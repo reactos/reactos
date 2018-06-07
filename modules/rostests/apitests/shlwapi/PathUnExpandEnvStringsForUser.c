@@ -8,6 +8,7 @@
 #include <apitest.h>
 #include <shlwapi.h>
 #include <stdio.h>
+#include <strsafe.h>
 
 #define DO_TEST(Res, hToken, TestStr, ExpStr, Len) \
 do { \
@@ -72,7 +73,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
     DO_TEST(FALSE, NULL, TestStr, L"%APPDATA%", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%APPDATA%", 2);
     DO_TEST(TRUE, NULL, TestStr, L"%APPDATA%", MAX_PATH);
-    lstrcatW(TestStr, L"\\TEST");
+    StringCbCatW(TestStr, sizeof(TestStr), L"\\TEST");
     DO_TEST(FALSE, NULL, TestStr, L"%APPDATA%\\TEST", 0);
     DO_TEST(FALSE, NULL, TestStr, L"%APPDATA%\\TEST", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%APPDATA%\\TEST", 2);
@@ -85,7 +86,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
     DO_TEST(FALSE, NULL, TestStr, L"%USERPROFILE%", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%USERPROFILE%", 2);
     DO_TEST(TRUE, NULL, TestStr, L"%USERPROFILE%", MAX_PATH);
-    lstrcatW(TestStr, L"\\TEST");
+    StringCbCatW(TestStr, sizeof(TestStr), L"\\TEST");
     DO_TEST(FALSE, NULL, TestStr, L"%USERPROFILE%\\TEST", 0);
     DO_TEST(FALSE, NULL, TestStr, L"%USERPROFILE%\\TEST", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%USERPROFILE%\\TEST", 2);
@@ -98,7 +99,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
     DO_TEST(FALSE, NULL, TestStr, L"%ALLUSERSPROFILE%", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%ALLUSERSPROFILE%", 2);
     DO_TEST(TRUE, NULL, TestStr, L"%ALLUSERSPROFILE%", MAX_PATH);
-    lstrcatW(TestStr, L"\\TEST");
+    StringCbCatW(TestStr, sizeof(TestStr), L"\\TEST");
     DO_TEST(FALSE, NULL, TestStr, L"%ALLUSERSPROFILE%\\TEST", 0);
     DO_TEST(FALSE, NULL, TestStr, L"%ALLUSERSPROFILE%\\TEST", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%ALLUSERSPROFILE%\\TEST", 2);
@@ -111,7 +112,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%", 2);
     DO_TEST(TRUE, NULL, TestStr, L"%ProgramFiles%", MAX_PATH);
-    lstrcatW(TestStr, L"\\TEST");
+    StringCbCatW(TestStr, sizeof(TestStr), L"\\TEST");
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%\\TEST", 0);
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%\\TEST", -1);
     DO_TEST(FALSE, NULL, TestStr, L"%ProgramFiles%\\TEST", 2);
