@@ -180,8 +180,8 @@ WaitForKeyboard(VOID)
                         NULL);
     if (Status == STATUS_PENDING)
     {
-        /* Wait 3s */
-        Timeout.QuadPart = (LONG)-3*1000*1000*10;
+        /* Wait 10s */
+        Timeout.QuadPart = (LONG)-10*1000*1000*10;
         Status = NtWaitForSingleObject(KeyboardHandle, FALSE, &Timeout);
         /* The user didn't enter anything, cancel the read */
         if (Status == STATUS_TIMEOUT)
@@ -328,7 +328,7 @@ ChkdskCallback(
         Status = (PBOOLEAN)Argument;
         if (*Status != FALSE)
         {
-            PrintString("Autochk was unable to complete successfully.\r\n\r\n");
+            PrintString("The file system check was unable to complete successfully\r\n\r\n");
             // Error = TRUE;
         }
         break;
@@ -355,11 +355,11 @@ CheckVolume(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
-        PrintString("  Unable to get file system of %S\r\n", DrivePath);
+        PrintString("  Unable to detect file system of %S\r\n", DrivePath);
         return Status;
     }
 
-    PrintString("  File system type is %S\r\n", FileSystem);
+    PrintString("  The file system type is %S\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
@@ -388,8 +388,9 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  This volume needs to be checked for problems. You may cancel this check, but it's recommended that you continue\r\n");
-            PrintString("  To cancel and resume startup, press any key within 3 seconds\r\n");
+            PrintString("  The file system on this volume needs to be checked for problems\r\n");
+            PrintString("  You may cancel this check, but it's recommended that you continue\r\n");
+            PrintString("  Press any key within 10 seconds to cancel and resume startup\r\n");
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard();
@@ -401,6 +402,7 @@ CheckVolume(
                                                        TRUE, // CheckOnlyIfDirty
                                                        FALSE,// ScanDrive
                                                        ChkdskCallback);
+                PrintString("  The system will now check the file system\r\n");
             }
             else
             {
@@ -413,7 +415,7 @@ CheckVolume(
     if (Count == sizeof(FileSystems) / sizeof(FileSystems[0]))
     {
         DPRINT1("File system not supported\n");
-        PrintString("  Unable to verify a %S volume\r\n", FileSystem);
+        PrintString("  Unable to check the file system. %S is not supported\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
     }
 
