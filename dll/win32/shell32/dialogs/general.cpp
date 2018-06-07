@@ -75,11 +75,11 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
 
     // read ShellState
     nStatus = SHGetValueW(HKEY_CURRENT_USER, 
-                         s_pszExplorerKey,
-                         L"ShellState",
-                         NULL,
-                         &rss,
-                         &dwSize);
+                          s_pszExplorerKey,
+                          L"ShellState",
+                          NULL,
+                          &rss,
+                          &dwSize);
     if (nStatus != ERROR_SUCCESS || rss.dwSize < REGSHELLSTATE_SIZE)
     {
         IntGetDefaultShellState(rss);
@@ -92,11 +92,11 @@ IntSetShellStateSettings(BOOL bDoubleClick, BOOL bUseCommonTasks)
     // write ShellState
     rss.dwSize = dwSize = REGSHELLSTATE_SIZE;
     nStatus = SHSetValueW(HKEY_CURRENT_USER,
-                         s_pszExplorerKey,
-                         L"ShellState",
-                         REG_BINARY,
-                         &rss,
-                         dwSize);
+                          s_pszExplorerKey,
+                          L"ShellState",
+                          REG_BINARY,
+                          &rss,
+                          dwSize);
     if (nStatus != ERROR_SUCCESS)
         return FALSE;
 
@@ -120,7 +120,7 @@ IntGetShellStateSettings(BOOL& bDoubleClick, BOOL& bUseCommonTasks)
 
     // read ShellState
     nStatus = SHGetValueW(HKEY_CURRENT_USER, s_pszExplorerKey,
-                         L"ShellState", NULL, &rss, &dwSize);
+                          L"ShellState", NULL, &rss, &dwSize);
     if (nStatus != ERROR_SUCCESS || rss.dwSize < REGSHELLSTATE_SIZE)
         return FALSE;
 
