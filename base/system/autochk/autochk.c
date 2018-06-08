@@ -316,7 +316,7 @@ ChkdskCallback(
 
     case PROGRESS:
         Percent = (PDWORD) Argument;
-        PrintString("%d percent completed.\r", *Percent);
+        PrintString("%d percent completed\r", *Percent);
         break;
 
     case OUTPUT:
@@ -328,7 +328,7 @@ ChkdskCallback(
         Status = (PBOOLEAN)Argument;
         if (*Status != FALSE)
         {
-            PrintString("The file system check was unable to complete successfully\r\n\r\n");
+            PrintString("The file system check was unable to complete successfully.\r\n\r\n");
             // Error = TRUE;
         }
         break;
@@ -359,7 +359,7 @@ CheckVolume(
         return Status;
     }
 
-    PrintString("  The file system type is %S\r\n", FileSystem);
+    PrintString("  The file system type is %S.\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
@@ -388,9 +388,9 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  The file system on this volume needs to be checked for problems\r\n");
-            PrintString("  You may cancel this check, but it's recommended that you continue\r\n");
-            PrintString("  Press any key within 10 seconds to cancel and resume startup\r\n");
+            PrintString("  The file system on this volume needs to be checked for problems.\r\n");
+            PrintString("  You may cancel this check, but it's recommended that you continue.\r\n");
+            PrintString("  Press any key within 10 seconds to cancel and resume startup.\r\n");
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard();
@@ -402,11 +402,11 @@ CheckVolume(
                                                        TRUE, // CheckOnlyIfDirty
                                                        FALSE,// ScanDrive
                                                        ChkdskCallback);
-                PrintString("  The system will now check the file system\r\n");
+                PrintString("  The system will now check the file system.\r\n");
             }
             else
             {
-                PrintString("  File system check has been skipped\r\n");
+                PrintString("  File system check has been skipped.\r\n");
             }
         }
         break;
@@ -415,7 +415,7 @@ CheckVolume(
     if (Count == sizeof(FileSystems) / sizeof(FileSystems[0]))
     {
         DPRINT1("File system not supported\n");
-        PrintString("  Unable to check the file system. %S is not supported\r\n", FileSystem);
+        PrintString("  Unable to check the file system. %S is not supported.\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
     }
 
