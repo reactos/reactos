@@ -7,7 +7,6 @@
 
 #include <apitest.h>
 #include <shlwapi.h>
-#include <stdio.h>
 #include <strsafe.h>
 
 #define DO_TEST(Res, hToken, TestStr, ExpStr, Len) \
@@ -42,7 +41,7 @@ START_TEST(PathUnExpandEnvStringsForUser)
 
     if (pPathUnExpandEnvStringsForUserW == NULL)
     {
-        printf("PathUnExpandEnvStringsForUserW is not public\n");
+        trace("PathUnExpandEnvStringsForUserW is not public\n");
         pPathUnExpandEnvStringsForUserW =
             (PATHUNEXPANDENVSTRINGSFORUSERW)GetProcAddress(hShlwapi, (LPCSTR)(LONG_PTR)466);
     }
