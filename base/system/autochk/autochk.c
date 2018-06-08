@@ -316,7 +316,7 @@ ChkdskCallback(
 
     case PROGRESS:
         Percent = (PDWORD) Argument;
-        PrintString("%d percent completed\r", *Percent);
+        PrintString("%d percent completed.\r", *Percent);
         break;
 
     case OUTPUT:
