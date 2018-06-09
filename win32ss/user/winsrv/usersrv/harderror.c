@@ -641,8 +641,10 @@ UserpFormatMessages(
     CaptionStringU->Length = (USHORT)(wcslen(CaptionStringU->Buffer) * sizeof(WCHAR));
 
     /* Free the strings if needed */
-    if (WindowTitleU.Buffer) RtlFreeUnicodeString(&WindowTitleU);
-    if (hProcess) RtlFreeUnicodeString(&FileNameU);
+    if (WindowTitleU.Buffer && (WindowTitleU.MaximumLength != 0))
+        RtlFreeUnicodeString(&WindowTitleU);
+    if (hProcess)
+        RtlFreeUnicodeString(&FileNameU);
 
     Format2A.Buffer = NULL;
 
