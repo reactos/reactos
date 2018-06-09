@@ -1212,4 +1212,89 @@ FAT32SetDirtyStatus(
 #endif
 }
 
+NTSTATUS
+FAT32UpdateFreeClustersCount(
+    PDEVICE_EXTENSION DeviceExt,
+    ULONG Count,
+    BOOLEAN Freed)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _FsInfoSector * Sector;
+
+    /* We'll read (and then write) the fsinfo sector */
+    Offset.QuadPart = DeviceExt->FatInfo.FSInfoSector * DeviceExt->FatInfo.BytesPerSector;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a FSINFO sector */
+    if (Sector->ExtBootSignature2 != 0x41615252 ||
+        Sector->FSINFOSignature != 0x61417272 ||
+        Sector->Signatur2 != 0xaa550000)
+    {
+        ASSERT(FALSE);
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Update the free clusters count */
+    if (Freed)
+    {
+        Sector->FreeCluster += Count;
+    }
+    else
+    {
+        Sector->FreeCluster -= Count;
+    }
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Mark FSINFO sector dirty so that it gets written to the disk */
+    CcSetDirtyPinnedData(Context, NULL);
+    CcUnpinData(Context);
+    return STATUS_SUCCESS;
+#else
+    /* Write back the FSINFO sector to the disk */
+    Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+    return Status;
+#endif
+}
+
 /* EOF */

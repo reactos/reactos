@@ -929,6 +929,12 @@ FAT32SetDirtyStatus(
     PDEVICE_EXTENSION DeviceExt,
     BOOLEAN DirtyStatus);
 
+NTSTATUS
+FAT32UpdateFreeClustersCount(
+    PDEVICE_EXTENSION DeviceExt,
+    ULONG Count,
+    BOOLEAN Freed);
+
 /* fcb.c */
 
 PVFATFCB

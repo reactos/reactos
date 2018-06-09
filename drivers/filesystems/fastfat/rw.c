@@ -539,6 +539,12 @@ VfatWriteFileData(
             Status = IrpContext->Irp->IoStatus.Status;
         }
     }
+
+    if (NT_SUCCESS(Status) && ClusterCount != 0 && DeviceExt->FatInfo.FatType == FAT32)
+    {
+        FAT32UpdateFreeClustersCount(DeviceExt, ClusterCount, FALSE);
+    }
+
     return Status;
 }
 
