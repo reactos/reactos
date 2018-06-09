@@ -232,6 +232,7 @@ VfatHasFileSystem(
                     FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
                     FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
                     FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+                    FatInfo.FSInfoSector = ((struct _BootSector32*) Boot)->FSInfoSector;
                     RtlCopyMemory(&FatInfo.VolumeLabel, &((struct _BootSector32*)Boot)->VolumeLabel, sizeof(FatInfo.VolumeLabel));
                 }
                 else

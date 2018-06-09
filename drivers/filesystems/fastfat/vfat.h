@@ -263,6 +263,7 @@ typedef struct
     ULONG FatType;
     ULONG Sectors;
     BOOLEAN FixedMedia;
+    ULONG FSInfoSector;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
