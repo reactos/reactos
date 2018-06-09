@@ -62,14 +62,13 @@ BEGIN
     BEGIN
         MENUITEM "&Daftar Isi", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang", CMD_ABOUT
         MENUITEM "Inf&o", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
 /* Dialog 'Page setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 365, 193
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Page Setup"
 BEGIN
@@ -79,9 +78,9 @@ BEGIN
     CONTROL "", rct3, "Static", SS_GRAYRECT, 264, 122, 80, 4
     GROUPBOX "Paper", grp2, 8, 6, 224, 56, BS_GROUPBOX
     LTEXT "&Size:", stc2, 16, 22, 36, 8
-    COMBOBOX cmb2, 64, 20, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb2, 64, 20, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Tray:", stc3, 16, 42, 36, 8
-    COMBOBOX cmb3, 64, 40, 160, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb3, 64, 40, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientation", grp1, 8, 66, 64, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Portrait", rad1, 16, 80, 52, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "&Landscape", rad2, 16, 100, 52, 12, BS_AUTORADIOBUTTON
@@ -126,23 +125,6 @@ BEGIN
     LTEXT "Nomor baris:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
     PUSHBUTTON "Batal", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
-END
-
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Tentang ReactOS Notepad"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS Notepad v1.0\r\nHak Cipta 1997,98 Marcel Baur\r\nHak Cipta 2000 Mike McCormack\r\nHak Cipta 2002 Sylvain Petreolle\r\nHak Cipta 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Close", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE

@@ -50,14 +50,11 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID);
 VOID DIALOG_HelpContents(VOID);
 VOID DIALOG_HelpSearch(VOID);
 VOID DIALOG_HelpLicense(VOID);
-VOID DIALOG_HelpNoWarranty(VOID);
 VOID DIALOG_HelpAboutNotepad(VOID);
 
 VOID DIALOG_TimeDate(VOID);
 
 int DIALOG_StringMsgBox(HWND hParent, int formatId, LPCTSTR szString, DWORD dwFlags);
-
-INT_PTR CALLBACK AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 /* utility functions */
 VOID ShowLastError(VOID);

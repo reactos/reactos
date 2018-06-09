@@ -62,14 +62,13 @@ BEGIN
     BEGIN
         MENUITEM "&Guida in linea", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni &su blocco note", CMD_ABOUT
         MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
 /* Dialog 'Page setup' */
 DIALOG_PAGESETUP DIALOGEX 0, 0, 390, 190
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Imposta pagina"
 BEGIN
@@ -79,9 +78,9 @@ BEGIN
     CONTROL "", rct3, "Static", SS_GRAYRECT, 288, 120, 80, 4
     GROUPBOX "Foglio", grp2, 8, 8, 256, 56, BS_GROUPBOX
     LTEXT "&Dimensioni:", stc2, 16, 20, 68, 12, SS_CENTERIMAGE
-    COMBOBOX cmb2, 88, 20, 168, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb2, 88, 20, 168, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Alimentazione:", stc3, 16, 42, 68, 12, SS_CENTERIMAGE
-    COMBOBOX cmb3, 88, 40, 168, 160, CBS_SIMPLE | CBS_DROPDOWN | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
+    COMBOBOX cmb3, 88, 40, 168, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_GROUP | WS_TABSTOP | WS_VSCROLL
     GROUPBOX "Orientamento", grp1, 8, 68, 68, 56, BS_GROUPBOX
     AUTORADIOBUTTON "&Verticale", rad1, 16, 80, 56, 12, BS_AUTORADIOBUTTON
     AUTORADIOBUTTON "&Orizzontale", rad2, 16, 100, 56, 12, BS_AUTORADIOBUTTON
@@ -126,23 +125,6 @@ BEGIN
     LTEXT "Numero di riga:", 0x155, 5, 12, 41, 12, WS_CHILD | WS_TABSTOP | ES_NUMBER
     DEFPUSHBUTTON "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
     PUSHBUTTON "Annulla", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
-END
-
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Informazioni su blocco note ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Chiudi", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE

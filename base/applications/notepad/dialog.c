@@ -1198,40 +1198,6 @@ VOID DIALOG_HelpAboutNotepad(VOID)
     DeleteObject(notepadIcon);
 }
 
-INT_PTR
-CALLBACK
-AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HWND hLicenseEditWnd;
-    TCHAR *strLicense;
-
-    switch (message)
-    {
-    case WM_INITDIALOG:
-
-        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE);
-
-        /* 0x1000 should be enough */
-        strLicense = (TCHAR *)_alloca(0x1000);
-        LoadString(GetModuleHandle(NULL), STRING_LICENSE, strLicense, 0x1000);
-
-        SetWindowText(hLicenseEditWnd, strLicense);
-
-        return TRUE;
-
-    case WM_COMMAND:
-
-        if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
-        }
-
-        break;
-    }
-
-    return 0;
-}
 
 /***********************************************************************
  *
