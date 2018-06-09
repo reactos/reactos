@@ -557,7 +557,10 @@ CountAvailableClusters(
         else
             Status = FAT32CountAvailableClusters(DeviceExt);
     }
-    Clusters->QuadPart = DeviceExt->AvailableClusters;
+    if (Clusters != NULL)
+    {
+        Clusters->QuadPart = DeviceExt->AvailableClusters;
+    }
     ExReleaseResourceLite (&DeviceExt->FatResource);
 
     return Status;
@@ -1214,9 +1217,7 @@ FAT32SetDirtyStatus(
 
 NTSTATUS
 FAT32UpdateFreeClustersCount(
-    PDEVICE_EXTENSION DeviceExt,
-    ULONG Count,
-    BOOLEAN Freed)
+    PDEVICE_EXTENSION DeviceExt)
 {
     LARGE_INTEGER Offset;
     ULONG Length;
@@ -1226,6 +1227,11 @@ FAT32UpdateFreeClustersCount(
     PVOID Context;
 #endif
     struct _FsInfoSector * Sector;
+
+    if (!DeviceExt->AvailableClustersValid)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* We'll read (and then write) the fsinfo sector */
     Offset.QuadPart = DeviceExt->FatInfo.FSInfoSector * DeviceExt->FatInfo.BytesPerSector;
@@ -1275,14 +1281,7 @@ FAT32UpdateFreeClustersCount(
     }
 
     /* Update the free clusters count */
-    if (Freed)
-    {
-        Sector->FreeCluster += Count;
-    }
-    else
-    {
-        Sector->FreeCluster -= Count;
-    }
+    Sector->FreeCluster = InterlockedCompareExchange((PLONG)&DeviceExt->AvailableClusters, 0, 0);
 
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
     /* Mark FSINFO sector dirty so that it gets written to the disk */

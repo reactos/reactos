@@ -737,6 +737,7 @@ VfatMount(
     _SEH2_END;
 
     DeviceExt->LastAvailableCluster = 2;
+    CountAvailableClusters(DeviceExt, NULL);
     ExInitializeResourceLite(&DeviceExt->FatResource);
 
     InitializeListHead(&DeviceExt->FcbListHead);

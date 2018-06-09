@@ -670,6 +670,11 @@ FATAddEntry(
                 }
                 return STATUS_DISK_FULL;
             }
+
+            if (DeviceExt->FatInfo.FatType == FAT32)
+            {
+                FAT32UpdateFreeClustersCount(DeviceExt);
+            }
         }
         else
         {
@@ -1021,20 +1026,17 @@ FATDelEntry(
     /* In case of moving, don't delete data */
     if (MoveContext == NULL)
     {
-        ULONG ClusterCount = 0;
-
         while (CurrentCluster && CurrentCluster != 0xffffffff)
         {
             GetNextCluster(DeviceExt, CurrentCluster, &NextCluster);
             /* FIXME: check status */
             WriteCluster(DeviceExt, CurrentCluster, 0);
             CurrentCluster = NextCluster;
-            ClusterCount++;
         }
 
-        if (ClusterCount != 0 && DeviceExt->FatInfo.FatType == FAT32)
+        if (DeviceExt->FatInfo.FatType == FAT32)
         {
-            FAT32UpdateFreeClustersCount(DeviceExt, ClusterCount, TRUE);
+            FAT32UpdateFreeClustersCount(DeviceExt);
         }
     }
 

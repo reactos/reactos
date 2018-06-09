@@ -1344,8 +1344,6 @@ VfatSetAllocationSizeInformation(
     }
     else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
     {
-        ULONG ClusterCount;
-
         DPRINT("Check for the ability to set file size\n");
         if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer,
                                   (PLARGE_INTEGER)AllocationSize))
@@ -1393,18 +1391,16 @@ VfatSetAllocationSizeInformation(
             Status = STATUS_SUCCESS;
         }
 
-        ClusterCount = 0;
         while (NT_SUCCESS(Status) && 0xffffffff != Cluster && Cluster > 1)
         {
             Status = NextCluster(DeviceExt, FirstCluster, &NCluster, FALSE);
             WriteCluster(DeviceExt, Cluster, 0);
             Cluster = NCluster;
-            ClusterCount++;
         }
 
-        if (ClusterCount != 0 && DeviceExt->FatInfo.FatType == FAT32)
+        if (DeviceExt->FatInfo.FatType == FAT32)
         {
-            FAT32UpdateFreeClustersCount(DeviceExt, ClusterCount, TRUE);
+            FAT32UpdateFreeClustersCount(DeviceExt);
         }
     }
     else
