@@ -97,8 +97,8 @@ endif()
 add_compile_flags("/w14115")
 
 if(USE_CLANG_CL)
-    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-unknown-pragmas" "C")
-    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-unknown-pragmas" "CXX")
+    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-parentheses-equality -Wno-unknown-pragmas" "C")
+    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-parentheses-equality -Wno-unknown-pragmas" "CXX")
 endif()
 
 # Debugging
@@ -149,15 +149,8 @@ if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
     # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
-    # Only VS 10+ resource compiler supports /nologo
-    # CMAKE_CXX_SIMULATE_VERSION is a similar check for our clang-cl builds
-    if((MSVC_VERSION GREATER 1599) OR (CMAKE_CXX_SIMULATE_VERSION VERSION_GREATER 15.99))
-        set(rc_nologo_flag "/nologo")
-    else()
-        set(rc_nologo_flag)
-    endif()
     if(CMAKE_VERSION VERSION_LESS 3.4.0)
-        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_nologo_flag} <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
         if(ARCH STREQUAL "arm")
             set(CMAKE_ASM_COMPILE_OBJECT
                 "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
@@ -168,7 +161,7 @@ else()
                 "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
         endif()
     else()
-        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_nologo_flag} <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
         if(ARCH STREQUAL "arm")
             set(CMAKE_ASM_COMPILE_OBJECT
                 "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"

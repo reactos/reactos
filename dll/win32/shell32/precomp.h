@@ -29,6 +29,7 @@
 #include <atlcom.h>
 #include <atlwin.h>
 #include <atlstr.h>
+#include <atlsimpcoll.h>
 #include <powrprof.h>
 #include <winnetwk.h>
 #include <objsafe.h>
@@ -85,6 +86,7 @@
 #include "shellmenu/CMergedFolder.h"
 #include "shellmenu/shellmenu.h"
 #include "CUserNotification.h"
+#include "dialogs/folder_options.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>

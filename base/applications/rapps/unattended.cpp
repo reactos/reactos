@@ -11,7 +11,7 @@
 
 #include <setupapi.h>
 
-#define MIN_ARGS 2
+#define MIN_ARGS 3
 
 BOOL UseCmdParameters(LPWSTR lpCmdLine)
 {
@@ -25,17 +25,17 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
 
     // TODO: use DB filenames as names because they're shorter
     ATL::CSimpleArray<ATL::CStringW> arrNames;
-    if (!StrCmpW(argv[0], CMD_KEY_INSTALL))
+    if (!StrCmpIW(argv[1], CMD_KEY_INSTALL))
     {
-        for (INT i = 1; i < argc; ++i)
+        for (INT i = 2; i < argc; ++i)
         {
             arrNames.Add(argv[i]);
         }
     }
     else
-    if (!StrCmpW(argv[0], CMD_KEY_SETUP))
+    if (!StrCmpIW(argv[1], CMD_KEY_SETUP))
     {
-        HINF InfHandle = SetupOpenInfFileW(argv[1], NULL, INF_STYLE_WIN4, NULL);
+        HINF InfHandle = SetupOpenInfFileW(argv[2], NULL, INF_STYLE_WIN4, NULL);
         if (InfHandle == INVALID_HANDLE_VALUE)
         {
             return FALSE;

@@ -1,0 +1,71 @@
+/*
+ * PROJECT:     ReactOS Zip Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Russian (Russia) resource translation
+ * COPYRIGHT:   Copyright 2018 Stas'M (x86corez@gmail.com)
+ */
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Укажите путь"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Выберите путь для извлечения",IDC_STATIC,6,12,174,8
+    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Обзор...",IDC_BROWSE,174,42,54,14
+    PUSHBUTTON      "Пароль",IDC_PASSWORD,174,66,54,14
+    LTEXT           "Извлечение...",IDC_STATIC,6,114,48,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+END
+
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Извлечение завершено"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Все файлы были извлечены в следующую директорию:",IDC_STATIC,6,12,222,18
+    LTEXT           "Целевой путь",IDC_DESTDIR,6,36,222,8
+    CONTROL         "Показать извлечённые файлы",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,118,10
+    LTEXT           "Нажмите ""Готово"" чтобы продолжить.",IDC_STATIC,6,84,174,8
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Подтвердите замену файла"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Да",IDYES,6,36,62,14
+    PUSHBUTTON      "Отмена",IDCANCEL,204,36,62,14
+    PUSHBUTTON      "Заменить &все",IDYESALL,72,36,62,14
+    PUSHBUTTON      "&Нет",IDNO,138,36,62,14
+    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
+    LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "Название"
+    IDS_COL_TYPE "Тип"
+    IDS_COL_COMPRSIZE "Сжатый размер"
+    IDS_COL_PASSWORD "Защищён паролем"
+    IDS_COL_SIZE "Размер"
+    IDS_COL_RATIO "Сжатие"
+    IDS_COL_DATE_MOD "Дата изменения"
+    IDS_YES "Да"
+    IDS_NO "Нет"
+
+    IDS_WIZ_TITLE "Мастер извлечения архивов"
+    IDS_WIZ_DEST_TITLE "Укажите путь"
+    IDS_WIZ_DEST_SUBTITLE "Файлы из zip архива будут извлечены в указанную директорию."
+    IDS_WIZ_COMPL_TITLE "Извлечение завершено"
+    IDS_WIZ_COMPL_SUBTITLE "Файлы из zip архива были извлечены."
+    IDS_WIZ_BROWSE_TITLE "Выберите расположение для извлечения элементов."
+
+    IDS_OVERWRITEFILE_TEXT "В данной папке уже есть файл '%1'.\nВы хотите заменить его?"
+
+    IDS_MENUITEM "&Извлечь всё..."
+    IDS_HELPTEXT "Извлекает содержимое архива"
+    IDS_FRIENDLYNAME "Сжатая zip папка"
+END

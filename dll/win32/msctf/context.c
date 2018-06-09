@@ -758,14 +758,14 @@ static HRESULT WINAPI TextStoreACPSink_OnTextChange(ITextStoreACPSink *iface,
 {
     Context *This = impl_from_ITextStoreACPSink(iface);
     FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI TextStoreACPSink_OnSelectionChange(ITextStoreACPSink *iface)
 {
     Context *This = impl_from_ITextStoreACPSink(iface);
     FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI TextStoreACPSink_OnLayoutChange(ITextStoreACPSink *iface,
@@ -773,7 +773,7 @@ static HRESULT WINAPI TextStoreACPSink_OnLayoutChange(ITextStoreACPSink *iface,
 {
     Context *This = impl_from_ITextStoreACPSink(iface);
     FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI TextStoreACPSink_OnStatusChange(ITextStoreACPSink *iface,

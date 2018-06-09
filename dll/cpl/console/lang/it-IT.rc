@@ -148,9 +148,9 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Consola"
-    IDS_CPLDESCRIPTION "Configura le proprietà della consola."
+    IDS_CPLNAME "Console"
+    IDS_CPLDESCRIPTION "Configura le proprietà della console."
     IDS_APPLY_SHORTCUT_ALL "Modifica il collegamento che ha attivato questa finestra"
-    IDS_RASTERFONTS "Font a Raster"
+    IDS_RASTERFONTS "Font Raster"
     IDS_GROUPBOX_FONT_NAME "Font Selezionate: "
 END

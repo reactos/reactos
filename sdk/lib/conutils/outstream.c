@@ -49,13 +49,11 @@
 #include "stream_private.h"
 
 
-// #define RC_STRING_MAX_SIZE  4096
+// Also known as: RC_STRING_MAX_SIZE, MAX_BUFFER_SIZE (some programs:
+// wlanconf, shutdown, set it to 5024), OUTPUT_BUFFER_SIZE (name given
+// in cmd/console.c), MAX_STRING_SIZE (name given in diskpart) or
+// MAX_MESSAGE_SIZE (set to 512 in shutdown).
 #define CON_RC_STRING_MAX_SIZE  4096
-// #define MAX_BUFFER_SIZE     4096    // Some programs (wlanconf, shutdown) set it to 5024
-// #define OUTPUT_BUFFER_SIZE  4096    // Name given in cmd/console.c
-// MAX_STRING_SIZE  // Name given in diskpart
-
-// #define MAX_MESSAGE_SIZE    512     // See shutdown...
 
 
 /**
@@ -93,8 +91,6 @@ ConWrite(
     DWORD TotalLen = len, dwNumBytes = 0;
     PVOID p;
 
-    // CHAR strOem[CON_RC_STRING_MAX_SIZE]; // Some static buffer...
-
     /* If we do not write anything, just return */
     if (!szStr || len == 0)
         return 0;
@@ -103,7 +99,7 @@ ConWrite(
     // if (IsConsoleHandle(Stream->hHandle))
     if (Stream->IsConsole)
     {
-        // TODO: Check if (ConStream->Mode == WideText or UTF16Text) ??
+        // TODO: Check if (Stream->Mode == WideText or UTF16Text) ??
 
         /*
          * This code is inspired from _cputws, in particular from the fact that,
@@ -136,15 +132,15 @@ ConWrite(
      *
      * Implementation NOTE:
      *   MultiByteToWideChar (resp. WideCharToMultiByte) are equivalent to
-     *   OemToCharBuffW (resp. CharToOemBuffW), but the latters uselessly
-     *   depend on user32.dll, while MultiByteToWideChar and WideCharToMultiByte
-     *   only need kernel32.dll.
+     *   OemToCharBuffW (resp. CharToOemBuffW), but these latter functions
+     *   uselessly depend on user32.dll, while MultiByteToWideChar and
+     *   WideCharToMultiByte only need kernel32.dll.
      */
     if ((Stream->Mode == WideText) || (Stream->Mode == UTF16Text))
     {
 #ifndef _UNICODE // UNICODE means that TCHAR == WCHAR == UTF-16
-        /* Convert from the current process/thread's codepage to UTF-16 */
-        WCHAR *buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        /* Convert from the current process/thread's code page to UTF-16 */
+        PWCHAR buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
         if (!buffer)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -200,18 +196,22 @@ ConWrite(
     }
     else if ((Stream->Mode == UTF8Text) || (Stream->Mode == AnsiText))
     {
-        CHAR *buffer;
+        UINT CodePage;
+        PCHAR buffer;
 
         /*
-         * Resolve the codepage cache if it was not assigned yet
-         * (only if the stream is in ANSI mode; in UTF8 mode the
-         * codepage was already set to CP_UTF8).
+         * Resolve the current code page if it has not been assigned yet
+         * (we do this only if the stream is in ANSI mode; in UTF8 mode
+         * the code page is always set to CP_UTF8). Otherwise use the
+         * current stream's code page.
          */
         if (/*(Stream->Mode == AnsiText) &&*/ (Stream->CodePage == INVALID_CP))
-            Stream->CodePage = GetConsoleOutputCP(); // CP_ACP, CP_OEMCP
+            CodePage = GetConsoleOutputCP(); // CP_ACP, CP_OEMCP
+        else
+            CodePage = Stream->CodePage;
 
 #ifdef _UNICODE // UNICODE means that TCHAR == WCHAR == UTF-16
-        /* Convert from UTF-16 to either UTF-8 or ANSI, using stream codepage */
+        /* Convert from UTF-16 to either UTF-8 or ANSI, using the stream code page */
         // NOTE: MB_LEN_MAX defined either in limits.h or in stdlib.h .
         buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * MB_LEN_MAX);
         if (!buffer)
@@ -219,14 +219,14 @@ ConWrite(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;
         }
-        len = WideCharToMultiByte(Stream->CodePage, 0,
+        len = WideCharToMultiByte(CodePage, 0,
                                   szStr, len, buffer, len * MB_LEN_MAX,
                                   NULL, NULL);
         szStr = (PVOID)buffer;
 #else
         /*
-         * Convert from the current process/thread's codepage to either
-         * UTF-8 or ANSI, using stream codepage.
+         * Convert from the current process/thread's code page to either
+         * UTF-8 or ANSI, using the stream code page.
          * We need to perform a double conversion, by going through UTF-16.
          */
         // TODO!

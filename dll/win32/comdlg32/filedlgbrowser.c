@@ -40,6 +40,7 @@
 #include "shlguid.h"
 #include "servprov.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
@@ -116,7 +117,7 @@ static void COMDLG32_DumpSBSPFlags(UINT uflags)
         };
 #undef FE
         TRACE("SBSP Flags: %08x =", uflags);
-	for (i = 0; i < (sizeof(flags) / sizeof(flags[0])); i++)
+	for (i = 0; i < ARRAY_SIZE(flags); i++)
 	    if (flags[i].mask & uflags)
 		TRACE("%s ", flags[i].name);
 	TRACE("\n");
@@ -155,7 +156,7 @@ static BOOL COMDLG32_StrRetToStrNW (LPVOID dest, DWORD len, LPSTRRET src, LPCITE
 	{
 	  case STRRET_WSTR:
             lstrcpynW(dest, src->u.pOleStr, len);
-	    COMDLG32_SHFree(src->u.pOleStr);
+	    CoTaskMemFree(src->u.pOleStr);
 	    break;
 
 	  case STRRET_CSTR:
@@ -194,7 +195,7 @@ IShellBrowser * IShellBrowserImpl_Construct(HWND hwndOwner)
     FileOpenDlgInfos *fodInfos = get_filedlg_infoptr(hwndOwner);
     IShellBrowserImpl *sb;
 
-    sb = COMDLG32_SHAlloc(sizeof(IShellBrowserImpl));
+    sb = heap_alloc(sizeof(*sb));
 
     /* Initialisation of the member variables */
     sb->ref=1;
@@ -267,10 +268,8 @@ static ULONG WINAPI IShellBrowserImpl_Release(IShellBrowser * iface)
     TRACE("(%p,%u)\n", This, ref + 1);
 
     if (!ref)
-    {
-      COMDLG32_SHFree(This);
-      TRACE("-- destroyed\n");
-    }
+        heap_free(This);
+
     return ref;
 }
 
@@ -335,7 +334,7 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
                                               UINT wFlags)
 {
     HRESULT hRes;
-    IShellFolder *psfTmp;
+    IShellFolder *folder;
     IShellView *psvTmp;
     FileOpenDlgInfos *fodInfos;
     LPITEMIDLIST pidlTmp;
@@ -356,43 +355,43 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     {
 
         /* SBSP_RELATIVE  A relative pidl (relative from the current folder) */
-        if(FAILED(hRes = IShellFolder_BindToObject(fodInfos->Shell.FOIShellFolder,
-             pidl, NULL, &IID_IShellFolder, (LPVOID *)&psfTmp)))
+        if (FAILED(hRes = IShellFolder_BindToObject(fodInfos->Shell.FOIShellFolder,
+             pidl, NULL, &IID_IShellFolder, (void **)&folder)))
         {
             ERR("bind to object failed\n");
 	    return hRes;
         }
         /* create an absolute pidl */
-        pidlTmp = COMDLG32_PIDL_ILCombine(fodInfos->ShellInfos.pidlAbsCurrent, pidl);
+        pidlTmp = ILCombine(fodInfos->ShellInfos.pidlAbsCurrent, pidl);
     }
     else if(wFlags & SBSP_PARENT)
     {
         /* Browse the parent folder (ignores the pidl) */
         pidlTmp = GetParentPidl(fodInfos->ShellInfos.pidlAbsCurrent);
-        psfTmp = GetShellFolderFromPidl(pidlTmp);
-
+        folder = GetShellFolderFromPidl(pidlTmp);
     }
     else /* SBSP_ABSOLUTE is 0x0000 */
     {
         /* An absolute pidl (relative from the desktop) */
-        pidlTmp =  COMDLG32_PIDL_ILClone(pidl);
-        psfTmp = GetShellFolderFromPidl(pidlTmp);
+        pidlTmp = ILClone(pidl);
+        folder = GetShellFolderFromPidl(pidlTmp);
     }
 
-    if(!psfTmp)
+    if (!folder)
     {
-      ERR("could not browse to folder\n");
-      return E_FAIL;
+        ERR("could not browse to folder\n");
+        ILFree(pidlTmp);
+        return E_FAIL;
     }
 
     /* If the pidl to browse to is equal to the actual pidl ...
        do nothing and pretend you did it*/
-    if(COMDLG32_PIDL_ILIsEqual(pidlTmp,fodInfos->ShellInfos.pidlAbsCurrent))
+    if (ILIsEqual(pidlTmp, fodInfos->ShellInfos.pidlAbsCurrent))
     {
-        IShellFolder_Release(psfTmp);
-	COMDLG32_SHFree(pidlTmp);
+        IShellFolder_Release(folder);
+        ILFree(pidlTmp);
         TRACE("keep current folder\n");
-        return NOERROR;
+        return S_OK;
     }
 
     /* Release the current DataObject */
@@ -404,8 +403,13 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     /* Create the associated view */
     TRACE("create view object\n");
-    if(FAILED(hRes = IShellFolder_CreateViewObject(psfTmp, fodInfos->ShellInfos.hwndOwner,
-           &IID_IShellView, (LPVOID *)&psvTmp))) goto error;
+    if (FAILED(hRes = IShellFolder_CreateViewObject(folder, fodInfos->ShellInfos.hwndOwner,
+           &IID_IShellView, (void **)&psvTmp)))
+    {
+        IShellFolder_Release(folder);
+        ILFree(pidlTmp);
+        return hRes;
+    }
 
     /* Check if listview has focus */
     bViewHasFocus = IsChild(fodInfos->ShellInfos.hwndView,GetFocus());
@@ -427,10 +431,10 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     /* Release old FOIShellFolder and update its value */
     if (fodInfos->Shell.FOIShellFolder)
       IShellFolder_Release(fodInfos->Shell.FOIShellFolder);
-    fodInfos->Shell.FOIShellFolder = psfTmp;
+    fodInfos->Shell.FOIShellFolder = folder;
 
     /* Release old pidlAbsCurrent and update its value */
-    COMDLG32_SHFree(fodInfos->ShellInfos.pidlAbsCurrent);
+    ILFree(fodInfos->ShellInfos.pidlAbsCurrent);
     fodInfos->ShellInfos.pidlAbsCurrent = pidlTmp;
 
     COMDLG32_UpdateCurrentDir(fodInfos);
@@ -440,9 +444,13 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
 
     /* Create the window */
     TRACE("create view window\n");
-    if(FAILED(hRes = IShellView_CreateViewWindow(psvTmp, NULL,
-         &fodInfos->ShellInfos.folderSettings, fodInfos->Shell.FOIShellBrowser,
-         &rectView, &hwndView))) goto error;
+    if (FAILED(hRes = IShellView_CreateViewWindow(psvTmp, NULL,
+            &fodInfos->ShellInfos.folderSettings, fodInfos->Shell.FOIShellBrowser,
+            &rectView, &hwndView)))
+    {
+        WARN("Failed to create view window, hr %#x.\n", hRes);
+        return hRes;
+    }
 
     fodInfos->ShellInfos.hwndView = hwndView;
 
@@ -461,9 +469,6 @@ static HRESULT WINAPI IShellBrowserImpl_BrowseObject(IShellBrowser *iface,
     if (bViewHasFocus)
       SetFocus(fodInfos->ShellInfos.hwndView);
 
-    return hRes;
-error:
-    ERR("Failed with error 0x%08x\n", hRes);
     return hRes;
 }
 
@@ -784,8 +789,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnDefaultCommand(ICommDl
          hRes = S_OK;
 	}
 
-        /* Free memory used by pidl */
-        COMDLG32_SHFree(pidl);
+        ILFree(pidl);
 
         return hRes;
     }
@@ -847,7 +851,7 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_OnStateChange(ICommDlgBr
 		if(fodInfos->DlgInfos.dwDlgProp & FODPROP_SAVEDLG)
 		{
 		    WCHAR szSave[16];
-		    LoadStringW(COMDLG32_hInstance, IDS_SAVE_BUTTON, szSave, sizeof(szSave)/sizeof(WCHAR));
+		    LoadStringW(COMDLG32_hInstance, IDS_SAVE_BUTTON, szSave, ARRAY_SIZE(szSave));
 		    SetDlgItemTextW(fodInfos->ShellInfos.hwndOwner, IDOK, szSave);
 		}
             }

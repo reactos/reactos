@@ -1122,6 +1122,23 @@ interface ITfKeyEventSink : IUnknown
 [
   object,
   local,
+  uuid(1cd4c13b-1c36-4191-a70a-7f3e611f367d),
+  pointer_default(unique)
+]
+interface ITfKeyTraceEventSink : IUnknown
+{
+    HRESULT OnKeyTraceDown(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam);
+
+    HRESULT OnKeyTraceUp(
+        [in] WPARAM wParam,
+        [in] LPARAM lParam);
+}
+
+[
+  object,
+  local,
   uuid(8f1b8ad8-0b6b-4874-90c5-bd76011e8f7c),
   pointer_default(unique)
 ]

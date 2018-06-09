@@ -1984,8 +1984,6 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, BOOL* change
                                    c, NULL, NULL, 0, FALSE, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
                     ERR("read_data returned %08x\n", Status);
-                    ExFreePool(csum);
-                    ExFreePool(bmparr);
                     goto end;
                 }
 
@@ -1993,8 +1991,6 @@ static NTSTATUS balance_data_chunk(device_extension* Vcb, chunk* c, BOOL* change
                                              NULL, newchunk, FALSE, 0, NormalPagePriority);
                 if (!NT_SUCCESS(Status)) {
                     ERR("write_data_complete returned %08x\n", Status);
-                    ExFreePool(csum);
-                    ExFreePool(bmparr);
                     goto end;
                 }
 

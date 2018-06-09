@@ -106,6 +106,7 @@ LoadOrderGroup = Keyboard Port
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","SampleRate",0x00010001,0x0000003c
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","MouseResolution",0x00010001,0x00000003
+HKR, , EnumPropPages32, 0, "syssetup.dll,PS2MousePropPageProvider"
 HKR, , LocationInformationOverride, 0, %LocationOverride%
 
 ;---------------------------- HID MOUSE DRIVER --------------------------

@@ -108,7 +108,7 @@ _GlobalJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
 /**
  * @name _PrinterJobListCompareRoutine
  *
- * SKIPLIST_COMPARE_ROUTINE for the each Printer's Job List.
+ * SKIPLIST_COMPARE_ROUTINE for each Printer's Job List.
  * Jobs in this list are sorted in the desired order of processing.
  */
 static int WINAPI
@@ -119,9 +119,6 @@ _PrinterJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
     int iComparison;
     FILETIME ftSubmittedA;
     FILETIME ftSubmittedB;
-    ULARGE_INTEGER uliSubmittedA;
-    ULARGE_INTEGER uliSubmittedB;
-    ULONGLONG ullResult;
 
     // First compare the priorities to determine the order.
     // The job with a higher priority shall come first.
@@ -130,7 +127,6 @@ _PrinterJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
         return iComparison;
 
     // Both have the same priority, so go by creation time.
-    // Comparison is done using the MSDN-recommended way for comparing SYSTEMTIMEs.
     if (!SystemTimeToFileTime(&A->stSubmitted, &ftSubmittedA))
     {
         ERR("SystemTimeToFileTime failed for A with error %lu!\n", GetLastError());
@@ -143,18 +139,7 @@ _PrinterJobListCompareRoutine(PVOID FirstStruct, PVOID SecondStruct)
         return 0;
     }
 
-    uliSubmittedA.LowPart = ftSubmittedA.dwLowDateTime;
-    uliSubmittedA.HighPart = ftSubmittedA.dwHighDateTime;
-    uliSubmittedB.LowPart = ftSubmittedB.dwLowDateTime;
-    uliSubmittedB.HighPart = ftSubmittedB.dwHighDateTime;
-    ullResult = uliSubmittedA.QuadPart - uliSubmittedB.QuadPart;
-
-    if (ullResult < 0)
-        return -1;
-    else if (ullResult > 0)
-        return 1;
-
-    return 0;
+    return CompareFileTime(&ftSubmittedA, &ftSubmittedB);
 }
 
 DWORD
@@ -781,7 +766,7 @@ _LocalSetJobLevel1(PLOCAL_PRINTER_HANDLE pPrinterHandle, PLOCAL_JOB pJob, PJOB_I
     }
 
     // Check if the user name has changed. An empty string is permitted here!
-    if (!_EqualStrings(pJob->pwszUserName, pJobInfo->pUserName) != 0)
+    if (!_EqualStrings(pJob->pwszUserName, pJobInfo->pUserName))
     {
         // The new user name doesn't need to exist, so no additional verification is required.
 

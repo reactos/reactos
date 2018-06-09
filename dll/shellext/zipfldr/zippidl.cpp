@@ -14,6 +14,8 @@ LPITEMIDLIST _ILCreate(ZipPidlType Type, LPCSTR lpString, unz_file_info64& info)
     if (!pidl)
         return NULL;
 
+    ZeroMemory(pidl, cbData + sizeof(WORD));
+
     pidl->cb = cbData;
     pidl->MagicType = 'z';
     pidl->ZipType = Type;

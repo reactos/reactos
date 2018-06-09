@@ -98,7 +98,7 @@
 152 stub -noname IsSyncForegroundPolicyRefresh                        #stdcall -noname IsSyncForegroundPolicyRefresh(8)
 153 stdcall -noname CreateUserProfileExA(ptr str str str long long)
 154 stdcall -noname CreateUserProfileExW(ptr wstr wstr wstr long long)
-155 stub -noname CopySystemProfile                                    #stdcall -noname CopySystemProfile(4)
+155 stdcall -noname CopySystemProfile(long)
 156 stub -noname GetUserProfileDirFromSidA                            #stdcall -noname GetUserProfileDirFromSidA(12)
 157 stub -noname GetUserProfileDirFromSidW                            #stdcall -noname GetUserProfileDirFromSidW(12)
 158 stub -noname SetNextFgPolicyRefreshInfo                           #stdcall -noname SetNextFgPolicyRefreshInfo(12)

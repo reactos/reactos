@@ -11,9 +11,10 @@ DriverVer  = 3/20/2012,1.01.0.0
 AddReg = LegacyDriverClass.NT.AddReg
 
 [LegacyDriverClass.NT.AddReg]
-HKR, , ,               0, %LegacyDriverClassName%
-HKR, , Icon,           0, "-19"
-HKR, , NoDisplayClass, 0, 1
+HKR, , ,                0, %LegacyDriverClassName%
+HKR, , Icon,            0, "-19"
+HKR, , NoDisplayClass,  0, 1
+HKR, , EnumPropPages32, 0, "syssetup.dll,LegacyDriverPropPageProvider"
 
 ;-------------------------------- STRINGS -------------------------------
 

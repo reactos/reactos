@@ -32,8 +32,6 @@
 #include "wine/test.h"
 #include "wine/heap.h"
 
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
-
 DEFINE_GUID(IID_IXmlReaderInput, 0x0b3ccc9b, 0x9214, 0x428b, 0xa2, 0xae, 0xef, 0x3a, 0xa8, 0x71, 0xaf, 0xda);
 
 static WCHAR *a2w(const char *str)

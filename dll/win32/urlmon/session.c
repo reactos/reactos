@@ -219,7 +219,7 @@ IInternetProtocolInfo *get_protocol_info(LPCWSTR url)
     return ret;
 }
 
-HRESULT get_protocol_handler(IUri *uri, CLSID *clsid, BOOL *urlmon_protocol, IClassFactory **ret)
+HRESULT get_protocol_handler(IUri *uri, CLSID *clsid, IClassFactory **ret)
 {
     name_space *ns;
     BSTR scheme;
@@ -240,20 +240,11 @@ HRESULT get_protocol_handler(IUri *uri, CLSID *clsid, BOOL *urlmon_protocol, ICl
         IClassFactory_AddRef(*ret);
         if(clsid)
             *clsid = ns->clsid;
-        if(urlmon_protocol)
-            *urlmon_protocol = ns->urlmon;
     }
 
     LeaveCriticalSection(&session_cs);
 
-    if(*ret) {
-        hres = S_OK;
-    }else {
-        if(urlmon_protocol)
-            *urlmon_protocol = FALSE;
-        hres = get_protocol_cf(scheme, SysStringLen(scheme), clsid, ret);
-    }
-
+    hres = *ret ? S_OK : get_protocol_cf(scheme, SysStringLen(scheme), clsid, ret);
     SysFreeString(scheme);
     return hres;
 }
@@ -448,7 +439,7 @@ static HRESULT WINAPI InternetSession_CreateBinding(IInternetSession *iface,
     if(pBC || pUnkOuter || ppUnk || dwOption)
         FIXME("Unsupported arguments\n");
 
-    hres = create_binding_protocol(FALSE, &protocol);
+    hres = create_binding_protocol(&protocol);
     if(FAILED(hres))
         return hres;
 

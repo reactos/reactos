@@ -10,7 +10,10 @@
 
 #include <win32k.h>
 
-#include <winnls.h>
+// Was included only because of CP_ACP and required  the
+// definition of SYSTEMTIME in ndk\rtltypes.h
+//#include <winnls.h>
+#define CP_ACP 0
 
 DBG_DEFAULT_CHANNEL(UserKbdLayout);
 

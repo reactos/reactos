@@ -4288,16 +4288,16 @@ BOOL WINAPI SetupDiCallClassInstaller(
                     &hKey);
                 if (rc == ERROR_SUCCESS)
                 {
-                    LPWSTR lpGuidString;
-                    if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) == RPC_S_OK)
+                    WCHAR szGuidString[40];
+                    if (pSetupStringFromGuid(&DeviceInfoData->ClassGuid, szGuidString, ARRAYSIZE(szGuidString)) == ERROR_SUCCESS)
                     {
-                        rc = RegQueryValueExW(hKey, lpGuidString, NULL, &dwRegType, NULL, &dwLength);
+                        rc = RegQueryValueExW(hKey, szGuidString, NULL, &dwRegType, NULL, &dwLength);
                         if (rc == ERROR_SUCCESS && dwRegType == REG_MULTI_SZ)
                         {
                             LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
                             if (KeyBuffer != NULL)
                             {
-                                rc = RegQueryValueExW(hKey, lpGuidString, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                                rc = RegQueryValueExW(hKey, szGuidString, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                                 if (rc == ERROR_SUCCESS)
                                 {
                                     LPWSTR ptr;
@@ -4319,7 +4319,6 @@ BOOL WINAPI SetupDiCallClassInstaller(
                                 HeapFree(GetProcessHeap(), 0, KeyBuffer);
                             }
                         }
-                        RpcStringFreeW(&lpGuidString);
                     }
                     RegCloseKey(hKey);
                 }

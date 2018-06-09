@@ -983,7 +983,7 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         15,
-        "Benutzen Sie die Entf-TASTE, um Zeichen zu lîschen.",
+        "Benutzen Sie die RÅck-TASTE, um Zeichen zu lîschen.",
         TEXT_STYLE_NORMAL
     },
     {

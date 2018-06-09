@@ -1503,7 +1503,7 @@ LdrUnloadDll(IN PVOID BaseAddress)
         /* Notify Application Verifier */
         if (Peb->NtGlobalFlag & FLG_HEAP_ENABLE_TAIL_CHECK)
         {
-            DPRINT1("We don't support Application Verifier yet\n");
+            AVrfDllUnloadNotification(LdrEntry);
         }
 
         /* Show message */

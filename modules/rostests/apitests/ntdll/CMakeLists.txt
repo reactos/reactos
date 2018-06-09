@@ -49,6 +49,7 @@ list(APPEND SOURCE
     RtlMemoryStream.c
     RtlNtPathNameToDosPathName.c
     RtlpEnsureBufferSize.c
+    RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c
     RtlUnicodeStringToAnsiString.c
     RtlUpcaseUnicodeStringToCountedOemString.c

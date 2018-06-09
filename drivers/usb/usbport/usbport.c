@@ -1696,7 +1696,7 @@ USBPORT_AllocateCommonBuffer(IN PDEVICE_OBJECT FdoDevice,
     PHYSICAL_ADDRESS LogicalAddress;
     ULONG_PTR BaseVA;
     ULONG_PTR StartBufferVA;
-    ULONG_PTR StartBufferPA;
+    ULONG StartBufferPA;
 
     DPRINT("USBPORT_AllocateCommonBuffer: FdoDevice - %p, BufferLength - %p\n",
            FdoDevice,
@@ -2108,7 +2108,7 @@ USBPORT_RequestAsyncCallback(IN PVOID MiniPortExtension,
 
 PVOID
 NTAPI
-USBPORT_GetMappedVirtualAddress(IN PVOID PhysicalAddress,
+USBPORT_GetMappedVirtualAddress(IN ULONG PhysicalAddress,
                                 IN PVOID MiniPortExtension,
                                 IN PVOID MiniPortEndpoint)
 {
@@ -2129,7 +2129,7 @@ USBPORT_GetMappedVirtualAddress(IN PVOID PhysicalAddress,
 
     HeaderBuffer = Endpoint->HeaderBuffer;
 
-    Offset = (ULONG_PTR)PhysicalAddress - HeaderBuffer->PhysicalAddress;
+    Offset = PhysicalAddress - HeaderBuffer->PhysicalAddress;
     VirtualAddress = HeaderBuffer->VirtualAddress + Offset;
 
     return (PVOID)VirtualAddress;

@@ -1173,6 +1173,79 @@ done:
 
 static
 DWORD
+SaveDefaultUserHive(VOID)
+{
+    WCHAR szDefaultUserHive[MAX_PATH];
+    HKEY hUserKey = NULL;
+    DWORD cchSize;
+    DWORD dwError;
+
+    DPRINT("SaveDefaultUserHive()\n");
+
+    cchSize = ARRAYSIZE(szDefaultUserHive);
+    GetDefaultUserProfileDirectoryW(szDefaultUserHive, &cchSize);
+
+    wcscat(szDefaultUserHive, L"\\ntuser.dat");
+
+    dwError = RegOpenKeyExW(HKEY_USERS,
+                            L".DEFAULT",
+                            0,
+                            KEY_READ,
+                            &hUserKey);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegOpenKeyExW() failed (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    pSetupEnablePrivilege(L"SeBackupPrivilege", TRUE);
+
+    /* Save the Default hive */
+    dwError = RegSaveKeyExW(hUserKey,
+                            szDefaultUserHive,
+                            NULL,
+                            REG_STANDARD_FORMAT);
+    if (dwError == ERROR_ALREADY_EXISTS)
+    {
+        WCHAR szBackupHive[MAX_PATH];
+
+        /* Build the backup hive file name by replacing the extension */
+        wcscpy(szBackupHive, szDefaultUserHive);
+        wcscpy(&szBackupHive[wcslen(szBackupHive) - 4], L".bak");
+
+        /* Back up the existing default user hive by renaming it, replacing any possible existing old backup */
+        if (!MoveFileExW(szDefaultUserHive,
+                         szBackupHive,
+                         MOVEFILE_REPLACE_EXISTING))
+        {
+            dwError = GetLastError();
+            DPRINT1("Failed to create a default-user hive backup '%S', MoveFileExW failed (Error %lu)\n",
+                    szBackupHive, dwError);
+        }
+        else
+        {
+            /* The backup has been done, retry saving the Default hive */
+            dwError = RegSaveKeyExW(hUserKey,
+                                    szDefaultUserHive,
+                                    NULL,
+                                    REG_STANDARD_FORMAT);
+        }
+    }
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("RegSaveKeyExW() failed (Error %lu)\n", dwError);
+    }
+
+    pSetupEnablePrivilege(L"SeBackupPrivilege", FALSE);
+
+    RegCloseKey(hUserKey);
+
+    return dwError;
+}
+
+
+static
+DWORD
 InstallReactOS(VOID)
 {
     WCHAR szBuffer[MAX_PATH];
@@ -1231,6 +1304,18 @@ InstallReactOS(VOID)
         PathAddBackslash(szBuffer);
         wcscat(szBuffer, L"system");
         CreateDirectory(szBuffer, NULL);
+    }
+
+    if (SaveDefaultUserHive() != ERROR_SUCCESS)
+    {
+        FatalError("SaveDefaultUserHive() failed");
+        return 0;
+    }
+
+    if (!CopySystemProfile(0))
+    {
+        FatalError("CopySystemProfile() failed");
+        return 0;
     }
 
     hHotkeyThread = CreateThread(NULL, 0, HotkeyThread, NULL, 0, NULL);

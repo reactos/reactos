@@ -127,6 +127,12 @@ ServiceInit(VOID)
     else
         CloseHandle(hThread);
 
+    /* Report a running server service */
+    SetServiceBits(ServiceStatusHandle,
+                   SV_TYPE_SERVER,
+                   TRUE,
+                   TRUE);
+
     return ERROR_SUCCESS;
 }
 

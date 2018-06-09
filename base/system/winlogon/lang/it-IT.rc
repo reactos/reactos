@@ -30,7 +30,7 @@ BEGIN
     LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
     LTEXT "Message:", -1, 38, 65, 135, 8
-    LTEXT "", IDC_SYSSHUTDOWNMESSAGE, 38, 75, 135, 58
+    EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
 STRINGTABLE
@@ -44,11 +44,13 @@ BEGIN
     IDS_RUNNINGLOGONSCRIPTS "Esecuzione scripts di connessione..."
     IDS_LOADINGYOURPERSONALSETTINGS "Caricamento delle impostazioni personali..."
     IDS_CLOSINGNETWORKCONNECTIONS "Chiusura connessioni di rete..."
-    IDS_REACTOSISSHUTTINGDOWN "ReactOS Sta spegnendosi..."
+    IDS_REACTOSISSHUTTINGDOWN "ReactOS si sta spegnendo..."
     IDS_PREPARETOSTANDBY "Preparazione Standby..."
-    IDS_PREPARETOHIBERNATE "Preparazione  Hibernate..."
+    IDS_PREPARETOHIBERNATE "Preparazione Ibernazione..."
     IDS_SAVEYOURSETTINGS "Salvataggio delle impostazioni personali..."
-    IDS_REACTOSISSTARTINGUP "ReactOS sta avviandosi..."
+    IDS_REACTOSISSTARTINGUP "ReactOS si sta avviando..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d days"
 END
 
 STRINGTABLE

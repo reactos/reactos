@@ -217,12 +217,9 @@ typedef struct _ROS_VACB
     LIST_ENTRY VacbLruListEntry;
     /* Offset in the file which this view maps. */
     LARGE_INTEGER FileOffset;
-    /* Mutex */
-    KMUTEX Mutex;
     /* Number of references. */
     volatile ULONG ReferenceCount;
     /* How many times was it pinned? */
-    _Guarded_by_(Mutex)
     LONG PinCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
@@ -470,28 +467,9 @@ VOID
 CcPerformReadAhead(
     IN PFILE_OBJECT FileObject);
 
-FORCEINLINE
 NTSTATUS
-CcRosAcquireVacbLock(
-    _Inout_ PROS_VACB Vacb,
-    _In_ PLARGE_INTEGER Timeout)
-{
-    NTSTATUS Status;
-    Status = KeWaitForSingleObject(&Vacb->Mutex,
-                                   Executive,
-                                   KernelMode,
-                                   FALSE,
-                                   Timeout);
-    return Status;
-}
-
-FORCEINLINE
-VOID
-CcRosReleaseVacbLock(
-    _Inout_ PROS_VACB Vacb)
-{
-    KeReleaseMutex(&Vacb->Mutex, FALSE);
-}
+CcRosInternalFreeVacb(
+    IN PROS_VACB Vacb);
 
 FORCEINLINE
 BOOLEAN
@@ -545,6 +523,19 @@ CcRosVacbGetRefCount_(
 
 #else
 #define CcRosVacbIncRefCount(vacb) InterlockedIncrement((PLONG)&(vacb)->ReferenceCount)
-#define CcRosVacbDecRefCount(vacb) InterlockedDecrement((PLONG)&(vacb)->ReferenceCount)
+FORCEINLINE
+ULONG
+CcRosVacbDecRefCount(
+    PROS_VACB vacb)
+{
+    ULONG Refs;
+
+    Refs = InterlockedDecrement((PLONG)&vacb->ReferenceCount);
+    if (Refs == 0)
+    {
+        CcRosInternalFreeVacb(vacb);
+    }
+    return Refs;
+}
 #define CcRosVacbGetRefCount(vacb) InterlockedCompareExchange((PLONG)&(vacb)->ReferenceCount, 0, 0)
 #endif

@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Resources header.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ */
+
 #pragma once
 
 #define CLIPBRD_ICON 100

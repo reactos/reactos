@@ -425,7 +425,7 @@ BEGIN
     IDS_MENU_CPUHISTORY "Historique de l'utilisation de l'UC"
     IDS_MENU_SHOWKERNELTIMES "Aff&icher les temps du noyau"
     IDS_CREATENEWTASK "Créer une nouvelle tâche"
-    IDS_CREATENEWTASK_DESC "Tapez le nom d'un programme, dossier,document, ou ressource Internet resource et le Gestionnaire des tâches l'ouvrira pour vous."
+    IDS_CREATENEWTASK_DESC "Entrez le nom d'un programme, d'un dossier, d'un document ou d'une ressource Internet, et le Gestionnaire des tâches l'ouvrira pour vous."
     IDS_MSG_ACCESSPROCESSAFF "Impossible d'accéder ou de mofier l'affinité du processeur."
     IDS_MSG_PROCESSONEPRO "Le processus doit avoir de l'affinité avec au moins un processeur."
     IDS_MSG_INVALIDOPTION "Option Invalide"

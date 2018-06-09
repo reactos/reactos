@@ -364,7 +364,6 @@ NetServerDiskEnum(
 }
 
 
-#if 0
 NET_API_STATUS
 WINAPI
 NetServerGetInfo(
@@ -383,7 +382,7 @@ NetServerGetInfo(
     {
         status = NetrServerGetInfo(servername,
                                    level,
-                                   (LPSERVER_INFO)bufptr);
+                                   (LPSERVER_INFO *)bufptr);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -393,7 +392,6 @@ NetServerGetInfo(
 
     return status;
 }
-#endif
 
 
 NET_API_STATUS

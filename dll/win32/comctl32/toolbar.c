@@ -66,7 +66,21 @@
  *
  */
 
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "wine/unicode.h"
+#include "winnls.h"
+#include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "vssym32.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(toolbar);
 
@@ -289,9 +303,9 @@ TOOLBAR_GetText(const TOOLBAR_INFO *infoPtr, const TBUTTON_INFO *btnPtr)
 static void
 TOOLBAR_DumpTBButton(const TBBUTTON *tbb, BOOL fUnicode)
 {
-    TRACE("TBBUTTON: id %d, bitmap=%d, state=%02x, style=%02x, data=%08lx, stringid=0x%08lx (%s)\n",
-          tbb->idCommand,tbb->iBitmap, tbb->fsState, tbb->fsStyle, tbb->dwData, tbb->iString,
-          (fUnicode ? wine_dbgstr_w((LPWSTR)tbb->iString) : wine_dbgstr_a((LPSTR)tbb->iString)));
+    TRACE("TBBUTTON: id %d, bitmap=%d, state=%02x, style=%02x, data=%p, stringid=%p (%s)\n", tbb->idCommand,
+        tbb->iBitmap, tbb->fsState, tbb->fsStyle, (void *)tbb->dwData, (void *)tbb->iString,
+        tbb->iString != -1 ? (fUnicode ? debugstr_w((LPWSTR)tbb->iString) : debugstr_a((LPSTR)tbb->iString)) : "");
 }
 
 static void
@@ -4416,7 +4430,7 @@ TOOLBAR_Restore(TOOLBAR_INFO *infoPtr, const TBSAVEPARAMSW *lpSave)
 
                 memset( &tb, 0, sizeof(tb) );
                 tb.iItem = i;
-                tb.cchText = sizeof(buf) / sizeof(buf[0]);
+                tb.cchText = ARRAY_SIZE(buf);
                 tb.pszText = buf;
 
                 /* Use the same struct for both A and W versions since the layout is the same. */
@@ -6397,7 +6411,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
         TRACE("TBN_GETINFOTIPW - got string %s\n", debugstr_w(tbgit.pszText));
 
         len = strlenW(tbgit.pszText);
-        if (len > sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0])-1)
+        if (len > ARRAY_SIZE(lpnmtdi->szText) - 1)
         {
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
@@ -6435,7 +6449,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
         TRACE("TBN_GETINFOTIPA - got string %s\n", debugstr_a(tbgit.pszText));
 
         len = MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1, NULL, 0);
-        if (len > sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0]))
+        if (len > ARRAY_SIZE(lpnmtdi->szText))
         {
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
@@ -6450,8 +6464,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
         }
         else if (tbgit.pszText && tbgit.pszText[0])
         {
-            MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1,
-                                lpnmtdi->lpszText, sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0]));
+            MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1, lpnmtdi->lpszText, ARRAY_SIZE(lpnmtdi->szText));
             return 0;
         }
     }
@@ -6466,7 +6479,7 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
 
         TRACE("using button hidden text %s\n", debugstr_w(pszText));
 
-        if (len > sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0])-1)
+        if (len > ARRAY_SIZE(lpnmtdi->szText) - 1)
         {
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the

@@ -123,7 +123,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Klassikalise stardimenüü kohandamine"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Menüü Start", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Menüü Start kohandamiseks saate sellesse üksusi lisada või neid eemaldada.", IDC_STATIC, 48, 17, 108, 39
@@ -138,26 +138,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "StartMenu&Options", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Loobu", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Faili Nime Hoiatus"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "&Ignoreeri", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Nimeta Ümber", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Ära teosta seda kontrolli käivitusel", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "Fail nimega %s Teie arvutis võib põhjustada kindlate rakendustele tõrkeid.  Ümber nimetades seda %s'ks lahendaks selle probleemi.  Kas soovite seda ümber nimetada nüüd?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Täpsemalt"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Menüü Start seaded ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Ava alammenüüd kui ma seiskan nende juures hiirega", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Tõsta esile &uudselt paigaldatud programmid", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -167,13 +167,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "Valige see sätte, et saada kiire juurdepääs dokumentidele, mida olete hiljuti kasutanud.  Selle nimekirja kustutamine ei kustuta neid dokumente.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Loetle minu kõige &hiljutisemalt avatuid dokumente", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Puhasta Nimekirja", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Üldine"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Vali ikoonisuurus programmidele", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -190,7 +190,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN

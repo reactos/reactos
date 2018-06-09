@@ -108,6 +108,149 @@ AcquireRemoveRestorePrivilege(IN BOOL bAcquire)
 
 BOOL
 WINAPI
+CopySystemProfile(
+    _In_ ULONG Unused)
+{
+    WCHAR szKeyName[MAX_PATH];
+    WCHAR szRawProfilePath[MAX_PATH];
+    WCHAR szProfilePath[MAX_PATH];
+    WCHAR szDefaultProfilePath[MAX_PATH];
+    UNICODE_STRING SidString = {0, 0, NULL};
+    HANDLE hToken = NULL;
+    PSID pUserSid = NULL;
+    HKEY hProfileKey = NULL;
+    DWORD dwDisposition;
+    BOOL bResult = FALSE;
+    DWORD cchSize;
+    DWORD dwError;
+
+    DPRINT1("CopySystemProfile()\n");
+
+    if (!OpenProcessToken(GetCurrentProcess(),
+                          TOKEN_QUERY | TOKEN_IMPERSONATE,
+                          &hToken))
+    {
+        DPRINT1("Failed to open the process token (Error %lu)\n", GetLastError());
+        return FALSE;
+    }
+
+    pUserSid = GetUserSid(hToken);
+    if (pUserSid == NULL)
+    {
+        DPRINT1("Failed to get the users SID (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Get the user SID string */
+    if (!GetUserSidStringFromToken(hToken, &SidString))
+    {
+        DPRINT1("GetUserSidStringFromToken() failed\n");
+        goto done;
+    }
+
+    StringCbCopyW(szKeyName, sizeof(szKeyName),
+                  L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList\\");
+    StringCbCatW(szKeyName, sizeof(szKeyName), SidString.Buffer);
+
+    RtlFreeUnicodeString(&SidString);
+
+    dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                              szKeyName,
+                              0, NULL, 0,
+                              KEY_WRITE,
+                              NULL,
+                              &hProfileKey,
+                              &dwDisposition);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to create the profile key for the %s profile (Error %lu)\n",
+                SidString.Buffer, dwError);
+        goto done;
+    }
+
+    dwError = RegSetValueExW(hProfileKey,
+                             L"Sid",
+                             0,
+                             REG_BINARY,
+                             (PBYTE)pUserSid,
+                             RtlLengthSid(pUserSid));
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to set the SID value (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    wcscpy(szRawProfilePath,
+           L"%systemroot%\\system32\\config\\systemprofile");
+
+    dwError = RegSetValueExW(hProfileKey,
+                             L"ProfileImagePath",
+                             0,
+                             REG_EXPAND_SZ,
+                             (PBYTE)szRawProfilePath,
+                             (wcslen(szRawProfilePath) + 1) * sizeof(WCHAR));
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to set the ProfileImagePath value (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    /* Expand the raw profile path */
+    if (!ExpandEnvironmentStringsW(szRawProfilePath,
+                                   szProfilePath,
+                                   ARRAYSIZE(szProfilePath)))
+    {
+        DPRINT1("Failled to expand the raw profile path (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Create the profile directory if it does not exist yet */
+    // FIXME: Security!
+    if (!CreateDirectoryW(szProfilePath, NULL))
+    {
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Failed to create the profile directory (Error %lu)\n", GetLastError());
+            goto done;
+        }
+    }
+
+    /* Get the path of the default profile */
+    cchSize = ARRAYSIZE(szDefaultProfilePath);
+    if (!GetDefaultUserProfileDirectoryW(szDefaultProfilePath, &cchSize))
+    {
+        DPRINT1("Failed to create the default profile path (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    /* Copy the default profile into the new profile directory */
+    // FIXME: Security!
+    if (!CopyDirectory(szProfilePath, szDefaultProfilePath))
+    {
+        DPRINT1("Failed to copy the default profile directory (Error %lu)\n", GetLastError());
+        goto done;
+    }
+
+    bResult = TRUE;
+
+done:
+    if (hProfileKey != NULL)
+        RegCloseKey(hProfileKey);
+
+    RtlFreeUnicodeString(&SidString);
+
+    if (pUserSid != NULL)
+        LocalFree(pUserSid);
+
+    if (hToken != NULL)
+        CloseHandle(hToken);
+
+    return bResult;
+}
+
+
+BOOL
+WINAPI
 CreateUserProfileA(
     _In_ PSID pSid,
     _In_ LPCSTR lpUserName)
@@ -1030,7 +1173,7 @@ GetUserProfileDirectoryW(
                                    szImagePath,
                                    ARRAYSIZE(szImagePath)))
     {
-        DPRINT1 ("Error: %lu\n", GetLastError());
+        DPRINT1("Error: %lu\n", GetLastError());
         return FALSE;
     }
 
@@ -1207,16 +1350,13 @@ LoadUserProfileW(
     _Inout_ LPPROFILEINFOW lpProfileInfo)
 {
     WCHAR szUserHivePath[MAX_PATH];
-    LPWSTR UserName = NULL, Domain = NULL;
-    DWORD UserNameLength = 0, DomainLength = 0;
     PTOKEN_USER UserSid = NULL;
-    SID_NAME_USE AccountType;
     UNICODE_STRING SidString = { 0, 0, NULL };
     LONG Error;
     BOOL ret = FALSE;
     DWORD dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
 
-    DPRINT("LoadUserProfileW() called\n");
+    DPRINT("LoadUserProfileW(%p %p)\n", hToken, lpProfileInfo);
 
     /* Check profile info */
     if (!lpProfileInfo || (lpProfileInfo->dwSize != sizeof(PROFILEINFOW)) ||
@@ -1225,6 +1365,8 @@ LoadUserProfileW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    DPRINT("UserName: %S\n", lpProfileInfo->lpUserName);
 
     /* Don't load a profile twice */
     if (CheckForLoadedProfile(hToken))
@@ -1280,50 +1422,8 @@ LoadUserProfileW(
             goto cleanup;
         }
 
-        /* Get user name */
-        do
-        {
-            if (UserNameLength > 0)
-            {
-                HeapFree(GetProcessHeap(), 0, UserName);
-                UserName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, UserNameLength * sizeof(WCHAR));
-                if (!UserName)
-                {
-                    DPRINT1("HeapAlloc() failed\n");
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-            }
-            if (DomainLength > 0)
-            {
-                HeapFree(GetProcessHeap(), 0, Domain);
-                Domain = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, DomainLength * sizeof(WCHAR));
-                if (!Domain)
-                {
-                    DPRINT1("HeapAlloc() failed\n");
-                    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                    goto cleanup;
-                }
-            }
-            ret = LookupAccountSidW(NULL,
-                                    UserSid->User.Sid,
-                                    UserName,
-                                    &UserNameLength,
-                                    Domain,
-                                    &DomainLength,
-                                    &AccountType);
-        } while (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
-
-        if (!ret)
-        {
-            DPRINT1("LookupAccountSidW() failed\n");
-            goto cleanup;
-        }
-
         /* Create profile */
-        /* FIXME: ignore Domain? */
-        DPRINT("UserName %S, Domain %S\n", UserName, Domain);
-        ret = CreateUserProfileW(UserSid->User.Sid, UserName);
+        ret = CreateUserProfileW(UserSid->User.Sid, lpProfileInfo->lpUserName);
         if (!ret)
         {
             DPRINT1("CreateUserProfileW() failed\n");
@@ -1381,8 +1481,6 @@ LoadUserProfileW(
 
 cleanup:
     HeapFree(GetProcessHeap(), 0, UserSid);
-    HeapFree(GetProcessHeap(), 0, UserName);
-    HeapFree(GetProcessHeap(), 0, Domain);
     RtlFreeUnicodeString(&SidString);
 
     DPRINT("LoadUserProfileW() done\n");

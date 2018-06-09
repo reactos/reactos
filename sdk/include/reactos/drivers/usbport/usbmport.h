@@ -51,18 +51,18 @@ typedef struct _USBPORT_RESOURCES {
   BOOLEAN ShareVector;
   UCHAR Padded2[3];
   KINTERRUPT_MODE InterruptMode;
-  ULONG Reserved;
+  ULONG_PTR Reserved;
   PVOID ResourceBase;
-  SIZE_T IoSpaceLength;
-  PVOID StartVA;
-  PVOID StartPA;
+  ULONG IoSpaceLength;
+  ULONG_PTR StartVA;
+  ULONG StartPA;
   UCHAR LegacySupport;
   BOOLEAN IsChirpHandled;
   UCHAR Reserved2;
   UCHAR Reserved3;
 } USBPORT_RESOURCES, *PUSBPORT_RESOURCES;
 
-C_ASSERT(sizeof(USBPORT_RESOURCES) == 24 + 7 * sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_RESOURCES) == 32 + 5 * sizeof(PVOID));
 
 typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   USHORT DeviceAddress;
@@ -76,7 +76,7 @@ typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   ULONG TransferType;
   ULONG Direction;
   ULONG_PTR BufferVA;
-  ULONG_PTR BufferPA;
+  ULONG BufferPA;
   ULONG BufferLength;
   ULONG Reserved3;
   ULONG MaxTransferSize;
@@ -90,7 +90,7 @@ typedef struct _USBPORT_ENDPOINT_PROPERTIES {
   ULONG Reserved6;
 } USBPORT_ENDPOINT_PROPERTIES, *PUSBPORT_ENDPOINT_PROPERTIES;
 
-C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 48 + 4 * sizeof(PVOID));
+C_ASSERT(sizeof(USBPORT_ENDPOINT_PROPERTIES) == 56 + 2 * sizeof(PVOID));
 
 typedef struct _USBPORT_TRANSFER_PARAMETERS {
   ULONG TransferFlags;
@@ -454,7 +454,7 @@ typedef ULONG
 
 typedef PVOID
 (NTAPI *PUSBPORT_GET_MAPPED_VIRTUAL_ADDRESS)(
-  PVOID,
+  ULONG,
   PVOID,
   PVOID);
 

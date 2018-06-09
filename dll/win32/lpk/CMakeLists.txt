@@ -1,10 +1,11 @@
 
 add_definitions(-DLANGPACK)
 include_directories(include)
-spec2def(lpk.dll lpk.spec)
+spec2def(lpk.dll lpk.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
-    dllmain.c
+    bidi.c
+    lpk.c
     stub.c
     ros_lpk.h)
 
@@ -14,6 +15,9 @@ add_library(lpk SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 set_module_type(lpk win32dll UNICODE)
-add_importlibs(lpk user32 usp10 msvcrt kernel32 ntdll)
+
+target_link_libraries(lpk wine)
+
+add_importlibs(lpk usp10 user32 gdi32 msvcrt kernel32 ntdll)
 add_pch(lpk ros_lpk.h SOURCE)
 add_cd_file(TARGET lpk DESTINATION reactos/system32 FOR all)

@@ -21,6 +21,7 @@
 #include <shellapi.h>
 #include <htmlhelp.h>
 
+#include "common.h"
 #include "definitions.h"
 #include "drawing.h"
 #include "dib.h"

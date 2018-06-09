@@ -1,0 +1,56 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Polecenia i programy usługi planowania poleceń AT do uruchomienia na\n\
+komputerze o określonej godzinie i dacie. Usługa Harmonogram musi być\n\
+uruchomiona, aby używać poleceń AT.\n\n\
+AT [\\\\nazwa_komputera] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\nazwa_komputera] godzina [/INTERACTIVE]\n\
+    [ /EVERY:data[,...] | /NEXT:data[,...]] ""polecenie""\n\n\
+\\\\nazwa_komputera   Określa komputer zdalny. Polecenia są zaplanowane w \n\
+                   komputerze lokalnym, jeśli ten parametr jest pominięty.\n\
+id                 Jest numerem identyfikacyjnym przyporządkowanym do\n\
+                   zaplanowanego polecenia.\n\
+/DELETE            Anuluje zaplanowane polecenie. Jeśli jest pominięte,\n\
+                   wszystkie zaplanowane polecenia w komputerze są anulowane.\n\
+/YES               Używa się przy anulowaniu wszystkich zadań, gdy nie jest\n\
+                   wymagane potwierdzenie.\n\
+time               Określa godzinę wykonania polecenia.\n\
+/INTERACTIVE       Zezwala, aby zadanie współdziałało z zadaniami użytkownika,\n\
+                   który jest zalogowany wówczas, gdy jest ono uruchomione.\n\
+/EVERY:date[,...]  Uruchamia polecenie w każdym określonym dniu tygodnia lub\n\
+                   miesiąca. Jeśli data jest pominięta, przyjmowany jest\n\
+                   bieżący dzień miesiąca.\n\
+/NEXT:date[,...]   Uruchamia określone polecenie przy następnym wystąpieniu\n\
+                   dnia (np. w następny czwartek). Jeśli data jest pominięta, \n\
+                   przyjmowany jest bieżący dzień miesiąca.\n\
+""command""          Polecenie lub program wsadowy do uruchomienia.\n"
+
+    IDS_DELETE_ALL "Ta operacja usunie wszystkie zaplanowane zadania.\n"
+    IDS_NEW_JOB "Dodano nowe zadanie o identyfikatorze = %lu\n"
+    IDS_JOBS_LIST "ID stanu    Dzień                   Godzina      Wiersz polecenia\n"
+    IDS_NO_ENTRIES "Na liście nie ma żadnych wpisów.\n"
+
+    IDS_CONFIRM_QUESTION "Czy chcesz kontynuować wykonwyanie tej operacji? (T/N) [N]: "
+    IDS_CONFIRM_INVALID  "\nNieprawidłowe polecenie.\n"
+    IDS_CONFIRM_YES "T"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "Dzisiaj"
+    IDS_TOMORROW "Jutro"
+    IDS_EVERY "Każdy"
+    IDS_NEXT "Nast."
+
+    IDS_YES "Tak"
+    IDS_NO "Nie"
+    IDS_ERROR "BŁĄD"
+    IDS_OK "OK"
+
+    IDS_TASKID      "Identyfikator zadania:        %lu\n"
+    IDS_STATUS      "Stan:                         %s\n"
+    IDS_SCHEDULE    "Harmonogram:                  %s\n"
+    IDS_TIME        "Pora dnia:                    %s\n"
+    IDS_INTERACTIVE "Interaktywne:                 %s\n"
+    IDS_COMMAND     "Polecenie:                    %s\n"
+END

@@ -28,34 +28,6 @@ WlxIsLockOk(
 /*
  * @unimplemented
  */
-VOID WINAPI
-WlxLogoff(
-    PVOID pWlxContext)
-{
-    UNREFERENCED_PARAMETER(pWlxContext);
-
-    UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-VOID WINAPI
-WlxShutdown(
-    PVOID pWlxContext,
-    DWORD ShutdownType)
-{
-    UNREFERENCED_PARAMETER(pWlxContext);
-    UNREFERENCED_PARAMETER(ShutdownType);
-
-    UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL WINAPI
 WlxGetStatusMessage(
     PVOID pWlxContext,

@@ -34,7 +34,6 @@
 #pragma alloc_text(INIT, DriverEntry)
 #endif
 
-
 /* GLOBALS *****************************************************************/
 
 PVFAT_GLOBAL_DATA VfatGlobalData;
@@ -137,6 +136,16 @@ DriverEntry(
     ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);
     InitializeListHead(&VfatGlobalData->VolumeListHead);
     IoRegisterFileSystem(DeviceObject);
+
+#ifdef KDBG
+    {
+        BOOLEAN Registered;
+
+        Registered = KdRosRegisterCliCallback(vfatKdbgHandler);
+        DPRINT1("FastFAT KDBG extension registered: %s\n", (Registered ? "yes" : "no"));
+    }
+#endif
+
     return STATUS_SUCCESS;
 }
 

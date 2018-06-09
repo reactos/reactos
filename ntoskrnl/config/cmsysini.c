@@ -1369,15 +1369,19 @@ CmpLoadHiveThread(IN PVOID StartContext)
             Length = CmHive->Hive.Storage[Stable].Length + HBLOCK_SIZE;
 
             /* Check if the cluster size doesn't match */
-            if (CmHive->Hive.Cluster != ClusterSize) ASSERT(FALSE);
+            if (CmHive->Hive.Cluster != ClusterSize)
+            {
+                DPRINT1("FIXME: Support for CmHive->Hive.Cluster (%lu) != ClusterSize (%lu) is unimplemented!\n",
+                        CmHive->Hive.Cluster, ClusterSize);
+            }
 
             /* Set the file size */
-            DPRINT("FIXME: Should set file size: %lx\n", Length);
+            DPRINT("FIXME: Should set file size: %lu\n", Length);
             //if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
-            {
+            //{
                 /* This shouldn't fail */
                 //ASSERT(FALSE);
-            }
+            //}
 
             /* Another thing we don't support is NTLDR-recovery */
             if (CmHive->Hive.BaseBlock->BootRecover) ASSERT(FALSE);

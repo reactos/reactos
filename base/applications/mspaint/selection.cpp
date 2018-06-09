@@ -148,6 +148,8 @@ LRESULT CSelectionWindow::OnLButtonDown(UINT nMsg, WPARAM wParam, LPARAM lParam,
         SetCursor(LoadCursor(NULL, m_lpszCursorLUT[m_iAction]));
     m_bMoving = TRUE;
     scrlClientWindow.InvalidateRect(NULL, TRUE);
+    scrlClientWindow.SendMessage(WM_PAINT, 0, 0);
+    imageArea.InvalidateRect(NULL, FALSE);
     imageArea.SendMessage(WM_PAINT, 0, 0);
     return 0;
 }

@@ -353,6 +353,9 @@ NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_CREATE:
         Globals.hMenu = GetMenu(hWnd);
+
+        // For now, the "Help" dialog is disabled due to the lack of HTML Help support
+        EnableMenuItem(Globals.hMenu, CMD_HELP_CONTENTS, MF_BYCOMMAND | MF_GRAYED);
         break;
 
     case WM_COMMAND:

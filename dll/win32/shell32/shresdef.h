@@ -147,9 +147,14 @@
 #define IDS_COM_FILE              203
 #define IDS_CPL_FILE              204
 #define IDS_CUR_FILE              205
+#define IDS_DB__FILE              220
 #define IDS_DLL_FILE              206
 #define IDS_DRV_FILE              207
+#define IDS_EFI_FILE              221
 #define IDS_EXE_FILE              208
+#define IDS_NLS_FILE              222
+#define IDS_OCX_FILE              223
+#define IDS_TLB_FILE              224
 #define IDS_FON_FILE              209
 #define IDS_TTF_FILE              210
 #define IDS_OTF_FILE              211
@@ -157,11 +162,12 @@
 #define IDS_ICO_FILE              213
 #define IDS_INI_FILE              214
 #define IDS_LNK_FILE              215
+#define IDS_NT__FILE              225
 #define IDS_PIF_FILE              216
 #define IDS_SCR_FILE              217
 #define IDS_SYS_FILE              218
 #define IDS_VXD_FILE              219
-#define IDS_ANY_FILE              220
+#define IDS_ANY_FILE              299
 
 #define IDS_EMPTY_BITBUCKET       172
 #define IDS_SHLEXEC_NOASSOC       173
@@ -253,6 +259,25 @@
 #define IDS_ADVANCED_SHOW_COMP_COLOR                30512
 #define IDS_ADVANCED_SHOW_INFO_TIP                  30502
 
+#define IDS_NEWEXT_ADVANCED_LEFT                    30515
+#define IDS_NEWEXT_ADVANCED_RIGHT                   30516
+#define IDS_NEWEXT_NEW                              30518
+#define IDS_NEWEXT_SPECIFY_EXT                      30519
+#define IDS_NEWEXT_ALREADY_ASSOC                    30520
+#define IDS_NEWEXT_EXT_IN_USE                       30521
+
+#define IDS_SPECIFY_ACTION                          30523
+#define IDS_INVALID_PROGRAM                         30524
+#define IDS_REMOVE_ACTION                           30525
+#define IDS_ACTION_EXISTS                           30526
+#define IDS_EXE_FILTER                              30527
+#define IDS_EDITING_ACTION                          30528
+
+#define IDS_REMOVE_EXT                              30522
+
+#define IDS_NO_ICONS                                30529
+#define IDS_FILE_NOT_FOUND                          30530
+
 /* Dialogs */
 
 /* Run dialog */
@@ -332,12 +357,82 @@
 #define IDC_BROWSE_FOR_FOLDER_TITLE       0x3742
 #define IDC_BROWSE_FOR_FOLDER_TREEVIEW    0x3741
 
+/* Control IDs for IDD_FOLDER_OPTIONS_FILETYPES dialog */
+#define IDC_FILETYPES_LISTVIEW              14000
+#define IDC_FILETYPES_NEW                   14001
+#define IDC_FILETYPES_DELETE                14002
+#define IDC_FILETYPES_DETAILS_GROUPBOX      14003
+#define IDC_FILETYPES_APPNAME               14005
+#define IDC_FILETYPES_CHANGE                14006
+#define IDC_FILETYPES_DESCRIPTION           14007
+#define IDC_FILETYPES_ADVANCED              14008
+#define IDC_FILETYPES_ICON                  14009
+
+/* Control IDs for IDD_NEWEXTENSION dialog */
+#define IDC_NEWEXT_EDIT                     14001
+#define IDC_NEWEXT_ADVANCED                 14002
+#define IDC_NEWEXT_COMBOBOX                 14003
+#define IDC_NEWEXT_ASSOC                    14004
+
+/* Control IDs for IDD_SHORTCUT_PROPERTIES dialog */
+#define IDC_SHORTCUT_ICON                   14000
+#define IDC_SHORTCUT_TEXT                   14001
+#define IDC_SHORTCUT_TYPE                   14004
+#define IDC_SHORTCUT_TYPE_EDIT              14005
+#define IDC_SHORTCUT_LOCATION               14006
+#define IDC_SHORTCUT_LOCATION_EDIT          14007
+#define IDC_SHORTCUT_TARGET                 14008
+#define IDC_SHORTCUT_TARGET_TEXT            14009
+#define IDC_SHORTCUT_START_IN               14010
+#define IDC_SHORTCUT_START_IN_EDIT          14011
+#define IDC_SHORTCUT_KEY                    14014
+#define IDC_SHORTCUT_KEY_HOTKEY             14015
+#define IDC_SHORTCUT_RUN                    14016
+#define IDC_SHORTCUT_RUN_COMBO              14017
+#define IDC_SHORTCUT_COMMENT                14018
+#define IDC_SHORTCUT_COMMENT_EDIT           14019
+#define IDC_SHORTCUT_FIND                   14020
+#define IDC_SHORTCUT_CHANGE_ICON            14021
+#define IDC_SHORTCUT_ADVANCED               14022
+
+/* Control IDs for IDD_SHORTCUT_EXTENDED_PROPERTIES dialog */
+#define IDC_SHORTEX_RUN_DIFFERENT           14000
+#define IDC_SHORTEX_RUN_SEPARATE            14001
+
+/* Control IDs for IDD_EDITTYPE dialog */
+#define IDC_EDITTYPE_ICON                   14001
+#define IDC_EDITTYPE_TEXT                   14002
+#define IDC_EDITTYPE_CHANGE_ICON            14003
+#define IDC_EDITTYPE_LISTBOX                14004
+#define IDC_EDITTYPE_NEW                    14005
+#define IDC_EDITTYPE_EDIT_BUTTON            14006
+#define IDC_EDITTYPE_REMOVE                 14007
+#define IDC_EDITTYPE_SET_DEFAULT            14008
+#define IDC_EDITTYPE_CONFIRM_OPEN           14009
+#define IDC_EDITTYPE_SHOW_EXT               14010
+#define IDC_EDITTYPE_SAME_WINDOW            14011
+
+/* Control IDs for IDD_ACTION dialog */
+#define IDC_ACTION_ACTION                   14001
+#define IDC_ACTION_APP                      14002
+#define IDC_ACTION_BROWSE                   14003
+#define IDC_ACTION_USE_DDE                  14004
+
+/* Control IDs for IDD_FOLDER_OPTIONS_VIEW dialog */
+#define IDC_VIEW_APPLY_TO_ALL               14001
+#define IDC_VIEW_RESET_ALL                  14002
+#define IDC_VIEW_TREEVIEW                   14003
+#define IDC_VIEW_RESTORE_DEFAULTS           14004
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
 #define IDD_FORMAT_DRIVE 25
 #define IDD_CHECK_DISK   26
 #define IDD_NOOPEN       27
+#define IDD_NEWEXTENSION 28
+#define IDD_EDITTYPE     36
+#define IDD_ACTION       37
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

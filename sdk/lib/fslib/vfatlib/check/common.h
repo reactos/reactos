@@ -1,7 +1,3 @@
-/****
- ** Platform-dependent file
- ****/
-
 /* common.h - Common functions
 
    Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
@@ -27,29 +23,42 @@
 #ifndef _COMMON_H
 #define _COMMON_H
 
+#ifndef __REACTOS__
+void die(const char *msg, ...)
+    __attribute((noreturn, format(printf, 1, 2)));
+#else
 DECLSPEC_NORETURN // __attribute((noreturn))
-// void die(const char *msg, ...);
 void die_func(const char *msg, ...);
 #define die(msg, ...)   \
 do {                    \
     die_func("DIE! (%s:%d) " msg "\n", __RELFILE__, __LINE__, ##__VA_ARGS__);  \
 } while (0)
+#endif
 
 /* Displays a prinf-style message and terminates the program. */
 
+#ifndef __REACTOS__
+void pdie(const char *msg, ...)
+    __attribute((noreturn, format(printf, 1, 2)));
+#else
 DECLSPEC_NORETURN // __attribute((noreturn))
-// void pdie(const char *msg, ...);
 void pdie_func(const char *msg, ...);
 #define pdie(msg, ...)   \
 do {                    \
     pdie_func("P-DIE! (%s:%d) " msg "\n", __RELFILE__, __LINE__, ##__VA_ARGS__);  \
 } while (0)
+#endif
 
 /* Like die, but appends an error message according to the state of errno. */
 
-void *vfalloc(size_t size);
-void *vfcalloc(size_t size, size_t count);
+#ifndef __REACTOS__
+void *alloc(int size);
+#else
+void *vfalloc(int size);
+void *vfcalloc(int size, int count);
 void vffree(void *ptr);
+#endif
+
 /* mallocs SIZE bytes and returns a pointer to the data. Terminates the program
    if malloc fails. */
 
@@ -61,7 +70,9 @@ void qfree(void **root);
 
 /* Deallocates all qalloc'ed data areas described by ROOT. */
 
-//int min(int a,int b);
+#ifndef __REACTOS__
+int min(int a, int b);
+#endif
 
 /* Returns the smaller integer value of a and b. */
 

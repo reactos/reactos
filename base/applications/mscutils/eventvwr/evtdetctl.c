@@ -11,6 +11,8 @@
 #include "eventvwr.h"
 #include "evtdetctl.h"
 
+#include <shellapi.h>
+
 // FIXME:
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER  1024*10
 extern HWND hwndListView;
@@ -343,7 +345,46 @@ Quit:
     CloseClipboard();
 }
 
-static VOID
+static
+VOID
+OnLink(HWND hDlg, ENLINK* penLink)
+{
+    LPWSTR pLink;
+    TEXTRANGE txtRange;
+
+    ASSERT(penLink->nmhdr.idFrom == IDC_EVENTTEXTEDIT);
+
+    /* Only act on left button up events */
+    if (penLink->msg != WM_LBUTTONUP)
+        return;
+
+    /* If the range is empty, do nothing */
+    if (penLink->chrg.cpMin == penLink->chrg.cpMax)
+        return;
+
+    /* Allocate memory for the text link */
+    pLink = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                      (max(penLink->chrg.cpMin, penLink->chrg.cpMax) -
+                       min(penLink->chrg.cpMin, penLink->chrg.cpMax) + 1) * sizeof(WCHAR));
+    if (!pLink)
+    {
+        /* Not enough memory, bail out */
+        return;
+    }
+
+    txtRange.chrg = penLink->chrg;
+    txtRange.lpstrText = pLink;
+    SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_GETTEXTRANGE, 0, (LPARAM)&txtRange);
+
+    /* Open the link */
+    ShellExecuteW(hDlg, L"open", pLink, NULL, NULL, SW_SHOWNOACTIVATE);
+
+    /* Free the buffer */
+    HeapFree(GetProcessHeap(), 0, pLink);
+}
+
+static
+VOID
 OnScroll(HWND hDlg, PDETAILDATA pData, INT nBar, WORD sbCode)
 {
     RECT rect;
@@ -730,7 +771,7 @@ InitDetailsDlgCtrl(HWND hDlg, PDETAILDATA pData)
      */
     SendDlgItemMessageW(hDlg, IDC_EVENTTEXTEDIT, EM_AUTOURLDETECT, AURL_ENABLEURL /* | AURL_ENABLEEAURLS */, 0);
 
-    /* Note that the RichEdit control never gets themed under WinXP+. One would have to write code to simulate Edit-control theming */
+    /* Note that the RichEdit control never gets themed under WinXP+; one would have to write code to simulate Edit-control theming */
 
     SendDlgItemMessageW(hDlg, pData->bDisplayWords ? IDC_WORDRADIO : IDC_BYTESRADIO, BM_SETCHECK, BST_CHECKED, 0);
     SendDlgItemMessageW(hDlg, IDC_EVENTDATAEDIT, WM_SETFONT, (WPARAM)pData->hMonospaceFont, (LPARAM)TRUE);
@@ -858,13 +899,20 @@ EventDetailsCtrl(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_NOTIFY:
-            switch (((LPNMHDR)lParam)->code)
+        {
+            LPNMHDR hdr = (LPNMHDR)lParam;
+
+            if (hdr->idFrom == IDC_EVENTTEXTEDIT)
             {
-                case EN_LINK:
-                    // TODO: Act on the activated RichEdit link!
-                    break;
+                switch (hdr->code)
+                {
+                    case EN_LINK:
+                        OnLink(hDlg, (ENLINK*)lParam);
+                        break;
+                }
             }
             break;
+        }
 
         case WM_HSCROLL:
             OnScroll(hDlg, pData, SB_HORZ, LOWORD(wParam));

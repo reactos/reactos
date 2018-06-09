@@ -21,14 +21,80 @@
 #pragma makedep proxy
 #pragma makedep register
 
-#include "avifile_ifaces.idl"
+import "wtypes.idl";
+import "unknwn.idl";
+
+typedef struct _AVISTREAMINFOW
+{
+    DWORD fccType;
+    DWORD fccHandler;
+    DWORD dwFlags;
+    DWORD dwCaps;
+    WORD  wPriority;
+    WORD  wLanguage;
+    DWORD dwScale;
+    DWORD dwRate;
+    DWORD dwStart;
+    DWORD dwLength;
+    DWORD dwInitialFrames;
+    DWORD dwSuggestedBufferSize;
+    DWORD dwQuality;
+    DWORD dwSampleSize;
+    RECT  rcFrame;
+    DWORD dwEditCount;
+    DWORD dwFormatChangeCount;
+    WCHAR szName[64];
+} AVISTREAMINFOW;
 
 [
-    helpstring("IAVIStream & IAVIFile Proxy"),
-    threading(both),
-    uuid(0002000d-0000-0000-c000-000000000046)
+    object,
+    uuid(00020021-0000-0000-c000-000000000046)
 ]
-coclass PSFactoryBuffer { interface IFactoryBuffer; }
+interface IAVIStream : IUnknown
+{
+    HRESULT Create(LPARAM lParam1, LPARAM lParam2);
+    HRESULT Info(AVISTREAMINFOW *psi, LONG lSize);
+    LONG FindSample(LONG lPos, LONG lFlags);
+    HRESULT ReadFormat(LONG lPos, [out,size_is(*lpcbFormat)] char *lpFormat, [in,out] LONG *lpcbFormat);
+    HRESULT SetFormat(LONG lPos, [in,size_is(cbFormat)] char *lpFormat, LONG cbFormat);
+    HRESULT Read(LONG lStart, LONG lSamples, [out,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer, LONG *plBytes, LONG *plSamples);
+    HRESULT Write(LONG lStart, LONG lSamples, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer, DWORD dwFlags, LONG *plSampWritten, LONG *plBytesWritten);
+    HRESULT Delete(LONG lStart, LONG lSamples);
+    HRESULT ReadData(DWORD fcc, [out,size_is(*lpcbBuffer)] char *lpBuffer, [in,out] LONG *lpcbBuffer);
+    HRESULT WriteData(DWORD fcc, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer);
+    HRESULT SetInfo(AVISTREAMINFOW *plInfo, LONG cbInfo);
+};
+
+typedef struct _AVIFILEINFOW
+{
+    DWORD dwMaxBytesPerSec;
+    DWORD dwFlags;
+    DWORD dwCaps;
+    DWORD dwStreams;
+    DWORD dwSuggestedBufferSize;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    DWORD dwScale;
+    DWORD dwRate;
+    DWORD dwLength;
+    DWORD dwEditCount;
+    WCHAR szFileType[64];
+} AVIFILEINFOW;
+
+[
+    object,
+    uuid(00020020-0000-0000-c000-000000000046)
+]
+interface IAVIFile : IUnknown
+{
+    HRESULT Info(AVIFILEINFOW *pfi, LONG lSize);
+    HRESULT GetStream(IAVIStream **ppStream, DWORD fccType, LONG lParam);
+    HRESULT CreateStream(IAVIStream **ppStream, AVISTREAMINFOW *psi);
+    HRESULT WriteData(DWORD fcc, [in,size_is(cbBuffer)] char *lpBuffer, LONG cbBuffer);
+    HRESULT ReadData(DWORD fcc, [out,size_is(*lpcbBuffer)] char *lpBuffer, [in,out] LONG *lpcbBuffer);
+    HRESULT EndRecord(void);
+    HRESULT DeleteStream(DWORD fccType, LONG lParam);
+};
 
 [
     helpstring("Microsoft AVI Files"),
@@ -50,6 +116,13 @@ coclass ICMStream { interface IAVIStream; }
     uuid(00020003-0000-0000-c000-000000000046)
 ]
 coclass WAVFile { interface IAVIFile; }
+
+[
+    helpstring("IAVIStream & IAVIFile Proxy"),
+    threading(both),
+    uuid(0002000d-0000-0000-c000-000000000046)
+]
+coclass PSFactoryBuffer { interface IFactoryBuffer; }
 
 [
     helpstring("ACM Compressed Audio Stream"),

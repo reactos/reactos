@@ -28,11 +28,11 @@ CAPTION "System Shutdown"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "Das System wird heruntergefahren. Speichern Sie alle Daten und melden Sie sich ab. Alle nicht gespeicherten Änderungen gehen verloren.", -1, 38, 7, 135, 40
+    LTEXT "Zeit bis zum Herunterfahren:", -1, 38, 50, 93, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
-    LTEXT "", IDC_SYSSHUTDOWNMESSAGE, 38, 75, 135, 58
+    LTEXT "Meldung:", -1, 38, 65, 135, 8
+    EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
 STRINGTABLE
@@ -51,6 +51,8 @@ BEGIN
     IDS_PREPARETOHIBERNATE "Vorbereiten für den Ruhezustand..."
     IDS_SAVEYOURSETTINGS "Speichern Ihrer persönlichen Einstellungen..."
     IDS_REACTOSISSTARTINGUP "ReactOS startet..."
+    IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
+    IDS_TIMEOUTLONGFORMAT "%d Tage"
 END
 
 STRINGTABLE

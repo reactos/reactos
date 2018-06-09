@@ -342,8 +342,8 @@ RemoveStatusMessage(IN PWLSESSION Session);
 VOID
 InitDialogListHead(VOID);
 
-HWND
-GetTopDialogWindow(VOID);
+VOID
+CloseAllDialogWindows(VOID);
 
 BOOL
 GinaInit(IN OUT PWLSESSION Session);

@@ -61,7 +61,7 @@ static ULONG WINAPI fw_app_Release(
     if (!refs)
     {
         TRACE("destroying %p\n", fw_app);
-        if (fw_app->filename) SysFreeString( fw_app->filename );
+        SysFreeString( fw_app->filename );
         HeapFree( GetProcessHeap(), 0, fw_app );
     }
     return refs;
@@ -256,16 +256,10 @@ static HRESULT WINAPI fw_app_get_ProcessImageFileName(
     FIXME("%p, %p\n", This, imageFileName);
 
     if (!imageFileName)
-        return E_INVALIDARG;
-
-    if (!This->filename)
-    {
-        *imageFileName = NULL;
-        return S_OK;
-    }
+        return E_POINTER;
 
     *imageFileName = SysAllocString( This->filename );
-    return *imageFileName ? S_OK : E_OUTOFMEMORY;
+    return *imageFileName || !This->filename ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI fw_app_put_ProcessImageFileName(
@@ -276,12 +270,10 @@ static HRESULT WINAPI fw_app_put_ProcessImageFileName(
 
     FIXME("%p, %s\n", This, debugstr_w(imageFileName));
 
-    if (!imageFileName)
-    {
-        This->filename = NULL;
-        return S_OK;
-    }
+    if (!imageFileName || !imageFileName[0])
+        return E_INVALIDARG;
 
+    SysFreeString( This->filename );
     This->filename = SysAllocString( imageFileName );
     return This->filename ? S_OK : E_OUTOFMEMORY;
 }

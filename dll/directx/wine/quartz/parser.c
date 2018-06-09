@@ -44,6 +44,7 @@ static HRESULT WINAPI Parser_ChangeStart(IMediaSeeking *iface);
 static HRESULT WINAPI Parser_ChangeStop(IMediaSeeking *iface);
 static HRESULT WINAPI Parser_ChangeRate(IMediaSeeking *iface);
 static HRESULT WINAPI Parser_OutputPin_DecideBufferSize(BaseOutputPin *iface, IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *ppropInputRequest);
+static HRESULT WINAPI Parser_OutputPin_CheckMediaType(BasePin *pin, const AM_MEDIA_TYPE *pmt);
 static HRESULT WINAPI Parser_OutputPin_GetMediaType(BasePin *iface, int iPosition, AM_MEDIA_TYPE *pmt);
 static HRESULT WINAPI Parser_OutputPin_DecideAllocator(BaseOutputPin *This, IMemInputPin *pPin, IMemAllocator **pAlloc);
 static HRESULT WINAPI Parser_OutputPin_BreakConnect(BaseOutputPin *This);
@@ -432,7 +433,7 @@ HRESULT WINAPI Parser_QueryVendorInfo(IBaseFilter * iface, LPWSTR *pVendorInfo)
 
 static const BaseOutputPinFuncTable output_BaseOutputFuncTable = {
     {
-        NULL,
+        Parser_OutputPin_CheckMediaType,
         BaseOutputPinImpl_AttemptConnection,
         BasePinImpl_GetMediaTypeVersion,
         Parser_OutputPin_GetMediaType
@@ -699,11 +700,10 @@ static HRESULT WINAPI Parser_OutputPin_Connect(IPin * iface, IPin * pReceivePin,
     return BaseOutputPinImpl_Connect(iface, pReceivePin, pmt);
 }
 
-static HRESULT WINAPI Parser_OutputPin_QueryAccept(IPin *iface, const AM_MEDIA_TYPE * pmt)
+static HRESULT WINAPI Parser_OutputPin_CheckMediaType(BasePin *pin, const AM_MEDIA_TYPE *pmt)
 {
-    Parser_OutputPin *This = unsafe_impl_Parser_OutputPin_from_IPin(iface);
+    Parser_OutputPin *This = (Parser_OutputPin *)pin;
 
-    TRACE("()\n");
     dump_AM_MEDIA_TYPE(pmt);
 
     return (memcmp(This->pmt, pmt, sizeof(AM_MEDIA_TYPE)) == 0);
@@ -722,7 +722,7 @@ static const IPinVtbl Parser_OutputPin_Vtbl =
     BasePinImpl_QueryPinInfo,
     BasePinImpl_QueryDirection,
     BasePinImpl_QueryId,
-    Parser_OutputPin_QueryAccept,
+    BasePinImpl_QueryAccept,
     BasePinImpl_EnumMediaTypes,
     BasePinImpl_QueryInternalConnections,
     BaseOutputPinImpl_EndOfStream,

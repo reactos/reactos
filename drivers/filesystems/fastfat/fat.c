@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/fat.c
- * PURPOSE:          VFAT Filesystem
+ * FILE:             drivers/filesystems/fastfat/fat.c
+ * PURPOSE:          FastFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  *
  */
 
@@ -18,6 +19,12 @@
 
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
 		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
+
+/* FIXME: because volume is not cached, we have to perform direct IOs
+ * The day this is fixed, just comment out that line, and check
+ * it still works (and delete old code ;-))
+ */
+#define VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
 
 /* FUNCTIONS ****************************************************************/
 
@@ -550,7 +557,10 @@ CountAvailableClusters(
         else
             Status = FAT32CountAvailableClusters(DeviceExt);
     }
-    Clusters->QuadPart = DeviceExt->AvailableClusters;
+    if (Clusters != NULL)
+    {
+        Clusters->QuadPart = DeviceExt->AvailableClusters;
+    }
     ExReleaseResourceLite (&DeviceExt->FatResource);
 
     return Status;
@@ -816,6 +826,474 @@ GetNextClusterExtend(
 
     ExReleaseResourceLite(&DeviceExt->FatResource);
     return Status;
+}
+
+/*
+ * FUNCTION: Retrieve the dirty status
+ */
+NTSTATUS
+GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus)
+{
+    NTSTATUS Status;
+
+    DPRINT("GetDirtyStatus(DeviceExt %p)\n", DeviceExt);
+
+    /* FAT12 has no dirty bit */
+    if (DeviceExt->FatInfo.FatType == FAT12)
+    {
+        *DirtyStatus = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    /* Not really in the FAT, but share the lock because
+     * we're really low-level and shouldn't happent that often
+     * And call the appropriate function
+     */
+    ExAcquireResourceSharedLite(&DeviceExt->FatResource, TRUE);
+    Status = DeviceExt->GetDirtyStatus(DeviceExt, DirtyStatus);
+    ExReleaseResourceLite(&DeviceExt->FatResource);
+
+    return Status;
+}
+
+NTSTATUS
+FAT16GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _BootSector * Sector;
+
+    /* We'll read the bootsector at 0 */
+    Offset.QuadPart = 0;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        *DirtyStatus = TRUE;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        *DirtyStatus = TRUE;
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a boot sector...
+     * FIXME: This check is a bit lame and should be improved
+     */
+    if (Sector->Signatur1 != 0xaa55)
+    {
+        /* Set we are dirty so that we don't attempt anything */
+        *DirtyStatus = TRUE;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Return the status of the dirty bit */
+    if (Sector->Res1 & FAT_DIRTY_BIT)
+        *DirtyStatus = TRUE;
+    else
+        *DirtyStatus = FALSE;
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    CcUnpinData(Context);
+#else
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FAT32GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _BootSector32 * Sector;
+
+    /* We'll read the bootsector at 0 */
+    Offset.QuadPart = 0;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        *DirtyStatus = TRUE;
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        *DirtyStatus = TRUE;
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a boot sector...
+     * FIXME: This check is a bit lame and should be improved
+     */
+    if (Sector->Signature1 != 0xaa55)
+    {
+        /* Set we are dirty so that we don't attempt anything */
+        *DirtyStatus = TRUE;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Return the status of the dirty bit */
+    if (Sector->Res4 & FAT_DIRTY_BIT)
+        *DirtyStatus = TRUE;
+    else
+        *DirtyStatus = FALSE;
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    CcUnpinData(Context);
+#else
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+    return STATUS_SUCCESS;
+}
+
+/*
+ * FUNCTION: Set the dirty status
+ */
+NTSTATUS
+SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus)
+{
+    NTSTATUS Status;
+
+    DPRINT("SetDirtyStatus(DeviceExt %p, DirtyStatus %d)\n", DeviceExt, DirtyStatus);
+
+    /* FAT12 has no dirty bit */
+    if (DeviceExt->FatInfo.FatType == FAT12)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    /* Not really in the FAT, but share the lock because
+     * we're really low-level and shouldn't happent that often
+     * And call the appropriate function
+     * Acquire exclusive because we will modify ondisk value
+     */
+    ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);
+    Status = DeviceExt->SetDirtyStatus(DeviceExt, DirtyStatus);
+    ExReleaseResourceLite(&DeviceExt->FatResource);
+
+    return Status;
+}
+
+NTSTATUS
+FAT16SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _BootSector * Sector;
+
+    /* We'll read (and then write) the bootsector at 0 */
+    Offset.QuadPart = 0;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a boot sector...
+     * FIXME: This check is a bit lame and should be improved
+     */
+    if (Sector->Signatur1 != 0xaa55)
+    {
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Modify the dirty bit status according
+     * to caller needs
+     */
+    if (!DirtyStatus)
+    {
+        Sector->Res1 &= ~FAT_DIRTY_BIT;
+    }
+    else
+    {
+        Sector->Res1 |= FAT_DIRTY_BIT;
+    }
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Mark boot sector dirty so that it gets written to the disk */
+    CcSetDirtyPinnedData(Context, NULL);
+    CcUnpinData(Context);
+    return STATUS_SUCCESS;
+#else
+    /* Write back the boot sector to the disk */
+    Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+    return Status;
+#endif
+}
+
+NTSTATUS
+FAT32SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _BootSector32 * Sector;
+
+    /* We'll read (and then write) the bootsector at 0 */
+    Offset.QuadPart = 0;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a boot sector...
+     * FIXME: This check is a bit lame and should be improved
+     */
+    if (Sector->Signature1 != 0xaa55)
+    {
+        ASSERT(FALSE);
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Modify the dirty bit status according
+     * to caller needs
+     */
+    if (!DirtyStatus)
+    {
+        Sector->Res4 &= ~FAT_DIRTY_BIT;
+    }
+    else
+    {
+        Sector->Res4 |= FAT_DIRTY_BIT;
+    }
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Mark boot sector dirty so that it gets written to the disk */
+    CcSetDirtyPinnedData(Context, NULL);
+    CcUnpinData(Context);
+    return STATUS_SUCCESS;
+#else
+    /* Write back the boot sector to the disk */
+    Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+    return Status;
+#endif
+}
+
+NTSTATUS
+FAT32UpdateFreeClustersCount(
+    PDEVICE_EXTENSION DeviceExt)
+{
+    LARGE_INTEGER Offset;
+    ULONG Length;
+#ifdef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    NTSTATUS Status;
+#else
+    PVOID Context;
+#endif
+    struct _FsInfoSector * Sector;
+
+    if (!DeviceExt->AvailableClustersValid)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* We'll read (and then write) the fsinfo sector */
+    Offset.QuadPart = DeviceExt->FatInfo.FSInfoSector * DeviceExt->FatInfo.BytesPerSector;
+    Length = DeviceExt->FatInfo.BytesPerSector;
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Go through Cc for this */
+    _SEH2_TRY
+    {
+        CcPinRead(DeviceExt->VolumeFcb->FileObject, &Offset, Length, PIN_WAIT, &Context, (PVOID *)&Sector);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#else
+    /* No Cc, do it the old way:
+     * - Allocate a big enough buffer
+     * - And read the disk
+     */
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    if (Sector == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    if  (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+        return Status;
+    }
+#endif
+
+    /* Make sure we have a FSINFO sector */
+    if (Sector->ExtBootSignature2 != 0x41615252 ||
+        Sector->FSINFOSignature != 0x61417272 ||
+        Sector->Signatur2 != 0xaa550000)
+    {
+        ASSERT(FALSE);
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+        CcUnpinData(Context);
+#else
+        ExFreePoolWithTag(Sector, TAG_VFAT);
+#endif
+        return STATUS_DISK_CORRUPT_ERROR;
+    }
+
+    /* Update the free clusters count */
+    Sector->FreeCluster = InterlockedCompareExchange((PLONG)&DeviceExt->AvailableClusters, 0, 0);
+
+#ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
+    /* Mark FSINFO sector dirty so that it gets written to the disk */
+    CcSetDirtyPinnedData(Context, NULL);
+    CcUnpinData(Context);
+    return STATUS_SUCCESS;
+#else
+    /* Write back the FSINFO sector to the disk */
+    Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
+    ExFreePoolWithTag(Sector, TAG_VFAT);
+    return Status;
+#endif
 }
 
 /* EOF */

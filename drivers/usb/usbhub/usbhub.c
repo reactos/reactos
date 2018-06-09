@@ -1,10 +1,10 @@
 /*
  * PROJECT:         ReactOS Universal Serial Bus Hub Driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/usb/usbhub/fdo.c
+ * FILE:            drivers/usb/usbhub/usbhub.c
  * PURPOSE:         UsbHub Driver
  * PROGRAMMERS:
- *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  HervÃ© Poussineau (hpoussin@reactos.org)
  *                  Michael Martin (michael.martin@reactos.org)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)
  */

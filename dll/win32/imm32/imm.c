@@ -3147,7 +3147,7 @@ BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
 }
 
 /***********************************************************************
- *              IMMDisableLegacyIME(IMM32.@)
+ *              ImmDisableLegacyIME(IMM32.@)
  */
 BOOL WINAPI ImmDisableLegacyIME(void)
 {

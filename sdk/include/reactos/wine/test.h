@@ -155,6 +155,7 @@ extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 #define todo_wine_if(is_todo)   todo_if((is_todo) && !strcmp(winetest_platform, "wine"))
 #endif
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #ifdef NONAMELESSUNION
 # define U(x)  (x).u

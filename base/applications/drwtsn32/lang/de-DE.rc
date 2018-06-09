@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     de-DE resource file
+ * COPYRIGHT:   Copyright 2018 Robert Naumann
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS Fehlerberichterstattung"
+    IDS_USER_ALERT_MESSAGE "Die Anwendung %ls ist abgestürzt. Informationen über den Absturz wurden hier abgespeichert:\r\n\r\n%ls"
+END

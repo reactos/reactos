@@ -148,7 +148,7 @@ typedef struct _USBPORT_COMMON_BUFFER_HEADER {
   PHYSICAL_ADDRESS LogicalAddress;
   SIZE_T BufferLength;
   ULONG_PTR VirtualAddress;
-  ULONG_PTR PhysicalAddress;
+  ULONG PhysicalAddress;
 } USBPORT_COMMON_BUFFER_HEADER, *PUSBPORT_COMMON_BUFFER_HEADER;
 
 typedef struct _USBPORT_ENDPOINT *PUSBPORT_ENDPOINT;
@@ -394,7 +394,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 #if !defined(_M_X64)
   ULONG Padded[64];
 #else
-  ULONG Padded[0];
+  ULONG Padded[30];
 #endif
 
 } USBPORT_DEVICE_EXTENSION, *PUSBPORT_DEVICE_EXTENSION;
@@ -402,7 +402,7 @@ typedef struct _USBPORT_DEVICE_EXTENSION {
 #if !defined(_M_X64)
 C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x500);
 #else
-C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x690);
+C_ASSERT(sizeof(USBPORT_DEVICE_EXTENSION) == 0x700);
 #endif
 
 typedef struct _USBPORT_RH_DESCRIPTORS {

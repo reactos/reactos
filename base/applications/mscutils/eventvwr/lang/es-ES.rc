@@ -27,7 +27,10 @@ BEGIN
     END
     POPUP "&Opciones"
     BEGIN
-        MENUITEM "&Show event details view", IDM_SHOW_EVENT_DETAILS_VIEW
+        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM SEPARATOR
+        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
     END
     POPUP "Ay&uda"
     BEGIN

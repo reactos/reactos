@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/usetup.h
  * PURPOSE:         Text-mode setup
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #ifndef _USETUP_PCH_
@@ -39,8 +39,6 @@
 #include <winuser.h>
 #include <wincon.h>
 
-#include <strsafe.h>
-
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
@@ -52,30 +50,26 @@
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
 
-/* Filesystem headers */
+#include <ntstrsafe.h>
+
+/* Setup library headers */
 #include <reactos/rosioctl.h>
-#include <fslib/vfatlib.h>
-#include <fslib/ext2lib.h>
-// #include <fslib/ntfslib.h>
+#include <../lib/setuplib.h>
+// #include "errorcode.h"
 
 /* Internal Headers */
-#include "interface/consup.h"
+#include "consup.h"
 #include "inffile.h"
-#include "inicache.h"
 #include "progress.h"
-#ifdef __REACTOS__
 #include "infros.h"
 #include "filequeue.h"
-#endif
 #include "registry.h"
 #include "fslist.h"
 #include "partlist.h"
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
-#include "host.h"
 #include "mui.h"
-#include "errorcode.h"
 
 extern HANDLE ProcessHeap;
 extern UNICODE_STRING SourceRootPath;
@@ -83,8 +77,6 @@ extern UNICODE_STRING SourceRootDir;
 extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
 extern PWCHAR SelectedLanguageId;
-
-#ifdef __REACTOS__
 
 extern VOID InfSetHeap(PVOID Heap);
 extern VOID InfCloseFile(HINF InfHandle);
@@ -111,8 +103,6 @@ extern BOOLEAN InfGetStringField(PINFCONTEXT Context,
 #define SetupGetBinaryField InfGetBinaryField
 #define SetupGetMultiSzFieldW InfGetMultiSzField
 #define SetupGetStringFieldW InfGetStringField
-
-#endif /* __REACTOS__ */
 
 #ifndef _PAGE_NUMBER_DEFINED
 #define _PAGE_NUMBER_DEFINED
@@ -165,23 +155,5 @@ typedef enum _PAGE_NUMBER
 #define POPUP_WAIT_NONE    0
 #define POPUP_WAIT_ANY_KEY 1
 #define POPUP_WAIT_ENTER   2
-
-#define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
-{\
-  PLIST_ENTRY current;\
-\
-  current = (ListHead)->Flink;\
-  while (current != (ListHead))\
-  {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
-        (NewEntry)->SortField)\
-    {\
-      break;\
-    }\
-    current = current->Flink;\
-  }\
-\
-  InsertTailList(current, &((NewEntry)->ListEntryField));\
-}
 
 #endif /* _USETUP_PCH_ */

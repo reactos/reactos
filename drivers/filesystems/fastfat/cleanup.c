@@ -50,17 +50,8 @@ VfatCleanupFile(
     }
     else
     {
-        if(!ExAcquireResourceExclusiveLite(&pFcb->MainResource,
-                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-        {
-            return STATUS_PENDING;
-        }
-        if(!ExAcquireResourceExclusiveLite(&pFcb->PagingIoResource,
-                                           BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-        {
-            ExReleaseResourceLite(&pFcb->MainResource);
-            return STATUS_PENDING;
-        }
+        ExAcquireResourceExclusiveLite(&pFcb->MainResource, TRUE);
+        ExAcquireResourceExclusiveLite(&pFcb->PagingIoResource, TRUE);
 
         pCcb = FileObject->FsContext2;
         if (BooleanFlagOn(pCcb->Flags, CCB_DELETE_ON_CLOSE))
@@ -88,7 +79,7 @@ VfatCleanupFile(
 
         if (BooleanFlagOn(pFcb->Flags, FCB_IS_DIRTY))
         {
-            VfatUpdateEntry (pFcb, vfatVolumeIsFatX(DeviceExt));
+            VfatUpdateEntry (DeviceExt, pFcb);
         }
 
         if (BooleanFlagOn(pFcb->Flags, FCB_DELETE_PENDING) &&
@@ -107,6 +98,7 @@ VfatCleanupFile(
                 {
                     pFcb->FileObject = NULL;
                     CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
+                    ClearFlag(pFcb->Flags, FCB_CACHE_INITIALIZED);
                     ObDereferenceObject(tmpFileObject);
                 }
 
@@ -137,6 +129,9 @@ VfatCleanupFile(
         }
 
         FileObject->Flags |= FO_CLEANUP_COMPLETE;
+#ifdef KDBG
+        pFcb->Flags |= FCB_CLEANED_UP;
+#endif
 
         ExReleaseResourceLite(&pFcb->PagingIoResource);
         ExReleaseResourceLite(&pFcb->MainResource);
@@ -169,20 +164,9 @@ VfatCleanup(
         return STATUS_SUCCESS;
     }
 
-    if (!ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource,
-                                        BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
-    }
-
+    ExAcquireResourceExclusiveLite(&IrpContext->DeviceExt->DirResource, TRUE);
     Status = VfatCleanupFile(IrpContext);
-
     ExReleaseResourceLite(&IrpContext->DeviceExt->DirResource);
-
-    if (Status == STATUS_PENDING)
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
-    }
 
     IrpContext->Irp->IoStatus.Information = 0;
     return Status;

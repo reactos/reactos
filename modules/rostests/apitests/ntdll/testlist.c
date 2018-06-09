@@ -53,6 +53,7 @@ extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlNtPathNameToDosPathName(void);
 extern void func_RtlpEnsureBufferSize(void);
+extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
 extern void func_RtlUnicodeStringToAnsiString(void);
 extern void func_RtlUpcaseUnicodeStringToCountedOemString(void);
@@ -111,6 +112,7 @@ const struct test winetest_testlist[] =
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
     { "RtlpEnsureBufferSize",           func_RtlpEnsureBufferSize },
+    { "RtlQueryTimeZoneInformation",    func_RtlQueryTimeZoneInformation },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
     { "RtlUnicodeStringToAnsiString",   func_RtlUnicodeStringToAnsiString },
     { "RtlUpcaseUnicodeStringToCountedOemString", func_RtlUpcaseUnicodeStringToCountedOemString },

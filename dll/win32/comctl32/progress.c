@@ -18,15 +18,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTE
- * 
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- *
  * TODO:
  *
  * Styles:
@@ -34,7 +25,19 @@
  *
  */
 
+#include <stdarg.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "vssym32.h"
+#include "wine/debug.h"
+#include "wine/heap.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
 
@@ -551,7 +554,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	    SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
         /* allocate memory for info struct */
-        infoPtr = Alloc (sizeof(PROGRESS_INFO));
+        infoPtr = heap_alloc_zero (sizeof(*infoPtr));
         if (!infoPtr) return -1;
         SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -573,7 +576,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 
     case WM_DESTROY:
         TRACE("Progress Ctrl destruction, hwnd=%p\n", hwnd);
-        Free (infoPtr);
+        heap_free (infoPtr);
         SetWindowLongPtrW(hwnd, 0, 0);
         theme = GetWindowTheme (hwnd);
         CloseThemeData (theme);
@@ -652,8 +655,14 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	INT oldVal;
         oldVal = infoPtr->CurVal;
         infoPtr->CurVal += infoPtr->Step;
-        if(infoPtr->CurVal > infoPtr->MaxVal)
-	    infoPtr->CurVal = infoPtr->MinVal;
+        if (infoPtr->CurVal > infoPtr->MaxVal)
+        {
+            infoPtr->CurVal = (infoPtr->CurVal - infoPtr->MinVal) % (infoPtr->MaxVal - infoPtr->MinVal) + infoPtr->MinVal;
+        }
+        if (infoPtr->CurVal < infoPtr->MinVal)
+        {
+            infoPtr->CurVal = (infoPtr->CurVal - infoPtr->MinVal) % (infoPtr->MaxVal - infoPtr->MinVal) + infoPtr->MaxVal;
+        }
         if(oldVal != infoPtr->CurVal)
 	{
 	    TRACE("PBM_STEPIT: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);

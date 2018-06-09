@@ -90,7 +90,7 @@ test_IcmpSendEcho(void)
     unsigned long ipaddr = INADDR_NONE;
     DWORD bRet = 0, error = 0;
     char SendData[32] = "Data Buffer";
-    PVOID ReplyBuffer = NULL;
+    PVOID ReplyBuffer;
     DWORD ReplySize = 0;
 
     SetLastError(0xDEADBEEF);
@@ -102,27 +102,27 @@ test_IcmpSendEcho(void)
     }
 
     ipaddr = 0x08080808; // 8.8.8.8
+    ReplyBuffer = malloc(sizeof(ICMP_ECHO_REPLY) + sizeof(SendData));
 
     ReplySize = sizeof(ICMP_ECHO_REPLY);
-    ReplyBuffer = malloc(ReplySize);
     SetLastError(0xDEADBEEF);
     bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData), 
         NULL, ReplyBuffer, ReplySize, 5000);
 
     ok(!bRet, "IcmpSendEcho succeeded unexpectedly\n");
     error = GetLastError();
-    ok(error == IP_GENERAL_FAILURE, "IcmpSendEcho returned unexpected error: %lu\n", error);
-    free(ReplyBuffer);
+    ok(error == IP_BUF_TOO_SMALL /* Win2003 */ ||
+       error == IP_GENERAL_FAILURE /* Win10 */,
+       "IcmpSendEcho returned unexpected error: %lu\n", error);
 
     ReplySize = sizeof(ICMP_ECHO_REPLY) + sizeof(SendData);
-    ReplyBuffer = malloc(ReplySize);
     SetLastError(0xDEADBEEF);
     bRet = IcmpSendEcho(hIcmp, ipaddr, SendData, sizeof(SendData), 
         NULL, ReplyBuffer, ReplySize, 5000);
 
     ok(bRet, "IcmpSendEcho failed unexpectedly: %lu\n", GetLastError());
-    free(ReplyBuffer);
 
+    free(ReplyBuffer);
     IcmpCloseHandle(hIcmp);
 }
 

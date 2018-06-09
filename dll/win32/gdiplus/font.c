@@ -1367,7 +1367,7 @@ static int match_name_table_language( const tt_name_record *name, LANGID lang )
     case TT_PLATFORM_MACINTOSH:
         if (!IsValidCodePage( get_mac_code_page( name ))) return 0;
         name_lang = GET_BE_WORD(name->language_id);
-        if (name_lang >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+        if (name_lang >= ARRAY_SIZE(mac_langid_table)) return 0;
         name_lang = mac_langid_table[name_lang];
         break;
     case TT_PLATFORM_APPLE_UNICODE:
@@ -1377,7 +1377,7 @@ static int match_name_table_language( const tt_name_record *name, LANGID lang )
         case TT_APPLE_ID_ISO_10646:
         case TT_APPLE_ID_UNICODE_2_0:
             name_lang = GET_BE_WORD(name->language_id);
-            if (name_lang >= sizeof(mac_langid_table)/sizeof(mac_langid_table[0])) return 0;
+            if (name_lang >= ARRAY_SIZE(mac_langid_table)) return 0;
             name_lang = mac_langid_table[name_lang];
             break;
         default:

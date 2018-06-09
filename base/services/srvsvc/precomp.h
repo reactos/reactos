@@ -9,6 +9,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #include <winsvc.h>
+#include <lmserver.h>
 
 #include <srvsvc_s.h>
 

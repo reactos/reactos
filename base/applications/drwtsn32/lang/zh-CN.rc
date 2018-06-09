@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     zh-CN resource file
+ * COPYRIGHT:   Copyright 2018 Wexpo Lyu (laosb at lasteam.net)
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "ReactOS 崩溃报告"
+    IDS_USER_ALERT_MESSAGE "应用程序 %ls 遇到错误异常退出了。有关这次异常退出的信息保存在：\r\n\r\n%ls"
+END

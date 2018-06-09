@@ -248,6 +248,89 @@ again:
     return Status;
 }
 
+/* Used by dirty bit code, likely to be killed the day it's properly handle
+ * This is just a copy paste from VfatReadDisk()
+ */
+NTSTATUS
+VfatWriteDisk(
+    IN PDEVICE_OBJECT pDeviceObject,
+    IN PLARGE_INTEGER WriteOffset,
+    IN ULONG WriteLength,
+    IN OUT PUCHAR Buffer,
+    IN BOOLEAN Override)
+{
+    PIO_STACK_LOCATION Stack;
+    PIRP Irp;
+    IO_STATUS_BLOCK IoStatus;
+    KEVENT Event;
+    NTSTATUS Status;
+
+again:
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    DPRINT("VfatWriteDisk(pDeviceObject %p, Offset %I64x, Length %u, Buffer %p)\n",
+           pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
+
+    DPRINT ("Building synchronous FSD Request...\n");
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+                                       pDeviceObject,
+                                       Buffer,
+                                       WriteLength,
+                                       WriteOffset,
+                                       &Event,
+                                       &IoStatus);
+    if (Irp == NULL)
+    {
+        DPRINT("IoBuildSynchronousFsdRequest failed\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (Override)
+    {
+        Stack = IoGetNextIrpStackLocation(Irp);
+        Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+    }
+
+    DPRINT("Calling IO Driver... with irp %p\n", Irp);
+    Status = IoCallDriver (pDeviceObject, Irp);
+
+    DPRINT("Waiting for IO Operation for %p\n", Irp);
+    if (Status == STATUS_PENDING)
+    {
+        DPRINT("Operation pending\n");
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+        DPRINT("Getting IO Status... for %p\n", Irp);
+        Status = IoStatus.Status;
+    }
+
+    if (Status == STATUS_VERIFY_REQUIRED)
+    {
+        PDEVICE_OBJECT DeviceToVerify;
+
+        DPRINT1 ("Media change detected!\n");
+
+        /* Find the device to verify and reset the thread field to empty value again. */
+        DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
+        IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
+        Status = IoVerifyVolume(DeviceToVerify,
+                                FALSE);
+        if (NT_SUCCESS(Status))
+        {
+            DPRINT1("Volume verification successful; Reissuing write request\n");
+            goto again;
+        }
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("IO failed!!! VfatWriteDisk : Error code: %x\n", Status);
+        DPRINT("(pDeviceObject %p, Offset %I64x, Size %u, Buffer %p\n",
+               pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
+        return Status;
+    }
+    DPRINT("Block request succeeded for %p\n", Irp);
+    return STATUS_SUCCESS;
+}
 
 NTSTATUS
 VfatWriteDiskPartial(

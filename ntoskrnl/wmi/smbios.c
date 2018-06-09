@@ -229,7 +229,7 @@ WmipQueryRawSMBiosTables(
     Status = WmipGetRawSMBiosTableData(OutBuffer ? &TableData : NULL, &TableSize);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WmipGetRawSMBiosTableData failed: 0x08lx\n", Status);
+        DPRINT1("WmipGetRawSMBiosTableData failed: 0x%08lx\n", Status);
         return Status;
     }
 

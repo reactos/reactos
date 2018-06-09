@@ -30,7 +30,6 @@ typedef struct _SYS_SHUTDOWN_PARAMS
     BOOLEAN bForceAppsClosed;
     DWORD dwReason;
 
-    HWND hShutdownDialog;
     BOOLEAN bShuttingDown;
 } SYS_SHUTDOWN_PARAMS, *PSYS_SHUTDOWN_PARAMS;
 
@@ -43,13 +42,51 @@ SYS_SHUTDOWN_PARAMS g_ShutdownParams;
 /* FUNCTIONS *****************************************************************/
 
 static
+BOOL
+DoSystemShutdown(
+    IN PSYS_SHUTDOWN_PARAMS pShutdownParams)
+{
+    BOOL Success;
+
+    if (pShutdownParams->pszMessage)
+    {
+        HeapFree(GetProcessHeap(), 0, pShutdownParams->pszMessage);
+        pShutdownParams->pszMessage = NULL;
+    }
+
+    /* If shutdown has been cancelled, bail out now */
+    if (!pShutdownParams->bShuttingDown)
+        return TRUE;
+
+    Success = ExitWindowsEx((pShutdownParams->bRebootAfterShutdown ? EWX_REBOOT : EWX_SHUTDOWN) |
+                            (pShutdownParams->bForceAppsClosed ? EWX_FORCE : 0),
+                             pShutdownParams->dwReason);
+    if (!Success)
+    {
+        /* Something went wrong, cancel shutdown */
+        pShutdownParams->bShuttingDown = FALSE;
+    }
+
+    return Success;
+}
+
+
+static
 VOID
 OnTimer(
     HWND hwndDlg,
     PSYS_SHUTDOWN_PARAMS pShutdownParams)
 {
-    WCHAR szBuffer[12];
+    WCHAR szFormatBuffer[32];
+    WCHAR szBuffer[32];
     INT iSeconds, iMinutes, iHours, iDays;
+
+    if (!pShutdownParams->bShuttingDown)
+    {
+        /* Shutdown has been cancelled, close the dialog and bail out */
+        EndDialog(hwndDlg, 0);
+        return;
+    }
 
     if (pShutdownParams->dwTimeout < SECONDS_PER_DAY)
     {
@@ -59,22 +96,25 @@ OnTimer(
         iMinutes = iSeconds / 60;
         iSeconds -= iMinutes * 60;
 
-        swprintf(szBuffer, L"%02d:%02d:%02d", iHours, iMinutes, iSeconds);
+        LoadStringW(hAppInstance, IDS_TIMEOUTSHORTFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
+        swprintf(szBuffer, szFormatBuffer, iHours, iMinutes, iSeconds);
     }
     else
     {
         iDays = (INT)(pShutdownParams->dwTimeout / SECONDS_PER_DAY);
-        swprintf(szBuffer, L"%d days", iDays);
+
+        LoadStringW(hAppInstance, IDS_TIMEOUTLONGFORMAT, szFormatBuffer, ARRAYSIZE(szFormatBuffer));
+        swprintf(szBuffer, szFormatBuffer, iDays);
     }
 
     SetDlgItemTextW(hwndDlg, IDC_SYSSHUTDOWNTIMELEFT, szBuffer);
 
     if (pShutdownParams->dwTimeout == 0)
     {
-        PostMessage(hwndDlg, WM_CLOSE, 0, 0);
-        ExitWindowsEx((pShutdownParams->bRebootAfterShutdown ? EWX_REBOOT : EWX_SHUTDOWN) |
-                      (pShutdownParams->bForceAppsClosed ? EWX_FORCE : 0),
-                      pShutdownParams->dwReason);
+        /* Close the dialog and perform the system shutdown */
+        EndDialog(hwndDlg, 0);
+        DoSystemShutdown(pShutdownParams);
+        return;
     }
 
     pShutdownParams->dwTimeout--;
@@ -97,10 +137,9 @@ ShutdownDialogProc(
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
             pShutdownParams = (PSYS_SHUTDOWN_PARAMS)lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pShutdownParams);
-
-            pShutdownParams->hShutdownDialog = hwndDlg;
 
             if (pShutdownParams->pszMessage)
             {
@@ -109,26 +148,17 @@ ShutdownDialogProc(
                                 pShutdownParams->pszMessage);
             }
 
-            RemoveMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
+            DeleteMenu(GetSystemMenu(hwndDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
             SetWindowPos(hwndDlg, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 
             PostMessage(hwndDlg, WM_TIMER, 0, 0);
             SetTimer(hwndDlg, SHUTDOWN_TIMER_ID, 1000, NULL);
             break;
+        }
 
-        case WM_CLOSE:
-            pShutdownParams->hShutdownDialog = NULL;
-            pShutdownParams->bShuttingDown = FALSE;
-
+        /* NOTE: Do not handle WM_CLOSE */
+        case WM_DESTROY:
             KillTimer(hwndDlg, SHUTDOWN_TIMER_ID);
-
-            if (pShutdownParams->pszMessage)
-            {
-                HeapFree(GetProcessHeap(), 0, pShutdownParams->pszMessage);
-                pShutdownParams->pszMessage = NULL;
-            }
-
-            EndDialog(hwndDlg, 0);
             break;
 
         case WM_TIMER:
@@ -159,10 +189,6 @@ InitiateSystemShutdownThread(
                              NULL,
                              ShutdownDialogProc,
                              (LPARAM)pShutdownParams);
-    if (status >= 0)
-    {
-        return ERROR_SUCCESS;
-    }
 
     if (pShutdownParams->pszMessage)
     {
@@ -170,8 +196,10 @@ InitiateSystemShutdownThread(
         pShutdownParams->pszMessage = NULL;
     }
 
-    pShutdownParams->bShuttingDown = FALSE;
+    if (status >= 0)
+        return ERROR_SUCCESS;
 
+    pShutdownParams->bShuttingDown = FALSE;
     return GetLastError();
 }
 
@@ -179,10 +207,10 @@ InitiateSystemShutdownThread(
 DWORD
 TerminateSystemShutdown(VOID)
 {
-    if (g_ShutdownParams.bShuttingDown == FALSE)
+    if (_InterlockedCompareExchange8((volatile char*)&g_ShutdownParams.bShuttingDown, FALSE, TRUE) == FALSE)
         return ERROR_NO_SHUTDOWN_IN_PROGRESS;
 
-    return PostMessage(g_ShutdownParams.hShutdownDialog, WM_CLOSE, 0, 0) ? ERROR_SUCCESS : GetLastError();
+    return ERROR_SUCCESS;
 }
 
 
@@ -228,11 +256,20 @@ StartSystemShutdown(
     g_ShutdownParams.bRebootAfterShutdown = bRebootAfterShutdown;
     g_ShutdownParams.dwReason = dwReason;
 
-    hThread = CreateThread(NULL, 0, InitiateSystemShutdownThread, (PVOID)&g_ShutdownParams, 0, NULL);
-    if (hThread)
+    /* If dwTimeout is zero perform an immediate system shutdown, otherwise display the countdown shutdown dialog */
+    if (g_ShutdownParams.dwTimeout == 0)
     {
-        CloseHandle(hThread);
-        return ERROR_SUCCESS;
+        if (DoSystemShutdown(&g_ShutdownParams))
+            return ERROR_SUCCESS;
+    }
+    else
+    {
+        hThread = CreateThread(NULL, 0, InitiateSystemShutdownThread, (PVOID)&g_ShutdownParams, 0, NULL);
+        if (hThread)
+        {
+            CloseHandle(hThread);
+            return ERROR_SUCCESS;
+        }
     }
 
     if (g_ShutdownParams.pszMessage)
@@ -242,7 +279,6 @@ StartSystemShutdown(
     }
 
     g_ShutdownParams.bShuttingDown = FALSE;
-
     return GetLastError();
 }
 

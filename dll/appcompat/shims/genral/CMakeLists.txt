@@ -5,6 +5,7 @@ spec2def(acgenral.dll genral.spec)
 
 list(APPEND SOURCE
     ignoredbgout.c
+    ignorefreelib.c
     main.c
     themes.c
     genral.spec)

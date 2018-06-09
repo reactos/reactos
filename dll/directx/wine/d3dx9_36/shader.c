@@ -216,7 +216,6 @@ HRESULT WINAPI D3DXAssembleShader(const char *data, UINT data_len, const D3DXMAC
 
 static const void *main_file_data;
 
-static CRITICAL_SECTION from_file_mutex;
 static CRITICAL_SECTION_DEBUG from_file_mutex_debug =
 {
     0, 0, &from_file_mutex,
@@ -226,14 +225,14 @@ static CRITICAL_SECTION_DEBUG from_file_mutex_debug =
     },
     0, 0, {(DWORD_PTR)(__FILE__ ": from_file_mutex")}
 };
-static CRITICAL_SECTION from_file_mutex = {&from_file_mutex_debug, -1, 0, 0, 0, 0};
+CRITICAL_SECTION from_file_mutex = {&from_file_mutex_debug, -1, 0, 0, 0, 0};
 
 /* D3DXInclude private implementation, used to implement
  * D3DXAssembleShaderFromFile() from D3DXAssembleShader(). */
 /* To be able to correctly resolve include search paths we have to store the
  * pathname of each include file. We store the pathname pointer right before
  * the file data. */
-static HRESULT WINAPI d3dincludefromfile_open(ID3DXInclude *iface, D3DXINCLUDE_TYPE include_type,
+static HRESULT WINAPI d3dx_include_from_file_open(ID3DXInclude *iface, D3DXINCLUDE_TYPE include_type,
         const char *filename, const void *parent_data, const void **data, UINT *bytes)
 {
     const char *p, *parent_name = "";
@@ -252,7 +251,7 @@ static HRESULT WINAPI d3dincludefromfile_open(ID3DXInclude *iface, D3DXINCLUDE_T
             parent_name = *((const char **)main_file_data - 1);
     }
 
-    TRACE("Looking up for include file %s, parent %s\n", debugstr_a(filename), debugstr_a(parent_name));
+    TRACE("Looking up include file %s, parent %s.\n", debugstr_a(filename), debugstr_a(parent_name));
 
     if ((p = strrchr(parent_name, '\\')))
         ++p;
@@ -303,7 +302,7 @@ error:
     return HRESULT_FROM_WIN32(GetLastError());
 }
 
-static HRESULT WINAPI d3dincludefromfile_close(ID3DXInclude *iface, const void *data)
+static HRESULT WINAPI d3dx_include_from_file_close(ID3DXInclude *iface, const void *data)
 {
     HeapFree(GetProcessHeap(), 0, *((char **)data - 1));
     HeapFree(GetProcessHeap(), 0, (char **)data - 1);
@@ -312,13 +311,10 @@ static HRESULT WINAPI d3dincludefromfile_close(ID3DXInclude *iface, const void *
     return S_OK;
 }
 
-static const struct ID3DXIncludeVtbl D3DXInclude_Vtbl = {
-    d3dincludefromfile_open,
-    d3dincludefromfile_close
-};
-
-struct D3DXIncludeImpl {
-    ID3DXInclude ID3DXInclude_iface;
+const struct ID3DXIncludeVtbl d3dx_include_from_file_vtbl =
+{
+    d3dx_include_from_file_open,
+    d3dx_include_from_file_close
 };
 
 HRESULT WINAPI D3DXAssembleShaderFromFileA(const char *filename, const D3DXMACRO *defines,
@@ -350,7 +346,7 @@ HRESULT WINAPI D3DXAssembleShaderFromFileW(const WCHAR *filename, const D3DXMACR
     const void *buffer;
     DWORD len;
     HRESULT hr;
-    struct D3DXIncludeImpl includefromfile;
+    struct d3dx_include_from_file include_from_file;
     char *filename_a;
 
     TRACE("filename %s, defines %p, include %p, flags %#x, shader %p, error_messages %p.\n",
@@ -358,8 +354,8 @@ HRESULT WINAPI D3DXAssembleShaderFromFileW(const WCHAR *filename, const D3DXMACR
 
     if(!include)
     {
-        includefromfile.ID3DXInclude_iface.lpVtbl = &D3DXInclude_Vtbl;
-        include = &includefromfile.ID3DXInclude_iface;
+        include_from_file.ID3DXInclude_iface.lpVtbl = &d3dx_include_from_file_vtbl;
+        include = &include_from_file.ID3DXInclude_iface;
     }
 
     len = WideCharToMultiByte(CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL);
@@ -518,7 +514,7 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
     const void *buffer;
     DWORD len, filename_len;
     HRESULT hr;
-    struct D3DXIncludeImpl includefromfile;
+    struct d3dx_include_from_file include_from_file;
     char *filename_a;
 
     TRACE("filename %s, defines %p, include %p, entrypoint %s, profile %s, "
@@ -528,8 +524,8 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
 
     if (!include)
     {
-        includefromfile.ID3DXInclude_iface.lpVtbl = &D3DXInclude_Vtbl;
-        include = &includefromfile.ID3DXInclude_iface;
+        include_from_file.ID3DXInclude_iface.lpVtbl = &d3dx_include_from_file_vtbl;
+        include = &include_from_file.ID3DXInclude_iface;
     }
 
     filename_len = WideCharToMultiByte(CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL);
@@ -643,7 +639,7 @@ HRESULT WINAPI D3DXPreprocessShaderFromFileW(const WCHAR *filename, const D3DXMA
     const void *buffer;
     DWORD len;
     HRESULT hr;
-    struct D3DXIncludeImpl includefromfile;
+    struct d3dx_include_from_file include_from_file;
     char *filename_a;
 
     TRACE("filename %s, defines %p, include %p, shader %p, error_messages %p.\n",
@@ -651,8 +647,8 @@ HRESULT WINAPI D3DXPreprocessShaderFromFileW(const WCHAR *filename, const D3DXMA
 
     if (!include)
     {
-        includefromfile.ID3DXInclude_iface.lpVtbl = &D3DXInclude_Vtbl;
-        include = &includefromfile.ID3DXInclude_iface;
+        include_from_file.ID3DXInclude_iface.lpVtbl = &d3dx_include_from_file_vtbl;
+        include = &include_from_file.ID3DXInclude_iface;
     }
 
     len = WideCharToMultiByte(CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL);

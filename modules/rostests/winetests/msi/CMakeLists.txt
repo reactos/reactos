@@ -3,6 +3,11 @@ add_definitions(
     -DUSE_WINE_TODOS
     -D__WINESRC__)
 
+if(MSVC_IDE)
+    # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
+    include_directories($<TARGET_FILE_DIR:custom>)
+endif()
+
 spec2def(custom.dll custom.spec)
 add_library(custom SHARED custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 target_link_libraries(custom uuid)

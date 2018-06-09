@@ -672,8 +672,8 @@ OHCI_StartController(IN PVOID ohciExtension,
         return MPStatus;
     }
 
-    OhciExtension->HcResourcesVA = Resources->StartVA;
-    OhciExtension->HcResourcesPA = Resources->StartPA;
+    OhciExtension->HcResourcesVA = (POHCI_HC_RESOURCES)Resources->StartVA;
+    OhciExtension->HcResourcesPA = (POHCI_HC_RESOURCES)Resources->StartPA;
 
     DPRINT_OHCI("OHCI_StartController: HcResourcesVA - %p, HcResourcesPA - %p\n",
                 OhciExtension->HcResourcesVA,
@@ -1731,9 +1731,9 @@ OHCI_AbortTransfer(IN PVOID ohciExtension,
     ED = OhciEndpoint->HcdED;
     NextTdPA = ED->HwED.HeadPointer & OHCI_ED_HEAD_POINTER_MASK;
 
-    NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
-                                                       OhciExtension,
-                                                       OhciEndpoint);
+    NextTD = RegPacket.UsbPortGetMappedVirtualAddress(NextTdPA,
+                                                      OhciExtension,
+                                                      OhciEndpoint);
 
     if (NextTD->OhciTransfer == (ULONG)OhciTransfer)
     {
@@ -1978,7 +1978,7 @@ OHCI_PollAsyncEndpoint(IN POHCI_EXTENSION OhciExtension,
         DbgBreakPoint();
     }
 
-    NextTD = RegPacket.UsbPortGetMappedVirtualAddress((PVOID)NextTdPA,
+    NextTD = RegPacket.UsbPortGetMappedVirtualAddress(NextTdPA,
                                                       OhciExtension,
                                                       OhciEndpoint);
     DPRINT_OHCI("NextTD - %p\n", NextTD);

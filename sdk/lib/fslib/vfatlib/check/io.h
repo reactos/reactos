@@ -1,7 +1,3 @@
-/****
- ** Platform-dependent file
- ****/
-
 /* io.h - Virtual disk input/output
 
    Copyright (C) 1993 Werner Almesberger <werner.almesberger@lrc.di.epfl.ch>
@@ -31,17 +27,24 @@
 #ifndef _IO_H
 #define _IO_H
 
-//#include <sys/types.h> /* for loff_t */
-// #include <fcntl.h>		/* for off_t */
+#ifndef __REACTOS__
+#include <fcntl.h>		/* for off_t */
+#endif
 
+#ifndef __REACTOS__
+void fs_open(char *path, int rw);
+#else
 NTSTATUS fs_open(PUNICODE_STRING DriveRoot, int read_write);
+#endif
 
-/* Opens the file system PATH. If RW is zero, the file system is opened
+/* Opens the filesystem PATH. If RW is zero, the filesystem is opened
    read-only, otherwise, it is opened read-write. */
 
+#ifdef __REACTOS__
 BOOLEAN fs_isdirty(void);
 
 /* Checks if filesystem is dirty */
+#endif
 
 void fs_read(off_t pos, int size, void *data);
 
@@ -69,6 +72,7 @@ int fs_changed(void);
 
 /* Determines whether the filesystem has changed. See fs_close. */
 
+#ifdef __REACTOS__
 NTSTATUS fs_lock(BOOLEAN LockVolume);
 
 /* Lock or unlocks the volume */
@@ -76,5 +80,5 @@ NTSTATUS fs_lock(BOOLEAN LockVolume);
 void fs_dismount(void);
 
 /* Dismounts the volume */
-
+#endif
 #endif

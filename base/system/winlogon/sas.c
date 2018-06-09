@@ -1140,7 +1140,6 @@ DispatchSAS(
     IN DWORD dwSasType)
 {
     DWORD wlxAction = WLX_SAS_ACTION_NONE;
-    HWND hwnd;
     PSID LogonSid = NULL; /* FIXME */
     BOOL bSecure = TRUE;
 
@@ -1157,9 +1156,7 @@ DispatchSAS(
                 case STATE_LOGGED_OFF:
                     Session->LogonState = STATE_LOGGED_OFF_SAS;
 
-                    hwnd = GetTopDialogWindow();
-                    if (hwnd != NULL)
-                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
+                    CloseAllDialogWindows();
 
                     Session->Options = 0;
 
@@ -1192,9 +1189,7 @@ DispatchSAS(
                 case STATE_LOCKED:
                     Session->LogonState = STATE_LOCKED_SAS;
 
-                    hwnd = GetTopDialogWindow();
-                    if (hwnd != NULL)
-                        SendMessage(hwnd, WLX_WM_SAS, 0, 0);
+                    CloseAllDialogWindows();
 
                     wlxAction = (DWORD)Session->Gina.Functions.WlxWkstaLockedSAS(Session->Gina.Context, dwSasType);
                     break;
@@ -1333,7 +1328,8 @@ SASWindowProc(
                 case MAKELONG(MOD_CONTROL | MOD_SHIFT, VK_ESCAPE):
                 {
                     TRACE("SAS: CONTROL+SHIFT+ESCAPE\n");
-                    DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
+                    if (Session->LogonState == STATE_LOGGED_ON)
+                        DoGenericAction(Session, WLX_SAS_ACTION_TASKLIST);
                     return TRUE;
                 }
             }
@@ -1377,7 +1373,9 @@ SASWindowProc(
                 case LN_SHELL_EXITED:
                 {
                     /* lParam is the exit code */
-                    if(lParam != 1)
+                    if (lParam != 1 &&
+                        Session->LogonState != STATE_LOGGED_OFF &&
+                        Session->LogonState != STATE_LOGGED_OFF_SAS)
                     {
                         SetTimer(hwndDlg, 1, 1000, NULL);
                     }

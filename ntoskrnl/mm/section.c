@@ -684,7 +684,7 @@ l_ReadHeaderFromFile:
     pssSegments[0].Length.QuadPart = nPrevVirtualEndOfSegment;
     pssSegments[0].RawLength.QuadPart = nFileSizeOfHeaders;
     pssSegments[0].Image.VirtualAddress = 0;
-    pssSegments[0].Image.Characteristics = IMAGE_SCN_CNT_INITIALIZED_DATA;
+    pssSegments[0].Image.Characteristics = 0;
     pssSegments[0].WriteCopy = TRUE;
 
     /* skip the headers segment */
@@ -1040,23 +1040,21 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
-MiCopyFromUserPage(PFN_NUMBER DestPage, PFN_NUMBER SrcPage)
+MiCopyFromUserPage(PFN_NUMBER DestPage, const VOID *SrcAddress)
 {
     PEPROCESS Process;
-    KIRQL Irql, Irql2;
-    PVOID DestAddress, SrcAddress;
+    KIRQL Irql;
+    PVOID DestAddress;
 
     Process = PsGetCurrentProcess();
     DestAddress = MiMapPageInHyperSpace(Process, DestPage, &Irql);
-    SrcAddress = MiMapPageInHyperSpace(Process, SrcPage, &Irql2);
-    if (DestAddress == NULL || SrcAddress == NULL)
+    if (DestAddress == NULL)
     {
         return(STATUS_NO_MEMORY);
     }
     ASSERT((ULONG_PTR)DestAddress % PAGE_SIZE == 0);
     ASSERT((ULONG_PTR)SrcAddress % PAGE_SIZE == 0);
     RtlCopyMemory(DestAddress, SrcAddress, PAGE_SIZE);
-    MiUnmapPageInHyperSpace(Process, SrcAddress, Irql2);
     MiUnmapPageInHyperSpace(Process, DestAddress, Irql);
     return(STATUS_SUCCESS);
 }
@@ -1367,7 +1365,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     HasSwapEntry = MmIsPageSwapEntry(Process, Address);
 
     /* See if we should use a private page */
-    if ((HasSwapEntry) || (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA))
+    if (HasSwapEntry)
     {
         SWAPENTRY DummyEntry;
 
@@ -1781,7 +1779,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Copy the old page
      */
-    MiCopyFromUserPage(NewPage, OldPage);
+    NT_VERIFY(NT_SUCCESS(MiCopyFromUserPage(NewPage, PAddress)));
 
     /*
      * Unshare the old page.
@@ -1958,9 +1956,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      */
     MmUnlockSectionSegment(Context.Segment);
     Context.WasDirty = FALSE;
-    if (Context.Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-            IS_SWAP_FROM_SSE(Entry) ||
-            PFN_FROM_SSE(Entry) != Page)
+    if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
     {
         Context.Private = TRUE;
     }
@@ -2348,9 +2344,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     /*
      * Check for a private (COWed) page.
      */
-    if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-            IS_SWAP_FROM_SSE(Entry) ||
-            PFN_FROM_SSE(Entry) != Page)
+    if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
     {
         Private = TRUE;
     }
@@ -2483,9 +2477,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                 Page = MmGetPfnForProcess(Process, Address);
 
                 Protect = PAGE_READONLY;
-                if (Segment->Image.Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA ||
-                        IS_SWAP_FROM_SSE(Entry) ||
-                        PFN_FROM_SSE(Entry) != Page)
+                if (IS_SWAP_FROM_SSE(Entry) || PFN_FROM_SSE(Entry) != Page)
                 {
                     Protect = NewProtect;
                 }

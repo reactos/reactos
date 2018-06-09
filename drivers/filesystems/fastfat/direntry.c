@@ -41,12 +41,14 @@ vfatDirEntryGetFirstCluster(
 
 BOOLEAN
 FATIsDirectoryEmpty(
+    PDEVICE_EXTENSION DeviceExt,
     PVFATFCB Fcb)
 {
     LARGE_INTEGER FileOffset;
     PVOID Context = NULL;
     PFAT_DIR_ENTRY FatDirEntry;
     ULONG Index, MaxIndex;
+    NTSTATUS Status;
 
     if (vfatFCBIsRoot(Fcb))
     {
@@ -59,6 +61,12 @@ FATIsDirectoryEmpty(
 
     FileOffset.QuadPart = 0;
     MaxIndex = Fcb->RFCB.FileSize.u.LowPart / sizeof(FAT_DIR_ENTRY);
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, Fcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
 
     while (Index < MaxIndex)
     {
@@ -109,15 +117,23 @@ FATIsDirectoryEmpty(
 
 BOOLEAN
 FATXIsDirectoryEmpty(
+    PDEVICE_EXTENSION DeviceExt,
     PVFATFCB Fcb)
 {
     LARGE_INTEGER FileOffset;
     PVOID Context = NULL;
     PFATX_DIR_ENTRY FatXDirEntry;
     ULONG Index = 0, MaxIndex;
+    NTSTATUS Status;
 
     FileOffset.QuadPart = 0;
     MaxIndex = Fcb->RFCB.FileSize.u.LowPart / sizeof(FATX_DIR_ENTRY);
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, Fcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
 
     while (Index < MaxIndex)
     {
@@ -186,11 +202,19 @@ FATGetNextDirEntry(
     BOOLEAN Valid = TRUE;
     BOOLEAN Back = FALSE;
 
+    NTSTATUS Status;
+
     DirContext->LongNameU.Length = 0;
     DirContext->LongNameU.Buffer[0] = UNICODE_NULL;
 
     FileOffset.u.HighPart = 0;
     FileOffset.u.LowPart = ROUND_DOWN(DirContext->DirIndex * sizeof(FAT_DIR_ENTRY), PAGE_SIZE);
+
+    Status = vfatFCBInitializeCacheFromVolume(DirContext->DeviceExt, pDirFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     if (*pContext == NULL || (DirContext->DirIndex % FAT_ENTRIES_PER_PAGE) == 0)
     {
@@ -461,6 +485,7 @@ FATXGetNextDirEntry(
     PFATX_DIR_ENTRY fatxDirEntry;
     OEM_STRING StringO;
     ULONG DirIndex = DirContext->DirIndex;
+    NTSTATUS Status;
 
     FileOffset.u.HighPart = 0;
 
@@ -496,6 +521,12 @@ FATXGetNextDirEntry(
             default:
                 DirIndex -= 2;
         }
+    }
+
+    Status = vfatFCBInitializeCacheFromVolume(DirContext->DeviceExt, pDirFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
     }
 
     if (*pContext == NULL || (DirIndex % FATX_ENTRIES_PER_PAGE) == 0)

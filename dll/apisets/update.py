@@ -247,15 +247,8 @@ class SpecEntry(object):
             arch = self.arch
             if self.callconv == 'extern':
                 args = ''
-                callconv = 'extern'
-                if arch.has(Arch.x86_64):
-                    fwd = '{}.__imp_{}'.format(*self._forwarder)
-                    self.arch = arch - Arch(Arch.x86_64)
-                    estimate_size += self.write(spec_file)
-                    self.arch = arch
-                    arch = Arch(Arch.x86_64)
-                else:
-                    fwd = '{}._imp__{}'.format(*self._forwarder)
+                callconv = 'extern -stub'   # HACK
+                fwd += ' # the -stub is a HACK to fix VS < 2017 build!'
             if arch != Arch(Arch.Any):
                 opts = '{} -arch={}'.format(opts, arch.to_str())
             spec_file.write('{ord} {cc}{opts} {name}{args} {fwd}{nl}'.format(ord=self._ord,

@@ -261,7 +261,7 @@ static const char HatchBrushes[][8] = {
 
 GpStatus get_hatch_data(GpHatchStyle hatchstyle, const char **result)
 {
-    if (hatchstyle < sizeof(HatchBrushes) / sizeof(HatchBrushes[0]))
+    if (hatchstyle < ARRAY_SIZE(HatchBrushes))
     {
         *result = HatchBrushes[hatchstyle];
         return Ok;
@@ -1713,6 +1713,18 @@ GpStatus WINGDIPAPI GdipSetPathGradientGammaCorrection(GpPathGradient *grad,
     grad->gamma = gamma;
 
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipSetPathGradientPath(GpPathGradient *grad, GDIPCONST GpPath *path)
+{
+    static int calls;
+
+    TRACE("(%p, %p)\n", grad, path);
+
+    if (!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipSetPathGradientSigmaBlend(GpPathGradient *grad,

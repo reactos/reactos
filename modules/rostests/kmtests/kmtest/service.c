@@ -4,6 +4,7 @@
  * PURPOSE:     Kernel-Mode Test Suite loader service control functions
  * COPYRIGHT:   Copyright 2011-2018 Thomas Faber <thomas.faber@reactos.org>
  *              Copyright 2017 Ged Murphy <gedmurphy@reactos.org>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include <kmt_test.h>
@@ -11,7 +12,7 @@
 
 #include <assert.h>
 
-#define SERVICE_ACCESS (SERVICE_START | SERVICE_STOP | DELETE)
+#define SERVICE_ACCESS (SERVICE_QUERY_STATUS | SERVICE_START | SERVICE_STOP | DELETE)
 
 /*
  * This is an internal function not meant for use by the kmtests app,
@@ -102,6 +103,104 @@ KmtCreateService(
 }
 
 /**
+ * @name KmtGetServiceStateAsString
+ *
+ * @param ServiceState
+ *        Service state as a number
+ *
+ * @return Service state as a string
+ */
+static
+PCSTR
+KmtGetServiceStateAsString(
+    IN DWORD ServiceState)
+{
+    switch(ServiceState)
+    {
+        case SERVICE_STOPPED:
+            return "STOPPED";
+        case SERVICE_START_PENDING:
+            return "START_PENDING";
+        case SERVICE_STOP_PENDING:
+            return "STOP_PENDING";
+        case SERVICE_RUNNING:
+            return "RUNNING";
+        case SERVICE_CONTINUE_PENDING:
+            return "CONTINUE_PENDING";
+        case SERVICE_PAUSE_PENDING:
+            return "PAUSE_PENDING";
+        case SERVICE_PAUSED:
+            return "PAUSED";
+        default:
+            ok(FALSE, "Unknown service state = %lu\n", ServiceState);
+            return "(Unknown)";
+    }
+}
+
+/**
+ * @name KmtEnsureServiceState
+ *
+ * @param ServiceName
+ *        Name of the service to check,
+ *        or NULL
+ * @param ServiceHandle
+ *        Handle to the service
+ * @param ExpectedServiceState
+ *        State which the service should be in
+ *
+ * @return Win32 error code
+ */
+static
+DWORD
+KmtEnsureServiceState(
+    IN PCWSTR ServiceName OPTIONAL,
+    IN SC_HANDLE ServiceHandle,
+    IN DWORD ExpectedServiceState)
+{
+    DWORD Error = ERROR_SUCCESS;
+    SERVICE_STATUS ServiceStatus;
+    DWORD StartTime = GetTickCount();
+    DWORD Timeout = 10 * 1000;
+    PCWSTR ServiceNameOut = ServiceName ? ServiceName : L"(handle only, no name)";
+
+    assert(ServiceHandle);
+    assert(ExpectedServiceState);
+
+    if (!QueryServiceStatus(ServiceHandle, &ServiceStatus))
+        error_goto(Error, cleanup);
+
+    while (ServiceStatus.dwCurrentState != ExpectedServiceState)
+    {
+        // NB: ServiceStatus.dwWaitHint and ServiceStatus.dwCheckPoint logic could be added, if need be.
+
+        Sleep(1 * 1000);
+
+        if (!QueryServiceStatus(ServiceHandle, &ServiceStatus))
+            error_goto(Error, cleanup);
+
+        if (GetTickCount() - StartTime >= Timeout)
+            break;
+    }
+
+    if (ServiceStatus.dwCurrentState != ExpectedServiceState)
+    {
+        ok(FALSE, "Service = %ls, state = %lu %s (!= %lu %s), waitHint = %lu, checkPoint = %lu\n",
+           ServiceNameOut,
+           ServiceStatus.dwCurrentState, KmtGetServiceStateAsString(ServiceStatus.dwCurrentState),
+           ExpectedServiceState, KmtGetServiceStateAsString(ExpectedServiceState),
+           ServiceStatus.dwWaitHint, ServiceStatus.dwCheckPoint);
+        goto cleanup;
+    }
+
+    trace("Service = %ls, state = %lu %s\n",
+          ServiceNameOut,
+          ExpectedServiceState, KmtGetServiceStateAsString(ExpectedServiceState));
+
+cleanup:
+    return Error;
+}
+
+/**
  * @name KmtStartService
  *
  * Start the specified driver service by handle or name (and return a handle to it)
@@ -132,6 +231,10 @@ KmtStartService(
 
     if (!StartService(*ServiceHandle, 0, NULL))
         error_goto(Error, cleanup);
+
+    Error = KmtEnsureServiceState(ServiceName, *ServiceHandle, SERVICE_RUNNING);
+    if (Error)
+        goto cleanup;
 
 cleanup:
     return Error;
@@ -227,6 +330,10 @@ KmtStopService(
 
     if (!ControlService(*ServiceHandle, SERVICE_CONTROL_STOP, &ServiceStatus))
         error_goto(Error, cleanup);
+
+    Error = KmtEnsureServiceState(ServiceName, *ServiceHandle, SERVICE_STOPPED);
+    if (Error)
+        goto cleanup;
 
 cleanup:
     return Error;

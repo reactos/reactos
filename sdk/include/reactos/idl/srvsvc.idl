@@ -330,6 +330,8 @@ typedef [switch_type(unsigned long)] union _SHARE_INFO
     [case(503)] LPSHARE_INFO_503_I ShareInfo503;
 } SHARE_INFO, *PSHARE_INFO, *LPSHARE_INFO;
 
+
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_INFO_100
 {
     DWORD sv100_platform_id;
@@ -362,6 +364,7 @@ typedef struct _SERVER_INFO_102
     DWORD sv102_licenses;
     [string] wchar_t *sv102_userpath;
 } SERVER_INFO_102, *PSERVER_INFO_102, *LPSERVER_INFO_102;
+cpp_quote("#endif")
 
 typedef struct _SERVER_INFO_103 
 {
@@ -381,6 +384,7 @@ typedef struct _SERVER_INFO_103
     DWORD sv103_capabilities;
 } SERVER_INFO_103, *PSERVER_INFO_103, *LPSERVER_INFO_103;
 
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_INFO_502
 {
     DWORD sv502_sessopens;
@@ -728,7 +732,9 @@ typedef struct _SERVER_INFO_1556
 {
     DWORD sv1556_maxworkitemidletime;
 } SERVER_INFO_1556, *PSERVER_INFO_1556, *LPSERVER_INFO_1556;
+cpp_quote("#endif")
 
+/*
 typedef [switch_type(unsigned long)] union _SERVER_INFO
 {
     [case(100)] LPSERVER_INFO_100 ServerInfo100;
@@ -783,6 +789,61 @@ typedef [switch_type(unsigned long)] union _SERVER_INFO
     [case(1555)] LPSERVER_INFO_1555 ServerInfo1555;
     [case(1556)] LPSERVER_INFO_1556 ServerInfo1556;
 } SERVER_INFO, *PSERVER_INFO, *LPSERVER_INFO;
+*/
+typedef [switch_type(unsigned long)] union _SERVER_INFO
+{
+    [case(100)] SERVER_INFO_100 ServerInfo100;
+    [case(101)] SERVER_INFO_101 ServerInfo101;
+    [case(102)] SERVER_INFO_102 ServerInfo102;
+    [case(103)] SERVER_INFO_103 ServerInfo103;
+    [case(502)] SERVER_INFO_502 ServerInfo502;
+    [case(503)] SERVER_INFO_503 ServerInfo503;
+    [case(599)] SERVER_INFO_599 ServerInfo599;
+    [case(1005)] SERVER_INFO_1005 ServerInfo1005;
+    [case(1107)] SERVER_INFO_1107 ServerInfo1107;
+    [case(1010)] SERVER_INFO_1010 ServerInfo1010;
+    [case(1016)] SERVER_INFO_1016 ServerInfo1016;
+    [case(1017)] SERVER_INFO_1017 ServerInfo1017;
+    [case(1018)] SERVER_INFO_1018 ServerInfo1018;
+    [case(1501)] SERVER_INFO_1501 ServerInfo1501;
+    [case(1502)] SERVER_INFO_1502 ServerInfo1502;
+    [case(1503)] SERVER_INFO_1503 ServerInfo1503;
+    [case(1506)] SERVER_INFO_1506 ServerInfo1506;
+    [case(1510)] SERVER_INFO_1510 ServerInfo1510;
+    [case(1511)] SERVER_INFO_1511 ServerInfo1511;
+    [case(1512)] SERVER_INFO_1512 ServerInfo1512;
+    [case(1513)] SERVER_INFO_1513 ServerInfo1513;
+    [case(1514)] SERVER_INFO_1514 ServerInfo1514;
+    [case(1515)] SERVER_INFO_1515 ServerInfo1515;
+    [case(1516)] SERVER_INFO_1516 ServerInfo1516;
+    [case(1518)] SERVER_INFO_1518 ServerInfo1518;
+    [case(1523)] SERVER_INFO_1523 ServerInfo1523;
+    [case(1528)] SERVER_INFO_1528 ServerInfo1528;
+    [case(1529)] SERVER_INFO_1529 ServerInfo1529;
+    [case(1530)] SERVER_INFO_1530 ServerInfo1530;
+    [case(1533)] SERVER_INFO_1533 ServerInfo1533;
+    [case(1534)] SERVER_INFO_1534 ServerInfo1534;
+    [case(1535)] SERVER_INFO_1535 ServerInfo1535;
+    [case(1536)] SERVER_INFO_1536 ServerInfo1536;
+    [case(1538)] SERVER_INFO_1538 ServerInfo1538;
+    [case(1539)] SERVER_INFO_1539 ServerInfo1539;
+    [case(1540)] SERVER_INFO_1540 ServerInfo1540;
+    [case(1541)] SERVER_INFO_1541 ServerInfo1541;
+    [case(1542)] SERVER_INFO_1542 ServerInfo1542;
+    [case(1543)] SERVER_INFO_1543 ServerInfo1543;
+    [case(1544)] SERVER_INFO_1544 ServerInfo1544;
+    [case(1545)] SERVER_INFO_1545 ServerInfo1545;
+    [case(1546)] SERVER_INFO_1546 ServerInfo1546;
+    [case(1547)] SERVER_INFO_1547 ServerInfo1547;
+    [case(1548)] SERVER_INFO_1548 ServerInfo1548;
+    [case(1549)] SERVER_INFO_1549 ServerInfo1549;
+    [case(1550)] SERVER_INFO_1550 ServerInfo1550;
+    [case(1552)] SERVER_INFO_1552 ServerInfo1552;
+    [case(1553)] SERVER_INFO_1553 ServerInfo1553;
+    [case(1554)] SERVER_INFO_1554 ServerInfo1554;
+    [case(1555)] SERVER_INFO_1555 ServerInfo1555;
+    [case(1556)] SERVER_INFO_1556 ServerInfo1556;
+} SERVER_INFO, *PSERVER_INFO, *LPSERVER_INFO;
 
 typedef struct _DISK_INFO
 {
@@ -795,6 +856,7 @@ typedef struct _DISK_ENUM_CONTAINER
     [size_is(EntriesRead), length_is(EntriesRead)] LPDISK_INFO Buffer;
 } DISK_ENUM_CONTAINER;
 
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_TRANSPORT_INFO_0
 {
     DWORD svti0_numberofvcs;
@@ -803,6 +865,7 @@ typedef struct _SERVER_TRANSPORT_INFO_0
     DWORD svti0_transportaddresslength;
     [string] wchar_t *svti0_networkaddress;
 } SERVER_TRANSPORT_INFO_0, *PSERVER_TRANSPORT_INFO_0, *LPSERVER_TRANSPORT_INFO_0;
+cpp_quote("#endif")
 
 typedef struct _SERVER_XPORT_INFO_0_CONTAINER
 {
@@ -810,6 +873,7 @@ typedef struct _SERVER_XPORT_INFO_0_CONTAINER
     [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_0 Buffer;
 } SERVER_XPORT_INFO_0_CONTAINER, *PSERVER_XPORT_INFO_0_CONTAINER;
 
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_TRANSPORT_INFO_1
 {
     DWORD svti1_numberofvcs;
@@ -819,6 +883,7 @@ typedef struct _SERVER_TRANSPORT_INFO_1
     [string] wchar_t *svti1_networkaddress;
     [string] wchar_t *svti1_domain;
 } SERVER_TRANSPORT_INFO_1, *PSERVER_TRANSPORT_INFO_1, *LPSERVER_TRANSPORT_INFO_1;
+cpp_quote("#endif")
 
 typedef struct _SERVER_XPORT_INFO_1_CONTAINER
 {
@@ -826,6 +891,7 @@ typedef struct _SERVER_XPORT_INFO_1_CONTAINER
     [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_1 Buffer;
 } SERVER_XPORT_INFO_1_CONTAINER, *PSERVER_XPORT_INFO_1_CONTAINER;
 
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_TRANSPORT_INFO_2
 {
     DWORD svti2_numberofvcs;
@@ -836,6 +902,7 @@ typedef struct _SERVER_TRANSPORT_INFO_2
     [string] wchar_t *svti2_domain;
     unsigned long svti2_flags;
 } SERVER_TRANSPORT_INFO_2, *PSERVER_TRANSPORT_INFO_2, *LPSERVER_TRANSPORT_INFO_2;
+cpp_quote("#endif")
 
 typedef struct _SERVER_XPORT_INFO_2_CONTAINER
 {
@@ -843,6 +910,7 @@ typedef struct _SERVER_XPORT_INFO_2_CONTAINER
     [size_is(EntriesRead)] LPSERVER_TRANSPORT_INFO_2 Buffer;
 } SERVER_XPORT_INFO_2_CONTAINER, *PSERVER_XPORT_INFO_2_CONTAINER;
 
+cpp_quote("#ifndef _LMSERVER_H")
 typedef struct _SERVER_TRANSPORT_INFO_3
 {
     DWORD svti3_numberofvcs;
@@ -855,6 +923,7 @@ typedef struct _SERVER_TRANSPORT_INFO_3
     DWORD svti3_passwordlength;
     unsigned char svti3_password[256];
 } SERVER_TRANSPORT_INFO_3, *PSERVER_TRANSPORT_INFO_3, *LPSERVER_TRANSPORT_INFO_3;
+cpp_quote("#endif")
 
 typedef struct _SERVER_XPORT_INFO_3_CONTAINER
 {
@@ -883,6 +952,7 @@ typedef struct _SERVER_XPORT_ENUM_STRUCT
     DWORD Level;
     [switch_is(Level)] SERVER_XPORT_ENUM_UNION XportInfo;
 } SERVER_XPORT_ENUM_STRUCT, *PSERVER_XPORT_ENUM_STRUCT, *LPSERVER_XPORT_ENUM_STRUCT;
+
 
 typedef [context_handle] void *SHARE_DEL_HANDLE;
 typedef SHARE_DEL_HANDLE *PSHARE_DEL_HANDLE;
@@ -1148,7 +1218,8 @@ interface srvsvc
     NetrServerGetInfo(
         [in, string, unique] SRVSVC_HANDLE ServerName,
         [in] DWORD Level,
-        [out, switch_is(Level)] LPSERVER_INFO InfoStruct);
+        [out, switch_is(Level)] LPSERVER_INFO *InfoStruct);
+//        [out, switch_is(Level)] LPSERVER_INFO InfoStruct);
 
     NET_API_STATUS
     __stdcall
@@ -1206,10 +1277,14 @@ interface srvsvc
         [in, string, unique] SRVSVC_HANDLE ServerName,
         [out] LPTIME_OF_DAY_INFO *BufferPtr);
 
-    // This method not used on the wire
-    void
+    /* Function 29 - Not used on wire */
+    NET_API_STATUS
     __stdcall
-    Opnum29NotUsedOnWire(void);
+    NetrServerSetServiceBits(
+        [in, string, unique] SRVSVC_HANDLE ServerName,
+        [in, string, unique] WCHAR *Transport,
+        [in] DWORD ServiceBits,
+        [in] DWORD UpdateImmediately);
 
     NET_API_STATUS
     __stdcall

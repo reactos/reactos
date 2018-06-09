@@ -16,23 +16,118 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef KDBG
+extern UNICODE_STRING DebugFile;
+#endif
+
+NTSTATUS
+vfatFCBInitializeCacheFromVolume(
+    PVCB vcb,
+    PVFATFCB fcb)
+{
+    PFILE_OBJECT fileObject;
+    PVFATCCB newCCB;
+    NTSTATUS status;
+    BOOLEAN Acquired;
+
+    /* Don't re-initialize if already done */
+    if (BooleanFlagOn(fcb->Flags, FCB_CACHE_INITIALIZED))
+    {
+        return STATUS_SUCCESS;
+    }
+
+    ASSERT(vfatFCBIsDirectory(fcb));
+    ASSERT(fcb->FileObject == NULL);
+
+    Acquired = FALSE;
+    if (!ExIsResourceAcquiredExclusive(&vcb->DirResource))
+    {
+        ExAcquireResourceExclusiveLite(&vcb->DirResource, TRUE);
+        Acquired = TRUE;
+    }
+
+    fileObject = IoCreateStreamFileObject (NULL, vcb->StorageDevice);
+    if (fileObject == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quit;
+    }
+
+#ifdef KDBG
+    if (DebugFile.Buffer != NULL && FsRtlIsNameInExpression(&DebugFile, &fcb->LongNameU, FALSE, NULL))
+    {
+        DPRINT1("Attaching %p to %p (%d)\n", fcb, fileObject, fcb->RefCount);
+    }
+#endif
+
+    newCCB = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
+    if (newCCB == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        ObDereferenceObject(fileObject);
+        goto Quit;
+    }
+    RtlZeroMemory(newCCB, sizeof (VFATCCB));
+
+    fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
+    fileObject->FsContext = fcb;
+    fileObject->FsContext2 = newCCB;
+    fileObject->Vpb = vcb->IoVPB;
+    fcb->FileObject = fileObject;
+
+    _SEH2_TRY
+    {
+        CcInitializeCacheMap(fileObject,
+                             (PCC_FILE_SIZES)(&fcb->RFCB.AllocationSize),
+                             TRUE,
+                             &VfatGlobalData->CacheMgrCallbacks,
+                             fcb);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = _SEH2_GetExceptionCode();
+        fcb->FileObject = NULL;
+        ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, newCCB);
+        ObDereferenceObject(fileObject);
+        if (Acquired)
+        {
+            ExReleaseResourceLite(&vcb->DirResource);
+        }
+        return status;
+    }
+    _SEH2_END;
+
+    vfatGrabFCB(vcb, fcb);
+    SetFlag(fcb->Flags, FCB_CACHE_INITIALIZED);
+    status = STATUS_SUCCESS;
+
+Quit:
+    if (Acquired)
+    {
+        ExReleaseResourceLite(&vcb->DirResource);
+    }
+
+    return status;
+}
+
 /*
  * update an existing FAT entry
  */
 NTSTATUS
 VfatUpdateEntry(
-    IN PVFATFCB pFcb,
-    IN BOOLEAN IsFatX)
+    IN PDEVICE_EXTENSION DeviceExt,
+    IN PVFATFCB pFcb)
 {
     PVOID Context;
     PDIR_ENTRY PinEntry;
     LARGE_INTEGER Offset;
     ULONG SizeDirEntry;
     ULONG dirIndex;
+    NTSTATUS Status;
 
     ASSERT(pFcb);
 
-    if (IsFatX)
+    if (vfatVolumeIsFatX(DeviceExt))
     {
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
         dirIndex = pFcb->startIndex;
@@ -51,6 +146,12 @@ VfatUpdateEntry(
     }
 
     ASSERT(pFcb->parentFcb);
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pFcb->parentFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     Offset.u.HighPart = 0;
     Offset.u.LowPart = dirIndex * SizeDirEntry;
@@ -91,6 +192,12 @@ vfatRenameEntry(
 
     DPRINT("vfatRenameEntry(%p, %p, %wZ, %d)\n", DeviceExt, pFcb, FileName, CaseChangeOnly);
 
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pFcb->parentFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
     if (vfatVolumeIsFatX(DeviceExt))
     {
         VFAT_DIRENTRY_CONTEXT DirContext;
@@ -120,6 +227,7 @@ vfatRenameEntry(
         pDirEntry->FilenameLength = (unsigned char)NameA.Length;
 
         /* Update FCB */
+        DirContext.DeviceExt = DeviceExt;
         DirContext.ShortNameU.Length = 0;
         DirContext.ShortNameU.MaximumLength = 0;
         DirContext.ShortNameU.Buffer = NULL;
@@ -168,6 +276,12 @@ vfatFindDirSpace(
         SizeDirEntry = sizeof(FATX_DIR_ENTRY);
     else
         SizeDirEntry = sizeof(FAT_DIR_ENTRY);
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pDirFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     count = pDirFcb->RFCB.FileSize.u.LowPart / SizeDirEntry;
     size = DeviceExt->FatInfo.BytesPerCluster / SizeDirEntry;
@@ -343,6 +457,7 @@ FATAddEntry(
     NameA.Length = 0;
     NameA.MaximumLength = sizeof(aName);
 
+    DirContext.DeviceExt = DeviceExt;
     DirContext.ShortNameU.Buffer = ShortNameBuffer;
     DirContext.ShortNameU.Length = 0;
     DirContext.ShortNameU.MaximumLength = sizeof(ShortNameBuffer);
@@ -359,6 +474,7 @@ FATAddEntry(
         needTilde = TRUE;
         needLong = TRUE;
         RtlZeroMemory(&NameContext, sizeof(GENERATE_NAME_CONTEXT));
+        SearchContext.DeviceExt = DeviceExt;
         SearchContext.LongNameU.Buffer = LongNameBuffer;
         SearchContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);
         SearchContext.ShortNameU.Buffer = ShortSearchName;
@@ -554,6 +670,11 @@ FATAddEntry(
                 }
                 return STATUS_DISK_FULL;
             }
+
+            if (DeviceExt->FatInfo.FatType == FAT32)
+            {
+                FAT32UpdateFreeClustersCount(DeviceExt);
+            }
         }
         else
         {
@@ -576,6 +697,9 @@ FATAddEntry(
         }
         DirContext.DirEntry.Fat.FirstCluster = (unsigned short)CurrentCluster;
     }
+
+    /* No need to init cache here, vfatFindDirSpace() will have done it for us */
+    ASSERT(BooleanFlagOn(ParentFcb->Flags, FCB_CACHE_INITIALIZED));
 
     i = DeviceExt->FatInfo.BytesPerCluster / sizeof(FAT_DIR_ENTRY);
     FileOffset.u.HighPart = 0;
@@ -659,6 +783,13 @@ FATAddEntry(
 
     if (IsDirectory)
     {
+        Status = vfatFCBInitializeCacheFromVolume(DeviceExt, (*Fcb));
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            return Status;
+        }
+
         FileOffset.QuadPart = 0;
         _SEH2_TRY
         {
@@ -741,6 +872,7 @@ FATXAddEntry(
     DirContext.ShortNameU.Buffer = 0;
     DirContext.ShortNameU.Length = 0;
     DirContext.ShortNameU.MaximumLength = 0;
+    DirContext.DeviceExt = DeviceExt;
     RtlZeroMemory(&DirContext.DirEntry.FatX, sizeof(FATX_DIR_ENTRY));
     memset(DirContext.DirEntry.FatX.Filename, 0xff, 42);
     /* Use cluster, if moving */
@@ -783,6 +915,9 @@ FATXAddEntry(
         DirContext.DirEntry.FatX.CreationTime = MoveContext->CreationTime;
         DirContext.DirEntry.FatX.FileSize = MoveContext->FileSize;
     }
+
+    /* No need to init cache here, vfatFindDirSpace() will have done it for us */
+    ASSERT(BooleanFlagOn(ParentFcb->Flags, FCB_CACHE_INITIALIZED));
 
     /* add entry into parent directory */
     FileOffset.u.HighPart = 0;
@@ -829,9 +964,16 @@ FATDelEntry(
     PVOID Context = NULL;
     LARGE_INTEGER Offset;
     PFAT_DIR_ENTRY pDirEntry = NULL;
+    NTSTATUS Status;
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pFcb->parentFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     DPRINT("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
     DPRINT("delete entry: %u to %u\n", pFcb->startIndex, pFcb->dirIndex);
@@ -891,6 +1033,11 @@ FATDelEntry(
             WriteCluster(DeviceExt, CurrentCluster, 0);
             CurrentCluster = NextCluster;
         }
+
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+            FAT32UpdateFreeClustersCount(DeviceExt);
+        }
     }
 
     return STATUS_SUCCESS;
@@ -910,12 +1057,19 @@ FATXDelEntry(
     LARGE_INTEGER Offset;
     PFATX_DIR_ENTRY pDirEntry;
     ULONG StartIndex;
+    NTSTATUS Status;
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);
     ASSERT(vfatVolumeIsFatX(DeviceExt));
 
     StartIndex = pFcb->startIndex;
+
+    Status = vfatFCBInitializeCacheFromVolume(DeviceExt, pFcb->parentFcb);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
 
     DPRINT("delEntry PathName \'%wZ\'\n", &pFcb->PathNameU);
     DPRINT("delete entry: %u\n", StartIndex);
@@ -1004,8 +1158,8 @@ VfatMoveEntry(
     return Status;
 }
 
-extern BOOLEAN FATXIsDirectoryEmpty(PVFATFCB Fcb);
-extern BOOLEAN FATIsDirectoryEmpty(PVFATFCB Fcb);
+extern BOOLEAN FATXIsDirectoryEmpty(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb);
+extern BOOLEAN FATIsDirectoryEmpty(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb);
 extern NTSTATUS FATGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirFcb, PVFAT_DIRENTRY_CONTEXT DirContext, BOOLEAN First);
 extern NTSTATUS FATXGetNextDirEntry(PVOID *pContext, PVOID *pPage, PVFATFCB pDirFcb, PVFAT_DIRENTRY_CONTEXT DirContext, BOOLEAN First);
 

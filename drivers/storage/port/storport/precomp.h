@@ -29,6 +29,8 @@
 #define TAG_ACCRESS_RANGE   'RAtS'
 #define TAG_RESOURCE_LIST   'LRtS'
 #define TAG_ADDRESS_MAPPING 'MAtS'
+#define TAG_INQUIRY_DATA    'QItS'
+#define TAG_SENSE_DATA      'NStS'
 
 typedef enum
 {
@@ -121,6 +123,12 @@ typedef struct _PDO_DEVICE_EXTENSION
 
 NTSTATUS
 NTAPI
+PortFdoScsi(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
+
+NTSTATUS
+NTAPI
 PortFdoPnp(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ PIRP Irp);
@@ -145,6 +153,11 @@ MiniportHwInitialize(
 BOOLEAN
 MiniportHwInterrupt(
     _In_ PMINIPORT Miniport);
+
+BOOLEAN
+MiniportStartIo(
+    _In_ PMINIPORT Miniport,
+    _In_ PSCSI_REQUEST_BLOCK Srb);
 
 /* misc.c */
 
@@ -205,6 +218,12 @@ AllocateAddressMapping(
     ULONG BusNumber);
 
 /* pdo.c */
+
+NTSTATUS
+NTAPI
+PortPdoScsi(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
 
 NTSTATUS
 NTAPI

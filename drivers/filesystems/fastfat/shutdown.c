@@ -55,7 +55,6 @@ VfatShutdown(
     NTSTATUS Status;
     PLIST_ENTRY ListEntry;
     PDEVICE_EXTENSION DeviceExt;
-    ULONG eocMark;
 
     DPRINT("VfatShutdown(DeviceObject %p, Irp %p)\n",DeviceObject, Irp);
 
@@ -74,16 +73,12 @@ VfatShutdown(
             ListEntry = ListEntry->Flink;
 
             ExAcquireResourceExclusiveLite(&DeviceExt->DirResource, TRUE);
+            /* It was a clean volume mounted */
             if (DeviceExt->VolumeFcb->Flags & VCB_CLEAR_DIRTY)
             {
-                /* set clean shutdown bit */
-                Status = GetNextCluster(DeviceExt, 1, &eocMark);
-                if (NT_SUCCESS(Status))
-                {
-                    eocMark |= DeviceExt->CleanShutBitMask;
-                    if (NT_SUCCESS(WriteCluster(DeviceExt, 1, eocMark)))
-                        DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
-                }
+                /* So, drop the dirty bit we set */
+                if (NT_SUCCESS(SetDirtyStatus(DeviceExt, FALSE)))
+                    DeviceExt->VolumeFcb->Flags &= ~VCB_IS_DIRTY;
             }
 
             Status = VfatFlushVolume(DeviceExt, DeviceExt->VolumeFcb);

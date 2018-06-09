@@ -616,8 +616,21 @@ static HRESULT WINAPI SysMouseWImpl_GetProperty(LPDIRECTINPUTDEVICE8W iface, REF
 	    case (DWORD_PTR) DIPROP_GRANULARITY: {
 		LPDIPROPDWORD pr = (LPDIPROPDWORD) pdiph;
 		
-		/* We'll just assume that the app asks about the Z axis */
-		pr->dwData = WHEEL_DELTA;
+		if (
+		    ((pdiph->dwHow == DIPH_BYOFFSET) &&
+		     ((pdiph->dwObj == DIMOFS_X) ||
+		      (pdiph->dwObj == DIMOFS_Y)))
+		    ||
+		    ((pdiph->dwHow == DIPH_BYID) &&
+		     ((pdiph->dwObj == (DIDFT_MAKEINSTANCE(WINE_MOUSE_X_AXIS_INSTANCE) | DIDFT_RELAXIS)) ||
+		      (pdiph->dwObj == (DIDFT_MAKEINSTANCE(WINE_MOUSE_Y_AXIS_INSTANCE) | DIDFT_RELAXIS))))
+		){
+		    /* Set granularity of X/Y Axis to 1. See MSDN on DIPROP_GRANULARITY */
+		    pr->dwData = 1;
+		} else {
+		    /* We'll just assume that the app asks about the Z axis */
+		    pr->dwData = WHEEL_DELTA;
+		}
 		
 		break;
 	    }

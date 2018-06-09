@@ -28,10 +28,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
 #include "resource.h"
 
-/* Values for GINA_CONTEXT.AutoLogonState */
-#define AUTOLOGON_CHECK_REGISTRY 1
-#define AUTOLOGON_ONCE           2
-#define AUTOLOGON_DISABLED       3
 
 typedef struct
 {
@@ -42,17 +38,17 @@ typedef struct
     HWND hStatusWindow;
     HANDLE LsaHandle;
     ULONG AuthenticationPackage;
-    DWORD AutoLogonState;
     BOOL bDisableCAD;
     BOOL bAutoAdminLogon;
     BOOL bDontDisplayLastUserName;
     BOOL bShutdownWithoutLogon;
+    BOOL bIgnoreShiftOverride;
 
     ULONG nShutdownAction;
 
     /* Information to be filled during logon */
     WCHAR UserName[256];
-    WCHAR Domain[256];
+    WCHAR DomainName[256];
     WCHAR Password[256];
     SYSTEMTIME LogonTime;
     HANDLE UserToken;
@@ -60,9 +56,6 @@ typedef struct
     PDWORD pdwOptions;
     PWLX_MPR_NOTIFY_INFO pMprNotifyInfo;
     PVOID *pProfile;
-
-    /* Current logo to display */
-    HBITMAP hBitmap;
 } GINA_CONTEXT, *PGINA_CONTEXT;
 
 extern HINSTANCE hDllInstance;
@@ -137,10 +130,16 @@ CreateProfile(
 /* shutdown.c */
 
 DWORD
+GetDefaultShutdownSelState(VOID);
+
+DWORD
 LoadShutdownSelState(VOID);
 
 VOID
 SaveShutdownSelState(DWORD ShutdownCode);
+
+DWORD
+GetDefaultShutdownOptions(VOID);
 
 DWORD
 GetAllowedShutdownOptions(VOID);

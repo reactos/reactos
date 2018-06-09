@@ -29,6 +29,6 @@
 NTSTATUS
 FormatPartition(
     IN PUNICODE_STRING DriveRoot,
-    IN PFILE_SYSTEM_ITEM FileSystem);
+    IN PFILE_SYSTEM_ITEM FileSystemItem);
 
 /* EOF */

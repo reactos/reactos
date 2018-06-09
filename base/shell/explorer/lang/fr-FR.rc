@@ -70,7 +70,7 @@ BEGIN
     GROUPBOX "Apparence de la barre des tâches", IDC_STATIC, 6, 6, 240, 104
     CONTROL "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE, 12, 18, 229, 24
     AUTOCHECKBOX "&Verrouiller la barre des tâches", IDC_TASKBARPROP_LOCK, 13, 45, 200, 10
-    AUTOCHECKBOX "&Cacher a&utomatique la barre des tâches", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
+    AUTOCHECKBOX "&Cacher a&utomatiquement la barre des tâches", IDC_TASKBARPROP_HIDE, 13, 58, 200, 10
     AUTOCHECKBOX "Garder la barre des &tâches au-dessus des autres fenêtres", IDC_TASKBARPROP_ONTOP, 13, 71, 200, 10
     AUTOCHECKBOX "&Grouper les boutons similaires de la barre des tâches", IDC_TASKBARPROP_GROUP, 13, 84, 200, 10
     AUTOCHECKBOX "Montrer la &zone de lancement rapide", IDC_TASKBARPROP_SHOWQL, 13, 97, 200, 10
@@ -116,7 +116,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Personnalisez le Menu Démarrer Classique"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Menu démarrer", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Vous pouvez personnaliser votre menu Démarrer en ajoutant ou en retirant des éléments.", IDC_STATIC, 48, 17, 108, 39
@@ -131,26 +131,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "&Paramètres du Menu Démarrer", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Annuler", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Attention au nom de fichier"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "&Ignorer", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Renommer", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Ne pas réaliser cette vérification au démarrage", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "Il y a un fichier ou un répertoire sur votre ordinateur appelé  %s ce qui pourrait conduire certaines applications à dysfonctionner.  Le renommer en %s résoudrait le problème. Voulez-vous le renommer maintenant ?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Avancé"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Paramètres du menu démarrer", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Ouvrir les sous-menus quand je m'arrête dessus avec la souris", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "&Mettre en surbrillance les éléments nouvellement installés", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -160,13 +160,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "&Sélectionnez cette option pour fournir un accès rapide aux documents que vous avez ouvert le plus récemment. Vider cette liste ne supprime pas les documents.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "&Lister les documents que j'ai ouvert le plus récemment", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Nettoyer la liste", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Sélectionnez une taille d'icône pour les programmes ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -183,7 +183,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail :", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN

@@ -1,15 +1,18 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Clipboard Viewer
- * FILE:            base/applications/clipbrd/fileutils.h
- * PURPOSE:         Clipboard file format helper functions.
- * PROGRAMMERS:     Ricardo Hanke
- *                  Hermes Belusca-Maito
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Clipboard file format helper functions.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ *              Copyright 2015-2018 Hermes Belusca-Maito
  */
 
+#pragma once
+
+/* Clipboard file format signatures */
 #define CLIP_FMT_31 0xC350
 #define CLIP_FMT_NT 0xC351
 #define CLIP_FMT_BK 0xC352
+
 #define MAX_FMT_NAME_LEN 79
 
 /*

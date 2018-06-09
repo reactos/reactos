@@ -1419,9 +1419,9 @@ NTSTATUS
 NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
-                IN PUNICODE_STRING RegistryPath,
+                IN PUNICODE_STRING RegistryPath OPTIONAL,
                 IN PCUNICODE_STRING ServiceName,
-                PLDR_DATA_TABLE_ENTRY ModuleObject,
+                IN PLDR_DATA_TABLE_ENTRY ModuleObject OPTIONAL,
                 OUT PDRIVER_OBJECT *pDriverObject)
 {
     WCHAR NameBuffer[100];
@@ -1479,7 +1479,16 @@ try_again:
     RtlZeroMemory(DriverObject, ObjectSize);
     DriverObject->Type = IO_TYPE_DRIVER;
     DriverObject->Size = sizeof(DRIVER_OBJECT);
-    DriverObject->Flags = DRVO_LEGACY_DRIVER;
+
+    /*
+     * Check whether RegistryPath and ModuleObject are both NULL because
+     * IoCreateDriver() was called to initialize a built-in driver.
+     */
+    if ((RegistryPath != NULL) || (ModuleObject != NULL))
+        DriverObject->Flags = DRVO_LEGACY_DRIVER;
+    else
+        DriverObject->Flags = DRVO_BUILTIN_DRIVER;
+
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;

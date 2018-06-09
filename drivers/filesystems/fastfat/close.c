@@ -48,6 +48,22 @@ VfatCloseFile(
     }
     else
     {
+        if (pFcb->OpenHandleCount == 0 && BooleanFlagOn(pFcb->Flags, FCB_CACHE_INITIALIZED))
+        {
+            PFILE_OBJECT tmpFileObject;
+            tmpFileObject = pFcb->FileObject;
+            if (tmpFileObject != NULL)
+            {
+                pFcb->FileObject = NULL;
+                CcUninitializeCacheMap(tmpFileObject, NULL, NULL);
+                ClearFlag(pFcb->Flags, FCB_CACHE_INITIALIZED);
+                ObDereferenceObject(tmpFileObject);
+            }
+        }
+
+#ifdef KDBG
+        pFcb->Flags |= FCB_CLOSED;
+#endif
         vfatReleaseFCB(DeviceExt, pFcb);
     }
 

@@ -5,6 +5,10 @@
 #include <ntdddisk.h>
 #include <dos.h>
 #include <pseh/pseh2.h>
+#ifdef KDBG
+#include <ndk/kdfuncs.h>
+#include <reactos/kdros.h>
+#endif
 
 #ifdef __GNUC__
 #define INIT_SECTION __attribute__((section ("INIT")))
@@ -78,6 +82,8 @@ struct _BootSector32
     unsigned char  Res2[420];				// 90
     unsigned short Signature1;				// 510
 };
+
+#define FAT_DIRTY_BIT 0x01
 
 struct _BootSectorFatX
 {
@@ -235,6 +241,7 @@ typedef union _DIR_ENTRY DIR_ENTRY, *PDIR_ENTRY;
 #define VCB_VOLUME_LOCKED       0x0001
 #define VCB_DISMOUNT_PENDING    0x0002
 #define VCB_IS_FATX             0x0004
+#define VCB_IS_SYS_OR_HAS_PAGE  0x0008
 #define VCB_IS_DIRTY            0x4000 /* Volume is dirty */
 #define VCB_CLEAR_DIRTY         0x8000 /* Clean dirty flag at shutdown */
 
@@ -256,6 +263,7 @@ typedef struct
     ULONG FatType;
     ULONG Sectors;
     BOOLEAN FixedMedia;
+    ULONG FSInfoSector;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
@@ -276,10 +284,12 @@ typedef NTSTATUS (*PGET_NEXT_CLUSTER)(PDEVICE_EXTENSION,ULONG,PULONG);
 typedef NTSTATUS (*PFIND_AND_MARK_AVAILABLE_CLUSTER)(PDEVICE_EXTENSION,PULONG);
 typedef NTSTATUS (*PWRITE_CLUSTER)(PDEVICE_EXTENSION,ULONG,ULONG,PULONG);
 
-typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(struct _VFATFCB*);
+typedef BOOLEAN (*PIS_DIRECTORY_EMPTY)(PDEVICE_EXTENSION,struct _VFATFCB*);
 typedef NTSTATUS (*PADD_ENTRY)(PDEVICE_EXTENSION,PUNICODE_STRING,struct _VFATFCB**,struct _VFATFCB*,ULONG,UCHAR,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PDEL_ENTRY)(PDEVICE_EXTENSION,struct _VFATFCB*,struct _VFAT_MOVE_CONTEXT*);
 typedef NTSTATUS (*PGET_NEXT_DIR_ENTRY)(PVOID*,PVOID*,struct _VFATFCB*,struct _VFAT_DIRENTRY_CONTEXT*,BOOLEAN);
+typedef NTSTATUS (*PGET_DIRTY_STATUS)(PDEVICE_EXTENSION,PBOOLEAN);
+typedef NTSTATUS (*PSET_DIRTY_STATUS)(PDEVICE_EXTENSION,BOOLEAN);
 
 typedef struct _VFAT_DISPATCH
 {
@@ -321,7 +331,8 @@ typedef struct DEVICE_EXTENSION
     PGET_NEXT_CLUSTER GetNextCluster;
     PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
     PWRITE_CLUSTER WriteCluster;
-    ULONG CleanShutBitMask;
+    PGET_DIRTY_STATUS GetDirtyStatus;
+    PSET_DIRTY_STATUS SetDirtyStatus;
 
     ULONG BaseDateYear;
 
@@ -347,7 +358,7 @@ BOOLEAN
 VfatIsDirectoryEmpty(PDEVICE_EXTENSION DeviceExt,
                      struct _VFATFCB* Fcb)
 {
-    return DeviceExt->Dispatch.IsDirectoryEmpty(Fcb);
+    return DeviceExt->Dispatch.IsDirectoryEmpty(DeviceExt, Fcb);
 }
 
 FORCEINLINE
@@ -409,6 +420,12 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
 #define FCB_IS_DIRTY            0x0020
+#ifdef KDBG
+#define FCB_CLEANED_UP          0x0040
+#define FCB_CLOSED              0x0080
+#endif
+
+#define NODE_TYPE_FCB ((CSHORT)0x0502)
 
 typedef struct _VFATFCB
 {
@@ -534,6 +551,7 @@ DOSDATE, *PDOSDATE;
 #define IRPCONTEXT_COMPLETE         0x0002
 #define IRPCONTEXT_QUEUE            0x0004
 #define IRPCONTEXT_PENDINGRETURNED  0x0008
+#define IRPCONTEXT_DEFERRED_WRITE   0x0010
 
 typedef struct
 {
@@ -558,6 +576,7 @@ typedef struct _VFAT_DIRENTRY_CONTEXT
     DIR_ENTRY DirEntry;
     UNICODE_STRING LongNameU;
     UNICODE_STRING ShortNameU;
+    PDEVICE_EXTENSION DeviceExt;
 } VFAT_DIRENTRY_CONTEXT, *PVFAT_DIRENTRY_CONTEXT;
 
 typedef struct _VFAT_MOVE_CONTEXT
@@ -640,6 +659,14 @@ VfatReadDiskPartial(
     IN ULONG ReadLength,
     IN ULONG BufferOffset,
     IN BOOLEAN Wait);
+
+NTSTATUS
+VfatWriteDisk(
+    IN PDEVICE_OBJECT pDeviceObject,
+    IN PLARGE_INTEGER WriteOffset,
+    IN ULONG WriteLength,
+    IN OUT PUCHAR Buffer,
+    IN BOOLEAN Override);
 
 NTSTATUS
 VfatWriteDiskPartial(
@@ -725,9 +752,14 @@ vfatDirEntryGetFirstCluster(
 /* dirwr.c */
 
 NTSTATUS
+vfatFCBInitializeCacheFromVolume(
+    PVCB vcb,
+    PVFATFCB fcb);
+
+NTSTATUS
 VfatUpdateEntry(
-    PVFATFCB pFcb,
-    IN BOOLEAN IsFatX);
+    IN PDEVICE_EXTENSION DeviceExt,
+    PVFATFCB pFcb);
 
 BOOLEAN
 vfatFindDirSpace(
@@ -867,6 +899,40 @@ WriteCluster(
     ULONG ClusterToWrite,
     ULONG NewValue);
 
+NTSTATUS
+GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT16GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32GetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    PBOOLEAN DirtyStatus);
+
+NTSTATUS
+SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT16SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32SetDirtyStatus(
+    PDEVICE_EXTENSION DeviceExt,
+    BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32UpdateFreeClustersCount(
+    PDEVICE_EXTENSION DeviceExt);
+
 /* fcb.c */
 
 PVFATFCB
@@ -896,14 +962,41 @@ vfatDestroyCCB(
     PVFATCCB pCcb);
 
 VOID
+#ifndef KDBG
 vfatGrabFCB(
+#else
+_vfatGrabFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB);
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+    );
 
 VOID
+#ifndef KDBG
 vfatReleaseFCB(
+#else
+_vfatReleaseFCB(
+#endif
     PDEVICE_EXTENSION pVCB,
-    PVFATFCB pFCB);
+    PVFATFCB pFCB
+#ifdef KDBG
+    ,
+    PCSTR File,
+    ULONG Line,
+    PCSTR Func
+#endif
+    );
+
+#ifdef KDBG
+#define vfatGrabFCB(v, f) _vfatGrabFCB(v, f, __FILE__, __LINE__, __FUNCTION__)
+#define vfatReleaseFCB(v, f) _vfatReleaseFCB(v, f, __FILE__, __LINE__, __FUNCTION__)
+#endif
 
 PVFATFCB
 vfatGrabFCBFromTable(
@@ -1009,6 +1102,10 @@ DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath);
 
+#ifdef KDBG
+/* kdbg.c */
+KDBG_CLI_ROUTINE vfatKdbgHandler;
+#endif
 
 /* misc.c */
 
@@ -1043,6 +1140,12 @@ vfatReportChange(
     IN PVFATFCB Fcb,
     IN ULONG FilterMatch,
     IN ULONG Action);
+
+VOID
+NTAPI
+VfatHandleDeferredWrite(
+    IN PVOID IrpContext,
+    IN PVOID Unused);
 
 /* pnp.c */
 

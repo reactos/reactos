@@ -620,15 +620,19 @@ void CALLBACK StartScrubW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nC
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token))
             goto end;
 
-        if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid))
+        if (!LookupPrivilegeValueW(NULL, L"SeManageVolumePrivilege", &luid)) {
+            CloseHandle(token);
             goto end;
+        }
 
         tp.PrivilegeCount = 1;
         tp.Privileges[0].Luid = luid;
         tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-        if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL))
+        if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
+            CloseHandle(token);
             goto end;
+        }
 
         CloseHandle(token);
 

@@ -46,18 +46,26 @@ KdRosDumpStackFrames(
 }
 
 #if defined(KDBG)
+typedef
+BOOLEAN
+(NTAPI KDBG_CLI_ROUTINE)(
+    IN PCHAR Command,
+    IN ULONG Argc,
+    IN PCH Argv[]);
+typedef KDBG_CLI_ROUTINE *PKDBG_CLI_ROUTINE;
+
 FORCEINLINE
-VOID
+ULONG
 KdRosRegisterCliCallback(
-    PVOID Callback)
+    PKDBG_CLI_ROUTINE Callback)
 {
-    KdSystemDebugControl('RbdK', Callback, FALSE, 0, 0, 0, 0);
+    return KdSystemDebugControl('RbdK', Callback, FALSE, 0, 0, 0, 0);
 }
 
 FORCEINLINE
 VOID
 KdRosDeregisterCliCallback(
-    PVOID Callback)
+    PKDBG_CLI_ROUTINE Callback)
 {
     KdSystemDebugControl('RbdK', Callback, TRUE, 0, 0, 0, 0);
 }

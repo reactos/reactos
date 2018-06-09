@@ -1,0 +1,71 @@
+/*
+ * PROJECT:     ReactOS Zip Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Chinese (Simplified) resource translation
+ * COPYRIGHT:   Copyright 2018 Li Keqing (auroracloud4096@gmail.com)
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "选择目标文件夹"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "选择目标文件夹",IDC_STATIC,6,12,174,8
+    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "浏览...",IDC_BROWSE,174,42,54,14
+    PUSHBUTTON      "密码",IDC_PASSWORD,174,66,54,14
+    LTEXT           "正在解压...",IDC_STATIC,6,114,42,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+END
+
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "解压完成"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "文件已经被解压至下列目录：",IDC_STATIC,6,12,222,18
+    LTEXT           "目标文件夹",IDC_DESTDIR,6,36,222,8
+    CONTROL         "显示被解压文件",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
+    LTEXT           "点击完成以继续。",IDC_STATIC,6,84,174,8
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "确认替换文件"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "是(&Y)",IDYES,6,36,62,14
+    PUSHBUTTON      "取消",IDCANCEL,204,36,62,14
+    PUSHBUTTON      "全部为是(&T)",IDYESALL,72,36,62,14
+    PUSHBUTTON      "否(&N)",IDNO,138,36,62,14
+    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
+    LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "名称"
+    IDS_COL_TYPE "类型"
+    IDS_COL_COMPRSIZE "压缩大小"
+    IDS_COL_PASSWORD "密码"
+    IDS_COL_SIZE "大小"
+    IDS_COL_RATIO "压缩率"
+    IDS_COL_DATE_MOD "修改日期"
+    IDS_YES "是"
+    IDS_NO "否"
+
+    IDS_WIZ_TITLE "解压向导"
+    IDS_WIZ_DEST_TITLE "选择一个目标文件夹"
+    IDS_WIZ_DEST_SUBTITLE "ZIP 归档中的文件将被解压至指定位置。"
+    IDS_WIZ_COMPL_TITLE "解压完毕"
+    IDS_WIZ_COMPL_SUBTITLE "ZIP 归档中的文件已经被解压。"
+    IDS_WIZ_BROWSE_TITLE "选择您想要解压指定项目到的地方。"
+
+    IDS_OVERWRITEFILE_TEXT "这个文件夹中已经包含一个叫 %1 的文件。\n您想要替换它吗？"
+
+    IDS_MENUITEM "解压全部(&A)..."
+    IDS_HELPTEXT "解压文件夹内容"
+    IDS_FRIENDLYNAME "压缩文件夹"
+END

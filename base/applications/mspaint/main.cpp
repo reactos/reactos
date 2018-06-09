@@ -259,15 +259,15 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     RECT imageAreaPos = {3, 3, 3 + imageModel.GetWidth(), 3 + imageModel.GetHeight()};
     imageArea.Create(scrlClientWindow.m_hWnd, imageAreaPos, NULL, WS_CHILD | WS_VISIBLE);
 
-    if (lpszArgument[0] != 0)
+    if (__argc >= 2)
     {
         HBITMAP bmNew = NULL;
-        LoadDIBFromFile(&bmNew, lpszArgument, &fileTime, &fileSize, &fileHPPM, &fileVPPM);
+        LoadDIBFromFile(&bmNew, __targv[1], &fileTime, &fileSize, &fileHPPM, &fileVPPM);
         if (bmNew != NULL)
         {
             TCHAR *temp;
             imageModel.Insert(bmNew);
-            GetFullPathName(lpszArgument, SIZEOF(filepathname), filepathname, &temp);
+            GetFullPathName(__targv[1], SIZEOF(filepathname), filepathname, &temp);
             CPath pathFileName(filepathname);
             pathFileName.StripPath();
             CString strTitle;

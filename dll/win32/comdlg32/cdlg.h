@@ -23,6 +23,8 @@
 
 #include "dlgs.h"
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
+
 /* Common dialogs implementation globals */
 #define COMDLG32_Atom   MAKEINTATOM(0xa000)     /* MS uses this one to identify props */
 
@@ -204,19 +206,7 @@ void FILEDLG95_OnOpenMessage(HWND hwnd, int idCaption, int idText) DECLSPEC_HIDD
 extern BOOL GetFileName31A( OPENFILENAMEA *lpofn, UINT dlgType ) DECLSPEC_HIDDEN;
 extern BOOL GetFileName31W( OPENFILENAMEW *lpofn, UINT dlgType ) DECLSPEC_HIDDEN;
 
-/* ITEMIDLIST */
-
-extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILClone) (LPCITEMIDLIST);
-extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILCombine)(LPCITEMIDLIST,LPCITEMIDLIST);
-extern LPITEMIDLIST (WINAPI *COMDLG32_PIDL_ILGetNext)(LPITEMIDLIST);
-extern BOOL (WINAPI *COMDLG32_PIDL_ILRemoveLastID)(LPCITEMIDLIST);
-extern BOOL (WINAPI *COMDLG32_PIDL_ILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
-extern UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST);
-
 /* SHELL */
-extern LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD);
-extern DWORD (WINAPI *COMDLG32_SHFree)(LPVOID);
-extern BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR);
 extern LPITEMIDLIST (WINAPI *COMDLG32_SHSimpleIDListFromPathAW)(LPCVOID);
 
 #define ONOPEN_BROWSE 1

@@ -1916,3 +1916,12 @@ HRESULT WINAPI D3DXSaveTextureToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
 
     return hr;
 }
+
+HRESULT WINAPI D3DXComputeNormalMap(IDirect3DTexture9 *texture, IDirect3DTexture9 *src_texture,
+        const PALETTEENTRY *src_palette, DWORD flags, DWORD channel, float amplitude)
+{
+    FIXME("texture %p, src_texture %p, src_palette %p, flags %#x, channel %u, amplitude %.8e stub.\n",
+            texture, src_texture, src_palette, flags, channel, amplitude);
+
+    return D3D_OK;
+}

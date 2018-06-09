@@ -5,8 +5,8 @@
 ---
 
 <p align=center>
-  <a href="https://reactos.org/project-news/reactos-047-released">
-    <img alt="Release 0.4.7 Release" src="https://img.shields.io/badge/release-0.4.7-0688CB.svg">
+  <a href="https://reactos.org/project-news/reactos-048-released">
+    <img alt="ReactOS 0.4.8 Release" src="https://img.shields.io/badge/release-0.4.8-0688CB.svg">
   </a>
   <a href="https://reactos.org/download">
     <img alt="Download ReactOS" src="https://img.shields.io/badge/download-latest-0688CB.svg">
@@ -113,12 +113,12 @@ There is also an obsolete [SVN archive repository](https://svn.reactos.org/svn/r
 [travis.badge]:     https://travis-ci.org/reactos/reactos.svg?branch=master
 [appveyor.badge]:   https://ci.appveyor.com/api/projects/status/github/reactos/reactos?branch=master&svg=true
 [coverity.badge]:   https://scan.coverity.com/projects/205/badge.svg?flat=1
-[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.5-0688CB.svg   
+[rosbewin.badge]:   https://img.shields.io/badge/RosBE_Windows-2.1.6-0688CB.svg   
 [rosbeunix.badge]:  https://img.shields.io/badge/RosBE_Unix-2.1.2-0688CB.svg
 [prwelcome.badge]:  https://img.shields.io/badge/PR-welcome-0688CB.svg
 
 [travis.link]:      https://travis-ci.org/reactos/reactos
 [appveyor.link]:    https://ci.appveyor.com/project/AmineKhaldi/reactos
 [coverity.link]:    https://scan.coverity.com/projects/205
-[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.5/
+[rosbewin.link]:    https://sourceforge.net/projects/reactos/files/RosBE-Windows/i386/2.1.6/
 [rosbeunix.link]:   https://sourceforge.net/projects/reactos/files/RosBE-Unix/2.1.2/  

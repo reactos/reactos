@@ -778,6 +778,7 @@ VfatCreateFile(
                 if (PagingFileCreate)
                 {
                     pFcb->Flags |= FCB_IS_PAGE_FILE;
+                    SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
                 }
             }
             else
@@ -897,6 +898,7 @@ VfatCreateFile(
             else
             {
                 pFcb->Flags |= FCB_IS_PAGE_FILE;
+                SetFlag(DeviceExt->Flags, VCB_IS_SYS_OR_HAS_PAGE);
             }
         }
         else
@@ -949,7 +951,7 @@ VfatCreateFile(
                                                &pFcb->entry.Fat.UpdateTime);
                 }
 
-                VfatUpdateEntry(pFcb, vfatVolumeIsFatX(DeviceExt));
+                VfatUpdateEntry(DeviceExt, pFcb);
             }
 
             ExAcquireResourceExclusiveLite(&(pFcb->MainResource), TRUE);
@@ -1055,11 +1057,6 @@ VfatCreate(
         IrpContext->PriorityBoost = IO_DISK_INCREMENT;
 
         return STATUS_SUCCESS;
-    }
-
-    if (!BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT))
-    {
-        return VfatMarkIrpContextForQueue(IrpContext);
     }
 
     IrpContext->Irp->IoStatus.Information = 0;

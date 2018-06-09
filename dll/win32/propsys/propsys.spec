@@ -84,7 +84,7 @@
 @ stub PSGetPropertyDescriptionByName
 @ stdcall PSGetPropertyDescriptionListFromString(wstr ptr ptr)
 @ stub PSGetPropertyFromPropertyStorage
-@ stub PSGetPropertyKeyFromName
+@ stdcall PSGetPropertyKeyFromName(wstr ptr)
 @ stdcall PSGetPropertySystem(ptr ptr)
 @ stub PSGetPropertyValue
 @ stub PSLookupPropertyHandlerCLSID

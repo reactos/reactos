@@ -20,6 +20,7 @@ HKCR,"Folder\shell\explore\command","",0x00000000,"explorer.exe /e,""%1"""
 
 ; Clipboard Element
 HKCR,".clp","",0x00000000,"clpfile"
+HKCR,".clp","Content Type",0x00000000,"application/x-msclip"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
@@ -78,6 +79,7 @@ HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; DOS Applications
 HKCR,".com","",0x00000000,"comfile"
+HKCR,".com","Content Type",0x00000000,"application/x-msdos-program"
 HKCR,"comfile","",0x00000000,"DOS Application"
 HKCR,"comfile","EditFlags",0x00010001,0x00000010
 HKCR,"comfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-203"
@@ -100,8 +102,16 @@ HKCR,"curfile","",0x00000000,"Cursor"
 HKCR,"curfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-205"
 HKCR,"curfile\DefaultIcon","",0x00000000,"%1"
 
+; Database File
+HKCR,".db","",0x00000000,"dbfile"
+HKCR,"dbfile","",0x00000000,"Database File"
+HKCR,"dbfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-220"
+HKCR,"dbfile","NoOpen",0x00000000,""
+HKCR,"dbfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+
 ; Dynamic Link Libraries
 HKCR,".dll","",0x00000000,"dllfile"
+HKCR,".dll","Content Type",0x00000000,"application/x-msdownload"
 HKCR,"dllfile","",0x00000000,"Application Extension"
 HKCR,"dllfile","EditFlags",0x00010001,0x00000001
 HKCR,"dllfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-206"
@@ -114,8 +124,17 @@ HKCR,"drvfile","",0x00000000,"Device Driver"
 HKCR,"drvfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-207"
 HKCR,"drvfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
+; Extensible Firmware Interface Executable
+HKCR,".efi","",0x00000000,"efifile"
+HKCR,".efi","Content Type",0x00000000,"application/octet-stream"
+HKCR,"efifile","",0x00000000,"Extensible Firmware Interface Executable"
+HKCR,"efifile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-221"
+HKCR,"efifile","NoOpen",0x00000000,""
+HKCR,"efifile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+
 ; Applications
 HKCR,".exe","",0x00000000,"exefile"
+HKCR,".exe","Content Type",0x00000000,"application/x-msdownload"
 HKCR,"exefile","",0x00000000,"Application"
 HKCR,"exefile","EditFlags",0x00010001,0x00000010
 HKCR,"exefile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-208"
@@ -123,6 +142,29 @@ HKCR,"exefile\DefaultIcon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 HKCR,"exefile\shell\runas\command","",0x00020000,"""%1"" %*"
 HKCR,"exefile\shellex\DropHandler","",0x00020000,"{86C86720-42A0-1069-A2E8-08002B30309D}"
+
+; National Language Support File
+HKCR,".nls","",0x00000000,"nlsfile"
+HKCR,"nlsfile","",0x00000000,"National Language Support File"
+HKCR,"nlsfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-222"
+HKCR,"nlsfile","NoOpen",0x00000000,""
+HKCR,"nlsfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+
+; ActiveX Control
+HKCR,".ocx","",0x00000000,"ocxfile"
+HKCR,".ocx","PerceivedType",0x00000000,"system"
+HKCR,"ocxfile","",0x00000000,"ActiveX Control"
+HKCR,"ocxfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-223"
+HKCR,"ocxfile","NoOpen",0x00000000,""
+HKCR,"ocxfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
+
+; Type Library
+HKCR,".tlb","",0x00000000,"tlbfile"
+HKCR,"tlbfile","",0x00000000,"Type Library"
+HKCR,"tlbfile","AlwaysShowExt",0x00000000,""
+HKCR,"tlbfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-224"
+HKCR,"tlbfile","NoOpen",0x00000000,""
+HKCR,"tlbfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-154"
 
 ; Fonts
 HKCR,".fon","",0x00000000,"fonfile"
@@ -173,6 +215,12 @@ HKCR,"chm.file","",0x00000000,%CHMFILE%
 ;;HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\hhctrl.ocx,-452"
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
 HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
+
+; HTA Files
+HKCR,".hta","",0x00000000,"htafile"
+HKCR,"htafile","",0x00000000,"HTML Application"
+HKCR,"htafile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mshta.exe,-1"
+HKCR,"htafile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mshta.exe ""%1"" %*"
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"htmlfile"
@@ -229,7 +277,7 @@ HKCR,"jpegfile","",0x00000000,"JPEG Image"
 HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
@@ -244,7 +292,7 @@ HKCR,"bmpfile","",0x00000000,"Bitmap Image"
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
 HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
@@ -254,7 +302,7 @@ HKCR,"pngfile","",0x00000000,"PNG Image"
 HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
 HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; TIF Images
 HKCR,".tif","",0x00000000,"TIFImage.Document"
@@ -267,7 +315,7 @@ HKCR,"TIFImage.Document","",0x00000000,"TIF Image"
 HKCR,"TIFImage.Document","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-306"
 HKCR,"TIFImage.Document\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
 HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; WMF Images
 HKCR,".wmf","",0x00000000,"wmffile"
@@ -358,7 +406,14 @@ HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\system32\msi
 HKCR,"Msi.Package\shell\Uninstall","",0x00000000,%UNINSTALL%
 HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\system32\msiexec.exe /x ""%1"""
 
-; Program Information File for NT VDM
+; NT DOS32 Configuration File
+HKCR,".nt","",0x00000000,"ntfile"
+HKCR,"ntfile","",0x00000000,"NT DOS32 Configuration File"
+HKCR,"ntfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-225"
+HKCR,"ntfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
+HKCR,"ntfile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
+
+; NT VDM Program Information File
 HKCR,".pif","",0x00000000,"piffile"
 HKCR,"piffile","",0x00000000,"NT VDM Program Information File"
 HKCR,"piffile","EditFlags",0x00010001,0x00000001
@@ -410,6 +465,7 @@ HKCR,"SHCmdFile\shellex\DropHandler","",0x00000000,"{86C86720-42A0-1069-A2E8-080
 
 ; System Files
 HKCR,".sys","",0x00000000,"sysfile"
+HKCR,".sys","PerceivedType",0x00000000,"system"
 HKCR,"sysfile","",0x00000000,"System File"
 HKCR,"sysfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-218"
 HKCR,"sysfile","NoOpen",0x00000000,""
@@ -433,13 +489,19 @@ HKCR,".url","",0x00000000,"InternetShortcut"
 
 ; Wave Sounds
 HKCR,".wav","",0x00000000,"SoundRec"
+HKCR,".wav","Content Type",0x00000000,"audio/wav"
+HKCR,".wav","PerceivedType",0x00000000,"audio"
 HKCR,"SoundRec","",0x00000000,%WAVFILE%
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
 
 ; Midi Sounds
 HKCR,".mid","",0x00000000,"MIDFile"
+HKCR,".mid","Content Type",0x00000000,"audio/mid"
+HKCR,".mid","PerceivedType",0x00000000,"audio"
 HKCR,".midi","",0x00000000,"MIDFile"
+HKCR,".midi","Content Type",0x00000000,"audio/mid"
+HKCR,".midi","PerceivedType",0x00000000,"audio"
 HKCR,"MIDFile","",0x00000000,%MIDFILE%
 HKCR,"MIDFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
 HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
@@ -452,6 +514,8 @@ HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.e
 
 ; Avi Files
 HKCR,".avi","",0x00000000,"AVIFile"
+HKCR,".avi","Content Type",0x00000000,"video/avi"
+HKCR,".avi","PerceivedType",0x00000000,"video"
 HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
 HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
@@ -515,8 +579,6 @@ HKCR,".java","PerceivedType",0x00000000,"text"
 HKCR,".local","PerceivedType",0x00000000,"system"
 HKCR,".manifest","PerceivedType",0x00000000,"system"
 HKCR,".nvr","PerceivedType",0x00000000,"text"
-HKCR,".ocx","",0x00000000,%OCXFILE%
-HKCR,".ocx","PerceivedType",0x00000000,"system"
 HKCR,".php3","PerceivedType",0x00000000,"text"
 HKCR,".pl","PerceivedType",0x00000000,"text"
 HKCR,".plg","PerceivedType",0x00000000,"text"
@@ -697,11 +759,10 @@ AVIFILE="Video Clip"
 
 ;; Misc file types without friendly (localized in .dll resources) name
 CSSFILE="Cascading Style Sheet"
-OCXFILE="OLE Control Extension"
 SCFFILE="ReactOS Explorer Command"
 WMZFILE="Compressed Enhanced Metafile"
 
-:: For .reg files, right-click menu
+;; For .reg files, right-click menu
 MERGE="Merge"
 
 ;; For screensaver (*.scr) and MSI install package (*.msi) files, right-click menu
@@ -739,7 +800,6 @@ MIDFILE="Secuencia MIDI"
 CDAFILE="Pista de audio CD"
 AVIFILE="Secuencia de vídeo"
 CSSFILE="Hoja de estilos en cascada"
-OCXFILE="Extensión de control OLE"
 SCFFILE="Órden del explorador de ReactOS"
 WMZFILE="Metarchivo mejorado comprimido"
 
@@ -795,7 +855,6 @@ WAVFILE="Dźwięk typu wave"
 MIDFILE="Sekwencja MIDI"
 CDAFILE="Ścieżka CD audio"
 AVIFILE="Arkusz stylu kaskadowego"
-OCXFILE="Kontrolka OLE"
 SCFFILE="Polecenie Eksploratora ReactOS"
 WMZFILE="Skompresowany metaplik"
 MERGE="Scal"
@@ -821,7 +880,6 @@ MIDFILE="Secvență audio MIDI"
 CDAFILE="Pistă de CD audio"
 AVIFILE="Fișier video"
 CSSFILE="Foaie de stiluri în cascadă"
-OCXFILE="Extensie de control OLE"
 SCFFILE="Comandă de Explorator ReactOS"
 WMZFILE="Metafișier îmbunătățit comprimat"
 MERGE="Unește"

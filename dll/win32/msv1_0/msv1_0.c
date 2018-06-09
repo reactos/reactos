@@ -22,7 +22,7 @@ LSA_DISPATCH_TABLE DispatchTable;
 
 static
 NTSTATUS
-GetDomainSid(PRPC_SID *Sid)
+GetAccountDomainSid(PRPC_SID *Sid)
 {
     LSAPR_HANDLE PolicyHandle = NULL;
     PLSAPR_POLICY_INFORMATION PolicyInfo = NULL;
@@ -66,6 +66,27 @@ done:
         LsarClose(&PolicyHandle);
 
     return Status;
+}
+
+
+static
+NTSTATUS
+GetNtAuthorityDomainSid(PRPC_SID *Sid)
+{
+    SID_IDENTIFIER_AUTHORITY NtAuthority = {SECURITY_NT_AUTHORITY};
+    ULONG Length = 0;
+
+    Length = RtlLengthRequiredSid(0);
+    *Sid = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+    if (*Sid == NULL)
+    {
+        ERR("Failed to allocate SID\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlInitializeSid(*Sid,&NtAuthority, 0);
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -287,34 +308,72 @@ BuildTokenPrimaryGroup(OUT PTOKEN_PRIMARY_GROUP PrimaryGroup,
 static
 NTSTATUS
 BuildTokenGroups(OUT PTOKEN_GROUPS *Groups,
-                 IN PSID AccountDomainSid)
+                 IN PSID AccountDomainSid,
+                 IN ULONG RelativeId,
+                 IN BOOL SpecialAccount)
 {
     SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
     PTOKEN_GROUPS TokenGroups;
-#define MAX_GROUPS 2
     DWORD GroupCount = 0;
+    DWORD MaxGroups = 2;
     PSID Sid;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    if (SpecialAccount)
+        MaxGroups++;
+
     TokenGroups = DispatchTable.AllocateLsaHeap(sizeof(TOKEN_GROUPS) +
-                                                MAX_GROUPS * sizeof(SID_AND_ATTRIBUTES));
+                                                MaxGroups * sizeof(SID_AND_ATTRIBUTES));
     if (TokenGroups == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Sid = AppendRidToSid(AccountDomainSid, DOMAIN_GROUP_RID_USERS);
-    if (Sid == NULL)
+    if (SpecialAccount)
     {
+        /* Self */
+        Sid = AppendRidToSid(AccountDomainSid, RelativeId);
+        if (Sid == NULL)
+        {
 
+        }
+
+        TokenGroups->Groups[GroupCount].Sid = Sid;
+        TokenGroups->Groups[GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+        GroupCount++;
+
+        /* Member of 'Users' alias */
+        RtlAllocateAndInitializeSid(&SystemAuthority,
+                                    2,
+                                    SECURITY_BUILTIN_DOMAIN_RID,
+                                    DOMAIN_ALIAS_RID_USERS,
+                                    SECURITY_NULL_RID,
+                                    SECURITY_NULL_RID,
+                                    SECURITY_NULL_RID,
+                                    SECURITY_NULL_RID,
+                                    SECURITY_NULL_RID,
+                                    SECURITY_NULL_RID,
+                                    &Sid);
+        TokenGroups->Groups[GroupCount].Sid = Sid;
+        TokenGroups->Groups[GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+        GroupCount++;
     }
+    else
+    {
+        /* Member of the domains users group */
+        Sid = AppendRidToSid(AccountDomainSid, DOMAIN_GROUP_RID_USERS);
+        if (Sid == NULL)
+        {
 
-    /* Member of the domain */
-    TokenGroups->Groups[GroupCount].Sid = Sid;
-    TokenGroups->Groups[GroupCount].Attributes =
-        SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-    GroupCount++;
+        }
 
+        TokenGroups->Groups[GroupCount].Sid = Sid;
+        TokenGroups->Groups[GroupCount].Attributes =
+            SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+        GroupCount++;
+    }
 
     /* Member of 'Authenticated users' */
     RtlAllocateAndInitializeSid(&SystemAuthority,
@@ -334,7 +393,7 @@ BuildTokenGroups(OUT PTOKEN_GROUPS *Groups,
     GroupCount++;
 
     TokenGroups->GroupCount = GroupCount;
-    ASSERT(TokenGroups->GroupCount <= MAX_GROUPS);
+    ASSERT(TokenGroups->GroupCount <= MaxGroups);
 
     *Groups = TokenGroups;
 
@@ -346,7 +405,8 @@ static
 NTSTATUS
 BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
                             PRPC_SID AccountDomainSid,
-                            PSAMPR_USER_INFO_BUFFER UserInfo)
+                            PSAMPR_USER_INFO_BUFFER UserInfo,
+                            BOOL SpecialAccount)
 {
     PLSA_TOKEN_INFORMATION_V1 Buffer = NULL;
     ULONG i;
@@ -376,7 +436,9 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
         goto done;
 
     Status = BuildTokenGroups(&Buffer->Groups,
-                              (PSID)AccountDomainSid);
+                              (PSID)AccountDomainSid,
+                              UserInfo->All.UserId,
+                              SpecialAccount);
     if (!NT_SUCCESS(Status))
         goto done;
 
@@ -970,9 +1032,10 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
 //    LARGE_INTEGER AccountExpires;
     LARGE_INTEGER PasswordMustChange;
     LARGE_INTEGER PasswordLastSet;
+    BOOL SpecialAccount = FALSE;
     NTSTATUS Status;
 
-    TRACE("()\n");
+    TRACE("LsaApLogonUser()\n");
 
     TRACE("LogonType: %lu\n", LogonType);
     TRACE("AuthenticationInformation: %p\n", AuthenticationInformation);
@@ -1012,153 +1075,215 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Get the logon time */
     NtQuerySystemTime(&LogonTime);
 
-    /* Get the domain SID */
-    Status = GetDomainSid(&AccountDomainSid);
-    if (!NT_SUCCESS(Status))
+    /* Check for special accounts */
+    if (_wcsicmp(LogonInfo->LogonDomainName.Buffer, L"NT AUTHORITY") == 0)
     {
-        TRACE("GetDomainSid() failed (Status 0x%08lx)\n", Status);
-        return Status;
-    }
+        SpecialAccount = TRUE;
 
-    /* Connect to the SAM server */
-    Status = SamIConnect(NULL,
-                         &ServerHandle,
-                         SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
-                         TRUE);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("SamIConnect() failed (Status 0x%08lx)\n", Status);
-        goto done;
-    }
-
-    /* Open the account domain */
-    Status = SamrOpenDomain(ServerHandle,
-                            DOMAIN_LOOKUP,
-                            AccountDomainSid,
-                            &DomainHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("SamrOpenDomain failed (Status %08lx)\n", Status);
-        goto done;
-    }
-
-    Names[0].Length = LogonInfo->UserName.Length;
-    Names[0].MaximumLength = LogonInfo->UserName.MaximumLength;
-    Names[0].Buffer = LogonInfo->UserName.Buffer;
-
-    /* Try to get the RID for the user name */
-    Status = SamrLookupNamesInDomain(DomainHandle,
-                                     1,
-                                     Names,
-                                     &RelativeIds,
-                                     &Use);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
-        Status = STATUS_NO_SUCH_USER;
-        goto done;
-    }
-
-    /* Fail, if it is not a user account */
-    if (Use.Element[0] != SidTypeUser)
-    {
-        TRACE("Account is not a user account!\n");
-        Status = STATUS_NO_SUCH_USER;
-        goto done;
-    }
-
-    /* Open the user object */
-    Status = SamrOpenUser(DomainHandle,
-                          USER_READ_GENERAL | USER_READ_LOGON |
-                          USER_READ_ACCOUNT | USER_READ_PREFERENCES, /* FIXME */
-                          RelativeIds.Element[0],
-                          &UserHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("SamrOpenUser failed (Status %08lx)\n", Status);
-        goto done;
-    }
-
-    Status = SamrQueryInformationUser(UserHandle,
-                                      UserAllInformation,
-                                      &UserInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        TRACE("SamrQueryInformationUser failed (Status %08lx)\n", Status);
-        goto done;
-    }
-
-    TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
-
-    /* Check the password */
-    if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
-    {
-        Status = MsvpCheckPassword(&(LogonInfo->Password),
-                                   UserInfo);
+        /* Get the authority domain SID */
+        Status = GetNtAuthorityDomainSid(&AccountDomainSid);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("MsvpCheckPassword failed (Status %08lx)\n", Status);
+            ERR("GetNtAuthorityDomainSid() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        if (_wcsicmp(LogonInfo->UserName.Buffer, L"LocalService") == 0)
+        {
+            TRACE("SpecialAccount: LocalService\n");
+
+            if (LogonType != Service)
+                return STATUS_LOGON_FAILURE;
+
+            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       HEAP_ZERO_MEMORY,
+                                       sizeof(SAMPR_USER_ALL_INFORMATION));
+            if (UserInfo == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            UserInfo->All.UserId = SECURITY_LOCAL_SERVICE_RID;
+            UserInfo->All.PrimaryGroupId = SECURITY_LOCAL_SERVICE_RID;
+        }
+        else if (_wcsicmp(LogonInfo->UserName.Buffer, L"NetworkService") == 0)
+        {
+            TRACE("SpecialAccount: NetworkService\n");
+
+            if (LogonType != Service)
+                return STATUS_LOGON_FAILURE;
+
+            UserInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+                                       HEAP_ZERO_MEMORY,
+                                       sizeof(SAMPR_USER_ALL_INFORMATION));
+            if (UserInfo == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
+
+            UserInfo->All.UserId = SECURITY_NETWORK_SERVICE_RID;
+            UserInfo->All.PrimaryGroupId = SECURITY_NETWORK_SERVICE_RID;
+        }
+        else
+        {
+            Status = STATUS_NO_SUCH_USER;
             goto done;
         }
     }
-
-    /* Check account restrictions for non-administrator accounts */
-    if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
+    else
     {
-        /* Check if the account has been disabled */
-        if (UserInfo->All.UserAccountControl & USER_ACCOUNT_DISABLED)
+        TRACE("NormalAccount\n");
+
+        /* Get the account domain SID */
+        Status = GetAccountDomainSid(&AccountDomainSid);
+        if (!NT_SUCCESS(Status))
         {
-            ERR("Account disabled!\n");
-            *SubStatus = STATUS_ACCOUNT_DISABLED;
-            Status = STATUS_ACCOUNT_RESTRICTION;
+            ERR("GetAccountDomainSid() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
+
+        /* Connect to the SAM server */
+        Status = SamIConnect(NULL,
+                             &ServerHandle,
+                             SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                             TRUE);
+        if (!NT_SUCCESS(Status))
+        {
+            TRACE("SamIConnect() failed (Status 0x%08lx)\n", Status);
             goto done;
         }
 
-        /* Check if the account has been locked */
-        if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
+        /* Open the account domain */
+        Status = SamrOpenDomain(ServerHandle,
+                                DOMAIN_LOOKUP,
+                                AccountDomainSid,
+                                &DomainHandle);
+        if (!NT_SUCCESS(Status))
         {
-            ERR("Account locked!\n");
-            *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
-            Status = STATUS_ACCOUNT_RESTRICTION;
+            ERR("SamrOpenDomain failed (Status %08lx)\n", Status);
             goto done;
         }
+
+        Names[0].Length = LogonInfo->UserName.Length;
+        Names[0].MaximumLength = LogonInfo->UserName.MaximumLength;
+        Names[0].Buffer = LogonInfo->UserName.Buffer;
+
+        /* Try to get the RID for the user name */
+        Status = SamrLookupNamesInDomain(DomainHandle,
+                                         1,
+                                         Names,
+                                         &RelativeIds,
+                                         &Use);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamrLookupNamesInDomain failed (Status %08lx)\n", Status);
+            Status = STATUS_NO_SUCH_USER;
+            goto done;
+        }
+
+        /* Fail, if it is not a user account */
+        if (Use.Element[0] != SidTypeUser)
+        {
+            ERR("Account is not a user account!\n");
+            Status = STATUS_NO_SUCH_USER;
+            goto done;
+        }
+
+        /* Open the user object */
+        Status = SamrOpenUser(DomainHandle,
+                              USER_READ_GENERAL | USER_READ_LOGON |
+                              USER_READ_ACCOUNT | USER_READ_PREFERENCES, /* FIXME */
+                              RelativeIds.Element[0],
+                              &UserHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamrOpenUser failed (Status %08lx)\n", Status);
+            goto done;
+        }
+
+        Status = SamrQueryInformationUser(UserHandle,
+                                          UserAllInformation,
+                                          &UserInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamrQueryInformationUser failed (Status %08lx)\n", Status);
+            goto done;
+        }
+
+        TRACE("UserName: %S\n", UserInfo->All.UserName.Buffer);
+
+        /* Check the password */
+        if ((UserInfo->All.UserAccountControl & USER_PASSWORD_NOT_REQUIRED) == 0)
+        {
+            Status = MsvpCheckPassword(&(LogonInfo->Password),
+                                       UserInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("MsvpCheckPassword failed (Status %08lx)\n", Status);
+                goto done;
+            }
+        }
+
+        /* Check account restrictions for non-administrator accounts */
+        if (RelativeIds.Element[0] != DOMAIN_USER_RID_ADMIN)
+        {
+            /* Check if the account has been disabled */
+            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_DISABLED)
+            {
+                ERR("Account disabled!\n");
+                *SubStatus = STATUS_ACCOUNT_DISABLED;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
+
+            /* Check if the account has been locked */
+            if (UserInfo->All.UserAccountControl & USER_ACCOUNT_AUTO_LOCKED)
+            {
+                ERR("Account locked!\n");
+                *SubStatus = STATUS_ACCOUNT_LOCKED_OUT;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
 
 #if 0
-        /* Check if the account expired */
-        AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
-        AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
+            /* Check if the account expired */
+            AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
+            AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
 
-        if (AccountExpires.QuadPart != 0 &&
-            LogonTime.QuadPart >= AccountExpires.QuadPart)
-        {
-            ERR("Account expired!\n");
-            *SubStatus = STATUS_ACCOUNT_EXPIRED;
-            Status = STATUS_ACCOUNT_RESTRICTION;
-            goto done;
-        }
+            if (AccountExpires.QuadPart != 0 &&
+                LogonTime.QuadPart >= AccountExpires.QuadPart)
+            {
+                ERR("Account expired!\n");
+                *SubStatus = STATUS_ACCOUNT_EXPIRED;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
 #endif
 
-        /* Check if the password expired */
-        PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
-        PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
-        PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
-        PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
+            /* Check if the password expired */
+            PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
+            PasswordMustChange.HighPart = UserInfo->All.PasswordMustChange.HighPart;
+            PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
+            PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
 
-        if (LogonTime.QuadPart >= PasswordMustChange.QuadPart)
-        {
-            ERR("Password expired!\n");
-            if (PasswordLastSet.QuadPart == 0)
-                *SubStatus = STATUS_PASSWORD_MUST_CHANGE;
-            else
-                *SubStatus = STATUS_PASSWORD_EXPIRED;
+            if (LogonTime.QuadPart >= PasswordMustChange.QuadPart)
+            {
+                ERR("Password expired!\n");
+                if (PasswordLastSet.QuadPart == 0)
+                    *SubStatus = STATUS_PASSWORD_MUST_CHANGE;
+                else
+                    *SubStatus = STATUS_PASSWORD_EXPIRED;
 
-            Status = STATUS_ACCOUNT_RESTRICTION;
-            goto done;
+                Status = STATUS_ACCOUNT_RESTRICTION;
+                goto done;
+            }
+
+            /* FIXME: more checks */
+            // STATUS_INVALID_LOGON_HOURS;
+            // STATUS_INVALID_WORKSTATION;
         }
-
-        /* FIXME: more checks */
-        // STATUS_INVALID_LOGON_HOURS;
-        // STATUS_INVALID_WORKSTATION;
     }
 
     /* Return logon information */
@@ -1199,7 +1324,8 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     /* Build and fill the token information buffer */
     Status = BuildTokenInformationBuffer((PLSA_TOKEN_INFORMATION_V1*)TokenInformation,
                                          AccountDomainSid,
-                                         UserInfo);
+                                         UserInfo,
+                                         SpecialAccount);
     if (!NT_SUCCESS(Status))
     {
         TRACE("BuildTokenInformationBuffer failed (Status %08lx)\n", Status);

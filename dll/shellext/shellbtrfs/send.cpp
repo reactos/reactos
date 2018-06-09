@@ -157,7 +157,7 @@ DWORD BtrfsSend::Thread() {
         goto end2;
     }
 
-    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(BTRFS_SEND_MAGIC));
+    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
     header.version = 1;
 
     if (!WriteFile(stream, &header, sizeof(header), NULL, NULL)) {
@@ -654,7 +654,7 @@ static void send_subvol(std::wstring subvol, std::wstring file, std::wstring par
     if (!NT_SUCCESS(Status))
         goto end2;
 
-    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(BTRFS_SEND_MAGIC));
+    memcpy(header.magic, BTRFS_SEND_MAGIC, sizeof(header.magic));
     header.version = 1;
 
     if (!WriteFile(stream, &header, sizeof(header), NULL, NULL))

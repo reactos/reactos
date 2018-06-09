@@ -7,7 +7,7 @@
 @ stub AsrpGetLocalDiskInfo
 @ stub AsrpGetLocalVolumeInfo
 @ stub AsprRestoreNonCriticalDisksW
-@ stub CdromPropPageProvider
+@ stdcall CdromPropPageProvider(ptr ptr long)
 @ stdcall ComputerClassInstaller(long ptr ptr)
 @ stub CreateLocalAdminAccount
 @ stub CreateLocalAdminAccountEx
@@ -15,22 +15,22 @@
 @ stdcall CriticalDeviceCoInstaller(long ptr ptr ptr)
 @ stub DevInstallW
 @ stdcall DeviceBayClassInstaller(long ptr ptr)
-@ stub DiskPropPageProvider
+@ stdcall DiskPropPageProvider(ptr ptr long)
 @ stub DoInstallComponentInfs
 @ stdcall EisaUpHalCoInstaller(long ptr ptr ptr)
-@ stub EisaUpHalPropPageProvider
+@ stdcall EisaUpHalPropPageProvider(ptr ptr long)
 @ stub GenerateName
 @ stdcall HdcClassInstaller(long ptr ptr)
 @ stdcall InitializeSetupActionLog(long)
 @ stdcall InstallWindowsNt(long ptr)
 @ stub InvokeExternalApplicationEx
 @ stdcall KeyboardClassInstaller(long ptr ptr)
-@ stub LegacyDriverPropPageProvider
+@ stdcall LegacyDriverPropPageProvider(ptr ptr long)
 @ stub MigrateExceptionPackages
 @ stdcall MouseClassInstaller(long ptr ptr)
 @ stdcall NtApmClassInstaller(long ptr ptr)
 @ stub OpkCheckVersion
-@ stub PS2MousePropPageProvider
+@ stdcall PS2MousePropPageProvider(ptr ptr long)
 @ stub PnPInitializationThread
 @ stub PrepareForAudit
 @ stub RepairStartMenuItems
@@ -76,7 +76,7 @@
 @ stdcall StorageCoInstaller(long ptr ptr ptr)
 @ stub SystemUpdateUserProfileDirectory
 @ stdcall TapeClassInstaller(long ptr ptr)
-@ stub TapePropPageProvider
+@ stdcall TapePropPageProvider(ptr ptr long)
 @ stdcall TerminateSetupActionLog()
 @ stub UpdatePnpDeviceDrivers
 @ stub UpgradePrinters

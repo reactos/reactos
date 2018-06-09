@@ -24,15 +24,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTES
- *
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on May. 20, 2005, by James Hawkins.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  * TODO:
  *
  * Default Message Processing
@@ -133,9 +124,28 @@
  *   -- LVGroupComparE
  */
 
-#include "comctl32.h"
+#include "config.h"
+#include "wine/port.h"
 
+#include <assert.h>
+#include <ctype.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
+#include "comctl32.h"
+#include "uxtheme.h"
+
+#include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(listview);
 
@@ -1055,7 +1065,7 @@ static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRA
     COLORREF backcolor, textcolor;
 
     /* apparently, for selected items, we have to override the returned values */
-    if (!SubItem)
+    if (!SubItem || (infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
     {
         if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
         {
@@ -4788,6 +4798,7 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
         while (iterator_next(subitems))
         {
             DWORD subitemstage = CDRF_DODEFAULT;
+            NMLVCUSTOMDRAW temp_nmlvcd;
 
             /* We need to query for each subitem, item's data (subitem == 0) is already here at this point */
             if (subitems->nItem)
@@ -4814,19 +4825,16 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, ITERAT
 
             if (cdsubitemmode & CDRF_NOTIFYSUBITEMDRAW)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPREPAINT, &nmlvcd);
-            else
-            {
-                nmlvcd.clrTextBk = infoPtr->clrTextBk;
-                nmlvcd.clrText   = infoPtr->clrText;
-            }
 
-            if (subitems->nItem == 0 || (cdmode & CDRF_NOTIFYITEMDRAW))
-                prepaint_setup(infoPtr, hdc, &nmlvcd, FALSE);
-            else if (!(infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
-                prepaint_setup(infoPtr, hdc, &nmlvcd, TRUE);
+            /*
+             * A selection should neither affect the colors in the post paint notification nor
+             * affect the colors of the next drawn subitem. Copy the structure to prevent this.
+             */
+            temp_nmlvcd = nmlvcd;
+            prepaint_setup(infoPtr, hdc, &temp_nmlvcd, subitems->nItem);
 
             if (!(subitemstage & CDRF_SKIPDEFAULT))
-                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &nmlvcd, &pos);
+                LISTVIEW_DrawItemPart(infoPtr, &lvItem, &temp_nmlvcd, &pos);
 
             if (subitemstage & CDRF_NOTIFYPOSTPAINT)
                 subitemstage = notify_customdraw(infoPtr, CDDS_SUBITEM | CDDS_ITEMPOSTPAINT, &nmlvcd);
@@ -6688,16 +6696,19 @@ static BOOL LISTVIEW_GetItemT(const LISTVIEW_INFO *infoPtr, LPLVITEMW lpLVItem, 
     /* make a local copy */
     isubitem = lpLVItem->iSubItem;
 
+    if (isubitem && (lpLVItem->mask & LVIF_STATE))
+        lpLVItem->state = 0;
+
     /* a quick optimization if all we're asked is the focus state
      * these queries are worth optimising since they are common,
      * and can be answered in constant time, without the heavy accesses */
     if ( (lpLVItem->mask == LVIF_STATE) && (lpLVItem->stateMask == LVIS_FOCUSED) &&
 	 !(infoPtr->uCallbackMask & LVIS_FOCUSED) )
     {
-	lpLVItem->state = 0;
-	if (infoPtr->nFocusedItem == lpLVItem->iItem)
-	    lpLVItem->state |= LVIS_FOCUSED;
-	return TRUE;
+        lpLVItem->state = 0;
+        if (infoPtr->nFocusedItem == lpLVItem->iItem && isubitem == 0)
+            lpLVItem->state |= LVIS_FOCUSED;
+        return TRUE;
     }
 
     ZeroMemory(&dispInfo, sizeof(dispInfo));
@@ -11908,7 +11919,7 @@ static LRESULT LISTVIEW_Command(LISTVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lP
 	    SIZE	  sz;
 
 	    if (!infoPtr->hwndEdit || !hdc) return 0;
-	    GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer)/sizeof(buffer[0]));
+	    GetWindowTextW(infoPtr->hwndEdit, buffer, ARRAY_SIZE(buffer));
 	    GetWindowRect(infoPtr->hwndEdit, &rect);
 
             /* Select font to get the right dimension of the string */

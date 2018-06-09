@@ -19,9 +19,18 @@
  *
  */
 
-#include "comctl32.h"
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(theme_scroll);
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "uxtheme.h"
+#include "vssym32.h"
+#include "comctl32.h"
+#include "wine/debug.h"
 
 /* Minimum size of the thumb in pixels */
 #define SCROLL_MIN_THUMB 6
@@ -41,6 +50,8 @@ enum SCROLL_HITTEST
 
 static HWND tracking_win = 0;
 static enum SCROLL_HITTEST tracking_hot_part = SCROLL_NOWHERE;
+
+WINE_DEFAULT_DEBUG_CHANNEL(theme_scroll);
 
 static void calc_thumb_dimensions(unsigned int size, SCROLLINFO *si, unsigned int *thumbpos, unsigned int *thumbsize)
 {

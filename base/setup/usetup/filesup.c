@@ -1,27 +1,9 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/* COPYRIGHT:       See COPYING in the top level directory
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/filesup.c
  * PURPOSE:         File support functions
- * PROGRAMMER:      Eric Kohl
- *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -48,7 +30,7 @@ SetupCreateSingleDirectory(
     HANDLE DirectoryHandle;
     NTSTATUS Status;
 
-    if(!RtlCreateUnicodeString(&PathName, DirectoryName))
+    if (!RtlCreateUnicodeString(&PathName, DirectoryName))
         return STATUS_NO_MEMORY;
 
     if (PathName.Length > sizeof(WCHAR) &&
@@ -73,14 +55,14 @@ SetupCreateSingleDirectory(
                                NULL);
 
     Status = NtCreateFile(&DirectoryHandle,
-                          DIRECTORY_ALL_ACCESS,
+                          FILE_LIST_DIRECTORY | SYNCHRONIZE,
                           &ObjectAttributes,
                           &IoStatusBlock,
                           NULL,
                           FILE_ATTRIBUTE_DIRECTORY,
                           FILE_SHARE_READ | FILE_SHARE_WRITE,
                           FILE_OPEN_IF,
-                          FILE_DIRECTORY_FILE,
+                          FILE_OPEN_FOR_BACKUP_INTENT | FILE_DIRECTORY_FILE,
                           NULL,
                           0);
     if (NT_SUCCESS(Status))
@@ -92,64 +74,6 @@ SetupCreateSingleDirectory(
 
     return Status;
 }
-
-
-static
-BOOLEAN
-DoesPathExist(
-    PWSTR PathName)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING Name;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-
-    RtlInitUnicodeString(&Name,
-                         PathName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
-    {
-        return FALSE;
-    }
-
-    NtClose(FileHandle);
-
-    return TRUE;
-}
-
-
-BOOLEAN
-IsValidPath(
-    PWCHAR InstallDir,
-    ULONG Length)
-{
-    UINT i;
-
-    // TODO: Add check for 8.3 too.
-
-    /* Check for whitespaces */
-    for (i = 0; i < Length; i++)
-    {
-        if (isspace(InstallDir[i]))
-            return FALSE;
-    }
-
-    return TRUE;
-}
-
 
 NTSTATUS
 SetupCreateDirectory(
@@ -188,7 +112,7 @@ SetupCreateDirectory(
             *Ptr = 0;
 
             DPRINT("PathBuffer: %S\n", PathBuffer);
-            if (!DoesPathExist(PathBuffer))
+            if (!DoesPathExist(NULL, PathBuffer))
             {
                 DPRINT("Create: %S\n", PathBuffer);
                 Status = SetupCreateSingleDirectory(PathBuffer);
@@ -202,7 +126,7 @@ SetupCreateDirectory(
         Ptr++;
     }
 
-    if (!DoesPathExist(PathBuffer))
+    if (!DoesPathExist(NULL, PathBuffer))
     {
         DPRINT("Create: %S\n", PathBuffer);
         Status = SetupCreateSingleDirectory(PathBuffer);
@@ -217,7 +141,6 @@ done:
 
     return Status;
 }
-
 
 NTSTATUS
 SetupCopyFile(
@@ -238,7 +161,6 @@ SetupCopyFile(
     SIZE_T SourceSectionSize = 0;
     LARGE_INTEGER ByteOffset;
 
-#ifdef __REACTOS__
     RtlInitUnicodeString(&FileName,
                          SourceFileName);
 
@@ -259,20 +181,6 @@ SetupCopyFile(
         DPRINT1("NtOpenFile failed: %x, %wZ\n", Status, &FileName);
         goto done;
     }
-#else
-    FileHandleSource = CreateFileW(SourceFileName,
-                                   GENERIC_READ,
-                                   FILE_SHARE_READ,
-                                   NULL,
-                                   OPEN_EXISTING,
-                                   0,
-                                   NULL);
-    if (FileHandleSource == INVALID_HANDLE_VALUE)
-    {
-        Status = STATUS_UNSUCCESSFUL;
-        goto done;
-    }
-#endif
 
     Status = NtQueryInformationFile(FileHandleSource,
                                     &IoStatusBlock,
@@ -470,7 +378,7 @@ done:
     return Status;
 }
 
-#ifdef __REACTOS__
+
 NTSTATUS
 SetupExtractFile(
     PWCHAR CabinetFileName,
@@ -548,49 +456,49 @@ SetupExtractFile(
 
     return STATUS_SUCCESS;
 }
-#endif
+
 
 BOOLEAN
-DoesFileExist(
-    PWSTR PathName,
-    PWSTR FileName)
+IsValidPath(
+    IN PCWSTR InstallDir)
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    IO_STATUS_BLOCK IoStatusBlock;
-    UNICODE_STRING Name;
-    WCHAR FullName[MAX_PATH];
-    HANDLE FileHandle;
-    NTSTATUS Status;
+    UINT i, Length;
 
-    wcscpy(FullName, PathName);
-    if (FileName != NULL)
+    Length = wcslen(InstallDir);
+
+    // TODO: Add check for 8.3 too.
+
+    /* Path must be at least 2 characters long */
+//    if (Length < 2)
+//        return FALSE;
+
+    /* Path must start with a backslash */
+//    if (InstallDir[0] != L'\\')
+//        return FALSE;
+
+    /* Path must not end with a backslash */
+    if (InstallDir[Length - 1] == L'\\')
+        return FALSE;
+
+    /* Path must not contain whitespace characters */
+    for (i = 0; i < Length; i++)
     {
-        if (FileName[0] != L'\\')
-            wcscat(FullName, L"\\");
-        wcscat(FullName, FileName);
+        if (iswspace(InstallDir[i]))
+            return FALSE;
     }
 
-    RtlInitUnicodeString(&Name,
-                         FullName);
-
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &Name,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenFile(&FileHandle,
-                        GENERIC_READ | SYNCHRONIZE,
-                        &ObjectAttributes,
-                        &IoStatusBlock,
-                        0,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS(Status))
+    /* Path component must not end with a dot */
+    for (i = 0; i < Length; i++)
     {
-      return FALSE;
+        if (InstallDir[i] == L'\\' && i > 0)
+        {
+            if (InstallDir[i - 1] == L'.')
+                return FALSE;
+        }
     }
 
-    NtClose(FileHandle);
+    if (InstallDir[Length - 1] == L'.')
+        return FALSE;
 
     return TRUE;
 }

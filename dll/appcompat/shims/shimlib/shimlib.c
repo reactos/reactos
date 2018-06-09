@@ -50,11 +50,16 @@ void ShimLib_ShimFree(PVOID pData)
     HeapFree(g_ShimLib_Heap, 0, pData);
 }
 
+PCSTR ShimLib_StringNDuplicateA(PCSTR szString, SIZE_T stringLengthIncludingNullTerm)
+{
+    PSTR NewString = ShimLib_ShimMalloc(stringLengthIncludingNullTerm);
+    StringCchCopyA(NewString, stringLengthIncludingNullTerm, szString);
+    return NewString;
+}
+
 PCSTR ShimLib_StringDuplicateA(PCSTR szString)
 {
-    SIZE_T Length = lstrlenA(szString);
-    PSTR NewString = ShimLib_ShimMalloc(Length+1);
-    return lstrcpyA(NewString, szString);
+    return ShimLib_StringNDuplicateA(szString, lstrlenA(szString) + 1);
 }
 
 BOOL ShimLib_StrAEqualsW(PCSTR szString, PCWSTR wszString)

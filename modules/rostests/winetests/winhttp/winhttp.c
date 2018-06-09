@@ -2272,11 +2272,35 @@ static void test_basic_request(int port, const WCHAR *verb, const WCHAR *path)
     ses = WinHttpOpen(test_useragent, WINHTTP_ACCESS_TYPE_NO_PROXY, NULL, NULL, 0);
     ok(ses != NULL, "failed to open session %u\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(ses, 0, buffer, sizeof(buffer));
+    ok(!ret && GetLastError() == ERROR_WINHTTP_INVALID_OPTION, "got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(ses, 0, buffer, &size);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %u\n", GetLastError());
+
     con = WinHttpConnect(ses, localhostW, port, 0);
     ok(con != NULL, "failed to open a connection %u\n", GetLastError());
 
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(con, 0, buffer, sizeof(buffer));
+    todo_wine ok(!ret && GetLastError() == ERROR_WINHTTP_INVALID_OPTION, "got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(con, 0, buffer, &size);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %u\n", GetLastError());
+
     req = WinHttpOpenRequest(con, verb, path, NULL, NULL, NULL, 0);
     ok(req != NULL, "failed to open a request %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpSetOption(req, 0, buffer, sizeof(buffer));
+    ok(!ret && GetLastError() == ERROR_WINHTTP_INVALID_OPTION, "got %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = WinHttpQueryOption(req, 0, buffer, &size);
+    ok(!ret && GetLastError() == ERROR_INVALID_PARAMETER, "got %u\n", GetLastError());
 
     ret = WinHttpSendRequest(req, NULL, 0, NULL, 0, 0, 0);
     ok(ret, "failed to send request %u\n", GetLastError());

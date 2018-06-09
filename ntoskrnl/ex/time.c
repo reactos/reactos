@@ -18,7 +18,7 @@
 /* GLOBALS ******************************************************************/
 
 /* Note: Bias[minutes] = UTC - local time */
-TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+RTL_TIME_ZONE_INFORMATION ExpTimeZoneInfo;
 ULONG ExpLastTimeZoneBias = -1;
 LARGE_INTEGER ExpTimeZoneBias;
 ULONG ExpAltTimeZoneBias;
@@ -233,7 +233,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
     if (!NT_SUCCESS(Status))
     {
         /* Failed, clear all data */
-        RtlZeroMemory(&ExpTimeZoneInfo, sizeof(TIME_ZONE_INFORMATION));
+        RtlZeroMemory(&ExpTimeZoneInfo, sizeof(RTL_TIME_ZONE_INFORMATION));
         ExpTimeZoneBias.QuadPart = (LONGLONG)0;
         ExpTimeZoneId = TIME_ZONE_ID_UNKNOWN;
     }
@@ -275,7 +275,7 @@ ExRefreshTimeZoneInformation(IN PLARGE_INTEGER CurrentBootTime)
 }
 
 NTSTATUS
-ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+ExpSetTimeZoneInformation(PRTL_TIME_ZONE_INFORMATION TimeZoneInformation)
 {
     LARGE_INTEGER LocalTime, SystemTime, OldTime;
     TIME_FIELDS TimeFields;
@@ -303,7 +303,7 @@ ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
     /* Copy the timezone information */
     RtlCopyMemory(&ExpTimeZoneInfo,
                   TimeZoneInformation,
-                  sizeof(TIME_ZONE_INFORMATION));
+                  sizeof(RTL_TIME_ZONE_INFORMATION));
 
     /* Set the new time zone information */
     SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;

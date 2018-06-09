@@ -2355,6 +2355,23 @@ static void test_import(void)
     verify_reg(hkey, "Wine68h", REG_BINARY, NULL, 0, 0);
     verify_reg(hkey, "Wine68i", REG_NONE, NULL, 0, 0);
 
+    /* Test with embedded null characters */
+    test_import_str("REGEDIT4\n\n"
+                    "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                    "\"Wine69a\"=\"\\0\n"
+                    "\"Wine69b\"=\"\\0\\0\n"
+                    "\"Wine69c\"=\"Value1\\0\n"
+                    "\"Wine69d\"=\"Value2\\0\\0\\0\\0\n"
+                    "\"Wine69e\"=\"Value3\\0Value4\n"
+                    "\"Wine69f\"=\"\\0Value4\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "Wine69a");
+    verify_reg_nonexist(hkey, "Wine69b");
+    verify_reg_nonexist(hkey, "Wine69c");
+    verify_reg_nonexist(hkey, "Wine69d");
+    verify_reg_nonexist(hkey, "Wine69e");
+    verify_reg_nonexist(hkey, "Wine69f");
+
     err = RegCloseKey(hkey);
     ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
 
@@ -3863,6 +3880,23 @@ static void test_unicode_import(void)
     verify_reg(hkey, "Wine68h", REG_BINARY, NULL, 0, 0);
     verify_reg(hkey, "Wine68i", REG_NONE, NULL, 0, 0);
 
+    /* Test with embedded null characters */
+    test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                     "\"Wine69a\"=\"\\0\n"
+                     "\"Wine69b\"=\"\\0\\0\n"
+                     "\"Wine69c\"=\"Value1\\0\n"
+                     "\"Wine69d\"=\"Value2\\0\\0\\0\\0\n"
+                     "\"Wine69e\"=\"Value3\\0Value4\n"
+                     "\"Wine69f\"=\"\\0Value4\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    verify_reg_nonexist(hkey, "Wine69a");
+    verify_reg_nonexist(hkey, "Wine69b");
+    verify_reg_nonexist(hkey, "Wine69c");
+    verify_reg_nonexist(hkey, "Wine69d");
+    verify_reg_nonexist(hkey, "Wine69e");
+    verify_reg_nonexist(hkey, "Wine69f");
+
     err = RegCloseKey(hkey);
     ok(err == ERROR_SUCCESS, "got %d, expected 0\n", err);
 
@@ -4328,9 +4362,9 @@ error:
 static void test_export(void)
 {
     LONG err;
-    DWORD r, dword;
+    DWORD r, dword, type, size;
     HKEY hkey, subkey;
-    BYTE hex[4];
+    BYTE hex[4], buffer[8];
 
     const char *empty_key_test =
         "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
@@ -4405,6 +4439,18 @@ static void test_export(void)
         "\"Wine3a\"=\"Value\"\r\n"
         "\"Wine3b\"=hex:12,34,56,78\r\n"
         "\"Wine3c\"=dword:10203040\r\n\r\n";
+
+    const char *embedded_null_test =
+        "\xef\xbb\xbfWindows Registry Editor Version 5.00\r\n\r\n"
+        "[HKEY_CURRENT_USER\\" KEY_BASE "]\r\n"
+        "\"Wine4a\"=dword:00000005\r\n"
+        "\"Wine4b\"=\"\"\r\n"
+        "\"Wine4c\"=\"Value\"\r\n"
+        "\"Wine4d\"=\"\"\r\n"
+        "\"Wine4e\"=dword:00000100\r\n"
+        "\"Wine4f\"=\"\"\r\n"
+        "\"Wine4g\"=\"Value2\"\r\n"
+        "\"Wine4h\"=\"abc\"\r\n\r\n";
 
     err = RegDeleteKeyA(HKEY_CURRENT_USER, KEY_BASE);
     ok(err == ERROR_SUCCESS || err == ERROR_FILE_NOT_FOUND, "got %d\n", err);
@@ -4596,6 +4642,44 @@ static void test_export(void)
     run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
     ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
     ok(compare_export("file.reg", hex_types_test, 0), "compare_export() failed\n");
+
+    delete_key(HKEY_CURRENT_USER, KEY_BASE);
+
+    /* Test registry export with embedded null characters */
+    test_import_wstr("\xef\xbb\xbfWindows Registry Editor Version 5.00\n\n"
+                     "[HKEY_CURRENT_USER\\" KEY_BASE "]\n"
+                     "\"Wine4a\"=dword:00000005\n"
+                     "\"Wine4b\"=hex(1):00,00,00,00,00,00,00,00\n"
+                     "\"Wine4c\"=\"Value\"\n"
+                     "\"Wine4d\"=hex(1):00,00,61,00,62,00,63,00\n"
+                     "\"Wine4e\"=dword:00000100\n"
+                     "\"Wine4f\"=hex(1):00,00,56,00,61,00,6c,00,75,00,65,00,00,00\n"
+                     "\"Wine4g\"=\"Value2\"\n"
+                     "\"Wine4h\"=hex(1):61,00,62,00,63,00,00,00, \\\n"
+                     "  64,00,65,00,66,00,00,00\n\n", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    open_key(HKEY_CURRENT_USER, KEY_BASE, 0, &hkey);
+    dword = 0x5;
+    verify_reg(hkey, "Wine4a", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine4b", REG_SZ, "\0\0\0\0\0\0\0", 4, 0);
+    verify_reg(hkey, "Wine4c", REG_SZ, "Value", 6, 0);
+    /* Wine4d */
+    size = sizeof(buffer);
+    err = RegQueryValueExA(hkey, "Wine4d", NULL, &type, (BYTE *)&buffer, &size);
+    ok(err == ERROR_SUCCESS, "RegQueryValueExA failed: %d\n", err);
+    ok(type == REG_SZ, "got wrong type %u, expected %u\n", type, REG_SZ);
+    ok(size == 5 || broken(size == 4) /* WinXP */, "got wrong size %u, expected 5\n", size);
+    ok(memcmp(buffer, "\0abc", size) == 0, "got wrong data\n");
+    dword = 0x100;
+    verify_reg(hkey, "Wine4e", REG_DWORD, &dword, sizeof(dword), 0);
+    verify_reg(hkey, "Wine4f", REG_SZ, "\0Value", 7, 0);
+    verify_reg(hkey, "Wine4g", REG_SZ, "Value2", 7, 0);
+    verify_reg(hkey, "Wine4h", REG_SZ, "abc\0def", 8, 0);
+    RegCloseKey(hkey);
+
+    run_reg_exe("reg export HKEY_CURRENT_USER\\" KEY_BASE " file.reg", &r);
+    ok(r == REG_EXIT_SUCCESS, "got exit code %d, expected 0\n", r);
+    ok(compare_export("file.reg", embedded_null_test, 0), "compare_export() failed\n");
 
     delete_key(HKEY_CURRENT_USER, KEY_BASE);
 }

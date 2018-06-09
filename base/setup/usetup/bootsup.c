@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/bootsup.c
  * PURPOSE:         Bootloader support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMER:
  */
 
 #include "usetup.h"
@@ -435,13 +435,13 @@ CreateFreeLoaderIniForReactOS(
 static
 NTSTATUS
 CreateFreeLoaderIniForReactOSAndBootSector(
-    PWCHAR IniPath,
-    PWCHAR ArcPath,
-    PWCHAR Section,
-    PWCHAR Description,
-    PWCHAR BootDrive,
-    PWCHAR BootPartition,
-    PWCHAR BootSector)
+    IN PCWSTR IniPath,
+    IN PCWSTR ArcPath,
+    IN PCWSTR Section,
+    IN PCWSTR Description,
+    IN PCWSTR BootDrive,
+    IN PCWSTR BootPartition,
+    IN PCWSTR BootSector)
 {
     PINICACHE IniCache;
     PINICACHESECTION IniSection;
@@ -453,7 +453,7 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     CreateCommonFreeLoaderSections(IniCache);
 
     /* Add the ReactOS entries */
-    CreateFreeLoaderReactOSEntries(IniCache, ArcPath);
+    CreateFreeLoaderReactOSEntries(IniCache, (PWCHAR)ArcPath);
 
     /* Get "Operating Systems" section */
     IniSection = IniCacheGetSection(IniCache, L"Operating Systems");
@@ -462,11 +462,11 @@ CreateFreeLoaderIniForReactOSAndBootSector(
     IniCacheInsertKey(IniSection,
                       NULL,
                       INSERT_LAST,
-                      Section,
-                      Description);
+                      (PWCHAR)Section,
+                      (PWCHAR)Description);
 
     /* Create new section */
-    IniSection = IniCacheAppendSection(IniCache, Section);
+    IniSection = IniCacheAppendSection(IniCache, (PWCHAR)Section);
 
     /* BootType=BootSector */
     IniCacheInsertKey(IniSection,
@@ -480,24 +480,24 @@ CreateFreeLoaderIniForReactOSAndBootSector(
                       NULL,
                       INSERT_LAST,
                       L"BootDrive",
-                      BootDrive);
+                      (PWCHAR)BootDrive);
 
     /* BootPartition= */
     IniCacheInsertKey(IniSection,
                       NULL,
                       INSERT_LAST,
                       L"BootPartition",
-                      BootPartition);
+                      (PWCHAR)BootPartition);
 
     /* BootSector= */
     IniCacheInsertKey(IniSection,
                       NULL,
                       INSERT_LAST,
                       L"BootSectorFile",
-                      BootSector);
+                      (PWCHAR)BootSector);
 
     /* Save the INI file */
-    IniCacheSave(IniCache, IniPath);
+    IniCacheSave(IniCache, (PWCHAR)IniPath);
     IniCacheDestroy(IniCache);
 
     return STATUS_SUCCESS;
@@ -1269,7 +1269,10 @@ InstallMbrBootCodeToDisk(
         return Status;
     }
 
-    /* Copy partition table from old MBR to new */
+    /*
+     * Copy the disk signature, the reserved fields and
+     * the partition table from the old MBR to the new one.
+     */
     RtlCopyMemory(&NewBootSector->Signature,
                   &OrigBootSector->Signature,
                   sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
@@ -2249,7 +2252,6 @@ InstallFatBootcodeToPartition(
     PUNICODE_STRING DestinationArcPath,
     UCHAR PartitionType)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
@@ -2258,11 +2260,9 @@ InstallFatBootcodeToPartition(
     /* FAT or FAT32 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
-    /* Copy FreeLoader to the system partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.sys");
+    /* Copy FreeLoader to the system partition, always overwriting the older version */
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2272,11 +2272,10 @@ InstallFatBootcodeToPartition(
         return Status;
     }
 
-    /* Prepare for possibly copying 'freeldr.ini' */
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.ini");
+    /* Prepare for possibly updating 'freeldr.ini' */
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2293,10 +2292,12 @@ InstallFatBootcodeToPartition(
     /* Check for NT and other bootloaders */
 
     // FIXME: Check for Vista+ bootloader!
-    if (DoesFileExist(SystemRootPath->Buffer, L"ntldr") == TRUE ||
-        DoesFileExist(SystemRootPath->Buffer, L"boot.ini") == TRUE)
+    /*** Status = FindNTOSBootLoader(PartitionHandle, NtLdr, &Version); ***/
+    /*** Status = FindNTOSBootLoader(PartitionHandle, BootMgr, &Version); ***/
+    if (DoesFileExist_2(SystemRootPath->Buffer, L"NTLDR") == TRUE ||
+        DoesFileExist_2(SystemRootPath->Buffer, L"BOOT.INI") == TRUE)
     {
-        /* Search root directory for 'ntldr' and 'boot.ini' */
+        /* Search root directory for 'NTLDR' and 'BOOT.INI' */
         DPRINT1("Found Microsoft Windows NT/2000/XP boot loader\n");
 
         /* Create or update 'freeldr.ini' */
@@ -2304,8 +2305,7 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // wcscpy(DstPath, SystemRootPath->Buffer);
-            // wcscat(DstPath, L"\\freeldr.ini");
+            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
 
             Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
             if (!NT_SUCCESS(Status))
@@ -2315,15 +2315,13 @@ InstallFatBootcodeToPartition(
             }
 
             /* Install new bootcode into a file */
-            wcscpy(DstPath, SystemRootPath->Buffer);
-            wcscat(DstPath, L"\\bootsect.ros");
+            CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"bootsect.ros");
 
             if (PartitionType == PARTITION_FAT32 ||
                 PartitionType == PARTITION_FAT32_XINT13)
             {
                 /* Install FAT32 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat32.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
 
                 DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, DstPath);
                 Status = InstallFat32BootCodeToFile(SrcPath, DstPath,
@@ -2337,8 +2335,7 @@ InstallFatBootcodeToPartition(
             else
             {
                 /* Install FAT16 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
 
                 DPRINT1("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
                 Status = InstallFat16BootCodeToFile(SrcPath, DstPath,
@@ -2352,8 +2349,7 @@ InstallFatBootcodeToPartition(
         }
 
         /* Update 'boot.ini' */
-        wcscpy(DstPath, SystemRootPath->Buffer);
-        wcscat(DstPath, L"\\boot.ini");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
 
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
@@ -2369,31 +2365,97 @@ InstallFatBootcodeToPartition(
     {
         /* Non-NT bootloaders: install our own bootloader */
 
-        PWCHAR Section;
-        PWCHAR Description;
-        PWCHAR BootDrive;
-        PWCHAR BootPartition;
-        PWCHAR BootSector;
-        PWCHAR BootSectorFileName;
+        PCWSTR Section;
+        PCWSTR Description;
+        PCWSTR BootDrive;
+        PCWSTR BootPartition;
+        PCWSTR BootSector;
 
-        if (DoesFileExist(SystemRootPath->Buffer, L"io.sys") == TRUE ||
-            DoesFileExist(SystemRootPath->Buffer, L"msdos.sys") == TRUE)
+        /* Search for COMPAQ MS-DOS 1.x (1.11, 1.12, based on MS-DOS 1.25) boot loader */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"IOSYS.COM") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"MSDOS.COM") == TRUE)
         {
-            /* Search for root directory for 'io.sys' and 'msdos.sys' */
-            DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
+            DPRINT1("Found COMPAQ MS-DOS 1.x (1.11, 1.12) / MS-DOS 1.25 boot loader\n");
 
             Section       = L"DOS";
-            Description   = L"\"DOS/Windows\"";
+            Description   = L"\"COMPAQ MS-DOS 1.x / MS-DOS 1.25\"";
             BootDrive     = L"hd0";
             BootPartition = L"1";
             BootSector    = L"BOOTSECT.DOS";
-
-            BootSectorFileName = L"\\bootsect.dos";
         }
         else
-        if (DoesFileExist(SystemRootPath->Buffer, L"kernel.sys") == TRUE)
+        /* Search for Microsoft DOS or Windows 9x boot loader */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"IO.SYS") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"MSDOS.SYS") == TRUE)
+            // WINBOOT.SYS
         {
-            /* Search for root directory for 'kernel.sys' */
+            DPRINT1("Found Microsoft DOS or Windows 9x boot loader\n");
+
+            Section       = L"DOS";
+            Description   = L"\"MS-DOS/Windows\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.DOS";
+        }
+        else
+        /* Search for IBM PC-DOS or DR-DOS 5.x boot loader */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"IBMIO.COM" ) == TRUE || // Some people refer to this file instead of IBMBIO.COM...
+            DoesFileExist_2(SystemRootPath->Buffer, L"IBMBIO.COM") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"IBMDOS.COM") == TRUE)
+        {
+            DPRINT1("Found IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\n");
+
+            Section       = L"DOS";
+            Description   = L"\"IBM PC-DOS or DR-DOS 5.x or IBM OS/2 1.0\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.DOS";
+        }
+        else
+        /* Search for DR-DOS 3.x boot loader */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"DRBIOS.SYS") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"DRBDOS.SYS") == TRUE)
+        {
+            DPRINT1("Found DR-DOS 3.x\n");
+
+            Section       = L"DOS";
+            Description   = L"\"DR-DOS 3.x\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.DOS";
+        }
+        else
+        /* Search for MS OS/2 1.x */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"OS2BOOT.COM") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"OS2BIO.COM" ) == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"OS2DOS.COM" ) == TRUE)
+        {
+            DPRINT1("Found MS OS/2 1.x\n");
+
+            Section       = L"DOS";
+            Description   = L"\"MS OS/2 1.x\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.OS2";
+        }
+        else
+        /* Search for MS or IBM OS/2 */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"OS2BOOT") == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"OS2LDR" ) == TRUE ||
+            DoesFileExist_2(SystemRootPath->Buffer, L"OS2KRNL") == TRUE)
+        {
+            DPRINT1("Found MS/IBM OS/2\n");
+
+            Section       = L"DOS";
+            Description   = L"\"MS/IBM OS/2\"";
+            BootDrive     = L"hd0";
+            BootPartition = L"1";
+            BootSector    = L"BOOTSECT.OS2";
+        }
+        else
+        /* Search for FreeDOS boot loader */
+        if (DoesFileExist_2(SystemRootPath->Buffer, L"kernel.sys") == TRUE)
+        {
             DPRINT1("Found FreeDOS boot loader\n");
 
             Section       = L"DOS";
@@ -2401,8 +2463,6 @@ InstallFatBootcodeToPartition(
             BootDrive     = L"hd0";
             BootPartition = L"1";
             BootSector    = L"BOOTSECT.DOS";
-
-            BootSectorFileName = L"\\bootsect.dos";
         }
         else
         {
@@ -2414,8 +2474,6 @@ InstallFatBootcodeToPartition(
             BootDrive     = L"hd0";
             BootPartition = L"1";
             BootSector    = L"BOOTSECT.OLD";
-
-            BootSectorFileName = L"\\bootsect.old";
         }
 
         /* Create or update 'freeldr.ini' */
@@ -2423,8 +2481,7 @@ InstallFatBootcodeToPartition(
         {
             /* Create new 'freeldr.ini' */
             DPRINT1("Create new 'freeldr.ini'\n");
-            // wcscpy(DstPath, SystemRootPath->Buffer);
-            // wcscat(DstPath, L"\\freeldr.ini");
+            // CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
 
             if (IsThereAValidBootSector(SystemRootPath->Buffer))
             {
@@ -2439,8 +2496,7 @@ InstallFatBootcodeToPartition(
                 }
 
                 /* Save current bootsector */
-                wcscpy(DstPath, SystemRootPath->Buffer);
-                wcscat(DstPath, BootSectorFileName);
+                CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, BootSector);
 
                 DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
                 Status = SaveBootSector(SystemRootPath->Buffer, DstPath, SECTORSIZE);
@@ -2465,8 +2521,7 @@ InstallFatBootcodeToPartition(
                 PartitionType == PARTITION_FAT32_XINT13)
             {
                 /* Install FAT32 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat32.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
 
                 DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
                 Status = InstallFat32BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2479,8 +2534,7 @@ InstallFatBootcodeToPartition(
             else
             {
                 /* Install FAT16 bootcode */
-                wcscpy(SrcPath, SourceRootPath->Buffer);
-                wcscat(SrcPath, L"\\loader\\fat.bin");
+                CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
 
                 DPRINT1("Install FAT16 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
                 Status = InstallFat16BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2494,9 +2548,6 @@ InstallFatBootcodeToPartition(
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 static
@@ -2507,7 +2558,6 @@ InstallExt2BootcodeToPartition(
     PUNICODE_STRING DestinationArcPath,
     UCHAR PartitionType)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
@@ -2516,11 +2566,9 @@ InstallExt2BootcodeToPartition(
     /* EXT2 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
-    /* Copy FreeLoader to the system partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.sys");
+    /* Copy FreeLoader to the system partition, always overwriting the older version */
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2531,10 +2579,9 @@ InstallExt2BootcodeToPartition(
     }
 
     /* Prepare for possibly copying 'freeldr.ini' */
-    wcscpy(DstPath, SystemRootPath->Buffer);
-    wcscat(DstPath, L"\\freeldr.ini");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"freeldr.ini");
 
-    DoesFreeLdrExist = DoesFileExist(SystemRootPath->Buffer, L"freeldr.ini");
+    DoesFreeLdrExist = DoesFileExist(NULL, DstPath);
     if (DoesFreeLdrExist)
     {
         /* Update existing 'freeldr.ini' */
@@ -2555,18 +2602,19 @@ InstallExt2BootcodeToPartition(
     {
         /* Create new 'freeldr.ini' */
         DPRINT1("Create new 'freeldr.ini'\n");
-        wcscpy(DstPath, SystemRootPath->Buffer);
-        wcscat(DstPath, L"\\freeldr.ini");
+        CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"\\freeldr.ini");
 
         /* Certainly SysLinux, GRUB, LILO... or an unknown boot loader */
         DPRINT1("*nix or unknown boot loader found\n");
 
         if (IsThereAValidBootSector(SystemRootPath->Buffer))
         {
+            PCWSTR BootSector = L"BOOTSECT.OLD";
+
             Status = CreateFreeLoaderIniForReactOSAndBootSector(
                          DstPath, DestinationArcPath->Buffer,
                          L"Linux", L"\"Linux\"",
-                         L"hd0", L"1", L"BOOTSECT.OLD");
+                         L"hd0", L"1", BootSector);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("CreateFreeLoaderIniForReactOSAndBootSector() failed (Status %lx)\n", Status);
@@ -2574,8 +2622,7 @@ InstallExt2BootcodeToPartition(
             }
 
             /* Save current bootsector */
-            wcscpy(DstPath, SystemRootPath->Buffer);
-            wcscat(DstPath, L"\\bootsect.old");
+            CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, BootSector);
 
             DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
             Status = SaveBootSector(SystemRootPath->Buffer, DstPath, sizeof(EXT2_BOOTSECTOR));
@@ -2599,8 +2646,7 @@ InstallExt2BootcodeToPartition(
         // if (PartitionType == PARTITION_EXT2)
         {
             /* Install EXT2 bootcode */
-            wcscpy(SrcPath, SourceRootPath->Buffer);
-            wcscat(SrcPath, L"\\loader\\ext2.bin");
+            CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\ext2.bin");
 
             DPRINT1("Install EXT2 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
             Status = InstallExt2BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
@@ -2613,9 +2659,6 @@ InstallExt2BootcodeToPartition(
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 
@@ -2650,6 +2693,7 @@ InstallVBRToPartition(
         }
 
         case PARTITION_IFS:
+            DPRINT1("Partitions of type NTFS or HPFS are not supported yet!\n");
             break;
 
         default:
@@ -2666,19 +2710,25 @@ InstallFatBootcodeToFloppy(
     PUNICODE_STRING SourceRootPath,
     PUNICODE_STRING DestinationArcPath)
 {
-#ifdef __REACTOS__
     NTSTATUS Status;
-    UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0");
+    PFILE_SYSTEM FatFS;
+    UNICODE_STRING FloppyDevice = RTL_CONSTANT_STRING(L"\\Device\\Floppy0\\");
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
     /* Format the floppy first */
-    Status = VfatFormat(&FloppyDevice,
-                        FMIFS_FLOPPY,
-                        NULL,
-                        TRUE,
-                        0,
-                        NULL);
+    FatFS = GetFileSystemByName(L"FAT");
+    if (!FatFS)
+    {
+        DPRINT1("FAT FS non existent on this system?!\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    Status = FatFS->FormatFunc(&FloppyDevice,
+                               FMIFS_FLOPPY,
+                               NULL,
+                               TRUE,
+                               0,
+                               NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("VfatFormat() failed (Status %lx)\n", Status);
@@ -2686,10 +2736,8 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Copy FreeLoader to the boot partition */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\freeldr.sys");
-
-    wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.sys");
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\freeldr.sys");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice.Buffer, L"freeldr.sys");
 
     DPRINT("Copy: %S ==> %S\n", SrcPath, DstPath);
     Status = SetupCopyFile(SrcPath, DstPath);
@@ -2700,7 +2748,7 @@ InstallFatBootcodeToFloppy(
     }
 
     /* Create new 'freeldr.ini' */
-    wcscpy(DstPath, L"\\Device\\Floppy0\\freeldr.ini");
+    CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, FloppyDevice.Buffer, L"freeldr.ini");
 
     DPRINT("Create new 'freeldr.ini'\n");
     Status = CreateFreeLoaderIniForReactOS(DstPath, DestinationArcPath->Buffer);
@@ -2710,24 +2758,19 @@ InstallFatBootcodeToFloppy(
         return Status;
     }
 
-    /* Install FAT12/16 boosector */
-    wcscpy(SrcPath, SourceRootPath->Buffer);
-    wcscat(SrcPath, L"\\loader\\fat.bin");
-
-    wcscpy(DstPath, L"\\Device\\Floppy0");
+    /* Install FAT12 boosector */
+    CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
+    RtlStringCchCopyW(DstPath, ARRAYSIZE(DstPath), FloppyDevice.Buffer);
 
     DPRINT("Install FAT bootcode: %S ==> %S\n", SrcPath, DstPath);
     Status = InstallFat12BootCodeToFloppy(SrcPath, DstPath);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("InstallFat16BootCodeToDisk() failed (Status %lx)\n", Status);
+        DPRINT1("InstallFat12BootCodeToFloppy() failed (Status %lx)\n", Status);
         return Status;
     }
 
     return STATUS_SUCCESS;
-#else
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 /* EOF */

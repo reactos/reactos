@@ -151,24 +151,20 @@ void CDECL wined3d_swapchain_set_window(struct wined3d_swapchain *swapchain, HWN
 
 HRESULT CDECL wined3d_swapchain_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, HWND dst_window_override,
-        DWORD swap_interval, DWORD flags)
+        unsigned int swap_interval, DWORD flags)
 {
-    static DWORD notified_flags = 0;
     RECT s, d;
 
     TRACE("swapchain %p, src_rect %s, dst_rect %s, dst_window_override %p, flags %#x.\n",
             swapchain, wine_dbgstr_rect(src_rect), wine_dbgstr_rect(dst_rect),
             dst_window_override, flags);
 
-    if (flags & ~notified_flags)
-    {
-        FIXME("Ignoring flags %#x.\n", flags & ~notified_flags);
-        notified_flags |= flags;
-    }
+    if (flags)
+        FIXME("Ignoring flags %#x.\n", flags);
 
     if (!swapchain->back_buffers)
     {
-        WARN("Swapchain doesn't have a backbuffer, returning WINED3DERR_INVALIDCALL\n");
+        WARN("Swapchain doesn't have a backbuffer, returning WINED3DERR_INVALIDCALL.\n");
         return WINED3DERR_INVALIDCALL;
     }
 
@@ -318,7 +314,6 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
         struct wined3d_context *context, const RECT *src_rect, const RECT *dst_rect)
 {
     struct wined3d_texture *texture = swapchain->back_buffers[0];
-    struct wined3d_surface *back_buffer = texture->sub_resources[0].u.surface;
     struct wined3d_device *device = swapchain->device;
     enum wined3d_texture_filter_type filter;
     DWORD location;
@@ -338,8 +333,8 @@ static void swapchain_blit(const struct wined3d_swapchain *swapchain,
         location = WINED3D_LOCATION_RB_RESOLVED;
 
     wined3d_texture_validate_location(texture, 0, WINED3D_LOCATION_DRAWABLE);
-    device->blitter->ops->blitter_blit(device->blitter, WINED3D_BLIT_OP_COLOR_BLIT, context, back_buffer,
-            location, src_rect, back_buffer, WINED3D_LOCATION_DRAWABLE, dst_rect, NULL, filter);
+    device->blitter->ops->blitter_blit(device->blitter, WINED3D_BLIT_OP_COLOR_BLIT, context, texture, 0,
+            location, src_rect, texture, 0, WINED3D_LOCATION_DRAWABLE, dst_rect, NULL, filter);
     wined3d_texture_invalidate_location(texture, 0, WINED3D_LOCATION_DRAWABLE);
 }
 
@@ -395,6 +390,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
 {
     struct wined3d_texture *back_buffer = swapchain->back_buffers[0];
     const struct wined3d_fb_state *fb = &swapchain->device->cs->fb;
+    struct wined3d_rendertarget_view *dsv = fb->depth_stencil;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_texture *logo_texture;
     struct wined3d_context *context;
@@ -480,11 +476,7 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
     if (swapchain->render_to_fbo)
         swapchain_blit(swapchain, context, src_rect, dst_rect);
 
-#if !defined(STAGING_CSMT)
     if (swapchain->num_contexts > 1)
-#else  /* STAGING_CSMT */
-    if (swapchain->num_contexts > 1 && !wined3d_settings.cs_multithreaded)
-#endif /* STAGING_CSMT */
         gl_info->gl_ops.gl.p_glFinish();
 
     /* call wglSwapBuffers through the gl table to avoid confusing the Steam overlay */
@@ -523,14 +515,13 @@ static void swapchain_gl_present(struct wined3d_swapchain *swapchain,
         wined3d_texture_validate_location(swapchain->back_buffers[swapchain->desc.backbuffer_count - 1],
                 0, WINED3D_LOCATION_DISCARDED);
 
-    if (fb->depth_stencil)
+    if (dsv && dsv->resource->type != WINED3D_RTYPE_BUFFER)
     {
-        struct wined3d_surface *ds = wined3d_rendertarget_view_get_surface(fb->depth_stencil);
+        struct wined3d_texture *ds = texture_from_resource(dsv->resource);
 
-        if (ds && (swapchain->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
-                || ds->container->flags & WINED3D_TEXTURE_DISCARD))
-            wined3d_texture_validate_location(ds->container,
-                    fb->depth_stencil->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
+        if ((swapchain->desc.flags & WINED3D_SWAPCHAIN_DISCARD_DEPTHSTENCIL
+                || ds->flags & WINED3D_TEXTURE_DISCARD))
+            wined3d_texture_validate_location(ds, dsv->sub_resource_idx, WINED3D_LOCATION_DISCARDED);
     }
 
     context_release(context);
@@ -555,7 +546,7 @@ static const struct wined3d_swapchain_ops swapchain_gl_ops =
 
 static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchain)
 {
-    struct wined3d_surface *front;
+    struct wined3d_dc_info *front;
     POINT offset = {0, 0};
     HDC src_dc, dst_dc;
     RECT draw_rect;
@@ -563,11 +554,11 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
 
     TRACE("swapchain %p.\n", swapchain);
 
-    front = swapchain->front_buffer->sub_resources[0].u.surface;
+    front = &swapchain->front_buffer->dc_info[0];
     if (swapchain->palette)
         wined3d_palette_apply_to_dc(swapchain->palette, front->dc);
 
-    if (front->container->resource.map_count)
+    if (swapchain->front_buffer->resource.map_count)
         ERR("Trying to blit a mapped surface.\n");
 
     TRACE("Copying surface %p to screen.\n", front);
@@ -598,26 +589,26 @@ static void swapchain_gdi_frontbuffer_updated(struct wined3d_swapchain *swapchai
 static void swapchain_gdi_present(struct wined3d_swapchain *swapchain,
         const RECT *src_rect, const RECT *dst_rect, DWORD flags)
 {
-    struct wined3d_surface *front, *back;
+    struct wined3d_dc_info *front, *back;
     HBITMAP bitmap;
     void *data;
     HDC dc;
 
-    front = swapchain->front_buffer->sub_resources[0].u.surface;
-    back = swapchain->back_buffers[0]->sub_resources[0].u.surface;
+    front = &swapchain->front_buffer->dc_info[0];
+    back = &swapchain->back_buffers[0]->dc_info[0];
 
     /* Flip the surface data. */
     dc = front->dc;
     bitmap = front->bitmap;
-    data = front->container->resource.heap_memory;
+    data = swapchain->front_buffer->resource.heap_memory;
 
     front->dc = back->dc;
     front->bitmap = back->bitmap;
-    front->container->resource.heap_memory = back->container->resource.heap_memory;
+    swapchain->front_buffer->resource.heap_memory = swapchain->back_buffers[0]->resource.heap_memory;
 
     back->dc = dc;
     back->bitmap = bitmap;
-    back->container->resource.heap_memory = data;
+    swapchain->back_buffers[0]->resource.heap_memory = data;
 
     /* FPS support */
     if (TRACE_ON(fps))
@@ -686,44 +677,26 @@ static void wined3d_swapchain_apply_sample_count_override(const struct wined3d_s
     *quality = 0;
 }
 
-static void wined3d_swapchain_update_swap_interval_cs(void *object)
+void wined3d_swapchain_set_swap_interval(struct wined3d_swapchain *swapchain,
+        unsigned int swap_interval)
 {
-    struct wined3d_swapchain *swapchain = object;
     const struct wined3d_gl_info *gl_info;
     struct wined3d_context *context;
-    int swap_interval;
+
+    swap_interval = swap_interval <= 4 ? swap_interval : 1;
+    if (swapchain->swap_interval == swap_interval)
+        return;
+
+    swapchain->swap_interval = swap_interval;
 
     context = context_acquire(swapchain->device, swapchain->front_buffer, 0);
     gl_info = context->gl_info;
 
-    switch (swapchain->desc.swap_interval)
-    {
-        case WINED3DPRESENT_INTERVAL_IMMEDIATE:
-            swap_interval = 0;
-            break;
-        case WINED3DPRESENT_INTERVAL_DEFAULT:
-        case WINED3DPRESENT_INTERVAL_ONE:
-            swap_interval = 1;
-            break;
-        case WINED3DPRESENT_INTERVAL_TWO:
-            swap_interval = 2;
-            break;
-        case WINED3DPRESENT_INTERVAL_THREE:
-            swap_interval = 3;
-            break;
-        case WINED3DPRESENT_INTERVAL_FOUR:
-            swap_interval = 4;
-            break;
-        default:
-            FIXME("Unhandled present interval %#x.\n", swapchain->desc.swap_interval);
-            swap_interval = 1;
-    }
-
     if (gl_info->supported[WGL_EXT_SWAP_CONTROL])
     {
         if (!GL_EXTCALL(wglSwapIntervalEXT(swap_interval)))
-            ERR("wglSwapIntervalEXT failed to set swap interval %d for context %p, last error %#x\n",
-                swap_interval, context, GetLastError());
+            ERR("wglSwapIntervalEXT failed to set swap interval %d for context %p, last error %#x.\n",
+                    swap_interval, context, GetLastError());
     }
 
     context_release(context);
@@ -769,8 +742,12 @@ static void wined3d_swapchain_cs_init(void *object)
         FIXME("Add OpenGL context recreation support.\n");
 
     context_release(swapchain->context[0]);
+}
 
-    wined3d_swapchain_update_swap_interval_cs(swapchain);
+void swapchain_set_max_frame_latency(struct wined3d_swapchain *swapchain, const struct wined3d_device *device)
+{
+    /* Subtract 1 for the implicit OpenGL latency. */
+    swapchain->max_frame_latency = device->max_frame_latency >= 2 ? device->max_frame_latency - 1 : 1;
 }
 
 static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3d_device *device,
@@ -781,9 +758,9 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     BOOL displaymode_set = FALSE;
     DWORD texture_flags = 0;
     RECT client_rect;
+    unsigned int i;
     HWND window;
     HRESULT hr;
-    UINT i;
 
     if (desc->backbuffer_count > 1)
     {
@@ -809,6 +786,8 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     swapchain->ref = 1;
     swapchain->win_handle = window;
     swapchain->device_window = window;
+    swapchain->swap_interval = WINED3D_SWAP_INTERVAL_DEFAULT;
+    swapchain_set_max_frame_latency(swapchain, device);
 
     if (FAILED(hr = wined3d_get_adapter_display_mode(device->wined3d,
             adapter->ordinal, &swapchain->original_mode, NULL)))
@@ -821,15 +800,16 @@ static HRESULT swapchain_init(struct wined3d_swapchain *swapchain, struct wined3
     GetClientRect(window, &client_rect);
     if (desc->windowed)
     {
+        TRACE("Client rect %s.\n", wine_dbgstr_rect(&client_rect));
+
         if (!desc->backbuffer_width)
         {
-            desc->backbuffer_width = client_rect.right;
+            desc->backbuffer_width = client_rect.right ? client_rect.right : 8;
             TRACE("Updating width to %u.\n", desc->backbuffer_width);
         }
-
         if (!desc->backbuffer_height)
         {
-            desc->backbuffer_height = client_rect.bottom;
+            desc->backbuffer_height = client_rect.bottom ? client_rect.bottom : 8;
             TRACE("Updating height to %u.\n", desc->backbuffer_height);
         }
 
@@ -1139,11 +1119,6 @@ void swapchain_update_draw_bindings(struct wined3d_swapchain *swapchain)
     {
         wined3d_resource_update_draw_binding(&swapchain->back_buffers[i]->resource);
     }
-}
-
-void swapchain_update_swap_interval(struct wined3d_swapchain *swapchain)
-{
-    wined3d_cs_init_object(swapchain->device->cs, wined3d_swapchain_update_swap_interval_cs, swapchain);
 }
 
 void wined3d_swapchain_activate(struct wined3d_swapchain *swapchain, BOOL activate)

@@ -123,7 +123,7 @@ struct Layer
 
 struct MatchingFile
 {
-    MatchingFile() : Size(0), Checksum(0) {;}
+    MatchingFile() : Size(0), Checksum(0), LinkDate(0), LinkerVersion(0) {;}
 
     bool fromXml(XMLHandle dbNode);
     bool toSdb(PDB pdb, Database& db);
@@ -137,12 +137,12 @@ struct MatchingFile
     std::string ProductVersion;
     std::string FileVersion;
     std::string BinFileVersion;
-    std::string LinkDate;
+    DWORD LinkDate;
     std::string VerLanguage;
     std::string FileDescription;
     std::string OriginalFilename;
     std::string UptoBinFileVersion;
-    std::string LinkerVersion;
+    DWORD LinkerVersion;
 };
 
 struct Exe

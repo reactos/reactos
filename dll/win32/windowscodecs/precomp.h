@@ -25,6 +25,7 @@
 #include "wincodecs_private.h"
 
 #include <wine/debug.h>
+#include <wine/heap.h>
 #include <wine/library.h>
 
 #endif /* !WINCODECS_PRECOMP_H */

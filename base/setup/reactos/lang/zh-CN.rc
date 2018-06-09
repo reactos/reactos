@@ -6,7 +6,7 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     LTEXT "欢迎使用 ReactOS 安装程序。", IDC_STARTTITLE, 115, 8, 195, 24
-    LTEXT "您不能直接从此 CD 安装 ReactOS！ 请重新启动并从 CD 引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "您不能直接从此 CD 安装 ReactOS！请重新启动并从 CD 引导您的电脑以便安装 ReactOS。", IDC_STATIC, 115, 40, 195, 100
     LTEXT "点击完成退出安装。", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -16,9 +16,9 @@ CAPTION "ReactOS 安装程序"
 FONT 9, "宋体"
 BEGIN
     AUTORADIOBUTTON "安装 ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "安装 ReactOS 的新副本。此选项将不会保存你的文件、 设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25
+    LTEXT "安装 ReactOS 的新副本。此选项将不会保存你的文件、设置和程序。你可以对磁盘和分区进行更改。", IDC_INSTALLTEXT, 18, 18, 269, 25
     AUTORADIOBUTTON "修复或更新已安装的 ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "更新或修复 ReactOS 安装的副本。此选项会保存您的文件、 设置和程序。如果 ReactOS 已经安装，此选项方可使用。", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "更新或修复 ReactOS 安装的副本。此选项会保存您的文件、设置和程序。如果 ReactOS 已经安装，此选项方可使用。", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "点击下一步安装设备。", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -106,24 +106,24 @@ BEGIN
     LTEXT "您成功完成 ReactOS 第一阶段安装过程。", IDC_STATIC, 20, 50, 277, 10
     LTEXT "点击完成后，您的电脑将会重新启动。", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "请从光盘驱动器取出任何光盘。然后，点击完成重启您的电脑。", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "请从光盘驱动器取出所有光盘。然后点击完成来重启您的电脑。", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
 BEGIN
     IDS_TYPETITLE "ReactOS 安装程序"
-    IDS_TYPESUBTITLE "选择安装类型。"
-    IDS_DEVICETITLE "设置基本设备。"
+    IDS_TYPESUBTITLE "选择安装类型"
+    IDS_DEVICETITLE "设置基本设备"
     IDS_DEVICESUBTITLE "指定显示和键盘设置。"
     IDS_DRIVETITLE "设置安装分区和系统文件夹"
-    IDS_DRIVESUBTITLE "设置安装分区，系统文件夹和引导程序。"
-    IDS_PROCESSTITLE "设置分区，复制文件并安装系统"
+    IDS_DRIVESUBTITLE "设置安装分区、系统文件夹和引导程序"
+    IDS_PROCESSTITLE "设置分区、复制文件并安装系统"
     IDS_PROCESSSUBTITLE "建立并格式化分区，复制文件，安装并设置引导程序"
     IDS_RESTARTTITLE "第一阶段安装完成"
     IDS_RESTARTSUBTITLE "第一阶段安装已经完成，重新启动进行第二阶段安装"
     IDS_SUMMARYTITLE "安装概要"
-    IDS_SUMMARYSUBTITLE "正是安装前列出安装属性以供检查"
-    IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要在一次运行安装程序来安装 ReactOS。 确定退出？"
+    IDS_SUMMARYSUBTITLE "安装程序将会执行的内容，以供参考"
+    IDS_ABORTSETUP "ReactOS 未在您的电脑上安装完成。如果您现在退出安装程序，您需要再次运行安装程序来安装 ReactOS。 确定退出？"
     IDS_ABORTSETUP2 "终止安装？"
     IDS_NO_TXTSETUP_SIF "无法找到 'txtsetup.sif'\n安装程序无法继续。"
     IDS_CAPTION "ReactOS 安装程序"

@@ -19,15 +19,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
- * NOTE
- * 
- * This code was audited for completeness against the documented features
- * of Comctl32.dll version 6.0 on Sep. 24, 2002, by Dimitrie O. Paun.
- * 
- * Unless otherwise noted, we believe this code to be complete, as per
- * the specification mentioned above.
- * If you discover missing features, or bugs, please note them below.
- * 
  * TODO:
  * 	-- CCS_BOTTOM (default)
  * 	-- CCS_LEFT
@@ -40,7 +31,20 @@
  * 	-- CCS_VERT (defaults to RIGHT)
  */
 
+#include <stdarg.h>
+#include <string.h>
+
+#include "windef.h"
+#include "winbase.h"
+#include "wine/unicode.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winnls.h"
+#include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "vssym32.h"
+#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(statusbar);
 

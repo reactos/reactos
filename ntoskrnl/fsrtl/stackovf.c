@@ -61,7 +61,7 @@ FsRtlStackOverflowRead(IN PVOID Context)
     /* Otherwise, free the work item */
     else
     {
-        ExFreePoolWithTag(WorkItem, 'Fsrs');
+        ExFreePoolWithTag(WorkItem, 'FSrs');
     }
 
     /* Reset top level */

@@ -33,18 +33,20 @@ WINE_DEFAULT_DEBUG_CHANNEL(devenum);
 typedef struct
 {
     IEnumMoniker IEnumMoniker_iface;
+    CLSID class;
     LONG ref;
-    DWORD index;
-    DWORD subkey_cnt;
-    HKEY hkey;
-    HKEY special_hkey;
+    HKEY sw_key;
+    DWORD sw_index;
+    HKEY cm_key;
+    DWORD cm_index;
 } EnumMonikerImpl;
 
 typedef struct
 {
     IPropertyBag IPropertyBag_iface;
     LONG ref;
-    HKEY hkey;
+    enum device_type type;
+    WCHAR path[MAX_PATH];
 } RegPropBagImpl;
 
 
@@ -100,7 +102,6 @@ static ULONG WINAPI DEVENUM_IPropertyBag_Release(LPPROPERTYBAG iface)
 
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0) {
-        RegCloseKey(This->hkey);
         CoTaskMemFree(This);
         DEVENUM_UnlockModule();
     }
@@ -118,22 +119,32 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
     DWORD type = 0;
     RegPropBagImpl *This = impl_from_IPropertyBag(iface);
     HRESULT res = S_OK;
-    LONG reswin32;
+    LONG reswin32 = ERROR_SUCCESS;
+    HKEY hkey;
 
     TRACE("(%p)->(%s, %p, %p)\n", This, debugstr_w(pszPropName), pVar, pErrorLog);
 
     if (!pszPropName || !pVar)
         return E_POINTER;
 
-    reswin32 = RegQueryValueExW(This->hkey, pszPropName, NULL, NULL, NULL, &received);
+    if (This->type == DEVICE_FILTER)
+        reswin32 = RegOpenKeyW(HKEY_CLASSES_ROOT, This->path, &hkey);
+    else if (This->type == DEVICE_CODEC)
+        reswin32 = RegOpenKeyW(HKEY_CURRENT_USER, This->path, &hkey);
     res = HRESULT_FROM_WIN32(reswin32);
+
+    if (SUCCEEDED(res))
+    {
+        reswin32 = RegQueryValueExW(hkey, pszPropName, NULL, NULL, NULL, &received);
+        res = HRESULT_FROM_WIN32(reswin32);
+    }
 
     if (SUCCEEDED(res))
     {
         pData = HeapAlloc(GetProcessHeap(), 0, received);
 
         /* work around a GCC bug that occurs here unless we use the reswin32 variable as well */
-        reswin32 = RegQueryValueExW(This->hkey, pszPropName, NULL, &type, pData, &received);
+        reswin32 = RegQueryValueExW(hkey, pszPropName, NULL, &type, pData, &received);
         res = HRESULT_FROM_WIN32(reswin32);
     }
 
@@ -214,6 +225,8 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
 
     HeapFree(GetProcessHeap(), 0, pData);
 
+    RegCloseKey(hkey);
+
     TRACE("<- %x\n", res);
     return res;
 }
@@ -228,6 +241,8 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Write(
     DWORD cbData = 0;
     DWORD dwType = 0;
     HRESULT res = S_OK;
+    LONG lres = ERROR_SUCCESS;
+    HKEY hkey;
 
     TRACE("(%p)->(%s, %p)\n", This, debugstr_w(pszPropName), pVar);
 
@@ -264,10 +279,18 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Write(
         return E_FAIL;
     }
 
-    if (RegSetValueExW(This->hkey,
-                       pszPropName, 0,
-                       dwType, lpData, cbData) != ERROR_SUCCESS)
-        res = E_FAIL;
+    if (This->type == DEVICE_FILTER)
+        lres = RegCreateKeyW(HKEY_CLASSES_ROOT, This->path, &hkey);
+    else if (This->type == DEVICE_CODEC)
+        lres = RegCreateKeyW(HKEY_CURRENT_USER, This->path, &hkey);
+    res = HRESULT_FROM_WIN32(lres);
+
+    if (SUCCEEDED(res))
+    {
+        lres = RegSetValueExW(hkey, pszPropName, 0, dwType, lpData, cbData);
+        res = HRESULT_FROM_WIN32(lres);
+        RegCloseKey(hkey);
+    }
 
     if (V_VT(pVar) & VT_ARRAY)
         res = SafeArrayUnaccessData(V_ARRAY(pVar));
@@ -284,14 +307,28 @@ static const IPropertyBagVtbl IPropertyBag_Vtbl =
     DEVENUM_IPropertyBag_Write
 };
 
-static HRESULT DEVENUM_IPropertyBag_Construct(HANDLE hkey, IPropertyBag **ppBag)
+static HRESULT create_PropertyBag(MediaCatMoniker *mon, IPropertyBag **ppBag)
 {
     RegPropBagImpl * rpb = CoTaskMemAlloc(sizeof(RegPropBagImpl));
     if (!rpb)
         return E_OUTOFMEMORY;
     rpb->IPropertyBag_iface.lpVtbl = &IPropertyBag_Vtbl;
     rpb->ref = 1;
-    rpb->hkey = hkey;
+    rpb->type = mon->type;
+
+    if (rpb->type == DEVICE_FILTER)
+        strcpyW(rpb->path, clsidW);
+    else if (rpb->type == DEVICE_CODEC)
+        strcpyW(rpb->path, wszActiveMovieKey);
+    if (mon->has_class)
+    {
+        StringFromGUID2(&mon->class, rpb->path + strlenW(rpb->path), CHARS_IN_GUID);
+        if (rpb->type == DEVICE_FILTER)
+            strcatW(rpb->path, instanceW);
+        strcatW(rpb->path, backslashW);
+    }
+    strcatW(rpb->path, mon->name);
+
     *ppBag = &rpb->IPropertyBag_iface;
     DEVENUM_LockModule();
     return S_OK;
@@ -344,7 +381,7 @@ static ULONG WINAPI DEVENUM_IMediaCatMoniker_Release(IMoniker *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if (ref == 0) {
-        RegCloseKey(This->hkey);
+        CoTaskMemFree(This->name);
         CoTaskMemFree(This);
         DEVENUM_UnlockModule();
     }
@@ -406,6 +443,9 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_BindToObject(IMoniker *iface, IBi
     HRESULT res = E_FAIL;
 
     TRACE("(%p)->(%p, %p, %s, %p)\n", This, pbc, pmkToLeft, debugstr_guid(riidResult), ppvResult);
+
+    if (!ppvResult)
+        return E_POINTER;
 
     VariantInit(&var);
     *ppvResult = NULL;
@@ -485,9 +525,7 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_BindToStorage(IMoniker *iface, IB
 
     if (IsEqualGUID(riid, &IID_IPropertyBag))
     {
-        HANDLE hkey;
-        DuplicateHandle(GetCurrentProcess(), This->hkey, GetCurrentProcess(), &hkey, 0, 0, DUPLICATE_SAME_ACCESS);
-        return DEVENUM_IPropertyBag_Construct(hkey, (IPropertyBag**)ppvObj);
+        return create_PropertyBag(This, (IPropertyBag**)ppvObj);
     }
 
     return MK_E_NOSTORAGE;
@@ -620,24 +658,35 @@ static HRESULT WINAPI DEVENUM_IMediaCatMoniker_RelativePathTo(IMoniker *iface, I
 static HRESULT WINAPI DEVENUM_IMediaCatMoniker_GetDisplayName(IMoniker *iface, IBindCtx *pbc,
         IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName)
 {
+    static const WCHAR swW[] = {'s','w',':',0};
+    static const WCHAR cmW[] = {'c','m',':',0};
     MediaCatMoniker *This = impl_from_IMoniker(iface);
-    WCHAR wszBuffer[MAX_PATH];
-    static const WCHAR wszFriendlyName[] = {'F','r','i','e','n','d','l','y','N','a','m','e',0};
-    DWORD received = sizeof(wszBuffer);
+    WCHAR *buffer;
 
     TRACE("(%p)->(%p, %p, %p)\n", iface, pbc, pmkToLeft, ppszDisplayName);
 
     *ppszDisplayName = NULL;
 
-    /* FIXME: should this be the weird stuff we have to parse in IParseDisplayName? */
-    if (RegQueryValueExW(This->hkey, wszFriendlyName, NULL, NULL, (LPBYTE)wszBuffer, &received) == ERROR_SUCCESS)
-    {
-        *ppszDisplayName = CoTaskMemAlloc(received);
-        strcpyW(*ppszDisplayName, wszBuffer);
-        return S_OK;
-    }
+    buffer = CoTaskMemAlloc((strlenW(deviceW) + 4 + (This->has_class ? CHARS_IN_GUID : 0)
+                            + strlenW(This->name) + 1) * sizeof(WCHAR));
+    if (!buffer)
+        return E_OUTOFMEMORY;
 
-    return E_FAIL;
+    strcpyW(buffer, deviceW);
+    if (This->type == DEVICE_FILTER)
+        strcatW(buffer, swW);
+    else if (This->type == DEVICE_CODEC)
+        strcatW(buffer, cmW);
+
+    if (This->has_class)
+    {
+        StringFromGUID2(&This->class, buffer + strlenW(buffer), CHARS_IN_GUID);
+        strcatW(buffer, backslashW);
+    }
+    strcatW(buffer, This->name);
+
+    *ppszDisplayName = buffer;
+    return S_OK;
 }
 
 static HRESULT WINAPI DEVENUM_IMediaCatMoniker_ParseDisplayName(IMoniker *iface, IBindCtx *pbc,
@@ -694,7 +743,8 @@ MediaCatMoniker * DEVENUM_IMediaCatMoniker_Construct(void)
 
     pMoniker->IMoniker_iface.lpVtbl = &IMoniker_Vtbl;
     pMoniker->ref = 0;
-    pMoniker->hkey = NULL;
+    pMoniker->has_class = FALSE;
+    pMoniker->name = NULL;
 
     DEVENUM_IMediaCatMoniker_AddRef(&pMoniker->IMoniker_iface);
 
@@ -748,9 +798,8 @@ static ULONG WINAPI DEVENUM_IEnumMoniker_Release(IEnumMoniker *iface)
 
     if (!ref)
     {
-        if(This->special_hkey)
-            RegCloseKey(This->special_hkey);
-        RegCloseKey(This->hkey);
+        RegCloseKey(This->sw_key);
+        RegCloseKey(This->cm_key);
         CoTaskMemFree(This);
         DEVENUM_UnlockModule();
         return 0;
@@ -766,36 +815,54 @@ static HRESULT WINAPI DEVENUM_IEnumMoniker_Next(IEnumMoniker *iface, ULONG celt,
     LONG res;
     ULONG fetched = 0;
     MediaCatMoniker * pMoniker;
+    HKEY hkey;
 
     TRACE("(%p)->(%d, %p, %p)\n", iface, celt, rgelt, pceltFetched);
 
     while (fetched < celt)
     {
-        if(This->index+fetched < This->subkey_cnt)
-            res = RegEnumKeyW(This->hkey, This->index+fetched, buffer, sizeof(buffer) / sizeof(WCHAR));
-        else if(This->special_hkey)
-            res = RegEnumKeyW(This->special_hkey, This->index+fetched-This->subkey_cnt, buffer, sizeof(buffer) / sizeof(WCHAR));
+        /* FIXME: try PNP devices and DMOs first */
+
+        /* try DirectShow filters */
+        if (!(res = RegEnumKeyW(This->sw_key, This->sw_index, buffer, sizeof(buffer)/sizeof(WCHAR))))
+        {
+            This->sw_index++;
+            if ((res = RegOpenKeyExW(This->sw_key, buffer, 0, KEY_QUERY_VALUE, &hkey)))
+                break;
+
+            if (!(pMoniker = DEVENUM_IMediaCatMoniker_Construct()))
+                return E_OUTOFMEMORY;
+
+            pMoniker->type = DEVICE_FILTER;
+        }
+        /* then try codecs */
+        else if (!(res = RegEnumKeyW(This->cm_key, This->cm_index, buffer, sizeof(buffer)/sizeof(WCHAR))))
+        {
+            This->cm_index++;
+
+            if ((res = RegOpenKeyExW(This->cm_key, buffer, 0, KEY_QUERY_VALUE, &hkey)))
+                break;
+
+            if (!(pMoniker = DEVENUM_IMediaCatMoniker_Construct()))
+                return E_OUTOFMEMORY;
+
+            pMoniker->type = DEVICE_CODEC;
+        }
         else
             break;
-        if (res != ERROR_SUCCESS)
-        {
-            break;
-        }
-        pMoniker = DEVENUM_IMediaCatMoniker_Construct();
-        if (!pMoniker)
-            return E_OUTOFMEMORY;
 
-        if (RegOpenKeyW(This->index+fetched < This->subkey_cnt ? This->hkey : This->special_hkey,
-                        buffer, &pMoniker->hkey) != ERROR_SUCCESS)
+        if (!(pMoniker->name = CoTaskMemAlloc((strlenW(buffer) + 1) * sizeof(WCHAR))))
         {
             IMoniker_Release(&pMoniker->IMoniker_iface);
-            break;
+            return E_OUTOFMEMORY;
         }
+        strcpyW(pMoniker->name, buffer);
+        pMoniker->has_class = TRUE;
+        pMoniker->class = This->class;
+
         rgelt[fetched] = &pMoniker->IMoniker_iface;
         fetched++;
     }
-
-    This->index += fetched;
 
     TRACE("-- fetched %d\n", fetched);
 
@@ -811,21 +878,26 @@ static HRESULT WINAPI DEVENUM_IEnumMoniker_Next(IEnumMoniker *iface, ULONG celt,
 static HRESULT WINAPI DEVENUM_IEnumMoniker_Skip(IEnumMoniker *iface, ULONG celt)
 {
     EnumMonikerImpl *This = impl_from_IEnumMoniker(iface);
-    DWORD special_subkeys = 0;
 
     TRACE("(%p)->(%d)\n", iface, celt);
 
-    /* Before incrementing, check if there are any more values to run through.
-       Some programs use the Skip() function to get the number of devices */
-    if(This->special_hkey)
-        RegQueryInfoKeyW(This->special_hkey, NULL, NULL, NULL, &special_subkeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-
-    if((This->index + celt) >= This->subkey_cnt + special_subkeys)
+    while (celt--)
     {
-        return S_FALSE;
-    }
+        /* FIXME: try PNP devices and DMOs first */
 
-    This->index += celt;
+        /* try DirectShow filters */
+        if (RegEnumKeyW(This->sw_key, This->sw_index, NULL, 0) != ERROR_NO_MORE_ITEMS)
+        {
+            This->sw_index++;
+        }
+        /* then try codecs */
+        else if (RegEnumKeyW(This->cm_key, This->cm_index, NULL, 0) != ERROR_NO_MORE_ITEMS)
+        {
+            This->cm_index++;
+        }
+        else
+            return S_FALSE;
+    }
 
     return S_OK;
 }
@@ -836,7 +908,8 @@ static HRESULT WINAPI DEVENUM_IEnumMoniker_Reset(IEnumMoniker *iface)
 
     TRACE("(%p)->()\n", iface);
 
-    This->index = 0;
+    This->sw_index = 0;
+    This->cm_index = 0;
 
     return S_OK;
 }
@@ -862,23 +935,32 @@ static const IEnumMonikerVtbl IEnumMoniker_Vtbl =
     DEVENUM_IEnumMoniker_Clone
 };
 
-HRESULT DEVENUM_IEnumMoniker_Construct(HKEY hkey, HKEY special_hkey, IEnumMoniker ** ppEnumMoniker)
+HRESULT create_EnumMoniker(REFCLSID class, IEnumMoniker **ppEnumMoniker)
 {
     EnumMonikerImpl * pEnumMoniker = CoTaskMemAlloc(sizeof(EnumMonikerImpl));
+    WCHAR buffer[78];
+
     if (!pEnumMoniker)
         return E_OUTOFMEMORY;
 
     pEnumMoniker->IEnumMoniker_iface.lpVtbl = &IEnumMoniker_Vtbl;
     pEnumMoniker->ref = 1;
-    pEnumMoniker->index = 0;
-    pEnumMoniker->hkey = hkey;
-    pEnumMoniker->special_hkey = special_hkey;
+    pEnumMoniker->sw_index = 0;
+    pEnumMoniker->cm_index = 0;
+    pEnumMoniker->class = *class;
+
+    strcpyW(buffer, clsidW);
+    StringFromGUID2(class, buffer + strlenW(buffer), CHARS_IN_GUID);
+    strcatW(buffer, instanceW);
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &pEnumMoniker->sw_key))
+        pEnumMoniker->sw_key = NULL;
+
+    strcpyW(buffer, wszActiveMovieKey);
+    StringFromGUID2(class, buffer + strlenW(buffer), CHARS_IN_GUID);
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, buffer, 0, KEY_ENUMERATE_SUB_KEYS, &pEnumMoniker->cm_key))
+        pEnumMoniker->cm_key = NULL;
 
     *ppEnumMoniker = &pEnumMoniker->IEnumMoniker_iface;
-
-    if(RegQueryInfoKeyW(pEnumMoniker->hkey, NULL, NULL, NULL, &pEnumMoniker->subkey_cnt, NULL, NULL, NULL, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
-        pEnumMoniker->subkey_cnt = 0;
-
 
     DEVENUM_LockModule();
 

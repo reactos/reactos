@@ -384,6 +384,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955A
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Icon",0x00000000,"-5"
 
+; Class Co-Installers
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\CoDeviceInstallers","{4D36E96B-E325-11CE-BFC1-08002BE10318}",0x00010000,"syssetup.dll,CriticalDeviceCoInstaller"
+
+
 ; Default computer name settings
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
@@ -687,8 +692,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000425","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5042"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout File",0x00000000,"kbdlv.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Text",0x00000000,%LATVIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5043"
+
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout File",0x00000000,"kbdlv1.dll"
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Text",0x00000000,%LATVIAN_QUERTY%
+; HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010426","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5044"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout File",0x00000000,"kbdlt1.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00010427","Layout Text",0x00000000,%LITHUANIAN%
@@ -711,7 +720,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Text",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5117"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout File",0x00000000,"kbdaze.dll"
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Text",0x00000000,%AZERI_CYRILLIC%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000082c","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5115"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042f","Layout File",0x00000000,"kbdmac.dll"
@@ -721,6 +730,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000042f","Layout Displa
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout File",0x00000000,"kbdgeo.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Text",0x00000000,%GEORGIAN%
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000437","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5119"
+
+;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout File",0x00000000,"kbdfo.dll"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout Text",0x00000000,%FAEROESE%
+;HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000438","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5108"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout File",0x00000000,"kbdindev.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000439","Layout Text",0x00000000,%DEVANAGARI%
@@ -1383,7 +1396,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Parallel arbitrator", \
  "Extended Base" \
  "PCI Configuration", \
- "MS Transactions
+ "MS Transactions"
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
@@ -1530,17 +1543,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","File",0x00020000,"%SystemRoot%\system32\config\AppEvent.Evt"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","MaxSize",0x00010003,5242880
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Application","Retention",0x00010003,0
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","File",0x00020000,"%SystemRoot%\system32\config\SecEvent.Evt"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","MaxSize",0x00010003,5242880
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\Security","Retention",0x00010003,0
 
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","File",0x00020000,"%SystemRoot%\system32\config\SysEvent.Evt"
-HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,524288
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","MaxSize",0x00010003,5242880
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System","Retention",0x00010003,0
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","EventMessageFile",0x00020000,"%SystemRoot%\system32\ntdll.dll"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog\System\Application Popup","TypesSupported",0x00010003,0x00000007
@@ -2218,6 +2231,7 @@ GERMAN = "German"
 GREEK = "Greek"
 GUJARATI = "Gujarati"
 IRISH = "Irish"
+FAEROESE = "Faeroese"
 FINNISH = "Finnish"
 FRENCH = "French"
 GEORGIAN = "Georgian"
@@ -2230,6 +2244,7 @@ KAZAKH = "Kazakh"
 KOREAN = "Korean"
 LATIN_AMERICAN = "Latin American"
 LATVIAN = "Latvian"
+LATVIAN_QUERTY = "Latvian (QUERTY)"
 LITHUANIAN = "Lithuanian"
 MACEDONIAN = "Macedonian (FYRO)"
 MALAYALAM = "Malayalam"
@@ -2354,6 +2369,7 @@ GERMAN = "Niemiecki"
 GREEK = "Grecki"
 GUJARATI = "Gujarati"
 IRISH = "Irlandzki"
+FAEROESE = "Faeroese"
 FINNISH = "Fiński"
 FRENCH = "Francuski"
 GEORGIAN = "Gruziński"
@@ -2366,6 +2382,7 @@ KAZAKH = "Kazachski"
 KOREAN = "Koreański"
 LATIN_AMERICAN = "Latynoamerykański"
 LATVIAN = "Łotewski"
+LATVIAN_QUERTY = "Łotewski (QUERTY)"
 LITHUANIAN = "Litewski"
 MACEDONIAN = "Macedoński (FYRO)"
 MALAYALAM = "Malajalam"
@@ -2490,6 +2507,7 @@ GERMAN = "Germană"
 GREEK = "Greacă"
 GUJARATI = "Gujarati"
 IRISH = "Irlandeză"
+FAEROESE = "Faeroese"
 FINNISH = "Finlandeză"
 FRENCH = "Franceză"
 GEORGIAN = "Georgiană"
@@ -2502,6 +2520,7 @@ KAZAKH = "Kazahă"
 KOREAN = "Coreeană"
 LATIN_AMERICAN = "Iberoamericană"
 LATVIAN = "Letonă"
+LATVIAN_QUERTY = "Letonă (QUERTY)"
 LITHUANIAN = "Lituaniană"
 MACEDONIAN = "Macedonă (FYRO)"
 MALAYALAM = "Malayalam"

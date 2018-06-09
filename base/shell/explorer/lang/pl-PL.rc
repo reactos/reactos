@@ -126,7 +126,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Dostosuj klasyczne menu Start"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Menu Start", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Możesz dostosować menu Start, dodając lub usuwając jego elementy.", IDC_STATIC, 48, 17, 100, 39
@@ -141,26 +141,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "OK", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "Anuluj", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Ostrzeżenie o nazwie pliku"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "&Ignoruj", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Zmień nazwę", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "&Nie sprawdzaj tego przy starcie systemu", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "Na Twoim komputerze znajduje się plik folderu o nazwie %s , który może spowodować nieprawidłowe działanie niektórych aplikacji.  Zmienienie nazwy na %s rozwiązało by ten problem.  Czy chcesz teraz zmienić nazwę tego pliku?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Ustawienia menu Start ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Otwieraj podmenu po zatrzymaniu na nich wskaźnika myszy", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "Wyróżnij &nowo zainstalowane programy", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -170,13 +170,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "Zaznacz tę opcję, aby zapewnić szybki dostęp do niedawno otwieranych dokumentów.  Wyczyszczenie tej listy nie powoduje usunięcia dokumentów.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Wyczyść &moje ostatnio otwierane dokumenty", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "Wy&czyść listę", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Ogólne"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Wybierz rozmiar ikon dla programów ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -193,7 +193,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
  
 STRINGTABLE
 BEGIN

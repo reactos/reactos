@@ -309,7 +309,11 @@ static BOOL CRYPT_RegFlushStore(WINE_REGSTOREINFO *store, BOOL force)
     TRACE("(%p, %d)\n", store, force);
 
     if (store->dirty || force)
+    {
         ret = CRYPT_RegWriteToReg(store);
+        if (ret)
+            store->dirty = FALSE;
+    }
     else
         ret = TRUE;
     return ret;
@@ -453,7 +457,7 @@ static BOOL WINAPI CRYPT_RegControl(HCERTSTORE hCertStore, DWORD dwFlags,
  DWORD dwCtrlType, void const *pvCtrlPara)
 {
     WINE_REGSTOREINFO *store = hCertStore;
-    BOOL ret;
+    BOOL ret = TRUE;
 
     TRACE("(%p, %08x, %d, %p)\n", hCertStore, dwFlags, dwCtrlType,
      pvCtrlPara);
@@ -469,7 +473,6 @@ static BOOL WINAPI CRYPT_RegControl(HCERTSTORE hCertStore, DWORD dwFlags,
         CRYPT_RegReadFromReg(store->key, memStore);
         I_CertUpdateStore(store->memStore, memStore, 0, 0);
         CertCloseStore(memStore, 0);
-        ret = TRUE;
         break;
     }
     case CERT_STORE_CTRL_COMMIT:
@@ -478,10 +481,12 @@ static BOOL WINAPI CRYPT_RegControl(HCERTSTORE hCertStore, DWORD dwFlags,
         break;
     case CERT_STORE_CTRL_AUTO_RESYNC:
         FIXME("CERT_STORE_CTRL_AUTO_RESYNC: stub\n");
-        ret = TRUE;
+        break;
+    case CERT_STORE_CTRL_NOTIFY_CHANGE:
+        FIXME("CERT_STORE_CTRL_NOTIFY_CHANGE: stub\n");
         break;
     default:
-        FIXME("%d: stub\n", dwCtrlType);
+        FIXME("%u: stub\n", dwCtrlType);
         ret = FALSE;
     }
     return ret;

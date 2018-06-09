@@ -133,6 +133,13 @@ public:
         return ::wcscmp(psz1, psz2);
     }
 
+    static int __cdecl CompareNoCase(
+        _In_z_ LPCWSTR psz1,
+        _In_z_ LPCWSTR psz2)
+    {
+        return ::_wcsicmp(psz1, psz2);
+    }
+
     static int __cdecl FormatV(
         _In_opt_z_ LPWSTR pszDest,
         _In_z_ LPCWSTR pszFormat,
@@ -263,6 +270,13 @@ public:
         _In_z_ LPCSTR psz2)
     {
         return ::strcmp(psz1, psz2);
+    }
+
+    static int __cdecl CompareNoCase(
+        _In_z_ LPCSTR psz1,
+        _In_z_ LPCSTR psz2)
+    {
+        return ::_stricmp(psz1, psz2);
     }
 
     static int __cdecl FormatV(
@@ -593,6 +607,10 @@ public:
         return StringTraits::Compare(CThisSimpleString::GetString(), psz);
     }
 
+    int CompareNoCase(_In_z_ PCXSTR psz) const
+    {
+        return StringTraits::CompareNoCase(CThisSimpleString::GetString(), psz);
+    }
 
     CStringT Mid(int iFirst, int nCount) const
     {

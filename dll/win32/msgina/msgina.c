@@ -170,6 +170,7 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
     LPWSTR lpAutoAdminLogon = NULL;
     LPWSTR lpDontDisplayLastUserName = NULL;
     LPWSTR lpShutdownWithoutLogon = NULL;
+    LPWSTR lpIgnoreShiftOverride = NULL;
     DWORD dwDisableCAD = 0;
     DWORD dwSize;
     LONG rc;
@@ -226,6 +227,15 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
             pgContext->bDontDisplayLastUserName = TRUE;
     }
 
+    rc = ReadRegSzValue(hKey,
+                        L"IgnoreShiftOverride",
+                        &lpIgnoreShiftOverride);
+    if (rc == ERROR_SUCCESS)
+    {
+        if (wcscmp(lpIgnoreShiftOverride, L"1") == 0)
+            pgContext->bIgnoreShiftOverride = TRUE;
+    }
+
     dwSize = sizeof(pgContext->UserName);
     rc = RegQueryValueExW(hKey,
                           L"DefaultUserName",
@@ -234,13 +244,24 @@ GetRegistrySettings(PGINA_CONTEXT pgContext)
                           (LPBYTE)&pgContext->UserName,
                           &dwSize);
 
-    dwSize = sizeof(pgContext->Domain);
+    dwSize = sizeof(pgContext->DomainName);
     rc = RegQueryValueExW(hKey,
-                          L"DefaultDomain",
+                          L"DefaultDomainName",
                           NULL,
                           NULL,
-                          (LPBYTE)&pgContext->Domain,
+                          (LPBYTE)&pgContext->DomainName,
                           &dwSize);
+
+    dwSize = sizeof(pgContext->Password);
+    rc = RegQueryValueExW(hKey,
+                          L"DefaultPassword",
+                          NULL,
+                          NULL,
+                          (LPBYTE)&pgContext->Password,
+                          &dwSize);
+
+    if (lpIgnoreShiftOverride != NULL)
+        HeapFree(GetProcessHeap(), 0, lpIgnoreShiftOverride);
 
     if (lpShutdownWithoutLogon != NULL)
         HeapFree(GetProcessHeap(), 0, lpShutdownWithoutLogon);
@@ -332,9 +353,6 @@ WlxInitialize(
 
     /* Locates the authentication package */
     //LsaRegisterLogonProcess(...);
-
-    /* Check autologon settings the first time */
-    pgContext->AutoLogonState = AUTOLOGON_CHECK_REGISTRY;
 
     pgContext->nShutdownAction = WLX_SAS_ACTION_SHUTDOWN_POWER_OFF;
 
@@ -785,12 +803,12 @@ CreateProfile(
     wcscpy(pgContext->UserName, UserName);
     if (Domain == NULL || wcslen(Domain) == 0)
     {
-        dwLength = _countof(pgContext->Domain);
-        GetComputerNameW(pgContext->Domain, &dwLength);
+        dwLength = _countof(pgContext->DomainName);
+        GetComputerNameW(pgContext->DomainName, &dwLength);
     }
     else
     {
-        wcscpy(pgContext->Domain, Domain);
+        wcscpy(pgContext->DomainName, Domain);
     }
 
     /* Get profile path */
@@ -823,7 +841,7 @@ CreateProfile(
     pProfile->pszProfile = ProfilePath;
 
     cbSize = sizeof(L"LOGONSERVER=\\\\") +
-             wcslen(pgContext->Domain) * sizeof(WCHAR) +
+             wcslen(pgContext->DomainName) * sizeof(WCHAR) +
              sizeof(UNICODE_NULL);
     lpEnvironment = HeapAlloc(GetProcessHeap(), 0, cbSize);
     if (!lpEnvironment)
@@ -832,7 +850,7 @@ CreateProfile(
         goto cleanup;
     }
 
-    StringCbPrintfW(lpEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->Domain);
+    StringCbPrintfW(lpEnvironment, cbSize, L"LOGONSERVER=\\\\%ls", pgContext->DomainName);
     ASSERT(wcslen(lpEnvironment) == cbSize / sizeof(WCHAR) - 2);
     lpEnvironment[cbSize / sizeof(WCHAR) - 1] = UNICODE_NULL;
 
@@ -868,115 +886,6 @@ cleanup:
 }
 
 
-static BOOL
-DoAutoLogon(
-    IN PGINA_CONTEXT pgContext)
-{
-    HKEY WinLogonKey = NULL;
-    LPWSTR AutoLogon = NULL;
-    LPWSTR AutoCount = NULL;
-    LPWSTR IgnoreShiftOverride = NULL;
-    LPWSTR UserName = NULL;
-    LPWSTR Domain = NULL;
-    LPWSTR Password = NULL;
-    BOOL result = FALSE;
-    LONG rc;
-    NTSTATUS Status;
-    NTSTATUS SubStatus = STATUS_SUCCESS;
-
-    TRACE("DoAutoLogon(): AutoLogonState = %lu\n",
-        pgContext->AutoLogonState);
-
-    if (pgContext->AutoLogonState == AUTOLOGON_DISABLED)
-        return FALSE;
-
-    rc = RegOpenKeyExW(
-        HKEY_LOCAL_MACHINE,
-        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\WinLogon",
-        0,
-        KEY_QUERY_VALUE,
-        &WinLogonKey);
-    if (rc != ERROR_SUCCESS)
-        goto cleanup;
-
-    if (pgContext->AutoLogonState == AUTOLOGON_CHECK_REGISTRY)
-    {
-        /* Set it by default to disabled, we might reenable it again later */
-        pgContext->AutoLogonState = AUTOLOGON_DISABLED;
-
-        rc = ReadRegSzValue(WinLogonKey, L"AutoAdminLogon", &AutoLogon);
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-        if (wcscmp(AutoLogon, L"1") != 0)
-            goto cleanup;
-
-        rc = ReadRegSzValue(WinLogonKey, L"AutoLogonCount", &AutoCount);
-        if (rc == ERROR_SUCCESS && wcscmp(AutoCount, L"0") == 0)
-            goto cleanup;
-        else if (rc != ERROR_FILE_NOT_FOUND)
-            goto cleanup;
-
-        rc = ReadRegSzValue(WinLogonKey, L"IgnoreShiftOverride", &UserName);
-        if (rc == ERROR_SUCCESS)
-        {
-            if (wcscmp(AutoLogon, L"1") != 0 && GetKeyState(VK_SHIFT) < 0)
-                goto cleanup;
-        }
-        else if (GetKeyState(VK_SHIFT) < 0)
-        {
-            /* User pressed SHIFT */
-            goto cleanup;
-        }
-
-        pgContext->AutoLogonState = AUTOLOGON_ONCE;
-        result = TRUE;
-    }
-    else /* pgContext->AutoLogonState == AUTOLOGON_ONCE */
-    {
-        pgContext->AutoLogonState = AUTOLOGON_DISABLED;
-
-        rc = ReadRegSzValue(WinLogonKey, L"DefaultUserName", &UserName);
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-        rc = ReadRegSzValue(WinLogonKey, L"DefaultDomain", &Domain);
-        if (rc != ERROR_SUCCESS && rc != ERROR_FILE_NOT_FOUND)
-            goto cleanup;
-        rc = ReadRegSzValue(WinLogonKey, L"DefaultPassword", &Password);
-        if (rc != ERROR_SUCCESS)
-            goto cleanup;
-
-        Status = DoLoginTasks(pgContext, UserName, Domain, Password, &SubStatus);
-        if (!NT_SUCCESS(Status))
-        {
-            /* FIXME: Handle errors!!! */
-            result = FALSE;
-            goto cleanup;
-        }
-
-        result = CreateProfile(pgContext, UserName, Domain, Password);
-        if (result)
-        {
-            ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
-            wcscpy(pgContext->Password, Password);
-
-            NotifyBootConfigStatus(TRUE);
-        }
-    }
-
-cleanup:
-    if (WinLogonKey != NULL)
-        RegCloseKey(WinLogonKey);
-    HeapFree(GetProcessHeap(), 0, AutoLogon);
-    HeapFree(GetProcessHeap(), 0, AutoCount);
-    HeapFree(GetProcessHeap(), 0, IgnoreShiftOverride);
-    HeapFree(GetProcessHeap(), 0, UserName);
-    HeapFree(GetProcessHeap(), 0, Domain);
-    HeapFree(GetProcessHeap(), 0, Password);
-    TRACE("DoAutoLogon(): AutoLogonState = %lu, returning %d\n",
-        pgContext->AutoLogonState, result);
-    return result;
-}
-
 /*
  * @implemented
  */
@@ -997,13 +906,16 @@ WlxDisplaySASNotice(
 
     if (pgContext->bAutoAdminLogon)
     {
-        /* Don't display the window, we want to do an automatic logon */
-        pgContext->AutoLogonState = AUTOLOGON_ONCE;
-        pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
-        return;
+        if (pgContext->bIgnoreShiftOverride ||
+            (GetKeyState(VK_SHIFT) >= 0))
+        {
+            /* Don't display the window, we want to do an automatic logon */
+            pgContext->pWlxFuncs->WlxSasNotify(pgContext->hWlx, WLX_SAS_TYPE_CTRL_ALT_DEL);
+            return;
+        }
+
+        pgContext->bAutoAdminLogon = FALSE;
     }
-    else
-        pgContext->AutoLogonState = AUTOLOGON_DISABLED;
 
     if (pgContext->bDisableCAD)
     {
@@ -1043,14 +955,6 @@ WlxLoggedOutSAS(
     pgContext->pMprNotifyInfo = pMprNotifyInfo;
     pgContext->pProfile = pProfile;
 
-    if (0 == GetSystemMetrics(SM_REMOTESESSION) &&
-        DoAutoLogon(pgContext))
-    {
-        /* User is local and registry contains information
-         * to log on him automatically */
-        *phToken = pgContext->UserToken;
-        return WLX_SAS_ACTION_LOGON;
-    }
 
     res = pGinaUI->LoggedOutSAS(pgContext);
     *phToken = pgContext->UserToken;
@@ -1107,6 +1011,50 @@ WlxIsLogoffOk(
     UNREFERENCED_PARAMETER(pWlxContext);
     return TRUE;
 }
+
+
+/*
+ * @implemented
+ */
+VOID WINAPI
+WlxLogoff(
+    PVOID pWlxContext)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+
+    TRACE("WlxLogoff(%p)\n", pWlxContext);
+
+    /* Delete the password */
+    ZeroMemory(pgContext->Password, sizeof(pgContext->Password));
+
+    /* Close the user token */
+    CloseHandle(pgContext->UserToken);
+    pgContext->UserToken = NULL;
+}
+
+
+/*
+ * @implemented
+ */
+VOID WINAPI
+WlxShutdown(
+    PVOID pWlxContext,
+    DWORD ShutdownType)
+{
+    PGINA_CONTEXT pgContext = (PGINA_CONTEXT)pWlxContext;
+    NTSTATUS Status;
+
+    TRACE("WlxShutdown(%p %lx)\n", pWlxContext, ShutdownType);
+
+    /* Close the LSA handle */
+    pgContext->AuthenticationPackage = 0;
+    Status = LsaDeregisterLogonProcess(pgContext->LsaHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("LsaDeregisterLogonProcess failed (Status 0x%08lx)\n", Status);
+    }
+}
+
 
 BOOL WINAPI
 DllMain(

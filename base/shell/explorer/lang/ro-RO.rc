@@ -118,7 +118,7 @@ IDD_CLASSICSTART_CUSTOMIZE DIALOGEX 0, 0, 232, 240, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
 CAPTION "Particularizare meniu de Pornire clasic"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Meniul „Pornire”", IDC_STATIC, 8, 7, 218, 114
     ICON             IDI_STARTMENU2, IDC_STATIC, 19, 17, 20, 20
     LTEXT            "Puteți particulariza meniul „Pornire” prin adăugarea sau eliminarea de elemente.", IDC_STATIC, 48, 17, 108, 39
@@ -133,26 +133,26 @@ FONT 8, "MS Shell Dlg"
     CONTROL          "StartMenuSe&ttings", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "Con&firmă", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "A&nulează", IDCANCEL, 176, 220, 50, 14
-}
+END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "Avertisment nume fișier"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     DEFPUSHBUTTON    "Ign&oră", IDIGNORE, 215, 60, 50, 14
     PUSHBUTTON       "&Redenumește", IDC_FILE_RENAME, 159, 60, 50, 14
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "N&u efectua această verificare la pornire", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
     LTEXT            "În calculator există un fișier sau dosar numit %s care poate cauza probleme în funcționarea corectă a anumitor aplicații. Redenumirea sa în %s ar rezolva această problemă. Doriți să-l redenumiți acum?", IDC_STATIC, 34, 7, 224, 37
-}
+END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
 STYLE DS_SETFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Opțiuni ale meniului „Pornire” ", IDC_STATIC, 7, 7, 238, 42
     AUTOCHECKBOX     "&Deschide submeniurile când mă opresc la ele cu indicatorul șoricelului", IDC_AUTOOPEN, 14, 21, 224, 10
     AUTOCHECKBOX     "&Evidențiază programele nou instalate", IDC_HIGHLIGHT, 14, 35, 224, 10
@@ -162,13 +162,13 @@ FONT 8, "MS Shell Dlg"
     LTEXT            "Selectați această opțiune pentru a oferi un acces rapid la documentele recent accesate.  Curățarea acestei liste nu va șterge documentele.", IDC_STATIC, 14, 144, 224, 21
     AUTOCHECKBOX     "Afișează cele mai &recent accesate documente", IDC_RECENTLY, 14, 168, 147, 10
     PUSHBUTTON       "&Curăță lista", IDC_CLEAR, 182, 168, 55, 14
-}
+END
 
 IDD_MODERNSTART_GENERAL DIALOGEX 0, 0, 251, 198
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_DLGFRAME
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
     GROUPBOX         "Selectați o dimensiune de pictogramă pentru programe ", IDC_STATIC, 7, 7, 238, 37
     ICON             IDC_LARGEICON, 17, 18, 20, 20, SS_CENTERIMAGE
     ICON             IDC_SMALLICON, 151, 18, 20, 20, SS_CENTERIMAGE
@@ -185,7 +185,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX         IDC_INTERNETDEFAULTAPP, 98, 138, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
     AUTOCHECKBOX     "&E-mail:", IDC_SHOWEMAIL, 14, 157, 37, 10
     COMBOBOX         IDC_EMAILDEFAULTAPP, 98, 155, 140, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-}
+END
 
 STRINGTABLE
 BEGIN

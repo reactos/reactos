@@ -29,13 +29,14 @@
 #define NDEBUG
 #include <debug.h>
 
-
 FDSC *fp_root = NULL;
 
 static void put_char(char **p, unsigned char c)
 {
-    // if (dos_char_to_printable(p, c))
-	// return;
+#ifndef __REACTOS__
+    if (dos_char_to_printable(p, c))
+	return;
+#endif
     if ((c >= ' ' && c < 0x7f) || c >= 0xa0)
 	*(*p)++ = c;
     else {
@@ -108,18 +109,15 @@ int file_cvt(unsigned char *name, unsigned char *fixed)
 	}
 	if (c == '\\') {
 	    c = 0;
+	    name++;
 	    for (cnt = 3; cnt; cnt--) {
 		if (*name < '0' || *name > '7') {
-		    printf("Invalid octal character.\n");
+		    printf("Expected three octal digits.\n");
 		    return 0;
 		}
 		c = c * 8 + *name++ - '0';
 	    }
-	    if (cnt < 4) {
-		printf("Expected three octal digits.\n");
-		return 0;
-	    }
-	    name += 3;
+	    name--;
 	}
 	if (islower(c))
 	    c = toupper(c);
@@ -158,7 +156,14 @@ void file_add(char *path, FD_TYPE type)
 	    exit(2);
 	for (walk = *current; walk; walk = walk->next)
 	    if (!here && (!strncmp(name, walk->name, MSDOS_NAME) || (type ==
-	     fdt_undelete && !strncmp(name + 1, walk->name + 1, MSDOS_NAME - 1))))
+								     fdt_undelete
+								     &&
+								     !strncmp
+								     (name + 1,
+								      walk->name
+								      + 1,
+								      MSDOS_NAME
+								      - 1))))
 		die("Ambiguous name: \"%s\"", path);
 	    else if (here && !strncmp(name, walk->name, MSDOS_NAME))
 		break;

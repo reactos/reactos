@@ -12,10 +12,12 @@ class CZipExtract :
 {
     CStringW m_Filename;
     CStringW m_Directory;
+    bool m_DirectoryChanged;
     unzFile uf;
 public:
     CZipExtract(PCWSTR Filename)
-        :uf(NULL)
+        :m_DirectoryChanged(false)
+        ,uf(NULL)
     {
         m_Filename = Filename;
         m_Directory = m_Filename;
@@ -158,6 +160,7 @@ public:
         int OnSetActive()
         {
             SetDlgItemTextW(IDC_DIRECTORY, m_pExtract->m_Directory);
+            m_pExtract->m_DirectoryChanged = false;
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);    /* Not supported for now */
             GetParent().CenterWindow(::GetDesktopWindow());
             return 0;
@@ -168,6 +171,9 @@ public:
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
             ::EnableWindow(GetDlgItem(IDC_DIRECTORY), FALSE);
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
+
+            if (m_pExtract->m_DirectoryChanged)
+                UpdateDirectory();
 
             if (!m_pExtract->Extract(m_hWnd, GetDlgItem(IDC_PROGRESS)))
             {
@@ -211,6 +217,9 @@ public:
             CStringW title(MAKEINTRESOURCEW(IDS_WIZ_BROWSE_TITLE));
             bi.lpszTitle = title;
 
+            if (m_pExtract->m_DirectoryChanged)
+                UpdateDirectory();
+
             browse_info info = { m_hWnd, m_pExtract->m_Directory.GetString() };
             bi.lParam = (LPARAM)&info;
 
@@ -222,7 +231,14 @@ public:
             {
                 m_pExtract->m_Directory = tmpPath;
                 SetDlgItemTextW(IDC_DIRECTORY, m_pExtract->m_Directory);
+                m_pExtract->m_DirectoryChanged = false;
             }
+            return 0;
+        }
+
+        LRESULT OnEnChangeDirectory(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+        {
+            m_pExtract->m_DirectoryChanged = true;
             return 0;
         }
 
@@ -231,12 +247,19 @@ public:
             return 0;
         }
 
+        void UpdateDirectory()
+        {
+            GetDlgItemText(IDC_DIRECTORY, m_pExtract->m_Directory);
+            m_pExtract->m_DirectoryChanged = false;
+        }
+
     public:
         enum { IDD = IDD_PROPPAGEDESTINATION };
 
         BEGIN_MSG_MAP(CCompleteSettingsPage)
             COMMAND_ID_HANDLER(IDC_BROWSE, OnBrowse)
             COMMAND_ID_HANDLER(IDC_PASSWORD, OnPassword)
+            COMMAND_HANDLER(IDC_DIRECTORY, EN_CHANGE, OnEnChangeDirectory)
             CHAIN_MSG_MAP(CPropertyPageImpl<CExtractSettingsPage>)
         END_MSG_MAP()
     };
@@ -319,6 +342,7 @@ public:
         if (err != UNZ_OK)
         {
             DPRINT1("ERROR, unzGetGlobalInfo64: 0x%x\n", err);
+            Close();
             return false;
         }
 
@@ -326,6 +350,7 @@ public:
         if (!zipEnum.initialize(this))
         {
             DPRINT1("ERROR, zipEnum.initialize\n");
+            Close();
             return false;
         }
 
@@ -351,6 +376,7 @@ public:
             HRESULT hr = SHPathPrepareForWriteA(hDlg, NULL, FullPath, dwFlags);
             if (FAILED_UNEXPECTEDLY(hr))
             {
+                Close();
                 return false;
             }
             CurrentFile++;
@@ -363,6 +389,7 @@ public:
             if (err != UNZ_OK)
             {
                 DPRINT1("ERROR, unzOpenCurrentFilePassword: 0x%x\n", err);
+                Close();
                 return false;
             }
 
@@ -386,6 +413,8 @@ public:
                         case CConfirmReplace::No:
                             break;
                         case CConfirmReplace::Cancel:
+                            unzCloseCurrentFile(uf);
+                            Close();
                             return false;
                         }
                     }
@@ -408,6 +437,7 @@ public:
                 {
                     unzCloseCurrentFile(uf);
                     DPRINT1("ERROR, CreateFileA: 0x%x (%s)\n", dwErr, bOverwriteAll ? "Y" : "N");
+                    Close();
                     return false;
                 }
             }
@@ -454,6 +484,7 @@ public:
             {
                 unzCloseCurrentFile(uf);
                 DPRINT1("ERROR, unzReadCurrentFile2: 0x%x\n", err);
+                Close();
                 return false;
             }
             else

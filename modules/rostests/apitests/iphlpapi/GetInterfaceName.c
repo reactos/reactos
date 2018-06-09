@@ -361,7 +361,6 @@ test_GetInterfaceName(VOID)
     }
 
     ApiReturn = RtlGUIDFromString(&GuidString, &AdapterGUID);
-    RtlFreeUnicodeString(&GuidString);
     if (ApiReturn != 0)
     {
         skip("RtlGUIDFromString failed. Can't proceed\n");

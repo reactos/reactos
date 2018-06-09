@@ -1,11 +1,18 @@
+/*
+ * PROJECT:     ReactOS Clipboard Viewer
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Resources file.
+ * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
+ */
+
 #include <windef.h>
 #include <winuser.h>
 
 #include "resources.h"
 
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Clipboard Viewer"
-#define REACTOS_STR_INTERNAL_NAME     "clipbrd"
-#define REACTOS_STR_ORIGINAL_FILENAME "clipbrd.exe"
+#define REACTOS_STR_FILE_DESCRIPTION    "ReactOS Clipboard Viewer"
+#define REACTOS_STR_INTERNAL_NAME       "clipbrd"
+#define REACTOS_STR_ORIGINAL_FILENAME   "clipbrd.exe"
 #include <reactos/version.rc>
 
 CLIPBRD_ICON ICON "res/clipbrd.ico"

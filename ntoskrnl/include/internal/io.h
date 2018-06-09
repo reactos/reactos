@@ -1091,9 +1091,9 @@ NTSTATUS
 NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
-                IN PUNICODE_STRING RegistryPath,
+                IN PUNICODE_STRING RegistryPath OPTIONAL,
                 IN PCUNICODE_STRING ServiceName,
-                PLDR_DATA_TABLE_ENTRY ModuleObject,
+                IN PLDR_DATA_TABLE_ENTRY ModuleObject OPTIONAL,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
 VOID
@@ -1339,8 +1339,8 @@ extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
 extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
 extern PDRIVER_OBJECT IopRootDriverObject;
-extern KSPIN_LOCK IopDeviceRelationsSpinLock;
-extern LIST_ENTRY IopDeviceRelationsRequestList;
+extern KSPIN_LOCK IopDeviceActionLock;
+extern LIST_ENTRY IopDeviceActionRequestList;
 extern RESERVE_IRP_ALLOCATOR IopReserveIrpAllocator;
 
 //

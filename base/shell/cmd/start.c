@@ -70,7 +70,7 @@ INT cmd_start (LPTSTR Rest)
             lpTitle = GetParameter(&Rest);
             StripQuotes(lpTitle);
         }
-        else if (*Rest == L'/')
+        else if (*Rest == _T('/'))
         {
             LPTSTR option;
             Rest++;

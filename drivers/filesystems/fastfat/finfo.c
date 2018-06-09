@@ -265,7 +265,7 @@ VfatSetBasicInformation(
         }
     }
 
-    VfatUpdateEntry(FCB, vfatVolumeIsFatX(DeviceExt));
+    VfatUpdateEntry(DeviceExt, FCB);
 
     if (NotifyFilter != 0)
     {
@@ -1397,6 +1397,11 @@ VfatSetAllocationSizeInformation(
             WriteCluster(DeviceExt, Cluster, 0);
             Cluster = NCluster;
         }
+
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+            FAT32UpdateFreeClustersCount(DeviceExt);
+        }
     }
     else
     {
@@ -1407,7 +1412,7 @@ VfatSetAllocationSizeInformation(
     Fcb->Flags |= FCB_IS_DIRTY;
     if (AllocSizeChanged)
     {
-        VfatUpdateEntry(Fcb, vfatVolumeIsFatX(DeviceExt));
+        VfatUpdateEntry(DeviceExt, Fcb);
 
         vfatReportChange(DeviceExt, Fcb, FILE_NOTIFY_CHANGE_SIZE, FILE_ACTION_MODIFIED);
     }
@@ -1552,6 +1557,7 @@ VfatSetInformation(
     PVFATFCB FCB;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID SystemBuffer;
+    BOOLEAN LockDir;
 
     /* PRECONDITION */
     ASSERT(IrpContext);
@@ -1593,7 +1599,14 @@ VfatSetInformation(
         DPRINT("Can set file size\n");
     }
 
-    if (FileInformationClass == FileRenameInformation)
+    LockDir = FALSE;
+    if (FileInformationClass == FileRenameInformation || FileInformationClass == FileAllocationInformation ||
+        FileInformationClass == FileEndOfFileInformation || FileInformationClass == FileBasicInformation)
+    {
+        LockDir = TRUE;
+    }
+
+    if (LockDir)
     {
         if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
@@ -1607,7 +1620,7 @@ VfatSetInformation(
         if (!ExAcquireResourceExclusiveLite(&FCB->MainResource,
                                             BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT)))
         {
-            if (FileInformationClass == FileRenameInformation)
+            if (LockDir)
             {
                 ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
             }
@@ -1662,7 +1675,7 @@ VfatSetInformation(
         ExReleaseResourceLite(&FCB->MainResource);
     }
 
-    if (FileInformationClass == FileRenameInformation)
+    if (LockDir)
     {
         ExReleaseResourceLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource);
     }

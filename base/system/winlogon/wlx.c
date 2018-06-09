@@ -105,25 +105,23 @@ GetDialogListEntry(HWND hwndDlg)
 }
 
 
-HWND
-GetTopDialogWindow(VOID)
+VOID
+CloseAllDialogWindows(VOID)
 {
     PDIALOG_LIST_ENTRY Current;
     PLIST_ENTRY ListEntry;
 
     ListEntry = DialogListHead.Flink;
-    if (ListEntry != &DialogListHead)
+    while (ListEntry != &DialogListHead)
     {
         Current = CONTAINING_RECORD(ListEntry,
                                     DIALOG_LIST_ENTRY,
                                     Entry);
 
-        TRACE("Found entry: %p window %p\n", Current, Current->hWnd);
-        return Current->hWnd;
-    }
+        PostMessage(Current->hWnd, WLX_WM_SAS, 0, 0);
 
-    TRACE("Found no window\n");
-    return NULL;
+        ListEntry = ListEntry->Flink;
+    }
 }
 
 
