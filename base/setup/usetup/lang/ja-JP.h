@@ -134,56 +134,62 @@ static MUI_ENTRY jaJPIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " ¾¯Ä±¯Ìß ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS ¾¯Ä±¯ÌßÊ ¼®·¶²ÊÂÀÞÝ¶²Æ ±ØÏ½¡ ¿ÉÀÒ¤ ÏÀÞ",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "¼Þ­³ÌÞÝÆ ØÖ³ÃÞ·Ù ¾¯Ä±¯Ìß ±ÌßØ¹°¼®ÝÉ ½ÍÞÃÉ ·É³Ê »Îß°Ä »ÚÏ¾Ý¡",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Â·ÞÉ ¾²Ô¸¶Þ Ã·Ö³ »ÚÏ½:",
+        "and under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- ¾¯Ä±¯ÌßÊ FAT Ì§²Ù¼½ÃÑ ÉÐ »Îß°Ä ¼Ï½¡",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary PC if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Ì§²Ù¼½ÃÑÉ Áª¯¸·É³Ê ÏÀÞ ¼Þ¯¿³ »ÚÃ ²Ï¾Ý¡",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  ReactOS ¦ ²Ý½Ä°Ù ½ÙÆÊ ENTER ·°¦ µ¼Ã ¸ÀÞ»²¡",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  ReactOS ¦ ²Ý½Ä°Ù¾½ÞÆ Á­³¼ ½Ù ÊÞ±²Ê F3 ·°¦ µ¼Ã ¸ÀÞ»²¡",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = ¿Þ¯º³   F3 = Á­³¼",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

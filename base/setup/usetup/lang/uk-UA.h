@@ -139,56 +139,62 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         4,
         3,
-        " Встановлення ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Встановлювач ReactOS знаходиться в раннiй стадiї розробки i ще не",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "пiдтримує всi функцiї повноцiнної програми встановлення.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Присутнi наступнi обмеження:",
+        "and under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Встановлювач пiдтримує лише файлову систему FAT.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary PC if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Перевiрка файлової системи ще не впроваджена.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  Натиснiть ENTER щоб встановити ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  Натиснiть F3 щоб вийти, не встановлюючи ReactOS.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Продовжити   F3 = Вийти",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

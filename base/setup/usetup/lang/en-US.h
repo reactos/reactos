@@ -145,13 +145,13 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     {
         6,
         11,
-        "ReactOS is an Alpha operating system, meaning it is not feature-complete",
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and it's under heavy development. It is recommended to use only for",
+        "and under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
@@ -163,18 +163,19 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     {
         6,
         15,
-        "Backup your data or test in a secondary PC if you attempt",
+        "Backup your data or test on a secondary PC if you attempt",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run in a real hardware."
+        "to run on real hardware.",
+        TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue the ReactOS Setup.",
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {

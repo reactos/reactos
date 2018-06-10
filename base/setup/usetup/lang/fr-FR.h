@@ -131,64 +131,64 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
 
 static MUI_ENTRY frFRIntroPageEntries[] =
 {
-    {
+   {
         4,
         3,
-        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "L'installation de ReactOS est en phase de dÇveloppement.",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "Elle ne supporte pas encore toutes les fonctions d'une application",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        10,
-        " d'installation entiärement utilisable.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Les limitations suivantes s'appliquent:",
+        "and under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- L'installation supporte uniquement le systäme de fichiers FAT.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary PC if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Les vÇrifications de systäme de fichers ne sont pas implÇmentÇes.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  Appuyer sur ENTRêE pour installer ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  Appuyer sur F3 pour quitter sans installer ReactOS.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTRêE = Continuer   F3 = Quitter",
+        "ENTER = Continue   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

@@ -141,56 +141,62 @@ static MUI_ENTRY skSKIntroPageEntries[] =
     {
         4,
         3,
-        " Inçtal tor syst‚mu ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Inçtal tor syst‚mu ReactOS je v zaŸiatoŸnom çt diu vìvoja. Zatia–",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "nepodporuje vçetky funkcie plne vyu§¡vaj£ce program Inçtal tor.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "M  nasleduj£ce obmedzenia:",
+        "and under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Inçtal tor podporuje iba s£borovì syst‚m FAT.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary PC if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Kontrola s£borov‚ho syst‚mu zatia– nie je implementovan .",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  StlaŸte ENTER pre nainçtalovanie syst‚mu ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  StlaŸte F3 pre skonŸenie inçtal cie, syst‚m ReactOS sa nenainçtaluje.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = PokraŸovaœ   F3 = SkonŸiœ",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
