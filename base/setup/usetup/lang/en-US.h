@@ -139,42 +139,47 @@ static MUI_ENTRY enUSIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "support all the functions of a fully usable setup application.",
+        11,
+        "ReactOS is an Alpha operating system, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "The following limitations apply:",
+        "and it's under heavy development. It is recommended to use only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Setup supports FAT file systems only.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test in a secondary PC if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run in a real hardware."
+    },
+    {
+        8,
+        19,
+        "\x07  Press ENTER to continue the ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- File system checks are not implemented yet.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        23,
-        "\x07  Press ENTER to install ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
+        21,
         "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
@@ -182,7 +187,7 @@ static MUI_ENTRY enUSIntroPageEntries[] =
         0,
         0,
         "ENTER = Continue   F3 = Quit",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
