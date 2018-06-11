@@ -160,7 +160,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         6,
         12,
-        "and under heavy development. It is recommended to use it only for",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
@@ -178,7 +178,7 @@ static MUI_ENTRY bgBGIntroPageEntries[] =
     {
         6,
         16,
-        "to run on real hardware.",
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
