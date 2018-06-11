@@ -134,61 +134,61 @@ static MUI_ENTRY ptBRIntroPageEntries[] =
     {
         4,
         3,
-        " Instalaá∆o do ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "O instalador do ReactOS est† em fase inicial de desenvolvimento e",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        9,
-        "ainda n∆o suporta todas as funá‰es de instalaá∆o.",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "As seguintes limitaá‰es se aplicam:",
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         12,
-        "- O instalador suporta somente o sistema de arquivos FAT.",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- O verificador de integridade de sistema de arquivos ainda n∆o est†",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary computer if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "  implementado.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        25,
-        "\x07  Para continuar a instalaá∆o do ReactOS, pressione ENTER.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        27,
-        "\x07  Para sair sem instalar o ReactOS, pressione F3.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER=Continuar  F3=Sair",
+        "ENTER = Continue   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
