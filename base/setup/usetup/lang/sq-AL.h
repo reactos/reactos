@@ -155,7 +155,7 @@ static MUI_ENTRY sqALIntroPageEntries[] =
     {
         6,
         12,
-        "and under heavy development. It is recommended to use only for",
+        "and under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
@@ -167,7 +167,7 @@ static MUI_ENTRY sqALIntroPageEntries[] =
     {
         6,
         15,
-        "Backup your data or test on a secondary PC if you attempt",
+        "Backup your data or test on a secondary computer if you attempt",
         TEXT_STYLE_NORMAL
     },
     {

@@ -137,7 +137,7 @@ static MUI_ENTRY svSEWelcomePageEntries[] =
 
 static MUI_ENTRY svSEIntroPageEntries[] =
 {
-   {
+    {
         4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
@@ -158,7 +158,7 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         6,
         12,
-        "and under heavy development. It is recommended to use only for",
+        "and under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
@@ -170,7 +170,7 @@ static MUI_ENTRY svSEIntroPageEntries[] =
     {
         6,
         15,
-        "Backup your data or test on a secondary PC if you attempt",
+        "Backup your data or test on a secondary computer if you attempt",
         TEXT_STYLE_NORMAL
     },
     {
