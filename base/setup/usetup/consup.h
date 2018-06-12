@@ -118,6 +118,12 @@ CONSOLE_PrintTextXYN(
 	IN LPCSTR fmt, ...);
 
 VOID
+CONSOLE_ClearTextXY(
+    IN SHORT x,
+    IN SHORT y,
+    IN SHORT Length);
+
+VOID
 CONSOLE_SetCursorType(
 	IN BOOL bInsert,
 	IN BOOL bVisible);

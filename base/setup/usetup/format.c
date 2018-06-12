@@ -96,7 +96,7 @@ FormatPartition(
     if (!FileSystem || !FileSystem->FormatFunc)
         return STATUS_NOT_SUPPORTED;
 
-    CONSOLE_PrintTextXY(6, 10, "%100c", ' ');
+    CONSOLE_ClearTextXY(6, 10, 100);
 
     FormatProgressBar = CreateProgressBar(6,
                                           yScreen - 14,

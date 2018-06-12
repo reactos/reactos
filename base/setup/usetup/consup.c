@@ -282,7 +282,6 @@ CONSOLE_SetTextXY(
         &Written);
 }
 
-static
 VOID
 CONSOLE_ClearTextXY(IN SHORT x,
                     IN SHORT y,
