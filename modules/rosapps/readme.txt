@@ -2,23 +2,18 @@
 ReactOS Applications
 ====================
 
-This directory contains extra applicatons for ReactOS.
+This directory contains extra applications for ReactOS.
 Make sure you also have a copy of the rest of the ReactOS
 source before you attempt to build anything in this module.
 It is to be placed under "modules" subdirectory of a trunk checkout.
-No additional changes to build files are necessary, it'll be picked up
-automatically.
+The module requires to be enabled during the "configure" process.
 
-To include "rosapps" in your build folder:
-1. Copy the rosapps folder into the reactos\modules folder, or
-2. Link reactos/modules/rosapps to rosapps
+To include the module in your build folder, run the configure script with the flags -DENABLE_ROSAPPS=1 
 
 # For Windows users
 
-    cd %%_ROSSOURCEDIR%%\reactos\modules
-    mklink /j rosapps %%_ROSSOURCEDIR%%\rosapps
+    configure.cmd -DENABLE_ROSAPPS=1
 
 # For UNIX users
 
-    cd \$$_ROSSOURCEDIR/reactos/modules
-    ln -s \$$_ROSSOURCEDIR/rosapps rosapps
+    ./configure.sh -DENABLE_ROSAPPS=1
