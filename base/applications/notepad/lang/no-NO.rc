@@ -62,8 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Emner i hjelp", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Om", CMD_ABOUT
-        MENUITEM "&Infomasjon", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -128,23 +127,6 @@ BEGIN
     PUSHBUTTON "Avbryt", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Om ReactOS Notisblokk"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS Notisblokk v1.0\r\nEnerett 1997,98 Marcel Baur\r\nEnerett 2000 Mike McCormack\r\nEnerett 2002 Sylvain Petreolle\r\nEnerett 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Avslutt", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -184,4 +166,5 @@ minne."
     STRING_PRINTERROR "Cannot print the file '%s'.\n\nMake sure that the printer is turned on and is configured properly."
 
     STRING_TEXT_DOCUMENT "Text Document"
+    STRING_NOTEPAD_AUTHORS "Enerett 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

@@ -1191,46 +1191,15 @@ VOID DIALOG_HelpContents(VOID)
 VOID DIALOG_HelpAboutNotepad(VOID)
 {
     TCHAR szNotepad[MAX_STRING_LEN];
+    TCHAR szNotepadAuthors[MAX_STRING_LEN];
+
     HICON notepadIcon = LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON));
 
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, ARRAY_SIZE(szNotepad));
-    ShellAbout(Globals.hMainWnd, szNotepad, 0, notepadIcon);
+    LoadString(Globals.hInstance, STRING_NOTEPAD_AUTHORS, szNotepadAuthors, ARRAY_SIZE(szNotepadAuthors));
+
+    ShellAbout(Globals.hMainWnd, szNotepad, szNotepadAuthors, notepadIcon);
     DeleteObject(notepadIcon);
-}
-
-INT_PTR
-CALLBACK
-AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    HWND hLicenseEditWnd;
-    TCHAR *strLicense;
-
-    switch (message)
-    {
-    case WM_INITDIALOG:
-
-        hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE);
-
-        /* 0x1000 should be enough */
-        strLicense = (TCHAR *)_alloca(0x1000);
-        LoadString(GetModuleHandle(NULL), STRING_LICENSE, strLicense, 0x1000);
-
-        SetWindowText(hLicenseEditWnd, strLicense);
-
-        return TRUE;
-
-    case WM_COMMAND:
-
-        if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
-        }
-
-        break;
-    }
-
-    return 0;
 }
 
 /***********************************************************************

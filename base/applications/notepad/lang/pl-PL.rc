@@ -62,8 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Tematy pomocy", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&Notatnik - informacje", CMD_ABOUT
-        MENUITEM "&ReactOS - informacje", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -128,23 +127,6 @@ BEGIN
     PUSHBUTTON "Anuluj", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Notatnik ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "Notatnik ReactOS v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Zamknij", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Niniejszy program jest wolnym oprogramowaniem; możesz go rozprowadzać dalej i/lub modyfikować na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundację Wolnego Oprogramowania - według wersji 2 tej Licencji lub (według twojego wyboru) którejś z późniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadzieją, iż będzie on użyteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyślnej gwarancji PRZYDATNOŚCI HANDLOWEJ albo PRZYDATNOŚCI DO OKREŚLONYCH ZASTOSOWAŃ. W celu uzyskania bliższych informacji sięgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnością wraz z niniejszym programem otrzymałeś też egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeśli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -178,4 +160,5 @@ BEGIN
     STRING_PRINTERROR "Nie można wydrukować pliku '%s'.\n\nUpewnij się, że drukarka jest włączona i poprawnie skonfigurowana."
 
     STRING_TEXT_DOCUMENT "Dokument tekstowy"
+    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

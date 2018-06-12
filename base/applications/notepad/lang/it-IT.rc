@@ -62,8 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Guida in linea", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "Informazioni &su blocco note", CMD_ABOUT
-        MENUITEM "Inf&o...", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 
@@ -128,23 +127,6 @@ BEGIN
     PUSHBUTTON "Annulla", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
-IDD_ABOUTBOX DIALOGEX 22, 16, 284, 170
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Informazioni su blocco note ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL "ReactOS Notepad v1.0\r\nCopyright 1997,98 Marcel Baur\r\nCopyright 2000 Mike McCormack\r\nCopyright 2002 Sylvain Petreolle\r\nCopyright 2002 Andriy Palamarchuk\r\n", -1, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 46, 7, 232, 39
-    CONTROL " ", -1, "Static", 0x50000000, 8, 48, 272, 11
-    DEFPUSHBUTTON "Chiudi", IDOK, 114, 149, 44, 15, WS_GROUP
-    ICON IDI_NPICON, -1, 12, 9, 20, 30
-    EDITTEXT IDC_LICENSE, 8, 64, 272, 81, ES_MULTILINE | ES_READONLY | WS_VSCROLL
-END
-
-STRINGTABLE
-BEGIN
-    STRING_LICENSE "Questo programma è software libero; può redistribuirlo e/o modificarlo sotto\ni termini della licenza pubblica GNU come pubblicata dalla Free Software Foundation; sia la versione 2 sia una versione successiva (a sua scelta).\r\n\r\nQuesto programma è distribuito\nnella speranza che sia utile, ma SENZA ALCUNA GARANZIA; senza neanche la garanzia implicita\ndi NEGOZIABILITA' o APPLICABILITA' per un particolare scopo.  Si veda la licenza generale pubblica GNU per maggiori dettagli.\r\n\r\nDovrebbe aver ricevuto una copia assieme a questo programma; se così non fosse, scriva alla Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
-END
-
 STRINGTABLE
 BEGIN
     STRING_PAGESETUP_HEADERVALUE "&n" /* FIXME */
@@ -184,4 +166,5 @@ di memoria libera."
     STRING_PRINTERROR "Impossibile stampare il file '%s'.\n\nControllare che la stampante sia accesa e impostata correttamente."
 
     STRING_TEXT_DOCUMENT "Documento di testo"
+    STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END
