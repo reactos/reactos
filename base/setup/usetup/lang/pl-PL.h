@@ -144,61 +144,61 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "Stan rozwoju systemu ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "System ReactOS jest w fazie Alpha, co oznacza, ¾e jest niekompletny",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "i wci¥¾ intensywnie rozwijany. Zaleca si© u¾ywania systemu wyˆ¥cznie",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "w celach ewauluacji i testowania, nie jako system codziennego u¾ytku.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "Wykonaj kopi© zapasow¥ danych lub testuj na dodatkowym komputerze,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "je˜li pr¢bujesz uruchomi† system ReactOS poza maszyn¥ wirtualn¥.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Naci˜nij ENTER, aby zainstalowa† system ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Naci˜nij F3, aby wyj˜† bez instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Kontynuacja   F3 = Wyj˜cie",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
