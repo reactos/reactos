@@ -2,8 +2,8 @@
  * PROJECT:     ReactOS API Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Test for NtAllocateVirtualMemory
- * COPYRIGHT:   Copyright 2011 Thomas Faber <thomas.faber@reactos.org>
- *              Copyright 2013 Timo Kreuzer <timo.kreuzer@reactos.org>
+ * COPYRIGHT:   Copyright 2011-2013 Thomas Faber <thomas.faber@reactos.org>
+ *              Copyright 2013-2014 Timo Kreuzer <timo.kreuzer@reactos.org>
  *              Copyright 2015 Jérôme Gardou <jerome.gardou@reactos.org>
  *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
@@ -216,11 +216,11 @@ CheckSize(ULONG_PTR Base, SIZE_T InSize, SIZE_T ExpectedSize)
                                      &Size,
                                      MEM_RESERVE,
                                      PAGE_NOACCESS);
-    ok(NT_SUCCESS(Status), "NtAllocateVirtualMemory failed!\n");
+    ok_ntstatus(Status, STATUS_SUCCESS);
     ok(BaseAddress == (PVOID)(Base & ~((ULONG_PTR)0xFFFF)), "Got back wrong base address: %p\n", BaseAddress);
     ok(Size == ExpectedSize, "Alloc of 0x%Ix: got back wrong size: 0x%Ix, expected 0x%Ix\n", InSize, Size, ExpectedSize);
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
-    ok(NT_SUCCESS(Status), "NtFreeVirtualMemory failed!\n");
+    ok_ntstatus(Status, STATUS_SUCCESS);
 }
 
 VOID
@@ -356,7 +356,6 @@ CheckAlignment()
     /* Release the memory */
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
     ok_ntstatus(Status, STATUS_SUCCESS);
-
 }
 
 static
@@ -561,8 +560,37 @@ CheckAdjacentVADs()
     BaseAddress = UlongToPtr(0x50010000);
     Size = 0x10000;
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    // Result varies between ReactOS and Windows.
     ok_ntstatus(Status, STATUS_SUCCESS);
-
+    if (!NT_SUCCESS(Status))
+    { // Unexpected, cleanup.
+        trace("ReactOS does not support \"case B\" yet\n");
+        ok_ntstatus(Status, STATUS_FREE_VM_NOT_AT_BASE);
+        // Release the 3 64k region.
+        BaseAddress = UlongToPtr(0x50000000);
+        Size = 0x30000;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+    else
+    {
+        trace("Windows supports \"case B\"\n");
+        // Double-check that the 64k region in the middle was released.
+        BaseAddress = UlongToPtr(0x50010000);
+        Size = 0x10000;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_MEMORY_NOT_ALLOCATED);
+        // Release the 64k region at the start.
+        BaseAddress = UlongToPtr(0x50000000);
+        Size = 0x10000;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+        // Release the 64k region at the end.
+        BaseAddress = UlongToPtr(0x50020000);
+        Size = 0x10000;
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
 }
 
 static
@@ -589,7 +617,12 @@ CheckSomeDefaultAddresses(VOID)
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    // 0x00000000, 64k: Free.
+    // Suffix meanings: nothing = x32 and x64, x32 = 32on32, x64 = 32on64, amd64 = 64on64.
+    // The following checks assume very default addresses,
+    // no address space layout randomization (ASLR).
+    // PS: Actually, it looks like ASLR is active on 7+_x32/Vista+_x64/Vista+_amd64 test VMs...
+
+    // 0x00000000: First 64k region.
 
     /* Reserve and commit memory at 0x00000000, after round down */
     BaseAddress = UlongToPtr(0x00000000 + 0x0FFF);
@@ -600,7 +633,21 @@ CheckSomeDefaultAddresses(VOID)
                                      &Size,
                                      MEM_RESERVE | MEM_COMMIT,
                                      PAGE_READWRITE);
+    // Result varies between Windows versions.
     ok_ntstatus(Status, STATUS_SUCCESS);
+    if (NT_SUCCESS(Status))
+    {
+        trace("0x00000000(+) is available, as on ReactOS and Windows XP/S03/Vista_x32/7_x32\n");
+        // 0x00000000, 64k: Free.
+    }
+    else
+    {
+        trace("0x00000000(+) is not available, as on Windows 8.1_x32/Vista+_x64/Vista+_amd64\n");
+        ok_ntstatus(Status, STATUS_INVALID_PARAMETER_2);
+        skip("Following tests on first 64k region would fail too\n");
+        goto First64kIsUnavailable;
+    }
+
     ok_ptr(BaseAddress, 0x00000000);
 
     // Double-check that it is not forbidden "in order to catch null pointer accesses".
@@ -624,14 +671,7 @@ CheckSomeDefaultAddresses(VOID)
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
-    /* The following checks assume very default addresses,
-     * no address space layout randomization (ASLR). */
-#ifdef _WIN64
-    ok(FALSE, "ToDo, 64-bit: Check/Adapt 32-bit results\n");
-#endif
-
-    // 0x00010000,  4k: Private Data.
-    // 0x00011000, 60k: Unusable.
+    // 0x00010000: Second 64k region.
 
     /* Reserve memory below 0x00010000 */
     BaseAddress = UlongToPtr(0x00010000 - 0x1000);
@@ -646,6 +686,7 @@ CheckSomeDefaultAddresses(VOID)
     Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
     ok_ntstatus(Status, STATUS_SUCCESS);
 
+First64kIsUnavailable:
     /* Reserve memory at 0x00010000:
      * Windows NT legacy default executable image base */
     BaseAddress = UlongToPtr(0x00010000);
@@ -656,9 +697,18 @@ CheckSomeDefaultAddresses(VOID)
                                      &Size,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
+    // Result varies between Windows versions.
     ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
-    if (NT_SUCCESS(Status))
-    { // Unexpected, cleanup.
+    if (!NT_SUCCESS(Status))
+    {
+        trace("0x00010000 is not available, as on ReactOS and Windows XP/S03/Vista/S08_x64/7/Vista_amd64/S08_amd64/7_amd64\n");
+        // 0x00010000,  4k: Private Data.
+        // 0x00011000, 60k: Unusable.
+    }
+    else
+    {
+        trace("0x00010000 is available, as on Windows 8.1/10_x64/8.1+_amd64\n");
+        ok_ntstatus(Status, STATUS_SUCCESS);
         Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
         ok_ntstatus(Status, STATUS_SUCCESS);
     }
@@ -674,17 +724,20 @@ CheckSomeDefaultAddresses(VOID)
                                      &Size,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
+    // Result varies between Windows versions and sometimes between configurations/runs.
+    ok_ntstatus(Status, STATUS_SUCCESS);
     if (NT_SUCCESS(Status))
     {
-        trace("Below 0x00400000 is available, as on ReactOS and Windows S03\n");
+        trace("Below 0x00400000 is available, as on ReactOS and Windows XP/S03/8.1+_amd64. (Windows 8.1/10_x64 vary.)\n");
+        // ReactOS:
         // 0x003F0000, 64k: Free.
-        ok_ntstatus(Status, STATUS_SUCCESS);
         Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
         ok_ntstatus(Status, STATUS_SUCCESS);
     }
     else
     {
-        trace("Below 0x00400000 is not available, as on Windows XP\n");
+        trace("Below 0x00400000 is not available, as on Windows Vista_amd64. (Windows Vista/S08_x64/7/S08_amd64/7_amd64 vary.)\n");
+        // Windows XP on VirtualPC 2004:
         // 0x003F0000,  4k: Shareable.
         // 0x003F1000, 60k: Unusable.
         ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
@@ -701,9 +754,16 @@ CheckSomeDefaultAddresses(VOID)
                                      &Size,
                                      MEM_RESERVE,
                                      PAGE_READWRITE);
+    // Result varies between Windows versions and sometimes between configurations/runs.
     ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
-    if (NT_SUCCESS(Status))
-    { // Unexpected, cleanup.
+    if (!NT_SUCCESS(Status))
+    {
+        trace("0x00400000 is not available, as on ReactOS and Windows XP/S03/Vista_amd64. (Windows Vista/S08_x64/7/S08_amd64/7_amd64 vary.)\n");
+    }
+    else
+    {
+        trace("0x00400000 is available. (Windows 8.1/10_x64/8.1+_amd64 vary.)\n");
+        ok_ntstatus(Status, STATUS_SUCCESS);
         Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
         ok_ntstatus(Status, STATUS_SUCCESS);
     }
@@ -738,7 +798,83 @@ CheckSomeDefaultAddresses(VOID)
     ok_ntstatus(Status, STATUS_SUCCESS);
 
 #ifdef _WIN64
-    skip("ToDo, 64-bit: Add 0x140000000/Exe and 0x180000000/DLL checks\n");
+    // 0x0000000140000000: 64-bit Exe image base.
+
+    // Reserve memory below 0x0000000140000000.
+    BaseAddress = (PVOID) (0x0000000140000000 - 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    // Result varies sometimes between runs.
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    if (NT_SUCCESS(Status))
+    {
+        trace("Below 0x0140000000 is available, as on Windows S08_amd64/8.1+_amd64. (Windows Vista_amd64/7_amd64 vary.)\n");
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+    else
+    {
+        trace("Below 0x0140000000 is not available\n");
+        ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    }
+
+    // Reserve memory at 0x0000000140000000:
+    // Windows 64-bit default executable image base.
+    BaseAddress = (PVOID) 0x0000000140000000;
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    // Result varies sometimes between runs.
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    if (NT_SUCCESS(Status))
+    {
+        trace("0x0140000000 is available, as on Windows S08+_amd64. (Windows Vista_amd64 varies.)\n");
+        Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+        ok_ntstatus(Status, STATUS_SUCCESS);
+    }
+    else
+    {
+        trace("0x0140000000 is not available\n");
+        ok_ntstatus(Status, STATUS_CONFLICTING_ADDRESSES);
+    }
+
+    // 0x0000000180000000: 64-bit DLL image base.
+
+    // Reserve memory below 0x0000000180000000.
+    BaseAddress = (PVOID) (0x0000000180000000 - 0x1000);
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+
+    // Reserve memory at 0x0000000180000000:
+    // Windows 64-bit default DLL image base.
+    BaseAddress = (PVOID) 0x0000000180000000;
+    Size = 0x1000;
+    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &Size,
+                                     MEM_RESERVE,
+                                     PAGE_READWRITE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
+    Status = NtFreeVirtualMemory(NtCurrentProcess(), &BaseAddress, &Size, MEM_RELEASE);
+    ok_ntstatus(Status, STATUS_SUCCESS);
 #endif
 }
 
