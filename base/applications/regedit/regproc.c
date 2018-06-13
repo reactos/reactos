@@ -851,8 +851,14 @@ static void processRegLinesW(FILE *in)
                 if(*s_eol == '\r' && *(s_eol+1) == '\n')
                     NextLine++;
 
-                while(*(NextLine+1) == ' ' || *(NextLine+1) == '\t')
+                while(isspaceW(*NextLine))
                     NextLine++;
+
+                if (!*NextLine)
+                {
+                    s = NextLine;
+                    break;
+                }
 
                 MoveMemory(s_eol - 1, NextLine, (CharsInBuf - (NextLine - s) + 1)*sizeof(WCHAR));
                 CharsInBuf -= NextLine - s_eol + 1;
