@@ -54,13 +54,16 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_QUERY_DEVICES "BŁĄD: nie można wysłać zapytania do urządzeń DOS (0x%lx).\n"
+    IDS_ERROR_QUERY_DEVICES "BŁĄD: Nie można wysłać zapytania do urządzeń DOS (0x%lx).\n"
     IDS_ERROR_QUERY_DEVICES_FORM "    QueryDosDeviceW(%s) zwrócił nierozpoznaną formę %s.\n"
     IDS_ERROR_SET_PARALLEL_STATE "SetParallelState(%d) - DefineDosDevice(%s) (0x%lx)\n"
     IDS_ERROR_INVALID_PARAMETER "BŁĄD: Nieprawidłowy parametr - %s\n"
     IDS_ERROR_ILLEGAL_DEVICE_NAME "BŁĄD: Niedozwolona nazwa urządzenia - %s (0x%lx)\n"
+    IDS_ERROR_DEVICE_NOT_AVAILABLE "BŁĄD: Urządzenie %s nie jest aktualnie dostępne.\n"
     IDS_ERROR_STATUS_GET_DEVICE "BŁĄD: Nie udało się uzyskać stanu urządzenia COM%d:\n"
     IDS_ERROR_STATUS_SET_DEVICE "BŁĄD: Nie można ustawić stanu urządzenia COM%d:\n"
+    IDS_ERROR_TIMEOUT_GET_DEVICE "BŁĄD: Nie można uzyskać limitu czasu dla urządzenia %s:\n"
+    IDS_ERROR_TIMEOUT_SET_DEVICE "BŁĄD: Nie można ustawić limitu czasu dla urządzenia %s:\n"
     IDS_ERROR_INVALID_PARITY_BITS "BŁĄD: Nieprawidłowa wartość dla parzystości bitów %d:\n"
     IDS_ERROR_INVALID_STOP_BITS "BŁĄD: Nieprawidłowa wartość dla bitów separatora %d:\n"
     IDS_ERROR_NO_MEMORY "BŁĄD: Za mało pamięci.\n"

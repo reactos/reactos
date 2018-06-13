@@ -160,7 +160,8 @@ OpenKeyboard(VOID)
 }
 
 static NTSTATUS
-WaitForKeyboard(VOID)
+WaitForKeyboard(
+    IN LONG TimeOut)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -180,8 +181,8 @@ WaitForKeyboard(VOID)
                         NULL);
     if (Status == STATUS_PENDING)
     {
-        /* Wait 3s */
-        Timeout.QuadPart = (LONG)-3*1000*1000*10;
+        /* Wait TimeOut seconds */
+        Timeout.QuadPart = TimeOut * -10000000;
         Status = NtWaitForSingleObject(KeyboardHandle, FALSE, &Timeout);
         /* The user didn't enter anything, cancel the read */
         if (Status == STATUS_TIMEOUT)
@@ -338,7 +339,8 @@ ChkdskCallback(
 
 static NTSTATUS
 CheckVolume(
-    IN PWCHAR DrivePath)
+    IN PWCHAR DrivePath,
+    IN LONG TimeOut)
 {
     WCHAR FileSystem[128];
     WCHAR NtDrivePath[64];
@@ -390,10 +392,10 @@ CheckVolume(
             /* Let the user decide whether to repair */
             PrintString("  %S needs to be checked\r\n", DrivePath);
             PrintString("  You can skip it, but be advised it is not recommanded\r\n");
-            PrintString("  To skip disk checking press any key in 3 seconds\r\n", DrivePath);
+            PrintString("  To skip disk checking press any key in %d second(s)\r\n", TimeOut);
 
             /* Timeout == fix it! */
-            WaitStatus = WaitForKeyboard();
+            WaitStatus = WaitForKeyboard(TimeOut);
             if (WaitStatus == STATUS_TIMEOUT)
             {
                 Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
@@ -421,6 +423,29 @@ CheckVolume(
     return Status;
 }
 
+static VOID
+QueryTimeout(
+    IN OUT PLONG TimeOut)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"AutoChkTimeOut";
+    QueryTable[0].EntryContext = TimeOut;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_CONTROL, L"Session Manager", QueryTable, NULL, NULL);
+    /* See: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/autochk */
+    if (*TimeOut > 259200)
+    {
+        *TimeOut = 259200;
+    }
+    else if (*TimeOut < 0)
+    {
+        *TimeOut = 0;
+    }
+}
+
 /* Native image's entry point */
 int
 _cdecl
@@ -433,6 +458,7 @@ _main(int argc,
     ULONG i;
     NTSTATUS Status;
     WCHAR DrivePath[128];
+    LONG TimeOut;
 
     // Win2003 passes the only param - "*". Probably means to check all drives
     /*
@@ -440,6 +466,10 @@ _main(int argc,
     for (i=0; i<argc; i++)
         DPRINT("Param %d: %s\n", i, argv[i]);
     */
+
+    /* Query timeout */
+    TimeOut = 3;
+    QueryTimeout(&TimeOut);
 
     /* FIXME: We should probably use here the mount manager to be
      * able to check volumes which don't have a drive letter.
@@ -471,7 +501,7 @@ _main(int argc,
          && (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
         {
             swprintf(DrivePath, L"%c:\\", L'A'+i);
-            CheckVolume(DrivePath);
+            CheckVolume(DrivePath, TimeOut);
         }
     }
 

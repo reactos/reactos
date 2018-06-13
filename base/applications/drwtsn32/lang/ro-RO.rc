@@ -1,0 +1,14 @@
+/*
+ * PROJECT:     Dr. Watson crash reporter
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Romanian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE "Crash reporter de ReactOS"
+    IDS_USER_ALERT_MESSAGE "Aplicația %ls a eșuat să funcționeze. Informațiile despre acest crash sunt salvate în:\r\n\r\n%ls"
+END

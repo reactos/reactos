@@ -51,7 +51,7 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB, ULONG ShareType ) {
                 Status = STATUS_NO_MEMORY;
         }
 
-        if (NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status) && FCB->Recv.Content < FCB->Recv.Size)
         {
             Status = TdiReceiveDatagram(&FCB->ReceiveIrp.InFlightRequest,
                                         FCB->AddressFile.Object,

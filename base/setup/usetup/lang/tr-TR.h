@@ -137,55 +137,61 @@ static MUI_ENTRY trTRIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Kur, bir în geliüme evresindedir. Daha tÅmÅyle kullançülç",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "bir kurulum uygulamasçnçn tÅm iülevlerini desteklemez.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Aüaßçdaki kçsçtlamalar uygulançr:",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Kur, yalnçzca FAT kÅtÅk dizgelerini destekler.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary computer if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- KÅtÅk dizgesi denetimi daha bitirilmemiütir.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  ReactOS'u kurmak iáin Giriü'e basçnçz.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  ReactOS'u kurmadan áçkmak iáin F3'e basçnçz.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "Giriü = SÅrdÅr   F3 = Äçk",
+        "ENTER = Continue   F3 = Quit",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {

@@ -2503,7 +2503,7 @@ InstallWizard(VOID)
     PSETUPDATA pSetupData = NULL;
     HMODULE hNetShell = NULL;
     PFNREQUESTWIZARDPAGES pfn = NULL;
-    DWORD dwPageCount = 8, dwNetworkPageCount = 0;
+    DWORD dwPageCount = 9, dwNetworkPageCount = 0;
 
     LogItem(L"BEGIN_SECTION", L"InstallWizard");
 
@@ -2635,6 +2635,8 @@ InstallWizard(VOID)
     psp.pfnDlgProc = FinishDlgProc;
     psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
     phpage[nPages++] = CreatePropertySheetPage(&psp);
+
+    ASSERT(nPages == dwPageCount);
 
     /* Create the property sheet */
     psh.dwSize = sizeof(PROPSHEETHEADER);
