@@ -96,6 +96,8 @@ FormatPartition(
     if (!FileSystem || !FileSystem->FormatFunc)
         return STATUS_NOT_SUPPORTED;
 
+    /* Remove "Setup will now format the partition. 
+     * Press ENTER to continue." message */
     CONSOLE_ClearTextXY(6, 10, 100);
 
     FormatProgressBar = CreateProgressBar(6,
