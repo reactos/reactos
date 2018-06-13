@@ -79,12 +79,16 @@ typedef struct _FAT32_BOOTSECTOR
 
 } FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
 
-typedef struct _EXT2_BOOTSECTOR
+typedef struct _BTRFS_BOOTSECTOR
 {
-    // The EXT2 bootsector is completely user-specific.
-    // No FS data is stored there.
-    UCHAR Fill[1024];
-} EXT2_BOOTSECTOR, *PEXT2_BOOTSECTOR;
+    UCHAR JumpBoot[3];
+    UCHAR ChunkMapSize;
+    UCHAR BootDrive;
+    ULONGLONG PartitionStartLBA;
+    UCHAR Fill[1521]; // 1536 - 15
+    USHORT BootSectorMagic;
+} BTRFS_BOOTSECTOR, *PBTRFS_BOOTSECTOR;
+C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == 3 * 512);
 
 // TODO: Add more bootsector structures!
 
@@ -1837,7 +1841,7 @@ InstallFat32BootCodeToDisk(
 
 static
 NTSTATUS
-InstallExt2BootCodeToDisk(
+InstallBtrfsBootCodeToDisk(
     PWSTR SrcPath,
     PWSTR RootPath)
 {
@@ -1848,8 +1852,9 @@ InstallExt2BootCodeToDisk(
     HANDLE FileHandle;
     LARGE_INTEGER FileOffset;
 //  PEXT2_BOOTSECTOR OrigBootSector;
-    PEXT2_BOOTSECTOR NewBootSector;
+    PBTRFS_BOOTSECTOR NewBootSector;
     // USHORT BackupBootSector;
+    PARTITION_INFORMATION_EX PartInfo;
 
 #if 0
     /* Allocate buffer for original bootsector */
@@ -1897,7 +1902,7 @@ InstallExt2BootCodeToDisk(
 #endif
 
     /* Allocate buffer for new bootsector */
-    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(EXT2_BOOTSECTOR));
+    NewBootSector = RtlAllocateHeap(ProcessHeap, 0, sizeof(BTRFS_BOOTSECTOR));
     if (NewBootSector == NULL)
     {
         // RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1932,7 +1937,7 @@ InstallExt2BootCodeToDisk(
                         NULL,
                         &IoStatusBlock,
                         NewBootSector,
-                        sizeof(EXT2_BOOTSECTOR),
+                        sizeof(BTRFS_BOOTSECTOR),
                         NULL,
                         NULL);
     NtClose(FileHandle);
@@ -1981,6 +1986,28 @@ InstallExt2BootCodeToDisk(
         return Status;
     }
 
+    /* Obtaining partition info and writing it to bootsector */
+    Status = NtDeviceIoControlFile(FileHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_DISK_GET_PARTITION_INFO_EX,
+                                   NULL,
+                                   0,
+                                   &PartInfo,
+                                   sizeof(PartInfo));
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("IOCTL_DISK_GET_PARTITION_INFO_EX failed (Status %lx)\n", Status);
+        NtClose(FileHandle);
+        RtlFreeHeap(ProcessHeap, 0, NewBootSector);
+        return Status;
+    }
+
+    NewBootSector->PartitionStartLBA = PartInfo.StartingOffset.QuadPart / SECTORSIZE;
+
     /* Write sector 0 */
     FileOffset.QuadPart = 0ULL;
     Status = NtWriteFile(FileHandle,
@@ -1989,7 +2016,7 @@ InstallExt2BootCodeToDisk(
                          NULL,
                          &IoStatusBlock,
                          NewBootSector,
-                         sizeof(EXT2_BOOTSECTOR),
+                         sizeof(BTRFS_BOOTSECTOR),
                          &FileOffset,
                          NULL);
 #if 0
@@ -2552,7 +2579,7 @@ InstallFatBootcodeToPartition(
 
 static
 NTSTATUS
-InstallExt2BootcodeToPartition(
+InstallBtrfsBootcodeToPartition(
     PUNICODE_STRING SystemRootPath,
     PUNICODE_STRING SourceRootPath,
     PUNICODE_STRING DestinationArcPath,
@@ -2563,7 +2590,7 @@ InstallExt2BootcodeToPartition(
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
 
-    /* EXT2 partition */
+    /* BTRFS partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
 
     /* Copy FreeLoader to the system partition, always overwriting the older version */
@@ -2625,7 +2652,7 @@ InstallExt2BootcodeToPartition(
             CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, BootSector);
 
             DPRINT1("Save bootsector: %S ==> %S\n", SystemRootPath->Buffer, DstPath);
-            Status = SaveBootSector(SystemRootPath->Buffer, DstPath, sizeof(EXT2_BOOTSECTOR));
+            Status = SaveBootSector(SystemRootPath->Buffer, DstPath, sizeof(BTRFS_BOOTSECTOR));
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SaveBootSector() failed (Status %lx)\n", Status);
@@ -2645,14 +2672,14 @@ InstallExt2BootcodeToPartition(
         /* Install new bootsector on the disk */
         // if (PartitionType == PARTITION_EXT2)
         {
-            /* Install EXT2 bootcode */
-            CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\ext2.bin");
+            /* Install BTRFS bootcode */
+            CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\btrfs.bin");
 
-            DPRINT1("Install EXT2 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
-            Status = InstallExt2BootCodeToDisk(SrcPath, SystemRootPath->Buffer);
+            DPRINT1("Install BTRFS bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
+            Status = InstallBtrfsBootCodeToDisk(SrcPath, SystemRootPath->Buffer);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("InstallExt2BootCodeToDisk() failed (Status %lx)\n", Status);
+                DPRINT1("InstallBtrfsBootCodeToDisk() failed (Status %lx)\n", Status);
                 return Status;
             }
         }
@@ -2684,12 +2711,12 @@ InstallVBRToPartition(
                                                  PartitionType);
         }
 
-        case PARTITION_EXT2:
+        case PARTITION_LINUX:
         {
-            return InstallExt2BootcodeToPartition(SystemRootPath,
-                                                  SourceRootPath,
-                                                  DestinationArcPath,
-                                                  PartitionType);
+            return InstallBtrfsBootcodeToPartition(SystemRootPath,
+                                                   SourceRootPath,
+                                                   DestinationArcPath,
+                                                   PartitionType);
         }
 
         case PARTITION_IFS:

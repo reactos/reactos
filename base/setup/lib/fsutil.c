@@ -24,6 +24,7 @@
 #include "partlist.h"
 
 #include <fslib/vfatlib.h>
+#include <fslib/btrfslib.h>
 // #include <fslib/ext2lib.h>
 // #include <fslib/ntfslib.h>
 
@@ -42,7 +43,9 @@ FILE_SYSTEM RegisteredFileSystems[] =
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
     { L"EXT4" , Ext2Format, Ext2Chkdsk },
+#endif
     { L"BTRFS", BtrfsFormatEx, BtrfsChkdskEx },
+#if 0
     { L"FFS"  , FfsFormat , FfsChkdsk  },
     { L"REISERFS", ReiserfsFormat, ReiserfsChkdsk },
 #endif
@@ -283,11 +286,10 @@ GetFileSystem(
     {
         FileSystemName = L"FAT";
     }
-    else if (PartEntry->PartitionType == PARTITION_EXT2)
+    else if (PartEntry->PartitionType == PARTITION_LINUX)
     {
         // WARNING: See the warning above.
-        FileSystemName = L"EXT2";
-        // FIXME: We may have EXT3, 4 too...
+        FileSystemName = L"BTRFS";
     }
     else if (PartEntry->PartitionType == PARTITION_IFS)
     {
@@ -303,7 +305,7 @@ Quit: // For code temporarily disabled above
     // HACK: WARNING: We cannot write on this FS yet!
     if (FileSystemName)
     {
-        if (PartEntry->PartitionType == PARTITION_EXT2 || PartEntry->PartitionType == PARTITION_IFS)
+        if (PartEntry->PartitionType == PARTITION_IFS)
             DPRINT1("Recognized file system %S that doesn't support write support yet!\n", FileSystemName);
     }
 
@@ -374,6 +376,10 @@ PreparePartitionForFormatting(
                 SetPartitionType(PartEntry, PARTITION_FAT32_XINT13);
             }
         }
+    }
+    else if (wcscmp(FileSystem->FileSystemName, L"BTRFS") == 0)
+    {
+        SetPartitionType(PartEntry, PARTITION_LINUX);
     }
 #if 0
     else if (wcscmp(FileSystem->FileSystemName, L"EXT2") == 0)
