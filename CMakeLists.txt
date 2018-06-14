@@ -1,20 +1,15 @@
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.2.1)
+cmake_policy(VERSION 3.2.1)
 
-if(POLICY CMP0017)
-    # Shadow cmake provided modules
-    cmake_policy(SET CMP0017 OLD)
-endif()
+# Don't escape preprocessor definition values added via add_definitions
+cmake_policy(SET CMP0005 OLD)
 
-if(POLICY CMP0026)
-    # Allow use of the LOCATION property
-    cmake_policy(SET CMP0026 NEW)
-endif()
+# Shadow cmake provided modules
+cmake_policy(SET CMP0017 OLD)
 
-if(POLICY CMP0051)
-    # List TARGET_OBJECTS in SOURCES target property
-    cmake_policy(SET CMP0051 NEW)
-endif()
+# Honor CMAKE_SHARED_LIBRARY_<Lang>_FLAGS variable.
+cmake_policy(SET CMP0018 OLD)
 
 if(POLICY CMP0058)
     # Ninja requires custom command byproducts to be explicit
@@ -25,13 +20,6 @@ project(REACTOS)
 
 # Versioning
 include(sdk/include/reactos/version.cmake)
-
-# Don't escape preprocessor definition values added via add_definitions
-cmake_policy(SET CMP0005 OLD)
-cmake_policy(SET CMP0002 NEW)
-if(POLICY CMP0018)
-    cmake_policy(SET CMP0018 OLD)
-endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -217,6 +205,8 @@ else()
         include(sdk/cmake/gcc.cmake)
     endif()
 
+    include(sdk/cmake/cabman.cmake)
+    include(sdk/cmake/mkisofs.cmake)
     # Generic macros
     include(sdk/cmake/CMakeMacros.cmake)
 
@@ -265,7 +255,8 @@ else()
     # For MSVC builds, this puts all debug symbols file in the same directory.
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
 
-    #begin with boot so reactos_cab target is defined before all other modules
+    # begin with dist so reactos_cab target is defined before all other modules
+    add_subdirectory(dist)
     add_subdirectory(boot)
     add_subdirectory(base)
     add_subdirectory(dll)
@@ -281,9 +272,6 @@ else()
 
     # Create the registry hives
     create_registry_hives()
-
-    # Create {bootcd, livecd, bootcdregtest}.lst
-    create_iso_lists()
 
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/sdk/include/reactos)
 

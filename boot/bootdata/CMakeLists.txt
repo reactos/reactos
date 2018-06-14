@@ -1,6 +1,3 @@
-
-add_subdirectory(packages)
-
 # Common hives
 
 add_cd_file(FILE ${CMAKE_CURRENT_SOURCE_DIR}/txtsetup.sif DESTINATION reactos NO_CAB FOR bootcd regtest)

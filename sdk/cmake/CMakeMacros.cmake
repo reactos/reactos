@@ -162,136 +162,27 @@ function(add_link)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_LINK_NAME}.lnk PROPERTIES GENERATED TRUE)
 endfunction()
 
-macro(dir_to_num dir var)
-    if(${dir} STREQUAL reactos/system32)
-        set(${var} 1)
-    elseif(${dir} STREQUAL reactos/system32/drivers)
-        set(${var} 2)
-    elseif(${dir} STREQUAL reactos/Fonts)
-        set(${var} 3)
-    elseif(${dir} STREQUAL reactos)
-        set(${var} 4)
-    elseif(${dir} STREQUAL reactos/system32/drivers/etc)
-        set(${var} 5)
-    elseif(${dir} STREQUAL reactos/inf)
-        set(${var} 6)
-    elseif(${dir} STREQUAL reactos/bin)
-        set(${var} 7)
-    elseif(${dir} STREQUAL reactos/bin/testdata)
-        set(${var} 8)
-    elseif(${dir} STREQUAL reactos/bin/suppl)
-        set(${var} 80)
-    elseif(${dir} STREQUAL reactos/media)
-        set(${var} 9)
-    elseif(${dir} STREQUAL reactos/Microsoft.NET)
-        set(${var} 10)
-    elseif(${dir} STREQUAL reactos/Microsoft.NET/Framework)
-        set(${var} 11)
-    elseif(${dir} STREQUAL reactos/Microsoft.NET/Framework/v1.0.3705)
-        set(${var} 12)
-    elseif(${dir} STREQUAL reactos/Microsoft.NET/Framework/v1.1.4322)
-        set(${var} 13)
-    elseif(${dir} STREQUAL reactos/Microsoft.NET/Framework/v2.0.50727)
-        set(${var} 14)
-    elseif(${dir} STREQUAL reactos/Resources)
-        set(${var} 15)
-    elseif(${dir} STREQUAL reactos/Resources/Themes)
-        set(${var} 16)
-    elseif(${dir} STREQUAL reactos/system32/wbem)
-        set(${var} 17)
-    elseif(${dir} STREQUAL reactos/Resources/Themes/Lautus)
-        set(${var} 18)
-    elseif(${dir} STREQUAL reactos/Help)
-        set(${var} 19)
-    elseif(${dir} STREQUAL reactos/Config)
-        set(${var} 20)
-    elseif(${dir} STREQUAL reactos/Cursors)
-        set(${var} 21)
-    elseif(${dir} STREQUAL reactos/system32/ShellExt)
-        set(${var} 22)
-    elseif(${dir} STREQUAL reactos/Temp)
-        set(${var} 23)
-    elseif(${dir} STREQUAL reactos/system32/spool)
-        set(${var} 24)
-    elseif(${dir} STREQUAL reactos/system32/spool/drivers)
-        set(${var} 25)
-    elseif(${dir} STREQUAL reactos/system32/spool/drivers/color)
-        set(${var} 26)
-    elseif(${dir} STREQUAL reactos/system32/spool/drivers/w32x86)
-        set(${var} 27)
-    elseif(${dir} STREQUAL reactos/system32/spool/drivers/w32x86/3)
-        set(${var} 28)
-    elseif(${dir} STREQUAL reactos/system32/spool/prtprocs)
-        set(${var} 29)
-    elseif(${dir} STREQUAL reactos/system32/spool/prtprocs/w32x86)
-        set(${var} 30)
-    elseif(${dir} STREQUAL reactos/system32/spool/PRINTERS)
-        set(${var} 31)
-    elseif(${dir} STREQUAL reactos/system32/wbem/Repository)
-        set(${var} 32)
-    elseif(${dir} STREQUAL reactos/system32/wbem/Repository/FS)
-        set(${var} 33)
-    elseif(${dir} STREQUAL reactos/system32/wbem/mof/good)
-        set(${var} 34)
-    elseif(${dir} STREQUAL reactos/system32/wbem/mof/bad)
-        set(${var} 35)
-    elseif(${dir} STREQUAL reactos/system32/wbem/AdStatus)
-        set(${var} 36)
-    elseif(${dir} STREQUAL reactos/system32/wbem/xml)
-        set(${var} 37)
-    elseif(${dir} STREQUAL reactos/system32/wbem/Logs)
-        set(${var} 38)
-    elseif(${dir} STREQUAL reactos/system32/wbem/AutoRecover)
-        set(${var} 39)
-    elseif(${dir} STREQUAL reactos/system32/wbem/snmp)
-        set(${var} 40)
-    elseif(${dir} STREQUAL reactos/system32/wbem/Performance)
-        set(${var} 41)
-    elseif(${dir} STREQUAL reactos/twain_32)
-        set(${var} 42)
-    elseif(${dir} STREQUAL reactos/repair)
-        set(${var} 43)
-    elseif(${dir} STREQUAL reactos/Web)
-        set(${var} 44)
-    elseif(${dir} STREQUAL reactos/Web/Wallpaper)
-        set(${var} 45)
-    elseif(${dir} STREQUAL reactos/Prefetch)
-        set(${var} 46)
-    elseif(${dir} STREQUAL reactos/security)
-        set(${var} 47)
-    elseif(${dir} STREQUAL reactos/security/Database)
-        set(${var} 48)
-    elseif(${dir} STREQUAL reactos/security/logs)
-        set(${var} 49)
-    elseif(${dir} STREQUAL reactos/security/templates)
-        set(${var} 50)
-    elseif(${dir} STREQUAL reactos/system32/CatRoot)
-        set(${var} 51)
-    elseif(${dir} STREQUAL reactos/system32/CatRoot2)
-        set(${var} 52)
-    elseif(${dir} STREQUAL reactos/AppPatch)
-        set(${var} 53)
-    elseif(${dir} STREQUAL reactos/winsxs)
-        set(${var} 54)
-    elseif(${dir} STREQUAL reactos/winsxs/manifests)
-        set(${var} 55)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.2600.2982_none_deadbeef)
-        set(${var} 56)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.2600.2982_none_deadbeef)
-        set(${var} 57)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef)
-        set(${var} 58)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef)
-        set(${var} 59)
-    elseif(${dir} STREQUAL reactos/winsxs/x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef)
-        set(${var} 60)
+function(_int_add_cd_file _target)
+    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+    if(_CD_FILE)
+        set(_dest ${_CD_DESTINATION})
+        if(_dest STREQUAL "root")
+            set(_dest "")
+        endif()
+        foreach(_file ${_CD_FILE})
+            add_iso_file(${_target} FILE ${_file} DESTINATION ${_dest} NAME "${_CD_NAME_ON_CD}")
+        endforeach()
+        if(_CD_TARGET)
+            set_property(TARGET ${_target}_iso APPEND PROPERTY _iso_depends ${_CD_TARGET})
+        endif()
     else()
-        message(FATAL_ERROR "Wrong destination: ${dir}")
+        add_iso_file(${_target} TARGET ${_CD_TARGET} DESTINATION ${_CD_DESTINATION} NAME "${_CD_NAME_ON_CD}")
     endif()
-endmacro()
+endfunction()
 
 function(add_cd_file)
     cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
+
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -306,14 +197,6 @@ function(add_cd_file)
         message(FATAL_ERROR "You must provide a cd name (or \"all\" for all of them) to install the file on!")
     endif()
 
-    # get file if we need to
-    if(NOT _CD_FILE)
-        set(_CD_FILE "$<TARGET_FILE:${_CD_TARGET}>")
-        if(NOT _CD_NAME_ON_CD)
-            set(_CD_NAME_ON_CD "$<TARGET_FILE_NAME:${_CD_TARGET}>")
-        endif()
-    endif()
-
     # do we add it to all CDs?
     list(FIND _CD_FOR all __cd)
     if(NOT __cd EQUAL -1)
@@ -326,168 +209,54 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            # directly on cd
-            foreach(item ${_CD_FILE})
-                if(_CD_NAME_ON_CD)
-                    # rename it in the cd tree
-                    set(__file ${_CD_NAME_ON_CD})
-                else()
-                    get_filename_component(__file ${item} NAME)
-                endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-                # add it also into the hybridcd if not specified otherwise
-                if(NOT _CD_NOT_IN_HYBRIDCD)
-                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
-                endif()
-            endforeach()
-            # manage dependency
-            if(_CD_TARGET)
-                add_dependencies(bootcd ${_CD_TARGET} registry_inf)
+            _int_add_cd_file(bootcd ${ARGN})
+
+            # add it also into the hybridcd if not specified otherwise
+            if(NOT _CD_NOT_IN_HYBRIDCD)
+                _int_add_cd_file(hybridcd FILE ${_CD_FILE} TARGET ${_CD_TARGET} NAME_ON_CD ${_CD_NAME_ON_CD} DESTINATION "bootcd/${_CD_DESTINATION}")
             endif()
         else()
-            # add it in reactos.cab
-            dir_to_num(${_CD_DESTINATION} _num)
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${_CD_FILE}\" ${_num}\n")
-            # manage dependency - target level
-            if(_CD_TARGET)
-                add_dependencies(reactos_cab_inf ${_CD_TARGET})
+            string(REGEX REPLACE "^reactos/?" "" _dest ${_CD_DESTINATION})
+            if(_dest STREQUAL "")
+                set(_dest "/")
             endif()
-            # manage dependency - file level
-            set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${_CD_FILE})
+
+            if(_CD_FILE)
+                add_cab_file(reactos FILE ${_CD_FILE} DESTINATION ${_dest})
+                if(_CD_TARGET)
+                    set_property(TARGET reactos_cab APPEND PROPERTY _cab_file_depends ${_CD_TARGET})
+                endif()
+            else()
+                add_cab_file(reactos TARGET ${_CD_TARGET} DESTINATION ${_dest})
+            endif()
         endif()
     endif() #end bootcd
 
     # do we add it to livecd?
     list(FIND _CD_FOR livecd __cd)
     if(NOT __cd EQUAL -1)
-        # manage dependency
-        if(_CD_TARGET)
-            add_dependencies(livecd ${_CD_TARGET} registry_inf)
+        _int_add_cd_file(livecd ${ARGN})
+
+        # add it also into the hybridcd if not specified otherwise
+        if(NOT _CD_NOT_IN_HYBRIDCD)
+            _int_add_cd_file(hybridcd FILE ${_CD_FILE} TARGET ${_CD_TARGET} NAME_ON_CD ${_CD_NAME_ON_CD} DESTINATION "livecd/${_CD_DESTINATION}")
         endif()
-        foreach(item ${_CD_FILE})
-            if(_CD_NAME_ON_CD)
-                # rename it in the cd tree
-                set(__file ${_CD_NAME_ON_CD})
-            else()
-                get_filename_component(__file ${item} NAME)
-            endif()
-            set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            # add it also into the hybridcd if not specified otherwise
-            if(NOT _CD_NOT_IN_HYBRIDCD)
-                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
-            endif()
-        endforeach()
     endif() #end livecd
 
     # do we need also to add it to hybridcd?
     list(FIND _CD_FOR hybridcd __cd)
     if(NOT __cd EQUAL -1)
-        # manage dependency
-        if(_CD_TARGET)
-            add_dependencies(hybridcd ${_CD_TARGET})
-        endif()
-        foreach(item ${_CD_FILE})
-            if(_CD_NAME_ON_CD)
-                # rename it in the cd tree
-                set(__file ${_CD_NAME_ON_CD})
-            else()
-                get_filename_component(__file ${item} NAME)
-            endif()
-            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-        endforeach()
+        _int_add_cd_file(hybridcd ${ARGN})
     endif() #end hybridcd
 
     # do we add it to regtest?
     list(FIND _CD_FOR regtest __cd)
     if(NOT __cd EQUAL -1)
-        # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            # directly on cd
-            foreach(item ${_CD_FILE})
-                if(_CD_NAME_ON_CD)
-                    # rename it in the cd tree
-                    set(__file ${_CD_NAME_ON_CD})
-                else()
-                    get_filename_component(__file ${item} NAME)
-                endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
-            endforeach()
-            # manage dependency
-            if(_CD_TARGET)
-                add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
-            endif()
-        else()
-            #add it in reactos.cab
-            #dir_to_num(${_CD_DESTINATION} _num)
-            #file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
-            #if(_CD_TARGET)
-            #    #manage dependency
-            #    add_dependencies(reactos_cab ${_CD_TARGET})
-            #endif()
+            _int_add_cd_file(regtest ${ARGN})
         endif()
-    endif() #end bootcd
-endfunction()
+    endif() #end regtest
 
-function(create_iso_lists)
-    # generate reactos.cab before anything else
-    get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
-
-    # begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
-        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf reactos_cab_inf)
-
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
-        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman ${_filelist})
-
-    add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
-    add_dependencies(reactos_cab reactos_cab_inf)
-
-    add_cd_file(
-        TARGET reactos_cab
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
-        DESTINATION reactos
-        NO_CAB FOR bootcd regtest)
-
-    add_cd_file(
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
-        DESTINATION livecd
-        FOR hybridcd)
-
-    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
 # Create module_clean targets
@@ -876,7 +645,7 @@ function(add_rostests_file)
     endif()
 
     if(_ROSTESTS_TARGET)
-        add_cd_file(TARGET ${_ROSTESTS_TARGET} FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_NAME_ON_CD} FOR all)
+        add_cd_file(TARGET ${_ROSTESTS_TARGET} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_NAME_ON_CD} FOR all)
     else()
         add_cd_file(FILE ${_ROSTESTS_FILE} DESTINATION "reactos/bin${_ROSTESTS_SUBDIR}" NAME_ON_CD ${_ROSTESTS_NAME_ON_CD} FOR all)
     endif()
