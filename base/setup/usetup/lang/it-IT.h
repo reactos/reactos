@@ -140,54 +140,48 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6,
         8,
-        "Lo statuto della versione ReactOS",
+        "Status versione ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS è nello stadio di sviluppo Alpha, cioè non è feature-complete",
+        "ReactOS è nello stadio di sviluppo Alpha, significa che non tutte le funzioni",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "ed è in continuo sviluppo. E' raccomandato solamente per",
+        "sono operative e cambia continuamente. È adatto solamente per",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "scopi di valutazione, testing ed è sconsigliato l'uso del sistema",
+        "scopi di valutazione, test ed è inadatto per le attività quotidiane.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
-        14,
-        "operativo per l'impiego delle attività di tutti i giorni.",
+        15,
+        "Eseguire un backup dei dati oppure installate il sistema in un computer senza",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "Fai un backup dei tuoi dati oppure prova su un computer secondario",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        17,
-        "se si tenta di eseguire ReactOS su un hardware reale.",
+        "sistema operativo e dati se volete eseguirlo su un hardware fisico.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        19,
-        "\x07  Premere INVIO per continuare l'installazione ReactOS.",
+        18,
+        "\x07  Premere INVIO per continuare l'installazione di ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        21,
+        20,
         "\x07  Premere F3 per uscire senza installare ReactOS.",
         TEXT_STYLE_NORMAL
     },
