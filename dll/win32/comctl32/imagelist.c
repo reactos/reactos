@@ -112,12 +112,15 @@ struct _IMAGELIST
     BOOL    color_table_set;
 
     LONG        ref;                       /* reference count */
+
+    USHORT      usVersion;                 /* hack for IL from stream. Keep version here */
 };
 
 #define IMAGELIST_MAGIC 0x53414D58
 #ifdef __REACTOS__
 #define IMAGELIST_MAGIC_DESTROYED 0x44454144
 #endif
+#define IMAGELIST_VERSION 0x101
 
 /* Header used by ImageList_Read() and ImageList_Write() */
 #include "pshpack2.h"
@@ -841,6 +844,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     himl->clrFg     = CLR_DEFAULT;
     himl->clrBk     = CLR_NONE;
     himl->color_table_set = FALSE;
+    himl->usVersion = 0;
 
     /* initialize overlay mask indices */
     for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
@@ -2477,7 +2481,9 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
 	return NULL;
     if (ilHead.usMagic != (('L' << 8) | 'I'))
 	return NULL;
-    if (ilHead.usVersion != 0x101) /* probably version? */
+    if (ilHead.usVersion != IMAGELIST_VERSION && 
+        ilHead.usVersion != 0x600 && /* XP/2003 version */
+        ilHead.usVersion != 0x620)   /* Vista/7 version */
 	return NULL;
 
     TRACE("cx %u, cy %u, flags 0x%04x, cCurImage %u, cMaxImage %u\n",
@@ -2486,6 +2492,9 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
     himl = ImageList_Create(ilHead.cx, ilHead.cy, ilHead.flags, ilHead.cCurImage, ilHead.cMaxImage);
     if (!himl)
 	return NULL;
+
+    /* keep version from stream */
+    himl->usVersion = ilHead.usVersion;
 
     if (!(image_bits = read_bitmap(pstm, image_info)))
     {
@@ -2506,23 +2515,25 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
     {
         DWORD *ptr = image_bits;
         BYTE *mask_ptr = mask_bits;
-        int stride = himl->cy * image_info->bmiHeader.biWidth;
+        int stride = himl->cy * (ilHead.usVersion != IMAGELIST_VERSION ? himl->cx : image_info->bmiHeader.biWidth);
+        int image_step = ilHead.usVersion != IMAGELIST_VERSION ? 1 : TILE_COUNT;
+        int mask_step = ilHead.usVersion != IMAGELIST_VERSION ? 4 : 8;
 
         if (image_info->bmiHeader.biHeight > 0)  /* bottom-up */
         {
             ptr += image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride;
-            mask_ptr += (image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride) / 8;
+            mask_ptr += (image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride) / mask_step;
             stride = -stride;
             image_info->bmiHeader.biHeight = himl->cy;
         }
         else image_info->bmiHeader.biHeight = -himl->cy;
 
-        for (i = 0; i < ilHead.cCurImage; i += TILE_COUNT)
+        for (i = 0; i < ilHead.cCurImage; i += image_step)
         {
-            add_dib_bits( himl, i, min( ilHead.cCurImage - i, TILE_COUNT ),
+            add_dib_bits( himl, i, min( ilHead.cCurImage - i, image_step ),
                           himl->cx, himl->cy, image_info, mask_info, ptr, mask_ptr );
             ptr += stride;
-            mask_ptr += stride / 8;
+            mask_ptr += stride / mask_step;
         }
     }
     else
