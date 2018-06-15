@@ -112,11 +112,15 @@ struct _IMAGELIST
     BOOL    color_table_set;
 
     LONG        ref;                       /* reference count */
+#ifdef __REACTOS__
+    USHORT      usVersion;                 /* hack for IL from stream. Keep version here */
+#endif
 };
 
 #define IMAGELIST_MAGIC 0x53414D58
 #ifdef __REACTOS__
 #define IMAGELIST_MAGIC_DESTROYED 0x44454144
+#define IMAGELIST_VERSION 0x101
 #endif
 
 /* Header used by ImageList_Read() and ImageList_Write() */
@@ -841,6 +845,9 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     himl->clrFg     = CLR_DEFAULT;
     himl->clrBk     = CLR_NONE;
     himl->color_table_set = FALSE;
+#ifdef __REACTOS__
+    himl->usVersion = 0;
+#endif
 
     /* initialize overlay mask indices */
     for (nCount = 0; nCount < MAX_OVERLAYIMAGE; nCount++)
@@ -2477,7 +2484,13 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
 	return NULL;
     if (ilHead.usMagic != (('L' << 8) | 'I'))
 	return NULL;
+#ifdef __REACTOS__
+    if (ilHead.usVersion != IMAGELIST_VERSION &&
+        ilHead.usVersion != 0x600 && /* XP/2003 version */
+        ilHead.usVersion != 0x620)   /* Vista/7 version */
+#else
     if (ilHead.usVersion != 0x101) /* probably version? */
+#endif
 	return NULL;
 
     TRACE("cx %u, cy %u, flags 0x%04x, cCurImage %u, cMaxImage %u\n",
@@ -2486,6 +2499,11 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
     himl = ImageList_Create(ilHead.cx, ilHead.cy, ilHead.flags, ilHead.cMaxImage, ilHead.cGrow);
     if (!himl)
 	return NULL;
+
+#ifdef __REACTOS__
+    /* keep version from stream */
+    himl->usVersion = ilHead.usVersion;
+#endif
 
     if (!(image_bits = read_bitmap(pstm, image_info)))
     {
@@ -2506,17 +2524,34 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
     {
         DWORD *ptr = image_bits;
         BYTE *mask_ptr = mask_bits;
+#ifdef __REACTOS__
+        int stride = himl->cy * (ilHead.usVersion != IMAGELIST_VERSION ? himl->cx : image_info->bmiHeader.biWidth);
+        int image_step = ilHead.usVersion != IMAGELIST_VERSION ? 1 : TILE_COUNT;
+        int mask_step = ilHead.usVersion != IMAGELIST_VERSION ? 4 : 8;
+#else
         int stride = himl->cy * image_info->bmiHeader.biWidth;
-
+#endif
         if (image_info->bmiHeader.biHeight > 0)  /* bottom-up */
         {
             ptr += image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride;
+#ifdef __REACTOS__
+            mask_ptr += (image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride) / mask_step;
+#else
             mask_ptr += (image_info->bmiHeader.biHeight * image_info->bmiHeader.biWidth - stride) / 8;
+#endif
             stride = -stride;
             image_info->bmiHeader.biHeight = himl->cy;
         }
         else image_info->bmiHeader.biHeight = -himl->cy;
-
+#ifdef __REACTOS__
+        for (i = 0; i < ilHead.cCurImage; i += image_step)
+        {
+            add_dib_bits(himl, i, min(ilHead.cCurImage - i, image_step),
+                         himl->cx, himl->cy, image_info, mask_info, ptr, mask_ptr);
+            ptr += stride;
+            mask_ptr += stride / mask_step;
+        }
+#else
         for (i = 0; i < ilHead.cCurImage; i += TILE_COUNT)
         {
             add_dib_bits( himl, i, min( ilHead.cCurImage - i, TILE_COUNT ),
@@ -2524,6 +2559,7 @@ HIMAGELIST WINAPI ImageList_Read(IStream *pstm)
             ptr += stride;
             mask_ptr += stride / 8;
         }
+#endif
     }
     else
     {
