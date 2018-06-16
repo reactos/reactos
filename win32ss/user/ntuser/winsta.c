@@ -386,107 +386,95 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
  *    @implemented
  */
 
-HWINSTA APIENTRY
-NtUserCreateWindowStation(
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ACCESS_MASK dwDesiredAccess,
+NTSTATUS
+FASTCALL
+IntCreateWindowStation(
+    OUT HWINSTA* phWinSta,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ACCESS_MASK dwDesiredAccess,
     DWORD Unknown2,
     DWORD Unknown3,
     DWORD Unknown4,
     DWORD Unknown5,
     DWORD Unknown6)
 {
-    UNICODE_STRING WindowStationName;
-    PWINSTATION_OBJECT WindowStationObject;
-    HWINSTA WindowStation;
     NTSTATUS Status;
+    HWINSTA WindowStation;
+    PWINSTATION_OBJECT WindowStationObject;
 
-    TRACE("NtUserCreateWindowStation called\n");
+    TRACE("IntCreateWindowStation called\n");
+
+    ASSERT(phWinSta);
+    *phWinSta = NULL;
 
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExWindowStationObjectType,
-                                UserMode,
+                                AccessMode,
                                 NULL,
                                 dwDesiredAccess,
                                 NULL,
                                 (PVOID*)&WindowStation);
-
     if (NT_SUCCESS(Status))
     {
-        TRACE("NtUserCreateWindowStation opened window station %wZ\n", ObjectAttributes->ObjectName);
-        return (HWINSTA)WindowStation;
+        TRACE("IntCreateWindowStation opened window station %wZ\n",
+              ObjectAttributes->ObjectName);
+        *phWinSta = WindowStation;
+        return Status;
     }
 
     /*
-     * No existing window station found, try to create new one
+     * No existing window station found, try to create new one.
      */
 
-    /* Capture window station name */
-    _SEH2_TRY
-    {
-        ProbeForRead( ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), 1);
-        Status = IntSafeCopyUnicodeStringTerminateNULL(&WindowStationName, ObjectAttributes->ObjectName);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status =_SEH2_GetExceptionCode();
-    }
-    _SEH2_END
-
-    if (! NT_SUCCESS(Status))
-    {
-        ERR("Failed reading capturing window station name\n");
-        SetLastNtError(Status);
-        return NULL;
-    }
-
     /* Create the window station object */
-    Status = ObCreateObject(UserMode,
+    Status = ObCreateObject(KernelMode,
                             ExWindowStationObjectType,
                             ObjectAttributes,
-                            UserMode,
+                            AccessMode,
                             NULL,
                             sizeof(WINSTATION_OBJECT),
                             0,
                             0,
                             (PVOID*)&WindowStationObject);
-
     if (!NT_SUCCESS(Status))
     {
-        ERR("ObCreateObject failed with %lx for window station %wZ\n", Status, &WindowStationName);
-        ExFreePoolWithTag(WindowStationName.Buffer, TAG_STRING);
-        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-        return 0;
+        ERR("ObCreateObject failed with %lx for window station %wZ\n",
+            Status, ObjectAttributes->ObjectName);
+        SetLastNtError(Status);
+        return Status;
     }
 
     /* Initialize the window station */
     RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
 
     InitializeListHead(&WindowStationObject->DesktopListHead);
-    WindowStationObject->Name = WindowStationName;
+    WindowStationObject->Name = *ObjectAttributes->ObjectName;
+    ObjectAttributes->ObjectName = NULL; // FIXME! (see NtUserCreateWindowStation())
     WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
     Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
     if (!NT_SUCCESS(Status))
     {
-        ERR("RtlCreateAtomTable failed with %lx for window station %wZ\n", Status, &WindowStationName);
+        ERR("RtlCreateAtomTable failed with %lx for window station %wZ\n", Status, ObjectAttributes->ObjectName);
         ObDereferenceObject(WindowStationObject);
-        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-        return 0;
+        SetLastNtError(Status);
+        return Status;
     }
 
-    Status = ObInsertObject((PVOID)WindowStationObject,
+    Status = ObInsertObject(WindowStationObject,
                             NULL,
                             dwDesiredAccess,
                             0,
                             NULL,
                             (PVOID*)&WindowStation);
-
     if (!NT_SUCCESS(Status))
     {
         ERR("ObInsertObject failed with %lx for window station\n", Status);
-        SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-        return 0;
+        SetLastNtError(Status);
+        return Status;
     }
+
+    // FIXME! TODO: Add this new window station to a linked list
 
     if (InputWindowStation == NULL)
     {
@@ -502,9 +490,84 @@ NtUserCreateWindowStation(
         WindowStationObject->Flags |= WSS_NOIO;
     }
 
-    TRACE("NtUserCreateWindowStation created object %p with name %wZ handle %p\n",
-          WindowStation, &WindowStationObject->Name, WindowStation);
-    return WindowStation;
+    TRACE("IntCreateWindowStation created object 0x%p with name %wZ handle 0x%p\n",
+          WindowStationObject, &WindowStationObject->Name, WindowStation);
+
+    *phWinSta = WindowStation;
+    return STATUS_SUCCESS;
+}
+
+HWINSTA
+APIENTRY
+NtUserCreateWindowStation(
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ACCESS_MASK dwDesiredAccess,
+    DWORD Unknown2,
+    DWORD Unknown3,
+    DWORD Unknown4,
+    DWORD Unknown5,
+    DWORD Unknown6)
+{
+    NTSTATUS Status;
+    HWINSTA hWinSta;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    UNICODE_STRING WindowStationName;
+
+    TRACE("NtUserCreateWindowStation called\n");
+
+    /* Capture window station name */
+    _SEH2_TRY
+    {
+        ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+        LocalObjectAttributes = *ObjectAttributes;
+        Status = IntSafeCopyUnicodeStringTerminateNULL(&WindowStationName,
+                                                       LocalObjectAttributes.ObjectName);
+        LocalObjectAttributes.ObjectName = &WindowStationName;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status =_SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed reading or capturing window station name, Status 0x%08lx\n", Status);
+        SetLastNtError(Status);
+        return NULL;
+    }
+
+    // TODO: Capture and use the SecurityQualityOfService!
+
+    Status = IntCreateWindowStation(&hWinSta,
+                                    &LocalObjectAttributes,
+                                    UserMode,
+                                    dwDesiredAccess,
+                                    Unknown2,
+                                    Unknown3,
+                                    Unknown4,
+                                    Unknown5,
+                                    Unknown6);
+
+    // FIXME! Because in some situations we store the allocated window station name
+    // inside the window station, we must not free it now! We know this fact when
+    // IntCreateWindowStation() sets LocalObjectAttributes.ObjectName to NULL.
+    // This hack must be removed once we just use the stored Ob name instead
+    // (in which case we will always free the allocated name here).
+    if (LocalObjectAttributes.ObjectName)
+        ExFreePoolWithTag(LocalObjectAttributes.ObjectName->Buffer, TAG_STRING);
+
+    if (NT_SUCCESS(Status))
+    {
+        TRACE("NtUserCreateWindowStation created a window station with handle 0x%p\n", hWinSta);
+    }
+    else
+    {
+        ASSERT(hWinSta == NULL);
+        TRACE("NtUserCreateWindowStation failed to create a window station!\n");
+    }
+
+    return hWinSta;
 }
 
 /*
@@ -764,6 +827,7 @@ NtUserGetObjectInformation(
 
         case UOI_NAME:
         {
+            // FIXME: Use either ObQueryNameString() or read directly that name inside the Object section!
             if (WinStaObject != NULL)
             {
                 pvData = WinStaObject->Name.Buffer;
@@ -1135,6 +1199,14 @@ BuildWindowStationNameList(
     DWORD EntryCount;
     POBJECT_DIRECTORY_INFORMATION DirEntry;
     WCHAR NullWchar;
+
+    //
+    // FIXME: Fully wrong! Since, by calling NtUserCreateWindowStation
+    // with judicious parameters one can create window stations elsewhere
+    // than in Windows\WindowStations directory, Win32k definitely MUST
+    // maintain a list of window stations it has created, and not rely
+    // on the enumeration of Windows\WindowStations !!!
+    //
 
     /*
      * Try to open the directory.

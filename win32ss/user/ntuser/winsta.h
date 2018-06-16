@@ -107,6 +107,19 @@ IntValidateWindowStationHandle(
    PWINSTATION_OBJECT *Object,
    POBJECT_HANDLE_INFORMATION pObjectHandleInfo);
 
+NTSTATUS
+FASTCALL
+IntCreateWindowStation(
+    OUT HWINSTA* phWinSta,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ACCESS_MASK dwDesiredAccess,
+    DWORD Unknown2,
+    DWORD Unknown3,
+    DWORD Unknown4,
+    DWORD Unknown5,
+    DWORD Unknown6);
+
 BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 
 BOOL FASTCALL co_IntInitializeDesktopGraphics(VOID);
