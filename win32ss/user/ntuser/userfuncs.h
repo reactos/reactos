@@ -108,6 +108,7 @@ HBRUSH FASTCALL GetControlColor(PWND,PWND,HDC,UINT);
 NTSTATUS
 GetProcessLuid(
     IN PETHREAD Thread OPTIONAL,
+    IN PEPROCESS Process OPTIONAL,
     OUT PLUID Luid);
 
 /*************** MESSAGE.C ***************/

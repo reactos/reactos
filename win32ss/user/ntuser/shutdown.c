@@ -181,7 +181,7 @@ UserInitiateShutdown(IN PETHREAD Thread,
     TRACE("UserInitiateShutdown\n");
 
     /* Get the caller's LUID */
-    Status = GetProcessLuid(Thread, &CallerLuid);
+    Status = GetProcessLuid(Thread, NULL, &CallerLuid);
     if (!NT_SUCCESS(Status))
     {
         ERR("UserInitiateShutdown: GetProcessLuid failed\n");
@@ -302,10 +302,10 @@ UserEndShutdown(IN PETHREAD Thread,
      */
     //STUB;
 
-    Status = GetProcessLuid(Thread, &CallerLuid);
+    Status = GetProcessLuid(Thread, NULL, &CallerLuid);
     if (!NT_SUCCESS(Status))
     {
-        ERR("GetProcessLuid failed\n");
+        ERR("UserEndShutdown: GetProcessLuid failed\n");
         return Status;
     }
 

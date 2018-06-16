@@ -766,30 +766,44 @@ GetW32ThreadInfo(VOID)
 NTSTATUS
 GetProcessLuid(
     IN PETHREAD Thread OPTIONAL,
+    IN PEPROCESS Process OPTIONAL,
     OUT PLUID Luid)
 {
     NTSTATUS Status;
-    PACCESS_TOKEN Token;
+    PACCESS_TOKEN Token = NULL;
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
     BOOLEAN CopyOnOpen, EffectiveOnly;
 
-    if (Thread == NULL)
+    if (Thread && Process)
+        return STATUS_INVALID_PARAMETER;
+
+    /* If nothing has been specified, use the current thread */
+    if (!Thread && !Process)
         Thread = PsGetCurrentThread();
 
-    /* Use a thread token */
-    Token = PsReferenceImpersonationToken(Thread,
-                                          &CopyOnOpen,
-                                          &EffectiveOnly,
-                                          &ImpersonationLevel);
-    if (Token == NULL)
+    if (Thread)
     {
-        /* We don't have a thread token, use a process token */
-        Token = PsReferencePrimaryToken(PsGetThreadProcess(Thread));
+        /* Use a thread token */
+        ASSERT(!Process);
+        Token = PsReferenceImpersonationToken(Thread,
+                                              &CopyOnOpen,
+                                              &EffectiveOnly,
+                                              &ImpersonationLevel);
 
-        /* If no token, fail */
-        if (Token == NULL)
+        /* If we don't have a thread token, use a process token */
+        if (!Token)
+            Process = PsGetThreadProcess(Thread);
+    }
+    if (!Token && Process)
+    {
+        /* Use a process token */
+        Token = PsReferencePrimaryToken(Process);
+
+        /* If we don't have a token, fail */
+        if (!Token)
             return STATUS_NO_TOKEN;
     }
+    ASSERT(Token);
 
     /* Query the LUID */
     Status = SeQueryAuthenticationIdToken(Token, Luid);
