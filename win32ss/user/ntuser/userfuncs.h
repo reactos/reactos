@@ -105,6 +105,11 @@ PTHREADINFO FASTCALL IntTID2PTI(HANDLE);
 HBRUSH FASTCALL GetControlBrush(PWND,HDC,UINT);
 HBRUSH FASTCALL GetControlColor(PWND,PWND,HDC,UINT);
 
+NTSTATUS
+GetProcessLuid(
+    IN PETHREAD Thread OPTIONAL,
+    OUT PLUID Luid);
+
 /*************** MESSAGE.C ***************/
 
 BOOL FASTCALL UserPostMessage(HWND Wnd,UINT Msg, WPARAM wParam, LPARAM lParam);

@@ -762,4 +762,41 @@ GetW32ThreadInfo(VOID)
     return (PTHREADINFO)PsGetCurrentThreadWin32Thread();
 }
 
+
+NTSTATUS
+GetProcessLuid(
+    IN PETHREAD Thread OPTIONAL,
+    OUT PLUID Luid)
+{
+    NTSTATUS Status;
+    PACCESS_TOKEN Token;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    BOOLEAN CopyOnOpen, EffectiveOnly;
+
+    if (Thread == NULL)
+        Thread = PsGetCurrentThread();
+
+    /* Use a thread token */
+    Token = PsReferenceImpersonationToken(Thread,
+                                          &CopyOnOpen,
+                                          &EffectiveOnly,
+                                          &ImpersonationLevel);
+    if (Token == NULL)
+    {
+        /* We don't have a thread token, use a process token */
+        Token = PsReferencePrimaryToken(PsGetThreadProcess(Thread));
+
+        /* If no token, fail */
+        if (Token == NULL)
+            return STATUS_NO_TOKEN;
+    }
+
+    /* Query the LUID */
+    Status = SeQueryAuthenticationIdToken(Token, Luid);
+
+    /* Get rid of the token and return */
+    ObDereferenceObject(Token);
+    return Status;
+}
+
 /* EOF */
