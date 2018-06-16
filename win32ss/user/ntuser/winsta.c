@@ -96,7 +96,7 @@ UserCreateWinstaDirectory(VOID)
 /* OBJECT CALLBACKS  **********************************************************/
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectDelete(
     _In_ PVOID Parameters)
 {
@@ -117,7 +117,7 @@ IntWinStaObjectDelete(
 }
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectParse(
     _In_ PVOID Parameters)
 {
@@ -183,7 +183,7 @@ IntWinStaObjectParse(
 
 NTSTATUS
 NTAPI
-IntWinstaOkToClose(
+IntWinStaOkToClose(
     _In_ PVOID Parameters)
 {
     PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS OkToCloseParameters = Parameters;
@@ -370,7 +370,7 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
  *    lpSecurity
  *       Security descriptor
  *
- *    Unknown3, Unknown4, Unknown5
+ *    Unknown3, Unknown4, Unknown5, Unknown6
  *       Unused
  *
  * Return Value
@@ -378,10 +378,6 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
  *    created window station. If the specified window station already
  *    exists, the function succeeds and returns a handle to the existing
  *    window station. If the function fails, the return value is NULL.
- *
- * Todo
- *    Correct the prototype to match the Windows one (with 7 parameters
- *    on Windows XP).
  *
  * Status
  *    @implemented
@@ -940,7 +936,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     ppi = PsGetCurrentProcessWin32Process();
 
     /* Reference the new window station */
-    if(hWindowStation !=NULL)
+    if (hWindowStation != NULL)
     {
         Status = IntValidateWindowStationHandle(hWindowStation,
                                                 UserMode,
@@ -960,13 +956,13 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     hwinstaOld = PsGetProcessWin32WindowStation(ppi->peProcess);
 
     /* Dereference the previous window station */
-    if(OldWinSta != NULL)
+    if (OldWinSta != NULL)
     {
         ObDereferenceObject(OldWinSta);
     }
 
     /* Check if we have a stale handle (it should happen for console apps) */
-    if(hwinstaOld != ppi->hwinsta)
+    if (hwinstaOld != ppi->hwinsta)
     {
         ObCloseHandle(hwinstaOld, UserMode);
     }
@@ -991,7 +987,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
         ppi->W32PF_flags &= ~W32PF_READSCREENACCESSGRANTED;
     }
 
-    if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO) )
+    if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO))
     {
         ppi->W32PF_flags |= W32PF_IOWINSTA;
     }
@@ -1529,8 +1525,8 @@ NtUserSetWindowStationUser(
 
     _SEH2_TRY
     {
-        ProbeForRead( psid, size, 1);
-        ProbeForRead( pluid, sizeof(LUID), 1);
+        ProbeForRead(psid, size, 1);
+        ProbeForRead(pluid, sizeof(LUID), 1);
 
         RtlCopyMemory(WindowStation->psidUser, psid, size);
         WindowStation->luidUser = *pluid;
@@ -1544,7 +1540,7 @@ NtUserSetWindowStationUser(
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
-        WindowStation->psidUser = 0;
+        WindowStation->psidUser = NULL;
         goto Leave;
     }
 

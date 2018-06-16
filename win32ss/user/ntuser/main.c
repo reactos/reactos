@@ -941,7 +941,7 @@ DriverEntry(
     CalloutData.DesktopOkToCloseProcedure = IntDesktopOkToClose;
     CalloutData.DesktopCloseProcedure = IntDesktopObjectClose;
     CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
-    CalloutData.WindowStationOkToCloseProcedure = IntWinstaOkToClose;
+    CalloutData.WindowStationOkToCloseProcedure = IntWinStaOkToClose;
     // CalloutData.WindowStationCloseProcedure = NULL;
     CalloutData.WindowStationDeleteProcedure = IntWinStaObjectDelete;
     CalloutData.WindowStationParseProcedure = IntWinStaObjectParse;
