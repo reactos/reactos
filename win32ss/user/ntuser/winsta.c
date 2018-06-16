@@ -47,11 +47,11 @@ NTSTATUS
 NTAPI
 UserCreateWinstaDirectory(VOID)
 {
-    PPEB Peb;
     NTSTATUS Status;
-    WCHAR wstrWindowStationsDir[MAX_PATH];
+    PPEB Peb;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hWinstaDir;
+    WCHAR wstrWindowStationsDir[MAX_PATH];
 
     /* Create the WindowStations directory and cache its path for later use */
     Peb = NtCurrentPeb();
@@ -64,11 +64,14 @@ UserCreateWinstaDirectory(VOID)
     }
     else
     {
-        swprintf(wstrWindowStationsDir,
-                 L"%ws\\%lu%ws",
-                 SESSION_DIR,
-                 Peb->SessionId,
-                 WINSTA_OBJ_DIR);
+        Status = RtlStringCbPrintfW(wstrWindowStationsDir,
+                                    sizeof(wstrWindowStationsDir),
+                                    L"%ws\\%lu%ws",
+                                    SESSION_DIR,
+                                    Peb->SessionId,
+                                    WINSTA_OBJ_DIR);
+        if (!NT_SUCCESS(Status))
+            return Status;
 
         if (!RtlCreateUnicodeString(&gustrWindowStationsDir, wstrWindowStationsDir))
         {
@@ -78,10 +81,10 @@ UserCreateWinstaDirectory(VOID)
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &gustrWindowStationsDir,
-                               0,
+                               OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
-    Status = ZwCreateDirectoryObject(&hWinstaDir, 0, &ObjectAttributes);
+    Status = ZwCreateDirectoryObject(&hWinstaDir, DIRECTORY_CREATE_OBJECT, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         ERR("Could not create %wZ directory (Status 0x%X)\n", &gustrWindowStationsDir,  Status);
