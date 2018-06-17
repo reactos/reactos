@@ -15,7 +15,6 @@ typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
-    UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
     HANDLE ShellWindow;

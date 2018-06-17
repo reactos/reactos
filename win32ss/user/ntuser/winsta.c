@@ -114,8 +114,6 @@ IntWinStaObjectDelete(
 
     RtlDestroyAtomTable(WinSta->AtomTable);
 
-    RtlFreeUnicodeString(&WinSta->Name);
-
     return STATUS_SUCCESS;
 }
 
@@ -449,8 +447,6 @@ IntCreateWindowStation(
     RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
 
     InitializeListHead(&WindowStationObject->DesktopListHead);
-    WindowStationObject->Name = *ObjectAttributes->ObjectName;
-    ObjectAttributes->ObjectName = NULL; // FIXME! (see NtUserCreateWindowStation())
     WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
     Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
     if (!NT_SUCCESS(Status))
@@ -491,7 +487,7 @@ IntCreateWindowStation(
     }
 
     TRACE("IntCreateWindowStation created object 0x%p with name %wZ handle 0x%p\n",
-          WindowStationObject, &WindowStationObject->Name, WindowStation);
+          WindowStationObject, ObjectAttributes->ObjectName, WindowStation);
 
     *phWinSta = WindowStation;
     return STATUS_SUCCESS;
@@ -582,23 +578,7 @@ NtUserCreateWindowStation(
             return NULL;
         }
 
-        WindowStationName.Length = wcslen(ServiceWinStaName) * sizeof(WCHAR);
-        WindowStationName.MaximumLength =
-            WindowStationName.Length + sizeof(UNICODE_NULL);
-        WindowStationName.Buffer =
-            ExAllocatePoolWithTag(PagedPool,
-                                  WindowStationName.MaximumLength,
-                                  TAG_STRING);
-        if (!WindowStationName.Buffer)
-        {
-            Status = STATUS_NO_MEMORY;
-            ERR("Impossible to build a valid window station name, Status 0x%08lx\n", Status);
-            SetLastNtError(Status);
-            return NULL;
-        }
-        RtlStringCbCopyW(WindowStationName.Buffer,
-                         WindowStationName.MaximumLength,
-                         ServiceWinStaName);
+        RtlInitUnicodeString(&WindowStationName, ServiceWinStaName);
         LocalObjectAttributes.ObjectName = &WindowStationName;
         AccessMode = KernelMode;
     }
@@ -615,12 +595,7 @@ NtUserCreateWindowStation(
                                     Unknown5,
                                     Unknown6);
 
-    // FIXME! Because in some situations we store the allocated window station name
-    // inside the window station, we must not free it now! We know this fact when
-    // IntCreateWindowStation() sets LocalObjectAttributes.ObjectName to NULL.
-    // This hack must be removed once we just use the stored Ob name instead
-    // (in which case we will always free the allocated name here).
-    if (LocalObjectAttributes.ObjectName)
+    if ((AccessMode == UserMode) && LocalObjectAttributes.ObjectName)
         ExFreePoolWithTag(LocalObjectAttributes.ObjectName->Buffer, TAG_STRING);
 
     if (NT_SUCCESS(Status))
@@ -802,7 +777,11 @@ NtUserGetObjectInformation(
     NTSTATUS Status;
     PWINSTATION_OBJECT WinStaObject = NULL;
     PDESKTOP DesktopObject = NULL;
+    POBJECT_HEADER ObjectHeader;
+    POBJECT_HEADER_NAME_INFO NameInfo;
+    OBJECT_HANDLE_INFORMATION HandleInfo;
     USEROBJECTFLAGS ObjectFlags;
+    PUNICODE_STRING pStrNameU = NULL;
     PVOID pvData = NULL;
     SIZE_T nDataSize = 0;
 
@@ -820,13 +799,13 @@ NtUserGetObjectInformation(
     _SEH2_END;
 
     /* Try window station */
-    TRACE("Trying to open window station %p\n", hObject);
+    TRACE("Trying to open window station 0x%p\n", hObject);
     Status = ObReferenceObjectByHandle(hObject,
                                        0,
                                        ExWindowStationObjectType,
                                        UserMode,
                                        (PVOID*)&WinStaObject,
-                                       NULL);
+                                       &HandleInfo);
 
     if (Status == STATUS_OBJECT_TYPE_MISMATCH)
     {
@@ -852,23 +831,8 @@ NtUserGetObjectInformation(
     {
         case UOI_FLAGS:
         {
-            OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
-            ULONG BytesWritten;
-
             ObjectFlags.fReserved = FALSE;
-
-            /* Check whether this handle is inheritable */
-            Status = ZwQueryObject(hObject,
-                                   ObjectHandleFlagInformation,
-                                   &HandleInfo,
-                                   sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
-                                   &BytesWritten);
-            if (!NT_SUCCESS(Status))
-            {
-                ERR("ZwQueryObject failed, Status 0x%08lx\n", Status);
-                break;
-            }
-            ObjectFlags.fInherit = HandleInfo.Inherit;
+            ObjectFlags.fInherit = !!(HandleInfo.HandleAttributes & OBJ_INHERIT);
 
             ObjectFlags.dwFlags = 0;
             if (WinStaObject != NULL)
@@ -893,11 +857,24 @@ NtUserGetObjectInformation(
 
         case UOI_NAME:
         {
-            // FIXME: Use either ObQueryNameString() or read directly that name inside the Object section!
             if (WinStaObject != NULL)
             {
-                pvData = WinStaObject->Name.Buffer;
-                nDataSize = WinStaObject->Name.Length + sizeof(WCHAR);
+                ObjectHeader = OBJECT_TO_OBJECT_HEADER(WinStaObject);
+                NameInfo = OBJECT_HEADER_TO_NAME_INFO(ObjectHeader);
+
+                if (NameInfo && (NameInfo->Name.Length > 0))
+                {
+                    /* Named window station */
+                    pStrNameU = &NameInfo->Name;
+                    nDataSize = pStrNameU->Length + sizeof(UNICODE_NULL);
+                }
+                else
+                {
+                    /* Unnamed window station (should never happen!) */
+                    ASSERT(FALSE);
+                    pStrNameU = NULL;
+                    nDataSize = sizeof(UNICODE_NULL);
+                }
                 Status = STATUS_SUCCESS;
             }
             else if (DesktopObject != NULL)
@@ -917,14 +894,16 @@ NtUserGetObjectInformation(
         {
             if (WinStaObject != NULL)
             {
-                pvData = L"WindowStation";
-                nDataSize = sizeof(L"WindowStation");
+                ObjectHeader = OBJECT_TO_OBJECT_HEADER(WinStaObject);
+                pStrNameU = &ObjectHeader->Type->Name;
+                nDataSize = pStrNameU->Length + sizeof(UNICODE_NULL);
                 Status = STATUS_SUCCESS;
             }
             else if (DesktopObject != NULL)
             {
-                pvData = L"Desktop";
-                nDataSize = sizeof(L"Desktop");
+                ObjectHeader = OBJECT_TO_OBJECT_HEADER(DesktopObject);
+                pStrNameU = &ObjectHeader->Type->Name;
+                nDataSize = pStrNameU->Length + sizeof(UNICODE_NULL);
                 Status = STATUS_SUCCESS;
             }
             else
@@ -954,10 +933,25 @@ Exit:
             *nLengthNeeded = nDataSize;
 
         /* Try to copy data to caller */
-        if (Status == STATUS_SUCCESS)
+        if (Status == STATUS_SUCCESS && (nDataSize > 0))
         {
             TRACE("Trying to copy data to caller (len = %lu, len needed = %lu)\n", nLength, nDataSize);
-            RtlCopyMemory(pvInformation, pvData, nDataSize);
+            if (pvData)
+            {
+                /* Copy the data */
+                RtlCopyMemory(pvInformation, pvData, nDataSize);
+            }
+            else if (pStrNameU)
+            {
+                /* Copy and NULL-terminate the string */
+                RtlCopyMemory(pvInformation, pStrNameU->Buffer, pStrNameU->Length);
+                ((PWCHAR)pvInformation)[pStrNameU->Length / sizeof(WCHAR)] = UNICODE_NULL;
+            }
+            else
+            {
+                /* Zero the memory */
+                RtlZeroMemory(pvInformation, nDataSize);
+            }
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1024,8 +1018,6 @@ NtUserSetObjectInformation(
     SetLastNtError(STATUS_UNSUCCESSFUL);
     return FALSE;
 }
-
-
 
 
 HWINSTA FASTCALL
