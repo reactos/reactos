@@ -15,16 +15,26 @@ struct test_info {
     WCHAR* ExpectedDesktp;
 };
 
-struct test_info TestResults[] = {{L"WinSta0",L"Default"},
-                                  {L"WinSta0",L"Default"},
-                                  {L"WinSta0",L"Default"},
-                                  {NULL, NULL},
-                                  {NULL, NULL},
-                                  {NULL, NULL},
-                                  {NULL, NULL},
-                                  {L"WinSta0",L"Default"},
-                                  {L"TestWinsta", L"TestDesktop"},
-                                  {NULL, NULL}};
+struct test_info TestResults[] =
+{
+    {L"WinSta0",L"Default"},
+    {L"WinSta0",L"Default"},
+    {NULL, NULL},
+    {NULL, NULL},
+    {L"WinSta0",L"Default"},
+    {NULL, NULL},
+    {NULL, NULL},
+    {NULL, NULL},
+    {NULL, NULL},
+    {L"WinSta0",L"Default"},
+    {NULL, NULL},
+    {NULL, NULL},
+    {NULL, NULL},
+    {L"TestWinsta", L"TestDesktop"},
+    {NULL, NULL},
+    {L"WinSta0",L"Default"},
+    {NULL, NULL}
+};
 
 void do_InitialDesktop_child(int i)
 {
@@ -34,11 +44,8 @@ void do_InitialDesktop_child(int i)
     DWORD size;
     BOOL ret;
 
-    if(TestResults[i].ExpectedWinsta == NULL)
-    {
-        trace("Process should have failed to initialize\n");
-        return;
-    }
+    if (TestResults[i].ExpectedWinsta == NULL)
+        ok(FALSE, "%d: Process should have failed to initialize\n", i);
 
     IsGUIThread(TRUE);
 
@@ -47,11 +54,15 @@ void do_InitialDesktop_child(int i)
 
     ret = GetUserObjectInformationW( hwinsta, UOI_NAME, buffer, sizeof(buffer), &size );
     ok(ret == TRUE, "ret = %d\n", ret);
-    ok(wcscmp(buffer, TestResults[i].ExpectedWinsta) == 0, "Wrong winsta %S insted of %S\n", buffer, TestResults[i].ExpectedWinsta);
+    if (TestResults[i].ExpectedWinsta)
+        ok(wcscmp(buffer, TestResults[i].ExpectedWinsta) == 0, "%d: Wrong winsta %S instead of %S\n", i, buffer, TestResults[i].ExpectedWinsta);
+    trace("%d: We run on winstation %S\n", i, buffer);
 
     ret = GetUserObjectInformationW( hdesktop, UOI_NAME, buffer, sizeof(buffer), &size );
     ok(ret == TRUE, "ret = %d\n", ret);
-    ok(wcscmp(buffer, TestResults[i].ExpectedDesktp) == 0, "Wrong desktop %S insted of %S\n", buffer, TestResults[i].ExpectedDesktp);
+    if (TestResults[i].ExpectedDesktp)
+        ok(wcscmp(buffer, TestResults[i].ExpectedDesktp) == 0, "%d: Wrong desktop %S instead of %S\n", i, buffer, TestResults[i].ExpectedDesktp);
+    trace("%d: We run on desktop %S\n", i, buffer);
 }
 
 void test_CreateProcessWithDesktop(int i, char *argv0, char* Desktop, DWORD expectedExitCode)
@@ -77,29 +88,37 @@ void test_CreateProcessWithDesktop(int i, char *argv0, char* Desktop, DWORD expe
 
     /* the exit code varies from version to version */
     /* xp returns error 128 and 7 returns STATUS_DLL_INIT_FAILED */
-    if(ExitCode == 128) ExitCode = STATUS_DLL_INIT_FAILED;
+    if (ExitCode == 128) ExitCode = STATUS_DLL_INIT_FAILED;
 
     ok(ExitCode == expectedExitCode, "%d: expected error 0x%x in child process got 0x%x\n", i, (int)expectedExitCode, (int)ExitCode);
 
     CloseHandle(pi.hProcess);
 }
 
-HWINSTA CreateInheritableWinsta(WCHAR* name, ACCESS_MASK dwDesiredAccess, BOOL inheritable)
+HWINSTA CreateInheritableWinsta(WCHAR* name, ACCESS_MASK dwDesiredAccess, BOOL inheritable, DWORD *error)
 {
-	SECURITY_ATTRIBUTES sa;
-	sa.nLength = sizeof(sa);
-	sa.lpSecurityDescriptor = NULL;
-	sa.bInheritHandle = inheritable;
-	return CreateWindowStationW(name, 0, dwDesiredAccess, &sa );
+    HWINSTA hwinsta;
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = inheritable;
+    SetLastError(0xfeedf00d);
+    hwinsta = CreateWindowStationW(name, 0, dwDesiredAccess, &sa);
+    *error = GetLastError();
+    return hwinsta;
 }
 
-HDESK CreateInheritableDesktop(WCHAR* name, ACCESS_MASK dwDesiredAccess, BOOL inheritable)
+HDESK CreateInheritableDesktop(WCHAR* name, ACCESS_MASK dwDesiredAccess, BOOL inheritable, DWORD *error)
 {
-	SECURITY_ATTRIBUTES sa;
-	sa.nLength = sizeof(sa);
-	sa.lpSecurityDescriptor = NULL;
-	sa.bInheritHandle = inheritable;
-    return CreateDesktopW(name, NULL, NULL, 0, dwDesiredAccess, &sa );
+    HDESK hdesk;
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = inheritable;
+    SetLastError(0xfeedf00d);
+    hdesk = CreateDesktopW(name, NULL, NULL, 0, dwDesiredAccess, &sa);
+    *error = GetLastError();
+    return hdesk;
 }
 
 void Test_InitialDesktop(char *argv0)
@@ -107,36 +126,66 @@ void Test_InitialDesktop(char *argv0)
     HWINSTA hwinsta = NULL, hwinstaInitial;
     HDESK hdesktop = NULL;
     BOOL ret;
+    DWORD error;
 
     hwinstaInitial = GetProcessWindowStation();
 
+    /* Use the default (interactive) window station */
     test_CreateProcessWithDesktop(0, argv0, NULL, 0);
     test_CreateProcessWithDesktop(1, argv0, "Default", 0);
-    test_CreateProcessWithDesktop(2, argv0, "WinSta0\\Default", 0);
-    test_CreateProcessWithDesktop(3, argv0, "Winlogon", STATUS_DLL_INIT_FAILED);
-    test_CreateProcessWithDesktop(4, argv0, "WinSta0/Default", STATUS_DLL_INIT_FAILED);
-    test_CreateProcessWithDesktop(5, argv0, "NonExistantDesktop", STATUS_DLL_INIT_FAILED);
-    test_CreateProcessWithDesktop(6, argv0, "NonExistantWinsta\\NonExistantDesktop", STATUS_DLL_INIT_FAILED);
-
-    hwinsta = CreateInheritableWinsta(L"TestWinsta", WINSTA_ALL_ACCESS, TRUE);
-    ok(hwinsta!=NULL, "CreateWindowStation failed\n");
-    ret = SetProcessWindowStation(hwinsta);
-    ok(ret != 0, "SetProcessWindowStation failed\n");
-    hdesktop = CreateInheritableDesktop(L"TestDesktop", DESKTOP_ALL_ACCESS, TRUE);
-    ok(hdesktop!=NULL, "CreateDesktop failed\n");
-
-    test_CreateProcessWithDesktop(7, argv0, NULL, 0);
-    test_CreateProcessWithDesktop(8, argv0, "TestWinsta\\TestDesktop", 0);
+    test_CreateProcessWithDesktop(2, argv0, "WinSta0\\", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(3, argv0, "\\Default", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(4, argv0, "WinSta0\\Default", 0);
+    test_CreateProcessWithDesktop(5, argv0, "Winlogon", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(6, argv0, "WinSta0/Default", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(7, argv0, "NonExistantDesktop", STATUS_DLL_INIT_FAILED);
     test_CreateProcessWithDesktop(8, argv0, "NonExistantWinsta\\NonExistantDesktop", STATUS_DLL_INIT_FAILED);
 
+    /* Test on an (non-interactive) window station */
+    hwinsta = CreateInheritableWinsta(L"TestWinsta", WINSTA_ALL_ACCESS, TRUE, &error);
+    ok(hwinsta != NULL && error == NO_ERROR, "CreateWindowStation failed, got 0x%p, 0x%lx\n", hwinsta, error);
+    ret = SetProcessWindowStation(hwinsta);
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
+    hdesktop = CreateInheritableDesktop(L"TestDesktop", DESKTOP_ALL_ACCESS, TRUE, &error);
+    ok(hdesktop != NULL && error == 0xfeedf00d, "CreateDesktop failed, got 0x%p, 0x%lx\n", hdesktop, error);
+
+    test_CreateProcessWithDesktop(9, argv0, NULL, 0);
+    test_CreateProcessWithDesktop(10, argv0, "TestDesktop", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(11, argv0, "TestWinsta\\", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(12, argv0, "\\TestDesktop", STATUS_DLL_INIT_FAILED);
+    test_CreateProcessWithDesktop(13, argv0, "TestWinsta\\TestDesktop", 0);
+    test_CreateProcessWithDesktop(14, argv0, "NonExistantWinsta\\NonExistantDesktop", STATUS_DLL_INIT_FAILED);
+
     ret = SetProcessWindowStation(hwinstaInitial);
-    ok(ret != 0, "SetProcessWindowStation failed\n");
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
 
     ret = CloseDesktop(hdesktop);
-    ok(ret != 0, "CloseDesktop failed\n");
+    ok(ret != FALSE, "CloseDesktop failed\n");
 
     ret = CloseWindowStation(hwinsta);
-    ok(ret != 0, "CloseWindowStation failed\n");
+    ok(ret != FALSE, "CloseWindowStation failed\n");
+
+#if 0
+    /* Test on an non-interactive Service-0xXXXX-YYYY$ window station */
+    hwinsta = CreateInheritableWinsta(NULL, WINSTA_ALL_ACCESS, TRUE, &error);
+    ok(hwinsta != NULL && error == NO_ERROR, "CreateWindowStation failed, got 0x%p, 0x%lx\n", hwinsta, error);
+    ret = SetProcessWindowStation(hwinsta);
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
+    hdesktop = CreateInheritableDesktop(L"TestDesktop", DESKTOP_ALL_ACCESS, TRUE, &error);
+    ok(hdesktop != NULL && error == 0xfeedf00d, "CreateDesktop failed, got 0x%p, 0x%lx\n", hdesktop, error);
+
+    test_CreateProcessWithDesktop(15, argv0, NULL, 0);
+    test_CreateProcessWithDesktop(16, "TestDesktop", NULL, 0 /*ERROR_ACCESS_DENIED*/);
+
+    ret = SetProcessWindowStation(hwinstaInitial);
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
+
+    ret = CloseDesktop(hdesktop);
+    ok(ret != FALSE, "CloseDesktop failed\n");
+
+    ret = CloseWindowStation(hwinsta);
+    ok(ret != FALSE, "CloseWindowStation failed\n");
+#endif
 }
 
 void Test_OpenInputDesktop()
@@ -175,7 +224,7 @@ void Test_OpenInputDesktop()
     ok(hwinsta != 0, "CreateWindowStationW failed\n");
 
     ret = SetProcessWindowStation(hwinsta);
-    ok(ret != 0, "SetProcessWindowStation failed\n");
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
 
     hDeskInput = OpenInputDesktop(0, FALSE, DESKTOP_ALL_ACCESS);
     ok(hDeskInput == 0, "OpenInputDesktop should fail\n");
@@ -184,10 +233,10 @@ void Test_OpenInputDesktop()
     ok(err == ERROR_INVALID_FUNCTION, "Got last error: %lu\n", err);
 
     ret = SetProcessWindowStation(hwinstaInitial);
-    ok(ret != 0, "SetProcessWindowStation failed\n");
+    ok(ret != FALSE, "SetProcessWindowStation failed\n");
 
     ret = CloseWindowStation(hwinsta);
-    ok(ret != 0, "CloseWindowStation failed\n");
+    ok(ret != FALSE, "CloseWindowStation failed\n");
 
 }
 
@@ -244,17 +293,17 @@ static void Test_References(void)
 
 #define check_ref(handle, hdlcnt, ptrcnt) \
     status = NtQueryObject(handle, ObjectBasicInformation, &objectInfo, sizeof(objectInfo), NULL);  \
-    ok(status == STATUS_SUCCESS, "status = %lx\n", status);                                         \
-    ok(objectInfo.HandleCount == (hdlcnt), "HandleCount = %lx\n", objectInfo.HandleCount);          \
-    ok(objectInfo.PointerCount == (ptrcnt), "PointerCount = %lx\n", objectInfo.PointerCount);
+    ok(status == STATUS_SUCCESS, "status = 0x%lx\n", status);                                       \
+    ok(objectInfo.HandleCount == (hdlcnt), "HandleCount = %lu, expected %lu\n", objectInfo.HandleCount, (ULONG)(hdlcnt));  \
+    ok(objectInfo.PointerCount == (ptrcnt), "PointerCount = %lu, expected %lu\n", objectInfo.PointerCount, (ULONG)(ptrcnt));
 
     /* Winsta shouldn't exist */
     hwinsta = open_winsta(winstaName, &error);
-    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got 0x%p, 0x%lx\n", hwinsta, error);
 
     /* Create it -- we get 1/4 instead of 1/3 because Winstas are kept in a list */
     hwinsta = create_winsta(winstaName, &error);
-    ok(hwinsta != NULL && error == NO_ERROR, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta != NULL && error == NO_ERROR, "Got 0x%p, 0x%lx\n", hwinsta, error);
     check_ref(hwinsta, 1, 4);
     baseRefs = objectInfo.PointerCount;
     ok(baseRefs == 4, "Window station initially has %lu references, expected 4\n", baseRefs);
@@ -262,7 +311,7 @@ static void Test_References(void)
 
     /* Open a second handle */
     hwinsta2 = open_winsta(winstaName, &error);
-    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got 0x%p, 0x%lx\n", hwinsta, error);
     check_ref(hwinsta, 2, baseRefs + 1);
 
     /* Close second handle -- back to 1/4 */
@@ -272,7 +321,7 @@ static void Test_References(void)
 
     /* Same game but using CloseWindowStation */
     hwinsta2 = open_winsta(winstaName, &error);
-    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta2 != NULL && error == 0xfeedf00d, "Got 0x%p, 0x%lx\n", hwinsta, error);
     check_ref(hwinsta, 2, baseRefs + 1);
     ret = CloseWindowStation(hwinsta2);
     ok(ret == TRUE, "ret = %d\n", ret);
@@ -285,7 +334,7 @@ static void Test_References(void)
 
     /* Create a desktop. It takes a reference */
     hdesk = create_desk(deskName, &error);
-    ok(hdesk != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hdesk, error);
+    ok(hdesk != NULL && error == 0xfeedf00d, "Got 0x%p, 0x%lx\n", hdesk, error);
     check_ref(hwinsta, 2, baseRefs + 3);
 
     /* CloseHandle fails, must use CloseDesktop */
@@ -298,7 +347,7 @@ static void Test_References(void)
 
     /* Desktop no longer exists */
     hdesk = open_desk(deskName, &error);
-    ok(hdesk == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hdesk, error);
+    ok(hdesk == NULL && error == ERROR_FILE_NOT_FOUND, "Got 0x%p, 0x%lx\n", hdesk, error);
     check_ref(hwinsta, 2, baseRefs + 2);
 
     /* Restore the original process Winsta */
@@ -311,18 +360,18 @@ static void Test_References(void)
 
     /* Winsta no longer exists */
     hwinsta = open_winsta(winstaName, &error);
-    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got 0x%p, 0x%lx\n", hwinsta, error);
 
     /* Create the Winsta again, and close it while there's still a desktop */
     hwinsta = create_winsta(winstaName, &error);
-    ok(hwinsta != NULL && error == NO_ERROR, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta != NULL && error == NO_ERROR, "Got 0x%p, 0x%lx\n", hwinsta, error);
     check_ref(hwinsta, 1, baseRefs);
     hwinstaProcess = GetProcessWindowStation();
     SetProcessWindowStation(hwinsta);
     check_ref(hwinsta, 2, baseRefs + 2);
 
     hdesk = create_desk(deskName, &error);
-    ok(hdesk != NULL && error == 0xfeedf00d, "Got %p, %lu\n", hdesk, error);
+    ok(hdesk != NULL && error == 0xfeedf00d, "Got 0x%p, 0x%lx\n", hdesk, error);
     check_ref(hwinsta, 2, baseRefs + 3);
 
     /* The reference from the desktop is still there, hence 1/5 */
@@ -331,7 +380,7 @@ static void Test_References(void)
     ret = CloseHandle(hwinsta);
     ok(ret == TRUE, "ret = %d\n", ret);
     hwinsta = open_winsta(winstaName, &error);
-    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got %p, %lu\n", hwinsta, error);
+    ok(hwinsta == NULL && error == ERROR_FILE_NOT_FOUND, "Got 0x%p, 0x%lx\n", hwinsta, error);
 
     /* Test references by SetThreadDesktop */
     hdesk1 = GetThreadDesktop(GetCurrentThreadId());
