@@ -133,62 +133,62 @@ static MUI_ENTRY daDKIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS installationen er i en tilelig udviklingsfase. Derfor",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "underst›tter den ikke alle funtionerne i et fult brugbart",
-        TEXT_STYLE_NORMAL
-    },
-	{
-        6,
-        10,
-        "installationsprogram.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Der er f›lgende begr‘ndsninger:",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Installationen underst›tter kun FAT-filsystmet.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary computer if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Tjek af filsystem er endnu ikke implementeret.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  Tryk p† ENTER for at installere ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  Tryk p† F3 for at afslutte uden at installere ReactOS.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Forts‘t   F3 = Afslut",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

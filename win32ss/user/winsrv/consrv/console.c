@@ -294,7 +294,7 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
 
 VOID
 ConSrvReleaseConsole(IN PCONSRV_CONSOLE Console,
-                     IN BOOLEAN WasConsoleLocked)
+                     IN BOOLEAN IsConsoleLocked)
 {
     LONG RefCount = 0;
 
@@ -314,7 +314,7 @@ ConSrvReleaseConsole(IN PCONSRV_CONSOLE Console,
     RefCount = _InterlockedDecrement(&Console->ReferenceCount);
 
     /* Unlock the console if needed */
-    if (WasConsoleLocked) LeaveCriticalSection(&Console->Lock);
+    if (IsConsoleLocked) LeaveCriticalSection(&Console->Lock);
 
     /* Delete the console if needed */
     if (RefCount <= 0) ConSrvDeleteConsole(Console);

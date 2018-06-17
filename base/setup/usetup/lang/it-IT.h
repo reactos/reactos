@@ -132,64 +132,64 @@ static MUI_ENTRY itITWelcomePageEntries[] =
 static MUI_ENTRY itITIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
-        4, 
-        3,
-        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
-        TEXT_STYLE_UNDERLINE
+        6,
+        8,
+        "Status versione ReactOS",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
-        6, 
-        8, 
-        "Il setup di ReactOS Š ancora in una fase preliminare.",
+        6,
+        11,
+        "ReactOS è nello stadio di sviluppo Alpha, significa che non tutte le funzioni",
         TEXT_STYLE_NORMAL
     },
     {
-        6, 
-        9,
-        "Non ha ancora tutte le funzioni di installazione.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6, 
+        6,
         12,
-        "Si applicano le seguenti limitazioni:",
+        "sono operative e cambia continuamente. È adatto solamente per",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
-        13, 
-        "- Il setup supporta solamente il sistema FAT.",
+        6,
+        13,
+        "scopi di valutazione, test ed è inadatto per le attività quotidiane.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Eseguire un backup dei dati oppure installate il sistema in un computer senza",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "sistema operativo e dati se volete eseguirlo su un hardware fisico.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- File system checks are not implemented yet.",
+        18,
+        "\x07  Premere INVIO per continuare l'installazione di ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
-        8, 
-        23, 
-        "\x07  Premere INVIO per installare ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8, 
-        25, 
+        8,
+        20,
         "\x07  Premere F3 per uscire senza installare ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
-        0, 
-        "   INVIO = Continua   F3 = Termina",
-        TEXT_TYPE_STATUS
+        0,
+        "ENTER = Continua   F3 = Termina",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

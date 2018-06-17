@@ -1360,6 +1360,8 @@ typedef struct
     UINT :15; /* Required for proper binary layout with gcc */
 } SHELLSTATE, *LPSHELLSTATE;
 
+VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet);
+
 /**********************************************************************
  * SHGetSettings ()
  */
@@ -1399,6 +1401,8 @@ VOID WINAPI SHGetSettings(_Out_ LPSHELLFLAGSTATE lpsfs, DWORD dwMask);
 #define SSF_MAPNETDRVBUTTON		0x1000
 #define SSF_NOCONFIRMRECYCLE		0x8000
 #define SSF_HIDEICONS			0x4000
+#define SSF_SHOWSUPERHIDDEN		0x00040000
+#define SSF_SEPPROCESS			0x00080000
 
 /****************************************************************************
 * SHRestricted API

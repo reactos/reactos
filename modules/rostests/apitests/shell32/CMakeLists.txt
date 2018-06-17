@@ -7,19 +7,21 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     AddCommas.cpp
-    Control_RunDLLW.cpp
     CFSFolder.cpp
     CMyComputer.cpp
     CShellDesktop.cpp
     CShellLink.cpp
     CUserNotification.cpp
+    Control_RunDLLW.cpp
     IShellFolderViewCB.cpp
-    menu.cpp
+    OpenAs_RunDLL.cpp
     PathResolve.cpp
     SHCreateFileExtractIconW.cpp
-    ShellExecuteEx.cpp
-    shelltest.cpp
     SHParseDisplayName.cpp
+    ShellExecuteEx.cpp
+    ShellState.cpp
+    menu.cpp
+    shelltest.cpp
     shelltest.h)
 
 add_executable(shell32_apitest

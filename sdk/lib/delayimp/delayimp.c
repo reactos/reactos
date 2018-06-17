@@ -15,17 +15,14 @@
 
 /**** Linker magic: provide a default (NULL) pointer, but allow the user to override it ****/
 
-#if defined(__GNUC__)
+/* The actual items we use */
 PfnDliHook __pfnDliNotifyHook2;
 PfnDliHook __pfnDliFailureHook2;
-#else
-/* The actual items we use */
-extern PfnDliHook __pfnDliNotifyHook2;
-extern PfnDliHook __pfnDliFailureHook2;
 
+#if !defined(__GNUC__)
 /* The fallback symbols */
-extern PfnDliHook __pfnDliNotifyHook2Default = NULL;
-extern PfnDliHook __pfnDliFailureHook2Default = NULL;
+PfnDliHook __pfnDliNotifyHook2Default = NULL;
+PfnDliHook __pfnDliFailureHook2Default = NULL;
 
 /* Tell the linker to use the fallback symbols */
 #if defined (_M_IX86)

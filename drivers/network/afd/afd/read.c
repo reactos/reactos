@@ -681,7 +681,7 @@ PacketSocketRecvComplete(
     } else
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
-    if( NT_SUCCESS(Irp->IoStatus.Status) ) {
+    if( NT_SUCCESS(Irp->IoStatus.Status) && FCB->Recv.Content < FCB->Recv.Size ) {
         /* Now relaunch the datagram request */
         Status = TdiReceiveDatagram
             ( &FCB->ReceiveIrp.InFlightRequest,
