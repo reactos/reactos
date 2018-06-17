@@ -390,7 +390,6 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-
             PrintString("  The file system on this volume needs to be checked for problems.\r\n");
             PrintString("  You may cancel this check, but it's recommended that you continue.\r\n");
             PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n", TimeOut);
