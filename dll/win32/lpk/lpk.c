@@ -63,9 +63,6 @@ LpkExtTextOut(
     const INT *lpDx,
     INT unknown)
 {
-    LPWORD glyphs = NULL;
-    INT cGlyphs;
-
     UNREFERENCED_PARAMETER(unknown);
 
     if (!(fuOptions & ETO_IGNORELANGUAGE))
@@ -81,16 +78,30 @@ LpkExtTextOut(
     /* Check if the string requires complex script processing and not a "glyph indices" array */
     if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
     {
+        LPWORD glyphs = NULL;
+        LPWSTR reordered_str = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
+        INT cGlyphs;
+        BOOL bResult;
+
         BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER,
                      (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
-                     NULL, uCount, NULL, &glyphs, &cGlyphs);
+                     reordered_str, uCount, NULL, &glyphs, &cGlyphs);
 
-        fuOptions |= ETO_GLYPH_INDEX;
+        if (glyphs)
+        {
+            fuOptions |= ETO_GLYPH_INDEX;
 
-        if (uCount > cGlyphs)
-            cGlyphs = uCount;
+            if (uCount != cGlyphs)
+                uCount = cGlyphs;
+        }
 
-        return ExtTextOutW(hdc, x, y, fuOptions, lprc, (LPWSTR)glyphs, cGlyphs, lpDx);
+        bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc,
+                              glyphs ? (LPWSTR)glyphs : reordered_str, uCount, lpDx);
+
+        HeapFree(GetProcessHeap(), 0, glyphs);
+        HeapFree(GetProcessHeap(), 0, reordered_str);
+
+        return bResult;
     }
 
     return ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
@@ -132,28 +143,38 @@ LpkGetCharacterPlacement(
     lpResults->nGlyphs = (UINT)cGlyphs;
 
     if (lpResults->lpGlyphs)
-        wcscpy(lpResults->lpGlyphs, lpGlyphs);
-
-    if (lpResults->lpDx && !(dwFlags & GCP_GLYPHSHAPE))
     {
-        int c;
-        for (i = 0; i < nSet; i++)
-        {
-            if (GetCharWidth32W(hdc, lpResults->lpOutString[i], lpResults->lpOutString[i], &c))
-                lpResults->lpDx[i] = c;
-        }
+        if (lpGlyphs)
+            wcscpy(lpResults->lpGlyphs, lpGlyphs);
+
+        else if (lpResults->lpOutString)
+            GetGlyphIndicesW(hdc, lpResults->lpOutString, nSet, lpResults->lpGlyphs, 0);
     }
 
-    /* If glyph shaping was requested */
-    else if (lpResults->lpDx && (dwFlags & GCP_GLYPHSHAPE))
+    if (lpResults->lpDx)
     {
-        int c;
-
-        if (lpResults->lpGlyphs)
+        /* If glyph shaping was requested */
+        if(dwFlags & GCP_GLYPHSHAPE)
         {
-            for (i = 0; i < lpResults->nGlyphs; i++)
+            int c;
+
+            if (lpResults->lpGlyphs)
             {
-                if (GetCharWidth32W(hdc, lpGlyphs[i], lpGlyphs[i], &c))
+                for (i = 0; i < lpResults->nGlyphs; i++)
+                {
+                    if (GetCharWidth32W(hdc, lpResults->lpGlyphs[i], lpResults->lpGlyphs[i], &c))
+                        lpResults->lpDx[i] = c;
+                }
+            }
+        }
+
+        else
+        {
+            int c;
+
+            for (i = 0; i < nSet; i++)
+            {
+                if (GetCharWidth32W(hdc, lpResults->lpOutString[i], lpResults->lpOutString[i], &c))
                     lpResults->lpDx[i] = c;
             }
         }
