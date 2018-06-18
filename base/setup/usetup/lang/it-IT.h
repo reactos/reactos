@@ -36,7 +36,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Questa lingua sar\x85 quella predefinita per il sistema finale.",
+        "\x07  Questa lingua sar\x85 quella predefinita per il sistema installato.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -849,66 +849,72 @@ static MUI_ENTRY itITConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         10,
-        "Le partizioni di sistema possono contenere i programmi diagnostici, configurazione hardware",
+        "Le partizioni di sistema possono contenere i programmi diagnostici,",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         11,
-        "Programmi utilizzati per l'avvio di un sistema operativo (come ReactOS) o altri.",
+        "configurazione hardware, programmi utilizzati per l'avvio di un",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Programmi forniti dal produttore dell'hardware.",
+        "sistema operativo (come ReactOS o altri), programmi forniti",
         TEXT_STYLE_NORMAL
     },
     {
         6,
-        14,
-        "Elimina una partizione di sistema solo quando sei sicuro che non ci siano",
+        13,
+        "dal produttore dell'hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "programmi sulla partizione, o quando sei sicuro di eliminarla.",
+        "Elimina una partizione di sistema solo quando sei sicuro che non ci",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "Cancellando una partizione, non sar\x85 pi\x97 possibile avviare",
+        "siano programmi sulla partizione, o quando sei sicuro di eliminarla.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         17,
-        "il computer dall'harddisk fino al termine del setup di ReactOS.",
+        "Cancellando una partizione, non sar\x85 pi\x97 possibile avviare",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
-        20,
-        "\x07  Primere INVIO per eliminare una partizione di sistema. Ti sar\x85 chiesto",
+        6,
+        18,
+        "il computer dall'harddisk fino al termine dell'installazione di ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "   di confermare ancora l'eliminazione della partizione.",
+        "\x07  Primere INVIO per eliminare una partizione di sistema. Ti sar\x85",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        24,
-        "\x07  Premere ESC per ritornare alla pagina precedente. La partizione",
+        22,
+        "   chiesto di confermare ancora l'eliminazione della partizione.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
+        "\x07  Premere ESC per ritornare alla pagina precedente. La partizione",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        26,
         "   non verr\x85 cancellata.",
         TEXT_STYLE_NORMAL
     },
@@ -971,13 +977,13 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installer\x85 i file di ReactOS nella partizione selezionata.",
+        "Il setup installer\x85 i file di ReactOS nella partizione selezionata.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         9,
-        "Scegliere una cartella dove volete che ReactOS sia installato:",
+        "Scegliere una cartella dove si vuole che ReactOS venga installato:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -989,7 +995,7 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         15,
-        "la cartella dove volete che ReactOS sia installato.",
+        "la cartella desiderata per l'installazione di ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1727,7 +1733,7 @@ MUI_STRING itITStrings[] =
     {STRING_DELETEPARTITION,
      "   D = Elimina Partizione   F3 = Esci"},
     {STRING_PARTITIONSIZE,
-     "Dimensione della nuova partizione:"},
+     "Dimensione nuova partizione:"},
     {STRING_CHOOSENEWPARTITION,
      "Si \x8A scelto di creare una nuova partizione primaria su"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
@@ -1747,7 +1753,7 @@ MUI_STRING itITStrings[] =
     {STRING_NONFORMATTEDOTHERPART,
     "La nuova partizione non \x8A stata ancora formattata."},
     {STRING_INSTALLONPART,
-    "Setup installer\x85 ReactOS sulla partitione"},
+    "Il setup installer\x85 ReactOS sulla partitione"},
     {STRING_CHECKINGPART,
     "Setup sta controllando la partizione selezionata."},
     {STRING_CONTINUE,
