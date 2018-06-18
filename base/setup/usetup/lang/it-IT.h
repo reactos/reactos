@@ -36,7 +36,7 @@ static MUI_ENTRY itITLanguagePageEntries[] =
     {
         8,
         13,
-        "\x07  Questa lingua sar� quella predefinita per il sistema finale.",
+        "\x07  Questa lingua sar\x85 quella predefinita per il sistema finale.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -375,7 +375,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6,
         19,
-        "Pu� scegliere un elemento della configurazione con i tasti SU e GI\x97",
+        "Pu\x95 scegliere un elemento della configurazione con i tasti SU e GI\x97",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1739,7 +1739,7 @@ MUI_STRING itITStrings[] =
     {STRING_CREATEPARTITION,
      "   INVIO = Creare la partizione   ESC = Annulla   F3 = Esci"},
     {STRING_PARTFORMAT,
-    "Questa partizione sar� formattata successivamente."},
+    "Questa partizione sar\x85 formattata successivamente."},
     {STRING_NONFORMATTEDPART,
     "Avete scelto di installare ReactOS su una partizione nuova o non formattata."},
     {STRING_NONFORMATTEDSYSTEMPART,
