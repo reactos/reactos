@@ -152,7 +152,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6,
         12,
-        "funzioni sono operative e cambia continuamente. \x8A adatto solamente per",
+        "funzioni sono operative e cambia continuamente. \x90 adatto solamente per",
         TEXT_STYLE_NORMAL
     },
     {
@@ -375,7 +375,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6,
         19,
-        "Pu\x95 scegliere un elemento della configurazione con i tasti SU e GI\x97",
+        "Pu\x95 scegliere un elemento della configurazione con i tasti SU e GI\xEB",
         TEXT_STYLE_NORMAL
     },
     {
@@ -497,7 +497,7 @@ static MUI_ENTRY itITComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Premere i tasti SU e GI\x97 per scegliere il tipo.",
+        "\x07  Premere i tasti SU e GI\xEB per scegliere il tipo.",
         TEXT_STYLE_NORMAL
     },    
     {
@@ -634,7 +634,7 @@ static MUI_ENTRY itITDisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Premere i tasti SU e GI\x97 per modificare il tipo.",
+         "\x07  Premere i tasti SU e GI\xEB per modificare il tipo.",
          TEXT_STYLE_NORMAL
     },
     {
@@ -785,7 +785,7 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Premere SU o GI\x97 per selezionare un elemento della lista.",
+        "\x07  Premere SU o GI\xEB per selezionare un elemento della lista.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1127,7 +1127,7 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Premere SU o GI\x97 per selezionare il tipo di tastiera desiderato.",
+        "\x07  Premere SU o GI\xEB per selezionare il tipo di tastiera desiderato.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1179,7 +1179,7 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Premere SU o GI\x97 per selezionare il tipo di tastiera",
+        "\x07  Premere SU o GI\xEB per selezionare il tipo di tastiera",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1261,7 +1261,7 @@ static MUI_ENTRY itITSelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Premere SU o GI\x97 per selezionare un filesystem.",
+        "\x07  Premere SU o GI\xEB per selezionare un filesystem.",
         0
     },
     {
