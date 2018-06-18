@@ -197,15 +197,17 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
 {
    STARTUPINFO StartupInfo = {0};
    PROCESS_INFORMATION ProcessInformation;
-//   char* fmode;
-//   HANDLE* hFile;
-//   int i, last;
    BOOL bResult;
    DWORD dwExitCode;
    DWORD dwError;
 
    TRACE(MK_STR(do_spawnT)"(%i,'%"sT"','%"sT"','%"sT"')",mode,cmdname,args,envp);
 
+   if ((unsigned)mode > _P_DETACH)
+   {
+      _set_errno(EINVAL);
+	  return -1;
+   }
 
    if (mode != _P_NOWAIT && mode != _P_NOWAITO && mode != _P_WAIT && mode != _P_DETACH && mode != _P_OVERLAY)
    {
@@ -309,23 +311,25 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
       _dosmaperr(dwError);
       return(-1);
    }
-   CloseHandle(ProcessInformation.hThread);
+
    switch(mode)
    {
-      case _P_NOWAIT:
-      case _P_NOWAITO:
-         return((intptr_t)ProcessInformation.hProcess);
-      case _P_OVERLAY:
-         CloseHandle(ProcessInformation.hProcess);
-         _exit(0);
       case _P_WAIT:
          WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
          GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
          CloseHandle(ProcessInformation.hProcess);
-         return( (int)dwExitCode); //CORRECT?
+         CloseHandle(ProcessInformation.hThread);
+         return ProcessInformation.dwProcessId;
       case _P_DETACH:
-         CloseHandle(ProcessInformation.hProcess);
-         return( 0);
+         CloseHandle(ProcessInformation.hProcess);	
+         ProcessInformation.hProcess = 0;
+         /* fall through */
+      case _P_NOWAIT:
+      case _P_NOWAITO:
+         CloseHandle(ProcessInformation.hThread);
+         return((intptr_t)ProcessInformation.hProcess);
+      case _P_OVERLAY:
+         _exit(0);
    }
    return( (intptr_t)ProcessInformation.hProcess);
 }
