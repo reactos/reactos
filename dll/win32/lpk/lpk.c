@@ -145,7 +145,7 @@ LpkGetCharacterPlacement(
     if (lpResults->lpGlyphs)
     {
         if (lpGlyphs)
-            wcscpy(lpResults->lpGlyphs, lpGlyphs);
+            StringCchCopyW(lpResults->lpGlyphs, cGlyphs, lpGlyphs);
 
         else if (lpResults->lpOutString)
             GetGlyphIndicesW(hdc, lpResults->lpOutString, nSet, lpResults->lpGlyphs, 0);
@@ -154,7 +154,7 @@ LpkGetCharacterPlacement(
     if (lpResults->lpDx)
     {
         /* If glyph shaping was requested */
-        if(dwFlags & GCP_GLYPHSHAPE)
+        if (dwFlags & GCP_GLYPHSHAPE)
         {
             int c;
 
@@ -162,7 +162,7 @@ LpkGetCharacterPlacement(
             {
                 for (i = 0; i < lpResults->nGlyphs; i++)
                 {
-                    if (GetCharWidth32W(hdc, lpResults->lpGlyphs[i], lpResults->lpGlyphs[i], &c))
+                    if (GetCharWidthI(hdc, 0, 1, (WORD *)&lpResults->lpGlyphs[i], &c))
                         lpResults->lpDx[i] = c;
                 }
             }
