@@ -63,6 +63,11 @@ LpkExtTextOut(
     const INT *lpDx,
     INT unknown)
 {
+    LPWORD glyphs = NULL;
+    LPWSTR reordered_str = NULL;
+    INT cGlyphs;
+    BOOL bResult;
+
     UNREFERENCED_PARAMETER(unknown);
 
     if (!(fuOptions & ETO_IGNORELANGUAGE))
@@ -78,10 +83,7 @@ LpkExtTextOut(
     /* Check if the string requires complex script processing and not a "glyph indices" array */
     if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
     {
-        LPWORD glyphs = NULL;
-        LPWSTR reordered_str = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
-        INT cGlyphs;
-        BOOL bResult;
+        reordered_str = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
 
         BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER,
                      (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
@@ -90,13 +92,17 @@ LpkExtTextOut(
         if (glyphs)
         {
             fuOptions |= ETO_GLYPH_INDEX;
-
-            if (uCount != cGlyphs)
-                uCount = cGlyphs;
+            uCount = cGlyphs;
         }
 
-        bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc,
-                              glyphs ? (LPWSTR)glyphs : reordered_str, uCount, lpDx);
+        if (glyphs || reordered_str)
+        {
+            bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc,
+                                  glyphs ? (LPWSTR)glyphs : reordered_str, uCount, lpDx);
+        }
+
+        else
+            bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
 
         HeapFree(GetProcessHeap(), 0, glyphs);
         HeapFree(GetProcessHeap(), 0, reordered_str);
