@@ -146,13 +146,13 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6,
         11,
-        "ReactOS \x8A nello stadio di sviluppo Alpha, significa che non tutte le funzioni",
+        "ReactOS \x8A nello stadio di sviluppo Alpha, significa che non tutte le",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "sono operative e cambia continuamente. \x8A adatto solamente per",
+        "funzioni sono operative e cambia continuamente. \x8A adatto solamente per",
         TEXT_STYLE_NORMAL
     },
     {
@@ -164,13 +164,13 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6,
         15,
-        "Eseguire un backup dei dati oppure installate il sistema in un computer senza",
+        "Eseguire un backup dei dati oppure installate il sistema in un computer",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "sistema operativo e dati se volete eseguirlo su un hardware fisico.",
+        "senza sistema operativo e dati se volete eseguirlo su un hardware fisico.",
         TEXT_STYLE_NORMAL
     },
     {
