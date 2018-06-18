@@ -322,7 +322,7 @@ remove_mark(char *Line)
 static void
 translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
 {
-    size_t offset;
+    unsigned int offset;
     int cnt, res;
     char *sep, *tail, *mark, *s;
     unsigned char ch;
@@ -346,7 +346,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
     if (sep)
     {
         *sep = ' ';
-        cnt = sscanf(s, "<%s %x%c", path, (unsigned int *)(&offset), &ch);
+        cnt = sscanf(s, "<%s %x%c", path, &offset, &ch);
         if (opt_undo)
         {
             if (cnt == 3 && ch == ' ')
@@ -360,12 +360,12 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
                     mark = opt_mark ? "* " : "";
                     if (opt_redo && !(res = translate_file(path, offset, LineOut)))
                     {
-                        log(outFile, "%s<%s:%x (%s)>%s", mark, path, (unsigned int)offset, LineOut, tail);
+                        log(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
                         summ.redo++;
                     }
                     else
                     {
-                        log(outFile, "%s<%s:%x>%s", mark, path, (unsigned int)offset, tail);
+                        log(outFile, "%s<%s:%x>%s", mark, path, offset, tail);
                         summ.undo++;
                     }
                 }
@@ -386,7 +386,7 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
                 if (!(res = translate_file(path, offset, LineOut)))
                 {
                     mark = opt_mark ? "* " : "";
-                    log(outFile, "%s<%s:%x (%s)>%s", mark, path, (unsigned int)offset, LineOut, tail);
+                    log(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
                     summ.translated++;
                 }
                 else
