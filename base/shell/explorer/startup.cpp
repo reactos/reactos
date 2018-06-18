@@ -309,7 +309,8 @@ AutoStartupApplications(INT nCSIDL_Folder)
             continue;
 
         // Build the path
-        wcscpy(&szPath[cchPathLen + 1], FoundData.cFileName);
+        szPath[cchPathLen + 1] = UNICODE_NULL;
+        StringCbCatW(szPath, sizeof(szPath), FoundData.cFileName);
 
         TRACE("Executing %s in directory %s\n", debugstr_w(FoundData.cFileName), debugstr_w(szPath));
 
