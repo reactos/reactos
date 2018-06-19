@@ -488,15 +488,15 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
 
     /* Initialize SystemRoot\System32 path */
     strcpy(DirPath, BootPath);
-    strcat(DirPath, "SYSTEM32\\");
+    strcat(DirPath, "system32\\");
 
     //
     // TODO: Parse also the separate INI values "Kernel=" and "Hal="
     //
 
     /* Default KERNEL and HAL file names */
-    strcpy(KernelFileName, "NTOSKRNL.EXE");
-    strcpy(HalFileName   , "HAL.DLL");
+    strcpy(KernelFileName, "ntoskrnl.exe");
+    strcpy(HalFileName   , "hal.dll");
 
     /* Find any /KERNEL= or /HAL= switch in the boot options */
     Options = BootOptions;
@@ -544,10 +544,10 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
     TRACE("Kernel file = '%s' ; HAL file = '%s'\n", KernelFileName, HalFileName);
 
     /* Load the Kernel */
-    LoadModule(LoaderBlock, DirPath, KernelFileName, "NTOSKRNL.EXE", LoaderSystemCode, KernelDTE, 30);
+    LoadModule(LoaderBlock, DirPath, KernelFileName, "ntoskrnl.exe", LoaderSystemCode, KernelDTE, 30);
 
     /* Load the HAL */
-    LoadModule(LoaderBlock, DirPath, HalFileName, "HAL.DLL", LoaderHalCode, &HalDTE, 45);
+    LoadModule(LoaderBlock, DirPath, HalFileName, "hal.dll", LoaderHalCode, &HalDTE, 45);
 
     /* Load the Kernel Debugger Transport DLL */
     if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
@@ -630,7 +630,7 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
              * Load the transport DLL. Override the base DLL name of the
              * loaded transport DLL to the default "KDCOM.DLL" name.
              */
-            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "KDCOM.DLL", LoaderSystemCode, &KdComDTE, 60);
+            LoadModule(LoaderBlock, DirPath, KdTransportDllName, "kdcom.dll", LoaderSystemCode, &KdComDTE, 60);
         }
     }
 
