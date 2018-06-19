@@ -126,7 +126,7 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     // FIXME: For now we only try system
     strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "SYSTEM32\\CONFIG\\");
+    strcat(SearchPath, "system32\\config\\");
     Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
 
     // Fail if failed...
@@ -173,7 +173,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     // Load NLS data
     strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "SYSTEM32\\");
+    strcat(SearchPath, "system32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
