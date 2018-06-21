@@ -366,15 +366,13 @@ public:
 
         m_RunFileDlgOwner = hwnd;
 
-        WCHAR szHomeDrive[MAX_PATH], szHomePath[MAX_PATH];
-        GetEnvironmentVariableW(L"HOMEDRIVE", szHomeDrive, _countof(szHomeDrive));
-        GetEnvironmentVariableW(L"HOMEPATH", szHomePath, _countof(szHomePath));
+        // build the default directory from two environment variables
+        CStringW strDefaultDir, strHomePath;
+        strDefaultDir.GetEnvironmentVariable(L"HOMEDRIVE");
+        strHomePath.GetEnvironmentVariable(L"HOMEPATH");
+        strDefaultDir += strHomePath;
 
-        WCHAR szDefaultDir[MAX_PATH];
-        StringCchCopyW(szDefaultDir, _countof(szDefaultDir), szHomeDrive);
-        StringCchCatW(szDefaultDir, _countof(szDefaultDir), szHomePath);
-
-        RunFileDlg(hwnd, NULL, szDefaultDir, NULL, NULL, RFF_CALCDIRECTORY);
+        RunFileDlg(hwnd, NULL, (LPCWSTR)strDefaultDir, NULL, NULL, RFF_CALCDIRECTORY);
 
         m_RunFileDlgOwner = NULL;
         ::DestroyWindow(hwnd);
