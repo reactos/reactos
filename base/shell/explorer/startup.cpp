@@ -391,8 +391,6 @@ static BOOL IsSelfExplorer(VOID)
     WCHAR szPath[MAX_PATH];
 
     GetModuleFileName(NULL, szPath, _countof(szPath));
-    PathRemoveArgsW(szPath);
-    PathRemoveBlanksW(szPath);
 
     return (StrCmpIW(PathFindFileNameW(szPath), L"explorer.exe") == 0);
 }
