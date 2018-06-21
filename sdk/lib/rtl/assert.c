@@ -36,7 +36,7 @@ RtlAssert(IN PVOID FailedAssertion,
     {
         /* Print the assertion */
         DbgPrint("\n*** Assertion failed: %s%s\n"
-                 "***   Source File: %s, line %ld\n\n",
+                 "***   Source File: %s, line %lu\n\n",
                  Message != NULL ? Message : "",
                  (PSTR)FailedAssertion,
                  (PSTR)FileName,
