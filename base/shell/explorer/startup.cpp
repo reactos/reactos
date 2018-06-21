@@ -421,8 +421,8 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
 
     if (!s_hStartupMutex)
     {
-        // Accidentally, there is possibility that the system starts multiple Explorers without shell.
-        // We use a mutex to match the timing of shell initialization.
+        // Accidentally, there is possibility that the system starts multiple Explorers
+        // before startup of shell. We use a mutex to match the timing of shell initialization.
         s_hStartupMutex = CreateMutexW(NULL, FALSE, L"ExplorerIsShellMutex");
         if (s_hStartupMutex == NULL)
             return FALSE;
