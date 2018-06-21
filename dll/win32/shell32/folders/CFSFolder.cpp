@@ -177,7 +177,7 @@ getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
             break;
 
         // read-only or system folder?
-        const DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
+        DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
         if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
             break;
 
