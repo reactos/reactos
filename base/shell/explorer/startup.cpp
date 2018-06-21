@@ -388,11 +388,17 @@ INT ProcessStartupItems(VOID)
 
 static BOOL IsSelfExplorer(VOID)
 {
-    WCHAR szPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH], *pch;
+    static const WCHAR szExplorer[] = L"explorer.exe";
 
     GetModuleFileName(NULL, szPath, _countof(szPath));
 
-    return (StrCmpIW(PathFindFileNameW(szPath), L"explorer.exe") == 0);
+    pch = PathFindFileNameW(szPath);
+    if (pch)
+    {
+        return (StrCmpIW(pch, szExplorer) == 0);
+    }
+    return (StrCmpIW(szPath, szExplorer) == 0);
 }
 
 BOOL DoFinishStartupItems(VOID)
