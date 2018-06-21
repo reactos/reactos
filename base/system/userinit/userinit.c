@@ -215,7 +215,6 @@ TryToStartShell(
         return FALSE;
     }
 
-    // NOTE: Auto Startup codes are moved to base/shell/explorer/startup.cpp
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return TRUE;
