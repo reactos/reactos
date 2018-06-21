@@ -171,74 +171,72 @@ getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
     static const WCHAR iconResource[] = { 'I', 'c', 'o', 'n', 'R', 'e', 's', 'o', 'u', 'r', 'c', 'e', 0 };
     static const WCHAR wszDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
 
-    do
+    if (uFlags & GIL_DEFAULTICON)
+        goto Quit;
+
+    // read-only or system folder?
+    DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
+    if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
+       goto Quit;
+
+    // get path
+    WCHAR wszFolderPath[MAX_PATH];
+    SHGetPathFromIDListW(pidl, wszFolderPath);
+    if (!PathIsDirectoryW(wszFolderPath))
+       goto Quit;
+
+    // build a full path of ini file
+    WCHAR wszIniFullPath[MAX_PATH];
+    StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszFolderPath);
+    PathAppendW(wszIniFullPath, wszDesktopIni);
+
+    // get current folder
+    WCHAR wszCurDir[MAX_PATH];
+    GetCurrentDirectoryW(_countof(wszCurDir), wszCurDir);
+
+    WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
+    if (getShellClassInfo(iconFile, wszValue, _countof(wszValue), wszIniFullPath))
     {
-        if (uFlags & GIL_DEFAULTICON)
-            break;
+        // wszValue --> wszTemp
+        ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
 
-        // read-only or system folder?
-        DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
-        if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
-            break;
-
-        // get path
-        WCHAR wszFolderPath[MAX_PATH];
-        SHGetPathFromIDListW(pidl, wszFolderPath);
-        if (!PathIsDirectoryW(wszFolderPath))
-            break;
-
-        // build a full path of ini file
-        WCHAR wszIniFullPath[MAX_PATH];
-        StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszFolderPath);
-        PathAppendW(wszIniFullPath, wszDesktopIni);
-
-        // get current folder
-        WCHAR wszCurDir[MAX_PATH];
-        GetCurrentDirectoryW(_countof(wszCurDir), wszCurDir);
-
-        WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
-        if (getShellClassInfo(iconFile, wszValue, _countof(wszValue), wszIniFullPath))
+        if (SetCurrentDirectoryW(wszFolderPath))
         {
-            // wszValue --> wszTemp
-            ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
+            // wszTemp --> szIconFile
+            GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
+            SetCurrentDirectoryW(wszCurDir);
 
-            if (SetCurrentDirectoryW(wszFolderPath))
-            {
-                // wszTemp --> szIconFile
-                GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
-                SetCurrentDirectoryW(wszCurDir);
-
-                *piIndex = GetPrivateProfileIntW(s_shellClassInfo, iconIndex, 0, wszIniFullPath);
-                return S_OK;
-            }
-        }
-        else if (getShellClassInfo(clsid, wszValue, _countof(wszValue), wszIniFullPath) &&
-                 HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
-        {
+            *piIndex = GetPrivateProfileIntW(s_shellClassInfo, iconIndex, 0, wszIniFullPath);
             return S_OK;
         }
-        else if (getShellClassInfo(clsid2, wszValue, _countof(wszValue), wszIniFullPath) &&
-                 HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
+    }
+    else if (getShellClassInfo(clsid, wszValue, _countof(wszValue), wszIniFullPath) &&
+             HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
+    {
+        return S_OK;
+    }
+    else if (getShellClassInfo(clsid2, wszValue, _countof(wszValue), wszIniFullPath) &&
+             HCR_GetIconW(wszValue, szIconFile, NULL, cchMax, piIndex))
+    {
+        return S_OK;
+    }
+    else if (getShellClassInfo(iconResource, wszValue, _countof(wszValue), wszIniFullPath))
+    {
+        *piIndex = PathParseIconLocationW(wszValue);
+
+        // wszValue --> wszTemp
+        ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
+
+        if (SetCurrentDirectoryW(wszFolderPath))
         {
+            // wszTemp --> szIconFile
+            GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
+            SetCurrentDirectoryW(wszCurDir);
             return S_OK;
         }
-        else if (getShellClassInfo(iconResource, wszValue, _countof(wszValue), wszIniFullPath))
-        {
-            *piIndex = PathParseIconLocationW(wszValue);
+    }
 
-            // wszValue --> wszTemp
-            ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
-
-            if (SetCurrentDirectoryW(wszFolderPath))
-            {
-                // wszTemp --> szIconFile
-                GetFullPathNameW(wszTemp, cchMax, szIconFile, NULL);
-                SetCurrentDirectoryW(wszCurDir);
-                return S_OK;
-            }
-        }
-    } while (0);
-
+Quit:
     return getDefaultIconLocation(szIconFile, cchMax, piIndex, uFlags);
 }
 
