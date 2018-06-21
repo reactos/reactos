@@ -188,7 +188,7 @@ getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
     if (!PathIsDirectoryW(wszFolderPath))
        goto Quit;
 
-    // build a full path of ini file
+    // build the full path of ini file
     StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszFolderPath);
     PathAppendW(wszIniFullPath, wszDesktopIni);
 
