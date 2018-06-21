@@ -315,7 +315,7 @@ AutoStartupApplications(INT nCSIDL_Folder)
         TRACE("Executing %s in directory %s\n", debugstr_w(FoundData.cFileName), debugstr_w(szPath));
 
         DWORD dwType;
-        if (GetBinaryTypeW(szPath, &dwType) )
+        if (GetBinaryTypeW(szPath, &dwType))
         {
             runCmd(szPath, NULL, TRUE, FALSE);
         }
@@ -417,7 +417,7 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
 
     if (!s_hStartupMutex)
     {
-        // Accidentally, there is possibility that the system starts multple Explorers without shell.
+        // Accidentally, there is possibility that the system starts multiple Explorers without shell.
         // We use a mutex to match the timing of shell initialization.
         s_hStartupMutex = CreateMutexW(NULL, FALSE, L"ExplorerIsShellMutex");
         if (s_hStartupMutex == NULL)
