@@ -24,6 +24,7 @@
 HINSTANCE hExplorerInstance;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
+BOOL IsSelfTheShell = FALSE;
 
 class CExplorerModule : public CComModule
 {
@@ -206,14 +207,12 @@ _tWinMain(IN HINSTANCE hInstance,
     InitRSHELL();
 
 #if !WIN7_COMPAT_MODE
-    BOOL CreateShellDesktop = FALSE;
-
     TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
 
     if (GetShellWindow() == NULL)
-        CreateShellDesktop = TRUE;
+        IsSelfTheShell = TRUE;
 
-    if (!CreateShellDesktop)
+    if (!IsSelfTheShell)
     {
         return StartWithCommandLine(hInstance);
     }
