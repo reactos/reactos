@@ -164,6 +164,10 @@ static HRESULT
 getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
                          LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
+    DWORD dwFileAttrs;
+    WCHAR wszFolderPath[MAX_PATH];
+    WCHAR wszIniFullPath[MAX_PATH];
+    WCHAR wszCurDir[MAX_PATH];
     static const WCHAR iconFile[] = { 'I', 'c', 'o', 'n', 'F', 'i', 'l', 'e', 0 };
     static const WCHAR clsid[] = { 'C', 'L', 'S', 'I', 'D', 0 };
     static const WCHAR clsid2[] = { 'C', 'L', 'S', 'I', 'D', '2', 0 };
@@ -175,23 +179,20 @@ getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
         goto Quit;
 
     // read-only or system folder?
-    DWORD dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
+    dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
     if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
        goto Quit;
 
     // get path
-    WCHAR wszFolderPath[MAX_PATH];
     SHGetPathFromIDListW(pidl, wszFolderPath);
     if (!PathIsDirectoryW(wszFolderPath))
        goto Quit;
 
     // build a full path of ini file
-    WCHAR wszIniFullPath[MAX_PATH];
     StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszFolderPath);
     PathAppendW(wszIniFullPath, wszDesktopIni);
 
     // get current folder
-    WCHAR wszCurDir[MAX_PATH];
     GetCurrentDirectoryW(_countof(wszCurDir), wszCurDir);
 
     WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
