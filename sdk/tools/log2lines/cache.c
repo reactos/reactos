@@ -18,6 +18,10 @@
 
 #include "log2lines.h"
 
+#define UNZIP_FMT_4_CAB_SHELL32 \
+  "%s e -aos -y %s" PATH_STR "reactos" PATH_STR "reactos.cab" \
+  " -o%s" PATH_STR "reactos" PATH_STR "reactos shell32.dll > " DEV_NULL
+
 static char *cache_name;
 static char *tmp_name;
 
@@ -50,7 +54,8 @@ unpack_iso(char *dir, char *iso)
         l2l_dbg(1, "Failed to execute: '%s'\n", Line);
         res = 1;
     }
-    else
+
+    if (res == 0)
     {
         l2l_dbg(2, "\nUnpacking reactos.cab in %s\n", dir);
         sprintf(Line, UNZIP_FMT_CAB, opt_7z, dir, dir);
@@ -61,6 +66,25 @@ unpack_iso(char *dir, char *iso)
             res = 2;
         }
     }
+
+    // Workaround: Extract shell32.dll from .cab again.
+    // This time, do not let first 9 MiB O.S. file be overwritten
+    // by second empty test file, if the latter exists.
+    if (res == 0)
+    {
+        sprintf(Line, "%s" PATH_STR "reactos" PATH_STR "reactos" PATH_STR "shell32.dll", dir);
+        remove(Line);
+
+        l2l_dbg(2, "Unpacking reactos.cab" PATH_STR "shell32.dll again in %s\n", dir);
+        sprintf(Line, UNZIP_FMT_4_CAB_SHELL32, opt_7z, dir, dir);
+        if (system(Line) < 0)
+        {
+            l2l_dbg(0, "\nCannot unpack reactos.cab" PATH_STR "shell32.dll again in %s\n", dir);
+            l2l_dbg(1, "Failed to execute: '%s'\n", Line);
+            res = 4;
+        }
+    }
+
     if (iso_copied)
         remove(iso_tmp);
     return res;
