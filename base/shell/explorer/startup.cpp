@@ -386,21 +386,6 @@ INT ProcessStartupItems(VOID)
     return res ? 0 : 101;
 }
 
-static BOOL IsSelfExplorer(VOID)
-{
-    WCHAR szPath[MAX_PATH], *pch;
-    static const WCHAR szExplorer[] = L"explorer.exe";
-
-    GetModuleFileName(NULL, szPath, _countof(szPath));
-
-    pch = PathFindFileNameW(szPath);
-    if (pch)
-    {
-        return (StrCmpIW(pch, szExplorer) == 0);
-    }
-    return (StrCmpIW(szPath, szExplorer) == 0);
-}
-
 BOOL DoFinishStartupItems(VOID)
 {
     if (s_hStartupMutex)
@@ -416,7 +401,7 @@ BOOL DoStartStartupItems(ITrayWindow *Tray)
 {
     DWORD dwWait;
 
-    if (!IsSelfExplorer())
+    if (!bExplorerIsShell)
         return FALSE;
 
     if (!s_hStartupMutex)

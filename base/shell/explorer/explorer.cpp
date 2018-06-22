@@ -24,7 +24,7 @@
 HINSTANCE hExplorerInstance;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
-BOOL IsSelfTheShell = FALSE;
+BOOL bExplorerIsShell = FALSE;
 
 class CExplorerModule : public CComModule
 {
@@ -34,8 +34,8 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
-CExplorerModule                             gModule;
-CAtlWinModule                               gWinModule;
+CExplorerModule gModule;
+CAtlWinModule   gWinModule;
 
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
@@ -206,16 +206,18 @@ _tWinMain(IN HINSTANCE hInstance,
 
     InitRSHELL();
 
+    TRACE("Explorer starting... Command line: %S\n", lpCmdLine);
+
 #if !WIN7_COMPAT_MODE
-    TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
-
     if (GetShellWindow() == NULL)
-        IsSelfTheShell = TRUE;
+        bExplorerIsShell = TRUE;
 
-    if (!IsSelfTheShell)
+    if (!bExplorerIsShell)
     {
         return StartWithCommandLine(hInstance);
     }
+#else
+    bExplorerIsShell = TRUE;
 #endif
 
     return StartWithDesktop(hInstance);
