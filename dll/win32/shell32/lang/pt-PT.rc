@@ -425,10 +425,10 @@ BEGIN
     GROUPBOX "Seleccione a seguinte opção", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Click simples para abrir um item", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     AUTORADIOBUTTON "&Duplo-click para abrir um item (um click para seleccionar)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    PUSHBUTTON "&Restaurar valores por defeito", 14011, 180, 180, 60, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones mantendo o aspecto do &browser", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Sublinhar os títulos dos ícones apenas quando &aponto para eles", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    PUSHBUTTON "&Restaurar valores por defeito", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
