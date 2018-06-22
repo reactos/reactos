@@ -23,12 +23,14 @@
 #define _WMI_SOURCE_
 #include <aclapi.h>
 #include <winsafer.h>
+
 #define NTOS_MODE_USER
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/sefuncs.h>
+#include <ndk/setypes.h>
 
 /* this has to go after the NDK when being used with the NDK */
 #include <ntsecapi.h>
