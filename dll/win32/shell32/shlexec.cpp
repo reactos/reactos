@@ -2314,6 +2314,6 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
     WCHAR szCmdLineW[MAX_PATH];
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
 
-    MultiByteToWideChar(CP_ACP, 0, cmdline, MAX_PATH, szCmdLineW, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, cmdline, -1, szCmdLineW, _countof(szCmdLineW));
     OpenAs_RunDLLW(hwnd, hinst, szCmdLineW, cmdshow);
 }
