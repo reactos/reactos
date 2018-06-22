@@ -1570,8 +1570,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
    {      // Need both here for wine win.c test_CreateWindow.
-      //if (Cs->hwndParent && ParentWindow)
-      if (ParentWindow) // It breaks more tests..... WIP.
+      if (ParentWindow && Cs->hwndParent) // It breaks more tests..... WIP.
       {
          if ( (Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD &&
               ParentWindow->ExStyle & WS_EX_LAYOUTRTL &&

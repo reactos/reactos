@@ -283,17 +283,6 @@ User32CreateWindowEx(DWORD dwExStyle,
         plstrClassVersion = &lstrClassVersion;
     }
 
-    /* Check process default layout */
-    if (!hWndParent)
-    {
-        DWORD dwLayout = 0L;
-
-        GetProcessDefaultLayout(&dwLayout);
-
-        if (dwLayout == LAYOUT_RTL)
-            dwExStyle |= WS_EX_LAYOUTRTL;
-    }
-
     for (;;)
     {
         Handle = NtUserCreateWindowEx(dwExStyle,
