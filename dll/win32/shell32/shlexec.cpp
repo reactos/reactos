@@ -2294,15 +2294,15 @@ EXTERN_C HINSTANCE WINAPI WOWShellExecute(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFil
 EXTERN_C void WINAPI
 OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
 {
-    OPENASINFO osi;
+    OPENASINFO info;
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_w(cmdline), cmdshow);
 
-    ZeroMemory(&osi, sizeof(osi));
-    osi.pcszFile = cmdline;
-    osi.pcszClass = NULL;
-    osi.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
+    ZeroMemory(&info, sizeof(info));
+    info.pcszFile = cmdline;
+    info.pcszClass = NULL;
+    info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
 
-    SHOpenWithDialog(hwnd, &osi);
+    SHOpenWithDialog(hwnd, &info);
 }
 
 /*************************************************************************
