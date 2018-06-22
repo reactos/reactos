@@ -230,8 +230,9 @@ HRESULT ShutdownShellServices(HDPA hdpa);
  * startup.cpp
  */
 
-int
-ProcessStartupItems(VOID);
+BOOL DoStartStartupItems(ITrayWindow *Tray);
+INT ProcessStartupItems(VOID);
+BOOL DoFinishStartupItems(VOID);
 
 /*
  * trayprop.h

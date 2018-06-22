@@ -24,6 +24,7 @@
 HINSTANCE hExplorerInstance;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
+BOOL IsSelfTheShell = FALSE;
 
 class CExplorerModule : public CComModule
 {
@@ -132,10 +133,6 @@ StartWithDesktop(IN HINSTANCE hInstance)
     InitCommonControls();
     OleInitialize(NULL);
 
-#if !WIN7_DEBUG_MODE
-    ProcessStartupItems();
-#endif
-
 #if !WIN7_COMPAT_MODE
     /* Initialize shell dde support */
     _ShellDDEInit(TRUE);
@@ -164,6 +161,12 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* WinXP: Notify msgina to hide the welcome screen */
     if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
         SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
+
+    if (DoStartStartupItems(Tray))
+    {
+        ProcessStartupItems();
+        DoFinishStartupItems();
+    }
 #endif
 
     if (Tray != NULL)
@@ -204,14 +207,12 @@ _tWinMain(IN HINSTANCE hInstance,
     InitRSHELL();
 
 #if !WIN7_COMPAT_MODE
-    BOOL CreateShellDesktop = FALSE;
-
     TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
 
     if (GetShellWindow() == NULL)
-        CreateShellDesktop = TRUE;
+        IsSelfTheShell = TRUE;
 
-    if (!CreateShellDesktop)
+    if (!IsSelfTheShell)
     {
         return StartWithCommandLine(hInstance);
     }
