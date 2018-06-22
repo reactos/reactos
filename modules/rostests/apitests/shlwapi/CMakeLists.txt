@@ -5,6 +5,7 @@ list(APPEND SOURCE
     PathIsUNCServer.c
     PathIsUNCServerShare.c
     PathUnExpandEnvStrings.c
+    PathUnExpandEnvStringsForUser.c
     SHAreIconsEqual.c
     StrFormatByteSizeW.c
     testdata.rc

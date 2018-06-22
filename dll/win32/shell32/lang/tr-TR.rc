@@ -427,10 +427,10 @@ BEGIN
     GROUPBOX "Aşağıdaki Gibi Ögelere Tıkla", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Bir Öge Açmak İçin Tek Tıkla (Seçmek İçin Üzerine Git)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "T&arayıcımla Uyumlu Olarak Simge Başlıklarının Altını Çiz", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "&Simge Başlıklarının Yalnızca Onların Üzerine Gittiğimde Altını Çiz", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     AUTORADIOBUTTON "B&ir Ögeyi Açmak İçin Çift Tıkla (Seçmek İçin Tek Tıkla)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    PUSHBUTTON "&Ön Tanımlıları Geri Getir", 14011, 180, 180, 60, 14, WS_TABSTOP
+    AUTORADIOBUTTON "T&arayıcımla Uyumlu Olarak Simge Başlıklarının Altını Çiz", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Simge Başlıklarının Yalnızca Onların Üzerine Gittiğimde Altını Çiz", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    PUSHBUTTON "&Ön Tanımlıları Geri Getir", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256

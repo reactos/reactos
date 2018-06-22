@@ -1,0 +1,45 @@
+/*
+ * PROJECT:     ReactOS Welcome Hindi Translation
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     To make Hindi translation of Welcome
+ * COPYRIGHT:   Copyright 2018 Arnav Bhatt (arnavbhatt2004@gmail.com)
+ */
+
+LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
+
+/* String Tables */
+
+/* Default settings */
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE "रिऐक्ट ओएस - स्वागत है"
+    IDS_DEFAULT_TOPIC_TITLE "रिऐक्ट ओएस"
+    IDS_DEFAULT_TOPIC_DESC "रिऐक्ट ओएस ऑपरेटिंग सिस्टम में आपका स्वागत ह।\n\nबांए विषय पर क्लिक करें।"
+    IDS_FONTNAME "Kruti Dev"
+    IDS_CHECKTEXT "&इस डॉयलाग को दोबारा दिखाएं"
+    IDS_CLOSETEXT "&इग्ज़िट"
+END
+
+/* Topic buttons */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_BUTTON0 "&रिऐक्ट ओएस इंस्टॉल करें"
+    IDS_TOPIC_BUTTON1 "&इस सीडी को ब्राउज़ करें"
+    IDS_TOPIC_BUTTON2 "&इग्ज़िट"
+END
+
+/* Topic titles */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_TITLE0 "रिऐक्ट ओएस इंस्टॉल करें"
+    IDS_TOPIC_TITLE1 "इस सीडी को ब्राउज़ करें"
+    IDS_TOPIC_TITLE2 "इग्ज़िट"
+END
+
+/* Topic descriptions */
+STRINGTABLE
+BEGIN
+    IDS_TOPIC_DESC0 "अपने कम्प्यृटर पर नया रिऐक्ट ओएस इंस्टॉलेशन बनाएँ या वर्तमान इंस्टॉलेशन को अपग्रेड करें।"
+    IDS_TOPIC_DESC1 "इस सीडी को ब्राउज़ करें।"
+    IDS_TOPIC_DESC2 "एप्लीकेशन इग्ज़िट करने के लिए क्लिक करें।"
+END

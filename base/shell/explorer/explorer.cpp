@@ -24,6 +24,7 @@
 HINSTANCE hExplorerInstance;
 HANDLE hProcessHeap;
 HKEY hkExplorer = NULL;
+BOOL bExplorerIsShell = FALSE;
 
 class CExplorerModule : public CComModule
 {
@@ -33,8 +34,8 @@ public:
 BEGIN_OBJECT_MAP(ObjectMap)
 END_OBJECT_MAP()
 
-CExplorerModule                             gModule;
-CAtlWinModule                               gWinModule;
+CExplorerModule gModule;
+CAtlWinModule   gWinModule;
 
 static VOID InitializeAtlModule(HINSTANCE hInstance, BOOL bInitialize)
 {
@@ -132,10 +133,6 @@ StartWithDesktop(IN HINSTANCE hInstance)
     InitCommonControls();
     OleInitialize(NULL);
 
-#if !WIN7_DEBUG_MODE
-    ProcessStartupItems();
-#endif
-
 #if !WIN7_COMPAT_MODE
     /* Initialize shell dde support */
     _ShellDDEInit(TRUE);
@@ -164,6 +161,12 @@ StartWithDesktop(IN HINSTANCE hInstance)
     /* WinXP: Notify msgina to hide the welcome screen */
     if (!SetShellReadyEvent(L"msgina: ShellReadyEvent"))
         SetShellReadyEvent(L"Global\\msgina: ShellReadyEvent");
+
+    if (DoStartStartupItems(Tray))
+    {
+        ProcessStartupItems();
+        DoFinishStartupItems();
+    }
 #endif
 
     if (Tray != NULL)
@@ -203,18 +206,18 @@ _tWinMain(IN HINSTANCE hInstance,
 
     InitRSHELL();
 
+    TRACE("Explorer starting... Command line: %S\n", lpCmdLine);
+
 #if !WIN7_COMPAT_MODE
-    BOOL CreateShellDesktop = FALSE;
-
-    TRACE("Explorer starting... Commandline: %S\n", lpCmdLine);
-
     if (GetShellWindow() == NULL)
-        CreateShellDesktop = TRUE;
+        bExplorerIsShell = TRUE;
 
-    if (!CreateShellDesktop)
+    if (!bExplorerIsShell)
     {
         return StartWithCommandLine(hInstance);
     }
+#else
+    bExplorerIsShell = TRUE;
 #endif
 
     return StartWithDesktop(hInstance);

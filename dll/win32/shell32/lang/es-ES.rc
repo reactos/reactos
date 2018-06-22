@@ -427,10 +427,10 @@ BEGIN
     GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10
-    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 190, 10
     AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 190, 10
-    PUSHBUTTON "&Restaurar valores predeterminados", 14011, 146, 180, 140, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 190, 10
+    PUSHBUTTON "&Restaurar valores predeterminados", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 294, 240
