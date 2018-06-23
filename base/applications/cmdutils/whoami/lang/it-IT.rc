@@ -36,22 +36,21 @@ BEGIN
     IDS_UNKNOWN_DESCRIPTION "???"
     IDS_STATE_ENABLED "Abilitato"
     IDS_STATE_DISABLED "Disabilitato"
-    IDS_ERROR_UPN "ERRORE: Impossibile trovare il nome dell'utente principale (UPN) perchè l'utente attualmente registrato\nnon è un dominio utente.\n"
-    IDS_ERROR_FQDN "ERRORE: Impossibile trovare il nome distinto pienamente qualificato (FQDN) perchè l'utente\nattualmente registrato non è un dominio utente.\n"
-    IDS_ERROR_VALUEXPECTED "ERRORE: Sintassi non valida. È previsto un valore per '/fo'.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
-    IDS_ERROR_VALUENOTALLOWED "ERRORE: Sintassi non valida. '%s' valore non autorizzato per l'opzione '/fo'.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
-    IDS_ERROR_1TIMES "ERRORE: Sintassi non valida. L'uso dell'opzione '%s' non è autorizzato più\n di una volta.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
-    IDS_ERROR_INVALIDSYNTAX "ERRORE: Sintassi non valida.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
-    IDS_ERROR_INVALIDARG "ERRORE: Argomento o opzione non valida - '%s'.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
-    IDS_ERROR_NH_LIST "ERRORE: L'opzione /NH non può essere usata in formato LIST.\nInserisci ""WHOAMI /?"" per vedere le informazioni dell'uso.\n"
+    IDS_ERROR_UPN "ERRORE: Impossibile trovare l'User Principal Name (UPN) perchè l'utente attualmente registrato\nnon è un dominio utente.\n"
+    IDS_ERROR_FQDN "ERRORE: Impossibile trovare un Fully Qualified Domain Name (FQDN) perchè l'utente\nattualmente registrato non è un dominio utente.\n"
+    IDS_ERROR_VALUEXPECTED "ERRORE: Sintassi non valida. È previsto un valore per '/fo'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_VALUENOTALLOWED "ERRORE: Sintassi non valida. Valore '%s' non autorizzato per l'opzione '/fo'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_1TIMES "ERRORE: Sintassi non valida. L'uso dell'opzione '%s' non è autorizzato più\n di una volta.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_INVALIDSYNTAX "ERRORE: Sintassi non valida.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_INVALIDARG "ERRORE: Argomento o opzione non valida - '%s'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_NH_LIST "ERRORE: L'opzione /NH non può essere usata in formato LIST.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
     IDS_HELP "DESCRIPTION:\n\
-  Mostra le informazioni dell'utente, del gruppo e dei privilegi per un\n\
-  utente registrato localmente. Se non ci sono argomenti forniti, sarà\n\
-  mostrata il nome e il dominio dell'utente corrente.\n\
+  Mostra le informazioni di utente, gruppo e privilegi relativi ad\n\
+  un account locale. Se non vengono forniti argomenti, sarà\n\
+  mostrato nome e dominio dell'account attuale.\n\
 \n\
-  Formati disponibili per l'opzione '/fo' sono 'csv', 'list' e 'table'.\n\
-  Usa '/nh' per nascondere le intestazioni. La data è visualizzata in una tabella come\n\
-  per impostazione predefinita.\n\
+  I formati disponibili per l'opzione '/fo' sono 'csv', 'list' e 'table'.\n\
+  Usa '/nh' per nascondere le intestazioni. La data è visualizzata in una tabella.\n\
 \n\
 SINTASSI:\n\
   whoami [/upn | /fqdn | /logonid] \n\
