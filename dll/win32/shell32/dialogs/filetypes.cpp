@@ -1704,8 +1704,10 @@ FolderOptionsFileTypesDlg(
                     pEntry = FileTypesDlg_GetEntry(GetDlgItem(hwndDlg, IDC_FILETYPES_LISTVIEW));
                     if (pEntry)
                     {
+                        ZeroMemory(&Info, sizeof(Info));
                         Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
-                        Info.pcszClass = pEntry->FileExtension;
+                        Info.pcszFile = pEntry->FileExtension;
+                        Info.pcszClass = NULL;
                         SHOpenWithDialog(hwndDlg, &Info);
                     }
                     break;
