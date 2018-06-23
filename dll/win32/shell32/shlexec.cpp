@@ -2311,9 +2311,10 @@ OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
 EXTERN_C void WINAPI
 OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
 {
-    WCHAR szCmdLineW[MAX_PATH];
+    LPWSTR pszCmdLineW = NULL;
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
 
-    MultiByteToWideChar(CP_ACP, 0, cmdline, -1, szCmdLineW, _countof(szCmdLineW));
-    OpenAs_RunDLLW(hwnd, hinst, szCmdLineW, cmdshow);
+    __SHCloneStrAtoW(&pszCmdLineW, cmdline);
+    OpenAs_RunDLLW(hwnd, hinst, pszCmdLineW, cmdshow);
+    SHFree(pszCmdLineW);
 }
