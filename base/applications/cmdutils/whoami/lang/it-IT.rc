@@ -1,0 +1,64 @@
+/*
+ * PROJECT:     ReactOS Whoami
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "INFORMAZIONI DELL'UTENTE"
+    IDS_GROU_HEADER "INFORMAZIONI DEL GRUPPO"
+    IDS_PRIV_HEADER "INFORMAZIONI DEI PRIVILEGI"
+    IDS_COL_USER_NAME "Nome Utente"
+    IDS_COL_GROUP_NAME "Gruppo Utente"
+    IDS_COL_TYPE "Tipo"
+    IDS_COL_SID "SID"
+    IDS_COL_ATTRIB "Attributi"
+    IDS_COL_PRIV_NAME "Nome Privilegio"
+    IDS_COL_DESCRIPTION "Descrizione"
+    IDS_COL_STATE "Stato"
+    IDS_TP_WELL_KNOWN_GROUP "Gruppo conosciuto"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Etichetta"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Gruppo obbligatorio, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Abilitato per impostazione predefinita, "
+    IDS_ATTR_GROUP_ENABLED "Gruppo abilitato, "
+    IDS_ATTR_GROUP_OWNER "Gruppo proprietario, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Abilitato"
+    IDS_STATE_DISABLED "Disabilitato"
+    IDS_ERROR_UPN "ERRORE: Impossibile trovare l'User Principal Name (UPN) perchè l'utente attualmente registrato\nnon è un dominio utente.\n"
+    IDS_ERROR_FQDN "ERRORE: Impossibile trovare un Fully Qualified Domain Name (FQDN) perchè l'utente\nattualmente registrato non è un dominio utente.\n"
+    IDS_ERROR_VALUEXPECTED "ERRORE: Sintassi non valida. È previsto un valore per '/fo'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_VALUENOTALLOWED "ERRORE: Sintassi non valida. Valore '%s' non autorizzato per l'opzione '/fo'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_1TIMES "ERRORE: Sintassi non valida. L'uso dell'opzione '%s' non è autorizzato più\n di una volta.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_INVALIDSYNTAX "ERRORE: Sintassi non valida.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_INVALIDARG "ERRORE: Argomento o opzione non valida - '%s'.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_ERROR_NH_LIST "ERRORE: L'opzione /NH non può essere usata in formato LIST.\nInserisci ""WHOAMI /?"" per leggere le informazioni sull'uso.\n"
+    IDS_HELP "DESCRIPTION:\n\
+  Mostra le informazioni di utente, gruppo e privilegi relativi ad\n\
+  un account locale. Se non vengono forniti argomenti, sarà\n\
+  mostrato nome e dominio dell'account attuale.\n\
+\n\
+  I formati disponibili per l'opzione '/fo' sono 'csv', 'list' e 'table'.\n\
+  Usa '/nh' per nascondere le intestazioni. La data è visualizzata in una tabella.\n\
+\n\
+SINTASSI:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
+\n\
+ESEMPI: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END
