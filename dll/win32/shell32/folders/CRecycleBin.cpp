@@ -870,7 +870,7 @@ HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pd
 
 /**
  * Tests whether a file can be trashed
- * @param wszPath Path to the file to trash
+ * @param wszPath Path to the file to be trash
  * @returns TRUE if the file can be trashed, FALSE otherwise
  */
 BOOL
@@ -889,14 +889,14 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    // Create a Wide character buffer and copy the given path
+    // Create a wide character buffer and copy the given path
     WCHAR wszRootPathName[MAX_PATH];
     strcpyW(wszRootPathName, wszPath); // warning: possible buffer overflow
     
     // Get just the root path
     PathStripToRootW(wszRootPathName);
 
-    // Test to see if the file is not fixed (non removable)
+    // Test to see if the drive is fixed (non removable)
     if (GetDriveTypeW(wszRootPathName) != DRIVE_FIXED)
     {
         /* no bitbucket on removable media */
