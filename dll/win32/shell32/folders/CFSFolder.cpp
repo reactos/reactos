@@ -161,7 +161,7 @@ getShellClassInfo(LPCWSTR Entry, LPWSTR pszValue, DWORD cchValueLen, LPCWSTR Ini
 }
 
 static HRESULT
-getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
+getIconLocationForFolder(IShellFolder * psf, PCITEMID_CHILD pidl, UINT uFlags,
                          LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     DWORD dwFileAttrs;
@@ -178,14 +178,15 @@ getIconLocationForFolder(IShellFolder * psf, LPCITEMIDLIST pidl, UINT uFlags,
         goto Quit;
 
     // get path
-    SHGetPathFromIDListW(pidl, wszPath);
+    if (!ILGetDisplayNameExW(psf, pidl, wszPath, 0))
+        goto Quit;
     if (!PathIsDirectoryW(wszPath))
-       goto Quit;
+        goto Quit;
 
     // read-only or system folder?
-    dwFileAttrs = GetFileAttributes(wszPath);
+    dwFileAttrs = _ILGetFileAttributes(ILFindLastID(pidl), NULL, 0);
     if ((dwFileAttrs & (FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY)) == 0)
-       goto Quit;
+        goto Quit;
 
     // build the full path of ini file
     StringCchCopyW(wszIniFullPath, _countof(wszIniFullPath), wszPath);
