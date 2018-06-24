@@ -889,9 +889,11 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    // Create a wide character buffer and copy the given path
+    // Create a wide character buffer for our path copy
     WCHAR wszRootPathName[MAX_PATH];
-    strcpyW(wszRootPathName, wszPath); // warning: possible buffer overflow
+
+    // Copy the path given so we can modify it (copies at most MAX_PATH)
+    StringCbCopy(wszRootPathName, MAX_PATH, wszPath);
     
     // Get just the root path
     PathStripToRootW(wszRootPathName);
