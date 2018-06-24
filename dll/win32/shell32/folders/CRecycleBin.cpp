@@ -889,13 +889,9 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    // Create a wide character buffer for our path copy
+    // Copy and retrieve the root path from get given string
     WCHAR wszRootPathName[MAX_PATH];
-
-    // Copy the path given so we can modify it (copies at most MAX_PATH)
-    StringCbCopy(wszRootPathName, MAX_PATH, wszPath);
-    
-    // Get just the root path
+    StringCbCopy(wszRootPathName, sizeof(wszRootPathName), wszPath);
     PathStripToRootW(wszRootPathName);
 
     // Test to see if the drive is fixed (non removable)
@@ -907,7 +903,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
 
     if (!GetVolumeInformationW(wszRootPathName, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
     {
-        ERR("GetVolumeInformationW failed with %u wszRootPathName[%s]\n", GetLastError(), debugstr_w(wszRootPathName));
+        ERR("GetVolumeInformationW failed with %u wszRootPathName=%s\n", GetLastError(), debugstr_w(wszRootPathName));
         return FALSE;
     }
 
