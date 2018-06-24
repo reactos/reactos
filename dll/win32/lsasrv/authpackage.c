@@ -1550,6 +1550,7 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
 
     if (TokenInformationType == LsaTokenInformationV1)
     {
+        TOKEN_PRIVILEGES NoPrivilege = {0};
         TokenInfo1 = (PLSA_TOKEN_INFORMATION_V1)TokenInformation;
 
         Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
@@ -1573,7 +1574,8 @@ LsapLogonUser(PLSA_API_MSG RequestMsg,
                                &TokenInfo1->ExpirationTime,
                                &TokenInfo1->User,
                                TokenInfo1->Groups,
-                               TokenInfo1->Privileges,
+                               TokenInfo1->Privileges ? TokenInfo1->Privileges
+                                                      : &NoPrivilege,
                                &TokenInfo1->Owner,
                                &TokenInfo1->PrimaryGroup,
                                &TokenInfo1->DefaultDacl,
