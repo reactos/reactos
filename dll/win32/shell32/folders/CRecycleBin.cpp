@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2006 Mikolaj Zalewski
  * Copyright (C) 2009 Andrew Hill
+ * Copyright (C) 2018 Russell Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -867,6 +868,11 @@ HRESULT WINAPI CRecycleBin::Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pd
     return S_OK;
 }
 
+/**
+ * Tests whether a file can be trashed
+ * @param wszPath Path to the file to trash
+ * @returns TRUE if the file can be trashed, FALSE otherwise
+ */
 BOOL
 TRASH_CanTrashFile(LPCWSTR wszPath)
 {
@@ -883,12 +889,14 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
         return FALSE;
     }
 
-    // Only keep the base path.
+    // Create a Wide character buffer and copy the given path
     WCHAR wszRootPathName[MAX_PATH];
-    strcpyW(wszRootPathName, wszPath);
-    PathRemoveFileSpecW(wszRootPathName);
-    PathAddBackslashW(wszRootPathName);
+    strcpyW(wszRootPathName, wszPath); // warning: possible buffer overflow
+    
+    // Get just the root path
+    PathStripToRootW(wszRootPathName);
 
+    // Test to see if the file is not fixed (non removable)
     if (GetDriveTypeW(wszRootPathName) != DRIVE_FIXED)
     {
         /* no bitbucket on removable media */
@@ -897,7 +905,7 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
 
     if (!GetVolumeInformationW(wszRootPathName, NULL, 0, &VolSerialNumber, &MaxComponentLength, &FileSystemFlags, NULL, 0))
     {
-        ERR("GetVolumeInformationW failed with %u\n", GetLastError());
+        ERR("GetVolumeInformationW failed with %u wszRootPathName[%s]\n", GetLastError(), debugstr_w(wszRootPathName));
         return FALSE;
     }
 
