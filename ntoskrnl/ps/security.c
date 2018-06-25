@@ -691,11 +691,13 @@ NTAPI
 PsReferenceEffectiveToken(IN PETHREAD Thread,
                           OUT IN PTOKEN_TYPE TokenType,
                           OUT PBOOLEAN EffectiveOnly,
-                          OUT PSECURITY_IMPERSONATION_LEVEL Level)
+                          OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
     PEPROCESS Process;
     PACCESS_TOKEN Token = NULL;
+
     PAGED_CODE();
+
     PSTRACE(PS_SECURITY_DEBUG,
             "Thread: %p, TokenType: %p\n", Thread, TokenType);
 
@@ -716,7 +718,7 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
             /* Return data to caller */
             *TokenType = TokenImpersonation;
             *EffectiveOnly = Thread->ImpersonationInfo->EffectiveOnly;
-            *Level = Thread->ImpersonationInfo->ImpersonationLevel;
+            *ImpersonationLevel = Thread->ImpersonationInfo->ImpersonationLevel;
 
             /* Unlock the Process */
             PspUnlockProcessSecurityShared(Process);
@@ -746,6 +748,7 @@ PsReferenceEffectiveToken(IN PETHREAD Thread,
     /* Return the token */
     *TokenType = TokenPrimary;
     *EffectiveOnly = FALSE;
+    // NOTE: ImpersonationLevel is left untouched on purpose!
     return Token;
 }
 

@@ -170,9 +170,9 @@ PACCESS_TOKEN
 NTAPI
 PsReferenceEffectiveToken(
     IN PETHREAD Thread,
-    OUT PTOKEN_TYPE TokenType,
-    OUT PUCHAR b,
-    OUT PSECURITY_IMPERSONATION_LEVEL Level
+    OUT IN PTOKEN_TYPE TokenType,
+    OUT PBOOLEAN EffectiveOnly,
+    OUT PSECURITY_IMPERSONATION_LEVEL ImpersonationLevel
 );
 
 NTSTATUS
