@@ -1549,7 +1549,9 @@ SeTokenIsAdmin(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
-    return (((PTOKEN)Token)->TokenFlags & TOKEN_WRITE_RESTRICTED) != 0;
+    // NOTE: Win7+ instead really checks the list of groups in the token
+    // (since TOKEN_HAS_ADMIN_GROUP == TOKEN_WRITE_RESTRICTED ...)
+    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_ADMIN_GROUP) != 0;
 }
 
 /*
@@ -1566,6 +1568,8 @@ SeTokenIsRestricted(IN PACCESS_TOKEN Token)
 
 /*
  * @implemented
+ * @note First introduced in NT 5.1 SP2 x86 (5.1.2600.2622), absent in NT 5.2,
+ *       then finally re-introduced in Vista+.
  */
 BOOLEAN
 NTAPI
@@ -1573,7 +1577,9 @@ SeTokenIsWriteRestricted(IN PACCESS_TOKEN Token)
 {
     PAGED_CODE();
 
-    return (((PTOKEN)Token)->TokenFlags & TOKEN_HAS_RESTORE_PRIVILEGE) != 0;
+    // NOTE: NT 5.1 SP2 x86 checks the SE_BACKUP_PRIVILEGES_CHECKED flag
+    // while Vista+ checks the TOKEN_WRITE_RESTRICTED flag as one expects.
+    return (((PTOKEN)Token)->TokenFlags & SE_BACKUP_PRIVILEGES_CHECKED) != 0;
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -2552,7 +2558,7 @@ Cleanup:
  * is correct either. -Gunnar
  * This is true. EffectiveOnly overrides SQOS.EffectiveOnly. - IAI
  * NOTE for readers: http://hex.pp.ua/nt/NtDuplicateToken.php is therefore
- * wrong in that regard.
+ * wrong in that regard, while MSDN documentation is correct.
  */
 NTSTATUS NTAPI
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
