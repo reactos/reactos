@@ -150,42 +150,48 @@ static MUI_ENTRY plPLIntroPageEntries[] =
     {
         6,
         8,
-        "Instalator ReactOS wci¥¾ jest we wczesnej fazie rozwoju. Nadal nie",
-        TEXT_STYLE_NORMAL
+        "Stan rozwoju systemu ReactOS",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "obsˆuguje wszystkich funkcji, niezb©dnych dla programu instalacyjnego.",
+        11,
+        "System ReactOS jest w fazie Alpha, co oznacza, ¾e jest niekompletny",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "Najwa¾niejsze ograniczenia:",
+        "i wci¥¾ intensywnie rozwijany. Zaleca si© u¾ywania systemu wyˆ¥cznie",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "- Instalator obsˆuguje jedynie system plik¢w FAT.",
+        "w celach ewauluacji i testowania, nie jako system codziennego u¾ytku.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Wykonaj kopi© zapasow¥ danych lub testuj na dodatkowym komputerze,",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "je˜li pr¢bujesz uruchomi† system ReactOS poza maszyn¥ wirtualn¥.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "- Brakuje sprawdzenia poprawno˜ci systemu plik¢w.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        23,
+        19,
         "\x07  Naci˜nij ENTER, aby zainstalowa† system ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        25,
+        21,
         "\x07  Naci˜nij F3, aby wyj˜† bez instalacji systemu ReactOS.",
         TEXT_STYLE_NORMAL
     },
@@ -193,7 +199,7 @@ static MUI_ENTRY plPLIntroPageEntries[] =
         0,
         0,
         "ENTER = Kontynuacja   F3 = Wyj˜cie",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

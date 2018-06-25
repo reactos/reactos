@@ -670,6 +670,11 @@ FATAddEntry(
                 }
                 return STATUS_DISK_FULL;
             }
+
+            if (DeviceExt->FatInfo.FatType == FAT32)
+            {
+                FAT32UpdateFreeClustersCount(DeviceExt);
+            }
         }
         else
         {
@@ -1027,6 +1032,11 @@ FATDelEntry(
             /* FIXME: check status */
             WriteCluster(DeviceExt, CurrentCluster, 0);
             CurrentCluster = NextCluster;
+        }
+
+        if (DeviceExt->FatInfo.FatType == FAT32)
+        {
+            FAT32UpdateFreeClustersCount(DeviceExt);
         }
     }
 

@@ -62,7 +62,6 @@ if defined ROS_ARCH (
     cl 2>&1 | find "x86" > NUL && set ARCH=i386
     cl 2>&1 | find "x64" > NUL && set ARCH=amd64
     cl 2>&1 | find "ARM" > NUL && set ARCH=arm
-    cl 2>&1 | find "15.00." > NUL && set VS_VERSION=9
     cl 2>&1 | find "16.00." > NUL && set VS_VERSION=10
     cl 2>&1 | find "17.00." > NUL && set VS_VERSION=11
     cl 2>&1 | find "18.00." > NUL && set VS_VERSION=12
@@ -71,8 +70,9 @@ if defined ROS_ARCH (
     cl 2>&1 | find "19.11." > NUL && set VS_VERSION=15
     cl 2>&1 | find "19.12." > NUL && set VS_VERSION=15
     cl 2>&1 | find "19.13." > NUL && set VS_VERSION=15
+    cl 2>&1 | find "19.14." > NUL && set VS_VERSION=15
     if not defined VS_VERSION (
-        echo Error: Visual Studio version too old or version detection failed.
+        echo Error: Visual Studio version too old ^(before 10 ^(2010^)^) or version detection failed.
         goto quit
     )
     set BUILD_ENVIRONMENT=VS
@@ -138,13 +138,7 @@ REM Parse command line parameters
                 set VS_VERSION=%3
                 echo Visual Studio Environment set to !BUILD_ENVIRONMENT!!VS_VERSION!-!ARCH!
             )
-            if "!VS_VERSION!" == "9" (
-                if "!ARCH!" == "amd64" (
-                    set CMAKE_GENERATOR="Visual Studio 9 2008 Win64"
-                ) else (
-                    set CMAKE_GENERATOR="Visual Studio 9 2008"
-                )
-            ) else if "!VS_VERSION!" == "10" (
+            if "!VS_VERSION!" == "10" (
                 if "!ARCH!" == "amd64" (
                     set CMAKE_GENERATOR="Visual Studio 10 Win64"
                 ) else (

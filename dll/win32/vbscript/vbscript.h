@@ -27,6 +27,7 @@
 #include "ole2.h"
 #include "dispex.h"
 #include "activscp.h"
+#include "activdbg.h"
 
 #ifdef __REACTOS__
 #include <initguid.h>
@@ -347,6 +348,7 @@ struct _vbscode_t {
 
     BOOL pending_exec;
     function_t main_code;
+    IDispatch *context;
 
     BSTR *bstr_pool;
     unsigned bstr_pool_size;
@@ -360,6 +362,7 @@ void release_vbscode(vbscode_t*) DECLSPEC_HIDDEN;
 HRESULT compile_script(script_ctx_t*,const WCHAR*,const WCHAR*,vbscode_t**) DECLSPEC_HIDDEN;
 HRESULT exec_script(script_ctx_t*,function_t*,vbdisp_t*,DISPPARAMS*,VARIANT*) DECLSPEC_HIDDEN;
 void release_dynamic_vars(dynamic_var_t*) DECLSPEC_HIDDEN;
+IDispatch *lookup_named_item(script_ctx_t*,const WCHAR*,unsigned) DECLSPEC_HIDDEN;
 
 typedef struct {
     UINT16 len;

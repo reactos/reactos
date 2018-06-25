@@ -16,8 +16,6 @@
 #include <winreg.h>
 #include <winuser.h>
 
-#include <strsafe.h>
-
 #define NTOS_MODE_USER
 #include <ndk/cmfuncs.h>
 #include <ndk/exfuncs.h>
@@ -28,6 +26,9 @@
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/setypes.h>
+
+#include <ntstrsafe.h>
+
 
 /* Filesystem headers */
 #include <reactos/rosioctl.h>   // For extra partition IDs

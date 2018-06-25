@@ -25,26 +25,32 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
+    IUnknown            IUnknown_outer;
     IInternetProtocolEx IInternetProtocolEx_iface;
 
     LONG ref;
+    IUnknown *outer;
 
     IStream *stream;
 } MkProtocol;
+
+static inline MkProtocol *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, MkProtocol, IUnknown_outer);
+}
 
 static inline MkProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
 {
     return CONTAINING_RECORD(iface, MkProtocol, IInternetProtocolEx_iface);
 }
 
-static HRESULT WINAPI MkProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
+static HRESULT WINAPI MkProtocolUnk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
-    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    MkProtocol *This = impl_from_IUnknown(iface);
 
-    *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IInternetProtocolEx_iface;
+        *ppv = &This->IUnknown_outer;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
         *ppv = &This->IInternetProtocolEx_iface;
@@ -54,28 +60,27 @@ static HRESULT WINAPI MkProtocol_QueryInterface(IInternetProtocolEx *iface, REFI
     }else if(IsEqualGUID(&IID_IInternetProtocolEx, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolEx %p)\n", This, ppv);
         *ppv = &This->IInternetProtocolEx_iface;
+    }else {
+        *ppv = NULL;
+        WARN("not supported interface %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IInternetProtocolEx_AddRef(iface);
-        return S_OK;
-    }
-
-    WARN("not supported interface %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
-static ULONG WINAPI MkProtocol_AddRef(IInternetProtocolEx *iface)
+static ULONG WINAPI MkProtocolUnk_AddRef(IUnknown *iface)
 {
-    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    MkProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
 }
 
-static ULONG WINAPI MkProtocol_Release(IInternetProtocolEx *iface)
+static ULONG WINAPI MkProtocolUnk_Release(IUnknown *iface)
 {
-    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    MkProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -90,6 +95,33 @@ static ULONG WINAPI MkProtocol_Release(IInternetProtocolEx *iface)
     }
 
     return ref;
+}
+
+static const IUnknownVtbl MkProtocolUnkVtbl = {
+    MkProtocolUnk_QueryInterface,
+    MkProtocolUnk_AddRef,
+    MkProtocolUnk_Release
+};
+
+static HRESULT WINAPI MkProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
+{
+    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+    return IUnknown_QueryInterface(This->outer, riid, ppv);
+}
+
+static ULONG WINAPI MkProtocol_AddRef(IInternetProtocolEx *iface)
+{
+    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)\n", This);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI MkProtocol_Release(IInternetProtocolEx *iface)
+{
+    MkProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)\n", This);
+    return IUnknown_Release(This->outer);
 }
 
 static HRESULT report_result(IInternetProtocolSink *sink, HRESULT hres, DWORD dwError)
@@ -330,24 +362,25 @@ static const IInternetProtocolExVtbl MkProtocolVtbl = {
     MkProtocol_StartEx
 };
 
-HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
+HRESULT MkProtocol_Construct(IUnknown *outer, void **ppv)
 {
     MkProtocol *ret;
 
-    TRACE("(%p %p)\n", pUnkOuter, ppobj);
+    TRACE("(%p %p)\n", outer, ppv);
 
     URLMON_LockModule();
 
     ret = heap_alloc(sizeof(MkProtocol));
 
+    ret->IUnknown_outer.lpVtbl = &MkProtocolUnkVtbl;
     ret->IInternetProtocolEx_iface.lpVtbl = &MkProtocolVtbl;
     ret->ref = 1;
+    ret->outer = outer ? outer : &ret->IUnknown_outer;
     ret->stream = NULL;
 
     /* NOTE:
-     * Native returns NULL ppobj and S_OK in CreateInstance if called with IID_IUnknown riid.
+     * Native returns NULL ppobj and S_OK in CreateInstance if called with IID_IUnknown riid and no outer.
      */
-    *ppobj = &ret->IInternetProtocolEx_iface;
-
+    *ppv = &ret->IUnknown_outer;
     return S_OK;
 }

@@ -104,7 +104,7 @@ VfatGetFileNamesInformation(
     if (FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) > BufferLength)
         return Status;
 
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    if (First || (BufferLength > FIELD_OFFSET(FILE_NAMES_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
 
@@ -149,7 +149,7 @@ VfatGetFileDirectoryInformation(
     if (FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName) > BufferLength)
         return Status;
 
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    if (First || (BufferLength > FIELD_OFFSET(FILE_DIRECTORY_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
         /* pInfo->FileIndex = ; */
@@ -266,7 +266,7 @@ VfatGetFileFullDirectoryInformation(
     if (FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName) > BufferLength)
         return Status;
 
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    if (First || (BufferLength > FIELD_OFFSET(FILE_FULL_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
         /* pInfo->FileIndex = ; */
@@ -362,7 +362,7 @@ VfatGetFileBothInformation(
     if (FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName) > BufferLength)
         return Status;
 
-    if (First || (BufferLength >= FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
+    if (First || (BufferLength > FIELD_OFFSET(FILE_BOTH_DIR_INFORMATION, FileName) + DirContext->LongNameU.Length))
     {
         pInfo->FileNameLength = DirContext->LongNameU.Length;
         pInfo->EaSize = 0;

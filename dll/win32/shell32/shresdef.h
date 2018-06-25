@@ -337,9 +337,10 @@
 #define IDC_FOLDER_OPTIONS_SAMEWINDOW      14004
 #define IDC_FOLDER_OPTIONS_OWNWINDOW       14005
 #define IDC_FOLDER_OPTIONS_SINGLECLICK     14007
-#define IDC_FOLDER_OPTIONS_ULBROWSER       14008
-#define IDC_FOLDER_OPTIONS_ULPOINT         14009
-#define IDC_FOLDER_OPTIONS_DOUBLECLICK     14010
+#define IDC_FOLDER_OPTIONS_DOUBLECLICK     14008
+#define IDC_FOLDER_OPTIONS_ULBROWSER       14009
+#define IDC_FOLDER_OPTIONS_ULPOINT         14010
+#define IDC_FOLDER_OPTIONS_RESTORE         14011
 
 /* Yes to all msgbox */
 #define IDD_YESTOALL_MSGBOX  20
@@ -417,6 +418,12 @@
 #define IDC_ACTION_APP                      14002
 #define IDC_ACTION_BROWSE                   14003
 #define IDC_ACTION_USE_DDE                  14004
+
+/* Control IDs for IDD_FOLDER_OPTIONS_VIEW dialog */
+#define IDC_VIEW_APPLY_TO_ALL               14001
+#define IDC_VIEW_RESET_ALL                  14002
+#define IDC_VIEW_TREEVIEW                   14003
+#define IDC_VIEW_RESTORE_DEFAULTS           14004
 
 /* Other dialogs */
 #define IDD_RUN_AS       23

@@ -8,8 +8,8 @@
 @ stub DsBindWithSpnW
 @ stub DsClientMakeSpnForTargetServerA
 @ stdcall DsClientMakeSpnForTargetServerW(wstr wstr ptr ptr)
-@ stub DsCrackNamesA
-@ stub DsCrackNamesW
+@ stdcall DsCrackNamesA(ptr long long long long ptr ptr)
+@ stdcall DsCrackNamesW(ptr long long long long ptr ptr)
 @ stub DsCrackSpn2A
 @ stub DsCrackSpn2W
 @ stub DsCrackSpn3W

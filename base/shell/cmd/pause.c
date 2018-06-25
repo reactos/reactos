@@ -34,23 +34,24 @@
  *        Remove all hardcoded strings in En.rc
  */
 
-INT cmd_pause (LPTSTR param)
+INT cmd_pause(LPTSTR param)
 {
-    TRACE ("cmd_pause: \'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_pause: \'%s\')\n", debugstr_aw(param));
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_PAUSE_HELP1);
         return 0;
     }
 
     if (*param)
-        ConOutPrintf (param);
+        ConOutPuts(param);
     else
-        msg_pause ();
+        msg_pause();
 
-    cgetchar ();
+    cgetchar();
 
+    ConOutChar(_T('\n'));
     return 0;
 }
 

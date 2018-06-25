@@ -1229,6 +1229,10 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
 
       default:
       empty_rect:
+#ifdef __REACTOS__
+         if (bHasIml)
+             break;
+#endif
          rc->right = r.left;
          rc->bottom = r.top;
          return (UINT)-1;

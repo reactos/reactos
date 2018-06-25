@@ -947,7 +947,7 @@ static BOOL stream_out_graphics( ME_TextEditor *editor, ME_OutStream *stream,
     SIZE goal, pic;
     ME_Context c;
 
-    hr = IOleObject_QueryInterface( run->ole_obj->poleobj, &IID_IDataObject, (void **)&data );
+    hr = IOleObject_QueryInterface( run->reobj->obj.poleobj, &IID_IDataObject, (void **)&data );
     if (FAILED(hr)) return FALSE;
 
     ME_InitContext( &c, editor, ITextHost_TxGetDC( editor->texthost ) );
@@ -975,8 +975,8 @@ static BOOL stream_out_graphics( ME_TextEditor *editor, ME_OutStream *stream,
                      emf_bits->szlMillimeters.cy * c.dpi.cy * 10 );
 
     /* convert goal size to twips */
-    goal.cx = MulDiv( run->ole_obj->sizel.cx, 144, 254 );
-    goal.cy = MulDiv( run->ole_obj->sizel.cy, 144, 254 );
+    goal.cx = MulDiv( run->reobj->obj.sizel.cx, 144, 254 );
+    goal.cy = MulDiv( run->reobj->obj.sizel.cy, 144, 254 );
 
     if (!ME_StreamOutPrint( stream, "{\\*\\shppict{\\pict\\emfblip\\picw%d\\pich%d\\picwgoal%d\\pichgoal%d\n",
                             pic.cx, pic.cy, goal.cx, goal.cy ))

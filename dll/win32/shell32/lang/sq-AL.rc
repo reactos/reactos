@@ -429,10 +429,10 @@ BEGIN
     GROUPBOX "Klikoni artikuj si më poshtë", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "Klikim-njëherësh për të hapur një objekt (pikë për të zgjedhur)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Nënvizo titull ikone në përputhje me shfletuesin tim", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "Nënvizo ikonën vetëm në tituj ku unë vë pikë në ta", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
     AUTORADIOBUTTON "Kliko-dyherë për të hapur një objekt (klikoni-njëerësht për të zgjedhur)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 170, 10
-    PUSHBUTTON "&Rikthe Parazgjedhjet", 14011, 180, 180, 60, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Nënvizo titull ikone në përputhje me shfletuesin tim", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Nënvizo ikonën vetëm në tituj ku unë vë pikë në ta", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 170, 10
+    PUSHBUTTON "&Rikthe Parazgjedhjet", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -443,11 +443,11 @@ BEGIN
     GROUPBOX "Vëzhgo Dosjen", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Ju mund të aplikoni pamje (të tilla si Detaje ose Pllaka) që\nJu jeni duke përdorur për këtë dosje të gjitha dosjet.", -1, 60, 20, 180, 20
-    PUSHBUTTON "Apliko për të gjitha Dosjet", 14001, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Rivë të gjitha Dosjet", 14002, 150, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "Apliko për të gjitha Dosjet", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Rivë të gjitha Dosjet", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Cilësime të Avancuar:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "Kthej &Parazgjedhje", 14004, 177, 215, 80, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "Kthej &Parazgjedhje", IDC_VIEW_RESTORE_DEFAULTS, 177, 215, 80, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256

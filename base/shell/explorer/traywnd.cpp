@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
+ * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * this library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -365,7 +366,13 @@ public:
 
         m_RunFileDlgOwner = hwnd;
 
-        RunFileDlg(hwnd, NULL, NULL, NULL, NULL, RFF_CALCDIRECTORY);
+        // build the default directory from two environment variables
+        CStringW strDefaultDir, strHomePath;
+        strDefaultDir.GetEnvironmentVariable(L"HOMEDRIVE");
+        strHomePath.GetEnvironmentVariable(L"HOMEPATH");
+        strDefaultDir += strHomePath;
+
+        RunFileDlg(hwnd, NULL, (LPCWSTR)strDefaultDir, NULL, NULL, RFF_CALCDIRECTORY);
 
         m_RunFileDlgOwner = NULL;
         ::DestroyWindow(hwnd);

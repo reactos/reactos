@@ -32,6 +32,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define FO_MASK         0xF
 
+#define NEW_FILENAME_ON_COPY_TRIES 100
+
 static const WCHAR wWildcardFile[] = {'*',0};
 static const WCHAR wWildcardChars[] = {'*','?',0};
 
@@ -1219,6 +1221,34 @@ static void destroy_file_list(FILE_LIST *flList)
     HeapFree(GetProcessHeap(), 0, flList->feFiles);
 }
 
+static CStringW try_find_new_name(LPCWSTR szDestPath)
+{
+    CStringW mask(szDestPath);
+    CStringW ext(PathFindExtensionW(szDestPath));
+
+    // cut off extension before inserting a "new file" mask
+    if (!ext.IsEmpty())
+    {
+        mask = mask.Left(mask.GetLength() - ext.GetLength());
+    }
+    mask += L" (%d)" + ext;
+
+    CStringW newName;
+
+    // trying to find new file name
+    for (int i = 1; i < NEW_FILENAME_ON_COPY_TRIES; i++)
+    {
+        newName.Format(mask, i);
+
+        if (!PathFileExistsW(newName))
+        {
+            return newName;
+        }
+    }
+
+    return CStringW();
+}
+
 static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWSTR szDestPath)
 {
     WCHAR szFrom[MAX_PATH], szTo[MAX_PATH];
@@ -1236,12 +1266,20 @@ static void copy_dir_to_dir(FILE_OPERATION *op, const FILE_ENTRY *feFrom, LPCWST
 
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
-        if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
+        CStringW newPath;
+        if (lstrcmp(feFrom->szDirectory, szDestPath) == 0 && !(newPath = try_find_new_name(szTo)).IsEmpty())
         {
-            /* Vista returns an ERROR_CANCELLED even if user pressed "No" */
-            if (!op->bManyItems)
-                op->bCancelled = TRUE;
-            return;
+            StringCchCopyW(szTo, _countof(szTo), newPath);
+        }
+        else
+        {
+            if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FOLDER, feFrom->szFilename, op))
+            {
+                /* Vista returns an ERROR_CANCELLED even if user pressed "No" */
+                if (!op->bManyItems)
+                    op->bCancelled = TRUE;
+                return;
+            }
         }
     }
 
@@ -1266,6 +1304,12 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, const WCHAR *szFrom, const WCH
 {
     if (!(op->req->fFlags & FOF_NOCONFIRMATION) && PathFileExistsW(szTo))
     {
+        CStringW newPath;
+        if (lstrcmp(szFrom, szTo) == 0 && !(newPath = try_find_new_name(szTo)).IsEmpty())
+        {
+            return SHNotifyCopyFileW(op, szFrom, newPath, FALSE) == 0;
+        }
+
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
             return FALSE;
     }

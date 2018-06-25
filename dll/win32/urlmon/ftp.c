@@ -28,12 +28,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
+    IUnknown            IUnknown_outer;
     IInternetProtocolEx IInternetProtocolEx_iface;
     IInternetPriority   IInternetPriority_iface;
     IWinInetHttpInfo    IWinInetHttpInfo_iface;
 
     LONG ref;
+    IUnknown *outer;
 } FtpProtocol;
+
+static inline FtpProtocol *impl_from_IUnknown(IUnknown *iface)
+{
+    return CONTAINING_RECORD(iface, FtpProtocol, IUnknown_outer);
+}
 
 static inline FtpProtocol *impl_from_IInternetProtocolEx(IInternetProtocolEx *iface)
 {
@@ -115,14 +122,13 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     FtpProtocol_on_error
 };
 
-static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
+static HRESULT WINAPI FtpProtocolUnk_QueryInterface(IUnknown *iface, REFIID riid, void **ppv)
 {
-    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    FtpProtocol *This = impl_from_IUnknown(iface);
 
-    *ppv = NULL;
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
-        *ppv = &This->IInternetProtocolEx_iface;
+        *ppv = &This->IUnknown_outer;
     }else if(IsEqualGUID(&IID_IInternetProtocolRoot, riid)) {
         TRACE("(%p)->(IID_IInternetProtocolRoot %p)\n", This, ppv);
         *ppv = &This->IInternetProtocolEx_iface;
@@ -141,28 +147,27 @@ static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REF
     }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
         TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
         *ppv = &This->IWinInetHttpInfo_iface;
+    }else {
+        *ppv = NULL;
+        WARN("not supported interface %s\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
     }
 
-    if(*ppv) {
-        IInternetProtocolEx_AddRef(iface);
-        return S_OK;
-    }
-
-    WARN("not supported interface %s\n", debugstr_guid(riid));
-    return E_NOINTERFACE;
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
 }
 
-static ULONG WINAPI FtpProtocol_AddRef(IInternetProtocolEx *iface)
+static ULONG WINAPI FtpProtocolUnk_AddRef(IUnknown *iface)
 {
-    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    FtpProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedIncrement(&This->ref);
     TRACE("(%p) ref=%d\n", This, ref);
     return ref;
 }
 
-static ULONG WINAPI FtpProtocol_Release(IInternetProtocolEx *iface)
+static ULONG WINAPI FtpProtocolUnk_Release(IUnknown *iface)
 {
-    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    FtpProtocol *This = impl_from_IUnknown(iface);
     LONG ref = InterlockedDecrement(&This->ref);
 
     TRACE("(%p) ref=%d\n", This, ref);
@@ -175,6 +180,33 @@ static ULONG WINAPI FtpProtocol_Release(IInternetProtocolEx *iface)
     }
 
     return ref;
+}
+
+static const IUnknownVtbl FtpProtocolUnkVtbl = {
+    FtpProtocolUnk_QueryInterface,
+    FtpProtocolUnk_AddRef,
+    FtpProtocolUnk_Release
+};
+
+static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocolEx *iface, REFIID riid, void **ppv)
+{
+    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+    return IUnknown_QueryInterface(This->outer, riid, ppv);
+}
+
+static ULONG WINAPI FtpProtocol_AddRef(IInternetProtocolEx *iface)
+{
+    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)\n", This);
+    return IUnknown_AddRef(This->outer);
+}
+
+static ULONG WINAPI FtpProtocol_Release(IInternetProtocolEx *iface)
+{
+    FtpProtocol *This = impl_from_IInternetProtocolEx(iface);
+    TRACE("(%p)\n", This);
+    return IUnknown_Release(This->outer);
 }
 
 static HRESULT WINAPI FtpProtocol_Start(IInternetProtocolEx *iface, LPCWSTR szUrl,
@@ -416,23 +448,24 @@ static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
     HttpInfo_QueryInfo
 };
 
-HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
+HRESULT FtpProtocol_Construct(IUnknown *outer, void **ppv)
 {
     FtpProtocol *ret;
 
-    TRACE("(%p %p)\n", pUnkOuter, ppobj);
+    TRACE("(%p %p)\n", outer, ppv);
 
     URLMON_LockModule();
 
     ret = heap_alloc_zero(sizeof(FtpProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
+    ret->IUnknown_outer.lpVtbl            = &FtpProtocolUnkVtbl;
     ret->IInternetProtocolEx_iface.lpVtbl = &FtpProtocolVtbl;
     ret->IInternetPriority_iface.lpVtbl   = &FtpPriorityVtbl;
     ret->IWinInetHttpInfo_iface.lpVtbl    = &WinInetHttpInfoVtbl;
     ret->ref = 1;
+    ret->outer = outer ? outer : &ret->IUnknown_outer;
 
-    *ppobj = &ret->IInternetProtocolEx_iface;
-
+    *ppv = &ret->IUnknown_outer;
     return S_OK;
 }

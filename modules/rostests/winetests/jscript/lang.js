@@ -48,6 +48,9 @@ tmp = 07777777777777777777777;
 ok(typeof(tmp) === "number" && tmp > 0xffffffff, "tmp = " + tmp);
 tmp = 07777777779777777777777;
 ok(typeof(tmp) === "number" && tmp > 0xffffffff, "tmp = " + tmp);
+ok(0xffffffff === 4294967295, "0xffffffff = " + 0xffffffff);
+tmp = 0x10000000000000000000000000000000000000000000000000000000000000000;
+ok(tmp === Math.pow(2, 256), "0x1000...00 != 2^256");
 
 ok(1 !== 2, "1 !== 2 is false");
 ok(null !== undefined, "null !== undefined is false");
@@ -631,6 +634,12 @@ ok(tmp === 0, "0 | NaN = " + tmp);
 tmp = 10;
 ok((tmp |= 0x10) === 26, "tmp(10) |= 0x10 !== 26");
 ok(getVT(tmp) === "VT_I4", "getVT(tmp |= 10) = " + getVT(tmp));
+
+tmp = (123 * Math.pow(2,32) + 2) | 0;
+ok(tmp === 2, "123*2^32+2 | 0 = " + tmp);
+
+tmp = (-123 * Math.pow(2,32) + 2) | 0;
+ok(tmp === 2, "123*2^32+2 | 0 = " + tmp);
 
 tmp = 3 & 5;
 ok(tmp === 1, "3 & 5 !== 1");

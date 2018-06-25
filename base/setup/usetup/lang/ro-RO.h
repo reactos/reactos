@@ -147,74 +147,62 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         4,
         3,
-        " Instalare ReactOS " KERNEL_VERSION_STR " ",
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "Programul curent de instalare este încã într-un stadiu primar",
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
+    },
+    {
+        6,
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
-        9,
-        "de dezvoltare ºi nu conþine toate funcþionalitãþile unui",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        10,
-        "program de instalare complet.",
+        12,
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "Sunt aplicabile urmãtoarele limitãri:",
+        "evaluation and testing purposes and not as your daily-usage OS.",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
-        14,
-        "- Programul curent de instalare poate opera doar cu sisteme",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
+        6,
         15,
-        "  de fiºiere FAT.",
+        "Backup your data or test on a secondary computer if you attempt",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         16,
-        "- Verificãrile de integritate pentru fiºiere nu sunt",
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        17,
-        "  încã implementate.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        26,
-        "\x07  Apãsaþi ENTER pentru a instala ReactOS.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        28,
-        "\x07  Apãsaþi F3 pentru a ieºi fãrã a instala ReactOS.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continuare   F3 = Ieºire",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,

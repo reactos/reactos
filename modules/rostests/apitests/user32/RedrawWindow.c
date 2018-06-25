@@ -83,4 +83,5 @@ START_TEST(RedrawWindow)
     TRACE_CACHE();
 
     DeleteObject(hRgn);
+    DestroyWindow(hWnd);
 }

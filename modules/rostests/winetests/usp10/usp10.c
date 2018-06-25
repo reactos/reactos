@@ -31,10 +31,6 @@
 #include <windows.h>
 #include <usp10.h>
 
-#ifndef ARRAY_SIZE
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-#endif
-
 typedef struct _itemTest {
     char todo_flag[6];
     int iCharPos;

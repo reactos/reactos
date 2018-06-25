@@ -539,6 +539,7 @@ VfatWriteFileData(
             Status = IrpContext->Irp->IoStatus.Status;
         }
     }
+
     return Status;
 }
 

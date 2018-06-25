@@ -1,4 +1,4 @@
-/* Russian language resource file by Kudratov Olimjon (olim98@bk.ru) */
+/* Translators: Kudratov Olimjon (olim98@bk.ru), Abdulganiev Rafael (abdulganiev.rafael[at]gmail.com) */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -81,11 +81,11 @@ IDM_DRAGFILE MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Copy here", IDM_COPYHERE
-        MENUITEM "&Move here", IDM_MOVEHERE
-        MENUITEM "Create &shortcuts here", IDM_LINKHERE
+        MENUITEM "&Копировать сюда", IDM_COPYHERE
+        MENUITEM "&Переместить сюда", IDM_MOVEHERE
+        MENUITEM "Создать &ярлыки здесь", IDM_LINKHERE
         MENUITEM SEPARATOR
-        MENUITEM "Cancel", 0
+        MENUITEM "Отмена", 0
     END
 END
 
@@ -427,10 +427,10 @@ BEGIN
     GROUPBOX "Щелчки мышью", -1, 7, 110, 249, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "От&крывать одним щелчком, выделять указателем", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 185, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Подчеркив&ать подписи значков", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10
-    AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 175, 10
     AUTORADIOBUTTON "Откр&ывать двойным, а выделять одним щелчком", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 180, 10
-    PUSHBUTTON "&Восстановить умолчания", 14011, 145, 180, 95, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Подчеркив&ать подписи значков", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Подчеркивать подписи з&начков при наведении", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 175, 10
+    PUSHBUTTON "&Восстановить умолчания", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 264, 256
@@ -441,11 +441,11 @@ BEGIN
     GROUPBOX "Представление папок", -1, 7, 10, 249, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Можно применить вид, выбранный для этой папки, например, ""Таблица"" или ""Плитка"", ко всем папкам.", -1, 60, 20, 180, 20
-    PUSHBUTTON "&Применить к папкам", 14001, 60, 50, 80, 14, WS_TABSTOP
-    PUSHBUTTON "&Сброс вида папок", 14002, 150, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Применить к папкам", IDC_VIEW_APPLY_TO_ALL, 60, 50, 80, 14, WS_TABSTOP
+    PUSHBUTTON "&Сброс вида папок", IDC_VIEW_RESET_ALL, 150, 50, 80, 14, WS_TABSTOP
     LTEXT "Дополнительные параметры:", -1, 7, 80, 105, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "&Восстановить умолчания", 14004, 160, 210, 100, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "&Восстановить умолчания", IDC_VIEW_RESTORE_DEFAULTS, 160, 210, 100, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 264, 256
@@ -644,53 +644,53 @@ BEGIN
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "Create New Extension"
+CAPTION "Создание нового расширения"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&File Extension:", -1, 10, 10, 85, 14
+    LTEXT "&Расширение файла:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< Ad&vanced", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
-    LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
+    PUSHBUTTON "<< До&полнительно", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    LTEXT "&Зарегистрированные типы файлов:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 190, 55, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 190, 55, 60, 14
 END
 
 IDD_EDITTYPE DIALOG 0, 0, 225, 190
-CAPTION "Edit File Type"
+CAPTION "Изменение типа файла"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_EDITTYPE_ICON, 5, 8, 20, 20
     EDITTEXT IDC_EDITTYPE_TEXT, 30, 10, 115, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Change &Icon...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
-    LTEXT "&Actions:", -1, 5, 37, 70, 10
+    PUSHBUTTON "Изменить зна&чок...", IDC_EDITTYPE_CHANGE_ICON, 150, 10, 70, 14
+    LTEXT "&Действия:", -1, 5, 37, 70, 10
     LISTBOX IDC_EDITTYPE_LISTBOX, 5, 50, 140, 60, LBS_NOINTEGRALHEIGHT | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED | LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "&New...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
-    PUSHBUTTON "&Edit...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
-    PUSHBUTTON "&Remove", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
-    PUSHBUTTON "&Set Default", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
-    AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "Al&ways show extension", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
-    AUTOCHECKBOX "&Browse in same window", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
+    PUSHBUTTON "&Создать...", IDC_EDITTYPE_NEW, 150, 50, 70, 14
+    PUSHBUTTON "&Изменить...", IDC_EDITTYPE_EDIT_BUTTON, 150, 65, 70, 14
+    PUSHBUTTON "&Удалить", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
+    PUSHBUTTON "По у&молчанию", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
+    AUTOCHECKBOX "Подтверждать открытие после &загрузки", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
+    AUTOCHECKBOX "&Всегда отображать расширение", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 14
+    AUTOCHECKBOX "Просматривать в том &же окне", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "OK", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
-CAPTION "New Action"
+CAPTION "Новое действие"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Action:", -1, 5, 7, 150, 10
+    LTEXT "&Действие:", -1, 5, 7, 150, 10
     EDITTEXT IDC_ACTION_ACTION, 5, 20, 150, 14, ES_AUTOHSCROLL
-    LTEXT "App&lication used to perform action:", -1, 5, 42, 150, 10
+    LTEXT "&Приложение, исполняющее действие:", -1, 5, 42, 150, 10
     EDITTEXT IDC_ACTION_APP, 5, 55, 150, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "B&rowse...", IDC_ACTION_BROWSE, 160, 60, 60, 14
-    AUTOCHECKBOX "&Use DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
+    PUSHBUTTON "&Обзор...", IDC_ACTION_BROWSE, 160, 60, 60, 14
+    AUTOCHECKBOX "&Использовать DDE", IDC_ACTION_USE_DDE, 10, 75, 103, 14
     DEFPUSHBUTTON "OK", IDOK, 160, 20, 60, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 160, 40, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 160, 40, 60, 14
 END
 
 STRINGTABLE
@@ -931,20 +931,20 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "Отображать сжатые или зашифрованные файлы NTFS другим цветом"
     IDS_ADVANCED_SHOW_INFO_TIP "Отображать описание для папок и элементов рабочего стола"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< Ad&vanced"
-    IDS_NEWEXT_ADVANCED_RIGHT "Ad&vanced >>"
-    IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "You must specify an extension."
-    IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "Extension is in use"
+    IDS_NEWEXT_ADVANCED_LEFT "<< До&полнительно"
+    IDS_NEWEXT_ADVANCED_RIGHT "До&полнительно >>"
+    IDS_NEWEXT_NEW "<Новый>"
+    IDS_NEWEXT_SPECIFY_EXT "Необходимо задать расширение."
+    IDS_NEWEXT_ALREADY_ASSOC "Расширение '%s' уже сопоставлено файлам типа '%s'. Удалить сопоставление '%s' с '%s' и создать для него новый тип файла?"
+    IDS_NEWEXT_EXT_IN_USE "Расширение уже используется"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
-    IDS_SPECIFY_ACTION "You must specify an action."
-    IDS_INVALID_PROGRAM "The specified program could not be found. Make sure the file name and path are correct."
-    IDS_REMOVE_ACTION "Are you sure you want to remove this action?"
-    IDS_ACTION_EXISTS "The action '%s' is already registered for this file type. Please enter a different name and try again."
+    IDS_REMOVE_EXT "Если вы удалите регистрацию расширения имени файлов, то вы не сможете открывать соответствующие файлы двойным щелчком.\n\nВы действительно хотите удалить это расширение?"
+    IDS_SPECIFY_ACTION "Необходимо задать действие."
+    IDS_INVALID_PROGRAM "Указанная программа не найдена. Убедитесь, что имя и путь к файлу указаны правильно."
+    IDS_REMOVE_ACTION "Вы действительно хотите удалить это действие?"
+    IDS_ACTION_EXISTS "Действие '%s' уже зарегистрирован для этого типа файла. Введите другое имя и повторите попытку."
     IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
-    IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_EDITING_ACTION "Изменение действия для типа: "
+    IDS_NO_ICONS "Файл '%s' не содержит значков.\n\nВыберите значок из списка или укажите другой файл."
+    IDS_FILE_NOT_FOUND "Файл '%s' не найден."
 END

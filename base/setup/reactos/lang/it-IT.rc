@@ -111,7 +111,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TYPETITLE "Benvenuti alla installazione di ReactOS"
+    IDS_TYPETITLE "Benvenuti nell'installazione di ReactOS"
     IDS_TYPESUBTITLE "Scegliere il tipo di installazione."
     IDS_DEVICETITLE "Impostazione dei dispositivi di base"
     IDS_DEVICESUBTITLE "Impostazione di monitor e tastiera."

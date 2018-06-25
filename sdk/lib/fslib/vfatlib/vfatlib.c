@@ -428,6 +428,14 @@ VfatChkdsk(IN PUNICODE_STRING DriveRoot,
         /* No need to check FS */
         return (fs_close(FALSE) == 0 ? STATUS_SUCCESS : STATUS_DISK_CORRUPT_ERROR);
     }
+    else if (CheckOnlyIfDirty && fs_isdirty())
+    {
+        if (!(FsCheckFlags & FSCHECK_READ_WRITE) && !(FsCheckFlags & FSCHECK_INTERACTIVE))
+        {
+            fs_close(FALSE);
+            return STATUS_DISK_CORRUPT_ERROR;
+        }
+    }
 
     read_boot(&fs);
 

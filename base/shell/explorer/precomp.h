@@ -61,6 +61,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(explorernew);
 extern HINSTANCE hExplorerInstance;
 extern HANDLE hProcessHeap;
 extern HKEY hkExplorer;
+extern BOOL bExplorerIsShell;
 
 #define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
@@ -230,8 +231,9 @@ HRESULT ShutdownShellServices(HDPA hdpa);
  * startup.cpp
  */
 
-int
-ProcessStartupItems(VOID);
+BOOL DoStartStartupItems(ITrayWindow *Tray);
+INT ProcessStartupItems(VOID);
+BOOL DoFinishStartupItems(VOID);
 
 /*
  * trayprop.h

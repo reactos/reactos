@@ -60,7 +60,6 @@
 /* Internal Headers */
 #include "consup.h"
 #include "inffile.h"
-#include "inicache.h"
 #include "progress.h"
 #include "infros.h"
 #include "filequeue.h"
@@ -70,7 +69,6 @@
 #include "cabinet.h"
 #include "filesup.h"
 #include "genlist.h"
-#include "osdetect.h"
 #include "mui.h"
 
 extern HANDLE ProcessHeap;

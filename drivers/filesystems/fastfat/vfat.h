@@ -263,6 +263,7 @@ typedef struct
     ULONG FatType;
     ULONG Sectors;
     BOOLEAN FixedMedia;
+    ULONG FSInfoSector;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
@@ -927,6 +928,10 @@ NTSTATUS
 FAT32SetDirtyStatus(
     PDEVICE_EXTENSION DeviceExt,
     BOOLEAN DirtyStatus);
+
+NTSTATUS
+FAT32UpdateFreeClustersCount(
+    PDEVICE_EXTENSION DeviceExt);
 
 /* fcb.c */
 

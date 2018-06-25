@@ -900,7 +900,10 @@ static ULONG WINAPI InternetExplorerManager_Release(IInternetExplorerManager *if
     TRACE("(%p) decreasing refcount to %u\n", iface, ref);
 
     if (ref == 0)
+    {
         HeapFree(GetProcessHeap(), 0, This);
+        released_obj();
+    }
 
     return ref;
 }
@@ -936,6 +939,7 @@ HRESULT WINAPI InternetExplorerManager_Create(IClassFactory *iface, IUnknown *pO
     hr = IInternetExplorerManager_QueryInterface(&ret->IInternetExplorerManager_iface, riid, ppv);
     IInternetExplorerManager_Release(&ret->IInternetExplorerManager_iface);
 
+    InterlockedIncrement(&obj_cnt);
     return hr;
 }
 

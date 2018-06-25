@@ -268,6 +268,12 @@ HRESULT WINAPI PSGetPropertyDescriptionListFromString(LPCWSTR proplist, REFIID r
     return E_NOTIMPL;
 }
 
+HRESULT WINAPI PSGetPropertyKeyFromName(PCWSTR name, PROPERTYKEY *key)
+{
+    FIXME("%s, %p\n", debugstr_w(name), key);
+    return E_NOTIMPL;
+}
+
 HRESULT WINAPI PSRefreshPropertySchema(void)
 {
     FIXME("\n");

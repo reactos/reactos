@@ -313,13 +313,15 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
          * the interfaces were returned */
         if (SUCCEEDED(hr))
         {
+            APARTMENT *apt = apartment_get_current_or_mta();
+
             /* try to unmarshal each object returned to us */
             for (i = 0; i < nonlocal_mqis; i++)
             {
                 ULONG index = mapping[i];
                 HRESULT hrobj = qiresults[i].hResult;
                 if (hrobj == S_OK)
-                    hrobj = unmarshal_object(&qiresults[i].std, COM_CurrentApt(),
+                    hrobj = unmarshal_object(&qiresults[i].std, apt,
                                              This->dest_context,
                                              This->dest_context_data,
                                              pMQIs[index].pIID, &This->oxid_info,
@@ -331,6 +333,8 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
                     ERR("Failed to get pointer to interface %s\n", debugstr_guid(pMQIs[index].pIID));
                 pMQIs[index].hr = hrobj;
             }
+
+            apartment_release(apt);
         }
 
         /* free the memory allocated by the proxy */
@@ -1010,8 +1014,7 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
     if (This->sorflags & SORFP_NOLIFETIMEMGMT)
         return S_FALSE;
 
-    apt = COM_CurrentApt();
-    if (!apt)
+    if (!(apt = apartment_get_current_or_mta()))
         return CO_E_NOTINITIALIZED;
 
     called_in_original_apt = This->parent && (This->parent->oxid == apt->oxid);
@@ -1046,7 +1049,7 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         stdobjref.ipid = This->oxid_info.ipidRemUnknown;
 
         /* do the unmarshal */
-        hr = unmarshal_object(&stdobjref, COM_CurrentApt(), This->dest_context,
+        hr = unmarshal_object(&stdobjref, apt, This->dest_context,
                               This->dest_context_data, &IID_IRemUnknown,
                               &This->oxid_info, (void**)remunk);
         if (hr == S_OK && called_in_original_apt)
@@ -1056,6 +1059,7 @@ static HRESULT proxy_manager_get_remunknown(struct proxy_manager * This, IRemUnk
         }
     }
     LeaveCriticalSection(&This->cs);
+    apartment_release(apt);
 
     TRACE("got IRemUnknown* pointer %p, hr = 0x%08x\n", *remunk, hr);
 
@@ -1221,11 +1225,11 @@ StdMarshalImpl_MarshalInterface(
     STDOBJREF             stdobjref;
     ULONG                 res;
     HRESULT               hres;
-    APARTMENT            *apt = COM_CurrentApt();
+    APARTMENT *apt;
 
     TRACE("(...,%s,...)\n", debugstr_guid(riid));
 
-    if (!apt)
+    if (!(apt = apartment_get_current_or_mta()))
     {
         ERR("Apartment not initialized\n");
         return CO_E_NOTINITIALIZED;
@@ -1235,6 +1239,7 @@ StdMarshalImpl_MarshalInterface(
     RPC_StartRemoting(apt);
 
     hres = marshal_object(apt, &stdobjref, riid, pv, dest_context, dest_context_data, mshlflags);
+    apartment_release(apt);
     if (hres != S_OK)
     {
         ERR("Failed to create ifstub, hres=0x%x\n", hres);
@@ -1288,7 +1293,7 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
                                          &proxy_manager->oxid_info,
                                          proxy_manager->dest_context,
                                          proxy_manager->dest_context_data,
-                                         &chanbuf);
+                                         &chanbuf, apt);
             if (hr == S_OK)
                 hr = proxy_manager_create_ifproxy(proxy_manager, stdobjref,
                                                   riid, chanbuf, &ifproxy);
@@ -1324,14 +1329,14 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
     STDOBJREF stdobjref;
     ULONG res;
     HRESULT hres;
-    APARTMENT *apt = COM_CurrentApt();
+    APARTMENT *apt;
     APARTMENT *stub_apt;
     OXID oxid;
 
     TRACE("(...,%s,....)\n", debugstr_guid(riid));
 
     /* we need an apartment to unmarshal into */
-    if (!apt)
+    if (!(apt = apartment_get_current_or_mta()))
     {
         ERR("Apartment not initialized\n");
         return CO_E_NOTINITIALIZED;
@@ -1339,10 +1344,18 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
 
     /* read STDOBJREF from wire */
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
-    if (hres != S_OK) return STG_E_READFAULT;
+    if (hres != S_OK)
+    {
+        apartment_release(apt);
+        return STG_E_READFAULT;
+    }
 
     hres = apartment_getoxid(apt, &oxid);
-    if (hres != S_OK) return hres;
+    if (hres != S_OK)
+    {
+        apartment_release(apt);
+        return hres;
+    }
 
     /* check if we're marshalling back to ourselves */
     if ((oxid == stdobjref.oxid) && (stubmgr = get_stub_manager(apt, stdobjref.oid)))
@@ -1357,6 +1370,7 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
             stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, stdobjref.flags & SORFP_TABLEWEAK, FALSE);
 
         stub_manager_int_release(stubmgr);
+        apartment_release(apt);
         return hres;
     }
 
@@ -1395,6 +1409,7 @@ StdMarshalImpl_UnmarshalInterface(IMarshal *iface, IStream *pStm, REFIID riid, v
     if (hres != S_OK) WARN("Failed with error 0x%08x\n", hres);
     else TRACE("Successfully created proxy %p\n", *ppv);
 
+    apartment_release(apt);
     return hres;
 }
 

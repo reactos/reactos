@@ -427,10 +427,10 @@ BEGIN
     GROUPBOX "Hacer clic en los elementos tal y como se indica ", -1, 7, 110, 279, 60
     CONTROL "", IDC_FOLDER_OPTIONS_CLICKICON, "Static", SS_ICON | WS_CHILD | WS_VISIBLE, 14, 120, 21, 20
     AUTORADIOBUTTON "&Un solo clic para abrir elemento (seleccionar al señalar)", IDC_FOLDER_OPTIONS_SINGLECLICK, 40, 120, 190, 10, WS_TABSTOP | WS_GROUP
-    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10
-    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 190, 10
     AUTORADIOBUTTON "&Doble clic para abrir elemento (seleccionar con un clic)", IDC_FOLDER_OPTIONS_DOUBLECLICK, 40, 156, 190, 10
-    PUSHBUTTON "&Restaurar valores predeterminados", 14011, 146, 180, 140, 14, WS_TABSTOP
+    AUTORADIOBUTTON "Subrayar los títulos de iconos que coincidan con el e&xplorador", IDC_FOLDER_OPTIONS_ULBROWSER, 50, 132, 220, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Subrayar &los títulos de iconos cuando yo los señale", IDC_FOLDER_OPTIONS_ULPOINT, 50, 144, 190, 10
+    PUSHBUTTON "&Restaurar valores predeterminados", IDC_FOLDER_OPTIONS_RESTORE, 167, 175, 90, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_VIEW DIALOGEX 0, 0, 294, 240
@@ -441,11 +441,11 @@ BEGIN
     GROUPBOX "Vistas de carpeta", -1, 7, 10, 279, 60
     ICON IDI_SHELL_PROGRAMS_FOLDER2, IDC_STATIC, 20, 20, 21, 20
     LTEXT "Puede aplicar la vista que está usando con esta carpeta para el resto (como Detalles o Mosaicos).", -1, 60, 20, 200, 20
-    PUSHBUTTON "A&plicar a todas las carpetas", 14001, 60, 50, 100, 14, WS_TABSTOP
-    PUSHBUTTON "R&estaurar todas las carpetas", 14002, 165, 50, 100, 14, WS_TABSTOP
+    PUSHBUTTON "A&plicar a todas las carpetas", IDC_VIEW_APPLY_TO_ALL, 60, 50, 100, 14, WS_TABSTOP
+    PUSHBUTTON "R&estaurar todas las carpetas", IDC_VIEW_RESET_ALL, 165, 50, 100, 14, WS_TABSTOP
     LTEXT "Configuración avanzada:", -1, 7, 80, 100, 10
-    CONTROL "", 14003, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
-    PUSHBUTTON "&Restaurar valores predeterminados", 14004, 156, 220, 130, 14, WS_TABSTOP
+    CONTROL "", IDC_VIEW_TREEVIEW, "SysTreeView32", WS_BORDER | WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | TVS_DISABLEDRAGDROP | TVS_LINESATROOT, 7, 90, 249, 120
+    PUSHBUTTON "&Restaurar valores predeterminados", IDC_VIEW_RESTORE_DEFAULTS, 156, 220, 130, 14, WS_TABSTOP
 END
 
 IDD_FOLDER_OPTIONS_FILETYPES DIALOGEX 0, 0, 294, 240

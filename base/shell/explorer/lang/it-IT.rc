@@ -58,7 +58,7 @@ BEGIN
         MENUITEM "&Fine sessione %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "Disconnetti...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
         MENUITEM "&Sblocca il computer", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "Spegnere il computer...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "Arresta il sistema", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -187,7 +187,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_START "Avvio"
+    IDS_START "Start"
     IDS_PROPERTIES "&Proprietà"
     IDS_OPEN_ALL_USERS "&Apri tutti gli utenti"
     IDS_EXPLORE_ALL_USERS "&Esplora tutti gli utenti"

@@ -224,6 +224,12 @@ HKCR,"chm.file","",0x00000000,%CHMFILE%
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
 HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe ""%1"""
 
+; HTA Files
+HKCR,".hta","",0x00000000,"htafile"
+HKCR,"htafile","",0x00000000,"HTML Application"
+HKCR,"htafile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mshta.exe,-1"
+HKCR,"htafile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mshta.exe ""%1"" %*"
+
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"htmlfile"
 HKCR,".htm","Content Type",0x00000000,"text/html"

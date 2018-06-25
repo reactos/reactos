@@ -15,6 +15,7 @@
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
+#include <ntddkbd.h>
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
@@ -58,6 +59,8 @@ FILESYSTEM_CHKDSK FileSystems[10] =
     { L"FFS", FfsChkdsk },
     { L"CDFS", CdfsChkdsk },
 };
+
+HANDLE KeyboardHandle;
 
 /* FUNCTIONS ****************************************************************/
 //
@@ -133,6 +136,67 @@ OpenDirectory(
     }
 
     return hFile;
+}
+
+static NTSTATUS
+OpenKeyboard(VOID)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING KeyboardName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+
+    /* Just open the class driver */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyboardName,
+                               0,
+                               NULL,
+                               NULL);
+    return  NtOpenFile(&KeyboardHandle,
+                       FILE_ALL_ACCESS,
+                       &ObjectAttributes,
+                       &IoStatusBlock,
+                       FILE_OPEN,
+                       0);
+}
+
+static NTSTATUS
+WaitForKeyboard(
+    IN LONG TimeOut)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    LARGE_INTEGER Offset, Timeout;
+    KEYBOARD_INPUT_DATA InputData;
+
+    /* Attempt to read from the keyboard */
+    Offset.QuadPart = 0;
+    Status = NtReadFile(KeyboardHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        &InputData,
+                        sizeof(KEYBOARD_INPUT_DATA),
+                        &Offset,
+                        NULL);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait TimeOut seconds */
+        Timeout.QuadPart = TimeOut * -10000000;
+        Status = NtWaitForSingleObject(KeyboardHandle, FALSE, &Timeout);
+        /* The user didn't enter anything, cancel the read */
+        if (Status == STATUS_TIMEOUT)
+        {
+            NtCancelIoFile(KeyboardHandle, &IoStatusBlock);
+        }
+        /* Else, return some status */
+        else
+        {
+            Status = IoStatusBlock.Status;
+        }
+    }
+
+    return Status;
 }
 
 static NTSTATUS
@@ -275,13 +339,16 @@ ChkdskCallback(
 
 static NTSTATUS
 CheckVolume(
-    IN PWCHAR DrivePath)
+    IN PWCHAR DrivePath,
+    IN LONG TimeOut)
 {
     WCHAR FileSystem[128];
     WCHAR NtDrivePath[64];
     UNICODE_STRING DrivePathU;
     NTSTATUS Status;
     DWORD Count;
+
+    PrintString("  Verifying volume %S\r\n", DrivePath);
 
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
@@ -294,6 +361,8 @@ CheckVolume(
         return Status;
     }
 
+    PrintString("  Its filesystem type is %S\r\n", FileSystem);
+
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
     {
@@ -302,19 +371,45 @@ CheckVolume(
             continue;
         }
 
-        // PrintString("  Verifying volume %S\r\n", DrivePath);
         swprintf(NtDrivePath, L"\\??\\");
         wcscat(NtDrivePath, DrivePath);
         NtDrivePath[wcslen(NtDrivePath)-1] = 0;
         RtlInitUnicodeString(&DrivePathU, NtDrivePath);
 
         DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
+        /* First, check whether the volume is dirty */
         Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
-                                               TRUE, // FixErrors
+                                               FALSE, // FixErrors
                                                TRUE, // Verbose
                                                TRUE, // CheckOnlyIfDirty
                                                FALSE,// ScanDrive
                                                ChkdskCallback);
+        /* It is */
+        if (Status == STATUS_DISK_CORRUPT_ERROR)
+        {
+            NTSTATUS WaitStatus;
+
+            /* Let the user decide whether to repair */
+            PrintString("  %S needs to be checked\r\n", DrivePath);
+            PrintString("  You can skip it, but be advised it is not recommanded\r\n");
+            PrintString("  To skip disk checking press any key in %d second(s)\r\n", TimeOut);
+
+            /* Timeout == fix it! */
+            WaitStatus = WaitForKeyboard(TimeOut);
+            if (WaitStatus == STATUS_TIMEOUT)
+            {
+                Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+                                                       TRUE, // FixErrors
+                                                       TRUE, // Verbose
+                                                       TRUE, // CheckOnlyIfDirty
+                                                       FALSE,// ScanDrive
+                                                       ChkdskCallback);
+            }
+            else
+            {
+                PrintString("  %S checking has been skipped\r\n", DrivePath);
+            }
+        }
         break;
     }
 
@@ -326,6 +421,29 @@ CheckVolume(
     }
 
     return Status;
+}
+
+static VOID
+QueryTimeout(
+    IN OUT PLONG TimeOut)
+{
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+
+    RtlZeroMemory(QueryTable, sizeof(QueryTable));
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"AutoChkTimeOut";
+    QueryTable[0].EntryContext = TimeOut;
+
+    RtlQueryRegistryValues(RTL_REGISTRY_CONTROL, L"Session Manager", QueryTable, NULL, NULL);
+    /* See: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/autochk */
+    if (*TimeOut > 259200)
+    {
+        *TimeOut = 259200;
+    }
+    else if (*TimeOut < 0)
+    {
+        *TimeOut = 0;
+    }
 }
 
 /* Native image's entry point */
@@ -340,6 +458,7 @@ _main(int argc,
     ULONG i;
     NTSTATUS Status;
     WCHAR DrivePath[128];
+    LONG TimeOut;
 
     // Win2003 passes the only param - "*". Probably means to check all drives
     /*
@@ -347,6 +466,10 @@ _main(int argc,
     for (i=0; i<argc; i++)
         DPRINT("Param %d: %s\n", i, argv[i]);
     */
+
+    /* Query timeout */
+    TimeOut = 3;
+    QueryTimeout(&TimeOut);
 
     /* FIXME: We should probably use here the mount manager to be
      * able to check volumes which don't have a drive letter.
@@ -364,15 +487,27 @@ _main(int argc,
         return 1;
     }
 
+    /* Open keyboard */
+    Status = OpenKeyboard();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("OpenKeyboard() failed with status 0x%08lx\n", Status);
+        return 1;
+    }
+
     for (i = 0; i < 26; i++)
     {
         if ((DeviceMap.Query.DriveMap & (1 << i))
          && (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
         {
             swprintf(DrivePath, L"%c:\\", L'A'+i);
-            CheckVolume(DrivePath);
+            CheckVolume(DrivePath, TimeOut);
         }
     }
+
+    /* Close keyboard */
+    NtClose(KeyboardHandle);
+
     // PrintString("  Done\r\n\r\n");
     return 0;
 }

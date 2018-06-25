@@ -405,7 +405,7 @@ PHAL_SW_INTERRUPT_HANDLER SWInterruptHandlerTable[20] =
 /* Handlers for pending software interrupts when we already have a trap frame*/
 PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY SWInterruptHandlerTable2[3] =
 {
-    (PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)KiUnexpectedInterrupt,
+    (PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(PVOID)KiUnexpectedInterrupt,
     HalpApcInterrupt2ndEntry,
     HalpDispatchInterrupt2ndEntry
 };

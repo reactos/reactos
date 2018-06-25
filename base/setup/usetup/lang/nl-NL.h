@@ -155,62 +155,56 @@ static MUI_ENTRY nlNLIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Setup is nog in een vroege ontwikkelingsfase.",
-        TEXT_STYLE_NORMAL
+        "ReactOS Version Status",
+        TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
-        9,
-        "Het ondersteunt nog niet alle functies van een volledig",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        6,
-        10,
-        "setup programma.",
+        11,
+        "ReactOS is in Alpha stage, meaning it is not feature-complete",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "De volgende beperkingen zijn van toepassing:",
+        "and is under heavy development. It is recommended to use it only for",
         TEXT_STYLE_NORMAL
     },
     {
-        8,
+        6,
         13,
-        "\x07  Setup ondersteunt alleen FAT bestandssystemen.",
+        "evaluation and testing purposes and not as your daily-usage OS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        15,
+        "Backup your data or test on a secondary computer if you attempt",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        6,
+        16,
+        "to run ReactOS on real hardware.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        14,
-        "\x07  Bestandssysteemcontrole is nog niet ge\x8Bmplementeerd.",
+        19,
+        "\x07  Press ENTER to continue ReactOS Setup.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  Druk op ENTER om ReactOS te installeren.",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        25,
-        "\x07  Druk op F3 als u Setup wilt afsluiten zonder ReactOS te",
-        TEXT_STYLE_NORMAL
-    },
-    {
-        8,
-        26,
-        "   installeren.",
+        21,
+        "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Doorgaan   F3 = Afsluiten",
-        TEXT_TYPE_STATUS| TEXT_PADDING_BIG
+        "ENTER = Continue   F3 = Quit",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
         0,
