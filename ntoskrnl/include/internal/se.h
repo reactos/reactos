@@ -412,13 +412,13 @@ SeCheckPrivilegedObject(
 NTSTATUS
 NTAPI
 SepDuplicateToken(
-    PTOKEN Token,
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    BOOLEAN EffectiveOnly,
-    TOKEN_TYPE TokenType,
-    SECURITY_IMPERSONATION_LEVEL Level,
-    KPROCESSOR_MODE PreviousMode,
-    PTOKEN* NewAccessToken
+    _In_ PTOKEN Token,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ BOOLEAN EffectiveOnly,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ SECURITY_IMPERSONATION_LEVEL Level,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PTOKEN* NewAccessToken
 );
 
 NTSTATUS

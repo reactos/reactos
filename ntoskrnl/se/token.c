@@ -47,7 +47,7 @@ static GENERIC_MAPPING SepTokenMapping = {
 
 static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
 
-    /* Class 0 not used, blame M$! */
+    /* Class 0 not used, blame MS! */
     ICI_SQ_SAME( 0, 0, 0),
 
     /* TokenUser */
@@ -268,7 +268,7 @@ SeExchangePrimaryToken(PEPROCESS Process,
     }
 
     /* Mark new token in use */
-    NewToken->TokenInUse = 1;
+    NewToken->TokenInUse = TRUE;
 
     /* Reference the New Token */
     ObReferenceObject(NewToken);
@@ -277,7 +277,7 @@ SeExchangePrimaryToken(PEPROCESS Process,
     OldToken = ObFastReplaceObject(&Process->Token, NewToken);
 
     /* Mark the Old Token as free */
-    OldToken->TokenInUse = 0;
+    OldToken->TokenInUse = FALSE;
 
     *OldTokenP = (PACCESS_TOKEN)OldToken;
     return STATUS_SUCCESS;
@@ -293,7 +293,7 @@ SeDeassignPrimaryToken(PEPROCESS Process)
     OldToken = ObFastReplaceObject(&Process->Token, NULL);
 
     /* Mark the Old Token as free */
-    OldToken->TokenInUse = 0;
+    OldToken->TokenInUse = FALSE;
 
     /* Dereference the Token */
     ObDereferenceObject(OldToken);
@@ -324,7 +324,7 @@ SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
 {
     ULONG i;
 
-    Token->PrimaryGroup = 0;
+    Token->PrimaryGroup = NULL;
 
     if (DefaultOwner)
     {
@@ -351,7 +351,7 @@ SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
         return STATUS_INVALID_OWNER;
     }
 
-    if (Token->PrimaryGroup == 0)
+    if (Token->PrimaryGroup == NULL)
     {
         return STATUS_INVALID_PRIMARY_GROUP;
     }
@@ -362,13 +362,14 @@ SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
 
 NTSTATUS
 NTAPI
-SepDuplicateToken(PTOKEN Token,
-                  POBJECT_ATTRIBUTES ObjectAttributes,
-                  BOOLEAN EffectiveOnly,
-                  TOKEN_TYPE TokenType,
-                  SECURITY_IMPERSONATION_LEVEL Level,
-                  KPROCESSOR_MODE PreviousMode,
-                  PTOKEN* NewAccessToken)
+SepDuplicateToken(
+    _In_ PTOKEN Token,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ BOOLEAN EffectiveOnly,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ SECURITY_IMPERSONATION_LEVEL Level,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _Out_ PTOKEN* NewAccessToken)
 {
     ULONG uLength;
     ULONG i;
@@ -389,7 +390,7 @@ SepDuplicateToken(PTOKEN Token,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
+        DPRINT1("ObCreateObject() failed (Status 0x%lx)\n", Status);
         return Status;
     }
 
@@ -587,6 +588,7 @@ SeCopyClientToken(IN PACCESS_TOKEN Token,
                                0,
                                NULL,
                                NULL);
+
     Status = SepDuplicateToken(Token,
                                &ObjectAttributes,
                                FALSE,
@@ -667,28 +669,28 @@ SeAssignPrimaryToken(IN PEPROCESS Process,
     ObInitializeFastReference(&Process->Token, Token);
 }
 
-
 NTSTATUS
 NTAPI
-SepCreateToken(OUT PHANDLE TokenHandle,
-               IN KPROCESSOR_MODE PreviousMode,
-               IN ACCESS_MASK DesiredAccess,
-               IN POBJECT_ATTRIBUTES ObjectAttributes,
-               IN TOKEN_TYPE TokenType,
-               IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-               IN PLUID AuthenticationId,
-               IN PLARGE_INTEGER ExpirationTime,
-               IN PSID_AND_ATTRIBUTES User,
-               IN ULONG GroupCount,
-               IN PSID_AND_ATTRIBUTES Groups,
-               IN ULONG GroupLength,
-               IN ULONG PrivilegeCount,
-               IN PLUID_AND_ATTRIBUTES Privileges,
-               IN PSID Owner,
-               IN PSID PrimaryGroup,
-               IN PACL DefaultDacl,
-               IN PTOKEN_SOURCE TokenSource,
-               IN BOOLEAN SystemToken)
+SepCreateToken(
+    _Out_ PHANDLE TokenHandle,
+    _In_ KPROCESSOR_MODE PreviousMode,
+    _In_ ACCESS_MASK DesiredAccess,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_ TOKEN_TYPE TokenType,
+    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+    _In_ PLUID AuthenticationId,
+    _In_ PLARGE_INTEGER ExpirationTime,
+    _In_ PSID_AND_ATTRIBUTES User,
+    _In_ ULONG GroupCount,
+    _In_ PSID_AND_ATTRIBUTES Groups,
+    _In_ ULONG GroupsLength,
+    _In_ ULONG PrivilegeCount,
+    _In_ PLUID_AND_ATTRIBUTES Privileges,
+    _In_opt_ PSID Owner,
+    _In_ PSID PrimaryGroup,
+    _In_opt_ PACL DefaultDacl,
+    _In_ PTOKEN_SOURCE TokenSource,
+    _In_ BOOLEAN SystemToken)
 {
     PTOKEN AccessToken;
     LUID TokenId;
@@ -733,7 +735,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
                             (PVOID*)&AccessToken);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
+        DPRINT1("ObCreateObject() failed (Status 0x%lx)\n", Status);
         return Status;
     }
 
@@ -874,7 +876,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
 
     if (!SystemToken)
     {
-        Status = ObInsertObject((PVOID)AccessToken,
+        Status = ObInsertObject(AccessToken,
                                 NULL,
                                 DesiredAccess,
                                 0,
@@ -882,7 +884,7 @@ SepCreateToken(OUT PHANDLE TokenHandle,
                                 TokenHandle);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("ObInsertObject() failed (Status %lx)\n", Status);
+            DPRINT1("ObInsertObject() failed (Status 0x%lx)\n", Status);
         }
     }
     else
@@ -910,7 +912,7 @@ SepCreateSystemProcessToken(VOID)
     SID_AND_ATTRIBUTES Groups[32];
     LARGE_INTEGER Expiration;
     SID_AND_ATTRIBUTES UserSid;
-    ULONG GroupLength;
+    ULONG GroupsLength;
     PSID PrimaryGroup;
     OBJECT_ATTRIBUTES ObjectAttributes;
     PSID Owner;
@@ -942,11 +944,11 @@ SepCreateSystemProcessToken(VOID)
     Groups[1].Attributes = GroupAttributes;
     Groups[2].Sid = SeAuthenticatedUserSid;
     Groups[2].Attributes = OwnerAttributes;
-    GroupLength = sizeof(SID_AND_ATTRIBUTES) +
-                  SeLengthSid(Groups[0].Sid) +
-                  SeLengthSid(Groups[1].Sid) +
-                  SeLengthSid(Groups[2].Sid);
-    ASSERT(GroupLength <= sizeof(Groups));
+    GroupsLength = sizeof(SID_AND_ATTRIBUTES) +
+                   SeLengthSid(Groups[0].Sid) +
+                   SeLengthSid(Groups[1].Sid) +
+                   SeLengthSid(Groups[2].Sid);
+    ASSERT(GroupsLength <= sizeof(Groups));
 
     /* Setup the privileges */
     i = 0;
@@ -1027,7 +1029,7 @@ SepCreateSystemProcessToken(VOID)
                             &UserSid,
                             3,
                             Groups,
-                            GroupLength,
+                            GroupsLength,
                             20,
                             Privileges,
                             Owner,
@@ -2144,7 +2146,6 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
  * Unimplemented:
  *  TokenOrigin, TokenDefaultDacl
  */
-
 NTSTATUS NTAPI
 NtSetInformationToken(IN HANDLE TokenHandle,
                       IN TOKEN_INFORMATION_CLASS TokenInformationClass,
@@ -2395,9 +2396,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 }
 
                 break;
-
             }
-
 
             case TokenAuditPolicy:
             {
@@ -2665,7 +2664,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 
     if (NT_SUCCESS(Status))
     {
-        Status = ObInsertObject((PVOID)NewToken,
+        Status = ObInsertObject(NewToken,
                                 NULL,
                                 (DesiredAccess ? DesiredAccess : HandleInformation.GrantedAccess),
                                 0,
@@ -2853,7 +2852,7 @@ NtAdjustPrivilegesToken(
     if (DisableAllPrivileges == FALSE && NewState == NULL)
         return STATUS_INVALID_PARAMETER;
 
-    PreviousMode = KeGetPreviousMode ();
+    PreviousMode = KeGetPreviousMode();
     if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
@@ -2927,7 +2926,7 @@ NtAdjustPrivilegesToken(
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to reference token (Status %lx)\n", Status);
+        DPRINT1("Failed to reference token (Status 0x%lx)\n", Status);
 
         /* Release the captured privileges */
         if (CapturedPrivileges != NULL)
@@ -3455,8 +3454,6 @@ NtOpenThreadToken(IN HANDLE ThreadHandle,
                                TokenHandle);
 }
 
-
-
 /*
  * @unimplemented
  */
@@ -3517,7 +3514,9 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
                                   &IsEqual);
     }
     else
+    {
         IsEqual = TRUE;
+    }
 
     ObDereferenceObject(FirstToken);
     ObDereferenceObject(SecondToken);
