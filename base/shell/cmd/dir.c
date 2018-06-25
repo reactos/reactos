@@ -136,7 +136,7 @@
  *    25-Aug-2015 (Pierre Schweitzer)
  *        Implemented /R switch
  *
- *    3-June-2018 (Katayama Hirofumi MZ)
+ *    25-June-2018 (Katayama Hirofumi MZ)
  *        Fixed the behavior for "DIR ." and "DIR ..".
  */
 
@@ -1349,6 +1349,26 @@ QsortFiles(PDIRFINDINFO ptrArray[],         /* [IN/OUT] The array with file info
     }
 }
 
+static void
+DirNodeCleanup(PDIRFINDLISTNODE ptrStartNode, LPDWORD pdwCount)
+{
+    PDIRFINDLISTNODE ptrNextNode;
+    PDIRFINDSTREAMNODE ptrFreeNode;
+    while (ptrStartNode)
+    {
+        ptrNextNode = ptrStartNode->ptrNext;
+        while (ptrStartNode->stInfo.ptrHead)
+        {
+            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+            cmd_free(ptrFreeNode);
+        }
+        cmd_free(ptrStartNode);
+        ptrStartNode = ptrNextNode;
+        (*pdwCount)--;
+    }
+}
+
 /*
  * DirList
  *
@@ -1375,7 +1395,6 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ULARGE_INTEGER u64Temp;             /* A temporary counter */
     WIN32_FIND_STREAM_DATA wfsdStreamInfo;
     PDIRFINDSTREAMNODE * ptrCurNode;    /* The pointer to the first stream */
-    PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
     static HANDLE (WINAPI *pFindFirstStreamW)(LPCWSTR, STREAM_INFO_LEVELS, LPVOID, DWORD);
     static BOOL (WINAPI *pFindNextStreamW)(HANDLE, LPVOID);
     LPTSTR pchDotExt;
@@ -1458,19 +1477,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                     if (ptrNextNode->ptrNext == NULL)
                     {
                         WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
-                        while (ptrStartNode)
-                        {
-                            ptrNextNode = ptrStartNode->ptrNext;
-                            while (ptrStartNode->stInfo.ptrHead)
-                            {
-                                ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                                ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                                cmd_free(ptrFreeNode);
-                            }
-                            cmd_free(ptrStartNode);
-                            ptrStartNode = ptrNextNode;
-                            dwCount--;
-                        }
+                        DirNodeCleanup(ptrStartNode, &dwCount);
                         FindClose(hSearch);
                         return 1;
                     }
@@ -1520,19 +1527,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                                 if (*ptrCurNode == NULL)
                                 {
                                     WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
-                                    while (ptrStartNode)
-                                    {
-                                        ptrNextNode = ptrStartNode->ptrNext;
-                                        while (ptrStartNode->stInfo.ptrHead)
-                                        {
-                                            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                                            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                                            cmd_free(ptrFreeNode);
-                                        }
-                                        cmd_free(ptrStartNode);
-                                        ptrStartNode = ptrNextNode;
-                                        dwCount--;
-                                    }
+                                    DirNodeCleanup(ptrStartNode, &dwCount);
                                     FindClose(hStreams);
                                     FindClose(hSearch);
                                     return 1;
@@ -1587,19 +1582,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     if (ptrFileArray == NULL)
     {
         WARN("DEBUG: Cannot allocate memory for ptrFileArray!\n");
-        while (ptrStartNode)
-        {
-            ptrNextNode = ptrStartNode->ptrNext;
-            while (ptrStartNode->stInfo.ptrHead)
-            {
-                ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                cmd_free(ptrFreeNode);
-            }
-            cmd_free(ptrStartNode);
-            ptrStartNode = ptrNextNode;
-            dwCount --;
-        }
+        DirNodeCleanup(ptrStartNode, &dwCount);
         return 1;
     }
 
@@ -1637,20 +1620,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
 
     /* Free array */
     cmd_free(ptrFileArray);
+
     /* Free linked list */
-    while (ptrStartNode)
-    {
-        ptrNextNode = ptrStartNode->ptrNext;
-        while (ptrStartNode->stInfo.ptrHead)
-        {
-            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-            cmd_free(ptrFreeNode);
-        }
-        cmd_free(ptrStartNode);
-        ptrStartNode = ptrNextNode;
-        dwCount --;
-    }
+    DirNodeCleanup(ptrStartNode, &dwCount);
 
     if (CheckCtrlBreak(BREAK_INPUT))
         return 1;
