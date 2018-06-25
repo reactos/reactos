@@ -225,8 +225,8 @@ SepCreateClientSecurity(IN PACCESS_TOKEN Token,
         /* Do not use direct access and make a copy */
         ClientContext->DirectlyAccessClientToken = FALSE;
         Status = SeCopyClientToken(Token,
-                                   ImpersonationLevel,
-                                   0,
+                                   ClientSecurityQos->ImpersonationLevel,
+                                   KernelMode,
                                    &NewToken);
         if (!NT_SUCCESS(Status))
             return Status;
