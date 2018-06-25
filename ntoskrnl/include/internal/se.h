@@ -317,9 +317,9 @@ SeIsTokenChild(
 NTSTATUS
 NTAPI
 SepCreateImpersonationTokenDacl(
-    PTOKEN Token,
-    PTOKEN PrimaryToken,
-    PACL *Dacl
+    _In_ PTOKEN Token,
+    _In_ PTOKEN PrimaryToken,
+    _Out_ PACL* Dacl
 );
 
 VOID

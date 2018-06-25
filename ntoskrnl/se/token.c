@@ -3325,7 +3325,8 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
 
     /*
      * At first open the thread token for information access and verify
-     * that the token associated with thread is valid.     */
+     * that the token associated with thread is valid.
+     */
 
     Status = ObReferenceObjectByHandle(ThreadHandle, THREAD_QUERY_INFORMATION,
                                        PsThreadType, PreviousMode, (PVOID*)&Thread,
@@ -3386,7 +3387,6 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                 InitializeObjectAttributes(&ObjectAttributes, NULL, HandleAttributes,
                                            NULL, Dacl ? &SecurityDescriptor : NULL);
 
-
                 Status = SepDuplicateToken(Token, &ObjectAttributes, EffectiveOnly,
                                            TokenImpersonation, ImpersonationLevel,
                                            KernelMode, &NewToken);
@@ -3406,7 +3406,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                        PreviousMode, &hToken);
     }
 
-    if (Dacl) ExFreePoolWithTag(Dacl, TAG_TOKEN_ACL);
+    if (Dacl) ExFreePoolWithTag(Dacl, TAG_ACL);
 
     if (RestoreImpersonation)
     {
