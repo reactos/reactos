@@ -32,7 +32,7 @@ HKCR,".clp","Content Type",0x00000000,"application/x-msclip"
 HKCR,"clpfile","",0x00000000,"Clipboard Element"
 HKCR,"clpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\clipbrd.exe,-121"
 HKCR,"clpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\clipbrd.exe,1"
-HKCR,"clpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\clipbrd.exe %1"
+HKCR,"clpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\clipbrd.exe ""%1"""
 
 ; Event Log File
 HKCR,".evt","",0x00000000,"evtfile"
@@ -73,7 +73,7 @@ HKCR,"batfile","",0x00000000,"ReactOS Batch File"
 HKCR,"batfile","EditFlags",0x00010001,0x00000010
 HKCR,"batfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-201"
 HKCR,"batfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
-HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"batfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"batfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; ReactOS Command Script Files
@@ -82,7 +82,7 @@ HKCR,"cmdfile","",0x00000000,"ReactOS Command Script"
 HKCR,"cmdfile","EditFlags",0x00010001,0x00000010
 HKCR,"cmdfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-202"
 HKCR,"cmdfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-153"
-HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"cmdfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"cmdfile\shell\open\command","",0x00000000,"""%1"" %*"
 
 ; DOS Applications
@@ -216,13 +216,13 @@ HKCR,".hlp","",0x00000000,"hlpfile"
 HKCR,"hlpfile","",0x00000000,"Help File"
 HKCR,"hlpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-212"
 HKCR,"hlpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-24"
-HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\winhlp32.exe %1"
+HKCR,"hlpfile\shell\open\command","",0x00020000,"%SystemRoot%\winhlp32.exe ""%1"""
 
 HKCR,".chm","",0x00000000,"chm.file"
 HKCR,"chm.file","",0x00000000,%CHMFILE%
 ;;HKCR,"chm.file","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\hhctrl.ocx,-452"
 HKCR,"chm.file\DefaultIcon","",0x00020000,"%SystemRoot%\hh.exe,0"
-HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe %1"
+HKCR,"chm.file\shell\open\command","",0x00020000,"%SystemRoot%\hh.exe ""%1"""
 
 ; set MIME type for .html and .htm because Tiny webserver needs it
 HKCR,".htm","",0x00000000,"htmlfile"
@@ -234,7 +234,7 @@ HKCR,".html","PerceivedType",0x00000000,"text"
 HKCR,"htmlfile","",0x00000000,"HTML Document"
 HKCR,"htmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\mshtml.dll,-7501"
 HKCR,"htmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\ieframe.dll,0"
-HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"htmlfile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 ; Icons
 HKCR,".ico","",0x00000000,"icofile"
@@ -243,7 +243,7 @@ HKCR,".ico","PerceivedType",0x00000000,"image"
 HKCR,"icofile","",0x00000000,"Icon"
 HKCR,"icofile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-213"
 HKCR,"icofile\DefaultIcon","",0x00000000,"%1"
-HKCR,"icofile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"icofile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
 
 ; EMF Images
 HKCR,".emf","",0x00000000,"emffile"
@@ -251,7 +251,7 @@ HKCR,".emf","PerceivedType",0x00000000,"image"
 HKCR,"emffile","",0x00000000,"EMF Image"
 HKCR,"emffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-301"
 HKCR,"emffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
-HKCR,"emffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"emffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
 
 ; GIF Images
 HKCR,".gif","",0x00000000,"giffile"
@@ -260,7 +260,7 @@ HKCR,".gif","PerceivedType",0x00000000,"image"
 HKCR,"giffile","",0x00000000,"GIF Image"
 HKCR,"giffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-302"
 HKCR,"giffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" %1"
+HKCR,"giffile\shell\open\command","",0x00020000,"""%ProgramFiles%\Internet Explorer\iexplore.exe"" ""%1"""
 
 ; JPEG Images
 HKCR,".jpg","",0x00000000,"jpegfile"
@@ -278,8 +278,8 @@ HKCR,".jfif","PerceivedType",0x00000000,"image"
 HKCR,"jpegfile","",0x00000000,"JPEG Image"
 HKCR,"jpegfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-303"
 HKCR,"jpegfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
-HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"jpegfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
+HKCR,"jpegfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; Bitmap Images
 HKCR,".bmp","",0x00000000,"bmpfile"
@@ -293,8 +293,8 @@ HKCR,".dib","PerceivedType",0x00000000,"image"
 HKCR,"bmpfile","",0x00000000,"Bitmap Image"
 HKCR,"bmpfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-304"
 HKCR,"bmpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,1"
-HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"bmpfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
+HKCR,"bmpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; PNG Images
 HKCR,".png","",0x00000000,"pngfile"
@@ -303,8 +303,8 @@ HKCR,".png","PerceivedType",0x00000000,"image"
 HKCR,"pngfile","",0x00000000,"PNG Image"
 HKCR,"pngfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-305"
 HKCR,"pngfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,2"
-HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"pngfile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
+HKCR,"pngfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; TIF Images
 HKCR,".tif","",0x00000000,"TIFImage.Document"
@@ -316,8 +316,8 @@ HKCR,".tiff","PerceivedType",0x00000000,"image"
 HKCR,"TIFImage.Document","",0x00000000,"TIF Image"
 HKCR,"TIFImage.Document","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-306"
 HKCR,"TIFImage.Document\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
-HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
-HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe %1"
+HKCR,"TIFImage.Document\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
+HKCR,"TIFImage.Document\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mspaint.exe ""%1"""
 
 ; WMF Images
 HKCR,".wmf","",0x00000000,"wmffile"
@@ -325,7 +325,7 @@ HKCR,".wmf","PerceivedType",0x00000000,"image"
 HKCR,"wmffile","",0x00000000,"WMF Image"
 HKCR,"wmffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shimgvw.dll,-307"
 HKCR,"wmffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shimgvw.dll,0"
-HKCR,"wmffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen %1"
+HKCR,"wmffile\shell\open\command","",0x00020000,"rundll32.exe %SystemRoot%\system32\shimgvw.dll,ImageView_Fullscreen ""%1"""
 
 ; Configuration Files
 HKCR,".ini","",0x00000000,"inifile"
@@ -342,13 +342,13 @@ HKCR,"inffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\setupapi.dl
 HKCR,"inffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-151"
 HKCR,"inffile\shell\open\command","",0x00000000,"notepad.exe ""%1"""
 HKCR,"inffile\shell\Install","",0x00000000,%INSTALL%
-HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
+HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\system32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 ""%1"""
 
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
 ; Don't display extension for shortcuts
 HKCR,".lnk","",0x00000000,"lnkfile"
 HKCR,".lnk\shellnew","",0x00000000,""
-HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere %1"
+HKCR,".lnk\shellnew","command",0x00020000,"%SystemRoot%\system32\rundll32.exe appwiz.cpl,NewLinkHere ""%1"""
 HKCR,"lnkfile","",0x00000000,"Shortcut"
 HKCR,"lnkfile","EditFlags",0x00010001,0x00000001
 HKCR,"lnkfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\shell32.dll,-215"
@@ -378,7 +378,7 @@ HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
 HKCR,"txtfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\notepad.exe,-512"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
-HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"txtfile\shell\print\command","",0x00000000,"notepad.exe /p ""%1"""
 
 ; XML Documents
@@ -387,7 +387,7 @@ HKCR,".xml","Content Type",0x00000000,"text/xml"
 HKCR,"xmlfile","",0x00000000,%XMLFILE%
 ;;HKCR,"xmlfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-1"
 HKCR,"xmlfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,0"
-HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"xmlfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
 ; XSL Stylesheets
 HKCR,".xsl","",0x00000000,"xslfile"
@@ -395,7 +395,7 @@ HKCR,".xsl","Content Type",0x00000000,"text/xml"
 HKCR,"xslfile","",0x00000000,%XSLFILE%
 ;;HKCR,"xslfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\msxml3r.dll,-2"
 HKCR,"xslfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\msxml3.dll,1"
-HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"xslfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 
 ; MSI files
 HKCR,".msi","",0x00000000,"Msi.Package"
@@ -428,7 +428,7 @@ HKCR,".reg","",0x00000000,"regfile"
 HKCR,"regfile","",0x00000000,"Registration File"
 HKCR,"regfile","FriendlyTypeName",0x00020000,"@%SystemRoot%\regedit.exe,-31000"
 HKCR,"regfile\DefaultIcon","",0x00020000,"%SystemRoot%\regedit.exe,1"
-HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe %1"
+HKCR,"regfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\notepad.exe ""%1"""
 HKCR,"regfile\shell\open","",0x00000000,%MERGE%
 HKCR,"regfile\shell\open\command","",0x00000000,"regedit.exe ""%1"""
 
@@ -437,8 +437,8 @@ HKCR,".rdp","",0x00000000,"rdpfile"
 HKCR,"rdpfile","",0x00000000,"Remote Desktop Connection"
 ;HKCR,"rdpfile","FriendlyTypeName",0x00020000,"%SystemRoot%\mstsc.exe,-4004"
 HKCR,"rdpfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\mstsc.exe,0"
-HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe %1"
-;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit %1"
+HKCR,"rdpfile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe ""%1"""
+;HKCR,"rdpfile\shell\edit\command","",0x00020000,"%SystemRoot%\system32\mstsc.exe -edit ""%1"""
 
 ; Screen Savers
 HKCR,".scr","",0x00000000,"scrfile"
@@ -495,7 +495,7 @@ HKCR,".wav","Content Type",0x00000000,"audio/wav"
 HKCR,".wav","PerceivedType",0x00000000,"audio"
 HKCR,"SoundRec","",0x00000000,%WAVFILE%
 HKCR,"SoundRec\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"SoundRec\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Midi Sounds
 HKCR,".mid","",0x00000000,"MIDFile"
@@ -506,13 +506,13 @@ HKCR,".midi","Content Type",0x00000000,"audio/mid"
 HKCR,".midi","PerceivedType",0x00000000,"audio"
 HKCR,"MIDFile","",0x00000000,%MIDFILE%
 HKCR,"MIDFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"MIDFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Audio CD
 HKCR,".cda","",0x00000000,"CDAFile"
 HKCR,"CDAFile","",0x00000000,%CDAFILE%
 HKCR,"CDAFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-225"
-HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"CDAFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 ; Avi Files
 HKCR,".avi","",0x00000000,"AVIFile"
@@ -520,7 +520,7 @@ HKCR,".avi","Content Type",0x00000000,"video/avi"
 HKCR,".avi","PerceivedType",0x00000000,"video"
 HKCR,"AVIFile","",0x00000000,%AVIFILE%
 HKCR,"AVIFile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-224"
-HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe %1"
+HKCR,"AVIFile\shell\open\command","",0x00020000,"%SystemRoot%\system32\mplay32.exe ""%1"""
 
 HKCR,"CLSID",,0x00000012
 
