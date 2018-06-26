@@ -272,6 +272,7 @@ NTSTATUS WINAPI
 LsapInitLsa(VOID)
 {
     NTSTATUS Status;
+    BOOLEAN PrivilegeEnabled;
 
     TRACE("LsapInitLsa() called\n");
 
@@ -298,6 +299,13 @@ LsapInitLsa(VOID)
     {
         ERR("LsapInitAuthPackages() failed (Status 0x%08lx)\n", Status);
         return Status;
+    }
+
+    /* Enable the token creation privilege for the rest of our lifetime */
+    Status = RtlAdjustPrivilege(SE_CREATE_TOKEN_PRIVILEGE, TRUE, FALSE, &PrivilegeEnabled);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("RtlAdjustPrivilege(SE_CREATE_TOKEN_PRIVILEGE) failed, ignoring (Status 0x%08lx)\n", Status);
     }
 
     /* Start the authentication LPC port thread */
