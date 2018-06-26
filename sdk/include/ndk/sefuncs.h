@@ -201,6 +201,7 @@ NtCompareTokens(
     _In_ HANDLE SecondTokenHandle,
     _Out_ PBOOLEAN Equal);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI

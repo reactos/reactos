@@ -200,17 +200,17 @@ extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 #define SepAcquireTokenLockExclusive(Token)                                    \
 {                                                                              \
     KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceExclusive(((PTOKEN)Token)->TokenLock, TRUE);              \
+    ExAcquireResourceExclusiveLite(((PTOKEN)Token)->TokenLock, TRUE);          \
 }
 #define SepAcquireTokenLockShared(Token)                                       \
 {                                                                              \
     KeEnterCriticalRegion();                                                   \
-    ExAcquireResourceShared(((PTOKEN)Token)->TokenLock, TRUE);                 \
+    ExAcquireResourceSharedLite(((PTOKEN)Token)->TokenLock, TRUE);             \
 }
 
 #define SepReleaseTokenLock(Token)                                             \
 {                                                                              \
-    ExReleaseResource(((PTOKEN)Token)->TokenLock);                             \
+    ExReleaseResourceLite(((PTOKEN)Token)->TokenLock);                         \
     KeLeaveCriticalRegion();                                                   \
 }
 
@@ -345,9 +345,9 @@ SeAuditProcessCreate(IN PEPROCESS Process);
 NTSTATUS
 NTAPI
 SeExchangePrimaryToken(
-    struct _EPROCESS* Process,
-    PACCESS_TOKEN NewToken,
-    PACCESS_TOKEN* OldTokenP
+    _In_ PEPROCESS Process,
+    _In_ PACCESS_TOKEN NewAccessToken,
+    _Out_ PACCESS_TOKEN* OldAccessToken
 );
 
 VOID
