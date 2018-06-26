@@ -50,51 +50,67 @@ static const TEST_ENTRY s_TestEntries[] =
     {__LINE__, FALSE, NULL, OPENED, TRUE, "created file.txt", NULL, 0 },
     {__LINE__, FALSE, BAD_INST, OPENED, FALSE, NULL, NULL, 0 },
     {__LINE__, FALSE, BAD_INST, OPENED, FALSE, "invalid file name.txt", NULL, 0 },
-    {__LINE__, FALSE, BAD_INST, DEATH, FALSE, BAD_SZ_A, NULL, 0xDEADFACE },
+    {__LINE__, FALSE, BAD_INST, DEATH, FALSE, BAD_SZ_A, NULL, 0 },
     {__LINE__, FALSE, BAD_INST, OPENED, TRUE, "created file.txt", NULL, 0 },
     // WIDE
-    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, NULL, 0x80070490 },
-    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, L"", ERROR_NO_SCROLLBARS },
-    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, L"invalid file name.txt", ERROR_NO_SCROLLBARS },
-    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, BAD_SZ_W, 0xDEADFACE },
-    {__LINE__, TRUE, NULL, OPENED, TRUE, NULL, L"created file.txt", ERROR_NO_SCROLLBARS },
-    {__LINE__, TRUE, BAD_INST, OPENED, FALSE, NULL, NULL, 0x80070490 },
-    {__LINE__, TRUE, BAD_INST, OPENED, FALSE, NULL, L"invalid file name.txt", ERROR_NO_SCROLLBARS },
-    {__LINE__, TRUE, BAD_INST, OPENED, FALSE, NULL, BAD_SZ_W, 0xDEADFACE },
-    {__LINE__, TRUE, BAD_INST, OPENED, TRUE, NULL, L"created file.txt", ERROR_NO_SCROLLBARS },
+    {__LINE__, TRUE, NULL, DEATH, FALSE, NULL, NULL, 0x80070490 },
+    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, L"", 0 },
+    {__LINE__, TRUE, NULL, OPENED, FALSE, NULL, L"invalid file name.txt", 0 },
+    {__LINE__, TRUE, NULL, DEATH, FALSE, NULL, BAD_SZ_W, 0 },
+    {__LINE__, TRUE, NULL, OPENED, TRUE, NULL, L"created file.txt", 0 },
+    {__LINE__, TRUE, BAD_INST, DEATH, FALSE, NULL, NULL, 0x80070490 },
+    {__LINE__, TRUE, BAD_INST, OPENED, FALSE, NULL, L"invalid file name.txt", 0 },
+    {__LINE__, TRUE, BAD_INST, DEATH, FALSE, NULL, BAD_SZ_W, 0 },
+    {__LINE__, TRUE, BAD_INST, OPENED, TRUE, NULL, L"created file.txt", 0 },
 };
 
 static HANDLE s_hThread = NULL;
 static INT s_nRet = NOT_OPENED;
 
 static unsigned __stdcall
-watch_thread_proc(void *arg)
+test_thread_proc(void *arg)
 {
-    for (int i = 0; i < COUNT; ++i)
+    TEST_ENTRY *pEntry = (TEST_ENTRY *)arg;
+    
+    SetLastError(0xDEADFACE);
+
+    _SEH2_TRY
     {
-        Sleep(INTERVAL);
-
-        HWND hwnd = FindWindowA("#32770", "Open With");
-        if (hwnd == NULL)
-            continue;
-
-        if (!IsWindowVisible(hwnd))
-        {
-            trace("not visible\n");
-            continue;
-        }
-
-        s_nRet = OPENED;
-        PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDCANCEL, BN_CLICKED), 0);
-        break;
+        if (pEntry->bWide)
+            (*pOpenAs_RunDLLW)(NULL, pEntry->hInst, pEntry->pszFileW, SW_SHOWDEFAULT);
+        else
+            (*pOpenAs_RunDLLA)(NULL, pEntry->hInst, pEntry->pszFileA, SW_SHOWDEFAULT);
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        s_nRet = DEATH;
+    }
+    _SEH2_END;
+
+    DWORD dwError = GetLastError();
+    ok(pEntry->dwError == dwError, "Line %d: error expected %ld, was %ld\n", pEntry->nLine, pEntry->dwError, dwError);
+
     return 0;
 }
 
-static void StartWatchGUI(const TEST_ENTRY *pEntry)
+BOOL WaitForDialogOpen(VOID)
 {
-    s_nRet = NOT_OPENED;
-    s_hThread = (HANDLE)_beginthreadex(NULL, 0, watch_thread_proc, NULL, 0, NULL);
+    HWND hwnd;
+    for (INT i = 0; i < COUNT; ++i)
+    {
+        Sleep(INTERVAL);
+
+        hwnd = FindWindowA("#32770", "Open With");
+        if (!hwnd)
+            continue;
+
+        SendMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
+        return TRUE;
+    }
+
+    hwnd = FindWindowA("#32770", "Open With");
+    SendMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
+    return hwnd != NULL;
 }
 
 static void DoEntry(const TEST_ENTRY *pEntry)
@@ -108,23 +124,14 @@ static void DoEntry(const TEST_ENTRY *pEntry)
             fclose(fp);
         }
 
-        StartWatchGUI(pEntry);
-        SetLastError(0xDEADFACE);
+        s_nRet = NOT_OPENED;
+        s_hThread = (HANDLE)_beginthreadex(NULL, 0, test_thread_proc, (void *)pEntry, 0, NULL);
+        ok(s_hThread != NULL, "s_hThread was NULL\n");
 
-        _SEH2_TRY
+        if (WaitForDialogOpen())
         {
-            (*pOpenAs_RunDLLW)(NULL, pEntry->hInst, pEntry->pszFileW, SW_SHOWDEFAULT);
+            s_nRet = OPENED;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            s_nRet = DEATH;
-        }
-        _SEH2_END;
-
-        DWORD dwError = GetLastError();
-        ok(pEntry->dwError == dwError, "Line %d: error expected %ld, was %ld\n", pEntry->nLine, pEntry->dwError, dwError);
-
-        WaitForSingleObject(s_hThread, INFINITE);
         CloseHandle(s_hThread);
 
         if (pEntry->bCreateFile)
@@ -141,23 +148,14 @@ static void DoEntry(const TEST_ENTRY *pEntry)
             fclose(fp);
         }
 
-        StartWatchGUI(pEntry);
-        SetLastError(0xDEADFACE);
+        s_nRet = NOT_OPENED;
+        s_hThread = (HANDLE)_beginthreadex(NULL, 0, test_thread_proc, (void *)pEntry, 0, NULL);
+        ok(s_hThread != NULL, "s_hThread was NULL\n");
 
-        _SEH2_TRY
+        if (WaitForDialogOpen())
         {
-            (*pOpenAs_RunDLLA)(NULL, pEntry->hInst, pEntry->pszFileA, SW_SHOWDEFAULT);
+            s_nRet = OPENED;
         }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            s_nRet = DEATH;
-        }
-        _SEH2_END;
-
-        DWORD dwError = GetLastError();
-        ok(pEntry->dwError == dwError, "Line %d: error expected %ld, was %ld\n", pEntry->nLine, pEntry->dwError, dwError);
-
-        WaitForSingleObject(s_hThread, INFINITE);
         CloseHandle(s_hThread);
 
         if (pEntry->bCreateFile)
