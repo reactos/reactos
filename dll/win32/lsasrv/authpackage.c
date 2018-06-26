@@ -1137,7 +1137,7 @@ LsapSetTokenOwner(
     IN LSA_TOKEN_INFORMATION_TYPE TokenInformationType)
 {
     PLSA_TOKEN_INFORMATION_V1 TokenInfo1;
-    PSID OwnerSid = NULL;
+    PSID_AND_ATTRIBUTES OwnerSid = NULL;
     ULONG i, Length;
 
     if (TokenInformationType == LsaTokenInformationV1)
@@ -1147,24 +1147,25 @@ LsapSetTokenOwner(
         if (TokenInfo1->Owner.Owner != NULL)
             return STATUS_SUCCESS;
 
-        OwnerSid = TokenInfo1->User.User.Sid;
+        OwnerSid = &TokenInfo1->User.User;
         for (i = 0; i < TokenInfo1->Groups->GroupCount; i++)
         {
             if (EqualSid(TokenInfo1->Groups->Groups[i].Sid, LsapAdministratorsSid))
             {
-                OwnerSid = LsapAdministratorsSid;
+                OwnerSid = &TokenInfo1->Groups->Groups[i];
                 break;
             }
         }
 
-        Length = RtlLengthSid(OwnerSid);
+        Length = RtlLengthSid(OwnerSid->Sid);
         TokenInfo1->Owner.Owner = DispatchTable.AllocateLsaHeap(Length);
         if (TokenInfo1->Owner.Owner == NULL)
             return STATUS_INSUFFICIENT_RESOURCES;
 
         RtlCopyMemory(TokenInfo1->Owner.Owner,
-                      OwnerSid,
+                      OwnerSid->Sid,
                       Length);
+        OwnerSid->Attributes |= SE_GROUP_OWNER;
     }
 
     return STATUS_SUCCESS;
