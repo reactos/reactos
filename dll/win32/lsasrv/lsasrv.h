@@ -206,7 +206,7 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
                DWORD ClientRevision);
 
 /* lsarpc.c */
-VOID
+NTSTATUS
 LsarStartRpcServer(VOID);
 
 /* policy.c */
