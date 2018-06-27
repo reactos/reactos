@@ -2170,10 +2170,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     /* create desktop.ini for custom icon */
     if (CSIDL_Data[folder].nShell32IconIndex)
     {
-        static const WCHAR s_szDesktopIni[] = L"desktop.ini";
         static const WCHAR s_szFormat[] = L"%%SystemRoot%%\\system32\\shell32.dll,%d";
-        static const WCHAR s_szIconResource[] = L"IconResource";
-        static const WCHAR s_shellClassInfo[] = L".ShellClassInfo";
         WCHAR szIconLocation[MAX_PATH];
         DWORD dwAttributes;
 
@@ -2183,14 +2180,14 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         SetFileAttributesW(szBuildPath, dwAttributes);
 
         /* build the desktop.ini file path */
-        PathAppendW(szBuildPath, s_szDesktopIni);
+        PathAppendW(szBuildPath, L"desktop.ini");
 
         /* build the icon location */
         StringCchPrintfW(szIconLocation, _countof(szIconLocation), s_szFormat,
                          CSIDL_Data[folder].nShell32IconIndex);
 
         /* write desktop.ini */
-        WritePrivateProfileStringW(s_shellClassInfo, s_szIconResource, szIconLocation, szBuildPath);
+        WritePrivateProfileStringW(L".ShellClassInfo", L"IconResource", szIconLocation, szBuildPath);
 
         /* flush! */
         WritePrivateProfileStringW(NULL, NULL, NULL, szBuildPath);
