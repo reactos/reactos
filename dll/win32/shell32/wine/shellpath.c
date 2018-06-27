@@ -3,6 +3,7 @@
  *
  * Copyright 1998, 1999, 2000 Juergen Schmied
  * Copyright 2004 Juan Lang
+ * Copyright 2018 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +37,7 @@
 #include <undocshell.h>
 #include <shlwapi.h>
 #include <sddl.h>
+#include <strsafe.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
@@ -661,6 +663,7 @@ typedef struct
     CSIDL_Type type;
     LPCWSTR    szValueName;
     LPCWSTR    szDefaultPath; /* fallback string or resource ID */
+    INT        nShell32IconIndex;
 } CSIDL_DATA;
 
 static const CSIDL_DATA CSIDL_Data[] =
@@ -669,7 +672,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Desktop,
         CSIDL_Type_User,
         DesktopW,
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY)
+        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+        -IDI_SHELL_DESKTOP
     },
     { /* 0x01 - CSIDL_INTERNET */
         &FOLDERID_InternetFolder,
@@ -681,31 +685,36 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Programs,
         CSIDL_Type_User,
         ProgramsW,
-        MAKEINTRESOURCEW(IDS_PROGRAMS)
+        MAKEINTRESOURCEW(IDS_PROGRAMS),
+        -IDI_SHELL_PRINTERS_FOLDER
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
         CSIDL_Type_SystemPath,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_CONTROL_PANEL
     },
     { /* 0x04 - CSIDL_PRINTERS */
         &FOLDERID_PrintersFolder,
         CSIDL_Type_SystemPath,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_PRINTER
     },
     { /* 0x05 - CSIDL_PERSONAL */
         &FOLDERID_Documents,
         CSIDL_Type_User,
         PersonalW,
-        MAKEINTRESOURCEW(IDS_PERSONAL)
+        MAKEINTRESOURCEW(IDS_PERSONAL),
+        -IDI_SHELL_MY_DOCUMENTS
     },
     { /* 0x06 - CSIDL_FAVORITES */
         &FOLDERID_Favorites,
         CSIDL_Type_User,
         FavoritesW,
-        MAKEINTRESOURCEW(IDS_FAVORITES)
+        MAKEINTRESOURCEW(IDS_FAVORITES),
+        -IDI_SHELL_FAVORITES
     },
     { /* 0x07 - CSIDL_STARTUP */
         &FOLDERID_Startup,
@@ -717,7 +726,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Recent,
         CSIDL_Type_User,
         RecentW,
-        MAKEINTRESOURCEW(IDS_RECENT)
+        MAKEINTRESOURCEW(IDS_RECENT),
+        -IDI_SHELL_RECENT_DOCUMENTS
     },
     { /* 0x09 - CSIDL_SENDTO */
         &FOLDERID_SendTo,
@@ -729,31 +739,35 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_RecycleBinFolder,
         CSIDL_Type_Disallowed,
         NULL,
-        NULL,
+        NULL
     },
     { /* 0x0b - CSIDL_STARTMENU */
         &FOLDERID_StartMenu,
         CSIDL_Type_User,
         Start_MenuW,
-        MAKEINTRESOURCEW(IDS_STARTMENU)
+        MAKEINTRESOURCEW(IDS_STARTMENU),
+        -IDI_SHELL_TSKBAR_STARTMENU
     },
     { /* 0x0c - CSIDL_MYDOCUMENTS */
         &GUID_NULL,
         CSIDL_Type_Disallowed, /* matches WinXP--can't get its path */
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_MY_DOCUMENTS
     },
     { /* 0x0d - CSIDL_MYMUSIC */
         &FOLDERID_Music,
         CSIDL_Type_User,
         My_MusicW,
-        MAKEINTRESOURCEW(IDS_MYMUSIC)
+        MAKEINTRESOURCEW(IDS_MYMUSIC),
+        -IDI_SHELL_MY_MUSIC
     },
     { /* 0x0e - CSIDL_MYVIDEO */
         &FOLDERID_Videos,
         CSIDL_Type_User,
         My_VideoW,
-        MAKEINTRESOURCEW(IDS_MYVIDEO)
+        MAKEINTRESOURCEW(IDS_MYVIDEO),
+        -IDI_SHELL_MY_MOVIES
     },
     { /* 0x0f - unassigned */
         &GUID_NULL,
@@ -765,7 +779,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Desktop,
         CSIDL_Type_User,
         DesktopW,
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY)
+        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+        -IDI_SHELL_DESKTOP
     },
     { /* 0x11 - CSIDL_DRIVES */
         &FOLDERID_ComputerFolder,
@@ -783,13 +798,15 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_NetHood,
         CSIDL_Type_User,
         NetHoodW,
-        MAKEINTRESOURCEW(IDS_NETHOOD)
+        MAKEINTRESOURCEW(IDS_NETHOOD),
+        -IDI_SHELL_NETWORK
     },
     { /* 0x14 - CSIDL_FONTS */
         &FOLDERID_Fonts,
         CSIDL_Type_WindowsPath,
         FontsW,
-        FontsW
+        FontsW,
+        -IDI_SHELL_FONTS_FOLDER
     },
     { /* 0x15 - CSIDL_TEMPLATES */
         &FOLDERID_Templates,
@@ -801,13 +818,15 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_CommonStartMenu,
         CSIDL_Type_AllUsers,
         Common_Start_MenuW,
-        MAKEINTRESOURCEW(IDS_STARTMENU)
+        MAKEINTRESOURCEW(IDS_STARTMENU),
+        -IDI_SHELL_TSKBAR_STARTMENU
     },
     { /* 0x17 - CSIDL_COMMON_PROGRAMS */
         &FOLDERID_CommonPrograms,
         CSIDL_Type_AllUsers,
         Common_ProgramsW,
-        MAKEINTRESOURCEW(IDS_PROGRAMS)
+        MAKEINTRESOURCEW(IDS_PROGRAMS),
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x18 - CSIDL_COMMON_STARTUP */
         &FOLDERID_CommonStartup,
@@ -819,7 +838,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_PublicDesktop,
         CSIDL_Type_AllUsers,
         Common_DesktopW,
-        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY)
+        MAKEINTRESOURCEW(IDS_DESKTOPDIRECTORY),
+        -IDI_SHELL_DESKTOP
     },
     { /* 0x1a - CSIDL_APPDATA */
         &FOLDERID_RoamingAppData,
@@ -831,7 +851,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_PrintHood,
         CSIDL_Type_User,
         PrintHoodW,
-        MAKEINTRESOURCEW(IDS_PRINTHOOD)
+        MAKEINTRESOURCEW(IDS_PRINTHOOD),
+        -IDI_SHELL_PRINTERS_FOLDER
     },
     { /* 0x1c - CSIDL_LOCAL_APPDATA */
         &FOLDERID_LocalAppData,
@@ -855,7 +876,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Favorites,
         CSIDL_Type_AllUsers,
         Common_FavoritesW,
-        MAKEINTRESOURCEW(IDS_FAVORITES)
+        MAKEINTRESOURCEW(IDS_FAVORITES),
+        -IDI_SHELL_FAVORITES
     },
     { /* 0x20 - CSIDL_INTERNET_CACHE */
         &FOLDERID_InternetCache,
@@ -891,19 +913,22 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_System,
         CSIDL_Type_SystemPath,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_SYSTEM_GEAR
     },
     { /* 0x26 - CSIDL_PROGRAM_FILES */
         &FOLDERID_ProgramFiles,
         CSIDL_Type_CurrVer,
         ProgramFilesDirW,
-        MAKEINTRESOURCEW(IDS_PROGRAM_FILES)
+        MAKEINTRESOURCEW(IDS_PROGRAM_FILES),
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x27 - CSIDL_MYPICTURES */
         &FOLDERID_Pictures,
         CSIDL_Type_User,
         My_PicturesW,
-        MAKEINTRESOURCEW(IDS_MYPICTURES)
+        MAKEINTRESOURCEW(IDS_MYPICTURES),
+        -IDI_SHELL_MY_PICTURES
     },
     { /* 0x28 - CSIDL_PROFILE */
         &FOLDERID_Profile,
@@ -945,7 +970,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_PublicDocuments,
         CSIDL_Type_AllUsers,
         Common_DocumentsW,
-        MAKEINTRESOURCEW(IDS_PERSONAL)
+        MAKEINTRESOURCEW(IDS_PERSONAL),
+        -IDI_SHELL_MY_DOCUMENTS
     },
     { /* 0x2f - CSIDL_COMMON_ADMINTOOLS */
         &FOLDERID_CommonAdminTools,
@@ -963,7 +989,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_ConnectionsFolder,
         CSIDL_Type_Disallowed,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_NETWORK_CONNECTIONS
     },
     { /* 0x32 - unassigned */
         &GUID_NULL,
@@ -987,19 +1014,22 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_PublicMusic,
         CSIDL_Type_AllUsers,
         CommonMusicW,
-        MAKEINTRESOURCEW(IDS_COMMON_MUSIC)
+        MAKEINTRESOURCEW(IDS_COMMON_MUSIC),
+        -237
     },
     { /* 0x36 - CSIDL_COMMON_PICTURES */
         &FOLDERID_PublicPictures,
         CSIDL_Type_AllUsers,
         CommonPicturesW,
-        MAKEINTRESOURCEW(IDS_COMMON_PICTURES)
+        MAKEINTRESOURCEW(IDS_COMMON_PICTURES),
+        -236
     },
     { /* 0x37 - CSIDL_COMMON_VIDEO */
         &FOLDERID_PublicVideos,
         CSIDL_Type_AllUsers,
         CommonVideoW,
-        MAKEINTRESOURCEW(IDS_COMMON_VIDEO)
+        MAKEINTRESOURCEW(IDS_COMMON_VIDEO),
+        -238
     },
     { /* 0x38 - CSIDL_RESOURCES */
         &FOLDERID_ResourceDir,
@@ -2128,8 +2158,46 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         hr = E_FAIL;
         goto end;
     }
-
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
+
+    /* create desktop.ini for custom icon */
+    if (CSIDL_Data[folder].nShell32IconIndex)
+    {
+        /* desktop.ini */
+        static const WCHAR s_szDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
+        /* %%SystemRoot%%\system32\shell32.dll,%d */
+        static const WCHAR s_szFormat[] = { '%','%','S','y','s','t','e','m','R','o','o','t','%','%','\\',
+            's','y','s','t','e','m','3','2','\\','s','h','e','l','l','3','2','.','d','l','l',',','%','d',0 };
+        /* IconResource */
+        static const WCHAR s_szIconResource[] = { 'I','c','o','n','R','e','s','o','u','r','c','e',0 };
+        /* .ShellClassInfo  */
+        static const WCHAR s_shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
+
+        WCHAR szIconLocation[MAX_PATH];
+        DWORD dwAttributes;
+
+        /* make the directory a system folder */
+        dwAttributes = GetFileAttributesW(szBuildPath);
+        dwAttributes |= FILE_ATTRIBUTE_SYSTEM;
+        SetFileAttributesW(szBuildPath, dwAttributes);
+
+        /* build the desktop.ini file path */
+        PathAppendW(szBuildPath, s_szDesktopIni);
+
+        /* build the icon location */
+        StringCchPrintfW(szIconLocation, _countof(szIconLocation), s_szFormat,
+                         CSIDL_Data[folder].nShell32IconIndex);
+
+        /* write desktop.ini */
+        WritePrivateProfileStringW(s_shellClassInfo, s_szIconResource, szIconLocation, szBuildPath);
+        WritePrivateProfileStringW(NULL, NULL, NULL, szBuildPath);
+
+        /* make the desktop.ini a system and hidden file */
+        dwAttributes = GetFileAttributesW(szBuildPath);
+        dwAttributes |= FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN;
+        SetFileAttributesW(szBuildPath, dwAttributes);
+    }
+
 end:
     TRACE("returning 0x%08x (final path is %s)\n", hr, debugstr_w(szBuildPath));
     return hr;
