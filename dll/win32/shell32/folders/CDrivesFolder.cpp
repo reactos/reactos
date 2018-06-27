@@ -297,13 +297,6 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, DrivesContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
-static BOOL
-getAutoRunInfo(LPCWSTR Entry, LPWSTR pszValue, DWORD cchValueLen, LPCWSTR InfFile)
-{
-    static const WCHAR s_icon[] = L"icon";
-    return GetPrivateProfileStringW(Entry, s_icon, NULL, pszValue, cchValueLen, InfFile);
-}
-
 static HRESULT
 getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
                         LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
@@ -325,7 +318,8 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
     PathAppendW(wszAutoRunInfPath, wszAutoRunInf);
 
     // autorun.inf --> wszValue
-    if (getAutoRunInfo(wszAutoRun, wszValue, _countof(wszValue), wszAutoRunInfPath))
+    if (GetPrivateProfileStringW(wszAutoRun, L"icon", NULL, wszValue, _countof(wszValue),
+                                 wszAutoRunInfPath) && wszValue[0] != 0)
     {
         // wszValue --> wszTemp
         ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
