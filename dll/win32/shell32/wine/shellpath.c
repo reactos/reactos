@@ -2190,6 +2190,8 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
 
         /* write desktop.ini */
         WritePrivateProfileStringW(s_shellClassInfo, s_szIconResource, szIconLocation, szBuildPath);
+
+        /* flush! */
         WritePrivateProfileStringW(NULL, NULL, NULL, szBuildPath);
 
         /* make the desktop.ini a system and hidden file */
