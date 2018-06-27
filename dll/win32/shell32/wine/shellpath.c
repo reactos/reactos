@@ -1015,21 +1015,21 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_AllUsers,
         CommonMusicW,
         MAKEINTRESOURCEW(IDS_COMMON_MUSIC),
-        -237
+        -IDI_SHELL_MY_MUSIC
     },
     { /* 0x36 - CSIDL_COMMON_PICTURES */
         &FOLDERID_PublicPictures,
         CSIDL_Type_AllUsers,
         CommonPicturesW,
         MAKEINTRESOURCEW(IDS_COMMON_PICTURES),
-        -236
+        -IDI_SHELL_MY_PICTURES
     },
     { /* 0x37 - CSIDL_COMMON_VIDEO */
         &FOLDERID_PublicVideos,
         CSIDL_Type_AllUsers,
         CommonVideoW,
         MAKEINTRESOURCEW(IDS_COMMON_VIDEO),
-        -238
+        -IDI_SHELL_MY_MOVIES
     },
     { /* 0x38 - CSIDL_RESOURCES */
         &FOLDERID_ResourceDir,
