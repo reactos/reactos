@@ -686,7 +686,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_User,
         ProgramsW,
         MAKEINTRESOURCEW(IDS_PROGRAMS),
-        -IDI_SHELL_PRINTERS_FOLDER
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x03 - CSIDL_CONTROLS (.CPL files) */
         &FOLDERID_ControlPanelFolder,
@@ -700,7 +700,7 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_SystemPath,
         NULL,
         NULL,
-        -IDI_SHELL_PRINTER
+        -IDI_SHELL_PRINTERS_FOLDER
     },
     { /* 0x05 - CSIDL_PERSONAL */
         &FOLDERID_Documents,
@@ -787,12 +787,14 @@ static const CSIDL_DATA CSIDL_Data[] =
         CSIDL_Type_Disallowed,
         NULL,
         NULL,
+        -IDI_SHELL_COMPUTER_FOLDER
     },
     { /* 0x12 - CSIDL_NETWORK */
         &FOLDERID_NetworkFolder,
         CSIDL_Type_Disallowed,
         NULL,
         NULL,
+        -IDI_SHELL_NETWORK_FOLDER
     },
     { /* 0x13 - CSIDL_NETHOOD */
         &FOLDERID_NetHood,
@@ -907,7 +909,8 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_Windows,
         CSIDL_Type_WindowsPath,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_SYSTEM_GEAR
     },
     { /* 0x25 - CSIDL_SYSTEM */
         &FOLDERID_System,
@@ -940,19 +943,22 @@ static const CSIDL_DATA CSIDL_Data[] =
         &FOLDERID_SystemX86,
         CSIDL_Type_SystemX86Path,
         NULL,
-        NULL
+        NULL,
+        -IDI_SHELL_SYSTEM_GEAR
     },
     { /* 0x2a - CSIDL_PROGRAM_FILESX86 */
         &FOLDERID_ProgramFilesX86,
         CSIDL_Type_CurrVer,
         ProgramFilesDirX86W,
-        Program_Files_x86W
+        Program_Files_x86W,
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2b - CSIDL_PROGRAM_FILES_COMMON */
         &FOLDERID_ProgramFilesCommon,
         CSIDL_Type_CurrVer,
         CommonFilesDirW,
-        MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON)
+        MAKEINTRESOURCEW(IDS_PROGRAM_FILES_COMMON),
+        -IDI_SHELL_PROGRAMS_FOLDER
     },
     { /* 0x2c - CSIDL_PROGRAM_FILES_COMMONX86 */
         &FOLDERID_ProgramFilesCommonX86,
