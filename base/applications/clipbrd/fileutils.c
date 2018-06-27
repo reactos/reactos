@@ -4,6 +4,7 @@
  * PURPOSE:     Clipboard file format helper functions.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
+ *              Copyright 2018 Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
@@ -272,7 +273,7 @@ static BOOL ClipboardReadBitmap(HANDLE hFile, DWORD dwOffset, DWORD dwLength)
     return TRUE;
 }
 
-void ReadClipboardFile(LPCWSTR lpFileName)
+BOOL ReadClipboardFile(LPCWSTR lpFileName)
 {
     CLIPFILEHEADER ClipFileHeader;
     CLIPFORMATHEADER ClipFormatArray;
@@ -291,7 +292,7 @@ void ReadClipboardFile(LPCWSTR lpFileName)
 
     HANDLE hFile;
     DWORD dwBytesRead;
-    BOOL bResult;
+    BOOL bResult = FALSE;
     int i;
 
     /* Open the file for read access */
@@ -443,10 +444,10 @@ done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
 
-    return;
+    return bResult;
 }
 
-void WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier)
+BOOL WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier)
 {
     CLIPFILEHEADER ClipFileHeader;
     CLIPFORMATHEADER ClipFormatArray;
@@ -465,6 +466,7 @@ void WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier)
     HANDLE hFile;
     DWORD dwBytesWritten;
     int i;
+    BOOL bResult = FALSE;
 
     /* Create the file for write access */
     hFile = CreateFileW(lpFileName, GENERIC_WRITE, 0, NULL,
@@ -583,9 +585,11 @@ Cont:
         dwFormatID = EnumClipboardFormats(dwFormatID);
     }
 
+    bResult = TRUE;
+
 done:
     if (hFile != INVALID_HANDLE_VALUE)
         CloseHandle(hFile);
 
-    return;
+    return bResult;
 }

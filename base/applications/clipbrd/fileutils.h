@@ -51,5 +51,5 @@ typedef struct _NTCLIPFORMATHEADER
     WCHAR szName[MAX_FMT_NAME_LEN];
 } NTCLIPFORMATHEADER;
 
-void ReadClipboardFile(LPCWSTR lpFileName);
-void WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier);
+BOOL ReadClipboardFile(LPCWSTR lpFileName);
+BOOL WriteClipboardFile(LPCWSTR lpFileName, WORD wFileIdentifier);

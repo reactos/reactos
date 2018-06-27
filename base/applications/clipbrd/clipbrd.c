@@ -4,6 +4,7 @@
  * PURPOSE:     Provides a view of the contents of the ReactOS clipboard.
  * COPYRIGHT:   Copyright 2015-2018 Ricardo Hanke
  *              Copyright 2015-2018 Hermes Belusca-Maito
+ *              Copyright 2018 Katayama Hirofumi MZ
  */
 
 #include "precomp.h"
@@ -49,25 +50,22 @@ static void SaveClipboardToFile(void)
     CloseClipboard();
 }
 
-static void LoadClipboardDataFromFile(LPWSTR lpszFileName)
+static BOOL LoadClipboardDataFromFile(LPWSTR lpszFileName)
 {
-    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
-                      STRING_DELETE_MSG, STRING_DELETE_TITLE,
-                      MB_ICONWARNING | MB_YESNO) != IDYES)
-    {
-        return;
-    }
+    BOOL bResult;
 
     if (!OpenClipboard(Globals.hMainWnd))
     {
         ShowLastWin32Error(Globals.hMainWnd);
-        return;
+        return FALSE;
     }
 
     EmptyClipboard();
-    ReadClipboardFile(lpszFileName);
+    bResult = ReadClipboardFile(lpszFileName);
 
     CloseClipboard();
+
+    return bResult;
 }
 
 static void LoadClipboardFromFile(void)
@@ -94,6 +92,13 @@ static void LoadClipboardFromFile(void)
     if (!GetOpenFileNameW(&ofn))
         return;
 
+    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
+                      STRING_DELETE_MSG, STRING_DELETE_TITLE,
+                      MB_ICONWARNING | MB_YESNO) != IDYES)
+    {
+        return;
+    }
+
     LoadClipboardDataFromFile(szFileName);
 }
 
@@ -103,6 +108,13 @@ static void LoadClipboardFromDrop(HDROP hDrop)
 
     DragQueryFileW(hDrop, 0, szFileName, ARRAYSIZE(szFileName));
     DragFinish(hDrop);
+
+    if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
+                      STRING_DELETE_MSG, STRING_DELETE_TITLE,
+                      MB_ICONWARNING | MB_YESNO) != IDYES)
+    {
+        return;
+    }
 
     LoadClipboardDataFromFile(szFileName);
 }
@@ -385,6 +397,7 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_CREATE:
         {
             TEXTMETRICW tm;
+
             HDC hDC = GetDC(hWnd);
 
             /*
@@ -409,6 +422,8 @@ static LRESULT WINAPI MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
             UpdateDisplayMenu();
             SetDisplayFormat(0);
+
+            DragAcceptFiles(hWnd, TRUE);
             break;
         }
 
@@ -733,8 +748,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     /* If the user provided a path to a clipboard data file, try to open it */
-    if (lpCmdLine != NULL && *lpCmdLine)
-        LoadClipboardDataFromFile(lpCmdLine);
+    if (__argc >= 2)
+    {
+        if (MessageBoxRes(Globals.hMainWnd, Globals.hInstance,
+                          STRING_DELETE_MSG, STRING_DELETE_TITLE,
+                          MB_ICONWARNING | MB_YESNO) == IDYES)
+        {
+            if (!LoadClipboardDataFromFile(__wargv[1]))
+                LoadClipboardDataFromFile(lpCmdLine);
+        }
+    }
 
     while (GetMessageW(&msg, 0, 0, 0))
     {
