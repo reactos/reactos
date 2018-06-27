@@ -30,7 +30,7 @@
 @ stdcall MakeSureDirectoryPathExists(str)
 @ stdcall MapDebugInformation(long str str long)
 @ stdcall MiniDumpReadDumpStream(ptr long ptr ptr ptr)
-@ stdcall MiniDumpWriteDump(ptr long ptr long long long long)
+@ stdcall MiniDumpWriteDump(ptr long ptr long ptr ptr ptr)
 @ stdcall SearchTreeForFile(str str ptr)
 @ stdcall SearchTreeForFileW(wstr wstr ptr)
 @ stdcall StackWalk(long long long ptr ptr ptr ptr ptr ptr)
