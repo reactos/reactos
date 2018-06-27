@@ -316,9 +316,9 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
 
     // get path
     if (!ILGetDisplayNameExW(psf, pidl, wszPath, 0))
-        goto Quit;
+        return E_FAIL;
     if (!PathIsDirectoryW(wszPath))
-        goto Quit;
+        return E_FAIL;
 
     // build the full path of autorun.inf
     StringCchCopyW(wszAutoRunInfPath, _countof(wszAutoRunInfPath), wszPath);
@@ -345,7 +345,6 @@ getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
         return S_OK;
     }
 
-Quit:
     return E_FAIL;
 }
 
