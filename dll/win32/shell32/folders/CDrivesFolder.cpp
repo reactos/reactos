@@ -4,7 +4,7 @@
  *    Copyright 1997                Marcus Meissner
  *    Copyright 1998, 1999, 2002    Juergen Schmied
  *    Copyright 2009                Andrew Hill
- *    Copyright 2017                Katayama Hirofumi MZ
+ *    Copyright 2017-2018           Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -297,6 +297,58 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
     return CDefFolderMenu_Create2(pidlFolder, hwnd, cidl, apidl, psf, DrivesContextMenuCallback, cKeys, hKeys, ppcm);
 }
 
+static BOOL
+getAutoRunInfo(LPCWSTR Entry, LPWSTR pszValue, DWORD cchValueLen, LPCWSTR InfFile)
+{
+    static const WCHAR s_icon[] = { 'i', 'c', 'o', 'n', 0 };
+    return GetPrivateProfileStringW(Entry, s_icon, NULL, pszValue, cchValueLen, InfFile);
+}
+
+static HRESULT
+getIconLocationForDrive(IShellFolder *psf, PCITEMID_CHILD pidl, UINT uFlags,
+                        LPWSTR szIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
+{
+    WCHAR wszPath[MAX_PATH];
+    WCHAR wszAutoRunInfPath[MAX_PATH];
+    WCHAR wszValue[MAX_PATH], wszTemp[MAX_PATH];
+    static const WCHAR wszAutoRunInf[] = { 'a','u','t','o','r','u','n','.','i','n','f',0 };
+    static const WCHAR wszAutoRun[] = { 'a','u','t','o','r','u','n',0 };
+
+    // get path
+    if (!ILGetDisplayNameExW(psf, pidl, wszPath, 0))
+        goto Quit;
+    if (!PathIsDirectoryW(wszPath))
+        goto Quit;
+
+    // build the full path of autorun.inf
+    StringCchCopyW(wszAutoRunInfPath, _countof(wszAutoRunInfPath), wszPath);
+    PathAppendW(wszAutoRunInfPath, wszAutoRunInf);
+
+    // autorun.inf --> wszValue
+    if (getAutoRunInfo(wszAutoRun, wszValue, _countof(wszValue), wszAutoRunInfPath))
+    {
+        // wszValue --> wszTemp
+        ExpandEnvironmentStringsW(wszValue, wszTemp, _countof(wszTemp));
+
+        // parse the icon location
+        *piIndex = PathParseIconLocationW(wszTemp);
+
+        // wszPath + wszTemp --> wszPath
+        if (PathIsRelativeW(wszTemp))
+            PathAppendW(wszPath, wszTemp);
+        else
+            StringCchCopyW(wszPath, _countof(wszPath), wszTemp);
+
+        // wszPath --> szIconFile
+        GetFullPathNameW(wszPath, cchMax, szIconFile, NULL);
+
+        return S_OK;
+    }
+
+Quit:
+    return E_FAIL;
+}
+
 HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl, REFIID riid, LPVOID * ppvOut)
 {
     CComPtr<IDefaultExtractIconInit> initIcon;
@@ -311,8 +363,14 @@ HRESULT CDrivesExtractIcon_CreateInstance(IShellFolder * psf, LPCITEMIDLIST pidl
 
     WCHAR wTemp[MAX_PATH];
     int icon_idx;
+    UINT flags = 0;
     if ((DriveType == DRIVE_FIXED || DriveType == DRIVE_UNKNOWN) &&
         (HCR_GetIconW(L"Drive", wTemp, NULL, MAX_PATH, &icon_idx)))
+    {
+        initIcon->SetNormalIcon(wTemp, icon_idx);
+    }
+    else if (SUCCEEDED(getIconLocationForDrive(psf, pidl, 0, wTemp, _countof(wTemp),
+                                               &icon_idx, &flags)))
     {
         initIcon->SetNormalIcon(wTemp, icon_idx);
     }
