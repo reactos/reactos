@@ -2164,16 +2164,10 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     /* create desktop.ini for custom icon */
     if (CSIDL_Data[folder].nShell32IconIndex)
     {
-        /* desktop.ini */
-        static const WCHAR s_szDesktopIni[] = { 'd','e','s','k','t','o','p','.','i','n','i',0 };
-        /* %%SystemRoot%%\system32\shell32.dll,%d */
-        static const WCHAR s_szFormat[] = { '%','%','S','y','s','t','e','m','R','o','o','t','%','%','\\',
-            's','y','s','t','e','m','3','2','\\','s','h','e','l','l','3','2','.','d','l','l',',','%','d',0 };
-        /* IconResource */
-        static const WCHAR s_szIconResource[] = { 'I','c','o','n','R','e','s','o','u','r','c','e',0 };
-        /* .ShellClassInfo  */
-        static const WCHAR s_shellClassInfo[] = { '.', 'S', 'h', 'e', 'l', 'l', 'C', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
-
+        static const WCHAR s_szDesktopIni[] = L"desktop.ini";
+        static const WCHAR s_szFormat[] = L"%%SystemRoot%%\\system32\\shell32.dll,%d";
+        static const WCHAR s_szIconResource[] = L"IconResource";
+        static const WCHAR s_shellClassInfo[] = L".ShellClassInfo";
         WCHAR szIconLocation[MAX_PATH];
         DWORD dwAttributes;
 
