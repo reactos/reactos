@@ -2158,6 +2158,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
         hr = E_FAIL;
         goto end;
     }
+
     TRACE("Created missing system directory %s\n", debugstr_w(szBuildPath));
 
     /* create desktop.ini for custom icon */
