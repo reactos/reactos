@@ -300,7 +300,7 @@ HRESULT CDrivesContextMenu_CreateInstance(PCIDLIST_ABSOLUTE pidlFolder,
 static BOOL
 getAutoRunInfo(LPCWSTR Entry, LPWSTR pszValue, DWORD cchValueLen, LPCWSTR InfFile)
 {
-    static const WCHAR s_icon[] = { 'i', 'c', 'o', 'n', 0 };
+    static const WCHAR s_icon[] = L"icon";
     return GetPrivateProfileStringW(Entry, s_icon, NULL, pszValue, cchValueLen, InfFile);
 }
 
