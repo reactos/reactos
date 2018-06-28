@@ -144,7 +144,6 @@ IntSynthesizeDib(
     ULONG cjInfoSize, cjDataSize;
     PCLIPBOARDDATA pClipboardData;
     HANDLE hMem;
-    BITMAP bm;
     INT iResult;
     struct
     {
@@ -161,16 +160,8 @@ IntSynthesizeDib(
     }
 
     /* Get information about the bitmap format */
-    if (!GreGetObject(hbm, sizeof(BITMAP), &bm))
-        goto cleanup;
-
     memset(&bmiBuffer, 0, sizeof(bmiBuffer));
     pbmi->bmiHeader.biSize = sizeof(bmiBuffer.bmih);
-    pbmi->bmiHeader.biWidth = bm.bmWidth;
-    pbmi->bmiHeader.biHeight = bm.bmHeight;
-    pbmi->bmiHeader.biPlanes = bm.bmPlanes;
-    pbmi->bmiHeader.biBitCount = bm.bmBitsPixel;
-
     iResult = GreGetDIBitsInternal(hdc,
                                    hbm,
                                    0,
