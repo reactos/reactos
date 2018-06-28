@@ -434,6 +434,16 @@
 #define IDD_NEWEXTENSION 28
 #define IDD_EDITTYPE     36
 #define IDD_ACTION       37
+#define IDD_FOLDER_CUSTOMIZE    38
+
+/* Control IDs for IDD_FOLDER_CUSTOMIZE dialog */
+#define IDC_FOLDERCUST_COMBOBOX             14001
+#define IDC_FOLDERCUST_CHECKBOX             14002
+#define IDC_FOLDERCUST_CHOOSE_PIC           14003
+#define IDC_FOLDERCUST_RESTORE_DEFAULTS     14004
+#define IDC_FOLDERCUST_PREVIEW_BITMAP       14005
+#define IDC_FOLDERCUST_ICON                 14006
+#define IDC_FOLDERCUST_CHANGE_ICON          14007
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

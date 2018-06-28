@@ -885,11 +885,256 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
+/*************************************************************************/
+/* Folder Customize */
+
+static const WCHAR s_szShellClassInfo[] = L".ShellClassInfo";
+static const WCHAR s_szIconIndex[] = L"IconIndex";
+static const WCHAR s_szIconFile[] = L"IconFile";
+static const WCHAR s_szIconResource[] = L"IconResource";
+
+// IDD_FOLDER_CUSTOMIZE
+INT_PTR CALLBACK
+CFileDefExt::FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            LPPROPSHEETPAGE ppsp = (LPPROPSHEETPAGE)lParam;
+
+            if (ppsp == NULL || !ppsp->lParam)
+                break;
+
+            TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %x\n", hwndDlg, lParam, ppsp->lParam);
+
+            pFileDefExt = reinterpret_cast<CFileDefExt *>(ppsp->lParam);
+            return pFileDefExt->InitFolderCustomizePage(hwndDlg);
+        }
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_FOLDERCUST_CHANGE_ICON:
+                    pFileDefExt->OnFolderCustChangeIcon(hwndDlg);
+                    break;
+
+                case IDC_FOLDERCUST_CHOOSE_PIC:
+                    // TODO:
+                    break;
+
+                case IDC_FOLDERCUST_RESTORE_DEFAULTS:
+                    // TODO:
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                // apply or not
+                if (pFileDefExt->OnFolderCustApply(hwndDlg))
+                {
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+                }
+                else
+                {
+                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+                }
+                return TRUE;
+            }
+            break;
+        }
+
+        case WM_DESTROY:
+            pFileDefExt->OnFolderCustDestroy(hwndDlg);
+            break;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+// IDD_FOLDER_CUSTOMIZE WM_DESTROY
+void CFileDefExt::OnFolderCustDestroy(HWND hwndDlg)
+{
+    ::DestroyIcon(m_hFolderIcon);
+    m_hFolderIcon = NULL;
+
+    /* Detach the object from dialog window */
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)0);
+}
+
+void CFileDefExt::UpdateFolderIcon(HWND hwndDlg)
+{
+    // destroy icon if any
+    if (m_hFolderIcon)
+    {
+        ::DestroyIcon(m_hFolderIcon);
+        m_hFolderIcon = NULL;
+    }
+
+    // create the icon
+    if (m_szFolderIconPath[0] == 0 && m_nFolderIconIndex == 0)
+    {
+        m_hFolderIcon = LoadIconW(shell32_hInstance, MAKEINTRESOURCEW(IDI_SHELL_FOLDER));
+    }
+    else
+    {
+        ExtractIconExW(m_szFolderIconPath, m_nFolderIconIndex, &m_hFolderIcon, NULL, 1);
+    }
+
+    // set icon
+    SendDlgItemMessageW(hwndDlg, IDC_FOLDERCUST_ICON, STM_SETICON, (WPARAM)m_hFolderIcon, 0);
+}
+
+// IDD_FOLDER_CUSTOMIZE WM_INITDIALOG
+BOOL CFileDefExt::InitFolderCustomizePage(HWND hwndDlg)
+{
+    /* Attach the object to dialog window */
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)this);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_COMBOBOX), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_CHECKBOX), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_CHOOSE_PIC), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_RESTORE_DEFAULTS), FALSE);
+
+    // build the desktop.ini file path
+    WCHAR szIniFile[MAX_PATH];
+    StringCchCopyW(szIniFile, _countof(szIniFile), m_wszPath);
+    PathAppendW(szIniFile, L"desktop.ini");
+
+    // desktop.ini --> m_szFolderIconPath, m_nFolderIconIndex
+    m_szFolderIconPath[0] = 0;
+    m_nFolderIconIndex = 0;
+    if (GetPrivateProfileStringW(s_szShellClassInfo, s_szIconFile, NULL,
+                                 m_szFolderIconPath, _countof(m_szFolderIconPath), szIniFile))
+    {
+        m_nFolderIconIndex = GetPrivateProfileIntW(s_szShellClassInfo, s_szIconIndex, 0, szIniFile);
+    }
+    else if (GetPrivateProfileStringW(s_szShellClassInfo, s_szIconResource, NULL,
+                                      m_szFolderIconPath, _countof(m_szFolderIconPath), szIniFile))
+    {
+        m_nFolderIconIndex = PathParseIconLocationW(m_szFolderIconPath);
+    }
+
+    // update icon
+    UpdateFolderIcon(hwndDlg);
+
+    return TRUE;
+}
+
+// IDD_FOLDER_CUSTOMIZE IDC_FOLDERCUST_CHANGE_ICON
+void CFileDefExt::OnFolderCustChangeIcon(HWND hwndDlg)
+{
+    WCHAR szPath[MAX_PATH];
+    INT nIconIndex;
+
+    // m_szFolderIconPath, m_nFolderIconIndex --> szPath, nIconIndex
+    if (m_szFolderIconPath[0])
+    {
+        StringCchCopyW(szPath, _countof(szPath), m_szFolderIconPath);
+        nIconIndex = m_nFolderIconIndex;
+    }
+    else
+    {
+        szPath[0] = 0;
+        nIconIndex = 0;
+    }
+
+    // let the user choose the icon
+    if (PickIconDlg(hwndDlg, szPath, _countof(szPath), &nIconIndex))
+    {
+        // changed
+        m_bFolderIconIsSet = TRUE;
+        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+        // update
+        StringCchCopyW(m_szFolderIconPath, _countof(m_szFolderIconPath), szPath);
+        m_nFolderIconIndex = nIconIndex;
+        UpdateFolderIcon(hwndDlg);
+    }
+}
+
+// IDD_FOLDER_CUSTOMIZE PSN_APPLY
+BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
+{
+    // build the desktop.ini file path
+    WCHAR szIniFile[MAX_PATH];
+    StringCchCopyW(szIniFile, _countof(szIniFile), m_wszPath);
+    PathAppendW(szIniFile, L"desktop.ini");
+
+    if (m_bFolderIconIsSet)     // it is set!
+    {
+        DWORD attrs;
+
+        // change folder attributes (-S -R)
+        attrs = GetFileAttributesW(m_wszPath);
+        attrs &= ~(FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY);
+        SetFileAttributesW(m_wszPath, attrs);
+
+        // change desktop.ini attributes (-S -H -R)
+        attrs = GetFileAttributesW(szIniFile);
+        attrs &= ~(FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
+        SetFileAttributesW(szIniFile, attrs);
+
+        if (m_szFolderIconPath[0])
+        {
+            // write IconFile and IconIndex
+            WritePrivateProfileStringW(s_szShellClassInfo, s_szIconFile, m_szFolderIconPath, szIniFile);
+
+            WCHAR szInt[32];
+            StringCchPrintfW(szInt, _countof(szInt), L"%d", m_nFolderIconIndex);
+            WritePrivateProfileStringW(s_szShellClassInfo, s_szIconIndex, szInt, szIniFile);
+
+            // flush!
+            WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+        }
+        else
+        {
+            // erase three values
+            WritePrivateProfileStringW(s_szShellClassInfo, s_szIconFile, NULL, szIniFile);
+            WritePrivateProfileStringW(s_szShellClassInfo, s_szIconIndex, NULL, szIniFile);
+            WritePrivateProfileStringW(s_szShellClassInfo, s_szIconResource, NULL, szIniFile);
+
+            // flush!
+            WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
+        }
+
+        // change desktop.ini attributes (+S +H)
+        attrs = GetFileAttributesW(szIniFile);
+        attrs |= FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN;
+        SetFileAttributesW(szIniFile, attrs);
+
+        // change folder attributes (+R)
+        attrs = GetFileAttributesW(m_wszPath);
+        attrs |= FILE_ATTRIBUTE_READONLY;
+        SetFileAttributesW(m_wszPath, attrs);
+
+        // done!
+        m_bFolderIconIsSet = FALSE;
+    }
+
+    return TRUE;
+}
+
+/*****************************************************************************/
+
 CFileDefExt::CFileDefExt():
     m_bDir(FALSE), m_cFiles(0), m_cFolders(0)
 {
     m_wszPath[0] = L'\0';
     m_DirSize.QuadPart = 0ull;
+
+    m_szFolderIconPath[0] = 0;
+    m_nFolderIconIndex = 0;
+    m_hFolderIcon = NULL;
+    m_bFolderIconIsSet = FALSE;
 }
 
 CFileDefExt::~CFileDefExt()
@@ -976,6 +1221,16 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
                                             VersionPageProc,
                                             (LPARAM)this,
                                             NULL);
+        if (hPage)
+            pfnAddPage(hPage, lParam);
+    }
+
+    if (m_bDir)
+    {
+        hPage = SH_CreatePropertySheetPage(IDD_FOLDER_CUSTOMIZE,
+                                           FolderCustomizePageProc,
+                                           (LPARAM)this,
+                                           NULL);
         if (hPage)
             pfnAddPage(hPage, lParam);
     }
