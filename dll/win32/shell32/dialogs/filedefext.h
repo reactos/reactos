@@ -87,9 +87,21 @@ private:
 
     static DWORD WINAPI _CountFolderAndFilesThreadProc(LPVOID lpParameter);
 
+    // FolderCustomize
+    WCHAR   m_szFolderIconPath[MAX_PATH];
+    INT     m_nFolderIconIndex;
+    HICON   m_hFolderIcon;
+    BOOL    m_bFolderIconIsSet;
+
 public:
 	CFileDefExt();
 	~CFileDefExt();
+
+    // FolderCustomize
+    BOOL OnFolderCustApply(HWND hwndDlg);
+    void OnFolderCustChangeIcon(HWND hwndDlg);
+    void OnFolderCustDestroy(HWND hwndDlg);
+    void UpdateFolderIcon(HWND hwndDlg);
 
 	// IShellExtInit
 	virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
