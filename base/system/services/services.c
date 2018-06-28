@@ -24,7 +24,6 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 /* Defined in include/reactos/services/services.h */
 // #define SCM_START_EVENT             L"SvcctrlStartEvent_A3752DX"
 #define SCM_AUTOSTARTCOMPLETE_EVENT L"SC_AutoStartComplete"
-#define LSA_RPC_SERVER_ACTIVE       L"LSA_RPC_SERVER_ACTIVE"
 
 BOOL ScmInitialize = FALSE;
 BOOL ScmShutdown = FALSE;
@@ -85,10 +84,10 @@ ScmLogEvent(DWORD dwEventId,
 VOID
 ScmWaitForLsa(VOID)
 {
-    HANDLE hEvent = CreateEventW(NULL, TRUE, FALSE, LSA_RPC_SERVER_ACTIVE);
+    HANDLE hEvent = CreateEventW(NULL, TRUE, FALSE, L"LSA_RPC_SERVER_ACTIVE");
     if (hEvent == NULL)
     {
-        DPRINT1("Failed to create the notification event (Error %lu)\n", GetLastError());
+        DPRINT1("Failed to create or open the notification event (Error %lu)\n", GetLastError());
     }
     else
     {
@@ -193,9 +192,6 @@ wWinMain(HINSTANCE hInstance,
         DPRINT1("SERVICES: Failed to create SCM database (Error %lu)\n", dwError);
         goto done;
     }
-
-    /* Wait for the LSA server */
-    ScmWaitForLsa();
 
     /* Update the services database */
     ScmGetBootAndSystemDriverState();
