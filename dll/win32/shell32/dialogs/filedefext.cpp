@@ -779,6 +779,21 @@ CFileDefExt::InitVersionPage(HWND hwndDlg)
     return TRUE;
 }
 
+BOOL
+CFileDefExt::InitFolderCustomizePage(HWND hwndDlg)
+{
+    /* Attach file version to dialog window */
+    SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)this);
+
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_COMBOBOX), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_CHECKBOX), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_CHOOSE_PIC), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_RESTORE_DEFAULTS), FALSE);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_FOLDERCUST_CHANGE_ICON), FALSE);
+
+    return TRUE;
+}
+
 /*************************************************************************
  *
  * CFileDefExt::SetVersionLabel [Internal]
@@ -885,6 +900,59 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
     return FALSE;
 }
 
+// IDD_FOLDER_CUSTOMIZE
+INT_PTR CALLBACK
+CFileDefExt::FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            LPPROPSHEETPAGE ppsp = (LPPROPSHEETPAGE)lParam;
+
+            if (ppsp == NULL || !ppsp->lParam)
+                break;
+
+            TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %x\n", hwndDlg, lParam, ppsp->lParam);
+
+            CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(ppsp->lParam);
+            return pFileDefExt->InitFolderCustomizePage(hwndDlg);
+        }
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_FOLDERCUST_CHANGE_ICON:
+                    // TODO:
+                    break;
+                case IDC_FOLDERCUST_CHOOSE_PIC:
+                    // TODO:
+                    break;
+                case IDC_FOLDERCUST_RESTORE_DEFAULTS:
+                    // TODO:
+                    break;
+            }
+            break;
+        case WM_NOTIFY:
+        {
+            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
+            if (lppsn->hdr.code == PSN_APPLY)
+            {
+                //CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
+
+                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+                return TRUE;
+            }
+            break;
+        }
+        case WM_DESTROY:
+            break;
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
 CFileDefExt::CFileDefExt():
     m_bDir(FALSE), m_cFiles(0), m_cFolders(0)
 {
@@ -976,6 +1044,16 @@ CFileDefExt::AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
                                             VersionPageProc,
                                             (LPARAM)this,
                                             NULL);
+        if (hPage)
+            pfnAddPage(hPage, lParam);
+    }
+
+    if (m_bDir)
+    {
+        hPage = SH_CreatePropertySheetPage(IDD_FOLDER_CUSTOMIZE,
+                                           FolderCustomizePageProc,
+                                           (LPARAM)this,
+                                           NULL);
         if (hPage)
             pfnAddPage(hPage, lParam);
     }
