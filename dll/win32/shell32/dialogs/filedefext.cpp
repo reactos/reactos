@@ -1073,12 +1073,12 @@ BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
     {
         DWORD attrs;
 
-        // change folder attributes
+        // change folder attributes (-S -R)
         attrs = GetFileAttributesW(m_wszPath);
         attrs &= ~(FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_READONLY);
         SetFileAttributesW(m_wszPath, attrs);
 
-        // change desktop.ini attributes
+        // change desktop.ini attributes (-S -H -R)
         attrs = GetFileAttributesW(szIniFile);
         attrs &= ~(FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY);
         SetFileAttributesW(szIniFile, attrs);
@@ -1106,14 +1106,14 @@ BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
             WritePrivateProfileStringW(NULL, NULL, NULL, szIniFile);
         }
 
-        // change desktop.ini attributes
+        // change desktop.ini attributes (+S +H)
         attrs = GetFileAttributesW(szIniFile);
         attrs |= FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN;
         SetFileAttributesW(szIniFile, attrs);
 
-        // change folder attributes
+        // change folder attributes (+R)
         attrs = GetFileAttributesW(m_wszPath);
-        attrs |= FILE_ATTRIBUTE_SYSTEM;
+        attrs |= FILE_ATTRIBUTE_READONLY;
         SetFileAttributesW(m_wszPath, attrs);
 
         // done!
