@@ -160,6 +160,7 @@ IntSynthesizeDib(
     }
 
     /* Get information about the bitmap format */
+    memset(&bmiBuffer, 0, sizeof(bmiBuffer));
     pbmi->bmiHeader.biSize = sizeof(bmiBuffer.bmih);
     iResult = GreGetDIBitsInternal(hdc,
                                    hbm,
