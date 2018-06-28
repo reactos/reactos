@@ -47,7 +47,7 @@ extern const MATRIX gmxWorldToPageDefault;
 /* HACK!! Fix XFORMOBJ then use 1:16 / 16:1 */
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
-FT_Library  g_library;
+FT_Library  g_FreeTypeLibrary;
 
 /* special font names */
 static const UNICODE_STRING g_MarlettW = RTL_CONSTANT_STRING(L"Marlett");
@@ -473,7 +473,7 @@ InitFontSupport(VOID)
     }
     ExInitializeFastMutex(g_FreeTypeLock);
 
-    ulError = FT_Init_FreeType(&g_library);
+    ulError = FT_Init_FreeType(&g_FreeTypeLibrary);
     if (ulError)
     {
         DPRINT1("FT_Init_FreeType failed with error code 0x%x\n", ulError);
@@ -803,7 +803,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         /* load a face from memory */
         IntLockFreeType();
         Error = FT_New_Memory_Face(
-                    g_library,
+                    g_FreeTypeLibrary,
                     pLoadFont->Memory->Buffer,
                     pLoadFont->Memory->BufferSize,
                     ((FontIndex != -1) ? FontIndex : 0),
@@ -3403,7 +3403,7 @@ ftGdiGetGlyphOutline(
             FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
             /* Note: FreeType will only set 'black' bits for us. */
             RtlZeroMemory(pvBuf, needed);
-            FT_Outline_Get_Bitmap(g_library, &ft_face->glyph->outline, &ft_bitmap);
+            FT_Outline_Get_Bitmap(g_FreeTypeLibrary, &ft_face->glyph->outline, &ft_bitmap);
             IntUnLockFreeType();
             break;
 
@@ -3466,7 +3466,7 @@ ftGdiGetGlyphOutline(
             }
             FT_Outline_Translate(&ft_face->glyph->outline, -left, -bottom );
             RtlZeroMemory(ft_bitmap.buffer, cjBuf);
-            FT_Outline_Get_Bitmap(g_library, &ft_face->glyph->outline, &ft_bitmap);
+            FT_Outline_Get_Bitmap(g_FreeTypeLibrary, &ft_face->glyph->outline, &ft_bitmap);
             IntUnLockFreeType();
 
             if (iFormat == GGO_GRAY2_BITMAP)
