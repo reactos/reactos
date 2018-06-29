@@ -200,7 +200,26 @@ GetClipboardData(UINT uFormat)
 
     hData = NtUserGetClipboardData(uFormat, &gcd);
     if (!hData)
-        return NULL;
+    {
+        UINT uSourceFormat;
+        switch (uFormat)
+        {
+            case CF_TEXT:
+                uSourceFormat = CF_UNICODETEXT;
+                break;
+            case CF_OEMTEXT:
+                uSourceFormat = CF_UNICODETEXT;
+                break;
+            case CF_UNICODETEXT:
+                uSourceFormat = CF_TEXT;
+                break;
+            default:
+                return NULL;
+        }
+        hData = NtUserGetClipboardData(uSourceFormat, &gcd);
+        if (!hData)
+            return NULL;
+    }
 
     if (gcd.fGlobalHandle)
     {

@@ -294,8 +294,8 @@ IntAddSynthesizedFormats(PWINSTATION_OBJECT pWinStaObj)
     bHaveBm = IntIsFormatAvailable(pWinStaObj, CF_BITMAP);
     bHaveDib = IntIsFormatAvailable(pWinStaObj, CF_DIB);
 
-    /* Add CF_LOCALE format if we have CF_TEXT */
-    if (!bHaveLocale && bHaveText)
+    /* Add CF_LOCALE format if we have CF_TEXT, CF_OEMTEXT or CF_UNICODETEXT */
+    if (!bHaveLocale && (bHaveText || bHaveOemText || bHaveUniText))
     {
         PCLIPBOARDDATA pMemObj;
         HANDLE hMem;
