@@ -669,7 +669,21 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        hr = this->QueryInterface(riid, ppvOut);
+        HKEY hKeys[16];
+        UINT cKeys = 0;
+        AddClassKeyToArray(L"Directory\\Background", hKeys, &cKeys);
+
+        DEFCONTEXTMENU dcm;
+        dcm.hwnd = hwndOwner;
+        dcm.pcmcb = this;
+        dcm.pidlFolder = pidlRoot;
+        dcm.psf = this;
+        dcm.cidl = 0;
+        dcm.apidl = NULL;
+        dcm.cKeys = cKeys;
+        dcm.aKeys = hKeys;
+        dcm.punkAssociationInfo = NULL;
+        hr = SHCreateDefaultContextMenu(&dcm, riid, ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
@@ -1060,37 +1074,36 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
 }
 
 /************************************************************************/
-/* IContextMenu interface */
+/* IContextMenuCB interface */
 
-HRESULT WINAPI CDrivesFolder::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+HRESULT WINAPI CDrivesFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IDataObject *pdtobj, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    ULONG Count = 0;
+    if (uMsg != DFM_MERGECONTEXTMENU && uMsg != DFM_INVOKECOMMAND)
+        return S_OK;
 
-    if (!hMenu)
-        return E_INVALIDARG;
-
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED); // #0
-    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);    // #1
-
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
-}
-
-HRESULT WINAPI CDrivesFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
-{
-    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
-
-    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))   // #1
+    /* no data object means no selection */
+    if (!pdtobj)
     {
-        // "System" properties
-        ShellExecuteW(lpcmi->hwnd, NULL, L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
+        if (uMsg == DFM_INVOKECOMMAND && wParam == 1)   // #1
+        {
+            // "System" properties
+            ShellExecuteW(hwndOwner, NULL, L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
+        }
+        else if (uMsg == DFM_MERGECONTEXTMENU)
+        {
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            HMENU hpopup = CreatePopupMenu();
+            _InsertMenuItemW(hpopup, 0, TRUE, 0, MFT_SEPARATOR, NULL, MFS_ENABLED); // #0
+            _InsertMenuItemW(hpopup, 1, TRUE, 1, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED); // #1
+            Shell_MergeMenus(pqcminfo->hmenu, hpopup, pqcminfo->indexMenu++, pqcminfo->idCmdFirst, pqcminfo->idCmdLast, MM_ADDSEPARATOR);
+            DestroyMenu(hpopup);
+        }
+
+        return S_OK;
     }
 
-    return S_OK;
-}
+    if (uMsg != DFM_INVOKECOMMAND || wParam != DFM_CMD_PROPERTIES)
+        return S_OK;
 
-HRESULT WINAPI CDrivesFolder::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
-{
-    FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
-
-    return E_NOTIMPL;
+    return Shell_DefaultContextMenuCallBack(this, pdtobj);
 }

@@ -4,6 +4,7 @@
  * FILE:        dll/win32/shell32/shv_item_new.c
  * PURPOSE:     provides default context menu implementation
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
+ *              Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -1513,4 +1514,39 @@ CDefFolderMenu_Create2(
         return hr;
 
     return S_OK;
+}
+
+/*
+ * for internal use
+ */
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
+{
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (cidl > 1)
+        ERR("SHMultiFileProperties is not yet implemented\n");
+
+    STRRET strFile;
+    hr = psf->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
+    if (SUCCEEDED(hr))
+    {
+        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
+        if (FAILED(hr))
+            ERR("SH_ShowPropertiesDialog failed\n");
+    }
+    else
+    {
+        ERR("Failed to get display name\n");
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
+    return hr;
 }

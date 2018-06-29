@@ -119,4 +119,7 @@ AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
     return FALSE;
 }
 
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj);
+
 #endif /* _PRECOMP_H__ */
