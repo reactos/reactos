@@ -205,8 +205,6 @@ GetClipboardData(UINT uFormat)
         switch (uFormat)
         {
             case CF_TEXT:
-                uSourceFormat = CF_UNICODETEXT;
-                break;
             case CF_OEMTEXT:
                 uSourceFormat = CF_UNICODETEXT;
                 break;
