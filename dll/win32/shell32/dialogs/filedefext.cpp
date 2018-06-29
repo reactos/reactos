@@ -643,6 +643,7 @@ CFileDefExt::InitGeneralPage(HWND hwndDlg)
 INT_PTR CALLBACK
 CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -654,7 +655,7 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
             TRACE("WM_INITDIALOG hwnd %p lParam %p ppsplParam %S\n", hwndDlg, lParam, ppsp->lParam);
 
-            CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(ppsp->lParam);
+            pFileDefExt = reinterpret_cast<CFileDefExt *>(ppsp->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pFileDefExt);
             pFileDefExt->InitGeneralPage(hwndDlg);
             break;
@@ -662,7 +663,6 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         case WM_COMMAND:
             if (LOWORD(wParam) == 14024) /* Opens With - Change */
             {
-                CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                 OPENASINFO oainfo;
                 oainfo.pcszFile = pFileDefExt->m_wszPath;
                 oainfo.pcszClass = NULL;
@@ -682,8 +682,6 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
-                CFileDefExt *pFileDefExt = reinterpret_cast<CFileDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
-
                 /* Update attributes first */
                 DWORD dwAttr = GetFileAttributesW(pFileDefExt->m_wszPath);
                 if (dwAttr)
@@ -716,6 +714,19 @@ CFileDefExt::GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return TRUE;
             }
             break;
+        }
+        case PSM_QUERYSIBLINGS:
+        {
+            // reset icon
+            HWND hIconCtrl = GetDlgItem(hwndDlg, 14025);
+            HICON hIcon = (HICON)SendMessageW(hIconCtrl, STM_GETICON, 0, 0);
+            DestroyIcon(hIcon);
+            hIcon = NULL;
+            SendMessageW(hIconCtrl, STM_SETICON, (WPARAM)hIcon, 0);
+
+            // refresh the page
+            pFileDefExt->InitGeneralPage(hwndDlg);
+            return FALSE;   // continue
         }
         default:
             break;
@@ -878,6 +889,8 @@ CFileDefExt::VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             break;
         case WM_DESTROY:
             break;
+        case PSM_QUERYSIBLINGS:
+            return FALSE;   // continue
         default:
             break;
     }
@@ -948,6 +961,9 @@ CFileDefExt::FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             }
             break;
         }
+
+        case PSM_QUERYSIBLINGS:
+            return FALSE;   // continue
 
         case WM_DESTROY:
             pFileDefExt->OnFolderCustDestroy(hwndDlg);
@@ -1115,6 +1131,9 @@ BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
         attrs = GetFileAttributesW(m_wszPath);
         attrs |= FILE_ATTRIBUTE_READONLY;
         SetFileAttributesW(m_wszPath, attrs);
+
+        // notify to the siblings
+        PropSheet_QuerySiblings(GetParent(hwndDlg), 0, 0);
 
         // done!
         m_bFolderIconIsSet = FALSE;
