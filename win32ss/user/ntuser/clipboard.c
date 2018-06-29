@@ -914,6 +914,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
 
     if (IS_DATA_SYNTHESIZED(pElement))
     {
+        UINT uSourceFmt = fmt;
         /* Note: Data is synthesized in usermode */
         /* TODO: Add more formats */
         switch (fmt)
@@ -921,17 +922,37 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
             case CF_UNICODETEXT:
             case CF_TEXT:
             case CF_OEMTEXT:
-                pElement = IntGetFormatElement(pWinStaObj, CF_UNICODETEXT);
+                uSourceFmt = CF_UNICODETEXT;
+                pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
                 if (IS_DATA_SYNTHESIZED(pElement))
-                    pElement = IntGetFormatElement(pWinStaObj, CF_TEXT);
+                {
+                    uSourceFmt = CF_TEXT;
+                    pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
+                }
                 if (IS_DATA_SYNTHESIZED(pElement))
-                    pElement = IntGetFormatElement(pWinStaObj, CF_OEMTEXT);
+                {
+                    uSourceFmt = CF_OEMTEXT;
+                    pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
+                }
                 break;
+
             case CF_BITMAP:
                 IntSynthesizeBitmap(pWinStaObj, pElement);
                 break;
+
             default:
                 ASSERT(FALSE);
+        }
+
+        if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
+        {
+            /* Send WM_RENDERFORMAT message */
+            pWinStaObj->fInDelayedRendering = TRUE;
+            co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)uSourceFmt, 0);
+            pWinStaObj->fInDelayedRendering = FALSE;
+
+            /* Data should be in clipboard now */
+            pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
         }
     }
 
