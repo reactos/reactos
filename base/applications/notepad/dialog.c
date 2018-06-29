@@ -362,7 +362,7 @@ VOID DoOpenFile(LPCTSTR szFileName)
         goto done;
     }
 
-    if (!ReadText(hFile, (LPWSTR *)&pszText, &dwTextLen, (int *)&Globals.encFile, &Globals.iEoln))
+    if (!ReadText(hFile, (LPWSTR *)&pszText, &dwTextLen, &Globals.encFile, &Globals.iEoln))
     {
         ShowLastError();
         goto done;
