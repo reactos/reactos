@@ -193,7 +193,7 @@ SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
         SharedFaceCache_Init(&Ptr->UserLanguage);
 
         SharedMem_AddRef(Memory);
-        DPRINT("Creating SharedFace for %s\n", Face->family_name);
+        DPRINT("Creating SharedFace for %s\n", Face->family_name ? Face->family_name : "<NULL>");
     }
     return Ptr;
 }
@@ -294,7 +294,7 @@ SharedFace_Release(PSHARED_FACE Ptr)
     --Ptr->RefCount;
     if (Ptr->RefCount == 0)
     {
-        DPRINT("Releasing SharedFace for %s\n", Ptr->Face->family_name);
+        DPRINT("Releasing SharedFace for %s\n", Ptr->Face->family_name ? Ptr->Face->family_name : "<NULL>");
         RemoveCacheEntries(Ptr->Face);
         FT_Done_Face(Ptr->Face);
         SharedMem_Release(Ptr->Memory);
@@ -989,7 +989,9 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     ++FaceCount;
-    DPRINT("Font loaded: %s (%s)\n", Face->family_name, Face->style_name);
+    DPRINT("Font loaded: %s (%s)\n",
+           Face->family_name ? Face->family_name : "<NULL>",
+           Face->style_name ? Face->style_name : "<NULL>");
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
     DPRINT("CharSet: %d\n", FontGDI->CharSet);
 
@@ -4028,7 +4030,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
 
     ASSERT(Otm);
     ASSERT(LogFont);
-    ASSERT(style_name);
 
     /* FIXME: Aspect Penalty 30 */
     /* FIXME: IntSizeSynth Penalty 20 */
