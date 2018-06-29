@@ -669,8 +669,7 @@ HRESULT WINAPI CDrivesFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVO
     }
     else if (IsEqualIID(riid, IID_IContextMenu))
     {
-        WARN("IContextMenu not implemented\n");
-        hr = E_NOTIMPL;
+        hr = this->QueryInterface(riid, ppvOut);
     }
     else if (IsEqualIID(riid, IID_IShellView))
     {
@@ -1058,4 +1057,40 @@ HRESULT WINAPI CDrivesFolder::GetCurFolder(LPITEMIDLIST *pidl)
 
     *pidl = ILClone(pidlRoot);
     return S_OK;
+}
+
+/************************************************************************/
+/* IContextMenu interface */
+
+HRESULT WINAPI CDrivesFolder::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags)
+{
+    ULONG Count = 0;
+
+    if (!hMenu)
+        return E_INVALIDARG;
+
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_SEPARATOR, NULL, MFS_ENABLED); // #0
+    _InsertMenuItemW(hMenu, indexMenu++, TRUE, idCmdFirst + Count++, MFT_STRING, MAKEINTRESOURCEW(IDS_PROPERTIES), MFS_ENABLED);    // #1
+
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
+}
+
+HRESULT WINAPI CDrivesFolder::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
+{
+    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n", this, lpcmi, lpcmi->lpVerb, lpcmi->hwnd);
+
+    if (lpcmi->lpVerb == MAKEINTRESOURCEA(1))   // #1
+    {
+        // "System" properties
+        ShellExecuteW(lpcmi->hwnd, NULL, L"rundll32.exe shell32.dll,Control_RunDLL sysdm.cpl", NULL, NULL, SW_SHOWNORMAL);
+    }
+
+    return S_OK;
+}
+
+HRESULT WINAPI CDrivesFolder::GetCommandString(UINT_PTR idCommand, UINT uFlags, UINT *lpReserved, LPSTR lpszName, UINT uMaxNameLen)
+{
+    FIXME("%p %lu %u %p %p %u\n", this, idCommand, uFlags, lpReserved, lpszName, uMaxNameLen);
+
+    return E_NOTIMPL;
 }
