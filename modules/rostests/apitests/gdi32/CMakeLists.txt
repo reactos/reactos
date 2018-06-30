@@ -21,7 +21,6 @@ list(APPEND SOURCE
     DPtoLP.c
     EngAcquireSemaphore.c
     EngCreateSemaphore.c
-    EngDeleteSemaphore.c
     EngReleaseSemaphore.c
     EnumFontFamilies.c
     ExcludeClipRect.c
