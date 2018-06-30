@@ -1772,8 +1772,42 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
 HRESULT STDMETHODCALLTYPE
 CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-    UNIMPLEMENTED;
-    return E_FAIL;
+    HRESULT hr = NOERROR;
+    UINT cxyLarge = LOWORD(nIconSize), cxySmall = HIWORD(nIconSize);
+
+    if (phiconLarge)
+    {
+        *phiconLarge = NULL;
+        PrivateExtractIconsW(pszFile, nIconIndex, cxyLarge, cxyLarge, phiconLarge, NULL, 1, 0);
+
+        if (*phiconLarge == NULL)
+            hr = S_FALSE;
+    }
+
+    if (phiconSmall)
+    {
+        *phiconSmall = NULL;
+        PrivateExtractIconsW(pszFile, nIconIndex, cxySmall, cxySmall, phiconSmall, NULL, 1, 0);
+
+        if (*phiconSmall == NULL)
+            hr = S_FALSE;
+    }
+
+    if (hr == S_FALSE)
+    {
+        if (phiconLarge && *phiconLarge)
+        {
+            DestroyIcon(*phiconLarge);
+            *phiconLarge = NULL;
+        }
+        if (phiconSmall && *phiconSmall)
+        {
+            DestroyIcon(*phiconSmall);
+            *phiconSmall = NULL;
+        }
+    }
+
+    return hr;
 }
 
 #if 0
