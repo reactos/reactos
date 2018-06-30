@@ -98,11 +98,14 @@ private:
     HRESULT SetAdvertiseInfo(LPCWSTR str);
     HRESULT WriteAdvertiseInfo(LPCWSTR string, DWORD dwSig);
     HRESULT SetTargetFromPIDLOrPath(LPCITEMIDLIST pidl, LPCWSTR pszFile);
+    HICON CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex);
 
 public:
     CShellLink();
     ~CShellLink();
     static INT_PTR CALLBACK SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BOOL m_bInitializing;
 
     // IPersistFile
     virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pclsid);
