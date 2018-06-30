@@ -29,8 +29,6 @@
 
 #if DBG
 
-    #include <builddir.h>
-
     #if !defined(__RELFILE__)
         #define __RELFILE__ __FILE__
     #endif
@@ -134,10 +132,11 @@
     #define DBG_DISABLE_CHANNEL(ppi,ch,level) ((ppi)->DbgChannelLevel[ch] &= ~level)
     #define DBG_IS_CHANNEL_ENABLED(ppi,ch,level) (((ppi)->DbgChannelLevel[ch] & level) == level)
 
-    #define DBG_PRINT(ppi,ch,level,fmt, ...)  do {                            \
-    if((level == ERR_LEVEL) || (ppi && DBG_IS_CHANNEL_ENABLED(ppi,ch,level))) \
-        DbgPrint("(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__);          \
-    }while(0);
+    #define DBG_PRINT(ppi,ch,level,fmt, ...)    \
+    do {    \
+    if ((level == ERR_LEVEL) || (ppi && DBG_IS_CHANNEL_ENABLED(ppi,ch,level)))  \
+        DbgPrint("(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__);         \
+    } while (0)
 
     #define ERR(fmt, ...)     DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, ERR_LEVEL,"err: " fmt, ##__VA_ARGS__)
     #define FIXME(fmt, ...)   DBG_PRINT(DBG_GET_PPI, DbgDefaultChannel, FIXME_LEVEL,"fixme: " fmt, ##__VA_ARGS__)

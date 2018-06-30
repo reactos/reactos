@@ -201,22 +201,23 @@ NtCompareTokens(
     _In_ HANDLE SecondTokenHandle,
     _Out_ PBOOLEAN Equal);
 
+__kernel_entry
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtCreateToken(
     _Out_ PHANDLE TokenHandle,
     _In_ ACCESS_MASK DesiredAccess,
-    _In_ POBJECT_ATTRIBUTES ObjectAttributes,
+    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,
     _In_ TOKEN_TYPE TokenType,
     _In_ PLUID AuthenticationId,
     _In_ PLARGE_INTEGER ExpirationTime,
     _In_ PTOKEN_USER TokenUser,
     _In_ PTOKEN_GROUPS TokenGroups,
     _In_ PTOKEN_PRIVILEGES TokenPrivileges,
-    _In_ PTOKEN_OWNER TokenOwner,
+    _In_opt_ PTOKEN_OWNER TokenOwner,
     _In_ PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
-    _In_ PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+    _In_opt_ PTOKEN_DEFAULT_DACL TokenDefaultDacl,
     _In_ PTOKEN_SOURCE TokenSource
 );
 

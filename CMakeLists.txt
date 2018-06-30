@@ -1,20 +1,15 @@
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.2.1)
+cmake_policy(VERSION 3.2.1)
 
-if(POLICY CMP0017)
-    # Shadow cmake provided modules
-    cmake_policy(SET CMP0017 OLD)
-endif()
+# Don't escape preprocessor definition values added via add_definitions
+cmake_policy(SET CMP0005 OLD)
 
-if(POLICY CMP0026)
-    # Allow use of the LOCATION property
-    cmake_policy(SET CMP0026 NEW)
-endif()
+# Shadow cmake provided modules
+cmake_policy(SET CMP0017 OLD)
 
-if(POLICY CMP0051)
-    # List TARGET_OBJECTS in SOURCES target property
-    cmake_policy(SET CMP0051 NEW)
-endif()
+# Honor CMAKE_SHARED_LIBRARY_<Lang>_FLAGS variable.
+cmake_policy(SET CMP0018 OLD)
 
 if(POLICY CMP0058)
     # Ninja requires custom command byproducts to be explicit
@@ -25,13 +20,6 @@ project(REACTOS)
 
 # Versioning
 include(sdk/include/reactos/version.cmake)
-
-# Don't escape preprocessor definition values added via add_definitions
-cmake_policy(SET CMP0005 OLD)
-cmake_policy(SET CMP0002 NEW)
-if(POLICY CMP0018)
-    cmake_policy(SET CMP0018 OLD)
-endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -68,6 +56,9 @@ endif()
 include(sdk/cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
+add_definitions(-DREACTOS_SOURCE_DIR="\\"${REACTOS_SOURCE_DIR}\\"")
+add_definitions(-DREACTOS_BINARY_DIR="\\"${REACTOS_BINARY_DIR}\\"")
+add_compile_flags(-D__RELFILE__="&__FILE__[sizeof REACTOS_SOURCE_DIR]")
 
 if(MSVC_IDE)
     add_compile_flags("/MP")

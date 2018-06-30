@@ -162,7 +162,7 @@ SeGetTokenControlInformation(IN PACCESS_TOKEN _Token,
     /* Lock the token */
     SepAcquireTokenLockShared(Token);
 
-    /* Capture the modified it */
+    /* Capture the modified ID */
     TokenControl->ModifiedId = Token->ModifiedId;
 
     /* Unlock it */
@@ -215,8 +215,8 @@ SepCreateClientSecurity(IN PACCESS_TOKEN Token,
         }
 
         /* Pick either the thread setting or the QOS setting */
-        ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
-                                                    (ClientSecurityQos->EffectiveOnly)) ? TRUE : FALSE;
+        ClientContext->DirectAccessEffectiveOnly =
+            ((ThreadEffectiveOnly) || (ClientSecurityQos->EffectiveOnly)) ? TRUE : FALSE;
     }
 
     /* Is this static tracking */
@@ -224,8 +224,12 @@ SepCreateClientSecurity(IN PACCESS_TOKEN Token,
     {
         /* Do not use direct access and make a copy */
         ClientContext->DirectlyAccessClientToken = FALSE;
-        Status = SeCopyClientToken(Token, ImpersonationLevel, 0, &NewToken);
-        if (!NT_SUCCESS(Status)) return Status;
+        Status = SeCopyClientToken(Token,
+                                   ClientSecurityQos->ImpersonationLevel,
+                                   KernelMode,
+                                   &NewToken);
+        if (!NT_SUCCESS(Status))
+            return Status;
     }
     else
     {

@@ -1,0 +1,62 @@
+/*
+ * PROJECT:     ReactOS AT Utility
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Il comando AT permette di stabilire altri comandi e programmi di eseguire\n\
+in un computer in un certo tempo. Lo servizio ""Schedule"" deve essere in esecuzione per\n\
+poter usare il comando AT.\n\n\
+AT [\\\\nomecomputer] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\nomecomputer] tempo [/INTERACTIVE]\n\
+    [ /EVERY:data[,...] | /NEXT:data[,...]] ""comando""\n\n\
+\\\\nomecomputer     Specifica un computer remoto. I comandi saranno programmati \n\
+                   sul computer locale se questo parametro è omesso.\n\
+id                 È un numero d'identificazione assegnato al comando programmato.\n\
+/DELETE            Cancella un comando programmato. Se l'id viene omesso, tutti\n\
+                   i comandi programmati nel computer saranno cancellati.\n\
+/YES               Usato con l'opzione ""DELETE"", annullerà tutti i compiti programmati\n\
+                   nel computer senza ulteriore conferma.\n\
+tempo              Specifica il tempo per l'esecuzione del comando.\n\
+/INTERACTIVE       Permette ai comandi di interagire con il desktop dell'utente\n\
+                   che è autenticato al momento della loro esecuzione.\n\
+/EVERY:data[,...]  Esegue il comando nel giorno o nei giorni specificati d'ogni\n\
+                   settimana o mese. Se la data è omessa, verrà considerata il\n\
+                   giorno attuale del mese.\n\
+/NEXT:data[,...]   Esegue il comando specificato nel prossimo giorno (per\n\
+                   esempio prossimo Martedì). Se la data è omessa, verrà\n\
+                   considerata il giorno attuale del mese.\n\
+""comando""          Il nome del comando o programma da eseguire.\n"
+
+    IDS_DELETE_ALL "Questa operazione cancellerà tutte le operazioni programmate.\n"
+    IDS_NEW_JOB "È stata pianificata una nuova attività con l'ID = %lu\n"
+    IDS_JOBS_LIST "Stato ID   Giorno                     Tempo          Riga di comando\n"
+    IDS_NO_ENTRIES "Non ci sono comandi programmati nella lista.\n"
+
+    IDS_CONFIRM_QUESTION "Sei sicuro di voler continuare questa operazione? (S/N) [N]: "
+    IDS_CONFIRM_INVALID  "\nQuesta risposta non è valida.\n"
+    IDS_CONFIRM_YES "S"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "Oggi"
+    IDS_TOMORROW "Domani"
+    IDS_EVERY "Ogni"
+    IDS_NEXT "Seguente"
+
+    IDS_YES "Sì"
+    IDS_NO "No"
+    IDS_ERROR "ERRORE"
+    IDS_OK "OK"
+
+    IDS_TASKID      "ID Operazione:       %lu\n"
+    IDS_STATUS      "Stato:               %s\n"
+    IDS_SCHEDULE    "Orario:              %s\n"
+    IDS_TIME        "Tempo del giorno:    %s\n"
+    IDS_INTERACTIVE "Interattivo:         %s\n"
+    IDS_COMMAND     "Comando:             %s\n"
+END

@@ -42,7 +42,8 @@ extern "C" {
 /* enum definitions for Secure Service Provider/Authentication Packages */
 typedef enum _LSA_TOKEN_INFORMATION_TYPE {
     LsaTokenInformationNull,
-    LsaTokenInformationV1
+    LsaTokenInformationV1,
+    LsaTokenInformationV2
 } LSA_TOKEN_INFORMATION_TYPE, *PLSA_TOKEN_INFORMATION_TYPE;
 
 typedef enum _SECPKG_EXTENDED_INFORMATION_CLASS
@@ -77,6 +78,8 @@ typedef struct _LSA_TOKEN_INFORMATION_V1
     TOKEN_OWNER Owner;
     TOKEN_DEFAULT_DACL DefaultDacl;
 } LSA_TOKEN_INFORMATION_V1, *PLSA_TOKEN_INFORMATION_V1;
+
+typedef LSA_TOKEN_INFORMATION_V1 LSA_TOKEN_INFORMATION_V2, *PLSA_TOKEN_INFORMATION_V2;
 
 typedef struct _SECPKG_PRIMARY_CRED {
     LUID LogonId;
@@ -255,14 +258,14 @@ typedef NTSTATUS (NTAPI *PLSA_CALL_PACKAGE_PASSTHROUGH)(PUNICODE_STRING, PVOID,
  PVOID, ULONG, PVOID*, PULONG, PNTSTATUS);
 
 /* Dispatch tables of functions used by SSP/AP */
-typedef struct SECPKG_DLL_FUNCTIONS {
+typedef struct _SECPKG_DLL_FUNCTIONS {
     PLSA_ALLOCATE_LSA_HEAP AllocateHeap;
     PLSA_FREE_LSA_HEAP FreeHeap;
     PLSA_REGISTER_CALLBACK RegisterCallback;
 } SECPKG_DLL_FUNCTIONS,
  *PSECPKG_DLL_FUNCTIONS;
 
-typedef struct LSA_DISPATCH_TABLE {
+typedef struct _LSA_DISPATCH_TABLE {
     PLSA_CREATE_LOGON_SESSION CreateLogonSession;
     PLSA_DELETE_LOGON_SESSION DeleteLogonSession;
     PLSA_ADD_CREDENTIAL AddCredential;
@@ -418,7 +421,7 @@ typedef NTSTATUS (NTAPI SpImportSecurityContextFn)(PSecBuffer, HANDLE,
 #endif
 
 /* dispatch tables of LSA-mode functions implemented by SSP/AP */
-typedef struct SECPKG_FUNCTION_TABLE {
+typedef struct _SECPKG_FUNCTION_TABLE {
     PLSA_AP_INITIALIZE_PACKAGE InitializePackage;
     PLSA_AP_LOGON_USER LsaLogonUser;
     PLSA_AP_CALL_PACKAGE CallPackage;
@@ -466,7 +469,7 @@ typedef struct SECPKG_FUNCTION_TABLE {
  *PSECPKG_FUNCTION_TABLE;
 
 /* dispatch tables of user-mode functions implemented by SSP/AP */
-typedef struct SECPKG_USER_FUNCTION_TABLE {
+typedef struct _SECPKG_USER_FUNCTION_TABLE {
     SpInstanceInitFn *InstanceInit;
     SpInitUserModeContextFn *InitUserModeContext;
     SpMakeSignatureFn *MakeSignature;

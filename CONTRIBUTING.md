@@ -101,3 +101,7 @@ Finding a good project to start with can be a challenge, because when starting o
   [Coverity]:                                                    https://scan.coverity.com/projects/reactos
   [request-coverity]:                                            https://scan.coverity.com/memberships/new?project_id=reactos
   [commit template]:                                             .gitmessage
+
+# See Also
+
+- [Rules for managing Pull Requests](PULL_REQUEST_MANAGEMENT.md)

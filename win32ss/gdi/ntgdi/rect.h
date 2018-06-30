@@ -67,6 +67,20 @@ RECTL_bIsWellOrdered(
             (prcl->top  <= prcl->bottom));
 }
 
+FORCEINLINE
+BOOL
+RECTL_bClipRectBySize(
+    _Out_ RECTL *prclDst,
+    _In_ const RECTL *prclSrc,
+    _In_ const SIZEL *pszl)
+{
+    prclDst->left = max(prclSrc->left, 0);
+    prclDst->top = max(prclSrc->top, 0);
+    prclDst->right = min(prclSrc->right, pszl->cx);
+    prclDst->bottom = min(prclSrc->bottom, pszl->cy);
+    return !RECTL_bIsEmptyRect(prclDst);
+}
+
 BOOL
 FASTCALL
 RECTL_bUnionRect(

@@ -787,8 +787,12 @@ VfatSetRenameInformation(
         }
 
         RtlCopyUnicodeString(&NewName, &((PVFATFCB)TargetFileObject->FsContext)->PathNameU);
-        NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
-        NewName.Length += sizeof(WCHAR);
+        /* If \, it's already backslash terminated, don't add it */
+        if (!vfatFCBIsRoot(TargetFileObject->FsContext))
+        {
+            NewName.Buffer[NewName.Length / sizeof(WCHAR)] = L'\\';
+            NewName.Length += sizeof(WCHAR);
+        }
         RtlAppendUnicodeStringToString(&NewName, &TargetFileObject->FileName);
     }
 

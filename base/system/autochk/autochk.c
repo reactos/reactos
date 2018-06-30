@@ -5,7 +5,7 @@
  * PURPOSE:         Filesystem checker
  * PROGRAMMERS:     Aleksey Bragin
  *                  Eric Kohl
- *                  Hervé Poussineau
+ *                  HervÃ© Poussineau
  *                  Pierre Schweitzer
  */
 
@@ -329,7 +329,7 @@ ChkdskCallback(
         Status = (PBOOLEAN)Argument;
         if (*Status != FALSE)
         {
-            PrintString("Autochk was unable to complete successfully.\r\n\r\n");
+            PrintString("The file system check was unable to complete successfully.\r\n\r\n");
             // Error = TRUE;
         }
         break;
@@ -348,7 +348,7 @@ CheckVolume(
     NTSTATUS Status;
     DWORD Count;
 
-    PrintString("  Verifying volume %S\r\n", DrivePath);
+    PrintString("  Checking file system on %S\r\n", DrivePath);
 
     /* Get the file system */
     Status = GetFileSystem(DrivePath,
@@ -357,11 +357,11 @@ CheckVolume(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
-        PrintString("  Unable to get file system of %S\r\n", DrivePath);
+        PrintString("  Unable to detect file system of %S\r\n", DrivePath);
         return Status;
     }
 
-    PrintString("  Its filesystem type is %S\r\n", FileSystem);
+    PrintString("  The file system type is %S.\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
@@ -390,9 +390,9 @@ CheckVolume(
             NTSTATUS WaitStatus;
 
             /* Let the user decide whether to repair */
-            PrintString("  %S needs to be checked\r\n", DrivePath);
-            PrintString("  You can skip it, but be advised it is not recommanded\r\n");
-            PrintString("  To skip disk checking press any key in %d second(s)\r\n", TimeOut);
+            PrintString("  The file system on this volume needs to be checked for problems.\r\n");
+            PrintString("  You may cancel this check, but it's recommended that you continue.\r\n");
+            PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n", TimeOut);
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard(TimeOut);
@@ -404,10 +404,11 @@ CheckVolume(
                                                        TRUE, // CheckOnlyIfDirty
                                                        FALSE,// ScanDrive
                                                        ChkdskCallback);
+                PrintString("  The system will now check the file system.\r\n");
             }
             else
             {
-                PrintString("  %S checking has been skipped\r\n", DrivePath);
+                PrintString("  File system check has been skipped.\r\n");
             }
         }
         break;
@@ -416,7 +417,7 @@ CheckVolume(
     if (Count == sizeof(FileSystems) / sizeof(FileSystems[0]))
     {
         DPRINT1("File system not supported\n");
-        PrintString("  Unable to verify a %S volume\r\n", FileSystem);
+        PrintString("  Unable to check the file system. %S is not supported.\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
     }
 

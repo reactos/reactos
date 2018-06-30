@@ -14,7 +14,9 @@
 
 #pragma once
 
-#include <builddir.h>
+#ifndef __RELFILE__
+#define __RELFILE__ __FILE__
+#endif
 
 /* Define DbgPrint/DbgPrintEx/RtlAssert unless the NDK is used */
 #if !defined(_RTLFUNCS_H) && !defined(_NTDDK_)

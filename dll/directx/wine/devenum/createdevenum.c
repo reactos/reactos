@@ -798,7 +798,7 @@ cleanup:
 static void register_vfw_codecs(void)
 {
     static const WCHAR fcchandlerW[] = {'F','c','c','H','a','n','d','l','e','r',0};
-    REGFILTERPINS2 rgpins[2];
+    REGFILTERPINS2 rgpins[2] = {{0}};
     IPropertyBag *prop_bag = NULL;
     REGPINTYPES rgtypes[2];
     REGFILTER2 rgf;

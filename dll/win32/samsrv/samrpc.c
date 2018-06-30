@@ -3538,6 +3538,9 @@ TRACE("Open %S\n", MemberSidString);
             SampRegCloseKey(&MemberKeyHandle);
         }
 
+        if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+            Status = STATUS_SUCCESS;
+
         LocalFree(MemberSidString);
     }
 

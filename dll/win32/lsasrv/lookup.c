@@ -182,7 +182,6 @@ LsapInitSids(VOID)
     hInstance = GetModuleHandleW(L"lsasrv.dll");
 
     /* NT Authority */
-
     LsapLoadString(hInstance, IDS_NT_AUTHORITY, szAccountName, ARRAYSIZE(szAccountName));
     LsapLoadString(hInstance, IDS_NT_AUTHORITY, szDomainName, ARRAYSIZE(szDomainName));
     LsapCreateSid(&NtAuthority,

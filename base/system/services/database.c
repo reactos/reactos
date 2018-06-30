@@ -184,37 +184,30 @@ ScmLogonService(
     IN PSERVICE pService,
     IN PSERVICE_IMAGE pImage)
 {
-#if 0
+    DWORD dwError = ERROR_SUCCESS;
     PROFILEINFOW ProfileInfo;
     PWSTR pszUserName = NULL;
     PWSTR pszDomainName = NULL;
     PWSTR pszPassword = NULL;
     PWSTR ptr;
-    DWORD dwError = ERROR_SUCCESS;
-#endif
 
     DPRINT("ScmLogonService(%p %p)\n", pService, pImage);
-
     DPRINT("Service %S\n", pService->lpServiceName);
 
     if (ScmIsLocalSystemAccount(pImage->pszAccountName))
         return ERROR_SUCCESS;
 
-    // FIXME: Always assume LocalSystem
-    return ERROR_SUCCESS;
-
-#if 0
     /* Get the user and domain names */
     ptr = wcschr(pImage->pszAccountName, L'\\');
     if (ptr != NULL)
     {
         *ptr = L'\0';
-
         pszUserName = ptr + 1;
         pszDomainName = pImage->pszAccountName;
     }
     else
     {
+        // ERROR_INVALID_SERVICE_ACCOUNT
         pszUserName = pImage->pszAccountName;
         pszDomainName = NULL;
     }
@@ -234,7 +227,7 @@ ScmLogonService(
 
     DPRINT("Domain: %S  User: %S  Password: %S\n", pszDomainName, pszUserName, pszPassword);
 
-    /* Service logon */
+    /* Do the service logon */
     if (!LogonUserW(pszUserName,
                     pszDomainName,
                     pszPassword,
@@ -244,14 +237,13 @@ ScmLogonService(
     {
         dwError = GetLastError();
         DPRINT1("LogonUserW() failed (Error %lu)\n", dwError);
+
+        /* Normalize the returned error */
+        dwError = ERROR_SERVICE_LOGON_FAILED;
         goto done;
     }
 
-    // FIXME: Call LoadUserProfileW to be able to initialize a per-user
-    // environment block, with user-specific environment variables as
-    // %USERNAME%, %USERPROFILE%, and %ALLUSERSPROFILE% correctly initialized!!
-
-    /* Load the user profile, so that the per-user environment variables can be initialized */
+    /* Load the user profile; the per-user environment variables are thus correctly initialized */
     ZeroMemory(&ProfileInfo, sizeof(ProfileInfo));
     ProfileInfo.dwSize = sizeof(ProfileInfo);
     ProfileInfo.dwFlags = PI_NOUI;
@@ -279,7 +271,6 @@ done:
         *ptr = L'\\';
 
     return dwError;
-#endif
 }
 
 
@@ -1682,7 +1673,9 @@ ScmStartUserModeService(PSERVICE Service,
     /* Use the interactive desktop if the service is interactive */
     if ((NoInteractiveServices == 0) &&
         (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
+    {
         StartupInfo.lpDesktop = L"WinSta0\\Default";
+    }
 
     if (Service->lpImage->hToken)
     {

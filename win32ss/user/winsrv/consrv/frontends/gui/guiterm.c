@@ -203,9 +203,7 @@ GuiConsoleInputThread(PVOID Param)
                     if (GuiData->GuiInfo.FullScreen) SwitchFullScreen(GuiData, TRUE);
 
                     DPRINT("PM_CREATE_CONSOLE -- showing window\n");
-                    // ShowWindow(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
                     ShowWindowAsync(NewWindow, (int)GuiData->GuiInfo.ShowWindow);
-                    DPRINT("Window showed\n");
                 }
                 else
                 {
@@ -1174,6 +1172,7 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 {
     PCONSOLE_START_INFO ConsoleStartInfo;
     PGUI_INIT_INFO GuiInitInfo;
+    USEROBJECTFLAGS UserObjectFlags;
 
     if (FrontEnd == NULL || ConsoleInfo == NULL || ConsoleInitInfo == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1194,6 +1193,21 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
         return STATUS_UNSUCCESSFUL;
     }
 
+    GuiInitInfo->IsWindowVisible = ConsoleInitInfo->IsWindowVisible;
+    if (GuiInitInfo->IsWindowVisible)
+    {
+        /* Don't show the console if the window station is not interactive */
+        if (GetUserObjectInformationW(GuiInitInfo->WinSta,
+                                      UOI_FLAGS,
+                                      &UserObjectFlags,
+                                      sizeof(UserObjectFlags),
+                                      NULL))
+        {
+            if (!(UserObjectFlags.dwFlags & WSF_VISIBLE))
+                GuiInitInfo->IsWindowVisible = FALSE;
+        }
+    }
+
     /*
      * Load terminal settings
      */
@@ -1209,7 +1223,7 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 
     GuiInitInfo->TermInfo.ShowWindow = SW_SHOWNORMAL;
 
-    if (ConsoleInitInfo->IsWindowVisible)
+    if (GuiInitInfo->IsWindowVisible)
     {
         /* 2. Load the remaining console settings via the registry */
         if ((ConsoleStartInfo->dwStartupFlags & STARTF_TITLEISLINKNAME) == 0)
@@ -1256,7 +1270,6 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
 
     // Display
     GuiInitInfo->TermInfo.FullScreen   = ConsoleInfo->FullScreen;
-    // GuiInitInfo->TermInfo.ShowWindow;
     GuiInitInfo->TermInfo.AutoPosition = ConsoleInfo->AutoPosition;
     GuiInitInfo->TermInfo.WindowOrigin = ConsoleInfo->WindowPosition;
 
@@ -1272,8 +1285,6 @@ GuiLoadFrontEnd(IN OUT PFRONTEND FrontEnd,
         // GuiInitInfo->hIconSm = ghDefaultIconSm;
 
     // ASSERT(GuiInitInfo->hIcon && GuiInitInfo->hIconSm);
-
-    GuiInitInfo->IsWindowVisible = ConsoleInitInfo->IsWindowVisible;
 
     /* Finally, initialize the frontend structure */
     FrontEnd->Vtbl     = &GuiVtbl;

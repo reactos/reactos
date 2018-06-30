@@ -39,7 +39,7 @@ ConSrvGetConsole(IN PCONSOLE_PROCESS_DATA ProcessData,
                  IN BOOLEAN LockConsole);
 VOID
 ConSrvReleaseConsole(IN struct _CONSRV_CONSOLE* /* PCONSRV_CONSOLE */ Console,
-                     IN BOOLEAN WasConsoleLocked);
+                     IN BOOLEAN IsConsoleLocked);
 
 
 BOOLEAN NTAPI

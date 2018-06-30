@@ -3,6 +3,7 @@
  *
  * Copyright 1998 Marcus Meissner
  * Copyright 2002 Eric Pouech
+ * Copyright 2018 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2288,17 +2289,32 @@ EXTERN_C HINSTANCE WINAPI WOWShellExecute(HWND hWnd, LPCSTR lpVerb, LPCSTR lpFil
 }
 
 /*************************************************************************
- * OpenAs_RunDLLA          [SHELL32.@]
+ * OpenAs_RunDLLW          [SHELL32.@]
  */
-EXTERN_C void WINAPI OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
+EXTERN_C void WINAPI
+OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
 {
-    FIXME("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
+    OPENASINFO info;
+    TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_w(cmdline), cmdshow);
+
+    ZeroMemory(&info, sizeof(info));
+    info.pcszFile = cmdline;
+    info.pcszClass = NULL;
+    info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT | OAIF_EXEC;
+
+    SHOpenWithDialog(hwnd, &info);
 }
 
 /*************************************************************************
- * OpenAs_RunDLLW          [SHELL32.@]
+ * OpenAs_RunDLLA          [SHELL32.@]
  */
-EXTERN_C void WINAPI OpenAs_RunDLLW(HWND hwnd, HINSTANCE hinst, LPCWSTR cmdline, int cmdshow)
+EXTERN_C void WINAPI
+OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
 {
-    FIXME("%p, %p, %s, %d\n", hwnd, hinst, debugstr_w(cmdline), cmdshow);
+    LPWSTR pszCmdLineW = NULL;
+    TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
+
+    __SHCloneStrAtoW(&pszCmdLineW, cmdline);
+    OpenAs_RunDLLW(hwnd, hinst, pszCmdLineW, cmdshow);
+    SHFree(pszCmdLineW);
 }

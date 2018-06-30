@@ -71,8 +71,10 @@ private:
     BOOL SetVersionLabel(HWND hwndDlg, DWORD idCtrl, LPCWSTR pwszName);
     BOOL AddVersionString(HWND hwndDlg, LPCWSTR pwszName);
     BOOL InitVersionPage(HWND hwndDlg);
+    BOOL InitFolderCustomizePage(HWND hwndDlg);
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	BOOL CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, LPDWORD ticks);
 
 	WCHAR m_wszPath[MAX_PATH];
@@ -85,9 +87,21 @@ private:
 
     static DWORD WINAPI _CountFolderAndFilesThreadProc(LPVOID lpParameter);
 
+    // FolderCustomize
+    WCHAR   m_szFolderIconPath[MAX_PATH];
+    INT     m_nFolderIconIndex;
+    HICON   m_hFolderIcon;
+    BOOL    m_bFolderIconIsSet;
+
 public:
 	CFileDefExt();
 	~CFileDefExt();
+
+    // FolderCustomize
+    BOOL OnFolderCustApply(HWND hwndDlg);
+    void OnFolderCustChangeIcon(HWND hwndDlg);
+    void OnFolderCustDestroy(HWND hwndDlg);
+    void UpdateFolderIcon(HWND hwndDlg);
 
 	// IShellExtInit
 	virtual HRESULT STDMETHODCALLTYPE Initialize(LPCITEMIDLIST pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);

@@ -36,10 +36,12 @@ LsapSecretMapping = {SECRET_READ,
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
+NTSTATUS
 LsarStartRpcServer(VOID)
 {
     RPC_STATUS Status;
+    DWORD dwError;
+    HANDLE hEvent;
 
     RtlInitializeCriticalSection(&PolicyHandleTableLock);
 
@@ -52,7 +54,7 @@ LsarStartRpcServer(VOID)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return;
+        return I_RpcMapWin32Status(Status);
     }
 
     Status = RpcServerRegisterIf(lsarpc_v0_0_s_ifspec,
@@ -61,7 +63,7 @@ LsarStartRpcServer(VOID)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return;
+        return I_RpcMapWin32Status(Status);
     }
 
     DsSetupInit();
@@ -70,10 +72,42 @@ LsarStartRpcServer(VOID)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerListen() failed (Status %lx)\n", Status);
-        return;
+        return I_RpcMapWin32Status(Status);
     }
 
+    /* Notify the service manager */
+    TRACE("Creating notification event!\n");
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"LSA_RPC_SERVER_ACTIVE");
+    if (hEvent == NULL)
+    {
+        dwError = GetLastError();
+        TRACE("Failed to create or open the notification event (Error %lu)\n", dwError);
+#if 0
+        if (dwError == ERROR_ALREADY_EXISTS)
+        {
+            hEvent = OpenEventW(GENERIC_WRITE,
+                                FALSE,
+                                L"LSA_RPC_SERVER_ACTIVE");
+            if (hEvent == NULL)
+            {
+               ERR("Could not open the notification event (Error %lu)\n", GetLastError());
+               return STATUS_UNSUCCESSFUL;
+            }
+        }
+#endif
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    TRACE("Set notification event!\n");
+    SetEvent(hEvent);
+
+    /* NOTE: Do not close the event handle, as it must remain alive! */
+
     TRACE("LsarStartRpcServer() done\n");
+    return STATUS_SUCCESS;
 }
 
 
