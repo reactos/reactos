@@ -271,7 +271,6 @@ CShellLink::CShellLink()
 
     m_sLinkPath = NULL;
     m_iIdOpen = -1;
-    m_bInitializing = FALSE;
 
     /**/sProduct = sComponent = NULL;/**/
 }
@@ -2755,6 +2754,7 @@ LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
 INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CShellLink *pThis = reinterpret_cast<CShellLink *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
+    static BOOL s_bInInit = FALSE;
 
     switch(uMsg)
     {
@@ -2769,7 +2769,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             pThis = reinterpret_cast<CShellLink *>(ppsp->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
 
-            pThis->SetInInit(TRUE);
+            s_bInInit = TRUE;
 
             TRACE("m_sArgs: %S sComponent: %S m_sDescription: %S m_sIcoPath: %S m_sPath: %S m_sPathRel: %S sProduct: %S m_sWorkDir: %S\n", pThis->m_sArgs, pThis->sComponent, pThis->m_sDescription,
                   pThis->m_sIcoPath, pThis->m_sPath, pThis->m_sPathRel, pThis->sProduct, pThis->m_sWorkDir);
@@ -2827,7 +2827,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
             if (pThis->m_sDescription)
                 SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, pThis->m_sDescription);
 
-            pThis->SetInInit(FALSE);
+            s_bInInit = FALSE;
 
             return TRUE;
         }
@@ -2941,7 +2941,7 @@ INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
                     return TRUE;
                 }
             }
-            if (HIWORD(wParam) == EN_CHANGE && !pThis->IsInInit())
+            if (HIWORD(wParam) == EN_CHANGE && !s_bInInit)
                 PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
             break;
 

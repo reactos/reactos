@@ -88,7 +88,6 @@ private:
 
     LPWSTR        m_sLinkPath;
     INT           m_iIdOpen;     /* ID of the "Open" entry in the context menu */
-    BOOL          m_bInitializing;
 
     CComPtr<IUnknown>    m_site;
     CComPtr<IDropTarget> m_DropTarget;
@@ -105,15 +104,6 @@ public:
     CShellLink();
     ~CShellLink();
     static INT_PTR CALLBACK SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    BOOL IsInInit() const
-    {
-        return m_bInitializing;
-    }
-    void SetInInit(BOOL bInInit)
-    {
-        m_bInitializing = bInInit;
-    }
 
     // IPersistFile
     virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pclsid);
