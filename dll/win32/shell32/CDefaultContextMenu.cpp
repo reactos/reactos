@@ -1532,6 +1532,8 @@ Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
     if (cidl > 1)
     {
         ERR("SHMultiFileProperties is not yet implemented\n");
+        SHFree(pidlFolder);
+        _ILFreeaPidl(apidl, cidl);
         return E_FAIL;
     }
 
