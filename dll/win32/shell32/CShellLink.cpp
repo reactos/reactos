@@ -3130,9 +3130,12 @@ HICON CShellLink::CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex)
     }
 
 cleanup:
-    DestroyIcon(hIcon);
-    DestroyIcon(hShortcut);
-    ImageList_Destroy(himl);
+    if (hIcon)
+        DestroyIcon(hIcon);
+    if (hShortcut)
+        DestroyIcon(hShortcut);
+    if (himl)
+        ImageList_Destroy(himl);
 
     return hNewIcon;
 }
