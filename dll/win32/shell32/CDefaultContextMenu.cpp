@@ -1530,7 +1530,10 @@ Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
         return hr;
 
     if (cidl > 1)
+    {
         ERR("SHMultiFileProperties is not yet implemented\n");
+        return E_FAIL;
+    }
 
     STRRET strFile;
     hr = psf->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
