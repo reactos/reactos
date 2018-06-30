@@ -881,6 +881,7 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     HANDLE hRet = NULL;
     PCLIP pElement;
     PWINSTATION_OBJECT pWinStaObj;
+    UINT uSourceFmt = fmt;
 
     TRACE("NtUserGetClipboardData(%x, %p)\n", fmt, pgcd);
 
@@ -898,23 +899,11 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
     }
 
     pElement = IntGetFormatElement(pWinStaObj, fmt);
-    if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
-    {
-        /* Send WM_RENDERFORMAT message */
-        pWinStaObj->fInDelayedRendering = TRUE;
-        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)fmt, 0);
-        pWinStaObj->fInDelayedRendering = FALSE;
-
-        /* Data should be in clipboard now */
-        pElement = IntGetFormatElement(pWinStaObj, fmt);
-    }
-
-    if (!pElement || IS_DATA_DELAYED(pElement))
+    if (!pElement)
         goto cleanup;
 
     if (IS_DATA_SYNTHESIZED(pElement))
     {
-        UINT uSourceFmt = fmt;
         /* Note: Data is synthesized in usermode */
         /* TODO: Add more formats */
         switch (fmt)
@@ -943,18 +932,21 @@ NtUserGetClipboardData(UINT fmt, PGETCLIPBDATA pgcd)
             default:
                 ASSERT(FALSE);
         }
-
-        if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
-        {
-            /* Send WM_RENDERFORMAT message */
-            pWinStaObj->fInDelayedRendering = TRUE;
-            co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)uSourceFmt, 0);
-            pWinStaObj->fInDelayedRendering = FALSE;
-
-            /* Data should be in clipboard now */
-            pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
-        }
     }
+
+    if (pElement && IS_DATA_DELAYED(pElement) && pWinStaObj->spwndClipOwner)
+    {
+        /* Send WM_RENDERFORMAT message */
+        pWinStaObj->fInDelayedRendering = TRUE;
+        co_IntSendMessage(pWinStaObj->spwndClipOwner->head.h, WM_RENDERFORMAT, (WPARAM)uSourceFmt, 0);
+        pWinStaObj->fInDelayedRendering = FALSE;
+
+        /* Data should be in clipboard now */
+        pElement = IntGetFormatElement(pWinStaObj, uSourceFmt);
+    }
+
+    if (!pElement || IS_DATA_DELAYED(pElement))
+        goto cleanup;
 
     _SEH2_TRY
     {
