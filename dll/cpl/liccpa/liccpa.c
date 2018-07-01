@@ -10,11 +10,6 @@
  * This application does almost nothing and its really good at it.
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <cpl.h>
-
-#include "resource.h"
 #include "liccpa.h"
 
 HINSTANCE hApplet = 0;
@@ -26,12 +21,12 @@ DlgMainProc(HWND hwndDlg,
             WPARAM wParam,
             LPARAM lParam)
 {
-    TCHAR szString[256];
+//    TCHAR szString[256];
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            break;
+            return TRUE;
 
         case WM_COMMAND:
             switch (HIWORD(wParam))
