@@ -24,22 +24,23 @@ VOID LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield);
 /* FUNCTIONS ****************************************************************/
 
 VOID
-ScrLoadFontTable(UINT32 CodePage)
+ScrLoadFontTable(
+    UINT32 CodePage)
 {
     PHYSICAL_ADDRESS BaseAddress;
     PUCHAR Bitplane;
     PUCHAR FontBitfield = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FontBitfield = (PUCHAR) ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_BLUE);
-    if(FontBitfield)
+    FontBitfield = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_BLUE);
+    if (FontBitfield)
     {
         /* open bit plane for font table access */
         OpenBitPlane();
 
         /* get pointer to video memory */
         BaseAddress.QuadPart = BITPLANE_BASE;
-        Bitplane = (PUCHAR)MmMapIoSpace (BaseAddress, 0xFFFF, MmNonCached);
+        Bitplane = (PUCHAR)MmMapIoSpace(BaseAddress, 0xFFFF, MmNonCached);
 
         Status = ExtractFont(CodePage, FontBitfield);
         if (NT_SUCCESS(Status))
@@ -55,7 +56,10 @@ ScrLoadFontTable(UINT32 CodePage)
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
+NTSTATUS
+ExtractFont(
+    UINT32 CodePage,
+    PUCHAR FontBitField)
 {
     BOOLEAN            bFoundFile = FALSE;
     HANDLE             Handle;
@@ -69,10 +73,10 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
     CFFILE             CabFile;
     ULONG              CabFileOffset = 0;
     LARGE_INTEGER      ByteOffset;
-    WCHAR              SourceBuffer[MAX_PATH] = {L'\0'};
+    WCHAR              SourceBuffer[MAX_PATH] = { L'\0' };
     ULONG              ReadCP;
 
-    if(KeGetCurrentIrql() != PASSIVE_LEVEL)
+    if (KeGetCurrentIrql() != PASSIVE_LEVEL)
         return STATUS_INVALID_DEVICE_STATE;
 
     RtlInitUnicodeString(&LinkName,
@@ -96,56 +100,82 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
     SourceName.Buffer = SourceBuffer;
 
     Status = ZwQuerySymbolicLinkObject(Handle,
-                                      &SourceName,
-                                      NULL);
+                                       &SourceName,
+                                       NULL);
     ZwClose(Handle);
 
     Status = RtlAppendUnicodeToString(&SourceName, L"\\vgafonts.cab");
-    InitializeObjectAttributes(&ObjectAttributes, &SourceName,
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SourceName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL, NULL);
+                               NULL,
+                               NULL);
 
     Status = ZwCreateFile(&Handle,
                           GENERIC_READ,
-                          &ObjectAttributes, &IoStatusBlock, NULL,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
                           FILE_ATTRIBUTE_NORMAL,
                           0,
                           FILE_OPEN, 
                           FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL, 0);
+                          NULL,
+                          0);
 
     ByteOffset.LowPart = ByteOffset.HighPart = 0;
 
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                            &CabFileHeader, sizeof(CabFileHeader), &ByteOffset, NULL);
+        Status = ZwReadFile(Handle,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &CabFileHeader,
+                            sizeof(CabFileHeader),
+                            &ByteOffset,
+                            NULL);
 
-        if(NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
-            if(CabFileHeader.Signature == CAB_SIGNATURE)
+            if (CabFileHeader.Signature == CAB_SIGNATURE)
             {
                 // We have a valid CAB file!
                 // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
                 ByteOffset.LowPart = CabFileHeader.FileTableOffset;
 
-                while(CabFileHeader.FileCount)
+                while (CabFileHeader.FileCount)
                 {
-                    Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                        &CabFile, sizeof(CabFile), &ByteOffset, NULL);
+                    Status = ZwReadFile(Handle,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        &IoStatusBlock,
+                                        &CabFile,
+                                        sizeof(CabFile),
+                                        &ByteOffset,
+                                        NULL);
 
-                    if(NT_SUCCESS(Status))
+                    if (NT_SUCCESS(Status))
                     {
                         ByteOffset.LowPart += sizeof(CabFile);
 
                         // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
                         // This should be enough for our purpose.
-                        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                            FileName, sizeof(FileName), &ByteOffset, NULL);
+                        Status = ZwReadFile(Handle,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            &IoStatusBlock,
+                                            FileName,
+                                            sizeof(FileName),
+                                            &ByteOffset,
+                                            NULL);
 
-                        if(NT_SUCCESS(Status))
+                        if (NT_SUCCESS(Status))
                         {
-                            if(!bFoundFile)
+                            if (!bFoundFile)
                             {
                                 Status = RtlCharToInteger(FileName, 0, &ReadCP);
                                 if (NT_SUCCESS(Status) && ReadCP == CodePage)
@@ -169,8 +199,15 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
                 ByteOffset.LowPart += CabFileOffset;
 
                 // ByteOffset now contains the offset of the actual data, so we can read the RAW font
-                Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                    FontBitField, 2048, &ByteOffset, NULL);
+                Status = ZwReadFile(Handle,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    &IoStatusBlock,
+                                    FontBitField,
+                                    2048,
+                                    &ByteOffset,
+                                    NULL);
                 ZwClose(Handle);
                 return STATUS_SUCCESS;
             }
@@ -201,15 +238,15 @@ OpenBitPlane(VOID)
     _disable();
 
     /* sequence reg */
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR (SEQ_DATA, 0x04);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR (SEQ_DATA, 0x07);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x01);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR(SEQ_DATA, 0x04);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR(SEQ_DATA, 0x07);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
 
     /* graphic reg */
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR (GCT_DATA, 0x02);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR(GCT_DATA, 0x02);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
 
     /* enable interrupts */
     _enable();
@@ -222,35 +259,37 @@ CloseBitPlane(VOID)
     _disable();
 
     /* sequence reg */
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x01);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
 
     /* graphic reg */
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR (GCT_DATA, 0x10);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x0e);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR(GCT_DATA, 0x10);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR(GCT_DATA, 0x0e);
 
     /* enable interrupts */
     _enable();
 }
 
 VOID
-LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield)
+LoadFont(
+    PUCHAR Bitplane,
+    PUCHAR FontBitfield)
 {
-    UINT32 i,j;
+    UINT32 i, j;
 
-    for (i=0; i<256; i++)
+    for (i = 0; i < 256; i++)
     {
-        for (j=0; j<8; j++)
+        for (j = 0; j < 8; j++)
         {
-            *Bitplane = FontBitfield[i*8+j];
+            *Bitplane = FontBitfield[i * 8 + j];
             Bitplane++;
         }
 
         // padding
-        for (j=8; j<32; j++)
+        for (j = 8; j < 32; j++)
         {
             *Bitplane = 0;
             Bitplane++;
