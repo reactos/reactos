@@ -3158,7 +3158,8 @@ HICON CShellLink::CreateShortcutIcon(LPCWSTR wszIconPath, INT IconIndex)
     HDC hDC;
     HIMAGELIST himl = ImageList_Create(cx, cy, ILC_COLOR32 | ILC_MASK, 1, 1);
     HICON hIcon = NULL, hNewIcon = NULL;
-    HICON hShortcut = LoadIconW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT));
+    HICON hShortcut = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_SHORTCUT),
+                                        IMAGE_ICON, cx, cy, 0);
 
     ::ExtractIconExW(wszIconPath, IconIndex, &hIcon, NULL, 1);
     if (!hIcon || !hShortcut || !himl)
