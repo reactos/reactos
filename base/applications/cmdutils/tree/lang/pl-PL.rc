@@ -1,0 +1,12 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Przedstawia graficznie strukturę folderów na dysku lub w określonej ścieżce.\n\n\
+TREE [dysk:][ścieżka] [/F] [/A]\n\n\
+\t/F   Wyświetla nazwy plików w poszczególnych folderach.\n\
+\t/A   Używa znaków ASCII zamiast znaków rozszerzonych.\n"
+    IDS_NO_SUBDIRECTORIES "Nie ma żadnych podfolderów"
+    IDS_FOLDER_PATH "Zmienna PATH folderu\n"
+    IDS_VOL_SERIAL "Numer seryjny woluminu to %x:%x\n"
+END
