@@ -81,6 +81,8 @@ private:
     BOOL          m_bRunAs;
     BOOL          m_bDirty;
     LPDBLIST      m_pDBList; /* Optional data block list (in the extra data section) */
+    BOOL          m_bInInit;    // in initialization or not
+    HICON         m_hIcon;
 
     /* Pointers to strings inside Logo3/Darwin info blocks, cached for debug info purposes only */
     LPWSTR sProduct;
@@ -104,6 +106,11 @@ public:
     CShellLink();
     ~CShellLink();
     static INT_PTR CALLBACK SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    BOOL OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam);
+    void OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify);
+    LRESULT OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr);
+    void OnDestroy(HWND hwndDlg);
 
     // IPersistFile
     virtual HRESULT STDMETHODCALLTYPE GetClassID(CLSID *pclsid);

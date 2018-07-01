@@ -268,6 +268,8 @@ CShellLink::CShellLink()
     m_bRunAs = FALSE;
     m_bDirty = FALSE;
     m_pDBList = NULL;
+    m_bInInit = FALSE;
+    m_hIcon = NULL;
 
     m_sLinkPath = NULL;
     m_iIdOpen = -1;
@@ -2779,209 +2781,245 @@ LPWSTR SH_GetTargetTypeByPath(LPCWSTR lpcwFullPath)
     return wszBuf;
 }
 
+BOOL CShellLink::OnInitDialog(HWND hwndDlg, HWND hwndFocus, LPARAM lParam)
+{
+    TRACE("CShellLink::OnInitDialog(hwnd %p hwndFocus %p lParam %p)\n", hwndDlg, hwndFocus, lParam);
+
+    TRACE("m_sArgs: %S sComponent: %S m_sDescription: %S m_sIcoPath: %S m_sPath: %S m_sPathRel: %S sProduct: %S m_sWorkDir: %S\n", m_sArgs, sComponent, m_sDescription,
+          m_sIcoPath, m_sPath, m_sPathRel, sProduct, m_sWorkDir);
+
+    m_bInInit = TRUE;
+
+    /* Get file information */
+    // FIXME! FIXME! Shouldn't we use m_sIcoPath, m_Header.nIconIndex instead???
+    SHFILEINFOW fi;
+    if (!SHGetFileInfoW(m_sLinkPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_ICON))
+    {
+        ERR("SHGetFileInfoW failed for %ls (%lu)\n", m_sLinkPath, GetLastError());
+        fi.szTypeName[0] = L'\0';
+        fi.hIcon = NULL;
+    }
+
+    if (fi.hIcon)
+    {
+        if (m_hIcon)
+            DestroyIcon(m_hIcon);
+        m_hIcon = fi.hIcon;
+        SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)m_hIcon, 0);
+    }
+    else
+        ERR("ExtractIconW failed %ls %u\n", m_sIcoPath, m_Header.nIconIndex);
+
+    /* Target type */
+    if (m_sPath)
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, SH_GetTargetTypeByPath(m_sPath));
+
+    /* Target location */
+    if (m_sPath)
+    {
+        WCHAR target[MAX_PATH];
+        StringCchCopyW(target, _countof(target), m_sPath);
+        PathRemoveFileSpecW(target);
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION_EDIT, PathFindFileNameW(target));
+    }
+
+    /* Target path */
+    if (m_sPath)
+    {
+        WCHAR newpath[2*MAX_PATH] = L"\0";
+        if (wcschr(m_sPath, ' '))
+            StringCchPrintfExW(newpath, _countof(newpath), NULL, NULL, 0, L"\"%ls\"", m_sPath);
+        else
+            StringCchCopyExW(newpath, _countof(newpath), m_sPath, NULL, NULL, 0);
+
+        if (m_sArgs && m_sArgs[0])
+        {
+            StringCchCatW(newpath, _countof(newpath), L" ");
+            StringCchCatW(newpath, _countof(newpath), m_sArgs);
+        }
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, newpath);
+    }
+
+    /* Working dir */
+    if (m_sWorkDir)
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, m_sWorkDir);
+
+    /* Description */
+    if (m_sDescription)
+        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, m_sDescription);
+
+    m_bInInit = FALSE;
+
+    return TRUE;
+}
+
+void CShellLink::OnCommand(HWND hwndDlg, int id, HWND hwndCtl, UINT codeNotify)
+{
+    switch (id)
+    {
+        case IDC_SHORTCUT_FIND:
+            SHOpenFolderAndSelectItems(m_pPidl, 0, NULL, 0);
+            ///
+            /// FIXME
+            /// open target directory
+            ///
+            return;
+
+        case IDC_SHORTCUT_CHANGE_ICON:
+        {
+            WCHAR wszPath[MAX_PATH] = L"";
+
+            if (m_sIcoPath)
+                wcscpy(wszPath, m_sIcoPath);
+            else
+                FindExecutableW(m_sPath, NULL, wszPath);
+
+            INT IconIndex = m_Header.nIconIndex;
+            if (PickIconDlg(hwndDlg, wszPath, _countof(wszPath), &IconIndex))
+            {
+                SetIconLocation(wszPath, IconIndex);
+                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+
+                HICON hIconLarge = CreateShortcutIcon(wszPath, IconIndex);
+                if (hIconLarge)
+                {
+                    if (m_hIcon)
+                        DestroyIcon(m_hIcon);
+                    m_hIcon = hIconLarge;
+                    SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)m_hIcon, 0);
+                }
+            }
+            return;
+        }
+
+        case IDC_SHORTCUT_ADVANCED:
+        {
+            INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHORTCUT_EXTENDED_PROPERTIES), hwndDlg, ExtendedShortcutProc, (LPARAM)m_bRunAs);
+            if (result == 1 || result == 0)
+            {
+                if (m_bRunAs != result)
+                {
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                }
+
+                m_bRunAs = result;
+            }
+            return;
+        }
+    }
+    if (codeNotify == EN_CHANGE)
+    {
+        if (!m_bInInit)
+            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+    }
+}
+
+LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
+{
+    WCHAR wszBuf[MAX_PATH];
+    LPPSHNOTIFY lppsn = (LPPSHNOTIFY)pnmhdr;
+
+    if (lppsn->hdr.code == PSN_APPLY)
+    {
+        /* set working directory */
+        GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, wszBuf, _countof(wszBuf));
+        SetWorkingDirectory(wszBuf);
+
+        /* set link destination */
+        GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, wszBuf, _countof(wszBuf));
+        LPWSTR lpszArgs = NULL;
+        LPWSTR unquoted = strdupW(wszBuf);
+        StrTrimW(unquoted, L" ");
+
+        if (!PathFileExistsW(unquoted))
+        {
+            lpszArgs = PathGetArgsW(unquoted);
+            PathRemoveArgsW(unquoted);
+            StrTrimW(lpszArgs, L" ");
+        }
+        if (unquoted[0] == '"' && unquoted[wcslen(unquoted) - 1] == '"')
+            PathUnquoteSpacesW(unquoted);
+
+        WCHAR *pwszExt = PathFindExtensionW(unquoted);
+        if (!wcsicmp(pwszExt, L".lnk"))
+        {
+            // FIXME load localized error msg
+            MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);
+            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+            return TRUE;
+        }
+
+        if (!PathFileExistsW(unquoted))
+        {
+            // FIXME load localized error msg
+            MessageBoxW(hwndDlg, L"The specified file name in the target box is invalid", L"Error", MB_ICONERROR);
+            SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
+            return TRUE;
+        }
+
+        SetPath(unquoted);
+        if (lpszArgs)
+            SetArguments(lpszArgs);
+        else
+            SetArguments(L"\0");
+
+        HeapFree(GetProcessHeap(), 0, unquoted);
+
+        TRACE("This %p m_sLinkPath %S\n", this, m_sLinkPath);
+        Save(m_sLinkPath, TRUE);
+        SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void CShellLink::OnDestroy(HWND hwndDlg)
+{
+    if (m_hIcon)
+    {
+        DestroyIcon(m_hIcon);
+        m_hIcon = NULL;
+    }
+}
+
 /**************************************************************************
  * SH_ShellLinkDlgProc
  *
  * dialog proc of the shortcut property dialog
  */
 
-INT_PTR CALLBACK CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK
+CShellLink::SH_ShellLinkDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    LPPROPSHEETPAGEW ppsp;
     CShellLink *pThis = reinterpret_cast<CShellLink *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
-    static BOOL s_bInInit = FALSE;
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
-            LPPROPSHEETPAGEW ppsp = (LPPROPSHEETPAGEW)lParam;
+            ppsp = (LPPROPSHEETPAGEW)lParam;
             if (ppsp == NULL)
                 break;
 
-            TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n", hwndDlg, lParam, ppsp->lParam);
-
             pThis = reinterpret_cast<CShellLink *>(ppsp->lParam);
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pThis);
-
-            s_bInInit = TRUE;
-
-            TRACE("m_sArgs: %S sComponent: %S m_sDescription: %S m_sIcoPath: %S m_sPath: %S m_sPathRel: %S sProduct: %S m_sWorkDir: %S\n", pThis->m_sArgs, pThis->sComponent, pThis->m_sDescription,
-                  pThis->m_sIcoPath, pThis->m_sPath, pThis->m_sPathRel, pThis->sProduct, pThis->m_sWorkDir);
-
-            /* Get file information */
-            // FIXME! FIXME! Shouldn't we use pThis->m_sIcoPath, pThis->m_Header.nIconIndex instead???
-            SHFILEINFOW fi;
-            if (!SHGetFileInfoW(pThis->m_sLinkPath, 0, &fi, sizeof(fi), SHGFI_TYPENAME | SHGFI_ICON))
-            {
-                ERR("SHGetFileInfoW failed for %ls (%lu)\n", pThis->m_sLinkPath, GetLastError());
-                fi.szTypeName[0] = L'\0';
-                fi.hIcon = NULL;
-            }
-
-            if (fi.hIcon) // TODO: destroy icon
-                SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)fi.hIcon, 0);
-            else
-                ERR("ExtractIconW failed %ls %u\n", pThis->m_sIcoPath, pThis->m_Header.nIconIndex);
-
-            /* Target type */
-            if (pThis->m_sPath)
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TYPE_EDIT, SH_GetTargetTypeByPath(pThis->m_sPath));
-
-            /* Target location */
-            if (pThis->m_sPath)
-            {
-                WCHAR target[MAX_PATH];
-                StringCchCopyW(target, _countof(target), pThis->m_sPath);
-                PathRemoveFileSpecW(target);
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION_EDIT, PathFindFileNameW(target));
-            }
-
-            /* Target path */
-            if (pThis->m_sPath)
-            {
-                WCHAR newpath[2*MAX_PATH] = L"\0";
-                if (wcschr(pThis->m_sPath, ' '))
-                    StringCchPrintfExW(newpath, _countof(newpath), NULL, NULL, 0, L"\"%ls\"", pThis->m_sPath);
-                else
-                    StringCchCopyExW(newpath, _countof(newpath), pThis->m_sPath, NULL, NULL, 0);
-
-                if (pThis->m_sArgs && pThis->m_sArgs[0])
-                {
-                    StringCchCatW(newpath, _countof(newpath), L" ");
-                    StringCchCatW(newpath, _countof(newpath), pThis->m_sArgs);
-                }
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, newpath);
-            }
-
-            /* Working dir */
-            if (pThis->m_sWorkDir)
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, pThis->m_sWorkDir);
-
-            /* Description */
-            if (pThis->m_sDescription)
-                SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_COMMENT_EDIT, pThis->m_sDescription);
-
-            s_bInInit = FALSE;
-
-            return TRUE;
-        }
+            return pThis->OnInitDialog(hwndDlg, (HWND)(wParam), lParam);
 
         case WM_NOTIFY:
-        {
-            LPPSHNOTIFY lppsn = (LPPSHNOTIFY)lParam;
-            if (lppsn->hdr.code == PSN_APPLY)
-            {
-                WCHAR wszBuf[MAX_PATH];
-                /* set working directory */
-                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_START_IN_EDIT, wszBuf, _countof(wszBuf));
-                pThis->SetWorkingDirectory(wszBuf);
-                /* set link destination */
-                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_TARGET_TEXT, wszBuf, _countof(wszBuf));
-                LPWSTR lpszArgs = NULL;
-                LPWSTR unquoted = strdupW(wszBuf);
-                StrTrimW(unquoted, L" ");
-                if (!PathFileExistsW(unquoted))
-                {
-                    lpszArgs = PathGetArgsW(unquoted);
-                    PathRemoveArgsW(unquoted);
-                    StrTrimW(lpszArgs, L" ");
-                }
-                if (unquoted[0] == '"' && unquoted[wcslen(unquoted)-1] == '"')
-                    PathUnquoteSpacesW(unquoted);
-
-
-                WCHAR *pwszExt = PathFindExtensionW(unquoted);
-                if (!wcsicmp(pwszExt, L".lnk"))
-                {
-                    // FIXME load localized error msg
-                    MessageBoxW(hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR);
-                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
-                    return TRUE;
-                }
-
-                if (!PathFileExistsW(unquoted))
-                {
-                    // FIXME load localized error msg
-                    MessageBoxW(hwndDlg, L"The specified file name in the target box is invalid", L"Error", MB_ICONERROR);
-                    SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
-                    return TRUE;
-                }
-
-                pThis->SetPath(unquoted);
-                if (lpszArgs)
-                    pThis->SetArguments(lpszArgs);
-                else
-                    pThis->SetArguments(L"\0");
-
-                HeapFree(GetProcessHeap(), 0, unquoted);
-
-                TRACE("This %p m_sLinkPath %S\n", pThis, pThis->m_sLinkPath);
-                pThis->Save(pThis->m_sLinkPath, TRUE);
-                SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
-                return TRUE;
-            }
-            break;
-        }
+            return pThis->OnNotify(hwndDlg, (int)wParam, (NMHDR *)lParam);
 
         case WM_COMMAND:
-            switch(LOWORD(wParam))
-            {
-                case IDC_SHORTCUT_FIND:
-                    SHOpenFolderAndSelectItems(pThis->m_pPidl, 0, NULL, 0);
-                    ///
-                    /// FIXME
-                    /// open target directory
-                    ///
-                    return TRUE;
+            pThis->OnCommand(hwndDlg, LOWORD(wParam), (HWND)lParam, HIWORD(wParam));
+            break;
 
-                case IDC_SHORTCUT_CHANGE_ICON:
-                {
-                    WCHAR wszPath[MAX_PATH] = L"";
-
-                    if (pThis->m_sIcoPath)
-                        wcscpy(wszPath, pThis->m_sIcoPath);
-                    else
-                        FindExecutableW(pThis->m_sPath, NULL, wszPath);
-
-                    INT IconIndex = pThis->m_Header.nIconIndex;
-                    if (PickIconDlg(hwndDlg, wszPath, _countof(wszPath), &IconIndex))
-                    {
-                        pThis->SetIconLocation(wszPath, IconIndex);
-                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-
-                        HICON hIconLarge = pThis->CreateShortcutIcon(wszPath, IconIndex);
-                        if (hIconLarge)
-                        {
-                            HICON hIconOld = (HICON)SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_GETICON, 0, 0);
-                            SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_ICON, STM_SETICON, (WPARAM)hIconLarge, 0);
-                            DestroyIcon(hIconOld);
-                        }
-                    }
-                    return TRUE;
-                }
-
-                case IDC_SHORTCUT_ADVANCED:
-                {
-                    INT_PTR result = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHORTCUT_EXTENDED_PROPERTIES), hwndDlg, ExtendedShortcutProc, (LPARAM)pThis->m_bRunAs);
-                    if (result == 1 || result == 0)
-                    {
-                        if (pThis->m_bRunAs != result)
-                        {
-                            PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-                        }
-
-                        pThis->m_bRunAs = result;
-                    }
-                    return TRUE;
-                }
-            }
-            if (HIWORD(wParam) == EN_CHANGE && !s_bInInit)
-                PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+        case WM_DESTROY:
+            pThis->OnDestroy(hwndDlg);
             break;
 
         default:
             break;
     }
+
     return FALSE;
 }
 
