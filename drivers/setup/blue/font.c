@@ -33,25 +33,34 @@ ScrLoadFontTable(
     NTSTATUS Status = STATUS_SUCCESS;
 
     FontBitfield = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_BLUE);
-    if (FontBitfield)
+    if (FontBitfield == NULL)
     {
-        /* open bit plane for font table access */
-        OpenBitPlane();
-
-        /* get pointer to video memory */
-        BaseAddress.QuadPart = BITPLANE_BASE;
-        Bitplane = (PUCHAR)MmMapIoSpace(BaseAddress, 0xFFFF, MmNonCached);
-
-        Status = ExtractFont(CodePage, FontBitfield);
-        if (NT_SUCCESS(Status))
-            LoadFont(Bitplane, FontBitfield);
-
-        MmUnmapIoSpace(Bitplane, 0xFFFF);
-        ExFreePool(FontBitfield);
-
-        /* close bit plane */
-        CloseBitPlane();
+        DPRINT1("ExAllocatePoolWithTag failed\n");
+        return;
     }
+
+    /* open bit plane for font table access */
+    OpenBitPlane();
+
+    /* get pointer to video memory */
+    BaseAddress.QuadPart = BITPLANE_BASE;
+    Bitplane = (PUCHAR)MmMapIoSpace(BaseAddress, 0xFFFF, MmNonCached);
+
+    Status = ExtractFont(CodePage, FontBitfield);
+    if (NT_SUCCESS(Status))
+    {
+        LoadFont(Bitplane, FontBitfield);
+    }
+    else
+    {
+        DPRINT1("ExtractFont failed with Status 0x%lx\n", Status);
+    }
+
+    MmUnmapIoSpace(Bitplane, 0xFFFF);
+    ExFreePool(FontBitfield);
+
+    /* close bit plane */
+    CloseBitPlane();
 }
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -93,7 +102,10 @@ ExtractFont(
                                       &ObjectAttributes);
 
     if (!NT_SUCCESS(Status))
-        return(Status);
+    {
+        DPRINT1("ZwOpenSymbolicLinkObject failed with Status 0x%lx\n", Status);
+        return Status;
+    }
 
     SourceName.Length = 0;
     SourceName.MaximumLength = MAX_PATH * sizeof(WCHAR);
@@ -104,7 +116,19 @@ ExtractFont(
                                        NULL);
     ZwClose(Handle);
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwQuerySymbolicLinkObject failed with Status 0x%lx\n", Status);
+        return Status;
+    }
+
     Status = RtlAppendUnicodeToString(&SourceName, L"\\vgafonts.cab");
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAppendUnicodeToString failed with Status 0x%lx\n", Status);
+        return Status;
+    }
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &SourceName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
@@ -125,109 +149,111 @@ ExtractFont(
 
     ByteOffset.LowPart = ByteOffset.HighPart = 0;
 
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Cannot open vgafonts.cab (0x%lx)\n", Status);
+        return Status;
+    }
+
+    Status = ZwReadFile(Handle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        &CabFileHeader,
+                        sizeof(CabFileHeader),
+                        &ByteOffset,
+                        NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Cannot read from file (0x%lx)\n", Status);
+        goto Exit;
+    }
+
+    if (CabFileHeader.Signature != CAB_SIGNATURE)
+    {
+        DPRINT1("Error: CAB signature is missing!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    // We have a valid CAB file!
+    // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
+    ByteOffset.LowPart = CabFileHeader.FileTableOffset;
+
+    while (CabFileHeader.FileCount)
     {
         Status = ZwReadFile(Handle,
                             NULL,
                             NULL,
                             NULL,
                             &IoStatusBlock,
-                            &CabFileHeader,
-                            sizeof(CabFileHeader),
+                            &CabFile,
+                            sizeof(CabFile),
                             &ByteOffset,
                             NULL);
 
         if (NT_SUCCESS(Status))
         {
-            if (CabFileHeader.Signature == CAB_SIGNATURE)
+            ByteOffset.LowPart += sizeof(CabFile);
+
+            // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
+            // This should be enough for our purpose.
+            Status = ZwReadFile(Handle,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &IoStatusBlock,
+                                FileName,
+                                sizeof(FileName),
+                                &ByteOffset,
+                                NULL);
+
+            if (NT_SUCCESS(Status))
             {
-                // We have a valid CAB file!
-                // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
-                ByteOffset.LowPart = CabFileHeader.FileTableOffset;
-
-                while (CabFileHeader.FileCount)
+                if (!bFoundFile)
                 {
-                    Status = ZwReadFile(Handle,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        &IoStatusBlock,
-                                        &CabFile,
-                                        sizeof(CabFile),
-                                        &ByteOffset,
-                                        NULL);
-
-                    if (NT_SUCCESS(Status))
+                    Status = RtlCharToInteger(FileName, 0, &ReadCP);
+                    if (NT_SUCCESS(Status) && ReadCP == CodePage)
                     {
-                        ByteOffset.LowPart += sizeof(CabFile);
-
-                        // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
-                        // This should be enough for our purpose.
-                        Status = ZwReadFile(Handle,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            &IoStatusBlock,
-                                            FileName,
-                                            sizeof(FileName),
-                                            &ByteOffset,
-                                            NULL);
-
-                        if (NT_SUCCESS(Status))
-                        {
-                            if (!bFoundFile)
-                            {
-                                Status = RtlCharToInteger(FileName, 0, &ReadCP);
-                                if (NT_SUCCESS(Status) && ReadCP == CodePage)
-                                {
-                                    // We got the correct file.
-                                    // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.
-                                    CabFileOffset = CabFile.FileOffset;
-                                    bFoundFile = TRUE;
-                                }
-                            }
-
-                            ByteOffset.LowPart += strlen(FileName) + 1;
-                        }
+                        // We got the correct file.
+                        // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.
+                        CabFileOffset = CabFile.FileOffset;
+                        bFoundFile = TRUE;
                     }
-
-                    CabFileHeader.FileCount--;
                 }
 
-                // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
-                ByteOffset.LowPart += 8;
-                ByteOffset.LowPart += CabFileOffset;
-
-                // ByteOffset now contains the offset of the actual data, so we can read the RAW font
-                Status = ZwReadFile(Handle,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    &IoStatusBlock,
-                                    FontBitField,
-                                    2048,
-                                    &ByteOffset,
-                                    NULL);
-                ZwClose(Handle);
-                return STATUS_SUCCESS;
-            }
-            else
-            {
-                DPRINT1("Error: CAB signature is missing!\n");
-                Status = STATUS_UNSUCCESSFUL;
+                ByteOffset.LowPart += strlen(FileName) + 1;
             }
         }
-        else
-            DPRINT1("Error: Cannot read from file\n");
 
-        ZwClose(Handle);
-        return Status;
+        CabFileHeader.FileCount--;
     }
-    else
+
+    // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
+    ByteOffset.LowPart += 8;
+    ByteOffset.LowPart += CabFileOffset;
+
+    // ByteOffset now contains the offset of the actual data, so we can read the RAW font
+    Status = ZwReadFile(Handle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        FontBitField,
+                        2048,
+                        &ByteOffset,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Cannot open vgafonts.cab\n");
-        return Status;
+        DPRINT1("ZwReadFile failed with Status 0x%lx\n", Status);
     }
+
+Exit:
+
+    ZwClose(Handle);
+    return Status;
 }
 
 /* Font-load specific funcs */
