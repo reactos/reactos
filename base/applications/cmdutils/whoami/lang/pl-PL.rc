@@ -41,8 +41,8 @@ BEGIN
   Wyświetla informacje użytkownika, grupy i uprawnień dla lokalnie zalogowanego użytkownika\n\
   Jeżeli nie podano żadnych parametrów, wyświetla aktualną domenę i nazwę użytkownika.\n\
 \n\
-  Dostępnymi formatami wyjściowymi dla opcji '/fo\ są 'csv', 'list' i 'table'.\n\
-  Użyj opcji '/nh\, żeby ukryć nagłówki. Domyślnie dane są wyświetlone w tabeli.\n\
+  Dostępnymi formatami wyjściowymi dla opcji '/fo' są 'csv', 'list' i 'table'.\n\
+  Użyj opcji '/nh', żeby ukryć nagłówki. Domyślnie dane są wyświetlone w tabeli.\n\
 \n\
 SKŁADNIA:\n\
   whoami [/upn | /fqdn | /logonid] \n\
