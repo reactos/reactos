@@ -146,15 +146,13 @@ ExtractFont(
                           FILE_SYNCHRONOUS_IO_NONALERT,
                           NULL,
                           0);
-
-    ByteOffset.LowPart = ByteOffset.HighPart = 0;
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Error: Cannot open vgafonts.cab (0x%lx)\n", Status);
         return Status;
     }
 
+    ByteOffset.QuadPart = 0;
     Status = ZwReadFile(Handle,
                         NULL,
                         NULL,
@@ -173,14 +171,14 @@ ExtractFont(
 
     if (CabFileHeader.Signature != CAB_SIGNATURE)
     {
-        DPRINT1("Error: CAB signature is missing!\n");
+        DPRINT1("Invalid CAB signature: 0x%lx!\n", CabFileHeader.Signature);
         Status = STATUS_UNSUCCESSFUL;
         goto Exit;
     }
 
     // We have a valid CAB file!
     // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
-    ByteOffset.LowPart = CabFileHeader.FileTableOffset;
+    ByteOffset.QuadPart = CabFileHeader.FileTableOffset;
 
     while (CabFileHeader.FileCount)
     {
@@ -196,7 +194,7 @@ ExtractFont(
 
         if (NT_SUCCESS(Status))
         {
-            ByteOffset.LowPart += sizeof(CabFile);
+            ByteOffset.QuadPart += sizeof(CabFile);
 
             // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
             // This should be enough for our purpose.
@@ -224,7 +222,7 @@ ExtractFont(
                     }
                 }
 
-                ByteOffset.LowPart += strlen(FileName) + 1;
+                ByteOffset.QuadPart += strlen(FileName) + 1;
             }
         }
 
@@ -232,8 +230,8 @@ ExtractFont(
     }
 
     // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
-    ByteOffset.LowPart += 8;
-    ByteOffset.LowPart += CabFileOffset;
+    ByteOffset.QuadPart += 8;
+    ByteOffset.QuadPart += CabFileOffset;
 
     // ByteOffset now contains the offset of the actual data, so we can read the RAW font
     Status = ZwReadFile(Handle,
