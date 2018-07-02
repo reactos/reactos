@@ -26,7 +26,7 @@ typedef struct _FONT_CACHE_ENTRY
 {
     LIST_ENTRY ListEntry;
     int GlyphIndex;
-    FT_Face Face;
+    FT_Face ft_face;
     FT_BitmapGlyph BitmapGlyph;
     int Height;
     FT_Render_Mode RenderMode;
