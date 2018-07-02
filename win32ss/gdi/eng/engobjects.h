@@ -153,6 +153,9 @@ typedef struct _FONTGDI {
   BYTE          OriginalItalic;
   LONG          OriginalWeight;
   BYTE          charset;
+
+  UINT          codepage;
+  LONG          ppem;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {

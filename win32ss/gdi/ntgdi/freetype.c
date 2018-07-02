@@ -6317,6 +6317,140 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+/* ported from Wine */
+static inline WCHAR
+get_glyph_index_symbol(PFONTGDI font, UINT glyph)
+{
+    WCHAR ret;
+    FT_Face ft_face = font->SharedFace->Face;
+
+    if (glyph < 0x100)
+        glyph += 0xf000;
+
+    /* there are a number of old pre-Unicode "broken" TTFs, which
+       do have symbols at U+00XX instead of U+f0XX */
+    ret = (WCHAR)FT_Get_Char_Index(ft_face, glyph);
+    if (!ret)
+        ret = (WCHAR)FT_Get_Char_Index(ft_face, glyph - 0xf000);
+
+    return ret;
+}
+
+/* ported from Wine */
+static WCHAR
+get_glyph_index(PFONTGDI font, UINT glyph)
+{
+    WCHAR ret;
+    WCHAR wc;
+    char buf[8];
+    BOOL default_used;
+    FT_Face ft_face = font->SharedFace->Face;
+
+    if (ft_face->charmap->encoding == FT_ENCODING_NONE)
+    {
+        wc = (WCHAR)glyph;
+        if (EngWideCharToMultiByte(font->codepage, &wc, 1, buf, sizeof(buf)) == -1)
+        {
+            /* defaulted */
+            if (font->codepage == CP_SYMBOL)
+            {
+                ret = get_glyph_index_symbol(font, glyph);
+                if (!ret)
+                {
+                    if (EngWideCharToMultiByte(0, &wc, 1, buf, sizeof(buf)) != -1)
+                        ret = get_glyph_index_symbol(font, buf[0]);
+                }
+            }
+            else
+            {
+                ret = 0;
+            }
+        }
+        else
+        {
+            ret = (WORD)FT_Get_Char_Index(ft_face, (unsigned char)buf[0]);
+        }
+
+        DPRINT("%04x (%02x) -> ret %d def_used %d\n", glyph, (unsigned char)buf[0], ret, default_used);
+        return ret;
+    }
+
+    if (ft_face->charmap->encoding == FT_ENCODING_MS_SYMBOL)
+    {
+        ret = get_glyph_index_symbol(font, glyph);
+        if (!ret)
+        {
+            wc = (WCHAR)glyph;
+            if (EngWideCharToMultiByte(0, &wc, 1, buf, sizeof(buf)) != -1)
+                ret = get_glyph_index_symbol(font, (unsigned char)buf[0]);
+        }
+        return ret;
+    }
+
+    return FT_Get_Char_Index(ft_face, glyph);
+}
+
+/* ported from Wine */
+static WCHAR
+get_gdi_glyph_index(PFONTGDI font, UINT glyph)
+{
+    WCHAR wc = (WCHAR)glyph;
+    WCHAR ret;
+    char buf[8];
+    FT_Face ft_face = font->SharedFace->Face;
+    BOOL def_used = FALSE;
+
+    if (ft_face->charmap->encoding != FT_ENCODING_NONE)
+        return get_glyph_index(font, glyph);
+
+    if (EngWideCharToMultiByte(font->codepage, &wc, 1, buf, sizeof(buf)) == -1)
+    {
+        def_used = TRUE;
+        if (font->codepage == CP_SYMBOL && wc < 0x100)
+            ret = (unsigned char)wc;
+        else
+            ret = 0;
+    }
+    else
+    {
+        ret = (unsigned char)buf[0];
+    }
+
+    DPRINT("%04x (%02x) -> ret %d def_used %d\n", glyph, (unsigned char)buf[0], ret, def_used);
+    return ret;
+}
+
+/* ported from Wine */
+static WORD
+get_default_char_index(PFONTGDI font)
+{
+    WORD default_char;
+    TT_OS2 *pOS2;
+    FT_Face ft_face = font->SharedFace->Face;
+    FT_WinFNT_HeaderRec winfnt_header;
+    FT_Error err;
+
+    if (FT_IS_SFNT(ft_face))
+    {
+        pOS2 = FT_Get_Sfnt_Table(ft_face, FT_SFNT_OS2);
+        ASSERT(pOS2 != NULL);
+        default_char = (pOS2->usDefaultChar ? get_glyph_index(font, pOS2->usDefaultChar) : 0);
+    }
+    else
+    {
+        err = FT_Get_WinFNT_Header(ft_face, &winfnt_header);
+        if (!err)
+        {
+            default_char = winfnt_header.default_char + winfnt_header.first_char;
+        }
+        else
+        {
+            default_char = L' ';
+        }
+    }
+
+    return default_char;
+}
 
 /*
 * @implemented
@@ -6341,11 +6475,10 @@ NtGdiGetGlyphIndicesW(
     PFONTGDI FontGDI;
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    OUTLINETEXTMETRICW *potm;
     INT i;
     WCHAR DefChar = 0xffff;
     PWSTR Buffer = NULL;
-    ULONG Size, pwcSize;
+    ULONG pwcSize;
     PWSTR Safepwc = NULL;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
@@ -6406,26 +6539,7 @@ NtGdiGetGlyphIndicesW(
     }
     else
     {
-        FT_Face Face = FontGDI->SharedFace->Face;
-        if (FT_IS_SFNT(Face))
-        {
-            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(Face, pOS2->usDefaultChar) : 0);
-        }
-        else
-        {
-            Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-            potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
-            if (!potm)
-            {
-                cwc = GDI_ERROR;
-                goto ErrorRet;
-            }
-            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
-            if (Size)
-                DefChar = potm->otmTextMetrics.tmDefaultChar;
-            ExFreePoolWithTag(potm, GDITAG_TEXT);
-        }
+        DefChar = get_default_char_index(FontGDI);
     }
 
     pwcSize = cwc * sizeof(WCHAR);
@@ -6454,7 +6568,7 @@ NtGdiGetGlyphIndicesW(
 
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(FontGDI->SharedFace->Face, Safepwc[i]);
+        Buffer[i] = get_gdi_glyph_index(FontGDI, Safepwc[i]);
         if (Buffer[i] == 0)
         {
             Buffer[i] = DefChar;
