@@ -262,7 +262,7 @@ ProIndicatePacket(
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
 #if DBG
-  MiniDisplayPacket(Packet);
+  MiniDisplayPacket(Packet, "INDICATE");
 #endif
 
   NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
@@ -395,10 +395,16 @@ proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
    KIRQL RaiseOldIrql;
    NDIS_STATUS NdisStatus;
 
+   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
    if(MiniIsBusy(Adapter, NdisWorkItemSend)) {
+      NDIS_DbgPrint(MID_TRACE, ("Busy: NdisWorkItemSend.\n"));
+
       MiniQueueWorkItem(Adapter, NdisWorkItemSend, Packet, FALSE);
       return NDIS_STATUS_PENDING;
    }
+
+   MiniDisplayPacket(Packet, "SEND");
 
    if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
    {

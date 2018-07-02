@@ -109,7 +109,8 @@ extern KSPIN_LOCK AdapterListLock;
 #if DBG
 VOID
 MiniDisplayPacket(
-    PNDIS_PACKET Packet);
+    PNDIS_PACKET Packet,
+    PCSTR Reason);
 #endif /* DBG */
 
 VOID
