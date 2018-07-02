@@ -206,7 +206,11 @@ EngMultiByteToWideChar(UINT CodePage,
                        LPSTR MultiByteString,
                        INT BytesInMultiByteString)
 {
-    return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
+    INT ret = MultiByteToWideChar(CodePage, 0, MultiByteString, BytesInMultiByteString,
+                                  WideCharString, BytesInWideCharString / sizeof(WCHAR));
+    if (ret)
+        return ret;
+    return -1;
 }
 
 /*
