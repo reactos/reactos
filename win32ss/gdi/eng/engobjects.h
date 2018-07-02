@@ -126,12 +126,47 @@ typedef struct _SHARED_FACE_CACHE {
 } SHARED_FACE_CACHE, *PSHARED_FACE_CACHE;
 
 typedef struct _SHARED_FACE {
-  FT_Face       Face;
+  FT_Face       ft_face;
   LONG          RefCount;
   PSHARED_MEM   Memory;
   SHARED_FACE_CACHE EnglishUS;
   SHARED_FACE_CACHE UserLanguage;
 } SHARED_FACE, *PSHARED_FACE;
+
+/* ported from Wine */
+/* This is basically a copy of FT_Bitmap_Size with an extra element added */
+typedef struct {
+    FT_Short height;
+    FT_Short width;
+    FT_Pos size;
+    FT_Pos x_ppem;
+    FT_Pos y_ppem;
+    FT_Short internal_leading;
+} Bitmap_Size;
+
+/* ported from Wine */
+typedef FT_Bitmap_Size My_FT_Bitmap_Size;
+
+/* ported from Wine */
+typedef struct {
+    GLYPHMETRICS gm;
+    ABC          abc;  /* metrics of the unrotated char */
+    BOOL         init;
+} GM;
+
+/* ported from Wine */
+typedef struct {
+    FLOAT eM11, eM12;
+    FLOAT eM21, eM22;
+} FMAT2;
+
+/* ported from Wine */
+typedef struct {
+    DWORD hash;
+    LOGFONTW lf;
+    FMAT2 matrix;
+    BOOL can_use_bitmap;
+} FONT_DESC;
 
 typedef struct _FONTGDI {
   FONTOBJ       FontObj;
@@ -146,13 +181,15 @@ typedef struct _FONTGDI {
   LONG          lMinWidthD;
 
   LPWSTR        Filename;
-  BYTE          RequestUnderline;
-  BYTE          RequestStrikeOut;
   BYTE          RequestItalic;
   LONG          RequestWeight;
   BYTE          OriginalItalic;
   LONG          OriginalWeight;
-  BYTE          CharSet;
+
+  /* the following members can be accessed without locking, they are never modified after creation */
+  BYTE          charset;
+  BYTE          underline;
+  BYTE          strikeout;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {

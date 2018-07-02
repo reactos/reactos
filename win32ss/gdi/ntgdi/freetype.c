@@ -180,20 +180,20 @@ SharedFaceCache_Init(PSHARED_FACE_CACHE Cache)
 }
 
 static PSHARED_FACE
-SharedFace_Create(FT_Face Face, PSHARED_MEM Memory)
+SharedFace_Create(FT_Face ft_face, PSHARED_MEM Memory)
 {
     PSHARED_FACE Ptr;
     Ptr = ExAllocatePoolWithTag(PagedPool, sizeof(SHARED_FACE), TAG_FONT);
     if (Ptr)
     {
-        Ptr->Face = Face;
+        Ptr->ft_face = ft_face;
         Ptr->RefCount = 1;
         Ptr->Memory = Memory;
         SharedFaceCache_Init(&Ptr->EnglishUS);
         SharedFaceCache_Init(&Ptr->UserLanguage);
 
         SharedMem_AddRef(Memory);
-        DPRINT("Creating SharedFace for %s\n", Face->family_name ? Face->family_name : "<NULL>");
+        DPRINT("Creating SharedFace for %s\n", ft_face->family_name ? ft_face->family_name : "<NULL>");
     }
     return Ptr;
 }
@@ -235,7 +235,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 }
 
 static void
-RemoveCacheEntries(FT_Face Face)
+RemoveCacheEntries(FT_Face ft_face)
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
@@ -248,7 +248,7 @@ RemoveCacheEntries(FT_Face Face)
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         CurrentEntry = CurrentEntry->Flink;
 
-        if (FontEntry->Face == Face)
+        if (FontEntry->ft_face == ft_face)
         {
             RemoveCachedEntry(FontEntry);
         }
@@ -294,9 +294,9 @@ SharedFace_Release(PSHARED_FACE Ptr)
     --Ptr->RefCount;
     if (Ptr->RefCount == 0)
     {
-        DPRINT("Releasing SharedFace for %s\n", Ptr->Face->family_name ? Ptr->Face->family_name : "<NULL>");
-        RemoveCacheEntries(Ptr->Face);
-        FT_Done_Face(Ptr->Face);
+        DPRINT("Releasing SharedFace for %s\n", Ptr->ft_face->family_name ? Ptr->ft_face->family_name : "<NULL>");
+        RemoveCacheEntries(Ptr->ft_face);
+        FT_Done_Face(Ptr->ft_face);
         SharedMem_Release(Ptr->Memory);
         SharedFaceCache_Release(&Ptr->EnglishUS);
         SharedFaceCache_Release(&Ptr->UserLanguage);
@@ -785,7 +785,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FONT_ENTRY_MEM*     PrivateEntry = NULL;
     FONTGDI *           FontGDI;
     NTSTATUS            Status;
-    FT_Face             Face;
+    FT_Face             ft_face;
     ANSI_STRING         AnsiFaceName;
     FT_WinFNT_HeaderRec WinFNT;
     INT                 FaceCount = 0, CharSetCount = 0;
@@ -807,14 +807,14 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                     pLoadFont->Memory->Buffer,
                     pLoadFont->Memory->BufferSize,
                     ((FontIndex != -1) ? FontIndex : 0),
-                    &Face);
+                    &ft_face);
 
         if (!Error)
-            SharedFace = SharedFace_Create(Face, pLoadFont->Memory);
+            SharedFace = SharedFace_Create(ft_face, pLoadFont->Memory);
 
         IntUnLockFreeType();
 
-        if (!Error && FT_IS_SFNT(Face))
+        if (!Error && FT_IS_SFNT(ft_face))
             pLoadFont->IsTrueType = TRUE;
 
         if (Error || SharedFace == NULL)
@@ -831,7 +831,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
     else
     {
-        Face = SharedFace->Face;
+        ft_face = SharedFace->ft_face;
         IntLockFreeType();
         SharedFace_AddRef(SharedFace);
         IntUnLockFreeType();
@@ -902,13 +902,13 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     /* set face */
     FontGDI->SharedFace = SharedFace;
-    FontGDI->CharSet = ANSI_CHARSET;
-    FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
+    FontGDI->charset = ANSI_CHARSET;
+    FontGDI->OriginalItalic = ItalicFromStyle(ft_face->style_name);
     FontGDI->RequestItalic = FALSE;
-    FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
+    FontGDI->OriginalWeight = WeightFromStyle(ft_face->style_name);
     FontGDI->RequestWeight = FW_NORMAL;
 
-    RtlInitAnsiString(&AnsiFaceName, Face->family_name);
+    RtlInitAnsiString(&AnsiFaceName, ft_face->family_name);
     Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
     if (!NT_SUCCESS(Status))
     {
@@ -934,7 +934,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     os2_version = 0;
     IntLockFreeType();
-    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(Face, FT_SFNT_OS2);
+    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(ft_face, FT_SFNT_OS2);
     if (pOS2)
     {
         os2_version = pOS2->version;
@@ -960,7 +960,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 if ((CharSetIndex == -1 && CharSetCount == 0) ||
                     CharSetIndex == CharSetCount)
                 {
-                    FontGDI->CharSet = g_FontTci[BitIndex].ciCharset;
+                    FontGDI->charset = g_FontTci[BitIndex].ciCharset;
                 }
 
                 ++CharSetCount;
@@ -974,10 +974,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     {
         /* get charset from WinFNT header */
         IntLockFreeType();
-        Error = FT_Get_WinFNT_Header(Face, &WinFNT);
+        Error = FT_Get_WinFNT_Header(ft_face, &WinFNT);
         if (!Error)
         {
-            FontGDI->CharSet = WinFNT.charset;
+            FontGDI->charset = WinFNT.charset;
         }
         IntUnLockFreeType();
     }
@@ -985,15 +985,15 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     /* FIXME: CharSet is invalid on Marlett */
     if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
     {
-        FontGDI->CharSet = SYMBOL_CHARSET;
+        FontGDI->charset = SYMBOL_CHARSET;
     }
 
     ++FaceCount;
     DPRINT("Font loaded: %s (%s)\n",
-           Face->family_name ? Face->family_name : "<NULL>",
-           Face->style_name ? Face->style_name : "<NULL>");
-    DPRINT("Num glyphs: %d\n", Face->num_glyphs);
-    DPRINT("CharSet: %d\n", FontGDI->CharSet);
+           ft_face->family_name ? ft_face->family_name : "<NULL>",
+           ft_face->style_name ? ft_face->style_name : "<NULL>");
+    DPRINT("Num glyphs: %d\n", ft_face->num_glyphs);
+    DPRINT("CharSet: %d\n", FontGDI->charset);
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
@@ -1017,9 +1017,9 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     if (FontIndex == -1)
     {
-        if (FT_IS_SFNT(Face))
+        if (FT_IS_SFNT(ft_face))
         {
-            TT_Face TrueType = (TT_Face)Face;
+            TT_Face TrueType = (TT_Face)ft_face;
             if (TrueType->ttc_header.count > 1)
             {
                 FT_Long i;
@@ -1061,7 +1061,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
         for (i = 1; i < CharSetCount; ++i)
         {
-            /* Do not count charsets towards 'faces' loaded */
+            /* Do not count CharSets towards 'faces' loaded */
             IntGdiLoadFontsFromMemory(pLoadFont, SharedFace, FontIndex, i);
         }
     }
@@ -1514,10 +1514,10 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
 {
     FT_Fixed XScale, YScale;
     int Ascent, Descent;
-    FT_Face Face = FontGDI->SharedFace->Face;
+    FT_Face ft_face = FontGDI->SharedFace->ft_face;
 
-    XScale = Face->size->metrics.x_scale;
-    YScale = Face->size->metrics.y_scale;
+    XScale = ft_face->size->metrics.x_scale;
+    YScale = ft_face->size->metrics.y_scale;
 
     if (pFNT)
     {
@@ -1548,9 +1548,9 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmWeight       = FontGDI->RequestWeight;
             TM->tmItalic       = FontGDI->RequestItalic;
-            TM->tmUnderlined   = FontGDI->RequestUnderline;
-            TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-            TM->tmCharSet      = FontGDI->CharSet;
+            TM->tmUnderlined   = FontGDI->underline;
+            TM->tmStruckOut    = FontGDI->strikeout;
+            TM->tmCharSet      = FontGDI->charset;
         }
         return;
     }
@@ -1570,10 +1570,10 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
     TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
 #else /* This (ros) code was previously affected by a FreeType bug, but it works now */
-    TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
-    TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* Units below baseline */
+    TM->tmAscent = (ft_face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
+    TM->tmDescent = (32 - ft_face->size->metrics.descender) >> 6; /* Units below baseline */
 #endif
-    TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
+    TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - ft_face->units_per_EM, YScale) + 32) >> 6;
 
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
 
@@ -1592,7 +1592,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     }
 
     /* Correct forumla to get the maxcharwidth from unicode and ansi font */
-    TM->tmMaxCharWidth = (FT_MulFix(Face->max_advance_width, XScale) + 32) >> 6;
+    TM->tmMaxCharWidth = (FT_MulFix(ft_face->max_advance_width, XScale) + 32) >> 6;
 
     if (RealFont)
     {
@@ -1614,7 +1614,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
     TM->tmOverhang = 0;
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
-    if (face_has_symbol_charmap(Face) ||
+    if (face_has_symbol_charmap(ft_face) ||
         (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
     {
         USHORT cpOEM, cpAnsi;
@@ -1662,11 +1662,11 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmItalic = 0;
         }
-        TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
-        TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
+        TM->tmUnderlined = (FontGDI->underline ? 0xFF : 0);
+        TM->tmStruckOut  = (FontGDI->strikeout ? 0xFF : 0);
     }
 
-    if (!FT_IS_FIXED_WIDTH(Face))
+    if (!FT_IS_FIXED_WIDTH(ft_face))
     {
         switch (pOS2->panose[PAN_PROPORTION_INDEX])
         {
@@ -1737,16 +1737,16 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmPitchAndFamily |= FF_DONTCARE;
     }
 
-    if (FT_IS_SCALABLE(Face))
+    if (FT_IS_SCALABLE(ft_face))
     {
         TM->tmPitchAndFamily |= TMPF_VECTOR;
     }
-    if (FT_IS_SFNT(Face))
+    if (FT_IS_SFNT(ft_face))
     {
         TM->tmPitchAndFamily |= TMPF_TRUETYPE;
     }
 
-    TM->tmCharSet = FontGDI->CharSet;
+    TM->tmCharSet = FontGDI->charset;
 }
 
 static void FASTCALL
@@ -1780,7 +1780,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     UNICODE_STRING FamilyNameW, FaceNameW, StyleNameW, FullNameW;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
     PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
-    FT_Face Face = SharedFace->Face;
+    FT_Face ft_face = SharedFace->ft_face;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
     {
@@ -1824,11 +1824,11 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return Cache->OutlineRequiredSize;
     }
 
-    XScale = Face->size->metrics.x_scale;
-    YScale = Face->size->metrics.y_scale;
+    XScale = ft_face->size->metrics.x_scale;
+    YScale = ft_face->size->metrics.y_scale;
 
     IntLockFreeType();
-    pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+    pOS2 = FT_Get_Sfnt_Table(ft_face, ft_sfnt_os2);
     if (NULL == pOS2)
     {
         IntUnLockFreeType();
@@ -1840,7 +1840,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return 0;
     }
 
-    pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
+    pHori = FT_Get_Sfnt_Table(ft_face, ft_sfnt_hhea);
     if (NULL == pHori)
     {
         IntUnLockFreeType();
@@ -1852,9 +1852,9 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
         return 0;
     }
 
-    pPost = FT_Get_Sfnt_Table(Face, ft_sfnt_post); /* We can live with this failing */
+    pPost = FT_Get_Sfnt_Table(ft_face, ft_sfnt_post); /* We can live with this failing */
 
-    Error = FT_Get_WinFNT_Header(Face , &Win);
+    Error = FT_Get_WinFNT_Header(ft_face , &Win);
 
     Otm->otmSize = Cache->OutlineRequiredSize;
 
@@ -1867,16 +1867,16 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     Otm->otmsCharSlopeRise = pHori->caret_Slope_Rise;
     Otm->otmsCharSlopeRun = pHori->caret_Slope_Run;
     Otm->otmItalicAngle = 0; /* POST table */
-    Otm->otmEMSquare = Face->units_per_EM;
+    Otm->otmEMSquare = ft_face->units_per_EM;
     Otm->otmAscent = (FT_MulFix(pOS2->sTypoAscender, YScale) + 32) >> 6;
     Otm->otmDescent = (FT_MulFix(pOS2->sTypoDescender, YScale) + 32) >> 6;
     Otm->otmLineGap = (FT_MulFix(pOS2->sTypoLineGap, YScale) + 32) >> 6;
     Otm->otmsCapEmHeight = (FT_MulFix(pOS2->sCapHeight, YScale) + 32) >> 6;
     Otm->otmsXHeight = (FT_MulFix(pOS2->sxHeight, YScale) + 32) >> 6;
-    Otm->otmrcFontBox.left = (FT_MulFix(Face->bbox.xMin, XScale) + 32) >> 6;
-    Otm->otmrcFontBox.right = (FT_MulFix(Face->bbox.xMax, XScale) + 32) >> 6;
-    Otm->otmrcFontBox.top = (FT_MulFix(Face->bbox.yMax, YScale) + 32) >> 6;
-    Otm->otmrcFontBox.bottom = (FT_MulFix(Face->bbox.yMin, YScale) + 32) >> 6;
+    Otm->otmrcFontBox.left = (FT_MulFix(ft_face->bbox.xMin, XScale) + 32) >> 6;
+    Otm->otmrcFontBox.right = (FT_MulFix(ft_face->bbox.xMax, XScale) + 32) >> 6;
+    Otm->otmrcFontBox.top = (FT_MulFix(ft_face->bbox.yMax, YScale) + 32) >> 6;
+    Otm->otmrcFontBox.bottom = (FT_MulFix(ft_face->bbox.yMin, YScale) + 32) >> 6;
     Otm->otmMacAscent = Otm->otmTextMetrics.tmAscent;
     Otm->otmMacDescent = -Otm->otmTextMetrics.tmDescent;
     Otm->otmMacLineGap = Otm->otmLineGap;
@@ -1954,7 +1954,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
 
-        RtlInitAnsiString(&EntryFaceNameA, FontGDI->SharedFace->Face->family_name);
+        RtlInitAnsiString(&EntryFaceNameA, FontGDI->SharedFace->ft_face->family_name);
         status = RtlAnsiStringToUnicodeString(&EntryFaceNameW, &EntryFaceNameA, TRUE);
         if (!NT_SUCCESS(status))
         {
@@ -2097,7 +2097,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
     PSHARED_FACE_CACHE Cache;
-    FT_Face Face = SharedFace->Face;
+    FT_Face ft_face = SharedFace->ft_face;
 
     RtlFreeUnicodeString(pNameW);
 
@@ -2124,10 +2124,10 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     BestIndex = -1;
     BestScore = 0;
 
-    Count = FT_Get_Sfnt_Name_Count(Face);
+    Count = FT_Get_Sfnt_Name_Count(ft_face);
     for (i = 0; i < Count; ++i)
     {
-        Error = FT_Get_Sfnt_Name(Face, i, &Name);
+        Error = FT_Get_Sfnt_Name(ft_face, i, &Name);
         if (Error)
         {
             continue;   /* failure */
@@ -2180,7 +2180,7 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     if (BestIndex >= 0)
     {
         /* store the best name */
-        Error = (Score == 30) ? 0 : FT_Get_Sfnt_Name(Face, BestIndex, &Name);
+        Error = (Score == 30) ? 0 : FT_Get_Sfnt_Name(ft_face, BestIndex, &Name);
         if (!Error)
         {
             /* NOTE: Name.string is not null-terminated */
@@ -2213,12 +2213,12 @@ IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
         /* defaulted */
         if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
         {
-            RtlInitAnsiString(&AnsiName, Face->style_name);
+            RtlInitAnsiString(&AnsiName, ft_face->style_name);
             Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
         }
         else
         {
-            RtlInitAnsiString(&AnsiName, Face->family_name);
+            RtlInitAnsiString(&AnsiName, ft_face->family_name);
             Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
         }
     }
@@ -2264,7 +2264,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     DWORD fs0;
     NTSTATUS status;
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
-    FT_Face Face = SharedFace->Face;
+    FT_Face ft_face = SharedFace->ft_face;
     UNICODE_STRING NameW;
 
     RtlInitUnicodeString(&NameW, NULL);
@@ -2349,7 +2349,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
     ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
-    RtlInitAnsiString(&StyleA, Face->style_name);
+    RtlInitAnsiString(&StyleA, ft_face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
     StyleW.MaximumLength = sizeof(Info->EnumLogFontEx.elfStyle);
     status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
@@ -2360,7 +2360,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
 
     IntLockFreeType();
-    pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+    pOS2 = FT_Get_Sfnt_Table(ft_face, ft_sfnt_os2);
 
     if (!pOS2)
     {
@@ -2379,7 +2379,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     {
         FT_UInt Dummy;
 
-        if (FT_Get_First_Char(Face, &Dummy) < 0x100)
+        if (FT_Get_First_Char(ft_face, &Dummy) < 0x100)
             fs.fsCsb[0] |= FS_LATIN1;
         else
             fs.fsCsb[0] |= FS_SYMBOL;
@@ -2389,9 +2389,9 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     if (fs.fsCsb[0] == 0)
     {
         /* Let's see if we can find any interesting cmaps */
-        for (i = 0; i < (UINT)Face->num_charmaps; i++)
+        for (i = 0; i < (UINT)ft_face->num_charmaps; i++)
         {
-            switch (Face->charmaps[i]->encoding)
+            switch (ft_face->charmaps[i]->encoding)
             {
             case FT_ENCODING_UNICODE:
             case FT_ENCODING_APPLE_ROMAN:
@@ -2507,7 +2507,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         ASSERT(FontGDI);
 
         if (LogFont->lfCharSet != DEFAULT_CHARSET &&
-            LogFont->lfCharSet != FontGDI->CharSet)
+            LogFont->lfCharSet != FontGDI->charset)
         {
             continue;
         }
@@ -2618,7 +2618,7 @@ SameScaleMatrix(
 
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
-    FT_Face Face,
+    FT_Face ft_face,
     INT GlyphIndex,
     INT Height,
     FT_Render_Mode RenderMode,
@@ -2633,7 +2633,7 @@ ftGdiGlyphCacheGet(
     while (CurrentEntry != &g_FontCacheListHead)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        if ((FontEntry->Face == Face) &&
+        if ((FontEntry->ft_face == ft_face) &&
             (FontEntry->GlyphIndex == GlyphIndex) &&
             (FontEntry->Height == Height) &&
             (FontEntry->RenderMode == RenderMode) &&
@@ -2655,7 +2655,7 @@ ftGdiGlyphCacheGet(
 /* no cache */
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphSet(
-    FT_Face Face,
+    FT_Face ft_face,
     FT_GlyphSlot GlyphSlot,
     FT_Render_Mode RenderMode)
 {
@@ -2696,7 +2696,7 @@ ftGdiGlyphSet(
 
 FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheSet(
-    FT_Face Face,
+    FT_Face ft_face,
     INT GlyphIndex,
     INT Height,
     PMATRIX pmx,
@@ -2749,7 +2749,7 @@ ftGdiGlyphCacheSet(
     BitmapGlyph->bitmap = AlignedBitmap;
 
     NewEntry->GlyphIndex = GlyphIndex;
-    NewEntry->Face = Face;
+    NewEntry->ft_face = ft_face;
     NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
     NewEntry->RenderMode = RenderMode;
@@ -3046,7 +3046,7 @@ TextIntUpdateSize(PDC dc,
     if (bDoLock)
         IntLockFreeType();
 
-    face = FontGDI->SharedFace->Face;
+    face = FontGDI->SharedFace->ft_face;
     if (face->charmap == NULL)
     {
         DPRINT("WARNING: No charmap selected!\n");
@@ -3152,7 +3152,7 @@ ftGdiGetGlyphOutline(
         return GDI_ERROR;
     }
     FontGDI = ObjToGDI(TextObj->Font, FONT);
-    ft_face = FontGDI->SharedFace->Face;
+    ft_face = FontGDI->SharedFace->ft_face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     aveWidth = FT_IS_SCALABLE(ft_face) ? abs(plf->lfWidth) : 0;
@@ -3586,7 +3586,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-    face = FontGDI->SharedFace->Face;
+    face = FontGDI->SharedFace->ft_face;
     if (NULL != Fit)
     {
         *Fit = 0;
@@ -3715,7 +3715,7 @@ ftGdiGetTextCharsetInfo(
     PFONTGDI FontGdi;
     FONTSIGNATURE fs;
     TT_OS2 *pOS2;
-    FT_Face Face;
+    FT_Face ft_face;
     CHARSETINFO csi;
     DWORD cp, fs0;
     USHORT usACP, usOEM;
@@ -3730,11 +3730,11 @@ ftGdiGetTextCharsetInfo(
         return Ret;
     }
     FontGdi = ObjToGDI(TextObj->Font, FONT);
-    Face = FontGdi->SharedFace->Face;
+    ft_face = FontGdi->SharedFace->ft_face;
     TEXTOBJ_UnlockText(TextObj);
 
     IntLockFreeType();
-    pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+    pOS2 = FT_Get_Sfnt_Table(ft_face, ft_sfnt_os2);
     IntUnLockFreeType();
     memset(&fs, 0, sizeof(FONTSIGNATURE));
     if (NULL != pOS2)
@@ -3749,7 +3749,7 @@ ftGdiGetTextCharsetInfo(
         {
             FT_UInt dummy;
 
-            if (FT_Get_First_Char( Face, &dummy ) < 0x100)
+            if (FT_Get_First_Char( ft_face, &dummy ) < 0x100)
                 fs.fsCsb[0] |= FS_LATIN1;
             else
                 fs.fsCsb[0] |= FS_SYMBOL;
@@ -3758,9 +3758,9 @@ ftGdiGetTextCharsetInfo(
     DPRINT("Csb 1=%x  0=%x\n", fs.fsCsb[1],fs.fsCsb[0]);
     if (fs.fsCsb[0] == 0)
     { /* Let's see if we can find any interesting cmaps */
-        for (i = 0; i < Face->num_charmaps; i++)
+        for (i = 0; i < ft_face->num_charmaps; i++)
         {
-            switch (Face->charmaps[i]->encoding)
+            switch (ft_face->charmaps[i]->encoding)
             {
             case FT_ENCODING_UNICODE:
             case FT_ENCODING_APPLE_ROMAN:
@@ -3818,7 +3818,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
 {
     DWORD size = 0;
     DWORD num_ranges = 0;
-    FT_Face face = Font->SharedFace->Face;
+    FT_Face face = Font->SharedFace->ft_face;
 
     if (face->charmap->encoding == FT_ENCODING_UNICODE)
     {
@@ -3827,7 +3827,7 @@ ftGetFontUnicodeRanges(PFONTGDI Font, PGLYPHSET glyphset)
 
         char_code_prev = char_code = FT_Get_First_Char(face, &glyph_code);
 
-        DPRINT("Face encoding FT_ENCODING_UNICODE, number of glyphs %ld, first glyph %u, first char %04lx\n",
+        DPRINT("ft_face encoding FT_ENCODING_UNICODE, number of glyphs %ld, first glyph %u, first char %04lx\n",
                face->num_glyphs, glyph_code, char_code);
 
         if (!glyph_code) return 0;
@@ -3890,7 +3890,7 @@ ftGdiGetTextMetricsW(
     PDC_ATTR pdcattr;
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
-    FT_Face Face;
+    FT_Face ft_face;
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec Win;
@@ -3916,10 +3916,10 @@ ftGdiGetTextMetricsW(
         plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
         FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-        Face = FontGDI->SharedFace->Face;
+        ft_face = FontGDI->SharedFace->ft_face;
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, Face, plf->lfWidth, plf->lfHeight);
-        FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
+        Error = IntRequestFontSize(dc, ft_face, plf->lfWidth, plf->lfHeight);
+        FtSetCoordinateTransform(ft_face, DC_pmxWorldToDevice(dc));
         IntUnLockFreeType();
         if (0 != Error)
         {
@@ -3928,25 +3928,25 @@ ftGdiGetTextMetricsW(
         }
         else
         {
-            FT_Face Face = FontGDI->SharedFace->Face;
+            FT_Face ft_face = FontGDI->SharedFace->ft_face;
             Status = STATUS_SUCCESS;
 
             IntLockFreeType();
-            pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
+            pOS2 = FT_Get_Sfnt_Table(ft_face, ft_sfnt_os2);
             if (NULL == pOS2)
             {
                 DPRINT1("Can't find OS/2 table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
 
-            pHori = FT_Get_Sfnt_Table(Face, ft_sfnt_hhea);
+            pHori = FT_Get_Sfnt_Table(ft_face, ft_sfnt_hhea);
             if (NULL == pHori)
             {
                 DPRINT1("Can't find HHEA table - not TT font?\n");
                 Status = STATUS_INTERNAL_ERROR;
             }
 
-            Error = FT_Get_WinFNT_Header(Face, &Win);
+            Error = FT_Get_WinFNT_Header(ft_face, &Win);
 
             IntUnLockFreeType();
 
@@ -3984,11 +3984,11 @@ ftGdiGetFontData(
     DWORD Size)
 {
     DWORD Result = GDI_ERROR;
-    FT_Face Face = FontGdi->SharedFace->Face;
+    FT_Face ft_face = FontGdi->SharedFace->ft_face;
 
     IntLockFreeType();
 
-    if (FT_IS_SFNT(Face))
+    if (FT_IS_SFNT(ft_face))
     {
         if (Table)
             Table = Table >> 24 | Table << 24 | (Table >> 8 & 0xFF00) |
@@ -4001,11 +4001,11 @@ ftGdiGetFontData(
             FT_Error Error;
             FT_ULong Needed = 0;
 
-            Error = FT_Load_Sfnt_Table(Face, Table, Offset, NULL, &Needed);
+            Error = FT_Load_Sfnt_Table(ft_face, Table, Offset, NULL, &Needed);
 
             if ( !Error && Needed < Size) Size = Needed;
         }
-        if (!FT_Load_Sfnt_Table(Face, Table, Offset, Buffer, &Size))
+        if (!FT_Load_Sfnt_Table(ft_face, Table, Offset, Buffer, &Size))
             Result = Size;
     }
 
@@ -4367,7 +4367,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     FONTGDI *FontGDI;
     OUTLINETEXTMETRICW *Otm = NULL;
     UINT OtmSize, OldOtmSize = 0;
-    FT_Face Face;
+    FT_Face ft_face;
 
     ASSERT(FontObj);
     ASSERT(MatchPenalty);
@@ -4387,7 +4387,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
-        Face = FontGDI->SharedFace->Face;
+        ft_face = FontGDI->SharedFace->ft_face;
 
         /* get text metrics */
         OtmSize = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
@@ -4407,7 +4407,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 
             OldOtmSize = OtmSize;
 
-            Penalty = GetFontPenalty(LogFont, Otm, Face->style_name);
+            Penalty = GetFontPenalty(LogFont, Otm, ft_face->style_name);
             if (*MatchPenalty == 0xFFFFFFFF || Penalty < *MatchPenalty)
             {
                 *FontObj = GDIToObj(FontGDI, FONT);
@@ -4427,26 +4427,26 @@ IntFontType(PFONTGDI Font)
 {
     PS_FontInfoRec psfInfo;
     FT_ULong tmp_size = 0;
-    FT_Face Face = Font->SharedFace->Face;
+    FT_Face ft_face = Font->SharedFace->ft_face;
 
-    if (FT_HAS_MULTIPLE_MASTERS(Face))
+    if (FT_HAS_MULTIPLE_MASTERS(ft_face))
         Font->FontObj.flFontType |= FO_MULTIPLEMASTER;
-    if (FT_HAS_VERTICAL(Face))
+    if (FT_HAS_VERTICAL(ft_face))
         Font->FontObj.flFontType |= FO_VERT_FACE;
-    if (!FT_IS_SCALABLE(Face))
+    if (!FT_IS_SCALABLE(ft_face))
         Font->FontObj.flFontType |= FO_TYPE_RASTER;
-    if (FT_IS_SFNT(Face))
+    if (FT_IS_SFNT(ft_face))
     {
         Font->FontObj.flFontType |= FO_TYPE_TRUETYPE;
-        if (FT_Get_Sfnt_Table(Face, ft_sfnt_post))
+        if (FT_Get_Sfnt_Table(ft_face, ft_sfnt_post))
             Font->FontObj.flFontType |= FO_POSTSCRIPT;
     }
-    if (!FT_Get_PS_Font_Info(Face, &psfInfo ))
+    if (!FT_Get_PS_Font_Info(ft_face, &psfInfo ))
     {
         Font->FontObj.flFontType |= FO_POSTSCRIPT;
     }
     /* Check for the presence of the 'CFF ' table to check if the font is Type1 */
-    if (!FT_Load_Sfnt_Table(Face, TTAG_CFF, 0, NULL, &tmp_size))
+    if (!FT_Load_Sfnt_Table(ft_face, TTAG_CFF, 0, NULL, &tmp_size))
     {
         Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
     }
@@ -4462,7 +4462,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     ULONG MatchPenalty;
     LOGFONTW *pLogFont;
     LOGFONTW SubstitutedLogFont;
-    FT_Face Face;
+    FT_Face ft_face;
 
     if (!pTextObj)
     {
@@ -4522,20 +4522,20 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj->Font->iUniq = 1; // Now it can be cached.
         IntFontType(FontGdi);
         FontGdi->flType = TextObj->Font->flFontType;
-        FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
-        FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+        FontGdi->underline = pLogFont->lfUnderline ? 0xFF : 0;
+        FontGdi->strikeout = pLogFont->lfStrikeOut ? 0xFF : 0;
         FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
         if (pLogFont->lfWeight != FW_DONTCARE)
             FontGdi->RequestWeight = pLogFont->lfWeight;
         else
             FontGdi->RequestWeight = FW_NORMAL;
 
-        Face = FontGdi->SharedFace->Face;
+        ft_face = FontGdi->SharedFace->ft_face;
 
-        //FontGdi->OriginalWeight = WeightFromStyle(Face->style_name);
+        //FontGdi->OriginalWeight = WeightFromStyle(ft_face->style_name);
 
         if (!FontGdi->OriginalItalic)
-            FontGdi->OriginalItalic = ItalicFromStyle(Face->style_name);
+            FontGdi->OriginalItalic = ItalicFromStyle(ft_face->style_name);
 
         TextObj->fl |= TEXTOBJECT_INIT;
         Status = STATUS_SUCCESS;
@@ -4905,11 +4905,11 @@ BOOL
 FASTCALL
 ftGdiRealizationInfo(PFONTGDI Font, PREALIZATION_INFO Info)
 {
-    if (FT_HAS_FIXED_SIZES(Font->SharedFace->Face))
+    if (FT_HAS_FIXED_SIZES(Font->SharedFace->ft_face))
         Info->iTechnology = RI_TECH_BITMAP;
     else
     {
-        if (FT_IS_SCALABLE(Font->SharedFace->Face))
+        if (FT_IS_SCALABLE(Font->SharedFace->ft_face))
             Info->iTechnology = RI_TECH_SCALABLE;
         else
             Info->iTechnology = RI_TECH_FIXED;
@@ -4928,7 +4928,7 @@ ftGdiGetKerningPairs( PFONTGDI Font,
 {
     DWORD Count = 0;
     INT i = 0;
-    FT_Face face = Font->SharedFace->Face;
+    FT_Face face = Font->SharedFace->ft_face;
 
     if (FT_HAS_KERNING(face) && face->charmap->encoding == FT_ENCODING_UNICODE)
     {
@@ -5250,7 +5250,7 @@ GreExtTextOutW(
     ASSERT(FontGDI);
 
     IntLockFreeType();
-    face = FontGDI->SharedFace->Face;
+    face = FontGDI->SharedFace->ft_face;
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     EmuBold = (plf->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);
@@ -6053,7 +6053,7 @@ NtGdiGetCharABCWidthsW(
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-    face = FontGDI->SharedFace->Face;
+    face = FontGDI->SharedFace->ft_face;
     if (face->charmap == NULL)
     {
         for (i = 0; i < (UINT)face->num_charmaps; i++)
@@ -6249,7 +6249,7 @@ NtGdiGetCharWidthW(
 
     FontGDI = ObjToGDI(TextObj->Font, FONT);
 
-    face = FontGDI->SharedFace->Face;
+    face = FontGDI->SharedFace->ft_face;
     if (face->charmap == NULL)
     {
         for (i = 0; i < (UINT)face->num_charmaps; i++)
@@ -6406,11 +6406,11 @@ NtGdiGetGlyphIndicesW(
     }
     else
     {
-        FT_Face Face = FontGDI->SharedFace->Face;
-        if (FT_IS_SFNT(Face))
+        FT_Face ft_face = FontGDI->SharedFace->ft_face;
+        if (FT_IS_SFNT(ft_face))
         {
-            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(Face, pOS2->usDefaultChar) : 0);
+            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(ft_face, ft_sfnt_os2);
+            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(ft_face, pOS2->usDefaultChar) : 0);
         }
         else
         {
@@ -6454,7 +6454,7 @@ NtGdiGetGlyphIndicesW(
 
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(FontGDI->SharedFace->Face, Safepwc[i]);
+        Buffer[i] = FT_Get_Char_Index(FontGDI->SharedFace->ft_face, Safepwc[i]);
         if (Buffer[i] == 0)
         {
             Buffer[i] = DefChar;
