@@ -146,13 +146,13 @@ typedef struct _FONTGDI {
   LONG          lMinWidthD;
 
   LPWSTR        Filename;
-  BYTE          RequestUnderline;
-  BYTE          RequestStrikeOut;
+  BYTE          underline;
+  BYTE          strikeout;
   BYTE          RequestItalic;
   LONG          RequestWeight;
   BYTE          OriginalItalic;
   LONG          OriginalWeight;
-  BYTE          CharSet;
+  BYTE          charset;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {

@@ -902,7 +902,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     /* set face */
     FontGDI->SharedFace = SharedFace;
-    FontGDI->CharSet = ANSI_CHARSET;
+    FontGDI->charset = ANSI_CHARSET;
     FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
     FontGDI->RequestItalic = FALSE;
     FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
@@ -960,7 +960,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 if ((CharSetIndex == -1 && CharSetCount == 0) ||
                     CharSetIndex == CharSetCount)
                 {
-                    FontGDI->CharSet = g_FontTci[BitIndex].ciCharset;
+                    FontGDI->charset = g_FontTci[BitIndex].ciCharset;
                 }
 
                 ++CharSetCount;
@@ -977,15 +977,15 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         Error = FT_Get_WinFNT_Header(Face, &WinFNT);
         if (!Error)
         {
-            FontGDI->CharSet = WinFNT.charset;
+            FontGDI->charset = WinFNT.charset;
         }
         IntUnLockFreeType();
     }
 
-    /* FIXME: CharSet is invalid on Marlett */
+    /* FIXME: charset is invalid on Marlett */
     if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
     {
-        FontGDI->CharSet = SYMBOL_CHARSET;
+        FontGDI->charset = SYMBOL_CHARSET;
     }
 
     ++FaceCount;
@@ -993,7 +993,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
            Face->family_name ? Face->family_name : "<NULL>",
            Face->style_name ? Face->style_name : "<NULL>");
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
-    DPRINT("CharSet: %d\n", FontGDI->CharSet);
+    DPRINT("charset: %d\n", FontGDI->charset);
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
@@ -1548,9 +1548,9 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmWeight       = FontGDI->RequestWeight;
             TM->tmItalic       = FontGDI->RequestItalic;
-            TM->tmUnderlined   = FontGDI->RequestUnderline;
-            TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-            TM->tmCharSet      = FontGDI->CharSet;
+            TM->tmUnderlined   = FontGDI->underline;
+            TM->tmStruckOut    = FontGDI->strikeout;
+            TM->tmCharSet      = FontGDI->charset;
         }
         return;
     }
@@ -1662,8 +1662,8 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmItalic = 0;
         }
-        TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
-        TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
+        TM->tmUnderlined = (FontGDI->underline ? 0xFF : 0);
+        TM->tmStruckOut  = (FontGDI->strikeout ? 0xFF : 0);
     }
 
     if (!FT_IS_FIXED_WIDTH(Face))
@@ -1746,7 +1746,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmPitchAndFamily |= TMPF_TRUETYPE;
     }
 
-    TM->tmCharSet = FontGDI->CharSet;
+    TM->tmCharSet = FontGDI->charset;
 }
 
 static void FASTCALL
@@ -2507,7 +2507,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         ASSERT(FontGDI);
 
         if (LogFont->lfCharSet != DEFAULT_CHARSET &&
-            LogFont->lfCharSet != FontGDI->CharSet)
+            LogFont->lfCharSet != FontGDI->charset)
         {
             continue;
         }
@@ -3807,7 +3807,7 @@ ftGdiGetTextCharsetInfo(
         }
     }
 Exit:
-    DPRINT("CharSet %u CodePage %u\n", csi.ciCharset, csi.ciACP);
+    DPRINT("charset %u CodePage %u\n", csi.ciCharset, csi.ciACP);
     return (MAKELONG(csi.ciACP, csi.ciCharset));
 }
 
@@ -4522,8 +4522,8 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj->Font->iUniq = 1; // Now it can be cached.
         IntFontType(FontGdi);
         FontGdi->flType = TextObj->Font->flFontType;
-        FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
-        FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+        FontGdi->underline = pLogFont->lfUnderline ? 0xFF : 0;
+        FontGdi->strikeout = pLogFont->lfStrikeOut ? 0xFF : 0;
         FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
         if (pLogFont->lfWeight != FW_DONTCARE)
             FontGdi->RequestWeight = pLogFont->lfWeight;
