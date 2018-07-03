@@ -17,6 +17,7 @@
 #include <wincon.h>
 #include <commdlg.h>
 #include <ddeml.h>
+#include <userenv.h>
 
 #include <shlwapi.h>
 #include <shlobj.h>

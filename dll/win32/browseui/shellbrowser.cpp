@@ -599,7 +599,7 @@ public:
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -645,7 +645,7 @@ public:
         MESSAGE_HANDLER(WM_MEASUREITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
-        MESSAGE_HANDLER(WM_WININICHANGE, PropagateMessage)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -3512,21 +3512,13 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-LRESULT CShellBrowser::PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+EXTERN_C
+__declspec(dllimport) BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
+
+LRESULT CShellBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // RegenerateUserEnvironment
-    typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
-
-    HMODULE hShell32 = GetModuleHandleA("shell32");
-
-    REGENERATEUSERENVIRONMENT pRegenerateUserEnvironment;
-    pRegenerateUserEnvironment = (REGENERATEUSERENVIRONMENT)GetProcAddress(hShell32, "RegenerateUserEnvironment");
-
-    if (pRegenerateUserEnvironment)
-    {
-        LPVOID lpEnvironment;
-        (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
-    }
+    LPVOID lpEnvironment;
+    RegenerateUserEnvironment(&lpEnvironment, TRUE);
 
     SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
