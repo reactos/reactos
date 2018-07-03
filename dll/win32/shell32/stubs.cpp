@@ -643,55 +643,6 @@ SHChangeNotifySuspendResume(BOOL bSuspend,
     return FALSE;
 }
 
-// CreateEnvironmentBlock
-typedef BOOL (WINAPI *CREATEENVIRONMENTBLOCK)(LPVOID *, HANDLE, BOOL);
-
-/*
- * Implemented
- */
-EXTERN_C BOOL
-WINAPI
-RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
-{
-    HANDLE hUserToken;
-    OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken);
-
-    HMODULE hUserEnv = GetModuleHandleA("userenv");
-
-    CREATEENVIRONMENTBLOCK pCreateEnvironmentBlock;
-    pCreateEnvironmentBlock = (CREATEENVIRONMENTBLOCK)GetProcAddress(hUserEnv, "CreateEnvironmentBlock");
-
-    BOOL bResult = FALSE;
-    if (pCreateEnvironmentBlock)
-    {
-        bResult = (*pCreateEnvironmentBlock)(lpEnvironment, hUserToken, TRUE);
-        if (bResult && lpEnvironment && bUpdateSelf)
-        {
-            LPWSTR pszz = (LPWSTR)*lpEnvironment;
-            if (pszz)
-            {
-                while (*pszz)
-                {
-                    LPWSTR pchEqual = wcschr(pszz, L'=');
-                    if (pchEqual)
-                    {
-                        CStringW strName(pszz, pchEqual - pszz);
-                        INT cch = lstrlen(pszz);
-                        SetEnvironmentVariableW(strName, pchEqual + 1);
-                        pszz += cch + 1;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    return bResult;
-}
-
 /*
  * Unimplemented
  */

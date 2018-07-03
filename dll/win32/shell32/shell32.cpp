@@ -63,6 +63,53 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     return lpNumber;
 }
 
+// CreateEnvironmentBlock
+typedef BOOL (WINAPI *CREATEENVIRONMENTBLOCK)(LPVOID *, HANDLE, BOOL);
+
+/*
+ * Implemented
+ */
+EXTERN_C BOOL
+WINAPI
+RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
+{
+    HANDLE hUserToken;
+    OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken);
+
+    HMODULE hUserEnv = GetModuleHandleA("userenv");
+
+    CREATEENVIRONMENTBLOCK pCreateEnvironmentBlock;
+    pCreateEnvironmentBlock = (CREATEENVIRONMENTBLOCK)GetProcAddress(hUserEnv, "CreateEnvironmentBlock");
+
+    if (!pCreateEnvironmentBlock)
+        return FALSE;
+
+    BOOL bResult = (*pCreateEnvironmentBlock)(lpEnvironment, hUserToken, TRUE);
+    if (!bResult || !lpEnvironment)
+        return FALSE;
+
+    if (bUpdateSelf)
+    {
+        LPWSTR pszz = (LPWSTR)*lpEnvironment;
+        if (!pszz)
+            return FALSE;
+
+        while (*pszz)
+        {
+            INT cch = lstrlen(pszz);
+            LPWSTR pchEqual = wcschr(pszz, L'=');
+            if (pchEqual)
+            {
+                CStringW strName(pszz, pchEqual - pszz);
+                SetEnvironmentVariableW(strName, pchEqual + 1);
+            }
+            pszz += cch + 1;
+        }
+    }
+
+    return bResult;
+}
+
 /**************************************************************************
  * Default ClassFactory types
  */
