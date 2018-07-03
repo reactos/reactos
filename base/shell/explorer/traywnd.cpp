@@ -24,6 +24,9 @@
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
+EXTERN_C
+__declspec(dllimport) BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
+
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
 #define TIMER_ID_AUTOHIDE 1
@@ -2764,21 +2767,10 @@ HandleTrayContextMenu:
         return 0;
     }
 
-    LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        // RegenerateUserEnvironment
-        typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
-
-        HMODULE hShell32 = GetModuleHandleA("shell32");
-
-        REGENERATEUSERENVIRONMENT pRegenerateUserEnvironment;
-        pRegenerateUserEnvironment = (REGENERATEUSERENVIRONMENT)GetProcAddress(hShell32, "RegenerateUserEnvironment");
-
-        if (pRegenerateUserEnvironment)
-        {
-            LPVOID lpEnvironment;
-            (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
-        }
+        LPVOID lpEnvironment;
+        RegenerateUserEnvironment(&lpEnvironment, TRUE);
 
         bHandled = TRUE;
         return 0;
@@ -2869,13 +2861,13 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
-        MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
-        MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
-        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingsChange)
+        MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
+        MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
