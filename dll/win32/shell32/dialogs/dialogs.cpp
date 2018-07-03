@@ -471,6 +471,52 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDOK), Enable);
 }
 
+LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR arg0)
+{
+    LPCWSTR pch;
+    INT ich = 0;
+    if (*psz == L'"')
+    {
+        // 1st argument is quoted. the string in quotes is quoted 1st argument.
+        // [pch] --> [arg0+ich]
+        for (pch = psz + 1; *pch; ++ich, ++pch)
+        {
+            if (*pch == L'"' && pch[1] == L'"')
+            {
+                // doubled double quotations found!
+                arg0[ich] = L'"';
+            }
+            else if (*pch == L'"')
+            {
+                // single double quotation found!
+                ++pch;
+                break;
+            }
+            else
+            {
+                // otherwise
+                arg0[ich] = *pch;
+            }
+        }
+    }
+    else
+    {
+        // 1st argument is unquoted. non-space sequence is 1st argument.
+        // [pch] --> [arg0+ich]
+        for (pch = psz; *pch && !iswspace(*pch); ++ich, ++pch)
+        {
+            arg0[ich] = *pch;
+        }
+    }
+    arg0[ich] = 0;
+
+    // skip space
+    while (iswspace(*pch))
+        ++pch;
+
+    return pch;
+}
+
 /* Dialog procedure for RunFileDlg */
 static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -529,6 +575,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     WCHAR *psz, *parent = NULL;
                     SHELLEXECUTEINFOW sei;
                     NMRUNFILEDLGW nmrfd;
+                    WCHAR arg0[MAX_PATH];
 
                     ic = GetWindowTextLengthW(htxt);
                     if (ic == 0)
@@ -552,10 +599,23 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
 
                     GetWindowTextW(htxt, psz, ic + 1);
+                    StrTrimW(psz, L" \t");
+
+                    LPCWSTR pch = Get1stArgAndParams(psz, arg0);
+
+                    WCHAR szFilePath[MAX_PATH];
+                    if (!SearchPathW(NULL, arg0, NULL, _countof(szFilePath), szFilePath, NULL))
+                    {
+                        if ((INT)FindExecutableW(arg0, NULL, szFilePath) <= 32)
+                        {
+                            lstrcpyW(szFilePath, arg0);
+                        }
+                    }
 
                     sei.hwnd = hwnd;
                     sei.nShow = SW_SHOWNORMAL;
-                    sei.lpFile = psz;
+                    sei.lpFile = szFilePath;
+                    sei.lpParameters = *pch ? pch : NULL;
 
                     /*
                      * The precedence is the following: first the user-given
@@ -585,7 +645,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     nmrfd.hdr.code = RFN_VALIDATE;
                     nmrfd.hdr.hwndFrom = hwnd;
                     nmrfd.hdr.idFrom = 0;
-                    nmrfd.lpFile = sei.lpFile;
+                    nmrfd.lpFile = szFilePath;
                     nmrfd.lpDirectory = sei.lpDirectory;
                     nmrfd.nShow = sei.nShow;
 
