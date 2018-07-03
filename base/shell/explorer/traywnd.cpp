@@ -2764,6 +2764,27 @@ HandleTrayContextMenu:
         return 0;
     }
 
+    LRESULT OnSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        // RegenerateUserEnvironment
+        typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
+
+        HMODULE hShell32 = GetModuleHandleA("shell32");
+
+        REGENERATEUSERENVIRONMENT pRegenerateUserEnvironment;
+        pRegenerateUserEnvironment = (REGENERATEUSERENVIRONMENT)GetProcAddress(hShell32, "RegenerateUserEnvironment");
+
+        if (pRegenerateUserEnvironment)
+        {
+            LPVOID lpEnvironment;
+            (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
+            MessageBoxA(NULL, "OK2", NULL, 0);
+        }
+
+        bHandled = TRUE;
+        return 0;
+    }
+
     LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
@@ -2855,6 +2876,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingsChanged)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 

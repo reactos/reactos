@@ -3514,6 +3514,20 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
 
 LRESULT CShellBrowser::PropagateMessage(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    // RegenerateUserEnvironment
+    typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
+
+    HMODULE hShell32 = GetModuleHandleA("shell32");
+
+    REGENERATEUSERENVIRONMENT pRegenerateUserEnvironment;
+    pRegenerateUserEnvironment = (REGENERATEUSERENVIRONMENT)GetProcAddress(hShell32, "RegenerateUserEnvironment");
+
+    if (pRegenerateUserEnvironment)
+    {
+        LPVOID lpEnvironment;
+        (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
+    }
+
     SHPropagateMessage(m_hWnd, uMsg, wParam, lParam, TRUE);
     return 0;
 }
