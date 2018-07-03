@@ -2778,7 +2778,6 @@ HandleTrayContextMenu:
         {
             LPVOID lpEnvironment;
             (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
-            MessageBoxA(NULL, "OK2", NULL, 0);
         }
 
         bHandled = TRUE;
