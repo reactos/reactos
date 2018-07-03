@@ -76,15 +76,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
     HANDLE hUserToken;
     OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken);
 
-    HMODULE hUserEnv = GetModuleHandleA("userenv");
-
-    CREATEENVIRONMENTBLOCK pCreateEnvironmentBlock;
-    pCreateEnvironmentBlock = (CREATEENVIRONMENTBLOCK)GetProcAddress(hUserEnv, "CreateEnvironmentBlock");
-
-    if (!pCreateEnvironmentBlock)
-        return FALSE;
-
-    BOOL bResult = (*pCreateEnvironmentBlock)(lpEnvironment, hUserToken, TRUE);
+    BOOL bResult = CreateEnvironmentBlock(lpEnvironment, hUserToken, TRUE);
     if (!bResult || !lpEnvironment)
         return FALSE;
 
