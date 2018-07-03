@@ -388,21 +388,12 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
+EXTERN_C BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
+
 LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // RegenerateUserEnvironment
-    typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
-
-    HMODULE hShell32 = GetModuleHandleA("shell32");
-
-    REGENERATEUSERENVIRONMENT pRegenerateUserEnvironment;
-    pRegenerateUserEnvironment = (REGENERATEUSERENVIRONMENT)GetProcAddress(hShell32, "RegenerateUserEnvironment");
-
-    if (pRegenerateUserEnvironment)
-    {
-        LPVOID lpEnvironment;
-        (*pRegenerateUserEnvironment)(&lpEnvironment, TRUE);
-    }
+    LPVOID lpEnvironment;
+    RegenerateUserEnvironment(&lpEnvironment, TRUE);
 
     if (m_hWndShellView)
     {
