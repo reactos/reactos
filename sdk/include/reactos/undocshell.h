@@ -526,6 +526,9 @@ typedef struct
  * Misc Stuff
  */
 
+BOOL WINAPI
+RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf);
+
 /* SHWaitForFileToOpen flags */
 #define SHWFF_ADD     0x01
 #define SHWFF_REMOVE  0x02
@@ -986,11 +989,6 @@ typedef struct tagEXP_VISTA_ID_LIST
 #define EXP_SHIM_SIG          0xa0000008
 #define EXP_KNOWN_FOLDER_SIG  0xa000000b
 #define EXP_VISTA_ID_LIST_SIG 0xa000000c
-
-/***************************************************************************/
-
-BOOL WINAPI
-RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf);
 
 #include <poppack.h>
 
