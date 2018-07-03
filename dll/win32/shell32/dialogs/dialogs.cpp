@@ -603,18 +603,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     LPCWSTR pch = Get1stArgAndParams(psz, arg0);
 
-                    WCHAR szFilePath[MAX_PATH];
-                    if (!SearchPathW(NULL, arg0, NULL, _countof(szFilePath), szFilePath, NULL))
-                    {
-                        if ((INT)FindExecutableW(arg0, NULL, szFilePath) <= 32)
-                        {
-                            lstrcpyW(szFilePath, arg0);
-                        }
-                    }
-
                     sei.hwnd = hwnd;
                     sei.nShow = SW_SHOWNORMAL;
-                    sei.lpFile = szFilePath;
+                    sei.lpFile = arg0;
                     sei.lpParameters = *pch ? pch : NULL;
 
                     /*
@@ -645,7 +636,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     nmrfd.hdr.code = RFN_VALIDATE;
                     nmrfd.hdr.hwndFrom = hwnd;
                     nmrfd.hdr.idFrom = 0;
-                    nmrfd.lpFile = szFilePath;
+                    nmrfd.lpFile = sei.lpFile;
                     nmrfd.lpDirectory = sei.lpDirectory;
                     nmrfd.nShow = sei.nShow;
 
