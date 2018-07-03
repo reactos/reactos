@@ -19,8 +19,6 @@
 #include <shlobj.h>
 #include <intshcut.h>
 #include <shlwapi.h>
-#include <tchar.h>
-#include <strsafe.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(appwiz);

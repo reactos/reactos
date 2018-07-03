@@ -11,8 +11,8 @@
  */
 
 #include "appwiz.h"
-
 #include <tchar.h>
+#include <strsafe.h>
 
 BOOL
 IsShortcut(HKEY hKey)
