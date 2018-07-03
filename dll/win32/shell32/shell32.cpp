@@ -63,9 +63,6 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     return lpNumber;
 }
 
-// CreateEnvironmentBlock
-typedef BOOL (WINAPI *CREATEENVIRONMENTBLOCK)(LPVOID *, HANDLE, BOOL);
-
 /*
  * Implemented
  */
