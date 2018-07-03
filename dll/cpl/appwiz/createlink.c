@@ -351,7 +351,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateInternetShortcut(pContext))
                     {
-                        MessageBox(hwndDlg, _T("Failed to create internet shortcut"), NULL, MB_ICONERROR);
+                        MessageBoxW(hwndDlg, L"Failed to create internet shortcut", NULL, MB_ICONERROR);
                     }
                 }
                 else
@@ -369,7 +369,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateShortcut(pContext))
                     {
-                        MessageBox(hwndDlg, _T("Failed to create shortcut"), NULL, MB_ICONERROR);
+                        MessageBoxW(hwndDlg, L"Failed to create shortcut", NULL, MB_ICONERROR);
                     }
                 }
             }
