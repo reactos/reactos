@@ -23,6 +23,7 @@
 #include <shellapi.h>
 #include <htiframe.h>
 #include <strsafe.h>
+#include <undocshell.h>
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -3511,9 +3512,6 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
         return SendMessage(fCurrentShellViewWindow, uMsg, wParam, lParam);
     return 0;
 }
-
-EXTERN_C
-__declspec(dllimport) BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
 
 LRESULT CShellBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {

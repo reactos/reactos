@@ -987,6 +987,11 @@ typedef struct tagEXP_VISTA_ID_LIST
 #define EXP_KNOWN_FOLDER_SIG  0xa000000b
 #define EXP_VISTA_ID_LIST_SIG 0xa000000c
 
+/***************************************************************************/
+
+BOOL WINAPI
+RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf);
+
 #include <poppack.h>
 
 #ifdef __cplusplus

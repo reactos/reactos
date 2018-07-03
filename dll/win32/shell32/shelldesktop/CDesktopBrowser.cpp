@@ -388,8 +388,6 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0;
 }
 
-EXTERN_C BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
-
 LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     LPVOID lpEnvironment;

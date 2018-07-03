@@ -21,11 +21,9 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include <undocshell.h>
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
-
-EXTERN_C
-__declspec(dllimport) BOOL WINAPI RegenerateUserEnvironment(LPVOID *, BOOL);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
