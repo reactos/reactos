@@ -278,7 +278,31 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         }
         else
         {
-            exit(0);
+            WIN32_FIND_DATAW find;
+            HANDLE hFind = FindFirstFileW(__targv[1], &find);
+            if (hFind != INVALID_HANDLE_VALUE)
+            {
+                FindClose(hFind);
+
+                if (find.nFileSizeHigh || find.nFileSizeLow)
+                {
+                    // cannot open and not empty
+                    CStringW strText;
+                    strText.Format(IDS_LOADERRORTEXT, __targv[1]);
+                    MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+                }
+                else
+                {
+                    // TODO: open the empty file
+                }
+            }
+            else
+            {
+                // not exist
+                CStringW strText;
+                strText.Format(IDS_LOADERRORTEXT, __targv[1]);
+                MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
+            }
         }
     }
 
