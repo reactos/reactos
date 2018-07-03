@@ -932,7 +932,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     /* set face */
     FontGDI->SharedFace = SharedFace;
     FontGDI->charset = ANSI_CHARSET;
-    FontGDI->codepage = 1252;
+    FontGDI->codepage = 1252;   /* Windows-1252 | ANSI Latin 1; Western European (Windows) */
     FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
     FontGDI->RequestItalic = FALSE;
     FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
