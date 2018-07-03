@@ -273,11 +273,9 @@ WelcomeDlgProc(HWND hwndDlg,
                 {
                     /* not found */
                     WCHAR szError[MAX_PATH + 100];
-                    szDesc[0] = 0;
-                    szPath[0] = 0;
                     LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
-c                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
+                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
                     MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                 }
             }
