@@ -2391,6 +2391,7 @@ get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, 
 
                 /* face_name <-- face_name + wide */
                 RtlAppendUnicodeStringToString(face_name, &wide);
+                RtlFreeUnicodeString(&wide);
 
                 /* style_name --> ansi --> wide */
                 RtlInitAnsiString(&ansi, ft_face->style_name);
@@ -2398,6 +2399,7 @@ get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, 
 
                 /* face_name <-- face_name + wide */
                 status = RtlAppendUnicodeStringToString(face_name, &wide);
+                RtlFreeUnicodeString(&wide);
                 break;
 
             case TT_NAME_ID_FONT_FAMILY:
