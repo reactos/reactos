@@ -332,27 +332,20 @@ FinishDlgProc(HWND hwndDlg,
                 GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, MAX_PATH);
                 StrTrimW(pContext->szDescription, L" \t");
 
-                /* if shortcut file exists, then delete it now */
-                attrs = GetFileAttributesW(pContext->szLinkName);
-                if (attrs != INVALID_FILE_ATTRIBUTES)
+                /* if old shortcut file exists, then delete it now */
+                attrs = GetFileAttributesW(pContext->szOldFile);
+                if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
-                    {
-                        DeleteFileW(pContext->szLinkName);
-
-                        /* get the folder path */
-                        pch = PathFindFileNameW(pContext->szLinkName);
-                        if (pch && *pch)
-                            *pch = 0;
-                    }
+                    DeleteFileW(pContext->szOldFile);
                 }
 
                 if (IsInternetLocation(pContext->szTarget))
                 {
                     /* internet */
+                    wcscpy(pContext->szLinkName, pContext->szOrigin);
                     PathAppendW(pContext->szLinkName, pContext->szDescription);
 
-                    /* change extension */
+                    /* change extension if any */
                     pch = PathFindExtensionW(pContext->szLinkName);
                     if (pch && *pch)
                         *pch = 0;
@@ -360,15 +353,16 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateInternetShortcut(pContext))
                     {
-                        MessageBox(hwndDlg, _T("Failed to create internet shortcut"), _T("Error"), MB_ICONERROR);
+                        MessageBox(hwndDlg, _T("Failed to create internet shortcut"), NULL, MB_ICONERROR);
                     }
                 }
                 else
                 {
                     /* file */
+                    wcscpy(pContext->szLinkName, pContext->szOrigin);
                     PathAppendW(pContext->szLinkName, pContext->szDescription);
 
-                    /* change extension */
+                    /* change extension if any */
                     pch = PathFindExtensionW(pContext->szLinkName);
                     if (pch && *pch)
                         *pch = 0;
@@ -376,7 +370,7 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateShortcut(pContext))
                     {
-                        MessageBox(hwndDlg, _T("Failed to create shortcut"), _T("Error"), MB_ICONERROR);
+                        MessageBox(hwndDlg, _T("Failed to create shortcut"), NULL, MB_ICONERROR);
                     }
                 }
             }
@@ -419,8 +413,18 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         return FALSE;
     }
 
-    // szLinkName is a valid file or directory
-    wcscpy(pContext->szLinkName, szPath);
+    /* build the pContext->szOrigin and pContext->szOldFile */
+    wcscpy(pContext->szOrigin, szPath);
+    pContext->szOldFile[0] = 0;
+    if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        LPWSTR pch;
+        wcscpy(pContext->szOldFile, szPath);
+        pch = PathFindFileNameW(pContext->szOrigin);
+        if (pch && *pch)
+            *pch = 0;
+    }
+    PathAddBackslashW(pContext->szOrigin);
 
     /* Create the Welcome page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
