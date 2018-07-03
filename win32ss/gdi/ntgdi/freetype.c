@@ -776,6 +776,35 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
+static UINT FASTCALL
+IntCodePageFromCharSet(BYTE charset)
+{
+    switch (charset)
+    {
+        case FT_WinFNT_ID_CP1252:   return 1252;
+        case FT_WinFNT_ID_DEFAULT:  return 0;
+        case FT_WinFNT_ID_SYMBOL:   return 42;
+        case FT_WinFNT_ID_MAC:      return 2;
+        case FT_WinFNT_ID_CP932:    return 932;
+        case FT_WinFNT_ID_CP949:    return 949;
+        case FT_WinFNT_ID_CP1361:   return 1361;
+        case FT_WinFNT_ID_CP936:    return 936;
+        case FT_WinFNT_ID_CP950:    return 950;
+        case FT_WinFNT_ID_CP1253:   return 1253;
+        case FT_WinFNT_ID_CP1254:   return 1254;
+        case FT_WinFNT_ID_CP1258:   return 1258;
+        case FT_WinFNT_ID_CP1255:   return 1255;
+        case FT_WinFNT_ID_CP1256:   return 1256;
+        case FT_WinFNT_ID_CP1257:   return 1257;
+        case FT_WinFNT_ID_CP1251:   return 1251;
+        case FT_WinFNT_ID_CP874:    return 874;
+        case FT_WinFNT_ID_CP1250:   return 1250;
+        case FT_WinFNT_ID_OEM:      return 1;
+        default: break;
+    }
+    return 0;
+}
+
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -980,6 +1009,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         if (!Error)
         {
             FontGDI->charset = WinFNT.charset;
+            FontGDI->codepage = IntCodePageFromCharSet(WinFNT.charset);
         }
         IntUnLockFreeType();
     }
@@ -988,6 +1018,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
     {
         FontGDI->charset = SYMBOL_CHARSET;
+        FontGDI->codepage = IntCodePageFromCharSet(SYMBOL_CHARSET);
     }
 
     ++FaceCount;
@@ -996,6 +1027,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
            Face->style_name ? Face->style_name : "<NULL>");
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
     DPRINT("charset: %d\n", FontGDI->charset);
+    DPRINT("codepage: %u\n", FontGDI->codepage);
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
