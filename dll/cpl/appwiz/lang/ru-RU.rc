@@ -78,4 +78,7 @@ BEGIN
     IDS_DOWNLOADING "Загрузка..."
     IDS_INSTALLING "Установка..."
     IDS_INVALID_SHA "Ошибка контрольной суммы загруженного файла. Прерывание установки поврежденного файла."
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

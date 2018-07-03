@@ -247,9 +247,11 @@ WelcomeDlgProc(HWND hwndDlg,
                 if (IsInternetLocation(pContext->szTarget))
                 {
                     /* internet */
+                    WCHAR szName[128];
+                    LoadStringW(hApplet, IDS_NEW_INTERNET_SHORTCUT, szName, _countof(szName));
+                    StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), szName);
+
                     pContext->szWorkingDirectory[0] = 0;
-                    StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription),
-                                   L"New Internet Shortcut");
                 }
                 else if (GetFileAttributesW(pContext->szTarget) != INVALID_FILE_ATTRIBUTES)
                 {
@@ -275,7 +277,7 @@ WelcomeDlgProc(HWND hwndDlg,
                     szPath[0] = 0;
                     LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
                     LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
-                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
+c                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
                     MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                 }
             }
@@ -351,7 +353,9 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateInternetShortcut(pContext))
                     {
-                        MessageBoxW(hwndDlg, L"Failed to create internet shortcut", NULL, MB_ICONERROR);
+                        WCHAR szMessage[128];
+                        LoadStringW(hApplet, IDS_CANTMAKEINETSHORTCUT, szMessage, _countof(szMessage));
+                        MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
                     }
                 }
                 else
@@ -369,7 +373,9 @@ FinishDlgProc(HWND hwndDlg,
 
                     if (!CreateShortcut(pContext))
                     {
-                        MessageBoxW(hwndDlg, L"Failed to create shortcut", NULL, MB_ICONERROR);
+                        WCHAR szMessage[128];
+                        LoadStringW(hApplet, IDS_CANTMAKESHORTCUT, szMessage, _countof(szMessage));
+                        MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
                     }
                 }
             }
