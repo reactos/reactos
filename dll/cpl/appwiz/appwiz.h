@@ -17,6 +17,8 @@
 #include <winreg.h>
 #include <winnls.h>
 #include <shlobj.h>
+#include <intshcut.h>
+#include <shlwapi.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(appwiz);
