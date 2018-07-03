@@ -5,9 +5,6 @@ cmake_policy(VERSION 3.2.1)
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 
-# Shadow cmake provided modules
-cmake_policy(SET CMP0017 OLD)
-
 # Honor CMAKE_SHARED_LIBRARY_<Lang>_FLAGS variable.
 cmake_policy(SET CMP0018 OLD)
 
@@ -64,12 +61,6 @@ if(MSVC_IDE)
     add_compile_flags("/MP")
 endif()
 
-# We don't need CMake importlib handling.
-# FIXME: Remove the MSVC_IDE condition when the upcoming RosBE lands.
-if(NOT MSVC_IDE)
-    unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
-endif()
-
 # Bison and Flex support
 # include(sdk/cmake/bison-flex.cmake)
 
@@ -111,6 +102,11 @@ if(NOT CMAKE_CROSSCOMPILING)
     endif()
 
 else()
+	# We don't need CMake importlib handling.
+	# FIXME: Remove the MSVC_IDE condition when the upcoming RosBE lands.
+	if(NOT MSVC_IDE)
+		unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
+	endif()
 
     if(NEW_STYLE_BUILD)
         include(sdk/cmake/host-tools.cmake)
