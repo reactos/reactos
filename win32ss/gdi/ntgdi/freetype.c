@@ -2330,7 +2330,7 @@ copy_name_table_string(PUNICODE_STRING face_name, const FT_SfntName *name)
 }
 
 static NTSTATUS
-get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, FT_UShort language_id)
+get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, LANGID language_id)
 {
     FT_SfntName name;
     FT_UInt num_names, name_index;
@@ -2341,7 +2341,48 @@ get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, 
     RtlInitUnicodeString(face_name, NULL);
 
     if (!FT_IS_SFNT(ft_face))
-        return STATUS_INVALID_PARAMETER;
+    {
+        /* get the name from family_name and style_name */
+        ANSI_STRING ansi;
+        UNICODE_STRING wide;
+        switch (name_id)
+        {
+            case TT_NAME_ID_FULL_NAME:
+            case TT_NAME_ID_UNIQUE_ID:
+                /* family_name --> ansi --> face_name */
+                RtlInitAnsiString(&ansi, ft_face->family_name);
+                RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+
+                /* " " --> ansi --> wide */
+                RtlInitAnsiString(&ansi, " ");
+                RtlAnsiStringToUnicodeString(&wide, &ansi, TRUE);
+
+                /* face_name <-- face_name + wide */
+                RtlAppendUnicodeStringToString(face_name, &wide);
+
+                /* style_name --> ansi --> wide */
+                RtlInitAnsiString(&ansi, ft_face->style_name);
+                RtlAnsiStringToUnicodeString(&wide, &ansi, TRUE);
+
+                /* face_name <-- face_name + wide */
+                status = RtlAppendUnicodeStringToString(face_name, &wide);
+                break;
+
+            case TT_NAME_ID_FONT_FAMILY:
+                RtlInitAnsiString(&ansi, ft_face->family_name);
+                status = RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+                break;
+
+            case TT_NAME_ID_FONT_SUBFAMILY:
+                RtlInitAnsiString(&ansi, ft_face->style_name);
+                status = RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+                break;
+
+            default:
+                return STATUS_NOT_FOUND;
+        }
+        return status;
+    }
 
     num_names = FT_Get_Sfnt_Name_Count(ft_face);
 
