@@ -2764,7 +2764,7 @@ HandleTrayContextMenu:
         return 0;
     }
 
-    LRESULT OnSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    LRESULT OnSettingsChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         // RegenerateUserEnvironment
         typedef BOOL (WINAPI *REGENERATEUSERENVIRONMENT)(LPVOID *, BOOL);
@@ -2876,7 +2876,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
-        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingsChanged)
+        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingsChange)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 
