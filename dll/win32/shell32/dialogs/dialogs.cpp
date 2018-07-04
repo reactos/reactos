@@ -471,7 +471,7 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDOK), Enable);
 }
 
-LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
+static LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
 {
     LPCWSTR pch;
     INT ich = 0;
