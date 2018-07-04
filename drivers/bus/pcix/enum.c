@@ -1128,7 +1128,7 @@ PciSkipThisFunction(IN PPCI_COMMON_HEADER PciData,
         else
         {
             /* Logic error in the driver */
-            ASSERTMSG("PCI Skip Function - Operation type unknown.", FALSE);
+            ASSERTMSG("PCI Skip Function - Operation type unknown.\n", FALSE);
         }
 
         /* Check for legacy bridges during resource enumeration */
@@ -2172,7 +2172,7 @@ PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
     if (!PcipIsSameDevice(PdoExtension, &PciData))
     {
         /* Fail */
-        ASSERTMSG("PCI Set resources - not same device", FALSE);
+        ASSERTMSG("PCI Set resources - not same device.\n", FALSE);
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
 

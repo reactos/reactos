@@ -105,7 +105,7 @@ NpCreatePipe(
         ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE;
     else
     {
-        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!", FALSE);
+        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!\n", FALSE);
         return STATUS_INVALID_PARAMETER_6;
     }
 
@@ -192,7 +192,7 @@ NpOpenPipe(
         ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE;
     else
     {
-        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!", FALSE);
+        ASSERTMSG("Invalid NamedPipeConfiguration parameter value!\n", FALSE);
         return STATUS_INVALID_PARAMETER_3;
     }
 

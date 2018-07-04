@@ -35,7 +35,7 @@ CmpSetValueCached(IN PHCELL_INDEX CellIndex)
 }
 
 #define ASSERT_VALUE_CACHE() \
-    ASSERTMSG("Cached Values Not Yet Supported!", FALSE);
+    ASSERTMSG("Cached Values Not Yet Supported!\n", FALSE);
 
 /* FUNCTIONS *****************************************************************/
 

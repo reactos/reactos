@@ -1851,7 +1851,7 @@ Return Value:
             // Only PDO can handle this request. Somebody above
             // is not playing by rule.
             //
-            ASSERTMSG("Someone above is handling TargetDeviceRelation", !deviceRelations);
+            ASSERTMSG("Someone above is handling TargetDeviceRelation\n", !deviceRelations);
         }
 
         deviceRelations = ExAllocatePoolWithTag(PagedPool,

@@ -313,7 +313,7 @@ extern ULONG CmlibTraceLevel;
 // Hack since bigkeys are not yet supported
 //
 #define ASSERT_VALUE_BIG(h, s)                          \
-    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+    ASSERTMSG("Big keys not supported!\n", !CmpIsKeyValueBig(h, s));
 
 //
 // Returns whether or not this is a small valued key
