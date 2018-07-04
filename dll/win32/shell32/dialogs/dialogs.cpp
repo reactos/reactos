@@ -471,20 +471,20 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDOK), Enable);
 }
 
-LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR arg0)
+LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
 {
     LPCWSTR pch;
     INT ich = 0;
     if (*psz == L'"')
     {
         // 1st argument is quoted. the string in quotes is quoted 1st argument.
-        // [pch] --> [arg0+ich]
-        for (pch = psz + 1; *pch; ++ich, ++pch)
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
         {
             if (*pch == L'"' && pch[1] == L'"')
             {
                 // doubled double quotations found!
-                arg0[ich] = L'"';
+                pszArg0[ich] = L'"';
             }
             else if (*pch == L'"')
             {
@@ -495,20 +495,20 @@ LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR arg0)
             else
             {
                 // otherwise
-                arg0[ich] = *pch;
+                pszArg0[ich] = *pch;
             }
         }
     }
     else
     {
         // 1st argument is unquoted. non-space sequence is 1st argument.
-        // [pch] --> [arg0+ich]
-        for (pch = psz; *pch && !iswspace(*pch); ++ich, ++pch)
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
         {
-            arg0[ich] = *pch;
+            pszArg0[ich] = *pch;
         }
     }
-    arg0[ich] = 0;
+    pszArg0[ich] = 0;
 
     // skip space
     while (iswspace(*pch))
@@ -601,7 +601,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     GetWindowTextW(htxt, psz, ic + 1);
                     StrTrimW(psz, L" \t");
 
-                    LPCWSTR pch = Get1stArgAndParams(psz, arg0);
+                    LPCWSTR pch = Get1stArgAndParams(psz, arg0, _countof(arg0));
 
                     sei.hwnd = hwnd;
                     sei.nShow = SW_SHOWNORMAL;
