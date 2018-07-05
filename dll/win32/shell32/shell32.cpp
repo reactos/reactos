@@ -71,7 +71,8 @@ WINAPI
 RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 {
     HANDLE hUserToken;
-    OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken);
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken))
+        return FALSE;
 
     BOOL bResult = CreateEnvironmentBlock(lpEnvironment, hUserToken, TRUE);
     if (!bResult || !lpEnvironment)
