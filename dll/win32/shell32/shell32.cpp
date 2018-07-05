@@ -96,6 +96,8 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
         }
     }
 
+    CloseHandle(hUserToken);
+
     return bResult;
 }
 
