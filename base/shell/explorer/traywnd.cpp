@@ -2684,7 +2684,7 @@ HandleTrayContextMenu:
         }
         if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
         {
-            ::ShowWindow(hwnd, SW_MINIMIZE);
+            ::ShowWindowAsync(hwnd, SW_MINIMIZE);
             info->bRet = TRUE;
             info->pMinimizedAll->Add(hwnd);
         }
