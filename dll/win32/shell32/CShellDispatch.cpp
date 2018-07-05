@@ -403,12 +403,12 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
             GetWindowRect(hwnd, &rcWindow);
 
             if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
-                return TRUE;    // continue;
+                return TRUE;    // continue
         }
     }
 
     pEW->hwndFound = hwnd;
-    return TRUE;
+    return FALSE;   // stop if found
 }
 
 static BOOL IsThereAnyEffectiveWindowOnDesktop(void)
