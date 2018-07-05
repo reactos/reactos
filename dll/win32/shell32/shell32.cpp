@@ -75,7 +75,10 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
     BOOL bResult = CreateEnvironmentBlock(lpEnvironment, hUserToken, TRUE);
     if (!bResult || !lpEnvironment)
+    {
+        CloseHandle(hUserToken);
         return FALSE;
+    }
 
     if (bUpdateSelf)
     {
