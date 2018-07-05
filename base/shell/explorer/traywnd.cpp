@@ -234,6 +234,7 @@ class CTrayWindow :
         MINIMIZE_ALL = 419,
         RESTORE_ALL = 416
     };
+    CSimpleArray<HWND>  m_MinimizedAll;
 
 public:
     CComPtr<ITrayBandSite> m_TrayBandSite;
@@ -2658,17 +2659,18 @@ HandleTrayContextMenu:
         return HandleHotKey(wParam);
     }
 
-    struct MIN_RES_INFO
+    struct MINIMIZE_INFO
     {
         HWND hwndDesktop;
         HWND hTrayWnd;
         HWND hwndProgman;
         BOOL bRet;
+        CSimpleArray<HWND> *pMinimizedAll;
     };
 
     static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
     {
-        MIN_RES_INFO *info = (MIN_RES_INFO *)lParam;
+        MINIMIZE_INFO *info = (MINIMIZE_INFO *)lParam;
         if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd ||
             hwnd == info->hwndProgman)
         {
@@ -2678,22 +2680,7 @@ HandleTrayContextMenu:
         {
             ::ShowWindow(hwnd, SW_MINIMIZE);
             info->bRet = TRUE;
-        }
-        return TRUE;
-    }
-
-    static BOOL CALLBACK RestoreWindowsProc(HWND hwnd, LPARAM lParam)
-    {
-        MIN_RES_INFO *info = (MIN_RES_INFO *)lParam;
-        if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd ||
-            hwnd == info->hwndProgman)
-        {
-            return TRUE;
-        }
-        if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
-        {
-            ::ShowWindow(hwnd, SW_RESTORE);
-            info->bRet = TRUE;
+            info->pMinimizedAll->Add(hwnd);
         }
         return TRUE;
     }
@@ -2707,29 +2694,41 @@ HandleTrayContextMenu:
             return FALSE;
         }
 
-        MIN_RES_INFO info;
-        info.hwndDesktop = GetDesktopWindow();;
-        info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-        info.hwndProgman = FindWindowW(L"Progman", NULL);
-        info.bRet = FALSE;
-
         switch (LOWORD(wParam))
         {
             case MINIMIZE_ALL:
+            {
+                m_MinimizedAll.RemoveAll();
+
+                MINIMIZE_INFO info;
+                info.hwndDesktop = GetDesktopWindow();;
+                info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+                info.hwndProgman = FindWindowW(L"Progman", NULL);
+                info.bRet = FALSE;
+                info.pMinimizedAll = &m_MinimizedAll;
                 EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
                 if (info.bRet)
                 {
                     // TODO: update menu
                 }
                 break;
+            }
 
             case RESTORE_ALL:
-                EnumWindows(RestoreWindowsProc, (LPARAM)&info);
-                if (info.bRet)
+            {
+                for (INT i = 0; i < m_MinimizedAll.GetSize(); i++)
                 {
-                    // TODO: update menu
+                    HWND hwnd = m_MinimizedAll[i];
+                    if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
+                    {
+                        ::ShowWindow(hwnd, SW_RESTORE);
+                    }
                 }
+                m_MinimizedAll.RemoveAll();
+
+                // TODO: update menu
                 break;
+            }
         }
 
         if (m_TrayBandSite == NULL || FAILED_UNEXPECTEDLY(m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))

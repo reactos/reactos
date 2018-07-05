@@ -29,6 +29,7 @@
 #include <atlwin.h>
 #include <atlstr.h>
 #include <atlcoll.h>
+#include <atlsimpcoll.h>
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
