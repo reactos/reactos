@@ -492,6 +492,18 @@ public:
                      SW_SHOWNORMAL);
     }
 
+    VOID WinDesktop()
+    {
+        IShellDispatch4 *pSDispatch4 = NULL;
+        HRESULT hr = ::CoCreateInstance(CLSID_Shell, NULL, CLSCTX_SERVER, IID_IDispatch,
+                                        (LPVOID *)&pSDispatch4);
+        if (SUCCEEDED(hr))
+        {
+            hr = pSDispatch4->ToggleDesktop();
+            pSDispatch4->Release();
+        }
+    }
+
     BOOL STDMETHODCALLTYPE ExecContextMenuCmd(IN UINT uiCmd)
     {
         switch (uiCmd)
@@ -525,17 +537,8 @@ public:
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
-        {
-            IShellDispatch4 *pSDispatch4 = NULL;
-            HRESULT hr = ::CoCreateInstance(CLSID_Shell, NULL, CLSCTX_SERVER, IID_IDispatch,
-                                            (LPVOID *)&pSDispatch4);
-            if (SUCCEEDED(hr))
-            {
-                hr = pSDispatch4->ToggleDesktop();
-                pSDispatch4->Release();
-            }
+            WinDesktop();
             break;
-        }
 
         case ID_SHELL_CMD_TILE_WND_H:
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
@@ -596,10 +599,13 @@ public:
         case IDHK_PREV_TASK:
             break;
         case IDHK_MINIMIZE_ALL:
+            MinimizeAll();
             break;
         case IDHK_RESTORE_ALL:
+            RestoreAll();
             break;
         case IDHK_DESKTOP:
+            WinDesktop();
             break;
         case IDHK_PAGER:
             break;
@@ -2685,6 +2691,37 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
+    VOID MinimizeAll()
+    {
+        m_MinimizedAll.RemoveAll();
+
+        MINIMIZE_INFO info;
+        info.hwndDesktop = GetDesktopWindow();;
+        info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+        info.hwndProgman = FindWindowW(L"Progman", NULL);
+        info.bRet = FALSE;
+        info.pMinimizedAll = &m_MinimizedAll;
+        EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
+
+        ::SetForegroundWindow(m_DesktopWnd);
+        ::SetFocus(m_DesktopWnd);
+        // TODO: update menu
+    }
+
+    VOID RestoreAll()
+    {
+        for (INT i = 0; i < m_MinimizedAll.GetSize(); i++)
+        {
+            HWND hwnd = m_MinimizedAll[i];
+            if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
+            {
+                ::ShowWindow(hwnd, SW_RESTORE);
+            }
+        }
+        m_MinimizedAll.RemoveAll();
+        // TODO: update menu
+    }
+
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = FALSE;
@@ -2697,38 +2734,12 @@ HandleTrayContextMenu:
         switch (LOWORD(wParam))
         {
             case MINIMIZE_ALL:
-            {
-                m_MinimizedAll.RemoveAll();
-
-                MINIMIZE_INFO info;
-                info.hwndDesktop = GetDesktopWindow();;
-                info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-                info.hwndProgman = FindWindowW(L"Progman", NULL);
-                info.bRet = FALSE;
-                info.pMinimizedAll = &m_MinimizedAll;
-                EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
-                if (info.bRet)
-                {
-                    // TODO: update menu
-                }
+                MinimizeAll();
                 break;
-            }
 
             case RESTORE_ALL:
-            {
-                for (INT i = 0; i < m_MinimizedAll.GetSize(); i++)
-                {
-                    HWND hwnd = m_MinimizedAll[i];
-                    if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
-                    {
-                        ::ShowWindow(hwnd, SW_RESTORE);
-                    }
-                }
-                m_MinimizedAll.RemoveAll();
-
-                // TODO: update menu
+                RestoreAll();
                 break;
-            }
         }
 
         if (m_TrayBandSite == NULL || FAILED_UNEXPECTEDLY(m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))
