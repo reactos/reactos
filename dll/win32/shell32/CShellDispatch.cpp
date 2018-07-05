@@ -367,10 +367,92 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::WindowsSecurity()
     return E_NOTIMPL;
 }
 
+struct ENUM_WINDOW
+{
+    HWND hwndFound;
+    HWND hwndDesktop;
+    HWND hwndProgman;
+    HWND hTrayWnd;
+};
+
+static BOOL CALLBACK
+EnumWindowsProc(HWND hwnd, LPARAM lParam)
+{
+    ENUM_WINDOW *pEW = (ENUM_WINDOW *)lParam;
+
+    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd))
+        return TRUE;    // continue
+
+    if (pEW->hTrayWnd == hwnd || pEW->hwndDesktop == hwnd ||
+        pEW->hwndProgman == hwnd)
+    {
+        return TRUE;    // continue
+    }
+
+    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    if (hMon)
+    {
+        MONITORINFO info;
+        ZeroMemory(&info, sizeof(info));
+        info.cbSize = sizeof(info);
+        if (GetMonitorInfoW(hMon, &info))
+        {
+            RECT rcWindow, rcMonitor, rcUnion;
+            GetWindowRect(hwnd, &rcWindow);
+
+            rcMonitor = info.rcMonitor;
+
+            UnionRect(&rcUnion, &rcMonitor, &rcWindow);
+            if (!EqualRect(&rcUnion, &rcMonitor))
+                return TRUE;    // continue;
+        }
+    }
+
+    pEW->hwndFound = hwnd;
+    return TRUE;
+}
+
+static BOOL IsThereAnyEffectiveWindowOnDesktop(void)
+{
+    ENUM_WINDOW ew;
+    ew.hwndFound = NULL;
+    ew.hwndDesktop = GetDesktopWindow();
+    ew.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    ew.hwndProgman = FindWindowW(L"Progman", NULL);
+
+    EnumWindows(EnumWindowsProc, (LPARAM)&ew);
+    if (ew.hwndFound && FALSE)
+    {
+        WCHAR szClass[128], szText[128];
+        GetClassNameW(ew.hwndFound, szClass, _countof(szClass));
+        GetWindowTextW(ew.hwndFound, szText, _countof(szText));
+        MessageBoxW(NULL, szText, szClass, 0);
+    }
+    return ew.hwndFound != NULL;
+}
+
 HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
+    enum {
+        MINIMIZE_ALL = 419,
+        RESTORE_ALL = 416
+    };
+
     TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    if (IsThereAnyEffectiveWindowOnDesktop())
+    {
+        // minimize all
+        SendMessageW(hTrayWnd, WM_COMMAND, MINIMIZE_ALL, 0);
+    }
+    else
+    {
+        // restore all
+        SendMessageW(hTrayWnd, WM_COMMAND, RESTORE_ALL, 0);
+    }
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *value)

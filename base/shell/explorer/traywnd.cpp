@@ -230,6 +230,11 @@ class CTrayWindow :
 
     HDPA m_ShellServices;
 
+    enum {
+        MINIMIZE_ALL = 419,
+        RESTORE_ALL = 416
+    };
+
 public:
     CComPtr<ITrayBandSite> m_TrayBandSite;
 
@@ -519,7 +524,17 @@ public:
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
+        {
+            IShellDispatch4 *pSDispatch4 = NULL;
+            HRESULT hr = ::CoCreateInstance(CLSID_Shell, NULL, CLSCTX_SERVER, IID_IDispatch,
+                                            (LPVOID *)&pSDispatch4);
+            if (SUCCEEDED(hr))
+            {
+                hr = pSDispatch4->ToggleDesktop();
+                pSDispatch4->Release();
+            }
             break;
+        }
 
         case ID_SHELL_CMD_TILE_WND_H:
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
@@ -2643,6 +2658,46 @@ HandleTrayContextMenu:
         return HandleHotKey(wParam);
     }
 
+    struct MIN_RES_INFO
+    {
+        HWND hwndDesktop;
+        HWND hTrayWnd;
+        HWND hwndProgman;
+        BOOL bRet;
+    };
+
+    static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
+    {
+        MIN_RES_INFO *info = (MIN_RES_INFO *)lParam;
+        if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd ||
+            hwnd == info->hwndProgman)
+        {
+            return TRUE;
+        }
+        if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
+        {
+            ::ShowWindow(hwnd, SW_MINIMIZE);
+            info->bRet = TRUE;
+        }
+        return TRUE;
+    }
+
+    static BOOL CALLBACK RestoreWindowsProc(HWND hwnd, LPARAM lParam)
+    {
+        MIN_RES_INFO *info = (MIN_RES_INFO *)lParam;
+        if (hwnd == info->hwndDesktop || hwnd == info->hTrayWnd ||
+            hwnd == info->hwndProgman)
+        {
+            return TRUE;
+        }
+        if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
+        {
+            ::ShowWindow(hwnd, SW_RESTORE);
+            info->bRet = TRUE;
+        }
+        return TRUE;
+    }
+
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         LRESULT Ret = FALSE;
@@ -2650,6 +2705,31 @@ HandleTrayContextMenu:
         if ((HWND) lParam == m_StartButton.m_hWnd)
         {
             return FALSE;
+        }
+
+        MIN_RES_INFO info;
+        info.hwndDesktop = GetDesktopWindow();;
+        info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+        info.hwndProgman = FindWindowW(L"Progman", NULL);
+        info.bRet = FALSE;
+
+        switch (LOWORD(wParam))
+        {
+            case MINIMIZE_ALL:
+                EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
+                if (info.bRet)
+                {
+                    // TODO: update menu
+                }
+                break;
+
+            case RESTORE_ALL:
+                EnumWindows(RestoreWindowsProc, (LPARAM)&info);
+                if (info.bRet)
+                {
+                    // TODO: update menu
+                }
+                break;
         }
 
         if (m_TrayBandSite == NULL || FAILED_UNEXPECTEDLY(m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))
