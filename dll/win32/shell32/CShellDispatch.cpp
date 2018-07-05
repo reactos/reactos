@@ -380,7 +380,7 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
 {
     ENUM_WINDOW *pEW = (ENUM_WINDOW *)lParam;
 
-    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd))
+    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
         return TRUE;    // continue
 
     if (pEW->hTrayWnd == hwnd || pEW->hwndDesktop == hwnd ||
@@ -389,6 +389,7 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
         return TRUE;    // continue
     }
 
+    // is the window in the nearest monitor?
     HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
     if (hMon)
     {
