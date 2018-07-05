@@ -3,6 +3,7 @@
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     IShellDispatch implementation
  * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
@@ -412,7 +413,7 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
     return FALSE;   // stop if found
 }
 
-static BOOL IsThereAnyEffectiveWindowOnDesktop(void)
+BOOL IsThereAnyEffectiveWindowOnDesktop(void)
 {
     ENUM_WINDOW ew;
     ew.hwndFound = NULL;
