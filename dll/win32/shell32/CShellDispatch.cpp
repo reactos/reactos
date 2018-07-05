@@ -397,13 +397,12 @@ EnumWindowsProc(HWND hwnd, LPARAM lParam)
         info.cbSize = sizeof(info);
         if (GetMonitorInfoW(hMon, &info))
         {
-            RECT rcWindow, rcMonitor, rcUnion;
-            GetWindowRect(hwnd, &rcWindow);
-
+            RECT rcWindow, rcMonitor, rcIntersect;
             rcMonitor = info.rcMonitor;
 
-            UnionRect(&rcUnion, &rcMonitor, &rcWindow);
-            if (!EqualRect(&rcUnion, &rcMonitor))
+            GetWindowRect(hwnd, &rcWindow);
+
+            if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
                 return TRUE;    // continue;
         }
     }
