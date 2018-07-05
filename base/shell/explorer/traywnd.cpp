@@ -2710,7 +2710,7 @@ HandleTrayContextMenu:
 
     VOID RestoreAll()
     {
-        for (INT i = 0; i < m_MinimizedAll.GetSize(); i++)
+        for (INT i = m_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = m_MinimizedAll[i];
             if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
