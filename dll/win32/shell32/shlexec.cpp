@@ -2314,7 +2314,8 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
     LPWSTR pszCmdLineW = NULL;
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
 
-    __SHCloneStrAtoW(&pszCmdLineW, cmdline);
+    if (cmdline)
+        __SHCloneStrAtoW(&pszCmdLineW, cmdline);
     OpenAs_RunDLLW(hwnd, hinst, pszCmdLineW, cmdshow);
     SHFree(pszCmdLineW);
 }

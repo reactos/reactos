@@ -1035,7 +1035,7 @@ VOID COpenWithDialog::Accept()
         if (m_pInfo->oaifInFlags & OAIF_EXEC)
             m_pAppList->Execute(pApp, m_pInfo->pcszFile);
 
-        DestroyWindow(m_hDialog);
+        EndDialog(m_hDialog, 1);
     }
 }
 
@@ -1066,7 +1066,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
                     return TRUE;
                 }
                 case IDCANCEL: /* cancel */
-                    DestroyWindow(hwndDlg);
+                    EndDialog(hwndDlg, 0);
                     return TRUE;
                 default:
                     break;
@@ -1085,7 +1085,7 @@ INT_PTR CALLBACK COpenWithDialog::DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wPa
              }
             break;
         case WM_CLOSE:
-            DestroyWindow(hwndDlg);
+            EndDialog(hwndDlg, 0);
             return TRUE;
         default:
             break;
@@ -1427,8 +1427,7 @@ COpenWithMenu::Initialize(LPCITEMIDLIST pidlFolder,
 HRESULT WINAPI
 SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 {
-    MSG msg;
-    HWND hwnd;
+    INT_PTR ret;
 
     TRACE("SHOpenWithDialog hwndParent %p poainfo %p\n", hwndParent, poainfo);
 
@@ -1439,25 +1438,16 @@ SHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
 
     COpenWithDialog pDialog(poainfo);
 
-    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent, COpenWithDialog::DialogProc, (LPARAM)&pDialog);
-    if (hwnd == NULL)
-    {
-        ERR("Failed to create dialog\n");
-        return E_FAIL;
-    }
-
     if (pDialog.IsNoOpen(hwndParent))
         return S_OK;
 
-    ShowWindow(hwnd, SW_SHOWNORMAL);
+    ret = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCE(IDD_OPEN_WITH), hwndParent,
+                          COpenWithDialog::DialogProc, (LPARAM)&pDialog);
 
-    while (GetMessage(&msg, NULL, 0, 0) && IsWindow(hwnd))
+    if (ret == (INT_PTR)-1)
     {
-        if (!IsDialogMessage(hwnd, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+        ERR("Failed to create dialog: %u\n", GetLastError());
+        return E_FAIL;
     }
 
     return S_OK;
