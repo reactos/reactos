@@ -152,8 +152,8 @@ HalpInitDma(VOID)
         * Check if Extended DMA is available. We're just going to do a random
         * read and write.
         */
-        WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
-        if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
+        WRITE_PORT_UCHAR(UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)), 0x2A);
+        if (READ_PORT_UCHAR(UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2))) == 0x2A)
         {
             DPRINT1("Machine supports EISA DMA. Bus type: %lu\n", HalpBusType);
             HalpEisaDma = TRUE;
@@ -479,11 +479,11 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
 
     if (Controller == 1)
     {
-        AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController1);
+        AdapterBaseVa = UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaController1));
     }
     else
     {
-        AdapterBaseVa = (PVOID)FIELD_OFFSET(EISA_CONTROL, DmaController2);
+        AdapterBaseVa = UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaController2));
     }
 
     AdapterObject->AdapterNumber = Controller;
@@ -517,12 +517,12 @@ HalpDmaInitializeEisaAdapter(IN PADAPTER_OBJECT AdapterObject,
 
         if (Controller == 1)
         {
-            WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode1),
+            WRITE_PORT_UCHAR(UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode1)),
                             ExtendedMode.Byte);
         }
         else
         {
-            WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode2),
+            WRITE_PORT_UCHAR(UlongToPtr(FIELD_OFFSET(EISA_CONTROL, DmaExtendedMode2)),
                             ExtendedMode.Byte);
         }
     }
