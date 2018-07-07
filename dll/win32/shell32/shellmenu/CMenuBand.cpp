@@ -54,7 +54,6 @@ CMenuBand::CMenuBand() :
     m_trackedPopup(NULL),
     m_trackedHwnd(NULL),
     m_iHighlightItem(-1),
-    m_bMnemoniced(FALSE),
     m_bBtnPressingByKB(FALSE)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
@@ -820,7 +819,6 @@ HRESULT CMenuBand::_TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 
     SetHighlightIndex(-1);
     m_bBtnPressingByKB = FALSE;
-    m_bMnemoniced = FALSE;
 
     return S_OK;
 }
@@ -876,7 +874,6 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
 
     SetHighlightIndex(-1);
     m_bBtnPressingByKB = FALSE;
-    m_bMnemoniced = FALSE;
 
     DestroyMenu(popup);
     return hr;
@@ -1472,7 +1469,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
                     {
                         m_bBtnPressingByKB = TRUE;
                     }
-                    m_bMnemoniced = FALSE;
                     break;
 
                 case VK_ESCAPE: // [Esc] key
@@ -1480,7 +1476,6 @@ HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
                     {
                         bProcessed = SetHighlightIndex(-1);
                     }
-                    m_bMnemoniced = FALSE;
                     m_bBtnPressingByKB = FALSE;
                     break;
 
@@ -1502,7 +1497,10 @@ HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
                 default:
                     // use mnemonic
                     bProcessed = SelectMnemonic((WCHAR)lpMsg->wParam);
-                    m_bMnemoniced = bProcessed;
+                    if (bProcessed)
+                    {
+                        m_bBtnPressingByKB = FALSE;
+                    }
                     break;
             }
             break;
@@ -1512,11 +1510,11 @@ HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
             switch (lpMsg->wParam)
             {
                 case VK_MENU:   // [Alt] key
-                    if (!IsHighlighted() && m_bBtnPressingByKB && !m_bMnemoniced)
+                    if (!IsHighlighted() && m_bBtnPressingByKB)
                     {
                         bProcessed = SetHighlightIndex(0);
                     }
-                    m_bMnemoniced = FALSE;
+                    m_bBtnPressingByKB = FALSE;
                     break;
             }
             break;

@@ -73,7 +73,6 @@ private:
     HWND m_trackedHwnd;
 
     INT m_iHighlightItem;
-    BOOL m_bMnemoniced;
     BOOL m_bBtnPressingByKB;
 
 public:
