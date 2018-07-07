@@ -3,6 +3,7 @@
  *
  *    Copyright 1997            Marcus Meissner
  *    Copyright 1998, 1999, 2002    Juergen Schmied
+ *    Copyright 2018 Katayama Hirofumi MZ
  *
  *    IShellFolder2 and related interfaces
  *
@@ -440,4 +441,44 @@ SHOpenFolderAndSelectItems(LPITEMIDLIST pidlFolder,
         return S_OK;
     else
         return E_FAIL;
+}
+
+/*
+ * for internal use
+ */
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj)
+{
+    PIDLIST_ABSOLUTE pidlFolder;
+    PUITEMID_CHILD *apidl;
+    UINT cidl;
+    HRESULT hr = SH_GetApidlFromDataObject(pdtobj, &pidlFolder, &apidl, &cidl);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (cidl > 1)
+    {
+        ERR("SHMultiFileProperties is not yet implemented\n");
+        SHFree(pidlFolder);
+        _ILFreeaPidl(apidl, cidl);
+        return E_FAIL;
+    }
+
+    STRRET strFile;
+    hr = psf->GetDisplayNameOf(apidl[0], SHGDN_FORPARSING, &strFile);
+    if (SUCCEEDED(hr))
+    {
+        hr = SH_ShowPropertiesDialog(strFile.pOleStr, pidlFolder, apidl);
+        if (FAILED(hr))
+            ERR("SH_ShowPropertiesDialog failed\n");
+    }
+    else
+    {
+        ERR("Failed to get display name\n");
+    }
+
+    SHFree(pidlFolder);
+    _ILFreeaPidl(apidl, cidl);
+
+    return hr;
 }
