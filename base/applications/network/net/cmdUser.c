@@ -10,6 +10,8 @@
 
 #include "net.h"
 
+static WCHAR szPasswordChars[] = L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%_-+:";
+
 static
 int
 CompareUserInfo(const void *a, const void *b)
@@ -356,6 +358,35 @@ ReadPassword(
 }
 
 
+static
+VOID
+GenerateRandomPassword(
+    LPWSTR *lpPassword,
+    LPBOOL lpAllocated)
+{
+    LPWSTR pPassword = NULL;
+    INT nCharsLen, i, nLength = 8;
+
+    srand(GetTickCount());
+
+    pPassword = HeapAlloc(GetProcessHeap(),
+                          HEAP_ZERO_MEMORY,
+                          (nLength + 1) * sizeof(WCHAR));
+    if (pPassword == NULL)
+        return;
+
+    nCharsLen = wcslen(szPasswordChars);
+
+    for (i = 0; i < nLength; i++)
+    {
+        pPassword[i] = szPasswordChars[rand() % nCharsLen];
+    }
+
+    *lpPassword = pPassword;
+    *lpAllocated = TRUE;
+}
+
+
 INT
 cmdUser(
     INT argc,
@@ -368,6 +399,7 @@ cmdUser(
 #if 0
     BOOL bDomain = FALSE;
 #endif
+    BOOL bRandomPassword = FALSE;
     LPWSTR lpUserName = NULL;
     LPWSTR lpPassword = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
@@ -427,6 +459,12 @@ cmdUser(
 #if 0
             bDomain = TRUE;
 #endif
+        }
+        else if (_wcsicmp(argv[j], L"/random") == 0)
+        {
+            bRandomPassword = TRUE;
+            GenerateRandomPassword(&lpPassword,
+                                   &bPasswordAllocated);
         }
     }
 
@@ -614,6 +652,13 @@ cmdUser(
         Status = NetUserDel(NULL,
                             lpUserName);
         ConPrintf(StdOut, L"Status: %lu\n", Status);
+    }
+
+    if (Status == NERR_Success &&
+        lpPassword != NULL &&
+        bRandomPassword == TRUE)
+    {
+        ConPrintf(StdOut, L"The password for %s is: %s\n", lpUserName, lpPassword);
     }
 
 done:
