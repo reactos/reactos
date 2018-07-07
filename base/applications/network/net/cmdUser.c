@@ -14,7 +14,7 @@ static WCHAR szPasswordChars[] = L"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHI
 
 static
 int
-CompareUserInfo(const void *a, const void *b)
+CompareInfo(const void *a, const void *b)
 {
     return _wcsicmp(((PUSER_INFO_0)a)->usri0_name,
                     ((PUSER_INFO_0)b)->usri0_name);
@@ -62,7 +62,7 @@ EnumerateUsers(VOID)
         qsort(pBuffer,
               dwRead,
               sizeof(PUSER_INFO_0),
-              CompareUserInfo);
+              CompareInfo);
 
         for (i = 0; i < dwRead; i++)
         {
@@ -662,7 +662,7 @@ cmdUser(
     }
 
 done:
-    if ((bPasswordAllocated != FALSE) && (lpPassword != NULL))
+    if ((bPasswordAllocated == TRUE) && (lpPassword != NULL))
         HeapFree(GetProcessHeap(), 0, lpPassword);
 
     if (!bAdd && !bDelete && pUserInfo != NULL)
