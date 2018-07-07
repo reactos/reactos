@@ -52,7 +52,9 @@ CMenuBand::CMenuBand() :
     m_Show(FALSE),
     m_shellBottom(FALSE),
     m_trackedPopup(NULL),
-    m_trackedHwnd(NULL)
+    m_trackedHwnd(NULL),
+    m_iHighlightItem(-1),
+    m_bBtnPressingByKB(FALSE)
 {
     m_focusManager = CMenuFocusManager::AcquireManager();
 }
@@ -815,6 +817,9 @@ HRESULT CMenuBand::_TrackSubMenu(HMENU popup, INT x, INT y, RECT& rcExclude)
 
     _DisableMouseTrack(FALSE);
 
+    SetHighlightIndex(-1);
+    m_bBtnPressingByKB = FALSE;
+
     return S_OK;
 }
 
@@ -866,6 +871,9 @@ HRESULT CMenuBand::_TrackContextMenu(IContextMenu * contextMenu, INT x, INT y)
         TRACE("TrackPopupMenu failed. Code=%d, LastError=%d\n", uCommand, GetLastError());
         hr = S_FALSE;
     }
+
+    SetHighlightIndex(-1);
+    m_bBtnPressingByKB = FALSE;
 
     DestroyMenu(popup);
     return hr;
@@ -1267,9 +1275,254 @@ HRESULT STDMETHODCALLTYPE CMenuBand::HasFocusIO()
     return S_FALSE;
 }
 
+BOOL CMenuBand::IsHighlighted()
+{
+    return m_iHighlightItem != -1;
+}
+
+INT CMenuBand::IndexToCommand(INT nIndex)
+{
+    if (nIndex == -1)
+        return -1;
+
+    HWND hwnd;
+    HRESULT hr = GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr) || hwnd == NULL)
+        return -1;
+
+    TBBUTTON button;
+    SendMessageW(hwnd, TB_GETBUTTON, nIndex, (LPARAM)&button);
+    return button.idCommand;
+}
+
+BOOL CMenuBand::MoveHighlightLeft()
+{
+    if (!IsHighlighted())
+        return FALSE;
+
+    if (_IsTracking())
+        return TRUE;
+
+    HWND hwnd;
+    HRESULT hr = GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr) || hwnd == NULL)
+        return FALSE;
+
+    INT nCount = (INT)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
+    if (m_iHighlightItem == 0)
+    {
+        SetHighlightIndex(nCount - 1);
+    }
+    else
+    {
+        SetHighlightIndex(m_iHighlightItem - 1);
+    }
+    return TRUE;
+}
+
+BOOL CMenuBand::MoveHighlightRight()
+{
+    if (!IsHighlighted())
+        return FALSE;
+
+    if (_IsTracking())
+        return TRUE;
+
+    HWND hwnd;
+    HRESULT hr = GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr) || hwnd == NULL)
+        return FALSE;
+
+    INT nCount = (INT)SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0);
+    if (m_iHighlightItem == nCount - 1)
+        SetHighlightIndex(0);
+    else
+        SetHighlightIndex(m_iHighlightItem + 1);
+
+    return TRUE;
+}
+
+BOOL CMenuBand::SetMarked(INT nIndex, BOOL bMarked)
+{
+    HWND hwnd;
+    HRESULT hr = GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr) || hwnd == NULL)
+        return FALSE;
+
+    INT nCommandID = IndexToCommand(nIndex);
+    if (nCommandID == -1)
+        return FALSE;
+
+    UINT uState = (UINT)SendMessageW(hwnd, TB_GETSTATE, nCommandID, 0);
+
+    if (bMarked)
+        uState |= TBSTATE_PRESSED;
+    else
+        uState &= ~TBSTATE_PRESSED;
+
+    SendMessageW(hwnd, TB_SETSTATE, nCommandID, uState);
+    return TRUE;
+}
+
+BOOL CMenuBand::SetHighlightIndex(INT nIndex)
+{
+    SetMarked(m_iHighlightItem, FALSE);
+    m_iHighlightItem = nIndex;
+    SetMarked(m_iHighlightItem, TRUE);
+
+    return TRUE;
+}
+
+BOOL CMenuBand::EnterHighlight()
+{
+    if (!IsHighlighted())
+        return FALSE;
+
+    INT index = m_iHighlightItem;
+    HMENU popup = ::GetSubMenu(m_hmenu, index);
+    if (popup == NULL)
+        return FALSE;
+
+    HWND hwnd;
+    HRESULT hr = GetWindow(&hwnd);
+    if (FAILED_UNEXPECTEDLY(hr) || hwnd == NULL)
+        return FALSE;
+
+    RECT rc;
+    if (!SendMessageW(hwnd, TB_GETITEMRECT, index, (LPARAM)&rc))
+        return FALSE;
+
+    POINT a = { rc.left, rc.top };
+    POINT b = { rc.right, rc.bottom };
+
+    ::ClientToScreen(hwnd, &a);
+    ::ClientToScreen(hwnd, &b);
+
+    POINT pt = { a.x, b.y };
+    RECT rcl = { a.x, a.y, b.x, b.y };
+
+    _TrackSubMenu(popup, pt.x, pt.y, rcl);
+    return TRUE;
+}
+
+INT CMenuBand::MnemonicToIndex(WCHAR wch)
+{
+    wch = towupper(wch);
+    INT nCount = GetMenuItemCount(m_hmenu);
+
+    WCHAR szText[64];
+    MENUITEMINFOW info;
+    for (INT i = 0; i < nCount; ++i)
+    {
+        ZeroMemory(&info, sizeof(info));
+        info.cbSize = sizeof(info);
+        info.fMask = MIIM_TYPE;
+        info.dwTypeData = szText;
+        info.cch = _countof(szText);
+        if (GetMenuItemInfoW(m_hmenu, i, TRUE, &info))
+        {
+            LPWSTR pch;
+            pch = wcschr(szText, L'&');
+            while (pch)
+            {
+                if (towupper(pch[1]) == wch)
+                {
+                    return i;
+                }
+                pch = wcschr(pch + 1, L'&');
+            }
+        }
+    }
+
+    return -1;
+}
+
+BOOL CMenuBand::SelectMnemonic(WCHAR wch)
+{
+    INT nIndex = MnemonicToIndex(wch);
+    if (nIndex != -1)
+    {
+        SetHighlightIndex(nIndex);
+        return EnterHighlight();
+    }
+
+    return FALSE;
+}
+
 HRESULT STDMETHODCALLTYPE CMenuBand::TranslateAcceleratorIO(LPMSG lpMsg)
 {
-    // TODO: Alt down -> toggle menu focus
+    BOOL bProcessed = FALSE;
+
+    switch (lpMsg->message)
+    {
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+            switch (lpMsg->wParam)
+            {
+                case VK_MENU:   // [Alt] key
+                    if (IsHighlighted())
+                    {
+                        bProcessed = SetHighlightIndex(-1);
+                        m_bBtnPressingByKB = FALSE;
+                    }
+                    else
+                    {
+                        m_bBtnPressingByKB = TRUE;
+                    }
+                    break;
+
+                case VK_ESCAPE: // [Esc] key
+                    if (IsHighlighted())
+                    {
+                        bProcessed = SetHighlightIndex(-1);
+                    }
+                    m_bBtnPressingByKB = FALSE;
+                    break;
+
+                case VK_LEFT:
+                    bProcessed = MoveHighlightLeft();
+                    break;
+
+                case VK_RIGHT:
+                    bProcessed = MoveHighlightRight();
+                    break;
+
+                case VK_UP:
+                case VK_DOWN:
+                case VK_SPACE:
+                case VK_RETURN: // [Enter] key
+                    bProcessed = EnterHighlight();
+                    break;
+
+                default:
+                    // use mnemonic
+                    bProcessed = SelectMnemonic((WCHAR)lpMsg->wParam);
+                    if (bProcessed)
+                    {
+                        m_bBtnPressingByKB = FALSE;
+                    }
+                    break;
+            }
+            break;
+
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            switch (lpMsg->wParam)
+            {
+                case VK_MENU:   // [Alt] key
+                    if (!IsHighlighted() && m_bBtnPressingByKB)
+                    {
+                        bProcessed = SetHighlightIndex(0);
+                    }
+                    m_bBtnPressingByKB = FALSE;
+                    break;
+            }
+            break;
+    }
+
+    if (bProcessed)
+        return S_OK;
+
     return S_FALSE;
 }
 
