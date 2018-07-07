@@ -72,6 +72,10 @@ private:
     HMENU m_trackedPopup;
     HWND m_trackedHwnd;
 
+    INT m_iHighlightItem;
+    BOOL m_bMnemoniced;
+    BOOL m_bBtnPressingByKB;
+
 public:
     CMenuBand();
     virtual ~CMenuBand();
@@ -208,6 +212,16 @@ public:
     {
         return m_useBigIcons;
     }
+
+    BOOL IsHighlighted();
+    INT IndexToCommand(INT nIndex);
+    BOOL SetHighlightIndex(INT nIndex);
+    BOOL MoveHighlightLeft();
+    BOOL MoveHighlightRight();
+    BOOL EnterHighlight();
+    BOOL SetMarked(INT nIndex, BOOL bMarked);
+    BOOL SelectMnemonic(WCHAR wch);
+    INT MnemonicToIndex(WCHAR wch);
 
 private:
     HRESULT _KeyboardItemChange(DWORD change);
