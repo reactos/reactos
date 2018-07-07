@@ -1467,6 +1467,7 @@ private:
                 {
                     CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
                     UpdateApplicationsList(-1);
+                    m_ListView->SetSelected(-1, FALSE);
                 }
                 else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
                 {
