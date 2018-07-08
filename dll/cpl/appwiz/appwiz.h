@@ -17,6 +17,8 @@
 #include <winreg.h>
 #include <winnls.h>
 #include <shlobj.h>
+#include <intshcut.h>
+#include <shlwapi.h>
 
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(appwiz);
@@ -28,6 +30,8 @@ typedef struct
    WCHAR szTarget[MAX_PATH];
    WCHAR szWorkingDirectory[MAX_PATH];
    WCHAR szDescription[MAX_PATH];
+   WCHAR szOrigin[MAX_PATH];
+   WCHAR szOldFile[MAX_PATH];
    WCHAR szLinkName[MAX_PATH];
 } CREATE_LINK_CONTEXT, *PCREATE_LINK_CONTEXT;
 

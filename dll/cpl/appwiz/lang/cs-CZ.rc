@@ -83,4 +83,7 @@ BEGIN
     IDS_DOWNLOADING "Stahování..."
     IDS_INSTALLING "Instalace..."
     IDS_INVALID_SHA "Stažený soubor má neplatný kontrolní součet. Instalace poškozeného souboru bude přerušena."
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

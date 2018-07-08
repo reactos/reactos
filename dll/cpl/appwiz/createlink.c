@@ -5,13 +5,13 @@
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  *                  Dmitry Chapyshev (lentind@yandex.ru)
  *                  Johannes Anderwald
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  * UPDATE HISTORY:
  *      06-17-2004  Created
  */
 
 #include "appwiz.h"
-
-#include <tchar.h>
+#include <strsafe.h>
 
 BOOL
 IsShortcut(HKEY hKey)
@@ -79,70 +79,102 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     LPWSTR lpExtension;
 
     /* get the extension */
-    lpExtension = wcsrchr(pContext->szTarget, '.');
+    lpExtension = PathFindExtensionW(pContext->szTarget);
 
     if (IsExtensionAShortcut(lpExtension))
     {
         hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLinkW, (void**)&pSourceShellLink);
 
-        if (hr != S_OK)
+        if (FAILED(hr))
             return FALSE;
 
-        hr = pSourceShellLink->lpVtbl->QueryInterface(pSourceShellLink, &IID_IPersistFile, (void**)&pPersistFile);
-        if (hr != S_OK)
+        hr = IUnknown_QueryInterface(pSourceShellLink, &IID_IPersistFile, (void**)&pPersistFile);
+        if (FAILED(hr))
         {
-            pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+            IUnknown_Release(pSourceShellLink);
             return FALSE;
         }
 
         hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
-        pPersistFile->lpVtbl->Release(pPersistFile);
+        IUnknown_Release(pPersistFile);
 
-        if (hr != S_OK)
+        if (FAILED(hr))
         {
-            pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+            IUnknown_Release(pSourceShellLink);
             return FALSE;
         }
 
-        hr = pSourceShellLink->lpVtbl->GetPath(pSourceShellLink, Path, sizeof(Path) / sizeof(WCHAR), NULL, 0);
-        pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+        hr = IShellLinkW_GetPath(pSourceShellLink, Path, _countof(Path), NULL, 0);
+        IUnknown_Release(pSourceShellLink);
 
-        if (hr != S_OK)
+        if (FAILED(hr))
         {
             return FALSE;
         }
     }
     else
     {
-        wcscpy(Path, pContext->szTarget);
+        StringCchCopyW(Path, _countof(Path), pContext->szTarget);
     }
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
-                   &IID_IShellLinkW, (void**)&pShellLink);
+                          &IID_IShellLinkW, (void**)&pShellLink);
 
     if (hr != S_OK)
         return FALSE;
-
 
     pShellLink->lpVtbl->SetPath(pShellLink, Path);
     pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
     pShellLink->lpVtbl->SetWorkingDirectory(pShellLink, pContext->szWorkingDirectory);
 
-    hr = pShellLink->lpVtbl->QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
+    hr = IUnknown_QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
     if (hr != S_OK)
     {
-        pShellLink->lpVtbl->Release(pShellLink);
+        IUnknown_Release(pShellLink);
         return FALSE;
     }
 
     hr = pPersistFile->lpVtbl->Save(pPersistFile, pContext->szLinkName, TRUE);
-    pPersistFile->lpVtbl->Release(pPersistFile);
-    pShellLink->lpVtbl->Release(pShellLink);
+    IUnknown_Release(pPersistFile);
+    IUnknown_Release(pShellLink);
     return (hr == S_OK);
 }
 
+BOOL
+CreateInternetShortcut(PCREATE_LINK_CONTEXT pContext)
+{
+    IUniformResourceLocatorW *pURL = NULL;
+    IPersistFile *pPersistFile = NULL;
+    HRESULT hr;
+    WCHAR szPath[MAX_PATH];
+    GetFullPathNameW(pContext->szLinkName, _countof(szPath), szPath, NULL);
 
+    hr = CoCreateInstance(&CLSID_InternetShortcut, NULL, CLSCTX_ALL,
+                          &IID_IUniformResourceLocatorW, (void **)&pURL);
+    if (FAILED(hr))
+        return FALSE;
 
+    hr = IUnknown_QueryInterface(pURL, &IID_IPersistFile, (void **)&pPersistFile);
+    if (FAILED(hr))
+    {
+        IUnknown_Release(pURL);
+        return FALSE;
+    }
+
+    pURL->lpVtbl->SetURL(pURL, pContext->szTarget, 0);
+
+    hr = pPersistFile->lpVtbl->Save(pPersistFile, szPath, TRUE);
+
+    IUnknown_Release(pPersistFile);
+    IUnknown_Release(pURL);
+
+    return SUCCEEDED(hr);
+}
+
+BOOL IsInternetLocation(LPCWSTR pszLocation)
+{
+    return (PathIsURLW(pszLocation) || wcsstr(pszLocation, L"www.") == pszLocation);
+}
 
 INT_PTR
 CALLBACK
@@ -158,7 +190,6 @@ WelcomeDlgProc(HWND hwndDlg,
     WCHAR szDesc[100];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
-    IMalloc* malloc;
 
     switch(uMsg)
     {
@@ -196,15 +227,10 @@ WelcomeDlgProc(HWND hwndDlg,
                         break;
 
                     if (SHGetPathFromIDListW(pidllist, szPath))
-                        SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETTEXT, 0, (LPARAM)szPath);
+                        SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, szPath);
 
                     /* Free memory, if possible */
-                    if (SUCCEEDED(SHGetMalloc(&malloc)))
-                    {
-                        IMalloc_Free(malloc, pidllist);
-                        IMalloc_Release(malloc);
-                    }
-
+                    CoTaskMemFree(pidllist);
                     break;
             }
             break;
@@ -212,47 +238,45 @@ WelcomeDlgProc(HWND hwndDlg,
             lppsn  = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_WIZNEXT)
             {
+                LPWSTR pch;
                 pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
-                SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXT, MAX_PATH, (LPARAM)pContext->szTarget);
-                ///
-                /// FIXME
-                /// it should also be possible to create a link to folders, shellobjects etc....
-                ///
-                if (GetFileAttributesW(pContext->szTarget) == INVALID_FILE_ATTRIBUTES)
+                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_LOCATION, pContext->szTarget, _countof(pContext->szTarget));
+                StrTrimW(pContext->szTarget, L" \t");
+
+                if (IsInternetLocation(pContext->szTarget))
                 {
-                    szDesc[0] = L'\0';
-                    szPath[0] = L'\0';
-                    if (LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, 100) < 100 &&
-                        LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, MAX_PATH) < MAX_PATH)
-                    {
-                        WCHAR szError[MAX_PATH + 100];
-                        swprintf(szError, szPath, pContext->szTarget);
-                        MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
-                    }
+                    /* internet */
+                    WCHAR szName[128];
+                    LoadStringW(hApplet, IDS_NEW_INTERNET_SHORTCUT, szName, _countof(szName));
+                    StringCchCopyW(pContext->szDescription, _countof(pContext->szDescription), szName);
+
+                    pContext->szWorkingDirectory[0] = 0;
+                }
+                else if (GetFileAttributesW(pContext->szTarget) != INVALID_FILE_ATTRIBUTES)
+                {
+                    /* file */
                     SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, EM_SETSEL, 0, -1);
                     SetFocus(GetDlgItem(hwndDlg, IDC_SHORTCUT_LOCATION));
                     SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE);
-                    return -1;
+
+                    /* set working directory */
+                    StringCchCopyW(pContext->szWorkingDirectory, _countof(pContext->szWorkingDirectory),
+                                   pContext->szTarget);
+                    PathRemoveBackslashW(pContext->szWorkingDirectory);
+                    pch = PathFindFileNameW(pContext->szWorkingDirectory);
+                    if (pch && *pch)
+                        *pch = 0;
+                    PathRemoveBackslashW(pContext->szWorkingDirectory);
                 }
                 else
                 {
-                    WCHAR * first, *last;
-                    wcscpy(pContext->szWorkingDirectory, pContext->szTarget);
-                    first = wcschr(pContext->szWorkingDirectory, L'\\');
-                    last = wcsrchr(pContext->szWorkingDirectory, L'\\');
-                    wcscpy(pContext->szDescription, &last[1]);
-
-                    if (first != last)
-                        last[0] = L'\0';
-                    else
-                        first[1] = L'\0';
-
-                    first = wcsrchr(pContext->szDescription, L'.');
-
-                    if(first)
-                        first[0] = L'\0';
+                    /* not found */
+                    WCHAR szError[MAX_PATH + 100];
+                    LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, _countof(szDesc));
+                    LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, _countof(szPath));
+                    StringCchPrintfW(szError, _countof(szError), szPath, pContext->szTarget);
+                    MessageBoxW(hwndDlg, szError, szDesc, MB_ICONERROR);
                 }
-
             }
             break;
     }
@@ -276,7 +300,7 @@ FinishDlgProc(HWND hwndDlg,
             ppsp = (LPPROPSHEETPAGEW)lParam;
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
-            SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, WM_SETTEXT, 0, (LPARAM)pContext->szDescription);
+            SetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription);
             PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
             break;
         case WM_COMMAND:
@@ -299,16 +323,60 @@ FinishDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) GetWindowLongPtr(hwndDlg, DWLP_USER);
             if (lppsn->hdr.code == PSN_WIZFINISH)
             {
-                SendDlgItemMessageW(hwndDlg, IDC_SHORTCUT_NAME, WM_GETTEXT, MAX_PATH, (LPARAM)pContext->szDescription);
-                wcscat(pContext->szLinkName, pContext->szDescription);
-                wcscat(pContext->szLinkName, L".lnk");
-                if (!CreateShortcut(pContext))
+                LPWSTR pch;
+                DWORD attrs;
+                GetDlgItemTextW(hwndDlg, IDC_SHORTCUT_NAME, pContext->szDescription, MAX_PATH);
+                StrTrimW(pContext->szDescription, L" \t");
+
+                /* if old shortcut file exists, then delete it now */
+                attrs = GetFileAttributesW(pContext->szOldFile);
+                if (attrs != INVALID_FILE_ATTRIBUTES && !(attrs & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    MessageBox(hwndDlg, _T("Failed to create shortcut"), _T("Error"), MB_ICONERROR);
+                    DeleteFileW(pContext->szOldFile);
+                }
+
+                if (IsInternetLocation(pContext->szTarget))
+                {
+                    /* internet */
+                    StringCchCopyW(pContext->szLinkName, _countof(pContext->szLinkName),
+                                   pContext->szOrigin);
+                    PathAppendW(pContext->szLinkName, pContext->szDescription);
+
+                    /* change extension if any */
+                    pch = PathFindExtensionW(pContext->szLinkName);
+                    if (pch && *pch)
+                        *pch = 0;
+                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".url");
+
+                    if (!CreateInternetShortcut(pContext))
+                    {
+                        WCHAR szMessage[128];
+                        LoadStringW(hApplet, IDS_CANTMAKEINETSHORTCUT, szMessage, _countof(szMessage));
+                        MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
+                    }
+                }
+                else
+                {
+                    /* file */
+                    StringCchCopyW(pContext->szLinkName, _countof(pContext->szLinkName),
+                                   pContext->szOrigin);
+                    PathAppendW(pContext->szLinkName, pContext->szDescription);
+
+                    /* change extension if any */
+                    pch = PathFindExtensionW(pContext->szLinkName);
+                    if (pch && *pch)
+                        *pch = 0;
+                    StringCchCatW(pContext->szLinkName, _countof(pContext->szLinkName), L".lnk");
+
+                    if (!CreateShortcut(pContext))
+                    {
+                        WCHAR szMessage[128];
+                        LoadStringW(hApplet, IDS_CANTMAKESHORTCUT, szMessage, _countof(szMessage));
+                        MessageBoxW(hwndDlg, szMessage, NULL, MB_ICONERROR);
+                    }
                 }
             }
-
-
+            break;
     }
     return FALSE;
 }
@@ -329,6 +397,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
        /* no memory */
        return FALSE;
     }
+
     nLength = wcslen(szPath);
     if (!nLength)
     {
@@ -347,13 +416,18 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         return FALSE;
     }
 
-    wcscpy(pContext->szLinkName, szPath);
-    if (pContext->szLinkName[nLength-1] != L'\\')
+    /* build the pContext->szOrigin and pContext->szOldFile */
+    StringCchCopyW(pContext->szOrigin, _countof(pContext->szOrigin), szPath);
+    pContext->szOldFile[0] = 0;
+    if (!(attrs & FILE_ATTRIBUTE_DIRECTORY))
     {
-        pContext->szLinkName[nLength] = L'\\';
-        pContext->szLinkName[nLength+1] = L'\0';
+        LPWSTR pch;
+        StringCchCopyW(pContext->szOldFile, _countof(pContext->szOldFile), szPath);
+        pch = PathFindFileNameW(pContext->szOrigin);
+        if (pch && *pch)
+            *pch = 0;
     }
-
+    PathAddBackslashW(pContext->szOrigin);
 
     /* Create the Welcome page */
     psp.dwSize = sizeof(PROPSHEETPAGE);
