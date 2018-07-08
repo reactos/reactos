@@ -8,6 +8,7 @@
 
 #include "precomp.h"
 #include "winsvc.h"
+#include "../../../base/shell/explorer/traycmd.h"   // tray commands
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -445,12 +446,12 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
     if (IsThereAnyEffectiveWindowOnDesktop())
     {
         // minimize all
-        SendMessageW(hTrayWnd, WM_COMMAND, MINIMIZE_ALL, 0);
+        SendMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_MINIMIZE_ALL, 0);
     }
     else
     {
         // restore all
-        SendMessageW(hTrayWnd, WM_COMMAND, RESTORE_ALL, 0);
+        SendMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_RESTORE_ALL, 0);
     }
 
     return S_OK;

@@ -21,6 +21,7 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
+#include "traycmd.h"
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
@@ -230,10 +231,6 @@ class CTrayWindow :
 
     HDPA m_ShellServices;
 
-    enum {
-        MINIMIZE_ALL = 419,
-        RESTORE_ALL = 416
-    };
     CSimpleArray<HWND>  m_MinimizedAll;
 
 public:
@@ -618,35 +615,77 @@ public:
     {
         switch (uCommand)
         {
-        case IDM_TASKBARANDSTARTMENU:
-            DisplayProperties();
-            break;
+            case TRAYCMD_STARTMENU:
+                // TODO:
+                break;
+            case TRAYCMD_RUN_DIALOG:
+                DisplayRunFileDlg();
+                break;
+            case TRAYCMD_LOGOFF_DIALOG:
+                LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
+                break;
+            case TRAYCMD_CASCADE:
+                CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
+                break;
+            case TRAYCMD_TILE_H:
+                TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
+                break;
+            case TRAYCMD_TILE_V:
+                TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
+                break;
+            case TRAYCMD_DATE_AND_TIME:
+                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+                break;
+            case TRAYCMD_TASKBAR_PROPERTIES:
+                DisplayProperties();
+                break;
+            case TRAYCMD_MINIMIZE_ALL_:
+                MinimizeAll();
+                break;
+            case TRAYCMD_RESTORE_ALL:
+                RestoreAll();
+                break;
+            case TRAYCMD_MINIMIZE_ALL:
+                MinimizeAll();
+                break;
+            case TRAYCMD_SHOW_TASK_MGR:
+                OpenTaskManager(m_hWnd);
+                break;
+            case TRAYCMD_CUSTOMIZE_TASKBAR:
+                break;
+            case TRAYCMD_LOCK_TASKBAR:
+                if (SHRestricted(REST_CLASSICSHELL) == 0)
+                {
+                    Lock(!g_TaskbarSettings.bLock);
+                }
+                break;
+            case TRAYCMD_HELP_AND_SUPPORT:
+                ExecResourceCmd(IDS_HELP_COMMAND);
+                break;
+            case TRAYCMD_CONTROL_PANEL:
+                // TODO:
+                break;
+            case TRAYCMD_SHUTDOWN_DIALOG:
+                DoExitWindows();
+                break;
+            case TRAYCMD_PRINTERS_AND_FAXES:
+                // TODO:
+                break;
+            case TRAYCMD_LOCK_DESKTOP:
+                // TODO:
+                break;
+            case TRAYCMD_SWITCH_USER_DIALOG:
+                // TODO:
+                break;
+            case TRAYCMD_SEARCH_FILES:
+                SHFindFiles(NULL, NULL);
+                break;
+            case TRAYCMD_SEARCH_COMPUTERS:
+                SHFindComputer(NULL, NULL);
+                break;
 
-        case IDM_SEARCH:
-            SHFindFiles(NULL, NULL);
-            break;
-
-        case IDM_HELPANDSUPPORT:
-            ExecResourceCmd(IDS_HELP_COMMAND);
-            break;
-
-        case IDM_RUN:
-            DisplayRunFileDlg();
-            break;
-
-        /* FIXME: Handle these commands as well */
-        case IDM_SYNCHRONIZE:
-        case IDM_DISCONNECT:
-        case IDM_UNDOCKCOMPUTER:
-            break;
-
-        case IDM_LOGOFF:
-            LogoffWindowsDialog(m_hWnd); // FIXME: Maybe handle it in a similar way as DoExitWindows?
-            break;
-
-        case IDM_SHUTDOWN:
-            DoExitWindows();
-            break;
+            default:
+                break;
         }
 
         return FALSE;
@@ -2729,17 +2768,6 @@ HandleTrayContextMenu:
         if ((HWND) lParam == m_StartButton.m_hWnd)
         {
             return FALSE;
-        }
-
-        switch (LOWORD(wParam))
-        {
-            case MINIMIZE_ALL:
-                MinimizeAll();
-                break;
-
-            case RESTORE_ALL:
-                RestoreAll();
-                break;
         }
 
         if (m_TrayBandSite == NULL || FAILED_UNEXPECTEDLY(m_TrayBandSite->ProcessMessage(m_hWnd, uMsg, wParam, lParam, &Ret)))
