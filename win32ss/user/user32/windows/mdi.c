@@ -1986,6 +1986,7 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
 typedef struct CASCADE_INFO
 {
     HWND hwndSelf;
+    HWND hwndParent;
     HWND hwndDesktop;
     HWND hTrayWnd;
     HWND hwndProgman;
@@ -2004,6 +2005,9 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     {
         return TRUE;
     }
+
+    if (pInfo->hwndParent && GetParent(hwnd) != pInfo->hwndParent)
+        return TRUE;
 
     if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
         return TRUE;
@@ -2052,6 +2056,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     info.hwndDesktop = GetDesktopWindow();
     info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
     info.hwndProgman = FindWindowW(L"Progman", NULL);
+    info.hwndParent = hwndParent;
 
     if (cKids == 0 || lpKids == NULL)
     {
