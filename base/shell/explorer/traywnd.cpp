@@ -2138,6 +2138,20 @@ ChangePos:
         return TRUE;
     }
 
+    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        if (wParam == SPI_SETNONCLIENTMETRICS)
+        {
+            SendMessage(m_TrayNotify, uMsg, wParam, lParam);
+            SendMessage(m_TaskSwitch, uMsg, wParam, lParam);
+            UpdateFonts();
+            AlignControls(NULL);
+            CheckTrayWndPosition();
+        }
+
+        return 0;
+    }
+
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HDC hdc = (HDC) wParam;
@@ -2747,12 +2761,6 @@ HandleTrayContextMenu:
 #else
         bHandled = FALSE;
 #endif
-        return 0;
-    }
-
-    LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        bHandled = TRUE;
         return 0;
     }
 
