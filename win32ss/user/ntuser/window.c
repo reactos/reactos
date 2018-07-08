@@ -861,19 +861,28 @@ IntLinkWindow(
     PWND WndInsertAfter /* Set to NULL if top sibling */
 )
 {
+    if (Wnd == WndInsertAfter)
+    {
+        ERR("IntLinkWindow -- Trying to link window 0x%p to itself!!\n", Wnd);
+        return;
+    }
+
     Wnd->spwndPrev = WndInsertAfter;
     if (Wnd->spwndPrev)
     {
         /* Link after WndInsertAfter */
+        ASSERT(Wnd != WndInsertAfter->spwndNext);
         Wnd->spwndNext = WndInsertAfter->spwndNext;
         if (Wnd->spwndNext)
             Wnd->spwndNext->spwndPrev = Wnd;
 
+        ASSERT(Wnd != Wnd->spwndPrev);
         Wnd->spwndPrev->spwndNext = Wnd;
     }
     else
     {
         /* Link at the top */
+        ASSERT(Wnd != Wnd->spwndParent->spwndChild);
         Wnd->spwndNext = Wnd->spwndParent->spwndChild;
         if (Wnd->spwndNext)
             Wnd->spwndNext->spwndPrev = Wnd;
@@ -956,6 +965,8 @@ VOID FASTCALL IntLinkHwnd(PWND Wnd, HWND hWndPrev)
             return;
         }
 
+        if (Wnd == WndInsertAfter)
+            ERR("IntLinkHwnd -- Trying to link window 0x%p to itself!!\n", Wnd);
         IntLinkWindow(Wnd, WndInsertAfter);
 
         /* Fix the WS_EX_TOPMOST flag */
@@ -1254,6 +1265,9 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 VOID FASTCALL
 IntUnlinkWindow(PWND Wnd)
 {
+    ASSERT(Wnd != Wnd->spwndNext);
+    ASSERT(Wnd != Wnd->spwndPrev);
+
     if (Wnd->spwndNext)
         Wnd->spwndNext->spwndPrev = Wnd->spwndPrev;
 
