@@ -1986,7 +1986,8 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
 
 typedef struct CASCADE_INFO
 {
-    HWND hwndSelf;
+    HWND hwndTop;
+    UINT wFlags;
     HWND hwndParent;
     HWND hwndDesktop;
     HWND hTrayWnd;
@@ -2003,7 +2004,7 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     CASCADE_INFO *pInfo = (CASCADE_INFO *)lParam;
 
     if (hwnd == pInfo->hwndDesktop || hwnd == pInfo->hTrayWnd ||
-        hwnd == pInfo->hwndProgman || hwnd == pInfo->hwndSelf)
+        hwnd == pInfo->hwndProgman || hwnd == pInfo->hwndTop)
     {
         return TRUE;
     }
@@ -2011,7 +2012,10 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     if (pInfo->hwndParent && GetParent(hwnd) != pInfo->hwndParent)
         return TRUE;
 
-    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
+    if ((pInfo->wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
+        return TRUE;
+
+    if (!IsWindowVisible(hwnd) ||  || IsIconic(hwnd))
         return TRUE;
 
     count = pInfo->chwnd;
@@ -2020,11 +2024,11 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     if (count == 0 || pInfo->ahwnd == NULL)
     {
         count = 0;
-        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
     }
     else
     {
-        ahwnd = (HWND *)HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfo->ahwnd, size);
+        ahwnd = (HWND *)HeapReAlloc(GetProcessHeap(), 0, pInfo->ahwnd, size);
         if (ahwnd == NULL)
         {
             HeapFree(GetProcessHeap(), 0, pInfo->ahwnd);
@@ -2032,9 +2036,8 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
         pInfo->ahwnd = ahwnd;
     }
 
-    if (pInfo->ahwnd == NULL || pInfo->chwnd == 0)
+    if (pInfo->ahwnd == NULL)
     {
-        pInfo->ahwnd = NULL;
         pInfo->chwnd = 0;
         return FALSE;
     }
@@ -2049,7 +2052,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
                UINT cKids, const HWND *lpKids)
 {
     CASCADE_INFO info;
-    HWND hwnd, hwndSelf;
+    HWND hwnd, hwndTop;
     HMONITOR hMon;
     MONITORINFO mi;
     RECT rcWork, rcWnd;
@@ -2059,21 +2062,22 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
 
     TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
 
-    hwndSelf = GetTopWindow(hwndParent);
+    hwndTop = GetTopWindow(hwndParent);
 
     ZeroMemory(&info, sizeof(info));
     info.hwndDesktop = GetDesktopWindow();
     info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
     info.hwndProgman = FindWindowW(L"Progman", NULL);
     info.hwndParent = hwndParent;
+    info.wFlags = wFlags;
 
     if (cKids == 0 || lpKids == NULL)
     {
-        info.hwndSelf = hwndSelf;
+        info.hwndTop = hwndTop;
         EnumChildWindows(hwndParent, GetCascadeChildProc, (LPARAM)&info);
 
-        info.hwndSelf = NULL;
-        GetCascadeChildProc(hwndSelf, (LPARAM)&info);
+        info.hwndTop = NULL;
+        GetCascadeChildProc(hwndTop, (LPARAM)&info);
     }
     else
     {
@@ -2125,7 +2129,10 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         if (y + cy > rcWork.bottom)
             y = rcWork.top;
 
-        if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
+        if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
+            continue;
+
+        if ((info.wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
             continue;
 
         hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
@@ -2141,6 +2148,8 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     }
 
     EndDeferWindowPos(hDWP);
+
+    BringWindowToTop(hwndTop);
 
 cleanup:
     if (cKids == 0 || lpKids == NULL)
