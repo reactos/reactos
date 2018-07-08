@@ -78,4 +78,7 @@ BEGIN
     IDS_DOWNLOADING "Téléchargement..."
     IDS_INSTALLING "Installation..."
     IDS_INVALID_SHA "La somme de contrôle du fichier téléchargé est erronée. Abandon de l'installation du fichier corrompu."
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

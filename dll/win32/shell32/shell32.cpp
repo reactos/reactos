@@ -63,6 +63,48 @@ AddCommasW(DWORD lValue, LPWSTR lpNumber)
     return lpNumber;
 }
 
+/*
+ * Implemented
+ */
+EXTERN_C BOOL
+WINAPI
+RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
+{
+    HANDLE hUserToken;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_READ | TOKEN_WRITE, &hUserToken))
+        return FALSE;
+
+    BOOL bResult = CreateEnvironmentBlock(lpEnvironment, hUserToken, TRUE);
+    if (!bResult || !lpEnvironment)
+    {
+        CloseHandle(hUserToken);
+        return FALSE;
+    }
+
+    if (bUpdateSelf)
+    {
+        LPWSTR pszz = (LPWSTR)*lpEnvironment;
+        if (!pszz)
+            return FALSE;
+
+        while (*pszz)
+        {
+            size_t cch = wcslen(pszz);
+            LPWSTR pchEqual = wcschr(pszz, L'=');
+            if (pchEqual)
+            {
+                CStringW strName(pszz, pchEqual - pszz);
+                SetEnvironmentVariableW(strName, pchEqual + 1);
+            }
+            pszz += cch + 1;
+        }
+    }
+
+    CloseHandle(hUserToken);
+
+    return bResult;
+}
+
 /**************************************************************************
  * Default ClassFactory types
  */

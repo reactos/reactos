@@ -1395,9 +1395,9 @@ GetStartupInfoA(IN LPSTARTUPINFOA lpStartupInfo)
         if (StartupInfo)
         {
             /* Zero out string pointers in case we fail to create them */
-            StartupInfo->lpReserved = 0;
-            StartupInfo->lpDesktop = 0;
-            StartupInfo->lpTitle = 0;
+            StartupInfo->lpReserved = NULL;
+            StartupInfo->lpDesktop = NULL;
+            StartupInfo->lpTitle = NULL;
 
             /* Set the size */
             StartupInfo->cb = sizeof(*StartupInfo);
@@ -2425,7 +2425,7 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     DebuggerCmdLine = NULL;
     PathBuffer = NULL;
     SearchPath = NULL;
-    NullBuffer = 0;
+    NullBuffer = NULL;
     FreeBuffer = NULL;
     NameBuffer = NULL;
     CurrentDirectory = NULL;

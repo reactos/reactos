@@ -86,4 +86,7 @@ BEGIN
     IDS_DOWNLOADING "Downloading..."
     IDS_INSTALLING "Installing..."
     IDS_INVALID_SHA "Unexpected checksum of downloaded file. Aborting installation of corrupted file."
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

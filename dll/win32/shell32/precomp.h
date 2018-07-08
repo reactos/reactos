@@ -17,6 +17,7 @@
 #include <wincon.h>
 #include <commdlg.h>
 #include <ddeml.h>
+#include <userenv.h>
 
 #include <shlwapi.h>
 #include <shlobj.h>
@@ -118,5 +119,8 @@ AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
 
     return FALSE;
 }
+
+HRESULT WINAPI
+Shell_DefaultContextMenuCallBack(IShellFolder *psf, IDataObject *pdtobj);
 
 #endif /* _PRECOMP_H__ */

@@ -84,4 +84,7 @@ BEGIN
     IDS_DOWNLOADING "În curs de descărcare…"
     IDS_INSTALLING "În curs de instalare…"
     IDS_INVALID_SHA "Suma de control a fișierului descărcat nu corespunde. Deoarece fișierul a fost corupt, instalarea trebuie abandonată."
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

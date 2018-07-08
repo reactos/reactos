@@ -838,14 +838,26 @@ public:
         IN BOOL TrackUp,
         IN PVOID Context OPTIONAL)
     {
-        INT x = ppt->x;
-        INT y = ppt->y;
+        POINT pt;
+        TPMPARAMS params;
+        RECT rc;
         HRESULT hr;
         UINT uCommand;
         HMENU popup = CreatePopupMenu();
 
         if (popup == NULL)
             return E_FAIL;
+
+        if (ppt)
+        {
+            pt = *ppt;
+        }
+        else
+        {
+            ::GetWindowRect(m_hWnd, &rc);
+            pt.x = rc.left;
+            pt.y = rc.top;
+        }
 
         TRACE("Before Query\n");
         hr = contextMenu->QueryContextMenu(popup, 0, 0, UINT_MAX, CMF_NORMAL);
@@ -857,7 +869,20 @@ public:
         }
 
         TRACE("Before Tracking\n");
-        uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, x, y, m_hWnd, NULL);
+        ::SetForegroundWindow(m_hWnd);
+        if (hwndExclude)
+        {
+            ::GetWindowRect(hwndExclude, &rc);
+            ZeroMemory(&params, sizeof(params));
+            params.cbSize = sizeof(params);
+            params.rcExclude = rc;
+            uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, pt.x, pt.y, m_hWnd, &params);
+        }
+        else
+        {
+            uCommand = ::TrackPopupMenuEx(popup, TPM_RETURNCMD, pt.x, pt.y, m_hWnd, NULL);
+        }
+        ::PostMessage(m_hWnd, WM_NULL, 0, 0);
 
         if (uCommand != 0)
         {
@@ -3035,12 +3060,12 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_NCMOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_APP_TRAYDESTROY, OnAppTrayDestroy)
-        MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
-        MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
+        MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
+        MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
     ALT_MSG_MAP(1)
     END_MSG_MAP()
 

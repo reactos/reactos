@@ -55,7 +55,7 @@ BOOL CALLBACK EnumSymbolsProc(
 	ULONG SymbolSize,
 	PVOID UserContext)
 {
-	if ((UINT)UserContext == -1)
+	if ((INT_PTR)UserContext == -1)
 	{
 		printf("%s ", pSymInfo->Name);
 	}
@@ -63,11 +63,11 @@ BOOL CALLBACK EnumSymbolsProc(
 	{
 		if (!bX64)
 		{
-			printf("%s@%d ", pSymInfo->Name, (UINT)UserContext);
+			printf("%s@%Iu ", pSymInfo->Name, (UINT_PTR)UserContext);
 		}
 		else
 		{
-			printf("%s <+ %d> ", pSymInfo->Name, (UINT)UserContext);
+			printf("%s <+ %Iu> ", pSymInfo->Name, (UINT_PTR)UserContext);
 		}
 	}
 	return TRUE;
@@ -173,7 +173,7 @@ cont:
 		for (i = 0; i < dwServiceLimit; i++)
 		{
 			printf("0x%x:", i+0x1000);
-			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries32[i], EnumSymbolsProc, (PVOID)(DWORD)pW32pArgumentTable[i]);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries32[i], EnumSymbolsProc, (PVOID)(DWORD_PTR)pW32pArgumentTable[i]);
 			printf("\n");
 		}
 	}
@@ -184,7 +184,7 @@ cont:
 		for (i = 0; i < dwServiceLimit; i++)
 		{
 			printf("0x%x:", i+0x1000);
-			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries64[i], EnumSymbolsProc, (PVOID)(DWORD)pW32pArgumentTable[i]);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries64[i], EnumSymbolsProc, (PVOID)(DWORD_PTR)pW32pArgumentTable[i]);
 			printf("\n");
 		}
 	}

@@ -1,0 +1,33 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Narzędzie Timeout systemu ReactOS\n\
+\n\
+TIMEOUT [/?] [/T] limit_czasu [/NOBREAK]\n\
+\n\
+Opis:\n\
+    To narzędzie oczekuje przez określony czas (w sekundach) lub do\n\
+    momentu naciśnięcia dowolnego klawisza. Akceptuje również parametr,\n\
+    który powoduje ignorowanie naciśnięć klawiszy.\n\
+\n\
+Lista parametrów:\n\
+    /?        Wyświetla ten komunikat pomocy.\n\
+\n\
+    /T limit_czasu  Określa czas oczekiwania w sekundach (w zakresie od -1 do 99999).\n\
+              Wartość -1 oznacza, że program będzie oczekiwać do momentu naciśnięcia klawisza.\n\
+              Parametr ""/T"" jest opcjonalny, możliwe jest określenie\n\
+              czasu oczekiwania bez niego.\n\
+\n\
+    /NOBREAK  Ignoruje naciśnięcia klawiszy oprócz kombinacji CTRL+C.\n\
+"
+    IDS_ERROR_OUT_OF_RANGE "BŁĄD: Prawidłowy zakres limitu czasu to zakres od -1 do 99999.\n"
+    IDS_ERROR_INVALID_HANDLE_VALUE "BŁĄD: Nie można otrzymać standardowego uchwytu konsoli (błąd %lu).\n"
+    IDS_ERROR_READ_INPUT "BŁĄD: Nie można odczytać wejścia z konsoli (błąd %lu).\n"
+    IDS_ERROR_NO_TIMER_VALUE "BŁĄD: Czas oczekiwania musi być określony (od -1 do 99999).\n"
+    IDS_ERROR_ONE_TIME "BŁĄD: Tylko czas oczekiwania jest wymagany.\n"
+    IDS_NOBREAK_INPUT "Wciśnij klawisze CTRL+C, aby zakończyć..."
+    IDS_USER_INPUT "Naciśnij dowolny klawisz, aby kontynuować..."
+    IDS_NOBREAK_INPUT_COUNT "Oczekiwanie przez %d s, wciśnij klawisze CTRL+C, aby zakończyć..."
+    IDS_USER_INPUT_COUNT "Oczekiwanie przez %d s, naciśnij dowolny klawisz, aby kontynuować..."
+END

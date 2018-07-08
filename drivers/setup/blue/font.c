@@ -24,38 +24,51 @@ VOID LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield);
 /* FUNCTIONS ****************************************************************/
 
 VOID
-ScrLoadFontTable(UINT32 CodePage)
+ScrLoadFontTable(
+    UINT32 CodePage)
 {
     PHYSICAL_ADDRESS BaseAddress;
     PUCHAR Bitplane;
     PUCHAR FontBitfield = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    FontBitfield = (PUCHAR) ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_BLUE);
-    if(FontBitfield)
+    FontBitfield = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, 2048, TAG_BLUE);
+    if (FontBitfield == NULL)
     {
-        /* open bit plane for font table access */
-        OpenBitPlane();
-
-        /* get pointer to video memory */
-        BaseAddress.QuadPart = BITPLANE_BASE;
-        Bitplane = (PUCHAR)MmMapIoSpace (BaseAddress, 0xFFFF, MmNonCached);
-
-        Status = ExtractFont(CodePage, FontBitfield);
-        if (NT_SUCCESS(Status))
-            LoadFont(Bitplane, FontBitfield);
-
-        MmUnmapIoSpace(Bitplane, 0xFFFF);
-        ExFreePool(FontBitfield);
-
-        /* close bit plane */
-        CloseBitPlane();
+        DPRINT1("ExAllocatePoolWithTag failed\n");
+        return;
     }
+
+    /* open bit plane for font table access */
+    OpenBitPlane();
+
+    /* get pointer to video memory */
+    BaseAddress.QuadPart = BITPLANE_BASE;
+    Bitplane = (PUCHAR)MmMapIoSpace(BaseAddress, 0xFFFF, MmNonCached);
+
+    Status = ExtractFont(CodePage, FontBitfield);
+    if (NT_SUCCESS(Status))
+    {
+        LoadFont(Bitplane, FontBitfield);
+    }
+    else
+    {
+        DPRINT1("ExtractFont failed with Status 0x%lx\n", Status);
+    }
+
+    MmUnmapIoSpace(Bitplane, 0xFFFF);
+    ExFreePool(FontBitfield);
+
+    /* close bit plane */
+    CloseBitPlane();
 }
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
+NTSTATUS
+ExtractFont(
+    UINT32 CodePage,
+    PUCHAR FontBitField)
 {
     BOOLEAN            bFoundFile = FALSE;
     HANDLE             Handle;
@@ -69,10 +82,10 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
     CFFILE             CabFile;
     ULONG              CabFileOffset = 0;
     LARGE_INTEGER      ByteOffset;
-    WCHAR              SourceBuffer[MAX_PATH] = {L'\0'};
+    WCHAR              SourceBuffer[MAX_PATH] = { L'\0' };
     ULONG              ReadCP;
 
-    if(KeGetCurrentIrql() != PASSIVE_LEVEL)
+    if (KeGetCurrentIrql() != PASSIVE_LEVEL)
         return STATUS_INVALID_DEVICE_STATE;
 
     RtlInitUnicodeString(&LinkName,
@@ -89,108 +102,156 @@ NTSTATUS ExtractFont(UINT32 CodePage, PUCHAR FontBitField)
                                       &ObjectAttributes);
 
     if (!NT_SUCCESS(Status))
-        return(Status);
+    {
+        DPRINT1("ZwOpenSymbolicLinkObject failed with Status 0x%lx\n", Status);
+        return Status;
+    }
 
     SourceName.Length = 0;
     SourceName.MaximumLength = MAX_PATH * sizeof(WCHAR);
     SourceName.Buffer = SourceBuffer;
 
     Status = ZwQuerySymbolicLinkObject(Handle,
-                                      &SourceName,
-                                      NULL);
+                                       &SourceName,
+                                       NULL);
     ZwClose(Handle);
 
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwQuerySymbolicLinkObject failed with Status 0x%lx\n", Status);
+        return Status;
+    }
+
     Status = RtlAppendUnicodeToString(&SourceName, L"\\vgafonts.cab");
-    InitializeObjectAttributes(&ObjectAttributes, &SourceName,
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAppendUnicodeToString failed with Status 0x%lx\n", Status);
+        return Status;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SourceName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               NULL, NULL);
+                               NULL,
+                               NULL);
 
     Status = ZwCreateFile(&Handle,
                           GENERIC_READ,
-                          &ObjectAttributes, &IoStatusBlock, NULL,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
                           FILE_ATTRIBUTE_NORMAL,
                           0,
                           FILE_OPEN, 
                           FILE_SYNCHRONOUS_IO_NONALERT,
-                          NULL, 0);
-
-    ByteOffset.LowPart = ByteOffset.HighPart = 0;
-
-    if(NT_SUCCESS(Status))
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
     {
-        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                            &CabFileHeader, sizeof(CabFileHeader), &ByteOffset, NULL);
+        DPRINT1("Error: Cannot open vgafonts.cab (0x%lx)\n", Status);
+        return Status;
+    }
 
-        if(NT_SUCCESS(Status))
+    ByteOffset.QuadPart = 0;
+    Status = ZwReadFile(Handle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        &CabFileHeader,
+                        sizeof(CabFileHeader),
+                        &ByteOffset,
+                        NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Error: Cannot read from file (0x%lx)\n", Status);
+        goto Exit;
+    }
+
+    if (CabFileHeader.Signature != CAB_SIGNATURE)
+    {
+        DPRINT1("Invalid CAB signature: 0x%lx!\n", CabFileHeader.Signature);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Exit;
+    }
+
+    // We have a valid CAB file!
+    // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
+    ByteOffset.QuadPart = CabFileHeader.FileTableOffset;
+
+    while (CabFileHeader.FileCount)
+    {
+        Status = ZwReadFile(Handle,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &CabFile,
+                            sizeof(CabFile),
+                            &ByteOffset,
+                            NULL);
+
+        if (NT_SUCCESS(Status))
         {
-            if(CabFileHeader.Signature == CAB_SIGNATURE)
+            ByteOffset.QuadPart += sizeof(CabFile);
+
+            // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
+            // This should be enough for our purpose.
+            Status = ZwReadFile(Handle,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &IoStatusBlock,
+                                FileName,
+                                sizeof(FileName),
+                                &ByteOffset,
+                                NULL);
+
+            if (NT_SUCCESS(Status))
             {
-                // We have a valid CAB file!
-                // Read the file table now and decrement the file count on every file. When it's zero, we read the complete table.
-                ByteOffset.LowPart = CabFileHeader.FileTableOffset;
-
-                while(CabFileHeader.FileCount)
+                if (!bFoundFile)
                 {
-                    Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                        &CabFile, sizeof(CabFile), &ByteOffset, NULL);
-
-                    if(NT_SUCCESS(Status))
+                    Status = RtlCharToInteger(FileName, 0, &ReadCP);
+                    if (NT_SUCCESS(Status) && ReadCP == CodePage)
                     {
-                        ByteOffset.LowPart += sizeof(CabFile);
-
-                        // We assume here that the file name is max. 19 characters (+ 1 NULL character) long.
-                        // This should be enough for our purpose.
-                        Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                            FileName, sizeof(FileName), &ByteOffset, NULL);
-
-                        if(NT_SUCCESS(Status))
-                        {
-                            if(!bFoundFile)
-                            {
-                                Status = RtlCharToInteger(FileName, 0, &ReadCP);
-                                if (NT_SUCCESS(Status) && ReadCP == CodePage)
-                                {
-                                    // We got the correct file.
-                                    // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.
-                                    CabFileOffset = CabFile.FileOffset;
-                                    bFoundFile = TRUE;
-                                }
-                            }
-
-                            ByteOffset.LowPart += strlen(FileName) + 1;
-                        }
+                        // We got the correct file.
+                        // Save the offset and loop through the rest of the file table to find the position, where the actual data starts.
+                        CabFileOffset = CabFile.FileOffset;
+                        bFoundFile = TRUE;
                     }
-
-                    CabFileHeader.FileCount--;
                 }
 
-                // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
-                ByteOffset.LowPart += 8;
-                ByteOffset.LowPart += CabFileOffset;
-
-                // ByteOffset now contains the offset of the actual data, so we can read the RAW font
-                Status = ZwReadFile(Handle, NULL, NULL, NULL, &IoStatusBlock,
-                                    FontBitField, 2048, &ByteOffset, NULL);
-                ZwClose(Handle);
-                return STATUS_SUCCESS;
-            }
-            else
-            {
-                DPRINT1("Error: CAB signature is missing!\n");
-                Status = STATUS_UNSUCCESSFUL;
+                ByteOffset.QuadPart += strlen(FileName) + 1;
             }
         }
-        else
-            DPRINT1("Error: Cannot read from file\n");
 
-        ZwClose(Handle);
-        return Status;
+        CabFileHeader.FileCount--;
     }
-    else
+
+    // 8 = Size of a CFFOLDER structure (see cabman). As we don't need the values of that structure, just increase the offset here.
+    ByteOffset.QuadPart += 8;
+    ByteOffset.QuadPart += CabFileOffset;
+
+    // ByteOffset now contains the offset of the actual data, so we can read the RAW font
+    Status = ZwReadFile(Handle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
+                        FontBitField,
+                        2048,
+                        &ByteOffset,
+                        NULL);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Error: Cannot open vgafonts.cab\n");
-        return Status;
+        DPRINT1("ZwReadFile failed with Status 0x%lx\n", Status);
     }
+
+Exit:
+
+    ZwClose(Handle);
+    return Status;
 }
 
 /* Font-load specific funcs */
@@ -201,15 +262,15 @@ OpenBitPlane(VOID)
     _disable();
 
     /* sequence reg */
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR (SEQ_DATA, 0x04);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR (SEQ_DATA, 0x07);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x01);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR(SEQ_DATA, 0x04);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR(SEQ_DATA, 0x07);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
 
     /* graphic reg */
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR (GCT_DATA, 0x02);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR(GCT_DATA, 0x02);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
 
     /* enable interrupts */
     _enable();
@@ -222,35 +283,37 @@ CloseBitPlane(VOID)
     _disable();
 
     /* sequence reg */
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x01);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
-    WRITE_PORT_UCHAR (SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR (SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x01);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_ENABLE_WRT_PLANE); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_MEM_MODE); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
+    WRITE_PORT_UCHAR(SEQ_COMMAND, SEQ_RESET); WRITE_PORT_UCHAR(SEQ_DATA, 0x03);
 
     /* graphic reg */
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR (GCT_DATA, 0x00);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR (GCT_DATA, 0x10);
-    WRITE_PORT_UCHAR (GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR (GCT_DATA, 0x0e);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_READ_PLANE); WRITE_PORT_UCHAR(GCT_DATA, 0x00);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_RW_MODES); WRITE_PORT_UCHAR(GCT_DATA, 0x10);
+    WRITE_PORT_UCHAR(GCT_COMMAND, GCT_GRAPH_MODE); WRITE_PORT_UCHAR(GCT_DATA, 0x0e);
 
     /* enable interrupts */
     _enable();
 }
 
 VOID
-LoadFont(PUCHAR Bitplane, PUCHAR FontBitfield)
+LoadFont(
+    PUCHAR Bitplane,
+    PUCHAR FontBitfield)
 {
-    UINT32 i,j;
+    UINT32 i, j;
 
-    for (i=0; i<256; i++)
+    for (i = 0; i < 256; i++)
     {
-        for (j=0; j<8; j++)
+        for (j = 0; j < 8; j++)
         {
-            *Bitplane = FontBitfield[i*8+j];
+            *Bitplane = FontBitfield[i * 8 + j];
             Bitplane++;
         }
 
         // padding
-        for (j=8; j<32; j++)
+        for (j = 8; j < 32; j++)
         {
             *Bitplane = 0;
             Bitplane++;

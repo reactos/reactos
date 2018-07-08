@@ -85,4 +85,7 @@ BEGIN
     IDS_DOWNLOADING "下載中..."
     IDS_INSTALLING "安裝中..."
     IDS_INVALID_SHA "意外的下載了的檔案的校驗和。中止安裝已損壞的檔案。"
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
+    IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END
