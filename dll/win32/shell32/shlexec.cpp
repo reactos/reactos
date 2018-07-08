@@ -2322,10 +2322,12 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
 /*************************************************************************/
 
 static LPCWSTR
-SplitParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
+SplitParams(LPCWSTR psz, LPWSTR pszArg0, size_t cchArg0)
 {
+    assert(cchArg0 > 0);
+
     LPCWSTR pch;
-    INT ich = 0;
+    size_t ich = 0;
     if (*psz == L'"')
     {
         // 1st argument is quoted. the string in quotes is quoted 1st argument.
@@ -2360,6 +2362,7 @@ SplitParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
         }
     }
     pszArg0[ich] = 0;
+
     // skip space
     while (iswspace(*pch))
         ++pch;
