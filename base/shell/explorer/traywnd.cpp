@@ -21,7 +21,6 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
-#include <undocshell.h>
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
@@ -2139,20 +2138,6 @@ ChangePos:
         return TRUE;
     }
 
-    LRESULT OnSettingChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        if (wParam == SPI_SETNONCLIENTMETRICS)
-        {
-            SendMessage(m_TrayNotify, uMsg, wParam, lParam);
-            SendMessage(m_TaskSwitch, uMsg, wParam, lParam);
-            UpdateFonts();
-            AlignControls(NULL);
-            CheckTrayWndPosition();
-        }
-
-        return 0;
-    }
-
     LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         HDC hdc = (HDC) wParam;
@@ -2767,9 +2752,6 @@ HandleTrayContextMenu:
 
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        LPVOID lpEnvironment;
-        RegenerateUserEnvironment(&lpEnvironment, TRUE);
-
         bHandled = TRUE;
         return 0;
     }
@@ -2862,7 +2844,6 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
-        MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
