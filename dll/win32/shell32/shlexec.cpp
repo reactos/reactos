@@ -2408,7 +2408,7 @@ HRESULT WINAPI ShellExecCmdLine(
     if (!SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL))
     {
         if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
-            lstrcpynW(szFile2, szFile, _countof(szFile2));
+            StringCchCopyW(szFile2, _countof(szFile2), szFile);
     }
 
     if (!GetBinaryTypeW(szFile2, &dwType))
@@ -2416,7 +2416,7 @@ HRESULT WINAPI ShellExecCmdLine(
         if (!GetBinaryTypeW(pwszCommand, &dwType))
             return CO_E_APPNOTFOUND;
 
-        lstrcpynW(szFile, pwszCommand, _countof(szFile2));
+        StringCchCopyW(szFile, _countof(szFile), pwszCommand);
         pchParams = NULL;
     }
 
