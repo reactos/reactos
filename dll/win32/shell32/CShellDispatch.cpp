@@ -435,11 +435,6 @@ BOOL IsThereAnyEffectiveWindowOnDesktop(void)
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
-    enum {
-        MINIMIZE_ALL = 419,
-        RESTORE_ALL = 416
-    };
-
     TRACE("(%p)\n", this);
 
     HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
