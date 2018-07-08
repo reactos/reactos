@@ -1999,6 +1999,7 @@ static BOOL CALLBACK
 GetCascadeChildProc(HWND hwnd, LPARAM lParam)
 {
     DWORD count, size;
+    HWND *ahwnd;
     CASCADE_INFO *pInfo = (CASCADE_INFO *)lParam;
 
     if (hwnd == pInfo->hwndDesktop || hwnd == pInfo->hTrayWnd ||
@@ -2018,21 +2019,28 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
 
     if (count == 0 || pInfo->ahwnd == NULL)
     {
-        pInfo->ahwnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+        count = 0;
+        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
     }
     else
     {
-        pInfo->ahwnd = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfo->ahwnd, size);
+        ahwnd = (HWND *)HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfo->ahwnd, size);
+        if (ahwnd == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, pInfo->ahwnd);
+        }
+        pInfo->ahwnd = ahwnd;
     }
 
-    if (pInfo->ahwnd == NULL)
+    if (pInfo->ahwnd == NULL || pInfo->chwnd == 0)
     {
+        pInfo->ahwnd = NULL;
         pInfo->chwnd = 0;
         return FALSE;
     }
 
     pInfo->ahwnd[count] = hwnd;
-    (pInfo->chwnd)++;
+    pInfo->chwnd = count + 1;
     return TRUE;
 }
 
@@ -2045,7 +2053,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     HMONITOR hMon;
     MONITORINFO mi;
     RECT rcWork, rcWnd;
-    DWORD i;
+    DWORD i, ret = 0;
     INT x, y, cx, cy, dx, dy;
     HDWP hDWP;
 
@@ -2074,7 +2082,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     }
 
     if (info.chwnd == 0 || info.ahwnd == NULL)
-        return 0;
+        return ret;
 
     if (lpRect)
     {
@@ -2094,10 +2102,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
 
     hDWP = BeginDeferWindowPos(info.chwnd);
     if (hDWP == NULL)
-    {
-        info.chwnd = 0;
         goto cleanup;
-    }
 
     x = rcWork.left;
     y = rcWork.top;
@@ -2112,7 +2117,6 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
-
         cx = rcWnd.right - rcWnd.left;
         cy = rcWnd.bottom - rcWnd.top;
 
@@ -2122,30 +2126,27 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             y = rcWork.top;
 
         if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
-        {
             continue;
-        }
 
         hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
         if (hDWP == NULL)
         {
-            info.chwnd = 0;
+            ret = 0;
             goto cleanup;
         }
 
         x += dx;
         y += dy;
+        ++ret;
     }
 
     EndDeferWindowPos(hDWP);
 
 cleanup:
     if (cKids == 0 || lpKids == NULL)
-    {
         HeapFree(GetProcessHeap(), 0, info.ahwnd);
-    }
 
-    return (WORD)info.chwnd;
+    return (WORD)ret;
 }
 
 
