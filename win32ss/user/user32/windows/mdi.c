@@ -2015,7 +2015,7 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     if ((pInfo->wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
         return TRUE;
 
-    if (!IsWindowVisible(hwnd) ||  || IsIconic(hwnd))
+    if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
         return TRUE;
 
     count = pInfo->chwnd;
@@ -2052,7 +2052,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
                UINT cKids, const HWND *lpKids)
 {
     CASCADE_INFO info;
-    HWND hwnd, hwndTop;
+    HWND hwnd, hwndTop, hwndPrev;
     HMONITOR hMon;
     MONITORINFO mi;
     RECT rcWork, rcWnd;
@@ -2112,6 +2112,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     y = rcWork.top;
     dx = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXSIZE);
     dy = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYSIZE);
+    hwndPrev = NULL;
     for (i = info.chwnd; i > 0;)    /* in reverse order */
     {
         --i;
@@ -2144,12 +2145,14 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
 
         x += dx;
         y += dy;
+        hwndPrev = hwnd;
         ++ret;
     }
 
     EndDeferWindowPos(hDWP);
 
-    BringWindowToTop(hwndTop);
+    if (hwndPrev)
+        SetForegroundWindow(hwndPrev);
 
 cleanup:
     if (cKids == 0 || lpKids == NULL)
