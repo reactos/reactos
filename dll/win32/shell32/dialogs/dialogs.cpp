@@ -471,52 +471,6 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDOK), Enable);
 }
 
-static LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
-{
-    LPCWSTR pch;
-    INT ich = 0;
-    if (*psz == L'"')
-    {
-        // 1st argument is quoted. the string in quotes is quoted 1st argument.
-        // [pch] --> [pszArg0+ich]
-        for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
-        {
-            if (*pch == L'"' && pch[1] == L'"')
-            {
-                // doubled double quotations found!
-                pszArg0[ich] = L'"';
-            }
-            else if (*pch == L'"')
-            {
-                // single double quotation found!
-                ++pch;
-                break;
-            }
-            else
-            {
-                // otherwise
-                pszArg0[ich] = *pch;
-            }
-        }
-    }
-    else
-    {
-        // 1st argument is unquoted. non-space sequence is 1st argument.
-        // [pch] --> [pszArg0+ich]
-        for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
-        {
-            pszArg0[ich] = *pch;
-        }
-    }
-    pszArg0[ich] = 0;
-
-    // skip space
-    while (iswspace(*pch))
-        ++pch;
-
-    return pch;
-}
-
 /* Dialog procedure for RunFileDlg */
 static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -573,9 +527,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
                     INT ic;
                     WCHAR *psz, *parent = NULL;
-                    SHELLEXECUTEINFOW sei;
                     NMRUNFILEDLGW nmrfd;
-                    WCHAR arg0[MAX_PATH];
 
                     ic = GetWindowTextLengthW(htxt);
                     if (ic == 0)
@@ -583,9 +535,6 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                         EndDialog(hwnd, IDCANCEL);
                         return TRUE;
                     }
-
-                    ZeroMemory(&sei, sizeof(sei));
-                    sei.cbSize = sizeof(sei);
 
                     /*
                      * Allocate a new MRU entry, we need to add two characters
@@ -601,25 +550,19 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     GetWindowTextW(htxt, psz, ic + 1);
                     StrTrimW(psz, L" \t");
 
-                    LPCWSTR pch = Get1stArgAndParams(psz, arg0, _countof(arg0));
-
-                    sei.hwnd = hwnd;
-                    sei.nShow = SW_SHOWNORMAL;
-                    sei.lpFile = arg0;
-                    sei.lpParameters = *pch ? pch : NULL;
-
                     /*
                      * The precedence is the following: first the user-given
                      * current directory is used; if there is none, a current
                      * directory is computed if the RFF_CALCDIRECTORY is set,
                      * otherwise no current directory is defined.
                      */
+                    LPCWSTR pszStartDir;
                     if (prfdp->lpstrDirectory)
-                        sei.lpDirectory = prfdp->lpstrDirectory;
+                        pszStartDir = prfdp->lpstrDirectory;
                     else if (prfdp->uFlags & RFF_CALCDIRECTORY)
-                        sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                        pszStartDir = parent = RunDlg_GetParentDir(psz);
                     else
-                        sei.lpDirectory = NULL;
+                        pszStartDir = NULL;
 
                     /* Hide the dialog for now on, we will show it up in case of retry */
                     ShowWindow(hwnd, SW_HIDE);
@@ -636,9 +579,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     nmrfd.hdr.code = RFN_VALIDATE;
                     nmrfd.hdr.hwndFrom = hwnd;
                     nmrfd.hdr.idFrom = 0;
-                    nmrfd.lpFile = sei.lpFile;
-                    nmrfd.lpDirectory = sei.lpDirectory;
-                    nmrfd.nShow = sei.nShow;
+                    nmrfd.lpFile = psz;
+                    nmrfd.lpDirectory = pszStartDir;
+                    nmrfd.nShow = SW_SHOWNORMAL;
 
                     lRet = SendMessageW(prfdp->hwndOwner, WM_NOTIFY, 0, (LPARAM)&nmrfd.hdr);
 
@@ -649,7 +592,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             break;
 
                         case RF_OK:
-                            if (ShellExecuteExW(&sei))
+                            if (SUCCEEDED(ShellExecCmdLine(hwnd, psz, pszStartDir, SW_SHOWNORMAL, NULL, 0)))
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
                                 GetWindowTextW(htxt, psz, ic + 1);

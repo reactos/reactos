@@ -2318,3 +2318,123 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
     OpenAs_RunDLLW(hwnd, hinst, pszCmdLineW, cmdshow);
     SHFree(pszCmdLineW);
 }
+
+/*************************************************************************/
+
+static LPCWSTR
+SplitParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
+{
+    LPCWSTR pch;
+    INT ich = 0;
+    if (*psz == L'"')
+    {
+        // 1st argument is quoted. the string in quotes is quoted 1st argument.
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
+        {
+            if (*pch == L'"' && pch[1] == L'"')
+            {
+                // doubled double quotations found!
+                pszArg0[ich] = L'"';
+            }
+            else if (*pch == L'"')
+            {
+                // single double quotation found!
+                ++pch;
+                break;
+            }
+            else
+            {
+                // otherwise
+                pszArg0[ich] = *pch;
+            }
+        }
+    }
+    else
+    {
+        // 1st argument is unquoted. non-space sequence is 1st argument.
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
+        {
+            pszArg0[ich] = *pch;
+        }
+    }
+    pszArg0[ich] = 0;
+    // skip space
+    while (iswspace(*pch))
+        ++pch;
+
+    return pch;
+}
+
+HRESULT WINAPI ShellExecCmdLine(
+    HWND hwnd,
+    LPCWSTR pwszCommand,
+    LPCWSTR pwszStartDir,
+    int nShow,
+    LPVOID pUnused,
+    DWORD dwSeclFlags)
+{
+    SHELLEXECUTEINFOW info;
+    DWORD dwSize, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    LPCWSTR pszVerb = NULL;
+    WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
+    HRESULT hr;
+    DWORD dwType;
+    LPCWSTR pchParams;
+
+    if (dwSeclFlags & SECL_NO_UI)
+        dwFlags |= SEE_MASK_FLAG_NO_UI;
+    if (dwSeclFlags & SECL_LOG_USAGE)
+        dwFlags |= SEE_MASK_FLAG_LOG_USAGE;
+    if (dwSeclFlags & SECL_USE_IDLIST)
+        dwFlags |= SEE_MASK_INVOKEIDLIST;
+
+    if (dwSeclFlags & SECL_RUNAS)
+    {
+        dwSize = 0;
+        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, pwszCommand, L"RunAs", NULL, &dwSize);
+        if (SUCCEEDED(hr) && dwSize != 0)
+        {
+            pszVerb = L"runas";
+        }
+    }
+
+    pchParams = SplitParams(pwszCommand, szFile, _countof(szFile));
+
+    if (!SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL))
+    {
+        if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
+            lstrcpynW(szFile2, szFile, _countof(szFile2));
+    }
+
+    if (!GetBinaryTypeW(szFile2, &dwType))
+    {
+        if (!GetBinaryTypeW(pwszCommand, &dwType))
+            return CO_E_APPNOTFOUND;
+
+        lstrcpynW(szFile, pwszCommand, _countof(szFile2));
+        pchParams = NULL;
+    }
+
+    ZeroMemory(&info, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = dwFlags;
+    info.hwnd = hwnd;
+    info.lpVerb = pszVerb;
+    info.lpFile = szFile;
+    info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
+    info.lpDirectory = pwszStartDir;
+    info.nShow = nShow;
+    if (ShellExecuteExW(&info))
+    {
+        if (info.lpIDList)
+            CoTaskMemFree(info.lpIDList);
+        return S_OK;
+    }
+
+    if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        return CO_E_APPNOTFOUND;
+
+    return HRESULT_FROM_WIN32(GetLastError());
+}
