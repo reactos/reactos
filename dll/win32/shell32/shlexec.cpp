@@ -2385,6 +2385,11 @@ HRESULT WINAPI ShellExecCmdLine(
     HRESULT hr;
     DWORD dwType;
     LPCWSTR pchParams;
+    LPWSTR lpCommand = NULL;
+    DWORD dwError;
+
+    __SHCloneStrW(&lpCommand, pwszCommand);
+    StrTrimW(lpCommand, L" \t");
 
     if (dwSeclFlags & SECL_NO_UI)
         dwFlags |= SEE_MASK_FLAG_NO_UI;
@@ -2396,27 +2401,39 @@ HRESULT WINAPI ShellExecCmdLine(
     if (dwSeclFlags & SECL_RUNAS)
     {
         dwSize = 0;
-        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, pwszCommand, L"RunAs", NULL, &dwSize);
+        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
         if (SUCCEEDED(hr) && dwSize != 0)
         {
             pszVerb = L"runas";
         }
     }
 
-    pchParams = SplitParams(pwszCommand, szFile, _countof(szFile));
+    pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
 
+    // .exe with pwszStartDir
     if (!SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL))
     {
-        if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
-            StringCchCopyW(szFile2, _countof(szFile2), szFile);
+        // .com with pwszStartDir
+        if (!SearchPathW(pwszStartDir, szFile, L".com", _countof(szFile2), szFile2, NULL))
+        {
+            // .exe with NULL
+            if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
+            {
+                // .com with NULL
+                if (!SearchPathW(NULL, szFile, L".com", _countof(szFile2), szFile2, NULL))
+                {
+                    StringCchCopyW(szFile2, _countof(szFile2), szFile);
+                }
+            }
+        }
     }
 
     if (!GetBinaryTypeW(szFile2, &dwType))
     {
-        if (!GetBinaryTypeW(pwszCommand, &dwType))
+        if (!GetBinaryTypeW(lpCommand, &dwType))
             return CO_E_APPNOTFOUND;
 
-        StringCchCopyW(szFile, _countof(szFile), pwszCommand);
+        StringCchCopyW(szFile, _countof(szFile), lpCommand);
         pchParams = NULL;
     }
 
@@ -2436,8 +2453,12 @@ HRESULT WINAPI ShellExecCmdLine(
         return S_OK;
     }
 
-    if (GetLastError() == ERROR_FILE_NOT_FOUND)
+    dwError = GetLastError();
+
+    SHFree(lpCommand);
+
+    if (dwError == ERROR_FILE_NOT_FOUND)
         return CO_E_APPNOTFOUND;
 
-    return HRESULT_FROM_WIN32(GetLastError());
+    return HRESULT_FROM_WIN32(dwError);
 }
