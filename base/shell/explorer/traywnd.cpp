@@ -21,7 +21,7 @@
 
 #include "precomp.h"
 #include <commoncontrols.h>
-#include "traycmd.h"
+#include <traycmd.h>
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 
