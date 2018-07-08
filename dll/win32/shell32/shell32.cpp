@@ -89,7 +89,7 @@ RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf)
 
         while (*pszz)
         {
-            INT cch = lstrlen(pszz);
+            size_t cch = wcslen(pszz);
             LPWSTR pchEqual = wcschr(pszz, L'=');
             if (pchEqual)
             {
