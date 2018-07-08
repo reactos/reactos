@@ -1975,7 +1975,6 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
 			SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
 }
 
-
 /******************************************************************************
  *		CascadeWindows (USER32.@) Cascades MDI child windows
  *
@@ -1983,12 +1982,160 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
  *    Success: Number of cascaded windows.
  *    Failure: 0
  */
-WORD WINAPI
-CascadeWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
-		UINT cKids, const HWND *lpKids)
+
+typedef struct CASCADE_INFO
 {
-    FIXME("(%p,0x%08x,...,%u,...): stub\n", hwndParent, wFlags, cKids);
-    return 0;
+    HWND hwndSelf;
+    HWND hwndDesktop;
+    HWND hTrayWnd;
+    HWND hwndProgman;
+    HWND *ahwnd;
+    DWORD chwnd;
+} CASCADE_INFO;
+
+static BOOL CALLBACK
+GetCascadeChildProc(HWND hwnd, LPARAM lParam)
+{
+    DWORD count, size;
+    CASCADE_INFO *pInfo = (CASCADE_INFO *)lParam;
+
+    if (hwnd == pInfo->hwndDesktop || hwnd == pInfo->hTrayWnd ||
+        hwnd == pInfo->hwndProgman || hwnd == pInfo->hwndSelf)
+    {
+        return TRUE;
+    }
+
+    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
+        return TRUE;
+
+    count = pInfo->chwnd;
+    size = (count + 1) * sizeof(HWND);
+
+    if (count == 0 || pInfo->ahwnd == NULL)
+    {
+        pInfo->ahwnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+    }
+    else
+    {
+        pInfo->ahwnd = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pInfo->ahwnd, size);
+    }
+
+    if (pInfo->ahwnd == NULL)
+    {
+        pInfo->chwnd = 0;
+        return FALSE;
+    }
+
+    pInfo->ahwnd[count] = hwnd;
+    (pInfo->chwnd)++;
+    return TRUE;
+}
+
+WORD WINAPI
+CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
+               UINT cKids, const HWND *lpKids)
+{
+    CASCADE_INFO info;
+    HWND hwnd, hwndSelf;
+    HMONITOR hMon;
+    MONITORINFO mi;
+    RECT rcWork, rcWnd;
+    DWORD i;
+    INT x, y, cx, cy, dx, dy;
+    HDWP hDWP;
+
+    TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
+
+    hwndSelf = GetTopWindow(hwndParent);
+
+    ZeroMemory(&info, sizeof(info));
+    info.hwndDesktop = GetDesktopWindow();
+    info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    info.hwndProgman = FindWindowW(L"Progman", NULL);
+
+    if (cKids == 0 || lpKids == NULL)
+    {
+        info.hwndSelf = hwndSelf;
+        EnumChildWindows(hwndParent, GetCascadeChildProc, (LPARAM)&info);
+
+        info.hwndSelf = NULL;
+        GetCascadeChildProc(hwndSelf, (LPARAM)&info);
+    }
+    else
+    {
+        info.chwnd = cKids;
+        info.ahwnd = (HWND *)lpKids;
+    }
+
+    if (info.chwnd == 0 || info.ahwnd == NULL)
+        return 0;
+
+    if (lpRect)
+    {
+        rcWork = *lpRect;
+    }
+    else
+    {
+        hMon = MonitorFromWindow(hwndParent, MONITOR_DEFAULTTONEAREST);
+        mi.cbSize = sizeof(mi);
+        GetMonitorInfoW(hMon, &mi);
+        rcWork = mi.rcWork;
+    }
+
+    hDWP = BeginDeferWindowPos(info.chwnd);
+    if (hDWP == NULL)
+    {
+        info.chwnd = 0;
+        goto cleanup;
+    }
+
+    x = rcWork.left;
+    y = rcWork.top;
+    dx = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXSIZE);
+    dy = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYSIZE);
+    for (i = info.chwnd; i > 0;)    /* in reverse order */
+    {
+        --i;
+        hwnd = info.ahwnd[i];
+
+        if (IsZoomed(hwnd))
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+
+        GetWindowRect(hwnd, &rcWnd);
+
+        cx = rcWnd.right - rcWnd.left;
+        cy = rcWnd.bottom - rcWnd.top;
+
+        if (x + cx > rcWork.right)
+            x = rcWork.left;
+        if (y + cy > rcWork.bottom)
+            y = rcWork.top;
+
+        if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
+        {
+            continue;
+        }
+
+        hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
+        if (hDWP == NULL)
+        {
+            info.chwnd = 0;
+            goto cleanup;
+        }
+
+        x += dx;
+        y += dy;
+    }
+
+    EndDeferWindowPos(hDWP);
+
+cleanup:
+    if (cKids == 0 || lpKids == NULL)
+    {
+        HeapFree(GetProcessHeap(), 0, info.ahwnd);
+    }
+
+    return (WORD)info.chwnd;
 }
 
 
