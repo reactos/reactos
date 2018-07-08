@@ -2079,6 +2079,10 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     {
         rcWork = *lpRect;
     }
+    else if (hwndParent)
+    {
+        GetClientRect(hwndParent, &rcWork);
+    }
     else
     {
         hMon = MonitorFromWindow(hwndParent, MONITOR_DEFAULTTONEAREST);
