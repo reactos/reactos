@@ -1,10 +1,11 @@
 /* MDI.C
  *
  * Copyright 1994, Bob Amstadt
- *           1995,1996 Alex Korobka
+ * Copyright 1995,1996 Alex Korobka
+ * Copyright 2018 Katayama Hirofumi MZ
  *
  * This file contains routines to support MDI (Multiple Document
- * Interface) features .
+ * Interface) features.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,7 @@
  *
  * Notes: Fairly complete implementation.
  *        Also, Excel and WinWord do _not_ use MDI so if you're trying
- *	  to fix them look elsewhere.
+ *        to fix them look elsewhere.
  *
  * Notes on how the "More Windows..." is implemented:
  *
@@ -1975,7 +1976,6 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
 			SW_INVALIDATE | SW_ERASE | SW_SCROLLCHILDREN );
 }
 
-
 /******************************************************************************
  *		CascadeWindows (USER32.@) Cascades MDI child windows
  *
@@ -1983,12 +1983,182 @@ void WINAPI ScrollChildren(HWND hWnd, UINT uMsg, WPARAM wParam,
  *    Success: Number of cascaded windows.
  *    Failure: 0
  */
-WORD WINAPI
-CascadeWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
-		UINT cKids, const HWND *lpKids)
+
+typedef struct CASCADE_INFO
 {
-    FIXME("(%p,0x%08x,...,%u,...): stub\n", hwndParent, wFlags, cKids);
-    return 0;
+    HWND hwndTop;
+    UINT wFlags;
+    HWND hwndParent;
+    HWND hwndDesktop;
+    HWND hTrayWnd;
+    HWND hwndProgman;
+    HWND *ahwnd;
+    DWORD chwnd;
+} CASCADE_INFO;
+
+static BOOL CALLBACK
+GetCascadeChildProc(HWND hwnd, LPARAM lParam)
+{
+    DWORD count, size;
+    HWND *ahwnd;
+    CASCADE_INFO *pInfo = (CASCADE_INFO *)lParam;
+
+    if (hwnd == pInfo->hwndDesktop || hwnd == pInfo->hTrayWnd ||
+        hwnd == pInfo->hwndProgman || hwnd == pInfo->hwndTop)
+    {
+        return TRUE;
+    }
+
+    if (pInfo->hwndParent && GetParent(hwnd) != pInfo->hwndParent)
+        return TRUE;
+
+    if ((pInfo->wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
+        return TRUE;
+
+    if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
+        return TRUE;
+
+    count = pInfo->chwnd;
+    size = (count + 1) * sizeof(HWND);
+
+    if (count == 0 || pInfo->ahwnd == NULL)
+    {
+        count = 0;
+        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
+    }
+    else
+    {
+        ahwnd = (HWND *)HeapReAlloc(GetProcessHeap(), 0, pInfo->ahwnd, size);
+        if (ahwnd == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, pInfo->ahwnd);
+        }
+        pInfo->ahwnd = ahwnd;
+    }
+
+    if (pInfo->ahwnd == NULL)
+    {
+        pInfo->chwnd = 0;
+        return FALSE;
+    }
+
+    pInfo->ahwnd[count] = hwnd;
+    pInfo->chwnd = count + 1;
+    return TRUE;
+}
+
+WORD WINAPI
+CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
+               UINT cKids, const HWND *lpKids)
+{
+    CASCADE_INFO info;
+    HWND hwnd, hwndTop, hwndPrev;
+    HMONITOR hMon;
+    MONITORINFO mi;
+    RECT rcWork, rcWnd;
+    DWORD i, ret = 0;
+    INT x, y, cx, cy, dx, dy;
+    HDWP hDWP;
+
+    TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
+
+    hwndTop = GetTopWindow(hwndParent);
+
+    ZeroMemory(&info, sizeof(info));
+    info.hwndDesktop = GetDesktopWindow();
+    info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    info.hwndProgman = FindWindowW(L"Progman", NULL);
+    info.hwndParent = hwndParent;
+    info.wFlags = wFlags;
+
+    if (cKids == 0 || lpKids == NULL)
+    {
+        info.hwndTop = hwndTop;
+        EnumChildWindows(hwndParent, GetCascadeChildProc, (LPARAM)&info);
+
+        info.hwndTop = NULL;
+        GetCascadeChildProc(hwndTop, (LPARAM)&info);
+    }
+    else
+    {
+        info.chwnd = cKids;
+        info.ahwnd = (HWND *)lpKids;
+    }
+
+    if (info.chwnd == 0 || info.ahwnd == NULL)
+        return ret;
+
+    if (lpRect)
+    {
+        rcWork = *lpRect;
+    }
+    else if (hwndParent)
+    {
+        GetClientRect(hwndParent, &rcWork);
+    }
+    else
+    {
+        hMon = MonitorFromWindow(hwndParent, MONITOR_DEFAULTTONEAREST);
+        mi.cbSize = sizeof(mi);
+        GetMonitorInfoW(hMon, &mi);
+        rcWork = mi.rcWork;
+    }
+
+    hDWP = BeginDeferWindowPos(info.chwnd);
+    if (hDWP == NULL)
+        goto cleanup;
+
+    x = rcWork.left;
+    y = rcWork.top;
+    dx = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXSIZE);
+    dy = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYSIZE);
+    hwndPrev = NULL;
+    for (i = info.chwnd; i > 0;)    /* in reverse order */
+    {
+        --i;
+        hwnd = info.ahwnd[i];
+
+        if (IsZoomed(hwnd))
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+
+        GetWindowRect(hwnd, &rcWnd);
+        cx = rcWnd.right - rcWnd.left;
+        cy = rcWnd.bottom - rcWnd.top;
+
+        if (x + cx > rcWork.right)
+            x = rcWork.left;
+        if (y + cy > rcWork.bottom)
+            y = rcWork.top;
+
+        if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
+            continue;
+
+        if ((info.wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
+            continue;
+
+        hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
+        if (hDWP == NULL)
+        {
+            ret = 0;
+            goto cleanup;
+        }
+
+        x += dx;
+        y += dy;
+        hwndPrev = hwnd;
+        ++ret;
+    }
+
+    EndDeferWindowPos(hDWP);
+
+    if (hwndPrev)
+        SetForegroundWindow(hwndPrev);
+
+cleanup:
+    if (cKids == 0 || lpKids == NULL)
+        HeapFree(GetProcessHeap(), 0, info.ahwnd);
+
+    return (WORD)ret;
 }
 
 
