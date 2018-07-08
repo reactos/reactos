@@ -1,5 +1,5 @@
 /*
- * ReactOS Explorer
+ * Tray Commands
  *
  * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
