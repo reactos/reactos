@@ -1,10 +1,11 @@
 /* MDI.C
  *
  * Copyright 1994, Bob Amstadt
- *           1995,1996 Alex Korobka
+ * Copyright 1995,1996 Alex Korobka
+ * Copyright 2018 Katayama Hirofumi MZ
  *
  * This file contains routines to support MDI (Multiple Document
- * Interface) features .
+ * Interface) features.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +23,7 @@
  *
  * Notes: Fairly complete implementation.
  *        Also, Excel and WinWord do _not_ use MDI so if you're trying
- *	  to fix them look elsewhere.
+ *        to fix them look elsewhere.
  *
  * Notes on how the "More Windows..." is implemented:
  *
