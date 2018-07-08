@@ -3289,10 +3289,10 @@ NtUserSetWindowsHookEx(
 BOOL
 NTAPI
 NtUserSetWindowStationUser(
-    HWINSTA hWindowStation,
-    PLUID pluid,
-    PSID psid,
-    DWORD size);
+    IN HWINSTA hWindowStation,
+    IN PLUID pluid,
+    IN PSID psid OPTIONAL,
+    IN DWORD size);
 
 WORD
 NTAPI

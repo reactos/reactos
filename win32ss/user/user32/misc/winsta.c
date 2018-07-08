@@ -399,8 +399,8 @@ BOOL
 WINAPI
 SetWindowStationUser(
     IN HWINSTA hWindowStation,
-    IN PLUID pluid OPTIONAL,
-    IN PSID psid,
+    IN PLUID pluid,
+    IN PSID psid OPTIONAL,
     IN DWORD size)
 {
     BOOL Success;
@@ -410,7 +410,7 @@ SetWindowStationUser(
     {
         /* Signal log-on/off to WINSRV */
 
-        /* User is logging on if pluid != LuidNone, otherwise it is a log-off */
+        /* User is logging on if *pluid != LuidNone, otherwise it is a log-off */
         LUID LuidNone = {0, 0};
         BOOL IsLogon = (pluid && !RtlEqualLuid(pluid, &LuidNone));
 

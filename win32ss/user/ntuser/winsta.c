@@ -1482,16 +1482,18 @@ NtUserLockWorkStation(VOID)
     return ret;
 }
 
-BOOL APIENTRY
+BOOL
+NTAPI
 NtUserSetWindowStationUser(
-    HWINSTA hWindowStation,
-    PLUID pluid,
-    PSID psid,
-    DWORD size)
+    IN HWINSTA hWindowStation,
+    IN PLUID pluid,
+    IN PSID psid OPTIONAL,
+    IN DWORD size)
 {
+    BOOL Ret = FALSE;
     NTSTATUS Status;
     PWINSTATION_OBJECT WindowStation = NULL;
-    BOOL Ret = FALSE;
+    LUID luidUser;
 
     UserEnterExclusive();
 
@@ -1501,53 +1503,79 @@ NtUserSetWindowStationUser(
         goto Leave;
     }
 
+    /* Validate the window station */
     Status = IntValidateWindowStationHandle(hWindowStation,
                                             UserMode,
                                             0,
                                             &WindowStation,
-                                            0);
+                                            NULL);
     if (!NT_SUCCESS(Status))
     {
         goto Leave;
     }
 
-    if (WindowStation->psidUser)
-    {
-        ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
-    }
-
-    WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
-    if (WindowStation->psidUser == NULL)
-    {
-        EngSetLastError(ERROR_OUTOFMEMORY);
-        goto Leave;
-    }
-
+    /* Capture the user LUID */
     _SEH2_TRY
     {
-        ProbeForRead(psid, size, 1);
         ProbeForRead(pluid, sizeof(LUID), 1);
-
-        RtlCopyMemory(WindowStation->psidUser, psid, size);
-        WindowStation->luidUser = *pluid;
+        luidUser = *pluid;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Leave);
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
+    /* Reset the window station user LUID */
+    RtlZeroMemory(&WindowStation->luidUser, sizeof(LUID));
+
+    /* Reset the window station user SID */
+    if (WindowStation->psidUser)
     {
         ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
         WindowStation->psidUser = NULL;
-        goto Leave;
     }
+
+    /* Copy the new user SID if one has been provided */
+    if (psid)
+    {
+        WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
+        if (WindowStation->psidUser == NULL)
+        {
+            EngSetLastError(ERROR_OUTOFMEMORY);
+            goto Leave;
+        }
+
+        Status = STATUS_SUCCESS;
+        _SEH2_TRY
+        {
+            ProbeForRead(psid, size, 1);
+            RtlCopyMemory(WindowStation->psidUser, psid, size);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
+            WindowStation->psidUser = NULL;
+            goto Leave;
+        }
+    }
+
+    /* Copy the new user LUID */
+    WindowStation->luidUser = luidUser;
 
     Ret = TRUE;
 
 Leave:
-    if (WindowStation) ObDereferenceObject(WindowStation);
+    if (WindowStation)
+        ObDereferenceObject(WindowStation);
+
     UserLeave();
     return Ret;
 }
