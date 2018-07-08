@@ -57,6 +57,71 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 
 static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
+struct TOGGLE_INFO
+{
+    HWND hwndFound;
+    HWND hwndDesktop;
+    HWND hwndProgman;
+    HWND hTrayWnd;
+};
+
+static BOOL CALLBACK
+FindEffectiveProc(HWND hwnd, LPARAM lParam)
+{
+    TOGGLE_INFO *pti = (TOGGLE_INFO *)lParam;
+
+    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
+        return TRUE;    // continue
+
+    if (pti->hTrayWnd == hwnd || pti->hwndDesktop == hwnd ||
+        pti->hwndProgman == hwnd)
+    {
+        return TRUE;    // continue
+    }
+
+    // is the window in the nearest monitor?
+    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+    if (hMon)
+    {
+        MONITORINFO info;
+        ZeroMemory(&info, sizeof(info));
+        info.cbSize = sizeof(info);
+        if (GetMonitorInfoW(hMon, &info))
+        {
+            RECT rcWindow, rcMonitor, rcIntersect;
+            rcMonitor = info.rcMonitor;
+
+            GetWindowRect(hwnd, &rcWindow);
+
+            if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
+                return TRUE;    // continue
+        }
+    }
+
+    pti->hwndFound = hwnd;
+    return FALSE;   // stop if found
+}
+
+static BOOL
+IsThereAnyEffectiveWindow(void)
+{
+    TOGGLE_INFO ti;
+    ti.hwndFound = NULL;
+    ti.hwndDesktop = GetDesktopWindow();
+    ti.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    ti.hwndProgman = FindWindowW(L"Progman", NULL);
+
+    EnumWindows(FindEffectiveProc, (LPARAM)&ti);
+    if (ti.hwndFound && FALSE)
+    {
+        WCHAR szClass[64], szText[64];
+        GetClassNameW(ti.hwndFound, szClass, _countof(szClass));
+        GetWindowTextW(ti.hwndFound, szText, _countof(szText));
+        MessageBoxW(NULL, szText, szClass, 0);
+    }
+    return ti.hwndFound != NULL;
+}
+
 /*
  * ITrayWindow
  */
@@ -491,13 +556,13 @@ public:
 
     VOID ToggleDesktop()
     {
-        IShellDispatch4 *pSDispatch4 = NULL;
-        HRESULT hr = ::CoCreateInstance(CLSID_Shell, NULL, CLSCTX_SERVER, IID_IDispatch,
-                                        (LPVOID *)&pSDispatch4);
-        if (SUCCEEDED(hr))
+        if (::IsThereAnyEffectiveWindow())
         {
-            hr = pSDispatch4->ToggleDesktop();
-            pSDispatch4->Release();
+            MinimizeAll();
+        }
+        else
+        {
+            RestoreAll();
         }
     }
 

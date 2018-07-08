@@ -369,85 +369,12 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::WindowsSecurity()
     return E_NOTIMPL;
 }
 
-struct ENUM_WINDOW
-{
-    HWND hwndFound;
-    HWND hwndDesktop;
-    HWND hwndProgman;
-    HWND hTrayWnd;
-};
-
-static BOOL CALLBACK
-EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    ENUM_WINDOW *pEW = (ENUM_WINDOW *)lParam;
-
-    if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
-        return TRUE;    // continue
-
-    if (pEW->hTrayWnd == hwnd || pEW->hwndDesktop == hwnd ||
-        pEW->hwndProgman == hwnd)
-    {
-        return TRUE;    // continue
-    }
-
-    // is the window in the nearest monitor?
-    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-    if (hMon)
-    {
-        MONITORINFO info;
-        ZeroMemory(&info, sizeof(info));
-        info.cbSize = sizeof(info);
-        if (GetMonitorInfoW(hMon, &info))
-        {
-            RECT rcWindow, rcMonitor, rcIntersect;
-            rcMonitor = info.rcMonitor;
-
-            GetWindowRect(hwnd, &rcWindow);
-
-            if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
-                return TRUE;    // continue
-        }
-    }
-
-    pEW->hwndFound = hwnd;
-    return FALSE;   // stop if found
-}
-
-BOOL IsThereAnyEffectiveWindowOnDesktop(void)
-{
-    ENUM_WINDOW ew;
-    ew.hwndFound = NULL;
-    ew.hwndDesktop = GetDesktopWindow();
-    ew.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    ew.hwndProgman = FindWindowW(L"Progman", NULL);
-
-    EnumWindows(EnumWindowsProc, (LPARAM)&ew);
-    if (ew.hwndFound && FALSE)
-    {
-        WCHAR szClass[128], szText[128];
-        GetClassNameW(ew.hwndFound, szClass, _countof(szClass));
-        GetWindowTextW(ew.hwndFound, szText, _countof(szText));
-        MessageBoxW(NULL, szText, szClass, 0);
-    }
-    return ew.hwndFound != NULL;
-}
-
 HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
     TRACE("(%p)\n", this);
 
     HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    if (IsThereAnyEffectiveWindowOnDesktop())
-    {
-        // minimize all
-        SendMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_MINIMIZE_ALL, 0);
-    }
-    else
-    {
-        // restore all
-        SendMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_RESTORE_ALL, 0);
-    }
+    PostMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
 
     return S_OK;
 }
