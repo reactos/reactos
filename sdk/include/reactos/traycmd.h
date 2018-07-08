@@ -25,14 +25,15 @@
 #define TRAYCMD_STARTMENU           305     /*              Same as IDMA_START. */
 #define TRAYCMD_RUN_DIALOG          401     /* Implemented. Same as IDM_RUN. */
 #define TRAYCMD_LOGOFF_DIALOG       402     /* Implemented. Same as IDM_LOGOFF. */
-#define TRAYCMD_CASCADE             403     /* Implemented. */
-#define TRAYCMD_TILE_H              404     /* Implemented. */
-#define TRAYCMD_TILE_V              405     /* Implemented. */
+#define TRAYCMD_CASCADE             403     /* */
+#define TRAYCMD_TILE_H              404     /* */
+#define TRAYCMD_TILE_V              405     /* */
+#define TRAYCMD_TOGGLE_DESKTOP      407     /* Implemented. */
 #define TRAYCMD_DATE_AND_TIME       408     /* Implemented. */
 #define TRAYCMD_TASKBAR_PROPERTIES  413     /* Implemented. Same as IDM_TASKBARANDSTARTMENU. */
-#define TRAYCMD_MINIMIZE_ALL_       415     /* Implemented. What differs with 419? */
+#define TRAYCMD_MINIMIZE_ALL        415     /* Implemented. */
 #define TRAYCMD_RESTORE_ALL         416     /* Implemented. Same as IDMA_RESTORE_OPEN. */
-#define TRAYCMD_MINIMIZE_ALL        419     /* Implemented. Same as IDMA_MINIMIZE_ALL. */
+#define TRAYCMD_SHOW_DESKTOP        419     /* Implemented. */
 #define TRAYCMD_SHOW_TASK_MGR       420     /* Implemented. */
 #define TRAYCMD_CUSTOMIZE_TASKBAR   421     /* */
 #define TRAYCMD_LOCK_TASKBAR        424     /* Implemented. */

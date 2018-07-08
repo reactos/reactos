@@ -489,7 +489,7 @@ public:
                      SW_SHOWNORMAL);
     }
 
-    VOID WinDesktop()
+    VOID ToggleDesktop()
     {
         IShellDispatch4 *pSDispatch4 = NULL;
         HRESULT hr = ::CoCreateInstance(CLSID_Shell, NULL, CLSCTX_SERVER, IID_IDispatch,
@@ -534,7 +534,7 @@ public:
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
-            WinDesktop();
+            MinimizeAll();
             break;
 
         case ID_SHELL_CMD_TILE_WND_H:
@@ -602,7 +602,7 @@ public:
             RestoreAll();
             break;
         case IDHK_DESKTOP:
-            WinDesktop();
+            ToggleDesktop();
             break;
         case IDHK_PAGER:
             break;
@@ -633,19 +633,22 @@ public:
             case TRAYCMD_TILE_V:
                 TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
                 break;
+            case TRAYCMD_TOGGLE_DESKTOP:
+                ToggleDesktop();
+                break;
             case TRAYCMD_DATE_AND_TIME:
                 ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
                 break;
             case TRAYCMD_TASKBAR_PROPERTIES:
                 DisplayProperties();
                 break;
-            case TRAYCMD_MINIMIZE_ALL_:
+            case TRAYCMD_MINIMIZE_ALL:
                 MinimizeAll();
                 break;
             case TRAYCMD_RESTORE_ALL:
                 RestoreAll();
                 break;
-            case TRAYCMD_MINIMIZE_ALL:
+            case TRAYCMD_SHOW_DESKTOP:
                 MinimizeAll();
                 break;
             case TRAYCMD_SHOW_TASK_MGR:
