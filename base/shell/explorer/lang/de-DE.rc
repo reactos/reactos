@@ -21,6 +21,27 @@ BEGIN
     END
 END
 
+IDM_TRAYWND2 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Datum- und Uhrzeiteinstellungen", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Benachrichtigungen anpassen...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Überlappend", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Fenster &horizontal anordnen", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Fenster v&ertikal anordnen", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
+        MENUITEM "Rückgängig", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Taskmanager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "Taskbar fi&xieren", ID_LOCKTASKBAR
+        MENUITEM "E&igenschaften", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""

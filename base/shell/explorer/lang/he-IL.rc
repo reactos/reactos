@@ -21,6 +21,27 @@ BEGIN
     END
 END
 
+IDM_TRAYWND2 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "התאם תאריך/שעה", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "התאם הודעות...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "חלונות מדורגים", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "הצג חלונות מוערמים", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "הצג חולונות זה לצד זה", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
+        MENUITEM "בטל", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "מנהל המשימות", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "נעל את שורת המשימות", ID_LOCKTASKBAR
+        MENUITEM "מאפיינים", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""

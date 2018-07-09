@@ -63,6 +63,7 @@ struct TOGGLE_INFO
     HWND hwndDesktop;
     HWND hwndProgman;
     HWND hTrayWnd;
+    BOOL bMustBeInMonitor;
 };
 
 static BOOL CALLBACK
@@ -79,22 +80,25 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
         return TRUE;    // continue
     }
 
-    // is the window in the nearest monitor?
-    HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-    if (hMon)
+    if (pti->bMustBeInMonitor)
     {
-        MONITORINFO info;
-        ZeroMemory(&info, sizeof(info));
-        info.cbSize = sizeof(info);
-        if (GetMonitorInfoW(hMon, &info))
+        // is the window in the nearest monitor?
+        HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        if (hMon)
         {
-            RECT rcWindow, rcMonitor, rcIntersect;
-            rcMonitor = info.rcMonitor;
+            MONITORINFO info;
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+            if (GetMonitorInfoW(hMon, &info))
+            {
+                RECT rcWindow, rcMonitor, rcIntersect;
+                rcMonitor = info.rcMonitor;
 
-            GetWindowRect(hwnd, &rcWindow);
+                GetWindowRect(hwnd, &rcWindow);
 
-            if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
-                return TRUE;    // continue
+                if (!IntersectRect(&rcIntersect, &rcMonitor, &rcWindow))
+                    return TRUE;    // continue
+            }
         }
     }
 
@@ -103,13 +107,14 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
 }
 
 static BOOL
-IsThereAnyEffectiveWindow(void)
+IsThereAnyEffectiveWindow(BOOL bMustBeInMonitor)
 {
     TOGGLE_INFO ti;
     ti.hwndFound = NULL;
     ti.hwndDesktop = GetDesktopWindow();
     ti.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
     ti.hwndProgman = FindWindowW(L"Progman", NULL);
+    ti.bMustBeInMonitor = bMustBeInMonitor;
 
     EnumWindows(FindEffectiveProc, (LPARAM)&ti);
     if (ti.hwndFound && FALSE)
@@ -121,6 +126,8 @@ IsThereAnyEffectiveWindow(void)
     }
     return ti.hwndFound != NULL;
 }
+
+CSimpleArray<HWND>  g_MinimizedAll;
 
 /*
  * ITrayWindow
@@ -295,8 +302,6 @@ class CTrayWindow :
     TRACKMOUSEEVENT m_MouseTrackingInfo;
 
     HDPA m_ShellServices;
-
-    CSimpleArray<HWND>  m_MinimizedAll;
 
 public:
     CComPtr<ITrayBandSite> m_TrayBandSite;
@@ -556,7 +561,7 @@ public:
 
     VOID ToggleDesktop()
     {
-        if (::IsThereAnyEffectiveWindow())
+        if (::IsThereAnyEffectiveWindow(TRUE))
         {
             MinimizeAll();
         }
@@ -621,6 +626,10 @@ public:
         case ID_SHELL_CMD_ADJUST_DAT:
             //FIXME: Use SHRunControlPanel
             ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+            break;
+
+        case ID_SHELL_CMD_RESTORE_ALL:
+            RestoreAll();
             break;
 
         default:
@@ -2825,33 +2834,29 @@ HandleTrayContextMenu:
 
     VOID MinimizeAll()
     {
-        m_MinimizedAll.RemoveAll();
-
         MINIMIZE_INFO info;
         info.hwndDesktop = GetDesktopWindow();;
         info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
         info.hwndProgman = FindWindowW(L"Progman", NULL);
         info.bRet = FALSE;
-        info.pMinimizedAll = &m_MinimizedAll;
+        info.pMinimizedAll = &g_MinimizedAll;
         EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
 
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
-        // TODO: update menu
     }
 
     VOID RestoreAll()
     {
-        for (INT i = m_MinimizedAll.GetSize() - 1; i >= 0; --i)
+        for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
-            HWND hwnd = m_MinimizedAll[i];
+            HWND hwnd = g_MinimizedAll[i];
             if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
             {
                 ::ShowWindow(hwnd, SW_RESTORE);
             }
         }
-        m_MinimizedAll.RemoveAll();
-        // TODO: update menu
+        g_MinimizedAll.RemoveAll();
     }
 
     LRESULT OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -2921,6 +2926,24 @@ HandleTrayContextMenu:
 
         AdjustSizerRect(rc, m_Position);
 
+        return 0;
+    }
+
+    LRESULT OnInitMenuPopup(INT code, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        HMENU hMenu = (HMENU)wParam;
+        if (::IsThereAnyEffectiveWindow(FALSE))
+        {
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_ENABLED);
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_ENABLED);
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_ENABLED);
+        }
+        else
+        {
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_CASCADE_WND, MF_BYCOMMAND | MF_GRAYED);
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_H, MF_BYCOMMAND | MF_GRAYED);
+            ::EnableMenuItem(hMenu, ID_SHELL_CMD_TILE_WND_V, MF_BYCOMMAND | MF_GRAYED);
+        }
         return 0;
     }
 
@@ -3063,6 +3086,7 @@ HandleTrayContextMenu:
         MESSAGE_HANDLER(WM_CLOSE, OnDoExitWindows)
         MESSAGE_HANDLER(WM_HOTKEY, OnHotkey)
         MESSAGE_HANDLER(WM_NCCALCSIZE, OnNcCalcSize)
+        MESSAGE_HANDLER(WM_INITMENUPOPUP, OnInitMenuPopup)
         MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(TWM_OPENSTARTMENU, OnOpenStartMenu)
         MESSAGE_HANDLER(TWM_DOEXITWINDOWS, OnDoExitWindows)
@@ -3213,7 +3237,13 @@ public:
                          UINT idCmdLast,
                          UINT uFlags)
     {
-        HMENU menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND));
+        HMENU menubase;
+
+        if (g_MinimizedAll.GetSize() == 0 || ::IsThereAnyEffectiveWindow(TRUE))
+            menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND));
+        else
+            menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND2));
+
         if (!menubase)
             return HRESULT_FROM_WIN32(GetLastError());
 

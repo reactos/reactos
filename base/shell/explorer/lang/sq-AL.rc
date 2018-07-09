@@ -25,6 +25,27 @@ BEGIN
     END
 END
 
+IDM_TRAYWND2 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Modifilo daten/Orën", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Modifiko njoftimet...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Shfaq dritaret", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Shfaq dritaret &Horizontalisht", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Shfaq dritaret V&ertikalisht", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
+        MENUITEM "&zhbëj", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Menaxhuesi i detyrave", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Blloko Taskbarin", ID_LOCKTASKBAR
+        MENUITEM "Konfigurimet", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""

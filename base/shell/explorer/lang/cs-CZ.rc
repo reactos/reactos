@@ -27,6 +27,27 @@ BEGIN
     END
 END
 
+IDM_TRAYWND2 MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Změnit &datum a čas", ID_SHELL_CMD_ADJUST_DAT
+        MENUITEM "&Upravit notifikace...", ID_SHELL_CMD_CUST_NOTIF
+        MENUITEM SEPARATOR
+        MENUITEM "Okna na &sebe", ID_SHELL_CMD_CASCADE_WND
+        MENUITEM "Zobrazit okna &vedle sebe", ID_SHELL_CMD_TILE_WND_H
+        MENUITEM "Zobrazit okna &nad sebou", ID_SHELL_CMD_TILE_WND_V
+        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
+        MENUITEM "&Zpět", ID_SHELL_CMD_UNDO_ACTION
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&rávce úloh", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "Uzamknout &hlavní panel", ID_LOCKTASKBAR
+        MENUITEM "Vl&astnosti", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
