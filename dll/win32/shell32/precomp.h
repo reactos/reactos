@@ -119,19 +119,4 @@ AddPropSheetPageCallback(HPROPSHEETPAGE hPage, LPARAM lParam)
     return FALSE;
 }
 
-#ifndef SECL_NO_UI
-    #define SECL_NO_UI          0x2
-    #define SECL_LOG_USAGE      0x8
-    #define SECL_USE_IDLIST     0x10
-    #define SECL_RUNAS          0x40
-#endif
-
-HRESULT WINAPI ShellExecCmdLine(
-    HWND hwnd,
-    LPCWSTR pwszCommand,
-    LPCWSTR pwszStartDir,
-    int nShow,
-    LPVOID pUnused,
-    DWORD dwSeclFlags);
-
 #endif /* _PRECOMP_H__ */

@@ -21,11 +21,13 @@
  */
 
 #include "precomp.h"
+#include <undocshell.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
 
 static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
+static const WCHAR wszCom[] = L".com";
 
 #define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
 
@@ -2411,16 +2413,16 @@ HRESULT WINAPI ShellExecCmdLine(
     pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
 
     // .exe with pwszStartDir
-    if (!SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL))
+    if (!SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL))
     {
         // .com with pwszStartDir
-        if (!SearchPathW(pwszStartDir, szFile, L".com", _countof(szFile2), szFile2, NULL))
+        if (!SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             // .exe with NULL
-            if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
+            if (!SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL))
             {
                 // .com with NULL
-                if (!SearchPathW(NULL, szFile, L".com", _countof(szFile2), szFile2, NULL))
+                if (!SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL))
                 {
                     StringCchCopyW(szFile2, _countof(szFile2), szFile);
                 }
@@ -2450,6 +2452,9 @@ HRESULT WINAPI ShellExecCmdLine(
     {
         if (info.lpIDList)
             CoTaskMemFree(info.lpIDList);
+
+        SHFree(lpCommand);
+
         return S_OK;
     }
 
