@@ -2024,7 +2024,7 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     if (count == 0 || pInfo->ahwnd == NULL)
     {
         count = 0;
-        ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
+        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
     }
     else
     {
@@ -2033,8 +2033,8 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
         {
             HeapFree(GetProcessHeap(), 0, pInfo->ahwnd);
         }
+        pInfo->ahwnd = ahwnd;
     }
-    pInfo->ahwnd = ahwnd;
 
     if (pInfo->ahwnd == NULL)
     {
@@ -2157,7 +2157,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         cyNew = cy = rcWnd.bottom - rcWnd.top;
 
         /* if we can change the window size */
-        if ((GetWindowLong(hwnd, GWL_STYLE) & WS_THICKFRAME) == WS_THICKFRAME)
+        if (GetWindowLong(hwnd, GWL_STYLE) & WS_THICKFRAME)
         {
             /* check the size */
 #define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
