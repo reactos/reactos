@@ -2051,21 +2051,22 @@ static void
 QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
 {
     MINMAXINFO mmi;
-    DWORD dwResult;
+    DWORD_PTR dwResult;
 
     mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
     mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
-    SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
-                        SMTO_ABORTIFHUNG, 80, &dwResult);
-
-    if (*pcx < mmi.ptMinTrackSize.x)
-        *pcx = mmi.ptMinTrackSize.x;
-    if (*pcy < mmi.ptMinTrackSize.y)
-        *pcy = mmi.ptMinTrackSize.y;
-    if (*pcx > mmi.ptMaxTrackSize.x)
-        *pcx = mmi.ptMaxTrackSize.x;
-    if (*pcy > mmi.ptMaxTrackSize.y)
-        *pcy = mmi.ptMaxTrackSize.y;
+    if (SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
+                            SMTO_ABORTIFHUNG | SMTO_NORMAL, 120, &dwResult))
+    {
+        if (*pcx < mmi.ptMinTrackSize.x)
+            *pcx = mmi.ptMinTrackSize.x;
+        if (*pcy < mmi.ptMinTrackSize.y)
+            *pcy = mmi.ptMinTrackSize.y;
+        if (*pcx > mmi.ptMaxTrackSize.x)
+            *pcx = mmi.ptMaxTrackSize.x;
+        if (*pcy > mmi.ptMaxTrackSize.y)
+            *pcy = mmi.ptMaxTrackSize.y;
+    }
 }
 
 WORD WINAPI
