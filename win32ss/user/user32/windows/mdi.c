@@ -2058,14 +2058,8 @@ QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
     if (SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
                             SMTO_ABORTIFHUNG | SMTO_NORMAL, 120, &dwResult))
     {
-        if (*pcx < mmi.ptMinTrackSize.x)
-            *pcx = mmi.ptMinTrackSize.x;
-        if (*pcy < mmi.ptMinTrackSize.y)
-            *pcy = mmi.ptMinTrackSize.y;
-        if (*pcx > mmi.ptMaxTrackSize.x)
-            *pcx = mmi.ptMaxTrackSize.x;
-        if (*pcy > mmi.ptMaxTrackSize.y)
-            *pcy = mmi.ptMaxTrackSize.y;
+        *pcx = min(max(*pcx, mmi.ptMinTrackSize.x), mmi.ptMaxTrackSize.x);
+        *pcy = min(max(*pcy, mmi.ptMinTrackSize.y), mmi.ptMaxTrackSize.y);
     }
 }
 
@@ -2158,14 +2152,12 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         cyNew = cy = rcWnd.bottom - rcWnd.top;
 
         /* if we can change the window size and it is not only one */
-        if (info.chwnd != 1 && (GetWindowLong(hwnd, GWL_STYLE) & WS_THICKFRAME))
+        if (info.chwnd != 1 && (GetWindowLongW(hwnd, GWL_STYLE) & WS_THICKFRAME))
         {
             /* check the size */
 #define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
-            if (cxNew > THRESHOLD(cxWork))
-                cxNew = THRESHOLD(cxWork);
-            if (cyNew > THRESHOLD(cyWork))
-                cyNew = THRESHOLD(cyWork);
+            cxNew = min(cxNew, THRESHOLD(cxWork));
+            cyNew = min(cyNew, THRESHOLD(cyWork));
 #undef THRESHOLD
             if (cx != cxNew || cy != cyNew)
             {
