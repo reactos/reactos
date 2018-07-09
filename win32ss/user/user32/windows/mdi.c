@@ -2047,6 +2047,27 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void
+QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
+{
+    MINMAXINFO mmi;
+    DWORD dwResult;
+
+    mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
+    mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
+    SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
+                        SMTO_ABORTIFHUNG, 80, &dwResult);
+
+    if (*pcx < mmi.ptMinTrackSize.x)
+        *pcx = mmi.ptMinTrackSize.x;
+    if (*pcy < mmi.ptMinTrackSize.y)
+        *pcy = mmi.ptMinTrackSize.y;
+    if (*pcx > mmi.ptMaxTrackSize.x)
+        *pcx = mmi.ptMaxTrackSize.x;
+    if (*pcy > mmi.ptMaxTrackSize.y)
+        *pcy = mmi.ptMaxTrackSize.y;
+}
+
 WORD WINAPI
 CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
                UINT cKids, const HWND *lpKids)
@@ -2056,11 +2077,10 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     HMONITOR hMon;
     MONITORINFO mi;
     RECT rcWork, rcWnd;
-    DWORD dwResult, i, ret = 0;
+    DWORD i, ret = 0;
     INT x, y, cx, cy, cxNew, cyNew, cxWork, cyWork, dx, dy;
     HDWP hDWP;
     POINT pt;
-    MINMAXINFO mmi;
 
     TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
 
@@ -2149,19 +2169,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             if (cx != cxNew || cy != cyNew)
             {
                 /* too large. shrink if we can */
-                mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
-                mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
-                SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
-                                    SMTO_ABORTIFHUNG, 100, &dwResult);
-
-                if (cxNew < mmi.ptMinTrackSize.x)
-                    cxNew = mmi.ptMinTrackSize.x;
-                if (cyNew < mmi.ptMinTrackSize.y)
-                    cyNew = mmi.ptMinTrackSize.y;
-                if (cxNew > mmi.ptMaxTrackSize.x)
-                    cxNew = mmi.ptMaxTrackSize.x;
-                if (cyNew > mmi.ptMaxTrackSize.y)
-                    cyNew = mmi.ptMaxTrackSize.y;
+                QuerySizeFix(hwnd, &cxNew, &cyNew);
                 cx = cxNew;
                 cy = cyNew;
             }
