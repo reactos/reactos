@@ -2047,6 +2047,22 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+static void
+QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
+{
+    MINMAXINFO mmi;
+    DWORD_PTR dwResult;
+
+    mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
+    mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
+    if (SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
+                            SMTO_ABORTIFHUNG | SMTO_NORMAL, 120, &dwResult))
+    {
+        *pcx = min(max(*pcx, mmi.ptMinTrackSize.x), mmi.ptMaxTrackSize.x);
+        *pcy = min(max(*pcy, mmi.ptMinTrackSize.y), mmi.ptMaxTrackSize.y);
+    }
+}
+
 WORD WINAPI
 CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
                UINT cKids, const HWND *lpKids)
@@ -2057,8 +2073,9 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     MONITORINFO mi;
     RECT rcWork, rcWnd;
     DWORD i, ret = 0;
-    INT x, y, cx, cy, dx, dy;
+    INT x, y, cx, cy, cxNew, cyNew, cxWork, cyWork, dx, dy;
     HDWP hDWP;
+    POINT pt;
 
     TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
 
@@ -2098,7 +2115,8 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     }
     else
     {
-        hMon = MonitorFromWindow(hwndParent, MONITOR_DEFAULTTONEAREST);
+        pt.x = pt.y = 0;
+        hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
         mi.cbSize = sizeof(mi);
         GetMonitorInfoW(hMon, &mi);
         rcWork = mi.rcWork;
@@ -2112,29 +2130,48 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     y = rcWork.top;
     dx = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXSIZE);
     dy = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYSIZE);
+    cxWork = rcWork.right - rcWork.left;
+    cyWork = rcWork.bottom - rcWork.top;
     hwndPrev = NULL;
     for (i = info.chwnd; i > 0;)    /* in reverse order */
     {
         --i;
         hwnd = info.ahwnd[i];
 
-        if (IsZoomed(hwnd))
-            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
-
-        GetWindowRect(hwnd, &rcWnd);
-        cx = rcWnd.right - rcWnd.left;
-        cy = rcWnd.bottom - rcWnd.top;
-
-        if (x + cx > rcWork.right)
-            x = rcWork.left;
-        if (y + cy > rcWork.bottom)
-            y = rcWork.top;
-
         if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
             continue;
 
         if ((info.wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
             continue;
+
+        if (IsZoomed(hwnd))
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+
+        GetWindowRect(hwnd, &rcWnd);
+        cxNew = cx = rcWnd.right - rcWnd.left;
+        cyNew = cy = rcWnd.bottom - rcWnd.top;
+
+        /* if we can change the window size and it is not only one */
+        if (info.chwnd != 1 && (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_THICKFRAME))
+        {
+            /* check the size */
+#define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
+            cxNew = min(cxNew, THRESHOLD(cxWork));
+            cyNew = min(cyNew, THRESHOLD(cyWork));
+#undef THRESHOLD
+            if (cx != cxNew || cy != cyNew)
+            {
+                /* too large. shrink if we can */
+                QuerySizeFix(hwnd, &cxNew, &cyNew);
+                cx = cxNew;
+                cy = cyNew;
+            }
+        }
+
+        if (x + cx > rcWork.right)
+            x = rcWork.left;
+        if (y + cy > rcWork.bottom)
+            y = rcWork.top;
 
         hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
         if (hDWP == NULL)
