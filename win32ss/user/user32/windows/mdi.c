@@ -2152,7 +2152,7 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         cyNew = cy = rcWnd.bottom - rcWnd.top;
 
         /* if we can change the window size and it is not only one */
-        if (info.chwnd != 1 && (GetWindowLongW(hwnd, GWL_STYLE) & WS_THICKFRAME))
+        if (info.chwnd != 1 && (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_THICKFRAME))
         {
             /* check the size */
 #define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
