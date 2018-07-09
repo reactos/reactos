@@ -2024,7 +2024,7 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     if (count == 0 || pInfo->ahwnd == NULL)
     {
         count = 0;
-        pInfo->ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
+        ahwnd = (HWND *)HeapAlloc(GetProcessHeap(), 0, size);
     }
     else
     {
@@ -2033,8 +2033,8 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
         {
             HeapFree(GetProcessHeap(), 0, pInfo->ahwnd);
         }
-        pInfo->ahwnd = ahwnd;
     }
+    pInfo->ahwnd = ahwnd;
 
     if (pInfo->ahwnd == NULL)
     {
@@ -2056,9 +2056,11 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     HMONITOR hMon;
     MONITORINFO mi;
     RECT rcWork, rcWnd;
-    DWORD i, ret = 0;
-    INT x, y, cx, cy, dx, dy;
+    DWORD dwResult, i, ret = 0;
+    INT x, y, cx, cy, cxNew, cyNew, cxWork, cyWork, dx, dy;
     HDWP hDWP;
+    POINT pt;
+    MINMAXINFO mmi;
 
     TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
 
@@ -2098,7 +2100,8 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     }
     else
     {
-        hMon = MonitorFromWindow(hwndParent, MONITOR_DEFAULTTONEAREST);
+        pt.x = pt.y = 0;
+        hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
         mi.cbSize = sizeof(mi);
         GetMonitorInfoW(hMon, &mi);
         rcWork = mi.rcWork;
@@ -2112,29 +2115,62 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
     y = rcWork.top;
     dx = GetSystemMetrics(SM_CXSIZEFRAME) + GetSystemMetrics(SM_CXSIZE);
     dy = GetSystemMetrics(SM_CYSIZEFRAME) + GetSystemMetrics(SM_CYSIZE);
+    cxWork = rcWork.right - rcWork.left;
+    cyWork = rcWork.bottom - rcWork.top;
     hwndPrev = NULL;
     for (i = info.chwnd; i > 0;)    /* in reverse order */
     {
         --i;
         hwnd = info.ahwnd[i];
 
-        if (IsZoomed(hwnd))
-            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
-
-        GetWindowRect(hwnd, &rcWnd);
-        cx = rcWnd.right - rcWnd.left;
-        cy = rcWnd.bottom - rcWnd.top;
-
-        if (x + cx > rcWork.right)
-            x = rcWork.left;
-        if (y + cy > rcWork.bottom)
-            y = rcWork.top;
-
         if (!IsWindowVisible(hwnd) || IsIconic(hwnd))
             continue;
 
         if ((info.wFlags & MDITILE_SKIPDISABLED) && !IsWindowEnabled(hwnd))
             continue;
+
+        if (IsZoomed(hwnd))
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+
+        GetWindowRect(hwnd, &rcWnd);
+        cxNew = cx = rcWnd.right - rcWnd.left;
+        cyNew = cy = rcWnd.bottom - rcWnd.top;
+
+        /* if we can change the window size */
+        if ((GetWindowLong(hwnd, GWL_STYLE) & WS_THICKFRAME) == WS_THICKFRAME)
+        {
+            /* check the size */
+#define THRESHOLD(xy) (((xy) * 5) / 7)      /* in the rate 5/7 */
+            if (cxNew > THRESHOLD(cxWork))
+                cxNew = THRESHOLD(cxWork);
+            if (cyNew > THRESHOLD(cyWork))
+                cyNew = THRESHOLD(cyWork);
+#undef THRESHOLD
+            if (cx != cxNew || cy != cyNew)
+            {
+                /* too large. shrink if we can */
+                mmi.ptMinTrackSize.x = mmi.ptMinTrackSize.y = 0;
+                mmi.ptMaxTrackSize.x = mmi.ptMaxTrackSize.y = MAXLONG;
+                SendMessageTimeoutW(hwnd, WM_GETMINMAXINFO, 0, (LPARAM)&mmi,
+                                    SMTO_ABORTIFHUNG, 100, &dwResult);
+
+                if (cxNew < mmi.ptMinTrackSize.x)
+                    cxNew = mmi.ptMinTrackSize.x;
+                if (cyNew < mmi.ptMinTrackSize.y)
+                    cyNew = mmi.ptMinTrackSize.y;
+                if (cxNew > mmi.ptMaxTrackSize.x)
+                    cxNew = mmi.ptMaxTrackSize.x;
+                if (cyNew > mmi.ptMaxTrackSize.y)
+                    cyNew = mmi.ptMaxTrackSize.y;
+                cx = cxNew;
+                cy = cyNew;
+            }
+        }
+
+        if (x + cx > rcWork.right)
+            x = rcWork.left;
+        if (y + cy > rcWork.bottom)
+            y = rcWork.top;
 
         hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
         if (hDWP == NULL)
