@@ -180,6 +180,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
         if (!((*dwFlags & DEL_YES) || (*dwFlags & DEL_QUIET) || (*dwFlags & DEL_PROMPT)))
         {
+            ConOutPrintf (_T("Delete %s, "),szFileName);
             res = FilePromptYNA (STRING_DEL_HELP2);
             if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
                 return 0x80000000;
