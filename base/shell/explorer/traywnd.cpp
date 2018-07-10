@@ -2833,7 +2833,10 @@ HandleTrayContextMenu:
         }
         if (!info->bShowDesktop)
         {
-            if (!::IsWindowEnabled(hwnd) || IsDialog(hwnd) || ::GetWindow(hwnd, GW_OWNER))
+            if (!::IsWindowEnabled(hwnd) || IsDialog(hwnd))
+                return TRUE;
+            HWND hwndOwner = ::GetWindow(hwnd, GW_OWNER);
+            if (hwndOwner && !::IsWindowEnabled(hwndOwner))
                 return TRUE;
         }
         if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
