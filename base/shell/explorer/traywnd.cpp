@@ -563,7 +563,7 @@ public:
     {
         if (::IsThereAnyEffectiveWindow(TRUE))
         {
-            MinimizeAll();
+            ShowDesktop();
         }
         else
         {
@@ -604,7 +604,7 @@ public:
             break;
 
         case ID_SHELL_CMD_SHOW_DESKTOP:
-            MinimizeAll();
+            ShowDesktop();
             break;
 
         case ID_SHELL_CMD_TILE_WND_H:
@@ -723,7 +723,7 @@ public:
                 RestoreAll();
                 break;
             case TRAYCMD_SHOW_DESKTOP:
-                MinimizeAll();
+                ShowDesktop();
                 break;
             case TRAYCMD_SHOW_TASK_MGR:
                 OpenTaskManager(m_hWnd);
@@ -2813,7 +2813,15 @@ HandleTrayContextMenu:
         HWND hwndProgman;
         BOOL bRet;
         CSimpleArray<HWND> *pMinimizedAll;
+        BOOL bShowDesktop;
     };
+
+    static BOOL IsDialog(HWND hwnd)
+    {
+        WCHAR szClass[32];
+        GetClassNameW(hwnd, szClass, _countof(szClass));
+        return wcscmp(szClass, L"#32770") == 0;
+    }
 
     static BOOL CALLBACK MinimizeWindowsProc(HWND hwnd, LPARAM lParam)
     {
@@ -2823,7 +2831,12 @@ HandleTrayContextMenu:
         {
             return TRUE;
         }
-        if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
+        if (!info->bShowDesktop)
+        {
+            if (!::IsWindowEnabled(hwnd) || IsDialog(hwnd) || ::GetWindow(hwnd, GW_OWNER))
+                return TRUE;
+        }
+        if (::IsWindowVisible(hwnd) && !::IsIconic(hwnd))
         {
             ::ShowWindowAsync(hwnd, SW_MINIMIZE);
             info->bRet = TRUE;
@@ -2832,7 +2845,7 @@ HandleTrayContextMenu:
         return TRUE;
     }
 
-    VOID MinimizeAll()
+    VOID MinimizeAll(BOOL bShowDesktop = FALSE)
     {
         MINIMIZE_INFO info;
         info.hwndDesktop = GetDesktopWindow();;
@@ -2840,6 +2853,7 @@ HandleTrayContextMenu:
         info.hwndProgman = FindWindowW(L"Progman", NULL);
         info.bRet = FALSE;
         info.pMinimizedAll = &g_MinimizedAll;
+        info.bShowDesktop = bShowDesktop;
         EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
 
         // invalid handles should be cleared to avoid mismatch of handles
@@ -2851,6 +2865,11 @@ HandleTrayContextMenu:
 
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
+    }
+
+    VOID ShowDesktop()
+    {
+        MinimizeAll(TRUE);
     }
 
     VOID RestoreAll()
