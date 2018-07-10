@@ -2333,8 +2333,8 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
 
         GetWindowRect(hwnd, &rcWnd);
-        cxNew = cx = rcWnd.right - rcWnd.left;
-        cyNew = cy = rcWnd.bottom - rcWnd.top;
+        cx = rcWnd.right - rcWnd.left;
+        cy = rcWnd.bottom - rcWnd.top;
 
         /* if we can change the window size */
         if (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_THICKFRAME)
