@@ -2842,6 +2842,13 @@ HandleTrayContextMenu:
         info.pMinimizedAll = &g_MinimizedAll;
         EnumWindows(MinimizeWindowsProc, (LPARAM)&info);
 
+        // invalid handles should be cleared to avoid mismatch of handles
+        for (INT i = 0; i < g_MinimizedAll.GetSize(); ++i)
+        {
+            if (!::IsWindow(g_MinimizedAll[i]))
+                g_MinimizedAll[i] = NULL;
+        }
+
         ::SetForegroundWindow(m_DesktopWnd);
         ::SetFocus(m_DesktopWnd);
     }
