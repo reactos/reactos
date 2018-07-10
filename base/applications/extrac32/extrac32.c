@@ -267,29 +267,29 @@ int PASCAL wWinMain(HINSTANCE hInstance, HINSTANCE prev, LPWSTR cmdline, int sho
                 force_mode = TRUE;
                 break;
             case 'L':
-                if ((i + 1) >= argc) return 0;
+                if ((i + 1) >= argc) goto cleanup;
                 if (!GetFullPathNameW(argv[++i], MAX_PATH, path, NULL))
-                    return 0;
+                    goto cleanup;
                 break;
             case 'C':
             case 'E':
             case 'D':
-                if (cmd) return 0;
+                if (cmd) goto cleanup;
                 cmd = check;
                 break;
             default:
-                return 0;
+                goto cleanup;
         }
     }
 
     if (!cabfile)
-        return 0;
+        goto cleanup;
 
     if (cmd == 'C')
     {
-        if ((i + 1) != argc) return 0;
+        if ((i + 1) != argc) goto cleanup;
         if (!GetFullPathNameW(argv[i], MAX_PATH, path, NULL))
-            return 0;
+            goto cleanup;
     }
     else if (!cmd)
         /* Use extraction by default if names of required files presents */
@@ -316,5 +316,8 @@ int PASCAL wWinMain(HINSTANCE hInstance, HINSTANCE prev, LPWSTR cmdline, int sho
             extract(cabfile, path);
             break;
     }
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, argv);
     return 0;
 }
