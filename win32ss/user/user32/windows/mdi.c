@@ -2293,13 +2293,12 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         {
             cxCell = cxWork / cColumns;
             cyCell = cyWork / cRows;
-            if (cyCell <= cyMin3 || cxCell >= cxMin2 || cRows >= 3)
+            if (cyCell <= cyMin3 || cxCell >= cxMin2)
                 break;
 
             ++cRows;
             cColumns = (info.chwnd + cRows - 1) / cRows;
         }
-        cyCell = cyWork / cRows;
     }
     else
     {
@@ -2309,7 +2308,7 @@ TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
         {
             cxCell = cxWork / cColumns;
             cyCell = cyWork / cRows;
-            if (cxCell <= cxMin2 || cyCell >= cyMin3 || cColumns >= 3)
+            if (cxCell <= cxMin2 || cyCell >= cyMin3)
                 break;
 
             ++cColumns;
