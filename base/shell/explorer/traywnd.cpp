@@ -2880,7 +2880,7 @@ HandleTrayContextMenu:
         for (INT i = g_MinimizedAll.GetSize() - 1; i >= 0; --i)
         {
             HWND hwnd = g_MinimizedAll[i];
-            if (::IsWindowEnabled(hwnd) && ::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
+            if (::IsWindowVisible(hwnd) && ::IsIconic(hwnd))
             {
                 ::ShowWindow(hwnd, SW_RESTORE);
             }
