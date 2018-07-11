@@ -57,7 +57,7 @@ HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, ICont
 
 static const WCHAR szTrayWndClass[] = L"Shell_TrayWnd";
 
-struct TOGGLE_INFO
+struct EFFECTIVE_INFO
 {
     HWND hwndFound;
     HWND hwndDesktop;
@@ -69,18 +69,18 @@ struct TOGGLE_INFO
 static BOOL CALLBACK
 FindEffectiveProc(HWND hwnd, LPARAM lParam)
 {
-    TOGGLE_INFO *pti = (TOGGLE_INFO *)lParam;
+    EFFECTIVE_INFO *pei = (EFFECTIVE_INFO *)lParam;
 
     if (!IsWindowVisible(hwnd) || !IsWindowEnabled(hwnd) || IsIconic(hwnd))
         return TRUE;    // continue
 
-    if (pti->hTrayWnd == hwnd || pti->hwndDesktop == hwnd ||
-        pti->hwndProgman == hwnd)
+    if (pei->hTrayWnd == hwnd || pei->hwndDesktop == hwnd ||
+        pei->hwndProgman == hwnd)
     {
         return TRUE;    // continue
     }
 
-    if (pti->bMustBeInMonitor)
+    if (pei->bMustBeInMonitor)
     {
         // is the window in the nearest monitor?
         HMONITOR hMon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
@@ -102,29 +102,29 @@ FindEffectiveProc(HWND hwnd, LPARAM lParam)
         }
     }
 
-    pti->hwndFound = hwnd;
+    pei->hwndFound = hwnd;
     return FALSE;   // stop if found
 }
 
 static BOOL
 IsThereAnyEffectiveWindow(BOOL bMustBeInMonitor)
 {
-    TOGGLE_INFO ti;
-    ti.hwndFound = NULL;
-    ti.hwndDesktop = GetDesktopWindow();
-    ti.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
-    ti.hwndProgman = FindWindowW(L"Progman", NULL);
-    ti.bMustBeInMonitor = bMustBeInMonitor;
+    EFFECTIVE_INFO ei;
+    ei.hwndFound = NULL;
+    ei.hwndDesktop = GetDesktopWindow();
+    ei.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    ei.hwndProgman = FindWindowW(L"Progman", NULL);
+    ei.bMustBeInMonitor = bMustBeInMonitor;
 
-    EnumWindows(FindEffectiveProc, (LPARAM)&ti);
-    if (ti.hwndFound && FALSE)
+    EnumWindows(FindEffectiveProc, (LPARAM)&ei);
+    if (ei.hwndFound && FALSE)
     {
         WCHAR szClass[64], szText[64];
-        GetClassNameW(ti.hwndFound, szClass, _countof(szClass));
-        GetWindowTextW(ti.hwndFound, szText, _countof(szText));
+        GetClassNameW(ei.hwndFound, szClass, _countof(szClass));
+        GetWindowTextW(ei.hwndFound, szText, _countof(szText));
         MessageBoxW(NULL, szText, szClass, 0);
     }
-    return ti.hwndFound != NULL;
+    return ei.hwndFound != NULL;
 }
 
 CSimpleArray<HWND>  g_MinimizedAll;
