@@ -1592,7 +1592,7 @@ public:
             {
                 if (bIsMinimized)
                 {
-                    ::ShowWindow(TaskItem->hWnd, SW_RESTORE);
+                    ::ShowWindowAsync(TaskItem->hWnd, SW_RESTORE);
                     TRACE("Valid button clicked. App window Restored.\n");
                 }
 
