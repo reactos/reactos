@@ -201,7 +201,7 @@ PspReapRoutine(IN PVOID Context)
 
         /* Remove magic value, keep looping if it got changed */
     } while (InterlockedCompareExchangePointer((PVOID*)&PspReaperListHead.Flink,
-                                               0,
+                                               NULL,
                                                (PVOID)1) != (PVOID)1);
 }
 
