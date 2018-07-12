@@ -23,6 +23,27 @@ EXTERN _KeI386FxsrPresent:DWORD
 /* FUNCTIONS ****************************************************************/
 .code
 
+/*++
+ * KiSwapContextInternal
+ *
+ * \brief
+ *     The KiSwapContextInternal routine switches context to another thread.
+ *
+ * BOOLEAN USERCALL KiSwapContextInternal();
+ *
+ * Params:
+ *     ESI - Pointer to the KTHREAD to which the caller wishes to
+ *           switch to.
+ *     EDI - Pointer to the KTHREAD to which the caller wishes to
+ *           switch from.
+ *
+ * \returns
+ *     APC state.
+ *
+ * \remarks
+ *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
+ *
+ *--*/
 PUBLIC @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
     /* Build switch frame */
@@ -31,6 +52,33 @@ PUBLIC @KiSwapContextInternal@0
     jmp @KiSwapContextEntry@8
 
 
+/**
+ * KiSwapContext
+ *
+ * \brief
+ *     The KiSwapContext routine switches context to another thread.
+ *
+ * BOOLEAN FASTCALL
+ * KiSwapContext(PKTHREAD CurrentThread, PKTHREAD TargetThread);
+ *
+ * \param CurrentThread
+ *     Pointer to the KTHREAD of the current thread.
+ *                    
+ * \param TargetThread
+ *     Pointer to the KTHREAD to which the caller wishes to switch to.
+ *
+ * \returns
+ *     The WaitStatus of the Target Thread.
+ *
+ * \remarks
+ *     This is a wrapper around KiSwapContextInternal which will save all the
+ *     non-volatile registers so that the Internal function can use all of
+ *     them. It will also save the old current thread and set the new one.
+ *
+ *     The calling thread does not return after KiSwapContextInternal until 
+ *     another thread switches to IT.
+ *
+ *--*/
 PUBLIC @KiSwapContext@8
 @KiSwapContext@8:
     /* Save 4 registers */
