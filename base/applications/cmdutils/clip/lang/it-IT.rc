@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     ReactOS Clip Command
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\nInserisci ""CLIP /?"" per leggere le informazioni sull'uso.\n"
+    IDS_HELP "\nReindirizza verso la clipboard l'output dei programmi a riga di comando.\n\n\
+CLIP [/?]\n\n\
+    /?  Mostra questo messaggio.\n"
+END
