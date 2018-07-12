@@ -4433,6 +4433,8 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
 //   ASSERT(OwnerWnd);
 
    TRACE("Enter ShowOwnedPopups Show: %s\n", (fShow ? "TRUE" : "FALSE"));
+
+   /* NOTE: Popups are not children */
    win_array = IntWinListOwnedPopups(OwnerWnd);
 
    if (!win_array)
