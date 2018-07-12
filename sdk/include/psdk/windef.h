@@ -244,15 +244,10 @@ typedef HANDLE HGLOBAL;
 typedef HANDLE HLOCAL;
 typedef HANDLE GLOBALHANDLE;
 typedef HANDLE LOCALHANDLE;
-#ifdef _WIN64
+
 typedef INT_PTR (WINAPI *FARPROC)();
 typedef INT_PTR (WINAPI *NEARPROC)();
 typedef INT_PTR (WINAPI *PROC)();
-#else
-typedef int (WINAPI *FARPROC)();
-typedef int (WINAPI *NEARPROC)();
-typedef int (WINAPI *PROC)();
-#endif
 
 typedef void *HGDIOBJ;
 
