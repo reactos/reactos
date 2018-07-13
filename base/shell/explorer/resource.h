@@ -101,6 +101,7 @@
 #define IDS_PROPERTIES                     720
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
+#define IDS_RESTORE_ALL                    811
 
 /*******************************************************************************\
 |*                              Control Resources                              *|
@@ -191,3 +192,4 @@
 #define ID_SHELL_CMD_CASCADE_WND        (410)
 #define ID_SHELL_CMD_CUST_NOTIF         (411)
 #define ID_SHELL_CMD_ADJUST_DAT         (412)
+#define ID_SHELL_CMD_RESTORE_ALL        (413)

@@ -199,4 +199,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Меню ""Пуск"" и панель задач"
+    IDS_RESTORE_ALL "&Show Open Windows"
 END

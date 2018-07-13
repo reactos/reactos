@@ -3,10 +3,12 @@
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     IShellDispatch implementation
  * COPYRIGHT:   Copyright 2015-2018 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
 #include "winsvc.h"
+#include <traycmd.h>   // tray commands
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -370,7 +372,11 @@ HRESULT STDMETHODCALLTYPE CShellDispatch::WindowsSecurity()
 HRESULT STDMETHODCALLTYPE CShellDispatch::ToggleDesktop()
 {
     TRACE("(%p)\n", this);
-    return E_NOTIMPL;
+
+    HWND hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    PostMessageW(hTrayWnd, WM_COMMAND, TRAYCMD_TOGGLE_DESKTOP, 0);
+
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CShellDispatch::ExplorerPolicy(BSTR policy, VARIANT *value)
