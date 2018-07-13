@@ -1582,22 +1582,13 @@ public:
 
             if (!bIsMinimized && bIsActive)
             {
-                ::PostMessage(TaskItem->hWnd,
-                    WM_SYSCOMMAND,
-                    SC_MINIMIZE,
-                    0);
+                ::ShowWindowAsync(TaskItem->hWnd, SW_MINIMIZE);
                 TRACE("Valid button clicked. App window Minimized.\n");
             }
             else
             {
-                if (bIsMinimized)
-                {
-                    ::ShowWindowAsync(TaskItem->hWnd, SW_RESTORE);
-                    TRACE("Valid button clicked. App window Restored.\n");
-                }
-
-                SetForegroundWindow(TaskItem->hWnd);
-                TRACE("Valid button clicked. App window Activated.\n");
+                ::SwitchToThisWindow(TaskItem->hWnd, TRUE);
+                TRACE("Valid button clicked. App window Restored.\n");
             }
         }
     }
