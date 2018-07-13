@@ -81,15 +81,17 @@ BringWindowToTop(HWND hWnd)
 VOID WINAPI
 SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
 {
+    HWND hwndFG, hwndLAP;
     if (fAltTab)
     {
-        ShowWindow(hwnd, SW_SHOW);
-        hwnd = GetLastActivePopup(hwnd);
-        SetForegroundWindow(hwnd);
+        ShowWindow(hwnd, SW_RESTORE);
+        hwndLAP = GetLastActivePopup(hwnd);
+        SetForegroundWindow(hwndLAP);
     }
     else
     {
-        HWND hwndFG = GetForegroundWindow();
+        hwndFG = GetForegroundWindow();
+        ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
         SetWindowPos(hwnd, hwndFG, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         SetWindowPos(hwndFG, hwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
