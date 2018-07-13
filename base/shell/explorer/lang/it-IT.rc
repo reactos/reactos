@@ -21,27 +21,6 @@ BEGIN
     END
 END
 
-IDM_TRAYWND2 MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM SEPARATOR
-        MENUITEM "&Modifica Data/Ora", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "&Personalizza Notifiche...", ID_SHELL_CMD_CUST_NOTIF
-        MENUITEM SEPARATOR
-        MENUITEM "Finestre a cascata", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Affianca Finestre &Orizzontalmente", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Affianca Finestre V&erticalmente", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
-        MENUITEM "&Undo", ID_SHELL_CMD_UNDO_ACTION
-        MENUITEM SEPARATOR
-        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
-        MENUITEM SEPARATOR
-        MENUITEM "&Blocca la Barra delle applicazioni", ID_LOCKTASKBAR
-        MENUITEM "&Proprietà", ID_SHELL_CMD_PROPERTIES
-    END
-END
-
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
@@ -218,4 +197,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Proprietà della Barra delle applicazioni e del Menú di avvio"
+    IDS_RESTORE_ALL "&Show Open Windows"
 END

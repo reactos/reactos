@@ -23,27 +23,6 @@ BEGIN
     END
 END
 
-IDM_TRAYWND2 MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM SEPARATOR
-        MENUITEM "Su&ai tarikh/masa", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "Menyesuaikan pemberitahuan...(&C)", ID_SHELL_CMD_CUST_NOTIF
-        MENUITEM SEPARATOR
-        MENUITEM "Lata Window&s", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Jubin Windows Melintang(&H)", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Jubin Windows Men&egak", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
-        MENUITEM "B&uat asal", ID_SHELL_CMD_UNDO_ACTION
-        MENUITEM SEPARATOR
-        MENUITEM "Pengurus tugas(&K)", ID_SHELL_CMD_OPEN_TASKMGR
-        MENUITEM SEPARATOR
-        MENUITEM "Kunci Bar Tugas(&L)", ID_LOCKTASKBAR
-        MENUITEM "Sifat-sifat(&R)", ID_SHELL_CMD_PROPERTIES
-    END
-END
-
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
@@ -220,4 +199,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Bar Tugas dan Menu Mula"
+    IDS_RESTORE_ALL "&Show Open Windows"
 END

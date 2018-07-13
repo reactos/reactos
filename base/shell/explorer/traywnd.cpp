@@ -3266,14 +3266,22 @@ public:
                          UINT idCmdLast,
                          UINT uFlags)
     {
-        HMENU menubase;
+        HMENU hMenuBase;
 
-        if (g_MinimizedAll.GetSize() == 0 || ::IsThereAnyEffectiveWindow(TRUE))
-            menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND));
-        else
-            menubase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND2));
+        hMenuBase = LoadPopupMenu(hExplorerInstance, MAKEINTRESOURCEW(IDM_TRAYWND));
 
-        if (!menubase)
+        if (g_MinimizedAll.GetSize() != 0 && !::IsThereAnyEffectiveWindow(TRUE))
+        {
+            CStringW strRestoreAll(MAKEINTRESOURCEW(IDS_RESTORE_ALL));
+            MENUITEMINFOW mii = { sizeof(mii) };
+            mii.fMask = MIIM_ID | MIIM_TYPE;
+            mii.wID = ID_SHELL_CMD_RESTORE_ALL;
+            mii.fType = MFT_STRING;
+            mii.dwTypeData = const_cast<LPWSTR>(&strRestoreAll[0]);
+            SetMenuItemInfoW(hMenuBase, ID_SHELL_CMD_SHOW_DESKTOP, FALSE, &mii);
+        }
+
+        if (!hMenuBase)
             return HRESULT_FROM_WIN32(GetLastError());
 
         if (SHRestricted(REST_CLASSICSHELL) != 0)
@@ -3283,15 +3291,15 @@ public:
                        MF_BYCOMMAND);
         }
 
-        CheckMenuItem(menubase,
+        CheckMenuItem(hMenuBase,
                       ID_LOCKTASKBAR,
                       MF_BYCOMMAND | (g_TaskbarSettings.bLock ? MF_CHECKED : MF_UNCHECKED));
 
         UINT idCmdNext;
-        idCmdNext = Shell_MergeMenus(hPopup, menubase, indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
+        idCmdNext = Shell_MergeMenus(hPopup, hMenuBase, indexMenu, idCmdFirst, idCmdLast, MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
         m_idCmdCmFirst = idCmdNext - idCmdFirst;
 
-        ::DestroyMenu(menubase);
+        ::DestroyMenu(hMenuBase);
 
         if (TrayWnd->m_TrayBandSite != NULL)
         {

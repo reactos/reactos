@@ -55,7 +55,6 @@
 
 #define IDM_STARTMENU 204
 #define IDM_TRAYWND   205
-#define IDM_TRAYWND2  206
 
 /* NOTE: The following constants may *NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -102,6 +101,7 @@
 #define IDS_PROPERTIES                     720
 #define IDS_HELP_COMMAND                   732
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
+#define IDS_RESTORE_ALL                    811
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

@@ -29,27 +29,6 @@ BEGIN
     END
 END
 
-IDM_TRAYWND2 MENU
-BEGIN
-    POPUP ""
-    BEGIN
-        MENUITEM SEPARATOR
-        MENUITEM "&Налаштування дати та часу", ID_SHELL_CMD_ADJUST_DAT
-        MENUITEM "Н&алаштування сповіщень...", ID_SHELL_CMD_CUST_NOTIF
-        MENUITEM SEPARATOR
-        MENUITEM "Вікна &каскадом", ID_SHELL_CMD_CASCADE_WND
-        MENUITEM "Вікна &горизонтально", ID_SHELL_CMD_TILE_WND_H
-        MENUITEM "Вікна &вертикально", ID_SHELL_CMD_TILE_WND_V
-        MENUITEM "&Show Open Windows", ID_SHELL_CMD_RESTORE_ALL
-        MENUITEM "&Скасувати", ID_SHELL_CMD_UNDO_ACTION
-        MENUITEM SEPARATOR
-        MENUITEM "&Диспетчер завдань", ID_SHELL_CMD_OPEN_TASKMGR
-        MENUITEM SEPARATOR
-        MENUITEM "&Закріпити панель завдань", ID_LOCKTASKBAR
-        MENUITEM "В&ластивості", ID_SHELL_CMD_PROPERTIES
-    END
-END
-
 IDM_STARTMENU MENUEX
 BEGIN
     POPUP ""
@@ -226,4 +205,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Властивості меню Пуск та Панелі завдань"
+    IDS_RESTORE_ALL "&Show Open Windows"
 END
