@@ -41,7 +41,6 @@ PWND FASTCALL ValidateHwndNoErr(HWND);
 BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 BOOL FASTCALL IntIsWindow(HWND hWnd);
 HWND* FASTCALL IntWinListChildren(PWND Window);
-HWND* FASTCALL IntWinListOwnedPopups(PWND Window);
 VOID FASTCALL IntGetClientRect (PWND WindowObject, RECTL *Rect);
 INT FASTCALL  IntMapWindowPoints(PWND FromWnd, PWND ToWnd, LPPOINT lpPoints, UINT cPoints);
 BOOL FASTCALL IntIsChildWindow (PWND Parent, PWND Child);

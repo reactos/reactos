@@ -2275,11 +2275,11 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
 
                WinPosFindIconPos(Wnd, &wpl.ptMinPosition);
 
-               if (!(old_style & WS_MINIMIZE))
+               /*if (!(old_style & WS_MINIMIZE))
                {
                   SwpFlags |= SWP_STATECHANGED;
                   IntShowOwnedPopups(Wnd, FALSE);
-               }
+               }*/
 
                RECTL_vSetRect(NewPos, wpl.ptMinPosition.x, wpl.ptMinPosition.y,
                              wpl.ptMinPosition.x + UserGetSystemMetrics(SM_CXMINIMIZED),
@@ -2325,7 +2325,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                old_style = IntSetStyle( Wnd, 0, WS_MINIMIZE | WS_MAXIMIZE );
                if (old_style & WS_MINIMIZE)
                {
-                  IntShowOwnedPopups(Wnd, TRUE);
+                  //IntShowOwnedPopups(Wnd, TRUE);
 
                   if (Wnd->InternalPos.flags & WPF_RESTORETOMAXIMIZED)
                   {
