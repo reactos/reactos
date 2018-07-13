@@ -619,14 +619,6 @@ IntDefWindowProc(
          if (!Wnd->spwndOwner) break;
          if (LOWORD(lParam))
          {
-            if (wParam)
-            {
-               if (!(Wnd->state & WNDS_HIDDENPOPUP)) break;
-               Wnd->state &= ~WNDS_HIDDENPOPUP;
-            }
-            else
-                Wnd->state |= WNDS_HIDDENPOPUP;
-
             co_WinPosShowWindow(Wnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }
          break;

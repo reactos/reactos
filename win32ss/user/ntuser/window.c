@@ -279,6 +279,39 @@ IntWinListChildren(PWND Window)
    return List;
 }
 
+HWND* FASTCALL
+IntWinListOwnedPopups(PWND Window)
+{
+    PWND Child, Desktop;
+    HWND *List;
+    UINT Index, NumChildren = 0;
+
+    Desktop = co_GetDesktopWindow(Window);
+    if (!Desktop)
+        return NULL;
+
+    for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
+        ++NumChildren;
+
+    List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    if (!List)
+    {
+        ERR("Failed to allocate memory for children array\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    Index = 0;
+    for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
+    {
+        if (Child->spwndOwner == Window)
+            List[Index++] = Child->head.h;
+    }
+    List[Index] = NULL;
+
+    return List;
+}
+
 PWND FASTCALL
 IntGetNonChildAncestor(PWND pWnd)
 {
@@ -4400,7 +4433,9 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
 //   ASSERT(OwnerWnd);
 
    TRACE("Enter ShowOwnedPopups Show: %s\n", (fShow ? "TRUE" : "FALSE"));
-   win_array = IntWinListChildren(OwnerWnd);
+
+   /* NOTE: Popups are not children */
+   win_array = IntWinListOwnedPopups(OwnerWnd);
 
    if (!win_array)
       return TRUE;
@@ -4423,6 +4458,7 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
              * regardless of the state of the owner
              */
             co_IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_SHOWNORMAL, SW_PARENTOPENING);
+            pWnd->state &= ~WNDS_HIDDENPOPUP;
             continue;
          }
       }
@@ -4435,10 +4471,10 @@ IntShowOwnedPopups(PWND OwnerWnd, BOOL fShow )
              * regardless of the state of the owner
              */
             co_IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_HIDE, SW_PARENTCLOSING);
+            pWnd->state |= WNDS_HIDDENPOPUP;
             continue;
          }
       }
-
    }
    ExFreePoolWithTag(win_array, USERTAG_WINDOWLIST);
    TRACE("Leave ShowOwnedPopups\n");
