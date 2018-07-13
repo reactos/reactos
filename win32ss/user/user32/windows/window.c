@@ -84,7 +84,8 @@ SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
     HWND hwndFG;
     if (fAltTab)
     {
-        ShowWindowAsync(hwnd, SW_RESTORE);
+        if (IsIconic(hwnd))
+            ShowWindowAsync(hwnd, SW_RESTORE);
         SetForegroundWindow(hwnd);
     }
     else
