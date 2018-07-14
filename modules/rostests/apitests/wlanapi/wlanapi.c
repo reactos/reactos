@@ -56,7 +56,7 @@ static void WlanOpenHandle_test(void)
 static void WlanCloseHandle_test(void)
 {
     DWORD ret;
-    HANDLE hClientHandle = (HANDLE) 0xdeadbeef;
+    HANDLE hClientHandle = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
 
     /* invalid pReserved */
     ret = WlanCloseHandle(hClientHandle, (PVOID) 1);
