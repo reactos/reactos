@@ -816,6 +816,11 @@ typedef enum _D3DFORMAT {
     D3DFMT_D32F_LOCKABLE        =  82,
     D3DFMT_D24FS8               =  83,
 
+#ifndef D3D_DISABLE_9EX
+    D3DFMT_D32_LOCKABLE         =  84,
+    D3DFMT_S8_LOCKABLE          =  85,
+#endif
+
     D3DFMT_VERTEXDATA           = 100,
     D3DFMT_INDEX16              = 101,
     D3DFMT_INDEX32              = 102,
