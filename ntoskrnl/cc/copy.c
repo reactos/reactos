@@ -779,6 +779,7 @@ CcCanIWrite (
                                     &CcDeferredWriteSpinLock);
     }
 
+    DPRINT1("Actively deferring write for: %p\n", FileObject);
     /* Now, we'll loop until our event is set. When it is set, it means that caller
      * can immediately write, and has to
      */
