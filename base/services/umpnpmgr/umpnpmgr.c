@@ -926,61 +926,58 @@ PNP_GetDeviceRegProp(
         switch (ulProperty)
         {
             case CM_DRP_PHYSICAL_DEVICE_OBJECT_NAME:
-                PlugPlayData.Property = 0xb; // DevicePropertyPhysicalDeviceObjectName;
+                PlugPlayData.Property = PNP_PROPERTY_PHYSICAL_DEVICE_OBJECT_NAME;
                 break;
 
             case CM_DRP_UI_NUMBER:
-                PlugPlayData.Property = 0x11; // DevicePropertyUINumber;
+                PlugPlayData.Property = PNP_PROPERTY_UI_NUMBER;
                 break;
 
             case CM_DRP_BUSTYPEGUID:
-                PlugPlayData.Property = 0xc; // DevicePropertyBusTypeGuid;
+                PlugPlayData.Property = PNP_PROPERTY_BUSTYPEGUID;
                 break;
 
             case CM_DRP_LEGACYBUSTYPE:
-                PlugPlayData.Property = 0xd; // DevicePropertyLegacyBusType;
+                PlugPlayData.Property = PNP_PROPERTY_LEGACYBUSTYPE;
                 break;
 
             case CM_DRP_BUSNUMBER:
-                PlugPlayData.Property = 0xe; // DevicePropertyBusNumber;
+                PlugPlayData.Property = PNP_PROPERTY_BUSNUMBER;
                 break;
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = 0xf; // DevicePropertyEnumeratorName;
+                PlugPlayData.Property = PNP_PROPERTY_ENUMERATOR_NAME;
                 break;
 
             case CM_DRP_ADDRESS:
-                PlugPlayData.Property = 0x10; // DevicePropertyAddress;
+                PlugPlayData.Property = PNP_PROPERTY_ADDRESS;
                 break;
 
-#if 0
-            /* FIXME: This property is not supported by IoGetDeviceProperty */
             case CM_DRP_DEVICE_POWER_DATA:
-#endif
+                PlugPlayData.Property = PNP_PROPERTY_POWER_DATA;
+                break;
 
             case CM_DRP_REMOVAL_POLICY:
-                PlugPlayData.Property = 0x13; // DevicePropertyRemovalPolicy
+                PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY;
                 break;
 
-#if 0
-            /* FIXME: This property is not supported by IoGetDeviceProperty */
             case CM_DRP_REMOVAL_POLICY_HW_DEFAULT:
-#endif
+                PlugPlayData.Property = PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT;
+                break;
 
             case CM_DRP_INSTALL_STATE:
-                PlugPlayData.Property = 0x12; // DevicePropertyInstallState;
+                PlugPlayData.Property = PNP_PROPERTY_INSTALL_STATE;
                 break;
 
-#if 0
-            /* FIXME: This property is not supported by IoGetDeviceProperty */
 #if (WINVER >= _WIN32_WINNT_WS03)
             case CM_DRP_LOCATION_PATHS:
-#endif
+                PlugPlayData.Property = PNP_PROPERTY_LOCATION_PATHS;
+                break;
 #endif
 
 #if (WINVER >= _WIN32_WINNT_WIN7)
             case CM_DRP_BASE_CONTAINERID:
-                PlugPlayData.Property = 0x16; // DevicePropertyContainerID;
+                PlugPlayData.Property = PNP_PROPERTY_CONTAINERID;
                 break;
 #endif
 
