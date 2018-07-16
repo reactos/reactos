@@ -12,7 +12,7 @@
        Dma functions (see hal/x86/dma.c)
        Shutdown support (see ex/power.c)
        Zw(Set/Get)SystemInformation (see ex/sysinfo.c)
-       Io cancelation support (see io/cancel, et al)
+       Io cancellation support (see io/cancel, et al)
        Directory change notification (see io/dir.c)
        Error logging (see io/errlog.c)
        Io completion ports (see io/iocomp.c)

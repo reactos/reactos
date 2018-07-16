@@ -49,7 +49,7 @@ GUI thread conversion.  The Win32 process initialization callback routine
 also creates and initializes the W32PROCESS structure and associates it with
 the process.
 
-Similary for thread the callback routine automatically assigns a desktop
+Similarly for thread the callback routine automatically assigns a desktop
 when the thread is converted to GUI thread. The thread also gets a W32THREAD
 structure, a message queue and a thread input structures.
 

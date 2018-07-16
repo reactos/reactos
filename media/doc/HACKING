@@ -77,7 +77,7 @@ Debugging kernel-mode code is tricky, these are some snippets
     The fault type will usually be either 'General Protection' or
     'Page Fault', see your Intel manual for the more exotic types. The
     'EIP' number is the address of the faulting instruction. If the 'CS'
-    number is 0x20 then the exception occured in kernel mode, if it is 0x11
+    number is 0x20 then the exception occurred in kernel mode, if it is 0x11
     then the exception occurred in user mode. 'cr2' is the address that the
     faulting instruction was trying to access, if the exception was a page 
     fault. The number printed after 'Frames' are any addresses on the stack
@@ -92,7 +92,7 @@ Debugging kernel-mode code is tricky, these are some snippets
 	           ....
 		   
     Again the numbers printed after 'Frames' are any addresses on the stack
-    that look like function addresss. Usually the kernel will also print a
+    that look like function addresses. Usually the kernel will also print a
     message describing the problem in more detail, the bug check code isn't
     very useful at the moment. 
     
@@ -117,8 +117,8 @@ Debugging kernel-mode code is tricky, these are some snippets
     The NT4 ddk license agreement allows its usage for developing nt drivers
     only. Legally therefore it can not be used to develop ReactOS, neither the
     documentation or the sample code. I'm not a lawyer, but I doubt the
-    effiacy of 'shrinkwrap licenses' particularly on freely downloadable 
-    software. The only precendent I know of, in a Scottish court, didn't
+    efficacy of 'shrinkwrap licenses' particularly on freely downloadable
+    software. The only precedent I know of, in a Scottish court, didn't
     upload this type of license.
     
     Also the 'fair use' section of copyright law allows the 'quoting' of small

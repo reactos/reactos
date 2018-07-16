@@ -1,6 +1,6 @@
 SAWinSta
 --------
-I write a GUI appication, and the user may run it in task schedule. Since
+I write a GUI application, and the user may run it in task schedule. Since
 windows 2000/XP treat schedule task as a service, the schedule service can
 not be associated with interactive desktop object in the in 2 states
 1) No user log on
@@ -64,7 +64,7 @@ Process closing window station with CloseWindowStation can't be assigned to the 
 
 The reason is that each session has its own CSRSS, as well as instanced
 win32k.sys data.  So in each session, you basically have a complete copy of
-Windows that doesn't know about the existance of any other copy.  You're not
+Windows that doesn't know about the existence of any other copy.  You're not
 just on a different desktop/windowstation when you're in a different
 session.
 
@@ -78,12 +78,12 @@ The CreateDesktop function creates a new desktop on the window station associate
 
 PROCESS:
 -every w32 process is associated with a WindowStation
--can move between window stations (well, with strict limitations i would guess eg. what if
+-can move between window stations (well, with strict limitations i would guess e.g. what if
  windows have been created and is using the winsta heap? or can multiple winsta heaps be mapped into
  one process?? )
 
 THREADS:
--can only enumerate windows on its desktop (but u can easely switch to a different desk)
+-can only enumerate windows on its desktop (but you can easily switch to a different desk)
 -every w32 thread is associated with a Desktop
 -Threads can switch between desktops, and windows are created on the thread's current desktop
  (a thread can have windows on multiple desktops? IS THIS REALLY TRUE?)
@@ -94,7 +94,7 @@ DESKTOP:
 be associated with Winsta0
 -Only one desktop is visible to the user and only one can receives input at any time
 -contain a logical display surface
--contin windows (or a pointer to the desktop window)
+-contain windows (or a pointer to the desktop window)
 -contain menus
 -contain hooks
 -holds UI objects, such as windows, menus, and hooks

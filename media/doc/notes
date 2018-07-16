@@ -11,7 +11,7 @@ From: Emanuele Aliberti <ea@iol.it>
 
 For those working on the boot loader: in WinNt Magazine november 1998
 issue (http://www.winntmag.com/) there is a detailed description, by
-Mark Russinovich, of the rôle the MBR, NTLDR, boot.ini, ntdetect.com...
+Mark Russinovich, of the role the MBR, NTLDR, boot.ini, ntdetect.com...
 play in the boot process ("Inside the Boot Process, Part 1").
 -----
 Yes with DPCs, KeDrainDpcQueue should go to HIGH_LEVEL because 
@@ -85,7 +85,7 @@ makefile for the module to generate a listing file with
 symbol information.  Then, on a boot test, note the
 address that the module is loaded at, and subtract
 this from the EIP value.  add any offset used in the
-module link specification (I dont think there currently
+module link specification (I don't think there currently
 is one), and look for the last symbol with a lower
 address offset.
 
@@ -96,7 +96,7 @@ in memory somewhere.  Perhaps the exception
 dump could check offending addresses to see if
 they lie in the kernel or in a module, and if they
 lie in a module the proper offset could be subtracted
-and this number could be displayed seperately.  If
+and this number could be displayed separately.  If
 I get a chance today, I'll make this change and send
 it to ya.
 
@@ -109,7 +109,7 @@ Organization: Microsoft Corp.
 Newsgroups: microsoft.public.win32.programmer.kernel, comp.os.ms-windows.programmer.nt.kernel-mode
 References: 1
 
-Radu, I post the following information occassionally for questions such as
+Radu, I post the following information occasionally for questions such as
 yours.  I hope it helps.
 
 -Paul
@@ -254,7 +254,7 @@ Device Driver Completion Routine perspective
 standard completion routine operations
 set IoStatus.Status to an approriate NtStatus
 IoStatus.Information is not needed
-completete the request
+complete the request
 
 
 
@@ -333,7 +333,7 @@ return status pending
 Device Driver Completion Routine perspective
 
 standard completion routine operations
-set IoStatus.Status to an approriate NtStatus
+set IoStatus.Status to an appropriate NtStatus
 IoStatus.Information is not needed
 completete the request
 
@@ -413,13 +413,13 @@ Something(
 >
 >The aDataIn buffer will not exist after DeviceIoControl returns (and
 >when the I/O operation terminates). I know that for buffered IO the
->input data buffer is copyed by de IOManager to a nonpaged-pool area
+>input data buffer is copied by de IOManager to a nonpaged-pool area
 >before passing the request to driver dispatch routine (DeviceControl).
 >At the point of calling the dispatch routine (DeviceControl) the driver
 >runs in the context of the calling thread so DeviceIoControl hasn't
 >returned yet (?? or so I think) so aDataI
 n will still be valid at the
->time IOManager copyes it to its buffer. So, this apears to work ok (at
+>time IOManager copies it to its buffer. So, this appears to work ok (at
 >least in my opinion).
 >
 >Does I/O Manager use the Input buffer from the call to the Win32
