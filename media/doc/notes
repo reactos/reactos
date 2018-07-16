@@ -413,12 +413,11 @@ Something(
 >
 >The aDataIn buffer will not exist after DeviceIoControl returns (and
 >when the I/O operation terminates). I know that for buffered IO the
->input data buffer is copied by de IOManager to a nonpaged-pool area
+>input data buffer is copied by IOManager to a nonpaged-pool area
 >before passing the request to driver dispatch routine (DeviceControl).
 >At the point of calling the dispatch routine (DeviceControl) the driver
 >runs in the context of the calling thread so DeviceIoControl hasn't
->returned yet (?? or so I think) so aDataI
-n will still be valid at the
+>returned yet (?? or so I think) so aDataIn will still be valid at the
 >time IOManager copies it to its buffer. So, this appears to work ok (at
 >least in my opinion).
 >

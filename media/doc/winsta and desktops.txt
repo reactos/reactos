@@ -93,10 +93,10 @@ DESKTOP:
 -Only one desktop at a time can interact with the user, and that desktop must necessarily 
 be associated with Winsta0
 -Only one desktop is visible to the user and only one can receives input at any time
--contain a logical display surface
--contain windows (or a pointer to the desktop window)
--contain menus
--contain hooks
+-contains a logical display surface
+-contains windows (or a pointer to the desktop window)
+-contains menus
+-contains hooks
 -holds UI objects, such as windows, menus, and hooks
 -Once a window is created it cannot move between desktops
 
@@ -118,7 +118,7 @@ WINDOW STATION:
 -contains a clipboard
 -contains a set of desktop objects
 -contains handle table(s) (handles are valid throughout the whole windowstation, not only the creating process)
--contain heaps (pointer(s) to the section heap(s) shared between user32/gdi32/win32k)
+-contains heaps (pointer(s) to the section heap(s) shared between user32/gdi32/win32k)
 -A Windows 2000 session will have several windows stations, one assigned to the logon session 
  of the interactive user, and others assigned to the Winlogon process, the secure screen saver
  process, and any service that runs in a security context other than that of the interactive user.
