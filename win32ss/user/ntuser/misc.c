@@ -9,6 +9,30 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+
+/*
+ * NOTE: _scwprintf() is NOT exported by ntoskrnl.exe,
+ * only _vscwprintf() is, so we need to implement it here.
+ * Code comes from sdk/lib/crt/printf/_scwprintf.c .
+ * See also win32ss/user/winsrv/usersrv/harderror.c .
+ */
+int
+__cdecl
+_scwprintf(
+    const wchar_t *format,
+    ...)
+{
+    int len;
+    va_list args;
+
+    va_start(args, format);
+    len = _vscwprintf(format, args);
+    va_end(args);
+
+    return len;
+}
+
+
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
  */
