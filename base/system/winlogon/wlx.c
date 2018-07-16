@@ -1271,7 +1271,7 @@ CreateWindowStationAndDesktops(
         NULL,
         0,
         MAXIMUM_ALLOWED,
-        &DefaultSecurity);
+        &DefaultSecurity); // FIXME: Must use restricted Winlogon-only security!!
     if (!Session->WinlogonDesktop)
     {
         ERR("WL: Failed to create Winlogon desktop (%lu)\n", GetLastError());
@@ -1303,6 +1303,9 @@ CreateWindowStationAndDesktops(
         ERR("WL: Cannot switch to Winlogon desktop (%lu)\n", GetLastError());
         goto cleanup;
     }
+
+    SetWindowStationUser(Session->InteractiveWindowStation,
+                         &LuidNone, NULL, 0);
 
     ret = TRUE;
 
