@@ -7,6 +7,7 @@
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,6 +15,7 @@
 #include <consrv.h>
 #include <intrin.h>
 #include <windowsx.h>
+#include <shellapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -586,7 +588,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
     PCONSRV_CONSOLE Console;
 
-    if (NULL == GuiData)
+    if (GuiData == NULL)
     {
         DPRINT1("GuiConsoleNcCreate: No GUI data\n");
         return FALSE;
@@ -638,6 +640,9 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
 
     DPRINT("OnNcCreate - setting start event\n");
     NtSetEvent(GuiData->hGuiInitEvent, NULL);
+
+    /* We accept dropped files */
+    DragAcceptFiles(GuiData->hWindow, TRUE);
 
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
@@ -2100,6 +2105,29 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
     GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
 }
 
+static VOID
+OnDropFiles(PCONSRV_CONSOLE Console, HDROP hDrop)
+{
+    LPWSTR pszPath;
+    WCHAR szPath[MAX_PATH + 2];
+
+    szPath[0] = L'"';
+
+    DragQueryFileW(hDrop, 0, &szPath[1], ARRAYSIZE(szPath) - 1);
+    DragFinish(hDrop);
+
+    if (wcschr(&szPath[1], L' ') != NULL)
+    {
+        StringCchCatW(szPath, ARRAYSIZE(szPath), L"\"");
+        pszPath = szPath;
+    }
+    else
+    {
+        pszPath = &szPath[1];
+    }
+
+    PasteText(Console, pszPath, wcslen(pszPath));
+}
 
 /*
 // HACK: This functionality is standard for general scrollbars. Don't add it by hand.
@@ -2386,6 +2414,10 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Result = OnCommand(GuiData, wParam, lParam);
             break;
         }
+
+        case WM_DROPFILES:
+            OnDropFiles(Console, (HDROP)wParam);
+            break;
 
         case WM_SETFOCUS:
         case WM_KILLFOCUS:
