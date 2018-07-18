@@ -71,7 +71,7 @@ add_compile_flags("/wd4018")
 # - C4013: implicit function declaration
 # - C4020: too many actual parameters
 # - C4022: pointer type mismatch for parameter
-# - TODO: C4028: formal parameter different from declaration
+# - C4028: formal parameter different from declaration
 # - C4047: different level of indirection
 # - TODO: C4090: different 'modifier' qualifiers (for C programs only;
 #          for C++ programs, the compiler error C2440 is issued)
@@ -85,6 +85,10 @@ add_compile_flags("/wd4018")
 # - C4603: macro is not defined or definition is different after precompiled header use
 # - C4716: function must return a value
 add_compile_flags("/we4013 /we4020 /we4022 /we4047 /we4098 /we4113 /we4129 /we4163 /we4229 /we4700 /we4603 /we4716")
+# TODO: Check and fix other architectures.
+if(ARCH STREQUAL "i386")
+    add_compile_flags("/we4028")
+endif()
 
 # - C4189: local variable initialized but not referenced
 # Not in Release mode and not with MSVC 2010
