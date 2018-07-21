@@ -387,6 +387,107 @@ GenerateRandomPassword(
 }
 
 
+static
+NET_API_STATUS
+BuildWorkstationsList(
+    _Out_ PWSTR *pWorkstationsList,
+    _In_ PWSTR pRaw)
+{
+    BOOL isLastSep, isSep;
+    INT i, j;
+    WCHAR c;
+    INT nLength = 0;
+    INT nArgs = 0;
+    INT nRawLength;
+    PWSTR pList;
+
+    /* Check for invalid characters in the raw string */
+    if (wcspbrk(pRaw, L"/[]=?\\+:.") != NULL)
+        return 3952;
+
+    /* Count the number of workstations in the list and
+     * the required buffer size */
+    isLastSep = FALSE;
+    isSep = FALSE;
+    nRawLength = wcslen(pRaw);
+    for (i = 0; i < nRawLength; i++)
+    {
+        c = pRaw[i];
+        if (c == L',' || c == L';')
+            isSep = TRUE;
+
+        if (isSep == TRUE)
+        {
+            if ((isLastSep == FALSE) && (i != 0) && (i != nRawLength - 1))
+                nLength++;
+        }
+        else
+        {
+            nLength++;
+
+            if (isLastSep == TRUE || (isLastSep == FALSE && i == 0))
+                nArgs++;
+        }
+
+        isLastSep = isSep;
+        isSep = FALSE;
+    }
+
+    nLength++;
+
+    /* Leave, if there are no workstations in the list */
+    if (nArgs == 0)
+    {
+        pWorkstationsList = NULL;
+        return NERR_Success;
+    }
+
+    /* Fail if there are more than eight workstations in the list */
+    if (nArgs > 8)
+        return 3951;
+
+    /* Allocate the buffer for the clean workstation list */
+    pList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nLength * sizeof(WCHAR));
+    if (pList == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    /* Build the clean workstation list */
+    isLastSep = FALSE;
+    isSep = FALSE;
+    nRawLength = wcslen(pRaw);
+    for (i = 0, j = 0; i < nRawLength; i++)
+    {
+        c = pRaw[i];
+        if (c == L',' || c == L';')
+            isSep = TRUE;
+
+        if (isSep == TRUE)
+        {
+            if ((isLastSep == FALSE) && (i != 0) && (i != nRawLength - 1))
+            {
+                pList[j] = L',';
+                j++;
+            }
+        }
+        else
+        {
+            pList[j] = c;
+            j++;
+
+            if (isLastSep == TRUE || (isLastSep == FALSE && i == 0))
+                nArgs++;
+        }
+
+        isLastSep = isSep;
+        isSep = FALSE;
+    }
+
+    *pWorkstationsList = pList;
+
+    return NERR_Success;
+}
+
+
 INT
 cmdUser(
     INT argc,
@@ -404,6 +505,7 @@ cmdUser(
     LPWSTR lpPassword = NULL;
     PUSER_INFO_4 pUserInfo = NULL;
     USER_INFO_4 UserInfo;
+    LPWSTR pWorkstations = NULL;
     LPWSTR p;
     LPWSTR endptr;
     DWORD value;
@@ -622,8 +724,25 @@ cmdUser(
         }
         else if (_wcsnicmp(argv[j], L"/workstations:", 14) == 0)
         {
-            /* FIXME */
-            ConResPrintf(StdErr, IDS_ERROR_OPTION_NOT_SUPPORTED, L"/WORKSTATIONS");
+            p = &argv[i][14];
+            if (wcscmp(p, L"*") == 0 || wcscmp(p, L"") == 0)
+            {
+                pUserInfo->usri4_workstations = NULL;
+            }
+            else
+            {
+                Status = BuildWorkstationsList(&pWorkstations, p);
+                if (Status == NERR_Success)
+                {
+                    pUserInfo->usri4_workstations = pWorkstations;
+                }
+                else
+                {
+                    ConPrintf(StdOut, L"Status %lu\n\n", Status);
+                    result = 1;
+                    goto done;
+                }
+            }
         }
     }
 
@@ -662,6 +781,9 @@ cmdUser(
     }
 
 done:
+    if (pWorkstations != NULL)
+        HeapFree(GetProcessHeap(), 0, pWorkstations);
+
     if ((bPasswordAllocated == TRUE) && (lpPassword != NULL))
         HeapFree(GetProcessHeap(), 0, lpPassword);
 
