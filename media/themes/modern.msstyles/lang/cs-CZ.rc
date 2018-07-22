@@ -1,0 +1,39 @@
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+1000, "Jasný"
+1001, "Temný"
+}
+
+STRINGTABLE
+{
+2000, "Modern Jasný"
+2001, "Modern Temný"
+}
+
+STRINGTABLE
+{
+3000, "Normální"
+3001, "Velké písmo"
+3002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+4000, "Normální"
+4001, "Velké písmo"
+4002, "Velmi velké písmo"
+}
+
+STRINGTABLE
+{
+5000, "Modern"
+5001, "Motiv"
+5002, "Nadace ReactOS"
+5003, "Polar, založeno na win10"
+5004, "Uvolněno pod licencí GNU/GPL 3.0, 2018"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Motiv pro ReactOS"
+}
