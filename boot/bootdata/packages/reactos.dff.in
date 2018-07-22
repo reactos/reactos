@@ -78,7 +78,7 @@ Signature = "$ReactOS$"
 58 = winsxs\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.7601.23038_none_deadbeef
 59 = winsxs\x86_reactos.apisets_6595b64144ccf1df_1.0.0.0_none_deadbeef
 60 = winsxs\x86_reactos.newapi_6595b64144ccf1df_1.0.0.0_none_deadbeef
-
+61 = Resources\Themes\Modern
 .InfEnd
 
 ; Contents of disk
