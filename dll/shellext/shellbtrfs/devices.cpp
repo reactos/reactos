@@ -907,7 +907,11 @@ static INT_PTR CALLBACK stub_DeviceResizeDlgProc(HWND hwndDlg, UINT uMsg, WPARAM
 
 void BtrfsDeviceResize::ShowDialog(HWND hwnd, WCHAR* fn, UINT64 dev_id) {
     this->dev_id = dev_id;
+#ifdef __REACTOS__
+    wcscpy_s(this->fn, _countof(this->fn), fn);
+#else
     wcscpy(this->fn, fn);
+#endif
 
     DialogBoxParamW(module, MAKEINTRESOURCEW(IDD_RESIZE), hwnd, stub_DeviceResizeDlgProc, (LPARAM)this);
 }
