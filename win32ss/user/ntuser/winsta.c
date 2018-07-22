@@ -14,7 +14,10 @@ DBG_DEFAULT_CHANNEL(UserWinsta);
 
 /* GLOBALS *******************************************************************/
 
-/* Currently active window station */
+/*
+ * The currently active window station. This is the
+ * only one interactive window station on the system.
+ */
 PWINSTATION_OBJECT InputWindowStation = NULL;
 
 /* Winlogon SAS window */
@@ -96,7 +99,7 @@ UserCreateWinstaDirectory(VOID)
     return Status;
 }
 
-/* OBJECT CALLBACKS  **********************************************************/
+/* OBJECT CALLBACKS ***********************************************************/
 
 NTSTATUS
 NTAPI
@@ -106,7 +109,18 @@ IntWinStaObjectDelete(
     PWIN32_DELETEMETHOD_PARAMETERS DeleteParameters = Parameters;
     PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)DeleteParameters->Object;
 
-    TRACE("Deleting window station (0x%p)\n", WinSta);
+    TRACE("Deleting window station 0x%p\n", WinSta);
+
+    if (WinSta == InputWindowStation)
+    {
+        ERR("WARNING: Deleting the interactive window station '%wZ'!\n",
+            &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(InputWindowStation))->Name));
+
+        /* Only Winlogon can close and delete the interactive window station */
+        ASSERT(gpidLogon == PsGetCurrentProcessId());
+
+        InputWindowStation = NULL;
+    }
 
     WinSta->Flags |= WSS_DYING;
 
@@ -192,7 +206,7 @@ IntWinStaOkToClose(
 
     ppi = PsGetCurrentProcessWin32Process();
 
-    if(ppi && (OkToCloseParameters->Handle == ppi->hwinsta))
+    if (ppi && (OkToCloseParameters->Handle == ppi->hwinsta))
     {
         return STATUS_ACCESS_DENIED;
     }
@@ -390,6 +404,7 @@ IntCreateWindowStation(
     OUT HWINSTA* phWinSta,
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
+    IN KPROCESSOR_MODE OwnerMode,
     IN ACCESS_MASK dwDesiredAccess,
     DWORD Unknown2,
     DWORD Unknown3,
@@ -398,8 +413,8 @@ IntCreateWindowStation(
     DWORD Unknown6)
 {
     NTSTATUS Status;
-    HWINSTA WindowStation;
-    PWINSTATION_OBJECT WindowStationObject;
+    HWINSTA hWinSta;
+    PWINSTATION_OBJECT WindowStation;
 
     TRACE("IntCreateWindowStation called\n");
 
@@ -412,60 +427,61 @@ IntCreateWindowStation(
                                 NULL,
                                 dwDesiredAccess,
                                 NULL,
-                                (PVOID*)&WindowStation);
+                                (PVOID*)&hWinSta);
     if (NT_SUCCESS(Status))
     {
-        TRACE("IntCreateWindowStation opened window station %wZ\n",
+        TRACE("IntCreateWindowStation opened window station '%wZ'\n",
               ObjectAttributes->ObjectName);
-        *phWinSta = WindowStation;
+        *phWinSta = hWinSta;
         return Status;
     }
 
     /*
-     * No existing window station found, try to create new one.
+     * No existing window station found, try to create a new one.
      */
 
     /* Create the window station object */
-    Status = ObCreateObject(KernelMode,
+    Status = ObCreateObject(AccessMode,
                             ExWindowStationObjectType,
                             ObjectAttributes,
-                            AccessMode,
+                            OwnerMode,
                             NULL,
                             sizeof(WINSTATION_OBJECT),
                             0,
                             0,
-                            (PVOID*)&WindowStationObject);
+                            (PVOID*)&WindowStation);
     if (!NT_SUCCESS(Status))
     {
-        ERR("ObCreateObject failed with %lx for window station %wZ\n",
-            Status, ObjectAttributes->ObjectName);
+        ERR("ObCreateObject failed for window station '%wZ', Status 0x%08lx\n",
+            ObjectAttributes->ObjectName, Status);
         SetLastNtError(Status);
         return Status;
     }
 
     /* Initialize the window station */
-    RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
+    RtlZeroMemory(WindowStation, sizeof(WINSTATION_OBJECT));
 
-    InitializeListHead(&WindowStationObject->DesktopListHead);
-    WindowStationObject->dwSessionId = NtCurrentPeb()->SessionId;
-    Status = RtlCreateAtomTable(37, &WindowStationObject->AtomTable);
+    InitializeListHead(&WindowStation->DesktopListHead);
+    WindowStation->dwSessionId = NtCurrentPeb()->SessionId;
+    Status = RtlCreateAtomTable(37, &WindowStation->AtomTable);
     if (!NT_SUCCESS(Status))
     {
-        ERR("RtlCreateAtomTable failed with %lx for window station %wZ\n", Status, ObjectAttributes->ObjectName);
-        ObDereferenceObject(WindowStationObject);
+        ERR("RtlCreateAtomTable failed for window station '%wZ', Status 0x%08lx\n",
+            ObjectAttributes->ObjectName, Status);
+        ObDereferenceObject(WindowStation);
         SetLastNtError(Status);
         return Status;
     }
 
-    Status = ObInsertObject(WindowStationObject,
+    Status = ObInsertObject(WindowStation,
                             NULL,
                             dwDesiredAccess,
                             0,
                             NULL,
-                            (PVOID*)&WindowStation);
+                            (PVOID*)&hWinSta);
     if (!NT_SUCCESS(Status))
     {
-        ERR("ObInsertObject failed with %lx for window station\n", Status);
+        ERR("ObInsertObject failed for window station, Status 0x%08lx\n", Status);
         SetLastNtError(Status);
         return Status;
     }
@@ -475,22 +491,180 @@ IntCreateWindowStation(
     if (InputWindowStation == NULL)
     {
         ERR("Initializing input window station\n");
-        InputWindowStation = WindowStationObject;
 
-        WindowStationObject->Flags &= ~WSS_NOIO;
+        /* Only Winlogon can create the interactive window station */
+        ASSERT(gpidLogon == PsGetCurrentProcessId());
 
+        InputWindowStation = WindowStation;
+        WindowStation->Flags &= ~WSS_NOIO;
         InitCursorImpl();
     }
     else
     {
-        WindowStationObject->Flags |= WSS_NOIO;
+        WindowStation->Flags |= WSS_NOIO;
     }
 
-    TRACE("IntCreateWindowStation created object 0x%p with name %wZ handle 0x%p\n",
-          WindowStationObject, ObjectAttributes->ObjectName, WindowStation);
+    TRACE("IntCreateWindowStation created window station '%wZ' object 0x%p handle 0x%p\n",
+          ObjectAttributes->ObjectName, WindowStation, hWinSta);
 
-    *phWinSta = WindowStation;
+    *phWinSta = hWinSta;
     return STATUS_SUCCESS;
+}
+
+static VOID
+FreeUserModeWindowStationName(
+    IN OUT PUNICODE_STRING WindowStationName,
+    IN PUNICODE_STRING TebStaticUnicodeString,
+    IN OUT POBJECT_ATTRIBUTES UserModeObjectAttributes OPTIONAL,
+    IN POBJECT_ATTRIBUTES LocalObjectAttributes OPTIONAL)
+{
+    SIZE_T MemSize = 0;
+
+    /* Try to restore the user's UserModeObjectAttributes */
+    if (UserModeObjectAttributes && LocalObjectAttributes)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(UserModeObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+            *UserModeObjectAttributes = *LocalObjectAttributes;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            NOTHING;
+        }
+        _SEH2_END;
+    }
+
+    /* Free the user-mode memory */
+    if (WindowStationName && (WindowStationName != TebStaticUnicodeString))
+    {
+        ZwFreeVirtualMemory(ZwCurrentProcess(),
+                            (PVOID*)&WindowStationName,
+                            &MemSize,
+                            MEM_RELEASE);
+    }
+}
+
+static NTSTATUS
+BuildUserModeWindowStationName(
+    IN OUT POBJECT_ATTRIBUTES UserModeObjectAttributes,
+    IN OUT POBJECT_ATTRIBUTES LocalObjectAttributes,
+    OUT PUNICODE_STRING* WindowStationName,
+    OUT PUNICODE_STRING* TebStaticUnicodeString)
+{
+    NTSTATUS Status;
+    SIZE_T MemSize;
+
+    LUID CallerLuid;
+    PTEB Teb;
+    USHORT StrSize;
+
+    *WindowStationName = NULL;
+    *TebStaticUnicodeString = NULL;
+
+    /* Retrieve the current process LUID */
+    Status = GetProcessLuid(NULL, NULL, &CallerLuid);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Failed to retrieve the caller LUID, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    /* Compute the needed string size */
+    MemSize = _scwprintf(L"%wZ\\Service-0x%x-%x$",
+                         &gustrWindowStationsDir,
+                         CallerLuid.HighPart,
+                         CallerLuid.LowPart);
+    MemSize = MemSize * sizeof(WCHAR) + sizeof(UNICODE_NULL);
+    if (MemSize > MAXUSHORT)
+    {
+        ERR("Window station name length is too long.\n");
+        return STATUS_NAME_TOO_LONG;
+    }
+    StrSize = (USHORT)MemSize;
+
+    /*
+     * Check whether it's short enough so that we can use the static buffer
+     * in the TEB. Otherwise continue with virtual memory allocation.
+     */
+    Teb = NtCurrentTeb();
+    if (Teb && (StrSize <= sizeof(Teb->StaticUnicodeBuffer)))
+    {
+        /* We can use the TEB's static unicode string */
+        ASSERT(Teb->StaticUnicodeString.Buffer == Teb->StaticUnicodeBuffer);
+        ASSERT(Teb->StaticUnicodeString.MaximumLength == sizeof(Teb->StaticUnicodeBuffer));
+
+        /* Remember the TEB's static unicode string address for later */
+        *TebStaticUnicodeString = &Teb->StaticUnicodeString;
+
+        *WindowStationName = *TebStaticUnicodeString;
+        (*WindowStationName)->Length = 0;
+    }
+    else
+    {
+        /* The TEB's static unicode string is too small, allocate some user-mode virtual memory */
+        MemSize += ALIGN_UP(sizeof(UNICODE_STRING), sizeof(PVOID));
+
+        /* Allocate the memory in user-mode */
+        Status = ZwAllocateVirtualMemory(ZwCurrentProcess(),
+                                         (PVOID*)WindowStationName,
+                                         0,
+                                         &MemSize,
+                                         MEM_COMMIT,
+                                         PAGE_READWRITE);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("ZwAllocateVirtualMemory() failed, Status 0x%08lx\n", Status);
+            return Status;
+        }
+
+        RtlInitEmptyUnicodeString(*WindowStationName,
+                                  (PWCHAR)((ULONG_PTR)*WindowStationName +
+                                      ALIGN_UP(sizeof(UNICODE_STRING), sizeof(PVOID))),
+                                  StrSize);
+    }
+
+    /* Build a valid window station name from the LUID */
+    Status = RtlStringCbPrintfW((*WindowStationName)->Buffer,
+                                (*WindowStationName)->MaximumLength,
+                                L"%wZ\\Service-0x%x-%x$",
+                                &gustrWindowStationsDir,
+                                CallerLuid.HighPart,
+                                CallerLuid.LowPart);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("Impossible to build a valid window station name, Status 0x%08lx\n", Status);
+        goto Quit;
+    }
+    (*WindowStationName)->Length = (USHORT)(wcslen((*WindowStationName)->Buffer) * sizeof(WCHAR));
+
+    /* Try to update the user's UserModeObjectAttributes */
+    _SEH2_TRY
+    {
+        ProbeForWrite(UserModeObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+        *LocalObjectAttributes = *UserModeObjectAttributes;
+
+        UserModeObjectAttributes->ObjectName = *WindowStationName;
+        UserModeObjectAttributes->RootDirectory = NULL;
+
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release the window station name */
+        FreeUserModeWindowStationName(*WindowStationName,
+                                      *TebStaticUnicodeString,
+                                      NULL, NULL);
+    }
+
+    return Status;
 }
 
 HWINSTA
@@ -504,108 +678,103 @@ NtUserCreateWindowStation(
     DWORD Unknown5,
     DWORD Unknown6)
 {
-    NTSTATUS Status;
-    HWINSTA hWinSta;
+    NTSTATUS Status = STATUS_SUCCESS;
+    HWINSTA hWinSta = NULL;
     OBJECT_ATTRIBUTES LocalObjectAttributes;
-    UNICODE_STRING WindowStationName;
-    KPROCESSOR_MODE AccessMode = UserMode;
+    PUNICODE_STRING WindowStationName = NULL;
+    PUNICODE_STRING TebStaticUnicodeString = NULL;
+    KPROCESSOR_MODE OwnerMode = UserMode;
 
     TRACE("NtUserCreateWindowStation called\n");
 
-    /* Capture window station name */
+    /* Capture the object attributes and the window station name */
     _SEH2_TRY
     {
         ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
         LocalObjectAttributes = *ObjectAttributes;
-        if (LocalObjectAttributes.ObjectName ||
-            LocalObjectAttributes.RootDirectory
-            /* &&
-            LocalObjectAttributes.ObjectName->Buffer &&
-            LocalObjectAttributes.ObjectName->Length > 0 */)
+        if (LocalObjectAttributes.Length != sizeof(OBJECT_ATTRIBUTES))
         {
-            Status = IntSafeCopyUnicodeStringTerminateNULL(&WindowStationName,
-                                                           LocalObjectAttributes.ObjectName);
-            LocalObjectAttributes.ObjectName = &WindowStationName;
+            ERR("Invalid ObjectAttributes length!\n");
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
         }
-        else
+
+        /*
+         * Check whether the caller provided a window station name together
+         * with a RootDirectory handle.
+         *
+         * If the caller did not provide a window station name, build a new one
+         * based on the logon session identifier for the calling process.
+         * The new name is allocated in user-mode, as the rest of ObjectAttributes
+         * already is, so that the validation performed by the Object Manager
+         * can be done adequately.
+         */
+        if ((LocalObjectAttributes.ObjectName == NULL ||
+             LocalObjectAttributes.ObjectName->Buffer == NULL ||
+             LocalObjectAttributes.ObjectName->Length == 0 ||
+             LocalObjectAttributes.ObjectName->Buffer[0] == UNICODE_NULL)
+            /* &&
+            LocalObjectAttributes.RootDirectory == NULL */)
         {
-            LocalObjectAttributes.ObjectName = NULL;
-            Status = STATUS_SUCCESS;
+            /* No, build the new window station name */
+            Status = BuildUserModeWindowStationName(ObjectAttributes,
+                                                    &LocalObjectAttributes,
+                                                    &WindowStationName,
+                                                    &TebStaticUnicodeString);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildUserModeWindowStationName() failed, Status 0x%08lx\n", Status);
+                _SEH2_LEAVE;
+            }
+            OwnerMode = KernelMode;
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status =_SEH2_GetExceptionCode();
+        ERR("ObjectAttributes capture failed, Status 0x%08lx\n", Status);
     }
-    _SEH2_END
+    _SEH2_END;
 
     if (!NT_SUCCESS(Status))
     {
-        ERR("Failed reading or capturing window station name, Status 0x%08lx\n", Status);
         SetLastNtError(Status);
         return NULL;
     }
 
-    /*
-     * If the caller did not provide a window station name, build a new one
-     * based on the logon session identifier for the calling process.
-     */
-    if (!LocalObjectAttributes.ObjectName)
-    {
-        LUID CallerLuid;
-        WCHAR ServiceWinStaName[MAX_PATH];
-
-        /* Retrieve the LUID of the current process */
-        Status = GetProcessLuid(NULL, NULL, &CallerLuid);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Failed to retrieve the caller LUID, Status 0x%08lx\n", Status);
-            SetLastNtError(Status);
-            return NULL;
-        }
-
-        /* Build a valid window station name from the LUID */
-        Status = RtlStringCbPrintfW(ServiceWinStaName,
-                                    sizeof(ServiceWinStaName),
-                                    L"%wZ\\Service-0x%x-%x$",
-                                    &gustrWindowStationsDir,
-                                    CallerLuid.HighPart,
-                                    CallerLuid.LowPart);
-        if (!NT_SUCCESS(Status))
-        {
-            ERR("Impossible to build a valid window station name, Status 0x%08lx\n", Status);
-            SetLastNtError(Status);
-            return NULL;
-        }
-
-        RtlInitUnicodeString(&WindowStationName, ServiceWinStaName);
-        LocalObjectAttributes.ObjectName = &WindowStationName;
-        AccessMode = KernelMode;
-    }
-
-    // TODO: Capture and use the SecurityQualityOfService!
-
+    /* Create the window station */
     Status = IntCreateWindowStation(&hWinSta,
-                                    &LocalObjectAttributes,
-                                    AccessMode,
+                                    ObjectAttributes,
+                                    UserMode,
+                                    OwnerMode,
                                     dwDesiredAccess,
                                     Unknown2,
                                     Unknown3,
                                     Unknown4,
                                     Unknown5,
                                     Unknown6);
-
-    if ((AccessMode == UserMode) && LocalObjectAttributes.ObjectName)
-        ExFreePoolWithTag(LocalObjectAttributes.ObjectName->Buffer, TAG_STRING);
-
     if (NT_SUCCESS(Status))
     {
-        TRACE("NtUserCreateWindowStation created a window station with handle 0x%p\n", hWinSta);
+        TRACE("NtUserCreateWindowStation created window station '%wZ' with handle 0x%p\n",
+              ObjectAttributes->ObjectName, hWinSta);
     }
     else
     {
         ASSERT(hWinSta == NULL);
-        TRACE("NtUserCreateWindowStation failed to create a window station!\n");
+        ERR("NtUserCreateWindowStation failed to create window station '%wZ', Status 0x%08lx\n",
+            ObjectAttributes->ObjectName, Status);
+    }
+
+    /* Try to restore the user's ObjectAttributes and release the window station name */
+    FreeUserModeWindowStationName(WindowStationName,
+                                  TebStaticUnicodeString,
+                                  (OwnerMode == KernelMode ? ObjectAttributes : NULL),
+                                  &LocalObjectAttributes);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(hWinSta == NULL);
+        SetLastNtError(Status);
     }
 
     return hWinSta;
@@ -635,32 +804,130 @@ NtUserCreateWindowStation(
  *    @implemented
  */
 
-HWINSTA APIENTRY
+HWINSTA
+APIENTRY
 NtUserOpenWindowStation(
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    ACCESS_MASK dwDesiredAccess)
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN ACCESS_MASK dwDesiredAccess)
 {
-    HWINSTA hwinsta;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
+    HWINSTA hWinSta = NULL;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    PUNICODE_STRING WindowStationName = NULL;
+    PUNICODE_STRING TebStaticUnicodeString = NULL;
+    KPROCESSOR_MODE OwnerMode = UserMode;
 
+    TRACE("NtUserOpenWindowStation called\n");
+
+    /* Capture the object attributes and the window station name */
+    _SEH2_TRY
+    {
+        ProbeForRead(ObjectAttributes, sizeof(OBJECT_ATTRIBUTES), sizeof(ULONG));
+        LocalObjectAttributes = *ObjectAttributes;
+        if (LocalObjectAttributes.Length != sizeof(OBJECT_ATTRIBUTES))
+        {
+            ERR("Invalid ObjectAttributes length!\n");
+            Status = STATUS_INVALID_PARAMETER;
+            _SEH2_LEAVE;
+        }
+
+        /*
+         * Check whether the caller did not provide a window station name,
+         * or provided the special "Service-0x00000000-00000000$" name.
+         *
+         * NOTE: On Windows, the special "Service-0x00000000-00000000$" string
+         * is used instead of an empty name (observed when API-monitoring
+         * OpenWindowStation() called with an empty window station name).
+         */
+        if ((LocalObjectAttributes.ObjectName == NULL ||
+             LocalObjectAttributes.ObjectName->Buffer == NULL ||
+             LocalObjectAttributes.ObjectName->Length == 0 ||
+             LocalObjectAttributes.ObjectName->Buffer[0] == UNICODE_NULL)
+            /* &&
+            LocalObjectAttributes.RootDirectory == NULL */)
+        {
+            /* No, remember that for later */
+            LocalObjectAttributes.ObjectName = NULL;
+        }
+        if (LocalObjectAttributes.ObjectName &&
+            LocalObjectAttributes.ObjectName->Length ==
+                sizeof(L"Service-0x00000000-00000000$") - sizeof(UNICODE_NULL) &&
+            _wcsnicmp(LocalObjectAttributes.ObjectName->Buffer,
+                      L"Service-0x00000000-00000000$",
+                      LocalObjectAttributes.ObjectName->Length / sizeof(WCHAR)) == 0)
+        {
+            /* No, remember that for later */
+            LocalObjectAttributes.ObjectName = NULL;
+        }
+
+        /*
+         * If the caller did not provide a window station name, build a new one
+         * based on the logon session identifier for the calling process.
+         * The new name is allocated in user-mode, as the rest of ObjectAttributes
+         * already is, so that the validation performed by the Object Manager
+         * can be done adequately.
+         */
+        if (!LocalObjectAttributes.ObjectName)
+        {
+            /* No, build the new window station name */
+            Status = BuildUserModeWindowStationName(ObjectAttributes,
+                                                    &LocalObjectAttributes,
+                                                    &WindowStationName,
+                                                    &TebStaticUnicodeString);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("BuildUserModeWindowStationName() failed, Status 0x%08lx\n", Status);
+                _SEH2_LEAVE;
+            }
+            OwnerMode = KernelMode;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status =_SEH2_GetExceptionCode();
+        ERR("ObjectAttributes capture failed, Status 0x%08lx\n", Status);
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
+
+    /* Open the window station */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 ExWindowStationObjectType,
                                 UserMode,
                                 NULL,
                                 dwDesiredAccess,
                                 NULL,
-                                (PVOID*)&hwinsta);
+                                (PVOID*)&hWinSta);
+    if (NT_SUCCESS(Status))
+    {
+        TRACE("NtUserOpenWindowStation opened window station '%wZ' with handle 0x%p\n",
+              ObjectAttributes->ObjectName, hWinSta);
+    }
+    else
+    {
+        ASSERT(hWinSta == NULL);
+        ERR("NtUserOpenWindowStation failed to open window station '%wZ', Status 0x%08lx\n",
+            ObjectAttributes->ObjectName, Status);
+    }
+
+    /* Try to restore the user's ObjectAttributes and release the window station name */
+    FreeUserModeWindowStationName(WindowStationName,
+                                  TebStaticUnicodeString,
+                                  (OwnerMode == KernelMode ? ObjectAttributes : NULL),
+                                  &LocalObjectAttributes);
 
     if (!NT_SUCCESS(Status))
     {
-        ERR("NtUserOpenWindowStation failed\n");
+        ASSERT(hWinSta == NULL);
         SetLastNtError(Status);
-        return 0;
     }
 
-    TRACE("Opened window station %wZ with handle %p\n", ObjectAttributes->ObjectName, hwinsta);
-
-    return hwinsta;
+    return hWinSta;
 }
 
 /*
@@ -677,7 +944,7 @@ NtUserOpenWindowStation(
  *
  * Remarks
  *    The window station handle can be created with NtUserCreateWindowStation
- *    or NtUserOpenWindowStation. Attemps to close a handle to the window
+ *    or NtUserOpenWindowStation. Attempts to close a handle to the window
  *    station assigned to the calling process will fail.
  *
  * Status
@@ -1712,6 +1979,5 @@ Leave:
     UserLeave();
     return Ret;
 }
-
 
 /* EOF */

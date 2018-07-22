@@ -112,6 +112,7 @@ IntCreateWindowStation(
     OUT HWINSTA* phWinSta,
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN KPROCESSOR_MODE AccessMode,
+    IN KPROCESSOR_MODE OwnerMode,
     IN ACCESS_MASK dwDesiredAccess,
     DWORD Unknown2,
     DWORD Unknown3,
