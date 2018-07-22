@@ -2656,7 +2656,7 @@ NtUserCloseDesktop(HDESK hDesktop)
 
     ObDereferenceObject(pdesk);
 
-    Status = ZwClose(hDesktop);
+    Status = ObCloseHandle(hDesktop, UserMode);
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to close desktop handle 0x%p\n", hDesktop);
