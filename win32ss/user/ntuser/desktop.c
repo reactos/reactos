@@ -27,7 +27,7 @@ IntFreeDesktopHeap(IN PDESKTOP pdesk);
 
 /* GLOBALS *******************************************************************/
 
-/* These can be changed via csrss startup, these are defaults */
+/* These can be changed via CSRSS startup, these are defaults */
 DWORD gdwDesktopSectionSize = 512;
 DWORD gdwNOIOSectionSize    = 128; // A guess, for one or more of the first three system desktops.
 
@@ -631,7 +631,7 @@ HDESK FASTCALL
 IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
 {
     NTSTATUS Status;
-    HDESK Ret;
+    HDESK hDesk;
 
     ASSERT(DesktopObject);
 
@@ -639,7 +639,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
                                DesktopObject,
                                ExDesktopObjectType,
                                NULL,
-                               (PHANDLE)&Ret))
+                               (PHANDLE)&hDesk))
     {
         Status = ObOpenObjectByPointer(DesktopObject,
                                        0,
@@ -647,7 +647,7 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
                                        0,
                                        ExDesktopObjectType,
                                        UserMode,
-                                       (PHANDLE)&Ret);
+                                       (PHANDLE)&hDesk);
         if (!NT_SUCCESS(Status))
         {
             /* Unable to create a handle */
@@ -657,10 +657,10 @@ IntGetDesktopObjectHandle(PDESKTOP DesktopObject)
     }
     else
     {
-        TRACE("Got handle: %p\n", Ret);
+        TRACE("Got handle: 0x%p\n", hDesk);
     }
 
-    return Ret;
+    return hDesk;
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -2327,7 +2327,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     NTSTATUS Status;
     PETHREAD Thread;
     PDESKTOP DesktopObject;
-    HDESK Ret, hThreadDesktop;
+    HDESK hDesk, hThreadDesktop;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     DECLARE_RETURN(HDESK);
 
@@ -2351,9 +2351,9 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
     {
         /* Just return the handle, we queried the desktop handle of a thread running
            in the same context */
-        Ret = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk;
+        hDesk = ((PTHREADINFO)Thread->Tcb.Win32Thread)->hdesk;
         ObDereferenceObject(Thread);
-        RETURN(Ret);
+        RETURN(hDesk);
     }
 
     /* Get the desktop handle and the desktop of the thread */
@@ -2387,12 +2387,12 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 
     /* Lookup our handle table if we can find a handle to the desktop object,
        if not, create one */
-    Ret = IntGetDesktopObjectHandle(DesktopObject);
+    hDesk = IntGetDesktopObjectHandle(DesktopObject);
 
     /* All done, we got a valid handle to the desktop */
     ObDereferenceObject(DesktopObject);
     ObDereferenceObject(Thread);
-    RETURN(Ret);
+    RETURN(hDesk);
 
 CLEANUP:
     TRACE("Leave NtUserGetThreadDesktop, ret=%p\n",_ret_);
