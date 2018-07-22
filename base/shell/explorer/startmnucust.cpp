@@ -26,7 +26,7 @@ VOID OnAddStartMenuItems(HWND hDlg)
 {
     WCHAR szPath[MAX_PATH];
 
-    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_STARTMENU, NULL, 0, szPath)))
+    if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_PROGRAMS, NULL, 0, szPath)))
     {
         WCHAR szCommand[MAX_PATH] = L"appwiz.cpl,NewLinkHere ";
         if (SUCCEEDED(StringCchCatW(szCommand, _countof(szCommand), szPath)))
