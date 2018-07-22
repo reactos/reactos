@@ -1753,7 +1753,7 @@ IntCreateDesktop(
     /* In case the object was not created (eg if it existed), return now */
     if (Context == FALSE)
     {
-        TRACE("NtUserCreateDesktop opened desktop %wZ\n", ObjectAttributes->ObjectName);
+        TRACE("IntCreateDesktop opened desktop '%wZ'\n", ObjectAttributes->ObjectName);
         Status = STATUS_SUCCESS;
         goto Quit;
     }
@@ -1825,8 +1825,8 @@ IntCreateDesktop(
     Cs.cx = Cs.cy = 100;
     Cs.style = WS_POPUP|WS_CLIPCHILDREN;
     Cs.hInstance = hModClient; // hModuleWin; // Server side winproc!
-    Cs.lpszName = (LPCWSTR) &WindowName;
-    Cs.lpszClass = (LPCWSTR) &ClassName;
+    Cs.lpszName = (LPCWSTR)&WindowName;
+    Cs.lpszClass = (LPCWSTR)&ClassName;
     pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
     if (pWnd == NULL)
     {
@@ -2050,7 +2050,7 @@ NtUserCloseDesktop(HDESK hDesktop)
     NTSTATUS Status;
     DECLARE_RETURN(BOOL);
 
-    TRACE("NtUserCloseDesktop called (0x%p)\n", hDesktop);
+    TRACE("NtUserCloseDesktop(0x%p) called\n", hDesktop);
     UserEnterExclusive();
 
     if (hDesktop == gptiCurrent->hdesk || hDesktop == gptiCurrent->ppi->hdeskStartup)
@@ -2060,10 +2060,10 @@ NtUserCloseDesktop(HDESK hDesktop)
         RETURN(FALSE);
     }
 
-    Status = IntValidateDesktopHandle( hDesktop, UserMode, 0, &pdesk);
+    Status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &pdesk);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Validation of desktop handle (0x%p) failed\n", hDesktop);
+        ERR("Validation of desktop handle 0x%p failed\n", hDesktop);
         RETURN(FALSE);
     }
 
@@ -2236,10 +2236,10 @@ NtUserSwitchDesktop(HDESK hdesk)
     UserEnterExclusive();
     TRACE("Enter NtUserSwitchDesktop(0x%p)\n", hdesk);
 
-    Status = IntValidateDesktopHandle( hdesk, UserMode, 0, &pdesk);
+    Status = IntValidateDesktopHandle(hdesk, UserMode, 0, &pdesk);
     if (!NT_SUCCESS(Status))
     {
-        ERR("Validation of desktop handle (0x%p) failed\n", hdesk);
+        ERR("Validation of desktop handle 0x%p failed\n", hdesk);
         RETURN(FALSE);
     }
 
@@ -2539,10 +2539,10 @@ IntSetThreadDesktop(IN HDESK hDesktop,
     if (hDesktop != NULL)
     {
         /* Validate the new desktop. */
-        Status = IntValidateDesktopHandle( hDesktop, UserMode, 0, &pdesk);
+        Status = IntValidateDesktopHandle(hDesktop, UserMode, 0, &pdesk);
         if (!NT_SUCCESS(Status))
         {
-            ERR("Validation of desktop handle (0x%p) failed\n", hDesktop);
+            ERR("Validation of desktop handle 0x%p failed\n", hDesktop);
             return FALSE;
         }
 
@@ -2583,7 +2583,7 @@ IntSetThreadDesktop(IN HDESK hDesktop,
             return FALSE;
         }
 
-        pctiNew = DesktopHeapAlloc( pdesk, sizeof(CLIENTTHREADINFO));
+        pctiNew = DesktopHeapAlloc(pdesk, sizeof(CLIENTTHREADINFO));
         if (pctiNew == NULL)
         {
             ERR("Failed to allocate new pcti\n");

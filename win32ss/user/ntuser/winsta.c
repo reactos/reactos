@@ -971,7 +971,7 @@ NtUserCloseWindowStation(
                                             UserMode,
                                             0,
                                             &Object,
-                                            0);
+                                            NULL);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1449,7 +1449,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
                                             UserMode,
                                             0,
                                             &Object,
-                                            0);
+                                            NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Validation of window station handle (%p) failed\n",
@@ -1494,7 +1494,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
                                             UserMode,
                                             0,
                                             &Object,
-                                            0);
+                                            NULL);
     if (!NT_SUCCESS(Status))
     {
         TRACE("Validation of window station handle (%p) failed\n",
@@ -1718,7 +1718,7 @@ BuildDesktopNameList(
                                             UserMode,
                                             0,
                                             &WindowStation,
-                                            0);
+                                            NULL);
     if (! NT_SUCCESS(Status))
     {
         return Status;
