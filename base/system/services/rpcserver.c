@@ -5104,6 +5104,10 @@ RChangeServiceConfig2A(
     DPRINT("RChangeServiceConfig2A() called\n");
     DPRINT("dwInfoLevel = %lu\n", Info.dwInfoLevel);
 
+    if ((Info.dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
+        (Info.dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+        return ERROR_INVALID_LEVEL;
+
     InfoW.dwInfoLevel = Info.dwInfoLevel;
 
     if (InfoW.dwInfoLevel == SERVICE_CONFIG_DESCRIPTION)
@@ -5502,6 +5506,10 @@ RChangeServiceConfig2W(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
+    if ((Info.dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
+        (Info.dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+        return ERROR_INVALID_LEVEL;
+
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
     {
@@ -5637,6 +5645,10 @@ RQueryServiceConfig2A(
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if ((dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
+        (dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+        return ERROR_INVALID_LEVEL;
 
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
@@ -5875,6 +5887,10 @@ RQueryServiceConfig2W(
 
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
+
+    if ((dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
+        (dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+        return ERROR_INVALID_LEVEL;
 
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
