@@ -3210,6 +3210,39 @@ IntSetThreadDesktop(IN HDESK hDesktop,
         }
     }
 
+    /*
+     * Processes, in particular Winlogon.exe, that manage window stations
+     * (especially the interactive WinSta0 window station) and desktops,
+     * may not be able to connect at startup to a window station and have
+     * an associated desktop as well, if none exists on the system already.
+     * Because creating a new window station does not affect the window station
+     * associated to the process, and because neither by associating a window
+     * station to the process nor creating a new desktop on it does associate
+     * a startup desktop to that process, the process has to actually assigns
+     * one of its threads to a desktop so that it gets automatically an assigned
+     * startup desktop.
+     *
+     * This is what actually happens for Winlogon.exe, which is started without
+     * any window station and desktop. By creating the first (and therefore
+     * interactive) WinSta0 window station, then assigning WinSta0 to itself
+     * and creating the Default desktop on it, and then assigning this desktop
+     * to its main thread, Winlogon.exe basically does the similar steps that
+     * would have been done automatically at its startup if there were already
+     * an existing WinSta0 window station and Default desktop.
+     *
+     * Of course all this must not be done if we are a SYSTEM or CSRSS thread.
+     */
+    // if (pti->ppi->peProcess != gpepCSRSS)
+    if (!(pti->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
+        pti->ppi->rpdeskStartup == NULL && hDesktop != NULL)
+    {
+        ERR("The process 0x%p '%s' didn't have an assigned startup desktop before, assigning it now!\n",
+            pti->ppi->peProcess, pti->ppi->peProcess->ImageFileName);
+
+        pti->ppi->hdeskStartup = hDesktop;
+        pti->ppi->rpdeskStartup = pdesk;
+    }
+
     /* free all classes or move them to the shared heap */
     if (pti->rpdesk != NULL)
     {
