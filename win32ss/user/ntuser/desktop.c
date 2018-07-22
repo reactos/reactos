@@ -1697,17 +1697,20 @@ UserInitializeDesktop(PDESKTOP pdesk, PUNICODE_STRING DesktopName, PWINSTATION_O
  *    @implemented
  */
 
-HDESK APIENTRY
-NtUserCreateDesktop(
-    POBJECT_ATTRIBUTES ObjectAttributes,
-    PUNICODE_STRING lpszDesktopDevice,
-    LPDEVMODEW lpdmw,
-    DWORD dwFlags,
-    ACCESS_MASK dwDesiredAccess)
+NTSTATUS
+FASTCALL
+IntCreateDesktop(
+    OUT HDESK* phDesktop,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN PUNICODE_STRING lpszDesktopDevice OPTIONAL,
+    IN LPDEVMODEW lpdmw OPTIONAL,
+    IN DWORD dwFlags,
+    IN ACCESS_MASK dwDesiredAccess)
 {
+    NTSTATUS Status;
     PDESKTOP pdesk = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-    HDESK hdesk;
+    HDESK hDesk;
     BOOLEAN Context = FALSE;
     UNICODE_STRING ClassName;
     LARGE_STRING WindowName;
@@ -1717,16 +1720,16 @@ NtUserCreateDesktop(
     PTHREADINFO ptiCurrent;
     PCLS pcls;
 
-    DECLARE_RETURN(HDESK);
+    TRACE("Enter IntCreateDesktop\n");
 
-    TRACE("Enter NtUserCreateDesktop\n");
-    UserEnterExclusive();
+    ASSERT(phDesktop);
+    *phDesktop = NULL;
 
     ptiCurrent = PsGetCurrentThreadWin32Thread();
     ASSERT(ptiCurrent);
     ASSERT(gptiDesktopThread);
 
-    /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
+    /* Turn off hooks when calling any CreateWindowEx from inside win32k */
     NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
     ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
     ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
@@ -1734,30 +1737,29 @@ NtUserCreateDesktop(
     /*
      * Try to open already existing desktop
      */
-    Status = ObOpenObjectByName(
-                 ObjectAttributes,
-                 ExDesktopObjectType,
-                 UserMode,
-                 NULL,
-                 dwDesiredAccess,
-                 (PVOID)&Context,
-                 (HANDLE*)&hdesk);
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                ExDesktopObjectType,
+                                AccessMode,
+                                NULL,
+                                dwDesiredAccess,
+                                (PVOID)&Context,
+                                (PHANDLE)&hDesk);
     if (!NT_SUCCESS(Status))
     {
         ERR("ObOpenObjectByName failed to open/create desktop\n");
-        SetLastNtError(Status);
-        RETURN(NULL);
+        goto Quit;
     }
 
     /* In case the object was not created (eg if it existed), return now */
     if (Context == FALSE)
     {
         TRACE("NtUserCreateDesktop opened desktop %wZ\n", ObjectAttributes->ObjectName);
-        RETURN( hdesk);
+        Status = STATUS_SUCCESS;
+        goto Quit;
     }
 
     /* Reference the desktop */
-    Status = ObReferenceObjectByHandle(hdesk,
+    Status = ObReferenceObjectByHandle(hDesk,
                                        0,
                                        ExDesktopObjectType,
                                        KernelMode,
@@ -1766,8 +1768,7 @@ NtUserCreateDesktop(
     if (!NT_SUCCESS(Status))
     {
         ERR("Failed to reference desktop object\n");
-        SetLastNtError(Status);
-        RETURN(NULL);
+        goto Quit;
     }
 
     /* Get the desktop window class. The thread desktop does not belong to any desktop
@@ -1780,7 +1781,8 @@ NtUserCreateDesktop(
     if (pcls == NULL)
     {
         ASSERT(FALSE);
-        RETURN(NULL);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
     RtlZeroMemory(&WindowName, sizeof(WindowName));
@@ -1794,12 +1796,13 @@ NtUserCreateDesktop(
     Cs.lpszName = (LPCWSTR) &WindowName;
     Cs.lpszClass = (LPCWSTR) &ClassName;
 
-    /* Use IntCreateWindow instead of co_UserCreateWindowEx cause the later expects a thread with a desktop */
+    /* Use IntCreateWindow instead of co_UserCreateWindowEx because the later expects a thread with a desktop */
     pWnd = IntCreateWindow(&Cs, &WindowName, pcls, NULL, NULL, NULL, pdesk);
     if (pWnd == NULL)
     {
         ERR("Failed to create desktop window for the new desktop\n");
-        RETURN(NULL);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
     pdesk->dwSessionId = PsGetCurrentProcessSessionId();
@@ -1813,7 +1816,8 @@ NtUserCreateDesktop(
     if (pcls == NULL)
     {
         ASSERT(FALSE);
-        RETURN(NULL);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
     RtlZeroMemory(&WindowName, sizeof(WindowName));
@@ -1827,7 +1831,8 @@ NtUserCreateDesktop(
     if (pWnd == NULL)
     {
         ERR("Failed to create message window for the new desktop\n");
-        RETURN(NULL);
+        Status = STATUS_UNSUCCESSFUL;
+        goto Quit;
     }
 
     pdesk->spwndMessage = pWnd;
@@ -1841,23 +1846,67 @@ NtUserCreateDesktop(
        The rest is same as message window.
        http://msdn.microsoft.com/en-us/library/bb760250(VS.85).aspx
     */
-    RETURN( hdesk);
+    Status = STATUS_SUCCESS;
 
-CLEANUP:
+Quit:
     if (pdesk != NULL)
     {
         ObDereferenceObject(pdesk);
     }
-    if (_ret_ == NULL && hdesk != NULL)
+    if (!NT_SUCCESS(Status) && hDesk != NULL)
     {
-        ObCloseHandle(hdesk, UserMode);
+        ObCloseHandle(hDesk, AccessMode);
+        hDesk = NULL;
     }
     if (!NoHooks)
     {
         ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
         ptiCurrent->pClientInfo->dwTIFlags = ptiCurrent->TIF_flags;
     }
-    TRACE("Leave NtUserCreateDesktop, ret=%p\n",_ret_);
+
+    TRACE("Leave IntCreateDesktop, Status 0x%08lx\n", Status);
+
+    if (NT_SUCCESS(Status))
+        *phDesktop = hDesk;
+    else
+        SetLastNtError(Status);
+    return Status;
+}
+
+HDESK APIENTRY
+NtUserCreateDesktop(
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    PUNICODE_STRING lpszDesktopDevice,
+    LPDEVMODEW lpdmw,
+    DWORD dwFlags,
+    ACCESS_MASK dwDesiredAccess)
+{
+    NTSTATUS Status;
+    HDESK hDesk;
+
+    DECLARE_RETURN(HDESK);
+
+    TRACE("Enter NtUserCreateDesktop\n");
+    UserEnterExclusive();
+
+    Status = IntCreateDesktop(&hDesk,
+                              ObjectAttributes,
+                              UserMode,
+                              lpszDesktopDevice,
+                              lpdmw,
+                              dwFlags,
+                              dwDesiredAccess);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("IntCreateDesktop failed, Status 0x%08lx\n", Status);
+        // SetLastNtError(Status);
+        RETURN(NULL);
+    }
+
+    RETURN(hDesk);
+
+CLEANUP:
+    TRACE("Leave NtUserCreateDesktop, ret=0x%p\n", _ret_);
     UserLeave();
     END_CLEANUP;
 }

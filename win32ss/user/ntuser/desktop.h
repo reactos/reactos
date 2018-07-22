@@ -168,6 +168,17 @@ IntValidateDesktopHandle(
    ACCESS_MASK DesiredAccess,
    PDESKTOP *Object);
 
+NTSTATUS
+FASTCALL
+IntCreateDesktop(
+    OUT HDESK* phDesktop,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN PUNICODE_STRING lpszDesktopDevice OPTIONAL,
+    IN LPDEVMODEW lpdmw OPTIONAL,
+    IN DWORD dwFlags,
+    IN ACCESS_MASK dwDesiredAccess);
+
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
                     PUNICODE_STRING DesktopPath,
