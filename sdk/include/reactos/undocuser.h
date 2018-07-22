@@ -156,8 +156,11 @@ extern "C" {
 #define DFCS_MENUARROWUP   0x0008
 #define DFCS_MENUARROWDOWN 0x0010
 
-
-#define STARTF_SCRNSAVER 0x80000000
+//
+// Undocumented flags for CreateProcess
+//
+#define STARTF_INHERITDESKTOP   0x40000000
+#define STARTF_SCREENSAVER      0x80000000
 
 #define MOD_WINLOGON_SAS 0x8000
 

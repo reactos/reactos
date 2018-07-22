@@ -17,6 +17,8 @@
 #include <userenv.h>
 #include <strsafe.h>
 
+#include <reactos/undocuser.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -1674,6 +1676,7 @@ ScmStartUserModeService(PSERVICE Service,
     if ((NoInteractiveServices == 0) &&
         (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
     {
+        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
         StartupInfo.lpDesktop = L"WinSta0\\Default";
     }
 

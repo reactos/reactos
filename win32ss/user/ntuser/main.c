@@ -165,8 +165,8 @@ UserProcessCreate(PEPROCESS Process)
 
     /* Setup process flags */
     ppiCurrent->W32PF_flags |= W32PF_PROCESSCONNECTED;
-    if ( Process->Peb->ProcessParameters &&
-         Process->Peb->ProcessParameters->WindowFlags & STARTF_SCRNSAVER )
+    if (Process->Peb->ProcessParameters &&
+        (Process->Peb->ProcessParameters->WindowFlags & STARTF_SCREENSAVER))
     {
         ppiScrnSaver = ppiCurrent;
         ppiCurrent->W32PF_flags |= W32PF_SCREENSAVER;
@@ -603,7 +603,7 @@ InitThreadCallback(PETHREAD Thread)
 
         Status = IntResolveDesktop(Process,
                                    &DesktopPath,
-                                   FALSE,
+                                   !!(ProcessParams->WindowFlags & STARTF_INHERITDESKTOP),
                                    &hWinSta,
                                    &hDesk);
 
