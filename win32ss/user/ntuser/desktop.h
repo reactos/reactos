@@ -161,6 +161,15 @@ IntHideDesktop(PDESKTOP Desktop);
 BOOL IntSetThreadDesktop(IN HDESK hDesktop,
                          IN BOOL FreeOnFailure);
 
+NTSTATUS
+FASTCALL
+IntResolveDesktop(
+    IN PEPROCESS Process,
+    IN PUNICODE_STRING DesktopPath,
+    IN BOOL bInherit,
+    OUT HWINSTA* phWinSta,
+    OUT HDESK* phDesktop);
+
 NTSTATUS FASTCALL
 IntValidateDesktopHandle(
    HDESK Desktop,
@@ -178,12 +187,6 @@ IntCreateDesktop(
     IN LPDEVMODEW lpdmw OPTIONAL,
     IN DWORD dwFlags,
     IN ACCESS_MASK dwDesiredAccess);
-
-NTSTATUS FASTCALL
-IntParseDesktopPath(PEPROCESS Process,
-                    PUNICODE_STRING DesktopPath,
-                    HWINSTA *hWinSta,
-                    HDESK *hDesktop);
 
 VOID APIENTRY UserRedrawDesktop(VOID);
 BOOL IntRegisterShellHookWindow(HWND hWnd);

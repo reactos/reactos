@@ -532,11 +532,11 @@ InitThreadCallback(PETHREAD Thread)
 
     ptiCurrent->TIF_flags &= ~TIF_INCLEANUP;
 
+    // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
+
     /* CSRSS threads have some special features */
     if (Process == gpepCSRSS)
         ptiCurrent->TIF_flags = TIF_CSRSSTHREAD | TIF_DONTATTACHQUEUE;
-
-    // FIXME: Flag SYSTEM threads with... TIF_SYSTEMTHREAD !!
 
     ptiCurrent->pcti = &ptiCurrent->cti;
 
@@ -570,9 +570,16 @@ InitThreadCallback(PETHREAD Thread)
        }
     }
 
-    /* Assign a default window station and desktop to the process */
-    /* Do not try to open a desktop or window station before winlogon initializes */
-    if (ptiCurrent->ppi->hdeskStartup == NULL && gpidLogon != 0)
+    /*
+     * Assign a default window station and desktop to the process.
+     * Do not try to open a desktop or window station before the very first
+     * (interactive) window station has been created by Winlogon.
+     */
+    // if (ptiCurrent->ppi->hdeskStartup == NULL && InputWindowStation != NULL)
+    /* Last things to do only if we are not a SYSTEM or CSRSS thread */
+    if (!(ptiCurrent->TIF_flags & (TIF_SYSTEMTHREAD | TIF_CSRSSTHREAD)) &&
+        /**/ptiCurrent->ppi->hdeskStartup == NULL &&/**/
+        InputWindowStation != NULL)
     {
         HWINSTA hWinSta = NULL;
         HDESK hDesk = NULL;
@@ -580,8 +587,8 @@ InitThreadCallback(PETHREAD Thread)
         PDESKTOP pdesk;
 
         /*
-         * inherit the thread desktop and process window station (if not yet inherited) from the process startup
-         * info structure. See documentation of CreateProcess()
+         * Inherit the thread desktop and process window station (if not yet inherited)
+         * from the process startup info structure. See documentation of CreateProcess().
          */
 
         Status = STATUS_UNSUCCESSFUL;
@@ -594,17 +601,18 @@ InitThreadCallback(PETHREAD Thread)
             RtlInitUnicodeString(&DesktopPath, NULL);
         }
 
-        Status = IntParseDesktopPath(Process,
-                                     &DesktopPath,
-                                     &hWinSta,
-                                     &hDesk);
+        Status = IntResolveDesktop(Process,
+                                   &DesktopPath,
+                                   FALSE,
+                                   &hWinSta,
+                                   &hDesk);
 
         if (DesktopPath.Buffer)
             ExFreePoolWithTag(DesktopPath.Buffer, TAG_STRING);
 
         if (!NT_SUCCESS(Status))
         {
-            ERR_CH(UserThread, "Failed to assign default dekstop and winsta to process\n");
+            ERR_CH(UserThread, "Failed to assign default desktop and winsta to process\n");
             goto error;
         }
 
@@ -615,7 +623,7 @@ InitThreadCallback(PETHREAD Thread)
             goto error;
         }
 
-        /* Validate the new desktop. */
+        /* Validate the new desktop */
         Status = IntValidateDesktopHandle(hDesk, UserMode, 0, &pdesk);
         if (!NT_SUCCESS(Status))
         {
@@ -624,6 +632,8 @@ InitThreadCallback(PETHREAD Thread)
         }
 
         /* Store the parsed desktop as the initial desktop */
+        ASSERT(ptiCurrent->ppi->hdeskStartup == NULL);
+        ASSERT(Process->UniqueProcessId != gpidLogon);
         ptiCurrent->ppi->hdeskStartup = hDesk;
         ptiCurrent->ppi->rpdeskStartup = pdesk;
     }
