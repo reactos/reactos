@@ -972,7 +972,6 @@ NtUserCloseWindowStation(
                                             0,
                                             &Object,
                                             NULL);
-
     if (!NT_SUCCESS(Status))
     {
         ERR("Validation of window station handle (%p) failed\n", hWinSta);
@@ -1319,11 +1318,11 @@ NtUserGetProcessWindowStation(VOID)
 BOOL FASTCALL
 UserSetProcessWindowStation(HWINSTA hWindowStation)
 {
-    PPROCESSINFO ppi;
     NTSTATUS Status;
-    HWINSTA hwinstaOld;
+    PPROCESSINFO ppi;
     OBJECT_HANDLE_INFORMATION ObjectHandleInfo;
     PWINSTATION_OBJECT NewWinSta = NULL, OldWinSta;
+    HWINSTA hCacheWinSta;
 
     ppi = PsGetCurrentProcessWin32Process();
 
@@ -1337,15 +1336,14 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
                                                 &ObjectHandleInfo);
         if (!NT_SUCCESS(Status))
         {
-            TRACE("Validation of window station handle (%p) failed\n",
-                  hWindowStation);
+            TRACE("Validation of window station handle 0x%p failed\n", hWindowStation);
             SetLastNtError(Status);
             return FALSE;
         }
     }
 
     OldWinSta = ppi->prpwinsta;
-    hwinstaOld = PsGetProcessWin32WindowStation(ppi->peProcess);
+    hCacheWinSta = PsGetProcessWin32WindowStation(ppi->peProcess);
 
     /* Dereference the previous window station */
     if (OldWinSta != NULL)
@@ -1353,17 +1351,64 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
         ObDereferenceObject(OldWinSta);
     }
 
-    /* Check if we have a stale handle (it should happen for console apps) */
-    if (hwinstaOld != ppi->hwinsta)
-    {
-        ObCloseHandle(hwinstaOld, UserMode);
-    }
-
     /*
-     * FIXME: Don't allow changing the window station if there are threads that are attached to desktops and own GUI objects.
+     * FIXME: Don't allow changing the window station if there are threads that are attached to desktops and own GUI objects?
      */
 
-    PsSetProcessWindowStation(ppi->peProcess, hWindowStation);
+    /* Close the cached EPROCESS window station handle if needed */
+    if (hCacheWinSta != NULL)
+    {
+        /* Reference the window station */
+        Status = ObReferenceObjectByHandle(hCacheWinSta,
+                                           0,
+                                           ExWindowStationObjectType,
+                                           UserMode,
+                                           (PVOID*)&OldWinSta,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to reference the inherited window station, Status 0x%08lx\n", Status);
+            /* We failed, reset the cache */
+            hCacheWinSta = NULL;
+            PsSetProcessWindowStation(ppi->peProcess, hCacheWinSta);
+        }
+        else
+        {
+            /*
+             * Close the old handle and reset the cache only
+             * if we are setting a different window station.
+             */
+            if (NewWinSta != OldWinSta)
+            {
+                ObCloseHandle(hCacheWinSta, UserMode);
+                hCacheWinSta = NULL;
+                PsSetProcessWindowStation(ppi->peProcess, hCacheWinSta);
+            }
+
+            /* Dereference the window station */
+            ObDereferenceObject(OldWinSta);
+        }
+    }
+
+    /* Duplicate and save a new cached EPROCESS window station handle */
+    if ((hCacheWinSta == NULL) && (hWindowStation != NULL))
+    {
+        Status = ZwDuplicateObject(ZwCurrentProcess(),
+                                   hWindowStation,
+                                   ZwCurrentProcess(),
+                                   (PHANDLE)&hCacheWinSta,
+                                   0,
+                                   0,
+                                   DUPLICATE_SAME_ACCESS);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("UserSetProcessWindowStation: Failed to duplicate the window station handle, Status 0x%08lx\n", Status);
+        }
+        else
+        {
+            PsSetProcessWindowStation(ppi->peProcess, hCacheWinSta);
+        }
+    }
 
     ppi->prpwinsta = NewWinSta;
     ppi->hwinsta = hWindowStation;
@@ -1383,7 +1428,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     {
         ppi->W32PF_flags |= W32PF_IOWINSTA;
     }
-    else // Might be closed if the handle is null.
+    else /* Might be closed if the handle is NULL */
     {
         ppi->W32PF_flags &= ~W32PF_IOWINSTA;
     }
