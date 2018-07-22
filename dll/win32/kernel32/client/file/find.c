@@ -5,12 +5,14 @@
  * PURPOSE:         Find functions
  * PROGRAMMERS:     Ariadne (ariadne@xs4all.nl)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
- *                  Hermes BELUSCA - MAITO (hermes.belusca@sfr.fr)
+ *                  Hermes Belusca-Maito
  */
 
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
+#include <ntstrsafe.h>
+
 #define NDEBUG
 #include <debug.h>
 DEBUG_CHANNEL(kernel32file);
@@ -71,7 +73,7 @@ typedef struct _FIND_FILE_DATA
 
     /*
      * For handling STATUS_BUFFER_OVERFLOW errors emitted by
-     * NtQueryDirectoryFile in the FildNextFile function.
+     * NtQueryDirectoryFile in the FindNextFile function.
      */
     BOOLEAN HasMoreData;
 
@@ -128,9 +130,9 @@ CopyDeviceFindData(OUT LPWIN32_FIND_DATAW lpFindFileData,
         /* Return the data */
         RtlZeroMemory(lpFindFileData, sizeof(*lpFindFileData));
         lpFindFileData->dwFileAttributes = FILE_ATTRIBUTE_ARCHIVE;
-        RtlCopyMemory(lpFindFileData->cFileName,
-                      DeviceName,
-                      Length);
+        RtlStringCbCopyNW(lpFindFileData->cFileName,
+                          sizeof(lpFindFileData->cFileName),
+                          DeviceName, Length);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -175,22 +177,22 @@ do { \
 
         if (fInfoLevelId == FindExInfoStandard)
         {
-            RtlCopyMemory(lpFindFileData->cFileName,
-                          DirInfo.BothDirInfo->FileName,
-                          DirInfo.BothDirInfo->FileNameLength);
-            lpFindFileData->cFileName[DirInfo.BothDirInfo->FileNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            RtlStringCbCopyNW(lpFindFileData->cFileName,
+                              sizeof(lpFindFileData->cFileName),
+                              DirInfo.BothDirInfo->FileName,
+                              DirInfo.BothDirInfo->FileNameLength);
 
-            RtlCopyMemory(lpFindFileData->cAlternateFileName,
-                          DirInfo.BothDirInfo->ShortName,
-                          DirInfo.BothDirInfo->ShortNameLength);
-            lpFindFileData->cAlternateFileName[DirInfo.BothDirInfo->ShortNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            RtlStringCbCopyNW(lpFindFileData->cAlternateFileName,
+                              sizeof(lpFindFileData->cAlternateFileName),
+                              DirInfo.BothDirInfo->ShortName,
+                              DirInfo.BothDirInfo->ShortNameLength);
         }
         else if (fInfoLevelId == FindExInfoBasic)
         {
-            RtlCopyMemory(lpFindFileData->cFileName,
-                          DirInfo.FullDirInfo->FileName,
-                          DirInfo.FullDirInfo->FileNameLength);
-            lpFindFileData->cFileName[DirInfo.FullDirInfo->FileNameLength / sizeof(WCHAR)] = UNICODE_NULL;
+            RtlStringCbCopyNW(lpFindFileData->cFileName,
+                              sizeof(lpFindFileData->cFileName),
+                              DirInfo.FullDirInfo->FileName,
+                              DirInfo.FullDirInfo->FileNameLength);
 
             lpFindFileData->cAlternateFileName[0] = UNICODE_NULL;
         }
@@ -554,6 +556,7 @@ FindClose(HANDLE hFindFile)
         _SEH2_YIELD(return FALSE);
     }
     _SEH2_END;
+
     return TRUE;
 }
 
