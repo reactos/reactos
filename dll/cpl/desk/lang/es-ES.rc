@@ -276,5 +276,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Configuración del monitor"
     IDS_APPLY_FAILED "Error al aplicar la nueva configuración..."
     IDS_APPLY_NEEDS_RESTART "Necesita reiniciar el equipo para aplicar los cambios."
-    IDS_TIMEOUTTEXT "Regresar a la última configuraciín en %d segundos."
+    IDS_TIMEOUTTEXT "Regresar a la última configuración en %d segundos."
 END
