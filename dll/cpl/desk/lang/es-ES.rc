@@ -118,7 +118,7 @@ BEGIN
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 110, 267, 19
     CONTROL "&Ocultar el subrayado de acceso rápido hasta presionar la tecla Alt",
             IDC_EFFAPPEARANCE_KEYBOARDCUES, "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 267, 19
-    CONTROL "Use &flat menus", IDC_EFFAPPEARANCE_FLATMENUS,
+    CONTROL "Usar menús &planos", IDC_EFFAPPEARANCE_FLATMENUS,
             "button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 140, 267, 19
     PUSHBUTTON "Cancelar", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "Aceptar", IDOK, 172, 165, 50, 14
@@ -218,8 +218,8 @@ BEGIN
     IDS_CENTER "Centrada"
     IDS_STRETCH "Expandida"
     IDS_TILE "En mosaico"
-    IDS_FIT "Fit"
-    IDS_FILL "Fill"
+    IDS_FIT "Ajustar"
+    IDS_FILL "Rellenar"
 END
 
 STRINGTABLE
