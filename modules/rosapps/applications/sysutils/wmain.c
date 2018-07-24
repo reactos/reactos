@@ -22,7 +22,9 @@ wchar_t *
 fgetws(wchar_t *buf, int bufsize, FILE *file)
 {
 	char * abuf = GlobalAlloc(bufsize,0);
-	if (!buf)return NULL;
+	if (!abuf)
+		return NULL;
+
 	fgets(abuf,bufsize,file);
 	a2w(abuf,buf);
 	GlobalFree(abuf);
