@@ -391,8 +391,8 @@ CheckVolume(
 
             /* Let the user decide whether to repair */
             PrintString("  The file system on this volume needs to be checked for problems.\r\n");
-            PrintString("  You may cancel this check, but it's recommended that you continue.\r\n");
-            PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n", TimeOut);
+            PrintString("  You may cancel this check, but it's recommended that you continue.\r\n\r\n");
+            PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n\r\n", TimeOut);
 
             /* Timeout == fix it! */
             WaitStatus = WaitForKeyboard(TimeOut);
@@ -404,7 +404,7 @@ CheckVolume(
                                                        TRUE, // CheckOnlyIfDirty
                                                        FALSE,// ScanDrive
                                                        ChkdskCallback);
-                PrintString("  The system will now check the file system.\r\n");
+                PrintString("  The system will now check the file system.\r\n\r\n");
             }
             else
             {
