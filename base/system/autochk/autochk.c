@@ -361,7 +361,7 @@ CheckVolume(
         return Status;
     }
 
-    PrintString("  The file system type is %S.\r\n", FileSystem);
+    PrintString("  The file system type is %S.\r\n\r\n", FileSystem);
 
     /* Call provider */
     for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
