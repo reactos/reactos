@@ -3027,12 +3027,12 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmEmHeight         = FontGDI->tmAscent - FontGDI->tmInternalLeading;
         if (FontGDI->tmEmHeight <= 0)
             FontGDI->tmEmHeight = 1;
+        if (FontGDI->tmEmHeight > USHORT_MAX)
+            FontGDI->tmEmHeight = USHORT_MAX;
 
-        if (lfHeight < 0)
-            lfHeight = -lfHeight;
         req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
         req.width          = 0;
-        req.height         = (FT_Long)(lfHeight << 6);
+        req.height         = (FT_Long)(FontGDI->tmEmHeight << 6);
         req.horiResolution = 0;
         req.vertResolution = 0;
         return FT_Request_Size(face, &req);
@@ -3069,6 +3069,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     if (FontGDI->tmEmHeight <= 0)
         FontGDI->tmEmHeight = 1;
+    if (FontGDI->tmEmHeight > USHORT_MAX)
+        FontGDI->tmEmHeight = USHORT_MAX;
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = 0;
