@@ -776,6 +776,35 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
+static UINT FASTCALL
+IntCodePageFromCharSet(BYTE charset)
+{
+    switch (charset)
+    {
+        case FT_WinFNT_ID_CP1252:   return 1252;
+        case FT_WinFNT_ID_DEFAULT:  return 0;
+        case FT_WinFNT_ID_SYMBOL:   return 42;
+        case FT_WinFNT_ID_MAC:      return 2;
+        case FT_WinFNT_ID_CP932:    return 932;
+        case FT_WinFNT_ID_CP949:    return 949;
+        case FT_WinFNT_ID_CP1361:   return 1361;
+        case FT_WinFNT_ID_CP936:    return 936;
+        case FT_WinFNT_ID_CP950:    return 950;
+        case FT_WinFNT_ID_CP1253:   return 1253;
+        case FT_WinFNT_ID_CP1254:   return 1254;
+        case FT_WinFNT_ID_CP1258:   return 1258;
+        case FT_WinFNT_ID_CP1255:   return 1255;
+        case FT_WinFNT_ID_CP1256:   return 1256;
+        case FT_WinFNT_ID_CP1257:   return 1257;
+        case FT_WinFNT_ID_CP1251:   return 1251;
+        case FT_WinFNT_ID_CP874:    return 874;
+        case FT_WinFNT_ID_CP1250:   return 1250;
+        case FT_WinFNT_ID_OEM:      return 1;
+        default: break;
+    }
+    return 0;
+}
+
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -902,7 +931,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
     /* set face */
     FontGDI->SharedFace = SharedFace;
-    FontGDI->CharSet = ANSI_CHARSET;
+    FontGDI->charset = ANSI_CHARSET;
+    FontGDI->codepage = 1252;   /* Windows-1252 | ANSI Latin 1; Western European (Windows) */
     FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
     FontGDI->RequestItalic = FALSE;
     FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
@@ -960,7 +990,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 if ((CharSetIndex == -1 && CharSetCount == 0) ||
                     CharSetIndex == CharSetCount)
                 {
-                    FontGDI->CharSet = g_FontTci[BitIndex].ciCharset;
+                    FontGDI->charset = g_FontTci[BitIndex].ciCharset;
+                    FontGDI->codepage = g_FontTci[BitIndex].ciACP;
                 }
 
                 ++CharSetCount;
@@ -977,15 +1008,17 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         Error = FT_Get_WinFNT_Header(Face, &WinFNT);
         if (!Error)
         {
-            FontGDI->CharSet = WinFNT.charset;
+            FontGDI->charset = WinFNT.charset;
+            FontGDI->codepage = IntCodePageFromCharSet(WinFNT.charset);
         }
         IntUnLockFreeType();
     }
 
-    /* FIXME: CharSet is invalid on Marlett */
+    /* FIXME: charset is invalid on Marlett */
     if (RtlEqualUnicodeString(&Entry->FaceName, &g_MarlettW, TRUE))
     {
-        FontGDI->CharSet = SYMBOL_CHARSET;
+        FontGDI->charset = SYMBOL_CHARSET;
+        FontGDI->codepage = IntCodePageFromCharSet(SYMBOL_CHARSET);
     }
 
     ++FaceCount;
@@ -993,7 +1026,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
            Face->family_name ? Face->family_name : "<NULL>",
            Face->style_name ? Face->style_name : "<NULL>");
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
-    DPRINT("CharSet: %d\n", FontGDI->CharSet);
+    DPRINT("charset: %d\n", FontGDI->charset);
+    DPRINT("codepage: %u\n", FontGDI->codepage);
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
@@ -1493,14 +1527,15 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
     return TRUE;
 }
 
-
+// ported from Wine
 static BOOL face_has_symbol_charmap(FT_Face ft_face)
 {
     int i;
 
     for(i = 0; i < ft_face->num_charmaps; i++)
     {
-        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+        if (ft_face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT &&
+            ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
             return TRUE;
     }
     return FALSE;
@@ -1548,9 +1583,9 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmWeight       = FontGDI->RequestWeight;
             TM->tmItalic       = FontGDI->RequestItalic;
-            TM->tmUnderlined   = FontGDI->RequestUnderline;
-            TM->tmStruckOut    = FontGDI->RequestStrikeOut;
-            TM->tmCharSet      = FontGDI->CharSet;
+            TM->tmUnderlined   = FontGDI->underline;
+            TM->tmStruckOut    = FontGDI->strikeout;
+            TM->tmCharSet      = FontGDI->charset;
         }
         return;
     }
@@ -1662,8 +1697,8 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         {
             TM->tmItalic = 0;
         }
-        TM->tmUnderlined = (FontGDI->RequestUnderline ? 0xFF : 0);
-        TM->tmStruckOut  = (FontGDI->RequestStrikeOut ? 0xFF : 0);
+        TM->tmUnderlined = (FontGDI->underline ? 0xFF : 0);
+        TM->tmStruckOut  = (FontGDI->strikeout ? 0xFF : 0);
     }
 
     if (!FT_IS_FIXED_WIDTH(Face))
@@ -1746,7 +1781,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         TM->tmPitchAndFamily |= TMPF_TRUETYPE;
     }
 
-    TM->tmCharSet = FontGDI->CharSet;
+    TM->tmCharSet = FontGDI->charset;
 }
 
 static void FASTCALL
@@ -1758,8 +1793,16 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI,
 }
 
 static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
-                        FT_UShort NameID, FT_UShort LangID);
+get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace,
+              WORD name_id, LANGID language_id);
+
+static void free_font_name(PUNICODE_STRING name)
+{
+    if (name->Buffer)
+    {
+        ExFreePoolWithTag(name->Buffer, TAG_USTR);
+    }
+}
 
 /*************************************************************
  * IntGetOutlineTextMetrics
@@ -1781,6 +1824,7 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     PSHARED_FACE SharedFace = FontGDI->SharedFace;
     PSHARED_FACE_CACHE Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
     FT_Face Face = SharedFace->Face;
+    NTSTATUS status;
 
     if (Cache->OutlineRequiredSize && Size < Cache->OutlineRequiredSize)
     {
@@ -1788,20 +1832,24 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     }
 
     /* family name */
-    RtlInitUnicodeString(&FamilyNameW, NULL);
-    IntGetFontLocalizedName(&FamilyNameW, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+    status = get_face_name(&FamilyNameW, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+    if (status)
+        DPRINT("get_face_name: %ld\n", status);
 
     /* face name */
-    RtlInitUnicodeString(&FaceNameW, NULL);
-    IntGetFontLocalizedName(&FaceNameW, SharedFace, TT_NAME_ID_FULL_NAME, gusLanguageID);
+    status = get_face_name(&FaceNameW, SharedFace, TT_NAME_ID_FULL_NAME, gusLanguageID);
+    if (status)
+        DPRINT("get_face_name: %ld\n", status);
 
     /* style name */
-    RtlInitUnicodeString(&StyleNameW, NULL);
-    IntGetFontLocalizedName(&StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
+    status = get_face_name(&StyleNameW, SharedFace, TT_NAME_ID_FONT_SUBFAMILY, gusLanguageID);
+    if (status)
+        DPRINT("get_face_name: %ld\n", status);
 
     /* unique name (full name) */
-    RtlInitUnicodeString(&FullNameW, NULL);
-    IntGetFontLocalizedName(&FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
+    status = get_face_name(&FullNameW, SharedFace, TT_NAME_ID_UNIQUE_ID, gusLanguageID);
+    if (status)
+        DPRINT("get_face_name: %ld\n", status);
 
     if (!Cache->OutlineRequiredSize)
     {
@@ -1817,10 +1865,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     if (Size < Cache->OutlineRequiredSize)
     {
-        RtlFreeUnicodeString(&FamilyNameW);
-        RtlFreeUnicodeString(&FaceNameW);
-        RtlFreeUnicodeString(&StyleNameW);
-        RtlFreeUnicodeString(&FullNameW);
+        free_font_name(&FamilyNameW);
+        free_font_name(&FaceNameW);
+        free_font_name(&StyleNameW);
+        free_font_name(&FullNameW);
         return Cache->OutlineRequiredSize;
     }
 
@@ -1833,10 +1881,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     {
         IntUnLockFreeType();
         DPRINT1("Can't find OS/2 table - not TT font?\n");
-        RtlFreeUnicodeString(&FamilyNameW);
-        RtlFreeUnicodeString(&FaceNameW);
-        RtlFreeUnicodeString(&StyleNameW);
-        RtlFreeUnicodeString(&FullNameW);
+        free_font_name(&FamilyNameW);
+        free_font_name(&FaceNameW);
+        free_font_name(&StyleNameW);
+        free_font_name(&FullNameW);
         return 0;
     }
 
@@ -1845,10 +1893,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
     {
         IntUnLockFreeType();
         DPRINT1("Can't find HHEA table - not TT font?\n");
-        RtlFreeUnicodeString(&FamilyNameW);
-        RtlFreeUnicodeString(&FaceNameW);
-        RtlFreeUnicodeString(&StyleNameW);
-        RtlFreeUnicodeString(&FullNameW);
+        free_font_name(&FamilyNameW);
+        free_font_name(&FaceNameW);
+        free_font_name(&StyleNameW);
+        free_font_name(&FullNameW);
         return 0;
     }
 
@@ -1928,10 +1976,10 @@ IntGetOutlineTextMetrics(PFONTGDI FontGDI,
 
     ASSERT(Cp - (char*)Otm == Cache->OutlineRequiredSize);
 
-    RtlFreeUnicodeString(&FamilyNameW);
-    RtlFreeUnicodeString(&FaceNameW);
-    RtlFreeUnicodeString(&StyleNameW);
-    RtlFreeUnicodeString(&FullNameW);
+    free_font_name(&FamilyNameW);
+    free_font_name(&FaceNameW);
+    free_font_name(&StyleNameW);
+    free_font_name(&FullNameW);
 
     return Cache->OutlineRequiredSize;
 }
@@ -2050,7 +2098,7 @@ CharSetFromLangID(LANGID LangID)
     }
 }
 
-static void
+static inline void
 SwapEndian(LPVOID pvData, DWORD Size)
 {
     BYTE b, *pb = pvData;
@@ -2064,187 +2112,334 @@ SwapEndian(LPVOID pvData, DWORD Size)
     }
 }
 
-static NTSTATUS
-DuplicateUnicodeString(PUNICODE_STRING Source, PUNICODE_STRING Destination)
+/* ported from Wine mac_langid_table */
+static const LANGID g_mac_langid_table[] =
 {
-    NTSTATUS Status = STATUS_NO_MEMORY;
-    UNICODE_STRING Tmp;
+    MAKELANGID(LANG_ENGLISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ENGLISH */
+    MAKELANGID(LANG_FRENCH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_FRENCH */
+    MAKELANGID(LANG_GERMAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_GERMAN */
+    MAKELANGID(LANG_ITALIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_ITALIAN */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_DUTCH */
+    MAKELANGID(LANG_SWEDISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWEDISH */
+    MAKELANGID(LANG_SPANISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SPANISH */
+    MAKELANGID(LANG_DANISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_DANISH */
+    MAKELANGID(LANG_PORTUGUESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_PORTUGUESE */
+    MAKELANGID(LANG_NORWEGIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_NORWEGIAN */
+    MAKELANGID(LANG_HEBREW,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_HEBREW */
+    MAKELANGID(LANG_JAPANESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_JAPANESE */
+    MAKELANGID(LANG_ARABIC,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_ARABIC */
+    MAKELANGID(LANG_FINNISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_FINNISH */
+    MAKELANGID(LANG_GREEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_GREEK */
+    MAKELANGID(LANG_ICELANDIC,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ICELANDIC */
+    MAKELANGID(LANG_MALTESE,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MALTESE */
+    MAKELANGID(LANG_TURKISH,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKISH */
+    MAKELANGID(LANG_CROATIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_CROATIAN */
+    MAKELANGID(LANG_CHINESE_TRADITIONAL,SUBLANG_DEFAULT),    /* TT_MAC_LANGID_CHINESE_TRADITIONAL */
+    MAKELANGID(LANG_URDU,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_URDU */
+    MAKELANGID(LANG_HINDI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_HINDI */
+    MAKELANGID(LANG_THAI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_THAI */
+    MAKELANGID(LANG_KOREAN,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KOREAN */
+    MAKELANGID(LANG_LITHUANIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_LITHUANIAN */
+    MAKELANGID(LANG_POLISH,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_POLISH */
+    MAKELANGID(LANG_HUNGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_HUNGARIAN */
+    MAKELANGID(LANG_ESTONIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ESTONIAN */
+    MAKELANGID(LANG_LATVIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_LETTISH */
+    MAKELANGID(LANG_SAMI,SUBLANG_DEFAULT),                   /* TT_MAC_LANGID_SAAMISK */
+    MAKELANGID(LANG_FAEROESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_FAEROESE */
+    MAKELANGID(LANG_FARSI,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_FARSI */
+    MAKELANGID(LANG_RUSSIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_RUSSIAN */
+    MAKELANGID(LANG_CHINESE_SIMPLIFIED,SUBLANG_DEFAULT),     /* TT_MAC_LANGID_CHINESE_SIMPLIFIED */
+    MAKELANGID(LANG_DUTCH,SUBLANG_DUTCH_BELGIAN),            /* TT_MAC_LANGID_FLEMISH */
+    MAKELANGID(LANG_IRISH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_IRISH */
+    MAKELANGID(LANG_ALBANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ALBANIAN */
+    MAKELANGID(LANG_ROMANIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ROMANIAN */
+    MAKELANGID(LANG_CZECH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_CZECH */
+    MAKELANGID(LANG_SLOVAK,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SLOVAK */
+    MAKELANGID(LANG_SLOVENIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SLOVENIAN */
+    0,                                                       /* TT_MAC_LANGID_YIDDISH */
+    MAKELANGID(LANG_SERBIAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SERBIAN */
+    MAKELANGID(LANG_MACEDONIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_MACEDONIAN */
+    MAKELANGID(LANG_BULGARIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_BULGARIAN */
+    MAKELANGID(LANG_UKRAINIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_UKRAINIAN */
+    MAKELANGID(LANG_BELARUSIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_BYELORUSSIAN */
+    MAKELANGID(LANG_UZBEK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_UZBEK */
+    MAKELANGID(LANG_KAZAK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KAZAKH */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_CYRILLIC),           /* TT_MAC_LANGID_AZERBAIJANI */
+    0,                                                       /* TT_MAC_LANGID_AZERBAIJANI_ARABIC_SCRIPT */
+    MAKELANGID(LANG_ARMENIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ARMENIAN */
+    MAKELANGID(LANG_GEORGIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GEORGIAN */
+    0,                                                       /* TT_MAC_LANGID_MOLDAVIAN */
+    MAKELANGID(LANG_KYRGYZ,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_KIRGHIZ */
+    MAKELANGID(LANG_TAJIK,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAJIKI */
+    MAKELANGID(LANG_TURKMEN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TURKMEN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MONGOLIAN */
+    MAKELANGID(LANG_MONGOLIAN,SUBLANG_MONGOLIAN_CYRILLIC_MONGOLIA), /* TT_MAC_LANGID_MONGOLIAN_CYRILLIC_SCRIPT */
+    MAKELANGID(LANG_PASHTO,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_PASHTO */
+    0,                                                       /* TT_MAC_LANGID_KURDISH */
+    MAKELANGID(LANG_KASHMIRI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_KASHMIRI */
+    MAKELANGID(LANG_SINDHI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_SINDHI */
+    MAKELANGID(LANG_TIBETAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_TIBETAN */
+    MAKELANGID(LANG_NEPALI,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_NEPALI */
+    MAKELANGID(LANG_SANSKRIT,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_SANSKRIT */
+    MAKELANGID(LANG_MARATHI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_MARATHI */
+    MAKELANGID(LANG_BENGALI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_BENGALI */
+    MAKELANGID(LANG_ASSAMESE,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_ASSAMESE */
+    MAKELANGID(LANG_GUJARATI,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GUJARATI */
+    MAKELANGID(LANG_PUNJABI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_PUNJABI */
+    MAKELANGID(LANG_ORIYA,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_ORIYA */
+    MAKELANGID(LANG_MALAYALAM,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_MALAYALAM */
+    MAKELANGID(LANG_KANNADA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_KANNADA */
+    MAKELANGID(LANG_TAMIL,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TAMIL */
+    MAKELANGID(LANG_TELUGU,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_TELUGU */
+    MAKELANGID(LANG_SINHALESE,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_SINHALESE */
+    0,                                                       /* TT_MAC_LANGID_BURMESE */
+    MAKELANGID(LANG_KHMER,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_KHMER */
+    MAKELANGID(LANG_LAO,SUBLANG_DEFAULT),                    /* TT_MAC_LANGID_LAO */
+    MAKELANGID(LANG_VIETNAMESE,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_VIETNAMESE */
+    MAKELANGID(LANG_INDONESIAN,SUBLANG_DEFAULT),             /* TT_MAC_LANGID_INDONESIAN */
+    0,                                                       /* TT_MAC_LANGID_TAGALOG */
+    MAKELANGID(LANG_MALAY,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_MALAY_ROMAN_SCRIPT */
+    0,                                                       /* TT_MAC_LANGID_MALAY_ARABIC_SCRIPT */
+    MAKELANGID(LANG_AMHARIC,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_AMHARIC */
+    MAKELANGID(LANG_TIGRIGNA,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_TIGRINYA */
+    0,                                                       /* TT_MAC_LANGID_GALLA */
+    0,                                                       /* TT_MAC_LANGID_SOMALI */
+    MAKELANGID(LANG_SWAHILI,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_SWAHILI */
+    0,                                                       /* TT_MAC_LANGID_RUANDA */
+    0,                                                       /* TT_MAC_LANGID_RUNDI */
+    0,                                                       /* TT_MAC_LANGID_CHEWA */
+/* These are documented by the MSDN but are missing from the Windows header */
+#define LANG_MALAGASY           0x8d
+#define LANG_ESPERANTO          0x8f
+#define LANG_MANX_GAELIC        0x94
+    MAKELANGID(LANG_MALAGASY,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_MALAGASY */
+    MAKELANGID(LANG_ESPERANTO,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_ESPERANTO */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,       /* 95-111 */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          /* 112-127 */
+    MAKELANGID(LANG_WELSH,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_WELSH */
+    MAKELANGID(LANG_BASQUE,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BASQUE */
+    MAKELANGID(LANG_CATALAN,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_CATALAN */
+    0,                                                       /* TT_MAC_LANGID_LATIN */
+    MAKELANGID(LANG_QUECHUA,SUBLANG_DEFAULT),                /* TT_MAC_LANGID_QUECHUA */
+    0,                                                       /* TT_MAC_LANGID_GUARANI */
+    0,                                                       /* TT_MAC_LANGID_AYMARA */
+    MAKELANGID(LANG_TATAR,SUBLANG_DEFAULT),                  /* TT_MAC_LANGID_TATAR */
+    MAKELANGID(LANG_UIGHUR,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_UIGHUR */
+    0,                                                       /* TT_MAC_LANGID_DZONGKHA */
+    0,                                                       /* TT_MAC_LANGID_JAVANESE */
+    0,                                                       /* TT_MAC_LANGID_SUNDANESE */
+    MAKELANGID(LANG_GALICIAN,SUBLANG_DEFAULT),               /* TT_MAC_LANGID_GALICIAN */
+    MAKELANGID(LANG_AFRIKAANS,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_AFRIKAANS */
+    MAKELANGID(LANG_BRETON,SUBLANG_DEFAULT),                 /* TT_MAC_LANGID_BRETON */
+    MAKELANGID(LANG_INUKTITUT,SUBLANG_DEFAULT),              /* TT_MAC_LANGID_INUKTITUT */
+    MAKELANGID(LANG_SCOTTISH_GAELIC,SUBLANG_DEFAULT),        /* TT_MAC_LANGID_SCOTTISH_GAELIC */
+    MAKELANGID(LANG_MANX_GAELIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_MANX_GAELIC */
+    MAKELANGID(LANG_IRISH,SUBLANG_IRISH_IRELAND),            /* TT_MAC_LANGID_IRISH_GAELIC */
+    0,                                                       /* TT_MAC_LANGID_TONGAN */
+    0,                                                       /* TT_MAC_LANGID_GREEK_POLYTONIC */
+    MAKELANGID(LANG_GREENLANDIC,SUBLANG_DEFAULT),            /* TT_MAC_LANGID_GREELANDIC */
+    MAKELANGID(LANG_AZERI,SUBLANG_AZERI_LATIN),              /* TT_MAC_LANGID_AZERBAIJANI_ROMAN_SCRIPT */
+};
 
-    Tmp.Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_USTR);
-    if (Tmp.Buffer)
+/* ported from Wine */
+static inline UINT
+get_mac_code_page(const FT_SfntName *name)
+{
+    if (name->encoding_id == TT_MAC_ID_SIMPLIFIED_CHINESE)
+        return 10008;  /* special case */
+    return 10000 + name->encoding_id;
+}
+
+/* ported from Wine match_name_table_language */
+static INT
+get_face_name_score(const FT_SfntName *name, LANGID lang)
+{
+    LANGID name_lang;
+    INT score = 0;
+
+    switch (name->platform_id)
     {
-        Tmp.MaximumLength = Source->MaximumLength;
-        Tmp.Length = 0;
-        RtlCopyUnicodeString(&Tmp, Source);
+        case TT_PLATFORM_MICROSOFT:
+            score += 5;  /* prefer the Microsoft name */
+            switch (name->encoding_id)
+            {
+                case TT_MS_ID_UNICODE_CS:
+                case TT_MS_ID_SYMBOL_CS:
+                    name_lang = name->language_id;
+                    break;
 
-        Destination->MaximumLength = Tmp.MaximumLength;
-        Destination->Length = Tmp.Length;
-        Destination->Buffer = Tmp.Buffer;
+                default:
+                    return 0;
+            }
+            break;
 
-        Status = STATUS_SUCCESS;
+        case TT_PLATFORM_MACINTOSH:
+            //if (!IsValidCodePage(get_mac_code_page(name)))
+            //    return 0;
+            if (name->language_id >= _countof(g_mac_langid_table))
+                return 0;
+            name_lang = g_mac_langid_table[name->language_id];
+            break;
+
+        case TT_PLATFORM_APPLE_UNICODE:
+            score += 2;  /* prefer Unicode encodings */
+            switch (name->encoding_id)
+            {
+                case TT_APPLE_ID_DEFAULT:
+                case TT_APPLE_ID_ISO_10646:
+                case TT_APPLE_ID_UNICODE_2_0:
+                    if (name->language_id >= _countof(g_mac_langid_table))
+                        return 0;
+                    name_lang = g_mac_langid_table[name->language_id];
+                    break;
+
+                default:
+                    return 0;
+            }
+            break;
+
+        default:
+            return 0;
     }
 
-    return Status;
+    if (name_lang == lang)
+        score += 30;
+    else if (PRIMARYLANGID(name_lang) == PRIMARYLANGID(lang))
+        score += 20;
+    else if (name_lang == MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT))
+        score += 10;
+    return score;
+}
+
+/* ported from Wine */
+static NTSTATUS
+copy_name_table_string(PUNICODE_STRING face_name, const FT_SfntName *name)
+{
+    UNICODE_STRING ret;
+    UINT codepage;
+    INT cchBuff;
+
+    RtlInitUnicodeString(face_name, NULL);
+
+    switch (name->platform_id)
+    {
+    case TT_PLATFORM_APPLE_UNICODE:
+    case TT_PLATFORM_MICROSOFT:
+        ret.Length = (USHORT)name->string_len;
+        ret.MaximumLength = (USHORT)(name->string_len + sizeof(UNICODE_NULL));
+        ret.Buffer = ExAllocatePoolWithTag(PagedPool, ret.MaximumLength, TAG_USTR);
+        if (ret.Buffer == NULL)
+            return STATUS_NO_MEMORY;
+
+        RtlCopyMemory(ret.Buffer, name->string, ret.Length);
+        SwapEndian(ret.Buffer, ret.Length);
+        ret.Buffer[ret.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        break;
+
+    case TT_PLATFORM_MACINTOSH:
+        codepage = get_mac_code_page(name);
+        cchBuff = EngMultiByteToWideChar(codepage, NULL, 0, (char *)name->string, name->string_len);
+        if (cchBuff < sizeof(WCHAR))
+            return STATUS_INVALID_PARAMETER;
+
+        ret.Length = (USHORT)(cchBuff - sizeof(UNICODE_NULL));
+        ret.MaximumLength = (USHORT)cchBuff;
+        ret.Buffer = ExAllocatePoolWithTag(PagedPool, ret.MaximumLength, TAG_USTR);
+        if (ret.Buffer == NULL)
+            return STATUS_NO_MEMORY;
+
+        EngMultiByteToWideChar(codepage, ret.Buffer, cchBuff, (char *)name->string, name->string_len);
+        ret.Buffer[ret.Length / sizeof(WCHAR)] = UNICODE_NULL;
+        break;
+
+    default:
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    *face_name = ret;
+
+    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-IntGetFontLocalizedName(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
-                        FT_UShort NameID, FT_UShort LangID)
+get_face_name(PUNICODE_STRING face_name, PSHARED_FACE SharedFace, WORD name_id, LANGID language_id)
 {
-    FT_SfntName Name;
-    INT i, Count, BestIndex, Score, BestScore;
-    FT_Error Error;
-    NTSTATUS Status = STATUS_NOT_FOUND;
-    ANSI_STRING AnsiName;
-    PSHARED_FACE_CACHE Cache;
-    FT_Face Face = SharedFace->Face;
+    FT_SfntName name;
+    FT_UInt num_names, name_index;
+    INT score, best_score = 0, best_index = -1;
+    NTSTATUS status = STATUS_NOT_FOUND;
+    FT_Face ft_face = SharedFace->Face;
 
-    RtlFreeUnicodeString(pNameW);
+    RtlInitUnicodeString(face_name, NULL);
 
-    /* select cache */
-    if (PRIMARYLANGID(LangID) == LANG_ENGLISH)
+    if (!FT_IS_SFNT(ft_face))
     {
-        Cache = &SharedFace->EnglishUS;
+        /* get the name from family_name and style_name */
+        ANSI_STRING ansi;
+        UNICODE_STRING wide;
+        switch (name_id)
+        {
+            case TT_NAME_ID_FULL_NAME:
+            case TT_NAME_ID_UNIQUE_ID:
+                /* family_name --> ansi --> face_name */
+                RtlInitAnsiString(&ansi, ft_face->family_name);
+                RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+
+                /* " " --> ansi --> wide */
+                RtlInitAnsiString(&ansi, " ");
+                RtlAnsiStringToUnicodeString(&wide, &ansi, TRUE);
+
+                /* face_name <-- face_name + wide */
+                RtlAppendUnicodeStringToString(face_name, &wide);
+                RtlFreeUnicodeString(&wide);
+
+                /* style_name --> ansi --> wide */
+                RtlInitAnsiString(&ansi, ft_face->style_name);
+                RtlAnsiStringToUnicodeString(&wide, &ansi, TRUE);
+
+                /* face_name <-- face_name + wide */
+                status = RtlAppendUnicodeStringToString(face_name, &wide);
+                RtlFreeUnicodeString(&wide);
+                break;
+
+            case TT_NAME_ID_FONT_FAMILY:
+                RtlInitAnsiString(&ansi, ft_face->family_name);
+                status = RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+                break;
+
+            case TT_NAME_ID_FONT_SUBFAMILY:
+                RtlInitAnsiString(&ansi, ft_face->style_name);
+                status = RtlAnsiStringToUnicodeString(face_name, &ansi, TRUE);
+                break;
+
+            default:
+                return STATUS_NOT_FOUND;
+        }
+        return status;
     }
-    else
+
+    num_names = FT_Get_Sfnt_Name_Count(ft_face);
+
+    for (name_index = 0; name_index < num_names; name_index++)
     {
-        Cache = &SharedFace->UserLanguage;
-    }
+        if (FT_Get_Sfnt_Name(ft_face, name_index, &name))
+            continue;
+        if (name.name_id != name_id)
+            continue;
 
-    /* use cache if available */
-    if (NameID == TT_NAME_ID_FONT_FAMILY && Cache->FontFamily.Buffer)
-    {
-        return DuplicateUnicodeString(&Cache->FontFamily, pNameW);
-    }
-    if (NameID == TT_NAME_ID_FULL_NAME && Cache->FullName.Buffer)
-    {
-        return DuplicateUnicodeString(&Cache->FullName, pNameW);
-    }
-
-    BestIndex = -1;
-    BestScore = 0;
-
-    Count = FT_Get_Sfnt_Name_Count(Face);
-    for (i = 0; i < Count; ++i)
-    {
-        Error = FT_Get_Sfnt_Name(Face, i, &Name);
-        if (Error)
+        score = get_face_name_score(&name, language_id);
+        if (score > best_score)
         {
-            continue;   /* failure */
-        }
-
-        if (Name.name_id != NameID)
-        {
-            continue;   /* mismatched */
-        }
-
-        if (Name.platform_id != TT_PLATFORM_MICROSOFT ||
-            (Name.encoding_id != TT_MS_ID_UNICODE_CS &&
-             Name.encoding_id != TT_MS_ID_SYMBOL_CS))
-        {
-            continue;   /* not Microsoft Unicode name */
-        }
-
-        if (Name.string == NULL || Name.string_len == 0 ||
-            (Name.string[0] == 0 && Name.string[1] == 0))
-        {
-            continue;   /* invalid string */
-        }
-
-        if (Name.language_id == LangID)
-        {
-            Score = 30;
-            BestIndex = i;
-            break;      /* best match */
-        }
-        else if (PRIMARYLANGID(Name.language_id) == PRIMARYLANGID(LangID))
-        {
-            Score = 20;
-        }
-        else if (PRIMARYLANGID(Name.language_id) == LANG_ENGLISH)
-        {
-            Score = 10;
-        }
-        else
-        {
-            Score = 0;
-        }
-
-        if (Score > BestScore)
-        {
-            BestScore = Score;
-            BestIndex = i;
+            best_score = score;
+            best_index = name_index;
         }
     }
 
-    if (BestIndex >= 0)
+    if (best_index != -1 && !FT_Get_Sfnt_Name(ft_face, best_index, &name))
     {
-        /* store the best name */
-        Error = (Score == 30) ? 0 : FT_Get_Sfnt_Name(Face, BestIndex, &Name);
-        if (!Error)
-        {
-            /* NOTE: Name.string is not null-terminated */
-            UNICODE_STRING Tmp;
-            Tmp.Buffer = (PWCH)Name.string;
-            Tmp.Length = Tmp.MaximumLength = Name.string_len;
-
-            pNameW->Length = 0;
-            pNameW->MaximumLength = Name.string_len + sizeof(WCHAR);
-            pNameW->Buffer = ExAllocatePoolWithTag(PagedPool, pNameW->MaximumLength, TAG_USTR);
-
-            if (pNameW->Buffer)
-            {
-                Status = RtlAppendUnicodeStringToString(pNameW, &Tmp);
-                if (Status == STATUS_SUCCESS)
-                {
-                    /* Convert UTF-16 big endian to little endian */
-                    SwapEndian(pNameW->Buffer, pNameW->Length);
-                }
-            }
-            else
-            {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-            }
-        }
+        status = copy_name_table_string(face_name, &name);
     }
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* defaulted */
-        if (NameID == TT_NAME_ID_FONT_SUBFAMILY)
-        {
-            RtlInitAnsiString(&AnsiName, Face->style_name);
-            Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
-        }
-        else
-        {
-            RtlInitAnsiString(&AnsiName, Face->family_name);
-            Status = RtlAnsiStringToUnicodeString(pNameW, &AnsiName, TRUE);
-        }
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        /* make cache */
-        if (NameID == TT_NAME_ID_FONT_FAMILY)
-        {
-            ASSERT_FREETYPE_LOCK_NOT_HELD();
-            IntLockFreeType();
-            if (!Cache->FontFamily.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FontFamily);
-            IntUnLockFreeType();
-        }
-        else if (NameID == TT_NAME_ID_FULL_NAME)
-        {
-            ASSERT_FREETYPE_LOCK_NOT_HELD();
-            IntLockFreeType();
-            if (!Cache->FullName.Buffer)
-                DuplicateUnicodeString(pNameW, &Cache->FullName);
-            IntUnLockFreeType();
-        }
-    }
-
-    return Status;
+    return status;
 }
 
 static void FASTCALL
@@ -2507,7 +2702,7 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         ASSERT(FontGDI);
 
         if (LogFont->lfCharSet != DEFAULT_CHARSET &&
-            LogFont->lfCharSet != FontGDI->CharSet)
+            LogFont->lfCharSet != FontGDI->charset)
         {
             continue;
         }
@@ -3031,6 +3226,91 @@ IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
     return FT_Request_Size(face, &req);
 }
 
+/* ported from Wine */
+static BOOL
+select_charmap(FT_Face ft_face, FT_Encoding encoding)
+{
+    FT_Error ft_err = FT_Err_Invalid_CharMap_Handle;
+    FT_CharMap cmap0, cmap1, cmap2, cmap3, cmap_def;
+    FT_Int i;
+
+    cmap0 = cmap1 = cmap2 = cmap3 = cmap_def = NULL;
+
+    for (i = 0; i < ft_face->num_charmaps; i++)
+    {
+        if (ft_face->charmaps[i]->encoding == encoding)
+        {
+            DPRINT("found cmap with platform_id %u, encoding_id %u\n",
+                   ft_face->charmaps[i]->platform_id, ft_face->charmaps[i]->encoding_id);
+
+            switch (ft_face->charmaps[i]->platform_id)
+            {
+                case 0: /* Apple Unicode */
+                    cmap0 = ft_face->charmaps[i];
+                    break;
+
+                case 1: /* Macintosh */
+                    cmap1 = ft_face->charmaps[i];
+                    break;
+
+                case 2: /* ISO */
+                    cmap2 = ft_face->charmaps[i];
+                    break;
+
+                case 3: /* Microsoft */
+                    cmap3 = ft_face->charmaps[i];
+                    break;
+
+                default:
+                    cmap_def = ft_face->charmaps[i];
+                    break;
+            }
+        }
+
+        if (cmap3) /* prefer Microsoft cmap table */
+            ft_err = FT_Set_Charmap(ft_face, cmap3);
+        else if (cmap1)
+            ft_err = FT_Set_Charmap(ft_face, cmap1);
+        else if (cmap2)
+            ft_err = FT_Set_Charmap(ft_face, cmap2);
+        else if (cmap0)
+            ft_err = FT_Set_Charmap(ft_face, cmap0);
+        else if (cmap_def)
+            ft_err = FT_Set_Charmap(ft_face, cmap_def);
+    }
+
+    return ft_err == FT_Err_Ok;
+}
+
+/* ported from Wine */
+static FT_Encoding
+pick_charmap(FT_Face face, BYTE charset)
+{
+    static const FT_Encoding regular_order[] =
+        { FT_ENCODING_UNICODE, FT_ENCODING_APPLE_ROMAN, FT_ENCODING_MS_SYMBOL, 0 };
+    static const FT_Encoding symbol_order[]  =
+        { FT_ENCODING_MS_SYMBOL, FT_ENCODING_UNICODE, FT_ENCODING_APPLE_ROMAN, 0 };
+    const FT_Encoding *encs = regular_order;
+
+    if (charset == SYMBOL_CHARSET)
+        encs = symbol_order;
+
+    while (*encs != 0)
+    {
+        if (select_charmap(face, *encs))
+            break;
+        encs++;
+    }
+
+    if (!face->charmap && face->num_charmaps)
+    {
+        if (!FT_Set_Charmap(face, face->charmaps[0]))
+            return face->charmap->encoding;
+    }
+
+    return *encs;
+}
+
 BOOL
 FASTCALL
 TextIntUpdateSize(PDC dc,
@@ -3039,8 +3319,7 @@ TextIntUpdateSize(PDC dc,
                   BOOL bDoLock)
 {
     FT_Face face;
-    INT error, n;
-    FT_CharMap charmap, found;
+    INT error;
     LOGFONTW *plf;
 
     if (bDoLock)
@@ -3052,29 +3331,9 @@ TextIntUpdateSize(PDC dc,
         DPRINT("WARNING: No charmap selected!\n");
         DPRINT("This font face has %d charmaps\n", face->num_charmaps);
 
-        found = NULL;
-        for (n = 0; n < face->num_charmaps; n++)
-        {
-            charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-        }
-        else
-        {
-            error = FT_Set_Charmap(face, found);
-            if (error)
-            {
-                DPRINT1("WARNING: Could not set the charmap!\n");
-            }
-        }
+        IntLockFreeType();
+        pick_charmap(face, FontGDI->charset);
+        IntUnLockFreeType();
     }
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
@@ -3093,6 +3352,8 @@ TextIntUpdateSize(PDC dc,
     return TRUE;
 }
 
+static FT_UInt
+get_flaged_glyph_index(PFONTGDI font, FT_ULong code, DWORD indexed_flag, DWORD flags);
 
 /*
  * Based on WineEngGetGlyphOutline
@@ -3181,12 +3442,8 @@ ftGdiGetGlyphOutline(
 
     TEXTOBJ_UnlockText(TextObj);
 
-    if (iFormat & GGO_GLYPH_INDEX)
-    {
-        glyph_index = wch;
-        iFormat &= ~GGO_GLYPH_INDEX;
-    }
-    else  glyph_index = FT_Get_Char_Index(ft_face, wch);
+    glyph_index = get_flaged_glyph_index(FontGDI, wch, GGO_GLYPH_INDEX, iFormat);
+    iFormat &= ~GGO_GLYPH_INDEX;
 
     if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
         load_flags |= FT_LOAD_NO_BITMAP;
@@ -3615,10 +3872,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        if (fl & GTEF_INDICES)
-            glyph_index = *String;
-        else
-            glyph_index = FT_Get_Char_Index(face, *String);
+        glyph_index = get_flaged_glyph_index(FontGDI, *String, GTEF_INDICES, fl);
 
         if (EmuBold || EmuItalic)
             realglyph = NULL;
@@ -3807,7 +4061,7 @@ ftGdiGetTextCharsetInfo(
         }
     }
 Exit:
-    DPRINT("CharSet %u CodePage %u\n", csi.ciCharset, csi.ciACP);
+    DPRINT("charset %u CodePage %u\n", csi.ciCharset, csi.ciACP);
     return (MAKELONG(csi.ciACP, csi.ciCharset));
 }
 
@@ -4522,8 +4776,8 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         TextObj->Font->iUniq = 1; // Now it can be cached.
         IntFontType(FontGdi);
         FontGdi->flType = TextObj->Font->flFontType;
-        FontGdi->RequestUnderline = pLogFont->lfUnderline ? 0xFF : 0;
-        FontGdi->RequestStrikeOut = pLogFont->lfStrikeOut ? 0xFF : 0;
+        FontGdi->underline = pLogFont->lfUnderline ? 0xFF : 0;
+        FontGdi->strikeout = pLogFont->lfStrikeOut ? 0xFF : 0;
         FontGdi->RequestItalic = pLogFont->lfItalic ? 0xFF : 0;
         if (pLogFont->lfWeight != FW_DONTCARE)
             FontGdi->RequestWeight = pLogFont->lfWeight;
@@ -5326,10 +5580,7 @@ GreExtTextOutW(
 
         for (i = iStart; i < Count; i++)
         {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = *TempText;
-            else
-                glyph_index = FT_Get_Char_Index(face, *TempText);
+            glyph_index = get_flaged_glyph_index(FontGDI, *TempText, ETO_GLYPH_INDEX, fuOptions);
 
             if (EmuBold || EmuItalic)
                 realglyph = NULL;
@@ -5431,10 +5682,7 @@ GreExtTextOutW(
         BackgroundLeft = (RealXStart + 32) >> 6;
         for (i = 0; i < Count; ++i)
         {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = String[i];
-            else
-                glyph_index = FT_Get_Char_Index(face, String[i]);
+            glyph_index = get_flaged_glyph_index(FontGDI, String[i], ETO_GLYPH_INDEX, fuOptions);
 
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
@@ -5549,10 +5797,7 @@ GreExtTextOutW(
     BackgroundLeft = (RealXStart + 32) >> 6;
     for (i = 0; i < Count; ++i)
     {
-        if (fuOptions & ETO_GLYPH_INDEX)
-            glyph_index = String[i];
-        else
-            glyph_index = FT_Get_Char_Index(face, String[i]);
+        glyph_index = get_flaged_glyph_index(FontGDI, String[i], ETO_GLYPH_INDEX, fuOptions);
 
         if (EmuBold || EmuItalic)
             realglyph = NULL;
@@ -5962,7 +6207,6 @@ NtGdiGetCharABCWidthsW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -6013,7 +6257,6 @@ NtGdiGetCharABCWidthsW(
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
     if (SafeBuff == NULL)
     {
-
         if(Safepwch)
             ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
 
@@ -6056,30 +6299,8 @@ NtGdiGetCharABCWidthsW(
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
     {
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-
-            if(Safepwch)
-                ExFreePoolWithTag(Safepwch , GDITAG_TEXT);
-
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
         IntLockFreeType();
-        FT_Set_Charmap(face, found);
+        pick_charmap(face, FontGDI->charset);
         IntUnLockFreeType();
     }
 
@@ -6094,17 +6315,11 @@ NtGdiGetCharABCWidthsW(
 
         if (Safepwch)
         {
-            if (fl & GCABCW_INDICES)
-                glyph_index = Safepwch[i - FirstChar];
-            else
-                glyph_index = FT_Get_Char_Index(face, Safepwch[i - FirstChar]);
+            glyph_index = get_flaged_glyph_index(FontGDI, Safepwch[i - FirstChar], GCABCW_INDICES, fl);
         }
         else
         {
-            if (fl & GCABCW_INDICES)
-                glyph_index = i;
-            else
-                glyph_index = FT_Get_Char_Index(face, i);
+            glyph_index = get_flaged_glyph_index(FontGDI, i, GCABCW_INDICES, fl);
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -6173,7 +6388,6 @@ NtGdiGetCharWidthW(
     PTEXTOBJ TextObj;
     PFONTGDI FontGDI;
     FT_Face face;
-    FT_CharMap charmap, found = NULL;
     UINT i, glyph_index, BufferSize;
     HFONT hFont = 0;
     PMATRIX pmxWorldToDevice;
@@ -6252,30 +6466,8 @@ NtGdiGetCharWidthW(
     face = FontGDI->SharedFace->Face;
     if (face->charmap == NULL)
     {
-        for (i = 0; i < (UINT)face->num_charmaps; i++)
-        {
-            charmap = face->charmaps[i];
-            if (charmap->encoding != 0)
-            {
-                found = charmap;
-                break;
-            }
-        }
-
-        if (!found)
-        {
-            DPRINT1("WARNING: Could not find desired charmap!\n");
-
-            if(Safepwc)
-                ExFreePoolWithTag(Safepwc, GDITAG_TEXT);
-
-            ExFreePoolWithTag(SafeBuff, GDITAG_TEXT);
-            EngSetLastError(ERROR_INVALID_HANDLE);
-            return FALSE;
-        }
-
         IntLockFreeType();
-        FT_Set_Charmap(face, found);
+        pick_charmap(face, FontGDI->charset);
         IntUnLockFreeType();
     }
 
@@ -6288,17 +6480,11 @@ NtGdiGetCharWidthW(
     {
         if (Safepwc)
         {
-            if (fl & GCW_INDICES)
-                glyph_index = Safepwc[i - FirstChar];
-            else
-                glyph_index = FT_Get_Char_Index(face, Safepwc[i - FirstChar]);
+            glyph_index = get_flaged_glyph_index(FontGDI, Safepwc[i - FirstChar], GCW_INDICES, fl);
         }
         else
         {
-            if (fl & GCW_INDICES)
-                glyph_index = i;
-            else
-                glyph_index = FT_Get_Char_Index(face, i);
+            glyph_index = get_flaged_glyph_index(FontGDI, i, GCW_INDICES, fl);
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
         if (!fl)
@@ -6317,6 +6503,159 @@ NtGdiGetCharWidthW(
     return TRUE;
 }
 
+/* ported from Wine */
+static inline WCHAR
+get_glyph_index_symbol(PFONTGDI font, UINT glyph)
+{
+    WCHAR ret;
+    FT_Face ft_face = font->SharedFace->Face;
+
+    if (glyph < 0x100)
+        glyph += 0xf000;
+
+    /* there are a number of old pre-Unicode "broken" TTFs, which
+       do have symbols at U+00XX instead of U+f0XX */
+    ret = (WCHAR)FT_Get_Char_Index(ft_face, glyph);
+    if (!ret)
+        ret = (WCHAR)FT_Get_Char_Index(ft_face, glyph - 0xf000);
+
+    return ret;
+}
+
+/* ported from Wine */
+static WCHAR
+get_glyph_index(PFONTGDI font, UINT glyph)
+{
+    WCHAR ret;
+    WCHAR wc;
+    char buf[8];
+    BOOL default_used = FALSE;
+    FT_Face ft_face = font->SharedFace->Face;
+
+    if (ft_face->charmap->encoding == FT_ENCODING_NONE)
+    {
+        wc = (WCHAR)glyph;
+        if (EngWideCharToMultiByte(font->codepage, &wc, 1, buf, sizeof(buf)) == -1)
+        {
+            /* defaulted */
+            default_used = TRUE;
+            if (font->codepage == CP_SYMBOL)
+            {
+                ret = get_glyph_index_symbol(font, glyph);
+                if (!ret)
+                {
+                    if (EngWideCharToMultiByte(0, &wc, 1, buf, sizeof(buf)) != -1)
+                        ret = get_glyph_index_symbol(font, buf[0]);
+                }
+            }
+            else
+            {
+                ret = 0;
+            }
+        }
+        else
+        {
+            ret = (WORD)FT_Get_Char_Index(ft_face, (unsigned char)buf[0]);
+        }
+
+        DPRINT("%04x (%02x) -> ret %d def_used %d\n", glyph, (unsigned char)buf[0], ret, default_used);
+        return ret;
+    }
+
+    if (ft_face->charmap->encoding == FT_ENCODING_MS_SYMBOL)
+    {
+        ret = get_glyph_index_symbol(font, glyph);
+        if (!ret)
+        {
+            wc = (WCHAR)glyph;
+            if (EngWideCharToMultiByte(0, &wc, 1, buf, sizeof(buf)) != -1)
+                ret = get_glyph_index_symbol(font, (unsigned char)buf[0]);
+        }
+        return ret;
+    }
+
+    return FT_Get_Char_Index(ft_face, glyph);
+}
+
+/* ported from Wine */
+static WCHAR
+get_gdi_glyph_index(PFONTGDI font, UINT glyph)
+{
+    WCHAR wc = (WCHAR)glyph;
+    WCHAR ret;
+    char buf[8];
+    FT_Face ft_face = font->SharedFace->Face;
+    BOOL def_used = FALSE;
+
+    if (ft_face->charmap->encoding != FT_ENCODING_NONE)
+        return get_glyph_index(font, glyph);
+
+    if (EngWideCharToMultiByte(font->codepage, &wc, 1, buf, sizeof(buf)) == -1)
+    {
+        def_used = TRUE;
+        if (font->codepage == CP_SYMBOL && wc < 0x100)
+            ret = (unsigned char)wc;
+        else
+            ret = 0;
+    }
+    else
+    {
+        ret = (unsigned char)buf[0];
+    }
+
+    DPRINT("%04x (%02x) -> ret %d def_used %d\n", glyph, (unsigned char)buf[0], ret, def_used);
+    return ret;
+}
+
+/* ported from Wine */
+static WORD
+get_default_char_index(PFONTGDI font)
+{
+    WORD default_char;
+    TT_OS2 *pOS2;
+    FT_Face ft_face = font->SharedFace->Face;
+    FT_WinFNT_HeaderRec winfnt_header;
+    FT_Error err;
+
+    if (FT_IS_SFNT(ft_face))
+    {
+        pOS2 = FT_Get_Sfnt_Table(ft_face, FT_SFNT_OS2);
+        ASSERT(pOS2 != NULL);
+        default_char = (pOS2->usDefaultChar ? get_glyph_index(font, pOS2->usDefaultChar) : 0);
+    }
+    else
+    {
+        err = FT_Get_WinFNT_Header(ft_face, &winfnt_header);
+        if (!err)
+        {
+            default_char = winfnt_header.default_char + winfnt_header.first_char;
+        }
+        else
+        {
+            default_char = L' ';
+        }
+    }
+
+    return default_char;
+}
+
+static FT_UInt
+get_flaged_glyph_index(PFONTGDI font, FT_ULong code, DWORD indexed_flag, DWORD flags)
+{
+    FT_UInt glyph_index;
+    if (flags & indexed_flag)
+    {
+        glyph_index = code;
+    }
+    else
+    {
+        if (face_has_symbol_charmap(font->SharedFace->Face))
+            glyph_index = get_glyph_index_symbol(font, code | 0xF000);
+        else
+            glyph_index = get_gdi_glyph_index(font, code);
+    }
+    return glyph_index;
+}
 
 /*
 * @implemented
@@ -6341,11 +6680,10 @@ NtGdiGetGlyphIndicesW(
     PFONTGDI FontGDI;
     HFONT hFont = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
-    OUTLINETEXTMETRICW *potm;
     INT i;
     WCHAR DefChar = 0xffff;
     PWSTR Buffer = NULL;
-    ULONG Size, pwcSize;
+    ULONG pwcSize;
     PWSTR Safepwc = NULL;
     LPCWSTR UnSafepwc = pwc;
     LPWORD UnSafepgi = pgi;
@@ -6406,26 +6744,7 @@ NtGdiGetGlyphIndicesW(
     }
     else
     {
-        FT_Face Face = FontGDI->SharedFace->Face;
-        if (FT_IS_SFNT(Face))
-        {
-            TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(Face, pOS2->usDefaultChar) : 0);
-        }
-        else
-        {
-            Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-            potm = ExAllocatePoolWithTag(PagedPool, Size, GDITAG_TEXT);
-            if (!potm)
-            {
-                cwc = GDI_ERROR;
-                goto ErrorRet;
-            }
-            Size = IntGetOutlineTextMetrics(FontGDI, Size, potm);
-            if (Size)
-                DefChar = potm->otmTextMetrics.tmDefaultChar;
-            ExFreePoolWithTag(potm, GDITAG_TEXT);
-        }
+        DefChar = get_default_char_index(FontGDI);
     }
 
     pwcSize = cwc * sizeof(WCHAR);
@@ -6454,7 +6773,7 @@ NtGdiGetGlyphIndicesW(
 
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(FontGDI->SharedFace->Face, Safepwc[i]);
+        Buffer[i] = get_gdi_glyph_index(FontGDI, Safepwc[i]);
         if (Buffer[i] == 0)
         {
             Buffer[i] = DefChar;

@@ -206,7 +206,11 @@ EngMultiByteToWideChar(UINT CodePage,
                        LPSTR MultiByteString,
                        INT BytesInMultiByteString)
 {
-    return MultiByteToWideChar(CodePage,0,MultiByteString,BytesInMultiByteString,WideCharString,BytesInWideCharString / sizeof(WCHAR));
+    INT ret = MultiByteToWideChar(CodePage, 0, MultiByteString, BytesInMultiByteString,
+                                  WideCharString, BytesInWideCharString / sizeof(WCHAR));
+    if (ret)
+        return ret;
+    return -1;
 }
 
 /*
@@ -248,8 +252,16 @@ EngWideCharToMultiByte( UINT CodePage,
                         LPSTR MultiByteString,
                         INT BytesInMultiByteString)
 {
-    return WideCharToMultiByte(CodePage, 0, WideCharString, (BytesInWideCharString/sizeof(WCHAR)),
-                               MultiByteString, BytesInMultiByteString, NULL, NULL);
+    BOOL UsedDefaultChar = FALSE;
+    INT ret = WideCharToMultiByte(CodePage, 0,
+                                  WideCharString, BytesInWideCharString / sizeof(WCHAR),
+                                  MultiByteString, BytesInMultiByteString,
+                                  NULL, &UsedDefaultChar);
+    if (ret && !UsedDefaultChar)
+    {
+        return ret;
+    }
+    return -1;
 }
 
 /*
