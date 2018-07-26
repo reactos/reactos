@@ -2047,7 +2047,7 @@ GetCascadeChildProc(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static void
+static BOOL
 QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
 {
     MINMAXINFO mmi;
@@ -2060,7 +2060,9 @@ QuerySizeFix(HWND hwnd, LPINT pcx, LPINT pcy)
     {
         *pcx = min(max(*pcx, mmi.ptMinTrackSize.x), mmi.ptMaxTrackSize.x);
         *pcy = min(max(*pcy, mmi.ptMinTrackSize.y), mmi.ptMaxTrackSize.y);
+        return TRUE;
     }
+    return FALSE;
 }
 
 WORD WINAPI
@@ -2162,9 +2164,11 @@ CascadeWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
             if (cx != cxNew || cy != cyNew)
             {
                 /* too large. shrink if we can */
-                QuerySizeFix(hwnd, &cxNew, &cyNew);
-                cx = cxNew;
-                cy = cyNew;
+                if (QuerySizeFix(hwnd, &cxNew, &cyNew))
+                {
+                    cx = cxNew;
+                    cy = cyNew;
+                }
             }
         }
 
@@ -2216,11 +2220,180 @@ WORD WINAPI CascadeChildWindows( HWND parent, UINT flags )
  *    Failure: 0
  */
 WORD WINAPI
-TileWindows (HWND hwndParent, UINT wFlags, LPCRECT lpRect,
-	     UINT cKids, const HWND *lpKids)
+TileWindows(HWND hwndParent, UINT wFlags, LPCRECT lpRect,
+            UINT cKids, const HWND *lpKids)
 {
-    FIXME("(%p,0x%08x,...,%u,...): stub\n", hwndParent, wFlags, cKids);
-    return 0;
+    HWND hwnd, hwndTop, hwndPrev;
+    CASCADE_INFO info;
+    RECT rcWork, rcWnd;
+    DWORD i, iRow, iColumn, cRows, cColumns, ret = 0;
+    INT x, y, cx, cy, cxNew, cyNew, cxWork, cyWork, cxCell, cyCell, cxMin2, cyMin3;
+    HDWP hDWP;
+    MONITORINFO mi;
+    HMONITOR hMon;
+    POINT pt;
+
+    TRACE("(%p,0x%08x,...,%u,...)\n", hwndParent, wFlags, cKids);
+
+    hwndTop = GetTopWindow(hwndParent);
+
+    ZeroMemory(&info, sizeof(info));
+    info.hwndDesktop = GetDesktopWindow();
+    info.hTrayWnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    info.hwndProgman = FindWindowW(L"Progman", NULL);
+    info.hwndParent = hwndParent;
+    info.wFlags = wFlags;
+
+    if (cKids == 0 || lpKids == NULL)
+    {
+        info.hwndTop = hwndTop;
+        EnumChildWindows(hwndParent, GetCascadeChildProc, (LPARAM)&info);
+
+        info.hwndTop = NULL;
+        GetCascadeChildProc(hwndTop, (LPARAM)&info);
+    }
+    else
+    {
+        info.chwnd = cKids;
+        info.ahwnd = (HWND *)lpKids;
+    }
+
+    if (info.chwnd == 0 || info.ahwnd == NULL)
+        return ret;
+
+    if (lpRect)
+    {
+        rcWork = *lpRect;
+    }
+    else if (hwndParent)
+    {
+        GetClientRect(hwndParent, &rcWork);
+    }
+    else
+    {
+        pt.x = pt.y = 0;
+        hMon = MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+        mi.cbSize = sizeof(mi);
+        GetMonitorInfoW(hMon, &mi);
+        rcWork = mi.rcWork;
+    }
+
+    cxWork = rcWork.right - rcWork.left;
+    cyWork = rcWork.bottom - rcWork.top;
+
+    cxMin2 = GetSystemMetrics(SM_CXMIN) * 2;
+    cyMin3 = GetSystemMetrics(SM_CYMIN) * 3;
+
+    /* calculate the numbers and widths of columns and rows */
+    if (info.wFlags & MDITILE_HORIZONTAL)
+    {
+        cColumns = info.chwnd;
+        cRows = 1;
+        for (;;)
+        {
+            cxCell = cxWork / cColumns;
+            cyCell = cyWork / cRows;
+            if (cyCell <= cyMin3 || cxCell >= cxMin2)
+                break;
+
+            ++cRows;
+            cColumns = (info.chwnd + cRows - 1) / cRows;
+        }
+    }
+    else
+    {
+        cRows = info.chwnd;
+        cColumns = 1;
+        for (;;)
+        {
+            cxCell = cxWork / cColumns;
+            cyCell = cyWork / cRows;
+            if (cxCell <= cxMin2 || cyCell >= cyMin3)
+                break;
+
+            ++cColumns;
+            cRows = (info.chwnd + cColumns - 1) / cColumns;
+        }
+    }
+
+    hDWP = BeginDeferWindowPos(info.chwnd);
+    if (hDWP == NULL)
+        goto cleanup;
+
+    x = rcWork.left;
+    y = rcWork.top;
+    hwndPrev = NULL;
+    iRow = iColumn = 0;
+    for (i = info.chwnd; i > 0;)    /* in reverse order */
+    {
+        --i;
+        hwnd = info.ahwnd[i];
+
+        if (IsZoomed(hwnd))
+            ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+
+        GetWindowRect(hwnd, &rcWnd);
+        cx = rcWnd.right - rcWnd.left;
+        cy = rcWnd.bottom - rcWnd.top;
+
+        /* if we can change the window size */
+        if (GetWindowLongPtrW(hwnd, GWL_STYLE) & WS_THICKFRAME)
+        {
+            cxNew = cxCell;
+            cyNew = cyCell;
+            /* shrink if we can */
+            if (QuerySizeFix(hwnd, &cxNew, &cyNew))
+            {
+                cx = cxNew;
+                cy = cyNew;
+            }
+        }
+
+        hDWP = DeferWindowPos(hDWP, hwnd, HWND_TOP, x, y, cx, cy, SWP_NOACTIVATE);
+        if (hDWP == NULL)
+        {
+            ret = 0;
+            goto cleanup;
+        }
+
+        if (info.wFlags & MDITILE_HORIZONTAL)
+        {
+            x += cxCell;
+            ++iColumn;
+            if (iColumn >= cColumns)
+            {
+                iColumn = 0;
+                ++iRow;
+                x = rcWork.left;
+                y += cyCell;
+            }
+        }
+        else
+        {
+            y += cyCell;
+            ++iRow;
+            if (iRow >= cRows)
+            {
+                iRow = 0;
+                ++iColumn;
+                x += cxCell;
+                y = rcWork.top;
+            }
+        }
+        hwndPrev = hwnd;
+        ++ret;
+    }
+
+    EndDeferWindowPos(hDWP);
+
+    if (hwndPrev)
+        SetForegroundWindow(hwndPrev);
+
+cleanup:
+    if (cKids == 0 || lpKids == NULL)
+        HeapFree(GetProcessHeap(), 0, info.ahwnd);
+
+    return (WORD)ret;
 }
 
 
