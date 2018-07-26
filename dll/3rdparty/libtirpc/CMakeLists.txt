@@ -39,7 +39,6 @@ list(APPEND SOURCE
     src/gettimeofday.c
     src/key_call.c
     src/key_prot_xdr.c
-    src/libtirpc.def
     #src/makefile
     #src/Makefile.am
     src/mt_misc.c
