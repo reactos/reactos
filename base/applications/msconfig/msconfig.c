@@ -15,6 +15,7 @@
 #include "freeldrpage.h"
 #include "systempage.h"
 #include "generalpage.h"
+#include "autochkpage.h"
 
 HINSTANCE hInst = 0;
 
@@ -91,6 +92,7 @@ BOOL OnCreate(HWND hWnd)
     hServicesPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_SERVICES_PAGE), hWnd,  ServicesPageWndProc); EnableDialogTheme(hServicesPage);
     hStartupPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_STARTUP_PAGE), hWnd,  StartupPageWndProc); EnableDialogTheme(hStartupPage);
     hToolsPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_TOOLS_PAGE), hWnd,  ToolsPageWndProc); EnableDialogTheme(hToolsPage);
+    hAutoChkPage = CreateDialog(hInst, MAKEINTRESOURCE(IDD_AUTOCHK_PAGE), hWnd,  AutoChkPageWndProc); EnableDialogTheme(hAutoChkPage);
 
     LoadString(hInst, IDS_MSCONFIG, szTemp, 256);
     SetWindowText(hWnd, szTemp);
@@ -132,6 +134,12 @@ BOOL OnCreate(HWND hWnd)
     item.pszText = szTemp;
     (void)TabCtrl_InsertItem(hTabWnd, 5, &item);
 
+    LoadString(hInst, IDS_TAB_AUTOCHK, szTemp, 256);
+    memset(&item, 0, sizeof(TCITEM));
+    item.mask = TCIF_TEXT;
+    item.pszText = szTemp;
+    (void)TabCtrl_InsertItem(hTabWnd, 6, &item);
+
     MsConfig_OnTabWndSelChange();
 
     return TRUE;
@@ -148,6 +156,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hServicesPage, SW_HIDE);
         ShowWindow(hStartupPage, SW_HIDE);
         ShowWindow(hToolsPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hGeneralPage);
         break;
     case 1: //SYSTEM.INI
@@ -157,6 +166,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hStartupPage, SW_HIDE);
         ShowWindow(hFreeLdrPage, SW_HIDE);
         ShowWindow(hServicesPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hSystemPage);
         break;
     case 2: //Freeldr
@@ -166,6 +176,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hServicesPage, SW_HIDE);
         ShowWindow(hStartupPage, SW_HIDE);
         ShowWindow(hToolsPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hFreeLdrPage);
         break;
     case 3: //Services
@@ -175,6 +186,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hServicesPage, SW_SHOW);
         ShowWindow(hStartupPage, SW_HIDE);
         ShowWindow(hToolsPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hServicesPage);
         break;
     case 4: //startup
@@ -184,6 +196,7 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hServicesPage, SW_HIDE);
         ShowWindow(hStartupPage, SW_SHOW);
         ShowWindow(hToolsPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hStartupPage);
         break;
     case 5: //Tools
@@ -193,7 +206,18 @@ void MsConfig_OnTabWndSelChange(void)
         ShowWindow(hServicesPage, SW_HIDE);
         ShowWindow(hStartupPage, SW_HIDE);
         ShowWindow(hToolsPage, SW_SHOW);
+        ShowWindow(hAutoChkPage, SW_HIDE);
         BringWindowToTop(hToolsPage);
+        break;
+    case 6: //Auto Check
+        ShowWindow(hGeneralPage, SW_HIDE);
+        ShowWindow(hSystemPage, SW_HIDE);
+        ShowWindow(hFreeLdrPage, SW_HIDE);
+        ShowWindow(hServicesPage, SW_HIDE);
+        ShowWindow(hStartupPage, SW_HIDE);
+        ShowWindow(hToolsPage, SW_HIDE);
+        ShowWindow(hAutoChkPage, SW_SHOW);
+        BringWindowToTop(hAutoChkPage);
         break;
     }
 }
@@ -280,6 +304,8 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_DESTROY:
+            if (hAutoChkPage)
+                DestroyWindow(hAutoChkPage);
             if (hToolsPage)
                 DestroyWindow(hToolsPage);
             if (hGeneralPage)

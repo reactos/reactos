@@ -8,6 +8,7 @@
 #define IDD_FREELDR_PAGE          106
 #define IDD_SYSTEM_PAGE           107
 #define IDD_FREELDR_ADVANCED_PAGE 108
+#define IDD_AUTOCHK_PAGE          109
 
 #define IDC_TAB                       1001
 #define IDC_BTN_APPLY                 1002
@@ -68,6 +69,8 @@
 #define IDC_SYSTEM_TREE               1057
 #define IDC_BTN_SYSTEM_ACTIVATE       1058
 #define IDC_BTN_SYSTEM_DEACTIVATE     1059
+#define IDC_AUTOCHK_ENABLE            1060
+#define IDC_AUTOCHK_DISABLE           1061
 
 #define IDS_TAB_TOOLS    2001
 #define IDS_TAB_SYSTEM   2002
@@ -75,6 +78,7 @@
 #define IDS_TAB_STARTUP  2004
 #define IDS_TAB_SERVICES 2005
 #define IDS_TAB_GENERAL  2006
+#define IDS_TAB_AUTOCHK  2007
 
 #define IDS_TOOLS_COLUMN_NAME       2010
 #define IDS_TOOLS_COLUMN_DESCR      2011

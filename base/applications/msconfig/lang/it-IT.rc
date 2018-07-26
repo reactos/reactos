@@ -121,6 +121,16 @@ BEGIN
     PUSHBUTTON "Annulla", IDC_CANCEL, 100, 160, 50, 12
 END
 
+IDD_AUTOCHK_PAGE DIALOGEX 0, 0, 362, 175
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Auto Check is a tool which repairs dirty volumes on startup. You can either enable or disable this check on this dialog.", -1, 14, 17, 339, 300
+    CONTROL         "&Enable", IDC_AUTOCHK_ENABLE, "Button", BS_AUTORADIOBUTTON, 15, 46, 332, 10
+    CONTROL         "&Disable", IDC_AUTOCHK_DISABLE, "Button", BS_AUTORADIOBUTTON, 15, 73, 332, 10
+    GROUPBOX        "Enable/Disable Auto Check", -1, 5, 5, 350, 140, 0, WS_EX_TRANSPARENT
+END
+
 STRINGTABLE
 BEGIN
     IDS_MSCONFIG "Utilità di configurazione del sistema"
@@ -130,6 +140,7 @@ BEGIN
     IDS_TAB_SERVICES "Servizi"
     IDS_TAB_STARTUP "Avvio"
     IDS_TAB_TOOLS "Strumenti"
+    IDS_TAB_AUTOCHK "Auto Check"
 END
 
 STRINGTABLE

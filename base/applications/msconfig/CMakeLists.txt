@@ -1,5 +1,6 @@
 
 list(APPEND SOURCE
+    autochkpage.c
     toolspage.c
     srvpage.c
     systempage.c
