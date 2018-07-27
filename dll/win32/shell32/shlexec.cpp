@@ -2410,6 +2410,12 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
+    if (UrlIsFileUrlW(lpCommand))
+    {
+        HINSTANCE hinst = ShellExecuteW(hwnd, lpVerb, lpCommand, NULL, pwszStartDir, nShow);
+        return (INT_PTR)hinst > 32 ? S_OK : E_FAIL;
+    }
+
     pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
 
     // .exe with pwszStartDir
