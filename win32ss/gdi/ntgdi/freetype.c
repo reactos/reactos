@@ -5,7 +5,7 @@
  * PURPOSE:         FreeType font engine interface
  * PROGRAMMERS:     Copyright 2001 Huw D M Davies for CodeWeavers.
  *                  Copyright 2006 Dmitry Timoshkov for CodeWeavers.
- *                  Copyright 2016-2017 Katayama Hirofumi MZ.
+ *                  Copyright 2016-2018 Katayama Hirofumi MZ.
  */
 
 /** Includes ******************************************************************/
@@ -1566,16 +1566,10 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-#if 0 /* This (Wine) code doesn't seem to work correctly for us, cmd issue */
-    TM->tmAscent = (FT_MulFix(Ascent, YScale) + 32) >> 6;
-    TM->tmDescent = (FT_MulFix(Descent, YScale) + 32) >> 6;
-#else /* This (ros) code was previously affected by a FreeType bug, but it works now */
-    TM->tmAscent = (Face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
-    TM->tmDescent = (32 - Face->size->metrics.descender) >> 6; /* Units below baseline */
-#endif
-    TM->tmInternalLeading = (FT_MulFix(Ascent + Descent - Face->units_per_EM, YScale) + 32) >> 6;
-
+    TM->tmAscent = FontGDI->tmAscent;
+    TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
+    TM->tmInternalLeading = FontGDI->tmInternalLeading;
 
     /* MSDN says:
      *  el = MAX(0, LineGap - ((WinAscent + WinDescent) - (Ascender - Descender)))
@@ -2994,38 +2988,99 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
     return needed;
 }
 
-static INT
-IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
+static FT_Error
+IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
 {
+    FT_Error error;
     FT_Size_RequestRec  req;
+    FT_Face face = FontGDI->SharedFace->Face;
+    TT_OS2 *pOS2;
+    TT_HoriHeader *pHori;
+    FT_WinFNT_HeaderRec WinFNT;
+    LONG Ascent, Descent, Sum, EmHeight64;
 
-    if (Width < 0)
-        Width = -Width;
+    if (lfWidth < 0)
+        lfWidth = -lfWidth;
 
-    if (Height < 0)
+    if (lfHeight == 0)
     {
-        Height = -Height;
+        lfHeight = dc->ppdev->devinfo.lfDefaultFont.lfHeight;
     }
-    if (Height == 0)
+    if (lfHeight == 0)
     {
-        Height = dc->ppdev->devinfo.lfDefaultFont.lfHeight;
-    }
-    if (Height == 0)
-    {
-        Height = Width;
+        lfHeight = lfWidth;
     }
 
-    if (Height < 1)
-        Height = 1;
+    pOS2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, FT_SFNT_OS2);
+    pHori = (TT_HoriHeader *)FT_Get_Sfnt_Table(face, FT_SFNT_HHEA);
 
-    if (Width > 0xFFFFU)
-        Width = 0xFFFFU;
-    if (Height > 0xFFFFU)
-        Height = 0xFFFFU;
+    if (!pOS2 || !pHori)
+    {
+        error = FT_Get_WinFNT_Header(face, &WinFNT);
+        if (error)
+            return error;
+
+        FontGDI->tmHeight           = WinFNT.pixel_height;
+        FontGDI->tmAscent           = WinFNT.ascent;
+        FontGDI->tmDescent          = FontGDI->tmHeight - FontGDI->tmAscent;
+        FontGDI->tmInternalLeading  = WinFNT.internal_leading;
+        FontGDI->tmEmHeight         = FontGDI->tmAscent - FontGDI->tmInternalLeading;
+        if (FontGDI->tmEmHeight <= 0)
+            FontGDI->tmEmHeight = 1;
+        if (FontGDI->tmEmHeight > USHORT_MAX)
+            FontGDI->tmEmHeight = USHORT_MAX;
+
+        req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
+        req.width          = 0;
+        req.height         = (FT_Long)(FontGDI->tmEmHeight << 6);
+        req.horiResolution = 0;
+        req.vertResolution = 0;
+        return FT_Request_Size(face, &req);
+    }
+
+    if (lfHeight > 0)
+    {
+        Sum = pOS2->usWinAscent + pOS2->usWinDescent;
+        if (Sum == 0)
+        {
+            Ascent = pHori->Ascender;
+            Descent = -pHori->Descender;
+            Sum = Ascent + Descent;
+        }
+        else
+        {
+            Ascent = pOS2->usWinAscent;
+            Descent = pOS2->usWinDescent;
+        }
+
+        FontGDI->tmAscent = FT_MulDiv(lfHeight, Ascent, Sum);
+        FontGDI->tmDescent = FT_MulDiv(lfHeight, Descent, Sum);
+        FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
+        FontGDI->tmInternalLeading = FontGDI->tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
+        FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
+    }
+    else if (lfHeight < 0)
+    {
+        FontGDI->tmAscent = FT_MulDiv(-lfHeight, pOS2->usWinAscent, face->units_per_EM);
+        FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
+        FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
+        FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
+        FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
+    }
+
+    if (FontGDI->tmEmHeight <= 0)
+        FontGDI->tmEmHeight = 1;
+    if (FontGDI->tmEmHeight > USHORT_MAX)
+        FontGDI->tmEmHeight = USHORT_MAX;
+
+    if (lfHeight > 0)
+        EmHeight64 = (FontGDI->tmEmHeight << 6) + 31;
+    else
+        EmHeight64 = (FontGDI->tmEmHeight << 6);
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
-    req.width          = (FT_Long)(Width << 6);
-    req.height         = (FT_Long)(Height << 6);
+    req.width          = 0;
+    req.height         = EmHeight64;
     req.horiResolution = 0;
     req.vertResolution = 0;
     return FT_Request_Size(face, &req);
@@ -3079,7 +3134,7 @@ TextIntUpdateSize(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
-    error = IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
 
     if (bDoLock)
         IntUnLockFreeType();
@@ -3226,12 +3281,21 @@ ftGdiGetGlyphOutline(
     IntLockFreeType();
 
     /* Scaling transform */
-    /*if (aveWidth)*/
+    if (widthRatio != 1.0)
     {
+        FT_Matrix scaleMat;
+        scaleMat.xx = FT_FixedFromFloat(widthRatio);
+        scaleMat.xy = 0;
+        scaleMat.yx = 0;
+        scaleMat.yy = FT_FixedFromFloat(1.0);
 
+        FT_Matrix_Multiply(&scaleMat, &transMat);
+        needsTransform = TRUE;
+    }
+
+    {
         FT_Matrix ftmatrix;
         FLOATOBJ efTemp;
-
         PMATRIX pmx = DC_pmxWorldToDevice(dc);
 
         /* Create a freetype matrix, by converting to 16.16 fixpoint format */
@@ -3251,8 +3315,11 @@ ftGdiGetGlyphOutline(
         FLOATOBJ_MulLong(&efTemp, 0x00010000);
         ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
 
-        FT_Matrix_Multiply(&ftmatrix, &transMat);
-        needsTransform = TRUE;
+        if (memcmp(&ftmatrix, &identityMat, sizeof(identityMat)) != 0)
+        {
+            FT_Matrix_Multiply(&ftmatrix, &transMat);
+            needsTransform = TRUE;
+        }
     }
 
     /* Rotation transform */
@@ -3689,8 +3756,8 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
-    ascender = (face->size->metrics.ascender + 32) >> 6; /* Units above baseline */
-    descender = (32 - face->size->metrics.descender) >> 6; /* Units below baseline */
+    ascender = FontGDI->tmAscent; /* Units above baseline */
+    descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
 
     Size->cx = (TotalWidth + 32) >> 6;
@@ -3918,7 +3985,7 @@ ftGdiGetTextMetricsW(
 
         Face = FontGDI->SharedFace->Face;
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, Face, plf->lfWidth, plf->lfHeight);
+        Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
         FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
         IntUnLockFreeType();
         if (0 != Error)
@@ -5093,7 +5160,8 @@ GreExtTextOutW(
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart;
-    ULONG TextTop, previous, BackgroundLeft;
+    ULONGLONG TextWidth = 0;
+    ULONG TextTop, previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
@@ -5190,11 +5258,7 @@ GreExtTextOutW(
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = lprc->left;
-        DestRect.top    = lprc->top;
-        DestRect.right  = lprc->right;
-        DestRect.bottom = lprc->bottom;
-
+        DestRect = *lprc;
         DestRect.left   += dc->ptlDCOrig.x;
         DestRect.top    += dc->ptlDCOrig.y;
         DestRect.right  += dc->ptlDCOrig.x;
@@ -5272,18 +5336,14 @@ GreExtTextOutW(
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
-
-        fixAscender = ScaleLong(face->size->metrics.ascender, &pmxWorldToDevice->efM22);
-        fixDescender = ScaleLong(face->size->metrics.descender, &pmxWorldToDevice->efM22);
     }
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
         FtSetCoordinateTransform(face, pmxWorldToDevice);
-
-        fixAscender = face->size->metrics.ascender;
-        fixDescender = face->size->metrics.descender;
     }
+    fixAscender = FontGDI->tmAscent << 6;
+    fixDescender = FontGDI->tmDescent << 6;
 
     /*
      * Process the vertical alignment and determine the yoff.
@@ -5292,7 +5352,7 @@ GreExtTextOutW(
     if (pdcattr->lTextAlign & TA_BASELINE)
         yoff = 0;
     else if (pdcattr->lTextAlign & TA_BOTTOM)
-        yoff = -fixDescender >> 6;
+        yoff = -(fixDescender >> 6);
     else /* TA_TOP */
         yoff = fixAscender >> 6;
 
@@ -5300,36 +5360,23 @@ GreExtTextOutW(
     previous = 0;
 
     /*
-     * Process the horizontal alignment and modify XStart accordingly.
+     * Calculate width of the text.
      */
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
-    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
+    DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     {
-        ULONGLONG TextWidth = 0;
-        LPCWSTR TempText = String;
-        int iStart;
-
-        /*
-         * Calculate width of the text.
-         */
-
-        if (NULL != Dx)
+        INT iStart = 0;
+        if (NULL != Dx && Count >= 2)
         {
-            iStart = Count < 2 ? 0 : Count - 2;
-            TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
+            iStart = Count - 2;
+            TextWidth = (Dx[(Count - 2) << DxShift] << 6);
         }
-        else
-        {
-            iStart = 0;
-        }
-        TempText = String + iStart;
 
         for (i = iStart; i < Count; i++)
         {
             if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = *TempText;
+                glyph_index = String[i];
             else
-                glyph_index = FT_Get_Char_Index(face, *TempText);
+                glyph_index = FT_Get_Char_Index(face, String[i]);
 
             if (EmuBold || EmuItalic)
                 realglyph = NULL;
@@ -5387,19 +5434,21 @@ GreExtTextOutW(
             }
 
             previous = glyph_index;
-            TempText++;
         }
 
         previous = 0;
+    }
 
-        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
-        {
-            RealXStart -= TextWidth / 2;
-        }
-        else
-        {
-            RealXStart -= TextWidth;
-        }
+    /*
+     * Modify RealXStart
+     */
+    if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+    {
+        RealXStart -= TextWidth / 2;
+    }
+    else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
+    {
+        RealXStart -= TextWidth;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5423,116 +5472,31 @@ GreExtTextOutW(
             thickness = 1;
     }
 
-    if ((fuOptions & ETO_OPAQUE) && plf->lfItalic)
+    if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
-        TextLeft = RealXStart;
-        TextTop = YStart;
-        BackgroundLeft = (RealXStart + 32) >> 6;
-        for (i = 0; i < Count; ++i)
-        {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = String[i];
-            else
-                glyph_index = FT_Get_Char_Index(face, String[i]);
-
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            glyph = face->glyph;
-            if (EmuBold)
-                FT_GlyphSlot_Embolden(glyph);
-            if (EmuItalic)
-                FT_GlyphSlot_Oblique(glyph);
-            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            /* retrieve kerning distance and move pen position */
-            if (use_kerning && previous && glyph_index && NULL == Dx)
-            {
-                FT_Vector delta;
-                FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft += delta.x;
-            }
-            DPRINT("TextLeft: %I64d\n", TextLeft);
-            DPRINT("TextTop: %lu\n", TextTop);
-            DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
+        DestRect.left = ((RealXStart + 32) >> 6);
+        DestRect.right = ((RealXStart + TextWidth + 32) >> 6);
+        DestRect.top = YStart;
+        DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+        if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        IntEngBitBlt(
+            &psurf->SurfObj,
+            NULL,
+            NULL,
+            (CLIPOBJ *)&dc->co,
+            NULL,
+            &DestRect,
+            &SourcePoint,
+            &SourcePoint,
+            &dc->eboBackground.BrushObject,
+            &BrushOrigin,
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawEnd(dc->ppdev);
-            BackgroundLeft = DestRect.right;
-
-            DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
-            DestRect.right = DestRect.left + realglyph->bitmap.width;
-            DestRect.top = TextTop + yoff - realglyph->top;
-            DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
-
-            bitSize.cx = realglyph->bitmap.width;
-            bitSize.cy = realglyph->bitmap.rows;
-            MaskRect.right = realglyph->bitmap.width;
-            MaskRect.bottom = realglyph->bitmap.rows;
-
-            if (NULL == Dx)
-            {
-                TextLeft += realglyph->root.advance.x >> 10;
-                DPRINT("New TextLeft: %I64d\n", TextLeft);
-            }
-            else
-            {
-                // FIXME this should probably be a matrix transform with TextTop as well.
-                Scale = pdcattr->mxWorldToDevice.efM11;
-                if (FLOATOBJ_Equal0(&Scale))
-                    FLOATOBJ_Set1(&Scale);
-
-                /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
-                TextLeft += FLOATOBJ_GetLong(&Scale);
-                DPRINT("New TextLeft2: %I64d\n", TextLeft);
-            }
-
-            if (DxShift)
-            {
-                TextTop -= Dx[2 * i + 1] << 6;
-            }
-
-            previous = glyph_index;
-
-            if (EmuBold || EmuItalic)
-            {
-                FT_Done_Glyph((FT_Glyph)realglyph);
-                realglyph = NULL;
-            }
-        }
     }
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
@@ -5546,7 +5510,6 @@ GreExtTextOutW(
      */
     TextLeft = RealXStart;
     TextTop = YStart;
-    BackgroundLeft = (RealXStart + 32) >> 6;
     for (i = 0; i < Count; ++i)
     {
         if (fuOptions & ETO_GLYPH_INDEX)
@@ -5605,39 +5568,6 @@ GreExtTextOutW(
         DPRINT("TextLeft: %I64d\n", TextLeft);
         DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-        if ((fuOptions & ETO_OPAQUE) && !plf->lfItalic)
-        {
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawEnd(dc->ppdev);
-
-            BackgroundLeft = DestRect.right;
-        }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
@@ -6085,7 +6015,7 @@ NtGdiGetCharABCWidthsW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
-    IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
@@ -6281,7 +6211,7 @@ NtGdiGetCharWidthW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
-    IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
