@@ -33,7 +33,7 @@
 #include <gdi/eng/floatobj.h>
 #include "font.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
@@ -5360,24 +5360,15 @@ GreExtTextOutW(
     previous = 0;
 
     /*
-     * Process the horizontal alignment and modify XStart accordingly.
+     * Calculate width of the text.
      */
-    DxShift = fuOptions & ETO_PDY ? 1 : 0;
+    DxShift = (fuOptions & ETO_PDY) ? 1 : 0;
     {
-        int iStart;
-
-        /*
-         * Calculate width of the text.
-         */
-
-        if (NULL != Dx)
+        INT iStart = 0;
+        if (NULL != Dx && Count >= 2)
         {
-            iStart = Count < 2 ? 0 : Count - 2;
-            TextWidth = Count < 2 ? 0 : (Dx[(Count-2)<<DxShift] << 6);
-        }
-        else
-        {
-            iStart = 0;
+            iStart = Count - 2;
+            TextWidth = (Dx[(Count - 2) << DxShift] << 6);
         }
 
         for (i = iStart; i < Count; i++)
@@ -5446,15 +5437,18 @@ GreExtTextOutW(
         }
 
         previous = 0;
+    }
 
-        if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
-        {
-            RealXStart -= TextWidth / 2;
-        }
-        else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
-        {
-            RealXStart -= TextWidth;
-        }
+    /*
+     * Modify RealXStart
+     */
+    if ((pdcattr->lTextAlign & TA_CENTER) == TA_CENTER)
+    {
+        RealXStart -= TextWidth / 2;
+    }
+    else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
+    {
+        RealXStart -= TextWidth;
     }
 
     psurf = dc->dclevel.pSurface;
@@ -5481,29 +5475,14 @@ GreExtTextOutW(
     if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
-        if (lprc)
-        {
-            DestRect = *lprc;
-            DestRect.left   += dc->ptlDCOrig.x;
-            DestRect.top    += dc->ptlDCOrig.y;
-            DestRect.right  += dc->ptlDCOrig.x;
-            DestRect.bottom += dc->ptlDCOrig.y;
-        }
-        else
-        {
-            DestRect.left = ((RealXStart + 32) >> 6);
-            DestRect.right = ((RealXStart + TextWidth + 32) >> 6);
-            DestRect.top = YStart;
-            DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
-        }
+        DestRect.left = ((RealXStart + 32) >> 6);
+        DestRect.right = ((RealXStart + TextWidth + 32) >> 6);
+        DestRect.top = YStart;
+        DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
         if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
             DC_vUpdateBackgroundBrush(dc);
         if (dc->dctype == DCTYPE_DIRECT)
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-        if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
-        {
-            IntUpdateBoundsRect(dc, &DestRect);
-        }
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
