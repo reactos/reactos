@@ -3293,6 +3293,35 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
+    {
+        FT_Matrix ftmatrix;
+        FLOATOBJ efTemp;
+        PMATRIX pmx = DC_pmxWorldToDevice(dc);
+
+        /* Create a freetype matrix, by converting to 16.16 fixpoint format */
+        efTemp = pmx->efM11;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xx = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM12;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.xy = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM21;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yx = FLOATOBJ_GetLong(&efTemp);
+
+        efTemp = pmx->efM22;
+        FLOATOBJ_MulLong(&efTemp, 0x00010000);
+        ftmatrix.yy = FLOATOBJ_GetLong(&efTemp);
+
+        if (memcmp(&ftmatrix, &identityMat, sizeof(identityMat)) != 0)
+        {
+            FT_Matrix_Multiply(&ftmatrix, &transMat);
+            needsTransform = TRUE;
+        }
+    }
+
     /* Rotation transform */
     if (orientation)
     {
