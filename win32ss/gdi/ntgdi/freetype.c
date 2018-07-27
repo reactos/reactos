@@ -3060,9 +3060,9 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     }
     else if (lfHeight < 0)
     {
-        FontGDI->tmAscent = FT_MulDiv(-lfHeight, pOS2->usWinAscent, face->units_per_EM);
+        FontGDI->tmHeight = -lfHeight;
         FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
-        FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
+        FontGDI->tmAscent = FontGDI->tmHeight - FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
     }
 
