@@ -5131,7 +5131,8 @@ GreExtTextOutW(
     FT_GlyphSlot glyph;
     FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart;
-    ULONG TextTop, previous, BackgroundLeft;
+    ULONGLONG TextWidth = 0;
+    ULONG TextTop, previous;
     FT_Bool use_kerning;
     RECTL DestRect, MaskRect;
     POINTL SourcePoint, BrushOrigin;
@@ -5228,11 +5229,7 @@ GreExtTextOutW(
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = lprc->left;
-        DestRect.top    = lprc->top;
-        DestRect.right  = lprc->right;
-        DestRect.bottom = lprc->bottom;
-
+        DestRect = *lprc;
         DestRect.left   += dc->ptlDCOrig.x;
         DestRect.top    += dc->ptlDCOrig.y;
         DestRect.right  += dc->ptlDCOrig.x;
@@ -5337,9 +5334,7 @@ GreExtTextOutW(
      * Process the horizontal alignment and modify XStart accordingly.
      */
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
-    if (pdcattr->lTextAlign & (TA_RIGHT | TA_CENTER))
     {
-        ULONGLONG TextWidth = 0;
         LPCWSTR TempText = String;
         int iStart;
 
@@ -5430,7 +5425,7 @@ GreExtTextOutW(
         {
             RealXStart -= TextWidth / 2;
         }
-        else
+        else if ((pdcattr->lTextAlign & TA_RIGHT) == TA_RIGHT)
         {
             RealXStart -= TextWidth;
         }
@@ -5457,116 +5452,46 @@ GreExtTextOutW(
             thickness = 1;
     }
 
-    if ((fuOptions & ETO_OPAQUE) && plf->lfItalic)
+    if (fuOptions & ETO_OPAQUE)
     {
         /* Draw background */
-        TextLeft = RealXStart;
-        TextTop = YStart;
-        BackgroundLeft = (RealXStart + 32) >> 6;
-        for (i = 0; i < Count; ++i)
+        if (lprc)
         {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = String[i];
-            else
-                glyph_index = FT_Get_Char_Index(face, String[i]);
-
-            error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-            if (error)
-            {
-                DPRINT1("Failed to load and render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            glyph = face->glyph;
-            if (EmuBold)
-                FT_GlyphSlot_Embolden(glyph);
-            if (EmuItalic)
-                FT_GlyphSlot_Oblique(glyph);
-            realglyph = ftGdiGlyphSet(face, glyph, RenderMode);
-            if (!realglyph)
-            {
-                DPRINT1("Failed to render glyph! [index: %d]\n", glyph_index);
-                IntUnLockFreeType();
-                goto Cleanup;
-            }
-
-            /* retrieve kerning distance and move pen position */
-            if (use_kerning && previous && glyph_index && NULL == Dx)
-            {
-                FT_Vector delta;
-                FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-                TextLeft += delta.x;
-            }
-            DPRINT("TextLeft: %I64d\n", TextLeft);
-            DPRINT("TextTop: %lu\n", TextTop);
-            DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
-            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-            MouseSafetyOnDrawEnd(dc->ppdev);
-            BackgroundLeft = DestRect.right;
-
-            DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
-            DestRect.right = DestRect.left + realglyph->bitmap.width;
-            DestRect.top = TextTop + yoff - realglyph->top;
-            DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
-
-            bitSize.cx = realglyph->bitmap.width;
-            bitSize.cy = realglyph->bitmap.rows;
-            MaskRect.right = realglyph->bitmap.width;
-            MaskRect.bottom = realglyph->bitmap.rows;
-
-            if (NULL == Dx)
-            {
-                TextLeft += realglyph->root.advance.x >> 10;
-                DPRINT("New TextLeft: %I64d\n", TextLeft);
-            }
-            else
-            {
-                // FIXME this should probably be a matrix transform with TextTop as well.
-                Scale = pdcattr->mxWorldToDevice.efM11;
-                if (FLOATOBJ_Equal0(&Scale))
-                    FLOATOBJ_Set1(&Scale);
-
-                /* do the shift before multiplying to preserve precision */
-                FLOATOBJ_MulLong(&Scale, Dx[i<<DxShift] << 6); 
-                TextLeft += FLOATOBJ_GetLong(&Scale);
-                DPRINT("New TextLeft2: %I64d\n", TextLeft);
-            }
-
-            if (DxShift)
-            {
-                TextTop -= Dx[2 * i + 1] << 6;
-            }
-
-            previous = glyph_index;
-
-            if (EmuBold || EmuItalic)
-            {
-                FT_Done_Glyph((FT_Glyph)realglyph);
-                realglyph = NULL;
-            }
+            DestRect = *lprc;
+            DestRect.left   += dc->ptlDCOrig.x;
+            DestRect.top    += dc->ptlDCOrig.y;
+            DestRect.right  += dc->ptlDCOrig.x;
+            DestRect.bottom += dc->ptlDCOrig.y;
         }
+        else
+        {
+            DestRect.left = ((RealXStart + 32) >> 6);
+            DestRect.right = ((RealXStart + TextWidth + 32) >> 6);
+            DestRect.top = YStart;
+            DestRect.bottom = YStart + ((fixAscender + fixDescender) >> 6);
+        }
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+        if (dc->fs & (DC_ACCUM_APP | DC_ACCUM_WMGR))
+        {
+            IntUpdateBoundsRect(dc, &DestRect);
+        }
+        IntEngBitBlt(
+            &psurf->SurfObj,
+            NULL,
+            NULL,
+            (CLIPOBJ *)&dc->co,
+            NULL,
+            &DestRect,
+            &SourcePoint,
+            &SourcePoint,
+            &dc->eboBackground.BrushObject,
+            &BrushOrigin,
+            ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
+        if (dc->dctype == DCTYPE_DIRECT)
+            MouseSafetyOnDrawEnd(dc->ppdev);
     }
 
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
@@ -5580,7 +5505,6 @@ GreExtTextOutW(
      */
     TextLeft = RealXStart;
     TextTop = YStart;
-    BackgroundLeft = (RealXStart + 32) >> 6;
     for (i = 0; i < Count; ++i)
     {
         if (fuOptions & ETO_GLYPH_INDEX)
@@ -5639,39 +5563,6 @@ GreExtTextOutW(
         DPRINT("TextLeft: %I64d\n", TextLeft);
         DPRINT("TextTop: %lu\n", TextTop);
         DPRINT("Advance: %d\n", realglyph->root.advance.x);
-
-        if ((fuOptions & ETO_OPAQUE) && !plf->lfItalic)
-        {
-            DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
-            DestRect.bottom = TextTop + yoff + ((32 - fixDescender) >> 6);
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
-
-            if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
-            {
-               IntUpdateBoundsRect(dc, &DestRect);
-            }
-            IntEngBitBlt(
-                &psurf->SurfObj,
-                NULL,
-                NULL,
-                (CLIPOBJ *)&dc->co,
-                NULL,
-                &DestRect,
-                &SourcePoint,
-                &SourcePoint,
-                &dc->eboBackground.BrushObject,
-                &BrushOrigin,
-                ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-
-            if (dc->dctype == DCTYPE_DIRECT)
-                MouseSafetyOnDrawEnd(dc->ppdev);
-
-            BackgroundLeft = DestRect.right;
-        }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
         DestRect.right = DestRect.left + realglyph->bitmap.width;
