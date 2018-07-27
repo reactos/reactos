@@ -2418,32 +2418,29 @@ HRESULT WINAPI ShellExecCmdLine(
 
     pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
 
-    // .exe with pwszStartDir
-    if (!SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL))
+    // the whole command line (lpCommand) is binary?
+    if (GetBinaryTypeW(lpCommand, &dwType))
     {
-        // .com with pwszStartDir
-        if (!SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
-        {
-            // .exe with NULL
-            if (!SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL))
-            {
-                // .com with NULL
-                if (!SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL))
-                {
-                    StringCchCopyW(szFile2, _countof(szFile2), szFile);
-                }
-            }
-        }
-    }
-
-    if (!GetBinaryTypeW(szFile2, &dwType))
-    {
-        if (!GetBinaryTypeW(lpCommand, &dwType))
-            return CO_E_APPNOTFOUND;
-
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
         pchParams = NULL;
     }
+
+    // lpCommand + ".exe" or lpCommand + ".com" is binary?
+    if (pchParams)
+    {
+        if (SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
+        {
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+            pchParams = NULL;
+        }
+    }
+
+    // szFile should be an executable
+    if (!GetBinaryTypeW(szFile, &dwType))
+        return CO_E_APPNOTFOUND;
 
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(info);
