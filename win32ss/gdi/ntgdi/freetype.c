@@ -33,7 +33,7 @@
 #include <gdi/eng/floatobj.h>
 #include "font.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
@@ -3045,13 +3045,13 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         {
             Ascent = pHori->Ascender;
             Descent = -pHori->Descender;
+            Sum = Ascent + Descent;
         }
         else
         {
             Ascent = pOS2->usWinAscent;
             Descent = pOS2->usWinDescent;
         }
-        Sum = Ascent + Descent;
 
         FontGDI->tmAscent = FT_MulDiv(lfHeight, Ascent, Sum);
         FontGDI->tmDescent = FT_MulDiv(lfHeight, Descent, Sum);
