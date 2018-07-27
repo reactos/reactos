@@ -341,7 +341,7 @@ NtUserCallOneParam(
         case ONEPARAM_ROUTINE_SETPROCDEFLAYOUT:
         {
             PPROCESSINFO ppi;
-            if (Param & LAYOUT_ORIENTATIONMASK)
+            if ((Param & LAYOUT_ORIENTATIONMASK) || (Param == LAYOUT_LTR))
             {
                 ppi = PsGetCurrentProcessWin32Process();
                 ppi->dwLayout = Param;
