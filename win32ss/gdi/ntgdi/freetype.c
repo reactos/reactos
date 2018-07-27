@@ -2997,7 +2997,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     TT_OS2 *pOS2;
     TT_HoriHeader *pHori;
     FT_WinFNT_HeaderRec WinFNT;
-    LONG Ascent, Descent, Sum;
+    LONG Ascent, Descent, Sum, EmHeight64;
 
     if (lfWidth < 0)
         lfWidth = -lfWidth;
@@ -3057,6 +3057,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmDescent = FT_MulDiv(lfHeight, Descent, Sum);
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
+        FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     }
     else if (lfHeight < 0)
     {
@@ -3064,17 +3065,22 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
         FontGDI->tmAscent = FontGDI->tmHeight - FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
+        FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     }
 
-    FontGDI->tmEmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     if (FontGDI->tmEmHeight <= 0)
         FontGDI->tmEmHeight = 1;
     if (FontGDI->tmEmHeight > USHORT_MAX)
         FontGDI->tmEmHeight = USHORT_MAX;
 
+    if (lfHeight > 0)
+        EmHeight64 = (FontGDI->tmEmHeight << 6) + 31;
+    else
+        EmHeight64 = (FontGDI->tmEmHeight << 6);
+
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = 0;
-    req.height         = (FT_Long)(FontGDI->tmEmHeight << 6);
+    req.height         = EmHeight64;
     req.horiResolution = 0;
     req.vertResolution = 0;
     return FT_Request_Size(face, &req);
