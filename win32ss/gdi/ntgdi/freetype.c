@@ -5364,7 +5364,6 @@ GreExtTextOutW(
      */
     DxShift = fuOptions & ETO_PDY ? 1 : 0;
     {
-        LPCWSTR TempText = String;
         int iStart;
 
         /*
@@ -5380,14 +5379,13 @@ GreExtTextOutW(
         {
             iStart = 0;
         }
-        TempText = String + iStart;
 
         for (i = iStart; i < Count; i++)
         {
             if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = *TempText;
+                glyph_index = String[i];
             else
-                glyph_index = FT_Get_Char_Index(face, *TempText);
+                glyph_index = FT_Get_Char_Index(face, String[i]);
 
             if (EmuBold || EmuItalic)
                 realglyph = NULL;
@@ -5445,7 +5443,6 @@ GreExtTextOutW(
             }
 
             previous = glyph_index;
-            TempText++;
         }
 
         previous = 0;
