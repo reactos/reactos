@@ -2995,9 +2995,10 @@ static unsigned int get_bezier_glyph_outline(FT_Outline *outline, unsigned int b
 }
 
 static INT
-IntRequestFontSize(PDC dc, FT_Face face, LONG Width, LONG Height)
+IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG Width, LONG Height)
 {
     FT_Size_RequestRec  req;
+    FT_Face face = FontGDI->SharedFace->Face;
 
     if (Width < 0)
         Width = -Width;
@@ -3079,7 +3080,7 @@ TextIntUpdateSize(PDC dc,
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
 
-    error = IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
 
     if (bDoLock)
         IntUnLockFreeType();
@@ -3918,7 +3919,7 @@ ftGdiGetTextMetricsW(
 
         Face = FontGDI->SharedFace->Face;
         IntLockFreeType();
-        Error = IntRequestFontSize(dc, Face, plf->lfWidth, plf->lfHeight);
+        Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
         FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
         IntUnLockFreeType();
         if (0 != Error)
@@ -6085,7 +6086,7 @@ NtGdiGetCharABCWidthsW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
-    IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
@@ -6281,7 +6282,7 @@ NtGdiGetCharWidthW(
 
     plf = &TextObj->logfont.elfEnumLogfontEx.elfLogFont;
     IntLockFreeType();
-    IntRequestFontSize(dc, face, plf->lfWidth, plf->lfHeight);
+    IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
     FtSetCoordinateTransform(face, pmxWorldToDevice);
 
     for (i = FirstChar; i < FirstChar+Count; i++)
