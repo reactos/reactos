@@ -2385,7 +2385,6 @@ HRESULT WINAPI ShellExecCmdLine(
     LPCWSTR pszVerb = NULL;
     WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
     HRESULT hr;
-    DWORD dwType;
     LPCWSTR pchParams;
     LPWSTR lpCommand = NULL;
     DWORD dwError;
