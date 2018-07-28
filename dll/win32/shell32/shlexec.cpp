@@ -2412,24 +2412,18 @@ HRESULT WINAPI ShellExecCmdLine(
 
     if (UrlIsFileUrlW(lpCommand))
     {
-        HINSTANCE hinst = ShellExecuteW(hwnd, lpVerb, lpCommand, NULL, pwszStartDir, nShow);
-        return (INT_PTR)hinst > 32 ? S_OK : E_FAIL;
-    }
-
-    pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
-
-    // the whole command line (lpCommand) is binary?
-    if (GetBinaryTypeW(lpCommand, &dwType))
-    {
         StringCchCopyW(szFile, _countof(szFile), lpCommand);
         pchParams = NULL;
     }
-
-    // lpCommand + ".exe" or lpCommand + ".com" is binary?
-    if (pchParams)
+    else
     {
-        if (SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+        pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+
+        // lpCommand, lpCommand + ".exe" or lpCommand + ".com" is binary?
+        if (SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
         {
@@ -2437,10 +2431,6 @@ HRESULT WINAPI ShellExecCmdLine(
             pchParams = NULL;
         }
     }
-
-    // szFile should be an executable
-    if (!GetBinaryTypeW(szFile, &dwType))
-        return CO_E_APPNOTFOUND;
 
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(info);
