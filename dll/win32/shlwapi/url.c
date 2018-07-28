@@ -2,6 +2,7 @@
  * Url functions
  *
  * Copyright 2000 Huw D M Davies for CodeWeavers.
+ * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -2514,6 +2515,65 @@ HRESULT WINAPI UrlCreateFromPathW(LPCWSTR pszPath, LPWSTR pszUrl, LPDWORD pcchUr
     return ret;
 }
 
+static BOOL
+ConvertSHACFtoACO(HWND hwndEdit, DWORD *pdwACO_, DWORD dwSHACF_)
+{
+    DWORD dwType, cbValue, dwACO_ = 0;
+    WCHAR szValue[8];
+    static const LPCWSTR s_pszAutoComplete =
+        L"Software\\Microsoft\\Internet Explorer\\AutoComplete";
+
+    if (dwSHACF_ == SHACF_DEFAULT)
+        dwSHACF_ = SHACF_FILESYSTEM | SHACF_URLALL;
+
+    /* SHACF_AUTOAPPEND_FORCE_* */
+    if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_ON)
+    {
+        dwACO_ |= ACO_AUTOAPPEND;
+    }
+    else if (!(dwSHACF_ & SHACF_AUTOAPPEND_FORCE_OFF))
+    {
+        cbValue = sizeof(szValue);
+        if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
+                                         &dwType, szValue, &cbValue) &&
+            lstrcmpiW(szValue, L"no") != 0)
+        {
+            dwACO_ |= ACO_AUTOSUGGEST;
+        }
+    }
+
+    /* SHACF_AUTOSUGGEST_FORCE_* */
+    if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_ON)
+    {
+        dwACO_ |= ACO_AUTOSUGGEST;
+    }
+    else if (!(dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_OFF))
+    {
+        cbValue = sizeof(szValue);
+        if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"AutoSuggest",
+                                         &dwType, szValue, &cbValue) &&
+            lstrcmpiW(szValue, L"no") != 0)
+        {
+            dwACO_ |= ACO_AUTOSUGGEST;
+        }
+    }
+
+    if (dwSHACF_ & SHACF_USETAB)
+        dwACO_ |= ACO_USETAB;
+
+    if (GetWindowLongPtr(hwndEdit, GWL_EXSTYLE) & WS_EX_RTLREADING)
+    {
+        dwACO_ |= ACO_RTLREADING;
+    }
+
+    *pdwACO_ = dwACO_;
+
+    if (!(dwACO_ & (ACO_AUTOSUGGEST | ACO_AUTOAPPEND)))
+        return FALSE;
+
+    return TRUE;
+}
+
 /*************************************************************************
  *      SHAutoComplete  	[SHLWAPI.@]
  *
@@ -2527,10 +2587,48 @@ HRESULT WINAPI UrlCreateFromPathW(LPCWSTR pszPath, LPWSTR pszUrl, LPDWORD pcchUr
  *  Success: S_OK. Auto-completion is enabled for the control.
  *  Failure: An HRESULT error code indicating the error.
  */
+typedef struct SHLWAPI_ENUMSTRING
+{
+    char dummy;
+} SHLWAPI_ENUMSTRING;
+
+SHLWAPI_ENUMSTRING *CreateShlwapiEnumString(DWORD dwFlags);
+
 HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 {
-  FIXME("stub\n");
-  return S_FALSE;
+    HRESULT hr;
+    LPAUTOCOMPLETE pAC = NULL;
+    LPAUTOCOMPLETE2 pAC2 = NULL;
+    DWORD dwClsCtx, dwACO_ = 0;
+
+    if (!ConvertSHACFtoACO(hwndEdit, &dwACO_, dwFlags))
+        return S_OK;
+
+    dwClsCtx = CLSCTX_INPROC_HANDLER | CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER;
+    hr = CoCreateInstance(&CLSID_AutoComplete, NULL, dwClsCtx,
+                          &IID_IAutoComplete, (void **)&pAC);
+    if (SUCCEEDED(hr))
+    {
+        SHLWAPI_ENUMSTRING *pEnumString = CreateShlwapiEnumString(dwFlags);
+        if (!pEnumString)
+        {
+            pAC->lpVtbl->Release(pAC);
+            return E_FAIL;
+        }
+
+        hr = pAC->lpVtbl->Init(pAC, hwndEdit, (LPUNKNOWN)pEnumString,
+                                         NULL, L"www.%s.com");
+        if (SUCCEEDED(hr))
+        {
+            hr = pAC->lpVtbl->QueryInterface(pAC, &IID_IAutoComplete2, (void **)&pAC2);
+            if (SUCCEEDED(hr))
+            {
+                hr = pAC2->lpVtbl->SetOptions(pAC2, dwACO_);
+                pAC2->lpVtbl->Release(pAC2);
+            }
+        }
+    }
+    return hr;
 }
 
 /*************************************************************************
