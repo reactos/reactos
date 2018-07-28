@@ -2420,8 +2420,6 @@ HRESULT WINAPI ShellExecCmdLine(
     }
     else
     {
-        pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
-
         // lpCommand, lpCommand + ".exe" or lpCommand + ".com" is binary?
         if (SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
@@ -2432,6 +2430,10 @@ HRESULT WINAPI ShellExecCmdLine(
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
+        }
+        else
+        {
+            pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
         }
     }
 
