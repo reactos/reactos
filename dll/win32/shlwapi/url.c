@@ -2527,14 +2527,11 @@ ConvertSHACFtoACO(HWND hwndEdit, DWORD *pdwACO_, DWORD dwSHACF_)
         dwSHACF_ = SHACF_FILESYSTEM | SHACF_URLALL;
 
     /* SHACF_AUTOAPPEND_FORCE_* */
-    if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_OFF)
+    if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_ON)
     {
         dwACO_ |= ACO_AUTOAPPEND;
     }
-    else if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_ON)
-    {
-    }
-    else
+    else if (!(dwSHACF_ & SHACF_AUTOAPPEND_FORCE_OFF))
     {
         cbValue = sizeof(szValue);
         if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
@@ -2546,14 +2543,11 @@ ConvertSHACFtoACO(HWND hwndEdit, DWORD *pdwACO_, DWORD dwSHACF_)
     }
 
     /* SHACF_AUTOSUGGEST_FORCE_* */
-    if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_OFF)
+    if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_ON)
     {
         dwACO_ |= ACO_AUTOSUGGEST;
     }
-    else if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_ON)
-    {
-    }
-    else
+    else if (!(dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_OFF))
     {
         cbValue = sizeof(szValue);
         if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"AutoSuggest",
