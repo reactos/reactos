@@ -181,7 +181,7 @@ static void ParseTildeEffect(PWSTR &res, LPCWSTR &args, DWORD &len, DWORD &used,
  *     - use rules from here http://www.autohotkey.net/~deleyd/parameters/parameters.htm
  */
 
-static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args, DWORD* out_len)
+static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* lpFile, LPITEMIDLIST pidl, LPCWSTR args, DWORD* out_len, const WCHAR* lpDir)
 {
     WCHAR   xlpFile[1024];
     BOOL    done = FALSE;
@@ -268,7 +268,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, DWORD len, const WCHAR* fmt, const WCHAR* 
                     if (!done || (*fmt == '1'))
                     {
                         /*FIXME Is the call to SearchPathW() really needed? We already have separated out the parameter string in args. */
-                        if (SearchPathW(NULL, lpFile, wszExe, sizeof(xlpFile) / sizeof(WCHAR), xlpFile, NULL))
+                        if (SearchPathW(lpDir, lpFile, wszExe, sizeof(xlpFile) / sizeof(WCHAR), xlpFile, NULL))
                             cmd = xlpFile;
                         else
                             cmd = lpFile;
@@ -831,7 +831,7 @@ static UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpVerb,
         if (retval > 32)
         {
             DWORD finishedLen;
-            SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args, &finishedLen);
+            SHELL_ArgifyW(lpResult, resultLen, command, xlpFile, pidl, args, &finishedLen, lpPath);
             if (finishedLen > resultLen)
                 ERR("Argify buffer not large enough.. truncated\n");
             /* Remove double quotation marks and command line arguments */
@@ -1064,11 +1064,11 @@ static unsigned dde_connect(const WCHAR* key, const WCHAR* start, WCHAR* ddeexec
         }
     }
 
-    SHELL_ArgifyW(static_res, sizeof(static_res)/sizeof(WCHAR), exec, lpFile, pidl, szCommandline, &resultLen);
+    SHELL_ArgifyW(static_res, sizeof(static_res)/sizeof(WCHAR), exec, lpFile, pidl, szCommandline, &resultLen, NULL);
     if (resultLen > sizeof(static_res)/sizeof(WCHAR))
     {
         res = dynamic_res = static_cast<WCHAR *>(HeapAlloc(GetProcessHeap(), 0, resultLen * sizeof(WCHAR)));
-        SHELL_ArgifyW(dynamic_res, resultLen, exec, lpFile, pidl, szCommandline, NULL);
+        SHELL_ArgifyW(dynamic_res, resultLen, exec, lpFile, pidl, szCommandline, NULL, NULL);
     }
     else
         res = static_res;
@@ -1134,7 +1134,8 @@ static UINT_PTR execute_from_key(LPCWSTR key, LPCWSTR lpFile, WCHAR *env,
         if (cmdlen >= sizeof(cmd) / sizeof(WCHAR))
             cmdlen = sizeof(cmd) / sizeof(WCHAR) - 1;
         cmd[cmdlen] = '\0';
-        SHELL_ArgifyW(param, sizeof(param) / sizeof(WCHAR), cmd, lpFile, (LPITEMIDLIST)psei->lpIDList, szCommandline, &resultLen);
+        SHELL_ArgifyW(param, sizeof(param) / sizeof(WCHAR), cmd, lpFile, (LPITEMIDLIST)psei->lpIDList, szCommandline, &resultLen,
+                      (psei->lpDirectory && *psei->lpDirectory) ? psei->lpDirectory : NULL);
         if (resultLen > sizeof(param) / sizeof(WCHAR))
             ERR("Argify buffer not large enough, truncating\n");
     }
@@ -1514,7 +1515,8 @@ static UINT_PTR SHELL_execute_class(LPCWSTR wszApplicationName, LPSHELLEXECUTEIN
         TRACE("SEE_MASK_CLASSNAME->%s, doc->%s\n", debugstr_w(execCmd), debugstr_w(wszApplicationName));
 
         wcmd[0] = '\0';
-        done = SHELL_ArgifyW(wcmd, sizeof(wcmd) / sizeof(WCHAR), execCmd, wszApplicationName, (LPITEMIDLIST)psei->lpIDList, NULL, &resultLen);
+        done = SHELL_ArgifyW(wcmd, sizeof(wcmd) / sizeof(WCHAR), execCmd, wszApplicationName, (LPITEMIDLIST)psei->lpIDList, NULL, &resultLen,
+                             (psei->lpDirectory && *psei->lpDirectory) ? psei->lpDirectory : NULL);
         if (!done && wszApplicationName[0])
         {
             strcatW(wcmd, L" ");
@@ -1580,7 +1582,8 @@ static BOOL SHELL_translate_idlist(LPSHELLEXECUTEINFOW sei, LPWSTR wszParameters
                                            sei->lpVerb,
                                            buffer, sizeof(buffer))) {
                 SHELL_ArgifyW(wszApplicationName, dwApplicationNameLen,
-                              buffer, target, (LPITEMIDLIST)sei->lpIDList, NULL, &resultLen);
+                              buffer, target, (LPITEMIDLIST)sei->lpIDList, NULL, &resultLen,
+                              (sei->lpDirectory && *sei->lpDirectory) ? sei->lpDirectory : NULL);
                 if (resultLen > dwApplicationNameLen)
                     ERR("Argify buffer not large enough... truncating\n");
                 appKnownSingular = FALSE;
@@ -2316,7 +2319,8 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
     LPWSTR pszCmdLineW = NULL;
     TRACE("%p, %p, %s, %d\n", hwnd, hinst, debugstr_a(cmdline), cmdshow);
 
-    __SHCloneStrAtoW(&pszCmdLineW, cmdline);
+    if (cmdline)
+        __SHCloneStrAtoW(&pszCmdLineW, cmdline);
     OpenAs_RunDLLW(hwnd, hinst, pszCmdLineW, cmdshow);
     SHFree(pszCmdLineW);
 }

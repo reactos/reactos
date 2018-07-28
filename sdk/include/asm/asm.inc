@@ -136,8 +136,12 @@ ENDM
     dd args
 ENDM
 
-.double MACRO args:VARARG
+.quad MACRO args:VARARG
     dq args
+ENDM
+
+.double MACRO args:VARARG
+    real8 args
 ENDM
 
 .org MACRO value

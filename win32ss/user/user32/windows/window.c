@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/windows/window.c
  * PURPOSE:         Window management
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  * UPDATE HISTORY:
  *      06-06-2001  CSH  Created
  */
@@ -78,9 +79,22 @@ BringWindowToTop(HWND hWnd)
 
 
 VOID WINAPI
-SwitchToThisWindow(HWND hwnd, BOOL fUnknown)
+SwitchToThisWindow(HWND hwnd, BOOL fAltTab)
 {
-    ShowWindow(hwnd, SW_SHOW);
+    HWND hwndFG;
+    if (fAltTab)
+    {
+        if (IsIconic(hwnd))
+            ShowWindowAsync(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+    }
+    else
+    {
+        hwndFG = GetForegroundWindow();
+        ShowWindow(hwnd, SW_RESTORE | SW_SHOWNA);
+        SetWindowPos(hwnd, hwndFG, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        SetWindowPos(hwndFG, hwnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    }
 }
 
 

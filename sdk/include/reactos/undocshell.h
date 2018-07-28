@@ -526,6 +526,9 @@ typedef struct
  * Misc Stuff
  */
 
+BOOL WINAPI
+RegenerateUserEnvironment(LPVOID *lpEnvironment, BOOL bUpdateSelf);
+
 /* SHWaitForFileToOpen flags */
 #define SHWFF_ADD     0x01
 #define SHWFF_REMOVE  0x02

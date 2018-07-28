@@ -96,7 +96,7 @@ RunSetupThreadProc(
 
     /* Expand string (if applicable) */
     if (dwType == REG_EXPAND_SZ)
-        ExpandEnvironmentStringsW(Shell, CommandLine, MAX_PATH);
+        ExpandEnvironmentStringsW(Shell, CommandLine, ARRAYSIZE(CommandLine));
     else if (dwType == REG_SZ)
         wcscpy(CommandLine, Shell);
     else
@@ -104,10 +104,12 @@ RunSetupThreadProc(
 
     TRACE("Should run '%s' now\n", debugstr_w(CommandLine));
 
+    SwitchDesktop(WLSession->ApplicationDesktop);
+
     /* Start process */
     StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpReserved = NULL;
-    StartupInfo.lpDesktop = NULL;
+    StartupInfo.lpDesktop = L"WinSta0\\Default";
     StartupInfo.lpTitle = NULL;
     StartupInfo.dwFlags = 0;
     StartupInfo.cbReserved2 = 0;
@@ -126,6 +128,7 @@ RunSetupThreadProc(
     if (!Result)
     {
         TRACE("Failed to run setup process\n");
+        SwitchDesktop(WLSession->WinlogonDesktop);
         return FALSE;
     }
 
@@ -137,6 +140,8 @@ RunSetupThreadProc(
     /* Close handles */
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
+
+    SwitchDesktop(WLSession->WinlogonDesktop);
 
     TRACE ("RunSetup() done\n");
 

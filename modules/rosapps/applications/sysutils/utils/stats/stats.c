@@ -82,7 +82,7 @@ AddExtension(LPTSTR ExtName,
     return NULL;
 
   for(t = ExtName; *t != _T('\0'); t += _tcslen(t) + 1);
-  ln = (DWORD)t - (DWORD)ExtName;
+  ln = (DWORD_PTR)t - (DWORD_PTR)ExtName;
 
   ZeroMemory (ExtInfo, sizeof (EXTENSION_INFO));
   memcpy (ExtInfo->ExtName, ExtName, ln);

@@ -29,6 +29,24 @@ Author:
 #define MAX_BUS_NAME 24
 
 //
+// PLUGPLAY_CONTROL_PROPERTY_DATA.Properties
+//
+#define PNP_PROPERTY_UI_NUMBER                        0
+#define PNP_PROPERTY_PHYSICAL_DEVICE_OBJECT_NAME      1
+#define PNP_PROPERTY_BUSTYPEGUID                      2
+#define PNP_PROPERTY_LEGACYBUSTYPE                    3
+#define PNP_PROPERTY_BUSNUMBER                        4
+#define PNP_PROPERTY_POWER_DATA                       5
+#define PNP_PROPERTY_REMOVAL_POLICY                   6
+#define PNP_PROPERTY_REMOVAL_POLICY_OVERRIDE          7
+#define PNP_PROPERTY_ADDRESS                          8
+#define PNP_PROPERTY_ENUMERATOR_NAME                  9
+#define PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT 10
+#define PNP_PROPERTY_INSTALL_STATE                   11
+#define PNP_PROPERTY_LOCATION_PATHS                  12
+#define PNP_PROPERTY_CONTAINERID                     13
+
+//
 // PLUGPLAY_CONTROL_RELATED_DEVICE_DATA.Relations
 //
 #define PNP_GET_PARENT_DEVICE           1
@@ -36,11 +54,20 @@ Author:
 #define PNP_GET_SIBLING_DEVICE          3
 
 //
-// PLUGPLAY_CONTROL_STATUS_DATA Operations
+// PLUGPLAY_CONTROL_STATUS_DATA.Operation
 //
 #define PNP_GET_DEVICE_STATUS           0
 #define PNP_SET_DEVICE_STATUS           1
 #define PNP_CLEAR_DEVICE_STATUS         2
+
+//
+// PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA.Relations
+//
+#define PNP_EJECT_RELATIONS             0
+#define PNP_REMOVAL_RELATIONS           1
+#define PNP_POWER_RELATIONS             2
+#define PNP_BUS_RELATIONS               3
+
 
 #ifdef NTOS_MODE_USER
 
@@ -466,7 +493,7 @@ typedef struct _PLUGPLAY_CONTROL_DEPTH_DATA
 typedef struct _PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA
 {
     UNICODE_STRING DeviceInstance;
-    ULONG Relations; // 0:EjectRelations, 1:RemovalRelations, 2:PowerRelations, 3:BusRelations
+    ULONG Relations;
     ULONG BufferSize;
     PWCHAR Buffer;
 } PLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA, *PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA;
@@ -481,7 +508,7 @@ typedef struct _PLUGPLAY_CONTROL_RETRIEVE_DOCK_DATA
 // Class 0x14
 typedef struct _PLUGPLAY_CONTROL_RESET_DEVICE_DATA
 {
-   UNICODE_STRING DeviceInstance;
+    UNICODE_STRING DeviceInstance;
 } PLUGPLAY_CONTROL_RESET_DEVICE_DATA, *PPLUGPLAY_CONTROL_RESET_DEVICE_DATA;
 
 //

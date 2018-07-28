@@ -1,0 +1,56 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USER_HEADER "INFORMACJE O UŻYTKOWNIKU"
+    IDS_GROU_HEADER "INFORMACJE O GRUPIE"
+    IDS_PRIV_HEADER "INFORMACJE O UPRAWNIENIACH"
+    IDS_COL_USER_NAME "Nazwa użytkownika"
+    IDS_COL_GROUP_NAME "Nazwa grupy"
+    IDS_COL_TYPE "Typ"
+    IDS_COL_SID "Identyfikator SID"
+    IDS_COL_ATTRIB "Atrybuty"
+    IDS_COL_PRIV_NAME "Nazwa uprawnienia"
+    IDS_COL_DESCRIPTION "Opis"
+    IDS_COL_STATE "Stan"
+    IDS_TP_WELL_KNOWN_GROUP "Dobrze znana grupa"
+    IDS_TP_ALIAS "Alias"
+    IDS_TP_LABEL "Etykieta"
+
+    /* [!] important note from the programmer: the program tries to remove
+       the last ', ' after concatenating, so keep than in mind when translating.
+
+       you can test your translation of these attributes by using 'whoami /groups' */
+
+    IDS_ATTR_GROUP_MANDATORY "Grupa obowiązkowa, "
+    IDS_ATTR_GROUP_ENABLED_BY_DEFAULT "Włączono domyślnie, "
+    IDS_ATTR_GROUP_ENABLED "Włączona grupa, "
+    IDS_ATTR_GROUP_OWNER "Właściciel grupy, "
+    IDS_UNKNOWN_DESCRIPTION "???"
+    IDS_STATE_ENABLED "Włączone"
+    IDS_STATE_DISABLED "Wyłączone"
+    IDS_ERROR_UPN "BŁĄD: Nie można uzyskać głównej nazwy użytkownika (UPN), ponieważ bieżący\nzalogowany użytkownik nie jest użytkownikiem domeny.\n"
+    IDS_ERROR_FQDN "BŁĄD: Nie można uzyskać w pełni kwalifikowanej nazwy wyróżniającej (FQDN),\nponieważ bieżący zalogowany użytkownik nie jest użytkownikiem domeny.\n"
+    IDS_ERROR_VALUEXPECTED "BŁĄD: Nieprawidłowa składnia. Brak obowiązkowej opcji '/fo'.\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_ERROR_VALUENOTALLOWED "BŁĄD: Nieprawidłowa składnia. Wartość '%s' nie jest dozwolona dla opcji '/fo'.\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_ERROR_1TIMES "BŁĄD: Nieprawidłowa składnia. Opcja '%s' nie jest dozwolona więcej niż '1' raz(y).\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_ERROR_INVALIDSYNTAX "BŁĄD: Nieprawidłowa składnia.\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_ERROR_INVALIDARG "BŁĄD: Nieprawidłowy argument/opcja - '%s'.\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_ERROR_NH_LIST "BŁĄD: Przełącznika /NH nie można używać w formacie LIST.\nWpisz polecenie ""WHOAMI /?"", aby zobaczyć sposób użycia.\n"
+    IDS_HELP "OPIS:\n\
+  Wyświetla informacje użytkownika, grupy i uprawnień dla lokalnie zalogowanego użytkownika\n\
+  Jeżeli nie podano żadnych parametrów, wyświetla aktualną domenę i nazwę użytkownika.\n\
+\n\
+  Dostępnymi formatami wyjściowymi dla opcji '/fo' są 'csv', 'list' i 'table'.\n\
+  Użyj opcji '/nh', żeby ukryć nagłówki. Domyślnie dane są wyświetlone w tabeli.\n\
+\n\
+SKŁADNIA:\n\
+  whoami [/upn | /fqdn | /logonid] \n\
+  whoami {[/user] [/groups] [/priv]} [/fo <Format>] [/nh] \n\
+  whoami /all [/fo <Format>] [/nh] \n\
+\n\
+PRZYKŁADY: \n\
+  whoami /groups /priv /nh /fo csv \n\
+  whoami /logonid \n\
+  whoami \n"
+END

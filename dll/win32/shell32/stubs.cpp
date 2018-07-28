@@ -646,17 +646,6 @@ SHChangeNotifySuspendResume(BOOL bSuspend,
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-RegenerateUserEnvironment(LPVOID *lpUnknown, BOOL bUnknown)
-{
-    FIXME("RegenerateUserEnvironment() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C HINSTANCE
 WINAPI
 RealShellExecuteExA(HWND hwnd,

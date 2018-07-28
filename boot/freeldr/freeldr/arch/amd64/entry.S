@@ -25,7 +25,7 @@ RealEntryPoint:
     jmp qword ptr [ContinueAddress]
 
 ContinueAddress:
-    .double offset FrldrStartup
+    .quad offset FrldrStartup
 
 FrldrStartup:
 
@@ -120,7 +120,7 @@ CallRealMode_return:
 
     /* 64-bit stack pointer */
 stack64:
-    .double STACKADDR
+    .quad STACKADDR
 
 PUBLIC FrldrBootDrive
 FrldrBootDrive:

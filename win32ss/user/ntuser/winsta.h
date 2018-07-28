@@ -84,18 +84,18 @@ NTAPI
 UserCreateWinstaDirectory(VOID);
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectDelete(
     _In_ PVOID Parameters);
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectParse(
     _In_ PVOID Parameters);
 
 NTSTATUS
 NTAPI
-IntWinstaOkToClose(
+IntWinStaOkToClose(
     _In_ PVOID Parameters);
 
 NTSTATUS

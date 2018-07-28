@@ -294,11 +294,13 @@ static NTSTATUS
 IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
 {
     PDEVICE_OBJECT DeviceObject = NULL;
-    NTSTATUS Status;
+    PDEVICE_NODE DeviceNode;
     UNICODE_STRING DeviceInstance;
     ULONG BufferSize;
-    ULONG Property = 0;
+    ULONG Property;
+    DEVICE_REGISTRY_PROPERTY DeviceProperty;
     PVOID Buffer;
+    NTSTATUS Status;
 
     DPRINT("IopGetDeviceProperty() called\n");
     DPRINT("Device name: %wZ\n", &PropertyData->DeviceInstance);
@@ -341,14 +343,124 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     Buffer = ExAllocatePool(NonPagedPool, BufferSize);
     if (Buffer == NULL)
     {
+        ObDereferenceObject(DeviceObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    Status = IoGetDeviceProperty(DeviceObject,
-                                 Property,
-                                 BufferSize,
-                                 Buffer,
-                                 &BufferSize);
+
+    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+
+    if (Property == PNP_PROPERTY_POWER_DATA)
+    {
+        if (BufferSize < sizeof(CM_POWER_DATA))
+        {
+            BufferSize = 0;
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+//            DEVICE_CAPABILITIES DeviceCapabilities;
+            PCM_POWER_DATA PowerData;
+
+//            Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
+
+            PowerData = (PCM_POWER_DATA)Buffer;
+            PowerData->PD_Size = sizeof(CM_POWER_DATA);
+/*
+            PowerData->PD_MostRecentPowerState;
+            PowerData->PD_Capabilities;
+            PowerData->PD_D1Latency;
+            PowerData->PD_D2Latency;
+            PowerData->PD_D3Latency;
+            PowerData->PD_PowerStateMapping[POWER_SYSTEM_MAXIMUM];
+            PowerData->PD_DeepestSystemWake;
+*/
+        }
+    }
+    else if (Property == PNP_PROPERTY_REMOVAL_POLICY_OVERRIDE)
+    {
+    }
+    else if (Property == PNP_PROPERTY_REMOVAL_POLICY_HARDWARE_DEFAULT)
+    {
+        if (BufferSize < sizeof(DeviceNode->HardwareRemovalPolicy))
+        {
+            BufferSize = 0;
+            Status = STATUS_BUFFER_TOO_SMALL;
+        }
+        else
+        {
+            BufferSize = sizeof(DeviceNode->HardwareRemovalPolicy);
+            RtlCopyMemory(Buffer,
+                          &DeviceNode->HardwareRemovalPolicy,
+                          BufferSize);
+        }
+    }
+    else
+    {
+        switch (Property)
+        {
+            case PNP_PROPERTY_UI_NUMBER:
+                DeviceProperty = DevicePropertyUINumber;
+                break;
+
+            case PNP_PROPERTY_PHYSICAL_DEVICE_OBJECT_NAME:
+                DeviceProperty = DevicePropertyPhysicalDeviceObjectName;
+                break;
+
+            case PNP_PROPERTY_BUSTYPEGUID:
+                DeviceProperty = DevicePropertyBusTypeGuid;
+                break;
+
+            case PNP_PROPERTY_LEGACYBUSTYPE:
+                DeviceProperty = DevicePropertyLegacyBusType;
+                break;
+
+            case PNP_PROPERTY_BUSNUMBER:
+                DeviceProperty = DevicePropertyBusNumber;
+                break;
+
+            case PNP_PROPERTY_REMOVAL_POLICY:
+                DeviceProperty = DevicePropertyRemovalPolicy;
+                break;
+
+            case PNP_PROPERTY_ADDRESS:
+                DeviceProperty = DevicePropertyAddress;
+                break;
+
+            case PNP_PROPERTY_ENUMERATOR_NAME:
+                DeviceProperty = DevicePropertyEnumeratorName;
+                break;
+
+            case PNP_PROPERTY_INSTALL_STATE:
+                DeviceProperty = DevicePropertyInstallState;
+                break;
+
+#if (WINVER >= _WIN32_WINNT_WS03)
+            case PNP_PROPERTY_LOCATION_PATHS:
+                break;
+#endif
+
+#if (WINVER >= _WIN32_WINNT_WIN7)
+            case PNP_PROPERTY_CONTAINERID:
+                DeviceProperty = DevicePropertyContainerID;
+                break;
+#endif
+
+            default:
+                BufferSize = 0;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+        }
+
+        if (Status == STATUS_SUCCESS)
+        {
+            Status = IoGetDeviceProperty(DeviceObject,
+                                         DeviceProperty,
+                                         BufferSize,
+                                         Buffer,
+                                         &BufferSize);
+        }
+    }
 
     ObDereferenceObject(DeviceObject);
 
@@ -696,19 +808,19 @@ IopGetDeviceRelations(PPLUGPLAY_CONTROL_DEVICE_RELATIONS_DATA RelationsData)
 
     switch (Relations)
     {
-        case 0: /* EjectRelations */
+        case PNP_EJECT_RELATIONS:
             Stack.Parameters.QueryDeviceRelations.Type = EjectionRelations;
             break;
 
-        case 1: /* RemovalRelations */
+        case PNP_REMOVAL_RELATIONS:
             Stack.Parameters.QueryDeviceRelations.Type = RemovalRelations;
             break;
 
-        case 2: /* PowerRelations */
+        case PNP_POWER_RELATIONS:
             Stack.Parameters.QueryDeviceRelations.Type = PowerRelations;
             break;
 
-        case 3: /* BusRelations */
+        case PNP_BUS_RELATIONS:
             Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
             break;
 

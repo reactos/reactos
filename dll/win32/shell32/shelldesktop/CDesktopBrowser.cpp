@@ -390,6 +390,9 @@ LRESULT CDesktopBrowser::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
 LRESULT CDesktopBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    LPVOID lpEnvironment;
+    RegenerateUserEnvironment(&lpEnvironment, TRUE);
+
     if (m_hWndShellView)
     {
         /* Forward the message */

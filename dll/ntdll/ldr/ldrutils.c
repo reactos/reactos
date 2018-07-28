@@ -2626,7 +2626,7 @@ LdrpLoadDll(IN BOOLEAN Redirected,
 
 Quickie:
     /* Release the lock */
-    if (!InInit) RtlLeaveCriticalSection(Peb->LoaderLock);
+    if (!InInit) RtlLeaveCriticalSection(&LdrpLoaderLock);
 
     /* Check for success */
     if (NT_SUCCESS(Status))

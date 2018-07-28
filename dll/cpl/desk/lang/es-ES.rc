@@ -1,4 +1,11 @@
-/* Spanish translation by Patricio Martínez Ros, Javier Remacha */
+/*
+ * PROJECT:     ReactOS display control panel
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Patricio Martínez Ros
+ *              Javier Remacha
+ *              Julio Carchi Ruiz
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -156,12 +163,12 @@ END
 
 IDD_CONFIRMSETTINGS DIALOGEX 20, 30, 233, 57
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
+CAPTION "Configuración de pantalla"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Do you want to keep these display settings?", IDC_STATIC, 7, 7, 219, 8
+    LTEXT "¿Desea mantener ésta configuración de pantalla?", IDC_STATIC, 7, 7, 219, 8
     LTEXT "", IDC_TIMEOUTTEXT, 7, 20, 219, 8
-    PUSHBUTTON "&Yes", IDYES, 121, 36, 50, 14
+    PUSHBUTTON "&Sí", IDYES, 121, 36, 50, 14
     DEFPUSHBUTTON "&No", IDNO, 175, 36, 50, 14
 END
 
@@ -269,5 +276,5 @@ BEGIN
     IDS_DISPLAY_SETTINGS "Configuración del monitor"
     IDS_APPLY_FAILED "Error al aplicar la nueva configuración..."
     IDS_APPLY_NEEDS_RESTART "Necesita reiniciar el equipo para aplicar los cambios."
-    IDS_TIMEOUTTEXT "Revert to previous settings in %d seconds."
+    IDS_TIMEOUTTEXT "Regresar a la última configuraciín en %d segundos."
 END

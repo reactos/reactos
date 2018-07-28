@@ -8,18 +8,18 @@
 MACRO(START_VTABLE, shortname, cxxname)
 EXTERN shortname&_rtti:PROC
 EXTERN MSVCRT_&shortname&_vector_dtor:PROC
-    .double shortname&_rtti
+    .quad shortname&_rtti
 PUBLIC MSVCRT_&shortname&_vtable
 MSVCRT_&shortname&_vtable:
 PUBLIC &cxxname
 &cxxname:
-    .double MSVCRT_&shortname&_vector_dtor
+    .quad MSVCRT_&shortname&_vector_dtor
 ENDM
 
 MACRO(DEFINE_EXCEPTION_VTABLE, shortname, cxxname)
     START_VTABLE shortname, cxxname
     EXTERN MSVCRT_what_exception:ABS
-    .double MSVCRT_what_exception
+    .quad MSVCRT_what_exception
 ENDM
 
 START_VTABLE type_info, __dummyname_type_info

@@ -96,7 +96,7 @@ UserCreateWinstaDirectory(VOID)
 /* OBJECT CALLBACKS  **********************************************************/
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectDelete(
     _In_ PVOID Parameters)
 {
@@ -117,7 +117,7 @@ IntWinStaObjectDelete(
 }
 
 NTSTATUS
-APIENTRY
+NTAPI
 IntWinStaObjectParse(
     _In_ PVOID Parameters)
 {
@@ -183,7 +183,7 @@ IntWinStaObjectParse(
 
 NTSTATUS
 NTAPI
-IntWinstaOkToClose(
+IntWinStaOkToClose(
     _In_ PVOID Parameters)
 {
     PWIN32_OKAYTOCLOSEMETHOD_PARAMETERS OkToCloseParameters = Parameters;
@@ -370,7 +370,7 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
  *    lpSecurity
  *       Security descriptor
  *
- *    Unknown3, Unknown4, Unknown5
+ *    Unknown3, Unknown4, Unknown5, Unknown6
  *       Unused
  *
  * Return Value
@@ -378,10 +378,6 @@ CheckWinstaAttributeAccess(ACCESS_MASK DesiredAccess)
  *    created window station. If the specified window station already
  *    exists, the function succeeds and returns a handle to the existing
  *    window station. If the function fails, the return value is NULL.
- *
- * Todo
- *    Correct the prototype to match the Windows one (with 7 parameters
- *    on Windows XP).
  *
  * Status
  *    @implemented
@@ -940,7 +936,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     ppi = PsGetCurrentProcessWin32Process();
 
     /* Reference the new window station */
-    if(hWindowStation !=NULL)
+    if (hWindowStation != NULL)
     {
         Status = IntValidateWindowStationHandle(hWindowStation,
                                                 UserMode,
@@ -960,13 +956,13 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
     hwinstaOld = PsGetProcessWin32WindowStation(ppi->peProcess);
 
     /* Dereference the previous window station */
-    if(OldWinSta != NULL)
+    if (OldWinSta != NULL)
     {
         ObDereferenceObject(OldWinSta);
     }
 
     /* Check if we have a stale handle (it should happen for console apps) */
-    if(hwinstaOld != ppi->hwinsta)
+    if (hwinstaOld != ppi->hwinsta)
     {
         ObCloseHandle(hwinstaOld, UserMode);
     }
@@ -991,7 +987,7 @@ UserSetProcessWindowStation(HWINSTA hWindowStation)
         ppi->W32PF_flags &= ~W32PF_READSCREENACCESSGRANTED;
     }
 
-    if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO) )
+    if (NewWinSta && !(NewWinSta->Flags & WSS_NOIO))
     {
         ppi->W32PF_flags |= W32PF_IOWINSTA;
     }
@@ -1486,16 +1482,18 @@ NtUserLockWorkStation(VOID)
     return ret;
 }
 
-BOOL APIENTRY
+BOOL
+NTAPI
 NtUserSetWindowStationUser(
-    HWINSTA hWindowStation,
-    PLUID pluid,
-    PSID psid,
-    DWORD size)
+    IN HWINSTA hWindowStation,
+    IN PLUID pluid,
+    IN PSID psid OPTIONAL,
+    IN DWORD size)
 {
+    BOOL Ret = FALSE;
     NTSTATUS Status;
     PWINSTATION_OBJECT WindowStation = NULL;
-    BOOL Ret = FALSE;
+    LUID luidUser;
 
     UserEnterExclusive();
 
@@ -1505,53 +1503,79 @@ NtUserSetWindowStationUser(
         goto Leave;
     }
 
+    /* Validate the window station */
     Status = IntValidateWindowStationHandle(hWindowStation,
                                             UserMode,
                                             0,
                                             &WindowStation,
-                                            0);
+                                            NULL);
     if (!NT_SUCCESS(Status))
     {
         goto Leave;
     }
 
-    if (WindowStation->psidUser)
-    {
-        ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
-    }
-
-    WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
-    if (WindowStation->psidUser == NULL)
-    {
-        EngSetLastError(ERROR_OUTOFMEMORY);
-        goto Leave;
-    }
-
+    /* Capture the user LUID */
     _SEH2_TRY
     {
-        ProbeForRead( psid, size, 1);
-        ProbeForRead( pluid, sizeof(LUID), 1);
-
-        RtlCopyMemory(WindowStation->psidUser, psid, size);
-        WindowStation->luidUser = *pluid;
+        ProbeForRead(pluid, sizeof(LUID), 1);
+        luidUser = *pluid;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(goto Leave);
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
+    /* Reset the window station user LUID */
+    RtlZeroMemory(&WindowStation->luidUser, sizeof(LUID));
+
+    /* Reset the window station user SID */
+    if (WindowStation->psidUser)
     {
         ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
-        WindowStation->psidUser = 0;
-        goto Leave;
+        WindowStation->psidUser = NULL;
     }
+
+    /* Copy the new user SID if one has been provided */
+    if (psid)
+    {
+        WindowStation->psidUser = ExAllocatePoolWithTag(PagedPool, size, USERTAG_SECURITY);
+        if (WindowStation->psidUser == NULL)
+        {
+            EngSetLastError(ERROR_OUTOFMEMORY);
+            goto Leave;
+        }
+
+        Status = STATUS_SUCCESS;
+        _SEH2_TRY
+        {
+            ProbeForRead(psid, size, 1);
+            RtlCopyMemory(WindowStation->psidUser, psid, size);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(WindowStation->psidUser, USERTAG_SECURITY);
+            WindowStation->psidUser = NULL;
+            goto Leave;
+        }
+    }
+
+    /* Copy the new user LUID */
+    WindowStation->luidUser = luidUser;
 
     Ret = TRUE;
 
 Leave:
-    if (WindowStation) ObDereferenceObject(WindowStation);
+    if (WindowStation)
+        ObDereferenceObject(WindowStation);
+
     UserLeave();
     return Ret;
 }

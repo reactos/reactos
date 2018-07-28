@@ -7,6 +7,7 @@
  */
 
 #include "ros_lpk.h"
+#include <debug.h>
 
 LPK_LPEDITCONTROL_LIST LpkEditControl = {EditCreate,       EditIchToXY,  EditMouseToIch, EditCchInWidth,
                                          EditGetLineWidth, EditDrawText, EditHScroll,    EditMoveSelection,
@@ -64,33 +65,57 @@ LpkExtTextOut(
     INT unknown)
 {
     LPWORD glyphs = NULL;
+    LPWSTR reordered_str = NULL;
     INT cGlyphs;
+    DWORD dwSICFlags = SIC_COMPLEX;
+    BOOL bResult, bReorder;
 
     UNREFERENCED_PARAMETER(unknown);
 
-    if (!(fuOptions & ETO_IGNORELANGUAGE))
-        fuOptions |= ETO_IGNORELANGUAGE;
+    fuOptions |= ETO_IGNORELANGUAGE;
 
     /* Check text direction */
     if ((GetLayout(hdc) & LAYOUT_RTL) || (GetTextAlign(hdc) & TA_RTLREADING))
-    {
-        if (!(fuOptions & ETO_RTLREADING))
-            fuOptions |= ETO_RTLREADING;
-    }
+        fuOptions |= ETO_RTLREADING;
+
+    /* If text direction is RTL change flag to account neutral characters
+       BUG: disables reordering of propsheet titles */
+    /* if (fuOptions & ETO_RTLREADING)
+        dwSICFlags = SIC_NEUTRAL; */
 
     /* Check if the string requires complex script processing and not a "glyph indices" array */
-    if (ScriptIsComplex(lpString, uCount, SIC_COMPLEX) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
+    if (ScriptIsComplex(lpString, uCount, dwSICFlags) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
     {
-        BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER,
-                     (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
-                     NULL, uCount, NULL, &glyphs, &cGlyphs);
+        /* reordered_str is used as fallback in case the glyphs array fails to generate,
+           BIDI_Reorder doesn't attempt to write into reordered_str if memory allocation fails */
+        reordered_str = HeapAlloc(GetProcessHeap(), 0, uCount * sizeof(WCHAR));
 
-        fuOptions |= ETO_GLYPH_INDEX;
+        bReorder = BIDI_Reorder(hdc, lpString, uCount, GCP_REORDER,
+                                (fuOptions & ETO_RTLREADING) ? WINE_GCPW_FORCE_RTL : WINE_GCPW_FORCE_LTR,
+                                reordered_str, uCount, NULL, &glyphs, &cGlyphs);
 
-        if (uCount > cGlyphs)
-            cGlyphs = uCount;
+        if (glyphs)
+        {
+            fuOptions |= ETO_GLYPH_INDEX;
+            uCount = cGlyphs;
+        }
 
-        return ExtTextOutW(hdc, x, y, fuOptions, lprc, (LPWSTR)glyphs, cGlyphs, lpDx);
+        /* Now display the reordered text if any of the arrays is valid and if BIDI_Reorder succeeded */
+        if ((glyphs || reordered_str) && bReorder) 
+        {
+            bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc,
+                                  glyphs ? (LPWSTR)glyphs : reordered_str, uCount, lpDx);
+        }
+        else
+        {
+            DPRINT1("BIDI_Reorder failed, falling back to original string.\n");
+            bResult = ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
+        }
+
+        HeapFree(GetProcessHeap(), 0, glyphs);
+        HeapFree(GetProcessHeap(), 0, reordered_str);
+
+        return bResult;
     }
 
     return ExtTextOutW(hdc, x, y, fuOptions, lprc, lpString, uCount, lpDx);
@@ -132,28 +157,35 @@ LpkGetCharacterPlacement(
     lpResults->nGlyphs = (UINT)cGlyphs;
 
     if (lpResults->lpGlyphs)
-        wcscpy(lpResults->lpGlyphs, lpGlyphs);
-
-    if (lpResults->lpDx && !(dwFlags & GCP_GLYPHSHAPE))
     {
-        int c;
-        for (i = 0; i < nSet; i++)
-        {
-            if (GetCharWidth32W(hdc, lpResults->lpOutString[i], lpResults->lpOutString[i], &c))
-                lpResults->lpDx[i] = c;
-        }
+        if (lpGlyphs)
+            StringCchCopyW(lpResults->lpGlyphs, cGlyphs, lpGlyphs);
+        else if (lpResults->lpOutString)
+            GetGlyphIndicesW(hdc, lpResults->lpOutString, nSet, lpResults->lpGlyphs, 0);
     }
 
-    /* If glyph shaping was requested */
-    else if (lpResults->lpDx && (dwFlags & GCP_GLYPHSHAPE))
+    if (lpResults->lpDx)
     {
         int c;
 
-        if (lpResults->lpGlyphs)
+        /* If glyph shaping was requested */
+        if (dwFlags & GCP_GLYPHSHAPE)
         {
-            for (i = 0; i < lpResults->nGlyphs; i++)
+            if (lpResults->lpGlyphs)
             {
-                if (GetCharWidth32W(hdc, lpGlyphs[i], lpGlyphs[i], &c))
+                for (i = 0; i < lpResults->nGlyphs; i++)
+                {
+                    if (GetCharWidthI(hdc, 0, 1, (WORD *)&lpResults->lpGlyphs[i], &c))
+                        lpResults->lpDx[i] = c;
+                }
+            }
+        }
+
+        else
+        {
+            for (i = 0; i < nSet; i++)
+            {
+                if (GetCharWidth32W(hdc, lpResults->lpOutString[i], lpResults->lpOutString[i], &c))
                     lpResults->lpDx[i] = c;
             }
         }

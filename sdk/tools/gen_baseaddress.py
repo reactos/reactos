@@ -5,11 +5,10 @@ PURPOSE:     Update baseaddresses of all modules
 COPYRIGHT:   Copyright 2017,2018 Mark Jansen (mark.jansen@reactos.org)
 '''
 
-# FIXME: user32 always at 0x77a20000
-
 import os
 import struct
 import sys
+
 try:
     import pefile
 except ImportError:
@@ -17,12 +16,8 @@ except ImportError:
     print '# Using fallback'
     print
 
-DLL_EXTENSIONS = (
-    '.dll'
-)
-
-OTHER_EXTENSIONS = (
-    '.acm', '.ax', '.cpl', '.drv', '.ocx'
+ALL_EXTENSIONS = (
+    '.dll', '.acm', '.ax', '.cpl', '.drv', '.ocx'
 )
 
 PRIORITIES = (
@@ -221,50 +216,115 @@ def size_of_image(filename):
         return pefile.PE(filename, fast_load=True).OPTIONAL_HEADER.SizeOfImage
     return size_of_image_fallback(filename)
 
-def onefile(current_address, filename, size):
-    name, ext = os.path.splitext(filename)
-    postfix = ''
-    if ext in('.acm', '.drv') and filename != 'winspool.drv':
-        name = filename
-    if current_address == 0:
-        current_address = 0x7c920000
-        postfix = ' # should be above 0x%08x' % current_address
-    else:
-        current_address = (current_address - size - 0x2000 - 0xffff) & 0xffff0000
-    print 'set(baseaddress_%-30s 0x%08x)%s' % (name, current_address, postfix)
-    return current_address
+
+class Module(object):
+    def __init__(self, name, address, size):
+        self._name = name
+        self.address = address
+        self.size = size
+        self._reserved = address != 0
+
+    def gen_baseaddress(self):
+        name, ext = os.path.splitext(self._name)
+        postfix = ''
+        if ext in('.acm', '.drv') and self._name != 'winspool.drv':
+            name = self._name
+        if name == 'ntdll':
+            postfix = ' # should be above 0x%08x' % self.address
+        elif self._reserved:
+            postfix = ' # reserved'
+        print 'set(baseaddress_%-30s 0x%08x)%s' % (name, self.address, postfix)
+
+    def end(self):
+        return self.address + self.size
+
+    def __repr__(self):
+        return '%s (0x%08x - 0x%08x)' % (self._name, self.address, self.end())
+
+class MemoryLayout(object):
+    def __init__(self, startaddress):
+        self.addresses = []
+        self.found = {}
+        self.reserved = {}
+        self.initial = startaddress
+        self.start_at = 0
+        self.module_padding = 0x2000
+
+    def add_reserved(self, name, address):
+        self.reserved[name] = (address, 0)
+
+    def add(self, filename, name):
+        size = size_of_image(filename)
+        addr = 0
+        if name in self.found:
+            return  # Assume duplicate files (rshell, ...) are 1:1 copies
+        if name in self.reserved:
+            addr = self.reserved[name][0]
+            self.reserved[name] = (addr, size)
+        self.found[name] = Module(name, addr, size)
+
+    def _next_address(self, size):
+        if self.start_at:
+            addr = (self.start_at - size - self.module_padding - 0xffff) & 0xffff0000
+            self.start_at = addr
+        else:
+            addr = self.start_at = self.initial
+        return addr
+
+    def next_address(self, size):
+        while True:
+            current_start = self._next_address(size)
+            current_end = current_start + size + self.module_padding
+            # Is there overlap with reserved modules?
+            for key, reserved in self.reserved.iteritems():
+                res_start = reserved[0]
+                res_end = res_start + reserved[1] + self.module_padding
+                if (res_start <= current_start <= res_end) or \
+                   (res_start <= current_end <= res_end) or \
+                   (current_start < res_start and current_end > res_end):
+                    # We passed this reserved item, we can remove it now
+                    self.start_at = min(res_start, current_start)
+                    del self.reserved[key]
+                    current_start = 0
+                    break
+            # No overlap with a reserved module?
+            if current_start:
+                return current_start
+
+    def update(self, priorities):
+        # sort addresses, should only contain reserved modules at this point!
+        for key, reserved in self.reserved.iteritems():
+            assert reserved[1] != 0, key
+        for curr in priorities:
+            if not curr in self.found:
+                print '# Did not find', curr, '!'
+            else:
+                obj = self.found[curr]
+                del self.found[curr]
+                if not obj.address:
+                    obj.address = self.next_address(obj.size)
+                self.addresses.append(obj)
+        # We handled all known modules now, run over the rest we found
+        for key in sorted(self.found):
+            obj = self.found[key]
+            obj.address = self.next_address(obj.size)
+            self.addresses.append(obj)
+
+    def gen_baseaddress(self):
+        for obj in self.addresses:
+            obj.gen_baseaddress()
 
 def run_dir(target):
     print '# Generated from', target
     print '# Generated by sdk/tools/gen_baseaddress.py'
-    found_dlls = {}
-    found_files = {}
+    layout = MemoryLayout(0x7c920000)
+    layout.add_reserved('user32.dll', 0x77a20000)
     for root, _, files in os.walk(target):
-        for dll in [filename for filename in files if filename.endswith(DLL_EXTENSIONS)]:
+        for dll in [filename for filename in files if filename.endswith(ALL_EXTENSIONS)]:
             if not dll in EXCLUDE and not dll.startswith('api-ms-win-'):
-                found_dlls[dll] = size_of_image(os.path.join(root, dll))
-        extrafiles = [filename for filename in files if filename.endswith(OTHER_EXTENSIONS)]
-        for extrafile in extrafiles:
-            if not extrafile in EXCLUDE:
-                found_files[extrafile] = size_of_image(os.path.join(root, extrafile))
-
-    current_address = 0
-    for curr in PRIORITIES:
-        if curr in found_dlls:
-            current_address = onefile(current_address, curr, found_dlls[curr])
-            del found_dlls[curr]
-        elif curr in found_files:
-            current_address = onefile(current_address, curr, found_files[curr])
-            del found_files[curr]
-        else:
-            print '# Did not find', curr, '!'
-
-    print '# Extra dlls'
-    for curr in sorted(found_dlls):
-        current_address = onefile(current_address, curr, found_dlls[curr])
-    print '# Extra files'
-    for curr in sorted(found_files):
-        current_address = onefile(current_address, curr, found_files[curr])
+                layout.add(os.path.join(root, dll), dll)
+    layout.update(PRIORITIES)
+    layout.gen_baseaddress()
 
 def main(dirs):
     if len(dirs) < 1:

@@ -453,14 +453,14 @@ WinMain(
     /* Check for pending setup */
     if (GetSetupType() != 0)
     {
-        TRACE("WL: Setup mode detected\n");
-
         /* Run setup and reboot when done */
-        SwitchDesktop(WLSession->ApplicationDesktop);
+        TRACE("WL: Setup mode detected\n");
         RunSetup();
     }
     else
+    {
         PostMessageW(WLSession->SASWindow, WLX_WM_SAS, WLX_SAS_TYPE_CTRL_ALT_DEL, 0);
+    }
 
     (void)LoadLibraryW(L"sfc_os.dll");
 
