@@ -551,6 +551,7 @@ WORD WINAPI ArrangeWindows(
 #define SECL_LOG_USAGE      0x8
 #define SECL_USE_IDLIST     0x10
 #define SECL_RUNAS          0x40
+#define SECL_ALLOW_NONEXE_  0x10000  /* ReactOS special flag */
 
 HRESULT WINAPI ShellExecCmdLine(
     HWND hwnd,

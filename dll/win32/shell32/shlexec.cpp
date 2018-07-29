@@ -2449,11 +2449,14 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    // NOTE: szFile must be an executable path.
-    if (!GetBinaryTypeW(szFile, &dwType))
+    if (!(dwSeclFlags & SECL_ALLOW_NONEXE_))   // the special flag
     {
-        SHFree(lpCommand);
-        return CO_E_APPNOTFOUND;
+        // NOTE: szFile must be an executable path.
+        if (!GetBinaryTypeW(szFile, &dwType))
+        {
+            SHFree(lpCommand);
+            return CO_E_APPNOTFOUND;
+        }
     }
 
     ZeroMemory(&info, sizeof(info));

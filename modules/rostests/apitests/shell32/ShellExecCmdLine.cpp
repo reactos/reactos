@@ -19,6 +19,7 @@
     #define SECL_LOG_USAGE      0x8
     #define SECL_USE_IDLIST     0x10
     #define SECL_RUNAS          0x40
+    #define SECL_ALLOW_NONEXE_  0x10000  // ReactOS special flag
 #endif
 
 #ifdef ShellExecCmdLine
@@ -154,11 +155,14 @@ HRESULT WINAPI ShellExecCmdLine(
         }
     }
 
-    // NOTE: szFile must be an executable path.
-    if (!GetBinaryTypeW(szFile, &dwType))
+    if (!(dwSeclFlags & SECL_ALLOW_NONEXE_))   // the special flag
     {
-        SHFree(lpCommand);
-        return CO_E_APPNOTFOUND;
+        // NOTE: szFile must be an executable path.
+        if (!GetBinaryTypeW(szFile, &dwType))
+        {
+            SHFree(lpCommand);
+            return CO_E_APPNOTFOUND;
+        }
     }
 
     ZeroMemory(&info, sizeof(info));
