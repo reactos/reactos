@@ -1,44 +1,42 @@
 /*
- * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/system/autochk/autochk.c
- * PURPOSE:         Filesystem checker
- * PROGRAMMERS:     Aleksey Bragin
- *                  Eric Kohl
- *                  Hervé Poussineau
- *                  Pierre Schweitzer
+ * PROJECT:     ReactOS AutoChk
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     FileSystem checker in Native mode.
+ * COPYRIGHT:   Copyright 2002-2018 Eric Kohl
+ *              Copyright 2006-2018 Aleksey Bragin
+ *              Copyright 2006-2018 Hervé Poussineau
+ *              Copyright 2008-2018 Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <stdio.h>
+
 #define WIN32_NO_STATUS
 #include <windef.h>
 #include <winbase.h>
 #include <ntddkbd.h>
+
 #define NTOS_MODE_USER
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/psfuncs.h>
 #include <ndk/rtlfuncs.h>
-#include <ndk/umfuncs.h>
 #include <fmifs/fmifs.h>
 
 #include <fslib/vfatlib.h>
-#include <fslib/ext2lib.h>
 #include <fslib/ntfslib.h>
-#include <fslib/cdfslib.h>
+#include <fslib/ext2lib.h>
 #include <fslib/btrfslib.h>
-#include <fslib/ffslib.h>
 #include <fslib/reiserfslib.h>
+#include <fslib/ffslib.h>
+#include <fslib/cdfslib.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* DEFINES ******************************************************************/
-
-#define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
 
 typedef struct _FILESYSTEM_CHKDSK
 {
@@ -63,6 +61,7 @@ FILESYSTEM_CHKDSK FileSystems[10] =
 HANDLE KeyboardHandle;
 
 /* FUNCTIONS ****************************************************************/
+
 //
 // FMIFS function
 //
@@ -151,12 +150,12 @@ OpenKeyboard(VOID)
                                0,
                                NULL,
                                NULL);
-    return  NtOpenFile(&KeyboardHandle,
-                       FILE_ALL_ACCESS,
-                       &ObjectAttributes,
-                       &IoStatusBlock,
-                       FILE_OPEN,
-                       0);
+    return NtOpenFile(&KeyboardHandle,
+                      FILE_ALL_ACCESS,
+                      &ObjectAttributes,
+                      &IoStatusBlock,
+                      FILE_OPEN,
+                      0);
 }
 
 static NTSTATUS
@@ -209,7 +208,7 @@ GetFileSystem(
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
-    UCHAR Buffer[FS_ATTRIBUTE_BUFFER_SIZE];
+    UCHAR Buffer[sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
 
     FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
@@ -220,30 +219,34 @@ GetFileSystem(
     Status = NtQueryVolumeInformationFile(FileHandle,
                                           &IoStatusBlock,
                                           FileFsAttribute,
-                                          FS_ATTRIBUTE_BUFFER_SIZE,
+                                          sizeof(Buffer),
                                           FileFsAttributeInformation);
     NtClose(FileHandle);
 
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
-        if (FileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
-        {
-            CopyMemory(FileSystemName,
-                       FileFsAttribute->FileSystemName,
-                       FileFsAttribute->FileSystemNameLength);
-            FileSystemName[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = 0;
-        }
-        else
-            return STATUS_BUFFER_TOO_SMALL;
+        DPRINT1("NtQueryVolumeInformationFile() failed, Status 0x%08lx\n", Status);
+        return Status;
+    }
+
+    if (FileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+    {
+        RtlCopyMemory(FileSystemName,
+                      FileFsAttribute->FileSystemName,
+                      FileFsAttribute->FileSystemNameLength);
+        FileSystemName[FileFsAttribute->FileSystemNameLength / sizeof(WCHAR)] = UNICODE_NULL;
     }
     else
-        return Status;
+    {
+        return STATUS_BUFFER_TOO_SMALL;
+    }
 
     return STATUS_SUCCESS;
 }
 
-// This is based on SysInternal's ChkDsk app
-static BOOLEAN NTAPI
+/* This is based on SysInternals' ChkDsk application */
+static BOOLEAN
+NTAPI
 ChkdskCallback(
     IN CALLBACKCOMMAND Command,
     IN ULONG Modifier,
@@ -348,6 +351,12 @@ CheckVolume(
     NTSTATUS Status;
     DWORD Count;
 
+    swprintf(NtDrivePath, L"\\??\\");
+    wcscat(NtDrivePath, DrivePath);
+    NtDrivePath[wcslen(NtDrivePath)-1] = 0;
+    RtlInitUnicodeString(&DrivePathU, NtDrivePath);
+
+    DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
     PrintString("  Checking file system on %S\r\n", DrivePath);
 
     /* Get the file system */
@@ -356,69 +365,59 @@ CheckVolume(
                            ARRAYSIZE(FileSystem));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("GetFileSystem() failed with status 0x%08lx\n", Status);
+        DPRINT1("GetFileSystem() failed, Status 0x%08lx\n", Status);
         PrintString("  Unable to detect file system of %S\r\n", DrivePath);
         return Status;
     }
 
     PrintString("  The file system type is %S.\r\n\r\n", FileSystem);
 
-    /* Call provider */
-    for (Count = 0; Count < sizeof(FileSystems) / sizeof(FileSystems[0]); ++Count)
+    /* Find a suitable file system provider */
+    for (Count = 0; Count < RTL_NUMBER_OF(FileSystems); ++Count)
     {
-        if (wcscmp(FileSystem, FileSystems[Count].Name) != 0)
-        {
-            continue;
-        }
-
-        swprintf(NtDrivePath, L"\\??\\");
-        wcscat(NtDrivePath, DrivePath);
-        NtDrivePath[wcslen(NtDrivePath)-1] = 0;
-        RtlInitUnicodeString(&DrivePathU, NtDrivePath);
-
-        DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
-        /* First, check whether the volume is dirty */
-        Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
-                                               FALSE, // FixErrors
-                                               TRUE, // Verbose
-                                               TRUE, // CheckOnlyIfDirty
-                                               FALSE,// ScanDrive
-                                               ChkdskCallback);
-        /* It is */
-        if (Status == STATUS_DISK_CORRUPT_ERROR)
-        {
-            NTSTATUS WaitStatus;
-
-            /* Let the user decide whether to repair */
-            PrintString("  The file system on this volume needs to be checked for problems.\r\n");
-            PrintString("  You may cancel this check, but it's recommended that you continue.\r\n\r\n");
-            PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n\r\n", TimeOut);
-
-            /* Timeout == fix it! */
-            WaitStatus = WaitForKeyboard(TimeOut);
-            if (WaitStatus == STATUS_TIMEOUT)
-            {
-                Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
-                                                       TRUE, // FixErrors
-                                                       TRUE, // Verbose
-                                                       TRUE, // CheckOnlyIfDirty
-                                                       FALSE,// ScanDrive
-                                                       ChkdskCallback);
-                PrintString("  The system will now check the file system.\r\n\r\n");
-            }
-            else
-            {
-                PrintString("  File system check has been skipped.\r\n");
-            }
-        }
-        break;
+        if (wcscmp(FileSystem, FileSystems[Count].Name) == 0)
+            break;
     }
-
-    if (Count == sizeof(FileSystems) / sizeof(FileSystems[0]))
+    if (Count >= RTL_NUMBER_OF(FileSystems))
     {
         DPRINT1("File system not supported\n");
         PrintString("  Unable to check the file system. %S is not supported.\r\n", FileSystem);
         return STATUS_DLL_NOT_FOUND;
+    }
+
+    /* First, check whether the volume is dirty */
+    Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+                                           FALSE, // FixErrors
+                                           TRUE,  // Verbose
+                                           TRUE,  // CheckOnlyIfDirty
+                                           FALSE, // ScanDrive
+                                           ChkdskCallback);
+    /* It is */
+    if (Status == STATUS_DISK_CORRUPT_ERROR)
+    {
+        NTSTATUS WaitStatus;
+
+        /* Let the user decide whether to repair */
+        PrintString("  The file system on this volume needs to be checked for problems.\r\n");
+        PrintString("  You may cancel this check, but it's recommended that you continue.\r\n\r\n");
+        PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n\r\n", TimeOut);
+
+        /* Timeout == fix it! */
+        WaitStatus = WaitForKeyboard(TimeOut);
+        if (WaitStatus == STATUS_TIMEOUT)
+        {
+            PrintString("  The system will now check the file system.\r\n\r\n");
+            Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+                                                   TRUE,  // FixErrors
+                                                   TRUE,  // Verbose
+                                                   TRUE,  // CheckOnlyIfDirty
+                                                   FALSE, // ScanDrive
+                                                   ChkdskCallback);
+        }
+        else
+        {
+            PrintString("  File system check has been skipped.\r\n");
+        }
     }
 
     return Status;
@@ -437,23 +436,16 @@ QueryTimeout(
 
     RtlQueryRegistryValues(RTL_REGISTRY_CONTROL, L"Session Manager", QueryTable, NULL, NULL);
     /* See: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/autochk */
-    if (*TimeOut > 259200)
-    {
-        *TimeOut = 259200;
-    }
-    else if (*TimeOut < 0)
-    {
-        *TimeOut = 0;
-    }
+    *TimeOut = min(max(*TimeOut, 0), 259200);
 }
 
-/* Native image's entry point */
-int
-_cdecl
-_main(int argc,
-      char *argv[],
-      char *envp[],
-      int DebugFlag)
+INT
+__cdecl
+_main(
+    IN INT argc,
+    IN PCHAR argv[],
+    IN PCHAR envp[],
+    IN ULONG DebugFlag)
 {
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     ULONG i;
@@ -475,7 +467,6 @@ _main(int argc,
     /* FIXME: We should probably use here the mount manager to be
      * able to check volumes which don't have a drive letter.
      */
-
     Status = NtQueryInformationProcess(NtCurrentProcess(),
                                        ProcessDeviceMap,
                                        &DeviceMap.Query,
@@ -483,8 +474,7 @@ _main(int argc,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("NtQueryInformationProcess() failed with status 0x%08lx\n",
-            Status);
+        DPRINT1("NtQueryInformationProcess() failed, Status 0x%08lx\n", Status);
         return 1;
     }
 
@@ -492,7 +482,7 @@ _main(int argc,
     Status = OpenKeyboard();
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("OpenKeyboard() failed with status 0x%08lx\n", Status);
+        DPRINT1("OpenKeyboard() failed, Status 0x%08lx\n", Status);
         return 1;
     }
 
@@ -509,7 +499,7 @@ _main(int argc,
     /* Close keyboard */
     NtClose(KeyboardHandle);
 
-    // PrintString("  Done\r\n\r\n");
+    // PrintString("Done\r\n\r\n");
     return 0;
 }
 
