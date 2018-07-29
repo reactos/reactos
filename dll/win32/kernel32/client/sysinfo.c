@@ -7,6 +7,7 @@
  *                  Christoph von Wittich
  *                  Thomas Weidenmueller
  *                  Gunnar Andre Dalsnes
+ *                  Stanislav Motylkov
  */
 
 /* INCLUDES *******************************************************************/
@@ -72,6 +73,82 @@ GetSystemInfoInternal(IN PSYSTEM_BASIC_INFORMATION BasicInfo,
         SystemInfo->wProcessorLevel = 0;
         SystemInfo->wProcessorRevision = 0;
     }
+}
+
+UINT
+WINAPI
+GetRawSMBiosTableFromRegistry(OUT PVOID pData)
+{
+    static const LPCWSTR RegistryKey = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\mssmbios\\Data";
+    static const LPCWSTR ValueNameStr = L"SMBiosData";
+
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo = NULL;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    ULONG KeyInfoSize;
+    ULONG ReturnSize = 0;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString(&KeyName, RegistryKey);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtOpenKey(&KeyHandle,
+                       KEY_READ,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        return 0;
+    }
+
+    // 256 KiB is more than enough for raw SMBIOS dump
+    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 256 * 1024;
+    KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, KeyInfoSize);
+    if (KeyInfo == NULL)
+    {
+        NtClose(KeyHandle);
+        goto cleanup;
+    }
+
+    RtlInitUnicodeString(&ValueName, ValueNameStr);
+
+    Status = NtQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             KeyInfo,
+                             KeyInfoSize,
+                             &ReturnSize);
+
+    NtClose(KeyHandle);
+    ReturnSize = 0;
+
+    if (!NT_SUCCESS(Status))
+    {
+        goto cleanup;
+    }
+
+    if (KeyInfo->Type != REG_BINARY)
+    {
+        goto cleanup;
+    }
+
+    ReturnSize = KeyInfo->DataLength;
+    if (pData)
+    {
+        RtlCopyMemory(pData, KeyInfo->Data, KeyInfo->DataLength);
+    }
+
+cleanup:
+    if (KeyInfo)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+    }
+    return ReturnSize;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -423,8 +500,32 @@ SetFirmwareEnvironmentVariableA(IN LPCSTR lpName,
     return 0;
 }
 
-/*
- * @unimplemented
+/**
+ * @name EnumSystemFirmwareTables
+ * @implemented
+ *
+ * Obtains firmware table identifiers.
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724259(v=vs.85).aspx
+ *
+ * @param FirmwareTableProviderSignature
+ * Can be either ACPI, FIRM, or RSMB.
+ *
+ * @param pFirmwareTableBuffer
+ * Pointer to the output buffer, can be NULL.
+ *
+ * @param BufferSize
+ * Size of the output buffer.
+ *
+ * @return
+ * Actual size of the data in case of success, 0 otherwise.
+ *
+ * @remarks
+ * Data would be written to buffer only if the specified size is
+ * larger or equal to the actual size, in the other case Last Error
+ * value would be set to ERROR_INSUFFICIENT_BUFFER.
+ * In case of incorrect provider signature, Last Error value would be
+ * set to ERROR_INVALID_FUNCTION.
+ *
  */
 UINT
 WINAPI
@@ -432,12 +533,104 @@ EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
                          OUT PVOID pFirmwareTableBuffer,
                          IN DWORD BufferSize)
 {
-    STUB;
-    return 0;
+    UINT uSize = 0;
+    UINT uCount = 0;
+    DWORD dwError = ERROR_SUCCESS;
+    PDWORD pBuffer = NULL;
+
+    switch (FirmwareTableProviderSignature)
+    {
+        case 'ACPI':
+        {
+            /* FIXME: Not implemented yet */
+            dwError = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+        case 'FIRM':
+        {
+            /* FIXME: Not implemented yet */
+            dwError = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+        case 'RSMB':
+        {
+            if (GetRawSMBiosTableFromRegistry(NULL) > 0)
+            {
+                uCount = 1;
+                uSize = uCount * sizeof(DWORD);
+                pBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, uSize);
+                if (!pBuffer)
+                {
+                    SetLastError(ERROR_OUTOFMEMORY);
+                    return 0;
+                }
+                *pBuffer = 0;
+            }
+            break;
+        }
+        default:
+        {
+            dwError = ERROR_INVALID_FUNCTION;
+        }
+    }
+
+    if (dwError == ERROR_SUCCESS)
+    {
+        if (uSize > 0 && BufferSize >= uSize)
+        {
+            /* Write to buffer */
+            if (pFirmwareTableBuffer)
+            {
+                RtlMoveMemory(pFirmwareTableBuffer, pBuffer, uSize);
+            }
+        }
+        else if (BufferSize < uSize)
+        {
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+        }
+    }
+
+    if (pBuffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
+    }
+    SetLastError(dwError);
+    return uSize;
 }
 
-/*
- * @unimplemented
+/**
+ * @name GetSystemFirmwareTable
+ * @implemented
+ *
+ * Obtains the firmware table data.
+ * https://msdn.microsoft.com/en-us/library/windows/desktop/ms724379(v=vs.85).aspx
+ *
+ * @param FirmwareTableProviderSignature
+ * Can be either ACPI, FIRM, or RSMB.
+ *
+ * @param FirmwareTableID
+ * Correct table identifier.
+ *
+ * @param pFirmwareTableBuffer
+ * Pointer to the output buffer, can be NULL.
+ *
+ * @param BufferSize
+ * Size of the output buffer.
+ *
+ * @return
+ * Actual size of the data in case of success, 0 otherwise.
+ *
+ * @remarks
+ * Data would be written to buffer only if the specified size is
+ * larger or equal to the actual size, in the other case Last Error
+ * value would be set to ERROR_INSUFFICIENT_BUFFER.
+ * In case of incorrect provider signature, Last Error value would be
+ * set to ERROR_INVALID_FUNCTION.
+ * Also Last Error value becomes ERROR_NOT_FOUND if incorrect
+ * table identifier was specified along with ACPI provider, and
+ * ERROR_INVALID_PARAMETER along with FIRM provider. The RSMB provider
+ * accepts any table identifier.
+ *
  */
 UINT
 WINAPI
@@ -446,8 +639,81 @@ GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
                        OUT PVOID pFirmwareTableBuffer,
                        IN DWORD BufferSize)
 {
-    STUB;
-    return 0;
+    /* This function currently obtains data using a hack (registry workaround)
+       which is located here: drivers/input/i8042prt/hwhacks.c
+       i8042StoreSMBiosTables is responsible for writing SMBIOS table into registry
+
+       Should be implemented correctly using NtQuerySystemInformation
+       along with SystemFirmwareTableInformation class
+
+       Reference: https://github.com/hfiref0x/VMDE/blob/master/src/vmde/sup.c
+     */
+
+    UINT uSize = 0;
+    DWORD dwError = ERROR_SUCCESS;
+    PVOID pBuffer = NULL;
+
+    switch (FirmwareTableProviderSignature)
+    {
+        case 'ACPI':
+        {
+            /* FIXME: Not implemented yet */
+            dwError = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+        case 'FIRM':
+        {
+            /* FIXME: Not implemented yet */
+            dwError = ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        }
+        case 'RSMB':
+        {
+            uSize = GetRawSMBiosTableFromRegistry(NULL);
+            if (uSize > 0)
+            {
+                pBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, uSize);
+                if (!pBuffer)
+                {
+                    SetLastError(ERROR_OUTOFMEMORY);
+                    return 0;
+                }
+                GetRawSMBiosTableFromRegistry(pBuffer);
+            }
+            else
+            {
+                dwError = ERROR_NOT_FOUND;
+            }
+            break;
+        }
+        default:
+        {
+            dwError = ERROR_INVALID_FUNCTION;
+        }
+    }
+
+    if (dwError == ERROR_SUCCESS)
+    {
+        if (uSize > 0 && BufferSize >= uSize)
+        {
+            /* Write to buffer */
+            if (pFirmwareTableBuffer)
+            {
+                RtlMoveMemory(pFirmwareTableBuffer, pBuffer, uSize);
+            }
+        }
+        else if (BufferSize < uSize)
+        {
+            dwError = ERROR_INSUFFICIENT_BUFFER;
+        }
+    }
+
+    if (pBuffer)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
+    }
+    SetLastError(dwError);
+    return uSize;
 }
 
 /*
