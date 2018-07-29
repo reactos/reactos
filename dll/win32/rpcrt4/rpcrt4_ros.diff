@@ -63,9 +63,35 @@ diff -pudN e:\wine\dlls\rpcrt4/rpc_epmap.c e:\reactos\dll\win32\rpcrt4/rpc_epmap
          case EXCEPTION_ACCESS_VIOLATION:
          case EXCEPTION_ILLEGAL_INSTRUCTION:
 diff -pudN e:\wine\dlls\rpcrt4/rpc_transport.c e:\reactos\dll\win32\rpcrt4/rpc_transport.c
---- e:\wine\dlls\rpcrt4/rpc_transport.c	2016-11-16 17:33:13 +0100
-+++ e:\reactos\dll\win32\rpcrt4/rpc_transport.c	2016-11-17 00:00:46 +0100
-@@ -82,6 +79,7 @@
+--- e:\wine\dlls\rpcrt4/rpc_transport.c	2018-07-28 18:12:19 +0000
++++ e:\reactos\dll\win32\rpcrt4/rpc_transport.c	2018-07-28 18:28:54 +0000
+@@ -25,6 +25,9 @@
+ 
+ #include "ntstatus.h"
+ #define WIN32_NO_STATUS
++#ifdef __REACTOS__
++#define NONAMELESSUNION
++#endif
+ #include "ws2tcpip.h"
+ 
+ #include <stdarg.h>
+@@ -32,12 +35,14 @@
+ #include <string.h>
+ #include <assert.h>
+ 
++
++
+ #include "windef.h"
+ #include "winbase.h"
+ #include "winnls.h"
+ #include "winerror.h"
+ #include "wininet.h"
+-#include "winternl.h"
++#include "wine/winternl.h"
+ #include "winioctl.h"
+ #include "wine/unicode.h"
+ 
+@@ -54,10 +59,26 @@
  
  #define DEFAULT_NCACN_HTTP_TIMEOUT (60 * 1000)
  
@@ -73,302 +99,137 @@ diff -pudN e:\wine\dlls\rpcrt4/rpc_transport.c e:\reactos\dll\win32\rpcrt4/rpc_t
  #define ARRAYSIZE(a) (sizeof((a)) / sizeof((a)[0]))
  
  WINE_DEFAULT_DEBUG_CHANNEL(rpc);
-@@ -94,31 +92,41 @@ typedef struct _RpcConnection_np
- {
-   RpcConnection common;
-   HANDLE pipe;
--  HANDLE listen_thread;
-+  OVERLAPPED ovl;
-   BOOL listening;
- } RpcConnection_np;
  
- static RpcConnection *rpcrt4_conn_np_alloc(void)
- {
-   RpcConnection_np *npc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RpcConnection_np));
-+  if (npc)
-+  {
-+    npc->pipe = NULL;
-+    memset(&npc->ovl, 0, sizeof(npc->ovl));
-+    npc->listening = FALSE;
-+  }
-   return &npc->common;
- }
- 
--static DWORD CALLBACK listen_thread(void *arg)
-+static RPC_STATUS rpcrt4_conn_listen_pipe(RpcConnection_np *npc)
- {
--  RpcConnection_np *npc = arg;
-+  if (npc->listening)
-+    return RPC_S_OK;
++#ifdef __REACTOS__ /* FIXME: Inspect */
++BOOL WINAPI CancelIoEx(HANDLE handle, LPOVERLAPPED lpOverlapped)
++{
++     IO_STATUS_BLOCK    io_status;
 +
-+  npc->listening = TRUE;
-   for (;;)
-   {
--      if (ConnectNamedPipe(npc->pipe, NULL))
-+      if (ConnectNamedPipe(npc->pipe, &npc->ovl))
-           return RPC_S_OK;
- 
-       switch(GetLastError())
-       {
-       case ERROR_PIPE_CONNECTED:
-+          SetEvent(npc->ovl.hEvent);
-+          return RPC_S_OK;
-+      case ERROR_IO_PENDING:
-+          /* will be completed in rpcrt4_protseq_np_wait_for_new_connection */
-           return RPC_S_OK;
--      case ERROR_HANDLES_CLOSED:
--          /* connection closed during listen */
--          return RPC_S_NO_CONTEXT_AVAILABLE;
-       case ERROR_NO_DATA_DETECTED:
-           /* client has disconnected, retry */
-           DisconnectNamedPipe( npc->pipe );
-@@ -131,6 +139,7 @@ static DWORD CALLBACK listen_thread(void
-   }
- }
- 
-+#ifndef __REACTOS__
- static RPC_STATUS rpcrt4_conn_listen_pipe(RpcConnection_np *npc)
- {
-   if (npc->listening)
-@@ -146,13 +155,14 @@ static RPC_STATUS rpcrt4_conn_listen_pip
-   }
-   return RPC_S_OK;
- }
++    NtCancelIoFile(handle, &io_status);
++    if (io_status.u.Status)
++    {
++        SetLastError( RtlNtStatusToDosError( io_status.u.Status ) );
++        return FALSE;
++    }
++    return TRUE;
++}
 +#endif
- 
- static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *Connection, LPCSTR pname)
- {
-   RpcConnection_np *npc = (RpcConnection_np *) Connection;
-   TRACE("listening on %s\n", pname);
- 
--  npc->pipe = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX,
-+  npc->pipe = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-                                PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
-                                PIPE_UNLIMITED_INSTANCES,
-                                RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
-@@ -164,6 +174,9 @@ static RPC_STATUS rpcrt4_conn_create_pip
-       return RPC_S_CANT_CREATE_ENDPOINT;
-   }
- 
-+  memset(&npc->ovl, 0, sizeof(npc->ovl));
-+  npc->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 +
-   /* Note: we don't call ConnectNamedPipe here because it must be done in the
-    * server thread as the thread must be alertable */
-   return RPC_S_OK;
-@@ -210,6 +223,9 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
-     if (err == ERROR_PIPE_BUSY) {
-       TRACE("connection failed, error=%x\n", err);
-       return RPC_S_SERVER_TOO_BUSY;
-+    } else if (err == ERROR_BAD_NETPATH) {
-+      TRACE("connection failed, error=%x\n", err);
-+      return RPC_S_SERVER_UNAVAILABLE;
-     }
-     if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
-       err = GetLastError();
-@@ -219,9 +235,11 @@ static RPC_STATUS rpcrt4_conn_open_pipe(
-   }
+ static RpcConnection *rpcrt4_spawn_connection(RpcConnection *old_connection);
  
-   /* success */
-+  memset(&npc->ovl, 0, sizeof(npc->ovl));
-   /* pipe is connected; change to message-read mode. */
-   dwMode = PIPE_READMODE_MESSAGE;
-   SetNamedPipeHandleState(pipe, &dwMode, NULL, NULL);
-+  npc->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-   npc->pipe = pipe;
+ /**** ncacn_np support ****/
+@@ -237,14 +258,24 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc
+   return r;
+ }
  
-   return RPC_S_OK;
-@@ -304,15 +322,64 @@ static char *ncacn_pipe_name(const char 
- static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
+-static char *ncacn_pipe_name(const char *endpoint)
++static char *ncacn_pipe_name(const char *server, const char *endpoint)
  {
-   RpcConnection_np *npc = (RpcConnection_np *) Connection;
+-  static const char prefix[] = "\\\\.";
 +  static const char prefix[] = "\\\\";
 +  static const char local[] = ".";
-+  BOOL bUseLocalName = TRUE;
-+  CHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-+  DWORD bufLen = sizeof(ComputerName)/sizeof(ComputerName[0]);
-   RPC_STATUS r;
-   LPSTR pname;
-+  LPSTR NetworkAddr;
-+  INT size;
++  char ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+   char *pipe_name;
++  DWORD bufLen = ARRAYSIZE(ComputerName);
++
++  GetComputerNameA(ComputerName, &bufLen);
++
++  if (server == NULL || *server == 0 || stricmp(ComputerName, server) == 0)
++      server = local;
  
-   /* already connected? */
+   /* protseq=ncacn_np: named pipes */
+-  pipe_name = I_RpcAllocate(sizeof(prefix) + strlen(endpoint));
+-  strcat(strcpy(pipe_name, prefix), endpoint);
++  pipe_name = I_RpcAllocate(sizeof(prefix) + strlen(server) + strlen(endpoint));
++  strcpy(pipe_name, prefix);
++  strcat(pipe_name, server);
++  strcat(pipe_name, endpoint);
+   return pipe_name;
+ }
+ 
+@@ -258,7 +289,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(R
    if (npc->pipe)
      return RPC_S_OK;
  
 -  pname = ncacn_pipe_name(Connection->Endpoint);
--  r = rpcrt4_conn_open_pipe(Connection, pname, FALSE);
-+  /* protseq=ncacn_np: named pipes */
-+  size = strlen(prefix);
-+
-+  if (Connection->NetworkAddr == NULL || strlen(Connection->NetworkAddr) == 0)
-+  {
-+    bUseLocalName = TRUE;
-+    size += strlen(local);
-+  }
-+  else
-+  {
-+    NetworkAddr = Connection->NetworkAddr;
-+    if (NetworkAddr[0] == '\\' && NetworkAddr[1] == '\\')
-+        NetworkAddr += 2;
-+
-+    if (GetComputerNameA(ComputerName, &bufLen))
-+    {
-+      if (stricmp(ComputerName, NetworkAddr) == 0)
-+      {
-+        bUseLocalName = TRUE;
-+        size += strlen(local);
-+      }
-+      else
-+      {
-+        bUseLocalName = FALSE;
-+        size += strlen(NetworkAddr);
-+      }
-+    }
-+    else
-+    {
-+      bUseLocalName = FALSE;
-+      size += strlen(NetworkAddr);
-+    }
-+  }
-+
-+  size += strlen(Connection->Endpoint) + 1;
-+
-+  pname = I_RpcAllocate(size);
-+  strcpy(pname, prefix);
-+  if (bUseLocalName)
-+    strcat(pname, local);
-+  else
-+    strcat(pname, NetworkAddr);
-+  strcat(pname, Connection->Endpoint);
-+  r = rpcrt4_conn_open_pipe(Connection, pname, TRUE);
++  pname = ncacn_pipe_name(Connection->NetworkAddr, Connection->Endpoint);
+   r = rpcrt4_conn_open_pipe(Connection, pname, FALSE);
    I_RpcFree(pname);
  
-   return r;
-@@ -358,9 +425,9 @@ static void rpcrt4_conn_np_handoff(RpcCo
-    * to the child, then reopen the server binding to continue listening */
+@@ -286,7 +317,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_n
+   if (r != RPC_S_OK)
+     return r;
  
-   new_npc->pipe = old_npc->pipe;
--  new_npc->listen_thread = old_npc->listen_thread;
-+  new_npc->ovl = old_npc->ovl;
-   old_npc->pipe = 0;
--  old_npc->listen_thread = 0;
-+  memset(&old_npc->ovl, 0, sizeof(old_npc->ovl));
-   old_npc->listening = FALSE;
- }
+-  ((RpcConnection_np*)Connection)->listen_pipe = ncacn_pipe_name(Connection->Endpoint);
++  ((RpcConnection_np*)Connection)->listen_pipe = ncacn_pipe_name(NULL, Connection->Endpoint);
+   r = rpcrt4_conn_create_pipe(Connection);
  
-@@ -444,20 +511,29 @@ static int rpcrt4_conn_np_read(RpcConnec
-                         void *buffer, unsigned int count)
- {
-   RpcConnection_np *npc = (RpcConnection_np *) Connection;
--  IO_STATUS_BLOCK io_status;
-   char *buf = buffer;
-+  BOOL ret = TRUE;
-   unsigned int bytes_left = count;
--  NTSTATUS status;
-+  OVERLAPPED ovl;
-+
-+  ZeroMemory(&ovl, sizeof(ovl));
-+  ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+   EnterCriticalSection(&protseq->cs);
+@@ -337,7 +368,7 @@ static RPC_STATUS rpcrt4_ncacn_np_is_ser
+   char *pipe_name;
+   RPC_STATUS status;
  
-   while (bytes_left)
-   {
--    status = NtReadFile(npc->pipe, NULL, NULL, NULL, &io_status, buf, bytes_left, NULL, NULL);
--    if (status && status != STATUS_BUFFER_OVERFLOW)
--      return -1;
--    bytes_left -= io_status.Information;
--    buf += io_status.Information;
-+    DWORD bytes_read;
-+    ret = ReadFile(npc->pipe, buf, bytes_left, &bytes_read, &ovl);
-+    if (!ret && GetLastError() == ERROR_IO_PENDING)
-+        ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_read, TRUE);
-+    if (!ret && GetLastError() == ERROR_MORE_DATA)
-+        ret = TRUE;
-+    if (!ret || !bytes_read)
-+        break;
-+    bytes_left -= bytes_read;
-+    buf += bytes_read;
-   }
--  return count;
-+  CloseHandle(ovl.hEvent);
-+  return ret ? count : -1;
- }
- 
- static int rpcrt4_conn_np_write(RpcConnection *Connection,
-@@ -467,16 +543,23 @@ static int rpcrt4_conn_np_write(RpcConne
-   const char *buf = buffer;
-   BOOL ret = TRUE;
-   unsigned int bytes_left = count;
-+  OVERLAPPED ovl;
-+
-+  ZeroMemory(&ovl, sizeof(ovl));
-+  ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
- 
-   while (bytes_left)
-   {
-     DWORD bytes_written;
--    ret = WriteFile(npc->pipe, buf, bytes_left, &bytes_written, NULL);
-+    ret = WriteFile(npc->pipe, buf, bytes_left, &bytes_written, &ovl);
-+    if (!ret && GetLastError() == ERROR_IO_PENDING)
-+        ret = GetOverlappedResult(npc->pipe, &ovl, &bytes_written, TRUE);
-     if (!ret || !bytes_written)
-         break;
-     bytes_left -= bytes_written;
-     buf += bytes_written;
-   }
-+  CloseHandle(ovl.hEvent);
-   return ret ? count : -1;
- }
- 
-@@ -488,9 +571,9 @@ static int rpcrt4_conn_np_close(RpcConne
-     CloseHandle(npc->pipe);
-     npc->pipe = 0;
-   }
--  if (npc->listen_thread) {
--    CloseHandle(npc->listen_thread);
--    npc->listen_thread = 0;
-+  if (npc->ovl.hEvent) {
-+    CloseHandle(npc->ovl.hEvent);
-+    npc->ovl.hEvent = 0;
-   }
-   return 0;
- }
-@@ -694,7 +777,7 @@ static void *rpcrt4_protseq_np_get_wait_
-     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
-     while (conn) {
-         rpcrt4_conn_listen_pipe(conn);
--        if (conn->listen_thread)
-+        if (conn->ovl.hEvent)
-             (*count)++;
-         conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
-     }
-@@ -715,7 +798,7 @@ static void *rpcrt4_protseq_np_get_wait_
-     *count = 1;
-     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
-     while (conn) {
--        if ((objs[*count] = conn->listen_thread))
-+        if ((objs[*count] = conn->ovl.hEvent))
-             (*count)++;
-         conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
-     }
-@@ -762,18 +845,12 @@ static int rpcrt4_protseq_np_wait_for_ne
-         EnterCriticalSection(&protseq->cs);
-         conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
-         while (conn) {
--            if (b_handle == conn->listen_thread) break;
-+            if (b_handle == conn->ovl.hEvent) break;
-             conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
+-  pipe_name = ncacn_pipe_name(endpoint);
++  pipe_name = ncacn_pipe_name(NULL, endpoint);
+   status = is_pipe_listening(pipe_name);
+   I_RpcFree(pipe_name);
+   return status;
+@@ -395,10 +426,14 @@ static int rpcrt4_conn_np_read(RpcConnec
+         if (connection->read_closed)
+         {
+             IO_STATUS_BLOCK io_status;
++#ifdef __REACTOS__ /* FIXME: We should also cancel I/O for other threads */
++            NtCancelIoFile(connection->pipe, &io_status);
++#else
+             NtCancelIoFileEx(connection->pipe, &connection->io_status, &io_status);
++#endif
          }
-         cconn = NULL;
-         if (conn)
--        {
--            DWORD exit_code;
--            if (GetExitCodeThread(conn->listen_thread, &exit_code) && exit_code == RPC_S_OK)
--                RPCRT4_SpawnConnection(&cconn, &conn->common);
--            CloseHandle(conn->listen_thread);
--            conn->listen_thread = 0;
--        }
-+            RPCRT4_SpawnConnection(&cconn, &conn->common);
-         else
-             ERR("failed to locate connection for handle %p\n", b_handle);
-         LeaveCriticalSection(&protseq->cs);
+         WaitForSingleObject(event, INFINITE);
+-        status = connection->io_status.Status;
++        status = connection->io_status.u.Status;
+     }
+     release_np_event(connection, event);
+     return status && status != STATUS_BUFFER_OVERFLOW ? -1 : connection->io_status.Information;
+@@ -419,7 +454,7 @@ static int rpcrt4_conn_np_write(RpcConne
+     if (status == STATUS_PENDING)
+     {
+         WaitForSingleObject(event, INFINITE);
+-        status = io_status.Status;
++        status = io_status.u.Status;
+     }
+     release_np_event(connection, event);
+     if (status)
+@@ -457,7 +492,11 @@ static void rpcrt4_conn_np_close_read(Rp
+     IO_STATUS_BLOCK io_status;
+ 
+     connection->read_closed = TRUE;
++#ifdef __REACTOS__ /* FIXME: We should also cancel I/O for other threads */
++    NtCancelIoFile(connection->pipe, &io_status);
++#else
+     NtCancelIoFileEx(connection->pipe, &connection->io_status, &io_status);
++#endif
+ }
+ 
+ static void rpcrt4_conn_np_cancel_call(RpcConnection *conn)
+@@ -675,7 +714,7 @@ static void *rpcrt4_protseq_np_get_wait_
+             {
+             case STATUS_SUCCESS:
+             case STATUS_PIPE_CONNECTED:
+-                conn->io_status.Status = status;
++                conn->io_status.u.Status = status;
+                 SetEvent(event);
+                 break;
+             case STATUS_PENDING:
+@@ -756,10 +795,10 @@ static int rpcrt4_protseq_np_wait_for_ne
+             {
+                 release_np_event(conn, conn->listen_event);
+                 conn->listen_event = NULL;
+-                if (conn->io_status.Status == STATUS_SUCCESS || conn->io_status.Status == STATUS_PIPE_CONNECTED)
++                if (conn->io_status.u.Status == STATUS_SUCCESS || conn->io_status.u.Status == STATUS_PIPE_CONNECTED)
+                     cconn = rpcrt4_spawn_connection(&conn->common);
+                 else
+-                    ERR("listen failed %x\n", conn->io_status.Status);
++                    ERR("listen failed %x\n", conn->io_status.u.Status);
+                 break;
+             }
+         }
