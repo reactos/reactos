@@ -1485,7 +1485,8 @@ LdrUnloadDll(IN PVOID BaseAddress)
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Do nothing */
+                DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_PROCESS_DETACH) for %wZ\n",
+                        _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
             }
             _SEH2_END;
 

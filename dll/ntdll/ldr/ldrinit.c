@@ -561,7 +561,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
                             if (!LdrpShutdownInProgress)
                             {
                                 /* Call TLS */
-                                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_ATTACH);
+                                LdrpCallTlsInitializers(LdrEntry, DLL_THREAD_ATTACH);
                             }
                         }
 
@@ -581,7 +581,8 @@ LdrpInitializeThread(IN PCONTEXT Context)
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        /* Do nothing */
+                        DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_THREAD_ATTACH) for %wZ\n",
+                                _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
                     }
                     _SEH2_END;
 
@@ -610,7 +611,7 @@ LdrpInitializeThread(IN PCONTEXT Context)
         _SEH2_TRY
         {
             /* Do TLS callbacks */
-            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_ATTACH);
+            LdrpCallTlsInitializers(LdrpImageEntry, DLL_THREAD_ATTACH);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -818,7 +819,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
                 if (LdrEntry->TlsIndex && Context)
                 {
                     /* Call TLS */
-                    LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_ATTACH);
+                    LdrpCallTlsInitializers(LdrEntry, DLL_PROCESS_ATTACH);
                 }
 
                 /* Call the Entrypoint */
@@ -835,6 +836,8 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 DllStatus = FALSE;
+                DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_PROCESS_ATTACH) for %wZ\n",
+                        _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
             }
             _SEH2_END;
 
@@ -889,7 +892,7 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         _SEH2_TRY
         {
             /* Do TLS callbacks */
-            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_ATTACH);
+            LdrpCallTlsInitializers(LdrpImageEntry, DLL_PROCESS_ATTACH);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -996,7 +999,7 @@ LdrShutdownProcess(VOID)
                     if (LdrEntry->TlsIndex)
                     {
                         /* Call TLS */
-                        LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_PROCESS_DETACH);
+                        LdrpCallTlsInitializers(LdrEntry, DLL_PROCESS_DETACH);
                     }
 
                     /* Call the Entrypoint */
@@ -1009,7 +1012,8 @@ LdrShutdownProcess(VOID)
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    /* Do nothing */
+                    DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_PROCESS_DETACH) for %wZ\n",
+                            _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
                 }
                 _SEH2_END;
 
@@ -1034,7 +1038,7 @@ LdrShutdownProcess(VOID)
         _SEH2_TRY
         {
             /* Do TLS callbacks */
-            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_PROCESS_DETACH);
+            LdrpCallTlsInitializers(LdrpImageEntry, DLL_PROCESS_DETACH);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1123,7 +1127,7 @@ LdrShutdownThread(VOID)
                             if (!LdrpShutdownInProgress)
                             {
                                 /* Call TLS */
-                                LdrpCallTlsInitializers(LdrEntry->DllBase, DLL_THREAD_DETACH);
+                                LdrpCallTlsInitializers(LdrEntry, DLL_THREAD_DETACH);
                             }
                         }
 
@@ -1141,7 +1145,8 @@ LdrShutdownThread(VOID)
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        /* Do nothing */
+                        DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_THREAD_DETACH) for %wZ\n",
+                                _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
                     }
                     _SEH2_END;
 
@@ -1167,7 +1172,7 @@ LdrShutdownThread(VOID)
         _SEH2_TRY
         {
             /* Do TLS callbacks */
-            LdrpCallTlsInitializers(Peb->ImageBaseAddress, DLL_THREAD_DETACH);
+            LdrpCallTlsInitializers(LdrpImageEntry, DLL_THREAD_DETACH);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {

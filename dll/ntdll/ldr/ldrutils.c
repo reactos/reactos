@@ -470,7 +470,7 @@ LdrpUpdateLoadCount2(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 VOID
 NTAPI
-LdrpCallTlsInitializers(IN PVOID BaseAddress,
+LdrpCallTlsInitializers(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                         IN ULONG Reason)
 {
     PIMAGE_TLS_DIRECTORY TlsDirectory;
@@ -478,7 +478,7 @@ LdrpCallTlsInitializers(IN PVOID BaseAddress,
     ULONG Size;
 
     /* Get the TLS Directory */
-    TlsDirectory = RtlImageDirectoryEntryToData(BaseAddress,
+    TlsDirectory = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                 TRUE,
                                                 IMAGE_DIRECTORY_ENTRY_TLS,
                                                 &Size);
@@ -497,7 +497,7 @@ LdrpCallTlsInitializers(IN PVOID BaseAddress,
                 if (ShowSnaps)
                 {
                     DPRINT1("LDR: Tls Callbacks Found. Imagebase %p Tls %p CallBacks %p\n",
-                            BaseAddress, TlsDirectory, Array);
+                            LdrEntry->DllBase, TlsDirectory, Array);
                 }
 
                 /* Loop the array */
@@ -510,12 +510,12 @@ LdrpCallTlsInitializers(IN PVOID BaseAddress,
                     if (ShowSnaps)
                     {
                         DPRINT1("LDR: Calling Tls Callback Imagebase %p Function %p\n",
-                                BaseAddress, Callback);
+                                LdrEntry->DllBase, Callback);
                     }
 
                     /* Call it */
                     LdrpCallInitRoutine((PDLL_INIT_ROUTINE)Callback,
-                                        BaseAddress,
+                                        LdrEntry->DllBase,
                                         Reason,
                                         NULL);
                 }
@@ -524,7 +524,8 @@ LdrpCallTlsInitializers(IN PVOID BaseAddress,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Do nothing */
+        DPRINT1("LDR: Exception 0x%x during Tls Callback(%u) for %wZ\n",
+                _SEH2_GetExceptionCode(), Reason, &LdrEntry->BaseDllName);
     }
     _SEH2_END;
 }
