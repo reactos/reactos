@@ -580,7 +580,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                 }
 
                 /* Check if we got an output buffer */
-                if (OutputBuffer)
+                if (OutputBufferLength)
                 {
                     /* Allocate the System Buffer */
                     Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
