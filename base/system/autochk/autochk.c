@@ -6,6 +6,7 @@
  *              Copyright 2006-2018 Aleksey Bragin
  *              Copyright 2006-2018 Hervé Poussineau
  *              Copyright 2008-2018 Pierre Schweitzer
+ *              Copyright 2018 Hermes Belusca-Maito
  */
 
 /* INCLUDES *****************************************************************/
@@ -58,7 +59,7 @@ FILESYSTEM_CHKDSK FileSystems[10] =
     { L"CDFS", CdfsChkdsk },
 };
 
-HANDLE KeyboardHandle;
+HANDLE KeyboardHandle = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -66,16 +67,17 @@ HANDLE KeyboardHandle;
 // FMIFS function
 //
 
-static VOID
+static INT
 PrintString(char* fmt,...)
 {
+    INT Len;
     char buffer[512];
     va_list ap;
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
 
     va_start(ap, fmt);
-    vsprintf(buffer, fmt, ap);
+    Len = vsprintf(buffer, fmt, ap);
     va_end(ap);
 
     RtlInitAnsiString(&AnsiString, buffer);
@@ -84,6 +86,42 @@ PrintString(char* fmt,...)
                                  TRUE);
     NtDisplayString(&UnicodeString);
     RtlFreeUnicodeString(&UnicodeString);
+
+    return Len;
+}
+
+static VOID
+EraseLine(
+    IN INT LineLength)
+{
+    INT Len;
+    UNICODE_STRING UnicodeString;
+    WCHAR buffer[512];
+
+    if (LineLength <= 0)
+        return;
+
+    /* Go to the beginning of the line */
+    RtlInitUnicodeString(&UnicodeString, L"\r");
+    NtDisplayString(&UnicodeString);
+
+    /* Fill the buffer chunk with spaces */
+    Len = min(LineLength, ARRAYSIZE(buffer));
+    while (Len > 0) buffer[--Len] = L' ';
+
+    RtlInitEmptyUnicodeString(&UnicodeString, buffer, sizeof(buffer));
+    while (LineLength > 0)
+    {
+        /* Display the buffer */
+        Len = min(LineLength, ARRAYSIZE(buffer));
+        LineLength -= Len;
+        UnicodeString.Length = Len * sizeof(WCHAR);
+        NtDisplayString(&UnicodeString);
+    }
+
+    /* Go to the beginning of the line */
+    RtlInitUnicodeString(&UnicodeString, L"\r");
+    NtDisplayString(&UnicodeString);
 }
 
 // this func is taken from kernel32/file/volume.c
@@ -138,7 +176,8 @@ OpenDirectory(
 }
 
 static NTSTATUS
-OpenKeyboard(VOID)
+OpenKeyboard(
+    OUT PHANDLE KeyboardHandle)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -150,7 +189,7 @@ OpenKeyboard(VOID)
                                0,
                                NULL,
                                NULL);
-    return NtOpenFile(&KeyboardHandle,
+    return NtOpenFile(KeyboardHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
                       &IoStatusBlock,
@@ -160,39 +199,79 @@ OpenKeyboard(VOID)
 
 static NTSTATUS
 WaitForKeyboard(
+    IN HANDLE KeyboardHandle,
     IN LONG TimeOut)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     LARGE_INTEGER Offset, Timeout;
     KEYBOARD_INPUT_DATA InputData;
+    INT Len = 0;
 
-    /* Attempt to read from the keyboard */
-    Offset.QuadPart = 0;
-    Status = NtReadFile(KeyboardHandle,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        &InputData,
-                        sizeof(KEYBOARD_INPUT_DATA),
-                        &Offset,
-                        NULL);
-    if (Status == STATUS_PENDING)
+    /* Skip the wait if there is no timeout */
+    if (TimeOut <= 0)
+        return STATUS_TIMEOUT;
+
+    /* Attempt to read a down key-press from the keyboard */
+    do
     {
-        /* Wait TimeOut seconds */
-        Timeout.QuadPart = TimeOut * -10000000;
+        Offset.QuadPart = 0;
+        Status = NtReadFile(KeyboardHandle,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &IoStatusBlock,
+                            &InputData,
+                            sizeof(KEYBOARD_INPUT_DATA),
+                            &Offset,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Something failed, bail out */
+            return Status;
+        }
+        if ((Status != STATUS_PENDING) && !(InputData.Flags & KEY_BREAK))
+        {
+            /* We have a down key-press, return */
+            return Status;
+        }
+    } while (Status != STATUS_PENDING);
+
+    /* Perform the countdown of TimeOut seconds */
+    Status = STATUS_TIMEOUT;
+    while (TimeOut > 0)
+    {
+        /*
+         * Display the countdown string.
+         * Note that we only do a carriage return to go back to the
+         * beginning of the line to possibly erase it. Note also that
+         * we display a trailing space to erase any last character
+         * when the string length decreases.
+         */
+        Len = PrintString("Press any key within %d second(s) to cancel and resume startup. \r", TimeOut);
+
+        /* Decrease the countdown */
+        --TimeOut;
+
+        /* Wait one second for a key press */
+        Timeout.QuadPart = -10000000;
         Status = NtWaitForSingleObject(KeyboardHandle, FALSE, &Timeout);
-        /* The user didn't enter anything, cancel the read */
-        if (Status == STATUS_TIMEOUT)
-        {
-            NtCancelIoFile(KeyboardHandle, &IoStatusBlock);
-        }
-        /* Else, return some status */
-        else
-        {
-            Status = IoStatusBlock.Status;
-        }
+        if (Status != STATUS_TIMEOUT)
+            break;
+    }
+
+    /* Erase the countdown string */
+    EraseLine(Len);
+
+    if (Status == STATUS_TIMEOUT)
+    {
+        /* The user did not press any key, cancel the read */
+        NtCancelIoFile(KeyboardHandle, &IoStatusBlock);
+    }
+    else
+    {
+        /* Otherwise, return some status */
+        Status = IoStatusBlock.Status;
     }
 
     return Status;
@@ -395,16 +474,11 @@ CheckVolume(
     /* It is */
     if (Status == STATUS_DISK_CORRUPT_ERROR)
     {
-        NTSTATUS WaitStatus;
-
         /* Let the user decide whether to repair */
         PrintString("  The file system on this volume needs to be checked for problems.\r\n");
         PrintString("  You may cancel this check, but it's recommended that you continue.\r\n\r\n");
-        PrintString("  Press any key within %d second(s) to cancel and resume startup.\r\n\r\n", TimeOut);
 
-        /* Timeout == fix it! */
-        WaitStatus = WaitForKeyboard(TimeOut);
-        if (WaitStatus == STATUS_TIMEOUT)
+        if (!KeyboardHandle || WaitForKeyboard(KeyboardHandle, TimeOut) == STATUS_TIMEOUT)
         {
             PrintString("  The system will now check the file system.\r\n\r\n");
             Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
@@ -478,12 +552,12 @@ _main(
         return 1;
     }
 
-    /* Open keyboard */
-    Status = OpenKeyboard();
+    /* Open the keyboard */
+    Status = OpenKeyboard(&KeyboardHandle);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("OpenKeyboard() failed, Status 0x%08lx\n", Status);
-        return 1;
+        /* Ignore keyboard interaction */
     }
 
     for (i = 0; i < 26; i++)
@@ -496,8 +570,9 @@ _main(
         }
     }
 
-    /* Close keyboard */
-    NtClose(KeyboardHandle);
+    /* Close the keyboard */
+    if (KeyboardHandle)
+        NtClose(KeyboardHandle);
 
     // PrintString("Done\r\n\r\n");
     return 0;
