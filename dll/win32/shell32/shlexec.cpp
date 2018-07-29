@@ -2448,6 +2448,14 @@ HRESULT WINAPI ShellExecCmdLine(
             if (!GetBinaryTypeW(szFile, &dwType))
             {
                 SHFree(lpCommand);
+
+                if (!(dwSeclFlags & SECL_NO_UI))
+                {
+                    WCHAR szText[128 + MAX_PATH], szFormat[128];
+                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
+                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
+                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
+                }
                 return CO_E_APPNOTFOUND;
             }
         }
@@ -2456,6 +2464,14 @@ HRESULT WINAPI ShellExecCmdLine(
             if (GetFileAttributesW(szFile) == INVALID_FILE_ATTRIBUTES)
             {
                 SHFree(lpCommand);
+
+                if (!(dwSeclFlags & SECL_NO_UI))
+                {
+                    WCHAR szText[128 + MAX_PATH], szFormat[128];
+                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
+                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
+                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
+                }
                 return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
             }
         }

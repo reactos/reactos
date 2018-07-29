@@ -23,6 +23,10 @@
 #endif
 
 #ifdef ShellExecCmdLine
+
+#define shell32_hInstance   GetModuleHandle(NULL)
+#define IDS_FILE_NOT_FOUND  (-1)
+
 static const WCHAR wszOpen[] = L"open";
 static const WCHAR wszExe[] = L".exe";
 static const WCHAR wszCom[] = L".com";
@@ -154,6 +158,14 @@ HRESULT WINAPI ShellExecCmdLine(
             if (!GetBinaryTypeW(szFile, &dwType))
             {
                 SHFree(lpCommand);
+
+                if (!(dwSeclFlags & SECL_NO_UI))
+                {
+                    WCHAR szText[128 + MAX_PATH], szFormat[128];
+                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
+                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
+                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
+                }
                 return CO_E_APPNOTFOUND;
             }
         }
@@ -162,6 +174,14 @@ HRESULT WINAPI ShellExecCmdLine(
             if (GetFileAttributesW(szFile) == INVALID_FILE_ATTRIBUTES)
             {
                 SHFree(lpCommand);
+
+                if (!(dwSeclFlags & SECL_NO_UI))
+                {
+                    WCHAR szText[128 + MAX_PATH], szFormat[128];
+                    LoadStringW(shell32_hInstance, IDS_FILE_NOT_FOUND, szFormat, _countof(szFormat));
+                    StringCchPrintfW(szText, _countof(szText), szFormat, szFile);
+                    MessageBoxW(hwnd, szText, NULL, MB_ICONERROR);
+                }
                 return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
             }
         }
@@ -443,24 +463,24 @@ START_TEST(ShellExecCmdLine)
     WCHAR buf2[MAX_PATH];
     TEST_ENTRY additionals[] =
     {
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf0, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf1, L"system32" },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, NULL },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, L"." },
-        { __LINE__, CO_E_APPNOTFOUND, FALSE, NULL, buf2, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf0, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf0, L"." },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf0, L"system32" }, // FIXME
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf1, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf1, L"." },
-        { __LINE__, S_OK, TRUE, NULL, buf1, L"system32" },
-        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, NULL, buf2, NULL }, // FIXME
-        { __LINE__, S_OK, TRUE, NULL, buf2, L"." },
-        { __LINE__, S_OK, TRUE, NULL, buf2, L"system32" },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, NULL },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, L"." },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf0, L"system32" },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, NULL },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, L"." },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf1, L"system32" },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, NULL },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, L"." },
+        { __LINE__, CO_E_APPNOTFOUND, FALSE, L"Notepad", buf2, L"system32" },
+        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf0, NULL }, // FIXME
+        { __LINE__, S_OK, TRUE, L"Notepad", buf0, L"." },
+        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf0, L"system32" }, // FIXME
+        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf1, NULL }, // FIXME
+        { __LINE__, S_OK, TRUE, L"Notepad", buf1, L"." },
+        { __LINE__, S_OK, TRUE, L"Notepad", buf1, L"system32" },
+        { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", buf2, NULL }, // FIXME
+        { __LINE__, S_OK, TRUE, L"Notepad", buf2, L"." },
+        { __LINE__, S_OK, TRUE, L"Notepad", buf2, L"system32" },
     };
 
     wsprintfW(buf0, L"%hs", s_testfile1);
