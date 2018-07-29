@@ -72,7 +72,7 @@ BOOL WINAPI notify_DllMain(IN HINSTANCE hDllHandle, IN DWORD dwReason, IN LPVOID
     }
     else
     {
-        ok_int(handlers, g_DLL_DETACH);
+        ok_int(handlers, g_DLL_DETACH); // For failures, see https://jira.reactos.org/browse/CORE-14857
     }
 
     if (InterlockedCompareExchange(&g_DllMainExcept, 0xffffff, dwReason) == dwReason)

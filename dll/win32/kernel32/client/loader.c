@@ -463,6 +463,7 @@ FreeLibrary(HINSTANCE hLibModule)
     if (LDR_IS_DATAFILE(hLibModule))
     {
         // FIXME: This SEH should go inside RtlImageNtHeader instead
+        // See https://jira.reactos.org/browse/CORE-14857
         _SEH2_TRY
         {
             /* This is a LOAD_LIBRARY_AS_DATAFILE module, check if it's a valid one */
