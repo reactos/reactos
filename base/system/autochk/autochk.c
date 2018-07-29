@@ -124,57 +124,6 @@ EraseLine(
     NtDisplayString(&UnicodeString);
 }
 
-// this func is taken from kernel32/file/volume.c
-static HANDLE
-OpenDirectory(
-    IN LPCWSTR DirName,
-    IN BOOLEAN Write)
-{
-    UNICODE_STRING NtPathU;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE hFile;
-
-    if (!RtlDosPathNameToNtPathName_U(DirName,
-                                      &NtPathU,
-                                      NULL,
-                                      NULL))
-    {
-        DPRINT1("Invalid path!\n");
-        return INVALID_HANDLE_VALUE;
-    }
-
-    InitializeObjectAttributes(
-        &ObjectAttributes,
-        &NtPathU,
-        OBJ_CASE_INSENSITIVE,
-        NULL,
-        NULL);
-
-    Status = NtCreateFile(
-        &hFile,
-        Write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ,
-        &ObjectAttributes,
-        &IoStatusBlock,
-        NULL,
-        0,
-        FILE_SHARE_READ|FILE_SHARE_WRITE,
-        FILE_OPEN,
-        0,
-        NULL,
-        0);
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, NtPathU.Buffer);
-
-    if (!NT_SUCCESS(Status))
-    {
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return hFile;
-}
-
 static NTSTATUS
 OpenKeyboard(
     OUT PHANDLE KeyboardHandle)
@@ -279,21 +228,42 @@ WaitForKeyboard(
 
 static NTSTATUS
 GetFileSystem(
-    IN LPCWSTR Drive,
-    IN OUT LPWSTR FileSystemName,
+    IN PUNICODE_STRING VolumePathU,
+    IN OUT PWSTR FileSystemName,
     IN SIZE_T FileSystemNameSize)
 {
-    HANDLE FileHandle;
     NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE FileHandle;
     IO_STATUS_BLOCK IoStatusBlock;
     PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
     UCHAR Buffer[sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
 
     FileFsAttribute = (PFILE_FS_ATTRIBUTE_INFORMATION)Buffer;
 
-    FileHandle = OpenDirectory(Drive, FALSE);
-    if (FileHandle == INVALID_HANDLE_VALUE)
-        return STATUS_INVALID_PARAMETER;
+    InitializeObjectAttributes(&ObjectAttributes,
+                               VolumePathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateFile(&FileHandle,
+                          FILE_GENERIC_READ,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not open volume '%wZ' to obtain its file system, Status 0x%08lx\n",
+                VolumePathU, Status);
+        return Status;
+    }
 
     Status = NtQueryVolumeInformationFile(FileHandle,
                                           &IoStatusBlock,
@@ -308,7 +278,7 @@ GetFileSystem(
         return Status;
     }
 
-    if (FileSystemNameSize * sizeof(WCHAR) >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
+    if (FileSystemNameSize >= FileFsAttribute->FileSystemNameLength + sizeof(WCHAR))
     {
         RtlCopyMemory(FileSystemName,
                       FileFsAttribute->FileSystemName,
@@ -421,32 +391,46 @@ ChkdskCallback(
 
 static NTSTATUS
 CheckVolume(
-    IN PWCHAR DrivePath,
-    IN LONG TimeOut)
+    IN PCWSTR VolumePath,
+    IN LONG TimeOut,
+    IN BOOLEAN CheckOnlyIfDirty)
 {
-    WCHAR FileSystem[128];
-    WCHAR NtDrivePath[64];
-    UNICODE_STRING DrivePathU;
     NTSTATUS Status;
-    DWORD Count;
+    PCWSTR DisplayName;
+    UNICODE_STRING VolumePathU;
+    ULONG Count;
+    WCHAR FileSystem[128];
 
-    swprintf(NtDrivePath, L"\\??\\");
-    wcscat(NtDrivePath, DrivePath);
-    NtDrivePath[wcslen(NtDrivePath)-1] = 0;
-    RtlInitUnicodeString(&DrivePathU, NtDrivePath);
+    RtlInitUnicodeString(&VolumePathU, VolumePath);
 
-    DPRINT1("AUTOCHK: Checking %wZ\n", &DrivePathU);
-    PrintString("  Checking file system on %S\r\n", DrivePath);
+    /* Get a drive string for display purposes only */
+    if (wcslen(VolumePath) == 6 &&
+        VolumePath[0] == L'\\'  &&
+        VolumePath[1] == L'?'   &&
+        VolumePath[2] == L'?'   &&
+        VolumePath[3] == L'\\'  &&
+        VolumePath[5] == L':')
+    {
+        /* DOS drive */
+        DisplayName = &VolumePath[4];
+    }
+    else
+    {
+        DisplayName = VolumePath;
+    }
+
+    DPRINT1("AUTOCHK: Checking %wZ\n", &VolumePathU);
+    PrintString("Verifying the file system on %S\r\n", DisplayName);
 
     /* Get the file system */
-    Status = GetFileSystem(DrivePath,
+    Status = GetFileSystem(&VolumePathU,
                            FileSystem,
-                           ARRAYSIZE(FileSystem));
+                           sizeof(FileSystem));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("GetFileSystem() failed, Status 0x%08lx\n", Status);
-        PrintString("  Unable to detect file system of %S\r\n", DrivePath);
-        return Status;
+        PrintString("  Unable to detect the file system of volume %S\r\n", DisplayName);
+        goto Quit;
     }
 
     PrintString("  The file system type is %S.\r\n\r\n", FileSystem);
@@ -459,41 +443,52 @@ CheckVolume(
     }
     if (Count >= RTL_NUMBER_OF(FileSystems))
     {
-        DPRINT1("File system not supported\n");
-        PrintString("  Unable to check the file system. %S is not supported.\r\n", FileSystem);
-        return STATUS_DLL_NOT_FOUND;
+        DPRINT1("File system %S not supported\n", FileSystem);
+        PrintString("  Unable to verify the volume. The %S file system is not supported.\r\n", FileSystem);
+        Status = STATUS_DLL_NOT_FOUND;
+        goto Quit;
     }
 
-    /* First, check whether the volume is dirty */
-    Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+    /* Check whether the volume is dirty */
+    Status = FileSystems[Count].ChkdskFunc(&VolumePathU,
                                            FALSE, // FixErrors
                                            TRUE,  // Verbose
                                            TRUE,  // CheckOnlyIfDirty
                                            FALSE, // ScanDrive
                                            ChkdskCallback);
-    /* It is */
-    if (Status == STATUS_DISK_CORRUPT_ERROR)
+
+    /* Perform the check either when the volume is dirty or a check is forced */
+    if ((Status == STATUS_DISK_CORRUPT_ERROR) || !CheckOnlyIfDirty)
     {
         /* Let the user decide whether to repair */
-        PrintString("  The file system on this volume needs to be checked for problems.\r\n");
-        PrintString("  You may cancel this check, but it's recommended that you continue.\r\n\r\n");
+        if (Status == STATUS_DISK_CORRUPT_ERROR)
+        {
+            PrintString("The file system on volume %S needs to be checked for problems.\r\n", DisplayName);
+            PrintString("You may cancel this check, but it is recommended that you continue.\r\n");
+        }
+        else
+        {
+            PrintString("A volume check has been scheduled.\r\n");
+        }
 
         if (!KeyboardHandle || WaitForKeyboard(KeyboardHandle, TimeOut) == STATUS_TIMEOUT)
         {
-            PrintString("  The system will now check the file system.\r\n\r\n");
-            Status = FileSystems[Count].ChkdskFunc(&DrivePathU,
+            PrintString("The system will now check the file system.\r\n\r\n");
+            Status = FileSystems[Count].ChkdskFunc(&VolumePathU,
                                                    TRUE,  // FixErrors
                                                    TRUE,  // Verbose
-                                                   TRUE,  // CheckOnlyIfDirty
+                                                   CheckOnlyIfDirty,
                                                    FALSE, // ScanDrive
                                                    ChkdskCallback);
         }
         else
         {
-            PrintString("  File system check has been skipped.\r\n");
+            PrintString("The file system check has been skipped.\r\n");
         }
     }
 
+Quit:
+    PrintString("\r\n\r\n");
     return Status;
 }
 
@@ -521,24 +516,84 @@ _main(
     IN PCHAR envp[],
     IN ULONG DebugFlag)
 {
-    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
-    ULONG i;
     NTSTATUS Status;
-    WCHAR DrivePath[128];
     LONG TimeOut;
+    ULONG i;
+    BOOLEAN CheckAllVolumes = FALSE;
+    BOOLEAN CheckOnlyIfDirty = TRUE;
+    PROCESS_DEVICEMAP_INFORMATION DeviceMap;
+    PCHAR SkipDrives = NULL;
+    ANSI_STRING VolumePathA;
+    UNICODE_STRING VolumePathU;
+    WCHAR VolumePath[128] = L"";
 
-    // Win2003 passes the only param - "*". Probably means to check all drives
     /*
-    DPRINT("Got %d params\n", argc);
-    for (i=0; i<argc; i++)
-        DPRINT("Param %d: %s\n", i, argv[i]);
-    */
+     * Parse the command-line: optional command switches,
+     * then the NT volume name (or drive letter) to be analysed.
+     * If "*" is passed this means that we check all the volumes.
+     */
+    if (argc <= 1)
+    {
+        /* Only one parameter (the program name), bail out */
+        return 1;
+    }
+    for (i = 1; i < argc; ++i)
+    {
+        if (argv[i][0] == '/' || argv[i][0] == '-')
+        {
+            DPRINT("Parameter %d: %s\n", i, argv[i]);
+            switch (toupper(argv[i][1]))
+            {
+                case 'K': /* List of drive letters to skip */
+                {
+                    /* Check for the separator */
+                    if (argv[i][2] != ':')
+                        goto Default;
 
-    /* Query timeout */
-    TimeOut = 3;
-    QueryTimeout(&TimeOut);
+                    SkipDrives = &argv[i][3];
+                    break;
+                }
 
-    /* FIXME: We should probably use here the mount manager to be
+                case 'R': /* Repair the errors, implies /P */
+                case 'P': /* Check even if not dirty */
+                {
+                    if (argv[i][2] != ANSI_NULL)
+                        goto Default;
+
+                    CheckOnlyIfDirty = FALSE;
+                    break;
+                }
+
+                default: Default:
+                    DPRINT1("Unknown switch %d: %s\n", i, argv[i]);
+                    break;
+            }
+        }
+        else
+        {
+            DPRINT("Parameter %d - Volume specification: %s\n", i, argv[i]);
+            if (strcmp(argv[i], "*") == 0)
+            {
+                CheckAllVolumes = TRUE;
+            }
+            else
+            {
+                RtlInitEmptyUnicodeString(&VolumePathU,
+                                          VolumePath,
+                                          sizeof(VolumePath));
+                RtlInitAnsiString(&VolumePathA, argv[i]);
+                Status = RtlAnsiStringToUnicodeString(&VolumePathU,
+                                                      &VolumePathA,
+                                                      FALSE);
+            }
+
+            /* Stop the parsing now */
+            break;
+        }
+    }
+
+    /*
+     * FIXME: We should probably use here the mount manager to be
      * able to check volumes which don't have a drive letter.
      */
     Status = NtQueryInformationProcess(NtCurrentProcess(),
@@ -552,6 +607,30 @@ _main(
         return 1;
     }
 
+    /* Filter out the skipped drives from the map */
+    if (SkipDrives && *SkipDrives)
+    {
+        DPRINT1("Skipping drives:");
+        while (*SkipDrives)
+        {
+#if DBG
+            DbgPrint(" %c:", *SkipDrives);
+#endif
+            /* Retrieve the index and filter the drive out */
+            i = toupper(*SkipDrives) - 'A';
+            if (0 <= i && i <= 'Z'-'A')
+                DeviceMap.Query.DriveMap &= ~(1 << i);
+
+            /* Go to the next drive letter */
+            ++SkipDrives;
+        }
+        DbgPrint("\n");
+    }
+
+    /* Query the timeout */
+    TimeOut = 3;
+    QueryTimeout(&TimeOut);
+
     /* Open the keyboard */
     Status = OpenKeyboard(&KeyboardHandle);
     if (!NT_SUCCESS(Status))
@@ -560,13 +639,41 @@ _main(
         /* Ignore keyboard interaction */
     }
 
-    for (i = 0; i < 26; i++)
+    if (CheckAllVolumes)
     {
-        if ((DeviceMap.Query.DriveMap & (1 << i))
-         && (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
+        /* Enumerate and check each of the available volumes */
+        for (i = 0; i <= 'Z'-'A'; i++)
         {
-            swprintf(DrivePath, L"%c:\\", L'A'+i);
-            CheckVolume(DrivePath, TimeOut);
+            if ((DeviceMap.Query.DriveMap & (1 << i)) &&
+                (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
+            {
+                swprintf(VolumePath, L"\\??\\%c:", L'A' + i);
+                CheckVolume(VolumePath, TimeOut, CheckOnlyIfDirty);
+            }
+        }
+    }
+    else
+    {
+        /* Retrieve our index and analyse the volume */
+        if (wcslen(VolumePath) == 6 &&
+            VolumePath[0] == L'\\'  &&
+            VolumePath[1] == L'?'   &&
+            VolumePath[2] == L'?'   &&
+            VolumePath[3] == L'\\'  &&
+            VolumePath[5] == L':')
+        {
+            i = toupper(VolumePath[4]) - 'A';
+            if ((DeviceMap.Query.DriveMap & (1 << i)) &&
+                (DeviceMap.Query.DriveType[i] == DOSDEVICE_DRIVE_FIXED))
+            {
+                CheckVolume(VolumePath, TimeOut, CheckOnlyIfDirty);
+            }
+        }
+        else
+        {
+            /* Just perform the check on the specified volume */
+            // TODO: Check volume type using NtQueryVolumeInformationFile(FileFsDeviceInformation)
+            CheckVolume(VolumePath, TimeOut, CheckOnlyIfDirty);
         }
     }
 
