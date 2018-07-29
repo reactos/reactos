@@ -2330,8 +2330,6 @@ OpenAs_RunDLLA(HWND hwnd, HINSTANCE hinst, LPCSTR cmdline, int cmdshow)
 static LPCWSTR
 SplitParams(LPCWSTR psz, LPWSTR pszArg0, size_t cchArg0)
 {
-    assert(cchArg0 > 0);
-
     LPCWSTR pch;
     size_t ich = 0;
     if (*psz == L'"')
@@ -2385,13 +2383,16 @@ HRESULT WINAPI ShellExecCmdLine(
     DWORD dwSeclFlags)
 {
     SHELLEXECUTEINFOW info;
-    DWORD dwSize, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
     LPCWSTR pszVerb = NULL;
     WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
     HRESULT hr;
     LPCWSTR pchParams;
     LPWSTR lpCommand = NULL;
-    DWORD dwError;
+
+    if (pwszCommand == NULL)
+        RaiseException(EXCEPTION_ACCESS_VIOLATION, EXCEPTION_NONCONTINUABLE,
+                       1, (ULONG_PTR*)pwszCommand);
 
     __SHCloneStrW(&lpCommand, pwszCommand);
     StrTrimW(lpCommand, L" \t");
@@ -2420,7 +2421,7 @@ HRESULT WINAPI ShellExecCmdLine(
     }
     else
     {
-        // lpCommand, lpCommand + ".exe" or lpCommand + ".com" is binary?
+        // lpCommand, (lpCommand + ".exe") or (lpCommand + ".com") is binary?
         if (SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
             SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
@@ -2434,7 +2435,25 @@ HRESULT WINAPI ShellExecCmdLine(
         else
         {
             pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+
+            if (SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+            {
+                StringCchCopyW(szFile, _countof(szFile), szFile2);
+                pchParams = NULL;
+            }
         }
+    }
+
+    // NOTE: szFile must be an executable path.
+    if (!GetBinaryTypeW(szFile, &dwType))
+    {
+        SHFree(lpCommand);
+        return CO_E_APPNOTFOUND;
     }
 
     ZeroMemory(&info, sizeof(info));

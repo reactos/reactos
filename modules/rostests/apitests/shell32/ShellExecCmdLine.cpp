@@ -6,6 +6,7 @@
  */
 #include "shelltest.h"
 #include <shlwapi.h>
+#include <strsafe.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,122 +22,173 @@
 #endif
 
 #ifdef ShellExecCmdLine
-    static LPCWSTR Get1stArgAndParams(LPCWSTR psz, LPWSTR pszArg0, INT cchArg0)
+static const WCHAR wszOpen[] = L"open";
+static const WCHAR wszExe[] = L".exe";
+static const WCHAR wszCom[] = L".com";
+
+static __inline void __SHCloneStrW(WCHAR **target, const WCHAR *source)
+{
+	*target = (WCHAR *)SHAlloc((lstrlenW(source) + 1) * sizeof(WCHAR) );
+	lstrcpyW(*target, source);
+}
+
+static LPCWSTR
+SplitParams(LPCWSTR psz, LPWSTR pszArg0, size_t cchArg0)
+{
+    LPCWSTR pch;
+    size_t ich = 0;
+    if (*psz == L'"')
     {
-        LPCWSTR pch;
-        INT ich = 0;
-        if (*psz == L'"')
+        // 1st argument is quoted. the string in quotes is quoted 1st argument.
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
         {
-            // 1st argument is quoted. the string in quotes is quoted 1st argument.
-            // [pch] --> [pszArg0+ich]
-            for (pch = psz + 1; *pch && ich + 1 < cchArg0; ++ich, ++pch)
+            if (*pch == L'"' && pch[1] == L'"')
             {
-                if (*pch == L'"' && pch[1] == L'"')
-                {
-                    // doubled double quotations found!
-                    pszArg0[ich] = L'"';
-                }
-                else if (*pch == L'"')
-                {
-                    // single double quotation found!
-                    ++pch;
-                    break;
-                }
-                else
-                {
-                    // otherwise
-                    pszArg0[ich] = *pch;
-                }
+                // doubled double quotations found!
+                pszArg0[ich] = L'"';
             }
-        }
-        else
-        {
-            // 1st argument is unquoted. non-space sequence is 1st argument.
-            // [pch] --> [pszArg0+ich]
-            for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
+            else if (*pch == L'"')
             {
+                // single double quotation found!
+                ++pch;
+                break;
+            }
+            else
+            {
+                // otherwise
                 pszArg0[ich] = *pch;
             }
         }
-        pszArg0[ich] = 0;
-        // skip space
-        while (iswspace(*pch))
-            ++pch;
+    }
+    else
+    {
+        // 1st argument is unquoted. non-space sequence is 1st argument.
+        // [pch] --> [pszArg0+ich]
+        for (pch = psz; *pch && !iswspace(*pch) && ich + 1 < cchArg0; ++ich, ++pch)
+        {
+            pszArg0[ich] = *pch;
+        }
+    }
+    pszArg0[ich] = 0;
 
-        return pch;
+    // skip space
+    while (iswspace(*pch))
+        ++pch;
+
+    return pch;
+}
+
+HRESULT WINAPI ShellExecCmdLine(
+    HWND hwnd,
+    LPCWSTR pwszCommand,
+    LPCWSTR pwszStartDir,
+    int nShow,
+    LPVOID pUnused,
+    DWORD dwSeclFlags)
+{
+    SHELLEXECUTEINFOW info;
+    DWORD dwSize, dwError, dwType, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
+    LPCWSTR pszVerb = NULL;
+    WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
+    HRESULT hr;
+    LPCWSTR pchParams;
+    LPWSTR lpCommand = NULL;
+
+    if (pwszCommand == NULL)
+        RaiseException(EXCEPTION_ACCESS_VIOLATION, EXCEPTION_NONCONTINUABLE,
+                       1, (ULONG_PTR*)pwszCommand);
+
+    __SHCloneStrW(&lpCommand, pwszCommand);
+    StrTrimW(lpCommand, L" \t");
+
+    if (dwSeclFlags & SECL_NO_UI)
+        dwFlags |= SEE_MASK_FLAG_NO_UI;
+    if (dwSeclFlags & SECL_LOG_USAGE)
+        dwFlags |= SEE_MASK_FLAG_LOG_USAGE;
+    if (dwSeclFlags & SECL_USE_IDLIST)
+        dwFlags |= SEE_MASK_INVOKEIDLIST;
+
+    if (dwSeclFlags & SECL_RUNAS)
+    {
+        dwSize = 0;
+        hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, lpCommand, L"RunAs", NULL, &dwSize);
+        if (SUCCEEDED(hr) && dwSize != 0)
+        {
+            pszVerb = L"runas";
+        }
     }
 
-    HRESULT WINAPI ShellExecCmdLine(
-        HWND hwnd,
-        LPCWSTR pwszCommand,
-        LPCWSTR pwszStartDir,
-        int nShow,
-        LPVOID pUnused,
-        DWORD dwSeclFlags)
+    if (UrlIsFileUrlW(lpCommand))
     {
-        SHELLEXECUTEINFOW info;
-        DWORD dwSize, dwFlags = SEE_MASK_DOENVSUBST | SEE_MASK_NOASYNC;
-        LPCWSTR pszVerb = NULL;
-        WCHAR szFile[MAX_PATH], szFile2[MAX_PATH];
-        HRESULT hr;
-        DWORD dwType;
-        LPCWSTR pchParams;
-
-        if (dwSeclFlags & SECL_NO_UI)
-            dwFlags |= SEE_MASK_FLAG_NO_UI;
-        if (dwSeclFlags & SECL_LOG_USAGE)
-            dwFlags |= SEE_MASK_FLAG_LOG_USAGE;
-        if (dwSeclFlags & SECL_USE_IDLIST)
-            dwFlags |= SEE_MASK_INVOKEIDLIST;
-
-        if (dwSeclFlags & SECL_RUNAS)
+        StringCchCopyW(szFile, _countof(szFile), lpCommand);
+        pchParams = NULL;
+    }
+    else
+    {
+        // lpCommand, (lpCommand + ".exe") or (lpCommand + ".com") is binary?
+        if (SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
         {
-            dwSize = 0;
-            hr = AssocQueryStringW(0, ASSOCSTR_COMMAND, pwszCommand, L"RunAs", NULL, &dwSize);
-            if (SUCCEEDED(hr) && dwSize != 0)
-            {
-                pszVerb = L"runas";
-            }
-        }
-
-        pchParams = Get1stArgAndParams(pwszCommand, szFile, _countof(szFile));
-
-        if (!SearchPathW(pwszStartDir, szFile, L".exe", _countof(szFile2), szFile2, NULL))
-        {
-            if (!SearchPathW(NULL, szFile, L".exe", _countof(szFile2), szFile2, NULL))
-                lstrcpynW(szFile2, szFile, _countof(szFile2));
-        }
-
-        if (!GetBinaryTypeW(szFile2, &dwType))
-        {
-            if (!GetBinaryTypeW(pwszCommand, &dwType))
-                return CO_E_APPNOTFOUND;
-
-            lstrcpynW(szFile, pwszCommand, _countof(szFile2));
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
         }
-
-        ZeroMemory(&info, sizeof(info));
-        info.cbSize = sizeof(info);
-        info.fMask = dwFlags;
-        info.hwnd = hwnd;
-        info.lpVerb = pszVerb;
-        info.lpFile = szFile;
-        info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
-        info.lpDirectory = pwszStartDir;
-        info.nShow = nShow;
-        if (ShellExecuteExW(&info))
+        else
         {
-            if (info.lpIDList)
-                CoTaskMemFree(info.lpIDList);
-            return S_OK;
+            pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+
+            if (SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+                SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+            {
+                StringCchCopyW(szFile, _countof(szFile), szFile2);
+                pchParams = NULL;
+            }
         }
-
-        if (GetLastError() == ERROR_FILE_NOT_FOUND)
-            return CO_E_APPNOTFOUND;
-
-        return HRESULT_FROM_WIN32(GetLastError());
     }
+
+    // NOTE: szFile must be an executable path.
+    if (!GetBinaryTypeW(szFile, &dwType))
+    {
+        SHFree(lpCommand);
+        return CO_E_APPNOTFOUND;
+    }
+
+    ZeroMemory(&info, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = dwFlags;
+    info.hwnd = hwnd;
+    info.lpVerb = pszVerb;
+    info.lpFile = szFile;
+    info.lpParameters = (pchParams && *pchParams) ? pchParams : NULL;
+    info.lpDirectory = pwszStartDir;
+    info.nShow = nShow;
+    if (ShellExecuteExW(&info))
+    {
+        if (info.lpIDList)
+            CoTaskMemFree(info.lpIDList);
+
+        SHFree(lpCommand);
+
+        return S_OK;
+    }
+
+    dwError = GetLastError();
+
+    SHFree(lpCommand);
+
+    if (dwError == ERROR_FILE_NOT_FOUND)
+        return CO_E_APPNOTFOUND;
+
+    return HRESULT_FROM_WIN32(dwError);
+}
 #else
     typedef HRESULT (WINAPI *SHELLEXECCMDLINE)(HWND, LPCWSTR, LPCWSTR, INT, LPVOID, DWORD);
     SHELLEXECCMDLINE g_pShellExecCmdLine = NULL;
@@ -167,70 +219,70 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, S_OK, L"Notepad", L"notepad", L"." },
     { __LINE__, S_OK, L"Notepad", L"notepad", L"system32" },
     { __LINE__, S_OK, L"Notepad", L"notepad", L"C:\\Program Files" },
-    { __LINE__, S_OK, L"Notepad", L"notepad \"Test File.txt\"", NULL},
+    { __LINE__, S_OK, L"Notepad", L"notepad \"Test File.txt\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"notepad \"Test File.txt\"", L"." },
     // notepad.exe
     { __LINE__, S_OK, L"Notepad", L"notepad.exe", NULL },
     { __LINE__, S_OK, L"Notepad", L"notepad.exe", L"." },
     { __LINE__, S_OK, L"Notepad", L"notepad.exe", L"system32" },
     { __LINE__, S_OK, L"Notepad", L"notepad.exe", L"C:\\Program Files" },
-    { __LINE__, S_OK, L"Notepad", L"notepad.exe \"Test File.txt\"", NULL},
+    { __LINE__, S_OK, L"Notepad", L"notepad.exe \"Test File.txt\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"notepad.exe \"Test File.txt\"", L"." },
     // C:\notepad.exe
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"C:\\notepad.exe \"Test File.txt\"", L"." },
     // "notepad"
     { __LINE__, S_OK, L"Notepad", L"\"notepad\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"\"notepad\"", L"." },
     { __LINE__, S_OK, L"Notepad", L"\"notepad\"", L"system32" },
     { __LINE__, S_OK, L"Notepad", L"\"notepad\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, L"Notepad", L"\"notepad\" \"Test File.txt\"", NULL},
+    { __LINE__, S_OK, L"Notepad", L"\"notepad\" \"Test File.txt\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"\"notepad\" \"Test File.txt\"", L"." },
     // "notepad.exe"
     { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\"", L"." },
     { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\"", L"system32" },
     { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\"", L"C:\\Program Files" },
-    { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", NULL},
+    { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", NULL },
     { __LINE__, S_OK, L"Notepad", L"\"notepad.exe\" \"Test File.txt\"", L"." },
     // test program.exe
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"test program.exe \"Test File.txt\"", L"." },
     // "test program"
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\"", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\"", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\" \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\" \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program\" \"Test File.txt\"", L"." },
     // "test program.exe"
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\"", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\"", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"test program.exe\" \"Test File.txt\"", L"." },
     // invalid program
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"invalid program \"Test File.txt\"", L"." },
     // \"invalid program.exe\"
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\"", L"." },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\"", L"system32" },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\"", L"C:\\Program Files" },
-    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL},
+    { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL },
     { __LINE__, CO_E_APPNOTFOUND, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", L"." },
 };
 
