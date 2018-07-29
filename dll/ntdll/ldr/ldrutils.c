@@ -2488,146 +2488,153 @@ LdrpLoadDll(IN BOOLEAN Redirected,
     /* Check for init flag and acquire lock */
     if (!InInit) RtlEnterCriticalSection(&LdrpLoaderLock);
 
-    /* Show debug message */
-    if (ShowSnaps)
+    _SEH2_TRY
     {
-        DPRINT1("LDR: LdrLoadDll, loading %wZ from %ws\n",
-                 &RawDllName,
-                 DllPath ? DllPath : L"");
-    }
-
-    /* Check if the DLL is already loaded */
-    if (!LdrpCheckForLoadedDll(DllPath,
-                               &RawDllName,
-                               FALSE,
-                               Redirected,
-                               &LdrEntry))
-    {
-        /* Map it */
-        Status = LdrpMapDll(DllPath,
-                            DllPath,
-                            NameBuffer,
-                            DllCharacteristics,
-                            FALSE,
-                            Redirected,
-                            &LdrEntry);
-        if (!NT_SUCCESS(Status)) goto Quickie;
-
-        /* FIXME: Need to mark the DLL range for the stack DB */
-        //RtlpStkMarkDllRange(LdrEntry);
-
-        /* Check if IMAGE_FILE_EXECUTABLE_IMAGE was provided */
-        if ((DllCharacteristics) &&
-            (*DllCharacteristics & IMAGE_FILE_EXECUTABLE_IMAGE))
+        /* Show debug message */
+        if (ShowSnaps)
         {
-            /* This is not a DLL, so remove such data */
-            LdrEntry->EntryPoint = NULL;
-            LdrEntry->Flags &= ~LDRP_IMAGE_DLL;
+            DPRINT1("LDR: LdrLoadDll, loading %wZ from %ws\n",
+                     &RawDllName,
+                     DllPath ? DllPath : L"");
         }
 
-        /* Make sure it's a DLL */
-        if (LdrEntry->Flags & LDRP_IMAGE_DLL)
+        /* Check if the DLL is already loaded */
+        if (!LdrpCheckForLoadedDll(DllPath,
+                                   &RawDllName,
+                                   FALSE,
+                                   Redirected,
+                                   &LdrEntry))
         {
-            /* Check if this is a .NET Image */
-            if (!(LdrEntry->Flags & LDRP_COR_IMAGE))
-            {
-                /* Walk the Import Descriptor */
-                Status = LdrpWalkImportDescriptor(DllPath, LdrEntry);
-            }
-
-            /* Update load count, unless it's locked */
-            if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
-            LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
-
-            /* Check if we failed */
+            /* Map it */
+            Status = LdrpMapDll(DllPath,
+                                DllPath,
+                                NameBuffer,
+                                DllCharacteristics,
+                                FALSE,
+                                Redirected,
+                                &LdrEntry);
             if (!NT_SUCCESS(Status))
+                _SEH2_LEAVE;
+
+            /* FIXME: Need to mark the DLL range for the stack DB */
+            //RtlpStkMarkDllRange(LdrEntry);
+
+            /* Check if IMAGE_FILE_EXECUTABLE_IMAGE was provided */
+            if ((DllCharacteristics) &&
+                (*DllCharacteristics & IMAGE_FILE_EXECUTABLE_IMAGE))
             {
-                /* Clear entrypoint, and insert into list */
+                /* This is not a DLL, so remove such data */
                 LdrEntry->EntryPoint = NULL;
-                InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                               &LdrEntry->InInitializationOrderLinks);
+                LdrEntry->Flags &= ~LDRP_IMAGE_DLL;
+            }
 
-                /* Cancel the load */
+            /* Make sure it's a DLL */
+            if (LdrEntry->Flags & LDRP_IMAGE_DLL)
+            {
+                /* Check if this is a .NET Image */
+                if (!(LdrEntry->Flags & LDRP_COR_IMAGE))
+                {
+                    /* Walk the Import Descriptor */
+                    Status = LdrpWalkImportDescriptor(DllPath, LdrEntry);
+                }
+
+                /* Update load count, unless it's locked */
+                if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
+                LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
+
+                /* Check if we failed */
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Clear entrypoint, and insert into list */
+                    LdrEntry->EntryPoint = NULL;
+                    InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
+                                   &LdrEntry->InInitializationOrderLinks);
+
+                    /* Cancel the load */
+                    LdrpClearLoadInProgress();
+
+                    /* Unload the DLL */
+                    if (ShowSnaps)
+                    {
+                        DbgPrint("LDR: Unloading %wZ due to error %x walking "
+                                 "import descriptors\n",
+                                 DllName,
+                                 Status);
+                    }
+                    LdrUnloadDll(LdrEntry->DllBase);
+
+                    /* Return the error */
+                    _SEH2_LEAVE;
+                }
+            }
+            else if (LdrEntry->LoadCount != 0xFFFF)
+            {
+                /* Increase load count */
+                LdrEntry->LoadCount++;
+            }
+
+            /* Insert it into the list */
+            InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
+                           &LdrEntry->InInitializationOrderLinks);
+
+            /* If we have to run the entrypoint, make sure the DB is ready */
+            if (CallInit && LdrpLdrDatabaseIsSetup)
+            {
+                /* Notify Shim Engine */
+                if (g_ShimsEnabled)
+                {
+                    VOID (NTAPI* SE_DllLoaded)(PLDR_DATA_TABLE_ENTRY) = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
+                    SE_DllLoaded(LdrEntry);
+                }
+
+                /* Run the init routine */
+                Status = LdrpRunInitializeRoutines(NULL);
+                if (!NT_SUCCESS(Status))
+                {
+                    /* Failed, unload the DLL */
+                    if (ShowSnaps)
+                    {
+                        DbgPrint("LDR: Unloading %wZ because either its init "
+                                 "routine or one of its static imports failed; "
+                                 "status = 0x%08lx\n",
+                                 DllName,
+                                 Status);
+                    }
+                    LdrUnloadDll(LdrEntry->DllBase);
+                }
+            }
+            else
+            {
+                /* The DB isn't ready, which means we were loaded because of a forwarder */
+                Status = STATUS_SUCCESS;
+            }
+        }
+        else
+        {
+            /* We were already loaded. Are we a DLL? */
+            if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != 0xFFFF))
+            {
+                /* Increase load count */
+                LdrEntry->LoadCount++;
+                LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
+
+                /* Clear the load in progress */
                 LdrpClearLoadInProgress();
-
-                /* Unload the DLL */
-                if (ShowSnaps)
-                {
-                    DbgPrint("LDR: Unloading %wZ due to error %x walking "
-                             "import descriptors\n",
-                             DllName,
-                             Status);
-                }
-                LdrUnloadDll(LdrEntry->DllBase);
-
-                /* Return the error */
-                goto Quickie;
             }
-        }
-        else if (LdrEntry->LoadCount != 0xFFFF)
-        {
-            /* Increase load count */
-            LdrEntry->LoadCount++;
-        }
-
-        /* Insert it into the list */
-        InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-                       &LdrEntry->InInitializationOrderLinks);
-
-        /* If we have to run the entrypoint, make sure the DB is ready */
-        if (CallInit && LdrpLdrDatabaseIsSetup)
-        {
-            /* Notify Shim Engine */
-            if (g_ShimsEnabled)
+            else
             {
-                VOID (NTAPI* SE_DllLoaded)(PLDR_DATA_TABLE_ENTRY) = RtlDecodeSystemPointer(g_pfnSE_DllLoaded);
-                SE_DllLoaded(LdrEntry);
+                /* Not a DLL, just increase the load count */
+                if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
             }
+        }
 
-            /* Run the init routine */
-            Status = LdrpRunInitializeRoutines(NULL);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Failed, unload the DLL */
-                if (ShowSnaps)
-                {
-                    DbgPrint("LDR: Unloading %wZ because either its init "
-                             "routine or one of its static imports failed; "
-                             "status = 0x%08lx\n",
-                             DllName,
-                             Status);
-                }
-                LdrUnloadDll(LdrEntry->DllBase);
-            }
-        }
-        else
-        {
-            /* The DB isn't ready, which means we were loaded because of a forwarder */
-            Status = STATUS_SUCCESS;
-        }
     }
-    else
+    _SEH2_FINALLY
     {
-        /* We were already loaded. Are we a DLL? */
-        if ((LdrEntry->Flags & LDRP_IMAGE_DLL) && (LdrEntry->LoadCount != 0xFFFF))
-        {
-            /* Increase load count */
-            LdrEntry->LoadCount++;
-            LdrpUpdateLoadCount2(LdrEntry, LDRP_UPDATE_REFCOUNT);
-
-            /* Clear the load in progress */
-            LdrpClearLoadInProgress();
-        }
-        else
-        {
-            /* Not a DLL, just increase the load count */
-            if (LdrEntry->LoadCount != 0xFFFF) LdrEntry->LoadCount++;
-        }
+        /* Release the lock */
+        if (!InInit) RtlLeaveCriticalSection(&LdrpLoaderLock);
     }
-
-Quickie:
-    /* Release the lock */
-    if (!InInit) RtlLeaveCriticalSection(&LdrpLoaderLock);
+    _SEH2_END;
 
     /* Check for success */
     if (NT_SUCCESS(Status))
