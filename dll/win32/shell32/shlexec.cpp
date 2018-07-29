@@ -2421,41 +2421,43 @@ HRESULT WINAPI ShellExecCmdLine(
     }
     else
     {
-        // lpCommand, (lpCommand + ".exe") or (lpCommand + ".com") is binary?
-        if (SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
-            SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
+        pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+        if (SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
+            SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
             pchParams = NULL;
         }
-        else
+        else if (SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(NULL, lpCommand, wszCom, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
+                 SearchPathW(pwszStartDir, lpCommand, wszCom, _countof(szFile2), szFile2, NULL))
         {
-            pchParams = SplitParams(lpCommand, szFile, _countof(szFile));
+            StringCchCopyW(szFile, _countof(szFile), szFile2);
+            pchParams = NULL;
+        }
 
-            if (SearchPathW(pwszStartDir, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                SearchPathW(pwszStartDir, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-                SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL) ||
-                SearchPathW(NULL, szFile, NULL, _countof(szFile2), szFile2, NULL) ||
-                SearchPathW(NULL, szFile, wszExe, _countof(szFile2), szFile2, NULL) ||
-                SearchPathW(NULL, szFile, wszCom, _countof(szFile2), szFile2, NULL))
+        if (!(dwSeclFlags & SECL_ALLOW_NONEXE))
+        {
+            if (!GetBinaryTypeW(szFile, &dwType))
             {
-                StringCchCopyW(szFile, _countof(szFile), szFile2);
-                pchParams = NULL;
+                SHFree(lpCommand);
+                return CO_E_APPNOTFOUND;
             }
         }
-    }
-
-    if (!(dwSeclFlags & SECL_ALLOW_NONEXE_))   // the special flag
-    {
-        // NOTE: szFile must be an executable path.
-        if (!GetBinaryTypeW(szFile, &dwType))
+        else
         {
-            SHFree(lpCommand);
-            return CO_E_APPNOTFOUND;
+            if (GetFileAttributesW(szFile) == INVALID_FILE_ATTRIBUTES)
+            {
+                SHFree(lpCommand);
+                return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+            }
         }
     }
 
@@ -2481,9 +2483,6 @@ HRESULT WINAPI ShellExecCmdLine(
     dwError = GetLastError();
 
     SHFree(lpCommand);
-
-    if (dwError == ERROR_FILE_NOT_FOUND)
-        return CO_E_APPNOTFOUND;
 
     return HRESULT_FROM_WIN32(dwError);
 }

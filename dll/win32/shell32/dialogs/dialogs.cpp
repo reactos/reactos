@@ -593,7 +593,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                         case RF_OK:
                             if (SUCCEEDED(ShellExecCmdLine(hwnd, psz, pszStartDir, SW_SHOWNORMAL, NULL,
-                                                           SECL_ALLOW_NONEXE_)))
+                                                           SECL_ALLOW_NONEXE)))
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
                                 GetWindowTextW(htxt, psz, ic + 1);
