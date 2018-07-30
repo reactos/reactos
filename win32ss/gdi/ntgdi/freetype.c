@@ -5332,20 +5332,23 @@ GreExtTextOutW(
         goto Cleanup;
     }
 
+    /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
     if (dc->pdcattr->iGraphicsMode == GM_ADVANCED)
     {
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
+
+        fixAscender = ScaleLong(FontGDI->tmAscent << 6, &pmxWorldToDevice->efM22); 
+        fixDescender = ScaleLong(FontGDI->tmDescent << 6, &pmxWorldToDevice->efM22);
     }
     else
     {
         pmxWorldToDevice = (PMATRIX)&gmxWorldToDeviceDefault;
         FtSetCoordinateTransform(face, pmxWorldToDevice);
-    }
 
-    /* NOTE: Don't trust face->size->metrics.ascender and descender values. */
-    fixAscender = FontGDI->tmAscent << 6;
-    fixDescender = FontGDI->tmDescent << 6;
+        fixAscender = FontGDI->tmAscent << 6;
+        fixDescender = FontGDI->tmDescent << 6;
+    }
 
     /*
      * Process the vertical alignment and determine the yoff.
