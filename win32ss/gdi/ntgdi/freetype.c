@@ -3006,7 +3006,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     }
     if (lfHeight == 0)
     {
-        lfHeight = 13;
+        lfHeight = -16;
     }
 
     ASSERT_FREETYPE_LOCK_HELD();
