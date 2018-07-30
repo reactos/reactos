@@ -954,7 +954,6 @@ BEGIN
     IDS_ADVANCED_DESKTOP_PROCESS "Abrir carpetas en procesos separados"
     IDS_ADVANCED_CLASSIC_VIEW_STATE "Recordar vistas personalizadas en carpetas"
     IDS_ADVANCED_PERSIST_BROWSERS "Restaurar carpetas abiertas al iniciar sesión"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
     IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Mostrar Panel de Control en Mi PC"
     IDS_ADVANCED_SHOW_COMP_COLOR "Mostrar en color archivos NTFS comprimidos o encriptados"
     IDS_ADVANCED_SHOW_INFO_TIP "Mostrar descripción de íconos y carpetas en el escritorio"
