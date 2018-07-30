@@ -3023,7 +3023,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmAscent           = WinFNT.ascent;
         FontGDI->tmDescent          = FontGDI->tmHeight - FontGDI->tmAscent;
         FontGDI->tmInternalLeading  = WinFNT.internal_leading;
-        FontGDI->EmHeight           = FontGDI->tmAscent - FontGDI->tmInternalLeading;
+        FontGDI->EmHeight           = FontGDI->tmHeight - FontGDI->tmInternalLeading;
         FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
         FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
 
