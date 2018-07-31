@@ -5340,7 +5340,7 @@ GreExtTextOutW(
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
 
-        fixAscender = ScaleLong(FontGDI->tmAscent << 6, &pmxWorldToDevice->efM22); 
+        fixAscender = ScaleLong(FontGDI->tmAscent << 6, &pmxWorldToDevice->efM22);
         fixDescender = ScaleLong(FontGDI->tmDescent << 6, &pmxWorldToDevice->efM22);
     }
     else
