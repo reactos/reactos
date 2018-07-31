@@ -5368,13 +5368,14 @@ GreExtTextOutW(
     /*
      * Process the vertical alignment and determine the yoff.
      */
-
-    if ((pdcattr->lTextAlign & TA_MASK) == TA_BASELINE)
+#define VALIGN_MASK  (TA_TOP | TA_BASELINE | TA_BOTTOM)
+    if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
         yoff = 0;
-    else if ((pdcattr->lTextAlign & TA_MASK) == TA_BOTTOM)
+    else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
         yoff = -fixDescender >> 6;
     else /* TA_TOP */
         yoff = fixAscender >> 6;
+#undef VALIGN_MASK
 
     use_kerning = FT_HAS_KERNING(face);
     previous = 0;
