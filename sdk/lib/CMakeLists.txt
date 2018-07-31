@@ -47,6 +47,7 @@ add_subdirectory(skiplist)
 add_subdirectory(strmiids)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
+add_subdirectory(udmihelp)
 add_subdirectory(uuid)
 add_subdirectory(wdmguid)
 
