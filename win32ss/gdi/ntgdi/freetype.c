@@ -776,6 +776,9 @@ WeightFromStyle(const char *style_name)
     return FW_NORMAL;
 }
 
+static FT_Error
+IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
+
 static INT FASTCALL
 IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                           PSHARED_FACE SharedFace, FT_Long FontIndex, INT CharSetIndex)
@@ -994,6 +997,10 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
            Face->style_name ? Face->style_name : "<NULL>");
     DPRINT("Num glyphs: %d\n", Face->num_glyphs);
     DPRINT("CharSet: %d\n", FontGDI->CharSet);
+
+    IntLockFreeType();
+    IntRequestFontSize(NULL, FontGDI, 0, 0);
+    IntUnLockFreeType();
 
     /* Add this font resource to the font table */
     Entry->Font = FontGDI;
@@ -1505,9 +1512,6 @@ static BOOL face_has_symbol_charmap(FT_Face ft_face)
     }
     return FALSE;
 }
-
-static FT_Error
-IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
 static void FASTCALL
 FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
@@ -2516,24 +2520,12 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         {
             if (Count < MaxCount)
             {
-                if (FontGDI->Magic != 0xDEADBEEF)
-                {
-                    IntLockFreeType();
-                    IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-                    IntUnLockFreeType();
-                }
                 FontFamilyFillInfo(&Info[Count], NULL, NULL, FontGDI);
             }
             Count++;
             continue;
         }
 
-        if (FontGDI->Magic != 0xDEADBEEF)
-        {
-            IntLockFreeType();
-            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-            IntUnLockFreeType();
-        }
         FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
 
         if (_wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0 &&
@@ -2593,12 +2585,6 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
 
         if (*pCount < MaxCount)
         {
-            if (FontGDI->Magic != 0xDEADBEEF)
-            {
-                IntLockFreeType();
-                IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-                IntUnLockFreeType();
-            }
             FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
         }
         (*pCount)++;
@@ -4012,10 +3998,12 @@ ftGdiGetTextMetricsW(
         FontGDI = ObjToGDI(TextObj->Font, FONT);
 
         Face = FontGDI->SharedFace->Face;
+
         IntLockFreeType();
         Error = IntRequestFontSize(dc, FontGDI, plf->lfWidth, plf->lfHeight);
         FtSetCoordinateTransform(Face, DC_pmxWorldToDevice(dc));
         IntUnLockFreeType();
+
         if (0 != Error)
         {
             DPRINT1("Error in setting pixel sizes: %u\n", Error);
@@ -4197,7 +4185,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0x0F);
     if (Byte == DEFAULT_PITCH)
         Byte = VARIABLE_PITCH;
-    if (Byte == FIXED_PITCH)
+    if ((Byte & FIXED_PITCH) || (Byte & MONO_FONT))
     {
         if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
         {
@@ -4207,7 +4195,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             Penalty += 15000;
         }
     }
-    if (Byte == VARIABLE_PITCH)
+    if (Byte & VARIABLE_PITCH)
     {
         if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
         {
@@ -4258,12 +4246,37 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0xF0);
     if (Byte != FF_DONTCARE)
     {
-        if (Byte != (TM->tmPitchAndFamily & 0xF0))
+        if (Byte & FF_MODERN)
+        {
+            if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
+            {
+                /* FixedPitch Penalty 15000 */
+                /* Requested a fixed pitch font, but the candidate is a
+                   variable pitch font. */
+                Penalty += 15000;
+            }
+        }
+
+        if ((Byte & FF_ROMAN) || (Byte & FF_SWISS))
+        {
+            if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
+            {
+                /* PitchVariable Penalty 350 */
+                /* Requested a variable pitch font, but the candidate is not a
+                   variable pitch font. */
+                Penalty += 350;
+            }
+        }
+
+#define FF_MASK  (FF_DECORATIVE | FF_SCRIPT | FF_SWISS)
+        if ((Byte & FF_MASK) != (TM->tmPitchAndFamily & FF_MASK))
         {
             /* Family Penalty 9000 */
             /* Requested a family, but the candidate's family is different. */
             Penalty += 9000;
         }
+#undef FF_MASK
+
         if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
         {
             /* FamilyUnknown Penalty 8000 */
@@ -4438,6 +4451,20 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         Penalty += 2;
     }
 
+    if (TM->tmAveCharWidth >= 5 && TM->tmHeight >= 5)
+    {
+        if (TM->tmAveCharWidth / TM->tmHeight >= 3)
+        {
+            /* The aspect rate is >= 3. It seems like a bad font. */
+            Penalty += ((TM->tmAveCharWidth / TM->tmHeight) - 2) * 100;
+        }
+        else if (TM->tmHeight / TM->tmAveCharWidth >= 3)
+        {
+            /* The aspect rate is >= 3. It seems like a bad font. */
+            Penalty += ((TM->tmHeight / TM->tmAveCharWidth) - 2) * 100;
+        }
+    }
+
     if (Penalty < 200)
     {
         DPRINT("WARNING: Penalty:%ld < 200: RequestedNameW:%ls, "
@@ -4484,13 +4511,6 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         ASSERT(FontGDI);
         Face = FontGDI->SharedFace->Face;
 
-        if (FontGDI->Magic != 0xDEADBEEF)
-        {
-            IntLockFreeType();
-            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
-            IntUnLockFreeType();
-        }
-
         /* get text metrics */
         OtmSize = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
         if (OtmSize > OldOtmSize)
@@ -4503,6 +4523,10 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         /* update FontObj if lowest penalty */
         if (Otm)
         {
+            IntLockFreeType();
+            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+            IntUnLockFreeType();
+
             OtmSize = IntGetOutlineTextMetrics(FontGDI, OtmSize, Otm);
             if (!OtmSize)
                 continue;
@@ -4619,6 +4643,11 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     else
     {
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+
+        IntLockFreeType();
+        IntRequestFontSize(NULL, FontGdi, pLogFont->lfWidth, pLogFont->lfHeight);
+        IntUnLockFreeType();
+
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.
         TextObj->Font->iUniq = 1; // Now it can be cached.
@@ -4747,7 +4776,6 @@ IntGdiGetFontResourceInfo(
     FONTFAMILYINFO *FamInfo;
     const ULONG MaxFamInfo = 64;
     BOOL bSuccess;
-    PFONTGDI FontGDI;
 
     DPRINT("IntGdiGetFontResourceInfo: dwType == %lu\n", dwType);
 
@@ -4804,9 +4832,8 @@ IntGdiGetFontResourceInfo(
             continue;
 
         IsEqual = FALSE;
-        FontGDI = FontEntry->Font;
         FontFamilyFillInfo(&FamInfo[Count], FontEntry->FaceName.Buffer,
-                           NULL, FontGDI);
+                           NULL, FontEntry->Font);
         for (i = 0; i < Count; ++i)
         {
             if (EqualFamilyInfo(&FamInfo[i], &FamInfo[Count]))
