@@ -1506,6 +1506,8 @@ static BOOL face_has_symbol_charmap(FT_Face ft_face)
     return FALSE;
 }
 
+static FT_Error
+IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight);
 
 static void FASTCALL
 FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
@@ -1566,7 +1568,10 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-    ASSERT(FontGDI->Magic == 0xDEADBEEF);
+    if (FontGDI->Magic != 0xDEADBEEF)
+    {
+        IntRequestFontSize(NULL, FontGDI, 0, 0);
+    }
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
@@ -2511,12 +2516,24 @@ GetFontFamilyInfoForList(LPLOGFONTW LogFont,
         {
             if (Count < MaxCount)
             {
+                if (FontGDI->Magic != 0xDEADBEEF)
+                {
+                    IntLockFreeType();
+                    IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+                    IntUnLockFreeType();
+                }
                 FontFamilyFillInfo(&Info[Count], NULL, NULL, FontGDI);
             }
             Count++;
             continue;
         }
 
+        if (FontGDI->Magic != 0xDEADBEEF)
+        {
+            IntLockFreeType();
+            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+            IntUnLockFreeType();
+        }
         FontFamilyFillInfo(&InfoEntry, NULL, NULL, FontGDI);
 
         if (_wcsnicmp(LogFont->lfFaceName, InfoEntry.EnumLogFontEx.elfLogFont.lfFaceName, RTL_NUMBER_OF(LogFont->lfFaceName)-1) != 0 &&
@@ -2576,6 +2593,12 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
 
         if (*pCount < MaxCount)
         {
+            if (FontGDI->Magic != 0xDEADBEEF)
+            {
+                IntLockFreeType();
+                IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+                IntUnLockFreeType();
+            }
             FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
         }
         (*pCount)++;
@@ -4724,6 +4747,7 @@ IntGdiGetFontResourceInfo(
     FONTFAMILYINFO *FamInfo;
     const ULONG MaxFamInfo = 64;
     BOOL bSuccess;
+    PFONTGDI FontGDI;
 
     DPRINT("IntGdiGetFontResourceInfo: dwType == %lu\n", dwType);
 
@@ -4780,8 +4804,9 @@ IntGdiGetFontResourceInfo(
             continue;
 
         IsEqual = FALSE;
+        FontGDI = FontEntry->Font;
         FontFamilyFillInfo(&FamInfo[Count], FontEntry->FaceName.Buffer,
-                           NULL, FontEntry->Font);
+                           NULL, FontGDI);
         for (i = 0; i < Count; ++i)
         {
             if (EqualFamilyInfo(&FamInfo[i], &FamInfo[Count]))
