@@ -1,4 +1,11 @@
-/* Spanish translation by Samuel Serapión Vega, Marc Piulachs */
+/*
+ * PROJECT:     ReactOS Win32 User Environment
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Samuel Serapión Vega
+ *              Marc Piulachs
+ *              Julio Carchi Ruiz
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -12,7 +19,7 @@ BEGIN
     IDS_NETHOOD "Entorno de red"
     IDS_PRINTHOOD "Impresoras"
     IDS_RECENT "Reciente"
-    IDS_SENDTO "SendTo"
+    IDS_SENDTO "Enviar a"
     IDS_TEMPLATES "Plantillas"
     IDS_STARTMENU "Menú Inicio"
     IDS_PROGRAMS "Menú Inicio\\Programas"

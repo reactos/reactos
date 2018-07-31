@@ -1,4 +1,10 @@
-/* Spanish translation by Samuel Serapión Vega */
+/*
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Samuel Serapión Vega
+ *              Julio Carchi Ruiz
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -37,7 +43,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_COMPAT_TITLE "Compatibilidad"
-    IDS_FAILED_NETWORK "Compatibility modes cannot be set on this program because it is on a network drive."
-    IDS_FAILED_PROTECTED "Compatibility modes cannot be set on this program because it is a part of ReactOS."
-    IDS_YOU_DID_NOT_ADD "You did not add the mode, do you want to add it now?"
+    IDS_FAILED_NETWORK "No se puede establecer modo de compatibilidad para este programa porque se encuentra en una unidad de red."
+    IDS_FAILED_PROTECTED "No se puede establecer modo de compatibilidad para este programa porque es parte de ReactOS."
+    IDS_YOU_DID_NOT_ADD "No se ha añadido el modo, ¿desea añadirlo ahora?"
 END
