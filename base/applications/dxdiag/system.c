@@ -154,6 +154,34 @@ VOID GetSystemCPU(WCHAR *szBuffer)
 }
 
 static
+SIZE_T
+GetBIOSValue(
+    BOOL UseSMBios,
+    PCHAR DmiString,
+    LPWSTR RegValue,
+    PVOID pBuf,
+    DWORD cchBuf,
+    BOOL bTrim)
+{
+    SIZE_T Length = 0;
+    BOOL Result;
+
+    if (UseSMBios)
+    {
+        Length = GetSMBiosStringW(DmiString, pBuf, cchBuf, bTrim);
+    }
+    if (Length == 0)
+    {
+        Result = GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", RegValue, REG_SZ, pBuf, cchBuf * sizeof(WCHAR));
+        if (Result)
+        {
+            Length = wcslen(pBuf);
+        }
+    }
+    return Length;
+}
+
+static
 VOID
 InitializeSystemPage(HWND hwndDlg)
 {
@@ -162,10 +190,12 @@ InitializeSystemPage(HWND hwndDlg)
     DWORD Length;
     DWORDLONG AvailableBytes, UsedBytes;
     MEMORYSTATUSEX mem;
-    WCHAR szFormat[40];
+    WCHAR szFormat[50];
     WCHAR szDesc[50];
     SYSTEM_INFO SysInfo;
     OSVERSIONINFO VersionInfo;
+    PVOID SMBiosBuf;
+    PCHAR DmiStrings[ID_STRINGS_MAX] = { 0 };
 
     /* set date/time */
     szTime[0] = L'\0';
@@ -225,9 +255,16 @@ InitializeSystemPage(HWND hwndDlg)
     if (GetLocaleInfo(LOCALE_SYSTEM_DEFAULT,LOCALE_SLANGUAGE , szTime, sizeof(szTime) / sizeof(WCHAR)))
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_LANG, WM_SETTEXT, 0, (LPARAM)szTime);
 
+    /* prepare SMBIOS data */
+    SMBiosBuf = LoadSMBiosData(DmiStrings);
+
     /* set system manufacturer */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemManufacturer", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[SYS_VENDOR],
+                          L"SystemManufacturer",
+                          szTime, _countof(szTime), FALSE);
+    if (Length > 0)
     {
         szTime[199] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MANU, WM_SETTEXT, 0, (LPARAM)szTime);
@@ -235,22 +272,39 @@ InitializeSystemPage(HWND hwndDlg)
 
     /* set motherboard model */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemProductName", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[SYS_PRODUCT],
+                          L"SystemProductName",
+                          szTime, _countof(szTime), FALSE);
+    if (Length > 0)
     {
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MODEL, WM_SETTEXT, 0, (LPARAM)szTime);
     }
 
     /* set bios model */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSVendor", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[BIOS_VENDOR],
+                          L"BIOSVendor",
+                          szTime, _countof(szTime), TRUE);
+    if (Length > 0)
     {
         DWORD Index;
-        DWORD StrLength = (sizeof(szTime) / sizeof(WCHAR));
+        DWORD StrLength = _countof(szTime);
 
         Index = wcslen(szTime);
+        if (Index + 1 < _countof(szTime))
+        {
+            szTime[Index++] = L' ';
+            szTime[Index] = L'\0';
+        }
         StrLength -= Index;
 
-        if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSReleaseDate", REG_SZ, &szTime[Index], StrLength))
+        Length = GetBIOSValue(SMBiosBuf != NULL,
+                              DmiStrings[BIOS_DATE],
+                              L"BIOSReleaseDate",
+                              szTime + Index, StrLength, TRUE);
+        if (Length > 0)
         {
             if (Index + StrLength > (sizeof(szTime)/sizeof(WCHAR))- 15)
             {
@@ -263,9 +317,14 @@ InitializeSystemPage(HWND hwndDlg)
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_BIOS, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }
+
+    /* clean SMBIOS data */
+    FreeSMBiosData(SMBiosBuf);
+
     /* set processor string */
     if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", REG_SZ, szDesc, sizeof(szDesc)))
     {
+        TrimDmiStringW(szDesc);
         /* FIXME retrieve current speed */
         szFormat[0] = L'\0';
         GetSystemInfo(&SysInfo);
