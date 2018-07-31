@@ -4456,6 +4456,13 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
         ASSERT(FontGDI);
         Face = FontGDI->SharedFace->Face;
 
+        if (FontGDI->Magic != 0xDEADBEEF)
+        {
+            IntLockFreeType();
+            IntRequestFontSize(NULL, FontGDI, LogFont->lfWidth, LogFont->lfHeight);
+            IntUnLockFreeType();
+        }
+
         /* get text metrics */
         OtmSize = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
         if (OtmSize > OldOtmSize)
