@@ -5353,8 +5353,8 @@ GreExtTextOutW(
         pmxWorldToDevice = DC_pmxWorldToDevice(dc);
         FtSetCoordinateTransform(face, pmxWorldToDevice);
 
-        fixAscender = ScaleLong(FontGDI->tmAscent << 6, &pmxWorldToDevice->efM22);
-        fixDescender = ScaleLong(FontGDI->tmDescent << 6, &pmxWorldToDevice->efM22);
+        fixAscender = ScaleLong(FontGDI->tmAscent, &pmxWorldToDevice->efM22) << 6;
+        fixDescender = ScaleLong(FontGDI->tmDescent, &pmxWorldToDevice->efM22) << 6;
     }
     else
     {
@@ -5369,10 +5369,10 @@ GreExtTextOutW(
      * Process the vertical alignment and determine the yoff.
      */
 
-    if (pdcattr->lTextAlign & TA_BASELINE)
+    if ((pdcattr->lTextAlign & TA_MASK) == TA_BASELINE)
         yoff = 0;
-    else if (pdcattr->lTextAlign & TA_BOTTOM)
-        yoff = -(fixDescender >> 6);
+    else if ((pdcattr->lTextAlign & TA_MASK) == TA_BOTTOM)
+        yoff = -fixDescender >> 6;
     else /* TA_TOP */
         yoff = fixAscender >> 6;
 
@@ -5550,8 +5550,8 @@ GreExtTextOutW(
 
             DestRect.left = BackgroundLeft;
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop;
-            DestRect.bottom = TextTop + ((fixAscender + fixDescender) >> 6);
+            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
+            DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
             MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             if (dc->fs & (DC_ACCUM_APP|DC_ACCUM_WMGR))
             {
@@ -5690,8 +5690,8 @@ GreExtTextOutW(
         {
             DestRect.left = BackgroundLeft;
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop;
-            DestRect.bottom = TextTop + ((fixAscender + fixDescender) >> 6);
+            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);;
+            DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
 
             if (dc->dctype == DCTYPE_DIRECT)
                 MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
