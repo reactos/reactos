@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/rtl/text.c
  * PURPOSE:         Draw Text
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
  */
@@ -1157,8 +1158,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 }
                 else
                 {
-#endif
+                    y = rect->top + (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
+#else
                     y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
+#endif
 #ifdef __REACTOS__
                 }
             }
