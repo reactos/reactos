@@ -45,5 +45,5 @@ BEGIN
     IDS_COMPAT_TITLE "Compatibilidad"
     IDS_FAILED_NETWORK "No se puede establecer modo de compatibilidad para este programa porque se encuentra en una unidad de red."
     IDS_FAILED_PROTECTED "No se puede establecer modo de compatibilidad para este programa porque es parte de ReactOS."
-    IDS_YOU_DID_NOT_ADD "¿No se ha añadido el modo, desea añadirlo ahora?"
+    IDS_YOU_DID_NOT_ADD "No se ha añadido el modo, ¿desea añadirlo ahora?"
 END
