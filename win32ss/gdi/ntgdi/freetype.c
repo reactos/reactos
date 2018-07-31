@@ -3278,7 +3278,7 @@ ftGdiGetGlyphOutline(
 
     IntLockFreeType();
 
-    /* Scaling transform */
+    /* Width scaling transform */
     if (widthRatio != 1.0)
     {
         FT_Matrix scaleMat;
@@ -3291,6 +3291,7 @@ ftGdiGetGlyphOutline(
         needsTransform = TRUE;
     }
 
+    /* World transform */
     {
         FT_Matrix ftmatrix;
         FLOATOBJ efTemp;
