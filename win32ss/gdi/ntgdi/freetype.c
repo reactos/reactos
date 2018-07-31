@@ -5691,7 +5691,7 @@ GreExtTextOutW(
         {
             DestRect.left = BackgroundLeft;
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
-            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);;
+            DestRect.top = TextTop + yoff - ((fixAscender + 32) >> 6);
             DestRect.bottom = DestRect.top + ((fixAscender + fixDescender) >> 6);
 
             if (dc->dctype == DCTYPE_DIRECT)
