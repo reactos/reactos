@@ -1566,6 +1566,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
+    ASSERT(FontGDI->Magic == 0xDEADBEEF);
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
@@ -3025,6 +3026,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->EmHeight           = FontGDI->tmHeight - FontGDI->tmInternalLeading;
         FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
         FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
+        FontGDI->Magic = 0xDEADBEEF;
 
         req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
         req.width          = 0;
@@ -3054,7 +3056,6 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmDescent = FT_MulDiv(lfHeight, Descent, Sum);
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight - FT_MulDiv(lfHeight, face->units_per_EM, Sum);
-        FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     }
     else if (lfHeight < 0)
     {
@@ -3063,11 +3064,12 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
-        FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     }
 
+    FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
     FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
+    FontGDI->Magic = 0xDEADBEEF;
 
     if (lfHeight > 0)
         EmHeight64 = (FontGDI->EmHeight << 6) + 31;
@@ -3752,6 +3754,7 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
+    ASSERT(FontGDI->Magic == 0xDEADBEEF);
     ascender = FontGDI->tmAscent; /* Units above baseline */
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();

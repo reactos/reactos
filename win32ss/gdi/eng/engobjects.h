@@ -160,6 +160,7 @@ typedef struct _FONTGDI {
   LONG          tmDescent;
   LONG          tmInternalLeading;
   LONG          EmHeight;
+  LONG          Magic;
 } FONTGDI, *PFONTGDI;
 
 typedef struct _PATHGDI {
