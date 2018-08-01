@@ -3,10 +3,7 @@
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
  * FILE:             win32ss/user/ntuser/nonclient.c
- * PROGRAMERS:       Colin Finck <colin@reactos.org>
- *                   Thomas Faber <thomas.faber@reactos.org>
- *                   Timo Kreuzer <timo.kreuzer@reactos.org>
- *                   Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * PROGRAMER:
  */
 
 #include <win32k.h>
@@ -708,8 +705,8 @@ UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
              TempRect.right -= UserGetSystemMetrics(SM_CXSIZE) - 2;
 
          TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE) + 1;
-         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 1;
-         TempRect.top += 1;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
+         TempRect.top += 2;
          TempRect.right -= 1;
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
@@ -727,8 +724,8 @@ UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
              TempRect.right -= UserGetSystemMetrics(SM_CXSIZE) + 1;
 
          TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE) + 1;
-         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 1;
-         TempRect.top += 1;
+         TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
+         TempRect.top += 2;
          TempRect.right -= 1;
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
@@ -746,15 +743,15 @@ UserDrawCaptionButton(PWND pWnd, LPRECT Rect, DWORD Style, DWORD ExStyle, HDC hD
          if (ExStyle & WS_EX_TOOLWINDOW)
          {
             TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSMSIZE);
-            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSMSIZE) - 1;
+            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSMSIZE) - 2;
          }
          else
          {
             TempRect.left = TempRect.right - UserGetSystemMetrics(SM_CXSIZE);
-            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 1;
+            TempRect.bottom = TempRect.top + UserGetSystemMetrics(SM_CYSIZE) - 2;
          }
-         TempRect.top += 1;
-         TempRect.right -= 1;
+         TempRect.top += 2;
+         TempRect.right -= 2;
 
          DrawFrameControl(hDC, &TempRect, DFC_CAPTION,
                           (DFCS_CAPTIONCLOSE | (bDown ? DFCS_PUSHED : 0) |
