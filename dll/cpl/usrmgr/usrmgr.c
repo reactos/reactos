@@ -43,7 +43,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
 static LONG APIENTRY
 UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
-    PROPSHEETPAGE psp[3];
+    PROPSHEETPAGE psp[2];
     PROPSHEETHEADER psh;
     TCHAR Caption[1024];
 
@@ -66,7 +66,7 @@ UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
     InitPropSheetPage(&psp[0], IDD_USERS, UsersPageProc);
     InitPropSheetPage(&psp[1], IDD_GROUPS, GroupsPageProc);
-    InitPropSheetPage(&psp[2], IDD_EXTRA, ExtraPageProc);
+    /* InitPropSheetPage(&psp[2], IDD_EXTRA, ExtraPageProc); */
 
     return (LONG)(PropertySheet(&psh) != -1);
 }
