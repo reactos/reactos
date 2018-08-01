@@ -41,9 +41,6 @@
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
 #endif
 
-/* the initialized 'Magic' value in FONTGDI */
-#define FONTGDI_MAGIC   0xBAD3DCAD
-
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 
