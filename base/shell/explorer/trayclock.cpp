@@ -3,6 +3,7 @@
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  * Copyright 2018 Ged Murphy <gedmurphy@reactos.org>
+ * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -534,7 +535,7 @@ LRESULT CTrayClockWnd::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bH
 
         hPrevFont = (HFONT) SelectObject(hDC, hFont);
 
-        rcClient.top = (rcClient.bottom / 2) - (CurrentSize.cy / 2);
+        rcClient.top = (rcClient.bottom - CurrentSize.cy) / 2;
         rcClient.bottom = rcClient.top + CurrentSize.cy;
 
         for (i = 0, line = 0;
