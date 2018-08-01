@@ -3014,7 +3014,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     {
         if (lfWidth == 0)
         {
-            DPRINT1("lfHeight and lfWidth are zero.");
+            DPRINT("lfHeight and lfWidth are zero.\n");
             lfHeight = -16;
         }
         else
