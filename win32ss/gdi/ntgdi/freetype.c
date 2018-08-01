@@ -5439,7 +5439,7 @@ GreExtTextOutW(
     if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BASELINE)
         yoff = 0;
     else if ((pdcattr->lTextAlign & VALIGN_MASK) == TA_BOTTOM)
-        yoff = -fixDescender >> 6;
+        yoff = -(fixDescender >> 6);
     else /* TA_TOP */
         yoff = fixAscender >> 6;
 #undef VALIGN_MASK
