@@ -20,8 +20,7 @@
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/rtl/text.c
  * PURPOSE:         Draw Text
- * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
  */
