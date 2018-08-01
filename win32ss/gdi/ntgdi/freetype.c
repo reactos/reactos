@@ -4114,7 +4114,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     ASSERT(Otm);
     ASSERT(LogFont);
 
-    /* FIXME: Aspect Penalty 30 */
     /* FIXME: IntSizeSynth Penalty 20 */
     /* FIXME: SmallPenalty Penalty 1 */
     /* FIXME: FaceNameSubst Penalty 500 */
@@ -4455,13 +4454,15 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     {
         if (TM->tmAveCharWidth / TM->tmHeight >= 3)
         {
+            /* Aspect Penalty 30 */
             /* The aspect rate is >= 3. It seems like a bad font. */
-            Penalty += ((TM->tmAveCharWidth / TM->tmHeight) - 2) * 100;
+            Penalty += ((TM->tmAveCharWidth / TM->tmHeight) - 2) * 30;
         }
         else if (TM->tmHeight / TM->tmAveCharWidth >= 3)
         {
+            /* Aspect Penalty 30 */
             /* The aspect rate is >= 3. It seems like a bad font. */
-            Penalty += ((TM->tmHeight / TM->tmAveCharWidth) - 2) * 100;
+            Penalty += ((TM->tmHeight / TM->tmAveCharWidth) - 2) * 30;
         }
     }
 
