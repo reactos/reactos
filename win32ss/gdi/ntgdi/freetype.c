@@ -41,6 +41,9 @@
     #define _TMPF_VARIABLE_PITCH    TMPF_FIXED_PITCH
 #endif
 
+/* the initialized 'Magic' value in FONTGDI */
+#define FONTGDI_MAGIC   0xBAD3DCAD
+
 extern const MATRIX gmxWorldToDeviceDefault;
 extern const MATRIX gmxWorldToPageDefault;
 
@@ -1572,7 +1575,7 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         Descent = pOS2->usWinDescent;
     }
 
-    if (FontGDI->Magic != 0xDEADBEEF)
+    if (FontGDI->Magic != FONTGDI_MAGIC)
     {
         IntRequestFontSize(NULL, FontGDI, 0, 0);
     }
@@ -3043,7 +3046,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         FontGDI->EmHeight           = FontGDI->tmHeight - FontGDI->tmInternalLeading;
         FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
         FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
-        FontGDI->Magic = 0xDEADBEEF;
+        FontGDI->Magic = FONTGDI_MAGIC;
 
         req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
         req.width          = 0;
@@ -3086,7 +3089,7 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
     FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
-    FontGDI->Magic = 0xDEADBEEF;
+    FontGDI->Magic = FONTGDI_MAGIC;
 
     if (lfHeight > 0)
         EmHeight64 = (FontGDI->EmHeight << 6) + 31;
@@ -3772,7 +3775,7 @@ TextIntGetTextExtentPoint(PDC dc,
         previous = glyph_index;
         String++;
     }
-    ASSERT(FontGDI->Magic == 0xDEADBEEF);
+    ASSERT(FontGDI->Magic == FONTGDI_MAGIC);
     ascender = FontGDI->tmAscent; /* Units above baseline */
     descender = FontGDI->tmDescent; /* Units below baseline */
     IntUnLockFreeType();
