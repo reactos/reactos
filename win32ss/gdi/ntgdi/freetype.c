@@ -4655,7 +4655,13 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
 
         RtlInitUnicodeString(&FaceName, NULL);
         IntGetFontLocalizedName(&FaceName, FontGdi->SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
-        wcscpy(TextObj->FaceName, FaceName.Buffer);
+
+        /* truncated copy */
+        FaceName.Length = (USHORT)min(FaceName.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
+        FaceName.MaximumLength = (USHORT)(FaceName.Length + sizeof(UNICODE_NULL));
+        RtlCopyMemory(TextObj->FaceName, FaceName.Buffer, FaceName.MaximumLength);
+
+        RtlFreeUnicodeString(&FaceName);
 
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.
