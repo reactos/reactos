@@ -3,7 +3,6 @@
  *
  * Copyright 2006 - 2007 Thomas Weidenmueller <w3seek@reactos.org>
  * Copyright 2018 Ged Murphy <gedmurphy@reactos.org>
- * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
