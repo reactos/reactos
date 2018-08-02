@@ -356,9 +356,33 @@ public:
         switch (uMsg)
         {
         case DFM_MERGECONTEXTMENU:
-            DPRINT1("FIXME: Add menu items for DFM_MERGECONTEXTMENU\n");
+        {
+            CComQIIDPtr<I_ID(IContextMenu)> spContextMenu(psf);
+            if (!spContextMenu)
+                return E_NOINTERFACE;
+
+            QCMINFO *pqcminfo = (QCMINFO *)lParam;
+            HRESULT hr = spContextMenu->QueryContextMenu(pqcminfo->hmenu,
+                                                 pqcminfo->indexMenu,
+                                                 pqcminfo->idCmdFirst,
+                                                 pqcminfo->idCmdLast,
+                                                 CMF_NORMAL);
+            if (FAILED_UNEXPECTEDLY(hr))
+                return hr;
+
+            pqcminfo->indexMenu += HRESULT_CODE(hr);
             return S_OK;
+        }
         case DFM_INVOKECOMMAND:
+        {
+            CComQIIDPtr<I_ID(IContextMenu)> spContextMenu(psf);
+            if (!spContextMenu)
+                return E_NOINTERFACE;
+
+            CMINVOKECOMMANDINFO ici = { sizeof(ici) };
+            ici.lpVerb = MAKEINTRESOURCEA(wParam);
+            return spContextMenu->InvokeCommand(&ici);
+        }
         case DFM_INVOKECOMMANDEX:
         case DFM_GETDEFSTATICID: // Required for Windows 7 to pick a default
             return S_FALSE;
