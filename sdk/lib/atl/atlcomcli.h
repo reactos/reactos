@@ -150,13 +150,16 @@ public:
 
 
 //CComQIIDPtr<I_ID(Itype)> is the gcc compatible version of CComQIPtr<Itype>
-#define I_ID(Itype) Itype,IID_##Itype
+#define I_ID(Itype) Itype,&IID_##Itype
 
 template <class T, const IID* piid>
-class CComQIIDPtr : 
+class CComQIIDPtr :
     public CComPtr<T>
 {
 public:
+    // Let's tell GCC how to find a symbol.
+    using CComPtr<T>::p;
+
     CComQIIDPtr()
     {
     }
@@ -172,37 +175,37 @@ public:
     {
         if (lp != NULL)
         {
-            if (FAILED(lp->QueryInterface(*piid, (void **)&this.p)))
-                this.p = NULL;
+            if (FAILED(lp->QueryInterface(*piid, reinterpret_cast<void **>(&p))))
+                p = NULL;
         }
     }
     T *operator = (T *lp)
     {
-        if (this.p != NULL)
-            this.p->Release();
-        this.p = lp;
-        if (this.p != NULL)
-            this.p->AddRef();
+        if (p != NULL)
+            p->Release();
+        p = lp;
+        if (p != NULL)
+            p->AddRef();
         return *this;
     }
 
     T *operator = (const CComQIIDPtr<T,piid> &lp)
     {
-        if (this.p != NULL)
-            this.p->Release();
-        this.p = lp.p;
-        if (this.p != NULL)
-            this.p->AddRef();
+        if (p != NULL)
+            p->Release();
+        p = lp.p;
+        if (p != NULL)
+            p->AddRef();
         return *this;
     }
 
     T * operator=(IUnknown* lp)
     {
-        if (this.p != NULL)
-            this.p->Release();
+        if (p != NULL)
+            p->Release();
 
-        if (FAILED(lp->QueryInterface(*piid, (void **)&this.p)))
-            this.p = NULL;
+        if (FAILED(lp->QueryInterface(*piid, reinterpret_cast<void **>(&p))))
+            p = NULL;
 
         return *this;
     }
