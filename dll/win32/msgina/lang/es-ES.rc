@@ -144,13 +144,13 @@ BEGIN
     LTEXT "¿&Qué desea hacer con el equipo?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Select the option that best describes why you want to shut down your computer.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Option:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planned", IDC_REASON_PLANNED, 182, 154, 47, 10
+    GROUPBOX "Eventos de Apagado", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Seleccione la opción que mejor describa el motivo del apagado de esta computadora.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Opción:", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "&Planificado", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Comment:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "&Comentario:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "Aceptar", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "Cancelar", IDCANCEL, 211, 276, 55, 14
