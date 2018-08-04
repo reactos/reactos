@@ -317,7 +317,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         }
         else
         {
-            // not exists
+            // does not exist
             CStringW strText;
             strText.Format(IDS_LOADERRORTEXT, __targv[1]);
             MessageBoxW(NULL, strText, NULL, MB_ICONERROR);
