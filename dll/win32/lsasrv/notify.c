@@ -32,8 +32,9 @@ LsapInitNotificationList(VOID)
 
 static
 PLSA_NOTIFICATION_ENTRY
-LsapGetNotificationEntryByHandle(
-    HANDLE EventHandle)
+LsapGetNotificationEntry(
+    HANDLE EventHandle,
+    POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass)
 {
     PLIST_ENTRY NotificationEntry;
     PLSA_NOTIFICATION_ENTRY CurrentNotification;
@@ -43,7 +44,8 @@ LsapGetNotificationEntryByHandle(
     {
         CurrentNotification = CONTAINING_RECORD(NotificationEntry, LSA_NOTIFICATION_ENTRY, Entry);
 
-        if (CurrentNotification->EventHandle == EventHandle)
+        if ((CurrentNotification->EventHandle == EventHandle) &&
+            (CurrentNotification->InformationClass == InformationClass))
             return CurrentNotification;
 
         NotificationEntry = NotificationEntry->Flink;
@@ -67,6 +69,7 @@ LsapRegisterNotification(
 
     if (pRequestMsg->PolicyChangeNotify.Request.Register)
     {
+        /* Register the notification event */
         pEntry = RtlAllocateHeap(RtlGetProcessHeap(),
                                  HEAP_ZERO_MEMORY,
                                  sizeof(LSA_NOTIFICATION_ENTRY));
@@ -84,12 +87,17 @@ LsapRegisterNotification(
     }
     else
     {
-        pEntry = LsapGetNotificationEntryByHandle(pRequestMsg->PolicyChangeNotify.Request.NotificationEventHandle);
-        if (pEntry)
+        /* Unregister the notification event */
+        pEntry = LsapGetNotificationEntry(pRequestMsg->PolicyChangeNotify.Request.NotificationEventHandle,
+                                          pRequestMsg->PolicyChangeNotify.Request.InformationClass);
+        if (pEntry == NULL)
         {
-            RemoveEntryList(&pEntry->Entry);
-            RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry);
+            Status = STATUS_INVALID_HANDLE;
+            goto done;
         }
+
+        RemoveEntryList(&pEntry->Entry);
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pEntry);
     }
 
 done:
@@ -97,6 +105,37 @@ done:
     RtlReleaseResource(&NotificationListLock);
 
     return Status;
+}
+
+
+VOID
+LsapNotifyPolicyChange(
+    POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass)
+{
+    PLIST_ENTRY NotificationEntry;
+    PLSA_NOTIFICATION_ENTRY CurrentNotification;
+
+    FIXME("LsapNotifyPolicyChange(%lu)\n", InformationClass);
+
+    /* Acquire the notification list lock shared */
+    RtlAcquireResourceShared(&NotificationListLock, TRUE);
+
+    NotificationEntry = NotificationListHead.Flink;
+    while (NotificationEntry != &NotificationListHead)
+    {
+        CurrentNotification = CONTAINING_RECORD(NotificationEntry, LSA_NOTIFICATION_ENTRY, Entry);
+
+        if (CurrentNotification->InformationClass == InformationClass)
+        {
+            FIXME("Notify event %p\n", CurrentNotification->EventHandle);
+
+        }
+
+        NotificationEntry = NotificationEntry->Flink;
+    }
+
+    /* Release the notification list lock */
+    RtlReleaseResource(&NotificationListLock);
 }
 
 /* EOF */

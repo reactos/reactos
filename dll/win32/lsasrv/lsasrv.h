@@ -217,6 +217,10 @@ NTSTATUS
 LsapRegisterNotification(
     PLSA_API_MSG RequestMsg);
 
+VOID
+LsapNotifyPolicyChange(
+    POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass);
+
 /* policy.c */
 NTSTATUS
 LsarQueryAuditLog(PLSA_DB_OBJECT PolicyObject,
