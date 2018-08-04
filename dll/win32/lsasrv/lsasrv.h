@@ -209,6 +209,14 @@ LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
 NTSTATUS
 LsarStartRpcServer(VOID);
 
+/* notify.c */
+VOID
+LsapInitNotificationList(VOID);
+
+NTSTATUS
+LsapRegisterNotification(
+    PLSA_API_MSG RequestMsg);
+
 /* policy.c */
 NTSTATUS
 LsarQueryAuditLog(PLSA_DB_OBJECT PolicyObject,
