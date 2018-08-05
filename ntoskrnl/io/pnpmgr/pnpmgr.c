@@ -786,7 +786,7 @@ IopStartDevice(
 {
    NTSTATUS Status;
    HANDLE InstanceHandle = NULL, ControlHandle = NULL;
-   UNICODE_STRING KeyName;
+   UNICODE_STRING KeyName, ValueString;
    OBJECT_ATTRIBUTES ObjectAttributes;
 
    if (DeviceNode->Flags & DNF_DISABLED)
@@ -817,7 +817,10 @@ IopStartDevice(
        goto ByeBye;
 
    RtlInitUnicodeString(&KeyName, L"ActiveService");
-   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, DeviceNode->ServiceName.Buffer, DeviceNode->ServiceName.Length + sizeof(UNICODE_NULL));
+   ValueString = DeviceNode->ServiceName;
+   if (!ValueString.Buffer)
+       RtlInitUnicodeString(&ValueString, L"");
+   Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, ValueString.Buffer, ValueString.Length + sizeof(UNICODE_NULL));
    // }
 
 ByeBye:
