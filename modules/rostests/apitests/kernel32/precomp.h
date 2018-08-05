@@ -11,5 +11,8 @@
 #include <winreg.h>
 #include <strsafe.h>
 #include <ndk/umtypes.h>
+#include <ndk/extypes.h>
+#include <ndk/exfuncs.h>
+#include <ndk/rtlfuncs.h>
 
 #endif /* _KERNEL32_APITEST_PRECOMP_H_ */
