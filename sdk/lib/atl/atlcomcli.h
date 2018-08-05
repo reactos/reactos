@@ -87,23 +87,49 @@ public:
 
     T *operator = (T *lp)
     {
-        if (p != NULL)
-            p->Release();
+        T* pOld = p;
+
         p = lp;
         if (p != NULL)
             p->AddRef();
+
+        if (pOld != NULL)
+            pOld->Release();
+
         return *this;
     }
 
     T *operator = (const CComPtr<T> &lp)
     {
-        if (p != NULL)
-            p->Release();
+        T* pOld = p;
+
         p = lp.p;
         if (p != NULL)
             p->AddRef();
+
+        if (pOld != NULL)
+            pOld->Release();
+
         return *this;
     }
+
+    // We cannot enable this until gcc starts supporting __uuidof
+    // See CORE-12710
+#if 0
+    template <typename Q>
+    T* operator=(const CComPtr<Q>& lp)
+    {
+        T* pOld = p;
+
+        if (!lp.p || FAILED(lp.p->QueryInterface(__uuidof(T), (void**)(IUnknown**)&p)))
+            p = NULL;
+
+        if (pOld != NULL)
+            pOld->Release();
+
+        return *this;
+    }
+#endif
 
     void Release()
     {
@@ -175,37 +201,47 @@ public:
     {
         if (lp != NULL)
         {
-            if (FAILED(lp->QueryInterface(*piid, reinterpret_cast<void **>(&p))))
+            if (FAILED(lp->QueryInterface(*piid, (void**)(IUnknown**)&p)))
                 p = NULL;
         }
     }
     T *operator = (T *lp)
     {
-        if (p != NULL)
-            p->Release();
+        T* pOld = p;
+
         p = lp;
         if (p != NULL)
             p->AddRef();
+
+        if (pOld != NULL)
+            pOld->Release();
+
         return *this;
     }
 
     T *operator = (const CComQIIDPtr<T,piid> &lp)
     {
-        if (p != NULL)
-            p->Release();
+        T* pOld = p;
+
         p = lp.p;
         if (p != NULL)
             p->AddRef();
+
+        if (pOld != NULL)
+            pOld->Release();
+
         return *this;
     }
 
     T * operator=(IUnknown* lp)
     {
-        if (p != NULL)
-            p->Release();
+        T* pOld = p;
 
-        if (FAILED(lp->QueryInterface(*piid, reinterpret_cast<void **>(&p))))
+        if (!lp || FAILED(lp->QueryInterface(*piid, (void**)(IUnknown**)&p)))
             p = NULL;
+
+        if (pOld != NULL)
+            pOld->Release();
 
         return *this;
     }
