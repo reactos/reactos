@@ -394,7 +394,7 @@ NetrServerGetInfo(
 
             pServerInfo->ServerInfo101.sv101_version_major = VersionInfo.dwMajorVersion;
             pServerInfo->ServerInfo101.sv101_version_minor = VersionInfo.dwMinorVersion;
-            pServerInfo->ServerInfo101.sv101_type = SV_TYPE_NT;  /* FIXME */
+            pServerInfo->ServerInfo101.sv101_type = dwServiceBits | SV_TYPE_NT;
             pServerInfo->ServerInfo101.sv101_comment = NULL; /* FIXME */
 
             *InfoStruct = pServerInfo;
@@ -413,7 +413,7 @@ NetrServerGetInfo(
 
             pServerInfo->ServerInfo102.sv102_version_major = VersionInfo.dwMajorVersion;
             pServerInfo->ServerInfo102.sv102_version_minor = VersionInfo.dwMinorVersion;
-            pServerInfo->ServerInfo102.sv102_type = SV_TYPE_NT;
+            pServerInfo->ServerInfo102.sv102_type = dwServiceBits | SV_TYPE_NT;
             pServerInfo->ServerInfo102.sv102_comment = NULL; /* FIXME */
 
             pServerInfo->ServerInfo102.sv102_users = 0; /* FIXME */
@@ -619,8 +619,15 @@ NetrServerSetServiceBits(
     DWORD ServiceBits,
     DWORD UpdateImmediately)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    FIXME("NetrServerSetServiceBits(%p %s %lx %lu)\n",
+          ServerName, debugstr_w(Transport), ServiceBits, UpdateImmediately);
+
+    /* FIXME: Support Transport */
+    /* FIXME: Support UpdateImmdiately */
+
+    dwServiceBits = ServiceBits;
+
+    return NERR_Success;
 }
 
 
@@ -798,12 +805,19 @@ NetrServerTransportAddEx(
 }
 
 
-/* Function 42 */
-void
+/* Function 42 - Not used on wire */
+NET_API_STATUS
 __stdcall
-Opnum42NotUsedOnWire(void)
+NetrServerSetServiceBitsEx(
+    SRVSVC_HANDLE ServerName,
+    WCHAR *EmulatedServer,
+    WCHAR *Transport,
+    DWORD ServiceBitsOfInterest,
+    DWORD ServiceBits,
+    DWORD UpdateImmediately)
 {
     UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -863,12 +877,13 @@ NetrDfsSetLocalVolumeState(
 }
 
 
-/* Function 47 */
-void
+/* Function 47 - Not used on wire */
+NET_API_STATUS
 __stdcall
-Opnum47NotUsedOnWire(void)
+NetrDfsSetServerInfo(void)
 {
     UNIMPLEMENTED;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 

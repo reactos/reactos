@@ -37,6 +37,9 @@ static WCHAR ServiceName[] = L"Lanmanserver";
 static SERVICE_STATUS_HANDLE ServiceStatusHandle;
 static SERVICE_STATUS ServiceStatus;
 
+DWORD dwServiceBits = 0;
+
+
 /* FUNCTIONS *****************************************************************/
 
 static VOID
