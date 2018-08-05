@@ -205,6 +205,7 @@ PVOID apfnDispatch[USER32_CALLBACK_MAXIMUM + 1] =
     User32CallDDEPostFromKernel,
     User32CallDDEGetFromKernel,
     User32CallOBMFromKernel,
+    User32CallLPKFromKernel,
 };
 
 
@@ -640,4 +641,23 @@ User32CallOBMFromKernel(PVOID Arguments, ULONG ArgumentLength)
   Common->oembmi[OBI_UPARROWI].cy = bmp.bmHeight;
 
   return ZwCallbackReturn(Arguments, ArgumentLength, STATUS_SUCCESS);
+}
+
+NTSTATUS WINAPI User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+    BOOL bResult;
+    PLPK_CALLBACK_ARGUMENTS Argument;
+
+    Argument = (PLPK_CALLBACK_ARGUMENTS)Arguments;
+
+    bResult = ExtTextOutW(Argument->hdc,
+                          Argument->x,
+                          Argument->y,
+                          Argument->flags,
+                          &Argument->rect,
+                          Argument->lpString,
+                          Argument->count,
+                          NULL);
+
+    return ZwCallbackReturn(&bResult, sizeof(HMODULE), STATUS_SUCCESS);
 }
