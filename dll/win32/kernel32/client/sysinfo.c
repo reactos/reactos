@@ -7,7 +7,8 @@
  *                  Christoph von Wittich
  *                  Thomas Weidenmueller
  *                  Gunnar Andre Dalsnes
- *                  Stanislav Motylkov
+ *                  Stanislav Motylkov (x86corez@gmail.com)
+ *                  Mark Jansen (mark.jansen@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -75,80 +76,50 @@ GetSystemInfoInternal(IN PSYSTEM_BASIC_INFORMATION BasicInfo,
     }
 }
 
+static
 UINT
-WINAPI
-GetRawSMBiosTableFromRegistry(OUT PVOID pData)
+BaseQuerySystemFirmware(IN DWORD FirmwareTableProviderSignature,
+                        IN DWORD FirmwareTableID,
+                        OUT PVOID pFirmwareTableBuffer,
+                        IN DWORD BufferSize,
+                        IN SYSTEM_FIRMWARE_TABLE_ACTION Action)
 {
-    static const LPCWSTR RegistryKey = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\mssmbios\\Data";
-    static const LPCWSTR ValueNameStr = L"SMBiosData";
-
-    PKEY_VALUE_PARTIAL_INFORMATION KeyInfo = NULL;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName;
-    UNICODE_STRING ValueName;
-    HANDLE KeyHandle;
-    ULONG KeyInfoSize;
-    ULONG ReturnSize = 0;
+    SYSTEM_FIRMWARE_TABLE_INFORMATION* SysFirmwareInfo;
+    ULONG Result = 0, ReturnedSize;
+    ULONG TotalSize = BufferSize + sizeof(SYSTEM_FIRMWARE_TABLE_INFORMATION);
     NTSTATUS Status;
 
-    RtlInitUnicodeString(&KeyName, RegistryKey);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenKey(&KeyHandle,
-                       KEY_READ,
-                       &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    SysFirmwareInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, TotalSize);
+    if (!SysFirmwareInfo)
     {
+        SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-
-    // 256 KiB is more than enough for raw SMBIOS dump
-    KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 256 * 1024;
-    KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, KeyInfoSize);
-    if (KeyInfo == NULL)
+    _SEH2_TRY
     {
-        NtClose(KeyHandle);
-        goto cleanup;
+        SysFirmwareInfo->ProviderSignature = FirmwareTableProviderSignature;
+        SysFirmwareInfo->TableID = FirmwareTableID;
+        SysFirmwareInfo->Action = Action;
+        SysFirmwareInfo->TableBufferLength = BufferSize;
+
+        Status = NtQuerySystemInformation(SystemFirmwareTableInformation, SysFirmwareInfo, TotalSize, &ReturnedSize);
+
+        if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+            Result = SysFirmwareInfo->TableBufferLength;
+
+        if (NT_SUCCESS(Status) && pFirmwareTableBuffer)
+        {
+            RtlCopyMemory(pFirmwareTableBuffer, SysFirmwareInfo->TableBuffer, SysFirmwareInfo->TableBufferLength);
+        }
     }
-
-    RtlInitUnicodeString(&ValueName, ValueNameStr);
-
-    Status = NtQueryValueKey(KeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             KeyInfo,
-                             KeyInfoSize,
-                             &ReturnSize);
-
-    NtClose(KeyHandle);
-    ReturnSize = 0;
-
-    if (!NT_SUCCESS(Status))
+    _SEH2_FINALLY
     {
-        goto cleanup;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SysFirmwareInfo);
     }
+    _SEH2_END;
 
-    if (KeyInfo->Type != REG_BINARY)
-    {
-        goto cleanup;
-    }
-
-    ReturnSize = KeyInfo->DataLength;
-    if (pData)
-    {
-        RtlCopyMemory(pData, KeyInfo->Data, KeyInfo->DataLength);
-    }
-
-cleanup:
-    if (KeyInfo)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-    }
-    return ReturnSize;
+    BaseSetLastNTError(Status);
+    return Result;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -533,69 +504,11 @@ EnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
                          OUT PVOID pFirmwareTableBuffer,
                          IN DWORD BufferSize)
 {
-    UINT uSize = 0;
-    UINT uCount = 0;
-    DWORD dwError = ERROR_SUCCESS;
-    PDWORD pBuffer = NULL;
-
-    switch (FirmwareTableProviderSignature)
-    {
-        case 'ACPI':
-        {
-            /* FIXME: Not implemented yet */
-            dwError = ERROR_CALL_NOT_IMPLEMENTED;
-            break;
-        }
-        case 'FIRM':
-        {
-            /* FIXME: Not implemented yet */
-            dwError = ERROR_CALL_NOT_IMPLEMENTED;
-            break;
-        }
-        case 'RSMB':
-        {
-            if (GetRawSMBiosTableFromRegistry(NULL) > 0)
-            {
-                uCount = 1;
-                uSize = uCount * sizeof(DWORD);
-                pBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, uSize);
-                if (!pBuffer)
-                {
-                    SetLastError(ERROR_OUTOFMEMORY);
-                    return 0;
-                }
-                *pBuffer = 0;
-            }
-            break;
-        }
-        default:
-        {
-            dwError = ERROR_INVALID_FUNCTION;
-        }
-    }
-
-    if (dwError == ERROR_SUCCESS)
-    {
-        if (uSize > 0 && BufferSize >= uSize)
-        {
-            /* Write to buffer */
-            if (pFirmwareTableBuffer)
-            {
-                RtlMoveMemory(pFirmwareTableBuffer, pBuffer, uSize);
-            }
-        }
-        else if (BufferSize < uSize)
-        {
-            dwError = ERROR_INSUFFICIENT_BUFFER;
-        }
-    }
-
-    if (pBuffer)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
-    }
-    SetLastError(dwError);
-    return uSize;
+    return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
+                                   0,
+                                   pFirmwareTableBuffer,
+                                   BufferSize,
+                                   SystemFirmwareTable_Enumerate);
 }
 
 /**
@@ -639,81 +552,11 @@ GetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
                        OUT PVOID pFirmwareTableBuffer,
                        IN DWORD BufferSize)
 {
-    /* This function currently obtains data using a hack (registry workaround)
-       which is located here: drivers/input/i8042prt/hwhacks.c
-       i8042StoreSMBiosTables is responsible for writing SMBIOS table into registry
-
-       Should be implemented correctly using NtQuerySystemInformation
-       along with SystemFirmwareTableInformation class
-
-       Reference: https://github.com/hfiref0x/VMDE/blob/master/src/vmde/sup.c
-     */
-
-    UINT uSize = 0;
-    DWORD dwError = ERROR_SUCCESS;
-    PVOID pBuffer = NULL;
-
-    switch (FirmwareTableProviderSignature)
-    {
-        case 'ACPI':
-        {
-            /* FIXME: Not implemented yet */
-            dwError = ERROR_CALL_NOT_IMPLEMENTED;
-            break;
-        }
-        case 'FIRM':
-        {
-            /* FIXME: Not implemented yet */
-            dwError = ERROR_CALL_NOT_IMPLEMENTED;
-            break;
-        }
-        case 'RSMB':
-        {
-            uSize = GetRawSMBiosTableFromRegistry(NULL);
-            if (uSize > 0)
-            {
-                pBuffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, uSize);
-                if (!pBuffer)
-                {
-                    SetLastError(ERROR_OUTOFMEMORY);
-                    return 0;
-                }
-                GetRawSMBiosTableFromRegistry(pBuffer);
-            }
-            else
-            {
-                dwError = ERROR_NOT_FOUND;
-            }
-            break;
-        }
-        default:
-        {
-            dwError = ERROR_INVALID_FUNCTION;
-        }
-    }
-
-    if (dwError == ERROR_SUCCESS)
-    {
-        if (uSize > 0 && BufferSize >= uSize)
-        {
-            /* Write to buffer */
-            if (pFirmwareTableBuffer)
-            {
-                RtlMoveMemory(pFirmwareTableBuffer, pBuffer, uSize);
-            }
-        }
-        else if (BufferSize < uSize)
-        {
-            dwError = ERROR_INSUFFICIENT_BUFFER;
-        }
-    }
-
-    if (pBuffer)
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, pBuffer);
-    }
-    SetLastError(dwError);
-    return uSize;
+    return BaseQuerySystemFirmware(FirmwareTableProviderSignature,
+                                   FirmwareTableID,
+                                   pFirmwareTableBuffer,
+                                   BufferSize,
+                                   SystemFirmwareTable_Get);
 }
 
 /*
