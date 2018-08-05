@@ -244,23 +244,23 @@ NetEnumerateComputerNames(
 NET_API_STATUS
 WINAPI
 NetGetJoinInformation(
-    LPCWSTR Server,
-    LPWSTR *Name,
-    PNETSETUP_JOIN_STATUS type)
+    _In_ LPCWSTR lpServer,
+    _Out_ LPWSTR *lpNameBuffer,
+    _Out_ PNETSETUP_JOIN_STATUS BufferType)
 {
     NET_API_STATUS status;
 
-    TRACE("NetGetJoinInformation(%s %p %p)\n", debugstr_w(Server),
-          Name, type);
+    TRACE("NetGetJoinInformation(%s %p %p)\n",
+          debugstr_w(lpServer), lpNameBuffer, BufferType);
 
-    if (Name == NULL || type == NULL)
+    if (lpNameBuffer == NULL || BufferType == NULL)
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        status = NetrGetJoinInformation((LPWSTR)Server,
-                                        Name,
-                                        type);
+        status = NetrGetJoinInformation((LPWSTR)lpServer,
+                                        lpNameBuffer,
+                                        BufferType);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -518,10 +518,10 @@ NetUnjoinDomain(
 NET_API_STATUS
 WINAPI
 NetUseAdd(
-    LMSTR UncServerName,
-    DWORD Level,
-    LPBYTE Buf,
-    LPDWORD ParmError)
+    _In_ LMSTR UncServerName,
+    _In_ DWORD Level,
+    _In_ LPBYTE Buf,
+    _Out_ LPDWORD ParmError)
 {
     NET_API_STATUS status;
 
@@ -548,9 +548,9 @@ NetUseAdd(
 NET_API_STATUS
 WINAPI
 NetUseDel(
-    LMSTR UncServerName,
-    LMSTR UseName,
-    DWORD ForceCond)
+    _In_ LMSTR UncServerName,
+    _In_ LMSTR UseName,
+    _In_ DWORD ForceCond)
 {
     NET_API_STATUS status;
 
@@ -576,13 +576,13 @@ NetUseDel(
 NET_API_STATUS
 WINAPI
 NetUseEnum(
-    LMSTR UncServerName,
-    DWORD Level,
-    LPBYTE *BufPtr,
-    DWORD PreferedMaximumSize,
-    LPDWORD EntriesRead,
-    LPDWORD TotalEntries,
-    LPDWORD ResumeHandle)
+    _In_ LMSTR UncServerName,
+    _In_ DWORD Level,
+    _Out_ LPBYTE *BufPtr,
+    _In_ DWORD PreferedMaximumSize,
+    _Out_ LPDWORD EntriesRead,
+    _Out_ LPDWORD TotalEntries,
+    _Inout_ LPDWORD ResumeHandle)
 {
     USE_ENUM_STRUCT UseEnumInfo;
     USE_INFO_0_CONTAINER Container0;
@@ -658,6 +658,38 @@ NetUseEnum(
 
 NET_API_STATUS
 WINAPI
+NetUseGetInfo(
+    _In_ LMSTR UncServerName,
+    _In_ LMSTR UseName,
+    _In_ DWORD Level,
+    _Out_ LPBYTE *BufPtr)
+{
+    NET_API_STATUS status;
+
+    TRACE("NetUseGetInfo(%s, %s, %d, %p)\n", debugstr_w(UncServerName),
+          debugstr_w(UseName), Level, BufPtr);
+
+    *BufPtr = NULL;
+
+    RpcTryExcept
+    {
+        status = NetrUseGetInfo(UncServerName,
+                                UseName,
+                                Level,
+                                (LPUSE_INFO)BufPtr);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetValidateName(
     _In_ LPCWSTR lpServer,
     _In_ LPCWSTR lpName,
@@ -696,50 +728,18 @@ NetValidateName(
 }
 
 
-NET_API_STATUS
-WINAPI
-NetUseGetInfo(
-    LMSTR UncServerName,
-    LMSTR UseName,
-    DWORD Level,
-    LPBYTE *BufPtr)
-{
-    NET_API_STATUS status;
-
-    TRACE("NetUseGetInfo(%s, %s, %d, %p)\n", debugstr_w(UncServerName),
-          debugstr_w(UseName), Level, BufPtr);
-
-    *BufPtr = NULL;
-
-    RpcTryExcept
-    {
-        status = NetrUseGetInfo(UncServerName,
-                                UseName,
-                                Level,
-                                (LPUSE_INFO)BufPtr);
-    }
-    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
-    {
-        status = I_RpcMapWin32Status(RpcExceptionCode());
-    }
-    RpcEndExcept;
-
-    return status;
-}
-
-
 #if 0
 NET_API_STATUS
 WINAPI
 NetWkstaGetInfo(
-    LPWSTR servername,
-    DWORD level,
-    LPBYTE *bufptr)
+    _In_ LPWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
 {
     NET_API_STATUS status;
 
-    TRACE("NetWkstaGetInfo(%s, %d, %p)\n", debugstr_w(servername),
-          level, bufptr);
+    TRACE("NetWkstaGetInfo(%s, %d, %p)\n",
+          debugstr_w(servername), level, bufptr);
 
     if (bufptr == NULL)
         return ERROR_INVALID_PARAMETER;
@@ -766,15 +766,15 @@ NetWkstaGetInfo(
 NET_API_STATUS
 WINAPI
 NetWkstaSetInfo(
-    LPWSTR servername,
-    DWORD level,
-    LPBYTE buffer,
-    LPDWORD parm_err)
+    _In_ LPWSTR servername,
+    _In_ DWORD level,
+    _In_ LPBYTE buffer,
+    _Out_ LPDWORD parm_err)
 {
     NET_API_STATUS status;
 
-    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n", debugstr_w(servername),
-          level, buffer, parm_err);
+    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n",
+          debugstr_w(servername), level, buffer, parm_err);
 
     RpcTryExcept
     {
@@ -796,10 +796,10 @@ NetWkstaSetInfo(
 NET_API_STATUS
 WINAPI
 NetWkstaTransportAdd(
-    LPWSTR servername,
-    DWORD level,
-    LPBYTE buf,
-    LPDWORD parm_err)
+    _In_opt_ LPWSTR servername,
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _Out_ LPDWORD parm_err)
 {
     NET_API_STATUS status;
 
@@ -826,9 +826,9 @@ NetWkstaTransportAdd(
 NET_API_STATUS
 WINAPI
 NetWkstaTransportDel(
-    LPWSTR servername,
-    LPWSTR transportname,
-    DWORD ucond)
+    _In_opt_ LPWSTR servername,
+    _In_ LPWSTR transportname,
+    _In_ DWORD ucond)
 {
     NET_API_STATUS status;
 
@@ -855,13 +855,13 @@ NetWkstaTransportDel(
 NET_API_STATUS
 WINAPI
 NetWkstaTransportEnum(
-    LPWSTR servername,
-    DWORD level,
-    LPBYTE *bufptr,
-    DWORD prefmaxlen,
-    LPDWORD entriesread,
-    LPDWORD totalentries,
-    LPDWORD resumehandle)
+    _In_opt_ LPWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ LPDWORD resumehandle)
 {
     WKSTA_TRANSPORT_ENUM_STRUCT TransportEnumInfo;
     WKSTA_TRANSPORT_INFO_0_CONTAINER Container0;
@@ -914,13 +914,13 @@ NetWkstaTransportEnum(
 NET_API_STATUS
 WINAPI
 NetWkstaUserEnum(
-    LPWSTR servername,
-    DWORD level,
-    LPBYTE *bufptr,
-    DWORD prefmaxlen,
-    LPDWORD entriesread,
-    LPDWORD totalentries,
-    LPDWORD resumehandle)
+    _In_ LPWSTR servername,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ LPDWORD resumehandle)
 {
     WKSTA_USER_ENUM_STRUCT UserEnumInfo;
     WKSTA_USER_INFO_0_CONTAINER Container0;
@@ -986,13 +986,13 @@ NET_API_STATUS
 WINAPI
 NetWkstaUserGetInfo(
     LPWSTR reserved,
-    DWORD level,
-    PBYTE *bufptr)
+    _In_ DWORD level,
+    _Out_ PBYTE *bufptr)
 {
     NET_API_STATUS status;
 
-    TRACE("NetWkstaUserGetInfo(%s, %d, %p)\n", debugstr_w(reserved),
-          level, bufptr);
+    TRACE("NetWkstaUserGetInfo(%s, %d, %p)\n",
+          debugstr_w(reserved), level, bufptr);
 
     if (reserved != NULL)
         return ERROR_INVALID_PARAMETER;
@@ -1020,14 +1020,14 @@ NET_API_STATUS
 WINAPI
 NetWkstaUserSetInfo(
     LPWSTR reserved,
-    DWORD level,
-    LPBYTE buf,
-    LPDWORD parm_err)
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _Out_ LPDWORD parm_err)
 {
     NET_API_STATUS status;
 
-    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n", debugstr_w(reserved),
-          level, buf, parm_err);
+    TRACE("NetWkstaSetInfo(%s, %d, %p, %p)\n",
+          debugstr_w(reserved), level, buf, parm_err);
 
     if (reserved != NULL)
         return ERROR_INVALID_PARAMETER;
