@@ -233,6 +233,28 @@ DirHelp(VOID)
     ConOutResPaging(TRUE, STRING_DIR_HELP1);
 }
 
+/* Check whether this is a dot-directory "." or "..", speed-optimized */
+FORCEINLINE
+BOOL
+IsDotDirectory(
+    IN LPCTSTR pszPath)
+{
+    return (  pszPath[0] == _T('.') &&
+            ( pszPath[1] == 0 || /* pszPath[1] == _T('\\') || */
+             (pszPath[1] == _T('.') && (pszPath[2] == 0 /* || pszPath[2] == _T('\\') */))
+            ) );
+}
+
+FORCEINLINE
+BOOL
+IsDotDirectoryN(
+    IN const TCHAR* pPath,
+    IN SIZE_T Length)
+{
+    return ((Length == 1 && pPath[0] == _T('.')) ||
+            (Length == 2 && pPath[0] == _T('.') && pPath[1] == _T('.')));
+}
+
 /*
  * DirReadParameters
  *
@@ -822,11 +844,10 @@ getName(const TCHAR* file, TCHAR * dest)
     INT_PTR iLen;
     LPTSTR end;
 
-    /* Check for "." and ".." folders */
-    if ((_tcscmp(file, _T(".")) == 0) ||
-        (_tcscmp(file, _T("..")) == 0))
+    /* Check for dot-directories "." and ".." */
+    if (IsDotDirectory(file))
     {
-        _tcscpy(dest,file);
+        _tcscpy(dest, file);
         return dest;
     }
 
@@ -1087,20 +1108,19 @@ DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
 
     for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
-        if ((_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T(".")) == 0) ||
-            (_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T("..")) == 0))
+        if (IsDotDirectory(ptrFiles[i]->stFindInfo.cFileName))
         {
-            /* at bare format we don't print "." and ".." folder */
+            /* At bare format we don't print the dot-directories "." and ".." */
             continue;
         }
         if (lpFlags->bRecursive)
         {
-            /* at recursive mode we print full path of file */
+            /* At recursive mode we print full path of file */
             DirPrintf(lpFlags, _T("%s\\%s\n"), szCurPath, ptrFiles[i]->stFindInfo.cFileName);
         }
         else
         {
-            /* if we are not in recursive mode we print the file names */
+            /* If we are not in recursive mode we print the file names */
             DirPrintf(lpFlags, _T("%s\n"), ptrFiles[i]->stFindInfo.cFileName);
         }
     }
@@ -1376,7 +1396,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /* Collect the results for the current folder */
+    /* Collect the results for the current directory */
     hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
     if (hSearch != INVALID_HANDLE_VALUE)
     {
@@ -1561,8 +1581,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
             do
             {
                 /* We search for directories other than "." and ".." */
-                if ((_tcsicmp(wfdFileInfo.cFileName, _T("."))  != 0) &&
-                    (_tcsicmp(wfdFileInfo.cFileName, _T("..")) != 0) &&
+                if (!IsDotDirectory(wfdFileInfo.cFileName) &&
                     (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
                     /* Concat the path and the directory to do recursive */
@@ -1572,7 +1591,7 @@ DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with tr
                     pszSubFilePart = &szSubPath[_tcslen(szSubPath)];
                     _tcscat(pszSubFilePart, pszFilePart);
 
-                    /* We do the same for the folder */
+                    /* We do the same for the directory */
                     if (DirList(szSubPath, pszSubFilePart, lpFlags) != 0)
                     {
                         FindClose(hRecSearch);
@@ -1660,9 +1679,7 @@ ResolvePattern(
             break;
 
         /* Ignore the special "." and ".." directories that are correctly handled */
-        if ((pNextDir - pCurDir == 0) ||
-            (pNextDir - pCurDir == 1 && pCurDir[0] == _T('.')) ||
-            (pNextDir - pCurDir == 2 && pCurDir[0] == _T('.') && pCurDir[1] == _T('.')))
+        if ((pNextDir - pCurDir == 0) || IsDotDirectoryN(pCurDir, pNextDir - pCurDir))
         {
             /* Found such a directory, ignore */
             ++pNextDir;
@@ -1758,9 +1775,7 @@ ResolvePattern(
         ASSERT(pszFullPath[_tcslen(pszFullPath)-1] == _T('\\'));
 
         /* Anything NOT being "." or ".." (the special directories) must be fully restored */
-        if (*pNextDir &&
-            (_tcsicmp(pNextDir, _T("."))  != 0) &&
-            (_tcsicmp(pNextDir, _T("..")) != 0))
+        if (*pNextDir && !IsDotDirectory(pNextDir))
         {
             pszPatternPart = &pszFullPath[_tcslen(pszFullPath)];
             _tcscpy(pszPatternPart, pNextDir);
@@ -1777,9 +1792,7 @@ ResolvePattern(
         TRACE("pszPatternPart: %S is DIFFERENT from file criterion: %S\n", pszPatternPart, pNextDir);
 
         /* Anything NOT being "." or ".." (the special directories) must be fully restored */
-        if (*pNextDir &&
-            (_tcsicmp(pNextDir, _T("."))  != 0) &&
-            (_tcsicmp(pNextDir, _T("..")) != 0))
+        if (*pNextDir && !IsDotDirectory(pNextDir))
         {
             /* Restore the correct file criterion */
             _tcscpy(pszPatternPart, pNextDir);
