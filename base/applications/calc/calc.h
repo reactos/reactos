@@ -1,10 +1,14 @@
-#ifndef _CALC_H
-#define _CALC_H
+#ifndef __CALC_H__
+#define __CALC_H__
 
-#include <stdarg.h>
-#include <windef.h>
-#include <winuser.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include <tchar.h>
+#include <commctrl.h>
+#include <shellapi.h>
+
+#include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <float.h>
 #include <malloc.h>
@@ -42,6 +46,8 @@
 #ifndef IDC_STATIC
 #define IDC_STATIC  ((DWORD)-1)
 #endif
+
+#define CALC_VERSION        _T("1.12")
 
 #define MAX_CALC_SIZE       256
 
@@ -226,8 +232,10 @@ void convert_real_integer(unsigned int base);
 
 INT_PTR CALLBACK AboutDlgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 
+//
+
 void ConvExecute(HWND hWnd);
 void ConvAdjust(HWND hWnd, int n_cat);
 void ConvInit(HWND hWnd);
 
-#endif /* _CALC_H */
+#endif /* __CALC_H__ */
