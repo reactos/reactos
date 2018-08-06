@@ -48,9 +48,9 @@
 #define BITMASK_OCT_MASK    0x02
 #define BITMASK_BIN_MASK    0x01
 
-#define CALC_CLR_RED        0x000000FF
-#define CALC_CLR_BLUE       0x00FF0000
-#define CALC_CLR_PURP       0x00FF00FF
+#define CALC_CLR_RED        RGB(0xFF, 0x00, 0x00)
+#define CALC_CLR_BLUE       RGB(0x00, 0x00, 0xFF)
+#define CALC_CLR_PURP       RGB(0xFF, 0x00, 0xFF)
 
 typedef struct {
     CHAR key; // Virtual key identifier
@@ -233,10 +233,22 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_LEFTPAR,  NO_CHAIN,              0, run_lpar,    NULL,        NULL,     NULL,     },
 };
 
-/*
-*/
+/* Sub-classing information for theming support */
+typedef struct{
+    BOOL    bHover;
+    WNDPROC oldProc;
+} BTNINFO,*LPBTNINFO;
 
-calc_t calc;
+
+/*
+ * Global variable declaration
+ */
+
+calc_t  calc;
+
+/* Hot-state info for theming support */
+BTNINFO BtnInfo[255];
+UINT    BtnCount;
 
 static void load_config(void)
 {
@@ -326,7 +338,7 @@ static LRESULT post_key_press(LPARAM lParam, WORD idc)
     if (!GetClassName(hCtlWnd, ClassName, SIZEOF(ClassName)))
         return 1;
 
-    if (!_tcscmp(ClassName, TEXT("Button"))) {
+    if (!_tcscmp(ClassName, WC_BUTTON)) {
         DWORD dwStyle = GetWindowLongPtr(hCtlWnd, GWL_STYLE) & 0xF;
 
         /* Set states for press/release, but only for push buttons */
@@ -1213,14 +1225,58 @@ static void run_lpar(calc_number_t *c)
 static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
 {
     LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT)lp;
-    DWORD            dwStyle;
     UINT             dwText;
     TCHAR            text[64];
     int              dx, dy, len;
     SIZE             size;
     POINT            pt;
 
-    if(dis->CtlType == ODT_BUTTON) {
+    if(dis->CtlType == ODT_BUTTON)
+    {
+        HTHEME hTheme = NULL;
+        LPBTNINFO lpBtnInfo;
+
+        if (calc_IsAppThemed() && calc_IsThemeActive())
+            hTheme = calc_OpenThemeData(hWnd, L"Button");
+
+        if (hTheme)
+        {
+            int iState = 0;
+
+            if ((dis->itemState & ODS_DISABLED))
+                iState |= PBS_DISABLED;
+            if ((dis->itemState & ODS_SELECTED))
+                iState |= PBS_PRESSED;
+
+            lpBtnInfo = (LPBTNINFO)GetWindowLongPtr(dis->hwndItem, GWLP_USERDATA);
+            if (lpBtnInfo != NULL)
+            {
+                if (lpBtnInfo->bHover)
+                    iState |= PBS_HOT;
+            }
+
+            if (calc_IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+            {
+                calc_DrawThemeParentBackground(dis->hwndItem, dis->hDC, &dis->rcItem);
+            }
+
+            // Draw the frame around the control
+            calc_DrawThemeBackground(hTheme, dis->hDC, BP_PUSHBUTTON, iState, &dis->rcItem, NULL);
+
+            calc_CloseThemeData(hTheme);
+        } else {
+            /* default state: unpushed */
+            DWORD dwStyle = 0;
+
+            if ((dis->itemState & ODS_SELECTED))
+                dwStyle = DFCS_PUSHED;
+
+            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH | dwStyle);
+        }
+
+        /* button text to write */
+        len = GetWindowText(dis->hwndItem, text, SIZEOF(text));
+
         /*
          * little exception: 1/x has different color
          * in standard and scientific modes
@@ -1236,21 +1292,20 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
                 break;
             }
         }
-        /* button text to write */
-        len = GetWindowText(dis->hwndItem, text, SIZEOF(text));
-        /* default state: unpushed & enabled */
-        dwStyle = 0;
+
+        /* No background, to avoid corruption of the texture */
+        SetBkMode(dis->hDC, TRANSPARENT);
+
+        /* Default state: enabled */
         dwText = 0;
         if ((dis->itemState & ODS_DISABLED))
             dwText = DSS_DISABLED;
-        if ((dis->itemState & ODS_SELECTED))
-            dwStyle = DFCS_PUSHED;
 
-        DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH | dwStyle);
+        /* Draw the text in the button */
         GetTextExtentPoint32(dis->hDC, text, len, &size);
         dx = ((dis->rcItem.right-dis->rcItem.left) - size.cx) >> 1;
         dy = ((dis->rcItem.bottom-dis->rcItem.top) - size.cy) >> 1;
-        if ((dwStyle & DFCS_PUSHED)) {
+        if ((dis->itemState & ODS_SELECTED)) {
             dx++;
             dy++;
         }
@@ -1259,6 +1314,61 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
         DrawState(dis->hDC, NULL, NULL, (LPARAM)text, 0, pt.x, pt.y, size.cx, size.cy, DST_TEXT | dwText);
     }
     return 1L;
+}
+
+static INT_PTR CALLBACK HotButtonProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    LPBTNINFO lpBtnInfo = (LPBTNINFO)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    TRACKMOUSEEVENT mouse_event;
+
+    switch (msg) {
+    case WM_MOUSEMOVE:
+        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
+        mouse_event.dwFlags = TME_QUERY;
+        if (!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags & (TME_HOVER|TME_LEAVE)))
+        {
+            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+            mouse_event.hwndTrack = hWnd;
+            mouse_event.dwHoverTime = 1;
+            TrackMouseEvent(&mouse_event);
+        }
+        break;
+
+    case WM_MOUSEHOVER:
+        lpBtnInfo->bHover = TRUE;
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+
+    case WM_MOUSELEAVE:
+        lpBtnInfo->bHover = FALSE;
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    }
+
+    return CallWindowProc(lpBtnInfo->oldProc, hWnd, msg, wp, lp);
+}
+
+static BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
+{
+    TCHAR szClass[64];
+
+    if (!GetClassName(hWnd, szClass, SIZEOF(szClass)))
+        return TRUE;
+
+    if (!_tcscmp(szClass, WC_BUTTON))
+    {
+        int *pnCtrls = (int *)lParam;
+        int nCtrls = *pnCtrls;
+
+        BtnInfo[nCtrls].oldProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+        BtnInfo[nCtrls].bHover  = FALSE;
+
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)&BtnInfo[nCtrls]);
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)HotButtonProc);
+
+        *pnCtrls = ++nCtrls;
+    }
+    return TRUE;
 }
 
 static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
@@ -1276,6 +1386,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         EnableMenuItem(GetMenu(hWnd), IDM_HELP_HELP, MF_BYCOMMAND | MF_GRAYED);
 #endif
         calc.hWnd=hWnd;
+        /* Enumerate children and apply hover function */
+        BtnCount = 0;
+        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)&BtnCount);
 
 #ifdef USE_KEYBOARD_HOOK
         calc.hKeyboardHook=SetWindowsHookEx(
@@ -1300,8 +1413,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         /* remove keyboard focus */
         SetFocus(GetDlgItem(hWnd, IDC_BUTTON_FOCUS));
         /* set our calc icon */
-        SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
-        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_SMALL)));
+        SendMessage(hWnd, WM_SETICON, ICON_BIG,   (LPARAM)calc.hBgIcon);
+        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)calc.hSmIcon);
 
         /* Sets the state of the option to group digits */
         hMenu = GetSubMenu(GetMenu(hWnd), 1);
@@ -1354,7 +1467,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             TCHAR infotext[200];
             LoadString(calc.hInstance, IDS_CALC_NAME, infotitle, SIZEOF(infotitle));
             LoadString(calc.hInstance, IDS_AUTHOR, infotext, SIZEOF(infotext));
-            ShellAbout(hWnd, infotitle, infotext, (HICON)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
+            ShellAbout(hWnd, infotitle, infotext, calc.hBgIcon);
             return TRUE;
         }
         case IDM_HELP_HELP:
@@ -1791,6 +1904,10 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_EXITMENULOOP:
         calc.is_menu_on = FALSE;
         break;
+
+    case WM_THEMECHANGED:
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
     }
     return FALSE;
 }
@@ -1804,6 +1921,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     MSG msg;
     DWORD dwLayout;
 
+    /* Initialize controls for theming & manifest support */
     InitCommonControls();
 
     calc.hInstance = hInstance;
@@ -1815,6 +1933,24 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     start_rpn_engine();
 
     HtmlHelp_Start(hInstance);
+
+    Theme_Start(hInstance);
+
+    calc.hBgIcon = LoadImage(
+                    hInstance,
+                    MAKEINTRESOURCE(IDI_CALC),
+                    IMAGE_ICON,
+                    GetSystemMetrics(SM_CXICON),
+                    GetSystemMetrics(SM_CYICON),
+                    0);
+
+    calc.hSmIcon = LoadImage(
+                    hInstance,
+                    MAKEINTRESOURCE(IDI_CALC),
+                    IMAGE_ICON,
+                    GetSystemMetrics(SM_CXSMICON),
+                    GetSystemMetrics(SM_CYSMICON),
+                    0);
 
     do {
         /* ignore hwnd: dialogs are already visible! */
@@ -1841,8 +1977,15 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
         }
     } while (calc.action != IDC_STATIC);
 
+    if (calc.hBgIcon != NULL)
+        DestroyIcon(calc.hBgIcon);
+
+    if (calc.hSmIcon != NULL)
+        DestroyIcon(calc.hSmIcon);
+
     stop_rpn_engine();
 
+    Theme_Stop();
     HtmlHelp_Stop();
 
     return 0;

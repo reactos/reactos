@@ -8,6 +8,7 @@ list(APPEND SOURCE
     utl_ieee.c
     winmain.c
     htmlhelp.c
+    theme.c
     calc.h)
 
 file(GLOB calc_rc_deps res/*.*)

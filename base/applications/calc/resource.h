@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef IDC_STATIC
+#define IDC_STATIC -1
+#endif
+
 #define IDS_CALC_NAME         1
 #define IDS_MATH_ERROR        2
 #define IDS_QUICKHELP         3
@@ -11,8 +15,7 @@
 #define IDR_MENU_SCIENTIFIC_1 106
 #define IDR_MENU_SCIENTIFIC_2 107
 #define IDR_MENU_STANDARD     108
-#define IDI_CALC_BIG          110
-#define IDI_CALC_SMALL        111
+#define IDI_CALC              110
 #define IDC_RADIO_HEX         1002
 #define IDC_RADIO_DEC         1003
 #define IDC_RADIO_OCT         1004

@@ -17,6 +17,9 @@
 #endif
 #include <limits.h>
 
+/* RESOURCES */
+#include "resource.h"
+
 /* Messages reserved for the main dialog */
 #define WM_CLOSE_STATS      (WM_APP+1)
 #define WM_HANDLE_CLIPBOARD (WM_APP+2)
@@ -41,12 +44,6 @@
 
 #endif
 
-#include "resource.h"
-
-#ifndef IDC_STATIC
-#define IDC_STATIC  ((DWORD)-1)
-#endif
-
 #define CALC_VERSION        _T("1.12")
 
 #define MAX_CALC_SIZE       256
@@ -66,6 +63,34 @@ extern type_HtmlHelpW calc_HtmlHelpW;
 
 void HtmlHelp_Start(HINSTANCE hInstance);
 void HtmlHelp_Stop(void);
+
+/* THEMING SUPPORT */
+#if (_WIN32_WINNT >= 0x0600)
+#include <vssym32.h>
+#include <vsstyle.h>
+#else
+#include <tmschema.h>
+#endif
+#include <uxtheme.h>
+
+void Theme_Start(HINSTANCE hInstance);
+void Theme_Stop(void);
+
+typedef HTHEME   (WINAPI* type_OpenThemeData)(HWND,const WCHAR*);
+typedef HRESULT  (WINAPI* type_CloseThemeData)(HTHEME);
+typedef HRESULT  (WINAPI* type_DrawThemeBackground)(HTHEME,HDC,int,int,const RECT*,const RECT*);
+typedef BOOL     (WINAPI* type_IsAppThemed)(void);
+typedef BOOL     (WINAPI* type_IsThemeActive)(void);
+typedef BOOL     (WINAPI* type_IsThemeBackgroundPartiallyTransparent)(HTHEME, int, int);
+typedef HRESULT  (WINAPI* type_DrawThemeParentBackground)(HWND, HDC, RECT *);
+
+extern type_OpenThemeData                   calc_OpenThemeData;
+extern type_CloseThemeData                  calc_CloseThemeData;
+extern type_DrawThemeBackground             calc_DrawThemeBackground;
+extern type_IsAppThemed                     calc_IsAppThemed;
+extern type_IsThemeActive                   calc_IsThemeActive;
+extern type_IsThemeBackgroundPartiallyTransparent calc_IsThemeBackgroundPartiallyTransparent;
+extern type_DrawThemeParentBackground       calc_DrawThemeParentBackground;
 
 /*#define USE_KEYBOARD_HOOK*/
 
@@ -144,6 +169,8 @@ typedef struct {
     HHOOK         hKeyboardHook;
 #endif
     HWND          hWnd;
+    HICON         hBgIcon;
+    HICON         hSmIcon;
     DWORD         layout;
     TCHAR         buffer[MAX_CALC_SIZE];
     TCHAR         source[MAX_CALC_SIZE];

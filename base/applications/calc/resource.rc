@@ -10,18 +10,14 @@
 
 #include "resource.h"
 
-#ifndef IDC_STATIC
-#define IDC_STATIC -1
-#endif
-
 /* Common resources */
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* Icons */
-IDI_CALC_BIG ICON "res/calc.ico"
-IDI_CALC_SMALL ICON "res/calc_sm.ico"
+IDI_CALC ICON DISCARDABLE "res/calc.ico"
 
+/* Manifest */
 #include <reactos/manifest_exe.rc>
 
 /* UTF-8 */
