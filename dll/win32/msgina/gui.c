@@ -53,7 +53,7 @@ SetWelcomeText(HWND hWnd)
 
     TRACE("SetWelcomeText(%p)\n", hWnd);
 
-    /* Get the path of userinit */
+    /* Open the Winlogon key */
     rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
                        L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
                        0,
