@@ -3,9 +3,9 @@ add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
 
 list(APPEND SOURCE
     convert.c
-    function.c
-    rpn.c
-    utl.c
+    fun_ieee.c
+    rpn_ieee.c
+    utl_ieee.c
     winmain.c
     calc.h)
 
