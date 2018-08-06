@@ -1,4 +1,4 @@
-1.12 (20090404)
+1.12 (20180806)
 =======================
 * Fixed bug 12.37 13/06/2009 into multiprecision display (unicode only).
 * Added support for average of squares and mean of squares into statistical functions.
