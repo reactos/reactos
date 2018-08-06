@@ -141,7 +141,7 @@ RunSetupThreadProc(
     CloseHandle(ProcessInformation.hThread);
     CloseHandle(ProcessInformation.hProcess);
 
-    SwitchDesktop(WLSession->WinlogonDesktop);
+    // SwitchDesktop(WLSession->WinlogonDesktop);
 
     TRACE ("RunSetup() done\n");
 
