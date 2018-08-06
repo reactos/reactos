@@ -1,12 +1,26 @@
+/*
+ * ReactOS Calc (main program)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
-#include <winbase.h>
-#include <wingdi.h>
-#include <winreg.h>
-#include <shellapi.h>
-#include <commctrl.h>
-
-#define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
+#define HTMLHELP_PATH(_pt)  _T("%systemroot%\\Help\\calc.chm::") _T(_pt)
 
 #define MAKE_BITMASK4(_show_b16, _show_b10, _show_b8, _show_b2) \
     (((_show_b2)  << 0) | \
@@ -34,9 +48,9 @@
 #define BITMASK_OCT_MASK    0x02
 #define BITMASK_BIN_MASK    0x01
 
-#define CALC_CLR_RED        0x000000FF
-#define CALC_CLR_BLUE       0x00FF0000
-#define CALC_CLR_PURP       0x00FF00FF
+#define CALC_CLR_RED        RGB(0xFF, 0x00, 0x00)
+#define CALC_CLR_BLUE       RGB(0x00, 0x00, 0xFF)
+#define CALC_CLR_PURP       RGB(0xFF, 0x00, 0xFF)
 
 typedef struct {
     CHAR key; // Virtual key identifier
@@ -166,6 +180,8 @@ static const WORD operator_codes[] = {
     IDC_BUTTON_MULT,    // RPN_OPERATOR_MULT
     IDC_BUTTON_DIV,     // RPN_OPERATOR_DIV
     IDC_BUTTON_MOD,     // RPN_OPERATOR_MOD
+    IDC_BUTTON_XeY,     // RPN_OPERATOR_POW
+    IDC_BUTTON_XrY,     // RPN_OPERATOR_SQR
 };
 
 typedef void (*rpn_callback1)(calc_number_t *);
@@ -180,8 +196,6 @@ typedef struct {
     rpn_callback1   inv_hyp;
 } function_table_t;
 
-static void run_pow(calc_number_t *number);
-static void run_sqr(calc_number_t *number);
 static void run_fe(calc_number_t *number);
 static void run_dat_sta(calc_number_t *number);
 static void run_mp(calc_number_t *c);
@@ -205,10 +219,9 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_LN,   MODIFIER_INV,              1, rpn_ln,      rpn_exp,     NULL,     NULL      },
     { IDC_BUTTON_LOG,  MODIFIER_INV,              1, rpn_log,     rpn_exp10,   NULL,     NULL      },
     { IDC_BUTTON_NF,   0,                         1, rpn_fact,    NULL,        NULL,     NULL      },
-    { IDC_BUTTON_AVE,  0,                         0, rpn_ave,     NULL,        NULL,     NULL      },
-    { IDC_BUTTON_SUM,  0,                         0, rpn_sum,     NULL,        NULL,     NULL      },
+    { IDC_BUTTON_AVE,  MODIFIER_INV,              0, rpn_ave,     rpn_ave2,    NULL,     NULL      },
+    { IDC_BUTTON_SUM,  MODIFIER_INV,              0, rpn_sum,     rpn_sum2,    NULL,     NULL      },
     { IDC_BUTTON_S,    MODIFIER_INV,              0, rpn_s_m1,    rpn_s,       NULL,     NULL      },
-    { IDC_BUTTON_XeY,  MODIFIER_INV,              1, run_pow,     run_sqr,     NULL,     NULL      },
     { IDC_BUTTON_SQRT, MODIFIER_INV,              1, rpn_sqrt,    NULL,        NULL,     NULL      },
     { IDC_BUTTON_DMS,  MODIFIER_INV,              1, rpn_dec2dms, rpn_dms2dec, NULL,     NULL      },
     { IDC_BUTTON_FE,   0,                         1, run_fe,      NULL,        NULL,     NULL      },
@@ -220,85 +233,68 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_LEFTPAR,  NO_CHAIN,              0, run_lpar,    NULL,        NULL,     NULL,     },
 };
 
+/* Sub-classing information for theming support */
+typedef struct{
+    BOOL    bHover;
+    WNDPROC oldProc;
+} BTNINFO,*LPBTNINFO;
+
+
 /*
-*/
+ * Global variable declaration
+ */
 
-calc_t calc;
+calc_t  calc;
 
-static void load_config(void)
+/* Hot-state info for theming support */
+BTNINFO BtnInfo[255];
+UINT    BtnCount;
+
+static void UpdateNumberIntl(void)
 {
-    DWORD tmp;
-    HKEY hKey;
-    
-    /* If no settings are found in the registry, then use the default options */
-    calc.layout = CALC_LAYOUT_STANDARD;
-    calc.usesep = FALSE;
+    /* Get current user defaults */
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, calc.sDecimal, SIZEOF(calc.sDecimal)))
+        _tcscpy(calc.sDecimal, _T("."));
 
-    /* Get the configuration based on what version of Windows that's being used */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) 
-    {
-        /* Try to load last selected layout */
-        tmp = sizeof(calc.layout);
-        if (RegQueryValueEx(hKey, TEXT("layout"), NULL, NULL, (LPBYTE)&calc.layout, &tmp) != ERROR_SUCCESS)
-            calc.layout = CALC_LAYOUT_STANDARD;
-
-        /* Try to load last selected formatting option */
-        tmp = sizeof(calc.usesep);
-        if (RegQueryValueEx(hKey, TEXT("UseSep"), NULL, NULL, (LPBYTE)&calc.usesep, &tmp) != ERROR_SUCCESS)
-            calc.usesep = FALSE;
-
-        /* close the key */
-        RegCloseKey(hKey);
-    }
-
-    /* memory is empty at startup */
-    calc.is_memory = FALSE;
-
-    /* empty these values */
-    calc.sDecimal[0] = TEXT('\0');
-    calc.sThousand[0] = TEXT('\0');
-
-    /* try to open the registry */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\International"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        /* get these values (ignore errors) */
-        tmp = sizeof(calc.sDecimal);
-        RegQueryValueEx(hKey, TEXT("sDecimal"), NULL, NULL, (LPBYTE)calc.sDecimal, &tmp);
-
-        tmp = sizeof(calc.sThousand);
-        RegQueryValueEx(hKey, TEXT("sThousand"), NULL, NULL, (LPBYTE)calc.sThousand, &tmp);
-
-        /* close the key */
-        RegCloseKey(hKey);
-    }
-    /* if something goes wrong, let's apply the defaults */
-    if (calc.sDecimal[0] == TEXT('\0'))
-        _tcscpy(calc.sDecimal, TEXT("."));
-
-    if (calc.sThousand[0] == TEXT('\0'))
-        _tcscpy(calc.sThousand, TEXT(","));
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, calc.sThousand, SIZEOF(calc.sThousand)))
+        _tcscpy(calc.sThousand, _T(","));
 
     /* get the string lengths */
     calc.sDecimal_len = _tcslen(calc.sDecimal);
     calc.sThousand_len = _tcslen(calc.sThousand);
 }
 
+static void load_config(void)
+{
+    TCHAR buf[32];
+    DWORD tmp;
+
+    /* Try to load last selected layout */
+    GetProfileString(_T("SciCalc"), _T("layout"), _T("0"), buf, SIZEOF(buf));
+    if (_stscanf(buf, _T("%ld"), &calc.layout) != 1)
+        calc.layout = CALC_LAYOUT_STANDARD;
+
+    /* Try to load last selected formatting option */
+    GetProfileString(_T("SciCalc"), _T("UseSep"), _T("0"), buf, SIZEOF(buf));
+    if (_stscanf(buf, _T("%ld"), &tmp) != 1)
+        calc.usesep = FALSE;
+    else
+        calc.usesep = (tmp == 1) ? TRUE : FALSE;
+
+    /* memory is empty at startup */
+    calc.is_memory = FALSE;
+
+    /* Get locale info for numbers */
+    UpdateNumberIntl();
+}
+
 static void save_config(void)
 {
-    HKEY hKey;
-    DWORD sepValue;
+    TCHAR buf[32];
 
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
-    {
-        return;
-    }
-    
-    sepValue = (calc.usesep) ? 1 : 0;
-
-    RegSetValueEx(hKey, TEXT("layout"), 0, REG_DWORD, (const BYTE*)&calc.layout, sizeof(calc.layout));
-    RegSetValueEx(hKey, TEXT("UseSep"), 0, REG_DWORD, (const BYTE*)&sepValue, sizeof(sepValue));
-
-    RegCloseKey(hKey);
+    _stprintf(buf, _T("%lu"), calc.layout);
+    WriteProfileString(_T("SciCalc"), _T("layout"), buf);
+    WriteProfileString(_T("SciCalc"), _T("UseSep"), (calc.usesep==TRUE) ? _T("1") : _T("0"));
 }
 
 static LRESULT post_key_press(LPARAM lParam, WORD idc)
@@ -313,7 +309,7 @@ static LRESULT post_key_press(LPARAM lParam, WORD idc)
     if (!GetClassName(hCtlWnd, ClassName, SIZEOF(ClassName)))
         return 1;
 
-    if (!_tcscmp(ClassName, TEXT("Button"))) {
+    if (!_tcscmp(ClassName, WC_BUTTON)) {
         DWORD dwStyle = GetWindowLongPtr(hCtlWnd, GWL_STYLE) & 0xF;
 
         /* Set states for press/release, but only for push buttons */
@@ -440,22 +436,25 @@ static void update_lcd_display(HWND hwnd)
      * happen that separator is used between each digit.
      * Also added little additional space for dot and '\0'.
      */
-    TCHAR *tmp = (TCHAR *)alloca(sizeof(calc.buffer)*2+2*sizeof(TCHAR));
+    TCHAR tmp[MAX_CALC_SIZE * 2 + 2];
 
-    if (calc.buffer[0] == TEXT('\0'))
-        _tcscpy(tmp, TEXT("0"));
+    if (calc.buffer[0] == _T('\0'))
+        _tcscpy(tmp, _T("0"));
     else
         _tcscpy(tmp, calc.buffer);
-    /* add final '.' in decimal mode (if it's missing) */
-    if (calc.base == IDC_RADIO_DEC) {
-        if (_tcschr(tmp, TEXT('.')) == NULL)
-            _tcscat(tmp, TEXT("."));
+
+    /* Add final '.' in decimal mode (if it's missing), but
+     * only if it's a result: no append if it prints "ERROR".
+     */
+    if (calc.base == IDC_RADIO_DEC && !calc.is_nan) {
+        if (_tcschr(tmp, _T('.')) == NULL)
+            _tcscat(tmp, _T("."));
     }
     /* if separator mode is on, let's add an additional space */
     if (calc.usesep && !calc.sci_in && !calc.sci_out && !calc.is_nan) {
         /* go to the integer part of the string */
-        TCHAR *p = _tcschr(tmp, TEXT('.'));
-        TCHAR *e = _tcschr(tmp, TEXT('\0'));
+        TCHAR *p = _tcschr(tmp, _T('.'));
+        TCHAR *e = _tcschr(tmp, _T('\0'));
         int    n=0, t;
 
         if (p == NULL) p = e;
@@ -472,21 +471,21 @@ static void update_lcd_display(HWND hwnd)
             break;
         }
         while (--p > tmp) {
-            if (++n == t && *(p-1) != TEXT('-')) {
+            if (++n == t && *(p-1) != _T('-')) {
                 memmove(p+1, p, (e-p+1)*sizeof(TCHAR));
                 e++;
-                *p = TEXT(' ');
+                *p = _T(' ');
                 n = 0;
             }
         }
         /* if decimal mode, apply regional settings */
         if (calc.base == IDC_RADIO_DEC) {
             TCHAR *p = tmp;
-            TCHAR *e = _tcschr(tmp, TEXT('.'));
+            TCHAR *e = _tcschr(tmp, _T('.'));
 
             /* searching for thousands default separator */
             while (p < e) {
-                if (*p == TEXT(' ')) {
+                if (*p == _T(' ')) {
                     memmove(p+calc.sThousand_len, p+1, _tcslen(p)*sizeof(TCHAR));
                     memcpy(p, calc.sThousand, calc.sThousand_len*sizeof(TCHAR));
                     p += calc.sThousand_len;
@@ -498,7 +497,7 @@ static void update_lcd_display(HWND hwnd)
             memcpy(p, calc.sDecimal, calc.sDecimal_len*sizeof(TCHAR));
         }
     } else {
-        TCHAR *p = _tcschr(tmp, TEXT('.'));
+        TCHAR *p = _tcschr(tmp, _T('.'));
 
         /* update decimal point when usesep is false */
         if (p != NULL) {
@@ -506,7 +505,7 @@ static void update_lcd_display(HWND hwnd)
             memcpy(p, calc.sDecimal, calc.sDecimal_len*sizeof(TCHAR));
         }
     }
-    SendDlgItemMessage(hwnd, IDC_TEXT_OUTPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)tmp);
+    SetDlgItemText(hwnd, IDC_TEXT_OUTPUT, tmp);
 }
 
 static void update_parent_display(HWND hWnd)
@@ -515,10 +514,10 @@ static void update_parent_display(HWND hWnd)
     int   n = eval_parent_count();
 
     if (!n)
-        str[0] = TEXT('\0');
+        str[0] = _T('\0');
     else
-        _stprintf(str,TEXT("(=%d"), n);
-    SendDlgItemMessage(hWnd, IDC_TEXT_PARENT, WM_SETTEXT, 0, (LPARAM)str);
+        _stprintf(str,_T("(=%d"), n);
+    SetDlgItemText(hWnd, IDC_TEXT_PARENT, str);
 }
 
 static void build_operand(HWND hwnd, DWORD idc)
@@ -528,14 +527,14 @@ static void build_operand(HWND hwnd, DWORD idc)
     if (idc == IDC_BUTTON_DOT) {
         /* if dot is the first char, it's added automatically */
         if (calc.buffer == calc.ptr) {
-            *calc.ptr++ = TEXT('0');
-            *calc.ptr++ = TEXT('.');
-            *calc.ptr   = TEXT('\0');
+            *calc.ptr++ = _T('0');
+            *calc.ptr++ = _T('.');
+            *calc.ptr   = _T('\0');
             update_lcd_display(hwnd);
             return;
         }
         /* if pressed dot and it's already in the string, then return */
-        if (_tcschr(calc.buffer, TEXT('.')) != NULL)
+        if (_tcschr(calc.buffer, _T('.')) != NULL)
             return;
     }
     if (idc != IDC_STATIC) {
@@ -544,8 +543,8 @@ static void build_operand(HWND hwnd, DWORD idc)
     n = calc.ptr - calc.buffer;
     if (idc == IDC_BUTTON_0 && n == 0) {
         /* no need to put the dot because it's handled by update_lcd_display() */
-        calc.buffer[0] = TEXT('0');
-        calc.buffer[1] = TEXT('\0');
+        calc.buffer[0] = _T('0');
+        calc.buffer[1] = _T('\0');
         update_lcd_display(hwnd);
         return;
     }
@@ -561,12 +560,12 @@ static void build_operand(HWND hwnd, DWORD idc)
             if (idc != IDC_STATIC)
                 calc.esp = (calc.esp * 10 + (key2code[i].key-'0')) % LOCAL_EXP_SIZE;
             if (calc.ptr == calc.buffer)
-                _stprintf(calc.ptr, TEXT("0.e%+d"), calc.esp);
+                _stprintf(calc.ptr, _T("0.e%+d"), calc.esp);
             else {
                 /* adds the dot at the end if the number has no decimal part */
-                if (!_tcschr(calc.buffer, TEXT('.')))
-                    *calc.ptr++ = TEXT('.');
-                _stprintf(calc.ptr, TEXT("e%+d"), calc.esp);
+                if (!_tcschr(calc.buffer, _T('.')))
+                    *calc.ptr++ = _T('.');
+                _stprintf(calc.ptr, _T("e%+d"), calc.esp);
             }
             update_lcd_display(hwnd);
             return;
@@ -581,7 +580,7 @@ static void build_operand(HWND hwnd, DWORD idc)
             return;
         break;
     }
-    calc.ptr += _stprintf(calc.ptr, TEXT("%C"), key2code[i].key);
+    calc.ptr += _stprintf(calc.ptr, _T("%C"), key2code[i].key);
     update_lcd_display(hwnd);
 }
 
@@ -605,13 +604,13 @@ static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
     update_parent_display(hwnd);
 }
 
-static int get_modifiers(HWND hwnd)
+static int get_modifiers(HWND hWnd)
 {
     int modifiers = 0;
 
-    if (SendDlgItemMessage(hwnd, IDC_CHECK_INV, BM_GETCHECK, 0, 0))
+    if (IsDlgButtonChecked(hWnd, IDC_CHECK_INV) == BST_CHECKED)
         modifiers |= MODIFIER_INV;
-    if (SendDlgItemMessage(hwnd, IDC_CHECK_HYP, BM_GETCHECK, 0, 0))
+    if (IsDlgButtonChecked(hWnd, IDC_CHECK_HYP) == BST_CHECKED)
         modifiers |= MODIFIER_HYP;
 
     return modifiers;
@@ -623,8 +622,8 @@ static void convert_text2number(calc_number_t *a)
     /* the operand is taken from the last input */
     if (calc.buffer == calc.ptr) {
         /* if pushed valued is ZERO then we should grab it */
-        if (!_tcscmp(calc.buffer, TEXT("0.")) ||
-            !_tcscmp(calc.buffer, TEXT("0")))
+        if (!_tcscmp(calc.buffer, _T("0.")) ||
+            !_tcscmp(calc.buffer, _T("0")))
             /* this zero is good for both integer and decimal */
             rpn_zero(a);
         else
@@ -660,44 +659,18 @@ static const struct _update_check_menus {
     { &calc.size, IDM_VIEW_BYTE,  IDC_RADIO_BYTE, },
 };
 
-static void update_menu(HWND hwnd)
+static void update_menu(HWND hWnd)
 {
-    HMENU        hMenu = GetSubMenu(GetMenu(hwnd), 1);
+    HMENU        hMenu = GetSubMenu(GetMenu(hWnd), 1);
     unsigned int x;
 
-    /* Sets the state of the layout in the menu based on the configuration file */
-    if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_SCIENTIFIC,
-                           MF_BYCOMMAND);
-    }
-    else if (calc.layout == CALC_LAYOUT_CONVERSION)
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_CONVERSION,
-                           MF_BYCOMMAND);
-    }
-    else
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_STANDARD,
-                           MF_BYCOMMAND);
-    }
-
-    for (x=3; x<SIZEOF(upd); x++) {
+    for (x=0; x<SIZEOF(upd); x++) {
         if (*(upd[x].sel) != upd[x].idc) {
             CheckMenuItem(hMenu, upd[x].idm, MF_BYCOMMAND|MF_UNCHECKED);
-            SendMessage((HWND)GetDlgItem(hwnd,upd[x].idc),BM_SETCHECK,FALSE,0L);
+            CheckDlgButton(hWnd, upd[x].idc, BST_UNCHECKED);
         } else {
             CheckMenuItem(hMenu, upd[x].idm, MF_BYCOMMAND|MF_CHECKED);
-            SendMessage((HWND)GetDlgItem(hwnd,upd[x].idc),BM_SETCHECK,TRUE,0L);
+            CheckDlgButton(hWnd, upd[x].idc, BST_CHECKED);
         }
     }
     CheckMenuItem(hMenu, IDM_VIEW_GROUP, MF_BYCOMMAND|(calc.usesep ? MF_CHECKED : MF_UNCHECKED));
@@ -801,25 +774,26 @@ static void update_radio(HWND hwnd, unsigned int base)
         enable_allowed_controls(hwnd, base);
     }
 
-    SendDlgItemMessage(hwnd, calc.base, BM_SETCHECK, BST_CHECKED, 0);
+    CheckRadioButton(hwnd, IDC_RADIO_HEX, IDC_RADIO_BIN, calc.base);
+
     if (base == IDC_RADIO_DEC)
-        SendDlgItemMessage(hwnd, calc.degr, BM_SETCHECK, BST_CHECKED, 0);
+        CheckRadioButton(hwnd, IDC_RADIO_DEG, IDC_RADIO_GRAD, calc.degr);
     else
-        SendDlgItemMessage(hwnd, calc.size, BM_SETCHECK, BST_CHECKED, 0);
+        CheckRadioButton(hwnd, IDC_RADIO_QWORD, IDC_RADIO_BYTE, calc.size);
 }
 
 static void update_memory_flag(HWND hWnd, BOOL mem_flag)
 {
     calc.is_memory = mem_flag;
-    SendDlgItemMessage(hWnd, IDC_TEXT_MEMORY, WM_SETTEXT, 0, (LPARAM)(mem_flag ? TEXT("M") : TEXT("")));
+    SetDlgItemText(hWnd, IDC_TEXT_MEMORY, mem_flag ? _T("M") : _T(""));
 }
 
 static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
 {
     unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0); 
 
-    _stprintf(buffer, TEXT("n=%d"), n);
-    SendDlgItemMessage(hWnd, IDC_TEXT_NITEMS, WM_SETTEXT, 0, (LPARAM)buffer);
+    _stprintf(buffer, _T("n=%u"), n);
+    SetDlgItemText(hWnd, IDC_TEXT_NITEMS, buffer);
 }
 
 static void clean_stat_list(void)
@@ -873,7 +847,7 @@ static char *ReadConversion(const char *formula)
 
     /* clear display content before proceeding */
     calc.ptr = calc.buffer;
-    calc.buffer[0] = TEXT('\0');
+    calc.buffer[0] = _T('\0');
 
     return str;
 }
@@ -897,13 +871,13 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             return TRUE;
         case IDC_BUTTON_LOAD:
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
-            if (n == (DWORD)-1)
+            if (n == LB_ERR)
                 return TRUE;
             PostMessage(GetParent(hWnd), WM_LOAD_STAT, (WPARAM)n, 0);
             return TRUE;
         case IDC_BUTTON_CD:
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
-            if (n == (DWORD)-1)
+            if (n == LB_ERR)
                 return TRUE;
             SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_DELETESTRING, (WPARAM)n, 0);
             update_n_stats_items(hWnd, buffer);
@@ -917,10 +891,10 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_CLOSE:
-        clean_stat_list();
         DestroyWindow(hWnd);
         return TRUE;
     case WM_DESTROY:
+        clean_stat_list();
         PostMessage(GetParent(hWnd), WM_CLOSE_STATS, 0, 0);
         return TRUE;
     case WM_INSERT_STAT:
@@ -934,18 +908,15 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     return FALSE;
 }
 
-static BOOL idm_2_idc(int idm, WPARAM *pIdc)
+static WPARAM idm_2_idc(int idm)
 {
     int x;
 
     for (x=0; x<SIZEOF(upd); x++) {
         if (upd[x].idm == idm)
-        {
-            *pIdc = (WPARAM)(upd[x].idc);
-            return TRUE;
-        }
+            break;
     }
-    return FALSE;
+    return (WPARAM)(upd[x].idc);
 }
 
 static void CopyMemToClipboard(void *ptr)
@@ -970,11 +941,14 @@ static void CopyMemToClipboard(void *ptr)
 
 static void handle_copy_command(HWND hWnd)
 {
-    TCHAR display[sizeof(calc.buffer)];
+    TCHAR display[MAX_CALC_SIZE];
+    UINT  n;
 
-    SendDlgItemMessage(hWnd, IDC_TEXT_OUTPUT, WM_GETTEXT, (WPARAM)SIZEOF(display), (LPARAM)display);
+    n = GetDlgItemText(hWnd, IDC_TEXT_OUTPUT, display, SIZEOF(display));
+
     if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, _T('.')) == NULL)
-        display[_tcslen(display)-calc.sDecimal_len] = TEXT('\0');
+        display[n - calc.sDecimal_len] = _T('\0');
+
     CopyMemToClipboard(display);
 }
 
@@ -988,7 +962,7 @@ static char *ReadClipboard(void)
 
         if (hData != NULL) {
             fromClipboard = (char *)GlobalLock(hData);
-            if (strlen(fromClipboard))
+            if (fromClipboard[0])
                 buffer = _strupr(_strdup(fromClipboard));
             GlobalUnlock( hData );
         }
@@ -1034,10 +1008,12 @@ static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
             }
         }
     }
-    seq->ptr = ptr;
+
     if (*ptr != '\0')
+    {
+        seq->ptr = ptr;
         PostMessage(hwnd, seq->wm_msg, 0, 0);
-    else {
+    } else {
         free(seq->data);
         seq->data = seq->ptr = ptr = NULL;
     }
@@ -1132,16 +1108,6 @@ static statistic_t *upload_stat_number(int n)
     return p;
 }
 
-static void run_pow(calc_number_t *number)
-{
-    exec_infix2postfix(number, RPN_OPERATOR_POW);
-}
-
-static void run_sqr(calc_number_t *number)
-{
-    exec_infix2postfix(number, RPN_OPERATOR_SQR);
-}
-
 static void run_fe(calc_number_t *number)
 {
     calc.sci_out = ((calc.sci_out != FALSE) ? FALSE : TRUE);
@@ -1178,7 +1144,7 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
         popup.rcMargins.left   = -1;
         popup.rcMargins.right  = -1;
         popup.idString = GetWindowLongPtr((HWND)wp, GWL_ID);
-        HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
+        calc_HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
     }
 #else
     (void)idm;
@@ -1189,12 +1155,14 @@ static void run_canc(calc_number_t *c)
 {
     flush_postfix();
     rpn_zero(c);
+
     /* clear also scientific display modes */
     calc.sci_out = FALSE;
     calc.sci_in  = FALSE;
+
     /* clear state of inv and hyp flags */
-    SendDlgItemMessage(calc.hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
-    SendDlgItemMessage(calc.hWnd, IDC_CHECK_HYP, BM_SETCHECK, 0, 0);
+    CheckDlgButton(calc.hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+    CheckDlgButton(calc.hWnd, IDC_CHECK_HYP, BST_UNCHECKED);
 }
 
 static void run_rpar(calc_number_t *c)
@@ -1210,14 +1178,53 @@ static void run_lpar(calc_number_t *c)
 static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
 {
     LPDRAWITEMSTRUCT dis = (LPDRAWITEMSTRUCT)lp;
-    DWORD            dwStyle;
     UINT             dwText;
     TCHAR            text[64];
     int              dx, dy, len;
     SIZE             size;
     POINT            pt;
 
-    if(dis->CtlType == ODT_BUTTON) {
+    if(dis->CtlType == ODT_BUTTON)
+    {
+        HTHEME hTheme = NULL;
+        LPBTNINFO lpBtnInfo;
+
+        if (calc_IsAppThemed() && calc_IsThemeActive())
+            hTheme = calc_OpenThemeData(hWnd, L"Button");
+
+        if (hTheme)
+        {
+            int iState = 0;
+
+            if ((dis->itemState & ODS_DISABLED))
+                iState |= PBS_DISABLED;
+            if ((dis->itemState & ODS_SELECTED))
+                iState |= PBS_PRESSED;
+
+            lpBtnInfo = (LPBTNINFO)GetWindowLongPtr(dis->hwndItem, GWLP_USERDATA);
+            if (lpBtnInfo != NULL)
+            {
+                    if (lpBtnInfo->bHover)
+                        iState |= PBS_HOT;
+            }
+
+            // Draw the frame around the control
+            calc_DrawThemeBackground(hTheme, dis->hDC, BP_PUSHBUTTON, iState, &dis->rcItem, NULL);
+
+            calc_CloseThemeData(hTheme);
+        } else {
+            /* default state: unpushed */
+            DWORD dwStyle = 0;
+
+            if ((dis->itemState & ODS_SELECTED))
+                dwStyle = DFCS_PUSHED;
+
+            DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH | dwStyle);
+        }
+
+        /* button text to write */
+        len = GetWindowText(dis->hwndItem, text, SIZEOF(text));
+
         /*
          * little exception: 1/x has different color
          * in standard and scientific modes
@@ -1233,21 +1240,20 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
                 break;
             }
         }
-        /* button text to write */
-        len = GetWindowText(dis->hwndItem, text, SIZEOF(text));
-        /* default state: unpushed & enabled */
-        dwStyle = 0;
+
+        /* No background, to avoid corruption of the texture */
+        SetBkMode(dis->hDC, TRANSPARENT);
+
+        /* Default state: enabled */
         dwText = 0;
         if ((dis->itemState & ODS_DISABLED))
             dwText = DSS_DISABLED;
-        if ((dis->itemState & ODS_SELECTED))
-            dwStyle = DFCS_PUSHED;
 
-        DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, DFCS_BUTTONPUSH | dwStyle);
+        /* Draw the text in the button */
         GetTextExtentPoint32(dis->hDC, text, len, &size);
         dx = ((dis->rcItem.right-dis->rcItem.left) - size.cx) >> 1;
         dy = ((dis->rcItem.bottom-dis->rcItem.top) - size.cy) >> 1;
-        if ((dwStyle & DFCS_PUSHED)) {
+        if ((dis->itemState & ODS_SELECTED)) {
             dx++;
             dy++;
         }
@@ -1258,20 +1264,98 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
     return 1L;
 }
 
+static INT_PTR CALLBACK HotButtonProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    LPBTNINFO lpBtnInfo = (LPBTNINFO)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    TRACKMOUSEEVENT mouse_event;
+
+    switch (msg) {
+    case WM_MOUSEMOVE:
+        mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
+        mouse_event.dwFlags = TME_QUERY;
+        if (!TrackMouseEvent(&mouse_event) || !(mouse_event.dwFlags & (TME_HOVER|TME_LEAVE)))
+        {
+            mouse_event.dwFlags = TME_HOVER|TME_LEAVE;
+            mouse_event.hwndTrack = hWnd;
+            mouse_event.dwHoverTime = 1;
+            TrackMouseEvent(&mouse_event);
+        }
+        break;
+
+    case WM_MOUSEHOVER:
+        lpBtnInfo->bHover = TRUE;
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+
+    case WM_MOUSELEAVE:
+        lpBtnInfo->bHover = FALSE;
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
+    }
+
+    return CallWindowProc(lpBtnInfo->oldProc, hWnd, msg, wp, lp);
+}
+
+static BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
+{
+    TCHAR szClass[64];
+
+    if (!GetClassName(hWnd, szClass, SIZEOF(szClass)))
+        return TRUE;
+
+    if (!_tcscmp(szClass, WC_BUTTON))
+    {
+        int *pnCtrls = (int *)lParam;
+        int nCtrls = *pnCtrls;
+
+        BtnInfo[nCtrls].oldProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
+        BtnInfo[nCtrls].bHover  = FALSE;
+
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)&BtnInfo[nCtrls]);
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)HotButtonProc);
+
+        *pnCtrls = ++nCtrls;
+    }
+    return TRUE;
+}
+
+static INT_PTR CALLBACK OnSettingChange(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    /* Check for user policy and area string valid */
+    if (wParam == 0 && lParam != 0)
+    {
+        LPTSTR lpArea = (LPTSTR)lParam;
+
+        /* Check if a parameter has been changed into the locale settings */
+        if (!_tcsicmp(lpArea, _T("intl")))
+        {
+            /* Re-load locale parameters */
+            UpdateNumberIntl();
+
+            /* Update text for decimal button */
+            SetDlgItemText(hWnd, IDC_BUTTON_DOT, calc.sDecimal);
+
+            /* Update text into the output display */
+            update_lcd_display(hWnd);
+        }
+    }
+    return 0;
+}
+
 static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
     RECT         rc;
-    HMENU        hMenu;
 
     switch (msg) {
     case WM_DRAWITEM:
         return SubclassButtonProc(hWnd, wp, lp);
 
     case WM_INITDIALOG:
-        // For now, the Help dialog is disabled because of lacking of HTML Help support
-        EnableMenuItem(GetMenu(hWnd), IDM_HELP_HELP, MF_BYCOMMAND | MF_GRAYED);
         calc.hWnd=hWnd;
+        /* Enumerate children and apply hover function */
+        BtnCount = 0;
+        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)&BtnCount);
 
 #ifdef USE_KEYBOARD_HOOK
         calc.hKeyboardHook=SetWindowsHookEx(
@@ -1296,15 +1380,10 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         /* remove keyboard focus */
         SetFocus(GetDlgItem(hWnd, IDC_BUTTON_FOCUS));
         /* set our calc icon */
-        SendMessage(hWnd, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
-        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_SMALL)));
-
-        /* Sets the state of the option to group digits */
-        hMenu = GetSubMenu(GetMenu(hWnd), 1);
-        CheckMenuItem(hMenu, IDM_VIEW_GROUP, (calc.usesep ? MF_CHECKED : MF_UNCHECKED));
-
+        SendMessage(hWnd, WM_SETICON, ICON_BIG,   (LPARAM)calc.hBgIcon);
+        SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)calc.hSmIcon);
         /* update text for decimal button */
-        SendDlgItemMessage(hWnd, IDC_BUTTON_DOT, WM_SETTEXT, (WPARAM)0, (LPARAM)calc.sDecimal);
+        SetDlgItemText(hWnd, IDC_BUTTON_DOT, calc.sDecimal);
         /* Fill combo box for conversion */
         if (calc.layout == CALC_LAYOUT_CONVERSION)
             ConvInit(hWnd);
@@ -1332,7 +1411,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_COMMAND:
         /*
          * if selection of category is changed, we must
-         * updatethe content of the "from/to" combo boxes.
+         * update the content of the "from/to" combo boxes.
          */
         if (wp == MAKEWPARAM(IDC_COMBO_CATEGORY, CBN_SELCHANGE)) {
             ConvAdjust(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO_CATEGORY, CB_GETCURSEL, 0, 0));
@@ -1350,58 +1429,28 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             TCHAR infotext[200];
             LoadString(calc.hInstance, IDS_CALC_NAME, infotitle, SIZEOF(infotitle));
             LoadString(calc.hInstance, IDS_AUTHOR, infotext, SIZEOF(infotext));
-            ShellAbout(hWnd, infotitle, infotext, (HICON)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_BIG)));
+            ShellAbout(hWnd, infotitle, infotext, calc.hBgIcon);
             return TRUE;
         }
         case IDM_HELP_HELP:
 #ifndef DISABLE_HTMLHELP_SUPPORT
-            HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
+            calc_HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
 #endif
             return TRUE;
         case IDM_VIEW_STANDARD:
-            if (calc.layout != CALC_LAYOUT_STANDARD)
-            {
-                calc.layout = CALC_LAYOUT_STANDARD;
-                calc.action = IDM_VIEW_STANDARD;
-                DestroyWindow(hWnd);
-                save_config();
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_STANDARD,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_STANDARD;
+            calc.action = IDM_VIEW_STANDARD;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_SCIENTIFIC:
-            if (calc.layout != CALC_LAYOUT_SCIENTIFIC)
-            {
-                calc.layout = CALC_LAYOUT_SCIENTIFIC;
-                calc.action = IDM_VIEW_SCIENTIFIC;
-                DestroyWindow(hWnd);
-                save_config();
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_SCIENTIFIC,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_SCIENTIFIC;
+            calc.action = IDM_VIEW_SCIENTIFIC;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_CONVERSION:
-            if (calc.layout != CALC_LAYOUT_CONVERSION)
-            {
-                calc.layout = CALC_LAYOUT_CONVERSION;
-                calc.action = IDM_VIEW_CONVERSION;
-                DestroyWindow(hWnd);
-                save_config();
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_CONVERSION,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_CONVERSION;
+            calc.action = IDM_VIEW_CONVERSION;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_HEX:
         case IDM_VIEW_DEC:
@@ -1414,15 +1463,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDM_VIEW_DWORD:
         case IDM_VIEW_WORD:
         case IDM_VIEW_BYTE:
-        {
-            WPARAM idc;
-            if(idm_2_idc(LOWORD(wp), &idc))
-            {
-                SendMessage(hWnd, WM_COMMAND, idc, 0);
-                return TRUE;
-            }
-            return FALSE;
-        }
+            SendMessage(hWnd, WM_COMMAND, idm_2_idc(LOWORD(wp)), 0);
+            return TRUE;
         case IDM_EDIT_COPY:
             handle_copy_command(hWnd);
             return TRUE;
@@ -1442,7 +1484,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             calc.usesep = (calc.usesep ? FALSE : TRUE);
             update_menu(hWnd);
             update_lcd_display(hWnd);
-            save_config();
             return TRUE;
         case IDC_BUTTON_CONVERT:
             ConvExecute(hWnd);
@@ -1531,17 +1572,29 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_LSH:
         case IDC_BUTTON_RSH:
         case IDC_BUTTON_EQU:
+        case IDC_BUTTON_XeY:
+        case IDC_BUTTON_XrY:
             if (calc.is_nan) break;
             /*
-             * LSH button holds the RSH function too with INV modifier,
-             * but since it's a two operand operator, it must be handled here.
+             * LSH and XeY buttons hold also the RSH and XrY functions with INV modifier,
+             * but since they are two operand operators, they must be handled here.
              */
-            if (LOWORD(wp) == IDC_BUTTON_LSH &&
-                (get_modifiers(hWnd) & MODIFIER_INV)) {
-                PostMessage(hWnd, WM_COMMAND, MAKEWPARAM(IDC_BUTTON_RSH, BN_CLICKED), 0);
-                SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
-                break;
+            if ((get_modifiers(hWnd) & MODIFIER_INV))
+            {
+                WPARAM IdcSim = IDC_STATIC;
+
+                switch (LOWORD(wp)) {
+                case IDC_BUTTON_LSH: IdcSim = MAKEWPARAM(IDC_BUTTON_RSH, BN_CLICKED); break;
+                case IDC_BUTTON_XeY: IdcSim = MAKEWPARAM(IDC_BUTTON_XrY, BN_CLICKED); break;
+                }
+
+                if (IdcSim != IDC_STATIC)
+                {
+                    PostMessage(hWnd, WM_COMMAND, IdcSim, 0);
+                    CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+                }
             }
+
             for (x=0; x<SIZEOF(operator_codes); x++) {
                 if (LOWORD(wp) == operator_codes[x]) {
                     convert_text2number(&calc.code);
@@ -1574,9 +1627,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                     TCHAR *ptr;
 
                     calc.sci_in = FALSE;
-                    ptr = _tcschr(calc.ptr, TEXT('e'));
+                    ptr = _tcschr(calc.ptr, _T('e'));
                     if (ptr)
-                        *ptr = TEXT('\0');
+                        *ptr = _T('\0');
                     update_lcd_display(hWnd);
                 } else {
                     calc.esp /= 10;
@@ -1584,12 +1637,12 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 }
             } else
             if (calc.ptr != calc.buffer) {
-                *--calc.ptr = TEXT('\0');
-                if (!_tcscmp(calc.buffer, TEXT("-")) ||
-                    !_tcscmp(calc.buffer, TEXT("-0")) ||
-                    !_tcscmp(calc.buffer, TEXT("0"))) {
+                *--calc.ptr = _T('\0');
+                if (!_tcscmp(calc.buffer, _T("-")) ||
+                    !_tcscmp(calc.buffer, _T("-0")) ||
+                    !_tcscmp(calc.buffer, _T("0"))) {
                     calc.ptr = calc.buffer;
-                    calc.buffer[0] = TEXT('\0');
+                    calc.buffer[0] = _T('\0');
                 }
                 update_lcd_display(hWnd);
             }
@@ -1617,22 +1670,22 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 calc.esp = 0-calc.esp;
                 build_operand(hWnd, IDC_STATIC);
             } else {
-                if (calc.is_nan || calc.buffer[0] == TEXT('\0'))
+                if (calc.is_nan || calc.buffer[0] == _T('\0'))
                     break;
 
-                if (calc.buffer[0] == TEXT('-')) {
+                if (calc.buffer[0] == _T('-')) {
                     /* make the number positive */
                     memmove(calc.buffer, calc.buffer+1, sizeof(calc.buffer)-1);
                     if (calc.buffer != calc.ptr)
                         calc.ptr--;
                 } else {
                     /* if first char is '0' and no dot, it isn't valid */
-                    if (calc.buffer[0] == TEXT('0') &&
-                        calc.buffer[1] != TEXT('.'))
+                    if (calc.buffer[0] == _T('0') &&
+                        calc.buffer[1] != _T('.'))
                         break;
                     /* make the number negative */
                     memmove(calc.buffer+1, calc.buffer, sizeof(calc.buffer)-1);
-                    calc.buffer[0] = TEXT('-');
+                    calc.buffer[0] = _T('-');
                     if (calc.buffer != calc.ptr)
                         calc.ptr++;
                 }
@@ -1668,7 +1721,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_SIN:
         case IDC_BUTTON_COS:
         case IDC_BUTTON_TAN:
-        case IDC_BUTTON_XeY:
         case IDC_BUTTON_MS:
             for (x=0; x<SIZEOF(function_table); x++) {
                 if (LOWORD(wp) == function_table[x].idc) {
@@ -1700,10 +1752,11 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                         if (!(function_table[x].range & NO_CHAIN))
                             exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
-                            SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
+                            CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
                         if (function_table[x].range & MODIFIER_HYP)
-                            SendDlgItemMessage(hWnd, IDC_CHECK_HYP, BM_SETCHECK, 0, 0);
+                            CheckDlgButton(hWnd, IDC_CHECK_HYP, BST_UNCHECKED);
                     }
+                    break;
                 }
             }
             return TRUE;
@@ -1711,7 +1764,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             if (IsWindow(calc.hStatWnd))
                 break;
             calc.hStatWnd = CreateDialog(calc.hInstance,
-                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, DlgStatProc);
+                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, (DLGPROC)DlgStatProc);
             if (calc.hStatWnd != NULL) {
                 enable_allowed_controls(hWnd, calc.base);
                 SendMessage(calc.hStatWnd, WM_SETFOCUS, 0, 0);
@@ -1720,6 +1773,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_CLOSE_STATS:
+        calc.hStatWnd = NULL;
         enable_allowed_controls(hWnd, calc.base);
         return TRUE;
     case WM_LOAD_STAT:
@@ -1749,6 +1803,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         calc.action = IDC_STATIC;
         DestroyWindow(hWnd);
         return TRUE;
+
     case WM_DESTROY:
         /* Get (x,y) position of the calculator */
         GetWindowRect(hWnd, &rc);
@@ -1775,6 +1830,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_EXITMENULOOP:
         calc.is_menu_on = FALSE;
         break;
+
+    case WM_SETTINGCHANGE:
+        return OnSettingChange(hWnd, wp, lp);
     }
     return FALSE;
 }
@@ -1788,6 +1846,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     MSG msg;
     DWORD dwLayout;
 
+    /* Initialize controls for theming & manifest support */
     InitCommonControls();
 
     calc.hInstance = hInstance;
@@ -1798,17 +1857,38 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     load_config();
     start_rpn_engine();
 
+    HtmlHelp_Start(hInstance);
+
+    Theme_Start(hInstance);
+
+    calc.hBgIcon = LoadImage(
+                    hInstance,
+                    MAKEINTRESOURCE(IDI_CALC),
+                    IMAGE_ICON,
+                    GetSystemMetrics(SM_CXICON),
+                    GetSystemMetrics(SM_CYICON),
+                    0);
+
+    calc.hSmIcon = LoadImage(
+                    hInstance,
+                    MAKEINTRESOURCE(IDI_CALC),
+                    IMAGE_ICON,
+                    GetSystemMetrics(SM_CXSMICON),
+                    GetSystemMetrics(SM_CYSMICON),
+                    0);
+
     do {
         /* ignore hwnd: dialogs are already visible! */
         if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
             dwLayout = IDD_DIALOG_SCIENTIFIC;
-        else if (calc.layout == CALC_LAYOUT_CONVERSION)
+        else
+        if (calc.layout == CALC_LAYOUT_CONVERSION)
             dwLayout = IDD_DIALOG_CONVERSION;
         else
             dwLayout = IDD_DIALOG_STANDARD;
 
         /* This call will always fail if UNICODE for Win9x */
-        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, DlgMainProc))
+        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, (DLGPROC)DlgMainProc))
             break;
 
         while (GetMessage(&msg, NULL, 0, 0)) {
@@ -1821,9 +1901,20 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+        save_config();
     } while (calc.action != IDC_STATIC);
 
+    if (calc.hBgIcon != NULL)
+        DestroyIcon(calc.hBgIcon);
+
+    if (calc.hSmIcon != NULL)
+        DestroyIcon(calc.hSmIcon);
+
     stop_rpn_engine();
+
+    Theme_Stop();
+    HtmlHelp_Stop();
 
     return 0;
 }

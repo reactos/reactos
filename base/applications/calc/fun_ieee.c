@@ -1,6 +1,27 @@
+/*
+ * ReactOS Calc (Math functions, IEEE-754 engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
-#include <limits.h>
+static double validate_rad2angle(double a);
+static double validate_angle2rad(calc_number_t *c);
 
 void apply_int_mask(calc_number_t *r)
 {
@@ -47,7 +68,7 @@ double atanh(double x)
     return log((1.0+x)/(1.0-x))/2.0;
 }
 
-double validate_rad2angle(double a)
+static double validate_rad2angle(double a)
 {
     switch (calc.degr) {
     case IDC_RADIO_DEG:
@@ -62,7 +83,7 @@ double validate_rad2angle(double a)
     return a;
 }
 
-double validate_angle2rad(calc_number_t *c)
+static double validate_angle2rad(calc_number_t *c)
 {
     switch (calc.degr) {
     case IDC_RADIO_DEG:
@@ -250,6 +271,7 @@ __int64 logic_dbl2int(calc_number_t *a)
     }
     return (__int64)int_part;
 }
+
 double logic_int2dbl(calc_number_t *a)
 {
     return (double)a->i;
@@ -315,9 +337,9 @@ static unsigned __int64 sqrti(unsigned __int64 number)
     unsigned __int64 n, n1;
 
 #ifdef __GNUC__
-    if (number == 0xffffffffffffffffLL)
+    if (number == 0xffffffffffffffffULL)
 #else
-    if (number == 0xffffffffffffffff)
+    if (number == 0xffffffffffffffffUI64)
 #endif
         return 0xffffffff;
 
@@ -427,6 +449,21 @@ static double stat_sum(void)
     return sum;
 }
 
+static double stat_sum2(void)
+{
+    double       sum = 0;
+    statistic_t *p = calc.stat;
+
+    while (p != NULL) {
+        if (p->base == IDC_RADIO_DEC)
+            sum += p->num.f * p->num.f;
+        else
+            sum += (double)p->num.i * (double)p->num.i;
+        p = (statistic_t *)(p->next);
+    }
+    return sum;
+}
+
 void rpn_ave(calc_number_t *c)
 {
     double       ave = 0;
@@ -443,9 +480,35 @@ void rpn_ave(calc_number_t *c)
         c->i = (__int64)ave;
 }
 
+void rpn_ave2(calc_number_t *c)
+{
+    double       ave = 0;
+    int          n;
+
+    ave = stat_sum2();
+    n = SendDlgItemMessage(calc.hStatWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0);
+
+    if (n)
+        ave = ave / (double)n;
+    if (calc.base == IDC_RADIO_DEC)
+        c->f = ave;
+    else
+        c->i = (__int64)ave;
+}
+
 void rpn_sum(calc_number_t *c)
 {
     double sum = stat_sum();
+
+    if (calc.base == IDC_RADIO_DEC)
+        c->f = sum;
+    else
+        c->i = (__int64)sum;
+}
+
+void rpn_sum2(calc_number_t *c)
+{
+    double sum = stat_sum2();
 
     if (calc.base == IDC_RADIO_DEC)
         c->f = sum;

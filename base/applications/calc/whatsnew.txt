@@ -1,4 +1,30 @@
-1.11 (20080813)
+1.12 (20090404)
+=======================
+* Fixed bug 12.37 13/06/2009 into multiprecision display (unicode only).
+* Added support for average of squares and mean of squares into statistical functions.
+* pop() and push() functions in RPN engines now work with nodes instead of stack units.
+* Updated translations from ReactOS' repository.
+* Added support for new conversion units:
+   - AREA: 'mu', 'rai'.
+   - LENGTH: 'chi', 'cun'. 'sun' optimized.
+   - TIME: 'nanoseconds'.
+   - WEIGHT: 'Kan', 'Kin'.
+* Added support for thailand measure system:
+
+  Invaluable help from this page:
+  http://www.eppo.go.th/ref/UNIT-ALL.html
+
+* Moved the POW and SQR operations near the operators.
+* Rewritten some units formula by using scientific notation.
+* Improved precision of parsec unit coversion formula.
+* Fixed bug when calculator was closed with statistics dialog open.
+* Do not append decimal separator if "ERROR" messages are print.
+* Improve code readability by using SetDlgItemText and GetDlgItemText functions
+* Colours are now declared though RGB() macro.
+* Remove call to _tcslen() and use return value of GetDlgItemText() where possible.
+* Added theming support. Requires Windows XP or later.
+
+1.11 (20090404)
 =======================
 * Updated translations (thanks to the friends at ReactOS' community).
 * Added DS_SHELLFONT to some dialogs into various translations (sometimes it was specified, sometimes it was not).
@@ -16,7 +42,7 @@
 * Fixed some unsignaled overflow errors.
 * Fixed conversion method, now scientific notation is recognized too.
 * Added compilation for UNICODE executables.
-* Plain MINGW toolchain do not support wWinMain function, so I switched to old WinMain if it is not under ReactOS' build tree.
+* Plain MINGW toolchain does not support wWinMain function, so I switched to old WinMain if it is not under ReactOS' build tree.
 * Detect error if UNICODE version is launched into Win9x (avoid the lock).
 
 1.09 (20080630)
