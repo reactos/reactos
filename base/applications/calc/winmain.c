@@ -250,80 +250,108 @@ calc_t  calc;
 BTNINFO BtnInfo[255];
 UINT    BtnCount;
 
-static void load_config(void)
+static void UpdateNumberIntl(void)
 {
-    DWORD tmp;
-    HKEY hKey;
-    
-    /* If no settings are found in the registry, then use the default options */
-    calc.layout = CALC_LAYOUT_STANDARD;
-    calc.usesep = FALSE;
+    /* Get current user defaults */
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, calc.sDecimal, SIZEOF(calc.sDecimal)))
+        _tcscpy(calc.sDecimal, _T("."));
 
-    /* Get the configuration based on what version of Windows that's being used */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) 
-    {
-        /* Try to load last selected layout */
-        tmp = sizeof(calc.layout);
-        if (RegQueryValueEx(hKey, TEXT("layout"), NULL, NULL, (LPBYTE)&calc.layout, &tmp) != ERROR_SUCCESS)
-            calc.layout = CALC_LAYOUT_STANDARD;
-
-        /* Try to load last selected formatting option */
-        tmp = sizeof(calc.usesep);
-        if (RegQueryValueEx(hKey, TEXT("UseSep"), NULL, NULL, (LPBYTE)&calc.usesep, &tmp) != ERROR_SUCCESS)
-            calc.usesep = FALSE;
-
-        /* close the key */
-        RegCloseKey(hKey);
-    }
-
-    /* memory is empty at startup */
-    calc.is_memory = FALSE;
-
-    /* empty these values */
-    calc.sDecimal[0] = TEXT('\0');
-    calc.sThousand[0] = TEXT('\0');
-
-    /* try to open the registry */
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\International"), 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-    {
-        /* get these values (ignore errors) */
-        tmp = sizeof(calc.sDecimal);
-        RegQueryValueEx(hKey, TEXT("sDecimal"), NULL, NULL, (LPBYTE)calc.sDecimal, &tmp);
-
-        tmp = sizeof(calc.sThousand);
-        RegQueryValueEx(hKey, TEXT("sThousand"), NULL, NULL, (LPBYTE)calc.sThousand, &tmp);
-
-        /* close the key */
-        RegCloseKey(hKey);
-    }
-    /* if something goes wrong, let's apply the defaults */
-    if (calc.sDecimal[0] == TEXT('\0'))
-        _tcscpy(calc.sDecimal, TEXT("."));
-
-    if (calc.sThousand[0] == TEXT('\0'))
-        _tcscpy(calc.sThousand, TEXT(","));
+    if (!GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_STHOUSAND, calc.sThousand, SIZEOF(calc.sThousand)))
+        _tcscpy(calc.sThousand, _T(","));
 
     /* get the string lengths */
     calc.sDecimal_len = _tcslen(calc.sDecimal);
     calc.sThousand_len = _tcslen(calc.sThousand);
 }
 
-static void save_config(void)
+static int LoadRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iDefault)
+{
+    HKEY  hKey;
+    int   iValue;
+    DWORD tmp;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, lpszApp, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        /* Try to load integer value */
+        tmp = sizeof(int);
+
+        if (RegQueryValueEx(hKey, lpszKey, NULL, NULL, (LPBYTE)&iValue, &tmp) == ERROR_SUCCESS)
+            iDefault = iValue;
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+
+    return iDefault;
+}
+
+static void SaveRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iValue)
 {
     HKEY hKey;
-    DWORD sepValue;
 
-    if (RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Calc"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, lpszApp, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
     {
-        return;
+        RegSetValueEx(hKey, lpszKey, 0, REG_DWORD, (const BYTE*)&iValue, sizeof(int));
+
+        /* close the key */
+        RegCloseKey(hKey);
     }
-    
-    sepValue = (calc.usesep) ? 1 : 0;
+}
 
-    RegSetValueEx(hKey, TEXT("layout"), 0, REG_DWORD, (const BYTE*)&calc.layout, sizeof(calc.layout));
-    RegSetValueEx(hKey, TEXT("UseSep"), 0, REG_DWORD, (const BYTE*)&sepValue, sizeof(sepValue));
+static void load_config(void)
+{
+    OSVERSIONINFO osvi;
 
-    RegCloseKey(hKey);
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+
+    switch (osvi.dwPlatformId) {
+    case VER_PLATFORM_WIN32s:
+    case VER_PLATFORM_WIN32_WINDOWS:
+        /* Try to load last selected layout */
+        calc.layout = GetProfileInt(_T("SciCalc"), _T("layout"), CALC_LAYOUT_STANDARD);
+
+        /* Try to load last selected formatting option */
+        calc.usesep = (GetProfileInt(_T("SciCalc"), _T("UseSep"), FALSE)) ? TRUE : FALSE;
+        break;
+
+    default: /* VER_PLATFORM_WIN32_NT */
+        /* Try to load last selected layout */
+        calc.layout = LoadRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("layout"), CALC_LAYOUT_STANDARD);
+
+        /* Try to load last selected formatting option */
+        calc.usesep = (LoadRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("UseSep"), FALSE)) ? TRUE : FALSE;
+        break;
+    }
+
+    /* memory is empty at startup */
+    calc.is_memory = FALSE;
+
+    /* Get locale info for numbers */
+    UpdateNumberIntl();
+}
+
+static void save_config(void)
+{
+    TCHAR buf[32];
+    OSVERSIONINFO osvi;
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+
+    switch (osvi.dwPlatformId) {
+    case VER_PLATFORM_WIN32s:
+    case VER_PLATFORM_WIN32_WINDOWS:
+        _stprintf(buf, _T("%lu"), calc.layout);
+        WriteProfileString(_T("SciCalc"), _T("layout"), buf);
+        WriteProfileString(_T("SciCalc"), _T("UseSep"), (calc.usesep==TRUE) ? _T("1") : _T("0"));
+        break;
+
+    default: /* VER_PLATFORM_WIN32_NT */
+        SaveRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("layout"), calc.layout);
+        SaveRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("UseSep"), calc.usesep);
+        break;
+    }
 }
 
 static LRESULT post_key_press(LPARAM lParam, WORD idc)
@@ -1371,6 +1399,29 @@ static BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
+static INT_PTR CALLBACK OnSettingChange(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    /* Check for user policy and area string valid */
+    if (wParam == 0 && lParam != 0)
+    {
+        LPTSTR lpArea = (LPTSTR)lParam;
+
+        /* Check if a parameter has been changed into the locale settings */
+        if (!_tcsicmp(lpArea, _T("intl")))
+        {
+            /* Re-load locale parameters */
+            UpdateNumberIntl();
+
+            /* Update text for decimal button */
+            SetDlgItemText(hWnd, IDC_BUTTON_DOT, calc.sDecimal);
+
+            /* Update text into the output display */
+            update_lcd_display(hWnd);
+        }
+    }
+    return 0;
+}
+
 static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
@@ -1449,7 +1500,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     case WM_COMMAND:
         /*
          * if selection of category is changed, we must
-         * updatethe content of the "from/to" combo boxes.
+         * update the content of the "from/to" combo boxes.
          */
         if (wp == MAKEWPARAM(IDC_COMBO_CATEGORY, CBN_SELCHANGE)) {
             ConvAdjust(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO_CATEGORY, CB_GETCURSEL, 0, 0));
@@ -1481,7 +1532,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 calc.layout = CALC_LAYOUT_STANDARD;
                 calc.action = IDM_VIEW_STANDARD;
                 DestroyWindow(hWnd);
-                save_config();
 
                 CheckMenuRadioItem(GetMenu(hWnd),
                     IDM_VIEW_STANDARD,
@@ -1496,7 +1546,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 calc.layout = CALC_LAYOUT_SCIENTIFIC;
                 calc.action = IDM_VIEW_SCIENTIFIC;
                 DestroyWindow(hWnd);
-                save_config();
 
                 CheckMenuRadioItem(GetMenu(hWnd),
                     IDM_VIEW_STANDARD,
@@ -1511,7 +1560,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 calc.layout = CALC_LAYOUT_CONVERSION;
                 calc.action = IDM_VIEW_CONVERSION;
                 DestroyWindow(hWnd);
-                save_config();
 
                 CheckMenuRadioItem(GetMenu(hWnd),
                     IDM_VIEW_STANDARD,
@@ -1559,7 +1607,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             calc.usesep = (calc.usesep ? FALSE : TRUE);
             update_menu(hWnd);
             update_lcd_display(hWnd);
-            save_config();
             return TRUE;
         case IDC_BUTTON_CONVERT:
             ConvExecute(hWnd);
@@ -1905,6 +1952,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         calc.is_menu_on = FALSE;
         break;
 
+    case WM_SETTINGCHANGE:
+        return OnSettingChange(hWnd, wp, lp);
+
     case WM_THEMECHANGED:
         InvalidateRect(hWnd, NULL, FALSE);
         break;
@@ -1975,6 +2025,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+
+        save_config();
     } while (calc.action != IDC_STATIC);
 
     if (calc.hBgIcon != NULL)
