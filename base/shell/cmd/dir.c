@@ -121,20 +121,23 @@
  *
  *    27-Feb-2005 (Konstantinos Paliouras <squarious@gmail.com>)
  *        Implemented all the switches that were missing, and made
- *        the ros dir very similar to windows dir. Major part of
+ *        the ROS dir very similar to windows dir. Major part of
  *        the code is rewritten. /p is removed, to be rewritten in
  *        the main cmd code.
  *
  *    1-Jul-2004 (Brandon Turner <turnerb7@msu.edu>)
  *        Added /p back in using ConOutPrintfPaging
  *
- *    3-feb-2007 (Paolo Devoti devotip at gmail)
+ *    3-Feb-2007 (Paolo Devoti devotip at gmail)
  *        Removed variables formerly in use to handle pagination
  *        Pagination belongs to ConOutPrintfPaging
  *        Removed already commented out code of old pagination
  *
  *    25-Aug-2015 (Pierre Schweitzer)
  *        Implemented /R switch
+ *
+ *    6-Aug-2018 (Hermes Belusca-Maito and Katayama Hirofumi MZ)
+ *        Fix handling of patterns containing trailing dots.
  */
 
 #include "precomp.h"
@@ -572,23 +575,15 @@ static BOOL
 PrintDirectoryHeader(LPCTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
-    TCHAR szFullDir[MAX_PATH];
+    LPCTSTR szFullDir;
     TCHAR szRootName[MAX_PATH];
     TCHAR szVolName[80];
-    LPTSTR pszFilePart;
     DWORD dwSerialNr;
 
     if (lpFlags->bBareFormat)
         return TRUE;
 
-    if (GetFullPathName(szPath, ARRAYSIZE(szFullDir), szFullDir, &pszFilePart) == 0)
-    {
-        ErrorMessage(GetLastError(), _T("Failed to build full directory path"));
-        return FALSE;
-    }
-
-    if (pszFilePart != NULL)
-    *pszFilePart = _T('\0');
+    szFullDir = szPath;
 
     /* Get the media ID of the drive */
     if (!GetVolumePathName(szFullDir, szRootName, ARRAYSIZE(szRootName)) ||
@@ -1339,10 +1334,10 @@ DirNodeCleanup(PDIRFINDLISTNODE ptrStartNode,
  * The function that does everything except for printing results
  */
 static INT
-DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
+DirList(IN OUT LPTSTR szFullPath,   /* [IN] The full path we are listing with trailing '\', where dir starts */
+        IN LPTSTR pszFilePart,      /* [IN] Pointer in the szFullPath buffer where the file (pattern) part starts*/
         LPDIRSWITCHFLAGS lpFlags)   /* [IN] The flags of the listing */
 {
-    BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True */
     HANDLE hSearch;                     /* The handle of the search */
     HANDLE hRecSearch;                  /* The handle for searching recursively */
     HANDLE hStreams;                    /* The handle for alternate streams */
@@ -1350,9 +1345,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     PDIRFINDINFO * ptrFileArray;        /* An array of pointers with all the files */
     PDIRFINDLISTNODE ptrStartNode;      /* The pointer to the first node */
     PDIRFINDLISTNODE ptrNextNode;       /* A pointer used for relatives references */
-    TCHAR szFullPath[MAX_PATH];         /* The full path that we are listing with trailing '\' */
-    TCHAR szSubPath[MAX_PATH];
-    LPTSTR pszFilePart;
+    TCHAR szSubPath[MAX_PATH];          /* The full path used for the recursive search */
+    LPTSTR pszSubFilePart;
+    TCHAR cPathSep;
     DWORD dwCount;                      /* A counter of files found in directory */
     DWORD dwCountFiles;                 /* Counter for files */
     DWORD dwCountDirs;                  /* Counter for directories */
@@ -1370,24 +1365,6 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     dwCountFiles = 0;
     dwCountDirs = 0;
     u64CountBytes = 0;
-    fPoint= FALSE;
-
-    /* Create szFullPath */
-    if (GetFullPathName(szPath, ARRAYSIZE(szFullPath), szFullPath, &pszFilePart) == 0)
-    {
-        _tcscpy (szFullPath, szPath);
-        pszFilePart = NULL;
-    }
-
-    /* If no wildcard or file was specified and this is a directory, then
-       display all files in it */
-    if (pszFilePart == NULL || IsExistingDirectory(szFullPath))
-    {
-        pszFilePart = &szFullPath[_tcslen(szFullPath)];
-        if (pszFilePart[-1] != _T('\\'))
-            *pszFilePart++ = _T('\\');
-        _tcscpy(pszFilePart, _T("*"));
-    }
 
     /* Prepare the linked list, first node is allocated */
     ptrStartNode = cmd_alloc(sizeof(DIRFINDLISTNODE));
@@ -1399,24 +1376,14 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /* Checking if szPath is a File with/wout extension */
-    if (szPath[_tcslen(szPath) - 1] == _T('.'))
-        fPoint= TRUE;
-
     /* Collect the results for the current folder */
     hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
     if (hSearch != INVALID_HANDLE_VALUE)
     {
         do
         {
-            /* If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName */
-            if (_tcschr(wfdFileInfo.cFileName,_T('.')) && (fPoint != FALSE))
-            {
-                continue;
-            /* Here we filter all the specified attributes */
-            }
-            else if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
-                    == (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
+            if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask) ==
+                (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal))
             {
                 ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
                 if (ptrNextNode->ptrNext == NULL)
@@ -1548,9 +1515,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         QsortFiles(ptrFileArray, 0, dwCount-1, lpFlags);
 
     /* Print Data */
-    pszFilePart[-1] = _T('\0'); /* truncate to directory name only */
+    cPathSep = pszFilePart[-1];
+    pszFilePart[-1] = _T('\0'); /* Truncate to directory name only */
     DirPrintFiles(ptrFileArray, dwCount, szFullPath, lpFlags);
-    pszFilePart[-1] = _T('\\');
 
     if (lpFlags->bRecursive)
     {
@@ -1561,6 +1528,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                      lpFlags,
                      FALSE);
     }
+    pszFilePart[-1] = cPathSep;
 
     /* Free array */
     cmd_free(ptrFileArray);
@@ -1601,10 +1569,11 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
                     memcpy(szSubPath, szFullPath, (pszFilePart - szFullPath) * sizeof(TCHAR));
                     _tcscpy(&szSubPath[pszFilePart - szFullPath], wfdFileInfo.cFileName);
                     _tcscat(szSubPath, _T("\\"));
-                    _tcscat(szSubPath, pszFilePart);
+                    pszSubFilePart = &szSubPath[_tcslen(szSubPath)];
+                    _tcscat(pszSubFilePart, pszFilePart);
 
                     /* We do the same for the folder */
-                    if (DirList(szSubPath, lpFlags) != 0)
+                    if (DirList(szSubPath, pszSubFilePart, lpFlags) != 0)
                     {
                         FindClose(hRecSearch);
                         return 1;
@@ -1618,6 +1587,225 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     return 0;
 }
 
+static VOID
+ResolvePattern(
+    IN LPTSTR pszPattern,
+    IN DWORD nBufferLength,
+    OUT LPTSTR pszFullPath,
+    OUT LPTSTR* ppszPatternPart OPTIONAL)
+{
+    LPTSTR pCurDir, pNextDir, ptr;
+    LPTSTR pszPatternPart;
+    TCHAR  szNewPattern[MAX_PATH];
+
+    /*
+     * We are going to use GetFullPathName() to properly determine the actual
+     * full path from the pattern. However, due to the fact GetFullPathName()
+     * strips parts of the file name component in case the pattern contains
+     * path specification with trailing dots, it is required to perform a
+     * pre-treatment on the pattern and a post-treatment on the obtained path.
+     * This is mandatory in order to use the correct file search criterion.
+     *
+     * One particular case is when the pattern specifies a dots-only directory
+     * followed by either the "." or ".." special directories. In this case the
+     * GetFullPathName() function may completely miss the dots-only directory.
+     * An example is given by the pattern (C-string notation) "\\...\\." .
+     * To cope with this problem we need to partially canonicalize the pattern
+     * by collapsing any "." or ".." special directory that immediately follows
+     * a dots-only directory. We collapse in addition consecutive backslashes.
+     *
+     * Finally, trailing dots are skipped by GetFullPathName(). Therefore
+     * a pattern that matches files with no extension, for example: "*." ,
+     * or: "dir\\noextfile." , are reduced to simply "*" or "dir\\noextfile",
+     * that match files with extensions. Or, a pattern specifying a trailing
+     * dots-only directory: "dir\\..." gets completely ignored and only the
+     * full path to "dir" is returned.
+     * To fix this second problem we need to restore the last part of the path
+     * pattern using the pattern that has been first partially canonicalized.
+     *
+     * Note however that the "." or ".." special directories are always
+     * interpreted correctly by GetFullPathName().
+     */
+
+    /* Make a copy of the path pattern */
+    ASSERT(_tcslen(pszPattern) < ARRAYSIZE(szNewPattern));
+    _tcscpy(szNewPattern, pszPattern);
+    pszPattern = szNewPattern;
+
+    TRACE("Original pszPattern: %S\n", pszPattern);
+
+    /* Convert slashes into backslashes */
+    pNextDir = pszPattern;
+    while ((pNextDir = _tcschr(pNextDir, _T('/'))))
+        *pNextDir++ = _T('\\');
+
+    /*
+     * Find any dots-only directory and collapse any "." or ".." special
+     * directory that immediately follows it.
+     * Note that we just start looking after the first path separator. Indeed,
+     * dots-only directories that are not preceded by a path separator, and so
+     * appear first in the pattern, for example: "...\dir", or: "..." , are
+     * either correctly handled by GetFullPathName() because they are followed
+     * by a non-pathological directory, or because they are handled when we
+     * restore the trailing dots pattern piece in the next step.
+     */
+    pNextDir = pszPattern;
+    while (pNextDir)
+    {
+        pCurDir = pNextDir;
+
+        /* Find the next path separator in the pattern */
+        pNextDir = _tcschr(pNextDir, _T('\\'));
+        if (!pNextDir)
+            break;
+
+        /* Ignore the special "." and ".." directories that are correctly handled */
+        if ((pNextDir - pCurDir == 0) ||
+            (pNextDir - pCurDir == 1 && pCurDir[0] == _T('.')) ||
+            (pNextDir - pCurDir == 2 && pCurDir[0] == _T('.') && pCurDir[1] == _T('.')))
+        {
+            /* Found such a directory, ignore */
+            ++pNextDir;
+            continue;
+        }
+
+        /* Check whether this is a dots-only directory */
+        for (ptr = pCurDir; ptr < pNextDir; ++ptr)
+        {
+            if (*ptr != _T('.'))
+                break;
+        }
+        if (ptr < pNextDir)
+        {
+            /* Not a dots-only directory, ignore */
+            ++pNextDir;
+            continue;
+        }
+
+        /* Skip any consecutive backslashes */
+        for (ptr = pNextDir; *ptr == _T('\\'); ++ptr) ;
+
+        /* pCurDir is a dots-only directory, perform partial canonicalization */
+
+        /* Remove any following "." directory */
+        if (ptr[0] == _T('.') && (ptr[1] == _T('\\') || ptr[1] == 0))
+        {
+            memmove(pNextDir, ptr + 1, (_tcslen(ptr + 1) + 1) * sizeof(TCHAR));
+        }
+        /* Remove any following ".." directory */
+        else if (ptr[0] == _T('.') && ptr[1] == _T('.') && (ptr[2] == _T('\\') || ptr[2] == 0))
+        {
+            /* Skip any consecutive backslashes before the next directory */
+            for (ptr = ptr + 2; *ptr == _T('\\'); ++ptr) ;
+
+            memmove(pCurDir, ptr, (_tcslen(ptr) + 1) * sizeof(TCHAR));
+            pNextDir = pCurDir;
+        }
+        else
+        {
+            ++pNextDir;
+
+            /* Collapse consecutive backslashes */
+            if (ptr > pNextDir)
+                memmove(pNextDir, ptr, (_tcslen(ptr) + 1) * sizeof(TCHAR));
+        }
+    }
+
+    /* An empty pattern means we enumerate all files in the current directory */
+    if (!*pszPattern)
+        _tcscpy(pszPattern, _T("*"));
+
+    TRACE("New pszPattern: %S\n", pszPattern);
+
+    /* Create the full path */
+    if (GetFullPathName(pszPattern, nBufferLength, pszFullPath, &pszPatternPart) == 0)
+    {
+        _tcscpy(pszFullPath, pszPattern);
+        pszPatternPart = NULL;
+    }
+
+    TRACE("pszFullPath (1): %S\n", pszFullPath);
+    TRACE("pszPatternPart (1): %S\n", pszPatternPart);
+
+    /*
+     * Restore the correct file name component in case the pattern contained
+     * trailing dots that have been skipped by GetFullPathName().
+     */
+
+    /* Find the last path separator in the original szPath */
+    pNextDir = _tcsrchr(pszPattern, _T('\\'));
+    if (pNextDir)
+    {
+        /* Skip past the separator and look at the path */
+        ++pNextDir;
+    }
+    else
+    {
+        /* The pattern is the path we need to look at */
+        pNextDir = pszPattern;
+    }
+
+    /*
+     * When pszPatternPart == NULL this means that pszFullPath should be a
+     * directory; however it might have happened that the original pattern
+     * was specifying a dots-only directory, that has been stripped off by
+     * GetFullPathName(). In both these cases we need to restore these as
+     * they are part of the actual directory path; the exception being if
+     * these are the special "." or ".." directories.
+     */
+    if (pszPatternPart == NULL)
+    {
+        ASSERT(pszFullPath[_tcslen(pszFullPath)-1] == _T('\\'));
+
+        /* Anything NOT being "." or ".." (the special directories) must be fully restored */
+        if (*pNextDir &&
+            (_tcsicmp(pNextDir, _T("."))  != 0) &&
+            (_tcsicmp(pNextDir, _T("..")) != 0))
+        {
+            pszPatternPart = &pszFullPath[_tcslen(pszFullPath)];
+            _tcscpy(pszPatternPart, pNextDir);
+            pszPatternPart = NULL;
+        }
+    }
+    else if (_tcscmp(pNextDir, pszPatternPart) != 0)
+    {
+        /*
+         * For example, pszPatternPart == "." or ".." and we do not need to
+         * do anything for these, or pszPatternPart == "dir\\noextfile." and
+         * we need to restore all the trailing points.
+         */
+        TRACE("pszPatternPart: %S is DIFFERENT from file criterion: %S\n", pszPatternPart, pNextDir);
+
+        /* Anything NOT being "." or ".." (the special directories) must be fully restored */
+        if (*pNextDir &&
+            (_tcsicmp(pNextDir, _T("."))  != 0) &&
+            (_tcsicmp(pNextDir, _T("..")) != 0))
+        {
+            /* Restore the correct file criterion */
+            _tcscpy(pszPatternPart, pNextDir);
+        }
+    }
+
+    TRACE("pszFullPath (2): %S\n", pszFullPath);
+
+    /*
+     * If no wildcard or file was specified and this is a directory,
+     * display all files in it.
+     */
+    if (pszPatternPart == NULL || IsExistingDirectory(pszFullPath))
+    {
+        pszPatternPart = &pszFullPath[_tcslen(pszFullPath)];
+        if (pszPatternPart[-1] != _T('\\'))
+            *pszPatternPart++ = _T('\\');
+        _tcscpy(pszPatternPart, _T("*"));
+    }
+
+    TRACE("pszPatternPart (2): %S\n", pszPatternPart);
+
+    if (ppszPatternPart)
+        *ppszPatternPart = pszPatternPart;
+}
+
 /*
  * dir
  *
@@ -1627,10 +1815,11 @@ INT
 CommandDir(LPTSTR rest)
 {
     TCHAR   dircmd[MAX_PATH];   /* A variable to store the DIRCMD environment variable */
-    TCHAR   path[MAX_PATH];
     TCHAR   prev_volume[MAX_PATH];
+    TCHAR   szFullPath[MAX_PATH];
     LPTSTR* params = NULL;
     LPTSTR  pszFilePart;
+    TCHAR   cPathSep;
     INT     entries = 0;
     UINT    loop = 0;
     DIRSWITCHFLAGS stFlags;
@@ -1729,40 +1918,38 @@ CommandDir(LPTSTR rest)
         ChangedVolume = TRUE;
 
         if (!stFlags.bBareFormat &&
-            GetVolumePathName(params[loop], path, ARRAYSIZE(path)))
+            GetVolumePathName(params[loop], szFullPath, ARRAYSIZE(szFullPath)))
         {
-            if (!_tcscmp(path, prev_volume))
+            if (!_tcscmp(szFullPath, prev_volume))
                 ChangedVolume = FALSE;
             else
-                _tcscpy(prev_volume, path);
-        }
-        else if (GetFullPathName(params[loop], ARRAYSIZE(path), path, &pszFilePart) != 0)
-        {
-            if (pszFilePart != NULL)
-                *pszFilePart = _T('\0');
-        }
-        else
-        {
-            _tcscpy(path, params[loop]);
+                _tcscpy(prev_volume, szFullPath);
         }
 
+        /* Resolve the pattern */
+        ResolvePattern(params[loop], ARRAYSIZE(szFullPath), szFullPath, &pszFilePart);
+
         /* Print the header */
+        cPathSep = pszFilePart[-1];
+        pszFilePart[-1] = _T('\0'); /* Truncate to directory name only */
         if (ChangedVolume && !stFlags.bBareFormat &&
-            !PrintDirectoryHeader(params[loop], &stFlags))
+            !PrintDirectoryHeader(szFullPath, &stFlags))
         {
             nErrorLevel = 1;
             goto cleanup;
         }
+        pszFilePart[-1] = cPathSep;
 
         /* Perform the actual directory listing */
-        if (DirList(params[loop], &stFlags) != 0)
+        if (DirList(szFullPath, pszFilePart, &stFlags) != 0)
         {
             nErrorLevel = 1;
             goto cleanup;
         }
 
         /* Print the footer */
-        PrintSummary(path,
+        pszFilePart[-1] = _T('\0'); /* Truncate to directory name only */
+        PrintSummary(szFullPath,
                      recurse_file_cnt,
                      recurse_dir_cnt,
                      recurse_bytes,
