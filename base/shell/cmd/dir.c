@@ -135,6 +135,9 @@
  *
  *    25-Aug-2015 (Pierre Schweitzer)
  *        Implemented /R switch
+ *
+ *    25-June-2018 (Katayama Hirofumi MZ)
+ *        Fixed the behavior for "DIR ." and "DIR ..".
  */
 
 #include "precomp.h"
@@ -230,6 +233,40 @@ static VOID
 DirHelp(VOID)
 {
     ConOutResPaging(TRUE, STRING_DIR_HELP1);
+}
+
+/* Is the path "." or ".."? Speed optimized. */
+inline BOOL
+IsIgnoredDots(LPCTSTR pszPath)
+{
+    if (pszPath[0] != _T('.'))
+        return FALSE;
+
+    if (pszPath[1] == 0)
+        return TRUE;
+
+    return (pszPath[1] == _T('.') && pszPath[2] == 0);
+}
+
+// Yes, this is a copy cat of shlwapi PathFindExtension.
+static LPTSTR IntPathFindExtension(LPCTSTR pszPath)
+{
+    LPCTSTR pchLast = NULL;
+
+    if (pszPath)
+    {
+        while (*pszPath)
+        {
+            if (*pszPath == _T('\\') || *pszPath == _T('/') || *pszPath == _T(' '))
+                pchLast = NULL;
+            else if (*pszPath == _T('.'))
+                pchLast = pszPath;
+
+            pszPath = _tcsinc(pszPath);
+        }
+    }
+
+    return (LPTSTR)(pchLast ? pchLast : pszPath);
 }
 
 /*
@@ -830,8 +867,7 @@ getName(const TCHAR* file, TCHAR * dest)
     LPTSTR end;
 
     /* Check for "." and ".." folders */
-    if ((_tcscmp(file, _T(".")) == 0) ||
-        (_tcscmp(file, _T("..")) == 0))
+    if (IsIgnoredDots(file))
     {
         _tcscpy(dest,file);
         return dest;
@@ -1094,8 +1130,7 @@ DirPrintBareList(PDIRFINDINFO ptrFiles[],       /* [IN] Files' Info */
 
     for (i = 0; i < dwCount && !CheckCtrlBreak(BREAK_INPUT); i++)
     {
-        if ((_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T(".")) == 0) ||
-            (_tcscmp(ptrFiles[i]->stFindInfo.cFileName, _T("..")) == 0))
+        if (IsIgnoredDots(ptrFiles[i]->stFindInfo.cFileName))
         {
             /* at bare format we don't print "." and ".." folder */
             continue;
@@ -1314,6 +1349,26 @@ QsortFiles(PDIRFINDINFO ptrArray[],         /* [IN/OUT] The array with file info
     }
 }
 
+static void
+DirNodeCleanup(PDIRFINDLISTNODE ptrStartNode, LPDWORD pdwCount)
+{
+    PDIRFINDLISTNODE ptrNextNode;
+    PDIRFINDSTREAMNODE ptrFreeNode;
+    while (ptrStartNode)
+    {
+        ptrNextNode = ptrStartNode->ptrNext;
+        while (ptrStartNode->stInfo.ptrHead)
+        {
+            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
+            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
+            cmd_free(ptrFreeNode);
+        }
+        cmd_free(ptrStartNode);
+        ptrStartNode = ptrNextNode;
+        (*pdwCount)--;
+    }
+}
+
 /*
  * DirList
  *
@@ -1323,7 +1378,6 @@ static INT
 DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
         LPDIRSWITCHFLAGS lpFlags)   /* [IN] The flags of the listing */
 {
-    BOOL fPoint;                        /* If szPath is a file with extension fPoint will be True */
     HANDLE hSearch;                     /* The handle of the search */
     HANDLE hRecSearch;                  /* The handle for searching recursively */
     HANDLE hStreams;                    /* The handle for alternate streams */
@@ -1341,9 +1395,10 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ULARGE_INTEGER u64Temp;             /* A temporary counter */
     WIN32_FIND_STREAM_DATA wfsdStreamInfo;
     PDIRFINDSTREAMNODE * ptrCurNode;    /* The pointer to the first stream */
-    PDIRFINDSTREAMNODE ptrFreeNode;     /* The pointer used during cleanup */
     static HANDLE (WINAPI *pFindFirstStreamW)(LPCWSTR, STREAM_INFO_LEVELS, LPVOID, DWORD);
     static BOOL (WINAPI *pFindNextStreamW)(HANDLE, LPVOID);
+    LPTSTR pchDotExt;
+    BOOL bPathFound;
 
     /* Initialize Variables */
     ptrStartNode = NULL;
@@ -1352,7 +1407,6 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     dwCountFiles = 0;
     dwCountDirs = 0;
     u64CountBytes = 0;
-    fPoint= FALSE;
 
     /* Create szFullPath */
     if (GetFullPathName(szPath, ARRAYSIZE(szFullPath), szFullPath, &pszFilePart) == 0)
@@ -1381,147 +1435,143 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     ptrStartNode->stInfo.ptrHead = NULL;
     ptrNextNode = ptrStartNode;
 
-    /* Checking if szPath is a File with/wout extension */
-    if (szPath[_tcslen(szPath) - 1] == _T('.'))
-        fPoint= TRUE;
+    /* Checking if szFullPath's extension is dot-only extension */
+    pchDotExt = IntPathFindExtension(szFullPath);
+    if (*pchDotExt == _T('.') && szFullPath < pchDotExt)
+    {
+        if (wcschr(_T(".\\/"), *(pchDotExt - 1)) == NULL)
+        {
+            /* Kill the dot-only extension */
+            *pchDotExt = 0;
+        }
+    }
 
-    /* Collect the results for the current folder */
-    hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
+    /* Test the szPath is found */
+    bPathFound = FALSE;
+    hSearch = FindFirstFile(szPath, &wfdFileInfo);
     if (hSearch != INVALID_HANDLE_VALUE)
     {
         do
         {
-            /* If retrieved FileName has extension,and szPath doesnt have extension then JUMP the retrieved FileName */
-            if (_tcschr(wfdFileInfo.cFileName,_T('.')) && (fPoint != FALSE))
-            {
+            if (IsIgnoredDots(wfdFileInfo.cFileName))
                 continue;
-            /* Here we filter all the specified attributes */
-            }
-            else if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask )
-                    == (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal ))
+
+            bPathFound = TRUE;
+            break;
+        } while (FindNextFile(hSearch, &wfdFileInfo));
+        FindClose(hSearch);
+    }
+
+    if (bPathFound)
+    {
+        /* Collect the results for the current folder */
+        hSearch = FindFirstFile(szFullPath, &wfdFileInfo);
+        if (hSearch != INVALID_HANDLE_VALUE)
+        {
+            do
             {
-                ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
-                if (ptrNextNode->ptrNext == NULL)
+                if ((wfdFileInfo.dwFileAttributes & lpFlags->stAttribs.dwAttribMask) ==
+                    (lpFlags->stAttribs.dwAttribMask & lpFlags->stAttribs.dwAttribVal))
                 {
-                    WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
-                    while (ptrStartNode)
+                    ptrNextNode->ptrNext = cmd_alloc(sizeof(DIRFINDLISTNODE));
+                    if (ptrNextNode->ptrNext == NULL)
                     {
-                        ptrNextNode = ptrStartNode->ptrNext;
-                        while (ptrStartNode->stInfo.ptrHead)
+                        WARN("DEBUG: Cannot allocate memory for ptrNextNode->ptrNext!\n");
+                        DirNodeCleanup(ptrStartNode, &dwCount);
+                        FindClose(hSearch);
+                        return 1;
+                    }
+
+                    /* Copy the info of search at linked list */
+                    memcpy(&ptrNextNode->ptrNext->stInfo.stFindInfo,
+                           &wfdFileInfo,
+                           sizeof(WIN32_FIND_DATA));
+
+                    /* If lower case is selected do it here */
+                    if (lpFlags->bLowerCase)
+                    {
+                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cAlternateFileName);
+                        _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cFileName);
+                    }
+
+                    /* No streams (yet?) */
+                    ptrNextNode->ptrNext->stInfo.ptrHead = NULL;
+
+                    /* Alternate streams are only displayed with new long list */
+                    if (lpFlags->bNewLongList && lpFlags->bDataStreams)
+                    {
+                        if (!pFindFirstStreamW)
                         {
-                            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                            cmd_free(ptrFreeNode);
+                            pFindFirstStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindFirstStreamW");
+                            pFindNextStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindNextStreamW");
                         }
-                        cmd_free(ptrStartNode);
-                        ptrStartNode = ptrNextNode;
-                        dwCount--;
+
+                        /* Try to get stream information */
+                        if (pFindFirstStreamW && pFindNextStreamW)
+                        {
+                            hStreams = pFindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                        }
+                        else
+                        {
+                            hStreams = INVALID_HANDLE_VALUE;
+                            ERR("FindFirstStreamW not supported!\n");
+                        }
+
+                        if (hStreams != INVALID_HANDLE_VALUE)
+                        {
+                            /* We totally ignore first stream. It contains data about ::$DATA */
+                            ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
+                            while (pFindNextStreamW(hStreams, &wfsdStreamInfo))
+                            {
+                                *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
+                                if (*ptrCurNode == NULL)
+                                {
+                                    WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
+                                    DirNodeCleanup(ptrStartNode, &dwCount);
+                                    FindClose(hStreams);
+                                    FindClose(hSearch);
+                                    return 1;
+                                }
+
+                                memcpy(&(*ptrCurNode)->stStreamInfo, &wfsdStreamInfo,
+                                       sizeof(WIN32_FIND_STREAM_DATA));
+
+                                /* If lower case is selected do it here */
+                                if (lpFlags->bLowerCase)
+                                {
+                                    _tcslwr((*ptrCurNode)->stStreamInfo.cStreamName);
+                                }
+
+                                ptrCurNode = &(*ptrCurNode)->ptrNext;
+                            }
+
+                            FindClose(hStreams);
+                            *ptrCurNode = NULL;
+                        }
                     }
-                    FindClose(hSearch);
-                    return 1;
-                }
 
-                /* Copy the info of search at linked list */
-                memcpy(&ptrNextNode->ptrNext->stInfo.stFindInfo,
-                       &wfdFileInfo,
-                       sizeof(WIN32_FIND_DATA));
+                    /* Continue at next node at linked list */
+                    ptrNextNode = ptrNextNode->ptrNext;
+                    dwCount ++;
 
-                /* If lower case is selected do it here */
-                if (lpFlags->bLowerCase)
-                {
-                    _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cAlternateFileName);
-                    _tcslwr(ptrNextNode->ptrNext->stInfo.stFindInfo.cFileName);
-                }
-
-                /* No streams (yet?) */
-                ptrNextNode->ptrNext->stInfo.ptrHead = NULL;
-
-                /* Alternate streams are only displayed with new long list */
-                if (lpFlags->bNewLongList && lpFlags->bDataStreams)
-                {
-                    if (!pFindFirstStreamW)
+                    /* Grab statistics */
+                    if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                     {
-                        pFindFirstStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindFirstStreamW");
-                        pFindNextStreamW = (PVOID)GetProcAddress(GetModuleHandle(_T("kernel32")), "FindNextStreamW");
-                    }
-
-                    /* Try to get stream information */
-                    if (pFindFirstStreamW && pFindNextStreamW)
-                    {
-                        hStreams = pFindFirstStreamW(wfdFileInfo.cFileName, FindStreamInfoStandard, &wfsdStreamInfo, 0);
+                        /* Directory */
+                        dwCountDirs++;
                     }
                     else
                     {
-                        hStreams = INVALID_HANDLE_VALUE;
-                        ERR("FindFirstStreamW not supported!\n");
-                    }
-
-                    if (hStreams != INVALID_HANDLE_VALUE)
-                    {
-                        /* We totally ignore first stream. It contains data about ::$DATA */
-                        ptrCurNode = &ptrNextNode->ptrNext->stInfo.ptrHead;
-                        while (pFindNextStreamW(hStreams, &wfsdStreamInfo))
-                        {
-                            *ptrCurNode = cmd_alloc(sizeof(DIRFINDSTREAMNODE));
-                            if (*ptrCurNode == NULL)
-                            {
-                                WARN("DEBUG: Cannot allocate memory for *ptrCurNode!\n");
-                                while (ptrStartNode)
-                                {
-                                    ptrNextNode = ptrStartNode->ptrNext;
-                                    while (ptrStartNode->stInfo.ptrHead)
-                                    {
-                                        ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                                        ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                                        cmd_free(ptrFreeNode);
-                                    }
-                                    cmd_free(ptrStartNode);
-                                    ptrStartNode = ptrNextNode;
-                                    dwCount--;
-                                }
-                                FindClose(hStreams);
-                                FindClose(hSearch);
-                                return 1;
-                            }
-
-                            memcpy(&(*ptrCurNode)->stStreamInfo, &wfsdStreamInfo,
-                                   sizeof(WIN32_FIND_STREAM_DATA));
-
-                            /* If lower case is selected do it here */
-                            if (lpFlags->bLowerCase)
-                            {
-                                _tcslwr((*ptrCurNode)->stStreamInfo.cStreamName);
-                            }
-
-                            ptrCurNode = &(*ptrCurNode)->ptrNext;
-                        }
-
-                        FindClose(hStreams);
-                        *ptrCurNode = NULL;
+                        /* File */
+                        dwCountFiles++;
+                        u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
+                        u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
+                        u64CountBytes += u64Temp.QuadPart;
                     }
                 }
-
-                /* Continue at next node at linked list */
-                ptrNextNode = ptrNextNode->ptrNext;
-                dwCount ++;
-
-                /* Grab statistics */
-                if (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    /* Directory */
-                    dwCountDirs++;
-                }
-                else
-                {
-                    /* File */
-                    dwCountFiles++;
-                    u64Temp.HighPart = wfdFileInfo.nFileSizeHigh;
-                    u64Temp.LowPart = wfdFileInfo.nFileSizeLow;
-                    u64CountBytes += u64Temp.QuadPart;
-                }
-            }
-        } while (FindNextFile(hSearch, &wfdFileInfo));
-        FindClose(hSearch);
+            } while (FindNextFile(hSearch, &wfdFileInfo));
+            FindClose(hSearch);
+        }
     }
 
     /* Terminate list */
@@ -1532,19 +1582,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
     if (ptrFileArray == NULL)
     {
         WARN("DEBUG: Cannot allocate memory for ptrFileArray!\n");
-        while (ptrStartNode)
-        {
-            ptrNextNode = ptrStartNode->ptrNext;
-            while (ptrStartNode->stInfo.ptrHead)
-            {
-                ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-                ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-                cmd_free(ptrFreeNode);
-            }
-            cmd_free(ptrStartNode);
-            ptrStartNode = ptrNextNode;
-            dwCount --;
-        }
+        DirNodeCleanup(ptrStartNode, &dwCount);
         return 1;
     }
 
@@ -1582,20 +1620,9 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
 
     /* Free array */
     cmd_free(ptrFileArray);
+
     /* Free linked list */
-    while (ptrStartNode)
-    {
-        ptrNextNode = ptrStartNode->ptrNext;
-        while (ptrStartNode->stInfo.ptrHead)
-        {
-            ptrFreeNode = ptrStartNode->stInfo.ptrHead;
-            ptrStartNode->stInfo.ptrHead = ptrFreeNode->ptrNext;
-            cmd_free(ptrFreeNode);
-        }
-        cmd_free(ptrStartNode);
-        ptrStartNode = ptrNextNode;
-        dwCount --;
-    }
+    DirNodeCleanup(ptrStartNode, &dwCount);
 
     if (CheckCtrlBreak(BREAK_INPUT))
         return 1;
@@ -1622,8 +1649,7 @@ DirList(LPTSTR szPath,              /* [IN] The path that dir starts */
             do
             {
                 /* We search for directories other than "." and ".." */
-                if ((_tcsicmp(wfdFileInfo.cFileName, _T(".")) != 0) &&
-                    (_tcsicmp(wfdFileInfo.cFileName, _T("..")) != 0 ) &&
+                if (!IsIgnoredDots(wfdFileInfo.cFileName) &&
                     (wfdFileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
                     /* Concat the path and the directory to do recursive */
