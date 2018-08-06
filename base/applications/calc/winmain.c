@@ -1749,8 +1749,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                         convert_text2number(&calc.code);
                         cb(&calc.code);
                         display_rpn_result(hWnd, &calc.code);
-                        if (!(function_table[x].range & NO_CHAIN))
-                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
+//                        if (!(function_table[x].range & NO_CHAIN))
+//                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
                             CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
                         if (function_table[x].range & MODIFIER_HYP)
