@@ -1,3 +1,23 @@
+/*
+ * ReactOS Calc (Utility functions for GMP/MPFR engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
 void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
@@ -39,7 +59,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
             width = 1 + mpfr_get_si(t, MPFR_DEFAULT_RND);
             mpfr_clear(t);
         }
-        if ((calc.sci_out != FALSE) || (width > max_ld_width) || (width < -max_ld_width))
+        if (calc.sci_out == TRUE || width > max_ld_width || width < -max_ld_width)
             ptr = temp + gmp_sprintf(temp, "%*.*#Fe", 1, max_ld_width, ff);
         else {
             ptr = temp + gmp_sprintf(temp, "%#*.*Ff", width, ((max_ld_width-width-1)>=0) ? max_ld_width-width-1 : 0, ff);
@@ -62,8 +82,8 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
     case IDC_RADIO_BIN:
         /* if the number is zero, just write 0 ;) */
         if (rpn_is_zero(rpn)) {
-            temp[0] = TEXT('0');
-            temp[1] = TEXT('\0');
+            temp[0] = _T('0');
+            temp[1] = _T('\0');
             break;
         }
         /* repeat until a bit set to '1' is found */
@@ -78,8 +98,8 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
         } while (1);
         /* now revert the string into TCHAR buffer */
         for (q=0; q<n; q++)
-            buffer[n-q-1] = (temp[q] == '1') ? TEXT('1') : TEXT('0');
-        buffer[n] = TEXT('\0');
+            buffer[n-q-1] = (temp[q] == '1') ? _T('1') : _T('0');
+        buffer[n] = _T('\0');
 
         mpz_clear(zz);
         mpf_clear(ff);
@@ -87,7 +107,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
     }
     mpz_clear(zz);
     mpf_clear(ff);
-    _sntprintf(buffer, SIZEOF(calc.buffer), TEXT("%s"), temp);
+    _sntprintf(buffer, SIZEOF(calc.buffer), _T("%hs"), temp);
 }
 
 void convert_text2number_2(calc_number_t *a)
@@ -135,4 +155,3 @@ void convert_real_integer(unsigned int base)
         break;
     }
 }
-

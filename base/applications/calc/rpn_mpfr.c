@@ -1,3 +1,23 @@
+/*
+ * ReactOS Calc (RPN encoder/decoder for GMP/MPFR engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
 typedef struct {
@@ -15,7 +35,7 @@ typedef struct {
 } calc_operator_t;
 
 static stack_node_t *stack;
-static stack_node_t  temp;
+static calc_node_t   temp;
 static BOOL          percent_mode;
 
 static void rpn_add_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
@@ -61,25 +81,27 @@ static const calc_operator_t operator_list[] = {
     { 7, rpn_sqr_f, NULL,      NULL,      }, // RPN_OPERATOR_SQR
 };
 
-static void node_copy(stack_node_t *dst, stack_node_t *src)
+static void node_copy(calc_node_t *dst, calc_node_t *src)
 {
-    mpfr_set(dst->node.number.mf,src->node.number.mf,MPFR_DEFAULT_RND);
-    dst->node.operation = src->node.operation;
-    dst->next = src->next;
+    mpfr_set(dst->number.mf, src->number.mf, MPFR_DEFAULT_RND);
+    dst->operation = src->operation;
 }
 
-static stack_node_t *pop()
+static calc_node_t *pop(void)
 {
+    void *next;
+
     if (stack == NULL)
         return NULL;
 
     /* copy the node */
-    node_copy(&temp, stack);
+    node_copy(&temp, &stack->node);
+    next = stack->next;
 
     /* free the node */
     mpfr_clear(stack->node.number.mf);
     free(stack);
-    stack = temp.next;
+    stack = next;
 
     return &temp;
 }
@@ -89,12 +111,12 @@ static int is_stack_empty(void)
     return (stack == NULL);
 }
 
-static void push(stack_node_t *op)
+static void push(calc_node_t *op)
 {
     stack_node_t *z = (stack_node_t *)malloc(sizeof(stack_node_t));
 
-    mpfr_init_set(z->node.number.mf,op->node.number.mf,MPFR_DEFAULT_RND);
-    z->node.operation = op->node.operation;
+    mpfr_init_set(z->node.number.mf, op->number.mf, MPFR_DEFAULT_RND);
+    z->node.operation = op->operation;
     z->next = stack;
     stack = z;
 }
@@ -109,8 +131,7 @@ static unsigned int get_prec(unsigned int opc)
 }
 */
 
-typedef
-__GMP_DECLSPEC void (*exec_call_t)
+typedef void (*exec_call_t)
 __GMP_PROTO ((mpz_ptr, mpz_srcptr, mpz_srcptr));
 
 static void rpn_exec_int(calc_number_t *r, calc_number_t *a, calc_number_t *b, exec_call_t cb)
@@ -286,7 +307,6 @@ static void rpn_div_p(calc_number_t *r, calc_number_t *a, calc_number_t *b)
     }
 }
 
-
 void run_operator(calc_node_t *result,
                   calc_node_t *a,
                   calc_node_t *b,
@@ -307,44 +327,44 @@ void run_operator(calc_node_t *result,
 
 static void evalStack(calc_number_t *number)
 {
-    stack_node_t *op, ip;
+    calc_node_t *op, ip;
     unsigned int prec;
 
-    mpfr_init(ip.node.number.mf);
+    mpfr_init(ip.number.mf);
     op = pop();
     node_copy(&ip, op);
-    prec = operator_list[ip.node.operation].prec;
+    prec = operator_list[ip.operation].prec;
     while (!is_stack_empty()) {
         op = pop();
 
-        if (prec <= operator_list[op->node.operation].prec) {
-            if (op->node.operation == RPN_OPERATOR_PARENT) continue;
+        if (prec <= operator_list[op->operation].prec) {
+            if (op->operation == RPN_OPERATOR_PARENT) continue;
 
-            rpn_copy(&calc.prev, &ip.node.number);
-            run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
+            rpn_copy(&calc.prev, &ip.number);
+            run_operator(&ip, op, &ip, op->operation);
             if (calc.is_nan) {
                 flush_postfix();
-                mpfr_clear(ip.node.number.mf);
+                mpfr_clear(ip.number.mf);
                 return;
             }
         } else {
             push(op);
             break;
-        }  
+        }
     }
 
-    if(ip.node.operation != RPN_OPERATOR_EQUAL && ip.node.operation != RPN_OPERATOR_PERCENT)
+    if (ip.operation != RPN_OPERATOR_EQUAL && ip.operation != RPN_OPERATOR_PERCENT)
         push(&ip);
 
-    calc.prev_operator = op->node.operation;
+    calc.prev_operator = op->operation;
 
-    rpn_copy(number, &ip.node.number);
-    mpfr_clear(ip.node.number.mf);
+    rpn_copy(number, &ip.number);
+    mpfr_clear(ip.number.mf);
 }
 
 int exec_infix2postfix(calc_number_t *number, unsigned int func)
 {
-    stack_node_t tmp;
+    calc_node_t tmp;
 
     if (is_stack_empty() && func == RPN_OPERATOR_EQUAL) {
         /* if a number has been entered with exponential */
@@ -357,12 +377,12 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
     if (func == RPN_OPERATOR_PERCENT)
         percent_mode = TRUE;
 
-    mpfr_init(tmp.node.number.mf);
-    rpn_copy(&tmp.node.number, number);
-    tmp.node.operation = func;
+    mpfr_init(tmp.number.mf);
+    rpn_copy(&tmp.number, number);
+    tmp.operation = func;
 
     push(&tmp);
-    mpfr_clear(tmp.node.number.mf);
+    mpfr_clear(tmp.number.mf);
 
     if (func == RPN_OPERATOR_NONE)
         return 0;
@@ -390,24 +410,24 @@ void exec_change_infix(void)
 
 void exec_closeparent(calc_number_t *number)
 {
-    stack_node_t *op, ip;
+    calc_node_t *op, ip;
 
-    rpn_alloc(&ip.node.number);
-    rpn_copy(&ip.node.number, number);
+    rpn_alloc(&ip.number);
+    rpn_copy(&ip.number, number);
     while (!is_stack_empty()) {
         op = pop();
 
-        if (op->node.operation == RPN_OPERATOR_PARENT)
+        if (op->operation == RPN_OPERATOR_PARENT)
             break;
 
-        run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
+        run_operator(&ip, op, &ip, op->operation);
         if (calc.is_nan) {
             flush_postfix();
             return;
         }
     }
-    rpn_copy(number, &ip.node.number);
-    rpn_free(&ip.node.number);
+    rpn_copy(number, &ip.number);
+    rpn_free(&ip.number);
 }
 
 int eval_parent_count(void)
@@ -423,12 +443,12 @@ int eval_parent_count(void)
     return n;
 }
 
-void flush_postfix()
+void flush_postfix(void)
 {
     while (!is_stack_empty())
         pop();
     /* clear prev and last typed operators */
-    calc.prev_operator = 
+    calc.prev_operator =
     calc.last_operator = 0;
 }
 
@@ -440,7 +460,7 @@ void start_rpn_engine(void)
     mpfr_init(calc.code.mf);
     mpfr_init(calc.prev.mf);
     mpfr_init(calc.memory.number.mf);
-    mpfr_init(temp.node.number.mf);
+    mpfr_init(temp.number.mf);
     rpn_zero(&calc.memory.number);
 }
 
@@ -449,5 +469,5 @@ void stop_rpn_engine(void)
     mpfr_clear(calc.code.mf);
     mpfr_clear(calc.prev.mf);
     mpfr_clear(calc.memory.number.mf);
-    mpfr_clear(temp.node.number.mf);
+    mpfr_clear(temp.number.mf);
 }

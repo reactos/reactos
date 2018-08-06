@@ -204,10 +204,16 @@ It deletes all numbers currently stored into the list.
 While the statistical window is shown, four additional buttons are enabled:
 [Ave]
 It calculates the arithmetic average of the numbers stored into the list.
+[Ave] + [Inv]
+It calculates the arithmetic average of the squares of the numbers stored into the list.
 [Sum]
 It calculates the sum of all numbers stored into the list.
+[Sum] + [Inv]
+It calculates the sum of the squares of all numbers stored into the list.
 [s]
-It calculates the population standard deviations of the numbers stored into the list.
+It calculates the population standard deviations with base 'n-1' of the numbers stored into the list.
+[s] + [Inv]
+It calculates the population standard deviations with base 'n' of the numbers stored into the list.
 [Dat]
 It inserts the number shown into the output display into the list.
 
@@ -483,10 +489,12 @@ Shortcut from keyboard: CTRL-S
 
 Ave
 It calculates the arithmetic average of the numbers stored into the statistical box.
+When used with [Inv] modifier it calculates the average of squares.
 Shortcut from keyboard: CTRL-A
 
 Sum
 It calculates the sum of the numbers stored into the statistical box.
+When used with [Inv] modifier it calculates the summation of squares.
 Shortcut from keyboard: CTRL-T
 
 s

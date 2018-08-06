@@ -166,6 +166,8 @@ static const WORD operator_codes[] = {
     IDC_BUTTON_MULT,    // RPN_OPERATOR_MULT
     IDC_BUTTON_DIV,     // RPN_OPERATOR_DIV
     IDC_BUTTON_MOD,     // RPN_OPERATOR_MOD
+    IDC_BUTTON_XeY,     // RPN_OPERATOR_POW
+    IDC_BUTTON_XrY,     // RPN_OPERATOR_SQR
 };
 
 typedef void (*rpn_callback1)(calc_number_t *);
@@ -180,8 +182,6 @@ typedef struct {
     rpn_callback1   inv_hyp;
 } function_table_t;
 
-static void run_pow(calc_number_t *number);
-static void run_sqr(calc_number_t *number);
 static void run_fe(calc_number_t *number);
 static void run_dat_sta(calc_number_t *number);
 static void run_mp(calc_number_t *c);
@@ -205,10 +205,9 @@ static const function_table_t function_table[] = {
     { IDC_BUTTON_LN,   MODIFIER_INV,              1, rpn_ln,      rpn_exp,     NULL,     NULL      },
     { IDC_BUTTON_LOG,  MODIFIER_INV,              1, rpn_log,     rpn_exp10,   NULL,     NULL      },
     { IDC_BUTTON_NF,   0,                         1, rpn_fact,    NULL,        NULL,     NULL      },
-    { IDC_BUTTON_AVE,  0,                         0, rpn_ave,     NULL,        NULL,     NULL      },
-    { IDC_BUTTON_SUM,  0,                         0, rpn_sum,     NULL,        NULL,     NULL      },
+    { IDC_BUTTON_AVE,  MODIFIER_INV,              0, rpn_ave,     rpn_ave2,    NULL,     NULL      },
+    { IDC_BUTTON_SUM,  MODIFIER_INV,              0, rpn_sum,     rpn_sum2,    NULL,     NULL      },
     { IDC_BUTTON_S,    MODIFIER_INV,              0, rpn_s_m1,    rpn_s,       NULL,     NULL      },
-    { IDC_BUTTON_XeY,  MODIFIER_INV,              1, run_pow,     run_sqr,     NULL,     NULL      },
     { IDC_BUTTON_SQRT, MODIFIER_INV,              1, rpn_sqrt,    NULL,        NULL,     NULL      },
     { IDC_BUTTON_DMS,  MODIFIER_INV,              1, rpn_dec2dms, rpn_dms2dec, NULL,     NULL      },
     { IDC_BUTTON_FE,   0,                         1, run_fe,      NULL,        NULL,     NULL      },
@@ -1132,16 +1131,6 @@ static statistic_t *upload_stat_number(int n)
     return p;
 }
 
-static void run_pow(calc_number_t *number)
-{
-    exec_infix2postfix(number, RPN_OPERATOR_POW);
-}
-
-static void run_sqr(calc_number_t *number)
-{
-    exec_infix2postfix(number, RPN_OPERATOR_SQR);
-}
-
 static void run_fe(calc_number_t *number)
 {
     calc.sci_out = ((calc.sci_out != FALSE) ? FALSE : TRUE);
@@ -1531,17 +1520,29 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_LSH:
         case IDC_BUTTON_RSH:
         case IDC_BUTTON_EQU:
+        case IDC_BUTTON_XeY:
+        case IDC_BUTTON_XrY:
             if (calc.is_nan) break;
             /*
-             * LSH button holds the RSH function too with INV modifier,
-             * but since it's a two operand operator, it must be handled here.
+             * LSH and XeY buttons hold also the RSH and XrY functions with INV modifier,
+             * but since they are two operand operators, they must be handled here.
              */
-            if (LOWORD(wp) == IDC_BUTTON_LSH &&
-                (get_modifiers(hWnd) & MODIFIER_INV)) {
-                PostMessage(hWnd, WM_COMMAND, MAKEWPARAM(IDC_BUTTON_RSH, BN_CLICKED), 0);
-                SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
-                break;
+            if ((get_modifiers(hWnd) & MODIFIER_INV))
+            {
+                WPARAM IdcSim = IDC_STATIC;
+
+                switch (LOWORD(wp)) {
+                case IDC_BUTTON_LSH: IdcSim = MAKEWPARAM(IDC_BUTTON_RSH, BN_CLICKED); break;
+                case IDC_BUTTON_XeY: IdcSim = MAKEWPARAM(IDC_BUTTON_XrY, BN_CLICKED); break;
+                }
+
+                if (IdcSim != IDC_STATIC)
+                {
+                    PostMessage(hWnd, WM_COMMAND, IdcSim, 0);
+                    CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+                }
             }
+
             for (x=0; x<SIZEOF(operator_codes); x++) {
                 if (LOWORD(wp) == operator_codes[x]) {
                     convert_text2number(&calc.code);
@@ -1668,7 +1669,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_SIN:
         case IDC_BUTTON_COS:
         case IDC_BUTTON_TAN:
-        case IDC_BUTTON_XeY:
         case IDC_BUTTON_MS:
             for (x=0; x<SIZEOF(function_table); x++) {
                 if (LOWORD(wp) == function_table[x].idc) {
@@ -1697,8 +1697,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                         convert_text2number(&calc.code);
                         cb(&calc.code);
                         display_rpn_result(hWnd, &calc.code);
-                        if (!(function_table[x].range & NO_CHAIN))
-                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
+//                      if (!(function_table[x].range & NO_CHAIN))
+//                          exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
                             SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
                         if (function_table[x].range & MODIFIER_HYP)

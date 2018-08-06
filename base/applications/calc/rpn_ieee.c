@@ -1,3 +1,23 @@
+/*
+ * ReactOS Calc (RPN encoder/decoder for IEEE-754 engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
 typedef struct {
@@ -15,7 +35,7 @@ typedef struct {
 } calc_operator_t;
 
 static stack_node_t *stack;
-static stack_node_t  temp;
+static calc_node_t   temp;
 static BOOL          percent_mode;
 
 static void rpn_add_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
@@ -67,14 +87,20 @@ static const calc_operator_t operator_list[] = {
     { 7, rpn_sqr_f, NULL,      NULL,      }, // RPN_OPERATOR_SQR
 };
 
-static stack_node_t *pop(void)
+static calc_node_t *pop(void)
 {
+    void *next;
+
     if (stack == NULL)
         return NULL;
 
-    temp = *stack;
+    /* copy the node */
+    temp = stack->node;
+    next = stack->next;
+
+    /* free the node */
     free(stack);
-    stack = temp.next;
+    stack = next;
 
     return &temp;
 }
@@ -84,11 +110,11 @@ static int is_stack_empty(void)
     return (stack == NULL);
 }
 
-static void push(stack_node_t *op)
+static void push(calc_node_t *op)
 {
     stack_node_t *z = (stack_node_t *)malloc(sizeof(stack_node_t));
 
-    *z = *op;
+    z->node = *op;
     z->next = stack;
     stack = z;
 }
@@ -330,20 +356,20 @@ void run_operator(calc_node_t *result,
 
 static void evalStack(calc_number_t *number)
 {
-    stack_node_t *op, ip;
+    calc_node_t *op, ip;
     unsigned int prec;
 
     op = pop();
     ip = *op;
-    prec = operator_list[ip.node.operation].prec;
+    prec = operator_list[ip.operation].prec;
     while (!is_stack_empty()) {
         op = pop();
 
-        if (prec <= operator_list[op->node.operation].prec) {
-            if (op->node.operation == RPN_OPERATOR_PARENT) continue;
+        if (prec <= operator_list[op->operation].prec) {
+            if (op->operation == RPN_OPERATOR_PARENT) continue;
 
-            calc.prev = ip.node.number;
-            run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
+            calc.prev = ip.number;
+            run_operator(&ip, op, &ip, op->operation);
             if (calc.is_nan) {
                 flush_postfix();
                 return;
@@ -354,17 +380,17 @@ static void evalStack(calc_number_t *number)
         }
     }
 
-    if(ip.node.operation != RPN_OPERATOR_EQUAL && ip.node.operation != RPN_OPERATOR_PERCENT)
+    if (ip.operation != RPN_OPERATOR_EQUAL && ip.operation != RPN_OPERATOR_PERCENT)
         push(&ip);
 
-    calc.prev_operator = op->node.operation;
+    calc.prev_operator = op->operation;
 
-    *number = ip.node.number;
+    *number = ip.number;
 }
 
 int exec_infix2postfix(calc_number_t *number, unsigned int func)
 {
-    stack_node_t tmp;
+    calc_node_t tmp;
 
     if (is_stack_empty() && func == RPN_OPERATOR_EQUAL) {
         /* if a number has been entered with exponential */
@@ -377,10 +403,9 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
     if (func == RPN_OPERATOR_PERCENT)
         percent_mode = TRUE;
 
-    tmp.node.number = *number;
-    tmp.node.base = calc.base;
-    tmp.node.operation = func;
-    tmp.next = NULL;
+    tmp.number = *number;
+    tmp.base = calc.base;
+    tmp.operation = func;
 
     push(&tmp);
 
@@ -410,23 +435,23 @@ void exec_change_infix(void)
 
 void exec_closeparent(calc_number_t *number)
 {
-    stack_node_t *op, ip;
+    calc_node_t *op, ip;
 
-    ip.node.number = *number;
-    ip.node.base = calc.base;
+    ip.number = *number;
+    ip.base = calc.base;
     while (!is_stack_empty()) {
         op = pop();
 
-        if (op->node.operation == RPN_OPERATOR_PARENT)
+        if (op->operation == RPN_OPERATOR_PARENT)
             break;
 
-        run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
+        run_operator(&ip, op, &ip, op->operation);
         if (calc.is_nan) {
             flush_postfix();
             return;
         }
     }
-    *number = ip.node.number;
+    *number = ip.number;
 }
 
 int eval_parent_count(void)
@@ -442,7 +467,7 @@ int eval_parent_count(void)
     return n;
 }
 
-void flush_postfix()
+void flush_postfix(void)
 {
     while (!is_stack_empty())
         pop();
@@ -459,4 +484,3 @@ void start_rpn_engine(void)
 void stop_rpn_engine(void)
 {
 }
-

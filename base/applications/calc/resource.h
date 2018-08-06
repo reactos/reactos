@@ -101,6 +101,7 @@
 #define IDC_COMBO_FROM        1091
 #define IDC_COMBO_TO          1092
 #define IDC_BUTTON_RSH        1093
+#define IDC_BUTTON_XrY        1094
 
 /* TYPES OF CONVERSIONS */
 #define IDS_CONV_ANGLE       2000

@@ -1,4 +1,27 @@
+/*
+ * ReactOS Calc (Math functions, GMP/MPFR engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
+
+static void validate_rad2angle(calc_number_t *c);
+static void validate_angle2rad(calc_number_t *c);
 
 void apply_int_mask(calc_number_t *r)
 {
@@ -28,7 +51,7 @@ void apply_int_mask(calc_number_t *r)
     mpz_clear(mask);
 }
 
-void validate_rad2angle(calc_number_t *r)
+static void validate_rad2angle(calc_number_t *r)
 {
     mpfr_t mult, divs;
 
@@ -55,7 +78,7 @@ void validate_rad2angle(calc_number_t *r)
     mpfr_clear(divs);
 }
 
-void validate_angle2rad(calc_number_t *r)
+static void validate_angle2rad(calc_number_t *r)
 {
     mpfr_t mult, divs;
 
@@ -341,6 +364,21 @@ static void stat_sum(mpfr_t sum)
     }
 }
 
+static void stat_sum2(mpfr_t sum)
+{
+    statistic_t *p = calc.stat;
+    mpfr_t       sqr;
+
+    mpfr_init(sqr);
+    mpfr_set_ui(sum, 0, MPFR_DEFAULT_RND);
+    while (p != NULL) {
+        mpfr_mul(sqr, p->num.mf, p->num.mf, MPFR_DEFAULT_RND);
+        mpfr_add(sum, sum, sqr, MPFR_DEFAULT_RND);
+        p = (statistic_t *)(p->next);
+    }
+    mpfr_clear(sqr);
+}
+
 void rpn_ave(calc_number_t *c)
 {
     int     n;
@@ -355,9 +393,31 @@ void rpn_ave(calc_number_t *c)
         mpfr_trunc(c->mf, c->mf);
 }
 
+void rpn_ave2(calc_number_t *c)
+{
+    int     n;
+
+    stat_sum2(c->mf);
+    n = SendDlgItemMessage(calc.hStatWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0);
+
+    if (n)
+        mpfr_div_ui(c->mf, c->mf, n, MPFR_DEFAULT_RND);
+
+    if (calc.base != IDC_RADIO_DEC)
+        mpfr_trunc(c->mf, c->mf);
+}
+
 void rpn_sum(calc_number_t *c)
 {
     stat_sum(c->mf);
+
+    if (calc.base != IDC_RADIO_DEC)
+        mpfr_trunc(c->mf, c->mf);
+}
+
+void rpn_sum2(calc_number_t *c)
+{
+    stat_sum2(c->mf);
 
     if (calc.base != IDC_RADIO_DEC)
         mpfr_trunc(c->mf, c->mf);
