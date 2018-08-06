@@ -51,6 +51,22 @@
 
 #define MAX_CALC_SIZE       256
 
+/* HTMLHELP SUPPORT */
+typedef HWND (WINAPI* type_HtmlHelpA)(HWND, LPCSTR, UINT, DWORD);
+typedef HWND (WINAPI* type_HtmlHelpW)(HWND, LPCWSTR, UINT, DWORD);
+
+extern type_HtmlHelpA calc_HtmlHelpA;
+extern type_HtmlHelpW calc_HtmlHelpW;
+
+#ifndef UNICODE
+#define calc_HtmlHelp   calc_HtmlHelpA
+#else
+#define calc_HtmlHelp   calc_HtmlHelpW
+#endif
+
+void HtmlHelp_Start(HINSTANCE hInstance);
+void HtmlHelp_Stop(void);
+
 /*#define USE_KEYBOARD_HOOK*/
 
 #define SIZEOF(_ar)     (sizeof(_ar)/sizeof(_ar[1]))

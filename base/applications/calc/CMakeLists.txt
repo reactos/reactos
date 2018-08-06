@@ -7,6 +7,7 @@ list(APPEND SOURCE
     rpn_ieee.c
     utl_ieee.c
     winmain.c
+    htmlhelp.c
     calc.h)
 
 file(GLOB calc_rc_deps res/*.*)

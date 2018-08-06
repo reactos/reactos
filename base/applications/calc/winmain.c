@@ -20,7 +20,7 @@
 
 #include "calc.h"
 
-#define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
+#define HTMLHELP_PATH(_pt)  _T("%systemroot%\\Help\\calc.chm::") _T(_pt)
 
 #define MAKE_BITMASK4(_show_b16, _show_b10, _show_b8, _show_b2) \
     (((_show_b2)  << 0) | \
@@ -1181,7 +1181,7 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
         popup.rcMargins.left   = -1;
         popup.rcMargins.right  = -1;
         popup.idString = GetWindowLongPtr((HWND)wp, GWL_ID);
-        HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
+        calc_HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
     }
 #else
     (void)idm;
@@ -1272,8 +1272,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         return SubclassButtonProc(hWnd, wp, lp);
 
     case WM_INITDIALOG:
-        // For now, the Help dialog is disabled because of lacking of HTML Help support
+#ifdef DISABLE_HTMLHELP_SUPPORT
         EnableMenuItem(GetMenu(hWnd), IDM_HELP_HELP, MF_BYCOMMAND | MF_GRAYED);
+#endif
         calc.hWnd=hWnd;
 
 #ifdef USE_KEYBOARD_HOOK
@@ -1358,7 +1359,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         case IDM_HELP_HELP:
 #ifndef DISABLE_HTMLHELP_SUPPORT
-            HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
+            calc_HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
 #endif
             return TRUE;
         case IDM_VIEW_STANDARD:
@@ -1763,6 +1764,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         calc.action = IDC_STATIC;
         DestroyWindow(hWnd);
         return TRUE;
+
     case WM_DESTROY:
         /* Get (x,y) position of the calculator */
         GetWindowRect(hWnd, &rc);
@@ -1812,6 +1814,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     load_config();
     start_rpn_engine();
 
+    HtmlHelp_Start(hInstance);
+
     do {
         /* ignore hwnd: dialogs are already visible! */
         if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
@@ -1838,6 +1842,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     } while (calc.action != IDC_STATIC);
 
     stop_rpn_engine();
+
+    HtmlHelp_Stop();
 
     return 0;
 }
