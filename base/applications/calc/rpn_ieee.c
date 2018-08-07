@@ -380,7 +380,7 @@ static void evalStack(calc_number_t *number)
         }
     }
 
-    if(ip.operation != RPN_OPERATOR_EQUAL && ip.operation != RPN_OPERATOR_PERCENT)
+    if (ip.operation != RPN_OPERATOR_EQUAL && ip.operation != RPN_OPERATOR_PERCENT)
         push(&ip);
 
     calc.prev_operator = op->operation;
