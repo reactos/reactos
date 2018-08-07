@@ -1888,7 +1888,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
             dwLayout = IDD_DIALOG_STANDARD;
 
         /* This call will always fail if UNICODE for Win9x */
-        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, (DLGPROC)DlgMainProc))
+        if (NULL == CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, DlgMainProc))
             break;
 
         while (GetMessage(&msg, NULL, 0, 0)) {
