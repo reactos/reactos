@@ -1764,7 +1764,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             if (IsWindow(calc.hStatWnd))
                 break;
             calc.hStatWnd = CreateDialog(calc.hInstance,
-                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, (DLGPROC)DlgStatProc);
+                                    MAKEINTRESOURCE(IDD_DIALOG_STAT), hWnd, DlgStatProc);
             if (calc.hStatWnd != NULL) {
                 enable_allowed_controls(hWnd, calc.base);
                 SendMessage(calc.hStatWnd, WM_SETFOCUS, 0, 0);
