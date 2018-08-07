@@ -562,7 +562,7 @@ static void update_lcd_display(HWND hwnd)
             memcpy(p, calc.sDecimal, calc.sDecimal_len*sizeof(TCHAR));
         }
     }
-    SendDlgItemMessage(hwnd, IDC_TEXT_OUTPUT, WM_SETTEXT, (WPARAM)0, (LPARAM)tmp);
+    SetDlgItemText(hwnd, IDC_TEXT_OUTPUT, tmp);
 }
 
 static void update_parent_display(HWND hWnd)
@@ -574,7 +574,7 @@ static void update_parent_display(HWND hWnd)
         str[0] = _T('\0');
     else
         _stprintf(str,_T("(=%d"), n);
-    SendDlgItemMessage(hWnd, IDC_TEXT_PARENT, WM_SETTEXT, 0, (LPARAM)str);
+    SetDlgItemText(hWnd, IDC_TEXT_PARENT, str);
 }
 
 static void build_operand(HWND hwnd, DWORD idc)
@@ -666,13 +666,13 @@ static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
     calc.ptr = calc.buffer;
 }
 
-static int get_modifiers(HWND hwnd)
+static int get_modifiers(HWND hWnd)
 {
     int modifiers = 0;
 
-    if (SendDlgItemMessage(hwnd, IDC_CHECK_INV, BM_GETCHECK, 0, 0))
+    if (IsDlgButtonChecked(hWnd, IDC_CHECK_INV) == BST_CHECKED)
         modifiers |= MODIFIER_INV;
-    if (SendDlgItemMessage(hwnd, IDC_CHECK_HYP, BM_GETCHECK, 0, 0))
+    if (IsDlgButtonChecked(hWnd, IDC_CHECK_HYP) == BST_CHECKED)
         modifiers |= MODIFIER_HYP;
 
     return modifiers;
@@ -721,44 +721,18 @@ static const struct _update_check_menus {
     { &calc.size, IDM_VIEW_BYTE,  IDC_RADIO_BYTE, },
 };
 
-static void update_menu(HWND hwnd)
+static void update_menu(HWND hWnd)
 {
-    HMENU        hMenu = GetSubMenu(GetMenu(hwnd), 1);
+    HMENU        hMenu = GetSubMenu(GetMenu(hWnd), 1);
     unsigned int x;
 
-    /* Sets the state of the layout in the menu based on the configuration file */
-    if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_SCIENTIFIC,
-                           MF_BYCOMMAND);
-    }
-    else if (calc.layout == CALC_LAYOUT_CONVERSION)
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_CONVERSION,
-                           MF_BYCOMMAND);
-    }
-    else
-    {
-        CheckMenuRadioItem(GetMenu(hwnd),
-                           IDM_VIEW_STANDARD,
-                           IDM_VIEW_CONVERSION,
-                           IDM_VIEW_STANDARD,
-                           MF_BYCOMMAND);
-    }
-
-    for (x=3; x<SIZEOF(upd); x++) {
+    for (x=0; x<SIZEOF(upd); x++) {
         if (*(upd[x].sel) != upd[x].idc) {
             CheckMenuItem(hMenu, upd[x].idm, MF_BYCOMMAND|MF_UNCHECKED);
-            SendMessage((HWND)GetDlgItem(hwnd,upd[x].idc),BM_SETCHECK,FALSE,0L);
+            CheckDlgButton(hWnd, upd[x].idc, BST_UNCHECKED);
         } else {
             CheckMenuItem(hMenu, upd[x].idm, MF_BYCOMMAND|MF_CHECKED);
-            SendMessage((HWND)GetDlgItem(hwnd,upd[x].idc),BM_SETCHECK,TRUE,0L);
+            CheckDlgButton(hWnd, upd[x].idc, BST_CHECKED);
         }
     }
     CheckMenuItem(hMenu, IDM_VIEW_GROUP, MF_BYCOMMAND|(calc.usesep ? MF_CHECKED : MF_UNCHECKED));
@@ -862,17 +836,18 @@ static void update_radio(HWND hwnd, unsigned int base)
         enable_allowed_controls(hwnd, base);
     }
 
-    SendDlgItemMessage(hwnd, calc.base, BM_SETCHECK, BST_CHECKED, 0);
+    CheckRadioButton(hwnd, IDC_RADIO_HEX, IDC_RADIO_BIN, calc.base);
+
     if (base == IDC_RADIO_DEC)
-        SendDlgItemMessage(hwnd, calc.degr, BM_SETCHECK, BST_CHECKED, 0);
+        CheckRadioButton(hwnd, IDC_RADIO_DEG, IDC_RADIO_GRAD, calc.degr);
     else
-        SendDlgItemMessage(hwnd, calc.size, BM_SETCHECK, BST_CHECKED, 0);
+        CheckRadioButton(hwnd, IDC_RADIO_QWORD, IDC_RADIO_BYTE, calc.size);
 }
 
 static void update_memory_flag(HWND hWnd, BOOL mem_flag)
 {
     calc.is_memory = mem_flag;
-    SendDlgItemMessage(hWnd, IDC_TEXT_MEMORY, WM_SETTEXT, 0, (LPARAM)(mem_flag ? TEXT("M") : TEXT("")));
+    SetDlgItemText(hWnd, IDC_TEXT_MEMORY, mem_flag ? _T("M") : _T(""));
 }
 
 static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
@@ -880,7 +855,7 @@ static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
     unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0); 
 
     _stprintf(buffer, _T("n=%u"), n);
-    SendDlgItemMessage(hWnd, IDC_TEXT_NITEMS, WM_SETTEXT, 0, (LPARAM)buffer);
+    SetDlgItemText(hWnd, IDC_TEXT_NITEMS, buffer);
 }
 
 static void clean_stat_list(void)
@@ -958,13 +933,13 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             return TRUE;
         case IDC_BUTTON_LOAD:
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
-            if (n == (DWORD)-1)
+            if (n == LB_ERR)
                 return TRUE;
             PostMessage(GetParent(hWnd), WM_LOAD_STAT, (WPARAM)n, 0);
             return TRUE;
         case IDC_BUTTON_CD:
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
-            if (n == (DWORD)-1)
+            if (n == LB_ERR)
                 return TRUE;
             SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_DELETESTRING, (WPARAM)n, 0);
             update_n_stats_items(hWnd, buffer);
@@ -995,18 +970,15 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
     return FALSE;
 }
 
-static BOOL idm_2_idc(int idm, WPARAM *pIdc)
+static WPARAM idm_2_idc(int idm)
 {
     int x;
 
     for (x=0; x<SIZEOF(upd); x++) {
         if (upd[x].idm == idm)
-        {
-            *pIdc = (WPARAM)(upd[x].idc);
-            return TRUE;
-        }
+            break;
     }
-    return FALSE;
+    return (WPARAM)(upd[x].idc);
 }
 
 static void CopyMemToClipboard(void *ptr)
@@ -1245,12 +1217,14 @@ static void run_canc(calc_number_t *c)
 {
     flush_postfix();
     rpn_zero(c);
+
     /* clear also scientific display modes */
     calc.sci_out = FALSE;
     calc.sci_in  = FALSE;
+
     /* clear state of inv and hyp flags */
-    SendDlgItemMessage(calc.hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
-    SendDlgItemMessage(calc.hWnd, IDC_CHECK_HYP, BM_SETCHECK, 0, 0);
+    CheckDlgButton(calc.hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+    CheckDlgButton(calc.hWnd, IDC_CHECK_HYP, BST_UNCHECKED);
 }
 
 static void run_rpar(calc_number_t *c)
@@ -1439,7 +1413,6 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
     RECT         rc;
-    HMENU        hMenu;
 
     switch (msg) {
     case WM_DRAWITEM:
@@ -1479,13 +1452,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         /* set our calc icon */
         SendMessage(hWnd, WM_SETICON, ICON_BIG,   (LPARAM)calc.hBgIcon);
         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)calc.hSmIcon);
-
-        /* Sets the state of the option to group digits */
-        hMenu = GetSubMenu(GetMenu(hWnd), 1);
-        CheckMenuItem(hMenu, IDM_VIEW_GROUP, (calc.usesep ? MF_CHECKED : MF_UNCHECKED));
-
         /* update text for decimal button */
-        SendDlgItemMessage(hWnd, IDC_BUTTON_DOT, WM_SETTEXT, (WPARAM)0, (LPARAM)calc.sDecimal);
+        SetDlgItemText(hWnd, IDC_BUTTON_DOT, calc.sDecimal);
         /* Fill combo box for conversion */
         if (calc.layout == CALC_LAYOUT_CONVERSION)
             ConvInit(hWnd);
@@ -1540,46 +1508,19 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 #endif
             return TRUE;
         case IDM_VIEW_STANDARD:
-            if (calc.layout != CALC_LAYOUT_STANDARD)
-            {
-                calc.layout = CALC_LAYOUT_STANDARD;
-                calc.action = IDM_VIEW_STANDARD;
-                DestroyWindow(hWnd);
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_STANDARD,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_STANDARD;
+            calc.action = IDM_VIEW_STANDARD;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_SCIENTIFIC:
-            if (calc.layout != CALC_LAYOUT_SCIENTIFIC)
-            {
-                calc.layout = CALC_LAYOUT_SCIENTIFIC;
-                calc.action = IDM_VIEW_SCIENTIFIC;
-                DestroyWindow(hWnd);
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_SCIENTIFIC,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_SCIENTIFIC;
+            calc.action = IDM_VIEW_SCIENTIFIC;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_CONVERSION:
-            if (calc.layout != CALC_LAYOUT_CONVERSION)
-            {
-                calc.layout = CALC_LAYOUT_CONVERSION;
-                calc.action = IDM_VIEW_CONVERSION;
-                DestroyWindow(hWnd);
-
-                CheckMenuRadioItem(GetMenu(hWnd),
-                    IDM_VIEW_STANDARD,
-                    IDM_VIEW_CONVERSION,
-                    IDM_VIEW_CONVERSION,
-                    MF_BYCOMMAND);
-            }
+            calc.layout = CALC_LAYOUT_CONVERSION;
+            calc.action = IDM_VIEW_CONVERSION;
+            DestroyWindow(hWnd);
             return TRUE;
         case IDM_VIEW_HEX:
         case IDM_VIEW_DEC:
@@ -1592,15 +1533,8 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDM_VIEW_DWORD:
         case IDM_VIEW_WORD:
         case IDM_VIEW_BYTE:
-        {
-            WPARAM idc;
-            if(idm_2_idc(LOWORD(wp), &idc))
-            {
-                SendMessage(hWnd, WM_COMMAND, idc, 0);
-                return TRUE;
-            }
-            return FALSE;
-        }
+            SendMessage(hWnd, WM_COMMAND, idm_2_idc(LOWORD(wp)), 0);
+            return TRUE;
         case IDM_EDIT_COPY:
             handle_copy_command(hWnd);
             return TRUE;
@@ -1894,9 +1828,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 //                        if (!(function_table[x].range & NO_CHAIN))
 //                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
-                            SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
+                            CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
                         if (function_table[x].range & MODIFIER_HYP)
-                            SendDlgItemMessage(hWnd, IDC_CHECK_HYP, BM_SETCHECK, 0, 0);
+                            CheckDlgButton(hWnd, IDC_CHECK_HYP, BST_UNCHECKED);
                     }
                     break;
                 }
@@ -2027,7 +1961,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
         /* ignore hwnd: dialogs are already visible! */
         if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
             dwLayout = IDD_DIALOG_SCIENTIFIC;
-        else if (calc.layout == CALC_LAYOUT_CONVERSION)
+        else
+        if (calc.layout == CALC_LAYOUT_CONVERSION)
             dwLayout = IDD_DIALOG_CONVERSION;
         else
             dwLayout = IDD_DIALOG_STANDARD;
