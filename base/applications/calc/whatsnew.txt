@@ -16,9 +16,9 @@
 
 * Moved the POW and SQR operations near the operators.
 * Rewritten some units formula by using scientific notation.
-* Improved precision of parsec unit coversion formula.
+* Improved precision of parsec unit conversion formula.
 * Fixed bug when calculator was closed with statistics dialog open.
-* Do not append decimal separator if "ERROR" messages are print.
+* Do not append decimal separator if "ERROR" messages are printed.
 * Improve code readability by using SetDlgItemText and GetDlgItemText functions
 * Colours are now declared though RGB() macro.
 * Remove call to _tcslen() and use return value of GetDlgItemText() where possible.
@@ -129,7 +129,7 @@
 * The version number of the programme has been moved from the resource files to ABOUT.C.
 * "DOT" function can be used for starting a number (integer part will be zero).
 * Added repeat function.
-* If the number is grater than maximum resolution, it will be displayed with exponential notation.
+* If the number is greater than maximum resolution, it will be displayed with exponential notation.
 * Removed mouse and keyboard focuses from displayed buttons. 
 * Added normal and small icons.
 
