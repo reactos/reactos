@@ -1,12 +1,13 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/wlnotify/test.c
- * PURPOSE:     Winlogon notifications
- * PROGRAMMER:  Eric Kohl
+ * FILE:        dll/win32/wlnotify/senssvc.c
+ * PURPOSE:     SENS service logon notifications
+ * PROGRAMMER:  Eric Kohl <eric.kohl@reactos.org>
  */
 
 #include "precomp.h"
+#include <winsvc.h>
 
 #define _NDEBUG
 #include <debug.h>
@@ -14,10 +15,10 @@
 
 VOID
 WINAPI
-TestLogonEvent(
+SensDisconnectEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLogonEvent\n");
+    DPRINT("SensDisconnectEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -31,10 +32,10 @@ TestLogonEvent(
 
 VOID
 WINAPI
-TestLogoffEvent(
+SensLockEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLogoffEvent\n");
+    DPRINT("SensLockEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -48,10 +49,10 @@ TestLogoffEvent(
 
 VOID
 WINAPI
-TestLockEvent(
+SensLogoffEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLockEvent\n");
+    DPRINT("SensLogoffEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -65,10 +66,10 @@ TestLockEvent(
 
 VOID
 WINAPI
-TestUnlockEvent(
+SensLogonEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestUnlockEvent\n");
+    DPRINT("SensLogonEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -82,10 +83,10 @@ TestUnlockEvent(
 
 VOID
 WINAPI
-TestStartupEvent(
+SensPostShellEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStartupEvent\n");
+    DPRINT("SensPostShellEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -99,10 +100,10 @@ TestStartupEvent(
 
 VOID
 WINAPI
-TestShutdownEvent(
+SensReconnectEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestShutdownEvent\n");
+    DPRINT("SensReconnectEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -116,10 +117,10 @@ TestShutdownEvent(
 
 VOID
 WINAPI
-TestStartScreenSaverEvent(
+SensShutdownEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStartScreenSaverEvent\n");
+    DPRINT("SensShutdownEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -133,10 +134,10 @@ TestStartScreenSaverEvent(
 
 VOID
 WINAPI
-TestStopScreenSaverEvent(
+SensStartScreenSaverEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStopScreenSaverEvent\n");
+    DPRINT("SensStartScreenSaverEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -150,10 +151,10 @@ TestStopScreenSaverEvent(
 
 VOID
 WINAPI
-TestStartShellEvent(
+SensStartShellEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStartShellEvent\n");
+    DPRINT("SensStartShellEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -167,26 +168,10 @@ TestStartShellEvent(
 
 VOID
 WINAPI
-TestPostShellEvent(
+SensStartupEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestPostShellEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-VOID
-WINAPI
-TestDisconnectEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestDisconnectEvent\n");
+    DPRINT("SensStartupEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -200,10 +185,27 @@ TestDisconnectEvent(
 
 VOID
 WINAPI
-TestReconnectEvent(
+SensStopScreenSaverEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestReconnectEvent\n");
+    DPRINT("SensStopScreenSaverEvent\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+
+VOID
+WINAPI
+SensUnlockEvent(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("SensUnlockEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
