@@ -493,22 +493,25 @@ static void update_lcd_display(HWND hwnd)
      * happen that separator is used between each digit.
      * Also added little additional space for dot and '\0'.
      */
-    TCHAR *tmp = (TCHAR *)alloca(sizeof(calc.buffer)*2+2*sizeof(TCHAR));
+    TCHAR tmp[MAX_CALC_SIZE * 2 + 2];
 
-    if (calc.buffer[0] == TEXT('\0'))
-        _tcscpy(tmp, TEXT("0"));
+    if (calc.buffer[0] == _T('\0'))
+        _tcscpy(tmp, _T("0"));
     else
         _tcscpy(tmp, calc.buffer);
-    /* add final '.' in decimal mode (if it's missing) */
-    if (calc.base == IDC_RADIO_DEC) {
-        if (_tcschr(tmp, TEXT('.')) == NULL)
-            _tcscat(tmp, TEXT("."));
+
+    /* Add final '.' in decimal mode (if it's missing), but
+     * only if it's a result: no append if it prints "ERROR".
+     */
+    if (calc.base == IDC_RADIO_DEC && !calc.is_nan) {
+        if (_tcschr(tmp, _T('.')) == NULL)
+            _tcscat(tmp, _T("."));
     }
     /* if separator mode is on, let's add an additional space */
     if (calc.usesep && !calc.sci_in && !calc.sci_out && !calc.is_nan) {
         /* go to the integer part of the string */
-        TCHAR *p = _tcschr(tmp, TEXT('.'));
-        TCHAR *e = _tcschr(tmp, TEXT('\0'));
+        TCHAR *p = _tcschr(tmp, _T('.'));
+        TCHAR *e = _tcschr(tmp, _T('\0'));
         int    n=0, t;
 
         if (p == NULL) p = e;
@@ -525,21 +528,21 @@ static void update_lcd_display(HWND hwnd)
             break;
         }
         while (--p > tmp) {
-            if (++n == t && *(p-1) != TEXT('-')) {
+            if (++n == t && *(p-1) != _T('-')) {
                 memmove(p+1, p, (e-p+1)*sizeof(TCHAR));
                 e++;
-                *p = TEXT(' ');
+                *p = _T(' ');
                 n = 0;
             }
         }
         /* if decimal mode, apply regional settings */
         if (calc.base == IDC_RADIO_DEC) {
             TCHAR *p = tmp;
-            TCHAR *e = _tcschr(tmp, TEXT('.'));
+            TCHAR *e = _tcschr(tmp, _T('.'));
 
             /* searching for thousands default separator */
             while (p < e) {
-                if (*p == TEXT(' ')) {
+                if (*p == _T(' ')) {
                     memmove(p+calc.sThousand_len, p+1, _tcslen(p)*sizeof(TCHAR));
                     memcpy(p, calc.sThousand, calc.sThousand_len*sizeof(TCHAR));
                     p += calc.sThousand_len;
@@ -551,7 +554,7 @@ static void update_lcd_display(HWND hwnd)
             memcpy(p, calc.sDecimal, calc.sDecimal_len*sizeof(TCHAR));
         }
     } else {
-        TCHAR *p = _tcschr(tmp, TEXT('.'));
+        TCHAR *p = _tcschr(tmp, _T('.'));
 
         /* update decimal point when usesep is false */
         if (p != NULL) {
@@ -568,9 +571,9 @@ static void update_parent_display(HWND hWnd)
     int   n = eval_parent_count();
 
     if (!n)
-        str[0] = TEXT('\0');
+        str[0] = _T('\0');
     else
-        _stprintf(str,TEXT("(=%d"), n);
+        _stprintf(str,_T("(=%d"), n);
     SendDlgItemMessage(hWnd, IDC_TEXT_PARENT, WM_SETTEXT, 0, (LPARAM)str);
 }
 
@@ -581,14 +584,14 @@ static void build_operand(HWND hwnd, DWORD idc)
     if (idc == IDC_BUTTON_DOT) {
         /* if dot is the first char, it's added automatically */
         if (calc.buffer == calc.ptr) {
-            *calc.ptr++ = TEXT('0');
-            *calc.ptr++ = TEXT('.');
-            *calc.ptr   = TEXT('\0');
+            *calc.ptr++ = _T('0');
+            *calc.ptr++ = _T('.');
+            *calc.ptr   = _T('\0');
             update_lcd_display(hwnd);
             return;
         }
         /* if pressed dot and it's already in the string, then return */
-        if (_tcschr(calc.buffer, TEXT('.')) != NULL)
+        if (_tcschr(calc.buffer, _T('.')) != NULL)
             return;
     }
     if (idc != IDC_STATIC) {
@@ -597,8 +600,8 @@ static void build_operand(HWND hwnd, DWORD idc)
     n = calc.ptr - calc.buffer;
     if (idc == IDC_BUTTON_0 && n == 0) {
         /* no need to put the dot because it's handled by update_lcd_display() */
-        calc.buffer[0] = TEXT('0');
-        calc.buffer[1] = TEXT('\0');
+        calc.buffer[0] = _T('0');
+        calc.buffer[1] = _T('\0');
         update_lcd_display(hwnd);
         return;
     }
@@ -614,12 +617,12 @@ static void build_operand(HWND hwnd, DWORD idc)
             if (idc != IDC_STATIC)
                 calc.esp = (calc.esp * 10 + (key2code[i].key-'0')) % LOCAL_EXP_SIZE;
             if (calc.ptr == calc.buffer)
-                _stprintf(calc.ptr, TEXT("0.e%+d"), calc.esp);
+                _stprintf(calc.ptr, _T("0.e%+d"), calc.esp);
             else {
                 /* adds the dot at the end if the number has no decimal part */
-                if (!_tcschr(calc.buffer, TEXT('.')))
-                    *calc.ptr++ = TEXT('.');
-                _stprintf(calc.ptr, TEXT("e%+d"), calc.esp);
+                if (!_tcschr(calc.buffer, _T('.')))
+                    *calc.ptr++ = _T('.');
+                _stprintf(calc.ptr, _T("e%+d"), calc.esp);
             }
             update_lcd_display(hwnd);
             return;
@@ -634,7 +637,7 @@ static void build_operand(HWND hwnd, DWORD idc)
             return;
         break;
     }
-    calc.ptr += _stprintf(calc.ptr, TEXT("%C"), key2code[i].key);
+    calc.ptr += _stprintf(calc.ptr, _T("%C"), key2code[i].key);
     update_lcd_display(hwnd);
 }
 
@@ -648,14 +651,19 @@ static void prepare_rpn_result(calc_number_t *rpn, TCHAR *buffer, int size, int 
     prepare_rpn_result_2(rpn, buffer, size, base);
 }
 
-static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
+static void set_rpn_result(HWND hwnd, calc_number_t *rpn)
 {
     calc.sci_in = FALSE;
     prepare_rpn_result(rpn, calc.buffer, SIZEOF(calc.buffer), calc.base);
     calc.ptr = calc.buffer + _tcslen(calc.buffer);
     update_lcd_display(hwnd);
-    calc.ptr = calc.buffer;
     update_parent_display(hwnd);
+}
+
+static void display_rpn_result(HWND hwnd, calc_number_t *rpn)
+{
+    set_rpn_result(hwnd, rpn);
+    calc.ptr = calc.buffer;
 }
 
 static int get_modifiers(HWND hwnd)
@@ -676,8 +684,8 @@ static void convert_text2number(calc_number_t *a)
     /* the operand is taken from the last input */
     if (calc.buffer == calc.ptr) {
         /* if pushed valued is ZERO then we should grab it */
-        if (!_tcscmp(calc.buffer, TEXT("0.")) ||
-            !_tcscmp(calc.buffer, TEXT("0")))
+        if (!_tcscmp(calc.buffer, _T("0.")) ||
+            !_tcscmp(calc.buffer, _T("0")))
             /* this zero is good for both integer and decimal */
             rpn_zero(a);
         else
@@ -871,7 +879,7 @@ static void update_n_stats_items(HWND hWnd, TCHAR *buffer)
 {
     unsigned int n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCOUNT, 0, 0); 
 
-    _stprintf(buffer, TEXT("n=%d"), n);
+    _stprintf(buffer, _T("n=%u"), n);
     SendDlgItemMessage(hWnd, IDC_TEXT_NITEMS, WM_SETTEXT, 0, (LPARAM)buffer);
 }
 
@@ -926,7 +934,7 @@ static char *ReadConversion(const char *formula)
 
     /* clear display content before proceeding */
     calc.ptr = calc.buffer;
-    calc.buffer[0] = TEXT('\0');
+    calc.buffer[0] = _T('\0');
 
     return str;
 }
@@ -970,10 +978,10 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_CLOSE:
-        clean_stat_list();
         DestroyWindow(hWnd);
         return TRUE;
     case WM_DESTROY:
+        clean_stat_list();
         PostMessage(GetParent(hWnd), WM_CLOSE_STATS, 0, 0);
         return TRUE;
     case WM_INSERT_STAT:
@@ -1023,11 +1031,14 @@ static void CopyMemToClipboard(void *ptr)
 
 static void handle_copy_command(HWND hWnd)
 {
-    TCHAR display[sizeof(calc.buffer)];
+    TCHAR display[MAX_CALC_SIZE];
+    UINT  n;
 
-    SendDlgItemMessage(hWnd, IDC_TEXT_OUTPUT, WM_GETTEXT, (WPARAM)SIZEOF(display), (LPARAM)display);
+    n = GetDlgItemText(hWnd, IDC_TEXT_OUTPUT, display, SIZEOF(display));
+
     if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, _T('.')) == NULL)
-        display[_tcslen(display)-calc.sDecimal_len] = TEXT('\0');
+        display[n - calc.sDecimal_len] = _T('\0');
+
     CopyMemToClipboard(display);
 }
 
@@ -1041,7 +1052,7 @@ static char *ReadClipboard(void)
 
         if (hData != NULL) {
             fromClipboard = (char *)GlobalLock(hData);
-            if (strlen(fromClipboard))
+            if (fromClipboard[0])
                 buffer = _strupr(_strdup(fromClipboard));
             GlobalUnlock( hData );
         }
@@ -1087,10 +1098,12 @@ static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
             }
         }
     }
-    seq->ptr = ptr;
+
     if (*ptr != '\0')
+    {
+        seq->ptr = ptr;
         PostMessage(hwnd, seq->wm_msg, 0, 0);
-    else {
+    } else {
         free(seq->data);
         seq->data = seq->ptr = ptr = NULL;
     }
@@ -1715,6 +1728,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 {
                     PostMessage(hWnd, WM_COMMAND, IdcSim, 0);
                     CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+                    break;
                 }
             }
 
@@ -1750,9 +1764,9 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                     TCHAR *ptr;
 
                     calc.sci_in = FALSE;
-                    ptr = _tcschr(calc.ptr, TEXT('e'));
+                    ptr = _tcschr(calc.ptr, _T('e'));
                     if (ptr)
-                        *ptr = TEXT('\0');
+                        *ptr = _T('\0');
                     update_lcd_display(hWnd);
                 } else {
                     calc.esp /= 10;
@@ -1760,12 +1774,12 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 }
             } else
             if (calc.ptr != calc.buffer) {
-                *--calc.ptr = TEXT('\0');
-                if (!_tcscmp(calc.buffer, TEXT("-")) ||
-                    !_tcscmp(calc.buffer, TEXT("-0")) ||
-                    !_tcscmp(calc.buffer, TEXT("0"))) {
+                *--calc.ptr = _T('\0');
+                if (!_tcscmp(calc.buffer, _T("-")) ||
+                    !_tcscmp(calc.buffer, _T("-0")) ||
+                    !_tcscmp(calc.buffer, _T("0"))) {
                     calc.ptr = calc.buffer;
-                    calc.buffer[0] = TEXT('\0');
+                    calc.buffer[0] = _T('\0');
                 }
                 update_lcd_display(hWnd);
             }
@@ -1793,22 +1807,22 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 calc.esp = 0-calc.esp;
                 build_operand(hWnd, IDC_STATIC);
             } else {
-                if (calc.is_nan || calc.buffer[0] == TEXT('\0'))
+                if (calc.is_nan || calc.buffer[0] == _T('\0'))
                     break;
 
-                if (calc.buffer[0] == TEXT('-')) {
+                if (calc.buffer[0] == _T('-')) {
                     /* make the number positive */
                     memmove(calc.buffer, calc.buffer+1, sizeof(calc.buffer)-1);
                     if (calc.buffer != calc.ptr)
                         calc.ptr--;
                 } else {
                     /* if first char is '0' and no dot, it isn't valid */
-                    if (calc.buffer[0] == TEXT('0') &&
-                        calc.buffer[1] != TEXT('.'))
+                    if (calc.buffer[0] == _T('0') &&
+                        calc.buffer[1] != _T('.'))
                         break;
                     /* make the number negative */
                     memmove(calc.buffer+1, calc.buffer, sizeof(calc.buffer)-1);
-                    calc.buffer[0] = TEXT('-');
+                    calc.buffer[0] = _T('-');
                     if (calc.buffer != calc.ptr)
                         calc.ptr++;
                 }
@@ -1871,14 +1885,20 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                     if (cb != NULL) {
                         convert_text2number(&calc.code);
                         cb(&calc.code);
-                        display_rpn_result(hWnd, &calc.code);
-//                      if (!(function_table[x].range & NO_CHAIN))
-//                          exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
+//                        display_rpn_result(hWnd, &calc.code);
+                        set_rpn_result(hWnd, &calc.code);
+
+                        if ((function_table[x].range & NO_CHAIN))
+                            calc.ptr = calc.buffer;
+
+//                        if (!(function_table[x].range & NO_CHAIN))
+//                            exec_infix2postfix(&calc.code, RPN_OPERATOR_NONE);
                         if (function_table[x].range & MODIFIER_INV)
                             SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
                         if (function_table[x].range & MODIFIER_HYP)
                             SendDlgItemMessage(hWnd, IDC_CHECK_HYP, BM_SETCHECK, 0, 0);
                     }
+                    break;
                 }
             }
             return TRUE;
@@ -1895,6 +1915,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         }
         break;
     case WM_CLOSE_STATS:
+        calc.hStatWnd = NULL;
         enable_allowed_controls(hWnd, calc.base);
         return TRUE;
     case WM_LOAD_STAT:
