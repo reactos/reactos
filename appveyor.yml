@@ -7,13 +7,13 @@ environment:
 version: reactos.appveyor.{build}
 skip_branch_with_pr: true
 clone_depth: 5
-clone_folder: c:\reactos-cov
+clone_folder: C:\reactos-cov
 
 init:
   - ps: (New-Object System.Net.WebClient).DownloadFile("https://svn.reactos.org/amine/RosCMakeNinja.zip","C:\RosCMakeNinja.zip")
   - 7z x C:\RosCMakeNinja.zip -oC:\RosCMakeNinja
   - ps: >-
-      If ($env:BuildType -Match "clang-cl") {
+      If ($env:BuildType -eq "clang-cl") {
         $env:clang_configure_option="clang"
         (New-Object System.Net.WebClient).DownloadFile("https://svn.reactos.org/amine/clang-cl.7z","C:\clang-cl.7z")
         7z x C:\clang-cl.7z -oC:\RosCMakeNinja\bin
@@ -24,13 +24,13 @@ init:
 build_script:
   - set PATH=C:\RosCMakeNinja\bin;%PATH%
   - if "%BuildType%" == "msvc-x64" (
-        call "C:\PROGRA~2\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
-      ) else (
-        call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
-      )
+      call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
+    ) else (
+      call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
+    )
   - cmake --version
-  - md c:\ros_build
-  - cd c:\ros_build
+  - md C:\ros_build
+  - cd C:\ros_build
   - call %APPVEYOR_BUILD_FOLDER%\configure.cmd %clang_configure_option% -DENABLE_ROSTESTS=1
   - ps: >-
       & ninja -k0 2>&1 | select-string -pattern "\[\d+\/\d+\] " -NotMatch | %{$_.Line}
