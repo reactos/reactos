@@ -1,0 +1,16 @@
+/*
+ * PROJECT:     ReactOS WMI command line
+ * LICENSE:     See COPYING in the top level directory
+ * PURPOSE:     Italian resource file
+ * COPYRIGHT:   Copyright 2018 Bișoc George (fraizeraust99 at gmail dot com)
+ */
+
+LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_CMDLINE_NOT_SUPPORTED, "Errore: Comando sconosciuto\n"
+    STRING_ALIAS_NOT_FOUND, "Errore: Alias sconosciuto\n"
+    STRING_INVALID_QUERY, "Errore: Richiesta non valida\n"
+    STRING_INVALID_PATH, "Errore: Sintassi non valida per PATH\n"
+}
