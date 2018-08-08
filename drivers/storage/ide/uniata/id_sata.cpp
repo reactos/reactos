@@ -650,7 +650,11 @@ UniataAhciInit(
     ULONG c, i;
     PHW_CHANNEL chan;
     ULONG offs;
+#ifdef __REACTOS__
+    ULONG_PTR BaseMemAddress;
+#else
     ULONG BaseMemAddress;
+#endif
     ULONG PI;
     ULONG CAP;
     ULONG CAP2;
