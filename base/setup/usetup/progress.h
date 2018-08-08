@@ -44,7 +44,7 @@ typedef struct _PROGRESS
     ULONG CurrentStep;
 
     BOOLEAN Double;
-    WORD ProgressColour;
+    SHORT ProgressColour;
     CHAR *Text;
 } PROGRESSBAR, *PPROGRESSBAR;
 
@@ -59,7 +59,7 @@ CreateProgressBarEx(
     SHORT TextTop,
     SHORT TextRight,
     IN BOOLEAN DoubleEdge,
-    WORD ProgressColour,
+    SHORT ProgressColour,
     CHAR *Text);
 
 PPROGRESSBAR
