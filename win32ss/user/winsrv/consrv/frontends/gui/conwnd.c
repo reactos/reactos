@@ -642,16 +642,6 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
 
-
-BOOL
-EnterFullScreen(PGUI_CONSOLE_DATA GuiData);
-VOID
-LeaveFullScreen(PGUI_CONSOLE_DATA GuiData);
-VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-VOID
-GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
-
 static VOID
 OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
 {
@@ -972,18 +962,6 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
 
     DeleteObject(oldRgn);
 }
-
-
-VOID
-GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                       PGUI_CONSOLE_DATA GuiData,
-                       PRECT rcView,
-                       PRECT rcFramebuffer);
-VOID
-GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                       PGUI_CONSOLE_DATA GuiData,
-                       PRECT rcView,
-                       PRECT rcFramebuffer);
 
 static VOID
 OnPaint(PGUI_CONSOLE_DATA GuiData)
@@ -1966,12 +1944,6 @@ Quit:
     return DefWindowProcW(GuiData->hWindow, msg, wParam, lParam);
 }
 
-VOID
-GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                          PGUI_CONSOLE_DATA GuiData);
-VOID
-GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                          PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 Copy(PGUI_CONSOLE_DATA GuiData)
@@ -1995,13 +1967,6 @@ Copy(PGUI_CONSOLE_DATA GuiData)
     /* Clear the selection */
     UpdateSelection(GuiData, NULL, NULL);
 }
-
-VOID
-GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                         PGUI_CONSOLE_DATA GuiData);
-VOID
-GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                         PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData)
@@ -2135,6 +2100,7 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
     GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
 }
 
+
 /*
 // HACK: This functionality is standard for general scrollbars. Don't add it by hand.
 
@@ -2162,7 +2128,6 @@ GuiConsoleHandleScrollbarMenu(VOID)
     //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLDOWN);
 }
 */
-
 
 static LRESULT CALLBACK
 ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)

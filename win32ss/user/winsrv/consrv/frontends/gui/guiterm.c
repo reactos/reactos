@@ -97,8 +97,6 @@ InvalidateCell(PGUI_CONSOLE_DATA GuiData,
  ******************************************************************************/
 
 VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-VOID
 CreateSysMenu(HWND hWnd);
 
 static ULONG NTAPI
