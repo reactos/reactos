@@ -1133,9 +1133,6 @@ IopInitializeBootDrivers(VOID)
      * See PiQueueDeviceAction function
      */
     PnPBootDriversLoaded = TRUE;
-
-    /* In old ROS, the loader list became empty after this point. Simulate. */
-    InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
 
 INIT_FUNCTION
