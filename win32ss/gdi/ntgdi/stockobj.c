@@ -141,6 +141,33 @@ IntCreateStockPen(DWORD dwPenStyle,
     return hPen;
 }
 
+static VOID FASTCALL
+CreateStockFonts(void)
+{
+    USHORT ActiveCodePage, OemCodePage;
+    BYTE bActiveCharSet, bOemCharSet;
+
+    RtlGetDefaultCodePage(&ActiveCodePage, &OemCodePage);
+    bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
+    bOemCharSet = IntCharSetFromCodePage(OemCodePage);
+
+    if (bOemCharSet == DEFAULT_CHARSET)
+        bOemCharSet = OEM_CHARSET;
+
+    OEMFixedFont.lfCharSet = bOemCharSet;
+    SystemFont.lfCharSet = bActiveCharSet;
+    SystemFixedFont.lfCharSet = bActiveCharSet;
+    DefaultGuiFont.lfCharSet = bActiveCharSet;
+
+    TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
+    TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
+    TextIntCreateFontIndirect(&AnsiVarFont, (HFONT*)&StockObjects[ANSI_VAR_FONT]);
+    TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
+    TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
+    TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
+    TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+}
+
 /*!
  * Creates a bunch of stock objects: brushes, pens, fonts.
 */
@@ -148,8 +175,6 @@ VOID FASTCALL
 CreateStockObjects(void)
 {
     UINT Object;
-    USHORT ActiveCodePage, OemCodePage;
-    BYTE bActiveCharSet, bOemCharSet;
 
     DPRINT("Beginning creation of stock objects\n");
 
@@ -171,25 +196,7 @@ CreateStockObjects(void)
     StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
     StockObjects[DEFAULT_BITMAP] = GreCreateBitmap(1, 1, 1, 1, NULL);
 
-    RtlGetDefaultCodePage(&ActiveCodePage, &OemCodePage);
-    bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
-    bOemCharSet = IntCharSetFromCodePage(OemCodePage);
-
-    if (bOemCharSet == DEFAULT_CHARSET)
-        bOemCharSet = OEM_CHARSET;
-
-    OEMFixedFont.lfCharSet = bOemCharSet;
-    SystemFont.lfCharSet = bActiveCharSet;
-    SystemFixedFont.lfCharSet = bActiveCharSet;
-    DefaultGuiFont.lfCharSet = bActiveCharSet;
-
-    (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&AnsiVarFont, (HFONT*)&StockObjects[ANSI_VAR_FONT]);
-    (void) TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
-    (void) TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
-    (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
-    (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
+    CreateStockFonts();
 
     StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)gppalDefault->BaseObject.hHmgr;
 
