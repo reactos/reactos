@@ -160,14 +160,19 @@ static const CHARSETINFO g_FontTci[MAXTCIINDEX] =
     { SYMBOL_CHARSET, CP_SYMBOL, {{0,0,0,0},{FS_SYMBOL,0}} }
 };
 
+#ifndef CP_OEMCP
+    #define CP_OEMCP  1
+    #define CP_MACCP  2
+#endif
+
 BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
 {
     UINT i;
 
-    if (uCodePage == 1)  // CP_OEMCP
+    if (uCodePage == CP_OEMCP)
         return OEM_CHARSET;
 
-    if (uCodePage == 2)  // CP_MACCP
+    if (uCodePage == CP_MACCP)
         return MAC_CHARSET;
 
     for (i = 0; i < MAXTCIINDEX; ++i)
