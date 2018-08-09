@@ -1978,6 +1978,7 @@ TranslateCharsetInfo(
         while (index < MAXTCIINDEX && !(*lpSrc>>index & 0x0001)) index++;
         break;
     case TCI_SRCCODEPAGE:
+        /* ciACP is also referred by IntCharSetFromCodePage() function */
         while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciACP) index++;
         break;
     case TCI_SRCCHARSET:
