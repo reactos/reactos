@@ -1,4 +1,10 @@
-/* Spanish translation by Javier Remacha <2008> */
+/*
+ * PROJECT:     ReactOS Setup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Javier Remacha 2008
+ *              Julio Carchi Ruiz 2018
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -18,9 +24,9 @@ CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     AUTORADIOBUTTON "Instalar ReactOS", IDC_INSTALL, 7, 7, 277, 10
-    LTEXT "Install a new copy of ReactOS. This option does not keep your files, settings and programs. You can make changes to disks and partitions.", IDC_INSTALLTEXT, 18, 18, 269, 25
-    AUTORADIOBUTTON "Actualizar o reparar una versión instalada de ReactOS", IDC_UPDATE, 7, 50, 277, 10
-    LTEXT "Update or repair an installed copy of ReactOS. This option keeps your files, settings and programs. This option is only available if ReactOS is already installed on this computer.", IDC_UPDATETEXT, 18, 61, 269, 30
+    LTEXT "Instala una nueva copia de ReactOS. Esta opción no proteje sus archivos, programas y ajustes. Usted puede realizar cambios a su disco duro y particiones.", IDC_INSTALLTEXT, 18, 18, 269, 25
+    AUTORADIOBUTTON "Actualizar o reparar una instalación existente de ReactOS", IDC_UPDATE, 7, 50, 277, 10
+    LTEXT "Actualiza o repara una instalación existente de ReactOS. Esta opción proteje sus archivos, programas y ajustes. Esta opción sólo está disponible si ha instalado ReactOS previamente en esta computadora.", IDC_UPDATETEXT, 18, 61, 269, 30
     LTEXT "Presione Siguiente para instalar los dispositivos.", IDC_STATIC, 7, 128, 297, 8
 END
 
@@ -127,13 +133,13 @@ BEGIN
     IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado"
     IDS_ABORTSETUP "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar ReactOS. ¿Realmente quiere salir?"
     IDS_ABORTSETUP2 "¿Abortar instalación?"
-    IDS_NO_TXTSETUP_SIF "Unable to find 'txtsetup.sif'\nSetup is unable to continue."
+    IDS_NO_TXTSETUP_SIF "No se pudo encontrar 'txtsetup.sif'\nLa instalación no puede continuar."
     IDS_CAPTION "Instalación de ReactOS"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_TYPE "Type"
+    IDS_PARTITION_NAME "Nombre"
+    IDS_PARTITION_SIZE "Tamaño"
+    IDS_PARTITION_TYPE "Tipo"
 END

@@ -70,7 +70,7 @@ SmpExecuteImage(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         /* This is a pretty bad failure. ASSERT on checked builds and exit */
-        ASSERTMSG("RtlCreateProcessParameters", NT_SUCCESS(Status));
+        ASSERTMSG("RtlCreateProcessParameters failed.\n", NT_SUCCESS(Status));
         DPRINT1("SMSS: RtlCreateProcessParameters failed for %wZ - Status == %lx\n",
                 FileName, Status);
         return Status;

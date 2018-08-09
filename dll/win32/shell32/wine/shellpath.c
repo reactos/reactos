@@ -1510,7 +1510,7 @@ BOOL _SHGetUserProfileDirectoryW(HANDLE hToken, LPWSTR szPath, LPDWORD lpcchPath
     {
         result = GetUserProfileDirectoryW(hToken, szPath, lpcchPath);
     }
-    DbgPrint("_SHGetUserProfileDirectoryW returning %S\n", szPath);
+    TRACE("_SHGetUserProfileDirectoryW returning %S\n", szPath);
     return result;
 }
 

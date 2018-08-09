@@ -226,6 +226,69 @@ CopyLines(PTEXTMODE_SCREEN_BUFFER Buffer,
 
 
 VOID
+PasteText(
+    IN PCONSRV_CONSOLE Console,
+    IN PWCHAR Buffer,
+    IN SIZE_T cchSize)
+{
+    USHORT VkKey; // MAKEWORD(low = vkey_code, high = shift_state);
+    INPUT_RECORD er;
+    WCHAR CurChar = 0;
+
+    /* Do nothing if we have nothing to paste */
+    if (!Buffer || (cchSize <= 0))
+        return;
+
+    er.EventType = KEY_EVENT;
+    er.Event.KeyEvent.wRepeatCount = 1;
+    while (cchSize--)
+    {
+        /* \r or \n characters. Go to the line only if we get "\r\n" sequence. */
+        if (CurChar == L'\r' && *Buffer == L'\n')
+        {
+            ++Buffer;
+            continue;
+        }
+        CurChar = *Buffer++;
+
+        /* Get the key code (+ shift state) corresponding to the character */
+        VkKey = VkKeyScanW(CurChar);
+        if (VkKey == 0xFFFF)
+        {
+            DPRINT1("FIXME: TODO: VkKeyScanW failed - Should simulate the key!\n");
+            /*
+             * We don't really need the scan/key code because we actually only
+             * use the UnicodeChar for output purposes. It may pose few problems
+             * later on but it's not of big importance. One trick would be to
+             * convert the character to OEM / multibyte and use MapVirtualKey()
+             * on each byte (simulating an Alt-0xxx OEM keyboard press).
+             */
+        }
+
+        /* Pressing some control keys */
+
+        /* Pressing the character key, with the control keys maintained pressed */
+        er.Event.KeyEvent.bKeyDown = TRUE;
+        er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
+        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
+        er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
+        er.Event.KeyEvent.dwControlKeyState = 0;
+        if (HIBYTE(VkKey) & 1)
+            er.Event.KeyEvent.dwControlKeyState |= SHIFT_PRESSED;
+        if (HIBYTE(VkKey) & 2)
+            er.Event.KeyEvent.dwControlKeyState |= LEFT_CTRL_PRESSED; // RIGHT_CTRL_PRESSED;
+        if (HIBYTE(VkKey) & 4)
+            er.Event.KeyEvent.dwControlKeyState |= LEFT_ALT_PRESSED; // RIGHT_ALT_PRESSED;
+
+        ConioProcessInputEvent(Console, &er);
+
+        /* Up all the character and control keys */
+        er.Event.KeyEvent.bKeyDown = FALSE;
+        ConioProcessInputEvent(Console, &er);
+    }
+}
+
+VOID
 GetSelectionBeginEnd(PCOORD Begin, PCOORD End,
                      PCOORD SelectionAnchor,
                      PSMALL_RECT SmallRect);
@@ -274,67 +337,16 @@ GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
     PCONSRV_CONSOLE Console = Buffer->Header.Console;
 
     HANDLE hData;
-    LPWSTR str;
-    WCHAR CurChar = 0;
-
-    USHORT VkKey; // MAKEWORD(low = vkey_code, high = shift_state);
-    INPUT_RECORD er;
+    LPWSTR pszText;
 
     hData = GetClipboardData(CF_UNICODETEXT);
     if (hData == NULL) return;
 
-    str = GlobalLock(hData);
-    if (str == NULL) return;
+    pszText = GlobalLock(hData);
+    if (pszText == NULL) return;
 
-    DPRINT("Got data <%S> from clipboard\n", str);
-
-    er.EventType = KEY_EVENT;
-    er.Event.KeyEvent.wRepeatCount = 1;
-    while (*str)
-    {
-        /* \r or \n characters. Go to the line only if we get "\r\n" sequence. */
-        if (CurChar == L'\r' && *str == L'\n')
-        {
-            str++;
-            continue;
-        }
-        CurChar = *str++;
-
-        /* Get the key code (+ shift state) corresponding to the character */
-        VkKey = VkKeyScanW(CurChar);
-        if (VkKey == 0xFFFF)
-        {
-            DPRINT1("FIXME: TODO: VkKeyScanW failed - Should simulate the key!\n");
-            /*
-             * We don't really need the scan/key code because we actually only
-             * use the UnicodeChar for output purposes. It may pose few problems
-             * later on but it's not of big importance. One trick would be to
-             * convert the character to OEM / multibyte and use MapVirtualKey
-             * on each byte (simulating an Alt-0xxx OEM keyboard press).
-             */
-        }
-
-        /* Pressing some control keys */
-
-        /* Pressing the character key, with the control keys maintained pressed */
-        er.Event.KeyEvent.bKeyDown = TRUE;
-        er.Event.KeyEvent.wVirtualKeyCode = LOBYTE(VkKey);
-        er.Event.KeyEvent.wVirtualScanCode = MapVirtualKeyW(LOBYTE(VkKey), MAPVK_VK_TO_VSC);
-        er.Event.KeyEvent.uChar.UnicodeChar = CurChar;
-        er.Event.KeyEvent.dwControlKeyState = 0;
-        if (HIBYTE(VkKey) & 1)
-            er.Event.KeyEvent.dwControlKeyState |= SHIFT_PRESSED;
-        if (HIBYTE(VkKey) & 2)
-            er.Event.KeyEvent.dwControlKeyState |= LEFT_CTRL_PRESSED; // RIGHT_CTRL_PRESSED;
-        if (HIBYTE(VkKey) & 4)
-            er.Event.KeyEvent.dwControlKeyState |= LEFT_ALT_PRESSED; // RIGHT_ALT_PRESSED;
-
-        ConioProcessInputEvent(Console, &er);
-
-        /* Up all the character and control keys */
-        er.Event.KeyEvent.bKeyDown = FALSE;
-        ConioProcessInputEvent(Console, &er);
-    }
+    DPRINT("Got data <%S> from clipboard\n", pszText);
+    PasteText(Console, pszText, wcslen(pszText));
 
     GlobalUnlock(hData);
 }

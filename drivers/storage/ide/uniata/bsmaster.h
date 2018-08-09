@@ -1588,7 +1588,11 @@ AtapiChipInit(
     IN ULONG c
     );
 
+#ifdef __REACTOS__
+extern ULONG_PTR
+#else
 extern ULONG
+#endif
 NTAPI
 AtapiGetIoRange(
     IN PVOID HwDeviceExtension,

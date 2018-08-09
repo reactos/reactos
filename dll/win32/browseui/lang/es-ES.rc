@@ -1,4 +1,10 @@
-/* Spanish translation by ??? and Ismael Ferreras Morezuelas (Swyter) */
+/*
+ * PROJECT:     ReactOS Win32 BrowseUI
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Ismael Ferreras Morezuelas
+ *              Julio Carchi Ruiz
+ */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -99,13 +105,13 @@ IDM_POPUPMENU MENUEX DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        POPUP "&View", IDM_VIEW_MENU
+        POPUP "&Ver", IDM_VIEW_MENU
         BEGIN
-            MENUITEM "&Large Icons", IDM_LARGE_ICONS
-            MENUITEM "&Small Icons", IDM_SMALL_ICONS
+            MENUITEM "Íconos &grandes", IDM_LARGE_ICONS
+            MENUITEM "Íconos &pequeños", IDM_SMALL_ICONS
         END
-        MENUITEM "&Open Folder", IDM_OPEN_FOLDER
-        MENUITEM "&Show Text", IDM_SHOW_TEXT
+        MENUITEM "&Abrir carpeta", IDM_OPEN_FOLDER
+        MENUITEM "&Mostrar texto", IDM_SHOW_TEXT
     END    
 END
 
@@ -297,7 +303,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_BROWSEFORNEWTOOLAR "Choose a folder"
-    IDS_TOOLBAR_ERR_TITLE "Toolbar"
-    IDS_TOOLBAR_ERR_TEXT "Cannot create toolbar."
+    IDS_BROWSEFORNEWTOOLAR "Seleccione una carpeta"
+    IDS_TOOLBAR_ERR_TITLE "Barra de herramientas"
+    IDS_TOOLBAR_ERR_TEXT "No se pudo crear la barra de herramientas."
 END

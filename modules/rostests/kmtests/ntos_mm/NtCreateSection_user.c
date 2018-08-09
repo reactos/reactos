@@ -10,7 +10,7 @@
 START_TEST(NtCreateSection)
 {
     PVOID Buffer;
-    ULONG FileSize;
+    SIZE_T FileSize;
     NTSTATUS Status;
     LARGE_INTEGER MaxFileSize;
     HANDLE Handle, SectionHandle;

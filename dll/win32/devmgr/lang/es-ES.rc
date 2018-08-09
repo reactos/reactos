@@ -1,4 +1,11 @@
-/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+/*
+ * PROJECT:     ReactOS Device Manager
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Spanish locale file
+ * COPYRIGHT:   Ismael Ferreras Morezuelas
+ *              Julio Carchi Ruiz
+ */
+
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -179,10 +186,10 @@ BEGIN
     LTEXT "Ver detalles de los archivos del controlador.", -1, 106, 105, 132, 17, SS_NOPREFIX
     PUSHBUTTON "&Actualizar controlador...", IDC_UPDATEDRIVER, 7, 134, 90, 15
     LTEXT "Actualizar el controlador del dispositivo.", -1, 106, 138, 132, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 106, 162, 132, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 106, 194, 132, 17, SS_NOPREFIX
+    PUSHBUTTON "&Restaurar controlador", IDC_ROLLBACKDRIVER, 7, 162, 90, 15
+    LTEXT "Si el dispositivo deja de funcionar luego de actualizar el controlador, restaura el controlador anterior.", -1, 106, 162, 132, 25, SS_NOPREFIX
+    PUSHBUTTON "&Desinstalar", IDC_UNINSTALLDRIVER, 7, 190, 90, 15
+    LTEXT "Desinstalar el controlador (Avanzado).", -1, 106, 194, 132, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230

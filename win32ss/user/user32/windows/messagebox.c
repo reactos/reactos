@@ -387,7 +387,7 @@ MessageBoxTimeoutIndirectW(
     else if (IS_INTRESOURCE(lpMsgBoxParams->lpszCaption))
     {
         /* User-defined resource string */
-        caplen = LoadStringW(lpMsgBoxParams->hInstance, (UINT)lpMsgBoxParams->lpszCaption, (LPWSTR)&caption, 0);
+        caplen = LoadStringW(lpMsgBoxParams->hInstance, PtrToUlong(lpMsgBoxParams->lpszCaption), (LPWSTR)&caption, 0);
     }
     else
     {
@@ -405,7 +405,7 @@ MessageBoxTimeoutIndirectW(
     else if (IS_INTRESOURCE(lpMsgBoxParams->lpszText))
     {
         /* User-defined resource string */
-        textlen = LoadStringW(lpMsgBoxParams->hInstance, (UINT)lpMsgBoxParams->lpszText, (LPWSTR)&text, 0);
+        textlen = LoadStringW(lpMsgBoxParams->hInstance, PtrToUlong(lpMsgBoxParams->lpszText), (LPWSTR)&text, 0);
     }
     else
     {

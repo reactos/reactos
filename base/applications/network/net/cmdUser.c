@@ -29,7 +29,7 @@ EnumerateUsers(VOID)
     PSERVER_INFO_100 pServer = NULL;
     DWORD dwRead = 0, dwTotal = 0;
     DWORD i;
-    DWORD_PTR ResumeHandle = 0;
+    DWORD ResumeHandle = 0;
     NET_API_STATUS Status;
 
     Status = NetServerGetInfo(NULL,

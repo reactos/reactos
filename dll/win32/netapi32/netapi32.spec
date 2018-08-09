@@ -93,7 +93,7 @@
 @ stub I_NetServerPasswordSet2
 @ stub I_NetServerPasswordSet
 @ stub I_NetServerReqChallenge
-@ stub I_NetServerSetServiceBits
+@ stdcall I_NetServerSetServiceBits(wstr wstr long long)
 @ stub I_NetServerSetServiceBitsEx
 @ stub I_NetServerTrustPasswordsGet
 @ stub I_NetlogonComputeClientDigest

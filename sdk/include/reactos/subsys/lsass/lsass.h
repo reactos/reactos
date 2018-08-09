@@ -23,6 +23,7 @@ typedef enum _LSA_API_NUMBER
     LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE,
     LSASS_REQUEST_ENUM_LOGON_SESSIONS,
     LSASS_REQUEST_GET_LOGON_SESSION_DATA,
+    LSASS_REQUEST_POLICY_CHANGE_NOTIFY,
     LSASS_REQUEST_MAXIMUM
 } LSA_API_NUMBER, *PLSA_API_NUMBER;
 
@@ -152,6 +153,24 @@ typedef struct _LSA_GET_LOGON_SESSION_DATA_MSG
 } LSA_GET_LOGON_SESSION_DATA_MSG, *PLSA_GET_LOGON_SESSION_DATA_MSG;
 
 
+typedef struct _LSA_POLICY_CHANGE_NOTIFY_MSG
+{
+    union
+    {
+        struct
+        {
+            POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass;
+            HANDLE NotificationEventHandle;
+            BOOLEAN Register;
+        } Request;
+        struct
+        {
+            ULONG Dummy;
+        } Reply;
+    };
+} LSA_POLICY_CHANGE_NOTIFY_MSG, *PLSA_POLICY_CHANGE_NOTIFY_MSG;
+
+
 typedef struct _LSA_API_MSG
 {
     PORT_MESSAGE h;
@@ -170,6 +189,7 @@ typedef struct _LSA_API_MSG
                 LSA_LOOKUP_AUTHENTICATION_PACKAGE_MSG LookupAuthenticationPackage;
                 LSA_ENUM_LOGON_SESSIONS_MSG EnumLogonSessions;
                 LSA_GET_LOGON_SESSION_DATA_MSG GetLogonSessionData;
+                LSA_POLICY_CHANGE_NOTIFY_MSG PolicyChangeNotify;
             };
         };
     };

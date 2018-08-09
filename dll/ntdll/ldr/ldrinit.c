@@ -136,7 +136,7 @@ LdrOpenImageFileOptionsKey(IN PUNICODE_STRING SubKey,
     if (NT_SUCCESS(Status))
     {
         /* Write the key handle */
-        if (_InterlockedCompareExchange((LONG*)RootKeyLocation, (LONG)RootKey, 0) != 0)
+        if (InterlockedCompareExchangePointer(RootKeyLocation, RootKey, NULL) != NULL)
         {
             /* Someone already opened it, use it instead */
             NtClose(RootKey);
@@ -460,8 +460,8 @@ LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
             NtQueryPerformanceCounter(&Counter, NULL);
 
             NewCookie = Counter.LowPart ^ Counter.HighPart;
-            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueProcess;
-            NewCookie ^= (ULONG)NtCurrentTeb()->ClientId.UniqueThread;
+            NewCookie ^= (ULONG_PTR)NtCurrentTeb()->ClientId.UniqueProcess;
+            NewCookie ^= (ULONG_PTR)NtCurrentTeb()->ClientId.UniqueThread;
 
             /* Loop like it's done in KeQueryTickCount(). We don't want to call it directly. */
             while (SharedUserData->SystemTime.High1Time != SharedUserData->SystemTime.High2Time)

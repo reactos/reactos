@@ -74,7 +74,7 @@ ario_Constructor(IN PVOID DeviceExtension,
     UNREFERENCED_PARAMETER(Interface);
 
     /* Make sure it's the expected interface */
-    if ((ULONG)InterfaceData != CmResourceTypePort)
+    if ((ULONG_PTR)InterfaceData != CmResourceTypePort)
     {
         /* Arbiter support must have been initialized first */
         if (FdoExtension->ArbitersInitialized)
@@ -170,7 +170,7 @@ armem_Constructor(IN PVOID DeviceExtension,
     UNREFERENCED_PARAMETER(Interface);
 
     /* Make sure it's the expected interface */
-    if ((ULONG)InterfaceData != CmResourceTypeMemory)
+    if ((ULONG_PTR)InterfaceData != CmResourceTypeMemory)
     {
         /* Arbiter support must have been initialized first */
         if (FdoExtension->ArbitersInitialized)

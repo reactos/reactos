@@ -282,10 +282,10 @@ AtapiWritePort##sz( \
         ASSERT(FALSE); /* We should never get here */ \
     } \
     if(!res->MemIo) {             \
-        ScsiPortWritePort##_Type((_type*)(res->Addr), data); \
+        ScsiPortWritePort##_Type((_type*)(ULONG_PTR)(res->Addr), data); \
     } else {                                      \
         /*KdPrint(("r_mem @ (%x) %x\n", _port, port));*/ \
-        ScsiPortWriteRegister##_Type((_type*)(res->Addr), data); \
+        ScsiPortWriteRegister##_Type((_type*)(ULONG_PTR)(res->Addr), data); \
     }                                                        \
     return;                                                  \
 }
@@ -319,10 +319,10 @@ AtapiWritePortEx##sz( \
         ASSERT(FALSE); /* We should never get here */ \
     } \
     if(!res->MemIo) {             \
-        ScsiPortWritePort##_Type((_type*)(res->Addr+offs), data); \
+        ScsiPortWritePort##_Type((_type*)(ULONG_PTR)(res->Addr+offs), data); \
     } else {                                      \
         /*KdPrint(("r_mem @ (%x) %x\n", _port, port));*/ \
-        ScsiPortWriteRegister##_Type((_type*)(res->Addr+offs), data); \
+        ScsiPortWriteRegister##_Type((_type*)(ULONG_PTR)(res->Addr+offs), data); \
     }                                                        \
     return;                                                  \
 }
@@ -355,10 +355,10 @@ AtapiReadPort##sz( \
     } \
     if(!res->MemIo) {             \
         /*KdPrint(("r_io @ (%x) %x\n", _port, res->Addr));*/ \
-        return ScsiPortReadPort##_Type((_type*)(res->Addr)); \
+        return ScsiPortReadPort##_Type((_type*)(ULONG_PTR)(res->Addr)); \
     } else {                                      \
         /*KdPrint(("r_mem @ (%x) %x\n", _port, res->Addr));*/ \
-        return ScsiPortReadRegister##_Type((_type*)(res->Addr)); \
+        return ScsiPortReadRegister##_Type((_type*)(ULONG_PTR)(res->Addr)); \
     }                                                        \
 }
 
@@ -390,10 +390,10 @@ AtapiReadPortEx##sz( \
         ASSERT(FALSE); /* We should never get here */ \
     } \
     if(!res->MemIo) {             \
-        return ScsiPortReadPort##_Type((_type*)(res->Addr+offs)); \
+        return ScsiPortReadPort##_Type((_type*)(ULONG_PTR)(res->Addr+offs)); \
     } else {                                      \
         /*KdPrint(("r_mem @ (%x) %x\n", _port, port));*/ \
-        return ScsiPortReadRegister##_Type((_type*)(res->Addr+offs)); \
+        return ScsiPortReadRegister##_Type((_type*)(ULONG_PTR)(res->Addr+offs)); \
     }                                                        \
 }
 
@@ -435,11 +435,11 @@ AtapiReadBuffer##sz( \
     } \
     if(!res->MemIo) {             \
         /*KdPrint(("r_io @ (%x) %x\n", _port, res->Addr));*/ \
-        ScsiPortReadPortBuffer##_Type((_type*)(res->Addr), (_type*)Buffer, Count); \
+        ScsiPortReadPortBuffer##_Type((_type*)(ULONG_PTR)(res->Addr), (_type*)Buffer, Count); \
         return; \
     }                                                        \
     while(Count) { \
-        (*((_type*)Buffer)) = ScsiPortReadRegister##_Type((_type*)(res->Addr)); \
+        (*((_type*)Buffer)) = ScsiPortReadRegister##_Type((_type*)(ULONG_PTR)(res->Addr)); \
         Count--; \
         Buffer = ((_type*)Buffer)+1; \
     } \
@@ -480,11 +480,11 @@ AtapiWriteBuffer##sz( \
     } \
     if(!res->MemIo) {             \
         /*KdPrint(("r_io @ (%x) %x\n", _port, res->Addr));*/ \
-        ScsiPortWritePortBuffer##_Type((_type*)(res->Addr), (_type*)Buffer, Count); \
+        ScsiPortWritePortBuffer##_Type((_type*)(ULONG_PTR)(res->Addr), (_type*)Buffer, Count); \
         return; \
     }                                                        \
     while(Count) { \
-        ScsiPortWriteRegister##_Type((_type*)(res->Addr), *((_type*)Buffer)); \
+        ScsiPortWriteRegister##_Type((_type*)(ULONG_PTR)(res->Addr), *((_type*)Buffer)); \
         Count--; \
         Buffer = ((_type*)Buffer)+1; \
     } \
@@ -10850,7 +10850,7 @@ DriverEntry(
                 newStatus = ScsiPortInitialize(DriverObject,
                                                Argument2,
                                                &hwInitializationData.comm,
-                                               (PVOID)(i | ((alt ^ pref_alt) ? 0x80000000 : 0)));
+                                               UlongToPtr(i | ((alt ^ pref_alt) ? 0x80000000 : 0)));
                 KdPrint2((PRINT_PREFIX "ScsiPortInitialize Status %#x\n", newStatus));
                 if (newStatus < statusToReturn) {
                     statusToReturn = newStatus;
@@ -10945,7 +10945,7 @@ DriverEntry(
         newStatus = ScsiPortInitialize(DriverObject,
                                        Argument2,
                                        &hwInitializationData.comm,
-                                       (PVOID)i);
+                                       UlongToPtr(i));
         KdPrint2((PRINT_PREFIX "ScsiPortInitialize Status %#x\n", newStatus));
         if(newStatus == (ULONG)STATUS_DEVICE_DOES_NOT_EXIST && BMList[i].NeedAltInit) {
             // Note: this is actually a BUG in scsiport.sys
@@ -10958,7 +10958,7 @@ DriverEntry(
             newStatus = ScsiPortInitialize(DriverObject,
                                            Argument2,
                                            &hwInitializationData.comm,
-                                           (PVOID)(i | 0x80000000));
+                                           UlongToPtr(i | 0x80000000));
             KdPrint2((PRINT_PREFIX "ScsiPortInitialize Status %#x (2)\n", newStatus));
         }
         if (newStatus < statusToReturn)

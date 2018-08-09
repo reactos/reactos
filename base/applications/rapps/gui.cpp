@@ -348,7 +348,7 @@ public:
             return FALSE;
         }
 
-        ImageList_Destroy((HIMAGELIST) SetImageList(hImageList));
+        ImageList_Destroy(SetImageList(hImageList));
 
         AddButtons(_countof(Buttons), Buttons);
 
@@ -1467,6 +1467,7 @@ private:
                 {
                     CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
                     UpdateApplicationsList(-1);
+                    m_ListView->SetSelected(-1, FALSE);
                 }
                 else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
                 {

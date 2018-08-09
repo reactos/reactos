@@ -170,7 +170,7 @@ WINAPI
 TestPostShellEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStartShellEvent\n");
+    DPRINT("TestPostShellEvent\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);

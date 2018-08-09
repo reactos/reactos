@@ -3,6 +3,7 @@ spec2def(wlnotify.dll wlnotify.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     schedsvc.c
+    senssvc.c
     test.c
     wlnotify.c
     precomp.h)

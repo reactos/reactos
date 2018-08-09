@@ -169,7 +169,7 @@ ParseFailureActions(
     SC_ACTION *pActions = NULL;
     LPTSTR pStringBuffer = NULL;
     LPTSTR p;
-    INT nLength;
+    INT_PTR nLength;
     INT nCount = 0;
 
     *pcActions = 0;

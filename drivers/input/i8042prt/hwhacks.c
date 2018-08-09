@@ -12,7 +12,7 @@
 #include <wmiguid.h>
 #include <wmidata.h>
 #include <wmistr.h>
-#include "dmi.h"
+#include <dmilib.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,25 +20,6 @@
 const GUID MSSmBios_RawSMBiosTables_GUID = SMBIOS_DATA_GUID;
 PVOID i8042SMBiosTables;
 ULONG i8042HwFlags;
-
-enum _ID_STRINGS
-{
-    ID_NONE = 0,
-    BIOS_VENDOR,
-    BIOS_VERSION,
-    BIOS_DATE,
-    SYS_VENDOR,
-    SYS_PRODUCT,
-    SYS_VERSION,
-    SYS_SERIAL,
-    BOARD_VENDOR,
-    BOARD_NAME,
-    BOARD_VERSION,
-    BOARD_SERIAL,
-    BOARD_ASSET_TAG,
-
-    ID_STRINGS_MAX,
-};
 
 typedef struct _MATCHENTRY
 {
@@ -76,109 +57,15 @@ const HARDWARE_TABLE i8042HardwareTable[] =
 
 
 static
-PCHAR
-GetDmiString(
-    _In_ PDMI_HEADER Header,
-    _In_ ULONG FieldOffset)
-{
-    ULONG StringIndex;
-    PCHAR String;
-
-    StringIndex = ((PUCHAR)Header)[FieldOffset];
-    if (StringIndex == 0)
-    {
-        return NULL;
-    }
-
-    String = (PCHAR)Header + Header->Length;
-
-    while (--StringIndex != 0)
-    {
-        while (*String != 0)
-            String++;
-
-        String++;
-    }
-
-    return String;
-}
-
-
-static
 VOID
 i8042ParseSMBiosTables(
     _In_reads_bytes_(TableSize) PVOID SMBiosTables,
     _In_ ULONG TableSize)
 {
-    PMSSmBios_RawSMBiosTables BiosTablesHeader = SMBiosTables;
-    PDMI_HEADER Header;
-    ULONG Remaining, i, j;
-    PCHAR Data;
+    ULONG i, j;
     PCHAR Strings[ID_STRINGS_MAX] = { 0 };
 
-    Header = (PDMI_HEADER)(&BiosTablesHeader->SMBiosData);
-    Remaining = BiosTablesHeader->Size;
-
-    while (Remaining >= sizeof(*Header))
-    {
-
-        if (Header->Type == DMI_ENTRY_END_OF_TABLE)
-            break;
-
-        switch (Header->Type)
-        {
-        case DMI_ENTRY_BIOS:
-            if (Remaining < DMI_BIOS_SIZE)
-                return;
-            Strings[BIOS_VENDOR] = GetDmiString(Header, DMI_BIOS_VENDOR);
-            Strings[BIOS_VERSION] = GetDmiString(Header, DMI_BIOS_VERSION);
-            Strings[BIOS_DATE] = GetDmiString(Header, DMI_BIOS_DATE);
-            break;
-
-        case DMI_ENTRY_SYSTEM:
-            if (Remaining < DMI_SYS_SIZE)
-                return;
-            Strings[SYS_VENDOR] = GetDmiString(Header, DMI_SYS_VENDOR);
-            Strings[SYS_PRODUCT] = GetDmiString(Header, DMI_SYS_PRODUCT);
-            Strings[SYS_VERSION] = GetDmiString(Header, DMI_SYS_VERSION);
-            Strings[SYS_SERIAL] = GetDmiString(Header, DMI_SYS_SERIAL);
-            break;
-
-        case DMI_ENTRY_BASEBOARD:
-            if (Remaining < DMI_BOARD_SIZE)
-                return;
-            Strings[BOARD_VENDOR] = GetDmiString(Header, DMI_BOARD_VENDOR);
-            Strings[BOARD_NAME] = GetDmiString(Header, DMI_BOARD_NAME);
-            Strings[BOARD_VERSION] = GetDmiString(Header, DMI_BOARD_VERSION);
-            Strings[BOARD_SERIAL] = GetDmiString(Header, DMI_BOARD_SERIAL);
-            Strings[BOARD_ASSET_TAG] = GetDmiString(Header, DMI_BOARD_ASSET_TAG);
-            break;
-
-        case DMI_ENTRY_CHASSIS:
-        case DMI_ENTRY_ONBOARD_DEVICE:
-        case DMI_ENTRY_OEMSTRINGS:
-        // DMI_ENTRY_IPMI_DEV?
-        // DMI_ENTRY_ONBOARD_DEV_EXT?
-            break;
-        }
-
-        Remaining -= Header->Length;
-        Data = (PCHAR)Header + Header->Length;
-
-        /* Now loop until we find 2 zeroes */
-        while ((Remaining >= 2) && ((Data[0] != 0) || (Data[1] != 0)))
-        {
-            Data++;
-            Remaining--;
-        }
-
-        if (Remaining < 2)
-            break;
-
-        /* Go to the next header */
-        Remaining -= 2;
-        Header = (PDMI_HEADER)((PUCHAR)Data + 2);
-    }
+    ParseSMBiosTables(SMBiosTables, TableSize, Strings);
 
 #if 0 // DBG
     DbgPrint("i8042prt: Dumping DMI data:\n");
@@ -226,6 +113,70 @@ i8042ParseSMBiosTables(
     }
 }
 
+static
+VOID
+i8042StoreSMBiosTables(
+    _In_reads_bytes_(TableSize) PVOID SMBiosTables,
+    _In_ ULONG TableSize)
+{
+    static UNICODE_STRING mssmbiosKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\mssmbios");
+    static UNICODE_STRING DataName = RTL_CONSTANT_STRING(L"Data");
+    static UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"SMBiosData");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle = NULL, SubKeyHandle = NULL;
+    NTSTATUS Status;
+
+    /* Create registry key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &mssmbiosKeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwCreateKey(&KeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return;
+    }
+
+    /* Create sub key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &DataName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               KeyHandle,
+                               NULL);
+    Status = ZwCreateKey(&SubKeyHandle,
+                         KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose(KeyHandle);
+        return;
+    }
+
+    /* Write value */
+    ZwSetValueKey(SubKeyHandle,
+                  &ValueName,
+                  0,
+                  REG_BINARY,
+                  SMBiosTables,
+                  TableSize);
+
+    ZwClose(SubKeyHandle);
+    ZwClose(KeyHandle);
+}
+
 VOID
 NTAPI
 i8042InitializeHwHacks(
@@ -270,6 +221,12 @@ i8042InitializeHwHacks(
         ExFreePoolWithTag(AllData, 'BTMS');
         return;
     }
+
+    /* FIXME: This function should be removed once the mssmbios driver is implemented */
+    /* Store SMBios data in registry */
+    i8042StoreSMBiosTables(AllData + 1,
+                           AllData->FixedInstanceSize);
+    DPRINT1("SMBiosTables HACK, see CORE-14867\n");
 
     /* Parse the table */
     i8042ParseSMBiosTables(AllData + 1,

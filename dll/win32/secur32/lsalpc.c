@@ -322,28 +322,96 @@ LsaGetLogonSessionData(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-LsaRegisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                    HANDLE NotificationEventHandle)
+LsaRegisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+    HANDLE NotificationEventHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    TRACE("LsaRegisterPolicyChangeNotification(%lu %p)\n",
+          InformationClass, NotificationEventHandle);
+
+    Status = LsapOpenLsaPort();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_POLICY_CHANGE_NOTIFY;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.PolicyChangeNotify);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    ApiMessage.PolicyChangeNotify.Request.InformationClass = InformationClass;
+    ApiMessage.PolicyChangeNotify.Request.NotificationEventHandle = NotificationEventHandle;
+    ApiMessage.PolicyChangeNotify.Request.Register = TRUE;
+
+    Status = NtRequestWaitReplyPort(LsaPortHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    return Status;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-LsaUnregisterPolicyChangeNotification(POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
-                                      HANDLE NotificationEventHandle)
+LsaUnregisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS InformationClass,
+    HANDLE NotificationEventHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    LSA_API_MSG ApiMessage;
+    NTSTATUS Status;
+
+    TRACE("LsaUnregisterPolicyChangeNotification(%lu %p)\n",
+          InformationClass, NotificationEventHandle);
+
+    Status = LsapOpenLsaPort();
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ApiMessage.ApiNumber = LSASS_REQUEST_POLICY_CHANGE_NOTIFY;
+    ApiMessage.h.u1.s1.DataLength = LSA_PORT_DATA_SIZE(ApiMessage.PolicyChangeNotify);
+    ApiMessage.h.u1.s1.TotalLength = LSA_PORT_MESSAGE_SIZE;
+    ApiMessage.h.u2.ZeroInit = 0;
+
+    ApiMessage.PolicyChangeNotify.Request.InformationClass = InformationClass;
+    ApiMessage.PolicyChangeNotify.Request.NotificationEventHandle = NotificationEventHandle;
+    ApiMessage.PolicyChangeNotify.Request.Register = FALSE;
+
+    Status = NtRequestWaitReplyPort(LsaPortHandle,
+                                    (PPORT_MESSAGE)&ApiMessage,
+                                    (PPORT_MESSAGE)&ApiMessage);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (Status 0x%08lx)\n", Status);
+        return Status;
+    }
+
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        ERR("NtRequestWaitReplyPort() failed (ApiMessage.Status 0x%08lx)\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    return Status;
 }
 
 /* EOF */

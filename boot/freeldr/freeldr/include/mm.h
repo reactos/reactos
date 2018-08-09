@@ -176,7 +176,8 @@ FrLdrHeapFree(PVOID MemoryPointer, ULONG Tag)
 FORCEINLINE
 PVOID
 FrLdrTempAlloc(
-    ULONG Size, ULONG Tag)
+    _In_ SIZE_T Size,
+    _In_ ULONG Tag)
 {
     return FrLdrHeapAllocateEx(FrLdrTempHeap, Size, Tag);
 }

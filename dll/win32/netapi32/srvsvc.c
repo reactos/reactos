@@ -426,6 +426,36 @@ NetServerSetInfo(
 
 NET_API_STATUS
 WINAPI
+I_NetServerSetServiceBits(
+    _In_ LPWSTR servername,
+    _In_ LPWSTR transport,
+    _In_ DWORD servicebits,
+    _In_ DWORD updateimmediately)
+{
+    NET_API_STATUS status;
+
+    TRACE("I_NetServerSetServiceBits(%s %s 0x%lx %lu)\n",
+          debugstr_w(servername), debugstr_w(transport), servicebits, updateimmediately);
+
+    RpcTryExcept
+    {
+        status = NetrServerSetServiceBits(servername,
+                                          transport,
+                                          servicebits,
+                                          updateimmediately);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return status;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetServerTransportAdd(
     _In_ LPWSTR servername,
     _In_ DWORD level,

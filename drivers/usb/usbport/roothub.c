@@ -485,7 +485,7 @@ NTAPI
 USBPORT_RootHubEndpoint0(IN PUSBPORT_TRANSFER Transfer)
 {
     PDEVICE_OBJECT FdoDevice;
-    SIZE_T TransferLength;
+    ULONG TransferLength;
     PVOID Buffer;
     PURB Urb;
     PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;

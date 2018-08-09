@@ -338,7 +338,7 @@ CsrSrvCreateSharedSection(IN PCHAR ParameterValue)
     ULONG Size;
     NTSTATUS Status;
     LARGE_INTEGER SectionSize;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     PPEB Peb = NtCurrentPeb();
 
     /* If there's no parameter, fail */
@@ -457,7 +457,7 @@ CsrSrvAttachSharedSection(IN PCSR_PROCESS CsrProcess OPTIONAL,
                           OUT PCSR_API_CONNECTINFO ConnectInfo)
 {
     NTSTATUS Status;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
 
     /* Check if we have a process */
     if (CsrProcess)

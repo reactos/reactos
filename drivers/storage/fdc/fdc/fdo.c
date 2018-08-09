@@ -134,7 +134,7 @@ FdcFdoStartDevice(
                         PartialDescriptor->u.Port.Start.u.LowPart,
                         PartialDescriptor->u.Port.Length);
                 if (PartialDescriptor->u.Port.Length >= 6)
-                    DeviceExtension->ControllerInfo.BaseAddress = (PUCHAR)PartialDescriptor->u.Port.Start.u.LowPart;
+                    DeviceExtension->ControllerInfo.BaseAddress = (PUCHAR)(ULONG_PTR)PartialDescriptor->u.Port.Start.QuadPart;
                 break;
 
             case CmResourceTypeInterrupt:
@@ -206,7 +206,7 @@ FdcFdoConfigCallback(
 
         if (PartialDescriptor->Type == CmResourceTypePort)
         {
-            if ((PUCHAR)PartialDescriptor->u.Port.Start.LowPart == DeviceExtension->ControllerInfo.BaseAddress)
+            if ((PUCHAR)(ULONG_PTR)PartialDescriptor->u.Port.Start.QuadPart == DeviceExtension->ControllerInfo.BaseAddress)
                 ControllerFound = TRUE;
         }
     }

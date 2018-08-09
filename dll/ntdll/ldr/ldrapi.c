@@ -124,7 +124,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
 
     /* Validate the cookie */
     if ((Cookie & 0xF0000000) ||
-        ((Cookie >> 16) ^ ((ULONG)(NtCurrentTeb()->RealClientId.UniqueThread) & 0xFFF)))
+        ((Cookie >> 16) ^ (HandleToUlong(NtCurrentTeb()->RealClientId.UniqueThread) & 0xFFF)))
     {
         DPRINT1("LdrUnlockLoaderLock() called with an invalid cookie!\n");
 

@@ -3628,7 +3628,7 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
                 /* Get Current Character Font Information */
                 case 0x30:
                 {
-                    ULONG Address = (ULONG)NULL;
+                    ULONG Address = NULL32;
 
                     switch (getBH())
                     {
@@ -3936,16 +3936,16 @@ VOID VidBiosPost(VOID)
      */
 
     /* Some vectors are in fact addresses to tables */
-    ((PULONG)BaseAddress)[0x1D] = (ULONG)NULL; // Video Parameter Tables
+    ((PULONG)BaseAddress)[0x1D] = NULL32; // Video Parameter Tables
     // Far pointer to the 8x8 graphics font for the 8x8 characters 80h-FFh
     ((PULONG)BaseAddress)[0x1F] = MAKELONG(FONT_8x8_HIGH_OFFSET, VIDEO_BIOS_DATA_SEG);
     // Far pointer to the character table (EGA, MCGA, VGA) for the 8x16 characters 00h-...
     ((PULONG)BaseAddress)[0x43] = MAKELONG(FONT_8x16_OFFSET, VIDEO_BIOS_DATA_SEG);
-    ((PULONG)BaseAddress)[0x44] = (ULONG)NULL; // ROM BIOS Character Font, Characters 00h-7Fh (PCjr)
+    ((PULONG)BaseAddress)[0x44] = NULL32; // ROM BIOS Character Font, Characters 00h-7Fh (PCjr)
 
     /* Relocated services by the BIOS (when needed) */
-    ((PULONG)BaseAddress)[0x42] = (ULONG)NULL; // Relocated Default INT 10h Video Services
-    ((PULONG)BaseAddress)[0x6D] = (ULONG)NULL; // Video BIOS Entry Point
+    ((PULONG)BaseAddress)[0x42] = NULL32; // Relocated Default INT 10h Video Services
+    ((PULONG)BaseAddress)[0x6D] = NULL32; // Video BIOS Entry Point
 
     //
     // FIXME: At the moment we always set a VGA mode. In the future,

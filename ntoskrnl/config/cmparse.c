@@ -1097,7 +1097,8 @@ CmpParseKey(IN PVOID ParseObject,
     ASSERT(ParentKcb != NULL);
 
     /* Check if everything was found cached */
-    if (!TotalRemainingSubkeys) ASSERTMSG("Caching not implemented", FALSE);
+    if (!TotalRemainingSubkeys)
+        ASSERTMSG("Caching not implemented\n", FALSE);
 
     /* Don't do anything if we're being deleted */
     if (Kcb->Delete)

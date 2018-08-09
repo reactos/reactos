@@ -14,6 +14,9 @@
 #include "guisettings.h"
 #include "conwnd.h"
 
+
+/* HELPER FUNCTIONS ***********************************************************/
+
 FORCEINLINE
 VOID
 GetScreenBufferSizeUnits(IN PCONSOLE_SCREEN_BUFFER Buffer,
@@ -50,11 +53,16 @@ SmallRectToRect(PGUI_CONSOLE_DATA GuiData, PRECT Rect, PSMALL_RECT SmallRect)
     Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ViewOrigin.Y) * HeightUnit;
 }
 
+
+/* FUNCTIONS ******************************************************************/
+
+/* guiterm.c */
+
 VOID
 GuiConsoleMoveWindow(PGUI_CONSOLE_DATA GuiData);
 
-VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
+
+/* conwnd.c */
 
 BOOL
 InitFonts(PGUI_CONSOLE_DATA GuiData,
@@ -64,3 +72,53 @@ InitFonts(PGUI_CONSOLE_DATA GuiData,
           ULONG  FontWeight);
 VOID
 DeleteFonts(PGUI_CONSOLE_DATA GuiData);
+
+
+/* fullscreen.c */
+
+BOOL
+EnterFullScreen(PGUI_CONSOLE_DATA GuiData);
+VOID
+LeaveFullScreen(PGUI_CONSOLE_DATA GuiData);
+VOID
+SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
+VOID
+GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
+
+
+/* graphics.c */
+
+VOID
+GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
+                          PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
+                         PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
+                       PGUI_CONSOLE_DATA GuiData,
+                       PRECT rcView,
+                       PRECT rcFramebuffer);
+
+
+/* text.c */
+
+VOID
+PasteText(
+    IN PCONSRV_CONSOLE Console,
+    IN PWCHAR Buffer,
+    IN SIZE_T cchSize);
+
+VOID
+GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
+                          PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
+                         PGUI_CONSOLE_DATA GuiData);
+VOID
+GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
+                       PGUI_CONSOLE_DATA GuiData,
+                       PRECT rcView,
+                       PRECT rcFramebuffer);
+
+/* EOF */

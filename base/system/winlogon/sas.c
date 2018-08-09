@@ -586,7 +586,7 @@ HandleLogon(
 
     Session->hProfileInfo = ProfileInfo.hProfile;
 
-    /* Logon has successed. Play sound. */
+    /* Logon has succeeded. Play sound. */
     PlayLogonSound(Session);
 
     ret = TRUE;

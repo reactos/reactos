@@ -258,14 +258,24 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq
   return r;
 }
 
-static char *ncacn_pipe_name(const char *endpoint)
+static char *ncacn_pipe_name(const char *server, const char *endpoint)
 {
-  static const char prefix[] = "\\\\.";
+  static const char prefix[] = "\\\\";
+  static const char local[] = ".";
+  char ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
   char *pipe_name;
+  DWORD bufLen = ARRAYSIZE(ComputerName);
+
+  GetComputerNameA(ComputerName, &bufLen);
+
+  if (server == NULL || *server == 0 || stricmp(ComputerName, server) == 0)
+      server = local;
 
   /* protseq=ncacn_np: named pipes */
-  pipe_name = I_RpcAllocate(sizeof(prefix) + strlen(endpoint));
-  strcat(strcpy(pipe_name, prefix), endpoint);
+  pipe_name = I_RpcAllocate(sizeof(prefix) + strlen(server) + strlen(endpoint));
+  strcpy(pipe_name, prefix);
+  strcat(pipe_name, server);
+  strcat(pipe_name, endpoint);
   return pipe_name;
 }
 
@@ -279,7 +289,7 @@ static RPC_STATUS rpcrt4_ncacn_np_open(RpcConnection* Connection)
   if (npc->pipe)
     return RPC_S_OK;
 
-  pname = ncacn_pipe_name(Connection->Endpoint);
+  pname = ncacn_pipe_name(Connection->NetworkAddr, Connection->Endpoint);
   r = rpcrt4_conn_open_pipe(Connection, pname, FALSE);
   I_RpcFree(pname);
 
@@ -307,7 +317,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
   if (r != RPC_S_OK)
     return r;
 
-  ((RpcConnection_np*)Connection)->listen_pipe = ncacn_pipe_name(Connection->Endpoint);
+  ((RpcConnection_np*)Connection)->listen_pipe = ncacn_pipe_name(NULL, Connection->Endpoint);
   r = rpcrt4_conn_create_pipe(Connection);
 
   EnterCriticalSection(&protseq->cs);
@@ -358,7 +368,7 @@ static RPC_STATUS rpcrt4_ncacn_np_is_server_listening(const char *endpoint)
   char *pipe_name;
   RPC_STATUS status;
 
-  pipe_name = ncacn_pipe_name(endpoint);
+  pipe_name = ncacn_pipe_name(NULL, endpoint);
   status = is_pipe_listening(pipe_name);
   I_RpcFree(pipe_name);
   return status;

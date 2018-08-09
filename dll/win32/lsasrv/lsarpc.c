@@ -707,21 +707,29 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
         case PolicyAuditEventsInformation:   /* 2 */
             Status = LsarSetAuditEvents(PolicyObject,
                                         (PLSAPR_POLICY_AUDIT_EVENTS_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyAuditEventsInformation);
             break;
 
         case PolicyPrimaryDomainInformation: /* 3 */
             Status = LsarSetPrimaryDomain(PolicyObject,
                                           (PLSAPR_POLICY_PRIMARY_DOM_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyDnsDomainInformation);
             break;
 
         case PolicyAccountDomainInformation: /* 5 */
             Status = LsarSetAccountDomain(PolicyObject,
                                           (PLSAPR_POLICY_ACCOUNT_DOM_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyAccountDomainInformation);
             break;
 
         case PolicyLsaServerRoleInformation: /* 6 */
             Status = LsarSetServerRole(PolicyObject,
                                        (PPOLICY_LSA_SERVER_ROLE_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyServerRoleInformation);
             break;
 
         case PolicyReplicaSourceInformation: /* 7 */
@@ -747,6 +755,8 @@ NTSTATUS WINAPI LsarSetInformationPolicy(
         case PolicyDnsDomainInformation:      /* 12 (0xC) */
             Status = LsarSetDnsDomain(PolicyObject,
                                       (PLSAPR_POLICY_DNS_DOMAIN_INFO)PolicyInformation);
+            if (NT_SUCCESS(Status))
+                LsapNotifyPolicyChange(PolicyNotifyDnsDomainInformation);
             break;
 
         case PolicyDnsDomainInformationInt:   /* 13 (0xD) */

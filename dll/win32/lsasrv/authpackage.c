@@ -386,7 +386,7 @@ LsapAllocateClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                          OUT PVOID *ClientBaseAddress)
 {
     PLSAP_LOGON_CONTEXT LogonContext;
-    ULONG Length;
+    SIZE_T Length;
 
     *ClientBaseAddress = NULL;
 
@@ -409,7 +409,7 @@ LsapFreeClientBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
                      IN PVOID ClientBaseAddress)
 {
     PLSAP_LOGON_CONTEXT LogonContext;
-    ULONG Length;
+    SIZE_T Length;
 
     if (ClientBaseAddress == NULL)
         return STATUS_SUCCESS;

@@ -602,9 +602,10 @@ ScServiceDispatcher(HANDLE hPipe,
         lpServiceName = (LPWSTR)((PBYTE)ControlPacket + ControlPacket->dwServiceNameOffset);
         TRACE("Service: %S\n", lpServiceName);
 
-        if (lpServiceName[0] == UNICODE_NULL)
+        if ((ControlPacket->dwControl == SERVICE_CONTROL_STOP) &&
+            (lpServiceName[0] == UNICODE_NULL))
         {
-            ERR("Stop dispatcher thread\n");
+            TRACE("Stop dispatcher thread\n");
             bRunning = FALSE;
             dwError = ERROR_SUCCESS;
         }
