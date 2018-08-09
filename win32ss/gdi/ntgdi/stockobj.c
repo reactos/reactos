@@ -146,6 +146,7 @@ CreateStockFonts(void)
 {
     USHORT ActiveCodePage, OemCodePage;
     BYTE bActiveCharSet, bOemCharSet;
+    BOOL bIsCJK;
     static const WCHAR SimSun[] = { 0x5B8B, 0x4F53, 0 };
     static const WCHAR MingLiU[] = { 0x7D30, 0x660E, 0x9AD4 };
     static const WCHAR Batang[] = { 0xBC14, 0xD0D5 };
@@ -157,54 +158,72 @@ CreateStockFonts(void)
     if (bOemCharSet == DEFAULT_CHARSET)
         bOemCharSet = OEM_CHARSET;
 
+
     switch (ActiveCodePage)
     {
         case 936:
             /* Simplified Chinese */
+            bIsCJK = TRUE;
             wcscpy(DefaultGuiFont.lfFaceName, SimSun);
-            DefaultGuiFont.lfHeight = -12;
-            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
-            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
-            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 950:
             /* Traditional Chinese */
-            /* MingLiU */
+            bIsCJK = TRUE;
             wcscpy(DefaultGuiFont.lfFaceName, MingLiU);
-            DefaultGuiFont.lfHeight = -12;
-            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
-            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
-            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 932:
             /* Japanese */
+            bIsCJK = TRUE;
             wcscpy(DefaultGuiFont.lfFaceName, L"MS UI Gothic");
-            DefaultGuiFont.lfHeight = -12;
-            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
-            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
-            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 949:
         case 1361:
             /* Korean */
+            bIsCJK = TRUE;
             wcscpy(DefaultGuiFont.lfFaceName, Batang);
-            DefaultGuiFont.lfHeight = -12;
-            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
-            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
-            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         default:
             /* Otherwise */
+            bIsCJK = FALSE;
             wcscpy(DefaultGuiFont.lfFaceName, L"MS Shell Dlg");
-            DefaultGuiFont.lfHeight = -11;
-            SystemFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
-            SystemFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
-            OEMFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
             break;
+    }
+
+    if (bIsCJK)
+    {
+        OEMFixedFont.lfHeight = 18;
+        OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+        SystemFont.lfHeight = 18;
+        SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+        DeviceDefaultFont.lfHeight = 18;
+        DeviceDefaultFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+        SystemFixedFont.lfHeight = 18;
+        SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+        DefaultGuiFont.lfHeight = -12;
+    }
+    else
+    {
+        OEMFixedFont.lfHeight = 12;
+        OEMFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+        SystemFont.lfHeight = 16;
+        SystemFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
+        DeviceDefaultFont.lfHeight = 16;
+        DeviceDefaultFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
+        if (bActiveCharSet == RUSSIAN_CHARSET)
+        {
+            SystemFixedFont.lfHeight = 16;
+            SystemFixedFont.lfPitchAndFamily = FF_SWISS | FIXED_PITCH;
+        }
+        else
+        {
+            SystemFixedFont.lfHeight = 15;
+            SystemFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+        }
+        DefaultGuiFont.lfHeight = -11;
     }
 
     OEMFixedFont.lfCharSet = bOemCharSet;
