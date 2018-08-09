@@ -84,7 +84,7 @@ static LOGFONTW SystemFont =
 
 static LOGFONTW DeviceDefaultFont =
     { 16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
-      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | VARIABLE_PITCH, L"System"
+      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_SWISS | VARIABLE_PITCH, L"System"
     };
 
 static LOGFONTW SystemFixedFont =
@@ -163,6 +163,9 @@ CreateStockFonts(void)
             /* Simplified Chinese */
             wcscpy(DefaultGuiFont.lfFaceName, SimSun);
             DefaultGuiFont.lfHeight = -12;
+            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 950:
@@ -170,12 +173,18 @@ CreateStockFonts(void)
             /* MingLiU */
             wcscpy(DefaultGuiFont.lfFaceName, MingLiU);
             DefaultGuiFont.lfHeight = -12;
+            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 932:
             /* Japanese */
             wcscpy(DefaultGuiFont.lfFaceName, L"MS UI Gothic");
             DefaultGuiFont.lfHeight = -12;
+            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         case 949:
@@ -183,12 +192,18 @@ CreateStockFonts(void)
             /* Korean */
             wcscpy(DefaultGuiFont.lfFaceName, Batang);
             DefaultGuiFont.lfHeight = -12;
+            SystemFont.lfPitchAndFamily = FF_DONTCARE | VARIABLE_PITCH;
+            SystemFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
+            OEMFixedFont.lfPitchAndFamily = FF_DONTCARE | FIXED_PITCH;
             break;
 
         default:
             /* Otherwise */
             wcscpy(DefaultGuiFont.lfFaceName, L"Tahoma");
             DefaultGuiFont.lfHeight = -11;
+            SystemFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
+            SystemFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
+            OEMFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
             break;
     }
 
