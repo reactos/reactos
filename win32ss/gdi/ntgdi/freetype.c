@@ -165,6 +165,8 @@ static const CHARSETINFO g_FontTci[MAXTCIINDEX] =
     #define CP_MACCP  2
 #endif
 
+/* Get charset from specified codepage.
+   g_FontTci is used also in TranslateCharsetInfo. */
 BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
 {
     UINT i;
