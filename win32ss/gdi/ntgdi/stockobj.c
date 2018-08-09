@@ -209,6 +209,7 @@ CreateStockFonts(void)
 
     OEMFixedFont.lfCharSet = bOemCharSet;
     SystemFont.lfCharSet = bActiveCharSet;
+    DeviceDefaultFont.lfCharSet = bActiveCharSet;
     SystemFixedFont.lfCharSet = bActiveCharSet;
     DefaultGuiFont.lfCharSet = bActiveCharSet;
 
