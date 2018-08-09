@@ -146,6 +146,9 @@ CreateStockFonts(void)
 {
     USHORT ActiveCodePage, OemCodePage;
     BYTE bActiveCharSet, bOemCharSet;
+    static const WCHAR SimSun[] = { 0x5B8B, 0x4F53, 0 };
+    static const WCHAR MingLiU[] = { 0x7D30, 0x660E, 0x9AD4 };
+    static const WCHAR Batang[] = { 0xBC14, 0xD0D5 };
 
     RtlGetDefaultCodePage(&ActiveCodePage, &OemCodePage);
     bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
@@ -153,6 +156,41 @@ CreateStockFonts(void)
 
     if (bOemCharSet == DEFAULT_CHARSET)
         bOemCharSet = OEM_CHARSET;
+
+    switch (ActiveCodePage)
+    {
+        case 936:
+            /* Simplified Chinese */
+            wcscpy(DefaultGuiFont.lfFaceName, SimSun);
+            DefaultGuiFont.lfHeight = -12;
+            break;
+
+        case 950:
+            /* Traditional Chinese */
+            /* MingLiU */
+            wcscpy(DefaultGuiFont.lfFaceName, MingLiU);
+            DefaultGuiFont.lfHeight = -12;
+            break;
+
+        case 932:
+            /* Japanese */
+            wcscpy(DefaultGuiFont.lfFaceName, L"MS UI Gothic");
+            DefaultGuiFont.lfHeight = -12;
+            break;
+
+        case 949:
+        case 1361:
+            /* Korean */
+            wcscpy(DefaultGuiFont.lfFaceName, Batang);
+            DefaultGuiFont.lfHeight = -12;
+            break;
+
+        default:
+            /* Otherwise */
+            wcscpy(DefaultGuiFont.lfFaceName, L"Tahoma");
+            DefaultGuiFont.lfHeight = -11;
+            break;
+    }
 
     OEMFixedFont.lfCharSet = bOemCharSet;
     SystemFont.lfCharSet = bActiveCharSet;
