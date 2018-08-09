@@ -78,7 +78,7 @@ static LOGFONTW AnsiVarFont =
     };
 
 static LOGFONTW SystemFont =
-    { 16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
       OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | VARIABLE_PITCH, L"System"
     };
 
@@ -88,7 +88,7 @@ static LOGFONTW DeviceDefaultFont =
     };
 
 static LOGFONTW SystemFixedFont =
-    { 15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    { 15, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
       OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE | FIXED_PITCH, L"Fixedsys"
     };
 
@@ -148,6 +148,8 @@ VOID FASTCALL
 CreateStockObjects(void)
 {
     UINT Object;
+    USHORT ActiveCodePage, OemCodePage;
+    BYTE bActiveCharSet, bOemCharSet;
 
     DPRINT("Beginning creation of stock objects\n");
 
@@ -168,6 +170,15 @@ CreateStockObjects(void)
 
     StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
     StockObjects[DEFAULT_BITMAP] = GreCreateBitmap(1, 1, 1, 1, NULL);
+
+    RtlGetDefaultCodePage(&ActiveCodePage, &OemCodePage);
+    bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
+    bOemCharSet = IntCharSetFromCodePage(OemCodePage);
+
+    OEMFixedFont.lfCharSet = bOemCharSet;
+    SystemFont.lfCharSet = bActiveCharSet;
+    SystemFixedFont.lfCharSet = bActiveCharSet;
+    DefaultGuiFont.lfCharSet = bActiveCharSet;
 
     (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
     (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
