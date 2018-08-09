@@ -199,7 +199,7 @@ CreateStockFonts(void)
 
         default:
             /* Otherwise */
-            wcscpy(DefaultGuiFont.lfFaceName, L"Tahoma");
+            wcscpy(DefaultGuiFont.lfFaceName, L"MS Shell Dlg");
             DefaultGuiFont.lfHeight = -11;
             SystemFont.lfPitchAndFamily = FF_SWISS | VARIABLE_PITCH;
             SystemFixedFont.lfPitchAndFamily = FF_MODERN | FIXED_PITCH;
