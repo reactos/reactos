@@ -509,13 +509,18 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     if (MmNumberOfPagingFiles >= MAX_PAGING_FILES)
     {
-        return(STATUS_TOO_MANY_PAGING_FILES);
+        return STATUS_TOO_MANY_PAGING_FILES;
     }
 
     PreviousMode = ExGetPreviousMode();
 
     if (PreviousMode != KernelMode)
     {
+        if (SeSinglePrivilegeCheck(SeCreatePagefilePrivilege, PreviousMode) != TRUE)
+        {
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+
         _SEH2_TRY
         {
             SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
