@@ -175,6 +175,9 @@ CreateStockObjects(void)
     bActiveCharSet = IntCharSetFromCodePage(ActiveCodePage);
     bOemCharSet = IntCharSetFromCodePage(OemCodePage);
 
+    if (bOemCharSet == DEFAULT_CHARSET)
+        bOemCharSet = OEM_CHARSET;
+
     OEMFixedFont.lfCharSet = bOemCharSet;
     SystemFont.lfCharSet = bActiveCharSet;
     SystemFixedFont.lfCharSet = bActiveCharSet;

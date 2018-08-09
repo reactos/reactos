@@ -164,6 +164,12 @@ BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
 {
     UINT i;
 
+    if (uCodePage == 1)  // CP_OEMCP
+        return OEM_CHARSET;
+
+    if (uCodePage == 2)  // CP_MACCP
+        return MAC_CHARSET;
+
     for (i = 0; i < MAXTCIINDEX; ++i)
     {
         if (g_FontTci[i].ciACP == 0)
