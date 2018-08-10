@@ -305,14 +305,14 @@ SharedFace_Release(PSHARED_FACE Ptr)
     IntUnLockFreeType();
 }
 
-static BOOL TEXT_DisplayText(HDC hdc,
-                             INT x,
-                             INT y,
-                             UINT flags,
-                             PRECTL lprc,
-                             LPCWSTR lpString,
-                             UINT count,
-                             LPBOOL bResult)
+static BOOL DrawUsingLPK(HDC hdc,
+                         INT x,
+                         INT y,
+                         UINT flags,
+                         PRECTL lprc,
+                         LPCWSTR lpString,
+                         UINT count,
+                         LPBOOL bResult)
 {
     PVOID ResultPointer;
     ULONG ResultLength;
@@ -324,7 +324,7 @@ static BOOL TEXT_DisplayText(HDC hdc,
     ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
 
     pStringBuffer = ArgumentLength;
-    ArgumentLength += sizeof(WCHAR) * (count + 1);
+    ArgumentLength += sizeof(WCHAR) * (count + 2);
 
     Argument = IntCbAllocateMemory(ArgumentLength);
     
@@ -359,7 +359,7 @@ static BOOL TEXT_DisplayText(HDC hdc,
      * mimicks code from co_IntClientLoadLibrary */
     pStringBuffer += (ULONG_PTR)Argument;
     Argument->lpString = (PWCHAR)pStringBuffer;
-    RtlStringCchCopyW(Argument->lpString, count, lpString);
+    RtlStringCchCopyW(Argument->lpString, count + 1, lpString);
 
     pStringBuffer -= (ULONG_PTR)Argument;
     Argument->lpString = (PWCHAR)(pStringBuffer);
@@ -5216,7 +5216,7 @@ GreExtTextOutW(
     /* Draw via lpk */
     if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
     {
-        if(TEXT_DisplayText(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
+        if(DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
             return bLPKResult;
     }
 
