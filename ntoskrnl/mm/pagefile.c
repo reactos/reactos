@@ -46,6 +46,7 @@ typedef struct _PAGINGFILE
 {
     LIST_ENTRY PagingFileListEntry;
     PFILE_OBJECT FileObject;
+    HANDLE FileHandle;
     LARGE_INTEGER MaximumSize;
     LARGE_INTEGER CurrentSize;
     PFN_NUMBER FreePages;
@@ -502,7 +503,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     ULONG Size;
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING CapturedFileName;
-    LARGE_INTEGER SafeInitialSize, SafeMaximumSize;
+    LARGE_INTEGER SafeInitialSize, SafeMaximumSize, AllocationSize;
 
     DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
            FileName, InitialSize->QuadPart);
@@ -568,25 +569,56 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                                NULL,
                                NULL);
 
+    /* Make sure we can at least store a complete page:
+     * If we have 2048 BytesPerAllocationUnit (FAT16 < 128MB) there is
+     * a problem if the paging file is fragmented. Suppose the first cluster
+     * of the paging file is cluster 3042 but cluster 3043 is NOT part of the
+     * paging file but of another file. We can't write a complete page (4096
+     * bytes) to the physical location of cluster 3042 then. */
+    AllocationSize.QuadPart = SafeInitialSize.QuadPart + PAGE_SIZE;
+
+    /* First, attempt to replace the page file, if existing */
     Status = IoCreateFile(&FileHandle,
-                          FILE_ALL_ACCESS,
+                          SYNCHRONIZE | WRITE_DAC | FILE_READ_DATA | FILE_WRITE_DATA,
                           &ObjectAttributes,
                           &IoStatus,
-                          NULL,
-                          0,
-                          0,
-                          FILE_OPEN_IF,
-                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          &AllocationSize,
+                          FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN,
+                          FILE_SHARE_WRITE,
+                          FILE_SUPERSEDE,
+                          FILE_DELETE_ON_CLOSE | FILE_NO_COMPRESSION | FILE_NO_INTERMEDIATE_BUFFERING,
                           NULL,
                           0,
                           CreateFileTypeNone,
                           NULL,
                           SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+    /* If we failed, relax a bit constraints, someone may be already holding the
+     * the file, so share write, don't attempt to replace and don't delete on close
+     * (basically, don't do anything conflicting)
+     */
+    if (!NT_SUCCESS(Status))
+    {
+        Status = IoCreateFile(&FileHandle,
+                              SYNCHRONIZE | FILE_WRITE_DATA,
+                              &ObjectAttributes,
+                              &IoStatus,
+                              &AllocationSize,
+                              FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN,
+                              FILE_SHARE_WRITE | FILE_SHARE_READ,
+                              FILE_OPEN,
+                              FILE_NO_COMPRESSION | FILE_NO_INTERMEDIATE_BUFFERING,
+                              NULL,
+                              0,
+                              CreateFileTypeNone,
+                              NULL,
+                              SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+    }
 
     ReleaseCapturedUnicodeString(&CapturedFileName,
                                  PreviousMode);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Failed creating page file: %lx\n", Status);
         return(Status);
     }
 
@@ -603,25 +635,14 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     BytesPerAllocationUnit = FsSizeInformation.SectorsPerAllocationUnit *
                              FsSizeInformation.BytesPerSector;
-    /* FIXME: If we have 2048 BytesPerAllocationUnit (FAT16 < 128MB) there is
-     * a problem if the paging file is fragmented. Suppose the first cluster
-     * of the paging file is cluster 3042 but cluster 3043 is NOT part of the
-     * paging file but of another file. We can't write a complete page (4096
-     * bytes) to the physical location of cluster 3042 then. */
-    if (BytesPerAllocationUnit % PAGE_SIZE)
-    {
-        DPRINT1("BytesPerAllocationUnit %lu is not a multiple of PAGE_SIZE %d\n",
-                BytesPerAllocationUnit, PAGE_SIZE);
-        ZwClose(FileHandle);
-        return STATUS_UNSUCCESSFUL;
-    }
 
+    /* Set its end of file to initial size */
     Status = ZwSetInformationFile(FileHandle,
                                   &IoStatus,
                                   &SafeInitialSize,
                                   sizeof(LARGE_INTEGER),
-                                  FileAllocationInformation);
-    if (!NT_SUCCESS(Status))
+                                  FileEndOfFileInformation);
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(IoStatus.Status))
     {
         ZwClose(FileHandle);
         return(Status);
@@ -722,6 +743,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     RtlZeroMemory(PagingFile, sizeof(*PagingFile));
 
+    PagingFile->FileHandle = FileHandle;
     PagingFile->FileObject = FileObject;
     PagingFile->MaximumSize.QuadPart = SafeMaximumSize.QuadPart;
     PagingFile->CurrentSize.QuadPart = SafeInitialSize.QuadPart;
@@ -816,8 +838,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
     MmNumberOfPagingFiles++;
     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
-
-    ZwClose(FileHandle);
 
     MmSwapSpaceMessage = FALSE;
 
