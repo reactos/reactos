@@ -17,10 +17,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
- *
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/windows/messagebox.c
- * PURPOSE:         Input
+ * PURPOSE:         Message Boxes
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -108,6 +107,7 @@ typedef struct _MSGBOXINFO
     LONG *Btns;
     UINT Timeout;
 } MSGBOXINFO, *PMSGBOXINFO;
+
 
 /* INTERNAL FUNCTIONS ********************************************************/
 
@@ -222,7 +222,7 @@ static INT_PTR CALLBACK MessageBoxProc(
     int Alert;
     PMSGBOXINFO mbi;
     HELPINFO hi;
-    HWND owner;
+    HWND hwndOwner;
 
     switch (message)
     {
@@ -296,7 +296,7 @@ static INT_PTR CALLBACK MessageBoxProc(
                 return 0;
             case IDHELP:
                 /* send WM_HELP message to messagebox window */
-                hi.cbSize = sizeof(HELPINFO);
+                hi.cbSize = sizeof(hi);
                 hi.iContextType = HELPINFO_WINDOW;
                 hi.iCtrlId = LOWORD(wParam);
                 hi.hItemHandle = (HANDLE)lParam;
@@ -320,12 +320,14 @@ static INT_PTR CALLBACK MessageBoxProc(
         hi.dwContextId = GetWindowContextHelpId(hwnd);
 
         if (mbi->lpfnMsgBoxCallback)
+        {
             mbi->lpfnMsgBoxCallback(&hi);
+        }
         else
         {
-            owner = GetWindow(hwnd, GW_OWNER);
-            if (owner)
-                SendMessageW(GetWindow(hwnd, GW_OWNER), WM_HELP, 0, (LPARAM)&hi);
+            hwndOwner = GetWindow(hwnd, GW_OWNER);
+            if (hwndOwner)
+                SendMessageW(hwndOwner, WM_HELP, 0, (LPARAM)&hi);
         }
         return 0;
     }
@@ -348,7 +350,7 @@ static INT_PTR CALLBACK MessageBoxProc(
     case WM_TIMER:
         if (wParam == 0)
         {
-            EndDialog(hwnd, 32000);
+            EndDialog(hwnd, IDTIMEOUT);
         }
         return 0;
     }
@@ -357,7 +359,7 @@ static INT_PTR CALLBACK MessageBoxProc(
 
 static int
 MessageBoxTimeoutIndirectW(
-    CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT Timeout)
+    CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT dwTimeout)
 {
     DLGTEMPLATE *tpl;
     DLGITEMTEMPLATE *iico, *itxt;
@@ -388,7 +390,9 @@ MessageBoxTimeoutIndirectW(
     else if (IS_INTRESOURCE(lpMsgBoxParams->lpszCaption))
     {
         /* User-defined resource string */
-        caplen = LoadStringW(lpMsgBoxParams->hInstance, PtrToUlong(lpMsgBoxParams->lpszCaption), (LPWSTR)&caption, 0);
+        caplen = LoadStringW(lpMsgBoxParams->hInstance,
+                             PtrToUlong(lpMsgBoxParams->lpszCaption),
+                             (LPWSTR)&caption, 0);
     }
     else
     {
@@ -406,7 +410,9 @@ MessageBoxTimeoutIndirectW(
     else if (IS_INTRESOURCE(lpMsgBoxParams->lpszText))
     {
         /* User-defined resource string */
-        textlen = LoadStringW(lpMsgBoxParams->hInstance, PtrToUlong(lpMsgBoxParams->lpszText), (LPWSTR)&text, 0);
+        textlen = LoadStringW(lpMsgBoxParams->hInstance,
+                              PtrToUlong(lpMsgBoxParams->lpszText),
+                              (LPWSTR)&text, 0);
     }
     else
     {
@@ -433,33 +439,34 @@ MessageBoxTimeoutIndirectW(
 
     switch (lpMsgBoxParams->dwStyle & MB_ICONMASK)
     {
-      case MB_ICONEXCLAMATION:
-        Icon = LoadIconW(0, IDI_EXCLAMATIONW);
-        MessageBeep(MB_ICONEXCLAMATION);
-        break;
-      case MB_ICONQUESTION:
-        Icon = LoadIconW(0, IDI_QUESTIONW);
-        MessageBeep(MB_ICONQUESTION);
-        break;
-      case MB_ICONASTERISK:
-        Icon = LoadIconW(0, IDI_ASTERISKW);
-        MessageBeep(MB_ICONASTERISK);
-        break;
-      case MB_ICONHAND:
-        Icon = LoadIconW(0, IDI_HANDW);
-        MessageBeep(MB_ICONHAND);
-        break;
-      case MB_USERICON:
-        Icon = LoadIconW(lpMsgBoxParams->hInstance, lpMsgBoxParams->lpszIcon);
-        MessageBeep(MB_OK);
-        break;
-      default:
-        /* By default, Windows 95/98/NT does not associate an icon to message boxes.
-         * So ReactOS should do the same.
-         */
-        Icon = (HICON)0;
-        MessageBeep(MB_OK);
-        break;
+        case MB_ICONEXCLAMATION: // case MB_ICONWARNING:
+            Icon = LoadIconW(0, IDI_EXCLAMATIONW);
+            MessageBeep(MB_ICONEXCLAMATION);
+            break;
+        case MB_ICONQUESTION:
+            Icon = LoadIconW(0, IDI_QUESTIONW);
+            MessageBeep(MB_ICONQUESTION);
+            break;
+        case MB_ICONASTERISK: // case MB_ICONINFORMATION:
+            Icon = LoadIconW(0, IDI_ASTERISKW);
+            MessageBeep(MB_ICONASTERISK);
+            break;
+        case MB_ICONHAND: // case MB_ICONSTOP: case MB_ICONERROR:
+            Icon = LoadIconW(0, IDI_HANDW);
+            MessageBeep(MB_ICONHAND);
+            break;
+        case MB_USERICON:
+            Icon = LoadIconW(lpMsgBoxParams->hInstance, lpMsgBoxParams->lpszIcon);
+            MessageBeep(MB_OK);
+            break;
+        default:
+            /*
+             * By default, Windows 95/98/NT does not associate an icon
+             * to message boxes. So ReactOS should do the same.
+             */
+            Icon = NULL;
+            MessageBeep(MB_OK);
+            break;
     }
 
     /* Basic space */
@@ -469,16 +476,16 @@ MessageBoxTimeoutIndirectW(
               sizeof(WORD);                     /* font height */
 
     /* Space for icon */
-    if (NULL != Icon)
+    if (Icon)
     {
-      bufsize = (bufsize + 3) & ~3;
-      bufsize += sizeof(DLGITEMTEMPLATE) +
-                 4 * sizeof(WORD) +
-                 sizeof(WCHAR);
+        bufsize = ALIGN_UP(bufsize, DWORD);
+        bufsize += sizeof(DLGITEMTEMPLATE) +
+                   4 * sizeof(WORD) +
+                   sizeof(WCHAR);
     }
 
     /* Space for text */
-    bufsize = (bufsize + 3) & ~3;
+    bufsize = ALIGN_UP(bufsize, DWORD);
     bufsize += sizeof(DLGITEMTEMPLATE) +
                3 * sizeof(WORD) +
                (textlen + 1) * sizeof(WCHAR);
@@ -488,19 +495,22 @@ MessageBoxTimeoutIndirectW(
         /* Get the default text of the buttons */
         if (Buttons.btnIds[i])
         {
-            ButtonLen[i] = LoadStringW(User32Instance, Buttons.btnIds[i], (LPWSTR)&ButtonText[i], 0);
+            ButtonLen[i] = LoadStringW(User32Instance,
+                                       Buttons.btnIds[i],
+                                       (LPWSTR)&ButtonText[i], 0);
         }
         else
         {
+            /* No text, use blank */
             ButtonText[i] = L"";
-            ButtonLen[i]  = 0;
+            ButtonLen[i] = 0;
         }
 
-      /* Space for buttons */
-      bufsize = (bufsize + 3) & ~3;
-      bufsize += sizeof(DLGITEMTEMPLATE) +
-                 3 * sizeof(WORD) +
-                 (ButtonLen[i] + 1) * sizeof(WCHAR);
+        /* Space for buttons */
+        bufsize = ALIGN_UP(bufsize, DWORD);
+        bufsize += sizeof(DLGITEMTEMPLATE) +
+                   3 * sizeof(WORD) +
+                   (ButtonLen[i] + 1) * sizeof(WCHAR);
     }
 
     buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize);
@@ -520,7 +530,8 @@ MessageBoxTimeoutIndirectW(
 
     tpl = (DLGTEMPLATE *)buf;
 
-    tpl->style = WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | DS_CENTER | DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG;
+    tpl->style = WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU |
+                 DS_CENTER | DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG;
     tpl->dwExtendedStyle = WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT;
     if (lpMsgBoxParams->dwStyle & MB_TOPMOST)
         tpl->dwExtendedStyle |= WS_EX_TOPMOST;
@@ -528,7 +539,7 @@ MessageBoxTimeoutIndirectW(
         tpl->dwExtendedStyle |= WS_EX_RIGHT;
     tpl->x = 100;
     tpl->y = 100;
-    tpl->cdit = Buttons.btnCnt + ((Icon != (HICON)0) ? 1 : 0) + 1;
+    tpl->cdit = Buttons.btnCnt + (Icon ? 1 : 0) + 1;
 
     dest = (BYTE *)(tpl + 1);
 
@@ -550,7 +561,7 @@ MessageBoxTimeoutIndirectW(
     /* Create icon */
     if (Icon)
     {
-        dest = (BYTE*)(((ULONG_PTR)dest + 3) & ~3);
+        dest = ALIGN_UP_POINTER(dest, DWORD);
         iico = (DLGITEMTEMPLATE *)dest;
         iico->style = WS_CHILD | WS_VISIBLE | SS_ICON;
         iico->dwExtendedStyle = 0;
@@ -569,8 +580,8 @@ MessageBoxTimeoutIndirectW(
         dest += sizeof(WORD);
     }
 
-    /* create static for text */
-    dest = (BYTE*)(((UINT_PTR)dest + 3) & ~3);
+    /* Create static for text */
+    dest = ALIGN_UP_POINTER(dest, DWORD);
     itxt = (DLGITEMTEMPLATE *)dest;
     itxt->style = WS_CHILD | WS_VISIBLE | SS_NOPREFIX;
     if (lpMsgBoxParams->dwStyle & MB_RIGHT)
@@ -616,15 +627,16 @@ MessageBoxTimeoutIndirectW(
         units.cy = HIWORD(defUnits);
     }
 
-    /* create buttons */
+    /* Create buttons */
     btnsize.cx = BTN_CX;
     btnsize.cy = BTN_CY;
     btnrect.left = btnrect.top = 0;
 
     for (i = 0; i < Buttons.btnCnt; i++)
     {
-        dest = (BYTE*)(((UINT_PTR)dest + 3) & ~3);
+        dest = ALIGN_UP_POINTER(dest, DWORD);
         ibtn[i] = (DLGITEMTEMPLATE *)dest;
+
         ibtn[i]->style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
         if (!defbtn && (i == ((lpMsgBoxParams->dwStyle & MB_DEFMASK) >> 8)))
         {
@@ -651,7 +663,8 @@ MessageBoxTimeoutIndirectW(
         dest += sizeof(WORD);
 
         // btnrect.right = btnrect.bottom = 0; // FIXME: Is it needed??
-        DrawTextW(hDC, ButtonText[i], ButtonLen[i], &btnrect, DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
+        DrawTextW(hDC, ButtonText[i], ButtonLen[i], &btnrect,
+                  DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
         btnsize.cx = max(btnsize.cx, btnrect.right);
         btnsize.cy = max(btnsize.cy, btnrect.bottom);
     }
@@ -671,7 +684,8 @@ MessageBoxTimeoutIndirectW(
     txtrect.top = txtrect.left = txtrect.bottom = 0;
     if (textlen != 0)
     {
-        DrawTextW(hDC, text, textlen, &txtrect, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
+        DrawTextW(hDC, text, textlen, &txtrect,
+                  DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
     }
     else
     {
@@ -770,14 +784,14 @@ MessageBoxTimeoutIndirectW(
     tpl->cx = RESCALE_X(btnleft, units);
     tpl->cy = RESCALE_Y(btntop, units);
 
-    /* finally show the messagebox */
+    /* Finally show the messagebox */
     mbi.Icon = Icon;
     mbi.dwContextHelpId = lpMsgBoxParams->dwContextHelpId;
     mbi.lpfnMsgBoxCallback = lpMsgBoxParams->lpfnMsgBoxCallback;
     mbi.dwStyle = lpMsgBoxParams->dwStyle;
     mbi.nButtons = Buttons.btnCnt;
     mbi.Btns = Buttons.btnIdx;
-    mbi.Timeout = Timeout;
+    mbi.Timeout = dwTimeout;
 
     /* Pass on to Justin Case so he can peek the message? */
     mbi.cbSize       = lpMsgBoxParams->cbSize;
@@ -788,7 +802,8 @@ MessageBoxTimeoutIndirectW(
     mbi.lpszIcon     = lpMsgBoxParams->lpszIcon;
     mbi.dwLanguageId = lpMsgBoxParams->dwLanguageId;
 
-    ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl, lpMsgBoxParams->hwndOwner,
+    ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl,
+                                  lpMsgBoxParams->hwndOwner,
                                   MessageBoxProc, (LPARAM)&mbi);
 
 Quit:
@@ -796,8 +811,8 @@ Quit:
     return ret;
 }
 
-/* FUNCTIONS *****************************************************************/
 
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
