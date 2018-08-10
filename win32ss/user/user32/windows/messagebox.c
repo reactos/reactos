@@ -57,8 +57,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 #define MSGBOXEX_MAXBTNS        (4)
 
 /* Rescale logical coordinates */
-#define RESCALE_X(_x, _unit)    (((_x) * 4 + LOWORD(_unit) - 1) / LOWORD(_unit))
-#define RESCALE_Y(_y, _unit)    (((_y) * 8 + HIWORD(_unit) - 1) / HIWORD(_unit))
+#define RESCALE_X(_x, _units)   (((_x) * 4 + (_units).cx - 1) / (_units).cx)
+#define RESCALE_Y(_y, _units)   (((_y) * 8 + (_units).cy - 1) / (_units).cy)
 
 
 /* MessageBox button helpers */
@@ -103,7 +103,6 @@ typedef struct _MSGBOXINFO
     MSGBOXPARAMSW; // Wine passes this too.
     // ReactOS
     HICON Icon;
-    HFONT Font;
     int DefBtn;
     int nButtons;
     LONG *Btns;
@@ -220,7 +219,7 @@ static INT_PTR CALLBACK MessageBoxProc(
     HWND hwnd, UINT message,
     WPARAM wParam, LPARAM lParam)
 {
-    int i, Alert;
+    int Alert;
     PMSGBOXINFO mbi;
     HELPINFO hi;
     HWND owner;
@@ -267,12 +266,6 @@ static INT_PTR CALLBACK MessageBoxProc(
             /* Send out the alert notifications. */
             NotifyWinEvent(EVENT_SYSTEM_ALERT, hwnd, OBJID_ALERT, Alert);
 
-            /* set control fonts */
-            SendDlgItemMessageW(hwnd, MSGBOX_IDTEXT, WM_SETFONT, (WPARAM)mbi->Font, 0);
-            for (i = 0; i < mbi->nButtons; i++)
-            {
-                SendDlgItemMessageW(hwnd, mbi->Btns[i], WM_SETFONT, (WPARAM)mbi->Font, 0);
-            }
             switch (mbi->dwStyle & MB_TYPEMASK)
             {
             case MB_ABORTRETRYIGNORE:
@@ -372,9 +365,11 @@ MessageBoxTimeoutIndirectW(
     LPVOID buf;
     BYTE *dest;
     LPCWSTR caption, text;
-    HFONT hFont;
+    HFONT hFont, hOldFont;
     HICON Icon;
+    HWND hDCWnd;
     HDC hDC;
+    SIZE units;
     int bufsize, ret, caplen, textlen, i, btnleft, btntop, lmargin;
     MSGBTNINFO Buttons;
     LPCWSTR ButtonText[MSGBOXEX_MAXBTNS];
@@ -384,7 +379,6 @@ MessageBoxTimeoutIndirectW(
     SIZE btnsize;
     MSGBOXINFO mbi;
     BOOL defbtn = FALSE;
-    DWORD units = GetDialogBaseUnits();
 
     if (!lpMsgBoxParams->lpszCaption)
     {
@@ -470,8 +464,9 @@ MessageBoxTimeoutIndirectW(
 
     /* Basic space */
     bufsize = sizeof(DLGTEMPLATE) +
-              2 * sizeof(WORD) +                         /* menu and class */
-              (caplen + 1) * sizeof(WCHAR);              /* title */
+              2 * sizeof(WORD) +                /* menu and class */
+              (caplen + 1) * sizeof(WCHAR) +    /* title */
+              sizeof(WORD);                     /* font height */
 
     /* Space for icon */
     if (NULL != Icon)
@@ -510,18 +505,22 @@ MessageBoxTimeoutIndirectW(
 
     buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize);
     if (!buf)
-    {
         return 0;
-    }
+
     iico = itxt = NULL;
 
     nclm.cbSize = sizeof(nclm);
-    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
     hFont = CreateFontIndirectW(&nclm.lfMessageFont);
+    if (!hFont)
+    {
+        ERR("Cannot retrieve nclm.lfMessageFont!\n");
+        goto Quit;
+    }
 
     tpl = (DLGTEMPLATE *)buf;
 
-    tpl->style = WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | DS_CENTER | DS_MODALFRAME | DS_NOIDLEMSG;
+    tpl->style = WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU | DS_CENTER | DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG;
     tpl->dwExtendedStyle = WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CONTROLPARENT;
     if (lpMsgBoxParams->dwStyle & MB_TOPMOST)
         tpl->dwExtendedStyle |= WS_EX_TOPMOST;
@@ -540,6 +539,13 @@ MessageBoxTimeoutIndirectW(
     dest += caplen * sizeof(WCHAR);
     *(WCHAR*)dest = L'\0';
     dest += sizeof(WCHAR);
+
+    /*
+     * A font point size (height) of 0x7FFF means that we use
+     * the message box font (NONCLIENTMETRICSW.lfMessageFont).
+     */
+    *(WORD*)dest = 0x7FFF;
+    dest += sizeof(WORD);
 
     /* Create icon */
     if (Icon)
@@ -585,8 +591,30 @@ MessageBoxTimeoutIndirectW(
     *(WORD*)dest = 0;
     dest += sizeof(WORD);
 
-    hDC = CreateCompatibleDC(0);
-    SelectObject(hDC, hFont);
+    hDCWnd = NULL;
+    hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
+    if (!hDC)
+    {
+        /* Retry with the DC of the owner window */
+        hDCWnd = lpMsgBoxParams->hwndOwner;
+        hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
+    }
+    if (!hDC)
+    {
+        ERR("GetDCEx() failed, bail out!\n");
+        goto Quit;
+    }
+    hOldFont = SelectObject(hDC, hFont);
+
+    units.cx = GdiGetCharDimensions(hDC, NULL, &units.cy);
+    if (!units.cx)
+    {
+        DWORD defUnits;
+        ERR("GdiGetCharDimensions() failed, falling back to default values!\n");
+        defUnits = GetDialogBaseUnits();
+        units.cx = LOWORD(defUnits);
+        units.cy = HIWORD(defUnits);
+    }
 
     /* create buttons */
     btnsize.cx = BTN_CX;
@@ -643,7 +671,7 @@ MessageBoxTimeoutIndirectW(
     txtrect.top = txtrect.left = txtrect.bottom = 0;
     if (textlen != 0)
     {
-        DrawTextW(hDC, text, textlen, &txtrect, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_CALCRECT);
+        DrawTextW(hDC, text, textlen, &txtrect, DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
     }
     else
     {
@@ -652,8 +680,13 @@ MessageBoxTimeoutIndirectW(
     }
     txtrect.right++;
 
-    if (hDC)
-        DeleteDC(hDC);
+    if (hOldFont)
+        SelectObject(hDC, hOldFont);
+
+    ReleaseDC(hDCWnd, hDC);
+
+    if (hFont)
+        DeleteObject(hFont);
 
     /* calculate position and size of the icon */
     rc.left = rc.bottom = rc.right = 0;
@@ -739,7 +772,6 @@ MessageBoxTimeoutIndirectW(
 
     /* finally show the messagebox */
     mbi.Icon = Icon;
-    mbi.Font = hFont;
     mbi.dwContextHelpId = lpMsgBoxParams->dwContextHelpId;
     mbi.lpfnMsgBoxCallback = lpMsgBoxParams->lpfnMsgBoxCallback;
     mbi.dwStyle = lpMsgBoxParams->dwStyle;
@@ -759,9 +791,7 @@ MessageBoxTimeoutIndirectW(
     ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl, lpMsgBoxParams->hwndOwner,
                                   MessageBoxProc, (LPARAM)&mbi);
 
-    if (hFont)
-        DeleteObject(hFont);
-
+Quit:
     RtlFreeHeap(GetProcessHeap(), 0, buf);
     return ret;
 }
