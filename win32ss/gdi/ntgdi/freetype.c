@@ -160,6 +160,35 @@ static const CHARSETINFO g_FontTci[MAXTCIINDEX] =
     { SYMBOL_CHARSET, CP_SYMBOL, {{0,0,0,0},{FS_SYMBOL,0}} }
 };
 
+#ifndef CP_OEMCP
+    #define CP_OEMCP  1
+    #define CP_MACCP  2
+#endif
+
+/* Get charset from specified codepage.
+   g_FontTci is used also in TranslateCharsetInfo. */
+BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage)
+{
+    UINT i;
+
+    if (uCodePage == CP_OEMCP)
+        return OEM_CHARSET;
+
+    if (uCodePage == CP_MACCP)
+        return MAC_CHARSET;
+
+    for (i = 0; i < MAXTCIINDEX; ++i)
+    {
+        if (g_FontTci[i].ciACP == 0)
+            continue;
+
+        if (g_FontTci[i].ciACP == uCodePage)
+            return g_FontTci[i].ciCharset;
+    }
+
+    return DEFAULT_CHARSET;
+}
+
 /* list head */
 static RTL_STATIC_LIST_HEAD(g_FontSubstListHead);
 

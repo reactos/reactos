@@ -106,6 +106,7 @@ TEXTOBJ_UnlockText(PLFONT plfnt)
 PTEXTOBJ FASTCALL RealizeFontInit(HFONT);
 NTSTATUS FASTCALL TextIntRealizeFont(HFONT,PTEXTOBJ);
 NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont);
+BYTE FASTCALL IntCharSetFromCodePage(UINT uCodePage);
 BOOL FASTCALL InitFontSupport(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
 BOOL FASTCALL IntIsFontRenderingEnabled(VOID);
