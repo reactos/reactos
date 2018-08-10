@@ -305,6 +305,100 @@ SharedFace_Release(PSHARED_FACE Ptr)
     IntUnLockFreeType();
 }
 
+static BOOL TEXT_DisplayText(HDC hdc,
+                             INT x,
+                             INT y,
+                             UINT flags,
+                             PRECTL lprc,
+                             LPCWSTR lpString,
+                             UINT count,
+                             LPBOOL bResult)
+{
+    PVOID ResultPointer;
+    ULONG ResultLength;
+    ULONG ArgumentLength;
+    ULONG_PTR pStringBuffer = 0;
+    NTSTATUS Status;
+    PLPK_CALLBACK_ARGUMENTS Argument;
+    
+    ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
+
+    pStringBuffer = ArgumentLength;
+    ArgumentLength += sizeof(WCHAR) * (count + 1);
+
+    Argument = IntCbAllocateMemory(ArgumentLength);
+    
+    if(!Argument)
+    {
+        *bResult  = FALSE;
+        return FALSE;
+    }
+    
+    /* Initialize struct members */
+    Argument->hdc    = hdc;
+    Argument->x      = x;
+    Argument->y      = y;    
+    Argument->flags  = flags;
+    Argument->count  = count;
+
+    /* copy rect */
+    if (lprc)
+    {
+        Argument->rect.left   = lprc->left;
+        Argument->rect.right  = lprc->right;
+        Argument->rect.top    = lprc->top;
+        Argument->rect.bottom = lprc->bottom;
+        Argument->rc = TRUE;
+    }
+    else
+    {
+        Argument->rc = FALSE;
+    }
+
+    /* Align lpString
+     * mimicks code from co_IntClientLoadLibrary */
+    pStringBuffer += (ULONG_PTR)Argument;
+    Argument->lpString = (PWCHAR)pStringBuffer;
+    RtlStringCchCopyW(Argument->lpString, count, lpString);
+
+    pStringBuffer -= (ULONG_PTR)Argument;
+    Argument->lpString = (PWCHAR)(pStringBuffer);
+
+    UserLeaveCo();
+
+    Status = KeUserModeCallback(USER32_CALLBACK_LPK,
+                                Argument,
+                                ArgumentLength,
+                                &ResultPointer,
+                                &ResultLength);
+        
+    UserEnterCo();
+ 
+    IntCbFreeMemory(Argument);
+        
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
+            *bResult = *(BOOL*)ResultPointer;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            //ERR("Failed to copy result from user mode!\n");
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        *bResult  = FALSE;
+        return FALSE;
+    }
+    return TRUE;
+}   
+
 
 /*
  * IntLoadFontSubstList --- loads the list of font substitutes
@@ -5117,7 +5211,14 @@ GreExtTextOutW(
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
     int thickness;
-    BOOL bResult;
+    BOOL bResult, bLPKResult;
+
+    /* Draw via lpk */
+    if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
+    {
+        if(TEXT_DisplayText(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
+            return bLPKResult;
+    }
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))

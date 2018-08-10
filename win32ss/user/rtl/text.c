@@ -939,91 +939,6 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 #endif
 }
 
-#ifdef _WIN32K_
-/* Perhaps make this a global ntuser function */
-/* Need to add code to check if dwLpkEntrypoints is valid */
-static BOOL TEXT_DisplayText(HDC hdc,
-                             INT x,
-                             INT y,
-                             UINT flags,
-                             PRECTL lprc,
-                             LPCWSTR lpString,
-                             UINT count)
-{
-    PVOID ResultPointer;
-    ULONG ResultLength;
-    ULONG ArgumentLength;
-    ULONG_PTR pStringBuffer = 0;
-    NTSTATUS Status;
-    BOOL bResult;
-    PLPK_CALLBACK_ARGUMENTS Argument;
-    
-    ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
-
-    pStringBuffer = ArgumentLength;
-    ArgumentLength += (sizeof(WCHAR) * count) + 1;
-    ArgumentLength += sizeof(RECT) + 1;
-
-    Argument = IntCbAllocateMemory(ArgumentLength);
-    
-    if(!Argument)
-        goto fallback;
-    
-    /* Align the struct members */
-    
-    /* Copy lpString and lprc */
-    RtlStringCchCopyW(Argument->lpString, count, lpString);
-    RtlCopyMemory(&Argument->rect, (PRECT)lprc, sizeof(RECTL));
-    
-    /* Initialize remaining struct members */
-    Argument->hdc    = hdc;
-    Argument->x      = x;
-    Argument->y      = y;    
-    Argument->flags  = flags;
-    Argument->count  = count;
-
-    UserLeaveCo();
-
-    Status = KeUserModeCallback(USER32_CALLBACK_LPK,
-                                Argument,
-                                ArgumentLength,
-                                &ResultPointer,
-                                &ResultLength);
-        
-    UserEnterCo();
- 
-    IntCbFreeMemory(Argument);
-        
-    if (NT_SUCCESS(Status))
-    {
-        _SEH2_TRY
-        {
-            ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
-            bResult = *(BOOL*)ResultPointer;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            ERR("Failed to copy result from user mode!\n");
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        ERR("Failed LPK usermode callback!\n");
-        goto fallback;
-    }
-
-    return bResult;
-
-    fallback:
-        return GreExtTextOutW(hdc, x, y, flags, lprc, lpString,
-                              count, NULL, 0);
-
-}   
-#endif
-
 /***********************************************************************
  *           DrawTextExW    (USER32.@)
  *
@@ -1283,10 +1198,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 else
                     len_seg = len;
 #ifdef _WIN32K_
-                if (!TEXT_DisplayText( hdc, xseg, y,
+                if (!GreExtTextOutW( hdc, xseg, y,
                                      ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
                                      ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                     rect, str, len_seg))
+                                     rect, str, len_seg, NULL, 0 ))
 #else
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
