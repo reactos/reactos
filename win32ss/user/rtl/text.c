@@ -939,6 +939,100 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 #endif
 }
 
+#ifdef _WIN32K_
+BOOL UserExtTextOutW(HDC hdc,
+                     INT x,
+                     INT y,
+                     UINT flags,
+                     PRECTL lprc,
+                     LPCWSTR lpString,
+                     UINT count)
+{
+    PVOID ResultPointer;
+    ULONG ResultLength;
+    ULONG ArgumentLength;
+    ULONG_PTR pStringBuffer = 0;
+    NTSTATUS Status;
+    PLPK_CALLBACK_ARGUMENTS Argument;
+    BOOL bResult;
+    
+    ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
+
+    pStringBuffer = ArgumentLength;
+    ArgumentLength += sizeof(WCHAR) * (count + 2);
+
+    Argument = IntCbAllocateMemory(ArgumentLength);
+    
+    if (!Argument)
+    {
+        goto fallback;
+    }
+    
+    /* Initialize struct members */
+    Argument->hdc   = hdc;
+    Argument->x     = x;
+    Argument->y     = y;    
+    Argument->flags = flags;
+    Argument->count = count;
+    
+    if (lprc)
+    {
+        Argument->rect = *lprc;
+        Argument->bRect = TRUE;
+    }
+    else
+    {
+        Argument->bRect = FALSE;
+    }
+
+    /* Align lpString
+     * mimicks code from co_IntClientLoadLibrary */
+    pStringBuffer += (ULONG_PTR)Argument;
+    Argument->lpString = (LPWSTR)pStringBuffer;
+    RtlStringCchCopyW(Argument->lpString, count + 1, lpString);
+
+    pStringBuffer -= (ULONG_PTR)Argument;
+    Argument->lpString = (LPWSTR)(pStringBuffer);
+
+    UserLeaveCo();
+
+    Status = KeUserModeCallback(USER32_CALLBACK_LPK,
+                                Argument,
+                                ArgumentLength,
+                                &ResultPointer,
+                                &ResultLength);
+        
+    UserEnterCo();
+ 
+    IntCbFreeMemory(Argument);
+        
+    if (NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(ResultPointer, sizeof(BOOL), 1);
+            bResult = *(LPBOOL)ResultPointer;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ERR("Failed to copy result from user mode!\n");
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        goto fallback;
+    }
+
+    return bResult;
+
+    fallback:
+        return GreExtTextOutW(hdc, x, y, flags, lprc, lpString, count, NULL, 0);
+}   
+#endif
+
 /***********************************************************************
  *           DrawTextExW    (USER32.@)
  *
@@ -1198,10 +1292,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 else
                     len_seg = len;
 #ifdef _WIN32K_
-                if (!GreExtTextOutW( hdc, xseg, y,
-                                    ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
-                                    ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                    rect, str, len_seg, NULL, 0 ))
+                if (!UserExtTextOutW( hdc, xseg, y,
+                                     ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
+                                     ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
+                                     rect, str, len_seg))
 #else
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |

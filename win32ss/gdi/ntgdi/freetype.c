@@ -305,96 +305,6 @@ SharedFace_Release(PSHARED_FACE Ptr)
     IntUnLockFreeType();
 }
 
-static BOOL DrawUsingLPK(HDC hdc,
-                         INT x,
-                         INT y,
-                         UINT flags,
-                         PRECTL lprc,
-                         LPCWSTR lpString,
-                         UINT count,
-                         LPBOOL bResult)
-{
-    PVOID ResultPointer;
-    ULONG ResultLength;
-    ULONG ArgumentLength;
-    ULONG_PTR pStringBuffer = 0;
-    NTSTATUS Status;
-    PLPK_CALLBACK_ARGUMENTS Argument;
-    
-    ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
-
-    pStringBuffer = ArgumentLength;
-    ArgumentLength += sizeof(WCHAR) * (count + 2);
-
-    Argument = IntCbAllocateMemory(ArgumentLength);
-    
-    if (!Argument)
-    {
-        *bResult = FALSE;
-        return FALSE;
-    }
-    
-    /* Initialize struct members */
-    Argument->hdc   = hdc;
-    Argument->x     = x;
-    Argument->y     = y;    
-    Argument->flags = flags;
-    Argument->count = count;
-    
-    if (lprc)
-    {
-        Argument->rect = *lprc;
-        Argument->bRect = TRUE;
-    }
-    else
-    {
-        Argument->bRect = FALSE;
-    }
-
-    /* Align lpString
-     * mimicks code from co_IntClientLoadLibrary */
-    pStringBuffer += (ULONG_PTR)Argument;
-    Argument->lpString = (LPWSTR)pStringBuffer;
-    RtlStringCchCopyW(Argument->lpString, count + 1, lpString);
-
-    pStringBuffer -= (ULONG_PTR)Argument;
-    Argument->lpString = (LPWSTR)(pStringBuffer);
-
-    UserLeaveCo();
-
-    Status = KeUserModeCallback(USER32_CALLBACK_LPK,
-                                Argument,
-                                ArgumentLength,
-                                &ResultPointer,
-                                &ResultLength);
-        
-    UserEnterCo();
- 
-    IntCbFreeMemory(Argument);
-        
-    if (NT_SUCCESS(Status))
-    {
-        _SEH2_TRY
-        {
-            ProbeForRead(ResultPointer, sizeof(BOOL), 1);
-            *bResult = *(LPBOOL)ResultPointer;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            DPRINT1("Failed to copy result from user mode!\n");
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-        *bResult = FALSE;
-        return FALSE;
-    }
-    return TRUE;
-}   
-
 
 /*
  * IntLoadFontSubstList --- loads the list of font substitutes
@@ -5207,20 +5117,13 @@ GreExtTextOutW(
     LOGFONTW *plf;
     BOOL EmuBold, EmuItalic;
     int thickness;
-    BOOL bResult, bLPKResult;
+    BOOL bResult;
 
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
-    }
-
-    /* Draw via lpk */
-    if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
-    {
-        if (DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
-            return bLPKResult;
     }
 
     /* NOTE: This function locks the screen DC, so it must never be called
