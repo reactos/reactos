@@ -2430,7 +2430,6 @@ HRESULT WINAPI ShellExecCmdLine(
             SearchPathW(pwszStartDir, szFile, wszCom, _countof(szFile2), szFile2, NULL))
         {
             StringCchCopyW(szFile, _countof(szFile), szFile2);
-            pchParams = NULL;
         }
         else if (SearchPathW(NULL, lpCommand, NULL, _countof(szFile2), szFile2, NULL) ||
                  SearchPathW(NULL, lpCommand, wszExe, _countof(szFile2), szFile2, NULL) ||
