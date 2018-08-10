@@ -1199,9 +1199,9 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                     len_seg = len;
 #ifdef _WIN32K_
                 if (!GreExtTextOutW( hdc, xseg, y,
-                                     ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
-                                     ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
-                                     rect, str, len_seg, NULL, 0 ))
+                                    ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
+                                    ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
+                                    rect, str, len_seg, NULL, 0 ))
 #else
                 if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
