@@ -385,7 +385,7 @@ static BOOL DrawUsingLPK(HDC hdc,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            //ERR("Failed to copy result from user mode!\n");
+            DPRINT1("Failed to copy result from user mode!\n");
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
@@ -5213,18 +5213,18 @@ GreExtTextOutW(
     int thickness;
     BOOL bResult, bLPKResult;
 
-    /* Draw via lpk */
-    if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
-    {
-        if(DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
-            return bLPKResult;
-    }
-
     /* Check if String is valid */
     if ((Count > 0xFFFF) || (Count > 0 && String == NULL))
     {
         EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
+    }
+
+    /* Draw via lpk */
+    if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
+    {
+        if(DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
+            return bLPKResult;
     }
 
     /* NOTE: This function locks the screen DC, so it must never be called
