@@ -78,10 +78,9 @@ LpkExtTextOut(
     if ((GetLayout(hdc) & LAYOUT_RTL) || (GetTextAlign(hdc) & TA_RTLREADING))
         fuOptions |= ETO_RTLREADING;
 
-    /* If text direction is RTL change flag to account neutral characters
-       BUG: disables reordering of propsheet titles */
-    /* if (fuOptions & ETO_RTLREADING)
-        dwSICFlags = SIC_NEUTRAL; */
+    /* If text direction is RTL change flag to account neutral characters */
+    if (fuOptions & ETO_RTLREADING)
+        dwSICFlags |= SIC_NEUTRAL;
 
     /* Check if the string requires complex script processing and not a "glyph indices" array */
     if (ScriptIsComplex(lpString, uCount, dwSICFlags) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))

@@ -656,10 +656,10 @@ NTSTATUS WINAPI User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength)
                           Argument->x,
                           Argument->y,
                           Argument->flags,
-                          (Argument->rc) ? &Argument->rect : NULL,
+                          (Argument->bRect) ? &Argument->rect : NULL,
                           Argument->lpString,
                           Argument->count,
                           NULL);
 
-    return ZwCallbackReturn(&bResult, sizeof(HMODULE), STATUS_SUCCESS);
+    return ZwCallbackReturn(&bResult, sizeof(BOOL), STATUS_SUCCESS);
 }

@@ -328,31 +328,27 @@ static BOOL DrawUsingLPK(HDC hdc,
 
     Argument = IntCbAllocateMemory(ArgumentLength);
     
-    if(!Argument)
+    if (!Argument)
     {
-        *bResult  = FALSE;
+        *bResult = FALSE;
         return FALSE;
     }
     
     /* Initialize struct members */
-    Argument->hdc    = hdc;
-    Argument->x      = x;
-    Argument->y      = y;    
-    Argument->flags  = flags;
-    Argument->count  = count;
-
-    /* copy rect */
+    Argument->hdc   = hdc;
+    Argument->x     = x;
+    Argument->y     = y;    
+    Argument->flags = flags;
+    Argument->count = count;
+    
     if (lprc)
     {
-        Argument->rect.left   = lprc->left;
-        Argument->rect.right  = lprc->right;
-        Argument->rect.top    = lprc->top;
-        Argument->rect.bottom = lprc->bottom;
-        Argument->rc = TRUE;
+        Argument->rect = *lprc;
+        Argument->bRect = TRUE;
     }
     else
     {
-        Argument->rc = FALSE;
+        Argument->bRect = FALSE;
     }
 
     /* Align lpString
@@ -380,8 +376,8 @@ static BOOL DrawUsingLPK(HDC hdc,
     {
         _SEH2_TRY
         {
-            ProbeForRead(ResultPointer, sizeof(HMODULE), 1);
-            *bResult = *(BOOL*)ResultPointer;
+            ProbeForRead(ResultPointer, sizeof(BOOL), 1);
+            *bResult = *(LPBOOL)ResultPointer;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -393,7 +389,7 @@ static BOOL DrawUsingLPK(HDC hdc,
 
     if (!NT_SUCCESS(Status))
     {
-        *bResult  = FALSE;
+        *bResult = FALSE;
         return FALSE;
     }
     return TRUE;
@@ -5223,7 +5219,7 @@ GreExtTextOutW(
     /* Draw via lpk */
     if (!(fuOptions & (ETO_IGNORELANGUAGE | ETO_GLYPH_INDEX)))
     {
-        if(DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
+        if (DrawUsingLPK(hDC, XStart, YStart, fuOptions, lprc, String, Count, &bLPKResult))
             return bLPKResult;
     }
 

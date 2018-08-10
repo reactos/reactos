@@ -149,7 +149,7 @@ typedef struct _LPK_CALLBACK_ARGUMENTS
     UINT flags;
     RECT rect;
     UINT count;
-    BOOL rc;
+    BOOL bRect;
 } LPK_CALLBACK_ARGUMENTS, *PLPK_CALLBACK_ARGUMENTS;
 
 NTSTATUS WINAPI

@@ -504,6 +504,8 @@ ExtTextOutW(
     {
         if (LoadLPK(LPK_ETO))
             return LpkExtTextOut(hdc, x, y, fuOptions, lprc, lpString, cwc , lpDx, 0);
+        else
+            fuOptions |= ETO_IGNORELANGUAGE;
     }
 
     return NtGdiExtTextOutW(hdc,
