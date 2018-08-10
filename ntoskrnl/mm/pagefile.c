@@ -504,6 +504,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING CapturedFileName;
     LARGE_INTEGER SafeInitialSize, SafeMaximumSize, AllocationSize;
+    FILE_FS_DEVICE_INFORMATION FsDeviceInfo;
 
     DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
            FileName, InitialSize->QuadPart);
@@ -658,6 +659,16 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         ZwClose(FileHandle);
         return(Status);
+    }
+
+    /* Deny page file creation on a floppy disk */
+    FsDeviceInfo.Characteristics = 0;
+    IoQueryVolumeInformation(FileObject, FileFsDeviceInformation, sizeof(FsDeviceInfo), &FsDeviceInfo, &Count);
+    if (BooleanFlagOn(FsDeviceInfo.Characteristics, FILE_FLOPPY_DISKETTE))
+    {
+        ObDereferenceObject(FileObject);
+        ZwClose(FileHandle);
+        return STATUS_FLOPPY_VOLUME;
     }
 
     CurrentRetDescList = RetDescList = MmAllocRetrievelDescriptorList(PAIRS_PER_RUN);
