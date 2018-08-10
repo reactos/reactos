@@ -505,6 +505,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     UNICODE_STRING CapturedFileName;
     LARGE_INTEGER SafeInitialSize, SafeMaximumSize, AllocationSize;
     FILE_FS_DEVICE_INFORMATION FsDeviceInfo;
+    SECURITY_DESCRIPTOR SecurityDescriptor;
+    PACL Dacl;
 
     DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
            FileName, InitialSize->QuadPart);
@@ -564,11 +566,71 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return(Status);
     }
 
+    /* Create the security descriptor for the page file */
+    Status = RtlCreateSecurityDescriptor(&SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return Status;
+    }
+
+    /* Create the DACL: we will only allow two SIDs */
+    Count = sizeof(ACL) + (sizeof(ACE) + RtlLengthSid(SeLocalSystemSid)) +
+                          (sizeof(ACE) + RtlLengthSid(SeAliasAdminsSid));
+    Dacl = ExAllocatePoolWithTag(PagedPool, Count, 'lcaD');
+    if (Dacl == NULL)
+    {
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Initialize the DACL */
+    Status = RtlCreateAcl(Dacl, Count, ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Dacl, 'lcaD');
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return Status;
+    }
+
+    /* Grant full access to admins */
+    Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeAliasAdminsSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Dacl, 'lcaD');
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return Status;
+    }
+
+    /* Grant full access to SYSTEM */
+    Status = RtlAddAccessAllowedAce(Dacl, ACL_REVISION, FILE_ALL_ACCESS, SeLocalSystemSid);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Dacl, 'lcaD');
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return Status;
+    }
+
+    /* Attach the DACL to the security descriptor */
+    Status = RtlSetDaclSecurityDescriptor(&SecurityDescriptor, TRUE, Dacl, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Dacl, 'lcaD');
+        ReleaseCapturedUnicodeString(&CapturedFileName,
+                                     PreviousMode);
+        return Status;
+    }
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &CapturedFileName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
-                               NULL);
+                               &SecurityDescriptor);
 
     /* Make sure we can at least store a complete page:
      * If we have 2048 BytesPerAllocationUnit (FAT16 < 128MB) there is
@@ -620,8 +682,24 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed creating page file: %lx\n", Status);
+        ExFreePoolWithTag(Dacl, 'lcaD');
         return(Status);
     }
+
+    /* Set the security descriptor */
+    if (NT_SUCCESS(IoStatus.Status))
+    {
+        Status = ZwSetSecurityObject(FileHandle, DACL_SECURITY_INFORMATION, &SecurityDescriptor);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ZwClose(FileHandle);
+            return Status;
+        }
+    }
+
+    /* DACL is no longer needed, free it */
+    ExFreePoolWithTag(Dacl, 'lcaD');
 
     Status = ZwQueryVolumeInformationFile(FileHandle,
                                           &IoStatus,
