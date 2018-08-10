@@ -158,7 +158,6 @@ CreateStockFonts(void)
     if (bOemCharSet == DEFAULT_CHARSET)
         bOemCharSet = OEM_CHARSET;
 
-
     switch (ActiveCodePage)
     {
         case 936:
