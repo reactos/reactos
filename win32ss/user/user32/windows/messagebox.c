@@ -73,9 +73,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 typedef struct _MSGBTNINFO
 {
-    LONG btnCnt;
-    LONG btnIdx[MSGBOXEX_MAXBTNS];
-    UINT btnIds[MSGBOXEX_MAXBTNS];
+    DWORD btnCnt;
+    INT   btnIdx[MSGBOXEX_MAXBTNS];
+    UINT  btnIds[MSGBOXEX_MAXBTNS];
 } MSGBTNINFO, *PMSGBTNINFO;
 
 /* Default MessageBox buttons */
@@ -97,24 +97,12 @@ static const MSGBTNINFO MsgBtnInfo[] =
     DECLARE_MB_3(CANCEL, TRYAGAIN, CONTINUE)
 };
 
-typedef struct _MSGBOXINFO
-{
-    MSGBOXPARAMSW; // Wine passes this too.
-    // ReactOS
-    HICON Icon;
-    int DefBtn;
-    int nButtons;
-    LONG *Btns;
-    UINT Timeout;
-} MSGBOXINFO, *PMSGBOXINFO;
-
-
 /* INTERNAL FUNCTIONS ********************************************************/
 
 static VOID MessageBoxTextToClipboard(HWND DialogWindow)
 {
     HWND hwndText;
-    PMSGBOXINFO mbi;
+    PMSGBOXDATA mbd;
     int cchTotal, cchTitle, cchText, cchButton, i, n, cchBuffer;
     LPWSTR pszBuffer, pszBufferPos, pMessageBoxText, pszTitle, pszText, pszButton;
     WCHAR szButton[MSGBOXEX_MAXBTNSTR];
@@ -122,12 +110,12 @@ static VOID MessageBoxTextToClipboard(HWND DialogWindow)
 
     static const WCHAR szLine[] = L"---------------------------\r\n";
 
-    mbi = (PMSGBOXINFO)GetPropW(DialogWindow, L"ROS_MSGBOX");
+    mbd = (PMSGBOXDATA)GetPropW(DialogWindow, L"ROS_MSGBOX");
     hwndText = GetDlgItem(DialogWindow, MSGBOX_IDTEXT);
     cchTitle = GetWindowTextLengthW(DialogWindow) + 1;
     cchText = GetWindowTextLengthW(hwndText) + 1;
 
-    if (!mbi)
+    if (!mbd)
         return;
 
     pMessageBoxText = (LPWSTR)RtlAllocateHeap(GetProcessHeap(), 0, (cchTitle + cchText) * sizeof(WCHAR));
@@ -151,7 +139,7 @@ static VOID MessageBoxTextToClipboard(HWND DialogWindow)
     /*
      * Calculate the total buffer size.
      */
-    cchTotal = 6 + cchTitle + cchText + (lstrlenW(szLine) * 4) + (mbi->nButtons * MSGBOXEX_MAXBTNSTR + 3);
+    cchTotal = 6 + cchTitle + cchText + (lstrlenW(szLine) * 4) + (mbd->dwButtons * MSGBOXEX_MAXBTNSTR + 3);
 
     hGlobal = GlobalAlloc(GHND, cchTotal * sizeof(WCHAR));
 
@@ -175,9 +163,9 @@ static VOID MessageBoxTextToClipboard(HWND DialogWindow)
     cchBuffer = wsprintfW(pszBuffer, L"%s%s\r\n%s%s\r\n%s", szLine, pszTitle, szLine, pszText, szLine);
     pszBufferPos = pszBuffer + cchBuffer;
 
-    for (i = 0; i < mbi->nButtons; i++)
+    for (i = 0; i < mbd->dwButtons; i++)
     {
-        GetDlgItemTextW(DialogWindow, mbi->Btns[i], szButton, MSGBOXEX_MAXBTNSTR);
+        GetDlgItemTextW(DialogWindow, mbd->pidButton[i], szButton, MSGBOXEX_MAXBTNSTR);
 
         cchButton = strlenW(szButton);
         pszButton = szButton;
@@ -220,7 +208,7 @@ static INT_PTR CALLBACK MessageBoxProc(
     WPARAM wParam, LPARAM lParam)
 {
     int Alert;
-    PMSGBOXINFO mbi;
+    PMSGBOXDATA mbd;
     HELPINFO hi;
     HWND hwndOwner;
 
@@ -228,26 +216,26 @@ static INT_PTR CALLBACK MessageBoxProc(
     {
     case WM_INITDIALOG:
     {
-        mbi = (PMSGBOXINFO)lParam;
+        mbd = (PMSGBOXDATA)lParam;
 
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)mbi);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)mbd);
         NtUserxSetMessageBox(hwnd);
 
         if (!GetPropW(hwnd, L"ROS_MSGBOX"))
         {
             SetPropW(hwnd, L"ROS_MSGBOX", (HANDLE)lParam);
 
-            if (mbi->dwContextHelpId)
-                SetWindowContextHelpId(hwnd, mbi->dwContextHelpId);
+            if (mbd->mbp.dwContextHelpId)
+                SetWindowContextHelpId(hwnd, mbd->mbp.dwContextHelpId);
 
-            if (mbi->Icon)
+            if (mbd->mbp.lpszIcon)
             {
-                SendDlgItemMessageW(hwnd, MSGBOX_IDICON, STM_SETICON, (WPARAM)mbi->Icon, 0);
+                SendDlgItemMessageW(hwnd, MSGBOX_IDICON, STM_SETICON, (WPARAM)(HICON)mbd->mbp.lpszIcon, 0);
                 Alert = ALERT_SYSTEM_WARNING;
             }
             else // Setup the rest of the alerts.
             {
-                switch (mbi->dwStyle & MB_ICONMASK)
+                switch (mbd->mbp.dwStyle & MB_ICONMASK)
                 {
                 case MB_ICONWARNING:
                     Alert = ALERT_SYSTEM_WARNING;
@@ -266,16 +254,17 @@ static INT_PTR CALLBACK MessageBoxProc(
             /* Send out the alert notifications. */
             NotifyWinEvent(EVENT_SYSTEM_ALERT, hwnd, OBJID_ALERT, Alert);
 
-            switch (mbi->dwStyle & MB_TYPEMASK)
+            switch (mbd->mbp.dwStyle & MB_TYPEMASK)
             {
             case MB_ABORTRETRYIGNORE:
             case MB_YESNO:
                 RemoveMenu(GetSystemMenu(hwnd, FALSE), SC_CLOSE, MF_BYCOMMAND);
                 break;
             }
-            SetFocus(GetDlgItem(hwnd, mbi->DefBtn));
-            if (mbi->Timeout && (mbi->Timeout != (UINT)-1))
-                SetTimer(hwnd, 0, mbi->Timeout, NULL);
+            ASSERT(mbd->uDefButton < mbd->dwButtons);
+            SetFocus(GetDlgItem(hwnd, mbd->pidButton[mbd->uDefButton]));
+            if (mbd->dwTimeout && (mbd->dwTimeout != (UINT)-1))
+                SetTimer(hwnd, 0, mbd->dwTimeout, NULL);
         }
         return 0;
     }
@@ -313,15 +302,15 @@ static INT_PTR CALLBACK MessageBoxProc(
 
     case WM_HELP:
     {
-        mbi = (PMSGBOXINFO)GetPropW(hwnd, L"ROS_MSGBOX");
-        if (!mbi)
+        mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
+        if (!mbd)
             return 0;
         memcpy(&hi, (void *)lParam, sizeof(hi));
         hi.dwContextId = GetWindowContextHelpId(hwnd);
 
-        if (mbi->lpfnMsgBoxCallback)
+        if (mbd->mbp.lpfnMsgBoxCallback)
         {
-            mbi->lpfnMsgBoxCallback(&hi);
+            mbd->mbp.lpfnMsgBoxCallback(&hi);
         }
         else
         {
@@ -334,10 +323,10 @@ static INT_PTR CALLBACK MessageBoxProc(
 
     case WM_CLOSE:
     {
-        mbi = (PMSGBOXINFO)GetPropW(hwnd, L"ROS_MSGBOX");
-        if (!mbi)
+        mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
+        if (!mbd)
             return 0;
-        switch (mbi->dwStyle & MB_TYPEMASK)
+        switch (mbd->mbp.dwStyle & MB_TYPEMASK)
         {
         case MB_ABORTRETRYIGNORE:
         case MB_YESNO:
@@ -361,6 +350,7 @@ static int
 MessageBoxTimeoutIndirectW(
     CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT dwTimeout)
 {
+    MSGBOXDATA mbd;
     DLGTEMPLATE *tpl;
     DLGITEMTEMPLATE *iico, *itxt;
     NONCLIENTMETRICSW nclm;
@@ -379,8 +369,41 @@ MessageBoxTimeoutIndirectW(
     DLGITEMTEMPLATE *ibtn[MSGBOXEX_MAXBTNS];
     RECT btnrect, txtrect, rc;
     SIZE btnsize;
-    MSGBOXINFO mbi;
-    BOOL defbtn = FALSE;
+
+
+    ZeroMemory(&mbd, sizeof(mbd));
+    memcpy(&mbd.mbp, lpMsgBoxParams, sizeof(mbd.mbp));
+    lpMsgBoxParams = &mbd.mbp;
+
+    mbd.wLanguageId = (WORD)lpMsgBoxParams->dwLanguageId; // FIXME!
+    mbd.dwTimeout   = dwTimeout;
+
+    /* Create the selected buttons; unknown types will fall back to MB_OK */
+    i = (lpMsgBoxParams->dwStyle & MB_TYPEMASK);
+    if (i >= ARRAYSIZE(MsgBtnInfo))
+        i = MB_OK;
+
+    /* Get buttons IDs */
+    Buttons = MsgBtnInfo[i];
+
+    /* Add the Help button */
+    if (lpMsgBoxParams->dwStyle & MB_HELP)
+    {
+        Buttons.btnIdx[Buttons.btnCnt] = IDHELP;
+        Buttons.btnIds[Buttons.btnCnt] = IDS_HELP;
+        Buttons.btnCnt++;
+    }
+
+    mbd.pidButton = Buttons.btnIdx;
+    mbd.ppszButtonText = ButtonText;
+    mbd.dwButtons = Buttons.btnCnt;
+
+    mbd.uDefButton = ((lpMsgBoxParams->dwStyle & MB_DEFMASK) >> 8);
+    /* Make the first button the default button if none other is */
+    if (mbd.uDefButton >= mbd.dwButtons)
+        mbd.uDefButton = 0;
+    // mbd.uCancelId;
+
 
     if (!lpMsgBoxParams->lpszCaption)
     {
@@ -421,22 +444,6 @@ MessageBoxTimeoutIndirectW(
         textlen = strlenW(text);
     }
 
-    /* Create the selected buttons; unknown types will fall back to MB_OK */
-    i = (lpMsgBoxParams->dwStyle & MB_TYPEMASK);
-    if (i >= ARRAYSIZE(MsgBtnInfo))
-        i = MB_OK;
-
-    /* Get buttons IDs */
-    Buttons = MsgBtnInfo[i];
-
-    /* Add the Help button */
-    if (lpMsgBoxParams->dwStyle & MB_HELP)
-    {
-        Buttons.btnIdx[Buttons.btnCnt] = IDHELP;
-        Buttons.btnIds[Buttons.btnCnt] = IDS_HELP;
-        Buttons.btnCnt++;
-    }
-
     switch (lpMsgBoxParams->dwStyle & MB_ICONMASK)
     {
         case MB_ICONEXCLAMATION: // case MB_ICONWARNING:
@@ -469,6 +476,9 @@ MessageBoxTimeoutIndirectW(
             break;
     }
 
+    /* Reuse the internal pointer! */
+    ((MSGBOXPARAMSW*)lpMsgBoxParams)->lpszIcon = (LPCWSTR)Icon;
+
     /* Basic space */
     bufsize = sizeof(DLGTEMPLATE) +
               2 * sizeof(WORD) +                /* menu and class */
@@ -490,19 +500,19 @@ MessageBoxTimeoutIndirectW(
                3 * sizeof(WORD) +
                (textlen + 1) * sizeof(WCHAR);
 
-    for (i = 0; i < Buttons.btnCnt; i++)
+    for (i = 0; i < mbd.dwButtons; i++)
     {
         /* Get the default text of the buttons */
         if (Buttons.btnIds[i])
         {
             ButtonLen[i] = LoadStringW(User32Instance,
                                        Buttons.btnIds[i],
-                                       (LPWSTR)&ButtonText[i], 0);
+                                       (LPWSTR)&mbd.ppszButtonText[i], 0);
         }
         else
         {
             /* No text, use blank */
-            ButtonText[i] = L"";
+            mbd.ppszButtonText[i] = L"";
             ButtonLen[i] = 0;
         }
 
@@ -539,12 +549,11 @@ MessageBoxTimeoutIndirectW(
         tpl->dwExtendedStyle |= WS_EX_RIGHT;
     tpl->x = 100;
     tpl->y = 100;
-    tpl->cdit = Buttons.btnCnt + (Icon ? 1 : 0) + 1;
+    tpl->cdit = mbd.dwButtons + (Icon ? 1 : 0) + 1;
 
     dest = (BYTE *)(tpl + 1);
 
-    *(WORD*)dest = 0; /* no menu */
-    *(((WORD*)dest) + 1) = 0; /* use default window class */
+    *(DWORD*)dest = 0;  /* no menu and use default window class */
     dest += 2 * sizeof(WORD);
     memcpy(dest, caption, caplen * sizeof(WCHAR));
     dest += caplen * sizeof(WCHAR);
@@ -632,30 +641,29 @@ MessageBoxTimeoutIndirectW(
     btnsize.cy = BTN_CY;
     btnrect.left = btnrect.top = 0;
 
-    for (i = 0; i < Buttons.btnCnt; i++)
+    /* Make the first button the default button if none other is */
+    if (mbd.uDefButton >= mbd.dwButtons)
+        mbd.uDefButton = 0;
+
+    for (i = 0; i < mbd.dwButtons; i++)
     {
         dest = ALIGN_UP_POINTER(dest, DWORD);
         ibtn[i] = (DLGITEMTEMPLATE *)dest;
 
         ibtn[i]->style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
-        if (!defbtn && (i == ((lpMsgBoxParams->dwStyle & MB_DEFMASK) >> 8)))
-        {
+        if (i == mbd.uDefButton)
             ibtn[i]->style |= BS_DEFPUSHBUTTON;
-            mbi.DefBtn = Buttons.btnIdx[i];
-            defbtn = TRUE;
-        }
         else
-        {
             ibtn[i]->style |= BS_PUSHBUTTON;
-        }
+
         ibtn[i]->dwExtendedStyle = 0;
-        ibtn[i]->id = Buttons.btnIdx[i];
+        ibtn[i]->id = mbd.pidButton[i];
         dest += sizeof(DLGITEMTEMPLATE);
         *(WORD*)dest = 0xFFFF;
         dest += sizeof(WORD);
         *(WORD*)dest = 0x0080; /* button control */
         dest += sizeof(WORD);
-        memcpy(dest, ButtonText[i], ButtonLen[i] * sizeof(WCHAR));
+        memcpy(dest, mbd.ppszButtonText[i], ButtonLen[i] * sizeof(WCHAR));
         dest += ButtonLen[i] * sizeof(WCHAR);
         *(WORD*)dest = 0;
         dest += sizeof(WORD);
@@ -663,18 +671,10 @@ MessageBoxTimeoutIndirectW(
         dest += sizeof(WORD);
 
         // btnrect.right = btnrect.bottom = 0; // FIXME: Is it needed??
-        DrawTextW(hDC, ButtonText[i], ButtonLen[i], &btnrect,
+        DrawTextW(hDC, mbd.ppszButtonText[i], ButtonLen[i], &btnrect,
                   DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
         btnsize.cx = max(btnsize.cx, btnrect.right);
         btnsize.cy = max(btnsize.cy, btnrect.bottom);
-    }
-
-    /* make first button the default button if no other is */
-    if (!defbtn)
-    {
-        ibtn[0]->style &= ~BS_PUSHBUTTON;
-        ibtn[0]->style |= BS_DEFPUSHBUTTON;
-        mbi.DefBtn = Buttons.btnIdx[0];
     }
 
     /* calculate position and size of controls */
@@ -716,7 +716,7 @@ MessageBoxTimeoutIndirectW(
 #else
         rc.top = MSGBOXEX_MARGIN;
 #endif
-        btnleft = (Buttons.btnCnt * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
+        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
         if (btnleft > txtrect.right + rc.right + MSGBOXEX_SPACING)
         {
 #ifdef MSGBOX_TEXTHCENTER
@@ -741,7 +741,7 @@ MessageBoxTimeoutIndirectW(
     }
     else
     {
-        btnleft = (Buttons.btnCnt * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
+        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
         if (btnleft > txtrect.right)
         {
 #ifdef MSGBOX_TEXTHCENTER
@@ -763,7 +763,7 @@ MessageBoxTimeoutIndirectW(
     rc.top = max(rc.top, MSGBOXEX_MARGIN);
     /* calculate position of the buttons */
     btntop = max(rc.top + txtrect.bottom + MSGBOXEX_SPACING, btntop);
-    for (i = 0; i < Buttons.btnCnt; i++)
+    for (i = 0; i < mbd.dwButtons; i++)
     {
         ibtn[i]->x = RESCALE_X(btnleft, units);
         ibtn[i]->y = RESCALE_Y(btntop, units);
@@ -785,26 +785,9 @@ MessageBoxTimeoutIndirectW(
     tpl->cy = RESCALE_Y(btntop, units);
 
     /* Finally show the messagebox */
-    mbi.Icon = Icon;
-    mbi.dwContextHelpId = lpMsgBoxParams->dwContextHelpId;
-    mbi.lpfnMsgBoxCallback = lpMsgBoxParams->lpfnMsgBoxCallback;
-    mbi.dwStyle = lpMsgBoxParams->dwStyle;
-    mbi.nButtons = Buttons.btnCnt;
-    mbi.Btns = Buttons.btnIdx;
-    mbi.Timeout = dwTimeout;
-
-    /* Pass on to Justin Case so he can peek the message? */
-    mbi.cbSize       = lpMsgBoxParams->cbSize;
-    mbi.hwndOwner    = lpMsgBoxParams->hwndOwner;
-    mbi.hInstance    = lpMsgBoxParams->hInstance;
-    mbi.lpszText     = lpMsgBoxParams->lpszText;
-    mbi.lpszCaption  = lpMsgBoxParams->lpszCaption;
-    mbi.lpszIcon     = lpMsgBoxParams->lpszIcon;
-    mbi.dwLanguageId = lpMsgBoxParams->dwLanguageId;
-
     ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl,
                                   lpMsgBoxParams->hwndOwner,
-                                  MessageBoxProc, (LPARAM)&mbi);
+                                  MessageBoxProc, (LPARAM)&mbd);
 
 Quit:
     RtlFreeHeap(GetProcessHeap(), 0, buf);
