@@ -650,7 +650,7 @@ NTSTATUS WINAPI User32CallLPKFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
     Argument = (PLPK_CALLBACK_ARGUMENTS)Arguments;
 
-    Argument->lpString = (PWCHAR)((ULONG_PTR)Argument->lpString + (ULONG_PTR)Argument);
+    Argument->lpString = (LPWSTR)((ULONG_PTR)Argument->lpString + (ULONG_PTR)Argument);
 
     bResult = ExtTextOutW(Argument->hdc,
                           Argument->x,

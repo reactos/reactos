@@ -354,11 +354,11 @@ static BOOL DrawUsingLPK(HDC hdc,
     /* Align lpString
      * mimicks code from co_IntClientLoadLibrary */
     pStringBuffer += (ULONG_PTR)Argument;
-    Argument->lpString = (PWCHAR)pStringBuffer;
+    Argument->lpString = (LPWSTR)pStringBuffer;
     RtlStringCchCopyW(Argument->lpString, count + 1, lpString);
 
     pStringBuffer -= (ULONG_PTR)Argument;
-    Argument->lpString = (PWCHAR)(pStringBuffer);
+    Argument->lpString = (LPWSTR)(pStringBuffer);
 
     UserLeaveCo();
 
