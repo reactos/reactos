@@ -13,6 +13,8 @@
 
 #include <winnls.h>
 #include <powrprof.h>
+#include <buildno.h>
+#include <strsafe.h>
 
 #define ANIM_STEP 2
 #define ANIM_TIME 50
@@ -498,6 +500,38 @@ static VOID GetSystemInformation(HWND hwnd)
     }
 }
 
+static VOID GetSystemVersion(HWND hwnd)
+{
+    HWND hRosVersion;
+    SIZE_T lenStr, lenVersion;
+    PCWSTR pwszVersion = L" " TEXT(KERNEL_VERSION_RC);
+    PWSTR pwszStr;
+
+    lenVersion = wcslen(pwszVersion);
+    if (lenVersion == 0)
+    {
+        return;
+    }
+
+    hRosVersion = GetDlgItem(hwnd, IDC_ROSVERSION);
+    if (!hRosVersion)
+    {
+        return;
+    }
+    lenStr = GetWindowTextLengthW(hRosVersion);
+    lenStr += lenVersion + 1;
+    pwszStr = HeapAlloc(GetProcessHeap(), 0, lenStr * sizeof(WCHAR));
+    if (!pwszStr)
+    {
+        return;
+    }
+    GetWindowText(hRosVersion, pwszStr, lenStr);
+
+    StringCchCatW(pwszStr, lenStr, pwszVersion);
+    SetWindowText(hRosVersion, pwszStr);
+
+    HeapFree(GetProcessHeap(), 0, pwszStr);
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -518,6 +552,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             InitLogo(hwndDlg);
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
+            GetSystemVersion(hwndDlg);
             break;
 
         case WM_DESTROY:
