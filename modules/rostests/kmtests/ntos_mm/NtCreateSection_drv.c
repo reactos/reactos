@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS kernel-mode tests
- * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test driver for NtCreateSection function
- * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
+ * PROJECT:     ReactOS kernel-mode tests
+ * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
+ * PURPOSE:     Test driver for NtCreateSection function
+ * COPYRIGHT:   Copyright 2016-2018 Pierre Schweitzer <pierre@reactos.org>
+ *              Copyright 2018 Serge Gautherie <reactos-git_serge_171003@gautherie.fr>
  */
 
 #include <kmt_test.h>
@@ -413,17 +414,38 @@ TestIrpHandler(
     {
         Fcb = IoStack->FileObject->FsContext;
         ok(Fcb != NULL, "Null pointer!\n");
-        if (IoStack->FileObject->SectionObjectPointer != NULL &&
-            IoStack->FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+
+        if (IoStack->FileObject->SectionObjectPointer == NULL)
+        {
+            ok(!CcIsFileCached(IoStack->FileObject), "File is cached\n");
+
+            trace("No cache to clean up\n");
+        }
+        else if (IoStack->FileObject->SectionObjectPointer->SharedCacheMap == NULL)
         {
             LARGE_INTEGER Zero = RTL_CONSTANT_LARGE_INTEGER(0LL);
 
-            CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
-            CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+            ok(!CcIsFileCached(IoStack->FileObject), "File is cached\n");
+
+            // CcUninitializeCacheMap must always be called,
+            // even when CcInitializeCacheMap has not been called.
+            trace("CcUninitializeCacheMap(Zero)\n");
             KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
             CcUninitializeCacheMap(IoStack->FileObject, &Zero, &CacheUninitEvent);
             KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
         }
+        else
+        {
+            ok(CcIsFileCached(IoStack->FileObject), "File is not cached\n");
+
+            trace("CcFlushCache, CcPurgeCacheSection, CcUninitializeCacheMap(NULL)\n");
+            CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
+            CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+            KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
+            CcUninitializeCacheMap(IoStack->FileObject, NULL, &CacheUninitEvent);
+            KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);
+        }
+
         ExFreePoolWithTag(Fcb, 'FwrI');
         IoStack->FileObject->FsContext = NULL;
         Status = STATUS_SUCCESS;
