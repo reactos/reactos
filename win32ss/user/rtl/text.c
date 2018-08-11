@@ -955,7 +955,7 @@ BOOL UserExtTextOutW(HDC hdc,
     NTSTATUS Status;
     PLPK_CALLBACK_ARGUMENTS Argument;
     BOOL bResult;
-    
+
     ArgumentLength = sizeof(LPK_CALLBACK_ARGUMENTS);
 
     pStringBuffer = ArgumentLength;
@@ -989,7 +989,7 @@ BOOL UserExtTextOutW(HDC hdc,
      * mimicks code from co_IntClientLoadLibrary */
     pStringBuffer += (ULONG_PTR)Argument;
     Argument->lpString = (LPWSTR)pStringBuffer;
-    RtlStringCchCopyW(Argument->lpString, count + 1, lpString);
+    RtlStringCchCopyNW(Argument->lpString, count + 1, lpString, count);
 
     pStringBuffer -= (ULONG_PTR)Argument;
     Argument->lpString = (LPWSTR)(pStringBuffer);
