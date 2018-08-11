@@ -21,6 +21,7 @@
  * FILE:            ntoskrnl/mm/pagefile.c
  * PURPOSE:         Paging file functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
+ *                  Pierre Schweitzer
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -38,7 +39,7 @@
 
 /* TYPES *********************************************************************/
 
-typedef struct _PAGINGFILE
+typedef struct _MMPAGING_FILE
 {
     PFILE_OBJECT FileObject;
     HANDLE FileHandle;
@@ -49,7 +50,7 @@ typedef struct _PAGINGFILE
     PRTL_BITMAP AllocMap;
     KSPIN_LOCK AllocMapLock;
 }
-PAGINGFILE, *PPAGINGFILE;
+MMPAGING_FILE, *PMMPAGING_FILE;
 
 /* GLOBALS *******************************************************************/
 
@@ -58,7 +59,7 @@ PAGINGFILE, *PPAGINGFILE;
 #define MAX_PAGING_FILES  (16)
 
 /* List of paging files, both used and free */
-static PPAGINGFILE MmPagingFile[MAX_PAGING_FILES];
+static PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
 
 /* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
@@ -224,7 +225,7 @@ MiReadPageFile(
     KEVENT Event;
     UCHAR MdlBase[sizeof(MDL) + sizeof(ULONG)];
     PMDL Mdl = (PMDL)MdlBase;
-    PPAGINGFILE PagingFile;
+    PMMPAGING_FILE PagingFile;
 
     DPRINT("MiReadSwapFile\n");
 
@@ -289,7 +290,7 @@ MmInitPagingFile(VOID)
 }
 
 static ULONG
-MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
+MiAllocPageFromPagingFile(PMMPAGING_FILE PagingFile)
 {
     KIRQL oldIrql;
     ULONG off;
@@ -308,7 +309,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
     ULONG i;
     ULONG_PTR off;
     KIRQL oldIrql;
-    PPAGINGFILE PagingFile;
+    PMMPAGING_FILE PagingFile;
 
     i = FILE_FROM_ENTRY(Entry);
     off = OFFSET_FROM_ENTRY(Entry) - 1;
@@ -388,7 +389,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     HANDLE FileHandle;
     IO_STATUS_BLOCK IoStatus;
     PFILE_OBJECT FileObject;
-    PPAGINGFILE PagingFile;
+    PMMPAGING_FILE PagingFile;
     KIRQL oldIrql;
     ULONG AllocMapSize;
     ULONG Count;
@@ -662,8 +663,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     RtlClearAllBits(PagingFile->AllocMap);
 
     KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
-    MmNumberOfPagingFiles++;
+    ASSERT(MmPagingFile[MmNumberOfPagingFiles] == NULL);
     MmPagingFile[MmNumberOfPagingFiles] = PagingFile;
+    MmNumberOfPagingFiles++;
     MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 
