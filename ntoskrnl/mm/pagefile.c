@@ -50,9 +50,8 @@ typedef struct _PAGINGFILE
     LARGE_INTEGER CurrentSize;
     PFN_NUMBER FreePages;
     PFN_NUMBER UsedPages;
-    PULONG AllocMap;
+    PRTL_BITMAP AllocMap;
     KSPIN_LOCK AllocMapLock;
-    ULONG AllocMapSize;
 }
 PAGINGFILE, *PPAGINGFILE;
 
@@ -297,27 +296,13 @@ static ULONG
 MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 {
     KIRQL oldIrql;
-    ULONG i, j;
+    ULONG off;
 
     KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
-
-    for (i = 0; i < PagingFile->AllocMapSize; i++)
-    {
-        for (j = 0; j < 32; j++)
-        {
-            if (!(PagingFile->AllocMap[i] & (1 << j)))
-            {
-                PagingFile->AllocMap[i] |= (1 << j);
-                PagingFile->UsedPages++;
-                PagingFile->FreePages--;
-                KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-                return((i * 32) + j);
-            }
-        }
-    }
-
+    off = RtlFindClearBitsAndSet(PagingFile->AllocMap, 1, 0);
     KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-    return(0xFFFFFFFF);
+
+    return off;
 }
 
 VOID
@@ -338,7 +323,7 @@ MmFreeSwapPage(SWAPENTRY Entry)
     }
     KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
 
-    PagingFileList[i]->AllocMap[off >> 5] &= (~(1 << (off % 32)));
+    RtlClearBit(PagingFileList[i]->AllocMap, off >> 5);
 
     PagingFileList[i]->FreePages++;
     PagingFileList[i]->UsedPages--;
@@ -661,11 +646,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->UsedPages = 0;
     KeInitializeSpinLock(&PagingFile->AllocMapLock);
 
-    AllocMapSize = (PagingFile->FreePages / 32) + 1;
-    PagingFile->AllocMap = ExAllocatePool(NonPagedPool,
-                                          AllocMapSize * sizeof(ULONG));
-    PagingFile->AllocMapSize = AllocMapSize;
-
+    AllocMapSize = sizeof(RTL_BITMAP) + (((PagingFile->FreePages + 31) / 32) * sizeof(ULONG));
+    PagingFile->AllocMap = ExAllocatePoolWithTag(NonPagedPool,
+                                                 AllocMapSize,
+                                                 TAG_MM);
     if (PagingFile->AllocMap == NULL)
     {
         ExFreePool(PagingFile);
@@ -674,7 +658,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return(STATUS_NO_MEMORY);
     }
 
-    RtlZeroMemory(PagingFile->AllocMap, AllocMapSize * sizeof(ULONG));
+    RtlInitializeBitMap(PagingFile->AllocMap,
+                        (PULONG)(PagingFile->AllocMap + 1),
+                        (ULONG)(PagingFile->FreePages));
+    RtlClearAllBits(PagingFile->AllocMap);
 
     KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
     for (i = 0; i < MAX_PAGING_FILES; i++)
