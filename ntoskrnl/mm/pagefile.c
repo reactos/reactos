@@ -58,7 +58,7 @@ PAGINGFILE, *PPAGINGFILE;
 #define MAX_PAGING_FILES  (16)
 
 /* List of paging files, both used and free */
-static PPAGINGFILE PagingFileList[MAX_PAGING_FILES];
+static PPAGINGFILE MmPagingFile[MAX_PAGING_FILES];
 
 /* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
@@ -129,7 +129,7 @@ MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject)
     for (i = 0; i < MmNumberOfPagingFiles; i++)
     {
         /* Check if this is one of them */
-        if (PagingFileList[i]->FileObject == FileObject) return TRUE;
+        if (MmPagingFile[i]->FileObject == FileObject) return TRUE;
     }
 
     /* Nothing found */
@@ -171,8 +171,8 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
     i = FILE_FROM_ENTRY(SwapEntry);
     offset = OFFSET_FROM_ENTRY(SwapEntry) - 1;
 
-    if (PagingFileList[i]->FileObject == NULL ||
-            PagingFileList[i]->FileObject->DeviceObject == NULL)
+    if (MmPagingFile[i]->FileObject == NULL ||
+            MmPagingFile[i]->FileObject->DeviceObject == NULL)
     {
         DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -185,7 +185,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
     file_offset.QuadPart = offset * PAGE_SIZE;
 
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    Status = IoSynchronousPageWrite(PagingFileList[i]->FileObject,
+    Status = IoSynchronousPageWrite(MmPagingFile[i]->FileObject,
                                     Mdl,
                                     &file_offset,
                                     &Event,
@@ -236,7 +236,7 @@ MiReadPageFile(
 
     ASSERT(PageFileIndex < MAX_PAGING_FILES);
 
-    PagingFile = PagingFileList[PageFileIndex];
+    PagingFile = MmPagingFile[PageFileIndex];
 
     if (PagingFile->FileObject == NULL || PagingFile->FileObject->DeviceObject == NULL)
     {
@@ -283,7 +283,7 @@ MmInitPagingFile(VOID)
 
     for (i = 0; i < MAX_PAGING_FILES; i++)
     {
-        PagingFileList[i] = NULL;
+        MmPagingFile[i] = NULL;
     }
     MmNumberOfPagingFiles = 0;
 }
@@ -308,26 +308,29 @@ MmFreeSwapPage(SWAPENTRY Entry)
     ULONG i;
     ULONG_PTR off;
     KIRQL oldIrql;
+    PPAGINGFILE PagingFile;
 
     i = FILE_FROM_ENTRY(Entry);
     off = OFFSET_FROM_ENTRY(Entry) - 1;
 
     KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
-    if (PagingFileList[i] == NULL)
+
+    PagingFile = MmPagingFile[i];
+    if (PagingFile == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    KeAcquireSpinLockAtDpcLevel(&PagingFileList[i]->AllocMapLock);
+    KeAcquireSpinLockAtDpcLevel(&PagingFile->AllocMapLock);
 
-    RtlClearBit(PagingFileList[i]->AllocMap, off >> 5);
+    RtlClearBit(PagingFile->AllocMap, off >> 5);
 
-    PagingFileList[i]->FreePages++;
-    PagingFileList[i]->UsedPages--;
+    PagingFile->FreePages++;
+    PagingFile->UsedPages--;
 
     MiFreeSwapPages++;
     MiUsedSwapPages--;
 
-    KeReleaseSpinLockFromDpcLevel(&PagingFileList[i]->AllocMapLock);
+    KeReleaseSpinLockFromDpcLevel(&PagingFile->AllocMapLock);
     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 
@@ -350,10 +353,10 @@ MmAllocSwapPage(VOID)
 
     for (i = 0; i < MAX_PAGING_FILES; i++)
     {
-        if (PagingFileList[i] != NULL &&
-                PagingFileList[i]->FreePages >= 1)
+        if (MmPagingFile[i] != NULL &&
+                MmPagingFile[i]->FreePages >= 1)
         {
-            off = MiAllocPageFromPagingFile(PagingFileList[i]);
+            off = MiAllocPageFromPagingFile(MmPagingFile[i]);
             if (off == 0xFFFFFFFF)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -388,7 +391,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PPAGINGFILE PagingFile;
     KIRQL oldIrql;
     ULONG AllocMapSize;
-    ULONG i;
     ULONG Count;
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING CapturedFileName;
@@ -660,16 +662,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     RtlClearAllBits(PagingFile->AllocMap);
 
     KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
-    for (i = 0; i < MAX_PAGING_FILES; i++)
-    {
-        if (PagingFileList[i] == NULL)
-        {
-            PagingFileList[i] = PagingFile;
-            break;
-        }
-    }
-    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
     MmNumberOfPagingFiles++;
+    MmPagingFile[MmNumberOfPagingFiles] = PagingFile;
+    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 
     MmSwapSpaceMessage = FALSE;
