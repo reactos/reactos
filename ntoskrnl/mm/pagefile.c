@@ -35,10 +35,6 @@
 #pragma alloc_text(INIT, MmInitPagingFile)
 #endif
 
-PVOID
-NTAPI
-MiFindExportedRoutineByName(IN PVOID DllBase,
-                            IN PANSI_STRING ExportName);
 
 /* TYPES *********************************************************************/
 
