@@ -44,7 +44,6 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
 
 typedef struct _PAGINGFILE
 {
-    LIST_ENTRY PagingFileListEntry;
     PFILE_OBJECT FileObject;
     HANDLE FileHandle;
     LARGE_INTEGER MaximumSize;
