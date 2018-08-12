@@ -24,11 +24,27 @@
     calc_##name = (type_##name)GetProcAddress(hUxTheme, #name); \
     if (calc_##name == NULL) calc_##name = dummy_##name;
 
-type_OpenThemeData       calc_OpenThemeData;
-type_CloseThemeData      calc_CloseThemeData;
-type_DrawThemeBackground calc_DrawThemeBackground;
-type_IsAppThemed         calc_IsAppThemed;
-type_IsThemeActive       calc_IsThemeActive;
+static HTHEME WINAPI
+dummy_OpenThemeData(HWND hwnd, const WCHAR* pszClassList);
+
+static HRESULT WINAPI
+dummy_CloseThemeData(HTHEME hTheme);
+
+static HRESULT WINAPI
+dummy_DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
+            const RECT* prc, const RECT* prcClip);
+
+static BOOL WINAPI
+dummy_IsAppThemed(void);
+
+static BOOL WINAPI
+dummy_IsThemeActive(void);
+
+type_OpenThemeData       calc_OpenThemeData       = dummy_OpenThemeData;
+type_CloseThemeData      calc_CloseThemeData      = dummy_CloseThemeData;
+type_DrawThemeBackground calc_DrawThemeBackground = dummy_DrawThemeBackground;
+type_IsAppThemed         calc_IsAppThemed         = dummy_IsAppThemed;
+type_IsThemeActive       calc_IsThemeActive       = dummy_IsThemeActive;
 
 static HMODULE hUxTheme;
 
