@@ -114,14 +114,14 @@
 @ stdcall NetConfigGetAll(wstr wstr ptr)
 @ stdcall NetConfigSet(wstr wstr wstr long long ptr long)
 @ stdcall NetConnectionEnum(wstr wstr long ptr long ptr ptr ptr)
-@ stub NetDfsAdd
-@ stub NetDfsAddFtRoot
-@ stub NetDfsAddStdRoot
-@ stub NetDfsAddStdRootForced
-@ stub NetDfsEnum
-@ stub NetDfsGetClientInfo
+@ stdcall NetDfsAdd(wstr wstr wstr wstr long)
+@ stdcall NetDfsAddFtRoot(wstr wstr wstr wstr long)
+@ stdcall NetDfsAddStdRoot(wstr wstr wstr long)
+@ stdcall NetDfsAddStdRootForced(wstr wstr wstr wstr)
+@ stdcall NetDfsEnum(wstr long long ptr ptr ptr)
+@ stdcall NetDfsGetClientInfo(wstr wstr wstr long ptr)
 @ stub NetDfsGetDcAddress
-@ stub NetDfsGetFtContainerSecurity
+@ stdcall NetDfsGetFtContainerSecurity(wstr long ptr ptr);
 @ stub NetDfsGetInfo
 @ stub NetDfsGetSecurity
 @ stub NetDfsGetStdContainerSecurity
