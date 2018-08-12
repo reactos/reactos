@@ -1204,8 +1204,13 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
             lpBtnInfo = (LPBTNINFO)GetWindowLongPtr(dis->hwndItem, GWLP_USERDATA);
             if (lpBtnInfo != NULL)
             {
-                    if (lpBtnInfo->bHover)
-                        iState |= PBS_HOT;
+                if (lpBtnInfo->bHover)
+                    iState |= PBS_HOT;
+            }
+
+            if (calc_IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+            {
+                calc_DrawThemeParentBackground(dis->hwndItem, dis->hDC, &dis->rcItem);
             }
 
             // Draw the frame around the control
