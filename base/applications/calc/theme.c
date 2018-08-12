@@ -25,14 +25,14 @@
     if (calc_##name == NULL) calc_##name = dummy_##name;
 
 static HTHEME WINAPI
-dummy_OpenThemeData(HWND hwnd, const WCHAR* pszClassList);
+dummy_OpenThemeData(HWND hwnd, const WCHAR *pszClassList);
 
 static HRESULT WINAPI
 dummy_CloseThemeData(HTHEME hTheme);
 
 static HRESULT WINAPI
 dummy_DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId,
-            const RECT* prc, const RECT* prcClip);
+    const RECT *prc, const RECT *prcClip);
 
 static BOOL WINAPI
 dummy_IsAppThemed(void);
@@ -40,11 +40,22 @@ dummy_IsAppThemed(void);
 static BOOL WINAPI
 dummy_IsThemeActive(void);
 
+static BOOL WINAPI
+dummy_IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
+
+static HRESULT WINAPI
+dummy_DrawThemeParentBackground(HWND hWnd, HDC hdc, RECT *prc);
+
+
 type_OpenThemeData       calc_OpenThemeData       = dummy_OpenThemeData;
 type_CloseThemeData      calc_CloseThemeData      = dummy_CloseThemeData;
 type_DrawThemeBackground calc_DrawThemeBackground = dummy_DrawThemeBackground;
 type_IsAppThemed         calc_IsAppThemed         = dummy_IsAppThemed;
 type_IsThemeActive       calc_IsThemeActive       = dummy_IsThemeActive;
+type_IsThemeBackgroundPartiallyTransparent calc_IsThemeBackgroundPartiallyTransparent = \
+    dummy_IsThemeBackgroundPartiallyTransparent;
+type_DrawThemeParentBackground calc_DrawThemeParentBackground = \
+    dummy_DrawThemeParentBackground;
 
 static HMODULE hUxTheme;
 
@@ -79,6 +90,18 @@ dummy_IsThemeActive(void)
     return FALSE;
 }
 
+static BOOL WINAPI
+dummy_IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId)
+{
+    return FALSE;
+}
+
+static HRESULT WINAPI
+dummy_DrawThemeParentBackground(HWND hWnd, HDC hdc, RECT *prc)
+{
+    return E_NOTIMPL;
+}
+
 void Theme_Start(HINSTANCE hInstance)
 {
     hUxTheme = LoadLibrary(_T("UXTHEME"));
@@ -90,6 +113,8 @@ void Theme_Start(HINSTANCE hInstance)
     GET_CB(DrawThemeBackground)
     GET_CB(IsAppThemed)
     GET_CB(IsThemeActive)
+    GET_CB(IsThemeBackgroundPartiallyTransparent)
+    GET_CB(DrawThemeParentBackground)
 }
 
 void Theme_Stop(void)
