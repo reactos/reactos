@@ -81,12 +81,16 @@ typedef HRESULT  (WINAPI* type_CloseThemeData)(HTHEME);
 typedef HRESULT  (WINAPI* type_DrawThemeBackground)(HTHEME,HDC,int,int,const RECT*,const RECT*);
 typedef BOOL     (WINAPI* type_IsAppThemed)(void);
 typedef BOOL     (WINAPI* type_IsThemeActive)(void);
+typedef BOOL     (WINAPI* type_IsThemeBackgroundPartiallyTransparent)(HTHEME, int, int);
+typedef HRESULT  (WINAPI* type_DrawThemeParentBackground)(HWND, HDC, RECT *);
 
-extern type_OpenThemeData       calc_OpenThemeData;
-extern type_CloseThemeData      calc_CloseThemeData;
-extern type_DrawThemeBackground calc_DrawThemeBackground;
-extern type_IsAppThemed         calc_IsAppThemed;
-extern type_IsThemeActive       calc_IsThemeActive;
+extern type_OpenThemeData                   calc_OpenThemeData;
+extern type_CloseThemeData                  calc_CloseThemeData;
+extern type_DrawThemeBackground             calc_DrawThemeBackground;
+extern type_IsAppThemed                     calc_IsAppThemed;
+extern type_IsThemeActive                   calc_IsThemeActive;
+extern type_IsThemeBackgroundPartiallyTransparent calc_IsThemeBackgroundPartiallyTransparent;
+extern type_DrawThemeParentBackground       calc_DrawThemeParentBackground;
 
 #define CALC_VERSION        _T("1.12")
 
