@@ -22,9 +22,9 @@ BEGIN
     GROUPBOX "Сведения о системе", IDC_STATIC, 5, 35, 452, 150, SS_RIGHT
     LTEXT "Текущие время и дата:", IDC_STATIC, 70, 50, 80, 10, SS_RIGHT
     LTEXT "Имя компьютера:", IDC_STATIC, 70, 60, 80, 10, SS_RIGHT
-    LTEXT "Операционная система:", IDC_STATIC, 70, 70, 80, 10, SS_RIGHT
+    LTEXT "Операционная система:", IDC_STATIC, 60, 70, 90, 10, SS_RIGHT
     LTEXT "Язык:", IDC_STATIC, 70, 80, 80, 10, SS_RIGHT
-    LTEXT "Изготовитель компьютера:", IDC_STATIC, 70, 90, 80, 10, SS_RIGHT
+    LTEXT "Изготовитель компьютера:", IDC_STATIC, 50, 90, 100, 10, SS_RIGHT
     LTEXT "Модель компьютера:", IDC_STATIC, 70, 100, 80, 10, SS_RIGHT
     LTEXT "BIOS:", IDC_STATIC, 70, 110, 80, 10, SS_RIGHT
     LTEXT "Процессор:", IDC_STATIC, 70, 120, 80, 10, SS_RIGHT
