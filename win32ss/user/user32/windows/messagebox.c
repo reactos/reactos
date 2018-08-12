@@ -97,6 +97,7 @@ static const MSGBTNINFO MsgBtnInfo[] =
     DECLARE_MB_3(CANCEL, TRYAGAIN, CONTINUE)
 };
 
+
 /* INTERNAL FUNCTIONS ********************************************************/
 
 static VOID MessageBoxTextToClipboard(HWND DialogWindow)
@@ -350,25 +351,26 @@ static int
 MessageBoxTimeoutIndirectW(
     CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT dwTimeout)
 {
+    int ret = 0;
     MSGBOXDATA mbd;
+    MSGBTNINFO Buttons;
+    LPCWSTR ButtonText[MSGBOXEX_MAXBTNS];
     DLGTEMPLATE *tpl;
-    DLGITEMTEMPLATE *iico, *itxt;
+    DLGITEMTEMPLATE *iico, *itxt, *ibtn;
     NONCLIENTMETRICSW nclm;
     LPVOID buf;
     BYTE *dest;
     LPCWSTR caption, text;
     HFONT hFont, hOldFont;
-    HICON Icon;
+    HICON hIcon;
     HWND hDCWnd;
     HDC hDC;
     SIZE units;
-    int bufsize, ret, caplen, textlen, i, btnleft, btntop, lmargin;
-    MSGBTNINFO Buttons;
-    LPCWSTR ButtonText[MSGBOXEX_MAXBTNS];
-    int ButtonLen[MSGBOXEX_MAXBTNS];
-    DLGITEMTEMPLATE *ibtn[MSGBOXEX_MAXBTNS];
+    int bufsize, caplen, textlen, i, btnleft, btntop;
+    size_t ButtonLen;
     RECT btnrect, txtrect, rc;
     SIZE btnsize;
+    POINT iconPos; SIZE iconSize;
 
 
     ZeroMemory(&mbd, sizeof(mbd));
@@ -394,6 +396,8 @@ MessageBoxTimeoutIndirectW(
         Buttons.btnCnt++;
     }
 
+    ASSERT(Buttons.btnCnt <= MSGBOXEX_MAXBTNS);
+
     mbd.pidButton = Buttons.btnIdx;
     mbd.ppszButtonText = ButtonText;
     mbd.dwButtons = Buttons.btnCnt;
@@ -405,6 +409,7 @@ MessageBoxTimeoutIndirectW(
     // mbd.uCancelId;
 
 
+    /* Load the caption */
     if (!lpMsgBoxParams->lpszCaption)
     {
         /* No caption, use the default one */
@@ -421,13 +426,14 @@ MessageBoxTimeoutIndirectW(
     {
         /* UNICODE string pointer */
         caption = lpMsgBoxParams->lpszCaption;
-        caplen = strlenW(caption);
+        caplen  = wcslen(caption);
     }
 
+    /* Load the text */
     if (!lpMsgBoxParams->lpszText)
     {
         /* No text, use blank */
-        text = L"";
+        text    = L"";
         textlen = 0;
     }
     else if (IS_INTRESOURCE(lpMsgBoxParams->lpszText))
@@ -440,30 +446,31 @@ MessageBoxTimeoutIndirectW(
     else
     {
         /* UNICODE string pointer */
-        text = lpMsgBoxParams->lpszText;
-        textlen = strlenW(text);
+        text    = lpMsgBoxParams->lpszText;
+        textlen = wcslen(text);
     }
 
+    /* Load the icon */
     switch (lpMsgBoxParams->dwStyle & MB_ICONMASK)
     {
         case MB_ICONEXCLAMATION: // case MB_ICONWARNING:
-            Icon = LoadIconW(0, IDI_EXCLAMATIONW);
+            hIcon = LoadIconW(NULL, IDI_EXCLAMATIONW);
             MessageBeep(MB_ICONEXCLAMATION);
             break;
         case MB_ICONQUESTION:
-            Icon = LoadIconW(0, IDI_QUESTIONW);
+            hIcon = LoadIconW(NULL, IDI_QUESTIONW);
             MessageBeep(MB_ICONQUESTION);
             break;
         case MB_ICONASTERISK: // case MB_ICONINFORMATION:
-            Icon = LoadIconW(0, IDI_ASTERISKW);
+            hIcon = LoadIconW(NULL, IDI_ASTERISKW);
             MessageBeep(MB_ICONASTERISK);
             break;
         case MB_ICONHAND: // case MB_ICONSTOP: case MB_ICONERROR:
-            Icon = LoadIconW(0, IDI_HANDW);
+            hIcon = LoadIconW(NULL, IDI_HANDW);
             MessageBeep(MB_ICONHAND);
             break;
         case MB_USERICON:
-            Icon = LoadIconW(lpMsgBoxParams->hInstance, lpMsgBoxParams->lpszIcon);
+            hIcon = LoadIconW(lpMsgBoxParams->hInstance, lpMsgBoxParams->lpszIcon);
             MessageBeep(MB_OK);
             break;
         default:
@@ -471,13 +478,12 @@ MessageBoxTimeoutIndirectW(
              * By default, Windows 95/98/NT does not associate an icon
              * to message boxes. So ReactOS should do the same.
              */
-            Icon = NULL;
+            hIcon = NULL;
             MessageBeep(MB_OK);
             break;
     }
-
     /* Reuse the internal pointer! */
-    ((MSGBOXPARAMSW*)lpMsgBoxParams)->lpszIcon = (LPCWSTR)Icon;
+    ((MSGBOXPARAMSW*)lpMsgBoxParams)->lpszIcon = (LPCWSTR)hIcon;
 
     /* Basic space */
     bufsize = sizeof(DLGTEMPLATE) +
@@ -485,8 +491,8 @@ MessageBoxTimeoutIndirectW(
               (caplen + 1) * sizeof(WCHAR) +    /* title */
               sizeof(WORD);                     /* font height */
 
-    /* Space for icon */
-    if (Icon)
+    /* Space for the icon */
+    if (hIcon)
     {
         bufsize = ALIGN_UP(bufsize, DWORD);
         bufsize += sizeof(DLGITEMTEMPLATE) +
@@ -494,40 +500,54 @@ MessageBoxTimeoutIndirectW(
                    sizeof(WCHAR);
     }
 
-    /* Space for text */
+    /* Space for the text */
     bufsize = ALIGN_UP(bufsize, DWORD);
     bufsize += sizeof(DLGITEMTEMPLATE) +
                3 * sizeof(WORD) +
                (textlen + 1) * sizeof(WCHAR);
 
+    /* Space for the buttons */
     for (i = 0; i < mbd.dwButtons; i++)
     {
         /* Get the default text of the buttons */
         if (Buttons.btnIds[i])
         {
-            ButtonLen[i] = LoadStringW(User32Instance,
-                                       Buttons.btnIds[i],
-                                       (LPWSTR)&mbd.ppszButtonText[i], 0);
+            LPCWSTR pStr;
+            ButtonLen = LoadStringW(User32Instance,
+                                    Buttons.btnIds[i],
+                                    (LPWSTR)&pStr, 0);
+            mbd.ppszButtonText[i] = RtlAllocateHeap(GetProcessHeap(), 0, (ButtonLen + 1) * sizeof(WCHAR));
+            if (mbd.ppszButtonText[i])
+            {
+                memcpy((LPWSTR)mbd.ppszButtonText[i], pStr, ButtonLen * sizeof(WCHAR));
+                ((LPWSTR)mbd.ppszButtonText[i])[ButtonLen] = 0;
+            }
+            else
+            {
+                mbd.ppszButtonText[i] = L"";
+                ButtonLen = 0;
+            }
         }
         else
         {
             /* No text, use blank */
             mbd.ppszButtonText[i] = L"";
-            ButtonLen[i] = 0;
+            ButtonLen = 0;
         }
 
-        /* Space for buttons */
         bufsize = ALIGN_UP(bufsize, DWORD);
         bufsize += sizeof(DLGITEMTEMPLATE) +
                    3 * sizeof(WORD) +
-                   (ButtonLen[i] + 1) * sizeof(WCHAR);
+                   (ButtonLen + 1) * sizeof(WCHAR);
     }
 
+    /* Allocate the dialog template */
     buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize);
     if (!buf)
-        return 0;
+        goto Quit;
 
     iico = itxt = NULL;
+
 
     nclm.cbSize = sizeof(nclm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
@@ -538,6 +558,132 @@ MessageBoxTimeoutIndirectW(
         goto Quit;
     }
 
+    hDCWnd = NULL;
+    hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
+    if (!hDC)
+    {
+        /* Retry with the DC of the owner window */
+        hDCWnd = lpMsgBoxParams->hwndOwner;
+        hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
+    }
+    if (!hDC)
+    {
+        ERR("GetDCEx() failed, bail out!\n");
+        goto Quit;
+    }
+    hOldFont = SelectObject(hDC, hFont);
+
+    units.cx = GdiGetCharDimensions(hDC, NULL, &units.cy);
+    if (!units.cx)
+    {
+        DWORD defUnits;
+        ERR("GdiGetCharDimensions() failed, falling back to default values!\n");
+        defUnits = GetDialogBaseUnits();
+        units.cx = LOWORD(defUnits);
+        units.cy = HIWORD(defUnits);
+    }
+
+    /* Calculate the caption rectangle */
+    txtrect.right = MulDiv(GetSystemMetrics(SM_CXSCREEN), 4, 5);
+    if (hIcon)
+        txtrect.right -= GetSystemMetrics(SM_CXICON) + MSGBOXEX_SPACING;
+    txtrect.top = txtrect.left = txtrect.bottom = 0;
+    if (textlen != 0)
+    {
+        DrawTextW(hDC, text, textlen, &txtrect,
+                  DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
+    }
+    else
+    {
+        txtrect.right = txtrect.left + 1;
+        txtrect.bottom = txtrect.top + 1;
+    }
+    txtrect.right++;
+
+    /* Calculate the maximum buttons size */
+    btnsize.cx = BTN_CX;
+    btnsize.cy = BTN_CY;
+    btnrect.left = btnrect.top = 0;
+    for (i = 0; i < mbd.dwButtons; i++)
+    {
+        // btnrect.right = btnrect.bottom = 0; // FIXME: Is it needed??
+        DrawTextW(hDC, mbd.ppszButtonText[i], wcslen(mbd.ppszButtonText[i]),
+                  &btnrect, DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
+        btnsize.cx = max(btnsize.cx, btnrect.right);
+        btnsize.cy = max(btnsize.cy, btnrect.bottom);
+    }
+
+    if (hOldFont)
+        SelectObject(hDC, hOldFont);
+
+    ReleaseDC(hDCWnd, hDC);
+
+    if (hFont)
+        DeleteObject(hFont);
+
+
+    /* Calculate position and size of controls */
+
+
+    /* Calculate position and size of the icon */
+    rc.left = rc.bottom = rc.right = 0;
+    btntop = 0;
+    if (hIcon)
+    {
+        rc.right = GetSystemMetrics(SM_CXICON);
+        rc.bottom = GetSystemMetrics(SM_CYICON);
+#ifdef MSGBOX_ICONVCENTER
+        rc.top = MSGBOXEX_MARGIN + ((max(txtrect.bottom, rc.bottom) - rc.bottom) / 2);
+        rc.top = max(MSGBOXEX_SPACING, rc.top);
+#else
+        rc.top = MSGBOXEX_MARGIN;
+#endif
+        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
+        if (btnleft > txtrect.right + rc.right + MSGBOXEX_SPACING)
+        {
+#ifdef MSGBOX_TEXTHCENTER
+            rc.left = MSGBOXEX_MARGIN + ((btnleft - txtrect.right - rc.right - MSGBOXEX_SPACING) / 2);
+#else
+            rc.left = MSGBOXEX_MARGIN;
+#endif
+            btnleft = MSGBOXEX_MARGIN;
+        }
+        else
+        {
+            rc.left = MSGBOXEX_MARGIN;
+            btnleft = MSGBOXEX_MARGIN + ((txtrect.right + rc.right + MSGBOXEX_SPACING - btnleft) / 2);
+        }
+
+        iconPos.x = RESCALE_X(rc.left, units);
+        iconPos.y = RESCALE_Y(rc.top, units);
+        iconSize.cx = RESCALE_X(rc.right, units);
+        iconSize.cy = RESCALE_Y(rc.bottom, units);
+
+        btntop = rc.top + rc.bottom + MSGBOXEX_SPACING;
+        rc.left += rc.right + MSGBOXEX_SPACING;
+    }
+    else
+    {
+        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
+        if (btnleft > txtrect.right)
+        {
+#ifdef MSGBOX_TEXTHCENTER
+            rc.left = MSGBOXEX_MARGIN + ((btnleft - txtrect.right) / 2);
+#else
+            rc.left = MSGBOXEX_MARGIN;
+#endif
+            btnleft = MSGBOXEX_MARGIN;
+        }
+        else
+        {
+            rc.left = MSGBOXEX_MARGIN;
+            btnleft = MSGBOXEX_MARGIN + ((txtrect.right - btnleft) / 2);
+        }
+    }
+
+
+
+    /* Initialize the dialog template */
     tpl = (DLGTEMPLATE *)buf;
 
     tpl->style = WS_CAPTION | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_SYSMENU |
@@ -549,7 +695,7 @@ MessageBoxTimeoutIndirectW(
         tpl->dwExtendedStyle |= WS_EX_RIGHT;
     tpl->x = 100;
     tpl->y = 100;
-    tpl->cdit = mbd.dwButtons + (Icon ? 1 : 0) + 1;
+    tpl->cdit = mbd.dwButtons + (hIcon ? 1 : 0) + 1; /* Buttons, icon and text */
 
     dest = (BYTE *)(tpl + 1);
 
@@ -567,14 +713,19 @@ MessageBoxTimeoutIndirectW(
     *(WORD*)dest = 0x7FFF;
     dest += sizeof(WORD);
 
-    /* Create icon */
-    if (Icon)
+    /* Create the icon */
+    if (hIcon)
     {
         dest = ALIGN_UP_POINTER(dest, DWORD);
         iico = (DLGITEMTEMPLATE *)dest;
         iico->style = WS_CHILD | WS_VISIBLE | SS_ICON;
         iico->dwExtendedStyle = 0;
         iico->id = MSGBOX_IDICON;
+
+        iico->x = iconPos.x;
+        iico->y = iconPos.y;
+        iico->cx = iconSize.cx;
+        iico->cy = iconSize.cy;
 
         dest += sizeof(DLGITEMTEMPLATE);
         *(WORD*)dest = 0xFFFF;
@@ -611,176 +762,64 @@ MessageBoxTimeoutIndirectW(
     *(WORD*)dest = 0;
     dest += sizeof(WORD);
 
-    hDCWnd = NULL;
-    hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
-    if (!hDC)
-    {
-        /* Retry with the DC of the owner window */
-        hDCWnd = lpMsgBoxParams->hwndOwner;
-        hDC = GetDCEx(hDCWnd, NULL, DCX_WINDOW | DCX_CACHE);
-    }
-    if (!hDC)
-    {
-        ERR("GetDCEx() failed, bail out!\n");
-        goto Quit;
-    }
-    hOldFont = SelectObject(hDC, hFont);
 
-    units.cx = GdiGetCharDimensions(hDC, NULL, &units.cy);
-    if (!units.cx)
-    {
-        DWORD defUnits;
-        ERR("GdiGetCharDimensions() failed, falling back to default values!\n");
-        defUnits = GetDialogBaseUnits();
-        units.cx = LOWORD(defUnits);
-        units.cy = HIWORD(defUnits);
-    }
+    /* Calculate position of the text */
+    rc.top = MSGBOXEX_MARGIN + ((rc.bottom - txtrect.bottom) / 2);
+    rc.top = max(rc.top, MSGBOXEX_MARGIN);
 
-    /* Create buttons */
-    btnsize.cx = BTN_CX;
-    btnsize.cy = BTN_CY;
-    btnrect.left = btnrect.top = 0;
 
     /* Make the first button the default button if none other is */
     if (mbd.uDefButton >= mbd.dwButtons)
         mbd.uDefButton = 0;
 
+    /* Create and calculate the position of the buttons */
+    btntop = max(rc.top + txtrect.bottom + MSGBOXEX_SPACING, btntop);
     for (i = 0; i < mbd.dwButtons; i++)
     {
+        ButtonLen = wcslen(mbd.ppszButtonText[i]);
+
         dest = ALIGN_UP_POINTER(dest, DWORD);
-        ibtn[i] = (DLGITEMTEMPLATE *)dest;
+        ibtn = (DLGITEMTEMPLATE *)dest;
 
-        ibtn[i]->style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
+        ibtn->style = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
         if (i == mbd.uDefButton)
-            ibtn[i]->style |= BS_DEFPUSHBUTTON;
+            ibtn->style |= BS_DEFPUSHBUTTON;
         else
-            ibtn[i]->style |= BS_PUSHBUTTON;
+            ibtn->style |= BS_PUSHBUTTON;
 
-        ibtn[i]->dwExtendedStyle = 0;
-        ibtn[i]->id = mbd.pidButton[i];
+        ibtn->dwExtendedStyle = 0;
+        ibtn->id = mbd.pidButton[i];
         dest += sizeof(DLGITEMTEMPLATE);
         *(WORD*)dest = 0xFFFF;
         dest += sizeof(WORD);
         *(WORD*)dest = 0x0080; /* button control */
         dest += sizeof(WORD);
-        memcpy(dest, mbd.ppszButtonText[i], ButtonLen[i] * sizeof(WCHAR));
-        dest += ButtonLen[i] * sizeof(WCHAR);
+        memcpy(dest, mbd.ppszButtonText[i], ButtonLen * sizeof(WCHAR));
+        dest += ButtonLen * sizeof(WCHAR);
         *(WORD*)dest = 0;
         dest += sizeof(WORD);
         *(WORD*)dest = 0;
         dest += sizeof(WORD);
 
-        // btnrect.right = btnrect.bottom = 0; // FIXME: Is it needed??
-        DrawTextW(hDC, mbd.ppszButtonText[i], ButtonLen[i], &btnrect,
-                  DT_LEFT | DT_SINGLELINE | DT_CALCRECT);
-        btnsize.cx = max(btnsize.cx, btnrect.right);
-        btnsize.cy = max(btnsize.cy, btnrect.bottom);
-    }
-
-    /* calculate position and size of controls */
-    txtrect.right = GetSystemMetrics(SM_CXSCREEN) / 5 * 4;
-    if (Icon)
-        txtrect.right -= GetSystemMetrics(SM_CXICON) + MSGBOXEX_SPACING;
-    txtrect.top = txtrect.left = txtrect.bottom = 0;
-    if (textlen != 0)
-    {
-        DrawTextW(hDC, text, textlen, &txtrect,
-                  DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
-    }
-    else
-    {
-        txtrect.right = txtrect.left + 1;
-        txtrect.bottom = txtrect.top + 1;
-    }
-    txtrect.right++;
-
-    if (hOldFont)
-        SelectObject(hDC, hOldFont);
-
-    ReleaseDC(hDCWnd, hDC);
-
-    if (hFont)
-        DeleteObject(hFont);
-
-    /* calculate position and size of the icon */
-    rc.left = rc.bottom = rc.right = 0;
-    btntop = 0;
-
-    if (iico)
-    {
-        rc.right = GetSystemMetrics(SM_CXICON);
-        rc.bottom = GetSystemMetrics(SM_CYICON);
-#ifdef MSGBOX_ICONVCENTER
-        rc.top = MSGBOXEX_MARGIN + (max(txtrect.bottom, rc.bottom) / 2) - (GetSystemMetrics(SM_CYICON) / 2);
-        rc.top = max(MSGBOXEX_SPACING, rc.top);
-#else
-        rc.top = MSGBOXEX_MARGIN;
-#endif
-        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
-        if (btnleft > txtrect.right + rc.right + MSGBOXEX_SPACING)
-        {
-#ifdef MSGBOX_TEXTHCENTER
-            lmargin = MSGBOXEX_MARGIN + ((btnleft - txtrect.right - rc.right - MSGBOXEX_SPACING) / 2);
-#else
-            lmargin = MSGBOXEX_MARGIN;
-#endif
-            btnleft = MSGBOXEX_MARGIN;
-        }
-        else
-        {
-            lmargin = MSGBOXEX_MARGIN;
-            btnleft = MSGBOXEX_MARGIN + ((txtrect.right + rc.right + MSGBOXEX_SPACING) / 2) - (btnleft / 2);
-        }
-        rc.left = lmargin;
-        iico->x = RESCALE_X(rc.left, units);
-        iico->y = RESCALE_Y(rc.top, units);
-        iico->cx = RESCALE_X(rc.right, units);
-        iico->cy = RESCALE_Y(rc.bottom, units);
-        btntop = rc.top + rc.bottom + MSGBOXEX_SPACING;
-        rc.left += rc.right + MSGBOXEX_SPACING;
-    }
-    else
-    {
-        btnleft = (mbd.dwButtons * (btnsize.cx + MSGBOXEX_BUTTONSPACING)) - MSGBOXEX_BUTTONSPACING;
-        if (btnleft > txtrect.right)
-        {
-#ifdef MSGBOX_TEXTHCENTER
-            lmargin = MSGBOXEX_MARGIN + ((btnleft - txtrect.right) / 2);
-#else
-            lmargin = MSGBOXEX_MARGIN;
-#endif
-            btnleft = MSGBOXEX_MARGIN;
-        }
-        else
-        {
-            lmargin = MSGBOXEX_MARGIN;
-            btnleft = MSGBOXEX_MARGIN + (txtrect.right / 2) - (btnleft / 2);
-        }
-        rc.left = lmargin;
-    }
-    /* calculate position of the text */
-    rc.top = MSGBOXEX_MARGIN + (rc.bottom / 2) - (txtrect.bottom / 2);
-    rc.top = max(rc.top, MSGBOXEX_MARGIN);
-    /* calculate position of the buttons */
-    btntop = max(rc.top + txtrect.bottom + MSGBOXEX_SPACING, btntop);
-    for (i = 0; i < mbd.dwButtons; i++)
-    {
-        ibtn[i]->x = RESCALE_X(btnleft, units);
-        ibtn[i]->y = RESCALE_Y(btntop, units);
-        ibtn[i]->cx = RESCALE_X(btnsize.cx, units);
-        ibtn[i]->cy = RESCALE_Y(btnsize.cy, units);
+        ibtn->x = RESCALE_X(btnleft, units);
+        ibtn->y = RESCALE_Y(btntop, units);
+        ibtn->cx = RESCALE_X(btnsize.cx, units);
+        ibtn->cy = RESCALE_Y(btnsize.cy, units);
         btnleft += btnsize.cx + MSGBOXEX_BUTTONSPACING;
     }
-    /* calculate size and position of the messagebox window */
+
+    /* Calculate the size and position of the messagebox window */
     btnleft = max(btnleft - MSGBOXEX_BUTTONSPACING, rc.left + txtrect.right);
     btnleft += MSGBOXEX_MARGIN;
     btntop +=  btnsize.cy + MSGBOXEX_MARGIN;
-    /* set size and position of the message static */
+
+    /* Set the size and position of the static message */
     itxt->x = RESCALE_X(rc.left, units);
     itxt->y = RESCALE_Y(rc.top, units);
     itxt->cx = RESCALE_X(btnleft - rc.left - MSGBOXEX_MARGIN, units);
     itxt->cy = RESCALE_Y(txtrect.bottom, units);
-    /* set size of the window */
+
+    /* Set the size of the window */
     tpl->cx = RESCALE_X(btnleft, units);
     tpl->cy = RESCALE_Y(btntop, units);
 
@@ -791,6 +830,13 @@ MessageBoxTimeoutIndirectW(
 
 Quit:
     RtlFreeHeap(GetProcessHeap(), 0, buf);
+
+    for (i = 0; i < mbd.dwButtons; i++)
+    {
+        if (mbd.ppszButtonText[i] && *(mbd.ppszButtonText[i]))
+            RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR)mbd.ppszButtonText[i]);
+    }
+
     return ret;
 }
 
