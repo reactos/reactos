@@ -4892,6 +4892,9 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     NTSTATUS Status;
     BOOL top_level;
     device_extension* Vcb = DeviceObject->DeviceExtension;
+#ifdef __REACTOS__
+    LIST_ENTRY *Vcble, *le;
+#endif
 
     FsRtlEnterFileSystem();
 
@@ -4909,6 +4912,7 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
     shutting_down = TRUE;
     KeSetEvent(&mountmgr_thread_event, 0, FALSE);
 
+#ifndef __REACTOS__
     while (!IsListEmpty(&VcbList)) {
         Vcb = CONTAINING_RECORD(VcbList.Flink, device_extension, list_entry);
 
@@ -4916,6 +4920,71 @@ static NTSTATUS drv_shutdown(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
 
         uninit(Vcb, TRUE);
     }
+#else
+    Vcble = VcbList.Flink;
+    while (Vcble != &VcbList) {
+        Vcb = CONTAINING_RECORD(Vcble, device_extension, list_entry);
+
+        TRACE("shutting down Vcb %p\n", Vcb);
+
+        if (Vcb->balance.thread) {
+            Vcb->balance.paused = FALSE;
+            Vcb->balance.stopping = TRUE;
+            KeSetEvent(&Vcb->balance.event, 0, FALSE);
+            KeWaitForSingleObject(&Vcb->balance.finished, Executive, KernelMode, FALSE, NULL);
+        }
+
+        if (Vcb->scrub.thread) {
+            Vcb->scrub.paused = FALSE;
+            Vcb->scrub.stopping = TRUE;
+            KeSetEvent(&Vcb->scrub.event, 0, FALSE);
+            KeWaitForSingleObject(&Vcb->scrub.finished, Executive, KernelMode, FALSE, NULL);
+        }
+
+        if (Vcb->running_sends != 0) {
+            BOOL send_cancelled = FALSE;
+
+            ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
+
+            le = Vcb->send_ops.Flink;
+            while (le != &Vcb->send_ops) {
+                send_info* send = CONTAINING_RECORD(le, send_info, list_entry);
+
+                if (!send->cancelling) {
+                    send->cancelling = TRUE;
+                    send_cancelled = TRUE;
+                    send->ccb = NULL;
+                    KeSetEvent(&send->cleared_event, 0, FALSE);
+                }
+
+                le = le->Flink;
+            }
+
+            ExReleaseResourceLite(&Vcb->send_load_lock);
+
+            if (send_cancelled) {
+                while (Vcb->running_sends != 0) {
+                    ExAcquireResourceExclusiveLite(&Vcb->send_load_lock, TRUE);
+                    ExReleaseResourceLite(&Vcb->send_load_lock);
+                }
+            }
+        }
+
+        ExAcquireResourceExclusiveLite(&Vcb->tree_lock, TRUE);
+
+        if (Vcb->need_write && !Vcb->readonly) {
+            Status = do_write(Vcb, Irp);
+
+            if (!NT_SUCCESS(Status))
+                ERR("do_write returned %08x\n", Status);
+        }
+
+        Vcb->removing = TRUE;
+
+        ExReleaseResourceLite(&Vcb->tree_lock);
+        Vcble = Vcble->Flink;
+    }
+#endif
 
 #ifdef _DEBUG
     if (comfo) {
