@@ -1157,8 +1157,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 }
                 else
                 {
-#endif
+                    y = rect->top + (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
+#else
                     y = rect->top + (rect->bottom - rect->top) / 2 + (invert_y ? (size.cy / 2) : (-size.cy / 2));
+#endif
 #ifdef __REACTOS__
                 }
             }
