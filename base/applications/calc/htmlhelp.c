@@ -24,8 +24,14 @@
     calc_##name = (type_##name)GetProcAddress(hHtmlHelp, #name); \
     if (calc_##name == NULL) calc_##name = dummy_##name;
 
-type_HtmlHelpA calc_HtmlHelpA;
-type_HtmlHelpW calc_HtmlHelpW;
+static HWND WINAPI
+dummy_HtmlHelpA(HWND hWnd, LPCSTR pszFile, UINT uCommand, DWORD dwData);
+
+static HWND WINAPI
+dummy_HtmlHelpW(HWND hWnd, LPCWSTR pszFile, UINT uCommand, DWORD dwData);
+
+type_HtmlHelpA calc_HtmlHelpA = dummy_HtmlHelpA;
+type_HtmlHelpW calc_HtmlHelpW = dummy_HtmlHelpW;
 
 static HMODULE hHtmlHelp;
 
