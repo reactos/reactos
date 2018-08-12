@@ -1838,6 +1838,10 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_SETTINGCHANGE:
         return OnSettingChange(hWnd, wp, lp);
+
+    case WM_THEMECHANGED:
+        InvalidateRect(hWnd, NULL, FALSE);
+        break;
     }
     return FALSE;
 }
