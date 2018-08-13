@@ -33,7 +33,7 @@
 #include <gdi/eng/floatobj.h>
 #include "font.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* TPMF_FIXED_PITCH is confusing; brain-dead api */
@@ -2053,6 +2053,7 @@ FindFaceNameInLists(PUNICODE_STRING FaceName)
     IntUnLockProcessPrivateFonts(Win32Process);
     if (NULL != Font)
     {
+        ASSERT(Font->SharedFace);
         return Font;
     }
 
@@ -2061,6 +2062,10 @@ FindFaceNameInLists(PUNICODE_STRING FaceName)
     Font = FindFaceNameInList(FaceName, &g_FontListHead);
     IntUnLockGlobalFonts();
 
+    if (Font)
+    {
+        ASSERT(Font->SharedFace);
+    }
     return Font;
 }
 
@@ -2655,6 +2660,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
             continue;   /* no real font */
         }
 
+        ASSERT(FontGDI->SharedFace);
         if (*pCount < MaxCount)
         {
             FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
@@ -3132,7 +3138,7 @@ RFONT_Init(PRFONT prfnt, PFONTGDI FontGDI, LPLOGFONTW pLogFont)
     {
         if (lfWidth == 0)
         {
-            DPRINT("lfHeight and lfWidth are zero.\n");
+            //DPRINT("lfHeight and lfWidth are zero.\n");
             lfHeight = -16;
         }
         else
@@ -4701,7 +4707,7 @@ PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
             ASSERT(FontGDI->SharedFace);
 
             IntLockFreeType();
-            RFONT_Init(prfnt, FontGDI, pLogFont);
+            RFONT_Init(prfnt, FontGDI, &SubstitutedLogFont);
             IntUnLockFreeType();
 
             prfnt->Font = pFontObj;
