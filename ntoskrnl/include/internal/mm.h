@@ -434,6 +434,7 @@ typedef struct _MMPAGING_FILE
     PFN_NUMBER UsedPages;
     PRTL_BITMAP AllocMap;
     KSPIN_LOCK AllocMapLock;
+    UNICODE_STRING PageFileName;
 }
 MMPAGING_FILE, *PMMPAGING_FILE;
 

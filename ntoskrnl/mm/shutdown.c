@@ -25,6 +25,11 @@ MiShutdownSystem(VOID)
     /* Loop through all the paging files */
     for (i = 0; i < MmNumberOfPagingFiles; i++)
     {
+        /* Free page file name */
+        ASSERT(MmPagingFile[i]->PageFileName.Buffer != NULL);
+        ExFreePoolWithTag(MmPagingFile[i]->PageFileName.Buffer, TAG_MM);
+        MmPagingFile[i]->PageFileName.Buffer = NULL;
+
         /* And close them */
         ZwClose(MmPagingFile[i]->FileHandle);
     }

@@ -376,11 +376,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     ULONG AllocMapSize;
     ULONG Count;
     KPROCESSOR_MODE PreviousMode;
-    UNICODE_STRING CapturedFileName;
+    UNICODE_STRING PageFileName;
     LARGE_INTEGER SafeInitialSize, SafeMaximumSize, AllocationSize;
     FILE_FS_DEVICE_INFORMATION FsDeviceInfo;
     SECURITY_DESCRIPTOR SecurityDescriptor;
     PACL Dacl;
+    PWSTR Buffer;
 
     DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
            FileName, InitialSize->QuadPart);
@@ -403,6 +404,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         {
             SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
             SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
+
+            PageFileName.Length = FileName->Length;
+            PageFileName.MaximumLength = FileName->MaximumLength;
+            PageFileName.Buffer = FileName->Buffer;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -415,6 +420,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         SafeInitialSize = *InitialSize;
         SafeMaximumSize = *MaximumSize;
+
+        PageFileName.Length = FileName->Length;
+        PageFileName.MaximumLength = FileName->MaximumLength;
+        PageFileName.Buffer = FileName->Buffer;
     }
 
     /* Pagefiles can't be larger than 4GB and ofcourse the minimum should be
@@ -432,20 +441,55 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_INVALID_PARAMETER_MIX;
     }
 
-    Status = ProbeAndCaptureUnicodeString(&CapturedFileName,
-                                          PreviousMode,
-                                          FileName);
-    if (!NT_SUCCESS(Status))
+    /* Validate name length */
+    if (PageFileName.Length > 128 * sizeof(WCHAR))
     {
-        return(Status);
+        return STATUS_OBJECT_NAME_INVALID;
     }
+
+    /* We won't care about any potential UNICODE_NULL */
+    PageFileName.MaximumLength = PageFileName.Length;
+    /* Allocate a buffer to keep name copy */
+    Buffer = ExAllocatePoolWithTag(PagedPool, PageFileName.Length, TAG_MM);
+    if (Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Copy name */
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            if (PageFileName.Length != 0)
+            {
+                ProbeForRead(PageFileName.Buffer, PageFileName.Length, sizeof(WCHAR));
+            }
+
+            RtlCopyMemory(Buffer, PageFileName.Buffer, PageFileName.Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            ExFreePoolWithTag(Buffer, TAG_MM);
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        RtlCopyMemory(Buffer, PageFileName.Buffer, PageFileName.Length);
+    }
+
+    /* Erase caller's buffer with ours */
+    PageFileName.Buffer = Buffer;
 
     /* Create the security descriptor for the page file */
     Status = RtlCreateSecurityDescriptor(&SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION);
     if (!NT_SUCCESS(Status))
     {
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
 
@@ -455,8 +499,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     Dacl = ExAllocatePoolWithTag(PagedPool, Count, 'lcaD');
     if (Dacl == NULL)
     {
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -465,8 +508,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(Dacl, 'lcaD');
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
 
@@ -475,8 +517,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(Dacl, 'lcaD');
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
 
@@ -485,8 +526,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(Dacl, 'lcaD');
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
 
@@ -495,13 +535,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(Dacl, 'lcaD');
-        ReleaseCapturedUnicodeString(&CapturedFileName,
-                                     PreviousMode);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
     }
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               &CapturedFileName,
+                               &PageFileName,
                                OBJ_KERNEL_HANDLE,
                                NULL,
                                &SecurityDescriptor);
@@ -551,13 +590,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                               SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
     }
 
-    ReleaseCapturedUnicodeString(&CapturedFileName,
-                                 PreviousMode);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed creating page file: %lx\n", Status);
         ExFreePoolWithTag(Dacl, 'lcaD');
-        return(Status);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return Status;
     }
 
     /* Set the security descriptor */
@@ -568,6 +606,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         {
             ExFreePoolWithTag(Dacl, 'lcaD');
             ZwClose(FileHandle);
+            ExFreePoolWithTag(Buffer, TAG_MM);
             return Status;
         }
     }
@@ -584,7 +623,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(IoStatus.Status))
     {
         ZwClose(FileHandle);
-        return(Status);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return Status;
     }
 
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -596,7 +636,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     if (!NT_SUCCESS(Status))
     {
         ZwClose(FileHandle);
-        return(Status);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return Status;
     }
 
     /* Deny page file creation on a floppy disk */
@@ -606,6 +647,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
+        ExFreePoolWithTag(Buffer, TAG_MM);
         return STATUS_FLOPPY_VOLUME;
     }
 
@@ -614,7 +656,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
-        return(STATUS_NO_MEMORY);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return STATUS_NO_MEMORY;
     }
 
     RtlZeroMemory(PagingFile, sizeof(*PagingFile));
@@ -626,6 +669,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->FreePages = (ULONG)(SafeInitialSize.QuadPart / PAGE_SIZE);
     PagingFile->UsedPages = 0;
     KeInitializeSpinLock(&PagingFile->AllocMapLock);
+    PagingFile->PageFileName = PageFileName;
 
     AllocMapSize = sizeof(RTL_BITMAP) + (((PagingFile->FreePages + 31) / 32) * sizeof(ULONG));
     PagingFile->AllocMap = ExAllocatePoolWithTag(NonPagedPool,
@@ -636,7 +680,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         ExFreePool(PagingFile);
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
-        return(STATUS_NO_MEMORY);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return STATUS_NO_MEMORY;
     }
 
     RtlInitializeBitMap(PagingFile->AllocMap,
