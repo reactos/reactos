@@ -20,6 +20,15 @@
 VOID
 MiShutdownSystem(VOID)
 {
+    ULONG i;
+
+    /* Loop through all the paging files */
+    for (i = 0; i < MmNumberOfPagingFiles; i++)
+    {
+        /* And close them */
+        ZwClose(MmPagingFile[i]->FileHandle);
+    }
+
     UNIMPLEMENTED;
 }
 

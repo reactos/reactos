@@ -36,30 +36,12 @@
 #pragma alloc_text(INIT, MmInitPagingFile)
 #endif
 
-
-/* TYPES *********************************************************************/
-
-typedef struct _MMPAGING_FILE
-{
-    PFILE_OBJECT FileObject;
-    HANDLE FileHandle;
-    LARGE_INTEGER MaximumSize;
-    LARGE_INTEGER CurrentSize;
-    PFN_NUMBER FreePages;
-    PFN_NUMBER UsedPages;
-    PRTL_BITMAP AllocMap;
-    KSPIN_LOCK AllocMapLock;
-}
-MMPAGING_FILE, *PMMPAGING_FILE;
-
 /* GLOBALS *******************************************************************/
 
 #define PAIRS_PER_RUN (1024)
 
-#define MAX_PAGING_FILES  (16)
-
 /* List of paging files, both used and free */
-static PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
+PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
 
 /* Lock for examining the list of paging files */
 static KSPIN_LOCK PagingFileListLock;
