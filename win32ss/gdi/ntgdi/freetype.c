@@ -933,6 +933,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     }
 
     /* set face */
+    ASSERT(SharedFace);
     FontGDI->SharedFace = SharedFace;
     FontGDI->CharSet = ANSI_CHARSET;
     FontGDI->OriginalItalic = ItalicFromStyle(Face->style_name);
@@ -1828,6 +1829,7 @@ ftGetOutlineTextMetrics(PRFONT prfnt,
     }
 
     SharedFace = FontGDI->SharedFace;
+    ASSERT(SharedFace);
     Cache = (PRIMARYLANGID(gusLanguageID) == LANG_ENGLISH) ? &SharedFace->EnglishUS : &SharedFace->UserLanguage;
     Face = SharedFace->Face;
 
@@ -2154,7 +2156,10 @@ get_face_name(PUNICODE_STRING pNameW, PSHARED_FACE SharedFace,
     NTSTATUS Status = STATUS_NOT_FOUND;
     ANSI_STRING AnsiName;
     PSHARED_FACE_CACHE Cache;
-    FT_Face Face = SharedFace->Face;
+    FT_Face Face;
+
+    ASSERT(SharedFace);
+    Face = SharedFace->Face;
 
     RtlFreeUnicodeString(pNameW);
 
@@ -2330,9 +2335,13 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     NEWTEXTMETRICW *Ntm;
     DWORD fs0;
     NTSTATUS status;
-    PSHARED_FACE SharedFace = FontGDI->SharedFace;
-    FT_Face Face = SharedFace->Face;
+    PSHARED_FACE SharedFace;
+    FT_Face Face;
     UNICODE_STRING NameW;
+
+    SharedFace = FontGDI->SharedFace;
+    ASSERT(SharedFace);
+    Face = SharedFace->Face;
 
     RtlInitUnicodeString(&NameW, NULL);
     RtlZeroMemory(Info, sizeof(FONTFAMILYINFO));
@@ -4689,6 +4698,7 @@ PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
         if (prfnt)
         {
             PFONTGDI FontGDI = ObjToGDI(pFontObj, FONT);
+            ASSERT(FontGDI->SharedFace);
 
             IntLockFreeType();
             RFONT_Init(prfnt, FontGDI, pLogFont);
