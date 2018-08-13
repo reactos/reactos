@@ -651,13 +651,13 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_FLOPPY_VOLUME;
     }
 
-    PagingFile = ExAllocatePool(NonPagedPool, sizeof(*PagingFile));
+    PagingFile = ExAllocatePoolWithTag(NonPagedPool, sizeof(*PagingFile), TAG_MM);
     if (PagingFile == NULL)
     {
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
         ExFreePoolWithTag(Buffer, TAG_MM);
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     RtlZeroMemory(PagingFile, sizeof(*PagingFile));
@@ -677,11 +677,11 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                                                  TAG_MM);
     if (PagingFile->AllocMap == NULL)
     {
-        ExFreePool(PagingFile);
+        ExFreePoolWithTag(PagingFile, TAG_MM);
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
         ExFreePoolWithTag(Buffer, TAG_MM);
-        return STATUS_NO_MEMORY;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     RtlInitializeBitMap(PagingFile->AllocMap,
@@ -698,7 +698,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     MmSwapSpaceMessage = FALSE;
 
-    return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
