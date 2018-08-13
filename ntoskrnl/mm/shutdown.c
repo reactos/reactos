@@ -39,8 +39,21 @@ MmShutdownSystem(IN ULONG Phase)
     {
         MiShutdownSystem();
     }
+    else if (Phase == 1)
+    {
+        ULONG i;
+
+        /* Loop through all the paging files */
+        for (i = 0; i < MmNumberOfPagingFiles; i++)
+        {
+            /* And dereference them */
+            ObDereferenceObject(MmPagingFile[i]->FileObject);
+        }
+    }
     else
     {
+        ASSERT(Phase == 2);
+
         UNIMPLEMENTED;
     }
 }

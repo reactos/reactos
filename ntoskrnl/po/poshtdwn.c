@@ -294,6 +294,11 @@ PopGracefulShutdown(IN PVOID Context)
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
 
+    /* FIXME: Calling Mm shutdown phase 1 here to get page file dereference
+     * but it shouldn't be called here. Only phase 2 should be called.
+     */
+    MmShutdownSystem(1);
+
     /* Note that here, we should broadcast the power IRP to devices */
 
     /* In this step, the HAL disables any wake timers */
