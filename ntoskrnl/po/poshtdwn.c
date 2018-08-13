@@ -283,6 +283,7 @@ PopGracefulShutdown(IN PVOID Context)
     ExShutdownSystem();
 
     /* Note that modified pages should be written here (MiShutdownSystem) */
+    MmShutdownSystem(0);
 
     /* Flush all user files before we start shutting down IO */
     /* This is where modified pages are written back by the IO manager */

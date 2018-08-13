@@ -1474,6 +1474,10 @@ NTAPI
 MmSetSessionLocaleId(
     _In_ LCID LocaleId);
 
+/* shutdown.c *****************************************************************/
+
+VOID
+MmShutdownSystem(IN ULONG Phase);
 
 /* virtual.c *****************************************************************/
 
