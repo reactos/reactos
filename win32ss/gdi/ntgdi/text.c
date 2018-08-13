@@ -41,9 +41,8 @@ GreGetTextExtentW(
     UINT flOpts)
 {
     PDC pdc;
-    PDC_ATTR pdcattr;
+    PRFONT prfnt;
     BOOL Result;
-    PTEXTOBJ TextObj;
 
     if (!cwc)
     {
@@ -59,13 +58,11 @@ GreGetTextExtentW(
         return FALSE;
     }
 
-    pdcattr = pdc->pdcattr;
-
-    TextObj = RealizeFontInit(pdcattr->hlfntNew);
-    if ( TextObj )
+    prfnt = DC_prfnt(pdc);
+    if (prfnt)
     {
         Result = TextIntGetTextExtentPoint( pdc,
-                                            TextObj,
+                                            prfnt,
                                             lpwsz,
                                             cwc,
                                             0,
@@ -73,7 +70,6 @@ GreGetTextExtentW(
                                             0,
                                             psize,
                                             flOpts);
-        TEXTOBJ_UnlockText(TextObj);
     }
     else
         Result = FALSE;
@@ -101,9 +97,8 @@ GreGetTextExtentExW(
     FLONG fl)
 {
     PDC pdc;
-    PDC_ATTR pdcattr;
+    PRFONT prfnt;
     BOOL Result;
-    PTEXTOBJ TextObj;
 
     if ( (!String && Count ) || !pSize )
     {
@@ -123,13 +118,12 @@ GreGetTextExtentExW(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pdcattr = pdc->pdcattr;
 
-    TextObj = RealizeFontInit(pdcattr->hlfntNew);
-    if ( TextObj )
+    prfnt = DC_prfnt(pdc);
+    if (prfnt)
     {
         Result = TextIntGetTextExtentPoint( pdc,
-                                            TextObj,
+                                            prfnt,
                                             String,
                                             Count,
                                             MaxExtent,
@@ -137,7 +131,6 @@ GreGetTextExtentExW(
                                             (LPINT)Dx,
                                             pSize,
                                             fl);
-        TEXTOBJ_UnlockText(TextObj);
     }
     else
         Result = FALSE;
@@ -292,14 +285,13 @@ NtGdiGetTextExtentExW(
 )
 {
     PDC dc;
-    PDC_ATTR pdcattr;
+    PRFONT prfnt;
     LPWSTR String;
     SIZE Size;
     NTSTATUS Status;
     BOOLEAN Result;
     INT Fit;
     LPINT Dx;
-    PTEXTOBJ TextObj;
 
     if ((LONG)Count < 0)
     {
@@ -367,12 +359,12 @@ NtGdiGetTextExtentExW(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pdcattr = dc->pdcattr;
-    TextObj = RealizeFontInit(pdcattr->hlfntNew);
-    if ( TextObj )
+
+    prfnt = DC_prfnt(dc);
+    if (prfnt)
     {
         Result = TextIntGetTextExtentPoint( dc,
-                                            TextObj,
+                                            prfnt,
                                             String,
                                             Count,
                                             MaxExtent,
@@ -380,7 +372,6 @@ NtGdiGetTextExtentExW(
                                             Dx,
                                             &Size,
                                             fl);
-        TEXTOBJ_UnlockText(TextObj);
     }
     else
         Result = FALSE;
@@ -492,9 +483,7 @@ NtGdiGetTextFaceW(
 )
 {
     PDC Dc;
-    PDC_ATTR pdcattr;
-    HFONT hFont;
-    PTEXTOBJ TextObj;
+    PRFONT prfnt;
     NTSTATUS Status;
     SIZE_T fLen;
     INT ret;
@@ -507,21 +496,24 @@ NtGdiGetTextFaceW(
         EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    pdcattr = Dc->pdcattr;
-    hFont = pdcattr->hlfntNew;
-    DC_UnlockDc(Dc);
 
-    TextObj = RealizeFontInit(hFont);
-    ASSERT(TextObj != NULL);
-    fLen = wcslen(TextObj->FaceName) + 1;
+    prfnt = DC_prfnt(Dc);
+    if (prfnt == NULL)
+    {
+        EngSetLastError(ERROR_INVALID_HANDLE);
+        DC_UnlockDc(Dc);
+        return FALSE;
+    }
+
+    fLen = wcslen(prfnt->FaceName) + 1;
 
     if (FaceName != NULL)
     {
         Count = min(Count, fLen);
-        Status = MmCopyToCaller(FaceName, TextObj->FaceName, Count * sizeof(WCHAR));
+        Status = MmCopyToCaller(FaceName, prfnt->FaceName, Count * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
-            TEXTOBJ_UnlockText(TextObj);
+            DC_UnlockDc(Dc);
             SetLastNtError(Status);
             return 0;
         }
@@ -537,7 +529,7 @@ NtGdiGetTextFaceW(
         ret = fLen;
     }
 
-    TEXTOBJ_UnlockText(TextObj);
+    DC_UnlockDc(Dc);
     return ret;
 }
 
