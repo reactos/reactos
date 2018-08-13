@@ -962,19 +962,19 @@ BOOL UserExtTextOutW(HDC hdc,
     ArgumentLength += sizeof(WCHAR) * (count + 2);
 
     Argument = IntCbAllocateMemory(ArgumentLength);
-    
+
     if (!Argument)
     {
         goto fallback;
     }
-    
+
     /* Initialize struct members */
     Argument->hdc   = hdc;
     Argument->x     = x;
-    Argument->y     = y;    
+    Argument->y     = y;
     Argument->flags = flags;
     Argument->count = count;
-    
+
     if (lprc)
     {
         Argument->rect = *lprc;
@@ -986,7 +986,7 @@ BOOL UserExtTextOutW(HDC hdc,
     }
 
     /* Align lpString
-     * mimicks code from co_IntClientLoadLibrary */
+       mimicks code from co_IntClientLoadLibrary */
     pStringBuffer += (ULONG_PTR)Argument;
     Argument->lpString = (LPWSTR)pStringBuffer;
     RtlStringCchCopyNW(Argument->lpString, count + 1, lpString, count);
@@ -1001,11 +1001,11 @@ BOOL UserExtTextOutW(HDC hdc,
                                 ArgumentLength,
                                 &ResultPointer,
                                 &ResultLength);
-        
+
     UserEnterCo();
  
     IntCbFreeMemory(Argument);
-        
+
     if (NT_SUCCESS(Status))
     {
         _SEH2_TRY
@@ -1028,9 +1028,9 @@ BOOL UserExtTextOutW(HDC hdc,
 
     return bResult;
 
-    fallback:
-        return GreExtTextOutW(hdc, x, y, flags, lprc, lpString, count, NULL, 0);
-}   
+fallback:
+    return GreExtTextOutW(hdc, x, y, flags, lprc, lpString, count, NULL, 0);
+}
 #endif
 
 /***********************************************************************
