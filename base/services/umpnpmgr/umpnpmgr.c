@@ -1959,11 +1959,36 @@ DisableDeviceInstance(LPWSTR pszDeviceInstance)
 
 
 static CONFIGRET
-ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
+ReenumerateDeviceInstance(
+    _In_ LPWSTR pszDeviceInstance,
+    _In_ ULONG ulFlags)
 {
-    DPRINT("ReenumerateDeviceInstance: not implemented\n");
-    /* FIXME */
-    return CR_CALL_NOT_IMPLEMENTED;
+    PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA EnumerateDeviceData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT1("ReenumerateDeviceInstance(%S 0x%08lx)\n",
+           pszDeviceInstance, ulFlags);
+
+    if (ulFlags & ~CM_REENUMERATE_BITS)
+        return CR_INVALID_FLAG;
+
+    if (ulFlags & CM_REENUMERATE_RETRY_INSTALLATION)
+    {
+        DPRINT1("CM_REENUMERATE_RETRY_INSTALLATION not implemented!\n");
+    }
+
+    RtlInitUnicodeString(&EnumerateDeviceData.DeviceInstance,
+                         pszDeviceInstance);
+    EnumerateDeviceData.Flags = 0;
+
+    Status = NtPlugPlayControl(PlugPlayControlEnumerateDevice,
+                               &EnumerateDeviceData,
+                               sizeof(PLUGPLAY_CONTROL_ENUMERATE_DEVICE_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
 }
 
 
@@ -2004,7 +2029,8 @@ PNP_DeviceInstanceAction(
             break;
 
         case PNP_DEVINST_REENUMERATE:
-            ret = ReenumerateDeviceInstance(pszDeviceInstance1);
+            ret = ReenumerateDeviceInstance(pszDeviceInstance1,
+                                            ulFlags);
             break;
 
         default:

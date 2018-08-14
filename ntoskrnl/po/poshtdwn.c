@@ -283,6 +283,7 @@ PopGracefulShutdown(IN PVOID Context)
     ExShutdownSystem();
 
     /* Note that modified pages should be written here (MiShutdownSystem) */
+    MmShutdownSystem(0);
 
     /* Flush all user files before we start shutting down IO */
     /* This is where modified pages are written back by the IO manager */
@@ -292,6 +293,11 @@ PopGracefulShutdown(IN PVOID Context)
     DPRINT("I/O manager shutting down in phase 1\n");
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
+
+    /* FIXME: Calling Mm shutdown phase 1 here to get page file dereference
+     * but it shouldn't be called here. Only phase 2 should be called.
+     */
+    MmShutdownSystem(1);
 
     /* Note that here, we should broadcast the power IRP to devices */
 

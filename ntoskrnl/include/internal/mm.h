@@ -102,6 +102,8 @@ typedef ULONG_PTR SWAPENTRY;
 #define SESSION_POOL_MASK                   32
 #define VERIFIER_POOL_MASK                  64
 
+#define MAX_PAGING_FILES                    (16)
+
 // FIXME: use ALIGN_UP_BY
 #define MM_ROUND_UP(x,s)                    \
     ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
@@ -420,6 +422,23 @@ typedef struct _MM_PAGED_POOL_INFO
 } MM_PAGED_POOL_INFO, *PMM_PAGED_POOL_INFO;
 
 extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
+
+/* Page file information */
+typedef struct _MMPAGING_FILE
+{
+    PFILE_OBJECT FileObject;
+    HANDLE FileHandle;
+    LARGE_INTEGER MaximumSize;
+    LARGE_INTEGER CurrentSize;
+    PFN_NUMBER FreePages;
+    PFN_NUMBER UsedPages;
+    PRTL_BITMAP AllocMap;
+    KSPIN_LOCK AllocMapLock;
+    UNICODE_STRING PageFileName;
+}
+MMPAGING_FILE, *PMMPAGING_FILE;
+
+extern PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
 
 typedef VOID
 (*PMM_ALTER_REGION_FUNC)(
@@ -1474,6 +1493,10 @@ NTAPI
 MmSetSessionLocaleId(
     _In_ LCID LocaleId);
 
+/* shutdown.c *****************************************************************/
+
+VOID
+MmShutdownSystem(IN ULONG Phase);
 
 /* virtual.c *****************************************************************/
 
