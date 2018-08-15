@@ -982,17 +982,15 @@ BOOL UserExtTextOutW(HDC hdc,
     }
     else
     {
+        RtlZeroMemory(&Argument->rect, sizeof(RECT));
         Argument->bRect = FALSE;
     }
 
     /* Align lpString
        mimicks code from co_IntClientLoadLibrary */
-    pStringBuffer += (ULONG_PTR)Argument;
     Argument->lpString = (LPWSTR)pStringBuffer;
-    RtlStringCchCopyNW(Argument->lpString, count + 1, lpString, count);
-
-    pStringBuffer -= (ULONG_PTR)Argument;
-    Argument->lpString = (LPWSTR)(pStringBuffer);
+    pStringBuffer += (ULONG_PTR)Argument;
+    RtlStringCchCopyNW((LPWSTR)pStringBuffer, count + 1, lpString, count);
 
     UserLeaveCo();
 
