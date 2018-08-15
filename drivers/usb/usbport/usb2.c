@@ -739,8 +739,7 @@ USB2_ConvertFrame(IN UCHAR Frame,
         *HcMicroframe = 0;
     }
 
-    if (Microframe >= 0 &&
-        Microframe <= (USB2_MICROFRAMES - 2))
+    if (Microframe <= (USB2_MICROFRAMES - 2))
     {
         *HcFrame = Frame;
         *HcMicroframe = Microframe + 1;
