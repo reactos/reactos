@@ -1146,10 +1146,10 @@ INT WINAPI DrawTextExWorker( HDC hdc,
 #endif
 	else if (flags & DT_RIGHT) x = rect->right - size.cx;
 
-    if (flags & DT_SINGLELINE)
-    {
-        if (flags & DT_VCENTER)
+	if (flags & DT_SINGLELINE)
+	{
 #ifdef __REACTOS__
+        if (flags & DT_VCENTER)
         {
             if (flags & DT_CALCRECT)
             {
@@ -1161,14 +1161,12 @@ INT WINAPI DrawTextExWorker( HDC hdc,
                 y = rect->top + (rect->bottom - rect->top + (invert_y ? size.cy : -size.cy)) / 2;
             }
         }
-#else
-            y = rect->top + (rect->bottom - rect->top) / 2 - size.cy / 2;
-#endif
         else if (flags & DT_BOTTOM)
-#ifdef __REACTOS__
             y = rect->bottom + (invert_y ? 0 : -size.cy);
 #else
-            y = rect->bottom - size.cy;
+	    if (flags & DT_VCENTER) y = rect->top +
+	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
+	    else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
 #endif
     }
 
