@@ -4453,7 +4453,21 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         goto exit;
     }
 
+    /* HACK: stream file object seems to get deleted at some point
+     * leading to use after free when installing ReactOS on
+     * BtrFS.
+     * Workaround: leak a handle to the fileobject
+     * XXX: Could be improved by storing it somewhere and releasing it
+     * on dismount. Or even by referencing again the file object.
+     */
+#ifndef __REACTOS__
     Vcb->root_file = IoCreateStreamFileObject(NULL, DeviceToMount);
+#else
+    {
+        HANDLE Dummy;
+        Vcb->root_file = IoCreateStreamFileObjectEx(NULL, DeviceToMount, &Dummy);
+    }
+#endif
     Vcb->root_file->FsContext = root_fcb;
     Vcb->root_file->SectionObjectPointer = &root_fcb->nonpaged->segment_object;
     Vcb->root_file->Vpb = DeviceObject->Vpb;
