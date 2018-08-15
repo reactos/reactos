@@ -1536,8 +1536,11 @@ static BOOL face_has_symbol_charmap(FT_Face ft_face)
 
     for(i = 0; i < ft_face->num_charmaps; i++)
     {
-        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+        if (ft_face->charmaps[i]->platform_id == TT_PLATFORM_MICROSOFT &&
+            ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+        {
             return TRUE;
+        }
     }
     return FALSE;
 }
@@ -3155,11 +3158,22 @@ TextIntUpdateSize(PDC dc,
         for (n = 0; n < face->num_charmaps; n++)
         {
             charmap = face->charmaps[n];
-            DPRINT("Found charmap encoding: %i\n", charmap->encoding);
-            if (charmap->encoding != 0)
+            if (charmap->encoding == FT_ENCODING_UNICODE)
             {
                 found = charmap;
                 break;
+            }
+        }
+        if (!found)
+        {
+            for (n = 0; n < face->num_charmaps; n++)
+            {
+                charmap = face->charmaps[n];
+                if (charmap->encoding == FT_ENCODING_MS_SYMBOL)
+                {
+                    found = charmap;
+                    break;
+                }
             }
         }
         if (!found)
@@ -3168,6 +3182,7 @@ TextIntUpdateSize(PDC dc,
         }
         else
         {
+            DPRINT("Found charmap encoding: %i\n", found->encoding);
             error = FT_Set_Charmap(face, found);
             if (error)
             {
@@ -3192,6 +3207,47 @@ TextIntUpdateSize(PDC dc,
     return TRUE;
 }
 
+static FT_UInt get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
+{
+    FT_UInt ret;
+
+    if (glyph < 0x100) glyph += 0xf000;
+    /* there are a number of old pre-Unicode "broken" TTFs, which
+       do have symbols at U+00XX instead of U+f0XX */
+    if (!(ret = FT_Get_Char_Index(ft_face, glyph)))
+        ret = FT_Get_Char_Index(ft_face, glyph - 0xf000);
+
+    return ret;
+}
+
+static FT_UInt get_glyph_index(FT_Face ft_face, UINT glyph)
+{
+    FT_UInt ret;
+
+    if (face_has_symbol_charmap(ft_face))
+    {
+        ret = get_glyph_index_symbol(ft_face, glyph);
+        if (ret != 0)
+            return ret;
+    }
+
+    return FT_Get_Char_Index(ft_face, glyph);
+}
+
+static FT_UInt
+get_glyph_index_flagged(FT_Face face, FT_ULong code, DWORD indexed_flag, DWORD flags)
+{
+    FT_UInt glyph_index;
+    if (flags & indexed_flag)
+    {
+        glyph_index = code;
+    }
+    else
+    {
+        glyph_index = get_glyph_index(face, code);
+    }
+    return glyph_index;
+}
 
 /*
  * Based on WineEngGetGlyphOutline
@@ -3280,12 +3336,8 @@ ftGdiGetGlyphOutline(
 
     TEXTOBJ_UnlockText(TextObj);
 
-    if (iFormat & GGO_GLYPH_INDEX)
-    {
-        glyph_index = wch;
-        iFormat &= ~GGO_GLYPH_INDEX;
-    }
-    else  glyph_index = FT_Get_Char_Index(ft_face, wch);
+    glyph_index = get_glyph_index_flagged(ft_face, wch, GGO_GLYPH_INDEX, iFormat);
+    iFormat &= ~GGO_GLYPH_INDEX;
 
     if (orientation || (iFormat != GGO_METRICS && iFormat != GGO_BITMAP) || aveWidth || pmat2)
         load_flags |= FT_LOAD_NO_BITMAP;
@@ -3727,10 +3779,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        if (fl & GTEF_INDICES)
-            glyph_index = *String;
-        else
-            glyph_index = FT_Get_Char_Index(face, *String);
+        glyph_index = get_glyph_index_flagged(face, *String, GTEF_INDICES, fl);
 
         if (EmuBold || EmuItalic)
             realglyph = NULL;
@@ -5503,10 +5552,7 @@ GreExtTextOutW(
 
         for (i = iStart; i < Count; i++)
         {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = *TempText;
-            else
-                glyph_index = FT_Get_Char_Index(face, *TempText);
+            glyph_index = get_glyph_index_flagged(face, *TempText, ETO_GLYPH_INDEX, fuOptions);
 
             if (EmuBold || EmuItalic)
                 realglyph = NULL;
@@ -5608,10 +5654,7 @@ GreExtTextOutW(
         BackgroundLeft = (RealXStart + 32) >> 6;
         for (i = 0; i < Count; ++i)
         {
-            if (fuOptions & ETO_GLYPH_INDEX)
-                glyph_index = String[i];
-            else
-                glyph_index = FT_Get_Char_Index(face, String[i]);
+            glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
             error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
             if (error)
@@ -5726,10 +5769,7 @@ GreExtTextOutW(
     BackgroundLeft = (RealXStart + 32) >> 6;
     for (i = 0; i < Count; ++i)
     {
-        if (fuOptions & ETO_GLYPH_INDEX)
-            glyph_index = String[i];
-        else
-            glyph_index = FT_Get_Char_Index(face, String[i]);
+        glyph_index = get_glyph_index_flagged(face, String[i], ETO_GLYPH_INDEX, fuOptions);
 
         if (EmuBold || EmuItalic)
             realglyph = NULL;
@@ -6271,17 +6311,11 @@ NtGdiGetCharABCWidthsW(
 
         if (Safepwch)
         {
-            if (fl & GCABCW_INDICES)
-                glyph_index = Safepwch[i - FirstChar];
-            else
-                glyph_index = FT_Get_Char_Index(face, Safepwch[i - FirstChar]);
+            glyph_index = get_glyph_index_flagged(face, Safepwch[i - FirstChar], GCABCW_INDICES, fl);
         }
         else
         {
-            if (fl & GCABCW_INDICES)
-                glyph_index = i;
-            else
-                glyph_index = FT_Get_Char_Index(face, i);
+            glyph_index = get_glyph_index_flagged(face, i, GCABCW_INDICES, fl);
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
 
@@ -6465,17 +6499,11 @@ NtGdiGetCharWidthW(
     {
         if (Safepwc)
         {
-            if (fl & GCW_INDICES)
-                glyph_index = Safepwc[i - FirstChar];
-            else
-                glyph_index = FT_Get_Char_Index(face, Safepwc[i - FirstChar]);
+            glyph_index = get_glyph_index_flagged(face, Safepwc[i - FirstChar], GCW_INDICES, fl);
         }
         else
         {
-            if (fl & GCW_INDICES)
-                glyph_index = i;
-            else
-                glyph_index = FT_Get_Char_Index(face, i);
+            glyph_index = get_glyph_index_flagged(face, i, GCW_INDICES, fl);
         }
         FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
         if (!fl)
@@ -6587,7 +6615,7 @@ NtGdiGetGlyphIndicesW(
         if (FT_IS_SFNT(Face))
         {
             TT_OS2 *pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-            DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(Face, pOS2->usDefaultChar) : 0);
+            DefChar = (pOS2->usDefaultChar ? get_glyph_index(Face, pOS2->usDefaultChar) : 0);
         }
         else
         {
@@ -6631,7 +6659,7 @@ NtGdiGetGlyphIndicesW(
 
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(FontGDI->SharedFace->Face, Safepwc[i]);
+        Buffer[i] = get_glyph_index(FontGDI->SharedFace->Face, Safepwc[i]);
         if (Buffer[i] == 0)
         {
             Buffer[i] = DefChar;
