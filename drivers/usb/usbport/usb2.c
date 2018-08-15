@@ -1892,11 +1892,7 @@ USBPORT_AllocateBandwidthUSB2(IN PDEVICE_OBJECT FdoDevice,
             case UsbHighSpeed:
             {
                 Tt = &FdoExtension->Usb2Extension->HcTt;
-
-                if (EndpointProperties->Period > USB2_MAX_MICROFRAMES)
-                    Period = USB2_MAX_MICROFRAMES;
-                else
-                    Period = EndpointProperties->Period;
+                Period = EndpointProperties->Period;
 
                 break;
             }
