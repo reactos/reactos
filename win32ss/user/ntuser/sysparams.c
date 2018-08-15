@@ -282,7 +282,7 @@ SpiUpdatePerUserSystemParameters(VOID)
     gspv.bMouseClickLock = (gspv.dwUserPrefMask & UPM_CLICKLOCK) != 0;
     gspv.bMouseCursorShadow = (gspv.dwUserPrefMask & UPM_CURSORSHADOW) != 0;
 #if (_WIN32_WINNT >= 0x0600)
-    gspv.iWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
+    gspv.uiWheelScrollChars = SpiLoadInt(KEY_DESKTOP, VAL_SCRLLCHARS, 3);
 #endif
 
     /* Some hardcoded values for now */
@@ -1523,7 +1523,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
 #if(WINVER >= 0x0600)
         case SPI_GETAUDIODESCRIPTION:
-            return SpiGet(pvParam, &gspv.audiodesription, sizeof(AUDIODESCRIPTION), fl);
+            return SpiGet(pvParam, &gspv.audiodescription, sizeof(AUDIODESCRIPTION), fl);
 
         case SPI_SETAUDIODESCRIPTION:
             ERR("SPI_SETAUDIODESCRIPTION is unimplemented\n");
@@ -1666,10 +1666,10 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiSetBool(&gspv.bDisableOverlappedContent, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETCLIENTAREAANIMATION:
-            return SpiGetInt(pvParam, &gspv.bClientAnimation, fl);
+            return SpiGetInt(pvParam, &gspv.bClientAreaAnimation, fl);
 
         case SPI_SETCLIENTAREAANIMATION:
-            return SpiSetBool(&gspv.bClientAnimation, uiParam, KEY_MOUSE, L"", fl);
+            return SpiSetBool(&gspv.bClientAreaAnimation, uiParam, KEY_MOUSE, L"", fl);
 
         case SPI_GETCLEARTYPE:
             return SpiGetInt(pvParam, &gspv.bClearType, fl);
