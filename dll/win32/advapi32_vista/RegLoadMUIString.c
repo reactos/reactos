@@ -1,4 +1,10 @@
-#include "desk.h"
+#include "advapi32_vista.h"
+
+#include <winuser.h>
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(reg);
 
 /******************************************************************************
  * load_string [Internal]
@@ -43,13 +49,12 @@ static int load_string(HINSTANCE hModule, UINT resId, LPWSTR pwszBuffer, INT cMa
     return cMaxChars;
 }
 
-
 /************************************************************************
  *  RegLoadMUIStringW
  *
  * @implemented
  */
-LONG
+LONG WINAPI
 RegLoadMUIStringW(IN HKEY hKey,
                   IN LPCWSTR pszValue  OPTIONAL,
                   OUT LPWSTR pszOutBuf,
@@ -68,7 +73,7 @@ RegLoadMUIStringW(IN HKEY hKey,
 
     if (pszDirectory && *pszDirectory)
     {
-        //FIXME("BaseDir parameter not yet supported!\n");
+        FIXME("BaseDir parameter not yet supported!\n");
         return ERROR_INVALID_PARAMETER;
     }
 
@@ -140,5 +145,51 @@ RegLoadMUIStringW(IN HKEY hKey,
 cleanup:
     HeapFree(GetProcessHeap(), 0, pwszTempBuffer);
     HeapFree(GetProcessHeap(), 0, pwszExpandedBuffer);
+    return result;
+}
+
+/************************************************************************
+ *  RegLoadMUIStringA
+ *
+ * @implemented
+ */
+LONG WINAPI
+RegLoadMUIStringA(IN HKEY hKey,
+                  IN LPCSTR pszValue  OPTIONAL,
+                  OUT LPSTR pszOutBuf,
+                  IN DWORD cbOutBuf,
+                  OUT LPDWORD pcbData OPTIONAL,
+                  IN DWORD Flags,
+                  IN LPCSTR pszDirectory  OPTIONAL)
+{
+    UNICODE_STRING valueW, baseDirW;
+    WCHAR *pwszBuffer;
+    DWORD cbData = cbOutBuf * sizeof(WCHAR);
+    LONG result;
+
+    valueW.Buffer = baseDirW.Buffer = pwszBuffer = NULL;
+    if (!RtlCreateUnicodeStringFromAsciiz(&valueW, pszValue) ||
+        !RtlCreateUnicodeStringFromAsciiz(&baseDirW, pszDirectory) ||
+        !(pwszBuffer = HeapAlloc(GetProcessHeap(), 0, cbData)))
+    {
+        result = ERROR_NOT_ENOUGH_MEMORY;
+        goto cleanup;
+    }
+
+    result = RegLoadMUIStringW(hKey, valueW.Buffer, pwszBuffer, cbData, NULL, Flags,
+                               baseDirW.Buffer);
+
+    if (result == ERROR_SUCCESS)
+    {
+        cbData = WideCharToMultiByte(CP_ACP, 0, pwszBuffer, -1, pszOutBuf, cbOutBuf, NULL, NULL);
+        if (pcbData)
+            *pcbData = cbData;
+    }
+
+cleanup:
+    HeapFree(GetProcessHeap(), 0, pwszBuffer);
+    RtlFreeUnicodeString(&baseDirW);
+    RtlFreeUnicodeString(&valueW);
+
     return result;
 }
