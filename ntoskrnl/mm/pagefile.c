@@ -634,6 +634,27 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             return STATUS_NOT_FOUND;
         }
 
+        /* Don't allow page file shrinking */
+        if (PagingFile->MinimumSize.QuadPart > SafeMinimumSize.QuadPart)
+        {
+            KeReleaseGuardedMutex(&MmPageFileCreationLock);
+            ObDereferenceObject(FileObject);
+            ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Buffer, TAG_MM);
+            return STATUS_INVALID_PARAMETER_2;
+        }
+
+        if (SafeMaximumSize.QuadPart < PagingFile->MaximumSize.QuadPart)
+        {
+            KeReleaseGuardedMutex(&MmPageFileCreationLock);
+            ObDereferenceObject(FileObject);
+            ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Buffer, TAG_MM);
+            return STATUS_INVALID_PARAMETER_3;
+        }
+
         /* FIXME: implement parameters checking and page file extension */
         UNIMPLEMENTED;
 
@@ -721,6 +742,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->FileObject = FileObject;
     PagingFile->MaximumSize.QuadPart = SafeMaximumSize.QuadPart;
     PagingFile->CurrentSize.QuadPart = SafeMinimumSize.QuadPart;
+    PagingFile->MinimumSize.QuadPart = SafeMinimumSize.QuadPart;
     PagingFile->FreePages = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE);
     PagingFile->UsedPages = 0;
     PagingFile->PageFileName = PageFileName;
