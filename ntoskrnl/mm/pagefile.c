@@ -690,6 +690,17 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* DACL is no longer needed, free it */
     ExFreePoolWithTag(Dacl, 'lcaD');
 
+    /* FIXME: To enable once page file managment is moved to ARM3 */
+#if 0
+    /* Check we won't overflow commit limit with the page file */
+    if (MmTotalCommitLimitMaximum + (SafeMaximumSize.QuadPart >> PAGE_SHIFT) <= MmTotalCommitLimitMaximum)
+    {
+        ZwClose(FileHandle);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return STATUS_INVALID_PARAMETER_3;
+    }
+#endif
+
     /* Set its end of file to minimal size */
     Status = ZwSetInformationFile(FileHandle,
                                   &IoStatus,
