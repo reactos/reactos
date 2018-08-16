@@ -59,6 +59,7 @@
 #define IDC_LICENCE          106
 #define IDC_ROSIMG           107
 #define IDC_ROSHOMEPAGE_LINK 108
+#define IDC_ROSVERSION       109
 
 /* Propsheet - hardware */
 #define IDD_PROPPAGEHARDWARE        300
