@@ -456,6 +456,15 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
             CharSets[FONTSUBST_TO] = (BYTE)_wtoi(pch + 1);
         }
 
+        /* is it identical? */
+        if (RtlEqualUnicodeString(&FromW, &ToW, TRUE) &&
+            CharSets[FONTSUBST_FROM] == CharSets[FONTSUBST_TO])
+        {
+            RtlFreeUnicodeString(&FromW);
+            RtlFreeUnicodeString(&ToW);
+            continue;
+        }
+
         /* allocate an entry */
         pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONTSUBST_ENTRY), TAG_FONT);
         if (pEntry == NULL)
@@ -607,6 +616,30 @@ SubstituteFontByList(PLIST_ENTRY        pHead,
     }
 
     return FALSE;
+}
+
+static VOID
+DumpSubstituteList(PLIST_ENTRY pHead)
+{
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+
+    DPRINT("## DumpSubstituteList\n");
+
+    /* for each list entry */
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry =
+            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+
+        DPRINT("%S,%u --> %S,%u\n",
+            pSubstEntry->FontNames[FONTSUBST_FROM].Buffer,
+            pSubstEntry->CharSets[FONTSUBST_FROM],
+            pSubstEntry->FontNames[FONTSUBST_TO].Buffer,
+            pSubstEntry->CharSets[FONTSUBST_TO]);
+    }
 }
 
 static BOOL
@@ -2005,8 +2038,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     FONTGDI *FontGDI;
     NTSTATUS status;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
@@ -2033,9 +2065,9 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         }
 
         RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
     }
 
+    DPRINT("'%ls' is not found\n", FaceName->Buffer);
     return NULL;
 }
 
@@ -2067,6 +2099,36 @@ FindFaceNameInLists(PUNICODE_STRING FaceName)
         ASSERT(Font->SharedFace);
     }
     return Font;
+}
+
+static VOID
+DumpFontList(PLIST_ENTRY Head)
+{
+    PLIST_ENTRY Entry;
+    PFONT_ENTRY CurrentEntry;
+    FONTGDI *FontGDI;
+
+    DPRINT("## DumpFontList(%p)\n", Head);
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        FontGDI = CurrentEntry->Font;
+
+        if (!FontGDI)
+        {
+            DPRINT("FontGDI was NULL\n");
+            continue;
+        }
+
+        if (!FontGDI->SharedFace)
+        {
+            DPRINT("FontGDI->SharedFace was NULL\n");
+            continue;
+        }
+
+        DPRINT("family_name %s, FontGDI %p, Filename %S\n", FontGDI->SharedFace->Face->family_name, FontGDI, FontGDI->Filename);
+    }
 }
 
 /* See https://msdn.microsoft.com/en-us/library/bb165625(v=vs.90).aspx */
@@ -2638,10 +2700,21 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
     FONTGDI *FontGDI;
     LOGFONTW lf = *LogFont;
     UNICODE_STRING NameW;
+    BOOL Found = FALSE;
 
     for (pEntry = pHead->Flink; pEntry != pHead; pEntry = pEntry->Flink)
     {
         pCurrentEntry = CONTAINING_RECORD(pEntry, FONTSUBST_ENTRY, ListEntry);
+
+        if (RtlEqualUnicodeString(&pCurrentEntry->FontNames[FONTSUBST_FROM],
+                                  &pCurrentEntry->FontNames[FONTSUBST_TO], TRUE))
+        {
+            if (pCurrentEntry->CharSets[FONTSUBST_FROM] ==
+                pCurrentEntry->CharSets[FONTSUBST_TO])
+            {
+                continue;
+            }
+        }
 
         pFromW = &pCurrentEntry->FontNames[FONTSUBST_FROM];
         if (LogFont->lfFaceName[0] != UNICODE_NULL)
@@ -2660,6 +2733,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
             continue;   /* no real font */
         }
 
+        Found = TRUE;
         ASSERT(FontGDI->SharedFace);
         if (*pCount < MaxCount)
         {
@@ -2668,7 +2742,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
         (*pCount)++;
     }
 
-    return TRUE;
+    return Found;
 }
 
 BOOL
@@ -4583,11 +4657,9 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     Otm = ExAllocatePoolWithTag(PagedPool, OldOtmSize, GDITAG_TEXT);
 
     /* get the FontObj of lowest penalty */
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
@@ -5252,6 +5324,22 @@ ScaleLong(LONG lValue, PFLOATOBJ pef)
     return lValue;
 }
 
+VOID DumpFontInfo(VOID)
+{
+    PPROCESSINFO Win32Process;
+
+    Win32Process = PsGetCurrentProcessWin32Process();
+    IntLockProcessPrivateFonts(Win32Process);
+    DumpFontList(&Win32Process->PrivateFontListHead);
+    IntUnLockProcessPrivateFonts(Win32Process);
+
+    IntLockGlobalFonts();
+    DumpFontList(&g_FontListHead);
+    IntUnLockGlobalFonts();
+
+    DumpSubstituteList(&g_FontSubstListHead);
+}
+
 BOOL
 APIENTRY
 GreExtTextOutW(
@@ -5432,11 +5520,10 @@ GreExtTextOutW(
     FontGDI = ObjToGDI(prfnt, FONT);
     ASSERT(FontGDI);
 
+    DPRINT("FontGDI->SharedFace is NULL: prfnt->FaceName: %ls\n", prfnt->FaceName);
+    DumpFontInfo();
+
     IntLockFreeType();
-    if (!FontGDI->SharedFace)
-    {
-        DPRINT("FontGDI->SharedFace is NULL: prfnt->FaceName: %ls\n", prfnt->FaceName);
-    }
     ASSERT(FontGDI->SharedFace);
     face = FontGDI->SharedFace->Face;
 
