@@ -715,7 +715,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     }
 
     Status = ObReferenceObjectByHandle(FileHandle,
-                                       FILE_ALL_ACCESS,
+                                       FILE_READ_DATA | FILE_WRITE_DATA,
                                        IoFileObjectType,
                                        KernelMode,
                                        (PVOID*)&FileObject,
