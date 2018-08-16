@@ -5433,6 +5433,10 @@ GreExtTextOutW(
     ASSERT(FontGDI);
 
     IntLockFreeType();
+    if (!FontGDI->SharedFace)
+    {
+        DPRINT("FontGDI->SharedFace is NULL: prfnt->FaceName: %ls\n", prfnt->FaceName);
+    }
     ASSERT(FontGDI->SharedFace);
     face = FontGDI->SharedFace->Face;
 
