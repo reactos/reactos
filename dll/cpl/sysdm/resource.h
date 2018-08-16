@@ -56,10 +56,11 @@
 #define IDC_MACHINELINE3     103
 #define IDC_MACHINELINE4     104
 #define IDC_MACHINELINE5     105
-#define IDC_LICENCE          106
-#define IDC_ROSIMG           107
-#define IDC_ROSHOMEPAGE_LINK 108
-#define IDC_ROSVERSION       109
+#define IDC_MACHINELINE6     106
+#define IDC_LICENCE          107
+#define IDC_ROSIMG           108
+#define IDC_ROSHOMEPAGE_LINK 109
+#define IDC_ROSVERSION       110
 
 /* Propsheet - hardware */
 #define IDD_PROPPAGEHARDWARE        300
