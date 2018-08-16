@@ -423,8 +423,18 @@ static VOID GetSystemInformation(HWND hwnd)
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
+    WCHAR SMBiosName[96];
     INT CurMachineLine = IDC_MACHINELINE1;
 
+    /*
+     * Get hardware device name or motherboard name
+     * using information from raw SMBIOS data
+     */
+    if (GetSystemName(SMBiosName, _countof(SMBiosName)))
+    {
+        SetDlgItemText(hwnd, CurMachineLine, SMBiosName);
+        CurMachineLine++;
+    }
     /*
      * Get Processor information
      * although undocumented, this information is being pulled
