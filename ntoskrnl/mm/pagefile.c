@@ -290,10 +290,10 @@ MmFreeSwapPage(SWAPENTRY Entry)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    RtlClearBit(PagingFile->AllocMap, off >> 5);
+    RtlClearBit(PagingFile->Bitmap, off >> 5);
 
-    PagingFile->FreePages++;
-    PagingFile->UsedPages--;
+    PagingFile->FreeSpace++;
+    PagingFile->CurrentUsage--;
 
     MiFreeSwapPages++;
     MiUsedSwapPages--;
@@ -320,9 +320,9 @@ MmAllocSwapPage(VOID)
     for (i = 0; i < MAX_PAGING_FILES; i++)
     {
         if (MmPagingFile[i] != NULL &&
-                MmPagingFile[i]->FreePages >= 1)
+                MmPagingFile[i]->FreeSpace >= 1)
         {
-            off = RtlFindClearBitsAndSet(MmPagingFile[i]->AllocMap, 1, 0);
+            off = RtlFindClearBitsAndSet(MmPagingFile[i]->Bitmap, 1, 0);
             if (off == 0xFFFFFFFF)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -741,17 +741,21 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->FileHandle = FileHandle;
     PagingFile->FileObject = FileObject;
     PagingFile->MaximumSize = (SafeMaximumSize.QuadPart >> PAGE_SHIFT);
-    PagingFile->CurrentSize = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
+    PagingFile->Size = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
     PagingFile->MinimumSize = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
-    PagingFile->FreePages = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE);
-    PagingFile->UsedPages = 0;
+    /* First page is never used: it's the header
+     * TODO: write it
+     */
+    PagingFile->FreeSpace = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE) - 1;
+    PagingFile->CurrentUsage = 0;
     PagingFile->PageFileName = PageFileName;
+    ASSERT(PagingFile->Size == PagingFile->FreeSpace + PagingFile->CurrentUsage + 1);
 
-    AllocMapSize = sizeof(RTL_BITMAP) + (((PagingFile->FreePages + 31) / 32) * sizeof(ULONG));
-    PagingFile->AllocMap = ExAllocatePoolWithTag(NonPagedPool,
-                                                 AllocMapSize,
-                                                 TAG_MM);
-    if (PagingFile->AllocMap == NULL)
+    AllocMapSize = sizeof(RTL_BITMAP) + (((PagingFile->MaximumSize + 31) / 32) * sizeof(ULONG));
+    PagingFile->Bitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                               AllocMapSize,
+                                               TAG_MM);
+    if (PagingFile->Bitmap == NULL)
     {
         ExFreePoolWithTag(PagingFile, TAG_MM);
         ObDereferenceObject(FileObject);
@@ -760,10 +764,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlInitializeBitMap(PagingFile->AllocMap,
-                        (PULONG)(PagingFile->AllocMap + 1),
-                        (ULONG)(PagingFile->FreePages));
-    RtlClearAllBits(PagingFile->AllocMap);
+    RtlInitializeBitMap(PagingFile->Bitmap,
+                        (PULONG)(PagingFile->Bitmap + 1),
+                        (ULONG)(PagingFile->MaximumSize));
+    RtlClearAllBits(PagingFile->Bitmap);
 
     /* FIXME: should be calling unsafe instead,
      * we should already be in a guarded region
@@ -772,7 +776,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     ASSERT(MmPagingFile[MmNumberOfPagingFiles] == NULL);
     MmPagingFile[MmNumberOfPagingFiles] = PagingFile;
     MmNumberOfPagingFiles++;
-    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreePages;
+    MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreeSpace;
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
 
     MmSwapSpaceMessage = FALSE;

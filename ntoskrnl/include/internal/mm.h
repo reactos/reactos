@@ -426,14 +426,14 @@ extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 /* Page file information */
 typedef struct _MMPAGING_FILE
 {
-    PFN_NUMBER CurrentSize;
+    PFN_NUMBER Size;
     PFN_NUMBER MaximumSize;
     PFN_NUMBER MinimumSize;
-    PFN_NUMBER FreePages;
-    PFN_NUMBER UsedPages;
+    PFN_NUMBER FreeSpace;
+    PFN_NUMBER CurrentUsage;
     PFILE_OBJECT FileObject;
     UNICODE_STRING PageFileName;
-    PRTL_BITMAP AllocMap;
+    PRTL_BITMAP Bitmap;
     HANDLE FileHandle;
 }
 MMPAGING_FILE, *PMMPAGING_FILE;
