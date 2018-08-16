@@ -22,6 +22,7 @@
  * PURPOSE:         Message Boxes
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                  Hermes Belusca-Maito
  * UPDATE HISTORY:
  *      2003/07/28  Added some NT features
  *      2003/07/27  Code ported from wine
@@ -29,6 +30,7 @@
  */
 
 #include <user32.h>
+#include <ntstrsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
@@ -99,6 +101,43 @@ static const MSGBTNINFO MsgBtnInfo[] =
 
 
 /* INTERNAL FUNCTIONS ********************************************************/
+
+static UINT
+LoadAllocStringW(
+    IN HINSTANCE hInstance OPTIONAL,
+    IN UINT uID,
+    OUT PWSTR* pString,
+    IN PCWSTR pDefaultString OPTIONAL)
+{
+    UINT Length;
+    PCWSTR pStr;
+
+    /* Try to load the string from the resource */
+    Length = LoadStringW(hInstance, uID, (LPWSTR)&pStr, 0);
+    if (Length == 0)
+    {
+        /* If the resource string was not found, use the fallback default one */
+
+        if (!pDefaultString)
+        {
+            /* None was specified, return NULL */
+            *pString = NULL;
+            return 0;
+        }
+
+        pStr = pDefaultString;
+        Length = wcslen(pStr);
+    }
+
+    /* Allocate a new buffer, adding a NULL-terminator */
+    *pString = RtlAllocateHeap(RtlGetProcessHeap(), 0, (Length + 1) * sizeof(WCHAR));
+    if (!*pString)
+        return 0;
+
+    /* Copy the string, NULL-terminated */
+    RtlStringCchCopyNW(*pString, Length + 1, pStr, Length);
+    return Length;
+}
 
 static VOID MessageBoxTextToClipboard(HWND DialogWindow)
 {
@@ -208,15 +247,14 @@ static INT_PTR CALLBACK MessageBoxProc(
     HWND hwnd, UINT message,
     WPARAM wParam, LPARAM lParam)
 {
-    int Alert;
     PMSGBOXDATA mbd;
-    HELPINFO hi;
-    HWND hwndOwner;
 
     switch (message)
     {
     case WM_INITDIALOG:
     {
+        int Alert;
+
         mbd = (PMSGBOXDATA)lParam;
 
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)mbd);
@@ -234,7 +272,7 @@ static INT_PTR CALLBACK MessageBoxProc(
                 SendDlgItemMessageW(hwnd, MSGBOX_IDICON, STM_SETICON, (WPARAM)(HICON)mbd->mbp.lpszIcon, 0);
                 Alert = ALERT_SYSTEM_WARNING;
             }
-            else // Setup the rest of the alerts.
+            else /* Setup the rest of the alerts */
             {
                 switch (mbd->mbp.dwStyle & MB_ICONMASK)
                 {
@@ -249,32 +287,66 @@ static INT_PTR CALLBACK MessageBoxProc(
                     break;
                 default:
                     Alert = ALERT_SYSTEM_INFORMATIONAL;
-                    /* fall through */
+                    /* Fall through */
                 }
             }
-            /* Send out the alert notifications. */
+            /* Send out the alert notifications */
             NotifyWinEvent(EVENT_SYSTEM_ALERT, hwnd, OBJID_ALERT, Alert);
 
-            switch (mbd->mbp.dwStyle & MB_TYPEMASK)
+            /* Disable the Close menu button if no Cancel button is specified */
+            if (mbd->uCancelId == 0)
             {
-            case MB_ABORTRETRYIGNORE:
-            case MB_YESNO:
-                RemoveMenu(GetSystemMenu(hwnd, FALSE), SC_CLOSE, MF_BYCOMMAND);
-                break;
+                HMENU hSysMenu = GetSystemMenu(hwnd, FALSE);
+                if (hSysMenu)
+                    DeleteMenu(hSysMenu, SC_CLOSE, MF_BYCOMMAND);
             }
-            ASSERT(mbd->uDefButton < mbd->dwButtons);
-            SetFocus(GetDlgItem(hwnd, mbd->pidButton[mbd->uDefButton]));
+
+            /* Set the focus to the default button */
+            if (mbd->dwButtons > 0)
+            {
+                ASSERT(mbd->uDefButton < mbd->dwButtons);
+                SetFocus(GetDlgItem(hwnd, mbd->pidButton[mbd->uDefButton]));
+            }
+
+            /* Set up the window timer */
             if (mbd->dwTimeout && (mbd->dwTimeout != (UINT)-1))
                 SetTimer(hwnd, 0, mbd->dwTimeout, NULL);
         }
-        return 0;
+        return FALSE;
     }
 
     case WM_COMMAND:
-        switch (LOWORD(wParam))
+    {
+        UINT i;
+        INT_PTR iCtrlId = LOWORD(wParam);
+
+        switch (iCtrlId)
         {
+            /* Handle the default message-box buttons */
             case IDOK:
             case IDCANCEL:
+                /*
+                 * The dialog manager always sends IDCANCEL when the user
+                 * presses ESCape. We check here whether the message box
+                 * has a CANCEL button, or whether we should fall back to
+                 * the OK button, by using the correct uCancelId.
+                 */
+                if (iCtrlId == IDCANCEL)
+                {
+                    mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
+                    if (!mbd)
+                        return FALSE; /* Ignore */
+
+                    /* Check whether we can cancel the message box */
+                    if (mbd->uCancelId == 0)
+                        return TRUE; // FALSE; /* No, ignore */
+                    /* Quit with the correct return value */
+                    iCtrlId = mbd->uCancelId;
+                }
+                if (!GetDlgItem(hwnd, iCtrlId))
+                    return FALSE; /* Ignore */
+
+            /* Fall through */
             case IDABORT:
             case IDRETRY:
             case IDIGNORE:
@@ -282,69 +354,93 @@ static INT_PTR CALLBACK MessageBoxProc(
             case IDNO:
             case IDTRYAGAIN:
             case IDCONTINUE:
-                EndDialog(hwnd, wParam);
-                return 0;
+                EndDialog(hwnd, iCtrlId);
+                return TRUE;
+
+            case IDCLOSE:
+                return FALSE; /* Ignore */
+
             case IDHELP:
-                /* send WM_HELP message to messagebox window */
+            {
+                /* Send WM_HELP message to the message-box window */
+                HELPINFO hi;
                 hi.cbSize = sizeof(hi);
                 hi.iContextType = HELPINFO_WINDOW;
-                hi.iCtrlId = LOWORD(wParam);
+                hi.iCtrlId = iCtrlId;
                 hi.hItemHandle = (HANDLE)lParam;
                 hi.dwContextId = 0;
                 GetCursorPos(&hi.MousePos);
                 SendMessageW(hwnd, WM_HELP, 0, (LPARAM)&hi);
-                return 0;
+                return TRUE;
+            }
+
+            default:
+                break;
         }
-        return 0;
+
+        /* Check for any other user-defined buttons */
+        mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
+        if (!mbd)
+            return FALSE;
+
+        for (i = 0; i < mbd->dwButtons; ++i)
+        {
+            if (iCtrlId == mbd->pidButton[i])
+            {
+                EndDialog(hwnd, iCtrlId);
+                return TRUE;
+            }
+        }
+
+        return FALSE;
+    }
 
     case WM_COPY:
         MessageBoxTextToClipboard(hwnd);
-        return 0;
+        return TRUE;
 
     case WM_HELP:
     {
+        LPHELPINFO phi = (LPHELPINFO)lParam;
         mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
         if (!mbd)
-            return 0;
-        memcpy(&hi, (void *)lParam, sizeof(hi));
-        hi.dwContextId = GetWindowContextHelpId(hwnd);
+            return FALSE;
+        phi->dwContextId = GetWindowContextHelpId(hwnd);
 
         if (mbd->mbp.lpfnMsgBoxCallback)
         {
-            mbd->mbp.lpfnMsgBoxCallback(&hi);
+            mbd->mbp.lpfnMsgBoxCallback(phi);
         }
         else
         {
-            hwndOwner = GetWindow(hwnd, GW_OWNER);
+            HWND hwndOwner = GetWindow(hwnd, GW_OWNER);
             if (hwndOwner)
-                SendMessageW(hwndOwner, WM_HELP, 0, (LPARAM)&hi);
+                SendMessageW(hwndOwner, WM_HELP, 0, lParam);
         }
-        return 0;
+        return TRUE;
     }
 
     case WM_CLOSE:
     {
         mbd = (PMSGBOXDATA)GetPropW(hwnd, L"ROS_MSGBOX");
         if (!mbd)
-            return 0;
-        switch (mbd->mbp.dwStyle & MB_TYPEMASK)
-        {
-        case MB_ABORTRETRYIGNORE:
-        case MB_YESNO:
-            return 1;
-        }
-        EndDialog(hwnd, IDCANCEL);
-        return 1;
+            return FALSE;
+
+        /* Check whether we can cancel the message box */
+        if (mbd->uCancelId == 0)
+            return TRUE; /* No, ignore */
+        /* Quit with the correct return value */
+        EndDialog(hwnd, mbd->uCancelId);
+        return TRUE;
     }
 
     case WM_TIMER:
         if (wParam == 0)
-        {
             EndDialog(hwnd, IDTIMEOUT);
-        }
-        return 0;
+        return FALSE;
     }
-    return 0;
+
+    return FALSE;
 }
 
 static int
@@ -352,40 +448,33 @@ MessageBoxTimeoutIndirectW(
     CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT dwTimeout)
 {
     int ret = 0;
+    UINT i;
+    LPWSTR defCaption = NULL;
     MSGBOXDATA mbd;
     MSGBTNINFO Buttons;
     LPCWSTR ButtonText[MSGBOXEX_MAXBTNS];
-    DLGTEMPLATE *tpl;
-    DLGITEMTEMPLATE *iico, *itxt, *ibtn;
-    NONCLIENTMETRICSW nclm;
-    LPVOID buf;
-    BYTE *dest;
-    LPCWSTR caption, text;
-    HFONT hFont, hOldFont;
-    HICON hIcon;
-    HWND hDCWnd;
-    HDC hDC;
-    SIZE units;
-    int bufsize, caplen, textlen, i, btnleft, btntop;
-    size_t ButtonLen;
-    RECT btnrect, txtrect, rc;
-    SIZE btnsize;
-    POINT iconPos; SIZE iconSize;
-
 
     ZeroMemory(&mbd, sizeof(mbd));
     memcpy(&mbd.mbp, lpMsgBoxParams, sizeof(mbd.mbp));
-    lpMsgBoxParams = &mbd.mbp;
-
-    mbd.wLanguageId = (WORD)lpMsgBoxParams->dwLanguageId; // FIXME!
+    mbd.wLanguageId = (WORD)lpMsgBoxParams->dwLanguageId;
     mbd.dwTimeout   = dwTimeout;
+
+    if (!mbd.mbp.lpszCaption)
+    {
+        /* No caption, use the default one */
+        LoadAllocStringW(User32Instance,
+                         IDS_ERROR,
+                         &defCaption,
+                         L"Error");
+        mbd.mbp.lpszCaption = (defCaption ? defCaption : L"Error");
+    }
 
     /* Create the selected buttons; unknown types will fall back to MB_OK */
     i = (lpMsgBoxParams->dwStyle & MB_TYPEMASK);
     if (i >= ARRAYSIZE(MsgBtnInfo))
         i = MB_OK;
 
-    /* Get buttons IDs */
+    /* Get the buttons IDs */
     Buttons = MsgBtnInfo[i];
 
     /* Add the Help button */
@@ -398,6 +487,23 @@ MessageBoxTimeoutIndirectW(
 
     ASSERT(Buttons.btnCnt <= MSGBOXEX_MAXBTNS);
 
+    /* Retrieve the pointers to the button labels and find the Cancel button */
+    mbd.uCancelId = (i == MB_OK ? IDOK : 0);
+    for (i = 0; i < Buttons.btnCnt; ++i)
+    {
+        // FIXME: Use the strings in the correct language.
+        // MB_GetString gives the string in default system language.
+        ButtonText[i] = MB_GetString(Buttons.btnIds[i] - IDS_OK); /* or: Buttons.btnIdx[i] - IDOK */
+#if 0
+        LoadAllocStringW(User32Instance,
+                         Buttons.btnIds[i],
+                         &ButtonText[i],
+                         L"");
+#endif
+        if (Buttons.btnIdx[i] == IDCANCEL)
+            mbd.uCancelId = IDCANCEL;
+    }
+
     mbd.pidButton = Buttons.btnIdx;
     mbd.ppszButtonText = ButtonText;
     mbd.dwButtons = Buttons.btnCnt;
@@ -406,48 +512,95 @@ MessageBoxTimeoutIndirectW(
     /* Make the first button the default button if none other is */
     if (mbd.uDefButton >= mbd.dwButtons)
         mbd.uDefButton = 0;
-    // mbd.uCancelId;
 
+    /* Call the helper function */
+    ret = SoftModalMessageBox(&mbd);
+
+#if 0
+    for (i = 0; i < mbd.dwButtons; i++)
+    {
+        if (ButtonText[i] && *ButtonText[i])
+            RtlFreeHeap(RtlGetProcessHeap(), 0, ButtonText[i]);
+    }
+#endif
+
+    if (defCaption)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, defCaption);
+
+    return ret;
+}
+
+int
+WINAPI
+SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
+{
+    int ret = 0;
+    MSGBOXDATA mbd;
+    LPMSGBOXPARAMSW lpMsgBoxParams = &mbd.mbp;
+    DLGTEMPLATE *tpl;
+    DLGITEMTEMPLATE *iico, *itxt, *ibtn;
+    NONCLIENTMETRICSW nclm;
+    LPVOID buf;
+    BYTE *dest;
+    LPWSTR caption, text;
+    HFONT hFont, hOldFont;
+    HICON hIcon;
+    HWND hDCWnd;
+    HDC hDC;
+    SIZE units;
+    int bufsize, caplen, textlen, i, btnleft, btntop;
+    size_t ButtonLen;
+    RECT btnrect, txtrect, rc;
+    SIZE btnsize;
+    POINT iconPos; SIZE iconSize;
+
+    /* Capture the MsgBoxData */
+    memcpy(&mbd, lpMsgBoxData, sizeof(mbd));
 
     /* Load the caption */
-    if (!lpMsgBoxParams->lpszCaption)
-    {
-        /* No caption, use the default one */
-        caplen = LoadStringW(User32Instance, IDS_ERROR, (LPWSTR)&caption, 0);
-    }
-    else if (IS_INTRESOURCE(lpMsgBoxParams->lpszCaption))
+    caption = NULL;
+    if (lpMsgBoxParams->lpszCaption && IS_INTRESOURCE(lpMsgBoxParams->lpszCaption))
     {
         /* User-defined resource string */
-        caplen = LoadStringW(lpMsgBoxParams->hInstance,
-                             PtrToUlong(lpMsgBoxParams->lpszCaption),
-                             (LPWSTR)&caption, 0);
+        caplen = LoadAllocStringW(lpMsgBoxParams->hInstance,
+                                  PtrToUlong(lpMsgBoxParams->lpszCaption),
+                                  &caption,
+                                  NULL);
+        lpMsgBoxParams->lpszCaption = caption;
     }
-    else
+    else if (lpMsgBoxParams->lpszCaption)
     {
         /* UNICODE string pointer */
-        caption = lpMsgBoxParams->lpszCaption;
-        caplen  = wcslen(caption);
+        caplen = wcslen(lpMsgBoxParams->lpszCaption);
+    }
+    if (!lpMsgBoxParams->lpszCaption)
+    {
+        /* No caption, use blank */
+        lpMsgBoxParams->lpszCaption = L"";
+        caplen = 0;
     }
 
     /* Load the text */
+    text = NULL;
+    if (lpMsgBoxParams->lpszText && IS_INTRESOURCE(lpMsgBoxParams->lpszText))
+    {
+        /* User-defined resource string */
+        textlen = LoadAllocStringW(lpMsgBoxParams->hInstance,
+                                   PtrToUlong(lpMsgBoxParams->lpszText),
+                                   &text,
+                                   NULL);
+        lpMsgBoxParams->lpszText = text;
+    }
+    else if (lpMsgBoxParams->lpszText)
+    {
+        /* UNICODE string pointer */
+        textlen = wcslen(lpMsgBoxParams->lpszText);
+    }
     if (!lpMsgBoxParams->lpszText)
     {
         /* No text, use blank */
-        text    = L"";
+        lpMsgBoxParams->lpszText = L"";
         textlen = 0;
-    }
-    else if (IS_INTRESOURCE(lpMsgBoxParams->lpszText))
-    {
-        /* User-defined resource string */
-        textlen = LoadStringW(lpMsgBoxParams->hInstance,
-                              PtrToUlong(lpMsgBoxParams->lpszText),
-                              (LPWSTR)&text, 0);
-    }
-    else
-    {
-        /* UNICODE string pointer */
-        text    = lpMsgBoxParams->lpszText;
-        textlen = wcslen(text);
     }
 
     /* Load the icon */
@@ -483,7 +636,7 @@ MessageBoxTimeoutIndirectW(
             break;
     }
     /* Reuse the internal pointer! */
-    ((MSGBOXPARAMSW*)lpMsgBoxParams)->lpszIcon = (LPCWSTR)hIcon;
+    lpMsgBoxParams->lpszIcon = (LPCWSTR)hIcon;
 
     /* Basic space */
     bufsize = sizeof(DLGTEMPLATE) +
@@ -509,30 +662,16 @@ MessageBoxTimeoutIndirectW(
     /* Space for the buttons */
     for (i = 0; i < mbd.dwButtons; i++)
     {
-        /* Get the default text of the buttons */
-        if (Buttons.btnIds[i])
-        {
-            LPCWSTR pStr;
-            ButtonLen = LoadStringW(User32Instance,
-                                    Buttons.btnIds[i],
-                                    (LPWSTR)&pStr, 0);
-            mbd.ppszButtonText[i] = RtlAllocateHeap(GetProcessHeap(), 0, (ButtonLen + 1) * sizeof(WCHAR));
-            if (mbd.ppszButtonText[i])
-            {
-                memcpy((LPWSTR)mbd.ppszButtonText[i], pStr, ButtonLen * sizeof(WCHAR));
-                ((LPWSTR)mbd.ppszButtonText[i])[ButtonLen] = 0;
-            }
-            else
-            {
-                mbd.ppszButtonText[i] = L"";
-                ButtonLen = 0;
-            }
-        }
-        else
+        if (!mbd.ppszButtonText[i] || !*mbd.ppszButtonText[i])
         {
             /* No text, use blank */
             mbd.ppszButtonText[i] = L"";
             ButtonLen = 0;
+        }
+        else
+        {
+            /* UNICODE string pointer */
+            ButtonLen = wcslen(mbd.ppszButtonText[i]);
         }
 
         bufsize = ALIGN_UP(bufsize, DWORD);
@@ -542,7 +681,7 @@ MessageBoxTimeoutIndirectW(
     }
 
     /* Allocate the dialog template */
-    buf = RtlAllocateHeap(GetProcessHeap(), 0, bufsize);
+    buf = RtlAllocateHeap(RtlGetProcessHeap(), 0, bufsize);
     if (!buf)
         goto Quit;
 
@@ -554,7 +693,7 @@ MessageBoxTimeoutIndirectW(
     hFont = CreateFontIndirectW(&nclm.lfMessageFont);
     if (!hFont)
     {
-        ERR("Cannot retrieve nclm.lfMessageFont!\n");
+        ERR("Cannot retrieve nclm.lfMessageFont! (error %lu)\n", GetLastError());
         goto Quit;
     }
 
@@ -568,7 +707,7 @@ MessageBoxTimeoutIndirectW(
     }
     if (!hDC)
     {
-        ERR("GetDCEx() failed, bail out!\n");
+        ERR("GetDCEx() failed, bail out! (error %lu)\n", GetLastError());
         goto Quit;
     }
     hOldFont = SelectObject(hDC, hFont);
@@ -577,7 +716,7 @@ MessageBoxTimeoutIndirectW(
     if (!units.cx)
     {
         DWORD defUnits;
-        ERR("GdiGetCharDimensions() failed, falling back to default values!\n");
+        ERR("GdiGetCharDimensions() failed, falling back to default values (error %lu)\n", GetLastError());
         defUnits = GetDialogBaseUnits();
         units.cx = LOWORD(defUnits);
         units.cy = HIWORD(defUnits);
@@ -590,7 +729,7 @@ MessageBoxTimeoutIndirectW(
     txtrect.top = txtrect.left = txtrect.bottom = 0;
     if (textlen != 0)
     {
-        DrawTextW(hDC, text, textlen, &txtrect,
+        DrawTextW(hDC, lpMsgBoxParams->lpszText, textlen, &txtrect,
                   DT_LEFT | DT_NOPREFIX | DT_WORDBREAK | DT_EXPANDTABS | DT_EXTERNALLEADING | DT_EDITCONTROL | DT_CALCRECT);
     }
     else
@@ -682,7 +821,6 @@ MessageBoxTimeoutIndirectW(
     }
 
 
-
     /* Initialize the dialog template */
     tpl = (DLGTEMPLATE *)buf;
 
@@ -701,7 +839,7 @@ MessageBoxTimeoutIndirectW(
 
     *(DWORD*)dest = 0;  /* no menu and use default window class */
     dest += 2 * sizeof(WORD);
-    memcpy(dest, caption, caplen * sizeof(WCHAR));
+    memcpy(dest, lpMsgBoxParams->lpszCaption, caplen * sizeof(WCHAR));
     dest += caplen * sizeof(WCHAR);
     *(WCHAR*)dest = L'\0';
     dest += sizeof(WCHAR);
@@ -755,7 +893,7 @@ MessageBoxTimeoutIndirectW(
     dest += sizeof(WORD);
     *(WORD*)dest = 0x0082; /* static control */
     dest += sizeof(WORD);
-    memcpy(dest, text, textlen * sizeof(WCHAR));
+    memcpy(dest, lpMsgBoxParams->lpszText, textlen * sizeof(WCHAR));
     dest += textlen * sizeof(WCHAR);
     *(WCHAR*)dest = 0;
     dest += sizeof(WCHAR);
@@ -808,10 +946,11 @@ MessageBoxTimeoutIndirectW(
         btnleft += btnsize.cx + MSGBOXEX_BUTTONSPACING;
     }
 
-    /* Calculate the size and position of the messagebox window */
+    /* Calculate the size and position of the message-box window */
     btnleft = max(btnleft - MSGBOXEX_BUTTONSPACING, rc.left + txtrect.right);
     btnleft += MSGBOXEX_MARGIN;
-    btntop +=  btnsize.cy + MSGBOXEX_MARGIN;
+    if (mbd.dwButtons > 0)
+        btntop += btnsize.cy + MSGBOXEX_MARGIN;
 
     /* Set the size and position of the static message */
     itxt->x = RESCALE_X(rc.left, units);
@@ -823,19 +962,20 @@ MessageBoxTimeoutIndirectW(
     tpl->cx = RESCALE_X(btnleft, units);
     tpl->cy = RESCALE_Y(btntop, units);
 
-    /* Finally show the messagebox */
+    /* Finally show the message-box */
     ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl,
                                   lpMsgBoxParams->hwndOwner,
                                   MessageBoxProc, (LPARAM)&mbd);
 
 Quit:
-    RtlFreeHeap(GetProcessHeap(), 0, buf);
+    if (buf)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, buf);
 
-    for (i = 0; i < mbd.dwButtons; i++)
-    {
-        if (mbd.ppszButtonText[i] && *(mbd.ppszButtonText[i]))
-            RtlFreeHeap(GetProcessHeap(), 0, (LPWSTR)mbd.ppszButtonText[i]);
-    }
+    if (text)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, text);
+
+    if (caption)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, caption);
 
     return ret;
 }
@@ -1099,23 +1239,12 @@ MessageBoxTimeoutW(
 
 
 /*
- * @unimplemented
- */
-DWORD
-WINAPI
-SoftModalMessageBox(DWORD Unknown0)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
  * @implemented
  */
 BOOL
 WINAPI
-MessageBeep(IN UINT uType)
+MessageBeep(
+    IN UINT uType)
 {
     return NtUserxMessageBeep(uType);
 }
@@ -1130,9 +1259,30 @@ MessageBeep(IN UINT uType)
  */
 LPCWSTR
 WINAPI
-MB_GetString(IN UINT wBtn)
+MB_GetString(
+    IN UINT wBtn)
 {
-    LPCWSTR btnStr = NULL;
+    static BOOL bCached = FALSE;
+    static MBSTRING MBStrings[MAX_MB_STRINGS]; // FIXME: Use gpsi->MBStrings when this is loaded by Win32k!
+
+    //
+    // FIXME - TODO: The gpsi->MBStrings[] array should be loaded by win32k!
+    //
+    ASSERT(IDCONTINUE <= MAX_MB_STRINGS);
+    if (!bCached)
+    {
+        UINT i;
+        for (i = 0; i < MAX_MB_STRINGS; ++i)
+        {
+            /*gpsi->*/MBStrings[i].uID  = IDOK + i;
+            /*gpsi->*/MBStrings[i].uStr = IDS_OK + i; // See user32/include/resource.h
+            LoadStringW(User32Instance,
+                        /*gpsi->*/MBStrings[i].uStr,
+                        /*gpsi->*/MBStrings[i].szName,
+                        ARRAYSIZE(/*gpsi->*/MBStrings[i].szName));
+        }
+        bCached = TRUE;
+    }
 
     /*
      * The allowable IDs are between "IDOK - 1" (0) and "IDCONTINUE - 1" (10) inclusive.
@@ -1141,9 +1291,7 @@ MB_GetString(IN UINT wBtn)
     if (wBtn > IDCONTINUE - 1)
         return NULL;
 
-    wBtn += 800; // See user32/include/resource.h
-    LoadStringW(User32Instance, wBtn, (LPWSTR)&btnStr, 0);
-    return btnStr;
+    return /*gpsi->*/MBStrings[wBtn].szName;
 }
 
 /* EOF */

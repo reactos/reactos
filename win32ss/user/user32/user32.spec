@@ -675,7 +675,7 @@
 666 stdcall ShowStartGlass(long)
 667 stdcall ShowWindow(long long) NtUserShowWindow
 668 stdcall ShowWindowAsync(long long) NtUserShowWindowAsync
-669 stdcall SoftModalMessageBox(long)
+669 stdcall SoftModalMessageBox(ptr)
 670 stdcall SubtractRect(ptr ptr ptr)
 671 stdcall SwapMouseButton(long)
 672 stdcall SwitchDesktop(long) NtUserSwitchDesktop
