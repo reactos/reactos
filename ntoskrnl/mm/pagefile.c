@@ -364,6 +364,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     SECURITY_DESCRIPTOR SecurityDescriptor;
     PACL Dacl;
     PWSTR Buffer;
+    DEVICE_TYPE DeviceType;
 
     DPRINT("NtCreatePagingFile(FileName %wZ, MinimumSize %I64d)\n",
            FileName, MinimumSize->QuadPart);
@@ -722,6 +723,17 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        ZwClose(FileHandle);
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return Status;
+    }
+
+    /* Only allow page file on a few device types */
+    DeviceType = IoGetRelatedDeviceObject(FileObject)->DeviceType;
+    if (DeviceType != FILE_DEVICE_DISK_FILE_SYSTEM && DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_DFS_VOLUME && DeviceType != FILE_DEVICE_DFS_FILE_SYSTEM)
+    {
+        ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
         ExFreePoolWithTag(Buffer, TAG_MM);
         return Status;
