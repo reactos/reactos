@@ -635,7 +635,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         }
 
         /* Don't allow page file shrinking */
-        if (PagingFile->MinimumSize.QuadPart > SafeMinimumSize.QuadPart)
+        if (PagingFile->MinimumSize > (SafeMinimumSize.QuadPart >> PAGE_SHIFT))
         {
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
@@ -645,7 +645,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             return STATUS_INVALID_PARAMETER_2;
         }
 
-        if (SafeMaximumSize.QuadPart < PagingFile->MaximumSize.QuadPart)
+        if ((SafeMaximumSize.QuadPart >> PAGE_SHIFT) < PagingFile->MaximumSize)
         {
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
@@ -740,9 +740,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     PagingFile->FileHandle = FileHandle;
     PagingFile->FileObject = FileObject;
-    PagingFile->MaximumSize.QuadPart = SafeMaximumSize.QuadPart;
-    PagingFile->CurrentSize.QuadPart = SafeMinimumSize.QuadPart;
-    PagingFile->MinimumSize.QuadPart = SafeMinimumSize.QuadPart;
+    PagingFile->MaximumSize = (SafeMaximumSize.QuadPart >> PAGE_SHIFT);
+    PagingFile->CurrentSize = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
+    PagingFile->MinimumSize = (SafeMinimumSize.QuadPart >> PAGE_SHIFT);
     PagingFile->FreePages = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE);
     PagingFile->UsedPages = 0;
     PagingFile->PageFileName = PageFileName;

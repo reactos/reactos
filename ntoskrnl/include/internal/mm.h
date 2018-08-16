@@ -426,9 +426,9 @@ extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 /* Page file information */
 typedef struct _MMPAGING_FILE
 {
-    LARGE_INTEGER CurrentSize;
-    LARGE_INTEGER MaximumSize;
-    LARGE_INTEGER MinimumSize;
+    PFN_NUMBER CurrentSize;
+    PFN_NUMBER MaximumSize;
+    PFN_NUMBER MinimumSize;
     PFN_NUMBER FreePages;
     PFN_NUMBER UsedPages;
     PFILE_OBJECT FileObject;
