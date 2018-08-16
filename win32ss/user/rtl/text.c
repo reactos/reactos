@@ -940,6 +940,21 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
 }
 
 #ifdef _WIN32K_
+/***********************************************************************
+ *                      UserExtTextOutW
+ *
+ *  Callback to usermode to use ExtTextOut, which will apply complex
+ *  script processing if needed and then draw it
+ *
+ * Parameters
+ *   hdc        [in] The handle of the DC for drawing
+ *   x          [in] The x location of the string
+ *   y          [in] The y location of the string
+ *   flags      [in] ExtTextOut flags
+ *   lprc       [in] Clipping rectangle (if not NULL)
+ *   lpString   [in] String to be drawn
+ *   count      [in] String length
+ */
 BOOL UserExtTextOutW(HDC hdc,
                      INT x,
                      INT y,
@@ -951,7 +966,7 @@ BOOL UserExtTextOutW(HDC hdc,
     PVOID ResultPointer;
     ULONG ResultLength;
     ULONG ArgumentLength;
-    ULONG_PTR pStringBuffer = 0;
+    ULONG_PTR pStringBuffer;
     NTSTATUS Status;
     PLPK_CALLBACK_ARGUMENTS Argument;
     BOOL bResult;
@@ -990,7 +1005,14 @@ BOOL UserExtTextOutW(HDC hdc,
        mimicks code from co_IntClientLoadLibrary */
     Argument->lpString = (LPWSTR)pStringBuffer;
     pStringBuffer += (ULONG_PTR)Argument;
-    RtlStringCchCopyNW((LPWSTR)pStringBuffer, count + 1, lpString, count);
+
+    Status = RtlStringCchCopyNW((LPWSTR)pStringBuffer, count + 1, lpString, count);
+
+    if (!NT_SUCCESS(Status))
+    {
+        IntCbFreeMemory(Argument);
+        goto fallback;
+    }
 
     UserLeaveCo();
 
