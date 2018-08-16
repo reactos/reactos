@@ -271,19 +271,6 @@ MmInitPagingFile(VOID)
     MmNumberOfPagingFiles = 0;
 }
 
-static ULONG
-MiAllocPageFromPagingFile(PMMPAGING_FILE PagingFile)
-{
-    KIRQL oldIrql;
-    ULONG off;
-
-    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
-    off = RtlFindClearBitsAndSet(PagingFile->AllocMap, 1, 0);
-    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-
-    return off;
-}
-
 VOID
 NTAPI
 MmFreeSwapPage(SWAPENTRY Entry)
@@ -303,7 +290,6 @@ MmFreeSwapPage(SWAPENTRY Entry)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    KeAcquireSpinLockAtDpcLevel(&PagingFile->AllocMapLock);
 
     RtlClearBit(PagingFile->AllocMap, off >> 5);
 
@@ -313,7 +299,6 @@ MmFreeSwapPage(SWAPENTRY Entry)
     MiFreeSwapPages++;
     MiUsedSwapPages--;
 
-    KeReleaseSpinLockFromDpcLevel(&PagingFile->AllocMapLock);
     KeReleaseSpinLock(&PagingFileListLock, oldIrql);
 }
 
@@ -339,7 +324,7 @@ MmAllocSwapPage(VOID)
         if (MmPagingFile[i] != NULL &&
                 MmPagingFile[i]->FreePages >= 1)
         {
-            off = MiAllocPageFromPagingFile(MmPagingFile[i]);
+            off = RtlFindClearBitsAndSet(MmPagingFile[i]->AllocMap, 1, 0);
             if (off == 0xFFFFFFFF)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -732,7 +717,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->CurrentSize.QuadPart = SafeInitialSize.QuadPart;
     PagingFile->FreePages = (ULONG)(SafeInitialSize.QuadPart / PAGE_SIZE);
     PagingFile->UsedPages = 0;
-    KeInitializeSpinLock(&PagingFile->AllocMapLock);
     PagingFile->PageFileName = PageFileName;
 
     AllocMapSize = sizeof(RTL_BITMAP) + (((PagingFile->FreePages + 31) / 32) * sizeof(ULONG));
