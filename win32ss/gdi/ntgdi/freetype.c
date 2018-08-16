@@ -3207,7 +3207,8 @@ TextIntUpdateSize(PDC dc,
     return TRUE;
 }
 
-static FT_UInt get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
+static inline FT_UInt FASTCALL
+get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
 {
     FT_UInt ret;
 
@@ -3220,7 +3221,8 @@ static FT_UInt get_glyph_index_symbol(FT_Face ft_face, UINT glyph)
     return ret;
 }
 
-static FT_UInt get_glyph_index(FT_Face ft_face, UINT glyph)
+static inline FT_UInt FASTCALL
+get_glyph_index(FT_Face ft_face, UINT glyph)
 {
     FT_UInt ret;
 
@@ -3234,7 +3236,7 @@ static FT_UInt get_glyph_index(FT_Face ft_face, UINT glyph)
     return FT_Get_Char_Index(ft_face, glyph);
 }
 
-static FT_UInt
+static inline FT_UInt FASTCALL
 get_glyph_index_flagged(FT_Face face, FT_ULong code, DWORD indexed_flag, DWORD flags)
 {
     FT_UInt glyph_index;
