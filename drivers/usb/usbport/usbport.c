@@ -1844,9 +1844,11 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
 
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
-        Length = sizeof(USBPORT_DEVICE_EXTENSION) +
-                 MiniPortInterface->Packet.MiniPortExtensionSize +
-                 sizeof(USB2_HC_EXTENSION);
+        ASSERT(MiniPortInterface->Packet.MiniPortExtensionSize <=
+               MAXULONG - sizeof(USBPORT_DEVICE_EXTENSION) - sizeof(USB2_HC_EXTENSION));
+        Length = (ULONG)(sizeof(USBPORT_DEVICE_EXTENSION) +
+                         MiniPortInterface->Packet.MiniPortExtensionSize +
+                         sizeof(USB2_HC_EXTENSION));
 
         /* Create device */
         Status = IoCreateDevice(DriverObject,

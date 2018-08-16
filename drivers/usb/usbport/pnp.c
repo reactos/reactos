@@ -1709,7 +1709,7 @@ USBPORT_PdoPnP(IN PDEVICE_OBJECT PdoDevice,
                                        L"USB\\ROOT_HUB");
                 }
 
-                Length = (wcslen(Buffer) + 1);
+                Length = (LONG)(wcslen(Buffer) + 1);
 
                 Id = ExAllocatePoolWithTag(PagedPool,
                                            Length * sizeof(WCHAR),
