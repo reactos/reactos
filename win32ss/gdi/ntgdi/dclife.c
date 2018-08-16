@@ -103,6 +103,10 @@ DC_AllocDcWithHandle(GDILOOBJTYPE eDcObjType)
 void
 DC_InitHack(PDC pdc)
 {
+#ifndef NDEBUG
+    PFONTGDI FontGDI;
+#endif
+
     if (defaultDCstate == NULL)
     {
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
@@ -113,6 +117,13 @@ DC_InitHack(PDC pdc)
     }
 
     pdc->prfnt = LFONT_Realize(pdc->dclevel.plfnt, pdc->ppdev, pdc->dhpdev);
+
+#ifndef NDEBUG
+    ASSERT(pdc->prfnt);
+    FontGDI = ObjToGDI(pdc->prfnt->Font, FONT);
+    ASSERT(FontGDI);
+    ASSERT(FontGDI->SharedFace);
+#endif
 
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 

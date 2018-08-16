@@ -578,8 +578,15 @@ DC_hSelectFont(
 
             /* Legacy crap that will die with font engine rewrite */
             prfnt = LFONT_Realize(pdc->dclevel.plfnt, pdc->ppdev, pdc->dhpdev);
+            ASSERT(prfnt);
             if (prfnt)
             {
+#ifndef NDEBUG
+                PFONTGDI FontGDI = ObjToGDI(prfnt->Font, FONT);
+                ASSERT(FontGDI);
+                ASSERT(FontGDI->SharedFace);
+#endif
+
                 if (pdc->prfnt)
                     RFONT_Free(pdc->prfnt);
 
