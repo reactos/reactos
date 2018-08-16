@@ -2735,6 +2735,7 @@ GetFontFamilyInfoForSubstitutes(LPLOGFONTW LogFont,
 
         Found = TRUE;
         ASSERT(FontGDI->SharedFace);
+        ASSERT(FontGDI->SharedFace->Face);
         if (*pCount < MaxCount)
         {
             FontFamilyFillInfo(&Info[*pCount], pFromW->Buffer, NULL, FontGDI);
@@ -4777,6 +4778,7 @@ PRFONT LFONT_Realize(PLFONT pLFont, PPDEVOBJ hdevConsumer, DHPDEV dhpdev)
         {
             PFONTGDI FontGDI = ObjToGDI(pFontObj, FONT);
             ASSERT(FontGDI->SharedFace);
+            ASSERT(FontGDI->SharedFace->Face);
 
             IntLockFreeType();
             RFONT_Init(prfnt, FontGDI, &SubstitutedLogFont);
@@ -5528,6 +5530,7 @@ GreExtTextOutW(
 
     IntLockFreeType();
     ASSERT(FontGDI->SharedFace);
+    ASSERT(FontGDI->SharedFace->Face);
     face = FontGDI->SharedFace->Face;
 
     EmuBold = (prfnt->lfWeight >= FW_BOLD && FontGDI->OriginalWeight <= FW_NORMAL);

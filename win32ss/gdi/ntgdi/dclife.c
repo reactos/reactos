@@ -123,6 +123,7 @@ DC_InitHack(PDC pdc)
     FontGDI = ObjToGDI(pdc->prfnt->Font, FONT);
     ASSERT(FontGDI);
     ASSERT(FontGDI->SharedFace);
+    ASSERT(FontGDI->SharedFace->Face);
 #endif
 
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);

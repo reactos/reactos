@@ -585,6 +585,7 @@ DC_hSelectFont(
                 PFONTGDI FontGDI = ObjToGDI(prfnt->Font, FONT);
                 ASSERT(FontGDI);
                 ASSERT(FontGDI->SharedFace);
+                ASSERT(FontGDI->SharedFace->Face);
 #endif
 
                 if (pdc->prfnt)
