@@ -345,7 +345,7 @@ MmAllocSwapPage(VOID)
 
 NTSTATUS NTAPI
 NtCreatePagingFile(IN PUNICODE_STRING FileName,
-                   IN PLARGE_INTEGER InitialSize,
+                   IN PLARGE_INTEGER MinimumSize,
                    IN PLARGE_INTEGER MaximumSize,
                    IN ULONG Reserved)
 {
@@ -359,14 +359,14 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     ULONG Count;
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING PageFileName;
-    LARGE_INTEGER SafeInitialSize, SafeMaximumSize, AllocationSize;
+    LARGE_INTEGER SafeMinimumSize, SafeMaximumSize, AllocationSize;
     FILE_FS_DEVICE_INFORMATION FsDeviceInfo;
     SECURITY_DESCRIPTOR SecurityDescriptor;
     PACL Dacl;
     PWSTR Buffer;
 
-    DPRINT("NtCreatePagingFile(FileName %wZ, InitialSize %I64d)\n",
-           FileName, InitialSize->QuadPart);
+    DPRINT("NtCreatePagingFile(FileName %wZ, MinimumSize %I64d)\n",
+           FileName, MinimumSize->QuadPart);
 
     PAGED_CODE();
 
@@ -386,7 +386,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
         _SEH2_TRY
         {
-            SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
+            SafeMinimumSize = ProbeForReadLargeInteger(MinimumSize);
             SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
 
             PageFileName.Length = FileName->Length;
@@ -402,7 +402,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     }
     else
     {
-        SafeInitialSize = *InitialSize;
+        SafeMinimumSize = *MinimumSize;
         SafeMaximumSize = *MaximumSize;
 
         PageFileName.Length = FileName->Length;
@@ -412,7 +412,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
     /* Pagefiles can't be larger than 4GB and ofcourse the minimum should be
        smaller than the maximum */
-    if (0 != SafeInitialSize.u.HighPart)
+    if (0 != SafeMinimumSize.u.HighPart)
     {
         return STATUS_INVALID_PARAMETER_2;
     }
@@ -420,7 +420,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     {
         return STATUS_INVALID_PARAMETER_3;
     }
-    if (SafeMaximumSize.u.LowPart < SafeInitialSize.u.LowPart)
+    if (SafeMaximumSize.u.LowPart < SafeMinimumSize.u.LowPart)
     {
         return STATUS_INVALID_PARAMETER_MIX;
     }
@@ -535,7 +535,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      * of the paging file is cluster 3042 but cluster 3043 is NOT part of the
      * paging file but of another file. We can't write a complete page (4096
      * bytes) to the physical location of cluster 3042 then. */
-    AllocationSize.QuadPart = SafeInitialSize.QuadPart + PAGE_SIZE;
+    AllocationSize.QuadPart = SafeMinimumSize.QuadPart + PAGE_SIZE;
 
     /* First, attempt to replace the page file, if existing */
     Status = IoCreateFile(&FileHandle,
@@ -669,10 +669,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* DACL is no longer needed, free it */
     ExFreePoolWithTag(Dacl, 'lcaD');
 
-    /* Set its end of file to initial size */
+    /* Set its end of file to minimal size */
     Status = ZwSetInformationFile(FileHandle,
                                   &IoStatus,
-                                  &SafeInitialSize,
+                                  &SafeMinimumSize,
                                   sizeof(LARGE_INTEGER),
                                   FileEndOfFileInformation);
     if (!NT_SUCCESS(Status) || !NT_SUCCESS(IoStatus.Status))
@@ -720,8 +720,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PagingFile->FileHandle = FileHandle;
     PagingFile->FileObject = FileObject;
     PagingFile->MaximumSize.QuadPart = SafeMaximumSize.QuadPart;
-    PagingFile->CurrentSize.QuadPart = SafeInitialSize.QuadPart;
-    PagingFile->FreePages = (ULONG)(SafeInitialSize.QuadPart / PAGE_SIZE);
+    PagingFile->CurrentSize.QuadPart = SafeMinimumSize.QuadPart;
+    PagingFile->FreePages = (ULONG)(SafeMinimumSize.QuadPart / PAGE_SIZE);
     PagingFile->UsedPages = 0;
     PagingFile->PageFileName = PageFileName;
 
