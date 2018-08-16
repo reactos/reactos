@@ -684,6 +684,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
 }
 
+static
 BOOLEAN
 InsertInBootDriverList(
     LIST_ENTRY *BootDriverListHead,
@@ -692,6 +693,9 @@ InsertInBootDriverList(
     PBOOT_DRIVER_LIST_ENTRY DriverEntry;
     PLIST_ENTRY ListEntry;
 
+    ASSERT(BootDriverEntry->FilePath.Buffer != NULL);
+    ASSERT(BootDriverEntry->RegistryPath.Buffer != NULL);
+
     for (ListEntry = BootDriverListHead->Flink;
          ListEntry != BootDriverListHead;
          ListEntry = ListEntry->Flink)
@@ -699,8 +703,7 @@ InsertInBootDriverList(
         DriverEntry = CONTAINING_RECORD(ListEntry,
                                         BOOT_DRIVER_LIST_ENTRY,
                                         Link);
-        if ((BootDriverEntry->FilePath.Buffer != NULL) &&
-            (DriverEntry->FilePath.Buffer != NULL) &&
+        if ((DriverEntry->FilePath.Buffer != NULL) &&
             RtlEqualUnicodeString(&BootDriverEntry->FilePath,
                                   &DriverEntry->FilePath,
                                   TRUE))
@@ -708,8 +711,7 @@ InsertInBootDriverList(
             return FALSE;
         }
 
-        if ((BootDriverEntry->RegistryPath.Buffer != NULL) &&
-            (DriverEntry->RegistryPath.Buffer != NULL) &&
+        if ((DriverEntry->RegistryPath.Buffer != NULL) &&
             RtlEqualUnicodeString(&BootDriverEntry->RegistryPath,
                                   &DriverEntry->RegistryPath,
                                   TRUE))
@@ -826,7 +828,7 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         // It was already there, so delete our entry
         if (BootDriverEntry->FilePath.Buffer) FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
         if (BootDriverEntry->RegistryPath.Buffer) FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
-        //FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
     }
 
     return TRUE;
