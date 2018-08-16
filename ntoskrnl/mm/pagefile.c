@@ -571,9 +571,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     /* If we failed, relax a bit constraints, someone may be already holding the
      * the file, so share write, don't attempt to replace and don't delete on close
      * (basically, don't do anything conflicting)
+     * This can happen if the caller attempts to extend a page file.
      */
     if (!NT_SUCCESS(Status))
     {
+        ULONG i;
+
         Status = IoCreateFile(&FileHandle,
                               SYNCHRONIZE | FILE_WRITE_DATA,
                               &ObjectAttributes,
@@ -588,6 +591,67 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                               CreateFileTypeNone,
                               NULL,
                               SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Buffer, TAG_MM);
+            return Status;
+        }
+
+        /* We opened it! Check we are that "someone" ;-)
+         * First, get the opened file object.
+         */
+        Status = ObReferenceObjectByHandle(FileHandle,
+                                           FILE_READ_DATA | FILE_WRITE_DATA,
+                                           IoFileObjectType,
+                                           KernelMode,
+                                           (PVOID*)&FileObject,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Buffer, TAG_MM);
+            return Status;
+        }
+
+        /* Find if it matches a previous page file */
+        PagingFile = NULL;
+        if (MmNumberOfPagingFiles > 0)
+        {
+            i = 0;
+
+            while (MmPagingFile[i]->FileObject->SectionObjectPointer != FileObject->SectionObjectPointer)
+            {
+                ++i;
+                if (i >= MmNumberOfPagingFiles)
+                {
+                    break;
+                }
+            }
+
+            /* This is the matching page file */
+            PagingFile = MmPagingFile[i];
+        }
+
+        /* If we didn't find the page file, fail */
+        if (PagingFile == NULL)
+        {
+            ObDereferenceObject(FileObject);
+            ZwClose(FileHandle);
+            ExFreePoolWithTag(Dacl, 'lcaD');
+            ExFreePoolWithTag(Buffer, TAG_MM);
+            return STATUS_NOT_FOUND;
+        }
+
+        /* FIXME: implement parameters checking and page file extension */
+        UNIMPLEMENTED;
+
+        ObDereferenceObject(FileObject);
+        ZwClose(FileHandle);
+        ExFreePoolWithTag(Dacl, 'lcaD');
+        ExFreePoolWithTag(Buffer, TAG_MM);
+        return STATUS_NOT_IMPLEMENTED;
     }
 
     if (!NT_SUCCESS(Status))
