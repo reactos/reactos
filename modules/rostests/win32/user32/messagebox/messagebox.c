@@ -1,7 +1,8 @@
 /*
  * PROJECT:     ReactOS Tests
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Tests the undocumented user32.dll API SoftModalMessageBox().
+ * PURPOSE:     Tests the undocumented user32.dll API SoftModalMessageBox()
+ *              and the MB_SERVICE_NOTIFICATION flag of the MessageBox*() APIs.
  * COPYRIGHT:   Copyright 2018 Hermes Belusca-Maito
  */
 
@@ -63,16 +64,16 @@ C_ASSERT(sizeof(MSGBOXDATA) == 0x4C);
 #endif
 
 
-typedef int (WINAPI *SOFTMODALMESSAGEBOX)(LPMSGBOXDATA lpMsgBoxData);
-// int WINAPI SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData);
-SOFTMODALMESSAGEBOX SoftModalMessageBox = NULL;
-
 //
 // Example taken from http://rsdn.org/forum/winapi/3273168.1
 // See also http://www.vbforums.com/showthread.php?840593-Message-Box-with-Four-Buttons
 //
-int wmain(int argc, WCHAR* argv[])
+void TestSoftModalMsgBox(void)
 {
+    typedef int (WINAPI *SOFTMODALMESSAGEBOX)(LPMSGBOXDATA lpMsgBoxData);
+    // int WINAPI SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData);
+    SOFTMODALMESSAGEBOX SoftModalMessageBox = NULL;
+
     MSGBOXDATA data;
     int res = 0;
 
@@ -113,8 +114,32 @@ int wmain(int argc, WCHAR* argv[])
     else
     {
         res = SoftModalMessageBox(&data);
-        printf("Returned value = %i\n\n", res);
+        printf("Returned value = %i\n", res);
     }
+}
+
+void TestMsgBoxServiceNotification(void)
+{
+    int res;
+
+    res = MessageBoxW(NULL, L"Hello World!", L"MB_SERVICE_NOTIFICATION",
+                      MB_YESNOCANCEL | MB_DEFBUTTON3 | MB_ICONINFORMATION | /* MB_DEFAULT_DESKTOP_ONLY | */ MB_SERVICE_NOTIFICATION);
+    printf("Returned value = %i\n", res);
+}
+
+int wmain(int argc, WCHAR* argv[])
+{
+    printf("Testing SoftModalMessageBox()...\n");
+    TestSoftModalMsgBox();
+    printf("\n");
+
+    printf("Press any key to continue...\n");
+    _getch();
+    printf("\n");
+
+    printf("Testing MB_SERVICE_NOTIFICATION...\n");
+    TestMsgBoxServiceNotification();
+    printf("\n");
 
     printf("Press any key to quit...\n");
     _getch();
