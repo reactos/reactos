@@ -271,11 +271,11 @@ RemoveCacheEntries(FT_Face Face)
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = CurrentEntry->Flink)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        CurrentEntry = CurrentEntry->Flink;
 
         if (FontEntry->Face == Face)
         {
@@ -1335,8 +1335,9 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
     IntLockProcessPrivateFonts(Win32Process);
-    Entry = Win32Process->PrivateMemFontListHead.Flink;
-    while (Entry != &Win32Process->PrivateMemFontListHead)
+    for (Entry = Win32Process->PrivateMemFontListHead.Flink;
+         Entry != &Win32Process->PrivateMemFontListHead;
+         Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
@@ -1346,8 +1347,6 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
             UnlinkFontMemCollection(CurrentEntry);
             break;
         }
-
-        Entry = Entry->Flink;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
 
@@ -1982,8 +1981,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     FONTGDI *FontGDI;
     NTSTATUS status;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
@@ -2010,7 +2008,6 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         }
 
         RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
     }
 
     return NULL;
@@ -2665,8 +2662,9 @@ ftGdiGlyphCacheGet(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = CurrentEntry->Flink)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         if ((FontEntry->Face == Face) &&
@@ -2675,7 +2673,6 @@ ftGdiGlyphCacheGet(
             (FontEntry->RenderMode == RenderMode) &&
             (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
             break;
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     if (CurrentEntry == &g_FontCacheListHead)
@@ -4585,11 +4582,9 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     Otm = ExAllocatePoolWithTag(PagedPool, OldOtmSize, GDITAG_TEXT);
 
     /* get the FontObj of lowest penalty */
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
