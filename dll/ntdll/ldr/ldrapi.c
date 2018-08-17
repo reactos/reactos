@@ -124,7 +124,7 @@ LdrUnlockLoaderLock(IN ULONG Flags,
 
     /* Validate the cookie */
     if ((Cookie & 0xF0000000) ||
-        ((Cookie >> 16) ^ ((ULONG)(NtCurrentTeb()->RealClientId.UniqueThread) & 0xFFF)))
+        ((Cookie >> 16) ^ (HandleToUlong(NtCurrentTeb()->RealClientId.UniqueThread) & 0xFFF)))
     {
         DPRINT1("LdrUnlockLoaderLock() called with an invalid cookie!\n");
 
@@ -353,73 +353,80 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
 
     /* Check if there's a TLD DLL being loaded */
     OldTldDll = LdrpTopLevelDllBeingLoaded;
-    if (OldTldDll)
+    _SEH2_TRY
     {
-        /* This is a recursive load, do something about it? */
-        if ((ShowSnaps) || (LdrpShowRecursiveLoads) || (LdrpBreakOnRecursiveDllLoads))
-        {
-            /* Print out debug messages */
-            DPRINT1("[%p, %p] LDR: Recursive DLL Load\n",
-                    Teb->RealClientId.UniqueProcess,
-                    Teb->RealClientId.UniqueThread);
-            DPRINT1("[%p, %p]      Previous DLL being loaded \"%wZ\"\n",
-                    Teb->RealClientId.UniqueProcess,
-                    Teb->RealClientId.UniqueThread,
-                    OldTldDll);
-            DPRINT1("[%p, %p]      DLL being requested \"%wZ\"\n",
-                    Teb->RealClientId.UniqueProcess,
-                    Teb->RealClientId.UniqueThread,
-                    DllName);
 
-            /* Was it initializing too? */
-            if (!LdrpCurrentDllInitializer)
+        if (OldTldDll)
+        {
+            /* This is a recursive load, do something about it? */
+            if ((ShowSnaps) || (LdrpShowRecursiveLoads) || (LdrpBreakOnRecursiveDllLoads))
             {
-                DPRINT1("[%p, %p] LDR: No DLL Initializer was running\n",
+                /* Print out debug messages */
+                DPRINT1("[%p, %p] LDR: Recursive DLL Load\n",
                         Teb->RealClientId.UniqueProcess,
                         Teb->RealClientId.UniqueThread);
-            }
-            else
-            {
-                DPRINT1("[%p, %p]      DLL whose initializer was currently running \"%wZ\"\n",
-                        Teb->ClientId.UniqueProcess,
-                        Teb->ClientId.UniqueThread,
-                        &LdrpCurrentDllInitializer->BaseDllName);
+                DPRINT1("[%p, %p]      Previous DLL being loaded \"%wZ\"\n",
+                        Teb->RealClientId.UniqueProcess,
+                        Teb->RealClientId.UniqueThread,
+                        OldTldDll);
+                DPRINT1("[%p, %p]      DLL being requested \"%wZ\"\n",
+                        Teb->RealClientId.UniqueProcess,
+                        Teb->RealClientId.UniqueThread,
+                        DllName);
+
+                /* Was it initializing too? */
+                if (!LdrpCurrentDllInitializer)
+                {
+                    DPRINT1("[%p, %p] LDR: No DLL Initializer was running\n",
+                            Teb->RealClientId.UniqueProcess,
+                            Teb->RealClientId.UniqueThread);
+                }
+                else
+                {
+                    DPRINT1("[%p, %p]      DLL whose initializer was currently running \"%wZ\"\n",
+                            Teb->ClientId.UniqueProcess,
+                            Teb->ClientId.UniqueThread,
+                            &LdrpCurrentDllInitializer->BaseDllName);
+                }
             }
         }
+
+        /* Set this one as the TLD DLL being loaded*/
+        LdrpTopLevelDllBeingLoaded = DllName;
+
+        /* Load the DLL */
+        Status = LdrpLoadDll(RedirectedDll,
+                             SearchPath,
+                             DllCharacteristics,
+                             DllName,
+                             BaseAddress,
+                             TRUE);
+        if (NT_SUCCESS(Status))
+        {
+            Status = STATUS_SUCCESS;
+        }
+        else if ((Status != STATUS_NO_SUCH_FILE) &&
+                 (Status != STATUS_DLL_NOT_FOUND) &&
+                 (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
+                 (Status != STATUS_DLL_INIT_FAILED))
+        {
+            DbgPrintEx(DPFLTR_LDR_ID,
+                       DPFLTR_WARNING_LEVEL,
+                       "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
+                       __FUNCTION__,
+                       DllName,
+                       Status);
+        }
     }
-
-    /* Set this one as the TLD DLL being loaded*/
-    LdrpTopLevelDllBeingLoaded = DllName;
-
-    /* Load the DLL */
-    Status = LdrpLoadDll(RedirectedDll,
-                         SearchPath,
-                         DllCharacteristics,
-                         DllName,
-                         BaseAddress,
-                         TRUE);
-    if (NT_SUCCESS(Status))
+    _SEH2_FINALLY
     {
-        Status = STATUS_SUCCESS;
-    }
-    else if ((Status != STATUS_NO_SUCH_FILE) &&
-             (Status != STATUS_DLL_NOT_FOUND) &&
-             (Status != STATUS_OBJECT_NAME_NOT_FOUND) &&
-             (Status != STATUS_DLL_INIT_FAILED))
-    {
-        DbgPrintEx(DPFLTR_LDR_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "LDR: %s - failing because LdrpLoadDll(%wZ) returned status %x\n",
-                   __FUNCTION__,
-                   DllName,
-                   Status);
-    }
+        /* Restore the old TLD DLL */
+        LdrpTopLevelDllBeingLoaded = OldTldDll;
 
-    /* Restore the old TLD DLL */
-    LdrpTopLevelDllBeingLoaded = OldTldDll;
-
-    /* Release the lock */
-    LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+        /* Release the lock */
+        LdrUnlockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_RAISE_ON_ERRORS, Cookie);
+    }
+    _SEH2_END;
 
     /* Do we have a redirect string? */
     if (DllString2.Buffer) RtlFreeUnicodeString(&DllString2);
@@ -1476,10 +1483,19 @@ LdrUnloadDll(IN PVOID BaseAddress)
                                                    LdrEntry->EntryPointActivationContext);
 
             /* Call the entrypoint */
-            LdrpCallInitRoutine(LdrEntry->EntryPoint,
-                                LdrEntry->DllBase,
-                                DLL_PROCESS_DETACH,
-                                NULL);
+            _SEH2_TRY
+            {
+                LdrpCallInitRoutine(LdrEntry->EntryPoint,
+                                    LdrEntry->DllBase,
+                                    DLL_PROCESS_DETACH,
+                                    NULL);
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                DPRINT1("WARNING: Exception 0x%x during LdrpCallInitRoutine(DLL_PROCESS_DETACH) for %wZ\n",
+                        _SEH2_GetExceptionCode(), &LdrEntry->BaseDllName);
+            }
+            _SEH2_END;
 
             /* Release the context */
             RtlDeactivateActivationContextUnsafeFast(&ActCtx);

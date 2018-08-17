@@ -469,7 +469,21 @@ LogonUserExW(
     NTSTATUS SubStatus = STATUS_SUCCESS;
     NTSTATUS Status;
 
-    *phToken = NULL;
+    if ((ppProfileBuffer != NULL && pdwProfileLength == NULL) ||
+        (ppProfileBuffer == NULL && pdwProfileLength != NULL))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if (ppProfileBuffer != NULL && pdwProfileLength != NULL)
+    {
+        *ppProfileBuffer = NULL;
+        *pdwProfileLength = 0;
+    }
+
+    if (phToken != NULL)
+        *phToken = NULL;
 
     switch (dwLogonType)
     {
@@ -654,9 +668,10 @@ LogonUserExW(
         TRACE("TokenHandle: %p\n", TokenHandle);
     }
 
-    *phToken = TokenHandle;
+    if (phToken != NULL)
+        *phToken = TokenHandle;
 
-    /* FIXME: return ppLogonSid, ppProfileBuffer, pdwProfileLength and pQuotaLimits */
+    /* FIXME: return ppLogonSid and pQuotaLimits */
 
 done:
     if (ProfileBuffer != NULL)

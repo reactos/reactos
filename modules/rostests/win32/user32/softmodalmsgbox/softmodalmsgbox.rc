@@ -1,0 +1,11 @@
+
+#include <windef.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_RES_CAPTION "Resource Caption"
+    IDS_RES_MESSAGE "Resource Message"
+END

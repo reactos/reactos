@@ -18,6 +18,7 @@ list(APPEND SOURCE
     PathResolve.cpp
     SHCreateFileExtractIconW.cpp
     SHParseDisplayName.cpp
+    ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellState.cpp
     menu.cpp

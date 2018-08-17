@@ -154,6 +154,34 @@ VOID GetSystemCPU(WCHAR *szBuffer)
 }
 
 static
+SIZE_T
+GetBIOSValue(
+    BOOL UseSMBios,
+    PCHAR DmiString,
+    LPWSTR RegValue,
+    PVOID pBuf,
+    DWORD cchBuf,
+    BOOL bTrim)
+{
+    SIZE_T Length = 0;
+    BOOL Result;
+
+    if (UseSMBios)
+    {
+        Length = GetSMBiosStringW(DmiString, pBuf, cchBuf, bTrim);
+    }
+    if (Length == 0)
+    {
+        Result = GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", RegValue, REG_SZ, pBuf, cchBuf * sizeof(WCHAR));
+        if (Result)
+        {
+            Length = wcslen(pBuf);
+        }
+    }
+    return Length;
+}
+
+static
 VOID
 InitializeSystemPage(HWND hwndDlg)
 {
@@ -162,33 +190,35 @@ InitializeSystemPage(HWND hwndDlg)
     DWORD Length;
     DWORDLONG AvailableBytes, UsedBytes;
     MEMORYSTATUSEX mem;
-    WCHAR szFormat[40];
+    WCHAR szFormat[50];
     WCHAR szDesc[50];
     SYSTEM_INFO SysInfo;
     OSVERSIONINFO VersionInfo;
+    PVOID SMBiosBuf;
+    PCHAR DmiStrings[ID_STRINGS_MAX] = { 0 };
 
     /* set date/time */
     szTime[0] = L'\0';
-    Length = GetDateFormat(LOCALE_SYSTEM_DEFAULT, DATE_LONGDATE, NULL, NULL, szTime, sizeof(szTime) / sizeof(WCHAR));
+    Length = GetDateFormat(LOCALE_SYSTEM_DEFAULT, DATE_LONGDATE, NULL, NULL, szTime, _countof(szTime));
     if (Length)
     {
         szTime[Length-1] = L',';
         szTime[Length++] = L' ';
     }
-    Length = GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT|LOCALE_NOUSEROVERRIDE, NULL, NULL, &szTime[Length], (sizeof(szTime) / sizeof(WCHAR)));
-    szTime[199] = L'\0';
+    Length = GetTimeFormatW(LOCALE_SYSTEM_DEFAULT, TIME_FORCE24HOURFORMAT|LOCALE_NOUSEROVERRIDE, NULL, NULL, szTime + Length, _countof(szTime));
+    szTime[_countof(szTime)-1] = L'\0';
     SendDlgItemMessageW(hwndDlg, IDC_STATIC_TIME, WM_SETTEXT, 0, (LPARAM)szTime);
 
     /* set computer name */
     szTime[0] = L'\0';
-    Length = sizeof(szTime) / sizeof(WCHAR);
+    Length = _countof(szTime);
     if (GetComputerNameW(szTime, &Length))
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_COMPUTER, WM_SETTEXT, 0, (LPARAM)szTime);
 
     /* set product name */
     if (GetRegValue(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", L"ProductName", REG_SZ, szOSName, sizeof(szOSName)))
     {
-        if (LoadStringW(hInst, IDS_OS_VERSION, szFormat, sizeof(szFormat) / sizeof(WCHAR)))
+        if (LoadStringW(hInst, IDS_OS_VERSION, szFormat, _countof(szFormat)))
         {
             WCHAR szCpuName[50];
 
@@ -199,14 +229,14 @@ InitializeSystemPage(HWND hwndDlg)
 
             if (GetVersionEx(&VersionInfo))
             {
-                szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+                szTime[_countof(szTime)-1] = L'\0';
                 wsprintfW(szTime, szFormat, szOSName, szCpuName, VersionInfo.dwMajorVersion, VersionInfo.dwMinorVersion, VersionInfo.dwBuildNumber);
                 SendDlgItemMessageW(hwndDlg, IDC_STATIC_OS, WM_SETTEXT, 0, (LPARAM)szTime);
             }
             else
             {
                 /* If the version of the OS cannot be retrieved for some reason, then just give the OS Name and Architecture */
-                szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+                szTime[_countof(szTime)-1] = L'\0';
                 wsprintfW(szTime, L"%s %s", szOSName, szCpuName);
                 SendDlgItemMessageW(hwndDlg, IDC_STATIC_OS, WM_SETTEXT, 0, (LPARAM)szTime);
             }
@@ -214,67 +244,96 @@ InitializeSystemPage(HWND hwndDlg)
     }
     else
     {
-        if (LoadStringW(hInst, IDS_VERSION_UNKNOWN, szTime, sizeof(szTime) / sizeof(WCHAR)))
+        if (LoadStringW(hInst, IDS_VERSION_UNKNOWN, szTime, _countof(szTime)))
         {
-            szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+            szTime[_countof(szTime)-1] = L'\0';
             SendDlgItemMessage(hwndDlg, IDC_STATIC_VERSION, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }
 
     /* FIXME set product language/local language */
-    if (GetLocaleInfo(LOCALE_SYSTEM_DEFAULT,LOCALE_SLANGUAGE , szTime, sizeof(szTime) / sizeof(WCHAR)))
+    if (GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SLANGUAGE, szTime, _countof(szTime)))
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_LANG, WM_SETTEXT, 0, (LPARAM)szTime);
+
+    /* prepare SMBIOS data */
+    SMBiosBuf = LoadSMBiosData(DmiStrings);
 
     /* set system manufacturer */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemManufacturer", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[SYS_VENDOR],
+                          L"SystemManufacturer",
+                          szTime, _countof(szTime), FALSE);
+    if (Length > 0)
     {
-        szTime[199] = L'\0';
+        szTime[_countof(szTime)-1] = L'\0';
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MANU, WM_SETTEXT, 0, (LPARAM)szTime);
     }
 
     /* set motherboard model */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"SystemProductName", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[SYS_PRODUCT],
+                          L"SystemProductName",
+                          szTime, _countof(szTime), FALSE);
+    if (Length > 0)
     {
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_MODEL, WM_SETTEXT, 0, (LPARAM)szTime);
     }
 
     /* set bios model */
     szTime[0] = L'\0';
-    if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSVendor", REG_SZ, szTime, sizeof(szTime)))
+    Length = GetBIOSValue(SMBiosBuf != NULL,
+                          DmiStrings[BIOS_VENDOR],
+                          L"BIOSVendor",
+                          szTime, _countof(szTime), TRUE);
+    if (Length > 0)
     {
         DWORD Index;
-        DWORD StrLength = (sizeof(szTime) / sizeof(WCHAR));
+        DWORD StrLength = _countof(szTime);
 
         Index = wcslen(szTime);
+        if (Index + 1 < _countof(szTime))
+        {
+            szTime[Index++] = L' ';
+            szTime[Index] = L'\0';
+        }
         StrLength -= Index;
 
-        if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\BIOS", L"BIOSReleaseDate", REG_SZ, &szTime[Index], StrLength))
+        Length = GetBIOSValue(SMBiosBuf != NULL,
+                              DmiStrings[BIOS_DATE],
+                              L"BIOSReleaseDate",
+                              szTime + Index, StrLength, TRUE);
+        if (Length > 0)
         {
-            if (Index + StrLength > (sizeof(szTime)/sizeof(WCHAR))- 15)
+            if (Index + StrLength > _countof(szTime) - 15)
             {
                 //FIXME  retrieve BiosMajorRelease, BiosMinorRelease
-                //StrLength = wcslen(&szTime[Index]);
+                //StrLength = wcslen(szTime + Index);
                 //szTime[Index+StrLength] = L' ';
-                //wcscpy(&szTime[Index+StrLength], L"Ver: "); //FIXME NON-NLS
-                //szTime[(sizeof(szTime)/sizeof(WCHAR))-1] = L'\0';
+                //wcscpy(szTime + Index + StrLength, L"Ver: "); //FIXME NON-NLS
+                //szTime[_countof(szTime)-1] = L'\0';
             }
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_BIOS, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }
+
+    /* clean SMBIOS data */
+    FreeSMBiosData(SMBiosBuf);
+
     /* set processor string */
     if (GetRegValue(HKEY_LOCAL_MACHINE, L"Hardware\\Description\\System\\CentralProcessor\\0", L"ProcessorNameString", REG_SZ, szDesc, sizeof(szDesc)))
     {
+        TrimDmiStringW(szDesc);
         /* FIXME retrieve current speed */
         szFormat[0] = L'\0';
         GetSystemInfo(&SysInfo);
         if (SysInfo.dwNumberOfProcessors > 1)
-            LoadStringW(hInst, IDS_FORMAT_MPPROC, szFormat, sizeof(szFormat) / sizeof(WCHAR));
+            LoadStringW(hInst, IDS_FORMAT_MPPROC, szFormat, _countof(szFormat));
         else
-            LoadStringW(hInst, IDS_FORMAT_UNIPROC, szFormat, sizeof(szFormat) / sizeof(WCHAR));
+            LoadStringW(hInst, IDS_FORMAT_UNIPROC, szFormat, _countof(szFormat));
 
-        szFormat[(sizeof(szFormat)/sizeof(WCHAR))-1] = L'\0';
+        szFormat[_countof(szFormat)-1] = L'\0';
         wsprintfW(szTime, szFormat, szDesc, SysInfo.dwNumberOfProcessors);
         SendDlgItemMessageW(hwndDlg, IDC_STATIC_PROC, WM_SETTEXT, 0, (LPARAM)szTime);
     }
@@ -284,36 +343,36 @@ InitializeSystemPage(HWND hwndDlg)
     mem.dwLength = sizeof(mem);
     if (GlobalMemoryStatusEx(&mem))
     {
-        if (LoadStringW(hInst, IDS_FORMAT_MB, szFormat, sizeof(szFormat) / sizeof(WCHAR)))
+        if (LoadStringW(hInst, IDS_FORMAT_MB, szFormat, _countof(szFormat)))
         {
             /* set total mem string */
-            szFormat[(sizeof(szFormat) / sizeof(WCHAR))-1] = L'\0';
+            szFormat[_countof(szFormat)-1] = L'\0';
             wsprintfW(szTime, szFormat, (mem.ullTotalPhys/1048576));
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_MEM, WM_SETTEXT, 0, (LPARAM)szTime);
         }
 
-        if (LoadStringW(hInst, IDS_FORMAT_SWAP, szFormat, sizeof(szFormat) / sizeof(WCHAR)))
+        if (LoadStringW(hInst, IDS_FORMAT_SWAP, szFormat, _countof(szFormat)))
         {
             /* set swap string */
             AvailableBytes = (mem.ullTotalPageFile-mem.ullTotalPhys)/1048576;
             UsedBytes = (mem.ullTotalPageFile-mem.ullAvailPageFile)/1048576;
 
-            szFormat[(sizeof(szFormat) / sizeof(WCHAR))-1] = L'\0';
+            szFormat[_countof(szFormat)-1] = L'\0';
             wsprintfW(szTime, szFormat, (UsedBytes), (AvailableBytes));
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_SWAP, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }
     /* set directx version string */
     wcscpy(szTime, L"ReactX ");
-    if (GetDirectXVersion(&szTime[7]))
+    if (GetDirectXVersion(szTime + 7))
     {
         SendDlgItemMessage(hwndDlg, IDC_STATIC_VERSION, WM_SETTEXT, 0, (LPARAM)szTime);
     }
     else
     {
-        if (LoadStringW(hInst, IDS_VERSION_UNKNOWN, szTime, sizeof(szTime) / sizeof(WCHAR)))
+        if (LoadStringW(hInst, IDS_VERSION_UNKNOWN, szTime, _countof(szTime)))
         {
-            szTime[(sizeof(szTime) / sizeof(WCHAR))-1] = L'\0';
+            szTime[_countof(szTime)-1] = L'\0';
             SendDlgItemMessage(hwndDlg, IDC_STATIC_VERSION, WM_SETTEXT, 0, (LPARAM)szTime);
         }
     }

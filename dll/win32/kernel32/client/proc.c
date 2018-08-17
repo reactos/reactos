@@ -440,7 +440,7 @@ BasepSxsCloseHandles(IN PBASE_MSG_SXS_HANDLES Handles)
     if (Handles->ViewBase.QuadPart)
     {
         Status = NtUnmapViewOfSection(NtCurrentProcess(),
-                                      (PVOID)Handles->ViewBase.LowPart);
+                                      (PVOID)(ULONG_PTR)Handles->ViewBase.QuadPart);
         ASSERT(NT_SUCCESS(Status));
     }
 }
@@ -2310,7 +2310,8 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SECTION_IMAGE_INFORMATION ImageInformation;
     IO_STATUS_BLOCK IoStatusBlock;
     CLIENT_ID ClientId;
-    ULONG NoWindow, RegionSize, StackSize, ErrorCode, Flags;
+    ULONG NoWindow, StackSize, ErrorCode, Flags;
+    SIZE_T RegionSize;
     USHORT ImageMachine;
     ULONG ParameterFlags, PrivilegeValue, HardErrorMode, ErrorResponse;
     ULONG_PTR ErrorParameters[2];
@@ -2342,7 +2343,8 @@ CreateProcessInternalW(IN HANDLE hUserToken,
     SIZE_T n;
     WCHAR SaveChar;
     ULONG Length, FileAttribs, CmdQuoteLength;
-    ULONG CmdLineLength, ResultSize;
+    ULONG ResultSize;
+    SIZE_T EnvironmentLength, CmdLineLength;
     PWCHAR QuotedCmdLine, AnsiCmdCommand, ExtBuffer, CurrentDirectory;
     PWCHAR NullBuffer, ScanString, NameBuffer, SearchPath, DebuggerCmdLine;
     ANSI_STRING AnsiEnv;
@@ -2571,8 +2573,17 @@ CreateProcessInternalW(IN HANDLE hUserToken,
         AnsiEnv.Buffer = pcScan = (PCHAR)lpEnvironment;
         while ((*pcScan) || (*(pcScan + 1))) ++pcScan;
 
+        /* Make sure the environment is not too large */
+        EnvironmentLength = (pcScan + sizeof(ANSI_NULL) - (PCHAR)lpEnvironment);
+        if (EnvironmentLength > MAXUSHORT)
+        {
+            /* Fail */
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
         /* Create our ANSI String */
-        AnsiEnv.Length = pcScan - (PCHAR)lpEnvironment + sizeof(ANSI_NULL);
+        AnsiEnv.Length = (USHORT)EnvironmentLength;
         AnsiEnv.MaximumLength = AnsiEnv.Length + sizeof(ANSI_NULL);
 
         /* Allocate memory for the Unicode Environment */
@@ -4003,10 +4014,11 @@ StartScan:
     if (VdmReserve)
     {
         /* Reserve the requested allocation */
+        RegionSize = VdmReserve;
         Status = NtAllocateVirtualMemory(ProcessHandle,
                                          &BaseAddress,
                                          0,
-                                         &VdmReserve,
+                                         &RegionSize,
                                          MEM_RESERVE,
                                          PAGE_EXECUTE_READWRITE);
         if (!NT_SUCCESS(Status))
@@ -4017,6 +4029,8 @@ StartScan:
             Result = FALSE;
             goto Quickie;
         }
+
+        VdmReserve = (ULONG)RegionSize;
     }
 
     /* Check if we've already queried information on the section */
@@ -4267,7 +4281,12 @@ StartScan:
 
     /* Write the remote PEB address and clear it locally, we no longer use it */
     CreateProcessMsg->PebAddressNative = RemotePeb;
+#ifdef _WIN64
+    DPRINT1("TODO: WOW64 is not supported yet\n");
+    CreateProcessMsg->PebAddressWow64 = 0;
+#else
     CreateProcessMsg->PebAddressWow64 = (ULONG)RemotePeb;
+#endif
     RemotePeb = NULL;
 
     /* Now check what kind of architecture this image was made for */

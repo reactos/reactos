@@ -1128,32 +1128,6 @@ HalpInitializePciBus(VOID)
                     }
                 }
 
-                /* Check if this is a USB controller */
-                if ((PciData->BaseClass == PCI_CLASS_SERIAL_BUS_CTLR) &&
-                    (PciData->SubClass == PCI_SUBCLASS_SB_USB))
-                {
-                    /* Check if this is an OHCI controller */
-                    if (PciData->ProgIf == 0x10)
-                    {
-                        DbgPrint("\tDevice is an OHCI (USB) PCI Expansion Card. Turn off Legacy USB in your BIOS!\n\n");
-                        continue;
-                    }
-
-                    /* Check for Intel UHCI controller */
-                    if (PciData->VendorID == 0x8086)
-                    {
-                        DbgPrint("\tDevice is an Intel UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n\n");
-                        continue;
-                    }
-
-                    /* Check for VIA UHCI controller */
-                    if (PciData->VendorID == 0x1106)
-                    {
-                        DbgPrint("\tDevice is a VIA UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n\n");
-                        continue;
-                    }
-                }
-
                 /* Now check the registry for chipset hacks */
                 Status = HalpGetChipHacks(PciData->VendorID,
                                           PciData->DeviceID,
@@ -1228,8 +1202,13 @@ HalpRegisterKdSupportFunctions(VOID)
 
     /* Register memory functions */
 #ifndef _MINIHAL_
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    KdMapPhysicalMemory64 = HalpMapPhysicalMemory64Vista;
+    KdUnmapVirtualAddress = HalpUnmapVirtualAddressVista;
+#else
     KdMapPhysicalMemory64 = HalpMapPhysicalMemory64;
     KdUnmapVirtualAddress = HalpUnmapVirtualAddress;
+#endif
 #endif
 
     /* Register ACPI stub */

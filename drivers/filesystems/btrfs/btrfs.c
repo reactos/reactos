@@ -4453,7 +4453,21 @@ static NTSTATUS mount_vol(_In_ PDEVICE_OBJECT DeviceObject, _In_ PIRP Irp) {
         goto exit;
     }
 
+    /* HACK: stream file object seems to get deleted at some point
+     * leading to use after free when installing ReactOS on
+     * BtrFS.
+     * Workaround: leak a handle to the fileobject
+     * XXX: Could be improved by storing it somewhere and releasing it
+     * on dismount. Or even by referencing again the file object.
+     */
+#ifndef __REACTOS__
     Vcb->root_file = IoCreateStreamFileObject(NULL, DeviceToMount);
+#else
+    {
+        HANDLE Dummy;
+        Vcb->root_file = IoCreateStreamFileObjectEx(NULL, DeviceToMount, &Dummy);
+    }
+#endif
     Vcb->root_file->FsContext = root_fcb;
     Vcb->root_file->SectionObjectPointer = &root_fcb->nonpaged->segment_object;
     Vcb->root_file->Vpb = DeviceObject->Vpb;
@@ -5563,12 +5577,19 @@ NTSTATUS DriverEntry(_In_ PDRIVER_OBJECT DriverObject, _In_ PUNICODE_STRING Regi
 
     InitializeObjectAttributes(&oa, RegistryPath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
     Status = ZwCreateKey(&regh, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS | KEY_NOTIFY, &oa, 0, NULL, REG_OPTION_NON_VOLATILE, &dispos);
+    /* ReactOS specific hack: allow BtrFS driver to start in 1st stage with no hive */
+#ifndef __REACTOS__
     if (!NT_SUCCESS(Status)) {
         ERR("ZwCreateKey returned %08x\n", Status);
         return Status;
     }
 
     watch_registry(regh);
+#else
+    if (NT_SUCCESS(Status)) {
+        watch_registry(regh);
+    }
+#endif
 
     Status = IoReportDetectedDevice(drvobj, InterfaceTypeUndefined, 0xFFFFFFFF, 0xFFFFFFFF,
                                     NULL, NULL, 0, &cde->buspdo);

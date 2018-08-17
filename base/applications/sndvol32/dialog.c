@@ -157,7 +157,7 @@ AddDialogControl(
                            rect.right - rect.left,
                            rect.bottom - rect.top,
                            hwndDialog,
-                           (HMENU)(wID),
+                           UlongToPtr(wID),
                            hAppInstance,
                            NULL);
 

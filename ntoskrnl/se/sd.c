@@ -916,13 +916,9 @@ SeSetSecurityDescriptorInfoEx(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCreateSecurityDescriptor(NewSd,
-                                SECURITY_DESCRIPTOR_REVISION1);
+    RtlCreateSecurityDescriptorRelative(NewSd, SECURITY_DESCRIPTOR_REVISION1);
 
-    /* We always build a self-relative descriptor */
-    NewSd->Control = Control | SE_SELF_RELATIVE;
-
-    Current = sizeof(SECURITY_DESCRIPTOR);
+    Current = sizeof(SECURITY_DESCRIPTOR_RELATIVE);
 
     if (OwnerLength != 0)
     {

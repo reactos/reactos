@@ -134,6 +134,7 @@ LdrVerifyMappedImageMatchesChecksum(
 
 /*
  * @implemented
+ * @note This needs SEH (See https://jira.reactos.org/browse/CORE-14857)
  */
 NTSTATUS
 NTAPI

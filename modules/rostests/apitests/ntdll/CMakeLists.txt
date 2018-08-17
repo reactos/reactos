@@ -1,6 +1,12 @@
 
+add_subdirectory(load_notifications)
+
+include_directories($<TARGET_FILE_DIR:load_notifications>)
+spec2def(ntdll_apitest.exe ntdll_apitest.spec)
+
 list(APPEND SOURCE
     LdrEnumResources.c
+    load_notifications.c
     NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
@@ -62,7 +68,13 @@ if(ARCH STREQUAL "i386")
     add_asm_files(ntdll_apitest_asm i386/NtContinue.S)
 endif()
 
-add_executable(ntdll_apitest ${SOURCE} ${ntdll_apitest_asm} testlist.c)
+add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/load_notifications/load_notifications.dll)
+add_executable(ntdll_apitest
+    ${SOURCE}
+    ${ntdll_apitest_asm}
+    testdata.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_apitest.def
+    testlist.c)
 target_link_libraries(ntdll_apitest wine uuid ${PSEH_LIB})
 set_module_type(ntdll_apitest win32cui)
 add_importlibs(ntdll_apitest msvcrt advapi32 kernel32 ntdll)

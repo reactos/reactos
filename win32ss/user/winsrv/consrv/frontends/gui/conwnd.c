@@ -7,6 +7,7 @@
  *                  Johannes Anderwald
  *                  Jeffrey Morlan
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 /* INCLUDES *******************************************************************/
@@ -14,6 +15,7 @@
 #include <consrv.h>
 #include <intrin.h>
 #include <windowsx.h>
+#include <shellapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -586,7 +588,7 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA)Create->lpCreateParams;
     PCONSRV_CONSOLE Console;
 
-    if (NULL == GuiData)
+    if (GuiData == NULL)
     {
         DPRINT1("GuiConsoleNcCreate: No GUI data\n");
         return FALSE;
@@ -639,18 +641,11 @@ OnNcCreate(HWND hWnd, LPCREATESTRUCTW Create)
     DPRINT("OnNcCreate - setting start event\n");
     NtSetEvent(GuiData->hGuiInitEvent, NULL);
 
+    /* We accept dropped files */
+    DragAcceptFiles(GuiData->hWindow, TRUE);
+
     return (BOOL)DefWindowProcW(GuiData->hWindow, WM_NCCREATE, 0, (LPARAM)Create);
 }
-
-
-BOOL
-EnterFullScreen(PGUI_CONSOLE_DATA GuiData);
-VOID
-LeaveFullScreen(PGUI_CONSOLE_DATA GuiData);
-VOID
-SwitchFullScreen(PGUI_CONSOLE_DATA GuiData, BOOL FullScreen);
-VOID
-GuiConsoleSwitchFullScreen(PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 OnActivate(PGUI_CONSOLE_DATA GuiData, WPARAM wParam)
@@ -972,18 +967,6 @@ UpdateSelection(PGUI_CONSOLE_DATA GuiData,
 
     DeleteObject(oldRgn);
 }
-
-
-VOID
-GuiPaintTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                       PGUI_CONSOLE_DATA GuiData,
-                       PRECT rcView,
-                       PRECT rcFramebuffer);
-VOID
-GuiPaintGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                       PGUI_CONSOLE_DATA GuiData,
-                       PRECT rcView,
-                       PRECT rcFramebuffer);
 
 static VOID
 OnPaint(PGUI_CONSOLE_DATA GuiData)
@@ -1966,12 +1949,6 @@ Quit:
     return DefWindowProcW(GuiData->hWindow, msg, wParam, lParam);
 }
 
-VOID
-GuiCopyFromTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                          PGUI_CONSOLE_DATA GuiData);
-VOID
-GuiCopyFromGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                          PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 Copy(PGUI_CONSOLE_DATA GuiData)
@@ -1995,13 +1972,6 @@ Copy(PGUI_CONSOLE_DATA GuiData)
     /* Clear the selection */
     UpdateSelection(GuiData, NULL, NULL);
 }
-
-VOID
-GuiPasteToTextModeBuffer(PTEXTMODE_SCREEN_BUFFER Buffer,
-                         PGUI_CONSOLE_DATA GuiData);
-VOID
-GuiPasteToGraphicsBuffer(PGRAPHICS_SCREEN_BUFFER Buffer,
-                         PGUI_CONSOLE_DATA GuiData);
 
 static VOID
 Paste(PGUI_CONSOLE_DATA GuiData)
@@ -2135,6 +2105,30 @@ OnMove(PGUI_CONSOLE_DATA GuiData)
     GuiData->GuiInfo.WindowOrigin.y = rcWnd.top;
 }
 
+static VOID
+OnDropFiles(PCONSRV_CONSOLE Console, HDROP hDrop)
+{
+    LPWSTR pszPath;
+    WCHAR szPath[MAX_PATH + 2];
+
+    szPath[0] = L'"';
+
+    DragQueryFileW(hDrop, 0, &szPath[1], ARRAYSIZE(szPath) - 1);
+    DragFinish(hDrop);
+
+    if (wcschr(&szPath[1], L' ') != NULL)
+    {
+        StringCchCatW(szPath, ARRAYSIZE(szPath), L"\"");
+        pszPath = szPath;
+    }
+    else
+    {
+        pszPath = &szPath[1];
+    }
+
+    PasteText(Console, pszPath, wcslen(pszPath));
+}
+
 /*
 // HACK: This functionality is standard for general scrollbars. Don't add it by hand.
 
@@ -2162,7 +2156,6 @@ GuiConsoleHandleScrollbarMenu(VOID)
     //InsertItem(hMenu, MIIM_STRING, MIIM_ID | MIIM_FTYPE | MIIM_STRING, 0, NULL, IDS_SCROLLDOWN);
 }
 */
-
 
 static LRESULT CALLBACK
 ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -2421,6 +2414,10 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Result = OnCommand(GuiData, wParam, lParam);
             break;
         }
+
+        case WM_DROPFILES:
+            OnDropFiles(Console, (HDROP)wParam);
+            break;
 
         case WM_SETFOCUS:
         case WM_KILLFOCUS:

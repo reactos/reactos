@@ -2147,7 +2147,7 @@ UserDrawCaptionText(
    {  // Faster while in setup.
       GreExtTextOutW( hDc,
                       lpRc->left,
-                      lpRc->top + (lpRc->bottom - lpRc->top) / 2 - Size.cy / 2, // DT_SINGLELINE && DT_VCENTER
+                      lpRc->top + (lpRc->bottom - lpRc->top - Size.cy) / 2, // DT_SINGLELINE && DT_VCENTER
                       ETO_CLIPPED,
                      (RECTL *)lpRc,
                       Text->Buffer,

@@ -20,8 +20,8 @@ KsiCreateObjectType( HANDLE hHandle,
                      PHANDLE phHandle)
 {
     NTSTATUS Status;
-    ULONG Length;
-    ULONG TotalSize;
+    SIZE_T Length;
+    SIZE_T TotalSize;
     LPWSTR pStr;
     UNICODE_STRING ObjectName;
     OBJECT_ATTRIBUTES ObjectAttributes;

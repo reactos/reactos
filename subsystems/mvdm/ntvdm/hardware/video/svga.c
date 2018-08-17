@@ -1296,7 +1296,7 @@ static inline VOID VgaWriteGc(BYTE Data)
                 UCHAR MemoryMap = (VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03;
 
                 /* Register a memory hook */
-                MemInstallFastMemoryHook((PVOID)MemoryBase[MemoryMap],
+                MemInstallFastMemoryHook(UlongToPtr(MemoryBase[MemoryMap]),
                                          MemorySize[MemoryMap],
                                          VgaReadMemory,
                                          VgaWriteMemory);
@@ -1466,7 +1466,7 @@ static VOID WINAPI VgaWritePort(USHORT Port, BYTE Data)
                 UCHAR MemoryMap = (VgaGcRegisters[VGA_GC_MISC_REG] >> 2) & 0x03;
 
                 /* Register a memory hook */
-                MemInstallFastMemoryHook((PVOID)MemoryBase[MemoryMap],
+                MemInstallFastMemoryHook(UlongToPtr(MemoryBase[MemoryMap]),
                                          MemorySize[MemoryMap],
                                          VgaReadMemory,
                                          VgaWriteMemory);

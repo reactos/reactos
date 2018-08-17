@@ -59,7 +59,7 @@ TestTcpConnect(void)
     ULONG FileInfoSize;
     IN_ADDR InAddr;
     LPCWSTR AddressTerminator;
-    CONNECTION_CONTEXT ConnectionContext = (CONNECTION_CONTEXT)0xC0CAC01A;
+    CONNECTION_CONTEXT ConnectionContext = (CONNECTION_CONTEXT)(ULONG_PTR)0xC0CAC01AC0CAC01AULL;
     KEVENT Event;
     TDI_CONNECTION_INFORMATION RequestInfo, ReturnInfo;
 

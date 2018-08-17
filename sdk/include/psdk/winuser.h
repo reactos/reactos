@@ -836,6 +836,11 @@ extern "C" {
 #define IDTRYAGAIN 10
 #define IDCONTINUE 11
 #endif
+#if (WINVER >= 0x0501)
+#ifndef IDTIMEOUT
+#define IDTIMEOUT 32000
+#endif
+#endif
 
 #define GWL_EXSTYLE (-20)
 #define GWL_STYLE (-16)

@@ -1509,7 +1509,7 @@ SelectObject(
     switch (GDI_HANDLE_GET_TYPE(hobj))
     {
         case GDILoObjType_LO_REGION_TYPE:
-            return (HGDIOBJ)ExtSelectClipRgn(hdc, hobj, RGN_COPY);
+            return (HGDIOBJ)UlongToHandle(ExtSelectClipRgn(hdc, hobj, RGN_COPY));
 
         case GDILoObjType_LO_BITMAP_TYPE:
         case GDILoObjType_LO_DIBSECTION_TYPE:

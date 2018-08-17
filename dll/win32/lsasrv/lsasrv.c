@@ -293,6 +293,9 @@ LsapInitLsa(VOID)
     /* Initialize logon sessions */
     LsapInitLogonSessions();
 
+    /* Initialize the notification list */
+    LsapInitNotificationList();
+
     /* Initialize registered authentication packages */
     Status = LsapInitAuthPackages();
     if (!NT_SUCCESS(Status))

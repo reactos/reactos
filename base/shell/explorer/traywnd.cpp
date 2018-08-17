@@ -3322,7 +3322,7 @@ public:
     virtual HRESULT STDMETHODCALLTYPE
         InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     {
-        UINT uiCmdId = (UINT) lpici->lpVerb;
+        UINT uiCmdId = PtrToUlong(lpici->lpVerb);
         if (uiCmdId != 0)
         {
             if (uiCmdId >= m_idCmdCmFirst)

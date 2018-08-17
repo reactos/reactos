@@ -64,7 +64,7 @@ TimerDpcRoutine(IN PKDPC Dpc,
                 IN PVOID SystemArgument2)
 {
     HEADLESS_RSP_GET_BYTE ByteValue;
-    ULONG ValueSize;
+    SIZE_T ValueSize;
     BOOLEAN GotChar;
     NTSTATUS Status;
     PSAC_DEVICE_EXTENSION SacExtension;

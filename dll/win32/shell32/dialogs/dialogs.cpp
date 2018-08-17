@@ -527,7 +527,6 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     HWND htxt = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
                     INT ic;
                     WCHAR *psz, *parent = NULL;
-                    SHELLEXECUTEINFOW sei;
                     NMRUNFILEDLGW nmrfd;
 
                     ic = GetWindowTextLengthW(htxt);
@@ -536,9 +535,6 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                         EndDialog(hwnd, IDCANCEL);
                         return TRUE;
                     }
-
-                    ZeroMemory(&sei, sizeof(sei));
-                    sei.cbSize = sizeof(sei);
 
                     /*
                      * Allocate a new MRU entry, we need to add two characters
@@ -552,10 +548,7 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
 
                     GetWindowTextW(htxt, psz, ic + 1);
-
-                    sei.hwnd = hwnd;
-                    sei.nShow = SW_SHOWNORMAL;
-                    sei.lpFile = psz;
+                    StrTrimW(psz, L" \t");
 
                     /*
                      * The precedence is the following: first the user-given
@@ -563,12 +556,13 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                      * directory is computed if the RFF_CALCDIRECTORY is set,
                      * otherwise no current directory is defined.
                      */
+                    LPCWSTR pszStartDir;
                     if (prfdp->lpstrDirectory)
-                        sei.lpDirectory = prfdp->lpstrDirectory;
+                        pszStartDir = prfdp->lpstrDirectory;
                     else if (prfdp->uFlags & RFF_CALCDIRECTORY)
-                        sei.lpDirectory = parent = RunDlg_GetParentDir(sei.lpFile);
+                        pszStartDir = parent = RunDlg_GetParentDir(psz);
                     else
-                        sei.lpDirectory = NULL;
+                        pszStartDir = NULL;
 
                     /* Hide the dialog for now on, we will show it up in case of retry */
                     ShowWindow(hwnd, SW_HIDE);
@@ -585,9 +579,9 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     nmrfd.hdr.code = RFN_VALIDATE;
                     nmrfd.hdr.hwndFrom = hwnd;
                     nmrfd.hdr.idFrom = 0;
-                    nmrfd.lpFile = sei.lpFile;
-                    nmrfd.lpDirectory = sei.lpDirectory;
-                    nmrfd.nShow = sei.nShow;
+                    nmrfd.lpFile = psz;
+                    nmrfd.lpDirectory = pszStartDir;
+                    nmrfd.nShow = SW_SHOWNORMAL;
 
                     lRet = SendMessageW(prfdp->hwndOwner, WM_NOTIFY, 0, (LPARAM)&nmrfd.hdr);
 
@@ -598,7 +592,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                             break;
 
                         case RF_OK:
-                            if (ShellExecuteExW(&sei))
+                            if (SUCCEEDED(ShellExecCmdLine(hwnd, psz, pszStartDir, SW_SHOWNORMAL, NULL,
+                                                           SECL_ALLOW_NONEXE)))
                             {
                                 /* Call again GetWindowText in case the contents of the edit box has changed? */
                                 GetWindowTextW(htxt, psz, ic + 1);

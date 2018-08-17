@@ -413,13 +413,16 @@ TestIrpHandler(
     {
         Fcb = IoStack->FileObject->FsContext;
         ok(Fcb != NULL, "Null pointer!\n");
-        if (IoStack->FileObject->SectionObjectPointer != NULL &&
-            IoStack->FileObject->SectionObjectPointer->SharedCacheMap != NULL)
+        if (IoStack->FileObject->SectionObjectPointer != NULL)
         {
             LARGE_INTEGER Zero = RTL_CONSTANT_LARGE_INTEGER(0LL);
 
-            CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
-            CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+            if (CcIsFileCached(IoStack->FileObject))
+            {
+                CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, NULL);
+                CcPurgeCacheSection(&Fcb->SectionObjectPointers, NULL, 0, FALSE);
+            }
+
             KeInitializeEvent(&CacheUninitEvent.Event, NotificationEvent, FALSE);
             CcUninitializeCacheMap(IoStack->FileObject, &Zero, &CacheUninitEvent);
             KeWaitForSingleObject(&CacheUninitEvent.Event, Executive, KernelMode, FALSE, NULL);

@@ -1580,8 +1580,9 @@ Phase1InitializationDiscard(IN PVOID Context)
                                WINDOWS_NT_INFO_STRING,
                                &MsgEntry);
 
-    /* Get total RAM size */
-    Size = MmNumberOfPhysicalPages * PAGE_SIZE / 1024 / 1024;
+    /* Get total RAM size, in MiB */
+    /* Round size up. Assumed to better match actual physical RAM size */
+    Size = ALIGN_UP_BY(MmNumberOfPhysicalPages * PAGE_SIZE, 1024 * 1024) / (1024 * 1024);
 
     /* Create the string */
     StringBuffer = InitBuffer->VersionBuffer;
@@ -1589,7 +1590,7 @@ Phase1InitializationDiscard(IN PVOID Context)
                                 sizeof(InitBuffer->VersionBuffer),
                                 NT_SUCCESS(MsgStatus) ?
                                 (PCHAR)MsgEntry->Text :
-                                "%u System Processor [%u MB Memory] %Z\r\n",
+                                "%u System Processor [%Iu MB Memory] %Z\r\n",
                                 KeNumberProcessors,
                                 Size,
                                 &TempString);

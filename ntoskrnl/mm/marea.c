@@ -375,7 +375,7 @@ MmFreeMemoryArea(
 #endif
     ExFreePoolWithTag(MemoryArea, TAG_MAREA);
 
-    DPRINT("MmFreeMemoryAreaByNode() succeeded\n");
+    DPRINT("MmFreeMemoryArea() succeeded\n");
 
     return STATUS_SUCCESS;
 }

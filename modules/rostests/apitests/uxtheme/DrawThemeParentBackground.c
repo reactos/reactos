@@ -138,13 +138,13 @@ void Test_Params()
     hr = DrawThemeParentBackground(NULL, NULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
-    hr = DrawThemeParentBackground((HWND)0xdeaddead, NULL, NULL);
+    hr = DrawThemeParentBackground((HWND)(ULONG_PTR)0xdeaddeaddeaddeadULL, NULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
-    hr = DrawThemeParentBackground(NULL, (HDC)0xdeaddead, NULL);
+    hr = DrawThemeParentBackground(NULL, (HDC)(ULONG_PTR)0xdeaddeaddeaddeadULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
-    hr = DrawThemeParentBackground((HWND)0xdeaddead, (HDC)0xdeaddead, NULL);
+    hr = DrawThemeParentBackground((HWND)(ULONG_PTR)0xdeaddeaddeaddeadULL, (HDC)(ULONG_PTR)0xdeaddeaddeaddeadULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
     RemoveVectoredExceptionHandler(pVEH);
@@ -173,11 +173,11 @@ void Test_Params()
     hr = DrawThemeParentBackground(hWnd1, hdc, NULL);
     ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
 
-    hr = DrawThemeParentBackground(hWnd1, (HDC)0xdeaddead, NULL);
+    hr = DrawThemeParentBackground(hWnd1, (HDC)(ULONG_PTR)0xdeaddeaddeaddeadULL, NULL);
     ok (hr == S_OK, "Expected success got 0x%lx error\n", hr);
 
     pVEH = AddVectoredExceptionHandler(1, VEHandler_2);
-    hr = DrawThemeParentBackground(hWnd1, hdc, (RECT*)0xdeaddead);
+    hr = DrawThemeParentBackground(hWnd1, hdc, (RECT*)(ULONG_PTR)0xdeaddeaddeaddeadULL);
     ok (hr == E_POINTER, "Expected success got 0x%lx error\n", hr);
     RemoveVectoredExceptionHandler(pVEH);
     ok (bGotException == TRUE, "Excepted a handled exception\n");

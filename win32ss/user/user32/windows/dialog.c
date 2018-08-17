@@ -19,7 +19,7 @@
 /*
  * PROJECT:         ReactOS user32.dll
  * FILE:            win32ss/user/user32/windows/dialog.c
- * PURPOSE:         Input
+ * PURPOSE:         Dialog Manager
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Steven Edwards (Steven_Ed4153@yahoo.com)
@@ -2532,7 +2532,7 @@ IsDialogMessageW(
                             WCHAR *buffer = HeapAlloc (GetProcessHeap(), 0, maxlen * sizeof(WCHAR));
                             if (buffer)
                             {
-                                INT length;
+                                SIZE_T length;
                                 SendMessageW (hwndNext, WM_GETTEXT, maxlen, (LPARAM) buffer);
                                 length = strlenW (buffer);
                                 HeapFree (GetProcessHeap(), 0, buffer);

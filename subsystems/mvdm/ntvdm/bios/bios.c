@@ -64,7 +64,7 @@ BiosInitialize(IN LPCSTR BiosFileName,
     BOOLEAN Success2 = FALSE;
     LPCSTR RomFile;
     LPSTR ptr;
-    ULONG RomAddress;
+    ULONG_PTR RomAddress;
     CHAR RomFileName[MAX_PATH + 10 + 1];
 
     /* Disable interrupts */

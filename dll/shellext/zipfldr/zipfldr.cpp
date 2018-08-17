@@ -109,9 +109,13 @@ BOOL WINAPI
 RouteTheCall(
     IN HWND hWndOwner,
     IN HINSTANCE hInstance,
-    IN LPWSTR lpNamedPipeName,
+    IN LPCSTR lpStringArg,
     IN INT Show)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    CStringW path = lpStringArg;
+    PathRemoveBlanksW(path.GetBuffer());
+    path.ReleaseBuffer();
+    path = L"\"" + path + L"\"";
+    ShellExecuteW(NULL, L"open", L"explorer.exe", path.GetString(), NULL, SW_SHOWNORMAL);
+    return TRUE;
 }

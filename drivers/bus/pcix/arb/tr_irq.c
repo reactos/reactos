@@ -36,7 +36,7 @@ tranirq_Initializer(IN PVOID Instance)
 {
     UNREFERENCED_PARAMETER(Instance);
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG("PCI tranirq_Initializer, unexpected call.", FALSE);
+    ASSERTMSG("PCI tranirq_Initializer, unexpected call.\n", FALSE);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -59,7 +59,7 @@ tranirq_Constructor(IN PVOID DeviceExtension,
     UNREFERENCED_PARAMETER(Size);
 
     /* Make sure it's the right resource type */
-    if ((ULONG)InterfaceData != CmResourceTypeInterrupt)
+    if ((ULONG_PTR)InterfaceData != CmResourceTypeInterrupt)
     {
         /* Fail this invalid request */
         DPRINT1("PCI - IRQ trans constructor doesn't like %p in InterfaceSpecificData\n",
@@ -69,7 +69,7 @@ tranirq_Constructor(IN PVOID DeviceExtension,
 
     /* Get the bus, and use this as the interface-specific data */
     BaseBus = FdoExtension->BaseBus;
-    InterfaceData = (PVOID)BaseBus;
+    InterfaceData = UlongToPtr(BaseBus);
 
     /* Check if this is the root bus */
     if (PCI_IS_ROOT_FDO(FdoExtension))

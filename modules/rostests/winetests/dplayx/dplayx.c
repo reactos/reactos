@@ -6548,17 +6548,30 @@ static void test_COM(void)
     IDirectPlay3A *dp3A;
     IDirectPlay3 *dp3;
     IDirectPlay4A *dp4A;
+#ifdef __REACTOS__
+    IDirectPlay4 *dp4 = (IDirectPlay4*)(ULONG_PTR)0xdeadbeefdeadbeefull;
+#else
     IDirectPlay4 *dp4 = (IDirectPlay4*)0xdeadbeef;
+#endif
     IUnknown *unk;
     ULONG refcount;
     HRESULT hr;
 
     /* COM aggregation */
+#ifdef __REACTOS__
+    hr = CoCreateInstance(&CLSID_DirectPlay, (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeefull, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&dp4);
+#else
     hr = CoCreateInstance(&CLSID_DirectPlay, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER,
             &IID_IUnknown, (void**)&dp4);
+#endif
     ok(hr == CLASS_E_NOAGGREGATION || broken(hr == E_INVALIDARG),
             "DirectPlay create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
+#ifdef __REACTOS__
+    ok(!dp4 || dp4 == (IDirectPlay4*)(ULONG_PTR)0xdeadbeefdeadbeefull, "dp4 = %p\n", dp4);
+#else
     ok(!dp4 || dp4 == (IDirectPlay4*)0xdeadbeef, "dp4 = %p\n", dp4);
+#endif
 
     /* Invalid RIID */
     hr = CoCreateInstance(&CLSID_DirectPlay, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectPlayLobby,
@@ -6630,7 +6643,11 @@ static void test_COM(void)
 
 static void test_COM_dplobby(void)
 {
+#ifdef __REACTOS__
+    IDirectPlayLobby *dpl = (IDirectPlayLobby*)(ULONG_PTR)0xdeadbeefdeadbeefull;
+#else
     IDirectPlayLobby *dpl = (IDirectPlayLobby*)0xdeadbeef;
+#endif
     IDirectPlayLobbyA *dplA;
     IDirectPlayLobby2A *dpl2A;
     IDirectPlayLobby2 *dpl2;
@@ -6641,11 +6658,20 @@ static void test_COM_dplobby(void)
     HRESULT hr;
 
     /* COM aggregation */
+#ifdef __REACTOS__
+    hr = CoCreateInstance(&CLSID_DirectPlayLobby, (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeefull, CLSCTX_INPROC_SERVER,
+            &IID_IUnknown, (void**)&dpl);
+#else
     hr = CoCreateInstance(&CLSID_DirectPlayLobby, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER,
             &IID_IUnknown, (void**)&dpl);
+#endif
     ok(hr == CLASS_E_NOAGGREGATION || broken(hr == E_INVALIDARG),
             "DirectPlayLobby create failed: %08x, expected CLASS_E_NOAGGREGATION\n", hr);
+#ifdef __REACTOS__
+    ok(!dpl || dpl == (IDirectPlayLobby*)(ULONG_PTR)0xdeadbeefdeadbeefull, "dpl = %p\n", dpl);
+#else
     ok(!dpl || dpl == (IDirectPlayLobby*)0xdeadbeef, "dpl = %p\n", dpl);
+#endif
 
     /* Invalid RIID */
     hr = CoCreateInstance(&CLSID_DirectPlayLobby, NULL, CLSCTX_INPROC_SERVER, &IID_IDirectPlay,

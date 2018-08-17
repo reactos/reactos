@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.2.1)
 cmake_policy(VERSION 3.2.1)
 
+if(NOT CMAKE_VERSION MATCHES "ReactOS")
+    message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
+endif()
+
 # Don't escape preprocessor definition values added via add_definitions
 cmake_policy(SET CMP0005 OLD)
 

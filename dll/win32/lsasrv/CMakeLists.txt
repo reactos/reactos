@@ -17,6 +17,7 @@ list(APPEND SOURCE
     lookup.c
     lsarpc.c
     lsasrv.c
+    notify.c
     policy.c
     privileges.c
     registry.c

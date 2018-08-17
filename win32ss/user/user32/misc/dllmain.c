@@ -574,7 +574,7 @@ User32CallGetCharsetInfo(PVOID Arguments, ULONG ArgumentLength)
 
   TRACE("GetCharsetInfo\n");
 
-  Ret = TranslateCharsetInfo((DWORD *)pgci->Locale, &pgci->Cs, TCI_SRCLOCALE);
+  Ret = TranslateCharsetInfo((DWORD *)(ULONG_PTR)pgci->Locale, &pgci->Cs, TCI_SRCLOCALE);
 
   return ZwCallbackReturn(Arguments, ArgumentLength, Ret ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }

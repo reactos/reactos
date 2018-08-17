@@ -17,7 +17,7 @@ void TestParams(HWND hwnd)
     hr = SetWindowTheme(0, NULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
-    hr = SetWindowTheme((HWND)0xdeaddead, NULL, NULL);
+    hr = SetWindowTheme((HWND)(ULONG_PTR)0xdeaddeaddeaddeadULL, NULL, NULL);
     ok (hr == E_HANDLE, "Expected E_HANDLE got 0x%lx error\n", hr);
 
     hr = SetWindowTheme(hwnd, NULL, NULL);

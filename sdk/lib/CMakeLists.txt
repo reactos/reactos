@@ -18,6 +18,7 @@ if(MSVC)
 endif()
 
 add_subdirectory(delayimp)
+add_subdirectory(dmilib)
 #add_subdirectory(dnslib) Nothing links to this lib.
 add_subdirectory(drivers)
 add_subdirectory(dxguid)
@@ -46,6 +47,7 @@ add_subdirectory(skiplist)
 add_subdirectory(strmiids)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
+add_subdirectory(udmihelp)
 add_subdirectory(uuid)
 add_subdirectory(wdmguid)
 

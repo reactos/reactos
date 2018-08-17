@@ -1844,9 +1844,11 @@ USBPORT_AddDevice(IN PDRIVER_OBJECT DriverObject,
 
         RtlInitUnicodeString(&DeviceName, CharDeviceName);
 
-        Length = sizeof(USBPORT_DEVICE_EXTENSION) +
-                 MiniPortInterface->Packet.MiniPortExtensionSize +
-                 sizeof(USB2_HC_EXTENSION);
+        ASSERT(MiniPortInterface->Packet.MiniPortExtensionSize <=
+               MAXULONG - sizeof(USBPORT_DEVICE_EXTENSION) - sizeof(USB2_HC_EXTENSION));
+        Length = (ULONG)(sizeof(USBPORT_DEVICE_EXTENSION) +
+                         MiniPortInterface->Packet.MiniPortExtensionSize +
+                         sizeof(USB2_HC_EXTENSION));
 
         /* Create device */
         Status = IoCreateDevice(DriverObject,
@@ -2299,7 +2301,7 @@ USBPORT_MapTransfer(IN PDEVICE_OBJECT FdoDevice,
     BOOLEAN WriteToDevice;
     PHYSICAL_ADDRESS PhAddr = {{0, 0}};
     PHYSICAL_ADDRESS PhAddress = {{0, 0}};
-    SIZE_T TransferLength;
+    ULONG TransferLength;
     SIZE_T SgCurrentLength;
     SIZE_T ElementLength;
     PUSBPORT_DEVICE_HANDLE DeviceHandle;

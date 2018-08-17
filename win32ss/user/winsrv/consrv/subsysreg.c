@@ -38,7 +38,7 @@ CSR_API(SrvRegisterConsoleVDM)
     if (RegisterVDMRequest->RegisterFlags != 0)
     {
         LARGE_INTEGER SectionSize;
-        ULONG Size, ViewSize = 0;
+        SIZE_T Size, ViewSize = 0;
         HANDLE ProcessHandle;
 
         /*
