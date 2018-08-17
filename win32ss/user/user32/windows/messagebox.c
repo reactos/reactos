@@ -30,6 +30,8 @@
  */
 
 #include <user32.h>
+#include <ndk/exfuncs.h>
+
 #include <ntstrsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
@@ -453,6 +455,86 @@ MessageBoxTimeoutIndirectW(
     MSGBOXDATA mbd;
     MSGBTNINFO Buttons;
     LPCWSTR ButtonText[MSGBOXEX_MAXBTNS];
+
+    // TODO: Check whether the caller is an NT 3.x app and if so, check
+    // instead for the MB_SERVICE_NOTIFICATION_NT3X flag and adjust it.
+    if (lpMsgBoxParams->dwStyle & MB_SERVICE_NOTIFICATION)
+    {
+        NTSTATUS Status;
+        UNICODE_STRING CaptionU, TextU;
+        ULONG Response = ResponseNotHandled; /* HARDERROR_RESPONSE */
+        ULONG_PTR MsgBoxParams[4] =
+        {
+            (ULONG_PTR)&TextU,
+            (ULONG_PTR)&CaptionU,
+            /*
+             * Retrieve the message box flags. Note that we filter out
+             * MB_SERVICE_NOTIFICATION to not enter an infinite recursive
+             * loop when we will call MessageBox() later on.
+             */
+            lpMsgBoxParams->dwStyle & ~MB_SERVICE_NOTIFICATION,
+            dwTimeout
+        };
+
+        /* hwndOwner must be NULL */
+        if (lpMsgBoxParams->hwndOwner != NULL)
+        {
+            ERR("MessageBoxTimeoutIndirectW(MB_SERVICE_NOTIFICATION): hwndOwner is not NULL!\n");
+            return 0;
+        }
+
+        //
+        // FIXME: TODO: Implement the special case for Terminal Services.
+        //
+
+        RtlInitUnicodeString(&CaptionU, lpMsgBoxParams->lpszCaption);
+        RtlInitUnicodeString(&TextU, lpMsgBoxParams->lpszText);
+
+        Status = NtRaiseHardError(STATUS_SERVICE_NOTIFICATION | HARDERROR_OVERRIDE_ERRORMODE,
+                                  ARRAYSIZE(MsgBoxParams),
+                                  (1 | 2),
+                                  MsgBoxParams,
+                                  OptionOk, /* NOTE: This parameter is ignored */
+                                  &Response);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("MessageBoxTimeoutIndirectW(MB_SERVICE_NOTIFICATION): NtRaiseHardError failed, Status = 0x%08lx\n", Status);
+            return 0;
+        }
+
+        /* Map the returned response to the buttons */
+        switch (Response)
+        {
+            /* Not handled */
+            case ResponseReturnToCaller:
+            case ResponseNotHandled:
+                break;
+
+            case ResponseAbort:
+                return IDABORT;
+            case ResponseCancel:
+                return IDCANCEL;
+            case ResponseIgnore:
+                return IDIGNORE;
+            case ResponseNo:
+                return IDNO;
+            case ResponseOk:
+                return IDOK;
+            case ResponseRetry:
+                return IDRETRY;
+            case ResponseYes:
+                return IDYES;
+            case ResponseTryAgain:
+                return IDTRYAGAIN;
+            case ResponseContinue:
+                return IDCONTINUE;
+
+            /* Not handled */
+            default:
+                break;
+        }
+        return 0;
+    }
 
     ZeroMemory(&mbd, sizeof(mbd));
     memcpy(&mbd.mbp, lpMsgBoxParams, sizeof(mbd.mbp));
