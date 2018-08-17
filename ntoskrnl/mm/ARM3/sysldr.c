@@ -1457,6 +1457,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section, LastSection, InitSection;
     BOOLEAN InitFound;
+    DBG_UNREFERENCED_LOCAL_VARIABLE(InitSection);
 
     /* So we don't free our own code yet */
     InitCode = (ULONG_PTR)&MiFindInitializationCode;
@@ -1592,6 +1593,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
                     else
                     {
                         /* This isn't us -- go ahead and free it */
+                        ASSERT(MI_IS_PHYSICAL_ADDRESS((PVOID)InitStart) == FALSE);
                         DPRINT("Freeing init code: %p-%p ('%wZ' @%p : '%s')\n",
                                (PVOID)InitStart,
                                (PVOID)InitEnd,
