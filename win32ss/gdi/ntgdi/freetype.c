@@ -453,6 +453,15 @@ IntLoadFontSubstList(PLIST_ENTRY pHead)
             CharSets[FONTSUBST_TO] = (BYTE)_wtoi(pch + 1);
         }
 
+        /* is it identical? */
+        if (RtlEqualUnicodeString(&FromW, &ToW, TRUE) &&
+            CharSets[FONTSUBST_FROM] == CharSets[FONTSUBST_TO])
+        {
+            RtlFreeUnicodeString(&FromW);
+            RtlFreeUnicodeString(&ToW);
+            continue;
+        }
+
         /* allocate an entry */
         pEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONTSUBST_ENTRY), TAG_FONT);
         if (pEntry == NULL)
