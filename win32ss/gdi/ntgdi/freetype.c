@@ -258,6 +258,9 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 
     FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
+#ifndef NDEBUG
+    RtlFillMemoryUlong(Entry, sizeof(FONT_CACHE_ENTRY), 0xDEADFACE);
+#endif
     ExFreePoolWithTag(Entry, TAG_FONT);
     g_FontCacheNumEntries--;
     ASSERT(g_FontCacheNumEntries <= MAX_FONT_CACHE);
@@ -272,17 +275,14 @@ RemoveCacheEntries(FT_Face Face)
     ASSERT_FREETYPE_LOCK_HELD();
 
     for (CurrentEntry = g_FontCacheListHead.Flink;
-         CurrentEntry != &g_FontCacheListHead;
-         CurrentEntry = NextEntry)
+         CurrentEntry != &g_FontCacheListHead;)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        NextEntry = CurrentEntry->Flink;
+        CurrentEntry = CurrentEntry->Flink;
 
         if (FontEntry->Face == Face)
         {
             RemoveCachedEntry(FontEntry);
-            FontEntry = NULL;
-            CurrentEntry = NULL;
         }
     }
 }
