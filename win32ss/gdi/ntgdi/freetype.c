@@ -251,6 +251,18 @@ SharedFace_AddRef(PSHARED_FACE Ptr)
     ++Ptr->RefCount;
 }
 
+static inline VOID FASTCALL
+ftFreePoolWithTagAndSize(
+    _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
+    _In_ ULONG Tag,
+    _In_ SIZE_T Size)
+{
+#ifndef NDEBUG
+    RtlFillMemoryUlong(P, Size, 0xDEADFACE);
+#endif
+    ExFreePoolWithTag(P, Tag);
+}
+
 static void
 RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 {
@@ -258,10 +270,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 
     FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
-#ifndef NDEBUG
-    RtlFillMemoryUlong(Entry, sizeof(FONT_CACHE_ENTRY), 0xDEADFACE);
-#endif
-    ExFreePoolWithTag(Entry, TAG_FONT);
+    ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
     g_FontCacheNumEntries--;
     ASSERT(g_FontCacheNumEntries <= MAX_FONT_CACHE);
 }
@@ -269,7 +278,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 static void
 RemoveCacheEntries(FT_Face Face)
 {
-    PLIST_ENTRY CurrentEntry, NextEntry;
+    PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
 
     ASSERT_FREETYPE_LOCK_HELD();
@@ -302,8 +311,8 @@ static void SharedMem_Release(PSHARED_MEM Ptr)
         if (Ptr->IsMapping)
             MmUnmapViewInSystemSpace(Ptr->Buffer);
         else
-            ExFreePoolWithTag(Ptr->Buffer, TAG_FONT);
-        ExFreePoolWithTag(Ptr, TAG_FONT);
+            ftFreePoolWithTagAndSize(Ptr->Buffer, TAG_FONT, Ptr->BufferSize);
+        ftFreePoolWithTagAndSize(Ptr, TAG_FONT, sizeof(*Ptr));
     }
 }
 
@@ -332,7 +341,7 @@ SharedFace_Release(PSHARED_FACE Ptr)
         SharedMem_Release(Ptr->Memory);
         SharedFaceCache_Release(&Ptr->EnglishUS);
         SharedFaceCache_Release(&Ptr->UserLanguage);
-        ExFreePoolWithTag(Ptr, TAG_FONT);
+        ftFreePoolWithTagAndSize(Ptr, TAG_FONT, sizeof(*Ptr));
     }
     IntUnLockFreeType();
 }
@@ -886,7 +895,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     if (!FontGDI)
     {
         SharedFace_Release(SharedFace);
-        ExFreePoolWithTag(Entry, TAG_FONT);
+        ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;   /* failure */
     }
@@ -901,7 +910,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         {
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
-            ExFreePoolWithTag(Entry, TAG_FONT);
+            ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;   /* failure */
         }
@@ -919,7 +928,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
-            ExFreePoolWithTag(Entry, TAG_FONT);
+            ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
             return 0;
         }
 
@@ -957,13 +966,13 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             {
                 RemoveEntryList(&PrivateEntry->ListEntry);
             }
-            ExFreePoolWithTag(PrivateEntry, TAG_FONT);
+            ftFreePoolWithTagAndSize(PrivateEntry, TAG_FONT, sizeof(*PrivateEntry));
         }
         if (FontGDI->Filename)
             ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
         EngFreeMem(FontGDI);
         SharedFace_Release(SharedFace);
-        ExFreePoolWithTag(Entry, TAG_FONT);
+        ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
         return 0;
     }
 
@@ -1290,7 +1299,7 @@ CleanupFontEntry(PFONT_ENTRY FontEntry)
 
     EngFreeMem(FontGDI);
     SharedFace_Release(SharedFace);
-    ExFreePoolWithTag(FontEntry, TAG_FONT);
+    ftFreePoolWithTagAndSize(FontEntry, TAG_FONT, sizeof(*FontEntry));
 }
 
 VOID FASTCALL
@@ -1305,11 +1314,11 @@ IntGdiCleanupMemEntry(PFONT_ENTRY_MEM Head)
         FontEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_MEM, ListEntry);
 
         CleanupFontEntry(FontEntry->Entry);
-        ExFreePoolWithTag(FontEntry, TAG_FONT);
+        ftFreePoolWithTagAndSize(FontEntry, TAG_FONT, sizeof(*FontEntry));
     }
 
     CleanupFontEntry(Head->Entry);
-    ExFreePoolWithTag(Head, TAG_FONT);
+    ftFreePoolWithTagAndSize(Head, TAG_FONT, sizeof(*Head));
 }
 
 static VOID FASTCALL
@@ -1356,7 +1365,7 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     if (EntryCollection)
     {
         IntGdiCleanupMemEntry(EntryCollection->Entry);
-        ExFreePoolWithTag(EntryCollection, TAG_FONT);
+        ftFreePoolWithTagAndSize(EntryCollection, TAG_FONT, sizeof(*EntryCollection));
         return TRUE;
     }
     return FALSE;
@@ -1387,7 +1396,7 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
         if (EntryCollection)
         {
             IntGdiCleanupMemEntry(EntryCollection->Entry);
-            ExFreePoolWithTag(EntryCollection, TAG_FONT);
+            ftFreePoolWithTagAndSize(EntryCollection, TAG_FONT, sizeof(*EntryCollection));
         }
         else
         {
@@ -2775,7 +2784,7 @@ ftGdiGlyphCacheSet(
     if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
     {
         DPRINT1("Conversion failed\n");
-        ExFreePoolWithTag(NewEntry, TAG_FONT);
+        ftFreePoolWithTagAndSize(NewEntry, TAG_FONT, sizeof(*NewEntry));
         FT_Bitmap_Done(GlyphSlot->library, &AlignedBitmap);
         FT_Done_Glyph((FT_Glyph)BitmapGlyph);
         return NULL;
