@@ -8,8 +8,7 @@
 
 #include "precomp.h"
 
-#define _NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wlnotify);
 
 
 VOID
@@ -17,15 +16,15 @@ WINAPI
 TSEventDisconnect(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventDisconnect\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventDisconnect\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -34,15 +33,15 @@ WINAPI
 TSEventLogoff(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventLogoff\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventLogoff\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -51,15 +50,15 @@ WINAPI
 TSEventLogon(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventLogon\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventLogon\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 VOID
@@ -67,15 +66,15 @@ WINAPI
 TSEventPostShell(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventPostShell\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventPostShell\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 VOID
@@ -83,15 +82,15 @@ WINAPI
 TSEventReconnect(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventReconnect\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventReconnect\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -100,15 +99,15 @@ WINAPI
 TSEventShutdown(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventShutdown\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventShutdown\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -117,15 +116,15 @@ WINAPI
 TSEventStartShell(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventStartShell\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventStartShell\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -134,15 +133,15 @@ WINAPI
 TSEventStartup(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TSEventStartup\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("TSEventStartup\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 

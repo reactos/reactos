@@ -8,8 +8,7 @@
 
 #include "precomp.h"
 
-#define _NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wlnotify);
 
 
 VOID
@@ -17,15 +16,15 @@ WINAPI
 RegisterTicketExpiredNotificationEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("RegisterTicketExpiredNotificationEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("RegisterTicketExpiredNotificationEvent\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -34,15 +33,15 @@ WINAPI
 UnregisterTicketExpiredNotificationEvent(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("UnregisterTicketExpiredNotificationEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("UnregisterTicketExpiredNotificationEvent\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 

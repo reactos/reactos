@@ -7,25 +7,24 @@
  */
 
 #include "precomp.h"
-#include <winsvc.h>
 
-#define _NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wlnotify);
+
 
 VOID
 WINAPI
 SCardResumeCertProp(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("SCardResumeCertProp\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SCardResumeCertProp\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -34,15 +33,15 @@ WINAPI
 SCardStartCertProp(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("SCardStartCertProp\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SCardStartCertProp\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -51,15 +50,15 @@ WINAPI
 SCardStopCertProp(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("SCardStopCertProp\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SCardStopCertProp\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 
@@ -68,15 +67,15 @@ WINAPI
 SCardSuspendCertProp(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("SCardSuspendCertProp\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+    TRACE("SCardSuspendCertProp\n");
+    TRACE("Size: %lu\n", pInfo->Size);
+    TRACE("Flags: %lx\n", pInfo->Flags);
+    TRACE("UserName: %S\n", pInfo->UserName);
+    TRACE("Domain: %S\n", pInfo->Domain);
+    TRACE("WindowStation: %S\n", pInfo->WindowStation);
+    TRACE("hToken: %p\n", pInfo->hToken);
+    TRACE("hDesktop: %p\n", pInfo->hDesktop);
+    TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 }
 
 /* EOF */

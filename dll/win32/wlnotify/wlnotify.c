@@ -8,8 +8,7 @@
 
 #include "precomp.h"
 
-#define _NDEBUG
-#include <debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(wlnotify);
 
 
 BOOL

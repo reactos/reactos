@@ -7,3 +7,6 @@
  */
 #include <windows.h>
 #include <winwlx.h>
+#include <winsvc.h>
+
+#include <wine/debug.h>

@@ -1385,7 +1385,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\ScCertProp","Unlock",0x00000000,"SCardResumeCertProp"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","DlLName",0x00020000,"wlnotify.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","Logoff",0x00000000,"SchedEventLogOff"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","Logoff",0x00000000,"SchedEventLogoff"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\Schedule","StartShell",0x00000000,"SchedStartShell"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\SensLogn","Disconnect",0x00000000,"SensDisconnectEvent"
