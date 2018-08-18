@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/wlnotify/test.c
+ * FILE:        dll/win32/wlnotify/termserv.c
  * PURPOSE:     Winlogon notifications
  * PROGRAMMER:  Eric Kohl
  */
@@ -14,10 +14,10 @@
 
 VOID
 WINAPI
-TestLogonEvent(
+TSEventDisconnect(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLogonEvent\n");
+    DPRINT("TSEventDisconnect\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -31,10 +31,10 @@ TestLogonEvent(
 
 VOID
 WINAPI
-TestLogoffEvent(
+TSEventLogoff(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLogoffEvent\n");
+    DPRINT("TSEventLogoff\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -48,10 +48,42 @@ TestLogoffEvent(
 
 VOID
 WINAPI
-TestLockEvent(
+TSEventLogon(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestLockEvent\n");
+    DPRINT("TSEventLogon\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+VOID
+WINAPI
+TSEventPostShell(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TSEventPostShell\n");
+    DPRINT("Size: %lu\n", pInfo->Size);
+    DPRINT("Flags: %lx\n", pInfo->Flags);
+    DPRINT("UserName: %S\n", pInfo->UserName);
+    DPRINT("Domain: %S\n", pInfo->Domain);
+    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
+    DPRINT("hToken: %p\n", pInfo->hToken);
+    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
+    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
+}
+
+VOID
+WINAPI
+TSEventReconnect(
+    PWLX_NOTIFICATION_INFO pInfo)
+{
+    DPRINT("TSEventReconnect\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -65,10 +97,10 @@ TestLockEvent(
 
 VOID
 WINAPI
-TestUnlockEvent(
+TSEventShutdown(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestUnlockEvent\n");
+    DPRINT("TSEventShutdown\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -82,10 +114,10 @@ TestUnlockEvent(
 
 VOID
 WINAPI
-TestStartupEvent(
+TSEventStartShell(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestStartupEvent\n");
+    DPRINT("TSEventStartShell\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -99,10 +131,10 @@ TestStartupEvent(
 
 VOID
 WINAPI
-TestShutdownEvent(
+TSEventStartup(
     PWLX_NOTIFICATION_INFO pInfo)
 {
-    DPRINT("TestShutdownEvent\n");
+    DPRINT("TSEventStartup\n");
     DPRINT("Size: %lu\n", pInfo->Size);
     DPRINT("Flags: %lx\n", pInfo->Flags);
     DPRINT("UserName: %S\n", pInfo->UserName);
@@ -114,104 +146,6 @@ TestShutdownEvent(
 }
 
 
-VOID
-WINAPI
-TestStartScreenSaverEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestStartScreenSaverEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-
-VOID
-WINAPI
-TestStopScreenSaverEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestStopScreenSaverEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-
-VOID
-WINAPI
-TestStartShellEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestStartShellEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-
-VOID
-WINAPI
-TestPostShellEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestPostShellEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-VOID
-WINAPI
-TestDisconnectEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestDisconnectEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
-
-
-VOID
-WINAPI
-TestReconnectEvent(
-    PWLX_NOTIFICATION_INFO pInfo)
-{
-    DPRINT("TestReconnectEvent\n");
-    DPRINT("Size: %lu\n", pInfo->Size);
-    DPRINT("Flags: %lx\n", pInfo->Flags);
-    DPRINT("UserName: %S\n", pInfo->UserName);
-    DPRINT("Domain: %S\n", pInfo->Domain);
-    DPRINT("WindowStation: %S\n", pInfo->WindowStation);
-    DPRINT("hToken: %p\n", pInfo->hToken);
-    DPRINT("hDesktop: %p\n", pInfo->hDesktop);
-    DPRINT("pStatusCallback: %p\n", pInfo->pStatusCallback);
-}
+/* TermsrvCreateTempDir */
 
 /* EOF */

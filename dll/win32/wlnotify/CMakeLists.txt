@@ -2,9 +2,11 @@
 spec2def(wlnotify.dll wlnotify.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+    scard.c
     schedsvc.c
     senssvc.c
-    test.c
+    termserv.c
+    wlballoon.c
     wlnotify.c
     precomp.h)
 
