@@ -370,6 +370,44 @@ VfatOpenFile(
         return STATUS_CANNOT_DELETE;
     }
 
+    /* If that one was marked for closing, remove it */
+    if (BooleanFlagOn(Fcb->Flags, FCB_DELAYED_CLOSE))
+    {
+        BOOLEAN ConcurrentDeletion;
+        PVFAT_CLOSE_CONTEXT CloseContext;
+
+        /* Get the context */
+        CloseContext = Fcb->CloseContext;
+        /* Is someone already taking over? */
+        if (CloseContext != NULL)
+        {
+            ConcurrentDeletion = FALSE;
+            /* Lock list */
+            ExAcquireFastMutex(&VfatGlobalData->CloseMutex);
+            /* Check whether it was already removed, if not, do it */
+            if (!IsListEmpty(&CloseContext->CloseListEntry))
+            {
+                RemoveEntryList(&CloseContext->CloseListEntry);
+                --VfatGlobalData->CloseCount;
+                ConcurrentDeletion = TRUE;
+            }
+            ExReleaseFastMutex(&VfatGlobalData->CloseMutex);
+
+            /* It's not delayed anymore! */
+            ClearFlag(Fcb->Flags, FCB_DELAYED_CLOSE);
+            /* Release the extra reference (would have been removed by IRP_MJ_CLOSE) */
+            vfatReleaseFCB(DeviceExt, Fcb);
+            Fcb->CloseContext = NULL;
+            /* If no concurrent deletion, free work item */
+            if (!ConcurrentDeletion)
+            {
+                ExFreeToPagedLookasideList(&VfatGlobalData->CloseContextLookasideList, CloseContext);
+            }
+        }
+
+        DPRINT("Reusing delayed close FCB for %wZ\n", &Fcb->PathNameU);
+    }
+
     DPRINT("Attaching FCB to fileObject\n");
     Status = vfatAttachFCBToFileObject(DeviceExt, Fcb, FileObject);
     if (!NT_SUCCESS(Status))
