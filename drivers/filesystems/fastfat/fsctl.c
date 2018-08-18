@@ -1299,6 +1299,7 @@ VfatDismountVolume(
     ExReleaseResourceLite(&DeviceExt->FatResource);
 
     /* Release a few resources and quit, we're done */
+    ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
     ExDeleteResourceLite(&DeviceExt->DirResource);
     ExDeleteResourceLite(&DeviceExt->FatResource);
     ObDereferenceObject(DeviceExt->FATFileObject);
