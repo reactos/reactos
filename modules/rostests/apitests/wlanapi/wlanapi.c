@@ -188,7 +188,9 @@ static void WlanGetProfile_test(void)
 static void WlanEnumInterfaces_test(void)
 {
     DWORD ret;
-    PWLAN_INTERFACE_INFO_LIST pInterfaceList;
+    PWLAN_INTERFACE_INFO_LIST pInterfaceList = NULL;
+    DWORD dwNegotiatedVersion;
+    HANDLE hClientHandle;
 
     /* invalid pReserved */
     ret = WlanEnumInterfaces((HANDLE) -1, (PVOID) 1, &pInterfaceList);
@@ -196,7 +198,26 @@ static void WlanEnumInterfaces_test(void)
 
     /* invalid pInterfaceList */
     ret = WlanEnumInterfaces((HANDLE) -1, NULL, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");    
+    ok(ret == ERROR_INVALID_PARAMETER, "expected failure\n");
+
+    ret = WlanOpenHandle(1, NULL, &dwNegotiatedVersion, &hClientHandle);
+    if (ret == ERROR_SERVICE_EXISTS)
+    {
+        skip("Skipping tests, WlanSvc is not running\n");
+        return;
+    }
+
+    ret = WlanEnumInterfaces(hClientHandle, NULL, &pInterfaceList);
+    ok(ret == ERROR_SUCCESS, "expected success\n");
+    
+    
+    if (pInterfaceList != NULL)
+    {
+        WlanFreeMemory(pInterfaceList);
+        pInterfaceList = NULL;
+    }
+    
+    WlanCloseHandle(hClientHandle, NULL);
 }
 
 static void WlanGetInterfaceCapability_test(void)
