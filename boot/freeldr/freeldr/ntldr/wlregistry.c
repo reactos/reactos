@@ -687,7 +687,7 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
 static
 BOOLEAN
 InsertInBootDriverList(
-    LIST_ENTRY *BootDriverListHead,
+    PLIST_ENTRY BootDriverListHead,
     PBOOT_DRIVER_LIST_ENTRY BootDriverEntry)
 {
     PBOOT_DRIVER_LIST_ENTRY DriverEntry;
