@@ -534,11 +534,13 @@ typedef struct _VFATCCB
     UNICODE_STRING SearchPattern;
 } VFATCCB, *PVFATCCB;
 
-#define TAG_CCB  'BCCV'
-#define TAG_FCB  'BCFV'
-#define TAG_IRP  'PRIV'
+#define TAG_CCB  'CtaF'
+#define TAG_FCB  'FtaF'
+#define TAG_IRP  'ItaF'
 #define TAG_VFAT 'TAFV'
 #define TAG_CLOSE 'xtaF'
+#define TAG_STATS 'VtaF'
+#define TAG_BUFFER 'OtaF'
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 

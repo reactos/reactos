@@ -22,8 +22,6 @@
 
 /*  --------------------------------------------------------  DEFINES  */
 
-#define TAG_FCB 'BCFV'
-
 #ifdef KDBG
 extern UNICODE_STRING DebugFile;
 #endif

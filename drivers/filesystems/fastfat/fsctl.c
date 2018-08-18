@@ -677,7 +677,7 @@ VfatMount(
 
     DeviceExt->Statistics = ExAllocatePoolWithTag(NonPagedPool,
                                                   sizeof(STATISTICS) * VfatGlobalData->NumberProcessors,
-                                                  TAG_VFAT);
+                                                  TAG_STATS);
     if (DeviceExt->Statistics == NULL)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -809,7 +809,7 @@ ByeBye:
         if (DeviceExt && DeviceExt->SpareVPB)
             ExFreePoolWithTag(DeviceExt->SpareVPB, TAG_VFAT);
         if (DeviceExt && DeviceExt->Statistics)
-            ExFreePoolWithTag(DeviceExt->Statistics, TAG_VFAT);
+            ExFreePoolWithTag(DeviceExt->Statistics, TAG_STATS);
         if (Fcb)
             vfatDestroyFCB(Fcb);
         if (Ccb)
