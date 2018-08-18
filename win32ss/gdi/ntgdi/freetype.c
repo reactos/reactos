@@ -266,20 +266,23 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 static void
 RemoveCacheEntries(FT_Face Face)
 {
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY CurrentEntry, NextEntry;
     PFONT_CACHE_ENTRY FontEntry;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
     for (CurrentEntry = g_FontCacheListHead.Flink;
          CurrentEntry != &g_FontCacheListHead;
-         CurrentEntry = CurrentEntry->Flink)
+         CurrentEntry = NextEntry)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
+        NextEntry = CurrentEntry->Flink;
 
         if (FontEntry->Face == Face)
         {
             RemoveCachedEntry(FontEntry);
+            FontEntry = NULL;
+            CurrentEntry = NULL;
         }
     }
 }
