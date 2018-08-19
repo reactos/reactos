@@ -228,6 +228,12 @@ void DoEntry(const TEST_ENTRY *pEntry)
     }
 
     hFontOld = SelectObject(hDC, hFont);
+    ok(hFontOld != NULL, "SelectObject failed\n");
+    if (hFontOld == NULL)
+    {
+        skip("Line %d: skipped because SelectObject failed\n", pEntry->line);
+    }
+    else
     {
         DWORD dwRet, dwError;
         GLYPHMETRICS gm;
@@ -257,8 +263,8 @@ void DoEntry(const TEST_ENTRY *pEntry)
             ok(gm.gmCellIncX == pEntry->gm.gmCellIncX, "Line %d: gm.gmCellIncX expected %d, was %d\n", pEntry->line, pEntry->gm.gmCellIncX, gm.gmCellIncX);
             ok(gm.gmCellIncY == pEntry->gm.gmCellIncY, "Line %d: gm.gmCellIncY expected %d, was %d\n", pEntry->line, pEntry->gm.gmCellIncY, gm.gmCellIncY);
         }
+        SelectObject(hDC, hFontOld);
     }
-    SelectObject(hDC, hFontOld);
 
     DeleteObject(hFont);
     DeleteDC(hDC);
