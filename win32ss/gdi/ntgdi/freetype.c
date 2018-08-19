@@ -271,7 +271,6 @@ RemoveCacheEntries(FT_Face Face)
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    
     for (CurrentEntry = g_FontCacheListHead.Flink;
          CurrentEntry != &g_FontCacheListHead;
          CurrentEntry = NextEntry)
