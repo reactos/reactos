@@ -251,6 +251,18 @@ SharedFace_AddRef(PSHARED_FACE Ptr)
     ++Ptr->RefCount;
 }
 
+static inline VOID FASTCALL
+ftFreePoolWithTagAndSize(
+    _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
+    _In_ ULONG Tag,
+    _In_ SIZE_T Size)
+{
+#ifndef NDEBUG
+    RtlFillMemoryUlong(P, Size, 0xDEADFACE);
+#endif
+    ExFreePoolWithTag(P, Tag);
+}
+
 static void
 RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 {
@@ -258,7 +270,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 
     FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
-    ExFreePoolWithTag(Entry, TAG_FONT);
+    ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
     g_FontCacheNumEntries--;
     ASSERT(g_FontCacheNumEntries <= MAX_FONT_CACHE);
 }
@@ -266,16 +278,17 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 static void
 RemoveCacheEntries(FT_Face Face)
 {
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY CurrentEntry, NextEntry;
     PFONT_CACHE_ENTRY FontEntry;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = NextEntry)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        CurrentEntry = CurrentEntry->Flink;
+        NextEntry = CurrentEntry->Flink;
 
         if (FontEntry->Face == Face)
         {
@@ -299,8 +312,8 @@ static void SharedMem_Release(PSHARED_MEM Ptr)
         if (Ptr->IsMapping)
             MmUnmapViewInSystemSpace(Ptr->Buffer);
         else
-            ExFreePoolWithTag(Ptr->Buffer, TAG_FONT);
-        ExFreePoolWithTag(Ptr, TAG_FONT);
+            ftFreePoolWithTagAndSize(Ptr->Buffer, TAG_FONT, Ptr->BufferSize);
+        ftFreePoolWithTagAndSize(Ptr, TAG_FONT, sizeof(*Ptr));
     }
 }
 
@@ -329,7 +342,7 @@ SharedFace_Release(PSHARED_FACE Ptr)
         SharedMem_Release(Ptr->Memory);
         SharedFaceCache_Release(&Ptr->EnglishUS);
         SharedFaceCache_Release(&Ptr->UserLanguage);
-        ExFreePoolWithTag(Ptr, TAG_FONT);
+        ftFreePoolWithTagAndSize(Ptr, TAG_FONT, sizeof(*Ptr));
     }
     IntUnLockFreeType();
 }
@@ -892,7 +905,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     if (!FontGDI)
     {
         SharedFace_Release(SharedFace);
-        ExFreePoolWithTag(Entry, TAG_FONT);
+        ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;   /* failure */
     }
@@ -907,7 +920,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
         {
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
-            ExFreePoolWithTag(Entry, TAG_FONT);
+            ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
             EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return 0;   /* failure */
         }
@@ -925,7 +938,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
                 ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
             EngFreeMem(FontGDI);
             SharedFace_Release(SharedFace);
-            ExFreePoolWithTag(Entry, TAG_FONT);
+            ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
             return 0;
         }
 
@@ -963,13 +976,13 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
             {
                 RemoveEntryList(&PrivateEntry->ListEntry);
             }
-            ExFreePoolWithTag(PrivateEntry, TAG_FONT);
+            ftFreePoolWithTagAndSize(PrivateEntry, TAG_FONT, sizeof(*PrivateEntry));
         }
         if (FontGDI->Filename)
             ExFreePoolWithTag(FontGDI->Filename, GDITAG_PFF);
         EngFreeMem(FontGDI);
         SharedFace_Release(SharedFace);
-        ExFreePoolWithTag(Entry, TAG_FONT);
+        ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
         return 0;
     }
 
@@ -1296,7 +1309,7 @@ CleanupFontEntry(PFONT_ENTRY FontEntry)
 
     EngFreeMem(FontGDI);
     SharedFace_Release(SharedFace);
-    ExFreePoolWithTag(FontEntry, TAG_FONT);
+    ftFreePoolWithTagAndSize(FontEntry, TAG_FONT, sizeof(*FontEntry));
 }
 
 VOID FASTCALL
@@ -1311,11 +1324,11 @@ IntGdiCleanupMemEntry(PFONT_ENTRY_MEM Head)
         FontEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_MEM, ListEntry);
 
         CleanupFontEntry(FontEntry->Entry);
-        ExFreePoolWithTag(FontEntry, TAG_FONT);
+        ftFreePoolWithTagAndSize(FontEntry, TAG_FONT, sizeof(*FontEntry));
     }
 
     CleanupFontEntry(Head->Entry);
-    ExFreePoolWithTag(Head, TAG_FONT);
+    ftFreePoolWithTagAndSize(Head, TAG_FONT, sizeof(*Head));
 }
 
 static VOID FASTCALL
@@ -1344,8 +1357,9 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
     IntLockProcessPrivateFonts(Win32Process);
-    Entry = Win32Process->PrivateMemFontListHead.Flink;
-    while (Entry != &Win32Process->PrivateMemFontListHead)
+    for (Entry = Win32Process->PrivateMemFontListHead.Flink;
+         Entry != &Win32Process->PrivateMemFontListHead;
+         Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
@@ -1355,15 +1369,13 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
             UnlinkFontMemCollection(CurrentEntry);
             break;
         }
-
-        Entry = Entry->Flink;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
 
     if (EntryCollection)
     {
         IntGdiCleanupMemEntry(EntryCollection->Entry);
-        ExFreePoolWithTag(EntryCollection, TAG_FONT);
+        ftFreePoolWithTagAndSize(EntryCollection, TAG_FONT, sizeof(*EntryCollection));
         return TRUE;
     }
     return FALSE;
@@ -1394,7 +1406,7 @@ IntGdiCleanupPrivateFontsForProcess(VOID)
         if (EntryCollection)
         {
             IntGdiCleanupMemEntry(EntryCollection->Entry);
-            ExFreePoolWithTag(EntryCollection, TAG_FONT);
+            ftFreePoolWithTagAndSize(EntryCollection, TAG_FONT, sizeof(*EntryCollection));
         }
         else
         {
@@ -1991,8 +2003,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     FONTGDI *FontGDI;
     NTSTATUS status;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
@@ -2019,7 +2030,6 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         }
 
         RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
     }
 
     return NULL;
@@ -2674,8 +2684,9 @@ ftGdiGlyphCacheGet(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = CurrentEntry->Flink)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         if ((FontEntry->Face == Face) &&
@@ -2684,7 +2695,6 @@ ftGdiGlyphCacheGet(
             (FontEntry->RenderMode == RenderMode) &&
             (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
             break;
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     if (CurrentEntry == &g_FontCacheListHead)
@@ -2784,7 +2794,7 @@ ftGdiGlyphCacheSet(
     if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
     {
         DPRINT1("Conversion failed\n");
-        ExFreePoolWithTag(NewEntry, TAG_FONT);
+        ftFreePoolWithTagAndSize(NewEntry, TAG_FONT, sizeof(*NewEntry));
         FT_Bitmap_Done(GlyphSlot->library, &AlignedBitmap);
         FT_Done_Glyph((FT_Glyph)BitmapGlyph);
         return NULL;
@@ -4594,11 +4604,9 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     Otm = ExAllocatePoolWithTag(PagedPool, OldOtmSize, GDITAG_TEXT);
 
     /* get the FontObj of lowest penalty */
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
