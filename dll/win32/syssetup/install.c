@@ -1508,9 +1508,7 @@ SetupStartService(
 {
     SC_HANDLE hManager = NULL;
     SC_HANDLE hService = NULL;
-    SERVICE_STATUS ServiceStatus;
     DWORD dwError = ERROR_SUCCESS;
-    DWORD dwRetries = 0;
 
     hManager = OpenSCManagerW(NULL,
                               NULL,
@@ -1523,7 +1521,7 @@ SetupStartService(
 
     hService = OpenServiceW(hManager,
                             lpServiceName,
-                            SERVICE_START | (bWait) ? SERVICE_QUERY_STATUS : 0);
+                            SERVICE_START);
     if (hService == NULL)
     {
         dwError = GetLastError();
@@ -1533,27 +1531,7 @@ SetupStartService(
     if (!StartService(hService, 0, NULL))
     {
         dwError = GetLastError();
-        if (dwError != ERROR_SERVICE_ALREADY_RUNNING)
-            goto done;
-
-        if (bWait)
-        {
-            for (;;)
-            {
-                if (!QueryServiceStatus(hService, &ServiceStatus))
-                    break;
-
-                if (ServiceStatus.dwCurrentState != SERVICE_START_PENDING)
-                    break;
-
-                if (dwRetries == 30)
-                    break;
-
-                dwRetries++;
-
-                Sleep(5000);
-            }
-        }
+        goto done;
     }
 
 done:
