@@ -101,6 +101,7 @@ DriverEntry(
     InitializeListHead(&VfatGlobalData->CloseListHead);
     VfatGlobalData->CloseCount = 0;
     VfatGlobalData->CloseWorkerRunning = FALSE;
+    VfatGlobalData->ShutdownStarted = FALSE;
     VfatGlobalData->CloseWorkItem = IoAllocateWorkItem(DeviceObject);
     if (VfatGlobalData->CloseWorkItem == NULL)
     {

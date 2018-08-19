@@ -183,7 +183,8 @@ VfatCloseFile(
     }
 
     /* If we have to close immediately, or if delaying failed, close */
-    if (!BooleanFlagOn(pFcb->Flags, FCB_DELAYED_CLOSE) || !NT_SUCCESS(VfatPostCloseFile(DeviceExt, FileObject)))
+    if (VfatGlobalData->ShutdownStarted || !BooleanFlagOn(pFcb->Flags, FCB_DELAYED_CLOSE) ||
+        !NT_SUCCESS(VfatPostCloseFile(DeviceExt, FileObject)))
     {
         VfatCommonCloseFile(DeviceExt, pFcb);
     }

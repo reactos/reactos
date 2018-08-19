@@ -417,6 +417,7 @@ typedef struct
     LIST_ENTRY CloseListHead;
     BOOLEAN CloseWorkerRunning;
     PIO_WORKITEM CloseWorkItem;
+    BOOLEAN ShutdownStarted;
 } VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
 
 extern PVFAT_GLOBAL_DATA VfatGlobalData;
