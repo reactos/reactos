@@ -48,6 +48,7 @@ extern void func_GetDIBColorTable(void);
 extern void func_GetDIBits(void);
 extern void func_GetFontResourceInfoW(void);
 extern void func_GetGlyphIndices(void);
+extern void func_GetGlyphOutline(void);
 extern void func_GetObject(void);
 extern void func_GetPixel(void);
 extern void func_GetRandomRgn(void);
@@ -122,6 +123,7 @@ const struct test winetest_testlist[] =
     { "GetDIBits", func_GetDIBits },
     { "GetFontResourceInfoW", func_GetFontResourceInfoW },
     { "GetGlyphIndices", func_GetGlyphIndices },
+    { "GetGlyphOutline", func_GetGlyphOutline },
     { "GetPixel", func_GetPixel },
     { "GetObject", func_GetObject },
     { "GetRandomRgn", func_GetRandomRgn },

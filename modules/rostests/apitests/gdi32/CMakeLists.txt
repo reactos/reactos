@@ -47,6 +47,7 @@ list(APPEND SOURCE
     GetDIBits.c
     GetFontResourceInfoW.c
     GetGlyphIndices.c
+    GetGlyphOutline.c
     GetObject.c
     GetRandomRgn.c
     GetPixel.c
