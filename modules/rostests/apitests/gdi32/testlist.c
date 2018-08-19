@@ -22,7 +22,6 @@ extern void func_CreateRectRgn(void);
 extern void func_DPtoLP(void);
 extern void func_EngAcquireSemaphore(void);
 extern void func_EngCreateSemaphore(void);
-extern void func_EngDeleteSemaphore(void);
 extern void func_EngReleaseSemaphore(void);
 extern void func_EnumFontFamilies(void);
 extern void func_ExcludeClipRect(void);
@@ -96,7 +95,6 @@ const struct test winetest_testlist[] =
     { "DPtoLP", func_DPtoLP },
     { "EngAcquireSemaphore", func_EngAcquireSemaphore },
     { "EngCreateSemaphore", func_EngCreateSemaphore },
-    { "EngDeleteSemaphore", func_EngDeleteSemaphore },
     { "EngReleaseSemaphore", func_EngReleaseSemaphore },
     { "EnumFontFamilies", func_EnumFontFamilies },
     { "ExcludeClipRect", func_ExcludeClipRect },
