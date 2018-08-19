@@ -1344,8 +1344,9 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
     IntLockProcessPrivateFonts(Win32Process);
-    Entry = Win32Process->PrivateMemFontListHead.Flink;
-    while (Entry != &Win32Process->PrivateMemFontListHead)
+    for (Entry = Win32Process->PrivateMemFontListHead.Flink;
+         Entry != &Win32Process->PrivateMemFontListHead;
+         Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
@@ -1355,8 +1356,6 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
             UnlinkFontMemCollection(CurrentEntry);
             break;
         }
-
-        Entry = Entry->Flink;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
 
