@@ -1991,8 +1991,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     FONTGDI *FontGDI;
     NTSTATUS status;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
@@ -2019,7 +2018,6 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         }
 
         RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
     }
 
     return NULL;
