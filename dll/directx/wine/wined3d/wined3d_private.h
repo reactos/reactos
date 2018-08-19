@@ -3544,7 +3544,11 @@ enum wined3d_push_constants
 
 #define WINED3D_CS_QUERY_POLL_INTERVAL  10u
 #define WINED3D_CS_QUEUE_SIZE           0x100000u
+#ifdef __REACTOS__
+#define WINED3D_CS_SPIN_COUNT           1u
+#else
 #define WINED3D_CS_SPIN_COUNT           10000000u
+#endif
 
 struct wined3d_cs_queue
 {
