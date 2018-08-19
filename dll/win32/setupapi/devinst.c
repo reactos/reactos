@@ -3368,9 +3368,11 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
         DWORD   PropertyBufferSize,
         PDWORD  RequiredSize)
 {
-    BOOL ret = FALSE;
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     struct DeviceInfo *devInfo;
+    CONFIGRET cr;
+    LONG lError = ERROR_SUCCESS;
+    DWORD size;
 
     TRACE("%p %p %d %p %p %d %p\n", DeviceInfoSet, DeviceInfoData,
         Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
@@ -3392,58 +3394,100 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
+
+    if (Property >= SPDRP_MAXIMUM_PROPERTY)
+    {
+        SetLastError(ERROR_INVALID_REG_PROPERTY);
+        return FALSE;
+    }
+
     devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+
     if (Property < sizeof(PropertyMap) / sizeof(PropertyMap[0])
         && PropertyMap[Property].nameW)
     {
-        DWORD size = PropertyBufferSize;
         HKEY hKey;
-        LONG l;
+        size = PropertyBufferSize;
         hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DEV, KEY_QUERY_VALUE);
         if (hKey == INVALID_HANDLE_VALUE)
             return FALSE;
-        l = RegQueryValueExW(hKey, PropertyMap[Property].nameW,
-                NULL, PropertyRegDataType, PropertyBuffer, &size);
+        lError = RegQueryValueExW(hKey, PropertyMap[Property].nameW,
+                 NULL, PropertyRegDataType, PropertyBuffer, &size);
         RegCloseKey(hKey);
 
         if (RequiredSize)
             *RequiredSize = size;
-        switch(l) {
+
+        switch (lError)
+        {
             case ERROR_SUCCESS:
-                if (PropertyBuffer != NULL || size == 0)
-                    ret = TRUE;
-                else
-                    SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                if (PropertyBuffer == NULL && size != 0)
+                    lError = ERROR_INSUFFICIENT_BUFFER;
                 break;
             case ERROR_MORE_DATA:
-                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                lError = ERROR_INSUFFICIENT_BUFFER;
                 break;
             default:
-                SetLastError(l);
+                break;
         }
     }
     else if (Property == SPDRP_PHYSICAL_DEVICE_OBJECT_NAME)
     {
-        DWORD required = (strlenW(devInfo->Data) + 1) * sizeof(WCHAR);
+        size = (strlenW(devInfo->Data) + 1) * sizeof(WCHAR);
 
         if (PropertyRegDataType)
             *PropertyRegDataType = REG_SZ;
         if (RequiredSize)
-            *RequiredSize = required;
-        if (PropertyBufferSize >= required)
+            *RequiredSize = size;
+        if (PropertyBufferSize >= size)
         {
             strcpyW((LPWSTR)PropertyBuffer, devInfo->Data);
-            ret = TRUE;
         }
         else
-            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            lError = ERROR_INSUFFICIENT_BUFFER;
     }
     else
     {
-        ERR("Property 0x%lx not implemented\n", Property);
-        SetLastError(ERROR_NOT_SUPPORTED);
+        size = PropertyBufferSize;
+
+        cr = CM_Get_DevNode_Registry_Property_ExW(devInfo->dnDevInst,
+                                                  Property + (CM_DRP_DEVICEDESC - SPDRP_DEVICEDESC),
+                                                  PropertyRegDataType,
+                                                  PropertyBuffer,
+                                                  &size,
+                                                  0,
+                                                  set->hMachine);
+        if ((cr == CR_SUCCESS) || (cr == CR_BUFFER_SMALL))
+        {
+            if (RequiredSize)
+                *RequiredSize = size;
+        }
+
+        if (cr != CR_SUCCESS)
+        {
+            switch (cr)
+            {
+                case CR_INVALID_DEVINST:
+                    lError = ERROR_NO_SUCH_DEVINST;
+                    break;
+
+                case CR_INVALID_PROPERTY:
+                    lError = ERROR_INVALID_REG_PROPERTY;
+                    break;
+
+                case CR_BUFFER_SMALL:
+                    lError = ERROR_INSUFFICIENT_BUFFER;
+                    break;
+
+                default :
+                    lError = ERROR_INVALID_DATA;
+                    break;
+            }
+        }
     }
-    return ret;
+
+    SetLastError(lError);
+    return (lError == ERROR_SUCCESS);
 }
 
 /***********************************************************************
