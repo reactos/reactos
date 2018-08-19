@@ -1045,6 +1045,7 @@ SoftModalMessageBox(IN LPMSGBOXDATA lpMsgBoxData)
     tpl->cy = RESCALE_Y(btntop, units);
 
     /* Finally show the message-box */
+    ERR("MessageBox: %s\n", wine_dbgstr_wn(lpMsgBoxParams->lpszText, textlen));
     ret = DialogBoxIndirectParamW(lpMsgBoxParams->hInstance, tpl,
                                   lpMsgBoxParams->hwndOwner,
                                   MessageBoxProc, (LPARAM)&mbd);
