@@ -354,7 +354,7 @@ static HRESULT ReadIcoDib(IStream *stream, IcoFrameDecode *result)
                     }
                     else
                     {
-                        andStride = -andBytesPerRow;
+                        andStride = -(INT)andBytesPerRow;
                         andRow = tempdata + (result->height-1)*andBytesPerRow;
                     }
 

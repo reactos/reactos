@@ -1399,7 +1399,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGdiDib(GDIPCONST BITMAPINFO* info,
     if(info->bmiHeader.biHeight > 0) /* bottom-up */
     {
         bits = (BYTE*)bits + (height - 1) * stride;
-        stride = -stride;
+        stride = -(LONG)stride;
     }
 
     switch(info->bmiHeader.biBitCount) {
@@ -1513,7 +1513,7 @@ GpStatus WINGDIPAPI GdipCreateHBITMAPFromBitmap(GpBitmap* bitmap,
         return GenericError;
     }
 
-    stat = convert_pixels(width, height, -width*4,
+    stat = convert_pixels(width, height, -(INT)width*4,
             bits + (width * 4 * (height - 1)), PixelFormat32bppPARGB,
             bitmap->stride, bitmap->bits, bitmap->format, bitmap->image.palette);
     if (stat != Ok)
@@ -1617,7 +1617,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHICON(HICON hicon, GpBitmap** bitmap)
 
     bih.biSize = sizeof(bih);
     bih.biWidth = width;
-    bih.biHeight = iinfo.hbmColor ? -height: -height * 2;
+    bih.biHeight = iinfo.hbmColor ? -(INT)height: -(INT)height * 2;
     bih.biPlanes = 1;
     bih.biBitCount = 32;
     bih.biCompression = BI_RGB;
@@ -1865,7 +1865,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
         format == PixelFormat4bppIndexed ||
         format == PixelFormat8bppIndexed)
     {
-        (*bitmap)->image.palette = heap_alloc_zero(sizeof(UINT) * 2 + sizeof(ARGB) * (1 << PIXELFORMATBPP(format)));
+        (*bitmap)->image.palette = heap_alloc_zero(sizeof(UINT) * 2 + sizeof(ARGB) * ((size_t)1 << PIXELFORMATBPP(format)));
 
         if (!(*bitmap)->image.palette)
         {

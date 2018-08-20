@@ -426,7 +426,7 @@ static IDispatchEx *get_script_dispatch(IActiveScript *script)
     IDispatch *disp;
     HRESULT hres;
 
-    disp = (void*)0xdeadbeef;
+    disp = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
     ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
     if(FAILED(hres))
@@ -477,7 +477,7 @@ static void test_no_script_dispatch(IActiveScript *script)
     IDispatch *disp;
     HRESULT hres;
 
-    disp = (void*)0xdeadbeef;
+    disp = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
     ok(hres == E_UNEXPECTED, "hres = %08x, expected E_UNEXPECTED\n", hres);
     ok(!disp, "disp != NULL\n");

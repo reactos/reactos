@@ -744,7 +744,7 @@ xrealloc(void * in, size_t size)
 
 /*****************************************************************************/
 void *
-xmalloc(int size)
+xmalloc(size_t size)
 {
   if (size < 1)
   {
@@ -767,7 +767,7 @@ xfree(void * in)
 char *
 xstrdup(const char * s)
 {
-  int len;
+  SIZE_T len;
   char * p;
 
   if (s == 0)

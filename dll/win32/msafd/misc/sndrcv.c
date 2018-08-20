@@ -816,7 +816,7 @@ WSPSendTo(SOCKET Handle,
 
     /* Set up Address in TDI Format */
     RemoteAddress->TAAddressCount = 1;
-    RemoteAddress->Address[0].AddressLength = SocketAddressLength - sizeof(SocketAddress->sa_family);
+    RemoteAddress->Address[0].AddressLength = (USHORT)(SocketAddressLength - sizeof(SocketAddress->sa_family));
     RtlCopyMemory(&RemoteAddress->Address[0].AddressType, SocketAddress, SocketAddressLength);
 
     /* Set up Structure */

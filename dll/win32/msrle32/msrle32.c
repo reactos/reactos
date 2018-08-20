@@ -1108,7 +1108,7 @@ static CodecInfo* Open(LPICOPEN icinfo)
 
   if (icinfo == NULL) {
     TRACE("(NULL)\n");
-    return (LPVOID)0xFFFF0000;
+    return (LPVOID)(ULONG_PTR)0xFFFF0000; // CHECKME!
   }
 
   if (compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return NULL;
@@ -1274,10 +1274,10 @@ static LRESULT CompressGetFormat(CodecInfo *pi, LPCBITMAPINFOHEADER lpbiIn,
     lpbiOut->biXPelsPerMeter = lpbiIn->biXPelsPerMeter;
     lpbiOut->biYPelsPerMeter = lpbiIn->biYPelsPerMeter;
     if (lpbiIn->biClrUsed == 0)
-      size = 1<<lpbiIn->biBitCount;
+      size = (LRESULT)1<<lpbiIn->biBitCount;
     else
       size = lpbiIn->biClrUsed;
-    lpbiOut->biClrUsed       = min(size, 1 << lpbiOut->biBitCount);
+    lpbiOut->biClrUsed       = min(size, (LRESULT)1 << lpbiOut->biBitCount);
     lpbiOut->biClrImportant  = 0;
 
     memcpy((LPBYTE)lpbiOut + lpbiOut->biSize,

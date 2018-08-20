@@ -60,7 +60,7 @@ static void do_enum(void)
 {
 	HRESULT hr;
 	REFCLSID rclsid = &CLSID_StdComponentCategoriesMgr;
-	ICatInformation *pICat = (ICatInformation*)0xdeadbeef;
+	ICatInformation *pICat = (ICatInformation*)(ULONG_PTR)0xdeadbeefdeadbeef;
 	GUID the_guid[1];
 	GUID the_cat[1];
 	GUID wanted_guid;
@@ -82,7 +82,7 @@ static void do_enum(void)
 			'c','a','f','e','b','e','a','d','d','e','a','d',
 			'}',0};
 
-	IEnumCLSID *pIEnum =(IEnumCLSID*)0xdeadcafe;
+	IEnumCLSID *pIEnum =(IEnumCLSID*)(ULONG_PTR)0xdeadbeefdeadbeef;
 
 	CLSIDFromString(szCatID,the_cat);
 	CLSIDFromString(szGuid,&wanted_guid);

@@ -2001,12 +2001,12 @@ static void test_IActiveScriptError(IActiveScriptError *error, SCODE errorcode, 
 
     excep.wCode = 0xdead;
     excep.wReserved = 0xdead;
-    excep.bstrSource = (BSTR)0xdeadbeef;
-    excep.bstrDescription = (BSTR)0xdeadbeef;
-    excep.bstrHelpFile = (BSTR)0xdeadbeef;
+    excep.bstrSource = (BSTR)(ULONG_PTR)0xdeadbeefdeadbeef;
+    excep.bstrDescription = (BSTR)(ULONG_PTR)0xdeadbeefdeadbeef;
+    excep.bstrHelpFile = (BSTR)(ULONG_PTR)0xdeadbeefdeadbeef;
     excep.dwHelpContext = 0xdeadbeef;
-    excep.pvReserved = (void *)0xdeadbeef;
-    excep.pfnDeferredFillIn = (void *)0xdeadbeef;
+    excep.pvReserved = (void *)(ULONG_PTR)0xdeadbeefdeadbeef;
+    excep.pfnDeferredFillIn = (void *)(ULONG_PTR)0xdeadbeefdeadbeef;
     excep.scode = 0xdeadbeef;
 
     hres = IActiveScriptError_GetExceptionInfo(error, &excep);

@@ -670,7 +670,7 @@ static HRESULT WINAPI outer_QueryInterface(IUnknown *iface, REFIID riid, void **
 {
     if(IsEqualGUID(riid, &outer_test_iid)) {
         CHECK_EXPECT(outer_QI_test);
-        *ppv = (IUnknown*)0xdeadbeef;
+        *ppv = (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeef;
         return S_OK;
     }
     ok(0, "unexpected call %s\n", wine_dbgstr_guid(riid));
@@ -713,12 +713,12 @@ static void test_com_aggregation(const CLSID *clsid)
     hres = IUnknown_QueryInterface(unk2, &outer_test_iid, (void**)&unk3);
     CHECK_CALLED(outer_QI_test);
     ok(hres == S_OK, "Could not get IInternetProtocol iface: %08x\n", hres);
-    ok(unk3 == (IUnknown*)0xdeadbeef, "unexpected unk2\n");
+    ok(unk3 == (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeef, "unexpected unk2\n");
 
     IUnknown_Release(unk2);
     IUnknown_Release(unk);
 
-    unk = (void*)0xdeadbeef;
+    unk = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IClassFactory_CreateInstance(class_factory, &outer, &IID_IInternetProtocol, (void**)&unk);
     ok(hres == CLASS_E_NOAGGREGATION, "CreateInstance returned: %08x\n", hres);
     ok(!unk, "unk = %p\n", unk);

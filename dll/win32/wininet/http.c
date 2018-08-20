@@ -699,7 +699,7 @@ static WCHAR* build_request_header(http_request_t *request, const WCHAR *verb,
     req[n] = NULL;
 
     requestString = HTTP_build_req( req, 4 );
-    heap_free( req );
+    heap_free( (void*)req );
     LeaveCriticalSection( &request->headers_section );
     return requestString;
 }
@@ -756,7 +756,7 @@ static WCHAR* build_response_header(http_request_t *request, BOOL use_cr)
     req[n] = NULL;
 
     ret = HTTP_build_req(req, 0);
-    heap_free(req);
+    heap_free((void*)req);
     LeaveCriticalSection( &request->headers_section );
     return ret;
 }

@@ -41,7 +41,7 @@
 /* getline: read a line, return length */
 INT GetBuff(PBYTE buff, FILE* in)
 {
-    return fread(buff, sizeof(BYTE), STRBUF, in);
+    return (INT)fread(buff, sizeof(BYTE), STRBUF, in);
 }
 
 INT FileSize(FILE* fd)

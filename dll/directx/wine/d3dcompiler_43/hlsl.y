@@ -1129,7 +1129,7 @@ preproc_directive:        PRE_LINE STRING
                                 TRACE("Updating line information to file %s, line %u\n", debugstr_a($2), $1);
                                 hlsl_ctx.line_no = $1;
                                 if (strcmp($2, hlsl_ctx.source_file))
-                                    new_array = d3dcompiler_realloc(hlsl_ctx.source_files,
+                                    new_array = d3dcompiler_realloc((void*)hlsl_ctx.source_files,
                                             sizeof(*hlsl_ctx.source_files) * (hlsl_ctx.source_files_count + 1));
 
                                 if (new_array)
@@ -2532,7 +2532,7 @@ struct bwriter_shader *parse_hlsl(enum shader_type type, DWORD major, DWORD mino
 
     for (i = 0; i < hlsl_ctx.source_files_count; ++i)
         d3dcompiler_free((void *)hlsl_ctx.source_files[i]);
-    d3dcompiler_free(hlsl_ctx.source_files);
+    d3dcompiler_free((void*)hlsl_ctx.source_files);
 
     TRACE("Freeing functions IR.\n");
     wine_rb_destroy(&hlsl_ctx.functions, free_function_rb, NULL);

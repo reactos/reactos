@@ -9,6 +9,11 @@ add_definitions(
     -D_DLL -D__USE_CRTIMP
     -D_BUILD_STLPORT)
 
+if(MSVC)
+    # C4146: unary minus operator applied to unsigned type, result still unsigned
+    add_compile_options("/wd4146")
+endif()
+
 list(APPEND SOURCE
     src/allocators.cpp
     src/bitset.cpp

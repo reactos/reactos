@@ -129,13 +129,13 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 	bita = bit_alloc;
 	if(stereo)
 	{
-		for(i=jsbound;i;i--,alloc1+=(1<<step))
+		for(i=jsbound;i;i--,alloc1+=(1ull<<step))
 		{
 			step=alloc1->bits;
 			*bita++ = (char) getbits(fr, step);
 			*bita++ = (char) getbits(fr, step);
 		}
-		for(i=sblimit-jsbound;i;i--,alloc1+=(1<<step))
+		for(i=sblimit-jsbound;i;i--,alloc1+=(1ull<<step))
 		{
 			step=alloc1->bits;
 			bita[0] = (char) getbits(fr, step);
@@ -150,7 +150,7 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 	}
 	else /* mono */
 	{
-		for(i=sblimit;i;i--,alloc1+=(1<<step))
+		for(i=sblimit;i;i--,alloc1+=(1ull<<step))
 		{
 			step=alloc1->bits;
 			*bita++ = (char) getbits(fr, step);
@@ -201,7 +201,7 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 	unsigned int *bita=bit_alloc;
 	int d1,step;
 
-	for(i=0;i<jsbound;i++,alloc1+=(1<<step))
+	for(i=0;i<jsbound;i++,alloc1+=(1ull<<step))
 	{
 		step = alloc1->bits;
 		for(j=0;j<stereo;j++)
@@ -233,7 +233,7 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 		}
 	}
 
-	for(i=jsbound;i<sblimit;i++,alloc1+=(1<<step))
+	for(i=jsbound;i<sblimit;i++,alloc1+=(1ull<<step))
 	{
 		step = alloc1->bits;
 		bita++;	/* channel 1 and channel 2 bitalloc are the same */

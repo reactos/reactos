@@ -132,7 +132,7 @@ BOOL rd_lock_file(int fd, int start, int len);
 /* rdp5.c */
 BOOL rdp5_process(RDPCLIENT * This, STREAM s);
 /* rdp.c */
-void rdp_out_unistr(RDPCLIENT * This, STREAM s, wchar_t *string, int len);
+void rdp_out_unistr(RDPCLIENT * This, STREAM s, wchar_t *string, SIZE_T len);
 int rdp_in_unistr(RDPCLIENT * This, STREAM s, wchar_t *string, int uni_len);
 BOOL rdp_send_input(RDPCLIENT * This, uint32 time, uint16 message_type, uint16 device_flags, uint16 param1,
 		    uint16 param2);

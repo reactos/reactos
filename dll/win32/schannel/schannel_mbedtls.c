@@ -108,7 +108,7 @@ static int schan_pull_adapter(void *session, unsigned char *buff, size_t buff_le
         else
         {
             TRACE("Pulled %u bytes\n", buff_len);
-            return buff_len;
+            return (int)buff_len;
         }
     }
     else if (status == EAGAIN)
@@ -142,7 +142,7 @@ static int schan_push_adapter(void *session, const unsigned char *buff, size_t b
     if (status == NO_ERROR)
     {
         TRACE("Pushed %u bytes\n", buff_len);
-        return buff_len;
+        return (int)buff_len;
     }
     else if (status == EAGAIN)
     {
@@ -329,7 +329,7 @@ static unsigned int schannel_get_mac_key_size(int ciphersuite_id)
     return md_size;
 }
 
-static unsigned int schannel_get_kx_key_size(const mbedtls_ssl_context *ssl, const mbedtls_ssl_config *conf, int ciphersuite_id)
+static size_t schannel_get_kx_key_size(const mbedtls_ssl_context *ssl, const mbedtls_ssl_config *conf, int ciphersuite_id)
 {
     const mbedtls_ssl_ciphersuite_t *ssl_ciphersuite = mbedtls_ssl_ciphersuite_from_id(ciphersuite_id);
 
@@ -553,7 +553,7 @@ unsigned int schan_imp_get_max_message_size(schan_imp_session session)
 {
     MBEDTLS_SESSION *s = (MBEDTLS_SESSION *)session;
 
-    unsigned int max_frag_len = mbedtls_ssl_get_max_frag_len(&s->ssl);
+    unsigned int max_frag_len = (unsigned int)mbedtls_ssl_get_max_frag_len(&s->ssl);
 
     TRACE("MBEDTLS schan_imp_get_max_message_size %p returning %u.\n", session, max_frag_len);
 
@@ -575,7 +575,7 @@ SECURITY_STATUS schan_imp_get_connection_info(schan_imp_session session,
     info->aiHash           = schannel_get_mac_algid(ciphersuite_id);
     info->dwHashStrength   = schannel_get_mac_key_size(ciphersuite_id);
     info->aiExch           = schannel_get_kx_algid(ciphersuite_id);
-    info->dwExchStrength   = schannel_get_kx_key_size(&s->ssl, &s->conf, ciphersuite_id);
+    info->dwExchStrength   = (DWORD)schannel_get_kx_key_size(&s->ssl, &s->conf, ciphersuite_id);
 
     return SEC_E_OK;
 }
@@ -596,7 +596,7 @@ SECURITY_STATUS schan_imp_get_session_peer_certificate(schan_imp_session session
 
     for (next_cert = peer_cert; next_cert != NULL; next_cert = next_cert->next)
     {
-        if (!CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, next_cert->raw.p, next_cert->raw.len,
+        if (!CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, next_cert->raw.p, (DWORD)next_cert->raw.len,
             CERT_STORE_ADD_REPLACE_EXISTING, (next_cert != peer_cert) ? NULL : &cert_context))
         {
             if (next_cert != peer_cert)

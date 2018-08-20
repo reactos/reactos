@@ -679,7 +679,7 @@ static struct symt* codeview_add_type_array(struct codeview_type_parse* ctp,
     struct symt*        elem = codeview_fetch_type(ctp, elemtype, FALSE);
     struct symt*        index = codeview_fetch_type(ctp, indextype, FALSE);
 
-    return &symt_new_array(ctp->module, 0, -arr_len, elem, index)->symt;
+    return &symt_new_array(ctp->module, 0, -(int)arr_len, elem, index)->symt;
 }
 
 static BOOL codeview_add_type_enum_field_list(struct module* module,
@@ -3083,7 +3083,7 @@ static BOOL  pev_binop(struct pevaluator* pev, char op)
     case '%': c = v1 % v2; break;
     default: return PEV_ERROR1(pev, "binop: unknown op (%c)", op);
     }
-    snprintf(res, sizeof(res), "%ld", c);
+    snprintf(res, sizeof(res), "%zd", c);
     pev_push(pev, res);
     return TRUE;
 }
@@ -3096,8 +3096,8 @@ static BOOL  pev_deref(struct pevaluator* pev)
 
     if (!pev_pop_val(pev, &v1)) return FALSE;
     if (!sw_read_mem(pev->csw, v1, &v2, sizeof(v2)))
-        return PEV_ERROR1(pev, "deref: cannot read mem at %lx\n", v1);
-    snprintf(res, sizeof(res), "%ld", v2);
+        return PEV_ERROR1(pev, "deref: cannot read mem at %zx\n", v1);
+    snprintf(res, sizeof(res), "%zd", v2);
     pev_push(pev, res);
     return TRUE;
 }

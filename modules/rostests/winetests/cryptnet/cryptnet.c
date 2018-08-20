@@ -334,7 +334,7 @@ static void test_retrieveObjectByUrl(void)
     make_tmp_file(tmpfile);
     sprintf(url, "file://%s", tmpfile);
 
-    pBlobArray = (CRYPT_BLOB_ARRAY *)0xdeadbeef;
+    pBlobArray = (CRYPT_BLOB_ARRAY *)(ULONG_PTR)0xdeadbeefdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, NULL, 0, 0, (void **)&pBlobArray,
      NULL, NULL, NULL, NULL);
     if (!ret)
@@ -344,9 +344,9 @@ static void test_retrieveObjectByUrl(void)
         return;
     }
     ok(ret, "CryptRetrieveObjectByUrlA failed: %d\n", GetLastError());
-    ok(pBlobArray && pBlobArray != (CRYPT_BLOB_ARRAY *)0xdeadbeef,
+    ok(pBlobArray && pBlobArray != (CRYPT_BLOB_ARRAY *)(ULONG_PTR)0xdeadbeefdeadbeef,
      "Expected a valid pointer\n");
-    if (pBlobArray && pBlobArray != (CRYPT_BLOB_ARRAY *)0xdeadbeef)
+    if (pBlobArray && pBlobArray != (CRYPT_BLOB_ARRAY *)(ULONG_PTR)0xdeadbeefdeadbeef)
     {
         ok(pBlobArray->cBlob == 1, "Expected 1 blob, got %d\n",
          pBlobArray->cBlob);
@@ -354,14 +354,14 @@ static void test_retrieveObjectByUrl(void)
          "Unexpected size %d\n", pBlobArray->rgBlob[0].cbData);
         CryptMemFree(pBlobArray);
     }
-    cert = (PCCERT_CONTEXT)0xdeadbeef;
+    cert = (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CERTIFICATE, 0, 0,
      (void **)&cert, NULL, NULL, NULL, NULL);
     ok(ret, "CryptRetrieveObjectByUrlA failed: %d\n", GetLastError());
-    ok(cert && cert != (PCCERT_CONTEXT)0xdeadbeef, "Expected a cert\n");
-    if (cert && cert != (PCCERT_CONTEXT)0xdeadbeef)
+    ok(cert && cert != (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef, "Expected a cert\n");
+    if (cert && cert != (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef)
         CertFreeCertificateContext(cert);
-    crl = (PCCRL_CONTEXT)0xdeadbeef;
+    crl = (PCCRL_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef;
     SetLastError(0xdeadbeef);
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CRL, 0, 0, (void **)&crl,
      NULL, NULL, NULL, NULL);
@@ -379,13 +379,13 @@ static void test_retrieveObjectByUrl(void)
         ok(crl == NULL, "Expected CRL to be NULL\n");
     }
 
-    if (crl && crl != (PCCRL_CONTEXT)0xdeadbeef)
+    if (crl && crl != (PCCRL_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef)
         CertFreeCRLContext(crl);
-    store = (HCERTSTORE)0xdeadbeef;
+    store = (HCERTSTORE)(ULONG_PTR)0xdeadbeefdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CAPI2_ANY, 0, 0,
      &store, NULL, NULL, NULL, NULL);
     ok(ret, "CryptRetrieveObjectByUrlA failed: %d\n", GetLastError());
-    if (store && store != (HCERTSTORE)0xdeadbeef)
+    if (store && store != (HCERTSTORE)(ULONG_PTR)0xdeadbeefdeadbeef)
     {
         DWORD certs = 0;
 
@@ -399,24 +399,24 @@ static void test_retrieveObjectByUrl(void)
         CertCloseStore(store, 0);
     }
     /* Are file URLs cached? */
-    cert = (PCCERT_CONTEXT)0xdeadbeef;
+    cert = (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CERTIFICATE,
      CRYPT_CACHE_ONLY_RETRIEVAL, 0, (void **)&cert, NULL, NULL, NULL, NULL);
     ok(ret, "CryptRetrieveObjectByUrlA failed: %08x\n", GetLastError());
-    if (cert && cert != (PCCERT_CONTEXT)0xdeadbeef)
+    if (cert && cert != (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef)
         CertFreeCertificateContext(cert);
 
-    cert = (PCCERT_CONTEXT)0xdeadbeef;
+    cert = (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef;
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CERTIFICATE, 0, 0,
      (void **)&cert, NULL, NULL, NULL, &aux);
     /* w2k: failure with E_INVALIDARG */
     ok(ret || broken(GetLastError() == E_INVALIDARG),
        "got %u with 0x%x/%u (expected '!=0' or '0' with E_INVALIDARG)\n",
        ret, GetLastError(), GetLastError());
-    if (cert && cert != (PCCERT_CONTEXT)0xdeadbeef)
+    if (cert && cert != (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef)
         CertFreeCertificateContext(cert);
 
-    cert = (PCCERT_CONTEXT)0xdeadbeef;
+    cert = (PCCERT_CONTEXT)(ULONG_PTR)0xdeadbeefdeadbeef;
     aux.cbSize = sizeof(aux);
     ret = CryptRetrieveObjectByUrlA(url, CONTEXT_OID_CERTIFICATE, 0, 0,
      (void **)&cert, NULL, NULL, NULL, &aux);

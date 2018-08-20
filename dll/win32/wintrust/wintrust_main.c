@@ -860,7 +860,7 @@ static BOOL WINAPI WINTRUST_enumUsages(PCCRYPT_OID_INFO pInfo, void *pvArg)
          */
         for (cUsages = 0, ptr = *usages; *ptr; ptr++, cUsages++)
             ;
-        *usages = WINTRUST_ReAlloc(*usages,
+        *usages = WINTRUST_ReAlloc((void*)*usages,
          (cUsages + 2) * sizeof(PCCRYPT_OID_INFO));
     }
     if (*usages)
@@ -908,12 +908,12 @@ BOOL WINAPI WTHelperGetKnownUsages(DWORD action, PCCRYPT_OID_INFO **usages)
     if (action == 1)
     {
         *usages = NULL;
-        ret = CryptEnumOIDInfo(CRYPT_ENHKEY_USAGE_OID_GROUP_ID, 0, usages,
+        ret = CryptEnumOIDInfo(CRYPT_ENHKEY_USAGE_OID_GROUP_ID, 0, (void*)usages,
          WINTRUST_enumUsages);
     }
     else if (action == 2)
     {
-        WINTRUST_Free(*usages);
+        WINTRUST_Free((void*)*usages);
         *usages = NULL;
         ret = TRUE;
     }

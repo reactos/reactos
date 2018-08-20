@@ -114,12 +114,12 @@ int TTelnetHandler::escapeIAC(char *buf, int length){
 
 // This lets us get rid of all the printf's (Paul Brannan 5/15/98)
 void TTelnetHandler::SendIAC(char c) {
-	static char buf[2] = {IAC};
+	static char buf[2] = {(char)IAC};
 	buf[1] = c;
 	Network.WriteString(buf, 2);
 }
 void TTelnetHandler::SendIAC(char c1, char c2) {
-	static char buf[3] = {IAC};
+	static char buf[3] = {(char)IAC};
 	buf[1] = c1; buf[2] = c2;
 	Network.WriteString(buf, 3);
 }

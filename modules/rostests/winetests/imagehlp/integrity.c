@@ -288,7 +288,7 @@ static void test_pe_checksum(void)
        "Expected 0xdeadbeef (XP) or ERROR_INVALID_PARAMETER (Vista+), got %x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = pCheckSumMappedFile((void *)0xdeadbeef, 0, &checksum_orig, &checksum_new);
+    ret = pCheckSumMappedFile((void *)(ULONG_PTR)0xdeadbeefdeadbeef, 0, &checksum_orig, &checksum_new);
     ok(!ret, "Expected CheckSumMappedFile to fail, got %p\n", ret);
     ok(((GetLastError() == ERROR_INVALID_PARAMETER)||(GetLastError() == 0xdeadbeef)),
        "Expected 0xdeadbeef (XP) or ERROR_INVALID_PARAMETER (Vista+), got %x\n", GetLastError());

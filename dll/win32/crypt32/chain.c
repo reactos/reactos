@@ -2354,7 +2354,7 @@ static void CRYPT_FreeLowerQualityChains(CertificateChain *chain)
 
     for (i = 0; i < chain->context.cLowerQualityChainContext; i++)
         CertFreeCertificateChain(chain->context.rgpLowerQualityChainContext[i]);
-    CryptMemFree(chain->context.rgpLowerQualityChainContext);
+    CryptMemFree((PVOID)chain->context.rgpLowerQualityChainContext);
     chain->context.cLowerQualityChainContext = 0;
     chain->context.rgpLowerQualityChainContext = NULL;
 }
@@ -2590,7 +2590,7 @@ static BOOL CRYPT_AddAlternateChainToChain(CertificateChain *chain,
 
     if (chain->context.cLowerQualityChainContext)
         chain->context.rgpLowerQualityChainContext =
-         CryptMemRealloc(chain->context.rgpLowerQualityChainContext,
+         CryptMemRealloc((PVOID)chain->context.rgpLowerQualityChainContext,
          (chain->context.cLowerQualityChainContext + 1) *
          sizeof(PCCERT_CHAIN_CONTEXT));
     else

@@ -66,7 +66,7 @@ EnumerateNt4ServiceSoundDevices(
             }
 
             DevicePath = AllocateWideString(MaxNameLength +
-                                            strlen("\\\\.\\"));
+                                            (UINT)strlen("\\\\.\\"));
 
             /* Check that the memory allocation was successful */
             if ( ! DevicePath )

@@ -48,7 +48,7 @@ static char copyright[] =
 
 #include <rosdhcp.h>
 
-static __inline int do_hash PROTO ((unsigned char *, int, int));
+static __inline int do_hash PROTO ((unsigned char *, size_t, size_t));
 
 struct hash_table *new_hash ()
 {
@@ -62,12 +62,12 @@ struct hash_table *new_hash ()
 
 static __inline int do_hash (name, len, size)
 	unsigned char *name;
-	int len;
-	int size;
+	size_t len;
+    size_t size;
 {
 	register int accum = 0;
 	register unsigned char *s = name;
-	int i = len;
+	size_t i = len;
 	while (i--) {
 		/* Add the character in... */
 		accum += *s++;
@@ -81,7 +81,7 @@ static __inline int do_hash (name, len, size)
 
 void add_hash (table, name, len, pointer)
 	struct hash_table *table;
-	int len;
+	size_t len;
 	unsigned char *name;
 	unsigned char *pointer;
 {
@@ -109,7 +109,7 @@ void add_hash (table, name, len, pointer)
 
 void delete_hash_entry (table, name, len)
 	struct hash_table *table;
-	int len;
+    size_t len;
 	unsigned char *name;
 {
 	int hashno;
@@ -144,7 +144,7 @@ void delete_hash_entry (table, name, len)
 unsigned char *hash_lookup (table, name, len)
 	struct hash_table *table;
 	unsigned char *name;
-	int len;
+	size_t len;
 {
 	int hashno;
 	struct hash_bucket *bp;

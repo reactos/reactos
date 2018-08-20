@@ -43,7 +43,17 @@ BOOLEAN RtlpNotAllowingMultipleActivation;
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
 #define ACTCTX_FAKE_COOKIE ((ULONG_PTR) 0xf00bad)
 
-
+/* Safe for strings in mapped files */
+static
+int
+WINAPI
+lstrlenW(
+    LPCWSTR lpString)
+{
+    SIZE_T len = strlenW(lpString);
+    ASSERT(len <= INT_MAX);
+    return (int)len;
+}
 
 typedef struct
 {
@@ -716,7 +726,7 @@ static WCHAR *strdupW(const WCHAR* str)
 {
     WCHAR*      ptr;
 
-    if (!(ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0, (strlenW(str) + 1) * sizeof(WCHAR))))
+    if (!(ptr = RtlAllocateHeap(RtlGetProcessHeap(), 0, (lstrlenW(str) + 1) * sizeof(WCHAR))))
         return NULL;
     return strcpyW(ptr, str);
 }
@@ -751,7 +761,7 @@ static inline BOOL xmlstr_cmp_end(const xmlstr_t* xmlstr, const WCHAR *str)
 
 static inline BOOL xml_elem_cmp(const xmlstr_t *elem, const WCHAR *str, const WCHAR *namespace)
 {
-    UINT len = strlenW( namespace );
+    UINT len = lstrlenW( namespace );
 
     if (!strncmpW(elem->ptr, str, elem->len) && !str[elem->len]) return TRUE;
     return (elem->len > len && !strncmpW(elem->ptr, namespace, len) &&
@@ -1035,8 +1045,8 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
     const WCHAR *key = ai->public_key ? ai->public_key : noneW;
     const WCHAR *lang = ai->language ? ai->language : noneW;
     const WCHAR *name = ai->name ? ai->name : noneW;
-    SIZE_T size = (strlenW(arch) + 1 + strlenW(name) + 1 + strlenW(key) + 24 + 1 +
-		    strlenW(lang) + 1) * sizeof(WCHAR) + sizeof(mskeyW);
+    SIZE_T size = (lstrlenW(arch) + 1 + lstrlenW(name) + 1 + lstrlenW(key) + 24 + 1 +
+		    lstrlenW(lang) + 1) * sizeof(WCHAR) + sizeof(mskeyW);
     WCHAR *ret;
 
     if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, size ))) return NULL;
@@ -1047,7 +1057,7 @@ static WCHAR *build_assembly_dir(struct assembly_identity* ai)
     strcatW( ret, undW );
     strcatW( ret, key );
     strcatW( ret, undW );
-    sprintfW( ret + strlenW(ret), version_formatW,
+    sprintfW( ret + lstrlenW(ret), version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
     strcatW( ret, undW );
     strcatW( ret, lang );
@@ -1062,10 +1072,10 @@ static inline void append_string( WCHAR *buffer, const WCHAR *prefix, const WCHA
 
     if (!str) return;
     strcatW( buffer, prefix );
-    p += strlenW(p);
+    p += lstrlenW(p);
     *p++ = '"';
     strcpyW( p, str );
-    p += strlenW(p);
+    p += lstrlenW(p);
     *p++ = '"';
     *p = 0;
 }
@@ -1086,11 +1096,11 @@ static WCHAR *build_assembly_id( const struct assembly_identity *ai )
 
     sprintfW( version, version_formatW,
               ai->version.major, ai->version.minor, ai->version.build, ai->version.revision );
-    if (ai->name) size += strlenW(ai->name) * sizeof(WCHAR);
-    if (ai->arch) size += strlenW(archW) + strlenW(ai->arch) + 2;
-    if (ai->public_key) size += strlenW(public_keyW) + strlenW(ai->public_key) + 2;
-    if (ai->type) size += strlenW(typeW2) + strlenW(ai->type) + 2;
-    size += strlenW(versionW2) + strlenW(version) + 2;
+    if (ai->name) size += lstrlenW(ai->name) * sizeof(WCHAR);
+    if (ai->arch) size += lstrlenW(archW) + lstrlenW(ai->arch) + 2;
+    if (ai->public_key) size += lstrlenW(public_keyW) + lstrlenW(ai->public_key) + 2;
+    if (ai->type) size += lstrlenW(typeW2) + lstrlenW(ai->type) + 2;
+    size += lstrlenW(versionW2) + lstrlenW(version) + 2;
 
     if (!(ret = RtlAllocateHeap( RtlGetProcessHeap(), 0, (size + 1) * sizeof(WCHAR) )))
         return NULL;
@@ -3129,7 +3139,7 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
 
         if (!(status = get_module_filename( module, &name, sizeof(dotManifestW) + 10*sizeof(WCHAR) )))
         {
-            if (resid != 1) sprintfW( name.Buffer + strlenW(name.Buffer), fmtW, resid );
+            if (resid != 1) sprintfW( name.Buffer + lstrlenW(name.Buffer), fmtW, resid );
             strcatW( name.Buffer, dotManifestW );
             if (!RtlDosPathNameToNtPathName_U( name.Buffer, &nameW, NULL, NULL ))
                 status = STATUS_RESOURCE_DATA_NOT_FOUND;
@@ -3140,10 +3150,10 @@ static NTSTATUS get_manifest_in_associated_manifest( struct actctx_loader* acl, 
     else
     {
         if (!(buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
-                                        (strlenW(filename) + 10) * sizeof(WCHAR) + sizeof(dotManifestW) )))
+                                        (lstrlenW(filename) + 10) * sizeof(WCHAR) + sizeof(dotManifestW) )))
             return STATUS_NO_MEMORY;
         strcpyW( buffer, filename );
-        if (resid != 1) sprintfW( buffer + strlenW(buffer), fmtW, resid );
+        if (resid != 1) sprintfW( buffer + lstrlenW(buffer), fmtW, resid );
         strcatW( buffer, dotManifestW );
         RtlInitUnicodeString( &nameW, buffer );
     }
@@ -3173,8 +3183,8 @@ static WCHAR *lookup_manifest_file( HANDLE dir, struct assembly_identity *ai )
     char buffer[8192];
 
     if (!(lookup = RtlAllocateHeap( RtlGetProcessHeap(), 0,
-                                    (strlenW(ai->arch) + strlenW(ai->name)
-                                     + strlenW(ai->public_key) + 20) * sizeof(WCHAR)
+                                    (lstrlenW(ai->arch) + lstrlenW(ai->name)
+                                     + lstrlenW(ai->public_key) + 20) * sizeof(WCHAR)
                                     + sizeof(lookup_fmtW) )))
         return NULL;
 
@@ -3258,11 +3268,11 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
     if (!ai->arch || !ai->name || !ai->public_key) return STATUS_NO_SUCH_FILE;
 
     if (!(path = RtlAllocateHeap( RtlGetProcessHeap(), 0,
-                                  ((strlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
+                                  ((lstrlenW(SharedUserData->NtSystemRoot) + 1) *sizeof(WCHAR)) + sizeof(manifest_dirW) )))
         return STATUS_NO_MEMORY;
 
-    memcpy( path, SharedUserData->NtSystemRoot, strlenW(SharedUserData->NtSystemRoot) * sizeof(WCHAR) );
-    memcpy( path + strlenW(SharedUserData->NtSystemRoot), manifest_dirW, sizeof(manifest_dirW) );
+    memcpy( path, SharedUserData->NtSystemRoot, lstrlenW(SharedUserData->NtSystemRoot) * sizeof(WCHAR) );
+    memcpy( path + lstrlenW(SharedUserData->NtSystemRoot), manifest_dirW, sizeof(manifest_dirW) );
 
     if (!RtlDosPathNameToNtPathName_U( path, &path_us, NULL, NULL ))
     {
@@ -3293,7 +3303,7 @@ static NTSTATUS lookup_winsxs(struct actctx_loader* acl, struct assembly_identit
 
     /* append file name to directory path */
     if (!(path = RtlReAllocateHeap( RtlGetProcessHeap(), 0, path_us.Buffer,
-                                    path_us.Length + (strlenW(file) + 2) * sizeof(WCHAR) )))
+                                    path_us.Length + (lstrlenW(file) + 2) * sizeof(WCHAR) )))
     {
         RtlFreeHeap( RtlGetProcessHeap(), 0, file );
         RtlFreeUnicodeString( &path_us );
@@ -3336,11 +3346,11 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
     /* FIXME: add support for language specific lookup */
 
     len = max(RtlGetFullPathName_U(acl->actctx->assemblies->manifest.info, 0, NULL, NULL) / sizeof(WCHAR),
-        strlenW(acl->actctx->appdir.info));
+        lstrlenW(acl->actctx->appdir.info));
 
     nameW.Buffer = NULL;
     if (!(buffer = RtlAllocateHeap( RtlGetProcessHeap(), 0,
-                                    (len + 2 * strlenW(ai->name) + 2) * sizeof(WCHAR) + sizeof(dotManifestW) )))
+                                    (len + 2 * lstrlenW(ai->name) + 2) * sizeof(WCHAR) + sizeof(dotManifestW) )))
         return STATUS_NO_MEMORY;
 
     if (!(directory = build_assembly_dir( ai )))
@@ -3358,7 +3368,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
      * it tries application manifest file path.
      */
     strcpyW( buffer, acl->actctx->appdir.info );
-    p = buffer + strlenW(buffer);
+    p = buffer + lstrlenW(buffer);
     for (i = 0; i < 4; i++)
     {
         if (i == 2)
@@ -3369,7 +3379,7 @@ static NTSTATUS lookup_assembly(struct actctx_loader* acl,
         else *p++ = '\\';
 
         strcpyW( p, ai->name );
-        p += strlenW(p);
+        p += lstrlenW(p);
 
         strcpyW( p, dotDllW );
         if (RtlDosPathNameToNtPathName_U( buffer, &nameW, NULL, NULL ))
@@ -3486,7 +3496,7 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             /* each entry needs index, data and string data */
             total_len += sizeof(*index);
             total_len += sizeof(*data);
-            total_len += aligned_string_len((strlenW(dll->name)+1)*sizeof(WCHAR));
+            total_len += aligned_string_len((lstrlenW(dll->name)+1)*sizeof(WCHAR));
 
             DPRINT("assembly %d (%p), dll %d: dll name %S\n", i, assembly, j, dll->name);
         }
@@ -3522,7 +3532,7 @@ static NTSTATUS build_dllredirect_section(ACTIVATION_CONTEXT* actctx, struct str
             DPRINT("%d: dll name %S\n", j, dll->name);
             /* setup new index entry */
             str.Buffer = dll->name;
-            str.Length = (USHORT)strlenW(dll->name)*sizeof(WCHAR);
+            str.Length = (USHORT)lstrlenW(dll->name)*sizeof(WCHAR);
             str.MaximumLength = str.Length + sizeof(WCHAR);
             /* hash original class name */
             RtlHashUnicodeString(&str, TRUE, HASH_STRING_ALGORITHM_X65599, &index->hash);
@@ -3687,7 +3697,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
                 struct entity *entity = &dll->entities.base[k];
                 if (entity->kind == ACTIVATION_CONTEXT_SECTION_WINDOW_CLASS_REDIRECTION)
                 {
-                    int class_len = strlenW(entity->u.class.name) + 1;
+                    int class_len = lstrlenW(entity->u.class.name) + 1;
                     int len;
 
                     /* each class entry needs index, data and string data */
@@ -3700,7 +3710,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
                         len = get_assembly_version(assembly, NULL) + class_len + 1 /* '!' separator */;
                     else
                         len = class_len;
-                    len += strlenW(dll->name) + 1;
+                    len += lstrlenW(dll->name) + 1;
                     total_len += aligned_string_len(len*sizeof(WCHAR));
 
                     class_count++;
@@ -3750,7 +3760,7 @@ static NTSTATUS build_wndclass_section(ACTIVATION_CONTEXT* actctx, struct strsec
                         versioned_len = (get_assembly_version(assembly, NULL) + 1)*sizeof(WCHAR) + str.Length;
                     else
                         versioned_len = str.Length;
-                    module_len = strlenW(dll->name)*sizeof(WCHAR);
+                    module_len = lstrlenW(dll->name)*sizeof(WCHAR);
 
                     index->name_offset = name_offset;
                     index->name_len = str.Length;
@@ -3895,10 +3905,10 @@ static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsectio
                     total_len += sizeof(*data);
                     /* help string is stored separately */
                     if (*entity->u.typelib.helpdir)
-                        total_len += aligned_string_len((strlenW(entity->u.typelib.helpdir)+1)*sizeof(WCHAR));
+                        total_len += aligned_string_len((lstrlenW(entity->u.typelib.helpdir)+1)*sizeof(WCHAR));
 
                     /* module names are packed one after another */
-                    names_len += (strlenW(dll->name)+1)*sizeof(WCHAR);
+                    names_len += (lstrlenW(dll->name)+1)*sizeof(WCHAR);
 
                     tlib_count++;
                 }
@@ -3937,11 +3947,11 @@ static NTSTATUS build_tlib_section(ACTIVATION_CONTEXT* actctx, struct guidsectio
                     WCHAR *ptrW;
 
                     if (*entity->u.typelib.helpdir)
-                        help_len = strlenW(entity->u.typelib.helpdir)*sizeof(WCHAR);
+                        help_len = lstrlenW(entity->u.typelib.helpdir)*sizeof(WCHAR);
                     else
                         help_len = 0;
 
-                    module_len = strlenW(dll->name)*sizeof(WCHAR);
+                    module_len = lstrlenW(dll->name)*sizeof(WCHAR);
 
                     /* setup new index entry */
                     RtlInitUnicodeString(&str, entity->u.typelib.tlbid);
@@ -4075,11 +4085,11 @@ static void get_comserver_datalen(const struct entity_array *entities, const str
                 unsigned int str_len;
 
                 /* all string data is stored together in aligned block */
-                str_len = strlenW(entity->u.comclass.name)+1;
+                str_len = lstrlenW(entity->u.comclass.name)+1;
                 if (entity->u.comclass.progid)
-                    str_len += strlenW(entity->u.comclass.progid)+1;
+                    str_len += lstrlenW(entity->u.comclass.progid)+1;
                 if (entity->u.comclass.version)
-                    str_len += strlenW(entity->u.comclass.version)+1;
+                    str_len += lstrlenW(entity->u.comclass.version)+1;
 
                 *len += sizeof(struct clrclass_data);
                 *len += aligned_string_len(str_len*sizeof(WCHAR));
@@ -4091,9 +4101,9 @@ static void get_comserver_datalen(const struct entity_array *entities, const str
             {
                 /* progid string is stored separately */
                 if (entity->u.comclass.progid)
-                    *len += aligned_string_len((strlenW(entity->u.comclass.progid)+1)*sizeof(WCHAR));
+                    *len += aligned_string_len((lstrlenW(entity->u.comclass.progid)+1)*sizeof(WCHAR));
 
-                *module_len += (strlenW(dll->name)+1)*sizeof(WCHAR);
+                *module_len += (lstrlenW(dll->name)+1)*sizeof(WCHAR);
             }
 
             *count += 1;
@@ -4120,11 +4130,11 @@ static void add_comserver_record(const struct guidsection_header *section, const
             WCHAR *ptrW;
 
             if (entity->u.comclass.progid)
-                progid_len = strlenW(entity->u.comclass.progid)*sizeof(WCHAR);
+                progid_len = lstrlenW(entity->u.comclass.progid)*sizeof(WCHAR);
             else
                 progid_len = 0;
 
-            module_len = dll ? strlenW(dll->name)*sizeof(WCHAR) : strlenW(mscoreeW)*sizeof(WCHAR);
+            module_len = dll ? lstrlenW(dll->name)*sizeof(WCHAR) : lstrlenW(mscoreeW)*sizeof(WCHAR);
 
             /* setup new index entry */
             RtlInitUnicodeString(&str, entity->u.comclass.clsid);
@@ -4192,11 +4202,11 @@ static void add_comserver_record(const struct guidsection_header *section, const
                 clrdata->size = sizeof(*clrdata);
                 clrdata->res[0] = 0;
                 clrdata->res[1] = 2; /* FIXME: unknown field */
-                clrdata->module_len = strlenW(mscoreeW)*sizeof(WCHAR);
+                clrdata->module_len = lstrlenW(mscoreeW)*sizeof(WCHAR);
                 clrdata->module_offset = *module_offset + data->name_len + sizeof(WCHAR);
-                clrdata->name_len = strlenW(entity->u.comclass.name)*sizeof(WCHAR);
+                clrdata->name_len = lstrlenW(entity->u.comclass.name)*sizeof(WCHAR);
                 clrdata->name_offset = clrdata->size;
-                clrdata->version_len = entity->u.comclass.version ? strlenW(entity->u.comclass.version)*sizeof(WCHAR) : 0;
+                clrdata->version_len = entity->u.comclass.version ? lstrlenW(entity->u.comclass.version)*sizeof(WCHAR) : 0;
                 clrdata->version_offset = clrdata->version_len ? clrdata->name_offset + clrdata->name_len + sizeof(WCHAR) : 0;
                 clrdata->res2[0] = 0;
                 clrdata->res2[1] = 0;
@@ -4385,7 +4395,7 @@ static void get_ifaceps_datalen(const struct entity_array *entities, unsigned in
         {
             *len += sizeof(struct guid_index) + sizeof(struct ifacepsredirect_data);
             if (entity->u.ifaceps.name)
-                *len += aligned_string_len((strlenW(entity->u.ifaceps.name)+1)*sizeof(WCHAR));
+                *len += aligned_string_len((lstrlenW(entity->u.ifaceps.name)+1)*sizeof(WCHAR));
             *count += 1;
         }
     }
@@ -4406,7 +4416,7 @@ static void add_ifaceps_record(struct guidsection_header *section, struct entity
             ULONG name_len;
 
             if (entity->u.ifaceps.name)
-                name_len = strlenW(entity->u.ifaceps.name)*sizeof(WCHAR);
+                name_len = lstrlenW(entity->u.ifaceps.name)*sizeof(WCHAR);
             else
                 name_len = 0;
 
@@ -4582,9 +4592,9 @@ static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct g
                 ULONG len;
 
                 total_len += sizeof(*index) + sizeof(*data);
-                len = strlenW(entity->u.clrsurrogate.name) + 1;
+                len = lstrlenW(entity->u.clrsurrogate.name) + 1;
                 if (entity->u.clrsurrogate.version)
-                   len += strlenW(entity->u.clrsurrogate.version) + 1;
+                   len += lstrlenW(entity->u.clrsurrogate.version) + 1;
                 total_len += aligned_string_len(len*sizeof(WCHAR));
 
                 count++;
@@ -4618,10 +4628,10 @@ static NTSTATUS build_clr_surrogate_section(ACTIVATION_CONTEXT* actctx, struct g
                 WCHAR *ptrW;
 
                 if (entity->u.clrsurrogate.version)
-                    version_len = strlenW(entity->u.clrsurrogate.version)*sizeof(WCHAR);
+                    version_len = lstrlenW(entity->u.clrsurrogate.version)*sizeof(WCHAR);
                 else
                     version_len = 0;
-                name_len = strlenW(entity->u.clrsurrogate.name)*sizeof(WCHAR);
+                name_len = lstrlenW(entity->u.clrsurrogate.name)*sizeof(WCHAR);
 
                 /* setup new index entry */
                 RtlInitUnicodeString(&str, entity->u.clrsurrogate.clsid);
@@ -4726,12 +4736,12 @@ static void get_progid_datalen(struct entity_array *entities, unsigned int *coun
         {
             if (entity->u.comclass.progid)
             {
-                *total_len += single_len + aligned_string_len((strlenW(entity->u.comclass.progid)+1)*sizeof(WCHAR));
+                *total_len += single_len + aligned_string_len((lstrlenW(entity->u.comclass.progid)+1)*sizeof(WCHAR));
                 *count += 1;
             }
 
             for (j = 0; j < entity->u.comclass.progids.num; j++)
-                *total_len += aligned_string_len((strlenW(entity->u.comclass.progids.progids[j])+1)*sizeof(WCHAR));
+                *total_len += aligned_string_len((lstrlenW(entity->u.comclass.progids.progids[j])+1)*sizeof(WCHAR));
 
             *total_len += single_len*entity->u.comclass.progids.num;
             *count += entity->u.comclass.progids.num;
@@ -5125,8 +5135,8 @@ RtlCreateActivationContext(IN ULONG Flags,
         {
             DWORD dir_len, source_len;
 
-            dir_len = strlenW(pActCtx->lpAssemblyDirectory);
-            source_len = strlenW(pActCtx->lpSource);
+            dir_len = lstrlenW(pActCtx->lpAssemblyDirectory);
+            source_len = lstrlenW(pActCtx->lpSource);
             if (!(source = RtlAllocateHeap( RtlGetProcessHeap(), 0, (dir_len+source_len+2)*sizeof(WCHAR))))
             {
                 status = STATUS_NO_MEMORY;
@@ -5480,9 +5490,9 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
             if (actctx->num_assemblies) assembly = actctx->assemblies;
 
             if (assembly && assembly->manifest.info)
-                manifest_len = strlenW(assembly->manifest.info) + 1;
-            if (actctx->config.info) config_len = strlenW(actctx->config.info) + 1;
-            if (actctx->appdir.info) appdir_len = strlenW(actctx->appdir.info) + 1;
+                manifest_len = lstrlenW(assembly->manifest.info) + 1;
+            if (actctx->config.info) config_len = lstrlenW(actctx->config.info) + 1;
+            if (actctx->appdir.info) appdir_len = lstrlenW(actctx->appdir.info) + 1;
             len = sizeof(*acdi) + (manifest_len + config_len + appdir_len) * sizeof(WCHAR);
 
             if (retlen) *retlen = len;
@@ -5539,12 +5549,12 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
             assembly = &actctx->assemblies[index - 1];
 
             if (!(assembly_id = build_assembly_id( &assembly->id ))) return STATUS_NO_MEMORY;
-            id_len = strlenW(assembly_id) + 1;
-            if (assembly->directory) ad_len = strlenW(assembly->directory) + 1;
+            id_len = lstrlenW(assembly_id) + 1;
+            if (assembly->directory) ad_len = lstrlenW(assembly->directory) + 1;
 
             if (assembly->manifest.info &&
                 (assembly->type == ASSEMBLY_MANIFEST || assembly->type == ASSEMBLY_SHARED_MANIFEST))
-                path_len  = strlenW(assembly->manifest.info) + 1;
+                path_len  = lstrlenW(assembly->manifest.info) + 1;
 
             len = sizeof(*afdi) + (id_len + ad_len + path_len) * sizeof(WCHAR);
 
@@ -5610,7 +5620,7 @@ NTSTATUS NTAPI RtlQueryInformationActivationContext( ULONG flags, HANDLE handle,
                 return STATUS_INVALID_PARAMETER;
             dll = &assembly->dlls[acqi->ulFileIndexInAssembly];
 
-            if (dll->name) dll_len = strlenW(dll->name) + 1;
+            if (dll->name) dll_len = lstrlenW(dll->name) + 1;
             len = sizeof(*afdi) + dll_len * sizeof(WCHAR);
 
             if (!buffer || bufsize < len)

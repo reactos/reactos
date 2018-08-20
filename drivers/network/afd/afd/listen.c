@@ -366,7 +366,7 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             RemoveEntryList( PendingConn );
 
             Status = ObReferenceObjectByHandle
-                ( AcceptData->ListenHandle,
+                ( (HANDLE)(ULONG_PTR)AcceptData->ListenHandle,
                   FILE_ALL_ACCESS,
                   NULL,
                   KernelMode,

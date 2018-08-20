@@ -717,7 +717,7 @@ static HRESULT HTMLFormElement_invoke(HTMLDOMNode *iface,
     return S_OK;
 }
 
-static HRESULT HTMLFormElement_handle_event(HTMLDOMNode *iface, DWORD eid, nsIDOMEvent *event, BOOL *prevent_default)
+static HRESULT HTMLFormElement_handle_event(HTMLDOMNode *iface, eventid_t eid, nsIDOMEvent *event, BOOL *prevent_default)
 {
     HTMLFormElement *This = impl_from_HTMLDOMNode(iface);
 

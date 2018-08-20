@@ -94,8 +94,8 @@ void TConsole::SetWindowSize(int width, int height) {
 	SMALL_RECT sr = {
 		CON_LEFT,
 		CON_TOP,
-		(width == -1) ? CON_RIGHT : CON_LEFT + width - 1,
-		(height == -1) ? CON_BOTTOM : CON_TOP + height - 1
+		(width == -1) ? CON_RIGHT : CON_LEFT + (SHORT)width - 1,
+		(height == -1) ? CON_BOTTOM : CON_TOP + (SHORT)height - 1
 	};
 	ConsoleInfo.dwSize.X = width;
 	if(ConsoleInfo.dwSize.Y < height) ConsoleInfo.dwSize.Y = height;
@@ -262,7 +262,7 @@ void TConsole::Lightbg() {
 	// Paul Brannan 8/5/98
 	// Correction: processing more than one line at a time causes a segfault
 	// if the screen width != 80
-	for(int i = CON_TOP; i <= CON_BOTTOM; i++) {
+	for(SHORT i = CON_TOP; i <= CON_BOTTOM; i++) {
 		COORD Coord = {CON_LEFT, i};
 
 		ReadConsoleOutputAttribute(hConsole, pAttributes, (DWORD)(CON_COLS),
@@ -288,7 +288,7 @@ void TConsole::Darkbg() {
 	// Paul Brannan 8/5/98
 	// Correction: processing more than one line at a time causes a segfault
 	// if the screen width != 80
-	for(int i = CON_TOP; i <= CON_BOTTOM; i++) {
+	for(SHORT i = CON_TOP; i <= CON_BOTTOM; i++) {
 		COORD Coord = {CON_LEFT, i};
 
 		ReadConsoleOutputAttribute(hConsole, pAttributes, (DWORD)(CON_COLS),
@@ -655,7 +655,7 @@ void TConsole::ScrollDown( int iStartRow , int iEndRow, int bUp ){
 	ciChar.Attributes = wAttributes;       // fill with current attrib
 
 	// This should speed things up (Paul Brannan 9/2/98)
-	COORD dwDestOrg = {srScrollWindow.Left, srScrollWindow.Top + bUp};
+	COORD dwDestOrg = {srScrollWindow.Left, srScrollWindow.Top + (SHORT)bUp};
 
 	// Note that iEndRow and iStartRow had better not be equal to -1 at this
 	// point.  There are four cases to consider for out of bounds.  Two of
@@ -698,7 +698,7 @@ void TConsole::ClearScreen(char c) {
 // Same as clear screen, but only affects the scroll region
 void TConsole::ClearWindow(int iStartRow, int iEndRow, char c) {
 	DWORD dwWritten;
-	COORD Coord = {CON_LEFT, CON_TOP + iStartRow};
+	COORD Coord = {CON_LEFT, CON_TOP + (SHORT)iStartRow};
 	FillConsoleOutputCharacter(hConsole, c, (DWORD)(CON_COLS)*
 		(DWORD)(iEndRow-iStartRow+1), Coord, &dwWritten);
 	FillConsoleOutputAttribute(hConsole, wAttributes, (DWORD)(CON_COLS)*
@@ -927,7 +927,7 @@ void TConsole::Beep() {
 }
 
 void TConsole::SetCursorSize(int pct) {
-	CONSOLE_CURSOR_INFO ci = {(pct != 0)?pct:1, pct != 0};
+	CONSOLE_CURSOR_INFO ci = {(pct != 0)?pct:1u, pct != 0};
 	SetConsoleCursorInfo(hConsole, &ci);
 }
 

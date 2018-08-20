@@ -373,7 +373,7 @@ static void test_default_data(void)
     res = AVIFileOpenA(&pFile, filename, OF_SHARE_DENY_WRITE, 0L);
     ok(res == 0, "Unable to open file: error=%u\n", res);
 
-    pStream0 = (void *)0xdeadbeef;
+    pStream0 = (void *)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = AVIFileGetStream(pFile, &pStream0, ~0U, 0);
     ok(res == AVIERR_NODATA, "expected AVIERR_NODATA, got %u\n", res);
     ok(pStream0 == NULL, "AVIFileGetStream should set stream to NULL\n");

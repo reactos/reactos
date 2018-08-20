@@ -538,12 +538,12 @@ static void test_special_reference(void)
     ok(ref != NULL, "ref == NULL\n");
     CoTaskMemFree(ref);
 
-    ref = (void*)0xdeadbeef;
+    ref = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = HlinkGetSpecialReference(HLSR_HISTORYFOLDER, &ref);
     ok(hres == E_NOTIMPL, "HlinkGetSpecialReference(HLSR_HISTORYFOLDER) failed: %08x\n", hres);
     ok(ref == NULL, "ref=%p\n", ref);
 
-    ref = (void*)0xdeadbeef;
+    ref = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = HlinkGetSpecialReference(4, &ref);
     ok(hres == E_INVALIDARG, "HlinkGetSpecialReference(HLSR_HISTORYFOLDER) failed: %08x\n", hres);
     ok(ref == NULL, "ref=%p\n", ref);
@@ -567,8 +567,8 @@ static void test_HlinkCreateExtensionServices(void)
     ok(hres == S_OK, "HlinkCreateExtensionServices failed: %08x\n", hres);
     ok(authenticate != NULL, "HlinkCreateExtensionServices returned NULL\n");
 
-    password = username = (void*)0xdeadbeef;
-    hwnd = (void*)0xdeadbeef;
+    password = username = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hwnd = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IAuthenticate_Authenticate(authenticate, &hwnd, &username, &password);
     ok(hres == S_OK, "Authenticate failed: %08x\n", hres);
     ok(!hwnd, "hwnd != NULL\n");
@@ -578,18 +578,18 @@ static void test_HlinkCreateExtensionServices(void)
     hres = IAuthenticate_QueryInterface(authenticate, &IID_IHttpNegotiate, (void**)&http_negotiate);
     ok(hres == S_OK, "Could not get IHttpNegotiate interface: %08x\n", hres);
 
-    headers = (void*)0xdeadbeef;
-    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)0xdeadbeef, (void*)0xdeadbeef,
+    headers = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, (void*)(ULONG_PTR)0xdeadbeefdeadbeef,
                                                0, &headers);
     ok(hres == S_OK, "BeginningTransaction failed: %08x\n", hres);
     ok(headers == NULL, "headers != NULL\n");
 
-    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)0xdeadbeef, (void*)0xdeadbeef,
+    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, (void*)(ULONG_PTR)0xdeadbeefdeadbeef,
                                                0, NULL);
     ok(hres == E_INVALIDARG, "BeginningTransaction failed: %08x, expected E_INVALIDARG\n", hres);
 
-    headers = (void*)0xdeadbeef;
-    hres = IHttpNegotiate_OnResponse(http_negotiate, 200, (void*)0xdeadbeef, (void*)0xdeadbeef, &headers);
+    headers = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hres = IHttpNegotiate_OnResponse(http_negotiate, 200, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, &headers);
     ok(hres == S_OK, "OnResponse failed: %08x\n", hres);
     ok(headers == NULL, "headers != NULL\n");
 
@@ -597,7 +597,7 @@ static void test_HlinkCreateExtensionServices(void)
     IAuthenticate_Release(authenticate);
 
 
-    hres = HlinkCreateExtensionServices(headersW, (HWND)0xfefefefe, usernameW, passwordW,
+    hres = HlinkCreateExtensionServices(headersW, (HWND)(ULONG_PTR)0xfefefefefefefefe, usernameW, passwordW,
                                         NULL, &IID_IAuthenticate, (void**)&authenticate);
     ok(hres == S_OK, "HlinkCreateExtensionServices failed: %08x\n", hres);
     ok(authenticate != NULL, "HlinkCreateExtensionServices returned NULL\n");
@@ -606,31 +606,31 @@ static void test_HlinkCreateExtensionServices(void)
     hwnd = NULL;
     hres = IAuthenticate_Authenticate(authenticate, &hwnd, &username, &password);
     ok(hres == S_OK, "Authenticate failed: %08x\n", hres);
-    ok(hwnd == (HWND)0xfefefefe, "hwnd=%p\n", hwnd);
+    ok(hwnd == (HWND)(ULONG_PTR)0xfefefefefefefefe, "hwnd=%p\n", hwnd);
     ok(!lstrcmpW(username, usernameW), "unexpected username\n");
     ok(!lstrcmpW(password, passwordW), "unexpected password\n");
     CoTaskMemFree(username);
     CoTaskMemFree(password);
 
-    password = username = (void*)0xdeadbeef;
-    hwnd = (void*)0xdeadbeef;
+    password = username = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hwnd = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IAuthenticate_Authenticate(authenticate, &hwnd, NULL, &password);
     ok(hres == E_INVALIDARG, "Authenticate failed: %08x\n", hres);
-    ok(password == (void*)0xdeadbeef, "password = %p\n", password);
-    ok(hwnd == (void*)0xdeadbeef, "hwnd = %p\n", hwnd);
+    ok(password == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "password = %p\n", password);
+    ok(hwnd == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "hwnd = %p\n", hwnd);
 
     hres = IAuthenticate_QueryInterface(authenticate, &IID_IHttpNegotiate, (void**)&http_negotiate);
     ok(hres == S_OK, "Could not get IHttpNegotiate interface: %08x\n", hres);
 
-    headers = (void*)0xdeadbeef;
-    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)0xdeadbeef, (void*)0xdeadbeef,
+    headers = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hres = IHttpNegotiate_BeginningTransaction(http_negotiate, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, (void*)(ULONG_PTR)0xdeadbeefdeadbeef,
                                                0, &headers);
     ok(hres == S_OK, "BeginningTransaction failed: %08x\n", hres);
     ok(!lstrcmpW(headers, headersexW), "unexpected headers %s\n", wine_dbgstr_w(headers));
     CoTaskMemFree(headers);
 
-    headers = (void*)0xdeadbeef;
-    hres = IHttpNegotiate_OnResponse(http_negotiate, 200, (void*)0xdeadbeef, (void*)0xdeadbeef, &headers);
+    headers = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
+    hres = IHttpNegotiate_OnResponse(http_negotiate, 200, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, (void*)(ULONG_PTR)0xdeadbeefdeadbeef, &headers);
     ok(hres == S_OK, "OnResponse failed: %08x\n", hres);
     ok(headers == NULL, "unexpected headers %s\n", wine_dbgstr_w(headers));
 
@@ -914,7 +914,7 @@ static HRESULT WINAPI HlinkBrowseContext_GetObject(IHlinkBrowseContext *iface,
     ok(fBindIfRootRegistered == 1, "fBindIfRootRegistered = %x\n", fBindIfRootRegistered);
 
     *ppiunk = HBC_object;
-    return HBC_object ? S_OK : 0xdeadbeef;
+    return HBC_object ? S_OK : (ULONG_PTR)0xdeadbeefdeadbeef;
 }
 
 static HRESULT WINAPI HlinkBrowseContext_Revoke(IHlinkBrowseContext *iface, DWORD dwRegister)
@@ -1667,7 +1667,7 @@ static IMoniker *r_getMonikerRef(unsigned line, IHlink *hlink, IMoniker *exp_tgt
 
     CoTaskMemFree(fnd_loc);
 
-    if(exp_tgt == (IMoniker*)0xFFFFFFFF)
+    if(exp_tgt == (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF)
         return fnd_tgt;
 
     ok_(__FILE__,line) (fnd_tgt == exp_tgt, "Found moniker target should have been %p, was: %p\n", exp_tgt, fnd_tgt);
@@ -1696,7 +1696,7 @@ static void test_HlinkMoniker(void)
     /* setting a string target creates a moniker reference */
     setStringRef(hlink, HLINKSETF_TARGET | HLINKSETF_LOCATION, aW, wordsW);
     getStringRef(hlink, aW, wordsW);
-    aMon = getMonikerRef(hlink, (IMoniker*)0xFFFFFFFF, wordsW, HLINKGETREF_RELATIVE);
+    aMon = getMonikerRef(hlink, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, wordsW, HLINKGETREF_RELATIVE);
     ok(aMon != NULL, "Moniker from %s target should not be NULL\n", wine_dbgstr_w(aW));
     if(aMon)
         IMoniker_Release(aMon);
@@ -1741,7 +1741,7 @@ static void test_HashLink(void)
 
     if(hlink){
         getStringRef(hlink, tgt_partW, loc_partW);
-        pmk = getMonikerRef(hlink, (IMoniker*)0xFFFFFFFF, loc_partW, HLINKGETREF_RELATIVE);
+        pmk = getMonikerRef(hlink, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, loc_partW, HLINKGETREF_RELATIVE);
         ok(pmk != NULL, "Found moniker should not be NULL\n");
         if(pmk)
             IMoniker_Release(pmk);
@@ -1759,7 +1759,7 @@ static void test_HashLink(void)
 
     if(hlink){
         getStringRef(hlink, tgt_partW, two_hash_loc_partW);
-        pmk = getMonikerRef(hlink, (IMoniker*)0xFFFFFFFF, two_hash_loc_partW, HLINKGETREF_RELATIVE);
+        pmk = getMonikerRef(hlink, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, two_hash_loc_partW, HLINKGETREF_RELATIVE);
         ok(pmk != NULL, "Found moniker should not be NULL\n");
         if(pmk)
             IMoniker_Release(pmk);
@@ -1774,7 +1774,7 @@ static void test_HashLink(void)
 
     if(hlink){
         getStringRef(hlink, tgt_partW, test_locW);
-        pmk = getMonikerRef(hlink, (IMoniker*)0xFFFFFFFF, test_locW, HLINKGETREF_RELATIVE);
+        pmk = getMonikerRef(hlink, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, test_locW, HLINKGETREF_RELATIVE);
         ok(pmk != NULL, "Found moniker should not be NULL\n");
         if(pmk)
             IMoniker_Release(pmk);
@@ -1789,7 +1789,7 @@ static void test_HashLink(void)
 
     if(hlink){
         getStringRef(hlink, NULL, loc_partW);
-        pmk = getMonikerRef(hlink, (IMoniker*)0xFFFFFFFF, loc_partW, HLINKGETREF_RELATIVE);
+        pmk = getMonikerRef(hlink, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, loc_partW, HLINKGETREF_RELATIVE);
         ok(pmk == NULL, "Found moniker should be NULL\n");
         if(pmk)
             IMoniker_Release(pmk);
@@ -2119,7 +2119,7 @@ static void test_HlinkClone(void)
 
     SET_EXPECT(Save);
     SET_EXPECT(GetClassID);
-    cloned = (IHlink*)0xdeadbeef;
+    cloned = (IHlink*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = HlinkClone(hl, &IID_IHlink, NULL, 0, (void**)&cloned);
     /* fails because of invalid CLSID given by Moniker_GetClassID */
     ok(hres == REGDB_E_CLASSNOTREG, "Wrong error code: %08x\n", hres);
@@ -2141,7 +2141,7 @@ static void test_HlinkClone(void)
     ok(hres == S_OK, "HlinkClone failed: %08x\n", hres);
     ok(cloned != NULL, "Should have gotten a clone\n");
 
-    fnd_mk = getMonikerRef(cloned, (IMoniker*)0xFFFFFFFF, two, HLINKGETREF_RELATIVE);
+    fnd_mk = getMonikerRef(cloned, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, two, HLINKGETREF_RELATIVE);
     ok(fnd_mk != NULL, "Expected non-null Moniker\n");
     ok(fnd_mk != dummy, "Expected a new Moniker to be created\n");
 
@@ -2153,7 +2153,7 @@ static void test_HlinkClone(void)
             wine_dbgstr_w(name), wine_dbgstr_w(fnd_name));
     CoTaskMemFree(fnd_name);
 
-    fnd_site = (IHlinkSite*)0xdeadbeef;
+    fnd_site = (IHlinkSite*)(ULONG_PTR)0xdeadbeefdeadbeef;
     fnd_data = 4;
     hres = IHlink_GetHlinkSite(cloned, &fnd_site, &fnd_data);
     ok(hres == S_OK, "GetHlinkSite failed: %08x\n", hres);
@@ -2172,11 +2172,11 @@ static void test_HlinkClone(void)
     ok(hres == S_OK, "HlinkClone failed: %08x\n", hres);
     ok(cloned != NULL, "Should have gotten a clone\n");
 
-    fnd_mk = getMonikerRef(cloned, (IMoniker*)0xFFFFFFFF, NULL, HLINKGETREF_RELATIVE);
+    fnd_mk = getMonikerRef(cloned, (IMoniker*)(ULONG_PTR)0xFFFFFFFFFFFFFFFF, NULL, HLINKGETREF_RELATIVE);
     ok(fnd_mk != NULL, "Expected non-null Moniker\n");
     ok(fnd_mk != dummy, "Expected a new Moniker to be created\n");
 
-    fnd_site = (IHlinkSite*)0xdeadbeef;
+    fnd_site = (IHlinkSite*)(ULONG_PTR)0xdeadbeefdeadbeef;
     fnd_data = 4;
     hres = IHlink_GetHlinkSite(cloned, &fnd_site, &fnd_data);
     ok(hres == S_OK, "GetHlinkSite failed: %08x\n", hres);
@@ -2201,7 +2201,7 @@ static void test_StdHlink(void)
             &IID_IHlink, (void**)&hlink);
     ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
 
-    str = (void*)0xdeadbeef;
+    str = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IHlink_GetTargetFrameName(hlink, &str);
     ok(hres == S_FALSE, "GetTargetFrameName failed: %08x\n", hres);
     ok(!str, "str = %s\n", wine_dbgstr_w(str));
@@ -2209,7 +2209,7 @@ static void test_StdHlink(void)
     hres = IHlink_SetTargetFrameName(hlink, testW);
     ok(hres == S_OK, "SetTargetFrameName failed: %08x\n", hres);
 
-    str = (void*)0xdeadbeef;
+    str = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IHlink_GetTargetFrameName(hlink, &str);
     ok(hres == S_OK, "GetTargetFrameName failed: %08x\n", hres);
     ok(!lstrcmpW(str, testW), "str = %s\n", wine_dbgstr_w(str));
@@ -2218,7 +2218,7 @@ static void test_StdHlink(void)
     hres = IHlink_SetTargetFrameName(hlink, NULL);
     ok(hres == S_OK, "SetTargetFrameName failed: %08x\n", hres);
 
-    str = (void*)0xdeadbeef;
+    str = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IHlink_GetTargetFrameName(hlink, &str);
     ok(hres == S_FALSE, "GetTargetFrameName failed: %08x\n", hres);
     ok(!str, "str = %s\n", wine_dbgstr_w(str));

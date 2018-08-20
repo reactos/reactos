@@ -321,7 +321,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
 
             header.biSize = sizeof(header);
             header.biWidth = This->tex_width;
-            header.biHeight = -This->tex_height;
+            header.biHeight = -(INT)This->tex_height;
             header.biPlanes = 1;
             header.biBitCount = 32;
             header.biCompression = BI_RGB;

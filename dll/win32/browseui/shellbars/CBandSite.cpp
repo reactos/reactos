@@ -127,7 +127,7 @@ VOID CBandSiteBase::_BuildBandInfo(struct BandObject *Band, REBARBANDINFOW *prbi
     {
         prbi->fMask |= RBBIM_TEXT;
         prbi->lpText = Band->dbi.wszTitle;
-        prbi->cch = wcslen(Band->dbi.wszTitle);
+        prbi->cch = (UINT)wcslen(Band->dbi.wszTitle);
     }
 
     if (Band->dbi.dwMask & DBIM_MODEFLAGS)

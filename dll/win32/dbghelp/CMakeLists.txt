@@ -36,11 +36,7 @@ else()
         -DHAVE_ALLOCA_H
         -D_IMAGEHLP_SOURCE_)
 
-    if(ARCH STREQUAL "amd64")
-        add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
-    endif()
-
-    include_directories(
+     include_directories(
         BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
         ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
 

@@ -3,7 +3,11 @@ add_definitions(
     -DDUPLICATES_ONCE
     -DINS_BASE="\\\".\\\""
     -DSCHILY_BUILD
-    -DSORTING)
+    -DSORTING
+    -DHAVE_ENVIRON_DEF
+    -DHAVE_RENAME
+    -DHAVE_STRNLEN
+    -D_CRT_NONSTDC_NO_DEPRECATE)
 
 include_directories(
     schilytools/include

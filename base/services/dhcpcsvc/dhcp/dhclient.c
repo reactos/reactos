@@ -435,7 +435,7 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
             DH_DbgPrint(MID_TRACE,("Setting DhcpNameserver: %s\n", nsbuf));
 
             RegSetValueExA( RegKey, "DhcpNameServer", 0, REG_SZ,
-                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
+                           (LPBYTE)nsbuf, (DWORD)strlen(nsbuf) + 1 );
             free( nsbuf );
         }
 
@@ -529,7 +529,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
               &Adapter->NteContext,
               &Adapter->NteInstance );
         if (hkey) {
-            RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), strlen(piaddr(new_lease->address))+1);
+            RegSetValueExA(hkey, "DhcpIPAddress", 0, REG_SZ, (LPBYTE)piaddr(new_lease->address), (DWORD)strlen(piaddr(new_lease->address))+1);
             Buffer[0] = '\0';
             for(i = 0; i < new_lease->options[DHO_SUBNET_MASK].len; i++)
             {
@@ -537,7 +537,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                 if (i + 1 < new_lease->options[DHO_SUBNET_MASK].len)
                     strcat(Buffer, ".");
             }
-            RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
+            RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, (DWORD)strlen(Buffer)+1);
             dwEnableDHCP = 1;
             RegSetValueExA(hkey, "EnableDHCP", 0, REG_DWORD, (LPBYTE)&dwEnableDHCP, sizeof(DWORD));
         }
@@ -575,7 +575,7 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                 if (i + 1 < new_lease->options[DHO_ROUTERS].len)
                     strcat(Buffer, ".");
             }
-            RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
+            RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)Buffer, (DWORD)strlen(Buffer)+1);
         }
     }
 

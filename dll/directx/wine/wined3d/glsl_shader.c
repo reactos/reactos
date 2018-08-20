@@ -953,7 +953,7 @@ static void shader_glsl_init_transform_feedback(const struct wined3d_context *co
     if (!(strings = heap_calloc(length, sizeof(*strings))))
     {
         ERR("Out of memory.\n");
-        heap_free(varyings);
+        heap_free((void*)varyings);
         string_buffer_release(&priv->string_buffers, buffer);
         return;
     }
@@ -962,7 +962,7 @@ static void shader_glsl_init_transform_feedback(const struct wined3d_context *co
     GL_EXTCALL(glTransformFeedbackVaryings(program_id, count, varyings, mode));
     checkGLcall("glTransformFeedbackVaryings");
 
-    heap_free(varyings);
+    heap_free((void*)varyings);
     heap_free(strings);
     string_buffer_release(&priv->string_buffers, buffer);
 }

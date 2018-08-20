@@ -182,10 +182,10 @@ private:
   }
 
   string present_value( DWORD type, const char *data, DWORD len ) {
-    switch( type ) {
-    default:
+//    switch( type ) {
+//    default:
       return bindump( data, len );
-    }
+//    }
   }
 
   void process_valid_request( HKEY open_reg_key, string key_name ) {

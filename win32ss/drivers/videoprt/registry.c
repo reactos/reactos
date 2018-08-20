@@ -596,7 +596,7 @@ IntCreateRegistryPath(
             wcsncpy(DeviceRegistryPath->Buffer,
                     DriverRegistryPath->Buffer,
                     AfterControlSet.Buffer - DriverRegistryPath->Buffer);
-            DeviceRegistryPath->Length = (AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
+            DeviceRegistryPath->Length = (USHORT)(AfterControlSet.Buffer - DriverRegistryPath->Buffer) * sizeof(WCHAR);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert1);
             RtlAppendUnicodeStringToString(DeviceRegistryPath, &AfterControlSet);
             RtlAppendUnicodeToString(DeviceRegistryPath, Insert2);

@@ -22,7 +22,7 @@ _TCHAR* _tfullpath(_TCHAR* absPath, const _TCHAR* relPath, size_t maxLength)
     if (!relPath || relPath[0] == 0)
     {
         /* If not, just try to return current dir */
-        return _tgetcwd(absPath, maxLength);
+        return _tgetcwd(absPath, (int)maxLength);
     }
 
     /* If no output buffer was given */

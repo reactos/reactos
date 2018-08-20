@@ -40,7 +40,7 @@ int _vsnprintf_s(char *buffer, size_t sizeOfBuffer, size_t count, const char *fo
     switch (ret)
     {
         case S_OK:
-            return (sizeOfBuffer - cchRemaining);
+            return (int)(sizeOfBuffer - cchRemaining);
 
         case STRSAFE_E_INVALID_PARAMETER:
         case STRSAFE_E_INSUFFICIENT_BUFFER:

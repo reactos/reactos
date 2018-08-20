@@ -129,7 +129,7 @@ ConPutsPaging(
     if (szStr == NULL)
         return TRUE;
 
-    len = wcslen(szStr);
+    len = (DWORD)wcslen(szStr);
     return ConWritePaging(Pager, PagePrompt, StartPaging, szStr, len);
 }
 

@@ -28,8 +28,8 @@ static void test_timeline(void)
 {
     HRESULT hr;
     IAMTimeline *timeline = NULL;
-    IAMTimeline *timeline2 = (IAMTimeline *)0xdeadbeef;
-    IAMTimelineObj *obj = (IAMTimelineObj *)0xdeadbeef;
+    IAMTimeline *timeline2 = (IAMTimeline *)(ULONG_PTR)0xdeadbeefdeadbeef;
+    IAMTimelineObj *obj = (IAMTimelineObj *)(ULONG_PTR)0xdeadbeefdeadbeef;
     IAMTimelineObj obj_iface;
     TIMELINE_MAJOR_TYPE type;
 
@@ -102,7 +102,7 @@ static void test_timeline(void)
     hr = IAMTimelineObj_GetTimelineNoRef(obj, NULL);
     ok(hr == E_POINTER, "Expected E_POINTER got %08x\n", hr);
 
-    timeline2 = (IAMTimeline *)0xdeadbeef;
+    timeline2 = (IAMTimeline *)(ULONG_PTR)0xdeadbeefdeadbeef;
     hr = IAMTimelineObj_GetTimelineNoRef(obj, &timeline2);
     ok(hr == E_NOINTERFACE, "Expected E_NOINTERFACE got %08x\n", hr);
     ok(!timeline2, "Expected NULL got %p\n", timeline2);

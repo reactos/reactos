@@ -60,7 +60,7 @@ static void
 iso_send_connection_request(char *username, uint32 neg_proto)
 {
 	STREAM s;
-	int length = 30 + strlen(username);
+	SIZE_T length = 30 + strlen(username);
 
 	if (g_rdp_version >= RDP_V5 && g_negotiate_rdp_protocol)
 		length += 8;

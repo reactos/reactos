@@ -281,17 +281,17 @@ static void test_GetChildContainer(void)
     ok(hr == E_INVALIDARG,
        "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
 
-    child = (void*)0xdeadbeef;
+    child = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, NULL, &child);
     ok(hr == E_INVALIDARG,
        "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
-    ok(child == (void*)0xdeadbeef, "Expected output pointer to be unchanged, got %p\n", child);
+    ok(child == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "Expected output pointer to be unchanged, got %p\n", child);
 
     hr = IDxDiagContainer_GetChildContainer(pddc, container, NULL);
     ok(hr == E_INVALIDARG,
        "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
 
-    child = (void*)0xdeadbeef;
+    child = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
     ok(hr == E_INVALIDARG,
        "Expected IDxDiagContainer::GetChildContainer to return E_INVALIDARG, got 0x%08x\n", hr);
@@ -307,11 +307,11 @@ static void test_GetChildContainer(void)
         goto cleanup;
     }
 
-    child = (void*)0xdeadbeef;
+    child = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hr = IDxDiagContainer_GetChildContainer(pddc, container, &child);
     ok(hr == S_OK,
        "Expected IDxDiagContainer::GetChildContainer to return S_OK, got 0x%08x\n", hr);
-    ok(child != NULL && child != (void*)0xdeadbeef, "Expected a valid output pointer, got %p\n", child);
+    ok(child != NULL && child != (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "Expected a valid output pointer, got %p\n", child);
 
     if (SUCCEEDED(hr))
     {

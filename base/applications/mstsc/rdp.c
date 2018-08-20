@@ -185,7 +185,7 @@ rdp_out_unistr_mandatory_null(STREAM s, char *string, int len)
 
 /* Output a string in Unicode */
 void
-rdp_out_unistr(STREAM s, char *string, int len)
+rdp_out_unistr(STREAM s, char *string, SIZE_T len)
 {
 	if (string == NULL || len == 0)
 		return;
@@ -345,16 +345,16 @@ rdp_send_logon_info(uint32 flags, char *domain, char *user,
 {
 	char *ipaddr = tcp_get_address();
 	/* length of string in TS_INFO_PACKET excludes null terminator */
-	int len_domain = 2 * strlen(domain);
-	int len_user = 2 * strlen(user);
-	int len_password = 2 * strlen(password);
-	int len_program = 2 * strlen(program);
-	int len_directory = 2 * strlen(directory);
+	SIZE_T len_domain = 2 * strlen(domain);
+    SIZE_T len_user = 2 * strlen(user);
+    SIZE_T len_password = 2 * strlen(password);
+    SIZE_T len_program = 2 * strlen(program);
+    SIZE_T len_directory = 2 * strlen(directory);
 
 	/* length of strings in TS_EXTENDED_PACKET includes null terminator */
 	char dllName[MAX_PATH];
-	int len_ip = 2 * strlen(ipaddr) + 2;
-	int len_dll = 0;
+	SIZE_T len_ip = 2 * strlen(ipaddr) + 2;
+	SIZE_T len_dll = 0;
 
 	int packetlen = 0;
 	uint32 sec_flags = g_encryption ? (SEC_INFO_PKT | SEC_ENCRYPT) : SEC_INFO_PKT;

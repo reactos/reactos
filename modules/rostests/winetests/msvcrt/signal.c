@@ -30,7 +30,7 @@ static void __cdecl sighandler(int signum)
 
     ok(ret != NULL, "ret = NULL\n");
     if(signum == SIGABRT)
-        ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+        ok(*ret == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "*ret = %p\n", *ret);
     else if(signum == SIGSEGV)
         ok(*ret == NULL, "*ret = %p\n", *ret);
     ++test_value;
@@ -59,16 +59,16 @@ static void test___pxcptinfoptrs(void)
 
     test_value = 0;
 
-    *ret = (void*)0xdeadbeef;
+    *ret = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     signal(SIGSEGV, sighandler);
     res = raise(SIGSEGV);
     ok(res == 0, "failed to raise SIGSEGV\n");
-    ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+    ok(*ret == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "*ret = %p\n", *ret);
 
     signal(SIGABRT, sighandler);
     res = raise(SIGABRT);
     ok(res == 0, "failed to raise SIGBREAK\n");
-    ok(*ret == (void*)0xdeadbeef, "*ret = %p\n", *ret);
+    ok(*ret == (void*)(ULONG_PTR)0xdeadbeefdeadbeef, "*ret = %p\n", *ret);
 
     ok(test_value == 2, "test_value = %d\n", test_value);
 }

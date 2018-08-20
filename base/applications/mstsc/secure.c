@@ -497,7 +497,7 @@ sec_establish_key(void)
 static void
 sec_out_mcs_data(STREAM s, uint32 selected_protocol)
 {
-	int hostlen = 2 * strlen(g_hostname);
+	SIZE_T hostlen = 2 * strlen(g_hostname);
 	int length = 162 + 76 + 12 + 4;
 	unsigned int i;
 	uint32 cluster_flags = 0;

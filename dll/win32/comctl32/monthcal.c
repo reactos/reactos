@@ -421,7 +421,7 @@ static BOOL MONTHCAL_IsSelRangeValid(const MONTHCAL_INFO *infoPtr,
   if(cmp == 1)
      ul_diff.QuadPart = ul_range0.QuadPart - ul_range1.QuadPart;
   else
-     ul_diff.QuadPart = -ul_range0.QuadPart + ul_range1.QuadPart;
+     ul_diff.QuadPart = ul_range1.QuadPart - ul_range0.QuadPart;
 
   if(ul_diff.QuadPart >= DAYSTO100NSECS(infoPtr->maxSelCount)) {
 

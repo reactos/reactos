@@ -3812,7 +3812,7 @@ HRESULT HTMLElement_clone(HTMLDOMNode *iface, nsIDOMNode *nsnode, HTMLDOMNode **
     return S_OK;
 }
 
-HRESULT HTMLElement_handle_event(HTMLDOMNode *iface, DWORD eid, nsIDOMEvent *event, BOOL *prevent_default)
+HRESULT HTMLElement_handle_event(HTMLDOMNode *iface, eventid_t eid, nsIDOMEvent *event, BOOL *prevent_default)
 {
     HTMLElement *This = impl_from_HTMLDOMNode(iface);
 

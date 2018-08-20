@@ -305,19 +305,19 @@ FtfdQueryFont(
                            LF_FACESIZE,
                            NULL,
                            ftface->family_name,
-                           strnlen(ftface->family_name, MAX_PATH));
+                           (ULONG)strnlen(ftface->family_name, MAX_PATH));
 
     EngMultiByteToUnicodeN(pifiX->wszStyleName,
                            LF_FACESIZE,
                            NULL,
                            ftface->style_name,
-                           strnlen(ftface->style_name, MAX_PATH));
+                           (ULONG)strnlen(ftface->style_name, MAX_PATH));
 
     EngMultiByteToUnicodeN(pifiX->wszFaceName,
                            LF_FACESIZE,
                            NULL,
                            ftface->family_name,
-                           strnlen(ftface->family_name, MAX_PATH));
+                           (ULONG)strnlen(ftface->family_name, MAX_PATH));
 
     FT_Done_Face(ftface);
 

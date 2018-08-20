@@ -674,7 +674,7 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
                 dp -= item->size;
                 memcpy(dp, item->data, item->size);
 
-                ln->offset = dp - tree - sizeof(tree_header);
+                ln->offset = (UINT32)(dp - tree - sizeof(tree_header));
             } else
                 ln->offset = 0;
 
@@ -1519,7 +1519,7 @@ end:
             MOUNTDEV_NAME* mdn;
             ULONG mdnsize;
 
-            mdnsize = offsetof(MOUNTDEV_NAME, Name[0]) + DriveRoot->Length;
+            mdnsize = (ULONG)offsetof(MOUNTDEV_NAME, Name[0]) + DriveRoot->Length;
 #ifndef __REACTOS__
             mdn = malloc(mdnsize);
 #else

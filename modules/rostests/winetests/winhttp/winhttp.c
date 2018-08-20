@@ -4579,14 +4579,14 @@ static void test_WinHttpDetectAutoProxyConfigUrl(void)
     ok( !ret, "expected failure\n" );
     ok( error == ERROR_INVALID_PARAMETER, "got %u\n", error );
 
-    url = (WCHAR *)0xdeadbeef;
+    url = (WCHAR *)(ULONG_PTR)0xdeadbeefdeadbeef;
     SetLastError(0xdeadbeef);
     ret = WinHttpDetectAutoProxyConfigUrl( WINHTTP_AUTO_DETECT_TYPE_DNS_A, &url );
     error = GetLastError();
     if (!ret)
     {
         ok( error == ERROR_WINHTTP_AUTODETECTION_FAILED, "got %u\n", error );
-        ok( !url || broken(url == (WCHAR *)0xdeadbeef), "got %p\n", url );
+        ok( !url || broken(url == (WCHAR *)(ULONG_PTR)0xdeadbeefdeadbeef), "got %p\n", url );
     }
     else
     {
@@ -4594,14 +4594,14 @@ static void test_WinHttpDetectAutoProxyConfigUrl(void)
         GlobalFree( url );
     }
 
-    url = (WCHAR *)0xdeadbeef;
+    url = (WCHAR *)(ULONG_PTR)0xdeadbeefdeadbeef;
     SetLastError(0xdeadbeef);
     ret = WinHttpDetectAutoProxyConfigUrl( WINHTTP_AUTO_DETECT_TYPE_DHCP, &url );
     error = GetLastError();
     if (!ret)
     {
         ok( error == ERROR_WINHTTP_AUTODETECTION_FAILED, "got %u\n", error );
-        ok( !url || broken(url == (WCHAR *)0xdeadbeef), "got %p\n", url );
+        ok( !url || broken(url == (WCHAR *)(ULONG_PTR)0xdeadbeefdeadbeef), "got %p\n", url );
     }
     else
     {

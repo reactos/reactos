@@ -1864,11 +1864,11 @@ static UINT get_logical_processor_count( UINT *num_cores )
     {
         if (info[i].Relationship == RelationProcessorCore)
         {
-            for (j = 0; j < sizeof(ULONG_PTR); j++) if (info[i].ProcessorMask & (1 << j)) count++;
+            for (j = 0; j < sizeof(ULONG_PTR); j++) if (info[i].ProcessorMask & ((ULONG_PTR)1 << j)) count++;
         }
         else if (info[i].Relationship == RelationProcessorPackage && num_cores)
         {
-            for (j = 0; j < sizeof(ULONG_PTR); j++) if (info[i].ProcessorMask & (1 << j)) (*num_cores)++;
+            for (j = 0; j < sizeof(ULONG_PTR); j++) if (info[i].ProcessorMask & ((ULONG_PTR)1 << j)) (*num_cores)++;
         }
     }
     heap_free( info );

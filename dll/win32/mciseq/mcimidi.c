@@ -675,7 +675,7 @@ static DWORD MIDI_mciOpen(WINE_MCIMIDI* wmm, DWORD dwFlags, LPMCI_OPEN_PARMSW lp
 
     wmm->hFile = 0;
     wmm->hMidi = 0;
-    wmm->wPort = MIDI_MAPPER;
+    wmm->wPort = (WORD)MIDI_MAPPER;
     wmm->lpstrElementName = NULL;
 
     TRACE("wDevID=%d (lpParams->wDeviceID=%d)\n", wmm->wDevID, lpParms->wDeviceID);

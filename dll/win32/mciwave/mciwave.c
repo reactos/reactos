@@ -532,7 +532,7 @@ static LRESULT WAVE_mciOpen(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_OPEN_P
 
     wmw->nUseCount++;
 
-    wmw->wInput = wmw->wOutput = WAVE_MAPPER;
+    wmw->wInput = wmw->wOutput = (WORD)WAVE_MAPPER;
     wmw->fInput = FALSE;
     wmw->hWave = 0;
     wmw->dwStatus = MCI_MODE_NOT_READY;
@@ -1368,13 +1368,13 @@ static DWORD WAVE_mciSet(MCIDEVICEID wDevID, DWORD dwFlags, LPMCI_WAVE_SET_PARMS
 	TRACE("MCI_WAVE_SET_ANYINPUT\n");
 	if (wmw->wInput != (WORD)lpParms->wInput)
 	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
-	wmw->wInput = WAVE_MAPPER;
+	wmw->wInput = (WORD)WAVE_MAPPER;
     }
     if (dwFlags & MCI_WAVE_SET_ANYOUTPUT) {
 	TRACE("MCI_WAVE_SET_ANYOUTPUT\n");
 	if (wmw->wOutput != (WORD)lpParms->wOutput)
 	    WAVE_mciStop(wDevID, MCI_WAIT, NULL);
-	wmw->wOutput = WAVE_MAPPER;
+	wmw->wOutput = (WORD)WAVE_MAPPER;
     }
     /* Set wave format parameters is refused after Open or Record.*/
     if (dwFlags & MCI_WAVE_SET_FORMATTAG) {

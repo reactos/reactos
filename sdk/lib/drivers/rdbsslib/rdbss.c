@@ -6813,7 +6813,7 @@ RxGetStringRegistryParameter(
     }
 
     OutString->Buffer = (PWSTR)(((PKEY_VALUE_PARTIAL_INFORMATION)Buffer)->Data);
-    OutString->Length = ((PKEY_VALUE_PARTIAL_INFORMATION)Buffer)->DataLength - sizeof(UNICODE_NULL);
+    OutString->Length = (USHORT)((PKEY_VALUE_PARTIAL_INFORMATION)Buffer)->DataLength - sizeof(UNICODE_NULL);
     OutString->MaximumLength = OutString->Length;
 
     return STATUS_SUCCESS;

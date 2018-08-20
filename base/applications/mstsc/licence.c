@@ -115,8 +115,8 @@ static void
 licence_send_new_licence_request(uint8 * client_random, uint8 * rsa_data, char *user, char *host)
 {
 	uint32 sec_flags = SEC_LICENSE_PKT;
-	uint16 userlen = strlen(user) + 1;
-	uint16 hostlen = strlen(host) + 1;
+	uint16 userlen = (uint16)strlen(user) + 1;
+	uint16 hostlen = (uint16)strlen(host) + 1;
 	uint16 length =
 		24 + SEC_RANDOM_SIZE + SEC_MODULUS_SIZE + SEC_PADDING_SIZE + userlen + hostlen;
 	STREAM s;

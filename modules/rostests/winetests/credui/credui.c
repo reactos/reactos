@@ -187,7 +187,7 @@ static void test_SspiPromptForCredentials(void)
             ok( save == TRUE || save == FALSE, "got %d\n", save );
 
             username = creds = NULL;
-            domain = (const WCHAR *)0xdeadbeef;
+            domain = (const WCHAR *)(ULONG_PTR)0xdeadbeefdeadbeef;
             status = pSspiEncodeAuthIdentityAsStrings( id, &username, &domain, &creds );
             ok( status == SEC_E_OK, "got %u\n", status );
             ok( username != NULL, "username not set\n" );

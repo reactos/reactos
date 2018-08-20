@@ -401,7 +401,7 @@ static HRESULT BmpFrameDecode_ReadUncompressed(BmpDecoder* This)
     if (bottomup)
     {
         This->imagedatastart = This->imagedata + (height-1) * bytesperrow;
-        This->stride = -bytesperrow;
+        This->stride = -(INT)bytesperrow;
     }
     else
     {
@@ -573,7 +573,7 @@ static HRESULT BmpFrameDecode_ReadRLE8(BmpDecoder* This)
 
 end:
     This->imagedatastart = This->imagedata + (height-1) * bytesperrow;
-    This->stride = -bytesperrow;
+    This->stride = -(INT)bytesperrow;
 
     return S_OK;
 
@@ -713,7 +713,7 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
 
 end:
     This->imagedatastart = This->imagedata + (height-1) * bytesperrow;
-    This->stride = -bytesperrow;
+    This->stride = -(INT)bytesperrow;
 
     return S_OK;
 

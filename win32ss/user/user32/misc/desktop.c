@@ -562,6 +562,7 @@ GetThreadDesktop(
         return NULL;
     }
 
+    ASSERT((DWORD_PTR)GetThreadConsoleDesktopRequest->ConsoleDesktop <= ULONG_MAX);
     return NtUserGetThreadDesktop(dwThreadId,
                                   GetThreadConsoleDesktopRequest->ConsoleDesktop);
 }

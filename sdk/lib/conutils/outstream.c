@@ -176,7 +176,7 @@ ConWrite(
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PWCHAR)p - (PWCHAR)szStr) * sizeof(WCHAR);
+            dwNumBytes = (DWORD)((PWCHAR)p - (PWCHAR)szStr) * sizeof(WCHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
@@ -260,7 +260,7 @@ ConWrite(
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PCHAR)p - (PCHAR)szStr) * sizeof(CHAR);
+            dwNumBytes = (DWORD)((PCHAR)p - (PCHAR)szStr) * sizeof(CHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
@@ -430,7 +430,7 @@ ConPuts(
 {
     INT Len;
 
-    Len = wcslen(szStr);
+    Len = (INT)wcslen(szStr);
     CON_STREAM_WRITE2(Stream, szStr, Len, Len);
 
     /* Fixup returned length in case of errors */

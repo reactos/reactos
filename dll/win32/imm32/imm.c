@@ -2339,7 +2339,7 @@ BOOL WINAPI ImmSetCandidateWindow(
 
     data->IMC.cfCandForm[lpCandidate->dwIndex] = *lpCandidate;
     ImmNotifyIME(hIMC, NI_CONTEXTUPDATED, 0, IMC_SETCANDIDATEPOS);
-    ImmInternalSendIMENotify(data, IMN_SETCANDIDATEPOS, 1 << lpCandidate->dwIndex);
+    ImmInternalSendIMENotify(data, IMN_SETCANDIDATEPOS, (LPARAM)1 << lpCandidate->dwIndex);
 
     return TRUE;
 }

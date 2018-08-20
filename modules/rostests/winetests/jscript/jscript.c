@@ -267,7 +267,7 @@ static IDispatchEx *get_script_dispatch(IActiveScript *script)
     IDispatch *disp;
     HRESULT hres;
 
-    disp = (void*)0xdeadbeef;
+    disp = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
     ok(hres == S_OK, "GetScriptDispatch failed: %08x\n", hres);
 
@@ -282,7 +282,7 @@ static void test_no_script_dispatch(IActiveScript *script)
     IDispatch *disp;
     HRESULT hres;
 
-    disp = (void*)0xdeadbeef;
+    disp = (void*)(ULONG_PTR)0xdeadbeefdeadbeef;
     hres = IActiveScript_GetScriptDispatch(script, NULL, &disp);
     ok(hres == E_UNEXPECTED, "hres = %08x, expected E_UNEXPECTED\n", hres);
     ok(!disp, "disp != NULL\n");
@@ -654,10 +654,10 @@ static void test_jscript_uninitializing(void)
 
 static void test_aggregation(void)
 {
-    IUnknown *unk = (IUnknown*)0xdeadbeef;
+    IUnknown *unk = (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeef;
     HRESULT hres;
 
-    hres = CoCreateInstance(&CLSID_JScript, (IUnknown*)0xdeadbeef, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
+    hres = CoCreateInstance(&CLSID_JScript, (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeef, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IUnknown, (void**)&unk);
     ok(hres == CLASS_E_NOAGGREGATION,
        "CoCreateInstance failed: %08x, expected CLASS_E_NOAGGREGATION\n", hres);

@@ -94,7 +94,7 @@ typedef void * HLRUCACHE;
 BOOL WINAPI I_CryptCreateLruCache(void *unknown, HLRUCACHE *out)
 {
     FIXME("(%p, %p): stub!\n", unknown, out);
-    *out = (void *)0xbaadf00d;
+    *out = (void *)(ULONG_PTR)0xbaadf00dbaadf00dULL;
     return TRUE;
 }
 

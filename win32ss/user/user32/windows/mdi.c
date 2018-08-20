@@ -1059,7 +1059,7 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient, BOOL repaint, LPCWSTR
 
 	    static const WCHAR lpBracket[]  = {' ','-',' ','[',0};
 	    static const WCHAR lpBracket2[]  = {']',0};
-	    int	i_frame_text_length = strlenW(ci->frameTitle);
+	    int	i_frame_text_length = lstrlenW(ci->frameTitle);
 
 	    lstrcpynW( lpBuffer, ci->frameTitle, MDI_MAXTITLELENGTH);
 
@@ -2439,7 +2439,7 @@ static INT_PTR WINAPI MDI_MoreWindowsDlgProc (HWND hDlg, UINT iMsg, WPARAM wPara
                    continue;
                SendMessageW(hListBox, LB_ADDSTRING, 0, (LPARAM)buffer );
                SendMessageW(hListBox, LB_SETITEMDATA, i, (LPARAM)ci->child[i] );
-               length = strlenW(buffer);  /* FIXME: should use GetTextExtentPoint */
+               length = lstrlenW(buffer);  /* FIXME: should use GetTextExtentPoint */
                if (length > widest)
                    widest = length;
            }

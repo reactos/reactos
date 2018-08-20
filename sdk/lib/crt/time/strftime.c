@@ -26,7 +26,7 @@ static inline BOOL strftime_date(char *str, size_t *pos, size_t max,
     format = alternate ? time_data->str.names.date : time_data->str.names.short_date;
     ret = GetDateFormatA(time_data->lcid, 0, &st, format, NULL, 0);
     if(ret && ret<max-*pos)
-        ret = GetDateFormatA(time_data->lcid, 0, &st, format, str+*pos, max-*pos);
+        ret = GetDateFormatA(time_data->lcid, 0, &st, format, str+*pos, (int)(max-*pos));
     if(!ret) {
         *str = 0;
         *_errno() = EINVAL;
@@ -58,7 +58,7 @@ static inline BOOL strftime_time(char *str, size_t *pos, size_t max,
     ret = GetTimeFormatA(time_data->lcid, 0, &st, time_data->str.names.time, NULL, 0);
     if(ret && ret<max-*pos)
         ret = GetTimeFormatA(time_data->lcid, 0, &st, time_data->str.names.time,
-                str+*pos, max-*pos);
+                str+*pos, (int)(max-*pos));
     if(!ret) {
         *str = 0;
         *_errno() = EINVAL;
@@ -201,7 +201,7 @@ size_t CDECL _Strftime(char *str, size_t max, const char *format,
                 tmp -= 12;
             else if(!tmp)
                 tmp = 12;
-            if(!strftime_int(str, &ret, max, tmp, alternate ? 0 : 2, 1, 12))
+            if(!strftime_int(str, &ret, max, (int)tmp, alternate ? 0 : 2, 1, 12))
                 return 0;
             break;
         case 'j':
@@ -237,7 +237,7 @@ size_t CDECL _Strftime(char *str, size_t max, const char *format,
             break;
         case 'Y':
             tmp = 1900+mstm->tm_year;
-            if(!strftime_int(str, &ret, max, tmp, alternate ? 0 : 4, 0, 9999))
+            if(!strftime_int(str, &ret, max, (int)tmp, alternate ? 0 : 4, 0, 9999))
                 return 0;
             break;
         case 'z':
@@ -259,7 +259,7 @@ size_t CDECL _Strftime(char *str, size_t max, const char *format,
                 tmp = mstm->tm_wday-1;
 
             tmp = mstm->tm_yday/7 + (tmp <= ((unsigned)mstm->tm_yday%7));
-            if(!strftime_int(str, &ret, max, tmp, alternate ? 0 : 2, 0, 53))
+            if(!strftime_int(str, &ret, max, (int)tmp, alternate ? 0 : 2, 0, 53))
                 return 0;
             break;
         case '%':
@@ -309,12 +309,12 @@ size_t CDECL wcsftime( wchar_t *str, size_t max,
 
     len = WideCharToMultiByte( CP_ACP, 0, format, -1, NULL, 0, NULL, NULL );
     if (!(fmt = malloc( len ))) return 0;
-    WideCharToMultiByte( CP_ACP, 0, format, -1, fmt, len, NULL, NULL );
+    WideCharToMultiByte( CP_ACP, 0, format, -1, fmt, (int)len, NULL, NULL );
 
     if ((s = malloc( max*4 )))
     {
         if (!strftime( s, max*4, fmt, mstm )) s[0] = 0;
-        len = MultiByteToWideChar( CP_ACP, 0, s, -1, str, max );
+        len = MultiByteToWideChar( CP_ACP, 0, s, -1, str, (int)max );
         if (len) len--;
         free( s );
     }

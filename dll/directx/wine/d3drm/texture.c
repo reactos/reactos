@@ -76,7 +76,7 @@ static BOOL d3drm_image_palettise(D3DRMIMAGE *image, unsigned char *src_data,
     if (w > (~(SIZE_T)0 - 3) / h)
         return FALSE;
 
-    src_pitch = flip ? -w * 3 : w * 3;
+    src_pitch = flip ? -(SSIZE_T)w * 3 : w * 3;
     dst_pitch = (w + 3) & ~3;
 
     if (!(dst_data = heap_alloc(dst_pitch * h)))
@@ -158,7 +158,7 @@ static HRESULT d3drm_image_load_32(D3DRMIMAGE *image, unsigned char *src_data,
     if (w > (~(SIZE_T)0 / 4) / h)
         return D3DRMERR_BADALLOC;
 
-    src_pitch = flip ? -w * 3 : w * 3;
+    src_pitch = flip ? -(SSIZE_T)w * 3 : w * 3;
     dst_pitch = w * 4;
 
     if (!(dst_data = heap_alloc(dst_pitch * h)))

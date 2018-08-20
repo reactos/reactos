@@ -1507,7 +1507,7 @@ BOOL WINAPI mciFreeCommandResource(UINT uTable)
     FreeResource(S_MciCmdTable[uTable].hMem);
     S_MciCmdTable[uTable].hMem = NULL;
     S_MciCmdTable[uTable].lpTable = NULL;
-    HeapFree(GetProcessHeap(), 0, S_MciCmdTable[uTable].aVerbs);
+    HeapFree(GetProcessHeap(), 0, (PVOID)S_MciCmdTable[uTable].aVerbs);
     S_MciCmdTable[uTable].aVerbs = 0;
     S_MciCmdTable[uTable].nVerbs = 0;
     return TRUE;
@@ -1538,7 +1538,7 @@ static	DWORD MCI_Open(DWORD dwParam, LPMCI_OPEN_PARMSW lpParms)
 
     if (dwParam & MCI_OPEN_TYPE) {
 	if (dwParam & MCI_OPEN_TYPE_ID) {
-	    WORD uDevType = LOWORD(lpParms->lpstrDeviceType);
+	    WORD uDevType = LOWORD((DWORD_PTR)lpParms->lpstrDeviceType);
 
 	    if (uDevType < MCI_DEVTYPE_FIRST ||
 		uDevType > MCI_DEVTYPE_LAST ||
@@ -1728,7 +1728,7 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
     if (lpParms == NULL)			return MCIERR_NULL_PARAMETER_BLOCK;
     if (lpParms->lpstrReturn == NULL)		return MCIERR_PARAM_OVERFLOW;
 
-    TRACE("(%08x, %08X, %p[num=%d, wDevTyp=%u])\n",
+    TRACE("(%08x, %08lX, %08lX[num=%ld, wDevTyp=%u])\n",
 	  uDevID, dwFlags, lpParms, lpParms->dwNumber, lpParms->wDeviceType);
     if ((WORD)MCI_ALL_DEVICE_ID == LOWORD(uDevID))
 	uDevID = MCI_ALL_DEVICE_ID; /* Be compatible with Win9x */
@@ -2278,7 +2278,7 @@ HTASK WINAPI mciGetCreatorTask(MCIDEVICEID uDeviceID)
     LPWINE_MCIDRIVER	wmd;
     HTASK ret = 0;
 
-    if ((wmd = MCI_GetDriver(uDeviceID))) ret = (HTASK)wmd->CreatorThread;
+    if ((wmd = MCI_GetDriver(uDeviceID))) ret = (HTASK)UlongToHandle(wmd->CreatorThread);
 
     TRACE("(%u) => %p\n", uDeviceID, ret);
     return ret;

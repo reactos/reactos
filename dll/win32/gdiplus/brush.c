@@ -514,7 +514,7 @@ GpStatus WINGDIPAPI GdipCreateLineBrushFromRectWithAngle(GDIPCONST GpRectF* rect
 
         while(angle >= 90) {
             angle -= 180;
-            add_angle += M_PI;
+            add_angle += (float)M_PI;
         }
 
         if (angle != 90 && angle != -90)

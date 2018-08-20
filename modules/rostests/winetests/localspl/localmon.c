@@ -450,9 +450,9 @@ static void test_ClosePort(void)
     if (have_com[0]) {
         nameW = have_com;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res = pOpenPort(nameW, &hPort);
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res2 = pOpenPort(nameW, &hPort2);
 
         if (res2 && (hPort2 != hPort)) {
@@ -472,9 +472,9 @@ static void test_ClosePort(void)
     if (have_lpt[0]) {
         nameW = have_lpt;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res = pOpenPort(nameW, &hPort);
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res2 = pOpenPort(nameW, &hPort2);
 
         if (res2 && (hPort2 != hPort)) {
@@ -494,9 +494,9 @@ static void test_ClosePort(void)
     if (have_file[0]) {
         nameW = have_file;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res = pOpenPort(nameW, &hPort);
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         res2 = pOpenPort(nameW, &hPort2);
 
         if (res2 && (hPort2 != hPort)) {
@@ -521,7 +521,7 @@ static void test_ClosePort(void)
         trace("got %u with %u\n", res, GetLastError());
 
         SetLastError(0xdeadbeef);
-        res = pClosePort( (HANDLE) 0xdeadbeef);
+        res = pClosePort( (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef);
         trace("got %u with %u\n", res, GetLastError());
 
         SetLastError(0xdeadbeef);
@@ -759,14 +759,14 @@ static void test_OpenPort(void)
     if (have_com[0]) {
         nameW = have_com;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res = pOpenPort(nameW, &hPort);
         ok( res, "got %u with %u and %p (expected '!= 0')\n",
             res, GetLastError(), hPort);
 
         /* the same HANDLE is returned for a second OpenPort in native localspl */
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res2 = pOpenPort(nameW, &hPort2);
         ok( res2, "got %u with %u and %p (expected '!= 0')\n",
@@ -779,7 +779,7 @@ static void test_OpenPort(void)
     if (have_lpt[0]) {
         nameW = have_lpt;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res = pOpenPort(nameW, &hPort);
         ok( res || (GetLastError() == ERROR_ACCESS_DENIED),
@@ -787,7 +787,7 @@ static void test_OpenPort(void)
             res, GetLastError(), hPort);
 
         /* the same HANDLE is returned for a second OpenPort in native localspl */
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res2 = pOpenPort(nameW, &hPort2);
         ok( res2 || (GetLastError() == ERROR_ACCESS_DENIED),
@@ -801,14 +801,14 @@ static void test_OpenPort(void)
     if (have_file[0]) {
         nameW = have_file;
 
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res = pOpenPort(nameW, &hPort);
         ok( res, "got %u with %u and %p (expected '!= 0')\n",
             res, GetLastError(), hPort);
 
         /* a different HANDLE is returned for a second OpenPort */
-        hPort2 = (HANDLE) 0xdeadbeef;
+        hPort2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res2 = pOpenPort(nameW, &hPort2);
         ok( res2 && (hPort2 != hPort),
@@ -822,31 +822,31 @@ static void test_OpenPort(void)
     if (0) {
         /* this test crash native localspl (w2k+xp) */
         if (nameW) {
-            hPort = (HANDLE) 0xdeadbeef;
+            hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
             SetLastError(0xdeadbeef);
             res = pOpenPort(nameW, NULL);
             trace("got %u with %u and %p\n", res, GetLastError(), hPort);
         }
     }
 
-    hPort = (HANDLE) 0xdeadbeef;
+    hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     SetLastError(0xdeadbeef);
     res = pOpenPort(does_not_existW, &hPort);
-    ok (!res && (hPort == (HANDLE) 0xdeadbeef),
+    ok (!res && (hPort == (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef),
         "got %u with 0x%x and %p (expected '0' and 0xdeadbeef)\n", res, GetLastError(), hPort);
     if (res) pClosePort(hPort);
 
-    hPort = (HANDLE) 0xdeadbeef;
+    hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     SetLastError(0xdeadbeef);
     res = pOpenPort(emptyW, &hPort);
-    ok (!res && (hPort == (HANDLE) 0xdeadbeef),
+    ok (!res && (hPort == (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef),
         "got %u with 0x%x and %p (expected '0' and 0xdeadbeef)\n", res, GetLastError(), hPort);
     if (res) pClosePort(hPort);
 
 
     /* NULL as name crash native localspl (w2k+xp) */
     if (0) {
-        hPort = (HANDLE) 0xdeadbeef;
+        hPort = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
         SetLastError(0xdeadbeef);
         res = pOpenPort(NULL, &hPort);
         trace("got %u with %u and %p\n", res, GetLastError(), hPort);
@@ -871,7 +871,7 @@ static void test_XcvClosePort(void)
 
 
     SetLastError(0xdeadbeef);
-    hXcv2 = (HANDLE) 0xdeadbeef;
+    hXcv2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, &hXcv2);
     ok(res, "returned %d with %u and %p (expected '!= 0')\n", res, GetLastError(), hXcv2);
 
@@ -1434,7 +1434,7 @@ static void test_XcvOpenPort(void)
 
     /* The returned handle is the result from a previous "spoolss.dll,DllAllocSplMem" */
     SetLastError(0xdeadbeef);
-    hXcv2 = (HANDLE) 0xdeadbeef;
+    hXcv2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = pXcvOpenPort(emptyW, SERVER_ACCESS_ADMINISTER, &hXcv2);
     ok(res, "returned %d with %u and %p (expected '!= 0')\n", res, GetLastError(), hXcv2);
     if (res) pXcvClosePort(hXcv2);
@@ -1442,7 +1442,7 @@ static void test_XcvOpenPort(void)
 
     /* The ACCESS_MASK is not checked in XcvOpenPort */
     SetLastError(0xdeadbeef);
-    hXcv2 = (HANDLE) 0xdeadbeef;
+    hXcv2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = pXcvOpenPort(emptyW, 0, &hXcv2);
     ok(res, "returned %d with %u and %p (expected '!= 0')\n", res, GetLastError(), hXcv2);
     if (res) pXcvClosePort(hXcv2);
@@ -1450,13 +1450,13 @@ static void test_XcvOpenPort(void)
 
     /* A copy of pszObject is saved in the Memory-Block */
     SetLastError(0xdeadbeef);
-    hXcv2 = (HANDLE) 0xdeadbeef;
+    hXcv2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = pXcvOpenPort(portname_lpt1W, SERVER_ALL_ACCESS, &hXcv2);
     ok(res, "returned %d with %u and %p (expected '!= 0')\n", res, GetLastError(), hXcv2);
     if (res) pXcvClosePort(hXcv2);
 
     SetLastError(0xdeadbeef);
-    hXcv2 = (HANDLE) 0xdeadbeef;
+    hXcv2 = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeef;
     res = pXcvOpenPort(portname_fileW, SERVER_ALL_ACCESS, &hXcv2);
     ok(res, "returned %d with %u and %p (expected '!= 0')\n", res, GetLastError(), hXcv2);
     if (res) pXcvClosePort(hXcv2);

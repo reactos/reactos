@@ -201,7 +201,7 @@ RpcPktHdr *RPCRT4_BuildBindHeader(ULONG DataRepresentation,
   ctxt_elem = (RpcContextElement *)(&header->bind + 1);
 
   RPCRT4_BuildCommonHeader(header, PKT_BIND, DataRepresentation);
-  header->common.frag_len = sizeof(header->bind) + FIELD_OFFSET(RpcContextElement, transfer_syntaxes[1]);
+  header->common.frag_len = (ULONG)(sizeof(header->bind) + FIELD_OFFSET(RpcContextElement, transfer_syntaxes[1]));
   header->bind.max_tsize = MaxTransmissionSize;
   header->bind.max_rsize = MaxReceiveSize;
   header->bind.assoc_gid = AssocGroupId;
@@ -278,7 +278,7 @@ RpcPktHdr *RPCRT4_BuildBindAckHeader(ULONG DataRepresentation,
   header->bind_ack.max_rsize = MaxReceiveSize;
   header->bind_ack.assoc_gid = AssocGroupId;
   server_address = (RpcAddressString*)(&header->bind_ack + 1);
-  server_address->length = strlen(ServerAddress) + 1;
+  server_address->length = (ULONG)strlen(ServerAddress) + 1;
   strcpy(server_address->string, ServerAddress);
   /* results is 4-byte aligned */
   results = (RpcResultList*)((ULONG_PTR)server_address + ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4));
@@ -306,7 +306,7 @@ RpcPktHdr *RPCRT4_BuildHttpHeader(ULONG DataRepresentation,
    * manually here */
   header->common.flags = RPC_FLG_FIRST|RPC_FLG_LAST;
   header->common.call_id = 0;
-  header->common.frag_len = sizeof(header->http) + payload_size;
+  header->common.frag_len = (ULONG)(sizeof(header->http) + payload_size);
   header->http.flags = flags;
   header->http.num_data_items = num_data_items;
 

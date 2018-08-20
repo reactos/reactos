@@ -381,7 +381,7 @@ do {                                                                            
     }
 
     SetConsoleSetting(L"CodePage", REG_DWORD, sizeof(DWORD), &ConsoleInfo->CodePage, CP_ACP /* CP_OEMCP */);
-    SetConsoleSetting(L"FaceName", REG_SZ, (wcslen(ConsoleInfo->FaceName) + 1) * sizeof(WCHAR), ConsoleInfo->FaceName, UNICODE_NULL); // wcsnlen
+    SetConsoleSetting(L"FaceName", REG_SZ, (ULONG)(wcslen(ConsoleInfo->FaceName) + 1) * sizeof(WCHAR), ConsoleInfo->FaceName, UNICODE_NULL); // wcsnlen
     SetConsoleSetting(L"FontFamily", REG_DWORD, sizeof(DWORD), &ConsoleInfo->FontFamily, FF_DONTCARE);
 
     Storage = MAKELONG(ConsoleInfo->FontSize.X, ConsoleInfo->FontSize.Y); // Width, Height

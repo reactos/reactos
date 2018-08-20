@@ -261,7 +261,7 @@ struct protocol {
 struct hash_bucket {
 	struct hash_bucket *next;
 	unsigned char *name;
-	int len;
+	size_t len;
 	unsigned char *value;
 };
 
@@ -362,8 +362,8 @@ int interface_link_status(char *);
 
 /* hash.c */
 struct hash_table *new_hash(void);
-void add_hash(struct hash_table *, unsigned char *, int, unsigned char *);
-unsigned char *hash_lookup(struct hash_table *, unsigned char *, int);
+void add_hash(struct hash_table *, unsigned char *, size_t, unsigned char *);
+unsigned char *hash_lookup(struct hash_table *, unsigned char *, size_t);
 
 /* tables.c */
 extern struct dhcp_option dhcp_options[256];

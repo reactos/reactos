@@ -1865,7 +1865,7 @@ static inline void array_compute_and_size_conformance(
     if (fc == FC_C_CSTRING)
     {
       TRACE("string=%s\n", debugstr_a((const char *)pMemory));
-      pStubMsg->ActualCount = strlen((const char *)pMemory)+1;
+      pStubMsg->ActualCount = (ULONG)strlen((const char *)pMemory)+1;
     }
     else
     {
@@ -1988,7 +1988,7 @@ static inline void array_compute_and_write_conformance(
     if (fc == FC_C_CSTRING)
     {
       TRACE("string=%s\n", debugstr_a((const char *)pMemory));
-      pStubMsg->ActualCount = strlen((const char *)pMemory)+1;
+      pStubMsg->ActualCount = (ULONG)strlen((const char *)pMemory)+1;
     }
     else
     {

@@ -1313,7 +1313,7 @@ static BOOL write_resources( QUEUEDUPDATES *updates, LPBYTE base, struct resourc
                 memcpy( &base[si->data_ofs], data->lpData, data->cbData );
                 si->data_ofs += data->cbData;
 
-                pad_size = (-si->data_ofs)&3;
+                pad_size = (-(LONG)si->data_ofs)&3;
                 res_write_padding( &base[si->data_ofs], pad_size );
                 si->data_ofs += pad_size;
             }
@@ -1471,7 +1471,7 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
 
     if (!sec->PointerToRawData)  /* empty section */
     {
-        sec->PointerToRawData = write_map->size + (-write_map->size) % PeFileAlignment;
+        sec->PointerToRawData = write_map->size + (-(LONG)write_map->size) % PeFileAlignment;
         sec->SizeOfRawData = 0;
     }
 
@@ -1481,7 +1481,7 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
 
     /* round up the section size */
     section_size = res_size.total_size;
-    section_size += (-section_size) % PeFileAlignment;
+    section_size += (-(LONG)section_size) % PeFileAlignment;
 
     TRACE("requires %08x (%08x) bytes\n", res_size.total_size, section_size );
 
@@ -1489,10 +1489,10 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
     if (section_size != sec->SizeOfRawData)
     {
         DWORD old_size = write_map->size;
-        DWORD virtual_section_size = res_size.total_size + (-res_size.total_size) % PeSectionAlignment;
-        int delta = section_size - (sec->SizeOfRawData + (-sec->SizeOfRawData) % PeFileAlignment);
+        DWORD virtual_section_size = res_size.total_size + (-(LONG)res_size.total_size) % PeSectionAlignment;
+        int delta = section_size - (sec->SizeOfRawData + (-(LONG)sec->SizeOfRawData) % PeFileAlignment);
         int rva_delta = virtual_section_size -
-            (sec->Misc.VirtualSize + (-sec->Misc.VirtualSize) % PeSectionAlignment);
+            (sec->Misc.VirtualSize + (-(LONG)sec->Misc.VirtualSize) % PeSectionAlignment);
         /* when new section is added it could end past current mapping size */
         BOOL rsrc_is_last = sec->PointerToRawData + sec->SizeOfRawData >= old_size;
 	/* align .rsrc size when possible */

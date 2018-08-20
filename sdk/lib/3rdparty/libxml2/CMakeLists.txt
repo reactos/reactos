@@ -68,6 +68,8 @@ if(MSVC AND (NOT USE_CLANG_CL))
     # Unreferenced local variable
     replace_compile_flags("/we4101" " ")
     add_target_compile_flags(libxml2 "/wd4101")
+    # Conversion from 'x' to 'y', possible loss of data
+    add_target_compile_flags(libxml2 "/wd4267")
     # Local variable initialized but not referenced
     replace_compile_flags("/we4189" " ")
 else()

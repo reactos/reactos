@@ -69,7 +69,7 @@ HCLUSTER WINAPI OpenCluster(LPCWSTR lpszClusterName)
 {
     FIXME("(%s) stub!\n", debugstr_w(lpszClusterName));
 
-    return (HCLUSTER)0xdeadbeef;
+    return (HCLUSTER)(ULONG_PTR)0xdeadbeefdeadbeef;
 }
 
 /***********************************************************************
@@ -91,7 +91,7 @@ HCLUSENUM WINAPI ClusterOpenEnum(HCLUSTER hCluster, DWORD dwType)
 {
     FIXME("(%p, %u) stub!\n", hCluster,dwType);
 
-    return (HCLUSENUM)0xdeadbeef;
+    return (HCLUSENUM)(ULONG_PTR)0xdeadbeefdeadbeef;
 }
 
 /***********************************************************************

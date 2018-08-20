@@ -3,9 +3,11 @@
 #ifdef _WIN64
 #define __typeof_intptr long long
 #define __typeof_longptr long long
+#define __typeof_DWORD unsigned long
 #else
 #define __typeof_intptr int
 #define __typeof_longptr long
+#define __typeof_DWORD unsigned int
 #endif
 
 #ifdef __cplusplus
@@ -43,7 +45,7 @@ typedef int (__stdcall typeof(NotifyIME))(void *, unsigned int, unsigned int, un
 typedef int (__stdcall typeof(ImeRegisterWord))(const __typeof_wchar *, unsigned int, const __typeof_wchar *);
 typedef int (__stdcall typeof(ImeUnregisterWord))(const __typeof_wchar *, unsigned int, const __typeof_wchar *);
 typedef unsigned int (__stdcall typeof(ImeGetRegisterWordStyle))(unsigned int, struct tagSTYLEBUFW *);
-typedef unsigned int (__stdcall typeof(ImeEnumRegisterWord))(int (__stdcall *)(const __typeof_wchar *, unsigned int, const __typeof_wchar *, void *), const __typeof_wchar *, unsigned int, const __typeof_wchar *, void *);
+typedef unsigned int (__stdcall typeof(ImeEnumRegisterWord))(int (__stdcall *)(const __typeof_wchar *, __typeof_DWORD, const __typeof_wchar *, void *), const __typeof_wchar *, unsigned int, const __typeof_wchar *, void *);
 typedef int (__stdcall typeof(ImeSetCompositionString))(void *, unsigned int, const void *, unsigned int, const void *, unsigned int);
 typedef unsigned int (__stdcall typeof(ImeConversionList))(void *, const __typeof_wchar *, struct tagCANDIDATELIST *, unsigned int, unsigned int);
 typedef int (__stdcall typeof(ImeProcessKey))(void *, unsigned int, __typeof_longptr, unsigned char *);

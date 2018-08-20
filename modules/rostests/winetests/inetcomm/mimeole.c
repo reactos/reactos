@@ -192,7 +192,7 @@ static void test_CreateBody(void)
 {
     HRESULT hr;
     IMimeBody *body;
-    HBODY handle = (void *)0xdeadbeef;
+    HBODY handle = (void *)(ULONG_PTR)0xdeadbeefdeadbeef;
     IStream *in;
     LARGE_INTEGER off;
     ULARGE_INTEGER pos;
@@ -656,7 +656,7 @@ static void test_CreateMessage(void)
     hr = IMimeMessage_GetBody(msg, IBL_PARENT, hbody, NULL);
     ok(hr == E_INVALIDARG, "ret %08x\n", hr);
 
-    hbody2 = (HBODY)0xdeadbeef;
+    hbody2 = (HBODY)(ULONG_PTR)0xdeadbeefdeadbeef;
     hr = IMimeMessage_GetBody(msg, IBL_PARENT, hbody, &hbody2);
     ok(hr == MIME_E_NOT_FOUND, "ret %08x\n", hr);
     ok(hbody2 == NULL, "hbody2 %p\n", hbody2);
@@ -1600,7 +1600,7 @@ static void test_mhtml_protocol(void)
     IUnknown_Release(unk2);
     IUnknown_Release(unk);
 
-    hres = IClassFactory_CreateInstance(class_factory, (IUnknown*)0xdeadbeef, &IID_IInternetProtocol, (void**)&unk2);
+    hres = IClassFactory_CreateInstance(class_factory, (IUnknown*)(ULONG_PTR)0xdeadbeefdeadbeef, &IID_IInternetProtocol, (void**)&unk2);
     ok(hres == CLASS_E_NOAGGREGATION, "CreateInstance returned: %08x\n", hres);
 
     IClassFactory_Release(class_factory);

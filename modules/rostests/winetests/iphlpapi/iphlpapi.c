@@ -1628,11 +1628,11 @@ static void test_CreateSortedAddressPairs(void)
     ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
     ok( pair_count == 0xdeadbeef, "got %u\n", pair_count );
 
-    pair = (SOCKADDR_IN6_PAIR *)0xdeadbeef;
+    pair = (SOCKADDR_IN6_PAIR *)(ULONG_PTR)0xdeadbeefdeadbeef;
     pair_count = 0xdeadbeef;
     ret = pCreateSortedAddressPairs( NULL, 0, NULL, 1, 0, &pair, &pair_count );
     ok( ret == ERROR_INVALID_PARAMETER, "got %u\n", ret );
-    ok( pair == (SOCKADDR_IN6_PAIR *)0xdeadbeef, "got %p\n", pair );
+    ok( pair == (SOCKADDR_IN6_PAIR *)(ULONG_PTR)0xdeadbeefdeadbeef, "got %p\n", pair );
     ok( pair_count == 0xdeadbeef, "got %u\n", pair_count );
 
     pair = NULL;

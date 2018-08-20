@@ -2141,13 +2141,13 @@ DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig, DWORD usage
         if(!numColors) numColors = 1 << pbmci->bmciHeader.bcBitCount;
         if(usage == DIB_PAL_COLORS)
         {
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
+            RtlZeroMemory(pbmci->bmciColors, ((SIZE_T)1 << pbmci->bmciHeader.bcBitCount) * sizeof(WORD));
             RtlCopyMemory(pbmci->bmciColors, converted->bmiColors, numColors * sizeof(WORD));
         }
         else
         {
             UINT i;
-            RtlZeroMemory(pbmci->bmciColors, (1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
+            RtlZeroMemory(pbmci->bmciColors, ((SIZE_T)1 << pbmci->bmciHeader.bcBitCount) * sizeof(RGBTRIPLE));
             for(i=0; i<numColors; i++)
             {
                 pbmci->bmciColors[i].rgbtRed = converted->bmiColors[i].rgbRed;

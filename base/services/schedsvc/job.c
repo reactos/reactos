@@ -262,7 +262,7 @@ SaveJob(
                            0,
                            REG_SZ,
                            (PBYTE)pJob->Command,
-                           (wcslen(pJob->Command) + 1) * sizeof(WCHAR));
+                           (DWORD)(wcslen(pJob->Command) + 1) * sizeof(WCHAR));
     if (lError != ERROR_SUCCESS)
         goto done;
 

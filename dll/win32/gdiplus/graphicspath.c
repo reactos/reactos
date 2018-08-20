@@ -1921,7 +1921,7 @@ static void widen_cap(const GpPointF *endpoint, const GpPointF *nextpoint,
         REAL segment_length = sqrtf(segment_dy*segment_dy + segment_dx*segment_dx);
         REAL distance = pen->width/2.0;
         REAL dx, dy, dx2, dy2;
-        const REAL control_point_distance = 0.5522847498307935; /* 4/3 * (sqrt(2) - 1) */
+        const REAL control_point_distance = (REAL)0.5522847498307935; /* 4/3 * (sqrt(2) - 1) */
 
         if (add_first_points)
         {

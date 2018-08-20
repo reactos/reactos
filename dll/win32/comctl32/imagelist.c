@@ -2408,7 +2408,7 @@ static void *read_bitmap(IStream *pstm, BITMAPINFO *bmi)
 
     bitsperpixel = bmi->bmiHeader.biPlanes * bmi->bmiHeader.biBitCount;
     if (bitsperpixel<=8)
-        palspace = (1<<bitsperpixel)*sizeof(RGBQUAD);
+        palspace = (1<<bitsperpixel)*(int)sizeof(RGBQUAD);
     else
         palspace = 0;
 
@@ -3212,7 +3212,7 @@ static BOOL _write_bitmap(HBITMAP hBitmap, IStream *pstm)
 
     totalSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
     if(bitCount <= 8)
-	totalSize += (1 << bitCount) * sizeof(RGBQUAD);
+	totalSize += (1 << bitCount) * (int)sizeof(RGBQUAD);
     offBits = totalSize;
     totalSize += sizeImage;
 

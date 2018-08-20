@@ -76,7 +76,7 @@ pmap_getmaps(address)
 	minutetimeout.tv_usec = 0;
 	address->sin_port = htons(PMAPPORT);
 	client = clnttcp_create(address, PMAPPROG,
-	    PMAPVERS, &sock, 50, 500);
+	    PMAPVERS, (int*)&sock, 50, 500);
 	if (client != NULL) {
 		if (CLNT_CALL(client, (rpcproc_t)PMAPPROC_DUMP,
 		    (xdrproc_t)xdr_void, NULL,

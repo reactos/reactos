@@ -43,7 +43,7 @@ malloc(size_t Size)
 {
     void *Object;
 
-    Object = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
+    Object = EngAllocMem(0, sizeof(size_t) + (ULONG)Size, TAG_FREETYPE);
     if (Object != NULL)
     {
         *((size_t *)Object) = Size;
@@ -59,7 +59,7 @@ realloc(void *Object, size_t Size)
     void *NewObject;
     size_t CopySize;
 
-    NewObject = EngAllocMem(0, sizeof(size_t) + Size, TAG_FREETYPE);
+    NewObject = EngAllocMem(0, sizeof(size_t) + (ULONG)Size, TAG_FREETYPE);
     if (NewObject != NULL)
     {
         *((size_t *)NewObject) = Size;

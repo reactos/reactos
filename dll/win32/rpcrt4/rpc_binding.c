@@ -47,7 +47,7 @@ LPSTR RPCRT4_strndupA(LPCSTR src, INT slen)
   DWORD len;
   LPSTR s;
   if (!src) return NULL;
-  if (slen == -1) slen = strlen(src);
+  if (slen == -1) slen = (INT)strlen(src);
   len = slen;
   s = HeapAlloc(GetProcessHeap(), 0, len+1);
   memcpy(s, src, len);
@@ -307,7 +307,7 @@ RPC_STATUS RPCRT4_CloseBinding(RpcBinding* Binding, RpcConnection* Connection)
 
 static LPSTR RPCRT4_strconcatA(LPSTR dst, LPCSTR src)
 {
-  DWORD len = strlen(dst), slen = strlen(src);
+  SIZE_T len = strlen(dst), slen = strlen(src);
   LPSTR ndst = HeapReAlloc(GetProcessHeap(), 0, dst, (len+slen+2)*sizeof(CHAR));
   if (!ndst)
   {
@@ -412,7 +412,7 @@ static RPC_CSTR unescape_string_binding_component(
 {
   RPC_CSTR component, p;
 
-  if (len == -1) len = strlen((const char *)string_binding);
+  if (len == -1) len = (int)strlen((const char *)string_binding);
 
   component = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(*component));
   if (!component) return NULL;
@@ -467,11 +467,11 @@ RPC_STATUS WINAPI RpcStringBindingComposeA(RPC_CSTR ObjUuid, RPC_CSTR Protseq,
         debugstr_a( (char*)Options ), StringBinding );
 
   /* overestimate for each component for escaping of delimiters */
-  if (ObjUuid && *ObjUuid) len += strlen((char*)ObjUuid) * 2 + 1;
-  if (Protseq && *Protseq) len += strlen((char*)Protseq) * 2 + 1;
-  if (NetworkAddr && *NetworkAddr) len += strlen((char*)NetworkAddr) * 2;
-  if (Endpoint && *Endpoint) len += strlen((char*)Endpoint) * 2 + 2;
-  if (Options && *Options) len += strlen((char*)Options) * 2 + 2;
+  if (ObjUuid && *ObjUuid) len += (int)strlen((char*)ObjUuid) * 2 + 1;
+  if (Protseq && *Protseq) len += (int)strlen((char*)Protseq) * 2 + 1;
+  if (NetworkAddr && *NetworkAddr) len += (int)strlen((char*)NetworkAddr) * 2;
+  if (Endpoint && *Endpoint) len += (int)strlen((char*)Endpoint) * 2 + 2;
+  if (Options && *Options) len += (int)strlen((char*)Options) * 2 + 2;
 
   data = HeapAlloc(GetProcessHeap(), 0, len);
   *StringBinding = data;

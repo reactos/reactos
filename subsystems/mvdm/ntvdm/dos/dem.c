@@ -1131,7 +1131,7 @@ static VOID WINAPI DosInitialize(LPWORD Stack)
     /* Get the DOS BIOS file name (NULL-terminated) */
     // FIXME: Isn't it possible to use some DS:SI instead??
     LPCSTR DosBiosFileName = (LPCSTR)SEG_OFF_TO_PTR(getCS(), getIP());
-    setIP(getIP() + strlen(DosBiosFileName) + 1); // Skip it
+    setIP(getIP() + (ULONG)strlen(DosBiosFileName) + 1); // Skip it
 
     DPRINT("DosInitialize('%s')\n", DosBiosFileName);
 

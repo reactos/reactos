@@ -29,7 +29,7 @@
 
 typedef LONG NTSTATUS;	/* same as in ntdef.h / winternl.h */
 
-#define UNW_FLAG_NHANDLER 0x00
+//#define UNW_FLAG_NHANDLER 0x00
 
 typedef union
 {

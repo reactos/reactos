@@ -486,8 +486,8 @@ clnt_vc_create(fd, raddr, prog, vers, sendsz, recvsz, cb_xdr, cb_fn, cb_args)
             fprintf(stderr, "_beginthreadex failed %d\n", GetLastError());
             goto err;
         } else
-            fprintf(stdout, "%04x: started the callback thread %04x\n", 
-                GetCurrentThreadId(), cl->cb_thread);
+            fprintf(stdout, "%04x: started the callback thread %04zx\n", 
+                GetCurrentThreadId(), (ULONG_PTR)cl->cb_thread);
     } else
         cl->cb_thread = INVALID_HANDLE_VALUE;
 	return (cl);
@@ -921,8 +921,8 @@ clnt_vc_destroy(cl)
 
     if (cl->cb_thread != INVALID_HANDLE_VALUE) {
         int status;
-        fprintf(stdout, "%04x: sending shutdown to callback thread %04x\n", 
-            GetCurrentThreadId(), cl->cb_thread);
+        fprintf(stdout, "%04x: sending shutdown to callback thread %04zx\n", 
+            GetCurrentThreadId(), (ULONG_PTR)cl->cb_thread);
         cl->shutdown = 1;
         mutex_unlock(&clnt_fd_lock);
         cond_signal(&vc_cv[WINSOCK_HANDLE_HASH(ct_fd)]);

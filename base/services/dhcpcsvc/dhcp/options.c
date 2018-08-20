@@ -399,7 +399,8 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 	static char optbuf[32768]; /* XXX */
 	int hunksize = 0, numhunk = -1, numelem = 0;
 	char fmtbuf[32], *op = optbuf;
-	int i, j, k, opleft = sizeof(optbuf);
+	int i, j, k;
+	size_t opleft = sizeof(optbuf);
 	unsigned char *dp = data;
 	struct in_addr foo;
 	char comma;
@@ -500,7 +501,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 	/* Cycle through the array (or hunk) printing the data. */
 	for (i = 0; i < numhunk; i++) {
 		for (j = 0; j < numelem; j++) {
-			int opcount;
+			size_t opcount;
 			switch (fmtbuf[j]) {
 			case 't':
 				if (emit_quotes) {

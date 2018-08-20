@@ -169,7 +169,7 @@ static void parse_options( const char *str )
         {
             for (i = 0; i < sizeof(debug_classes)/sizeof(debug_classes[0]); i++)
             {
-                int len = strlen(debug_classes[i]);
+                size_t len = strlen(debug_classes[i]);
                 if (len != (p - opt)) continue;
                 if (!memcmp( opt, debug_classes[i], len ))  /* found it */
                 {
@@ -367,7 +367,7 @@ static const char *default_dbgstr_an( const char *str, int n )
         sprintf( res, "#%04x", LOWORD(str) );
         return res;
     }
-    if (n == -1) n = strlen(str);
+    if (n == -1) n = (int)strlen(str);
     if (n < 0) n = 0;
     size = 10 + min( 300, n * 4 );
     dst = res = funcs.get_temp_buffer( size );

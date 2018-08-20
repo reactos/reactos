@@ -434,7 +434,7 @@ typedef struct tagMSIPACKAGE
     float center_y;
 
     UINT WordCount;
-    UINT Context;
+    MSIINSTALLCONTEXT Context;
 
     struct list subscriptions;
 

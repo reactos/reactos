@@ -1,6 +1,11 @@
 
 add_definitions(-DNO_VIZ)
 
+if(MSVC)
+    # C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+    add_compile_flags("/wd4267")
+endif()
+
 list(APPEND SOLO_SOURCE
     adler32.c
     crc32.c

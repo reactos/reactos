@@ -256,7 +256,7 @@ streamout_astring(FILE *stream, const char *string, size_t count)
 
 #if !defined(_USER32_WSPRINTF)
      if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
-        return count;
+        return (int)count;
 #endif
 
     while (count--)
@@ -284,7 +284,7 @@ streamout_wstring(FILE *stream, const wchar_t *string, size_t count)
 
 #if defined(_UNICODE) && !defined(_USER32_WSPRINTF)
      if ((stream->_flag & _IOSTRG) && (stream->_base == NULL))
-        return count;
+        return (int)count;
 #endif
 
     while (count--)

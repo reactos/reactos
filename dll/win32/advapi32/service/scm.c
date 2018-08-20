@@ -275,7 +275,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     RpcTryExcept
     {
-        dwError = RChangeServiceConfig2A((SC_RPC_HANDLE)hService,
+        dwError = RChangeServiceConfig2A((SC_RPC_HANDLE)(ULONG_PTR)hService,
                                          Info);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)

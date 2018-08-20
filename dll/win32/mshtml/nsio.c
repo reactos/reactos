@@ -3720,7 +3720,7 @@ static nsresult NSAPI nsIOService_GetConnectivity(nsIIOService *iface, cpp_bool 
     return nsIIOService_GetConnectivity(nsio, aConnectivity);
 }
 
-static nsresult NSAPI nsIOService_SetAppOffline(nsIIOService *iface, UINT32 appId, INT32 state)
+static nsresult NSAPI nsIOService_SetAppOffline(nsIIOService *iface, UINT32 appId, LONG state)
 {
     TRACE("(%d %x)\n", appId, state);
     return nsIIOService_SetAppOffline(nsio, appId, state);
@@ -3732,7 +3732,7 @@ static nsresult NSAPI nsIOService_IsAppOffline(nsIIOService *iface, UINT32 appId
     return nsIIOService_IsAppOffline(nsio, appId, _retval);
 }
 
-static nsresult NSAPI nsIOService_GetAppOfflineState(nsIIOService *iface, UINT32 appId, INT32 *_retval)
+static nsresult NSAPI nsIOService_GetAppOfflineState(nsIIOService *iface, UINT32 appId, LONG *_retval)
 {
     TRACE("(%d %p)\n", appId, _retval);
     return nsIIOService_GetAppOfflineState(nsio, appId, _retval);

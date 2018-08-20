@@ -2710,9 +2710,9 @@ static void print_backtrace(script_ctx_t *ctx)
             for(i=0; i < frame->argc; i++) {
                 if(i < frame->function->param_cnt)
                     WARN("%s%s=%s", i ? ", " : "", debugstr_w(frame->function->params[i]),
-                         debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+                         debugstr_jsval(ctx->stack[local_off(frame, -(int)i-1)]));
                 else
-                    WARN("%s%s", i ? ", " : "", debugstr_jsval(ctx->stack[local_off(frame, -i-1)]));
+                    WARN("%s%s", i ? ", " : "", debugstr_jsval(ctx->stack[local_off(frame, -(int)i-1)]));
             }
         }else {
             WARN("[detached frame]");

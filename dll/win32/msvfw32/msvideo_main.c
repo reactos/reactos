@@ -1345,9 +1345,9 @@ HANDLE VFWAPI ICImageDecompress(
 		if ( lpbiOut->bmiHeader.biBitCount <= 8 )
 		{
 			if ( lpbiOut->bmiHeader.biClrUsed == 0 )
-				cbHdr += sizeof(RGBQUAD) * (1<<lpbiOut->bmiHeader.biBitCount);
+				cbHdr += (ULONG)sizeof(RGBQUAD) * (1<<lpbiOut->bmiHeader.biBitCount);
 			else
-				cbHdr += sizeof(RGBQUAD) * lpbiOut->bmiHeader.biClrUsed;
+				cbHdr += (ULONG)sizeof(RGBQUAD) * lpbiOut->bmiHeader.biClrUsed;
 		}
 	}
 	else
@@ -1367,9 +1367,9 @@ HANDLE VFWAPI ICImageDecompress(
 			 lpbiIn->bmiHeader.biBitCount == lpbiOut->bmiHeader.biBitCount )
 		{
 			if ( lpbiIn->bmiHeader.biClrUsed == 0 )
-				memcpy( lpbiOut->bmiColors, lpbiIn->bmiColors, sizeof(RGBQUAD)*(1<<lpbiOut->bmiHeader.biBitCount) );
+				memcpy( lpbiOut->bmiColors, lpbiIn->bmiColors, (ULONG)sizeof(RGBQUAD)*(1<<lpbiOut->bmiHeader.biBitCount) );
 			else
-				memcpy( lpbiOut->bmiColors, lpbiIn->bmiColors, sizeof(RGBQUAD)*lpbiIn->bmiHeader.biClrUsed );
+				memcpy( lpbiOut->bmiColors, lpbiIn->bmiColors, (ULONG)sizeof(RGBQUAD)*lpbiIn->bmiHeader.biClrUsed );
 		}
 		if ( lpbiOut->bmiHeader.biBitCount <= 8 &&
 			 lpbiOut->bmiHeader.biClrUsed == 0 )

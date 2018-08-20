@@ -334,7 +334,7 @@ __rpc_get_time_offset(td, srv, thost, uaddr, netid)
 	 * standard with SVR4. Since most everyone supports TCP/IP
 	 * we could consider trying the rtime call first.
 	 */
-	clnt = clnttcp_create(&sin, RPCBPROG, RPCBVERS, &s, 0, 0);
+	clnt = clnttcp_create(&sin, RPCBPROG, RPCBVERS, (int*)&s, 0, 0);
 	if (clnt == NULL) {
 		msg("unable to create client handle to rpcbind.");
 		if (needfree)

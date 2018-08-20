@@ -2077,15 +2077,15 @@ mp_exptmod_fast (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y, int
   }
 
   /* compute the value at M[1<<(winsize-1)] by squaring M[1] (winsize-1) times */
-  if ((err = mp_copy (&M[1], &M[1 << (winsize - 1)])) != MP_OKAY) {
+  if ((err = mp_copy (&M[1], &M[1ll << (winsize - 1)])) != MP_OKAY) {
     goto __RES;
   }
 
   for (x = 0; x < (winsize - 1); x++) {
-    if ((err = mp_sqr (&M[1 << (winsize - 1)], &M[1 << (winsize - 1)])) != MP_OKAY) {
+    if ((err = mp_sqr (&M[1ll << (winsize - 1)], &M[1ll << (winsize - 1)])) != MP_OKAY) {
       goto __RES;
     }
-    if ((err = redux (&M[1 << (winsize - 1)], P, mp)) != MP_OKAY) {
+    if ((err = redux (&M[1ll << (winsize - 1)], P, mp)) != MP_OKAY) {
       goto __RES;
     }
   }
@@ -2218,7 +2218,7 @@ mp_exptmod_fast (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y, int
 __RES:mp_clear (&res);
 __M:
   mp_clear(&M[1]);
-  for (x = 1<<(winsize-1); x < (1 << winsize); x++) {
+  for (x = 1ll<<(winsize-1); x < (1ll << winsize); x++) {
     mp_clear (&M[x]);
   }
   return err;
@@ -4072,16 +4072,16 @@ static int s_mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int 
   /* compute the value at M[1<<(winsize-1)] by squaring 
    * M[1] (winsize-1) times 
    */
-  if ((err = mp_copy (&M[1], &M[1 << (winsize - 1)])) != MP_OKAY) {
+  if ((err = mp_copy (&M[1], &M[1ll << (winsize - 1)])) != MP_OKAY) {
     goto __MU;
   }
 
   for (x = 0; x < (winsize - 1); x++) {
-    if ((err = mp_sqr (&M[1 << (winsize - 1)], 
-                       &M[1 << (winsize - 1)])) != MP_OKAY) {
+    if ((err = mp_sqr (&M[1ll << (winsize - 1)], 
+                       &M[1ll << (winsize - 1)])) != MP_OKAY) {
       goto __MU;
     }
-    if ((err = mp_reduce (&M[1 << (winsize - 1)], P, &mu)) != MP_OKAY) {
+    if ((err = mp_reduce (&M[1ll << (winsize - 1)], P, &mu)) != MP_OKAY) {
       goto __MU;
     }
   }

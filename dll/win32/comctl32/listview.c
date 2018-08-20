@@ -648,7 +648,7 @@ static const char* debuglvitem_t(const LVITEMW *lpLVItem, BOOL isW)
     if (len == -1) goto end;
     buf += len; size -= len;
     if (lpLVItem->mask & LVIF_PARAM)
-	len = snprintf(buf, size, "lParam=%lx, ", lpLVItem->lParam);
+	len = snprintf(buf, size, "lParam=%zx, ", lpLVItem->lParam);
     else len = 0;
     if (len == -1) goto end;
     buf += len; size -= len;
@@ -9807,7 +9807,7 @@ static LRESULT LISTVIEW_VScroll(LISTVIEW_INFO *infoPtr, INT nScrollCode,
         break;
 
     case SB_PAGEUP:
-	nScrollDiff = -scrollInfo.nPage;
+	nScrollDiff = -(INT)scrollInfo.nPage;
         break;
 
     case SB_PAGEDOWN:
@@ -9912,7 +9912,7 @@ static LRESULT LISTVIEW_HScroll(LISTVIEW_INFO *infoPtr, INT nScrollCode,
         break;
 
     case SB_PAGELEFT:
-	nScrollDiff = -scrollInfo.nPage;
+	nScrollDiff = -(INT)scrollInfo.nPage;
         break;
 
     case SB_PAGERIGHT:

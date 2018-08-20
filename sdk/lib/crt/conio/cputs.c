@@ -14,7 +14,7 @@ int CDECL _cputs(const char* str)
 #endif
 
   if (!MSVCRT_CHECK_PMT(str != NULL)) return -1;
-  len = strlen(str);
+  len = (int)strlen(str);
 
 #ifndef __REACTOS__ /* r54651 */
   LOCK_CONSOLE;

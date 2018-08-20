@@ -10171,7 +10171,7 @@ static void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, 
         }
         /* Set width and height of the metafile */
         OlePres.dwExtentX = dwExtentX;
-        OlePres.dwExtentY = -dwExtentY;
+        OlePres.dwExtentY = -(LONG)dwExtentY;
 
         /* Set Data and Length */
         if(dwDataLength > sizeof(METAFILEPICT16))
@@ -10424,7 +10424,7 @@ static void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM
 
         /*Set width and Height */
         pOleStreamData[1].dwMetaFileWidth = olePress.dwExtentX;
-        pOleStreamData[1].dwMetaFileHeight = -olePress.dwExtentY;
+        pOleStreamData[1].dwMetaFileHeight = -(LONG)olePress.dwExtentY;
         if(olePress.dwSize > 0)
         {
             /* Set Length */

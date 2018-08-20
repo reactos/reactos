@@ -676,15 +676,17 @@ struct NSContainer {
     HWND hwnd;
 };
 
+enum eventid_t;
+
 typedef struct {
     HRESULT (*qi)(HTMLDOMNode*,REFIID,void**);
     void (*destructor)(HTMLDOMNode*);
     const cpc_entry_t *cpc_entries;
     HRESULT (*clone)(HTMLDOMNode*,nsIDOMNode*,HTMLDOMNode**);
-    HRESULT (*handle_event)(HTMLDOMNode*,DWORD,nsIDOMEvent*,BOOL*);
+    HRESULT (*handle_event)(HTMLDOMNode*, enum eventid_t,nsIDOMEvent*,BOOL*);
     HRESULT (*get_attr_col)(HTMLDOMNode*,HTMLAttributeCollection**);
     event_target_t **(*get_event_target_ptr)(HTMLDOMNode*);
-    HRESULT (*fire_event)(HTMLDOMNode*,DWORD,BOOL*);
+    HRESULT (*fire_event)(HTMLDOMNode*,enum eventid_t,BOOL*);
     HRESULT (*put_disabled)(HTMLDOMNode*,VARIANT_BOOL);
     HRESULT (*get_disabled)(HTMLDOMNode*,VARIANT_BOOL*);
     HRESULT (*get_document)(HTMLDOMNode*,IDispatch**);
@@ -1005,7 +1007,7 @@ HRESULT HTMLElement_QI(HTMLDOMNode*,REFIID,void**) DECLSPEC_HIDDEN;
 void HTMLElement_destructor(HTMLDOMNode*) DECLSPEC_HIDDEN;
 HRESULT HTMLElement_clone(HTMLDOMNode*,nsIDOMNode*,HTMLDOMNode**) DECLSPEC_HIDDEN;
 HRESULT HTMLElement_get_attr_col(HTMLDOMNode*,HTMLAttributeCollection**) DECLSPEC_HIDDEN;
-HRESULT HTMLElement_handle_event(HTMLDOMNode*,DWORD,nsIDOMEvent*,BOOL*) DECLSPEC_HIDDEN;
+HRESULT HTMLElement_handle_event(HTMLDOMNode*, enum eventid_t,nsIDOMEvent*,BOOL*) DECLSPEC_HIDDEN;
 
 HRESULT HTMLFrameBase_QI(HTMLFrameBase*,REFIID,void**) DECLSPEC_HIDDEN;
 void HTMLFrameBase_destructor(HTMLFrameBase*) DECLSPEC_HIDDEN;
@@ -1154,7 +1156,7 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
     LPWSTR ret = NULL;
 
     if(str) {
-        DWORD size;
+        SIZE_T size;
 
         size = (strlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
@@ -1186,7 +1188,7 @@ static inline char *heap_strdupA(const char *str)
     char *ret = NULL;
 
     if(str) {
-        DWORD size;
+        SIZE_T size;
 
         size = strlen(str)+1;
         ret = heap_alloc(size);
@@ -1232,7 +1234,7 @@ static inline WCHAR *heap_strdupUtoW(const char *str)
     WCHAR *ret = NULL;
 
     if(str) {
-        size_t len;
+        int len;
 
         len = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
         ret = heap_alloc(len*sizeof(WCHAR));
@@ -1248,7 +1250,7 @@ static inline char *heap_strdupWtoU(const WCHAR *str)
     char *ret = NULL;
 
     if(str) {
-        size_t size = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
+        int size = WideCharToMultiByte(CP_UTF8, 0, str, -1, NULL, 0, NULL, NULL);
         ret = heap_alloc(size);
         if(ret)
             WideCharToMultiByte(CP_UTF8, 0, str, -1, ret, size, NULL, NULL);

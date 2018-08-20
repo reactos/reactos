@@ -117,7 +117,7 @@ NDIS_STATUS LoopRegisterAdapter(
 
   Loopback->Name.Buffer = L"Loopback";
   Loopback->Name.MaximumLength = Loopback->Name.Length =
-      wcslen(Loopback->Name.Buffer) * sizeof(WCHAR);
+      (USHORT)wcslen(Loopback->Name.Buffer) * sizeof(WCHAR);
 
   AddrInitIPv4(&Loopback->Unicast, LOOPBACK_ADDRESS_IPv4);
   AddrInitIPv4(&Loopback->Netmask, LOOPBACK_ADDRMASK_IPv4);

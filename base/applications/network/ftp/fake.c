@@ -120,14 +120,14 @@ const char *fprintfSocket(int s, const char *format, ...)
    vsprintf(buffer, format, argptr);
    va_end(argptr);
 
-   send(s, buffer, strlen(buffer), 0);
+   send(s, buffer, (int)strlen(buffer), 0);
 
    return NULL;
 }
 
 const char *fputsSocket(const char *format, int s)
 {
-   send(s, format, strlen(format), 0);
+   send(s, format, (int)strlen(format), 0);
 
    return NULL;
 }
@@ -241,7 +241,7 @@ char *getpass (const char * prompt)
   if (in == INVALID_HANDLE_VALUE || err == INVALID_HANDLE_VALUE)
     return NULL;
 
-  if (WriteFile (err, prompt, strlen (prompt), &count, NULL))
+  if (WriteFile (err, prompt, (int)strlen(prompt), &count, NULL))
     {
       int istty = (GetFileType (in) == FILE_TYPE_CHAR);
       DWORD old_flags;

@@ -1215,11 +1215,7 @@ static HRESULT HTMLInputElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return HTMLElement_QI(&This->element.node, riid, ppv);
 }
 
-#ifndef __REACTOS__
 static HRESULT HTMLInputElementImpl_fire_event(HTMLDOMNode *iface, eventid_t eid, BOOL *handled)
-#else
-static HRESULT HTMLInputElementImpl_fire_event(HTMLDOMNode *iface, DWORD eid, BOOL *handled)
-#endif
 {
     HTMLInputElement *This = impl_from_HTMLDOMNode(iface);
 

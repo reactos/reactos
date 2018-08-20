@@ -59,7 +59,7 @@ static PUCHAR lznt1_decompress_chunk(UCHAR *dst, ULONG dst_size, UCHAR *src, ULO
 
                 /* find length / displacement bits */
                 for (displacement_bits = 12; displacement_bits > 4; displacement_bits--)
-                    if ((1 << (displacement_bits - 1)) < dst_cur - dst) break;
+                    if (((SIZE_T)1 << (displacement_bits - 1)) < dst_cur - dst) break;
                 length_bits       = 16 - displacement_bits;
                 code_length       = (code & ((1 << length_bits) - 1)) + 3;
                 code_displacement = (code >> length_bits) + 1;

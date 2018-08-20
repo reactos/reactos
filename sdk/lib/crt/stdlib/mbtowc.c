@@ -27,7 +27,7 @@ int CDECL _mbtowc_l(wchar_t *dst, const char* str, size_t n, _locale_t locale)
         return 0;
     if(!locinfo->lc_codepage)
         tmpdst = (unsigned char)*str;
-    else if(!MultiByteToWideChar(locinfo->lc_codepage, 0, str, n, &tmpdst, 1))
+    else if(!MultiByteToWideChar(locinfo->lc_codepage, 0, str, (ULONG)n, &tmpdst, 1))
         return -1;
     if(dst)
         *dst = tmpdst;

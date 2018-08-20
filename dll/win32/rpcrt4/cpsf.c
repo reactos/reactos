@@ -262,7 +262,7 @@ HRESULT WINAPI NdrDllRegisterProxy(HMODULE hDll,
       if (RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key) == ERROR_SUCCESS) {
         WCHAR num[10];
         if (name)
-          RegSetValueExA(key, NULL, 0, REG_SZ, (const BYTE *)name, strlen(name)+1);
+          RegSetValueExA(key, NULL, 0, REG_SZ, (const BYTE *)name, (ULONG)strlen(name)+1);
         RegSetValueW( key, clsid32W, REG_SZ, clsid, 0 );
         swprintf(num, numformatW, proxy->header.DispatchTableCount);
         RegSetValueW( key, nummethodsW, REG_SZ, num, 0 );

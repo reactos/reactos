@@ -152,10 +152,10 @@ void CDECL perror(const char* str)
 
     if (str && *str)
     {
-        _write( 2, str, strlen(str) );
+        _write( 2, str, (unsigned int)strlen(str) );
         _write( 2, ": ", 2 );
     }
-    _write( 2, _sys_errlist[err], strlen(_sys_errlist[err]) );
+    _write( 2, _sys_errlist[err], (unsigned int)strlen(_sys_errlist[err]) );
     _write( 2, "\n", 1 );
 }
 
@@ -170,7 +170,7 @@ int CDECL _wcserror_s(wchar_t* buffer, size_t nc, int err)
         return EINVAL;
     }
     if (err < 0 || err > _sys_nerr) err = _sys_nerr;
-    MultiByteToWideChar(CP_ACP, 0, _sys_errlist[err], -1, buffer, nc);
+    MultiByteToWideChar(CP_ACP, 0, _sys_errlist[err], -1, buffer, (int)nc);
     return 0;
 }
 
@@ -214,7 +214,7 @@ int CDECL __wcserror_s(wchar_t* buffer, size_t nc, const wchar_t* str)
     }
     else buffer[0] = '\0';
     len = lstrlenW(buffer);
-    MultiByteToWideChar(CP_ACP, 0, _sys_errlist[err], -1, buffer + len, 256 - len);
+    MultiByteToWideChar(CP_ACP, 0, _sys_errlist[err], -1, buffer + len, (int)(256 - len));
     lstrcatW(buffer, nlW);
 
     return 0;

@@ -1553,7 +1553,7 @@ HRESULT node_transform_node_params(const xmlnode *This, IXMLDOMNode *stylesheet,
 
             for (i = 0; i < params->count*2; i++)
                 heap_free((char*)xslparams[i]);
-            heap_free(xslparams);
+            heap_free((void*)xslparams);
         }
         else
             result = pxsltApplyStylesheet(xsltSS, This->node->doc, NULL);

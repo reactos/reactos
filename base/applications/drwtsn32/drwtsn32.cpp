@@ -25,7 +25,7 @@ void ModuleData::Update(HANDLE hProcess)
     Size = mi.SizeOfImage;
 
     ModuleName.resize(MAX_PATH);
-    DWORD dwLen = GetModuleFileNameExA(hProcess, (HMODULE)BaseAddress, &ModuleName[0], ModuleName.size());
+    DWORD dwLen = GetModuleFileNameExA(hProcess, (HMODULE)BaseAddress, &ModuleName[0], (ULONG)ModuleName.size());
     ModuleName.resize(dwLen);
 }
 
@@ -60,7 +60,7 @@ bool UpdateFromEvent(DEBUG_EVENT& evt, DumpData& data)
     case CREATE_PROCESS_DEBUG_EVENT:
     {
         data.ProcessPath.resize(MAX_PATH*2);
-        DWORD len = GetModuleFileNameExW(evt.u.CreateProcessInfo.hProcess, NULL, &data.ProcessPath[0], data.ProcessPath.size());
+        DWORD len = GetModuleFileNameExW(evt.u.CreateProcessInfo.hProcess, NULL, &data.ProcessPath[0], (ULONG)data.ProcessPath.size());
         if (len)
         {
             data.ProcessPath.resize(len);

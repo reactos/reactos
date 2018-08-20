@@ -58,7 +58,7 @@ typedef struct
     const char* expected;
 } makepath_case;
 
-#define USE_BUFF ((char*)~0ul)
+#define USE_BUFF ((char*)(uintptr_t)~0ul)
 static const makepath_case makepath_cases[] =
 {
     { NULL, NULL, NULL, NULL, NULL, "" }, /* 0 */

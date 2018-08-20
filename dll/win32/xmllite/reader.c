@@ -3415,7 +3415,7 @@ static HRESULT WINAPI xmlreader_GetValue(IXmlReader* iface, const WCHAR **value,
     assert(off <= val->len);
     *value = val->str + off;
     if (len) *len = val->len - off;
-    reader->chunk_read_off = -off;
+    reader->chunk_read_off = -(INT)off;
     return S_OK;
 }
 

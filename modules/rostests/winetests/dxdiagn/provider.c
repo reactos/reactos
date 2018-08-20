@@ -71,7 +71,7 @@ static void test_Initialize(void)
     {
         params.dwDxDiagHeaderVersion = DXDIAG_DX9_SDK_VERSION;
         params.bAllowWHQLChecks = FALSE;
-        params.pReserved = (VOID*)0xdeadbeef;
+        params.pReserved = (VOID*)(ULONG_PTR)0xdeadbeefdeadbeef;
         hr = IDxDiagProvider_Initialize(pddp, &params);
         trace("IDxDiagProvider::Initialize returned %x\n", hr);
     }

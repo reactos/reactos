@@ -245,7 +245,7 @@ InstallEventSource(
                    (LPBYTE)&dwData, sizeof(dwData));
 
     RegSetValueExW(hSourceKey, L"EventMessageFile", 0, REG_EXPAND_SZ,
-                   (LPBYTE)EventMessageFile, (wcslen(EventMessageFile) + 1) * sizeof(WCHAR));
+                   (LPBYTE)EventMessageFile, (DWORD)(wcslen(EventMessageFile) + 1) * sizeof(WCHAR));
 
     RegFlushKey(hSourceKey);
 

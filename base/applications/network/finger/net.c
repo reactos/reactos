@@ -90,7 +90,7 @@ netfinger(char *name)
 	if (lflag)
 		send(s, "/W ", 3, 0);
 	/* send the name followed by <CR><LF> */
-	send(s, name, strlen(name), 0);
+	send(s, name, (int)strlen(name), 0);
 	send(s, "\r\n", 2, 0);
 
 	/*

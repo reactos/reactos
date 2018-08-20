@@ -43,7 +43,7 @@ size_t CDECL _strxfrm_l( char *dest, const char *src,
     }
 
     return LCMapStringA(locinfo->lc_handle[MSVCRT_LC_COLLATE],
-            LCMAP_SORTKEY, src, -1, dest, len) - 1;
+            LCMAP_SORTKEY, src, -1, dest, (int)len) - 1;
 }
 
 /*********************************************************************

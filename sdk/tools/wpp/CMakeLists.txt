@@ -18,6 +18,7 @@ if(MSVC)
     # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
     add_compile_flags("/wd4244")
 
+    add_compile_flags("/wd4267")
 endif()
 
 if(CMAKE_CROSSCOMPILING)

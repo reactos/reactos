@@ -2581,7 +2581,7 @@ static BYTE *parse_value( MSIPACKAGE *package, const WCHAR *value, DWORD len, DW
                 p++;
             }
             if (deformated[0] == '-')
-                d = -d;
+                d = -(LONG)d;
             *(LPDWORD)data = d;
             TRACE("DWORD %i\n",*(LPDWORD)data);
 
@@ -6108,10 +6108,10 @@ static LPCWSTR *msi_service_args_to_vector(LPWSTR args, DWORD *numargs)
         {
             *q = '\0';
 
-            temp_vector = msi_realloc(vector, (*numargs + 1) * sizeof(LPWSTR));
+            temp_vector = msi_realloc((void*)vector, (*numargs + 1) * sizeof(LPWSTR));
             if (!temp_vector)
             {
-                msi_free(vector);
+                msi_free((void*)vector);
                 return NULL;
             }
             vector = temp_vector;
@@ -6228,7 +6228,7 @@ done:
 
     msi_free(name);
     msi_free(args);
-    msi_free(vector);
+    msi_free((void*)vector);
     msi_free(display_name);
     return r;
 }

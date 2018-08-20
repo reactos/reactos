@@ -2037,7 +2037,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     }
 
     /* also make a negative representation */
-    l64=-ul64;
+    l64=-(LONG64)ul64;
 
     /* Try signed and unsigned types in size order */
     if (dwVtBits & VTBIT_I1 && FITS_AS_I1(ul64))
@@ -2251,25 +2251,25 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         if (dwVtBits & VTBIT_I1 && ul64 <= -I1_MIN)
         {
           V_VT(pVarDst) = VT_I1;
-          V_I1(pVarDst) = -ul64;
+          V_I1(pVarDst) = -(LONG64)ul64;
           return S_OK;
         }
         else if (dwVtBits & VTBIT_I2 && ul64 <= -I2_MIN)
         {
           V_VT(pVarDst) = VT_I2;
-          V_I2(pVarDst) = -ul64;
+          V_I2(pVarDst) = -(LONG64)ul64;
           return S_OK;
         }
         else if (dwVtBits & VTBIT_I4 && ul64 <= -((LONGLONG)I4_MIN))
         {
           V_VT(pVarDst) = VT_I4;
-          V_I4(pVarDst) = -ul64;
+          V_I4(pVarDst) = -(LONG64)ul64;
           return S_OK;
         }
         else if (dwVtBits & VTBIT_I8 && ul64 <= (ULONGLONG)I8_MAX + 1)
         {
           V_VT(pVarDst) = VT_I8;
-          V_I8(pVarDst) = -ul64;
+          V_I8(pVarDst) = -(LONG64)ul64;
           return S_OK;
         }
         else if ((dwVtBits & (REAL_VTBITS|VTBIT_DECIMAL)) == VTBIT_DECIMAL)
@@ -2278,7 +2278,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
           V_VT(pVarDst) = VT_DECIMAL;
           DEC_SIGNSCALE(&V_DECIMAL(pVarDst)) = SIGNSCALE(DECIMAL_NEG,0);
           DEC_HI32(&V_DECIMAL(pVarDst)) = 0;
-          DEC_LO64(&V_DECIMAL(pVarDst)) = -ul64;
+          DEC_LO64(&V_DECIMAL(pVarDst)) = -(LONG64)ul64;
           return S_OK;
         }
       }

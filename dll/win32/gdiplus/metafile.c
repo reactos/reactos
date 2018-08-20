@@ -758,19 +758,19 @@ GpStatus WINGDIPAPI GdipRecordMetafile(HDC hdc, EmfType type, GDIPCONST GpRectF 
             framerect_factor_y = 2540.0 / dpiy;
             break;
         case MetafileFrameUnitPoint:
-            framerect_factor_x = framerect_factor_y = 2540.0 / 72.0;
+            framerect_factor_x = framerect_factor_y = (REAL)(2540.0 / 72.0);
             break;
         case MetafileFrameUnitInch:
-            framerect_factor_x = framerect_factor_y = 2540.0;
+            framerect_factor_x = framerect_factor_y = (REAL)2540.0;
             break;
         case MetafileFrameUnitDocument:
-            framerect_factor_x = framerect_factor_y = 2540.0 / 300.0;
+            framerect_factor_x = framerect_factor_y = (REAL)(2540.0 / 300.0);
             break;
         case MetafileFrameUnitMillimeter:
-            framerect_factor_x = framerect_factor_y = 100.0;
+            framerect_factor_x = framerect_factor_y = (REAL)100.0;
             break;
         case MetafileFrameUnitGdi:
-            framerect_factor_x = framerect_factor_y = 1.0;
+            framerect_factor_x = framerect_factor_y = (REAL)1.0;
             break;
         default:
             return InvalidParameter;

@@ -184,7 +184,7 @@ static BOOL str_array_push(struct parsed_symbol* sym, const char* ptr, int len,
         a->alloc *= 2;
         a->elts = new;
     }
-    if (len == -1) len = strlen(ptr);
+    if (len == -1) len = (int)strlen(ptr);
     a->elts[a->num] = und_alloc(sym, len + 1);
     assert(a->elts[a->num]);
     memcpy(a->elts[a->num], ptr, len);
@@ -234,7 +234,7 @@ static char* str_array_get_ref(struct array* cref, unsigned idx)
 static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
 {
     va_list      args;
-    unsigned int len = 1, i, sz;
+    size_t len = 1, i, sz;
     char*        tmp;
     char*        p;
     char*        t;
@@ -255,7 +255,7 @@ static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
         else len++;
     }
     va_end(args);
-    if (!(tmp = und_alloc(sym, len))) return NULL;
+    if (!(tmp = und_alloc(sym, (unsigned int)len))) return NULL;
     va_start(args, format);
     for (p = tmp, i = 0; format[i]; i++)
     {
@@ -644,12 +644,12 @@ static char* get_class_string(struct parsed_symbol* sym, int start)
     for (len = 0, i = start; i < a->num; i++)
     {
         assert(a->elts[i]);
-        len += 2 + strlen(a->elts[i]);
+        len += 2 + (unsigned int)strlen(a->elts[i]);
     }
     if (!(ret = und_alloc(sym, len - 1))) return NULL;
     for (len = 0, i = a->num - 1; i >= start; i--)
     {
-        sz = strlen(a->elts[i]);
+        sz = (unsigned int)strlen(a->elts[i]);
         memcpy(ret + len, a->elts[i], sz);
         len += sz;
         if (i > start)

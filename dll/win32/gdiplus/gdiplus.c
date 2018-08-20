@@ -35,8 +35,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
-static const REAL mm_per_inch = 25.4;
-static const REAL point_per_inch = 72.0;
+static const REAL mm_per_inch = (REAL)25.4;
+static const REAL point_per_inch = (REAL)72.0;
 
 static Status WINAPI NotificationHook(ULONG_PTR *token)
 {

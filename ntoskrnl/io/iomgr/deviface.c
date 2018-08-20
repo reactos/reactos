@@ -1423,7 +1423,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     }
 
     ASSERT(GuidString.Buffer >= LinkNameNoPrefix.Buffer + 1);
-    DeviceInstance.Length = (GuidString.Buffer - LinkNameNoPrefix.Buffer - 1) * sizeof(WCHAR);
+    DeviceInstance.Length = (USHORT)(GuidString.Buffer - LinkNameNoPrefix.Buffer - 1) * sizeof(WCHAR);
     if (DeviceInstance.Length == 0)
     {
         DPRINT1("No device instance in link name '%wZ'\n", SymbolicLinkName);

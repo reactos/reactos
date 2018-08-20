@@ -2344,7 +2344,7 @@ HRESULT WINAPI VarI8FromDec(DECIMAL *pdecIn, LONG64* pi64Out)
       return DISP_E_OVERFLOW;
 
     if (DEC_SIGN(pdecIn))
-      *pi64Out = -DEC_LO64(pdecIn);
+      *pi64Out = -(LONG64)DEC_LO64(pdecIn);
     else
       *pi64Out = DEC_LO64(pdecIn);
     return S_OK;
@@ -4403,7 +4403,7 @@ HRESULT WINAPI VarDecFromI8(LONG64 llIn, DECIMAL* pDecOut)
   if (pLi->u.HighPart & 0x80000000)
   {
     DEC_SIGNSCALE(pDecOut) = SIGNSCALE(DECIMAL_NEG,0);
-    DEC_LO64(pDecOut) = -pLi->QuadPart;
+    DEC_LO64(pDecOut) = -(LONG64)pLi->QuadPart;
   }
   else
   {
@@ -4544,7 +4544,7 @@ static ULONG VARIANT_Sub(ULONG ulLeft, ULONG ulRight, ULONG* pulHigh)
     invert = TRUE;
   }
   if (invert)
-    ul64.u.HighPart = -ul64.u.HighPart ;
+    ul64.u.HighPart = -(LONG)ul64.u.HighPart ;
 
   *pulHigh = ul64.u.HighPart;
   return ul64.u.LowPart;

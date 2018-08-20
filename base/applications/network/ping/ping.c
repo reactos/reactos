@@ -399,7 +399,7 @@ ResolveTarget(PCWSTR target)
     }
     else if (ResolveAddress)
     {
-        Status = GetNameInfoW(Target->ai_addr, Target->ai_addrlen,
+        Status = GetNameInfoW(Target->ai_addr, (socklen_t)Target->ai_addrlen,
                               CanonName, _countof(CanonName),
                               NULL, 0,
                               NI_NAMEREQD);

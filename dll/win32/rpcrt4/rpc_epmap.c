@@ -619,7 +619,7 @@ RPC_STATUS WINAPI TowerConstruct(
     if (!*tower)
         return RPC_S_OUT_OF_RESOURCES;
 
-    (*tower)->tower_length = tower_size;
+    (*tower)->tower_length = (ULONG)tower_size;
     p = &(*tower)->tower_octet_string[0];
     *(u_int16 *)p = 5; /* number of floors */
     p += sizeof(u_int16);

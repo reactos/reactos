@@ -65,8 +65,8 @@ static RECT g_wnd_clip; /* this client area of whats actually visible */
 static void
 str_to_uni(TCHAR * sizex, char * size1)
 {
-  int len;
-  int i;
+  SIZE_T len;
+  SIZE_T i;
 
   len = strlen(size1);
   for (i = 0; i < len; i++)

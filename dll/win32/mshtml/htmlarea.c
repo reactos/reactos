@@ -388,7 +388,7 @@ static HRESULT HTMLAreaElement_QI(HTMLDOMNode *iface, REFIID riid, void **ppv)
     return S_OK;
 }
 
-static HRESULT HTMLAreaElement_handle_event(HTMLDOMNode *iface, DWORD eid, nsIDOMEvent *event, BOOL *prevent_default)
+static HRESULT HTMLAreaElement_handle_event(HTMLDOMNode *iface, eventid_t eid, nsIDOMEvent *event, BOOL *prevent_default)
 {
     HTMLAreaElement *This = impl_from_HTMLDOMNode(iface);
     nsAString href_str, target_str;
