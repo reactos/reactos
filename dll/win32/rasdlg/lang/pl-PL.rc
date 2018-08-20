@@ -1076,9 +1076,9 @@ END
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Możesz skonfigurować to połączenie tak, by korzystało ze smart card przy logowaniu do sieci zdalnej. Wybierz czy chcesz korzystać ze smart card z tym połączeniem.", -1, 10, 5, 303, 22
-    AUTORADIOBUTTON "&Użyj smart card ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "&Nie używaj smart card ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+    LTEXT "Możesz skonfigurować to połączenie tak, by korzystało z karty inteligentnej przy logowaniu do sieci zdalnej. Wybierz czy chcesz korzystać z karty inteligentnej z tym połączeniem.", -1, 10, 5, 303, 22
+    AUTORADIOBUTTON "&Użyj karty inteligentnej ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+    AUTORADIOBUTTON "&Nie używaj karty inteligentnej ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 547 DIALOGEX 0, 0, 317, 143
@@ -1866,9 +1866,9 @@ BEGIN
     216 "*.rnk\0"
     217 "Utwórz skrót połączenia Dial-Up\0"
     218 "Połączenie z %1 nieudane.  Ponowne połączenie w toku...\0"
-    219 "Nie można uzyskać informacji o ramce.\0"
-    220 "Nie można uzyskać informacji o.\0"
-    221 "Cannot retrieve projection information.\0"
+    219 "Nie można uzyskać informacji o ramkach.\0"
+    220 "Nie można uzyskać informacji o portach.\0"
+    221 "Nie można uzyskać informacji o projekcji.\0"
     222 "Nie można załądować listy połączeń.\0"
     223 "Klienci:\0"
     224 "Szczegóły\0"
@@ -2171,8 +2171,8 @@ BEGIN
     589 "Właściwości\0"
     1512 "Port komunikacyjny\0"
     1523 " kanał\0"
-    1526 "Smart Cards\0"
-    1527 "Możesz użyć swoich smart card z tym połączeniem.\0"
+    1526 "Karty inteligentne\0"
+    1527 "Możesz użyć swoich kart inteligentnych z tym połączeniem.\0"
     1528 "Połączenie bezpośrednie\0"
     1529 "Proszę wybrać urządzenie dla tego połączenia.\0"
     1530 "Verdana Bold\0"
@@ -2204,7 +2204,7 @@ BEGIN
     1558 "Nie ma ustawień protokołów bezpieczeństwa dla połączeń z serwerem SLIP.\0"
     1559 "Zezwól na niezabezpieczone hasło\0"
     1560 "Wymagaj zabezpieczonego hasła\0"
-    1561 "Użyj smart card\0"
+    1561 "Użyj karty inteligentnej\0"
     1562 "Musisz wybrać co najmniej jeden protokół uwierzytelniania hasła.\0"
     1563 "Nie używaj szyfrowania (serwer zostanie rozłączony, jeśli będzie wymagał szyforwania)\0"
     1564 "Szyfrowanie opcjonalne (połącz także gdy nie ma szyfrowania)\0"
@@ -2297,7 +2297,7 @@ BEGIN
     7322 "Wprowadzone hasło jest zbyt krótkie.\0"
     7323 "Oba wprowadzone hasła nie są identyczne. Proszę je poprawić.\0"
     7324 "Wystąpił błąd wewnętrzny.  \0"
-    7325 "Listview\0"
+    7325 "Widok listy\0"
     7326 "Wystąpił błąd podczas przesyłania wprowadzonych zmian do bazy danych użytkownika lokalnego.  \0"
     7327 "Nie masz dostatecznych przywilejów by dodać użytkownika do lokalnej systemowej bazy danych.  \0"
     7328 "Użytkownik, którego chcesz stworzyć, już istnieje w lokalnej bazie danych użytkowników.\0"

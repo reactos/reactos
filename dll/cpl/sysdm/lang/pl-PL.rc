@@ -54,7 +54,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Aby móc przeprowadzić większość tych zmian, musisz zalogować się jako administrator.", IDC_STATIC, 12, 5, 236, 8
+    LTEXT "Aby móc przeprowadzić większość tych zmian, musisz zalogować się jako administrator.", IDC_STATIC, 12, 1, 236, 16
     GROUPBOX "Wydajność", IDC_STATIC, 6, 18, 244, 50
     LTEXT "Efekty wizualne, planowanie użycia procesora, wykorzystanie pamięci i pamięć wirtualna.", IDC_STATIC, 16, 29, 210, 17
     PUSHBUTTON "&Ustawienia", IDC_PERFOR, 194, 48, 50, 15
