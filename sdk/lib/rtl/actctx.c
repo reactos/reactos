@@ -3022,7 +3022,7 @@ static NTSTATUS get_manifest_in_pe_file( struct actctx_loader* acl, struct assem
 
     if ((!((ULONG_PTR)resname >> 16)))
     {
-        sprintfW(resnameBuf, L"#%u", (ULONG_PTR)resname);
+        sprintfW(resnameBuf, L"#%u", PtrToUlong(resname));
         resptr = resnameBuf;
     }
 

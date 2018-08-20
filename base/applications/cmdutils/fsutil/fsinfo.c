@@ -352,7 +352,7 @@ ValidateSizes(ULONG Length, DWORD ProcCount, DWORD BytesRead, DWORD SpecificSize
     /* Check whether this covers a specific entry and a generic entry for every processor */
     if ((sizeof(FILESYSTEM_STATISTICS) + SpecificSize) * ProcCount > BytesRead)
     {
-        _ftprintf(stderr, _T("Only performed a partial read: %lu (expected: %lu)\n"), BytesRead, (sizeof(FILESYSTEM_STATISTICS) + SpecificSize));
+        _ftprintf(stderr, _T("Only performed a partial read: %lu (expected: %Iu)\n"), BytesRead, (sizeof(FILESYSTEM_STATISTICS) + SpecificSize));
         return 1;
     }
 

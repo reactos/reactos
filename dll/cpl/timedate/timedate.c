@@ -28,7 +28,7 @@ VOID DisplayWin32ErrorDbg(DWORD dwErrorCode, const char *file, int line)
 VOID DisplayWin32Error(DWORD dwErrorCode)
 #endif
 {
-    LPVOID lpMsgBuf;
+    PWSTR lpMsgBuf;
 #if DBG
     WCHAR szMsg[255];
 #endif
@@ -44,7 +44,7 @@ VOID DisplayWin32Error(DWORD dwErrorCode)
                    NULL );
 
 #if DBG
-    if (swprintf(szMsg, L"%hs:%d: %s", file, line, lpMsgBuf))
+    if (swprintf(szMsg, L"%hs:%d: %s", file, line, (PWSTR)lpMsgBuf))
     {
         MessageBoxW(NULL, szMsg, NULL, MB_OK | MB_ICONERROR);
     }

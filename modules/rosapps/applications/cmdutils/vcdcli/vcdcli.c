@@ -362,7 +362,7 @@ _tmain(int argc, const TCHAR *argv[])
         hFile = CreateFile(argv[3], FILE_READ_DATA, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile == INVALID_HANDLE_VALUE)
         {
-            _ftprintf(stderr, _T("Failed to open file: %s\n"), GetLastError());
+            _ftprintf(stderr, _T("Failed to open file: %lu\n"), GetLastError());
             return 1;
         }
 
