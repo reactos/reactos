@@ -128,6 +128,8 @@ VfatCleanupFile(
         {
             IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
         }
+/* FIXME: causes FS corruption and breaks selfhosting/testbots and so on */
+#if 0
         /* If that's the last open handle we just closed, try to see whether
          * we can delay close operation
          */
@@ -136,21 +138,16 @@ VfatCleanupFile(
         {
             /* This is only allowed if that's a directory with no open files
              * OR if it's a file with no section opened
-             * FIXME: only allow files for now
              */
-#if 0
             if ((vfatFCBIsDirectory(pFcb) && IsListEmpty(&pFcb->ParentListHead)) ||
                 (!vfatFCBIsDirectory(pFcb) && FileObject->SectionObjectPointer->DataSectionObject == NULL &&
                  FileObject->SectionObjectPointer->ImageSectionObject == NULL))
-#else
-            if (!vfatFCBIsDirectory(pFcb) && FileObject->SectionObjectPointer->DataSectionObject == NULL &&
-                FileObject->SectionObjectPointer->ImageSectionObject == NULL)
-#endif
             {
                 DPRINT("Delaying close of: %wZ\n", &pFcb->PathNameU);
                 SetFlag(pFcb->Flags, FCB_DELAYED_CLOSE);
             }
         }
+#endif
 
         FileObject->Flags |= FO_CLEANUP_COMPLETE;
 #ifdef KDBG
