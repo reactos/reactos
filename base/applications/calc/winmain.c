@@ -264,22 +264,65 @@ static void UpdateNumberIntl(void)
     calc.sThousand_len = _tcslen(calc.sThousand);
 }
 
-static void load_config(void)
+static int LoadRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iDefault)
 {
-    TCHAR buf[32];
+    HKEY  hKey;
+    int   iValue;
     DWORD tmp;
 
-    /* Try to load last selected layout */
-    GetProfileString(_T("SciCalc"), _T("layout"), _T("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, _T("%ld"), &calc.layout) != 1)
-        calc.layout = CALC_LAYOUT_STANDARD;
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, lpszApp, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    {
+        /* Try to load integer value */
+        tmp = sizeof(int);
 
-    /* Try to load last selected formatting option */
-    GetProfileString(_T("SciCalc"), _T("UseSep"), _T("0"), buf, SIZEOF(buf));
-    if (_stscanf(buf, _T("%ld"), &tmp) != 1)
-        calc.usesep = FALSE;
-    else
-        calc.usesep = (tmp == 1) ? TRUE : FALSE;
+        if (RegQueryValueEx(hKey, lpszKey, NULL, NULL, (LPBYTE)&iValue, &tmp) == ERROR_SUCCESS)
+            iDefault = iValue;
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+
+    return iDefault;
+}
+
+static void SaveRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iValue)
+{
+    HKEY hKey;
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER, lpszApp, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueEx(hKey, lpszKey, 0, REG_DWORD, (const BYTE*)&iValue, sizeof(int));
+
+        /* close the key */
+        RegCloseKey(hKey);
+    }
+}
+
+static void load_config(void)
+{
+     OSVERSIONINFO osvi;
+
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+
+    switch (osvi.dwPlatformId) {
+    case VER_PLATFORM_WIN32s:
+    case VER_PLATFORM_WIN32_WINDOWS:
+        /* Try to load last selected layout */
+        calc.layout = GetProfileInt(_T("SciCalc"), _T("layout"), CALC_LAYOUT_STANDARD);
+
+        /* Try to load last selected formatting option */
+        calc.usesep = (GetProfileInt(_T("SciCalc"), _T("UseSep"), FALSE)) ? TRUE : FALSE;
+        break;
+
+    default: /* VER_PLATFORM_WIN32_NT */
+        /* Try to load last selected layout */
+        calc.layout = LoadRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("layout"), CALC_LAYOUT_STANDARD);
+
+        /* Try to load last selected formatting option */
+        calc.usesep = (LoadRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("UseSep"), FALSE)) ? TRUE : FALSE;
+        break;
+    }
 
     /* memory is empty at startup */
     calc.is_memory = FALSE;
@@ -291,10 +334,24 @@ static void load_config(void)
 static void save_config(void)
 {
     TCHAR buf[32];
+    OSVERSIONINFO osvi;
 
-    _stprintf(buf, _T("%lu"), calc.layout);
-    WriteProfileString(_T("SciCalc"), _T("layout"), buf);
-    WriteProfileString(_T("SciCalc"), _T("UseSep"), (calc.usesep==TRUE) ? _T("1") : _T("0"));
+    osvi.dwOSVersionInfoSize = sizeof(osvi);
+    GetVersionEx(&osvi);
+
+    switch (osvi.dwPlatformId) {
+    case VER_PLATFORM_WIN32s:
+    case VER_PLATFORM_WIN32_WINDOWS:
+        _stprintf(buf, _T("%lu"), calc.layout);
+        WriteProfileString(_T("SciCalc"), _T("layout"), buf);
+        WriteProfileString(_T("SciCalc"), _T("UseSep"), (calc.usesep==TRUE) ? _T("1") : _T("0"));
+        break;
+
+    default: /* VER_PLATFORM_WIN32_NT */
+        SaveRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("layout"), calc.layout);
+        SaveRegInt(_T("SOFTWARE\\Microsoft\\Calc"), _T("UseSep"), calc.usesep);
+        break;
+    }
 }
 
 static LRESULT post_key_press(LPARAM lParam, WORD idc)
