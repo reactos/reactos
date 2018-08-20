@@ -71,7 +71,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Wytnij", IDM_CUT
         MENUITEM "&Kopiuj", IDM_COPY
-		MENUITEM "Wklej", IDM_INSERT
+        MENUITEM "Wklej", IDM_INSERT
         MENUITEM SEPARATOR
         MENUITEM "Utwórz &Skrót", IDM_CREATELINK
         MENUITEM "&Usuń", IDM_DELETE
