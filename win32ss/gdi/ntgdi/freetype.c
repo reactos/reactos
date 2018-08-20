@@ -256,7 +256,7 @@ ftFreePoolWithSize(
     _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
     _In_ SIZE_T Size)
 {
-#ifdef DBG
+#if DBG
     RtlFillMemoryUlong(P, Size, 0xDEADFACE);
 #endif
     ExFreePoolWithTag(P, TAG_FONT);
