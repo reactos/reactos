@@ -555,6 +555,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                                (PMMPTE)PointerPde,
                                                PFN_FROM_PTE(MiAddressToPte(PointerPde)));
 
+                /* Write the actual PDE now */
+                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #else
                 //
                 // Save it into our double-buffered system page directory
@@ -566,9 +568,6 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                                (PMMPTE)PointerPde,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
 #endif
-
-                /* Write the actual PDE now */
-                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 
                 //
                 // Move on to the next expansion address
