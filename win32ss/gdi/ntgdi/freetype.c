@@ -252,15 +252,14 @@ SharedFace_AddRef(PSHARED_FACE Ptr)
 }
 
 static inline VOID FASTCALL
-ftFreePoolWithTagAndSize(
+ftFreePoolWithSize(
     _Pre_notnull_ __drv_freesMem(Mem) PVOID P,
-    _In_ ULONG Tag,
     _In_ SIZE_T Size)
 {
-#ifndef NDEBUG
+#ifdef DBG
     RtlFillMemoryUlong(P, Size, 0xDEADFACE);
 #endif
-    ExFreePoolWithTag(P, Tag);
+    ExFreePoolWithTag(P, TAG_FONT);
 }
 
 static void
@@ -270,7 +269,7 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 
     FT_Done_Glyph((FT_Glyph)Entry->BitmapGlyph);
     RemoveEntryList(&Entry->ListEntry);
-    ftFreePoolWithTagAndSize(Entry, TAG_FONT, sizeof(*Entry));
+    ftFreePoolWithSize(Entry, sizeof(*Entry));
     g_FontCacheNumEntries--;
     ASSERT(g_FontCacheNumEntries <= MAX_FONT_CACHE);
 }
