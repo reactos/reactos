@@ -64,7 +64,7 @@ UDFPrepareXSpaceBitmap(
     lb_addr locAddr;
     int8* _XSBM;
     uint16 Ident;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint32 PartNum;
 
     if(!(XSpaceBitmap->extLength)) {
@@ -202,7 +202,7 @@ UDFUpdateXSpaceBitmaps(
     uint32 USl, FSl;
     EXTENT_INFO FSBMExtInfo, USBMExtInfo;
 //    lb_addr locAddr;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
 
     UDF_CHECK_BITMAP_RESOURCE(Vcb);
 
@@ -304,7 +304,7 @@ UDFUpdatePartDesc(
     PartitionDesc *p = (PartitionDesc *)Buf;
     uint32 i; // PartNdx
     tag* PTag;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
 
     for(i=0; i<Vcb->PartitionMaps; i++)
     {
@@ -344,7 +344,7 @@ UDFUpdateUSpaceDesc(
     )
 {
     PUNALLOC_SPACE_DESC usd;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
 
     usd = (PUNALLOC_SPACE_DESC)Buf;
     usd->numAllocDescs = 0;
@@ -365,7 +365,7 @@ UDFUpdateLogicalVolInt(
 {
     OSSTATUS    RC = STATUS_SUCCESS;
     uint32      i, len;
-    uint32      WrittenBytes;
+    SIZE_T      WrittenBytes;
 //    uint32      lvid_count = 0;
     uint32      pSize;
     tag*        PTag;
@@ -469,7 +469,7 @@ UDFUpdateSparingTable(
     OSSTATUS status2 = STATUS_SUCCESS;
     uint32 i=0, BC, BC2;
     PSPARING_TABLE SparTable;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 //    uint32 n,m;
 //    BOOLEAN merged;
     BOOLEAN sorted;
@@ -605,7 +605,7 @@ UDFUpdateLogicalVol(
 #define CUR_IDENT_SZ (sizeof(lvd->logicalVolIdent))
     dstring CS0[CUR_IDENT_SZ];
     uint16 ident;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
     OSSTATUS status = STATUS_SUCCESS;
 //    OSSTATUS status2 = STATUS_SUCCESS;
 
@@ -761,7 +761,7 @@ UDFSetDstring(
     )
 {
     uint8* CS0;
-    uint32 len = Length-1;
+    SIZE_T len = Length-1;
 
     UDFCompressUnicode(UName, &CS0, &len);
     if(!CS0)
@@ -809,7 +809,7 @@ UDFUpdateVolIdent(
     OSSTATUS status;
     dstring CS0[CUR_IDENT_SZ];
     uint16 ident;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
 
     if(!pvoldesc) return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -1115,7 +1115,7 @@ UDFFindVRS(
     uint32       BeginOffset = Vcb->FirstLBA;
     OSSTATUS     RC;
     int8*        buffer = (int8*)MyAllocatePool__(NonPagedPool,Vcb->BlockSize);
-    uint32       ReadBytes;
+    SIZE_T       ReadBytes;
 
     if(!buffer) return 0;
     // Relative to First LBA in Last Session
@@ -1244,7 +1244,7 @@ UDFLoadLogicalVolInt(
 {
     OSSTATUS    RC = STATUS_SUCCESS;
     uint32      len;
-    uint32      _ReadBytes;
+    SIZE_T      _ReadBytes;
     int8*       Buf = NULL;
     uint16      ident;
     LogicalVolIntegrityDescImpUse* LVID_iUse;
@@ -1580,8 +1580,8 @@ UDFAddXSpaceBitmap(
     OSSTATUS status;
     uint16 Ident;
     uint32 flags;
-    uint32 Length;
-    uint32 ReadBytes;
+    SIZE_T Length;
+    SIZE_T ReadBytes;
     BOOLEAN bit_set;
 
     UDF_CHECK_BITMAP_RESOURCE(Vcb);
@@ -1680,7 +1680,7 @@ UDFVerifyXSpaceBitmap(
     uint16 Ident;
     uint32 flags;
     uint32 Length;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 //    BOOLEAN bit_set;
 
     UDF_CHECK_BITMAP_RESOURCE(Vcb);
@@ -1775,7 +1775,7 @@ UDFDelXSpaceBitmap(
     uint16 Ident;
     uint32 flags;
     uint32 Length;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 
     if(!(Length = (bm->extLength & UDF_EXTENT_LENGTH_MASK))) return STATUS_SUCCESS;
     i=0;
@@ -2791,7 +2791,7 @@ UDFLoadSparingTable(
     uint32 i=0, BC, BC2;
     PSPARING_TABLE SparTable;
     uint32 TabSize, NewSize;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint32 SparTableLoc;
 #ifdef UDF_TRACK_FS_STRUCTURES
     uint32 j;
@@ -2991,7 +2991,7 @@ UDFGetDiskInfoAndVerify(
     PFILE_SET_DESC  FileSetDesc = NULL;
 
     int8*           Buf = NULL;
-    uint32          ReadBytes;
+    SIZE_T          ReadBytes;
 
     UDFPrint(("UDFGetDiskInfoAndVerify\n"));
     _SEH2_TRY {

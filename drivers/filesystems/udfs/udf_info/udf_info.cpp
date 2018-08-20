@@ -170,7 +170,7 @@ __fastcall
 UDFDecompressUnicode(
     IN OUT PUNICODE_STRING UName,
     IN uint8* CS0,
-    IN uint32 Length,
+    IN SIZE_T Length,
     OUT uint16* valueCRC
     )
 {
@@ -240,7 +240,7 @@ __fastcall
 UDFCompressUnicode(
     IN PUNICODE_STRING UName,
     IN OUT uint8** _CS0,
-    IN OUT uint32* Length
+    IN OUT PSIZE_T Length
     )
 {
     uint8* CS0;
@@ -1115,7 +1115,8 @@ UDFBuildFileIdent(
 {
     PFILE_IDENT_DESC FileId;
     uint8* CS0;
-    uint32 Nlen, l;
+    SIZE_T Nlen;
+    uint32 l;
     // prepare filename
     UDFCompressUnicode(fn, &CS0, &Nlen);
     if(!CS0) return STATUS_INSUFFICIENT_RESOURCES;
@@ -1605,18 +1606,18 @@ UDFWriteFile__(
     IN PVCB Vcb,
     IN PUDF_FILE_INFO FileInfo,
     IN int64 Offset,
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN BOOLEAN Direct,
     IN int8* Buffer,
-    OUT uint32* WrittenBytes
+    OUT PSIZE_T WrittenBytes
     )
 {
     int64 t, elen;
     OSSTATUS status;
     int8* OldInIcb = NULL;
     ValidateFileInfo(FileInfo);
-    uint32 ReadBytes;
-    uint32 _WrittenBytes;
+    SIZE_T ReadBytes;
+    SIZE_T _WrittenBytes;
     PUDF_DATALOC_INFO Dloc;
     // unwind staff
     BOOLEAN WasInIcb = FALSE;
@@ -1689,7 +1690,7 @@ UDFWriteFile__(
         Vcb->LowFreeSpace ? "LowSpace" : ""));
     if(UDFIsADirectory(FileInfo) && !WasInIcb && !Vcb->LowFreeSpace) {
         FileInfo->Dloc->DataLoc.Flags |= EXTENT_FLAG_ALLOC_SEQUENTIAL;
-        status = UDFResizeExtent(Vcb, PartNum, (t*2+Vcb->WriteBlockSize-1) & ~(Vcb->WriteBlockSize-1), FALSE, &(Dloc->DataLoc));
+        status = UDFResizeExtent(Vcb, PartNum, (t*2+Vcb->WriteBlockSize-1) & ~(SIZE_T)(Vcb->WriteBlockSize-1), FALSE, &(Dloc->DataLoc));
         if(OS_SUCCESS(status)) {
             AdPrint(("  preallocated space for Dir\n"));
             FileInfo->Dloc->DataLoc.Flags |= EXTENT_FLAG_PREALLOCATED;
@@ -2019,7 +2020,7 @@ UDFOpenFile__(
     PDIR_INDEX_ITEM DirNdx;
     PUDF_FILE_INFO FileInfo;
     PUDF_FILE_INFO ParFileInfo;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     *_FileInfo = NULL;
     if(!hDirNdx) return STATUS_NOT_A_DIRECTORY;
 
@@ -2597,7 +2598,7 @@ UDFCreateFile__(
     PUDF_FILE_INFO FileInfo;
     *_FileInfo = NULL;
     BOOLEAN undel = FALSE;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 //    BOOLEAN PackDir = FALSE;
     BOOLEAN FEAllocated = FALSE;
 
@@ -2904,10 +2905,10 @@ UDFReadFile__(
     IN PVCB Vcb,
     IN PUDF_FILE_INFO FileInfo,
     IN int64 Offset,   // offset in extent
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN BOOLEAN Direct,
     OUT int8* Buffer,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
     ValidateFileInfo(FileInfo);
@@ -2925,9 +2926,9 @@ UDFZeroFile__(
     IN PVCB Vcb,
     IN PUDF_FILE_INFO FileInfo,
     IN int64 Offset,   // offset in extent
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN BOOLEAN Direct,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
     ValidateFileInfo(FileInfo);
@@ -2944,9 +2945,9 @@ UDFSparseFile__(
     IN PVCB Vcb,
     IN PUDF_FILE_INFO FileInfo,
     IN int64 Offset,   // offset in extent
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN BOOLEAN Direct,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
     ValidateFileInfo(FileInfo);
@@ -2966,7 +2967,8 @@ UDFPadLastSector(
     if(!ExtInfo || !(ExtInfo->Mapping) || !(ExtInfo->Length)) return STATUS_INVALID_PARAMETER;
 
     PEXTENT_MAP Extent = ExtInfo->Mapping;   // Extent array
-    uint32 to_write, Lba, sect_offs, flags, WrittenBytes;
+    SIZE_T to_write, WrittenBytes;
+    uint32 Lba, sect_offs, flags;
     OSSTATUS status;
     // Length should not be zero
     int64 Offset = ExtInfo->Length + ExtInfo->Offset;
@@ -3201,7 +3203,7 @@ UDFRenameMoveFile__(
            (j==FileInfo->Index) ) {
             // case-only rename
             uint8* CS0;
-            uint32 Nlen, /* l, FIXME ReactOS */ IUl;
+            SIZE_T Nlen, /* l, FIXME ReactOS */ IUl;
 
             // prepare filename
             UDFCompressUnicode(fn, &CS0, &Nlen);
@@ -3390,7 +3392,7 @@ UDFRecordDirectory__(
     UDF_DATALOC_INFO Dloc;
     UNICODE_STRING PName;
     uint32 PartNum;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
     PDIR_INDEX_ITEM CurDirNdx;
     uint32 lba;
 
@@ -3469,7 +3471,7 @@ UDFResizeFile__(
     IN int64 NewLength
     )
 {
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
     OSSTATUS status;
     uint32 PartNum;
     int8* OldInIcb = NULL;
@@ -3607,7 +3609,7 @@ UDFLoadVAT(
     PUDF_FILE_INFO VatFileInfo;
     uint32 len, i=0, j, to_read;
     uint32 Offset, hdrOffset;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint32 root;
     uint16 PartNum;
 //    uint32 VatFirstLba = 0;
@@ -3867,7 +3869,7 @@ UDFFlushFE(
 {
     int8* NewAllocDescs;
     OSSTATUS status;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
     uint16 AllocMode;
     uint32 lba;
 
@@ -4055,7 +4057,7 @@ UDFFlushFI(
     PUDF_FILE_INFO DirInfo = FileInfo->ParentFile;
     PDIR_INDEX_ITEM DirNdx;
     OSSTATUS status;
-    uint32 WrittenBytes;
+    SIZE_T WrittenBytes;
     // use WrittenBytes variable to store LBA of FI to be recorded
     #define lba   WrittenBytes
 
@@ -4524,7 +4526,7 @@ uint16
 __fastcall
 UDFCrc(
     IN uint8* Data, // ECX
-    IN uint32 Size  // EDX
+    IN SIZE_T Size  // EDX
     )
 {
 #if defined(_X86_) && defined(_MSC_VER) && !defined(__clang__)
@@ -4594,7 +4596,7 @@ UDFReadTagged(
 //    icbtag* Icb = (icbtag*)(Buf+1);
     uint8 checksum;
     unsigned int i;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     int8* tb;
 
     // Read the block
@@ -4836,7 +4838,7 @@ UDFCreateRootFile__(
     LONG_AD FEicb;
     PUDF_FILE_INFO FileInfo;
     *_FileInfo = NULL;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 
     FileInfo = (PUDF_FILE_INFO)MyAllocatePoolTag__(UDF_FILE_INFO_MT,sizeof(UDF_FILE_INFO), MEM_FINF_TAG);
     *_FileInfo = FileInfo;
@@ -5040,7 +5042,7 @@ UDFRecordVAT(
     uint32 hdrOffset, hdrOffsetNew;
     uint32 hdrLen;
     OSSTATUS status;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint32 len;
     uint16 PartNdx = (uint16)Vcb->VatPartNdx;
     uint16 PartNum = UDFGetPartNumByPartNdx(Vcb, PartNdx);
@@ -5363,8 +5365,8 @@ UDFConvertFEToNonInICB(
     int8* OldInIcb = NULL;
     uint32 OldLen;
     ValidateFileInfo(FileInfo);
-    uint32 ReadBytes;
-    uint32 _WrittenBytes;
+    SIZE_T ReadBytes;
+    SIZE_T _WrittenBytes;
     PUDF_DATALOC_INFO Dloc;
 
 //    ASSERT(FileInfo->RefCount >= 1);
@@ -5462,7 +5464,7 @@ UDFConvertFEToExtended(
     PFILE_ENTRY FileEntry;
     uint32 Length, NewLength, l;
     OSSTATUS status;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
 
     if(!FileInfo) return STATUS_INVALID_PARAMETER;
     ValidateFileInfo(FileInfo);

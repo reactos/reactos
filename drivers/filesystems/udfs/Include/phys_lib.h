@@ -22,9 +22,9 @@ __fastcall
 UDFTIOVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* IOBytes,
+    OUT PSIZE_T IOBytes,
     IN uint32 Flags
     );
 
@@ -32,9 +32,9 @@ extern OSSTATUS
 UDFTWriteVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* WrittenBytes,
+    OUT PSIZE_T WrittenBytes,
     IN uint32 Flags
     );
 
@@ -42,24 +42,24 @@ extern OSSTATUS
 UDFTReadVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* ReadBytes,
+    OUT PSIZE_T ReadBytes,
     IN uint32 Flags
     );
 
 extern OSSTATUS UDFTRead(PVOID           _Vcb,
                          PVOID           Buffer,     // Target buffer
-                         ULONG           Length,
+                         SIZE_T          Length,
                          ULONG           LBA,
-                         PULONG          ReadBytes,
+                         PSIZE_T         ReadBytes,
                          ULONG           Flags = 0);
 
 extern OSSTATUS UDFTWrite(IN PVOID _Vcb,
                    IN PVOID Buffer,     // Target buffer
-                   IN ULONG Length,
+                   IN SIZE_T Length,
                    IN ULONG LBA,
-                   OUT PULONG WrittenBytes,
+                   OUT PSIZE_T WrittenBytes,
                    IN ULONG Flags = 0);
 
 #define PH_TMP_BUFFER          1
@@ -126,7 +126,7 @@ extern OSSTATUS UDFDoDismountSequence(IN PVCB Vcb,
 #define UDFReadSectors(Vcb, Translate, Lba, BCount, Direct, Buffer, ReadBytes)                 \
     (( WCacheIsInitialized__(&((Vcb)->FastCache)) && (KeGetCurrentIrql() < DISPATCH_LEVEL)) ?              \
         (WCacheReadBlocks__(&((Vcb)->FastCache), Vcb, Buffer, Lba, BCount, ReadBytes, Direct)) : \
-        (UDFTRead(Vcb, Buffer, (BCount)<<((Vcb)->BlockSizeBits), Lba, ReadBytes, 0)))
+        (UDFTRead(Vcb, Buffer, ((SIZE_T)(BCount))<<((Vcb)->BlockSizeBits), Lba, ReadBytes, 0)))
 
 
 // read data inside physical sector
@@ -137,7 +137,7 @@ extern OSSTATUS UDFReadInSector(IN PVCB Vcb,
                          IN ULONG l,                 // transfer length
                          IN BOOLEAN Direct,
                          OUT PCHAR Buffer,
-                         OUT PULONG ReadBytes);
+                         OUT PSIZE_T ReadBytes);
 // read unaligned data
 extern OSSTATUS UDFReadData(IN PVCB Vcb,
                      IN BOOLEAN Translate,   // Translate Logical to Physical
@@ -145,7 +145,7 @@ extern OSSTATUS UDFReadData(IN PVCB Vcb,
                      IN ULONG Length,
                      IN BOOLEAN Direct,
                      OUT PCHAR Buffer,
-                     OUT PULONG ReadBytes);
+                     OUT PSIZE_T ReadBytes);
 
 #ifndef UDF_READ_ONLY_BUILD
 // write physical sectors
@@ -156,7 +156,7 @@ OSSTATUS UDFWriteSectors(IN PVCB Vcb,
                          IN BOOLEAN Direct,         // setting this flag delays flushing of given
                                                     // data to indefinite term
                          IN PCHAR Buffer,
-                         OUT PULONG WrittenBytes);
+                         OUT PSIZE_T WrittenBytes);
 // write directly to cached sector
 OSSTATUS UDFWriteInSector(IN PVCB Vcb,
                           IN BOOLEAN Translate,       // Translate Logical to Physical
@@ -165,16 +165,16 @@ OSSTATUS UDFWriteInSector(IN PVCB Vcb,
                           IN ULONG l,                 // transfer length
                           IN BOOLEAN Direct,
                           OUT PCHAR Buffer,
-                          OUT PULONG WrittenBytes);
+                          OUT PSIZE_T WrittenBytes);
 // write data at unaligned offset & length
 OSSTATUS UDFWriteData(IN PVCB Vcb,
                       IN BOOLEAN Translate,      // Translate Logical to Physical
                       IN LONGLONG Offset,
-                      IN ULONG Length,
+                      IN SIZE_T Length,
                       IN BOOLEAN Direct,         // setting this flag delays flushing of given
                                                  // data to indefinite term
                       IN PCHAR Buffer,
-                      OUT PULONG WrittenBytes);
+                      OUT PSIZE_T WrittenBytes);
 #endif //UDF_READ_ONLY_BUILD
 
 OSSTATUS UDFResetDeviceDriver(IN PVCB Vcb,

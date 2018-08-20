@@ -1116,7 +1116,7 @@ op_vol_accs_dnd:
             // get next path part...
             TmpBuffer = TailName.Buffer;
             TailName.Buffer = UDFDissectName(TailName.Buffer,&(CurName.Length) );
-            TailName.Length -= (USHORT)((ULONG)(TailName.Buffer) - (ULONG)TmpBuffer);
+            TailName.Length -= (USHORT)((ULONG_PTR)(TailName.Buffer) - (ULONG_PTR)TmpBuffer);
             CurName.Buffer = TailName.Buffer - CurName.Length;
             CurName.Length *= sizeof(WCHAR);
             CurName.MaximumLength = CurName.Length + sizeof(WCHAR);

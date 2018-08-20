@@ -24,7 +24,7 @@ UDFExtentOffsetToLba(IN PVCB Vcb,
                      IN PEXTENT_AD Extent,   // Extent array
                      IN int64 Offset,     // offset in extent
                      OUT uint32* SectorOffset,
-                     OUT uint32* AvailLength, // available data in this block
+                     OUT PSIZE_T AvailLength, // available data in this block
                      OUT uint32* Flags,
                      OUT uint32* Index);
 
@@ -44,10 +44,10 @@ UDFLocateLbaInExtent(
 OSSTATUS UDFReadExtent(IN PVCB Vcb,
                        IN PEXTENT_INFO ExtInfo, // Extent array
                        IN int64 Offset,   // offset in extent
-                       IN uint32 Length,
+                       IN SIZE_T Length,
                        IN BOOLEAN Direct,
                        OUT int8* Buffer,
-                       OUT uint32* ReadBytes);
+                       OUT PSIZE_T ReadBytes);
 // builds mapping for specified amount of data at any offset from specified extent.
 OSSTATUS
 UDFReadExtentLocation(IN PVCB Vcb,
@@ -64,7 +64,7 @@ int64 UDFGetExtentLength(IN PEXTENT_MAP Extent);  // Extent array
 void 
 __fastcall UDFDecompressUnicode(IN OUT PUNICODE_STRING UName,
                               IN uint8* CS0,
-                              IN uint32 Length,
+                              IN SIZE_T Length,
                               OUT uint16* valueCRC);
 // calculate hashes for directory search
 uint8    UDFBuildHashEntry(IN PVCB Vcb,
@@ -241,17 +241,17 @@ __fastcall UDFDOSName100(IN OUT PUNICODE_STRING DosName,
 
 // return length of bit-chain starting from Offs bit
 #ifdef _X86_
-uint32
+SIZE_T
 __stdcall
 UDFGetBitmapLen(
 #else   // NO X86 optimization , use generic C/C++
-uint32    UDFGetBitmapLen(
+SIZE_T    UDFGetBitmapLen(
 #endif // _X86_
                          uint32* Bitmap,
-                         uint32 Offs,
-                         uint32 Lim);
+                         SIZE_T Offs,
+                         SIZE_T Lim);
 // scan disc free space bitmap for minimal suitable extent
-uint32    UDFFindMinSuitableExtent(IN PVCB Vcb,
+SIZE_T    UDFFindMinSuitableExtent(IN PVCB Vcb,
                                    IN uint32 Length, // in blocks
                                    IN uint32 SearchStart,
                                    IN uint32 SearchLim,
@@ -468,7 +468,7 @@ OSSTATUS UDFLoadExtInfo(IN PVCB Vcb,
 void 
 __fastcall UDFCompressUnicode(IN PUNICODE_STRING UName,
                             IN OUT uint8** _CS0,
-                            IN OUT uint32* Length);
+                            IN OUT PSIZE_T Length);
 // build FileIdent for specified FileEntry.
 OSSTATUS UDFBuildFileIdent(IN PVCB Vcb,
                            IN PUNICODE_STRING fn,
@@ -520,21 +520,21 @@ __inline OSSTATUS UDFMarkRecordedAsAllocated(IN PVCB Vcb,
 OSSTATUS UDFWriteExtent(IN PVCB Vcb,
                         IN PEXTENT_INFO ExtInfo,   // Extent array
                         IN int64 Offset,           // offset in extent
-                        IN uint32 Length,
+                        IN SIZE_T Length,
                         IN BOOLEAN Direct,         // setting this flag delays flushing of given
                                                    // data to indefinite term
                         IN int8* Buffer,
-                        OUT uint32* WrittenBytes);
+                        OUT PSIZE_T WrittenBytes);
 
 // deallocate/zero data at any offset from specified extent.
 OSSTATUS UDFZeroExtent(IN PVCB Vcb,
                        IN PEXTENT_INFO ExtInfo,   // Extent array
                        IN int64 Offset,           // offset in extent
-                       IN uint32 Length,
+                       IN SIZE_T Length,
                        IN BOOLEAN Deallocate,     // deallocate frag or just mark as unrecorded
                        IN BOOLEAN Direct,         // setting this flag delays flushing of given
                                                   // data to indefinite term
-                       OUT uint32* WrittenBytes);
+                       OUT PSIZE_T WrittenBytes);
 
 #define UDFZeroExtent__(Vcb, Ext, Off, Len, Dir, WB) \
   UDFZeroExtent(Vcb, Ext, Off, Len, FALSE, Dir, WB)
@@ -619,10 +619,10 @@ void  UDFChangeFileCounter(IN PVCB Vcb,
 OSSTATUS UDFWriteFile__(IN PVCB Vcb,
                         IN PUDF_FILE_INFO FileInfo,
                         IN int64 Offset,
-                        IN uint32 Length,
+                        IN SIZE_T Length,
                         IN BOOLEAN Direct,
                         IN int8* Buffer,
-                        OUT uint32* WrittenBytes);
+                        OUT PSIZE_T WrittenBytes);
 // mark file as deleted & decrease file link counter.
 OSSTATUS UDFUnlinkFile__(IN PVCB Vcb,
                          IN PUDF_FILE_INFO FileInfo,
@@ -666,10 +666,10 @@ __inline
 OSSTATUS UDFReadFile__(IN PVCB Vcb,
                        IN PUDF_FILE_INFO FileInfo,
                        IN int64 Offset,   // offset in extent
-                       IN uint32 Length,
+                       IN SIZE_T Length,
                        IN BOOLEAN Direct,
                        OUT int8* Buffer,
-                       OUT uint32* ReadBytes)
+                       OUT PSIZE_T ReadBytes)
 {
     ValidateFileInfo(FileInfo);
 
@@ -862,7 +862,7 @@ __fastcall crc32(IN uint8* s,
 // calculate a 16-bit CRC checksum using ITU-T V.41 polynomial
 uint16 
 __fastcall UDFCrc(IN uint8* Data,
-                IN uint32 Size);
+                IN SIZE_T Size);
 // read the first block of a tagged descriptor & check it
 OSSTATUS UDFReadTagged(IN PVCB Vcb,
                        IN int8* Buf,
@@ -1277,7 +1277,7 @@ UDFVWrite(
     IN void* Buffer,     // Target buffer
     IN uint32 BCount,
     IN uint32 LBA,
-//    OUT uint32* WrittenBytes,
+//    OUT PSIZE_T WrittenBytes,
     IN uint32 Flags
     );
 

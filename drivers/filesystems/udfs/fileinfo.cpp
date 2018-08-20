@@ -137,7 +137,7 @@ UDFCommonFileInfo(
     TmPrint(("UDFCommonFileInfo: irp %x\n", Irp));
 
         TopIrp = IoGetTopLevelIrp();
-        switch((ULONG)TopIrp) {
+        switch((ULONG_PTR)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
             UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;

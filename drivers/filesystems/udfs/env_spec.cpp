@@ -130,9 +130,9 @@ NTAPI
 UDFPhReadSynchronous(
     PDEVICE_OBJECT      DeviceObject,   // the physical device object
     PVOID               Buffer,
-    ULONG               Length,
+    SIZE_T              Length,
     LONGLONG            Offset,
-    PULONG              ReadBytes,
+    PSIZE_T             ReadBytes,
     ULONG               Flags
     )
 {
@@ -276,9 +276,9 @@ NTAPI
 UDFPhWriteSynchronous(
     PDEVICE_OBJECT  DeviceObject,   // the physical device object
     PVOID           Buffer,
-    ULONG           Length,
+    SIZE_T          Length,
     LONGLONG        Offset,
-    PULONG          WrittenBytes,
+    PSIZE_T         WrittenBytes,
     ULONG           Flags
     )
 {
@@ -422,9 +422,9 @@ NTSTATUS
 UDFPhWriteVerifySynchronous(
     PDEVICE_OBJECT  DeviceObject,   // the physical device object
     PVOID           Buffer,
-    ULONG           Length,
+    SIZE_T          Length,
     LONGLONG        Offset,
-    PULONG          WrittenBytes,
+    PSIZE_T         WrittenBytes,
     ULONG           Flags
     )
 {

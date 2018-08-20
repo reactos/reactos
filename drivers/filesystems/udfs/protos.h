@@ -784,7 +784,7 @@ extern OSSTATUS UDFDoDismountSequence(IN PVCB Vcb,
 #define UDFReadSectors(Vcb, Translate, Lba, BCount, Direct, Buffer, ReadBytes)                 \
     (( WCacheIsInitialized__(&((Vcb)->FastCache)) && (KeGetCurrentIrql() < DISPATCH_LEVEL)) ?              \
         (WCacheReadBlocks__(&((Vcb)->FastCache), Vcb, Buffer, Lba, BCount, ReadBytes, Direct)) : \
-        (UDFTRead(Vcb, Buffer, (BCount)<<((Vcb)->BlockSizeBits), Lba, ReadBytes, 0)))
+        (UDFTRead(Vcb, Buffer, ((SIZE_T)(BCount))<<((Vcb)->BlockSizeBits), Lba, ReadBytes, 0)))
 
 
 // read data inside physical sector

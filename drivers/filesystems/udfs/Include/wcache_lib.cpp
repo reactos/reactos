@@ -70,7 +70,7 @@ typedef struct _W_CACHE_ASYNC {
     PW_CACHE Cache;
     PVOID Buffer;
     PVOID Buffer2;
-    ULONG TransferredBytes;
+    SIZE_T TransferredBytes;
     ULONG BCount;
     lba_t Lba;
     struct _W_CACHE_ASYNC* NextWContext;
@@ -119,7 +119,7 @@ WCacheInit__(
                               //   simultaneously
     IN ULONG MaxBlocks,       // maximum number of Blocks to be kept in memory
                               //   simultaneously
-    IN ULONG MaxBytesToRead,  // maximum IO length (split boundary)
+    IN SIZE_T MaxBytesToRead,  // maximum IO length (split boundary)
     IN ULONG PacketSizeSh,    // number of blocks in packet (bit shift)
                               //   Packes size = 2^PacketSizeSh
     IN ULONG BlockSizeSh,     // Block size (bit shift)
@@ -756,7 +756,7 @@ WCacheInitFrame(
     //Cache->FrameList[frame].AccessCount = 0;
 
     if(block_array) {
-        ASSERT((ULONG)block_array > 0x1000);
+        ASSERT((ULONG_PTR)block_array > 0x1000);
         WCacheInsertItemToList(Cache->CachedFramesList, &(Cache->FrameCount), frame);
         RtlZeroMemory(block_array, l);
     } else {
@@ -862,7 +862,7 @@ WCacheRemoveFrame(
   Internal routine
  */
 #define WCacheSectorAddr(block_array, i) \
-    ((ULONG)(block_array[i].Sector) & WCACHE_ADDR_MASK)
+    ((ULONG_PTR)(block_array[i].Sector) & WCACHE_ADDR_MASK)
 
 /*
   WCacheFreeSector() releases memory block containing cached
@@ -996,7 +996,7 @@ WCacheUpdatePacket(
     IN ULONG BS,              // Block size (bytes)
     IN ULONG PS,              // Packet size (bytes)
     IN ULONG PSs,             // Packet size (sectors)
-    IN PULONG ReadBytes,      // pointer to number of successfully read/written bytes
+    IN PSIZE_T ReadBytes,      // pointer to number of successfully read/written bytes
     IN BOOLEAN PrefereWrite,  // allow physical write (flush) of modified packet
     IN ULONG State            // callers state
     )
@@ -1379,7 +1379,7 @@ WCacheCheckLimitsRW(
     ULONG try_count = 0;
     PW_CACHE_ENTRY block_array;
     OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     ULONG FreeFrameCount = 0;
 //    PVOID addr;
     PW_CACHE_ASYNC FirstWContext = NULL;
@@ -1553,7 +1553,7 @@ WCacheFlushBlocksRAM(
     ULONG BS = Cache->BlockSize;
 //    ULONG PS = BS << Cache->PacketSizeSh; // packet size (bytes)
     ULONG PSs = Cache->PacketSize;
-    ULONG _WrittenBytes;
+    SIZE_T _WrittenBytes;
     OSSTATUS status = STATUS_SUCCESS;
 
     frame = List[firstPos] >> Cache->BlocksPerFrameSh;
@@ -1864,7 +1864,7 @@ WCachePreReadPacket__(
     ULONG BSh = Cache->BlockSizeSh;
     ULONG BS = Cache->BlockSize;
     PCHAR addr;
-    ULONG _ReadBytes;
+    SIZE_T _ReadBytes;
     ULONG PS = Cache->PacketSize; // (in blocks)
     ULONG BCount = PS;
     ULONG i, n, err_count;
@@ -2014,7 +2014,7 @@ WCacheReadBlocks__(
     IN PCHAR Buffer,          // user-supplied buffer for read blocks
     IN lba_t Lba,             // LBA to start read from
     IN ULONG BCount,          // number of blocks to be read
-    OUT PULONG ReadBytes,     // user-supplied pointer to ULONG that will
+    OUT PSIZE_T ReadBytes,     // user-supplied pointer to ULONG that will
                               //   recieve number of actually read bytes
     IN BOOLEAN CachedOnly     // specifies that cache is already locked
     )
@@ -2024,11 +2024,11 @@ WCacheReadBlocks__(
     OSSTATUS status = STATUS_SUCCESS;
     PW_CACHE_ENTRY block_array;
     ULONG BSh = Cache->BlockSizeSh;
-    ULONG BS = Cache->BlockSize;
+    SIZE_T BS = Cache->BlockSize;
     PCHAR addr;
     ULONG to_read, saved_to_read;
 //    PCHAR saved_buff = Buffer;
-    ULONG _ReadBytes;
+    SIZE_T _ReadBytes;
     ULONG PS = Cache->PacketSize;
     ULONG MaxR = Cache->MaxBytesToRead;
     ULONG PacketMask = PS-1; // here we assume that Packet Size value is 2^n
@@ -2283,7 +2283,7 @@ WCacheWriteBlocks__(
     IN PCHAR Buffer,          // user-supplied buffer containing data to be written    
     IN lba_t Lba,             // LBA to start write from
     IN ULONG BCount,          // number of blocks to be written
-    OUT PULONG WrittenBytes,  // user-supplied pointer to ULONG that will
+    OUT PSIZE_T WrittenBytes,  // user-supplied pointer to ULONG that will
                               //   recieve number of actually written bytes
     IN BOOLEAN CachedOnly     // specifies that cache is already locked
     )
@@ -2296,7 +2296,7 @@ WCacheWriteBlocks__(
     ULONG BS = Cache->BlockSize;
     PCHAR addr;
 //    PCHAR saved_buff = Buffer;
-    ULONG _WrittenBytes;
+    SIZE_T _WrittenBytes;
     ULONG PS = Cache->PacketSize;
     ULONG PacketMask = PS-1; // here we assume that Packet Size value is 2^n
     ULONG block_type;
@@ -2634,7 +2634,7 @@ WCachePurgeAllRW(
     ULONG PSs = Cache->PacketSize;
     PW_CACHE_ENTRY block_array;
 //    OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
     ULONG chain_count = 0;
@@ -2702,7 +2702,7 @@ WCacheFlushAllRW(
     ULONG BFs = Cache->BlocksPerFrameSh;
     PW_CACHE_ENTRY block_array;
 //    OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
     ULONG i;
@@ -2841,7 +2841,7 @@ WCacheFlushBlocksRW(
     ULONG BFs = Cache->BlocksPerFrameSh;
     PW_CACHE_ENTRY block_array;
 //    OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     PW_CACHE_ASYNC FirstWContext = NULL;
     PW_CACHE_ASYNC PrevWContext = NULL;
     ULONG i;
@@ -2960,7 +2960,7 @@ WCacheDirect__(
     PW_CACHE_ENTRY block_array;
     ULONG BS = Cache->BlockSize;
     PCHAR addr;
-    ULONG _ReadBytes;
+    SIZE_T _ReadBytes;
     ULONG block_type;
 
     WcPrint(("WC:%sD %x (1)\n", Modified ? "W" : "R", Lba));
@@ -3206,7 +3206,7 @@ WCacheCheckLimitsR(
     PW_CACHE_ENTRY block_array;
     BOOLEAN mod;
     OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     ULONG MaxReloc = Cache->PacketSize;
     PULONG reloc_tab = Cache->reloc_tab;
 
@@ -3324,7 +3324,7 @@ WCachePurgeAllR(
     PW_CACHE_ENTRY block_array;
     BOOLEAN mod;
     OSSTATUS status;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
     ULONG MaxReloc = Cache->PacketSize;
     PULONG reloc_tab = Cache->reloc_tab;
     ULONG RelocCount = 0;

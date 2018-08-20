@@ -117,7 +117,7 @@ UDFCommonWrite(
     PIO_STACK_LOCATION      IrpSp = NULL;
     LARGE_INTEGER           ByteOffset;
     ULONG                   WriteLength = 0, TruncatedLength = 0;
-    ULONG                   NumberBytesWritten = 0;
+    SIZE_T                  NumberBytesWritten = 0;
     PFILE_OBJECT            FileObject = NULL;
     PtrUDFFCB               Fcb = NULL;
     PtrUDFCCB               Ccb = NULL;
@@ -158,7 +158,7 @@ UDFCommonWrite(
 
         TopIrp = IoGetTopLevelIrp();
 
-        switch((ULONG)TopIrp) {
+        switch((ULONG_PTR)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
             UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
@@ -525,7 +525,7 @@ UDFCommonWrite(
 
         // Determine if we were called by the lazywriter.
         // We reuse 'IsThisADeferredWrite' here to decrease stack usage
-        IsThisADeferredWrite = (NtReqFcb->LazyWriterThreadID == (uint32)PsGetCurrentThread());
+        IsThisADeferredWrite = (NtReqFcb->LazyWriterThreadID == HandleToUlong(PsGetCurrentThreadId()));
 
         // Acquire the appropriate FCB resource
         if(PagingIo) {
@@ -576,7 +576,7 @@ UDFCommonWrite(
 
             //  This clause determines if the top level request was
             //  in the FastIo path.
-            if ((ULONG)TopIrp > FSRTL_MAX_TOP_LEVEL_IRP_FLAG) {
+            if ((ULONG_PTR)TopIrp > FSRTL_MAX_TOP_LEVEL_IRP_FLAG) {
 
                 PIO_STACK_LOCATION IrpStack;
                 ASSERT( TopIrp->Type == IO_TYPE_IRP );
@@ -846,11 +846,11 @@ UDFCommonWrite(
             }
 
 #if 1
-            if((ULONG)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
+            if((ULONG_PTR)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
                 UDFPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             } else
-            if((ULONG)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
+            if((ULONG_PTR)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
                 UDFPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             }

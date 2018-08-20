@@ -94,20 +94,20 @@ __fastcall
 UDFTIOVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* IOBytes,
+    OUT PSIZE_T IOBytes,
     IN uint32 Flags
     )
 {
     OSSTATUS RC = STATUS_SUCCESS;
     uint32 i, j;
-    uint32 mask;
+    SIZE_T mask;
     uint32 lba0, len, lba1;
     PUCHAR tmp_buff;
     PUCHAR p;
     PCHAR cached_block;
-    uint32 tmp_wb;
+    SIZE_T tmp_wb;
     BOOLEAN need_remap;
     OSSTATUS final_RC = STATUS_SUCCESS;
     BOOLEAN zero;
@@ -127,7 +127,7 @@ UDFTIOVerify(
     UDFAcquireResourceExclusive(&(Vcb->IoResource), TRUE);
     Flags |= PH_IO_LOCKED;
 
-    tmp_wb = (uint32)_Vcb;
+    tmp_wb = (SIZE_T)_Vcb;
     if(Flags & PH_EX_WRITE) {
         UDFPrint(("IO-Write-Verify\n"));
         RC = UDFTWrite(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_VCB_IN_RETLEN);
@@ -248,7 +248,7 @@ UDFTIOVerify(
             packet_ok = FALSE;
             if(!single_packet) {
                 // try to read entire packet, this returs error more often then sequential reading of all blocks one by one
-                tmp_wb = (uint32)_Vcb;
+                tmp_wb = (SIZE_T)_Vcb;
                 RC = UDFTRead(_Vcb, p, Vcb->SparingBlockSize << Vcb->BlockSizeBits, lba0+i, &tmp_wb,
                               Flags | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
             } else {
@@ -271,7 +271,7 @@ UDFTIOVerify(
                 // even if block is cached, we have to verify if it is readable
                 if(!packet_ok && !UDFVIsStored(Vcb, lba0+i)) {
 
-                    tmp_wb = (uint32)_Vcb;
+                    tmp_wb = (SIZE_T)_Vcb;
                     RC = UDFTRead(_Vcb, p, Vcb->BlockSize, lba0+i, &tmp_wb,
                                   Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
                     if(!OS_SUCCESS(RC)) {
@@ -297,7 +297,7 @@ UDFTIOVerify(
 
             } else {
                 if(!UDFVIsStored(Vcb, lba0+i)) {
-                    tmp_wb = (uint32)_Vcb;
+                    tmp_wb = (SIZE_T)_Vcb;
                     RC = UDFTRead(_Vcb, p, Vcb->BlockSize, lba0+i, &tmp_wb,
                                   Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
                 } else {
@@ -363,7 +363,7 @@ do_remap:
                         UDFPrint(("  remap status %x\n", RC));
                         if(OS_SUCCESS(RC)) {
                             // write to remapped area
-                            tmp_wb = (uint32)_Vcb;
+                            tmp_wb = (SIZE_T)_Vcb;
                             RC = UDFTWrite(_Vcb, tmp_buff, Vcb->SparingBlockSize << Vcb->BlockSizeBits, lba1, &tmp_wb,
                                           Flags | PH_FORGET_VERIFIED | PH_READ_VERIFY_CACHE | PH_TMP_BUFFER | PH_VCB_IN_RETLEN);
                             UDFPrint(("  write status %x\n", RC));
@@ -397,7 +397,7 @@ do_remap:
         DbgFreePool(tmp_buff);
     }
 
-    tmp_wb = (uint32)_Vcb;
+    tmp_wb = (SIZE_T)_Vcb;
     if(Flags & PH_EX_WRITE) {
         UDFPrint(("IO-Write-Verify (2)\n"));
         //RC = UDFTWrite(_Vcb, Buffer, Length, LBA, &tmp_wb, Flags | PH_FORGET_VERIFIED | PH_VCB_IN_RETLEN);
@@ -420,9 +420,9 @@ OSSTATUS
 UDFTWriteVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* WrittenBytes,
+    OUT PSIZE_T WrittenBytes,
     IN uint32 Flags
     )
 {
@@ -433,9 +433,9 @@ OSSTATUS
 UDFTReadVerify(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* ReadBytes,
+    OUT PSIZE_T ReadBytes,
     IN uint32 Flags
     )
 {
@@ -453,9 +453,9 @@ OSSTATUS
 UDFTWrite(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* WrittenBytes,
+    OUT PSIZE_T WrittenBytes,
     IN uint32 Flags
     )
 {
@@ -526,7 +526,7 @@ retry_1:
                 try_return(RC);
             }
             if(Flags & PH_VCB_IN_RETLEN) {
-                (*WrittenBytes) = (ULONG)Vcb;
+                (*WrittenBytes) = (ULONG_PTR)Vcb;
             }
             RC = UDFPhWriteVerifySynchronous(Vcb->TargetDeviceObject, Buffer, Length,
                        ((uint64)rLba) << Vcb->BlockSizeBits, WrittenBytes, Flags);
@@ -543,7 +543,7 @@ retry_1:
         // write according to relocation table
         RelocExtent_saved = RelocExtent;
         for(i=0; RelocExtent->extLength; i++, RelocExtent++) {
-            uint32 _WrittenBytes;
+            SIZE_T _WrittenBytes;
             rLba = RelocExtent->extLocation;
             BCount = RelocExtent->extLength>>Vcb->BlockSizeBits;
             retry = UDF_WRITE_MAX_RETRY;
@@ -554,7 +554,7 @@ retry_2:
                 break;
             }
             if(Flags & PH_VCB_IN_RETLEN) {
-                _WrittenBytes = (ULONG)Vcb;
+                _WrittenBytes = (ULONG_PTR)Vcb;
             }
             RC = UDFPhWriteVerifySynchronous(Vcb->TargetDeviceObject, Buffer, RelocExtent->extLength,
                        ((uint64)rLba) << Vcb->BlockSizeBits, &_WrittenBytes, Flags);
@@ -596,9 +596,9 @@ OSSTATUS
 UDFTRead(
     IN void* _Vcb,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* ReadBytes,
+    OUT PSIZE_T ReadBytes,
     IN uint32 Flags
     ) 
 {
@@ -651,7 +651,7 @@ retry_1:
             if(!OS_SUCCESS(RC)) return RC; // this is for !_BROWSE_UDF only
 #endif //_BROWSE_UDF_
             if(Flags & PH_VCB_IN_RETLEN) {
-                (*ReadBytes) = (ULONG)Vcb;
+                (*ReadBytes) = (SIZE_T)Vcb;
             }
             RC = UDFPhReadSynchronous(Vcb->TargetDeviceObject, Buffer, Length,
                        ((uint64)rLba) << Vcb->BlockSizeBits, ReadBytes, Flags);
@@ -674,7 +674,7 @@ retry_1:
         // read according to relocation table
         RelocExtent_saved = RelocExtent;
         for(i=0; RelocExtent->extLength; i++, RelocExtent++) {
-            uint32 _ReadBytes;
+            SIZE_T _ReadBytes;
             rLba = RelocExtent->extLocation;
             if(rLba >= (Vcb->CDR_Mode ? Vcb->NWA : Vcb->LastLBA + 1)) {
                 RtlZeroMemory(Buffer, _ReadBytes = RelocExtent->extLength);
@@ -688,7 +688,7 @@ retry_2:
             if(!OS_SUCCESS(RC)) break;
             rLba = UDFFixFPAddress(Vcb, rLba);
             if(Flags & PH_VCB_IN_RETLEN) {
-                _ReadBytes = (ULONG)Vcb;
+                _ReadBytes = (SIZE_T)Vcb;
             }
             RC = UDFPhReadSynchronous(Vcb->TargetDeviceObject, Buffer, RelocExtent->extLength,
                        ((uint64)rLba) << Vcb->BlockSizeBits, &_ReadBytes, Flags);
@@ -731,9 +731,9 @@ UDFTReadAsync(
     IN void* _Vcb,
     IN void* _WContext,
     IN void* Buffer,     // Target buffer
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN uint32 LBA,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     ) 
 {
     PEXTENT_MAP RelocExtent;
@@ -774,7 +774,7 @@ retry_1:
     // read according to relocation table
     RelocExtent_saved = RelocExtent;
     for(uint32 i=0; RelocExtent->extLength; i++, RelocExtent++) {
-        uint32 _ReadBytes;
+        SIZE_T _ReadBytes;
         rLba = RelocExtent->extLocation;
         if(rLba >= (Vcb->CDR_Mode ? Vcb->NWA : Vcb->LastLBA + 1)) {
             RtlZeroMemory(Buffer, _ReadBytes = RelocExtent->extLength);
@@ -1157,7 +1157,7 @@ check_dvd_bg_format:
                  && (Lba > Vcb->LastLBA)) {
    
             ULONG fLba;
-            ULONG WrittenBytes;
+            SIZE_T WrittenBytes;
             ULONG PSz = BCount << Vcb->BlockSizeBits;
 #ifdef _BROWSE_UDF_
             ULONG retry;
@@ -2151,7 +2151,7 @@ MRWRetry_label:
                 } else
                 if(Vcb->MRWStatus) {
                     uint8* buff;
-                    uint32 ReadBytes;
+                    SIZE_T ReadBytes;
 
                     UDFPrint((" MRW state %x\n", Vcb->MRWStatus));
 
@@ -2397,7 +2397,7 @@ UDFUseStandard(
 #ifdef _BROWSE_UDF_
     uint32                  OldTrkNum;
     uint32                  TrkNum;
-    uint32                  ReadBytes, i, len;
+    SIZE_T                  ReadBytes, i, len;
 #endif //_BROWSE_UDF_
 #ifdef UDF_FORMAT_MEDIA
     PUDFFmtState            fms = Vcb->fms;
@@ -2879,7 +2879,7 @@ UDFCheckTrackFPAddressing(
     uint32 lba=0;
     uint32 i;
     uint8* Buffer;
-//    uint32 ReadBytes;
+//    SIZE_T ReadBytes;
 
     uint8  user_data;
 
@@ -3682,7 +3682,7 @@ UDFPrepareForReadOperation(
 #ifdef _BROWSE_UDF_
     PUCHAR tmp;
     OSSTATUS RC;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
 #endif //_BROWSE_UDF_
 
 #ifdef _UDF_STRUCTURES_H_
@@ -3887,7 +3887,7 @@ UDFReadSectors(
     IN uint32 Lba,
     IN uint32 BCount,
     OUT int8* Buffer,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
 
@@ -3911,12 +3911,12 @@ UDFReadInSector(
     IN uint32 l,                 // transfer length
     IN BOOLEAN Direct,          // Disable access to non-cached data
     OUT int8* Buffer,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
     int8* tmp_buff;
     OSSTATUS status;
-    uint32 _ReadBytes;
+    SIZE_T _ReadBytes;
 
     (*ReadBytes) = 0;
     if(WCacheIsInitialized__(&(Vcb->FastCache)) && (KeGetCurrentIrql() < DISPATCH_LEVEL)) {
@@ -3953,13 +3953,13 @@ UDFReadData(
     IN uint32 Length,
     IN BOOLEAN Direct,          // Disable access to non-cached data
     OUT int8* Buffer,
-    OUT uint32* ReadBytes
+    OUT PSIZE_T ReadBytes
     )
 {
     uint32 i, l, Lba, BS=Vcb->BlockSize;
     uint32 BSh=Vcb->BlockSizeBits;
     OSSTATUS status;
-    uint32 _ReadBytes = 0;
+    SIZE_T _ReadBytes = 0;
     Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
     uint32 to_read;
 
@@ -4016,7 +4016,7 @@ UDFWriteSectors(
     IN uint32 BCount,
     IN BOOLEAN Direct,          // Disable access to non-cached data
     IN int8* Buffer,
-    OUT uint32* WrittenBytes
+    OUT PSIZE_T WrittenBytes
     )
 {
     OSSTATUS status;
@@ -4045,7 +4045,7 @@ UDFWriteSectors(
     }
 /*    void* buffer;
     OSSTATUS status;
-    uint32 _ReadBytes;
+    SIZE_T _ReadBytes;
     (*WrittenBytes) = 0;
     buffer = DbgAllocatePool(NonPagedPool, Vcb->WriteBlockSize);
     if(!buffer) return STATUS_INSUFFICIENT_RESOURCES;
@@ -4068,14 +4068,14 @@ UDFWriteInSector(
     IN uint32 l,                 // transfer length
     IN BOOLEAN Direct,          // Disable access to non-cached data
     OUT int8* Buffer,
-    OUT uint32* WrittenBytes
+    OUT PSIZE_T WrittenBytes
     )
 {
     int8* tmp_buff;
     OSSTATUS status;
 #ifdef _BROWSE_UDF_
-    uint32 _WrittenBytes;
-    uint32 ReadBytes;
+    SIZE_T _WrittenBytes;
+    SIZE_T ReadBytes;
 
     if(!Vcb->Modified) {
         UDFSetModified(Vcb);
@@ -4142,17 +4142,17 @@ UDFWriteData(
     IN PVCB Vcb,
     IN BOOLEAN Translate,      // Translate Logical to Physical
     IN int64 Offset,
-    IN uint32 Length,
+    IN SIZE_T Length,
     IN BOOLEAN Direct,         // setting this flag delays flushing of given
                                // data to indefinite term
     IN int8* Buffer,
-    OUT uint32* WrittenBytes
+    OUT PSIZE_T WrittenBytes
     )
 {
     uint32 i, l, Lba, BS=Vcb->BlockSize;
     uint32 BSh=Vcb->BlockSizeBits;
     OSSTATUS status;
-    uint32 _WrittenBytes;
+    SIZE_T _WrittenBytes;
     Vcb->VCBFlags |= UDF_VCB_SKIP_EJECT_CHECK;
 
     (*WrittenBytes) = 0;

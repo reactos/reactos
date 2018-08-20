@@ -1111,7 +1111,7 @@ unwind_3:
     if(NT_SUCCESS(RC)) {
 
         int8* buff;
-        uint32 len;
+        SIZE_T len;
         PUDF_FILE_INFO CfgFileInfo = NULL;
 
         RC = UDFOpenFile__(Vcb, FALSE, TRUE, &LocalPath, RootFcb->FileInfo, &CfgFileInfo, NULL);
@@ -1686,7 +1686,7 @@ UDFIsPathnameValid(
             // get next path part...
             TmpBuffer = PathName.Buffer;
             PathName.Buffer = UDFDissectName(PathName.Buffer,&(CurName.Length) );
-            PathName.Length -= (USHORT)((ULONG)(PathName.Buffer) - (ULONG)TmpBuffer);
+            PathName.Length -= (USHORT)((ULONG_PTR)(PathName.Buffer) - (ULONG_PTR)TmpBuffer);
             CurName.Buffer = PathName.Buffer - CurName.Length;
             CurName.Length *= sizeof(WCHAR);
             CurName.MaximumLength -= CurName.Length;
