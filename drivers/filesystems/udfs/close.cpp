@@ -1007,7 +1007,7 @@ UDFCloseAllXXXDelayedInDir(
                     if(CurFileInfo &&
                        (Fcb = CurFileInfo->Fcb)) {
                         NtReqFcb = Fcb->NTRequiredFCB;
-                        ASSERT((ULONG)NtReqFcb > 0x1000);
+                        ASSERT((ULONG_PTR)NtReqFcb > 0x1000);
 //                            ASSERT((ULONG)(NtReqFcb->SectionObject) > 0x1000);
                         if(!(NtReqFcb->NtReqFCBFlags & UDF_NTREQ_FCB_DELETED) &&
                             (NtReqFcb->NtReqFCBFlags & UDF_NTREQ_FCB_MODIFIED)) {

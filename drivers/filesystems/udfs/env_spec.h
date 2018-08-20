@@ -22,25 +22,25 @@
 extern NTSTATUS NTAPI UDFPhReadSynchronous(
                    PDEVICE_OBJECT      DeviceObject,
                    PVOID           Buffer,
-                   ULONG           Length,
+                   SIZE_T          Length,
                    LONGLONG        Offset,
-                   PULONG          ReadBytes,
+                   PSIZE_T         ReadBytes,
                    ULONG           Flags);
 
 extern NTSTATUS NTAPI UDFPhWriteSynchronous(
                    PDEVICE_OBJECT  DeviceObject,   // the physical device object
                    PVOID           Buffer,
-                   ULONG           Length,
+                   SIZE_T          Length,
                    LONGLONG        Offset,
-                   PULONG          WrittenBytes,
+                   PSIZE_T         WrittenBytes,
                    ULONG           Flags);
 /*
 extern NTSTATUS UDFPhWriteVerifySynchronous(
                    PDEVICE_OBJECT  DeviceObject,   // the physical device object
                    PVOID           Buffer,
-                   ULONG           Length,
+                   SIZE_T          Length,
                    LONGLONG        Offset,
-                   PULONG          WrittenBytes,
+                   PSIZE_T         WrittenBytes,
                    ULONG           Flags);
 */
 #define UDFPhWriteVerifySynchronous UDFPhWriteSynchronous
@@ -122,7 +122,7 @@ __inline VOID UDFNotifyFullReportChange(
 }
 
 #define CollectStatisticsEx(VCB, Field, a) {                                 \
-    ((VCB)->Statistics[KeGetCurrentProcessorNumber()].Common.##Field) += a;  \
+    ((VCB)->Statistics[KeGetCurrentProcessorNumber()].Common.##Field) += (ULONG)a;  \
 }
 
 #define CollectStatistics2(VCB, Field) {                                     \
@@ -149,7 +149,7 @@ NTSTATUS NTAPI UDFSyncCompletionRoutine2(IN PDEVICE_OBJECT DeviceObject,
 
 #define OSGetCurrentThread()     PsGetCurrentThread()
 
-#define GetCurrentPID()   ((ULONG)PsGetCurrentProcessId())
+#define GetCurrentPID()   HandleToUlong(PsGetCurrentProcessId())
 
 
 #endif  // _UDF_ENV_SPEC_H_

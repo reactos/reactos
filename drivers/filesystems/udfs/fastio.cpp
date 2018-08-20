@@ -440,7 +440,7 @@ BOOLEAN NTAPI UDFAcqLazyWrite(
 
     // Now, set the lazy-writer thread id.
     ASSERT(!(NtReqFcb->LazyWriterThreadID));
-    NtReqFcb->LazyWriterThreadID = (unsigned int)(PsGetCurrentThread());
+    NtReqFcb->LazyWriterThreadID = HandleToUlong(PsGetCurrentThreadId());
 
     ASSERT(IoGetTopLevelIrp() == NULL);
     IoSetTopLevelIrp((PIRP)FSRTL_CACHE_TOP_LEVEL_IRP);
@@ -481,7 +481,7 @@ UDFRelLazyWrite(
 
     // Remove the current thread-id from the NT_REQ_FCB
     // and release the MainResource.
-    ASSERT((NtReqFcb->LazyWriterThreadID) == (unsigned int)PsGetCurrentThread());
+    ASSERT((NtReqFcb->LazyWriterThreadID) == HandleToUlong(PsGetCurrentThreadId()));
     NtReqFcb->LazyWriterThreadID = 0;
 
     // Release the acquired resource.

@@ -235,7 +235,7 @@ UDFCommonRead(
     PIO_STACK_LOCATION      IrpSp = NULL;
     LARGE_INTEGER           ByteOffset;
     ULONG                   ReadLength = 0, TruncatedLength = 0;
-    ULONG                   NumberBytesRead = 0;
+    SIZE_T                  NumberBytesRead = 0;
     PFILE_OBJECT            FileObject = NULL;
     PtrUDFFCB               Fcb = NULL;
     PtrUDFCCB               Ccb = NULL;
@@ -262,7 +262,7 @@ UDFCommonRead(
     _SEH2_TRY {
 
         TopIrp = IoGetTopLevelIrp();
-        switch((ULONG)TopIrp) {
+        switch((ULONG_PTR)TopIrp) {
         case FSRTL_FSP_TOP_LEVEL_IRP:
             UDFPrint(("  FSRTL_FSP_TOP_LEVEL_IRP\n"));
             break;
@@ -684,11 +684,11 @@ UDFCommonRead(
             MmPrint(("    Read NonBufferedIo\n"));
 
 #if 1
-            if((ULONG)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
+            if((ULONG_PTR)TopIrp == FSRTL_MOD_WRITE_TOP_LEVEL_IRP) {
                 UDFPrint(("FSRTL_MOD_WRITE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             } else
-            if((ULONG)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
+            if((ULONG_PTR)TopIrp == FSRTL_CACHE_TOP_LEVEL_IRP) {
                 UDFPrint(("FSRTL_CACHE_TOP_LEVEL_IRP => CanWait\n"));
                 CanWait = TRUE;
             }

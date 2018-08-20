@@ -519,7 +519,7 @@ UDFIndexDirectory(
     int8* buff;
     PEXTENT_INFO ExtInfo;  // Extent array for directory
     uint16 PartNum;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint16 valueCRC;
 
     if(!FileInfo) return STATUS_INVALID_PARAMETER;
@@ -753,7 +753,7 @@ UDFPackDirectory__(
     uint32 Offset, curOffset;
     int8* Buf;
     OSSTATUS status;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     int8* storedFI;
     PUDF_FILE_INFO curFileInfo;
     PDIR_INDEX_ITEM DirNdx, DirNdx2;
@@ -901,7 +901,7 @@ UDFReTagDirectory(
     uint32 Offset;
     int8* Buf;
     OSSTATUS status;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     PUDF_FILE_INFO curFileInfo;
     PDIR_INDEX_ITEM DirNdx;
     UDF_DIR_SCAN_CONTEXT ScanContext;

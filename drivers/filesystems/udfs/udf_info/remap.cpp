@@ -227,7 +227,7 @@ UDFVWrite(
     IN void* Buffer,     // Target buffer
     IN uint32 BCount,
     IN uint32 LBA,
-//    OUT uint32* WrittenBytes,
+//    OUT PSIZE_T WrittenBytes,
     IN uint32 Flags
     )
 {
@@ -544,11 +544,11 @@ UDFVWorkItem(
 {
     PUDF_VERIFY_REQ VerifyReq = (PUDF_VERIFY_REQ)Context;
     PVCB Vcb = VerifyReq->Vcb;
-    ULONG ReadBytes;
+    SIZE_T ReadBytes;
 //    OSSTATUS RC;
     ULONG i;
 
-    ReadBytes = (ULONG)Vcb;
+    ReadBytes = (SIZE_T)Vcb;
 #if 1
     if(Vcb->SparingCountFree) {
         WCacheStartDirect__(&(Vcb->FastCache), Vcb, TRUE);
@@ -768,7 +768,7 @@ UDFCheckArea(
 {
     uint8* buff;
     OSSTATUS RC;
-    uint32 ReadBytes;
+    SIZE_T ReadBytes;
     uint32 i, d;
     BOOLEAN ext_ok = TRUE;
     EXTENT_MAP Map[2];

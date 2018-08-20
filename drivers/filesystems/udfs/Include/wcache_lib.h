@@ -21,32 +21,32 @@ extern "C" {
 
 typedef OSSTATUS     (*PWRITE_BLOCK) (IN PVOID Context,
                                       IN PVOID Buffer,     // Target buffer
-                                      IN ULONG Length,
+                                      IN SIZE_T Length,
                                       IN lba_t Lba,
-                                      OUT PULONG WrittenBytes,
+                                      OUT PSIZE_T WrittenBytes,
                                       IN uint32 Flags);
 
 typedef OSSTATUS     (*PREAD_BLOCK) (IN PVOID Context,
                                      IN PVOID Buffer,     // Target buffer
-                                     IN ULONG Length,
+                                     IN SIZE_T Length,
                                      IN lba_t Lba,
-                                     OUT PULONG ReadBytes,
+                                     OUT PSIZE_T ReadBytes,
                                      IN uint32 Flags);
 
 typedef OSSTATUS     (*PWRITE_BLOCK_ASYNC) (IN PVOID Context,
                                             IN PVOID WContext,
                                             IN PVOID Buffer,     // Target buffer
-                                            IN ULONG Length,
+                                            IN SIZE_T Length,
                                             IN lba_t Lba,
-                                            OUT PULONG WrittenBytes,
+                                            OUT PSIZE_T WrittenBytes,
                                             IN BOOLEAN FreeBuffer);
 
 typedef OSSTATUS     (*PREAD_BLOCK_ASYNC) (IN PVOID Context,
                                            IN PVOID WContext,
                                            IN PVOID Buffer,     // Source buffer
-                                           IN ULONG Length,
+                                           IN SIZE_T Length,
                                            IN lba_t Lba,
-                                           OUT PULONG ReadBytes);
+                                           OUT PSIZE_T ReadBytes);
 
 /*typedef BOOLEAN      (*PCHECK_BLOCK) (IN PVOID Context,
                                       IN lba_t Lba);*/
@@ -208,7 +208,7 @@ typedef struct _W_CACHE {
 OSSTATUS WCacheInit__(IN PW_CACHE Cache,
                       IN ULONG MaxFrames,
                       IN ULONG MaxBlocks,
-                      IN ULONG MaxBytesToRead,
+                      IN SIZE_T MaxBytesToRead,
                       IN ULONG PacketSizeSh,    // number of blocks in packet (bit shift)
                       IN ULONG BlockSizeSh,     // bit shift
                       IN ULONG BlocksPerFrameSh,// bit shift
@@ -230,7 +230,7 @@ OSSTATUS WCacheWriteBlocks__(IN PW_CACHE Cache,
                              IN PCHAR Buffer,
                              IN lba_t Lba,
                              IN ULONG BCount,
-                             OUT PULONG WrittenBytes,
+                             OUT PSIZE_T WrittenBytes,
                              IN BOOLEAN CachedOnly);
 // read cached
 OSSTATUS WCacheReadBlocks__(IN PW_CACHE Cache,
@@ -238,7 +238,7 @@ OSSTATUS WCacheReadBlocks__(IN PW_CACHE Cache,
                             IN PCHAR Buffer,
                             IN lba_t Lba,
                             IN ULONG BCount,
-                            OUT PULONG ReadBytes,
+                            OUT PSIZE_T ReadBytes,
                             IN BOOLEAN CachedOnly);
 // flush blocks
 OSSTATUS WCacheFlushBlocks__(IN PW_CACHE Cache,
