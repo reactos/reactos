@@ -300,7 +300,7 @@ static void SaveRegInt(LPCTSTR lpszApp, LPCTSTR lpszKey, int iValue)
 
 static void load_config(void)
 {
-     OSVERSIONINFO osvi;
+    OSVERSIONINFO osvi;
 
     osvi.dwOSVersionInfoSize = sizeof(osvi);
     GetVersionEx(&osvi);
