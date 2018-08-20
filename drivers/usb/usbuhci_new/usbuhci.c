@@ -517,19 +517,18 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
     ULONG Idx;
     ULONG HeadIdx;
     UCHAR FrameIdx;
-    PUHCI_HC_RESOURCES HcResourcesPA = (PUHCI_HC_RESOURCES)hcResourcesPA;
 
-    DPRINT("UhciInitializeSchedule: Ext[%p], VA - %p, PA - %p\n",
+    DPRINT("UhciInitializeSchedule: Ext[%p], VA - %p, PA - %lx\n",
            UhciExtension,
            HcResourcesVA,
-           HcResourcesPA);
+           hcResourcesPA);
 
     /* Build structure (tree) of static QHs
        for interrupt and isochronous transfers */
     for (FrameIdx = 0; FrameIdx < INTERRUPT_ENDPOINTs; FrameIdx++)
     {
         IntQH = &HcResourcesVA->StaticIntHead[FrameIdx];
-        IntQhPA = (ULONG)&HcResourcesPA->StaticIntHead[FrameIdx];
+        IntQhPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticIntHead[FrameIdx]);
 
         RtlZeroMemory(IntQH, sizeof(UHCI_HCD_QH));
 
@@ -546,7 +545,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static QH for control transfers */
     StaticControlHead = &HcResourcesVA->StaticControlHead;
-    StaticControlHeadPA = (ULONG)&HcResourcesPA->StaticControlHead;
+    StaticControlHeadPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticControlHead);
 
     RtlZeroMemory(StaticControlHead, sizeof(UHCI_HCD_QH));
 
@@ -559,7 +558,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static QH for bulk transfers */
     StaticBulkHead = &HcResourcesVA->StaticBulkHead;
-    StaticBulkHeadPA = (ULONG)&HcResourcesPA->StaticBulkHead;
+    StaticBulkHeadPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticBulkHead);
 
     RtlZeroMemory(StaticBulkHead, sizeof(UHCI_HCD_QH));
 
@@ -575,7 +574,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static TD for bulk transfers */
     StaticBulkTD = &HcResourcesVA->StaticBulkTD;
-    StaticBulkTdPA = (ULONG)&HcResourcesPA->StaticBulkTD;
+    StaticBulkTdPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticBulkTD);
 
     StaticBulkTD->HwTD.NextElement = StaticBulkTdPA | UHCI_TD_LINK_PTR_TD;
 
@@ -609,7 +608,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize static TD for first frame */
     StaticTD = &HcResourcesVA->StaticTD;
-    StaticTdPA = (ULONG)&HcResourcesPA->StaticTD;
+    StaticTdPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticTD);
 
     RtlZeroMemory(StaticTD, sizeof(UHCI_HCD_TD));
 
@@ -626,7 +625,7 @@ UhciInitializeSchedule(IN PUHCI_EXTENSION UhciExtension,
 
     /* Initialize StaticSofTDs for UhciInterruptNextSOF() */
     UhciExtension->SOF_HcdTDs = &HcResourcesVA->StaticSofTD[0];
-    StaticSofTdPA = (ULONG)&HcResourcesPA->StaticSofTD[0];
+    StaticSofTdPA = hcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, StaticSofTD[0]);
 
     for (Idx = 0; Idx < UHCI_MAX_STATIC_SOF_TDS; Idx++)
     {
@@ -686,7 +685,7 @@ UhciStartController(IN PVOID uhciExtension,
     }
 
     WRITE_PORT_ULONG(&BaseRegister->FrameAddress,
-                     (ULONG)((PUHCI_HC_RESOURCES)UhciExtension->HcResourcesPA)->FrameList);
+                     UhciExtension->HcResourcesPA + FIELD_OFFSET(UHCI_HC_RESOURCES, FrameList));
 
     if (MpStatus == MP_STATUS_SUCCESS)
     {
@@ -1238,7 +1237,6 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
                     IN PUSBPORT_SCATTER_GATHER_LIST SgList)
 {
     PUHCI_HCD_TD FirstTD;
-    PUHCI_HCD_TD FirstTdPA;
     PUHCI_HCD_TD LastTD;
     PUHCI_HCD_TD DataFirstTD;
     PUHCI_HCD_TD DataLastTD;
@@ -1295,8 +1293,7 @@ UhciControlTransfer(IN PUHCI_EXTENSION UhciExtension,
                   &TransferParameters->SetupPacket,
                   sizeof(USB_DEFAULT_PIPE_SETUP_PACKET));
 
-    FirstTdPA = (PUHCI_HCD_TD)FirstTD->PhysicalAddress;
-    FirstTD->HwTD.Buffer = (ULONG)&FirstTdPA->SetupPacket;
+    FirstTD->HwTD.Buffer = FirstTD->PhysicalAddress + FIELD_OFFSET(UHCI_HCD_TD, SetupPacket);
 
     FirstTD->NextHcdTD = NULL;
     FirstTD->UhciTransfer = UhciTransfer;
@@ -2490,8 +2487,8 @@ UhciInterruptNextSOF(IN PVOID uhciExtension)
             UhciResources = UhciExtension->HcResourcesVA;
             Idx = SOF_HcdTDs->Frame & UHCI_FRAME_LIST_INDEX_MASK;
 
-            InterlockedExchangePointer((PVOID)&SOF_HcdTDs->HwTD.NextElement,
-                                       (PVOID)UhciResources->FrameList[Idx]);
+            InterlockedExchange((PLONG)&SOF_HcdTDs->HwTD.NextElement,
+                                UhciResources->FrameList[Idx]);
 
             UhciResources->FrameList[Idx] = SOF_HcdTDs->PhysicalAddress;
             break;
