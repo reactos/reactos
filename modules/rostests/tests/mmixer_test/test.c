@@ -23,9 +23,9 @@ MixerThread(LPVOID Parameter)
 	while(GetMessage(&msg, NULL, 0, 0))
 	{
 			if (msg.message == MM_MIXM_CONTROL_CHANGE)
-				printf("got MM_MIXM_CONTROL_CHANGE wParam %x lParam %lx\n", msg.wParam, msg.lParam);
+				printf("got MM_MIXM_CONTROL_CHANGE wParam %Ix lParam %Ix\n", msg.wParam, msg.lParam);
 			else if (msg.message == MM_MIXM_LINE_CHANGE)
-				printf("got MM_MIXM_LINE_CHANGE wParam %x lParam %lx\n", msg.wParam, msg.lParam);
+				printf("got MM_MIXM_LINE_CHANGE wParam %Ix lParam %Ix\n", msg.wParam, msg.lParam);
 	}
 	return 1;
 }

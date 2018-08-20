@@ -46,7 +46,7 @@ PrintWin32Error(
 	DWORD	ErrorCode
 	)
 {
-	PVOID lpMsgBuf;
+    LPWSTR lpMsgBuf;
 
 	FormatMessageW(
 		(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM),
