@@ -2123,271 +2123,269 @@ UhciPollNonIsoEndpoint(IN PUHCI_EXTENSION UhciExtension,
                     TD,
                     TD->NextHcdTD);
 
-        if (TD != NextTD && TD != NULL)
+        if (TD == NextTD || TD == NULL)
         {
-            TD->Flags |= UHCI_HCD_TD_FLAG_DONE;
-            InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
+            break;
+        }
 
-            if (TD->NextHcdTD &&
-                TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
+        TD->Flags |= UHCI_HCD_TD_FLAG_DONE;
+        InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
+
+        if (TD->NextHcdTD &&
+            TD->NextHcdTD->HwTD.ControlStatus.Status & UHCI_TD_STS_ACTIVE)
+        {
+            if (NextTdPA == 0)
             {
-                if (NextTdPA == 0)
+                NextTD = TD->NextHcdTD;
+                UhciEndpoint->HeadTD = NextTD;
+
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
+
+                if (NextTD == NULL)
+                    UhciEndpoint->TailTD = NULL;
+
+                if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
                 {
-                    NextTD = TD->NextHcdTD;
-                    UhciEndpoint->HeadTD = NextTD;
-
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-                    if (NextTD == NULL)
-                        UhciEndpoint->TailTD = NULL;
-
-                    if (NextTD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-                    {
-                        PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
-                    }
-                    else
-                    {
-                        PhysicalAddress = NextTD->PhysicalAddress;
-                        PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-                    }
-
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
-
-                    QH->HwQH.NextElement = PhysicalAddress;
-                    QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
-                    goto ProcessListTDs;
-                }
-
-                if (NextTdPA != TD->NextHcdTD->PhysicalAddress)
-                {
-                    DPRINT("UhciPollNonIsoEndpoint: TD->NextHcdTD->PhysicalAddress - %p\n",
-                           TD->NextHcdTD->PhysicalAddress);
-                    ASSERT(FALSE);
-                }
-            }
-            else
-            {
-                if (TD->NextHcdTD == NULL)
-                {
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: TD->NextHcdTD == NULL\n");
+                    PhysicalAddress = UHCI_ENDPOINT_FLAG_HALTED;
                 }
                 else
                 {
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: ControlStatus - %X\n",
-                                TD->NextHcdTD->HwTD.ControlStatus.AsULONG);
+                    PhysicalAddress = NextTD->PhysicalAddress;
+                    PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
                 }
-            }
 
-            continue;
-        }
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p\n", NextTD);
 
-        UhciEndpoint->HeadTD = NextTD;
-
-        if (NextTD == NULL)
-        {
-            DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD == NULL\n");
-
-            UhciEndpoint->HeadTD = NULL;
-            UhciEndpoint->TailTD = NULL;
-
-            QH->HwQH.NextElement = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-
-            goto ProcessListTDs;
-        }
-
-        DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, NextTdPA - %p\n",
-                    NextTD,
-                    NextTdPA);
-
-        TdStatus = NextTD->HwTD.ControlStatus.Status;
-
-        if (TdStatus & UHCI_TD_STS_ACTIVE)
-        {
-            DPRINT_UHCI("UhciPollNonIsoEndpoint: UHCI_TD_STS_ACTIVE \n");
-            goto ProcessListTDs;
-        }
-
-        if (NextTD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
-            TdStatus & UHCI_TD_STS_STALLED &&
-            TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR &&
-            !(TdStatus & UHCI_TD_STS_NAK_RECEIVED) &&
-            !(TdStatus & UHCI_TD_STS_BABBLE_DETECTED) &&
-            !(TdStatus & UHCI_TD_STS_BITSTUFF_ERROR))
-        {
-            DPRINT("UhciPollNonIsoEndpoint: USBD_STATUS_DEV_NOT_RESPONDING\n");
-
-            UhciDumpHcdTD(NextTD);
-
-            if (!(NextTD->Flags & UHCI_HCD_TD_FLAG_STALLED_SETUP))
-            {
-                NextTD->HwTD.ControlStatus.ErrorCounter = 3;
-
-                NextTD->HwTD.ControlStatus.Status &= ~(UHCI_TD_STS_STALLED |
-                                                       UHCI_TD_STS_TIMEOUT_CRC_ERROR);
-
-                NextTD->HwTD.ControlStatus.Status |= UHCI_TD_STS_ACTIVE;
-
-                NextTD->Flags = NextTD->Flags | UHCI_HCD_TD_FLAG_STALLED_SETUP;
-
+                QH->HwQH.NextElement = PhysicalAddress;
+                QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
                 goto ProcessListTDs;
             }
-        }
 
-        if (TdStatus & (UHCI_TD_STS_STALLED |
-                        UHCI_TD_STS_DATA_BUFFER_ERROR |
-                        UHCI_TD_STS_BABBLE_DETECTED |
-                        UHCI_TD_STS_TIMEOUT_CRC_ERROR |
-                        UHCI_TD_STS_BITSTUFF_ERROR))
-        {
-            DPRINT("UhciPollNonIsoEndpoint: NextTD UHCI_TD_STS_ - %02X, PIDCode - %02X\n",
-                   NextTD->HwTD.ControlStatus.Status,
-                   NextTD->HwTD.Token.PIDCode);
-
-            UhciDumpHcdTD(NextTD);
-
-            UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
-            NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
-
-            InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
-
-            if (TD->UhciTransfer != NextTD->UhciTransfer)
-                ASSERT(TD->UhciTransfer == NextTD->UhciTransfer);
-
-            while (TD &&
-                   TD->UhciTransfer->TransferParameters->TransferCounter ==
-                   NextTD->UhciTransfer->TransferParameters->TransferCounter)
+            if (NextTdPA != TD->NextHcdTD->PhysicalAddress)
             {
-                DPRINT("UhciPollNonIsoEndpoint: Bad TD - %p\n", TD);
-
-                if (!(TD->Flags & UHCI_HCD_TD_FLAG_DONE))
-                {
-                    TD->Flags |= UHCI_HCD_TD_FLAG_DONE;
-                    TD->Flags |= UHCI_HCD_TD_FLAG_NOT_ACCESSED;
-
-                    InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
-                }
-
-                TD = TD->NextHcdTD;
-            }
-
-            if (UhciEndpoint->EndpointProperties.TransferType !=
-                USBPORT_TRANSFER_TYPE_CONTROL)
-            {
-                UhciFixDataToggle(UhciExtension,
-                                  UhciEndpoint,
-                                  TD,
-                                  NextTD->HwTD.Token.DataToggle);
+                DPRINT("UhciPollNonIsoEndpoint: TD->NextHcdTD->PhysicalAddress - %p\n",
+                       TD->NextHcdTD->PhysicalAddress);
+                ASSERT(FALSE);
             }
         }
         else
         {
-            TransferedLen = NextTD->HwTD.ControlStatus.ActualLength;
-
-            if (TransferedLen == UHCI_TD_LENGTH_NULL)
-                TransferedLen = 0;
+            if (TD->NextHcdTD == NULL)
+            {
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: TD->NextHcdTD == NULL\n");
+            }
             else
-                TransferedLen += 1;
-
-            if (NextTD->HwTD.Token.MaximumLength == UHCI_TD_LENGTH_NULL ||
-                TransferedLen >= (NextTD->HwTD.Token.MaximumLength + 1))
             {
-                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, TransferedLen - %X\n",
-                            NextTD,
-                            TransferedLen);
-
-                if (NextTdPA ==
-                    (QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_POINTER_MASK))
-                {
-                    NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
-                    InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
-
-                    UhciEndpoint->HeadTD = NextTD->NextHcdTD;
-
-                    QH->HwQH.NextElement = NextTD->HwTD.NextElement;
-                    QH->HwQH.NextElement |= UHCI_QH_ELEMENT_LINK_PTR_TD;
-
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, TD - %p\n",
-                                NextTD,
-                                TD);
-                }
-
-                goto ProcessListTDs;
-            }
-
-            DPRINT_UHCI("UhciPollNonIsoEndpoint: ShortPacket. ControlStatus - %X\n",
-                        NextTD->HwTD.ControlStatus.AsULONG);
-
-            NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
-            InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
-
-            while (TD &&
-                   TD->UhciTransfer->TransferParameters->TransferCounter ==
-                   NextTD->UhciTransfer->TransferParameters->TransferCounter)
-            {
-                if (TD->Flags & UHCI_HCD_TD_FLAG_CONTROLL &&
-                    NextTD->UhciTransfer->TransferParameters->TransferFlags &
-                    USBD_SHORT_TRANSFER_OK)
-                {
-                    break;
-                }
-
-                if (!(TD->Flags & UHCI_HCD_TD_FLAG_DONE))
-                {
-                    DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
-
-                    TD->Flags |= (UHCI_HCD_TD_FLAG_DONE |
-                                  UHCI_HCD_TD_FLAG_NOT_ACCESSED);
-
-                    InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
-                }
-
-                TD = TD->NextHcdTD;
-            }
-
-            if (NextTD->NextHcdTD &&
-                (UhciEndpoint->EndpointProperties.TransferType !=
-                 USBPORT_TRANSFER_TYPE_CONTROL))
-            {
-                UhciFixDataToggle(UhciExtension,
-                                  UhciEndpoint,
-                                  TD,
-                                  NextTD->NextHcdTD->HwTD.Token.DataToggle);
-            }
-
-            if (!(NextTD->UhciTransfer->TransferParameters->TransferFlags &
-                  USBD_SHORT_TRANSFER_OK))
-            {
-                UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: ControlStatus - %X\n",
+                            TD->NextHcdTD->HwTD.ControlStatus.AsULONG);
             }
         }
+    }
 
-        if (TD)
-        {
-            UhciEndpoint->HeadTD = TD;
-        }
-        else
-        {
-            UhciEndpoint->HeadTD = NULL;
-            UhciEndpoint->TailTD = NULL;
-        }
+    UhciEndpoint->HeadTD = NextTD;
 
-        if (TD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
-        {
-            PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-        }
-        else
-        {
-            PhysicalAddress = TD->PhysicalAddress;
-            PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
-        }
+    if (NextTD == NULL)
+    {
+        DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD == NULL\n");
 
-        DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
+        UhciEndpoint->HeadTD = NULL;
+        UhciEndpoint->TailTD = NULL;
 
-        QH->HwQH.NextElement = PhysicalAddress;
-        QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
+        QH->HwQH.NextElement = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
 
         goto ProcessListTDs;
     }
+
+    DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, NextTdPA - %p\n",
+                NextTD,
+                NextTdPA);
+
+    TdStatus = NextTD->HwTD.ControlStatus.Status;
+
+    if (TdStatus & UHCI_TD_STS_ACTIVE)
+    {
+        DPRINT_UHCI("UhciPollNonIsoEndpoint: UHCI_TD_STS_ACTIVE \n");
+        goto ProcessListTDs;
+    }
+
+    if (NextTD->HwTD.Token.PIDCode == UHCI_TD_PID_IN &&
+        TdStatus & UHCI_TD_STS_STALLED &&
+        TdStatus & UHCI_TD_STS_TIMEOUT_CRC_ERROR &&
+        !(TdStatus & UHCI_TD_STS_NAK_RECEIVED) &&
+        !(TdStatus & UHCI_TD_STS_BABBLE_DETECTED) &&
+        !(TdStatus & UHCI_TD_STS_BITSTUFF_ERROR))
+    {
+        DPRINT("UhciPollNonIsoEndpoint: USBD_STATUS_DEV_NOT_RESPONDING\n");
+
+        UhciDumpHcdTD(NextTD);
+
+        if (!(NextTD->Flags & UHCI_HCD_TD_FLAG_STALLED_SETUP))
+        {
+            NextTD->HwTD.ControlStatus.ErrorCounter = 3;
+
+            NextTD->HwTD.ControlStatus.Status &= ~(UHCI_TD_STS_STALLED |
+                                                   UHCI_TD_STS_TIMEOUT_CRC_ERROR);
+
+            NextTD->HwTD.ControlStatus.Status |= UHCI_TD_STS_ACTIVE;
+
+            NextTD->Flags = NextTD->Flags | UHCI_HCD_TD_FLAG_STALLED_SETUP;
+
+            goto ProcessListTDs;
+        }
+    }
+
+    if (TdStatus & (UHCI_TD_STS_STALLED |
+                    UHCI_TD_STS_DATA_BUFFER_ERROR |
+                    UHCI_TD_STS_BABBLE_DETECTED |
+                    UHCI_TD_STS_TIMEOUT_CRC_ERROR |
+                    UHCI_TD_STS_BITSTUFF_ERROR))
+    {
+        DPRINT("UhciPollNonIsoEndpoint: NextTD UHCI_TD_STS_ - %02X, PIDCode - %02X\n",
+               NextTD->HwTD.ControlStatus.Status,
+               NextTD->HwTD.Token.PIDCode);
+
+        UhciDumpHcdTD(NextTD);
+
+        UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
+        NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
+
+        InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
+
+        if (TD->UhciTransfer != NextTD->UhciTransfer)
+            ASSERT(TD->UhciTransfer == NextTD->UhciTransfer);
+
+        while (TD &&
+               TD->UhciTransfer->TransferParameters->TransferCounter ==
+               NextTD->UhciTransfer->TransferParameters->TransferCounter)
+        {
+            DPRINT("UhciPollNonIsoEndpoint: Bad TD - %p\n", TD);
+
+            if (!(TD->Flags & UHCI_HCD_TD_FLAG_DONE))
+            {
+                TD->Flags |= UHCI_HCD_TD_FLAG_DONE;
+                TD->Flags |= UHCI_HCD_TD_FLAG_NOT_ACCESSED;
+
+                InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
+            }
+
+            TD = TD->NextHcdTD;
+        }
+
+        if (UhciEndpoint->EndpointProperties.TransferType !=
+            USBPORT_TRANSFER_TYPE_CONTROL)
+        {
+            UhciFixDataToggle(UhciExtension,
+                              UhciEndpoint,
+                              TD,
+                              NextTD->HwTD.Token.DataToggle);
+        }
+    }
+    else
+    {
+        TransferedLen = NextTD->HwTD.ControlStatus.ActualLength;
+
+        if (TransferedLen == UHCI_TD_LENGTH_NULL)
+            TransferedLen = 0;
+        else
+            TransferedLen += 1;
+
+        if (NextTD->HwTD.Token.MaximumLength == UHCI_TD_LENGTH_NULL ||
+            TransferedLen >= (NextTD->HwTD.Token.MaximumLength + 1))
+        {
+            DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, TransferedLen - %X\n",
+                        NextTD,
+                        TransferedLen);
+
+            if (NextTdPA ==
+                (QH->HwQH.NextElement & UHCI_QH_ELEMENT_LINK_POINTER_MASK))
+            {
+                NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
+                InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
+
+                UhciEndpoint->HeadTD = NextTD->NextHcdTD;
+
+                QH->HwQH.NextElement = NextTD->HwTD.NextElement;
+                QH->HwQH.NextElement |= UHCI_QH_ELEMENT_LINK_PTR_TD;
+
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: NextTD - %p, TD - %p\n",
+                            NextTD,
+                            TD);
+            }
+
+            goto ProcessListTDs;
+        }
+
+        DPRINT_UHCI("UhciPollNonIsoEndpoint: ShortPacket. ControlStatus - %X\n",
+                    NextTD->HwTD.ControlStatus.AsULONG);
+
+        NextTD->Flags |= UHCI_HCD_TD_FLAG_DONE;
+        InsertTailList(&UhciEndpoint->ListTDs, &NextTD->TdLink);
+
+        while (TD &&
+               TD->UhciTransfer->TransferParameters->TransferCounter ==
+               NextTD->UhciTransfer->TransferParameters->TransferCounter)
+        {
+            if (TD->Flags & UHCI_HCD_TD_FLAG_CONTROLL &&
+                NextTD->UhciTransfer->TransferParameters->TransferFlags &
+                USBD_SHORT_TRANSFER_OK)
+            {
+                break;
+            }
+
+            if (!(TD->Flags & UHCI_HCD_TD_FLAG_DONE))
+            {
+                DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
+
+                TD->Flags |= (UHCI_HCD_TD_FLAG_DONE |
+                              UHCI_HCD_TD_FLAG_NOT_ACCESSED);
+
+                InsertTailList(&UhciEndpoint->ListTDs, &TD->TdLink);
+            }
+
+            TD = TD->NextHcdTD;
+        }
+
+        if (NextTD->NextHcdTD &&
+            (UhciEndpoint->EndpointProperties.TransferType !=
+             USBPORT_TRANSFER_TYPE_CONTROL))
+        {
+            UhciFixDataToggle(UhciExtension,
+                              UhciEndpoint,
+                              TD,
+                              NextTD->NextHcdTD->HwTD.Token.DataToggle);
+        }
+
+        if (!(NextTD->UhciTransfer->TransferParameters->TransferFlags &
+              USBD_SHORT_TRANSFER_OK))
+        {
+            UhciEndpoint->Flags |= UHCI_ENDPOINT_FLAG_HALTED;
+        }
+    }
+
+    if (TD)
+    {
+        UhciEndpoint->HeadTD = TD;
+    }
+    else
+    {
+        UhciEndpoint->HeadTD = NULL;
+        UhciEndpoint->TailTD = NULL;
+    }
+
+    if (TD == NULL || UhciEndpoint->Flags & UHCI_ENDPOINT_FLAG_HALTED)
+    {
+        PhysicalAddress = UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+    }
+    else
+    {
+        PhysicalAddress = TD->PhysicalAddress;
+        PhysicalAddress &= ~UHCI_QH_ELEMENT_LINK_PTR_TERMINATE;
+    }
+
+    DPRINT_UHCI("UhciPollNonIsoEndpoint: TD - %p\n", TD);
+
+    QH->HwQH.NextElement = PhysicalAddress;
+    QH->HwQH.NextElement &= ~UHCI_QH_ELEMENT_LINK_PTR_QH;
 
 ProcessListTDs:
 
