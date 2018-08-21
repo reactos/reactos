@@ -2945,6 +2945,7 @@ LRESULT CShellLink::OnNotify(HWND hwndDlg, int idFrom, LPNMHDR pnmhdr)
 
         TRACE("This %p m_sLinkPath %S\n", this, m_sLinkPath);
         Save(m_sLinkPath, TRUE);
+        SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, m_sLinkPath, NULL);
         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, PSNRET_NOERROR);
         return TRUE;
     }
