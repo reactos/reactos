@@ -80,13 +80,13 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Courier New",            L"FreeMono" },
     { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
     { L"Franklin Gothic Medium", L"Libre Franklin" },
-    { L"Helv",                   L"DejaVu Sans" },
-    { L"Helvetica",              L"DejaVu Sans" },
+    { L"Helv",                   L"Tahoma" },
+    { L"Helvetica",              L"Tahoma" },
     { L"Lucida Console",         L"DejaVu Sans Mono" },
-    { L"MS Sans Serif",          L"DejaVu Sans" },
-    { L"MS Shell Dlg",           L"DejaVu Sans" },
-    { L"MS Shell Dlg 2",         L"DejaVu Sans" },
-    { L"Tahoma",                 L"DejaVu Sans" },
+    { L"MS Sans Serif",          L"Tahoma" },
+    { L"MS Shell Dlg",           L"Tahoma" },
+    { L"MS Shell Dlg 2",         L"Tahoma" },
+    { L"Tahoma",                 L"Tahoma" },
     { L"Terminal",               L"DejaVu Sans Mono" },
     { L"Times New Roman",        L"DejaVu Serif" },
     { L"Trebuchet MS",           L"Open Sans" },
@@ -94,6 +94,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Tahoma" },
     { NULL, NULL }
 };
 
