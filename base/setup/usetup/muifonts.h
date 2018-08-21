@@ -94,6 +94,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Comic Sans MS",          L"Ubuntu" },
     { L"Georgia",                L"FreeSerif" },
     { L"Palatino Linotype",      L"DejaVu Serif" },
+    { L"Ubuntu",                 L"Tahoma"},
     { NULL, NULL }
 };
 
