@@ -163,6 +163,7 @@ public:
             m_pExtract->m_DirectoryChanged = false;
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);    /* Not supported for now */
             GetParent().CenterWindow(::GetDesktopWindow());
+            SetWizardButtons(PSWIZB_NEXT);
             return 0;
         }
 
@@ -171,6 +172,7 @@ public:
             ::EnableWindow(GetDlgItem(IDC_BROWSE), FALSE);
             ::EnableWindow(GetDlgItem(IDC_DIRECTORY), FALSE);
             ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);
+            SetWizardButtons(0);
 
             if (m_pExtract->m_DirectoryChanged)
                 UpdateDirectory();
@@ -183,6 +185,7 @@ public:
                 ::EnableWindow(GetDlgItem(IDC_BROWSE), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_DIRECTORY), TRUE);
                 ::EnableWindow(GetDlgItem(IDC_PASSWORD), FALSE);    /* Not supported for now */
+                SetWizardButtons(PSWIZB_NEXT);
 
                 return TRUE;
             }
