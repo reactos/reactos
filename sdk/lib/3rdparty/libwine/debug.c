@@ -35,6 +35,7 @@
 #include <rtlfuncs.h>
 #include <cmfuncs.h>
 
+WINE_DECLARE_DEBUG_CHANNEL(pid);
 WINE_DECLARE_DEBUG_CHANNEL(tid);
 
 ULONG
@@ -249,7 +250,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
     if (!(__wine_dbg_get_channel_flags( channel ) & (1 << cls))) return -1;
 
     va_start(valist, format);
-    ret = funcs.dbg_vlog( cls, channel, NULL, func, 0, format, valist );
+    ret = funcs.dbg_vlog( cls, channel, NULL, 0, func, format, valist );
     va_end(valist);
     return ret;
 }
@@ -257,7 +258,7 @@ int wine_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chan
 
 /* ReactOS compliant debug format wrapper for funcs.dbg_vlog */
 int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                  const char *file, const char *func, const int line, const char *format, ... )
+                  const char *file, const int line, const char *func, const char *format, ... )
 {
     int ret;
     va_list valist;
@@ -265,7 +266,7 @@ int ros_dbg_log( enum __wine_debug_class cls, struct __wine_debug_channel *chann
     if (!(__wine_dbg_get_channel_flags( channel ) & (1 << cls))) return -1;
 
     va_start(valist, format);
-    ret = funcs.dbg_vlog( cls, channel, file, func, line, format, valist );
+    ret = funcs.dbg_vlog( cls, channel, file, line, func, format, valist );
     va_end(valist);
     return ret;
 }
@@ -414,10 +415,12 @@ static int default_dbg_vprintf( const char *format, va_list args )
 
 /* default implementation of wine_dbg_vlog */
 static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_channel *channel,
-                             const char *file, const char *func, const int line, const char *format, va_list args )
+                             const char *file, const int line, const char *func, const char *format, va_list args )
 {
     int ret = 0;
 
+    if (TRACE_ON(pid))
+        ret += wine_dbg_printf("%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueProcess));
     if (TRACE_ON(tid))
         ret += wine_dbg_printf("%04x:", HandleToULong(NtCurrentTeb()->ClientId.UniqueThread));
 
@@ -425,9 +428,9 @@ static int default_dbg_vlog( enum __wine_debug_class cls, struct __wine_debug_ch
         ret += wine_dbg_printf( "%s:", debug_classes[cls] );
 
     if (file && line)
-        ret += wine_dbg_printf ( "(%s:%d) ", file, line );
-    else
-        ret += wine_dbg_printf( "%s:%s: ", channel->name, func );
+        ret += wine_dbg_printf ( "(%s:%d):", file, line );
+
+    ret += wine_dbg_printf( "%s:%s ", channel->name, func );
 
     if (format)
         ret += funcs.dbg_vprintf( format, args );
