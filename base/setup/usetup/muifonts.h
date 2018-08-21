@@ -81,7 +81,7 @@ MUI_SUBFONT HebrewFonts[] =
     { L"Fixedsys",               L"Fixedsys Excelsior 3.01-L2" },
     { L"Franklin Gothic Medium", L"Libre Franklin" },
     { L"Helv",                   L"Tahoma" },
-    { L"Helvetica",              L"DejaVu Sans" },
+    { L"Helvetica",              L"Tahoma" },
     { L"Lucida Console",         L"DejaVu Sans Mono" },
     { L"MS Sans Serif",          L"Tahoma" },
     { L"MS Shell Dlg",           L"Tahoma" },
