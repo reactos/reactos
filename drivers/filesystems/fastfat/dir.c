@@ -530,13 +530,7 @@ DoQuery(
     }
 
     /* Obtain the callers parameters */
-#ifdef _MSC_VER
-    /* HACKHACK: Bug in the MS ntifs.h header:
-     * FileName is really a PUNICODE_STRING, not a PSTRING */
     pSearchPattern = (PUNICODE_STRING)Stack->Parameters.QueryDirectory.FileName;
-#else
-    pSearchPattern = Stack->Parameters.QueryDirectory.FileName;
-#endif
     FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
 
     /* Allocate search pattern in case:
