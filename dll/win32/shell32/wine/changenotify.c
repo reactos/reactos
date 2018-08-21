@@ -392,44 +392,18 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA(dwItem2); //FIXME
         break;
     case SHCNF_PATHW:
+#ifdef __REACTOS__
+        if (dwItem1)
+        {
+            SHILCreateFromPathW(dwItem1, &Pidls[0], NULL);
+        }
+        if (dwItem2)
+        {
+            SHILCreateFromPathW(dwItem2, &Pidls[1], NULL);
+        }
+#else
         if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW(dwItem1);
         if (dwItem2) Pidls[1] = SHSimpleIDListFromPathW(dwItem2);
-#ifdef __REACTOS__
-        if (wEventId & (SHCNE_MKDIR | SHCNE_RMDIR | SHCNE_UPDATEDIR | SHCNE_RENAMEFOLDER))
-        {
-            /*
-             * The last items in the ID are currently files. So we chop off the last
-             * entry, and create a new one using a find data struct.
-             */
-            if (dwItem1 && Pidls[0]){
-                WIN32_FIND_DATAW wfd;
-                LPITEMIDLIST oldpidl, newpidl;
-                LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem1);
-                ILRemoveLastID(Pidls[0]);
-                lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
-                wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                newpidl = _ILCreateFromFindDataW(&wfd);
-                oldpidl = ILClone(Pidls[0]);
-                ILFree(Pidls[0]);
-                Pidls[0] = ILCombine(oldpidl, newpidl);
-                ILFree(newpidl);
-                ILFree(oldpidl);
-            }
-            if (dwItem2 && Pidls[1]){
-                WIN32_FIND_DATAW wfd;
-                LPITEMIDLIST oldpidl, newpidl;
-                LPWSTR p = PathFindFileNameW((LPCWSTR)dwItem2);
-                ILRemoveLastID(Pidls[1]);
-                lstrcpynW(&wfd.cFileName[0], p, MAX_PATH);
-                wfd.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                newpidl = _ILCreateFromFindDataW(&wfd);
-                oldpidl = ILClone(Pidls[0]);
-                ILFree(Pidls[1]);
-                Pidls[1] = ILCombine(oldpidl, newpidl);
-                ILFree(newpidl);
-                ILFree(oldpidl);
-            }
-        }
 #endif
         break;
     case SHCNF_IDLIST:

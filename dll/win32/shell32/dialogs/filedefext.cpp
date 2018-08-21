@@ -1136,6 +1136,7 @@ BOOL CFileDefExt::OnFolderCustApply(HWND hwndDlg)
         PropSheet_QuerySiblings(GetParent(hwndDlg), 0, 0);
 
         // done!
+        SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, m_wszPath, NULL);
         m_bFolderIconIsSet = FALSE;
     }
 
