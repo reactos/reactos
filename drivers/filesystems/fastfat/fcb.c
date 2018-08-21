@@ -260,7 +260,7 @@ vfatDestroyCCB(
 {
     if (pCcb->SearchPattern.Buffer)
     {
-        ExFreePoolWithTag(pCcb->SearchPattern.Buffer, TAG_VFAT);
+        ExFreePoolWithTag(pCcb->SearchPattern.Buffer, TAG_SEARCH);
     }
     ExFreeToNPagedLookasideList(&VfatGlobalData->CcbLookasideList, pCcb);
 }

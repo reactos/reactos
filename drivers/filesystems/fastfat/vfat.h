@@ -538,10 +538,13 @@ typedef struct _VFATCCB
 #define TAG_CCB  'CtaF'
 #define TAG_FCB  'FtaF'
 #define TAG_IRP  'ItaF'
-#define TAG_VFAT 'TAFV'
 #define TAG_CLOSE 'xtaF'
 #define TAG_STATS 'VtaF'
 #define TAG_BUFFER 'OtaF'
+#define TAG_VPB 'vtaF'
+#define TAG_NAME 'ntaF'
+#define TAG_SEARCH 'LtaF'
+#define TAG_DIRENT 'DtaF'
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 

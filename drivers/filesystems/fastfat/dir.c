@@ -555,7 +555,7 @@ DoQuery(
             pCcb->SearchPattern.MaximumLength = pSearchPattern->Length + sizeof(WCHAR);
             pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                                pCcb->SearchPattern.MaximumLength,
-                                                               TAG_VFAT);
+                                                               TAG_SEARCH);
             if (!pCcb->SearchPattern.Buffer)
             {
                 ExReleaseResourceLite(&pFcb->MainResource);
@@ -572,7 +572,7 @@ DoQuery(
         pCcb->SearchPattern.MaximumLength = 2 * sizeof(WCHAR);
         pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                            2 * sizeof(WCHAR),
-                                                           TAG_VFAT);
+                                                           TAG_SEARCH);
         if (!pCcb->SearchPattern.Buffer)
         {
             ExReleaseResourceLite(&pFcb->MainResource);
