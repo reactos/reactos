@@ -219,7 +219,7 @@ DrawProgressBar(
     for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
     {
         FillConsoleOutputAttribute(StdOutput,
-                                   FOREGROUND_YELLOW | BACKGROUND_BLUE,
+                                   Bar->ProgressColour,
                                    Bar->Width - 2,
                                    coPos,
                                    &Written);
@@ -234,7 +234,7 @@ DrawProgressBar(
 
 
 PPROGRESSBAR
-CreateProgressBar(
+CreateProgressBarEx(
     SHORT Left,
     SHORT Top,
     SHORT Right,
@@ -242,6 +242,7 @@ CreateProgressBar(
     SHORT TextTop,
     SHORT TextRight,
     IN BOOLEAN DoubleEdge,
+    SHORT ProgressColour,
     CHAR *Text)
 {
     PPROGRESSBAR Bar;
@@ -259,6 +260,7 @@ CreateProgressBar(
     Bar->TextTop = TextTop;
     Bar->TextRight = TextRight;
     Bar->Double = DoubleEdge;
+    Bar->ProgressColour = ProgressColour;
     Bar->Text = Text;
 
     Bar->Width = Bar->Right - Bar->Left + 1;
@@ -274,6 +276,25 @@ CreateProgressBar(
     return Bar;
 }
 
+PPROGRESSBAR
+CreateProgressBar(
+    SHORT Left,
+    SHORT Top,
+    SHORT Right,
+    SHORT Bottom,
+    SHORT TextTop,
+    SHORT TextRight,
+    IN BOOLEAN DoubleEdge,
+    CHAR *Text)
+{
+
+    /* Call the Ex variant of the function */
+    return CreateProgressBarEx(Left, Top, Right, Bottom,
+                               TextTop, TextRight,
+                               DoubleEdge,
+                               FOREGROUND_YELLOW | BACKGROUND_BLUE,
+                               Text);
+}
 
 VOID
 DestroyProgressBar(
