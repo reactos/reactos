@@ -38,8 +38,6 @@
 #define MAX_NUM_THREADS 128
 DWORD NFS41D_VERSION = 0;
 
-static const char FILE_NETCONFIG[] = "C:\\ReactOS\\System32\\drivers\\etc\\netconfig";
-
 /* Globals */
 char localdomain_name[NFS41_HOSTNAME_LEN];
 int default_uid = 666;
@@ -163,10 +161,14 @@ typedef struct _nfsd_args {
 static bool_t check_for_files()
 {
     FILE *fd;
-     
-    fd = fopen(FILE_NETCONFIG, "r");
+    char config_path[MAX_PATH];
+
+    GetSystemDirectoryA(config_path, ARRAYSIZE(config_path));
+    strcat(config_path, "\\drivers\\etc\\netconfig");
+
+    fd = fopen(config_path, "r");
     if (fd == NULL) {
-        fprintf(stderr,"nfsd() failed to open file '%s'\n", FILE_NETCONFIG);
+        fprintf(stderr,"nfsd() failed to open file '%s'\n", config_path);
         return FALSE;
     }
     fclose(fd);

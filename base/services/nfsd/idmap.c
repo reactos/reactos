@@ -73,10 +73,6 @@ struct idmap_lookup {
     const void *value;
 };
 
-
-/* configuration */
-static const char CONFIG_FILENAME[] = "C:\\ReactOS\\System32\\drivers\\etc\\ms-nfs41-idmap.conf";
-
 struct idmap_config {
     /* ldap server information */
     char hostname[NFS41_HOSTNAME_LEN+1];
@@ -361,6 +357,7 @@ static int config_init(
     struct idmap_config *config)
 {
     int status;
+    char config_path[MAX_PATH];
 
     /* load default values */
     status = config_defaults(config);
@@ -369,10 +366,13 @@ static int config_init(
         goto out;
     }
 
+    GetSystemDirectoryA(config_path, ARRAYSIZE(config_path));
+    strcat(config_path, "\\drivers\\etc\\ms-nfs41-idmap.conf");
+
     /* load configuration from file */
-    status = config_load(config, CONFIG_FILENAME);
+    status = config_load(config, config_path);
     if (status) {
-        eprintf("config_load('%s') failed with %d\n", CONFIG_FILENAME, status);
+        eprintf("config_load('%s') failed with %d\n", config_path, status);
         goto out;
     }
 out:

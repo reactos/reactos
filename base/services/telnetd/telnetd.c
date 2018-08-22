@@ -367,12 +367,19 @@ static void RunShell(client_t *client)
    STARTUPINFO           si;
    PROCESS_INFORMATION   piProcInfo;
    SECURITY_ATTRIBUTES   saAttr;
+   char cmd_path[MAX_PATH];
 
-   const char *name = "c:\\reactos\\system32\\cmd.exe";
+   //const char *name = "c:\\reactos\\system32\\cmd.exe";
    const char *cmd = NULL;
    //const char *name = "d:\\cygwin\\bin\\bash.exe";
    //const char *cmd = "d:\\cygwin\\bin\\bash.exe --login -i";
-   
+
+   if (!GetEnvironmentVariableA("COMSPEC", cmd_path, ARRAYSIZE(cmd_path)))
+   {
+      GetSystemDirectoryA(cmd_path, ARRAYSIZE(cmd_path));
+      strcat(cmd_path, "\\cmd.exe");
+   }
+
    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
    saAttr.bInheritHandle = TRUE; 
    saAttr.lpSecurityDescriptor = NULL; 
@@ -406,7 +413,7 @@ static void RunShell(client_t *client)
    //si.dwFlags |= STARTF_USESHOWWINDOW;
    //si.wShowWindow = SW_SHOW;
 
-   if (!CreateProcess((LPSTR) name,              // executable module
+   if (!CreateProcess((LPSTR) cmd_path,          // executable module
                       (LPSTR) cmd,               // command line 
                       NULL,                      // process security attributes 
                       NULL,                      // primary thread security attributes 
