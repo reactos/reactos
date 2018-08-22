@@ -9,6 +9,7 @@
 #include <wincon.h>
 #define _INC_WINDOWS
 #include <winsock2.h>
+#include <strsafe.h>
 
 /*
 ** macro definitions

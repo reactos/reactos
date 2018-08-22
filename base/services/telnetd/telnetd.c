@@ -371,8 +371,14 @@ static void RunShell(client_t *client)
 
    if (!GetEnvironmentVariableA("COMSPEC", cmd_path, ARRAYSIZE(cmd_path)))
    {
-      GetSystemDirectoryA(cmd_path, ARRAYSIZE(cmd_path));
-      strcat(cmd_path, "\\cmd.exe");
+      if (GetSystemDirectoryA(cmd_path, ARRAYSIZE(cmd_path)))
+      {
+         StringCchCatA(cmd_path, ARRAYSIZE(cmd_path), "\\cmd.exe");
+      }
+      else
+      {
+         StringCchCopyA(cmd_path, ARRAYSIZE(cmd_path), "C:\\ReactOS\\system32\\cmd.exe");
+      }
    }
 
    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
