@@ -2272,32 +2272,6 @@ UpdateBootIni(
 }
 
 static
-BOOL
-GetBootSectFilePath(LPWSTR pszBootSectFile, SIZE_T cchMax)
-{
-    UNICODE_STRING VarName, VarValue;
-    USHORT UniSize;
-    NTSTATUS Status;
-
-    RtlInitUnicodeStringEx(&VarName, L"SystemDrive");
-
-    UniSize = (USHORT)(cchMax * sizeof(WCHAR) - sizeof(UNICODE_NULL));
-    RtlInitEmptyUnicodeString(&VarValue, pszBootSectFile, UniSize);
-
-    Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
-    if (NT_SUCCESS(Status))
-    {
-        RtlStringCchCatW(pszBootSectFile, cchMax, L"\\bootsect.ros");
-    }
-    else
-    {
-        RtlStringCchCopyW(pszBootSectFile, cchMax, L"C:\\bootsect.ros");
-    }
-
-    return TRUE;
-}
-
-static
 NTSTATUS
 InstallFatBootcodeToPartition(
     PUNICODE_STRING SystemRootPath,
@@ -2309,7 +2283,6 @@ InstallFatBootcodeToPartition(
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
-    WCHAR szBootSectFile[MAX_PATH];
 
     /* FAT or FAT32 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
@@ -2405,11 +2378,9 @@ InstallFatBootcodeToPartition(
         /* Update 'boot.ini' */
         CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
 
-        GetBootSectFilePath(szBootSectFile, ARRAYSIZE(szBootSectFile));
-
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
-                               szBootSectFile,
+                               L"C:\\bootsect.ros",
                                L"\"ReactOS\"");
         if (!NT_SUCCESS(Status))
         {
