@@ -408,7 +408,7 @@ static void RunShell(client_t *client)
    //si.dwFlags |= STARTF_USESHOWWINDOW;
    //si.wShowWindow = SW_SHOW;
 
-   if (!CreateProcess((LPSTR) cmd_path,          // executable module
+   if (!CreateProcess(cmd_path,                  // executable module
                       NULL,                      // command line 
                       NULL,                      // process security attributes 
                       NULL,                      // primary thread security attributes 
