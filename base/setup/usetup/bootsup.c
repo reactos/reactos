@@ -2378,6 +2378,8 @@ InstallFatBootcodeToPartition(
         /* Update 'boot.ini' */
         CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
 
+        /* Windows' NTLDR loads an external bootsector file when the specified drive
+           letter is C:, otherwise it will interpret it as a boot DOS path specifier. */
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
                                L"C:\\bootsect.ros",
