@@ -23,6 +23,7 @@
 #include <process.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <strsafe.h>
 
 #include <devioctl.h>
 #include <lmcons.h> /* UNLEN for GetUserName() */
@@ -168,8 +169,14 @@ static bool_t check_for_files()
 #ifdef __REACTOS__
     char config_path[MAX_PATH];
 
-    GetSystemDirectoryA(config_path, ARRAYSIZE(config_path));
-    strcat(config_path, "\\drivers\\etc\\netconfig");
+    if (GetSystemDirectoryA(config_path, ARRAYSIZE(config_path)))
+    {
+        StringCchCatA(config_path, ARRAYSIZE(config_path), "\\drivers\\etc\\netconfig");
+    }
+    else
+    {
+        StringCchCopyA(config_path, ARRAYSIZE(config_path), "C:\\ReactOS\\system32\\drivers\\etc\\netconfig");
+    }
 
     fd = fopen(config_path, "r");
 #else
