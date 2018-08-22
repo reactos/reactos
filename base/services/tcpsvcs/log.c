@@ -214,11 +214,11 @@ InitLogging()
 
     if (GetEnvironmentVariableW(L"SystemDrive", szLogFileName, ARRAYSIZE(szLogFileName)))
     {
-        wcscat(szLogFileName, L"\\tcpsvcs_log.log");
+        StringCchCatW(szLogFileName, ARRAYSIZE(szLogFileName), L"\\tcpsvcs_log.log");
     }
     else
     {
-        wcscpy(szLogFileName, L"C:\\tcpsvcs_log.log");
+        StringCchCopyW(szLogFileName, ARRAYSIZE(szLogFileName), L"C:\\tcpsvcs_log.log");
     }
 
     ZeroMemory(&olWrite, sizeof(OVERLAPPED));

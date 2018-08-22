@@ -9,6 +9,7 @@
 #define _INC_WINDOWS
 #include <winsock2.h>
 #include <tchar.h>
+#include <strsafe.h>
 
 #define LOG_FILE 1
 #define LOG_EVENTLOG 2
