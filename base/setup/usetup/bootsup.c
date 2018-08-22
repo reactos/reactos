@@ -2283,6 +2283,7 @@ InstallFatBootcodeToPartition(
     BOOLEAN DoesFreeLdrExist;
     WCHAR SrcPath[MAX_PATH];
     WCHAR DstPath[MAX_PATH];
+    WCHAR szBootSectFile[MAX_PATH];
 
     /* FAT or FAT32 partition */
     DPRINT("System path: '%wZ'\n", SystemRootPath);
@@ -2378,9 +2379,18 @@ InstallFatBootcodeToPartition(
         /* Update 'boot.ini' */
         CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
 
+        if (GetEnvironmentVariableW(L"SystemDrive", szBootSectFile, ARRAYSIZE(szBootSectFile)))
+        {
+            wcscat(szBootSectFile, L"\\bootsect.ros");
+        }
+        else
+        {
+            wcscpy(szBootSectFile, L"C:\\bootsect.ros");
+        }
+
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
-                               L"C:\\bootsect.ros",
+                               szBootSectFile,
                                L"\"ReactOS\"");
         if (!NT_SUCCESS(Status))
         {
