@@ -1781,6 +1781,8 @@ MUI_STRING esESStrings[] =
     "   Terminado..."},
     {STRING_REBOOTCOMPUTER2,
     "   INTRO = Reiniciar el equipo"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "No se pudo abrir la consola\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

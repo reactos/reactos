@@ -1796,6 +1796,8 @@ MUI_STRING frFRStrings[] =
     "   TerminÇ..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTRêE = RedÇmarrer l'ordinateur"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Impossible d'ouvrir la console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

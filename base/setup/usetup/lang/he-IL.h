@@ -1779,6 +1779,8 @@ MUI_STRING heILStrings[] =
     "   ëâÖç..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Ñîíå éáÉô Äö ÑéôÅ"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Unable to open the console\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

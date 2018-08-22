@@ -1758,6 +1758,8 @@ MUI_STRING trTRStrings[] =
     "   Bitti..."},
     {STRING_REBOOTCOMPUTER2,
     "   Giriü = Bilgisayarç Yeniden Baülat"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Konsol aáçlamçyor.\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

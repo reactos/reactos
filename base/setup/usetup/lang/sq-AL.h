@@ -1784,6 +1784,8 @@ MUI_STRING sqALStrings[] =
     "   Mbaruam..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Ristarto kompjuterin"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "N‰ pamundesi p‰r t‰ hapur konsollin\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

@@ -1778,6 +1778,8 @@ MUI_STRING ruRUStrings[] =
     "   Завершено..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Перезагрузка"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Не удалось открыть консоль\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

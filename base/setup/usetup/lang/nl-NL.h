@@ -1807,6 +1807,8 @@ MUI_STRING nlNLStrings[] =
     "   Voltooid..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Computer opnieuw opstarten"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Kan console niet openen.\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
