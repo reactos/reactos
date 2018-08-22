@@ -2272,6 +2272,32 @@ UpdateBootIni(
 }
 
 static
+BOOL
+GetBootSectFilePath(LPWSTR pszBootSectFile, SIZE_T cchMax)
+{
+    UNICODE_STRING VarName, VarValue;
+    USHORT UniSize;
+    NTSTATUS Status;
+
+    RtlInitUnicodeStringEx(&VarName, L"SystemDrive");
+
+    UniSize = (USHORT)(cchMax * sizeof(WCHAR) - sizeof(UNICODE_NULL));
+    RtlInitEmptyUnicodeString(&VarValue, pszBootSectFile, UniSize);
+
+    Status = RtlQueryEnvironmentVariable_U(NULL, &VarName, &VarValue);
+    if (NT_SUCCESS(Status))
+    {
+        RtlStringCchCatW(pszBootSectFile, cchMax, L"\\bootsect.ros");
+    }
+    else
+    {
+        RtlStringCchCopyW(pszBootSectFile, cchMax, L"C:\\bootsect.ros");
+    }
+
+    return TRUE;
+}
+
+static
 NTSTATUS
 InstallFatBootcodeToPartition(
     PUNICODE_STRING SystemRootPath,
@@ -2379,14 +2405,7 @@ InstallFatBootcodeToPartition(
         /* Update 'boot.ini' */
         CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"boot.ini");
 
-        if (GetEnvironmentVariableW(L"SystemDrive", szBootSectFile, ARRAYSIZE(szBootSectFile)))
-        {
-            wcscat(szBootSectFile, L"\\bootsect.ros");
-        }
-        else
-        {
-            wcscpy(szBootSectFile, L"C:\\bootsect.ros");
-        }
+        GetBootSectFilePath(szBootSectFile, ARRAYSIZE(szBootSectFile));
 
         DPRINT1("Update 'boot.ini': %S\n", DstPath);
         Status = UpdateBootIni(DstPath,
