@@ -23,7 +23,9 @@
 #include <process.h>
 #include <tchar.h>
 #include <stdio.h>
+#ifdef __REACTOS__
 #include <strsafe.h>
+#endif
 
 #include <devioctl.h>
 #include <lmcons.h> /* UNLEN for GetUserName() */
