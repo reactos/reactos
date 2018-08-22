@@ -40,7 +40,7 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
         /* calculate the width of integer number */
         width = (rpn->f==0) ? 1 : (int)log10(fabs(rpn->f))+1;
         if (calc.sci_out == TRUE || width > MAX_LD_WIDTH || width < -MAX_LD_WIDTH)
-            _stprintf(buffer, _T("%#e"), rpn->f);
+            _stprintf(buffer, _T("%#.*e"), MAX_LD_WIDTH-1, rpn->f);
         else {
             TCHAR *ptr, *dst;
 
