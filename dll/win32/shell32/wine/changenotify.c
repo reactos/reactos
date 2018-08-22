@@ -388,8 +388,19 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     switch (uFlags & SHCNF_TYPE)
     {
     case SHCNF_PATHA:
+#ifdef __REACTOS__
+        if (dwItem1)
+        {
+            SHILCreateFromPathA(dwItem1, &Pidls[0], NULL);
+        }
+        if (dwItem2)
+        {
+            SHILCreateFromPathA(dwItem2, &Pidls[1], NULL);
+        }
+#else
         if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA(dwItem1); //FIXME
         if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA(dwItem2); //FIXME
+#endif
         break;
     case SHCNF_PATHW:
 #ifdef __REACTOS__
