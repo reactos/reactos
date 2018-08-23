@@ -19,36 +19,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define COBJMACROS
-#include "config.h"
-#include "wine/port.h"
+#include "winhttp_private.h"
 
-#include <stdarg.h>
-#include <assert.h>
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
-#include "ole2.h"
-#include "initguid.h"
-#include "httprequest.h"
-#include "httprequestid.h"
-#include "schannel.h"
-#include "winhttp.h"
+#include <assert.h>
+#include <winuser.h>
+#include <httprequest.h>
+#include <httprequestid.h>
 
-#include "winhttp_private.h"
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(winhttp);
-
-#ifdef __REACTOS__
 #include "inet_ntop.c"
-#endif
-
-#define DEFAULT_KEEP_ALIVE_TIMEOUT 30000
 
 static const WCHAR attr_accept[] = {'A','c','c','e','p','t',0};
 static const WCHAR attr_accept_charset[] = {'A','c','c','e','p','t','-','C','h','a','r','s','e','t', 0};
@@ -523,7 +505,7 @@ BOOL WINAPI WinHttpAddRequestHeaders( HINTERNET hrequest, LPCWSTR headers, DWORD
     BOOL ret;
     request_t *request;
 
-    TRACE("%p, %s, %u, 0x%08x\n", hrequest, debugstr_wn(headers, len), len, flags);
+    TRACE("%p, %s, 0x%x, 0x%08x\n", hrequest, debugstr_w(headers), len, flags);
 
     if (!headers || !len)
     {
@@ -558,7 +540,7 @@ static WCHAR *build_request_path( request_t *request )
         static const WCHAR http[] = { 'h','t','t','p',0 };
         static const WCHAR https[] = { 'h','t','t','p','s',0 };
         static const WCHAR fmt[] = { '%','s',':','/','/','%','s',0 };
-        LPCWSTR scheme = (request->netconn ? request->netconn->secure : (request->hdr.flags & WINHTTP_FLAG_SECURE)) ? https : http;
+        LPCWSTR scheme = request->netconn.secure ? https : http;
         int len;
 
         len = strlenW( scheme ) + strlenW( request->connect->hostname );
@@ -848,6 +830,619 @@ BOOL WINAPI WinHttpQueryHeaders( HINTERNET hrequest, DWORD level, LPCWSTR name, 
     }
 
     ret = query_headers( request, level, name, buffer, buflen, index );
+
+    release_object( &request->hdr );
+    if (ret) set_last_error( ERROR_SUCCESS );
+    return ret;
+}
+
+static LPWSTR concatenate_string_list( LPCWSTR *list, int len )
+{
+    LPCWSTR *t;
+    LPWSTR str;
+
+    for( t = list; *t ; t++  )
+        len += strlenW( *t );
+    len++;
+
+    str = heap_alloc( len * sizeof(WCHAR) );
+    if (!str) return NULL;
+    *str = 0;
+
+    for( t = list; *t ; t++ )
+        strcatW( str, *t );
+
+    return str;
+}
+
+static LPWSTR build_header_request_string( request_t *request, LPCWSTR verb,
+    LPCWSTR path, LPCWSTR version )
+{
+    static const WCHAR crlf[] = {'\r','\n',0};
+    static const WCHAR space[] = { ' ',0 };
+    static const WCHAR colon[] = { ':',' ',0 };
+    static const WCHAR twocrlf[] = {'\r','\n','\r','\n', 0};
+    LPWSTR requestString;
+    DWORD len, n;
+    LPCWSTR *req;
+    UINT i;
+    LPWSTR p;
+
+    /* allocate space for an array of all the string pointers to be added */
+    len = (request->num_headers) * 4 + 10;
+    req = heap_alloc( len * sizeof(LPCWSTR) );
+    if (!req) return NULL;
+
+    /* add the verb, path and HTTP version string */
+    n = 0;
+    req[n++] = verb;
+    req[n++] = space;
+    req[n++] = path;
+    req[n++] = space;
+    req[n++] = version;
+
+    /* Append custom request headers */
+    for (i = 0; i < request->num_headers; i++)
+    {
+        if (request->headers[i].is_request)
+        {
+            req[n++] = crlf;
+            req[n++] = request->headers[i].field;
+            req[n++] = colon;
+            req[n++] = request->headers[i].value;
+
+            TRACE("Adding custom header %s (%s)\n",
+                   debugstr_w(request->headers[i].field),
+                   debugstr_w(request->headers[i].value));
+        }
+    }
+
+    if( n >= len )
+        ERR("oops. buffer overrun\n");
+
+    req[n] = NULL;
+    requestString = concatenate_string_list( req, 4 );
+    heap_free( req );
+    if (!requestString) return NULL;
+
+    /*
+     * Set (header) termination string for request
+     * Make sure there are exactly two new lines at the end of the request
+     */
+    p = &requestString[strlenW(requestString)-1];
+    while ( (*p == '\n') || (*p == '\r') )
+       p--;
+    strcpyW( p+1, twocrlf );
+
+    return requestString;
+}
+
+static BOOL read_reply( request_t *request );
+
+static BOOL secure_proxy_connect( request_t *request )
+{
+    static const WCHAR verbConnect[] = {'C','O','N','N','E','C','T',0};
+    static const WCHAR fmt[] = {'%','s',':','%','u',0};
+    BOOL ret = FALSE;
+    LPWSTR path;
+    connect_t *connect = request->connect;
+
+    path = heap_alloc( (strlenW( connect->hostname ) + 13) * sizeof(WCHAR) );
+    if (path)
+    {
+        LPWSTR requestString;
+
+        sprintfW( path, fmt, connect->hostname, connect->hostport );
+        requestString = build_header_request_string( request, verbConnect,
+            path, http1_1 );
+        heap_free( path );
+        if (requestString)
+        {
+            LPSTR req_ascii = strdupWA( requestString );
+
+            heap_free( requestString );
+            if (req_ascii)
+            {
+                int len = strlen( req_ascii ), bytes_sent;
+
+                ret = netconn_send( &request->netconn, req_ascii, len, &bytes_sent );
+                heap_free( req_ascii );
+                if (ret)
+                    ret = read_reply( request );
+            }
+        }
+    }
+    return ret;
+}
+
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 46
+#endif
+
+static WCHAR *addr_to_str( struct sockaddr *addr )
+{
+    char buf[INET6_ADDRSTRLEN];
+    void *src;
+
+    switch (addr->sa_family)
+    {
+    case AF_INET:
+        src = &((struct sockaddr_in *)addr)->sin_addr;
+        break;
+    case AF_INET6:
+        src = &((struct sockaddr_in6 *)addr)->sin6_addr;
+        break;
+    default:
+        WARN("unsupported address family %d\n", addr->sa_family);
+        return NULL;
+    }
+    if (!inet_ntop( addr->sa_family, src, buf, sizeof(buf) )) return NULL;
+    return strdupAW( buf );
+}
+
+static BOOL open_connection( request_t *request )
+{
+    connect_t *connect;
+    WCHAR *addressW = NULL;
+    INTERNET_PORT port;
+    socklen_t slen;
+    struct sockaddr *saddr;
+    DWORD len;
+
+    if (netconn_connected( &request->netconn )) goto done;
+
+    connect = request->connect;
+    port = connect->serverport ? connect->serverport : (request->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
+    saddr = (struct sockaddr *)&connect->sockaddr;
+    slen = sizeof(struct sockaddr);
+
+    if (!connect->resolved)
+    {
+        len = strlenW( connect->servername ) + 1;
+        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, connect->servername, len );
+
+        if (!netconn_resolve( connect->servername, port, saddr, &slen, request->resolve_timeout )) return FALSE;
+        connect->resolved = TRUE;
+
+        if (!(addressW = addr_to_str( saddr ))) return FALSE;
+        len = strlenW( addressW ) + 1;
+        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, addressW, len );
+    }
+    if (!addressW && !(addressW = addr_to_str( saddr ))) return FALSE;
+    TRACE("connecting to %s:%u\n", debugstr_w(addressW), port);
+
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, addressW, 0 );
+
+    if (!netconn_create( &request->netconn, saddr->sa_family, SOCK_STREAM, 0 ))
+    {
+        heap_free( addressW );
+        return FALSE;
+    }
+    netconn_set_timeout( &request->netconn, TRUE, request->send_timeout );
+    netconn_set_timeout( &request->netconn, FALSE, request->recv_timeout );
+    if (!netconn_connect( &request->netconn, saddr, slen, request->connect_timeout ))
+    {
+        netconn_close( &request->netconn );
+        heap_free( addressW );
+        return FALSE;
+    }
+    if (request->hdr.flags & WINHTTP_FLAG_SECURE)
+    {
+        if (connect->session->proxy_server &&
+            strcmpiW( connect->hostname, connect->servername ))
+        {
+            if (!secure_proxy_connect( request ))
+            {
+                heap_free( addressW );
+                return FALSE;
+            }
+        }
+        if (!netconn_secure_connect( &request->netconn, connect->hostname ))
+        {
+            netconn_close( &request->netconn );
+            heap_free( addressW );
+            return FALSE;
+        }
+    }
+
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, addressW, strlenW(addressW) + 1 );
+
+done:
+    request->read_pos = request->read_size = 0;
+    request->read_chunked = FALSE;
+    request->read_chunked_size = ~0u;
+    request->read_chunked_eof = FALSE;
+    heap_free( addressW );
+    return TRUE;
+}
+
+void close_connection( request_t *request )
+{
+    if (!netconn_connected( &request->netconn )) return;
+
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0, 0 );
+    netconn_close( &request->netconn );
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0, 0 );
+}
+
+static BOOL add_host_header( request_t *request, DWORD modifier )
+{
+    BOOL ret;
+    DWORD len;
+    WCHAR *host;
+    static const WCHAR fmt[] = {'%','s',':','%','u',0};
+    connect_t *connect = request->connect;
+    INTERNET_PORT port;
+
+    port = connect->hostport ? connect->hostport : (request->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
+
+    if (port == INTERNET_DEFAULT_HTTP_PORT || port == INTERNET_DEFAULT_HTTPS_PORT)
+    {
+        return process_header( request, attr_host, connect->hostname, modifier, TRUE );
+    }
+    len = strlenW( connect->hostname ) + 7; /* sizeof(":65335") */
+    if (!(host = heap_alloc( len * sizeof(WCHAR) ))) return FALSE;
+    sprintfW( host, fmt, connect->hostname, port );
+    ret = process_header( request, attr_host, host, modifier, TRUE );
+    heap_free( host );
+    return ret;
+}
+
+static void clear_response_headers( request_t *request )
+{
+    unsigned int i;
+
+    for (i = 0; i < request->num_headers; i++)
+    {
+        if (!request->headers[i].field) continue;
+        if (!request->headers[i].value) continue;
+        if (request->headers[i].is_request) continue;
+        delete_header( request, i );
+        i--;
+    }
+}
+
+/* remove some amount of data from the read buffer */
+static void remove_data( request_t *request, int count )
+{
+    if (!(request->read_size -= count)) request->read_pos = 0;
+    else request->read_pos += count;
+}
+
+/* read some more data into the read buffer */
+static BOOL read_more_data( request_t *request, int maxlen, BOOL notify )
+{
+    int len;
+    BOOL ret;
+
+    if (request->read_chunked_eof) return FALSE;
+
+    if (request->read_size && request->read_pos)
+    {
+        /* move existing data to the start of the buffer */
+        memmove( request->read_buf, request->read_buf + request->read_pos, request->read_size );
+        request->read_pos = 0;
+    }
+    if (maxlen == -1) maxlen = sizeof(request->read_buf);
+
+    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, NULL, 0 );
+
+    ret = netconn_recv( &request->netconn, request->read_buf + request->read_size,
+                        maxlen - request->read_size, 0, &len );
+
+    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, &len, sizeof(len) );
+
+    request->read_size += len;
+    return ret;
+}
+
+/* discard data contents until we reach end of line */
+static BOOL discard_eol( request_t *request, BOOL notify )
+{
+    do
+    {
+        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
+        if (eol)
+        {
+            remove_data( request, (eol + 1) - (request->read_buf + request->read_pos) );
+            break;
+        }
+        request->read_pos = request->read_size = 0;  /* discard everything */
+        if (!read_more_data( request, -1, notify )) return FALSE;
+    } while (request->read_size);
+    return TRUE;
+}
+
+/* read the size of the next chunk */
+static BOOL start_next_chunk( request_t *request, BOOL notify )
+{
+    DWORD chunk_size = 0;
+
+    assert(!request->read_chunked_size || request->read_chunked_size == ~0u);
+
+    if (request->read_chunked_eof) return FALSE;
+
+    /* read terminator for the previous chunk */
+    if (!request->read_chunked_size && !discard_eol( request, notify )) return FALSE;
+
+    for (;;)
+    {
+        while (request->read_size)
+        {
+            char ch = request->read_buf[request->read_pos];
+            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
+            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
+            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
+            else if (ch == ';' || ch == '\r' || ch == '\n')
+            {
+                TRACE("reading %u byte chunk\n", chunk_size);
+
+                if (request->content_length == ~0u) request->content_length = chunk_size;
+                else request->content_length += chunk_size;
+
+                request->read_chunked_size = chunk_size;
+                if (!chunk_size) request->read_chunked_eof = TRUE;
+
+                return discard_eol( request, notify );
+            }
+            remove_data( request, 1 );
+        }
+        if (!read_more_data( request, -1, notify )) return FALSE;
+        if (!request->read_size)
+        {
+            request->content_length = request->content_read = 0;
+            request->read_chunked_size = 0;
+            return TRUE;
+        }
+    }
+}
+
+static BOOL refill_buffer( request_t *request, BOOL notify )
+{
+    int len = sizeof(request->read_buf);
+
+    if (request->read_chunked)
+    {
+        if (request->read_chunked_eof) return FALSE;
+        if (request->read_chunked_size == ~0u || !request->read_chunked_size)
+        {
+            if (!start_next_chunk( request, notify )) return FALSE;
+        }
+        len = min( len, request->read_chunked_size );
+    }
+    else if (request->content_length != ~0u)
+    {
+        len = min( len, request->content_length - request->content_read );
+    }
+
+    if (len <= request->read_size) return TRUE;
+    if (!read_more_data( request, len, notify )) return FALSE;
+    if (!request->read_size) request->content_length = request->content_read = 0;
+    return TRUE;
+}
+
+static void finished_reading( request_t *request )
+{
+    static const WCHAR closeW[] = {'c','l','o','s','e',0};
+
+    BOOL close = FALSE;
+    WCHAR connection[20];
+    DWORD size = sizeof(connection);
+
+    if (request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE) close = TRUE;
+    else if (query_headers( request, WINHTTP_QUERY_CONNECTION, NULL, connection, &size, NULL ) ||
+             query_headers( request, WINHTTP_QUERY_PROXY_CONNECTION, NULL, connection, &size, NULL ))
+    {
+        if (!strcmpiW( connection, closeW )) close = TRUE;
+    }
+    else if (!strcmpW( request->version, http1_0 )) close = TRUE;
+    if (close) close_connection( request );
+}
+
+/* return the size of data available to be read immediately */
+static DWORD get_available_data( request_t *request )
+{
+    if (request->read_chunked) return min( request->read_chunked_size, request->read_size );
+    return request->read_size;
+}
+
+/* check if we have reached the end of the data to read */
+static BOOL end_of_read_data( request_t *request )
+{
+    if (!request->content_length) return TRUE;
+    if (request->read_chunked) return request->read_chunked_eof;
+    if (request->content_length == ~0u) return FALSE;
+    return (request->content_length == request->content_read);
+}
+
+static BOOL read_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
+{
+    int count, bytes_read = 0;
+
+    if (end_of_read_data( request )) goto done;
+
+    while (size)
+    {
+        if (!(count = get_available_data( request )))
+        {
+            if (!refill_buffer( request, async )) goto done;
+            if (!(count = get_available_data( request ))) goto done;
+        }
+        count = min( count, size );
+        memcpy( (char *)buffer + bytes_read, request->read_buf + request->read_pos, count );
+        remove_data( request, count );
+        if (request->read_chunked) request->read_chunked_size -= count;
+        size -= count;
+        bytes_read += count;
+        request->content_read += count;
+        if (end_of_read_data( request )) goto done;
+    }
+    if (request->read_chunked && !request->read_chunked_size) refill_buffer( request, async );
+
+done:
+    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, request->content_read, request->content_length );
+
+    if (async) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, bytes_read );
+    if (read) *read = bytes_read;
+    if (end_of_read_data( request )) finished_reading( request );
+    return TRUE;
+}
+
+/* read any content returned by the server so that the connection can be reused */
+static void drain_content( request_t *request )
+{
+    DWORD bytes_read;
+    char buffer[2048];
+
+    refill_buffer( request, FALSE );
+    for (;;)
+    {
+        if (!read_data( request, buffer, sizeof(buffer), &bytes_read, FALSE ) || !bytes_read) return;
+    }
+}
+
+static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len, LPVOID optional,
+                          DWORD optional_len, DWORD total_len, DWORD_PTR context, BOOL async )
+{
+    static const WCHAR keep_alive[] = {'K','e','e','p','-','A','l','i','v','e',0};
+    static const WCHAR no_cache[]   = {'n','o','-','c','a','c','h','e',0};
+    static const WCHAR length_fmt[] = {'%','l','d',0};
+
+    BOOL ret = FALSE;
+    connect_t *connect = request->connect;
+    session_t *session = connect->session;
+    WCHAR *req = NULL;
+    char *req_ascii;
+    int bytes_sent;
+    DWORD len;
+
+    clear_response_headers( request );
+    drain_content( request );
+
+    if (session->agent)
+        process_header( request, attr_user_agent, session->agent, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
+
+    if (connect->hostname)
+        add_host_header( request, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW );
+
+    if (total_len || (request->verb && !strcmpW( request->verb, postW )))
+    {
+        WCHAR length[21]; /* decimal long int + null */
+        sprintfW( length, length_fmt, total_len );
+        process_header( request, attr_content_length, length, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
+    }
+    if (!(request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE))
+    {
+        process_header( request, attr_connection, keep_alive, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
+    }
+    if (request->hdr.flags & WINHTTP_FLAG_REFRESH)
+    {
+        process_header( request, attr_pragma, no_cache, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
+        process_header( request, attr_cache_control, no_cache, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
+    }
+    if (headers && !add_request_headers( request, headers, headers_len, WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE ))
+    {
+        TRACE("failed to add request headers\n");
+        return FALSE;
+    }
+    if (!(request->hdr.disable_flags & WINHTTP_DISABLE_COOKIES) && !add_cookie_headers( request ))
+    {
+        WARN("failed to add cookie headers\n");
+        return FALSE;
+    }
+
+    if (context) request->hdr.context = context;
+
+    if (!(ret = open_connection( request ))) goto end;
+    if (!(req = build_request_string( request ))) goto end;
+
+    if (!(req_ascii = strdupWA( req ))) goto end;
+    TRACE("full request: %s\n", debugstr_a(req_ascii));
+    len = strlen(req_ascii);
+
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_SENDING_REQUEST, NULL, 0 );
+
+    ret = netconn_send( &request->netconn, req_ascii, len, &bytes_sent );
+    heap_free( req_ascii );
+    if (!ret) goto end;
+
+    if (optional_len)
+    {
+        if (!netconn_send( &request->netconn, optional, optional_len, &bytes_sent )) goto end;
+        request->optional = optional;
+        request->optional_len = optional_len;
+        len += optional_len;
+    }
+    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, &len, sizeof(len) );
+
+end:
+    if (async)
+    {
+        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE, NULL, 0 );
+        else
+        {
+            WINHTTP_ASYNC_RESULT result;
+            result.dwResult = API_SEND_REQUEST;
+            result.dwError  = get_last_error();
+            send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, &result, sizeof(result) );
+        }
+    }
+    heap_free( req );
+    return ret;
+}
+
+static void task_send_request( task_header_t *task )
+{
+    send_request_t *s = (send_request_t *)task;
+    send_request( s->hdr.request, s->headers, s->headers_len, s->optional, s->optional_len, s->total_len, s->context, TRUE );
+    heap_free( s->headers );
+}
+
+/***********************************************************************
+ *          WinHttpSendRequest (winhttp.@)
+ */
+BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD headers_len,
+                                LPVOID optional, DWORD optional_len, DWORD total_len, DWORD_PTR context )
+{
+    BOOL ret;
+    request_t *request;
+
+    TRACE("%p, %s, 0x%x, %u, %u, %lx\n",
+          hrequest, debugstr_w(headers), headers_len, optional_len, total_len, context);
+
+    if (!(request = (request_t *)grab_object( hrequest )))
+    {
+        set_last_error( ERROR_INVALID_HANDLE );
+        return FALSE;
+    }
+    if (request->hdr.type != WINHTTP_HANDLE_TYPE_REQUEST)
+    {
+        release_object( &request->hdr );
+        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+        return FALSE;
+    }
+
+    if (headers && !headers_len) headers_len = strlenW( headers );
+
+    if (request->connect->hdr.flags & WINHTTP_FLAG_ASYNC)
+    {
+        send_request_t *s;
+
+        if (!(s = heap_alloc( sizeof(send_request_t) ))) return FALSE;
+        s->hdr.request  = request;
+        s->hdr.proc     = task_send_request;
+        s->headers      = strdupW( headers );
+        s->headers_len  = headers_len;
+        s->optional     = optional;
+        s->optional_len = optional_len;
+        s->total_len    = total_len;
+        s->context      = context;
+
+        addref_object( &request->hdr );
+        ret = queue_task( (task_header_t *)s );
+    }
+    else
+        ret = send_request( request, headers, headers_len, optional, optional_len, total_len, context, FALSE );
 
     release_object( &request->hdr );
     if (ret) set_last_error( ERROR_SUCCESS );
@@ -1146,25 +1741,24 @@ static BOOL do_authorization( request_t *request, DWORD target, DWORD scheme_fla
     const WCHAR *auth_target, *username, *password;
     WCHAR auth_value[2048], *auth_reply;
     DWORD len = sizeof(auth_value), len_scheme, flags;
-    BOOL ret, has_auth_value;
+    BOOL ret;
 
     if (scheme == SCHEME_INVALID) return FALSE;
 
     switch (target)
     {
     case WINHTTP_AUTH_TARGET_SERVER:
-        has_auth_value = get_authvalue( request, WINHTTP_QUERY_WWW_AUTHENTICATE, scheme_flag, auth_value, len );
+        if (!get_authvalue( request, WINHTTP_QUERY_WWW_AUTHENTICATE, scheme_flag, auth_value, len ))
+            return FALSE;
         auth_ptr = &request->authinfo;
         auth_target = attr_authorization;
         if (request->creds[TARGET_SERVER][scheme].username)
         {
-            if (scheme != SCHEME_BASIC && !has_auth_value) return FALSE;
             username = request->creds[TARGET_SERVER][scheme].username;
             password = request->creds[TARGET_SERVER][scheme].password;
         }
         else
         {
-            if (!has_auth_value) return FALSE;
             username = request->connect->username;
             password = request->connect->password;
         }
@@ -1368,851 +1962,6 @@ static BOOL do_authorization( request_t *request, DWORD target, DWORD scheme_fla
     return ret;
 }
 
-static LPWSTR concatenate_string_list( LPCWSTR *list, int len )
-{
-    LPCWSTR *t;
-    LPWSTR str;
-
-    for( t = list; *t ; t++  )
-        len += strlenW( *t );
-    len++;
-
-    str = heap_alloc( len * sizeof(WCHAR) );
-    if (!str) return NULL;
-    *str = 0;
-
-    for( t = list; *t ; t++ )
-        strcatW( str, *t );
-
-    return str;
-}
-
-static LPWSTR build_header_request_string( request_t *request, LPCWSTR verb,
-    LPCWSTR path, LPCWSTR version )
-{
-    static const WCHAR crlf[] = {'\r','\n',0};
-    static const WCHAR space[] = { ' ',0 };
-    static const WCHAR colon[] = { ':',' ',0 };
-    static const WCHAR twocrlf[] = {'\r','\n','\r','\n', 0};
-    LPWSTR requestString;
-    DWORD len, n;
-    LPCWSTR *req;
-    UINT i;
-    LPWSTR p;
-
-    /* allocate space for an array of all the string pointers to be added */
-    len = (request->num_headers) * 4 + 10;
-    req = heap_alloc( len * sizeof(LPCWSTR) );
-    if (!req) return NULL;
-
-    /* add the verb, path and HTTP version string */
-    n = 0;
-    req[n++] = verb;
-    req[n++] = space;
-    req[n++] = path;
-    req[n++] = space;
-    req[n++] = version;
-
-    /* Append custom request headers */
-    for (i = 0; i < request->num_headers; i++)
-    {
-        if (request->headers[i].is_request)
-        {
-            req[n++] = crlf;
-            req[n++] = request->headers[i].field;
-            req[n++] = colon;
-            req[n++] = request->headers[i].value;
-
-            TRACE("Adding custom header %s (%s)\n",
-                   debugstr_w(request->headers[i].field),
-                   debugstr_w(request->headers[i].value));
-        }
-    }
-
-    if( n >= len )
-        ERR("oops. buffer overrun\n");
-
-    req[n] = NULL;
-    requestString = concatenate_string_list( req, 4 );
-    heap_free( req );
-    if (!requestString) return NULL;
-
-    /*
-     * Set (header) termination string for request
-     * Make sure there are exactly two new lines at the end of the request
-     */
-    p = &requestString[strlenW(requestString)-1];
-    while ( (*p == '\n') || (*p == '\r') )
-       p--;
-    strcpyW( p+1, twocrlf );
-
-    return requestString;
-}
-
-static BOOL read_reply( request_t *request );
-
-static BOOL secure_proxy_connect( request_t *request )
-{
-    static const WCHAR verbConnect[] = {'C','O','N','N','E','C','T',0};
-    static const WCHAR fmt[] = {'%','s',':','%','u',0};
-    BOOL ret = FALSE;
-    LPWSTR path;
-    connect_t *connect = request->connect;
-
-    path = heap_alloc( (strlenW( connect->hostname ) + 13) * sizeof(WCHAR) );
-    if (path)
-    {
-        LPWSTR requestString;
-
-        sprintfW( path, fmt, connect->hostname, connect->hostport );
-        requestString = build_header_request_string( request, verbConnect,
-            path, http1_1 );
-        heap_free( path );
-        if (requestString)
-        {
-            LPSTR req_ascii = strdupWA( requestString );
-
-            heap_free( requestString );
-            if (req_ascii)
-            {
-                int len = strlen( req_ascii ), bytes_sent;
-
-                ret = netconn_send( request->netconn, req_ascii, len, &bytes_sent );
-                heap_free( req_ascii );
-                if (ret)
-                    ret = read_reply( request );
-            }
-        }
-    }
-    return ret;
-}
-
-#ifndef INET6_ADDRSTRLEN
-#define INET6_ADDRSTRLEN 46
-#endif
-
-static WCHAR *addr_to_str( struct sockaddr_storage *addr )
-{
-    char buf[INET6_ADDRSTRLEN];
-    void *src;
-
-    switch (addr->ss_family)
-    {
-    case AF_INET:
-        src = &((struct sockaddr_in *)addr)->sin_addr;
-        break;
-    case AF_INET6:
-        src = &((struct sockaddr_in6 *)addr)->sin6_addr;
-        break;
-    default:
-        WARN("unsupported address family %d\n", addr->ss_family);
-        return NULL;
-    }
-    if (!inet_ntop( addr->ss_family, src, buf, sizeof(buf) )) return NULL;
-    return strdupAW( buf );
-}
-
-static CRITICAL_SECTION connection_pool_cs;
-static CRITICAL_SECTION_DEBUG connection_pool_debug =
-{
-    0, 0, &connection_pool_cs,
-    { &connection_pool_debug.ProcessLocksList, &connection_pool_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": connection_pool_cs") }
-};
-static CRITICAL_SECTION connection_pool_cs = { &connection_pool_debug, -1, 0, 0, 0, 0 };
-
-static struct list connection_pool = LIST_INIT( connection_pool );
-
-void release_host( hostdata_t *host )
-{
-    LONG ref;
-
-    EnterCriticalSection( &connection_pool_cs );
-    if (!(ref = --host->ref)) list_remove( &host->entry );
-    LeaveCriticalSection( &connection_pool_cs );
-    if (ref) return;
-
-    assert( list_empty( &host->connections ) );
-    heap_free( host->hostname );
-    heap_free( host );
-}
-
-static BOOL connection_collector_running;
-
-static DWORD WINAPI connection_collector(void *arg)
-{
-    unsigned int remaining_connections;
-    netconn_t *netconn, *next_netconn;
-    hostdata_t *host, *next_host;
-    ULONGLONG now;
-
-    do
-    {
-        /* FIXME: Use more sophisticated method */
-        Sleep(5000);
-        remaining_connections = 0;
-        now = GetTickCount64();
-
-        EnterCriticalSection(&connection_pool_cs);
-
-        LIST_FOR_EACH_ENTRY_SAFE(host, next_host, &connection_pool, hostdata_t, entry)
-        {
-            LIST_FOR_EACH_ENTRY_SAFE(netconn, next_netconn, &host->connections, netconn_t, entry)
-            {
-                if (netconn->keep_until < now)
-                {
-                    TRACE("freeing %p\n", netconn);
-                    list_remove(&netconn->entry);
-                    netconn_close(netconn);
-                }
-                else
-                {
-                    remaining_connections++;
-                }
-            }
-        }
-
-        if (!remaining_connections) connection_collector_running = FALSE;
-
-        LeaveCriticalSection(&connection_pool_cs);
-    } while(remaining_connections);
-
-    FreeLibraryAndExitThread( winhttp_instance, 0 );
-}
-
-static void cache_connection( netconn_t *netconn )
-{
-    TRACE( "caching connection %p\n", netconn );
-
-    EnterCriticalSection( &connection_pool_cs );
-
-    netconn->keep_until = GetTickCount64() + DEFAULT_KEEP_ALIVE_TIMEOUT;
-    list_add_head( &netconn->host->connections, &netconn->entry );
-
-    if (!connection_collector_running)
-    {
-        HMODULE module;
-        HANDLE thread;
-
-        GetModuleHandleExW( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (const WCHAR*)winhttp_instance, &module );
-
-        thread = CreateThread(NULL, 0, connection_collector, NULL, 0, NULL);
-        if (thread)
-        {
-            CloseHandle( thread );
-            connection_collector_running = TRUE;
-        }
-        else
-        {
-            FreeLibrary( winhttp_instance );
-        }
-    }
-
-    LeaveCriticalSection( &connection_pool_cs );
-}
-
-static DWORD map_secure_protocols( DWORD mask )
-{
-    DWORD ret = 0;
-    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_SSL2) ret |= SP_PROT_SSL2_CLIENT;
-    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_SSL3) ret |= SP_PROT_SSL3_CLIENT;
-    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1) ret |= SP_PROT_TLS1_CLIENT;
-    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_1) ret |= SP_PROT_TLS1_1_CLIENT;
-    if (mask & WINHTTP_FLAG_SECURE_PROTOCOL_TLS1_2) ret |= SP_PROT_TLS1_2_CLIENT;
-    return ret;
-}
-
-static BOOL ensure_cred_handle( session_t *session )
-{
-    SCHANNEL_CRED cred;
-    SECURITY_STATUS status;
-
-    if (session->cred_handle_initialized) return TRUE;
-
-    memset( &cred, 0, sizeof(cred) );
-    cred.dwVersion             = SCHANNEL_CRED_VERSION;
-    cred.grbitEnabledProtocols = map_secure_protocols( session->secure_protocols );
-    if ((status = AcquireCredentialsHandleW( NULL, (WCHAR *)UNISP_NAME_W, SECPKG_CRED_OUTBOUND, NULL, &cred,
-                                             NULL, NULL, &session->cred_handle, NULL )) != SEC_E_OK)
-    {
-        WARN( "AcquireCredentialsHandleW failed: 0x%08x\n", status );
-        return FALSE;
-    }
-    session->cred_handle_initialized = TRUE;
-    return TRUE;
-}
-
-static BOOL open_connection( request_t *request )
-{
-    BOOL is_secure = request->hdr.flags & WINHTTP_FLAG_SECURE;
-    hostdata_t *host = NULL, *iter;
-    netconn_t *netconn = NULL;
-    connect_t *connect;
-    WCHAR *addressW = NULL;
-    INTERNET_PORT port;
-    DWORD len;
-
-    if (request->netconn) goto done;
-
-    connect = request->connect;
-    port = connect->serverport ? connect->serverport : (request->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
-
-    EnterCriticalSection( &connection_pool_cs );
-
-    LIST_FOR_EACH_ENTRY( iter, &connection_pool, hostdata_t, entry )
-    {
-        if (iter->port == port && !strcmpW( connect->servername, iter->hostname ) && !is_secure == !iter->secure)
-        {
-            host = iter;
-            host->ref++;
-            break;
-        }
-    }
-
-    if (!host)
-    {
-        if ((host = heap_alloc( sizeof(*host) )))
-        {
-            host->ref = 1;
-            host->secure = is_secure;
-            host->port = port;
-            list_init( &host->connections );
-            if ((host->hostname = strdupW( connect->servername )))
-            {
-                list_add_head( &connection_pool, &host->entry );
-            }
-            else
-            {
-                heap_free( host );
-                host = NULL;
-            }
-        }
-    }
-
-    LeaveCriticalSection( &connection_pool_cs );
-
-    if (!host) return FALSE;
-
-    for (;;)
-    {
-        EnterCriticalSection( &connection_pool_cs );
-        if (!list_empty( &host->connections ))
-        {
-            netconn = LIST_ENTRY( list_head( &host->connections ), netconn_t, entry );
-            list_remove( &netconn->entry );
-        }
-        LeaveCriticalSection( &connection_pool_cs );
-        if (!netconn) break;
-
-        if (netconn_is_alive( netconn )) break;
-        TRACE("connection %p no longer alive, closing\n", netconn);
-        netconn_close( netconn );
-        netconn = NULL;
-    }
-
-    if (!connect->resolved && netconn)
-    {
-        connect->sockaddr = netconn->sockaddr;
-        connect->resolved = TRUE;
-    }
-
-    if (!connect->resolved)
-    {
-        len = strlenW( host->hostname ) + 1;
-        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, host->hostname, len );
-
-        if (!netconn_resolve( host->hostname, port, &connect->sockaddr, request->resolve_timeout ))
-        {
-            release_host( host );
-            return FALSE;
-        }
-        connect->resolved = TRUE;
-
-        if (!(addressW = addr_to_str( &connect->sockaddr )))
-        {
-            release_host( host );
-            return FALSE;
-        }
-        len = strlenW( addressW ) + 1;
-        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, addressW, len );
-    }
-
-    if (!netconn)
-    {
-        if (!addressW && !(addressW = addr_to_str( &connect->sockaddr )))
-        {
-            release_host( host );
-            return FALSE;
-        }
-
-        TRACE("connecting to %s:%u\n", debugstr_w(addressW), port);
-
-        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, addressW, 0 );
-
-        if (!(netconn = netconn_create( host, &connect->sockaddr, request->connect_timeout )))
-        {
-            heap_free( addressW );
-            release_host( host );
-            return FALSE;
-        }
-        netconn_set_timeout( netconn, TRUE, request->send_timeout );
-        netconn_set_timeout( netconn, FALSE, request->recv_timeout );
-        if (is_secure)
-        {
-            if (connect->session->proxy_server &&
-                strcmpiW( connect->hostname, connect->servername ))
-            {
-                if (!secure_proxy_connect( request ))
-                {
-                    heap_free( addressW );
-                    netconn_close( netconn );
-                    return FALSE;
-                }
-            }
-            if (!ensure_cred_handle( connect->session ) ||
-                !netconn_secure_connect( netconn, connect->hostname, request->security_flags,
-                                         &connect->session->cred_handle ))
-            {
-                heap_free( addressW );
-                netconn_close( netconn );
-                return FALSE;
-            }
-        }
-
-        request->netconn = netconn;
-        send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER, addressW, strlenW(addressW) + 1 );
-    }
-    else
-    {
-        TRACE("using connection %p\n", netconn);
-
-        netconn_set_timeout( netconn, TRUE, request->send_timeout );
-        netconn_set_timeout( netconn, FALSE, request->recv_timeout );
-        request->netconn = netconn;
-    }
-
-done:
-    request->read_pos = request->read_size = 0;
-    request->read_chunked = FALSE;
-    request->read_chunked_size = ~0u;
-    request->read_chunked_eof = FALSE;
-    heap_free( addressW );
-    return TRUE;
-}
-
-void close_connection( request_t *request )
-{
-    if (!request->netconn) return;
-
-    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0, 0 );
-    netconn_close( request->netconn );
-    request->netconn = NULL;
-    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0, 0 );
-}
-
-static BOOL add_host_header( request_t *request, DWORD modifier )
-{
-    BOOL ret;
-    DWORD len;
-    WCHAR *host;
-    static const WCHAR fmt[] = {'%','s',':','%','u',0};
-    connect_t *connect = request->connect;
-    INTERNET_PORT port;
-
-    port = connect->hostport ? connect->hostport : (request->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
-
-    if (port == INTERNET_DEFAULT_HTTP_PORT || port == INTERNET_DEFAULT_HTTPS_PORT)
-    {
-        return process_header( request, attr_host, connect->hostname, modifier, TRUE );
-    }
-    len = strlenW( connect->hostname ) + 7; /* sizeof(":65335") */
-    if (!(host = heap_alloc( len * sizeof(WCHAR) ))) return FALSE;
-    sprintfW( host, fmt, connect->hostname, port );
-    ret = process_header( request, attr_host, host, modifier, TRUE );
-    heap_free( host );
-    return ret;
-}
-
-static void clear_response_headers( request_t *request )
-{
-    unsigned int i;
-
-    for (i = 0; i < request->num_headers; i++)
-    {
-        if (!request->headers[i].field) continue;
-        if (!request->headers[i].value) continue;
-        if (request->headers[i].is_request) continue;
-        delete_header( request, i );
-        i--;
-    }
-}
-
-/* remove some amount of data from the read buffer */
-static void remove_data( request_t *request, int count )
-{
-    if (!(request->read_size -= count)) request->read_pos = 0;
-    else request->read_pos += count;
-}
-
-/* read some more data into the read buffer */
-static BOOL read_more_data( request_t *request, int maxlen, BOOL notify )
-{
-    int len;
-    BOOL ret;
-
-    if (request->read_chunked_eof) return FALSE;
-
-    if (request->read_size && request->read_pos)
-    {
-        /* move existing data to the start of the buffer */
-        memmove( request->read_buf, request->read_buf + request->read_pos, request->read_size );
-        request->read_pos = 0;
-    }
-    if (maxlen == -1) maxlen = sizeof(request->read_buf);
-
-    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, NULL, 0 );
-
-    ret = netconn_recv( request->netconn, request->read_buf + request->read_size,
-                        maxlen - request->read_size, 0, &len );
-
-    if (notify) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, &len, sizeof(len) );
-
-    request->read_size += len;
-    return ret;
-}
-
-/* discard data contents until we reach end of line */
-static BOOL discard_eol( request_t *request, BOOL notify )
-{
-    do
-    {
-        char *eol = memchr( request->read_buf + request->read_pos, '\n', request->read_size );
-        if (eol)
-        {
-            remove_data( request, (eol + 1) - (request->read_buf + request->read_pos) );
-            break;
-        }
-        request->read_pos = request->read_size = 0;  /* discard everything */
-        if (!read_more_data( request, -1, notify )) return FALSE;
-    } while (request->read_size);
-    return TRUE;
-}
-
-/* read the size of the next chunk */
-static BOOL start_next_chunk( request_t *request, BOOL notify )
-{
-    DWORD chunk_size = 0;
-
-    assert(!request->read_chunked_size || request->read_chunked_size == ~0u);
-
-    if (request->read_chunked_eof) return FALSE;
-
-    /* read terminator for the previous chunk */
-    if (!request->read_chunked_size && !discard_eol( request, notify )) return FALSE;
-
-    for (;;)
-    {
-        while (request->read_size)
-        {
-            char ch = request->read_buf[request->read_pos];
-            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
-            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
-            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
-            else if (ch == ';' || ch == '\r' || ch == '\n')
-            {
-                TRACE("reading %u byte chunk\n", chunk_size);
-
-                if (request->content_length == ~0u) request->content_length = chunk_size;
-                else request->content_length += chunk_size;
-
-                request->read_chunked_size = chunk_size;
-                if (!chunk_size) request->read_chunked_eof = TRUE;
-
-                return discard_eol( request, notify );
-            }
-            remove_data( request, 1 );
-        }
-        if (!read_more_data( request, -1, notify )) return FALSE;
-        if (!request->read_size)
-        {
-            request->content_length = request->content_read = 0;
-            request->read_chunked_size = 0;
-            return TRUE;
-        }
-    }
-}
-
-static BOOL refill_buffer( request_t *request, BOOL notify )
-{
-    int len = sizeof(request->read_buf);
-
-    if (request->read_chunked)
-    {
-        if (request->read_chunked_eof) return FALSE;
-        if (request->read_chunked_size == ~0u || !request->read_chunked_size)
-        {
-            if (!start_next_chunk( request, notify )) return FALSE;
-        }
-        len = min( len, request->read_chunked_size );
-    }
-    else if (request->content_length != ~0u)
-    {
-        len = min( len, request->content_length - request->content_read );
-    }
-
-    if (len <= request->read_size) return TRUE;
-    if (!read_more_data( request, len, notify )) return FALSE;
-    if (!request->read_size) request->content_length = request->content_read = 0;
-    return TRUE;
-}
-
-static void finished_reading( request_t *request )
-{
-    static const WCHAR closeW[] = {'c','l','o','s','e',0};
-
-    BOOL close = FALSE;
-    WCHAR connection[20];
-    DWORD size = sizeof(connection);
-
-    if (!request->netconn) return;
-
-    if (request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE) close = TRUE;
-    else if (query_headers( request, WINHTTP_QUERY_CONNECTION, NULL, connection, &size, NULL ) ||
-             query_headers( request, WINHTTP_QUERY_PROXY_CONNECTION, NULL, connection, &size, NULL ))
-    {
-        if (!strcmpiW( connection, closeW )) close = TRUE;
-    }
-    else if (!strcmpW( request->version, http1_0 )) close = TRUE;
-    if (close)
-    {
-        close_connection( request );
-        return;
-    }
-
-    cache_connection( request->netconn );
-    request->netconn = NULL;
-}
-
-/* return the size of data available to be read immediately */
-static DWORD get_available_data( request_t *request )
-{
-    if (request->read_chunked) return min( request->read_chunked_size, request->read_size );
-    return request->read_size;
-}
-
-/* check if we have reached the end of the data to read */
-static BOOL end_of_read_data( request_t *request )
-{
-    if (!request->content_length) return TRUE;
-    if (request->read_chunked) return request->read_chunked_eof;
-    if (request->content_length == ~0u) return FALSE;
-    return (request->content_length == request->content_read);
-}
-
-static BOOL read_data( request_t *request, void *buffer, DWORD size, DWORD *read, BOOL async )
-{
-    int count, bytes_read = 0;
-
-    if (end_of_read_data( request )) goto done;
-
-    while (size)
-    {
-        if (!(count = get_available_data( request )))
-        {
-            if (!refill_buffer( request, async )) goto done;
-            if (!(count = get_available_data( request ))) goto done;
-        }
-        count = min( count, size );
-        memcpy( (char *)buffer + bytes_read, request->read_buf + request->read_pos, count );
-        remove_data( request, count );
-        if (request->read_chunked) request->read_chunked_size -= count;
-        size -= count;
-        bytes_read += count;
-        request->content_read += count;
-        if (end_of_read_data( request )) goto done;
-    }
-    if (request->read_chunked && !request->read_chunked_size) refill_buffer( request, async );
-
-done:
-    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, request->content_read, request->content_length );
-
-    if (async) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_READ_COMPLETE, buffer, bytes_read );
-    if (read) *read = bytes_read;
-    if (end_of_read_data( request )) finished_reading( request );
-    return TRUE;
-}
-
-/* read any content returned by the server so that the connection can be reused */
-static void drain_content( request_t *request )
-{
-    DWORD size, bytes_read, bytes_total = 0, bytes_left = request->content_length - request->content_read;
-    char buffer[2048];
-
-    refill_buffer( request, FALSE );
-    for (;;)
-    {
-        if (request->read_chunked) size = sizeof(buffer);
-        else
-        {
-            if (bytes_total >= bytes_left) return;
-            size = min( sizeof(buffer), bytes_left - bytes_total );
-        }
-        if (!read_data( request, buffer, size, &bytes_read, FALSE ) || !bytes_read) return;
-        bytes_total += bytes_read;
-    }
-}
-
-static BOOL send_request( request_t *request, LPCWSTR headers, DWORD headers_len, LPVOID optional,
-                          DWORD optional_len, DWORD total_len, DWORD_PTR context, BOOL async )
-{
-    static const WCHAR keep_alive[] = {'K','e','e','p','-','A','l','i','v','e',0};
-    static const WCHAR no_cache[]   = {'n','o','-','c','a','c','h','e',0};
-    static const WCHAR length_fmt[] = {'%','l','d',0};
-
-    BOOL ret = FALSE;
-    connect_t *connect = request->connect;
-    session_t *session = connect->session;
-    WCHAR *req = NULL;
-    char *req_ascii;
-    int bytes_sent;
-    DWORD len;
-
-    clear_response_headers( request );
-    drain_content( request );
-
-    if (session->agent)
-        process_header( request, attr_user_agent, session->agent, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
-
-    if (connect->hostname)
-        add_host_header( request, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW );
-
-    if (request->creds[TARGET_SERVER][SCHEME_BASIC].username)
-        do_authorization( request, WINHTTP_AUTH_TARGET_SERVER, WINHTTP_AUTH_SCHEME_BASIC );
-
-    if (total_len || (request->verb && !strcmpW( request->verb, postW )))
-    {
-        WCHAR length[21]; /* decimal long int + null */
-        sprintfW( length, length_fmt, total_len );
-        process_header( request, attr_content_length, length, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
-    }
-    if (!(request->hdr.disable_flags & WINHTTP_DISABLE_KEEP_ALIVE))
-    {
-        process_header( request, attr_connection, keep_alive, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
-    }
-    if (request->hdr.flags & WINHTTP_FLAG_REFRESH)
-    {
-        process_header( request, attr_pragma, no_cache, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
-        process_header( request, attr_cache_control, no_cache, WINHTTP_ADDREQ_FLAG_ADD_IF_NEW, TRUE );
-    }
-    if (headers && !add_request_headers( request, headers, headers_len, WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE ))
-    {
-        TRACE("failed to add request headers\n");
-        return FALSE;
-    }
-    if (!(request->hdr.disable_flags & WINHTTP_DISABLE_COOKIES) && !add_cookie_headers( request ))
-    {
-        WARN("failed to add cookie headers\n");
-        return FALSE;
-    }
-
-    if (context) request->hdr.context = context;
-
-    if (!(ret = open_connection( request ))) goto end;
-    if (!(req = build_request_string( request ))) goto end;
-
-    if (!(req_ascii = strdupWA( req ))) goto end;
-    TRACE("full request: %s\n", debugstr_a(req_ascii));
-    len = strlen(req_ascii);
-
-    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_SENDING_REQUEST, NULL, 0 );
-
-    ret = netconn_send( request->netconn, req_ascii, len, &bytes_sent );
-    heap_free( req_ascii );
-    if (!ret) goto end;
-
-    if (optional_len)
-    {
-        if (!netconn_send( request->netconn, optional, optional_len, &bytes_sent )) goto end;
-        request->optional = optional;
-        request->optional_len = optional_len;
-        len += optional_len;
-    }
-    send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, &len, sizeof(len) );
-
-end:
-    if (async)
-    {
-        if (ret) send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE, NULL, 0 );
-        else
-        {
-            WINHTTP_ASYNC_RESULT result;
-            result.dwResult = API_SEND_REQUEST;
-            result.dwError  = get_last_error();
-            send_callback( &request->hdr, WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, &result, sizeof(result) );
-        }
-    }
-    heap_free( req );
-    return ret;
-}
-
-static void task_send_request( task_header_t *task )
-{
-    send_request_t *s = (send_request_t *)task;
-    send_request( s->hdr.request, s->headers, s->headers_len, s->optional, s->optional_len, s->total_len, s->context, TRUE );
-    heap_free( s->headers );
-}
-
-/***********************************************************************
- *          WinHttpSendRequest (winhttp.@)
- */
-BOOL WINAPI WinHttpSendRequest( HINTERNET hrequest, LPCWSTR headers, DWORD headers_len,
-                                LPVOID optional, DWORD optional_len, DWORD total_len, DWORD_PTR context )
-{
-    BOOL ret;
-    request_t *request;
-
-    TRACE("%p, %s, %u, %u, %u, %lx\n", hrequest, debugstr_wn(headers, headers_len), headers_len, optional_len,
-          total_len, context);
-
-    if (!(request = (request_t *)grab_object( hrequest )))
-    {
-        set_last_error( ERROR_INVALID_HANDLE );
-        return FALSE;
-    }
-    if (request->hdr.type != WINHTTP_HANDLE_TYPE_REQUEST)
-    {
-        release_object( &request->hdr );
-        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
-        return FALSE;
-    }
-
-    if (headers && !headers_len) headers_len = strlenW( headers );
-
-    if (request->connect->hdr.flags & WINHTTP_FLAG_ASYNC)
-    {
-        send_request_t *s;
-
-        if (!(s = heap_alloc( sizeof(send_request_t) ))) return FALSE;
-        s->hdr.request  = request;
-        s->hdr.proc     = task_send_request;
-        s->headers      = strdupW( headers );
-        s->headers_len  = headers_len;
-        s->optional     = optional;
-        s->optional_len = optional_len;
-        s->total_len    = total_len;
-        s->context      = context;
-
-        addref_object( &request->hdr );
-        ret = queue_task( (task_header_t *)s );
-    }
-    else
-        ret = send_request( request, headers, headers_len, optional, optional_len, total_len, context, FALSE );
-
-    release_object( &request->hdr );
-    if (ret) set_last_error( ERROR_SUCCESS );
-    return ret;
-}
-
 static BOOL set_credentials( request_t *request, DWORD target, DWORD scheme_flag, const WCHAR *username,
                              const WCHAR *password )
 {
@@ -2396,7 +2145,7 @@ static BOOL read_reply( request_t *request )
     WCHAR *versionW, *status_textW, *raw_headers;
     WCHAR status_codeW[4]; /* sizeof("nnn") */
 
-    if (!request->netconn) return FALSE;
+    if (!netconn_connected( &request->netconn )) return FALSE;
 
     do
     {
@@ -2582,11 +2331,11 @@ static BOOL handle_redirect( request_t *request, DWORD status )
             connect->hostport = port;
             if (!(ret = set_server_for_hostname( connect, hostname, port ))) goto end;
 
-            netconn_close( request->netconn );
-            request->netconn = NULL;
-            request->content_length = request->content_read = 0;
+            netconn_close( &request->netconn );
+            if (!(ret = netconn_init( &request->netconn ))) goto end;
             request->read_pos = request->read_size = 0;
-            request->read_chunked = request->read_chunked_eof = FALSE;
+            request->read_chunked = FALSE;
+            request->read_chunked_eof = FALSE;
         }
         else heap_free( hostname );
 
@@ -2734,14 +2483,14 @@ static BOOL query_data_available( request_t *request, DWORD *available, BOOL asy
     if (end_of_read_data( request )) goto done;
 
     count = get_available_data( request );
-    if (!request->read_chunked && request->netconn)
-        count += netconn_query_data_available( request->netconn );
+    if (!request->read_chunked)
+        count += netconn_query_data_available( &request->netconn );
     if (!count)
     {
         refill_buffer( request, async );
         count = get_available_data( request );
-        if (!request->read_chunked && request->netconn)
-            count += netconn_query_data_available( request->netconn );
+        if (!request->read_chunked)
+            count += netconn_query_data_available( &request->netconn );
     }
 
 done:
@@ -2854,7 +2603,7 @@ static BOOL write_data( request_t *request, LPCVOID buffer, DWORD to_write, LPDW
     BOOL ret;
     int num_bytes;
 
-    ret = netconn_send( request->netconn, buffer, to_write, &num_bytes );
+    ret = netconn_send( &request->netconn, buffer, to_write, &num_bytes );
 
     if (async)
     {
