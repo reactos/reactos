@@ -5,7 +5,6 @@
  * PURPOSE:         Thread functions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Ariadne (ariadne@xs4all.nl)
- *
  */
 
 /* INCLUDES *******************************************************************/
@@ -950,16 +949,44 @@ QueueUserAPC(IN PAPCFUNC pfnAPC,
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 WINAPI
 SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
 {
-    static int once;
-    if (once++ == 0)
-         DPRINT1("SetThreadStackGuarantee(%p): stub\n", StackSizeInBytes);
-    return TRUE;
+    PTEB Teb = NtCurrentTeb();
+    ULONG GuaranteedStackBytes;
+    ULONG AllocationSize;
+
+    if (!StackSizeInBytes)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    AllocationSize = *StackSizeInBytes;
+
+    /* Retrieve the current stack size */
+    GuaranteedStackBytes = Teb->GuaranteedStackBytes;
+
+    /* Return the size of the previous stack */
+    *StackSizeInBytes = GuaranteedStackBytes;
+
+    /*
+     * If the new stack size is either zero or is less than the current size,
+     * the previous stack size is returned and we return success.
+     */
+    if ((AllocationSize == 0) || (AllocationSize < GuaranteedStackBytes))
+    {
+        return TRUE;
+    }
+
+    // FIXME: Unimplemented!
+    UNIMPLEMENTED_ONCE;
+
+    // return TRUE;
+    return FALSE;
 }
 
 /*
