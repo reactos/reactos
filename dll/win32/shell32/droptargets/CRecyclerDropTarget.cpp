@@ -157,7 +157,7 @@ class CRecyclerDropTarget :
                 if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
                     fMask |= CMIC_MASK_SHIFT_DOWN;
 
-                _DoDeleteAsync(pDataObject, fMask);
+                _DoDeleteDataObject(pDataObject, fMask);
             }
             else
             {
