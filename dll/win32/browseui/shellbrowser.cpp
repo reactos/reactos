@@ -25,7 +25,6 @@
 #include <htiframe.h>
 #include <strsafe.h>
 #include <undocshell.h>
-#include <olectl.h>
 
 extern HRESULT IUnknown_ShowDW(IUnknown * punk, BOOL fShow);
 
@@ -169,8 +168,6 @@ HRESULT WINAPI SHBindToFolder(LPCITEMIDLIST path, IShellFolder **newFolder)
     return desktop->BindToObject (path, NULL, IID_PPV_ARG(IShellFolder, newFolder));
 }
 
-HBITMAP DoLoadPicture(LPCWSTR pszFileName);
-
 static const TCHAR szCabinetWndClass[] = TEXT("CabinetWClass");
 //static const TCHAR szExploreWndClass[] = TEXT("ExploreWClass");
 
@@ -310,7 +307,6 @@ private:
     IBindCtx                                *fHistoryBindContext;
     HDSA menuDsa;
     HACCEL m_hAccel;
-    HBITMAP m_hBackImage;
 public:
 #if 0
     ULONG InternalAddRef()
@@ -329,7 +325,6 @@ public:
     ~CShellBrowser();
     HRESULT Initialize(LPITEMIDLIST pidl, DWORD dwFlags);
 public:
-    BOOL CheckBackImage(LPCITEMIDLIST pidl);
     HRESULT BrowseToPIDL(LPCITEMIDLIST pidl, long flags);
     HRESULT BrowseToPath(IShellFolder *newShellFolder, LPCITEMIDLIST absolutePIDL,
         FOLDERSETTINGS *folderSettings, long flags);
@@ -606,7 +601,6 @@ public:
     LRESULT OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClose(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolderOptions(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
@@ -654,7 +648,6 @@ public:
         MESSAGE_HANDLER(WM_DRAWITEM, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_MENUSELECT, RelayMsgToShellView)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
-        MESSAGE_HANDLER(WM_PRINTCLIENT, OnPrintClient)
         COMMAND_ID_HANDLER(IDM_FILE_CLOSE, OnClose)
         COMMAND_ID_HANDLER(IDM_TOOLS_FOLDEROPTIONS, OnFolderOptions)
         COMMAND_ID_HANDLER(IDM_TOOLS_MAPNETWORKDRIVE, OnMapNetworkDrive)
@@ -722,13 +715,10 @@ CShellBrowser::CShellBrowser()
     fHistoryObject = NULL;
     fHistoryStream = NULL;
     fHistoryBindContext = NULL;
-    m_hBackImage = NULL;
 }
 
 CShellBrowser::~CShellBrowser()
 {
-    if (m_hBackImage)
-        DeleteObject(m_hBackImage);
     if (menuDsa)
         DSA_Destroy(menuDsa);
 }
@@ -928,65 +918,6 @@ long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cch
     return IEGetNameAndFlagsEx(pidl, uFlags, 0, pszBuf, cchBuf, rgfInOut);
 }
 
-BOOL CShellBrowser::CheckBackImage(LPCITEMIDLIST pidl)
-{
-    if (m_hBackImage)
-    {
-        DeleteObject(m_hBackImage);
-        m_hBackImage = NULL;
-    }
-
-    COLORREF clrText = GetSysColor(COLOR_WINDOWTEXT);
-
-    WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
-    SHGetPathFromIDListW(pidl, szPath);
-
-    // does the folder exists?
-    DWORD attrs = GetFileAttributesW(szPath);
-    if (attrs == INVALID_FILE_ATTRIBUTES)
-    {
-        return FALSE;
-    }
-
-    // build the ini file path
-    StringCchCopyW(szIniFile, _countof(szIniFile), szPath);
-    PathAddBackslashW(szIniFile);
-    StringCchCatW(szIniFile, _countof(szIniFile), L"desktop.ini");
-
-    static LPCWSTR TheGUID = L"{BE098140-A513-11D0-A3A4-00C04FD706EC}";
-    static LPCWSTR Space = L" \t\n\r\f\v";
-
-    // get info from ini file
-    WCHAR szImage[MAX_PATH], szText[64];
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
-
-    // load the image
-    if (szImage[0])
-    {
-        StrTrimW(szImage, Space);
-
-        if (PathIsRelativeW(szImage))
-        {
-            PathAppendW(szPath, szImage);
-            StringCchCopyW(szImage, _countof(szImage), szPath);
-        }
-
-        m_hBackImage = DoLoadPicture(szImage);
-    }
-
-    // load the text color
-    if (szText[0])
-    {
-        StrTrimW(szText, Space);
-        clrText = (wcstol(szText, NULL, 0) & 0xFFFFFF);
-
-        // TODO: clrText
-    }
-
-    return TRUE;
-}
-
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
@@ -1072,7 +1003,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     // update current pidl
     ILFree(fCurrentDirectoryPIDL);
     fCurrentDirectoryPIDL = ILClone(absolutePIDL);
-    CheckBackImage(fCurrentDirectoryPIDL);
 
     // update view window
     if (saveCurrentShellView != NULL)
@@ -3584,53 +3514,6 @@ LRESULT CShellBrowser::RelayMsgToShellView(UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
-static VOID
-DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight)
-{
-    INT x, y, x0, y0, x1, y1;
-    x0 = prc->left;
-    y0 = prc->top;
-    x1 = prc->right;
-    y1 = prc->bottom;
-
-    HDC hMemDC = CreateCompatibleDC(hDC);
-    HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
-    for (y = y0; y < y1; y += nHeight)
-    {
-        for (x = x0; x < x1; x += nWidth)
-        {
-            BitBlt(hDC, x, y, nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
-        }
-    }
-    SelectObject(hMemDC, hbmOld);
-    DeleteDC(hMemDC);
-}
-
-LRESULT CShellBrowser::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    HDC hDC = (HDC)wParam;
-    HWND hwndCtrl = ::WindowFromDC(hDC);
-
-    RECT rc;
-    ::GetClientRect(hwndCtrl, &rc);
-
-    if (m_hBackImage)
-    {
-        BITMAP bm;
-        if (GetObject(m_hBackImage, sizeof(BITMAP), &bm))
-        {
-            DrawTileBitmap(hDC, &rc, m_hBackImage, bm.bmWidth, bm.bmHeight);
-        }
-    }
-    else
-    {
-        FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
-    }
-
-    bHandled = TRUE;
-    return TRUE;
-}
-
 LRESULT CShellBrowser::OnSettingChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     LPVOID lpEnvironment;
@@ -3804,8 +3687,6 @@ LRESULT CShellBrowser::OnRefresh(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL 
     if (fCurrentShellView)
         fCurrentShellView->Refresh();
 
-    CheckBackImage(fCurrentDirectoryPIDL);
-
     return 0;
 }
 
@@ -3858,70 +3739,4 @@ LRESULT CShellBrowser::RelayCommands(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 HRESULT CShellBrowser_CreateInstance(LPITEMIDLIST pidl, DWORD dwFlags, REFIID riid, void **ppv)
 {
     return ShellObjectCreatorInit<CShellBrowser>(pidl, dwFlags, riid, ppv);
-}
-
-HBITMAP DoLoadPicture(LPCWSTR pszFileName)
-{
-    // open the picture file
-    HANDLE hFile;
-    hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ,
-                        NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE)
-        return NULL;
-
-    // get the file size
-    DWORD cbGlobal = GetFileSize(hFile, NULL);
-    if (cbGlobal == INVALID_FILE_SIZE)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    // allocate
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, cbGlobal);
-    if (hGlobal == NULL)
-    {
-        CloseHandle(hFile);
-        return NULL;
-    }
-
-    // read it
-    LPVOID pvGlobal = GlobalLock(hGlobal);
-    DWORD cbRead;
-    if (!pvGlobal || !ReadFile(hFile, pvGlobal, cbGlobal, &cbRead, NULL) ||
-        cbRead != cbGlobal)
-    {
-        GlobalUnlock(hGlobal);
-        GlobalFree(hGlobal);
-        CloseHandle(hFile);
-        return NULL;
-    }
-    GlobalUnlock(hGlobal);
-
-    // close the file
-    CloseHandle(hFile);
-
-    // load the picture
-    HBITMAP hbm = NULL;
-    IPicture *pPicture = NULL;
-    IStream *pStream = NULL;
-    if (CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) == S_OK)
-    {
-        OleLoadPicture(pStream, cbGlobal, FALSE, IID_IPicture, (LPVOID *)&pPicture);
-
-        // get the bitmap handle
-        if (pPicture)
-        {
-            pPicture->get_Handle((OLE_HANDLE *)&hbm);
-
-            // copy the bitmap handle
-            hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
-
-            pPicture->Release();
-        }
-        pStream->Release();
-    }
-    GlobalFree(hGlobal);
-
-    return hbm;
 }
