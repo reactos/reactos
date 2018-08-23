@@ -113,6 +113,7 @@ class CDefView :
         CLSID m_Category;
         BOOL  m_Destroyed;
         HBITMAP m_hBackImage;
+        COLORREF m_crCustomTextColor;
 
     private:
         HRESULT _MergeToolbar();
@@ -385,7 +386,8 @@ CDefView::CDefView() :
     m_cScrollDelay(0),
     m_isEditing(FALSE),
     m_Destroyed(FALSE),
-    m_hBackImage(NULL)
+    m_hBackImage(NULL),
+    m_crCustomTextColor(CLR_INVALID)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -638,6 +640,20 @@ void CDefView::UpdateListColors()
             m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
     }
+    else
+    {
+        if (m_crCustomTextColor != CLR_INVALID)
+        {
+            m_ListView.SetTextColor(m_crCustomTextColor);
+
+            if (GetRValue(m_crCustomTextColor) + GetGValue(m_crCustomTextColor) + GetBValue(m_crCustomTextColor) > 128 * 3)
+                m_ListView.SetTextBkColor(RGB(0, 0, 0));
+            else
+                m_ListView.SetTextBkColor(RGB(255, 255, 255));
+
+            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
+        }
+    }
 }
 
 /**********************************************************
@@ -690,6 +706,7 @@ BOOL CDefView::CheckBackImage(LPCITEMIDLIST pidl)
         DeleteObject(m_hBackImage);
         m_hBackImage = NULL;
     }
+    m_crCustomTextColor = CLR_INVALID;
 
     WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
     SHGetPathFromIDListW(pidl, szPath);
@@ -711,27 +728,37 @@ BOOL CDefView::CheckBackImage(LPCITEMIDLIST pidl)
 
     // get info from ini file
     WCHAR szImage[MAX_PATH], szText[64];
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
-    GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
-
-    // load the image
-    if (szImage[0])
+    attrs = GetFileAttributesW(szIniFile);
+    if (attrs != INVALID_FILE_ATTRIBUTES)
     {
-        StrTrimW(szImage, Space);
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
 
-        if (PathIsRelativeW(szImage))
+        // load the image
+        if (szImage[0])
         {
-            PathAppendW(szPath, szImage);
-            StringCchCopyW(szImage, _countof(szImage), szPath);
+            StrTrimW(szImage, Space);
+
+            if (PathIsRelativeW(szImage))
+            {
+                PathAppendW(szPath, szImage);
+                StringCchCopyW(szImage, _countof(szImage), szPath);
+            }
+
+            m_hBackImage = DoLoadPicture(szImage);
         }
 
-        m_hBackImage = DoLoadPicture(szImage);
-    }
+        // load the text color
+        if (szText[0])
+        {
+            StrTrimW(szText, Space);
 
-    // load the text color
-    if (szText[0])
-    {
-        // TODO:
+            LPWSTR pchEnd = NULL;
+            COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+            if (pchEnd && !*pchEnd)
+                m_crCustomTextColor = cr;
+        }
     }
 
     return TRUE;
