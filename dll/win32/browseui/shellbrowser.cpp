@@ -2,6 +2,7 @@
  * ReactOS Explorer
  *
  * Copyright 2009 Andrew Hill <ash77 at domain reactos.org>
+ * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
