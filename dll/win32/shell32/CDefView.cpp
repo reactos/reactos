@@ -257,6 +257,7 @@ class CDefView :
         LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -323,6 +324,7 @@ class CDefView :
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_PRINTCLIENT, OnPrintClient)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
@@ -573,6 +575,12 @@ BOOL CDefView::CreateList()
 
     if (!m_ListView)
         return FALSE;
+
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
+    {
+        const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
+        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
+    }
 
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nHeaderID = -1;
@@ -988,6 +996,12 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     }
     bHandled = FALSE;
     return 0;
+}
+
+LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    bHandled = TRUE;
+    return SendMessageW(GetParent(), WM_PRINTCLIENT, wParam, lParam);
 }
 
 LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
