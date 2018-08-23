@@ -644,14 +644,9 @@ void CDefView::UpdateListColors()
     {
         if (m_crCustomTextColor != CLR_INVALID)
         {
+            m_ListView.SetTextBkColor(CLR_NONE);
             m_ListView.SetTextColor(m_crCustomTextColor);
-
-            if (GetRValue(m_crCustomTextColor) + GetGValue(m_crCustomTextColor) + GetBValue(m_crCustomTextColor) > 128 * 3)
-                m_ListView.SetTextBkColor(RGB(0, 0, 0));
-            else
-                m_ListView.SetTextBkColor(RGB(255, 255, 255));
-
-            m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
+            m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
     }
 }
