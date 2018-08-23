@@ -1087,9 +1087,12 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 }
 
 static VOID
-DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight)
+DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight, INT dx, INT dy)
 {
     INT x0 = prc->left, y0 = prc->top, x1 = prc->right, y1 = prc->bottom;
+
+    x0 += dx;
+    y0 += dy;
 
     HDC hMemDC = CreateCompatibleDC(hDC);
     HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
@@ -1116,7 +1119,9 @@ LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         BITMAP bm;
         if (::GetObject(m_hBackImage, sizeof(BITMAP), &bm))
         {
-            DrawTileBitmap(hDC, &rc, m_hBackImage, bm.bmWidth, bm.bmHeight);
+            INT dx = -(::GetScrollPos(m_ListView, SB_HORZ) % bm.bmWidth);
+            INT dy = -(::GetScrollPos(m_ListView, SB_VERT) % bm.bmHeight);
+            DrawTileBitmap(hDC, &rc, m_hBackImage, bm.bmWidth, bm.bmHeight, dx, dy);
         }
     }
     else
