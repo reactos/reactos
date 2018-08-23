@@ -18,12 +18,37 @@
 
 typedef NTSTATUS (NTAPI *PCSR_CREATE_REMOTE_THREAD)(IN HANDLE ThreadHandle, IN PCLIENT_ID ClientId);
 
+/* FUNCTIONS ******************************************************************/
+
 NTSTATUS
 WINAPI
 BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
-                       IN PCLIENT_ID ClientId);
+                       IN PCLIENT_ID ClientId)
+{
+    BASE_API_MESSAGE ApiMessage;
+    PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
 
-/* FUNCTIONS ******************************************************************/
+    DPRINT("BasepNotifyCsrOfThread: Thread: %p, Handle %p\n",
+            ClientId->UniqueThread, ThreadHandle);
+
+    /* Fill out the request */
+    CreateThreadRequest->ClientId = *ClientId;
+    CreateThreadRequest->ThreadHandle = ThreadHandle;
+
+    /* Call CSR */
+    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
+                        NULL,
+                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
+                        sizeof(*CreateThreadRequest));
+    if (!NT_SUCCESS(ApiMessage.Status))
+    {
+        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", ApiMessage.Status);
+        return ApiMessage.Status;
+    }
+
+    /* Return Success */
+    return STATUS_SUCCESS;
+}
 
 __declspec(noreturn)
 VOID
@@ -153,12 +178,13 @@ CreateRemoteThread(IN HANDLE hProcess,
     ULONG_PTR Cookie;
     ULONG ReturnLength;
     SIZE_T ReturnSize;
+
     DPRINT("CreateRemoteThread: hProcess: %p dwStackSize: %lu lpStartAddress"
-            ": %p lpParameter: %p, dwCreationFlags: %lx\n", hProcess,
-            dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
+           ": %p lpParameter: %p, dwCreationFlags: %lx\n", hProcess,
+           dwStackSize, lpStartAddress, lpParameter, dwCreationFlags);
 
     /* Clear the Context */
-    RtlZeroMemory(&Context, sizeof(CONTEXT));
+    RtlZeroMemory(&Context, sizeof(Context));
 
     /* Write PID */
     ClientId.UniqueProcess = hProcess;
@@ -176,14 +202,14 @@ CreateRemoteThread(IN HANDLE hProcess,
         return NULL;
     }
 
-    /* Create Initial Context */
+    /* Create the Initial Context */
     BaseInitializeContext(&Context,
                           lpParameter,
                           lpStartAddress,
                           InitialTeb.StackBase,
                           1);
 
-    /* initialize the attributes for the thread object */
+    /* Initialize the attributes for the thread object */
     ObjectAttributes = BaseFormatObjectAttributes(&LocalObjectAttributes,
                                                   lpThreadAttributes,
                                                   NULL);
@@ -217,10 +243,10 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
-                           "NtQueryInformationThread() failed with status %08lx\n",
-                           __FUNCTION__, Status);
-            return NULL;
+            DPRINT1("SXS: %s - Failing thread create because "
+                    "NtQueryInformationThread() failed with status %08lx\n",
+                    __FUNCTION__, Status);
+            goto Quit;
         }
 
         /* Allocate the Activation Context Stack */
@@ -228,10 +254,10 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
-                           "RtlAllocateActivationContextStack() failed with status %08lx\n",
-                           __FUNCTION__, Status);
-            return NULL;
+            DPRINT1("SXS: %s - Failing thread create because "
+                    "RtlAllocateActivationContextStack() failed with status %08lx\n",
+                    __FUNCTION__, Status);
+            goto Quit;
         }
 
         /* Save it */
@@ -249,15 +275,10 @@ CreateRemoteThread(IN HANDLE hProcess,
         if (!NT_SUCCESS(Status))
         {
             /* Fail */
-            ERROR_DBGBREAK("SXS: %s - Failing thread create because "
-                           "RtlQueryInformationActivationContext() failed with status %08lx\n",
-                           __FUNCTION__, Status);
-
-            /* Free the activation context stack */
-            // RtlFreeThreadActivationContextStack();
-            RtlFreeActivationContextStack(Teb->ActivationContextStackPointer);
-
-            return NULL;
+            DPRINT1("SXS: %s - Failing thread create because "
+                    "RtlQueryInformationActivationContext() failed with status %08lx\n",
+                    __FUNCTION__, Status);
+            goto Quit;
         }
 
         /* Does it need to be activated? */
@@ -271,24 +292,21 @@ CreateRemoteThread(IN HANDLE hProcess,
             if (!NT_SUCCESS(Status))
             {
                 /* Fail */
-                ERROR_DBGBREAK("SXS: %s - Failing thread create because "
-                               "RtlActivateActivationContextEx() failed with status %08lx\n",
-                               __FUNCTION__, Status);
-
-                /* Free the activation context stack */
-                // RtlFreeThreadActivationContextStack();
-                RtlFreeActivationContextStack(Teb->ActivationContextStackPointer);
-
-                return NULL;
+                DPRINT1("SXS: %s - Failing thread create because "
+                        "RtlActivateActivationContextEx() failed with status %08lx\n",
+                        __FUNCTION__, Status);
+                goto Quit;
             }
         }
+
+        /* Sync the service tag with the parent thread's one */
+        Teb->SubProcessTag = NtCurrentTeb()->SubProcessTag;
     }
 
     /* Notify CSR */
     if (!BaseRunningInServerProcess)
     {
         Status = BasepNotifyCsrOfThread(hThread, &ClientId);
-        ASSERT(NT_SUCCESS(Status));
     }
     else
     {
@@ -304,16 +322,35 @@ CreateRemoteThread(IN HANDLE hProcess,
             {
                 /* Call it instead of going through LPC */
                 Status = CsrCreateRemoteThread(hThread, &ClientId);
-                ASSERT(NT_SUCCESS(Status));
             }
         }
     }
 
-    /* Success */
-    if (lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
+Quit:
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed to create the thread */
 
-    /* Resume it if asked */
-    if (!(dwCreationFlags & CREATE_SUSPENDED)) NtResumeThread(hThread, &Dummy);
+        /* Free the activation context stack */
+        if (ActivationContextStack)
+            RtlFreeActivationContextStack(ActivationContextStack);
+
+        NtTerminateThread(hThread, Status);
+        // FIXME: Wait for the thread to terminate?
+        BaseFreeThreadStack(hProcess, &InitialTeb);
+        NtClose(hThread);
+
+        BaseSetLastNTError(Status);
+        return NULL;
+    }
+
+    /* Success */
+    if (lpThreadId)
+        *lpThreadId = HandleToUlong(ClientId.UniqueThread);
+
+    /* Resume the thread if asked */
+    if (!(dwCreationFlags & CREATE_SUSPENDED))
+        NtResumeThread(hThread, &Dummy);
 
     /* Return handle to thread */
     return hThread;

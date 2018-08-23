@@ -479,36 +479,6 @@ BaseProcessStartup(PPROCESS_START_ROUTINE lpStartAddress)
     _SEH2_END;
 }
 
-NTSTATUS
-WINAPI
-BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
-                       IN PCLIENT_ID ClientId)
-{
-    BASE_API_MESSAGE ApiMessage;
-    PBASE_CREATE_THREAD CreateThreadRequest = &ApiMessage.Data.CreateThreadRequest;
-
-    DPRINT("BasepNotifyCsrOfThread: Thread: %p, Handle %p\n",
-            ClientId->UniqueThread, ThreadHandle);
-
-    /* Fill out the request */
-    CreateThreadRequest->ClientId = *ClientId;
-    CreateThreadRequest->ThreadHandle = ThreadHandle;
-
-    /* Call CSR */
-    CsrClientCallServer((PCSR_API_MESSAGE)&ApiMessage,
-                        NULL,
-                        CSR_CREATE_API_NUMBER(BASESRV_SERVERDLL_INDEX, BasepCreateThread),
-                        sizeof(*CreateThreadRequest));
-    if (!NT_SUCCESS(ApiMessage.Status))
-    {
-        DPRINT1("Failed to tell CSRSS about new thread: %lx\n", ApiMessage.Status);
-        return ApiMessage.Status;
-    }
-
-    /* Return Success */
-    return STATUS_SUCCESS;
-}
-
 BOOLEAN
 WINAPI
 BasePushProcessParameters(IN ULONG ParameterFlags,
