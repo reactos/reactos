@@ -3590,8 +3590,8 @@ DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight)
     INT x, y, x0, y0, x1, y1;
     x0 = prc->left;
     y0 = prc->top;
-    x1 = prc->right + nWidth - 1;
-    y1 = prc->bottom + nHeight - 1;
+    x1 = prc->right;
+    y1 = prc->bottom;
 
     HDC hMemDC = CreateCompatibleDC(hDC);
     HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
