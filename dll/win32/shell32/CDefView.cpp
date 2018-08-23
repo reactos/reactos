@@ -3428,7 +3428,7 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
     return hRes;
 }
 
-    HBITMAP DoLoadPicture(LPCWSTR pszFileName)
+HBITMAP DoLoadPicture(LPCWSTR pszFileName)
 {
     // open the picture file
     HANDLE hFile;
