@@ -27,9 +27,7 @@
 #include <guiddef.h>
 #endif
 
-#ifndef __RELFILE__
-#define __RELFILE__ __FILE__
-#endif
+#include <builddir.h>
 
 #ifdef __WINE_WINE_TEST_H
 #error This file should not be used in Wine tests
