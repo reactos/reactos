@@ -259,7 +259,7 @@ static const conv_t conv_ENERGY[] = {
     1 va ............. = 4 sawk = 80 inch = 2.032 m
     1 yard ........... = 0.9144 m
     1 yote ........... = 400 sen = 16256 m
-    1 zhang .......... =
+    1 zhang .......... = 3+1/3 m = 10/3 m
 */
 static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, ANGSTROMS,            "$/1X10",           "$*1X10")
@@ -308,7 +308,7 @@ static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, VA,                   "$*2.032",          "$/2.032")
     DECLARE_CONV_UNIT(LENGTH, YARDS,                "$*0.9144",         "$/0.9144")
     DECLARE_CONV_UNIT(LENGTH, YOTE,                 "$*16256",          "$/16256")
-//    DECLARE_CONV_UNIT(LENGTH, ZHANG,                "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, ZHANG,                "$/0.3",            "$*0.3")
     DECLARE_CONV_END
 };
 
