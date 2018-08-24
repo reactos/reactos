@@ -1,3 +1,23 @@
+/*
+ * ReactOS Calc (Unit conversion engine)
+ *
+ * Copyright 2007-2017, Carlo Bramini
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include "calc.h"
 
 /*
@@ -62,13 +82,13 @@ static const conv_t conv_ANGLE[] = {
     1 acre us ............. = 4840*(36/39.37)^2 m = 6272640/1549.9969 m
     1 are ................. = 100 mq
     1 chou ................ = 108000*(10/33)^2 mq
-    1 danbo ............... =
+    1 danbo ............... = 991.74 mq
     1 ha .................. = 10000 mq
-    1 jeongbo ............. =
-    1 morgen hungary ...... =
+    1 jeongbo ............. = 9917.4 mq
+    1 morgen hungary ...... = 5754.642 mq
     1 mu .................. = 2000/3 mq
     1 ping ................ =
-    1 pyeong .............. =
+    1 pyeong .............. = 400/121 mq
     1 pyeongbangja ........ =
     1 rai ................. = 1600 mq
     1 se .................. = 1080*(10/33)^2 mq
@@ -84,7 +104,7 @@ static const conv_t conv_ANGLE[] = {
     1 square mm ........... = 0,000001 mq
     1 square shaku ........ = (10/33)^2 mq
     1 square tsuen ........ =
-    1 square va ........... =
+    1 square va ........... = 4 mq
     1 square yard ......... = 0,83612736 mq
     1 tan ................. = 10800*(10/33)^2 mq
     1 tsubo ............... = 36*(10/33)^2 mq
@@ -97,15 +117,15 @@ static const conv_t conv_AREA[] = {
     DECLARE_CONV_UNIT(AREA, ACRES_SCOTS,            "$*5000",            "$/5000")
     DECLARE_CONV_UNIT(AREA, ARES,                   "$*100",             "$/100")
     DECLARE_CONV_UNIT(AREA, CHOU,                   "$*10800000/1089",   "$*1089/10800000")
-//    DECLARE_CONV_UNIT(AREA, DANBO,                  "$", "$")
+    DECLARE_CONV_UNIT(AREA, DANBO,                  "$*991.74",          "$/991.74")
     DECLARE_CONV_UNIT(AREA, HECTARES,               "$*10000",           "$/10000")
-//    DECLARE_CONV_UNIT(AREA, JEONGBO,                "$", "$")
+    DECLARE_CONV_UNIT(AREA, JEONGBO,                "$*9917.4",          "$/9917.4")
 //    DECLARE_CONV_UNIT(AREA, MORGEN_HUNGARY,         "$", "$")
-    DECLARE_CONV_UNIT(AREA, MU,                     "$*(2000/3)", "$/(2000/3)")
+    DECLARE_CONV_UNIT(AREA, MU,                     "$*(2000/3)",        "$/(2000/3)")
 //    DECLARE_CONV_UNIT(AREA, PING,                   "$", "$")
-//    DECLARE_CONV_UNIT(AREA, PYEONG,                 "$", "$")
+    DECLARE_CONV_UNIT(AREA, PYEONG,                 "$*400/121",         "$*121/400")
 //    DECLARE_CONV_UNIT(AREA, PYEONGBANGJA,           "$", "$")
-    DECLARE_CONV_UNIT(AREA, RAI,                    "$*1600", "$/1600")
+    DECLARE_CONV_UNIT(AREA, RAI,                    "$*1600",            "$/1600")
     DECLARE_CONV_UNIT(AREA, SE,                     "$*108000/1089",     "$*1089/108000")
     DECLARE_CONV_UNIT(AREA, SQUARE_CENTIMETERS,     "$*0,0001",          "$/0,0001")
 //    DECLARE_CONV_UNIT(AREA, SQUARE_CHR,             "$", "$")
@@ -120,7 +140,7 @@ static const conv_t conv_AREA[] = {
     DECLARE_CONV_UNIT(AREA, SQUARE_MILLIMETERS,     "$*1000000",         "$/1000000")
     DECLARE_CONV_UNIT(AREA, SQUARE_SHAKU,           "$*100/1089",        "$/1089*100")
 //    DECLARE_CONV_UNIT(AREA, SQUARE_TSUEN,           "$", "$")
-//    DECLARE_CONV_UNIT(AREA, SQUARE_VA,              "$", "$")
+    DECLARE_CONV_UNIT(AREA, SQUARE_VA,              "$*4",               "$/4")
     DECLARE_CONV_UNIT(AREA, SQUARE_YARD,            "$*0,83612736",      "$/0,83612736")
     DECLARE_CONV_UNIT(AREA, TAN,                    "$*1080000/1089",    "$*1089/1080000")
     DECLARE_CONV_UNIT(AREA, TSUBO,                  "$*1188/1089",       "$*1089/1188")
@@ -168,7 +188,7 @@ static const conv_t conv_CURRENCY[] = {
     1 cal15 .... = 4.1855 J
     1 BTU ...... = 1055.056 J
     1 ERG ...... = 0.0000001 J
-    1 EV ....... = 0.000000000000000000160217653 J
+    1 eV ....... = 0.000000000000000000160217653 J
     1 Foot-Pound = 1.3558179483314004 J
     1 IT calorie = 4.1868 J
     1 KCa ...... = 4186.8 J
@@ -181,7 +201,7 @@ static const conv_t conv_ENERGY[] = {
     DECLARE_CONV_UNIT(ENERGY, 15_C_CALORIES,        "$*4.1855",   "$/4.1855")
     DECLARE_CONV_UNIT(ENERGY, BTUS,                 "$*1055.056", "$/1055.056")
     DECLARE_CONV_UNIT(ENERGY, ERGS,                 "$*.0000001", "$/.0000001")
-    DECLARE_CONV_UNIT(ENERGY, EVS,                  "$*.000000000000000000160217653", "$/.000000000000000000160217653")
+    DECLARE_CONV_UNIT(ENERGY, EVS,                  "$*1.60217653/1X19", "$/1.60217653*1X19")
     DECLARE_CONV_UNIT(ENERGY, FOOT_POUNDS,          "$*1.3558179483314004",   "$/1.3558179483314004")
     DECLARE_CONV_UNIT(ENERGY, IT_CALORIES,          "$*4.1868",   "$/4.1868")
     DECLARE_CONV_UNIT(ENERGY, IT_KILOCALORIES,      "$*4186.8",   "$/4186.8")
@@ -209,13 +229,13 @@ static const conv_t conv_ENERGY[] = {
     1 furlong ........ = 10 chains = 220*0.9144 m
     1 gan ............ =
     1 hand ........... = 4 inches = 0.9144/9 m
-    1 hunh ........... =
+    1 hunh ........... = 1/8 nieu = 9.144/3456 m
     1 inch ........... = yard/36 = 0.9144/36 m
     1 ja ............. =
     1 jeong .......... =
-    1 kabiet ......... =
+    1 kabiet ......... = 1/4 nieu = 9.144/1728 m
     1 ken ............ = 60/33 m
-    1 keub ........... =
+    1 keub ........... = 12 nieu = 10 inch = 9.144/36 m
     1 km ............. = 1000 m
     1 lar ............ =
     1 light year ..... = 9460730472580800 m
@@ -224,25 +244,25 @@ static const conv_t conv_ENERGY[] = {
     1 mile ........... = 1760 yards = 1609.344 m
     1 millimeter ..... = 1/1000 m
     1 nautical mile .. = 1852 m
-    1 nieu ........... =
+    1 nieu ........... = 10/12 inch = 9.144/432 m
     1 parsec ......... = 30856800000000000 m
     1 pica ........... = yard/216 = 0.9144/216 m
-    1 ri japan ....... =
-    1 ri korea ....... =
+    1 ri japan ....... = 129600/33 m
+    1 ri korea ....... = 12960/33 m
     1 rod ............ = 5.0292 m
-    1 sawk ........... =
-    1 sen ............ =
+    1 sawk ........... = 2 keub = 20 inch = 9.144/18 m
+    1 sen ............ = 20 va = 40.64 m
     1 shaku .......... = 10/33 m
     1 span ........... = 9 inches = 0.9144/4 m
     1 sun ............ = 1/33 m
     1 tsuen .......... =
-    1 va ............. =
+    1 va ............. = 4 sawk = 80 inch = 2.032 m
     1 yard ........... = 0.9144 m
-    1 yote ........... =
-    1 zhang .......... =
+    1 yote ........... = 400 sen = 16256 m
+    1 zhang .......... = 3+1/3 m = 10/3 m
 */
 static const conv_t conv_LENGTH[] = {
-    DECLARE_CONV_UNIT(LENGTH, ANGSTROMS,            "$*0.0000000001",   "$/0.0000000001")
+    DECLARE_CONV_UNIT(LENGTH, ANGSTROMS,            "$/1X10",           "$*1X10")
     DECLARE_CONV_UNIT(LENGTH, ASTRONOMICAL_UNITS,   "$*149598000000",   "$/149598000000")
     DECLARE_CONV_UNIT(LENGTH, BARLEYCORNS,          "$*0.9144/108",     "$/0.9144*108")
     DECLARE_CONV_UNIT(LENGTH, CENTIMETERS,          "$/100",            "$*100")
@@ -257,13 +277,13 @@ static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, FURLONGS,             "$*201.168",        "$/201.168")
 //    DECLARE_CONV_UNIT(LENGTH, GAN,                  "$", "$")
     DECLARE_CONV_UNIT(LENGTH, HANDS,                "$*0,1016",         "$/0,1016")
-//    DECLARE_CONV_UNIT(LENGTH, HUNH,                 "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, HUNH,                 "$*9.144/3456",     "$/9.144*3456")
     DECLARE_CONV_UNIT(LENGTH, INCHES,               "$*0.0254",         "$/0.0254")
 //    DECLARE_CONV_UNIT(LENGTH, JA,                   "$", "$")
 //    DECLARE_CONV_UNIT(LENGTH, JEONG,                "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, KABIET,               "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, KABIET,               "$*9.144/1728",     "$/9.144*1728")
     DECLARE_CONV_UNIT(LENGTH, KEN,                  "$*60/33",          "$*33/60")
-//    DECLARE_CONV_UNIT(LENGTH, KEUB,                 "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, KEUB,                 "$*9.144/36",       "$/9.144*36")
     DECLARE_CONV_UNIT(LENGTH, KILOMETERS,           "$*1000",           "$/1000")
 //    DECLARE_CONV_UNIT(LENGTH, LAR,                  "$", "$")
     DECLARE_CONV_UNIT(LENGTH, LIGHT_YEARS,          "$*9460730472580800", "$/9460730472580800")
@@ -273,22 +293,22 @@ static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, MILES,                "$*1609.344",       "$/1609.344")
     DECLARE_CONV_UNIT(LENGTH, MILLIMETERS,          "$/1000",           "$*1000")
     DECLARE_CONV_UNIT(LENGTH, NAUTICAL_MILES,       "$*1852",           "$/1852")
-//    DECLARE_CONV_UNIT(LENGTH, NIEU,                 "$", "$")
-    DECLARE_CONV_UNIT(LENGTH, PARSECS,              "$*30856800000000000", "$/30856800000000000")
+    DECLARE_CONV_UNIT(LENGTH, NIEU,                 "$*9.144/432",      "$/9.144*432")
+    DECLARE_CONV_UNIT(LENGTH, PARSECS,              "$*3.085678X16",    "$/3.085678X16")
     DECLARE_CONV_UNIT(LENGTH, PICAS,                "$*0.9144/216",     "$/0.9144*216")
     DECLARE_CONV_UNIT(LENGTH, RODS,                 "$*5.0292",         "$/5.0292")
-//    DECLARE_CONV_UNIT(LENGTH, RI_JAPAN,             "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, RI_KOREA,             "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, SAWK,                 "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, SEN,                  "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, RI_JAPAN,             "$*129600/33",      "$*33/129600")
+    DECLARE_CONV_UNIT(LENGTH, RI_KOREA,             "$*12960/33",       "$*33/12960")
+    DECLARE_CONV_UNIT(LENGTH, SAWK,                 "$*9.144/18",       "$/9.144*18")
+    DECLARE_CONV_UNIT(LENGTH, SEN,                  "$*40.64",          "$/40.64")
     DECLARE_CONV_UNIT(LENGTH, SHAKU,                "$*10/33",          "$*33/10")
     DECLARE_CONV_UNIT(LENGTH, SPAN,                 "$*0.9144/4",       "$*4/0.9144")
     DECLARE_CONV_UNIT(LENGTH, SUN,                  "$*1/33",            "$*33")
 //    DECLARE_CONV_UNIT(LENGTH, TSUEN,                "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, VA,                   "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, VA,                   "$*2.032",          "$/2.032")
     DECLARE_CONV_UNIT(LENGTH, YARDS,                "$*0.9144",         "$/0.9144")
-//    DECLARE_CONV_UNIT(LENGTH, YOTE,                 "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, ZHANG,                "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, YOTE,                 "$*16256",          "$/16256")
+    DECLARE_CONV_UNIT(LENGTH, ZHANG,                "$/0.3",            "$*0.3")
     DECLARE_CONV_END
 };
 
@@ -387,7 +407,7 @@ static const conv_t conv_VELOCITY[] = {
 /*
     1 barrel uk ...... = 163.65924 l
     1 barrel oil ..... = 158.987295 l
-    1 bun ............ =
+    1 bun ............ = 1000 l
     1 bushel uk ...... = 36.36872 l
     1 bushel us ...... = 35.23907017 l
     1 cubic cm  ...... = 0.001 l
@@ -404,7 +424,7 @@ static const conv_t conv_VELOCITY[] = {
     1 gou ............ = 0.1809 l
     1 hop ............ =
     1 icce ........... =
-    1 kwian .......... =
+    1 kwian .......... = 2000 l
     1 mal ............ =
     1 milliliter ..... = 0.001 l
     1 pint uk ........ = 0.56826125 l
@@ -415,14 +435,14 @@ static const conv_t conv_VELOCITY[] = {
     1 quart liquid us  = 0.946352946 l
     1 seki ........... =
     1 syou ........... =
-    1 tananloung ..... =
-    1 tang ........... =
+    1 tananloung ..... = 1 l
+    1 tang ........... = 20 l
     1 to ............. = 18040 l
 */
 static const conv_t conv_VOLUME[] = {
     DECLARE_CONV_UNIT(VOLUME, BARRELS_UK,           "$*163.65924",       "$/163.65924")
     DECLARE_CONV_UNIT(VOLUME, BARRELS_OIL,          "$*158.987295",      "$/158.987295")
-//    DECLARE_CONV_UNIT(VOLUME, BUN,                  "$", "$")
+    DECLARE_CONV_UNIT(VOLUME, BUN,                  "$*1000",            "$/1000")
     DECLARE_CONV_UNIT(VOLUME, BUSHELS_UK,           "$*36.36872",        "$/36.36872")
     DECLARE_CONV_UNIT(VOLUME, BUSHELS_US,           "$*35.23907017",     "$/35.23907017")
     DECLARE_CONV_UNIT(VOLUME, CUBIC_CENTIMETERS,    "$*0.001",           "$/0.001")
@@ -439,7 +459,7 @@ static const conv_t conv_VOLUME[] = {
     DECLARE_CONV_UNIT(VOLUME, GOU,                  "$*0.1809",          "$/0.1809")
 //    DECLARE_CONV_UNIT(VOLUME, HOP,                  "$", "$")
 //    DECLARE_CONV_UNIT(VOLUME, ICCE,                 "$", "$")
-//    DECLARE_CONV_UNIT(VOLUME, KWIAN,                "$", "$")
+    DECLARE_CONV_UNIT(VOLUME, KWIAN,                "$*2000",            "$/2000")
     DECLARE_CONV_UNIT(VOLUME, LITERS,               "$",                 "$")
 //    DECLARE_CONV_UNIT(VOLUME, MAL,                  "$", "$")
     DECLARE_CONV_UNIT(VOLUME, MILLILITERS,          "$*0.001",           "$/0.001")
@@ -451,8 +471,8 @@ static const conv_t conv_VOLUME[] = {
     DECLARE_CONV_UNIT(VOLUME, QUARTS_LIQUID_US,     "$*0.946352946",     "$/0.946352946")
 //    DECLARE_CONV_UNIT(VOLUME, SEKI,                 "$", "$")
 //    DECLARE_CONV_UNIT(VOLUME, SYOU,                 "$", "$")
-//    DECLARE_CONV_UNIT(VOLUME, TANANLOUNG,           "$", "$")
-//    DECLARE_CONV_UNIT(VOLUME, TANG,                 "$", "$")
+    DECLARE_CONV_UNIT(VOLUME, TANANLOUNG,           "$",                 "$")
+    DECLARE_CONV_UNIT(VOLUME, TANG,                 "$*20",              "$/20")
     DECLARE_CONV_UNIT(VOLUME, TO,                   "$*18040",           "$/18040")
     DECLARE_CONV_END
 };
@@ -483,6 +503,17 @@ static const conv_t conv_VOLUME[] = {
     1 ton ............. = 1000000 g
     1 ton uk .......... = 1016046.9088 g  // long ton
     1 ton us .......... = 907184.74 g     // short ton
+*/
+/*
+1 chang = 20 tamlung
+1 tamlung = 4 baht
+1 baht = 4 saloung
+1 saloung = 
+
+1 chang = 6/5 kg = 1200 g
+1 tamlung = 1/20 chang = 60 g
+1 baht = 1/4 tamlung = 15 g
+1 saloung = 1/4 bath = 15/4 g
 */
 static const conv_t conv_WEIGHT[] = {
     DECLARE_CONV_UNIT(WEIGHT, BAHT,                 "$*12.244",       "$/12.244")
