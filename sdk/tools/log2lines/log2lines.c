@@ -410,9 +410,9 @@ translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
 static int
 translate_files(FILE *inFile, FILE *outFile)
 {
-    char *Line = malloc(LINESIZE + 1);
-    char *path = malloc(LINESIZE + 1);
-    char *LineOut = malloc(LINESIZE + 1);
+    char Line[LINESIZE + 1];
+    char path[LINESIZE + 1];
+    char LineOut[LINESIZE + 1];
     int c;
     unsigned char ch;
     int i = 0;
@@ -420,8 +420,6 @@ translate_files(FILE *inFile, FILE *outFile)
     const char *p     = kdbg_prompt;
     const char *p_eos = p + sizeof(KDBG_PROMPT) - 1; //end of string pos
 
-    if (Line && path && LineOut)
-    {
         memset(Line, '\0', LINESIZE + 1);
         if (opt_console)
         {
@@ -536,7 +534,6 @@ translate_files(FILE *inFile, FILE *outFile)
                     log(outFile, "%s", Line);
             }
         }
-    }
 
     if (opt_Revision && (strstr(opt_Revision, "regscan") == opt_Revision))
     {
@@ -555,9 +552,6 @@ translate_files(FILE *inFile, FILE *outFile)
         if (logFile)
             stat_print(logFile, &summ);
     }
-    free(LineOut);
-    free(Line);
-    free(path);
     return 0;
 }
 

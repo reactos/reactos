@@ -18,8 +18,10 @@
 
 #include "log2lines.h"
 
-static char *cache_name;
-static char *tmp_name;
+static char CacheName[PATH_MAX];
+static char *cache_name = CacheName;
+static char TmpName[PATH_MAX];
+static char *tmp_name = TmpName;
 
 static int
 unpack_iso(char *dir, char *iso)
@@ -141,8 +143,6 @@ check_directory(int force)
             return 1;
         }
     }
-    cache_name = malloc(PATH_MAX);
-    tmp_name = malloc(PATH_MAX);
     strcpy(cache_name, opt_dir);
     if (cleanable(opt_dir))
         strcat(cache_name, ALT_PATH_STR CACHEFILE);
@@ -158,22 +158,15 @@ read_cache(void)
 {
     FILE *fr;
     LIST_MEMBER *pentry;
-    char *Line = NULL;
+    char Line[LINESIZE + 1];
     int result = 0;
 
-    Line = malloc(LINESIZE + 1);
-    if (!Line)
-    {
-        l2l_dbg(1, "Alloc Line failed\n");
-        return 1;
-    }
     Line[LINESIZE] = '\0';
 
     fr = fopen(cache_name, "r");
     if (!fr)
     {
         l2l_dbg(1, "Open %s failed\n", cache_name);
-        free(Line);
         return 2;
     }
     cache.phead = cache.ptail = NULL;
@@ -190,7 +183,6 @@ read_cache(void)
     }
 
     fclose(fr);
-    free(Line);
     return result;
 }
 
@@ -198,7 +190,7 @@ int
 create_cache(int force, int skipImageBase)
 {
     FILE *fr, *fw;
-    char *Line = NULL, *Fname = NULL;
+    char Line[LINESIZE + 1], *Fname = NULL;
     int len, err;
     size_t ImageBase;
 
@@ -229,9 +221,6 @@ create_cache(int force, int skipImageBase)
         }
     }
 
-    Line = malloc(LINESIZE + 1);
-    if (!Line)
-        return 1;
     Line[LINESIZE] = '\0';
 
     remove(tmp_name);
@@ -243,7 +232,6 @@ create_cache(int force, int skipImageBase)
         l2l_dbg(0, "Cannot list directory %s\n", opt_dir);
         l2l_dbg(1, "Failed to execute: '%s'\n", Line);
         remove(tmp_name);
-        free(Line);
         return 2;
     }
     l2l_dbg(0, "Creating cache ...");
@@ -280,7 +268,6 @@ create_cache(int force, int skipImageBase)
         fclose(fr);
     }
     remove(tmp_name);
-    free(Line);
     return 0;
 }
 
