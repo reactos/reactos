@@ -92,6 +92,7 @@ BOOL FASTCALL PATH_AddEntry (PPATH pPath, const POINT *pPoint, BYTE flags);
 BOOL FASTCALL PATH_AddFlatBezier (PPATH pPath, POINT *pt, BOOL closed);
 BOOL FASTCALL PATH_DoArcPart (PPATH pPath, FLOAT_POINT corners[], double angleStart, double angleEnd, BYTE startEntryType);
 BOOL FASTCALL PATH_FillPath( PDC dc, PPATH pPath );
+BOOL FASTCALL PATH_FillPathEx(PDC dc, PPATH pPath, PBRUSH pbrFill);
 PPATH FASTCALL PATH_FlattenPath (PPATH pPath);
 VOID FASTCALL PATH_NormalizePoint (FLOAT_POINT corners[], const FLOAT_POINT *pPoint, double *pX, double *pY);
 
@@ -107,3 +108,4 @@ VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 
 BOOL PATH_RestorePath( DC *, DC *);
 BOOL PATH_SavePath( DC *, DC *);
+BOOL IntGdiFillRgn(PDC pdc, PREGION prgn, PBRUSH pbrFill);
