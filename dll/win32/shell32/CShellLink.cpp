@@ -1721,6 +1721,9 @@ static HRESULT SHELL_PidlGetIconLocationW(PCIDLIST_ABSOLUTE pidl,
 HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     HRESULT hr;
+
+    pszIconFile[0] = 0;
+
     /*
      * It is possible for a shell link to point to another shell link,
      * and in particular there is the possibility to point to itself.
@@ -1739,11 +1742,13 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
      */
     uFlags |= GIL_FORSHORTCUT;
 
+    if (uFlags & GIL_DEFAULTICON)
+        return E_FAIL;
+
     hr = GetIconLocation(pszIconFile, cchMax, piIndex);
     if (FAILED(hr) || !pszIconFile[0])
     {
-        if (m_pPidl)
-            hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+        hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
     }
     else
     {
@@ -1892,9 +1897,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
          */
         // FIXME: http://stackoverflow.com/questions/2976489/ishelllinkseticonlocation-translates-my-icon-path-into-program-files-which-i
         // if (PathFullyUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath)))
-        SHExpandEnvironmentStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
+        PathUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
         if (wcscmp(pszIconPath, szUnExpIconPath) != 0)
         {
+            pszIconPath = szUnExpIconPath;
             /* Unexpansion succeeded, so we need an icon environment block */
             EXP_SZ_LINK buffer;
             LPEXP_SZ_LINK pInfo;
