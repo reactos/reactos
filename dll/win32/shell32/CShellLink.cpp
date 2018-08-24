@@ -1740,7 +1740,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
     uFlags |= GIL_FORSHORTCUT;
 
     hr = GetIconLocation(pszIconFile, cchMax, piIndex);
-    if (FAILED(hr))
+    if (FAILED(hr) || !pszIconFile[0])
     {
         if (m_pPidl)
             hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
