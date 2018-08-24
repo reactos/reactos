@@ -82,9 +82,9 @@ static const conv_t conv_ANGLE[] = {
     1 acre us ............. = 4840*(36/39.37)^2 m = 6272640/1549.9969 m
     1 are ................. = 100 mq
     1 chou ................ = 108000*(10/33)^2 mq
-    1 danbo ............... =
+    1 danbo ............... = 991.74 mq
     1 ha .................. = 10000 mq
-    1 jeongbo ............. =
+    1 jeongbo ............. = 9917.4 mq
     1 morgen hungary ...... = 5754.642 mq
     1 mu .................. = 2000/3 mq
     1 ping ................ =
@@ -117,9 +117,9 @@ static const conv_t conv_AREA[] = {
     DECLARE_CONV_UNIT(AREA, ACRES_SCOTS,            "$*5000",            "$/5000")
     DECLARE_CONV_UNIT(AREA, ARES,                   "$*100",             "$/100")
     DECLARE_CONV_UNIT(AREA, CHOU,                   "$*10800000/1089",   "$*1089/10800000")
-//    DECLARE_CONV_UNIT(AREA, DANBO,                  "$", "$")
+    DECLARE_CONV_UNIT(AREA, DANBO,                  "$*991.74",          "$/991.74")
     DECLARE_CONV_UNIT(AREA, HECTARES,               "$*10000",           "$/10000")
-//    DECLARE_CONV_UNIT(AREA, JEONGBO,                "$", "$")
+    DECLARE_CONV_UNIT(AREA, JEONGBO,                "$*9917.4",          "$/9917.4")
 //    DECLARE_CONV_UNIT(AREA, MORGEN_HUNGARY,         "$", "$")
     DECLARE_CONV_UNIT(AREA, MU,                     "$*(2000/3)",        "$/(2000/3)")
 //    DECLARE_CONV_UNIT(AREA, PING,                   "$", "$")
