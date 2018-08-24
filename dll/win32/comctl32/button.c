@@ -2104,7 +2104,7 @@ void BUTTON_Register(void)
 
 
 #ifdef __REACTOS__
-void BUTTON_Unregister()
+void BUTTON_Unregister(void)
 {
     UnregisterClassW(WC_BUTTONW, NULL);
 }

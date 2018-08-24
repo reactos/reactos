@@ -3081,3 +3081,16 @@ void COMBOLBOX_Register(void)
     wndClass.lpszClassName = combolboxW;
     RegisterClassW(&wndClass);
 }
+
+#ifdef __REACTOS__
+void LISTBOX_Unregister(void)
+{
+    UnregisterClassW(WC_LISTBOXW, NULL);
+}
+
+void COMBOLBOX_Unregister(void)
+{
+    static const WCHAR combolboxW[] = {'C','o','m','b','o','L','B','o','x',0};
+    UnregisterClassW(combolboxW, NULL);
+}
+#endif
