@@ -1722,7 +1722,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
 {
     HRESULT hr;
 
-    *pszIconFile = UNICODE_NULL;
+    pszIconFile[0] = UNICODE_NULL;
 
     /*
      * It is possible for a shell link to point to another shell link,
@@ -1746,7 +1746,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
         return E_FAIL;
 
     hr = GetIconLocation(pszIconFile, cchMax, piIndex);
-    if (FAILED(hr) || *pszIconFile == UNICODE_NULL)
+    if (FAILED(hr) || pszIconFile[0] == UNICODE_NULL)
     {
         hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
     }
