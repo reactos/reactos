@@ -102,6 +102,7 @@ add_library(kernel32 SHARED
     ${SOURCE}
     ${kernel32_asm}
     kernel32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
