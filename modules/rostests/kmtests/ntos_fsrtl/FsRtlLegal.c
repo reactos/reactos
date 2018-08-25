@@ -279,6 +279,34 @@ START_TEST(FsRtlLegal)
 
     for (i = 0; i <= 0x7f; ++i)
     {
-        ok(LegalAnsiCharacterArray[i] == (*FsRtlLegalAnsiCharacterArray)[i], "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, LegalAnsiCharacterArray[i], (*FsRtlLegalAnsiCharacterArray)[i]);
+        ok(LegalAnsiCharacterArray[i] == (*FsRtlLegalAnsiCharacterArray)[i],
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, LegalAnsiCharacterArray[i], (*FsRtlLegalAnsiCharacterArray)[i]);
+
+        ok((FsRtlIsAnsiCharacterWild(i) != 0) == BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterWild(i), BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER));
+
+        ok((FsRtlIsAnsiCharacterLegalFat(i, FALSE) != 0) == BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_FAT_LEGAL),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalFat(i, FALSE), BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_FAT_LEGAL));
+        ok((FsRtlIsAnsiCharacterLegalFat(i, TRUE) != 0) == (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_FAT_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalFat(i, TRUE),
+                                                                    (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_FAT_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)));
+
+        ok((FsRtlIsAnsiCharacterLegalHpfs(i, FALSE) != 0) == BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_HPFS_LEGAL),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalHpfs(i, FALSE), BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_HPFS_LEGAL));
+        ok((FsRtlIsAnsiCharacterLegalHpfs(i, TRUE) != 0) == (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_HPFS_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalHpfs(i, TRUE),
+                                                                    (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_HPFS_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)));
+
+        ok((FsRtlIsAnsiCharacterLegalNtfs(i, FALSE) != 0) == BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_LEGAL),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalNtfs(i, FALSE), BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_LEGAL));
+        ok((FsRtlIsAnsiCharacterLegalNtfs(i, TRUE) != 0) == (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalNtfs(i, TRUE),
+                                                                    (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)));
+
+        ok((FsRtlIsAnsiCharacterLegalNtfsStream(i, FALSE) != 0) == BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_STREAM_LEGAL),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalNtfsStream(i, FALSE), BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_STREAM_LEGAL));
+        ok((FsRtlIsAnsiCharacterLegalNtfsStream(i, TRUE) !=0 ) == (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_STREAM_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)),
+           "Mismatching value for 0x%x: 0x%x (exp) - 0x%x (got)\n", i, FsRtlIsAnsiCharacterLegalNtfsStream(i, TRUE),
+                                                                    (BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_NTFS_STREAM_LEGAL) || BooleanFlagOn(LegalAnsiCharacterArray[i], FSRTL_WILD_CHARACTER)));
     }
 }
