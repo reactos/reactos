@@ -2512,10 +2512,10 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
-                           L"F",
-                           REG_BINARY,
-                           &FixedDomainData,
-                           ulSize);
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedDomainData,
+                                    ulSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2557,8 +2557,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
-    FixedUserData.AccountExpires.LowPart = MAXULONG;
-    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.AccountExpires.QuadPart = MAXLONGLONG;
     FixedUserData.LastBadPasswordTime.QuadPart = 0;
     FixedUserData.UserId = ulRid;
     FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
