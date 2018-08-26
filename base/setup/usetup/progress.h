@@ -26,6 +26,15 @@
 
 #pragma once
 
+struct _PROGRESSBAR;
+
+typedef BOOLEAN
+(NTAPI *PUPDATE_PROGRESS)(
+    IN struct _PROGRESSBAR* Bar,
+    IN BOOLEAN ComputeProgress,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize);
+
 typedef struct _PROGRESSBAR
 {
     /* Border and text positions */
@@ -43,13 +52,15 @@ typedef struct _PROGRESSBAR
     ULONG CurrentStep;
 
     /* User-specific displayed bar progress/position */
-    ULONG Percent;
+    PUPDATE_PROGRESS UpdateProgressProc;
+    ULONG Progress;
     SHORT Pos;
 
     /* Static progress bar cues */
     BOOLEAN DoubleEdge;
     SHORT ProgressColour;
     PCSTR DescriptionText;
+    PCSTR ProgressFormatText;
 } PROGRESSBAR, *PPROGRESSBAR;
 
 
@@ -65,7 +76,9 @@ CreateProgressBarEx(
     IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
     IN SHORT ProgressColour,
-    IN PCSTR DescriptionText OPTIONAL);
+    IN PCSTR DescriptionText OPTIONAL,
+    IN PCSTR ProgressFormatText OPTIONAL,
+    IN PUPDATE_PROGRESS UpdateProgressProc OPTIONAL);
 
 PPROGRESSBAR
 CreateProgressBar(

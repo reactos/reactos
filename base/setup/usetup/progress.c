@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS text-mode setup
+ * FILE:            base/setup/usetup/progress.c
+ * PURPOSE:         Partition list functions
+ * PROGRAMMER:
+ */
 
 /* INCLUDES *****************************************************************/
 
@@ -7,6 +14,37 @@
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
+
+static
+BOOLEAN NTAPI
+UpdateProgressPercentage(
+    IN PPROGRESSBAR Bar,
+    IN BOOLEAN ComputeProgress,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize)
+{
+    // static PCSTR ProgressFormatText;
+    ULONG OldProgress = Bar->Progress;
+
+    if (ComputeProgress)
+    {
+        /* Calculate the new percentage */
+        if (Bar->StepCount == 0)
+            Bar->Progress = 0;
+        else
+            Bar->Progress = ((100 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
+    }
+
+    /* Build the progress string if it has changed */
+    if ( Bar->ProgressFormatText &&
+        (!ComputeProgress || (Bar->Progress != OldProgress)) )
+    {
+        RtlStringCchPrintfA(Buffer, cchBufferSize,
+                            Bar->ProgressFormatText, Bar->Progress);
+        return TRUE;
+    }
+    return FALSE;
+}
 
 static
 VOID
@@ -179,10 +217,10 @@ VOID
 DrawProgressBar(
     IN PPROGRESSBAR Bar)
 {
-    CHAR TextBuffer[8];
     COORD coPos;
     DWORD Written;
     PROGRESSBAR BarBorder = *Bar;
+    CHAR TextBuffer[256];
 
     /* Draw the progress bar "border" border */
     if (Bar->DoubleEdge)
@@ -201,16 +239,18 @@ DrawProgressBar(
     if (Bar->DescriptionText)
         CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->DescriptionText);
 
-    /* Print percentage */
-    sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
-
-    coPos.X = Bar->Left + (Bar->Width - 2) / 2;
-    coPos.Y = Bar->Top;
-    WriteConsoleOutputCharacterA(StdOutput,
-                                 TextBuffer,
-                                 4,
-                                 coPos,
-                                 &Written);
+    /* Display the progress */
+    if (Bar->UpdateProgressProc &&
+        Bar->UpdateProgressProc(Bar, FALSE, TextBuffer, ARRAYSIZE(TextBuffer)))
+    {
+        coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
+        coPos.Y = Bar->Top;
+        WriteConsoleOutputCharacterA(StdOutput,
+                                     TextBuffer,
+                                     strlen(TextBuffer),
+                                     coPos,
+                                     &Written);
+    }
 
     /* Draw the empty bar */
     coPos.X = Bar->Left + 1;
@@ -241,7 +281,9 @@ CreateProgressBarEx(
     IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
     IN SHORT ProgressColour,
-    IN PCSTR DescriptionText OPTIONAL)
+    IN PCSTR DescriptionText OPTIONAL,
+    IN PCSTR ProgressFormatText OPTIONAL,
+    IN PUPDATE_PROGRESS UpdateProgressProc OPTIONAL)
 {
     PPROGRESSBAR Bar;
 
@@ -263,11 +305,13 @@ CreateProgressBarEx(
     Bar->DoubleEdge = DoubleEdge;
     Bar->ProgressColour = ProgressColour;
     Bar->DescriptionText = DescriptionText;
+    Bar->ProgressFormatText = ProgressFormatText;
 
     Bar->StepCount = 0;
     Bar->CurrentStep = 0;
 
-    Bar->Percent = 0;
+    Bar->UpdateProgressProc = UpdateProgressProc;
+    Bar->Progress = 0;
     Bar->Pos = 0;
 
     DrawProgressBar(Bar);
@@ -291,7 +335,9 @@ CreateProgressBar(
                                TextTop, TextRight,
                                DoubleEdge,
                                FOREGROUND_YELLOW | BACKGROUND_BLUE,
-                               DescriptionText);
+                               DescriptionText,
+                               "%-3lu%%",
+                               UpdateProgressPercentage);
 }
 
 VOID
@@ -325,32 +371,25 @@ ProgressSetStep(
     IN PPROGRESSBAR Bar,
     IN ULONG Step)
 {
-    CHAR TextBuffer[8];
     COORD coPos;
     DWORD Written;
-    ULONG NewPercent;
     ULONG NewPos;
+    CHAR TextBuffer[256];
 
     if (Step > Bar->StepCount)
         return;
 
     Bar->CurrentStep = Step;
 
-    /* Calculate new percentage */
-    NewPercent = ((100 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
-
-    /* Redraw percentage if changed */
-    if (Bar->Percent != NewPercent)
+    /* Update the progress and redraw it if it has changed */
+    if (Bar->UpdateProgressProc &&
+        Bar->UpdateProgressProc(Bar, TRUE, TextBuffer, ARRAYSIZE(TextBuffer)))
     {
-        Bar->Percent = NewPercent;
-
-        sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
-
-        coPos.X = Bar->Left + (Bar->Width - 2) / 2;
+        coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
         coPos.Y = Bar->Top;
         WriteConsoleOutputCharacterA(StdOutput,
                                      TextBuffer,
-                                     4,
+                                     strlen(TextBuffer),
                                      coPos,
                                      &Written);
     }
