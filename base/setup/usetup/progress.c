@@ -8,7 +8,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-
 static
 VOID
 DrawBorder(
@@ -91,7 +90,6 @@ DrawBorder(
                                 coPos,
                                 &Written);
 }
-
 
 static
 VOID
@@ -176,7 +174,6 @@ DrawThickBorder(
                                 &Written);
 }
 
-
 static
 VOID
 DrawProgressBar(
@@ -186,6 +183,22 @@ DrawProgressBar(
     COORD coPos;
     DWORD Written;
     PROGRESSBAR BarBorder = *Bar;
+
+    /* Draw the progress bar "border" border */
+    if (Bar->Double)
+    {
+        BarBorder.Top -= 5;
+        BarBorder.Bottom += 2;
+        BarBorder.Right += 5;
+        BarBorder.Left -= 5;
+        DrawThickBorder(&BarBorder);
+    }
+
+    /* Draw the progress bar border */
+    DrawBorder(Bar);
+
+    /* Write the text associated with the bar */
+    CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->Text);
 
     /* Print percentage */
     sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
@@ -198,23 +211,7 @@ DrawProgressBar(
                                  coPos,
                                  &Written);
 
-    /* Draw the progress bar border */
-    DrawBorder(Bar);
-
-    /* Write Text Associated with Bar */
-    CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->Text);
-
-    /* Draw the progress bar "border" border */
-    if (Bar->Double)
-    {
-        BarBorder.Top -= 5;
-        BarBorder.Bottom += 2;
-        BarBorder.Right += 5;
-        BarBorder.Left -= 5;
-        DrawThickBorder(&BarBorder);
-    }
-
-    /* Draw the bar */
+    /* Draw the empty bar */
     coPos.X = Bar->Left + 1;
     for (coPos.Y = Bar->Top + 2; coPos.Y <= Bar->Bottom - 1; coPos.Y++)
     {
@@ -315,14 +312,12 @@ ProgressSetStepCount(
     DrawProgressBar(Bar);
 }
 
-
 VOID
 ProgressNextStep(
     PPROGRESSBAR Bar)
 {
     ProgressSetStep(Bar, Bar->CurrentStep + 1);
 }
-
 
 VOID
 ProgressSetStep(
