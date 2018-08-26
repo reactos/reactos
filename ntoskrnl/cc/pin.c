@@ -161,6 +161,7 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    BOOLEAN Result;
     PINTERNAL_BCB iBcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
@@ -181,16 +182,16 @@ CcPinMappedData (
     iBcb->Pinned = TRUE;
     iBcb->Vacb->PinCount++;
 
-    if (Flags & PIN_EXCLUSIVE)
+    if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
     {
-        ExAcquireResourceExclusiveLite(&iBcb->Lock, TRUE);
+        Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
     }
     else
     {
-        ExAcquireResourceSharedLite(&iBcb->Lock, TRUE);
+        Result = ExAcquireResourceSharedLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
     }
 
-    return TRUE;
+    return Result;
 }
 
 /*
