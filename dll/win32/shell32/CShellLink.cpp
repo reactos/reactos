@@ -1900,11 +1900,11 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
         PathUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
         if (wcscmp(pszIconPath, szUnExpIconPath) != 0)
         {
-            pszIconPath = szUnExpIconPath;
             /* Unexpansion succeeded, so we need an icon environment block */
             EXP_SZ_LINK buffer;
             LPEXP_SZ_LINK pInfo;
 
+            pszIconPath = szUnExpIconPath;
             pInfo = (LPEXP_SZ_LINK)SHFindDataBlock(m_pDBList, EXP_SZ_ICON_SIG);
             if (pInfo)
             {
