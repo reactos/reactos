@@ -1856,6 +1856,7 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
 {
     HRESULT hr = E_FAIL;
     WCHAR szUnExpIconPath[MAX_PATH];
+    BOOL bSuccess;
 
     TRACE("(%p)->(path=%s iicon=%u)\n", this, debugstr_w(pszIconPath), iIcon);
 
@@ -1875,8 +1876,8 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
          */
         // FIXME: http://stackoverflow.com/questions/2976489/ishelllinkseticonlocation-translates-my-icon-path-into-program-files-which-i
         // if (PathFullyUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath)))
-        PathUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
-        if (wcscmp(pszIconPath, szUnExpIconPath) != 0)
+        bSuccess = PathUnExpandEnvStringsW(pszIconPath, szUnExpIconPath, _countof(szUnExpIconPath));
+        if (bSuccess && wcscmp(pszIconPath, szUnExpIconPath) != 0)
         {
             /* Unexpansion succeeded, so we need an icon environment block */
             EXP_SZ_LINK buffer;
