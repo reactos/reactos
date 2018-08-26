@@ -579,7 +579,8 @@ main(int argc, const char **argv)
 
     if (optCount < 0 || optInit < 0)
     {
-        return optCount;
+        res = optCount;
+        goto cleanup;
     }
 
     argc -= optCount;
@@ -587,21 +588,30 @@ main(int argc, const char **argv)
     if (opt_Revision && (strcmp(opt_Revision, "update") == 0))
     {
         res = updateSvnlog();
-        return res;
+        goto cleanup;
     }
 
     if (check_directory(opt_force))
-        return 3;
+    {
+        res = 3;
+        goto cleanup;
+    }
 
     create_cache(opt_force, 0);
     if (opt_exit)
-        return 0;
+    {
+        res = 0;
+        goto cleanup;
+    }
 
     read_cache();
     l2l_dbg(4, "Cache read complete\n");
 
     if (set_LogFile(&logFile))
-        return 2;
+    {
+        res = 2;
+        goto cleanup;
+    }
     l2l_dbg(4, "opt_logFile processed\n");
 
     if (opt_Pipe)
@@ -612,7 +622,8 @@ main(int argc, const char **argv)
         {
             dbgIn = stdin; //restore
             l2l_dbg(0, "Could not popen '%s' (%s)\n", opt_Pipe, strerror(errno));
-            free(opt_Pipe); opt_Pipe = NULL;
+            free(opt_Pipe);
+            opt_Pipe = NULL;
         }
     }
     l2l_dbg(4, "opt_Pipe processed\n");
@@ -661,6 +672,24 @@ main(int argc, const char **argv)
 
     if (opt_Pipe)
         PCLOSE(dbgIn);
+
+cleanup:
+    // See optionParse().
+    if (opt_Revision)
+    {
+        free(opt_Revision);
+        opt_Revision = NULL;
+    }
+
+    // See optionInit().
+    if (opt_Pipe)
+    {
+        free(opt_Pipe);
+        opt_Pipe = NULL;
+    }
+
+    list_clear(&sources);
+    list_clear(&cache);
 
     return res;
 }
