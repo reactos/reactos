@@ -188,7 +188,7 @@ CcPinMappedData (
     }
     else
     {
-        Result = ExAcquireResourceSharedLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
+        Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
     }
 
     return Result;
