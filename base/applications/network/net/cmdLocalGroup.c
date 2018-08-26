@@ -335,9 +335,9 @@ cmdLocalGroup(
             }
 
             Status = NetLocalGroupAdd(NULL,
-                             (lpComment == NULL) ? 0 : 1,
-                             (lpComment == NULL) ? (LPBYTE)&Info0 : (LPBYTE)&Info1,
-                             NULL);
+                                      (lpComment == NULL) ? 0 : 1,
+                                      (lpComment == NULL) ? (LPBYTE)&Info0 : (LPBYTE)&Info1,
+                                      NULL);
             ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else if (!bAdd && bDelete && lpComment == NULL)
@@ -358,20 +358,20 @@ cmdLocalGroup(
         {
             /* Add group members */
             Status = NetLocalGroupAddMembers(NULL,
-                                    lpGroupName,
-                                    3,
-                                    (LPBYTE)lpMembers,
-                                    dwMemberCount);
+                                             lpGroupName,
+                                             3,
+                                             (LPBYTE)lpMembers,
+                                             dwMemberCount);
             ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else if (!bAdd && bDelete && lpComment == NULL)
         {
             /* Delete group members */
             Status = NetLocalGroupDelMembers(NULL,
-                                    lpGroupName,
-                                    3,
-                                    (LPBYTE)lpMembers,
-                                    dwMemberCount);
+                                             lpGroupName,
+                                             3,
+                                             (LPBYTE)lpMembers,
+                                             dwMemberCount);
             ConPrintf(StdOut, L"Status: %lu\n", Status);
         }
         else
