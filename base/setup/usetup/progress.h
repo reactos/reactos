@@ -26,8 +26,9 @@
 
 #pragma once
 
-typedef struct _PROGRESS
+typedef struct _PROGRESSBAR
 {
+    /* Border and text positions */
     SHORT Left;
     SHORT Top;
     SHORT Right;
@@ -37,58 +38,62 @@ typedef struct _PROGRESS
 
     SHORT Width;
 
-    ULONG Percent;
-    SHORT Pos;
-
+    /* Maximum and current step counts */
     ULONG StepCount;
     ULONG CurrentStep;
 
-    BOOLEAN Double;
+    /* User-specific displayed bar progress/position */
+    ULONG Percent;
+    SHORT Pos;
+
+    /* Static progress bar cues */
+    BOOLEAN DoubleEdge;
     SHORT ProgressColour;
-    CHAR *Text;
+    PCSTR DescriptionText;
 } PROGRESSBAR, *PPROGRESSBAR;
+
 
 /* FUNCTIONS ****************************************************************/
 
 PPROGRESSBAR
 CreateProgressBarEx(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom,
-    SHORT TextTop,
-    SHORT TextRight,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
-    SHORT ProgressColour,
-    CHAR *Text);
+    IN SHORT ProgressColour,
+    IN PCSTR DescriptionText OPTIONAL);
 
 PPROGRESSBAR
 CreateProgressBar(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom,
-    SHORT TextTop,
-    SHORT TextRight,
-    BOOLEAN DoubleEdge,
-    CHAR *Text);
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
+    IN BOOLEAN DoubleEdge,
+    IN PCSTR DescriptionText OPTIONAL);
 
 VOID
 DestroyProgressBar(
-    PPROGRESSBAR Bar);
+    IN OUT PPROGRESSBAR Bar);
 
 VOID
 ProgressSetStepCount(
-    PPROGRESSBAR Bar,
-    ULONG StepCount);
+    IN PPROGRESSBAR Bar,
+    IN ULONG StepCount);
 
 VOID
 ProgressNextStep(
-    PPROGRESSBAR Bar);
+    IN PPROGRESSBAR Bar);
 
 VOID
 ProgressSetStep(
-    PPROGRESSBAR Bar,
-    ULONG Step);
+    IN PPROGRESSBAR Bar,
+    IN ULONG Step);
 
 /* EOF */

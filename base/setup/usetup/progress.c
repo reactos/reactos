@@ -11,7 +11,7 @@
 static
 VOID
 DrawBorder(
-    PPROGRESSBAR Bar)
+    IN PPROGRESSBAR Bar)
 {
     COORD coPos;
     DWORD Written;
@@ -94,7 +94,7 @@ DrawBorder(
 static
 VOID
 DrawThickBorder(
-    PPROGRESSBAR Bar)
+    IN PPROGRESSBAR Bar)
 {
     COORD coPos;
     DWORD Written;
@@ -177,7 +177,7 @@ DrawThickBorder(
 static
 VOID
 DrawProgressBar(
-    PPROGRESSBAR Bar)
+    IN PPROGRESSBAR Bar)
 {
     CHAR TextBuffer[8];
     COORD coPos;
@@ -185,7 +185,7 @@ DrawProgressBar(
     PROGRESSBAR BarBorder = *Bar;
 
     /* Draw the progress bar "border" border */
-    if (Bar->Double)
+    if (Bar->DoubleEdge)
     {
         BarBorder.Top -= 5;
         BarBorder.Bottom += 2;
@@ -197,8 +197,9 @@ DrawProgressBar(
     /* Draw the progress bar border */
     DrawBorder(Bar);
 
-    /* Write the text associated with the bar */
-    CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->Text);
+    /* Display the description text */
+    if (Bar->DescriptionText)
+        CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->DescriptionText);
 
     /* Print percentage */
     sprintf(TextBuffer, "%-3lu%%", Bar->Percent);
@@ -232,15 +233,15 @@ DrawProgressBar(
 
 PPROGRESSBAR
 CreateProgressBarEx(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom,
-    SHORT TextTop,
-    SHORT TextRight,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
-    SHORT ProgressColour,
-    CHAR *Text)
+    IN SHORT ProgressColour,
+    IN PCSTR DescriptionText OPTIONAL)
 {
     PPROGRESSBAR Bar;
 
@@ -256,17 +257,18 @@ CreateProgressBarEx(
     Bar->Bottom = Bottom;
     Bar->TextTop = TextTop;
     Bar->TextRight = TextRight;
-    Bar->Double = DoubleEdge;
-    Bar->ProgressColour = ProgressColour;
-    Bar->Text = Text;
 
     Bar->Width = Bar->Right - Bar->Left + 1;
 
-    Bar->Percent = 0;
-    Bar->Pos = 0;
+    Bar->DoubleEdge = DoubleEdge;
+    Bar->ProgressColour = ProgressColour;
+    Bar->DescriptionText = DescriptionText;
 
     Bar->StepCount = 0;
     Bar->CurrentStep = 0;
+
+    Bar->Percent = 0;
+    Bar->Pos = 0;
 
     DrawProgressBar(Bar);
 
@@ -275,27 +277,26 @@ CreateProgressBarEx(
 
 PPROGRESSBAR
 CreateProgressBar(
-    SHORT Left,
-    SHORT Top,
-    SHORT Right,
-    SHORT Bottom,
-    SHORT TextTop,
-    SHORT TextRight,
+    IN SHORT Left,
+    IN SHORT Top,
+    IN SHORT Right,
+    IN SHORT Bottom,
+    IN SHORT TextTop,
+    IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
-    CHAR *Text)
+    IN PCSTR DescriptionText OPTIONAL)
 {
-
     /* Call the Ex variant of the function */
     return CreateProgressBarEx(Left, Top, Right, Bottom,
                                TextTop, TextRight,
                                DoubleEdge,
                                FOREGROUND_YELLOW | BACKGROUND_BLUE,
-                               Text);
+                               DescriptionText);
 }
 
 VOID
 DestroyProgressBar(
-    PPROGRESSBAR Bar)
+    IN OUT PPROGRESSBAR Bar)
 {
     RtlFreeHeap(ProcessHeap, 0, Bar);
 }
@@ -303,8 +304,8 @@ DestroyProgressBar(
 
 VOID
 ProgressSetStepCount(
-    PPROGRESSBAR Bar,
-    ULONG StepCount)
+    IN PPROGRESSBAR Bar,
+    IN ULONG StepCount)
 {
     Bar->CurrentStep = 0;
     Bar->StepCount = StepCount;
@@ -314,15 +315,15 @@ ProgressSetStepCount(
 
 VOID
 ProgressNextStep(
-    PPROGRESSBAR Bar)
+    IN PPROGRESSBAR Bar)
 {
     ProgressSetStep(Bar, Bar->CurrentStep + 1);
 }
 
 VOID
 ProgressSetStep(
-    PPROGRESSBAR Bar,
-    ULONG Step)
+    IN PPROGRESSBAR Bar,
+    IN ULONG Step)
 {
     CHAR TextBuffer[8];
     COORD coPos;
@@ -336,7 +337,7 @@ ProgressSetStep(
     Bar->CurrentStep = Step;
 
     /* Calculate new percentage */
-    NewPercent = (ULONG)(((100.0 * (float)Bar->CurrentStep) / (float)Bar->StepCount) + 0.5);
+    NewPercent = ((100 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
 
     /* Redraw percentage if changed */
     if (Bar->Percent != NewPercent)
@@ -354,10 +355,10 @@ ProgressSetStep(
                                      &Written);
     }
 
-    /* Calculate bar position */
-    NewPos = (ULONG)((((float)(Bar->Width - 2) * 2.0 * (float)Bar->CurrentStep) / (float)Bar->StepCount) + 0.5);
+    /* Calculate the bar position */
+    NewPos = (((Bar->Width - 2) * 2 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
 
-    /* Redraw bar if changed */
+    /* Redraw the bar if it has changed */
     if (Bar->Pos != NewPos)
     {
         Bar->Pos = NewPos;
@@ -370,7 +371,7 @@ ProgressSetStep(
                                         Bar->Pos / 2,
                                         coPos,
                                         &Written);
-            coPos.X += Bar->Pos/2;
+            coPos.X += Bar->Pos / 2;
 
             if (NewPos & 1)
             {
