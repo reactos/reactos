@@ -191,6 +191,12 @@ CcPinMappedData (
         Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
     }
 
+    if (!Result)
+    {
+        iBcb->Pinned = FALSE;
+        iBcb->Vacb->PinCount--;
+    }
+
     return Result;
 }
 
