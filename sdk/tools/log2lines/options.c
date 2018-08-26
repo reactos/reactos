@@ -96,8 +96,8 @@ int optionInit(int argc, const char **argv)
                 strcpy(opt_logFile, argv[i+1]);
                 break;
             case 'P':
-                free(opt_Pipe);
-                opt_Pipe = malloc(LINESIZE);
+                if (!opt_Pipe)
+                    opt_Pipe = malloc(LINESIZE);
                 strcpy(opt_Pipe, argv[i+1]);
                 break;
             case 'z':
@@ -166,8 +166,8 @@ int optionParse(int argc, const char **argv)
             break;
         case 'R':
             optCount++;
-            free(opt_Revision);
-            opt_Revision = malloc(LINESIZE);
+            if (!opt_Revision)
+                opt_Revision = malloc(LINESIZE);
             sscanf(optarg, "%s", opt_Revision);
             if (strcmp(opt_Revision, "check") == 0)
                 opt_Revision_check ++;
