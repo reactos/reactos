@@ -161,6 +161,7 @@ CcPinMappedData (
     IN	ULONG Flags,
     OUT	PVOID * Bcb)
 {
+    PINTERNAL_BCB iBcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
@@ -174,7 +175,21 @@ CcPinMappedData (
     ASSERT(SharedCacheMap);
     ASSERT(SharedCacheMap->PinAccess);
 
-    /* no-op for current implementation. */
+    iBcb = *Bcb;
+    ASSERT(iBcb->Pinned == FALSE);
+
+    iBcb->Pinned = TRUE;
+    iBcb->Vacb->PinCount++;
+
+    if (Flags & PIN_EXCLUSIVE)
+    {
+        ExAcquireResourceExclusiveLite(&iBcb->Lock, TRUE);
+    }
+    else
+    {
+        ExAcquireResourceSharedLite(&iBcb->Lock, TRUE);
+    }
+
     return TRUE;
 }
 
@@ -191,8 +206,6 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
-    PINTERNAL_BCB iBcb;
-
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
 
@@ -205,32 +218,20 @@ CcPinRead (
         ++CcPinReadNoWait;
     }
 
-    if (CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
+    /* Map first */
+    if (!CcMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
     {
-        if (CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
-        {
-            iBcb = *Bcb;
-
-            ASSERT(iBcb->Pinned == FALSE);
-
-            iBcb->Pinned = TRUE;
-            iBcb->Vacb->PinCount++;
-
-            if (Flags & PIN_EXCLUSIVE)
-            {
-                ExAcquireResourceExclusiveLite(&iBcb->Lock, TRUE);
-            }
-            else
-            {
-                ExAcquireResourceSharedLite(&iBcb->Lock, TRUE);
-            }
-
-            return TRUE;
-        }
-        else
-            CcUnpinData(*Bcb);
+        return FALSE;
     }
-    return FALSE;
+
+    /* Pin then */
+    if (!CcPinMappedData(FileObject, FileOffset, Length, Flags, Bcb))
+    {
+        CcUnpinData(*Bcb);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*
