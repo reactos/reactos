@@ -19,25 +19,22 @@ static
 BOOLEAN NTAPI
 UpdateProgressPercentage(
     IN PPROGRESSBAR Bar,
-    IN BOOLEAN ComputeProgress,
+    IN BOOLEAN AlwaysUpdate,
     OUT PSTR Buffer,
     IN SIZE_T cchBufferSize)
 {
     // static PCSTR ProgressFormatText;
     ULONG OldProgress = Bar->Progress;
 
-    if (ComputeProgress)
-    {
-        /* Calculate the new percentage */
-        if (Bar->StepCount == 0)
-            Bar->Progress = 0;
-        else
-            Bar->Progress = ((100 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
-    }
+    /* Calculate the new percentage */
+    if (Bar->StepCount == 0)
+        Bar->Progress = 0;
+    else
+        Bar->Progress = ((100 * Bar->CurrentStep + (Bar->StepCount / 2)) / Bar->StepCount);
 
     /* Build the progress string if it has changed */
     if ( Bar->ProgressFormatText &&
-        (!ComputeProgress || (Bar->Progress != OldProgress)) )
+        (AlwaysUpdate || (Bar->Progress != OldProgress)) )
     {
         RtlStringCchPrintfA(Buffer, cchBufferSize,
                             Bar->ProgressFormatText, Bar->Progress);
@@ -239,9 +236,9 @@ DrawProgressBar(
     if (Bar->DescriptionText)
         CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->DescriptionText);
 
-    /* Display the progress */
+    /* Always update and display the progress */
     if (Bar->UpdateProgressProc &&
-        Bar->UpdateProgressProc(Bar, FALSE, TextBuffer, ARRAYSIZE(TextBuffer)))
+        Bar->UpdateProgressProc(Bar, TRUE, TextBuffer, ARRAYSIZE(TextBuffer)))
     {
         coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
         coPos.Y = Bar->Top;
@@ -281,6 +278,7 @@ CreateProgressBarEx(
     IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
     IN SHORT ProgressColour,
+    IN ULONG StepCount,
     IN PCSTR DescriptionText OPTIONAL,
     IN PCSTR ProgressFormatText OPTIONAL,
     IN PUPDATE_PROGRESS UpdateProgressProc OPTIONAL)
@@ -307,14 +305,10 @@ CreateProgressBarEx(
     Bar->DescriptionText = DescriptionText;
     Bar->ProgressFormatText = ProgressFormatText;
 
-    Bar->StepCount = 0;
-    Bar->CurrentStep = 0;
-
     Bar->UpdateProgressProc = UpdateProgressProc;
-    Bar->Progress = 0;
-    Bar->Pos = 0;
 
-    DrawProgressBar(Bar);
+    /* Reset the progress bar counts and initially draw it */
+    ProgressSetStepCount(Bar, StepCount);
 
     return Bar;
 }
@@ -335,6 +329,7 @@ CreateProgressBar(
                                TextTop, TextRight,
                                DoubleEdge,
                                FOREGROUND_YELLOW | BACKGROUND_BLUE,
+                               0,
                                DescriptionText,
                                "%-3lu%%",
                                UpdateProgressPercentage);
@@ -355,6 +350,9 @@ ProgressSetStepCount(
 {
     Bar->CurrentStep = 0;
     Bar->StepCount = StepCount;
+
+    Bar->Progress = 0;
+    Bar->Pos = 0;
 
     DrawProgressBar(Bar);
 }
@@ -383,7 +381,7 @@ ProgressSetStep(
 
     /* Update the progress and redraw it if it has changed */
     if (Bar->UpdateProgressProc &&
-        Bar->UpdateProgressProc(Bar, TRUE, TextBuffer, ARRAYSIZE(TextBuffer)))
+        Bar->UpdateProgressProc(Bar, FALSE, TextBuffer, ARRAYSIZE(TextBuffer)))
     {
         coPos.X = Bar->Left + (Bar->Width - strlen(TextBuffer) + 1) / 2;
         coPos.Y = Bar->Top;

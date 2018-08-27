@@ -31,7 +31,7 @@ struct _PROGRESSBAR;
 typedef BOOLEAN
 (NTAPI *PUPDATE_PROGRESS)(
     IN struct _PROGRESSBAR* Bar,
-    IN BOOLEAN ComputeProgress,
+    IN BOOLEAN AlwaysUpdate,
     OUT PSTR Buffer,
     IN SIZE_T cchBufferSize);
 
@@ -76,6 +76,7 @@ CreateProgressBarEx(
     IN SHORT TextRight,
     IN BOOLEAN DoubleEdge,
     IN SHORT ProgressColour,
+    IN ULONG StepCount,
     IN PCSTR DescriptionText OPTIONAL,
     IN PCSTR ProgressFormatText OPTIONAL,
     IN PUPDATE_PROGRESS UpdateProgressProc OPTIONAL);
