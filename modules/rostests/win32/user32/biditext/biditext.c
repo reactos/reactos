@@ -115,6 +115,22 @@ void ShowAboutDialog(HWND owner)
 /* Main window class and title */
 static LPCTSTR MainWndClass = TEXT("BiDi Test");
 
+enum
+{
+    ALEF = 0x5D0,
+    BET,
+    GIMEL,
+    DALET,
+    HEY,
+    VAV,
+    ZAYIN,
+    HET,
+    TET,
+    YUD
+};
+const WCHAR szString[] = {ALEF, BET, GIMEL, DALET, HEY, 'A', 'B','C','D', VAV, ZAYIN, HET, TET, YUD, 0};
+const WCHAR szReversedString[] = {HEY, DALET, GIMEL, BET, ALEF, 'A', 'B', 'C', 'D', YUD, TET, HET, ZAYIN, VAV, 0};
+
 /* Window procedure for our main window */
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -171,10 +187,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            
+
             HDC hdc = BeginPaint(hWnd, &ps);
-            
-            LPWSTR szString = L"אבגדהABCDוזחטי";
+
             int Len = (int)wcslen(szString);
 
             WCHAR Glyphs[100] = { 0 };
@@ -188,7 +203,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             TextOutW(hdc, 10, 10, L"Proper (string being used):", 27);
             TextOutW(hdc, 200, 10, szString, 14);
             TextOutW(hdc, 10, 30, L"Reversed (example):", 19);
-            TextOutW(hdc, 200, 30, L"הדגבאABCDיטחזו", 14);
+            TextOutW(hdc, 200, 30, szReversedString, 14);
 
             TextOutW(hdc, 10, 50, L"String with NULL LpkETO call (not reversed):", 44);
             LpkExtTextOut(hdc, 10, 70, 0, NULL, szString, Len, NULL, 0);
