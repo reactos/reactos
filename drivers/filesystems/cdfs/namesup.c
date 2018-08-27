@@ -411,7 +411,7 @@ Return Value:
          Wchar++) {
 
         if ((*Wchar < 0xff) &&
-            !FsRtlIsAnsiCharacterLegalHpfs( *Wchar, FALSE ) &&
+            (!FsRtlIsAnsiCharacterLegalHpfs( *Wchar, FALSE ) && (*Wchar != 0xfc)) &&
             (*Wchar != L'"') &&
             (*Wchar != L'<') &&
             (*Wchar != L'>') &&
