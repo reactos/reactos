@@ -1,4 +1,4 @@
-/*
+﻿/*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPLv2+ - See COPYING in the top level directory
  * PURPOSE:         Test for RtlGenerate8dot3Name
