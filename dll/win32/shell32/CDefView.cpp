@@ -57,6 +57,8 @@ typedef struct
    to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
 #define CONTEXT_MENU_BASE_ID 1
 
+HBITMAP DoLoadPicture(LPCWSTR pszFileName);
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -110,6 +112,8 @@ class CDefView :
 
         CLSID m_Category;
         BOOL  m_Destroyed;
+        HBITMAP m_hBackImage;
+        COLORREF m_crCustomTextColor;
 
     private:
         HRESULT _MergeToolbar();
@@ -130,6 +134,7 @@ class CDefView :
         void UpdateListColors();
         BOOL InitList();
         static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
+        BOOL CheckBackImage(LPCITEMIDLIST pidl);
 
         PCUITEMID_CHILD _PidlByItem(int i);
         PCUITEMID_CHILD _PidlByItem(LVITEM& lvItem);
@@ -257,6 +262,7 @@ class CDefView :
         LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+        LRESULT OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnSysColorChange(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnGetShellBrowser(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
         LRESULT OnNCCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -280,7 +286,7 @@ class CDefView :
             {
                 {   sizeof(WNDCLASSEX), CS_PARENTDC, StartWindowProc,
                     0, 0, NULL, NULL,
-                    LoadCursor(NULL, IDC_ARROW), (HBRUSH)(COLOR_WINDOW + 1), NULL, SV_CLASS_NAME, NULL
+                    LoadCursor(NULL, IDC_ARROW), NULL, NULL, SV_CLASS_NAME, NULL
                 },
                 NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
             };
@@ -323,6 +329,7 @@ class CDefView :
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_PRINTCLIENT, OnPrintClient)
         MESSAGE_HANDLER(WM_SYSCOLORCHANGE, OnSysColorChange)
         MESSAGE_HANDLER(CWM_GETISHELLBROWSER, OnGetShellBrowser)
         MESSAGE_HANDLER(WM_SETTINGCHANGE, OnSettingChange)
@@ -378,7 +385,9 @@ CDefView::CDefView() :
     m_iDragOverItem(0),
     m_cScrollDelay(0),
     m_isEditing(FALSE),
-    m_Destroyed(FALSE)
+    m_Destroyed(FALSE),
+    m_hBackImage(NULL),
+    m_crCustomTextColor(CLR_INVALID)
 {
     ZeroMemory(&m_FolderSettings, sizeof(m_FolderSettings));
     ZeroMemory(&m_sortInfo, sizeof(m_sortInfo));
@@ -389,6 +398,11 @@ CDefView::CDefView() :
 CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
+
+    if (m_hBackImage)
+    {
+        ::DeleteObject(m_hBackImage);
+    }
 
     if (m_hWnd)
     {
@@ -574,6 +588,12 @@ BOOL CDefView::CreateList()
     if (!m_ListView)
         return FALSE;
 
+    if (!(m_FolderSettings.fFlags & FWF_DESKTOP))
+    {
+        const DWORD dwLBExStyle = LVS_EX_TRANSPARENTBKGND;
+        ::SendMessage(m_ListView, LVM_SETEXTENDEDLISTVIEWSTYLE, dwLBExStyle, dwLBExStyle);
+    }
+
     m_sortInfo.bIsAscending = TRUE;
     m_sortInfo.nHeaderID = -1;
     m_sortInfo.nLastHeaderID = -1;
@@ -620,6 +640,15 @@ void CDefView::UpdateListColors()
             m_ListView.SetExtendedListViewStyle(0, LVS_EX_TRANSPARENTSHADOWTEXT);
         }
     }
+    else
+    {
+        if (m_crCustomTextColor != CLR_INVALID)
+        {
+            m_ListView.SetTextBkColor(CLR_NONE);
+            m_ListView.SetTextColor(m_crCustomTextColor);
+            m_ListView.SetExtendedListViewStyle(LVS_EX_TRANSPARENTSHADOWTEXT, LVS_EX_TRANSPARENTSHADOWTEXT);
+        }
+    }
 }
 
 /**********************************************************
@@ -661,6 +690,71 @@ BOOL CDefView::InitList()
     Shell_GetImageLists(&big_icons, &small_icons);
     m_ListView.SetImageList(big_icons, LVSIL_NORMAL);
     m_ListView.SetImageList(small_icons, LVSIL_SMALL);
+
+    return TRUE;
+}
+
+BOOL CDefView::CheckBackImage(LPCITEMIDLIST pidl)
+{
+    if (m_hBackImage)
+    {
+        DeleteObject(m_hBackImage);
+        m_hBackImage = NULL;
+    }
+    m_crCustomTextColor = CLR_INVALID;
+
+    WCHAR szPath[MAX_PATH], szIniFile[MAX_PATH];
+    SHGetPathFromIDListW(pidl, szPath);
+
+    // does the folder exists?
+    DWORD attrs = GetFileAttributesW(szPath);
+    if (attrs == INVALID_FILE_ATTRIBUTES)
+    {
+        return FALSE;
+    }
+
+    // build the ini file path
+    StringCchCopyW(szIniFile, _countof(szIniFile), szPath);
+    PathAddBackslashW(szIniFile);
+    StringCchCatW(szIniFile, _countof(szIniFile), L"desktop.ini");
+
+    static LPCWSTR TheGUID = L"{BE098140-A513-11D0-A3A4-00C04FD706EC}";
+    static LPCWSTR Space = L" \t\n\r\f\v";
+
+    // get info from ini file
+    WCHAR szImage[MAX_PATH], szText[64];
+    attrs = GetFileAttributesW(szIniFile);
+    if (attrs != INVALID_FILE_ATTRIBUTES)
+    {
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Image", L"", szImage, _countof(szImage), szIniFile);
+        GetPrivateProfileStringW(TheGUID, L"IconArea_Text", L"", szText, _countof(szText), szIniFile);
+
+        // load the image
+        if (szImage[0])
+        {
+            StrTrimW(szImage, Space);
+
+            if (PathIsRelativeW(szImage))
+            {
+                PathAppendW(szPath, szImage);
+                StringCchCopyW(szImage, _countof(szImage), szPath);
+            }
+
+            m_hBackImage = DoLoadPicture(szImage);
+        }
+
+        // load the text color
+        if (szText[0])
+        {
+            StrTrimW(szText, Space);
+
+            LPWSTR pchEnd = NULL;
+            COLORREF cr = (wcstol(szText, &pchEnd, 0) & 0xFFFFFF);
+
+            if (pchEnd && !*pchEnd)
+                m_crCustomTextColor = cr;
+        }
+    }
 
     return TRUE;
 }
@@ -952,6 +1046,8 @@ HRESULT CDefView::FillList()
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
+    CheckBackImage(m_pidlParent);
+    m_ListView.InvalidateRect(NULL, TRUE);
 
     _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
 
@@ -988,6 +1084,53 @@ LRESULT CDefView::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     }
     bHandled = FALSE;
     return 0;
+}
+
+static VOID
+DrawTileBitmap(HDC hDC, LPCRECT prc, HBITMAP hbm, INT nWidth, INT nHeight, INT dx, INT dy)
+{
+    INT x0 = prc->left, y0 = prc->top, x1 = prc->right, y1 = prc->bottom;
+
+    x0 += dx;
+    y0 += dy;
+
+    HDC hMemDC = CreateCompatibleDC(hDC);
+    HGDIOBJ hbmOld = SelectObject(hMemDC, hbm);
+    for (INT y = y0; y < y1; y += nHeight)
+    {
+        for (INT x = x0; x < x1; x += nWidth)
+        {
+            BitBlt(hDC, x, y, nWidth, nHeight, hMemDC, 0, 0, SRCCOPY);
+        }
+    }
+    SelectObject(hMemDC, hbmOld);
+    DeleteDC(hMemDC);
+}
+
+LRESULT CDefView::OnPrintClient(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    HDC hDC = (HDC)wParam;
+
+    RECT rc;
+    ::GetClientRect(m_ListView, &rc);
+
+    if (m_hBackImage)
+    {
+        BITMAP bm;
+        if (::GetObject(m_hBackImage, sizeof(BITMAP), &bm))
+        {
+            INT dx = -(::GetScrollPos(m_ListView, SB_HORZ) % bm.bmWidth);
+            INT dy = -(::GetScrollPos(m_ListView, SB_VERT) % bm.bmHeight);
+            DrawTileBitmap(hDC, &rc, m_hBackImage, bm.bmWidth, bm.bmHeight, dx, dy);
+        }
+    }
+    else
+    {
+        FillRect(hDC, &rc, GetSysColorBrush(COLOR_WINDOW));
+    }
+
+    bHandled = TRUE;
+    return TRUE;
 }
 
 LRESULT CDefView::OnEraseBackground(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1039,14 +1182,6 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
     TRACE("%p\n", this);
 
-    if (CreateList())
-    {
-        if (InitList())
-        {
-            FillList();
-        }
-    }
-
     if (SUCCEEDED(QueryInterface(IID_PPV_ARG(IDropTarget, &pdt))))
     {
         if (FAILED(RegisterDragDrop(m_hWnd, pdt)))
@@ -1061,6 +1196,14 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ntreg.fRecursive = TRUE;
         ntreg.pidl = m_pidlParent;
         m_hNotify = SHChangeNotifyRegister(m_hWnd, SHCNRF_InterruptLevel | SHCNRF_ShellLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
+    }
+
+    if (CreateList())
+    {
+        if (InitList())
+        {
+            FillList();
+        }
     }
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
@@ -3306,4 +3449,70 @@ HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv,
 
     *ppsv = psv.Detach();
     return hRes;
+}
+
+HBITMAP DoLoadPicture(LPCWSTR pszFileName)
+{
+    // open the picture file
+    HANDLE hFile;
+    hFile = CreateFileW(pszFileName, GENERIC_READ, FILE_SHARE_READ,
+                        NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NULL;
+
+    // get the file size
+    DWORD cbGlobal = GetFileSize(hFile, NULL);
+    if (cbGlobal == INVALID_FILE_SIZE)
+    {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // allocate
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, cbGlobal);
+    if (hGlobal == NULL)
+    {
+        CloseHandle(hFile);
+        return NULL;
+    }
+
+    // read it
+    LPVOID pvGlobal = GlobalLock(hGlobal);
+    DWORD cbRead;
+    if (!pvGlobal || !ReadFile(hFile, pvGlobal, cbGlobal, &cbRead, NULL) ||
+        cbRead != cbGlobal)
+    {
+        GlobalUnlock(hGlobal);
+        GlobalFree(hGlobal);
+        CloseHandle(hFile);
+        return NULL;
+    }
+    GlobalUnlock(hGlobal);
+
+    // close the file
+    CloseHandle(hFile);
+
+    // load the picture
+    HBITMAP hbm = NULL;
+    IPicture *pPicture = NULL;
+    IStream *pStream = NULL;
+    if (CreateStreamOnHGlobal(hGlobal, TRUE, &pStream) == S_OK)
+    {
+        OleLoadPicture(pStream, cbGlobal, FALSE, IID_IPicture, (LPVOID *)&pPicture);
+
+        // get the bitmap handle
+        if (pPicture)
+        {
+            pPicture->get_Handle((OLE_HANDLE *)&hbm);
+
+            // copy the bitmap handle
+            hbm = (HBITMAP)CopyImage(hbm, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
+
+            pPicture->Release();
+        }
+        pStream->Release();
+    }
+    GlobalFree(hGlobal);
+
+    return hbm;
 }
