@@ -925,7 +925,7 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
                 if (HIWORD(wParam) == CBN_SELCHANGE)
                 {
                     HWND hCombo = GetDlgItem(hDlg,IDC_ZOOM);
-                    LPCTSTR currentZoomValue = "";
+                    LPCTSTR currentZoomValue = TEXT("");
 
                     /* Get index of current selection and the text of that selection */
                     int currentSelectionIndex = ComboBox_GetCurSel(hCombo);  
