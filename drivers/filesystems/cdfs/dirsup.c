@@ -787,6 +787,7 @@ Return Value:
 
     if (!CdIsLegalName( IrpContext, &Dirent->CdFileName.FileName )) {
 
+        DbgPrint( "CDFS: Illegal name: %wZ\n", &Dirent->CdFileName.FileName);
         CdRaiseStatus( IrpContext, STATUS_FILE_CORRUPT_ERROR );
     }
 

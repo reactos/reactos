@@ -501,7 +501,7 @@ CdRaiseStatusEx (
         DbgPrint( "CDFS: Contact CDFS.SYS component owner for triage.\n");
         DbgPrint( "CDFS: 'eb %p 0;eb %p 0' to disable this alert.\n", &CdTestRaisedStatus, &CdBreakOnAnyRaise);
 
-        /* NT_ASSERT(FALSE); silenced to avoid CORE-14067 */
+        NT_ASSERT(FALSE);
     }
     
     if (NormalizeStatus)  {
