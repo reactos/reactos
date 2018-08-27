@@ -2724,6 +2724,14 @@ static void test_right_click(void)
     LRESULT result;
     POINT pt;
 
+#ifdef __REACTOS__
+    if (!winetest_interactive)
+    {
+        skip("test_right_click() (set WINETEST_INTERACTIVE=1), until CORE-14975 is fixed upstream and WINESYNC\n");
+        return;
+    }
+#endif
+
     hTree = create_treeview_control(0);
     fill_tree(hTree);
 
