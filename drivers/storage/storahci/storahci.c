@@ -1503,11 +1503,6 @@ AhciActivatePort (
     // Bits in this field shall only be set to ‘1’ by software when PxCMD.ST is set to ‘1’
     cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
 
-    if (cmd.ST == 0) // PxCMD.ST == 0
-    {
-        return;
-    }
-
     // get the lowest set bit
     tmp = QueueSlots & (QueueSlots - 1);
 
