@@ -1503,6 +1503,10 @@ AhciActivatePort (
     // Bits in this field shall only be set to ‘1’ by software when PxCMD.ST is set to ‘1’
     cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
 
+#ifdef _MSC_VER
+    cmd.ST |= cmd.ST;   // avoid MSVC C4700
+#endif
+
     if (cmd.ST == 0) // PxCMD.ST == 0
     {
         return;
