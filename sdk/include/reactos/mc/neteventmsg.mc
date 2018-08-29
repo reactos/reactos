@@ -210,6 +210,9 @@ ReactOS %1 %2 %3 %4.
 Language=French
 ReactOS %1 %2 %3 %4.
 .
+Language=Polish
+ReactOS %1 %2 %3 %4.
+.
 
 MessageId=6010
 Severity=Error
