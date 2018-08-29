@@ -730,6 +730,7 @@ cmdUser(
         UserInfo.usri4_password = lpPassword;
         UserInfo.usri4_flags = UF_SCRIPT | UF_NORMAL_ACCOUNT;
         UserInfo.usri4_acct_expires = TIMEQ_FOREVER;
+        UserInfo.usri4_primary_group_id = DOMAIN_GROUP_RID_USERS;
 
         pUserInfo = &UserInfo;
     }
