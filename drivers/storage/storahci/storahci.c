@@ -1480,6 +1480,12 @@ AhciProcessSrb (
  * @param PortExtension
  *
  */
+
+#ifdef _MSC_VER    // avoid MSVC C4700
+    #pragma warning(push)
+    #pragma warning(disable: 4700)
+#endif
+
 VOID
 AhciActivatePort (
     __in PAHCI_PORT_EXTENSION PortExtension
@@ -1502,10 +1508,6 @@ AhciActivatePort (
     // section 3.3.14
     // Bits in this field shall only be set to ‘1’ by software when PxCMD.ST is set to ‘1’
     cmd.Status = StorPortReadRegisterUlong(AdapterExtension, &PortExtension->Port->CMD);
-
-#ifdef _MSC_VER
-    cmd.ST |= cmd.ST;   // avoid MSVC C4700
-#endif
 
     if (cmd.ST == 0) // PxCMD.ST == 0
     {
@@ -1532,6 +1534,10 @@ AhciActivatePort (
 
     return;
 }// -- AhciActivatePort();
+
+#ifdef _MSC_VER    // avoid MSVC C4700
+    #pragma warning(pop)
+#endif
 
 /**
  * @name AhciProcessIO
