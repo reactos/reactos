@@ -1480,6 +1480,12 @@ AhciProcessSrb (
  * @param PortExtension
  *
  */
+
+#ifdef _MSC_VER     // avoid MSVC C4700
+    #pragma warning(push)
+    #pragma warning(disable: 4700)
+#endif
+
 VOID
 AhciActivatePort (
     __in PAHCI_PORT_EXTENSION PortExtension
@@ -1528,6 +1534,10 @@ AhciActivatePort (
 
     return;
 }// -- AhciActivatePort();
+
+#ifdef _MSC_VER     // avoid MSVC C4700
+    #pragma warning(pop)
+#endif
 
 /**
  * @name AhciProcessIO
