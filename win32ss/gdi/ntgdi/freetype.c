@@ -4692,6 +4692,25 @@ MatchFontName(PSHARED_FACE SharedFace, LPCWSTR lfFaceName, FT_UShort NameID, FT_
     return FALSE;
 }
 
+static BOOL
+MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
+{
+    if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) ||
+        MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, LANG_ENGLISH))
+    {
+        return TRUE;
+    }
+    if (PRIMARYLANGID(gusLanguageID) != LANG_ENGLISH)
+    {
+        if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID) ||
+            MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, gusLanguageID))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 NTSTATUS
 FASTCALL
 TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
@@ -4765,10 +4784,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
         IntUnLockFreeType();
 
         TextObj->TextFace[0] = UNICODE_NULL;
-        if (MatchFontName(SharedFace, SubstitutedLogFont.lfFaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) ||
-            MatchFontName(SharedFace, SubstitutedLogFont.lfFaceName, TT_NAME_ID_FULL_NAME, LANG_ENGLISH) ||
-            MatchFontName(SharedFace, SubstitutedLogFont.lfFaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID) ||
-            MatchFontName(SharedFace, SubstitutedLogFont.lfFaceName, TT_NAME_ID_FULL_NAME, gusLanguageID))
+        if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
         {
             RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
         }
