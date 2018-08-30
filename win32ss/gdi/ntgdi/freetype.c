@@ -4671,22 +4671,25 @@ static BOOL
 MatchFontName(PSHARED_FACE SharedFace, LPCWSTR lfFaceName, FT_UShort NameID, FT_UShort LangID)
 {
     NTSTATUS Status;
-    UNICODE_STRING Name;
+    UNICODE_STRING Name1, Name2;
 
     if (lfFaceName[0] == UNICODE_NULL)
         return FALSE;
 
-    RtlInitUnicodeString(&Name, NULL);
-    Status = IntGetFontLocalizedName(&Name, SharedFace, NameID, LangID);
+    RtlInitUnicodeString(&Name1, lfFaceName);
+
+    RtlInitUnicodeString(&Name2, NULL);
+    Status = IntGetFontLocalizedName(&Name2, SharedFace, NameID, LangID);
+
     if (NT_SUCCESS(Status))
     {
-        if (_wcsicmp(Name.Buffer, lfFaceName) == 0)
+        if (RtlCompareUnicodeString(&Name1, &Name2, TRUE) == 0)
         {
-            RtlFreeUnicodeString(&Name);
+            RtlFreeUnicodeString(&Name2);
             return TRUE;
         }
 
-        RtlFreeUnicodeString(&Name);
+        RtlFreeUnicodeString(&Name2);
     }
 
     return FALSE;
