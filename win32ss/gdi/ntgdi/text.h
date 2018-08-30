@@ -64,9 +64,7 @@ typedef struct _LFONT
    LFTYPE        lft;
    FLONG         fl;
    FONTOBJ      *Font;
-   WCHAR         FullName[LF_FULLFACESIZE];
-   WCHAR         Style[LF_FACESIZE];
-   WCHAR         FaceName[LF_FACESIZE];
+   WCHAR         TextFace[LF_FACESIZE];
    DWORD         dwOffsetEndArray;
 // Fixed:
    ENUMLOGFONTEXDVW logfont;
