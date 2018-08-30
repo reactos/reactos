@@ -513,12 +513,12 @@ NtGdiGetTextFaceW(
 
     TextObj = RealizeFontInit(hFont);
     ASSERT(TextObj != NULL);
-    fLen = wcslen(TextObj->FaceName) + 1;
+    fLen = wcslen(TextObj->TextFace) + 1;
 
     if (FaceName != NULL)
     {
         Count = min(Count, fLen);
-        Status = MmCopyToCaller(FaceName, TextObj->FaceName, Count * sizeof(WCHAR));
+        Status = MmCopyToCaller(FaceName, TextObj->TextFace, Count * sizeof(WCHAR));
         if (!NT_SUCCESS(Status))
         {
             TEXTOBJ_UnlockText(TextObj);

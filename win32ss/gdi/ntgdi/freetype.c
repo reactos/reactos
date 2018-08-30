@@ -4667,6 +4667,53 @@ IntFontType(PFONTGDI Font)
     }
 }
 
+static BOOL
+MatchFontName(PSHARED_FACE SharedFace, LPCWSTR lfFaceName, FT_UShort NameID, FT_UShort LangID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name1, Name2;
+
+    if (lfFaceName[0] == UNICODE_NULL)
+        return FALSE;
+
+    RtlInitUnicodeString(&Name1, lfFaceName);
+
+    RtlInitUnicodeString(&Name2, NULL);
+    Status = IntGetFontLocalizedName(&Name2, SharedFace, NameID, LangID);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (RtlCompareUnicodeString(&Name1, &Name2, TRUE) == 0)
+        {
+            RtlFreeUnicodeString(&Name2);
+            return TRUE;
+        }
+
+        RtlFreeUnicodeString(&Name2);
+    }
+
+    return FALSE;
+}
+
+static BOOL
+MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
+{
+    if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) ||
+        MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, LANG_ENGLISH))
+    {
+        return TRUE;
+    }
+    if (PRIMARYLANGID(gusLanguageID) != LANG_ENGLISH)
+    {
+        if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID) ||
+            MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, gusLanguageID))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 NTSTATUS
 FASTCALL
 TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
@@ -4731,22 +4778,32 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     }
     else
     {
-        UNICODE_STRING FaceName;
+        UNICODE_STRING Name;
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+        PSHARED_FACE SharedFace = FontGdi->SharedFace;
 
         IntLockFreeType();
         IntRequestFontSize(NULL, FontGdi, pLogFont->lfWidth, pLogFont->lfHeight);
         IntUnLockFreeType();
 
-        RtlInitUnicodeString(&FaceName, NULL);
-        IntGetFontLocalizedName(&FaceName, FontGdi->SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+        TextObj->TextFace[0] = UNICODE_NULL;
+        if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
+        {
+            RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
+        }
+        else
+        {
+            RtlInitUnicodeString(&Name, NULL);
+            Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+            if (NT_SUCCESS(Status))
+            {
+                /* truncated copy */
+                Name.Length = (USHORT)min(Name.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
+                RtlStringCbCopyNW(TextObj->TextFace, Name.Length + sizeof(WCHAR), Name.Buffer, Name.Length);
 
-        /* truncated copy */
-        FaceName.Length = (USHORT)min(FaceName.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
-        FaceName.MaximumLength = (USHORT)(FaceName.Length + sizeof(UNICODE_NULL));
-        RtlCopyMemory(TextObj->FaceName, FaceName.Buffer, FaceName.MaximumLength);
-
-        RtlFreeUnicodeString(&FaceName);
+                RtlFreeUnicodeString(&Name);
+            }
+        }
 
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.
