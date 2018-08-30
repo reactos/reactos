@@ -4796,8 +4796,8 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
             {
                 /* truncated copy */
                 Name.Length = (USHORT)min(Name.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
-                Name.MaximumLength = (USHORT)(Name.Length + sizeof(UNICODE_NULL));
-                RtlCopyMemory(TextObj->TextFace, Name.Buffer, Name.MaximumLength);
+                RtlCopyMemory(TextObj->TextFace, Name.Buffer, Name.Length);
+                TextObj->TextFace[Name.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 RtlFreeUnicodeString(&Name);
             }
