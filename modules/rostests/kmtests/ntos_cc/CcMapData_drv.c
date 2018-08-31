@@ -20,6 +20,13 @@ typedef struct _TEST_FCB
     FAST_MUTEX HeaderMutex;
 } TEST_FCB, *PTEST_FCB;
 
+typedef struct _TEST_CONTEXT
+{
+    PVOID Bcb;
+    PVOID Buffer;
+} TEST_CONTEXT, *PTEST_CONTEXT;
+
+static BOOLEAN TestMap = FALSE;
 static ULONG TestTestId = -1;
 static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
@@ -139,6 +146,44 @@ MapAndLockUserBuffer(
 
 static
 VOID
+NTAPI
+MapInAnotherThread(IN PVOID Context)
+{
+    BOOLEAN Ret;
+    PULONG Buffer;
+    PVOID Bcb;
+    LARGE_INTEGER Offset;
+    PTEST_CONTEXT TestContext;
+
+    ok(TestFileObject != NULL, "Called in invalid context!\n");
+    ok_eq_ulong(TestTestId, 3);
+
+    TestContext = Context;
+    ok(TestContext != NULL, "Called in invalid context!\n");
+    ok(TestContext->Bcb != NULL, "Called in invalid context!\n");
+    ok(TestContext->Buffer != NULL, "Called in invalid context!\n");
+
+    Ret = FALSE;
+    Offset.QuadPart = 0x1000;
+    KmtStartSeh();
+    TestMap = TRUE;
+    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    TestMap = FALSE;
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
+    return;
+}
+
+static
+VOID
 PerformTest(
     ULONG TestId,
     PDEVICE_OBJECT DeviceObject)
@@ -174,17 +219,50 @@ PerformTest(
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
             {
-                Ret = FALSE;
-                Offset.QuadPart = TestId * 0x1000;
-                KmtStartSeh();
-                Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
-                KmtEndSeh(STATUS_SUCCESS);
-
-                if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                if (TestId < 3)
                 {
-                    ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
+                    Ret = FALSE;
+                    Offset.QuadPart = TestId * 0x1000;
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
 
-                    CcUnpinData(Bcb);
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                    {
+                        ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
+
+                        CcUnpinData(Bcb);
+                    }
+                }
+                else if (TestId == 3)
+                {
+                    PTEST_CONTEXT TestContext;
+
+                    TestContext = ExAllocatePool(NonPagedPool, sizeof(TEST_CONTEXT));
+                    if (!skip(Fcb != NULL, "ExAllocatePool failed\n"))
+                    {
+                        Ret = FALSE;
+                        Offset.QuadPart = 0x1000;
+                        KmtStartSeh();
+                        TestMap = TRUE;
+                        Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &TestContext->Bcb, &TestContext->Buffer);
+                        TestMap = FALSE;
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                        {
+                            PKTHREAD ThreadHandle;
+
+                            ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
+                            KmtFinishThread(ThreadHandle, NULL);
+
+                            TestTestId = -1;
+                            CcUnpinData(TestContext->Bcb);
+                            TestTestId = 3;
+                        }
+
+                        ExFreePool(TestContext);
+                    }
                 }
             }
         }
