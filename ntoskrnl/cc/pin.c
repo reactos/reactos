@@ -177,7 +177,7 @@ CcPinMappedData (
     PINTERNAL_BCB iBcb;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 
-    CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
+    CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
 
     ASSERT(FileObject);
