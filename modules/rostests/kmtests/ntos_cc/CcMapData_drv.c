@@ -24,6 +24,7 @@ typedef struct _TEST_CONTEXT
 {
     PVOID Bcb;
     PVOID Buffer;
+    ULONG Length;
 } TEST_CONTEXT, *PTEST_CONTEXT;
 
 static BOOLEAN TestMap = FALSE;
@@ -162,12 +163,13 @@ MapInAnotherThread(IN PVOID Context)
     ok(TestContext != NULL, "Called in invalid context!\n");
     ok(TestContext->Bcb != NULL, "Called in invalid context!\n");
     ok(TestContext->Buffer != NULL, "Called in invalid context!\n");
+    ok(TestContext->Length != 0, "Called in invalid context!\n");
 
     Ret = FALSE;
     Offset.QuadPart = 0x1000;
     KmtStartSeh();
     TestMap = TRUE;
-    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
     TestMap = FALSE;
     KmtEndSeh(STATUS_SUCCESS);
 
@@ -253,6 +255,11 @@ PerformTest(
                         {
                             PKTHREAD ThreadHandle;
 
+                            TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
+                            ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
+                            KmtFinishThread(ThreadHandle, NULL);
+
+                            TestContext->Length = FileSizes.FileSize.QuadPart - 2 * Offset.QuadPart;
                             ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
 
