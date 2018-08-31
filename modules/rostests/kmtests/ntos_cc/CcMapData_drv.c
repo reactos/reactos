@@ -255,6 +255,19 @@ PerformTest(
                         {
                             PKTHREAD ThreadHandle;
 
+#ifdef _X86_
+                            /* FIXME: Should be fixed, will fail under certains conditions */
+                            ok(TestContext->Buffer > (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
+                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
+#else
+#ifdef _M_AMD64
+                            ok(TestContext->Buffer > (PVOID)0xFFFFF98000000000 && TestContext->Buffer < (PVOID)0xFFFFFA8000000000,
+                               "Buffer %p not mapped in system space\n", TestContext->Buffer);
+#else
+                            skip(FALSE, "System space mapping not defined\n");
+#endif
+#endif
+
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
