@@ -86,6 +86,18 @@ CcMapData (
         return FALSE;
     }
 
+    if (!BooleanFlagOn(Flags, MAP_NO_READ))
+    {
+        static int Warned = 0;
+
+        SetFlag(Flags, MAP_NO_READ);
+        if (!Warned)
+        {
+            DPRINT1("Mapping/pinning with no read not implemented. Forcing read, might fail if wait not allowed\n");
+            Warned++;
+        }
+    }
+
     ROffset = ROUND_DOWN(ReadOffset, VACB_MAPPING_GRANULARITY);
     Status = CcRosRequestVacb(SharedCacheMap,
                               ROffset,
@@ -100,9 +112,9 @@ CcMapData (
         return FALSE;
     }
 
-    if (!Valid)
+    if (!Valid && BooleanFlagOn(Flags, MAP_NO_READ))
     {
-        if (!(Flags & MAP_WAIT))
+        if (!BooleanFlagOn(Flags, MAP_WAIT))
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
