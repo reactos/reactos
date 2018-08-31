@@ -263,9 +263,7 @@ PerformTest(
                             ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
 
-                            TestTestId = -1;
                             CcUnpinData(TestContext->Bcb);
-                            TestTestId = 3;
                         }
 
                         ExFreePool(TestContext);
