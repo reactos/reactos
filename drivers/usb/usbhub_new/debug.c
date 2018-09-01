@@ -112,8 +112,8 @@ NTAPI
 USBHUB_DumpingIDs(IN PVOID Id)
 {
     PWSTR Ptr;
-    ULONG Length;
-    ULONG TotalLength = 0;
+    size_t Length;
+    size_t TotalLength = 0;
 
     Ptr = Id;
     DPRINT("USBHUB_DumpingIDs:\n");
@@ -127,6 +127,6 @@ USBHUB_DumpingIDs(IN PVOID Id)
         TotalLength += Length;
     }
 
-    DPRINT("TotalLength: %hu\n", TotalLength);
+    DPRINT("TotalLength: %Iu\n", TotalLength);
     DPRINT("\n");
 }
