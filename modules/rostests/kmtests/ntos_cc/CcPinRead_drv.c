@@ -178,6 +178,18 @@ PinInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 
@@ -242,6 +254,17 @@ PerformTest(
                     {
                         Ret = FALSE;
                         Offset.QuadPart = 0x1000;
+
+                        /* Try enforce BCB first */
+                        KmtStartSeh();
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+                        ok(Ret == FALSE, "CcPinRead succeed\n");
+                        if (Ret)
+                        {
+                            CcUnpinData(Bcb);
+                        }
+
                         KmtStartSeh();
                         Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &TestContext->Bcb, &TestContext->Buffer);
                         KmtEndSeh(STATUS_SUCCESS);
