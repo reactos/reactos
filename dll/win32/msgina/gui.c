@@ -932,6 +932,14 @@ DoLogon(
                 goto done;
             }
         }
+        else if (SubStatus == STATUS_ACCOUNT_EXPIRED)
+        {
+            ResourceMessageBox(pgContext,
+                               hwndDlg,
+                               MB_OK | MB_ICONEXCLAMATION,
+                               IDS_LOGONTITLE,
+                               IDS_ACCOUNTEXPIRED);
+        }
         else
         {
             TRACE("Other error!\n");

@@ -202,6 +202,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Your account has been disabled. Please see your system administrator."
     IDS_PASSWORDMUSTCHANGE "You are required to change your password at first logon."
     IDS_PASSWORDEXPIRED "Your password has expired and must be changed."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

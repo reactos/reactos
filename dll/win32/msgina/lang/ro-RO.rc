@@ -207,6 +207,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Contul dumneavoastră a fost dezactivat. Contactați administratorul de sistem."
     IDS_PASSWORDMUSTCHANGE "Este imperativ să vă schimbați parola la prima autentificare."
     IDS_PASSWORDEXPIRED "Parola v-a expirat și trebuie schimbată."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

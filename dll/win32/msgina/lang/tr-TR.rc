@@ -200,6 +200,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Hesâbınız edilginleştirildi. Lütfen dizge yöneticinizi görünüz."
     IDS_PASSWORDMUSTCHANGE "İlk oturum açmada şifrenizi değiştirmeniz gerekir."
     IDS_PASSWORDEXPIRED "Şifrenizin süresi doldu ve şifreniz değiştirilmelidir."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

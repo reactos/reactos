@@ -203,6 +203,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Tento účet byl vypnut. Prosím kontaktujte administrátora tohoto systému."
     IDS_PASSWORDMUSTCHANGE "Při prvním přihlášení je nutné změnit heslo."
     IDS_PASSWORDEXPIRED "Heslu vypršela platnost a musí být změněno."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

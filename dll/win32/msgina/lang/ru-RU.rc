@@ -200,6 +200,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Ваш аккаунт отключен. Пожалуйста, обратитесь к системному администратору."
     IDS_PASSWORDMUSTCHANGE "Вы должны сменить пароль при следующем входе."
     IDS_PASSWORDEXPIRED "Срок действия вашего пароля истек, необходимо его изменить."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */

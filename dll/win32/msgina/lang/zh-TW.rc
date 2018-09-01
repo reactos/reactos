@@ -200,6 +200,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "您的帳戶已被禁用。請參閱您的系統管理員。"
     IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登入的密碼。"
     IDS_PASSWORDEXPIRED "您的密碼已過期，必須更改。"
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */
