@@ -27,7 +27,6 @@ typedef struct _TEST_CONTEXT
     ULONG Length;
 } TEST_CONTEXT, *PTEST_CONTEXT;
 
-static BOOLEAN TestMap = FALSE;
 static ULONG TestTestId = -1;
 static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
@@ -47,7 +46,7 @@ TestEntry(
 
     UNREFERENCED_PARAMETER(RegistryPath);
 
-    *DeviceName = L"CcMapData";
+    *DeviceName = L"CcPinRead";
     *Flags = TESTENTRY_NO_EXCLUSIVE_DEVICE |
              TESTENTRY_BUFFERED_IO_DEVICE |
              TESTENTRY_NO_READONLY_DEVICE;
@@ -148,7 +147,7 @@ MapAndLockUserBuffer(
 static
 VOID
 NTAPI
-MapInAnotherThread(IN PVOID Context)
+PinInAnotherThread(IN PVOID Context)
 {
     BOOLEAN Ret;
     PULONG Buffer;
@@ -168,12 +167,10 @@ MapInAnotherThread(IN PVOID Context)
     Ret = FALSE;
     Offset.QuadPart = 0x1000;
     KmtStartSeh();
-    TestMap = TRUE;
-    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
-    TestMap = FALSE;
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
     KmtEndSeh(STATUS_SUCCESS);
 
-    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
@@ -216,7 +213,7 @@ PerformTest(
             TestFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
             KmtStartSeh();
-            CcInitializeCacheMap(TestFileObject, &FileSizes, FALSE, &Callbacks, NULL);
+            CcInitializeCacheMap(TestFileObject, &FileSizes, TRUE, &Callbacks, NULL);
             KmtEndSeh(STATUS_SUCCESS);
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
@@ -226,10 +223,10 @@ PerformTest(
                     Ret = FALSE;
                     Offset.QuadPart = TestId * 0x1000;
                     KmtStartSeh();
-                    Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
 
-                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                     {
                         ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
 
@@ -246,12 +243,10 @@ PerformTest(
                         Ret = FALSE;
                         Offset.QuadPart = 0x1000;
                         KmtStartSeh();
-                        TestMap = TRUE;
-                        Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &TestContext->Bcb, &TestContext->Buffer);
-                        TestMap = FALSE;
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &TestContext->Bcb, &TestContext->Buffer);
                         KmtEndSeh(STATUS_SUCCESS);
 
-                        if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                        if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                         {
                             PKTHREAD ThreadHandle;
 
@@ -269,11 +264,11 @@ PerformTest(
 #endif
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
-                            ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
+                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - 2 * Offset.QuadPart;
-                            ThreadHandle = KmtStartThread(MapInAnotherThread, TestContext);
+                            ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
 
                             CcUnpinData(TestContext->Bcb);
@@ -336,6 +331,8 @@ TestMessageHandler(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
+    FsRtlEnterFileSystem();
+
     switch (ControlCode)
     {
         case IOCTL_START_TEST:
@@ -353,6 +350,8 @@ TestMessageHandler(
             break;
     }
 
+    FsRtlExitFileSystem();
+
     return Status;
 }
 
@@ -369,6 +368,8 @@ TestIrpHandler(
 
     DPRINT("IRP %x/%x\n", IoStack->MajorFunction, IoStack->MinorFunction);
     ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
+
+    FsRtlEnterFileSystem();
 
     Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
@@ -424,6 +425,8 @@ TestIrpHandler(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+
+    FsRtlExitFileSystem();
 
     return Status;
 }

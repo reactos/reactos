@@ -137,6 +137,7 @@ list(APPEND KMTEST_SOURCE
     kernel32/FindFile_user.c
     ntos_cc/CcCopyRead_user.c
     ntos_cc/CcMapData_user.c
+    ntos_cc/CcPinRead_user.c
     ntos_io/IoCreateFile_user.c
     ntos_io/IoDeviceObject_user.c
     ntos_io/IoReadWrite_user.c
