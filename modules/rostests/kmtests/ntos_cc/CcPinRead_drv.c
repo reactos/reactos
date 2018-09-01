@@ -190,6 +190,53 @@ PinInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
+    return;
+}
+
+static
+VOID
+NTAPI
+PinInAnotherThreadExclusive(IN PVOID Context)
+{
+    BOOLEAN Ret;
+    PULONG Buffer;
+    PVOID Bcb;
+    LARGE_INTEGER Offset;
+    PTEST_CONTEXT TestContext;
+
+    ok(TestFileObject != NULL, "Called in invalid context!\n");
+    ok_eq_ulong(TestTestId, 3);
+
+    TestContext = Context;
+    ok(TestContext != NULL, "Called in invalid context!\n");
+    ok(TestContext->Bcb != NULL, "Called in invalid context!\n");
+    ok(TestContext->Buffer != NULL, "Called in invalid context!\n");
+    ok(TestContext->Length != 0, "Called in invalid context!\n");
+
+    Ret = FALSE;
+    Offset.QuadPart = 0x1000;
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+    if (Ret)
+    {
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 
@@ -294,6 +341,21 @@ PerformTest(
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - 2 * Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
+                            KmtFinishThread(ThreadHandle, NULL);
+
+                            CcUnpinData(TestContext->Bcb);
+                        }
+
+                        KmtStartSeh();
+                        Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT | PIN_EXCLUSIVE, &TestContext->Bcb, &TestContext->Buffer);
+                        KmtEndSeh(STATUS_SUCCESS);
+
+                        if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                        {
+                            PKTHREAD ThreadHandle;
+
+                            TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
+                            ThreadHandle = KmtStartThread(PinInAnotherThreadExclusive, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
 
                             CcUnpinData(TestContext->Bcb);
