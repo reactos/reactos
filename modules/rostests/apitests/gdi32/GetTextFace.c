@@ -28,59 +28,59 @@ void Test_GetTextFace(void)
     ok(hDC != 0, "CreateCompatibleDC failed, skipping tests.\n");
     if (!hDC) return;
 
-	/* Whether asking for the string size (NULL buffer) ignores the size argument */
-	SetLastError(0xE000BEEF);
+    /* Whether asking for the string size (NULL buffer) ignores the size argument */
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 0, NULL);
     TEST(ret != 0);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
-	ret2 = ret;
+    ret2 = ret;
 
-	SetLastError(0xE000BEEF);
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, -1, NULL);
     TEST(ret != 0);
     TEST(ret == ret2);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
-	ret2 = ret;
+    ret2 = ret;
 
-	SetLastError(0xE000BEEF);
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 10000, NULL);
     TEST(ret != 0);
     TEST(ret == ret2);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
-	ret2 = ret;
+    ret2 = ret;
 
-	/* Whether the buffer is correctly filled */
-	SetLastError(0xE000BEEF);
+    /* Whether the buffer is correctly filled */
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 20, Buffer);
     TEST(ret != 0);
     TEST(ret <= 20);
     TEST(Buffer[ret - 1] == 0);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
 
-	SetLastError(0xE000BEEF);
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 1, Buffer);
     TEST(ret == 1);
     TEST(Buffer[ret - 1] == 0);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
 
-	SetLastError(0xE000BEEF);
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 2, Buffer);
     TEST(ret == 2);
     TEST(Buffer[ret - 1] == 0);
     ok(GetLastError() == 0xE000BEEF, "GetLastError() == %ld\n", GetLastError());
 
-	/* Whether invalid buffer sizes are correctly ignored */
-	SetLastError(0xE000BEEF);
+    /* Whether invalid buffer sizes are correctly ignored */
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, 0, Buffer);
     TEST(ret == 0);
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() == %ld\n", GetLastError());
 
-	SetLastError(0xE000BEEF);
+    SetLastError(0xE000BEEF);
     ret = GetTextFaceW(hDC, -1, Buffer);
     TEST(ret == 0);
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() == %ld\n", GetLastError());
 
-	DeleteDC(hDC);
+    DeleteDC(hDC);
 }
 
 void Test_GetTextFaceAliasW(void)
