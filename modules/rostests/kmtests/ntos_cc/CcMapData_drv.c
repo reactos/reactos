@@ -212,6 +212,21 @@ MapInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    Offset.QuadPart = 0x1500;
+    TestContext->Length -= 0x500;
+
+    KmtStartSeh();
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 

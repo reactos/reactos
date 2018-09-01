@@ -214,6 +214,45 @@ PinInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    Offset.QuadPart = 0x1500;
+    TestContext->Length -= 0x500;
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT | PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok_eq_pointer(Bcb, TestContext->Bcb);
+        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
+
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 
@@ -257,6 +296,41 @@ PinInAnotherThreadExclusive(IN PVOID Context)
     {
         ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
         ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
+    Offset.QuadPart = 0x1500;
+    TestContext->Length -= 0x500;
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+    if (Ret)
+    {
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+    if (Ret)
+    {
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
         CcUnpinData(Bcb);
     }
