@@ -178,6 +178,40 @@ MapInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_IF_BCB, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+    if (Ret)
+    {
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcPinRead(TestFileObject, &Offset, TestContext->Length, PIN_EXCLUSIVE, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 

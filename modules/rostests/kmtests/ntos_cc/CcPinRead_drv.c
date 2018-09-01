@@ -202,6 +202,18 @@ PinInAnotherThread(IN PVOID Context)
         CcUnpinData(Bcb);
     }
 
+    KmtStartSeh();
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
+        CcUnpinData(Bcb);
+    }
+
     return;
 }
 
@@ -234,6 +246,18 @@ PinInAnotherThreadExclusive(IN PVOID Context)
 
     if (Ret)
     {
+        CcUnpinData(Bcb);
+    }
+
+    KmtStartSeh();
+    Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, 0, &Bcb, (PVOID *)&Buffer);
+    KmtEndSeh(STATUS_SUCCESS);
+
+    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+    {
+        ok(Bcb != TestContext->Bcb, "Returned same BCB!\n");
+        ok_eq_pointer(Buffer, TestContext->Buffer);
+
         CcUnpinData(Bcb);
     }
 
