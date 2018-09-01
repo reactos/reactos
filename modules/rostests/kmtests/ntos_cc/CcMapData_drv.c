@@ -331,6 +331,8 @@ TestMessageHandler(
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
+    FsRtlEnterFileSystem();
+
     switch (ControlCode)
     {
         case IOCTL_START_TEST:
@@ -348,6 +350,8 @@ TestMessageHandler(
             break;
     }
 
+    FsRtlExitFileSystem();
+
     return Status;
 }
 
@@ -364,6 +368,8 @@ TestIrpHandler(
 
     DPRINT("IRP %x/%x\n", IoStack->MajorFunction, IoStack->MinorFunction);
     ASSERT(IoStack->MajorFunction == IRP_MJ_READ);
+
+    FsRtlEnterFileSystem();
 
     Status = STATUS_NOT_SUPPORTED;
     Irp->IoStatus.Information = 0;
@@ -419,6 +425,8 @@ TestIrpHandler(
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
+
+    FsRtlExitFileSystem();
 
     return Status;
 }
