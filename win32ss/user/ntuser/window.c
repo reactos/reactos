@@ -2740,58 +2740,41 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       return TRUE;
    }
 
-   /* Recursively destroy owned windows */
+    /* Recursively destroy owned windows */
+    if (!(Window->style & WS_CHILD))
+    {
+        HWND* List;
+        HWND* phWnd;
+        PWND pWnd;
 
-   if (! (Window->style & WS_CHILD))
-   {
-      for (;;)
-      {
-         BOOL GotOne = FALSE;
-         HWND *Children;
-         HWND *ChildHandle;
-         PWND Child, Desktop;
-
-         Desktop = IntIsDesktopWindow(Window) ? Window :
-                   UserGetWindowObject(IntGetDesktopWindow());
-         Children = IntWinListChildren(Desktop);
-
-         if (Children)
-         {
-            for (ChildHandle = Children; *ChildHandle; ++ChildHandle)
+        List = IntWinListOwnedPopups(Window);
+        if (List)
+        {
+            for (phWnd = List; *phWnd; ++phWnd)
             {
-               Child = UserGetWindowObject(*ChildHandle);
-               if (Child == NULL)
-                  continue;
-               if (Child->spwndOwner != Window)
-               {
-                  continue;
-               }
+                pWnd = ValidateHwndNoErr(*phWnd);
+                if (pWnd == NULL)
+                    continue;
+                ASSERT(pWnd->spwndOwner == Window);
+                ASSERT(pWnd != Window);
 
-               if (IntWndBelongsToThread(Child, PsGetCurrentThreadWin32Thread()))
-               {
-                  USER_REFERENCE_ENTRY ChildRef;
-                  UserRefObjectCo(Child, &ChildRef); // Temp HACK?
-                  co_UserDestroyWindow(Child);
-                  UserDerefObjectCo(Child); // Temp HACK?
-
-                  GotOne = TRUE;
-                  continue;
-               }
-
-               if (Child->spwndOwner != NULL)
-               {
-                  Child->spwndOwner = NULL;
-               }
-
+                pWnd->spwndOwner = NULL;
+                if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
+                {
+                    USER_REFERENCE_ENTRY Ref;
+                    UserRefObjectCo(pWnd, &Ref); // Temp HACK?
+                    co_UserDestroyWindow(pWnd);
+                    UserDerefObjectCo(pWnd); // Temp HACK?
+                }
+                else
+                {
+                    ERR("IntWndBelongsToThread(0x%p) is FALSE, ignoring.\n", pWnd);
+                }
             }
-            ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
-         }
-         if (! GotOne)
-         {
-            break;
-         }
-      }
-   }
+
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+        }
+    }
 
     /* Generate mouse move message for the next window */
     msg.message = WM_MOUSEMOVE;
