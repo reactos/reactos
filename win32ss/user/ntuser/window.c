@@ -254,29 +254,33 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
 HWND* FASTCALL
 IntWinListChildren(PWND Window)
 {
-   PWND Child;
-   HWND *List;
-   UINT Index, NumChildren = 0;
+    PWND Child;
+    HWND *List;
+    UINT Index, NumChildren = 0;
 
-   if (!Window) return NULL;
+    if (!Window) return NULL;
 
-   for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
-      ++NumChildren;
+    for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
+    {
+        ++NumChildren;
+    }
 
-   List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
-   if(!List)
-   {
-      ERR("Failed to allocate memory for children array\n");
-      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return NULL;
-   }
-   for (Child = Window->spwndChild, Index = 0;
-         Child != NULL;
-         Child = Child->spwndNext, ++Index)
-      List[Index] = Child->head.h;
-   List[Index] = NULL;
+    List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    if(!List)
+    {
+        ERR("Failed to allocate memory for children array\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
 
-   return List;
+    Index = 0;
+    for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
+    {
+        List[Index++] = Child->head.h;
+    }
+    List[Index] = NULL;
+
+    return List;
 }
 
 HWND* FASTCALL
@@ -2682,7 +2686,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       }
    }
 
-   // Adjust last active.
+   /* Adjust last active */
    if ((pwndTemp = Window->spwndOwner))
    {
       while (pwndTemp->spwndOwner)
