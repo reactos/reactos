@@ -217,6 +217,8 @@ PerformTest(
         Fcb = ExAllocatePool(NonPagedPool, sizeof(TEST_FCB));
         if (!skip(Fcb != NULL, "ExAllocatePool failed\n"))
         {
+            BOOLEAN PinAccess = (TestId != 4);
+
             RtlZeroMemory(Fcb, sizeof(TEST_FCB));
             ExInitializeFastMutex(&Fcb->HeaderMutex);
             FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
@@ -225,7 +227,7 @@ PerformTest(
             TestFileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
             KmtStartSeh();
-            CcInitializeCacheMap(TestFileObject, &FileSizes, TRUE, &Callbacks, NULL);
+            CcInitializeCacheMap(TestFileObject, &FileSizes, PinAccess, &Callbacks, NULL);
             KmtEndSeh(STATUS_SUCCESS);
 
             if (!skip(CcIsFileCached(TestFileObject) == TRUE, "CcInitializeCacheMap failed\n"))
@@ -298,6 +300,21 @@ PerformTest(
                         }
 
                         ExFreePool(TestContext);
+                    }
+                }
+                else if (TestId == 4)
+                {
+                    Ret = FALSE;
+                    Offset.QuadPart = 0x1000;
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, PIN_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        ok_eq_ulong(Buffer[0x2000 / sizeof(ULONG)], 0);
+
+                        CcUnpinData(Bcb);
                     }
                 }
             }
