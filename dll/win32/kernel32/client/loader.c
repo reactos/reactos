@@ -1140,8 +1140,9 @@ NTSTATUS
 WINAPI
 BaseProcessInitPostImport(VOID)
 {
+    DPRINT("Post-init called\n");
+
     /* Check if this is a terminal server */
-    DPRINT1("Post-init called\n");
     if (SharedUserData->SuiteMask & VER_SUITE_TERMINAL)
     {
         /* Initialize TS pointers */
