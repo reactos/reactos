@@ -288,16 +288,19 @@ IntWinListOwnedPopups(PWND Window)
 {
     PWND Child, Desktop;
     HWND *List;
-    UINT Index, NumChildren = 0;
+    UINT Index, NumOwned = 0;
 
     Desktop = co_GetDesktopWindow(Window);
     if (!Desktop)
         return NULL;
 
     for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
-        ++NumChildren;
+    {
+        if (Child->spwndOwner == Window)
+            ++NumOwned;
+    }
 
-    List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    List = ExAllocatePoolWithTag(PagedPool, (NumOwned + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
     if (!List)
     {
         ERR("Failed to allocate memory for children array\n");
@@ -2626,7 +2629,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    hWnd = Window->head.h;
    ti = PsGetCurrentThreadWin32Thread();
 
-   TRACE("co_UserDestroyWindow \n");
+   TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
 
    /* Check for owner thread */
    if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
