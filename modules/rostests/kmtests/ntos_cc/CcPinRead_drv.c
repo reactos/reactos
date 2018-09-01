@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS kernel-mode tests
  * LICENSE:         LGPLv2.1+ - See COPYING.LIB in the top level directory
- * PURPOSE:         Test driver for CcMapData function
+ * PURPOSE:         Test driver for CcPinRead function
  * PROGRAMMER:      Pierre Schweitzer <pierre@reactos.org>
  */
 
@@ -27,6 +27,7 @@ typedef struct _TEST_CONTEXT
     ULONG Length;
 } TEST_CONTEXT, *PTEST_CONTEXT;
 
+static BOOLEAN TestMap = FALSE;
 static ULONG TestTestId = -1;
 static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
@@ -167,7 +168,9 @@ MapInAnotherThread(IN PVOID Context)
     Ret = FALSE;
     Offset.QuadPart = 0x1000;
     KmtStartSeh();
+    TestMap = TRUE;
     Ret = CcMapData(TestFileObject, &Offset, TestContext->Length, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+    TestMap = FALSE;
     KmtEndSeh(STATUS_SUCCESS);
 
     if (!skip(Ret == TRUE, "CcMapData failed\n"))
@@ -243,7 +246,9 @@ PerformTest(
                         Ret = FALSE;
                         Offset.QuadPart = 0x1000;
                         KmtStartSeh();
+                        TestMap = TRUE;
                         Ret = CcMapData(TestFileObject, &Offset, FileSizes.FileSize.QuadPart - Offset.QuadPart, MAP_WAIT, &TestContext->Bcb, &TestContext->Buffer);
+                        TestMap = FALSE;
                         KmtEndSeh(STATUS_SUCCESS);
 
                         if (!skip(Ret == TRUE, "CcMapData failed\n"))
