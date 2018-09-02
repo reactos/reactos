@@ -2003,74 +2003,66 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     PrevTD = FirstTD;
     LinkTD = FirstTD;
 
-    if (TransferParameters->TransferBufferLength > 0)
+    while (TransferedLen < TransferParameters->TransferBufferLength)
     {
-        while (TRUE)
+        TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
+
+        if (!TD)
         {
-            TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
-
-            if (!TD)
-                break;
-
-            LinkTD = TD;
-
-            EhciTransfer->PendingTDs++;
-
-            TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
-            TD->EhciTransfer = EhciTransfer;
-
-            TD->HwTD.Buffer[0] = 0;
-            TD->HwTD.Buffer[1] = 0;
-            TD->HwTD.Buffer[2] = 0;
-            TD->HwTD.Buffer[3] = 0;
-            TD->HwTD.Buffer[4] = 0;
-
-            TD->NextHcdTD = NULL;
-
-            TD->HwTD.NextTD = TERMINATE_POINTER;
-            TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
-
-            TD->HwTD.Token.AsULONG = 0;
-            TD->HwTD.Token.ErrorCounter = 3;
-
-            PrevTD->NextHcdTD = TD;
-            PrevTD->HwTD.NextTD = TD->PhysicalAddress;
-
-            if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
-                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
-            else
-                TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
-
-            TD->HwTD.Token.DataToggle = DataToggle;
-            TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
-
-            if (DataToggle)
-                TD->HwTD.Token.DataToggle = 1;
-            else
-                TD->HwTD.Token.DataToggle = 0;
-
-            TD->AltNextHcdTD = LastTD;
-            TD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
-
-            TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
-                                                      EhciEndpoint->EndpointProperties.MaxPacketSize,
-                                                      TransferedLen,
-                                                      &DataToggle,
-                                                      EhciTransfer,
-                                                      TD,
-                                                      SgList);
-
-            PrevTD = TD;
-
-            if (TransferedLen >= TransferParameters->TransferBufferLength)
-                goto End;
+            RegPacket.UsbPortBugCheck(EhciExtension);
+            return MP_STATUS_FAILURE;
         }
 
-        RegPacket.UsbPortBugCheck(EhciExtension);
-        return MP_STATUS_FAILURE;
-    }
+        LinkTD = TD;
 
-End:
+        EhciTransfer->PendingTDs++;
+
+        TD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
+        TD->EhciTransfer = EhciTransfer;
+
+        TD->HwTD.Buffer[0] = 0;
+        TD->HwTD.Buffer[1] = 0;
+        TD->HwTD.Buffer[2] = 0;
+        TD->HwTD.Buffer[3] = 0;
+        TD->HwTD.Buffer[4] = 0;
+
+        TD->NextHcdTD = NULL;
+
+        TD->HwTD.NextTD = TERMINATE_POINTER;
+        TD->HwTD.AlternateNextTD = TERMINATE_POINTER;
+
+        TD->HwTD.Token.AsULONG = 0;
+        TD->HwTD.Token.ErrorCounter = 3;
+
+        PrevTD->NextHcdTD = TD;
+        PrevTD->HwTD.NextTD = TD->PhysicalAddress;
+
+        if (TransferParameters->TransferFlags & USBD_TRANSFER_DIRECTION_IN)
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_IN;
+        else
+            TD->HwTD.Token.PIDCode = EHCI_TD_TOKEN_PID_OUT;
+
+        TD->HwTD.Token.DataToggle = DataToggle;
+        TD->HwTD.Token.Status = (UCHAR)EHCI_TOKEN_STATUS_ACTIVE;
+
+        if (DataToggle)
+            TD->HwTD.Token.DataToggle = 1;
+        else
+            TD->HwTD.Token.DataToggle = 0;
+
+        TD->AltNextHcdTD = LastTD;
+        TD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
+
+        TransferedLen = EHCI_MapAsyncTransferToTd(EhciExtension,
+                                                  EhciEndpoint->EndpointProperties.MaxPacketSize,
+                                                  TransferedLen,
+                                                  &DataToggle,
+                                                  EhciTransfer,
+                                                  TD,
+                                                  SgList);
+
+        PrevTD = TD;
+    }
 
     LinkTD->NextHcdTD = LastTD;
     LinkTD->HwTD.NextTD = LastTD->PhysicalAddress;
