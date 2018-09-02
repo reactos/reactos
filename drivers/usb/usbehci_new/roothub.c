@@ -171,7 +171,7 @@ EHCI_RH_GetStatus(IN PVOID ehciExtension,
                   IN PUSHORT Status)
 {
     DPRINT_RH("EHCI_RH_GetStatus: ... \n");
-    *Status = 1;
+    *Status = USB_GETSTATUS_SELF_POWERED;
     return MP_STATUS_SUCCESS;
 }
 
