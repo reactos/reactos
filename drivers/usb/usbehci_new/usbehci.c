@@ -2745,7 +2745,7 @@ EHCI_InsertQhInPeriodicList(IN PEHCI_EXTENSION EhciExtension,
     {
         while (NextHead &&
                !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) &&
-               QH->sqh.Ordinal > NextHead->sqh.Ordinal);
+               QH->sqh.Ordinal > NextHead->sqh.Ordinal)
         {
             PrevHead = NextHead;
             NextHead = NextHead->sqh.NextHead;
