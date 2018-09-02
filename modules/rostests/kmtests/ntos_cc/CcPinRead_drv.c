@@ -477,6 +477,49 @@ PerformTest(
                         CcUnpinData(Bcb);
                     }
                 }
+                else if (TestId == 5)
+                {
+                    /* Pin after EOF */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    /* Pin a VACB after EOF */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+                    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    /* Pin more than a VACB */
+                    Ret = FALSE;
+                    Offset.QuadPart = 0x0;
+
+                    KmtStartSeh();
+                    Ret = CcPinRead(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == FALSE, "CcPinRead succeed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+                }
             }
         }
     }

@@ -326,6 +326,49 @@ PerformTest(
                         ExFreePool(TestContext);
                     }
                 }
+                else if (TestId == 4)
+                {
+                    /* Map after EOF */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000;
+
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    /* Map a VACB after EOF */
+                    Ret = FALSE;
+                    Offset.QuadPart = FileSizes.FileSize.QuadPart + 0x1000 + VACB_MAPPING_GRANULARITY;
+
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+                    ok(Ret == FALSE, "CcMapData succeed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+
+                    /* Map more than a VACB */
+                    Ret = FALSE;
+                    Offset.QuadPart = 0x0;
+
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, 0x1000 + VACB_MAPPING_GRANULARITY, 0, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == FALSE, "CcMapData succeed\n");
+
+                    if (Ret)
+                    {
+                        CcUnpinData(Bcb);
+                    }
+                }
             }
         }
     }
