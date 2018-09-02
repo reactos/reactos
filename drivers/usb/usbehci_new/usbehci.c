@@ -3040,7 +3040,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD CurrentTD;
     ULONG CurrentTDPhys; 
-    BOOLEAN IsSheduled;
+    BOOLEAN IsScheduled;
 
     DPRINT_EHCI("EHCI_PollActiveAsyncEndpoint: ... \n");
 
@@ -3056,10 +3056,10 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     if (CurrentTD == EhciEndpoint->DmaBufferVA)
         return;
 
-    IsSheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
+    IsScheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
 
     if (!EHCI_HardwarePresent(EhciExtension, 0))
-        IsSheduled = 0;
+        IsScheduled = 0;
 
     TD = EhciEndpoint->HcdHeadP;
 
@@ -3121,7 +3121,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         return;
     }
 
-    if (IsSheduled)
+    if (IsScheduled)
     {
         EHCI_LockQH(EhciExtension,
                     QH,
@@ -3153,7 +3153,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint->HcdHeadP = EhciEndpoint->HcdTailP;
 
-    if (IsSheduled)
+    if (IsScheduled)
         EHCI_UnlockQH(EhciExtension, QH);
 }
 
@@ -3167,7 +3167,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     ULONG CurrentTdPA;
     PEHCI_HCD_TD TD;
     PEHCI_TRANSFER Transfer;
-    BOOLEAN IsSheduled;
+    BOOLEAN IsScheduled;
 
     DPRINT("EHCI_PollHaltedAsyncEndpoint: EhciEndpoint - %p\n", EhciEndpoint);
 
@@ -3177,10 +3177,10 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     CurrentTdPA = QH->sqh.HwQH.CurrentTD & LINK_POINTER_MASK;
     ASSERT(CurrentTdPA);
 
-    IsSheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
+    IsScheduled = QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE;
 
     if (!EHCI_HardwarePresent(EhciExtension, 0))
-        IsSheduled = 0;
+        IsScheduled = 0;
 
     CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(CurrentTdPA,
                                                          EhciExtension,
@@ -3193,7 +3193,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     ASSERT(EhciEndpoint->HcdTailP != CurrentTD);
 
-    if (IsSheduled)
+    if (IsScheduled)
     {
         EHCI_LockQH(EhciExtension,
                     QH,
@@ -3244,7 +3244,7 @@ EHCI_PollHaltedAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     QH->sqh.HwQH.AlternateNextTD = TERMINATE_POINTER;
     QH->sqh.HwQH.Token.TransferBytes = 0;
 
-    if (IsSheduled)
+    if (IsScheduled)
         EHCI_UnlockQH(EhciExtension, QH);
 
     if (EhciEndpoint->EndpointStatus & USBPORT_ENDPOINT_CONTROL)

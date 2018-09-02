@@ -175,7 +175,7 @@ typedef struct _EHCI_EXTENSION {
   USHORT PortPowerControl;
   EHCI_INTERRUPT_ENABLE InterruptMask;
   EHCI_INTERRUPT_ENABLE InterruptStatus;
-  /* Shedule */
+  /* Schedule */
   PEHCI_HC_RESOURCES HcResourcesVA;
   ULONG HcResourcesPA;
   PEHCI_STATIC_QH AsyncHead;
