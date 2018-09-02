@@ -4187,11 +4187,108 @@ ftGdiGetFontData(
     return Result;
 }
 
+static BOOL
+MatchSfntName(const UNICODE_STRING *Name1, const FT_SfntName *SfntName)
+{
+    UNICODE_STRING Tmp, Name2W;
+    NTSTATUS Status;
+
+    if (SfntName->platform_id != TT_PLATFORM_MICROSOFT ||
+        (SfntName->encoding_id != TT_MS_ID_UNICODE_CS &&
+         SfntName->encoding_id != TT_MS_ID_SYMBOL_CS))
+    {
+        return FALSE;   /* not Microsoft Unicode name */
+    }
+
+    if (SfntName->string == NULL || SfntName->string_len == 0 ||
+        (SfntName->string[0] == 0 && SfntName->string[1] == 0))
+    {
+        return FALSE;   /* invalid string */
+    }
+
+    /* NOTE: SfntName->string is not null-terminated */
+
+    /* SfntName->string --> Tmp --> Name2W */
+    Tmp.Buffer = (PWCH)SfntName->string;
+    Tmp.Length = Tmp.MaximumLength = SfntName->string_len;
+    Name2W.Length = 0;
+    Name2W.MaximumLength = SfntName->string_len + sizeof(WCHAR);
+    Name2W.Buffer = ExAllocatePoolWithTag(PagedPool, Name2W.MaximumLength, TAG_USTR);
+    if (Name2W.Buffer)
+    {
+        Status = RtlAppendUnicodeStringToString(&Name2W, &Tmp);
+        if (NT_SUCCESS(Status))
+        {
+            /* convert UTF-16 big endian to little endian */
+            SwapEndian(Name2W.Buffer, Name2W.Length);
+
+            /* compare */
+            if (RtlCompareUnicodeString(Name1, &Name2W, TRUE) == 0)
+            {
+                RtlFreeUnicodeString(&Name2W);
+                return TRUE;
+            }
+        }
+
+        RtlFreeUnicodeString(&Name2W);
+    }
+
+    return FALSE;
+}
+
+static BOOL
+MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
+{
+    NTSTATUS Status;
+    FT_Error Error;
+    ANSI_STRING Name2A;
+    UNICODE_STRING Name1, Name2W;
+    FT_SfntName SfntName;
+    INT i, Count;
+    FT_Face Face = SharedFace->Face;
+
+    if (lfFaceName[0] == UNICODE_NULL)
+        return FALSE;
+
+    RtlInitUnicodeString(&Name1, lfFaceName);
+
+    /* Face->family_name --> Name2A --> Name2W */
+    RtlInitUnicodeString(&Name2W, NULL);
+    RtlInitAnsiString(&Name2A, Face->family_name);
+    Status = RtlAnsiStringToUnicodeString(&Name2W, &Name2A, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        /* compare */
+        if (RtlCompareUnicodeString(&Name1, &Name2W, TRUE) == 0)
+        {
+            RtlFreeUnicodeString(&Name2W);
+            return TRUE;
+        }
+        RtlFreeUnicodeString(&Name2W);
+    }
+
+    Count = FT_Get_Sfnt_Name_Count(Face);
+    for (i = 0; i < Count; ++i)
+    {
+        Error = FT_Get_Sfnt_Name(Face, i, &SfntName);
+        if (Error || SfntName.name_id != TT_NAME_ID_FONT_FAMILY)
+        {
+            continue;   /* failure or mismatched */
+        }
+
+        if (MatchSfntName(&Name1, &SfntName))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
 // NOTE: See Table 1. of https://msdn.microsoft.com/en-us/library/ms969909.aspx
 static UINT
 GetFontPenalty(const LOGFONTW *               LogFont,
+               PSHARED_FACE                   pSharedFace,
                const OUTLINETEXTMETRICW *     Otm,
-               const char *             style_name)
+               const char *                   style_name)
 {
     ULONG   Penalty = 0;
     BYTE    Byte;
@@ -4310,20 +4407,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
 
     if (LogFont->lfFaceName[0])
     {
-        BOOL Found = FALSE;
-
-        /* localized family name */
-        if (!Found)
-        {
-            Found = (_wcsicmp(LogFont->lfFaceName, ActualNameW) == 0);
-        }
-        /* localized full name */
-        if (!Found)
-        {
-            ActualNameW = (WCHAR*)((ULONG_PTR)Otm + (ULONG_PTR)Otm->otmpFaceName);
-            Found = (_wcsicmp(LogFont->lfFaceName, ActualNameW) == 0);
-        }
-        if (!Found)
+        if (!MatchFontNames(pSharedFace, LogFont->lfFaceName))
         {
             /* FaceName Penalty 10000 */
             /* Requested a face name, but the candidate's face name
@@ -4580,6 +4664,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     FONTGDI *FontGDI;
     OUTLINETEXTMETRICW *Otm = NULL;
     UINT OtmSize, OldOtmSize = 0;
+    PSHARED_FACE pSharedFace;
     FT_Face Face;
 
     ASSERT(FontObj);
@@ -4598,7 +4683,9 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
-        Face = FontGDI->SharedFace->Face;
+        pSharedFace = FontGDI->SharedFace;
+        ASSERT(pSharedFace);
+        Face = pSharedFace->Face;
 
         /* get text metrics */
         OtmSize = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
@@ -4622,7 +4709,7 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
 
             OldOtmSize = OtmSize;
 
-            Penalty = GetFontPenalty(LogFont, Otm, Face->style_name);
+            Penalty = GetFontPenalty(LogFont, pSharedFace, Otm, Face->style_name);
             if (*MatchPenalty == 0xFFFFFFFF || Penalty < *MatchPenalty)
             {
                 *FontObj = GDIToObj(FontGDI, FONT);
@@ -4665,53 +4752,6 @@ IntFontType(PFONTGDI Font)
     {
         Font->FontObj.flFontType |= (FO_CFF|FO_POSTSCRIPT);
     }
-}
-
-static BOOL
-MatchFontName(PSHARED_FACE SharedFace, LPCWSTR lfFaceName, FT_UShort NameID, FT_UShort LangID)
-{
-    NTSTATUS Status;
-    UNICODE_STRING Name1, Name2;
-
-    if (lfFaceName[0] == UNICODE_NULL)
-        return FALSE;
-
-    RtlInitUnicodeString(&Name1, lfFaceName);
-
-    RtlInitUnicodeString(&Name2, NULL);
-    Status = IntGetFontLocalizedName(&Name2, SharedFace, NameID, LangID);
-
-    if (NT_SUCCESS(Status))
-    {
-        if (RtlCompareUnicodeString(&Name1, &Name2, TRUE) == 0)
-        {
-            RtlFreeUnicodeString(&Name2);
-            return TRUE;
-        }
-
-        RtlFreeUnicodeString(&Name2);
-    }
-
-    return FALSE;
-}
-
-static BOOL
-MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
-{
-    if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) ||
-        MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, LANG_ENGLISH))
-    {
-        return TRUE;
-    }
-    if (PRIMARYLANGID(gusLanguageID) != LANG_ENGLISH)
-    {
-        if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID) ||
-            MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, gusLanguageID))
-        {
-            return TRUE;
-        }
-    }
-    return FALSE;
 }
 
 NTSTATUS
