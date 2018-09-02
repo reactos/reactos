@@ -2974,26 +2974,22 @@ EHCI_ProcessDoneAsyncTd(IN PEHCI_EXTENSION EhciExtension,
 
     EhciEndpoint = EhciTransfer->EhciEndpoint;
 
-    if (TD->TdFlags & EHCI_HCD_TD_FLAG_ACTIVE)
-        goto Next;
-
-    if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_HALTED)
-        USBDStatus = EHCI_GetErrorFromTD(TD);
-    else
-        USBDStatus = USBD_STATUS_SUCCESS;
-
-    LengthTransfered = TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
-
-    if (TD->HwTD.Token.PIDCode != EHCI_TD_TOKEN_PID_SETUP)
-        EhciTransfer->TransferLen += LengthTransfered;
-
-    if (USBDStatus != USBD_STATUS_SUCCESS)
+    if (!(TD->TdFlags & EHCI_HCD_TD_FLAG_ACTIVE))
     {
-        EhciTransfer->USBDStatus = USBDStatus;
-        goto Next;
-    }
 
-Next:
+        if (TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_HALTED)
+            USBDStatus = EHCI_GetErrorFromTD(TD);
+        else
+            USBDStatus = USBD_STATUS_SUCCESS;
+
+        LengthTransfered = TD->LengthThisTD - TD->HwTD.Token.TransferBytes;
+
+        if (TD->HwTD.Token.PIDCode != EHCI_TD_TOKEN_PID_SETUP)
+            EhciTransfer->TransferLen += LengthTransfered;
+
+        if (USBDStatus != USBD_STATUS_SUCCESS)
+            EhciTransfer->USBDStatus = USBDStatus;
+    }
 
     TD->HwTD.NextTD = 0;
     TD->HwTD.AlternateNextTD = 0;
