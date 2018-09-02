@@ -689,17 +689,17 @@ VOID
 NTAPI
 EHCI_CloseEndpoint(IN PVOID ehciExtension,
                    IN PVOID ehciEndpoint,
-                   IN BOOLEAN IsDoDisablePeriodic)
+                   IN BOOLEAN DisablePeriodic)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
     PEHCI_ENDPOINT EhciEndpoint = ehciEndpoint;
     ULONG TransferType;
 
-    DPRINT1("EHCI_CloseEndpoint: EhciEndpoint - %p, IsDoDisablePeriodic - %X\n",
+    DPRINT1("EHCI_CloseEndpoint: EhciEndpoint - %p, DisablePeriodic - %X\n",
             EhciEndpoint,
-            IsDoDisablePeriodic);
+            DisablePeriodic);
 
-    if (IsDoDisablePeriodic)
+    if (DisablePeriodic)
     {
         TransferType = EhciEndpoint->EndpointProperties.TransferType;
 
@@ -1269,7 +1269,7 @@ EHCI_StartController(IN PVOID ehciExtension,
 VOID
 NTAPI
 EHCI_StopController(IN PVOID ehciExtension,
-                    IN BOOLEAN IsDoDisableInterrupts)
+                    IN BOOLEAN DisableInterrupts)
 {
     DPRINT1("EHCI_StopController: UNIMPLEMENTED. FIXME\n");
 }
@@ -1478,7 +1478,7 @@ EHCI_InterruptService(IN PVOID ehciExtension)
 VOID
 NTAPI
 EHCI_InterruptDpc(IN PVOID ehciExtension,
-                  IN BOOLEAN IsDoEnableInterrupts)
+                  IN BOOLEAN EnableInterrupts)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
     PEHCI_HW_REGISTERS OperationalRegs;
@@ -1486,8 +1486,8 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    DPRINT_EHCI("EHCI_InterruptDpc: [%p] IsDoEnableInterrupts - %x\n",
-                EhciExtension, IsDoEnableInterrupts);
+    DPRINT_EHCI("EHCI_InterruptDpc: [%p] EnableInterrupts - %x\n",
+                EhciExtension, EnableInterrupts);
 
     iStatus = EhciExtension->InterruptStatus;
     EhciExtension->InterruptStatus.AsULONG = 0;
@@ -1506,7 +1506,7 @@ EHCI_InterruptDpc(IN PVOID ehciExtension,
         RegPacket.UsbPortInvalidateRootHub(EhciExtension);
     }
 
-    if (IsDoEnableInterrupts)
+    if (EnableInterrupts)
     {
         WRITE_REGISTER_ULONG(&OperationalRegs->HcInterruptEnable.AsULONG,
                              EhciExtension->InterruptMask.AsULONG);
