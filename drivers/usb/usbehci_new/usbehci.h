@@ -60,7 +60,11 @@ typedef struct _EHCI_HCD_TD {
   USB_DEFAULT_PIPE_SETUP_PACKET SetupPacket;
   ULONG LengthThisTD;
   LIST_ENTRY DoneLink;
+#ifdef _WIN64
+  ULONG Pad[31];
+#else
   ULONG Pad[40];
+#endif
 } EHCI_HCD_TD, *PEHCI_HCD_TD;
 
 C_ASSERT(sizeof(EHCI_HCD_TD) == 0x100);
@@ -80,20 +84,24 @@ typedef struct _EHCI_STATIC_QH {
   ULONG QhFlags;
   ULONG PhysicalAddress;
   struct _EHCI_HCD_QH * PrevHead;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad2;
 #endif
   struct _EHCI_HCD_QH * NextHead;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad3;
 #endif
   struct _EHCI_STATIC_QH * StaticQH;
-#if !defined(_M_X64)
+#ifndef _WIN64
   ULONG Pad4;
 #endif
   ULONG Period;
   ULONG Ordinal;
+#ifdef _WIN64
+  ULONG Pad[11];
+#else
   ULONG Pad[13];
+#endif
 } EHCI_STATIC_QH, *PEHCI_STATIC_QH;
 
 C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
@@ -102,7 +110,11 @@ C_ASSERT(sizeof(EHCI_STATIC_QH) == 0xA0);
 
 typedef struct _EHCI_HCD_QH {
   EHCI_STATIC_QH sqh;
+#ifdef _WIN64
+  ULONG Pad[23];
+#else
   ULONG Pad[24];
+#endif
 } EHCI_HCD_QH, *PEHCI_HCD_QH;
 
 C_ASSERT(sizeof(EHCI_HCD_QH) == 0x100);
