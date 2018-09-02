@@ -2522,7 +2522,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         FirstTdPA = TD->PhysicalAddress;
 
-        while (TD && TD->EhciTransfer == EhciTransfer);
+        while (TD && TD->EhciTransfer == EhciTransfer)
         {
             TD->HwTD.NextTD = 0;
             TD->HwTD.AlternateNextTD = 0;
