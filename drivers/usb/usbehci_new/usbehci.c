@@ -1289,10 +1289,10 @@ EHCI_SuspendController(IN PVOID ehciExtension)
 
     OperationalRegs = EhciExtension->OperationalRegs;
 
-    EhciExtension->BakupPeriodiclistbase = READ_REGISTER_ULONG(&OperationalRegs->PeriodicListBase);
-    EhciExtension->BakupAsynclistaddr = READ_REGISTER_ULONG(&OperationalRegs->AsyncListBase);
-    EhciExtension->BakupCtrlDSSegment = READ_REGISTER_ULONG(&OperationalRegs->SegmentSelector);
-    EhciExtension->BakupUSBCmd = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
+    EhciExtension->BackupPeriodiclistbase = READ_REGISTER_ULONG(&OperationalRegs->PeriodicListBase);
+    EhciExtension->BackupAsynclistaddr = READ_REGISTER_ULONG(&OperationalRegs->AsyncListBase);
+    EhciExtension->BackupCtrlDSSegment = READ_REGISTER_ULONG(&OperationalRegs->SegmentSelector);
+    EhciExtension->BackupUSBCmd = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.InterruptAdvanceDoorbell = 0;
@@ -1360,17 +1360,17 @@ EHCI_ResumeController(IN PVOID ehciExtension)
     }
 
     WRITE_REGISTER_ULONG(&OperationalRegs->SegmentSelector,
-                         EhciExtension->BakupCtrlDSSegment);
+                         EhciExtension->BackupCtrlDSSegment);
 
     WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase,
-                         EhciExtension->BakupPeriodiclistbase);
+                         EhciExtension->BackupPeriodiclistbase);
 
     WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase,
-                         EhciExtension->BakupAsynclistaddr);
+                         EhciExtension->BackupAsynclistaddr);
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
 
-    Command.AsULONG = Command.AsULONG ^ EhciExtension->BakupUSBCmd;
+    Command.AsULONG = Command.AsULONG ^ EhciExtension->BackupUSBCmd;
 
     Command.Reset = 0;
     Command.FrameListSize = 0;
