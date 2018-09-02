@@ -6738,6 +6738,54 @@ done:
 }
 
 
+static
+NTSTATUS
+SampQueryUserInternal2(PSAM_DB_OBJECT UserObject,
+                       PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Internal2.Flags = 0;
+    InfoBuffer->Internal2.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+    InfoBuffer->Internal2.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+    InfoBuffer->Internal2.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+    InfoBuffer->Internal2.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+    InfoBuffer->Internal2.BadPasswordCount = FixedData.BadPasswordCount;
+    InfoBuffer->Internal2.LogonCount = FixedData.LogonCount;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 static NTSTATUS
 SampQueryUserParameters(PSAM_DB_OBJECT UserObject,
                         PSAMPR_USER_INFO_BUFFER *Buffer)
@@ -7315,6 +7363,7 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserInternal1Information:
+        case UserInternal2Information:
         case UserAllInformation:
             DesiredAccess = 0;
             break;
@@ -7420,6 +7469,11 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserInternal1Information:
             Status = SampQueryUserInternal1(UserObject,
+                                            Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampQueryUserInternal2(UserObject,
                                             Buffer);
             break;
 
