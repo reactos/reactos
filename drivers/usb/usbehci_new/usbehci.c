@@ -2128,7 +2128,7 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
     if (TransferParameters->TransferBufferLength)
     {
-        do
+        while (TransferedLen < TransferParameters->TransferBufferLength)
         {
             TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
 
@@ -2189,7 +2189,6 @@ EHCI_BulkTransfer(IN PEHCI_EXTENSION EhciExtension,
 
             PrevTD = TD;
         }
-        while (TransferedLen < TransferParameters->TransferBufferLength);
     }
     else
     {
@@ -2287,7 +2286,7 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
         return MP_STATUS_FAILURE;
     }
 
-    do
+    while (TransferedLen < TransferParameters->TransferBufferLength)
     {
         TD = EHCI_AllocTd(EhciExtension, EhciEndpoint);
 
@@ -2345,7 +2344,6 @@ EHCI_InterruptTransfer(IN PEHCI_EXTENSION EhciExtension,
 
         PrevTD = TD;
     }
-    while (TransferedLen < TransferParameters->TransferBufferLength);
 
     TD->HwTD.Token.InterruptOnComplete = 1;
 
