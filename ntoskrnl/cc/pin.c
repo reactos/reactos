@@ -51,6 +51,7 @@ CcMapData (
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
     LONGLONG ROffset;
+    KIRQL OldIrql;
 
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
@@ -155,6 +156,10 @@ CcMapData (
     iBcb->RefCount = 1;
     ExInitializeResourceLite(&iBcb->Lock);
     *pBcb = (PVOID)iBcb;
+
+    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+    InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p\n",
         FileObject, FileOffset, Length, Flags, iBcb);
@@ -340,11 +345,19 @@ CcUnpinDataForThread (
 
     if (--iBcb->RefCount == 0)
     {
-        CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
+        KIRQL OldIrql;
+        PROS_SHARED_CACHE_MAP SharedCacheMap;
+
+        SharedCacheMap = iBcb->Vacb->SharedCacheMap;
+        CcRosReleaseVacb(SharedCacheMap,
                          iBcb->Vacb,
                          TRUE,
                          iBcb->Dirty,
                          FALSE);
+
+        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+        RemoveEntryList(&iBcb->BcbEntry);
+        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
@@ -377,6 +390,8 @@ CcUnpinRepinnedBcb (
     IN	PIO_STATUS_BLOCK IoStatus)
 {
     PINTERNAL_BCB iBcb = Bcb;
+    KIRQL OldIrql;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p WriteThrough=%d\n", Bcb, WriteThrough);
 
@@ -408,11 +423,16 @@ CcUnpinRepinnedBcb (
             ASSERT(iBcb->Vacb->PinCount == 0);
         }
 
+        SharedCacheMap = iBcb->Vacb->SharedCacheMap;
         CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
                          iBcb->Vacb,
                          TRUE,
                          iBcb->Dirty,
                          FALSE);
+
+        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+        RemoveEntryList(&iBcb->BcbEntry);
+        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
         ExDeleteResourceLite(&iBcb->Lock);
         ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);

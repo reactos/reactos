@@ -172,6 +172,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     CSHORT NodeByteSize;
     ULONG OpenCount;
     LARGE_INTEGER FileSize;
+    LIST_ENTRY BcbList;
     LARGE_INTEGER SectionSize;
     PFILE_OBJECT FileObject;
     ULONG DirtyPages;
@@ -181,6 +182,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
     ULONG DirtyPageThreshold;
+    KSPIN_LOCK BcbSpinLock;
     PRIVATE_CACHE_MAP PrivateCacheMap;
 
     /* ROS specific */
@@ -235,6 +237,7 @@ typedef struct _INTERNAL_BCB
     BOOLEAN Dirty;
     BOOLEAN Pinned;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
+    LIST_ENTRY BcbEntry;
 } INTERNAL_BCB, *PINTERNAL_BCB;
 
 typedef struct _LAZY_WRITER
