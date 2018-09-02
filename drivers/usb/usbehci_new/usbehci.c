@@ -3089,7 +3089,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
             QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
         }
 
-        EHCI_InterruptNextSOF((PVOID)EhciExtension);
+        EHCI_InterruptNextSOF(EhciExtension);
     }
     else
     {
