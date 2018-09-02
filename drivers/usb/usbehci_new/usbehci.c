@@ -736,12 +736,12 @@ VOID
 NTAPI
 EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
                       IN PULONG PhysicalAddress,
-                      IN PULONG VirtualAddress,
+                      IN PULONG_PTR VirtualAddress,
                       IN ULONG Alignment)
 {
     ULONG PAddress;
-    PVOID NewPAddress;
-    ULONG VAddress;
+    ULONG NewPAddress;
+    ULONG_PTR VAddress;
 
     //DPRINT_EHCI("EHCI_AlignHwStructure: *PhysicalAddress - %X, *VirtualAddress - %X, Alignment - %x\n",
     //             *PhysicalAddress,
@@ -751,12 +751,12 @@ EHCI_AlignHwStructure(IN PEHCI_EXTENSION EhciExtension,
     PAddress = *PhysicalAddress;
     VAddress = *VirtualAddress;
 
-    NewPAddress = PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+    NewPAddress = (ULONG)(ULONG_PTR)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
 
-    if (NewPAddress != PAGE_ALIGN(*PhysicalAddress))
+    if (NewPAddress != (ULONG)(ULONG_PTR)PAGE_ALIGN(*PhysicalAddress))
     {
-        VAddress += (ULONG)NewPAddress - PAddress;
-        PAddress = (ULONG)PAGE_ALIGN(*PhysicalAddress + Alignment - 1);
+        VAddress += NewPAddress - PAddress;
+        PAddress = NewPAddress;
 
         DPRINT("EHCI_AlignHwStructure: VAddress - %X, PAddress - %X\n",
                VAddress,
@@ -789,7 +789,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
     {
         RtlZeroMemory(DummyQH, sizeof(EHCI_HCD_QH));
 
-        PAddress.AsULONG = (ULONG)HcResourcesVA->PeriodicFrameList[Frame];
+        PAddress.AsULONG = HcResourcesVA->PeriodicFrameList[Frame];
 
         DummyQH->sqh.HwQH.HorizontalLink.AsULONG = PAddress.AsULONG;
         DummyQH->sqh.HwQH.CurrentTD = 0;
@@ -816,7 +816,7 @@ EHCI_AddDummyQHs(IN PEHCI_EXTENSION EhciExtension)
         PAddress.Reserved = 0;
         PAddress.Type = EHCI_LINK_TYPE_QH;
 
-        HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)PAddress.AsULONG;
+        HcResourcesVA->PeriodicFrameList[Frame] = PAddress.AsULONG;
 
         DummyQH++;
         DummyQhPA += sizeof(EHCI_HCD_QH);
@@ -874,7 +874,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
 {
     PEHCI_HW_REGISTERS OperationalRegs;
     PEHCI_HC_RESOURCES HcResourcesVA;
-    PEHCI_HC_RESOURCES HcResourcesPA;
+    ULONG HcResourcesPA;
     PEHCI_STATIC_QH AsyncHead;
     ULONG AsyncHeadPA;
     PEHCI_STATIC_QH PeriodicHead;
@@ -892,7 +892,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     OperationalRegs = EhciExtension->OperationalRegs;
 
     HcResourcesVA = (PEHCI_HC_RESOURCES)BaseVA;
-    HcResourcesPA = (PEHCI_HC_RESOURCES)BasePA;
+    HcResourcesPA = BasePA;
 
     EhciExtension->HcResourcesVA = HcResourcesVA;
     EhciExtension->HcResourcesPA = BasePA;
@@ -900,7 +900,7 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     /* Asynchronous Schedule */
 
     AsyncHead = &HcResourcesVA->AsyncHead;
-    AsyncHeadPA = (ULONG)&HcResourcesPA->AsyncHead;
+    AsyncHeadPA = HcResourcesPA + FIELD_OFFSET(EHCI_HC_RESOURCES, AsyncHead);
 
     RtlZeroMemory(AsyncHead, sizeof(EHCI_STATIC_QH));
 
@@ -921,13 +921,13 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
     /* Periodic Schedule */
 
     PeriodicHead = &HcResourcesVA->PeriodicHead[0];
-    PeriodicHeadPA = (ULONG)&HcResourcesPA->PeriodicHead[0];
+    PeriodicHeadPA = HcResourcesPA + FIELD_OFFSET(EHCI_HC_RESOURCES, PeriodicHead[0]);
 
     for (ix = 0; ix < (INTERRUPT_ENDPOINTs + 1); ix++)
     {
         EHCI_AlignHwStructure(EhciExtension,
                               &PeriodicHeadPA,
-                              (PULONG)&PeriodicHead,
+                              (PULONG_PTR)&PeriodicHead,
                               80);
 
         EhciExtension->PeriodicHead[ix] = PeriodicHead;
@@ -950,16 +950,16 @@ EHCI_InitializeSchedule(IN PEHCI_EXTENSION EhciExtension,
         //            Frame,
         //            StaticHeadPA);
 
-        HcResourcesVA->PeriodicFrameList[Frame] = (PEHCI_STATIC_QH)StaticHeadPA.AsULONG;
+        HcResourcesVA->PeriodicFrameList[Frame] = StaticHeadPA.AsULONG;
     }
 
     EhciExtension->IsoDummyQHListVA = &HcResourcesVA->IsoDummyQH[0];
-    EhciExtension->IsoDummyQHListPA = (ULONG)&HcResourcesPA->IsoDummyQH[0];
+    EhciExtension->IsoDummyQHListPA = HcResourcesPA + FIELD_OFFSET(EHCI_HC_RESOURCES, IsoDummyQH[0]);
 
     EHCI_AddDummyQHs(EhciExtension);
 
     WRITE_REGISTER_ULONG(&OperationalRegs->PeriodicListBase,
-                         EhciExtension->HcResourcesPA);
+                         EhciExtension->HcResourcesPA + FIELD_OFFSET(EHCI_HC_RESOURCES, PeriodicFrameList));
 
     WRITE_REGISTER_ULONG(&OperationalRegs->AsyncListBase,
                          NextLink.AsULONG);
@@ -1950,7 +1950,7 @@ EHCI_ControlTransfer(IN PEHCI_EXTENSION EhciExtension,
     FirstTD->TdFlags |= EHCI_HCD_TD_FLAG_PROCESSED;
     FirstTD->EhciTransfer = EhciTransfer;
 
-    FirstTD->HwTD.Buffer[0] = (ULONG)&((PEHCI_HCD_TD)(FirstTD->PhysicalAddress))->SetupPacket;
+    FirstTD->HwTD.Buffer[0] = FirstTD->PhysicalAddress + FIELD_OFFSET(EHCI_HCD_TD, SetupPacket);
     FirstTD->HwTD.Buffer[1] = 0;
     FirstTD->HwTD.Buffer[2] = 0;
     FirstTD->HwTD.Buffer[3] = 0;
@@ -2546,7 +2546,7 @@ EHCI_AbortAsyncTransfer(IN PEHCI_EXTENSION EhciExtension,
         }
 
         LastTD = TD;
-        NextTD = ((PEHCI_HCD_TD)(LastTD->PhysicalAddress))->HwTD.NextTD;
+        NextTD = LastTD->PhysicalAddress + FIELD_OFFSET(EHCI_HCD_TD, HwTD.NextTD);
 
         PrevTD->HwTD.NextTD = LastTD->PhysicalAddress;
         PrevTD->HwTD.AlternateNextTD = LastTD->PhysicalAddress;
