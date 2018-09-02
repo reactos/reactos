@@ -2624,7 +2624,7 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 
     QH = EhciEndpoint->QH;
 
-    if ( !(QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE) )
+    if (!(QH->sqh.QhFlags & EHCI_QH_FLAG_IN_SCHEDULE))
         return;
 
     DPRINT("EHCI_RemoveQhFromPeriodicList: EhciEndpoint - %p, QH - %X, EhciEndpoint->StaticQH - %p\n",
@@ -2637,9 +2637,9 @@ EHCI_RemoveQhFromPeriodicList(IN PEHCI_EXTENSION EhciExtension,
 
     PrevHead->sqh.NextHead = NextHead;
 
-    if ( NextHead )
+    if (NextHead)
     {
-        if ( !(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC) )
+        if (!(NextHead->sqh.QhFlags & EHCI_QH_FLAG_STATIC))
             NextHead->sqh.PrevHead = PrevHead;
 
         NextQhPA = NextHead->sqh.PhysicalAddress;
