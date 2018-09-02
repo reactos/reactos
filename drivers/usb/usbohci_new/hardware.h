@@ -49,8 +49,6 @@
 #define OHCI_TD_CONDITION_BUFFER_UNDERRUN   0x0D
 #define OHCI_TD_CONDITION_NOT_ACCESSED      0x0E
 
-#define OHCI_RH_STATUS_GOOD  1
-
 typedef union _OHCI_TRANSFER_CONTROL {
   struct {
     ULONG Reserved       : 18;

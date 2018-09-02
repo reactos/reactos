@@ -97,7 +97,7 @@ OHCI_RH_GetStatus(IN PVOID ohciExtension,
                   IN PUSHORT Status)
 {
     DPRINT("OHCI_RH_GetStatus: \n");
-    *Status = OHCI_RH_STATUS_GOOD;
+    *Status = USB_GETSTATUS_SELF_POWERED;
     return MP_STATUS_SUCCESS;
 }
 

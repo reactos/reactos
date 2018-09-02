@@ -34,7 +34,7 @@ UhciRHGetStatus(IN PVOID uhciExtension,
                 IN PUSHORT Status)
 {
     DPRINT("UhciRHGetStatus: ...\n");
-    *Status = UHCI_RH_STATUS_SUCCESS;
+    *Status = USB_GETSTATUS_SELF_POWERED;
     return MP_STATUS_SUCCESS;
 }
 
