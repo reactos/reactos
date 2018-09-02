@@ -3065,31 +3065,29 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
 
     if (TD == CurrentTD)
     {
-        if (TD == EhciEndpoint->HcdTailP ||
-            TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
+        if (TD != EhciEndpoint->HcdTailP &&
+            !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE))
         {
-            goto Next;
+            if (TD->NextHcdTD && TD->HwTD.NextTD != TD->NextHcdTD->PhysicalAddress)
+                TD->HwTD.NextTD = TD->NextHcdTD->PhysicalAddress;
+
+            if (TD->AltNextHcdTD &&
+                TD->HwTD.AlternateNextTD != TD->AltNextHcdTD->PhysicalAddress)
+            {
+                TD->HwTD.AlternateNextTD = TD->AltNextHcdTD->PhysicalAddress;
+            }
+
+            if (QH->sqh.HwQH.CurrentTD == TD->PhysicalAddress &&
+                !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE) &&
+                (QH->sqh.HwQH.NextTD != TD->HwTD.NextTD ||
+                 QH->sqh.HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
+            {
+                QH->sqh.HwQH.NextTD = TD->HwTD.NextTD;
+                QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
+            }
+
+            EHCI_InterruptNextSOF(EhciExtension);
         }
-
-        if (TD->NextHcdTD && TD->HwTD.NextTD != TD->NextHcdTD->PhysicalAddress)
-            TD->HwTD.NextTD = TD->NextHcdTD->PhysicalAddress;
-
-        if (TD->AltNextHcdTD &&
-            TD->HwTD.AlternateNextTD != TD->AltNextHcdTD->PhysicalAddress)
-        {
-            TD->HwTD.AlternateNextTD = TD->AltNextHcdTD->PhysicalAddress;
-        }
-
-        if (QH->sqh.HwQH.CurrentTD == TD->PhysicalAddress &&
-            !(TD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE) && 
-            (QH->sqh.HwQH.NextTD != TD->HwTD.NextTD ||
-             QH->sqh.HwQH.AlternateNextTD != TD->HwTD.AlternateNextTD))
-        {
-            QH->sqh.HwQH.NextTD = TD->HwTD.NextTD;
-            QH->sqh.HwQH.AlternateNextTD = TD->HwTD.AlternateNextTD;
-        }
-
-        EHCI_InterruptNextSOF(EhciExtension);
     }
     else
     {
@@ -3106,8 +3104,6 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
             TD = TD->NextHcdTD;
         }
     }
-
-Next:
 
     if (CurrentTD->HwTD.Token.Status & EHCI_TOKEN_STATUS_ACTIVE)
     {
