@@ -3093,7 +3093,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     }
     else
     {
-        do
+        while (TD != CurrentTD)
         {
             ASSERT((TD->TdFlags & EHCI_HCD_TD_FLAG_DUMMY) == 0);
 
@@ -3105,7 +3105,6 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
             InsertTailList(&EhciEndpoint->ListTDs, &TD->DoneLink);
             TD = TD->NextHcdTD;
         }
-        while (TD != CurrentTD);
     }
 
 Next:
