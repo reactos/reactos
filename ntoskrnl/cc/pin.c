@@ -83,7 +83,6 @@ CcMapData (
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
             FileObject, FileOffset, Length, Flags);
-        ExRaiseStatus(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
 
