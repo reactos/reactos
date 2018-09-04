@@ -269,8 +269,10 @@ AC_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
             return E_FAIL;
         }
     }
+
     cloned->m_capacity = cloned->m_cstrs = count;
     cloned->m_hwndEdit = this->m_hwndEdit;
+    cloned->m_dwSHACF_ = this->m_dwSHACF_;
 
     *ppenum = (IEnumString *)cloned;
     return S_OK;
