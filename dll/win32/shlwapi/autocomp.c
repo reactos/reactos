@@ -584,7 +584,7 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO_, LPDWORD pdwSHACF_)
 
     if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_OFF)
     {
-        ;
+        // do nothing
     }
     else if (dwSHACF_ & SHACF_AUTOAPPEND_FORCE_ON)
     {
@@ -603,7 +603,7 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO_, LPDWORD pdwSHACF_)
 
     if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_OFF)
     {
-        ;
+        // do nothing
     }
     else if (dwSHACF_ & SHACF_AUTOSUGGEST_FORCE_ON)
     {
