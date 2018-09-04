@@ -1339,6 +1339,24 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
 done:
+    /* Update the logon time/count or the bad password time/count */
+    if ((UserHandle != NULL) &&
+        (Status == STATUS_SUCCESS || Status == STATUS_WRONG_PASSWORD))
+    {
+        SAMPR_USER_INFO_BUFFER InternalInfo;
+
+        RtlZeroMemory(&InternalInfo, sizeof(InternalInfo));
+
+        if (Status == STATUS_SUCCESS)
+            InternalInfo.Internal2.Flags = USER_LOGON_SUCCESS;
+        else
+            InternalInfo.Internal2.Flags = USER_LOGON_BAD_PASSWORD;
+
+        SamrSetInformationUser(UserHandle,
+                               UserInternal2Information,
+                               &InternalInfo);
+    }
+
     /* Return the account name */
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AccountName != NULL)
