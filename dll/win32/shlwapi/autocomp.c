@@ -270,6 +270,10 @@ AC_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
     return S_OK;
 }
 
+#define IS_IGNORED_DOTS(sz) ( \
+    sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) \
+)
+
 /* directories only */
 static void
 AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
@@ -287,11 +291,8 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
     {
         do
         {
-            if (wcscmp(find.cFileName, L".") == 0 ||
-                wcscmp(find.cFileName, L"..") == 0)
-            {
+            if (IS_IGNORED_DOTS(find.cFileName))
                 continue;
-            }
 
             if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
                 continue;
@@ -323,11 +324,8 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
     {
         do
         {
-            if (wcscmp(find.cFileName, L".") == 0 ||
-                wcscmp(find.cFileName, L"..") == 0)
-            {
+            if (IS_IGNORED_DOTS(find.cFileName))
                 continue;
-            }
 
             if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
                 continue;
