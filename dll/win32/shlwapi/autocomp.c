@@ -317,7 +317,7 @@ AC_DoDir(AC_EnumString *pES, LPCWSTR pszDir, BOOL bDirOnly)
 }
 
 static void
-AC_DoFiles(AC_EnumString *pES, BOOL bDirOnly)
+AC_DoDrives(AC_EnumString *pES, BOOL bDirOnly)
 {
     WCHAR sz[4];
     UINT uType;
@@ -463,7 +463,7 @@ AC_EnumString_Reset(IEnumString* This)
         }
         else
         {
-            AC_DoFiles(this, bDirOnly);
+            AC_DoDrives(this, bDirOnly);
         }
     }
 
