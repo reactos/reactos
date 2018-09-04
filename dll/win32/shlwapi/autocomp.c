@@ -551,7 +551,7 @@ AC_EnumString_Construct(SIZE_T capacity)
     lpVtbl->Clone = AC_EnumString_Clone;
     ret->lpVtbl = lpVtbl;
 
-    ret->m_pstrs = (BSTR *)CoTaskMemAlloc(capacity * sizeof(BSTR));;
+    ret->m_pstrs = (BSTR *)CoTaskMemAlloc(capacity * sizeof(BSTR));
     if (ret->m_pstrs)
     {
         ret->m_cRefs = 1;
