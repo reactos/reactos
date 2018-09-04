@@ -31,7 +31,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#define NUM_GROW 64
+#define INITIAL_CAPACITY    256
+#define NUM_GROW            64
 
 typedef struct AC_EnumStringVtbl
 {
@@ -596,7 +597,7 @@ static IEnumString *
 AC_CreateEnumString(IAutoComplete2 *pAC2, HWND hwndEdit, DWORD dwSHACF)
 {
     IEnumString *ret;
-    AC_EnumString *this = AC_EnumString_Construct(256);
+    AC_EnumString *this = AC_EnumString_Construct(INITIAL_CAPACITY);
     if (!this)
         return NULL;
 
