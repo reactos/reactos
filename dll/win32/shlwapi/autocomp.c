@@ -282,9 +282,7 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
     WIN32_FIND_DATAW find;
 
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    PathAddBackslashW(szPath);
-
-    StringCbCatW(szPath, sizeof(szPath), L"*");
+    PathAppendW(szPath, L"*");
     pch = PathFindFileNameW(szPath);
     assert(pch);
 
@@ -302,8 +300,7 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
                 continue;
 
             *pch = UNICODE_NULL;
-            PathAddBackslashW(szPath);
-            StringCbCatW(szPath, sizeof(szPath), find.cFileName);
+            PathAppendW(szPath, find.cFileName);
 
             AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
@@ -320,9 +317,7 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
     WIN32_FIND_DATAW find;
 
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    PathAddBackslashW(szPath);
-
-    StringCbCatW(szPath, sizeof(szPath), L"*");
+    PathAppendW(szPath, L"*");
     pch = PathFindFileNameW(szPath);
     assert(pch);
 
@@ -338,8 +333,7 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
                 continue;
 
             *pch = UNICODE_NULL;
-            PathAddBackslashW(szPath);
-            StringCbCatW(szPath, sizeof(szPath), find.cFileName);
+            PathAppendW(szPath, find.cFileName);
 
             AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
@@ -474,8 +468,8 @@ AC_DoURLMRU(AC_EnumString *pES)
 static HRESULT STDMETHODCALLTYPE
 AC_EnumString_Reset(IEnumString* This)
 {
-    WCHAR szText[MAX_PATH];
     DWORD attrs;
+    WCHAR szText[MAX_PATH];
     AC_EnumString *this = (AC_EnumString *)This;
     DWORD dwSHACF_ = this->m_dwSHACF_;
 
