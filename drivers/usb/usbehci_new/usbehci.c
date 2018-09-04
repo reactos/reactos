@@ -1233,7 +1233,7 @@ EHCI_StartController(IN PVOID ehciExtension,
     }
 
     /* Port routing control logic default-routes all ports to this HC */
-    WRITE_REGISTER_ULONG(&OperationalRegs->ConfiFlag, 1);
+    WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag, 1);
     EhciExtension->PortRoutingControl = 1;
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
@@ -1354,7 +1354,7 @@ EHCI_ResumeController(IN PVOID ehciExtension)
     if (!(RoutingControl & 1))
     {
         EhciExtension->PortRoutingControl = RoutingControl | 1;
-        WRITE_REGISTER_ULONG(&OperationalRegs->ConfiFlag, RoutingControl | 1);
+        WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag, RoutingControl | 1);
 
         return MP_STATUS_HW_ERROR;
     }

@@ -167,7 +167,7 @@ typedef struct _EHCI_HW_REGISTERS {
   ULONG PeriodicListBase; // R/W (Writes must be DWord Writes)
   ULONG AsyncListBase; // Read/Write (Writes must be DWord Writes) 
   ULONG Reserved[9];
-  ULONG ConfiFlag; // R/W
+  ULONG ConfigFlag; // R/W
   EHCI_PORT_STATUS_CONTROL PortControl[15]; // (1-15) RO, R/W, R/WC (field dependent) 
 } EHCI_HW_REGISTERS, *PEHCI_HW_REGISTERS;
 
