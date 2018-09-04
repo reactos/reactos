@@ -381,10 +381,10 @@ AC_DoFiles(AC_EnumString *pES, BOOL bDirOnly)
                 case DRIVE_UNKNOWN:
                 case DRIVE_NO_ROOT_DIR:
                 case DRIVE_REMOVABLE:
-                case DRIVE_REMOTE:
                 case DRIVE_CDROM:
-                case DRIVE_RAMDISK:
                     break;
+                case DRIVE_REMOTE:
+                case DRIVE_RAMDISK:
                 case DRIVE_FIXED:
                     AC_DoDir(pES, sz, bDirOnly);
                     break;
