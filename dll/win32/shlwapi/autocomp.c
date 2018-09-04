@@ -353,7 +353,7 @@ static void
 AC_DoURLHistory(AC_EnumString *pES)
 {
     static const LPCWSTR
-    pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
+        pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
     HKEY hKey;
     LONG result;
     DWORD i, cbValue;
@@ -386,7 +386,7 @@ static void
 AC_DoURLMRU(AC_EnumString *pES)
 {
     static const LPCWSTR
-    pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
+        pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
     HKEY hKey;
     LONG result;
     DWORD i, cbValue;
