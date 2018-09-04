@@ -281,83 +281,38 @@ AC_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
 #define IS_IGNORED_DOTS(sz) \
     ( sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) )
 
-/* directories only */
-static void
-AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
-{
-    LPWSTR pch;
-    WCHAR szPath[MAX_PATH];
-    HANDLE hFind;
-    WIN32_FIND_DATAW find;
-
-    StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    if (!PathAppendW(szPath, L"*"))
-        return;
-
-    pch = PathFindFileNameW(szPath);
-    assert(pch);
-
-    hFind = FindFirstFileW(szPath, &find);
-    if (hFind != INVALID_HANDLE_VALUE)
-    {
-        do
-        {
-            if (IS_IGNORED_DOTS(find.cFileName))
-                continue;
-
-            if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-                continue;
-            if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                continue;
-
-            *pch = UNICODE_NULL;
-            if (PathAppendW(szPath, find.cFileName))
-                AC_EnumString_AddString(pES, szPath);
-        } while (FindNextFileW(hFind, &find));
-    }
-}
-
-/* all filesystem objects */
-static void
-AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
-{
-    LPWSTR pch;
-    WCHAR szPath[MAX_PATH];
-    HANDLE hFind;
-    WIN32_FIND_DATAW find;
-
-    StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    if (!PathAppendW(szPath, L"*"))
-        return;
-
-    pch = PathFindFileNameW(szPath);
-    assert(pch);
-
-    hFind = FindFirstFileW(szPath, &find);
-    if (hFind != INVALID_HANDLE_VALUE)
-    {
-        do
-        {
-            if (IS_IGNORED_DOTS(find.cFileName))
-                continue;
-
-            if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-                continue;
-
-            *pch = UNICODE_NULL;
-            if (PathAppendW(szPath, find.cFileName))
-                AC_EnumString_AddString(pES, szPath);
-        } while (FindNextFileW(hFind, &find));
-    }
-}
-
 static inline void
 AC_DoDir(AC_EnumString *pES, LPCWSTR pszDir, BOOL bDirOnly)
 {
-    if (bDirOnly)
-        AC_DoDir0(pES, pszDir);
-    else
-        AC_DoDir1(pES, pszDir);
+    LPWSTR pch;
+    WCHAR szPath[MAX_PATH];
+    HANDLE hFind;
+    WIN32_FIND_DATAW find;
+
+    StringCbCopyW(szPath, sizeof(szPath), pszDir);
+    if (!PathAppendW(szPath, L"*"))
+        return;
+
+    pch = PathFindFileNameW(szPath);
+    assert(pch);
+
+    hFind = FindFirstFileW(szPath, &find);
+    if (hFind != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+            if (IS_IGNORED_DOTS(find.cFileName))
+                continue;
+            if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+                continue;
+            if (bDirOnly && !(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                continue;
+
+            *pch = UNICODE_NULL;
+            if (PathAppendW(szPath, find.cFileName))
+                AC_EnumString_AddString(pES, szPath);
+        } while (FindNextFileW(hFind, &find));
+    }
 }
 
 static void
