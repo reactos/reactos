@@ -549,8 +549,8 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     else
     {
         cbValue = sizeof(szValue);
-        if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
-                                         &dwType, szValue, &cbValue) ||
+        if (SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
+                        &dwType, szValue, &cbValue) != ERROR_SUCCESS ||
             _wcsicmp(szValue, L"no") != 0)
         {
             dwACO |= ACO_AUTOSUGGEST;
@@ -568,8 +568,8 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     else
     {
         cbValue = sizeof(szValue);
-        if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete,
-                                         L"AutoSuggest", &dwType, szValue, &cbValue) ||
+        if (SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"AutoSuggest",
+                        &dwType, szValue, &cbValue) != ERROR_SUCCESS ||
             _wcsicmp(szValue, L"no") != 0)
         {
             dwACO |= ACO_AUTOSUGGEST;
