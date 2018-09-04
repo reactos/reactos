@@ -79,11 +79,11 @@ typedef struct AC_EnumString
 static void
 AC_EnumString_ResetContent(AC_EnumString *this)
 {
-    SIZE_T i, count = this->m_cstrs;
+    SIZE_T count = this->m_cstrs;
     BSTR *pstrs = this->m_pstrs;
-    for (i = 0; i < count; ++i)
+    while (count-- > 0)
     {
-        SysFreeString(pstrs[i]);
+        SysFreeString(pstrs[count]);
     }
     CoTaskMemFree(this->m_pstrs);
     this->m_pstrs = NULL;
