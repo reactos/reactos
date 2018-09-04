@@ -27,6 +27,7 @@
 #include "shlobj.h"
 #include "shlwapi.h"
 #include <assert.h>
+#include <strsafe.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -189,8 +190,7 @@ AC_EnumString_Next(
     LPOLESTR *rgelt,
     ULONG *pceltFetched)
 {
-    SIZE_T ielt, cch, cb, istr, cstrs;
-    BSTR *pstrs;
+    SIZE_T ielt;
     AC_EnumString *this = (AC_EnumString *)This;
 
     if (!rgelt || !pceltFetched)
@@ -202,23 +202,16 @@ AC_EnumString_Next(
     if (this->m_istr >= this->m_cstrs)
         return S_FALSE;
 
-    istr = this->m_istr;
-    cstrs = this->m_cstrs;
-    pstrs = this->m_pstrs;
-    for (ielt = 0; ielt < celt && istr < cstrs; ++ielt, ++istr)
+    ielt = 0;
+    for (; ielt < celt && this->m_istr < this->m_cstrs; ++ielt, ++this->m_istr)
     {
-        cch = (SysStringLen(pstrs[istr]) + 1);
-        cb = cch * sizeof(WCHAR);
-        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
-        if (!rgelt[ielt])
+        SIZE_T cch = (wcslen(this->m_pstrs[this->m_istr]) + 1);
+
+        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
+        if (rgelt[ielt])
         {
-            while (ielt-- > 0)
-            {
-                CoTaskMemFree(rgelt[ielt]);
-            }
-            return E_OUTOFMEMORY;
+            wcscpy(rgelt[ielt], this->m_pstrs[this->m_istr]);
         }
-        CopyMemory(rgelt[ielt], pstrs[istr], cb);
     }
 
     *pceltFetched = ielt;
@@ -282,15 +275,19 @@ AC_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
 static void
 AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
 {
-    WCHAR szCurDir[MAX_PATH], szPath[MAX_PATH];
+    LPWSTR pch;
+    WCHAR szPath[MAX_PATH];
     HANDLE hFind;
     WIN32_FIND_DATAW find;
 
-    GetCurrentDirectoryW(ARRAYSIZE(szCurDir), szCurDir);
-    if (!SetCurrentDirectoryW(pszDir))
-        return;
+    StringCbCopyW(szPath, sizeof(szPath), pszDir);
+    PathAddBackslashW(szPath);
 
-    hFind = FindFirstFileW(L"*", &find);
+    StringCbCatW(szPath, sizeof(szPath), L"*");
+    pch = PathFindFileNameW(szPath);
+    assert(pch);
+
+    hFind = FindFirstFileW(szPath, &find);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -303,25 +300,30 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
             if (!(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 continue;
 
-            GetFullPathNameW(find.cFileName, ARRAYSIZE(szPath), szPath, NULL);
+            *pch = UNICODE_NULL;
+            PathAddBackslashW(szPath);
+            StringCbCatW(szPath, sizeof(szPath), find.cFileName);
+
             AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
     }
-
-    SetCurrentDirectoryW(szCurDir);
 }
 
 /* all filesystem objects */
 static void
 AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
 {
-    WCHAR szCurDir[MAX_PATH], szPath[MAX_PATH];
+    LPWSTR pch;
+    WCHAR szPath[MAX_PATH];
     HANDLE hFind;
     WIN32_FIND_DATAW find;
 
-    GetCurrentDirectoryW(ARRAYSIZE(szCurDir), szCurDir);
-    if (!SetCurrentDirectoryW(pszDir))
-        return;
+    StringCbCopyW(szPath, sizeof(szPath), pszDir);
+    PathAddBackslashW(szPath);
+
+    StringCbCatW(szPath, sizeof(szPath), L"*");
+    pch = PathFindFileNameW(szPath);
+    assert(pch);
 
     hFind = FindFirstFileW(L"*", &find);
     if (hFind != INVALID_HANDLE_VALUE)
@@ -334,12 +336,13 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
             if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
                 continue;
 
-            GetFullPathNameW(find.cFileName, ARRAYSIZE(szPath), szPath, NULL);
+            *pch = UNICODE_NULL;
+            PathAddBackslashW(szPath);
+            StringCbCatW(szPath, sizeof(szPath), find.cFileName);
+
             AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
     }
-
-    SetCurrentDirectoryW(szCurDir);
 }
 
 static inline void
@@ -400,7 +403,7 @@ AC_DoURLHistory(AC_EnumString *pES)
     {
         for (i = 1; i <= 50; ++i)
         {
-            wsprintfW(szName, L"url%lu", i);
+            StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
             szValue[0] = 0;
             cbValue = sizeof(szValue);
