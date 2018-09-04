@@ -490,43 +490,22 @@ AC_EnumString_Reset(IEnumString* This)
 
     if (dwSHACF_ & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        if (dwSHACF_ & SHACF_FILESYS_DIRS)
+        BOOL bDirOnly = !!(dwSHACF_ & SHACF_FILESYS_DIRS);
+        if (attrs != INVALID_FILE_ATTRIBUTES)
         {
-            if (attrs != INVALID_FILE_ATTRIBUTES)
+            if (attrs & FILE_ATTRIBUTE_DIRECTORY)
             {
-                if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    AC_DoDir(this, szText, TRUE);
-                }
+                AC_DoDir(this, szText, bDirOnly);
             }
-            else if (szText[0])
-            {
-                PathRemoveFileSpecW(szText);
-                AC_DoDir(this, szText, TRUE);
-            }
-            else
-            {
-                AC_DoFiles(this, TRUE);
-            }
+        }
+        else if (szText[0])
+        {
+            PathRemoveFileSpecW(szText);
+            AC_DoDir(this, szText, bDirOnly);
         }
         else
         {
-            if (attrs != INVALID_FILE_ATTRIBUTES)
-            {
-                if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-                {
-                    AC_DoDir(this, szText, FALSE);
-                }
-                else
-                {
-                    PathRemoveFileSpecW(szText);
-                    AC_DoDir(this, szText, FALSE);
-                }
-            }
-            else
-            {
-                AC_DoFiles(this, FALSE);
-            }
+            AC_DoFiles(this, bDirOnly);
         }
     }
 
