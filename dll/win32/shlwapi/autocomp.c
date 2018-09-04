@@ -212,10 +212,15 @@ AC_EnumString_Next(
         cb = cch * sizeof(WCHAR);
 
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
-        if (rgelt[ielt])
+        if (!rgelt[ielt])
         {
-            CopyMemory(rgelt[ielt], pstrs[this->m_istr], cb);
+            while (ielt-- > 0)
+            {
+                CoTaskMemFree(rgelt[ielt]);
+            }
+            return S_FALSE;
         }
+        CopyMemory(rgelt[ielt], pstrs[this->m_istr], cb);
     }
 
     *pceltFetched = ielt;
