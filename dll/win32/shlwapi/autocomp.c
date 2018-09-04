@@ -292,7 +292,9 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
     WIN32_FIND_DATAW find;
 
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    PathAppendW(szPath, L"*");
+    if (!PathAppendW(szPath, L"*"))
+        return;
+
     pch = PathFindFileNameW(szPath);
     assert(pch);
 
@@ -310,9 +312,8 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
                 continue;
 
             *pch = UNICODE_NULL;
-            PathAppendW(szPath, find.cFileName);
-
-            AC_EnumString_AddString(pES, szPath);
+            if (PathAppendW(szPath, find.cFileName))
+                AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
     }
 }
@@ -327,7 +328,9 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
     WIN32_FIND_DATAW find;
 
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    PathAppendW(szPath, L"*");
+    if (!PathAppendW(szPath, L"*"))
+        return;
+
     pch = PathFindFileNameW(szPath);
     assert(pch);
 
@@ -343,9 +346,8 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
                 continue;
 
             *pch = UNICODE_NULL;
-            PathAppendW(szPath, find.cFileName);
-
-            AC_EnumString_AddString(pES, szPath);
+            if (PathAppendW(szPath, find.cFileName))
+                AC_EnumString_AddString(pES, szPath);
         } while (FindNextFileW(hFind, &find));
     }
 }
