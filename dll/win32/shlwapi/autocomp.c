@@ -26,6 +26,7 @@
 #include "winreg.h"
 #include "shlobj.h"
 #include "shlwapi.h"
+#include <assert.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -146,6 +147,7 @@ AC_EnumString_AddBStrNoGrow(AC_EnumString *this, BSTR bstr)
     if (!bstr)
         return FALSE;
 
+    assert(this->m_cstrs + 1 < this->m_capacity);
     this->m_pstrs[this->m_cstrs++] = bstr;
     return TRUE;
 }
