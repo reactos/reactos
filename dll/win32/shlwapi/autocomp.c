@@ -33,6 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define INITIAL_CAPACITY    256
 #define NUM_GROW            64
+#define MAX_TYPED_URLS      50
 
 typedef struct AC_EnumStringVtbl
 {
@@ -364,7 +365,7 @@ AC_DoURLHistory(AC_EnumString *pES)
     result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
     if (result == ERROR_SUCCESS)
     {
-        for (i = 1; i <= 50; ++i)
+        for (i = 1; i <= MAX_TYPED_URLS; ++i)
         {
             StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
