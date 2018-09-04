@@ -322,7 +322,7 @@ AC_DoFiles(AC_EnumString *pES, BOOL bDirOnly)
     UINT uType;
     DWORD i, dwBits = GetLogicalDrives();
 
-    for (i = 0; i < sizeof(DWORD) * 8; ++i)
+    for (i = 0; i < L'Z' - L'A'; ++i)
     {
         if (dwBits & (1 << i))
         {
