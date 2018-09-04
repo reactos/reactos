@@ -189,7 +189,7 @@ AC_EnumString_Next(
     LPOLESTR *rgelt,
     ULONG *pceltFetched)
 {
-    SIZE_T ielt, cch, istr, cstrs;
+    SIZE_T ielt, cch, cb, istr, cstrs;
     BSTR *pstrs;
     AC_EnumString *this = (AC_EnumString *)This;
 
@@ -208,12 +208,17 @@ AC_EnumString_Next(
     for (ielt = 0; ielt < celt && istr < cstrs; ++ielt, ++istr)
     {
         cch = (SysStringLen(pstrs[istr]) + 1);
-
-        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
-        if (rgelt[ielt])
+        cb = cch * sizeof(WCHAR);
+        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
+        if (!rgelt[ielt])
         {
-            wcscpy(rgelt[ielt], pstrs[istr]);
+            while (ielt-- > 0)
+            {
+                CoTaskMemFree(rgelt[ielt]);
+            }
+            return E_OUTOFMEMORY;
         }
+        CopyMemory(rgelt[ielt], pstrs[istr], cb);
     }
 
     *pceltFetched = ielt;
