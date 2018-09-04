@@ -67,7 +67,7 @@ typedef struct AC_EnumStringVtbl
 typedef struct AC_EnumString
 {
     AC_EnumStringVtbl*  lpVtbl;
-    ULONG               m_cRefs;
+    LONG                m_cRefs;
     ULONG               m_istr;
     SIZE_T              m_cstrs;
     SIZE_T              m_capacity;
