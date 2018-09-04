@@ -27,6 +27,8 @@
 #include "shlobj.h"
 #include "shlwapi.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 #define NUM_GROW 64
 
 typedef struct AC_EnumStringVtbl
