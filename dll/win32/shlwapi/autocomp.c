@@ -152,7 +152,7 @@ static BOOL
 AC_EnumString_AddString(AC_EnumString *this, LPCWSTR str)
 {
     SIZE_T new_capacity;
-    BSTR bstr, *pstr;
+    BSTR bstr, *pstrs;
 
     bstr = SysAllocString(str);
     if (!bstr)
@@ -161,17 +161,17 @@ AC_EnumString_AddString(AC_EnumString *this, LPCWSTR str)
     if (this->m_cstrs + 1 >= this->m_capacity)
     {
         new_capacity = this->m_capacity + NUM_GROW;
-        pstr = (BSTR *)CoTaskMemAlloc(new_capacity * sizeof(BSTR));
-        if (!pstr)
+        pstrs = (BSTR *)CoTaskMemAlloc(new_capacity * sizeof(BSTR));
+        if (!pstrs)
         {
             SysFreeString(bstr);
             return FALSE;
         }
 
-        CopyMemory(pstr, this->m_pstrs, this->m_cstrs * sizeof(BSTR));
+        CopyMemory(pstrs, this->m_pstrs, this->m_cstrs * sizeof(BSTR));
         CoTaskMemFree(this->m_pstrs);
+        this->m_pstrs = pstrs;
         this->m_capacity = new_capacity;
-        this->m_pstrs = pstr;
     }
 
     this->m_pstrs[this->m_cstrs++] = bstr;
@@ -185,7 +185,8 @@ AC_EnumString_Next(
     LPOLESTR *rgelt,
     ULONG *pceltFetched)
 {
-    SIZE_T ielt;
+    SIZE_T ielt, cch, istr, cstrs;
+    BSTR *pstrs;
     AC_EnumString *this = (AC_EnumString *)This;
 
     if (!rgelt || !pceltFetched)
@@ -198,14 +199,17 @@ AC_EnumString_Next(
         return S_FALSE;
 
     ielt = 0;
-    for (; ielt < celt && this->m_istr < this->m_cstrs; ++ielt, ++this->m_istr)
+    istr = this->m_istr;
+    cstrs = this->m_cstrs;
+    pstrs = this->m_pstrs;
+    for (; ielt < celt && istr < cstrs; ++ielt, ++istr)
     {
-        SIZE_T cch = (wcslen(this->m_pstrs[this->m_istr]) + 1);
+        cch = (SysStringLen(pstrs[istr]) + 1);
 
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
         if (rgelt[ielt])
         {
-            wcscpy(rgelt[ielt], this->m_pstrs[this->m_istr]);
+            wcscpy(rgelt[ielt], pstrs[istr]);
         }
     }
 
@@ -279,8 +283,8 @@ AC_DoDir0(AC_EnumString *pES, LPCWSTR pszDir)
     {
         do
         {
-            if (lstrcmpW(find.cFileName, L".") == 0 ||
-                lstrcmpW(find.cFileName, L"..") == 0)
+            if (wcscmp(find.cFileName, L".") == 0 ||
+                wcscmp(find.cFileName, L"..") == 0)
             {
                 continue;
             }
@@ -315,8 +319,8 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
     {
         do
         {
-            if (lstrcmpW(find.cFileName, L".") == 0 ||
-                lstrcmpW(find.cFileName, L"..") == 0)
+            if (wcscmp(find.cFileName, L".") == 0 ||
+                wcscmp(find.cFileName, L"..") == 0)
             {
                 continue;
             }
@@ -440,8 +444,8 @@ AC_DoURLMRU(AC_EnumString *pES)
                 if (result != ERROR_SUCCESS)
                     continue;
 
-                cch = lstrlenW(szValue);
-                if (cch >= 2 && lstrcmpW(&szValue[cch - 2], L"\\1") == 0)
+                cch = wcslen(szValue);
+                if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
                 {
                     szValue[cch - 2] = 0;
                 }
@@ -594,7 +598,7 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO_, LPDWORD pdwSHACF_)
         cbValue = sizeof(szValue);
         if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
                                          &dwType, szValue, &cbValue) &&
-            lstrcmpiW(szValue, L"no") != 0)
+            _wcsicmp(szValue, L"no") != 0)
         {
             dwACO_ |= ACO_AUTOSUGGEST;
         }
@@ -613,7 +617,7 @@ AC_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO_, LPDWORD pdwSHACF_)
         cbValue = sizeof(szValue);
         if (ERROR_SUCCESS != SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete,
                                          L"AutoSuggest", &dwType, szValue, &cbValue) &&
-            lstrcmpiW(szValue, L"no") != 0)
+            _wcsicmp(szValue, L"no") != 0)
         {
             dwACO_ |= ACO_AUTOSUGGEST;
         }
