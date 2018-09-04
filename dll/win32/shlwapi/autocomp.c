@@ -404,7 +404,7 @@ AC_DoURLMRU(AC_EnumString *pES)
         result = RegQueryValueExW(hKey, L"MRUList", NULL, NULL, (LPBYTE)szMRUList, &cbValue);
         if (result == ERROR_SUCCESS)
         {
-            for (i = 0; i < 26; ++i)
+            for (i = 0; i <= L'z' - L'a'; ++i)
             {
                 if (szMRUList[i] == 0)
                     break;
