@@ -7811,6 +7811,59 @@ done:
 
 
 static NTSTATUS
+SampSetUserInternal2(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get the fixed user attributes */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if ((Buffer->Internal2.Flags & USER_LOGON_SUCCESS) &&
+        ((Buffer->Internal2.Flags & ~USER_LOGON_SUCCESS) == 0))
+    {
+        /* Update the LastLogon time */
+        Status = NtQuerySystemTime(&FixedData.LastLogon);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        FixedData.LogonCount++;
+        FixedData.BadPasswordCount = 0;
+    }
+
+    if ((Buffer->Internal2.Flags & USER_LOGON_BAD_PASSWORD) &&
+        ((Buffer->Internal2.Flags & ~USER_LOGON_BAD_PASSWORD) == 0))
+    {
+        /* Update the LastBadPasswordTime */
+        Status = NtQuerySystemTime(&FixedData.LastBadPasswordTime);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        FixedData.BadPasswordCount++;
+    }
+
+    /* Set the fixed user attributes */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
 SampSetUserAll(PSAM_DB_OBJECT UserObject,
                PSAMPR_USER_INFO_BUFFER Buffer)
 {
@@ -8095,6 +8148,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserAllInformation:
+        case UserInternal2Information:
             DesiredAccess = 0; /* FIXME */
             break;
 
@@ -8217,6 +8271,11 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserInternal1Information:
             Status = SampSetUserInternal1(UserObject,
+                                          Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampSetUserInternal2(UserObject,
                                           Buffer);
             break;
 
