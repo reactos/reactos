@@ -87,7 +87,7 @@ AC_EnumString_ResetContent(AC_EnumString *this)
     {
         SysFreeString(pstrs[count]);
     }
-    CoTaskMemFree(this->m_pstrs);
+    CoTaskMemFree(pstrs);
     this->m_pstrs = NULL;
     this->m_cstrs = this->m_capacity = 0;
     this->m_istr = 0;
