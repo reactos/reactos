@@ -202,11 +202,10 @@ AC_EnumString_Next(
     if (this->m_istr >= this->m_cstrs)
         return S_FALSE;
 
-    ielt = 0;
     istr = this->m_istr;
     cstrs = this->m_cstrs;
     pstrs = this->m_pstrs;
-    for (; ielt < celt && istr < cstrs; ++ielt, ++istr)
+    for (ielt = 0; ielt < celt && istr < cstrs; ++ielt, ++istr)
     {
         cch = (SysStringLen(pstrs[istr]) + 1);
 
