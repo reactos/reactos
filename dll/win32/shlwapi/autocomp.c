@@ -278,9 +278,8 @@ AC_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
     return S_OK;
 }
 
-#define IS_IGNORED_DOTS(sz) ( \
-    sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) \
-)
+#define IS_IGNORED_DOTS(sz) \
+    ( sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) )
 
 /* directories only */
 static void
