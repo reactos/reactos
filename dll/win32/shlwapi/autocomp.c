@@ -321,6 +321,7 @@ AC_DoFiles(AC_EnumString *pES, BOOL bDirOnly)
     WCHAR sz[4];
     UINT uType;
     DWORD i, dwBits = GetLogicalDrives();
+
     for (i = 0; i < sizeof(DWORD) * 8; ++i)
     {
         if (dwBits & (1 << i))
