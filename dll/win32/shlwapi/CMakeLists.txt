@@ -13,6 +13,7 @@ spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     assoc.c
+    autocomp.c
     clist.c
     istream.c
     msgbox.c

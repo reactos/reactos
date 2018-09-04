@@ -2515,25 +2515,6 @@ HRESULT WINAPI UrlCreateFromPathW(LPCWSTR pszPath, LPWSTR pszUrl, LPDWORD pcchUr
 }
 
 /*************************************************************************
- *      SHAutoComplete  	[SHLWAPI.@]
- *
- * Enable auto-completion for an edit control.
- *
- * PARAMS
- *  hwndEdit [I] Handle of control to enable auto-completion for
- *  dwFlags  [I] SHACF_ flags from "shlwapi.h"
- *
- * RETURNS
- *  Success: S_OK. Auto-completion is enabled for the control.
- *  Failure: An HRESULT error code indicating the error.
- */
-HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
-{
-  FIXME("stub\n");
-  return S_FALSE;
-}
-
-/*************************************************************************
  *  MLBuildResURLA	[SHLWAPI.405]
  *
  * Create a Url pointing to a resource in a module.
