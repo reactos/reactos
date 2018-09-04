@@ -206,11 +206,12 @@ AC_EnumString_Next(
     for (; ielt < celt && this->m_istr < this->m_cstrs; ++ielt, ++this->m_istr)
     {
         SIZE_T cch = (wcslen(this->m_pstrs[this->m_istr]) + 1);
+        SIZE_T cb = cch * sizeof(WCHAR);
 
-        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cch * sizeof(WCHAR));
+        rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
         if (rgelt[ielt])
         {
-            wcscpy(rgelt[ielt], this->m_pstrs[this->m_istr]);
+            CopyMemory(rgelt[ielt], this->m_pstrs[this->m_istr], cb);
         }
     }
 
@@ -325,7 +326,7 @@ AC_DoDir1(AC_EnumString *pES, LPCWSTR pszDir)
     pch = PathFindFileNameW(szPath);
     assert(pch);
 
-    hFind = FindFirstFileW(L"*", &find);
+    hFind = FindFirstFileW(szPath, &find);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
