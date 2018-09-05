@@ -4,7 +4,8 @@
 #include <string.h>
 
 #ifdef _MSC_VER
-#define strcasecmp _stricmp
+#define strcasecmp(_String1, _String2) _stricmp(_String1, _String2)
+#define strncasecmp(_String1, _String2, _MaxCount) _strnicmp(_String1, _String2, _MaxCount)
 #endif
 
 #define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
@@ -1126,6 +1127,7 @@ int main(int argc, char *argv[])
 {
     size_t nFileSize;
     char *pszSource, *pszDefFileName = NULL, *pszStubFileName = NULL, *pszLibStubName = NULL;
+    const char* pszVersionOption = "--version=0x";
     char achDllName[40];
     FILE *file;
     int result = 0, i;
@@ -1161,9 +1163,9 @@ int main(int argc, char *argv[])
         {
             pszDllName = argv[i] + 3;
         }
-        else if (strcasecmp(argv[i], "--version=0x") == 0)
+        else if (strncasecmp(argv[i], pszVersionOption, strlen(pszVersionOption)) == 0)
         {
-            guOsVersion = strtoul(argv[i] + sizeof("--version=0x"), NULL, 16);
+            guOsVersion = strtoul(argv[i] + strlen(pszVersionOption), NULL, 16);
         }
         else if (strcasecmp(argv[i], "--implib") == 0)
         {
