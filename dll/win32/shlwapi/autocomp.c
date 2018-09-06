@@ -210,7 +210,7 @@ AC_EnumString_Next(
          ielt < celt && this->m_istr < this->m_cstrs;
          ++ielt, ++this->m_istr)
     {
-        cch = (SysStringLen(pstrs[this->m_istr]) + 1);
+        cch = SysStringLen(pstrs[this->m_istr]) + 1;
         cb = cch * sizeof(WCHAR);
 
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
