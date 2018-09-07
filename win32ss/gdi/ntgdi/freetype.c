@@ -1524,6 +1524,9 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
             Index++;
         }
         break;
+    case TCI_SRCLOCALE:
+        UNIMPLEMENTED;
+        return FALSE;
     default:
         return FALSE;
     }
