@@ -153,6 +153,44 @@ RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
     return Status;
 }
 
+VOID
+NTAPI
+RtlpDeleteRangeListEntry(
+    IN PRTLP_RANGE_LIST_ENTRY DelEntry)
+{
+    PRTLP_RANGE_LIST_ENTRY RangeListEntry;
+    PRTLP_RANGE_LIST_ENTRY entry;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlpDeleteRangeListEntry: DelEntry - %p\n", DelEntry);
+
+    if (!(DelEntry->PrivateFlags & RTLP_RANGE_LIST_ENTRY_MERGED))
+    {
+        goto Exit;
+    }
+
+    for (RangeListEntry = CONTAINING_RECORD(DelEntry->Merged.ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
+                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
+         &RangeListEntry->ListEntry != &DelEntry->Merged.ListHead;
+         RangeListEntry = entry,
+                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+    {
+        DPRINT("RtlpDeleteRangeListEntry: ExFree. RangeListEntry - %p, Start - %X, End - %X\n",
+               RangeListEntry, RangeListEntry->Start, RangeListEntry->End);
+
+        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RangeListEntry);
+        RtlpFreeMemory(RangeListEntry, 'elRR');
+    }
+
+Exit:
+
+    DPRINT("RtlpDeleteRangeListEntry: ExFree. DelEntry - %p, Start - %X, End - %X\n",
+           DelEntry, DelEntry->Start, DelEntry->End);
+
+    //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, DelEntry);
+    RtlpFreeMemory(DelEntry, 'elRR');
+}
+
 PRTLP_RANGE_LIST_ENTRY
 NTAPI
 RtlpCopyRangeListEntry(PRTLP_RANGE_LIST_ENTRY listEntry)
