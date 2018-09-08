@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB EHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBEHCI root hub functions
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbehci.h"
 
 #define NDEBUG
@@ -154,7 +161,7 @@ EHCI_RH_GetRootHubData(IN PVOID ehciExtension,
     HubCharacteristics.NoPowerSwitching = 0;
 
     /* EHCI RH is not part of a compound device */
-    HubCharacteristics.PartOfCompoundDevice = 0; 
+    HubCharacteristics.PartOfCompoundDevice = 0;
 
     /* Global Over-current Protection */
     HubCharacteristics.OverCurrentProtectionMode = 0;
@@ -286,7 +293,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
     {
         if (!PortSC.CurrentConnectStatus)
             DPRINT("EHCI_RH_FinishReset: PortSC.AsULONG - %X\n", PortSC.AsULONG);
-    
+
         if (PortSC.PortEnabledDisabled ||
             !PortSC.CurrentConnectStatus ||
             PortSC.ConnectStatusChange)
@@ -301,7 +308,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
             WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
             EhciExtension->FinishResetPortBits |= (1 << (*Port - 1));
         }
-    
+
         EhciExtension->ResetPortBits &= ~(1 << (*Port - 1));
     }
 }

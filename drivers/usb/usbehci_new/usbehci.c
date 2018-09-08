@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB EHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBEHCI main driver functions
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbehci.h"
 
 #define NDEBUG
@@ -87,14 +94,14 @@ static EHCI_PERIOD pTable[INTERRUPT_ENDPOINTs + 1] = {
 };
 
 static const UCHAR Balance[EHCI_FRAMES] = {
-    0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30, 
+    0, 16, 8,  24, 4, 20, 12, 28, 2, 18, 10, 26, 6, 22, 14, 30,
     1, 17, 9,  25, 5, 21, 13, 29, 3, 19, 11, 27, 7, 23, 15, 31};
 
 static const UCHAR LinkTable[INTERRUPT_ENDPOINTs + 1] = {
   255, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8,  9, 9,
   10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
   20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29,
-  30, 30, 0}; 
+  30, 30, 0};
 
 PEHCI_HCD_TD
 NTAPI
@@ -142,7 +149,7 @@ EHCI_InitializeQH(IN PEHCI_EXTENSION EhciExtension,
     PUSBPORT_ENDPOINT_PROPERTIES EndpointProperties;
     ULONG DeviceSpeed;
 
-    DPRINT_EHCI("EHCI_InitializeQH: EhciEndpoint - %p, QH - %p, QhPA - %p\n", 
+    DPRINT_EHCI("EHCI_InitializeQH: EhciEndpoint - %p, QH - %p, QhPA - %p\n",
                 EhciEndpoint,
                 QH,
                 QhPA);
@@ -214,7 +221,7 @@ EHCI_OpenBulkOrControlEndpoint(IN PEHCI_EXTENSION EhciExtension,
                                IN BOOLEAN IsControl)
 {
     PEHCI_HCD_QH QH;
-    ULONG QhPA; 
+    ULONG QhPA;
     PEHCI_HCD_TD TdVA;
     ULONG TdPA;
     PEHCI_HCD_TD TD;
@@ -844,11 +851,11 @@ EHCI_InitializeInterruptSchedule(IN PEHCI_EXTENSION EhciExtension)
     for (ix = 1; ix < INTERRUPT_ENDPOINTs; ix++)
     {
         StaticQH = EhciExtension->PeriodicHead[ix];
- 
+
         StaticQH->PrevHead = NULL;
         StaticQH->NextHead = (PEHCI_HCD_QH)EhciExtension->PeriodicHead[LinkTable[ix]];
 
-        StaticQH->HwQH.HorizontalLink.AsULONG = 
+        StaticQH->HwQH.HorizontalLink.AsULONG =
             EhciExtension->PeriodicHead[LinkTable[ix]]->PhysicalAddress;
 
         StaticQH->HwQH.HorizontalLink.Type = EHCI_LINK_TYPE_QH;
@@ -1560,11 +1567,11 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
 
     if (SgRemain > EHCI_MAX_QTD_BUFFER_PAGES)
     {
-        TD->HwTD.Buffer[0] = SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
+        TD->HwTD.Buffer[0] = SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart -
                              SgList->SgElement[SgIdx].SgOffset +
                              TransferedLen;
 
-        LengthThisTD = EHCI_MAX_QTD_BUFFER_PAGES * PAGE_SIZE - 
+        LengthThisTD = EHCI_MAX_QTD_BUFFER_PAGES * PAGE_SIZE -
                        (TD->HwTD.Buffer[0] & (PAGE_SIZE - 1));
 
         for (ix = 1; ix < EHCI_MAX_QTD_BUFFER_PAGES; ix++)
@@ -1586,7 +1593,7 @@ EHCI_MapAsyncTransferToTd(IN PEHCI_EXTENSION EhciExtension,
         LengthThisTD = TransferParameters->TransferBufferLength - TransferedLen;
 
         TD->HwTD.Buffer[0] = TransferedLen +
-                             SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart - 
+                             SgList->SgElement[SgIdx].SgPhysicalAddress.LowPart -
                              SgList->SgElement[SgIdx].SgOffset;
 
         for (ix = 1; ix < EHCI_MAX_QTD_BUFFER_PAGES; ix++)
@@ -1689,7 +1696,7 @@ EHCI_FlushAsyncCache(IN PEHCI_EXTENSION EhciExtension)
         while (Status.AsynchronousStatus && Command.AsULONG != -1 && Command.Run);
 
         return;
-    }    
+    }
 
     if (!Status.AsynchronousStatus && Command.AsynchronousEnable)
     {
@@ -1789,7 +1796,7 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
         {
             Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
         }
-        while (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) == 
+        while (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) ==
                FrameIndexReg && (Command.AsULONG != -1) && Command.Run);
     }
     else
@@ -3041,7 +3048,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_QH QH;
     PEHCI_HCD_TD TD;
     PEHCI_HCD_TD CurrentTD;
-    ULONG CurrentTDPhys; 
+    ULONG CurrentTDPhys;
     BOOLEAN IsScheduled;
 
     DPRINT_EHCI("EHCI_PollActiveAsyncEndpoint: ... \n");
@@ -3051,7 +3058,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
     CurrentTDPhys = QH->sqh.HwQH.CurrentTD & LINK_POINTER_MASK;
     ASSERT(CurrentTDPhys);
 
-    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(CurrentTDPhys, 
+    CurrentTD = RegPacket.UsbPortGetMappedVirtualAddress(CurrentTDPhys,
                                                          EhciExtension,
                                                          EhciEndpoint);
 
@@ -3139,7 +3146,7 @@ EHCI_PollActiveAsyncEndpoint(IN PEHCI_EXTENSION EhciExtension,
         CurrentTD->AltNextHcdTD == EhciEndpoint->HcdTailP)
     {
         TD = CurrentTD->NextHcdTD;
-  
+
         while (TD != EhciEndpoint->HcdTailP)
         {
             TD->TdFlags |= EHCI_HCD_TD_FLAG_ACTIVE;
@@ -3350,7 +3357,7 @@ NTAPI
 EHCI_Get32BitFrameNumber(IN PVOID ehciExtension)
 {
     PEHCI_EXTENSION EhciExtension = ehciExtension;
-    ULONG FrameIdx; 
+    ULONG FrameIdx;
     ULONG FrameIndex;
     ULONG FrameNumber;
 

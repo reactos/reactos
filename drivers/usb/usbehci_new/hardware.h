@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB EHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBEHCI hardware declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #define EHCI_FRAME_LIST_MAX_ENTRIES  1024 // Number of frames in Frame List
 
 /* EHCI hardware registers */

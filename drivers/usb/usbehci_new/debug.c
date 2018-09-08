@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB EHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBEHCI debugging functions
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbehci.h"
 
 //#define NDEBUG
