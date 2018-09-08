@@ -1493,7 +1493,7 @@ USBPORT_GetDeviceHwIds(IN PDEVICE_OBJECT FdoDevice,
                              L"USB\\ROOT_HUB");
     }
 
-    Length = (sizeof(Buffer) - Remaining + sizeof(UNICODE_NULL));
+    Length = (sizeof(Buffer) - Remaining + 2 * sizeof(UNICODE_NULL));
 
      /* for debug only */
     if (FALSE)
