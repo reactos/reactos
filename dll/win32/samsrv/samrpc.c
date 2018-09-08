@@ -4164,7 +4164,7 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
     }
 
     Status = SampGetObjectAttributeString(GroupObject,
-                                          L"Description",
+                                          L"AdminComment",
                                           &InfoBuffer->General.AdminComment);
     if (!NT_SUCCESS(Status))
     {
@@ -4179,7 +4179,10 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                                     (PVOID)&FixedData,
                                     &Length);
     if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     InfoBuffer->General.Attributes = FixedData.Attributes;
 
@@ -4189,12 +4192,20 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                                     NULL,
                                     &MembersLength);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
         InfoBuffer->General.MemberCount = 0;
+        Status = STATUS_SUCCESS;
+    }
     else
+    {
         InfoBuffer->General.MemberCount = MembersLength / sizeof(ULONG);
+    }
 
     *Buffer = InfoBuffer;
 
@@ -4279,7 +4290,10 @@ SampQueryGroupAttribute(PSAM_DB_OBJECT GroupObject,
                                     (PVOID)&FixedData,
                                     &Length);
     if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     InfoBuffer->Attribute.Attributes = FixedData.Attributes;
 
@@ -4312,7 +4326,7 @@ SampQueryGroupAdminComment(PSAM_DB_OBJECT GroupObject,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = SampGetObjectAttributeString(GroupObject,
-                                          L"Description",
+                                          L"AdminComment",
                                           &InfoBuffer->AdminComment.AdminComment);
     if (!NT_SUCCESS(Status))
     {
@@ -4540,7 +4554,7 @@ SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
 
         case GroupAdminCommentInformation:
             Status = SampSetObjectAttributeString(GroupObject,
-                                                  L"Description",
+                                                  L"AdminComment",
                                                   &Buffer->AdminComment.AdminComment);
             break;
 
