@@ -199,7 +199,7 @@ typedef union _EHCI_LINK_POINTER {
     ULONG Terminate : 1;
     ULONG Type      : 2;
     ULONG Reserved  : 2;
-    ULONG Adress    : 27;
+    ULONG Address   : 27;
   };
   ULONG AsULONG;
 } EHCI_LINK_POINTER;
