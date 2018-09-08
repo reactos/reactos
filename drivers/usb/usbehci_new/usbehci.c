@@ -1746,7 +1746,7 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
     ULONG QhPA;
     ULONG FrameIndexReg;
     PEHCI_HW_REGISTERS OperationalRegs;
-    ULONG Command;
+    EHCI_USB_COMMAND Command;
 
     DPRINT_EHCI("EHCI_LockQH: QH - %p, TransferType - %x\n",
                 QH,
@@ -1787,10 +1787,10 @@ EHCI_LockQH(IN PEHCI_EXTENSION EhciExtension,
     {
         do
         {
-            Command = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
+            Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
         }
         while (READ_REGISTER_ULONG(&OperationalRegs->FrameIndex) == 
-               FrameIndexReg && (Command != -1) && (Command & 1));
+               FrameIndexReg && (Command.AsULONG != -1) && Command.Run);
     }
     else
     {
