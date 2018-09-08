@@ -40,20 +40,20 @@ EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
 
     if (PortSC.CurrentConnectStatus == 0 ||
         PortSC.PortEnabledDisabled == 1 ||
-        PortSC.PortOwner == 1)
+        PortSC.PortOwner == EHCI_PORT_OWNER_COMPANION_CONTROLLER)
     {
         DPRINT_RH("EHCI_RH_ChirpRootPort: No port - %x\n", Port);
         return MP_STATUS_SUCCESS;
     }
 
-    if (PortSC.LineStatus == 1 &&
+    if (PortSC.LineStatus == EHCI_LINE_STATUS_K_STATE_LOW_SPEED &&
         PortSC.Suspend == 0 &&
         PortSC.CurrentConnectStatus == 1)
     {
         /* Attached device is not a high-speed device.
            Release ownership of the port to a selected HC.
            Companion HC owns and controls the port. Section 4.2 */
-        PortSC.PortOwner = 1;
+        PortSC.PortOwner = EHCI_PORT_OWNER_COMPANION_CONTROLLER;
         WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
 
         DPRINT_RH("EHCI_RH_ChirpRootPort: Companion HC port - %x\n", Port);
@@ -112,7 +112,7 @@ EHCI_RH_ChirpRootPort(IN PVOID ehciExtension,
     }
     else
     {
-        PortSC.PortOwner = 1;
+        PortSC.PortOwner = EHCI_PORT_OWNER_COMPANION_CONTROLLER;
         WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
         DPRINT_RH("EHCI_RH_ChirpRootPort: Companion HC port - %x\n", Port);
     }
@@ -201,13 +201,13 @@ EHCI_RH_GetPortStatus(IN PVOID ehciExtension,
 
     PortStatus->AsUlong32 = 0;
 
-    if (PortSC.LineStatus == 1 && // K-state  Low-speed device
-        PortSC.PortOwner != 1 && // Companion HC not owns and not controls this port
+    if (PortSC.LineStatus == EHCI_LINE_STATUS_K_STATE_LOW_SPEED &&
+        PortSC.PortOwner != EHCI_PORT_OWNER_COMPANION_CONTROLLER &&
         (PortSC.PortEnabledDisabled | PortSC.Suspend) && // Enable or Suspend
         PortSC.CurrentConnectStatus == 1) // Device is present
     {
         DPRINT("EHCI_RH_GetPortStatus: LowSpeed device detected\n");
-        PortSC.PortOwner = 1; // release ownership
+        PortSC.PortOwner = EHCI_PORT_OWNER_COMPANION_CONTROLLER; // release ownership
         WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
         return MP_STATUS_SUCCESS;
     }
@@ -296,7 +296,7 @@ EHCI_RH_FinishReset(IN PVOID ehciExtension,
         else
         {
             PortSC.AsULONG = READ_REGISTER_ULONG(PortStatusReg);
-            PortSC.PortOwner = 1;
+            PortSC.PortOwner = EHCI_PORT_OWNER_COMPANION_CONTROLLER;
             WRITE_REGISTER_ULONG(PortStatusReg, PortSC.AsULONG);
             EhciExtension->FinishResetPortBits |= (1 << (*Port - 1));
         }

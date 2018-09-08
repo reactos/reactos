@@ -127,6 +127,9 @@ typedef union _EHCI_INTERRUPT_ENABLE {
 
 C_ASSERT(sizeof(EHCI_INTERRUPT_ENABLE) == sizeof(ULONG));
 
+#define EHCI_LINE_STATUS_K_STATE_LOW_SPEED 1
+#define EHCI_PORT_OWNER_COMPANION_CONTROLLER 1
+
 typedef union _EHCI_PORT_STATUS_CONTROL {
   struct {
     ULONG CurrentConnectStatus    : 1;
