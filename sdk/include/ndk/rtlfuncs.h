@@ -3679,7 +3679,7 @@ NTSYSAPI
 VOID
 NTAPI
 RtlInitializeRangeList(
-    _Out_ PRTL_RANGE_LIST RangeList
+    _Inout_ PRTL_RANGE_LIST RangeList
 );
 
 NTSYSAPI
@@ -3792,6 +3792,15 @@ RtlGetNextRange(
     _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
     _Outptr_ PRTL_RANGE *Range,
     _In_ BOOLEAN MoveForwards
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetLastRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Outptr_ PRTL_RANGE *Range
 );
 
 //
