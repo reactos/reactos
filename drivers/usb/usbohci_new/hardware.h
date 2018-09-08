@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB OHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBOHCI hardware declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #define OHCI_NUMBER_OF_INTERRUPTS    32
 #define OHCI_MAX_PORT_COUNT          15
 #define ED_EOF                       -1

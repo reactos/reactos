@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB OHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBOHCI root hub functions
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #include "usbohci.h"
 
 #define NDEBUG
