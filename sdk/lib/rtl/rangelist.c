@@ -21,6 +21,8 @@ typedef struct _RTL_RANGE_ENTRY
     RTL_RANGE Range;
 } RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
 
+#define RTLP_RANGE_LIST_ENTRY_MERGED  1
+
 /* FUNCTIONS ***************************************************************/
 
 /**********************************************************************
@@ -57,73 +59,98 @@ RtlAddRange(IN OUT PRTL_RANGE_LIST RangeList,
             IN PVOID UserData OPTIONAL,
             IN PVOID Owner OPTIONAL)
 {
-    PRTL_RANGE_ENTRY RangeEntry;
-    //PRTL_RANGE_ENTRY Previous;
-    PRTL_RANGE_ENTRY Current;
+    PRTLP_RANGE_LIST_ENTRY RangeEntry;
+    PRTLP_RANGE_LIST_ENTRY Current;
     PLIST_ENTRY Entry;
+    NTSTATUS Status;
+
+    PAGED_CODE_RTL();
+    DPRINT("RtlAddRange: RangeList - %p [%I64X-%I64X], Count - %X, Attributes - %X, Flags - %X, UserData - %X, Owner - %X\n",
+           RangeList, Start, End, RangeList->Count, Attributes, Flags, UserData, Owner);
 
     if (Start > End)
+    {
         return STATUS_INVALID_PARAMETER;
+    }
 
     /* Create new range entry */
-    RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
+    RangeEntry = RtlpAllocateMemory(sizeof(RTLP_RANGE_LIST_ENTRY), 'elRR');
+    //RangeEntry = ExAllocateFromPagedLookasideList(&RtlpRangeListEntryLookasideList); // FIXME
+
     if (RangeEntry == NULL)
+    {
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-    /* Initialize range entry */
-    RangeEntry->Range.Start = Start;
-    RangeEntry->Range.End = End;
-    RangeEntry->Range.Attributes = Attributes;
-    RangeEntry->Range.UserData = UserData;
-    RangeEntry->Range.Owner = Owner;
+    RangeEntry->Start = Start;
+    RangeEntry->End = End;
 
-    RangeEntry->Range.Flags = 0;
+    RangeEntry->Allocated.UserData = UserData;
+    RangeEntry->Allocated.Owner = Owner;
+
+    RangeEntry->ListEntry.Flink = NULL;
+    RangeEntry->ListEntry.Blink = NULL;
+
+    RangeEntry->PublicFlags = 0;
+    RangeEntry->PrivateFlags = 0;
+    RangeEntry->Attributes = Attributes;
+
     if (Flags & RTL_RANGE_LIST_ADD_SHARED)
-        RangeEntry->Range.Flags |= RTL_RANGE_SHARED;
+    {
+        RangeEntry->PublicFlags |= RTL_RANGE_SHARED;
+    }
+  
+    RangeEntry->PublicFlags &= ~RTL_RANGE_CONFLICT;
 
     /* Insert range entry */
     if (RangeList->Count == 0)
     {
-        InsertTailList(&RangeList->ListHead,
-                       &RangeEntry->Entry);
-        RangeList->Count++;
-        RangeList->Stamp++;
-        return STATUS_SUCCESS;
+        /* Insert tail */
+        InsertTailList(&RangeList->ListHead, &RangeEntry->ListEntry);
+        Status =  STATUS_SUCCESS;
     }
     else
     {
-         //Previous = NULL;
-        Entry = RangeList->ListHead.Flink;
-        while (Entry != &RangeList->ListHead)
+        for (Entry = RangeList->ListHead.Flink;
+             Entry != &RangeList->ListHead;
+             Entry = Entry->Flink)
         {
-            Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
-            if (Current->Range.Start > RangeEntry->Range.End)
+            Current = CONTAINING_RECORD(Entry, RTLP_RANGE_LIST_ENTRY, ListEntry);
+            if (Current->Start > RangeEntry->End)
             {
                 /* Insert before current */
-                DPRINT("Insert before current\n");
-                InsertTailList(&Current->Entry,
-                               &RangeEntry->Entry);
-
-                RangeList->Count++;
-                RangeList->Stamp++;
-                return STATUS_SUCCESS;
+                InsertHeadList(Current->ListEntry.Blink, &RangeEntry->ListEntry);
+                Status = STATUS_SUCCESS;
+                break;
             }
 
-            //Previous = Current;
-            Entry = Entry->Flink;
-        }
+            if ((Current->Start <= RangeEntry->Start || Current->Start <= RangeEntry->End) &&
+                (Current->Start > RangeEntry->Start || Current->End > RangeEntry->Start))
+            {
+                /* Intersecting ranges */
+                DPRINT("RtlAddRange: Current [%I64X - %I64X], RangeEntry [%I64X - %I64X]\n",
+                       Current->Start, Current->End, RangeEntry->Start, RangeEntry->End);
 
-        DPRINT("Insert tail\n");
-        InsertTailList(&RangeList->ListHead,
-                       &RangeEntry->Entry);
-        RangeList->Count++;
-        RangeList->Stamp++;
-        return STATUS_SUCCESS;
+                ASSERT(FALSE);
+                Status = 0;//RtlpAddIntersectingRanges(RangeList, Current, RangeEntry, Flags);
+                break;
+            }
+        }
     }
 
-    RtlpFreeMemory(RangeEntry, 0);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+        RtlpFreeMemory(RangeEntry, 'elRR');
+        //ExFreeToPagedLookasideList(&RtlpRangeListEntryLookasideList, RangeEntry);
+    }
+    else
+    {
+        RangeList->Count++;
+        RangeList->Stamp++;
+    }
 
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 }
 
 
@@ -148,34 +175,48 @@ NTAPI
 RtlCopyRangeList(OUT PRTL_RANGE_LIST CopyRangeList,
                  IN PRTL_RANGE_LIST RangeList)
 {
-    PRTL_RANGE_ENTRY Current;
-    PRTL_RANGE_ENTRY NewEntry;
-    PLIST_ENTRY Entry;
+    PRTLP_RANGE_LIST_ENTRY listEntry;
+    PRTLP_RANGE_LIST_ENTRY NewListEntry;
 
-    CopyRangeList->Flags = RangeList->Flags;
+    PAGED_CODE_RTL();
+    ASSERT(RangeList);
+    ASSERT(CopyRangeList);
 
-    Entry = RangeList->ListHead.Flink;
-    while (Entry != &RangeList->ListHead)
+    DPRINT("RtlCopyRangeList: (CopyRangeList - %p) <== (RangeList - %p) [%X]\n",
+           CopyRangeList, RangeList, RangeList->Count);
+
+    if (CopyRangeList->Count)
     {
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+        DPRINT("RtlCopyRangeList: STATUS_INVALID_PARAMETER. CopyRangeList->Count - %X\n",
+               CopyRangeList->Count);
 
-        NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
-        if (NewEntry == NULL)
-            return STATUS_INSUFFICIENT_RESOURCES;
-
-        RtlCopyMemory(&NewEntry->Range,
-                      &Current->Range,
-                      sizeof(RTL_RANGE));
-
-        InsertTailList(&CopyRangeList->ListHead,
-                       &NewEntry->Entry);
-
-        CopyRangeList->Count++;
-
-        Entry = Entry->Flink;
+        ASSERT(FALSE);
+        return STATUS_INVALID_PARAMETER;
     }
 
-    CopyRangeList->Stamp++;
+    CopyRangeList->Flags = RangeList->Flags;
+    CopyRangeList->Count = RangeList->Count;
+    CopyRangeList->Stamp = RangeList->Stamp;
+
+    for (listEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
+         &listEntry->ListEntry!= &RangeList->ListHead;
+         listEntry = CONTAINING_RECORD(listEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+    {
+        //DPRINT("RtlCopyRangeList: ListEntry - %p [%I64X - %I64X], Attributes - %X, PublicFlags - %X, PrivateFlags - %X\n",
+        //       listEntry, listEntry->Start, listEntry->End, listEntry->Attributes, listEntry->PublicFlags, listEntry->PrivateFlags);
+
+        NewListEntry = RtlpCopyRangeListEntry(listEntry);
+
+        if (!NewListEntry)
+        {
+            DPRINT("RtlCopyRangeList: STATUS_INSUFFICIENT_RESOURCES\n");
+            ASSERT(FALSE);
+            RtlFreeRangeList(CopyRangeList);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        InsertTailList(&CopyRangeList->ListHead, &NewListEntry->ListEntry);
+    }
 
     return STATUS_SUCCESS;
 }
