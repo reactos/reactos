@@ -51,14 +51,34 @@ Descriptions of section entries used here:
 	   this area
 	C: Comments
 
+ACPI
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: drivers/bus/acpi/
+	F: hal/halx86/acpi/
+
+ACPICA Library
+	M: ThFabba, Thomas Faber
+	S: Upstream
+	F: drivers/bus/acpi/acpica/
+
 Cache Manager
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
 	F: ntoskrnl/cc/
 
 Cache Manager Rewrite
-	S: Abandonned
+	S: Abandoned
 	F: ntoskrnl/cache/
+
+CMake Build Scripts
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: sdk/cmake/
+	F: */CMakeLists.txt
+	F: */*.cmake
 
 File Systems
 	M: HeisSpiter, Pierre Schweitzer
@@ -73,11 +93,24 @@ File Systems Run Time Library
 	F: ntoskrnl/fsrtl/
 	F: sdk/lib/drivers/ntoskrnl_vista/fsrtl.c
 
-IO Manager
+HID Drivers
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: drivers/hid/
+
+Kernel
 	M:
 	R: HeisSpiter, Pierre Schweitzer
+	R: ThFabba, Thomas Faber
 	S: Maintained
-	F: ntoskrnl/io/iomgr/
+	F: ntoskrnl/
+
+Network Drivers
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: drivers/network/
 
 Network File Systems kernel libraries
 	M: HeisSpiter, Pierre Schweitzer
@@ -85,10 +118,33 @@ Network File Systems kernel libraries
 	F: sdk/lib/drivers/rdbsslib/
 	F: sdk/lib/drivers/rxce/
 
+NTDLL
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: dll/ntdll/
+
+ReactOS API Tests
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: modules/rostests/apitests/
+
+ReactOS Kernel-Mode Tests
+	M: ThFabba, Thomas Faber
+	S: Maintained
+	F: modules/rostests/kmtests/
+
 ROS internals tools
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
 	F: modules/rosapps/applications/rosinternals/
+
+Run-Time Library (RTL)
+	M:
+	R: ThFabba, Thomas Faber
+	S: Maintained
+	F: sdk/lib/rtl/
 
 Upstream File Systems
 	M: HeisSpiter, Pierre Schweitzer
@@ -107,6 +163,13 @@ Upstream File Systems
 	F: sdk/lib/fslib/btrfslib/
 	F: sdk/lib/fslib/ext2lib/
 	F: sdk/lib/fslib/vfatlib/check/
+
+USB Drivers
+	M: ThFabba, Thomas Faber
+	S: Maintained
+	F: drivers/usb/
+	F: sdk/lib/drivers/libusb/
+	F: sdk/include/reactos/drivers/usbport/
 
 Virtual CD-ROM
 	M: HeisSpiter, Pierre Schweitzer
@@ -129,3 +192,9 @@ Windows Network File Systems functions
 	M: HeisSpiter, Pierre Schweitzer
 	S: Upstream
 	F: dll/win32/mpr/wnet.c
+
+Wine Tests
+	M:
+	R: ThFabba, Thomas Faber
+	S: Upstream
+	F: modules/rostests/winetests/
