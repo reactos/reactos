@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB UHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBUHCI hardware declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #define UHCI_FRAME_LIST_MAX_ENTRIES  1024 // Number of frames in Frame List
 #define UHCI_NUM_ROOT_HUB_PORTS      2
 

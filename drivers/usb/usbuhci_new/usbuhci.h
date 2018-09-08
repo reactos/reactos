@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB UHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBUHCI declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #ifndef USBUHCI_H__
 #define USBUHCI_H__
 
