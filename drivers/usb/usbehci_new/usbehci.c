@@ -1233,8 +1233,9 @@ EHCI_StartController(IN PVOID ehciExtension,
     }
 
     /* Port routing control logic default-routes all ports to this HC */
-    WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag, 1);
-    EhciExtension->PortRoutingControl = 1;
+    EhciExtension->PortRoutingControl = EHCI_CONFIG_FLAG_CONFIGURED;
+    WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag,
+                         EhciExtension->PortRoutingControl);
 
     Command.AsULONG = READ_REGISTER_ULONG(&OperationalRegs->HcCommand.AsULONG);
     Command.InterruptThreshold = 1; // one micro-frame
@@ -1351,10 +1352,11 @@ EHCI_ResumeController(IN PVOID ehciExtension)
 
     RoutingControl = EhciExtension->PortRoutingControl;
 
-    if (!(RoutingControl & 1))
+    if (!(RoutingControl & EHCI_CONFIG_FLAG_CONFIGURED))
     {
-        EhciExtension->PortRoutingControl = RoutingControl | 1;
-        WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag, RoutingControl | 1);
+        EhciExtension->PortRoutingControl = RoutingControl | EHCI_CONFIG_FLAG_CONFIGURED;
+        WRITE_REGISTER_ULONG(&OperationalRegs->ConfigFlag,
+                             EhciExtension->PortRoutingControl);
 
         return MP_STATUS_HW_ERROR;
     }
