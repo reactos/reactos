@@ -63,6 +63,18 @@ ACPICA Library
 	S: Upstream
 	F: drivers/bus/acpi/acpica/
 
+Apisets
+	M: learn-more, learn_more, Mark Jansen
+	S: Maintained
+	F: dll/apisets
+
+Application Compatibility subystem
+	M: learn-more, learn_more, Mark Jansen
+	S: Maintained
+	F: dll/appcompat
+	F: dll/shellext/acppage
+	F: ntoskrnl/ps/apphelp.c
+
 Cache Manager
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
@@ -74,6 +86,7 @@ Cache Manager Rewrite
 
 CMake Build Scripts
 	M:
+	R: learn-more, learn_more, Mark Jansen
 	R: ThFabba, Thomas Faber
 	S: Maintained
 	F: sdk/cmake/
@@ -120,12 +133,15 @@ Network File Systems kernel libraries
 
 NTDLL
 	M:
+	R: HeisSpiter, Pierre Schweitzer
+	R: learn-more, learn_more, Mark Jansen
 	R: ThFabba, Thomas Faber
 	S: Maintained
 	F: dll/ntdll/
 
 ReactOS API Tests
 	M:
+	R: learn-more, learn_more, Mark Jansen
 	R: ThFabba, Thomas Faber
 	S: Maintained
 	F: modules/rostests/apitests/
@@ -142,9 +158,16 @@ ROS internals tools
 
 Run-Time Library (RTL)
 	M:
+	R: learn-more, learn_more, Mark Jansen
 	R: ThFabba, Thomas Faber
 	S: Maintained
 	F: sdk/lib/rtl/
+
+Shell Extensions
+	M:
+	R: learn-more, learn_more, Mark Jansen
+	S: Maintained
+	F: dll/shellext
 
 Upstream File Systems
 	M: HeisSpiter, Pierre Schweitzer
