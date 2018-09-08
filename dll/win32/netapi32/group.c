@@ -87,26 +87,6 @@ NetGroupDelUser(IN LPCWSTR servername,
 
 
 /************************************************************
- * NetGroupEnum  (NETAPI32.@)
- *
- */
-NET_API_STATUS
-WINAPI
-NetGroupEnum(IN LPCWSTR servername,
-             IN DWORD level,
-             OUT LPBYTE *bufptr,
-             IN DWORD prefmaxlen,
-             OUT LPDWORD entriesread,
-             OUT LPDWORD totalentries,
-             IN OUT PDWORD_PTR resume_handle)
-{
-    FIXME("(%s, %d, %p, %d, %p, %p, %p) stub!\n", debugstr_w(servername),
-          level, bufptr, prefmaxlen, entriesread, totalentries, resume_handle);
-    return ERROR_ACCESS_DENIED;
-}
-
-
-/************************************************************
  * NetGroupGetInfo  (NETAPI32.@)
  *
  */
