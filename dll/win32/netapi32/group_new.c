@@ -272,7 +272,7 @@ NetGroupAdd(
     _In_opt_ LPCWSTR servername,
     _In_ DWORD level,
     _In_ LPBYTE buf,
-    _Out_ LPDWORD parm_err)
+    _Out_opt_ LPDWORD parm_err)
 {
     GROUP_ADM_COMMENT_INFORMATION AdminComment;
     GROUP_ATTRIBUTE_INFORMATION AttributeInfo;
@@ -871,6 +871,259 @@ done:
         SamCloseHandle(ServerHandle);
 
     *bufptr = (LPBYTE)Buffer;
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetGroupSetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _Out_opt_ LPDWORD parm_err)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    GROUP_NAME_INFORMATION GroupNameInfo;
+    GROUP_ADM_COMMENT_INFORMATION AdminCommentInfo;
+    GROUP_ATTRIBUTE_INFORMATION AttributeInfo;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupSetInfo(%s, %s, %d, %p, %p)\n",
+          debugstr_w(servername), debugstr_w(groupname), level, buf, parm_err);
+
+    if (parm_err != NULL)
+        *parm_err = PARM_ERROR_NONE;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_WRITE_ACCOUNT,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus != NERR_Success)
+    {
+        WARN("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    switch (level)
+    {
+        case 0:
+            /* Set the group name */
+            RtlInitUnicodeString(&GroupNameInfo.Name,
+                                 ((PGROUP_INFO_0)buf)->grpi0_name);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupNameInformation,
+                                            &GroupNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 1:
+            /* Set the group name */
+            RtlInitUnicodeString(&GroupNameInfo.Name,
+                                 ((PGROUP_INFO_1)buf)->grpi1_name);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupNameInformation,
+                                            &GroupNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            /* Set the admin comment */
+            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                 ((PGROUP_INFO_1)buf)->grpi1_comment);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAdminCommentInformation,
+                                            &AdminCommentInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 2:
+            /* Set the group name */
+            RtlInitUnicodeString(&GroupNameInfo.Name,
+                                 ((PGROUP_INFO_2)buf)->grpi2_name);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupNameInformation,
+                                            &GroupNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            /* Set the admin comment */
+            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                 ((PGROUP_INFO_2)buf)->grpi2_comment);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAdminCommentInformation,
+                                            &AdminCommentInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            /* Set the attributes */
+            AttributeInfo.Attributes = ((PGROUP_INFO_2)buf)->grpi2_attributes;
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAttributeInformation,
+                                            &AttributeInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 3:
+            /* Set the group name */
+            RtlInitUnicodeString(&GroupNameInfo.Name,
+                                 ((PGROUP_INFO_3)buf)->grpi3_name);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupNameInformation,
+                                            &GroupNameInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            /* Set the admin comment */
+            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                 ((PGROUP_INFO_3)buf)->grpi3_comment);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAdminCommentInformation,
+                                            &AdminCommentInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+
+            /* Set the attributes */
+            AttributeInfo.Attributes = ((PGROUP_INFO_3)buf)->grpi3_attributes;
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAttributeInformation,
+                                            &AttributeInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 1002:
+            /* Set the admin comment */
+            RtlInitUnicodeString(&AdminCommentInfo.AdminComment,
+                                 ((PGROUP_INFO_1002)buf)->grpi1002_comment);
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAdminCommentInformation,
+                                            &AdminCommentInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        case 1005:
+            /* Set the attributes */
+            AttributeInfo.Attributes = ((PGROUP_INFO_1005)buf)->grpi1005_attributes;
+
+            Status = SamSetInformationGroup(GroupHandle,
+                                            GroupAttributeInformation,
+                                            &AttributeInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamSetInformationGroup failed (ApiStatus %lu)\n", ApiStatus);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+            break;
+
+        default:
+            ApiStatus = ERROR_INVALID_LEVEL;
+            goto done;
+    }
+
+done:
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
 
     return ApiStatus;
 }

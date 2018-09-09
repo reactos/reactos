@@ -77,24 +77,6 @@ NetGroupGetUsers(IN LPCWSTR servername,
 
 
 /************************************************************
- * NetGroupSetInfo  (NETAPI32.@)
- *
- */
-NET_API_STATUS
-WINAPI
-NetGroupSetInfo(IN LPCWSTR servername,
-                IN LPCWSTR groupname,
-                IN DWORD level,
-                IN LPBYTE buf,
-                OUT LPDWORD parm_err)
-{
-    FIXME("(%s, %s, %d, %p, %p) stub!\n", debugstr_w(servername),
-          debugstr_w(groupname), level, buf, parm_err);
-    return ERROR_ACCESS_DENIED;
-}
-
-
-/************************************************************
  * NetGroupSetUsers  (NETAPI32.@)
  *
  */
