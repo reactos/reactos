@@ -192,7 +192,7 @@ done:
 static
 VOID
 FreeGroupInfo(
-    PGROUP_GENERAL_INFORMATION GroupInfo)
+    _In_ PGROUP_GENERAL_INFORMATION GroupInfo)
 {
     if (GroupInfo->Name.Buffer != NULL)
         SamFreeMemory(GroupInfo->Name.Buffer);
@@ -201,6 +201,66 @@ FreeGroupInfo(
         SamFreeMemory(GroupInfo->AdminComment.Buffer);
 
     SamFreeMemory(GroupInfo);
+}
+
+
+static
+NET_API_STATUS
+OpenGroupByName(
+    _In_ SAM_HANDLE DomainHandle,
+    _In_ PUNICODE_STRING GroupName,
+    _In_ ULONG DesiredAccess,
+    _Out_ PSAM_HANDLE GroupHandle,
+    _Out_ PULONG RelativeId)
+{
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get the RID for the given user name */
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    1,
+                                    GroupName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        return NetpNtStatusToApiStatus(Status);
+    }
+
+    /* Fail, if it is not an alias account */
+    if (Use[0] != SidTypeGroup)
+    {
+        ERR("Object is not a group!\n");
+        ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    /* Open the alias account */
+    Status = SamOpenGroup(DomainHandle,
+                          DesiredAccess,
+                          RelativeIds[0],
+                          GroupHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenGroup failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    if (RelativeId != NULL)
+        *RelativeId = RelativeIds[0];
+
+done:
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    return ApiStatus;
 }
 
 
@@ -450,6 +510,107 @@ done:
     *bufptr = (LPBYTE)Buffer;
 
     TRACE("return %lu\n", ApiStatus);
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetGroupGetInfo(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    PGROUP_GENERAL_INFORMATION GroupInfo = NULL;
+    PVOID Buffer = NULL;
+    ULONG RelativeId;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupGetInfo(%s, %s, %d, %p)\n",
+          debugstr_w(servername), debugstr_w(groupname), level, bufptr);
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group account in the account domain */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_READ_INFORMATION,
+                                &GroupHandle,
+                                &RelativeId);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    Status = SamQueryInformationGroup(GroupHandle,
+                                      GroupGeneralInformation,
+                                      (PVOID *)&GroupInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamQueryInformationGroup failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    ApiStatus = BuildGroupInfoBuffer(GroupInfo,
+                                     level,
+                                     RelativeId,
+                                     &Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+done:
+    if (GroupInfo != NULL)
+        FreeGroupInfo(GroupInfo);
+
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    *bufptr = (LPBYTE)Buffer;
 
     return ApiStatus;
 }

@@ -87,23 +87,6 @@ NetGroupDelUser(IN LPCWSTR servername,
 
 
 /************************************************************
- * NetGroupGetInfo  (NETAPI32.@)
- *
- */
-NET_API_STATUS
-WINAPI
-NetGroupGetInfo(IN LPCWSTR servername,
-                IN LPCWSTR groupname,
-                IN DWORD level,
-                OUT LPBYTE *bufptr)
-{
-    FIXME("(%s, %s, %d, %p) stub!\n", debugstr_w(servername),
-          debugstr_w(groupname), level, bufptr);
-    return ERROR_ACCESS_DENIED;
-}
-
-
-/************************************************************
  * NetGroupGetUsers  (NETAPI32.@)
  *
  */
