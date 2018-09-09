@@ -1789,7 +1789,7 @@ MUI_STRING plPLStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Restart komputera"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " Komputer zostanie uruchomiony ponownie za %li sekund(y)... "},
     {STRING_CONSOLEFAIL1,
     "Otwarcie konsoli nieudane\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
