@@ -1832,7 +1832,7 @@ MUI_STRING roROStrings[] =
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
     {STRING_REBOOTPROGRESSBAR,
-    " Your computer will reboot in %li second(s)... "},
+    " Calculatorul va reporni în %li secunde... "},
     {STRING_CONSOLEFAIL1,
     "Eºec la deschiderea consolei\r\n\r\n"},
     {STRING_CONSOLEFAIL2,
