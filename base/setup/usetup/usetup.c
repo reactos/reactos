@@ -4548,7 +4548,7 @@ ProgressTimeOutStringHandler(
         (AlwaysUpdate || (Bar->Progress != OldProgress)))
     {
         RtlStringCchPrintfA(Buffer, cchBufferSize,
-                            Bar->ProgressFormatText, Bar->Progress);
+                            Bar->ProgressFormatText, Bar->Progress / max(1, Bar->Width) + 1);
 
         return TRUE;
     }
@@ -4578,9 +4578,9 @@ ProgressCountdown(
     IN LONG TimeOut)
 {
     NTSTATUS Status;
-    ULONG StartTime;
+    ULONG StartTime, BarWidth, TimerDiv;
     LONG TimeElapsed;
-    LONG TimerValue = TimeOut, OldTimerValue;
+    LONG TimerValue, OldTimerValue;
     LARGE_INTEGER Timeout;
     PPROGRESSBAR ProgressBar;
     BOOLEAN RefreshProgress = TRUE;
@@ -4598,14 +4598,20 @@ ProgressCountdown(
                                       24,
                                       TRUE,
                                       FOREGROUND_RED | BACKGROUND_BLUE,
-                                      TimerValue,
+                                      0,
                                       NULL,
                                       MUIGetString(STRING_REBOOTPROGRESSBAR),
                                       ProgressTimeOutStringHandler);
 
+    BarWidth = max(1, ProgressBar->Width);
+    TimerValue = TimeOut * BarWidth;
+    ProgressSetStepCount(ProgressBar, TimerValue);
+
     StartTime = NtGetTickCount();
     CONSOLE_Flush();
 
+    TimerDiv = 1000 / BarWidth;
+    TimerDiv = max(1, TimerDiv);
     OldTimerValue = TimerValue;
     while (TRUE)
     {
@@ -4617,11 +4623,11 @@ ProgressCountdown(
          * elapsed if something slowed down.
          */
         TimeElapsed = NtGetTickCount() - StartTime;
-        if (TimeElapsed >= 1000)
+        if (TimeElapsed >= TimerDiv)
         {
-            /* Increase StartTime by steps of 1 second */
-            TimeElapsed /= 1000;
-            StartTime += (1000 * TimeElapsed);
+            /* Increase StartTime by steps of 1 / ProgressBar->Width seconds */
+            TimeElapsed /= TimerDiv;
+            StartTime += (TimerDiv * TimeElapsed);
 
             if (TimeElapsed <= TimerValue)
                 TimerValue -= TimeElapsed;
@@ -4651,10 +4657,10 @@ ProgressCountdown(
 
         /* Wait a maximum of 1 second for input events */
         TimeElapsed = NtGetTickCount() - StartTime;
-        if (TimeElapsed < 1000)
+        if (TimeElapsed < TimerDiv)
         {
             /* Convert the time to NT Format */
-            Timeout.QuadPart = (1000 - TimeElapsed) * -10000LL;
+            Timeout.QuadPart = (TimerDiv - TimeElapsed) * -10000LL;
             Status = NtWaitForSingleObject(StdInput, FALSE, &Timeout);
         }
         else
