@@ -22,37 +22,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(netapi32);
 
-/************************************************************
- * NetGroupAddUser  (NETAPI32.@)
- *
- */
-NET_API_STATUS
-WINAPI
-NetGroupAddUser(IN LPCWSTR servername,
-                IN LPCWSTR groupname,
-                IN LPCWSTR username)
-{
-    FIXME("(%s, %s, %s) stub!\n", debugstr_w(servername),
-          debugstr_w(groupname), debugstr_w(username));
-    return ERROR_ACCESS_DENIED;
-}
-
-
-/************************************************************
- * NetGroupDelUser  (NETAPI32.@)
- *
- */
-NET_API_STATUS
-WINAPI
-NetGroupDelUser(IN LPCWSTR servername,
-                IN LPCWSTR groupname,
-                IN LPCWSTR username)
-{
-    FIXME("(%s, %s, %s) stub!\n", debugstr_w(servername),
-          debugstr_w(groupname), debugstr_w(username));
-    return ERROR_ACCESS_DENIED;
-}
-
 
 /************************************************************
  * NetGroupGetUsers  (NETAPI32.@)

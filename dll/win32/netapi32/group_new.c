@@ -445,6 +445,122 @@ done:
 
 NET_API_STATUS
 WINAPI
+NetGroupAddUser(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ LPCWSTR username)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupAddUser(%s, %s, %s)\n",
+          debugstr_w(servername), debugstr_w(groupname), debugstr_w(username));
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    RtlInitUnicodeString(&UserName, username);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group account */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_ADD_MEMBER,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Object is not a user!\n");
+        ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    Status = SamAddMemberToGroup(GroupHandle,
+                                 RelativeIds[0],
+                                 0);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamAddMemberToGroup failed (Status %lu)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
 NetGroupDel(
     _In_opt_ LPCWSTR servername,
     _In_ IN LPCWSTR groupname)
@@ -513,6 +629,121 @@ NetGroupDel(
     }
 
 done:
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetGroupDelUser(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ LPCWSTR username)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    UNICODE_STRING UserName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    PULONG RelativeIds = NULL;
+    PSID_NAME_USE Use = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupDelUser(%s, %s, %s)\n",
+          debugstr_w(servername), debugstr_w(groupname), debugstr_w(username));
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    RtlInitUnicodeString(&UserName, username);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group account */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_REMOVE_MEMBER,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    1,
+                                    &UserName,
+                                    &RelativeIds,
+                                    &Use);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Fail, if it is not a user account */
+    if (Use[0] != SidTypeUser)
+    {
+        ERR("Object is not a user!\n");
+        ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    Status = SamRemoveMemberFromGroup(GroupHandle,
+                                      RelativeIds[0]);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamRemoveMemberFromGroup failed (Status %lu)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (RelativeIds != NULL)
+        SamFreeMemory(RelativeIds);
+
+    if (Use != NULL)
+        SamFreeMemory(Use);
+
     if (GroupHandle != NULL)
         SamCloseHandle(GroupHandle);
 
