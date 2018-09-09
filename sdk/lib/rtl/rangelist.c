@@ -543,28 +543,34 @@ RtlFindRange(IN PRTL_RANGE_LIST RangeList,
  *
  * @implemented
  */
+NTSYSAPI
 VOID
 NTAPI
-RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList)
+RtlFreeRangeList(
+    _In_ PRTL_RANGE_LIST RangeList)
 {
-    PLIST_ENTRY Entry;
-    PRTL_RANGE_ENTRY Current;
+    PRTLP_RANGE_LIST_ENTRY entry;
+    PRTLP_RANGE_LIST_ENTRY RangeListEntry;
 
-    while (!IsListEmpty(&RangeList->ListHead))
-    {
-        Entry = RemoveHeadList(&RangeList->ListHead);
-        Current = CONTAINING_RECORD(Entry, RTL_RANGE_ENTRY, Entry);
+    PAGED_CODE_RTL();
+    ASSERT(RangeList);
 
-        DPRINT ("Range start: %I64u\n", Current->Range.Start);
-        DPRINT ("Range end:   %I64u\n", Current->Range.End);
-
-        RtlpFreeMemory(Current, 0);
-    }
+    DPRINT("RtlFreeRangeList: RangeList - %p, RangeList->Count - %X\n",
+           RangeList, RangeList->Count);
 
     RangeList->Flags = 0;
     RangeList->Count = 0;
-}
 
+    for (RangeListEntry = CONTAINING_RECORD(RangeList->ListHead.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry),
+                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry);
+         &RangeListEntry->ListEntry != &RangeList->ListHead;
+         RangeListEntry = entry,
+                  entry = CONTAINING_RECORD(RangeListEntry->ListEntry.Flink, RTLP_RANGE_LIST_ENTRY, ListEntry))
+    {
+        RemoveEntryList(&RangeListEntry->ListEntry);
+        RtlpDeleteRangeListEntry(RangeListEntry);
+    }
+}
 
 /**********************************************************************
  * NAME							EXPORTED
