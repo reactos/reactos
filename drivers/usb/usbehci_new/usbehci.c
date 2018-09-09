@@ -26,7 +26,7 @@ static const UCHAR ClassicPeriod[8] = {
     ENDPOINT_INTERRUPT_32ms - 1
 };
 
-static EHCI_PERIOD pTable[] = {
+static const EHCI_PERIOD pTable[] = {
     { ENDPOINT_INTERRUPT_1ms, 0x00, 0xFF },
     { ENDPOINT_INTERRUPT_2ms, 0x00, 0x55 },
     { ENDPOINT_INTERRUPT_2ms, 0x00, 0xAA },
@@ -336,7 +336,7 @@ EHCI_OpenInterruptEndpoint(IN PEHCI_EXTENSION EhciExtension,
     PEHCI_HCD_TD DummyTD;
     ULONG TdCount;
     ULONG ix;
-    PEHCI_PERIOD PeriodTable = NULL;
+    const EHCI_PERIOD * PeriodTable = NULL;
     ULONG ScheduleOffset;
     ULONG Idx = 0;
     UCHAR Period;

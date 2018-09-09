@@ -142,7 +142,7 @@ typedef struct _EHCI_ENDPOINT {
   PEHCI_HCD_TD HcdHeadP;
   PEHCI_HCD_TD HcdTailP;
   LIST_ENTRY ListTDs;
-  PEHCI_PERIOD PeriodTable;
+  const EHCI_PERIOD * PeriodTable;
   PEHCI_STATIC_QH StaticQH;
 } EHCI_ENDPOINT, *PEHCI_ENDPOINT;
 
