@@ -226,7 +226,7 @@ OpenGroupByName(
                                     &Use);
     if (!NT_SUCCESS(Status))
     {
-        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+        WARN("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
         return NetpNtStatusToApiStatus(Status);
     }
 
@@ -265,6 +265,266 @@ done:
 
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+NET_API_STATUS
+WINAPI
+NetGroupAdd(
+    _In_opt_ LPCWSTR servername,
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _Out_ LPDWORD parm_err)
+{
+    GROUP_ADM_COMMENT_INFORMATION AdminComment;
+    GROUP_ATTRIBUTE_INFORMATION AttributeInfo;
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    PWSTR Name = NULL;
+    PWSTR Comment = NULL;
+    ULONG Attributes = 0;
+    ULONG RelativeId;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupAdd(%s, %d, %p, %p)\n",
+          debugstr_w(servername), level, buf, parm_err);
+
+    /* Initialize the Server name*/
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    /* Initialize the Alias name*/
+    switch (level)
+    {
+        case 0:
+            Name = ((PGROUP_INFO_0)buf)->grpi0_name;
+            Comment = NULL;
+            Attributes = 0;
+            break;
+
+        case 1:
+            Name = ((PGROUP_INFO_1)buf)->grpi1_name;
+            Comment = ((PGROUP_INFO_1)buf)->grpi1_comment;
+            Attributes = 0;
+            break;
+
+        case 2:
+            Name = ((PGROUP_INFO_2)buf)->grpi2_name;
+            Comment = ((PGROUP_INFO_2)buf)->grpi2_comment;
+            Attributes = ((PGROUP_INFO_2)buf)->grpi2_attributes;
+            break;
+
+        case 3:
+            Name = ((PGROUP_INFO_3)buf)->grpi3_name;
+            Comment = ((PGROUP_INFO_3)buf)->grpi3_comment;
+            Attributes = ((PGROUP_INFO_3)buf)->grpi3_attributes;
+            break;
+
+        default:
+            return ERROR_INVALID_LEVEL;
+    }
+
+    RtlInitUnicodeString(&GroupName, Name);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the account domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_CREATE_GROUP | DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamOpenDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Try to open the group account */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_READ_INFORMATION,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus == NERR_Success)
+    {
+        ERR("OpenGroupByName: Group %wZ already exists!\n", &GroupName);
+
+        SamCloseHandle(GroupHandle);
+        ApiStatus = ERROR_GROUP_EXISTS;
+        goto done;
+    }
+
+    ApiStatus = NERR_Success;
+
+    /* Create the group */
+    Status = SamCreateGroupInDomain(DomainHandle,
+                                    &GroupName,
+                                    DELETE | GROUP_WRITE_ACCOUNT,
+                                    &GroupHandle,
+                                    &RelativeId);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamCreateGroupInDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    TRACE("Created group \"%wZ\" (RID: %lu)\n", &GroupName, RelativeId);
+
+    /* Set the admin comment */
+    if (level == 1 || level == 2 || level == 3)
+    {
+        RtlInitUnicodeString(&AdminComment.AdminComment, Comment);
+
+        Status = SamSetInformationGroup(GroupHandle,
+                                        GroupAdminCommentInformation,
+                                        &AdminComment);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+
+            /* Delete the Alias if the Comment could not be set */
+            SamDeleteGroup(GroupHandle);
+
+            goto done;
+        }
+    }
+
+    /* Set the attributes */
+    if (level == 2 || level == 3)
+    {
+        AttributeInfo.Attributes = Attributes;
+
+        Status = SamSetInformationGroup(GroupHandle,
+                                        GroupAttributeInformation,
+                                        &AttributeInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+
+            /* Delete the Alias if the Attributes could not be set */
+            SamDeleteGroup(GroupHandle);
+
+            goto done;
+        }
+    }
+
+done:
+    if (GroupHandle != NULL)
+    {
+        if (ApiStatus != NERR_Success)
+            SamDeleteGroup(GroupHandle);
+        else
+            SamCloseHandle(GroupHandle);
+    }
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetGroupDel(
+    _In_opt_ LPCWSTR servername,
+    _In_ IN LPCWSTR groupname)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupDel(%s, %s)\n",
+          debugstr_w(servername), debugstr_w(groupname));
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                DELETE,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    /* Delete the group */
+    Status = SamDeleteGroup(GroupHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamDeleteGroup failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+done:
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
 
 NET_API_STATUS
 WINAPI
