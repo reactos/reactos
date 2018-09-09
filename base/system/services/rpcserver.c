@@ -1989,6 +1989,11 @@ RChangeServiceConfigW(
         (dwErrorControl != SERVICE_ERROR_CRITICAL))
         return ERROR_INVALID_PARAMETER;
 
+    if (lpdwTagId && (!lpLoadOrderGroup || !*lpLoadOrderGroup))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
