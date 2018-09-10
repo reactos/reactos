@@ -4274,7 +4274,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0x0F);
     if (Byte == DEFAULT_PITCH)
         Byte = VARIABLE_PITCH;
-    if ((Byte & FIXED_PITCH) || (Byte & MONO_FONT))
+    if (Byte == FIXED_PITCH)
     {
         if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
         {
@@ -4284,7 +4284,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             Penalty += 15000;
         }
     }
-    if (Byte & VARIABLE_PITCH)
+    if (Byte == VARIABLE_PITCH)
     {
         if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
         {
@@ -4335,37 +4335,12 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0xF0);
     if (Byte != FF_DONTCARE)
     {
-        if (Byte & FF_MODERN)
-        {
-            if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
-            {
-                /* FixedPitch Penalty 15000 */
-                /* Requested a fixed pitch font, but the candidate is a
-                   variable pitch font. */
-                Penalty += 15000;
-            }
-        }
-
-        if ((Byte & FF_ROMAN) || (Byte & FF_SWISS))
-        {
-            if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
-            {
-                /* PitchVariable Penalty 350 */
-                /* Requested a variable pitch font, but the candidate is not a
-                   variable pitch font. */
-                Penalty += 350;
-            }
-        }
-
-#define FF_MASK  (FF_DECORATIVE | FF_SCRIPT | FF_SWISS)
-        if ((Byte & FF_MASK) != (TM->tmPitchAndFamily & FF_MASK))
+        if (Byte != (TM->tmPitchAndFamily & 0xF0))
         {
             /* Family Penalty 9000 */
             /* Requested a family, but the candidate's family is different. */
             Penalty += 9000;
         }
-#undef FF_MASK
-
         if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
         {
             /* FamilyUnknown Penalty 8000 */
