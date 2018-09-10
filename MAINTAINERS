@@ -84,6 +84,7 @@ Application Compatibility subystem
 Cache Manager
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
+	F: modules/rostests/kmtests/ntos_cc/
 	F: ntoskrnl/cc/
 
 Cache Manager Rewrite
@@ -109,6 +110,8 @@ File Systems
 File Systems Run Time Library
 	M: HeisSpiter, Pierre Schweitzer
 	S: Maintained
+	F: modules/rostests/kmtests/ntos_fsrtl/
+	F: modules/rostests/kmtests/novp_fsrtl/
 	F: ntoskrnl/fsrtl/
 	F: sdk/lib/drivers/ntoskrnl_vista/fsrtl.c
 
@@ -164,6 +167,7 @@ ROS internals tools
 
 Run-Time Library (RTL)
 	M:
+	R: HeisSpiter, Pierre Schweitzer
 	R: learn-more, learn_more, Mark Jansen
 	R: ThFabba, Thomas Faber
 	S: Maintained
