@@ -32,6 +32,21 @@ typedef struct _ENUM_CONTEXT
     ENUM_PHASE Phase;
 } ENUM_CONTEXT, *PENUM_CONTEXT;
 
+typedef struct _USER_ENUM_CONTEXT
+{
+    SAM_HANDLE ServerHandle;
+    SAM_HANDLE DomainHandle;
+    SAM_HANDLE GroupHandle;
+
+    ULONG MemberCount;
+    PULONG MemberIds;
+    PULONG Attributes;
+    PUNICODE_STRING Names;
+
+    ULONG Start;
+    ULONG Count;
+} USER_ENUM_CONTEXT, *PUSER_ENUM_CONTEXT;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1102,6 +1117,258 @@ done:
         SamCloseHandle(ServerHandle);
 
     *bufptr = (LPBYTE)Buffer;
+
+    return ApiStatus;
+}
+
+
+NET_API_STATUS
+WINAPI
+NetGroupGetUsers(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ DWORD level,
+    _Out_ LPBYTE *bufptr,
+    _In_ DWORD prefmaxlen,
+    _Out_ LPDWORD entriesread,
+    _Out_ LPDWORD totalentries,
+    _Inout_ PDWORD_PTR resume_handle)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    PGROUP_USERS_INFO_0 UserInfo0;
+    PGROUP_USERS_INFO_1 UserInfo1;
+    PUSER_ENUM_CONTEXT EnumContext = NULL;
+    PVOID Buffer = NULL;
+    ULONG i, idx, Size;
+    PWSTR Ptr;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupGetUsers(%s, %s, %d, %p, %d, %p, %p, %p)\n",
+          debugstr_w(servername), debugstr_w(groupname), level, bufptr,
+          prefmaxlen, entriesread, totalentries, resume_handle);
+
+    *entriesread = 0;
+    *totalentries = 0;
+    *bufptr = NULL;
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    if (resume_handle != NULL && *resume_handle != 0)
+    {
+        EnumContext = (PUSER_ENUM_CONTEXT)*resume_handle;
+    }
+    else
+    {
+        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        if (ApiStatus != NERR_Success)
+            goto done;
+
+        EnumContext->MemberCount = 0;
+        EnumContext->MemberIds = NULL;
+        EnumContext->Attributes = NULL;
+        EnumContext->Names = NULL;
+        EnumContext->Start = 0;
+        EnumContext->Count = 0;
+
+        /* Connect to the SAM Server */
+        Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                            &EnumContext->ServerHandle,
+                            SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                            NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamConnect failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the Acount Domain */
+        Status = OpenAccountDomain(EnumContext->ServerHandle,
+                                   (servername != NULL) ? &ServerName : NULL,
+                                   DOMAIN_LOOKUP,
+                                   &EnumContext->DomainHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        /* Open the group account */
+        ApiStatus = OpenGroupByName(EnumContext->DomainHandle,
+                                    &GroupName,
+                                    GROUP_LIST_MEMBERS,
+                                    &EnumContext->GroupHandle,
+                                    NULL);
+        if (ApiStatus != NERR_Success)
+        {
+            ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+            if (ApiStatus == ERROR_NONE_MAPPED)
+                ApiStatus = NERR_GroupNotFound;
+            goto done;
+        }
+
+        /* Get the group members */
+        Status = SamGetMembersInGroup(EnumContext->GroupHandle,
+                                      &EnumContext->MemberIds,
+                                      &EnumContext->Attributes,
+                                      &EnumContext->MemberCount);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("SamGetMembersInGroup failed (Status %08lx)\n", Status);
+            ApiStatus = NetpNtStatusToApiStatus(Status);
+            goto done;
+        }
+
+        if (EnumContext->MemberCount > 0)
+        {
+            /* Get all member names */
+            Status = SamLookupIdsInDomain(EnumContext->DomainHandle,
+                                          EnumContext->MemberCount,
+                                          EnumContext->MemberIds,
+                                          &EnumContext->Names,
+                                          NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamLookupIdsInDomain failed (Status %08lx)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+        }
+    }
+
+    /* Calculate the required buffer size */
+    Size = 0;
+    if (prefmaxlen == -1)
+    {
+        Size = EnumContext->MemberCount *
+               ((level == 0) ? sizeof(GROUP_USERS_INFO_0) : sizeof(GROUP_USERS_INFO_1));
+        for (i = EnumContext->Start; i < EnumContext->MemberCount; i++)
+            Size += EnumContext->Names[i].Length + sizeof(WCHAR);
+
+        EnumContext->Count = EnumContext->MemberCount;
+    }
+    else
+    {
+        for (i = EnumContext->Start; i < EnumContext->MemberCount; i++)
+        {
+            Size += (level == 0) ? sizeof(GROUP_USERS_INFO_0) : sizeof(GROUP_USERS_INFO_1);
+            Size += EnumContext->Names[i].Length + sizeof(WCHAR);
+
+            EnumContext->Count++;
+
+            if (Size >= prefmaxlen)
+                break;
+        }
+    }
+
+    TRACE("Buffer size: %lu\n", Size);
+
+    /* Allocate and clear the buffer */
+    ApiStatus = NetApiBufferAllocate(Size, &Buffer);
+    if (ApiStatus != NERR_Success)
+        goto done;
+
+    ZeroMemory(Buffer, Size);
+
+    /* Fill the buffer */
+    if (level == 0)
+        Ptr = (PWCHAR)((LONG_PTR)Buffer + EnumContext->Count * sizeof(GROUP_USERS_INFO_0));
+    else
+        Ptr = (PWCHAR)((LONG_PTR)Buffer + EnumContext->Count * sizeof(GROUP_USERS_INFO_1));
+
+    for (i = 0; i < EnumContext->Count; i++)
+    {
+        idx = EnumContext->Start + i;
+
+        if (level == 0)
+        {
+            UserInfo0 = (PGROUP_USERS_INFO_0)Buffer;
+
+            UserInfo0[i].grui0_name = Ptr;
+
+            memcpy(UserInfo0[i].grui0_name,
+                   EnumContext->Names[idx].Buffer,
+                   EnumContext->Names[idx].Length);
+            UserInfo0[i].grui0_name[EnumContext->Names[idx].Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            Ptr = (PWSTR)((ULONG_PTR)Ptr + EnumContext->Names[idx].Length + sizeof(WCHAR));
+        }
+        else
+        {
+            UserInfo1 = (PGROUP_USERS_INFO_1)Buffer;
+
+            UserInfo1[i].grui1_name = Ptr;
+
+            memcpy(UserInfo1[i].grui1_name,
+                   EnumContext->Names[idx].Buffer,
+                   EnumContext->Names[idx].Length);
+            UserInfo1[i].grui1_name[EnumContext->Names[idx].Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+            UserInfo1[i].grui1_attributes = EnumContext->Attributes[idx];
+
+            Ptr = (PWSTR)((ULONG_PTR)Ptr + EnumContext->Names[idx].Length + sizeof(WCHAR));
+        }
+    }
+
+    /* Set the new start index */
+    EnumContext->Start += EnumContext->Count;
+
+    /* Only return ERROR_MORE_DATA if we are not done yet */
+    if (EnumContext->MemberCount > EnumContext->Start)
+        ApiStatus = ERROR_MORE_DATA;
+    else
+        ApiStatus = NERR_Success;
+
+done:
+    if (EnumContext != NULL)
+    {
+        *entriesread = EnumContext->Count;
+        *totalentries = EnumContext->MemberCount;
+    }
+
+    if (resume_handle == NULL || ApiStatus != ERROR_MORE_DATA)
+    {
+        if (EnumContext != NULL)
+        {
+            if (EnumContext->Names != NULL)
+            {
+                for (i = 0; i < EnumContext->MemberCount; i++)
+                    SamFreeMemory(EnumContext->Names[i].Buffer);
+
+                SamFreeMemory(EnumContext->Names);
+            }
+
+            if (EnumContext->Attributes != NULL)
+                SamFreeMemory(EnumContext->Attributes);
+
+            if (EnumContext->MemberIds != NULL)
+                SamFreeMemory(EnumContext->MemberIds);
+
+
+            if (EnumContext->GroupHandle != NULL)
+                SamCloseHandle(EnumContext->GroupHandle);
+
+            if (EnumContext->DomainHandle != NULL)
+                SamCloseHandle(EnumContext->DomainHandle);
+
+            if (EnumContext->ServerHandle != NULL)
+                SamCloseHandle(EnumContext->ServerHandle);
+
+            NetApiBufferFree(EnumContext);
+            EnumContext = NULL;
+        }
+    }
+
+    *bufptr = (LPBYTE)Buffer;
+
+    if (resume_handle != NULL)
+        *resume_handle = (DWORD_PTR)EnumContext;
 
     return ApiStatus;
 }
