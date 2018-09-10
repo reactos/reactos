@@ -9,6 +9,7 @@ area of ReactOS. Being a maintainer means the following:
 	- that person has good knownledge in the area
 	- that person is able to enforce consistency in the area
 	- that person may be available for giving help in the area
+	- that person has push access on the repository
 Being a maintainer does not mean the following:
 	- that person is dedicated to the area
 	- that person is working full-time on the area/on ReactOS
@@ -25,7 +26,8 @@ from all the listed reviewers.
 Also, when submitted a pull request on GitHub, rules defined in
 CONTRIBUTING.md apply. And if the maintainer is not available and
 reviewers approved the pull request, developers feeling confident
-can merge the pull request.
+can merge the pull request. Note that reviewers do not necessarily
+have push access to the repository.
 When submitting a bug report on Jira, if you want to be sure to have
 a developer with skills in that area, write @nick from M people.
 
@@ -36,6 +38,10 @@ is responsible of updating periodically the source code and of
 managing local patches. He is not here to upstream code on your behalf.
 As responsible, he may refuse a local patch if you did not try to
 upstream your changes.
+
+If you want to get listed in that file, either put yourself in the
+file and push it, or open a pull request. You can also ask a person
+who has push access to add yourself.
 
 This file uses a similar format to the Linux kernel MAINTAINERS file.
 Descriptions of section entries used here:
