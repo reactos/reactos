@@ -24,6 +24,7 @@ HANDLE Wow64ExecOptionsKey;
 UNICODE_STRING ImageExecOptionsString = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options");
 UNICODE_STRING Wow64OptionsString = RTL_CONSTANT_STRING(L"");
 UNICODE_STRING NtDllString = RTL_CONSTANT_STRING(L"ntdll.dll");
+UNICODE_STRING Kernel32String = RTL_CONSTANT_STRING(L"kernel32.dll");
 
 BOOLEAN LdrpInLdrInit;
 LONG LdrpProcessInitialized;
@@ -40,6 +41,9 @@ WCHAR StringBuffer[156];
 extern PTEB LdrpTopLevelDllBeingLoadedTeb; // defined in rtlsupp.c!
 PLDR_DATA_TABLE_ENTRY LdrpCurrentDllInitializer;
 PLDR_DATA_TABLE_ENTRY LdrpNtDllDataTableEntry;
+
+static NTSTATUS (WINAPI *Kernel32ProcessInitPostImportFunction)(VOID);
+static BOOL (WINAPI *Kernel32BaseQueryModuleData)(IN LPSTR ModuleName, IN LPSTR Unk1, IN PVOID Unk2, IN PVOID Unk3, IN PVOID Unk4);
 
 RTL_BITMAP TlsBitMap;
 RTL_BITMAP TlsExpansionBitMap;
@@ -729,23 +733,28 @@ LdrpRunInitializeRoutines(IN PCONTEXT Context OPTIONAL)
         NextEntry = NextEntry->Flink;
     }
 
+    Status = STATUS_SUCCESS;
+
     /* If we got a context, then we have to call Kernel32 for TS support */
     if (Context)
     {
         /* Check if we have one */
-        //if (Kernel32ProcessInitPostImportfunction)
-        //{
+        if (Kernel32ProcessInitPostImportFunction)
+        {
             /* Call it */
-            //Kernel32ProcessInitPostImportfunction();
-        //}
-
+            Status = Kernel32ProcessInitPostImportFunction();
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("LDR: LdrpRunInitializeRoutines - Failed running kernel32 post-import function, Status=0x%08lx\n", Status);
+            }
+        }
         /* Clear it */
-        //Kernel32ProcessInitPostImportfunction = NULL;
-        //UNIMPLEMENTED;
+        Kernel32ProcessInitPostImportFunction = NULL;
     }
 
     /* No root entry? return */
-    if (!LdrRootEntry) return STATUS_SUCCESS;
+    if (!LdrRootEntry)
+        return Status;
 
     /* Set the TLD TEB */
     OldTldTeb = LdrpTopLevelDllBeingLoadedTeb;
@@ -1603,7 +1612,8 @@ LdrpInitializeProcess(IN PCONTEXT Context,
 {
     RTL_HEAP_PARAMETERS HeapParameters;
     ULONG ComSectionSize;
-    //ANSI_STRING FunctionName = RTL_CONSTANT_STRING("BaseQueryModuleData");
+    ANSI_STRING BaseProcessInitPostImportName = RTL_CONSTANT_STRING("BaseProcessInitPostImport");
+    ANSI_STRING BaseQueryModuleDataName = RTL_CONSTANT_STRING("BaseQueryModuleData");
     PVOID OldShimData;
     OBJECT_ATTRIBUTES ObjectAttributes;
     //UNICODE_STRING LocalFileName, FullImageName;
@@ -2120,11 +2130,46 @@ LdrpInitializeProcess(IN PCONTEXT Context,
         DPRINT1("We don't support .NET applications yet\n");
     }
 
-    /* FIXME: Load support for Terminal Services */
-    if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+    if (NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI ||
+        NtHeader->OptionalHeader.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
     {
-        /* Load kernel32 and call BasePostImportInit... */
-        DPRINT("Unimplemented codepath!\n");
+        PVOID Kernel32BaseAddress;
+        PVOID FunctionAddress;
+
+        Status = LdrLoadDll(NULL, NULL, &Kernel32String, &Kernel32BaseAddress);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (ShowSnaps)
+                DPRINT1("LDR: Unable to load %wZ, Status=0x%08lx\n", &Kernel32String, Status);
+            return Status;
+        }
+
+        Status = LdrGetProcedureAddress(Kernel32BaseAddress,
+                                        &BaseProcessInitPostImportName,
+                                        0,
+                                        &FunctionAddress);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (ShowSnaps)
+                DPRINT1("LDR: Unable to find post-import process init function, Status=0x%08lx\n", &Kernel32String, Status);
+            return Status;
+        }
+        Kernel32ProcessInitPostImportFunction = FunctionAddress;
+
+        Status = LdrGetProcedureAddress(Kernel32BaseAddress,
+                                        &BaseQueryModuleDataName,
+                                        0,
+                                        &FunctionAddress);
+
+        if (!NT_SUCCESS(Status))
+        {
+            if (ShowSnaps)
+                DPRINT1("LDR: Unable to find BaseQueryModuleData, Status=0x%08lx\n", &Kernel32String, Status);
+            return Status;
+        }
+        Kernel32BaseQueryModuleData = FunctionAddress;
     }
 
     /* Walk the IAT and load all the DLLs */

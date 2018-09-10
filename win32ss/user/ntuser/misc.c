@@ -9,6 +9,30 @@
 #include <win32k.h>
 DBG_DEFAULT_CHANNEL(UserMisc);
 
+
+/*
+ * NOTE: _scwprintf() is NOT exported by ntoskrnl.exe,
+ * only _vscwprintf() is, so we need to implement it here.
+ * Code comes from sdk/lib/crt/printf/_scwprintf.c .
+ * See also win32ss/user/winsrv/usersrv/harderror.c .
+ */
+int
+__cdecl
+_scwprintf(
+    const wchar_t *format,
+    ...)
+{
+    int len;
+    va_list args;
+
+    va_start(args, format);
+    len = _vscwprintf(format, args);
+    va_end(args);
+
+    return len;
+}
+
+
 /*
  * Test the Thread to verify and validate it. Hard to the core tests are required.
  */
@@ -760,6 +784,57 @@ GetW32ThreadInfo(VOID)
 {
     UserDbgAssertThreadInfo(TRUE);
     return (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+}
+
+
+NTSTATUS
+GetProcessLuid(
+    IN PETHREAD Thread OPTIONAL,
+    IN PEPROCESS Process OPTIONAL,
+    OUT PLUID Luid)
+{
+    NTSTATUS Status;
+    PACCESS_TOKEN Token = NULL;
+    SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+    BOOLEAN CopyOnOpen, EffectiveOnly;
+
+    if (Thread && Process)
+        return STATUS_INVALID_PARAMETER;
+
+    /* If nothing has been specified, use the current thread */
+    if (!Thread && !Process)
+        Thread = PsGetCurrentThread();
+
+    if (Thread)
+    {
+        /* Use a thread token */
+        ASSERT(!Process);
+        Token = PsReferenceImpersonationToken(Thread,
+                                              &CopyOnOpen,
+                                              &EffectiveOnly,
+                                              &ImpersonationLevel);
+
+        /* If we don't have a thread token, use a process token */
+        if (!Token)
+            Process = PsGetThreadProcess(Thread);
+    }
+    if (!Token && Process)
+    {
+        /* Use a process token */
+        Token = PsReferencePrimaryToken(Process);
+
+        /* If we don't have a token, fail */
+        if (!Token)
+            return STATUS_NO_TOKEN;
+    }
+    ASSERT(Token);
+
+    /* Query the LUID */
+    Status = SeQueryAuthenticationIdToken(Token, Luid);
+
+    /* Get rid of the token and return */
+    ObDereferenceObject(Token);
+    return Status;
 }
 
 /* EOF */

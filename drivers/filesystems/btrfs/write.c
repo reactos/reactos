@@ -4690,7 +4690,7 @@ exit:
 
 _Dispatch_type_(IRP_MJ_WRITE)
 _Function_class_(DRIVER_DISPATCH)
-NTSTATUS drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
+NTSTATUS NTAPI drv_write(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
     NTSTATUS Status;
     BOOL top_level;
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);

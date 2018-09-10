@@ -445,7 +445,7 @@ FATAddEntry(
     /* nb of entry needed for long name+normal entry */
     nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;
     DPRINT("NameLen= %u, nbSlots =%u\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, (nbSlots - 1) * sizeof(FAT_DIR_ENTRY), TAG_VFAT);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, (nbSlots - 1) * sizeof(FAT_DIR_ENTRY), TAG_DIRENT);
     if (Buffer == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -505,7 +505,7 @@ FATAddEntry(
         }
         if (i == 100) /* FIXME : what to do after this ? */
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             return STATUS_UNSUCCESSFUL;
         }
         IsNameLegal = RtlIsNameLegalDOS8Dot3(&DirContext.ShortNameU, &NameA, &SpacesFound);
@@ -650,7 +650,7 @@ FATAddEntry(
     /* try to find nbSlots contiguous entries frees in directory */
     if (!vfatFindDirSpace(DeviceExt, ParentFcb, nbSlots, &DirContext.StartIndex))
     {
-        ExFreePoolWithTag(Buffer, TAG_VFAT);
+        ExFreePoolWithTag(Buffer, TAG_DIRENT);
         return STATUS_DISK_FULL;
     }
     DirContext.DirIndex = DirContext.StartIndex + nbSlots - 1;
@@ -663,7 +663,7 @@ FATAddEntry(
             Status = NextCluster(DeviceExt, 0, &CurrentCluster, TRUE);
             if (CurrentCluster == 0xffffffff || !NT_SUCCESS(Status))
             {
-                ExFreePoolWithTag(Buffer, TAG_VFAT);
+                ExFreePoolWithTag(Buffer, TAG_DIRENT);
                 if (!NT_SUCCESS(Status))
                 {
                     return Status;
@@ -713,7 +713,7 @@ FATAddEntry(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -736,7 +736,7 @@ FATAddEntry(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -750,7 +750,7 @@ FATAddEntry(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -774,7 +774,7 @@ FATAddEntry(
     }
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Buffer, TAG_VFAT);
+        ExFreePoolWithTag(Buffer, TAG_DIRENT);
         return Status;
     }
 
@@ -786,7 +786,7 @@ FATAddEntry(
         Status = vfatFCBInitializeCacheFromVolume(DeviceExt, (*Fcb));
         if (!NT_SUCCESS(Status))
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             return Status;
         }
 
@@ -797,7 +797,7 @@ FATAddEntry(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            ExFreePoolWithTag(Buffer, TAG_VFAT);
+            ExFreePoolWithTag(Buffer, TAG_DIRENT);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -806,9 +806,11 @@ FATAddEntry(
         {
             RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
             /* create '.' and '..' */
-            RtlCopyMemory(&pFatEntry[0].Attrib, &DirContext.DirEntry.Fat.Attrib, sizeof(FAT_DIR_ENTRY) - 11);
+            RtlCopyMemory(&pFatEntry[0].Attrib, &DirContext.DirEntry.Fat.Attrib,
+                          sizeof(FAT_DIR_ENTRY) - FIELD_OFFSET(FAT_DIR_ENTRY, Attrib));
             RtlCopyMemory(pFatEntry[0].ShortName, ".          ", 11);
-            RtlCopyMemory(&pFatEntry[1].Attrib, &DirContext.DirEntry.Fat.Attrib, sizeof(FAT_DIR_ENTRY) - 11);
+            RtlCopyMemory(&pFatEntry[1].Attrib, &DirContext.DirEntry.Fat.Attrib,
+                          sizeof(FAT_DIR_ENTRY) - FIELD_OFFSET(FAT_DIR_ENTRY, Attrib));
             RtlCopyMemory(pFatEntry[1].ShortName, "..         ", 11);
         }
 
@@ -822,7 +824,7 @@ FATAddEntry(
         CcSetDirtyPinnedData(Context, NULL);
         CcUnpinData(Context);
     }
-    ExFreePoolWithTag(Buffer, TAG_VFAT);
+    ExFreePoolWithTag(Buffer, TAG_DIRENT);
     DPRINT("addentry ok\n");
     return STATUS_SUCCESS;
 }

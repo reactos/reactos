@@ -149,13 +149,20 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 
     /* load environment variable PATHEXT */
     pszPathExt = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+    if (!pszPathExt)
+    {
+        WARN("Cannot allocate memory for pszPathExt!\n");
+        return FALSE;
+    }
+
     dwBuffer = GetEnvironmentVariable (_T("PATHEXT"), pszPathExt, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)
     {
         LPTSTR pszOldPathExt = pszPathExt;
         pszPathExt = (LPTSTR)cmd_realloc (pszPathExt, dwBuffer * sizeof (TCHAR));
-        if (pszPathExt == NULL)
+        if (!pszPathExt)
         {
+            WARN("Cannot reallocate memory for pszPathExt!\n");
             cmd_free(pszOldPathExt);
             return FALSE;
         }
@@ -187,13 +194,20 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 
     /* load environment variable PATH into buffer */
     pszPath = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+    if (!pszPath)
+    {
+        WARN("Cannot allocate memory for pszPath!\n");
+        return FALSE;
+    }
+
     dwBuffer = GetEnvironmentVariable (_T("PATH"), pszPath, ENV_BUFFER_SIZE);
     if (dwBuffer > ENV_BUFFER_SIZE)
     {
         LPTSTR pszOldPath = pszPath;
         pszPath = (LPTSTR)cmd_realloc (pszPath, dwBuffer * sizeof (TCHAR));
-        if (pszPath == NULL)
+        if (!pszPath)
         {
+            WARN("Cannot reallocate memory for pszPath!\n");
             cmd_free(pszOldPath);
             cmd_free(pszPathExt);
             return FALSE;

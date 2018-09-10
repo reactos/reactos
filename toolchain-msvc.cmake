@@ -55,3 +55,5 @@ set(CMAKE_C_STANDARD_LIBRARIES "" CACHE INTERNAL "")
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
     add_definitions(-D__i386__)
 endif()
+
+set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/overrides-msvc.cmake")

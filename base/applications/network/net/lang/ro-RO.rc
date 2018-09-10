@@ -224,6 +224,11 @@ service can stop others. Some services cannot be stopped.\n\n"
     IDS_CONFIG_WORKSTATION_DOMAIN "Workstation domain"
     IDS_CONFIG_WORKSTATION_LOGON "Logon domain"
 
+    IDS_GROUP_GROUPS "Group Accounts for \\\\%s"
+    IDS_GROUP_NAME "Group name"
+    IDS_GROUP_COMMENT "Comment"
+    IDS_GROUP_MEMBERS "Members"
+
     IDS_LOCALGROUP_ALIASES "Alias pentru \\\\%s"
     IDS_LOCALGROUP_ALIAS_NAME "Nume alias"
     IDS_LOCALGROUP_COMMENT "Comentariu"

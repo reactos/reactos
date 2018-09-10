@@ -5039,3 +5039,10 @@ void EDIT_Register(void)
     wndClass.lpszClassName = WC_EDITW;
     RegisterClassW(&wndClass);
 }
+
+#ifdef __REACTOS__
+void EDIT_Unregister(void)
+{
+    UnregisterClassW(WC_EDITW, NULL);
+}
+#endif

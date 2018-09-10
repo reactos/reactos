@@ -21,6 +21,7 @@
  * FILE:             drivers/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
+ *                   Pierre Schweitzer (pierre@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -95,6 +96,19 @@ DriverEntry(
      * has been detected:
     VfatGlobalData->Flags = VFAT_BREAK_ON_CORRUPTION; */
 
+    /* Delayed close support */
+    ExInitializeFastMutex(&VfatGlobalData->CloseMutex);
+    InitializeListHead(&VfatGlobalData->CloseListHead);
+    VfatGlobalData->CloseCount = 0;
+    VfatGlobalData->CloseWorkerRunning = FALSE;
+    VfatGlobalData->ShutdownStarted = FALSE;
+    VfatGlobalData->CloseWorkItem = IoAllocateWorkItem(DeviceObject);
+    if (VfatGlobalData->CloseWorkItem == NULL)
+    {
+        IoDeleteDevice(DeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     DeviceObject->Flags |= DO_DIRECT_IO;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
     DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
@@ -132,6 +146,8 @@ DriverEntry(
                                     NULL, NULL, 0, sizeof(VFATCCB), TAG_CCB, 0);
     ExInitializeNPagedLookasideList(&VfatGlobalData->IrpContextLookasideList,
                                     NULL, NULL, 0, sizeof(VFAT_IRP_CONTEXT), TAG_IRP, 0);
+    ExInitializePagedLookasideList(&VfatGlobalData->CloseContextLookasideList,
+                                   NULL, NULL, 0, sizeof(VFAT_CLOSE_CONTEXT), TAG_CLOSE, 0);
 
     ExInitializeResourceLite(&VfatGlobalData->VolumeListLock);
     InitializeListHead(&VfatGlobalData->VolumeListHead);

@@ -270,7 +270,12 @@ extern void TREEVIEW_Unregister(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Register(void) DECLSPEC_HIDDEN;
 extern void UPDOWN_Unregister(void) DECLSPEC_HIDDEN;
 #ifdef __REACTOS__
-extern void BUTTON_Unregister();
+extern void BUTTON_Unregister(void) DECLSPEC_HIDDEN;
+extern void COMBO_Unregister(void) DECLSPEC_HIDDEN;
+extern void COMBOLBOX_Unregister(void) DECLSPEC_HIDDEN;
+extern void EDIT_Unregister(void) DECLSPEC_HIDDEN;
+extern void LISTBOX_Unregister(void) DECLSPEC_HIDDEN;
+extern void STATIC_Unregister(void) DECLSPEC_HIDDEN;
 extern void TOOLBARv6_Register(void) DECLSPEC_HIDDEN;
 extern void TOOLBARv6_Unregister(void) DECLSPEC_HIDDEN;
 #endif /* __REACTOS__ */

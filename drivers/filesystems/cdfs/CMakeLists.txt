@@ -2,27 +2,39 @@
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/drivers)
 
 list(APPEND SOURCE
-    cdfs.c
+    allocsup.c
+    cachesup.c
+    cddata.c
+    cdinit.c
+    cdprocssrc.c
     cleanup.c
     close.c
-    common.c
     create.c
     devctrl.c
-    dirctl.c
-    dispatch.c
-    fastio.c
-    fcb.c
-    finfo.c
-    fsctl.c
-    misc.c
-    rw.c
+    deviosup.c
+    dirctrl.c
+    dirsup.c
+    fileinfo.c
+    filobsup.c
+    fsctrl.c
+    fspdisp.c
+    lockctrl.c
+    namesup.c
+    pathsup.c
+    pnp.c
+    prefxsup.c
+    read.c
+    resrcsup.c
+    shutdown.c
+    strucsup.c
+    verfysup.c
     volinfo.c
-    cdfs.h)
+    workque.c
+    write.c)
 
 add_library(cdfs SHARED ${SOURCE} cdfs.rc)
 set_module_type(cdfs kernelmodedriver)
-target_link_libraries(cdfs ${PSEH_LIB})
+target_link_libraries(cdfs ${PSEH_LIB} memcmp)
 add_importlibs(cdfs ntoskrnl hal)
-add_pch(cdfs cdfs.h SOURCE)
 add_cd_file(TARGET cdfs DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_registry_inf(cdfs_reg.inf)

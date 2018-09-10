@@ -42,20 +42,20 @@ END
 
 STRINGTABLE
 BEGIN
-    STRING_CF_UNKNOWN "Unknown Format"
-    STRING_CF_TEXT "Text"
-    STRING_CF_BITMAP "Bitmap"
-    STRING_CF_OEMTEXT "OEM Text"
-    STRING_CF_UNICODETEXT "Unicode Text"
-    STRING_CF_DIB "DIB Bitmap"
-    STRING_CF_LOCALE "Locale Data"
-    STRING_CF_ENHMETAFILE "Enhanced Metafile"
-    STRING_CF_METAFILEPICT "Metafile"
-    STRING_CF_PALETTE "Color Palette"
-    STRING_CF_DIBV5 "DIB Bitmap (Version 5)"
-    STRING_CF_SYLK "Symbolic Link Format"
-    STRING_CF_DIF "Data Interchange Format"
-    STRING_CF_HDROP "Drop Data"
+    STRING_CF_UNKNOWN "Nieznany format"
+    STRING_CF_TEXT "Tekst"
+    STRING_CF_BITMAP "Mapa bitowa"
+    STRING_CF_OEMTEXT "Tekst OWEM"
+    STRING_CF_UNICODETEXT "Tekst Unicode"
+    STRING_CF_DIB "Mapa bitowa DIB"
+    STRING_CF_LOCALE "Dane lokalizacji"
+    STRING_CF_ENHMETAFILE "Rozszerzony metaplik"
+    STRING_CF_METAFILEPICT "Metaplik"
+    STRING_CF_PALETTE "Paleta kolorów"
+    STRING_CF_DIBV5 "Mapa bitowa DIB (wersja 5)"
+    STRING_CF_SYLK "Format lącza symbolicznego"
+    STRING_CF_DIF "Format wymiany danych"
+    STRING_CF_HDROP "Przeciągnij-upuść dane"
 END
 
 STRINGTABLE

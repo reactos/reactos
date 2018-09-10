@@ -1831,6 +1831,8 @@ MUI_STRING roROStrings[] =
     "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Calculatorul va reporni în %li secunde... "},
     {STRING_CONSOLEFAIL1,
     "Eºec la deschiderea consolei\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

@@ -153,13 +153,13 @@ BEGIN
     LTEXT "&Co chcesz, aby zrobił komputer?", IDC_STATIC, 39, 57, 167, 10
     COMBOBOX IDC_SHUTDOWN_ACTION, 39, 70, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_SHUTDOWN_DESCRIPTION, 39, 93, 190, 27
-    GROUPBOX "Shutdown Event Tracker", IDC_STATIC, 9, 122, 257, 146
-    LTEXT "Select the option that best describes why you want to shut down your computer.", IDC_STATIC, 39, 134, 190, 17
-    LTEXT "&Option:", IDC_STATIC, 39, 154, 80, 8
-    AUTOCHECKBOX "&Planned", IDC_REASON_PLANNED, 182, 154, 47, 10
+    GROUPBOX "Śledzenie zdarzeń zamknięcia systemu", IDC_STATIC, 9, 122, 257, 146
+    LTEXT "Wybierz opcję, która najlepiej opisuje, dlaczego chcesz zakończyć pracę tego komputera.", IDC_STATIC, 39, 134, 190, 17
+    LTEXT "&Opcja:", IDC_STATIC, 39, 154, 80, 8
+    AUTOCHECKBOX "&Planowane", IDC_REASON_PLANNED, 182, 154, 47, 10
     COMBOBOX IDC_REASON_LIST, 39, 165, 190, 210, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT "", IDC_REASON_DESCRIPTION, 39, 184, 190, 27
-    LTEXT "&Comment:", IDC_STATIC, 39, 214, 80, 8
+    LTEXT "&Komentarz:", IDC_STATIC, 39, 214, 80, 8
     EDITTEXT IDC_REASON_COMMENT, 39, 224, 190, 35, ES_MULTILINE | WS_VISIBLE | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 150, 276, 55, 14, WS_GROUP
     PUSHBUTTON "Anuluj", IDCANCEL, 211, 276, 55, 14
@@ -180,7 +180,7 @@ END
 
 IDD_SHUTDOWN_FANCY DIALOGEX 0, 0, 275, 146
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Luna-XP-style Shut Down dialog"
+CAPTION "Okno zamykania w stylu motywu Luna"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON "OK", IDOK, 80, 122, 55, 14, WS_GROUP
@@ -208,6 +208,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "Twoje konto zostało wyłączone. Skontaktuj się z administratorem systemu."
     IDS_PASSWORDMUSTCHANGE "Jesteś zobowiązany do zmiany hasła przy pierwszym logowaniu."
     IDS_PASSWORDEXPIRED "Twoje hasło wygasło i musi zostać zmienione."
+    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
 END
 
 /* Shutdown Dialog Strings */
@@ -215,7 +216,7 @@ STRINGTABLE
 BEGIN
     IDS_SHUTDOWN_LOGOFF "Wyloguj ""%s"""
     IDS_SHUTDOWN_SHUTDOWN "Wyłącz"
-    IDS_SHUTDOWN_RESTART "Restart"
+    IDS_SHUTDOWN_RESTART "Uruchom ponownie"
     IDS_SHUTDOWN_SLEEP "Uśpij"
     IDS_SHUTDOWN_HIBERNATE "Hibernacja"
     /* Shut down descriptions */

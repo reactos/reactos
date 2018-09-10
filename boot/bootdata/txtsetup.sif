@@ -56,6 +56,7 @@ pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 storport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
+btrfs.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
 classpnp.sys=,,,,,,,,,,,,4
 pciide.sys=,,,,,,,,,,,,4

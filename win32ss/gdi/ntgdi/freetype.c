@@ -266,16 +266,17 @@ RemoveCachedEntry(PFONT_CACHE_ENTRY Entry)
 static void
 RemoveCacheEntries(FT_Face Face)
 {
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY CurrentEntry, NextEntry;
     PFONT_CACHE_ENTRY FontEntry;
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = NextEntry)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
-        CurrentEntry = CurrentEntry->Flink;
+        NextEntry = CurrentEntry->Flink;
 
         if (FontEntry->Face == Face)
         {
@@ -1344,8 +1345,9 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
     IntLockProcessPrivateFonts(Win32Process);
-    Entry = Win32Process->PrivateMemFontListHead.Flink;
-    while (Entry != &Win32Process->PrivateMemFontListHead)
+    for (Entry = Win32Process->PrivateMemFontListHead.Flink;
+         Entry != &Win32Process->PrivateMemFontListHead;
+         Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY_COLL_MEM, ListEntry);
 
@@ -1355,8 +1357,6 @@ IntGdiRemoveFontMemResource(HANDLE hMMFont)
             UnlinkFontMemCollection(CurrentEntry);
             break;
         }
-
-        Entry = Entry->Flink;
     }
     IntUnLockProcessPrivateFonts(Win32Process);
 
@@ -1991,8 +1991,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
     FONTGDI *FontGDI;
     NTSTATUS status;
 
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
 
@@ -2019,7 +2018,6 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
         }
 
         RtlFreeUnicodeString(&EntryFaceNameW);
-        Entry = Entry->Flink;
     }
 
     return NULL;
@@ -2674,8 +2672,9 @@ ftGdiGlyphCacheGet(
 
     ASSERT_FREETYPE_LOCK_HELD();
 
-    CurrentEntry = g_FontCacheListHead.Flink;
-    while (CurrentEntry != &g_FontCacheListHead)
+    for (CurrentEntry = g_FontCacheListHead.Flink;
+         CurrentEntry != &g_FontCacheListHead;
+         CurrentEntry = CurrentEntry->Flink)
     {
         FontEntry = CONTAINING_RECORD(CurrentEntry, FONT_CACHE_ENTRY, ListEntry);
         if ((FontEntry->Face == Face) &&
@@ -2684,7 +2683,6 @@ ftGdiGlyphCacheGet(
             (FontEntry->RenderMode == RenderMode) &&
             (SameScaleMatrix(&FontEntry->mxWorldToDevice, pmx)))
             break;
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     if (CurrentEntry == &g_FontCacheListHead)
@@ -4594,11 +4592,9 @@ FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
     Otm = ExAllocatePoolWithTag(PagedPool, OldOtmSize, GDITAG_TEXT);
 
     /* get the FontObj of lowest penalty */
-    Entry = Head->Flink;
-    while (Entry != Head)
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
     {
         CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
-        Entry = Entry->Flink;
 
         FontGDI = CurrentEntry->Font;
         ASSERT(FontGDI);
@@ -4671,6 +4667,53 @@ IntFontType(PFONTGDI Font)
     }
 }
 
+static BOOL
+MatchFontName(PSHARED_FACE SharedFace, LPCWSTR lfFaceName, FT_UShort NameID, FT_UShort LangID)
+{
+    NTSTATUS Status;
+    UNICODE_STRING Name1, Name2;
+
+    if (lfFaceName[0] == UNICODE_NULL)
+        return FALSE;
+
+    RtlInitUnicodeString(&Name1, lfFaceName);
+
+    RtlInitUnicodeString(&Name2, NULL);
+    Status = IntGetFontLocalizedName(&Name2, SharedFace, NameID, LangID);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (RtlCompareUnicodeString(&Name1, &Name2, TRUE) == 0)
+        {
+            RtlFreeUnicodeString(&Name2);
+            return TRUE;
+        }
+
+        RtlFreeUnicodeString(&Name2);
+    }
+
+    return FALSE;
+}
+
+static BOOL
+MatchFontNames(PSHARED_FACE SharedFace, LPCWSTR lfFaceName)
+{
+    if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, LANG_ENGLISH) ||
+        MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, LANG_ENGLISH))
+    {
+        return TRUE;
+    }
+    if (PRIMARYLANGID(gusLanguageID) != LANG_ENGLISH)
+    {
+        if (MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FONT_FAMILY, gusLanguageID) ||
+            MatchFontName(SharedFace, lfFaceName, TT_NAME_ID_FULL_NAME, gusLanguageID))
+        {
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 NTSTATUS
 FASTCALL
 TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
@@ -4735,22 +4778,32 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     }
     else
     {
-        UNICODE_STRING FaceName;
+        UNICODE_STRING Name;
         PFONTGDI FontGdi = ObjToGDI(TextObj->Font, FONT);
+        PSHARED_FACE SharedFace = FontGdi->SharedFace;
 
         IntLockFreeType();
         IntRequestFontSize(NULL, FontGdi, pLogFont->lfWidth, pLogFont->lfHeight);
         IntUnLockFreeType();
 
-        RtlInitUnicodeString(&FaceName, NULL);
-        IntGetFontLocalizedName(&FaceName, FontGdi->SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+        TextObj->TextFace[0] = UNICODE_NULL;
+        if (MatchFontNames(SharedFace, SubstitutedLogFont.lfFaceName))
+        {
+            RtlStringCchCopyW(TextObj->TextFace, _countof(TextObj->TextFace), pLogFont->lfFaceName);
+        }
+        else
+        {
+            RtlInitUnicodeString(&Name, NULL);
+            Status = IntGetFontLocalizedName(&Name, SharedFace, TT_NAME_ID_FONT_FAMILY, gusLanguageID);
+            if (NT_SUCCESS(Status))
+            {
+                /* truncated copy */
+                Name.Length = (USHORT)min(Name.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
+                RtlStringCbCopyNW(TextObj->TextFace, Name.Length + sizeof(WCHAR), Name.Buffer, Name.Length);
 
-        /* truncated copy */
-        FaceName.Length = (USHORT)min(FaceName.Length, (LF_FACESIZE - 1) * sizeof(WCHAR));
-        FaceName.MaximumLength = (USHORT)(FaceName.Length + sizeof(UNICODE_NULL));
-        RtlCopyMemory(TextObj->FaceName, FaceName.Buffer, FaceName.MaximumLength);
-
-        RtlFreeUnicodeString(&FaceName);
+                RtlFreeUnicodeString(&Name);
+            }
+        }
 
         // Need hdev, when freetype is loaded need to create DEVOBJ for
         // Consumer and Producer.

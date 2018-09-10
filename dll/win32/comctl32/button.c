@@ -1273,7 +1273,11 @@ static UINT BUTTON_CalcLabelRect(const BUTTON_INFO *infoPtr, HDC hdc, RECT *rc)
    {
       case DT_TOP:     r.top++;  r.bottom++;  break;
       case DT_VCENTER: n = r.bottom - r.top;
+#ifdef __REACTOS__
+                       r.top    = rc->top + ((rc->bottom - 1 - rc->top) - n) / 2;
+#else
                        r.top    = rc->top + ((rc->bottom - rc->top) - n) / 2;
+#endif
                        r.bottom = r.top + n;  break;
       case DT_BOTTOM:  n = r.bottom - r.top;
                        r.bottom = rc->bottom - 1;
@@ -2104,7 +2108,7 @@ void BUTTON_Register(void)
 
 
 #ifdef __REACTOS__
-void BUTTON_Unregister()
+void BUTTON_Unregister(void)
 {
     UnregisterClassW(WC_BUTTONW, NULL);
 }

@@ -269,6 +269,7 @@ typedef struct
 struct _VFATFCB;
 struct _VFAT_DIRENTRY_CONTEXT;
 struct _VFAT_MOVE_CONTEXT;
+struct _VFAT_CLOSE_CONTEXT;
 
 typedef struct _HASHENTRY
 {
@@ -408,8 +409,15 @@ typedef struct
     NPAGED_LOOKASIDE_LIST FcbLookasideList;
     NPAGED_LOOKASIDE_LIST CcbLookasideList;
     NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
+    PAGED_LOOKASIDE_LIST CloseContextLookasideList;
     FAST_IO_DISPATCH FastIoDispatch;
     CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
+    FAST_MUTEX CloseMutex;
+    ULONG CloseCount;
+    LIST_ENTRY CloseListHead;
+    BOOLEAN CloseWorkerRunning;
+    PIO_WORKITEM CloseWorkItem;
+    BOOLEAN ShutdownStarted;
 } VFAT_GLOBAL_DATA, *PVFAT_GLOBAL_DATA;
 
 extern PVFAT_GLOBAL_DATA VfatGlobalData;
@@ -420,9 +428,10 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_IS_PAGE_FILE        0x0008
 #define FCB_IS_VOLUME           0x0010
 #define FCB_IS_DIRTY            0x0020
+#define FCB_DELAYED_CLOSE       0x0040
 #ifdef KDBG
-#define FCB_CLEANED_UP          0x0040
-#define FCB_CLOSED              0x0080
+#define FCB_CLEANED_UP          0x0080
+#define FCB_CLOSED              0x0100
 #endif
 
 #define NODE_TYPE_FCB ((CSHORT)0x0502)
@@ -510,6 +519,8 @@ typedef struct _VFATFCB
     FAST_MUTEX LastMutex;
     ULONG LastCluster;
     ULONG LastOffset;
+
+    struct _VFAT_CLOSE_CONTEXT * CloseContext;
 } VFATFCB, *PVFATFCB;
 
 #define CCB_DELETE_ON_CLOSE     0x0001
@@ -524,10 +535,16 @@ typedef struct _VFATCCB
     UNICODE_STRING SearchPattern;
 } VFATCCB, *PVFATCCB;
 
-#define TAG_CCB  'BCCV'
-#define TAG_FCB  'BCFV'
-#define TAG_IRP  'PRIV'
-#define TAG_VFAT 'TAFV'
+#define TAG_CCB  'CtaF'
+#define TAG_FCB  'FtaF'
+#define TAG_IRP  'ItaF'
+#define TAG_CLOSE 'xtaF'
+#define TAG_STATS 'VtaF'
+#define TAG_BUFFER 'OtaF'
+#define TAG_VPB 'vtaF'
+#define TAG_NAME 'ntaF'
+#define TAG_SEARCH 'LtaF'
+#define TAG_DIRENT 'DtaF'
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 
@@ -587,6 +604,13 @@ typedef struct _VFAT_MOVE_CONTEXT
     USHORT CreationTime;
     BOOLEAN InPlace;
 } VFAT_MOVE_CONTEXT, *PVFAT_MOVE_CONTEXT;
+
+typedef struct _VFAT_CLOSE_CONTEXT
+{
+    PDEVICE_EXTENSION Vcb;
+    PVFATFCB Fcb;
+    LIST_ENTRY CloseListEntry;
+} VFAT_CLOSE_CONTEXT, *PVFAT_CLOSE_CONTEXT;
 
 FORCEINLINE
 NTSTATUS

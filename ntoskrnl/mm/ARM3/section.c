@@ -9,6 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#include <ntintsafe.h>
 #define NDEBUG
 #include <debug.h>
 
@@ -2847,6 +2848,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     PCONTROL_AREA ControlArea;
     ULONG ProtectionMask;
     NTSTATUS Status;
+    ULONG64 CalculatedViewSize;
     PAGED_CODE();
 
     /* Get the segment and control area */
@@ -2893,11 +2895,12 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     if (!(*ViewSize))
     {
         /* Compute it for the caller */
-        *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
+        CalculatedViewSize = Section->SizeOfSection.QuadPart - 
+                             SectionOffset->QuadPart;
 
         /* Check if it's larger than 4GB or overflows into kernel-mode */
-        if ((*ViewSize > 0xFFFFFFFF) ||
-            (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)*BaseAddress) < *ViewSize))
+        if (!NT_SUCCESS(RtlULongLongToSIZET(CalculatedViewSize, ViewSize)) ||
+            (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)*BaseAddress) < CalculatedViewSize))
         {
             DPRINT1("Section view won't fit\n");
             return STATUS_INVALID_VIEW_SIZE;

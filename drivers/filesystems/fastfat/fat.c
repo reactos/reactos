@@ -891,7 +891,7 @@ FAT16GetDirtyStatus(
      * - Allocate a big enough buffer
      * - And read the disk
      */
-    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_BUFFER);
     if (Sector == NULL)
     {
         *DirtyStatus = TRUE;
@@ -902,7 +902,7 @@ FAT16GetDirtyStatus(
     if  (!NT_SUCCESS(Status))
     {
         *DirtyStatus = TRUE;
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
         return Status;
     }
 #endif
@@ -917,7 +917,7 @@ FAT16GetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
         CcUnpinData(Context);
 #else
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
         return STATUS_DISK_CORRUPT_ERROR;
     }
@@ -931,7 +931,7 @@ FAT16GetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
     CcUnpinData(Context);
 #else
-    ExFreePoolWithTag(Sector, TAG_VFAT);
+    ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
     return STATUS_SUCCESS;
 }
@@ -969,7 +969,7 @@ FAT32GetDirtyStatus(
      * - Allocate a big enough buffer
      * - And read the disk
      */
-    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_BUFFER);
     if (Sector == NULL)
     {
         *DirtyStatus = TRUE;
@@ -980,7 +980,7 @@ FAT32GetDirtyStatus(
     if  (!NT_SUCCESS(Status))
     {
         *DirtyStatus = TRUE;
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
         return Status;
     }
 #endif
@@ -995,7 +995,7 @@ FAT32GetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
         CcUnpinData(Context);
 #else
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
         return STATUS_DISK_CORRUPT_ERROR;
     }
@@ -1009,7 +1009,7 @@ FAT32GetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
     CcUnpinData(Context);
 #else
-    ExFreePoolWithTag(Sector, TAG_VFAT);
+    ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
     return STATUS_SUCCESS;
 }
@@ -1077,7 +1077,7 @@ FAT16SetDirtyStatus(
      * - Allocate a big enough buffer
      * - And read the disk
      */
-    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_BUFFER);
     if (Sector == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1086,7 +1086,7 @@ FAT16SetDirtyStatus(
     Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
     if  (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
         return Status;
     }
 #endif
@@ -1099,7 +1099,7 @@ FAT16SetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
         CcUnpinData(Context);
 #else
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
         return STATUS_DISK_CORRUPT_ERROR;
     }
@@ -1124,7 +1124,7 @@ FAT16SetDirtyStatus(
 #else
     /* Write back the boot sector to the disk */
     Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
-    ExFreePoolWithTag(Sector, TAG_VFAT);
+    ExFreePoolWithTag(Sector, TAG_BUFFER);
     return Status;
 #endif
 }
@@ -1162,7 +1162,7 @@ FAT32SetDirtyStatus(
      * - Allocate a big enough buffer
      * - And read the disk
      */
-    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_BUFFER);
     if (Sector == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1171,7 +1171,7 @@ FAT32SetDirtyStatus(
     Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
     if  (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
         return Status;
     }
 #endif
@@ -1185,7 +1185,7 @@ FAT32SetDirtyStatus(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
         CcUnpinData(Context);
 #else
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
         return STATUS_DISK_CORRUPT_ERROR;
     }
@@ -1210,7 +1210,7 @@ FAT32SetDirtyStatus(
 #else
     /* Write back the boot sector to the disk */
     Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
-    ExFreePoolWithTag(Sector, TAG_VFAT);
+    ExFreePoolWithTag(Sector, TAG_BUFFER);
     return Status;
 #endif
 }
@@ -1252,7 +1252,7 @@ FAT32UpdateFreeClustersCount(
      * - Allocate a big enough buffer
      * - And read the disk
      */
-    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_VFAT);
+    Sector = ExAllocatePoolWithTag(NonPagedPool, Length, TAG_BUFFER);
     if (Sector == NULL)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -1261,7 +1261,7 @@ FAT32UpdateFreeClustersCount(
     Status = VfatReadDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
     if  (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
         return Status;
     }
 #endif
@@ -1275,7 +1275,7 @@ FAT32UpdateFreeClustersCount(
 #ifndef VOLUME_IS_NOT_CACHED_WORK_AROUND_IT
         CcUnpinData(Context);
 #else
-        ExFreePoolWithTag(Sector, TAG_VFAT);
+        ExFreePoolWithTag(Sector, TAG_BUFFER);
 #endif
         return STATUS_DISK_CORRUPT_ERROR;
     }
@@ -1291,7 +1291,7 @@ FAT32UpdateFreeClustersCount(
 #else
     /* Write back the FSINFO sector to the disk */
     Status = VfatWriteDisk(DeviceExt->StorageDevice, &Offset, Length, (PUCHAR)Sector, FALSE);
-    ExFreePoolWithTag(Sector, TAG_VFAT);
+    ExFreePoolWithTag(Sector, TAG_BUFFER);
     return Status;
 #endif
 }

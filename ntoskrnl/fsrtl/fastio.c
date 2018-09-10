@@ -310,11 +310,13 @@ FsRtlCopyWrite(IN PFILE_OBJECT FileObject,
         return FALSE;
     }
 
+    /* Already init IO_STATUS_BLOCK */
+    IoStatus->Status = STATUS_SUCCESS;
+    IoStatus->Information = Length;
+
     /* No actual read */
     if (!Length)
     {
-        IoStatus->Status = STATUS_SUCCESS;
-        IoStatus->Information = Length;
         return TRUE;
     }
 

@@ -7156,7 +7156,7 @@ Return Value:
                         // upon completion of the read capacity.
                         //
 
-                        IrpToComplete->IoStatus.Status = STATUS_VERIFY_REQUIRED;
+                        IrpToComplete->IoStatus.Status = STATUS_IO_DEVICE_ERROR;
                         IoMarkIrpPending(IrpToComplete);
 
                         IoCallDriver(DeviceExtension->PortDeviceObject, irp);

@@ -21,7 +21,6 @@ list(APPEND SOURCE
     DPtoLP.c
     EngAcquireSemaphore.c
     EngCreateSemaphore.c
-    EngDeleteSemaphore.c
     EngReleaseSemaphore.c
     EnumFontFamilies.c
     ExcludeClipRect.c
@@ -47,6 +46,7 @@ list(APPEND SOURCE
     GetDIBits.c
     GetFontResourceInfoW.c
     GetGlyphIndices.c
+    GetGlyphOutline.c
     GetObject.c
     GetRandomRgn.c
     GetPixel.c

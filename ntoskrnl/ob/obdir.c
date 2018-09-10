@@ -18,7 +18,7 @@
 #include <debug.h>
 
 BOOLEAN ObpLUIDDeviceMapsEnabled;
-POBJECT_TYPE ObDirectoryType = NULL;
+POBJECT_TYPE ObpDirectoryObjectType = NULL;
 
 /* PRIVATE FUNCTIONS ******************************************************/
 
@@ -383,7 +383,7 @@ NtOpenDirectoryObject(OUT PHANDLE DirectoryHandle,
 
     /* Open the directory object */
     Status = ObOpenObjectByName(ObjectAttributes,
-                                ObDirectoryType,
+                                ObpDirectoryObjectType,
                                 PreviousMode,
                                 NULL,
                                 DesiredAccess,
@@ -520,7 +520,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     /* Get a reference to directory */
     Status = ObReferenceObjectByHandle(DirectoryHandle,
                                        DIRECTORY_QUERY,
-                                       ObDirectoryType,
+                                       ObpDirectoryObjectType,
                                        PreviousMode,
                                        (PVOID*)&Directory,
                                        NULL);
@@ -756,7 +756,7 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
 
     /* Create the object */
     Status = ObCreateObject(PreviousMode,
-                            ObDirectoryType,
+                            ObpDirectoryObjectType,
                             ObjectAttributes,
                             PreviousMode,
                             NULL,

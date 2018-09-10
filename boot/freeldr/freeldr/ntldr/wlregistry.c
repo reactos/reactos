@@ -126,7 +126,7 @@ BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     // FIXME: For now we only try system
     strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "SYSTEM32\\CONFIG\\");
+    strcat(SearchPath, "system32\\config\\");
     Success = WinLdrLoadSystemHive(LoaderBlock, SearchPath, "SYSTEM");
 
     // Fail if failed...
@@ -173,7 +173,7 @@ BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
     // Load NLS data
     strcpy(SearchPath, DirectoryPath);
-    strcat(SearchPath, "SYSTEM32\\");
+    strcat(SearchPath, "system32\\");
     Success = WinLdrLoadNLSData(LoaderBlock, SearchPath, AnsiName, OemName, LangName);
     TRACE("NLS data loading %s\n", Success ? "successful" : "failed");
 
@@ -684,6 +684,46 @@ WinLdrScanRegistry(IN OUT PLIST_ENTRY BootDriverListHead,
     FrLdrHeapFree(GroupNameBuffer, TAG_WLDR_NAME);
 }
 
+static
+BOOLEAN
+InsertInBootDriverList(
+    PLIST_ENTRY BootDriverListHead,
+    PBOOT_DRIVER_LIST_ENTRY BootDriverEntry)
+{
+    PBOOT_DRIVER_LIST_ENTRY DriverEntry;
+    PLIST_ENTRY ListEntry;
+
+    ASSERT(BootDriverEntry->FilePath.Buffer != NULL);
+    ASSERT(BootDriverEntry->RegistryPath.Buffer != NULL);
+
+    for (ListEntry = BootDriverListHead->Flink;
+         ListEntry != BootDriverListHead;
+         ListEntry = ListEntry->Flink)
+    {
+        DriverEntry = CONTAINING_RECORD(ListEntry,
+                                        BOOT_DRIVER_LIST_ENTRY,
+                                        Link);
+        if ((DriverEntry->FilePath.Buffer != NULL) &&
+            RtlEqualUnicodeString(&BootDriverEntry->FilePath,
+                                  &DriverEntry->FilePath,
+                                  TRUE))
+        {
+            return FALSE;
+        }
+
+        if ((DriverEntry->RegistryPath.Buffer != NULL) &&
+            RtlEqualUnicodeString(&BootDriverEntry->RegistryPath,
+                                  &DriverEntry->RegistryPath,
+                                  TRUE))
+        {
+            return FALSE;
+        }
+    }
+
+    InsertTailList(BootDriverListHead, &BootDriverEntry->Link);
+    return TRUE;
+}
+
 BOOLEAN
 WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
                       LPWSTR RegistryPath,
@@ -782,8 +822,14 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    // Insert entry at top of the list
-    InsertTailList(BootDriverListHead, &BootDriverEntry->Link);
+    // Insert entry into the list 
+    if (!InsertInBootDriverList(BootDriverListHead, BootDriverEntry))
+    {
+        // It was already there, so delete our entry
+        if (BootDriverEntry->FilePath.Buffer) FrLdrHeapFree(BootDriverEntry->FilePath.Buffer, TAG_WLDR_NAME);
+        if (BootDriverEntry->RegistryPath.Buffer) FrLdrHeapFree(BootDriverEntry->RegistryPath.Buffer, TAG_WLDR_NAME);
+        FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
+    }
 
     return TRUE;
 }

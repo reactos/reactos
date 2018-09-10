@@ -556,7 +556,9 @@ HvInitialize(
     Hive->BaseBlockAlloc = sizeof(HBASE_BLOCK); // == HBLOCK_SIZE
 
     Hive->Version = HSYS_MINOR;
+#if (NTDDI_VERSION < NTDDI_VISTA)
     Hive->Log = (FileType == HFILE_TYPE_LOG);
+#endif
     Hive->HiveFlags = HiveFlags & ~HIVE_NOLAZYFLUSH;
 
     switch (OperationType)

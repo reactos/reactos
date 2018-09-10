@@ -3095,7 +3095,7 @@ ObInsertObject(IN PVOID Object,
             {
                 /* Check if this was a symbolic link */
                 if (OBJECT_TO_OBJECT_HEADER(InsertObject)->Type ==
-                    ObSymbolicLinkType)
+                    ObpSymbolicLinkObjectType)
                 {
                     /* Dereference it */
                     ObDereferenceObject(InsertObject);
@@ -3129,7 +3129,7 @@ ObInsertObject(IN PVOID Object,
         else
         {
             /* Check if this is a symbolic link */
-            if (ObjectType == ObSymbolicLinkType)
+            if (ObjectType == ObpSymbolicLinkObjectType)
             {
                 /* Create the internal name */
                 ObpCreateSymbolicLinkName(Object);

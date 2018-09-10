@@ -692,14 +692,23 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo2->usri2_workstations[UserInfo->WorkStations.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->WorkStations.Length + sizeof(WCHAR));
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
-                                      &UserInfo2->usri2_last_logon);
+            if (UserInfo->LastLogon.QuadPart == 0)
+                UserInfo2->usri2_last_logon = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                          &UserInfo2->usri2_last_logon);
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
-                                      &UserInfo2->usri2_last_logoff);
+            if (UserInfo->LastLogoff.QuadPart == 0)
+                UserInfo2->usri2_last_logoff = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                          &UserInfo2->usri2_last_logoff);
 
-            RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
-                                      &UserInfo2->usri2_acct_expires);
+            if (UserInfo->AccountExpires.QuadPart == MAXLONGLONG)
+                UserInfo2->usri2_acct_expires = TIMEQ_FOREVER;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
+                                          &UserInfo2->usri2_acct_expires);
 
             UserInfo2->usri2_max_storage = USER_MAXSTORAGE_UNLIMITED;
             UserInfo2->usri2_units_per_week = UserInfo->LogonHours.UnitsPerWeek;
@@ -802,14 +811,23 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo3->usri3_workstations[UserInfo->WorkStations.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->WorkStations.Length + sizeof(WCHAR));
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
-                                      &UserInfo3->usri3_last_logon);
+            if (UserInfo->LastLogon.QuadPart == 0)
+                UserInfo3->usri3_last_logon = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                          &UserInfo3->usri3_last_logon);
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
-                                      &UserInfo3->usri3_last_logoff);
+            if (UserInfo->LastLogoff.QuadPart == 0)
+                UserInfo3->usri3_last_logoff = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                          &UserInfo3->usri3_last_logoff);
 
-            RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
-                                      &UserInfo3->usri3_acct_expires);
+            if (UserInfo->AccountExpires.QuadPart == MAXLONGLONG)
+                UserInfo3->usri3_acct_expires = TIMEQ_FOREVER;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
+                                          &UserInfo3->usri3_acct_expires);
 
             UserInfo3->usri3_max_storage = USER_MAXSTORAGE_UNLIMITED;
             UserInfo3->usri3_units_per_week = UserInfo->LogonHours.UnitsPerWeek;
@@ -930,14 +948,23 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo4->usri4_workstations[UserInfo->WorkStations.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->WorkStations.Length + sizeof(WCHAR));
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
-                                      &UserInfo4->usri4_last_logon);
+            if (UserInfo->LastLogon.QuadPart == 0)
+                UserInfo4->usri4_last_logon = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                          &UserInfo4->usri4_last_logon);
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
-                                      &UserInfo4->usri4_last_logoff);
+            if (UserInfo->LastLogoff.QuadPart == 0)
+                UserInfo4->usri4_last_logoff = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                          &UserInfo4->usri4_last_logoff);
 
-            RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
-                                      &UserInfo4->usri4_acct_expires);
+            if (UserInfo->AccountExpires.QuadPart == MAXLONGLONG)
+                UserInfo4->usri4_acct_expires = TIMEQ_FOREVER;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->AccountExpires,
+                                          &UserInfo4->usri4_acct_expires);
 
             UserInfo4->usri4_max_storage = USER_MAXSTORAGE_UNLIMITED;
             UserInfo4->usri4_units_per_week = UserInfo->LogonHours.UnitsPerWeek;
@@ -1076,11 +1103,17 @@ BuildUserInfoBuffer(SAM_HANDLE UserHandle,
             UserInfo11->usri11_parms[UserInfo->Parameters.Length / sizeof(WCHAR)] = UNICODE_NULL;
             Ptr = (LPWSTR)((ULONG_PTR)Ptr + UserInfo->Parameters.Length + sizeof(WCHAR));
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
-                                      &UserInfo11->usri11_last_logon);
+            if (UserInfo->LastLogon.QuadPart == 0)
+                UserInfo11->usri11_last_logon = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogon,
+                                          &UserInfo11->usri11_last_logon);
 
-            RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
-                                      &UserInfo11->usri11_last_logoff);
+            if (UserInfo->LastLogoff.QuadPart == 0)
+                UserInfo11->usri11_last_logoff = 0;
+            else
+                RtlTimeToSecondsSince1970(&UserInfo->LastLogoff,
+                                          &UserInfo11->usri11_last_logoff);
 
             UserInfo11->usri11_bad_pw_count = UserInfo->BadPasswordCount;
             UserInfo11->usri11_num_logons = UserInfo->LogonCount;
@@ -1382,8 +1415,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo2->usri2_acct_expires == TIMEQ_FOREVER)
             {
-                UserAllInfo.AccountExpires.LowPart = 0;
-                UserAllInfo.AccountExpires.HighPart = 0;
+                UserAllInfo.AccountExpires.QuadPart = MAXLONGLONG;
             }
             else
             {
@@ -1485,8 +1517,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo3->usri3_acct_expires == TIMEQ_FOREVER)
             {
-                UserAllInfo.AccountExpires.LowPart = 0;
-                UserAllInfo.AccountExpires.HighPart = 0;
+                UserAllInfo.AccountExpires.QuadPart = MAXLONGLONG;
             }
             else
             {
@@ -1610,8 +1641,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo4->usri4_acct_expires == TIMEQ_FOREVER)
             {
-                UserAllInfo.AccountExpires.LowPart = 0;
-                UserAllInfo.AccountExpires.HighPart = 0;
+                UserAllInfo.AccountExpires.QuadPart = MAXLONGLONG;
             }
             else
             {
@@ -1732,8 +1762,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo22->usri22_acct_expires == TIMEQ_FOREVER)
             {
-                UserAllInfo.AccountExpires.LowPart = 0;
-                UserAllInfo.AccountExpires.HighPart = 0;
+                UserAllInfo.AccountExpires.QuadPart = MAXLONGLONG;
             }
             else
             {
@@ -1865,8 +1894,7 @@ SetUserInfo(SAM_HANDLE UserHandle,
 
             if (UserInfo1017->usri1017_acct_expires == TIMEQ_FOREVER)
             {
-                UserAllInfo.AccountExpires.LowPart = 0;
-                UserAllInfo.AccountExpires.HighPart = 0;
+                UserAllInfo.AccountExpires.QuadPart = MAXLONGLONG;
             }
             else
             {

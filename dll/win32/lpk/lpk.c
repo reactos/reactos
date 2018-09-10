@@ -78,10 +78,9 @@ LpkExtTextOut(
     if ((GetLayout(hdc) & LAYOUT_RTL) || (GetTextAlign(hdc) & TA_RTLREADING))
         fuOptions |= ETO_RTLREADING;
 
-    /* If text direction is RTL change flag to account neutral characters
-       BUG: disables reordering of propsheet titles */
-    /* if (fuOptions & ETO_RTLREADING)
-        dwSICFlags = SIC_NEUTRAL; */
+    /* If text direction is RTL change flag to account neutral characters */
+    if (fuOptions & ETO_RTLREADING)
+        dwSICFlags |= SIC_NEUTRAL;
 
     /* Check if the string requires complex script processing and not a "glyph indices" array */
     if (ScriptIsComplex(lpString, uCount, dwSICFlags) == S_OK && !(fuOptions & ETO_GLYPH_INDEX))
@@ -135,9 +134,11 @@ LpkGetCharacterPlacement(
     DWORD dwFlags,
     DWORD dwUnused)
 {
+    DWORD ret = 0;
+    HRESULT hr;
+    SCRIPT_STRING_ANALYSIS ssa;
     LPWORD lpGlyphs = NULL;
     SIZE size;
-    DWORD ret = 0;
     UINT nSet, i;
     INT cGlyphs;
 
@@ -191,16 +192,36 @@ LpkGetCharacterPlacement(
         }
     }
 
-    /* FIXME: Currently not bidi compliant! */
     if (lpResults->lpCaretPos)
     {
         int pos = 0;
 
-        lpResults->lpCaretPos[0] = 0;
-        for (i = 1; i < nSet; i++)
+        hr = ScriptStringAnalyse(hdc, lpString, nSet,
+#ifdef __REACTOS__
+                                 /* ReactOS r57677 and r57679 */
+                                 (3 * nSet / 2 + 16),
+#else
+                                 (1.5 * nSet + 16),
+#endif
+                                 -1, SSA_GLYPHS, -1,
+                                 NULL, NULL, NULL, NULL, NULL, &ssa);
+        if (hr == S_OK)
         {
-            if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
-                lpResults->lpCaretPos[i] = (pos += size.cx);
+            for (i = 0; i < nSet; i++)
+            {
+                if (ScriptStringCPtoX(ssa, i, FALSE, &pos) == S_OK)
+                    lpResults->lpCaretPos[i] = pos;
+            }
+            ScriptStringFree(&ssa);
+        }
+        else
+        {
+            lpResults->lpCaretPos[0] = 0;
+            for (i = 1; i < nSet; i++)
+            {
+                if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
+                    lpResults->lpCaretPos[i] = (pos += size.cx);
+            }
         }
     }
 

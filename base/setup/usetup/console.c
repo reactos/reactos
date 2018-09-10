@@ -34,6 +34,13 @@
 #define NDEBUG
 #include <debug.h>
 
+/* DATA **********************************************************************/
+
+static BOOLEAN InputQueueEmpty;
+static BOOLEAN WaitForInput;
+static KEYBOARD_INPUT_DATA InputDataQueue; // Only one element!
+static IO_STATUS_BLOCK InputIosb;
+
 /* FUNCTIONS *****************************************************************/
 
 BOOL
@@ -76,6 +83,10 @@ AllocConsole(VOID)
     if (!NT_SUCCESS(Status))
         return FALSE;
 
+    /* Reset the queue state */
+    InputQueueEmpty = TRUE;
+    WaitForInput = FALSE;
+
     return TRUE;
 }
 
@@ -93,6 +104,10 @@ BOOL
 WINAPI
 FreeConsole(VOID)
 {
+    /* Reset the queue state */
+    InputQueueEmpty = TRUE;
+    WaitForInput = FALSE;
+
     if (StdInput != INVALID_HANDLE_VALUE)
         NtClose(StdInput);
 
@@ -154,11 +169,20 @@ WINAPI
 FlushConsoleInputBuffer(
     IN HANDLE hConsoleInput)
 {
+    NTSTATUS Status;
     LARGE_INTEGER Offset, Timeout;
     IO_STATUS_BLOCK IoStatusBlock;
     KEYBOARD_INPUT_DATA InputData;
-    NTSTATUS Status;
 
+    /* Cancel any pending read */
+    if (WaitForInput)
+        NtCancelIoFile(hConsoleInput, &IoStatusBlock);
+
+    /* Reset the queue state */
+    InputQueueEmpty = TRUE;
+    WaitForInput = FALSE;
+
+    /* Flush the keyboard buffer */
     do
     {
         Offset.QuadPart = 0;
@@ -168,7 +192,7 @@ FlushConsoleInputBuffer(
                             NULL,
                             &IoStatusBlock,
                             &InputData,
-                            sizeof(KEYBOARD_INPUT_DATA),
+                            sizeof(InputData),
                             &Offset,
                             NULL);
         if (Status == STATUS_PENDING)
@@ -188,34 +212,134 @@ FlushConsoleInputBuffer(
 
 BOOL
 WINAPI
+PeekConsoleInput(
+    IN HANDLE hConsoleInput,
+    OUT PINPUT_RECORD lpBuffer,
+    IN DWORD nLength,
+    OUT LPDWORD lpNumberOfEventsRead)
+{
+    NTSTATUS Status;
+    LARGE_INTEGER Offset, Timeout;
+    KEYBOARD_INPUT_DATA InputData;
+
+    if (InputQueueEmpty)
+    {
+        /* Read the keyboard for an event, without waiting */
+        if (!WaitForInput)
+        {
+            Offset.QuadPart = 0;
+            Status = NtReadFile(hConsoleInput,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &InputIosb,
+                                &InputDataQueue,
+                                sizeof(InputDataQueue),
+                                &Offset,
+                                NULL);
+            if (!NT_SUCCESS(Status))
+                return FALSE;
+            if (Status == STATUS_PENDING)
+            {
+                /* No input yet, we will have to wait next time */
+                *lpNumberOfEventsRead = 0;
+                WaitForInput = TRUE;
+                return TRUE;
+            }
+        }
+        else
+        {
+            /*
+             * We already tried to read from the keyboard and are
+             * waiting for data, check whether something showed up.
+             */
+            Timeout.QuadPart = -100; // Wait just a little bit.
+            Status = NtWaitForSingleObject(hConsoleInput, FALSE, &Timeout);
+            if (Status == STATUS_TIMEOUT)
+            {
+                /* Nothing yet, continue waiting next time */
+                *lpNumberOfEventsRead = 0;
+                WaitForInput = TRUE;
+                return TRUE;
+            }
+            WaitForInput = FALSE;
+            if (!NT_SUCCESS(Status))
+                return FALSE;
+        }
+
+        /* We got something in the queue */
+        InputQueueEmpty = FALSE;
+        WaitForInput = FALSE;
+    }
+
+    /* Fetch from the queue but keep it inside */
+    InputData = InputDataQueue;
+
+    lpBuffer->EventType = KEY_EVENT;
+    Status = IntTranslateKey(hConsoleInput, &InputData, &lpBuffer->Event.KeyEvent);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    *lpNumberOfEventsRead = 1;
+    return TRUE;
+}
+
+
+BOOL
+WINAPI
 ReadConsoleInput(
     IN HANDLE hConsoleInput,
     OUT PINPUT_RECORD lpBuffer,
     IN DWORD nLength,
     OUT LPDWORD lpNumberOfEventsRead)
 {
-    LARGE_INTEGER Offset;
-    IO_STATUS_BLOCK IoStatusBlock;
-    KEYBOARD_INPUT_DATA InputData;
     NTSTATUS Status;
+    LARGE_INTEGER Offset;
+    KEYBOARD_INPUT_DATA InputData;
 
-    Offset.QuadPart = 0;
-    Status = NtReadFile(hConsoleInput,
-                        NULL,
-                        NULL,
-                        NULL,
-                        &IoStatusBlock,
-                        &InputData,
-                        sizeof(KEYBOARD_INPUT_DATA),
-                        &Offset,
-                        NULL);
-    if (Status == STATUS_PENDING)
+    if (InputQueueEmpty)
     {
-        Status = NtWaitForSingleObject(hConsoleInput, FALSE, NULL);
-        Status = IoStatusBlock.Status;
+        /* Read the keyboard and wait for an event, skipping the queue */
+        if (!WaitForInput)
+        {
+            Offset.QuadPart = 0;
+            Status = NtReadFile(hConsoleInput,
+                                NULL,
+                                NULL,
+                                NULL,
+                                &InputIosb,
+                                &InputDataQueue,
+                                sizeof(InputDataQueue),
+                                &Offset,
+                                NULL);
+            if (Status == STATUS_PENDING)
+            {
+                /* Block and wait for input */
+                WaitForInput = TRUE;
+                Status = NtWaitForSingleObject(hConsoleInput, FALSE, NULL);
+                WaitForInput = FALSE;
+                Status = InputIosb.Status;
+            }
+            if (!NT_SUCCESS(Status))
+                return FALSE;
+        }
+        else
+        {
+            /*
+             * We already tried to read from the keyboard and are
+             * waiting for data, block and wait for input.
+             */
+            Status = NtWaitForSingleObject(hConsoleInput, FALSE, NULL);
+            WaitForInput = FALSE;
+            Status = InputIosb.Status;
+            if (!NT_SUCCESS(Status))
+                return FALSE;
+        }
     }
-    if (!NT_SUCCESS(Status))
-        return FALSE;
+
+    /* Fetch from the queue and empty it */
+    InputData = InputDataQueue;
+    InputQueueEmpty = TRUE;
 
     lpBuffer->EventType = KEY_EVENT;
     Status = IntTranslateKey(hConsoleInput, &InputData, &lpBuffer->Event.KeyEvent);

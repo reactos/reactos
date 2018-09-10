@@ -8,6 +8,7 @@
 
 KMT_TESTFUNC Test_CcCopyRead;
 KMT_TESTFUNC Test_CcMapData;
+KMT_TESTFUNC Test_CcPinRead;
 KMT_TESTFUNC Test_Example;
 KMT_TESTFUNC Test_FileAttributes;
 KMT_TESTFUNC Test_FindFile;
@@ -37,11 +38,12 @@ const KMT_TEST TestList[] =
 {
     { "CcCopyRead",                   Test_CcCopyRead },
     { "CcMapData",                    Test_CcMapData },
+    { "CcPinRead",                    Test_CcPinRead },
     { "-Example",                     Test_Example },
     { "FileAttributes",               Test_FileAttributes },
     { "FindFile",                     Test_FindFile },
-    { "FltMgrLoad",                   Test_FltMgrLoad },
-    { "FltMgrReg",                    Test_FltMgrReg },
+    { "-FltMgrLoad",                  Test_FltMgrLoad }, // TODO: WIP/untested/crashes.
+    { "-FltMgrReg",                   Test_FltMgrReg }, // TODO: WIP/untested/crashes.
     { "HidPDescription",              Test_HidPDescription },
     { "IoCreateFile",                 Test_IoCreateFile },
     { "IoDeviceObject",               Test_IoDeviceObject },

@@ -544,7 +544,6 @@ typedef struct _OBJECT_SYMBOLIC_LINK
 //
 // Kernel Exports
 //
-extern POBJECT_TYPE NTSYSAPI ObDirectoryType;
 extern PDEVICE_MAP NTSYSAPI ObSystemDeviceMap;
 
 #endif // !NTOS_MODE_USER

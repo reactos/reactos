@@ -109,10 +109,11 @@ vfatKdbgHandler(
                      ListEntry = ListEntry->Flink)
                 {
                     Fcb = CONTAINING_RECORD(ListEntry, VFATFCB, FcbListEntry);
-                    DPRINT1("FCB %p (ref: %d, oc: %d %s %s) for FO %p with path: %.*S\n",
+                    DPRINT1("FCB %p (ref: %d, oc: %d %s %s %s) for FO %p with path: %.*S\n",
                             Fcb, Fcb->RefCount, Fcb->OpenHandleCount,
                             ((Fcb->Flags & FCB_CLEANED_UP) ? "U" : "NU"),
                             ((Fcb->Flags & FCB_CLOSED) ? "C" : "NC"),
+                            ((Fcb->Flags & FCB_DELAYED_CLOSE) ? "D" : "ND"),
                             Fcb->FileObject, Fcb->PathNameU.Length, Fcb->PathNameU.Buffer);
                 }
             }

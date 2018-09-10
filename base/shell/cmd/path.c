@@ -50,6 +50,12 @@ INT cmd_path (LPTSTR param)
         LPTSTR pszBuffer;
 
         pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+        if (!pszBuffer)
+        {
+            WARN("Cannot allocate memory for pszBuffer!\n");
+            return 1;
+        }
+
         dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
         if (dwBuffer == 0)
         {
@@ -61,8 +67,9 @@ INT cmd_path (LPTSTR param)
         {
             LPTSTR pszOldBuffer = pszBuffer;
             pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
-            if (pszBuffer == NULL)
+            if (!pszBuffer)
             {
+                WARN("Cannot reallocate memory for pszBuffer!\n");
                 cmd_free(pszOldBuffer);
                 return 1;
             }

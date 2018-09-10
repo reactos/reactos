@@ -37,7 +37,8 @@ PushDirectory (LPTSTR pszPath)
     LPDIRENTRY lpDir = cmd_alloc(FIELD_OFFSET(DIRENTRY, szPath[_tcslen(pszPath) + 1]));
     if (!lpDir)
     {
-        error_out_of_memory ();
+        WARN("Cannot allocate memory for lpDir\n");
+        error_out_of_memory();
         return -1;
     }
 

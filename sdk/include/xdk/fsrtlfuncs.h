@@ -1606,19 +1606,16 @@ extern const UCHAR * const *FsRtlLegalAnsiCharacterArray;
 #endif
 
 #define FsRtlIsAnsiCharacterWild(C)                                            \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], FSRTL_WILD_CHARACTER)
+    FsRtlTestAnsiCharacter((C), FALSE, FALSE, FSRTL_WILD_CHARACTER)
 
 #define FsRtlIsAnsiCharacterLegalFat(C, WILD)                                  \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_FAT_LEGAL) |         \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD), FSRTL_FAT_LEGAL)
 
 #define FsRtlIsAnsiCharacterLegalHpfs(C, WILD)                                 \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_HPFS_LEGAL) |        \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD), FSRTL_HPFS_LEGAL)
 
 #define FsRtlIsAnsiCharacterLegalNtfs(C, WILD)                                 \
-    FlagOn(LEGAL_ANSI_CHARACTER_ARRAY[(UCHAR)(C)], (FSRTL_NTFS_LEGAL) |        \
-                                        ((WILD) ? FSRTL_WILD_CHARACTER : 0 ))
+    FsRtlTestAnsiCharacter((C), TRUE, (WILD), FSRTL_NTFS_LEGAL)
 
 #define FsRtlIsAnsiCharacterLegalNtfsStream(C,WILD_OK)                         \
     FsRtlTestAnsiCharacter((C), TRUE, (WILD_OK), FSRTL_NTFS_STREAM_LEGAL)

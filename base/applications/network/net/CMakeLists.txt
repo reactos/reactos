@@ -8,6 +8,7 @@ list(APPEND SOURCE
     cmdAccounts.c
     cmdConfig.c
     cmdContinue.c
+    cmdGroup.c
     cmdHelpMsg.c
     cmdLocalGroup.c
     cmdPause.c

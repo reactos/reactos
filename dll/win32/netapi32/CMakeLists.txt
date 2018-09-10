@@ -21,6 +21,7 @@ list(APPEND SOURCE
     display.c
     dssetup.c
     group.c
+    group_new.c
     local_group.c
     misc.c
     nbcmdqueue.c

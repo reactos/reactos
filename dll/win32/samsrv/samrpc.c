@@ -2512,10 +2512,10 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
 
     /* Store the fixed domain attributes */
     Status = SampSetObjectAttribute(DomainObject,
-                           L"F",
-                           REG_BINARY,
-                           &FixedDomainData,
-                           ulSize);
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedDomainData,
+                                    ulSize);
     if (!NT_SUCCESS(Status))
     {
         TRACE("failed with status 0x%08lx\n", Status);
@@ -2557,8 +2557,7 @@ SamrCreateUserInDomain(IN SAMPR_HANDLE DomainHandle,
     FixedUserData.LastLogon.QuadPart = 0;
     FixedUserData.LastLogoff.QuadPart = 0;
     FixedUserData.PasswordLastSet.QuadPart = 0;
-    FixedUserData.AccountExpires.LowPart = MAXULONG;
-    FixedUserData.AccountExpires.HighPart = MAXLONG;
+    FixedUserData.AccountExpires.QuadPart = MAXLONGLONG;
     FixedUserData.LastBadPasswordTime.QuadPart = 0;
     FixedUserData.UserId = ulRid;
     FixedUserData.PrimaryGroupId = DOMAIN_GROUP_RID_USERS;
@@ -4165,7 +4164,7 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
     }
 
     Status = SampGetObjectAttributeString(GroupObject,
-                                          L"Description",
+                                          L"AdminComment",
                                           &InfoBuffer->General.AdminComment);
     if (!NT_SUCCESS(Status))
     {
@@ -4180,7 +4179,10 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                                     (PVOID)&FixedData,
                                     &Length);
     if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     InfoBuffer->General.Attributes = FixedData.Attributes;
 
@@ -4190,12 +4192,20 @@ SampQueryGroupGeneral(PSAM_DB_OBJECT GroupObject,
                                     NULL,
                                     &MembersLength);
     if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
         InfoBuffer->General.MemberCount = 0;
+        Status = STATUS_SUCCESS;
+    }
     else
+    {
         InfoBuffer->General.MemberCount = MembersLength / sizeof(ULONG);
+    }
 
     *Buffer = InfoBuffer;
 
@@ -4280,7 +4290,10 @@ SampQueryGroupAttribute(PSAM_DB_OBJECT GroupObject,
                                     (PVOID)&FixedData,
                                     &Length);
     if (!NT_SUCCESS(Status))
+    {
+        TRACE("Status 0x%08lx\n", Status);
         goto done;
+    }
 
     InfoBuffer->Attribute.Attributes = FixedData.Attributes;
 
@@ -4313,7 +4326,7 @@ SampQueryGroupAdminComment(PSAM_DB_OBJECT GroupObject,
         return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = SampGetObjectAttributeString(GroupObject,
-                                          L"Description",
+                                          L"AdminComment",
                                           &InfoBuffer->AdminComment.AdminComment);
     if (!NT_SUCCESS(Status))
     {
@@ -4541,7 +4554,7 @@ SamrSetInformationGroup(IN SAMPR_HANDLE GroupHandle,
 
         case GroupAdminCommentInformation:
             Status = SampSetObjectAttributeString(GroupObject,
-                                                  L"Description",
+                                                  L"AdminComment",
                                                   &Buffer->AdminComment.AdminComment);
             break;
 
@@ -6739,6 +6752,54 @@ done:
 }
 
 
+static
+NTSTATUS
+SampQueryUserInternal2(PSAM_DB_OBJECT UserObject,
+                       PSAMPR_USER_INFO_BUFFER *Buffer)
+{
+    PSAMPR_USER_INFO_BUFFER InfoBuffer = NULL;
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status;
+
+    *Buffer = NULL;
+
+    InfoBuffer = midl_user_allocate(sizeof(SAMPR_USER_INFO_BUFFER));
+    if (InfoBuffer == NULL)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    InfoBuffer->Internal2.Flags = 0;
+    InfoBuffer->Internal2.LastLogon.LowPart = FixedData.LastLogon.LowPart;
+    InfoBuffer->Internal2.LastLogon.HighPart = FixedData.LastLogon.HighPart;
+    InfoBuffer->Internal2.LastLogoff.LowPart = FixedData.LastLogoff.LowPart;
+    InfoBuffer->Internal2.LastLogoff.HighPart = FixedData.LastLogoff.HighPart;
+    InfoBuffer->Internal2.BadPasswordCount = FixedData.BadPasswordCount;
+    InfoBuffer->Internal2.LogonCount = FixedData.LogonCount;
+
+    *Buffer = InfoBuffer;
+
+done:
+    if (!NT_SUCCESS(Status))
+    {
+        if (InfoBuffer != NULL)
+        {
+            midl_user_free(InfoBuffer);
+        }
+    }
+
+    return Status;
+}
+
+
 static NTSTATUS
 SampQueryUserParameters(PSAM_DB_OBJECT UserObject,
                         PSAMPR_USER_INFO_BUFFER *Buffer)
@@ -7316,6 +7377,7 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserInternal1Information:
+        case UserInternal2Information:
         case UserAllInformation:
             DesiredAccess = 0;
             break;
@@ -7421,6 +7483,11 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserInternal1Information:
             Status = SampQueryUserInternal1(UserObject,
+                                            Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampQueryUserInternal2(UserObject,
                                             Buffer);
             break;
 
@@ -7758,6 +7825,59 @@ done:
 
 
 static NTSTATUS
+SampSetUserInternal2(PSAM_DB_OBJECT UserObject,
+                     PSAMPR_USER_INFO_BUFFER Buffer)
+{
+    SAM_USER_FIXED_DATA FixedData;
+    ULONG Length = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Get the fixed user attributes */
+    Length = sizeof(SAM_USER_FIXED_DATA);
+    Status = SampGetObjectAttribute(UserObject,
+                                    L"F",
+                                    NULL,
+                                    (PVOID)&FixedData,
+                                    &Length);
+    if (!NT_SUCCESS(Status))
+        goto done;
+
+    if ((Buffer->Internal2.Flags & USER_LOGON_SUCCESS) &&
+        ((Buffer->Internal2.Flags & ~USER_LOGON_SUCCESS) == 0))
+    {
+        /* Update the LastLogon time */
+        Status = NtQuerySystemTime(&FixedData.LastLogon);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        FixedData.LogonCount++;
+        FixedData.BadPasswordCount = 0;
+    }
+
+    if ((Buffer->Internal2.Flags & USER_LOGON_BAD_PASSWORD) &&
+        ((Buffer->Internal2.Flags & ~USER_LOGON_BAD_PASSWORD) == 0))
+    {
+        /* Update the LastBadPasswordTime */
+        Status = NtQuerySystemTime(&FixedData.LastBadPasswordTime);
+        if (!NT_SUCCESS(Status))
+            goto done;
+
+        FixedData.BadPasswordCount++;
+    }
+
+    /* Set the fixed user attributes */
+    Status = SampSetObjectAttribute(UserObject,
+                                    L"F",
+                                    REG_BINARY,
+                                    &FixedData,
+                                    Length);
+
+done:
+    return Status;
+}
+
+
+static NTSTATUS
 SampSetUserAll(PSAM_DB_OBJECT UserObject,
                PSAMPR_USER_INFO_BUFFER Buffer)
 {
@@ -8042,6 +8162,7 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
             break;
 
         case UserAllInformation:
+        case UserInternal2Information:
             DesiredAccess = 0; /* FIXME */
             break;
 
@@ -8164,6 +8285,11 @@ SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
 
         case UserInternal1Information:
             Status = SampSetUserInternal1(UserObject,
+                                          Buffer);
+            break;
+
+        case UserInternal2Information:
+            Status = SampSetUserInternal2(UserObject,
                                           Buffer);
             break;
 

@@ -1,0 +1,39 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+1000, "Blanc"
+1001, "Noir"
+}
+
+STRINGTABLE
+{
+2000, "Modern Blanc"
+2001, "Modern Noir"
+}
+
+STRINGTABLE
+{
+3000, "Normal"
+3001, "Grandes Polices"
+3002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+4000, "Normal"
+4001, "Grandes Polices"
+4002, "Très Grandes Polices"
+}
+
+STRINGTABLE
+{
+5000, "Modern"
+5001, "Style Visuel"
+5002, "Fondation ReactOS"
+5003, "Polar, basé sur win10"
+5004, "Distribué sous GNU/GPL 3.0, 2018"
+5005, "http://www.reactos.org"
+5006, "1.0"
+5007, "Style Visuel pour ReactOS"
+}

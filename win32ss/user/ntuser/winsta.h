@@ -15,7 +15,6 @@ typedef struct _WINSTATION_OBJECT
 {
     DWORD dwSessionId;
 
-    UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
     HANDLE ShellWindow;
@@ -106,6 +105,20 @@ IntValidateWindowStationHandle(
    ACCESS_MASK DesiredAccess,
    PWINSTATION_OBJECT *Object,
    POBJECT_HANDLE_INFORMATION pObjectHandleInfo);
+
+NTSTATUS
+FASTCALL
+IntCreateWindowStation(
+    OUT HWINSTA* phWinSta,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN KPROCESSOR_MODE OwnerMode,
+    IN ACCESS_MASK dwDesiredAccess,
+    DWORD Unknown2,
+    DWORD Unknown3,
+    DWORD Unknown4,
+    DWORD Unknown5,
+    DWORD Unknown6);
 
 BOOL FASTCALL UserSetProcessWindowStation(HWINSTA hWindowStation);
 

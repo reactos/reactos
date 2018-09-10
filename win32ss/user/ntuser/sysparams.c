@@ -25,6 +25,7 @@ BOOL g_PaintDesktopVersion = FALSE;
 #define METRIC2REG(met) (-((((met) * 1440)- 0) / dpi))
 
 #define REQ_INTERACTIVE_WINSTA(err) \
+do { \
     if (GetW32ProcessInfo()->prpwinsta != InputWindowStation) \
     { \
         if (GetW32ProcessInfo()->prpwinsta == NULL) \
@@ -33,11 +34,13 @@ BOOL g_PaintDesktopVersion = FALSE;
         } \
         else \
         { \
-            ERR("NtUserSystemParametersInfo requires interactive window station (current is %wZ)\n", &GetW32ProcessInfo()->prpwinsta->Name); \
+            ERR("NtUserSystemParametersInfo requires interactive window station (current is '%wZ')\n", \
+                &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(GetW32ProcessInfo()->prpwinsta))->Name)); \
         } \
         EngSetLastError(err); \
         return 0; \
-    }
+    } \
+} while (0)
 
 static const WCHAR* KEY_MOUSE = L"Control Panel\\Mouse";
 static const WCHAR* VAL_MOUSE1 = L"MouseThreshold1";

@@ -1417,6 +1417,7 @@ CcRosInitializeFileCache (
         InitializeListHead(&SharedCacheMap->PrivateList);
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
+        InitializeListHead(&SharedCacheMap->BcbList);
     }
 
     KeAcquireGuardedMutex(&ViewLock);

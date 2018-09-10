@@ -64,7 +64,10 @@ PrintAlias (VOID)
     /* allocate memory for an extra \0 char to make parsing easier */
     ptr = cmd_alloc(len + sizeof(TCHAR));
     if (!ptr)
+    {
+        WARN("Cannot allocate memory for ptr!\n");
         return;
+    }
 
     Aliases = ptr;
 
@@ -107,6 +110,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
     buffer = cmd_alloc(maxlen);
     if (!buffer)
     {
+        WARN("Cannot allocate memory for alias buffer!\n");
         cmd_free(tmp);
         return;
     }

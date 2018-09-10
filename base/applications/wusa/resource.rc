@@ -1,0 +1,14 @@
+#include <windef.h>
+
+#include "resource.h"
+
+/* Common resources */
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS WUSA stub"
+#define REACTOS_STR_INTERNAL_NAME     "wusa"
+#define REACTOS_STR_ORIGINAL_FILENAME "wusa.exe"
+#include <reactos/version.rc>
+
+IDI_WUSA ICON "res/setup.ico"

@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Tests for System Firmware functions
  * COPYRIGHT:   Copyright 2018 Stanislav Motylkov
+ *              Copyright 2018 Mark Jansen
  */
 
 #include "precomp.h"
@@ -16,6 +17,70 @@ typedef struct ENTRY
     DWORD ErrInsuff;
     DWORD ErrSuccess;
 } ENTRY;
+
+static UINT
+CallNt(IN DWORD FirmwareTableProviderSignature,
+       IN DWORD FirmwareTableID,
+       OUT PVOID pFirmwareTableBuffer,
+       IN DWORD BufferSize,
+       IN SYSTEM_FIRMWARE_TABLE_ACTION Action)
+{
+    SYSTEM_FIRMWARE_TABLE_INFORMATION* SysFirmwareInfo;
+    ULONG Result = 0, ReturnedSize;
+    ULONG TotalSize = BufferSize + sizeof(SYSTEM_FIRMWARE_TABLE_INFORMATION);
+    NTSTATUS Status;
+
+    SysFirmwareInfo = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, TotalSize);
+    if (!SysFirmwareInfo)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+    _SEH2_TRY
+    {
+        SysFirmwareInfo->ProviderSignature = FirmwareTableProviderSignature;
+        SysFirmwareInfo->TableID = FirmwareTableID;
+        SysFirmwareInfo->Action = Action;
+        SysFirmwareInfo->TableBufferLength = BufferSize;
+
+        Status = NtQuerySystemInformation(SystemFirmwareTableInformation, SysFirmwareInfo, TotalSize, &ReturnedSize);
+
+        if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+            Result = SysFirmwareInfo->TableBufferLength;
+
+        if (NT_SUCCESS(Status) && pFirmwareTableBuffer)
+        {
+            memcpy(pFirmwareTableBuffer, SysFirmwareInfo->TableBuffer, SysFirmwareInfo->TableBufferLength);
+        }
+    }
+    _SEH2_FINALLY
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, SysFirmwareInfo);
+    }
+    _SEH2_END;
+
+    SetLastError(RtlNtStatusToDosError(Status));
+    return Result;
+}
+
+UINT
+WINAPI
+fEnumSystemFirmwareTables(IN DWORD FirmwareTableProviderSignature,
+                          OUT PVOID pFirmwareTableBuffer,
+                          IN DWORD BufferSize)
+{
+    return CallNt(FirmwareTableProviderSignature, 0, pFirmwareTableBuffer, BufferSize, SystemFirmwareTable_Enumerate);
+}
+
+UINT
+WINAPI
+fGetSystemFirmwareTable(IN DWORD FirmwareTableProviderSignature,
+                        IN DWORD FirmwareTableID,
+                        OUT PVOID pFirmwareTableBuffer,
+                        IN DWORD BufferSize)
+{
+    return CallNt(FirmwareTableProviderSignature, FirmwareTableID, pFirmwareTableBuffer, BufferSize, SystemFirmwareTable_Get);
+}
 
 static
 VOID
@@ -378,7 +443,9 @@ test_GetBuffer(
     }
 }
 
-START_TEST(SystemFirmware)
+static
+VOID
+test_Functions()
 {
     static const ENTRY Entries[] =
     {
@@ -388,33 +455,11 @@ START_TEST(SystemFirmware)
         /* This entry should be last */
         { 0xDEAD, ERROR_INVALID_FUNCTION, ERROR_INVALID_FUNCTION },
     };
-    HANDLE hKernel;
     CHAR Buffer[262144]; // 256 KiB should be enough
     CHAR Sign[sizeof(DWORD) + 1];
     UINT TableCount[_countof(Entries)];
     DWORD FirstTableID[_countof(Entries)];
     int i;
-
-    hKernel = GetModuleHandleW(L"kernel32.dll");
-    if (!hKernel)
-    {
-        skip("kernel32.dll module not found. Can't proceed\n");
-        return;
-    }
-
-    pEnumSystemFirmwareTables = (void *)GetProcAddress(hKernel, "EnumSystemFirmwareTables");
-    pGetSystemFirmwareTable = (void *)GetProcAddress(hKernel, "GetSystemFirmwareTable");
-
-    if (!pEnumSystemFirmwareTables)
-    {
-        skip("EnumSystemFirmwareTables not found. Can't proceed\n");
-        return;
-    }
-    if (!pGetSystemFirmwareTable)
-    {
-        skip("GetSystemFirmwareTable not found. Can't proceed\n");
-        return;
-    }
 
     // Test EnumSystemFirmwareTables
     for (i = 0; i < _countof(Entries); i++)
@@ -463,4 +508,36 @@ START_TEST(SystemFirmware)
         test_GetBuffer(Entries[i].Signature, FirstTableID[i], &Buffer, sizeof(Buffer),
                        FALSE, Entries[i].ErrInsuff, Entries[i].ErrSuccess);
     }
+}
+
+START_TEST(SystemFirmware)
+{
+    HANDLE hKernel;
+
+    hKernel = GetModuleHandleW(L"kernel32.dll");
+    if (!hKernel)
+    {
+        skip("kernel32.dll module not found. Can't proceed\n");
+        return;
+    }
+
+    pEnumSystemFirmwareTables = (void *)fEnumSystemFirmwareTables;
+    pGetSystemFirmwareTable = (void *)fGetSystemFirmwareTable;
+
+    test_Functions();
+
+    pEnumSystemFirmwareTables = (void *)GetProcAddress(hKernel, "EnumSystemFirmwareTables");
+    pGetSystemFirmwareTable = (void *)GetProcAddress(hKernel, "GetSystemFirmwareTable");
+
+    if (!pEnumSystemFirmwareTables)
+    {
+        skip("EnumSystemFirmwareTables not found. Can't proceed\n");
+        return;
+    }
+    if (!pGetSystemFirmwareTable)
+    {
+        skip("GetSystemFirmwareTable not found. Can't proceed\n");
+        return;
+    }
+    test_Functions();
 }

@@ -60,32 +60,49 @@ CreateWindowStationW(
     NTSTATUS Status;
     HWINSTA hWinSta;
     UNICODE_STRING WindowStationName;
+    // FIXME: We should cache a per-session directory (see ntuser\winsta.c!UserCreateWinstaDirectory).
     UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hWindowStationsDir;
 
-    /* Open WindowStations directory */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &WindowStationsDir,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = NtOpenDirectoryObject(&hWindowStationsDir,
-                                   DIRECTORY_CREATE_OBJECT,
-                                   &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
+    /*
+     * If provided, the window station name is always relative to the
+     * current user session's WindowStations directory.
+     * Otherwise (the window station name is NULL or an empty string),
+     * pass both an empty string and no WindowStations directory handle
+     * to win32k, so that it will create a window station whose name
+     * is based on the logon session identifier for the calling process.
+     */
+    if (lpwinsta && *lpwinsta)
     {
-        ERR("Failed to open WindowStations directory\n");
-        return NULL;
-    }
+        /* Open WindowStations directory */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &WindowStationsDir,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
 
-    RtlInitUnicodeString(&WindowStationName, lpwinsta);
+        Status = NtOpenDirectoryObject(&hWindowStationsDir,
+                                       DIRECTORY_CREATE_OBJECT,
+                                       &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("Failed to open WindowStations directory\n");
+            return NULL;
+        }
+
+        RtlInitUnicodeString(&WindowStationName, lpwinsta);
+    }
+    else
+    {
+        lpwinsta = NULL;
+        hWindowStationsDir = NULL;
+    }
 
     /* Create the window station object */
     InitializeObjectAttributes(&ObjectAttributes,
-                               &WindowStationName,
-                               OBJ_CASE_INSENSITIVE,
+                               lpwinsta ? &WindowStationName : NULL,
+                               OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
                                hWindowStationsDir,
                                NULL);
 
@@ -99,7 +116,8 @@ CreateWindowStationW(
                                         dwDesiredAccess,
                                         0, 0, 0, 0, 0);
 
-    NtClose(hWindowStationsDir);
+    if (hWindowStationsDir)
+        NtClose(hWindowStationsDir);
 
     return hWinSta;
 }
@@ -349,6 +367,7 @@ OpenWindowStationW(
     NTSTATUS Status;
     HWINSTA hWinSta;
     UNICODE_STRING WindowStationName;
+    // FIXME: We should cache a per-session directory (see ntuser\winsta.c!UserCreateWinstaDirectory).
     UNICODE_STRING WindowStationsDir = RTL_CONSTANT_STRING(L"\\Windows\\WindowStations");
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hWindowStationsDir;

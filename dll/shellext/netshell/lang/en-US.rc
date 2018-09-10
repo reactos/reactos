@@ -169,8 +169,8 @@ BEGIN
     IDS_NETWORKSETTINGSSUBTITLE "Installs network software used to connect to other networks, computers, and the Internet."
     IDS_NETWORKCOMPONENTTITLE "Network Components"
     IDS_NETWORKCOMPONENTSUBTITLE "Determine which networking components are used on your computer. To add new components, click on Install."
-    IDS_NETWORKDOMAINTITLE "Workgroup or Computer Domain"
-    IDS_NETWORKDOMAINSUBTITLE "A domain is a group of computers defined by a network administrator. A workgroup is a group of computers sharing the same workgroup name."
+    IDS_NETWORKDOMAINTITLE "Workgroup or Network Domain"
+    IDS_NETWORKDOMAINSUBTITLE "Specify how the computer will be used - as part of a workgroup or as part of a network domain."
     IDS_REACTOS_SETUP "ReactOS Setup"
     IDS_WZD_DOMAIN_NAME "Setup cannot continue until you\nenter the name of your domain\nor workgroup."
 END
