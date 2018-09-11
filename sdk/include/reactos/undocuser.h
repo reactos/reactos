@@ -378,6 +378,9 @@ BOOL WINAPI RegisterUserApiHook(PUSERAPIHOOKINFO puah);
 
 BOOL WINAPI UnregisterUserApiHook(VOID);
 
+/* WNET undocumented functions */
+DWORD WINAPI WNetClearConnections(DWORD dwUnknown);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
