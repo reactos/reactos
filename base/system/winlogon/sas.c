@@ -657,6 +657,9 @@ LogoffShutdownThread(
         ret = 0;
     }
 
+    /* Cancel all the user connections */
+    WNetClearConnections(0);
+
     if (LSData->Session->UserToken)
         RevertToSelf();
 
