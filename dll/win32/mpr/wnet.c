@@ -2646,6 +2646,64 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
     return err;
 }
 
+#ifdef __REACTOS__
+/*****************************************************************
+ * WNetClearConnections [MPR.@]
+ */
+DWORD WINAPI WNetClearConnections ( DWORD unknown )
+{
+    HANDLE connected;
+    DWORD ret, size, count;
+    NETRESOURCEW * resources, * iter;
+
+    ret = WNetOpenEnumW(RESOURCE_CONNECTED, RESOURCETYPE_ANY, 0, NULL, &connected);
+    if (ret != WN_SUCCESS)
+    {
+        if (ret != WN_NO_NETWORK)
+        {
+            return ret;
+        }
+
+        /* Means no provider, then, clearing is OK */
+        return WN_SUCCESS;
+    }
+
+    size = 0x1000;
+    resources = HeapAlloc(GetProcessHeap(), 0, size);
+    if (!resources)
+    {
+        WNetCloseEnum(connected);
+        return WN_OUT_OF_MEMORY;
+    }
+
+    do
+    {
+        size = 0x1000;
+        count = -1;
+
+        memset(resources, 0, size);
+        ret = WNetEnumResourceW(connected, &count, resources, &size);
+        if (ret == WN_SUCCESS || ret == WN_MORE_DATA)
+        {
+            iter = resources;
+            for (; count; count--)
+            {
+                WNetCancelConnection2W(iter->lpLocalName, 0, TRUE);
+
+                iter++;
+            }
+        }
+        else
+            break;
+    } while (ret != WN_NO_MORE_ENTRIES);
+
+    HeapFree(GetProcessHeap(), 0, resources);
+    WNetCloseEnum(connected);
+
+    return ret;
+}
+#endif
+
 
 
 /*
