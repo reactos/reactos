@@ -1626,4 +1626,231 @@ done:
     return ApiStatus;
 }
 
+
+NET_API_STATUS
+WINAPI
+NetGroupSetUsers(
+    _In_opt_ LPCWSTR servername,
+    _In_ LPCWSTR groupname,
+    _In_ DWORD level,
+    _In_ LPBYTE buf,
+    _In_ DWORD totalentries)
+{
+    UNICODE_STRING ServerName;
+    UNICODE_STRING GroupName;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE GroupHandle = NULL;
+    ULONG OldMemberCount = 0;
+    PULONG OldMemberIDs = NULL;
+    PULONG OldAttributes = NULL;
+    PUNICODE_STRING NamesArray = NULL;
+    PGROUP_USERS_INFO_0 UserInfo0;
+    PGROUP_USERS_INFO_1 UserInfo1;
+    PULONG NewMemberIDs = NULL;
+    PSID_NAME_USE NewMemberUse = NULL;
+    ULONG i, j;
+    BOOL Found;
+    NET_API_STATUS ApiStatus = NERR_Success;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    TRACE("NetGroupSetUsers(%s, %s, %d, %p, %d) stub!\n",
+          debugstr_w(servername), debugstr_w(groupname), level, buf, totalentries);
+
+    if (servername != NULL)
+        RtlInitUnicodeString(&ServerName, servername);
+
+    RtlInitUnicodeString(&GroupName, groupname);
+
+    /* Connect to the SAM Server */
+    Status = SamConnect((servername != NULL) ? &ServerName : NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamConnect failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the Acount Domain */
+    Status = OpenAccountDomain(ServerHandle,
+                               (servername != NULL) ? &ServerName : NULL,
+                               DOMAIN_LOOKUP,
+                               &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("OpenAccountDomain failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Open the group account in the account domain */
+    ApiStatus = OpenGroupByName(DomainHandle,
+                                &GroupName,
+                                GROUP_LIST_MEMBERS | GROUP_ADD_MEMBER | GROUP_REMOVE_MEMBER,
+                                &GroupHandle,
+                                NULL);
+    if (ApiStatus != NERR_Success)
+    {
+        ERR("OpenGroupByName failed (ApiStatus %lu)\n", ApiStatus);
+        if (ApiStatus == ERROR_NONE_MAPPED)
+            ApiStatus = NERR_GroupNotFound;
+        goto done;
+    }
+
+    /* Get the group members */
+    Status = SamGetMembersInGroup(GroupHandle,
+                                  &OldMemberIDs,
+                                  &OldAttributes,
+                                  &OldMemberCount);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamGetMembersInGroup failed (Status %08lx)\n", Status);
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    NamesArray = RtlAllocateHeap(RtlGetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 totalentries * sizeof(UNICODE_STRING));
+    if (NamesArray == NULL)
+    {
+        ERR("RtlAllocateHeap failed\n");
+        ApiStatus = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    UserInfo0 = (PGROUP_USERS_INFO_0)buf;
+    UserInfo1 = (PGROUP_USERS_INFO_1)buf;
+    for (i = 0; i < totalentries; i++)
+    {
+        if (level == 0)
+            RtlInitUnicodeString(&NamesArray[i], UserInfo0[i].grui0_name);
+        else
+            RtlInitUnicodeString(&NamesArray[i], UserInfo1[i].grui1_name);
+    }
+
+    Status = SamLookupNamesInDomain(DomainHandle,
+                                    totalentries,
+                                    NamesArray,
+                                    &NewMemberIDs,
+                                    &NewMemberUse);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SamLookupNamesInDomain failed (Status %08lx)\n", Status);
+
+        if (Status == STATUS_NONE_MAPPED)
+        {
+            ApiStatus = NERR_UserNotFound;
+            goto done;
+        }
+
+        ApiStatus = NetpNtStatusToApiStatus(Status);
+        goto done;
+    }
+
+    /* Add members and set attributes for existing members */
+    for (i = 0; i < totalentries; i++)
+    {
+        Found = FALSE;
+        for (j = 0; j < OldMemberCount; j++)
+        {
+            if (NewMemberIDs[i] == OldMemberIDs[j])
+            {
+                if (level == 1)
+                {
+                    Status = SamSetMemberAttributesOfGroup(GroupHandle,
+                                                           NewMemberIDs[i],
+                                                           UserInfo1[i].grui1_attributes);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        ERR("SamSetMemberAttributesOfGroup failed (Status %lu)\n", Status);
+                        ApiStatus = NetpNtStatusToApiStatus(Status);
+                        goto done;
+                    }
+                }
+
+                Found = TRUE;
+                break;
+            }
+        }
+
+        if (Found == FALSE)
+        {
+            TRACE("Add member %lx\n", NewMemberIDs[i]);
+
+            if (NewMemberUse[i] != SidTypeUser)
+            {
+                ERR("New member is not a user!\n");
+                ApiStatus = NERR_GroupNotFound;
+                goto done;
+            }
+
+            Status = SamAddMemberToGroup(GroupHandle,
+                                         NewMemberIDs[i],
+                                         (level == 0) ? 0 : UserInfo1[i].grui1_attributes);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamAddMemberToGroup failed (Status %lu)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+        }
+    }
+
+    /* Remove members */
+    for (i = 0; i < OldMemberCount; i++)
+    {
+        Found = FALSE;
+        for (j = 0; j < totalentries; j++)
+        {
+            if (OldMemberIDs[i] == NewMemberIDs[j])
+            {
+                Found = TRUE;
+                break;
+            }
+        }
+
+        if (Found == FALSE)
+        {
+            TRACE("Delete member %lx\n", OldMemberIDs[i]);
+
+            Status = SamRemoveMemberFromGroup(GroupHandle,
+                                              OldMemberIDs[i]);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("SamRemoveMemberFromGroup failed (Status %lu)\n", Status);
+                ApiStatus = NetpNtStatusToApiStatus(Status);
+                goto done;
+            }
+        }
+    }
+
+done:
+    if (NewMemberUse != NULL)
+        SamFreeMemory(NewMemberUse);
+
+    if (NewMemberIDs != NULL)
+        SamFreeMemory(NewMemberIDs);
+
+    if (NamesArray != NULL)
+        RtlFreeHeap(RtlGetProcessHeap(), 0, NamesArray);
+
+    if (OldMemberIDs != NULL)
+        SamFreeMemory(OldMemberIDs);
+
+    if (GroupHandle != NULL)
+        SamCloseHandle(GroupHandle);
+
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    return ApiStatus;
+}
+
 /* EOF */
