@@ -18,7 +18,7 @@ typedef enum _ENUM_PHASE
     DonePhase
 } ENUM_PHASE;
 
-typedef struct _ENUM_CONTEXT
+typedef struct _GROUP_ENUM_CONTEXT
 {
     SAM_HANDLE ServerHandle;
     SAM_HANDLE DomainHandle;
@@ -30,7 +30,7 @@ typedef struct _ENUM_CONTEXT
     ULONG Returned;
     ULONG Index;
     ENUM_PHASE Phase;
-} ENUM_CONTEXT, *PENUM_CONTEXT;
+} GROUP_ENUM_CONTEXT, *PGROUP_ENUM_CONTEXT;
 
 typedef struct _USER_ENUM_CONTEXT
 {
@@ -785,7 +785,7 @@ NetGroupEnum(
 {
     UNICODE_STRING ServerName;
     PSAM_RID_ENUMERATION CurrentGroup;
-    PENUM_CONTEXT EnumContext = NULL;
+    PGROUP_ENUM_CONTEXT EnumContext = NULL;
     ULONG i;
     SAM_HANDLE GroupHandle = NULL;
     PGROUP_GENERAL_INFORMATION GroupInfo = NULL;
@@ -805,11 +805,11 @@ NetGroupEnum(
 
     if (resume_handle != NULL && *resume_handle != 0)
     {
-        EnumContext = (PENUM_CONTEXT)*resume_handle;
+        EnumContext = (PGROUP_ENUM_CONTEXT)*resume_handle;
     }
     else
     {
-        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        ApiStatus = NetApiBufferAllocate(sizeof(GROUP_ENUM_CONTEXT), (PVOID*)&EnumContext);
         if (ApiStatus != NERR_Success)
             goto done;
 
@@ -1164,7 +1164,7 @@ NetGroupGetUsers(
     }
     else
     {
-        ApiStatus = NetApiBufferAllocate(sizeof(ENUM_CONTEXT), (PVOID*)&EnumContext);
+        ApiStatus = NetApiBufferAllocate(sizeof(USER_ENUM_CONTEXT), (PVOID*)&EnumContext);
         if (ApiStatus != NERR_Success)
             goto done;
 
