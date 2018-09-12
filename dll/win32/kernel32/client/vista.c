@@ -39,7 +39,7 @@ SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
                          IN OUT PCRITICAL_SECTION CriticalSection,
                          IN DWORD dwMilliseconds)
 {
-    NTSTATUS Status = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
     LARGE_INTEGER TimeOut;
     PLARGE_INTEGER TimeOutPtr = NULL;
 
@@ -74,7 +74,7 @@ SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
                           IN DWORD dwMilliseconds,
                           IN ULONG Flags)
 {
-    NTSTATUS Status = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
     LARGE_INTEGER TimeOut;
     PLARGE_INTEGER TimeOutPtr = NULL;
 
