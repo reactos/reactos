@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\iextag=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+TARGETNAME=iepeers
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=..\$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY=_DllMainCRTStartup
+
+DLLDEF=iextag.def
+
+INCLUDES= \
+    .; \
+    $(BASEDIR)\public\sdk\inc\atl21; \
+    $(O); \
+    $(BASEDIR)\private\windows\inc; \
+    $(SDK_LIB_PATH); \
+    $(ROOT)\external\inc;
+
+
+!ifdef UNIX
+SOURCE_PLATFORM = \
+
+!else
+SOURCE_PLATFORM = \
+    httpwf.cxx   \
+    ancrclk.cxx  \
+
+!endif
+
+SOURCES= \
+    $(SOURCE_PLATFORM) \
+    iextag.rc    \
+    utils.cxx    \
+    cvariant.cxx \
+    iextag.cxx   \
+    peerfact.cxx \
+    ccaps.cxx    \
+    homepg.cxx   \
+    persist.cxx  \
+    userdata.cxx \
+    download.cxx \
+
+NTTARGETFILES=
+
+USE_MIDL_FOR_MKTYPLIB=1
+
+PRECOMPILED_INCLUDE=headers.h
+PRECOMPILED_CXX=1
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\shlwapi.lib \
+    $(SDK_LIB_PATH)\shlwapip.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\urlmon.lib \
+    $(SDK_LIB_PATH)\wininet.lib \
+    $(SDK_LIB_PATH)\shell32p.lib \
+    $(SDK_LIB_PATH)\oledb.lib \
+    $(SDK_LIB_PATH)\adsiid.lib \
+!if "$(NTDEBUG)"!="" && "$(NTDEBUG)" != "retail" && "$(NTDEBUG)" != "ntsdnodbg"
+    $(SDK_LIB_PATH)\libcd.lib \
+!else
+    $(SDK_LIB_PATH)\libc.lib \
+!endif
+

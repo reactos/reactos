@@ -1,0 +1,352 @@
+KBD     CAN     "Canadian National Standard"
+; CAN/CSA-Z243.200-92
+
+
+VERSION 1.0
+
+MODIFIERS
+
+ OEM_8    8
+
+SHIFTSTATE
+
+ 0      ;Column 4 :
+ 1      ;Column 5 : Shift
+ 8      ;Column 6 :                   R-Ctrl
+ 9      ;Column 7 : Shift             R-Ctrl
+ 6      ;Column 8 :       Control Alt (AltGr)
+ 2      ;Column 9 :       Control
+
+LAYOUT         ;an extra '@' at the end is a dead key
+
+;SC  VK_        Cap    0       1       8       9       6
+
+ 29  OEM_7      0      /       \       -1      00ad    007c  // Soft Hyphen
+ 02  1          0      1       !       00b9    00a1          // Superscript 1, Inverted Exclamation Mark
+ 03  2          0      2       @       00b2                  // Superscript 2
+ 04  3          0      3       #       00b3    00a3          // Superscript 3, Pound Sign
+ 05  4          0      4       $       00bc    00a4          // Fraction One Quarter, Currency Sign
+ 06  5          0      5       %       00bd    215c          // Fraction One Half
+ 07  6          0      6       ?       00be    215d          // Fraction Three Quarters
+ 08  7          0      7       &       -1      215e    {
+ 09  8          0      8       *       -1      2122    }
+ 0a  9          0      9       (       -1      00b1    [     // Plus-Or-Minus Sign
+ 0b  0          0      0       )       -1      -1      ]
+ 0c  OEM_MINUS  0      -       _       -1      00bf          // Inverted Question Mark
+ 0d  OEM_PLUS   0      =       +       00b8@    02db@    00ac  // = - spacing cedilla(dead), ogonek(dead)
+ 10  Q          1      q       Q       -1      2126
+ 11  W          1      w       W       0142    0141
+ 12  E          1      e       E       0153    0152
+ 13  R          1      r       R       00b6    00ae          // Paragraph sign, Registered Trade Mark sign
+ 14  T          1      t       T       0167    0166
+ 15  Y          1      y       Y       2190    00a5          // Yen Sign
+ 16  U          1      u       U       2193    2191
+ 17  I          1      i       I       2192    0131
+ 18  O          1      o       O       00f8    00d8          // Latin Small/Capital Letter o/O Slash
+ 19  P          1      p       P       00fe    00de          // Latin Small/Capital Letter Thorn
+ 1a  OEM_4      0      ^@      00a8@   -1      02da@   0060@ // circumflex, diaresis, spacing ring above (dead), grave(dead)
+ 1b  OEM_6      1      00e7    00c7    007e   00af@   ~@    // c/C cedilla, Tilde, tilde (dead), Macron (dead) - Group 2b only?
+ 2b  OEM_5      1      00e0    00c0    -1      02d8@          // a/A grave, breve(dead)
+ 1e  A          1      a       A       00e6    00c6          // Latin Small/Capital Letter ae/AE
+ 1f  S          1      s       S       00df    00a7          // eszett (sharp s, or beta), section sign
+ 20  D          1      d       D       00f0    00d0          // Latin Small/Capital Letter Eth
+ 21  F          1      f       F       -1      00aa          // Feminine Ordinal Indicator
+ 22  G          1      g       G       014b    014a
+ 23  H          1      h       H       0127    0126
+ 24  J          1      j       J       0133    0132
+ 25  K          1      k       K       0138
+ 26  L          1      l       L       0140    013f
+ 27  OEM_1      0      ;       :       00b4@   02dd@    00b0  // spacing acute (dead), double acute(dead), degree sign
+ 28  OEM_3      1      00e8    00c8    -1      02c7@          // e/E grave, caron(dead)
+ 2c  Z          1      z       Z       -1      -1      00ab
+ 2d  X          1      x       X       -1      -1      00bb
+ 2e  C          1      c       C       00a2    00a9          // Cent Sign, Copyright Sign
+ 2f  V          1      v       V       201c    2018
+ 30  B          1      b       B       201d    2019
+ 31  N          1      n       N       0149    266a
+ 32  M          1      m       M       00b5    00ba          // Micro Sign, Masculine Ordinal Indicator
+ 33  OEM_COMMA  0      ,       '       2015    00d7    <     // Multiplication Sign
+ 34  OEM_PERIOD 0      .       "       02d9@   00f7    >     // Spacing Dot Above (Group 2b only? Composes?), Division Sign
+ 35  OEM_2      1      00e9    00c9    -1      02d9@          // e/E acute, dot above(dead)
+ 56  OEM_102    1      00f9    00d9    -1      00a6          // u/U grave, Capital U Acute - Broken Vertical Bar
+ 53  DECIMAL    0      .       .
+ 39  SPACE      0      0020    0020    0020    0020    00a0
+
+E01D OEM_8
+
+// I have done up to here - IanJa
+
+DEADKEY 00b4 // acute
+
+ 0061   00e1
+ 0065   00e9
+ 0069   00ed
+ 006f   00f3
+ 0075   00fa
+ 0079   00fd
+ 0041   00c1
+ 0045   00c9
+ 0049   00cd
+ 004f   00d3
+ 0055   00da
+ 0059   00dd
+ 0043   0106
+ 0063   0107
+ 004c   0139
+ 006c   013a
+ 004e   0143
+ 006e   0144
+ 0052   0154
+ 0072   0155
+ 0053   015a
+ 0073   015b
+ 005a   0179
+ 007a   017a
+ 0020   00b4
+
+DEADKEY 0060  // grave
+
+ 0061   00e0
+ 0065   00e8
+ 0069   00ec
+ 006f   00f2
+ 0075   00f9
+ 0041   00c0
+ 0045   00c8
+ 0049   00cc
+ 004f   00d2
+ 0055   00d9
+ 0020   0060
+
+DEADKEY 005e  //circumflex
+
+ 0061   00e2
+ 0065   00ea
+ 0069   00ee
+ 006f   00f4
+ 0075   00fb
+ 0041   00c2
+ 0045   00ca
+ 0049   00ce
+ 004f   00d4
+ 0055   00db
+ 0043   0108
+ 0063   0109
+ 0047   011c
+ 0067   011d
+ 0048   0124
+ 0068   0125
+ 004a   0134
+ 006a   0135
+ 0053   015c
+ 0073   015d
+ 0057   0174
+ 0077   0175
+ 0059   0176
+ 0079   0177
+ 0020   005e
+
+DEADKEY 00b8  // cedilla
+
+ 0063   00e7
+ 0067   0123
+ 006b   0137
+ 006c   013c
+ 006e   0146
+ 0072   0157
+ 0073   015f
+ 0074   0163
+ 0043   00c7
+ 0047   0122
+ 004b   0136
+ 004c   013b
+ 004e   0145
+ 0052   0156
+ 0053   015e
+ 0054   0162
+ 0020   00b8
+
+DEADKEY 00a8  // diaeresis
+
+ 0061   00e4
+ 0065   00eb
+ 0069   00ef
+ 006f   00f6
+ 0075   00fc
+ 0079   00ff
+ 0041   00c4
+ 0045   00cb
+ 0049   00cf
+ 004f   00d6
+ 0055   00dc
+ 0059   0178
+ 0020   00a8
+
+DEADKEY 007e  //tilde
+ 0061   00e3
+ 0069   0129
+ 006e   00f1
+ 006f   00f5
+ 0075   0169
+ 0041   00c3
+ 0049   0128
+ 004e   00d1
+ 004f   00d5
+ 0055   0168
+ 0020   007e
+
+DEADKEY 02c7  //caron
+ 0063   010d
+ 0064   010f
+ 0065   011b
+ 006c   013e
+ 006e   0148
+ 0072   0159
+ 0073   0161
+ 0074   0165
+ 007a   017e
+ 0043   010c
+ 0044   010e
+ 0045   011a
+ 004c   013d
+ 004e   0147
+ 0052   0158
+ 0053   0160
+ 0054   0164
+ 005a   017d
+ 0020   02c7
+
+DEADKEY 02d8  //breve
+ 0061   0103
+ 0067   011f
+ 0075   016d
+ 0041   0102
+ 0047   011e
+ 0055   016c
+ 0020   02d8
+
+DEADKEY 02dd  //double acute accent
+ 006f   0151
+ 0075   0171
+ 004f   0150
+ 0055   0170
+ 0020   02dd
+
+DEADKEY 02da  //ring above
+ 0061   00e5
+ 0075   016f
+ 0041   00c5
+ 0055   016e
+ 0020   02da
+
+DEADKEY 02d9  //dot above
+ 0063   010b
+ 0065   0117
+ 0067   0121
+ 007a   0017c
+ 0043   010a
+ 0045   0116
+ 0047   0120
+ 0049   0130
+ 005a   017b
+ 0020   02d9
+
+DEADKEY 00af  //macron
+ 0061   0101
+ 0065   0113
+ 0069   012b
+ 006f   014d
+ 0075   016b
+ 0041   0100
+ 0045   0112
+ 0049   012a
+ 004f   014c
+ 0055   016a
+ 0020   00af
+
+DEADKEY 02db  //ogonek
+ 0061   0105
+ 0065   0119
+ 0069   012f
+ 0075   0173
+ 0041   0104
+ 0045   0118
+ 0049   012e
+ 0055   0172
+ 0020   02db
+
+KEYNAME
+
+ 01     ECHAP
+ 0e     RET.ARR
+ 0f     TAB
+ 1c     ENTREE
+ 1d     CTRL
+ 2a     MAJ
+ 36     "MAJ DROITE"
+ 37     "* (PAVE NUM.)"
+ 38     ALT
+ 39     ESPACE
+ 3a     VERR.MAJ
+ 3b     F1
+ 3c     F2
+ 3d     F3
+ 3e     F4
+ 3f     F5
+ 40     F6
+ 41     F7
+ 42     F8
+ 43     F9
+ 44     F10
+ 45     Pause
+ 46     DEFIL
+ 47     "7 (PAVE NUM.)"
+ 48     "8 (PAVE NUM.)"
+ 49     "9 (PAVE NUM.)"
+ 4a     "- (PAVE NUM.)"
+ 4b     "4 (PAVE NUM.)"
+ 4c     "5 (PAVE NUM.)"
+ 4d     "6 (PAVE NUM.)"
+ 4e     "+ (PAVE NUM.)"
+ 4f     "1 (PAVE NUM.)"
+ 50     "2 (PAVE NUM.)"
+ 51     "3 (PAVE NUM.)"
+ 52     "0 (PAVE NUM.)"
+ 53     ". (PAVE NUM.)"
+ 57     F11
+ 58     F12
+
+KEYNAME_EXT
+
+ 1c     "ENTREE (PAVE NUM.)"
+ 1d     "CTRL DROITE"
+ 35     "/ (PAVE NUM.)"
+ 37     Impr.Ecran
+ 38     "ALT DROITE"
+ 45     Ver.Num
+ 46     ATTN
+ 47     ORIGINE
+ 48     HAUT
+ 49     PG.PREC
+ 4b     GAUCHE
+ 4d     DROITE
+ 4f     FIN
+ 50     BAS
+ 51     PG.SUIV
+ 52     INS
+ 53     SUPPR
+ 54     <00>
+ 56     AIDE
+ 5b     "WINDOWS GAUCHE"
+ 5c     "WINDOWS DROITE"
+ 5d     APPLICATION
+
+KEYNAME_DEAD
+
+ 00b4   "ACCENT AIGU"
+ 0060   "ACCENT GRAVE"
+ 005e   "ACCENT CIRCONFLEXE"
+ 00a8   TREMA
+ 00b8   CEDILLE
+
+ENDKBD

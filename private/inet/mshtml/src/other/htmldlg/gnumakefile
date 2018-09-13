@@ -1,0 +1,17 @@
+PRODUCT = OTHER
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES 
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%} -DCOMPILE_MULTIMON_STUBS
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

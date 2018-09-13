@@ -1,0 +1,47 @@
+//---------------------------------------------------------------------------
+// Sz.src : String table resources
+//
+// Copyright (c) Microsoft Corporation, 1990-1993
+//---------------------------------------------------------------------------
+
+iszNotResponding          "The Win 16 Subsystem is not responding to your request to start an application.    Choose RETRY to continue to wait or Cancel to Terminate the Win 16 Subsystem."
+iszApplicationError       "Application Error"
+
+iszStartupFailed          "The Win 16 Subsystem failed to start due to low memory.    Close other applications or increase your pagefile and try again."
+
+iszWIN16InternalError     "The Win 16 Subsystem had an internal error.   Close all your Win 16 applications and save your data."
+iszSystemError            "System Error"
+
+iszCantEndTask            "The system cannot end the selected task because %s is not allowing it to run.    Press OK to End Task %s or Cancel to leave it running."
+
+iszUnableToEndSelTask     "The request to end the selected 16 bit task has timed out.  The Win 16 Subsystem may be unstable.  Press OK to terminate the Win 16 Subsystem or Cancel to leave it running."
+
+iszCausedException        "%s caused an exception in %s at 0x%08x.  The exception code was 0x%08x.\n"
+iszCausedAV               "%s caused an access violation in %s at 0x%08x.\n"
+iszCausedStackOverflow    "%s caused a stack overflow in %s at 0x%08x.\n"
+iszCausedAlignmentFault   "%s caused a datatype misalignment fault in %s at 0x%08x.\nIf you choose Ignore, slower software emulation of misaligned accesses will be used.\n"
+iszCausedIllegalInstr     "%s caused an illegal instruction fault in %s at 0x%08x.\n"
+iszCausedInPageError      "%s caused an in-page error in %s at 0x%08x.\n"
+iszCausedIntDivideZero    "%s caused an integer divide by zero in %s at 0x%08x.\n"
+iszCausedFloatException   "%s caused a floating-point exception in %s at 0x%08x.\n"
+iszTheWin16Subsystem      "the Win16 Subsystem"
+
+iszChooseClose            "Click on CLOSE to terminate the application"
+iszChooseCancel           "Click on CANCEL to debug the application"
+iszChooseIgnore           "Click on IGNORE to continue, you should save your work in a new file."
+iszChooseIgnoreAlignment  "Click on IGNORE to enable emulation of misaligned data access in software."
+
+iszEventHook              "An application has attempted to access the keyboard or mouse hardware as a 16 bit Windows program, which cannot be supported.  This may cause the application to function incorrectly."
+
+iszApplication            "Application: "
+
+iszOLEMemAllocFailedFatal "The Win 16 Subsystem was unable to allocate memory for this DDE transaction, shutting down the conversation."
+iszOLEMemAllocFailed      "The Win 16 Subsystem was unable to allocate memory for this DDE transaction."
+
+// Localizers, the following string must match IDS_LOCALMONITOR in
+// \nt\private\windows\spooler\monitors\local\localmon.rc
+
+iszWowFaxLocalPort        "Local Port"
+
+iszMisMatchedBinaryTitle  "Binary does not match processor"
+iszMisMatchedBinary       "Module %s was not intended to run on this machine."

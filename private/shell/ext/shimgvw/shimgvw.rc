@@ -1,0 +1,122 @@
+#include "resource.h"
+#include "winuser.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include "winver.h"
+#include "resource.rcv"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// ICON
+//
+
+IDI_FULLSCREEN          ICON    DISCARDABLE    "res\\fullscn.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_PREVIEW             REGISTRY DISCARDABLE    "res\\Preview.rgs"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_OPENHAND            CURSOR  DISCARDABLE     "res\\harrow.cur"
+IDC_CLOSEDHAND          CURSOR  DISCARDABLE     "res\\hmove.cur"
+IDC_ZOOMOUT             CURSOR  DISCARDABLE     "res\\zoomout.cur"
+IDC_ZOOMIN              CURSOR  DISCARDABLE     "res\\zoomin.cur"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_PREVWND ACCELERATORS DISCARDABLE 
+BEGIN
+    "+",            ID_ZOOMINCMD,           ASCII,  NOINVERT
+    "-",            ID_ZOOMOUTCMD,          ASCII,  NOINVERT
+    "A",            ID_ACTUALSIZECMD,       VIRTKEY, NOINVERT
+    "B",            ID_BESTFITCMD,          VIRTKEY, NOINVERT
+    "F",            ID_FULLSCREENCMD,       VIRTKEY, NOINVERT
+    "P",            ID_FULLSCREENCMD,       VIRTKEY, NOINVERT
+    VK_ADD,         ID_ZOOMINCMD,           VIRTKEY, NOINVERT
+    VK_SUBTRACT,    ID_ZOOMOUTCMD,          VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TOOLBAR             BITMAP  DISCARDABLE     "res\\toolbar.bmp"
+IDB_TOOLBARHOT          BITMAP  DISCARDABLE     "res\\toolbarh.bmp"
+IDB_TOOLBARMASK         BITMAP  DISCARDABLE     "res\\toolbarm.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_CONTEXTMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "foo"
+    BEGIN
+        MENUITEM "Zoom &In",                    ID_ZOOMINCMD
+        MENUITEM "Zoom &Out",                   ID_ZOOMOUTCMD
+        MENUITEM SEPARATOR
+        MENUITEM "&Actual Size",                ID_ACTUALSIZECMD
+        MENUITEM "&Best Fit",                   ID_BESTFITCMD
+        MENUITEM "&Full Screen",                ID_FULLSCREENCMD
+        MENUITEM "&Print",                      ID_PRINTCMD
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME            "Image Preview"
+    IDS_NOPREVIEW           "No file selected."
+    IDS_LOADFAILED          "No preview available."
+    IDS_MULTISELECT         "Multiple files selected."
+    IDS_LOADING             "Generating preview..."
+    IDS_SETUPFAILED         "Could not initialize download."
+    IDS_BADFILENAME         "An Invalid filename or URL was specified."
+    IDS_DEBUGANIM           "Animimate Frame."
+    IDS_PRINT               "&Print"        // must match resource shell32.dll - "STR"; 8497  
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_ZOOMINCMD            "Zoom In"
+    ID_ZOOMOUTCMD           "Zoom Out"
+    ID_ACTUALSIZECMD        "Actual Size"
+    ID_BESTFITCMD           "Best Fit Size"
+    ID_FULLSCREENCMD        "Full Screen Preview"
+    ID_PRINTCMD             "Print"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Type Library
+//
+
+1 TYPELIB "shimgvw.tlb"

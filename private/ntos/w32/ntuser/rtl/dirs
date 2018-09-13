@@ -1,0 +1,6 @@
+
+DIRS=client \
+     kernel
+
+OPTIONAL_DIRS=
+

@@ -1,0 +1,180 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// msident.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Lightweight User Profile Interfaces.")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// GUIDS")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// {A9AE6C91-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(CLSID_UserIdentityManager, 0xa9ae6C91, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+cpp_quote("// {A9AE6C8E-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(IID_IUserIdentity, 0xa9ae6C8e, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+cpp_quote("// {A9AE6C8F-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(IID_IEnumUserIdentity, 0xa9ae6C8f, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+cpp_quote("// {A9AE6C90-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(IID_IUserIdentityManager, 0xa9ae6C90, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+cpp_quote("// {A9AE6C92-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(IID_IIdentityChangeNotify, 0xa9ae6C92, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+cpp_quote("// {A9AE6C93-1D1B-11D2-B21A-00C04FA357FA}")
+cpp_quote("DEFINE_GUID(IID_IPrivateIdentityManager, 0xa9ae6C93, 0x1d1b, 0x11d2, 0xb2, 0x1a, 0x0, 0xc0, 0x4f, 0xa3, 0x57, 0xfa);")
+
+cpp_quote("// {C28E26E6-219D-11d2-B200-0000F8085266}")
+cpp_quote("DEFINE_GUID(UID_GIBC_DEFAULT_USER, 0xc28e26e6, 0x219d, 0x11d2, 0xb2, 0x0, 0x0, 0x0, 0xf8, 0x8, 0x52, 0x66);")
+cpp_quote("// {C28E26E7-219D-11d2-B200-0000F8085266}")
+cpp_quote("DEFINE_GUID(UID_GIBC_CURRENT_USER, 0xc28e26e7, 0x219d, 0x11d2, 0xb2, 0x0, 0x0, 0x0, 0xf8, 0x8, 0x52, 0x66);")
+cpp_quote("// {C28E26E8-219D-11d2-B200-0000F8085266}")
+cpp_quote("DEFINE_GUID(UID_GIBC_OUTGOING_USER, 0xc28e26e8, 0x219d, 0x11d2, 0xb2, 0x0, 0x0, 0x0, 0xf8, 0x8, 0x52, 0x66);")
+cpp_quote("// {C28E26E9-219D-11d2-B200-0000F8085266}")
+cpp_quote("DEFINE_GUID(UID_GIBC_INCOMING_USER, 0xc28e26e9, 0x219d, 0x11d2, 0xb2, 0x0, 0x0, 0x0, 0xf8, 0x8, 0x52, 0x66);")
+cpp_quote("")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("// ERROR CODES")
+cpp_quote("// --------------------------------------------------------------------------------")
+cpp_quote("#define E_IDENTITIES_DISABLED                           _HRESULT_TYPEDEF_(0x80007110L)")
+cpp_quote("#define S_IDENTITIES_DISABLED                           _HRESULT_TYPEDEF_(0x00007110L)")
+cpp_quote("#define E_NO_CURRENT_IDENTITY                           _HRESULT_TYPEDEF_(0x80007111L)")
+cpp_quote("#define E_USER_CANCELLED                                _HRESULT_TYPEDEF_(0x80007112L)")
+cpp_quote("#define E_PROCESS_CANCELLED_SWITCH                      _HRESULT_TYPEDEF_(0x80007113L)")
+cpp_quote("#define E_IDENTITY_NOT_FOUND                            _HRESULT_TYPEDEF_(0x80007114L)")
+cpp_quote("#define E_IDENTITY_EXISTS                               _HRESULT_TYPEDEF_(0x80007115L)")
+cpp_quote("#define E_IDENTITY_CHANGING                             _HRESULT_TYPEDEF_(0x80007116L)")
+cpp_quote("")
+cpp_quote("#define CCH_IDENTITY_NAME_MAX_LENGTH                         (63)")
+
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "ocidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+#endif
+
+#include "winerror.h"
+
+[
+    uuid(A9AE6C8E-1D1B-11D2-B21A-00C04FA357FA), // IID_IUserIdentity
+    helpstring("User Identity interface")
+]
+interface IUserIdentity : IUnknown
+{
+    // Get cookie for this user
+    HRESULT GetCookie([out] GUID *puidCookie);
+
+    // Get user name
+    HRESULT GetName([in] WCHAR *pszName, [in] ULONG ulBuffSize);
+
+    // Get private registry location
+    [local]
+    HRESULT OpenIdentityRegKey([in]DWORD dwDesiredAccess, [out] HKEY *phKey);
+
+    // Get a per-user folder
+    HRESULT GetIdentityFolder([in] DWORD dwFlags, [in] WCHAR *pszPath, [in] ULONG ulBuffSize);
+
+cpp_quote("#define GIF_ROAMING_FOLDER            0x00000001")
+cpp_quote("#define GIF_NON_ROAMING_FOLDER        0x00000002")
+}
+
+
+
+[
+    uuid(A9AE6C8F-1D1B-11D2-B21A-00C04FA357FA), // IID_IEnumUserIdentity
+    helpstring("Enum User Identity interface"),
+    odl
+]
+interface IEnumUserIdentity : IUnknown
+{
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        IUnknown **rgelt,
+        [out] ULONG *pceltFetched);
+    HRESULT Skip([in] ULONG celt);
+    HRESULT Reset();
+    HRESULT Clone([out] IEnumUserIdentity **ppenum);
+    HRESULT GetCount([out] ULONG *pnCount);
+}
+
+
+
+[
+    uuid(A9AE6C90-1D1B-11D2-B21A-00C04FA357FA), // IID_IUserIdentityManager
+    helpstring("User Identity manager interface")
+]
+interface IUserIdentityManager : IUnknown
+{
+    // Get a list of all users
+    HRESULT EnumIdentities([out] IEnumUserIdentity **ppEnumUser);
+
+    // Show UI to manage users
+    HRESULT ManageIdentities([in] HWND hwndParent, [in] DWORD dwFlags);
+cpp_quote("#define UIMI_CREATE_NEW_IDENTITY        0x00000001")
+
+    // Show UI to logon a user
+    HRESULT Logon([in] HWND hwndParent, [in] DWORD dwFlags, [out] IUserIdentity **ppIdentity);
+
+cpp_quote("#define UIL_FORCE_UI        0x80000001")
+    
+    // Log the current user off
+    HRESULT Logoff([in] HWND hwndParent);
+    
+    // Get an arbitrary user by cookie
+    HRESULT GetIdentityByCookie([in] GUID *uidCookie, [out] IUserIdentity **ppIdentity);
+}
+
+
+[
+    uuid(A9AE6C92-1D1B-11D2-B21A-00C04FA357FA), // IID_IIdentityChangeNotify
+    helpstring("User Identity change notification interface")
+]
+interface IIdentityChangeNotify : IUnknown
+{
+	// The user has requested a switch.  Return E_PROCESS_CANCELLED_SWITCH 
+	// if the switch should not take place.
+	HRESULT	QuerySwitchIdentities();
+
+    // A switch has occurred.  Reload any settings necessary from the current identity
+    HRESULT SwitchIdentities();
+
+    // Some property (name, etc) of an identity has been updated or an identity has been added/deleted.
+    HRESULT IdentityInformationChanged(DWORD dwType);
+cpp_quote("#define IIC_CURRENT_IDENTITY_CHANGED      0x00000001")
+cpp_quote("#define IIC_IDENTITY_CHANGED              0x00000002")
+cpp_quote("#define IIC_IDENTITY_DELETED              0x00000004")
+cpp_quote("#define IIC_IDENTITY_ADDED                0x00000008")
+}
+
+
+[
+    uuid(A9AE6C93-1D1B-11D2-B21A-00C04FA357FA), // IID_IPrivateIdentityManager
+    helpstring("PRIVATE User Identity user list manipulation interface")
+]
+interface IPrivateIdentityManager : IUnknown
+{
+    // Create a new identity with a given name.  
+	HRESULT	CreateIdentity([in] WCHAR *pszName, [out] IUserIdentity **ppIdentity);
+
+    // Verify a password for the indicated identity
+    HRESULT ConfirmPassword([in] GUID *uidCookie, [in] WCHAR *pszPassword);
+}
+
+
+cpp_quote("extern const IID CLSID_UserIdentityManager;")

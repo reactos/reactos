@@ -1,0 +1,19 @@
+# Deskw95 is only for Win95, so we mark it as {x86}.
+# Desknt is only for NT4, so we mark it as {32}.
+
+DIRS    = appwiz    \
+          srvwiz    \
+          inetcpl   \
+          main      \
+          system    \
+          utc       \
+          deskw95{x86} \
+          desknt{32}    \
+          plus      \
+          desk{32}      \
+          deskadp   \
+          deskmon   \
+          deskpan   \
+          deskperf  \
+          desknt5   \
+          vidupgrd

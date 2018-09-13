@@ -1,0 +1,10 @@
+; Copyright (c)1997 Microsoft Corporation, All Rights Reserved.
+;
+; ws2_if.def
+
+LIBRARY   ws2_if
+
+EXPORTS   PrxyDllGetClassObject    PRIVATE
+          PrxyDllCanUnloadNow      PRIVATE
+          PrxyDllRegisterServer    PRIVATE
+          PrxyDllUnregisterServer  PRIVATE

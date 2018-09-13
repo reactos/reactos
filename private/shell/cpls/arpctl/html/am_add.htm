@@ -1,0 +1,297 @@
+<HTML>
+
+<HEAD>
+    <LINK REL="stylesheet" TYPE="text/css" HREF="am.css">
+
+    <SCRIPT LANGUAGE="JavaScript" SRC="util.js">
+    </SCRIPT>
+    
+    <SCRIPT LANGUAGE="JavaScript">
+
+        window.onerror = EatErrors;     // Catch onerror events
+
+        var g_oRowCur = null;
+
+        // Filter the given data source object according to the 
+        // current selection in oSelect.
+        // 
+        //  oSelectList - the select object key
+        //  oDSO - the data source object to filter
+        
+        function FilterDataSource(oSelectList, oDSO)
+        {
+            var oCurSel = oSelectList.options(oSelectList.selectedIndex);
+
+            if (oCurSel.value == "all")
+                oDSO.Filter = "";
+            else
+                oDSO.Filter = "id = " + oCurSel.value;
+                
+            oDSO.Reset();
+        }
+
+
+        // Select the given row and unselect the previously
+        // selected row.  This function changes the class of
+        // the element to do this.
+        //
+        //  oRow - table row element
+        //  oRecordSet - record set
+        
+        function SelectRow(oRow, oRecordSet)
+        {
+            //if (g_oRowCur != null)
+            //{
+                // Reset the UI of the previously selected item
+                //g_oRowCur.className = oRow.className;
+            //}
+            //g_oRowCur = oRow;
+            //g_oRowCur.className = "CAppItemSel";
+
+            if (g_oRowCur == oRow)  
+            {
+                // unselect current row
+                g_oRowCur.all("topRow").className = "CAppItem";
+                g_oRowCur.all("panel").style.display="none";
+                g_oRowCur.all("sortField").style.display="";
+                g_oRowCur = null;
+                btnAdd.disabled = true;
+            }
+            else
+            {
+                if (g_oRowCur != null)
+                {
+                    // Reset the UI of the previously selected item
+                    g_oRowCur.all("topRow").className = "CAppItem";
+                    g_oRowCur.all("panel").style.display="none";
+                    g_oRowCur.all("sortField").style.display="";
+                }
+                g_oRowCur = oRow;
+                g_oRowCur.all("topRow").className = "CAppItemSel";
+                g_oRowCur.all("panel").style.display = "";
+                g_oRowCur.all("sortField").style.display="none";
+                btnAdd.disabled = false;
+            }
+        }
+
+
+        // onclick handler for buttons
+        function BtnOnClick(oDSO)
+        {
+            // Even though the button may be disabled, we still
+            // receive the event.  So check the disabled property
+            // ourselves before acting on it.
+            if (false == event.srcElement.disabled)
+            {
+                switch(event.srcElement.id)
+                {
+                case "btnAdd":
+                    var nRecord = oDSO.recordset.absoluteposition;
+                    oDSO.Exec("install", nRecord);
+                    break;
+
+                case "btnCDFloppy":
+                    oDSO.Exec("generic install", 0);
+                    break;
+                }
+            }
+        }
+
+        // onclick handler for Forcex86 check box
+        function Forcex86OnClick(oDSO)
+        {
+            oDSO.Forcex86 = chkForcex86.checked;
+        }
+
+        function NOOP ()
+        {
+            window.event.cancelBubble = true;
+        }
+
+
+        // Initialize the category selection list
+        function InitCategoryList()
+        {
+            if (adcCategory.recordset.RecordCount > 0)
+            {
+                var i;
+                
+                adcCategory.recordset.MoveFirst();
+                for (i = 1; i <= adcCategory.recordset.RecordCount; i++)
+                {
+                    var oOpt = document.createElement("option");
+                    oOpt.value = adcCategory.recordset("id");
+                    oOpt.text = adcCategory.recordset("displayname");
+                    selCategory.add(oOpt);      // add it
+                    adcCategory.recordset.MoveNext();
+                }
+            } 
+        }
+        
+    </SCRIPT>
+
+    <SCRIPT FOR=window EVENT=onload LANGUAGE="JavaScript">
+
+        // if running on Alpha, show the forcex86 checkbox
+           
+        if (window.clientInformation.cpuClass == "Alpha")
+            ForceX86Pane.style.display="";
+    </SCRIPT>
+
+</HEAD>
+
+
+<BODY class="CBody">
+    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 style="height:100%;width:100%;">
+        <TR style="height:20px">  
+            <TD colSpan=2>
+                <DIV CLASS=CHeader style="LEFT: 0px; POSITION: relative">
+                    Install Programs from CD-ROM or Floppy
+                </DIV>
+            </TD>
+        </TR>
+        <TR style="height:40px">
+            <TD WIDTH=60% VALIGN=top CLASS=CNormalText>
+                    To install a new program from a floppy disk or CD-ROM drive, click Install.
+            </TD>
+            <TD ALIGN=right valign=bottom>
+                <BUTTON ID=btnCDFloppy CLASS=CBtn 
+                        TITLE="Click here to install a program from a CD-ROM or floppy."
+                        ONCLICK=BtnOnClick(adcApps)>
+                    Install
+                </BUTTON></TD>
+        </TR>
+
+        <!-- ROW 2: some blank space -->
+
+        <TR style="height:30px"><TD></TD></TR>
+        
+        <!-- ROW 3: Title and Category for network install -->
+
+        <TR style="height:25px">
+            <TD VALIGN=top>
+                <DIV CLASS=CHeader style="LEFT: 0px; POSITION: relative">
+                    Available programs from the corporate network:
+                </DIV>
+            </TD><!-- SORT -->
+
+            <TD VALIGN=top ALIGN=right WIDTH=30%>
+                <DIV class=CNormalText>
+                    <OBJECT classid=clsid:3964D9A0-AC96-11D1-9851-00C04FD91972 id=adcCategory>
+                        <PARAM NAME="ReadyState" VALUE="2">
+                        <PARAM NAME="EnumArea" VALUE="categories">
+                    </OBJECT>
+
+                    <LABEL FOR=selCategory DATASRC=#adcCategory DATAFLD=displayname ACCESSKEY=c><SPAN class=CAccessKey>C</SPAN>ategory:</LABEL>
+                        <SELECT ID=selCategory CLASS=CSelectList STYLE="POSITION: relative; TOP: 1px"
+                            SIZE=1 ONCHANGE="FilterDataSource(this, adcApps)">
+                            <OPTION VALUE=all SELECTED>All
+                        </SELECT>
+                </DIV>
+            </TD>
+        </TR>
+    
+        <!-- ROW2 -->
+
+        <TR style="height:2px" BGCOLOR=buttonface><TD colSpan=2></TD></TR>
+        
+        <!-- ROW3 -->
+        <TR>
+            <TD VALIGN=top COLSPAN=2><!--- MAIN CONTENTS ---><!-- Categories and Published Apps DSO -->
+                <DIV CLASS="CListView">
+                    <OBJECT classid=clsid:3964D9A0-AC96-11D1-9851-00C04FD91972 id=adcApps 
+                        ONDATASETCHANGED="InitCategoryList()">
+                        <PARAM NAME="ReadyState" VALUE="2">
+                        <PARAM NAME="EnumArea" VALUE="published">
+                        <PARAM NAME="Category" VALUE="">
+                    </OBJECT>
+
+                    <!-- MAIN CONTENTS --->
+
+                    <TABLE ID=tblApps CLASS=CAppTable DATASRC=#adcApps CELLPADDING=0 CELLSPACING=0 WIDTH=100% style="TABLE-LAYOUT: fixed">
+                        <TBODY>
+                            <TR ID=trAppTemplate ONCLICK="SetRecordSet(this, adcApps)" >
+                                <TD width=100%>
+                                    <TABLE ID=topRow class=CAppItem WIDTH=99% CELLPADDING=0 CELLSPACING=0 BORDER=0 TITLE="Click here to select this program">
+                                        <TR>
+                                            <TD width=65%>
+                                                <IMG src="remove_icon.gif" VSPACE=3 HSPACE=3 align=absMiddle>
+                                                <A href="javascript:;" class=hotspot>
+                                                <SPAN ID=name DATAFLD=displayname></SPAN></A>
+                                            </TD>
+                                            <TD align=right>
+                                                <TABLE ID=SortField class=buttonOffSort CELLSPACING=0 CELLPADDING=0 BORDER=0>
+                                                    <TR>
+                                                        <TD align=right>
+                                                            size </TD>
+                                                        <TD align=left style="WIDTH: 104px">&nbsp;&nbsp;&nbsp;<SPAN dataFld=size></SPAN> MB </TD>
+                                                    </TR>
+                                                </TABLE>
+                                            </TD>
+                                        </TR>
+                                    </TABLE>
+                                    <TABLE ID=panel WIDTH=99% CLASS=CAppItemPanel style="DISPLAY: none" CELLPADDING=0 CELLSPACING=0 BORDER=0>
+                                        <TR>
+                                            <TD ROWSPAN=10 STYLE="WIDTH: 26px">
+                                            </TD>           
+                                            <TD valign=top ROWSPAN=10>
+                                                <A href="javascript:;" onclick=NOOP()><SPAN dataFld=supporturl></SPAN></A>
+                                            </TD>
+                                            <TD valign=top STYLE="WIDTH: 40%">
+                                                <TR style="HEIGHT: 18px">
+                                                    <TD align=right valign=top>
+                                                        size </TD>
+                                                    <TD style="WIDTH:  104px" valign=top>&nbsp;&nbsp;&nbsp;<SPAN dataFld=size></SPAN> MB
+                                                    </TD>
+                                                </TR>
+                                                <TR style="HEIGHT: 18px">
+                                                    <TD align=right valign=top>
+                                                        version </TD>
+                                                    <TD style="WIDTH: 104px" valign=top>&nbsp;&nbsp;&nbsp;<SPAN dataFld=version></SPAN>
+                                                    </TD>
+                                                </TR>
+                                            </TD>
+                                        </TR>
+              
+                                    </TABLE>
+                                </TD>
+                            </TR>
+                        </TBODY>
+                     </TABLE>   
+                 </DIV>
+            </TD>
+        </TR>
+        <!-- ROW4 -->
+
+        <TR style="height:2px" BGCOLOR=buttonface><TD colSpan=2></TD></TR>
+
+        <!-- ROW5 -->
+
+        <TR style="height:40px">
+            <TD CLASS="CNormalText" VALIGN=MIDDLE>
+                To add a program to your computer, select it from the list above then click Add.
+                <SPAN ID="ForceX86Pane" STYLE="display:none">
+                    <BR><BR>
+                    <INPUT TYPE="checkbox" ID="chkForcex86" ONCLICK="Forcex86OnClick(document.all.adcApps)" ACCESSKEY=x STYLE="position:relative;top:2px" name="checkbox1">
+                    <LABEL FOR="FORCEX86">Force <SPAN class=CAccessKey>x</SPAN>86 Install</LABEL>
+                </SPAN>
+            </TD>
+            
+            <TD VALIGN=MIDDLE WIDTH="50%" ALIGN=RIGHT>
+
+                <!--- BUTTON REGION --->
+
+                <DIV ONCLICK="BtnOnClick(adcApps)">
+                <BUTTON ID="btnAdd" CLASS="CBtn"
+                        TITLE="Click here to add the selected component" 
+                        DISABLED>
+                    Add...
+                </BUTTON>
+                </DIV>
+            </TD>
+        </TR>
+    </TABLE>
+
+</BODY>
+</HTML>
+

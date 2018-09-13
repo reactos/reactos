@@ -1,0 +1,11 @@
+/********************************************************************/
+/*        DSKQUOWD.RCV                                              */
+/********************************************************************/
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Shell Disk Quota Watchdog DLL"
+#define VER_INTERNALNAME_STR            "DSKQUOWD"
+#define VER_ORIGINALFILENAME_STR        "DSKQUOWD.DLL"
+
+#include <ntverp.h>
+#include <common.ver>

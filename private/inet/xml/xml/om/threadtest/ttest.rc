@@ -1,0 +1,23 @@
+/*
+* 
+* Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+* EXEMPT: copyright change only, no build required
+* 
+*/
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "XML OM for Win32"
+#define VER_INTERNALNAME_STR        "MsXML.dll"
+#define VER_ORIGINALFILENAME_STR    "MsXML.dll"
+#define VER_OLESELFREGISTER
+
+
+
+
+#include "common.ver"
+
+
+

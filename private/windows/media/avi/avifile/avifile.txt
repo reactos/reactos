@@ -1,0 +1,181 @@
+AVIFile: it's not just an API set, it's a way of life.
+
+So, people are confused about how to approach the AVIFile APIs.
+Let's try to help by making some things clear.
+
+
+1.  AVIFile isn't just for AVI files.
+Perhaps this would be clearer if these functions had some different
+name, but let's live with AVIFile for now.  The important thing to
+keep in mind is that we aren't talking about .AVI files, but about
+some ideal time-based file format which supports the operations we'd
+like it to support, like reading and writing from multiple
+time-stamped streams.  If the APIs conform closely to what's actually
+in .AVI files, it's just because I made up both the .AVI format and
+the AVIFile APIs.
+
+The guiding principle is that any other type of file containing this
+time-stamped sort of data, be it a QuickTime file, an MPEG file, a
+.WAV file, or whatever, should be accessible in one simple way.
+
+2.  AVIFile isn't just for files.  
+Having a uniform API to read these different sorts of files is
+convenient, but we can go beyond that.  Once you have the abstract
+concept of a "file" which is a bundle of "streams" (each of which has
+a particular data type and format, along with a start time and
+duration, and can be read from or written to at various points in
+time), it is clear that not every "file" needs to correspond to an
+actual disk file, and not every "stream" has to come from a "file" at
+all.  
+
+Useful kinds of streams to think about: 
+Entirely synthetic streams, like the bouncing ball example; in this
+case, a "stream" reduces to a function GiveMeVideoFrame(x).
+Streams which are essentially filters applied to other streams; for
+example, given a stream of video (that is, some abstract object that
+can hand you frame 4 if you want it), you can build from that a
+"compressed" stream, which is simply a stream that when asked for
+frame 4 goes and asks the original stream for its frame 4, then
+compresses it and hands it back to you, saying "here's frame 4, all
+compressed like you wanted it." 
+
+3.  AVIFile tries to conform to the Component Object model.
+Since AVIFile is intended to be extensible to support additional file
+formats, it has to have some way of transparently linking to DLLs
+containing routines that understand those file formats.  In the past,
+we in MMSys have done this sort of thing using installable drivers
+and a message-based scheme.  (See MCI, ICM, and more....)  With the
+release of OLE 2.0, we have a new standard for this sort of thing.
+It's a little scary at first, requires either C++ or some C++-like
+thinking, and involves header files you haven't seen before.  In any
+case, we're all going to have to live with it.
+
+4.  Don't be intimidated by talk of C++ and "objects".  
+
+From a C point of view, all an "object pointer" like a PAVISTREAM is
+is a pointer to a structure whose first member happens to be another
+pointer to a table of functions.  This means that in addition to
+carrying around data like "how long is this video sequence", the
+structure also contains pointers to code that knows how to actually
+get things done.  All C++ does for you is provide a nicer syntax for
+doing this sort of thing.
+
+You can make yourself a PAVISTREAM by hand.  All you have to do
+is allocate room for a structure big enough to contain the pointer 
+to the function table and any other data you need to keep around.
+Then, you make a function table with the Read, Write, and other
+functions to operate on your type of stream, and make sure your
+structure points to your table.  Just like that, you have a bona fide
+PAVISTREAM which you can pass to AVISave, AVIStreamRead, and so on.
+
+5.  Luckily, you can usually ignore all of the "Component Object model"
+stuff.
+Unless you're doing something complicated, you should be able to just
+call the various AVIFileXXXX and AVIStreamXXXX APIs and pretty much
+ignore all of the talk of ISomethingOrOther and CLSID_Confusing.
+
+If you are trying to make a DLL that will add support for reading and
+writing a new file format, you will in fact have to learn something
+about what a "class factory" is, but cross that bridge when you come
+to it.
+
+6.  AVISave() is just a helper function.
+All the AVISave function does is copy some streams into a new file.
+It doesn't do anything that you couldn't do yourself by calling the
+AVIFileXXXX and AVIStreamXXXX APIs.  It does, however, make your life
+easier by: calling AVIMakeCompressedStream for you according to the
+options you pass in; calling AVIFileOpen and AVIFileCreateStream
+appropriately to make the new streams in the new file you're making;
+and finally, looping through all of the streams from start to end
+copying the data from the old streams into the new file, and doing it
+in the right order so that things come out nicely interleaved.
+
+7.  AVIStreamReadData, AVIStreamWriteData, AVIFileReadData, and
+AVIFileWriteData are not actually for reading and writing real data.
+I know, these routines have stupid names and they're just confusing
+everybody.  
+
+What they're not for: These routines are not what you use to read and
+write audio samples and video frames and that sort of thing.  For
+that, you must use AVIStreamRead and AVIStreamWrite.  (If you have a
+PAVIFile, call AVIFileGetStream and then call AVIStreamRead.) 
+
+What they're for: Reading and writing copyright information, the
+author's name, and other stuff like that that's kept in INFO chunks
+in RIFF files.
+
+8.  AVIStreamGetFrame is just another helper function.
+AVIStreamGetFrame (and AVIStreamGetFrameOpen/Close) are just
+functions which handle the relatively simple task of getting a
+decompressed video frame out of a stream.  This involves finding the
+right ICM decompressor for the task at hand, figuring out where the
+last key frame was, and decompressing frames as necessary.
+
+Perhaps this should all be done automatically for you; perhaps you
+should do this instead by opening a "decompressed" stream based on
+the compressed stream you want to read.  It's not either of those
+ways now, so use AVIStreamGetFrame.
+
+8a. What in heck is AVIMakeCompressedStream() for?
+AVIMakeCompressedStream makes a new stream pointer for you that acts
+just like the old stream you already had, but is compressed or
+decompressed.  That isn't very clear, so I'll try again: If you have
+a PAVISTREAM which, when you read it, gives you back 8-bit RGB frames
+of "Gone With the Wind", you can use AVIMakeCompressedStream to make
+a stream that will return the same pictures, but compressed in, say,
+CRAM format.  The reverse is also true: given a compressed stream,
+AVIMakeCompressedStream can make you an uncompressed version of that
+stream.
+
+To use it, just fill out an AVICOMPRESSOPTIONS structure.  (Or pass
+NULL, which will decompress.)
+
+In theory, you can either read from the compressed stream or write to
+it.  (Right now, this still doesn't work for audio compression....)
+However, you can only do one at a time.
+
+
+
+9.  What in the world is an HRESULT?  
+For some reason, all OLE 2.0 functions return HRESULTs which could
+potentially contain extra information about an error that occurred.
+For now, they are essentially just the same as a plain error code.  
+To convert one of the AVIERR_XXXX codes to an HRESULT, call 
+ResultFromScode() on it.  To convert back, use GetScode()....
+
+10.  In its current state, AVIFile is not finished.
+Some things which are bad about the current AVIFile APIs:
+AVISaveOptions() puts up a nasty big nested dialog which isn't
+user-friendly. 
+AVISave() doesn't handle palette changes correctly.
+Almost nothing handles the concept of, say, a wave format changing
+halfway through a stream.
+T here is no way to find when the next palette change happens, short
+of asking for the video format on every frame until you find a place
+it changes.
+Dealing with compressed and uncompressed streams is kind of screwy.
+If you know exactly what you have and what you want, you can call
+AVIMakeCompressedStream() to do what you need.
+Right now, the handler for compressing streams only supports reading,
+not writing.  There is no reason this should be true, and maybe I'll
+fix it.
+There are no status callbacks for anything.  If something takes a
+really long time, you wait.
+Error returns are generally stupid, if they're there at all.
+There is no way to find what a specific handler can do short of
+trying to do it and seeing what works.
+The documentation is still primitive.
+
+11.  Miscellaneous hints:
+Be sure to call AVIStreamInit() and AVIStreamExit().  If you don't,
+the component object DLL won't get initialized and nothing will work.
+Be sure the right information is in your registration database.  It
+should all get put there automatically, but isn't too resistant to
+tampering. 
+
+Some functions take pointers to long variables which need to be initialized
+to the size of your buffer before you call them.  You need to use code like:
+cbSize = cbBuffer; AVIStreamReadFormat(pstream, 0, lpBuffer, &cbSize);
+After this, cbSize will contain the actual correct size of the format, which 
+you can then compare to the size you passed in to see if your buffer
+was large enough.

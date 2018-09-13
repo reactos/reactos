@@ -1,0 +1,62 @@
+/*++
+
+Copyright (c) 1992  Microsoft Corporation
+
+Module Name:
+
+    Imports.idl
+
+Abstract:
+
+    This file is useful for creating RPC interfaces that require the use
+    of windef types.  The regrpc.idl file contains a line in the interface
+    body that imports this file.  For example:
+
+    import "imports.h";
+
+    Doing this causes the MIDL generated header file (regrpc.h) to contain
+    the following line:
+
+    #include "imports.h"
+
+    If this technique is not used, and instead regrpc.idl simply contains
+    #include <imports.h>, then the contents of imports.h will be expanded
+    in the MIDL generated header file.  This can lead to duplicate
+    definition problems later when the RPC client or RPC server code needs
+    to include both the MIDL generated header file and a file that is
+    included in imports.h.
+
+Author:
+
+    David J. Gilman (davegi)    27-Jan-1992
+
+Environment:
+
+    User Mode - Win32 - for use with the MIDL compiler
+
+--*/
+
+[
+    local,
+#ifdef __midl
+	ms_union,
+#endif // __midl
+    version( 0.0 )
+]
+
+interface imports
+
+{
+
+#define MIDL_PASS
+#include "imports.h"
+
+//
+// All .idl files need to contain at least one function prototype.
+//
+
+DWORD
+Dummy(
+    [ in ] DWORD DummyParm
+    );
+}

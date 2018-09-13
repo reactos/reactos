@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1993  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:
+
+    Don Ryan (donryan) 23-May-1995
+
+Revision History:
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=prtq32
+
+TARGETNAME=PRTQ32
+TARGETTYPE=DYNLINK
+DLLENTRY=InitializeDLL
+TARGETPATH=OBJ
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+    $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+    $(BASEDIR)\public\sdk\lib\*\acledit.lib  \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib
+
+INCLUDES=\
+    $(BASEDIR)\PRIVATE\INC;\
+    $(BASEDIR)\PRIVATE\WINDOWS\INC
+
+C_DEFINES=-DWINNT -DUNICODE
+
+SOURCES=\
+    prtq32.rc  \
+    prtq32.c
+
+UMTYPE=windows
+EXPECTED_WINVER=4.0
+UMTEST=
+UMLIBS=

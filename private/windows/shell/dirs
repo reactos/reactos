@@ -1,0 +1,47 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+!ENDIF
+
+DIRS= \
+    accesory    \
+    accessib    \
+    control     \
+    convgrp     \
+    cpls        \
+    dskquota    \
+    encrypt     \
+    fontfldr    \
+    games       \
+    lmui        \
+    lz          \
+    migrate     \
+    o2base      \
+    pifmgr      \
+    progman     \
+    regedit     \
+    regwiz      \
+    rundll32    \
+    runonce     \
+    security    \
+    snapins     \
+    taskman     \
+    themes      \
+    tools       \
+    upedit      \
+    userpri     \
+    version     \
+    winver 
+
+OPTIONAL_DIRS=
+

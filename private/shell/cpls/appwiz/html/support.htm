@@ -1,0 +1,315 @@
+<HTML xmlns:ctls >
+
+<HEAD>
+
+<META content="text/html; charset=iso-8859-1" http-equiv=Content-Type>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="arp.css">
+
+<STYLE TYPE="text/css">
+
+BODY {
+    background: infobackground;
+    color: infotext;
+    }
+
+DIV {
+    position: relative;
+    width: 100%;
+    xborder: '1px solid red';     /* Used for debugging the layout */
+    }
+    
+TABLE {
+    cursor: default;             /* Set explicitly b/c it is not inherited */
+    border-collapse:collapse;
+    }
+
+TD {
+    xborder: '1px solid burlywood';    /* Used for debugging the layout */
+    }
+
+BUTTON {
+    width: 8em;
+    }
+
+ctls\:ACCEL { behavior: url(accel.htc); }
+
+</STYLE>
+
+<SCRIPT LANGUAGE="JavaScript" SRC="preload.js" DEFER></SCRIPT>
+
+
+<TITLE>Support Info</TITLE>
+</HEAD>
+
+<BODY scroll=no>
+
+<DIV id=idDivDlg style='width:100%; height:100%'>
+<DIV id=idDivClient>
+
+<H1><SPAN id=idProduct _bpInnerText=displayname></SPAN></H1>
+
+<DIV id=idDivNoInfo style='display:none'>
+
+    <P id=idPNoSupportHelp>
+    There is no support information for <SPAN id=idProduct3 _bpInnerText=displayname></SPAN>.
+    <P>
+
+</DIV>
+
+<DIV id=idDivInfo>
+
+    <P id=idPSupportHelp>
+    Use the following information to get technical support for <SPAN id=idProduct2 _bpInnerText=displayname></SPAN>.
+    <P>
+
+    <TABLE id=idTblInfo style='height:auto'>
+        <COL id=idColSupportLabel align=left valign=top style='width:10em; padding-left:10px'>
+        <COL style='padding-left:10px'>
+        <TR>
+            <TD id=idTdPublisherLabel>Publisher:</TD>
+            <TD> <A id=idAPublisher _bpInnerText=publisher _bpHref=supporturl></A> </TD>
+        </TR>
+        <TR>
+            <TD id=idTdVersionLabel>Version:</TD>
+            <TD id=idVersion _bpInnerText=version></TD>
+        </TR>
+        <TR>
+            <TD id=idTdContactPersonLabel>Contact:</TD>
+            <TD id=idContactPerson _bpInnerText=contact></TD>
+        </TR>
+        <TR>
+            <TD id=idTdSupportInfoLabel>Support Information:</TD>
+            <TD><SPAN _bpNop=helpurl> <A id=idAHelpUrl _bpInnerText=helpurl _bpHref=helpurl></A> <BR></SPAN>
+                <SPAN id=idSpnHelpPhone _bpInnerText=helpphone></SPAN>
+            </TD>
+        </TR>
+        <TR>
+            <TD id=idTdReadmeLabel>Readme:</TD>
+            <TD> <A id=idAReadme _bpInnerText=readmeurl _bpHref=readmeurl></A> </TD>
+        </TR>
+        <TR>
+            <TD id=idTdUpdatesLabel>Product Updates:</TD>
+            <TD> <A id=idAUpdates _bpInnerText=updateinfourl _bpHref=updateinfourl></A> </TD>
+        </TR>
+        
+        <TR><TD colSpan=2>
+            <!-- Trick to hide this linebreak if ProductID/RegCompany/RegOwner don't exist -->
+            <SPAN _bpNop=productID>
+            <SPAN _bpNop=regcompany>
+            <SPAN _bpNop=regowner>
+                <BR>
+            </SPAN>
+            </SPAN>
+            </SPAN>
+        </TD></TR>
+        
+        <TR>
+            <TD id=idTdProductIDLabel>Product ID:</TD>
+            <TD id=idProductID _bpInnerText=productID></TD>
+        </TR>
+        <TR>
+            <TD id=idTdRegCoLabel>Registered Company:</TD>
+            <TD id=idTdRegCo _bpInnerText=regcompany></TD>
+        </TR>
+        <TR>
+            <TD id=idTdRegOwnLabel>Registered Owner:</TD>
+            <TD id=idTdRegOwn _bpInnerText=regowner></TD>
+        </TR>
+        
+        <TR><TD colSpan=2><BR></TD></TR>
+        
+        <TR>
+            <TD id=idTdCommentsLabel>Comments:</TD>
+            <TD id=idComments _bpInnerText=comments></TD>
+        </TR>
+    </TABLE>
+    
+</DIV>
+
+<TABLE id=idTblRepair style='height:auto'>
+<TR>
+    <TD>
+        <DIV id=idDivRepair _bpValue=capability style='display:none'>
+            <HR style='width:100%;' noshade size=2>
+            <TABLE cellpadding=0 cellspacing=0>
+                <TR>
+                    <TD id=idTdRepairDesc valign=middle style='padding:0px; margin:0px'>
+                        If this program is not working properly you may reinstall it 
+                        by clicking <B>Repair</B>.
+                    </TD>
+                    <TD id=idTdRepairButton align=right valign=middle style='padding:5px'>
+                        <BUTTON id="idBtnRepair" _bpValue=recordnumber> 
+                            <ctls:ACCEL id=idLblRepair forElem=idBtnRepair>&Repair</ctls:ACCEL>
+                        </BUTTON>
+                    </TD>
+                </TR>
+            </TABLE>
+        </DIV>        
+    </TD>
+</TR>
+<TR>
+    <TD style='padding:0px; margin:0px'>
+        <HR style='width:100%' noshade size=2>
+    </TD>
+</TR>
+<TR>
+    <TD id=idTdCloseButton style='padding:5px; text-align:right'>
+        <BUTTON id=idBtnOK>
+            <ctls:ACCEL id=idLblOK forElem=idBtnOK>&Close</ctls:ACCEL>
+        </BUTTON>
+    </TD>
+</TR>
+</TABLE>
+
+</DIV>
+</DIV>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+// Events
+document.body.onload = Body_Load;
+document.body.onunload = Body_UnLoad;
+document.body.onkeypress = Body_KeyPress;
+
+// Handle anchor events
+idDivInfo.onclick = GotoWebsite;
+
+idBtnRepair.onclick = Repair;
+idBtnOK.onclick = window.close;
+
+var g_docAll = document.all;            // Cache this collection
+
+var g_wndParent = null;
+var g_dlg;
+
+
+function Body_Load()
+{
+    // We need some utility functions
+    LoadScriptFile("idScriptUtil", "util.js");
+    LoadScriptFile("idScriptDlg", "dlg.js");
+    LoadScriptFile("idScriptBplate", "bplate.js");
+
+    InitDlgClass();
+    InitBoilerPlateClass();
+    
+    var bplate = new BoilerPlate();
+
+    g_wndParent = window.dialogArguments;
+
+    // Resize the dialog according to the content
+    g_dlg = new Dlg();
+    g_dlg.CalcMetrics(g_wndParent.SupportInfo_GetDlgSize(), idDivDlg);
+    
+    var szStruct = g_wndParent.SupportInfo_Query();
+
+    // This dialog supplies support information via fieldname values
+    // supplied from szStruct.  The list of possible field names are
+    // listed below.  The names in () are the registry names.
+    //
+    //   recordNumber
+    //   DisplayName     (DisplayName)
+    //   Version         (VersionMajor & VersionMinor)
+    //   Publisher       (Publisher)
+    //   SupportUrl      (UrlInfoAbout)
+    //   Contact         (Contact)
+    //   HelpPhone       (HelpTelephone)
+    //   ProductID       (ProductID)
+    //   HelpUrl         (HelpLink)
+    //   Comments        (Comments)
+    //   ReadmeUrl       (Readme)
+    //   RegCompany      (RegCompany)
+    //   RegOwner        (RegOwner)
+    //   UpdateInfoUrl   (UrlUpdateInfo)
+    //   Capability
+    //
+
+    bplate.Parse(szStruct);
+    bplate.Apply();     // apply the values to the page
+
+    // Are just the blank rows left in the support info?
+    if (2 == idTblInfo.rows.length)
+    {
+        // Yes; remove them too
+        idTblInfo.deleteRow();
+        idTblInfo.deleteRow();
+    }
+    
+    // Is there any info to show?
+    if (0 == idTblInfo.rows.length)
+    {
+        // No; hide the whole section
+        idDivInfo.style.display = 'none';
+        idDivNoInfo.style.display = 'block';
+    }
+    
+    // Can this app be repaired?
+    if (parseInt(idDivRepair._bpVar) & APPCAP_REPAIR)
+    {
+        // Yes; show the repair div
+        idDivRepair.style.display = 'block';
+    }
+
+    // Set the dialog size to entirely accomodate the contents of the dialog.
+    // (We have to sleep because for some reason Trident needs time to figure
+    // out the dimensions.  Lame...)
+    window.setTimeout("g_dlg.Resize(idDivClient.offsetWidth, idDivClient.offsetHeight)", 10);
+
+    // Set the focus on the OK button
+    idBtnOK.focus();
+}
+
+
+function Body_KeyPress()
+{
+    // Was this the escape key?
+    if (KC_ESCAPE == window.event.keyCode)
+    {
+        // Yes; close the window
+        window.close();
+    }
+}
+
+
+function Body_UnLoad()
+{
+    // When we are unloading, set an expando property "supportInforUnloaded" to true
+    // we can use this to know whether we unloaded later. 
+    if (g_wndParent)
+    {
+        g_wndParent.supportInfoUnloaded = true;
+    }
+}
+
+
+function GotoWebsite()
+{
+    var elem = window.event.srcElement;
+
+    // Catch anchor clicks and open a new window
+    if ("A" == elem.tagName && "" != elem.href)
+    {
+        window.open(elem.href, "SupInfoLink");
+        window.event.returnValue = false;   // don't do default
+    }
+}
+
+
+function Repair()
+{
+    // Call the parent window to repair the app, since it has access
+    // to the ARP control.
+    g_wndParent.SupportInfo_Repair(parseInt(idBtnRepair._bpVar));
+
+    // Set the focus back to this window unless our HTML dialog window is already gone
+    if (g_wndParent.supportInfoUnloaded != true)
+    {
+        idBtnOK.focus();
+    }
+}
+
+</SCRIPT>
+
+</BODY>
+</HTML>

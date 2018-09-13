@@ -1,0 +1,31 @@
+
+#include "resource.h"
+
+STRINGTABLE     DISCARDABLE
+BEGIN
+    IDS_ERR_CREATINSTANCE "Could not create virus check instance: IID_IVirusScanner"
+    IDS_ERR_BADCMDLINE    "Command line error!\n\nCmdLine: vrsreg <options>\n\t/U -- unregister virus scan engine\n\t/R -- register virus scan engine."
+    IDS_ERR_LOADADV       "Cannot Load Advpack.dll."
+    IDS_ERR_GETPROCADD    "GetProcAddress in advpack.dll failed.  You may have the older version of advpack.dll."
+    IDS_VRSENG_CLSID      "{91B0C1B0-0B71-11d0-8217-00A02474294C}"
+    IDS_VRSENG_DESC       "McAfee Virus Scanner"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg.inf"
+
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Virus Scan Engine Registry installer"
+#define VER_INTERNALNAME_STR        "vrsreg"
+#define VER_ORIGINALFILENAME_STR    "VRSREG.EXE"
+#define VER_FILEOS                  VOS_NT_WINDOWS32
+
+#include <common.ver>

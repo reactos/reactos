@@ -1,0 +1,82 @@
+/*++
+
+Copyright (c) 1994-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    internat.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the Multilingual
+    Language Indicator application.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include "resource.h"
+
+
+
+
+//
+//  Icons.
+//
+
+IDI_INTERNAT    ICON    DISCARDABLE     "internat.ico"
+
+
+
+
+//
+//  String Tables.
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNKNOWN         "Unknown"
+    IDS_PROPERTIES      "P&roperties"
+    IDS_WHATSTHIS       "&What's This?"
+    IDS_HELPFINDER      "&Help Finder..."
+    IDS_CPL_INTL        "RunDll32.exe shell32.dll,Control_RunDLL intl.cpl,,5"
+    IDS_PREVIOUS        "Application is already running"
+    IDS_APPNAME         "Indicator"
+
+    IDS_IMECLOSE        "Close IME"
+    IDS_IMEOPEN         "Open  IME"
+    IDS_SOFTKBDOFF      "Close Soft Keyboard"
+    IDS_SOFTKBDON       "Open Soft Keyboard"
+    IDS_IMESHOWSTATUS   "Show IME Status"
+    IDS_CONFIGUREIME    "Configure IME..."
+    IDS_IMEHELP         "&Help"
+END
+
+
+
+
+//
+//  Version Info.
+//
+
+#ifdef WINNT
+  #include <winver.h>
+  #include <ntverp.h>
+#else
+  #include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Keyboard Language Indicator Applet"
+#define VER_INTERNALNAME_STR            "INTERNAT"
+#define VER_LEGALCOPYRIGHT_YEARS        "1994-1999"
+#define VER_ORIGINALFILENAME_STR        "INTERNAT.EXE"
+
+#include <common.ver>

@@ -1,0 +1,10 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir srcc 		${MAKE}	${MFLAGS} $@
+	@enterdir srccpp	${MAKE}	${MFLAGS} $@
+	@enterdir emclient  ${MAKE}	${MFLAGS} $@
+	@enterdir nt5api    ${MAKE}	${MFLAGS} $@
+	@enterdir dll    	${MAKE}	${MFLAGS} $@

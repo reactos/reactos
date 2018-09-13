@@ -1,0 +1,100 @@
+<html>
+<title>
+CURRENT PERFBUILD REPORT FOR TRIDENT
+<body>
+<table border=1 cellpadding=2 cellspacing=1 background=gray2.bmp>
+<th bgColor=#00FFFF colspan=4>
+Current Performance Chart For Trident Opening via URL<BR>
+(All times shown are in millisecs and sizes in bytes)
+<tr>
+<td  bgColor=#FF0000 colspan=4> <B><I>Load w/o Doc:</I></B> 1022
+<tr>
+<td bgColor=#FFFFFF colspan=4> <B><I>DLL size:</I></B> 2113024
+
+<tr>
+<td> <B><I><U>DocName <td> <B><I><U>Load Entire Doc <td> <B><I><U>PgDn Once <td> <B><I><U>PgDn Twice 
+<tr>
+<td> <B>DISNEY <td  bgColor=#FF0000> 2513 <td  bgColor=#00FF00> 18 <td  bgColor=#00FF00> 36 
+<tr>
+<td> <B>CNN <td> 1104 <td  bgColor=#00FF00> 16 <td  bgColor=#00FF00> 28 
+<tr>
+<td> <B>ALTAVISTA <td> 752 <td> 20 <td> - 
+<tr>
+<td> <B>NBC <td  bgColor=#00FF00> 1244 <td  bgColor=#00FF00> 12 <td  bgColor=#00FF00> 27 
+<tr>
+<td> <B>STARWAVE <td  bgColor=#00FF00> 979 <td  bgColor=#00FF00> 13 <td> - 
+<tr>
+<td> <B>WSJ <td  bgColor=#00FF00> 825 <td  bgColor=#00FF00> 13 <td> - 
+<tr>
+<td> <B>VIACOM <td  bgColor=#00FF00> 853 <td  bgColor=#00FF00> 18 <td> - 
+<tr>
+<td> <B>HOTWIRED <td> 465 <td  bgColor=#00FF00> 37 <td> - 
+<tr>
+<td> <B>PATHFINDER <td> 1240 <td  bgColor=#00FF00> 18 <td> - 
+<tr>
+<td> <B>INTERN <td  bgColor=#00FF00> 1652 <td  bgColor=#00FF00> 34 <td  bgColor=#00FF00> 62 
+<tr>
+<td> <B>MSW <td> 869 <td  bgColor=#00FF00> 37 <td> - 
+<tr>
+<td> <B>NANDO <td  bgColor=#00FF00> 1642 <td  bgColor=#00FF00> 28 <td  bgColor=#00FF00> 33 
+<tr>
+<td> <B>FID <td  bgColor=#00FF00> 912 <td  bgColor=#00FF00> 11 <td  bgColor=#00FF00> 20 
+<tr>
+<td> <B>MERCURY <td  bgColor=#00FF00> 416 <td  bgColor=#FF0000> 42 <td> - 
+<tr>
+<td> <B>SJM <td> 1482 <td  bgColor=#00FF00> 97 <td  bgColor=#00FF00> 144 
+<tr>
+<td> <B>USNEWS <td  bgColor=#00FF00> 1451 <td  bgColor=#00FF00> 48 <td  bgColor=#00FF00> 62 
+<tr>
+<td> <B>ROCKHALL <td> 1671 <td  bgColor=#00FF00> 12 <td> 40 
+<tr>
+<td> <B>HTMLSOURCE <td> 4819 <td  bgColor=#00FF00> 7 <td  bgColor=#00FF00> 13 
+<tr>
+<td> <B>PARAFMT <td> 2423 <td  bgColor=#00FF00> 7 <td  bgColor=#00FF00> 14 
+<tr>
+<td> <B>TABLE <td  bgColor=#FF0000> 327 <td  bgColor=#00FF00> 28 <td  bgColor=#00FF00> 37 
+</table>
+<BR><BR>
+<table border=1 cellpadding=2 cellspacing=1 background=gray2.bmp>
+<th bgColor=#00FFFF colspan=4>
+Current Performance Chart For Trident Opening from File<BR>
+(All times shown are in millisecs and sizes in bytes)
+<tr>
+<td  bgColor=#00FF00 colspan=4> <B><I>Load w/o Doc:</I></B> 130
+<tr>
+<td bgColor=#FFFFFF colspan=4> <B><I>DLL size:</I></B> 2113024
+
+<tr>
+<td> <B><I><U>DocName <td> <B><I><U>Load Entire Doc <td> <B><I><U>PgDn Once <td> <B><I><U>PgDn Twice 
+<tr>
+<td> <B>DISNEY <td> 1044 <td  bgColor=#FF0000> 42 <td> 36 
+<tr>
+<td> <B>CNN <td> 950 <td  bgColor=#FF0000> 78 <td  bgColor=#FF0000> 37 
+<tr>
+<td> <B>ALTAVISTA <td  bgColor=#00FF00> 556 <td  bgColor=#00FF00> 19 <td> - 
+<tr>
+<td> <B>NBC <td> 1116 <td  bgColor=#FF0000> 17 <td> 22 
+<tr>
+<td> <B>STARWAVE <td> 973 <td> 12 <td> - 
+<tr>
+<td> <B>WSJ <td> 803 <td> 13 <td> - 
+<tr>
+<td> <B>VIACOM <td> 819 <td> 17 <td> - 
+<tr>
+<td> <B>HOTWIRED <td> 399 <td> 36 <td> - 
+<tr>
+<td> <B>PATHFINDER <td> 995 <td  bgColor=#00FF00> 16 <td> - 
+<tr>
+<td> <B>INTERN <td> 1548 <td> 47 <td> 55 
+<tr>
+<td> <B>MSW <td> 691 <td> 17 <td> - 
+<tr>
+<td> <B>NANDO <td> 1717 <td> 25 <td> 33 
+<tr>
+<td> <B>FID <td> 936 <td> 10 <td> 19 
+<tr>
+<td> <B>MERCURY <td> 446 <td> 35 <td> - 
+<tr>
+<td> <B>SJM <td> 1161 <td  bgColor=#00FF00> 72 <td  bgColor=#00FF00> 143 
+<tr>
+<td> <B>USNEWS <td> 1513 <td  bgColor=#0

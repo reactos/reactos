@@ -1,0 +1,39 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OLE32 Extensions for Win32"
+#define VER_INTERNALNAME_STR        "UrlMon.dll"
+#define VER_ORIGINALFILENAME_STR    "UrlMon.dll"
+#define VER_OLESELFREGISTER
+
+#include "common.ver"
+
+#ifndef unix
+#include "..\download\cdlstr.rc"
+#else
+#include "../download/cdlstr.rc"
+#endif /* unix */
+
+#ifndef unix
+#include "urlerr.rc"
+#else
+#include "urlerrmsg.h"
+#include "urlerrmsg.rc"
+#endif /* unix */
+
+#ifndef unix
+#include "..\zones\zones.rc"
+#else
+#include "../zones/zones.rc"
+#endif /* unix */
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg.inf"
+
+

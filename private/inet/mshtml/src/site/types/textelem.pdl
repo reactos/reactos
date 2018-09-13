@@ -1,0 +1,26 @@
+#ifndef _TEXTELEM_PDL_
+#define _TEXTELEM_PDL_ 1
+
+#include "csite.pdl"
+
+file textelem.pdl
+
+import csite.pdl
+
+
+interface IHTMLTextElement guid:3050f218-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CTextElement interface:IHTMLTextElement
+
+class CTextElement name:HTMLTextElement \
+            primaryinterface:IHTMLTextElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f26a-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f537-98b5-11cf-bb82-00aa00bdce0b
+ 
+#include "basedom.pdl"
+    implements IHTMLTextElement
+
+#endif _TEXTELEM_PDL_

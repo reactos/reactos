@@ -1,0 +1,21 @@
+MAJORCOMP=shell
+MINORCOMP=ucharmap
+
+TARGETNAME=ucharmap
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=..\spechars
+
+SOURCES= \
+    dummy.c
+
+UMTYPE=windows
+UMENTRY=winmain
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\comctl32.lib \
+    $(SDK_LIB_PATH)\htmlhelp.lib \
+    ..\spechars\obj\*\charmap.obj \
+    ..\spechars\obj\*\charmap.res
+
+ALT_PROJECT_TARGET=FE

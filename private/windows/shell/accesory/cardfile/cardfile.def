@@ -1,0 +1,45 @@
+NAME    CARDFILE
+
+DESCRIPTION     'Index Card Handler'
+EXETYPE         WINDOWS
+STUB            'WINSTUB.EXE'
+
+CODE MOVEABLE DISCARDABLE
+DATA MOVEABLE MULTIPLE		; Should we add a PRELOAD here?
+
+SEGMENTS
+    _INIT       PRELOAD MOVEABLE
+    _TEXT       PRELOAD MOVEABLE
+    _INDEX      MOVEABLE
+    _INPUT      MOVEABLE
+    _FILE       MOVEABLE
+    _READ       MOVEABLE
+    _WRITE      MOVEABLE
+    _OBJECT     MOVEABLE
+    _FIND       MOVEABLE
+    _DLGBOX     MOVEABLE
+    _DIAL       MOVEABLE
+    _PRINT      MOVEABLE
+
+HEAPSIZE    2048
+STACKSIZE   4096
+
+EXPORTS
+    IndexWndProc    @1
+    EditWndProc     @2
+    CardWndProc     @3
+    DlgProc         @4
+    fnAbortDlgProc  @5
+    fnAbortProc     @6
+    fnDial          @7
+    fnPageDlgProc   @8
+    HookProc        @9
+;
+; eCDA functions
+;
+    CallBack        @10
+    READSTREAM      @11
+    WRITESTREAM     @12
+    READOLDSTREAM   @13
+    fnLinksDlg      @14
+    fnInvalidLink   @15

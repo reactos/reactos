@@ -1,0 +1,63 @@
+/*++
+
+Copyright (c) 1990-1995,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    font.dlg
+
+Abstract:
+
+    This module contains the resource descriptions for the Win32
+    font common dialogs.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Font Dialogs.
+//
+
+FORMATDLGORD31 DIALOG 13, 54, 264, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Font:", stc1, 6, 3, 40, 9
+    COMBOBOX        cmb1, 6, 13, 94, 54, CBS_SIMPLE | CBS_AUTOHSCROLL |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+                    CBS_OWNERDRAWFIXED | CBS_DISABLENOSCROLL
+
+    LTEXT           "Font St&yle:", stc2, 108, 3, 44, 9
+    COMBOBOX        cmb2, 108, 13, 64, 54, CBS_SIMPLE | WS_VSCROLL |
+                    CBS_DISABLENOSCROLL | WS_TABSTOP
+
+    LTEXT           "&Size:", stc3, 179, 3, 30, 9
+    COMBOBOX        cmb3, 179, 13, 32, 54, CBS_SIMPLE | WS_VSCROLL |
+                    WS_TABSTOP | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED |
+                    CBS_SORT | CBS_DISABLENOSCROLL
+
+    DEFPUSHBUTTON   "OK", IDOK, 218, 6, 40, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Cancel", IDCANCEL, 218, 23, 40, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Apply", psh3, 218, 40, 40, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Help", pshHelp, 218, 57, 40, 14, WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Effects", grp1, 6, 72, 84, 34, WS_GROUP
+    AUTOCHECKBOX    "Stri&keout", chx1, 10, 82, 49, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Underline", chx2, 10, 94, 51, 10
+
+    LTEXT           "&Color:", stc4, 6, 110, 30, 9
+    COMBOBOX        cmb4, 6, 120, 84, 100,
+                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
+                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "Sample", grp2, 98, 72, 160, 49, WS_GROUP
+    CTEXT           "", stc6, 98, 124, 160, 20, SS_NOPREFIX | NOT WS_GROUP
+    CTEXT           "AaBbYyZz", stc5, 104, 81, 149, 37,
+                    SS_NOPREFIX | NOT WS_VISIBLE
+END
+
+

@@ -1,0 +1,48 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1998, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Aug-14-1998 PeterHal Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=WOW6432
+ALT_PROJECT_TARGET=WOW6432
+
+C_DEFINES=$(C_DEFINES) -D_HYDRA_
+C_DEFINES = $(C_DEFINES) -DBUILD_WOW6432
+ASM_DEFINES = $(ASM_DEFINES) -DBUILD_WOW6432
+
+!include ..\sources.inc
+
+# Change to the new 386 compiler for _ptr64
+# disable warning and optimizations since the compiler has bugs
+# and it flags warnings differently.
+!if "$(TARGET_DIRECTORY)" == "i386"
+MSC_OPTIMIZATION=/Odi
+MSC_WARNING_LEVEL=/w
+PATH=..\..\..\tools\i386_cl;$(PATH)
+!endif
+
+INCLUDES=$(INCLUDES);$(BASEDIR)\public\sdk\inc\hydra
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\kernl32p.lib \
+           $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\gdi32p.lib   \
+           $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\ntdll.lib    \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib
+
+LINKLIBS=$(LINKLIBS) \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\w32wow.lib
+
+#link with the special version of ntdll.dll
+USE_NOLIBS=1
+!ifdef USE_NTDLL
+!undef USE_NTDLL
+!endif
+
+DLLBASE=@$(COFFBASE_TXT_FILE),user3232

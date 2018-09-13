@@ -1,0 +1,78 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#
+# Cross-compiler macros for unique naming
+#
+
+MAJORCOMP       = shell
+MINORCOMP       = welcome
+
+# relative path to root of shell project
+CCSHELL_DIR     = ..\..\..
+
+#
+# Common settings required by build.exe and makefile.def
+#
+
+INCLUDES=$(BASEDIR)\public\sdk\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\inc;$(CCSHELL_DIR)\inc
+
+C_DEFINES=-DWIN32 -DW3
+
+CHICAGO_PRODUCT=1
+WIN32_WIN95_VERSION=0x0400
+WIN32_IE_VERSION=0x0400
+
+ALT_PROJECT_TARGET=chicago
+TARGETNAME = welcome
+TARGETPATH = obj
+TARGETTYPE = PROGRAM
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\gdi32.lib           \
+    $(SDK_LIB_PATH)\shlwapi.lib    \
+    $(SDK_LIB_PATH)\shell32p.lib    \
+    $(SDK_LIB_PATH)\ole32.lib           \
+    $(SDK_LIB_PATH)\oleaut32.lib        \
+    $(SDK_LIB_PATH)\winmm.lib        \
+
+UMTYPE=windows
+UMENTRY=winmain
+
+NOT_LEAN_AND_MEAN=1
+USE_NATIVE_EH=1
+
+#
+# List of sources
+#
+
+SOURCES = \
+    ..\welcome.cpp  \
+    ..\dlgapp.cpp   \
+    ..\dataitem.cpp \
+    ..\resource.rc  \
+
+MISCFILES = \
+    ..\welcome.ini \
+

@@ -1,0 +1,669 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// TIMEZONE.DOC  
+//
+// This file contains the same time zone information as the Timezone.ini
+// file with the addition of some comments for the Start date for the
+// Standard Time and Daylight Saving Time dates.  Also included is some
+// explanatory text for the BINARY values stored under the TZI key.
+// These values correspond to the similar values in the Windows NT
+// TIME_ZONE_INFORMATION structure and its included SYSTEMTIME structures.
+// Each of the BIAS values are LONGs and each element in the Dates is
+// a 16-bit word value.
+//
+// Under the "Time Zones" key - each key name is the Standard Time Zone
+// name.   Under that the "Display" value is the string displayed in the
+// Listbox that the User sees.  The "Dlt" value is the Daylight Time Zone
+// name.  Both the Standard and Daylight Time Zone names cannot exceed 32
+// chars in length because they are the strings used in the TIME_ZONE_
+// INFORMATION structure.
+//
+// NOTE TO LOCALIZERS:
+//
+//  Leave this file alone - it is informational only.  Change the hive
+//  file SOFTWARE.INI
+//
+//  The Time Zone key names under the "Time Zones" key can be localized.
+//  The String values for each of the "Display" and "Dlt" values can be
+//  localized.  Do not localize "Time Zones" key, or the value names under
+//  each of the keys "Display", "Dlt" or "TZI".
+//
+//
+//  04-Jan-94   [stevecat]    Created documentation file
+//  07-Feb-94   [stevecat]    Added new European timezones
+//
+// (c) 1994 Microsoft Corporation, All Rights Reserved
+//
+///////////////////////////////////////////////////////////////////////////////
+
+//  Registry location of Time Zone date under HKEY_LOCAL_MACHINE
+//
+//  Privileges  ADMIN FULL  SYSTEM FULL  WORLD READ
+
+\registry\machine\software\microsoft\windows nt\currentversion
+    Time Zones [WorldR AdminFull SystemFull]
+    	GMT
+	    Display = (GMT) Greenwich Mean Time; Dublin, Edinburgh, London        
+	    Dlt = GMT Daylight Time
+
+            // Bias         Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in October at 3:00:00 AM         
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //////////////////////////////////////////////////////////////////////
+	    //
+	    //  Binary data component structure 
+	    //
+            //////////////////////////////////////////////////////////////////////
+
+	    //                              BIAS Values               Standard Time changeover date & time         Daylight Time changeover date & time
+	    //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec     mon  yr    day dywk   min  hr     ms sec
+	    TZI = REG_BINARY 0x2C 0x00000000 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000003 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000
+
+    	Lisbon Warsaw Standard Time
+	    Display = (GMT+01:00) Lisbon, Warsaw
+	    Dlt = Lisbon Warsaw Daylight Time
+
+            // POLAND, PORTUGAL
+            // Bias  -1*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 2:00:00 AM         
+            // Daylight Date - Last Sunday in March at 1:00:00 AM           
+
+	    //                              BIAS Values               Standard Time changeover date & time         Daylight Time changeover date & time
+	    //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec     mon  yr    day dywk   min  hr     ms sec
+	    TZI = REG_BINARY 0x2C 0xFFFFFFC4 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000002 0x00000000  0x00030000 0x00050000 0x00000001 0x00000000 
+
+	Romance Standard Time
+	    Display = (GMT+01:00) Paris, Madrid
+	    Dlt = Romance Daylight Time  
+
+	    //  FRANCE, SPAIN
+            // Bias  -1*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in October at 2:00:00 AM
+            // Daylight Date - Last Sunday in March at 2:00:00 AM
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFFC4 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000000 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+	W. Europe Standard Time
+	    Display = (GMT+01:00) Berlin, Stockholm, Rome, Oslo, Bern, Brussels, Vienna
+	    Dlt = W. Europe Daylight Time  
+
+            // BELGIUM, DENMARK, GERMANY, ITALY, NETHERLANDS, NORWAY, SWEDEN, SWITZERLAND, AUSTRIA
+            // Bias  -1*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 3:00:00 AM       
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFFC4 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000003 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+	E. Europe Standard Time  
+	    Display = (GMT+02:00) Eastern Europe
+	    Dlt = E. Europe Daylight Time  
+
+            //  Rest of Eastern Europe - ROMAINE (Bucharest)
+            // Bias  -2*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 1:00:00 AM
+            // Daylight Date - Last Sunday in March at 12:00:00 AM
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF88 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000001 0x00000000 0x00030000 0x00050000 0x00000000 0x00000000
+
+	Czech Standard Time  
+	    Display = (GMT+01:00) Prague  
+	    Dlt = Czech Daylight Time  
+
+            //  CZECHOSLOVAKIA
+            // Bias  -1*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 1:00:00 AM
+            // Daylight Date - Last Sunday in March at 12:00:00 AM  (Midnight)
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFFC4 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000001 0x00000000 0x00030000 0x00050000 0x00000000 0x00000000 
+
+	GFT Standard Time  
+	    Display = (GMT+02:00) Athens, Helsinki, Istanbul
+	    Dlt = GFT Daylight Time  
+
+            //  FINLAND, GREECE, TURKEY
+            // Bias  -2*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 12:00:00 AM  (Midnight)
+            // Daylight Date - Last Sunday in March at 12:00:00 AM  (Midnight)
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF88 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000000 0x00000000 0x00030000 0x00050000 0x00000000 0x00000000 
+
+	E. South America Standard Time
+	    Display = (GMT-03:00) Brasilia
+	    Dlt = E. South America Daylight Time
+
+            // Bias 3*60L,  Std 0  Daylight  -1*60L,                           
+            // Standard Date - Second Sunday in February at 2:00:00 AM         
+            // Daylight Date - Third Sunday in October at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time    
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec 
+	    TZI = REG_BINARY 0x2C 0x000000B4 0x00000000 0xFFFFFFC4 0x00020000 0x00020000 0x00000002 0x00000000 0x000a0000 0x00030000 0x00000002 0x00000000 
+
+	Atlantic Standard Time
+	    Display = (GMT-04:00) Atlantic Time (Canada)
+	    Dlt = Atlantic Daylight Time
+
+            // Bias  4*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000000F0 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Eastern Standard Time
+	    Display = (GMT-05:00) Eastern Time (US & Canada)
+	    Dlt = Eastern Daylight Time
+
+            // Bias  5*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x0000012C 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Central Standard Time
+	    Display = (GMT-06:00) Central Time (US & Canada)
+	    Dlt = Central Daylight Time
+
+            // Bias  6*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000168 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Mountain Standard Time
+	    Display = (GMT-07:00) Mountain Time (US & Canada)
+	    Dlt = Mountain Daylight Time
+
+            // Bias  7*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000001A4 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Pacific Standard Time
+	    Display = (GMT-08:00) Pacific Time (US & Canada); Tijuana
+	    Dlt = Pacific Daylight Time
+
+            // Bias  8*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000001E0 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Alaskan Standard Time
+	    Display = (GMT-09:00) Alaska
+	    Dlt = Alaskan Daylight Time
+
+            // Bias  9*60L, Std 0  Daylight  -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x0000021C 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Hawaiian Standard Time
+	    Display = (GMT-10:00) Hawaii
+	    Dlt = Hawaiian Daylight Time
+
+            // Bias  10*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000258 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Samoa Standard Time
+	    Display = (GMT-11:00) Midway Island, Samoa
+	    Dlt = Samoa Daylight Time
+
+            // Bias  11*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000294 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	New Zealand Standard Time
+	    Display = (GMT+12:00) Wellington, Auckland
+	    Dlt = New Zealand Daylight Time
+
+            // Bias  -12*60LStd 0  Daylight, -1*60L,                           
+            // Standard Date - Third Sunday in March at 2:00:00 AM             
+            // Daylight Date - First Sunday in October at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFD30 0x00000000 0xFFFFFFC4 0x00030000 0x00030000 0x00000002 0x00000000 0x000a0000 0x00010000 0x00000002 0x00000000 
+
+	Sydney Standard Time
+	    Display = (GMT+10:00) Brisbane, Melbourne, Sydney
+	    Dlt = Sydney Daylight Time
+
+            // Bias  -10*60LStd 0  Daylight, -1*60L,                          
+            // Standard Date - First Sunday in March at 2:00:00 AM            
+            // Daylight Date - Last Sunday in October at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDA8 0x00000000 0xFFFFFFC4 0x00030000 0x00010000 0x00000002 0x00000000 0x000a0000 0x00050000 0x00000002 0x00000000 
+
+	Cen. Australia Standard Time
+	    Display = (GMT+09:30) Adelaide
+	    Dlt = Cen. Australia Daylight Time
+
+            // Bias  -9.5*60Std 0  DaylightL -1*60L,                          
+            // ,tandard Date - First Sunday in March at 2:00:00 AM            
+            // Daylight Date - Last Sunday in October at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDC6 0x00000000 0xFFFFFFC4 0x00030000 0x00010000 0x00000002 0x00000000 0x000a0000 0x00050000 0x00000002 0x00000000 
+
+	Tokyo Standard Time
+	    Display = (GMT+09:00) Tokyo, Osaka, Sapporo, Seoul, Yakutsk
+	    Dlt = Tokyo Daylight Time
+
+            // Bias  -9*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDE4 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Taipei Standard Time
+	    Display = (GMT+08:00) Hong Kong, Perth, Singapore, Taipei
+	    Dlt = Taipei Daylight Time
+
+            // Bias  -8*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFE20 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Bangkok Standard Time
+	    Display = (GMT+07:00) Bangkok, Jakarta, Hanoi
+	    Dlt = Bangkok Daylight Time
+
+            // Bias  -7*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFE5C 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	India Standard Time
+	    Display = (GMT+05:30) Bombay, Calcutta, Madras, New Delhi, Colombo
+	    Dlt = India Daylight Time
+
+            // Bias -5.5*60LStd 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFEB6 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Arabian Standard Time
+	    Display = (GMT+04:00) Abu Dhabi, Muscat, Tbilisi
+	    Dlt = Arabian Daylight Time
+
+            // Bias  -4*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF10 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Iran Standard Time
+	    Display = (GMT+03:30) Tehran
+	    Dlt = Iran Daylight Time
+
+            // Bias -3.5*60LStd 0  Daylight  -1*60L,                         
+            // Standard Date - Fourth Tuesday in September at 2:00:00 AM     
+            // Daylight Date - First Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF2E 0x00000000 0xFFFFFFC4 0x00090000 0x00040002 0x00000002 0x00000000 0x00030000 0x00010000 0x00000002 0x00000000 
+
+	Saudi Arabia Standard Time
+	    Display = (GMT+03:00) Baghdad, Kuwait, Nairobi, Riyadh
+	    Dlt = Saudi Arabia Daylight Time
+
+            // Bias  -3*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF4C 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Israel Standard Time
+	    Display = (GMT+02:00) Israel
+	    Dlt = Israel Daylight Time
+
+            // Bias  -2*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - First Sunday in September at 2:00:00 AM      
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF88 0x00000000 0xFFFFFFC4 0x00090000 0x00010000 0x00000002 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+	Newfoundland Standard Time
+	    Display = (GMT-03:30) Newfoundland
+	    Dlt = Newfoundland Daylight Time
+
+            // Bias  3.5*60LStd 0  Daylight, -1*60L,                         
+            // Standard Date - Last Sunday in October at 2:00:00 AM          
+            // Daylight Date - First Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000000D2 0x00000000 0xFFFFFFC4 0x000a0000 0x00050000 0x00000002 0x00000000 0x00040000 0x00010000 0x00000002 0x00000000 
+
+	Azores Standard Time
+	    Display = (GMT-01:00) Azores, Cape Verde Is.
+	    Dlt = Azores Daylight Time
+
+            // Bias  1*60L, Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 2:00:00 AM       
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x0000003C 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000002 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+	Mid-Atlantic Standard Time
+	    Display = (GMT-02:00) Mid-Atlantic
+	    Dlt = Mid-Atlantic Daylight Time
+
+            // Bias  2*60L, Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 2:00:00 AM       
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000078 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000002 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+	GMT Standard Time
+	    Display = (GMT) Monrovia, Casablanca
+	    Dlt = GMT DST
+
+            // Bias         Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000000 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	SA Eastern Standard Time
+	    Display = (GMT-03:00) Buenos Aires, Georgetown
+	    Dlt = SA Eastern Daylight Time
+
+            // Bias 3*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000000B4 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	SA Western Standard Time
+	    Display = (GMT-04:00) Caracas, La Paz
+	    Dlt = SA Western Daylight Time
+
+            // Bias 4*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000000F0 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	US Eastern Standard Time
+	    Display = (GMT-05:00) Indiana (East)
+	    Dlt = US Eastern Daylight Time
+
+            // Bias 5*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x0000012C 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	SA Pacific Standard Time
+	    Display = (GMT-05:00) Bogota, Lima
+	    Dlt = SA Pacific Daylight Time
+
+            // Bias 5*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x0000012C 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Canada Central Standard Time
+	    Display = (GMT-06:00) Saskatchewan
+	    Dlt = Canada Central Daylight Time
+
+            // Bias 6*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000168 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Mexico Standard Time
+	    Display = (GMT-06:00) Mexico City, Tegucigalpa
+	    Dlt = Mexico Daylight Time
+
+            // Bias 6*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x00000168 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	US Mountain Standard Time
+	    Display = (GMT-07:00) Arizona
+	    Dlt = US Mountain Daylight Time
+
+            // Bias 7*60L,  Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000001A4 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Dateline Standard Time
+	    Display = (GMT-12:00) Enewetak, Kwajalein
+	    Dlt = Dateline Daylight Time
+
+            // Bias 12*60L, Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0x000002D0 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Fiji Standard Time
+	    Display = (GMT+12:00) Fiji, Kamchatka, Marshall Is.
+	    Dlt = Fiji Daylight Time
+
+            // Bias -12*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFD30 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Central Pacific Standard Time
+	    Display = (GMT+11:00) Magadan, Solomon Is., New Caledonia
+	    Dlt = Central Pacific Daylight Time
+
+            // Bias -11*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFD6C 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Tasmania Standard Time
+	    Display = (GMT+10:00) Hobart
+	    Dlt = Tasmania Daylight Time
+
+            // Bias -10*60L,Std 0  Daylight  -1*60L,                           
+            // Standard Date - Last Sunday in March at 2:00:00 AM              
+            // Daylight Date - First Sunday in October at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDA8 0x00000000 0xFFFFFFC4 0x00030000 0x00050000 0x00000002 0x00000000 0x000a0000 0x00010000 0x00000002 0x00000000 
+
+	West Pacific Standard Time
+	    Display = (GMT+10:00) Guam, Port Moresby, Vladivostok
+	    Dlt = West Pacific Daylight Time
+
+            // Bias -10*60L,Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDA8 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	AUS Central Standard Time
+	    Display = (GMT+09:30) Darwin
+	    Dlt = AUS Central Daylight Time
+
+            // Bias -9.5*60LStd 0  Daylight, -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFDC6 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	China Standard Time
+	    Display = (GMT+08:00) Beijing, Chongqing, Urumqi
+	    Dlt = China Daylight Time
+
+            // Bias -8*60L, Std 0  Daylight  -1*60L,                          
+            // Standard Date - Second Sunday in September at 2:00:00 AM       
+            // Daylight Date - Second Sunday in April at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFE20 0x00000000 0xFFFFFFC4 0x00090000 0x00020000 0x00000002 0x00000000 0x00040000 0x00020000 0x00000002 0x00000000 
+
+	Central Asia Standard Time
+	    Display = (GMT+06:00) Alma Ata, Dhaka
+	    Dlt = Central Asia Daylight Time
+
+            // Bias -6*60L, Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFE98 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	West Asia Standard Time
+	    Display = (GMT+05:00) Islamabad, Karachi, Ekaterinburg, Tashkent
+	    Dlt = West Asia Daylight Time
+
+            // Bias -5*60L, Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFED4 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Afghanistan Standard Time
+	    Display = (GMT+04:30) Kabul
+	    Dlt = Afghanistan Daylight Time
+
+            // Bias -4.5*60LStd 0  Daylight, -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFEF2 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Egypt Standard Time
+	    Display = (GMT+02:00) Cairo
+	    Dlt = Egypt Daylight Time
+
+            // Bias -2*60L, Std 0  Daylight  -1*60L,                       
+            // Standard Date - Last Wednesday in September at 2:00:00 AM   
+            // Daylight Date - First Friday in May at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF88 0x00000000 0xFFFFFFC4 0x00090000 0x00050003 0x00000002 0x00000000 0x00050000 0x00010005 0x00000002 0x00000000 
+
+	South Africa Standard Time
+	    Display = (GMT+02:00) Harare, Pretoria
+	    Dlt = South Africa Daylight Time
+
+            // Bias -2*60L, Std 0  Daylight  -1*60L,
+            // Standard Date - None             
+            // Daylight Date - None             
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF88 0x00000000 0xFFFFFFC4 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 
+
+	Russian Standard Time
+	    Display = (GMT+03:00) Moscow, St. Petersburg, Kazan, Volgograd
+	    Dlt = Russian Daylight Time
+
+            // Bias  -3*60L,Std 0  Daylight  -1*60L,                        
+            // Standard Date - Last Sunday in September at 2:00:00 AM       
+            // Daylight Date - Last Sunday in March at 2:00:00 AM           
+
+            //                              BIAS Values               Standard Time changeover date & time        Daylight Time changeover date & time     
+            //                        Bias     StdBias    DltBias    mon  yr    day dywk   min  hr     ms sec    mon  yr    day dywk   min  hr     ms sec  
+	    TZI = REG_BINARY 0x2C 0xFFFFFF4C 0x00000000 0xFFFFFFC4 0x00090000 0x00050000 0x00000002 0x00000000 0x00030000 0x00050000 0x00000002 0x00000000 
+
+

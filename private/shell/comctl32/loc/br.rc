@@ -1,0 +1,128 @@
+LANGUAGE 0x16,0x01
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Personalizar barra de ferramentas"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Fechar",2,292,6,62,14
+    PUSHBUTTON      L"Re&definir",202,292,23,62,14
+    PUSHBUTTON      L"Aj&uda",205,292,40,62,14
+    PUSHBUTTON      L"Mover para &cima",206,292,74,62,14
+    PUSHBUTTON      L"&Mover para baixo",207,292,91,62,14
+    LTEXT           L"&Bot\x00f5es dispon\x00edveis:",-1,4,5,66,8
+    LISTBOX         201,4,17,112,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Adicionar ->",1,122,42,44,14
+    PUSHBUTTON      L"<- &Remover",204,122,62,44,14
+    LTEXT           L"Bo&t\x00f5es da barra de ferramentas:",-1,172,5,106,8
+    LISTBOX         203,172,17,112,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Cancelar",2,58,122,50,14
+    PUSHBUTTON      L"Ap&licar",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Ajuda",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Voltar",12323,75,26,44,14
+    DEFPUSHBUTTON   L"&Avan\x00e7ar >",12324,119,26,44,14
+    PUSHBUTTON      L"Concluir",12325,119,26,44,14
+    PUSHBUTTON      L"Cancelar",2,176,26,50,14
+    PUSHBUTTON      L"Ajuda",9,233,26,44,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Separador"
+    1025                    L" + "
+    1026                    L"Nenhum"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Fechar"
+    4161                    L"OK"
+    4162                    L"Propriedades de %s"
+    4163                    L"Hoje:"
+    4164                    L"&Ir para hoje"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Insira o texto aqui"
+    4177                    L"Propriedades"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Redimensiona esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Move esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Reduz a janela a um \x00edcone."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Expande esta janela para preencher a tela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Alterna para a pr\x00f3xima janela MDI."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Fecha esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Restaura o tamanho normal da janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Alterna para outra tarefa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Cont\x00e9m comandos para manipular janelas."
+    36849                   L"Arrastar para a esquerda ou direita para redimensionar colunas."
+    36850                   L"Redimensiona as colunas com as teclas de dire\x00e7\x00e3o e a tecla tab."
+    36851                   L"Adiciona, move e remove bot\x00f5es na barra de ferramentas."
+END
+

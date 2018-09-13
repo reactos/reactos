@@ -1,0 +1,22 @@
+NAME	     UPE
+
+EXETYPE      WINDOWS
+
+STUB	     'WINSTUB.EXE'
+
+CODE  PRELOAD MOVEABLE DISCARDABLE
+
+DATA  PRELOAD MOVEABLE
+
+
+HEAPSIZE     1024
+STACKSIZE    5120	   ; recommended minimum for Windows applications
+
+
+; All functions that will be called by any Windows routine
+; MUST be exported.
+
+EXPORTS
+	MainWndProc   @1
+	UPEDlgProc    @2
+        MessageFilter @3

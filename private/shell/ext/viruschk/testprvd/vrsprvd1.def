@@ -1,0 +1,12 @@
+LIBRARY         VRSPRVD1
+DESCRIPTION     'Microsoft's Sample Virus Scan DLL Server.'
+
+CODE            PRELOAD DISCARDABLE
+DATA            PRELOAD SINGLE
+
+EXPORTS
+                DllMain                 @1
+				DllGetClassObject       @2
+                DllCanUnloadNow         @3
+				DllRegisterServer       @4
+				DllUnregisterServer 	@5

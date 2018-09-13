@@ -1,0 +1,115 @@
+#include <windows.h>
+#include "crd.h"
+#include "cdt.h"
+#include "sol.h"
+#include "solid.h"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Solitaire Game Applet"
+#define VER_INTERNALNAME_STR        "sol.exe"
+#define VER_ORIGINALFILENAME_STR    "sol.exe"
+
+#include "common.ver"
+
+1 MENU 
+BEGIN
+    POPUP "&Game"
+    BEGIN
+        MENUITEM "&Deal\t F2",                  idsInitiate	
+        MENUITEM SEPARATOR
+        MENUITEM "&Undo",                       idsUndo	
+        MENUITEM "De&ck...",                    idsBacks
+        MENUITEM "&Options...",                 idsOptions
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       idsExit	
+    END
+
+#if DBG
+    POPUP "   "
+    BEGIN
+        MENUITEM "Set &Game Number",            idsGameNo
+        MENUITEM "&Print icrdMacs",             idsCardMacs	
+        MENUITEM "&Force Win",                  idsForceWin
+        MENUITEM "&Assert Failure",             idsAssertFail
+        MENUITEM "&Marquee Test",               idsMarquee
+        MENUITEM "&Configure for screen shots", idsScreenShots
+    END
+#endif
+
+
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents\t F1",              idsHelpIndex
+        MENUITEM "&Search for Help on...",      idsHelpSearch
+        MENUITEM "&How to Use Help",            idsHelpUsing
+        MENUITEM SEPARATOR
+        MENUITEM "&About Solitaire",            idsAbout
+    END
+END
+
+
+
+HiddenAccel ACCELERATORS {
+
+      0x32,  idsForceWin, VIRTKEY, NOINVERT, ALT, SHIFT
+      VK_F2, idsInitiate, VIRTKEY
+}
+
+
+
+STRINGTABLE
+BEGIN
+    
+    idsAppName,     "Solitaire"
+    idsScore,       "Score: "
+    idsTime,        "Time: "
+    idsCardDraw,    "CardDraw"
+    idsDealAgain,   "Deal Again?"
+    idsHelpFile	,   "sol.chm"
+    idsEndWinner,   "Press Esc or a mouse button to stop..."
+    idsBonus,       "Bonus: "
+    idsExtraInfo,   "Developed for Microsoft by Wes Cherry"
+
+    idsBack,        "Back"
+    idsOpts,        "Options"
+    idsBitmap,      "Bitmap"
+    idsiCurrency,   "iCurrency"
+    idssCurrency,   "sCurrency"
+    idsIntl,        "intl"
+
+    idsOOM,         "Out of memory"
+    idsNoHelp,      "Unable load Windows Help application"
+    idsNoBitmap,    "Unable to load bitmap; do you want to use a green background?"
+    idsNoFullDrag,  "Insufficient memory to display card faces when cards move;\n\nselect the Outline dragging box from the Options menu."
+
+    idsInitiate	,   "Deal a new game"
+    idsUndo,        "Undo last action"
+    idsBacks,       "Choose new deck back"
+    idsOptions,     "Change Solitaire options"
+    idsExit,        "Exit Solitaire"
+    idsGameNo,      "Set game number"
+    idsCardMacs,    "Print # of cards in each col"
+    idsAssertFail,  "Assertion failure"
+    idsMarquee,     "Heck, I don't know"
+    idsScreenShots, "Configure Solitaire for screen shots"
+    idsForceWin,    "Force a win"
+
+
+    idsHelpIndex,   "Index of Solitaire help topics"
+    idsHelpSearch,  "Search the Help Engine for a specific topic"
+    idsHelpUsing,   "Help using help"
+    idsAbout,       "About Solitaire"
+
+END
+
+rcinclude solid.h
+rcinclude sol.dlg
+
+rcinclude gameno.dlg
+rcinclude assert.h
+rcinclude assert.dlg
+
+ID_ICON_MAIN    ICON  sol.ic3

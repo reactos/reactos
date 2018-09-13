@@ -1,0 +1,268 @@
+
+// DO NOT USE APSTUDIO with this file
+
+#include "resids.h"
+#include "windows.h"
+
+/* Version stamping */
+#include "syncui.rcv"
+
+/* Dialog resource */
+#include "syncui.dlg"
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_READONLY            "Some of the files were read-only. They were not updated."
+    IDS_ERR_FULLDISK            "The file cannot be created or updated because the disk is full.\n\nRemove some files from the disk, or move the Briefcase to another disk."
+    IDS_ERR_FILE_CHANGED        "Some of the files had been changed by another process. They were not updated."
+    IDS_ERR_SOURCE_FILE         "The source file cannot be opened.\n\nCheck to see if another program has the file opened, and close the file before updating the Briefcase."
+    IDS_ERR_UPD_UNAVAIL_VOL     "The Briefcase cannot be updated because a disk is inaccessible."
+    IDS_ERR_NO_MERGE_HANDLER    "'%1' will not be updated because its merge handler cannot be loaded."
+
+    // Generic unavailable volume error
+    IDS_ERR_UNAVAIL_VOL         "This operation cannot be done because the disk is inaccessible.\n\nVerify that the disk is accessible, then try again."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_ADD_SUBTREECYCLE    "Cannot create a sync relationship with this folder at this location in the Briefcase.\n\nCheck to make sure this folder isn't already in the Briefcase at another location."
+
+    IDS_ERR_ADD_READONLY        "The files cannot be added to the Briefcase because it is on a read-only disk or share.\n\nMake the Briefcase writable, then click Update All to create the files."
+    IDS_ERR_ADD_FULLDISK        "The files cannot be added to the Briefcase because the disk is full.\n\nRemove some files from the disk, or move the Briefcase to another disk, then click Update All to create the files."
+    IDS_ERR_ADD_SOURCE_FILE     "The files cannot be added to the Briefcase because the source cannot be opened.\n\nVerify that the files are accessible, then click Update All to create the files."
+    IDS_ERR_ADD_UNAVAIL_VOL     "The files cannot be added to the Briefcase because the disk is inaccessible.\n\nVerify that the disk is accessible, then click Update All to create the files."
+    IDS_ERR_ADD_SYNCFOLDER      "Sync copies cannot be created in '%1' because the folder itself already has or is a sync copy.\n\nTo add files to this folder, move them into the folder and click Update All."
+    IDS_ERR_ADD_SYNCFOLDER_SRC  "Sync copies cannot be created from '%1' because the folder itself already has a sync copy."
+    IDS_ERR_ADDFILE_TOOMANY     "'%1' cannot be added because it already has a sync copy in this Briefcase."
+    IDS_ERR_ADDFOLDER_TOOMANY   "'%1' cannot be added because it already has a sync copy or it contains a file or folder that has a sync copy in this Briefcase."
+    IDS_ERR_ADDFILE_UNAVAIL_VOL   "This file cannot be added to the Briefcase because the disk is inaccessible.\n\nVerify that the disk is accessible."
+    IDS_ERR_ADDFOLDER_UNAVAIL_VOL "This folder cannot be added to the Briefcase because the disk is inaccessible.\n\nVerify that the disk is accessible."
+    IDS_ERR_ADDFILE_TOOLONG     "Cannot add '%1' because the filename is invalid or too long.\n\nSpecify a different filename."
+    IDS_ERR_ADDFOLDER_TOOLONG   "Cannot add '%1' because the folder name is invalid or too long.\n\nSpecify a different folder name."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_OPEN_SUBTREECYCLE   "Cannot open the Briefcase because it is in a folder that has a sync copy in the Briefcase.\n\nMove the Briefcase to another folder."
+
+    IDS_ERR_BCALREADYEXISTS     "A Briefcase already exists at this location.\n\nDouble-click the icon to open it."
+    IDS_ERR_CANTCREATEBC        "The Briefcase '%1' cannot be created.\n\nDelete one or more files and try again."
+    IDS_ERR_SAMEGUYIDIOT        "%1 is already in the Briefcase. You cannot copy a file or folder over itself."
+    IDS_ERR_CANTADDBRIEFCASE    "One Briefcase cannot be added to another.\n\nTo add files from another Briefcase, select specific files and drag them to this Briefcase."
+    IDS_ERR_BRIEFCASE_LOCKED    "The Briefcase is in use on another computer.\n\nClose the Briefcase on that computer, and then try again."
+    IDS_ERR_OPEN_ACCESS_DENIED  "The Briefcase cannot be opened.\n\nCheck that the disk is not full and that you have both read and write priviledges to the disk."
+    IDS_ERR_NEWER_BRIEFCASE     "This Briefcase requires a newer version of the software."
+    IDS_ERR_OPEN_UNAVAIL_VOL    "This Briefcase cannot be opened because the disk is inaccessible.\n\nVerify that the disk is accessible."
+    IDS_ERR_CLOSE_UNAVAIL_VOL   "The disk where the Briefcase database is located is inaccessible.\n\nVerify that the disk is accessible."
+    IDS_ERR_SAVE_UNAVAIL_VOL    "The Briefcase database cannot be saved because the disk is inaccessible. Any files you have recently added to the Briefcase will be orphans."
+    IDS_ERR_OPEN_TOOLONG        "The Briefcase cannot be opened because the name is invalid or too long.\n\nSpecify a different briefcase name."
+    IDS_ERR_CREATE_TOOLONG      "The Briefcase cannot be created here because the complete path is too long.\n\nCreate a Briefcase in a different folder."
+    IDS_ERR_CREATE_INANOTHER    "A Briefcase cannot be created inside another Briefcase.\n\nCreate the Briefcase in a different folder."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These strings are long strings displayed in a message box
+
+    IDS_ERR_F_CantSplit     "%1%2"
+    IDS_ERR_1_CantSplit     "You cannot split a file if it is in a folder that has its own sync copy.\n\n"
+    IDS_ERR_2_CantSplit     "Instead, split the entire folder by selecting the parent folder sync copy and choosing the Split command from the Briefcase menu."
+    IDS_ERR_F_CorruptDB     "%1%2"
+    IDS_ERR_1_CorruptDB     "This Briefcase database is corrupt. The files in the Briefcase are okay, but they are no longer in a sync relationship with files outside the Briefcase.\n\n"
+    IDS_ERR_2_CorruptDB     "When you open the Briefcase again, drag the files out of the Briefcase, and then drag them in again to create a new sync relationship."
+    IDS_ERR_F_FullDiskSave  "%1%2"
+    IDS_ERR_1_FullDiskSave  "The Briefcase database cannot be saved because the disk is full. Any files you have recently added to the Briefcase will be orphans.\n\n"
+    IDS_ERR_2_FullDiskSave  "Remove some files, or move the Briefcase to another disk, and then add the files to the Briefcase again."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are out-of-memory messages
+
+    IDS_OOM_ADD             "There is not enough memory to add anything to the Briefcase.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_ADDFOLDER       "There is not enough memory to add this folder to the Briefcase.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_CHANGETYPES     "There is not enough memory to change the type of this folder.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_STATUS          "There is not enough memory to view the Update Status property sheet.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_INFO            "There is not enough memory to view the Update Info property sheet.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_FILLTYPES       "There is not enough memory to completely fill the file types listbox, so this list is incomplete.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_UPDATEDIALOG    "There is not enough memory to view the Update dialog box.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_UPDATE          "There is not enough memory to update the Briefcase.\n\nQuit some files or programs, and then try again."
+    IDS_OOM_OPENBRIEFCASE   "There is not enough memory to open the Briefcase database.\n\nQuit some files or programs, and then try again."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These strings are displayed in the static text in the Status Property sheet
+    // They should not be very long.
+
+    IDS_STATPROP_SubfolderTwin  "This folder is contained within another folder in the Briefcase. To update this folder, update the parent folder."
+    IDS_STATPROP_OrphanFolder   "This folder is an orphan. It does not have a sync relationship with any folder outside the Briefcase."
+    IDS_STATPROP_OrphanFile     "This file is an orphan. It does not have a sync relationship with any file outside the Briefcase."
+    IDS_STATPROP_Uptodate       "The sync copy outside the Briefcase is up-to-date with the one in the Briefcase."
+    IDS_STATPROP_PressButton    "To update, click the Update button."
+    IDS_STATPROP_Unavailable    "The sync copy outside the Briefcase is inaccessible at this time. It cannot be updated until it is accessible."
+    IDS_STATPROP_Update         "To change the update action, click the file with the right mouse button. To update, click Update."
+    IDS_STATPROP_Conflict       "Both copies of the file have changed. To change the update action, click the file with the right mouse button. To update, click Update."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These strings are displayed in the update progress dialog.
+    // They should not be very long.
+
+    IDS_UPDATE_Copy             "Copying from '%1' to '%2'"
+    IDS_UPDATE_Merge            "Merging files in '%1' and '%2'"
+    IDS_UPDATE_Delete           "Deleting from '%1'"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These strings are labels in the Confirm File/Folder replacement dialog
+
+    IDS_MSG_ConfirmFileReplace      "The Briefcase already contains a file called '%1'."
+    IDS_MSG_ConfirmFileReplace_RO   "The Briefcase already contains a read-only file called '%1'."
+    IDS_MSG_ConfirmFileReplace_Sys  "The Briefcase already contains a system file called '%1'."
+
+    IDS_MSG_ConfirmFolderReplace    "The Briefcase already contains a folder called '%1'.\n\nWould you like to replace the files of the existing folder with the files of the folder you are moving whenever they have the same name?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are messagebox strings regarding the result of an update 
+
+    IDS_MSG_NoFiles             "There are no files in the Briefcase. To add a file, drag it into the Briefcase."
+    IDS_MSG_AllOrphans          "The files in the Briefcase are orphans. They will not be updated."
+    IDS_MSG_AllUptodate         "The Briefcase cannot find any files that need to be updated. All of your files are up-to-date."
+    IDS_MSG_AllSomeUnavailable  "Some files in the Briefcase have sync copies that are inaccessible. These files will not be updated until the sync copies are accessible from this computer."
+
+    IDS_MSG_FileOrphan          "'%1' is an orphan. It was not updated."
+    IDS_MSG_FolderOrphan        "'%1' is an orphan. It was not updated."
+    IDS_MSG_FileUptodate        "'%1' is already up-to-date."
+    IDS_MSG_FolderUptodate      "'%1' and its contents are already up-to-date."
+    IDS_MSG_FileUnavailable     "'%1' has a sync copy that is inaccessible. This file will not be updated until the sync copy is accessible from this computer."
+    IDS_MSG_FolderUnavailable   "'%1' has a sync copy that is inaccessible. This folder will not be updated until the sync copy is accessible from this computer."
+    IDS_MSG_FolderSubfolder     "'%1' is contained within another folder in the Briefcase. This folder will not be updated.\n\nUpdate the parent folder to update this folder."
+
+    IDS_MSG_MultiOrphans        "%1!d! of the files are orphans. They were not updated."
+    IDS_MSG_MultiUptodate       "The %1!d! files are already up-to-date."
+    IDS_MSG_MultiUptodateOrphan "The %1!d! files are orphans or already up-to-date. They will not be updated."
+    IDS_MSG_MultiUnavailable    "%1!d! of the files have sync copies that are inaccessible. These files will not be updated until the sync copies are accessible from this computer."
+    IDS_MSG_MultiSubfolder      "%1!d! of the folders are contained within other folders in the Briefcase. These folders will not be updated.\n\nTo update these folders, update the parent folders."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are random messagebox strings
+
+    IDS_MSG_SPECIFYTYPE         "You must specify the type of file to include."
+    IDS_MSG_ONDESKTOP           "The Briefcase has been created and placed on the desktop. To open it, double-click the My Briefcase icon."
+    IDS_MSG_ATPATH              "The Briefcase has been created and placed in %1. To open it, double-click the My Briefcase icon."
+    IDS_MSG_CantFindOriginal    "The original file cannot be found."
+    IDS_MSG_ConfirmFileSplit    "Are you sure you want to prevent any future updates of '%1'?"
+    IDS_MSG_ConfirmFolderSplit  "Are you sure you want to prevent any future updates of '%1'?"
+    IDS_MSG_ConfirmMultiSplit   "Are you sure you want to prevent any future updates of these %1!d! files?"
+    IDS_MSG_FileAlreadyOrphan   "'%1' is already an orphan. The file will not be updated in the future."
+    IDS_MSG_FolderAlreadyOrphan "'%1' is already an orphan. The folder will not be updated in the future."
+    IDS_MSG_FileTombstone       "'%1' has been made an orphan because its sync copy was previously deleted or moved. The file will not be updated in the future."
+    IDS_MSG_FolderTombstone     "'%1' has been made an orphan because its sync copy was previously deleted or moved. The folder will not be updated in the future."
+    IDS_MSG_UpdateOnDock        "You have just docked this computer. Do you want to update '%1'?"
+    IDS_MSG_UpdateBeforeUndock  "You are about to undock this computer. Do you want to update '%1' before you undock?"
+    IDS_MSG_NoMatchingFiles     "No files were created or updated because no files exist that match the file types specified for this folder."
+    IDS_MSG_CHECKING            "Please wait while Briefcase checks your files..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are captions
+
+    IDS_CAP_ADD             "Add To Briefcase"
+    IDS_CAP_UPDATE          "Update Briefcase"
+    IDS_CAP_INFO            "Update Info"
+    IDS_CAP_OPEN            "Open Briefcase"
+    IDS_CAP_STATUS          "Update Status"
+    IDS_CAP_SAVE            "Save Briefcase"
+    IDS_CAP_CREATE          "Create a Briefcase"
+    IDS_CAP_ReplaceFolder   "Confirm Folder Replace"
+    IDS_CAP_ConfirmSplit    "Confirm Split from Original"
+    IDS_CAP_ConfirmMultiSplit "Confirm Multiple Split from Original"
+    IDS_CAP_Split           "Split from Original"
+    IDS_CAP_UpdateFmt       "Update %s"
+    IDS_CAP_UPDATING        "Updating Briefcase..."
+    IDS_CAP_CHECKING        "Checking Briefcase..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are menu items
+
+    IDS_MENU_UPDATE          "&Update"
+    IDS_MENU_UPDATEALL       "&Update All"
+    IDS_MENU_REPLACE         "Replace"
+    IDS_MENU_SKIP            "Skip"
+    IDS_MENU_DONTDELETE      "Don't Delete"
+    IDS_MENU_MERGE           "Merge"
+    IDS_MENU_CREATE          "Create"
+    IDS_MENU_WHATSTHIS       "&What's This?"
+    IDS_MENU_DELETE          "Delete"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    // These are state or action strings 
+
+    IDS_STATE_Creates           "Create"
+    IDS_STATE_Replaces          "Replace"
+    IDS_STATE_Skip              "Skip"
+    IDS_STATE_Conflict          "Skip (both changed)"
+    IDS_STATE_Merge             "Merge"
+    IDS_STATE_Delete            "Delete"
+    IDS_STATE_DontDelete        "Don't Delete"
+    IDS_STATE_Uptodate          "Up-to-date"
+    IDS_STATE_NeedToUpdate      "Needs updating"
+    IDS_STATE_Orphan            "Orphan"
+    IDS_STATE_Subfolder         "Subfolder sync copy"
+    IDS_STATE_Changed           "Modified"
+    IDS_STATE_Unchanged         "Unmodified"
+    IDS_STATE_DoesNotExist      "Does not exist"
+    IDS_STATE_Deleted           "Deleted"
+    IDS_STATE_NewFile           "New file"
+    IDS_STATE_Unavailable       "Unavailable"
+    IDS_STATE_UptodateInBrf     "Unchanged in Briefcase"
+    IDS_STATE_SystemFile        "System File"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_InLocation          "In %1"
+    IDS_InBriefcase         "In Briefcase%1"
+    IDS_BYTES               "%s bytes"
+    IDS_ORDERKB             "%sKB"
+    IDS_ORDERMB             "%sMB"
+    IDS_ORDERGB             "%sGB"
+    IDS_ORDERTB             "%sTB"
+    IDS_BC_DATABASE         "Briefcase Database"
+    IDS_BC_DATABASE_SHORT   "Briefcas"
+    IDS_BC_NAME             "My Briefcase"
+    IDS_BC_NAME_SHORT       "MyBriefC"
+    IDS_BOGUSDBTEMPLATE     "Copy # of corrupt Briefcase database"
+    IDS_DATESIZELINE        "%1\nmodified on %2, %3"
+    IDS_ALTNAME             "(%1) %2"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OK                  "OK"
+    IDS_CANCEL              "Cancel"
+    IDS_YES                 "&Yes"
+    IDS_NO                  "&No"
+    IDS_RETRY               "&Retry"
+    IDS_YESTOALL            "Yes to &All"
+END
+
+

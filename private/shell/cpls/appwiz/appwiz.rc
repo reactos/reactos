@@ -1,0 +1,537 @@
+//{{NO_DEPENDENCIES}}
+//Microsoft App Studio generated resource script.
+//
+#ifdef WINNT
+#include <nt.h>
+#endif
+#include "appwizid.h"
+#include "winuser.h"
+#include "commctrl.h"
+#include "prsht.h"
+
+#ifdef WINNT
+#include "winuserp.h"
+#endif
+#include "winver.h"
+
+#include "appwiz.rcv"
+
+#include "resource.h"
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg_appwiz.inf"
+
+#ifndef DOWNLEVEL
+IDR_ADCCTL              REGISTRY DISCARDABLE    "ADCCtl.rgs"
+
+1 TYPELIB "shappmgr.tlb"
+
+default.hta             HTML DISCARDABLE "html\\obj\\default.hta"
+
+support.htm             HTML DISCARDABLE "html\\obj\\support.htm"
+def_size.htm            HTML DISCARDABLE "html\\obj\\def_size.htm"
+def_freq.htm            HTML DISCARDABLE "html\\obj\\def_freq.htm"
+
+arp.css                 HTML DISCARDABLE "html\\obj\\arp.css"
+
+bplate.js               HTML DISCARDABLE "html\\obj\\bplate.js"
+dlg.js                  HTML DISCARDABLE "html\\obj\\dlg.js"
+preload.js              HTML DISCARDABLE "html\\obj\\preload.js"
+util.js                 HTML DISCARDABLE "html\\obj\\util.js"
+add.js                  HTML DISCARDABLE "html\\obj\\add.js"
+config.js               HTML DISCARDABLE "html\\obj\\config.js"
+remove.js               HTML DISCARDABLE "html\\obj\\remove.js"
+
+accel.htc               HTML DISCARDABLE "html\\obj\\accel.htc"
+listbox.htc             HTML DISCARDABLE "html\\obj\\listbox.htc"
+places.htc              HTML DISCARDABLE "html\\obj\\places.htc"
+
+install_lg.gif          HTML DISCARDABLE "html\\install_lg.gif"
+add_lg.gif              HTML DISCARDABLE "html\\add_lg.gif"
+config_lg.gif           HTML DISCARDABLE "html\\config_lg.gif"
+winupd_lg.gif           HTML DISCARDABLE "html\\winupd_lg.gif"
+
+add.gif                 HTML DISCARDABLE "html\\add.gif"
+winupd.gif              HTML DISCARDABLE "html\\winupd.gif"
+appwiz.ico              HTML DISCARDABLE "appwiz.ico"
+instshld.ico            HTML DISCARDABLE "instshld.ico"
+
+#endif //DOWNLEVEL
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_BYTES               "%s bytes"
+    IDS_ORDERKB             "%sKB"
+    IDS_ORDERMB             "%sMB"
+    IDS_ORDERGB             "%sGB"
+    IDS_ORDERTB             "%sTB"
+    IDS_ORDERPB             "%sPB"  // Peta  (10^15)
+    IDS_ORDEREB             "%sEB"  // Exa   (10^18)
+
+    IDS_UNKNOWN             "Unknown"
+    IDS_NOTUSED             "Not Used"
+    IDS_INSTALLED           "Installed"
+
+    IDS_LABEL_SIZE          "Size"
+    IDS_LABEL_TIMESUSED     "Used"
+    IDS_LABEL_INSTALLEDON   "Installed On"
+    IDS_LABEL_LASTUSED      "Last Used On"
+    
+    IDS_RARELY              "rarely"
+    IDS_SOMETIMES           "occasionally"
+    IDS_OFTEN               "frequently"
+
+    IDS_ADDLATER            "Add Later"
+    IDS_WINUPD_URL          "http://windowsupdate.microsoft.com/default.htm?page=productupdates"
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_INSTALLBMP	     BITMAP  MOVEABLE PURE "INSTALL.BMP"
+IDB_LEGACYINSTALLBMP BITMAP  MOVEABLE PURE "LEGACY.BMP"
+IDB_SHORTCUTBMP      BITMAP  MOVEABLE PURE "SHORTCUT.BMP"
+IDB_CHECKSTATES      BITMAP  DISCARDABLE   "CHKBOXS.BMP"
+IDB_DOSCONFIG	     BITMAP  MOVEABLE PURE "CONFWIZ.BMP"
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+
+
+DLG_APPLIST DIALOGEX DISCARDABLE	0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Network Install"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&Install...",IDC_BUTTONSETUPFROMLIST,160,173,60,14
+    LTEXT           "&The following software can be automatically installed by Windows. To install a program, select it from the list and click Install.",
+		    IDC_NETINSTINSTR,40,10,177,26
+    LISTBOX         IDC_APPLIST,7,46,212,125,LBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    ICON            IDI_LISTINST,IDC_NETINSTICON,7,10,18,20
+END
+
+
+#ifdef DOWNLEVEL
+
+DLG_INSTUNINSTALL DIALOGEX DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Install/Uninstall"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "To install a new program from a floppy disk or CD-ROM drive, click Install.",
+		    IDC_INSTINSTR,40,7,179,20
+    PUSHBUTTON      "&Install...",IDC_BUTTONSETUP,155,36,60,14
+    CONTROL	    "",IDC_STATIC,"Static",SS_SUNKEN,7,58,212,1
+    ICON	    IDI_DISKINST,IDC_INSTICON,7,7,18,20
+    
+    LTEXT           "Placeholder",
+		    IDC_UNINSTINSTR,40,67,180,36
+    LISTBOX         IDC_REGISTERED_APPS,7,105,212,88,LBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    AUTOCHECKBOX    "Force x86 Install/Uninstall", IDC_FORCEX86ENV,7,194,100,14
+
+    PUSHBUTTON      "Change/&Remove...",IDC_MODIFYUNINSTALL,140,194,75,14, WS_DISABLED
+
+    PUSHBUTTON      "&Change",IDC_MODIFY,85,194,40,14, NOT WS_VISIBLE
+    PUSHBUTTON      "Re&pair",IDC_REPAIR,130,194,40,14, NOT WS_VISIBLE
+    PUSHBUTTON      "&Remove",IDC_UNINSTALL,175,194,40,14, NOT WS_VISIBLE
+
+    ICON	        IDI_UNINSTALL,IDC_UNINSTICON,7,67,18,20
+END
+
+#endif // DOWNLEVEL
+
+
+DLG_SETUP DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Install Program From Floppy Disk or CD-ROM"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL	    "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+    LTEXT	    "",IDC_SETUPMSG,100,7,187,28
+    ICON	    0,IDC_SEARCHICON,100,60,18,20
+    LTEXT	    "",IDC_SEARCHNAME,123,66,146,8
+END
+
+
+DLG_SETUPBROWSE DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Run Installation Program"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL	    "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+    LTEXT           "",IDC_SETUPMSG,100,7,187,28
+    LTEXT	    "&Open:",IDC_CMDSTATIC,100,50,187,8
+    EDITTEXT        IDC_COMMAND,100,60,133,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,237,60,50,14
+END
+
+
+DLG_BROWSE DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create Shortcut"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+    LTEXT           "This wizard helps you to create shortcuts to local or network programs, files, folders, computers, or Internet addresses.",
+                    IDC_STATIC,100,7,187,28
+    LTEXT           "&Type the location of the item:",IDC_CMDSTATIC,100,37,
+                    187,8
+    EDITTEXT        IDC_COMMAND,100,47,133,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,237,47,50,14
+    LTEXT           "Click Next to continue.",IDC_STATIC,100,77,133,8
+END
+
+DLG_PICKFOLDER DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select Program Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select a folder to place this shortcut in:",IDC_STATIC,100,7,
+                    187,10
+    CONTROL         "",IDC_FOLDERTREE, WC_TREEVIEW, TVS_EDITLABELS | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,100,17,187,70
+
+    PUSHBUTTON      "New &Folder...",IDC_NEWFOLDER,232,93,55,14
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+END
+
+DLG_GETTITLE DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select a Title for the Program"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Type a name for this shortcut:",IDC_STATIC,100,7,187,
+                    10
+    EDITTEXT        IDC_TITLE,100,17,187,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    11,11
+    LTEXT           "Click Finish to create the shortcut.",IDC_STATIC,100,48,
+                    187,8
+END
+
+DLG_PICKICON DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select an Icon"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select an icon for the shortcut:",IDC_STATIC,100,7,187,
+                    10
+    LISTBOX         IDC_ICONLIST,100,17,187,130,LBS_OWNERDRAWFIXED | 
+                    LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | 
+                    LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+END
+
+DLG_WHICHCFG DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select MS-DOS Configuration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the MS-DOS configuration to use for this program:",
+                    IDC_STATIC,100,7,187,20
+    CONTROL         "&Use my standard MS-DOS settings",IDB_CURCFG,"Button",
+                    BS_AUTORADIOBUTTON,100,29,187,8
+    CONTROL         "&Let me choose new settings",IDB_CLEANCFG,"Button",
+                    BS_AUTORADIOBUTTON,100,40,184,8
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+END
+
+DLG_RMOPTIONS DIALOGEX DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Select MS-DOS Configuration Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select the options you want enabled each time you start this program in MS-DOS mode.",
+                    IDC_STATIC,100,7,187,17
+    CONTROL         "",IDC_OPTIONLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_BORDER | 
+                    WS_TABSTOP,100,25,187,95
+    LTEXT           "Click an item on the list to see a description of what it does.",
+                    IDC_OPTIONTIP,100,127,187,20,NOT WS_GROUP
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,
+                    80,154
+END
+
+//
+//  Dialog for deleting programs.
+//
+DLG_DELITEM DIALOGEX DISCARDABLE 20, 20, 212, 200
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Remove Shortcuts/Folders"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT	    "&To remove an item from the Start menu, select the item and click Remove.",
+                    IDC_TEXT,10,10,192,16
+    CONTROL	    "",IDC_FOLDERTREE, WC_TREEVIEW,
+		    WS_TABSTOP | WS_BORDER | TVS_HASBUTTONS | TVS_HASLINES |
+		    TVS_SHOWSELALWAYS,
+		    10,32,192,138
+    PUSHBUTTON      "&Remove",IDC_DELETEITEM,98,176,50,14
+    DEFPUSHBUTTON   "Close",IDOK,152,176,50,14
+END
+
+
+DLG_ADDLATER DIALOGEX DISCARDABLE  0, 0, 212, 154
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | DS_CENTERMOUSE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Later"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT	    "You may choose a date and time when you would like to add this program to your computer. For example, you can schedule this to happen when you are away from your computer.",
+                IDC_TEXT,7,7,198,31
+
+    AUTORADIOBUTTON "&Add program later ",IDC_ADDLATER,
+                    7,40,73,10,WS_TABSTOP|WS_GROUP
+    CONTROL         "Picker",IDC_PICKER,DATETIMEPICK_CLASS,
+                    WS_BORDER | WS_CHILD | WS_VISIBLE | WS_TABSTOP | DTS_SHORTDATECENTURYFORMAT,
+                    19,54,107,14
+    AUTORADIOBUTTON "&Do not add program",IDC_UNSCHEDULE, 
+                    7,75,94,10, WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK",IDOK,101,133,50,14,WS_TABSTOP|WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,155,133,50,14,NOT WS_TABSTOP
+
+END
+
+DLG_UNCUNINSTALLBROWSE DIALOG DISCARDABLE  0, 0, 212, 111
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Run Installation Program"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please specify the uninstall program location",IDC_TEXT,7,7,187,36
+    LTEXT	        "&Command line for the uninstall program:",IDC_CMDSTATIC,7,50,187,8
+    EDITTEXT        IDC_COMMAND,7,60,133,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,144,60,50,14
+    DEFPUSHBUTTON   "OK",IDOK,8,90,50,14,WS_TABSTOP
+    PUSHBUTTON      "Cancel",IDCANCEL,62,90,50,14
+
+END
+
+#ifndef DOWNLEVEL
+#ifdef WINNT       
+DLG_CHGUSR DIALOG DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Change User Option"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,80,154
+    LTEXT           "You have the option to make this new program available to everyone.",
+		    IDC_SETUPMSG,100,7,184,40
+    CONTROL         "Install",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON |
+		    BS_MULTILINE | WS_GROUP | WS_TABSTOP,100,46,184,20
+    CONTROL         "Execute",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON |
+		    BS_MULTILINE,100,73,184,20
+END
+
+
+DLG_CHGUSRFINISH DIALOG DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Finish Admin Install"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,80,154
+    LTEXT           "Change ini mapping back by clicking Finish.",
+		    IDC_SETUPMSG,100,7,184,40
+END
+
+DLG_CHGUSRFINISH_PREV DIALOG DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "After Installation"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,0,80,154
+    LTEXT           "Please press Next.",
+		    IDC_SETUPMSG,100,7,184,40
+END
+
+#endif // WINNT
+#endif // DOWNLEVEL
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_CPLICON		ICON	DISCARDABLE	"APPWIZ.ICO"
+IDI_LISTINST		ICON	DISCARDABLE	"LISTINST.ICO"
+IDI_DISKINST		ICON	DISCARDABLE	"FLOPINST.ICO"
+IDI_UNINSTALL		ICON	DISCARDABLE	"UNINSTAL.ICO"
+IDI_FOLDEROPT       ICON    DISCARDABLE "FOLDEROP.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAME		    "Add/Remove Programs"
+    IDS_INFO		    "Installs and removes programs and Windows components"
+    IDS_BADPATHMSG	    "The file %1 cannot be found."
+    IDS_DUPLINK 	    "A shortcut named %1 already exists in this folder. Do you want to replace it?"
+    //
+    //	Special-case strings for non-standard install program names.
+    //	NOTE:  These strings must be exact-match, and must include the extension
+    //	    PTLOAD.EXE is the peachtree install program
+    //	    WC3.EXE is Wing Commander 3
+    //	    INSTCD is Star Trails
+    //
+    IDS_SPECIALCASE	    "PTLOAD.EXE@WC3.EXE@INSTCD.EXE"
+
+    //
+    //	Installation program names:
+    //	    Install
+    //	    Setup
+    //	    Lots of Setupxxx's like SetupAI
+    //	    Instal
+    //	    Felrak
+    //	    Instaluj
+    //	    Installe
+    //	    Installa
+    //	    Installare
+    //	    Imposta
+    //	    KUR
+    //	    Yükle
+    //	    Yüklemek
+    //	    Yükleme
+    //	    Ayarla
+    //
+    IDS_SETUPPRGNAMES	    "Install@Setup@*Instal*@*Setup*@Felrak@Imposta@KUR@Yükle*@Ayarla"
+    IDS_EXTENSIONS	    "Bat@Com@Exe@Cmd"
+    IDS_SETUPAPPNAMES	    "install@setup@uninst@unwise@felrak@imposta@kur@Yükle@Ayarla"
+    IDS_HAVESETUPPRG	    "If this is the correct installation program, click Finish. To start the automatic search again, click Back. To manually search for the installation program, click Browse."
+    IDS_TSHAVESETUPPRG	    "If this is the correct installation program, click Next. To start the automatic search again, click Back. To manually search for the installation program, click Next."
+    IDS_NOSETUPPRG	    "Windows was unable to find the installation program.  Click Back to try again.  Click Browse to find the installation program manually."
+    IDS_INSERTDISK	    "Insert the product's first installation floppy disk or CD-ROM, and then click Next."
+    IDS_SEARCHING	    "Please wait while Windows looks for the installation program."
+    IDS_BADSETUP	    "Windows could not run the installation program. You may be out of memory. Close some files or programs, and then try again."
+    IDS_BROWSEEXT	    "exe"
+    //LOCALISATION: Watch out: the following (between the first two '@') should contain setup typical program names (with wildcards)
+    //                         it was taken from IDS_SETUPPRGNAMES above
+    IDS_BROWSEFILTER	"Setup Programs@*Instal*.exe;*Setup*.exe;Felrak.exe;Imposta.exe;KUR.exe;Yükle*.exe;Ayarla.exe@Programs@*.exe;*.com;*.bat;*.cmd@All Files@*.*"
+    IDS_BROWSEFILTERMSI	"Setup Programs@*Instal*.exe;*Setup*.exe;Felrak.exe;Imposta.exe;KUR.exe;Yükle*.exe;Ayarla.exe;*.msi@Programs@*.exe;*.com;*.bat;*.cmd@All Files@*.*"
+    IDS_BROWSETITLE	    "Browse"
+    IDS_DEFBOOTDIR	    "C:\"
+    IDS_VMCLOSED	    "%1 must be run in MS-DOS mode, so it has been terminated. Would you like to create a shortcut to this program that will run it in MS-DOS mode?"
+    IDS_VMSTILLALIVE	    "%1 may not run well unless it is run in MS-DOS mode. Would you like to create a shortcut to this program that will run it in MS-DOS mode?"
+    IDS_CHGPROPCLOSED	    "%1 must be run in MS-DOS mode. Do you want to change its shortcut properties to make it always run in MS-DOS mode?"
+    IDS_CHGPROPSTILLALIVE   "%1 may not run well unless it is run in MS-DOS mode. Do you want to change its shortcut properties to make it always run in MS-DOS mode?"
+    IDS_GENERICNAME	    "The MS-DOS-based program you are running"
+    IDS_NOSHORTCUT	    "Unable to create shortcut."
+    IDS_OK		    "OK"
+    IDS_1APPWARNTITLE	    "Program Requires MS-DOS Mode"
+    IDS_NOSUPPORT1	    "This program requires MS-DOS mode support for %1. \nOn the File menu, click Properties. On the Program Tab, click Advanced. Click Advanced MS-DOS Mode."
+    IDS_NOSUPPORT2	    "Add the appropriate line(s) to the CONFIG.SYS and or AUTOEXEC.BAT boxes. For information on what to add, see your documentation for this program."
+    IDS_CANTDELETE	    "The system folder %1 can not be deleted."
+    IDS_NONESEL 	    "No folder selected."
+    IDS_NEWFOLDERSHORT	    "NEWGRP"
+    IDS_NEWFOLDERLONG	    "Program Group"
+    IDS_CSHIGHSTRS	    "DEVICEHIGH"	// Must be caps
+    IDS_CSLOWSTR	    "Device"
+    IDS_AEHIGHSTRS	    "LH@LOADHIGH"	// Must be caps
+    IDS_MOUSEENV	    "%MOUSE%"
+    IDS_MOUSETSRS	    "Mouse.Exe@Mouse.Com@LMouse.Exe@LMouse.Com"
+    IDS_MOUSEDRVS	    "Mouse.Sys@LMouse.Sys"
+    IDS_NOCOPYENV	    "COMSPEC@CMDLINE@LONGCMD@WINDIR"
+    IDS_SETCMD		    "SET "
+    IDS_LOADHIGH	    "LoadHigh "
+    IDS_DEVHIGH 	    "DeviceHigh="
+    IDS_MODNAME 	    "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_FOLDEROPT_NAME  "Folder Options"
+    IDS_FOLDEROPT_INFO  "Customizes the display of files and folders, changes file associations, and makes network files available offline"
+    IDS_FILEFOLDERBROWSE_TITLE "Select the target of the shortcut below:"
+    IDS_RESTRICTION     "Add/Remove Programs has been restricted. Please check with your administrator."
+    IDS_EXPIRED         "You cannot install this program because the date for installing the program has expired."
+    IDS_PASSASSIGNED    "You must install this program on or by %s. Please choose a date before %s."
+    IDS_PASSEXPIRED     "The expiration date for installing this program is %s. You have chosen a date that occurs after the expiration date. Please choose a date before %s"
+    IDS_UNINSTINSTR     "&The following software can be automatically removed by Windows. To remove a program or to modify its installed components, select it from the list and click %s."
+    IDS_UNINSTINSTR_NEW "Change or Remove"
+    IDS_UNINSTINSTR_LEGACY "Change/Remove"
+	IDS_CONFIRM_REMOVE	"Are you sure you want to remove %s from your computer?"
+#ifndef DOWNLEVEL
+#ifdef WINNT       
+    IDS_CHGUSRTITLE         "Change User Option"
+    IDS_CHGUSROPT           "You can install this application such that all users will have the same initial settings the first time they use this application.  Most applications should be installed this way."
+    IDS_CHGUSRINSTALL       "&All users begin with common application settings."
+    IDS_CHGUSREXECUTE       "&Install application settings for this user only."
+    IDS_GETINI_FAILED       "Error %1%d getting Ini File mapping"
+    IDS_SETINI_FAILED       "Error %1%d setting Ini File mapping"
+    IDS_CHGUSRUNINSTALL     "Installed so &all users begin with common application settings."
+    IDS_CHGUSRUNEXECUTE     "&Installed so application settings were installed for this user only."
+    IDS_CHGUSRUNINSTALLMSG  "The uninstaller could not determine how your program was installed.  Please make a choice below.  Cancel will abort the uninstall.  The program was:"
+    IDS_QUERYVALUE_FAILED   "Could not get Change User option from the registry."
+    IDS_CHGUSRFINISH        "When the installation has ended (successfully or not), please click the Finish button or the Cancel button.  DO NOT CLICK THE BUTTONS BEFORE INSTALLATION HAS ENDED!"
+    IDS_CHGUSRFINISH_PREV   "After installation, please click Next."
+#endif // WINNT
+#endif // DOWNLEVEL
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNINSTALL_ERROR             "Uninstaller Error"
+    IDS_UNINSTALL_UNCUNACCESSIBLE   "An error occurred while trying to remove %s. You do not have access to %s.\n You can specify the new uninstall program below:"
+    IDS_UNINSTALL_FAILED            "An error occurred while trying to remove %1. It may have already been uninstalled.\n\nWould you like to remove %2 from the Add/Remove programs list?"
+    IDS_CONFIGURE_FAILED            "Windows is unable to setup the service requested."
+    IDS_CANT_REMOVE_FROM_REGISTRY	"You do not have sufficient access to remove %1 from the Add/Remove Programs list.\nPlease contact your system administrator."
+END
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "appwizid.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

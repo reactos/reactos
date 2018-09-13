@@ -1,0 +1,21 @@
+/*******************************************************************************
+*
+*  (C) COPYRIGHT MICROSOFT CORP., 1993-1994
+*
+*  TITLE:       POWRPROF.RC
+*
+*  VERSION:     2.0
+*
+*  AUTHOR:      ReedB
+*
+*  DATE:        31 Dec 1996
+*
+*  DESCRIPTION:
+*
+*   Resource file. Includes version and default profiles definitions.
+*
+*******************************************************************************/
+
+#include "windows.h"
+#include "powrprof.rcv"
+

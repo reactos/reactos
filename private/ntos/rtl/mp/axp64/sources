@@ -1,0 +1,15 @@
+AXP64_SOURCES=..\alpha\byteswap.s \
+              ..\alpha\capture.s  \
+              ..\alpha\context.c  \
+              ..\alpha\debugstb.s \
+              ..\alpha\exdsptch.c \
+              ..\alpha\getcalr.c  \
+              ..\alpha\largeint.s \
+              ..\alpha\lzntaxp.s  \
+              ..\alpha\ntcurteb.s \
+              ..\alpha\mvmem.s    \
+              ..\alpha\trampoln.s \
+              ..\alpha\unwindr.c  \
+              ..\alpha\chandler.c \
+              ..\alpha\ghandler.c \
+              ..\alpha\xcptmisc.s

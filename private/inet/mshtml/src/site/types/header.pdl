@@ -1,0 +1,30 @@
+#ifndef _HEADER_PDL_
+#define _HEADER_PDL_ 1
+
+#include "block.pdl"
+
+file header.pdl
+
+import block.pdl
+
+interface IHTMLHeaderElement guid:3050f1f6-98b5-11cf-bb82-00aa00bdce0b
+refprop CHeaderElement:align
+
+tearoff CHeaderElement interface:IHTMLHeaderElement
+
+class CHeaderElement name:HTMLHeaderElement \
+            primaryinterface:IHTMLHeaderElement \
+            super:CBlockElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f27a-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f515-98b5-11cf-bb82-00aa00bdce0b
+         
+#include "basedom.pdl"
+    implements IHTMLBlockElement
+    implements IHTMLHeaderElement
+
+    property    align  atype:BSTR    dispid:STDPROPID_XOBJ_BLOCKALIGN  type:htmlBlockAlign  \
+                get set caa bindable maxstrlen:pdlToken
+
+#endif _HEADER_PDL_

@@ -1,0 +1,266 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_SCRNSAVECONFIGURE DIALOG DISCARDABLE  0, 0, 237, 167
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Maze Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,180,10,50,14
+    PUSHBUTTON      "Cancel",2,180,27,50,14
+    GROUPBOX        "Textures",IDC_STATIC,5,5,140,110,BS_CENTER
+    PUSHBUTTON      "&Walls...",DLG_BUTTON_WALLS_TEX,15,25,45,14
+    CONTROL         "Spin1",DLG_SPIN_WALLS,"msctls_updown32",UDS_WRAP | 
+                    UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_TABSTOP,125,20,11,25
+    PUSHBUTTON      "&Floor...",DLG_BUTTON_FLOOR_TEX,15,55,45,14
+    CONTROL         "Spin2",DLG_SPIN_FLOOR,"msctls_updown32",UDS_WRAP | 
+                    UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_TABSTOP,125,50,11,25
+    PUSHBUTTON      "&Ceiling...",DLG_BUTTON_CEILING_TEX,15,85,45,14
+    CONTROL         "Spin3",DLG_SPIN_CEILING,"msctls_updown32",UDS_WRAP | 
+                    UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_TABSTOP,125,80,11,25
+    GROUPBOX        "",IDC_STATIC,150,45,80,35
+    CONTROL         "Maze &Overlay",DLG_CHECK_OVERLAY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,160,60,59,10
+    GROUPBOX        "",IDC_STATIC,150,80,80,35
+    CONTROL         "F&ull Screen",DLG_CHECK_TURBOMODE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,160,95,60,10
+    GROUPBOX        "&Size",IDC_STATIC_SIZE,5,120,140,40,BS_CENTER
+    LTEXT           "Min",IDC_STATIC_MIN,15,130,12,8
+    RTEXT           "Max",IDC_STATIC_MAX,115,130,20,8
+    CONTROL         "Slider1",DLG_SLIDER_SIZE,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_GROUP | WS_TABSTOP,15,140,120,15
+    GROUPBOX        "Image &Quality",IDC_STATIC_IMAGEQUAL,150,120,80,40,
+                    BS_CENTER
+    COMBOBOX        DLG_COMBO_IMAGEQUAL,156,135,65,45,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "",DLG_PREVIEW_WALLS,"Static",SS_OWNERDRAW | WS_BORDER | 
+                    WS_GROUP,70,20,50,25
+    CONTROL         "",DLG_PREVIEW_FLOOR,"Static",SS_OWNERDRAW | WS_BORDER | 
+                    WS_GROUP,70,50,50,25
+    CONTROL         "",DLG_PREVIEW_CEILING,"Static",SS_OWNERDRAW | WS_BORDER | 
+                    WS_GROUP,70,80,50,25
+END
+
+DLG_TEXTURE_CONFIGURE DIALOG DISCARDABLE  0, 0, 182, 61
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Configure Texture"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,125,10,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,27,50,14
+    GROUPBOX        "Texture",IDC_STATIC,5,5,110,50,BS_CENTER
+    CONTROL         "&Default",IDC_RADIO_TEX_DEFAULT,"Button",
+                    BS_AUTORADIOBUTTON | BS_LEFT | WS_GROUP | WS_TABSTOP,11,
+                    15,39,10
+    CONTROL         "&User",IDC_RADIO_TEX_CHOOSE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,11,35,35,8
+    PUSHBUTTON      "&Choose...",DLG_BUTTON_TEX_CHOOSE,55,30,50,19,WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 100
+//
+
+IDB_BRICK               100     DISCARDABLE     "brick.bmp"
+IDB_WOOD                100     DISCARDABLE     "wood24.bmp"
+IDB_CASTLE              100     DISCARDABLE     "castle.bmp"
+IDB_COVER               100     DISCARDABLE     "cover8.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 101
+//
+
+IDB_START               101     DISCARDABLE     "start.a8"
+// Attention localizers ! start.a8 is an image that contains hardcoded the
+// word "START".  For non English locales, replace start.a8 with logo.a8
+//IDB_START               101     DISCARDABLE     "logo.a8"
+IDB_END                 101     DISCARDABLE     "happy.a8"
+IDB_RAT                 101     DISCARDABLE     "rat.a8"
+IDB_AD                  101     DISCARDABLE     "letters.a8"
+IDB_CURL4               101     DISCARDABLE     "curl4.a8"
+IDB_BHOLE4              101     DISCARDABLE     "bhole.a8"
+IDB_SNOWFLAK            101     DISCARDABLE     "snowflak.a8"
+IDB_SWIRLX4             101     DISCARDABLE     "swirlx4.a8"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DLG_SCRNSAVECONFIGURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 230
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 160
+    END
+
+    DLG_TEXTURE_CONFIGURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 175
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 54
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OpenGL 3D Maze Screen Saver"
+#define VER_INTERNALNAME_STR        "ssmaze\0"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "3D Maze (OpenGL)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TEXTURE_ENABLE      "TextureEnable"
+    IDS_DEFAULT_TEXTURE_ENABLE "DefaultTextureEnable"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_WALL_TEXTURE_OFFSET "WallTextureOffset"
+    IDS_FLOOR_TEXTURE_OFFSET "FloorTextureOffset"
+    IDS_CEILING_TEXTURE_OFFSET "CeilingTextureOffset"
+    IDS_DEF_WALL_TEXTURE    "DefWallTexture"
+    IDS_DEF_FLOOR_TEXTURE   "DefFloorTexture"
+    IDS_DEF_CEILING_TEXTURE "DefCeilingTexture"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_WALL_TEXTURE_FILE   "WallTextureFile"
+    IDS_FLOOR_TEXTURE_FILE  "FloorTextureFile"
+    IDS_CEILING_TEXTURE_FILE "CeilingTextureFile"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_IMAGEQUAL           "ImageQuality"
+    IDS_IMAGEQUAL_DEFAULT   "Default"
+    IDS_IMAGEQUAL_HIGH      "High"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_OVERLAY             "Overlay"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TURBOMODE           "TurboMode"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_NRATS               "RatCount"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SAVERNAME           "Screen Saver.3DMaze"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

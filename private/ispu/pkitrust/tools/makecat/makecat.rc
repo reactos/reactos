@@ -1,0 +1,158 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       makecat.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+#include "version.rc"
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""version.rc""\r\n"
+    "#endif\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PARAM_HELP          "?"
+    IDS_PARAM_VERBOSE       "v"
+    IDS_PARAMTEXT_HELP      "this screen"
+    IDS_PARAMTEXT_VERBOSE   "verbose output"
+    IDS_USAGETEXT_OPTIONS   "[options]"
+    IDS_USAGETEXT_CMDFILE   "[@commandfile]"
+    IDS_USAGETEXT_ADD       "CDF_filename"
+    IDS_USAGETEXT_USAGE     "usage"
+    IDS_USAGETEXT_OPTPARAM  "<param>"
+    IDS_PARAM_FAILALWAYS    "r"
+    IDS_PARAMTEXT_FAILALWAYS "return fail even on recoverable errors"
+    IDS_PARAM_EXPERROR      "h"
+    IDS_PARAMTEXT_EXPERROR  "expected last error (<param> is the hex error. eg: -h 0x80090001)"
+    IDS_PARAM_NOSTOPONERROR "n"
+    IDS_PARAMTEXT_NOSTOPONERROR "don't stop on error"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EXPECTED_HRESULT    "Failed: Expected return: %0x.  Returned: %0x\n"
+    IDS_ERROR_INTERNAL      "Failed: Internal Problem in MakeCat\n"
+    IDS_ERROR_FUNCTION      "Failed: %s.  Last Error: 0x%08X\n"
+    IDS_ERROR_NOMEMBERS     "No members found"
+    IDS_ERROR_PARSE         "\nErrors found in parsing the CDF file\n"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STATUS_FMT          "%s %s\n"
+    IDS_STATUS_OPENED       "opened:   "
+    IDS_STATUS_PROCESSED    "processing:"
+    IDS_STATUS_ATTR         "    attribute:"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PARSE_E_HEADER_FMT  "NOT processed: %s (%s)\n"
+    IDS_PARSE_E_MEMBER_FMT  "NOT processed: %s (%s)\n"
+    IDS_PARSE_E_ATTRIBUTE_FMT "    attribute: error parsing CDF.  %s (%s)\n"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PARSE_ERROR_GUID_CONV "unable to convert GUID"
+    IDS_PARSE_ERROR_FILE_PATH "unable to find file path for member"
+    IDS_PARSE_ERROR_TYPECOMBO "the type combination is invalid"
+    IDS_PARSE_ERROR_TOOFEWVALUES "insufficient number of values"
+    IDS_PARSE_ERROR_UNKNOWN "an unkown parsing error has occured"
+    IDS_PARSE_ERROR_INDIRECTDATA "calculating the indirect data"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PARSE_ERROR_FILENOTFOUND "member file does not exist"
+    IDS_PARSE_ERROR_UNSUPPORTED "unsupported feature"
+    IDS_PARSE_ERROR_DUPLICATE "duplicate reference tag"
+    IDS_PARSE_ERROR_NOTAG   "tag not found"
+    IDS_SUCCEEDED           "Succeeded\n"
+    IDS_FAILED              "\nFailed 0x%08X (%lu)\n"
+    IDS_FILEREF             "%s: "
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+

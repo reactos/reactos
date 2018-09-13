@@ -1,0 +1,87 @@
+/*** 
+*mktyplib.rc - Resource file for MKTYPLIB.EXE
+*
+*  Copyright (C) 1992 - 1993, Microsoft Corporation.  All Rights Reserved.
+*  Information Contained Herein Is Proprietary and Confidential.
+*
+*Purpose:
+*  This file is the resource file for MKTYPLIB.EXE.
+*
+*
+*Revision History:
+* [01]	23-Feb-93 dougf: added version resource.
+*
+*****************************************************************************/
+
+/* first include the icon */
+1 ICON "mktyplib.ico"
+
+/* then include all the stuff necessary for proper version information */
+#include <windows.h>
+#ifndef WIN32
+#include <ver.h>
+#endif
+
+#include "verstamp.h"
+
+/* override some stuff in verstamp.h */
+#undef rmj
+#define rmj 2
+#undef rmm
+// want version # to be 2.02.xxx
+#define rmm 02
+
+/* Define the version string with more preprocessor magic */
+#define STRING(x) #x
+#define VERSTRINGX(maj,min,rev) STRING(maj ## . ## min ## . ## rev ## \0)
+#define VERSTRING VERSTRINGX(rmj,rmm,rup)
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     rmj,rmm,rup,01
+PRODUCTVERSION  rmj,rmm,rup,01
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+
+#if 0
+#define BETAFLAG VS_FF_PRERELEASE
+#else  //1
+#define BETAFLAG 0L
+#endif  //1
+
+#ifdef _DEBUG
+FILEFLAGS       BETAFLAG | VS_FF_DEBUG
+#else
+FILEFLAGS       BETAFLAG
+#endif
+
+#ifdef WIN32
+FILEOS          VOS_NT_WINDOWS32
+#else //WIN32
+FILEOS          VOS_DOS_WINDOWS16
+#endif //WIN32
+
+FILETYPE        VFT_APP
+FILESUBTYPE	0
+
+
+BEGIN
+   BLOCK "StringFileInfo"
+   BEGIN
+      BLOCK "040904E4"
+      BEGIN
+         VALUE "CompanyName",     "Microsoft Corporation\0"
+         VALUE "FileDescription", "OLE Automation Type Library Generator\0"
+         VALUE "FileVersion",     "2.02\0"
+         VALUE "InternalName",    "MKTYPLIB.EXE\0"
+         VALUE "LegalCopyright",  "Copyright \251 Microsoft Corp. 1992 - 1995\0"
+         VALUE "LegalTrademarks", "Microsoft\256 is a registered trademark of Microsoft Corporation. Windows(TM) is a trademark of Microsoft Corporation.\0"
+         VALUE "ProductName",     "Microsoft OLE 2.02 for Windows\0"
+         VALUE "ProductVersion",  "2.02\0"
+         VALUE "Comments",        "Windows OLE Tools\0"
+      END
+   END
+
+   BLOCK "VarFileInfo"
+   BEGIN
+      VALUE "Translation", 0x409, 1252
+   END
+END

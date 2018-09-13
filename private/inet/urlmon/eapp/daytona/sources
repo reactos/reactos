@@ -1,0 +1,82 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Johann Posch (JohannP) 03-10c-1996
+
+!ENDIF
+
+
+MAJORCOMP   = urlmon
+MINORCOMP   = eapp 
+
+#
+# This is the name of the target built from the source files specified
+# below.  The name should include neither the path nor the file extension.
+#
+
+TARGETNAME=  eapp 
+
+#
+# This specifies where the target is to be built.  A private target of
+# type LIBRARY or DYNLINK should go to obj, whereas a public target of
+# type LIBRARY or DYNLINK should go to $(BASEDIR)\public\sdk\lib.
+#
+
+TARGETPATH= obj
+
+#
+# This specifies the type of the target, such as PROGRAM, DYNLINK, LIBRARY,
+# etc.
+#
+
+TARGETTYPE=   LIBRARY 
+
+INCLUDES=     ..\..\inc; $(BASEDIR)\private\windows\inc
+
+!include      ..\..\daytona.inc
+
+C_DEFINES=    \
+              $(C_DEFINES)
+
+SOURCES=            \
+              ..\cmimeft.cxx     \
+              ..\ccodeft.cxx     \
+              ..\clshndlr.cxx    \
+              ..\cdlprot.cxx     \
+              ..\cdlbsc.cxx      \
+              ..\protbase.cxx    \
+              ..\knownhnd.cxx    
+
+#i386_SOURCES=      \
+#              ..\plugprot.rc    \
+#              ..\urlcf.cxx      \
+#              ..\selfreg.cxx    \
+#              ..\plugdll.cxx    \
+
+UMTYPE=       windows
+
+# precompiled headers
+!include ..\precomp1.inc
+
+CONDITIONAL_INCLUDES = \
+	winwlm.h \
+	macwin32.h \
+	new
+
+
+

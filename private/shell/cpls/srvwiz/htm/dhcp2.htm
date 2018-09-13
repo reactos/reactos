@@ -1,0 +1,74 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>DHCP</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+var L_DHCPError_Text = "You must set up DHCP before proceeding.";
+
+function dhcp()
+{
+	if (srvwiz.ServiceState("DHCPServer")!=1)
+        alert(L_DHCPError_Text);
+    else
+        top.content.location.href = "dhcp.htm";
+}
+
+</SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("ntwrk_bg.gif");
+        background-repeat:no-repeat;
+        background-position:147 46;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">DHCP</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Windows DHCP uses Dynamic Host Configuration Protocol, 
+            which enables you to assign <A HREF="javascript:nothing()" onclick="popup(1)">IP addresses</A> to 
+            <A HREF="javascript:nothing()" onclick="popup(2)">TCP/IP</A> clients on your network.
+            
+            <!--definition for IP addresses-->
+            <DIV class="defdiv" ID="popup1">
+                <span class="defspan" onblur="popOff(1)" ID="def1"><b>IP addresses</b>
+				<br>Used to identify a node on a network and to specify routing information. Each node on the network must be assigned a unique IP address, which is made up of the network ID, plus a unique host ID assigned by the network administrator. This address is typically represented in dotted-decimal notation, with the decimal value of each octet separated by a period (for example, 138.57.7.27).
+                </span>            
+            </DIV>
+			
+            <!--definition for TCP\IP-->
+            <DIV class="defdiv" ID="popup2">
+                <span class="defspan" onblur="popOff(2)" ID="def2"><b>TCP/IP</b>
+				<br>A set of networking protocols that provides communications across interconnected networks made up of computers with diverse hardware architectures and various operating systems. TCP/IP includes standards for how computers communicate and conventions for connecting networks and routing traffic. TCP/IP is also called Transmission Control Protocol/Internet Protocol.
+                </span>            
+            </DIV>
+            
+            <P ID="para2">To set up DHCP, use the Windows Components wizard. After you finish with the wizard, click <b>Next</b> to define one or more <A HREF="javascript:nothing()" onclick="popup(3)">scopes</A> of IP addresses to be assigned to TCP/IP clients.
+            
+            <!--definition for scopes-->
+            <DIV class="defdiv" ID="popup3">
+                <span class="defspan" onblur="popOff(3)" ID="def3"><b>scopes</b>
+				<br>A range of IP addresses that are available to be leased or assigned to DHCP clients by the DHCP service.
+                </span>            
+            </DIV>
+            
+            <P ID="para3"><A HREF="javascript:exec('sysocmgr.exe', '/x /i:%windir%/inf/sysoc.inf')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Windows Components wizard. 
+            <P ID="para4"><A HREF="javascript:help('DHCPconcepts.chm::/sag_DHCPtopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about DHCP.</P>
+        </TD>
+    </TR>
+</TABLE>
+<button id="next" style="position:absolute; bottom:21px; right:37px" onclick="dhcp()">Next</button>
+<P>&nbsp;
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

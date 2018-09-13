@@ -1,0 +1,39 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=drivers
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllInitialize
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib
+
+INCLUDES=..\h;..\main;..\multimed
+
+C_DEFINES=-DWIN32
+
+SOURCES=drivers.c  \
+        mmdriver.c \
+        install.c  \
+        remove.c   \
+        add.c      \
+        infparse.c \
+        copy.c     \
+        filecopy.c \
+        drivers.rc
+
+
+
+

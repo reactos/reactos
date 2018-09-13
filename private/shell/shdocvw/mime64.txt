@@ -1,0 +1,396 @@
+
+------------------------------------------------------------------------------
+
+README.1ST:
+
+
+                   MIME64 Encoder/Decoder
+
+WHAT MIME64 IS:  MIME64 is an encoding described in RFC1341 as MIME base64.
+Its purpose is to encode binary files into ASCII so that they may be passed
+through e-mail gates.  In this regard, MIME64 is similar to UUENCODE.
+Although most binaries these days are transmitted using UUENCODE, I
+have seen a few using MIME64, and I have had requests from friends that
+I decode MIME64 files that have fallen into their hands.  As long as
+some MIME64 continues to exist, a package such as this one is useful
+to have.
+
+
+WHAT THIS PACKAGE CONTAINS:  This package contains both executable
+and ANSI-C source code for a MIME64 encoder/decoder (MIME.EXE and
+MIME.C respecively).  It also contains this README file, and a MIME64
+encoded file called MIME.64.  The latter will decode to MIME.ZIP if
+you issue the DOS command line:
+
+   MIME64 MIME.64 MIME.ZIP
+
+If you unzip the zip file, you will get an essay by Mark Grand about
+MIME.
+
+
+HOW TO USE THIS PACKAGE:  To decode a MIME64 file you may type:
+
+   MIME64 infile outfile
+
+If you leave out the outfile specification, the output file will
+overwrite the input file.
+
+To encode a file into MIME64 format, type:
+
+   MIME64 infile outfile -e
+
+Again, if you leave off the outfile specification, the output will
+overwrite the input.
+
+
+STATUS OF THIS PACKAGE:  This package is freeware.  As author, I
+claim no copyright.  If you change the source code and intend to
+propogate that change to other users, please include a comment to
+that effect at the top that states:  The date of the change, the
+nature of the change, and who made the change.  As a courtesy, I also
+ask that you retain the comment that acknowledges me as the original
+author.
+
+
+SEND QUESTIONS ABOUT THIS PACKAGE TO:  hahn@lds.loral.com
+
+Karl Hahn
+
+------------------------------------------------------------------------------
+
+MIME64.C:
+
+/* mime64 */
+/* MIME base64 encoder/decoder by Karl Hahn  hahn@lds.loral.com  3-Aug-94 */
+#include <stdio.h>
+#include <stdlib.h>
+
+char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                  "0123456789+/";
+
+void fputch( char blivit, FILE *f )
+{
+/*   if (blivit == '\n') fputc( '\r', f );*/
+   fputc( blivit, f );
+}
+
+int classify_args( int narg,
+                   char *rawargs[], char *fileargs[], char *optargs[] )
+{
+   int index, jndex, kndex;
+   char *argptr;
+
+   for ( index = 0, jndex = 0, kndex = 0; index < narg; index++ )
+   {
+      argptr = rawargs[index];
+      if (*argptr == '-')
+      {
+         argptr++;
+         optargs[kndex++] = argptr;
+      }
+      else
+      {
+         fileargs[jndex++] = argptr;
+      }
+   }
+
+   return kndex;
+}
+
+int cvt_ascii( unsigned char alpha )
+{
+   if      ( (alpha >= 'A') && (alpha <= 'Z') ) return (int)(alpha - 'A');
+   else if ( (alpha >= 'a') && (alpha <= 'z') )
+        return 26 + (int)(alpha - 'a');
+   else if ( (alpha >= '0') && (alpha <= '9' ) )
+        return 52 + (int)(alpha - '0');
+   else if ( alpha == '+' ) return 62;
+   else if ( alpha == '/' ) return 63;
+   else if ( alpha == '=' ) return -2;
+   else                     return -1;
+}
+
+char *fileargs[64], *optargs[64];
+
+struct STATE64 {
+                  unsigned long int accum;
+                  int               shift;
+               };
+
+
+int main( int nargs, char *cargs[] )
+{
+   int n_options, n_files, index, jndex, shift, save_shift;
+   enum { ENCODE, DECODE } whattodo = DECODE;
+   int help_flag = 0, replace_flag = 0, quit = 0;
+   FILE *fin, *fout;
+   unsigned char blivit;
+   unsigned long accum, value;
+   char buf[80];
+   char *cptr, *altptr;
+   int decode_state;
+
+   n_options = classify_args( nargs, cargs, fileargs, optargs );
+
+   n_files = nargs - n_options;
+
+   if ( n_files < 2 ) help_flag = 1;
+
+   for ( index = 0; index < n_options; index++ )
+   {
+      if ( ( optargs[index][0] == 'e' ) ||
+           ( optargs[index][0] == 'E' ) ) whattodo = ENCODE;
+      if ( optargs[index][0] == '?' ) help_flag = 1;
+   }
+
+   if ( help_flag )
+   {
+      printf( "mime64 infile [outfile] [-option] [-option] etc.\n\n"
+              "convert between binary and MIME BASE64 format\n\n"
+              "        -e       MIME base64 encode (default is decode)\n"
+              "        -?       display help message\n\n"
+              "if no outfile given, output file replaces infile\n" );
+   }
+
+   if ( n_files < 2 ) exit(0);
+
+   if ( whattodo == DECODE )
+   {
+      fin = fopen( fileargs[1], "r" );
+   }
+   else
+   {
+      fin = fopen( fileargs[1], "rb" );
+   }
+
+   if ( fin == 0 )
+   {
+      printf( "%s file not found\n", fileargs[1] );
+      exit(-1);
+   }
+
+   if ( n_files > 2 )
+   {
+      if ( whattodo == DECODE )
+      {
+         fout = fopen( fileargs[2], "wb" );
+      }
+      else
+      {
+         fout = fopen( fileargs[2], "w" );
+      }
+
+      if ( fout == 0 )
+      {
+         printf( "Couldn't open %s for output\n", fileargs[2] );
+      }
+   }
+   else
+   {
+      if ( whattodo == DECODE )
+      {
+         fout = fopen( "$$$$$$$$.$$$", "wb" );
+      }
+      else
+      {
+         fout = fopen( "$$$$$$$$.$$$", "w" );
+      }
+
+      replace_flag = 1;
+   }
+
+   if ( whattodo == DECODE )
+   {
+      shift = 0;
+      accum = 0;
+      decode_state = 0;
+
+      while ( ( !feof( fin ) ) && (quit == 0) )
+      {
+         fgets( buf, 80, fin );
+
+         if ( decode_state == 0 )
+         {
+            for ( index = 0; 
+                  (buf[index] != '\n') && (buf[index] != '\0') &&
+                  (decode_state >= 0);
+                  index++ )
+            {
+               if ( ( (buf[index] >= 'A') && (buf[index] <= 'Z') ) ||
+                    ( (buf[index] >= 'a') && (buf[index] <= 'z') ) ||
+                    ( (buf[index] >= '0') && (buf[index] <= '9') ) ||
+                    (buf[index] == '+') ||
+                    (buf[index] == '/') || 
+                    (buf[index] == '=') )
+               {
+                  decode_state = 1;
+               }
+               else
+               {
+                  decode_state = -2;
+               }
+            }
+
+            if ( decode_state <= 0 )
+            {
+               decode_state = 0;
+               continue;
+            }
+         }
+
+         if ( feof(fin) )
+         {
+            quit = 1;
+         }
+
+         if ( quit != 0 )
+         {
+            buf[0] = '\0';
+         }
+
+         for ( index = 0; (buf[index] != '\n') && (buf[index] != '\0'); index++)
+         {
+            value = cvt_ascii( buf[index] );
+
+            if ( value < 64 )
+            {
+               accum <<= 6;
+               shift += 6;
+               accum |= value;
+               if ( shift >= 8 )
+               {
+                  shift -= 8;
+                  value = accum >> shift;
+                  blivit = (unsigned char)value & 0xFFl;
+                  fputc( blivit, fout );
+               }
+            }
+            else
+            {
+               quit = 1;
+               break;
+            }
+         }
+      }
+   }
+   else
+   {
+      fprintf ( fout,
+       "Content-Type: text/plain; charset=US-ASCII\n"
+       "Content-transfer-encoding: base64\n\n" );
+
+      shift = 0;
+      accum = 0;
+      index = 0;
+      while ( ( !feof( fin ) ) || (shift != 0) )
+      {
+         if ( ( !feof( fin ) ) && ( quit == 0 ) )
+         {
+            blivit = fgetc( fin );
+
+            if ( feof( fin ) )
+            {
+               quit = 1;
+               save_shift = shift;
+               blivit = 0;
+            }
+         }
+         else
+         {
+            quit = 1;
+            save_shift = shift;
+            blivit = 0;
+         }
+
+         if ( (quit == 0) || (shift != 0) )
+         {
+            value = (unsigned long)blivit;
+            accum <<= 8;
+            shift += 8;
+            accum |= value;
+         } /* ENDIF */
+
+         while ( shift >= 6 )
+         {
+            shift -= 6;
+            value = (accum >> shift) & 0x3Fl;
+            blivit = alphabet[value];
+
+            buf[index++] = blivit;
+            if ( index >= 60 )
+            {
+               buf[index] = '\0';
+               fprintf( fout, "%s\n", buf );
+               index = 0;
+            }
+
+            if ( quit != 0 )
+            {
+               shift = 0;
+            }
+         }
+      }
+
+      if      ( save_shift == 2 )
+      {
+         buf[index++] = '=';
+         if ( index >= 60 )
+         {
+            buf[index] = '\0';
+            fprintf( fout, "%s\n", buf );
+            index = 0;
+         }
+
+         buf[index++] = '=';
+         if ( index >= 60 )
+         {
+            buf[index] = '\0';
+            fprintf( fout, "%s\n", buf );
+            index = 0;
+         }
+      }
+      else if ( save_shift == 4 )
+      {
+         buf[index++] = '=';
+         if ( index >= 60 )
+         {
+            buf[index] = '\0';
+            fprintf( fout, "%s\n", buf );
+            index = 0;
+         }
+      }
+
+      if ( index != 0 )
+      {
+         buf[index] = '\0';
+         fprintf( fout, "%s\n", buf );
+      }
+   }
+
+   fclose( fin );
+   fclose( fout );
+
+   if ( replace_flag )
+   {
+      if ( ( whattodo == DECODE ) && ( decode_state <= 0 ) )
+      {
+         remove( "$$$$$$$$.$$$" );
+         printf( "No MIME base64 lines found in %s\n", fileargs[1] );
+      }
+      else
+      {
+         remove( fileargs[1] );
+         rename( "$$$$$$$$.$$$", fileargs[1] );
+      }
+   }
+   else
+   {
+      if ( ( whattodo == DECODE ) && ( decode_state <= 0 ) )
+      {
+         remove( fileargs[2] );
+         printf( "No MIME base64 lines found in %s\n", fileargs[1] );
+      }
+   }
+}
+
+------------------------------------------------------------------------------

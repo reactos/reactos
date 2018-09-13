@@ -1,0 +1,38 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for Auto Enrollment
+#
+# History:
+#
+#   11/19/97 jeffspel created
+#
+#----------------------------------------------------------------------------
+
+
+MINORCOMP=pautoenr
+TARGETNAME=pautoenr
+
+TARGETTYPE=DYNLINK
+TARGETPATH=..\..\programs\bin
+DLLENTRY=DllInitialize
+
+INCLUDES=     $(NTINCLUDES);
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\crypt32.lib        \
+           $(BASEDIR)\public\sdk\lib\*\cryptui.lib
+
+SOURCES=\
+    pautoenr.c \
+    pautoenr.rc
+
+UMTYPE=console
+
+USE_NTDLL=1
+

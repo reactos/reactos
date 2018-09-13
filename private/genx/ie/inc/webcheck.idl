@@ -1,0 +1,223 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//--------------------------------------------------------------------------
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+import "subsmgr.idl";
+
+cpp_quote("// Private File")
+cpp_quote("// This file is not included in the Internet SDK")
+cpp_quote("// Use subsmgr headers for public interfaces")
+
+cpp_quote("extern const GUID CLSID_SubscriptionThrottler;")
+
+// ================================
+// Marshalled, private interfaces
+// ================================
+
+// ISubscriptionThrottler
+[
+    uuid(1E9B00E4-9846-11d1-A1EE-00C04FC2FBE1)
+]
+interface ISubscriptionThrottler : IUnknown
+{
+    HRESULT GetSubscriptionRunState([in] DWORD dwNumCookies,
+                                    [in, size_is(dwNumCookies)] const SUBSCRIPTIONCOOKIE *pCookies,
+                                    [out, size_is(dwNumCookies)] DWORD *pdwRunState);
+
+    HRESULT AbortItems([in] DWORD dwNumCookies,
+                       [in, size_is(dwNumCookies)] const SUBSCRIPTIONCOOKIE *pCookies);
+    HRESULT AbortAll();
+}
+
+cpp_quote("extern const IID CLSID_WebCheckDefaultProcess;               ")
+
+//
+// Next UUIDs are needed for UNIX as we use IE40 webcheck
+// with IE5 iedev/inc there.
+//
+#ifdef UNIX
+cpp_quote("EXTERN_C const CLSID CLSID_OfflineTrayAgent;")
+cpp_quote("EXTERN_C const CLSID CLSID_ConnectionAgent;")
+#endif
+
+cpp_quote("// Subscription Notifications                                                    ")
+cpp_quote("// To register your IOleCommandTarget for notifications:                         ")
+cpp_quote("//                                                                               ")
+cpp_quote("// Add your handler under:                                                       ")
+cpp_quote("// HKLM\Software\Microsoft\Windows\CurrentVersion\Webcheck\Notification Handlers ")
+cpp_quote("// as DWORD values with a mask specifying which SUBSNOTF_*                       ")
+cpp_quote("// events you care about.                                                        ")
+cpp_quote("//                                                                               ")
+cpp_quote("// So the Exec call will look like:                                              ")
+cpp_quote("//                                                                               ")
+cpp_quote("// pCmdTarget->Exec(&CLSID_SubscriptionMgr,                                      ")
+cpp_quote("//                  nCmdID,                                                      ")
+cpp_quote("//                  0,                                                           ")
+cpp_quote("//                  &varSubsCookie,                                              ")
+cpp_quote("//                  NULL);                                                       ")
+cpp_quote("//                                                                               ")
+cpp_quote("//                                                                               ")
+cpp_quote("#define SUBSNOTF_CREATE      0x00000001")
+cpp_quote("#define SUBSNOTF_DELETE      0x00000002")
+cpp_quote("#define SUBSNOTF_SYNC_START  0x00000004")
+cpp_quote("#define SUBSNOTF_SYNC_STOP   0x00000008")
+
+//
+// ==================================================
+// Non-marshalled, private interfaces (.TLB not used)
+// ==================================================
+[
+    uuid(10BD2E25-F235-11CF-B5DD-00A0C90348EC),     // LIBID_WebCheck
+    helpstring("Microsoft WebCheck 1.00"),
+    lcid(0x0000),
+    version(0.70)
+]
+library WebCheck
+{
+    // ISubscription* interfaces for IE5 delivery agents
+    [
+        uuid(A89E8FF0-70F4-11d1-BC7F-00C04FD929DB)
+    ]
+    interface ISubscriptionAgentControl : IUnknown
+    {
+    enum SUBSCRIPTION_AGENT_CONTROL { SUBSCRIPTION_AGENT_DELETE=0x0001 };
+    enum SUBSCRIPTION_AGENT_RESUME_FLAGS { SUBSCRIPTION_AGENT_RESUME_INCREASED_CACHE=0x0080 };
+
+        HRESULT StartUpdate(IUnknown *pItem, IUnknown *punkAdvise);
+        HRESULT PauseUpdate(DWORD dwFlags);
+        HRESULT ResumeUpdate(DWORD dwFlags);
+        HRESULT AbortUpdate(DWORD dwFlags);
+        HRESULT SubscriptionControl(IUnknown *pItem, DWORD dwControl);
+    }
+
+    [
+        uuid(81B184BA-B302-11d1-8552-00C04FA35C89)
+    ]
+    interface ISubscriptionAgentShellExt : IUnknown
+    {
+        HRESULT Initialize([in] SUBSCRIPTIONCOOKIE *pSubscriptionCookie, [in] LPCWSTR pwszURL,
+                           [in] LPCWSTR pwszName, [in] SUBSCRIPTIONTYPE subsType);
+        HRESULT RemovePages([in] HWND hdlg);
+        HRESULT SaveSubscription();
+        HRESULT URLChange([in] LPCWSTR pwszNewURL);
+    }
+
+    [
+        uuid(A89E8FF1-70F4-11d1-BC7F-00C04FD929DB)
+    ]
+    interface ISubscriptionAgentEvents : IUnknown
+    {
+        HRESULT UpdateBegin(const SUBSCRIPTIONCOOKIE *pSubscriptionCookie);
+        HRESULT UpdateProgress(const SUBSCRIPTIONCOOKIE *pSubscriptionCookie, long lSizeDownloaded,
+                                long lProgressCurrent, long lProgressMax,
+                                HRESULT hrStatus, LPCWSTR wszStatus);
+        HRESULT UpdateEnd(const SUBSCRIPTIONCOOKIE *pSubscriptionCookie, long lSizeDownloaded,
+                                HRESULT hrResult, LPCWSTR wszResult);
+        HRESULT ReportError(const SUBSCRIPTIONCOOKIE *pSubscriptionCookie, HRESULT hrError, LPCWSTR wszError);
+    };
+
+    [
+        uuid(D66B399E-AF1D-11d1-A1F9-00C04FC2FBE1)
+    ]
+    interface ISubscriptionMgrPriv : IUnknown
+    {
+        HRESULT CreateSubscriptionItem([in]  const SUBSCRIPTIONITEMINFO *pSubscriptionItemInfo,
+                                       [out] SUBSCRIPTIONCOOKIE *pNewCookie,
+                                       [out] ISubscriptionItem **ppSubscriptionItem);
+        HRESULT CloneSubscriptionItem([in] ISubscriptionItem *pSubscriptionItem,
+                                      [out] SUBSCRIPTIONCOOKIE *pNewCookie,
+                                      [out] ISubscriptionItem **ppSubscriptionItem);
+
+        HRESULT DeleteSubscriptionItem([in]  const SUBSCRIPTIONCOOKIE *pCookie);
+
+        HRESULT RemovePages([in] HWND hdlg);
+        HRESULT SaveSubscription();
+        HRESULT URLChange(LPCWSTR pwszNewURL);
+    };
+
+    importlib("stdole2.tlb");
+
+//---------------------------------------------------------------
+//          Webcheck Core
+//---------------------------------------------------------------
+    // Webcheck class
+    [
+        uuid(E6FB5E20-DE35-11CF-9C87-00AA005127ED), // CLSID_WebCheck
+        helpstring("WebCheck class"),
+        appobject
+    ]
+    coclass WebCheck
+    {
+        [default] interface IUnknown;
+    }
+
+
+    // Webcrawler object
+    [
+        uuid(08165EA0-E946-11CF-9C87-00AA005127ED)
+    ]
+    coclass WebCrawlerAgent
+    {
+        [default] interface IUnknown;
+    }
+
+    // Channel Agent object
+    [
+        uuid(E3A8BDE6-ABCE-11d0-BC4B-00C04FD929DB)
+    ]
+    coclass ChannelAgent
+    {
+        [default] interface IUnknown;
+    }
+
+//---------------------------------------------------------------
+//                  OneStop support object
+//---------------------------------------------------------------
+    [
+        uuid(7FC0B86E-5FA7-11d1-BC7C-00C04FD929DB)
+    ]
+    coclass WebCheckOfflineSync
+    {
+        [default] interface IUnknown;
+    }
+
+//---------------------------------------------------------------
+//                  Post Agent
+//---------------------------------------------------------------
+
+    //
+    // Post Agent Object
+    //
+    [
+        uuid(d8bd2030-6fC9-11d0-864f-00aa006809d9), // CLSID_PostAgent
+    ]
+    coclass PostAgent
+    {
+        [default] interface IUnknown; // this should be INotificationSink
+    }
+
+
+//---------------------------------------------------------------
+//                  Code Download Agent
+//---------------------------------------------------------------
+
+    //
+    // Code Download Agent Object
+    //
+    [
+        uuid(7D559C10-9FE9-11d0-93F7-00AA0059CE02), // CLSID_CDLAgent
+        helpstring("Code Download Agent Object")
+    ]
+    coclass CDLAgent
+    {
+        [default] interface IUnknown; // this should be INotificationSink
+    }
+}
+

@@ -1,0 +1,2 @@
+PLATFORM=   WIN9x
+!INCLUDE    ..\sources.inc

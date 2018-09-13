@@ -1,0 +1,75 @@
+//=--------------------------------------------------------------------------=
+// MSDatSrc.ODL
+//=--------------------------------------------------------------------------=
+// Copyright 1997-1998 Microsoft Corporation.  All Rights Reserved.
+//=--------------------------------------------------------------------------=
+// Data Source Interfaces for ActiveX Data Binding.
+//=--------------------------------------------------------------------------=
+
+#pragma midl_echo("// For non-VC5 compilers")
+#pragma midl_echo("#if _MSC_VER >= 1100")
+#pragma midl_echo("#define DECLSPEC_UUID(x)	__declspec(uuid(x))")
+#pragma midl_echo("#else")
+#pragma midl_echo("#define DECLSPEC_UUID(x)")
+#pragma midl_echo("#endif")
+#pragma midl_echo("")
+#pragma midl_echo("// C/C++ interface names")
+#pragma midl_echo("#define IDataSource		DataSource")
+#pragma midl_echo("#define IDataSourceListener	DataSourceListener")
+#pragma midl_echo("")
+#pragma midl_echo("// Component category guids")
+#pragma midl_echo("EXTERN_C const IID CATID_DataSource;")
+#pragma midl_echo("EXTERN_C const IID CATID_DataConsumer;")
+
+[
+  uuid(7c0ffab0-cd84-11d0-949a-00a0c91110ed),
+  version(1.0),
+  helpstring("Microsoft Data Source Interfaces")
+]				
+library MSDATASRC
+{
+  //=--------------------------------------------------------------------------=
+  // Standard imports
+  //=--------------------------------------------------------------------------=
+  importlib("stdole2.tlb");
+
+  //=--------------------------------------------------------------------------=
+  // DataMember typedef
+  //=--------------------------------------------------------------------------=
+  typedef [uuid(7c0ffab1-cd84-11d0-949a-00a0c91110ed)] BSTR DataMember;
+
+  //=--------------------------------------------------------------------------=
+  // IDataSourceListener
+  //=--------------------------------------------------------------------------=
+  [
+    uuid(7c0ffab2-cd84-11d0-949a-00a0c91110ed),
+    odl,
+    oleautomation,
+    hidden
+  ]
+  interface DataSourceListener : IUnknown
+  {
+    [hidden] HRESULT dataMemberChanged([in] DataMember bstrDM);
+    [hidden] HRESULT dataMemberAdded([in] DataMember bstrDM);
+    [hidden] HRESULT dataMemberRemoved([in] DataMember bstrDM);
+  };
+
+  //=--------------------------------------------------------------------------=
+  // IDataSource
+  //=--------------------------------------------------------------------------=
+  [
+    uuid(7c0ffab3-cd84-11d0-949a-00a0c91110ed),
+    oleautomation,
+    odl
+  ]
+  interface DataSource : IUnknown
+  {
+    [hidden, restricted] HRESULT getDataMember([in] DataMember bstrDM, [in] REFIID riid, [out, retval] IUnknown** ppunk);
+    [hidden] HRESULT getDataMemberName([in] long lIndex, [out, retval] DataMember* pbstrDM);
+    [hidden] HRESULT getDataMemberCount([out, retval] long* plCount);
+    [hidden] HRESULT addDataSourceListener([in] DataSourceListener* pDSL);
+    [hidden] HRESULT removeDataSourceListener([in] DataSourceListener* pDSL);
+  };
+
+};
+

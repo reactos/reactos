@@ -1,0 +1,542 @@
+ 
+//+---------------------------------------------------------------------------
+//
+//
+// ***************************************************************************
+// ***************************************************************************
+// ****************** INTERNAL - NOT FOR PUBLIC CONSUMPTION ******************
+// ***************************************************************************
+// ***************************************************************************
+//
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998.
+//
+//  Contents:   TRIDENT Editing services description
+//
+//----------------------------------------------------------------------------
+
+#ifdef UNIX
+#include "unixdef.h"
+#endif
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// internal.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// TRIDENT Editing Services Interfaces.")
+cpp_quote("//")
+cpp_quote("")
+cpp_quote("#ifndef QCOREINT_H_")
+cpp_quote("#define QCOREINT_H_")
+cpp_quote("")
+
+import "dimm.idl";
+import "qcore.idl";
+import "mshtmhst.idl";
+
+#ifndef DO_NO_IMPORTS
+import "ocidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+#endif
+typedef enum _CHAR_FORMAT_FAMILY
+{
+    CHAR_FORMAT_None = 0,
+    CHAR_FORMAT_FontStyle = 1,
+    CHAR_FORMAT_FontInfo = 2,
+    CHAR_FORMAT_FontName = 4,
+    CHAR_FORMAT_ColorInfo = 8,
+    CHAR_FORMAT_ParaFormat = 16,
+    CHAR_FORMAT_FAMILY_Max = 2147483647L
+} CHAR_FORMAT_FAMILY;
+
+typedef enum _LAYOUT_MOVE_UNIT
+{
+    LAYOUT_MOVE_UNIT_PreviousLine = 1,
+    LAYOUT_MOVE_UNIT_NextLine = 2,
+    LAYOUT_MOVE_UNIT_CurrentLineStart = 3,
+    LAYOUT_MOVE_UNIT_CurrentLineEnd = 4,
+    LAYOUT_MOVE_UNIT_NextLineStart = 5,
+    LAYOUT_MOVE_UNIT_PreviousLineEnd = 6,
+    LAYOUT_MOVE_UNIT_TopOfWindow = 7,
+    LAYOUT_MOVE_UNIT_BottomOfWindow = 8,
+    LAYOUT_MOVE_UNIT_OuterLineStart = 9,
+    LAYOUT_MOVE_UNIT_OuterLineEnd = 10,
+    LAYOUT_MOVE_UNIT_Max = 2147483647L
+} LAYOUT_MOVE_UNIT;
+
+typedef enum _HIGHLIGHT_TYPE
+{
+    HIGHLIGHT_TYPE_None = 0x00000000,
+    HIGHLIGHT_TYPE_Selected = 0x00000001,
+    HIGHLIGHT_TYPE_Squiggle = 0x00000002,
+    HIGHLIGHT_TYPE_ImeInput = 0x00000010,
+    HIGHLIGHT_TYPE_ImeTargetConverted = 0x00000020,
+    HIGHLIGHT_TYPE_ImeConverted = 0x00000030,
+    HIGHLIGHT_TYPE_ImeTargetNotConverted = 0x00000040,
+    HIGHLIGHT_TYPE_ImeInputError = 0x00000050,
+    HIGHLIGHT_TYPE_ImeHangul = 0x00000060,
+    HIGHLIGHT_TYPE_Max = 2147483647L
+} HIGHLIGHT_TYPE;
+
+typedef enum _CARET_GRAVITY
+{
+    CARET_GRAVITY_NoChange = 0,
+    CARET_GRAVITY_BeginningOfLine = 1,
+    CARET_GRAVITY_EndOfLine = 2,
+    CARET_GRAVITY_Max = 2147483647L
+} CARET_GRAVITY;
+
+typedef enum _CARET_VISIBILITY
+{
+    CARET_TYPE_Hide = 0,
+    CARET_TYPE_Show = 1,
+    CARET_VISIBILITY_Max = 2147483647L
+} CARET_VISIBILITY;
+
+typedef enum _FOLLOW_UP_ACTION_FLAGS
+{
+    FOLLOW_UP_ACTION_None = 0x00000000,
+    FOLLOW_UP_ACTION_ReBubbleEvent = 0x00000001,
+    FOLLOW_UP_ACTION_OnClick = 0x00000020,
+    FOLLOW_UP_ACTION_DragElement = 0x00000100,
+    FOLLOW_UP_ACTION_FLAGS_Max = 2147483647L
+} FOLLOW_UP_ACTION_FLAGS;
+
+typedef enum _SELECTION_NOTIFICATION
+{
+    SELECT_NOTIFY_TIMER_TICK = 0,
+    SELECT_NOTIFY_EMPTY_SELECTION = 1,
+    SELECT_NOTIFY_DOC_ENDED = 2,
+    SELECT_NOTIFY_DOC_CHANGED = 3,
+    SELECT_NOTIFY_DESTROY_SELECTION = 4,
+    SELECT_NOTIFY_CARET_IN_CONTEXT = 5,
+    SELECT_NOTIFY_EXIT_TREE = 6,
+    SELECT_NOTIFY_LOSE_FOCUS_FRAME = 7,
+    SELECT_NOTIFY_LOSE_FOCUS = 8,
+    SELECT_NOTIFY_DESTROY_ALL_SELECTION = 9,
+    SELECT_NOTIFY_DISABLE_IME = 10,
+    SELECTION_NOTIFICATION_Max = 2147483647L
+} SELECTION_NOTIFICATION;
+
+typedef enum _SELECTION_TYPE
+{
+    SELECTION_TYPE_None = 0,
+    SELECTION_TYPE_Caret = 1,
+    SELECTION_TYPE_Selection = 2,
+    SELECTION_TYPE_Control = 3,
+    SELECTION_TYPE_Auto = 4,
+    SELECTION_TYPE_IME = 5,
+    SELECTION_TYPE_Max = 2147483647L
+} SELECTION_TYPE;
+
+typedef enum _POINTER_SCROLLPIN
+{
+    POINTER_SCROLLPIN_TopLeft = 0,
+    POINTER_SCROLLPIN_BottomRight = 1,
+    POINTER_SCROLLPIN_Minimal = 2,
+    POINTER_SCROLLPIN_Max = 2147483647L
+} POINTER_SCROLLPIN;
+
+typedef enum _COORD_SYSTEM
+{
+    COORD_SYSTEM_GLOBAL = 0,
+    COORD_SYSTEM_PARENT = 1,
+    COORD_SYSTEM_CONTAINER = 2,
+    COORD_SYSTEM_CONTENT = 3,
+    COORD_SYSTEM_Max = 2147483647L
+} COORD_SYSTEM;
+
+typedef enum _ADORNER_HTI
+{
+    ADORNER_HTI_NONE = 0,
+    ADORNER_HTI_TOPBORDER = 1,
+    ADORNER_HTI_LEFTBORDER = 2,
+    ADORNER_HTI_BOTTOMBORDER = 3,
+    ADORNER_HTI_RIGHTBORDER = 4,
+    ADORNER_HTI_TOPLEFTHANDLE = 5,
+    ADORNER_HTI_LEFTHANDLE = 6,
+    ADORNER_HTI_TOPHANDLE = 7,
+    ADORNER_HTI_BOTTOMLEFTHANDLE = 8,
+    ADORNER_HTI_TOPRIGHTHANDLE = 9,
+    ADORNER_HTI_BOTTOMHANDLE = 10,
+    ADORNER_HTI_RIGHTHANDLE = 11,
+    ADORNER_HTI_BOTTOMRIGHTHANDLE = 12,
+    ADORNER_HTI_Max = 2147483647L
+} ADORNER_HTI;
+
+typedef enum _VIEW_APPHACKS
+{
+    VIEW_APPHACKS_NONE = 0x0,
+    VIEW_APPHACKS_BROWSECARET = 0x1,
+    VIEW_APPHACKS_BROWSEEMPTYLINES = 0x2,
+    VIEW_APPHACKS_NOSELECTIONTRACKING = 0x4,
+    VIEW_APPHACKS_Max = 2147483647L
+} VIEW_APPHACKS;
+
+typedef enum _CARET_DIRECTION
+{
+    CARET_DIRECTION_INDETERMINATE = 0,
+    CARET_DIRECTION_SAME = 1,
+    CARET_DIRECTION_BACKWARD = 2,
+    CARET_DIRECTION_FORWARD = 3,
+    CARET_DIRECTION_Max = 2147483647L
+} CARET_DIRECTION;
+
+typedef struct _SelectionMessage
+{
+    UINT message;
+    DWORD time;
+    POINT pt;
+    POINT ptContent;
+    WPARAM wParam;
+    LPARAM lParam;
+    int characterCookie;
+    DWORD_PTR elementCookie;
+    BOOL fShift;
+    BOOL fCtrl;
+    BOOL fAlt;
+    BOOL fFromCapture;
+    BOOL fStopForward;
+    BOOL fEmptySpace;
+    HWND hwnd;
+    LPARAM lResult;
+} SelectionMessage;
+
+typedef struct _HTMLPtrDispInfoRec
+{
+    DWORD dwSize;
+    LONG lBaseline;
+    LONG lXPosition;
+    LONG lLineHeight;
+    LONG lTextHeight;
+    LONG lDescent;
+    LONG lTextDescent;
+    BOOL fRTLLine;
+    BOOL fRTLFlow;
+    BOOL fAligned;
+    BOOL fHasNestedRunOwner;
+} HTMLPtrDispInfoRec;
+
+typedef struct _HTMLCharFormatData
+{
+    DWORD dwSize;
+    WORD wFamilyFlags;
+    BOOL fBold;
+    BOOL fItalic;
+    BOOL fUnderline;
+    BOOL fOverline;
+    BOOL fStrike;
+    BOOL fSubScript;
+    BOOL fSuperScript;
+    BOOL fHasBgColor;
+    BOOL fExplicitFace;
+    WORD wWeight;
+    WORD wFontSize;
+    TCHAR szFont[32];
+    DWORD dwTextColor;
+    DWORD dwBackColor;
+    BOOL fPre;
+    BOOL fRTL;
+} HTMLCharFormatData;
+
+interface IElementBehavior;
+interface IElementBehaviorFactory;
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f60c-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IIdentityBehavior : IElementBehavior
+{
+    [] HRESULT GetHTMLElement([out] IHTMLElement** ppNewElement);
+    [] HRESULT DocumentEnter([in] IHTMLDocument2* pDocument);
+    [] HRESULT DocumentLeave([in] IHTMLDocument2* pDocument);
+    [] HRESULT GetStyle([out] IHTMLStyle** ppStyle);
+    [] HRESULT FlushPersistentProperties();
+    [] HRESULT GetCurrentStyle([out] IHTMLCurrentStyle** ppStyle);
+    [] HRESULT GetRuntimeStyle([out] IHTMLStyle** ppStyle);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f60d-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IIdentityBehaviorFactory : IElementBehaviorFactory
+{
+    [] HRESULT GetBaseTags([out] INT* pTagNames,[out] INT* pTagId,[out] INT* pcTags);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f4d2-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface ISubDivisionProvider : IUnknown
+{
+    [] HRESULT GetSubDivisionCount([retval, out] LONG* pcSubDivision);
+    [] HRESULT GetSubDivisionTabs([in] LONG cTabs,[retval, out] LONG* pSubDivisionTabs);
+    [] HRESULT SubDivisionFromPt([in] POINT pt,[retval, out] LONG* piSubDivision);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f4bf-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IElementBehaviorUI : IUnknown
+{
+    [] HRESULT OnReceiveFocus([in] BOOL fFocus,[in] LONG lSubDivision);
+    [] HRESULT GetSubDivisionProvider([retval, out] ISubDivisionProvider** ppProvider);
+    [] HRESULT CanTakeFocus();
+};
+interface IMarkupPointer;
+interface IHTMLElement;
+interface ISegmentList;
+interface IHTMLCaret;
+interface IElementAdorner;
+interface ISelectionRenderingServices;
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f603-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLViewServices : IUnknown
+{
+    [] HRESULT MoveMarkupPointerToPoint([in] POINT pt,[in] IMarkupPointer* pPointer,[in, out] BOOL* pfNotAtBOL,[in, out] BOOL* pfAtLogicalBOL,[in, out] BOOL* pfRightOfCp,[in] BOOL fScrollIntoView);
+    [] HRESULT MoveMarkupPointerToPointEx([in] POINT pt,[in] IMarkupPointer* pPointer,[in] BOOL fGlobalCoordinates,[in, out] BOOL* pfNotAtBOL,[in, out] BOOL* pfAtLogicalBOL,[in, out] BOOL* pfRightOfCp,[in] BOOL fScrollIntoView);
+    [] HRESULT MoveMarkupPointerToMessage([in] IMarkupPointer* pPointer,[in] SelectionMessage* pMessage,[in, out] BOOL* pfNotAtBOL,[in, out] BOOL* pfAtLogicalBOL,[in, out] BOOL* pfRightOfCp,[in, out] BOOL* fValidTree,[in] BOOL fScrollIntoView,[in] IHTMLElement* pIContainerElement,[in, out] BOOL* pfSameLayout,[in] BOOL fHitTestEOL);
+    [] HRESULT GetCharFormatInfo([in] IMarkupPointer* pPointer,[in] WORD wFamilyFlags,[in, out] HTMLCharFormatData* pInfo);
+    [] HRESULT GetLineInfo([in] IMarkupPointer* pPointer,[in] BOOL fAtEndOfLine,[in, out] HTMLPtrDispInfoRec* pInfo);
+    [] HRESULT IsPointerBetweenLines([in] IMarkupPointer* pPointer,[in, out] BOOL* pfBetweenLines);
+    [] HRESULT GetElementsInZOrder([in] POINT pt,[in, out] IHTMLElement** rgElements,[in, out] DWORD* pCount);
+    [] HRESULT GetTopElement([in] POINT pt,[out] IHTMLElement** ppElement);
+    [] HRESULT MoveMarkupPointer([in] IMarkupPointer* pPointer,[in] LAYOUT_MOVE_UNIT eUnit,[in] LONG lXCurReally,[out] BOOL* fAtEOL,[in, out] BOOL* pfAtLogicalBOL);
+    [] HRESULT RegionFromMarkupPointers([in] IMarkupPointer* pPointerStart,[in] IMarkupPointer* pPointerEnd,[out] DWORD_PTR* phrgn);
+    [] HRESULT GetCurrentSelectionRenderingServices([in, out] ISelectionRenderingServices** ppSelRenSvc);
+    [] HRESULT GetCurrentSelectionSegmentList([in, out] ISegmentList** ppSegment);
+    [] HRESULT FireOnSelectStart([in] IHTMLElement* pIElement);
+    [] HRESULT FireCancelableEvent([in] IHTMLElement* pIElement,[in] LONG dispidMethod,[in] LONG dispidProp,[in] BSTR bstrEventType,[out] BOOL* pfResult);
+    [] HRESULT GetCaret([out] IHTMLCaret** ppCaret);
+    [] HRESULT ConvertVariantFromHTMLToTwips([in, out] VARIANT* pvarargInOut);
+    [] HRESULT ConvertVariantFromTwipsToHTML([in, out] VARIANT* pvarargInOut);
+    [] HRESULT IsBlockElement([in] IHTMLElement* pIElement,[out] BOOL* fResult);
+    [] HRESULT IsLayoutElement([in] IHTMLElement* pIElement,[out] BOOL* fResult);
+    [] HRESULT IsContainerElement([in] IHTMLElement* pIElement,[out] BOOL* fContainer,[out] BOOL* fHTML);
+    [] HRESULT GetFlowElement([in] IMarkupPointer* pMarkup,[out] IHTMLElement** ppElem);
+    [] HRESULT GetElementFromCookie([in] DWORD_PTR dwCookie,[out] IHTMLElement** ppElem);
+    [] HRESULT AddElementAdorner([in] IHTMLElement* pElem,[in] IElementAdorner* pAdorn,[in, out] DWORD_PTR* ppCookie);
+    [] HRESULT RemoveElementAdorner([in] DWORD_PTR cookie);
+    [] HRESULT GetElementAdornerBounds([in] DWORD_PTR cookie,[in, out] RECT* prcBounds);
+    [] HRESULT InflateBlockElement([in] IHTMLElement* pElem);
+    [] HRESULT IsInflatedBlockElement([in] IHTMLElement* pElem,[in, out] BOOL* pfInflated);
+    [] HRESULT IsMultiLineFlowElement([in] IHTMLElement* pElem,[out] BOOL* pfMulti);
+    [] HRESULT GetElementAttributeCount([in] IHTMLElement* pElem,[out] UINT* pCount);
+    [] HRESULT IsEditableElement([in] IHTMLElement* pElement,[out] BOOL* pfEditable);
+    [] HRESULT GetOuterContainer([in] IHTMLElement* pIElement,[in] IHTMLElement** ppIOuterElement,[in] BOOL fIgnoreOutermostContainer,[in] BOOL* pfHitContainer);
+    [] HRESULT IsNoScopeElement([in] IHTMLElement* pIElement,[in] BOOL* pfNoScope);
+    [] HRESULT ShouldObjectHaveBorder([in] IHTMLElement* pIElement,[in] BOOL* pfDrawBorder);
+    [] HRESULT DoTheDarnPasteHTML([in] IMarkupPointer* pIPointerStart,[in] IMarkupPointer* pIPointerFinish,[in] HGLOBAL hGlobalHTML);
+    [] HRESULT ConvertRTFToHTML([in] LPOLESTR pszRtf,[in] HGLOBAL* phGlobalHTML);
+    [] HRESULT GetViewHWND([in, out] HWND* pHWND);
+    [] HRESULT GetActiveIMM([out] IActiveIMMApp** ppActiveIMM);
+    [] HRESULT IsRtfConverterEnabled([out] BOOL* pfEnabled);
+    [] HRESULT ScrollElement([in] IHTMLElement* pIElement,[in] LONG lPercentToScroll,[out] POINT* ScrollDelta);
+    [] HRESULT GetScrollingElement([in] IMarkupPointer* pPosition,[in] IHTMLElement* pBoundary,[out] IHTMLElement** ppElement);
+    [] HRESULT StartHTMLEditorDblClickTimer();
+    [] HRESULT StopHTMLEditorDblClickTimer();
+    [] HRESULT HTMLEditorTakeCapture();
+    [] HRESULT HTMLEditorReleaseCapture();
+    [] HRESULT SetHTMLEditorMouseMoveTimer();
+    [] HRESULT GetEditContext([in] IHTMLElement* pIStartElement,[in] IHTMLElement** ppIEditThisElement,[in] IMarkupPointer* pIStart,[in] IMarkupPointer* pIEnd,[in] BOOL fDrillingIn,[in] BOOL* pfEditThisEditable,[in] BOOL* pfEditParentEditable,[in] BOOL* pfNoScopeElement);
+    [] HRESULT EnsureEditContext([in] IMarkupPointer* pIMarkupPointer);
+    [] HRESULT ScrollPointerIntoView([in] IMarkupPointer* pPointer,[in] BOOL fNotAtBOL,[in] POINTER_SCROLLPIN eScrollAmount);
+    [] HRESULT ScrollPointIntoView([in] IHTMLElement* pIElement,[in] POINT* ptGlobal);
+    [] HRESULT ArePointersInSameMarkup([in] IMarkupPointer* pP1,[in] IMarkupPointer* pP2,[out] BOOL* pfSameMarkup);
+    [] HRESULT DragElement([in] IHTMLElement* pIElement,[in] DWORD dwKeyState);
+    [] HRESULT BecomeCurrent([in] IHTMLElement* pIElement,[in] SelectionMessage* pMessage);
+    [] HRESULT TransformPoint([in, out] POINT* pPoint,[in] COORD_SYSTEM eSource,[in] COORD_SYSTEM eDestination,[in] IHTMLElement* pIElement);
+    [] HRESULT GetElementDragBounds([in] IHTMLElement* pIElement,[in, out] RECT* pIElementDragBounds);
+    [] HRESULT UpdateAdorner([in] DWORD_PTR cookie);
+    [] HRESULT InvalidateAdorner([in] DWORD_PTR cookie);
+    [] HRESULT ScrollIntoView([in] DWORD_PTR cookie);
+    [] HRESULT IsElementLocked([in] IHTMLElement* pIElement,[in, out] BOOL* pfLocked);
+    [] HRESULT MakeParentCurrent([in] IHTMLElement* pIElement);
+    [] HRESULT FireOnBeforeEditFocus([in] IHTMLElement* pINextActiveElement,[in, out] BOOL* pfRet);
+    [] HRESULT IsEqualElement([in] IHTMLElement* pIElement1,[in] IHTMLElement* pIElement2);
+    [] HRESULT GetOuterMostEditableElement([in] IHTMLElement* pIEditableElement,[in, out] IHTMLElement** ppIOuterEditableElement);
+    [] HRESULT IsSite([in] IHTMLElement* pElement,[out] BOOL* pfSite,[out] BOOL* pfText,[out] BOOL* pfMultiLine,[out] BOOL* pfScrollable);
+    [] HRESULT QueryBreaks([in] IMarkupPointer* pPointer,[out] DWORD* pdwBreaks,[in] BOOL fWantPendingBreak);
+    [] HRESULT MergeDeletion([in] IMarkupPointer* pPointer);
+    [] HRESULT GetElementForSelection([in] IHTMLElement* pIElement,[out] IHTMLElement** ppIAdjustedElement);
+    [] HRESULT IsContainedBy([in] IMarkupContainer* pIOuterContainer,[in] IMarkupContainer* pIInnerContainer);
+    [] HRESULT CurrentScopeOrSlave([in] IMarkupPointer* pPointer,[out] IHTMLElement** ppElemCurrent);
+    [] HRESULT LeftOrSlave([in] IMarkupPointer* pPointer,[in] BOOL fMove,[out] MARKUP_CONTEXT_TYPE* pContext,[out] IHTMLElement** ppElement,[in, out] long* pcch,[out] OLECHAR* pchText);
+    [] HRESULT RightOrSlave([in] IMarkupPointer* pPointer,[in] BOOL fMove,[out] MARKUP_CONTEXT_TYPE* pContext,[out] IHTMLElement** ppElement,[in, out] long* pcch,[out] OLECHAR* pchText);
+    [] HRESULT MoveToContainerOrSlave([in] IMarkupPointer* pPointer,[in] IMarkupContainer* pContainer,[in] BOOL fAtStart);
+    [] HRESULT MergeAttributes([in] IHTMLElement* pIHTMLElementMergeSrc,[in] IHTMLElement* pIHTMLElementMergeTarget,[in] BOOL fCopyId);
+    [] HRESULT FindUrl([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd,[in] IMarkupPointer* pUrlStart,[in] IMarkupPointer* pUrlEnd);
+    [] HRESULT IsEnabled([in] IHTMLElement* pIElement,[in, out] BOOL* pfEnabled);
+    [] HRESULT GetElementBlockDirection([in] IHTMLElement* pElement,[out] BSTR* pbstrDir);
+    [] HRESULT SetElementBlockDirection([in] IHTMLElement* pElement,[in] LONG eHTMLDir);
+    [] HRESULT IsBidiEnabled([in, out] BOOL* pfEnabled);
+    [] HRESULT SetDocDirection([in] LONG eHTMLDir);
+    [] HRESULT AllowSelection([in] IHTMLElement* pIElement,[in] SelectionMessage* peMessage);
+    [] HRESULT MoveWord([in] IMarkupPointer* pPointerToMove,[in] MOVEUNIT_ACTION muAction,[in] IMarkupPointer* pLeftBoundary,[in] IMarkupPointer* pRightBoundary);
+    [] HRESULT GetAdjacencyForPoint([in] IHTMLElement* pIElement,[in] POINT ptGlobal,[in, out] ELEMENT_ADJACENCY *peAdjacent);
+    [] HRESULT SaveSegmentsToClipboard([in] ISegmentList* pSegmentList);
+    [] HRESULT InsertMaximumText([in] OLECHAR* pText,[in] LONG lLen,[in] IMarkupPointer* pIMarkupPointer);
+    [] HRESULT IsInsideURL([in] IMarkupPointer* Start,[in] IMarkupPointer* pRight,[out] BOOL* pfResult);
+    [] HRESULT GetDocHostUIHandler([out] IDocHostUIHandler** ppIHandler);
+    [] HRESULT GetClientRect([in] IHTMLElement* pIElement,[in] COORD_SYSTEM eSource,[in, out] RECT* pRect);
+    [] HRESULT GetContentRect([in] IHTMLElement* pIElement,[in] COORD_SYSTEM eSource,[in, out] RECT* pRect);
+    [] HRESULT IsElementSized([in] IHTMLElement* pIElement,[in, out] BOOL* pfSized);
+    [] HRESULT GetLineDirection([in] IMarkupPointer* pPointer,[in] BOOL fAtEndOfLine,[in, out] LONG* peHTMLDir);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(7D7128E0-57B9-11d2-9BA3-00805F852B4D)
+]
+interface IHTMLViewServices2 : IHTMLViewServices
+{
+    [] HRESULT MoveMarkupPointerToPointEx2([in] POINT pt,[in] IMarkupPointer* pPointer,[in] BOOL fGlobalCoordinates,[in, out] BOOL* pfNotAtBOL,[in, out] BOOL* pfAtLogicalBOL,[in, out] BOOL* pfRightOfCp,[in] BOOL fScrollIntoView,[in, out] BOOL* pfInScrollbar);
+    [] HRESULT SetAppHacks([in] VIEW_APPHACKS dwHacks);
+    [] HRESULT GetAppHacks([out] VIEW_APPHACKS* dwHacks);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f604-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLCaret : IUnknown
+{
+    [] HRESULT MoveCaretToPointer([in] IMarkupPointer* pIMarkupPointerCaret,[in] BOOL fNotAtBOL,[in] BOOL fScrollIntoView,[in] CARET_DIRECTION eDir);
+    [] HRESULT MoveCaretToPointerEx([in] IMarkupPointer* pIMarkupPointerCaret,[in] BOOL fAtEOL,[in] BOOL fVisible,[in] BOOL fScrollIntoView,[in] CARET_DIRECTION eDir);
+    [] HRESULT MovePointerToCaret([in] IMarkupPointer* pIMarkupPointerCaret);
+    [] HRESULT IsVisible([in, out] BOOL* pIsVisible);
+    [] HRESULT Show([in] BOOL fScrollIntoView);
+    [] HRESULT Hide();
+    [] HRESULT InsertText([in] OLECHAR* pText,[in] LONG lLen);
+    [] HRESULT InsertMarkup([in] OLECHAR* pMarkup);
+    [] HRESULT ScrollIntoView();
+    [] HRESULT GetElementContainer([out] IHTMLElement** ppElement);
+    [] HRESULT GetLocation([in, out] POINT* pPoint,[in] BOOL fTranslate);
+    [] HRESULT UpdateCaret();
+    [] HRESULT SetOffset([in] LONG lXDelta,[in] LONG lYDelta,[in] LONG lHDelta);
+    [] HRESULT GetOffset([in, out] LONG* plXDelta,[in, out] LONG* plYDelta,[in, out] LONG* plHDelta);
+    [] HRESULT GetNotAtBOL([in, out] BOOL* pfNotAtBOL);
+    [] HRESULT SetNotAtBOL([in] BOOL fNotAtBOL);
+    [] HRESULT LoseFocus();
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f605-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface ISegmentList : IUnknown
+{
+    [] HRESULT MovePointersToSegment([in] int iSegmentIndex,[in] IMarkupPointer* pIPointerStart,[in] IMarkupPointer* pIPointerEnd);
+    [] HRESULT GetSegmentCount([in, out] int* piSegmentCount,[in, out] SELECTION_TYPE* eType);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f606-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface ISelectionRenderingServices : ISegmentList
+{
+    [] HRESULT AddSegment([in] IMarkupPointer* pIMarkupPointerStart,[in] IMarkupPointer* pIMarkupPointerEnd,[in] HIGHLIGHT_TYPE HighlightType,[in, out] int* piSegmentIndex);
+    [] HRESULT AddElementSegment([in] IHTMLElement* pIElement,[in, out] int* piSegmentIndex);
+    [] HRESULT MoveSegmentToPointers([in] int iSegmentIndex,[in] IMarkupPointer* pIMarkupPointerStart,[in] IMarkupPointer* pIMarkupPointerEnd,[in] HIGHLIGHT_TYPE HighlightType);
+    [] HRESULT GetElementSegment([in] int iSegmentIndex,[in, out] IHTMLElement** ppIElement);
+    [] HRESULT SetElementSegment([in] int iSegmentIndex,[in] IHTMLElement* pIElement);
+    [] HRESULT ClearSegment([in] int iSegmentIndex,[in] BOOL fInvalidate);
+    [] HRESULT ClearSegments([in] BOOL fInvalidate);
+    [] HRESULT ClearElementSegments();
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f607-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IElementAdorner : IUnknown
+{
+    [] HRESULT Draw([in] HDC hdc,[in] LPRECT prc);
+    [] HRESULT HitTestPoint([in] POINT* pt,[in] LPRECT prc,[in, out] BOOL* fResult,[in, out] ADORNER_HTI* peAdornerHTI);
+    [] HRESULT GetSize([in] SIZE* pSizeElem,[in] SIZE* pSizeAdorn);
+    [] HRESULT GetPosition([in] POINT* pPosElem,[in] POINT* pPosAdorn);
+    [] HRESULT OnPositionSet();
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f608-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLEditor : IUnknown
+{
+    [] HRESULT HandleMessage([in, out] SelectionMessage* pSelectionMessage,[in, out] DWORD* pdwFollowUpActionFlag);
+    [] HRESULT Initialize([in] IUnknown* pIDocument,[in] IUnknown* pIView);
+    [] HRESULT SetEditContext([in] BOOL fEditable,[in] BOOL fSetSelection,[in] BOOL fParentEditable,[in] IMarkupPointer* pStartPointer,[in] IMarkupPointer* pEndPointer,[in] BOOL fNoScopeElement);
+    [] HRESULT GetSelectionType([in, out] SELECTION_TYPE* eSelectionType);
+    [] HRESULT Notify([in] SELECTION_NOTIFICATION eSelectionNotification,[in] IUnknown* pUnknown,[in, out] DWORD* pdwFollowUpActionFlag,[in] DWORD dword);
+    [] HRESULT IsPointerInSelection([in] IMarkupPointer* pIPointer,[in, out] BOOL* pfPointerInSelection,[in] POINT* pptGlobal,[in] IHTMLElement* pIElementOver);
+    [] HRESULT GetRangeCommandTarget([in] IUnknown* pContext,[in, out] IUnknown** ppUnkTarget);
+    [] HRESULT GetElementToTabFrom([in] BOOL fForward,[in, out] IHTMLElement** ppElement,[in, out] BOOL* pfFindNext);
+    [] HRESULT IsElementSiteSelected([in] IHTMLElement* pIElement);
+    [] HRESULT IsEditContextUIActive();
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f609-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLEditingServices : IUnknown
+{
+    [] HRESULT Delete([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd,[in] BOOL fAdjustPointers);
+    [] HRESULT Paste([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd,[in] BSTR bstrText);
+    [] HRESULT PasteFromClipboard([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd,[in] IDataObject* pDO);
+    [] HRESULT Select([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd,[in] SELECTION_TYPE eType,[in] DWORD* pdwFollowUpActionFlag);
+    [] HRESULT LaunderSpaces([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd);
+    [] HRESULT InsertSanitizedText([in] IMarkupPointer* InsertHere,[in] OLECHAR* pstrText,[in] BOOL fDataBinding);
+    [] HRESULT UrlAutoDetectCurrentWord([in] IMarkupPointer* pWord);
+    [] HRESULT UrlAutoDetectRange([in] IMarkupPointer* pStart,[in] IMarkupPointer* pEnd);
+    [] HRESULT ShouldUpdateAnchorText([in] OLECHAR* pstrHref,[in] OLECHAR* pstrAnchorText,[out] BOOL* pfResult);
+    [] HRESULT AdjustPointerForInsert([in] IMarkupPointer* pWhereIThinkIAm,[in] BOOL fFurtherInDocument,[in] BOOL fNotAtBol,[in] IMarkupPointer* pConstraintStart,[in] IMarkupPointer* pConstraintEnd);
+    [] HRESULT FindSiteSelectableElement([in] IMarkupPointer* pPointerStart,[in] IMarkupPointer* pPointerEnd,[in] IHTMLElement** ppIHTMLElement);
+    [] HRESULT IsElementSiteSelectable([in] IHTMLElement* pIHTMLElement);
+    [] HRESULT IsElementUIActivatable([in] IHTMLElement* pIHTMLElement);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f60b-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IEditDebugServices : IUnknown
+{
+    [] HRESULT GetCp([in] IMarkupPointer* pIPointer,[out] long* pcp);
+    [] HRESULT SetDebugName([in] IMarkupPointer* pIPointer,[in] LPCTSTR strDbgName);
+    [] HRESULT DumpTree([in] IMarkupPointer* pIPointer);
+};
+[
+    object,
+    pointer_default(unique),
+    uuid(3050f5fc-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLOMWindowServices : IUnknown
+{
+    [] HRESULT moveTo([in] LONG x,[in] LONG y);
+    [] HRESULT moveBy([in] LONG x,[in] LONG y);
+    [] HRESULT resizeTo([in] LONG x,[in] LONG y);
+    [] HRESULT resizeBy([in] LONG x,[in] LONG y);
+};
+cpp_quote("#endif //QCOREINT_H_")
+ 

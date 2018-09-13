@@ -1,0 +1,43 @@
+;  File: D:\WACKER\comstd\comstd.def (Created: 08-Dec-1993)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.4 $
+;  $Date: 1997/09/09 15:25:00 $
+;
+
+LIBRARY   COMSTD
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; comstd.c
+	ComStdEntry@12
+
+	DeviceGetInfo@12
+	DeviceInitialize@12
+	DeviceFindPorts@4
+	DeviceClose@4
+	DeviceDialog@8
+	DeviceGetCommon@8
+	DeviceSetCommon@8
+	DeviceCheckSysFile@4
+	DeviceClearSysFile@4
+	DeviceReadSysFile@8
+	DeviceUpdateSysFile@8
+	DeviceSpecial@16
+
+	PortConfigure@4
+	PortActivate@8
+	PortDeactivate@4
+	PortConnected@4
+
+	RcvRefill@4
+	RcvClear@4
+
+	SndBufrSend@12
+	SndBufrIsBusy@4
+	SndBufrQuery@12
+	SndBufrClear@4

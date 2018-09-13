@@ -1,0 +1,492 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#include "windows.h"
+#include "commctrl.h"
+#include "access.rcv"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+//#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ACCESS              ICON    DISCARDABLE     "Res\\ACCESS.ICO"
+IDI_FILTER              ICON    DISCARDABLE     "Res\\FILTER.ICO"
+IDI_GRAPHAPP            ICON    DISCARDABLE     "Res\\GRAPHAPP.ICO"
+IDI_HIGHCON             ICON    DISCARDABLE     "Res\\HIGHCON.ICO"
+IDI_KEYSHORT            ICON    DISCARDABLE     "Res\\KEYSHORT.ICO"
+IDI_MSEKEYS             ICON    DISCARDABLE     "Res\\MSEKEYS.ICO"
+IDI_SERIALKY            ICON    DISCARDABLE     "Res\\SERIALKY.ICO"
+IDI_SHOWSNDS            ICON    DISCARDABLE     "Res\\SHOWSNDS.ICO"
+IDI_SHOWSTRY            ICON    DISCARDABLE     "Res\\SHOWSTRY.ICO"
+IDI_STICKY              ICON    DISCARDABLE     "Res\\STICKY.ICO"
+IDI_TEXTAPPS            ICON    DISCARDABLE     "Res\\TEXTAPPS.ICO"
+IDI_TOGGLE              ICON    DISCARDABLE     "Res\\TOGGLE.ICO"
+IDI_WINAPPS             ICON    DISCARDABLE     "Res\\WINAPPS.ICO"
+IDI_SERIALKY1           ICON    DISCARDABLE     "Res\\ICO00001.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_KEYBOARD DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Keyboard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "StickyKeys",IDC_KB_GROUP_1,7,7,213,56
+    ICON            IDI_STICKY,IDC_STATIC,14,20,18,20
+    LTEXT           "Use StickyKeys if you want to use Shift, Ctrl, or Alt key by pressing one key at a time.",
+                    IDC_STATIC,40,20,163,17
+    CONTROL         "&Use StickyKeys",IDC_STK_ENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,43,70,10
+    PUSHBUTTON      "&Settings...",IDC_STK_SETTINGS,162,41,50,14
+    GROUPBOX        "FilterKeys",IDC_KB_GROUP_2,7,66,213,56
+    ICON            IDI_FILTER,IDC_STATIC,14,79,18,20
+    LTEXT           "Use FilterKeys if you want Windows to ignore brief or repeated keystrokes, or slow the repeat rate.",
+                    IDC_STATIC,40,79,167,17
+    CONTROL         "Use &FilterKeys",IDC_FK_ENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,102,70,10
+    PUSHBUTTON      "S&ettings...",IDC_FK_SETTINGS,162,100,50,14
+    GROUPBOX        "ToggleKeys",IDC_KB_GROUP_3,7,125,213,56
+    ICON            IDI_TOGGLE,IDC_STATIC,14,138,18,20
+    LTEXT           "Use ToggleKeys if you want to hear tones when pressing Caps Lock, Num Lock, and Scroll Lock.",
+                    IDC_STATIC,40,138,169,17
+    CONTROL         "Use &ToggleKeys",IDC_TK_ENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,162,70,10
+    PUSHBUTTON      "Setti&ngs...",IDC_TK_SETTINGS,162,159,50,14
+    CONTROL         "Sho&w extra keyboard help in programs",
+                    IDC_SHOWEXTRAKYBDHELP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,187,143,10
+END
+
+IDD_SOUND DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Sound"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "SoundSentry",IDC_SS_GROUP_1,7,7,213,56
+    ICON            IDI_SHOWSTRY,IDC_STATIC,14,20,18,20
+    LTEXT           "Use SoundSentry if you want Windows to generate visual warnings when your system makes a sound.",
+                    IDC_STATIC,40,20,174,19
+    CONTROL         "Use &SoundSentry",IDC_SS_ENABLE_SOUND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,43,70,10
+    PUSHBUTTON      "S&ettings...",IDC_SS_SETTINGS,162,41,50,14
+    GROUPBOX        "ShowSounds",IDC_SS_GROUP_2,7,66,213,56
+    ICON            IDI_SHOWSNDS,IDC_STATIC,14,79,18,20
+    LTEXT           "Use ShowSounds to tell your programs to display captions for the speech and sounds they make.",
+                    IDC_STATIC,40,79,166,17
+    CONTROL         "Use S&howSounds",IDC_SS_ENABLE_SHOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,102,75,10
+END
+
+IDD_GENERAL DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Automatic reset",IDC_STATIC,7,7,213,48
+    CONTROL         "&Turn off accessibility features after idle for:",
+                    IDC_TO_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
+                    20,191,10
+    CONTROL         "App&ly changes to this Windows session only",
+                    IDC_SAVE_SETTINGS,"Button",BS_AUTOCHECKBOX | NOT 
+                    WS_VISIBLE | WS_TABSTOP,14,20,195,10
+    LTEXT           "&minutes",IDC_STATIC,67,35,29,11
+    COMBOBOX        IDC_TO_TIMEOUTVAL,26,33,36,100,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Notification",IDC_STATIC,7,59,213,42
+    CONTROL         "&Give warning message when turning a feature on",
+                    IDC_WARNING_SOUND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,71,195,10
+    CONTROL         "Make a &sound when turning a feature on or off",
+                    IDC_SOUND_ONOFF,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
+                    84,174,10
+    GROUPBOX        "SerialKey devices",IDC_STATIC,7,105,213,56
+    ICON            IDI_SERIALKY,IDC_STATIC,14,118,20,20
+    LTEXT           "SerialKey devices allow alternative access to keyboard and mouse features.",
+                    IDC_STATIC,40,118,172,17
+    CONTROL         "S&upport SerialKey devices",IDC_SK_ENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,141,101,10
+    PUSHBUTTON      "S&ettings...",IDC_SK_SETTINGS,162,139,50,14
+    GROUPBOX        "Administrative options",IDC_STATIC,7,165,213,41
+    CONTROL         "Apply all settings to l&ogon desktop",IDC_ADMIN_LOGON,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,178,195,10
+    CONTROL         "Apply all settings to &defaults for new users",
+                    IDC_ADMIN_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,191,191,10
+END
+
+IDD_DISPLAY DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Display"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "High Contrast",IDC_HC_GROUP_1,7,7,213,56
+    ICON            IDI_HIGHCON,IDC_HC_ICON,14,20,18,20
+    LTEXT           "Use this option if you want Windows to use colors and fonts designed for easy reading.",
+                    IDC_STATIC,40,20,172,17
+    CONTROL         "&Use High Contrast",IDC_HC_ENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,43,74,10
+    PUSHBUTTON      "&Settings...",IDC_HC_SETTINGS,162,41,50,14
+END
+
+IDD_MOUSE DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Mouse"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "MouseKeys",IDC_MK_GROUP_1,7,7,213,56
+    ICON            IDI_MSEKEYS,IDC_STATIC,14,20,18,20
+    LTEXT           "Use MouseKeys if you want to control the pointer with the numeric keypad on your keyboard.",
+                    IDC_STATIC,40,20,163,17
+    CONTROL         "Use &MouseKeys",IDC_MK_ENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    PUSHBUTTON      "&Settings...",IDC_MK_SETTINGS,162,41,50,14
+END
+
+IDD_STICKYSETTINGS DIALOGEX 0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for StickyKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Keyboard shortcut",IDC_STK_GROUP_1,7,7,213,56
+    ICON            IDI_KEYSHORT,IDC_STATIC,14,20,18,20
+    LTEXT           "The shortcut for StickyKeys is:  Press the <Shift> key five times.",
+                    IDC_STATIC,40,20,110,18
+    CONTROL         "&Use shortcut",IDC_STK_HOTKEY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    GROUPBOX        "Options",IDC_STK_GROUP_2,7,66,213,44
+    CONTROL         "&Press modifier key twice to lock",IDC_STK_LOCK,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,79,149,10
+    CONTROL         "&Turn StickyKeys off if two keys are pressed at once",
+                    IDC_STK_2KEYS,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,
+                    92,184,10
+    GROUPBOX        "Notification",IDC_STK_GROUP_3,7,113,213,45
+    CONTROL         "&Make sounds when modifier key is pressed",
+                    IDC_STK_SOUNDMOD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,126,157,10
+    CONTROL         "&Show StickyKeys status on screen",IDC_STK_STATUS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,139,130,10
+    DEFPUSHBUTTON   "OK",IDOK,116,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,193,50,14
+END
+
+IDD_TOGGLESETTINGS DIALOGEX 0, 0, 227, 108
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for ToggleKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Keyboard shortcut",IDC_TK_GROUP_1,7,7,213,56
+    ICON            IDI_KEYSHORT,IDC_STATIC,14,20,18,20
+    LTEXT           "The shortcut for ToggleKeys is:  \nHold down <Num Lock> for five seconds.",
+                    IDC_STATIC,40,20,172,17
+    CONTROL         "Use &shortcut",IDC_TK_HOTKEY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    DEFPUSHBUTTON   "OK",IDOK,116,86,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,86,50,14
+END
+
+IDD_MOUSESETTINGS DIALOGEX 0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for MouseKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Keyboard shortcut",IDC_MKS_GROUP_1,7,7,213,56
+    LTEXT           "The shortcut for MouseKeys is:  \nPress <Left Alt+Left Shift+Num Lock>",
+                    IDC_STATIC,40,20,163,17
+    ICON            IDI_KEYSHORT,IDC_STATIC,14,20,18,20
+    CONTROL         "&Use shortcut",IDC_MK_HOTKEY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    GROUPBOX        "Pointer speed",IDC_MKS_GROUP_2,7,66,213,78
+    LTEXT           "&Top speed:",IDC_STATIC,14,84,45,10
+    LTEXT           "Low",IDC_STATIC,66,84,17,9
+    LTEXT           "High",IDC_STATIC,194,84,18,9
+    CONTROL         "",IDC_MK_TOPSPEED,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,86,78,105,20
+    LTEXT           "&Acceleration:",IDC_STATIC,14,105,43,10
+    LTEXT           "Slow",IDC_STATIC,66,105,17,9
+    LTEXT           "Fast",IDC_STATIC,194,105,18,9
+    CONTROL         "",IDC_MK_ACCEL,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,86,100,105,20
+    CONTROL         "&Hold down Ctrl to speed up and Shift to slow down",
+                    IDC_MK_USEMODKEYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,126,197,10
+    LTEXT           "Use MouseKeys when NumLock is:",IDC_STATIC,7,155,117,10
+    CONTROL         "O&n",IDC_MK_NLOFF,"Button",BS_AUTORADIOBUTTON,133,155,
+                    25,10
+    CONTROL         "Of&f",IDC_MK_NLON,"Button",BS_AUTORADIOBUTTON,165,155,
+                    25,10
+    CONTROL         "&Show MouseKey status on screen",IDC_MK_STATUS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,169,123,10
+    DEFPUSHBUTTON   "OK",IDOK,116,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,193,50,14
+END
+
+IDD_SOUNDSETTINGS DIALOGEX 0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for SoundSentry"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Choose the visual warning for sounds made by the following types of programs:",
+                    IDC_NO_HELP_1,7,11,203,18
+    LTEXT           "Warning for &windowed programs",IDC_STATIC,7,36,113,9
+    COMBOBOX        IDC_SS_WINDOWED,7,47,213,100,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Warning for &full screen text programs",IDC_STATIC,7,67,
+                    133,9
+    COMBOBOX        IDC_SS_TEXT,7,78,213,100,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,193,50,14
+END
+
+IDD_HIGHCONSETTINGS DIALOGEX 0, 0, 228, 235
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for High Contrast"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Keyboard shortcut",IDC_HCS_GROUP_1,7,7,213,56
+    ICON            IDI_KEYSHORT,IDC_STATIC,14,20,18,20
+    LTEXT           "The shortcut for High Contrast is:  \nPress <Left Alt+Left Shift+Print Screen>.",
+                    IDC_STATIC,40,20,172,17
+    CONTROL         "&Use shortcut",IDC_HC_HOTKEY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    GROUPBOX        "High Contrast color scheme",IDC_HCS_GROUP_2,7,66,213,
+                    135
+    LTEXT           "Select an appearance scheme for High Contrast use:",
+                    IDC_STATIC,14,81,191,10
+    CONTROL         "&White on black",IDC_HC_WHITE_BLACK,"Button",
+                    BS_AUTORADIOBUTTON,14,96,63,10
+    CONTROL         "&Black on white",IDC_HC_BLACK_WHITE,"Button",
+                    BS_AUTORADIOBUTTON,14,109,64,10
+    CONTROL         "&Custom",IDC_HC_CUSTOM,"Button",BS_AUTORADIOBUTTON,14,
+                    122,38,10
+    COMBOBOX        IDC_HC_DEFAULTSCHEME,79,121,132,100,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,212,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,212,50,14
+END
+
+IDD_SERKEYSETTING DIALOGEX 0, 0, 227, 108
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for SerialKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Choose the port where you connect an alternative input device.",
+                    IDC_NO_HELP_1,7,11,203,19
+    LTEXT           "&Serial port:",IDC_STATIC,7,40,45,9
+    COMBOBOX        IDC_SK_PORT,7,51,157,100,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Baud rate:",IDC_STATIC,168,40,46,9
+    COMBOBOX        IDC_SK_BAUD,168,51,53,100,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,86,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,86,50,14
+END
+
+IDD_ADVCHARREPEAT DIALOGEX 0, 0, 227, 235
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Advanced Settings for FilterKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "RepeatKeys",IDC_ASFK_GROUP_1,7,7,213,125
+    LTEXT           "Override settings on the Keyboard control panel:",
+                    IDC_NO_HELP_1,14,20,201,11
+    CONTROL         "&No keyboard repeat",IDC_RK_NOREPEAT,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,14,32,78,13
+    CONTROL         "&Slow down keyboard repeat rates",IDC_RK_REPEAT,
+                    "Button",BS_AUTORADIOBUTTON,14,45,131,13
+    EDITTEXT        IDC_RK_DELAYTIME,74,60,20,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "seconds",IDC_RK_DELAYTIME_LBL,97,62,31,10
+    LTEXT           "Repeat &delay:",IDC_RK_DELAYRATE_LBL,26,62,46,10
+    LTEXT           "Short",IDC_STATIC,74,78,17,9
+    LTEXT           "Long",IDC_STATIC,196,78,18,9
+    CONTROL         "",IDC_RK_DELAYRATE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,94,75,99,18
+    EDITTEXT        IDC_RK_REPEATTIME,74,94,20,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "seconds",IDC_RK_REPEATTIME_LBL,97,96,31,10
+    LTEXT           "Repeat &rate:",IDC_RK_REPEATRATE_LBL,26,96,46,10
+    LTEXT           "Short",IDC_STATIC,74,113,17,9
+    LTEXT           "Long",IDC_STATIC,196,113,18,9
+    CONTROL         "",IDC_RK_REPEATRATE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,94,109,99,18
+    GROUPBOX        "SlowKeys",IDC_ASFK_GROUP_2,7,135,213,48
+    EDITTEXT        IDC_RK_WAITTIME,14,161,20,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "seconds",IDC_RK_WAITTIME_LBL,35,163,31,11
+    LTEXT           "&Keys must be held down for:",IDC_RK_ACCEPTRATE_LBL,14,
+                    148,137,10
+    LTEXT           "Short",IDC_STATIC,73,163,17,9
+    LTEXT           "Long",IDC_STATIC,196,163,18,9
+    CONTROL         "",IDC_RK_ACCEPTRATE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,94,159,99,18
+    LTEXT           "&Test area:",IDC_STATIC,7,194,35,10
+    EDITTEXT        IDC_RK_TESTBOX,42,191,178,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,116,212,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,212,50,14
+END
+
+IDD_FILTERSETTINGS DIALOGEX 0, 0, 227, 235
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for FilterKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Keyboard shortcut",IDC_FK_GROUP_1,7,7,213,56
+    ICON            IDI_KEYSHORT,IDC_STATIC,14,20,18,20
+    LTEXT           "The shortcut for FilterKeys is:  \nHold down <Right Shift> for eight seconds.",
+                    IDC_STATIC,40,20,163,17,NOT WS_GROUP
+    CONTROL         "&Use shortcut",IDC_FK_HOTKEY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,40,43,70,10
+    GROUPBOX        "Filter options",IDC_FK_GROUP_2,7,66,213,84
+    CONTROL         "Ign&ore repeated keystrokes",IDC_FK_BOUNCE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,14,79,113,10
+    CONTROL         "Ig&nore quick keystrokes and slow down the repeat rate",
+                    IDC_FK_REPEAT,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,14,96,119,22
+    PUSHBUTTON      "&Settings...",IDC_BK_SETTINGS,162,77,50,14,WS_GROUP
+    PUSHBUTTON      "S&ettings...",IDC_RK_SETTINGS,162,95,50,14,WS_GROUP
+    LTEXT           "&Click and type here to test FilterKey settings:",
+                    IDC_STATIC,14,119,165,10
+    EDITTEXT        IDC_FK_TESTBOX,14,130,198,14,ES_AUTOHSCROLL | WS_GROUP
+    GROUPBOX        "Notification ",IDC_FK_GROUP_3,7,154,213,44
+    CONTROL         "&Beep when keys pressed or accepted",IDC_FK_SOUND,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,167,138,9
+    CONTROL         "S&how FilterKey status on screen",IDC_FK_STATUS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,180,135,10
+    DEFPUSHBUTTON   "OK",IDOK,116,212,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,170,212,50,14
+END
+
+IDD_ADVKEYBOUNCE DIALOGEX 0, 0, 227, 108
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Advanced Settings for FilterKeys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Ignore keystrokes repeated faster than:",
+                    IDC_BK_TIME_LBL1,7,11,137,10
+    EDITTEXT        IDC_BK_TIME,7,26,20,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "seconds",IDC_BK_TIME_LBL2,30,29,31,10
+    LTEXT           "Short",IDC_STATIC,71,29,17,10
+    CONTROL         "",IDC_BK_BOUNCERATE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,93,26,99,18
+    LTEXT           "Long",IDC_STATIC,196,29,18,10
+    LTEXT           "&Test area:",IDC_STATIC,7,58,35,10
+    EDITTEXT        IDC_BK_TESTBOX,42,55,178,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,116,86,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,86,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACCESSIBILITY       "Accessibility"
+    IDS_ACCESS              "Accessibility Options"
+    IDS_ACCESSINFO          "Customizes accessibility features for your computer"
+    IDS_WINDOWED            "[None]"
+    IDS_WINDOWED1           "Flash active caption bar"
+    IDS_WINDOWED2           "Flash active window"
+    IDS_WINDOWED3           "Flash desktop"
+    IDS_TEXT                "[None]"
+    IDS_TEXT1               "Flash chars"
+    IDS_TEXT2               "Flash border"
+    IDS_TEXT3               "Flash display"
+    IDS_GRAPHICS            "[None]"
+    IDS_GRAPHICS1           "Flash screen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMPORT             "COM"
+    IDS_UNAVAIL_TITLE       "Feature Unavailable..."
+    IDS_UNAVAIL_TEXT        "The feature you are trying to activate is not available on this system;\nyou may need to install the standard Windows keyboard or mouse drivers."
+    IDS_BLACKWHITE_SCHEME   "High Contrast White (large)"
+    IDS_WHITEBLACK_SCHEME   "High Contrast Black (large)"
+    IDS_PROPERTY_TITLE      "Accessibility Options"
+    IDS_ACCSTAT_WINDOW_TITLE "Accessibility Status"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SAVE_DEFAULT_TITLE  "Default Settings"
+    IDS_SAVE_DEFAULT_TEXT   "Do you want to save the current settings as the default for new users and the login prompt?"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

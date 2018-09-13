@@ -1,0 +1,141 @@
+PRODUCT = F3
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES =  \
+    dllreg.cxx \
+    factory.cxx \
+    libmain.cxx \
+    hook.cxx
+
+# Windows DLL name:
+
+WDLL = mshtml
+DLL  = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+CPP_OBJS := ${CPP_OBJS:%.c=%.o}
+DLLOBJS = ${CPP_OBJS}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+INCLUDES=\
+    $(SITEINCLUDES) \
+    $(ROOT)/src/f3/include
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+
+## Override this by running cmake FULL_DEBUG=0
+FULL_DEBUG = 1
+
+ifeq (${COMPILE_OPTION},debug)
+DEBUG_LIBS = \
+	-lmshtmdbg \
+	-ldlaymisc
+endif
+
+NEW_LAYOUT_LIBS= \
+	-ltable  \
+	-llayout
+
+STATIC_LIBS= \
+	${DEBUG_LIBS} \
+	-lcoremisc \
+	-lothermisc \
+	-lsitemisc \
+	-lwrappers \
+	-lcdbase   \
+	-lcdutil   \
+	-lstyle    \
+	-ldlc      \
+	-lbase     \
+	-ldisplay  \
+	-lprint    \
+	-ltext     \
+	-lutil     \
+	-lbuiltin  \
+	-ldownload \
+	-ljpglib6a \
+	-lhtmldlg  \
+	-lole      \
+	-lmiscelem \
+	-lmiscsite \
+	-lmoniker  \
+	-lencode   \
+	-lproppage \
+	-ldl       \
+	-lhtmlapp  \
+	-lnile2std \
+	-lstd      \
+	-ldbind    \
+	-lcorepch  \
+	-lsitepch  \
+	-lotherpch \
+	-ldlaypch  \
+	-lcrt      \
+	-lview     \
+	${NEW_LAYOUT_LIBS} \
+	-lacc
+
+DYN_LIBS= \
+	-ladvapi32 \
+	-lole32    \
+	-lshlwapi  \
+	-lmsls3      
+	
+ifeq "${MWARCH}" "hp700"
+PROJECT_LIBS = \
+        ${STATIC_LIBS} \
+	${DYN_LIBS} \
+        -lmwsupl 
+else
+PROJECT_LIBS = \
+	${STATIC_LIBS} \
+	${DYN_LIBS} \
+	-luuid 
+endif
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+DLLMAIN = _DllMainStartup
+
+DIP_CFLAGS = \
+	-DDLL_SPECIFIC_OPERATOR_NEW
+
+ifeq "${MWARCH}" "hp700"
+PROJECT_DLLFLAGS := \
+        -Wl,-cforms3_ux10.map \
+        ${PROJECT_LIBS} -L/vobs/build/mw/lib-ux10_debug 
+else
+PROJECT_DLLFLAGS := \
+	-u ${DLLMAIN} \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS} -L/vobs/build/mw/lib-sunos5_debug
+endif
+
+KILL_EXTRA_VTBL = \
+	${O}/killvtbl.o 
+
+__cplusplus = true
+
+#  DLL-EXPORTS = forms3.def
+MAPFILE.sunos5 = forms3.map
+
+include $(MWHOME)/make.rules.simple

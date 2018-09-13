@@ -1,0 +1,225 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\0"
+    "#include ""version.h""\r\n"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_ITEMCONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Copy",                       IDC_ITEM_COPY
+        MENUITEM "&Extract",                    IDC_ITEM_EXTRACT
+    END
+END
+
+MENU_SFV MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "Lar&ge Icons",                IDC_VIEW_ICON
+            MENUITEM "S&mall Icons",                IDC_VIEW_SMALLICON
+            MENUITEM "&List",                       IDC_VIEW_LIST
+            MENUITEM "&Details",                    IDC_VIEW_DETAILS
+        END
+        MENUITEM SEPARATOR
+        POPUP "Arrange &Icons"
+        BEGIN
+            MENUITEM "&Auto Arrange",               IDC_ARRANGE_AUTO
+        END
+        MENUITEM "Lin&e up Icons",              IDC_ARRANGE_GRID
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Se&lect",                     IDC_SELECT
+    END
+END
+
+MENU_SFV_MAINMERGE MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               IDC_EDIT_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl+A",         IDC_EDIT_SELALL
+        MENUITEM "&Invert Selection",           IDC_EDIT_INVSEL
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Lar&ge Icons",                IDC_VIEW_ICON
+        MENUITEM "S&mall Icons",                IDC_VIEW_SMALLICON
+        MENUITEM "&List",                       IDC_VIEW_LIST
+        MENUITEM "&Details",                    IDC_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        POPUP "Arrange &Icons"
+        BEGIN
+            MENUITEM "&Auto Arrange",               IDC_ARRANGE_AUTO
+        END
+        MENUITEM "Lin&e up Icons",              IDC_ARRANGE_GRID
+    END
+END
+
+MENU_SFV_MAINMERGENF MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Select &All\tCtrl+A",         IDC_EDIT_SELALL
+        MENUITEM "&Invert Selection",           IDC_EDIT_INVSEL
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Lar&ge Icons",                IDC_VIEW_ICON
+        MENUITEM "S&mall Icons",                IDC_VIEW_SMALLICON
+        MENUITEM "&List",                       IDC_VIEW_LIST
+        MENUITEM "&Details",                    IDC_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        POPUP "Arrange &Icons"
+        BEGIN
+            MENUITEM "&Auto Arrange",               IDC_ARRANGE_AUTO
+        END
+        MENUITEM "Lin&e up Icons",              IDC_ARRANGE_GRID
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CABVIEW             ICON    DISCARDABLE     "cabview.ico"
+IDI_GENERIC             ICON    DISCARDABLE     "document.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_VIEW DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_LISTVIEW,"SysListView32",NOT WS_VISIBLE | 
+                    WS_TABSTOP,11,9,158,75
+    LISTBOX         IDC_LISTBOX,1,1,26,21,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | NOT WS_VISIBLE | NOT WS_BORDER
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDA_MAIN ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            IDC_EDIT_SELALL,        VIRTKEY, CONTROL, NOINVERT
+    "C",            IDC_EDIT_COPY,          VIRTKEY, CONTROL, NOINVERT
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CV_COL_NAME         "Name"
+    IDS_CV_COL_SIZE         "Size"
+    IDS_CV_COL_TYPE         "Type"
+    IDS_CV_COL_MODIFIED     "Date"
+    IDS_CV_COL_PATH         "Path"
+    IDS_EXTRACTBROWSE       "Choose a Folder in which to save the files."
+    IDS_NEXTCABBROWSE       "Select the folder containing the next cabinet file '%hs'."
+    IDS_SUREUNINST          "Are you sure you want to remove the Cabinet File Viewer from your computer?"
+    IDS_THISDLL             "Cabinet File Viewer"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NAME                "Name"
+    IDS_BYCOL_FMT           "by %s"
+    IDS_NEXTDISKBROWSE      "Select the folder containing the next cabinet file '%hs' from disk '%hs'."
+    IDS_MISSINGDLL          "The Cabinet File Viewer requires the missing file CABINET.DLL."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_VIEW_ICON           "Displays items by using large icons."
+    IDS_VIEW_SMALLICON      "Displays items by using small icons."
+    IDS_VIEW_LIST           "Displays items in a list."
+    IDS_VIEW_DETAILS        "Displays information about each item in the window."
+    IDS_EDIT_COPY           "Copies the selected items to the Clipboard.  Use Paste to put them in the new location."
+    IDS_EDIT_SELALL         "Selects all items in the window."
+    IDS_EDIT_INVSEL         "Reverses which items are selected and which are not."
+    IDS_BYCOL_HELP_FMT      "Sorts items in the window by %s."
+    IDS_ARRANGE_GRID        "Arranges icons in a grid."
+    IDS_ARRANGE_AUTO        "Arranges the icons automatically."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TT_VIEW_ICON        "Large Icons"
+    IDS_TT_VIEW_SMALLICON   "Small Icons"
+    IDS_TT_VIEW_LIST        "List"
+    IDS_TT_VIEW_DETAILS     "Details"
+    IDS_TT_EDIT_COPY        "Copy"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+

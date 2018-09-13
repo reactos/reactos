@@ -1,0 +1,52 @@
+TARGETNAME=evntwin
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+USE_MFCUNICODE=1
+
+LINKER_FLAGS=$(LINKER_FLAGS) /subsystem:windows
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc;
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_CXX=1
+
+SOURCES=\
+    eventrap.rc  \
+    busy.cpp     \
+    dlgsavep.cpp \
+    eventrap.cpp \
+    evntfind.cpp \
+    evntprop.cpp \
+    export.cpp   \
+    globals.cpp  \
+    layout.cpp   \
+    lcevents.cpp \
+    lcsource.cpp \
+    regkey.cpp   \
+    settings.cpp \
+    source.cpp   \
+    tcsource.cpp \
+    trapdlg.cpp  \
+    trapreg.cpp  \
+    utils.cpp    \
+    remote.cpp   \
+#    odlist.cpp
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib
+
+

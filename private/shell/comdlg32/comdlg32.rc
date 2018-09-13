@@ -1,0 +1,564 @@
+/*++
+
+Copyright (c) 1990-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    comdlg32.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the Win32 common
+    dialogs.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include <windows.h>
+#include <dlgs.h>
+#include "isz.h"
+#include "cdids.h"
+
+
+
+//
+//  Bitmaps.
+//
+
+bmpDirDrive    BITMAP  IMPURE filebmps.bmp
+
+BMFONT         BITMAP  font.bmp
+
+
+
+
+
+//
+//  Cursors.
+//
+
+
+
+//
+//  Fonts.
+//
+
+
+
+//
+//  Icons.
+//
+
+ICO_PORTRAIT    ICON    portrait.ico
+ICO_LANDSCAPE   ICON    landscap.ico
+
+ICO_P_NONE      ICON    p_none.ico
+ICO_L_NONE      ICON    l_none.ico
+ICO_P_HORIZ     ICON    p_horz.ico
+ICO_L_HORIZ     ICON    l_horz.ico
+ICO_P_VERT      ICON    p_vert.ico
+ICO_L_VERT      ICON    l_vert.ico
+ICO_COLLATE     ICON    collate.ico
+ICO_NO_COLLATE  ICON    nocoll8.ico
+ICO_P_PSSTAMP   ICON    psstampp.ico
+ICO_L_PSSTAMP   ICON    psstampl.ico
+
+ICO_PRINTER     ICON    printer.ico
+
+
+//
+//  Menus.
+//
+
+
+
+//
+//  Accelerators.
+//
+
+IDA_OPENFILE ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F4,          IDC_DROPDRIVLIST,     VIRTKEY, NOINVERT
+    VK_F5,          IDC_REFRESH,          VIRTKEY, NOINVERT
+END
+
+
+IDA_OPENFILEVIEW ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F4,          IDC_DROPDRIVLIST,     VIRTKEY, NOINVERT
+    VK_F5,          IDC_REFRESH,          VIRTKEY, NOINVERT
+    VK_BACK,        IDC_PREVIOUSFOLDER,   VIRTKEY, NOINVERT
+    VK_BACK,        IDC_BACK,             VIRTKEY, NOINVERT,CONTROL
+
+END
+
+
+IDA_PRINTFOLDER ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F5,          IDC_REFRESH,          VIRTKEY, NOINVERT
+END
+
+
+
+
+//
+//  Dialogs.
+//
+
+#include "fileopen.dlg"
+#include "prnsetup.dlg"
+#include "findtext.dlg"
+#include "color.dlg"
+#include "font.dlg"
+
+#include "printnew.dlg"
+
+
+
+DUMMYFILEOPENORD DIALOGEX DISCARDABLE  0, 0, 0, 0
+STYLE DS_CONTROL | (DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+FONTDLGMMAXES DIALOG 13, 54, 287, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Font:", stc1, 7, 7, 40, 9
+    COMBOBOX        cmb1, 7, 16, 98, 76,
+                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+                    CBS_OWNERDRAWFIXED
+
+    LTEXT           "Font st&yle:", stc2, 110, 7, 44, 9
+    COMBOBOX        cmb2, 110, 16, 74, 76,
+                    CBS_SIMPLE | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "&Size:", stc3, 189, 7, 30, 9
+    COMBOBOX        cmb3, 190, 16, 36, 76,
+                    CBS_SIMPLE | CBS_AUTOHSCROLL | CBS_DISABLENOSCROLL |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS |
+                    CBS_OWNERDRAWFIXED
+
+    GROUPBOX        "Effects", grp1, 7, 97, 98, 72, WS_GROUP
+    AUTOCHECKBOX    "Stri&keout", chx1, 13, 110, 49, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Underline", chx2, 13, 123, 51, 10
+
+    LTEXT           "&Color:", stc4, 13, 136, 30, 9
+    COMBOBOX        cmb4, 13, 146, 82, 100,
+                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL |
+                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "Sample", grp2, 110, 97, 116, 43, WS_GROUP
+    CTEXT           "AaBbYyZz", stc5, 118, 111, 100, 23,
+                    SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "", stc6, 7, 172, 219, 20, SS_NOPREFIX | NOT WS_GROUP
+
+    LTEXT           "Sc&ript:", stc7, 110, 147, 30, 9
+    COMBOBOX        cmb5, 110, 157, 116, 30, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS |
+                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK", IDOK, 231, 16, 45, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 231, 32, 45, 14, WS_GROUP
+    PUSHBUTTON      "&Apply", psh3, 231, 48, 45, 14, WS_GROUP
+    PUSHBUTTON      "&Help", pshHelp, 231, 64, 45, 14, WS_GROUP
+
+    GROUPBOX        "Axes:", grp3, 7, 200, 200, 210, WS_GROUP
+
+    SCROLLBAR       scr1,  70, 217, 100, 10, WS_TABSTOP | NOT WS_GROUP
+    SCROLLBAR       scr2,  70, 237, 100, 10, WS_TABSTOP | NOT WS_GROUP
+    SCROLLBAR       scr3,  70, 257, 100, 10, WS_TABSTOP | NOT WS_GROUP
+    SCROLLBAR       scr4,  70, 277, 100, 10, WS_TABSTOP | NOT WS_GROUP
+    SCROLLBAR       scr5,  70, 297, 100, 10, WS_TABSTOP | NOT WS_GROUP
+    SCROLLBAR       scr6,  70, 317, 100, 10, WS_TABSTOP | NOT WS_GROUP
+
+    RTEXT       "", stc11,  25, 217,  40, 10
+    RTEXT       "", stc12,  25, 237,  40, 10
+    RTEXT       "", stc13,  25, 257,  40, 10
+    RTEXT       "", stc14,  25, 277,  40, 10
+    RTEXT       "", stc15,  25, 297,  40, 10
+    RTEXT       "", stc16,  25, 317,  40, 10
+
+    EDITTEXT        edt1,  180, 217,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP
+    EDITTEXT        edt2,  180, 237,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP 
+    EDITTEXT        edt3,  180, 257,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP
+    EDITTEXT        edt4,  180, 277,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP
+    EDITTEXT        edt5,  180, 297,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP
+    EDITTEXT        edt6,  180, 317,  20, 10, ES_AUTOHSCROLL | ES_READONLY, WS_TABSTOP
+
+    LTEXT       "", stc18, 70, 207,  40, 10
+    LTEXT       "", stc19, 70, 227,  40, 10
+    LTEXT       "", stc20, 70, 247,  40, 10
+    LTEXT       "", stc21, 70, 267,  40, 10
+    LTEXT       "", stc22, 70, 287,  40, 10
+    LTEXT       "", stc23, 70, 307,  40, 10
+
+    RTEXT       "", stc25, 130, 207,  40, 10
+    RTEXT       "", stc26, 130, 227,  40, 10
+    RTEXT       "", stc27, 130, 247,  40, 10
+    RTEXT       "", stc28, 130, 267,  40, 10
+    RTEXT       "", stc29, 130, 287,  40, 10
+    RTEXT       "", stc31, 130, 307,  40, 10
+
+END
+
+
+
+
+//
+//  Strings.
+//
+
+STRINGTABLE
+BEGIN
+    MH_TOOLTIPBASE + IDC_PARENT         "Up One Level"
+    MH_TOOLTIPBASE + IDC_NEWFOLDER      "Create New Folder"
+    MH_TOOLTIPBASE + IDC_VIEWLIST       "List"
+    MH_TOOLTIPBASE + IDC_VIEWDETAILS    "Details"
+    MH_TOOLTIPBASE + IDC_BACK           "Go To Last Folder Visited"
+    MH_TOOLTIPBASE + IDC_VIEWMENU       "View Menu"
+END
+
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    iszOverwriteCaption         "File Exists"
+    iszOverwriteQuestion        "%s already exists.\nDo you want to replace it?"
+    iszDefExitCaption           "Exiting"
+    iszDefExitText              "Do you really want to exit?"
+
+    dlgFileOpen                 "FileOpen"
+    dlgMultiFileOpen            "MultiFileOpen"
+    dlgFileSave                 "FileSave"
+    dlgExitChanges              "ExitChanges"
+    dlgChooseColor              "ChooseColor"
+    dlgFindText                 "FindText"
+    dlgReplaceText              "ReplaceText"
+    dlgFormatChar               "FormatChar"
+    dlgFontInfo                 "FontInfo"
+    dlgPrintDlg                 "PrintDlg"
+    dlgPrintSetupDlg            "PrintSetupDlg"
+
+    iszFileSaveIn               "Save &in:"
+    iszFileOpenButton           "&Open"
+    iszFileSaveButton           "&Save"
+    iszPrintButton              "&Print"
+
+    
+    iszFileOpenTitle            "Open"
+    iszFileSaveTitle            "Save As"
+    iszSaveFileAsType           "Save file as &type:"
+    iszNetworkButtonText        "Network..."
+    iszNetworkButtonTextAccel   "Net&work..."
+    iszDriveDoesNotExist        "Drive %c: does not exist.\nPlease verify the appropriate drive was given."
+    iszNoDiskInDrive            "Windows is unable to read drive %c:. Make sure the drive door is closed and that the disk is formatted and free of errors."
+    iszNoDiskInCDRom            "Windows is unable to read the CD ROM in drive %c:.  Make sure the drive door is closed and that there is a valid data disk in the drive."
+    iszWrongDiskInDrive         "A different disk is expected in drive %c:.  Please insert the appropriate disk."
+    iszUnformatedDisk           "The disk in drive %c: is not formatted;\nPlease insert a formatted disk and try this operation again."
+    iszFileNotFound             "%s\nFile not found.\nPlease verify the correct file name was given."
+    iszPathNotFound             "%s\nPath does not exist.\nPlease verify the correct path was given."
+    iszInvalidFileName          "%s\nThe above file name is invalid."
+    iszSharingViolation         "%s\nThis file is already in use.\nSelect a new name or close the file in use by another application."
+    iszNetworkAccessDenied      "%s\nCannot access this file.\nCheck security privileges over the network drive."
+    iszReadOnly                 "%s\nThis file exists with Read Only attributes.\nPlease use a different file name."
+    iszPortName                 "%s\nThis file name is a reserved device name.\nPlease choose another name."
+    iszWriteProtection          "Disk %c: is write-protected.\nA file cannot be saved on a write-protected disk."
+    iszDiskFull                 "This directory of disk %c: is full.\nChoose another directory or disk."
+    iszNoFileHandles            "Cannot open %s.  Maximum number of files already open.\nClose a file or application in order to open this file."
+    iszCreatePrompt             "%s\nThis file does not exist.\n\nCreate the file?"
+    iszCreateNoModify           "%s\nThis file is on a network drive with create but no modify privileges.\n\nAsk the administrator of this network to change this condition."
+    iszSelectDriveTrouble       "Cannot select drive %c:."
+    iszNoNetButtonResponse      "Network service not responding."
+    iszFileAccessDenied         "%s\nYou do not have permission to open this file. \n\n See the owner of the file or an administrator to obtain permission."
+    iszDirAccessDenied          "%s\nYou do not have permission to open this directory. \n\n See the owner of the directory or an administrator to obtain permission."
+    iszTooManyFiles             "More than one file has the name '%s'.\n\nChoose one from the list of files."
+    iszSaveAsType               "Save as &type:"
+    iszSaveRestricted           "You cannot save in the folder you specified. Please choose another location."
+    iszNoSaveToURL              "You cannot save in the URL Location you specified. Please choose another location."
+    
+    //String for places bar
+    iszHistory                  "History"
+    iszMyDocs                   "My Documents"
+    iszDesktop                  "Desktop"
+    iszFavorites                "Favorites"
+    iszMyNetPlaces              "Network Places"
+
+    //String for Object File Open/Save as dialogs
+    iszObjectName               "Object &name:"
+    iszObjectType               "Objects of &type:"
+
+
+    //Color Dialog
+    iszBlack                    "Black"
+    iszDkRed                    "Maroon"
+    iszDkGreen                  "Green"
+    iszDkYellow                 "Olive"
+    iszDkBlue                   "Navy"
+    iszDkPurple                 "Purple"
+    iszDkAqua                   "Teal"
+    iszDkGrey                   "Gray"
+    iszLtGrey                   "Silver"
+    iszLtRed                    "Red"
+    iszLtGreen                  "Lime"
+    iszLtYellow                 "Yellow"
+    iszLtBlue                   "Blue"
+    iszLtPurple                 "Fuchsia"
+    iszLtAqua                   "Aqua"
+    iszWhite                    "White"
+
+    iszHighPrnQ                 "High"
+    iszMedPrnQ                  "Medium"
+    iszLowPrnQ                  "Low"
+    iszDraftPrnQ                "Draft"
+
+    iszPrinter                  "Printer:  "
+    iszSysPrn                   "System Printer ("
+    iszPrnOnPort                " on "
+    iszDefCurOn                 "(currently %s)"
+
+    iszPageRangeError           "This value is not within the page range.\nEnter a number between %u and %u."
+    iszFromToError              "The 'From' value cannot be greater than the 'To' value."
+    iszPageFromError            "The 'From' value cannot be empty and must be a positive value."
+    iszPageToError              "The 'To' value cannot be empty and must be a positive value."
+    iszBadMarginError           "The margins overlap or they are off the paper.\nEnter a different margin size."
+    iszCopiesZero               "The 'Copies' value cannot be empty and must be a positive value."
+    iszTooManyCopies            "This printer cannot support this many copies.\n Number of copies will be set to printer maximum of %u."
+    iszWarningTitle             "Printing Error"
+    iszNoPrnsInstalled          "Before you can print, you need to install a printer.\nTo do this, click Start, point to Settings, click Printers, and then double-click Add Printer."
+    iszPrnNotFound              "The printer could not be found."
+    iszMemoryError              "There is not enough memory for this operation."
+    iszGeneralWarning           "An error occurred during this operation."
+    iszUnknownDriver            "Unknown printer driver.\nPlease verify that a driver is installed on %s."
+    iszBadPageRange             "The page range is invalid.\nEnter numbers between %u and %u."
+    iszTooManyPageRanges        "You have entered too many page ranges.  You may enter a total of %u page ranges."
+    iszBadPageRangeSyntaxOld    "The syntax for the page range is invalid.\nEnter either a single page number or a single page range.  For example, 5-12."
+    iszBadPageRangeSyntaxNew    "The syntax for the page range is invalid.\nEnter page numbers and/or page ranges separated by commas.  For example, 1,3,5-12."
+    iszNoPrinters               "Before you can print, you need to install a printer.\nTo do this, either double-click the Add Printer icon or click the Find Printer... button located on the General tab of this dialog."
+    iszNoPrinterSelected        "Before you can print, you need to select a printer.\nIf you need to install a printer, either double-click the Add Printer icon or click the Find Printer... button located on the General tab of this dialog."
+    iszDefaultMenuText          "Print"
+    iszNoPrinterAccess          "You do not have permission to use the selected printer.  If you need access, contact your network administrator."
+
+    iszStatusReady              "Ready"
+
+    iszStatusPaused             "Paused; "
+    iszStatusError              "Error; "
+    iszStatusPendingDeletion    "Pending deletion; "
+    iszStatusPaperJam           "Paper jam; "
+    iszStatusPaperOut           "Paper out; "
+    iszStatusManualFeed         "Manual feed; "
+    iszStatusPaperProblem       "Paper problem; "
+    iszStatusOffline            "Offline; "
+    iszStatusIOActive           "I/O active; "
+    iszStatusBusy               "Busy; "
+    iszStatusPrinting           "Printing; "
+    iszStatusOutputBinFull      "Output bin full; "
+    iszStatusNotAvailable       "Not available; "
+    iszStatusWaiting            "Waiting; "
+    iszStatusProcessing         "Processing; "
+    iszStatusInitializing       "Initializing; "
+    iszStatusWarmingUp          "Warming up; "
+    iszStatusTonerLow           "Toner low; "
+    iszStatusNoToner            "No toner; "
+    iszStatusPagePunt           "Page punt; "
+    iszStatusUserIntervention   "User intervention; "
+    iszStatusOutOfMemory        "Out of memory; "
+    iszStatusDoorOpen           "Door open; "
+
+    iszStatusDocumentsWaiting   "%lu documents waiting"
+    iszStatusDefaultPrinter     "Default printer; "
+
+    //
+    //  Used only when more than 1 page.
+    //
+    iszPrintRangeAll            "&All %lu pages"
+
+    iszMarginsInches            "Margins (inches)"
+    iszMarginsMillimeters       "Margins (millimeters)"
+    iszInches                   """"
+    iszMillimeters              "mm"
+    iszDefaultSource            "Automatically Select"
+
+    iszGeneralPage              "General"
+    iszPrintCaption             "Print"
+
+    //
+    //  "Close" text for find/replace.
+    //
+    iszClose                    "Close"
+
+    iszSizeNumber               "Size must be a number."
+    iszSizeRange                "Size must be between %d and %d points."
+    iszSynth                    "This font style is imitated for the display. The closest matching style will be used for printing."
+    iszTrueType                 "This is a TrueType font. This same font will be used on both your printer and your screen."
+    iszPrinterFont              "This is a printer font. The closest matching Windows font will be used on your screen."
+#ifdef WINNT
+    iszTTOpenType               "This is an OpenType font. This same font will be used on both your printer and your screen."
+    iszPSOpenType               "This is an OpenType font. This same font will be used on both your printer and your screen."
+    iszType1                    "This is a PostScript font. This same font will be used on both your printer and your screen."
+#endif
+    iszGDIFont                  "This is a screen font. The closest matching printer font will be used for printing."
+
+    iszNoFontsTitle             "Fonts"
+    iszNoFontsMsg               "There are no fonts installed.\nOpen the Fonts folder from the Control Panel to install fonts."
+    iszNoFaceSel                "There is no font with that name.\nChoose a font from the list of fonts."
+    iszNoStyleSel               "This font is not available in that style.\nChoose a style from the list of styles."
+
+    //
+    //  iszRegular thru iszBoldItalic must be 31 characters or less.
+    //
+    iszRegular                  "Regular"
+    iszBold                     "Bold"
+    iszItalic                   "Italic"
+    iszBoldItalic               "Bold Italic"
+
+    iszNoScript                 "(none)"
+
+    #ifdef UNICODE
+      iszFontSample             L"AaBbYyZz"
+      iszFontSample + 1         L"AaBbYyZz"
+      iszFontSample + 2         L"Symbol"
+      iszFontSample + 77        L"AaBbYyZz"
+      iszFontSample + 177       L"AaBb\x05e0\x05e1\x05e9\x05ea"
+      iszFontSample + 178       L"AaBb\x0627\x0628\x062c\x062f\x0647\x0648\x0632"
+      iszFontSample + 186       L"AaBbYyZz"
+      iszFontSample + 204       L"AaBb\x0411\x0431\x0424\x0444"
+      iszFontSample + 238       L"AaBb\x00c1\x00e1\x00d4\x00f4"
+      iszFontSample + 161       L"AaBb\x0391\x03b1\x0392\x03b2"
+      iszFontSample + 162       L"AaBb\x011e\x011f\x015e\x015f"
+      iszFontSample + 163       L"AaBb\x01a0\x01a1\x01af\x01b0"
+      iszFontSample + 222       L"AaBb\x0e2d\x0e31\x0e01\x0e29\x0e23\x0e44\x0e17\x0e22"
+      iszFontSample + 255       L"AaBb¯Ò˝"
+
+      iszFontSample + 128       L"Aa\x3042\x3041\x30a2\x30a1\x4e9c\x5b87"
+      iszFontSample + 129       L"\xac00\xb098\xb2e4\x0041\x0061\x0042\x0062\x0059\x0079\x005a\x007a"
+      iszFontSample + 130       L"\xac00\xb098\xb2e4\x0041\x0061\x0042\x0062\x0059\x0079\x005a\x007a"
+      iszFontSample + 134       L"\x5fae\x8f6f\x4e2d\x6587\x8f6f\x4ef6"
+      iszFontSample + 136       L"\x4e2d\x6587\x5b57\x578b\x7bc4\x4f8b"
+      iszFontSample + 179       L"AaBb\x0639\x0645\x0646\x062e\x0631\x0648\x0643\x0645"
+    #else
+      iszFontSample             "AaBbYyZz"
+      iszFontSample + 1         "AaBbYyZz"
+      iszFontSample + 2         "Symbol"
+      iszFontSample + 77        "AaBbYyZz"
+      iszFontSample + 177       "AaBbÒ˘˙"
+      iszFontSample + 178       "AaBb«»ÃœÂÊ“"
+      iszFontSample + 186       "AaBbYyZz"
+      iszFontSample + 204       "AaBb¡·‘Ù"
+      iszFontSample + 238       "AaBb¡·‘Ù"
+      iszFontSample + 161       "AaBb¡·¬‚"
+      iszFontSample + 162       "AaBb–ﬁ˛"
+      iszFontSample + 163       "AaBb’ı›˝"
+      iszFontSample + 222       "AaBbÕ—°…√‰∑¬"
+      iszFontSample + 255       "AaBb¯Ò˝"
+
+      iszFontSample + 128       "AaÇ†ÇüÉAÉ@àüâF"
+      iszFontSample + 129       "∞°≥™¥ŸAaBbYyZz"
+      iszFontSample + 130       "àaêaîaAaBbYyZz"
+      iszFontSample + 134       "AaBbYyZz"
+      iszFontSample + 136       "§§§Â¶r´¨Ωd®“"
+      iszFontSample + 179       "AaBb⁄„‰Œ—Êﬂ„"
+    #endif
+END
+
+
+//Unicode Sample Strings
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    //0 Basic Latin 
+    //1 Latin-1 Supplement 
+    //2 Latin Extended-A 
+    //3 Latin Extended-B 
+    //4 IPA Extensions 
+    //5 Spacing Modifier Letters 
+    //6 Combining Diacritical Marks 
+    //7 Basic Greek 
+    //8 Greek Symbols and Coptic 
+    //9 Cyrillic 
+    //10 Armenian 
+    //11 Basic Hebrew 
+    //12 Hebrew Extended 
+    //13 Basic Arabic 
+    //14 Arabic Extended 
+    //15 Devanagari 
+    iszUnicode+15   L"\x092E\x093e\x0924\x093e"
+    //16 Bengali 
+    //17 Gurmukhi 
+    //18 Gujarati 
+    //19 Oriya 
+    //20 Tamil 
+     iszUnicode+20   L"\x0B85\x0BAE\x0BCD\x0BAE\x0BBE"
+    //21 Telugu 
+    //22 Kannada 
+    //23 Malayalam 
+    //24 Thai 
+    //25 Lao 
+    //26 Basic Georgian 
+    //27 Georgian Extended 
+    //28 Hangul Jamo 
+    //29 Latin Extended Additional 
+    //30 Greek Extended 
+    //31 General Punctuation 
+    //32 Subscripts and Superscripts 
+    //33 Currency Symbols 
+    //34 Combining Diacritical Marks for Symbols 
+    //35 Letter-like Symbols 
+    //36 Number Forms 
+    //37 Arrows 
+    //38 Mathematical Operators 
+    //39 Miscellaneous Technical 
+    //40 Control Pictures 
+    //41 Optical Character Recognition 
+    //42 Enclosed Alphanumerics 
+    //43 Box Drawing 
+    //44 Block Elements 
+    //45 Geometric Shapes 
+    //46 Miscellaneous Symbols 
+    //47 Dingbats 
+    //48 Chinese, Japanese, and Korean (CJK) Symbols and Punctuation 
+    //49 Hiragana 
+    //50 Katakana 
+    //51 Bopomofo 
+    //52 Hangul Compatibility Jamo 
+    //53 CJK Miscellaneous 
+    //54 Enclosed CJK 
+    //55 CJK Compatibility 
+    //56 Hangul 
+    //57 Reserved for Unicode Subranges 
+    //58 Reserved for Unicode Subranges 
+    //59 CJK Unified Ideographs 
+    //60 Private Use Area 
+    //61 CJK Compatibility Ideographs 
+    //62 Alphabetic Presentation Forms 
+    //63 Arabic Presentation Forms-A 
+    //64 Combining Half Marks 
+    //65 CJK Compatibility Forms 
+    //66 Small Form Variants 
+    //67 Arabic Presentation Forms-B 
+    //68 Halfwidth and Fullwidth Forms 
+    //69 Specials 
+    //70-127 Reserved for Unicode Subranges 
+
+END
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Common Dialogs DLL"
+#define VER_INTERNALNAME_STR        "comdlg32\0"
+#define VER_ORIGINALFILENAME_STR    "comdlg32.dll"
+
+#include "common.ver"
+

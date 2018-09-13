@@ -1,0 +1,15 @@
+NAME    Reversi
+
+EXETYPE WINDOWS
+STUB    'WINSTUB.EXE'
+
+CODE MOVEABLE
+DATA MULTIPLE MOVEABLE
+
+HEAPSIZE   512
+STACKSIZE  4096
+
+EXPORTS
+    ReversiWndProc @1
+    InverseMessage @2
+    AboutDlgProc   @3

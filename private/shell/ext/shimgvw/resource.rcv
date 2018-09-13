@@ -1,0 +1,14 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE             	VFT_DLL
+#define VER_FILESUBTYPE	            VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Shell Image View Control"
+#define VER_INTERNALNAME_STR        "ShImgVw.dll"
+#define VER_ORIGINALFILENAME_STR    "shimgvw.dll"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>
+

@@ -1,9 +1,0 @@
-#include <windef.h>
-#include <winuser.h>
-#include <dlgs.h>
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-#include <reactos/manifest_exe.rc>
-
-5 BITMAP "test.bmp"

@@ -1,0 +1,25 @@
+/****************************Module*Header******************************\
+* Module Name: MSCMS.RC
+*
+* Module Descripton: Resource file for MSCMS.DLL
+*
+* Warnings:
+*
+* Issues:
+*
+* Created:  18 March 1996
+* Author:   Srinivasan Chandraekar    [srinivac]
+*
+* Copyright (c) 1996, 1997  Microsoft Corporation
+\***********************************************************************/
+
+#include "mscms.h"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft Color Matching System DLL"
+#define VER_INTERNALNAME_STR        "MSCMS.DLL"
+
+#include "common.ver"

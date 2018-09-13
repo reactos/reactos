@@ -1,0 +1,17 @@
+LIBRARY         WS2HELP
+
+EXPORTS
+
+        WahOpenApcHelper
+        WahCloseApcHelper
+        WahOpenCurrentThread
+        WahCloseThread
+        WahQueueUserApc
+
+        WahCreateContextTable
+        WahDestroyContextTable
+        WahSetContext
+        WahGetContext
+        WahRemoveContext
+        WahRemoveContextEx
+

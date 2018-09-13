@@ -1,0 +1,51 @@
+#include <windows.h>
+
+#define VER_FILEVERSION_STR      "1,00\0"
+#define VER_FILEVERSION          1,0000,0000,0000
+
+#define VER_PRODUCTNAME_STR      "Microsoft Windows NT(TM)\0"
+#define VER_COMPANYNAME_STR      "Microsoft Corporation\0"
+#define VER_LEGALTRADEMARKS_STR  "Microsoft\256 is a registered trademark of Microsoft Corporation. Windows NT(TM) is a trademark of Microsoft Corporation\0"
+#define VER_LEGALCOPYRIGHT_STR   "Copyright \251 Microsoft Corp. 1992 - 1996\0"
+#define VER_PRODUCTVERSION_STR   "1.0\0"
+#define VER_PRODUCTVERSION       1,0000,0000,0000
+#define VER_COMMENT_STR          "Microsoft Windows NT(TM) Operating System\0"
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          0
+#define VER_FILEFLAGSMASK        VS_FFI_FILEFLAGSMASK
+#define VER_FILEFLAGS            0L
+#define VER_FILEOS               VOS_NT_WINDOWS32
+#define VER_FILEDESCRIPTION_STR  "Remote Clipboard Support Library\0"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEFLAGSMASK   VER_FILEFLAGSMASK
+FILEFLAGS       VER_FILEFLAGS
+FILEOS          VER_FILEOS
+FILETYPE        VER_FILETYPE
+FILESUBTYPE     VER_FILESUBTYPE
+{
+   BLOCK "StringFileInfo"
+   {
+   BLOCK "040904E4"
+      {
+      VALUE "CompanyName",     VER_COMPANYNAME_STR
+      VALUE "FileDescription", VER_FILEDESCRIPTION_STR
+      VALUE "FileVersion",     VER_FILEVERSION_STR
+      VALUE "InternalName",    "NCLIPPS.DLL\0"
+      VALUE "LegalCopyright",  VER_LEGALCOPYRIGHT_STR
+      VALUE "LegalTrademarks", VER_LEGALTRADEMARKS_STR
+      VALUE "ProductName",     VER_PRODUCTNAME_STR
+      VALUE "ProductVersion",  VER_PRODUCTVERSION_STR
+      VALUE "Comments",        VER_COMMENT_STR
+      }
+   }
+   BLOCK "VarFileInfo"
+   {
+      VALUE "Translation", 0x409, 1252
+   }
+}
+
+1  ICON    DISCARDABLE     "Clipbrd.ico"
+2  ICON    DISCARDABLE     "NetClip.ico"

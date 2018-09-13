@@ -1,0 +1,1 @@
+!include ..\daytona\makefile.inc

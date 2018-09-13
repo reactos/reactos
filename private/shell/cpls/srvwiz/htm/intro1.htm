@@ -1,0 +1,124 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>My First Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    var L_ServerChoiceErrorMsg_Text = "You must select an option.";
+    var L_DHCPWarning_Text = "Because one or more other servers already exist, you cannot configure this server as the only server on the network. For more information, contact your system administrator.";
+
+    function DoContinue()
+    {
+	
+		if((theForm.c1.checked==false)&&(theForm.c2.checked==false)&&(theForm.c3.checked==false))
+		{
+			alert(L_ServerChoiceErrorMsg_Text)
+		}
+		else
+		{ 
+	        if(theForm.c1.checked == true)
+	        {
+	            //actions when c1 is selected
+                if (srvwiz.CheckDHCPServer())
+                {
+                    alert(L_DHCPWarning_Text);
+                    srvwiz.Home = 8;
+	                self.location.href = "config.htm";
+                }
+                else
+                {
+                    srvwiz.Home = 2;
+	                self.location.href = "intro2.htm";
+                }
+	        } 
+	        else
+	        {
+	            //actions when c2 or c3 is selected
+	            
+	            srvwiz.Home = 8;
+	            self.location.href = "config.htm";
+	        }
+		}
+    }
+
+    function ValidateCheck(objCheckBox)
+    {
+        var strCheckName = objCheckBox.name;
+
+        if (strCheckName == "c1")
+        {
+            if(theForm.c2.checked == true)
+            {
+                theForm.c2.checked = false;
+            }  
+            
+            if(theForm.c3.checked == true)
+            {
+                theForm.c3.checked = false;
+            }        
+        }
+        else if (strCheckName == "c2")
+        {
+            if(theForm.c1.checked == true)
+            {
+                theForm.c1.checked = false;
+            }
+            
+            if(theForm.c3.checked == true)
+            {
+                theForm.c3.checked = false;
+            }
+        }
+        else if (strCheckName == "c3")
+        {
+            if(theForm.c1.checked == true)
+            {
+                theForm.c1.checked = false;
+            }
+            
+            if(theForm.c2.checked == true)
+            {
+                theForm.c2.checked = false;
+            }
+        }
+    }
+</SCRIPT>
+<STYLE>
+    Body
+    {
+        background-image:url("foo.gif");
+        background-repeat:no-repeat;
+        background-position:bottom right;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">You have successfully completed Windows 2000 Server Setup.
+            <P ID="para2">You can now configure this server. Select the first option if you have one server in your network. Select the second option if you have more than one server in your network.
+            <P ID="para3" STYLE="margin-top:6pt">If you prefer to configure your server later, select the third option.
+            <form NAME="theForm">
+                <TABLE cellpadding="0" cellspacing="0">
+                    <TR>
+                        <TD VALIGN="top" HEIGHT="28"><INPUT TYPE="RADIO" ID="onlyServer" NAME="c1" ONCLICK="ValidateCheck(this);" ALIGN="left"><label for="onlyServer" ACCESSKEY="o" ID="para6">This is the <U>o</U>nly server in my network.</label></TD>
+                    </TR>    
+                    <TR>
+                        <TD VALIGN="top" HEIGHT="28"><INPUT TYPE="RADIO" ID="moreServers" NAME="c2" ONCLICK="ValidateCheck(this);" ALIGN="left"><label for="moreServers" ACCESSKEY="m" ID="para7">One or <U>m</U>ore servers are already running in my network.</TD>
+                    </TR>
+                    <TR>
+                        <TD VALIGN="top"><INPUT TYPE="RADIO" ID="later" NAME="c3" ONCLICK="ValidateCheck(this);" ALIGN="left"><label for="later" ACCESSKEY="l" ID="para8">I will configure this server <u>l</u>ater.</TD>
+                    </TR>
+                </TABLE>
+            </form>
+        </TD>
+    </TR>
+</TABLE>
+<BUTTON TYPE="button" ACCESSKEY="n" ID="next" ONCLICK="DoContinue()" style="position:absolute; bottom:21px; right:37px"><U>N</U>ext</BUTTON>
+</BODY>
+</HTML>
+

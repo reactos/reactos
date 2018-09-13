@@ -1,1 +1,0 @@
-@ stdcall ServiceMain(long ptr)

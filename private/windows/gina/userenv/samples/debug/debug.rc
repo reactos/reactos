@@ -1,0 +1,28 @@
+#include "windows.h"
+#include "debug.h"
+
+DEBUG DIALOG 17, 26, 241, 117
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug User Environments"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Userenv Debug Output", -1, 10, 10, 160, 65
+    AUTORADIOBUTTON "None", IDD_NONE, 25, 25, 68, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Normal", IDD_NORMAL, 25, 40, 68, 10
+    AUTORADIOBUTTON "Verbose", IDD_VERBOSE, 25, 55, 68, 10
+    AUTOCHECKBOX    "Create Log File (C:\USERENV.LOG)", IDD_LOGFILE, 10, 87, 161, 10, WS_TABSTOP | WS_GROUP
+    AUTOCHECKBOX    "Debug Winlogon", IDD_WINLOGON, 10, 99, 161, 10, WS_TABSTOP | WS_GROUP
+    DEFPUSHBUTTON   "OK", IDOK, 182, 10, 52, 17, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 182, 34, 52, 17, WS_TABSTOP | WS_GROUP
+END
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Debug"
+#define VER_INTERNALNAME_STR        "debug\0"
+#define VER_ORIGINALFILENAME_STR    "debug.exe"
+
+#include "common.ver"

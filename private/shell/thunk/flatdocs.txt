@@ -1,0 +1,333 @@
+
+
+  		  How to write flat 32->16 thunks
+
+1. INTRO
+--------------------------------------------------------------------
+   
+
+   - What are flat 32->16 thunks?
+
+     THUNK.EXE is really three compilers that share a common parser.
+     This file describes the "flat thunk" mode, which generates 32->16
+     thunks that are mostly 32-bit (the other two modes are 16->32 thunks
+     and 32->16 thunks that are mostly 16-bit).  
+
+
+   - Why should I use flat thunks?
+
+     Flat thunks do most of their work in 32-bit mode. This means better
+     performance since they use a minimum number of selector loads
+     and replace far16 calls with near32 calls. Also, the
+     flat compiler is an aggressive optimizer: early results show
+     a 30-40% code size reduction over the 16-bit code generator.
+
+
+   - Then why use 16-bit 32->16 thunks at all?
+
+     Approximately 200 thunks in Chicago have hand-coded portions which
+     need to be ported by hand to 32-bit mode. For compatibility,
+     16-bit thunks will be with us for some time to come.
+
+
+   - Can I have both 16-bit and 32-bit thunks in my component?
+
+     Yes, but you will need two thunk scripts: one for the 16-bit thunks
+     and one for the 32-bit thunks. There is no way to mix types in a single
+     script.
+
+
+   - How does the thunk compiler work?
+
+     The thunk compiler's input is a "thunk script", which is a list
+     of C-style function prototypes and typedefs. It outputs a .asm file which
+     is really two .asm files in one. Assemble it with the "-DIS_16"
+     flag and you get a 16-bit .obj which you link into your 16-bit
+     component. Assemble it with the "-DIS_32" flag and you get a 32-bit
+     .obj which you link into your 32-bit component.
+
+     The 16-bit component contains a jump table containing the 16:16
+     address of each function named in your thunk scripts (these functions
+     must exist elsewhere as PASCAL functions in your 16-bit component).
+     The 32-bit half contains a STDCALL function for each thunk which
+     converts its parameters to 16-bit and then calls (through some
+     kernel32 magic) the 16-bit target named in the jump table. When
+     a 32-bit app invokes a thunked api, it calles these compiler-generated
+     STDCALL functions directly.
+
+     For example, the thunk declaration for the LineTo api looks like this:
+
+        typedef          int INT;
+        typedef unsigned int UINT;
+	typedef UINT         HANDLE;
+	typedef HANDLE       HDC;
+	
+	BOOL LineTo(HDC, INT, INT) =
+	BOOL LineTo(HDC, INT, INT) 
+	{
+        }
+
+     The first function "prototype" declares the form of the 16-bit target
+     and second declares the form the of the 32-bit target. As in most
+     thunks, the two prototypes are identical. Like the C compiler, the
+     thunk compiler interprets "int" as "short" in the 16-bit prototype
+     and "long" in the 32-bit prototype.
+
+     When this is fed through the thunk compiler, this is what pops out.
+     On the 16-bit half, there is a jump table:
+
+	 externDef LineTo:far16
+
+	 FT_GdiFThkTargetTable:
+		...
+		dw	offset LineTo 
+		dw	seg    LineTo
+
+     and LineTo is (say) entry #79. The 32-bit half contains the code:
+
+
+	; LineTo(16) = LineTo(32) {}
+	;
+	; dword ptr [ebp+8]:  param1
+	; dword ptr [ebp+12]:  param2
+	; dword ptr [ebp+16]:  param3
+	;
+	public LineTo@12
+	LineTo@12:
+		FAPILOG16	1377            ;DEBUG only -- log api call
+		push	ebp
+		mov	ebp,esp
+		sub	esp,40                  ;Work-space for kernel32
+		push	word ptr [ebp+8]	;param1: dword->word
+		push	word ptr [ebp+12]	;param2: dword->word
+		push	word ptr [ebp+16]	;param3: dword->word
+		mov	cl,79			;Thunk index
+		call	QT_Call16_ShortToLong
+		leave
+		ret	12
+
+     When a Win32 app calls "LineTo", it transfers directly to this
+     routine, which builds a 16-bit call frame and calls a local routine 
+     asking it to please invoke api #79 in the 16-bit jump table and 
+     sign-extend the return value (each component gets its own set
+     of QT_ routines which knows what jump table to use.)
+
+
+
+
+
+
+2. PROCEDURE FOR ADDING FLAT THUNKS 
+------------------------------------------------------------------------
+
+     1. Write a thunk script containing thunk declarations and typedef's
+        as above. core\thunk\gdifthk.thk and core\thunk\usrfthk.thk are
+        good examples to start from. Put the lines:
+
+		enablemapdirect3216 = true;
+		flatthunks = true;
+
+        at the start of your script. This tells the compiler you intend
+	to write 32->16 thunks and to generate 32-bit code.
+
+        The naming convention for flat thunk scripts is FooFThk.thk where
+	"Foo" identifies your component. If you keep your script in
+	the core\thunk directory, please follow	this convention.
+
+
+
+     2. Compile your thunk script:
+
+            $(TNT) $(THUNK) -ynTb -t FooFThk FooFThk.thk FooFThk.asm
+
+            $(TNT) = dev\tools\c\bin\tnt.exe
+	    $(THUNKCOM) = dev\tools\binr\thunk.exe
+
+	The "-t FooFThk" provides a string which the thunk compiler uses
+	to individualize identifier names. By convention, use the
+	stem of your thunk script filename.
+
+        For debug builds, eliminate the "-b" flag.
+
+	The makefile in core\thunk has all this set up so it's easiest
+	to check your thunk script there.
+
+
+
+
+     3. Create a empty header file "FooFThk.inc". The 32-bit half of the *.asm
+	file includes this header. This is where you put special-case 
+	code for your thunks.
+
+
+
+
+     4. Link the 16-bit half of FooFThk.asm into your 16-bit component. 
+        Pass these flags to the assembler:
+	
+	   -DIS_16
+
+        Add the export:
+
+	    FT_FOOFTHKTHKCONNECTIONDATA
+ 
+	to your *.def file and mark it internal. The 32-bit half 
+	dynalinks to this symbol to access the 16-bit jump table.
+
+
+
+
+
+     5. Link the 32-bit half of FooFThk.asm into your 32-bit component. 
+        Pass these flags to the assembler:
+	
+	   -DIS_32
+
+	Core\thunk\fltthk.inc and FooFThk.inc must be in the
+	include path.
+
+        Do not pass the -DFT_DEFINEFTCOMMONROUTINES flag to activate
+	the "ifdef"'d part of the .asm file. The "ifdef'd" part
+	contains common support code that's to be linked into kernel32
+	only. Including it in another module wastes code.
+
+
+
+
+     6. In your DLL initialization procedure, execute the following
+        for each PROCESS_ATTACH call:
+
+		FT_FooFThkConnectToFlatThkPeer	PROTO near 
+						pszDll16:dword, 
+						pszDll32:dword
+
+		pszDll16	db  'foo16.dll',0  ;name of your 16-bit dll
+		pszDll32	db  'foo32.dll',0  ;name of your 32-bit dll
+
+		...
+
+
+
+		invoke	FT_FooFThkConnectToFlatThkPeer, 
+			offset pszDll16, 
+			offset pszDll32
+		or      eax,eax
+		jz      failed
+		; success
+
+        This initializes the flat thunks. The call executes a loadlibrary
+	and getprocess address on the 16-bit module. The init routine
+	itself is generated by the thunk compiler in the 32-bit half
+	of the .asm file.
+
+
+
+     7. Link your 32-bit module with dev\lib\kernel32.lib if you're
+        not doing so already. The thunk code needs the import records
+	for the support routines in kernel32.
+
+
+
+     8. Build the components and test. Under debug, you
+        can get a debug-port message for each flat thunk by
+	setting the "fapilog16" variable in win32c.dll to 1.
+	The "[F]" before the api name tells you that it's a flat thunk.
+
+
+
+
+3. WHAT'S IN AND OUT FOR FLAT THUNKS
+-------------------------------------------------------------------------
+
+     The flat code generator supports:
+
+        - Structures passed by value or reference.
+	- Structures within structures.
+	- Pointers within structures, provided that the object
+	  pointed to doesn't require repacking. The object can be
+	  another structure.
+	- Arrays of scalars embedded in structures.
+	- The "input", "output" and "inout" qualifiers for pointer 
+	  arguments. Default is "input".
+	- "passifhinull" for pointer arguments.
+	- The "hinstance" primitive type (for mapping instance handles)
+	- "passifnull" for hinstances
+	- "structsize" for integer structure fields
+
+	- Returning pointers provided that the object pointed to requires
+	  no repacking. The object can be a structure.
+	- The "voidtotrue" and "voidtofalse" qualifiers.
+
+
+     Not supported:
+        - Arrays of pointers or arrays of structures.
+	- The "deleted" qualifier.
+	- The "byname" qualifier
+	- The "maptoretval" semantic.
+	- The "sizeof" and "countof" semantics.
+	- The "localheap" semantic.
+	- The "reverserc" semantic.
+	- The "callback" semantic.
+	- "body = special", "raw pack/unpack", "push", "special".
+	  No hand-coding for flat thunks is allowed. Use wrappers
+	  instead to thunk complex routines.
+
+
+
+
+4. SPECIAL-CASING A THUNK BODY
+---------------------------------------------------------------------------
+**** HAND-CODING FOR THUNK BODIES IS BEING PHASED OUT. USE
+     WRAPPERS TO THUNK COMPLEX API. SEE ATSUSHIK IF YOU NEED HELP
+     ON THIS.
+****
+
+
+
+
+13. APPENDIX I: 
+------------------------------------------------------------------------------
+    NEW for the flat code generator:
+    Revision 1: STRUCTSIZE and HINSTANCES
+
+
+  Structure size fields:
+     You can now thunk those fields that contain the size of its 
+     containing structure. Just put the "structsize" keyword after
+     the field name, like this:
+
+            typedef struct tagFOO {
+                DWORD cbSize   structsize;
+                LPSTR this;
+                LPSTR that;
+            } FOO;
+
+     The compiler will insert the 16-bit structure size when packing in,
+     and the 32-bit structure size when packing out. You can mark
+     any integral type field as "structsize", including UINT.
+
+
+  HInstance:
+     There's a new primitive data type "hinstance" (lowercase). I'll
+     add a typedef for HINSTANCE (uppercase) as soon as I've cleaned out
+     the old usage of HINSTANCE.
+
+     "hinstance" maps to a 32-bit value for the 32-bit side and a 16-bit
+     value for the 16-bit side. Hinstances can appear anywhere an integer
+     can (except as the return value type). 
+
+     NULL gets mapped to the current hinstance by default. You can make
+     NULL map to NULL instead by adding the "passifnull" qualifier.
+     If the hinstance is a structure field, add the "passifnull" qualifier
+     as you would "structsize". If it's a parameter, put
+
+     paramname = passifnull;
+
+     inside the curly braces.
+
+     Everyone is reminded that the 16-bit "hinstance" for a 32-bit app is
+     really the hmodule. This works because most api that ask for hinstances
+     really want hmodules.
+
+      
+

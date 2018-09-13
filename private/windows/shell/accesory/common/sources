@@ -1,0 +1,29 @@
+MAJORCOMP=shell
+MINORCOMP=accesories
+
+TARGETNAME=common
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.
+
+C_DEFINES=-DWIN32
+
+SOURCES=datein.c        \
+        dateinit.c      \
+        datelini.c      \
+        dateout.c       \
+        dateoutl.c      \
+        help.c          \
+        ll.c            \
+        message.c
+
+UMTYPE=windows
+UMENTRY=winmain
+UMTEST=calc
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+       obj\*\common.lib
+

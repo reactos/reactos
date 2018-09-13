@@ -1,0 +1,29 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=drawdib
+TARGETPATH=..\lib
+TARGETTYPE=LIBRARY
+UMTYPE=windows
+
+C_DEFINES=-DWIN32 -DUNICODE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=\nt\public\sdk\lib\*\user32.lib    \
+           \nt\public\sdk\lib\*\libc.lib      \
+           \nt\public\sdk\lib\*\kernel32.lib  \
+           \nt\public\sdk\lib\*\gdi32.lib     \
+           \nt\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\inc;\nt\public\sdk\inc;\nt\public\sdk\inc\crt
+
+SOURCES= dith775.c  \
+         dither.c   \
+         drawdib.c  \
+         profdisp.c \
+         stretchc.c

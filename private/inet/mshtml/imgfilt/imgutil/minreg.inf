@@ -1,0 +1,35 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Unreg]
+DelReg=ImgUtil.Reg
+
+[Reg]
+AddReg=ImgUtil.Reg
+
+[ImgUtil.Reg]
+HKCR,CLSID\%CLSID_CoSniffStream%,,,"CoSniffStream Class"
+HKCR,CLSID\%CLSID_CoSniffStream%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CoSniffStream%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoSniffStream%\ProgID,,,"ImgUtil.CoSniffStream.1"
+
+HKCR,ImgUtil.CoSniffStream,,,"CoSniffStream Class"
+HKCR,ImgUtil.CoSniffStream\CLSID,,,%CLSID_CoSniffStream%
+HKCR,ImgUtil.CoSniffStream.1,,,"CoSniffStream Class"
+HKCR,ImgUtil.CoSniffStream.1\CLSID,,,%CLSID_CoSniffStream%
+
+HKCR,CLSID\%CLSID_CoMapMIMEToCLSID%,,,"CoMapMIMEToCLSID Class"
+HKCR,CLSID\%CLSID_CoMapMIMEToCLSID%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CoMapMIMEToCLSID%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoMapMIMEToCLSID%\ProgID,,,"ImgUtil.CoMapMIMEToCLSID.1"
+
+HKCR,ImgUtil.CoMapMIMEToCLSID,,,"CoMapMIMEToCLSID Class"
+HKCR,ImgUtil.CoMapMIMEToCLSID\CLSID,,,%CLSID_CoMapMIMEToCLSID%
+HKCR,ImgUtil.CoMapMIMEToCLSID.1,,,"CoMapMIMEToCLSID Class"
+HKCR,ImgUtil.CoMapMIMEToCLSID.1\CLSID,,,%CLSID_CoMapMIMEToCLSID%
+
+[Strings]
+CLSID_CoSniffStream={6A01FDA0-30DF-11d0-B724-00AA006C1A01}
+CLSID_CoMapMIMEToCLSID={30C3B080-30FB-11d0-B724-00AA006C1A01}
+
+[End]

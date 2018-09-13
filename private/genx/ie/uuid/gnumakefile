@@ -1,0 +1,119 @@
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/razzle.template
+
+IID_OBJ_DIR = obj/unix/${MWOS}
+VPATH = ${IID_OBJ_DIR}
+
+UNIX_SOURCES = \
+	unixguids.cxx
+
+SOURCES = \
+      ${UNIX_SOURCES} \
+      activaut_i.c \
+      activdbg_i.c \
+      activscp_i.c \
+      chanmgr_i.c \
+      comcat_i.c   \
+      dimm_i.c     \
+      dispex_i.c   \
+      docobj_i.c   \
+      exdisp_i.c   \
+      shldisp_i.c   \
+      guids.c      \
+      hlink_i.c    \
+      htiface_i.c  \
+      htiframe_i.c \
+      htmlfilter_i.c \
+      iextag_i.c   \
+      imgutil_i.c  \
+      interned_i.c \
+      mimeinfo_i.c \
+      mlang_i.c    \
+      mobsync_i.c \
+      mobsyncp_i.c \
+      msieftp_i.c  \
+      mshtmhst_i.c \
+      mshtml_i.c   \
+      msxml_i.c    \
+      objsafe_i.c  \
+      ocmm_i.c     \
+      optary_i.c   \
+      opsprof_i.c  \
+      perhist_i.c  \
+      prgsnk_i.c   \
+      disptree_i.c   \
+      procdm_i.c   \
+      servprov_i.c \
+      simpdata_i.c \
+      subsmgr_i.c  \
+      urlhist_i.c  \
+      safeocx_i.c  \
+      shappmgr_i.c \
+      urlmon_i.c   \
+      urltrack_i.c \
+      emptyvc_i.c  \
+      vervec_i.c   \
+      vrsscan_i.c  \
+      webcheck_i.c \
+      dbgprop_i.c  \
+      propbag2_i.c \
+      sensevts_i.c \
+      recalc_i.c \
+      dwnnot_i.c \
+      xmlparser_i.c 
+
+      
+WDLL	= uuid
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+CPP_OBJS := ${CPP_OBJS:%.c=%.o}
+DLLOBJS = ${CPP_OBJS}
+SRCS = ${SOURCES}
+
+PROJECT_CFLAGS = -Iunix
+## Comment out some duplicate symbols to allow linking on hp
+ifeq (${MWOS}, ux10)
+all: hp_fix 
+hp_fix: ${CPP_OBJS%.c} 
+	chmod u+w obj/unix/ux10/mshtml_i.c
+	chmod u+w obj/unix/ux10/interned_i.c
+	if0argument IID_IActiveIMMApp < obj/unix/ux10/mshtml_i.c > obj/unix/ux10/mshtml_i.c2
+	mv obj/unix/ux10/mshtml_i.c2 obj/unix/ux10/mshtml_i.c
+	if0argument IID_IElementBehavior < obj/unix/ux10/interned_i.c > obj/unix/ux10/interned_i.c2
+	if0argument IID_IElementBehaviorFactory < obj/unix/ux10/interned_i.c2 > obj/unix/ux10/interned_i.c
+	rm obj/unix/ux10/interned_i.c2
+	chmod u-w obj/unix/ux10/mshtml_i.c
+	chmod u-w obj/unix/ux10/interned_i.c
+endif
+
+ifeq (${MWOS}, sunos5)
+    PROJECT_DLLFLAGS = -z muldefs
+endif
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+## install it into Mainwin tree for Mainwin components to find it.
+ifndef COMPILE_OPTION
+COMPILE_OPTION = debug
+endif
+ 
+RUN.dir := ${MWHOME}/lib-${MWCONFIG_NAME}_${COMPILE_OPTION}
+
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+MAINWIN_LIBS_ONLY := -L${MWLIBDIR} -lmw${MWTECHNO}

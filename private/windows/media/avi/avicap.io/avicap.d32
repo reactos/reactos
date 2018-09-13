@@ -1,0 +1,14 @@
+;
+; NT version of AVICAP32.DEF
+;
+LIBRARY   AVICAP32
+HEAPSIZE  4096
+EXPORTS
+          capCreateCaptureWindowW    ;@2
+          capGetDriverDescriptionW   ;@3
+          capCreateCaptureWindowA    ;@4
+          capGetDriverDescriptionA   ;@5
+          videoThunk32               ;@6
+          AppCleanup
+
+

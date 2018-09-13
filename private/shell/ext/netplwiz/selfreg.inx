@@ -1,0 +1,80 @@
+;
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;  Section Name Notations:
+;       A_*     - add reg section
+;       D_*     - del reg section
+;       AD_*    - add/del reg section
+;
+;  RegItems with %11% or %25% are substituted on NT with 
+;  %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!
+;  The flag 131072 (0x20000) will make the item be of type
+;  REG_EXPAND_SZ.
+;
+;  Any entries that go into the registry that contain 
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+;
+
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+AddReg=RegAll
+
+[RegDllWorkstation]
+AddReg=RegWorkstation
+
+[UnregDll]
+DelReg=UnRegAll
+
+[RegAll]
+; Register the User Prop Pages shell extension COM object
+HKCR,"CLSID\%CLSID_UserPropertyPages%",,,"%DESC_UsersPropertyPages%"
+HKCR,"CLSID\%CLSID_UserPropertyPages%\InProcServer32",,%REGEXSZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_UserPropertyPages%\InProcServer32","ThreadingModel",,"Apartment"
+
+; Register Add Network Places regitem
+HKCR,"CLSID\%CLSID_AddNetPlace%",,,"%DESC_AddNetworkPlaces%"
+HKCR,"CLSID\%CLSID_AddNetPlace%","InfoTip",,"%IT_AddNetworkPlaces%"
+HKCR,"CLSID\%CLSID_AddNetPlace%\DefaultIcon",,%REGEXSZ%,"%_MOD_PATH%,-107"
+HKCR,"CLSID\%CLSID_AddNetPlace%\ShellFolder",Attributes,%REGDW%,0x00000000
+HKCR,"CLSID\%CLSID_AddNetPlace%\Shell\Open\Command",,%REGEXSZ%,"rundll32 %_SYS_MOD_PATH%,AddNetPlaceRunDll"
+HKLM,"%PATH_EXPLORER%\NetworkNeighborhood\NameSpace\%CLSID_AddNetPlace%",,,"%CLSID_AddNetPlace%"
+HKLM,"%PATH_EXPLORER%\NetworkNeighborhood\NameSpace\%CLSID_AddNetPlace%","SuppressionPolicy",%REGDW%,0x08000000 ; REST_NONETCONNECTDISCONNECT
+
+[RegWorkstation]
+; Register the Users control panel applet regitem
+HKCR,"CLSID\%CLSID_UsersAndPasswords%",,,"%DESC_UsersAndPasswords%"
+HKCR,"CLSID\%CLSID_UsersAndPasswords%","InfoTip",,"%IT_UsersAndPasswords%"
+HKCR,"CLSID\%CLSID_UsersAndPasswords%\ShellFolder",Attributes,%REGDW%,0x00000000
+HKCR,"CLSID\%CLSID_UsersAndPasswords%\DefaultIcon",,%REGEXSZ%,"%_SYS_MOD_PATH%,-102"
+HKCR,"CLSID\%CLSID_UsersAndPasswords%\Shell\Open\Command",,%REGEXSZ%,"rundll32.exe %_SYS_MOD_PATH%,UsersRunDll"
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_UsersAndPasswords%",,,"%CLSID_UsersAndPasswords%"
+
+[UnRegAll]
+HKCR,"CLSID\%CLSID_UsersAndPasswords%"
+HKCR,"CLSID\%CLSID_UserPropertyPages%"
+HKCR,"CLSID\%CLSID_AddNetPlace%"
+HKLM,"%PATH_EXPLORER%\ControlPanel\NameSpace\%CLSID_UsersAndPasswords%"
+HKLM,"%PATH_EXPLORER%\NetworkNeighborhood\NameSpace\%CLSID_AddNetPlace%"
+
+[Strings]
+PATH_EXPLORER="Software\Microsoft\Windows\CurrentVersion\Explorer"
+CLSID_UserPropertyPages="{D707877E-4D9C-11d2-8784-F6E920524153}"
+CLSID_UsersAndPasswords="{7A9D77BD-5403-11d2-8785-2E0420524153}"
+CLSID_AddNetPlace="{D4480A50-BA28-11d1-8E75-00C04FA31A86}"
+REGEXSZ=0x00020000
+REGDW=0x00010001
+
+; !!!!Localisable strings!!!!
+DESC_AddNetworkPlaces="Add Network Place"
+DESC_UsersAndPasswords="Users and Passwords"
+DESC_UsersPropertyPages="User Property Pages"
+IT_UsersAndPasswords="Manages users and passwords for this computer"
+IT_AddNetworkPlaces="Connects to shared folders, Web folders, and FTP sites."

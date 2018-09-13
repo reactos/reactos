@@ -1,0 +1,137 @@
+<HTML>
+<HEAD>
+	<TITLE>Protect Your Computer with Security Zones</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+function doSwap(num, img){
+	if (num == CurBull){
+	
+	} else {
+		if (CurBull == 1){
+			list1.style.color = "#0099FF";
+			B1.style.display = "none";
+		}
+		else if (CurBull == 2){
+			list2.style.color = "#0099FF";
+			B2.style.display = "none";
+		}
+		else if (CurBull == 0){
+			textarea.style.display = "block";
+		}
+		
+		if (num == 1) {
+			list1.style.color = "#000000";
+			B1.style.display = "block";
+		}
+		else if (num == 2){
+			list2.style.color = "#000000";
+			B2.style.display = "block";
+		}
+
+		document.images("GIF1").setAttribute("src", img);
+		CurBull = num;
+		doRule(textarea);
+	}
+
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Protect Your Computer with Security Zones
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/sdefault.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+Internet Explorer 4.0 helps protect your computer by dividing Web sites into areas of trust, called zones. You can assign specific Web sites to the right zone with the appropriate security option settings. For restricted sites, your security settings are high, requiring approval every time you open a file or run a program from the Internet. For trusted sites or your secure local intranet (such as your company's internal network), your security settings can safely be set low.
+<br><br>
+Click a feature to learn more about it.
+<BR><BR>
+<SPAN ID="list1" CLASS="listitem" onClick="doSwap(1, 'res://ie4tour.dll/2/zones.bmp')">
+Zones</SPAN><BR>
+<SPAN ID="list2" CLASS="listitem" onClick="doSwap(2, 'res://ie4tour.dll/2/levels.bmp')">
+Security Level</SPAN><BR>
+<BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText">
+There are four different zones to choose from. For the Trusted Sites,  Restricted Sites, and Local Intranet zones, click <B>Add Sites</B> to add the addresses for specific Web sites to that zone.
+Then, when you browse a site assigned to the zone, the security options for that zone will be applied.
+</SPAN>
+
+<SPAN ID="B2" CLASS="CalloutText">
+Once you select a zone, you can choose which security level you want for it.
+</SPAN>
+
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+<IMG SRC="res://ie4tour.dll/2/levels.bmp" WIDTH=160 HEIGHT=159 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/zones.bmp" WIDTH=160 HEIGHT=239 BORDER=0 ALT="">
+</DIV>
+
+</BODY>
+</HTML>

@@ -1,0 +1,929 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "commctrl.h"
+#include "powercfg.rcv"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "pwrresid.h"
+#include "powercfp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""powercfg.rcv""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""pwrresid.h""\r\n"
+    "#include ""powercfp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_POWERSCHEME DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Power Schemes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PWRMNG,IDI_PWRMNG,7,7,21,20
+    LTEXT           "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.",
+                    IDC_NO_HELP_0,39,7,206,28
+    GROUPBOX        "P&ower schemes",IDC_POWERSCHEMESTEXT,7,38,238,52
+    COMBOBOX        IDC_SCHEMECOMBO,14,49,224,92,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Save As...",IDC_SAVEAS,134,69,50,14
+    PUSHBUTTON      "&Delete",IDC_DELETE,188,69,50,14
+    GROUPBOX        "Unknown",IDC_SETTINGSFOR,7,97,238,113
+    LTEXT           "When computer is:",IDC_WHENCOMPUTERIS,14,111,63,8
+    ICON            IDI_PLUG,IDI_PLUG,87,106,21,20
+    LTEXT           "Plugged in",IDC_PLUGGEDIN,113,111,34,8
+    ICON            IDI_BATTERY,IDI_BATTERY,161,106,21,20
+    LTEXT           "Running on batteries",IDC_RUNNINGONBAT,184,108,40,20
+    LTEXT           "Turn off &monitor:",IDC_TURNOFFMONITOR,14,131,69,8
+    COMBOBOX        IDC_MONITORACCOMBO,87,129,72,155,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MONITORDCCOMBO,166,129,72,154,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Turn off hard d&isks:",IDC_TURNOFFHARDDISKS,14,149,69,8
+    COMBOBOX        IDC_DISKACCOMBO,87,147,72,165,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_DISKDCCOMBO,166,147,72,164,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "System s&tandby:",IDC_GOONSTANDBY,14,175,69,8
+    COMBOBOX        IDC_STANDBYACCOMBO,87,173,72,170,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_STANDBYDCCOMBO,166,173,72,175,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "System &hibernates:",IDC_SYSTEMHIBERNATES,14,193,69,8
+    COMBOBOX        IDC_HIBERACCOMBO,87,191,72,165,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_HIBERDCCOMBO,166,191,72,164,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_NO_HELP_7,"Static",SS_BLACKRECT | SS_SUNKEN,14,
+                    166,224,1
+END
+
+IDD_POWERSCHEME_NOBAT DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Power Schemes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PWRMNG,IDI_PWRMNG,7,7,21,20
+    LTEXT           "Select the power scheme with the most appropriate settings for this computer. Note that changing the settings below will modify the selected scheme.",
+                    IDC_NO_HELP_0,39,7,206,28
+    GROUPBOX        "P&ower schemes",IDC_POWERSCHEMESTEXT,7,38,238,54
+    COMBOBOX        IDC_SCHEMECOMBO,14,50,224,92,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Save As...",IDC_SAVEAS,134,70,50,14
+    PUSHBUTTON      "&Delete",IDC_DELETE,188,70,50,14
+    GROUPBOX        "Unknown",IDC_SETTINGSFOR,7,96,238,98
+    LTEXT           "Turn off &monitor:",IDC_TURNOFFMONITOR,14,111,70,8
+    COMBOBOX        IDC_MONITORACCOMBO,91,108,147,171,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Turn off hard d&isks:",IDC_TURNOFFHARDDISKS,14,129,70,8
+    COMBOBOX        IDC_DISKACCOMBO,91,126,147,165,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "System s&tandby:",IDC_GOONSTANDBY,14,158,70,8
+    COMBOBOX        IDC_STANDBYACCOMBO,91,155,147,190,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "System &hibernates:",IDC_SYSTEMHIBERNATES,14,176,70,8
+    COMBOBOX        IDC_HIBERACCOMBO,91,173,147,165,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_NO_HELP_7,"Static",SS_BLACKRECT | SS_SUNKEN,14,
+                    146,224,1
+END
+
+IDD_BATMETERCFG DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Power Meter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Show details for each &battery.",IDC_ENABLEMULTI,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,7,7,120,8
+    GROUPBOX        "Power status",IDC_POWERSTATUSGROUPBOX,7,20,238,190
+    LTEXT           "",IDC_STATIC_FRAME_BATMETER,11,29,229,178,NOT 
+                    WS_VISIBLE
+END
+
+IDD_ALARMPOLICY DIALOGEX 0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Alarms"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Low battery alarm",IDC_POWERCFGGROUPBOX3,7,7,238,96
+    CONTROL         "Activate &low battery alarm when power level reaches:",
+                    IDC_LOBATALARMENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,19,195,10
+    LTEXT           "unknown",IDC_LOWALARMLEVEL,207,20,31,8,0,WS_EX_RIGHT
+    LTEXT           "0%",IDC_NO_HELP_1,26,36,11,12
+    CONTROL         "Generic1",IDC_LOALARMSLIDER,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP,37,35,182,20
+    LTEXT           "100%",IDC_NO_HELP_2,215,38,23,11,0,WS_EX_RIGHT
+    PUSHBUTTON      "Alar&m Action...",IDC_LOWACTION,26,65,60,14
+    LTEXT           "Unknown",IDC_LOALARMNOTIFICATION,152,65,86,8
+    LTEXT           "Unknown",IDC_LOALARMPOWERMODE,152,76,86,8
+    GROUPBOX        "Critical battery alarm",IDC_POWERCFGGROUPBOX4,7,108,238,
+                    96
+    CONTROL         "Activate &critical battery alarm when power level reaches:",
+                    IDC_CRITBATALARMENABLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,120,195,10
+    LTEXT           "unknown",IDC_CRITALARMLEVEL,206,121,32,9,0,WS_EX_RIGHT
+    LTEXT           "0%",IDC_NO_HELP_3,26,139,15,11
+    CONTROL         "Generic1",IDC_CRITALARMSLIDER,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_TABSTOP,37,136,182,20
+    LTEXT           "100%",IDC_NO_HELP_4,215,139,22,8,0,WS_EX_RIGHT
+    PUSHBUTTON      "Ala&rm Action...",IDC_CRITACTION,26,167,60,14
+    LTEXT           "Unknown",IDC_CRITALARMNOTIFICATION,152,167,86,8
+    LTEXT           "Unknown",IDC_CRITALARMPOWERMODE,152,178,86,8
+    LTEXT           "Notification:",IDC_STATIC,93,65,54,8
+    LTEXT           "Power Mode:",IDC_STATIC,93,76,54,8
+    LTEXT           "Notification:",IDC_STATIC,93,167,54,8
+    LTEXT           "Power Mode:",IDC_STATIC,93,178,51,8
+#ifdef WINNT    
+    LTEXT           "Unknown",IDC_LOALARMPROGRAM,152,87,86,8
+    LTEXT           "Unknown",IDC_CRITALARMPROGRAM,152,189,86,8
+    LTEXT           "Run Program:",IDC_STATIC,93,87,54,8
+    LTEXT           "Run Program:",IDC_STATIC,93,189,54,8
+#endif    
+END
+
+IDD_ADVANCEDPOLICY DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PWRMNG,IDI_PWRMNG,7,7,18,20
+    LTEXT           "Select the behaviors you want.",IDC_NO_HELP_5,39,13,107,
+                    8
+    GROUPBOX        "Options",IDC_OPTIONSGROUPBOX,7,34,238,59
+    CONTROL         "Always show &icon on the taskbar.",IDC_ENABLEMETER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,46,225,10
+    CONTROL         "Prompt for &password when computer goes off standby.",
+                    IDC_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,60,
+                    225,10
+    CONTROL         "&Dim display when running on batteries.",IDC_VIDEODIM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,74,225,10
+    GROUPBOX        "Power buttons",IDC_POWERBUTGROUP,7,96,238,107
+    LTEXT           "&When I close the lid of my portable computer:",
+                    IDC_LIDCLOSETEXT,13,107,225,8
+    COMBOBOX        IDC_LIDCLOSEACTION,13,118,225,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Wh&en I press the power button on my computer:",
+                    IDC_PWRBUTTONTEXT,13,138,225,8
+    COMBOBOX        IDC_PWRBUTACTION,13,149,225,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Whe&n I press the sleep button on my computer:",
+                    IDC_SLPBUTTONTEXT,13,170,225,8
+    COMBOBOX        IDC_SLPBUTACTION,13,181,225,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+#ifdef WINNT
+IDD_ALARMACTIONS DIALOGEX 0, 0, 252, 202
+#else
+IDD_ALARMACTIONS DIALOGEX 0, 0, 252, 154
+#endif
+
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Alarm Actions"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Notification",IDC_POWERCFGGROUPBOX5,7,7,238,40
+    CONTROL         "&Sound alarm",IDC_NOTIFYWITHSOUND,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,18,224,10
+    CONTROL         "&Display message",IDC_NOTIFYWITHTEXT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,31,69,10
+    GROUPBOX        "Power level",IDC_POWERCFGGROUPBOX6,7,52,238,68
+    CONTROL         "When the &alarm goes off, the computer will:",
+                    IDC_ENABLELOWSTATE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,63,224,10
+    COMBOBOX        IDC_ALARMACTIONPOLICY,26,75,212,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Force standby or shutdown even if a program stops responding.",
+                    IDC_ALARMIGNORENONRESP,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,14,97,224,18
+#ifdef WINNT
+    GROUPBOX        "Run a program",IDC_POWERCFGGROUPBOX7,7,126,238,48
+
+    CONTROL         "When the alarm occurs, &run this program:",
+                    IDC_RUNPROGCHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,138,224,10
+    PUSHBUTTON      "Configure &program",IDC_RUNPROGWORKITEM,26,151,87,14
+    DEFPUSHBUTTON   "OK",IDOK,141,182,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,182,50,14
+#else
+    DEFPUSHBUTTON   "OK",IDOK,141,136,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,136,50,14
+#endif
+END
+
+IDD_SAVE DIALOG DISCARDABLE  0, 0, 190, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Scheme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Save this power scheme as:",IDC_SAVETEXT,7,7,90,8
+    EDITTEXT        IDC_SAVENAMEEDIT,7,18,176,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",IDOK,79,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,40,50,14
+END
+
+IDD_HIBERNATE DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Hibernate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE,7,7,21,20
+    LTEXT           "When your computer hibernates, it stores whatever it has in memory on your hard disk and then shuts down. When your computer comes out of hibernation, it returns to its previous state. ",
+                    IDC_NO_HELP_6,39,7,206,33
+    GROUPBOX        "Disk space for hibernation",IDC_DISKSPACEGROUPBOX,7,79,
+                    238,58
+    LTEXT           "You must free some disk space before your computer can hibernate. ",
+                    IDC_NOTENOUGHSPACE,14,114,224,18
+    LTEXT           "Free disk space:",IDC_FREESPACETEXT,14,91,64,8
+    LTEXT           "Unknown",IDC_FREESPACE,85,91,153,10
+    LTEXT           "Disk space required to hibernate:",
+                    IDC_REQUIREDSPACETEXT,14,103,118,8
+    LTEXT           "Unknown",IDC_REQUIREDSPACE,139,103,99,9
+    GROUPBOX        "Hibernate",IDC_HIBERNATEGROUPBOX,7,47,238,27
+    CONTROL         "Enable &hibernate support.",IDC_HIBERNATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,58,224,10
+END
+
+IDD_APM DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "APM"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PWRMNG,IDI_PWRMNG,7,7,21,20
+    LTEXT           "Your computer reports that it can support Advanced Power Management (APM).  Using APM, you can reduce the power consumption of your system.  If you have battery power on your computer, APM also provides battery status information.", 
+                    IDC_STATIC,39,7,206,33
+
+    LTEXT           "For more information about APM, see the Windows 2000 Release Notes on the Windows 2000 CD.", 
+                    IDC_STATIC,39,45,206,20
+    GROUPBOX        "Advanced Power Management",IDC_STATIC,7,72,238,27
+    CONTROL         "Enable Advanced Power &Management support.",IDC_APMENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,20,84,224,10
+END
+
+
+IDD_UPS DIALOG DISCARDABLE  0, 0, 252, 216
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "UPS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Uninterruptible Power Supply",IDC_UPS_TITLE,79,8,92,11,
+                    SS_NOPREFIX
+    GROUPBOX        "Status",IDC_STATUS_GROUPBOX,7,18,238,62
+    ICON            "",IDC_POWER_SOURCE_ICON,15,31,20,20
+    LTEXT           "Current power source:",IDC_POWER_SOURCE_LHS,43,31,79,8
+    LTEXT           "",IDC_POWER_SOURCE,128,31,108,8
+    LTEXT           "Estimated UPS runtime:",IDC_RUNTIME_REMAINING_LHS,43,42,
+                    79,8
+    LTEXT           "",IDC_RUNTIME_REMAINING,128,42,108,8
+    LTEXT           "Estimated UPS capacity:",IDC_BATTERY_CAPACITY_LHS,43,53,
+                    79,8
+    LTEXT           "",IDC_BATTERY_CAPACITY,128,53,108,8
+    LTEXT           "Battery condition:",IDC_BATTERY_STATUS_LHS,43,64,79,8
+    LTEXT           "",IDC_BATTERY_STATUS,128,64,108,8
+    GROUPBOX        "Details",IDC_DETAILS_GROUPBOX,7,83,239,66
+    PUSHBUTTON      "UPS",IDB_UPS_ICON_BUTTON,15,99,19,25,BS_ICON
+    LTEXT           "Manufacturer:",IDC_VENDOR_NAME_LHS,43,99,49,8
+    LTEXT           "",IDC_VENDOR_NAME,100,99,138,12
+    LTEXT           "Model:",IDC_MODEL_TYPE_LHS,43,109,49,8
+    LTEXT           "",IDC_MODEL_TYPE,100,109,138,12
+    PUSHBUTTON      "&Configure...",IDB_CONFIGURE_SVC,129,127,50,14
+    PUSHBUTTON      "&Select...",IDB_INSTALL_UPS,188,127,50,14
+    GROUPBOX        "",IDC_STATIC,7,152,239,37
+    ICON            32516,IDC_MESSAGE_ICON,15,162,20,20,WS_GROUP
+    LTEXT           "",IDC_MESSAGE_TEXT,43,165,195,16,NOT WS_VISIBLE
+    CONTROL         "Progress1",IDC_SERVICE_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE | WS_BORDER,15,171,164,8
+    PUSHBUTTON      "C&lose",IDC_SERVICE_CLOSE,188,165,50,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+    PUSHBUTTON      "A&bout...",IDB_APCLOGO_SMALL,7,197,50,14
+    LTEXT           "Technology  developed  by",IDC_APC1,23,195,90,9,
+                    SS_NOTIFY | NOT WS_VISIBLE
+    LTEXT           "American Power Conversion",IDC_APC2,7,204,90,9,
+                    SS_NOTIFY | NOT WS_VISIBLE
+    LTEXT           "",IDC_SERVICE_TEXT,15,162,164,8,NOT WS_VISIBLE
+END
+
+IDD_UPS_EXT DIALOG DISCARDABLE  0, 0, 252, 216
+STYLE DS_3DLOOK | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "UPS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Uninterruptible Power Supply",IDC_STATIC,79,8,92,11,
+                    SS_NOPREFIX
+    GROUPBOX        "Status",IDC_STATUS_GROUPBOX,7,18,238,62
+    ICON            "",IDC_POWER_SOURCE_ICON,15,31,20,20
+    LTEXT           "Current power source:",IDC_POWER_SOURCE_LHS,43,31,79,8
+    LTEXT           "",IDC_POWER_SOURCE,128,31,108,8
+    LTEXT           "Estimated UPS runtime:",IDC_RUNTIME_REMAINING_LHS,43,42,
+                    79,8
+    LTEXT           "",IDC_RUNTIME_REMAINING,128,42,108,8
+    LTEXT           "Estimated UPS capacity:",IDC_BATTERY_CAPACITY_LHS,43,53,
+                    79,8
+    LTEXT           "",IDC_BATTERY_CAPACITY,128,53,108,8
+    LTEXT           "Battery condition:",IDC_BATTERY_STATUS_LHS,43,64,79,8
+    LTEXT           "",IDC_BATTERY_STATUS,128,64,108,8
+    GROUPBOX        "Details",IDC_DETAILS_GROUPBOX,7,83,239,66
+    PUSHBUTTON      "UPS",IDB_UPS_ICON_BUTTON,15,99,19,25,BS_ICON
+    LTEXT           "Manufacturer:",IDC_VENDOR_NAME_LHS,43,99,49,8
+    LTEXT           "",IDC_VENDOR_NAME,100,99,138,12
+    LTEXT           "Model:",IDC_MODEL_TYPE_LHS,43,109,49,8
+    LTEXT           "",IDC_MODEL_TYPE,100,109,138,12
+    PUSHBUTTON      "&Configure...",IDB_CONFIGURE_SVC,129,127,50,14
+    PUSHBUTTON      "&Select...",IDB_INSTALL_UPS,188,127,50,14
+    GROUPBOX        "",IDC_STATIC,7,152,239,37
+    ICON            32516,IDC_MESSAGE_ICON,15,162,20,20,WS_GROUP
+    LTEXT           "",IDC_MESSAGE_TEXT,43,165,195,16,NOT WS_VISIBLE
+    CONTROL         "Progress1",IDC_SERVICE_PROGRESS,"msctls_progress32",NOT 
+                    WS_VISIBLE | WS_BORDER,15,171,164,8
+    PUSHBUTTON      "C&lose",IDC_SERVICE_CLOSE,188,165,50,14,NOT WS_VISIBLE | 
+                    WS_DISABLED
+    PUSHBUTTON      "A&bout...",IDB_APCLOGO_SMALL,7,197,50,14
+    LTEXT           "Technology  developed  by",IDC_APC1,23,195,90,9,
+                    SS_NOTIFY | NOT WS_VISIBLE
+    LTEXT           "American Power Conversion",IDC_APC2,7,204,90,9,
+                    SS_NOTIFY | NOT WS_VISIBLE
+    LTEXT           "",IDC_SERVICE_TEXT,15,162,164,8,NOT WS_VISIBLE
+END
+
+IDD_UPSSELECT DIALOGEX 0, 0, 280, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "UPS Selection"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Select manufacturer:",IDC_VENDOR_TEXT,7,8,94,11,
+                    WS_DISABLED
+    COMBOBOX        IDC_VENDOR_LIST,7,19,160,89,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Select &model:",IDC_MODEL_TEXT,7,41,98,11,WS_DISABLED
+    LISTBOX         IDC_MODEL_LIST,7,52,160,81,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "On &port:",IDC_PORT_TEXT,206,8,52,11,WS_DISABLED
+    COMBOBOX        IDC_PORT_LIST,206,19,67,56,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Finish",IDB_SELECT_FINISH,168,149,50,14
+    PUSHBUTTON      "&Next >",IDB_SELECT_NEXT,168,149,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Cancel",IDCANCEL,223,149,50,14
+END
+
+IDD_UPSCUSTOM DIALOGEX 0, 0, 280, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "UPS Interface Configuration"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "UPS Signal Polarity:",IDC_CUSTOM_FRAME,7,7,266,103
+    ICON            32515,IDC_STATIC,21,22,20,20
+    LTEXT           "Warning: Please consult your UPS documentation before attempting to configure signal polarities.",
+                    IDC_CUSTOM_CAVEAT,57,24,201,27
+    CONTROL         "&Power Fail/On Battery:",IDC_ONBAT_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,21,57,87,10
+    CONTROL         "Negative",IDC_ONBAT_NEG,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,125,57,41,10
+    CONTROL         "Positive",IDC_ONBAT_POS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,192,57,45,10
+    CONTROL         "&Low Battery:",IDC_LOWBAT_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,21,73,55,10
+    CONTROL         "Negative",IDC_LOWBAT_NEG,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,125,73,41,10
+    CONTROL         "Positive",IDC_LOWBAT_POS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,192,73,45,10
+    CONTROL         "&UPS Shutdown:",IDC_TURNOFF_CHECK,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,21,89,67,10
+    CONTROL         "Negative",IDC_TURNOFF_NEG,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,125,89,41,10
+    CONTROL         "Positive",IDC_TURNOFF_POS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,192,89,45,10
+    PUSHBUTTON      "< &Back",IDB_CUSTOM_BACK,118,149,50,14
+    DEFPUSHBUTTON   "Finish",IDB_CUSTOM_FINISH,168,149,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,223,149,50,14
+END
+
+IDD_UPSDETAILS DIALOG DISCARDABLE  0, 0, 258, 157
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Detailed UPS Information"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "UPS status",IDC_STATIC,6,7,245,121
+    LTEXT           "Manufacturer:",IDC_VENDOR_NAME_LHS,17,26,45,8
+    EDITTEXT        IDC_VENDOR_NAME,86,26,156,8,ES_READONLY | NOT WS_BORDER | 
+                    NOT WS_TABSTOP
+    LTEXT           "Model:",IDC_MODEL_TYPE_LHS,17,37,22,8
+    EDITTEXT        IDC_MODEL_TYPE,86,37,156,8,ES_READONLY | NOT WS_BORDER | 
+                    NOT WS_TABSTOP
+    LTEXT           "Serial Number:",IDC_SERIAL_NUMBER_LHS,17,48,65,8
+    EDITTEXT        IDC_SERIAL_NUMBER,86,48,156,8,ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Firmware Revision:",IDC_FIRMWARE_REVISION_LHS,17,59,65,
+                    8
+    EDITTEXT        IDC_FIRMWARE_REVISION,86,59,156,8,ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    CTEXT           "No detailed information is available for this UPS",
+                    IDC_NO_DETAILED_INFO,8,16,238,86,SS_NOPREFIX | 
+                    SS_CENTERIMAGE
+    DEFPUSHBUTTON   "OK",IDOK,201,136,50,14
+END
+
+IDD_UPSCONFIGURATION DIALOGEX 0, 0, 260, 263
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "UPS Configuration"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "&Enable all notifications.",IDC_NOTIFYCHECKBOX,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,11,120,8
+    LTEXT           "Seconds between power failure and &first notification:",
+                    IDC_WAITTEXT,20,26,181,16
+    EDITTEXT        IDC_WAITEDITBOX,221,24,32,12,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER,WS_EX_RIGHT
+    CONTROL         "Spin2",IDC_WAITSPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,248,24,11,
+                    12
+    LTEXT           "Seconds between &subsequent power failure notifications:",
+                    IDC_REPEATTEXT,20,45,181,16
+    EDITTEXT        IDC_REPEATEDITBOX,221,43,32,12,ES_AUTOHSCROLL | 
+                    ES_NUMBER,WS_EX_RIGHT
+    CONTROL         "Spin1",IDC_REPEATSPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,248,43,11,
+                    12
+    GROUPBOX        "Critical alarm",IDC_SHUTDOWNGROUPBOX,7,63,246,147
+    LTEXT           "A critical alarm occurs when the UPS battery is almost exhausted or, optionally, after a specified time on battery power.",
+                    IDC_LOWBATTERYSHUTDOWNTEXT,16,78,229,26
+    CONTROL         "&Minutes on battery before critical alarm:",
+                    IDC_SHUTDOWNTIMERCHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,16,107,187,17
+    EDITTEXT        IDC_SHUTDOWNTIMEREDITBOX,216,105,32,12,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER,WS_EX_RIGHT
+    CONTROL         "Spin2",IDC_TIMERSPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,244,105,
+                    11,12
+    CONTROL         "When the alarm occurs, run this &program:",
+                    IDC_RUNTASKCHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,126,230,10
+    EDITTEXT        IDC_TASKNAMETEXT,28,139,159,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    PUSHBUTTON      "&Configure...",IDC_CONFIGURETASKBUTTON,197,139,50,14
+    LTEXT           "&Next, instruct the computer to:",IDC_POWERACTIONTEXT,
+                    28,160,219,8
+    COMBOBOX        IDC_POWERACTIONCOMBO,28,171,219,45,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Finally, turn &off the UPS.",IDC_TURNOFFCHECKBOX,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,16,
+                    191,230,11
+    DEFPUSHBUTTON   "OK",IDOK,144,242,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,203,242,50,14
+END
+
+IDD_APCABOUT DIALOG DISCARDABLE  0, 0, 221, 169
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&OK",IDOK,164,148,50,14
+    LTEXT           "Developed for Microsoft by:",IDC_STATIC,50,13,120,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,66,207,1
+    EDITTEXT        IDC_APCURL,50,113,120,12,ES_CENTER | ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,136,207,1
+    LTEXT           "For information on enhancing the manageability of your American Power Conversion UPS and upgrade information, please see:",
+                    IDC_STATIC,50,75,120,37
+    LTEXT           "© Copyright 1999  American Power Conversion",IDC_STATIC,
+                    7,150,149,8,NOT WS_VISIBLE
+    LTEXT           "Version 1.0",IDC_STATIC,50,50,36,8
+    LTEXT           "American Power Conversion",IDC_STATIC,50,24,120,8
+    ICON            IDI_UPS,IDC_STATIC,7,13,20,20
+    LTEXT           "www.apcc.com",IDC_STATIC,50,33,120,8
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_BATTERY             ICON    DISCARDABLE     "BATT.ICO"
+IDI_PLUG                ICON    DISCARDABLE     "PLUG.ICO"
+IDI_PWRMNG              ICON    DISCARDABLE     "PWRMNG.ICO"
+IDI_HIBERNATE           ICON    DISCARDABLE     "Hibernate.ico"
+IDI_UPS                 ICON    DISCARDABLE     "ups\\ups.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_POWERSCHEME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 39
+        VERTGUIDE, 83
+        VERTGUIDE, 184
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 38
+        HORZGUIDE, 49
+        HORZGUIDE, 69
+        HORZGUIDE, 97
+    END
+
+    IDD_POWERSCHEME_NOBAT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 39
+        VERTGUIDE, 84
+        VERTGUIDE, 91
+        VERTGUIDE, 184
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 38
+        HORZGUIDE, 50
+        HORZGUIDE, 70
+        HORZGUIDE, 92
+        HORZGUIDE, 100
+    END
+
+    IDD_BATMETERCFG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 15
+        VERTGUIDE, 237
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 21
+        HORZGUIDE, 36
+        HORZGUIDE, 203
+    END
+
+    IDD_ALARMPOLICY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 26
+        VERTGUIDE, 37
+        VERTGUIDE, 93
+        VERTGUIDE, 147
+        VERTGUIDE, 152
+        VERTGUIDE, 209
+        VERTGUIDE, 219
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 36
+        HORZGUIDE, 65
+        HORZGUIDE, 76
+        HORZGUIDE, 87
+        HORZGUIDE, 101
+        HORZGUIDE, 108
+        HORZGUIDE, 120
+        HORZGUIDE, 137
+        HORZGUIDE, 167
+        HORZGUIDE, 178
+        HORZGUIDE, 189
+    END
+
+    IDD_ADVANCEDPOLICY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 13
+        VERTGUIDE, 39
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 46
+        HORZGUIDE, 60
+        HORZGUIDE, 77
+        HORZGUIDE, 82
+        HORZGUIDE, 93
+        HORZGUIDE, 104
+        HORZGUIDE, 125
+        HORZGUIDE, 136
+        HORZGUIDE, 157
+        HORZGUIDE, 168
+        HORZGUIDE, 189
+    END
+
+    IDD_ALARMACTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 26
+        VERTGUIDE, 187
+        VERTGUIDE, 191
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 195
+        HORZGUIDE, 18
+        HORZGUIDE, 31
+        HORZGUIDE, 47
+        HORZGUIDE, 52
+        HORZGUIDE, 63
+        HORZGUIDE, 76
+        HORZGUIDE, 98
+        HORZGUIDE, 138
+        HORZGUIDE, 152
+        HORZGUIDE, 174
+        HORZGUIDE, 182
+    END
+
+    IDD_SAVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 183
+        VERTGUIDE, 129
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 54
+        HORZGUIDE, 21
+        HORZGUIDE, 43
+    END
+
+    IDD_HIBERNATE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 39
+        VERTGUIDE, 78
+        VERTGUIDE, 85
+        VERTGUIDE, 132
+        VERTGUIDE, 139
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 40
+        HORZGUIDE, 47
+        HORZGUIDE, 58
+        HORZGUIDE, 74
+        HORZGUIDE, 79
+        HORZGUIDE, 91
+        HORZGUIDE, 103
+        HORZGUIDE, 114
+        HORZGUIDE, 137
+    END
+
+    IDD_UPSSELECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_UPSCUSTOM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_UPSCONFIGURATION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 253
+        VERTGUIDE, 15
+        VERTGUIDE, 28
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 259
+    END
+
+    IDD_APCABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 214
+        VERTGUIDE, 50
+        VERTGUIDE, 170
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPNAME             "Power Options"
+    IDS_INFO                "Configures energy-saving settings for your computer"
+    IDS_LOWSOUNDEVENT       "Low Battery Alarm"
+    IDS_CRITSOUNDEVENT      "Critical Battery Alarm"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_POWEREDBYUPS        "Powered by UPS"
+    IDS_NOACTION            "No action"
+    IDS_BROWSETITLE         "Browsing for run program"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_06_HOUR             "After 6 hours"
+    IDS_UNKNOWN_ERROR       "Unknown Error"
+    IDS_UNABLETOSETHIBER    "Power Policy Manager unable to reserve hibernate file"
+    IDS_UNABLETOSETPOLICY   "Power Policy Manager unable to set policy"
+    IDS_UNABLETOSETGLOBALPOLICY 
+                            "Power Policy Manager unable to set global policy"
+    IDS_UNABLETOSETACTIVEPOLICY 
+                            "Power Policy Manager unable to set active policy"
+    IDS_UNABLETOSETRUNPROG  "Unable to set alarm event run program"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALARMACTIONS        "%1 Alarm Actions"
+    IDS_ALARMLEVELFORMAT    "%1!u!%%"
+    IDS_ALARMSTATUSSOUND    "Sound"
+    IDS_ALARMSTATUSTEXT     "Text"
+    IDS_CRITBAT             "Critical Battery"
+    IDS_LOWBAT              "Low Battery"
+    IDS_SETTINGSFORMAT      "Settings for %1 power scheme"
+    IDS_ADVSETTINGSFORMAT   "Advanced settings for %1"
+    IDS_BLANKNAME           "Type a name for the scheme you want to save."
+    IDS_CONFIRMDELETECAPTION "Delete Scheme"
+    IDS_CONFIRMDELETE       "Are you sure you want to delete the power scheme: ""%1""?"
+    IDS_SAVESCHEME          "Save Scheme"
+    IDS_BYTES               "%1 bytes"
+    IDS_MBYTES              "%1 MB"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEVCHANGE_RESTART   "Your hardware settings have changed. You must restart your computer for these changes to take effect.\n\nDo you want to restart your computer now?"
+    IDS_DEVCHANGE_CAPTION   "System Settings Change"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNKNOWN             "Unknown"
+    IDS_NONE                "None"
+    IDS_STANDBY             "Standby"
+    IDS_HIBERNATE           "Hibernate"
+    IDS_SHUTDOWN            "Shutdown"
+    IDS_POWEROFF            "Power Off"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEVER               "Never"
+    IDS_01_MIN              "After 1 min"
+    IDS_02_MIN              "After 2 mins"
+    IDS_03_MIN              "After 3 mins"
+    IDS_05_MIN              "After 5 mins"
+    IDS_10_MIN              "After 10 mins"
+    IDS_15_MIN              "After 15 mins"
+    IDS_20_MIN              "After 20 mins"
+    IDS_25_MIN              "After 25 mins"
+    IDS_30_MIN              "After 30 mins"
+    IDS_45_MIN              "After 45 mins"
+    IDS_01_HOUR             "After 1 hour"
+    IDS_02_HOUR             "After 2 hours"
+    IDS_03_HOUR             "After 3 hours"
+    IDS_04_HOUR             "After 4 hours"
+    IDS_05_HOUR             "After 5 hours"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_POWERPOLICIESTITLE  "Power Options"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APCURL              "http://winupgrade.apcc.com"
+    IDS_OUTOFWAITRANGE      "Time between power failure and initial warning \nmessage is out of the valid range. (0-120 sec)"
+    IDS_OUTOFREPEATRANGE    "Delay between warning message is out \nof the valid range. (5-300 sec)"
+    IDS_NOTIFYCAPTION       "Notification"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OUTOFSHUTDELAYRANGE "Shutdown delay is out of \nthe valid range. (2-720 min)"
+    IDS_SHUTDOWNCAPTION     "Shutdown"
+    IDS_SHUTDOWN_TASKNAME   "UPS System Shutdown Program"
+    IDS_LOW_BATTERY_SHUTDOWN 
+                            "The operating system will shutdown when the UPS reaches a Low Battery state. "
+    IDS_ON_BATTERY_SHUTDOWN "The operating system will shutdown after the UPS has been on battery for %1!lu! minutes."
+    IDS_NO_SHUTDOWN         "The operating system will not shutdown automatically in response to a UPS power event."
+    IDS_UPS_TURNOFF_IMMEDIATELY 
+                            "The UPS will turn off immediately after the operating system shuts down."
+    IDS_UPS_TURNOFF_AFTER   "The UPS will turn off %1!lu! minutes after the operating system shuts down."
+    IDS_UPS_NO_TURNOFF      "The UPS will not turn off after the operating system shuts down."
+    IDS_DWORD               "%1!lu!"
+    IDS_STRING              "%1"
+    IDS_RUNTIME_REMAINING   "%1!lu! minutes remaining"
+    IDS_CAPACITY            "%1!lu!%%"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPACITY_CHARGING   "%1!lu!%%   (charging)"
+    IDS_UTILITYPOWER_UNKNOWN "Unknown"
+    IDS_UTILITYPOWER_ON     "AC Power"
+    IDS_UTILITYPOWER_OFF    "On Battery"
+    IDS_BATTERYSTATUS_UNKNOWN "Unknown"
+    IDS_BATTERYSTATUS_OK    "Good"
+    IDS_BATTERYSTATUS_BAD   "Needs Replacing"
+    IDS_URLLINK             "%1"
+    IDS_NO_UPS_VENDOR       "(None)"
+    IDS_OTHER_UPS_VENDOR    "Generic"
+    IDS_CUSTOM_UPS_MODEL    "Custom"
+    IDS_COM_PORT_PREFIX     "COM"
+    IDS_CUSTOM_CAPTION      "UPS Interface Configuration On: "
+    IDS_NO_UPS_INSTALLED    "No UPS is currently selected."
+    IDS_UPS_STOPPED         "The UPS service is currently stopped."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_START_UPS           "Attempting to start the UPS service..."
+    IDS_STOP_UPS            "Attempting to stop the UPS service..."
+    IDS_PRESS_APPLY         "To commit the new settings, choose OK or Apply."
+    IDS_COMM_LOST           "The UPS service has lost communication with the UPS."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

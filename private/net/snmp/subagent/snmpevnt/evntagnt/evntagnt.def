@@ -1,0 +1,11 @@
+LIBRARY		SNMPELEA
+;DESCRIPTION	'SNMP EventLog Extension Agent DLL'
+;CODE 		MOVEABLE DISCARDABLE PRELOAD
+;DATA		MOVEABLE DISCARDABLE PRELOAD
+
+EXPORTS
+	SnmpExtensionInit
+    SnmpExtensionClose
+	SnmpExtensionTrap
+	SnmpExtensionQuery
+

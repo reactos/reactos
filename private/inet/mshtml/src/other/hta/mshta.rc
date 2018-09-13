@@ -1,0 +1,9 @@
+#include "winver.h"
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Application host"
+#define VER_INTERNALNAME_STR        "MSHTA"
+#define VER_ORIGINALFILENAME_STR    "MSHTA.EXE"
+#include "common.ver"
+

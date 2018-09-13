@@ -1,0 +1,5 @@
+LIBRARY KBDNEC95
+
+EXPORTS
+    KbdLayerDescriptor @1
+    KbdNlsLayerDescriptor @2

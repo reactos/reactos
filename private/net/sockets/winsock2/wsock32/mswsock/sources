@@ -1,0 +1,85 @@
+!IF 0
+
+Copyright (c) 1989-91  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=winsock2
+MINORCOMP=mswsock
+
+TARGETNAME=mswsock
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+LINKLIBS=                                       \
+    ..\..\..\sockreg\obj\*\sockreg.lib          \
+    ..\..\..\sockutil\obj\*\sockutil.lib        \
+    $(BASEDIR)\Public\Sdk\Lib\*\ws2_32.lib      \
+
+TARGETLIBS=                                     \
+    $(BASEDIR)\Public\Sdk\Lib\*\kernel32.lib    \
+    $(BASEDIR)\Public\Sdk\Lib\*\User32.lib      \
+    $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib    \
+    $(BASEDIR)\Public\Sdk\Lib\*\rpcrt4.lib      \
+    $(BASEDIR)\Public\Sdk\Lib\*\ws2_32.lib      \
+    $(BASEDIR)\Public\Sdk\Lib\*\dnsapi.lib      \
+    ..\..\..\libuemul\obj\*\libuemul.lib        \
+    ..\..\..\sockreg\obj\*\sockreg.lib          \
+    ..\..\..\sockutil\obj\*\sockutil.lib
+
+DLLENTRY=SockInitialize
+
+USE_CRTDLL=1
+
+INCLUDES=.;..;..\..\inc;..\..\..\..\inc;..\..\..\..\..\inc;..\..\..\sockreg;..\..\..\..\snmp\inetmib1
+
+C_DEFINES=-DOLDXBYY=1
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=                \
+        ..\gethost.c    \
+        ..\ghname.c     \
+        ..\init.c       \
+        ..\nspeprot.c   \
+        ..\nspgaddr.c   \
+        ..\nspmisc.c    \
+        ..\nspsvc.c     \
+        ..\nsptcpip.c   \
+        ..\nsputil.c    \
+        ..\recvex.c     \
+        ..\rnrutil.c    \
+        ..\r_comp.c     \
+        ..\sockdata.c   \
+        ..\sockproc.c   \
+        ..\s_perror.c   \
+        ..\w_perror.c   \
+        ..\setup.c      \
+        ..\logit.c      \
+        msext.c         \
+        mswsock.rc
+
+NTTARGETFILE0=nlstxt.h nlstxt.mc nlstxt.rc
+
+SYNCHRONIZE_DRAIN=1
+SYNCHRONIZE_BLOCK=1
+

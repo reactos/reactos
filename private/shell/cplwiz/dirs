@@ -1,0 +1,5 @@
+DIRS =  access \
+        magnify
+
+OPTIONAL_DIRS = 
+

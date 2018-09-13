@@ -1,0 +1,24 @@
+HKCR
+{
+	ClientCaps.ClientCaps.1 = s 'ClientCaps Class'
+	{
+		CLSID = s '{7E8BC44E-AEFF-11D1-89C2-00C04FB6BFC4}'
+	}
+	ClientCaps.ClientCaps = s 'ClientCaps Class'
+	{
+		CurVer = s 'ClientCaps.ClientCaps.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {7E8BC44E-AEFF-11D1-89C2-00C04FB6BFC4} = s 'ClientCaps Class'
+		{
+			ProgID = s 'ClientCaps.ClientCaps.1'
+			VersionIndependentProgID = s 'ClientCaps.ClientCaps'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

@@ -1,0 +1,482 @@
+LANGUAGE 0x14,0x00
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+101 DIALOG FIXED IMPURE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION L"Installasjon av spr\x00e5kpakke"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Installer",1,68,74,50,14
+    PUSHBUTTON      L"Avbryt",2,126,74,50,14
+    LTEXT           L"Hvis du vil vise spr\x00e5ktegn riktig m\x00e5 du installere f\x00f8lgende spr\x00e5kpakke:",
+                    -1,10,7,166,19
+    LTEXT           L"",201,10,28,170,11
+    CONTROL         L"&Installer aldri spr\x00e5kpakker.",1000,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,56,166,11
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4096                    L"Tegntabell %d"
+    4097                    L"Installasjon av spr\x00e5kpakke"
+    4098                    L"Du har ikke administratortilgang p\x00e5 denne maskinen. \r\nDenne installasjonen kan ikke fullf\x00f8res hvis den ikke kj\x00f8res av en administrator."
+    4099                    L"Spr\x00e5kpakken er installert for Internet Explorer. \r\nDet kan hende du m\x00e5 starte maskinen p\x00e5 nytt for at alle innstillingene skal fungere."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4352                    L"Afrikaans"
+    4353                    L"Albansk"
+    4354                    L"Arabisk"
+    4355                    L"Arabisk (Saudi-Arabia)"
+    4356                    L"Arabisk (Irak)"
+    4357                    L"Arabisk (Egypt)"
+    4358                    L"Arabisk (Libya)"
+    4359                    L"Arabisk (Algerie)"
+    4360                    L"Arabisk (Marokko)"
+    4361                    L"Arabisk (Tunisia)"
+    4362                    L"Arabisk (Oman)"
+    4363                    L"Arabisk (Yemen)"
+    4364                    L"Arabisk (Syria)"
+    4365                    L"Arabisk (Jordan)"
+    4366                    L"Arabisk (Libanon)"
+    4367                    L"Arabisk (Kuwait)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4368                    L"Arabisk (De forente arabiske emirater)"
+    4369                    L"Arabisk (Bahrain)"
+    4370                    L"Arabisk (Qatar)"
+    4371                    L"Baskisk"
+    4372                    L"Bulgarsk"
+    4373                    L"Hviterussisk"
+    4374                    L"Katalansk"
+    4375                    L"Kinesisk"
+    4376                    L"Kinesisk (Taiwan)"
+    4377                    L"Kinesisk (Folkerepublikken Kina)"
+    4378                    L"Kinesisk (Hong Kong)"
+    4379                    L"Kinesisk (Singapore)"
+    4380                    L"Kroatisk"
+    4381                    L"Tsjekkisk"
+    4382                    L"Dansk"
+    4383                    L"Nederlandsk (Nederland)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4384                    L"Nederlandsk (Belgia)"
+    4385                    L"Engelsk"
+    4386                    L"Engelsk (USA)"
+    4387                    L"Engelsk (Storbritannia)"
+    4388                    L"Engelsk (Australia)"
+    4389                    L"Engelsk (Canada)"
+    4390                    L"Engelsk (New Zealand)"
+    4391                    L"Engelsk (Irland)"
+    4392                    L"Engelsk (S\x00f8r-Afrika)"
+    4393                    L"Engelsk (Jamaica)"
+    4394                    L"Engelsk (Belize)"
+    4395                    L"Engelsk (Trinidad)"
+    4396                    L"Estisk"
+    4397                    L"F\x00e6r\x00f8ysk"
+    4398                    L"Farsi"
+    4399                    L"Finsk"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4400                    L"Fransk (Frankrike)"
+    4401                    L"Fransk (Belgia)"
+    4402                    L"Fransk (Canada)"
+    4403                    L"Fransk (Sveits)"
+    4404                    L"Fransk (Luxemburg)"
+    4405                    L"G\x00e6lisk"
+    4406                    L"Tysk (Tyskland)"
+    4407                    L"Tysk (Sveits)"
+    4408                    L"Tysk (\x00d8sterrike)"
+    4409                    L"Tysk (Luxemburg)"
+    4410                    L"Tysk (Liechtenstein)"
+    4411                    L"Gresk"
+    4412                    L"Hebraisk"
+    4413                    L"Hindi"
+    4414                    L"Ungarsk"
+    4415                    L"Islandsk"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4416                    L"Indonesisk"
+    4417                    L"Italiensk (Italia)"
+    4418                    L"Italiensk (Sveits)"
+    4419                    L"Japansk"
+    4420                    L"Koreansk"
+    4421                    L"Latvisk"
+    4422                    L"Litauisk"
+    4423                    L"Makedonisk"
+    4424                    L"Malaysisk (Malaysia)"
+    4425                    L"Maltesisk"
+    4426                    L"Norsk (bokm\x00e5l)"
+    4427                    L"Norsk (nynorsk)"
+    4428                    L"Polsk"
+    4429                    L"Portugisisk (Brasil)"
+    4430                    L"Portugisisk (Portugal)"
+    4431                    L"Retoromansk"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4432                    L"Rumensk"
+    4433                    L"Rumensk (Moldova)"
+    4434                    L"Russisk"
+    4435                    L"Russisk (Moldova)"
+    4436                    L"Serbisk (kyrillisk)"
+    4437                    L"Serbisk (latin)"
+    4438                    L"Slovakisk"
+    4439                    L"Slovensk"
+    4440                    L"Sorbian"
+    4441                    L"Spansk (tradisjonell)"
+    4442                    L"Spansk (Mexico)"
+    4443                    L"Spansk (internasjonal)"
+    4444                    L"Spansk (Guatemala)"
+    4445                    L"Spansk (Costa Rica)"
+    4446                    L"Spansk (Panama)"
+    4447                    L"Spansk (Den dominikanske republikk)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4448                    L"Spansk (Venezuela)"
+    4449                    L"Spansk (Colombia)"
+    4450                    L"Spansk (Peru)"
+    4451                    L"Spansk (Argentina)"
+    4452                    L"Spansk (Ecuador)"
+    4453                    L"Spansk (Chile)"
+    4454                    L"Spansk (Uruguay)"
+    4455                    L"Spansk (Paraguay)"
+    4456                    L"Spansk (Bolivia)"
+    4457                    L"Spansk (El Salvador)"
+    4458                    L"Spansk (Honduras)"
+    4459                    L"Spansk (Nicaragua)"
+    4460                    L"Spansk (Puerto Rico)"
+    4461                    L"Sutu"
+    4462                    L"Svensk"
+    4463                    L"Svensk (Finland)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4464                    L"Thai"
+    4465                    L"Tsonga"
+    4466                    L"Tswana"
+    4467                    L"Tyrkisk"
+    4468                    L"Ukrainsk"
+    4469                    L"Urdu"
+    4470                    L"Vietnamesisk"
+    4471                    L"Xhosa"
+    4472                    L"Jiddisk"
+    4473                    L"Zulu"
+    4474                    L"Kinesisk (Macau)"
+    4475                    L"Engelsk (De karibiske \x00f8yene)"
+    4476                    L"Engelsk (Zimbabwe)"
+    4477                    L"Engelsk (Filippinene)"
+    4478                    L"Fransk (Monaco)"
+    4479                    L"Azeri (latin)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4480                    L"Uzbek (kyrillisk)"
+    4481                    L"Uzbek (latin)"
+    4482                    L"Armensk"
+    4483                    L"Georgisk"
+    4484                    L"Khasakisk"
+    4485                    L"Swahili"
+    4486                    L"Tatar"
+    4487                    L"Bengalsk"
+    4488                    L"Panjabi"
+    4489                    L"Gujarati"
+    4490                    L"Oriya"
+    4491                    L"Tamilsk"
+    4492                    L"Telugu"
+    4493                    L"Kannada"
+    4494                    L"Malayalam"
+    4495                    L"Assamesisk"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4497                    L"Marathi"
+    4498                    L"Malayisk (Brunei Darussalam)"
+    4499                    L"Nepali (India)"
+    4500                    L"Sanskrit"
+    4501                    L"Litauisk"
+    4502                    L"Konkani"
+    4503                    L"Azeri (kyrillisk)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4608                    L"Unicode"
+    4609                    L"Unicode (Big-Endian)"
+    4610                    L"Sentraleuropeisk (Windows)"
+    4611                    L"Kyrillisk (Windows)"
+    4612                    L"Vesteuropeisk (Windows)"
+    4613                    L"Gresk (Windows)"
+    4614                    L"Tyrkisk (Windows)"
+    4615                    L"Hebraisk (Windows)"
+    4616                    L"Arabisk (Windows)"
+    4617                    L"Baltisk (Windows)"
+    4618                    L"Vietnamesisk (Windows)"
+    4619                    L"Vesteuropeisk (IA5)"
+    4620                    L"Tysk (IA5)"
+    4621                    L"Svensk (IA5)"
+    4622                    L"Norsk (IA5)"
+    4623                    L"Kyrillisk (KOI8-R)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4624                    L"Kyrillisk (KOI8-U)"
+    4625                    L"Sentraleuropeisk (ISO)"
+    4626                    L"Latin 3 (ISO)"
+    4627                    L"Baltisk (ISO)"
+    4628                    L"Kyrillisk (ISO)"
+    4629                    L"Arabisk (ISO)"
+    4630                    L"Gresk (ISO)"
+    4631                    L"Hebraisk (ISO-Visual)"
+    4632                    L"Brukerdefinert"
+    4633                    L"Japansk (JIS)"
+    4634                    L"Japansk (JIS-Allow 1 byte Kana)"
+    4635                    L"Japansk (JIS-Allow 1 byte Kana - SO/SI)"
+    4636                    L"Koreansk (ISO)"
+    4637                    L"Japansk (automatisk valg)"
+    4638                    L"Koreansk (automatisk valg)"
+    4639                    L"Japansk (EUC)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4640                    L"Koreansk (EUC)"
+    4641                    L"Kinesisk - forenklet (HZ)"
+    4642                    L"Unicode (UTF-7)"
+    4643                    L"Unicode (UTF-8)"
+    4644                    L"Sentraleuropeisk (DOS)"
+    4645                    L"Kyrillisk (DOS)"
+    4646                    L"Thailandsk (Windows)"
+    4647                    L"Japansk (Shift-JIS)"
+    4648                    L"Kinesisk - forenklet (GB2312)"
+    4649                    L"Koreansk"
+    4650                    L"Kinesisk - tradisjonell (Big5)"
+    4651                    L"Hebraisk (ISO-Logical)"
+    4652                    L"Automatisk valg"
+    4653                    L"Arabisk (ASMO 708)"
+    4654                    L"Arabisk (DOS)"
+    4655                    L"Hebraisk (DOS)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4656                    L"Vesteuropeisk (ISO)"
+    4657                    L"Forenklet kinesisk (automatisk valg)"
+    4658                    L"Tradisjonell kinesisk (automatisk valg)"
+    4659                    L"Kyrillisk (automatisk valg)"
+    4660                    L"Gresk (automatisk valg)"
+    4661                    L"Arabisk (automatisk valg)"
+    4662                    L"Tyrkisk (ISO)"
+    4663                    L"Latin 9 (ISO)"
+    4664                    L"US-ASCII"
+    4665                    L"Kinesisk - forenklet (EUC)"
+    4666                    L"Koreansk (Johab)"
+    4667                    L"OEM USA"
+    4668                    L"Vesteuropeisk"
+    4669                    L"Europa"
+    4670                    L"Kinesisk - tradisjonell (CNS)"
+    4671                    L"Kinesisk - tradisjonell (Eten)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4672                    L"Estisk (ISO)"
+    4673                    L"Vesteuropeisk (DOS)"
+    4674                    L"Gresk (DOS)"
+    4675                    L"Gresk, moderne (DOS)"
+    4676                    L"Baltisk (DOS)"
+    4677                    L"Tyrkisk (DOS)"
+    4678                    L"Islandsk (DOS)"
+    4679                    L"Vesteuropeisk (Mac)"
+    4680                    L"Japansk (Mac)"
+    4681                    L"Kinesisk - tradisjonell (Mac)"
+    4682                    L"Koreansk (Mac)"
+    4683                    L"Arabisk (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4700                    L"Hebraisk (Mac)"
+    4701                    L"Gresk (Mac)"
+    4702                    L"Kyrillisk (Mac)"
+    4703                    L"Kinesisk - forenklet (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4704                    L"Sentraleuropeisk (Mac)"
+    4705                    L"Islandsk (Mac)"
+    4706                    L"Tyrkisk (Mac)"
+    4707                    L"IBM EBCDIC (USA-Canada)"
+    4708                    L"IBM EBCDIC (Internasjonal)"
+    4709                    L"IBM EBCDIC (flerspr\x00e5klig latin-2)"
+    4710                    L"IBM EBCDIC (gresk - moderne)"
+    4711                    L"IBM EBCDIC (tyrkisk latin-5)"
+    4712                    L"IBM EBCDIC (Tyskland)"
+    4713                    L"IBM EBCDIC (Danmark-Norge)"
+    4714                    L"IBM EBCDIC (Finland-Sverige)"
+    4715                    L"IBM EBCDIC (Italia)"
+    4716                    L"IBM EBCDIC (Spania)"
+    4717                    L"IBM EBCDIC (Storbritannia)"
+    4718                    L"IBM EBCDIC (japansk katakana)"
+    4719                    L"IBM EBCDIC (Frankrike)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4720                    L"IBM EBCDIC (arabisk)"
+    4721                    L"IBM EBCDIC (gresk)"
+    4722                    L"IBM EBCDIC (hebraisk)"
+    4723                    L"IBM EBCDIC (koreansk - utvidet)"
+    4724                    L"IBM EBCDIC (thai)"
+    4725                    L"IBM EBCDIC (islandsk)"
+    4726                    L"IBM EBCDIC (kyrillisk russisk)"
+    4727                    L"IBM EBCDIC (tyrkisk)"
+    4728                    L"IBM EBCDIC (kyrillisk serbisk-bulgarsk)"
+    4729                    L"IBM EBCDIC (japansk og japansk katakana)"
+    4730                    L"IBM EBCDIC (japansk og USA-Canada)"
+    4731                    L"IBM EBCDIC (japansk og japansk-latinsk)"
+    4732                    L"IBM EBCDIC (koreansk og koreansk utvidet)"
+    4733                    L"IBM EBCDIC (kinesisk - forenklet)"
+    4734                    L"IBM EBCDIC (kinesisk - tradisjonell)"
+    4735                    L"IBM EBCDIC (US-Canada-Euro)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4736                    L"IBM EBCDIC (Tyskland-Euro)"
+    4737                    L"IBM EBCDIC (Danmark-Norge-Euro)"
+    4738                    L"IBM EBCDIC (Finland-Sverige-Euro)"
+    4739                    L"IBM EBCDIC (Italia-Euro)"
+    4740                    L"IBM EBCDIC (Spania-Euro)"
+    4741                    L"IBM EBCDIC (Storbritannia-Euro)"
+    4742                    L"IBM EBCDIC (Frankrike-Euro)"
+    4743                    L"IBM EBCDIC (Internasjonal-Euro)"
+    4744                    L"IBM EBCDIC (islandsk-Euro)"
+    4745                    L"ISCII-kode for assamesisk"
+    4746                    L"ISCII-kode for bengali"
+    4747                    L"ISCII-kode for devanagari"
+    4748                    L"ISCII-kode for gujarati"
+    4749                    L"ISCII-kode for kannada"
+    4750                    L"ISCII-kode for malayalam"
+    4751                    L"ISCII-kode for oriya"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4752                    L"ISCII-kode for punjabi"
+    4753                    L"ISCII-kode for telugu"
+    4754                    L"ISCII-kode for tamil"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4864                    L"MS Gothic"
+    4865                    L"MS PGothic"
+    4866                    L"Simsun"
+    4867                    L"Simsun"
+    4868                    L"GulimChe"
+    4869                    L"Gulim"
+    4870                    L"GulimChe"
+    4871                    L"GulimChe"
+    4872                    L"MingLiu"
+    4873                    L"New MingLiu"
+    4874                    L"Courier New"
+    4875                    L"Arial"
+    4876                    L"Lucida Sans Unicode"
+    4877                    L"Miriam Fixed"
+    4878                    L"David"
+    4879                    L"Cordia New"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4880                    L"Cordia New"
+    4881                    L"Simplified Arabic Fixed"
+    4882                    L"Simplified Arabic"
+    4883                    L"Mangal"
+    4884                    L"Mangal"
+    4885                    L"Latha"
+    4886                    L"Latha"
+    4887                    L"Times New Roman"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5120                    L"Latin-basert"
+    5121                    L"Latin"
+    5122                    L"Gresk"
+    5123                    L"Kyrillisk"
+    5124                    L"Armensk"
+    5125                    L"Hebraisk"
+    5126                    L"Arabisk"
+    5127                    L"Devanagari"
+    5128                    L"Bengalsk"
+    5129                    L"Gurmukhi"
+    5130                    L"Gujarati"
+    5131                    L"Oriya"
+    5132                    L"Tamilsk"
+    5133                    L"Telugu"
+    5134                    L"Kannada"
+    5135                    L"Malayalam"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5136                    L"Thai"
+    5137                    L"Laotisk"
+    5138                    L"Tibetisk"
+    5139                    L"Georgisk"
+    5140                    L"Koreansk"
+    5141                    L"Japansk"
+    5142                    L"Kinesisk - forenklet"
+    5143                    L"Kinesisk - forenklet"
+    5144                    L"Etiopisk"
+    5145                    L"CanSyllabic"
+    5146                    L"Cherokesisk"
+    5147                    L"Yi"
+    5148                    L"Braille"
+    5149                    L"Runeskrift"
+    5150                    L"Ogham"
+    5151                    L"Singalesisk"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5152                    L"Syrisk"
+    5153                    L"Burmesisk"
+    5154                    L"Khmer"
+    5155                    L"Thaana"
+    5156                    L"Mongolsk"
+    5158                    L"Standard"
+    5159                    L"Flett"
+    5160                    L"Asciisym"
+    5161                    L"Brukerdefinert"
+END

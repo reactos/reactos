@@ -1,0 +1,87 @@
+PRODUCT = F3
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+DLLDEF_SRC = mshtmled.def
+DLLDEF_EXPORTS = \
+    _____mshtmled_initDLL
+
+WRESOURCE = $(O)/mshtmled.rc
+
+RGSOBJS = \
+	$(O)/dlghelpr.unix_rgs \
+	$(O)/mshtmled.unix_rgs \
+	$(O)/fontname.unix_rgs \
+	$(O)/htmled.unix_rgs
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+APP_RCFLAGS = -I${RUN.dir}
+
+ifeq (${COMPILE_OPTION},debug)
+DEBUG_LIBS = -lmshtmdbg
+endif
+
+STATIC_LIBS= \
+	-lcorepch \
+	-lsitepch \
+	-lcrt     \
+	-lcdutil  \
+	-lwrappers \
+	-lcoremisc \
+	-ltext \
+
+DYN_LIBS= \
+	-luuid     \
+	-ladvapi32 \
+	-loleaut32 \
+	-lole32    \
+	-lshlwapi  \
+
+PROJECT_LIBS = \
+	${DEBUG_LIBS} \
+	${STATIC_LIBS} \
+	${DYN_LIBS}
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+DLLMAIN = _DllMainStartup
+
+PROJECT_DLLFLAGS := \
+	-u ${DLLMAIN} \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS} -L/vobs/build/mw/lib-sunos5_debug
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+${OBJS.list}: $(O)/optshold.h
+
+$(O)/mshtmled.rc: mshtmled.rc ${RGSOBJS}
+	sed -f unixrgs.sed $< | ${DOS2UNIX} > $@
+
+$(O)/%.unix_rgs: ./%.rgs
+	${ECHOOBJ}
+	sed -f unix.sed $< | ${DOS2UNIX} > $@
+
+$(O)/optshold.h: optshold.idl
+	${ECHOOBJ} "[ $(notdir $<) --> optshold_i.c optshold.h ]"
+	midl \
+	-savepp \
+	-Zp8    \
+	-char unsigned  \
+	-wchar 4bytes   \
+	-ms_ext -c_ext  \
+	-I/vobs/build/userx/public/sdk/inc \
+	-h optshold.h   \
+	-iid optshold_i.c  \
+	/out $(O)    \
+	-tlb ${RUN.dir}/optshold.tlb  \
+	optshold.idl

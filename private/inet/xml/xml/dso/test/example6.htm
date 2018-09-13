@@ -1,0 +1,115 @@
+<html>  
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 6</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+<script src=DOMformatter.js></script>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+</OBJECT>
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("books.xml");
+    if (doc.documentElement == null)
+    {
+        error.innerText = doc.parseError.reason;
+    }
+</SCRIPT>
+
+<script>
+    function CalcTotal()
+    {
+        var root = xmldso.XMLDocument.documentElement;
+        var children = root.childNodes;
+        var num = children.length;
+        var total = 0;
+        var count = 0;
+        for (i = 0; i < num; i++) {
+            var item = children.item(i);
+            if (item.nodeName == "ITEM")
+            {
+                var fields = item.childNodes;
+                var count = fields.length;
+                var price = 0;
+                var quantity = 0;
+                for (j = 0; j < count; j++)
+                {
+                    var field = fields.item(j);
+                    var name = field.nodeName;
+                    if (name == "PRICE")
+                    {
+                        price = parseFloat(field.innerText);
+                        var tax = field.attributes.getNamedItem("TAX");
+                        var t = 0;
+                        if (tax != null)
+                            parseFloat(tax.nodeValue);
+                        if (t > 0) price = (price * (100 + t)) / 100;
+                    }
+                    else if (name == "QUANTITY")
+                    {
+                        quantity = parseInt(field.innerText);
+                    }
+                }
+                count += quantity;
+                total += price * quantity;     
+            }
+        }      
+        total = parseInt(total*100) / 100;
+        msg = "There are " + count + " books";
+        msg = msg + " with a total value of $" + total + ".";
+        return msg;
+    }
+</script>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR="#ffffff" LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+<table align=right>
+<tr><td bgcolor=black><a href="Example5.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Previous<b></font></a>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+    <td bgcolor=black><a href="Example7.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 6</h3>
+<P>
+This example shows how the JavaScript interface to the
+XML Java Parser can be used to program the XML object 
+model directly.  In this case, we traverse all the items and
+multiply the PRICE and QUANTITY fields to come up with a 
+total dollar value.
+<P>
+<input type=button value="Calculate Total Value" 
+        onclick='document.all.item("output").innerText = CalcTotal()'>
+<div style="background:yellow" id=output></div>
+<xmp id=error></xmp>
+<P>
+
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+
+  </body>
+</html>

@@ -1,0 +1,272 @@
+FATAL
+cannot open file
+I/O error closing file
+I/O error writing file
+I/O error reading file
+out of memory
+assembler limit : macro parameter name table full
+invalid command-line option
+nesting level too deep
+unmatched macro nesting
+line too long
+unmatched block nesting
+directive must be in control block
+error count exceeds 100; stopping assembly
+invalid numerical command-line argument
+too many arguments
+statement too complex
+N/A
+missing source filename
+COFF error writing file
+invalid debug and browser data; file exceeds line limit
+cannot find link.exe
+cannot find cvpack.exe
+SEVERE
+memory operand not allowed in context
+immediate operand not allowed
+cannot have more than one ELSE clause per IF block
+extra characters after statement
+symbol type conflict
+symbol redefinition
+undefined symbol
+non-benign record redefinition
+syntax error
+syntax error in expression
+invalid type expression
+distance invalid for word size of current segment
+PROC, MACRO, or macro repeat directive must precede LOCAL
+.MODEL must precede this directive
+cannot define as public or external
+segment attributes cannot change
+expression expected
+operator expected
+invalid use of external symbol
+operand must be RECORD type or field
+identifier not a record
+record constants may not span line breaks
+instruction operands must be the same size
+instruction operand must have size
+invalid operand size for instruction
+operands must be in same segment
+constant expected
+operand must be a memory expression
+expression must be a code address
+multiple base registers not allowed
+multiple index registers not allowed
+must be index or base register
+invalid use of register
+invalid INVOKE argument
+must be in segment block
+DUP too complex
+too many initial values for structure
+statement not allowed inside structure definition
+missing operand for macro operator
+line too long
+segment register not allowed in context
+string or text literal too long
+statement too complex
+identifier too long
+invalid character in file
+missing angle bracket or brace in literal
+missing single or double quotation mark in string
+empty (null) string
+nondigit in number
+syntax error in floating-point constant
+real or BCD number not allowed
+text item required
+forced error
+forced error : value equal to 0
+forced error : value not equal to 0
+forced error : symbol not defined
+forced error : symbol defined
+forced error : string blank
+forced error : string not blank
+forced error : strings equal
+forced error : strings not equal
+[ELSE]IF2/.ERR2 not allowed : single-pass assembler
+expression too complex for .UNTILCXZ
+can ALIGN only to power of 2
+structure alignment must be 1, 2, or 4
+expected
+incompatible CPU mode and segment size
+LOCK must be followed by a memory operation
+instruction prefix not allowed
+no operands allowed for this instruction
+invalid instruction operands
+initializer magnitude too large for specified size
+cannot access symbol in given segment or group
+operands have different frames
+cannot access label through segment registers
+jump destination too far
+jump destination must specify a label
+instruction does not allow NEAR indirect addressing
+instruction does not allow FAR indirect addressing
+instruction does not allow FAR direct addressing
+jump distance not possible in current CPU mode
+missing operand after unary operator
+cannot mix 16- and 32-bit registers
+invalid scale value
+constant value too large
+instruction or register not accepted in current CPU mode
+reserved word expected
+instruction form requires 80386/486
+END directive required at end of file
+too many bits in RECORD
+positive value expected
+index value past end of string
+count must be positive or zero
+count value too large
+operand must be relocatable
+constant or relocatable label expected
+segment, group, or segment register expected
+segment expected
+invalid operand for OFFSET
+invalid use of external absolute
+segment or group not allowed
+cannot add two relocatable labels
+cannot add memory expression and code label
+segment exceeds 64K limit
+invalid type for a data declaration
+HIGH and LOW require immediate operands
+N/A
+cannot have implicit far jump or call to near label
+use of register assumed to ERROR
+only white space or comment can follow backslash
+COMMENT delimiter expected
+conflicting parameter definition
+PROC and prototype calling conventions conflict
+invalid radix tag
+INVOKE argument type mismatch : argument
+invalid coprocessor register
+instructions and initialized data not allowed in AT segments
+/AT switch requires the TINY memory model
+cannot have segment address references with TINY model
+language type must be specified
+PROLOGUE must be macro function
+EPILOGUE must be macro procedure
+alternate identifier not allowed with EXTERNDEF
+text macro nesting level too deep
+N/A
+missing macro argument
+EXITM used inconsistently
+macro function argument list too long
+N/A
+VARARG parameter must be last parameter
+VARARG parameter not allowed with LOCAL
+VARARG parameter requires C calling convention
+ORG needs a constant or local offset
+register value overwritten by INVOKE
+structure too large to pass with INVOKE : argument
+not overriding private proc as public
+too many arguments to INVOKE
+too few arguments to INVOKE
+invalid data initializer
+N/A
+RET operand too large
+too many operands to instruction
+cannot have more than one .ELSE clause per .IF block
+expected data label
+cannot nest procedures
+EXPORT must be FAR
+procedure declared with two visibility attributes
+macro label not defined
+invalid symbol type in expression
+byte register cannot be first operand
+word register cannot be first operand
+special register cannot be first operand
+coprocessor register cannot be first operand
+cannot change size of expression computations
+syntax error in control-flow directive
+cannot use 16-bit register with a 32-bit address
+constant value out of range
+missing right parenthesis
+type is wrong size for register
+structure cannot be instanced
+non-benign structure redefinition: label incorrect
+non-benign structure redefinition: too few labels
+OLDSTRUCTS/NOOLDSTRUCTS state cannot be changed
+non-benign structure redefinition: incorrect initializers
+non-benign structure redefinition: too few initializers
+non-benign structure redefinition: label has incorrect offset
+structure field expected
+unexpected literal found in expression
+N/A
+divide by zero in expression
+directive must appear inside a macro
+cannot expand macro function
+too few bits in RECORD
+macro function cannot redefine itself
+N/A
+invalid qualified type
+floating-point initializer on an integer variable
+nested structure improperly initialized
+invalid use of FLAT
+structure improperly initialized
+improper list initialization
+initializer must be a string or single item
+initializer must be a single item
+initializer must be a single byte
+improper use of list initializer
+improper literal initialization
+extra characters in literal initialization
+must use floating-point initializer
+cannot use .EXIT for OS_OS2 with .8086
+invalid combination with segment alignment
+INVOKE requires prototype for procedure
+cannot include structure in self
+symbol language attribute conflict
+non-benign COMM redefinition
+COMM variable exceeds 64K
+parameter or local cannot have void type
+cannot use TINY model with OS_OS2
+expression size must be 32 bits
+.EXIT does not work with 32-bit segments
+.STARTUP does not work with 32-bit segments
+ORG directive not allowed in unions
+D/T
+illegal use of segment register
+cannot declare scoped code label as PUBLIC
+.MSFLOAT directive is obsolete : .MSFLOAT ignored
+ESC instruction is obsolete : ESC ignored
+missing operator in expression
+missing right parenthesis in expression
+missing left parenthesis in expression
+reference to forward macro definition
+16 bit segments not allowed with /coff option
+FAR not allowed in flat model comm variables
+invalid .model parameter for flat model
+.ALIAS directive not supported with /coff option
+LEVEL 1
+cannot modify READONLY segment
+N/A
+non-unique STRUCT/UNION field used without qualification
+start address on END directive ignored with .STARTUP
+cannot ASSUME CS
+unknown default prologue argument
+too many arguments in macro call
+option untranslated, directive required
+invalid command-line option value, default is used
+insufficent memory for /EP : /EP ignored
+expected '>' on text literal
+multiple .MODEL directives found : .MODEL ignored
+line number information for segment without class 'CODE'
+instructions and initialized data not supported in AT segments
+directive ignored with /coff switch
+/Gc switch incompatible with flat model
+/AT switch incompatible with flat model
+invalid command-line option
+LEVEL 2
+@@: label defined but not referenced
+expression expected, assume value 0
+EXTERNDEF previously assumed to be external
+length of symbol previously assumed to be different
+symbol previously assumed to not be in a group
+types are different
+calling convention not supported in flat model
+LEVEL 3
+N/A
+no return from procedure
+N/A
+conditional jump lengthened
+procedure argument or local not referenced
+expression may be pass-dependent

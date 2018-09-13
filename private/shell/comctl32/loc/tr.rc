@@ -1,0 +1,139 @@
+LANGUAGE 0x1f, 0x00 // Really 0x1F, 0x01 - Turkish (Turkish)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Turkish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Ara\x00e7 \x00c7ubu\x011funu \x00d6zelle\x015ftir"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Kapat",2,308,6,44,14
+    PUSHBUTTON      L"&S\x0131f\x0131rla",202,308,23,44,14
+    PUSHBUTTON      L"&Yard\x0131m",205,308,40,44,14
+    PUSHBUTTON      L"Yukar\x0131 &Ta\x015f\x0131",206,308,74,44,14
+    PUSHBUTTON      L"&A\x015fa\x011f\x0131 Ta\x015f\x0131",207,308,91,44,14
+    LTEXT           L"K&ullan\x0131labilir d\x00fc\x011fmeler:",-1,4,5,115,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Ekle ->",1,131,42,44,14
+    PUSHBUTTON      L"<- Kald\x0131&r",204,131,62,44,14
+    LTEXT           L"Ara\x00e7 \x00e7ubu\x011fu &d\x00fc\x011fmeleri:",-1,182,5,115,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Tamam",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"\x0130ptal",2,58,122,50,14
+    PUSHBUTTON      L"&Uygula",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Yard\x0131m",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Geri",12323,12,26,50,14
+    DEFPUSHBUTTON   L"\x0130le&ri >",12324,62,26,50,14
+    PUSHBUTTON      L"Son",12325,119,26,50,14
+    PUSHBUTTON      L"\x0130ptal",2,176,26,50,14
+    PUSHBUTTON      L"Yard\x0131m",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Ay\x0131r\x0131c\x0131"
+    1025                    L" + "
+    1026                    L"Yok"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Kapat"
+    4161                    L"Tamam"
+    4162                    L"%s \x00d6zellikleri"
+    4163                    L"Bug\x00fcn:"
+    4164                    L"&Bug\x00fcne Git"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Metni buraya girin"
+    4177                    L"\x00d6zellikler"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Bu pencereyi boyutland\x0131r\x0131r."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Bu pencereyi ta\x015f\x0131r."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Bu pencereyi simge durumuna k\x00fc\x00e7\x00fclt\x00fcr."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Bu pencereyi ekran\x0131 kaplayacak \x015fekilde geni\x015fletir."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Sonraki MDI penceresine ge\x00e7er."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Bu pencereyi kapat\x0131r."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Bu pencereyi normal boyutuna getirir."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Bir ba\x015fka g\x00f6reve ge\x00e7er."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Pencere de\x011fi\x015ftirme komutlar\x0131n\x0131 i\x00e7erir."
+    36849                   L"S\x00fctunlar\x0131n boyutunu de\x011fi\x015ftirmek i\x00e7in sola veya sa\x011fa s\x00fcr\x00fckleyin."
+    36850                   L"S\x00fctunlar\x0131 oklar ve sekme tu\x015flar\x0131yla yeniden boyutland\x0131r\x0131r."
+    36851                   L"Ara\x00e7 \x00e7ubu\x011funda d\x00fc\x011fme ekleme, ta\x015f\x0131ma ve kald\x0131rma i\x015flemi yapar."
+END
+

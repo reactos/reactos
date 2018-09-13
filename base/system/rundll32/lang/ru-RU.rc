@@ -1,7 +1,0 @@
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
-
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "Невозможно загрузить библиотеку '%s'"
-    IDS_MissingEntry "Невозможно найти точку входа: %s\nв библиотеке %s"
-END

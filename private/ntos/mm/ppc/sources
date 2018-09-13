@@ -1,0 +1,5 @@
+PPC_SOURCES=..\ppc\initppc.c \
+             ..\ppc\datappc.c \
+             ..\ppc\debugsup.c \
+             ..\ppc\hypermap.c \
+             ..\ppc\setdirty.c

@@ -1,0 +1,17 @@
+#include <winuser.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include "resource.h"
+
+#include "userstub.rcv"
+
+#include <stubres.h>
+#include <inststub.rc>
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESKTOP     "Internet Explorer"
+
+END
+

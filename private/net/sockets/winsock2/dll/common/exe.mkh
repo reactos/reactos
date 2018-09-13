@@ -1,0 +1,132 @@
+#####################
+# 
+# Module EXE.MKH
+#
+# Descrition:
+# This module contains the targets required and macro definitions
+# required to build a windows EXE
+#
+#####################
+
+####################
+#
+# Begin C compiler options
+#
+#
+
+# Flags common to debug and non-debug versions
+COMMON_CFLAGS= /nologo\
+                 /MT\
+                 /W4\
+                 /GX\
+                 /YX\
+                 /D "WIN32"\
+                 /D "_WINDOWS"\
+                 /c
+               
+
+TYPE_DEBUG_CFLAGS= $(COMMON_CFLAGS) $(COMPONENT_EXTRA_CFLAGS) /Od /D "_DEBUG" /Zi
+TYPE_NO_DEBUG_CFLAGS= $(COMMON_CFLAGS)  $(COMPONENT_EXTRA_CFLAGS) /O2 /D "NDEBUG"
+
+#
+#
+# End C compiler options
+#
+####################
+
+####################
+#
+# Begin C++ compiler option
+
+# Flags common to debug and non-debug versions
+COMMON_CPPFLAGS= /nologo\
+                 /MT\
+                 /W4\
+                 /GX\
+                 /YX\
+                 /D "WIN32"\
+                 /D "_WINDOWS"\
+                 /c
+                 
+TYPE_DEBUG_CPPFLAGS= $(COMMON_CPPFLAGS) /Od /D "_DEBUG" /Zi
+TYPE_NO_DEBUG_CPPFLAGS= $(COMMON_CPPFLAGS) /O2 /D "NDEBUG"
+
+# End C++ compiler option
+#
+####################
+
+####################
+#
+# Begin Linker options
+
+# Flags common to debug and non-debug versions
+COMMON_LFLAGS=  /NOLOGO\
+                /SUBSYSTEM:$(COMPONENT_SUBSYSTEM)\
+                /PDB:NONE\
+                /MACHINE:I386\
+                /OUT:$(COMPONENT_NAME).exe\
+                /NODEFAULTLIB
+
+TYPE_DEBUG_LFLAGS= $(COMMON_LFLAGS) /DEBUG /INCREMENTAL:yes
+TYPE_NO_DEBUG_LFLAGS= $(COMMON_LFLAGS) /INCREMENTAL:no
+
+TYPE_LINK_LIBS= libc.lib kernel32.lib user32.lib gdi32.lib winspool.lib\
+comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib \
+uuid.lib 
+
+### Temporary
+TYPE_ALL_LINK_LIBS= $(TYPE_LINK_LIBS) $(COMPONENT_EXTRA_LIBS)
+###
+
+# End Linker options
+#
+####################
+
+####################
+#
+# Begin Resource compiler options
+
+# Flags common to debug and non-debug versions
+COMMON_RCFLAGS= /l 0x0 /fo"$(COMPONENT_NAME).res" 
+COMMON_RESFLAGS=
+
+TYPE_DEBUG_RCFLAGS= $(COMMON_RCFLAGS)
+TYPE_NO_DEBUG_RCFLAGS= $(COMMON_RCFLAGS)
+
+TYPE_DEBUG_RESFLAGS= $(COMMON_RESFLAGS)
+TYPE_NO_DEBUG_RESFLAGS= $(COMMON_RESFLAGS)
+
+# End Resource compiler options
+#
+####################
+
+OBJS=$(COMPONENT_C_FILES:.c=.obj ) \
+     $(COMPONENT_CPP_FILES:.cpp=.obj ) \
+     $(COMPONENT_EXTRA_OBJECTS) \
+     $(COMPONENT_ASM_FILES:.asm=.obj )
+
+RESS=$(COMPONENT_RC_FILES:.rc=.res )
+
+TYPE_MAIN_TARGET= $(COMPONENT_NAME).$(COMPONENT_TYPE)
+
+
+!include <tools.mkh>
+!include <targets.mkh>
+
+
+
+
+$(COMPONENT_NAME).$(COMPONENT_TYPE):: $(OBJS) $(RESS)
+    echo >>NUL @<<$(COMPONENT_NAME).LRF
+$(TYPE_ALL_LINK_LIBS) $(PROJ_LFLAGS) $(OBJS) $(RESS)
+<<KEEP
+        link @$(COMPONENT_NAME).LRF
+
+
+
+
+
+
+
+
+

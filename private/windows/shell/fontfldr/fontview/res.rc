@@ -1,0 +1,41 @@
+#include "windows.h"
+#include "fontdefs.h"
+#include "fvrc.h"
+#include "fvmsg.h"
+
+#include "fvmsg.rc"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FONTFACE        "MS Shell Dlg 2"        /* Usually points to Tahoma */
+END
+
+
+fviewAccel ACCELERATORS
+    BEGIN
+        "D",   IDB_DONE,       ALT, VIRTKEY
+        "D",   IDB_DONE,            ASCII
+        "d",   IDB_DONE,            ASCII
+
+        "P",   IDB_PRINT,      ALT, VIRTKEY
+        "P",   IDB_PRINT,           ASCII
+        "p",   IDB_PRINT,           ASCII
+        ",",   IDB_PREV_FONT
+        ",",   IDB_PREV_FONT,  ALT
+        "<",   IDB_PREV_FONT
+        "<",   IDB_PREV_FONT,  ALT
+
+        ".",   IDB_NEXT_FONT
+        ".",   IDB_NEXT_FONT,  ALT
+        ">",   IDB_NEXT_FONT
+        ">",   IDB_NEXT_FONT,  ALT
+
+        VK_ESCAPE, IDB_DONE,        VIRTKEY
+
+        VK_UP,      IDK_UP,         VIRTKEY
+        VK_DOWN,    IDK_DOWN,       VIRTKEY
+        VK_PRIOR,   IDK_PGUP,       VIRTKEY
+        VK_NEXT,    IDK_PGDWN,      VIRTKEY
+    END
+
+#include "fontview.rcv"

@@ -1,0 +1,5 @@
+LIBRARY KBD101C
+
+EXPORTS
+    KbdLayerDescriptor @1
+    KbdNlsLayerDescriptor @2

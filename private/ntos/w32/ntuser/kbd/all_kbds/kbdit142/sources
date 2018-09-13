@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdit142
+
+TARGETNAME=kbdit142
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdit142.c kbdit142.rc
+
+NTTARGETFILE0=kbdit142.h kbdit142.rc kbdit142.def

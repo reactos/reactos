@@ -1,0 +1,42 @@
+!include ..\common.src
+
+C_DEFINES = $(C_DEFINES) -DOSDEBUG -DOSDEBUG4 -DWORD97_STYLE -D_DEBUG -DDEBUG
+
+!IFDEF DEBUGVER
+USE_RTTI=1
+!ENDIF
+
+USECXX_FLAG=/TP
+
+UMTYPE=windows
+UMENTRY=winmain
+
+TARGETNAME=dbgwiz
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS= $(BASEDIR)\public\sdk\lib\*\comctl32.lib            \
+            $(BASEDIR)\public\sdk\lib\*\comdlg32.lib            \
+            $(BASEDIR)\public\sdk\lib\*\shell32.lib             \
+            $(BASEDIR)\public\sdk\lib\*\ole32.lib               \
+            $(BASEDIR)\public\sdk\lib\*\setupapi.lib            \
+            $(BASEDIR)\public\sdk\lib\*\version.lib             \
+            $(VCTOOLS)\debugger\lib\*\wslib.lib                 \
+            $(BASEDIR)\public\sdk\lib\*\uuid.lib
+
+INCLUDES=$(VCTOOLS)\debugger\wrkspc
+
+SOURCES=dbgwiz.rc       \
+        cfgfile.cpp     \
+        copydlg.cpp     \
+        data.cpp        \
+        dbgwiz.cpp      \
+        init.cpp        \
+        cfgdata.cpp     \
+        wizmisc.cpp     \
+        pagedefs.cpp
+
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=precomp.hxx
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

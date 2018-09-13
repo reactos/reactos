@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (c) 1993-94  Microsoft Corporation
+
+!ENDIF
+
+TARGETNAME=dbghelp
+C_DEFINES=/DBUILD_DBGHELP
+
+!INCLUDE ..\sources.inc
+
+SOURCES=\
+        ..\debug.c       \
+        ..\imagedir.c    \
+        ..\imagehlp.c    \
+        ..\linesym.c     \
+        ..\mapdebug.c    \
+        ..\symbols.c     \
+        ..\sympriv.c     \
+        ..\typesrv.c     \
+        ..\walk.c        \
+        ..\walkx86.c     \
+        ..\walkalp.c     \
+        ..\walki64.c     \
+        ..\vwndia64.c    \
+        ..\ext.c         \
+        ..\$(TARGETNAME).rc
+
+
+TARGETLIBS=\
+    $(TARGETLIBS)\
+    $(BASEDIR)\public\sdk\lib\*\version.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+SYNCHRONIZE_BLOCK=1

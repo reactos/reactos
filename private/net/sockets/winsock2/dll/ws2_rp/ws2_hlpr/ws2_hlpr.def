@@ -1,0 +1,11 @@
+LIBRARY WS2_HLPR
+
+
+EXPORTS
+
+    DllMain
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+

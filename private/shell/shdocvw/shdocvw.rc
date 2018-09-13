@@ -1,0 +1,280 @@
+/****************************************************************************************************
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ *                                                                                                  *
+ * NON LOCALISABLE RESOURCES ONLY - NON LOCALISABLE RESOURCES ONLY - NON LOCALISABLE RESOURCES ONLY *
+ *                                                                                                  *
+ * This file must ONLY contain resources that DO NOT need LOCALISATION. Any localised resources     *
+ * should go into shdoclc.rc. Abuse of this rule will be on pain of death.                          *
+ *                                                                                                  *
+ * 06/11/98 - gilesv                                                                                *
+ *                                                                                                  *
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ ****************************************************************************************************/
+
+#include <windows.h>
+#include <shlobj.h>     // for FCIDM_SHVIEWFIRST
+
+#include <mshtmcid.h>
+
+#include "urlmon.h"
+#include <shellp.h>
+#include <shdocvw.h>
+#include "resource.h"
+#include <platform.h>
+
+REGINST                 REGINST "selfreg_shdocvw.inf"
+
+IDC_OFFLINE_HAND        CURSOR "..\lib\handoffl.cur"
+
+// BUGBUG this needs to be resolved... how do we get the system to
+// load the custom dialog box template from our resource dll?
+#ifndef UNIX
+IDD_ADDTOSAVE_DIALOG DIALOG DISCARDABLE 0, 0, 250, 20
+STYLE WS_CHILD | WS_VISIBLE | DS_3DLOOK | DS_CONTROL | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Encoding:"IDC_STATIC, 5, 2, 50, 10, NOT WS_GROUP
+    COMBOBOX        IDC_SAVE_CHARSET,54,0,156,70,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    CONTROL         "",-1,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_ADDTOSAVE_NT5_DIALOG DIALOG DISCARDABLE 0, 0, 300, 20
+STYLE WS_CHILD | WS_VISIBLE | DS_3DLOOK | DS_CONTROL | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Encoding:"IDC_STATIC, 67, 2, 50, 10, NOT WS_GROUP
+    COMBOBOX        IDC_SAVE_CHARSET,130,0,164,70,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | CBS_SORT
+    CONTROL         "",-1,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+END
+#else
+IDD_ADDTOSAVE_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24,  212, 210
+CAPTION "Open"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "File &Name",stc3,8,145,76,9
+    EDITTEXT        edt1,8,157,192,12,ES_AUTOHSCROLL | ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK",IDOK,44,200,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,116,200,50,14,WS_GROUP
+    LTEXT           "Fil&ter",stc2,8,5,90,9
+    COMBOBOX        cmb1,8,16,193,36,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Directories",-1,8,34,92,9
+    LISTBOX         lst2,8,48,92,96,LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_HSCROLL | WS_TABSTOP
+    LTEXT           "&Files", stc4, 112, 34, 50, 9
+    LISTBOX         lst1,112,48,90,96,LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_HSCROLL | WS_TABSTOP
+    LTEXT           "&Encoding:"IDC_STATIC, 8, 170, 90, 9, NOT WS_GROUP
+    COMBOBOX        IDC_SAVE_CHARSET,8,180,193,70,CBS_DROPDOWNLIST | WS_VSCROLL
+| WS_TABSTOP | CBS_SORT
+END
+#endif /* UNIX */
+
+//--------------------------------------------------------------
+// I C O N S
+//
+// Warning!  Do not change the order of icons if they shipped in the
+// previous version of shdocvw.
+//--------------------------------------------------------------
+
+IDI_HOMEPAGE            ICON "rc_home.ico"              // 0
+IDI_101                 ICON "junk.ico"                 // 1 -- NOTE: used to be IDI_FRAME "rc_frame.ico", which moved to shdoclc.  If someone referenced by index, we need to duplicate the icon here again.
+IDI_RUNDLG              ICON "fileopen.ico"             // 2
+IDI_SSL                 ICON "rc_sec.ico"               // 3
+IDI_104                 ICON "junk.ico"                 // 4 -- NOTE: used to be IDI_FAVORITE "..\shell32\fave.ico", which moved to shdoclc.  If someone referenced by index, we need to duplicate the icon here again.
+IDI_OFFLINE             ICON "..\shell32\drivedsc.ico"  // 5
+IDI_106                 ICON "junk.ico"         // 6
+IDI_107                 ICON "junk.ico"         // 7
+IDI_108                 ICON "junk.ico"         // 8
+IDI_109                 ICON "junk.ico"         // 9
+IDI_STATE_NORMAL          ICON "st_norm.ico"    // 10
+IDI_STATE_FINDINGRESOURCE ICON "st_find.ico"    // 11
+IDI_STATE_SENDINGREQUEST  ICON "st_sreq.ico"    // 12
+IDI_STATE_DOWNLOADINGDATA ICON "st_recv.ico"    // 13
+114                     ICON "junk.ico"         // IE didn't ship one at 114, why do we need it??
+IDI_115                 ICON "junk.ico"         // 15
+IDI_PRINTER             ICON "..\shell32\printer.ico"   // 16
+IDI_117                 ICON "junk.ico"         // 17
+IDI_CHANNELSAPP         ICON "chanapp.ico"      // 18 -- THIS ONE IS REFERENCED BY INDEX IN IE40 LINKS
+//IDI_154                 ICON ""
+//IDI_200                 ICON ""
+//IDI_201                 ICON ""
+//IDI_202                 ICON ""
+//IDI_203                 ICON ""
+ICO_TREEUP              ICON "treeup.ico"
+//IDI_205                 ICON "gleam.ico"
+#ifndef POSTPOSTSPLIT
+IDI_NEW_FOLDER          ICON "newfld.ico"
+#endif
+//IDI_207                 ICON ""
+//IDI_208                 ICON ""
+//IDI_209                 ICON ""
+// OPS icons
+IDI_LOCK                ICON "lock.ico"
+IDI_USAGE_ICON          ICON "usage_ic.ico"
+// WARNING / POTENTIAL BUG:
+// the following 10 icons are DIFFERENT
+// from those shipped in IE4
+IDI_REMOTEFLD           ICON "hcview.ico"
+IDI_HISTWEEK            ICON "histweek.ico"
+IDI_HISTOPEN            ICON "histopen.ico"
+IDI_HISTFOLDER          ICON "histfold.ico"
+IDI_HISTURL             ICON "histurl.ico"
+// END WARNING / POTENTIAL BUG
+
+IDB_IETOOLBAR           BITMAP "tbdef.bmp"
+IDB_IETOOLBARHOT        BITMAP "tbhot.bmp"
+IDB_IETOOLBAR16         BITMAP "tbdef16.bmp"
+IDB_IETOOLBARHOT16      BITMAP "tbhot16.bmp"
+IDB_IETOOLBARHICOLOR    BITMAP "tbdefhi.bmp"
+IDB_IETOOLBARHOTHICOLOR BITMAP "tbhothi.bmp"
+
+IDI_PINNED              ICON "pinned.ico"
+
+IDI_FORTEZZA            ICON "fortezza.ico"
+IDI_STATE_SCRIPTERROR   ICON "st_scer.ico"
+
+1 TYPELIB "exdisp.tlb"
+
+//--------------------------------------------------------------
+// B I T M A P S (and other images types)
+//--------------------------------------------------------------
+
+IDB_FOLDER              BITMAP "folder.bmp"
+IDB_FOLDERVIEW          BITMAP "fldview.bmp"
+
+IDB_SPLASH_IEXPLORER    BITMAP "splash16.bmp"
+IDB_SPLASH_IEXPLORER_HI BITMAP "splash.bmp"
+
+IDB_HISTORYANDFAVBANDSDEF  BITMAP "tbbandsdef.bmp"
+IDB_HISTORYANDFAVBANDSHOT  BITMAP "tbbandshot.bmp"
+
+IDA_DOWNLOAD            AVI     download.avi
+IDA_AUTOSUGGEST         AVI     iforms.avi
+
+IDR_PRINT_PREVIEW           BITMAP      "prt_as.bmp"
+IDR_PRINT_PREVIEWONEDOC     BITMAP      "prt_sel.bmp"
+IDR_PRINT_PREVIEWALLDOCS    BITMAP      "prt_all.bmp"
+IDR_PRINT_PREVIEWDISABLED   BITMAP      "prt_gray.bmp"
+
+#ifdef UNIX
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ALPHAWRNDLG DIALOG DISCARDABLE  0, 0, 226, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome to Internet Explorer 5.0"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,88,121,50,14
+//    CONTROL         "In the future do not show this message",
+//                    IDC_NOFUTUREDISPLAY,"Button",BS_AUTOCHECKBOX |
+//                    WS_TABSTOP,41,98,143,10
+    LTEXT           "This beta release of Internet Explorer represents a work in progress.  Some of the features in the product may be incomplete at this time, and are subject to change in the final version.  "
+                    IDC_STATIC,14,29,198,31
+    LTEXT           "Please see the readme that accompanies this release for more detailed information.",
+                    IDC_STATIC,14,63,198,31
+    LTEXT           "Welcome to the Beta Release of Internet Explorer 5",
+                    IDC_STATIC,15,10,194,8
+END
+
+
+#endif /* UNIX */
+
+//
+// these are strings that are used in the registry.
+// UI strings should never be registered, because the registry
+// doesn't handle cross codepage strings, and it's static (no plugUI).
+// The differences between the plugUI version of the protocol strings
+// and the registered (install language) versions were causing
+// IE to erroneously present the "make IE your default browser" dialog
+// when the UI language had been switched via plugUI.
+// the UI strings are ones which, as far as I can tell, we never use
+// so probably someone else (like shell32) is loading them out of the
+// registry... unless we could teach whoever loads them about
+// using shlwapi's SHLoadRegUIString(), there's no point is wasting
+// space in the satellite resource dlls... hence they're back here.
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_REG_HTTPNAME    "URL:HyperText Transfer Protocol"
+    IDS_REG_HTTPSNAME   "URL:HyperText Transfer Protocol with Privacy"
+    IDS_REG_FTPNAME     "URL:File Transfer Protocol"
+    IDS_REG_GOPHERNAME  "URL:Gopher Protocol"
+    IDS_REG_TELNETNAME  "URL:Telnet Protocol"
+    IDS_REG_RLOGINNAME  "URL:RLogin Protocol"
+    IDS_REG_TN3270NAME  "URL:TN3270 Protocol"
+    IDS_REG_MAILTONAME  "URL:MailTo Protocol"
+    IDS_REG_NEWSNAME    "URL:News Protocol"
+    IDS_REG_FILENAME    "URL:File Protocol"
+    IDS_REG_INTSHNAME   "Internet Shortcut"
+    IDS_REG_THEINTERNET "The Internet"
+    IDS_REG_URLEXECHOOK "URL Exec Hook"
+    IDS_REG_OPEN        "&Open"
+    IDS_REG_OPENSAME    "Open in S&ame Window"
+    IDS_REG_SCFTYPENAME "Windows Explorer Command"
+END
+
+#ifdef MLUI_SUPPORT
+#include "shdocvw.rcv"
+#else
+#include "shdoclc.rc"
+#endif
+
+#ifdef UNIX
+
+IDI_MONOFRAME       ICON                    "monofrm.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog for EULA acceptance from user.
+//
+
+IDD_EULA DIALOG DISCARDABLE  50, 50, 250, 180
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Internet Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_EULA_TEXT,30,41,200,81,ES_MULTILINE |
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    RADIOBUTTON     "I &accept the agreement",IDC_ACCEPT,30,127,87,10,
+                    WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "I &do not accept the agreement",IDC_DONT_ACCEPT,30,142,
+                    110,10,WS_TABSTOP
+    LTEXT           "Press the PAGE DOWN key to see more text...",IDC_MORE,
+                    150,127,78,24
+    LTEXT           "License Agreement",IDC_BIGFONT,30,10,210,20
+    LTEXT           "Please read the following license agreement. You must accept the agreement to continue using Internet Explorer.",
+                    IDC_STATIC,30,22,196,16
+    PUSHBUTTON      "Dis&miss",IDOK,100,165,50,14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_NS_BOOKMARKS_DIR "/Imported Bookmarks"
+IDS_NEWS_SCRIPT_ERROR  "Unable to execute News command. Please verify News settings in 'Programs' tab under 'Internet Options'. "
+IDS_NEWS_SCRIPT_ERROR_TITLE  "News"
+END
+
+DLG_RUNMOTIF DIALOG DISCARDABLE  0, 0, 227, 85
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_RUNDLG,IDD_ICON,7,11,18,20
+    LTEXT           "Type the Internet address of a document, and Internet Explorer will open it for you.", IDD_PROMPT,36,11,182,18
+    LTEXT           "&Open:",IDD_RUNDLGOPENPROMPT,7,39,24,10
+    CONTROL         "",IDD_COMMAND, WC_COMBOBOXEX, CBS_DROPDOWN | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL| WS_TABSTOP, 36,37,183,100
+    DEFPUSHBUTTON   "OK",IDOK,19,63,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,89,63,50,14
+    PUSHBUTTON      "&Browse...",IDD_BROWSE,159,63,50,14
+END
+
+#endif /* UNIX */

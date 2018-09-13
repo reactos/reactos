@@ -1,0 +1,133 @@
+#include "sdv16rc.h"
+
+#define DS_CENTER 0
+
+IDB_DOWNLOAD            BITMAP "..\\..\\core\\shdocvw\\download.bmp"
+#define IDI_FRAME RES_ICO_FRAME 
+
+// MAKEINTRESOURCE is causing us problems...
+#undef IDI_EXCLAMATION
+#define IDI_EXCLAMATION     32515
+
+DLG_DOWNLOADPROGRESS DIALOG DISCARDABLE  60, 60, 247, 107
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | DS_CENTER | DS_3DLOOK
+CAPTION "File Download"
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    ICON            IDI_FRAME,IDD_DOWNLOADICON,7,7,18,20,
+#ifdef WIN16
+    CONTROL         "",IDD_ANIMATE,ANIMATE_CLASS,ACS_TRANSPARENT|ACS_AUTOPLAY|ACS_TIMER,7,0,236,25
+#endif
+    LTEXT           "Getting File Information:",IDD_OPENIT, 7,38,236,10, SS_NOPREFIX
+    CONTROL         "",IDD_NAME,"edit",WS_CHILD | WS_VISIBLE | ES_READONLY,       7,48,236,10
+    CONTROL         "",IDD_PROBAR,PROGRESS_CLASS, NOT WS_VISIBLE ,                  7,58,176,8
+    LTEXT           "File size unknown",IDD_NOFILESIZE, 7,68,176,10,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Estimated time left:",-1,7,68,60,10,SS_NOPREFIX
+    LTEXT           "Download to:",-1,7,78,60,10,SS_NOPREFIX
+    LTEXT           "Transfer rate:",-1,7,88,60,10,SS_NOPREFIX
+    LTEXT           "",IDD_TIMEEST,70,68,170,10,SS_NOPREFIX
+    LTEXT           "",IDD_DIR,70,78,170,10,SS_NOPREFIX
+    LTEXT           "",IDD_TRANSFERRATE,70,88,85,10,SS_NOPREFIX
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,190,88,50,14
+END
+
+DLG_SAFEOPEN DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER | DS_3DLOOK
+CAPTION "File Download"
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,233,162,50,14
+    PUSHBUTTON      "OK",IDOK,180,162,50,14
+    CONTROL         "Al&ways ask before opening this type of file",IDC_SAFEOPEN_ALWAYS,
+		    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,99,108,182,12
+#ifndef WIN16 // beta2?
+    DEFPUSHBUTTON   "&More Info...",IDM_MOREINFO,126,162,50,14
+#endif
+    LTEXT           "You have chosen to download a file from the Web.",-1,99,
+		    7,182,19
+#ifdef WIN16
+    CONTROL         IDB_DOWNLOAD,IDB_DOWNLOAD,BITMAPCLASSNAME,SS_BITMAP | SS_SUNKEN,8,7,80,140
+#else
+    CONTROL         IDB_DOWNLOAD,-1,"Static",SS_BITMAP | SS_SUNKEN,8,7,80,140
+#endif
+    LTEXT           "What would you like to do with this file?",-1,99,35,182,
+		    8
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,8,154,275,1
+    CONTROL         "Run this program from the Internet",IDC_SAFEOPEN_AUTOOPEN,"Button",
+		    BS_AUTORADIOBUTTON,99,48,178,8
+    CONTROL         "Save this program to disk",IDC_SAFEOPEN_AUTOSAVE,"Button",
+		    BS_AUTORADIOBUTTON,99,60,178,8
+END
+
+DLG_UNKNOWNFILE DIALOG DISCARDABLE  0, 0, 247, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Internet Explorer"
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_UNKNOWNFILE_ICON,7,8,18,20
+    LTEXT           "Internet Explorer is opening file of unknown type:\n%s"
+	    IDC_UNKNOWNFILE_EXPL,38,8,197,20,SS_NOPREFIX
+
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,38,32,197,1
+
+    LTEXT           "What would you like to do with this file?" -1,
+	    38,42,197,8,SS_NOPREFIX
+
+    CONTROL         "O&pen it using a program on your computer", IDC_UNKNOWNFILE_AUTOOPEN,
+	    "Button", BS_AUTORADIOBUTTON | WS_GROUP,
+	    38,54,197,10
+
+    CONTROL         "&Save it to disk", IDC_UNKNOWNFILE_AUTOSAVE,
+	    "Button", BS_AUTORADIOBUTTON ,
+	    38,64,197,10
+
+    PUSHBUTTON      "OK",    IDOK,      136,83,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,  190,83,50,14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERR_FILE_NOTFOUND           "The system cannot find the file specified."
+    IDS_ERR_URL_NOTFOUND            "The system cannot find the URL specified."
+    IDS_ERR_RESOURCE_NOTFOUND       "The system cannot find the resource specified."
+    IDS_ERR_UNKNOWN                 "The system encountered an unknown error."
+    IDS_ERR_DOWNLOAD_FAILURE        "The system failed to download the content."
+    IDS_ERR_UNSUPPORTED_PROTOCOL    "The specified protocol is not supported."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ALLFILES                "All Files"
+    IDS_BYTESCOPIED             "Not known (Opened so far %1!s!)"
+    IDS_CANTDOWNLOAD            "Internet Explorer cannot download from the Internet site: %1.\n\n%2"
+    IDS_DEFDLGTITLE             "File Download"
+    IDS_DOCUMENT                "Document"
+    IDS_DOWNLOADCOMPLETE        "Download complete"
+    IDS_DOWNLOADFAILED          "Download could not complete!"
+    IDS_DOWNLOADTOCACHE         "Temporary Folder"
+    IDS_ESTIMATE                "%1!s! (%2!s! copied)"
+    IDS_OPENFROMINTERNET        "Open this file from the internet"
+    IDS_OPENING                 "Opening:"
+    IDS_SAVEFILETODISK          "Save this file to disk"
+    IDS_SAVING                  "Saving:"
+    IDS_TARGETFILE              "%1 from %2"
+    IDS_TITLEBYTES              "%1!s! of %2!s! Copied"
+    IDS_TITLEPERCENT            "%1!d!%% of %2!s! Completed"
+    IDS_TRANSFERRATE            "%1!s!/Sec"
+    IDS_TITLE                   "Microsoft Internet Explorer"
+    IDS_ERR_OLESVR              "Cannot start the OLE server for this type of document.\n%1\n\nDo you want to download it as a file?"
+    IDS_ERR_LOAD                "The associated OLE server cannot load this document.\n%1\n\nDo you want to download it as a file?"
+    IDS_INVALIDURL              "Internet Explorer cannot open: %1.\n\n%2"
+END

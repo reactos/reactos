@@ -1,0 +1,35 @@
+TARGETNAME=srv
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+EXPECTED_WINVER=4.0
+NOT_LEAN_AND_MEAN=1
+USE_LIBCMT=1
+USE_NATIVE_EH=1
+USE_STATIC_ATL=1
+
+MSC_WARNING_LEVEL=/WX /W3
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=pch.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+
+INCLUDES=$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\windows\inc;..\inc
+PASS0_HEADERDIR=..\inc
+PASS0_SOURCEDIR=..\cmn
+
+SOURCES= \
+    ptsrv32.idl   \
+    defsrv32.cpp  \
+    enum.cpp   	  \
+    defprop.cpp   \
+    imageprop.cpp \
+    mruprop.cpp \
+    colprov.cpp
+
+C_DEFINES = \
+    -D_WINDOWS \
+    -D_UNICODE \
+    -DUNICODE
+

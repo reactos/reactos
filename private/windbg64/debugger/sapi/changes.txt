@@ -1,0 +1,939 @@
+07-Jan-1996 BryanT
+    Has it been this long?  Merge in the speed changes from SteveSm for faster UDT lookups.
+    Rename all the VC sourcecode to *.vc.  We'll eliminate them all together shortly.
+    Rename the NT .cxx files to *.cpp.
+    Switch to the NT build process.
+    Move the tracking for the PDATA and FPO into the EXE struct.  This allows multiple
+    copies of the same image for different processes.
+
+16-Jun-1995
+    loadomf.cpp
+        Query the registry for Pdb Dirs and pass information to mspdb?0.dll, so it
+        can search for pdbs along the path.
+
+01-May-1995 SanjayS
+    shsymlb0.c
+        Don't search the publics in SHdNearestSymbol if the address passed in
+        lies within the range of the proc that we found.
+
+25-Feb-1995 BryanT
+    Nuke all 16-bit files and build rules.  Use the Dolphin/Crystal codebase if it's
+    interesting to you.
+
+03-Nov-1994 BryanT
+    All *.cxx files, sources, shinc.hxx
+        Add support to build in NT build environment w/o effecting VC.
+        *.cxx files are built in NT, *.c are built for VC (will change
+        once it's stable).  For NT code, remove FAR/PASCAL/LOADDS/NEAR
+        macros.  Replace _ftcsxxx macros with _tcsxxx macros.  Remove
+        need for shwin32.c by using CRITICAL_SECTION wrappers.  Format
+        according to OSDebug4 standards.
+
+23-Jun-1994 SanjayS
+    loadomf.cpp
+        Add support to read NT .dbg files.
+
+18-May-1994 v-LeoL
+    loadomf.cpp inc\sapi.h
+        When the IDE preloads a DLL it stands the risk of NT moving the
+        loadaddress when loaded for real. This causes all the
+        IMAGE_RUNTIME_FUNCTION_ENTRY's to be invalid unless relocated.
+        So OLLoadOmf is changed to check for that problem and LoadPdata
+        stores the assumed loadaddress when first loaded.
+
+18-May-1994 MarkBro
+    shsymbol.c:
+        Corrected CheckHandles.  It assumed that psym->off was never zero.
+        Changed all refs from
+            GetAddrOff(paddr) == 0
+        to
+            GetAddrOff(paddr) < psym->off
+
+        Also corrected SHIsInProlog to correctly check for the end (limit)
+        when validating epilog.
+
+29-Apr-1994 MarkBro
+    shinit.c:
+        Exported SHIsEmiLoaded.
+
+29-Apr-1994 MarkBro
+    sh.c:
+        In SHAddDllExt, when a filename isn't found in the correct
+        list, look in the other list (exgDll vs. exgExe).  If found
+        put in correct list.  Solves problem with calling SHLoadDll
+        which automatically puts filename into dll list (doesn't
+        take an arg to specify)
+
+25-Apr-1994 v-LeoL
+    shsymbol.c
+        Because MIPS uses nested procedures in C++EH and SEH do an
+        exhaustive search in SetBlks when PC is beyond DebugEnd of
+        top level procedure.
+
+20-Apr-1994 SanjayS
+    sh.c
+        Store full path name for dlls we don't find on the host machine.
+        This is so we don't report errors during a restart.
+
+19-Apr-1994 v-LeoL
+    shsymbol.c
+        Protect against GetSymbols failure and prep for S_LINK32
+        support
+    sl.c
+        Protect against FHOpen failure
+    sh.c
+        Protect SHGetHexeName against null Hexe
+
+14-Apr-1994 MarkBro
+    sh.c:
+        When destroying an Exs node, make sure that the
+        find node succeeded before calling LLRemove
+
+13-Apr-1994 v-LeoL
+    shsymbol.c
+        return FALSE in SHIsInProlog if addr beyond end of proc
+
+1-Apr-1994 v-LeoL
+    sh.c shsymbol.c
+        Don't stop for S_ENDARG when looking for REGREL/BPREL
+        Look for REGREL in SHGetSymbol sopStack
+
+30-Mar-1994 MarkBro
+    sl.c:
+        Big changes to SLFAddrFromLineExtended. Removed cache and
+        now will loop through entire source table to find multiple
+        occurances of a line w/i the table.
+
+        SLFLineToAddr now has its own cache for the previous query.
+        (SLCAddrFromLine already had a cache).
+
+        SLCAddrFromLine now calls SLFAFLExt with new arg for finding
+        the nth entry in the specified table
+
+24-Mar-1994
+    loadomf.cpp
+        Under OSDEBUG4X don't exit OLStart if DEBUG_DIRECTORY==NULL
+        until after having checked/loaded pdata
+
+22-Mar-1994 MarkBro
+    shinit.c shsymbol.c shiproto.h:
+        Added export of SHFindSymInExe
+
+17-Mar-1994 MarkBro
+    Changes below to fix Dolphin 8654.
+
+    loadomf.c:
+        #ifdef'd out guts of LoadOmap since it will do an allocation
+        which isn't saved.  Basicall, lost memory
+
+    sh.c:
+        Reworked SHUnloadSymbolhandler.  Now correctly destroy debug
+        data lists.  Also takes an arg to deterimine if the DLL
+        is actually being unloaded or just the debuggee.
+
+        Various KillxxxList functions now free up corresponding
+        memory.  Still some holes, but not so bad.  The problems
+        were mostly lists being retained.  Not anymore
+
+    shinit.c:
+        Change SHInit call of InitLlexg to FInitLists and now include
+        initializing hlliPds
+
+    inc\shiproto.h:
+        Changed prototype for SHUnloadSymbolHandler (now takes BOOL)
+
+15-Mar-1994 MarkBro
+    sh.c:
+        When loading symbols, don't put cbSym into WORD.  Should go
+        into UINT.  Dolphin 8577
+
+18-Feb-1994 MarkBro
+    loadomf.c:
+        Close the hfile (.exe/.dll) if NB10 and LoadPdb fails.
+        Dolphin:3386
+
+16-Feb-1994 MarkBro
+    *.c inc\sapi.h:
+        Dbcs enabling only.
+
+18-Jan-1994 MikeMo
+    shsymbol.c inc\cvproto.h:
+        OSDebug 4 changes: SYFIsOverlayLoaded callback is gone.
+
+30-Nov-1993 MarkBro
+    ph.c:
+        Enabled NB09 FindNearest to search global syms also.  SteveSm
+        vehemently argueed not to put in additional support for NB10
+
+12-Nov-1993 MarkBro
+    loadomf.c dosdll.asm shinit.c sh.c inc\shiproto.h inc\sapi.h:
+        Handle PDB load errors like NB09 errors and added new
+        function void SHPdbNameFromExe( lszName, lszPdbName, cbMax )
+
+4-Nov-1993 MarkBro
+    sl.c:
+        When calculating the CB for the last line in the source line
+        table, add 1 to the offEnd since GetSFBounds returns an
+        inclusive offset so cb = offBounds - srcstart + 1:
+        Fix for dolphin 3701
+
+2-Nov-1993 MarkBro
+    ph.c:
+        Added code in FindNearest to include sstGlobals in search
+        ifdef'd out until M5
+
+    shsymlb0.c:
+        When getting nearest address, also allow for GDATAxx when
+        creating strings.
+
+21-Oct-1993 MarkBro
+    shinit.c sh.c inc\shiproto.h dosdll.asm:
+        Added SHUnloadSymbolHandler for NB10 notifications.  Can
+        also be used in the future to free up memory so symbol
+        handler doesn't need to be free'd and reloaded.
+
+7-Oct-1993 MarkBro
+    loadomf.c:
+        OLLoadFileIndexes - handle NB10 pdb size instead of lpdssCur->cb
+
+6-Oct-1993 MarkBro
+    loadomf.c:
+        OLLoadFileIndexes - correct off by 1 on cbFileName calculation
+
+5-Oct-1993 MarkBro
+    inc\sapi.h:
+        Added cbFileNames field to _EXS struct.  This will be used
+        to determine the end of the lpchFileNames buffer.
+
+    loadomf.c:
+        OLLoadFileIndexes - initialize the cbFileNames field of the _EXS
+        struct
+
+    sl.c:
+        Added SLFFileInHexe.  Scans lpchFileNames for a specific file
+        being searched for in SLCAddrFromLine.  Also changed SLCAddrFromLine
+        to call SLFFileInHexe to short circuit and NOT go through all of
+        the modules in an exe if the file isn't referenced in the exe
+
+1-Oct-1993 MarkBro
+    sl.c:
+        cbLine was off by 1.  (offNext - offPrev - 1) was the cb in
+        SLFLineToAddrExtended.  All the way from CV400!
+
+29-Sep-1993 v-LeoL
+    loadomf.c:
+        Handle uSig == 8 in CheckSignature
+
+    ph.c
+        Add UNALIGNED for MIPS
+
+    shsymbol.c shsymlb0.c shsymlb1.c
+        Add support for S_GPROCMIPS, S_LPROCMIPS, S_REGREG32
+
+27-Sep-1993 MarkBro
+    sl.c:
+        Corrected bug in SLFLineToAddrExtended.  Improperly caching
+        iSegStartSave.
+
+21-Sep-1993 MarkBro
+    sh.c:
+        Corrected SHHexeAddNew to first check the exs list to see
+        if the hexg is already in the list if so, don't re-add (bug)
+        and return success.
+
+    shsymbol.c inc\sapi.h:
+        DBCS enabling.  Missing call to STRLWR instead of _fstrlwr
+
+    sl.c:
+        Changed SLCAddrFromLine to go through each segment table for
+        a source file.  Also SLFLineToAddr now calls SLFLineToAddrExteneded
+        which SLCAddrFromLine uses.  This new API (not exported) takes
+        an index into the hsf (SL table) to start the search for the line.
+
+08-Sep-1993 MarkBro
+    sl.c:
+        Added SLCAddrFromLine.  This will walk through all of the hexe's
+        in our list to get ALL occurances of a source line in all modules.
+        Will allocate an array of SLP (source line pairs)
+
+    shinit.c:
+        Added export of SLCAddrFromLine to the SHF struct.  Also added new
+        SHFree so caller can free up memory allocated by SLCAddrFromLine
+
+    inc\shiproto.h:
+        Added prototype for SLCAddrFromLine
+
+26-May-1993 DanS
+    sh.c
+        cuda:4825
+        GetNextSym and FixAlign were not operating on the same wavelength
+        wrt UFOP's and what was stored in the data portion of S_ALIGN records
+        once we had the page loaded.
+    ph.c
+    sh.c
+        turn optimizations on for WIN32 builds
+
+20-Apr-1993 RicoM
+    ph.c
+        CUDA #3513
+        PsymFromRef now returns NULL if the module in question doesn't
+        have any associated symbols.  There was only one call to this
+        function and it now correctly checks for this case.  This fixes
+        problems that occur if cvpack can't write out the symbols for
+        a module because they are too big or some other such wierdness.
+
+23-Mar-1993 DanS
+    shsymbol.c
+    shsymlb0.c
+        changes required by new cvinfo.h, use bitfields instead of hard
+        coded bit positions.
+
+19-Mar-1993 dans
+    shsymbol.c
+        don't count on proc symbols being ordered by offset in SHSetBlksInCXT.
+        this means that we have to look at every proc sym in a module before
+        giving up.
+
+16-Mar-1993 dans
+    sh.c
+        a couple of off-by-1 bugs in LpvFromAlmLfo regarding cb == cbBlock
+        on an ending alignment record that is on the boundary, exactly.
+        Also fixed a couple of warnings.
+
+05-Mar-1993 dans
+    makefile
+    sh.c
+    shinit.c
+    shnt.bld
+        added critical sections around SHLoadDll and SHAddDll, cause they
+        both dork with the list of modules.
+
+29-Feb-1993
+    loadomf.c
+        Change cTypeIndChunk to 0x2000 to prevent wrap-around when loading
+        type index table in a segmented architecture.
+    shsymbol.c
+    shsymlb0.c
+    shsymlb1.c
+        Added S_[L|G]Thread cases where appropriate in order to support
+        thread local storage.
+
+31-Dec-1992 RicoM
+    sh.c:
+        Check for null hpds in SHGetNextExe() and return failure code
+        instead of asserting
+
+17-Dec-1992 MarkBro
+    shw0.bld:
+        Fix version stuff in windows builds.
+
+15-Dec-1992 MarkBro
+    shsymbol.c:
+        Moved assert( pcxt->hmod ) in SHGetSymLoc to places where
+        hmod is referenced.  There are places where we don't care if the
+        hmod is null (where it's not used, duh).
+
+11-Dec-1992 MarkBro
+    shsymbol.c:
+        SHGetSymLoc wasn't handling multiple register symbols.  Needed
+        to see if register index > 255.  Second register value to be
+        in hiword if applicable
+
+11-Dec-1992 MarkBro
+    shinit.c
+        Change #ifdef around version stuff so we can get update version #'s
+        for release builds.
+
+07-Dec-1992 MarkBro
+    sh.c:
+        Add extra check for end of symbol info in GetNextSym.  Was only
+        checking for ~1.  Now check for ~1 or -1.
+
+05-Dec-1992 MarkBro
+    sh.c:
+        Allow SHHexeFromHmod to accept an HMOD of NULL.  If the hmod is
+        NULL, return (HEXE)NULL.
+
+03-Dec-1992 GlennN
+    ph.c
+        fix bug 5859.
+        Add function to verify an hexe from an hpid.
+        The problem was that we assume that hpdsCurr is
+        changed and since we changed to having 1 hpds we
+        lost the ability to cache multiple hpids ( as well
+        as the setting of hpidCurr ).  To get around this (
+        since windows is weird ) we now make sure that the
+        hexe is an hexe in the list.
+
+    loadomf.c
+        added fix from dans change to OLLoadOmf
+
+02-Dec-1992 DavidGra
+    ph.c
+        Incorporate DanS's fix for binary searching.
+    inc\sapi.h
+    sh.c
+    loadomf.c
+        Handle mis-aligned symbols by maintaining an align bit in
+        the Alm structure and using the low bit of an alignment
+        record length to maintain the alignment bit for linear
+        searching of tables.
+
+30-Nov-1992 MikeMo
+    loadomf.c:
+        (1) In default (non-LOADALL) case, skip over all sstModules
+            as an optimization.  (This was already being done in
+            the LOADALL case.)
+        (2) Fix for NT: compare iMod to 0xFFFF not -1, since it's an
+            unsigned short.  (Was fixed earlier, someone accidentally
+            changed it back on a merge with 410.)
+
+24-Nov-1992 DavidGra
+    loadomf.c
+    ph.c
+    inc\sapi.h
+        Added support for hash functions 10 & 12 while still supporting
+        functions 6 & 8.
+
+18-Nov-1992 DavidGra
+    sl.c:
+        If a source line table is unsorted, we now sort it at load time.
+
+13-Nov-1992 DavidGra
+    inc\sapi.h  Change type alignment to 48k.
+
+05-Nov-1992 DavidGra
+    loadomf.c   Forgot to include the types table in the fix for demand
+                load of symbols from a .dbg file.
+
+03-Nov-1992 DavidGra
+    loadomf.c   Added a new field to the exg structure, lszDebug which
+    ph.c        is the full path name to the file that contains the
+    sh.c        dedbug info and is used during demand loading of symbols.
+    sl.c
+    sapi.h
+
+03-Nov-1992 MarkBro
+    loadomf.c:
+        Changed return she values for various signatures.
+            < NB08 == relink
+            NB08 == repack
+            NB09 == OK
+            > NB09 == future symbols.
+
+    ph.c:
+        Correction to fix for 4539.  Conditions for checking selector
+        limits would always fail.  Corrected if() to check boundary
+        condition.
+
+02-Nov-1992 GlennN
+    loadomf.c
+        fix problem for 32bit world since we indexed on all
+        imods.  in our case -1 was special and subtracting
+        1 would cause us to wrap and index off of the mod
+        array.  In the 32 bit world this would cause them
+        to index off the end of the array and gpf.
+
+    ph.c
+        fix bug 4539.  problem was that we can't always get
+        the right seg limit for the publics address hash (
+        we don't know the real logical segment limit until
+        later so we use the largest ref'd in the publics
+        table itself.  Well, in cases where we are trying
+        to find the nearest symbol we can walk off the end
+        of the address hash table because of this.  Now, we
+        check to see of the segment coming in is with range
+        of the segment sort table before looking it up.
+
+30-Oct-1992 DavidGra
+    ph.c
+        Initialized some variables for publics searching to avoid
+        randomly doing a linear search.
+    sh.c
+        Fix bug when types table is an exactl multiple of 0x4000 bytes long.
+
+30-Oct-1992 MarkBro
+    sh.c:
+        Fix problem with SHFAddNewPds for dos and windows.  We were
+        returning a bad pds when we failed and we were also calling LLUnlock
+        with a NULL handle.
+
+28-Oct-1992 GlennN
+    sh.c
+        Fix bug 4666. We were loading debug information
+        twice since ProgLoad in codeview system.c would
+        call SYLoadDebugInfo().  Compounding the problem
+        was the fact that Run.Load used to attach the debug
+        info on a per process basis.  Now we have one and
+        only one hpds and all debug information tables are
+        associated to this and therefore exhaustive
+        searches don't always need the context operator
+        like they used to.
+
+28-Oct-1992 MikeMo
+    loadomf.c:
+        We no longer assume IMAGE_FILE_HEADER.SizeOfOptionalHeader ==
+        sizeof(IMAGE_OPTIONAL_HEADER).
+
+27-Oct-1992 MikeMo
+    loadomf.c:
+        Fix OLLoadOmf so that, when reading directory entries past
+        the list of module entries, we don't try to index into
+        rghmod [ iMod - 1 ] if iMod == 0xFFFF.
+
+26-Oct-1992 MarkBro
+    shinit.c inc\cvtypes.h:
+        Change to AVS structure to have alphabetic version
+
+19-Oct-1992 v-natjm
+    sh.c:
+        Made changes to FHOpen to share the static with the SHUnloadDll
+        function. The current  file handle  was locked until CVW.EXE is
+        unloaded. We now close  this handle in  SHUnloadDll if the file
+        name is matching.
+
+17-Oct-1992 MikeMo
+    cvexefmt.h
+        Deleted, moved to the CVINC.420 project.
+
+    *.bld
+        Changed to reflect new location of CVEXEFMT.H.
+
+16-Oct-1992 MarkBro
+    shw0.bld shd1.bld sho1.bld:
+        Changed nmake from using a tmp file (which it doesn't delete)
+        to a constant $(OBJDIR)\compiler.flg
+
+16-Oct-1992 MikeMo
+    cvinfo.h
+    cvtypes.h
+    shapi.h
+    types.h
+        Deleted, moved to the CVINC.420 project.
+
+    makefile
+    *.bld
+        Modified to support the new CVINC.420 project.
+
+11-Oct-1992 MikeMo
+    makefile:
+        Created CDEBUGNT macro which is distinct from CDEBUG in that
+        it uses -Z7 instead of -Zi, and it does not use -f.
+
+10-Oct-1992 MikeMo
+    makefile shnt1.bld:
+        Fixes for NT build.
+    types.h:
+        SEGBASED(x) maps to _based(x) for 16-bit, nothing for 32-bit
+        INLINE      maps to __inline (the EE uses this)
+        _fstrcmp    maps to strcmp on NT
+    loadomf.c:
+        Fixed very minor bug in CheckSignature, where it wouldn't return
+        the right result if the read failed.
+    sl.c:
+        Minor fix for NT
+    shinit.c:
+        Remove shdllinit (we now set _CRT_INIT as DLL entry point in NT)
+    shapi.h:
+        Revise prototypes for use with NT.
+
+09-Oct-1992 JimSa
+    ph.c
+        Fixes for ambiguous functions and determining when we are done.
+        Previously we would recurse indefinitely because we didn't pay
+        attention to the incoming hsym, and we assumed we could just
+        get the next symbol in the hash. We needed to keep fetching from
+        the hash until we got to the current symbol.  Then we know we
+        can just get one more.
+
+08-Oct-1992
+    sh.c: initialize static to 0 in FHOpen.  Don't ask me
+    why this was required but it fixed the problem with
+    multiple runs of CV in the same Windows DOS VM.
+
+6-Oct-1992 v-natjm
+    sh.c : Compiler was complaining about (lp & 1) in debug build
+
+5-Oct-1992 v-natjm
+    makefile: Updated these two files for the new Visual C++ DLL names
+    shw0.bld:
+
+4-Oct-1992 MikeMo
+    loadomf.c:
+        32-bit fixes: changed "far" to "FAR", and changed "int" to "WORD"
+        when reading OMF info off the disk.
+
+1-Oct-1992 MarkBro
+    makefile:
+        Changed DOS sapi to use -G2 for compiles.
+
+29-Sept-1992 v-natjm
+    shw0.bld:
+     Added /NOE to link command line to avoid the linker error on
+     multiple symbols.
+
+18-Sept-1992 MarkBro
+    inc\newexe.h:
+        Updated with pcode bit in header
+
+    *.c inc\shinc.h precomp.c:
+        Stuff for precompiled header builds!
+
+4-Sept-1992 Rossg
+    inc\cvinfo.h
+        Update to cvinfo with LF_VARSTRING numeric leaf
+    shsymlb1.c
+        process LF_VARSTRING in S_CONSTANT
+
+28-Aug-1992 JimSa
+    sh.c
+        Fix for loading Dll's without symbols.  We weren't registering an
+        emi.
+    loadomf.c
+        Fixes for PE loading with multiple debug directory entries.
+
+14-Aug-1992 DavidGra
+    sh.c    Correct checking of fLin32 bit.
+
+10-Aug-1992 Davidgra
+    sh.c    Don't throw away exe nodes which don't contain symbols.
+
+03-Aug-1992 MarkBro
+    sh.c:
+        Bad use of ADDRSEG16.  ADDRSEG16 ASSIGNS the addr packet to be
+        16 bits not check to see if it is a 16 bit addr.  Changed check
+        to do fAddr32 instead.
+
+03-Aug-1992 RossG
+    shsymbol.c\shsymlb1.c
+        Add support for S_COBOLUDT symbol type.  This is a UDT that cannot
+         be symbol packed.
+     inc\cvinfo.h
+         Update to master copy
+
+30-Jul-1992 Davidgra
+    inc\shapi.h
+            Add sopRegister for enregistered variable support by
+            the disassmbler.
+
+27-Jul-1992 Davidgra/MarkBro
+    sh.c
+            Fix 32-bit bp-relative symbol lookup from disasm.
+
+    shsymbol.c
+            Fix another bug with SHGetSymLoc for negative offsets.
+
+27-Jul-1992 MarkBro
+    sl.c:
+            Removed some dead code from SLLineToAddr.
+
+21-Jul-1992 MarkBro
+    shsymbol.c:
+            Fix for Caviar 2411.  "bp 0:0;bl" causes GPF in SHSetCxtMod.
+            We were using the segment (unfixed addr) as an index into
+            the segmap table.  Problem is that index = seg-1.  0-1 = 0xffff
+            which gpf's its brains out.  To fix, if the seg is zero, then
+            return NULL for the mod.
+
+20-Jul-1992 JimSa/MarkBro
+    loadomf.c
+            Fix problem with module contributor with a seg index of 0.
+
+20-Jul-1992 Davidgra/MarkBro
+    shsymbol.c
+            Changes SHGetSymLoc to return a flat address for 32-bit
+            static symbols and to return a 32-bit BP relative offset
+            only when the offset will not fit in a 16-bit number.
+
+01-Jul-1992 MarkBro
+    shsymbol.c:
+            Fixed problem in CheckHandles() in hblk test.  was checking
+            pcxt->hProc instead of pcxt->hBlk.
+
+    inc\cvtypes.h:
+            Updated DBG_API_VERSION
+
+25-Jun-1992 MarkBro
+
+    *********************************************************************
+    *********************************************************************
+    **                                                                 **
+    **                                                                 **
+    **  SPLIT OFF FROM HOBIE - old 410 project became 420 on HOBIE and **
+    **                         moved to SLUG\DEBUG for 410             **
+    **                                                                 **
+    **                                                                 **
+    *********************************************************************
+    *********************************************************************
+
+18-Jun-1992 MarkBro
+    sh.c            Corrected caching in SHHexeFromHmod.  It didn't check
+                    the hpdsCurr when determining if the cache hexe is the
+                    correct one to return.  It's possible for Windows
+                    multiple instances to hit the same hmod when in different
+                    hpds's.  This would yield different hexes.
+
+04-Jun-1992 MarkBro
+    loadomf.c       Added tons of error checking for OOM failures.
+
+19-May-1992 Jonki
+    sh.c            when SHLoadDll was invoked twice for the same dll, and
+                    it failed to load the omf, it would leave an hexe lying around
+                    which would cause the second invocation to return true.
+                    Now we remove the hexe that was created by SHLoadDll if the
+                    load failed to load the OMF
+
+08-Apr-1992 Davidgra
+    loadomf.c       Added code to get debug info location from PE header
+
+02-Apr-1992 DavidGra
+    loadomf.c       Added code to detect PE exes for win32s and
+    shsymblol.c     to mark addresses as 32-bit based on type
+    sl.c            of exe when the sh cannot get this information
+    inc\exe386.h    elsewhere.
+    inc\newexe.h
+
+23-Mar-1992 DavidGra
+    Merged fixes from the 400 version of sapi.
+
+23-Jan-1992 davidgra
+    sl.c    Correct off by one error in source file lookup to fix
+            code in include file problem.
+
+07-Jan-1992 GlennN
+    new bld files for DOS C7 builds and new STU libs
+
+02-Jan-1992 Jonki
+    shsymbol.c    fix call to SyProcessor()
+
+05-Dec-1991 GlennN
+
+dosdll.asm
+ldllcew.lib     new C7 lib
+libw.lib        new C7 lib
+loadomf.c       change _HUGE to _HUGE_ conflict with C7 math.h
+shd1.bld        change build to include oldnames
+sho1.bld        ""
+shw0.bld        ""
+th.c            change _HUGE to _HUGE_ conflict with C7 math.h
+
+inc/sapi.h      change _HUGE to _HUGE_
+inc/shapi.h     change _HUGE to _HUGE_
+inc/types.h     change _HUGE to _HUGE_
+02-Dec-1991 Davidgra
+
+    shsymbol.c  Added search on symbol type in SHFindNameInContext
+    shsymlb1.c  and SHFindNameInGlobal.
+
+19-Nov-1991 Davidgra
+
+    dosdll.asm      Added version checking.
+    shd1.bld
+    shinit.c
+    shnt1.bld
+    sho1.bld
+    shw0.bld
+    inc\cvtypes.h
+
+    ph.c            Surpress hashing when SSTR_NoHash bit is set.
+    inc\shapi.h
+    shsymbol.c
+
+04-Nov-1991 Jonki
+    inc\sapi.h
+        increased size of _MAX_FNAME under !OS2 to 32
+
+    sho1.bld
+    shw0.bld
+    shd1.bld
+    shnt1.bld
+        Added sapi dependency
+
+28-Oct-1991 Davidgra
+    ph.c        Make find nearest public find only publics less than
+                or equal to the address requested.
+
+28-Oct-1991 GlennN
+    sl.c        Make sure that in SLNameFromHmod that we check the
+                lpsm before the derefence.
+
+24-Oct-1991 MikeMo
+    sl.c        Changed SLHmodFromHsf so it doesn't fail when a non-NULL
+                HEXE is passed in.
+
+24-Oct-1991 MikeMo
+    sl.c        The line number passed to SLFLineToAddr is now a WORD
+                rather than an SHOFF.
+
+17-Oct-1991 Jonki
+    shsymbol.c  Fix SHSetCxtMod to set the address even if no mod
+                was found
+
+16-Oct-1991 JimSa
+    shsymbol.c  SHFindNameInContext was passing of lpsstr to pfnCmp rather than
+                lpsstr->lpName.
+
+15-Oct-1991 Jonki
+    shsymbol.c inc\shapi.h inc\shiproto.h
+            Fix SHGetSymLoc to display the location of global stuff correctly.
+            This required that we pass it a context, so that we could get the
+            emi and fixup the address
+
+12-Oct-1991 GlennN
+    sl.c    fix problems with SLHmodFromHsf.  We would sometimes
+            return the wrong Hmod due to duplicate files ( includes ) in
+            different modules.
+
+
+10-Oct-1991 RossG
+    loadomf.c ph.c shsymbol.c
+        Changed the interface to the EE to allow specification of whether
+        or not the local symbols of a function are searched while in the
+        prolog\epilog of a function.  Also, formalized the hidden convention
+        to the interface to the symbol handler.  The parameter that is passed
+        as the hvoid parameter passed back to the symbol compare routine is
+        now a structure that contains the pointer to the name, length, flags,
+        etc. that the symbol handler can use for global and public symbol
+        hashing.  Also, there is provision for limiting the symbol searching
+        to specific types of symbols (not implemented).
+
+07-Oct-1991 GlennN
+    sl.c        fix problem with cb calculation for line count bytes. In
+                the case of the last line I was off by one.
+
+07-Oct-1991 GlennN
+    sl.c        initialize cb inside of SLLineToAddr so that we don't
+                pass in garbage.
+
+02-Oct-1991 DavidGra
+    loadomf.c   Removed the start/end fixups to the source lines.  The
+                packer should now be taking care of this.
+
+01-Oct-1991 GlennN
+    dosdll.asm  fix build for dos due to API name change
+
+27-Sep-1991 GlennN
+
+    makefile    Add OBJDIR as part of parameters passed to shw0.bld
+                for shw0.dll build
+
+24-Sep-1991 GlennN
+
+    Bonehead fixes to
+    loadomf.c   Fix FixOfpEnd allocation of lpopt table.  We now alloc
+                cfiles * cseg * sizeof(opt).  The reason we need this
+                is because a file may occur mutiple times for a segment.
+                also fix potential problem with return of this function.
+
+                Also, make sure that we free the lpopt table.
+
+    sl.c        Fix problem with GetLpslFromIndex, I was indexing too
+                far into the baseSrcLn table.
+
+23-Sep-1991  GlennN
+    dosdll.asm
+    loadomf.c
+    sh.c
+    shd1.bld
+    shinit.c
+    shsymbol.c
+    shsymlb0.c
+    shsymlb1.c
+    shw0.bld
+    inc/cvexefmt.h
+    inc/cvtypes.h
+    inc/shiproto.h
+    inc/shtypes.h
+
+    add new source line table api.
+
+
+05-Setp01991 Jimsch
+    Change handle sizes to be consistent across all machines -- i.e
+    32-bit handles and such
+
+04-Sept-1991 MarkBro
+        DOS DLLs -- many small changes all over the place.
+
+22-Aug-1991 Jonki
+    shsymbol.c  SHSetBlksInCXT MUST compare segments.  Otherwise,
+                we screw up when there are multiple logical segments
+                in a mod (ex. alloc_text)
+
+19-Aug-1991 Jonki
+    loadomf.c    fix to support C++ member functions.  Member functions
+        can cause code to come from different contribution locations
+        within the segment.  We need to calulate the end offset based
+        on the last mds with a matching index.
+
+13-Aug-1991 Jonki
+    shsymbol.c  hacked SHSetBlksInCXT until the packer is fixed.
+
+12-Ayg-1991 Jonki
+    shsymbol.c  Corrected SHAddrFromHsym - make sure that fAddrLI is set
+                after we have built the addr to be returned
+
+12-Aug-1991 Jonki
+    ph.c    Correct error in computation of pPubEnd in PHFindNameInPublics
+
+07-Aug-1991 Davidgra
+    \sapi\ph.c      Check to see that there is a valid publics or
+    \sapi\shsymbol.c globals table before attempting to search it.
+                     this used to fall out with a cpubs or cglobs
+                     of 0, now we check explicitly for the
+                     appropriate lpssmr of NULL.
+
+06-Aug-1991 Davidgra
+    \sapi\loadomf.c Rework the publics hashing code.  The hash table
+    \sapi\ph.c      now appears on disk with length prefixed chain
+    \sapi\shtypes.h tables.  The chain tables are loaded in sections
+                    if the total size of the tables is greater that
+                    cbMaxAlloc.
+
+05-Aug-1991 Jonki
+    loadomf.c sh.c th.c cvproto.h cvtypes.h shproto.h shtypes.h
+        Allow for up to 64K distinct types, by making rgitd a huge array.
+        Also defined _HUGE.  Also removed some old ems junk from OLLoadTypes
+
+01-Aug-1991 GlennN
+
+    \sapi\loadomf.c disabled the loading of hash table to get past of
+                    gpf loading excel.
+
+
+26-Jul-1991 Davidgra
+    \sapi\shsymbol.c Fix bug in SHSetCXTMod with caching.  We were not
+    checking to see if the current process was the same as the process
+    when we created the cache.
+
+26-Jul-1991 MarkBro
+    \sapi\shsymbol.c Fix bug in SHSetCXTMod with caching.  We were not
+    checking to see if the emi of the addr matched the cached hexs.  Now
+    we are.
+
+08-Jul-1991 Davidgra
+    \sapi\shsymbol.c Calculate end of symbol table correctly ( size includes
+                    the leading long ) for SHSetBlksInCXT
+
+03-Jul-1991 MikeMo
+    \sapi\loadomf.c Improved return values from CheckSignature so the user
+                    gets a better error message depending on NBxx format.
+
+01-Jul-1991 GlennN
+    added hack for code in include files for RossG.
+    bug fix for callstack navigation.
+    bug fix 1062 for MarkBro a at csip other than that at main.
+
+
+    \sapi\LoadOmf.c hack is marked as M00KLUDGE.  The change was to first
+                    save the first file with line number information that
+                    has .c .cxx .bas .for .asm extension as the main module
+                    stored in the hmds structure in OLLoadSrc.
+    \sapi\shsymlb1.c
+                    bug was that we weren't checking offset for files in
+                    SHLineFromAddr().  So we put in a check for offset
+                    verification.
+
+    \sapi\inc\shtypes.h
+                    Added defines for STRUPR and STRSTR into sapi for calls
+                    to the runtime.  This was for hack made to loadomf.c

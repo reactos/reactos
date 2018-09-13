@@ -1,0 +1,24 @@
+/*
+* 
+* Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+* EXEMPT: copyright change only, no build required
+* 
+*/
+#include "resource.h"
+#include <windows.h>
+#include <ntverp.h>
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "MSXML debug helper library"
+#define VER_INTERNALNAME_STR        "MSXMLDBG.DLL"
+#define VER_ORIGINALFILENAME_STR    "MSXMLDBG.DLL"
+#define VER_OLESELFREGISTER
+
+#include "common.ver"
+

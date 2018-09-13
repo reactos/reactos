@@ -1,0 +1,150 @@
+[Version] 
+Signature="$CHICAGO$" 
+AdvancedINF=2.5, "You need a newer version of Advpack.dll"
+
+[DefaultInstall] 
+CopyFiles=InfCopySection, Minimum, Setup
+UpdateInis =MinimumInis
+AddReg =GeneralRegKeys,PlatformSpecificRegKeys, MSHTMPAD.Trident
+DelReg =DelKnownDLLKey
+RegisterOCXs =RegisterDLLs
+SmartReboot=I
+
+[DefaultInstall.NT] 
+CopyFiles=InfCopySection, Minimum, Setup
+UpdateInis =MinimumInis
+AddReg =GeneralRegKeys,PlatformSpecificRegKeys.NT, MSHTMPAD.Trident
+DelReg =DelKnownDLLKey
+RegisterOCXs =RegisterDLLs
+SmartReboot=I
+
+;******************************************************************************
+;Directory Names
+;******************************************************************************
+
+[DestinationDirs] 
+InfCopySection=17			;Windows\Inf
+;Win95Only=11				;Windows\System
+Setup=11				;Windows\System
+DefaultDestDir=24, progra~1\Trident	;WinRoot:\Program Files\Trident
+
+[SourceDisksNames] 
+55="Trident Minimum CAB","",1
+
+[SourceDisksFiles] 
+Trident.Inf=55
+
+advpack.dll=55
+w95inf16.dll=55
+w95inf32.dll=55
+htmlpath.exe=55
+
+mshtml.dll=55
+mshtmenu.dll=55
+trident.txt=55
+; jscript.dll=55
+; vbscript.dll=55
+; oledlg.dll=55
+
+;DEBUG ONLY
+mshtmdbg.dll=55
+
+;******************************************************************************
+;MINIMUM CAB
+;******************************************************************************
+
+[InfCopySection] 
+Trident.Inf
+
+[Setup]
+advpack.dll,,,32
+w95inf16.dll,,,32
+w95inf32.dll,,,32
+
+; [Win95Only]
+; oledlg.dll
+
+[Minimum]
+mshtml.dll
+mshtmenu.dll
+trident.txt
+htmlpath.exe
+; jscript.dll
+; vbscript.dll
+; oledlg.dll
+
+;DEBUG ONLY
+mshtmdbg.dll
+
+[MinimumInis]
+setup.ini, progman.groups,, "tfolder=%TRIDENT%"
+setup.ini, tfolder,, """Trident Readme"",""NOTEPAD.EXE %24%\progra~1\Trident\Trident.TXT"",,,,"
+setup.ini, tfolder,, """Use Trident HTML Engine"",""%24%\progra~1\Trident\htmlpath.exe %24%\progra~1\Trident\mshtml.dll"",,,,%24%\progra~1\Trident"
+setup.ini, tfolder,, """Use Classic HTML Engine"",""%24%\progra~1\Trident\htmlpath.exe"",,,,%24%\progra~1\Trident"
+
+[UninstallMinimumInis]
+setup.ini, progman.groups,, "tfolder=%TRIDENT%"
+setup.ini, tfolder,, """Trident Readme"",,,,,"
+setup.ini, tfolder,, """Use Trident HTML Engine"",,,,,"
+setup.ini, tfolder,, """Use Classic HTML Engine"",,,,,"
+
+[DelKnownDLLKey]
+HKLM,SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs,"mshtml"
+HKLM,SYSTEM\CurrentControlSet\Control\SessionManager\KnownDLLs,"mshtml"
+
+[MSHTMPAD.Classic]
+;same as MSHTMPAD /Classic
+HKCR,CLSID\{25336920-03f9-11cf-8fd0-00aa00686f13}\InProcServer32,,,%11%\mshtml.dll
+
+[MSHTMPAD.Trident]
+;same as MSHTMPAD /Trident
+HKCR,CLSID\{25336920-03f9-11cf-8fd0-00AA00686F13}\InProcServer32,,,%24%\progra~1\Trident\mshtml.dll
+
+[RegisterDLLs]
+%24%\progra~1\Trident\mshtml.dll
+; %24%\progra~1\Trident\vbscript.dll
+; %24%\progra~1\Trident\jscript.dll
+
+[RegisterClassicDLLs]
+%11%\mshtml.dll
+; %11%\vbscript.dll
+; %11%\jscript.dll
+
+[Notepad]
+"%11%\NOTEPAD.EXE %24%\progra~1\Trident\trident.txt"
+
+[GeneralRegKeys] 
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Trident,"DisplayName",,"%TRIDENT% (uninstall only)"
+HKLM,SOFTWARE\Microsoft\Forms³\Trident,"DLLPath",,"%24%\progra~1\Trident\mshtml.dll"
+HKLM,SOFTWARE\Microsoft\Forms³\Trident,"InstallRoot",,"%24%\progra~1\Trident"
+
+;******************************************************************************
+;UNINSTALL
+;******************************************************************************
+
+[Uninstall] 
+DelFiles =InfCopySection, Minimum
+UpdateInis = UninstallMinimumInis
+DelReg =GeneralRegKeys, PlatformSpecificRegKeys,DelUninstallKey
+AddReg =MSHTMPAD.Classic
+RegisterOCXs=RegisterClassicDLLs
+
+[Uninstall.NT] 
+DelFiles =InfCopySection, Minimum
+UpdateInis = UninstallMinimumInis
+DelReg =GeneralRegKeys, PlatformSpecificRegKeys.NT,DelUninstallKey
+AddReg =MSHTMPAD.Classic
+RegisterOCXs=RegisterClassicDLLs
+
+[DelUninstallKey] 
+HKLM, SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Trident
+
+[PlatformSpecificRegKeys] 
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Trident,"UninstallString",,"RunDll setupx.dll,InstallHinfSection Uninstall 4 Trident.Inf"
+
+[PlatformSpecificRegKeys.NT] 
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Trident,"UninstallString",,"RunDll32 syssetup.dll,SetupInfObjectInstallAction Uninstall.NT 4 Trident.Inf" 
+
+;******************************************************************************
+[Strings]
+TRIDENT="Microsoft Trident"

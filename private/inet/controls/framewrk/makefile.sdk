@@ -1,0 +1,60 @@
+#=------------------------------------------------------------------------=
+# Makefile    [Framework]
+#=------------------------------------------------------------------------=
+# Copyright 1995-1996 Microsoft Corporation.  All Rights Reserved.
+#
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF 
+# ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO 
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A 
+# PARTICULAR PURPOSE.
+#=--------------------------------------------------------------------------=
+#
+# builds a Library for the Framework
+#
+!if ("$(nodebug)"=="")
+Proj=CtlFwD32
+!else
+Proj=CtlFwR32
+!endif
+
+# Commands to be added to the compile line... in this case to locate headers
+
+cDefines= -I. -I..\Include  -Gd -Gs -W3 -Oi -Tp
+
+
+# pull in the master SDK makefile that defines all of the macros
+#  and all of the build rules
+
+!include <inetsdk.mak>
+
+
+# itemize all of the required object files
+
+OBJS= $(ObjDir)\AutoObj.Obj  \
+      $(ObjDir)\ClassF.Obj   \
+      $(ObjDir)\CtlEmbed.Obj \
+      $(ObjDir)\CtlHelp.Obj  \
+      $(ObjDir)\CtlMisc.Obj  \
+      $(ObjDir)\CtlOCX96.Obj \
+      $(ObjDir)\CtlPsst.Obj  \
+      $(ObjDir)\CtlView.Obj  \
+      $(ObjDir)\CtlWrap.Obj  \
+      $(ObjDir)\Debug.Obj    \
+      $(ObjDir)\Globals.Obj  \
+      $(ObjDir)\Internet.Obj \
+      $(ObjDir)\IPServer.Obj \
+      $(ObjDir)\PropPage.Obj \
+      $(ObjDir)\StdEnum.Obj  \
+      $(ObjDir)\Unknown.Obj  \
+      $(ObjDir)\ExtObj.Obj   \
+      $(ObjDir)\Util.Obj
+
+all: $(ObjDir)\$(Proj).Lib
+
+
+# make the Library, and copy it into the correct directory
+
+$(ObjDir)\$(Proj).Lib: $(OBJS)
+     $(LIBU) $(LIBFLAGS) $** $(LogCmd)
+     @if not exist ..\Lib md ..\Lib
+     copy $(ObjDir)\$(Proj).Lib ..\Lib

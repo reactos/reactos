@@ -1,0 +1,11 @@
+!IF 0
+
+Copyright (c) 1998  Microsoft Corporation
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\ext\netplwiz\sources.inc

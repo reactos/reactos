@@ -1,0 +1,147 @@
+#ifdef WIN32
+#include "winuser.h"
+#else
+#include "windows.h"
+#endif
+
+#ifdef IEWIN31
+#include "comctlie.h"
+#else
+#include "commctrl.h"
+#endif
+
+#include "rcids.h"
+
+IDC_MOVEBUTTON  CURSOR  mvbtn.cur
+IDC_COPY        CURSOR  copy.cur
+IDC_MOVE        CURSOR  move.cur
+IDC_DIVIDER     CURSOR  "DIVIDER.CUR"
+IDC_DIVOPEN     CURSOR  "DIVOPEN.CUR"
+#ifdef IEWIN31_25
+IDC_HAND        CURSOR  "brhand.cur"
+#endif //IEWIN31_25
+IDI_INSERT      ICON    insert.ico
+
+#ifdef WIN32
+IDB_STDTB_SMALL_COLOR   BITMAP          "STDSM.BMP"
+IDB_STDTB_LARGE_COLOR   BITMAP          "STDLG.BMP"
+
+IDB_VIEWTB_SMALL_COLOR  BITMAP          "VIEWSM.BMP"
+IDB_VIEWTB_LARGE_COLOR  BITMAP          "VIEWLG.BMP"
+#endif
+
+#ifdef IEWIN31_25
+// For ctl3d.c
+#include "ctl3d.h"
+CTL3D_3DCHECK           BITMAP  DISCARDABLE     "3DCHECK.BMP"
+#endif
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+  // toolbar stuff
+
+  IDS_SPACE,    "Separator"
+
+  IDS_PLUS,     " + "
+  IDS_NONE,     "None"
+  IDS_ELLIPSES, "..."
+
+  // menuhelp stuff
+
+  IDS_SYSMENU   ,       "Contains commands for manipulating windows."
+  IDS_HEADER    ,       "Drag to the left or right to resize columns."
+  IDS_HEADERADJ ,       "Resizes columns using the arrow and tab keys."
+  IDS_TOOLBARADJ,       "Adds, moves, and removes buttons on the toolbar."
+
+  MH_SYSMENU+SC_RESTORE   ,     "Restores this window to normal size."
+  MH_SYSMENU+SC_MOVE      ,     "Moves this window."
+  MH_SYSMENU+SC_SIZE      ,     "Resizes this window."
+  MH_SYSMENU+SC_MINIMIZE  ,     "Collapses this window to an icon."
+  MH_SYSMENU+SC_MAXIMIZE  ,     "Expands this window to fill the screen."
+  MH_SYSMENU+SC_CLOSE     ,     "Closes this window."
+  MH_SYSMENU+SC_TASKLIST  ,     "Switches to another task."
+  MH_SYSMENU+SC_NEXTWINDOW,     "Switches to the next MDI window."
+
+  // property sheet
+  IDS_CLOSE                 "Close"
+  IDS_OK                    "OK"
+  IDS_PROPERTIESFOR         "%s Properties"
+END
+
+
+ADJUSTDLG DIALOG 10, 20, 357, 125
+#ifdef IEWIN31_25
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU    
+#else
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+#endif
+CAPTION "Customize Toolbar"
+FONT 8, "Helv"
+BEGIN
+    DEFPUSHBUTTON   "&Close", IDCANCEL, 308, 6, 44, 14
+    PUSHBUTTON      "R&eset", IDC_RESET, 308, 23, 44, 14
+    PUSHBUTTON      "&Help", IDC_APPHELP, 308, 40, 44, 14
+    PUSHBUTTON      "Move &Up", IDC_MOVEUP, 308, 74, 44, 14
+    PUSHBUTTON      "Move &Down", IDC_MOVEDOWN, 308, 91, 44, 14
+    LTEXT           "A&vailable buttons:", -1, 4, 5, 84, 10
+    LISTBOX         IDC_BUTTONLIST, 4, 17, 120, 100, LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Add ->", IDOK, 131, 42, 44, 14
+    PUSHBUTTON      "<- &Remove", IDC_REMOVE, 131, 62, 44, 14
+    LTEXT           "&Toolbar buttons:", -1, 182, 5, 78, 10
+    LISTBOX         IDC_CURRENT, 182, 17, 120, 100, LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL |
+                    WS_TABSTOP
+END
+
+DLG_PROPSHEET DIALOG DISCARDABLE  20, 20, 220, 140
+#ifdef IEWIN31_25
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+#else
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+#endif
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,4,122,50,14, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,58,122,50,14
+    PUSHBUTTON      "&Apply",IDD_APPLYNOW,112,122,50,14, WS_DISABLED
+// Deliberately do NOT use mnuemonic for Help button (which is usually hidden)
+    PUSHBUTTON      "Help",IDHELP,166,122,50,14, WS_TABSTOP | WS_GROUP
+    CONTROL         "",IDD_PAGELIST,WC_TABCONTROL,WS_GROUP | WS_TABSTOP | TCS_MULTILINE,4,4,212,114
+END
+
+
+DLG_WIZARD DIALOG DISCARDABLE  20, 20, 290, 46
+#ifdef IEWIN31_25
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+#else
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | DS_CONTEXTHELP
+#endif
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDD_PAGELIST,WC_TABCONTROL,WS_GROUP | WS_DISABLED,7,7,276,3
+#ifdef WIN31
+    CONTROL         "",IDD_DIVIDER,"Static", SS_BLACKRECT,7,17,276,1
+#else
+    CONTROL         "",IDD_DIVIDER,"Static", SS_SUNKEN,7,17,276,1
+#endif
+#ifdef WIN31
+    PUSHBUTTON      "< Back",IDD_BACK,69,26,50,14
+    DEFPUSHBUTTON      "Next >",IDD_NEXT,119,26,50,14
+#else
+    PUSHBUTTON      "< &Back",IDD_BACK,69,26,50,14
+    DEFPUSHBUTTON   "Next >",IDD_NEXT,119,26,50,14
+#endif
+    PUSHBUTTON      "Finish",IDD_FINISH,119,26,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,26,50,14
+// Deliberately do NOT use mnuemonic for Help button (which is usually hidden)
+    PUSHBUTTON      "Help",IDHELP,233,26,50,14, WS_TABSTOP | WS_GROUP
+END
+
+
+#include "commctrl.rcv"

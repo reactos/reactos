@@ -1,0 +1,52 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992-1998.
+//
+//  File: mimeinfo.idl
+//
+//  Contents: IMimeInfo interface definition
+//
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// MimeInfo.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// IMimeInfo Interfaces.")
+cpp_quote("")
+
+import "objidl.idl";
+
+[
+  local,
+  object,
+  uuid(F77459A0-BF9A-11cf-BA4E-00C04FD70816),
+  pointer_default(unique)
+]
+interface IMimeInfo : IUnknown
+{
+
+    typedef [unique] IMimeInfo *LPMIMEINFO;
+
+    HRESULT GetMimeCLSIDMapping
+    (
+        [out] UINT      *pcTypes,
+        [out] LPCSTR  * *ppszTypes,
+        [out] CLSID   * *ppclsID
+    );
+
+}
+
+cpp_quote("#define SID_IMimeInfo IID_IMimeInfo")

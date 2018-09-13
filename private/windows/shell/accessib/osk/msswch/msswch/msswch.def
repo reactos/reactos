@@ -1,0 +1,38 @@
+LIBRARY   MSSWCH
+;DESCRIPTION	'Switch Input Library DLL'
+
+;CODE	  PRELOAD MOVEABLE
+;DATA	  PRELOAD MOVEABLE SINGLE SHARED
+
+SECTIONS
+	sh_data READ WRITE SHARED
+
+HEAPSIZE  1024
+
+EXPORTS
+	XswchRegHelperWnd
+	XswchEndAll
+	XswchSetSwitchConfig
+	XswchPollSwitches
+	XswchTimerProc
+
+   	swcKeyboardHookProc
+
+	swchOpenSwitchPort
+	swchCloseSwitchPort
+	swchReadSwitches
+
+	swchGetSwitchList
+	swchGetSwitchDevice
+	swchGetDeviceType
+	swchGetDeviceNumber
+	swchGetSwitchConfig
+	swchSetSwitchConfig
+	
+	; to send (and avoid) the scan character
+	swchAvoidScanChar
+
+	; for debugging
+	swcLptDbgGetPrtStatus
+	swcLptDbgGetCtrStatus
+	swcLptDbgGetData

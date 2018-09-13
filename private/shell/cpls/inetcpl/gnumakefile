@@ -1,0 +1,7 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir dll     	${MAKE}	${MFLAGS} $@
+

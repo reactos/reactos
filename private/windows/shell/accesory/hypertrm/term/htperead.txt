@@ -1,0 +1,214 @@
+HyperTerminal Private Edition 5.0
+by Hilgraeve Inc., Copyright 1996, 1997, 1998, 1999
+
+Contents
+What is HyperTerminal Private Edition? 
+What is HyperACCESS? 
+How to get HyperACCESS 
+What is DropChute?
+Contacting Hilgraeve 
+How HyperTerminal PE is Different from HyperTerminal 
+HyperTerminal PE 5.0 Enhancements
+HyperTerminal PE 4.0 Enhancements 
+HyperTerminal PE 3.0 Enhancements 
+HyperTerminal PE 2.0 Enhancements 
+HyperTerminal PE 1.0 Enhancements 
+Installing and Using HyperTerminal PE 
+Using HyperTerminal PE as a Telnet Client 
+Changing the Redial Delay 
+Using Special Characters 
+License Agreement
+HyperACCESS Order Form 
+
+What is HyperTerminal Private Edition?
+HyperTerminal Private Edition (HyperTerminal PE) is a more powerful version of HyperTerminal, which Microsoft includes with Windows 95, Windows 98, and Windows NT 4.0. Hilgraeve developed HyperTerminal for Microsoft, and began providing HyperTerminal PE free for personal use shortly after the release of Windows 95. Each successive release of HyperTerminal PE has won new awards and caused the program's following to swell. It is today one of the most popular free downloads on the Internet.
+
+PC Magazine has said, "HyperTerminal Private Edition sets a new standard for what to expect from free software…one of the Internet's best giveaways." You can find excerpts from many other rave reviews and quotes from satisfied HyperTerminal PE users at http://www.hilgraeve.com/htpe.html.
+
+HyperTerminal PE is provided free for personal use and at a modest charge for business use (see License Agreement, below). Business users may evaluate the product for a period of 15 days, then purchase individual or site licenses if they wish to continue using it. You can purchase a single-user license for $29.95 by double-clicking the Purchase Private Edition icon in the folder that contains HyperTerminal PE, or use our online order form at http://www.hilgraeve.com/htpeord.html. For site licenses or customized versions, contact sales@hilgraeve.com, call Hilgraeve at 800-826-2760 (US and Canada) or 734-243-0576, or fax 734-243-0645.
+
+You can find additional information about HyperTerminal PE or download the latest version from http://www.hilgraeve.com or the HyperTerminal BBS (734-243-9957 or telnet://htermbbs.hilgraeve.com). HyperTerminal and HyperTerminal PE offer a subset of the capabilities of Hilgraeve's award-winning, full-featured communications program, HyperACCESS. Businesses or individuals who need capabilities beyond those of HyperTerminal PE should consider HyperACCESS.
+
+What is HyperACCESS?
+HyperACCESS is the official FULL-POWERED upgrade from HyperTerminal and HyperTerminal PE. It is the product from which HyperTerminal and HyperTerminal PE are derived. HyperACCESS offers a wide array of additional capabilities, with a similar look and feel. HyperACCESS gives you these and many other benefits:
+
+Many additional terminal emulators and file transfer protocols 
+Record and play back logons and repetitive steps with VBS (Visual Basic Script) 
+Redefine keys and add your own buttons to the toolbar with text or bitmap labels 
+Automate communications with Visual Basic, VBA, C++, or other languages 
+
+To learn about the many other advantages of HyperACCESS, browse http://www.hilgraeve.com/htpe.html#benefits.
+
+HyperACCESS has won top awards from every major computer magazine and been selected Editor's Choice of PC Magazine 4 times. The most recent PC Magazine award states, "Terminal communications, whether through Internet telnet connections or plain old telephone lines, has never been done better than by Hilgraeve's HyperACCESS. Elegant, clear menus and tight integration with Windows and the Internet make it our Editor's Choice among the terminal programs we looked at." For excerpts from other reviews of HyperACCESS, go to http://www.hilgraeve.com/hawin32.html#press.
+
+People who use HyperACCESS love it. Here are some quotes from happy customers:
+
+"Everything (!!!!!!) worked exactly as I would want it to work!"
+"Thank you for another great product! You have once again set a Win95 standard we can use to compare all other "similar but not quite there yet" software."
+"A most excellent product! If the above doesn't make this clear, I am very, very impressed." T.K.
+
+To see more quotes from HyperACCESS users, see http://www.hilgraeve.com/hawin32.html#users.
+
+How to Get HyperACCESS
+HyperACCESS is available from many software retailers. But you can also try it FREE or purchase it directly from us:
+
+From the HyperTerminal PE setup program: In addition to letting you install HyperTerminal PE, the setup program gives you the option to download and install a 15-day FREE trial of HyperACCESS. You can purchase it at any time by for $69.95 by clicking its Buy Now button and entering your credit card number. 
+From our web site: You can also download a trial copy or buy the product using our online order form at http://www.hilgraeve.com/hw32ord.html. You can purchase and download HyperACCESS immediately for $69.95, or have us ship it to you for $79.95, or do both for $89.95. 
+By fax or mail: Double-click the HyperACCESS Order Form icon in the folder that contains HyperTerminal PE to fill out and print the form using your web browser. Or print the form at the end of this ReadMe file, and fill it out by hand. Fax the form to 734-243-0645, or mail it to our address below.
+By phone: Call 800-826-2760 (US and Canada) or 734-243-0576, 9:00am - 6:00pm EST weekdays. 
+
+Satisfaction Guaranteed: If you aren't fully satisfied with HyperACCESS, you can call within 60 days for a refund.
+
+What is DropChute?
+
+DropChute is a new product family from Hilgraeve, entirely separate from HyperTerminal or HyperACCESS. It's a revolutionary new kind of software -- personal file delivery software -- the fastest, easiest, most secure way to exchange files with others over the Internet, intranets, or modems. It solves the problems people experience trying to exchange files as email attachments or with ftp.
+
+DropChute lets you:
+Deliver files of any kind to any other PC through the Internet, intranets (TCP/IP networks), or by modem, simply by dragging and dropping the files onto that person's icon.
+DropChute instantly establishes a REAL-TIME connection to the other PC and send files immediately, avoiding the time lag and insecurity of e-mail store-and-forward mechanisms.
+Send individual files, folders, or entire drives. There is no limit to the size, number, or type of files you can send.
+Send and receive all data with ironclad error correction, crash recovery and on-the-fly compression, so you can be sure files come through intact, safe, secure, and fast.
+Exchange files with complete privacy with RSA Public Key Authentication and Symmetric Key Encryption, based on Microsoft Cryptography APIs. No extra manual steps required.
+Enjoy peace of mind that files are free from more than 6,700 known computer viruses. DropChute detects and blocks viruses in incoming files using IBM virus data.
+Chat in real-time with the person at the other end before, during or after a file exchange. Attach cover notes to files, for the recipient to read.
+
+DropChute eliminates problems associated with e-mail attachments, such as security concerns, clogged mail servers, and slow or uncertain delivery. It's easier than ftp and more secure. It exchanges files through a real-time, user-authenticated, encypted connection, so nobody can intercept and decipher the data. And it works through firewalls without breaching security.
+
+You can download and install a 30-day FREE trial of DropChute Pro simply by rerunning the HyperTerminal PE setup program and selecting this option. For more information, go to http://www.dropchute.com, call 800-826-2760 (US and Canada) or 734-243-0576, or e-mail sales@hilgraeve.com.
+
+Contacting Hilgraeve
+If you qualify to use HyperTerminal PE free under terms of the License Agreement below, we ask that consult other HyperTerminal PE users when you need advice. You can exchange messages with other HyperTerminal users through the discussion forum on our web site (listed below). This avoids tying up our staff and enables us to provide quality support to those who have purchased our products or want sales information.
+
+Support questions for those who use HyperTerminal PE free:
+Discussion forum: http://www.hilgraeve.com/discuss
+Web site: http://www.hilgraeve.com
+Also see FAQs about HyperTerminal PE at http://www.hilgraeve.com/htpefaq.html
+
+Support questions for those who have purchased Hilgraeve products:
+Above methods, plus...
+E-mail: support@hilgraeve.com
+HyperTerminal BBS: 734-243-9957 or telnet://htermbbs.hilgraeve.com
+Phone: 734-243-0576
+Fax: 734-243-0645
+Hilgraeve BBS: 734-243-5915 or telnet://hbbs.hilgraeve.com
+CompuServe: Go Hilgraeve
+
+Sales questions:
+Above methods, plus...
+E-mail: sales@hilgraeve.com
+Phone: 800-826-2760 (US and Canada) or 734-243-0576
+Hilgraeve Inc.
+111 Conant Ave., Suite A
+Monroe, MI 48161
+
+How HyperTerminal PE is Different from HyperTerminal
+On the surface, HyperTerminal PE seems identical to HyperTerminal (except for its banner screen). Both are speedy 32-bit programs that take full advantage of the Windows interface and features, such as TAPI (Telephony API) and Unimodem universal modem support. But looks can be deceiving. Each new version of HyperTerminal PE has added new features not in the versions of HyperTerminal that Microsoft provides, and has corrected problems identified after release of HyperTerminal. Sections below list the new features added in each new version of HyperTerminal PE.
+
+HyperTerminal PE 5.0 Enhancements
+Guaranteed Y2K-Ready
+Adds VT220 terminal emulation 
+Includes fixes to avoid video problems introduced by IE 5.0 
+
+HyperTerminal PE 4.0 Enhancements
+Define key macros to issue frequently used series of keystrokes
+Define the colors used by the terminal screen 
+Set the terminal screen size (rows and columns) 
+Full color support when emulating VT100 terminals 
+Pass-through printing now lets host systems control your printer 
+Ability to exit the program automatically when you log off 
+Includes updated entries for BBSs and systems that you can call 
+Adopts Windows new "flat" toolbar style 
+Uses Windows system sounds (WAV and audio files) instead of beeps 
+Includes bug fixes for improved use with all versions of Windows 
+
+HyperTerminal PE 3.0 Enhancements
+Simple answer mode for accepting incoming calls 
+Ability to remap the backspace and delete keys 
+Implemented many aspects of host-controlled printing 
+Ability to use HyperTerminal PE as the default telnet application for your browser 
+
+HyperTerminal PE 2.0 Enhancements
+Added TCP/IP support, for accessing telnet sites through the Internet 
+Improved file handling during interrupted transfers, for Zmodem crash recovery 
+Added definable redialing delay. For details, click Changing the Redial Delay, below 
+
+HyperTerminal PE 1.0 Enhancements
+Zmodem crash recovery for resuming interrupted file transfers 
+Support for automatically redialing busy phone numbers 
+Support for foreign characters 
+Made it easy to type commands directly to the modem 
+Corrected problems with transferring files through direct cable connections 
+Added inter-character delay for sending text pasted from clipboard 
+Fixed problems that occurred with certain printers 
+Corrected subtle errors in Minitel terminal emulation 
+
+Installing and Using HyperTerminal PE
+HyperTerminal PE 5.0 is provided as a file called HTPE5.EXE. Simply execute HTPE5.EXE and follow the instructions that display. You can do this by opening the folder that contains HTPE5.EXE and double-clicking on this file, or by selecting Run from the Start menu, browsing to the folder, and selecting this file.
+
+That's it! HyperTerminal PE is now ready to use. You start and use it the same as the HyperTerminal program provided with Windows 95, Windows 98, and Windows NT 4.0; see your Windows documentation or Help for instructions.
+
+Using HyperTerminal PE as a Telnet Client
+Using HyperTerminal PE as a telnet client is simple. You must have TCP/IP installed on your computer first. Once that is done, simply change the "Connect using" setting to "TCP/IP (Winsock)" in HyperTerminal PE's Connect To property sheet, and enter the Host address (either the host name or its numeric IP address and port number). Telnet sites are typically listed in one of the two following forms: 
+
+Host name:port number or numeric IP address:port number
+
+If you enter no port number, HyperTerminal PE assumes you mean port number 23, which is the default port for telnet. If the telnet site you want to reach uses a port other than 23, you will need to enter the port number.
+
+Changing the Redial Delay
+You may need to change the redial delay if your country restricts how quickly busy numbers may be redialed. (The US has no restrictions.) The default delay is two seconds. To change the delay, you must change a setting in the Windows registry: 
+
+1. Run the Registry Editor. If you don't have a shortcut set up for the Registry Editor, type REGEDIT at a DOS prompt.
+2. Open the HKEY_LOCAL_MACHINE folder by clicking on the plus sign to the left of the folder, or double-click on the folder.
+3. Open the SOFTWARE folder and the Microsoft folder that it contains in a similar fashion.
+4. Open the HyperTerminal folder contained in the Microsoft folder.
+5. Open the TimeToRedial folder contained in the HyperTerminal folder, and a value will appear in the window on the right.
+6. Double-click on the (Default) to bring up the Edit String dialog. Enter the new value and click OK.
+7. Exit the Registry Editor.
+
+Using Special Characters
+If you find that special characters aren't being sent or displayed correctly by HyperTerminal PE, try changing to a different font. Due to the way Windows maps characters under different fonts, you will see a different character displayed if you are using the Terminal font, as opposed to the other available fonts. There is a more complete discussion of font issues in the FAQs about HyperTerminal PE at http://www.hilgraeve.com/htpefaq.html.
+
+License Agreement
+Hilgraeve Inc. supplies HyperTerminal Private Edition free for your personal use if: (a) you are using it on a machine that you own; or (b) you are a student, faculty member or staff member of an educational institution (K-12, junior college, college or library) or an employee of a charitable not-for-profit organization (e.g. IRS 509 (a) excluding government); or (c) your use of HyperTerminal Private Edition is for the purpose of evaluating whether to purchase an ongoing license. The evaluation period for use by or on behalf of a commercial or government entity is 15 days.
+ 
+You can purchase a single-user license for $29.95 by double-clicking the Purchase Private Edition icon in the folder that contains HyperTerminal PE, or use our online order form at http://www.hilgraeve.com/htpeord.html. For site licenses or customized versions, contact sales@hilgraeve.com, call Hilgraeve at 800-826-2760 (US and Canada) or 734-243-0576, or fax 734-243-0645.
+
+You may legally give HyperTerminal PE to others (or upload it to locations where others can download it), provided that you distribute only the complete, original HTPE5.EXE file. This ensures that everyone receives the right files in mint condition.
+ 
+Attempting to reverse engineer or modify HyperTerminal Private Edition is unlawful. All rights reserved by Hilgraeve Inc., copyright 1995, 1996, 1997, 1998, 1999. HyperACCESS, HyperTerminal, and CommSense are registered trademarks of Hilgraeve Inc.; all other trademarks belong to their respective holders.
+
+HyperACCESS Order Form
+Customer Code: HTP5
+
+Print this form, then fill it out and fax it to 734-243-0645, or mail it to our address below. This is RISK FREE! If you aren't fully satisfied with HyperACCESS, call us within 60 days for a refund.
+
+Name:	_________________________________
+Address 1:	_______________________________
+Address 2:	_______________________________
+City:	__________________________________
+State/Province:	____________	Postal/Zip Code: _____
+Country:	________________________________
+Daytime Phone:	____________________________
+
+Please fill in the Quantity and Total columns:
+
+	Product	Quantity	Each	Total
+_____________________________________________________________________
+
+HyperACCESS	_____	$79.95	_____
+Includes retail box, manual, and CD (call for 3.5" disks).
+Sales Tax (MI only, add 6%)	_____
+Shipping	$7.50	_____
+For US delivery (call for shipping to other countries).
+Total	_____
+
+Payment Method (check one):
+__ Check   __ Money Order   __ MasterCard   __ VISA   __ American Express
+
+Credit Card Number: 	____________________	 Expiration: _____
+
+Signature (name on the card):	_____________________________
+
+Hilgraeve Inc.
+111 Conant Ave., Suite A
+Monroe, MI 48161

@@ -1,0 +1,9 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{00020900-0000-0000-C000-000000000046}\DataFormats\PriorityCacheFormats]
+"Rich Text Format"=""
+
+[HKEY_CLASSES_ROOT\CLSID\{00020900-0000-0000-C000-000000000046}\DataFormats\DelayRenderFormats]
+"Woozle"=""
+"#1"=""
+

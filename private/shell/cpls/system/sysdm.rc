@@ -1,0 +1,657 @@
+/*++
+
+Microsoft Confidential
+Copyright (c) 1992-1997  Microsoft Corporation
+All rights reserved
+
+Module Name:
+
+    sysdm.rc
+
+Abstract:
+
+    Resource definitions for System Control Panel Applet
+
+Author:
+
+    Eric Flo (ericflo) 19-Jun-1995
+
+Revision History:
+
+    15-Oct-1997 scotthal
+        Complete overhaul
+
+--*/
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+#include "helpid.h"
+
+//
+// Version information
+//
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "System Applet for the Control Panel"
+#define VER_INTERNALNAME_STR        "sysdm.cpl"
+#define VER_ORIGINALFILENAME_STR    "sysdm.cpl"
+
+#include "common.ver"
+
+//
+// Icons
+//
+ID_ICON         ICON  SYSDM.ICO
+IDI_PROFILE     ICON  PROFILE.ICO
+DOCK_ICON       ICON  DOCK.ICO
+UP_ICON         ICON  up.ico
+DOWN_ICON       ICON  down.ico
+PERF_ICON       ICON  perf.ico
+ENVVAR_ICON     ICON  envvar.ico
+CRASHDUMP_ICON  ICON  crashdmp.ico
+IDI_COMPUTER    ICON  Computer.ico
+IDI_X86PROG     ICON  x86prog.ico
+
+//
+// Bitmaps
+//
+IDB_WINDOWS BITMAP WINDOWS.BMP
+
+
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+    IDS_NAME,               "System"
+    IDS_INFO,               "Provides system information and changes environment settings"
+    IDS_TITLE,              "System Properties"
+
+    //
+    // General strings
+    //
+
+    IDS_DEBUG,              "(Debug)"
+    IDS_XDOTX_MB,           "%s KB RAM"
+    IDS_PAE,                "Physical Address Extension"
+
+    //
+    // Performance strings
+    //
+
+    IDS_PAGESIZE,           "Total paging file size for all disk volumes:  %d MB"
+
+    //
+    // Startup strings
+    //
+
+    IDS_DUMPFILE,           "%SystemRoot%\MEMORY.DMP"
+
+    //
+    // Environment Variables strings
+    //
+
+    IDS_USERENVVARS,        "&User variables for %s"
+
+
+    //
+    // The "Identification" Tab's strings
+    //
+    IDS_NETID_DLL_NAME "netid.dll"
+
+    //
+    // User Profile strings
+    //
+
+    IDS_UP_NAME,             "Name"
+    IDS_UP_SIZE,             "Size"
+    IDS_UP_TYPE,             "Type"
+    IDS_UP_MOD,              "Modified"
+    IDS_UP_KB,               "%d KB"
+
+    IDS_UP_LOCAL,            "Local"
+    IDS_UP_FLOATING,         "Roaming"
+    IDS_UP_MANDATORY,        "Mandatory"
+    IDS_UP_BACKUP,           "Backup"
+
+    IDS_UP_CONFIRM,          "Are you sure you want to delete %s's profile?"
+    IDS_UP_CONFIRMTITLE,     "Confirm Delete"
+
+    IDS_UP_DIRPICK,          "Select a directory to place the profile in:"
+    IDS_UP_ERRORTITLE,       "Profile Error"
+    IDS_UP_ACCUNKNOWN,       "Account Unknown"
+    IDS_UP_ACCDELETED,       "Account Deleted"
+    IDS_UP_CHANGETYPEMSG,    "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile." 
+    IDS_UP_CONFIRMCOPYMSG,   "%.500s already exists. The current contents of this directory or this file will be deleted during this operation.  Are you sure you want to continue?"
+    IDS_UP_CONFIRMCOPYTITLE, "Confirm Copy"
+    IDS_UP_DELETE_ERROR,     "Profile not deleted completely. Error - "
+    IDS_UP_SETSECURITY_ERROR,"Failed to set Security on the Destination Profile. Error - "
+    IDS_UP_COPYHIVE_ERROR,   "Failed to copy Registry file %s. Error - "
+
+    //
+    // Random strings
+    //
+    IDS_TEMP_PAGEFILE_WARN, "Windows created a temporary paging file on your computer because of a problem that occurred with your paging file configuration when you started your computer.  The total paging file size for all disk drives may be somewhat larger than the size you specified."
+
+    //
+    // Edit Environment Variable strings
+    //
+    IDS_NEW_SYSVAR_CAPTION     "New System Variable"
+    IDS_EDIT_SYSVAR_CAPTION    "Edit System Variable"
+    IDS_NEW_USERVAR_CAPTION    "New User Variable"
+    IDS_EDIT_USERVAR_CAPTION   "Edit User Variable"
+
+    //
+    // Hardware Profiles strings
+    //
+    HWP_DEF_FRIENDLYNAME,      "Noname Hardware Profile"
+    HWP_CURRENT_TAG,           "(Current)"
+    HWP_UNAVAILABLE,           "Unavailable"
+    HWP_ERROR_CAPTION,         "Warning"
+    HWP_ERROR_PROFILE_IN_USE,  "That profile name is already in use."
+    HWP_ERROR_INVALID_CHAR,    "Profile names cannot contain extended characters."
+    HWP_ERROR_IN_USE,          "The Hardware Profiles dialog is already running."
+    HWP_CONFIRM_DELETE_CAP,    "Confirm Profile Delete"
+    HWP_CONFIRM_DELETE,        "Are you sure you want to delete the hardware profile ""%s""?"
+    HWP_INVALID_WAIT,          "You must enter a value between 0 and 500 for the number of seconds to wait for a user selection."
+    HWP_CONFIRM_NOT_PORTABLE,  "You have specified this is not a portable computer, the docking state in all other Hardware Profiles will be changed to unknown."
+    HWP_UNKNOWN_PROFILE,       "Profile"
+    HWP_DOCKED_PROFILE,        "Docked Profile"
+    HWP_UNDOCKED_PROFILE,      "Undocked Profile"
+
+    IDS_CRASHDUMP_NONE,         "(none)"
+    IDS_CRASHDUMP_MINI,         "Small Memory Dump (64 KB)"
+    IDS_CRASHDUMP_SUMMARY,      "Kernel Memory Dump"
+    IDS_CRASHDUMP_FULL,         "Complete Memory Dump"
+    IDS_CRASHDUMP_DUMP_FILE,    "Dump File:"
+    IDS_CRASHDUMP_MINI_DIR,     "Small Dump Directory:"
+
+//
+// Virtual memory dlg strings
+//
+    INITS,       "Insufficient memory for this operation;\r\rclose one or more Windows applications to increase available memory."
+    INITS + 1,   "System Control Panel Applet"   /* for message box titles */
+
+    SYSTEM +  4, "Please enter a value between %d and %d seconds. "
+    SYSTEM +  8, "Cannot open USER Environment section in Registry.\nPossible registry corruption. "
+    SYSTEM +  9, "Cannot save new Environment variables in Registry.\nPossible registry corruption. "
+
+    SYSTEM + 11, "You are not logged onto Windows as a member of the user group that has the right to view the workstation's Virtual Memory settings."
+    //SYSTEM + 12, "You must be logged onto this system as an Administrator to change the Virtual Memory settings."
+
+    SYSTEM + 13, "The initial paging file size must be between 2 MB and %d MB, and cannot exceed the amount of free space on the drive you have selected."
+    SYSTEM + 14, "Enter a maximum page file size that is greater than or equal to the initial page file size, and less than %d MB."
+    SYSTEM + 15, "There is not enough space on this drive for the paging file size specified.  Please enter a smaller number or free some disk space."
+    SYSTEM + 16, "Drive %c: is too small for the maximum paging file size specified.  Please enter a smaller number."
+    SYSTEM + 17, "Could not read the current virtual memory settings."
+    SYSTEM + 18, "MB"
+    SYSTEM + 19, "Cannot change Boot.ini file.  Operating System and Timeout changes will not be saved."
+    SYSTEM + 20, "Drive %c: does not have enough free space for the maximum paging file size specified.  If you continue with this setting, the paging file will only grow to the size of the available free space."
+    SYSTEM + 21, "Cannot open SYSTEM Environment section in Registry.\nPossible registry corruption."
+
+    SYSTEM + 22, "You are not logged onto Windows as a member of the user group that has the right to view the workstation's Recovery settings."
+    //SYSTEM + 23, "Could not read the current recovery settings."
+    SYSTEM + 24, "An error occurred while saving the changes.  Some changes will not be remembered."
+    SYSTEM + 25, "Another file exists with the filename ""%s"".  Do you wish to overwrite the existing file with a page file?"
+    SYSTEM + 26, "There is not enough space on this drive to create the page file size specified.  At least %d Megabytes of free disk space must be left after the page file is created.  Specify a smaller page file size or free some disk space."
+    SYSTEM + 27, "There is not enough free space on the boot drive to enable crash recovery.  At least %d Megabytes of free space on drive %c: are needed.  Please free up some disk space and try again."
+    SYSTEM + 28, "The Recovery options you chose require that the initial pagefile size on volume %c: be at least %d megabytes.  Should the initial pagefile size be changed now?"
+    SYSTEM + 29, "If the pagefile on volume %c: has an initial size of less than %d megabytes, then the system may not be able to create a debugging information file if a STOP error occurs. Continue anyway?"
+    SYSTEM + 30, "If you want to write debugging information to a file, you must enter a filename."
+    SYSTEM + 31, "Debugging information can be written only to local, writable disk drives.  Please specify a path on a local disk drive."
+    SYSTEM + 32, "The debugging information file path may be invalid or is currently inaccessible.  Do you wish to change it?"
+    SYSTEM + 33, "The path for the debugging information file is too long.  Please specify a path that is less than %ld characters."
+    SYSTEM + 34, "The debugging information file path must be a fully qualified path such as c:\windir\memory.log"
+    SYSTEM + 35, "To increase the registry size limit by the amount specified, a bigger paging file is needed.  The paging file size will be increased."
+    SYSTEM + 36, "There is not enough space on the drives to set the registry size limit specified.  Specify a smaller registry size limit or free some disk space."
+    SYSTEM + 37, "The registry size limit must be larger than the current size of the registry.  Specify a larger registry size limit."
+    SYSTEM + 38, "Windows cannot send administrative alerts unless the Alerter service is running.\n\nTo start the Alerter now, click the Start button, point to Programs, point to Administrative Tools, and then click Computer Management.  In the left pane, double-click System Tools, then click Services.  In the right pane, double-click Alerter.  Under Current Status, click Start.  To have the Alerter start automatically each time Windows starts, under Startup, click Automatic."
+    SYSTEM + 39, "The %s file can not be opened.  Operating System and Timeout settings can not be changed."
+    SYSTEM + 40, "Enter a numeric value for the initial page file size."
+    SYSTEM + 41, "Enter a numeric value for the maximum page file size."
+    SYSTEM + 42, "The changes you have made require you to restart your computer before they can take effect."
+    SYSTEM + 43, "Unable to determine the current paging file size.  The value reported as the current paging file size may be incorrect."
+
+    // Column headings in EnvVar dialog
+    SYSTEM + 50, "Variable"
+    SYSTEM + 51, "Value"
+    SYSTEM + 52         "Unable to load the Device manager program file, %s.\n"
+    SYSTEM + 53         "Unable to find the necessary functions exported from the Device manager.\n The Device manager program file, %s, may be out of date.\n"
+
+END
+
+
+//
+// The "General" Tab and its subdialogs
+//
+
+IDD_GENERAL DIALOGEX 32, 10, 256, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_GEN_WINDOWS_IMAGE,"Static",
+                    SS_BITMAP | SS_CENTERIMAGE,7,11,120,98
+    LTEXT           "System:",IDC_TEXT_1,129,11,40,8
+    LTEXT           "Microsoft Windows 2000",IDC_TEXT_2,141,22,100,8
+    LTEXT           "",IDC_GEN_SERIAL_NUMBER,141,33,100,8
+    LTEXT           "",IDC_GEN_SERVICE_PACK,141,44,100,8
+
+    LTEXT           "Registered to:",IDC_TEXT_3,129,60,70,8
+    EDITTEXT        IDC_GEN_REGISTERED_0,141,71,100,8,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_GEN_REGISTERED_1,141,82,100,8,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_GEN_REGISTERED_2,141,93,100,8,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_GEN_REGISTERED_3,141,104,100,8,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+
+    CTEXT           "Manufactured and supported by:",IDC_GEN_OEM_NUDGE,
+                    7,123,120,8, NOT WS_VISIBLE
+    LTEXT           "Computer:",IDC_GEN_MACHINE,129,115,70,8
+    CONTROL         "",IDC_GEN_OEM_IMAGE,"Static",
+                    SS_BITMAP | SS_CENTERIMAGE,7,133,120,70
+    LTEXT           "",IDC_GEN_MACHINE_0,141,126,110,8, SS_NOPREFIX
+    LTEXT           "",IDC_GEN_MACHINE_1,141,137,110,8, SS_NOPREFIX
+    LTEXT           "",IDC_GEN_MACHINE_2,141,148,110,8, SS_NOPREFIX
+    LTEXT           "",IDC_GEN_MACHINE_3,141,159,110,8, SS_NOPREFIX
+    LTEXT           "",IDC_GEN_MACHINE_4,141,170,110,8, SS_NOPREFIX
+    LTEXT           "",IDC_GEN_MACHINE_5,141,181,110,8, SS_NOPREFIX
+
+    PUSHBUTTON      "&Support Information...",IDC_GEN_OEM_SUPPORT,
+                    141,195,80,14,WS_DISABLED | NOT WS_VISIBLE
+END
+
+IDD_PHONESUP DIALOGEX 32, 10, 256, 176
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Phone Support"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_SUPPORT_TEXT,7,7,241,144,WS_VSCROLL | WS_HSCROLL |
+                    ES_READONLY | ES_MULTILINE | NOT WS_TABSTOP
+
+    PUSHBUTTON      "OK",IDOK,101,155,50,14
+END
+
+
+
+//
+// The "Hardware" Tab and its subdialogs
+//
+IDD_HARDWARE DIALOGEX 0, 0, 256, 226
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Hardware Wizard",IDC_STATIC,7,12,242,63
+    ICON            "",IDC_WIZARD_ICON,14,24,21,20
+    LTEXT       "The Hardware wizard helps you install, uninstall, repair, unplug, eject, and configure your hardware.",
+                    IDC_WIZARD_TEXT,45,24,195,30
+    PUSHBUTTON      "&Hardware Wizard...",IDC_WIZARD_START,144,53,98,14
+
+    GROUPBOX        "Device Manager",IDC_STATIC,7,79,242,66
+    ICON            "",IDC_DEVMGR_ICON,14,91,21,20
+    LTEXT           "The Device Manager lists all the hardware devices installed on your computer. Use the Device Manager to change the properties of any device.",
+                    IDC_DEVMGR_TEXT,45,91,195,30
+    PUSHBUTTON      "Driver &Signing...",IDC_DRIVER_SIGNING,41,123,98,14
+    PUSHBUTTON      "&Device Manager...",IDC_DEVMGR_START,144,123,98,14
+
+    GROUPBOX        "Hardware Profiles", IDC_STATIC, 7, 149, 242, 63
+    ICON            DOCK_ICON,IDC_HWPROFILES_ICON,14,161,21,20
+    LTEXT           "Hardware profiles provide a way for you to set up and store different hardware configurations.", IDC_HWPROFILES_START_TEXT, 45, 161, 195, 30
+    PUSHBUTTON      "Hardware &Profiles...", IDC_HWPROFILES_START, 144, 190, 98, 14
+END
+
+DLG_HWPROFILES DIALOGEX 6, 18, 254, 234
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Hardware Profiles"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            DOCK_ICON, IDD_HWP_UNUSED_1, 8,11,18,20
+    LTEXT           "You can set up hardware profiles for different hardware configurations.  At startup, you can choose the profile you want to use.",
+                    IDD_HWP_UNUSED_2, 46, 11, 188, 25
+    LTEXT           "&Available hardware profiles:", -1, 8, 41, 120, 8
+    LISTBOX         IDD_HWP_PROFILES, 8,52,215,54, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP | WS_GROUP
+
+    PUSHBUTTON      "", IDD_HWP_ORDERUP, 232,59,15,15, WS_GROUP | BS_ICON | BS_CENTER | BS_VCENTER
+    PUSHBUTTON      "", IDD_HWP_ORDERDOWN, 232,79,15,15, WS_GROUP | BS_ICON | BS_CENTER | BS_VCENTER
+
+    PUSHBUTTON      "&Properties", IDD_HWP_PROPERTIES, 8,106,50,14
+    PUSHBUTTON      "&Copy...", IDD_HWP_COPY, 63,106,50,14
+    PUSHBUTTON      "&Rename...", IDD_HWP_RENAME, 118,106,50,14
+    PUSHBUTTON      "&Delete", IDD_HWP_DELETE, 173,106,50,14
+
+    GROUPBOX        "Hardware profiles selection", IDD_HWP_ST_MULTIPLE, 7,130,240,75
+    LTEXT           "When Windows starts:",
+                    IDD_HWP_UNUSED_3, 14,142,210,8
+    AUTORADIOBUTTON "&Wait until I select a hardware profile", IDD_HWP_WAITFOREVER,
+                    14,158,133,8, WS_TABSTOP
+    AUTORADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDD_HWP_WAITUSER,
+                    14,173,190,8, WS_TABSTOP
+    LTEXT           "seconds", IDD_HWP_WAITUSER_TEXT_1, 65,187,35,8
+    EDITTEXT        IDD_HWP_SECONDS, 25,185,35,12, WS_TABSTOP
+    CONTROL         "", IDD_HWP_SECSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_SETBUDDYINT,
+                    25, 185, 7, 10
+
+    DEFPUSHBUTTON   "OK", IDOK, 143, 213, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 197, 213, 50, 14
+END
+
+DLG_HWP_RENAME DIALOGEX DISCARDABLE  12, 26, 256, 52
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Rename Profile"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "From:", IDD_HWP_UNUSED_1, 5, 10, 20, 8
+    LTEXT           "", IDD_HWP_RENAMEFROM, 28, 10, 170, 10
+    LTEXT           "To:", IDD_HWP_UNUSED_2, 5, 30, 21, 8
+    EDITTEXT        IDD_HWP_RENAMETO, 30, 30, 161, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 196, 6, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 196, 24, 50, 14
+END
+
+
+DLG_HWP_COPY DIALOGEX DISCARDABLE  12, 26, 256, 52
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Copy Profile"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "From:", IDD_HWP_UNUSED_1, 5, 10, 20, 8
+    LTEXT           "", IDD_HWP_COPYFROM, 28, 10, 170, 10
+    LTEXT           "To:", IDD_HWP_UNUSED_2, 5, 30, 21, 8
+    EDITTEXT        IDD_HWP_COPYTO, 30, 30, 161, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 196, 6, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 196, 24, 50, 14
+END
+
+DLG_HWP_GENERAL DIALOGEX 18, 34, 212, 188
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            DOCK_ICON, IDD_HWP_UNUSED_1, 10,10,18,20
+    LTEXT           "", IDD_HWP_ST_PROFILE, 48, 16, 150, 8
+    LTEXT           "Dock ID:", IDD_HWP_ST_DOCKID, 10,42,43,8
+    LTEXT           "", IDD_HWP_DOCKID, 64,42,135,8
+    LTEXT           "Serial Number:", IDD_HWP_ST_SERIALNUM, 10,55,52,8
+    LTEXT           "", IDD_HWP_SERIALNUM, 64,55,135,8
+    GROUPBOX        "    ", IDD_HWP_UNUSED_2, 10,69,192,61
+    AUTOCHECKBOX    "This is a &portable computer", IDD_HWP_PORTABLE, 17,68,102,10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The docking &state is unknown", IDD_HWP_UNKNOWN, 22,85,160,10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "The computer is &docked", IDD_HWP_DOCKED, 22,97,160,10
+    AUTORADIOBUTTON "The computer is &undocked", IDD_HWP_UNDOCKED, 22,109,160,10
+
+    GROUPBOX        "Hardware profiles selection", IDD_HWP_ST_MULTIPLE, 10,138,192,42
+    AUTOCHECKBOX    "Always &include this profile as an option when Windows starts", IDD_HWP_ALIASABLE, 17,150,164,20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+END
+
+
+//
+// The "User Profiles" tab and its subdialogs
+//
+IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE
+CAPTION "User Profiles"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PROFILE,IDC_UP_ICON,8,11,18,20
+    LTEXT           "User profiles contain desktop settings and other information related to your logon.  A different profile can be created on each computer you use, or you can select a roaming profile that is the same on every computer you use.",
+                    IDC_UP_TEXT,46,11,188,40
+    LTEXT           "&Profiles stored on this computer:",IDC_STATIC,8,59,125,8
+    CONTROL         "",IDC_UP_LISTVIEW,"SysListView32",LVS_REPORT | LVS_SORTASCENDING | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS |
+                    WS_BORDER | WS_TABSTOP,8,70,240,132,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Delete",IDC_UP_DELETE,8,208,75,13
+    PUSHBUTTON      "&Change Type...",IDC_UP_TYPE,91,208,75,13
+    PUSHBUTTON      "Copy &To...",IDC_UP_COPY,173,208,75,13
+END
+
+IDD_UP_TYPE DIALOGEX 7, 20, 225, 103
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Profile Type"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", IDC_UPTYPE_GROUP, 7, 11, 206, 28
+    AUTORADIOBUTTON "&Roaming profile", IDC_UPTYPE_FLOAT, 60, 49, 145, 10, WS_TABSTOP
+    AUTORADIOBUTTON "&Local profile", IDC_UPTYPE_LOCAL, 60, 63, 145, 10, WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 60, 82, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 122, 82, 50, 14
+END
+
+IDD_UP_COPY DIALOGEX 6, 18, 261, 133
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Copy To"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Copy &profile to", IDC_COPY_PROFILE, 8, 9, 185, 52
+    EDITTEXT        IDC_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...", IDC_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX        "Permitted to use", IDC_COPY_GROUP, 8, 77, 185, 48
+    LTEXT           "", IDC_COPY_USER, 15,91,167,8
+    PUSHBUTTON      "&Change...", IDC_COPY_CHANGE, 15, 105, 50, 14
+    DEFPUSHBUTTON   "OK", IDOK, 204, 13, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 204, 30, 50, 14
+END
+
+
+//
+// The "Advanced" tab and its subdialogs
+//
+IDD_ADVANCED DIALOGEX 0, 0, 256, 226
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Performance",IDC_STATIC,7,12,242,63
+    ICON            PERF_ICON,IDC_ADV_PERF_ICON,14,24,21,20
+    LTEXT           "Performance options control how applications use memory, which affects the speed of your computer.",
+                    IDC_ADV_PERF_TEXT,45,24,195,30
+    PUSHBUTTON      "&Performance Options...",IDC_ADV_PERF_BTN,144,53,98,14
+
+    GROUPBOX        "Environment Variables",IDC_STATIC,7,79,242,63
+    ICON            ENVVAR_ICON,IDC_ADV_ENV_ICON,14,91,21,20
+    LTEXT           "Environment variables tell your computer where to find certain types of information.",
+                    IDC_ADV_ENV_TEXT,45,91,195,30
+    PUSHBUTTON      "&Environment Variables...",IDC_ADV_ENV_BTN,144,120,98,14
+
+    GROUPBOX        "Startup and Recovery", IDC_STATIC, 7, 146, 242, 66
+    ICON            CRASHDUMP_ICON,IDC_ADV_RECOVERY_ICON, 14, 158, 21, 20
+    LTEXT           "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_ADV_RECOVERY_TEXT, 45, 158, 195, 30
+    PUSHBUTTON      "&Startup and Recovery...", IDC_ADV_RECOVERY_BTN, 144, 190, 98, 14
+END
+
+
+// READ IF YOU WANT TO CHANGE THE PERFORMANCE DIALOG
+// The Alpha version of the Perf dialog is a strict superset of the x86
+// version (it has an extra groupbox with text and a button to launch a
+// wx86 performance tuning applet).  ANY CHANGES MADE TO IDD_PERFORMANCE_X86
+// MUST ALSO BE MADE TO IDD_PERFORMANCE_ALPHA
+
+IDD_PERFORMANCE_X86 DIALOGEX 6, 18, 227, 139
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_SYSMENU | WS_POPUP | WS_VISIBLE | DS_CONTEXTHELP
+CAPTION "Performance Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Application response", IDC_PERF_GROUP, 7, 8, 213, 48
+    LTEXT           "Optimize performance for:", IDC_PERF_TEXT, 14, 20, 199, 8
+    AUTORADIOBUTTON "&Applications", IDC_PERF_WORKSTATION,
+                    14,36,75,12, WS_TABSTOP
+    AUTORADIOBUTTON "Background &services", IDC_PERF_SERVER,
+                    96,36,85,12, WS_TABSTOP
+    GROUPBOX        "Virtual memory", IDC_PERF_VM_GROUP, 7, 60, 213, 50
+    LTEXT           "Total paging file size for all drives:",
+                    IDC_PERF_VM_ALLOCD_LABEL, 14, 72, 125, 8
+    LTEXT           "", IDC_PERF_VM_ALLOCD, 147, 72, 50, 8
+    PUSHBUTTON      "&Change...", IDC_PERF_CHANGE, 163, 88, 50, 14
+
+    DEFPUSHBUTTON   "OK", IDOK, 116, 118, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 170, 118, 50, 14
+END
+
+IDD_PERFORMANCE_ALPHA DIALOGEX 6, 18, 227, 214
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_SYSMENU | WS_POPUP | WS_VISIBLE | DS_CONTEXTHELP
+CAPTION "Performance Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Application response", IDC_PERF_GROUP, 7, 8, 213, 48
+    LTEXT           "Optimize performance for:", IDC_PERF_TEXT, 14, 20, 199, 8
+    AUTORADIOBUTTON "&Applications", IDC_PERF_WORKSTATION,
+                    14,36,75,12, WS_TABSTOP
+    AUTORADIOBUTTON "Background &services", IDC_PERF_SERVER,
+                    96,36,85,12, WS_TABSTOP
+    GROUPBOX        "Virtual memory", IDC_PERF_VM_GROUP, 7, 60, 213, 50
+    LTEXT           "Total paging file size for all drives:",
+                    IDC_PERF_VM_ALLOCD_LABEL, 14, 72, 125, 8
+    LTEXT           "", IDC_PERF_VM_ALLOCD, 147, 72, 50, 8
+    PUSHBUTTON      "&Change...", IDC_PERF_CHANGE, 163, 88, 50, 14
+
+// Begin Alpha-only wx86 stuff
+    GROUPBOX        "x86 Program Optimization", IDC_PERF_X86PROG_GROUP,
+                    7, 114, 213, 75
+    ICON            IDI_X86PROG,IDC_PERF_X86PROG_ICON,14,126,21,20
+    LTEXT           "Use x86 Programs to schedule and monitor performance optimization for x86-based programs.",
+                    IDC_PERF_X86PROG_TEXT,45,126,168,30
+    PUSHBUTTON      "&x86 Programs...",
+                    IDC_PERF_X86PROG_BUTTON,115,168,98,14
+// End Alpha-only wx86 stuff
+    DEFPUSHBUTTON   "OK", IDOK, 116, 195, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 170, 195, 50, 14
+END
+
+IDD_ENVVARS DIALOGEX 6, 18, 252, 245
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Environment Variables"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "", IDC_ENVVAR_SYS_USERGROUP, 7, 12, 238, 100
+    CONTROL         "",IDC_ENVVAR_SYS_LB_USERVARS, WC_LISTVIEW, LVS_REPORT | LVS_SINGLESEL |
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,
+                    14, 25, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&New...", IDC_ENVVAR_SYS_NEWUV, 80, 90, 50, 14
+    PUSHBUTTON      "&Edit...", IDC_ENVVAR_SYS_EDITUV, 134, 90, 50, 14
+    PUSHBUTTON      "&Delete", IDC_ENVVAR_SYS_NDELUV, 188, 90, 50, 14
+
+    GROUPBOX        "&System variables", IDC_STATIC, 7, 116, 238, 100 
+    CONTROL         "",IDC_ENVVAR_SYS_LB_SYSVARS, WC_LISTVIEW, LVS_REPORT | LVS_SINGLESEL |
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,
+                    14, 129, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Ne&w...", IDC_ENVVAR_SYS_NEWSV, 80, 194, 50, 14
+    PUSHBUTTON      "Ed&it...", IDC_ENVVAR_SYS_EDITSV, 134, 194, 50, 14
+    PUSHBUTTON      "De&lete", IDC_ENVVAR_SYS_DELSV, 188, 194, 50, 14
+
+    DEFPUSHBUTTON   "OK", IDOK, 141, 224, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 195, 224, 50, 14
+END
+
+IDD_ENVVAREDIT DIALOGEX 10, 15, 227, 71
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT            "Variable &Name:", IDC_ENVVAR_EDIT_NAME_LABEL, 
+                     7, 14, 50, 8
+    EDITTEXT         IDC_ENVVAR_EDIT_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
+
+    LTEXT            "Variable &Value:", IDC_ENVVAR_EDIT_VALUE_LABEL,
+                     7, 32, 50, 8
+    EDITTEXT         IDC_ENVVAR_EDIT_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
+
+    DEFPUSHBUTTON    "OK", IDOK, 116, 50, 50, 14, WS_GROUP
+    PUSHBUTTON       "Cancel", IDCANCEL, 170, 50, 50, 14
+
+END
+
+IDD_STARTUP DIALOGEX 6, 18, 252, 252
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Startup and Recovery"
+FONT 8, "MS Shell Dlg"
+BEGIN
+#   define CX_CDWN_OFFS 9
+
+    GROUPBOX        "System startup",IDC_STARTUP_SYSTEM_GRP,7,12,238,67
+    LTEXT           "Default operating &system:",IDC_STATIC,14,26,100,8
+    COMBOBOX        IDC_STARTUP_SYS_OS,14,37,224,46,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+#   define CX_CDWN_OFFS 9
+    CHECKBOX        "&Display list of operating systems for", IDC_STARTUP_SYS_ENABLECOUNTDOWN, 14, 61, 120 + CX_CDWN_OFFS, 8
+
+    LTEXT           "seconds.", IDC_STARTUP_SYS_SECONDS_LABEL, 172 + CX_CDWN_OFFS, 61, 44, 8
+    EDITTEXT        IDC_STARTUP_SYS_SECONDS, 134 + CX_CDWN_OFFS, 59, 35, 12, ES_AUTOHSCROLL
+    CONTROL         "", IDC_STARTUP_SYS_SECSCROLL, "msctls_updown32",
+                    UDS_WRAP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_SETBUDDYINT,
+                    128 + CX_CDWN_OFFS, 44, 8, 13
+
+    GROUPBOX        "System Failure",IDC_STARTUP_CDMP_GRP,7,83,238,140
+    CONTROL         "Write an event to the system &log",IDC_STARTUP_CDMP_LOG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,96,148,10
+    CONTROL         "S&end an administrative alert",IDC_STARTUP_CDMP_SEND,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,110,148,10
+    CONTROL         "Automatically &reboot",IDC_STARTUP_CDMP_AUTOREBOOT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,124,145,10
+    GROUPBOX        "Write Debugging Information",IDC_STARTUP_CDMP_DEBUGINFO_GROUP,12,139,227,76
+    COMBOBOX        IDC_STARTUP_CDMP_TYPE,21,154,151,49,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dump &File:",IDC_STARTUP_CDMP_FILE_LABEL,21,170,150,8
+    EDITTEXT        IDC_STARTUP_CDMP_FILENAME,21,182,153,12,ES_AUTOHSCROLL
+    CONTROL         "&Overwrite any existing file",
+                    IDC_STARTUP_CDMP_OVERWRITE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,22,200,125,10
+    DEFPUSHBUTTON   "OK",IDOK,141,231,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,195,231,50,14
+END
+
+DLG_VIRTUALMEM DIALOGEX 8, 10, 252, 255
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Virtual Memory"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Drive  [Volume Label]", IDD_VM_DRIVE_HDR, 8, 8, 71, 8
+    LTEXT           "Paging File Size (MB)", IDD_VM_PF_SIZE_LABEL, 111, 8, 70, 8
+    LISTBOX         IDD_VM_VOLUMES, 7, 18, 238, 32, LBS_SORT |
+                    LBS_USETABSTOPS | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    GROUPBOX        "Paging file size for selected drive", IDC_STATIC, 7, 48,
+                    238, 76
+    LTEXT           "Drive:", IDD_VM_DRIVE_LABEL, 14, 60, 20, 8
+    LTEXT           "", IDD_VM_SF_DRIVE, 87, 60, 90, 8
+    LTEXT           "Space available:", IDD_VM_SPACE_LABEL, 14, 69, 56, 8
+    LTEXT           "", IDD_VM_SF_SPACE, 87, 69, 52, 8
+
+    LTEXT           "&Initial size (MB):", IDD_VM_ST_INITSIZE, 14, 87, 54,
+                    8
+    EDITTEXT        IDD_VM_SF_SIZE, 87, 85, 30, 12, ES_AUTOHSCROLL
+    LTEXT           "Ma&ximum size (MB):", IDD_VM_ST_MAXSIZE, 14, 104, 66, 8
+    EDITTEXT        IDD_VM_SF_SIZEMAX, 87, 103, 30, 12, ES_AUTOHSCROLL
+
+    PUSHBUTTON      "&Set", IDD_VM_SF_SET, 188, 102, 50, 14
+
+    GROUPBOX        "Total paging file size for all drives", IDC_STATIC, 7,
+                    128, 238, 46
+    LTEXT           "Minimum allowed:", IDD_VM_MIN_LABEL, 14, 140, 58, 8
+    LTEXT           "", IDD_VM_MIN, 87, 140, 52, 8
+    LTEXT           "Recommended:", IDD_VM_RECOMMEND_LABEL, 14, 149, 51, 8
+    LTEXT           "", IDD_VM_RECOMMEND, 87, 149, 52, 8
+    LTEXT           "Currently allocated:", IDD_VM_ALLOCD_LABEL, 14, 158, 65, 8
+    LTEXT           "", IDD_VM_ALLOCD, 87, 158, 82, 8
+    GROUPBOX        "Registry size", IDC_STATIC, 7, 178, 238, 48
+    LTEXT           "Current registry size:", IDD_VM_RSL_ALLOCD_LABEL, 14, 190, 72, 8
+    LTEXT           "", IDD_VM_RSL_ALLOCD, 118, 190, 51, 8
+    LTEXT           "Maximum &registry size (MB):", IDD_VM_RSL_LABEL, 14, 207, 95, 8
+    EDITTEXT        IDD_VM_REG_SIZE_LIM, 118, 206, 32, 12, ES_AUTOHSCROLL
+
+//    PUSHBUTTON      "&Help", IDD_HELP, 87, 234, 50, 14
+    DEFPUSHBUTTON   "OK", IDOK, 141, 234, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 195, 234, 50, 14
+END

@@ -1,0 +1,25 @@
+;  File: D:\WACKER\htrn_jis\htrn_jis.def (Created: 24-Aug-1994)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.3 $
+;  $Date: 1997/09/09 15:24:57 $
+;
+
+LIBRARY   HTRN_JIS
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; htrn_jis.c
+	transCreateHandle
+	transInitHandle
+	transLoadHandle
+	transSaveHandle
+	transDestroyHandle
+	transDoDialog
+	transCharIn
+	transCharOut
+

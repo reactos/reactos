@@ -1,0 +1,25 @@
+LIBRARY         ICM32.dll
+HEAPSIZE        8192
+
+EXPORTS
+    CMCheckColors                      @1
+    CMCheckColorsInGamut               @2
+    CMCheckRGBs                        @3
+    CMCreateDeviceLinkProfile          @4
+    CMCreateMultiProfileTransform      @5
+    CMCreateProfile                    @6
+    CMCreateProfileW                   @7
+    CMCreateTransform                  @8
+    CMCreateTransformExt               @9
+    CMCreateTransformExtW              @10
+    CMCreateTransformW                 @11
+    CMDeleteTransform                  @12
+    CMGetInfo                          @13
+    CMIsProfileValid                   @14
+    CMTranslateColors                  @15
+    CMTranslateRGB                     @16
+    CMTranslateRGBs                    @17
+    CMTranslateRGBsExt                 @18
+    CMConvertColorNameToIndex          @19
+    CMConvertIndexToColorName          @20
+    CMGetNamedProfileInfo              @21

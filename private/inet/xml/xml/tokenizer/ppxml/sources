@@ -1,0 +1,36 @@
+
+ROOT=$(MAKEDIR:xml\tokenizer\ppxml=)
+!include $(ROOT)\common.inc
+
+NO_NTDLL	= 1
+
+TARGETNAME=ppxml
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+SOURCES = \
+   ppxml.cxx \
+   MyFactory.cxx
+
+!if $(FREEBUILD)
+CLIB=libcmt.lib
+!else
+CLIB=libcmtd.lib
+!endif
+
+LINKLIBS=\
+    $(SDK_LIB_PATH)\ole32.lib  \
+    $(SDK_LIB_PATH)\oleaut32.lib  \
+    $(SDK_LIB_PATH)\shlwapip.lib  \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\urlmon.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\version.lib \
+    $(SDK_LIB_PATH)\$(CLIB)
+
+INCLUDES= \
+	$(ROOT); \
+	$(ROOT)\include; \
+    $(WINDOWS_INC_PATH)\
+

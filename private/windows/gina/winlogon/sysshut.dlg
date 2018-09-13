@@ -1,0 +1,15 @@
+#include "sysshut.h"
+
+IDD_SYSTEM_SHUTDOWN DIALOG 35, 46, 184, 139
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "System Shutdown"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This system is shutting down. Please save all work in progress and log off. Any unsaved changes will be lost. This shutdown was initiated by %s\\%s.",
+                    IDD_SYSTEM_MESSAGE, 33, 11, 147, 42
+    RTEXT           "Time before shutdown :", 102, 21, 59, 85, 8
+    GROUPBOX        "Message", 104, 30, 73, 146, 58
+    LTEXT           "Text", IDD_MESSAGE, 36, 83, 137, 45
+    LTEXT           "00:00:00", IDD_TIMER, 114, 59, 41, 8
+    ICON            32513, -1, 7, 12, 18, 20
+END

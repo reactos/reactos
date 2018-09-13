@@ -1,0 +1,248 @@
+// This file contains directives for how to order the functions.
+#include "wininet.fmap"
+
+libwininet.so.1
+{
+    global:
+
+    InternetTimeFromSystemTimeW;
+    InternetTimeFromSystemTimeA;
+    InternetTimeToSystemTimeA;
+    InternetTimeToSystemTimeW;
+    InternetDebugGetLocalTime;
+    InternetCrackUrlA;
+    InternetCrackUrlW;
+    InternetCreateUrlA;
+    InternetCreateUrlW;
+    InternetCanonicalizeUrlA;
+    InternetCanonicalizeUrlW;
+    InternetCombineUrlA;
+    InternetCombineUrlW;
+    InternetOpenA;
+    InternetOpenW;
+    InternetCloseHandle;
+    InternetConnectA;
+    InternetConnectW;
+    InternetOpenUrlA;
+    InternetOpenUrlW;
+    InternetSetFilePointer;
+    InternetReadFile;
+    InternetReadFileExA;
+    InternetReadFileExW;
+    InternetWriteFile;
+    InternetWriteFileExA;
+    InternetWriteFileExW;
+    InternetQueryDataAvailable;
+    InternetFindNextFileA;
+    InternetFindNextFileW;
+    InternetQueryOptionA;
+    InternetQueryOptionW;
+    InternetSetOptionA;
+    InternetSetOptionW;
+    InternetSetOptionExA;
+    InternetSetOptionExW;
+    InternetGetLastResponseInfoA;
+    InternetGetLastResponseInfoW;
+    InternetSetStatusCallbackA;
+    InternetSetStatusCallbackW;
+    InternetConfirmZoneCrossingA;
+    InternetConfirmZoneCrossingW;
+
+
+    FtpFindFirstFileA;
+    FtpFindFirstFileW;
+    FtpGetFileA;
+    FtpGetFileW;
+    FtpPutFileA;
+    FtpPutFileW;
+    FtpDeleteFileA;
+    FtpDeleteFileW;
+    FtpRenameFileA;
+    FtpRenameFileW;
+    FtpOpenFileA;
+    FtpOpenFileW;
+    FtpCreateDirectoryA;
+    FtpCreateDirectoryW;
+    FtpRemoveDirectoryA;
+    FtpRemoveDirectoryW;
+    FtpSetCurrentDirectoryA;
+    FtpSetCurrentDirectoryW;
+    FtpGetCurrentDirectoryA;
+    FtpGetCurrentDirectoryW;
+//    ;FtpCommandA
+//    ;FtpCommandW
+
+    GopherCreateLocatorA;
+    GopherCreateLocatorW;
+    GopherGetLocatorTypeA;
+    GopherGetLocatorTypeW;
+    GopherFindFirstFileA;
+    GopherFindFirstFileW;
+    GopherOpenFileA;
+    GopherOpenFileW;
+    GopherGetAttributeA;
+    GopherGetAttributeW;
+//    ;GopherSendDataA;
+//    ;GopherSendDataW;
+
+    HttpOpenRequestA;
+    HttpOpenRequestW;
+    HttpAddRequestHeadersA;
+    HttpAddRequestHeadersW;
+    HttpSendRequestA;
+    HttpSendRequestW;
+    HttpSendRequestExA;
+    HttpSendRequestExW;
+    HttpEndRequestA;
+    HttpEndRequestW;
+    HttpQueryInfoA;
+    HttpQueryInfoW;
+
+    InternetErrorDlg;
+
+    InternetSetCookieA;
+    InternetSetCookieW;
+    InternetGetCookieA;
+    InternetGetCookieW;
+
+    CreateUrlCacheEntryA;
+    CreateUrlCacheEntryW;
+    CommitUrlCacheEntryA;
+    CommitUrlCacheEntryW;
+
+    RetrieveUrlCacheEntryFileA;
+    RetrieveUrlCacheEntryFileW;
+    UnlockUrlCacheEntryFileA;
+    UnlockUrlCacheEntryFileW;
+
+    RetrieveUrlCacheEntryStreamA;
+    RetrieveUrlCacheEntryStreamW;
+    ReadUrlCacheEntryStream;
+    UnlockUrlCacheEntryStream;
+
+    GetUrlCacheEntryInfoA;
+    GetUrlCacheEntryInfoW;
+    GetUrlCacheEntryInfoExA;
+    GetUrlCacheEntryInfoExW;
+    SetUrlCacheEntryInfoA;
+    SetUrlCacheEntryInfoW;
+
+    DeleteUrlCacheEntryW;
+    DeleteUrlCacheEntryA;
+
+    FindFirstUrlCacheContainerA;
+    FindFirstUrlCacheContainerW;
+    FindNextUrlCacheContainerA;
+    FindNextUrlCacheContainerW;
+    CreateUrlCacheContainerA;
+    CreateUrlCacheContainerW;
+    DeleteUrlCacheContainerA;
+    DeleteUrlCacheContainerW;
+
+    FindFirstUrlCacheEntryA;
+    FindFirstUrlCacheEntryW;
+    FindFirstUrlCacheEntryExA;
+    FindFirstUrlCacheEntryExW;
+
+    FindNextUrlCacheEntryA;
+    FindNextUrlCacheEntryW;
+    FindNextUrlCacheEntryExA;
+    FindNextUrlCacheEntryExW;
+
+    FindCloseUrlCache;
+
+    CreateUrlCacheGroup;
+    DeleteUrlCacheGroup;
+    SetUrlCacheEntryGroupA;
+    SetUrlCacheEntryGroupW;
+
+    FreeUrlCacheSpaceA;
+    FreeUrlCacheSpaceW;
+
+    GetUrlCacheConfigInfoA;
+    GetUrlCacheConfigInfoW;
+
+    SetUrlCacheConfigInfoA;
+    SetUrlCacheConfigInfoW;
+
+    GetUrlCacheHeaderData;
+    SetUrlCacheHeaderData;
+    IncrementUrlCacheHeaderData;
+
+    LoadUrlCacheContent;
+    UpdateUrlCacheContentPath;
+
+
+//;    InternetAddHistoryItem
+//;    InternetIsHistorical
+
+
+
+//    ; BUGBUG [arthurbi] - Remove this function after Beta 1.
+//    ;  This is exported out of WININET so MSHTML can reuse
+//    ;  some of the IE 2 SSL code without too much modification.
+//    ;
+//    ;  POST-BETA1 we need to have InternetErrorDlg do all
+//    ;  the work for MSHTML.  That way we impliment ONE
+//    ;  set Certifcate UI code.
+//    ;
+
+    InternetShowSecurityInfoByURLW;
+    InternetShowSecurityInfoByURLA;
+    
+    RunOnceUrlCache;
+    DeleteIE3Cache;
+
+//; A caller may call this the first time to
+//; so we make a winsock call, which may invoke dial
+//; dialog
+    InternetAttemptConnect;
+
+    ShowSecurityInfo;
+    ShowX509EncodedCertificate;
+    ShowClientAuthCerts;
+    ParseX509EncodedCertificateForListBoxEntry;
+
+    InternetLockRequestFile;
+    InternetUnlockRequestFile;
+
+    InternetCheckConnectionA;
+    InternetCheckConnectionW;
+
+    InternetInitializeAutoProxyDll;
+
+    InternetAutodialCallback;
+    InternetDialA;
+    InternetDialW;
+    InternetHangUp;
+    InternetGoOnlineW;
+    InternetGoOnlineA;
+    InternetAutodial;
+    InternetAutodialHangup;
+    InternetSetDialStateA;
+    InternetSetDialStateW;
+    InternetGetConnectedState;
+
+    InternetGetConnectedStateExA;
+    InternetGetConnectedStateExW;
+
+//    ; Exports for the Security Zones functions.
+    IsHostInProxyBypassList;
+
+//    ; Called by setup to install registry entries needed by Wininet.
+//    ; was PRIVATE in wininet.def
+    DllInstall;
+
+    InternetGetCertByURLA;
+    ShowCertificate;
+
+	StrTokEx;
+        StrToDbl;
+	_____wininet_initDLL;
+        unixForceAutoProxSync;
+        unixCleanupWininetCacheLockFile;
+        unixGetWininetCacheLockStatus;
+    local:
+        *;
+};
+

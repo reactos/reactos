@@ -1,0 +1,42 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1998, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Aug-14-1998 PeterHal Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=WOW64
+ALT_PROJECT_TARGET=WOW64
+
+TARGETNAME=csruser
+TARGETPATH=$(BASEDIR)\private\windows\obj
+TARGETTYPE=LIBRARY
+
+C_DEFINES=$(C_DEFINES) $(USER_C_DEFINES) -D_USER32_ -DUNICODE -DUSE_MIRRORING -DBUILD_CSRWOW64
+LINKER_FLAGS = $(LINKER_FLAGS) /WX
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+INCLUDES=..;                                    \
+         ..\..\inc;                             \
+         ..\..\inc\$(ALT_PROJECT);              \
+         ..\..\inc\daytona;                     \
+         ..\..\..\w32inc;                       \
+         $(BASEDIR)\private\ntos\inc;           \
+         ..\..\..\ntgdi\inc;                    \
+         $(BASEDIR)\public\sdk\inc\hydra
+
+SOURCES=..\csrstubs.c
+
+PRECOMPILED_INCLUDE=..\precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

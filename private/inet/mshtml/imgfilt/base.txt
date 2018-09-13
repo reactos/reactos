@@ -1,0 +1,18 @@
+;
+; This file defines the base virtual address for Dynamic Link Libraries (DLL)
+; The first token on a line is the name of the DLL and the second token is the
+; base virtual address, in hexidecimal.  The third token is the maximum size of
+; the DLL image file, including symbols.
+;
+;  NOTE:  I have used the convention of labelling unused areas as _FREExx_.
+;  If you need an address,  these are available.  
+
+;
+;  IMGFILT
+;
+; BUGBUG: need an official base address
+imgutil       0x1b000000    0x00030000
+wmffilt       0x1b030000    0x00030000
+pngfilt       0x1b060000    0x00030000
+jpegfilt      0x1b090000    0x00030000
+giffilt       0x1b0c0000    0x00030000

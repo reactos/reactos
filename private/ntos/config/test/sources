@@ -1,0 +1,40 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Mark Lucovsky (markl) 18-Sep-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=ntos
+MINORCOMP=configtest
+
+TARGETNAME=regext
+TARGETPATH=\nt\public\sdk\lib
+TARGETTYPE=DYNLINK
+TARGETLIBS=\nt\public\sdk\lib\*\kernel32.lib
+USE_CRTDLL=1
+
+INCLUDES=..\..\inc;..
+
+SOURCES= regext.c
+
+UMTYPE=console
+
+DLLBASE=0x1000000

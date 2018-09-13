@@ -1,0 +1,36 @@
+;------------------------------------------------------------------------------
+; WINCHAT MODULE DEFINITION FILE  (Dos Specific)
+;   This is the module-definintion file for Windows 3.x
+;
+;------------------------------------------------------------------------------
+NAME	     WinChat
+
+EXETYPE      WINDOWS
+PROTMODE
+
+STUB	     'WINSTUB.EXE'
+
+CODE  MOVEABLE PRELOAD
+DATA  MOVEABLE MULTIPLE PRELOAD
+
+SEGMENTS
+    _TEXT MOVEABLE PRELOAD
+    _INIT MOVEABLE DISCARDABLE PRELOAD
+    _DLGS MOVEABLE DISCARDABLE PRELOAD
+
+HEAPSIZE   1024
+STACKSIZE  8192
+
+
+EXPORTS
+    MainWndProc         @1   ; name of window processing function
+    DdeCallback         @2
+
+    dlgConnectProc      @3
+    dlgPreferencesProc  @4
+
+    EditProc            @5
+
+IMPORTS
+	SHELL.SHELLABOUT
+	USER.WNETGETCAPS

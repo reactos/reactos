@@ -1,0 +1,49 @@
+MAJORCOMP=shell
+MINORCOMP=accesories
+
+TARGETNAME=calendar
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=..\..\inc;..\..\comdlg;..\..\userpri
+
+C_DEFINES=-DW3 -DWIN32 -DWIN32_SLOW_AND_BLOATED -DUNICODE -D_UNICODE
+
+SOURCES=calrc.rc        \
+        cal.c           \
+        cal2.c          \
+        calalarm.c      \
+        calcmd.c        \
+        calcmd2.c       \
+        calcolor.c      \
+        caldata.c       \
+        caldata2.c      \
+        calday.c        \
+        calday2.c       \
+        caldos.c        \
+        calendar.c      \
+        calfile.c       \
+        calfile2.c      \
+        calinit.c       \
+        calmark.c       \
+        calmon2.c       \
+        calmonth.c      \
+        calprint.c      \
+        calrem.c        \
+        calspecl.c      \
+        caltdd.c        \
+        caltqr.c        \
+        cdlgopen.c      \
+        dateinit.c      \
+        datein.c        \
+        dateout.c
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=calendar
+UMLIBS=obj\*\calendar.lib obj\*\calrc.res  \
+        $(BASEDIR)\public\sdk\lib\*\shell32.lib   \
+        $(BASEDIR)\public\sdk\lib\*\pwin32.lib    \
+        $(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+        ..\..\userpri\lib\*\userpri.lib

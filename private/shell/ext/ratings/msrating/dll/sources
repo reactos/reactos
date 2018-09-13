@@ -1,0 +1,104 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+!include ..\..\ratings.inc
+
+NO_BROWSER_FILE = 1
+
+# dont want ntdll.
+NO_NTDLL=1
+
+USE_IERT        = 1
+
+MAJORCOMP=OHARE
+MINORCOMP=RATINGS
+
+DLLENTRY=_DllMainCRTStartup
+
+DLLDEF=..\msrating.def
+
+TARGETNAME=msrating
+TARGETPATH=obj
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_PCH = precomp.pch
+
+C_DEFINES       = $(C_DEFINES) -DUSE_MIRRORING
+
+TARGETLIBS= \
+        $(BASEDIR)\private\lib\*\rsa32.lib \
+!if $(386)
+        $(BASEDIR)\private\lib\*\comdlg32.lib \
+!else	
+        $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+!endif
+        $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+        $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+        $(BASEDIR)\public\sdk\lib\*\user32.lib \
+        $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+        $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+        $(BASEDIR)\public\sdk\lib\*\wsock32.lib \
+        $(LIBRARY_PATH)\shlwapip.lib \
+        $(SDK_LIB_PATH)\htmlhelp.lib \
+        $(BASEDIR)\private\shell\lib\$O\stocklib.lib \
+        $(BASEDIR)\private\shell\lib\$O\stock5.lib \
+        ..\..\common\$(O)\npcommon.lib
+
+INCLUDES= \
+        ..; \
+        ..\..\inc; \
+        ..\..\..\inc; \
+        $(BASEDIR)\private\inc\crypto; \
+        $(BASEDIR)\private\shell\inc; \
+        $(BASEDIR)\private\lsa\crypt\engine; \
+        $(BASEDIR)\private\windows\inc; \
+        $(INCLUDES)
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        ..\msrating.rc \
+        ..\ratguid.cpp \
+        ..\msrating.cpp \
+        ..\roll.cpp \
+        ..\rors.cpp \
+        ..\rocycle.cpp \
+        ..\mslubase.cpp \
+        ..\ratings.cpp \
+        ..\superpw.cpp \
+        ..\msludlg.cpp \
+        ..\parselbl.cpp \
+        ..\picsuser.cpp \
+        ..\comobj.cpp \
+        ..\parserat.cpp \
+        ..\filedlg.cpp \
+        ..\debug.cpp \
+        ..\picsrule.cpp
+
+PRECOMPILED_INCLUDE = ..\msrating.h
+
+UMTYPE=windows

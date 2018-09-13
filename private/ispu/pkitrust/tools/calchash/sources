@@ -1,0 +1,42 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=calchash
+!include $(CRYPT_ROOT)\cryptexe.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+INCLUDES=$(INCLUDES); $(CRYPT_ROOT)\pkitrust\mssip32
+
+UMTYPE=console
+UMENTRY=wmain
+
+!IF 0
+LINKER_FLAGS=/VERBOSE /MAP $(LINKER_FLAGS)
+!ENDIF
+
+SOURCES= \
+    $(MINORCOMP).rc \
+    $(MINORCOMP).cpp
+
+LINKLIBS=                                   \
+    $(CRYPT_LOCALLIB)\unicode.lib           \
+    $(CRYPT_LIB)                            \
+    $(CRYPT_LOCALLIB)\authclib.lib          \
+    $(CRYPT_SDKLIB)\user32.lib              \
+    $(LINKLIBS)
+
+
+TARGETLIBS=                                 \
+    $(CRYPT_SDKORLOCALLIB)\mscat32.lib      \
+    $(TARGETLIBS)

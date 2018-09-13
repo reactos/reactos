@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#
+#  C sources files strictly used for the NT shell
+#
+
+CCSHELL_DIR     = $(MAKEDIR:\shell32\ntc=)
+
+!include ..\shell32.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\shell32.inc
+
+NO_BROWSER_FILE = 1
+
+TARGETNAME      = srcc
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+SOURCES         = \
+                  ..\cbthook.c   \
+                  ..\nothunk.c   \
+                  ..\start.c     \
+                  ..\thunktxt.c  \
+                  ..\pifdat.c    \
+                  ..\piffnt.c    \
+                  ..\pifhot.c    \
+                  ..\pifinf.c    \
+                  ..\piflib.c    \
+                  ..\pifmem.c    \
+                  ..\pifmgr.c    \
+                  ..\pifmsc.c    \
+                  ..\pifprg.c    \
+                  ..\pifsub.c    \
+                  ..\pifvid.c    \
+                  ..\lnkcon.c    \
+                  ..\lnkfnt.c    \
+                  ..\lnkprev.c   \
+                  ..\lnkmisc.c   \
+                  ..\dbcs.c      \
+                  ..\oemhard.c   \
+                  ..\proxynt.c
+
+PRECOMPILED_INCLUDE = ..\shellprv.h

@@ -1,0 +1,6 @@
+DIRS=\
+    SNMPMIB \
+    HOSTMIB \
+    LMMIB2  \
+    SNMPEVNT
+

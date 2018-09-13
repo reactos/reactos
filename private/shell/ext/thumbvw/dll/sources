@@ -1,0 +1,84 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib  \
+
+!ENDIF
+
+TARGET_BOTH=1
+NOT_UNICODE=1
+PRECOMPILED_CXX=1
+
+CCSHELL_DIR = ..\..\..
+!INCLUDE $(CCSHELL_DIR)\ext\thumbvw\thumbvw.inc
+
+NO_BROWSER_FILE = 1
+
+TARGETNAME=thumbvw
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+TARGETLIBS      = \
+                  ..\tngen\$O\tngen.lib             \
+                  ..\guid\$O\thmbguid.lib           \
+                  ..\thlib\$O\thlib.lib             \
+                  $(SDK_LIB_PATH)\kernel32.lib      \
+                  $(SDK_LIB_PATH)\gdi32.lib         \
+                  $(SDK_LIB_PATH)\user32.lib        \
+                  $(SDK_LIB_PATH)\advapi32.lib      \
+                  $(SDK_LIB_PATH)\uuid.lib          \
+                  $(SDK_LIB_PATH)\ole32.lib         \
+                  $(SDK_LIB_PATH)\oleaut32.lib      \
+                  $(SDK_LIB_PATH)\urlmon.lib        \
+                  $(SDK_LIB_PATH)\wininet.lib       \
+                  $(SDK_LIB_PATH)\ddraw.lib         \
+                  $(SDK_LIB_PATH)\imgutil.lib       \
+                  $(CCSHELL_DIR)\lib\$O\shguid.lib  \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib \
+                  $(LIBRARY_PATH)\shlwapip.lib      \
+                  $(LIBRARY_PATH)\comctlp.lib       \
+                  $(LIBRARY_PATH)\shell32p.lib      \
+                  $(CCSHELL_DIR)\lib\$O\stock5.lib  \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib
+
+DELAYLOAD=ddraw.dll; urlmon.dll; imgutil.dll; oleaut32.dll; ole32.dll
+
+SOURCES= \
+    ..\dragdrop.cpp \
+    ..\thextsup.cpp \
+    ..\thext.mc \
+    ..\thumbs.cpp \
+    ..\thisv.cpp \
+    ..\thisfv.cpp \
+    ..\thextdd.cpp \
+    ..\thextwnd.cpp \
+    ..\thumbs.rc \
+    ..\menu.cpp \
+    ..\extract.cpp \
+    ..\storage.cpp \
+    ..\html.cpp \
+    ..\bmp.cpp \
+    ..\lnk.cpp \
+    ..\docfile.cpp \
+    ..\imgcache.cpp \
+    ..\dllload.cpp
+
+PRECOMPILED_INCLUDE=..\precomp.h
+
+DLLDEF          = ..\thumbs.def
+DLLENTRY        = LibMain
+DLLBASE         = 0x10000000

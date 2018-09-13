@@ -1,0 +1,480 @@
+LANGUAGE 0x05,0x00
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+101 DIALOG FIXED IMPURE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION L"Instalace jazykov\x00e9 sady"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Nainstalovat",1,68,74,50,14
+    PUSHBUTTON      L"Storno",2,126,74,50,14
+    LTEXT           L"Ke spr\x00e1vn\x00e9mu zobrazen\x00ed znak\x016f v dan\x00e9m jazyce je t\x0159eba nainstalovat n\x00e1sleduj\x00edc\x00ed jazykovou sadu:",
+                    -1,10,7,166,19
+    LTEXT           L"",201,10,28,166,11
+    CONTROL         L"&Nikdy neinstalovat \x017e\x00e1dn\x00e9 jazykov\x00e9 sady",1000,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,56,169,11
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4096                    L"K\x00f3dov\x00e1 str\x00e1nka %d"
+    4097                    L"Instalace jazykov\x00e9 sady"
+    4098                    L"V tomto po\x010d\x00edta\x010di nem\x00e1te opr\x00e1vn\x011bn\x00ed spr\x00e1vce.\r\nTuto instalaci lze \x00fasp\x011b\x0161n\x011b dokon\x010dit pouze v p\x0159\x00edpad\x011b, \x017ee bude spu\x0161t\x011bna spr\x00e1vcem."
+    4099                    L"Jazykov\x00e1 sada pro aplikaci Internet Explorer byla nainstalov\x00e1na. \r\nProveden\x00e9 zm\x011bny se projev\x00ed a\x017e po restartov\x00e1n\x00ed po\x010d\x00edta\x010de."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4352                    L"Afrik\x00e1n\x0161tina"
+    4353                    L"Alb\x00e1n\x0161tina"
+    4354                    L"Arab\x0161tina"
+    4355                    L"Arab\x0161tina (Saudsk\x00e1 Ar\x00e1bie)"
+    4356                    L"Arab\x0161tina (Ir\x00e1k)"
+    4357                    L"Arab\x0161tina (Egypt)"
+    4358                    L"Arab\x0161tina (Libye)"
+    4359                    L"Arab\x0161tina (Al\x017e\x00edrsko)"
+    4360                    L"Arab\x0161tina (Maroko)"
+    4361                    L"Arab\x0161tina (Tunis)"
+    4362                    L"Arab\x0161tina (Om\x00e1n)"
+    4363                    L"Arab\x0161tina (Jemen)"
+    4364                    L"Arab\x0161tina (S\x00fdrie)"
+    4365                    L"Arab\x0161tina (Jord\x00e1nsko)"
+    4366                    L"Arab\x0161tina (Libanon)"
+    4367                    L"Arab\x0161tina (Kuvajt)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4368                    L"Arab\x0161tina (SAE)"
+    4369                    L"Arab\x0161tina (Bahrajn)"
+    4370                    L"Arab\x0161tina (Katar)"
+    4371                    L"Baski\x010dtina"
+    4372                    L"Bulhar\x0161tina"
+    4373                    L"B\x011bloru\x0161tina"
+    4374                    L"Katal\x00e1n\x0161tina"
+    4375                    L"\x010c\x00edn\x0161tina"
+    4376                    L"\x010c\x00edn\x0161tina (Tchaj-wan)"
+    4377                    L"\x010c\x00edn\x0161tina (\x010cLR)"
+    4378                    L"\x010c\x00edn\x0161tina (Hongkong)"
+    4379                    L"\x010c\x00edn\x0161tina (Singapur)"
+    4380                    L"Chorvat\x0161tina"
+    4381                    L"\x010ce\x0161tina"
+    4382                    L"D\x00e1n\x0161tina"
+    4383                    L"Holand\x0161tina (Nizozemsko)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4384                    L"Holand\x0161tina (Belgie)"
+    4385                    L"Angli\x010dtina"
+    4386                    L"Angli\x010dtina (USA)"
+    4387                    L"Angli\x010dtina (Velk\x00e1 Brit\x00e1nie)"
+    4388                    L"Angli\x010dtina (Austr\x00e1lie)"
+    4389                    L"Angli\x010dtina (Kanada)"
+    4390                    L"Angli\x010dtina (Nov\x00fd Z\x00e9land)"
+    4391                    L"Angli\x010dtina (Irsko)"
+    4392                    L"Angli\x010dtina (Ji\x017en\x00ed Afrika)"
+    4393                    L"Angli\x010dtina (Jamajka)"
+    4394                    L"Angli\x010dtina (Belize)"
+    4395                    L"Angli\x010dtina (Trinidad)"
+    4396                    L"Eston\x0161tina"
+    4397                    L"Faer\x0161tina"
+    4398                    L"Farsij\x0161tina"
+    4399                    L"Fin\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4400                    L"Francouz\x0161tina (Francie)"
+    4401                    L"Francouz\x0161tina (Belgie)"
+    4402                    L"Francouz\x0161tina (Kanada)"
+    4403                    L"Francouz\x0161tina (\x0160v\x00fdcarsko)"
+    4404                    L"Francouz\x0161tina (Lucembursko)"
+    4405                    L"Gael\x0161tina"
+    4406                    L"N\x011bm\x010dina (N\x011bmecko)"
+    4407                    L"N\x011bm\x010dina (\x0160v\x00fdcarsko)"
+    4408                    L"N\x011bm\x010dina (Rakousko)"
+    4409                    L"N\x011bm\x010dina (Lucembursko)"
+    4410                    L"N\x011bm\x010dina (Lichten\x0161tejnsko)"
+    4411                    L"\x0158e\x010dtina"
+    4412                    L"Hebrej\x0161tina"
+    4413                    L"Hind\x0161tina"
+    4414                    L"Ma\x010far\x0161tina"
+    4415                    L"Island\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4416                    L"Indon\x00e9\x0161tina"
+    4417                    L"Ital\x0161tina (It\x00e1lie)"
+    4418                    L"Ital\x0161tina (\x0160v\x00fdcarsko)"
+    4419                    L"Japon\x0161tina"
+    4420                    L"Korej\x0161tina"
+    4421                    L"Loty\x0161tina"
+    4422                    L"Litev\x0161tina"
+    4423                    L"Makedon\x0161tina (Makedonie - b\x00fdval\x00e1 republika Jugosl\x00e1vie)"
+    4424                    L"Malaj\x0161tina (Malajsie)"
+    4425                    L"Malt\x0161tina"
+    4426                    L"Nor\x0161tina (Bokmal)"
+    4427                    L"Nor\x0161tina (Nynorsk)"
+    4428                    L"Pol\x0161tina"
+    4429                    L"Portugal\x0161tina (Braz\x00edlie)"
+    4430                    L"Portugal\x0161tina (Portugalsko)"
+    4431                    L"R\x00e9torom\x00e1n\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4432                    L"Rumun\x0161tina"
+    4433                    L"Rumun\x0161tina (Moldavsko)"
+    4434                    L"Ru\x0161tina"
+    4435                    L"Ru\x0161tina (Moldavsko)"
+    4436                    L"Srb\x0161tina (cyrilice)"
+    4437                    L"Srb\x0161tina (latinka)"
+    4438                    L"Sloven\x0161tina"
+    4439                    L"Slovin\x0161tina"
+    4440                    L"Srb\x0161tina"
+    4441                    L"\x0160pan\x011bl\x0161tina (tradi\x010dn\x00ed \x0159azen\x00ed)"
+    4442                    L"\x0160pan\x011bl\x0161tina (Mexiko)"
+    4443                    L"\x0160pan\x011bl\x0161tina (mezin\x00e1rodn\x00ed \x0159azen\x00ed)"
+    4444                    L"\x0160pan\x011bl\x0161tina (Guatemala)"
+    4445                    L"\x0160pan\x011bl\x0161tina (Kostarika)"
+    4446                    L"\x0160pan\x011bl\x0161tina (Panama)"
+    4447                    L"\x0160pan\x011bl\x0161tina (Dominik\x00e1nsk\x00e1 republika)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4448                    L"\x0160pan\x011bl\x0161tina (Venezuela)"
+    4449                    L"\x0160pan\x011bl\x0161tina (Kolumbie)"
+    4450                    L"\x0160pan\x011bl\x0161tina (Peru)"
+    4451                    L"\x0160pan\x011bl\x0161tina (Argentina)"
+    4452                    L"\x0160pan\x011bl\x0161tina (Ekv\x00e1dor)"
+    4453                    L"\x0160pan\x011bl\x0161tina (Chile)"
+    4454                    L"\x0160pan\x011bl\x0161tina (Uruguay)"
+    4455                    L"\x0160pan\x011bl\x0161tina (Paraguay)"
+    4456                    L"\x0160pan\x011bl\x0161tina (Bol\x00edvie)"
+    4457                    L"\x0160pan\x011bl\x0161tina (Salvador)"
+    4458                    L"\x0160pan\x011bl\x0161tina (Honduras)"
+    4459                    L"\x0160pan\x011bl\x0161tina (Nikaragua)"
+    4460                    L"\x0160pan\x011bl\x0161tina (Portoriko)"
+    4461                    L"Sutu"
+    4462                    L"\x0160v\x00e9d\x0161tina"
+    4463                    L"\x0160v\x00e9d\x0161tina (Finsko)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4464                    L"Thaj\x0161tina"
+    4465                    L"Tsonga"
+    4466                    L"\x010cwana"
+    4467                    L"Ture\x010dtina"
+    4468                    L"Ukrajin\x0161tina"
+    4469                    L"Urd\x0161tina"
+    4470                    L"Vietnam\x0161tina"
+    4471                    L"Xhosa"
+    4472                    L"Jidi\x0161"
+    4473                    L"Zulu"
+    4474                    L"\x010c\x00edn\x0161tina (Macao)"
+    4475                    L"Angli\x010dtina (Karibsk\x00e1 oblast)"
+    4476                    L"Angli\x010dtina (Zimbabwe)"
+    4477                    L"Angli\x010dtina (Filip\x00edny)"
+    4478                    L"Francouz\x0161tina (Monako)"
+    4479                    L"Azer\x0161tina (latinka)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4480                    L"Uzbe\x010dtina (cyrilice)"
+    4481                    L"Uzbe\x010dtina (latinka)"
+    4482                    L"Arm\x00e9n\x0161tina"
+    4483                    L"Gruz\x00edn\x0161tina"
+    4484                    L"Kaza\x0161tina"
+    4485                    L"Svahil\x0161tina"
+    4486                    L"Tatar\x0161tina"
+    4487                    L"Beng\x00e1l\x0161tina"
+    4488                    L"Pa\x0148d\x017e\x00e1b\x0161tina"
+    4489                    L"Gud\x017ear\x00e1t\x0161tina"
+    4490                    L"Urij\x0161tina"
+    4491                    L"Tamil\x0161tina"
+    4492                    L"Telug\x0161tina"
+    4493                    L"Kannad\x0161tina"
+    4494                    L"Malajal\x00e1m\x0161tina"
+    4495                    L"\x00c1s\x00e1m\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4497                    L"Mar\x00e1th\x0161tina"
+    4498                    L"Malaj\x0161tina (Brunej Darussalam)"
+    4499                    L"Nep\x00e1l\x0161tina (Indie)"
+    4500                    L"Sanskrt"
+    4501                    L"Litev\x0161tina"
+    4502                    L"Konkani"
+    4503                    L"Azer\x0161tina (cyrilice)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4608                    L"Unicode"
+    4609                    L"Unicode (Big-Endian)"
+    4610                    L"St\x0159edoevropsk\x00e9 jazyky (Windows)"
+    4611                    L"Cyrilice (Windows)"
+    4612                    L"Z\x00e1padoevropsk\x00e9 jazyky (Windows)"
+    4613                    L"\x0158e\x010dtina (Windows)"
+    4614                    L"Ture\x010dtina (Windows)"
+    4615                    L"Hebrej\x0161tina (Windows)"
+    4616                    L"Arab\x0161tina (Windows)"
+    4617                    L"Pobaltsk\x00e9 jazyky (Windows)"
+    4618                    L"Vietnam\x0161tina (Windows)"
+    4619                    L"Z\x00e1padoevropsk\x00e9 jazyky (IA5)"
+    4620                    L"N\x011bm\x010dina (IA5)"
+    4621                    L"\x0160v\x00e9d\x0161tina (IA5)"
+    4622                    L"Nor\x0161tina (IA5)"
+    4623                    L"Cyrilice (KOI8-R)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4624                    L"Cyrilice (KOI8-U)"
+    4625                    L"St\x0159edoevropsk\x00e9 jazyky (ISO)"
+    4626                    L"Latin 3 (ISO)"
+    4627                    L"Pobaltsk\x00e9 jazyky (ISO)"
+    4628                    L"Cyrilice (ISO)"
+    4629                    L"Arab\x0161tina (ISO)"
+    4630                    L"\x0158e\x010dtina (ISO)"
+    4631                    L"Hebrej\x0161tina (ISO-Visual)"
+    4632                    L"Vlastn\x00ed"
+    4633                    L"Japon\x0161tina (JIS)"
+    4634                    L"Japon\x0161tina (JIS - povolen 1 bajt Kana)"
+    4635                    L"Japon\x0161tina (JIS - povolen 1 bajt Kana - SO/SI)"
+    4636                    L"Korej\x0161tina (ISO)"
+    4637                    L"Japon\x0161tina (automatick\x00fd v\x00fdb\x011br)"
+    4638                    L"Korej\x0161tina (automatick\x00fd v\x00fdb\x011br)"
+    4639                    L"Japon\x0161tina (EUC)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4640                    L"Korej\x0161tina (EUC)"
+    4641                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina (HZ)"
+    4642                    L"Unicode (UTF-7)"
+    4643                    L"Unicode (UTF-8)"
+    4644                    L"St\x0159edoevropsk\x00e9 jazyky (DOS)"
+    4645                    L"Cyrilice (DOS)"
+    4646                    L"Thaj\x0161tina (Windows)"
+    4647                    L"Japon\x0161tina (Shift-JIS)"
+    4648                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina (GB2312)"
+    4649                    L"Korej\x0161tina"
+    4650                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina (Big5)"
+    4651                    L"Hebrej\x0161tina (ISO-Logical)"
+    4652                    L"Automatick\x00fd v\x00fdb\x011br"
+    4653                    L"Arab\x0161tina (ASMO 708)"
+    4654                    L"Arab\x0161tina (DOS)"
+    4655                    L"Hebrej\x0161tina (DOS)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4656                    L"Z\x00e1padoevropsk\x00e9 jazyky (ISO)"
+    4657                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina (automatick\x00fd v\x00fdb\x011br)"
+    4658                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina (automatick\x00fd v\x00fdb\x011br)"
+    4659                    L"Cyrilice (automatick\x00fd v\x00fdb\x011br)"
+    4660                    L"\x0158e\x010dtina (automatick\x00fd v\x00fdb\x011br)"
+    4661                    L"Arab\x0161tina (automatick\x00fd v\x00fdb\x011br)"
+    4662                    L"Ture\x010dtina (ISO)"
+    4663                    L"Latin 9 (ISO)"
+    4664                    L"US-ASCII"
+    4665                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina (EUC)"
+    4666                    L"Korej\x0161tina (Johab)"
+    4667                    L"OEM - USA"
+    4668                    L"Z\x00e1padoevropsk\x00e9 jazyky"
+    4669                    L"Evropa"
+    4670                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina (CNS)"
+    4671                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina (Eten)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4672                    L"Eston\x0161tina (ISO)"
+    4673                    L"Z\x00e1padoevropsk\x00e9 jazyky (DOS)"
+    4674                    L"\x0158e\x010dtina (DOS)"
+    4675                    L"\x0158e\x010dtina, modern\x00ed (DOS)"
+    4676                    L"Pobaltsk\x00e9 jazyky (DOS)"
+    4677                    L"Ture\x010dtina (DOS)"
+    4678                    L"Island\x0161tina (DOS)"
+    4679                    L"Z\x00e1padoevropsk\x00e9 jazyky (Mac)"
+    4680                    L"Japon\x0161tina (Mac)"
+    4681                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina (Mac)"
+    4682                    L"Korej\x0161tina (Mac)"
+    4683                    L"Arab\x0161tina (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4700                    L"Hebrej\x0161tina (Mac)"
+    4701                    L"\x0158e\x010dtina (Mac)"
+    4702                    L"Cyrilice (Mac)"
+    4703                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4704                    L"St\x0159edoevropsk\x00e9 jazyky (Mac)"
+    4705                    L"Island\x0161tina (Mac)"
+    4706                    L"Ture\x010dtina (Mac)"
+    4707                    L"IBM EBCDIC (USA - Kanada)"
+    4708                    L"IBM EBCDIC (mezin\x00e1rodn\x00ed)"
+    4709                    L"IBM EBCDIC (v\x00edcejazy\x010dn\x011b Latin-2)"
+    4710                    L"IBM EBCDIC (modern\x00ed \x0159e\x010dtina)"
+    4711                    L"IBM EBCDIC (ture\x010dtina Latin-5)"
+    4712                    L"IBM EBCDIC (N\x011bmecko)"
+    4713                    L"IBM EBCDIC (D\x00e1nsko - Norsko)"
+    4714                    L"IBM EBCDIC (Finsko - \x0160v\x00e9dsko)"
+    4715                    L"IBM EBCDIC (It\x00e1lie)"
+    4716                    L"IBM EBCDIC (\x0160pan\x011blsko)"
+    4717                    L"IBM EBCDIC (Velk\x00e1 Brit\x00e1nie)"
+    4718                    L"IBM EBCDIC (japonsk\x00e1 katakana)"
+    4719                    L"IBM EBCDIC (Francie)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4720                    L"IBM EBCDIC (arab\x0161tina)"
+    4721                    L"IBM EBCDIC (\x0159e\x010dtina)"
+    4722                    L"IBM EBCDIC (hebrej\x0161tina)"
+    4723                    L"IBM EBCDIC (korej\x0161tina - roz\x0161\x00ed\x0159en\x00e1)"
+    4724                    L"IBM EBCDIC (thaj\x0161tina)"
+    4725                    L"IBM EBCDIC (island\x0161tina)"
+    4726                    L"IBM EBCDIC (ru\x0161tina - cyrilice)"
+    4727                    L"IBM EBCDIC (ture\x010dtina)"
+    4728                    L"IBM EBCDIC (srb\x0161tina a bulhar\x0161tina - cyrilice)"
+    4729                    L"IBM EBCDIC (japon\x0161tina a japonsk\x00e1 katakana)"
+    4730                    L"IBM EBCDIC (japon\x0161tina a USA - Kanada)"
+    4731                    L"IBM EBCDIC (japon\x0161tina, japon\x0161tina - latinka)"
+    4732                    L"IBM EBCDIC (korej\x0161tina, korej\x0161tina - roz\x0161\x00ed\x0159en\x00e1)"
+    4733                    L"IBM EBCDIC (zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina)"
+    4734                    L"IBM EBCDIC (tradi\x010dn\x00ed \x010d\x00edn\x0161tina)"
+    4735                    L"IBM EBCDIC (USA - Kanada - Euro)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4736                    L"IBM EBCDIC (N\x011bmecko - Euro)"
+    4737                    L"IBM EBCDIC (D\x00e1nsko - Norsko - Euro)"
+    4738                    L"IBM EBCDIC (Finsko - \x0160v\x00e9dsko - Euro)"
+    4739                    L"IBM EBCDIC (It\x00e1lie - Euro)"
+    4740                    L"IBM EBCDIC (\x0160pan\x011blsko - Euro)"
+    4741                    L"IBM EBCDIC (Velk\x00e1 Brit\x00e1nie - Euro)"
+    4742                    L"IBM EBCDIC (Francie - Euro)"
+    4743                    L"IBM EBCDIC (mezin\x00e1rodn\x00ed - Euro)"
+    4744                    L"IBM EBCDIC (island\x0161tina - Euro)"
+    4745                    L"ISCII - \x00e1s\x00e1m\x0161tina"
+    4746                    L"ISCII - beng\x00e1l\x0161tina"
+    4747                    L"ISCII - devanag\x00e1r\x0161tina"
+    4748                    L"ISCII - gud\x017ear\x00e1t\x0161tina"
+    4749                    L"ISCII - kannad\x0161tina"
+    4750                    L"ISCII - malajal\x00e1m\x0161tina"
+    4751                    L"ISCII - urij\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4752                    L"ISCII - pa\x0148d\x017e\x00e1b\x0161tina"
+    4753                    L"ISCII - telug\x0161tina"
+    4754                    L"ISCII - tamil\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4864                    L"MS Gothic"
+    4865                    L"MS PGothic"
+    4866                    L"Simsun"
+    4867                    L"Simsun"
+    4868                    L"GulimChe"
+    4869                    L"Gulim"
+    4870                    L"GulimChe"
+    4871                    L"GulimChe"
+    4872                    L"MingLiu"
+    4873                    L"New MingLiu"
+    4874                    L"Courier New"
+    4875                    L"Arial"
+    4876                    L"Lucida Sans Unicode"
+    4877                    L"Miriam Fixed"
+    4878                    L"David"
+    4879                    L"Cordia New"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4880                    L"Cordia New"
+    4881                    L"Simplified Arabic Fixed"
+    4882                    L"Simplified Arabic"
+    4883                    L"Mangal"
+    4884                    L"Mangal"
+    4885                    L"Latha"
+    4886                    L"Latha"
+    4887                    L"Times New Roman"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5120                    L"Zalo\x017eeno na latince"
+    5121                    L"Latinka"
+    5122                    L"\x0158e\x010dtina"
+    5123                    L"Cyrilice"
+    5124                    L"Arm\x00e9n\x0161tina"
+    5125                    L"Hebrej\x0161tina"
+    5126                    L"Arab\x0161tina"
+    5127                    L"Devanag\x00e1r\x0161tina"
+    5128                    L"Beng\x00e1l\x0161tina"
+    5129                    L"Gurmuch\x0161tina"
+    5130                    L"Gud\x017ear\x00e1t\x0161tina"
+    5131                    L"Urij\x0161tina"
+    5132                    L"Tamil\x0161tina"
+    5133                    L"Telug\x0161tina"
+    5134                    L"Kannad\x0161tina"
+    5135                    L"Malajal\x00e1m\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5136                    L"Thaj\x0161tina"
+    5137                    L"Lao\x0161tina"
+    5138                    L"Tibet\x0161tina"
+    5139                    L"Gruz\x00edn\x0161tina"
+    5140                    L"Korej\x0161tina"
+    5141                    L"Japon\x0161tina"
+    5142                    L"Tradi\x010dn\x00ed \x010d\x00edn\x0161tina"
+    5143                    L"Zjednodu\x0161en\x00e1 \x010d\x00edn\x0161tina"
+    5144                    L"Etiop\x0161tina"
+    5145                    L"CanSyllabic"
+    5146                    L"Cherokee"
+    5147                    L"Yi"
+    5148                    L"Slepeck\x00e9 p\x00edsmo"
+    5149                    L"Runov\x00e9 p\x00edsmo"
+    5150                    L"Ogamsk\x00e9 p\x00edsmo"
+    5151                    L"Sinh\x00e1l\x0161tina"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5152                    L"Syr\x0161tina"
+    5153                    L"Barm\x0161tina"
+    5154                    L"Khmer\x0161tina"
+    5155                    L"Thaana"
+    5156                    L"Mongol\x0161tina"
+    5158                    L"Default"
+    5159                    L"Merge"
+    5160                    L"Asciisym"
+    5161                    L"Vlastn\x00ed"
+END

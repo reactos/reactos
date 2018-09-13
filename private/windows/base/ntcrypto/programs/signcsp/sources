@@ -1,0 +1,48 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for test program for cryptapi
+#
+# History:
+#
+#       11/29/94 larrys created
+#       03/15/95 raymondm added conditional linking to capi.dll
+#
+#----------------------------------------------------------------------------
+
+MAJORCOMP=signcsp
+MINORCOMP=EXE
+
+TARGETNAME=signcsp
+TARGETPATH=..\bin
+TARGETTYPE=PROGRAM
+
+INCLUDES=\
+    $(BASEDIR)\private\inc\crypto; \
+    ..\inc; \
+    ..; \
+    ..\..\inc
+
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib          \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\rpcns4.lib         \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\netapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib         \
+           $(BASEDIR)\private\lib\*\rsa32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\imagehlp.lib
+SOURCES=\
+        skrpc.idl  \
+        skrpc_c.c  \
+        signcsp.cpp \
+	signcsp.rc
+
+UMTYPE=console
+IDL_TYPE=rpc
+PASS0_CLIENTDIR=.
+PASS0_SERVERDIR=.
+USE_MSVCRT=1

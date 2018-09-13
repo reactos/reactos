@@ -1,0 +1,139 @@
+LANGUAGE 0x2a, 0x00 //Vietnamese
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 366, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Tu\x0300y chi\x0309nh Thanh C\x00f4ng cu\x0323"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x0110o\x0301&ng",2,308,6,53,14
+    PUSHBUTTON      L"&Hoa\x0300n nguy\x00ean",202,308,23,53,14
+    PUSHBUTTON      L"&Tr\x01a1\x0323 giu\x0301p",205,308,40,53,14
+    PUSHBUTTON      L"D\x01a1\x0300i &L\x00ean",206,308,74,53,14
+    PUSHBUTTON      L"D\x01a1\x0300i &Xu\x00f4\x0301ng",207,308,91,53,14
+    LTEXT           L"Nu\x0301t &S\x0103\x0303n co\x0301:",-1,4,5,84,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"Th\x00ea&m ->",1,131,42,44,14
+    PUSHBUTTON      L"<- &G\x01a1\x0303 bo\x0309",204,131,62,44,14
+    LTEXT           L"Nu\x0301t tr\x00ean Thanh &C\x00f4ng cu\x0323:",-1,182,5,96,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x0110\x00f4\x0300ng y\x0301",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Th\x00f4i",2,58,122,50,14
+    PUSHBUTTON      L"A\x0301&p du\x0323ng",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Tr\x01a1\x0323 giu\x0301p",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Lu\x0300i",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&Ti\x00ea\x0301n >",12324,62,26,50,14
+    PUSHBUTTON      L"Xong",12325,119,26,50,14
+    PUSHBUTTON      L"Th\x00f4i",2,176,26,50,14
+    PUSHBUTTON      L"Tr\x01a1\x0323 giu\x0301p",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"D\x00e2\x0301u ph\x00e2n ca\x0301ch"
+    1025                    L" + "
+    1026                    L"Kh\x00f4ng co\x0301"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"\x0110o\x0301ng"
+    4161                    L"\x0110\x00f4\x0300ng y\x0301"
+    4162                    L"\x0110\x0103\x0323c ti\x0301nh %s"
+    4163                    L"H\x00f4m nay:"
+    4164                    L"\x0110i \x0111\x00ea\x0301n &H\x00f4m nay"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Enter text here"
+    4177                    L"\x0110\x0103\x0323c"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"\x0110i\x0323nh la\x0323i c\x01a1\x0303 c\x01b0\x0309a s\x00f4\x0309 na\x0300y."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"D\x01a1\x0300i c\x01b0\x0309a s\x00f4\x0309 na\x0300y."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Thu c\x01b0\x0309a s\x00f4\x0309 na\x0300y tha\x0300nh m\x00f4\x0323t hi\x0300nh t\x01b0\x01a1\x0323ng."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"M\x01a1\x0309 r\x00f4\x0323ng cho c\x01b0\x0309a s\x00f4\x0309 na\x0300y chi\x00ea\x0301m tro\x0323n ma\x0300n a\x0309nh."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Chuy\x00ea\x0309n sang c\x01b0\x0309a s\x00f4\x0309 MDI k\x00ea\x0301."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"\x0110o\x0301ng c\x01b0\x0309a s\x00f4\x0309 na\x0300y."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Kh\x00f4i phu\x0323c c\x01b0\x0309a s\x00f4\x0309 na\x0300y v\x00ea\x0300 c\x01a1\x0303 bi\x0300nh th\x01b0\x01a1\x0300ng."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Chuy\x00ea\x0309n sang ta\x0301c vu\x0323 kha\x0301c."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Ch\x01b0\x0301a l\x00ea\x0323nh \x0111\x00ea\x0309 v\x00e2\x0323n \x0111\x00f4\x0323ng ca\x0301c c\x01b0\x0309a s\x00f4\x0309."
+    36849                   L"Ke\x0301o sang tra\x0301i hay pha\x0309i \x0111\x00ea\x0309 \x0111i\x0323nh la\x0323i c\x01a1\x0303 c\x00f4\x0323t."
+    36850                   L"\x0110i\x0323nh la\x0323i c\x01a1\x0303 ca\x0301c c\x00f4\x0323t du\x0300ng ca\x0301c phi\x0301m mu\x0303i t\x00ean va\x0300 tab."
+    36851                   L"Th\x00eam, d\x01a1\x0300i va\x0300 g\x01a1\x0303 bo\x0309 ca\x0301c nu\x0301t tr\x00ean thanh c\x00f4ng cu\x0323."
+END
+

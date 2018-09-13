@@ -1,0 +1,48 @@
+/****************************************************************************
+ *
+ *   avicap.rcv
+ *
+ *   Version control information
+ *
+ *   Microsoft Video for Windows Sample Capture Class
+ *
+ *   Copyright (c) 1992 - 1995 Microsoft Corporation.  All Rights Reserved.
+ *
+ *    You have a royalty-free right to use, modify, reproduce and
+ *    distribute the Sample Files (and/or any modified version) in
+ *    any way you find useful, provided that you agree that
+ *    Microsoft has no warranty obligations or liability for any
+ *    Sample Application Files which are modified.
+ *
+ *    IMPORTANT: If compiling this sample code for your own use,
+ *    define USE_INTERNAL_VERSION_INFO to be 0 below!!!
+ *
+ ***************************************************************************/
+#ifdef CHICAGO
+#include <verinfo.h>
+
+#define VERSIONNAME               "avicap32.dll\0"
+#define VERSIONDESCRIPTION        "AVI Capture DLL\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_UNKNOWN
+
+#include <verinfo.ver>
+
+#else
+
+#include <ntverp.h>
+
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
+ */
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN  //VFT2_DRV_INSTALLABLE
+
+#define VER_FILEDESCRIPTION_STR     "AVI Capture window class"
+#define VER_INTERNALNAME_STR        "AVICAP32.DLL"
+#define VER_ORIGINALFILENAME_STR    "AVICAP32.DLL"
+
+#include "common.ver"
+#endif

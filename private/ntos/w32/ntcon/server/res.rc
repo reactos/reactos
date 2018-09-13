@@ -1,0 +1,88 @@
+/****************************** Module Header ******************************\
+* Module Name: res.rc
+*
+* Copyright (c) 1985-91, Microsoft Corporation
+*
+* Constants
+*
+* History:
+* 08-21-91      Created.
+\***************************************************************************/
+
+#include <windows.h>
+#include "menu.h"
+
+//
+//  Menus
+//
+
+ID_WOMENU  MENU PRELOAD
+BEGIN
+  MENUITEM    "Mar&k",        cmMark
+  MENUITEM    "Cop&y\tEnter", cmCopy
+  MENUITEM    "&Paste",       cmPaste
+  MENUITEM    "&Select All",  cmSelectAll
+  MENUITEM    "Scro&ll",      cmScroll
+  MENUITEM    "&Find...",     cmFind
+END
+
+//
+//  Strings
+//
+
+STRINGTABLE PRELOAD
+BEGIN
+/*  NOTE: ALL OF THESE STRINGS MUST BE < msgMax BYTES IN LENGTH (see tty.inc) */
+/* errors */
+
+    msgBufferTooBig, "The requested screen buffer size was too large. Reverting to default size."
+
+    /*
+     *  Fullscreen didn't initialize
+     */
+    msgNoFullScreen, "The video device failed to initialize for fullscreen mode."
+
+    /*
+     * Command line editing messages
+     */
+
+    msgCmdLineF2, "Enter char to copy up to: "
+    msgCmdLineF4, "Enter char to delete up to: "
+    msgCmdLineF9, "Enter command number: "
+
+    msgMarkMode,     "Mark"
+    msgSelectMode,   "Select"
+    msgScrollMode,   "Scroll"
+
+
+/* Menu items that replace the standard ones. These don't have the accelerators */
+    SC_CLOSE,       "&Close"
+
+/* just menu items */
+    cmControl,  "&Properties"
+    cmEdit,     "&Edit"
+    cmDefaults  "&Defaults"
+END
+
+//
+//  Dialogs
+//
+
+ID_FINDDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 30, 73, 236, 62
+STYLE WS_BORDER | WS_CAPTION | DS_MODALFRAME | WS_POPUP | DS_3DLOOK
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Fi&nd what:", -1, 4, 8, 42, 8
+    EDITTEXT        ID_FINDSTR, 47, 7, 128, 12, WS_GROUP | WS_TABSTOP | ES_AUTOHSCROLL
+
+    AUTOCHECKBOX    "Match &case", ID_FINDCASE, 4, 42, 64, 12
+
+    GROUPBOX        "Direction", -1, 107, 26, 68, 28, WS_GROUP
+    AUTORADIOBUTTON "&Up", ID_FINDUP, 111, 38, 25, 12, WS_GROUP
+    AUTORADIOBUTTON "&Down", ID_FINDDOWN, 138, 38, 35, 12
+
+    DEFPUSHBUTTON   "&Find Next", IDOK, 182, 5, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 182, 23, 50, 14
+END
+

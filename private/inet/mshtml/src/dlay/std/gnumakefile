@@ -1,0 +1,47 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+PRODUCT = DLAY
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES =  \
+	arrayi.cxx
+
+INCLUDES= \
+    $(ROOT)/src/dlay/include \
+    $(ROOT)/src/core/include \
+    $(ROOT)/external/inc \
+    $(ROOT)/types/$(O) \
+    $(ROOT)/src/dlay/std \
+    $(BASEDIR)/private/windows/inc \
+
+WLIB	= std
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+PROJECT_CFLAGS = \
+	${INCLUDES:%=-I%}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

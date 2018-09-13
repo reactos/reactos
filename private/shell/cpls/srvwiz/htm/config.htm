@@ -1,0 +1,59 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>Home</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="menu.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    // go back to server choice page
+    function intro1()
+    {
+        srvwiz.Home = 1;
+        self.location.href = "intro1.htm";
+    }
+</SCRIPT>
+<STYLE>
+    BODY { background-image:url("home_bg.gif"); background-repeat:no-repeat; background-position:162 40}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" ID="home" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" BGCOLOR="C0C0C0">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Configure Your Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">From the menu at the left, choose the services that you want to run on this server. 
+                You can set up any or all of the services, depending on how you want to customize your network. 
+            <UL STYLE="margin-left: 16pt; margin-top: 12pt;">
+                <LI TYPE="square" ID="para2">To set up or find out more about a service, click the service name on the menu.</LI>
+                <LI TYPE="square" ID="para3">Find out <A HREF="javascript:help('gstart.chm::/whats_new_in_windows_2000_server.htm')">What's New</A> in Windows 2000 Server.</LI>
+                <LI TYPE="square" ID="para4">Check out the latest <a href="http://www.microsoft.com/isapi/redir.dll?prd=Win2000&sbp=server&ar=deploy" target="_blank">walkthroughs</a>.
+				<LI TYPE="square" ID="para5">To reopen this window at any time, click <B>Start</B>, point to <B>Programs</B>, point to <B>Administrative Tools</B>, and then click <B>Configure Your Server</B>.</LI>
+            </UL>
+
+            <DIV STYLE="position:absolute; top:280; left:180; display:none" ID="divReturn">
+                <P ID="return">&nbsp;<A HREF="javascript:intro1()">Return</A> to Server Choices page.</P>
+                <SCRIPT LANGUAGE="javascript">
+                    // show return link only if user came to config page by selecting multiple servers
+                    if ( srvwiz.Home == 8 ) 
+                    {
+                        document.all.divReturn.style.display = "";
+                    }
+                </SCRIPT>
+            </DIV>
+
+            <DIV STYLE="position:absolute; top:314; left:180;">
+                <P ALIGN="right" ID="para6" />
+                <INPUT TYPE="checkbox" ID="cbShow" NAME="cbShow" ONCLICK="srvwiz.ShowAtStartup = cbShow.checked;">
+                <LABEL ID="accesskey" FOR="cbShow" ACCESSKEY="s"><U>S</U>how this screen at startup</LABEL>
+                <SCRIPT LANGUAGE="javascript">
+                    cbShow.checked = srvwiz.ShowAtStartup;
+                </SCRIPT>
+            </DIV>
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

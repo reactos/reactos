@@ -1,0 +1,27 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+TARGETNAME=
+TARGETTYPE=LIBRARY
+TARGETPATH=obj
+CHECKED_ALT_DIR=1
+
+PASS0_HEADERDIR=$(O)
+NTTARGETFILE0=$(SDK_INC_PATH)\xenroll.h
+
+SOURCES=xenroll.idl
+
+MIDL_FLAGS=/tlb $(O)\xenroll.tlb

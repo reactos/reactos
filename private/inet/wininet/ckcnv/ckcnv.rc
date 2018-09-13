@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <commctrl.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Cookie Converter"
+#define VER_INTERNALNAME_STR        "ckcnv.exe"
+#define VER_ORIGINALFILENAME_STR    "ckcnv.exe"
+
+#include "common.ver"

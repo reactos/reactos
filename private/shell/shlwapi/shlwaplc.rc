@@ -1,0 +1,91 @@
+#ifdef WIN32
+#include "winuser.h"
+#ifdef WINNT
+#include "winver.h"
+#endif
+#else
+#include "windows.h"
+#endif
+
+#include "ids.h"
+
+#include "shlwapi.rcv"
+
+// WARNING
+// this file should contain localizable resources only
+// non-localizable resources should go in shlwapi.rc
+
+STRINGTABLE DISCARDABLE
+BEGIN
+        IDS_HOUR        " %s hr"
+        IDS_MIN         " %s min"
+        IDS_SEC         " %s sec"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BYTES               "%s bytes"
+    IDS_ORDERKB             "%s KB"
+    IDS_ORDERMB             "%s MB"
+    IDS_ORDERGB             "%s GB"
+    IDS_ORDERTB             "%s TB"
+    IDS_ORDERPB             "%s PB"  // Peta  (10^15)
+    IDS_ORDEREB             "%s EB"  // Exa   (10^18)
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LONGDATE_SEP        ", "            // "<date>, <time>"
+
+    // These two strings replace the day-of-the-week.  If this doesn't
+    // work with the locale, then translate these to empty strings and
+    // the code will accomodate this.
+    IDS_TODAY               "Today"
+    IDS_YESTERDAY           "Yesterday"
+
+    // BUGBUG (scotth): we should probably use GetLocaleInfo instead...
+    IDS_SUNDAY              "Sunday"
+    IDS_MONDAY              "Monday"
+    IDS_TUESDAY             "Tuesday"
+    IDS_WEDNESDAY           "Wednesday"
+    IDS_THURSDAY            "Thursday"
+    IDS_FRIDAY              "Friday"
+    IDS_SATURDAY            "Saturday"
+
+    IDS_DRIVENOTREADY       "There is no disk in drive %c.\n\nInsert a disk, and then try again."
+    IDS_UNFORMATTED         "The disk in drive %c is not formatted.\n\nDo you want to format it now?"
+    IDS_NOFMT               "The disk in drive %c cannot be formatted."
+    IDS_NOSUCHDRIVE         "Drive %c cannot be accessed."
+    IDS_FILEERRORMOVE       "Error Moving File or Folder"
+    IDS_FILEERRORCOPY       "Error Copying File or Folder"
+    IDS_FILEERRORDEL        "Error Deleting File or Folder"
+    IDS_FILEERRORREN        "Error Renaming File or Folder"
+
+	IDS_MIXED               " (Mixed)"
+	IDS_INTERNETSECURITY    "Internet Security"
+
+    IDS_RESTRICTIONSTITLE   "Restrictions"
+    IDS_RESTRICTIONS        "This operation has been cancelled due to restrictions in effect on this computer. Please contact your system administrator."
+    IDS_SECURITY            "Security Alert"
+    IDS_TEMPLATENOTSECURE   "The file or folder you are opening contains Web content that may be unsafe.  The Web content has either been modified or is from an unknown source.  Do you want to allow it to be intialized and be accessed by scripts?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_SIDEBYSIDE          "Side-by-Side Mode"
+END
+
+DLG_MESSAGEBOXCHECK DIALOG DISCARDABLE  0, 0, 210, 55
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+CAPTION "Error!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            0, IDC_MBC_ICON,5,5,18,20
+    LTEXT           "",IDC_MBC_TEXT,5,5,200,8
+    CONTROL         "&In the future, do not show me this dialog box",
+        IDC_MBC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,20,155,10
+    PUSHBUTTON      "OK",IDOK,95,35,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,150,35,50,14
+    PUSHBUTTON      "&Yes",IDYES,95,35,50,14
+    PUSHBUTTON      "&No",IDNO,150,35,50,14
+END

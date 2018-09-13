@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdkaz
+
+TARGETNAME=kbdkaz
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdkaz.c kbdkaz.rc
+
+NTTARGETFILE0=kbdkaz.h kbdkaz.rc kbdkaz.def

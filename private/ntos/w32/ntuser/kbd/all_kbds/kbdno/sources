@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdno
+
+TARGETNAME=kbdno
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdno.c kbdno.rc
+
+NTTARGETFILE0=kbdno.h kbdno.rc kbdno.def

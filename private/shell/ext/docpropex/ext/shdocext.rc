@@ -1,0 +1,491 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "..\inc\resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+#include "shdocext.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "..\\inc\\resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "#include ""shdocext.rcv""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "1 TYPELIB ""..\\\\ctl\\\\proptree.tlb""\r\n"
+    "2 TYPELIB ""..\\\\srv\\\\ptsrv32.tlb""\r\n"
+    "3 TYPELIB ""..\\\\ext\\\\shdocext.tlb""\r\n"
+    "4 TYPELIB ""..\\\\avprop\\\\avprop.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_SHELLEXT            REGISTRY DISCARDABLE    "shdocext.rgs"
+IDR_PROPERTYTREECTL     REGISTRY DISCARDABLE    "..\\ctl\\ctl.rgs"
+IDR_PTDEFAULTSERVER32   REGISTRY DISCARDABLE    "..\\srv\\ptsrv32.rgs"
+IDR_COLUMNPROVIDERS     REGISTRY DISCARDABLE    "..\\srv\\colprov.rgs"
+IDR_AVFILEPROPSERVER    REGISTRY DISCARDABLE    "..\\avprop\\avprop.rgs"
+IDR_AVCOLUMNPROVIDER    REGISTRY DISCARDABLE    "..\\avprop\\avcol.rgs"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TREE_IMAGELIST      BITMAP  DISCARDABLE     "..\\ctl\\res\\TILsmall.bmp"
+IDR_TOOLBAR             BITMAP  DISCARDABLE     "..\\ctl\\res\\ToolBar.bmp"
+IDB_TREEHDR_IMAGELIST   BITMAP  DISCARDABLE     "..\\ctl\\res\\HDsmall.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_TOOLBAR TOOLBAR DISCARDABLE  27, 16
+BEGIN
+    BUTTON      IDC_APPLY
+    BUTTON      IDC_CUSTOMIZE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MULTILINE_EDIT DIALOGEX 0, 0, 198, 121
+STYLE DS_FIXEDSYS | DS_CONTROL | WS_POPUP | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT,3,4,189,98,ES_MULTILINE | ES_AUTOVSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,90,105,50,11
+    PUSHBUTTON      "Cancel",IDCANCEL,143,105,50,11
+END
+
+IDD_INPLACE_CALENDAR DIALOGEX 0, 0, 126, 86
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CONTROL | WS_CHILD
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_CALENDAR,"SysMonthCal32",MCS_NOTODAY | WS_TABSTOP | 
+                    0x8,2,2,122,82,WS_EX_CLIENTEDGE
+END
+
+IDD_PROPTREEPAGE DIALOG DISCARDABLE  0, 0, 229, 200
+STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Summary"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Title:",IDC_TITLE_LABEL,8,9,37,8
+    EDITTEXT        IDC_TITLE,47,7,175,13,ES_AUTOHSCROLL
+    LTEXT           "&Subject:",IDC_SUBJECT_LABEL,8,28,37,8
+    EDITTEXT        IDC_SUBJECT,47,26,175,13,ES_AUTOHSCROLL
+    LTEXT           "A&uthor:",IDC_AUTHOR_LABEL,8,47,37,8
+    EDITTEXT        IDC_AUTHOR,47,45,175,13,ES_AUTOHSCROLL
+    CONTROL         "",IDC_SEP1,"Static",SS_ETCHEDHORZ,8,66,213,1
+    LTEXT           "&Category:",IDC_CATEGORY_LABEL,8,77,37,8
+    EDITTEXT        IDC_CATEGORY,47,75,175,13,ES_AUTOHSCROLL
+    LTEXT           "&Keywords:",IDC_KEYWORDS_LABEL,8,96,37,8
+    EDITTEXT        IDC_KEYWORDS,47,94,175,13,ES_AUTOHSCROLL
+    LTEXT           "Co&mments:",IDC_COMMENTS_LABEL,8,115,37,8
+    EDITTEXT        IDC_COMMENTS,47,113,175,49,ES_MULTILINE | ES_AUTOVSCROLL
+    LTEXT           "Note: The selected file has read-only attributes.",
+                    IDC_READONLY_SINGLE,8,169,143,21
+    LTEXT           "Note: One or more of the selected files have read-only attributes.",
+                    IDC_READONLY_MULTIPLE,8,169,143,21
+    PUSHBUTTON      "Ad&vanced >>",IDC_ADVANCED,156,169,66,14
+    PUSHBUTTON      "<< Si&mple",IDC_SIMPLE,156,177,66,14
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 226, 251
+STYLE DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Advanced Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "OK",IDOK,110,230,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,230,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME            "ShDocExt"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROPTREE_CAPTION     "Property Tree"
+    IDS_PROPERTY_HEADER_ITEM "Property"
+    IDS_VALUE_HEADER_ITEM   "Value"
+    IDS_NOSOURCES_CAPTION   "No source items have been selected."
+    IDS_NOCOMMONS_CAPTION   "There are no summary properties in common among the selected sources."
+    IDS_NOPROPERTIES_CAPTION 
+                            "Summary properties are unavailable for the selected source(s)."
+    IDS_READONLY            " (read-only)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PAGE0_MSGCAPTION    "Summary Properties"
+    IDS_ERR_ACCESSDENIED_1  "Changes to Summary properties could not be saved; access has been denied.\n\nThe file may be marked read-only or may be in use by another application."
+    IDS_ERR_ACCESSDENIED_N  "Changes to Summary properties could not be saved for one or more files; access has been denied.\n\nThe file(s) may be marked read-only or may be in use by another application."
+    IDS_ERR_LOCKVIOLATION_1 "Changes to Summary properties could not be saved.\n\nThe file is in use by another application."
+    IDS_ERR_LOCKVIOLATION_N "Changes to Summary properties could not be saved for one or more files.\n\nThe file(s) are in use by another application."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_APPLY               "Apply Changes"
+    IDS_COMPOSITE_MISMATCH  "(multiple values)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FOLDER_DESCRIPTION  "Description|Description|General attributes."
+    IDS_FOLDER_SOURCE       "Origin|Origin|Information concerning the authorship, origination and production."
+    IDS_FOLDER_IMAGE        "Image|Image|Image attributes."
+    IDS_FOLDER_FAX          "Fax|Fax|Facsimile Information."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDSI_TITLE         "Title|Title|Document or file title."
+    IDS_PIDSI_SUBJECT       "Subject|Subject|Document or file subject name."
+    IDS_PIDSI_AUTHOR        "Author|Author|Name of the document or file's author."
+    IDS_PIDSI_KEYWORDS      "Keywords|Keywords|List of keywords describing the file's content."
+    IDS_PIDSI_COMMENTS      "Comments|Comments|Description or comments for the file."
+    IDS_PIDSI_TEMPLATE      "Template|Template|Name of the template used to create the document."
+    IDS_PIDSI_LASTAUTHOR    "LastAuthor|Last Saved By|Name of the last author to contribute to the document's content."
+    IDS_PIDSI_REVNUMBER     "RevNumber|Revision Number|File or document revision number."
+    IDS_PIDSI_EDITTIME      "EditTime|Edit time|Amount of time clocked in editing the document."
+    IDS_PIDSI_LASTPRINTED   "LastPrinted|Last Printed|Date the file or document was most recently printed."
+    IDS_PIDSI_CREATE_DTM    "CreateDTM|Date of Creation|Date the file or document was created (not equivalent to file creation date)."
+    IDS_PIDSI_LASTSAVE_DTM  "LastSaveDTM|Date Last Saved|Date the file or document was most recently saved."
+    IDS_PIDSI_PAGECOUNT     "PageCount|Page Count|Number of pages contained in the document."
+    IDS_PIDSI_WORDCOUNT     "WordCount|Word Count|Number of words contained in the document."
+    IDS_PIDSI_CHARCOUNT     "CharCount|Character Count|Number of characters contained in the document."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDSI_THUMBNAIL     "Thumbnail|Thumbnail Image|Condensed representation of the file's content."
+    IDS_PIDSI_APPNAME       "AppName|Application Name|Name of primary application used to create the file's content."
+    IDS_PIDSI_DOC_SECURITY  "DocSecurity|Security|Document security."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDDSI_CATEGORY     "Category|Category|Subject category."
+    IDS_PIDDSI_PRESFORMAT   "PresFormat|Presentation Format|"
+    IDS_PIDDSI_BYTECOUNT    "ByteCount|Byte Count|Size of file contents."
+    IDS_PIDDSI_LINECOUNT    "LineCount|Lines|Number of lines in document."
+    IDS_PIDDSI_PARCOUNT     "ParCount|Paragraphs|Number of paragraphs in document."
+    IDS_PIDDSI_SLIDECOUNT   "SlideCount|Slides|Number of slides in document."
+    IDS_PIDDSI_NOTECOUNT    "NoteCount|Notes|Number of notes attached to document."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDDSI_HIDDENCOUNT  "HiddenCount|Hidden Objects|Number of hidden objects in document."
+    IDS_PIDDSI_MMCLIPCOUNT  "MmClipCount|Multimedia Clips|Number of media clips attached to the document."
+    IDS_PIDDSI_SCALE        "Scale|Scale|Document scaled for output?"
+    IDS_PIDDSI_HEADINGPAIR  "HeadingPair|Heading Pairs|Number of heading pairs in the document."
+    IDS_PIDDSI_DOCPARTS     "DocPart|Document Parts|Number of subcomponents in document."
+    IDS_PIDDSI_MANAGER      "Manager|Manager|Name of Document Manager."
+    IDS_PIDDSI_COMPANY      "Company|Company Name|Name of company or institution."
+    IDS_PIDDSI_LINKSDIRTY   "LinksDirty|Links Dirty?|Links need updating?|"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDISG_FILETYPE     "FileType|File Type|File format."
+    IDS_PIDISG_FILE_VERSION "FileVersion|File Type Version|Image format version information."
+    IDS_PIDISG_CX           "Width|Width|Image width (horizontal dimension), in pixels."
+    IDS_PIDISG_CY           "Height|Height|Image height (vertical dimension), in pixels."
+    IDS_PIDISG_RESOLUTIONX  "ResolutionX|Horizontal Resolution|Horizontal image resolution in pixels per inch."
+    IDS_PIDISG_RESOLUTIONY  "ResolutionY|Vertical Resolution|Vertical image resolution in pixels per inch."
+    IDS_PIDISG_BITDEPTH     "BitDepth|Bit Depth|Bits per pixel."
+    IDS_PIDISG_COLORSPACE   "Color Space|Color Representation|Internal color table representation."
+    IDS_PIDISG_COMPRESSION  "Compression|Compression|Internal compression mode."
+    IDS_PIDISG_GAMMAVALUE   "Gamma|Gamma Value|Gamma correction value."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDMSI_EDITOR       "Editor|Editor|Name of file's principal editor."
+    IDS_PIDMSI_SOURCE       "Source|Source|Name of the file's source."
+    IDS_PIDMSI_SUPPLIER     "Supplier|Supplier|Name of the file's supplier, e.g. from whom the file was licensed or purchased."
+    IDS_PIDMSI_SEQUENCE_NO  "SequenceNumber|Sequence Number|Sequence number of the file in the group."
+    IDS_PIDMSI_PROJECT      "Project|Project|Name of project to which the file's content belongs."
+    IDS_PIDMSI_STATUS       "Status|Status|Status of the file in the workflow."
+    IDS_PIDMSI_OWNER        "Owner|Owner|Owner of the file."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDMSI_RATING       "Rating|Rating|Rating of the file's content."
+    IDS_PIDMSI_PRODUCTION_DTM 
+                            "ProductionDTM|Produced|Date that the file's content was produced."
+    IDS_PIDMSI_COPYRIGHT    "Copyright|Copyright|Copyright information"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDFSI_TIME           "FaxTime|Transmitted|Facsimile transmission time."
+    IDS_PIDFSI_SENDERNAME     "FaxSenderName|Sender Name|Name of the sender of the facsimile."
+    IDS_PIDFSI_TSID           "FaxTSID|TSID|Transmitting Station identification number." 
+    IDS_PIDFSI_CALLERID       "FaxCallerID|Caller ID|Sender's caller identification number."
+    IDS_PIDFSI_RECIPIENTNAME  "FaxRecipientName|Recipient Name|Name of the facsimile recipient."
+    IDS_PIDFSI_ROUTING        "FaxRouting|Routing|Additional facsimile routing information."
+    IDS_PIDFSI_CSID           "FaxCSID|CSID|Called Station identification number."
+    IDS_PIDFSI_RECIPIENTNUMBER "FaxRecipientNumber|Recipient's Number|Recipient's facsimile number." 
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BOOLVAL_TRUE        "True"
+    IDS_BOOLVAL_FALSE       "False"
+    IDS_BOOLVAL_YES         "Yes"
+    IDS_BOOLVAL_NO          "No"
+    IDS_STATUSVAL_NEW       "New"
+    IDS_STATUSVAL_PRELIM    "Preliminary"
+    IDS_STATUSVAL_DRAFT     "Draft"
+    IDS_STATUSVAL_INPROGRESS "In Progress"
+    IDS_STATUSVAL_EDIT      "Edit"
+    IDS_STATUSVAL_REVIEW    "Review"
+    IDS_STATUSVAL_PROOF     "Proof"
+    IDS_STATUSVAL_FINAL     "Final"
+    IDS_STATUSVAL_NORMAL    "Normal"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IFLT_UNKNOWN        "Unsupported file type"
+    IDS_IFLT_GIF            "Graphics Interchange Format (GIF)"
+    IDS_IFLT_BMP            "Windows or OS/2 Bitmap (BMP)"
+    IDS_IFLT_JPEG           "Joint Photographic Experts Group (JPEG)"
+    IDS_IFLT_TIFF           "Tagged Information File Format (TIFF)"
+    IDS_IFLT_PNG            "Portable Network Graphics (PNG)"
+    IDS_IFLT_PCD            "Photo CD (PCD)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IFLT_PCX            "PC Paintbrush (PCX)"
+    IDS_IFLT_TGA            "Targa (TGA)"
+    IDS_IFLT_PICT           "PICT"
+    IDS_IFLCL_BILEVEL       "Monochrome"
+    IDS_IFLCL_GRAY          "Gray scale"
+    IDS_IFLCL_GRAYA         "Gray scale with alpha"
+    IDS_IFLCL_PALETTE       "Palettized"
+    IDS_IFLCL_RGB           "True color RGB"
+    IDS_IFLCL_RGBPLANAR     "True color RGB, 8 bit planar"
+    IDS_IFLCL_RGBA          "True color RGB with alpha"
+    IDS_IFLCL_RGBAPLANAR    "True color RGB with alpha, 8 bit planar"
+    IDS_IFLCL_CMYK          "CMYK color scheme"
+    IDS_IFLCL_YCC           "YCC color scheme"
+    IDS_IFLCL_CIELAB        "CIELAB color scheme"
+    IDS_IFLCL_NONE          "(indeterminate)"
+    IDS_IFLTF_NONE          "(no internal tiling)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IFLTF_STRIPS        "Strips"
+    IDS_IFLTF_TILES         "Tiles"
+    IDS_IFLPM_PACKED        "Right justified"
+    IDS_IFLPM_UNPACKED      "(unpacked)"
+    IDS_IFLPM_LEFTJUSTIFIED "Left justified"
+    IDS_IFLPM_NORMALIZED    "Normalized"
+    IDS_IFLPM_RAW           "(unpacked)"
+    IDS_IFLSEQ_TOPDOWN      "Non-interlaced, Top-down"
+    IDS_IFLSEQ_BOTTOMUP     "Non-interlaced, Bottom-up"
+    IDS_IFLSEQ_GIF_INTERLACED "GIF interlaced"
+    IDS_IFLSEQ_ADAM7_INTERLACED "Adam 7 interlaced"
+    IDS_IFLCOMP_NONE        "(uncompressed)"
+    IDS_IFLCOMP_DEFAULT     "default compression"
+    IDS_IFLCOMP_RLE         "Run-Length Encoded (RLE)"
+    IDS_IFLCOMP_CCITT1D     "TIFF modified G3"
+    IDS_IFLCOMP_CCITTG3     "TIFF raw G3"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IFLCOMP_CCITTG4     "TIFF G4"
+    IDS_IFLCOMP_LZW         "Lempel-Ziv"
+    IDS_IFLCOMP_LZWHPRED    "Lempel-Ziv with TIFF horizontal differencing"
+    IDS_IFLCOMP_JPEG        "JPEG"
+    IDS_IFLBV_WIN_3         "Windows 3.x Bitmap (BMP)"
+    IDS_IFLBV_OS2_1         "OS2 1.2 Bitmap (BMP)"
+    IDS_IFLBV_OS2_2S        "OS2 2.0 Single Image Bitmap (BMP)"
+    IDS_IFLBV_OS2_2M        "OS2 2.0 Multiple Image Bitmap (BMP)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WAVEAUDIO_FOLDER    "Audio"
+    IDS_WAVEAUDIO_FOLDER_TIP "Audio attributes."
+    IDS_VIDEO_FOLDER        "Video"
+    IDS_VIDEO_FOLDER_TIP    "Video attributes."
+    IDS_MIDI_FOLDER         "MIDI"
+    IDS_MIDI_FOLDER_TIP     "Musical Instrument Digital Interface attributes."
+    IDS_UNCOMPRESSED        "Uncompressed"
+    IDS_MONO                "(Mono)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STEREO              "(Stereo)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDVSI_STREAM_NAME  "Stream name"
+    IDS_PIDVSI_STREAM_NAME_TIP "Name of the video stream"
+    IDS_PIDVSI_FRAME_WIDTH  "Frame width"
+    IDS_PIDVSI_FRAME_WIDTH_TIP "Width of the video frame"
+    IDS_PIDVSI_FRAME_WIDTH_FMT "%d pixels"
+    IDS_PIDVSI_FRAME_HEIGHT "Frame height"
+    IDS_PIDVSI_FRAME_HEIGHT_TIP "Height of the video frame"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDVSI_FRAME_HEIGHT_FMT "%d pixels"
+    IDS_PIDVSI_TIMELENGTH   "Play length"
+    IDS_PIDVSI_TIMELENGTH_TIP "Run length of the video stream"
+    IDS_PIDVSI_TIMELENGTH_FMT "%0d.%02d seconds"
+    IDS_PIDVSI_FRAME_COUNT  "Frame count"
+    IDS_PIDVSI_FRAME_COUNT_TIP "Number of frames in the video stream"
+    IDS_PIDVSI_FRAME_RATE   "Frame rate"
+    IDS_PIDVSI_FRAME_RATE_TIP "Number of frames per second"
+    IDS_PIDVSI_FRAME_RATE_FMT "%0d.%02d frames/second"
+    IDS_PIDVSI_DATA_RATE    "Data rate"
+    IDS_PIDVSI_DATA_RATE_TIP 
+                            "Rate at which video data is transmitted to the output device."
+    IDS_PIDVSI_DATA_RATE_FMT "%0d.%02d Kb/second"
+    IDS_PIDVSI_SAMPLE_SIZE  "Video sample size"
+    IDS_PIDVSI_SAMPLE_SIZE_TIP "Size of each video sample"
+    IDS_PIDVSI_SAMPLE_SIZE_FMT "%d bit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDVSI_COMPRESSION  "Video compression"
+    IDS_PIDVSI_COMPRESSION_TIP 
+                            "Compression mode used to store video information."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDASI_FORMAT       "Audio format"
+    IDS_PIDASI_FORMAT_TIP   "Audio storage format"
+    IDS_PIDASI_TIMELENGTH   "Play length"
+    IDS_PIDASI_TIMELENGTH_TIP "Run length of the audio stream"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDASI_TIMELENGTH_FMT "%0d.%03d seconds"
+    IDS_PIDASI_AVG_DATA_RATE "Average data rate"
+    IDS_PIDASI_AVG_DATA_RATE_TIP 
+                            "Average amount of audio data transferred to playback device per unit of time."
+    IDS_PIDASI_AVG_DATA_RATE_FMT "%0d.%02d Kb/second"
+    IDS_PIDASI_SAMPLE_RATE  "Sample rate"
+    IDS_PIDASI_SAMPLE_RATE_TIP 
+                            "Number of audio samples recorded per unit of time"
+    IDS_PIDASI_SAMPLE_RATE_FMT "%0d.%02d kHz"
+    IDS_PIDASI_SAMPLE_SIZE  "Audio sample size"
+    IDS_PIDASI_SAMPLE_SIZE_TIP "Size of each audio sample"
+    IDS_PIDASI_SAMPLE_SIZE_FMT "%d bit"
+    IDS_PIDASI_CHANNEL_COUNT "Channels"
+    IDS_PIDASI_CHANNEL_COUNT_TIP "Number of audio channels"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STATUSVAL_OTHER     "Other"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADVDLG_CAPTION1     "Advanced Properties for %s"
+    IDS_ADVDLG_CAPTIONN     "Advanced Properties for %d Files"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDVSI_COMPANYNAME  "Company Name"
+    IDS_PIDVSI_FILEDESCRIPTION "Module Description"
+    IDS_PIDVSI_FILEVERSION  "Module Version"
+    IDS_PIDVSI_INTERNALNAME "Internal Module Name"
+    IDS_PIDVSI_ORIGINALFILENAME "Original Module Name"
+    IDS_PIDVSI_PRODUCTNAME  "Product Name"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIDVSI_PRODUCTVERSION "Product Version"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "..\\ctl\\proptree.tlb"
+2 TYPELIB "..\\srv\\ptsrv32.tlb"
+3 TYPELIB "..\\ext\\shdocext.tlb"
+4 TYPELIB "..\\avprop\\avprop.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

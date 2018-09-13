@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE        VFT_APP
+#define VER_FILESUBTYPE     VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "MSAFD NTSD Debugger Extension"
+#define VER_INTERNALNAME_STR        "msafdext.dll"
+#define VER_ORIGINALFILENAME_STR    "msafdext.dll"
+
+#include <common.ver>
+

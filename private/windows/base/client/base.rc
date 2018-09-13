@@ -1,0 +1,14 @@
+#include <windows.h>
+
+#include "winerror.rc"
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT BASE API Client DLL"
+#define VER_INTERNALNAME_STR        "kernel32\0"
+
+#include "common.ver"
+
+#include "..\..\winnls\winnls.rc"

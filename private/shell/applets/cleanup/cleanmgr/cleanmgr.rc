@@ -1,0 +1,304 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+//#include "afxres.h"
+#include "winres.h"
+
+#define IDC_STATIC  (-1)
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifndef _MAC
+#endif    // !_MAC
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DISK_CLEANER DIALOG DISCARDABLE  0, 0, 235, 215
+STYLE DS_CONTEXTHELP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+CLASS "CLEANMGR"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_DRIVE_ICON_LOCATION,7,7,20,20
+    LTEXT           "You can use Disk Cleanup to free up to 0.0MB of disk space on drive C.",
+                    IDC_INTRO_TEXT,35,7,193,21
+    LTEXT           "&Files to delete:",IDC_FILES_TO_REMOVE_TEXT,7,31,221,10
+    CONTROL         "",IDC_CLIENT_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | 
+                    LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 
+                    7,43,221,57,WS_EX_CLIENTEDGE
+    GROUPBOX        "Description",IDC_DESCRIPTION_GROUP,7,117,221,90
+    LTEXT           "",IDC_DESCRIPTION_TEXT,13,129,207,60
+    PUSHBUTTON      "&Details...",IDC_DETAILS_BUTTON,161,186,60,14
+    LTEXT           "Total amount of disk space you gain:",
+                    IDC_TOTAL_SPACE_DESCRIPTION,7,105,154,10
+    RTEXT           "",IDC_TOTAL_SPACE_TEXT,154,105,69,9
+END
+
+IDD_SCAN_ABORT DIALOG DISCARDABLE  0, 0, 223, 70
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,166,43,50,14
+    ICON            ICON_CLEANMGR,IDC_STATIC,7,7,20,20
+    LTEXT           "Disk Cleanup is calculating how much space you can free on Drive C.",
+                    IDC_ABORT_TEXT,33,7,183,21
+    CONTROL         "Progress1",IDC_ABORT_SCAN_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,48,151,7
+    LTEXT           "Calculating...",IDC_STATIC,7,37,102,8
+    LTEXT           "",IDC_SCAN_STATUS_TEXT,44,59,172,8
+    LTEXT           "Scanning:",IDC_STATIC,7,59,32,8
+END
+
+IDD_PURGE_ABORT DIALOG DISCARDABLE  0, 0, 223, 70
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,166,43,50,14
+    ICON            ICON_CLEANMGR,IDC_STATIC,7,7,20,20
+    LTEXT           "The Disk Cleanup utility is cleaning up unnecessary files on your machine.",
+                    IDC_STATIC,34,7,182,17
+    CONTROL         "Progress1",IDC_ABORT_PURGE_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,48,151,7
+    LTEXT           "Cleaning up drive C:",IDC_PURGE_TEXT,7,38,152,8
+    LTEXT           "",IDC_PURGE_STATUS_TEXT,44,59,172,8
+    LTEXT           "Cleaning:",IDC_STATIC,7,59,32,8
+END
+
+IDD_COUNTDOWN_ABORT DIALOG DISCARDABLE  0, 0, 223, 70
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,166,43,50,14
+    ICON            ICON_CLEANMGR,IDC_STATIC,7,7,20,20
+    LTEXT           "Windows will cleanup your disk by removing temporary files on your computer in 15 seconds.",
+                    IDC_COUNTDOWN_TEXT,34,7,182,22
+    CONTROL         "Progress1",IDC_COUNTDOWN_PROGRESS,"msctls_progress32",
+                    WS_BORDER,7,48,151,7
+    LTEXT           "Cleanup hard disk drives",IDC_COUNTDOWN_DRIVE_TEXT,7,36,
+                    100,8
+END
+
+#ifdef WINNT
+IDD_MORE_OPTIONS DIALOG DISCARDABLE  0, 0, 235, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Windows components",IDC_WINDOWS_SETUP_GROUP,7,7,221,93
+    ICON            ICON_SETUP,IDC_WINDOWS_SETUP_ICON,13,22,20,20
+    LTEXT           "You can free more disk space by removing optional Windows components that you do not use.",
+                    IDC_WINDOWS_SETUP_TEXT,44,22,179,18
+    PUSHBUTTON      "C&lean up...",IDC_WINDOWS_SETUP_BUTTON,166,48,55,14
+    GROUPBOX        "Installed programs",IDC_INSTALLED_PROGRAMS_GROUP,7,105,
+                    221,93
+    ICON            ICON_SETUP,IDC_INSTALLED_PROGRAMS_ICON,13,123,20,20
+    LTEXT           "You can free more disk space by removing programs that you do not use.",
+                    IDC_INSTALLED_PROGRAMS_TEXT,44,123,179,25
+    PUSHBUTTON      "Cl&ean up...",IDC_INSTALLED_PROGRAMS_BUTTON,166,149,55,
+                    14
+END
+
+#else // osr2/windows98
+IDD_MORE_OPTIONS DIALOG DISCARDABLE  0, 0, 235, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Windows components",IDC_WINDOWS_SETUP_GROUP,7,7,221,62
+    ICON            ICON_SETUP,IDC_WINDOWS_SETUP_ICON,13,22,20,20
+    LTEXT           "You can free more disk space by removing optional Windows components that you do not use.",
+                    IDC_WINDOWS_SETUP_TEXT,44,22,179,18
+    PUSHBUTTON      "C&lean up...",IDC_WINDOWS_SETUP_BUTTON,166,48,55,14
+    GROUPBOX        "Installed programs",IDC_INSTALLED_PROGRAMS_GROUP,7,76,
+                    221,62
+    ICON            ICON_SETUP,IDC_INSTALLED_PROGRAMS_ICON,13,91,20,20
+    LTEXT           "You can free more disk space by removing programs that you do not use.",
+                    IDC_INSTALLED_PROGRAMS_TEXT,44,91,179,25
+    PUSHBUTTON      "Cl&ean up...",IDC_INSTALLED_PROGRAMS_BUTTON,166,117,55,
+                    14
+    GROUPBOX        "Drive conversion (FAT32)",IDC_FAT32_CONVERSION_GROUP,7,
+                    145,221,62
+    ICON            ICON_FAT32,IDC_FAT32_CONVERSION_ICON,13,160,20,20
+    LTEXT           "You can create additional disk space by converting this disk to FAT32.",
+                    IDC_FAT32_CONVERSION_TEXT,44,160,179,23
+    PUSHBUTTON      "&Convert...",IDC_FAT32_CONVERSION_BUTTON,166,186,55,14
+END
+#endif
+
+IDD_SETTINGS DIALOG DISCARDABLE  0, 0, 235, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Cleanup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&If this drive runs low on disk space, automatically run Disk Cleanup.",
+                    IDC_AUTO_LAUNCH,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,17,47,194,23
+    ICON            "",IDC_DRIVE_ICON_LOCATION,7,7,20,20
+    LTEXT           "The following settings apply to DRIVE (C:)",
+                    IDC_SETTINGS_DRIVE_TEXT,35,16,193,10
+END
+
+IDD_SELDRIVE DIALOG DISCARDABLE  0, 0, 204, 82
+STYLE DS_CENTER | DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Drive"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,45,55,50,14
+    PUSHBUTTON      "E&xit",IDCANCEL,108,55,50,14
+    LTEXT           "Select the drive you want to clean up.",
+                    IDC_SELDRIVE_TEXT,14,8,176,8
+    LTEXT           "&Drives:",IDC_SELDRIVE_TEXT2,14,21,49,8
+    COMBOBOX        IDC_SELDRIVE_COMBO,13,32,174,70,CBS_DROPDOWNLIST | 
+                    CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | 
+                    CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_DISK_CLEANER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_SCAN_ABORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 67
+    END
+
+    IDD_PURGE_ABORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_COUNTDOWN_ABORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
+
+    IDD_MORE_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ICON_GENERIC            ICON    DISCARDABLE     "generic.ico"
+ICON_CLEANMGR           ICON    DISCARDABLE     "cleanmgr.ico"
+ICON_SETUP              ICON    DISCARDABLE     "setup.ico"
+ICON_FAT32              ICON    DISCARDABLE     "cvt1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DISKCLEANUP     "Disk Cleanup"
+    IDS_MOREOPTIONS     "More Options"
+    IDS_SETTINGS        "Settings"
+    IDS_DELETEWARNING   "Are you sure you want to delete files ?"
+    IDS_DETAILS         "&Details..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#include "cleanmgr.rcv"
+
+#include "cmstrings.rc"
+

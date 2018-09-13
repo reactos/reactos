@@ -1,0 +1,59 @@
+#include "strids.h"
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CDLDBG_MISSING_DLLREGISTERSERVER     "WRN: OCX Registration: no DllRegisterServer entry point in (%s). Skipping registration. INF Author: mark this section with RegisterServer=No as a performance optimization.\n"
+    ID_CDLDBG_INCOMPATIBLE_BINARY           "ERR: OCX Install: detected incompatible platform binary (%s). Please contact site for a binary for your platform.\n"
+    ID_CDLDBG_VERIFYTRUST_FAILED            "ERR: Security Trust Verification Failed or rejected by user/administrator. Check Security Settings. Detailed Error Code (hr) = %lx\n"
+    ID_CDLDBG_ERR_PRIMARY_LANGUAGE          "ERR: INF Processing:  Failed Error Code:(%lx) processing: %s. Cannot get primary language!\n"
+    ID_CDLDBG_ERR_NO_SECTION                "ERR: INF Processing:  No section for processing: %s\n. language = %s\n!"
+    ID_CDLDBG_SATELLITE_FOUND               "LOG: INF Processing:  Satellite DLL found:%s\n!"
+    ID_CDLDBG_PROCESSINF_FAILED             "ERR: INF Processing:  Failed (%lx) processing: %s\n. Cannot get primary/default language!"
+    ID_CDLDBG_COMPLETEONE_IN                "LOG: URL Download Complete: hrStatus:%lx, hrOSB:%lx, hrResponseHdr:%lx, URL:(%ws)\n"
+    ID_CDLDBG_ONSTOPBINDING_CALLED          "LOG: Reporting Code Download Completion: (hr:%lx%s, CLASSID: %lx..., szCODE:(%ws), MainType:%ws, MainExt:%ws)\n"
+    ID_CDLDBG_FOUND_DUP                     "LOG: detected DUP secondary CAB %ws.\n Adding CDL=(CLASSID: %lx..., szCODE:(%ws), VersionMS:%lx, VersionLS:%lx)\n"
+    ID_CDLDBG_DOSETUP_FAILED                "ERR: Setup Failed Error Code: (hr) = %lx, installing: %s to %s destination code(%lx)\n"
+    ID_CDLDBG_NO_IWINDOWFORBINDINGUI        "WRN: Client no IWindowForBindingUI! Controls that need user confirmation to establish trust will fail. If you implement ICodeInstall pls note that it has been obsoleted now\n"
+    ID_CDLDBG_RUNSETUPHOOK_FAILED           "ERR: Run Setup Hook: Failed Error Code:(hr) = %lx, processing: %s\n"
+    ID_CDLDBG_OBJ_TAG_MIXED_USAGE           "WRN: OBJECT tags for CLASSID=%lx... have mixed usage with CODEBASE=%ws and %ws\n"
+    ID_CDLDBG_FAILED_OSD_OM                 "ERR: (OSD)Open Software Description Processor: Error loading OSD or missing SoftPkg tag. Check syntax!\n"
+    ID_CDLDBG_DU_REQUIRED_ATTRIB_MISSING    "ERR: (OSD)Open Software Description Processor: SoftPkg tag: NAME, VERSION: Required attributes in SoftPkg tag missing or bad syntax!\n"
+END    
+
+STRINGTABLE DISCARDABLE    
+BEGIN
+    ID_CDLDBG_NATIVECODE_SYNTAX             "ERR: (OSD)Open Software Description Processor: MSICD::NativeCode tag: CODE: Required tag missing or bad syntax!\n"
+    ID_CDLDBG_CODEBASE_SYNTAX               "ERR: (OSD)Open Software Description Processor: CODEBASE tag: HREF/FILENAME: Required attributes missing or bad syntax!\n"
+    ID_CDLDBG_BAD_INF_FROM_OSD              "ERR: (OSD)Open Software Description Processor: Error extracting INF file referred to in OSD file. INF needs to be in the same CAB as OSD.\n"
+    ID_CDLDBG_JAVAPACKAGE_SYNTAX            "ERR: (OSD)Open Software Description Processor: MSICD::Java Package tag: Bad Syntax or Missing Required attribute!\n"
+    ID_CDLDBG_DEPENDENCY_SYNTAX             "ERR: (OSD)Open Software Description Processor: DEPENDENCY tag (or subtag SoftPkg): Bad Syntax or Missing Required attribute!"
+    ID_CDLDBG_DEPENDENCY_SOFTDIST_SYNTAX    "ERR: (OSD)Open Software Description Processor: SoftPkg under DEPENDENCY: Bad Syntax or Missing Required attribute!\n"
+    ID_CDLDBG_CDL_HANDLER_MISSING           "ERR: CDL Protocol Handler missing, can't process <DEPENDENCY> tag.\n"
+    ID_CDLDBG_FILE_INUSE                    "WRN: File %s was installed, but will require a reboot for the install to take effect.\n"
+    ID_CDLDBG_SETUP_COMPLETE                "LOG: Setup successful installing: %s to %s destination code(%lx)\n"
+    ID_CDLDBG_HOOK_COMPLETE                 "LOG: Setup Hook %s was executed successfully.\n"
+    ID_CDLDBG_DLL_REGISTERED                "LOG: File %s being registered.\n"
+    ID_CDLDBG_ITEM_PROCESSED                "LOG: Item %s being processed.\n"
+    ID_CDLDBG_JAVA_PKG_SETUP                "LOG: Java Package %ws being installed into %ws NameSpace.\n"
+    ID_CDLDBG_JAVA_PKG_FAILED               "ERR: Error installing Java Package. Error Code (hr) = %lx.\n"
+    ID_CDLDBG_DL_REDUNDANT                  "LOG: Redundant download started on %s (hr = %lx).\n"
+    ID_CDLDBG_DL_REDUNDANT_FAILED           "LOG: Redundant download attempted, but no more codebases available.\n"
+END    
+    
+    
+STRINGTABLE DISCARDABLE    
+BEGIN
+    ID_CDLDBG_DL_ON_STOP_BINDING            "LOG: Download OnStopBinding called (hrStatus = %lx / hrResponseHdr = %lx).\n" 
+    ID_CDLDBG_DL_UPDATE_DU_NO_VERS          "LOG: Version not identified for %s, using 0.1.\n"
+    ID_CDLDBG_DETAILS                       "For details, see "
+    ID_CDLDBG_FAILED_CONVERT_CLSID          "ERR: Could not convert extension %s or type %s to clsid.\n"
+    ID_CDLDBG_FAILED_STRING_FROM_CLSID      "ERR: Could not get clsid from string.\n"
+    ID_CDLDBG_ERROR_STRING                  "A code download error has occurred: "
+    ID_CDLDBG_DETAILS_STRING                "For more error details please see: "
+    ID_CDLDBG_UNKNOWN_ERROR                 "Unknown Error!"
+    ID_CDLDBG_UNKNOWN_SETUP_ERROR           "Unknown Setup Error."
+    ID_CDLDBG_WX86_REQUIRE_PRIMARY_ARCH     "LOG: Downloaded images must now be all native code, URL:(%s)\n"
+    ID_CDLDBG_WX86_REQUIRE_ALTERNATE_ARCH   "LOG: Downloaded images must now be all x86 code, URL:(%s)\n"
+    ID_CDLDBG_CANNOT_REPLACE_SFP_FILE       "LOG: Cannot downgrade file which exists in the System File Protection list.\n"
+END
+

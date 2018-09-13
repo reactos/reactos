@@ -1,0 +1,544 @@
+//Microsoft App Studio generated resource script.
+//
+#include "resource.h"
+#ifdef WINNT
+#include "windows.h"
+#else
+#include "winuser.h"
+#endif
+#include "commctrl.h"
+#include "dlgs.h"
+#include "regresid.h"
+#include "regedit.rcv"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REGEXPORT DIALOG DISCARDABLE  32, 24, 264, 191
+STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | DS_CONTROL
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",stc32,0,0,264,131,NOT WS_VISIBLE | WS_DISABLED
+    GROUPBOX        "Export range",IDC_EXPORTRANGE,4,131,196,54
+    AUTORADIOBUTTON "&All",IDC_RANGEALL,12,143,76,12,WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "S&elected branch",IDC_RANGESELECTEDPATH,12,156,76,12
+    LTEXT           "Selected branch",-1,-1,-1,0,0
+    EDITTEXT        IDC_SELECTEDPATH,30,169,162,12,ES_AUTOHSCROLL | WS_GROUP
+END
+
+IDD_REGPRINT DIALOG DISCARDABLE  0, 0, 288, 178
+STYLE WS_CHILD | WS_VISIBLE | DS_CONTROL
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Print range",grp1,0,0,278,56,WS_GROUP | WS_VISIBLE
+    AUTORADIOBUTTON "A&ll",IDC_RANGEALL,8,12,64,12,WS_GROUP | WS_TABSTOP | WS_VISIBLE
+    AUTORADIOBUTTON "S&elected branch",IDC_RANGESELECTEDPATH,8,25,76,12, WS_VISIBLE
+    LTEXT           "Selected branch",-1,-1,-1,0,0
+    EDITTEXT        IDC_SELECTEDPATH,26,38,238,12,ES_AUTOHSCROLL | WS_GROUP | WS_VISIBLE
+END
+
+IDD_REGPRINTABORT DIALOG DISCARDABLE  32, 24, 154, 49
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Print"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,51,28,50,14
+    CTEXT           "Printing the registry...",-1,29,10,93,8
+END
+
+IDD_EDITSTRINGVALUE DIALOG DISCARDABLE  32, 24, 252, 84
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit String"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Value data:",-1,6,35,161,8
+    EDITTEXT        IDC_VALUEDATA,6,46,240,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,64,50,14
+    LTEXT           "Value &name:",-1,6,6,134,8
+    EDITTEXT        IDC_VALUENAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_EDITBINARYVALUE DIALOG DISCARDABLE  32, 24, 232, 178
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Binary Value"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Value data:",-1,6,33,220,8
+    CONTROL         "",IDC_VALUEDATA,HEXEDIT_CLASSNAME,WS_VSCROLL | WS_BORDER |
+                    WS_TABSTOP,6,44,220,110,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,120,158,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,158,50,14
+    LTEXT           "Value &name:",-1,6,6,220,8
+    EDITTEXT        IDC_VALUENAME,6,17,220,12,ES_AUTOHSCROLL | ES_READONLY
+END
+
+IDD_REGCONNECT DIALOG DISCARDABLE  32, 24, 191, 65
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect Network Registry"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Computer name:",-1,7,15,75,8
+    EDITTEXT        IDC_REMOTENAME,7,27,120,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,133,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,24,50,14
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,133,44,50,14
+END
+
+IDD_ADDFAVORITE DIALOG DISCARDABLE  32, 24, 191, 65
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add to Favorites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Favorite name:",-1,7,15,75,8
+    EDITTEXT        IDC_FAVORITENAME,7,27,120,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,133,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,133,24,50,14
+END
+
+IDD_REMFAVORITE DIALOG DISCARDABLE  0, 0, 194, 103
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Favorites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,137,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,137,28,50,14
+    LISTBOX         IDC_FAVORITES,7,23,121,72,LBS_SORT | LBS_MULTIPLESEL | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Select Favorite(s):",-1,7,7,93,8
+END
+
+IDD_REGFIND DIALOG DISCARDABLE  32, 24, 264, 96
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Fi&nd what:",-1,6,8,40,8
+    EDITTEXT        IDC_FINDWHAT,50,6,150,14,ES_AUTOHSCROLL | WS_TABSTOP
+    CONTROL         "&Keys",IDC_FORKEYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,38,35,10
+    CONTROL         "&Values",IDC_FORVALUES,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,12,50,35,10
+    CONTROL         "&Data",IDC_FORDATA,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,12,62,35,10
+    CONTROL         "Match &whole string only",IDC_WHOLEWORDONLY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,80,109,10
+    DEFPUSHBUTTON   "&Find Next",IDOK,208,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,208,24,50,14
+    GROUPBOX        "Look at",IDC_GROUPBOX,6,26,194,50
+END
+
+IDD_REGDISCONNECT DIALOG DISCARDABLE  32, 24, 228, 97
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Disconnect Network Registry"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Computer name:",-1,6,6,106,8
+    CONTROL         "",IDC_REMOTELIST,WC_LISTVIEW, WS_BORDER | WS_TABSTOP |
+                    LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS,
+                    6,18,160,72,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,172,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,172,22,50,14
+END
+
+IDD_REGFINDABORT DIALOG DISCARDABLE  32, 24, 170, 64
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,110,40,50,14
+    LTEXT           "Searching the registry...",-1,38,16,84,8
+    ICON            IDI_REGFIND,-1,10,10,18,20
+END
+
+IDD_REGPROGRESS DIALOG DISCARDABLE  32, 24, 240, 59
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION
+CAPTION "Import Registry File"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_PROGRESSBAR,PROGRESS_CLASS,0,10,40,220,9
+    LTEXT           "",IDC_FILENAME,10,22,220,8
+    LTEXT           "File:",-1,10,10,24,8
+END
+
+IDD_EDITDWORDVALUE DIALOG DISCARDABLE  32, 24, 212, 103
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit DWORD Value"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Value data:",-1,6,35,61,8
+    EDITTEXT        IDC_VALUEDATA,6,46,82,12,ES_AUTOHSCROLL
+    GROUPBOX        "Base",-1,98,35,108,39
+    AUTORADIOBUTTON "&Hexadecimal",IDC_HEXADECIMAL,109,46,60,10,WS_TABSTOP |
+                    WS_GROUP
+    AUTORADIOBUTTON "&Decimal",IDC_DECIMAL,109,59,60,10
+    DEFPUSHBUTTON   "OK",IDOK,100,81,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,156,81,50,14,WS_GROUP
+    LTEXT           "Value &name:",-1,6,6,69,8
+    EDITTEXT        IDC_VALUENAME,6,17,200,12,ES_AUTOHSCROLL | ES_READONLY
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_REGEDIT             ICON    DISCARDABLE     "REGEDIT.ICO"
+IDI_REGEDDOC		ICON    DISCARDABLE     "REGEDDOC.ICO"
+IDI_REGFIND             ICON    DISCARDABLE     "REGFIND.ICO"
+//  IDI_DIAMOND             ICON    DISCARDABLE     "DIAMOND.ICO"
+IDI_COMPUTER            ICON    DISCARDABLE     "COMPUTER.ICO"
+IDI_REMOTE              ICON    DISCARDABLE     "REMOTE.ICO"
+IDI_FOLDER              ICON    DISCARDABLE     "FOLDER.ICO"
+IDI_FOLDEROPEN          ICON    DISCARDABLE     "FOLDEROP.ICO"
+IDI_STRING              ICON    DISCARDABLE     "STRING.ICO"
+IDI_BINARY              ICON    DISCARDABLE     "BINARY.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_SPLIT               CURSOR  DISCARDABLE     "SPLIT.CUR"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_REGEDIT MENUEX DISCARDABLE
+BEGIN
+    POPUP "&Registry", IDMP_REGISTRY
+    BEGIN
+        MENUITEM "&Import Registry File...",    ID_IMPORTREGFILE
+        MENUITEM "&Export Registry File...",    ID_EXPORTREGFILE
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Connect Network Registry...", ID_CONNECT
+        MENUITEM "&Disconnect Network Registry...", ID_DISCONNECT
+        MENUITEM "",                            ID_NETSEPARATOR, MFT_SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_PRINT
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "E&xit",                       ID_EXIT
+    END
+    POPUP "&Edit", IDMP_EDIT
+    BEGIN
+        POPUP "&New", IDMP_NEW
+        BEGIN
+            MENUITEM "&Key",                    ID_NEWKEY
+            MENUITEM "",                        -1, MFT_SEPARATOR
+            MENUITEM "&String Value",           ID_NEWSTRINGVALUE
+            MENUITEM "&Binary Value",           ID_NEWBINARYVALUE
+            MENUITEM "&DWORD Value",            ID_NEWDWORDVALUE
+        END
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Delete\tDel",                ID_DELETE
+        MENUITEM "&Rename",                     ID_RENAME
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Copy Key Name",              ID_COPYKEYNAME
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_FIND
+        MENUITEM "Find Ne&xt\tF3",              ID_FINDNEXT
+    END
+    POPUP "&View", IDMP_VIEW
+    BEGIN
+        MENUITEM "Status &Bar",                 ID_STATUSBAR
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "Sp&lit",                      ID_SPLIT
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Refresh\tF5",                ID_REFRESH
+    END
+    POPUP "&Favorites", IDMP_FAVORITES
+    BEGIN
+        MENUITEM "&Add to Favorites",           ID_ADDTOFAVORITES
+        MENUITEM "&Remove Favorite",            ID_REMOVEFAVORITE
+    END
+    POPUP "&Help", IDMP_HELP
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELPTOPICS
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&About Registry Editor",      ID_ABOUT
+    END
+END
+
+IDM_COMPUTER_CONTEXT MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Expand",                      ID_TOGGLE
+        MENUITEM "",                            ID_NETSEPARATOR, MFT_SEPARATOR
+        MENUITEM "Disconnect",                  ID_DISCONNECT
+    END
+END
+
+IDM_KEY_CONTEXT MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Expand",                      ID_TOGGLE
+        POPUP "&New", IDMP_NEW
+        BEGIN
+            MENUITEM "&Key",                    ID_NEWKEY
+            MENUITEM "",                        -1, MFT_SEPARATOR
+            MENUITEM "&String Value",           ID_NEWSTRINGVALUE
+            MENUITEM "&Binary Value",           ID_NEWBINARYVALUE
+            MENUITEM "&DWORD Value",            ID_NEWDWORDVALUE
+        END
+        MENUITEM "&Find...",                    ID_FIND
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Delete",                     ID_DELETE
+        MENUITEM "&Rename",                     ID_RENAME
+        MENUITEM "",                            -1, MFT_SEPARATOR
+        MENUITEM "&Copy Key Name",              ID_COPYKEYNAME
+    END
+END
+
+IDM_VALUE_CONTEXT MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Modify",                     ID_MODIFY
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete",                     ID_DELETE
+        MENUITEM "&Rename",                     ID_RENAME
+    END
+END
+
+IDM_VALUELIST_NOITEM_CONTEXT MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&New", IDMP_NEW
+        BEGIN
+            MENUITEM "&Key",                    ID_NEWKEY
+            MENUITEM "",                        -1, MFT_SEPARATOR
+            MENUITEM "&String Value",           ID_NEWSTRINGVALUE
+            MENUITEM "&Binary Value",           ID_NEWBINARYVALUE
+            MENUITEM "&DWORD Value",            ID_NEWDWORDVALUE
+        END
+    END
+END
+
+IDM_HEXEDIT_CONTEXT MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Cu&t",                        IDKEY_CUT
+        MENUITEM "&Copy",                       IDKEY_COPY
+        MENUITEM "&Paste",                      IDKEY_PASTE
+        MENUITEM "&Delete",                     VK_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All",                 ID_SELECTALL
+    END
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDACCEL_REGEDIT ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_TAB,         ID_CYCLEFOCUS,          VIRTKEY,NOINVERT
+    VK_TAB,         ID_CYCLEFOCUS,          VIRTKEY,SHIFT, NOINVERT
+    VK_F1,          ID_HELPTOPICS,          VIRTKEY,NOINVERT
+    VK_F2,          ID_RENAME,              VIRTKEY,NOINVERT
+    VK_F3,          ID_FINDNEXT,            VIRTKEY,NOINVERT
+    VK_F5,          ID_REFRESH,             VIRTKEY,NOINVERT
+    VK_F6,          ID_CYCLEFOCUS,          VIRTKEY,NOINVERT
+    VK_F10,         ID_CONTEXTMENU,         VIRTKEY,SHIFT, NOINVERT
+    VK_DELETE,      ID_DELETE,              VIRTKEY,NOINVERT
+    "^F",           ID_FIND,                NOINVERT
+    "^P",           ID_PRINT,               NOINVERT
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_REGEDIT             "Registry Editor"
+    IDS_NAMECOLUMNLABEL     "Name"
+    IDS_TYPECOLUMNLABEL     "Type"
+    IDS_DATACOLUMNLABEL     "Data"
+    IDS_COMPUTER            "My Computer"
+    IDS_DEFAULTVALUE        "(Default)"
+//    IDS_EMPTYSTRING         "Empty string"
+    IDS_EMPTYBINARY         "(zero-length binary value)"
+    IDS_NEWKEYNAMETEMPLATE  "New Key #%%u"
+    IDS_NEWVALUENAMETEMPLATE "New Value #%%u"
+    IDS_COLLAPSE            "Collapse"
+    IDS_MODIFY              "&Modify"
+    IDS_VALUENOTSET         "(value not set)"
+    IDS_HELPFILENAME        "regedit.hlp"
+    IDS_DWORDDATAFORMATSPEC "0x%1!08x! (%1!u!)"
+    IDS_INVALIDDWORDDATA    "(invalid DWORD value)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IMPORTREGFILETITLE  "Import Registry File"
+    IDS_EXPORTREGFILETITLE  "Export Registry File"
+    IDS_REGIMPORTFILEFILTER "Registration Files#*.reg#All Files (*.*)#*.*#"
+    IDS_REGEXPORTFILEFILTER "Registration Files#*.reg#Win9x/NT4 Registration Files (REGEDIT4)#*.reg#All Files (*.*)#*.*#"
+    IDS_REGFILEDEFEXT       "REG"
+    IDS_CONFIRMIMPFILE      "Are you sure you want to add the information in %1 to the registry?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_REGEDITDISABLED     "Registry editing has been disabled by your administrator."
+    IDS_SEARCHEDTOEND       "Finished searching through the registry."
+    IDS_COMPUTERBROWSETITLE "Click the computer you want to connect to."
+    IDS_NOFILESPECIFIED     "Command line argument requires a filename and none was specified."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRMDELKEYTEXT   "Are you sure you want to delete this key?"
+    IDS_CONFIRMDELKEYTITLE  "Confirm Key Delete"
+    IDS_CONFIRMDELVALMULTITEXT "Are you sure you want to delete these values?"
+    IDS_CONFIRMDELVALTITLE  "Confirm Value Delete"
+    IDS_CONFIRMDELVALTEXT   "Are you sure you want to delete this value?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RENAMEKEYERRORTITLE "Error Renaming Key"
+    IDS_RENAMEKEYOTHERERROR "Cannot rename %1:  Error while renaming key."
+    IDS_RENAMEKEYTOOLONG    "Cannot rename %1:  The specified key name is too long. Type a shorter name and try again."
+    IDS_RENAMEKEYEXISTS     "Cannot rename %1:  The specified key name already exists. Type another name and try again."
+    IDS_RENAMEKEYBADCHARS   "Cannot rename %1:  The specified key name contains illegal characters."
+    IDS_RENAMEKEYEMPTY      "Cannot rename %1:  The specified key name is empty. Type another name and try again."
+    IDS_RENAMEVALERRORTITLE "Error Renaming Value"
+    IDS_RENAMEVALOTHERERROR "Cannot rename %1:  Error while renaming value."
+    IDS_RENAMEVALEXISTS     "Cannot rename %1:  The specified value name already exists. Type another name and try again."
+    IDS_RENAMEVALEMPTY      "Cannot rename %1:  The specified value name is empty. Type another name and try again."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DELETEKEYERRORTITLE "Error Deleting Key"
+    IDS_DELETEKEYDELETEFAILED "Cannot delete %1:  Error while deleting key."
+    IDS_DELETEVALERRORTITLE "Error Deleting Values"
+    IDS_DELETEVALDELETEFAILED "Unable to delete all specified values."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OPENKEYERRORTITLE   "Error Opening Key"
+    IDS_OPENKEYCANNOTOPEN   "Cannot open %1:  Error while opening key."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EDITVALERRORTITLE   "Error Editing Value"
+    IDS_EDITVALCANNOTREAD   "Cannot edit %1:  Error reading the value's contents."
+    IDS_EDITVALCANNOTWRITE  "Cannot edit %1:  Error writing the value's new contents."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_IMPFILEERRSUCCESS   "Information in %1 has been successfully entered into the registry."
+    IDS_IMPFILEERRFILEOPEN  "Cannot import %1: Error opening the file. There may be a disk or file system error."
+    IDS_IMPFILEERRFILEREAD  "Cannot import %1: Error reading the file. There may be a disk error or the file may be corrupt."
+    IDS_IMPFILEERRREGOPEN   "Cannot import %1: Error accessing the registry."
+    IDS_IMPFILEERRREGSET    "Cannot import %1: Not all data was successfully written to the registry.  Some keys are open by the system or other processes."
+    IDS_IMPFILEERRFORMATBAD "Cannot import %1: The specified file is not a registry script. You can import only registry files."
+    IDS_IMPFILEERRVERBAD    "Cannot import %1: The specified file is not intended for use with this version of Windows."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EXPFILEERRFILEWRITE "Cannot export %1: Error writing the file. There may be a disk or file system error."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRINTERRNOMEMORY    "Cannot print: Insufficient memory to begin job. Try closing down some applications, and try again. If you still see this message, try restarting Windows."
+    IDS_PRINTERRPRINTER     "Cannot print: An error occurred during printing. Check your printer and your printer's settings for problems, and try again."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERRINVALIDREGPATH   "The selected branch does not exist. Make sure that the correct path is given."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONNECTERRORTITLE   "Error Connecting Network Registry"
+    IDS_CONNECTNOTLOCAL     "You cannot connect to your own computer."
+    IDS_CONNECTBADNAME      "Unable to connect to %1.  Make sure that this computer is on the network, has remote administration enabled, and that both computers are running the remote registry service."
+    IDS_CONNECTROOTFAILED   "Unable to connect to all of the roots of the computer's registry.  Disconnect from the remote registry and then reconnect before trying again."
+    IDS_CONNECTACCESSDENIED "Unable to connect to %1.  Make sure you have permission to administer this computer."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWKEYERRORTITLE    "Error Creating Key"
+    IDS_NEWKEYPARENTOPENFAILED "Cannot create key: Error while opening the key %1."
+    IDS_NEWKEYCANNOTCREATE  "Cannot create key: Error writing to the registry."
+    IDS_NEWKEYNOUNIQUE      "Cannot create key: Unable to generate a unique name."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWVALUEERRORTITLE  "Error Creating Value"
+    IDS_NEWVALUECANNOTCREATE "Cannot create value: Error writing to the registry."
+    IDS_NEWVALUENOUNIQUE    "Cannot create value: Unable to generate a unique name."
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FAVORITEEXISTS      "There is already a favorite with that name."
+    IDS_FAVORITEERROR       "Error Adding Favorite"
+    IDS_FAVORITE            "Favorite"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_CONNECT              "Connects to a remote computer's registry."
+    ID_IMPORTREGFILE        "Imports a text file into the registry."
+    ID_EXPORTREGFILE        "Exports all or part of the registry to a text file."
+    ID_PRINT                "Prints all or part of the registry."
+    ID_EXIT                 "Quits the Registry Editor."
+    ID_NEWKEY               "Adds a new key."
+    ID_NEWSTRINGVALUE       "Adds a new string value."
+    ID_NEWBINARYVALUE       "Adds a new binary value."
+    ID_ABOUT                "Displays program information, version number, and copyright."
+    ID_STATUSBAR            "Shows or hides the status bar."
+    ID_REFRESH              "Refreshes the window."
+    ID_SPLIT                "Changes position of split between two panes."
+    ID_DISCONNECT           "Disconnects from a remote computer's registry."
+    ID_FIND                 "Finds a text string in a key, value, or data."
+    ID_FINDNEXT             "Finds the next occurrence of text specified in previous search."
+    ID_HELPTOPICS           "Opens Registry Editor Help."
+    ID_MODIFY               "Modifies the value's data."
+    ID_DELETE               "Deletes the selection."
+    ID_RENAME               "Renames the selection."
+    ID_TOGGLE               "Expands or collapses the branch."
+    ID_NEWDWORDVALUE        "Adds a new DWORD value."
+    ID_COPYKEYNAME          "Copies the name of the selected key to the Clipboard."
+    ID_ADDTOFAVORITES       "Adds keys to the Favorites list."
+    ID_REMOVEFAVORITE       "Removes keys from the Favorites list."
+    IDMP_REGISTRY           "Contains commands for working with the whole registry."
+    IDMP_EDIT               "Contains commands for editing values or keys."
+    IDMP_VIEW               "Contains commands for customizing the registry window."
+    IDMP_HELP               "Contains commands for displaying Help for and information about Registry Editor."
+    IDMP_NEW                "Contains commands for creating new keys or values."
+    IDMP_FAVORITES          "Contains commands for accessing frequently used keys."
+END

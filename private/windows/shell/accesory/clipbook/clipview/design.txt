@@ -1,0 +1,17 @@
+Security
+
+There are three things that need to be secured for each Clipbook
+page: the .CLP file for the page, the registry key that links the page name
+with the .CLP file name, and the DDE share that allows DDE access to ClipSrv.
+
+The .CLP file and registry key are should be given these accesses:
+        Local System (services)         Full Control
+        Administrators                  Full Control
+        Everybody                       No Access
+
+The DDE share's security can be set by the user using the DACL editor. The
+default security is:
+        Owner/Creator                   Full Control
+        Everybody                       Read and Link
+
+

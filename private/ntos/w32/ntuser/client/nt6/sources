@@ -1,0 +1,119 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Feb-14-1996 GerardoB Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=NT6
+# daytona works ... NT6 doesn't ...
+ALT_PROJECT=DAYTONA
+
+ALT_PROJECT_TARGET=. 
+# $(ALT_PROJECT)
+
+!include ..\sources.inc
+
+SOURCES=..\res.rc     \
+        ..\acons.c    \
+        ..\btnctl.c   \
+        ..\callback.c \
+        ..\classc.c   \
+        ..\cldib.c    \
+        ..\clenum.c   \
+        ..\clglobal.c \
+        ..\clhook.c   \
+        ..\client.c   \
+        ..\clientw.c  \
+        ..\clinit.c   \
+        ..\clmenu.c   \
+        ..\clmsg.c    \
+        ..\clrect.c   \
+        ..\clres.c    \
+        ..\combo.c    \
+        ..\combodir.c \
+        ..\comboini.c \
+        ..\connect.c  \
+        ..\crecv.c    \
+        ..\csendw.c   \
+        ..\csrstubs.c \
+        ..\drawtext.c \
+        ..\ddemlcli.c \
+        ..\ddemlwp.c  \
+        ..\ddetrack.c \
+                            debug.cpp \
+                            dlg.cpp \
+        dispcb.c      \
+        		    dlgbegin.c \
+        ..\dlgend.c   \
+        		    dlgmgr.c   \
+        ..\dlgmgr2.c  \
+        ..\dlgmgrc.c  \
+        ..\dmmnem.c   \
+        ..\draw.c     \
+        ..\edecrare.c \
+                            edge.cpp \
+        ..\editec.c   \
+        ..\editml.c   \
+        ..\editsl.c   \
+        ..\edmlrare.c \
+        ..\edmlonce.c \
+        ..\edslrare.c \
+        ..\extract.c  \
+        ..\fntsweep.c \
+        ..\getsetc.c  \
+        ..\handles.c  \
+        ..\hdata.c    \
+        ..\help.c     \
+        ..\hsz.c      \
+        ..\instance.c \
+        ..\keybrdc.c  \
+        ..\lb1.c      \
+        ..\lboxctl1.c \
+        ..\lboxctl2.c \
+        ..\lboxctl3.c \
+        ..\lboxmult.c \
+        ..\lboxrare.c \
+        ..\lboxvar.c  \
+                            list.cpp \
+        ..\mdimenu.c  \
+        ..\mdiwin.c   \
+        ..\menuc.c    \
+        ..\menuddc.c  \
+        ..\mmcl.c     \
+        ..\mngrayc.c  \
+        ..\monitor.c  \
+        ..\msgbox.c   \
+        ..\ntstubs.c  \
+        ..\oemxlate.c \
+                                parentinfo.cpp \
+                                persctl.cpp \
+        ..\queuec.c   \
+        ..\random.c   \
+        ..\reader.c   \
+        ..\register.c \
+                                resizedlg.cpp \
+        ..\rtlinit.c  \
+        ..\rtlres.c   \
+        ..\sbapi.c    \
+        ..\statctl.c  \
+        ..\stdptcl.c  \
+        ..\strings.c  \
+        ..\util.c     \
+        ..\winable.c  \
+        ..\winmgrc.c  \
+        ..\wow.c      \
+    ..\wsprintf.c \
+        ..\wstrings.c \
+        ..\xact.c     \
+        ..\clienta.c  \
+        ..\csenda.c   \
+        ..\fareast.c  \
+        ..\imectl.c
+

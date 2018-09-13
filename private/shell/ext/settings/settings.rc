@@ -1,0 +1,158 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SETTINGS DIALOGEX 0, 0, 330, 218
+STYLE DS_CENTER | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "Tahoma", 0, 0, 0x1
+BEGIN
+    LTEXT           "You can use Settings wizards to change your system settings quickly and easily.  For more information on an option, point to it, and then click the option you want.",
+                    IDC_STATIC,19,51,293,22
+    LTEXT           "Image caption text drawn here",IDC_TXT_IMAGE,187,152,
+                    118,40
+    CONTROL         "List1",IDC_LIST_TOPICS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_ALIGNLEFT | LVS_OWNERDRAWFIXED | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_TABSTOP,19,80,
+                    158,110
+    PUSHBUTTON      "&Close",IDC_BTN_CLOSE,271,200,50,14
+    CONTROL         "",IDC_BMP_IMAGE,"Static",SS_BITMAP | SS_CENTERIMAGE,187,
+                    80,120,70
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKRECT,0,194,330,1,
+                    WS_EX_STATICEDGE
+    CONTROL         "",IDC_BMP_BANNER,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,330,40
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKRECT,0,40,330,1,
+                    WS_EX_STATICEDGE
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""msg.rc""\r\n"
+    "#include ""settings.rcv""\r\n"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        TOPMARGIN, 7
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SETTINGS            ICON    DISCARDABLE     "settings.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SPOT_FOCUS          BITMAP  DISCARDABLE     "spot_foc.bmp"
+IDB_SPOT_NORMAL         BITMAP  DISCARDABLE     "spot_nor.bmp"
+IDB_TOPIC_ACCESSIBILITY BITMAP  DISCARDABLE     "access.bmp"
+IDB_TOPIC_HARDWARE      BITMAP  DISCARDABLE     "hardware.bmp"
+IDB_TOPIC_NETWORK       BITMAP  DISCARDABLE     "network.bmp"
+IDB_TOPIC_PRINTERS      BITMAP  DISCARDABLE     "printer.bmp"
+IDB_TOPIC_PROGRAMS      BITMAP  DISCARDABLE     "program.bmp"
+IDB_TOPIC_STARTMENU     BITMAP  DISCARDABLE     "start.bmp"
+IDB_TOPIC_WINLOOK       BITMAP  DISCARDABLE     "winlook.bmp"
+IDB_TOPIC_CPANEL        BITMAP  DISCARDABLE     "cpanel.bmp"
+IDB_BANNER              BITMAP  DISCARDABLE     "banner.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_KBDACCEL ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_ESCAPE,      IDM_ESCAPE,             VIRTKEY, NOINVERT
+    VK_F4,          IDM_CLOSE,              VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURSOR_HAND         CURSOR  DISCARDABLE     "hand.cur"
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "msg.rc"
+#include "settings.rcv"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

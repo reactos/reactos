@@ -1,0 +1,1 @@
+!include $(NTMAKEENV)\makefile.def

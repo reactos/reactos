@@ -1,0 +1,61 @@
+####################
+#
+# Module  TARGETS.MKH
+#
+# Description:
+# This module contains the standard targets that will be present
+# in all makefiles
+#
+####################
+
+!if defined(BUILD_TAG)
+release:  TagFiles GetRelease $(TYPE_MAIN_TARGET) $(COMPONENT_ADDITIONAL_TARGETS) CopyOut
+!else
+release: $(TYPE_MAIN_TARGET) $(COMPONENT_ADDITIONAL_TARGETS) CopyOut
+!endif
+
+Clean:
+    -$(RM_CMD) $(RM_FLAGS) $(TYPE_CLEAN_TARGETS) $(COMPONENT_CLEAN_TARGETS)
+
+CopyOut: $(RELEASE_DIR)
+	$(COPY_CMD) $(COMPONENT_ADDITIONAL_TARGETS) $(TYPE_MAIN_TARGET) $(RELEASE_DIR)\$(COMPONENT_RELEASE_DIR)
+
+TagFiles:
+	@$(TAG_CMD) $(TAG_FLAGS)$(BUILD_TAG):$(RELEASE_TAG) *.??v
+
+GetRelease:
+	@$(GET_CMD) -qo -v$(BUILD_TAG) *.??v
+
+GetTips:
+	@$(GET_CMD) -y *.??v
+
+CopySource: GetRelease $(SOURCE_RELEASE_DIR)
+	@echo copying source files to $(SOURCE_RELEASE_DIR)
+	@$(COPY_CMD) $(COMPONENT_SOURCES) $(SOURCE_RELEASE_DIR)\$(COMPONENT_RELEASE_DIR)
+
+$(RELEASE_DIR)::
+	-@mkdir $(RELEASE_ROOT) >nul
+!if defined(BUILD_TAG)
+    -@mkdir  $(RELEASE_ROOT)\$(BUILD_TAG)
+!endif
+!if defined(SOURCE_BUILD)
+	-@mkdir $(SOURCE_RELEASE_DIR) >nul
+	-@mkdir $(SOURCE_RELEASE_DIR)\$(COMPONENT_RELEASE_DIR) >nul
+!else
+	-@mkdir $(RELEASE_DIR) >nul
+	-@mkdir $(RELEASE_DIR)\$(COMPONENT_RELEASE_DIR) >nul
+!endif
+
+$(SOURCE_RELEASE_DIR)::
+	-@mkdir $(RELEASE_ROOT) >nul
+!if defined(BUILD_TAG)
+    -@mkdir  $(RELEASE_ROOT)\$(BUILD_TAG)
+!endif
+	-@mkdir $(SOURCE_RELEASE_DIR) >nul
+	-@mkdir $(SOURCE_RELEASE_DIR)\$(COMPONENT_RELEASE_DIR) >nul
+
+
+
+
+
+

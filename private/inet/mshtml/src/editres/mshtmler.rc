@@ -1,0 +1,101 @@
+//+----------------------------------------------------------------------------
+//
+//   CGlyph constants
+//
+//----------------------------------------------------------------------------
+
+#include "..\edit\resource.h"
+
+#define IDS_BEGIN_DELIMITER             0
+#define IDS_END_DELIMITER               1
+#define IDS_END_LINE_DELIMITER          2
+
+#include "winver.h"
+#include "ntverp.h"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Editing Component's Resource DLL"
+#define VER_INTERNALNAME_STR        "MSHTMLER"
+#define VER_ORIGINALFILENAME_STR    "MSHTMLER.DLL"
+#define VER_OLESELFREGISTER
+
+#include "common.ver"
+
+
+//Dialog Resources
+forchar.dlg         HTML     "forchar.dlx"
+insimage.dlg        HTML     "insimage.dlx"
+edlink.dlg          HTML     "edlink.dlx"
+
+palette.gif         HTML     "palette.gif"
+
+//Glyph Resources
+wordbreak.gif       HTML    "wordbreak.gif"
+br.gif              HTML    "br.gif"
+leftalign.gif       HTML    "leftalign.gif"
+rightalign.gif      HTML    "rightalign.gif"
+comment.gif         HTML    "comment.gif"
+style.gif           HTML    "style.gif"
+unknown.gif         HTML    "unknown.gif"
+script.gif          HTML    "script.gif"
+area.gif            HTML    "area.gif"
+centeralign.gif     HTML    "centeralign.gif"
+abspos.gif          HTML    "abspos.gif"
+
+
+
+STRINGTABLE
+BEGIN
+IDS_BEGIN_DELIMITER,                 "%%"
+IDS_END_DELIMITER,                   "^^"
+IDS_END_LINE_DELIMITER,              "**"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME                   "OptsHold"
+    IDS_BLOCKFMT_NORMAL            "Normal"
+    IDS_BLOCKFMT_PRE               "Formatted"
+    IDS_BLOCKFMT_ADDRESS           "Address"
+    IDS_BLOCKFMT_H1                "Heading 1"
+    IDS_BLOCKFMT_H2                "Heading 2"
+    IDS_BLOCKFMT_H3                "Heading 3"
+    IDS_BLOCKFMT_H4                "Heading 4"
+    IDS_BLOCKFMT_H5                "Heading 5"
+    IDS_BLOCKFMT_H6                "Heading 6"
+    IDS_BLOCKFMT_OL                "Numbered List"
+    IDS_BLOCKFMT_UL                "Bulleted List"
+    IDS_BLOCKFMT_DIR               "Directory List"
+    IDS_BLOCKFMT_MENU              "Menu List"
+    IDS_BLOCKFMT_DT                "Definition Term"
+    IDS_BLOCKFMT_DD                "Definition"
+    IDS_BLOCKFMT_P                 "Paragraph"
+
+    IDS_EDUNDO,                       "Undo <0s>"
+    IDS_EDREDO,                       "Redo <0s>"
+    IDS_EDUNDONEWCTRL,                "Insert Object"
+    IDS_EDUNDODELETE,                 "Delete Object"
+    IDS_EDUNDOPROPCHANGE,             "Property Change"
+    IDS_EDUNDOMOVE,                   "Move"
+    IDS_EDUNDORESIZE,                 "Resize"
+    IDS_EDUNDODRAGDROP,               "Drop"
+    IDS_EDUNDOALIGN,                  "Alignment"
+    IDS_EDUNDOCENTER,                 "Centering"
+    IDS_EDUNDOSIZETO,                 "Size To"
+    IDS_EDUNDOSPACING,                "Spacing"
+    IDS_EDUNDOARRANGE,                "Arrange"
+    IDS_EDUNDOPASTE,                  "Paste"
+    IDS_EDUNDOCUT,                    "Cut"
+    IDS_EDUNDOTYPING,                 "Typing"
+    IDS_EDUNDOTEXTDELETE,             "Text Delete"
+    IDS_EDUNDOGENERICTEXT,            "Text Operation"
+    IDS_EDUNDOBLOCKDIR,               "Block Direction"
+    IDS_EDUNDOOVERWRITE,              "Overwrite"
+END

@@ -1,0 +1,28 @@
+#ifndef _DD_PDL_
+#define _DD_PDL_ 1
+
+#include "element.pdl"
+
+file dd.pdl
+
+import element.pdl
+
+interface IHTMLDDElement guid:3050f1f2-98b5-11cf-bb82-00aa00bdce0b
+    refprop CDDElement:noWrap
+
+tearoff CDDElement interface:IHTMLDDElement
+
+class CDDElement name:HTMLDDElement \
+            super:CElement primaryinterface:IHTMLDDElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f27f-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f50b-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLDDElement
+
+    property    noWrap  atype:VARIANT_BOOL  dispid:DISPID_A_NOWRAP  type:BYTE \
+                vt:VT_BOOL default:0  get set caa displaybind
+
+#endif _DD_PDL_

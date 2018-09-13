@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=msxml
+MINORCOMP=dtd
+
+ROOT=$(MAKEDIR:\xml\dtd=)
+!include $(ROOT)\common.inc
+
+
+TARGETNAME=dtd	
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES= \
+    xmlnames.cxx \
+    entity.cxx \
+    attdef.cxx \
+    contentmodel.cxx \
+    dtd.cxx \
+    elementdecl.cxx \
+    notation.cxx \
+    dtdstate.cxx\
+    dtdnodefactory.cxx \
+    validationfactory.cxx
+
+INCLUDES= \
+	$(ROOT)\include; \
+	$(ROOT); \
+    $(ROOT)\xml\om; \
+    $(ROOT)\core\util; \
+    $(ROOT)\core\base; \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(ROOT)\include\$(O)\core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(ROOT)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+

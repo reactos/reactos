@@ -1,0 +1,50 @@
+
+#define clsBtn BS_OWNERDRAW|WS_CHILD
+
+#define clsTabGrp (WS_TABSTOP|WS_GROUP)
+
+
+iddBacks DIALOG LOADONCALL MOVEABLE DISCARDABLE 11, 12, 178, 112
+STYLE WS_BORDER | DS_MODALFRAME|WS_CAPTION|WS_DLGFRAME|WS_POPUP|WS_SYSMENU|DS_CONTEXTHELP 
+CAPTION "Select Card Back"
+Font 8, "MS Shell Dlg"
+BEGIN
+	   CONTROL "", IDFACEDOWN1, "button", clsBtn|clsTabGrp,    8,  4, 26, 42
+	   CONTROL "", IDFACEDOWN2, "button", clsBtn,   36,  4, 26, 42
+	   CONTROL "", IDFACEDOWN7, "button", clsBtn,   64,  4, 26, 42
+	   CONTROL "", IDFACEDOWN8, "button", clsBtn,   92,  4, 26, 42
+	   CONTROL "", IDFACEDOWN5, "button", clsBtn,  120,  4, 26, 42
+	   CONTROL "", IDFACEDOWN6, "button", clsBtn,  148,  4, 26, 42
+	   CONTROL "", IDFACEDOWN3, "button", clsBtn,    8, 48, 26, 42
+	   CONTROL "", IDFACEDOWN4, "button", clsBtn,   36,  48, 26, 42
+	   CONTROL "", IDFACEDOWN9, "button", clsBtn,   64,  48, 26, 42
+	   CONTROL "", IDFACEDOWN10, "button", clsBtn,  92,  48, 26, 42
+	   CONTROL "", IDFACEDOWN11, "button", clsBtn, 120,  48, 26, 42
+	   CONTROL "", IDFACEDOWN12, "button", clsBtn, 148,  48, 26, 42 
+	   CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD|WS_GROUP, 44, 94, 40, 14
+	   CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD|WS_GROUP, 94, 94, 40, 14
+END
+
+
+
+iddOptions DIALOG LOADONCALL MOVEABLE DISCARDABLE 50, 31, 134, 101
+CAPTION "Options"
+STYLE WS_BORDER | DS_MODALFRAME|WS_CAPTION|WS_DLGFRAME|WS_POPUP|WS_SYSMENU|DS_CONTEXTHELP 
+Font 8, "MS Shell Dlg"
+BEGIN
+		GROUPBOX 		"&Draw",			-1, 		 			4, 4, 60, 36
+		RADIOBUTTON		"Draw &One",	ideDrawOne,			8, 13, 44, 12,	WS_TABSTOP|WS_GROUP
+		RADIOBUTTON		"Draw &Three"	ideDrawThree,		8, 25, 52, 12
+		GROUPBOX			"&Scoring"		-1,					68, 4, 56, 48, WS_GROUP
+		RADIOBUTTON		"St&andard"		ideScoreStandard,	72, 14, 43, 12, WS_TABSTOP|WS_GROUP
+		RADIOBUTTON		"&Vegas"			ideScoreVegas,		72, 26, 36, 12
+		RADIOBUTTON		"&None"			ideScoreNone,		72, 38, 30, 12
+		AUTOCHECKBOX			"T&imed game"	ideTimedGame,		 8, 44, 52, 12, WS_GROUP
+		AUTOCHECKBOX			"Status &bar"	ideStatusBar,		 8, 56, 52, 12
+		AUTOCHECKBOX			"Out&line dragging" ideOutlineDrag, 8, 68, 76, 12
+		AUTOCHECKBOX			"&Cumulative"	ideKeepScore,		72, 56, 62, 12
+		LTEXT				"Score"		ideScore,		84, 68, 20, 12
+
+		DEFPUSHBUTTON	"OK"				1,						36, 84, 36, 14, WS_GROUP
+		PUSHBUTTON		"Cancel"		2,						76, 84, 40, 14, WS_GROUP
+END

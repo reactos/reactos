@@ -1,0 +1,79 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=debugger
+MINORCOMP=ee
+
+!include ..\sources.inc
+
+TARGETNAME=eecxx$D
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLDEF=eecxx.def
+COFFBASE=eecxx
+
+##
+## If you add a common source file to eecan, BE SURE to
+## add a line in eecan\common.inc at the same time as you
+## add one here!!
+##
+
+SOURCES= \
+    debapi.c    \
+    debbind.c   \
+    deberr.c    \
+    debeval.c   \
+    debfmt.c    \
+    deblex.c    \
+    deblexr.c   \
+    debparse.c  \
+    debsrch.c   \
+    debsup.c    \
+    debsym.c    \
+    debtree.c   \
+    debtyper.c  \
+    debutil.c   \
+    debwalk.c   \
+    dllmain.c   \
+    eecxx.rc
+
+i386_SOURCES=\
+    ldouble.c
+
+PPC_SOURCES=\
+    ldouble.c
+
+UMTYPE=windows
+
+CONDITIONAL_INCLUDES=debops.h
+INCLUDES=\
+    $(O); \
+    ..\od\include; \
+    $(DEBUG_INCLUDES); \
+    $(LANGAPI_ROOT)\undname; \
+    ..\include
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib
+
+PRECOMPILED_INCLUDE=debexpr.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+NTTARGETFILE0=$O\debops.h

@@ -1,0 +1,36 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+#.NOTPARALLEL: world all clean install depend
+
+world all install depend: INCLUDE MISC PROPPAGE MONIKER HTMLDLG HTMLAPP
+
+INCLUDE:
+	@enterdir include ${MAKE} ${MFLAGS}
+
+MISC:
+	@enterdir misc ${MAKE} ${MFLAGS}
+
+PROPPAGE:
+	@enterdir proppage ${MAKE} ${MFLAGS}
+
+MONIKER:
+	@enterdir moniker ${MAKE} ${MFLAGS}
+
+HTMLDLG:
+	@enterdir htmldlg ${MAKE} ${MFLAGS}
+
+HTMLAPP:
+	@enterdir htmlapp ${MAKE} ${MFLAGS}
+
+clean:
+	@enterdir include ${MAKE} ${MFLAGS} $@
+	@enterdir misc ${MAKE} ${MFLAGS} $@
+	@enterdir proppage ${MAKE} ${MFLAGS} $@
+	@enterdir moniker ${MAKE} ${MFLAGS} $@
+	@enterdir htmldlg ${MAKE} ${MFLAGS} $@
+	@enterdir htmlapp ${MAKE} ${MFLAGS} $@
+#	@enterdir scrtoid ${MAKE} ${MFLAGS} $@
+#	@enterdir hta ${MAKE} ${MFLAGS} $@
+
+NOT_USED:
+	@enterdir include ${MAKE} ${MFLAGS} $@

@@ -1,0 +1,57 @@
+<HTML>
+<HEAD>
+<TITLE>Windows 2000 Configure Your Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    // whether the machine is a DC in the middle of upgrade
+    var fInUpgrade = srvwiz.DsRole(1);
+
+    if (fInUpgrade)
+    {
+        // Don't show CYS during DC purgatory
+
+        // this is a mshta work around:
+        // set window initial size to 0x0 to avoid flash, 
+        // then close the window after hta tag
+
+        window.resizeTo(0,0);
+    }
+    else
+    {
+        // set the window's initial size and position
+
+        var x = (window.screen.width - 636)/2;
+        var y = (window.screen.height - 450)/2;
+
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+
+        window.resizeTo(636,450);
+        window.moveTo(x, y);
+    }
+</SCRIPT>
+<HTA:APPLICATION
+     id=SrvWizApp
+     icon=srvwiz.ico
+     maximizeButton=no
+     border=dialog
+     applicationName="Windows 2000 Configure Your Server" 
+     version=1.0
+     singleInstance=yes
+/>
+<SCRIPT LANGUAGE="javascript">
+    if (fInUpgrade)
+    {
+        window.close();
+    }
+</SCRIPT>
+</HEAD>
+
+<frameset id=idFS1 rows="75,*" border=0 frameborder=0>
+    <frame id=idFM1 NAME="top" SRC="top.htm" marginWIDTH="0" marginHEIGHT="0" scrolling="no" frameBORDER="no" noresize />
+    <frameset id=idFS2 cols="165,*" border=0 frameborder=0 onload="home()">
+        <frame id=idFM2 NAME="menu" SRC="menu.htm" marginWIDTH="0" marginHEIGHT="0" scrolling="no" frameBORDER="no" noresize application=yes />
+        <frame id=idFM3 NAME="content" marginWIDTH="0" marginHEIGHT="0" scrolling="auto" frameBORDER="no" noresize application=yes />
+    </frameset>
+</frameset>
+</HTML>

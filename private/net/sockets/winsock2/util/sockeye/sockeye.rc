@@ -1,0 +1,167 @@
+#include "resource.h"
+#include "windows.h"
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 292, 217
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU | 
+    WS_THICKFRAME | WS_CLIPCHILDREN
+CAPTION "SockEye.Exe - WinSock API Browser"
+MENU IDR_MENU1
+FONT 6, "Courier"
+BEGIN
+    CONTROL         "Params",IDM_PARAMS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,2,4,28,10
+    PUSHBUTTON      "Startup",IDC_BUTTON1,34,1,28,16
+    PUSHBUTTON      "Cleanup",IDC_BUTTON2,62,1,28,16
+    PUSHBUTTON      "socket",IDC_BUTTON3,90,1,28,16
+    PUSHBUTTON      "WSASock",IDC_BUTTON4,118,1,28,16
+    PUSHBUTTON      "closesock",IDC_BUTTON5,146,1,28,16
+
+    PUSHBUTTON      "Clear",IDC_BUTTON6,176,1,16,16
+
+    PUSHBUTTON      "",IDC_BUTTON7,194,1,14,16
+    PUSHBUTTON      "",IDC_BUTTON8,208,1,14,16
+    PUSHBUTTON      "",IDC_BUTTON9,222,1,14,16
+    PUSHBUTTON      "",IDC_BUTTON10,236,1,14,16
+    PUSHBUTTON      "",IDC_BUTTON11,250,1,14,16
+    PUSHBUTTON      "",IDC_BUTTON12,264,1,14,16
+    EDITTEXT        IDC_EDIT1,129,19,117,195,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL | 0x1000
+//    LISTBOX         IDC_LIST1,70,20,58,194, LBS_NOINTEGRALHEIGHT |
+//                    WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST1,70,20,58,95, LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST3,70,117,58,95, LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP | LBS_MULTIPLESEL
+    LISTBOX         IDC_LIST2,2,20,65,197,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_DIALOG2 DIALOG DISCARDABLE  10, 10, 223, 192
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Parameters:",55,4,6,42,7
+    LISTBOX         IDC_LIST1,4,16,90,148,LBS_NOINTEGRALHEIGHT | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Value:",56,106,6,30,7
+    COMBOBOX        IDC_COMBO1,106,16,110,47,CBS_SIMPLE | CBS_AUTOHSCROLL |
+                    CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",57,106,66,110,9
+    LTEXT           "",58,106,76,110,9
+    LISTBOX         IDC_LIST2,106,75,110,89,LBS_MULTIPLESEL |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT1,106,85,0,0,ES_MULTILINE | ES_AUTOVSCROLL |
+                    WS_VSCROLL | 0x1000
+    DEFPUSHBUTTON   "OK",IDOK,106,171,47,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,171,47,14
+// help    PUSHBUTTON      "Help",IDC_TB_HELP,4,171,36,14
+END
+
+IDD_DIALOG3 DIALOG DISCARDABLE  0, 0, 203, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "User-defined buttons"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Button number:",55,8,8,54,7
+    LISTBOX         IDC_LIST1,8,18,50,72,LBS_SORT | LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Button function:",56,78,8,58,7
+    LISTBOX         IDC_LIST2,79,18,118,174,LBS_SORT | LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Button Text:",57,8,100,45,7
+    EDITTEXT        IDC_EDIT1,9,110,28,11,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,8,158,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,8,178,50,14
+END
+
+IDD_DIALOG4 DIALOG DISCARDABLE  0, 0, 185, 69
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About SockEye"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,69,50,50,14
+    LTEXT           "WinSock API Browser v1.0",38,80,12,70,7
+    LTEXT           "Copyright (c) 1996  Microsoft Corporation",70,20,30,168,
+                    12
+    ICON            IDI_ICON1,IDC_STATIC1,52,5,18,20
+END
+
+IDD_DIALOG6 DIALOG 6, 18, 192, 173
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Using SockEye"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 66, 157, 60, 14
+    EDITTEXT        IDC_EDIT1, 4, 4, 184, 150, ES_MULTILINE | ES_AUTOVSCROLL |
+                    ES_READONLY | WS_VSCROLL
+END
+
+IDR_MENU1 MENU DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Clear",                      IDM_CLEAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Params",                     IDM_PARAMS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Default values...",          IDM_DEFAULTVALUES
+        MENUITEM SEPARATOR
+        MENUITEM "&User buttons...",            IDM_USERBUTTONS
+//        MENUITEM SEPARATOR
+//        MENUITEM "Log &parameters",             IDM_DUMPPARAMS
+//        POPUP "Log &structures"
+//        BEGIN
+//            MENUITEM "by &fields (all)",            IDM_LOGSTRUCTALLFIELD
+//            MENUITEM "by fields (&non-zero only)",  IDM_LOGSTRUCTNONZEROFIELD
+//            MENUITEM "by &DWORDs/ASCII",            IDM_LOGSTRUCTDWORD
+//            MENUITEM "by n&one",                    IDM_LOGSTRUCTNONE
+//        END
+//        MENUITEM SEPARATOR
+//        MENUITEM "&Show time stamps",           IDM_TIMESTAMP
+        MENUITEM SEPARATOR
+        MENUITEM "Record log &file",            IDM_LOGFILE
+//        MENUITEM SEPARATOR
+//        MENUITEM "Disable handle checking",     IDM_NOHANDLECHK
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Using SockEye...",           IDM_USAGE
+        MENUITEM "&About SockEye...",           IDM_ABOUT
+    END
+END
+
+
+IDI_ICON1               ICON    DISCARDABLE     "SOCKEYE.ICO"
+
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE
+BEGIN
+// help    VK_F1, IDC_F1HELP, VIRTKEY
+    VK_TAB, IDC_PREVCTRL, VIRTKEY, SHIFT
+    VK_TAB, IDC_NEXTCTRL, VIRTKEY
+    VK_RETURN, IDC_ENTER, VIRTKEY
+END
+
+
+#if WINNT
+#include <ntverp.h>
+#else
+#include <ver.h>
+#endif
+
+#define VER_FILEDESCRIPTION_STR     "Microsoft\256 Windows(TM) WinSock Browser"
+#define VER_INTERNALNAME_STR        "sockeye"
+#define VER_ORIGINALFILENAME_STR    "SOCKEYE.EXE"
+
+#define VER_LEGALCOPYRIGHT_STR      "Copyright \251 Microsoft Corporation 1996.  All Rights Reserved."
+
+#define VER_FILETYPE     VFT_APP
+#define VER_FILESUBTYPE  VFT2_UNKNOWN
+
+#include <common.ver>

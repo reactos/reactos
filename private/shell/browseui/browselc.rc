@@ -1,0 +1,1107 @@
+/****************************************************************************************************
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ *                                   DANGER WILL ROBINSON                                           *
+ *                                                                                                  *
+ *                                                                                                  *
+ *       LOCALISABLE RESOURCES ONLY - LOCALISABLE RESOURCES ONLY - LOCALISABLE RESOURCES ONLY       *
+ *                                                                                                  *
+ * This file must ONLY contain resources that need LOCALISATION. Any non-localised resources should *
+ * go into Browseui.rc. Abuse of this will be on pain of death.                                     *
+ *                                                                                                  *
+ * 02/27/98 - CDturner                                                                              *
+ *                                                                                                  *
+ ****************************************************************************************************/
+
+#include <windows.h>
+#include <shlobj.h>     // for FCIDM_SHVIEWFIRST
+
+#include <mshtmcid.h>
+#include <shdocvw.h>
+
+#include <shellp.h>
+#include "resource.h"
+#include "itbar.h"
+#include <platform.h>
+
+#include "browseui.rcv"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESKTOP                 "Desktop"
+    IDS_WINDOWSNT               "Windows"
+#ifndef UNIX
+    IDS_ABOUTWINDOWS            "&About Windows"
+    IDS_ABOUTWINDOWS98          "&About Windows 98"
+    IDS_ABOUTWINDOWSNT          "&About Windows NT"
+#else
+    IDS_ABOUTWINDOWS            "&About Internet Explorer"
+    IDS_ABOUTWINDOWS98          "&About Internet Explorer"
+    IDS_ABOUTWINDOWSNT          "&About Internet Explorer"
+#endif
+    IDS_TITLE                   "Microsoft Internet Explorer"
+    IDS_WORKINGOFFLINETIP       "You are currently working offline. To connect, click Work Offline on the File menu."
+    IDS_WORKINGOFFLINE          "[Working Offline]"
+    IDS_CHANNEL                 "Channels"
+    IDS_CHANBAR_SHORTCUT_MSG    "Do you want the Channel bar to be displayed next time you restart your computer?"
+    IDS_CHANBAR_SHORTCUT_TITLE  "Channel Bar"
+    IDS_CHANNELS_FILEEXISTS     "The name you have entered for the channel already exists on your Channel bar.  Would you like to overwrite it?"
+
+    IDS_SMALLICONS              "Small icons"
+    IDS_LARGEICONS              "Large icons"
+
+    IDS_TEXTLABELS              "Show text labels"
+    IDS_PARTIALTEXT             "Selective text on right"
+    IDS_NOTEXTLABELS            "No text labels"
+
+    IDS_FAVORITEBROWSE          "Click the folder to which you want to move the selected files."
+
+    IDS_FAVS_TITLE              "Organize Favorites"
+    IDS_FAVS_FOLDER             "&Folder:"
+    IDS_FAVS_BROWSETEXT         "Internet Explorer will create a shortcut to this page on your Favorites menu and use your Local Intranet Zone security settings."
+    IDS_FAVS_NEWFOLDERBUTTON    "Ne&w Folder..."
+    IDS_FAVS_NAME               "&Name:"
+    IDS_FAVS_ADVANCED           "&Create in >>"
+    IDS_FAVS_SUBSCRIBE          "&Subscribe"
+    IDS_FAVS_SUBSCRIBE_TEXT     "You can also subscribe to this site to monitor it for changes or download its content."
+    IDS_FAVS_ADDTOFAVORITES     "Add to Favorites"
+    IDS_FAVS_MORE               "&More Favorites..."
+    IDS_FAVS_FILEEXISTS         "The name you have entered for the shortcut already exists on your Favorites menu.  Would you like to overwrite it?"
+    IDS_FAVS_FNTOOLONG          "The name you have entered for the favorite item is too long."
+    IDS_FAVS_SAVE               "Create &in:"
+    IDS_FAVS_INVALIDFN          "A file name cannot contain any of the following characters:\n\t \\ / :  * ? "" < > | "
+
+    IDS_NEED_CHANNEL_PASSWORD   "This channel is password-protected.  \
+You will not be able to update a subscription to this channel without a \
+username and password.  If you know your username and password, click \
+Customize, and use the wizard to enter them.  If you don't want to \
+subscribe to this channel, click No Subscription."
+
+// IDS_FAV_UNABLETOCREATE is FormatMessage'd by SHDOCVW, so we must be
+// explicit about the charset since we don't know what charset SHDOCVW is.
+#ifdef UNICODE
+    // Need to limit wide char strings to 1023 characters to avoid Win98 fault.
+    IDS_FAV_UNABLETOCREATE      "Unable to create '%1!.1023ls!':\n\n%2!.1023ls!"
+#else
+    IDS_FAV_UNABLETOCREATE      "Unable to create '%1!hs!':\n\n%2!hs!"
+#endif
+    IDS_SUBS_UNKNOWN            "Unknown"
+
+    IDS_EDITPAGE                "E&dit"
+
+    IDS_NEW_WINDOW              "&New Window \tCtrl+N"
+END
+// deskbar strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CONFIRMCLOSETITLE   "Confirm Toolbar Close"
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CONFIRMCLOSEBAND    "You have chosen to close the ""%1!.1023ls!"" toolbar."
+#else
+    IDS_CONFIRMCLOSEBAND    "You have chosen to close the ""%1"" toolbar."
+#endif
+    IDS_CONFIRMCLOSEBAR     "You have chosen to close a toolbar window."
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CONFIRMCLOSETEXT    "%1!.1023ls!\n\nTo add a toolbar to your desktop, right-click an existing toolbar, point to Toolbars, and then click an item."
+#else
+    IDS_CONFIRMCLOSETEXT    "%1\n\nTo add a toolbar to your desktop, right-click an existing toolbar, click Toolbars, and then click an item."
+#endif
+    // DOC: .hlp should give reasons create might fail, including
+    // special-case of 'recycle bin'
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CANTISFBAND         "Cannot create toolbar for '%1!.1023ls!'"
+#else
+    IDS_CANTISFBAND         "Cannot create toolbar for '%1'"
+#endif
+    // This string is used only by non-NT5 systems
+    IDS_EXPLORING           "Exploring"
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_NOTADIR             "The path '%1!.1023ls!' does not exist or is not a directory."
+#else
+    IDS_NOTADIR             "The path '%1' does not exist or is not a directory."
+#endif
+    IDS_CABINET             "Windows Explorer"
+    IDS_DISCONNECTERROR     "Disconnect Net Drive"
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_NETERROR            "The network provider %2!.1023ls! reported the following error: %3!.1023ls!(%1!d!)."
+#else
+    IDS_NETERROR            "The network provider %2 reported the following error: %3(%1!d!)."
+#endif
+#ifndef UNIX
+    IDS_EXCEPTIONMSGSH          "There was an internal error and one of the windows you were using will be closed."
+#else
+    IDS_EXCEPTIONMSGSH          "Internal Error: One of the windows you were using will be closed."
+#endif
+    IDS_EXCEPTIONMSG            "There was an internal error."
+    IDS_EXCEPTIONNOMEMORY       "You do not have enough memory to complete this operation. Quit one or more programs, and then try again."
+
+    IDS_TREETITLE           "Folders"
+
+    IDS_ERROR_GOTOA              "Cannot find '%1!hs!'. Make sure the path or Internet address is correct."
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_ERROR_GOTOW              "Cannot find '%1!.1023ls!'. Make sure the path or Internet address is correct."
+    IDS_INTERNETOPTIONS         "Internet &Options..."
+    IDS_FOLDEROPTIONS       "Folder Options..."
+    IDS_CLOSEANYWAY         "This browser window (or ActiveX control in this page) is busy.\nClosing this window may cause some problems.\n\nDo you want to close it anyway?"
+
+    IDS_MIXEDZONE        " (Mixed)"
+    IDS_UNKNOWNZONE      "Unknown Zone"
+
+    IDS_CANCELFILEDOWNLOAD      "You currently have a file download in progress.  Working offline will cancel the download.\nDo you want to cancel the file download?"
+    IDS_FILEDOWNLOADCAPTION     "File Download"
+END
+
+// itbar strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    // For drag and drop to the toolbar
+    IDS_SETHOME_TITLE           "Home Page"
+    IDS_SETHOME_TEXT            "Would you like to set your home page to ""%s""?"
+    IDS_SETSEARCH_TITLE         "Search Page"
+    IDS_SETSEARCH_TEXT          "Would you like to set your search page to ""%s""?"
+    IDS_ALREADYAUTOHIDEBAR  "A toolbar is already hidden on this side of your screen.\nYou can have only one auto-hide toolbar per side."
+    IDS_WEBBARTITLE         "Toolbar"       // singular
+    IDS_WEBBARSTITLE        "Toolbars"      // plural
+END
+
+// address bar string
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ADDRBAND_ACCELLERATOR "D"
+END
+
+// itbar string
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_IE_TB_LABELS    "|Back|Forward|Stop|Refresh|Home|Search|Favorites|\
+Print|Size|Edit|Tools|Tools|History|Mail|Full Screen|Discuss||"
+
+    IDS_SHELL_TB_LABELS "|Back|Forward|Favorites|Add to Favorites|\
+Tree View|Cut|Copy|Paste|Undo|Redo|Delete|New|Open|Save|Find|\
+Properties|Help|Zoom|Zoom|Print|Large Icons|Small Icons|List|\
+Details|Label1|Label2|Label3|Label4|Up|Map Drive|Disconnect|\
+New Folder|Views|Update All|Update Selection|Create|Dial|\
+Large Icons|List|Similarity|Details|Sync|Sync All|Folders|\
+Move To|Copy To|Folder Options||"
+    IDS_WEB_TB_TEXTROWS   "1"
+    IDS_SHELL_TB_TEXTROWS "2"
+    IDS_TB_WIDTH_EXTRA_HIRES  "4"
+    IDS_TB_WIDTH_EXTRA_LORES  "4"
+    IDS_ADDRESS_TB_LABELS "|Go||"
+    IDS_GO_TOOLTIP      "Go to ""%s"""
+    IDS_ELLIPSES        "..."
+    IDS_SEARCHFOR       "Search for ""%s"""
+
+    // Note that this must use a search keyword in shdocvw's IDS_URL_SEARCH_KEY
+    IDS_SEARCHFORCMD    "Search %s"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SM_SEARCHASSIST         "Search Assistant"
+    IDS_SM_SEARCHASSIST_HELP    "Opens the Search Assistant"
+    IDS_SM_SEARCHCFG            "Customize search"
+    IDS_SM_SEARCHCFG_HELP       "Customize your search settings"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ALLUSER_WARNING "Modifying this folder will affect all users who log on to this computer. Do you want to continue?"
+    IDS_ALLUSER_WARNING_TITLE "Warning"
+END
+
+// strings for explorer bar buttons
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifndef FAVORITESTOSHDOCVW
+    IDS_FAVS_BAR_LABELS   "|Add|Organize||\0"
+    IDS_HIST_BAR_LABELS "|View||\0"
+#endif
+    IDS_SEARCH_BAR_LABELS "|&New|Ne&xt|Customi&ze||\0"
+    IDS_CACHE_BAR_LABELS  "|Options||\0"
+    IDS_BANDSITE_CLOSE_LABELS "|Auto-hide|Close||\0"
+END
+
+// tooltips for itbar
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EDITWITH                "E&dit with %s"
+    IDS_TT_PREVIOUSFOLDER       "Up"
+    IDS_TT_NAVIGATEBACK         "Back"
+    IDS_TT_NAVIGATEFORWARD      "Forward"
+    IDS_TT_FAVORITES            "Favorites"
+    IDS_TT_DRIVES               "Go to a different folder"
+    IDS_TT_VIEWTREE             "Show/Hide folders"
+#ifdef UNIX
+    IDS_SHURL_ERR_NOASSOC       "This file does not have a program associated with it."
+#endif
+    // Shell Name Space Parsing Errors
+    IDS_SHURL_ERR_TITLE              "Address Bar"
+#ifdef UNICODE
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_SHURL_ERR_PARSE_FAILED       "Cannot find the file or item '%1!.1023ls!'.  Make sure the path and file name are correct.  Type 'go <SearchText>' to use AutoSearch."
+    IDS_SHURL_ERR_PARSE_NOTALLOWED   "Access to the resource '%1!.1023ls!' has been disallowed."
+#else
+    IDS_SHURL_ERR_PARSE_FAILED       "Cannot find the file or item '%1!hs!'.  Make sure the path and file name are correct.  Type 'go <Searchtext>' to use AutoSearch."
+    IDS_SHURL_ERR_PARSE_NOTALLOWED   "Access to the resource '%1!hs!' has been disallowed."
+#endif
+END
+
+// qlinks strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_QLAUNCHAPPDATAPATH   "Microsoft\\Internet Explorer\\Quick Launch"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWFSBANDTITLE "Choose a folder, or type an Internet address"
+    IDS_NEWFSBANDCAPTION "New Toolbar"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COMPLETIONS     "Completions"
+END
+
+// Shell Menus
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACC_OPEN            "Open"
+    IDS_ACC_CLOSE           "Close"
+    IDS_ACC_EXEC            "Execute"
+    IDS_ACC_APP             "Application"
+    IDS_ACC_APPMB           "Application Menu Bar"
+    IDS_ACC_SEP             "Separator"
+    IDS_ACC_CHEVRON         "Show Hidden Items"
+    IDS_ACC_ALT             "Alt + "
+    IDS_CHEVRONTIP          "Favorites that you have not used recently have\nbeen hidden. Click here to see them."
+    IDS_CHEVRONTIPTITLE     "Where have my Favorites gone?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_QLINKS              "Links" // There are two 'Links" for localization. These
+
+    IDS_BAND_ADDRESS        "Address"       // w/o mnemonic
+    IDS_BAND_ADDRESS2       "A&ddress"
+
+    IDS_BAND_SEARCH         "Search"
+    IDS_URL_LOGO                "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=logo"
+
+    IDS_CLOSE                   "Close"
+    IDS_MINIMIZE                "Minimize"
+    IDS_RESTORE                 "Restore"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EMPTY               "(Empty)"
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MH_DRIVELIST       "History list"
+    IDS_MH_MENU_FILE       "Contains commands for working with the selected items."
+    IDS_MH_EDIT            "Contains edit commands."
+    IDS_MH_VIEW            "Contains commands for manipulating the view."
+    IDS_MH_TOOLS           "Contains tools commands." // for Win9x compat
+    IDS_MH_MENU_EXPLORE    "Contains commands for browsing to various pages."
+    IDS_MH_MENU_HELP       "Contains commands for displaying Help."
+    IDS_MH_VIEWOFFLINE     "Allows you to view offline Web pages while not connected."
+
+    IDS_MH_FILECLOSE       "Closes the window."
+    IDS_MH_LINK            "Creates shortcuts to the selected items."
+    IDS_MH_DELETE          "Deletes the selected items."
+    IDS_MH_RENAME          "Renames the selected item."
+    IDS_MH_PROPERTIES      "Displays the properties of the selected items."
+    IDS_MH_HELPABOUT       "Displays program information, version number, and copyright."
+    IDS_MH_HELPTIPOFTHEDAY "Displays the Tip of the Day."
+    IDS_MH_NAVIGATEBACK    "Goes to the previous page."
+    IDS_MH_NAVIGATEFORWARD "Goes to the next page."
+    IDS_MH_PREVIOUSFOLDER  "Goes up one level."
+    IDS_MH_VIEWTOOLBAR     "Shows or hides toolbars."
+    IDS_MH_VIEWTOOLS       "Displays the Standard Buttons toolbar."
+    IDS_MH_VIEWADDRESS     "Displays the Address bar."
+    IDS_MH_VIEWLINKS       "Displays the Quick Links bar."
+    IDS_MH_VIEWMENU        "Displays the menu."
+    IDS_MH_VIEWAUTOHIDE    "Auto-hide the toolbar."
+    IDS_MH_VIEWTEXTLABELS  "Adds a text label under each toolbar button."
+    IDS_MH_VIEWSTATUSBAR   "Shows or hides the status bar."
+    IDS_MH_VIEWBROWSERBARS "Shows or hides an Explorer bar."
+    IDS_MH_VBBSEARCHBAND    "Shows the Search bar."         // explorer bar
+    IDS_MH_VBBFAVORITESBAND "Shows the Favorites bar."      // explorer bar
+    IDS_MH_VBBHISTORYBAND   "Shows the History bar."        // explorer bar
+    IDS_MH_VBBEXPLORERBAND  "Shows the Folders bar."    // explorer bar
+
+    IDS_MH_BROWSEROPTIONS  "Enables you to change settings."
+    // IDS_MH_RECENTFIRST      "Revisits this location."
+    IDS_MH_MENU_FAVORITES  "Displays the contents of your Favorites folder."
+    IDS_MH_ADDTOFAVORITES  "Adds the current page to your Favorites list."
+    IDS_MH_FAVS_MORE       "Displays more items in your Favorites folder."
+    IDS_MH_STARTPAGE       "Goes to your home page."
+    IDS_MH_UPDATEPAGE      "Opens the product news page."
+    IDS_MH_CHANNELGUIDE    "Opens the Channel Guide Web page."
+
+    IDS_MH_UPDATESUBSCRIPTIONS  "Updates all offline content."
+
+    IDS_MH_FAVORITES       "Opens the Favorites folder."
+    IDS_MH_FAVORITE_ITEM   "Opens this item in your Favorites folder."
+
+    IDS_MH_MAILANDNEWS      "Contains commands for using your Internet mail and newsreader programs."
+    IDS_MH_MAIL             "Opens your Internet e-mail program."
+    IDS_MH_NEWS             "Opens your Internet newsreader program."
+    IDS_MH_NEWMESSAGE       "Creates a new mail message."
+    IDS_MH_SENDLINK         "Sends a link to this page in an e-mail message."
+    IDS_MH_SENDDOCUMENT     "Sends this page in the body of an e-mail message."
+    (MH_ITEMS+FCIDM_COPY)   "Copies the current selection onto the Clipboard."
+    (MH_ITEMS+FCIDM_MOVE)   "Removes the current selection and copies it onto the Clipboard."
+    (MH_ITEMS+FCIDM_PASTE)  "Inserts the items you have copied or cut into the selected location."
+    (MH_ITEMS+FCIDM_SELECTALL) "Selects all items on this page."
+    (MH_ITEMS+FCIDM_REFRESH)   "Refreshes the contents of the current page."
+    (MH_ITEMS+FCIDM_STOP)   "Stops the current page from loading."
+    IDS_MH_CONTACTS         "Opens your Contacts Manager."
+    IDS_MH_CALENDAR         "Opens your Calendar."
+    IDS_MH_TASKS            "Opens your Task list."
+    IDS_MH_JOURNAL          "Opens your Journal."
+    IDS_MH_NOTES            "Opens Notes."
+    IDS_MH_MYCOMPUTER       "Opens My Computer."
+    IDS_MH_CALL             "Opens your Internet call and meeting program."
+    IDS_MH_CONNECT          "Connects to a network drive."
+    IDS_MH_DISCONNECT       "Disconnects from a network drive."
+
+    (MH_ITEMS+IDM_LAUNCHDEBUGGER) "Opens script debugger."
+    (MH_ITEMS+IDM_BREAKATNEXT)    "Jumps to script debugger before next script statement is executed."
+
+    IDS_MH_EDITPAGE         "Edits this page."
+    IDS_MH_THEATER          "Maximizes window to full screen."
+    IDS_MH_VIEWTOOLBARCUSTOMIZE "Customizes the toolbar."
+    IDS_MH_ENCODING         "Specifies the character set to use for displaying this Web page."
+    IDS_MH_VIEWFONTS        "Specifies the relative size of text displayed in pages."
+
+    IDS_MH_RESETWEBSETTINGS "Resets your Web settings to their Internet Explorer defaults."
+
+END
+
+// plugUI strings for menu bands
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ADDRESSBANDTEXT         "&Address"
+    IDS_LINKSBANDTEXT           "&Links"
+END
+
+// Strings for Fortezza menu
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FORTEZZA_MENU       "&Fortezza"
+    IDS_FORTEZZA_LOGIN      "Log &In"
+    IDS_FORTEZZA_LOGOUT     "Log &Out"
+    IDS_FORTEZZA_CHANGE     "&Change Personality"
+END
+
+// Strings for the Progress Dialog
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIMEEST_DAYSHOURS   "%1!d! Days and %2!d! hours Remaining"
+    IDS_TIMEEST_DAYHOURS    "%1!d! Day and %2!d! hours Remaining"
+    IDS_TIMEEST_DAYSHOUR    "%1!d! Days and %2!d! hour Remaining"
+    IDS_TIMEEST_DAYHOUR     "%1!d! Day and %2!d! hour Remaining"
+    IDS_TIMEEST_HOURSMINS   "%1!d! Hours and %2!d! Minutes Remaining"
+    IDS_TIMEEST_HOURSMIN    "%1!d! Hours and %2!d! Minute Remaining"
+    IDS_TIMEEST_HOURMINS    "%1!d! Hour and %2!d! Minutes Remaining"
+    IDS_TIMEEST_HOURMIN     "%1!d! Hour and %2!d! Minute Remaining"
+    IDS_TIMEEST_MINUTES     "%d Minutes Remaining"
+    IDS_TIMEEST_SECONDS     "%d Seconds Remaining"
+    IDS_CANTSHUTDOWN        "Windows is currently in the middle of a long operation.\n\nEither wait for the operation to finish, or cancel it before you quit Windows."
+    IDS_DEFAULT_CANCELPROG  "Cancelling..."
+    IDS_TITLEBAR_PROGRESS   "%d%% Completed"
+END
+
+MENU_MNFOLDERCONTEXT MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "Sort &by Name", MNIDM_RESORT
+    END
+END
+
+
+// BrowserBand (IWebBrowser band)
+MENU_BROWBAND MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Refresh", IDM_BROWBAND_REFRESH
+        MENUITEM "&Open in Window", IDM_BROWBAND_OPENNEW
+    END
+END
+
+MENU_DESKBARAPP MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+
+        POPUP "&Toolbars", -1
+        BEGIN
+            //MENUITEM "&Favorites", DBIDM_FAVORITESBAND
+            MENUITEM "&Desktop", DBIDM_DESKTOPBAND
+            MENUITEM "&Quick Launch", DBIDM_LAUNCHBAND
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&New Toolbar...", DBIDM_NEWFOLDERBAND
+        END
+    END
+END
+
+// BandSite
+// this goes at bottom...
+MENU_BANDSITE2 MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Close", BSIDM_CLOSEBAND
+        MENUITEM "Disable Add, Close, Drag and Drop (IEAK)", BSIDM_IEAK_DISABLE_DDCLOSE
+        MENUITEM "Disable Resizing (IEAK)", BSIDM_IEAK_DISABLE_MOVE
+    END
+END
+
+// this goes at top...
+MENU_BANDSITE1 MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Sho&w Title", BSIDM_SHOWTITLEBAND
+    END
+END
+
+MENU_ISFBAND MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&View", -1
+        BEGIN
+            MENUITEM "&Logos", ISFBIDM_LOGOS
+            MENUITEM "Lar&ge", ISFBIDM_LARGE
+            MENUITEM "S&mall", ISFBIDM_SMALL
+        END
+        MENUITEM "Show Te&xt", ISFBIDM_SHOWTEXT
+        MENUITEM "Re&fresh", ISFBIDM_REFRESH
+        MENUITEM "&Open", ISFBIDM_OPEN
+    END
+END
+
+
+MENU_WEBBAR MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Always on Top"   , IDM_AB_TOPMOST
+        MENUITEM "A&uto-Hide", IDM_AB_AUTOHIDE
+
+#ifdef DEBUG
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "(debug) &Close All"   , IDM_AB_CLOSE
+#endif
+    END
+END
+
+MENU_MAILNEWS MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "", MENU_MAILNEWS
+    BEGIN
+        MENUITEM "Read &Mail",      FCIDM_MAIL
+        MENUITEM "Ne&w Message...", FCIDM_NEWMESSAGE
+        MENUITEM "Send a &Link...", FCIDM_SENDLINK
+        MENUITEM "Send &Page...", FCIDM_SENDDOCUMENT
+        MENUITEM "", FCIDM_MAILNEWSSEPARATOR, MFT_SEPARATOR
+        MENUITEM "Read &News",      FCIDM_NEWS
+    END
+END
+
+MENU_ITOOLBAR MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "", MENU_ITOOLBAR
+    BEGIN
+        MENUITEM "&Menu Bar",            FCIDM_VIEWMENU
+        MENUITEM "&Standard Buttons",    FCIDM_VIEWTOOLS
+        MENUITEM "&Address Bar",         FCIDM_VIEWADDRESS
+        MENUITEM "&Links",               FCIDM_VIEWLINKS
+        MENUITEM "", FCIDM_VIEWCONTEXTMENUSEP, MFT_SEPARATOR
+        MENUITEM "Auto-&Hide",           FCIDM_VIEWAUTOHIDE
+        MENUITEM "&Customize...",        FCIDM_VIEWTOOLBARCUSTOMIZE
+        MENUITEM "&Text Labels",         FCIDM_VIEWTEXTLABELS
+        MENUITEM "&Go Button",           FCIDM_VIEWGOBUTTON
+    END
+END
+
+MENU_TBMENU MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "", MENU_TBMENU
+    BEGIN
+        MENUITEM "", FCIDM_VIEWCONTEXTMENUSEP, MFT_SEPARATOR
+        MENUITEM "&Customize...",           FCIDM_VIEWTOOLBARCUSTOMIZE
+    END
+END
+
+
+
+MENU_SM_CONTEXTMENU MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "", MENU_SM_CONTEXTMENU
+    BEGIN
+        MENUITEM "&Open",              SMIDM_OPEN
+        MENUITEM "O&pen All Users",    SMIDM_OPENCOMMON
+        MENUITEM "&Explore",           SMIDM_EXPLORE
+        MENUITEM "E&xplore All Users", SMIDM_EXPLORECOMMON
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Delete",            SMIDM_DELETE
+        MENUITEM "Rena&me",            SMIDM_RENAME
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "P&roperties",        SMIDM_PROPERTIES
+    END
+END
+
+MENU_AC_CONTEXTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP "", MENU_AC_CONTEXTMENU
+    BEGIN
+        MENUITEM "&Undo",       IDM_AC_UNDO
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Cu&t",        IDM_AC_CUT
+        MENUITEM "&Copy",       IDM_AC_COPY
+        MENUITEM "&Paste",      IDM_AC_PASTE
+        MENUITEM "&Delete",     IDM_AC_DELETE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Select &All", IDM_AC_SELECTALL
+    END
+END
+
+#ifdef ENABLE_CHANNELPANE
+#error need to add menu item for channels band to POPUP_EXPLORERBAR def below
+#endif
+
+#ifndef UNIX
+#define POPUP_EXPLORERBAR                                           \
+    POPUP "&Explorer Bar",                  FCIDM_VIEWBROWSERBARS   \
+    BEGIN                                                           \
+        MENUITEM "&Search\tCtrl+E",         FCIDM_VBBSEARCHBAND     \
+        MENUITEM "&Favorites\tCtrl+I",      FCIDM_VBBFAVORITESBAND  \
+        MENUITEM "&History\tCtrl+H",        FCIDM_VBBHISTORYBAND    \
+        MENUITEM "F&olders",                FCIDM_VBBEXPLORERBAND   \
+    /* AddInfoMenu menus go here: pos-2, idm+FCIDM_VBBDYNFIRST */   \
+        MENUITEM "",                        FCIDM_VBBPLACEHOLDER    \
+    END                                                             \
+// (end #define POPUP_EXPLORERBAR)
+#else
+#define POPUP_EXPLORERBAR                                           \
+    POPUP "&Explorer Bar",                  FCIDM_VIEWBROWSERBARS   \
+    BEGIN                                                           \
+        MENUITEM "&Search\tAlt+C",         FCIDM_VBBSEARCHBAND     \
+        MENUITEM "&Favorites\tAlt+I",      FCIDM_VBBFAVORITESBAND  \
+        MENUITEM "&History\tAlt+Y",        FCIDM_VBBHISTORYBAND    \
+        MENUITEM "F&olders",                FCIDM_VBBEXPLORERBAND   \
+    /* AddInfoMenu menus go here: pos-2, idm+FCIDM_VBBDYNFIRST */   \
+        MENUITEM "",                        FCIDM_VBBPLACEHOLDER    \
+    END                                                             \
+// (end #define POPUP_EXPLORERBAR)
+#endif
+
+#define POPUP_GO_IE4                                                    \
+    POPUP "&Go",           FCIDM_MENU_EXPLORE                           \
+    BEGIN                                                               \
+        MENUITEM "&Back\tAlt+Left Arrow",       FCIDM_NAVIGATEBACK      \
+        MENUITEM "&Forward\tAlt+Right Arrow",   FCIDM_NAVIGATEFORWARD   \
+        MENUITEM "&Up One Level",               FCIDM_PREVIOUSFOLDER    \
+        MENUITEM "", FCIDM_LINKSSEPARATOR,      MFT_SEPARATOR           \
+        MENUITEM "&Home Page\tAlt+Home",        FCIDM_STARTPAGE         \
+        MENUITEM "Channel &Guide",              FCIDM_CHANNELGUIDE      \
+        MENUITEM "&Search the Web",             FCIDM_SEARCHPAGE        \
+        MENUITEM "", -1, MFT_SEPARATOR                                  \
+        MENUITEM "&Mail",                       FCIDM_MAIL              \
+        MENUITEM "&News",                       FCIDM_NEWS              \
+        MENUITEM "My &Computer",                FCIDM_MYCOMPUTER        \
+        MENUITEM "&Address Book",               FCIDM_CONTACTS          \
+        MENUITEM "Ca&lendar",                   FCIDM_CALENDAR          \
+        MENUITEM "&Tasks",                      FCIDM_TASKS             \
+        MENUITEM "&Journal",                    FCIDM_JOURNAL           \
+        MENUITEM "N&otes",                      FCIDM_NOTES             \
+        MENUITEM "&Internet Call",              FCIDM_CALL              \
+    END                                                                 \
+// (end #define POPUP_GO)
+
+#define POPUP_GO                                                        \
+    POPUP "G&o To",                             FCIDM_MENU_EXPLORE      \
+    BEGIN                                                               \
+        MENUITEM "&Back\tAlt+Left Arrow",       FCIDM_NAVIGATEBACK      \
+        MENUITEM "&Forward\tAlt+Right Arrow",   FCIDM_NAVIGATEFORWARD   \
+        MENUITEM "&Up One Level",               FCIDM_PREVIOUSFOLDER    \
+        MENUITEM "", FCIDM_LINKSSEPARATOR,      MFT_SEPARATOR           \
+        MENUITEM "&Home Page\tAlt+Home",        FCIDM_STARTPAGE         \
+    END                                                                 \
+// (end #define POPUP_GO)
+
+
+#define POPUP_FAVORITES                                                             \
+    POPUP "F&avorites",                     FCIDM_MENU_FAVORITES                    \
+    BEGIN                                                                           \
+        MENUITEM "&Add to Favorites...",    FCIDM_ADDTOFAVORITES                    \
+        MENUITEM "&Organize Favorites...",  FCIDM_ORGANIZEFAVORITES                 \
+        MENUITEM "", -1, MFT_SEPARATOR                                              \
+        MENUITEM "(Empty)",                 FCIDM_FAVPLACEHOLDER                    \
+    END                                                                             \
+// (end #define POPUP_FAVORITES)
+
+
+#ifndef UNIX
+// This menu for Win9x compat
+#define POPUP_9XTOOLS                                                   \
+    POPUP "&Tools", FCIDM_MENU_TOOLS                                    \
+    BEGIN                                                               \
+        POPUP "&Find", FCIDM_MENU_FIND                                  \
+        BEGIN                                                           \
+            MENUITEM "", -1, MFT_SEPARATOR                              \
+        END                                                             \
+        MENUITEM "", FCIDM_TOOLSSEPARATOR,      MFT_SEPARATOR           \
+        MENUITEM "Map &Network Drive...",        FCIDM_CONNECT          \
+        MENUITEM "&Disconnect Network Drive...", FCIDM_DISCONNECT       \
+        MENUITEM "&Synchronize...",              FCIDM_UPDATESUBSCRIPTIONS \
+        MENUITEM "", -1, MFT_SEPARATOR                                  \
+        MENUITEM "Folder &Options...",          FCIDM_BROWSEROPTIONS    \
+        MENUITEM "&Internet Options...",        FCIDM_FTPOPTIONS        \
+    END                                                                 \
+// (end #define POPUP_9XTOOLS)
+#endif
+
+
+MENU_FULL MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File", FCIDM_MENU_FILE
+    BEGIN
+#ifndef UNIX
+        MENUITEM "Create &Shortcut",            FCIDM_LINK ,, MFS_GRAYED
+#endif
+        MENUITEM "&Delete",                     FCIDM_DELETE
+        MENUITEM "Rena&me",                     FCIDM_RENAME
+        MENUITEM "P&roperties",                 FCIDM_PROPERTIES
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Work Offline",               FCIDM_VIEWOFFLINE
+
+#ifdef TEST_AMBIENTS
+        MENUITEM "&Local Offline (Debug)",      FCIDM_VIEWLOCALOFFLINE
+        MENUITEM "Local Si&lent (Debug)",       FCIDM_VIEWLOCALSILENT
+#endif // TEST_AMBIENTS
+
+#ifndef UNIX
+        MENUITEM "&Close",                      FCIDM_FILECLOSE
+#else
+        MENUITEM "&Close\tAlt+F4",              FCIDM_FILECLOSE
+#endif
+
+    END
+    POPUP "&Edit", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                FCIDM_MOVE ,, MFS_GRAYED
+        MENUITEM "&Copy\tCtrl+C",               FCIDM_COPY ,, MFS_GRAYED
+    END
+    POPUP "&View", FCIDM_MENU_VIEW
+    BEGIN
+        POPUP "&Toolbars",                    FCIDM_VIEWTOOLBAR
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Status &Bar",                 FCIDM_VIEWSTATUSBAR
+        POPUP_EXPLORERBAR
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP_GO
+
+        MENUITEM "&Refresh",                    FCIDM_REFRESH
+#ifndef UNIX
+        MENUITEM "&Java Console",               FCIDM_JAVACONSOLE
+        MENUITEM "Folder &Options...",          FCIDM_BROWSEROPTIONS
+        MENUITEM "&Internet Options...",        FCIDM_FTPOPTIONS
+#else
+        MENUITEM "Internet &Options...",          FCIDM_BROWSEROPTIONS
+#endif
+    END
+
+    POPUP_GO_IE4
+
+    POPUP_FAVORITES
+
+#ifndef UNIX
+    POPUP_9XTOOLS
+#endif
+
+    POPUP "&Help", FCIDM_MENU_HELP
+    BEGIN
+#ifndef UNIX
+        MENUITEM "&About Windows 95",    FCIDM_HELPABOUT
+#else
+        MENUITEM "&About Internet Explorer",    FCIDM_HELPABOUT, MF_GRAYED
+#endif
+    END
+END
+
+
+
+
+MENU_PREMERGED MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File", FCIDM_MENU_FILE
+    BEGIN
+        POPUP "&New",                            DVIDM_NEW
+        BEGIN
+#ifndef UNIX
+            MENUITEM "&Window \tCtrl+N",        DVIDM_NEWWINDOW
+#else
+            MENUITEM "&Window \tAlt+N",        DVIDM_NEWWINDOW
+#endif
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Message",                DVIDM_NEWMESSAGE
+            MENUITEM "&Post",                   DVIDM_NEWPOST
+            MENUITEM "&Contact",                DVIDM_NEWCONTACT
+#ifndef UNIX
+            MENUITEM "&Appointment",            DVIDM_NEWAPPOINTMENT
+            MENUITEM "Meeting &Request",        DVIDM_NEWMEETING
+            MENUITEM "&Task",                   DVIDM_NEWTASK
+            MENUITEM "Task Re&quest",           DVIDM_NEWTASKREQUEST
+            MENUITEM "&Journal",                DVIDM_NEWJOURNAL
+            MENUITEM "&Note",                   DVIDM_NEWNOTE
+            MENUITEM "&Internet Call",          DVIDM_CALL
+#endif
+        END
+#ifndef UNIX
+        MENUITEM "&Open...\tCtrl+O",            DVIDM_OPEN
+        MENUITEM "E&dit",                       FCIDM_EDITPAGE
+        MENUITEM "&Save\tCtrl+S",               DVIDM_SAVE ,, MFS_GRAYED
+        MENUITEM "Save &As...",                 DVIDM_SAVEASFILE // ,, MFS_GRAYED
+#else
+        MENUITEM "&Open...\tAlt+O",             DVIDM_OPEN
+        MENUITEM "Save &As...\tAlt+S",           DVIDM_SAVEASFILE  //  ,, MFS_GRAYED
+#endif
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Page Set&up...",              DVIDM_PAGESETUP ,, MFS_GRAYED
+#ifndef UNIX
+        MENUITEM "&Print...\tCtrl+P",           DVIDM_PRINT ,, MFS_GRAYED
+#else
+        MENUITEM "&Print...\tAlt+P",            DVIDM_PRINT ,, MFS_GRAYED
+#endif
+
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "S&end",       DVIDM_SEND
+        BEGIN
+            MENUITEM "&Page by E-mail..." ,  DVIDM_SENDPAGE
+            MENUITEM "&Link by E-mail...",   DVIDM_SENDSHORTCUT
+#ifndef UNIX
+            MENUITEM "&Shortcut to Desktop",         DVIDM_DESKTOPSHORTCUT
+#endif
+        END
+        MENUITEM "&Import and Export...",       DVIDM_IMPORTEXPORT
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "P&roperties",   DVIDM_PROPERTIES
+#ifdef TEST_AMBIENTS
+        MENUITEM "&Local Offline (Debug)",      FCIDM_VIEWLOCALOFFLINE
+        MENUITEM "Local Si&lent (Debug)",       FCIDM_VIEWLOCALSILENT
+#endif // TEST_AMBIENTS
+
+        MENUITEM "&Work Offline",               FCIDM_VIEWOFFLINE
+#ifndef UNIX
+        MENUITEM "&Close",                      FCIDM_FILECLOSE
+#else
+        MENUITEM "&Close\tAlt+F4",              FCIDM_FILECLOSE
+#endif
+    END
+    POPUP "&Edit", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                FCIDM_MOVE
+        MENUITEM "&Copy\tCtrl+C",               FCIDM_COPY
+        MENUITEM "&Paste\tCtrl+V",              FCIDM_PASTE
+        MENUITEM "", -1, MFT_SEPARATOR
+#ifndef UNIX
+        MENUITEM "Select &All\tCtrl+A",         FCIDM_SELECTALL
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Find (on This Page)...\tCtrl+F",  (DVIDM_MSHTML_FIRST+IDM_FIND)
+#else
+        MENUITEM "Select &All\tCtrl+/",         FCIDM_SELECTALL
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Find (on This Page)...\tCtrl+S",  (DVIDM_MSHTML_FIRST+IDM_FIND)
+#endif
+    END
+    POPUP "&View", FCIDM_MENU_VIEW
+    BEGIN
+        // this is for the case that we're hosting DefView or other
+        // views that do full IShellBrowser menu merging
+        POPUP "&Toolbars",                    FCIDM_VIEWTOOLBAR
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Status &Bar",               FCIDM_VIEWSTATUSBAR
+        POPUP_EXPLORERBAR
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP_GO
+        MENUITEM "Sto&p\tEsc",                  FCIDM_STOP
+        MENUITEM "&Refresh\tF5",                FCIDM_REFRESH
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "Te&xt Size", FCIDM_VIEWFONTS
+        BEGIN
+            MENUITEM "La&rgest",      (DVIDM_MSHTML_FIRST+IDM_BASELINEFONT5)
+            MENUITEM "&Large",        (DVIDM_MSHTML_FIRST+IDM_BASELINEFONT4)
+            MENUITEM "&Medium",       (DVIDM_MSHTML_FIRST+IDM_BASELINEFONT3)
+            MENUITEM "&Small",        (DVIDM_MSHTML_FIRST+IDM_BASELINEFONT2)
+            MENUITEM "Sm&allest",     (DVIDM_MSHTML_FIRST+IDM_BASELINEFONT1)
+        END
+        POPUP "Enco&ding", FCIDM_ENCODING
+        BEGIN
+            MENUITEM "None",          (DVIDM_MSHTML_FIRST+IDM_MIMECSET__FIRST__)
+        END
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "Sour&ce",                     (DVIDM_MSHTML_FIRST+IDM_VIEWSOURCE)
+#ifndef DISABLE_FULLSCREEN
+        MENUITEM "&Full Screen\tF11",            FCIDM_THEATER
+#endif
+#ifndef UNIX
+        MENUITEM "&Java Console",               FCIDM_JAVACONSOLE
+#endif
+    END
+
+    POPUP_FAVORITES
+
+    POPUP "&Tools", FCIDM_MENU_TOOLS
+    BEGIN
+        POPUP "&Mail and News",               FCIDM_MAILANDNEWS
+        BEGIN
+            MENUITEM "Read &Mail",      FCIDM_MAIL
+            MENUITEM "Ne&w Message...", FCIDM_NEWMESSAGE
+            MENUITEM "Send a &Link...", FCIDM_SENDLINK
+            MENUITEM "Send &Page...",   FCIDM_SENDDOCUMENT
+            MENUITEM "", FCIDM_MAILNEWSSEPARATOR, MFT_SEPARATOR
+            MENUITEM "Read &News",      FCIDM_NEWS
+        END
+#ifndef UNIX
+        MENUITEM "&Synchronize...",             FCIDM_UPDATESUBSCRIPTIONS
+        MENUITEM "Windows &Update",             FCIDM_PRODUCTUPDATES
+#else
+        MENUITEM "Internet &Update",            FCIDM_PRODUCTUPDATES
+#endif
+//        MENUITEM "Favorites Tune-up Wizard", 	(FCIDM_FAVORITESWIZARD)
+        //extensible items go here
+        MENUITEM "",                            FCIDM_TOOLS_EXT_PLACEHOLDER
+        MENUITEM "Reset &Web Settings...",      FCIDM_RESETWEBSETTINGS
+        MENUITEM "Internet &Options...",          FCIDM_BROWSEROPTIONS
+    END
+
+    POPUP "&Help", FCIDM_MENU_HELP
+    BEGIN
+    //////  The Number of items in this menu MUST correspond to HELP_ITEM_COUNT (currently 10)
+        MENUITEM "&Contents and Index",         DVIDM_HELPSEARCH
+        MENUITEM "Tip of the &Day",             FCIDM_HELPTIPOFTHEDAY
+        MENUITEM "For &Netscape Users",         FCIDM_HELPNETSCAPEUSERS
+#ifndef UNIX
+        MENUITEM "&Tour",                       DVIDM_HELPTUTORIAL
+#endif
+        MENUITEM "Online &Support",             FCIDM_HELPONLINESUPPORT
+        MENUITEM "Send Feedbac&k",              FCIDM_HELPSENDFEEDBACK
+        MENUITEM "",                            FCIDM_HELP_EXT_PLACEHOLDER
+        MENUITEM "&About Internet Explorer",    DVIDM_HELPABOUT
+    END
+END
+
+
+
+MENU_TEMPLATE MENUEX PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File", FCIDM_MENU_FILE
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Work Offline",             FCIDM_VIEWOFFLINE
+#ifndef UNIX
+        MENUITEM "&Close",                      FCIDM_FILECLOSE
+#else
+        MENUITEM "&Close\tAlt+F4",              FCIDM_FILECLOSE
+#endif
+    END
+    POPUP "&Edit", FCIDM_MENU_EDIT
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+    END
+    POPUP "&View", FCIDM_MENU_VIEW
+    BEGIN
+        // this is for the case that we're hosting DefView or other
+        // views that do full IShellBrowser menu merging
+        POPUP "&Toolbars",                    FCIDM_VIEWTOOLBAR
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "Status &Bar",                 FCIDM_VIEWSTATUSBAR
+        POPUP_EXPLORERBAR
+        MENUITEM "", FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
+        POPUP_GO
+        MENUITEM "&Refresh",                    FCIDM_REFRESH
+#ifndef UNIX
+        MENUITEM "&Java Console",               FCIDM_JAVACONSOLE
+        MENUITEM "Folder &Options...",          FCIDM_BROWSEROPTIONS
+        MENUITEM "&Internet Options...",        FCIDM_FTPOPTIONS
+#else
+        MENUITEM "Internet &Options...",        FCIDM_BROWSEROPTIONS
+#endif
+    END
+
+    POPUP_GO_IE4
+
+    POPUP_FAVORITES
+
+#ifndef UNIX
+    POPUP_9XTOOLS
+#endif
+
+    POPUP "&Help", FCIDM_MENU_HELP
+    BEGIN
+#ifndef UNIX
+        MENUITEM "&About Windows 95",    FCIDM_HELPABOUT
+#else
+        MENUITEM "&About Internet Explorer",    FCIDM_HELPABOUT, MF_GRAYED
+#endif
+    END
+END
+
+
+// BUGBUG:Chee
+// these are currently duplicated with explorer.exe
+MENU_SYSPOPUP MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+#ifndef UNIX
+        MENUITEM "&Close", IDSYSPOPUP_CLOSE,, MFS_DEFAULT
+#else
+        MENUITEM "&Close", IDSYSPOPUP_CLOSE
+#endif
+    END
+END
+
+
+//
+// BUGBUG: This accelerator will be ignored if the DocObject is a Local Server.
+//  See BUGBUG in GetWindowContext of shdocvw\dochost.c for detail.
+//
+ACCEL_MERGEEXPLORER ACCELERATORS DISCARDABLE
+BEGIN
+    "X",            FCIDM_MOVE,             VIRTKEY,NOINVERT,CONTROL
+    "C",            FCIDM_COPY,             VIRTKEY,NOINVERT,CONTROL
+    "V",            FCIDM_PASTE,            VIRTKEY,NOINVERT,CONTROL
+    VK_F2,          FCIDM_RENAME,           VIRTKEY,NOINVERT
+    VK_INSERT,      FCIDM_COPY,             VIRTKEY,NOINVERT,CONTROL
+    VK_INSERT,      FCIDM_PASTE,            VIRTKEY,NOINVERT,SHIFT
+    VK_DELETE,      FCIDM_DELETE,           VIRTKEY,NOINVERT
+    VK_DELETE,      FCIDM_DELETE,           VIRTKEY,NOINVERT,SHIFT
+    "D",            FCIDM_DELETE,           VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    VK_RETURN,      FCIDM_PROPERTIES,       VIRTKEY,NOINVERT,ALT
+END
+
+//
+// BUGBUG: This accelerator will be ignored if the DocObject is a Local Server.
+//  See BUGBUG in GetWindowContext of shdocvw\dochost.c for detail.
+//
+ACCEL_MERGE ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F6,          FCIDM_NEXTCTL,          VIRTKEY,NOINVERT
+#ifdef UNIX
+    "S",            (DVIDM_MSHTML_FIRST+IDM_FIND), VIRTKEY,NOINVERT,CONTROL
+#else
+    "F",            FCIDM_FINDFILES,        VIRTKEY,NOINVERT,CONTROL
+    VK_F3,          FCIDM_FINDFILES,        VIRTKEY,NOINVERT
+#endif
+    VK_F5,          FCIDM_REFRESH,          VIRTKEY,NOINVERT
+    VK_F5,          FCIDM_REFRESH,          VIRTKEY,NOINVERT,CONTROL
+    "r",            FCIDM_REFRESH,          VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    VK_TAB,         FCIDM_NEXTCTL,          VIRTKEY,NOINVERT
+    VK_TAB,         FCIDM_NEXTCTL,          VIRTKEY,NOINVERT,SHIFT
+    VK_TAB,         FCIDM_NEXTCTL,          VIRTKEY,NOINVERT,CONTROL
+    VK_TAB,         FCIDM_NEXTCTL,          VIRTKEY,NOINVERT,CONTROL,SHIFT
+    VK_LEFT,        FCIDM_NAVIGATEBACK,     VIRTKEY,ALT
+    VK_RIGHT,       FCIDM_NAVIGATEFORWARD,  VIRTKEY,ALT
+    VK_BACK,        FCIDM_BACKSPACE,        VIRTKEY,NOINVERT
+    "D",            FCIDM_ADDTOFAVNOUI,     VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    "b",            FCIDM_ORGANIZEFAVORITES,VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    "d",            FCIDM_ADDTOFAVORITES,   VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+#ifdef UNIX
+    // IEUNIX : Netscape compatibilty keys
+    "k",            FCIDM_ADDTOFAVORITES,   VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    VK_F4,          FCIDM_FILECLOSE,        VIRTKEY,NOINVERT,CONTROL
+#else
+    "w",            FCIDM_FILECLOSE,        VIRTKEY,NOINVERT,CONTROL
+#endif
+    VK_ESCAPE,      FCIDM_STOP,             VIRTKEY,NOINVERT
+#ifndef DISABLE_FULLSCREEN
+    VK_F11,         FCIDM_THEATER,          VIRTKEY,NOINVERT
+#endif
+#ifndef UNIX
+    "H",            FCIDM_VBBHISTORYBAND,   VIRTKEY,NOINVERT,CONTROL
+    "I",            FCIDM_VBBFAVORITESBAND, VIRTKEY,NOINVERT,CONTROL
+    "E",            FCIDM_VBBSEARCHBAND,    VIRTKEY,NOINVERT,CONTROL
+#else
+    "Y",            FCIDM_VBBHISTORYBAND,   VIRTKEY,NOINVERT,ALT
+    "I",            FCIDM_VBBFAVORITESBAND, VIRTKEY,NOINVERT,ALT
+    "C",            FCIDM_VBBSEARCHBAND,    VIRTKEY,NOINVERT,ALT
+#endif
+    VK_HOME,        FCIDM_STARTPAGE,        VIRTKEY,NOINVERT,ALT
+    VK_F2,          FCIDM_SHOWSCRIPTERRDLG, VIRTKEY,NOINVERT,CONTROL
+END
+
+DLG_TEXTICONOPTIONS DIALOGEX 0, 0, 357, 33
+STYLE DS_CONTROL | (DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_VISIBLE | WS_CHILD | NOT WS_BORDER
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Te&xt options:", -1,4,2,48,15
+    COMBOBOX        IDC_SHOWTEXT,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Ico&n options:", -1,4,20,48,15
+    COMBOBOX        IDC_SMALLICONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+DLG_ISFBANDRENAME DIALOGEX DISCARDABLE  10, 40, 227, 55
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rename"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&New name:",-1,7,9,44,10
+    EDITTEXT        IDD_NAME,56,7,163,14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,33,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,33,50,14
+END
+
+/*STYLE DS_MODALFRAME | DS_CONTROL | WS_POPUP | WS_CAPTION | WS_SYSMENU*/
+/*STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTROL | WS_CHILD*/
+
+DLG_NEWFOLDER DIALOGEX DISCARDABLE  10, 40, 227, 85
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Internet Explorer will create the following folder for you. You can use this folder to organize shortcuts on your Favorites menu.",
+    IDD_PROMPT,7,11,213,18
+    LTEXT           "&Folder name:",-1,7,39,44,10
+    EDITTEXT        IDD_NAME,56,37,163,14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,63,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,63,50,14
+END
+
+
+DLG_PROGRESSDIALOG DIALOGEX DISCARDABLE  20, 20, 250, 84
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_EX_APPWINDOW | NOT WS_SIZEBOX
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDD_PROGDLG_ANIMATION,ANIMATE_CLASS,ACS_TRANSPARENT|ACS_AUTOPLAY|ACS_TIMER,7,0,236,25
+    CONTROL         "",IDD_PROGDLG_LINE1,"Static",SS_SIMPLE | SS_NOPREFIX,          7,38,236,10
+    CONTROL         "",IDD_PROGDLG_LINE2,"Static",SS_SIMPLE | SS_NOPREFIX,          7,48,236,10
+    CONTROL         "",IDD_PROGDLG_PROGRESSBAR,PROGRESS_CLASS, 0x0,                 7,63,190,8
+    CONTROL         "",IDD_PROGDLG_LINE3,"Static",SS_SIMPLE | SS_NOPREFIX,          7,74,192,10
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,                                      202,63,40,14,NOT WS_TABSTOP
+	/* Used to allow the path names to be in a different code page */
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL|NFS_USEFONTASSOC|NFS_EDIT|NFS_STATIC,0,0,0,0
+END

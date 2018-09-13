@@ -1,0 +1,26 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       version.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Catalog Dump Utility"
+
+#define VER_INTERNALNAME_STR        VER_FILEDESCRIPTION_STR
+#define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
+
+#define EXPORT_CONTROLLED           1
+
+#include <common.ver>
+
+

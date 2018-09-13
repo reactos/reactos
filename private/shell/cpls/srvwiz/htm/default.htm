@@ -1,0 +1,35 @@
+<HTML>
+<HEAD>
+<TITLE>Windows 2000 Configure Your Server</TITLE>
+<script language="javascript" src="util.js"></script>
+<script language="javascript">
+    if (srvwiz.DsRole(2) == 1)
+    {
+        // Don't show CYS during DC prugatory
+
+        window.close();
+    }
+    else
+    {
+        // set the window's initial size and position
+
+        var x = (window.screen.width - 636)/2;
+        var y = (window.screen.height - 450)/2;
+
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+
+        window.resizeTo(636,450);
+        window.moveTo(x, y);
+    }
+</script>
+</HEAD>
+
+<frameset rows="75,*" border=0 frameborder=0>
+    <frame name="top" src="top.htm" marginwidth="0" marginheight="0" scrolling="no" frameborder="no" noresize>
+    <frameset cols="165,*" border=0 frameborder=0 onload="home()">
+        <frame name="menu" src="menu.htm" marginwidth="0" marginheight="0" scrolling="no" frameborder="no" noresize>
+        <frame name="content" marginwidth="0" marginheight="0" scrolling="auto" frameborder="no" noresize>
+    </frameset>
+</frameset>
+</HTML>

@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdest
+
+TARGETNAME=kbdest
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdest.c kbdest.rc
+
+NTTARGETFILE0=kbdest.h kbdest.rc kbdest.def

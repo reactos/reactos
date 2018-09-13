@@ -1,0 +1,32 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft License Manager
+//
+//----------------------------------------------------------------------------
+
+
+#include    <core.hxx>
+#include    <resource.hxx>
+ 
+
+#ifndef _PPCMAC
+#define VER_FILE_DESCRIPTION    "Microsoft\256 License Manager DLL"
+#define VER_INTERNAL_NAME       "LICMGR10"
+#define VER_ORIGINAL_FILENAME   "LICMGR10.DLL"
+#define VER_SELFREGISTER
+#include "version.rc"
+#endif // _PPCMAC
+
+
+STRINGTABLE
+BEGIN
+    IDS_COPYTEXT+0  "LPK License Package"
+    IDS_COPYTEXT+1  "//////////////////////////////////////////////////////////////////////////////"
+    IDS_COPYTEXT+2  "//  WARNING:  The information in this file is protected by copyright law    //"
+    IDS_COPYTEXT+3  "//  and international treaty provisions. Unauthorized reproduction or       //"
+    IDS_COPYTEXT+4  "//  distribution of this file, or any portion of it, may result in severe   //"
+    IDS_COPYTEXT+5  "//  criminal and civil penalties, and will be prosecuted to the maximum     //"
+    IDS_COPYTEXT+6  "//  extent possible under the law.  Further, you may not reverse engineer,  //"
+    IDS_COPYTEXT+7  "//  decompile, or disassemble the file.                                     //"
+    IDS_COPYTEXT+8  "//////////////////////////////////////////////////////////////////////////////"
+END

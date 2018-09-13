@@ -1,0 +1,15 @@
+#****************************** File Header ******************************\
+# File Name: Dirs
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# BUILD.EXE DIRS file.
+# To build one of the projects listed below, add the project name to
+#  the BUILD_DEFAULT environment variable, OR, include it in BUILD.EXE's
+#  command line.
+#
+# History:
+# Apr-22-1997 v-HirShi Created
+#***************************************************************************/
+OPTIONAL_DIRS= fe
+

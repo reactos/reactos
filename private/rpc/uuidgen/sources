@@ -1,0 +1,46 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Revision History:
+
+!ENDIF
+
+TARGETNAME=uuidgen
+TARGETPATH=.
+TARGETTYPE=PROGRAM
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib  \
+    $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+INCLUDES=.;..\runtime\mtrt
+
+SOURCES=\
+        uuidgen.rc \
+	uuidgen.c  \
+	uuidfmt.c
+
+UMTYPE=console
+
+!ifdef DOSWIN32RPC
+RPCENV=-DDOSWIN32RPC -DWIN32RPC
+!else
+RPCENV=-DNTENV
+!endif
+
+C_DEFINES=$(RPCENV)
+
+
+UMTYPE=console

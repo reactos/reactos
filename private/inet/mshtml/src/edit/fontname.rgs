@@ -1,0 +1,24 @@
+HKCR
+{
+	FontsOption.FontsOption.1 = s 'CFontsOption Class'
+	{
+		CLSID = s '{3050f4ec-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	FontsOption.FontsOption = s 'CFontsOption Class'
+	{
+		CurVer = s 'FontsOption.FontsOption.1'
+	}
+	CLSID
+	{
+		ForceRemove {3050f4ec-98b5-11cf-bb82-00aa00bdce0b} = s 'CFontsOption Class'
+		{
+			ProgID = s 'FontsOption.FontsOption.1'
+			VersionIndependentProgID = s 'FontsOption.FontsOption'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

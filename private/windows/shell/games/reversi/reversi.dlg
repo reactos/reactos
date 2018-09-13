@@ -1,0 +1,19 @@
+3 DIALOG LOADONCALL MOVEABLE DISCARDABLE 22, 17, 191, 77
+STYLE DS_MODALFRAME | WS_SYSMENU | WS_DLGFRAME | WS_POPUP
+CAPTION  "About Reversi"
+BEGIN
+#ifdef OS2
+    CONTROL "Microsoft OS/2"	-1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 5, 191, 8
+#else
+    CONTROL "Microsoft Windows" -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 5, 191, 8
+#endif
+    CONTROL "Reversi" -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 15, 191, 8
+#ifdef OS2
+    CONTROL "Version 2.0 " -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 34, 191, 8
+#else
+    CONTROL "Version 3.0 " -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 34, 191, 8
+#endif
+    CONTROL "Copyright © 1985-1991 Microsoft Corp." -1, "static", SS_CENTER | WS_GROUP | WS_CHILD, 0, 47, 191, 9
+    CONTROL "OK" IDOK, "button", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP | WS_CHILD, 79, 59, 32, 14
+    CONTROL "ÿ" -1, "static", SS_ICON | WS_GROUP | WS_CHILD, 24, 12, 16, 21
+END

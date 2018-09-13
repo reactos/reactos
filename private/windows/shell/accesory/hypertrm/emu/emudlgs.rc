@@ -1,0 +1,476 @@
+/*	File: D:\WACKER\emu\emudlgs.rc (Created: 12-Mar-1994)
+ *
+ *	Copyright 1994, 1998 by Hilgraeve Inc. -- Monroe, MI
+ *	All rights reserved
+ *
+ *	$Revision: 2 $
+ *	$Date: 2/05/99 3:20p $
+ */
+
+#include    <windows.h>     // JohnFu, added 16-Oct-1995
+
+#if !defined(INCL_TERMINAL_SIZE_AND_COLORS)
+
+IDD_ANSI_SETTINGS DIALOG DISCARDABLE  0, 10, 177, 66
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,45,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    15,19,38,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,40,10
+END
+
+IDD_TTY_SETTINGS DIALOG DISCARDABLE  0, 10, 177, 85
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,64,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    15,19,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,55,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,40,10
+    CONTROL         " Use &destructive backspace",116,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,44,157,10
+END
+
+#if defined(INCL_VT220)
+IDD_VT220_SETTINGS DIALOG DISCARDABLE  0, 10, 178, 193
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,19,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,41,10
+
+    GROUPBOX        " Terminal Modes ",118,7,42,163,58
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,56,139,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,69,139,10
+    CONTROL         " &132 column mode",107,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,82,139,10
+
+    CONTROL         " &8 bit control codes",120,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,106,148,10
+    CONTROL         " User defined keys allowed",121,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,119,148,10
+
+    LTEXT           "C&haracter set:",109,7,136,48,8
+    COMBOBOX        110,7,147,163,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK",IDOK,67,171,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,171,50,14
+END
+#endif
+
+IDD_VT100_SETTINGS DIALOG DISCARDABLE  0, 10, 178, 161
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,67,139,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,139,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,19,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,41,10
+    GROUPBOX        " Terminal Modes ",118,7,42,163,58
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,56,139,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,69,139,10
+    CONTROL         " &132 column mode",107,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,82,139,10
+    LTEXT           "C&haracter set:",109,7,106,48,8
+    COMBOBOX        110,7,115,163,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+#if defined(INCL_VT100J)
+IDD_VT100J_SETTINGS DIALOG DISCARDABLE  0, 10, 178, 161
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,67,139,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,139,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,19,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,41,10
+    GROUPBOX        " Terminal Modes ",118,7,42,163,58
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,56,139,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,69,139,10
+    CONTROL         " &132 column mode",107,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,82,139,10
+    LTEXT           "C&haracter set:",109,7,106,48,8
+    COMBOBOX        110,7,115,163,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+#endif
+
+IDD_VT52_SETTINGS DIALOG DISCARDABLE  0, 10, 177, 85
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,64,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    15,19,37,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,58,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,39,10
+    CONTROL         " &Alternate keypad mode",117,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,44,126,10
+END
+
+// These were not modified by Microsoft.
+//
+IDD_MINITEL_SETTINGS DIALOG 0, 10, 177, 66
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,45,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    15,19,38,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,40,10
+END
+
+IDD_VIEWDATA_SETTINGS DIALOG 0, 10, 177, 66
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,45,50,14
+    CONTROL         "&Hide cursor",119,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,8,130,10
+    CONTROL         "&Enter key sends #",122,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,23,130,10
+END
+
+#else	// #if !defined(INCL_TERMINAL_SIZE_AND_COLORS)
+
+IDD_ANSI_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 106
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+	DEFPUSHBUTTON	"OK",IDOK,56,84,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,84,50,14
+END
+
+IDD_TTY_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 118
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+    CONTROL         " Use &destructive backspace",116,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,81,147,10
+
+	DEFPUSHBUTTON	"OK",IDOK,56,97,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,97,50,14
+END
+
+#if defined(INCL_VT220)
+IDD_VT220_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 220
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+    GROUPBOX        " Keypad Modes ",118,7,79,153,45
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,93,129,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,106,129,10
+
+    CONTROL         " &8 bit control codes",120,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,133,138,10
+    CONTROL         " User defined keys allowed",121,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,146,138,10
+
+    LTEXT           "C&haracter set:",109,7,163,48,8
+    COMBOBOX        110,7,174,91,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK",IDOK,56,198,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,198,50,14
+END
+#endif	//#if defined(INCL_VT220)
+
+IDD_VT100_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 185
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+    GROUPBOX        " Keypad Modes ",118,7,79,153,45
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,93,129,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,106,129,10
+
+    LTEXT           "C&haracter set:",109,7,130,48,8
+    COMBOBOX        110,7,141,95,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK",IDOK,56,163,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,163,50,14
+END
+
+#if defined(INCL_VT100J)
+IDD_VT100J_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 185
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+    GROUPBOX        " Keypad Modes ",118,7,79,153,45
+    CONTROL         " &Keypad application mode",104,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,93,129,10
+    CONTROL         " &Cursor keypad mode",106,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,16,106,129,10
+
+    LTEXT           "C&haracter set:",109,7,130,48,8
+    COMBOBOX        110,7,141,95,43,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK",IDOK,56,163,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,163,50,14
+END
+#endif	//#if defined(INCL_VT100J)
+
+IDD_VT52_SETTINGS DIALOG DISCARDABLE  0, 10, 167, 118
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    GROUPBOX        " Cursor ",111,7,42,153,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,15,56,36,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,56,56,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    56,35,10
+
+    CONTROL         " &Alternate keypad mode",117,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,81,116,10
+
+	DEFPUSHBUTTON	"OK",IDOK,56,97,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,97,50,14
+END
+
+// These were not modified by Microsoft.
+//
+IDD_MINITEL_SETTINGS DIALOG 0, 10, 177, 66
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"OK",IDOK,67,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,120,45,50,14
+    GROUPBOX        " Cursor ",111,7,5,163,33
+    CONTROL         " &Block",112,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    15,19,38,10
+    CONTROL         " &Underline",113,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,58,19,57,10
+    CONTROL         " Bli&nk",114,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,
+                    19,40,10
+END
+
+IDD_VIEWDATA_SETTINGS DIALOG 0, 10, 167, 103
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Terminal Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " Screen ",130,7,5,152,33
+    LTEXT           "&Rows:",131,17,19,19,8
+    EDITTEXT        132,43,17,25,13,ES_AUTOHSCROLL
+    LTEXT           "C&olumns:",133,87,19,29,8
+    EDITTEXT        134,121,17,28,13,ES_AUTOHSCROLL
+
+    CONTROL         "&Hide cursor",119,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    14,48,120,10
+    CONTROL         "&Enter key sends #",122,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,63,120,10
+
+	DEFPUSHBUTTON	"OK",IDOK,56,81,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,110,81,50,14
+END
+
+IDD_SCRN_COLOR_SETTINGS DIALOG DISCARDABLE  0, 10, 188, 184
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Terminal Colors"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Terminal text",110,7,5,174,45,WS_GROUP
+    CONTROL         "",IDC_TEXT_BLACK,"Button",BS_OWNERDRAW | WS_GROUP | 
+                    WS_TABSTOP,15,15,18,12
+    CONTROL         "",IDC_TEXT_DARKBLUE,"Button",BS_OWNERDRAW,35,15,18,12
+    CONTROL         "",IDC_TEXT_DARKGREEN,"Button",BS_OWNERDRAW,55,15,18,12
+    CONTROL         "",IDC_TEXT_DARKCYAN,"Button",BS_OWNERDRAW,75,15,18,12
+    CONTROL         "",IDC_TEXT_DARKRED,"Button",BS_OWNERDRAW,95,15,18,12
+    CONTROL         "",IDC_TEXT_DARKMAGENTA,"Button",BS_OWNERDRAW,115,15,18,
+                    12
+    CONTROL         "",IDC_TEXT_DARKYELLOW,"Button",BS_OWNERDRAW,135,15,18,12
+    CONTROL         "",IDC_TEXT_LIGHTGRAY,"Button",BS_OWNERDRAW,155,15,18,12
+    CONTROL         "",IDC_TEXT_DARKGRAY,"Button",BS_OWNERDRAW,15,31,18,12
+    CONTROL         "",IDC_TEXT_BLUE,"Button",BS_OWNERDRAW,35,31,18,12
+    CONTROL         "",IDC_TEXT_GREEN,"Button",BS_OWNERDRAW,55,31,18,12
+    CONTROL         "",IDC_TEXT_CYAN,"Button",BS_OWNERDRAW,75,31,18,12
+    CONTROL         "",IDC_TEXT_RED,"Button",BS_OWNERDRAW,95,31,18,12
+    CONTROL         "",IDC_TEXT_MAGENTA,"Button",BS_OWNERDRAW,115,31,18,12
+    CONTROL         "",IDC_TEXT_YELLOW,"Button",BS_OWNERDRAW,135,31,18,12
+    CONTROL         "",IDC_TEXT_WHITE,"Button",BS_OWNERDRAW,155,31,18,12
+    GROUPBOX        "Terminal &background",130,7,59,174,45,WS_GROUP
+    CONTROL         "",IDC_BACK_BLACK,"Button",BS_OWNERDRAW | WS_GROUP | 
+                    WS_TABSTOP,15,69,18,12
+    CONTROL         "",IDC_BACK_DARKBLUE,"Button",BS_OWNERDRAW,35,69,18,12
+    CONTROL         "",IDC_BACK_DARKGREEN,"Button",BS_OWNERDRAW,55,69,18,12
+    CONTROL         "",IDC_BACK_DARKCYAN,"Button",BS_OWNERDRAW,75,69,18,12
+    CONTROL         "",IDC_BACK_DARKRED,"Button",BS_OWNERDRAW,95,69,18,12
+    CONTROL         "",IDC_BACK_DARKMAGENTA,"Button",BS_OWNERDRAW,115,69,18,
+                    12
+    CONTROL         "",IDC_BACK_DARKYELLOW,"Button",BS_OWNERDRAW,135,69,18,12
+    CONTROL         "",IDC_BACK_LIGHTGRAY,"Button",BS_OWNERDRAW,155,69,18,12
+    CONTROL         "",IDC_BACK_DARKGRAY,"Button",BS_OWNERDRAW,15,85,18,12
+    CONTROL         "",IDC_BACK_BLUE,"Button",BS_OWNERDRAW,35,85,18,12
+    CONTROL         "",IDC_BACK_GREEN,"Button",BS_OWNERDRAW,55,85,18,12
+    CONTROL         "",IDC_BACK_CYAN,"Button",BS_OWNERDRAW,75,85,18,12
+    CONTROL         "",IDC_BACK_RED,"Button",BS_OWNERDRAW,95,85,18,12
+    CONTROL         "",IDC_BACK_MAGENTA,"Button",BS_OWNERDRAW,115,85,18,12
+    CONTROL         "",IDC_BACK_YELLOW,"Button",BS_OWNERDRAW,135,85,18,12
+    CONTROL         "",IDC_BACK_WHITE,"Button",BS_OWNERDRAW,155,85,18,12
+    GROUPBOX        "Text preview",IDC_PREVIEW_GROUPBOX,7,113,174,41,WS_GROUP
+    LTEXT           "This text illustrates how the colors you have selected above will look when displayed on the terminal screen.",
+                    IDC_TEXT_PREVIEW,18,123,153,25,NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,78,164,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,131,164,50,14
+END
+
+#endif	// #if !defined(INCL_TERMINAL_SIZE_AND_COLORS)

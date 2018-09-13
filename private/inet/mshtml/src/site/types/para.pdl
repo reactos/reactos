@@ -1,0 +1,29 @@
+#ifndef _PARA_PDL_
+#define _PARA_PDL_ 1
+
+#include "block.pdl"
+
+file para.pdl
+
+import element.pdl
+
+interface IHTMLParaElement guid:3050f1f5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CParaElement:align
+
+tearoff CParaElement interface:IHTMLParaElement
+
+class CParaElement name:HTMLParaElement \
+            super:CBlockElement \
+            primaryinterface:IHTMLParaElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f26f-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f52c-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBlockElement
+    implements IHTMLParaElement
+
+    property align  atype:BSTR    dispid:STDPROPID_XOBJ_BLOCKALIGN  type:htmlBlockAlign  get set caa bindable maxstrlen:pdlToken
+
+#endif _PARA_PDL_

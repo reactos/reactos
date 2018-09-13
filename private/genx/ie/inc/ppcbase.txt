@@ -1,0 +1,2 @@
+// description of IE 4 binaries load addresses for PPC
+

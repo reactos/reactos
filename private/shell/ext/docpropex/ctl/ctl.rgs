@@ -1,0 +1,35 @@
+HKCR
+{
+    MSPropertyTree.Ctl.1 = s 'MSPropertyTreeCtl Class'
+    {
+        CLSID = s '{40710C26-4BC7-11D1-8B6F-080036B11A03}'
+        'Insertable'
+    }
+    MSPropertyTree.Ctl = s 'MSPropertyTreeCtl Class'
+    {
+        CurVer = s 'MSPropertyTree.Ctl.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {40710C26-4BC7-11D1-8B6F-080036B11A03} = s 'MSPropertyTreeCtl Class'
+        {
+            ProgID = s 'MSPropertyTree.Ctl.1'
+            VersionIndependentProgID = s 'MSPropertyTree.Ctl'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            ForceRemove 'Control'
+            ForceRemove 'Programmable'
+            ForceRemove 'Insertable'
+            ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+            'MiscStatus' = s '0'
+            {
+                '1' = s '131473'
+            }
+            'TypeLib' = s '{40710C17-4BC7-11D1-8B6F-080036B11A03}'
+            'Version' = s '1.0'
+        }
+    }
+}

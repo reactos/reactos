@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>Networking</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("ntwrk_bg.gif");
+        background-repeat:no-repeat;
+        background-position:147 46;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Networking</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Choose the networking services you want to run on this server from the drop-down menu on the left.</P>
+            <P ID="para4">To set up networking on your computer, 
+                click <A HREF="javascript:exec('rundll32.exe','shell32.dll,Control_RunDLL ncpa.cpl,,1')">Network 
+                and Dial-up Connections</A>.
+            </P>
+            <P ID="para3">To identify your computer on the network, 
+                click <A HREF="javascript:exec('rundll32.exe','shell32.dll,Control_RunDLL sysdm.cpl,,1')">Network 
+                Identification</A>.
+            </P>
+            <TABLE cellspacing="0" cellpadding="0">
+                <TR>
+                    <TD VALIGN="top">
+                        <A HREF="javascript:help('windows.chm::/sag_npstopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5"></A>
+                    </TD>
+                    <TD ID="para2">
+                        <A HREF="javascript:help('windows.chm::/sag_npstopnode.htm')">Learn more</A> about configuring other networking services and protocols.
+                    </TD>
+                </TR>
+            </TABLE>
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

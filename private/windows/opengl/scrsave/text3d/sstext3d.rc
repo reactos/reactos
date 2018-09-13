@@ -1,0 +1,256 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "scrnsave.h"
+#include "sstext3d.h"
+#include "sscommon.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_FONT DIALOG DISCARDABLE  17, 71, 220, 128
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Font:",1088,6,3,40,9
+    COMBOBOX        1136,6,13,94,54,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | 
+                    CBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Font St&yle:",1089,108,3,44,9
+    COMBOBOX        1137,108,13,64,54,CBS_SIMPLE | CBS_DISABLENOSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,175,15,40,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,175,35,40,14,WS_GROUP
+    GROUPBOX        "Sample",1073,5,70,165,55,WS_GROUP
+    CTEXT           "AaBbYyZz",1092,10,80,155,40,SS_NOPREFIX | NOT 
+                    WS_VISIBLE
+    COMBOBOX        1138,1179,13,32,54,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_SORT | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | 
+                    WS_VSCROLL
+    PUSHBUTTON      "&Apply",1026,1218,40,40,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,1218,57,40,14,WS_GROUP
+    GROUPBOX        "Effects",1072,1006,72,84,34,WS_GROUP
+    CONTROL         "Stri&keout",1040,"Button",BS_AUTOCHECKBOX,1010,82,49,10
+    CONTROL         "&Underline",1041,"Button",BS_AUTOCHECKBOX,1010,94,51,10
+    COMBOBOX        1139,1006,120,84,100,CBS_DROPDOWNLIST | 
+                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | 
+                    WS_BORDER | WS_VSCROLL
+    CTEXT           "",1093,5,1124,160,20,SS_NOPREFIX | NOT WS_GROUP
+END
+
+DLG_SCRNSAVECONFIGURE DIALOG DISCARDABLE  28, 25, 331, 148
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "3D Text Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,265,5,60,15,WS_GROUP
+    PUSHBUTTON      "Cancel",2,265,25,60,15,WS_GROUP
+    PUSHBUTTON      "Choose &Font ...",DLG_SETUP_FONT,265,50,60,15,WS_GROUP
+    GROUPBOX        "Display",IDC_STATIC,5,0,125,55
+    RADIOBUTTON     "Te&xt",IDC_DEMO_STRING,10,15,30,10,WS_GROUP | 
+                    WS_TABSTOP
+    EDITTEXT        DLG_TEXT_ENTER,45,15,80,13,ES_AUTOHSCROLL | WS_GROUP
+    RADIOBUTTON     "Ti&me",IDC_DEMO_CLOCK,10,35,35,10,WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Surface Style",IDC_STATIC,135,0,125,55
+    CONTROL         "Solid &Color",IDC_RADIO_SOLID,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,140,15,49,10
+    CONTROL         "T&extured",IDC_RADIO_TEX,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,140,35,44,10
+    PUSHBUTTON      "&Texture...",DLG_SETUP_TEX,195,35,55,15,WS_GROUP
+    GROUPBOX        "Si&ze",IDC_STATIC_SIZE,5,55,125,45
+    LTEXT           "Small",IDC_STATIC_SIZE_MIN,15,70,25,7
+    LTEXT           "Large",IDC_STATIC_SIZE_MAX,100,70,20,8
+    CONTROL         "Slider1",DLG_SETUP_SIZE,"msctls_trackbar32",TBS_NOTICKS | 
+                    WS_GROUP | WS_TABSTOP,15,80,105,15
+    GROUPBOX        "&Speed",IDC_STATIC,135,55,125,45
+    LTEXT           "Slow",IDC_STATIC,145,70,30,8
+    LTEXT           "Fast",IDC_STATIC,235,70,15,8
+    CONTROL         "Slider2",DLG_SETUP_SPEED,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_GROUP | WS_TABSTOP,145,80,105,15
+    GROUPBOX        "&Resolution",IDC_STATIC_TESS,5,100,125,45
+    LTEXT           "Min",IDC_STATIC_TESS_MIN,15,115,15,7
+    LTEXT           "Max",IDC_STATIC_TESS_MAX,105,115,15,7
+    CONTROL         "Slider3",DLG_SETUP_TESSEL,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_GROUP | WS_TABSTOP,15,125,105,15
+    GROUPBOX        "Spin St&yle",IDC_STATIC,135,100,125,45
+    COMBOBOX        DLG_SETUP_ROTSTYLE,145,125,105,50,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""scrnsave.h""\r\n"
+    "#include ""sstext3d.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OpenGL 3D Text Screen Saver"
+#define VER_INTERNALNAME_STR        "sstext3d\0"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+#if 0
+/////////////////////////////////////////////////////////////////////////////
+//
+// 99
+//
+
+#ifdef SS_WIN95
+1                       99      MOVEABLE PURE   "default2.str"
+#else
+1                       99      MOVEABLE PURE   "default.str"
+#endif
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 100
+//
+
+IDB_DEFTEX              100     DISCARDABLE     "rainbow.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "3D Text (OpenGL)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DEMOTYPE            "DemoType"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SPEED               "Speed"
+    IDS_ROTSTYLE            "RotStyle"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SURFSTYLE           "SurfStyle"
+    IDS_FONT                "Font"
+    IDS_FONT_ATTRIBUTES     "FontAttributes"
+    IDS_CHARSET             "CharSet"
+    IDS_TEXT                "Text"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TEXT_TITLE          "Configure display string"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DEMO_STRING         "Text"
+    IDS_DEMO_CLOCK          "Clock"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_ROTSTYLE_NONE       "None"
+    IDS_ROTSTYLE_SEESAW     "See-Saw"
+    IDS_ROTSTYLE_WOBBLE     "Wobble"
+    IDS_ROTSTYLE_RANDOM     "Random"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SAVERNAME           "Screen Saver.3DText"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DEFFONT             "Tahoma"
+    IDS_DEFCHARSET	    "1"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

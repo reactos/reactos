@@ -1,0 +1,338 @@
+#ifndef _CURSTYLE_PDL_
+#define _CURSTYLE_PDL_ 1
+
+
+#include "types.pdl"
+#include "style.pdl"
+
+file curstyle.pdl
+
+import types.pdl
+import style.pdl
+
+enum textDecoration prefix:textDecoration     guid:3050f4bb-98b5-11cf-bb82-00aa00bdce0b
+    eval None           string:none
+    eval Underline      string:underline
+    eval Overline       string:overline
+    eval LineThrough    string:line-through
+    eval Blink          string:blink
+                                 
+interface IHTMLCurrentStyle guid:3050f3db-98b5-11cf-bb82-00aa00bdce0b
+    refprop CCurrentStyle:position             
+    refprop CCurrentStyle:styleFloat
+    refprop CCurrentStyle:color
+    refprop CCurrentStyle:backgroundColor
+    refprop CCurrentStyle:fontFamily
+    refprop CCurrentStyle:fontStyle
+    refprop CCurrentStyle:fontVariant
+    refprop CCurrentStyle:fontWeight
+    refprop CCurrentStyle:fontSize
+    refprop CCurrentStyle:backgroundImage 
+    refprop CCurrentStyle:backgroundPositionX
+    refprop CCurrentStyle:backgroundPositionY
+    refprop CCurrentStyle:backgroundRepeat
+    refprop CCurrentStyle:borderLeftColor 
+    refprop CCurrentStyle:borderTopColor 
+    refprop CCurrentStyle:borderRightColor 
+    refprop CCurrentStyle:borderBottomColor 
+    refprop CCurrentStyle:borderTopStyle    
+    refprop CCurrentStyle:borderRightStyle  
+    refprop CCurrentStyle:borderBottomStyle 
+    refprop CCurrentStyle:borderLeftStyle   
+    refprop CCurrentStyle:borderTopWidth    
+    refprop CCurrentStyle:borderRightWidth  
+    refprop CCurrentStyle:borderBottomWidth 
+    refprop CCurrentStyle:borderLeftWidth   
+    refprop CCurrentStyle:left          
+    refprop CCurrentStyle:top          
+    refprop CCurrentStyle:width        
+    refprop CCurrentStyle:height       
+    refprop CCurrentStyle:paddingLeft  
+    refprop CCurrentStyle:paddingTop   
+    refprop CCurrentStyle:paddingRight 
+    refprop CCurrentStyle:paddingBottom
+    refprop CCurrentStyle:textAlign     
+    refprop CCurrentStyle:textDecoration
+    refprop CCurrentStyle:display       
+    refprop CCurrentStyle:visibility    
+    refprop CCurrentStyle:zIndex         
+    refprop CCurrentStyle:letterSpacing
+    refprop CCurrentStyle:lineHeight
+    refprop CCurrentStyle:textIndent
+    refprop CCurrentStyle:verticalAlign
+    refprop CCurrentStyle:backgroundAttachment
+    refprop CCurrentStyle:marginTop
+    refprop CCurrentStyle:marginRight
+    refprop CCurrentStyle:marginBottom
+    refprop CCurrentStyle:marginLeft
+    refprop CCurrentStyle:clear
+    refprop CCurrentStyle:listStyleType
+    refprop CCurrentStyle:listStylePosition
+    refprop CCurrentStyle:listStyleImage
+    refprop CCurrentStyle:clipTop
+    refprop CCurrentStyle:clipRight
+    refprop CCurrentStyle:clipBottom
+    refprop CCurrentStyle:clipLeft
+    refprop CCurrentStyle:overflow
+    refprop CCurrentStyle:pageBreakBefore
+    refprop CCurrentStyle:pageBreakAfter
+    refprop CCurrentStyle:cursor
+    refprop CCurrentStyle:tableLayout
+    refprop CCurrentStyle:borderCollapse
+    refprop CCurrentStyle:direction
+    refprop CCurrentStyle:behavior
+    refmethod CBase:getAttribute
+    refprop CCurrentStyle:unicodeBidi
+    refprop CCurrentStyle:right          
+    refprop CCurrentStyle:bottom          
+    refprop CCurrentStyle:imeMode
+    refprop CCurrentStyle:rubyAlign          
+    refprop CCurrentStyle:rubyPosition          
+    refprop CCurrentStyle:rubyOverhang
+    refprop CCurrentStyle:textAutospace
+    refprop CCurrentStyle:lineBreak
+    refprop CCurrentStyle:wordBreak
+    refprop CCurrentStyle:textJustify
+    refprop CCurrentStyle:textJustifyTrim
+    refprop CCurrentStyle:textKashida
+    refprop CCurrentStyle:blockDirection
+    refprop CCurrentStyle:layoutGridChar
+    refprop CCurrentStyle:layoutGridLine    
+    refprop CCurrentStyle:layoutGridMode    
+    refprop CCurrentStyle:layoutGridType    
+    refprop CCurrentStyle:borderStyle
+    refprop CCurrentStyle:borderColor
+    refprop CCurrentStyle:borderWidth
+    refprop CCurrentStyle:padding
+    refprop CCurrentStyle:margin
+    refprop CCurrentStyle:accelerator
+    refprop CCurrentStyle:overflowX
+    refprop CCurrentStyle:overflowY
+    refprop CCurrentStyle:textTransform
+
+tearoff CCurrentStyle interface:IHTMLCurrentStyle
+
+tearoff CCurrentStyle interface:IPerPropertyBrowsing BaseImpl:super::
+
+tearoff CCurrentStyle interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:InvokeEx
+
+class CCurrentStyle name:HTMLCurrentStyle \
+            primaryinterface:IHTMLCurrentStyle \
+            super:CBase \
+            noaamethods \
+            keepnopersist \
+            guid:3050f3dc-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f557-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLCurrentStyle
+    implements IPerPropertyBrowsing
+
+    property position         atype:BSTR     dispid:DISPID_A_POSITION      type:stylePosition  \
+                    abstract get displaybind stylesheetproperty
+    property styleFloat       atype:BSTR     dispid:DISPID_A_FLOAT         type:styleStyleFloat \
+                    abstract get displaybind stylesheetproperty
+    
+    // Background color and image
+    property backgroundColor  atype:VARIANT  dispid:DISPID_BACKCOLOR       type:CColorValue     \
+                    abstract get displaybind stylesheetproperty
+    property backgroundImage  atype:BSTR     dispid:DISPID_A_BACKGROUNDIMAGE type:CStr \
+                    abstract get displaybind stylesheetproperty
+
+    // Background Position
+    property backgroundPositionX atype:VARIANT dispid:DISPID_A_BACKGROUNDPOSX   type:CUnitValue     \
+                    abstract get displaybind ppflags:PP_UV_SCALER_OR_PERCENT stylesheetproperty
+    property backgroundPositionY atype:VARIANT dispid:DISPID_A_BACKGROUNDPOSY   type:CUnitValue     \
+                    abstract get displaybind ppflags:PP_UV_SCALER_OR_PERCENT stylesheetproperty
+
+    // Background Repeat
+    property backgroundRepeat   atype:BSTR dispid:DISPID_A_BACKGROUNDREPEAT type:styleBackgroundRepeat \
+                    abstract get displaybind stylesheetproperty
+    property backgroundAttachment atype:BSTR  dispid:DISPID_A_BACKGROUNDATTACHMENT  type:styleBackgroundAttachment \
+                    abstract get displaybind stylesheetproperty
+
+    // Border Color
+    property borderLeftColor   atype:VARIANT   dispid:DISPID_A_BORDERLEFTCOLOR  type:CColorValue     \
+                    abstract get displaybind stylesheetproperty
+    property borderTopColor    atype:VARIANT    dispid:DISPID_A_BORDERTOPCOLOR    type:CColorValue    \
+                    abstract get displaybind stylesheetproperty
+    property borderRightColor  atype:VARIANT  dispid:DISPID_A_BORDERRIGHTCOLOR  type:CColorValue    \
+                    abstract get displaybind stylesheetproperty
+    property borderBottomColor atype:VARIANT dispid:DISPID_A_BORDERBOTTOMCOLOR type:CColorValue    \
+                    abstract get displaybind stylesheetproperty
+
+    // Border Style
+    property borderTopStyle     atype:BSTR      dispid:DISPID_A_BORDERTOPSTYLE      type:styleBorderStyle \
+                    abstract get displaybind stylesheetproperty
+    property borderRightStyle   atype:BSTR      dispid:DISPID_A_BORDERRIGHTSTYLE    type:styleBorderStyle \
+                    abstract get displaybind stylesheetproperty
+    property borderBottomStyle  atype:BSTR      dispid:DISPID_A_BORDERBOTTOMSTYLE   type:styleBorderStyle \
+                    abstract get displaybind stylesheetproperty
+    property borderLeftStyle    atype:BSTR      dispid:DISPID_A_BORDERLEFTSTYLE     type:styleBorderStyle \
+                    abstract get displaybind stylesheetproperty
+
+    //Border Width
+    property borderTopWidth     atype:VARIANT   dispid:DISPID_A_BORDERTOPWIDTH      type:CUnitValue \
+                    abstract get displaybind stylesheetproperty enumref:styleBorderWidth min:0 ppflags:PP_UV_SCALER
+    property borderRightWidth   atype:VARIANT   dispid:DISPID_A_BORDERRIGHTWIDTH    type:CUnitValue \
+                    abstract get displaybind stylesheetproperty enumref:styleBorderWidth min:0 ppflags:PP_UV_SCALER
+    property borderBottomWidth  atype:VARIANT   dispid:DISPID_A_BORDERBOTTOMWIDTH   type:CUnitValue \
+                    abstract get displaybind stylesheetproperty enumref:styleBorderWidth min:0 ppflags:PP_UV_SCALER
+    property borderLeftWidth    atype:VARIANT   dispid:DISPID_A_BORDERLEFTWIDTH     type:CUnitValue \
+                    abstract get displaybind stylesheetproperty enumref:styleBorderWidth min:0 ppflags:PP_UV_SCALER
+
+    property color              atype:VARIANT   dispid:DISPID_A_COLOR               type:CColorValue     \
+                    abstract get displaybind stylesheetproperty
+    
+    // Font related properties
+    property fontFamily     atype:BSTR      dispid:DISPID_A_FONTFACE        type:CStr \
+                    abstract get displaybind stylesheetproperty
+    property fontStyle      atype:BSTR      dispid:DISPID_A_FONTSTYLE       type:styleFontStyle \
+                    abstract get displaybind stylesheetproperty
+    property fontVariant    atype:BSTR      dispid:DISPID_A_FONTVARIANT     type:styleFontVariant \
+                    hidden abstract get displaybind stylesheetproperty
+    property fontWeight     atype:VARIANT   dispid:DISPID_A_FONTWEIGHT      type:CStr  \
+                    abstract get displaybind stylesheetproperty
+    property fontSize       atype:VARIANT   dispid:DISPID_A_FONTSIZE        type:CUnitValue \
+                    abstract get displaybind stylesheetproperty
+    
+    // Position and size    
+    property left          atype:VARIANT  dispid:STDPROPID_XOBJ_LEFT       type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    property right         atype:VARIANT  dispid:STDPROPID_XOBJ_RIGHT      type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    property top           atype:VARIANT  dispid:STDPROPID_XOBJ_TOP        type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    property bottom        atype:VARIANT  dispid:STDPROPID_XOBJ_BOTTOM     type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    property width         atype:VARIANT  dispid:STDPROPID_XOBJ_WIDTH      type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    property height        atype:VARIANT  dispid:STDPROPID_XOBJ_HEIGHT     type:CUnitValue            \
+                    abstract get displaybind stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto
+    
+    // Padding
+    property paddingLeft   atype:VARIANT  dispid:DISPID_A_PADDINGLEFT      type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property paddingTop    atype:VARIANT  dispid:DISPID_A_PADDINGTOP       type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property paddingRight  atype:VARIANT  dispid:DISPID_A_PADDINGRIGHT     type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property paddingBottom atype:VARIANT  dispid:DISPID_A_PADDINGBOTTOM    type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+
+    // Text type
+    property textAlign      atype:BSTR     dispid:STDPROPID_XOBJ_BLOCKALIGN type:htmlBlockAlign \
+                    abstract get displaybind stylesheetproperty
+    property textDecoration atype:BSTR     dispid:DISPID_A_TEXTDECORATION   type:CStr \
+                    abstract get displaybind stylesheetproperty
+    property accelerator    atype:BSTR     dispid:DISPID_A_ACCELERATOR      type:styleAccelerator \
+                    abstract get displaybind stylesheetproperty
+
+    // Visibility
+    property display        atype:BSTR  dispid:DISPID_A_DISPLAY             type:styleDisplay \
+                    abstract get displaybind stylesheetproperty
+    property visibility     atype:BSTR  dispid:DISPID_A_VISIBILITY          type:styleVisibility  \
+                    abstract get displaybind stylesheetproperty
+
+    property zIndex         atype:VARIANT  dispid:DISPID_A_ZINDEX          type:long \
+                    abstract get displaybind stylesheetproperty
+
+    property letterSpacing  atype:VARIANT  dispid:DISPID_A_LETTERSPACING    type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER enumref:styleNormal
+    property lineHeight     atype:VARIANT  dispid:DISPID_A_LINEHEIGHT       type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property textIndent     atype:VARIANT  dispid:DISPID_A_TEXTINDENT       type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property verticalAlign  atype:VARIANT dispid:DISPID_A_VERTICALALIGN     type:CUnitValue \
+                    abstract get displaybind stylesheetproperty ppflags:PROPPARAM_PERCENTAGE enumref:styleVerticalAlign
+    property marginTop      atype:VARIANT  dispid:DISPID_A_MARGINTOP       type:CUnitValue \
+                   abstract get displaybind stylesheetproperty enumref:styleAuto ppflags:PP_UV_SCALER_OR_PERCENT
+    property marginRight    atype:VARIANT  dispid:DISPID_A_MARGINRIGHT     type:CUnitValue \
+                   abstract get displaybind stylesheetproperty enumref:styleAuto ppflags:PP_UV_SCALER_OR_PERCENT
+    property marginBottom   atype:VARIANT  dispid:DISPID_A_MARGINBOTTOM    type:CUnitValue \
+                   abstract get displaybind stylesheetproperty enumref:styleAuto ppflags:PP_UV_SCALER_OR_PERCENT
+    property marginLeft     atype:VARIANT  dispid:DISPID_A_MARGINLEFT      type:CUnitValue \
+                   abstract get displaybind stylesheetproperty enumref:styleAuto ppflags:PP_UV_SCALER_OR_PERCENT
+    property clear          atype:BSTR     dispid:DISPID_A_CLEAR           type:htmlClear \
+                    abstract get displaybind stylesheetproperty
+    property listStyleType  atype:BSTR     dispid:DISPID_A_LISTSTYLETYPE   type:styleListStyleType  \
+                    abstract get displaybind stylesheetproperty
+    property listStylePosition  atype:BSTR dispid:DISPID_A_LISTSTYLEPOSITION type:styleListStylePosition \
+                    abstract get displaybind stylesheetproperty
+    property listStyleImage atype:BSTR     dispid:DISPID_A_LISTSTYLEIMAGE  type:CStr \
+                    abstract get displaybind stylesheetproperty
+    property clipTop        atype:VARIANT  dispid:DISPID_A_CLIPRECTTOP     type:CUnitValue enumref:styleAuto \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property clipRight      atype:VARIANT  dispid:DISPID_A_CLIPRECTRIGHT   type:CUnitValue enumref:styleAuto \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property clipBottom     atype:VARIANT  dispid:DISPID_A_CLIPRECTBOTTOM  type:CUnitValue enumref:styleAuto \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property clipLeft       atype:VARIANT  dispid:DISPID_A_CLIPRECTLEFT    type:CUnitValue enumref:styleAuto \
+                    abstract get displaybind stylesheetproperty ppflags:PP_UV_SCALER_OR_PERCENT
+    property overflow       atype:BSTR     dispid:DISPID_A_OVERFLOW         type:styleOverflow \
+                    abstract get displaybind stylesheetproperty
+    property pageBreakBefore atype:BSTR    dispid:DISPID_A_PAGEBREAKBEFORE type:stylePageBreak \
+                    abstract get displaybind stylesheetproperty
+    property pageBreakAfter  atype:BSTR    dispid:DISPID_A_PAGEBREAKAFTER  type:stylePageBreak \
+                    abstract get displaybind stylesheetproperty
+    property cursor         atype:BSTR     dispid:DISPID_A_CURSOR          type:styleCursor \
+                    abstract get displaybind stylesheetproperty    
+    property tableLayout    atype:BSTR     dispid:DISPID_A_TABLELAYOUT     type:styleTableLayout \
+                    abstract get displaybind  stylesheetproperty
+    property borderCollapse atype:BSTR     dispid:DISPID_A_BORDERCOLLAPSE  type:styleBorderCollapse \
+                    abstract get displaybind  stylesheetproperty
+    property blockDirection atype:BSTR     dispid:DISPID_A_DIR             type:styleDir \
+                    abstract get displaybind  stylesheetproperty
+    property direction      atype:BSTR     dispid:DISPID_A_DIRECTION       type:styleDir \
+                    abstract get displaybind  stylesheetproperty
+    property unicodeBidi    atype:BSTR     dispid:DISPID_A_UNICODEBIDI     type:styleBidi \
+                    abstract get displaybind  stylesheetproperty
+    property behavior       atype:BSTR     dispid:DISPID_A_BEHAVIOR        type:CStr \
+                    abstract get displaybind  stylesheetproperty
+    property imeMode        atype:BSTR     dispid:DISPID_A_IMEMODE         type:styleImeMode \
+                    abstract get displaybind  stylesheetproperty
+    property rubyAlign      atype:BSTR     dispid:DISPID_A_RUBYALIGN       type:styleRubyAlign \
+                    abstract get displaybind  stylesheetproperty
+    property rubyPosition   atype:BSTR     dispid:DISPID_A_RUBYPOSITION    type:styleRubyPosition \
+                    abstract get displaybind  stylesheetproperty
+    property rubyOverhang   atype:BSTR     dispid:DISPID_A_RUBYOVERHANG    type:styleRubyOverhang \
+                    abstract get displaybind  stylesheetproperty
+    property layoutGridChar atype:VARIANT   dispid:DISPID_A_LAYOUTGRIDCHAR type:CUnitValue \
+                    abstract get displaybind stylesheetproperty
+    property layoutGridLine atype:VARIANT   dispid:DISPID_A_LAYOUTGRIDLINE type:CUnitValue \
+                    abstract get displaybind stylesheetproperty
+    property layoutGridMode atype:BSTR     dispid:DISPID_A_LAYOUTGRIDMODE  type:styleLayoutGridMode \
+                    abstract get displaybind  stylesheetproperty
+    property layoutGridType atype:BSTR     dispid:DISPID_A_LAYOUTGRIDTYPE  type:styleLayoutGridType \
+                    abstract get displaybind  stylesheetproperty
+    property textAutospace  atype:BSTR     dispid:DISPID_A_TEXTAUTOSPACE   type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property lineBreak      atype:BSTR     dispid:DISPID_A_LINEBREAK       type:styleLineBreak \
+                    abstract get displaybind  stylesheetproperty
+    property wordBreak      atype:BSTR     dispid:DISPID_A_WORDBREAK       type:styleWordBreak \
+                    abstract get displaybind  stylesheetproperty
+    property textJustify    atype:BSTR     dispid:DISPID_A_TEXTJUSTIFY     type:styleTextJustify \
+                    abstract get displaybind  stylesheetproperty
+    property textJustifyTrim atype:BSTR    dispid:DISPID_A_TEXTJUSTIFYTRIM type:styleTextJustifyTrim \
+                    abstract get displaybind  stylesheetproperty
+    property textKashida     atype:VARIANT dispid:DISPID_A_TEXTKASHIDA     type:CUnitValue \
+                    abstract get displaybind  stylesheetproperty  ppflags:PP_UV_SCALER_OR_PERCENT
+    property borderStyle     atype:BSTR    dispid:DISPID_A_BORDERSTYLE     type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property borderColor     atype:BSTR    dispid:DISPID_A_BORDERCOLOR     type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property borderWidth     atype:BSTR    dispid:DISPID_A_BORDERWIDTH     type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property padding         atype:BSTR    dispid:DISPID_A_PADDING         type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property margin          atype:BSTR    dispid:DISPID_A_MARGIN          type:CStyleComponent \
+                    abstract get displaybind  stylesheetproperty
+    property overflowX       atype:BSTR    dispid:DISPID_A_OVERFLOWX       type:styleOverflow   \
+				    abstract get displaybind  stylesheetproperty
+    property overflowY       atype:BSTR    dispid:DISPID_A_OVERFLOWY       type:styleOverflow   \
+				    abstract get displaybind  stylesheetproperty
+    property textTransform   atype:BSTR    dispid:DISPID_A_TEXTTRANSFORM   type:styleTextTransform \
+				    abstract get displaybind  stylesheetproperty
+
+#endif _CURSTYLE_PDL_

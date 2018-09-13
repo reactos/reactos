@@ -1,0 +1,241 @@
+1 DLGINCLUDE "prompt.H"
+
+IDD_DISKPROMPT1 DIALOG 34, 50, 281, 120
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 225, 10, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 225, 27, 50, 14
+    LTEXT           "Copy &files from:", IDT_TITLE1, 42, 86, 180, 8
+    COMBOBOX        IDC_COMBO1, 42, 99, 175, 74, CBS_DROPDOWN |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO2, 42, 99, 175, 74, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...", IDB_BROWSE, 225, 99, 50, 14
+    ICON            IDOK, IDI_ICON1, 9, 10, 18, 20, WS_GROUP
+    LTEXT           "Text", IDT_TEXT1, 42, 10, 175, 26, NOT WS_GROUP
+    LTEXT           "Text", IDT_TEXT2, 42, 44, 175, 42, NOT WS_GROUP
+END
+
+IDD_REPLACE DIALOG 0, 0, 301, 100
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Replace"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes", IDYES, 66, 80, 53, 14, WS_GROUP
+    PUSHBUTTON      "&No", IDNO, 124, 80, 53, 14
+    PUSHBUTTON      "No to &All", IDB_NOTOALL, 182, 80, 53, 14
+
+    LTEXT           "Source: %1.", IDT_TEXT7, 11, 10, 290, 10, NOT WS_GROUP
+    LTEXT           "Target: %1.", IDT_TEXT8, 11, 20, 290, 10, NOT WS_GROUP
+
+    LTEXT           "The target file exists and is a different language than the source.", IDT_TEXT1, 11, 40, 290, 10, NOT WS_GROUP
+    LTEXT           "The target file exists and is newer than the source.", IDT_TEXT2, 11, 40, 290, 10, NOT WS_GROUP
+    LTEXT           "The target file already exists.", IDT_TEXT3, 11, 40, 290, 10, NOT WS_GROUP
+
+    LTEXT           "Overwrite the %1 file with the %2 one?", IDT_TEXT4, 11, 60, 290, 10, NOT WS_GROUP
+    LTEXT           "Overwrite the newer file?", IDT_TEXT5, 11, 60, 290, 10, NOT WS_GROUP
+    LTEXT           "Would you like to overwrite it?", IDT_TEXT6, 11, 60, 290, 10, NOT WS_GROUP
+END
+
+IDD_FILEPROGRESS DIALOG 6, 18, 250, 84
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "File Progress"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDA_ANIMATION,ANIMATE_CLASS,ACS_TRANSPARENT,7,0,189,28
+    LTEXT           "", IDT_TEXT1, 7, 38, 189, 8, SS_PATHELLIPSIS | NOT WS_GROUP
+    LTEXT           "", IDT_TEXT2, 7, 48, 189, 8, SS_PATHELLIPSIS | NOT WS_GROUP
+    CONTROL         "", IDC_PROGRESS, PROGRESS_CLASS, 0, 7, 63, 179, 8
+    DEFPUSHBUTTON   "Cancel", IDCANCEL, 192, 63, 50, 14, WS_GROUP
+END
+
+IDD_FILEERROR2 DIALOG 6, 18, 230, 91
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "File Error"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ICON1, IDI_ICON1, 9, 10, 18, 20, WS_GROUP
+    LTEXT           "An error has occurred.", IDT_TEXT1, 42, 10, 174, 40,
+                    NOT WS_GROUP
+    DEFPUSHBUTTON   "&Retry", IDOK, 39, 71, 50, 14, WS_GROUP
+    PUSHBUTTON      "&Cancel", IDCANCEL, 151, 71, 50, 14
+END
+
+IDD_DYNAWIZ_SELECTDEV_PAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Manufacturers:",IDC_NDW_PICKDEV_MFGLABEL,0,44,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_MFGLIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING |
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER |
+                    WS_BORDER | WS_TABSTOP,0,54,114,60
+    LTEXT           "",IDC_NDW_PICKDEV_ONEMFG_MODELSLABEL,0,44,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_ONEMFG_DRVLIST,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+                    LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT |
+                    LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,0,54,317,60
+    LTEXT           "",IDC_NDW_PICKDEV_MODELSLABEL,117,44,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_DRVLIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING |
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER |
+                    WS_BORDER | WS_TABSTOP,117,54,200,60
+    LTEXT           "(Retrieving a list of all devices)", IDC_NDW_STATUS_TEXT, 0,54,317,60,
+                                SS_SUNKEN
+    ICON            "",IDC_CLASSICON,0,0,20,20
+    RADIOBUTTON     "Show &compatible hardware",IDC_NDW_PICKDEV_SHOWCOMPAT,
+                    0,118,165,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "Show &all hardware of this device class",IDC_NDW_PICKDEV_SHOWALL,0,129,165,
+                    10,WS_TABSTOP
+    PUSHBUTTON      "&Windows Update",IDC_NDW_PICKDEV_WINDOWSUPDATE,181,118,66,14
+    PUSHBUTTON      "&Have Disk...",IDC_NDW_PICKDEV_HAVEDISK,251,118,66,14
+    LTEXT           "",IDC_NDW_TEXT,30,0,287,40
+END
+
+
+DLG_DEVINSTALL DIALOG DISCARDABLE  20, 20, 290, 183
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Device"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Manufacturers:",IDC_NDW_PICKDEV_MFGLABEL,7,45,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_MFGLIST,WC_LISTVIEW,
+                    WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_SORTASCENDING,
+                    7,55,100,66
+    LTEXT           "",IDC_NDW_PICKDEV_ONEMFG_MODELSLABEL,7,45,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_ONEMFG_DRVLIST,WC_LISTVIEW,
+                    WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_SORTASCENDING,
+                    7,55,276,66
+    LTEXT           "",IDC_NDW_PICKDEV_MODELSLABEL,111,45,100,8
+    CONTROL         "",IDC_NDW_PICKDEV_DRVLIST,WC_LISTVIEW,
+                    WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_SORTASCENDING,
+                    111,55,172,66
+    LTEXT           "(Retrieving a list of all devices)", IDC_NDW_STATUS_TEXT, 7, 55, 276, 66, SS_SUNKEN
+    ICON            "",IDC_CLASSICON,7,7,18,20
+    RADIOBUTTON     "Show &compatible hardware",IDC_NDW_PICKDEV_SHOWCOMPAT,7,126,96,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "Show &all hardware of this device class",IDC_NDW_PICKDEV_SHOWALL,7,137,68,10,WS_TABSTOP
+    PUSHBUTTON      "&Windows Update",IDC_NDW_PICKDEV_WINDOWSUPDATE,147,126,66,14
+    PUSHBUTTON      "&Have Disk...",IDC_NDW_PICKDEV_HAVEDISK,217,126,66,14,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,179,162,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,233,162,50,14
+    LTEXT           "",IDC_NDW_TEXT,40,7,242,34
+    CONTROL         "",IDD_DEVINSLINE,"Static",SS_BLACKRECT,7,154,276,1
+END
+
+
+IDD_DEF_DEVRESOURCE_PROP DIALOG DISCARDABLE  0, 0, 252, 218
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Resources"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_DEVRES_ICON,7,7,21,21
+    LTEXT           "",IDC_DEVRES_DEVDESC,37,9,203,16,SS_NOPREFIX
+    LTEXT           "&Resource settings:",IDC_DEVRES_SETTINGSTATE,7,35,98,8
+    LTEXT           "",IDC_DEVRES_NO_RESOURCES_TEXT,7,35,238,55
+    CONTROL         "",IDC_DEVRES_SETTINGSLIST,WC_LISTVIEW,
+                    WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL |
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT |
+                    LVS_NOSORTHEADER,7,46,238,48
+    LTEXT           "",IDC_DEVRES_NOALLOCTEXT,7,46,204,48
+    LTEXT           "Setting &based on:",IDC_DEVRES_LCTEXT,7,103,60,8
+    COMBOBOX        IDC_DEVRES_LOGCONFIGLIST,68,101,177,40,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDC_DEVRES_NO_CHANGE_TEXT,7,103,238,24
+    CONTROL         "&Use automatic settings",IDC_DEVRES_USESYSSETTINGS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,68,135,104,10
+    PUSHBUTTON      "&Change Setting...",IDC_DEVRES_CHANGE,173,133,72,14, WS_TABSTOP
+    PUSHBUTTON      "&Set Configuration Manually", IDC_DEVRES_MAKEFORCED, 141, 133, 104, 14, WS_TABSTOP
+    LTEXT           "Parent device:",IDC_DEVRES_MFPARENT,7,136,56,8
+    LTEXT           "",IDC_DEVRES_MFPARENT_DESC,66,136,179,8,SS_NOPREFIX
+    LTEXT           "Conflicting device list:",IDC_DEVRES_CONFLICTDEVTEXT,7,
+                    154,138,8
+    EDITTEXT        IDC_DEVRES_CONFLICTINFOLIST,7,165,238,46,ES_MULTILINE |
+                    ES_READONLY | WS_VSCROLL | WS_TABSTOP
+END
+
+
+IDD_EDIT_RESOURCE DIALOG DISCARDABLE  32, 24, 227, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_EDITRES_INSTRUCTIONS,7,7,213,48
+    LTEXT           "This resource is assigned to the following child device(s):",
+                    IDC_EDITRES_MFCHILDREN,7,62,193,8
+    LTEXT           "",IDC_EDITRES_MFCHILDREN_LIST,7,73,213,16
+    LTEXT           "&Value:",IDC_EDITRES_VALUE_LABEL,7,99,24,8
+    EDITTEXT        IDC_EDITRES_VALUE,32,96,115,14,ES_AUTOHSCROLL
+    CONTROL         "",IDC_EDITRES_SPIN,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | 0x35,126,96,20,14
+    GROUPBOX        "Conflict information",IDC_EDITRES_CONFLICTINFO,7,117,
+                    213,70
+    LTEXT           "",IDC_EDITRES_CONFLICTTEXT,14,128,199,16
+    LISTBOX         IDC_EDITRES_CONFLICTLIST,14,147,199,33,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,113,194,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,194,50,14
+END
+
+
+IDD_DEVICE_VERIFY_WARNING DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Digital Signature Not Found"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDD_DEVINSLINE,"Static",SS_BLACKRECT,7,154,276,1
+    CONTROL         BMP_CRYPTO,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,7,7,80,119
+    LTEXT           "The Microsoft digital signature affirms that software has been tested with Windows and that the software has not been altered since it was tested.",
+                    IDC_STATIC,100,7,183,24
+    LTEXT           "The software you are about to install does not contain a Microsoft digital signature. Therefore,  there is no guarantee that this software works correctly with Windows.",
+                    IDC_STATIC,100,38,183,32
+    LTEXT           "Unknown device",IDC_VERIFY_FILENAME,110,77,173,16
+    LTEXT           "If you want to search for Microsoft digitally signed software, visit the Windows Update Web site at http://windowsupdate.microsoft.com to see if one is available.",
+                    IDC_STATIC,100,100,183,32
+    LTEXT           "Do you want to continue the installation?",IDC_STATIC,
+                    100,139,183,14
+    DEFPUSHBUTTON   "&Yes",IDC_VERIFY_WARN_YES,125,162,50,14
+    PUSHBUTTON      "&No",IDC_VERIFY_WARN_NO,179,162,50,14
+    PUSHBUTTON      "&More Info",IDC_VERIFY_WARN_DETAILS,233,162,50,14
+END
+
+
+IDD_DEVICE_VERIFY_BLOCK DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Digital Signature Not Found"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDD_DEVINSLINE,"Static",SS_BLACKRECT,7,154,276,1
+    CONTROL         BMP_CRYPTO,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,7,7,80,119
+    LTEXT           "The Microsoft digital signature affirms that software has been tested with Windows and that the software has not been altered since it was tested.",
+                    IDC_STATIC,100,7,183,24
+    LTEXT           "The software you are about to install does not contain a Microsoft digital signature. Therefore,  there is no guarantee that this software works correctly with Windows.",
+                    IDC_STATIC,100,38,183,32
+    LTEXT           "Unknown device",IDC_VERIFY_FILENAME,110,77,173,16
+    LTEXT           "If you want to search for Microsoft digitally signed software, visit the Windows Update Web site at http://windowsupdate.microsoft.com to see if one is available.",
+                    IDC_STATIC, 100,100,183,32
+    DEFPUSHBUTTON   "OK",IDC_VERIFY_BLOCK_OK,179,162,50,14
+    PUSHBUTTON      "&More Info",IDC_VERIFY_WARN_DETAILS,233,162,50,14
+END
+
+
+IDD_SIMPLEPROMPT DIALOG 34, 50, 281, 83
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 225, 10, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 225, 27, 50, 14
+    ICON            IDOK, IDI_ICON1, 9, 10, 18, 20, WS_GROUP
+    LTEXT           "Text", IDT_TEXT1, 42, 10, 175, 61, NOT WS_GROUP
+END
+
+

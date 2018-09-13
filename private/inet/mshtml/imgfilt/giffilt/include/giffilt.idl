@@ -1,0 +1,25 @@
+// GIFFilter.idl : IDL source for GIFFilter.dll
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (GIFFilter.tlb) and marshalling code.
+
+import "ocmm.idl";
+
+[
+	uuid( fe47ed40-7312-11d0-97b0-00c04fd85a5d ),
+	version( 1.0 ),
+	helpstring( "GIFFilter 1.0 Type Library" )
+]
+library GIFFilterLib
+{
+	importlib( "stdole32.tlb" );
+
+	[
+		uuid( 69dc5010-7312-11d0-97b0-00c04fd85a5d ),
+		helpstring( "CoGIFFilter Class" )
+	]
+	coclass CoGIFFilter
+	{
+		[default] interface IImageDecodeFilter;
+	};
+};

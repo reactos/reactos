@@ -1,0 +1,85 @@
+!IF 0
+
+Copyright (c) 1998  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\edit=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=mshtmled
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=    ..\..\$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY=$(CRTMAIN)
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\atl21; \
+    $(O); \
+    $(SITEINCLUDES) \
+
+DLLDEF=$O\mshtmled.def
+
+# OptsHold.idl is being built separately in PASS 0
+SOURCES= \
+    stdafx.cxx \
+    mshtmled.rc \
+    libmain.cxx \
+    dlghelpr.cxx \
+    mshtmled.cxx \
+    htmled.cxx\
+    sload.cxx \
+    edutil.cxx \
+    edcmd.cxx \
+    charcmd.cxx \
+    blockcmd.cxx \
+    dlgcmd.cxx \
+    inscmd.cxx \
+    delcmd.cxx \
+    misccmd.cxx \
+    selcmd.cxx \
+    selman.cxx \
+    edtrack.cxx \
+    edadorn.cxx \
+    ime.cxx \
+    isclist.cxx \
+    cutcmd.cxx \
+    copycmd.cxx \
+    pastecmd.cxx
+
+
+NTTARGETFILES=
+
+USE_MIDL_FOR_MKTYPLIB=1
+
+
+PRECOMPILED_CXX=1
+# precompiled headers
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\site\include\$(O)\headers.pch
+
+TARGETLIBS = \
+    $(ROOT)\src\core\include\$(O)\corepch.lib \
+    $(ROOT)\src\site\include\$(O)\sitepch.lib \
+    $(ROOT)\src\f3\crt\$(O)\crt.lib \
+    $(ROOT)\src\core\cdutil\$(O)\memutils.obj \
+    $(ROOT)\src\core\cdutil\$(O)\vmem.obj \
+    $(ROOT)\src\core\cdutil\$(O)\cstr.obj \
+    $(ROOT)\src\core\cdutil\$(O)\formsary.obj \
+    $(ROOT)\src\core\wrappers\$(O)\wrappers.lib \
+!ifdef USE_DEBUGLIB
+    $(ROOT)\src\core\debuglib\$(O)\debuglib.lib \
+!endif
+    $(ROOT)\src\core\misc\$(O)\coremisc.lib \
+    $(ROOT)\src\site\text\$(O)\util.obj \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\shlwapip.lib \
+    $(SDK_LIB_PATH)\shlwapi.lib \
+
+
+NTTARGETFILE0=$O\OptsHold.tlb

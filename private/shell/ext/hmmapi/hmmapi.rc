@@ -1,0 +1,21 @@
+///////////////////////////////////////////////////////////////////////////
+//  BEGIN Version Resource
+
+#ifndef MAC
+#if defined(WINNT) || defined(WINNT_ENV)
+#include <winver.h>
+#endif // winnt
+#include "hmmapi.rcv"
+#endif // mac
+
+//  END   Version Resource
+///////////////////////////////////////////////////////////////////////////
+
+#include "resource.h"
+
+IDI_MAIL              ICON    DISCARDABLE     "MAIL.ICO"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_DEFAULTPOSTURL "http://www.hotmail.com/secure/start"
+END

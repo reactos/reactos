@@ -1,0 +1,67 @@
+MAJORCOMP=shell
+MINORCOMP=shimgvw
+
+TARGETNAME=shimgvw
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLBASE=0x10000000
+DLLENTRY=DllMain
+DLLDEF=shimgvw.def
+
+# Do this to assure that we run on NT 4.0 and Win95, even with
+# NT5/Memphis headers.
+!if !defined(WIN32_WINNT_VERSION)
+WIN32_WINNT_VERSION=0x0400
+!endif
+!if !defined(WIN32_WIN95_VERSION)
+WIN32_WIN95_VERSION=0x0400
+!endif
+!if !defined(WIN32_IE_VERSION)
+WIN32_IE_VERSION=0x0501
+!endif
+
+# Override NT5 settings
+SUBSYSTEM_VERSION=4.00
+
+EXPECTED_WINVER=4.0
+NOT_LEAN_AND_MEAN=1
+USE_CRTDLL=0
+
+USE_ATL=1
+
+MSC_WARNING_LEVEL=/WX /W3
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+C_DEFINES = $(C_DEFINES) -DUNICODE -D_UNICODE -DWIN32
+INCLUDES=$(BASEDIR)\public\sdk\inc\atl21;\nt\private\shell\inc;\nt\private\windows\inc
+
+SOURCES= \
+    Atl.cpp         \
+    Events.cpp      \
+    PrevCtrl.cpp    \
+    PrevWnd.cpp  \
+    ZoomWnd.cpp     \
+    shimgvw.cpp     \
+    shimgvw.rc      \
+    shimgvw.idl
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib            \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib             \
+    $(BASEDIR)\public\sdk\lib\*\winspool.lib          \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shlwapip.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib           \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib             \
+    $(BASEDIR)\public\sdk\lib\*\oleaut32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib              \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\shell32p.lib          \
+

@@ -1,0 +1,10 @@
+/*****************************************************************/
+/**				  Microsoft Windows for Workgroups				**/
+/**		      Copyright (C) Microsoft Corp., 1991-1992			**/
+/*****************************************************************/ 
+
+#include <nowindep.h>
+#include <windows.h>
+
+#include "npstub.rcv"
+

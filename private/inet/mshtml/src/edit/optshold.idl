@@ -1,0 +1,55 @@
+#include <olectl.h>
+import "oaidl.idl";
+import "ocidl.idl";
+
+    [
+        object,
+        uuid(3050f4eb-98b5-11cf-bb82-00aa00bdce0b),
+        helpstring("IHtmlFontNamesCollection Interface"),
+        pointer_default(unique),
+	    dual
+    ]
+    interface IHtmlFontNamesCollection : IDispatch
+    {
+	    [propget, id(1), hidden] HRESULT length([retval, out] long * p);
+	    [id(2)] HRESULT item([in] long index,[retval, out] BSTR* pBstr);
+    };
+
+    [
+        object,
+        uuid(3050f4df-98b5-11cf-bb82-00aa00bdce0b),
+        dual,
+        helpstring("IHtmlDlgHelper Interface"),
+        pointer_default(unique)
+    ]
+    interface IHtmlDlgHelper : IDispatch
+    {
+        [propget, id(1)] HRESULT document([out, retval] LPDISPATCH *pVal);
+        [id(2)] HRESULT openfiledlg([optional, in] VARIANT initFile,[optional, in] VARIANT initDir,[optional, in] VARIANT filter,[optional, in] VARIANT title,[retval, out] BSTR* pathName);
+        [id(3)] HRESULT savefiledlg([optional, in] VARIANT initFile,[optional, in] VARIANT initDir,[optional, in] VARIANT filter,[optional, in] VARIANT title,[retval, out] BSTR* pathName);
+        [id(4)] HRESULT choosecolordlg([optional, in] VARIANT initColor,[retval, out] long* rgbColor);
+        [id(5)] HRESULT getCharset([in] BSTR fontName,[retval, out] long* charset);
+        [propget, id(6), hidden] HRESULT fonts([retval, out] IHtmlFontNamesCollection ** p);
+    };
+[
+    uuid(3050f4e0-98b5-11cf-bb82-00aa00bdce0b),
+    version(1.0),
+    helpstring("OptsHold 1.0 Type Library")
+]
+library OPTSHOLDLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        uuid(3050f4e1-98b5-11cf-bb82-00aa00bdce0b),
+        helpstring("HtmlDlgHelper Class")
+    ]
+    coclass HtmlDlgHelper
+    {
+        [default] interface IHtmlDlgHelper;
+    };
+};
+cpp_quote("extern \"C\" const CLSID  CLSID_Mshtmled;")
+cpp_quote("extern \"C\" const CLSID  CLSID_HTMLEditor;")
+

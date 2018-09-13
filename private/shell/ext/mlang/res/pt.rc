@@ -1,0 +1,482 @@
+LANGUAGE 0x16,0x02
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+101 DIALOG FIXED IMPURE  0, 0, 194, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION L"Instala\x00e7\x00e3o do pacote de idiomas"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Instalar",1,76,74,50,14
+    PUSHBUTTON      L"Cancelar",2,134,74,50,14
+    LTEXT           L"Para visualizar correctamente os car\x00e1cteres do idioma necessita de instalar o seguinte pacote de idiomas:",
+                    -1,10,7,176,19
+    LTEXT           L"",201,10,28,166,11
+    CONTROL         L"&Nunca instalar quaisquer pacotes de idiomas",1000,
+                    L"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,56,172,11
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4096                    L"P\x00e1gina de c\x00f3digo %d"
+    4097                    L"Instala\x00e7\x00e3o do pacote de idiomas"
+    4098                    L"N\x00e3o tem privil\x00e9gios de administrador neste computador. \r\nS\x00f3 ser\x00e1 poss\x00edvel concluir esta instala\x00e7\x00e3o correctamente se for executada por um administrador."
+    4099                    L"Pacote de idiomas instalado para o Internet Explorer. \r\nPoder\x00e1 ter de reiniciar o computador para que todas as defini\x00e7\x00f5es entrem em vigor."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4352                    L"Afrikaans"
+    4353                    L"Alban\x00eas"
+    4354                    L"\x00c1rabe"
+    4355                    L"\x00c1rabe (Ar\x00e1bia Saudita)"
+    4356                    L"\x00c1rabe (Iraque)"
+    4357                    L"\x00c1rabe (Egipto)"
+    4358                    L"\x00c1rabe (L\x00edbia)"
+    4359                    L"\x00c1rabe (Arg\x00e9lia)"
+    4360                    L"\x00c1rabe (Marrocos)"
+    4361                    L"\x00c1rabe (Tun\x00edsia)"
+    4362                    L"\x00c1rabe (Om\x00e3)"
+    4363                    L"\x00c1rabe (I\x00e9men)"
+    4364                    L"\x00c1rabe (S\x00edria)"
+    4365                    L"\x00c1rabe (Jord\x00e2nia)"
+    4366                    L"\x00c1rabe (L\x00edbano)"
+    4367                    L"\x00c1rabe (Koweit)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4368                    L"\x00c1rabe (E.A.U.)"
+    4369                    L"\x00c1rabe (Bar\x00e9m)"
+    4370                    L"\x00c1rabe (Catar)"
+    4371                    L"Basco"
+    4372                    L"B\x00falgaro"
+    4373                    L"Bielo-russo"
+    4374                    L"Catal\x00e3o"
+    4375                    L"Chin\x00eas"
+    4376                    L"Chin\x00eas (Formosa)"
+    4377                    L"Chin\x00eas (RPC)"
+    4378                    L"Chin\x00eas (Hong Kong)"
+    4379                    L"Chin\x00eas (Singapura)"
+    4380                    L"Croata"
+    4381                    L"Checo"
+    4382                    L"Dinamarqu\x00eas"
+    4383                    L"Holand\x00eas (Holanda)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4384                    L"Holand\x00eas (B\x00e9lgica)"
+    4385                    L"Ingl\x00eas"
+    4386                    L"Ingl\x00eas (E.U.A.)"
+    4387                    L"Ingl\x00eas (Reino Unido)"
+    4388                    L"Ingl\x00eas (Austr\x00e1lia)"
+    4389                    L"Ingl\x00eas (Canad\x00e1)"
+    4390                    L"Ingl\x00eas (Nova Zel\x00e2ndia)"
+    4391                    L"Ingl\x00eas (Irlanda)"
+    4392                    L"Ingl\x00eas (\x00c1frica do Sul)"
+    4393                    L"Ingl\x00eas (Jamaica)"
+    4394                    L"Ingl\x00eas (Belize)"
+    4395                    L"Ingl\x00eas (Trindade)"
+    4396                    L"Est\x00f3nio"
+    4397                    L"Fero\x00eas"
+    4398                    L"Farsi"
+    4399                    L"Finland\x00eas"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4400                    L"Franc\x00eas (Fran\x00e7a)"
+    4401                    L"Franc\x00eas (B\x00e9lgica)"
+    4402                    L"Franc\x00eas (Canad\x00e1)"
+    4403                    L"Franc\x00eas (Su\x00ed\x00e7a)"
+    4404                    L"Franc\x00eas (Luxemburgo)"
+    4405                    L"Ga\x00e9lico"
+    4406                    L"Alem\x00e3o (Alemanha)"
+    4407                    L"Alem\x00e3o (Su\x00ed\x00e7a)"
+    4408                    L"Alem\x00e3o (\x00c1ustria)"
+    4409                    L"Alem\x00e3o (Luxemburgo)"
+    4410                    L"Alem\x00e3o (Liechtenstein)"
+    4411                    L"Grego"
+    4412                    L"Hebraico"
+    4413                    L"Hindi"
+    4414                    L"H\x00fangaro"
+    4415                    L"Island\x00eas"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4416                    L"Indon\x00e9sio"
+    4417                    L"Italiano (It\x00e1lia)"
+    4418                    L"Italiano (Su\x00ed\x00e7a)"
+    4419                    L"Japon\x00eas"
+    4420                    L"Coreano"
+    4421                    L"Let\x00e3o"
+    4422                    L"Lituano"
+    4423                    L"Maced\x00f3nio (FYROM)"
+    4424                    L"Malaio (Mal\x00e1sia)"
+    4425                    L"Malt\x00eas"
+    4426                    L"Noruegu\x00eas (Bokmal)"
+    4427                    L"Noruegu\x00eas (Nynorsk)"
+    4428                    L"Polaco"
+    4429                    L"Portugu\x00eas (Brasil)"
+    4430                    L"Portugu\x00eas (Portugal)"
+    4431                    L"Reto-romano"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4432                    L"Romeno"
+    4433                    L"Romeno (Mold\x00e1via)"
+    4434                    L"Russo"
+    4435                    L"Russo (Mold\x00e1via)"
+    4436                    L"Servo (cir\x00edlico)"
+    4437                    L"Servo (latim)"
+    4438                    L"Eslovaco"
+    4439                    L"Esloveno"
+    4440                    L"S\x00f3rbico"
+    4441                    L"Espanhol (tradicional)"
+    4442                    L"Espanhol (M\x00e9xico)"
+    4443                    L"Espanhol (Internacional)"
+    4444                    L"Espanhol (Guatemala)"
+    4445                    L"Espanhol (Costa Rica)"
+    4446                    L"Espanhol (Panam\x00e1)"
+    4447                    L"Espanhol (Rep\x00fablica Dominicana)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4448                    L"Espanhol (Venezuela)"
+    4449                    L"Espanhol (Col\x00f4mbia)"
+    4450                    L"Espanhol (Peru)"
+    4451                    L"Espanhol (Argentina)"
+    4452                    L"Espanhol (Equador)"
+    4453                    L"Espanhol (Chile)"
+    4454                    L"Espanhol (Uruguai)"
+    4455                    L"Espanhol (Paraguai)"
+    4456                    L"Espanhol (Bol\x00edvia)"
+    4457                    L"Espanhol (El Salvador)"
+    4458                    L"Espanhol (Honduras)"
+    4459                    L"Espanhol (Nicar\x00e1gua)"
+    4460                    L"Espanhol (Porto Rico)"
+    4461                    L"Sutu"
+    4462                    L"Sueco"
+    4463                    L"Sueco (Finl\x00e2ndia)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4464                    L"Tailand\x00eas"
+    4465                    L"Tsonga"
+    4466                    L"Tswana"
+    4467                    L"Turco"
+    4468                    L"Ucraniano"
+    4469                    L"Urdu"
+    4470                    L"Vietnamita"
+    4471                    L"Xhosa"
+    4472                    L"I\x00eddiche"
+    4473                    L"Zulu"
+    4474                    L"Chin\x00eas (Macau)"
+    4475                    L"Ingl\x00eas (Cara\x00edbas)"
+    4476                    L"Ingl\x00eas (Zimbabwe)"
+    4477                    L"Ingl\x00eas (Filipinas)"
+    4478                    L"Franc\x00eas (M\x00f3naco)"
+    4479                    L"Azeri (Latim)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4480                    L"Uzbeque (Cir\x00edlico)"
+    4481                    L"Uzbeque (Latim)"
+    4482                    L"Arm\x00e9nio"
+    4483                    L"Georgiano"
+    4484                    L"Cazaque"
+    4485                    L"Swahili"
+    4486                    L"Tatar"
+    4487                    L"Bengali"
+    4488                    L"Pundjabi"
+    4489                    L"Gujarati"
+    4490                    L"Oriya"
+    4491                    L"T\x00e2mul"
+    4492                    L"Telugu"
+    4493                    L"Kannada"
+    4494                    L"Malaio"
+    4495                    L"Assam\x00eas"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4497                    L"Marati"
+    4498                    L"Malaio (Brunei Darussalam)"
+    4499                    L"Nepal\x00eas (\x00cdndia)"
+    4500                    L"S\x00e2nscrito"
+    4501                    L"Lituano"
+    4502                    L"Konkani"
+    4503                    L"Azeri (cir\x00edlico)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4608                    L"Unicode"
+    4609                    L"Unicode (big-endian)"
+    4610                    L"Idiomas da Europa Central (Windows)"
+    4611                    L"Cir\x00edlico (Windows)"
+    4612                    L"Idiomas da Europa Ocidental (Windows)"
+    4613                    L"Grego (Windows)"
+    4614                    L"Turco (Windows)"
+    4615                    L"Hebraico (Windows)"
+    4616                    L"\x00c1rabe (Windows)"
+    4617                    L"B\x00e1ltico (Windows)"
+    4618                    L"Vietnamita (Windows)"
+    4619                    L"Idiomas da Europa Ocidental (IA5)"
+    4620                    L"Alem\x00e3o (IA5)"
+    4621                    L"Sueco (IA5)"
+    4622                    L"Noruegu\x00eas (IA5)"
+    4623                    L"Cir\x00edlico (KOI8-R)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4624                    L"Cir\x00edlico (KOI8-U)"
+    4625                    L"Idiomas da Europa Central (ISO)"
+    4626                    L"Latim 3 (ISO)"
+    4627                    L"B\x00e1ltico (ISO)"
+    4628                    L"Cir\x00edlico (ISO)"
+    4629                    L"\x00c1rabe (ISO)"
+    4630                    L"Grego (ISO)"
+    4631                    L"Hebraico (ISO-Visual)"
+    4632                    L"Definido pelo utilizador"
+    4633                    L"Japon\x00eas (JIS)"
+    4634                    L"Japon\x00eas (JIS-Kana de 1 byte)"
+    4635                    L"Japon\x00eas (JIS-Kana de 1 byte- SO/SI)"
+    4636                    L"Coreano (ISO)"
+    4637                    L"Japon\x00eas (seleccionar automaticamente)"
+    4638                    L"Coreano (seleccionar automaticamente)"
+    4639                    L"Japon\x00eas (EUC)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4640                    L"Coreano (EUC)"
+    4641                    L"Chin\x00eas simplificado (HZ)"
+    4642                    L"Unicode (UTF-7)"
+    4643                    L"Unicode (UTF-8)"
+    4644                    L"Idiomas da Europa central (DOS)"
+    4645                    L"Cir\x00edlico (DOS)"
+    4646                    L"Tailand\x00eas (Windows)"
+    4647                    L"Japon\x00eas (Shift-JIS)"
+    4648                    L"Chin\x00eas simplificado (GB2312)"
+    4649                    L"Coreano"
+    4650                    L"Chin\x00eas tradicional (Big5)"
+    4651                    L"Hebraico (ISO-Logical)"
+    4652                    L"Seleccionar automaticamente"
+    4653                    L"\x00c1rabe (ASMO 708)"
+    4654                    L"\x00c1rabe (DOS)"
+    4655                    L"Hebraico (DOS)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4656                    L"Idiomas da Europa Ocidental  (ISO)"
+    4657                    L"Chin\x00eas simplificado (Seleccionar automaticamente)"
+    4658                    L"Chin\x00eas tradicional (Seleccionar automaticamente)"
+    4659                    L"Cir\x00edlico (Seleccionar automaticamente)"
+    4660                    L"Grego (Seleccionar automaticamente)"
+    4661                    L"\x00c1rabe (Seleccionar automaticamente)"
+    4662                    L"Turco (ISO)"
+    4663                    L"Latim 9 (ISO)"
+    4664                    L"US-ASCII"
+    4665                    L"Chin\x00eas simplificado (EUC)"
+    4666                    L"Coreano (Johab)"
+    4667                    L"OEM Estados Unidos"
+    4668                    L"Idiomas da Europa Ocidental"
+    4669                    L"Europa"
+    4670                    L"Chin\x00eas tradicional (CNS)"
+    4671                    L"Chin\x00eas tradicional (Eten)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4672                    L"Est\x00f3nio (ISO)"
+    4673                    L"Idiomas da Europa Ocidental (DOS)"
+    4674                    L"Grego (DOS)"
+    4675                    L"Grego, actual (DOS)"
+    4676                    L"B\x00e1ltico (DOS)"
+    4677                    L"Turco (DOS)"
+    4678                    L"Island\x00eas (DOS)"
+    4679                    L"Idiomas da Europa Ocidental (Mac)"
+    4680                    L"Japon\x00eas (Mac)"
+    4681                    L"Chin\x00eas tradicional (Mac)"
+    4682                    L"Coreano (Mac)"
+    4683                    L"\x00c1rabe (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4700                    L"Hebraico (Mac)"
+    4701                    L"Grego (Mac)"
+    4702                    L"Cir\x00edlico (Mac)"
+    4703                    L"Chin\x00eas simplificado (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4704                    L"Idiomas da Europa Central (Mac)"
+    4705                    L"Island\x00eas (Mac)"
+    4706                    L"Turco (Mac)"
+    4707                    L"IBM EBCDIC (E.U.A-Canad\x00e1)"
+    4708                    L"IBM EBCDIC (Internacional)"
+    4709                    L"IBM EBCDIC (Latim multil\x00edngue-2)"
+    4710                    L"IBM EBCDIC (Grego actual)"
+    4711                    L"IBM EBCDIC (Latim turco-5)"
+    4712                    L"IBM EBCDIC (Alemanha)"
+    4713                    L"IBM EBCDIC (Dinamarca-Noruega)"
+    4714                    L"IBM EBCDIC (Finl\x00e2ndia-Su\x00e9cia)"
+    4715                    L"IBM EBCDIC (It\x00e1lia)"
+    4716                    L"IBM EBCDIC (Espanha)"
+    4717                    L"IBM EBCDIC (R.U.)"
+    4718                    L"IBM EBCDIC (Katakana japon\x00eas)"
+    4719                    L"IBM EBCDIC (Fran\x00e7a)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4720                    L"IBM EBCDIC (\x00c1rabe)"
+    4721                    L"IBM EBCDIC (Grego)"
+    4722                    L"IBM EBCDIC (Hebraico)"
+    4723                    L"IBM EBCDIC (Coreano com caracteres expandidos)"
+    4724                    L"IBM EBCDIC (Tailand\x00eas)"
+    4725                    L"IBM EBCDIC (Island\x00eas)"
+    4726                    L"IBM EBCDIC (Russo cir\x00edlico)"
+    4727                    L"IBM EBCDIC (Turco)"
+    4728                    L"IBM EBCDIC (S\x00e9rvio cir\x00edlico-b\x00falgaro)"
+    4729                    L"IBM EBCDIC (Japon\x00eas e katakana japon\x00eas)"
+    4730                    L"IBM EBCDIC (Japon\x00eas e E.U.A.-Canad\x00e1)"
+    4731                    L"IBM EBCDIC (Japon\x00eas e Japon\x00eas-Latim)"
+    4732                    L"IBM EBCDIC (Coreano e coreano com caracteres expandidos)"
+    4733                    L"IBM EBCDIC (Chin\x00eas simplificado)"
+    4734                    L"IBM EBCDIC (Chin\x00eas tradicional)"
+    4735                    L"IBM EBCDIC (E.U.A.-Canad\x00e1-Europa)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4736                    L"IBM EBCDIC (Alemanha-Europa)"
+    4737                    L"IBM EBCDIC (Dinamarca-Noruega-Europa)"
+    4738                    L"IBM EBCDIC (Finl\x00e2ndia-Su\x00e9cia-Europa)"
+    4739                    L"IBM EBCDIC (It\x00e1lia-Europa)"
+    4740                    L"IBM EBCDIC (Espanha-Europa)"
+    4741                    L"IBM EBCDIC (R.U.-Europa)"
+    4742                    L"IBM EBCDIC (Fran\x00e7a-Europa)"
+    4743                    L"IBM EBCDIC (Internacional-Europa)"
+    4744                    L"IBM EBCDIC (Island\x00eas-Europa)"
+    4745                    L"ISCII Assam\x00eas"
+    4746                    L"ISCII Bengali"
+    4747                    L"ISCII Devan\x00e1gari"
+    4748                    L"ISCII Gujarathi"
+    4749                    L"ISCII Kannada"
+    4750                    L"ISCII Malaio"
+    4751                    L"ISCII Oriya"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4752                    L"ISCII Pundjabi"
+    4753                    L"ISCII Telugu"
+    4754                    L"ISCII T\x00e2mul"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4864                    L"MS Gothic"
+    4865                    L"MS PGothic"
+    4866                    L"Simsun"
+    4867                    L"Simsun"
+    4868                    L"GulimChe"
+    4869                    L"Gulim"
+    4870                    L"GulimChe"
+    4871                    L"GulimChe"
+    4872                    L"MingLiu"
+    4873                    L"New MingLiu"
+    4874                    L"Courier New"
+    4875                    L"Arial"
+    4876                    L"Lucida Sans Unicode"
+    4877                    L"Miriam Fixed"
+    4878                    L"David"
+    4879                    L"Cordia New"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4880                    L"Cordia New"
+    4881                    L"Simplified Arabic Fixed"
+    4882                    L"Simplified Arabic"
+    4883                    L"Mangal"
+    4884                    L"Mangal"
+    4885                    L"Latha"
+    4886                    L"Latha"
+    4887                    L"Times New Roman"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5120                    L"Baseado em Latim"
+    5121                    L"Latim"
+    5122                    L"Grego"
+    5123                    L"Cir\x00edlico"
+    5124                    L"Arm\x00e9nio"
+    5125                    L"Hebraico"
+    5126                    L"\x00c1rabe"
+    5127                    L"Devan\x00e1gari"
+    5128                    L"Bengali"
+    5129                    L"Gurmukhi"
+    5130                    L"Gujarati"
+    5131                    L"Oriya"
+    5132                    L"T\x00e2mul"
+    5133                    L"Telugu"
+    5134                    L"Kannada"
+    5135                    L"Malaio"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5136                    L"Tailand\x00eas"
+    5137                    L"Lao"
+    5138                    L"Tibetano"
+    5139                    L"Georgiano"
+    5140                    L"Coreano"
+    5141                    L"Japon\x00eas"
+    5142                    L"Chin\x00eas tradicional"
+    5143                    L"Chin\x00eas simplificado"
+    5144                    L"Et\x00edope"
+    5145                    L"CanSyllabic"
+    5146                    L"Cherokee"
+    5147                    L"Yi"
+    5148                    L"Braille"
+    5149                    L"R\x00fanico"
+    5150                    L"Ogham"
+    5151                    L"Sinhala"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5152                    L"Sir\x00edaco"
+    5153                    L"Birman\x00eas"
+    5154                    L"Kmer"
+    5155                    L"Thaana"
+    5156                    L"Mongol"
+    5158                    L"Predefini\x00e7\x00e3o"
+    5159                    L"Merge"
+    5160                    L"Asciisym"
+    5161                    L"Definido pelo utilizador"
+END

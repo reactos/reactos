@@ -1,0 +1,55 @@
+[version]
+signature="$CHICAGO$"
+
+[RegDll]
+AddReg=Registry
+DelReg=Obsolete
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+DelReg=Registry,Obsolete
+
+[Registry]
+HKCR,.cab,,,"%CLSID%"
+HKCR,.cab,InfoTip,,"%INFOTIP%"
+HKCR,%CLSID%,,,"%DESC%"
+HKCR,%CLSID%\CLSID,,,%GUID%
+HKCR,%CLSID%\InProcServer32,,,"cabview.dll"
+HKCR,%CLSID%\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,%CLSID%\DefaultIcon,,,"cabview.dll,0"
+HKCR,%CLSID%\ShellFolder,Attributes,0x00010001,0x680001a0
+
+HKCR,%CLSID%\shell\open\command,,%REGEXSZ%,"%25%\Explorer.exe /idlist,%I,%L"
+HKCR,%CLSID%\shell\open\ddeexec,,,"[ViewFolder(""%l"", %I, %S)]"
+HKCR,%CLSID%\shell\open\ddeexec,NoActivateHandler
+HKCR,%CLSID%\shell\open\ddeexec\application,,,"Folders"
+HKCR,%CLSID%\shell\open\ddeexec\ifexec,,,"[]"
+HKCR,%CLSID%\shell\open\ddeexec\topic,,,"AppProperties"
+HKCR,%CLSID%\shell\explore\command,,%REGEXSZ%,"%25%\Explorer.exe /e,/idlist,%I,%L"
+HKCR,%CLSID%\shell\explore\ddeexec,,,"[ExploreFolder(""%l"", %I, %S)]"
+HKCR,%CLSID%\shell\explore\ddeexec,NoActivateHandler
+HKCR,%CLSID%\shell\explore\ddeexec\application,,,"Folders"
+HKCR,%CLSID%\shell\explore\ddeexec\ifexec,,,"[]"
+HKCR,%CLSID%\shell\explore\ddeexec\topic,,,"AppProperties"
+
+HKCR,%CLSIDDataObject%,,,"Cabview Data Object"
+HKCR,%CLSIDDataObject%\InProcServer32,,,"cabview.dll"
+HKCR,%CLSIDDataObject%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%GUID%",,".CAB file viewer"
+
+[Obsolete]
+HKLM,%WINDOWS%\Uninstall\MSCabFileView
+HKLM,%WINDOWS%\Uninstall\CabView
+HKLM,%WINDOWS%\SharedDLLs,%11%\Cabinet.DLL
+HKCR,%CLSID%\shell
+
+[Strings]
+REGEXSZ=0x00020000
+DESC="Cabinet File"
+INFOTIP="Contains compressed files"
+GUID="{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}"
+CLSID="CLSID\{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}"
+CLSIDDataObject="CLSID\{DFE49CFE-CD09-11D2-9643-00C04f79ADF0}"
+WINDOWS="Software\Microsoft\Windows\CurrentVersion"
+ERR_NOSETUPAPI="Can not register cabview.dll because setupapi.dll is missing."

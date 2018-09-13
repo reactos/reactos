@@ -1,0 +1,137 @@
+LANGUAGE  0x1b, 0x00 //Slovak
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 361, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Prisp\x00f4sobenie panela s n\x00e1strojmi"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Zavrie\x0165",2,303,6,54,14
+    PUSHBUTTON      L"&Vynulova\x0165",202,303,23,54,14
+    PUSHBUTTON      L"Pomo&cn\x00edk",205,303,40,54,14
+    PUSHBUTTON      L"Posun\x00fa\x0165 &hore",206,303,74,54,14
+    PUSHBUTTON      L"Posun\x00fa\x0165 &dolu",207,303,91,54,14
+    LTEXT           L"Do&stupn\x00e9 tla\x010didl\x00e1:",-1,4,5,115,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Prida\x0165 ->",1,128,42,46,14
+    PUSHBUTTON      L"<- &Odstr\x00e1ni\x0165",204,128,62,46,14
+    LTEXT           L"&Tla\x010didl\x00e1 na paneli s n\x00e1strojmi:",-1,179,5,114,10
+    LISTBOX         203,178,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Zru\x0161i\x0165",2,58,122,50,14
+    PUSHBUTTON      L"P&ou\x017ei\x0165",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Pomocn\x00edk",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Nasp\x00e4\x0165",12323,12,26,50,14
+    DEFPUSHBUTTON   L"\x010e&alej >",12324,62,26,50,14
+    PUSHBUTTON      L"Dokon\x010di\x0165",12325,119,26,50,14
+    PUSHBUTTON      L"Zru\x0161i\x0165",2,176,26,50,14
+    PUSHBUTTON      L"Pomocn\x00edk",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Odde\x013eova\x010d"
+    1025                    L" + "
+    1026                    L"Nie je"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Zavrie\x0165"
+    4161                    L"OK"
+    4162                    L"%s - vlastnosti"
+    4163                    L"Dnes:"
+    4164                    L"Pr&ejs\x0165 na Dnes"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Sem zada\x0165 text"
+    4177                    L"Vlastnosti"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Zmen\x00ed ve\x013ekos\x0165 okna."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Presunie okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Zmen\x0161\x00ed okno na\x00a0ve\x013ekos\x0165 ikony."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Rozbal\x00ed okno na cel\x00fa obrazovku."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Prepne do \x010fal\x0161ieho okna MDI."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Zavrie okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Obnov\x00ed norm\x00e1lnu ve\x013ekos\x0165 okna."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Prepne do \x010fal\x0161ej \x00falohy."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Obsahuje pr\x00edkazy na pr\x00e1cu s oknami."
+    36849                   L"Zmen\x00ed ve\x013ekos\x0165 st\x013apcov potiahnut\x00edm do\x013eava alebo doprava."
+    36850                   L"Zmen\x00ed ve\x013ekos\x0165 st\x013apcov pomocou kurzorov\x00fdch kl\x00e1vesov a tabul\x00e1tora."
+    36851                   L"Prid\x00e1, presunie alebo odstr\x00e1ni tla\x010didl\x00e1 na paneli s n\x00e1strojmi."
+END

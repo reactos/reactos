@@ -1,0 +1,88 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+PRODUCT = SITE
+VOBS = /vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+VPATH = ${SITE_DIR}/download/lib:${SITE_DIR}/download
+
+SOURCES =  \
+    dwnbind.cxx \
+    dwncache.cxx \
+    dwndoc.cxx \
+    dwnpost.cxx \
+    dwntask.cxx \
+    dwnutil.cxx \
+    bits.cxx \
+    htmctx.cxx \
+    htmdesc.cxx \
+    htmload.cxx \
+    htmparse.cxx \
+    htmpost.cxx \
+    htmpre.cxx \
+    htmsrc.cxx \
+    htmtag.cxx \
+    htmtok.cxx \
+    htmver.cxx \
+    imgctx.cxx \
+    imginfo.cxx \
+    imgload.cxx \
+    imgbmp.cxx \
+    imgbits.cxx \
+    imgwmf.cxx \
+    imgemf.cxx \
+    imggif.cxx \
+    imgjpg.cxx \
+    imgxbm.cxx \
+    imgplug.cxx \
+    imgutil.cxx \
+    dither.cxx \
+    spacectx.cxx \
+    bodyctx.cxx \
+    rootctx.cxx \
+    imgico.cxx
+
+# No support for .art files
+ART_SOURCES = \
+    imgart.cxx
+
+
+WLIB	= download
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+INCLUDES = \
+    $(_SLM_NTROOT)/NT_SDK_INC \
+    $(ROOT)/src/site/download \
+    $(SITEINCLUDES) \
+    $(ROOT)/src/site/download/jpglib6a
+
+DEFINES = -D_DOWNLOAD_DIRECTORY_
+
+PROJECT_CFLAGS = \
+	${DEFINES} \
+	${INCLUDES:%=-I%}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

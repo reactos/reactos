@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE4.</title>
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h1>IE4.0 API change</h1>
+
+<h2><font size="3">SHGetFileInfo API</font></h2>
+
+<p>A new SHGFI_ATTR_SPECIFIED flag is defined in <em>uFlags</em>.
+If this flag is set, the caller is responsible in initializing <em>dwAttributes</em>
+in <em>psfi</em> (SHFILEINFO) and the API uses this DWORD to call
+IShellFolder::GetAttributesOf (instead of 0xffffffff). This is
+much more efficient if you are interested in a small set of
+attributes. </p>
+
+<p>WARNING: SHGFI_ATTR_SPECIFIED and SHGFI_ICON can no be set at
+the same time (due to the optimization in this API). If you set
+both, you may get a wrong icon. </p>
+
+<p>&nbsp;</p>
+</body>
+</html>

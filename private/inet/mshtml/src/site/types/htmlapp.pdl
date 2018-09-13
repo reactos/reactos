@@ -1,0 +1,132 @@
+#ifndef _HTMLAPP_PDL_
+#define _HTMLAPP_PDL_ 1
+
+#include "types.pdl"
+
+file htmlapp.pdl
+
+import types.pdl
+
+// Extra guids reserved for HTML application support.  Use as needed.
+//
+//  3050f5cd-98b5-11cf-bb82-00aa00bdce0b
+//  3050f5ce-98b5-11cf-bb82-00aa00bdce0b
+//  3050f5cf-98b5-11cf-bb82-00aa00bdce0b
+//  3050f5d0-98b5-11cf-bb82-00aa00bdce0b
+
+enum HTMLAppFlag prefix:HTMLAppFlag
+    eval No         string:no       value:0
+    eval Off        string:off      value:0
+    eval 0          string:0        value:0
+    eval Yes        string:yes      value:1
+    eval On         string:on       value:1
+    eval 1          string:1        value:1
+	
+enum HTMLMinimizeFlag prefix:HTMLMinimizeFlag
+    eval No         string:no       value:0
+    eval Yes        string:yes      value:0x00020000L   // WS_MINIMIZEBOX
+
+enum HTMLMaximizeFlag prefix:HTMLMaximizeFlag
+    eval No         string:no       value:0
+    eval Yes        string:yes      value:0x00010000L   // WS_MAXIMIZEBOX
+
+enum HTMLCaptionFlag prefix:HTMLCaptionFlag
+    eval No         string:no       value:0
+    eval Yes        string:yes      value:0x00C00000L   // WS_CAPTION
+
+enum HTMLSysMenuFlag prefix:HTMLSysMenuFlag
+    eval No         string:no       value:0
+    eval Yes        string:yes      value:0x00080000L   // WS_SYSMENU
+
+enum HTMLBorder    prefix:HTMLBorder
+    eval None      	    string:none      value:0           	// No style
+    eval Thick     	    string:thick     value:0x00040000L 	// WS_THICKFRAME
+    eval Dialog  	    string:dialog    value:0x00400000L 	// WS_DLGFRAME
+    eval Thin      	    string:thin      value:0x00800000L 	// WS_BORDER
+
+enum HTMLBorderStyle    prefix:HTMLBorderStyle
+    eval Normal         string:normal      	value:0           	// No extended border style
+    eval Raised         string:raised       value:0x00000100L   // WS_EX_WINDOWEDGE
+    eval Sunken         string:sunken       value:0x00000200L   // WS_EX_CLIENTEDGE
+    eval combined       string:complex      value:0x00000300L   // WS_EX_OVERLAPPEDWINDOW
+    eval Static         string:static       value:0x00020000L   // WS_EX_STATICEDGE
+    
+enum HTMLWindowState   prefix:HTMLWindowState
+    eval Normal         string:normal       value:1   // SW_NORMAL
+    eval Maximize       string:maximize     value:3   // SW_MAXIMIZE
+    eval Minimize       string:minimize     value:6   // SW_MINIMIZE
+    
+interface IHTMLAppBehavior super:IDispatch guid:3050f5ca-98b5-11cf-bb82-00aa00bdce0b
+    refprop CAppBehavior:applicationName
+    refprop CAppBehavior:version
+    refprop CAppBehavior:icon
+    refprop CAppBehavior:singleinstance
+    refprop CAppBehavior:minimizeButton
+    refprop CAppBehavior:maximizeButton
+    refprop CAppBehavior:border
+    refprop CAppBehavior:borderStyle
+    refprop CAppBehavior:sysmenu
+    refprop CAppBehavior:caption
+    refprop CAppBehavior:windowState
+    refprop CAppBehavior:showInTaskBar
+    refprop CAppBehavior:commandLine
+
+interface IHTMLAppBehavior2 super:IDispatch guid:3050f5c9-98b5-11cf-bb82-00aa00bdce0b
+    refprop CAppBehavior:contextMenu
+    refprop CAppBehavior:innerBorder
+    refprop CAppBehavior:scroll
+    refprop CAppBehavior:scrollFlat
+    refprop CAppBehavior:selection
+
+tearoff CAppBehavior interface:IHTMLAppBehavior
+tearoff CAppBehavior interface:IHTMLAppBehavior2
+
+class CAppBehavior name:HTMLAppBehavior \
+            primaryinterface:IHTMLAppBehavior \
+            super:CBase \
+            noconnectionpoints \
+            guid:3050f5cb-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f57c-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLAppBehavior
+    implements IHTMLAppBehavior2
+
+    // Review:  Do the maxstrlen values make sense?
+    
+    property applicationName dispid:DISPID_HTMLAPP+0  atype:BSTR  type:CStr   \ 
+        caa get set maxstrlen:pdlUrlLen 
+    property version dispid:DISPID_HTMLAPP+1  atype:BSTR  type:CStr   \
+        caa get set maxstrlen:pdlUrlLen 
+    property icon dispid:DISPID_HTMLAPP+2  atype:BSTR  type:CStr   \
+        caa get set setaahr maxstrlen:pdlUrlLen
+    property singleInstance dispid:DISPID_HTMLAPP+3 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagNo default:HTMLAppFlagNo maxstrlen:pdlUrlLen
+    property minimizeButton dispid:DISPID_HTMLAPP+5 atype:BSTR type:HTMLMinimizeFlag    \
+        caa get set noassigndefault:HTMLMinimizeFlagYes default:HTMLMinimizeFlagYes maxstrlen:pdlUrlLen
+    property maximizeButton dispid:DISPID_HTMLAPP+6 atype:BSTR type:HTMLMaximizeFlag    \
+        caa get set noassigndefault:HTMLMaximizeFlagYes default:HTMLMaximizeFlagYes maxstrlen:pdlUrlLen
+    property border dispid:DISPID_HTMLAPP+7 atype:BSTR type:HTMLBorder    \
+        caa get set noassigndefault:HTMLBorderThick default:HTMLBorderThick maxstrlen:pdlUrlLen
+    property borderStyle dispid:DISPID_HTMLAPP+8 atype:BSTR type:HTMLBorderStyle    \
+        caa get set noassigndefault:HTMLBorderStyleNormal default:HTMLBorderStyleNormal maxstrlen:pdlUrlLen
+    property sysMenu dispid:DISPID_HTMLAPP+9 atype:BSTR type:HTMLSysMenuFlag    \
+        caa get set noassigndefault:HTMLSysMenuFlagYes default:HTMLSysMenuFlagYes maxstrlen:pdlUrlLen
+    property caption dispid:DISPID_HTMLAPP+10 atype:BSTR type:HTMLCaptionFlag    \
+        caa get set noassigndefault:HTMLCaptionFlagYes default:HTMLCaptionFlagYes maxstrlen:pdlUrlLen
+    property windowState dispid:DISPID_HTMLAPP+11 atype:BSTR type:HTMLWindowState    \
+        caa get set noassigndefault:HTMLWindowStateNormal default:HTMLWindowStateNormal maxstrlen:pdlUrlLen
+    property showInTaskBar dispid:DISPID_HTMLAPP+12 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagYes default:HTMLAppFlagYes maxstrlen:pdlUrlLen
+    property commandLine dispid:DISPID_HTMLAPP+13 atype:BSTR vt:VT_BSTR   \
+        caa get setaahr maxstrlen:pdlNoLimit
+    property contextMenu dispid:DISPID_HTMLAPP+14 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagYes default:HTMLAppFlagYes maxstrlen:pdlUrlLen
+    property innerBorder dispid:DISPID_HTMLAPP+15 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagYes default:HTMLAppFlagYes maxstrlen:pdlUrlLen
+    property scroll dispid:DISPID_HTMLAPP+16 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagYes default:HTMLAppFlagYes maxstrlen:pdlUrlLen
+    property scrollFlat dispid:DISPID_HTMLAPP+17 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagNo default:HTMLAppFlagNo maxstrlen:pdlUrlLen
+    property selection dispid:DISPID_HTMLAPP+18 atype:BSTR type:HTMLAppFlag    \
+        caa get set noassigndefault:HTMLAppFlagYes default:HTMLAppFlagYes maxstrlen:pdlUrlLen
+#endif _OBJECT_PDL_

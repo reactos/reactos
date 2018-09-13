@@ -1,0 +1,27 @@
+MAJORCOMP=shell
+MINORCOMP=ups
+
+NTDEBUG=ntsd
+
+TARGETNAME=ups
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+UMTYPE=windows
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib\
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib\
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib\
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+INCLUDES=..\h
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+C_DEFINES=-DWIN32
+
+SOURCES= arrow.c	\
+	 cpl.c		\
+	 memutil.c	\
+	 ups.c		\
+	 upsres.rc

@@ -1,0 +1,803 @@
+[Version]
+Signature="$CHICAGO$"
+
+;
+; The following contains install sections.
+; [Reg], [RegCompatTable], [RegUrlCompatTable] and [Unreg] are called from DllRegisterServer/DllUnregisterServer.
+; [Install], [Uninstall] are called from DllInstall()
+;
+
+;  Section with names beginning with '!' AREN'T BACKED
+
+[Reg]
+ComponentName=mshtml.DllReg
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=Classes.Reg, Protocols.Reg, InetPrint.Reg, Misc.Reg
+DelReg=BaseDel.Reg, !RemoveInsertable
+NoBackupPlatform=NT5
+
+[!RemoveInsertable]
+HKCR,"CLSID\%CLSID_Scriptlet%\Insertable"
+
+[RegCompatTable]
+ComponentName=mshtml.DllReg
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=CompatTable.Reg
+NoBackupPlatform=NT5
+
+[RegUrlCompatTable]
+ComponentName=mshtml.DllReg
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=UrlCompatTable.Reg
+DelReg=UrlCompatTableDel.Reg
+NoBackupPlatform=NT5
+
+[RegJPEG]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=JPEG.Inst
+NoBackupPlatform=NT5
+
+[RegJPG]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=JPG.Inst
+NoBackupPlatform=NT5
+
+[RegJPE]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=JPE.Inst
+NoBackupPlatform=NT5
+
+[RegPNG]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=PNG.Inst
+NoBackupPlatform=NT5
+
+[RegPJPG]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=PJPG.Inst
+NoBackupPlatform=NT5
+
+[RegXBM]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=XBM.Inst
+NoBackupPlatform=NT5
+
+[RegGIF]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=GIF.Inst
+NoBackupPlatform=NT5
+
+[Unreg]
+ComponentName=mshtml.DllReg
+AdvOptions=260
+NoBackupPlatform=NT5
+
+;
+; DO NOT CHANGE THE NAME OF THIS SECTION WITHOUT NOTIFYING THE SETUP TEAM
+;  They need to keep another .inf file in sync with the name "Install"
+;
+[Install]
+ComponentName=mshtml.Install
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=FileAssoc.Inst, MIME.Inst, Misc.Inst
+DelReg=BaseDel.Inst,IE3TypeLib,mshtmlwbTypeLib
+NoBackupPlatform=NT5
+
+[Uninstall]
+ComponentName=mshtml.Install
+AdvOptions=260
+NoBackupPlatform=NT5
+
+;
+; The following contains sections used in install section for DllRegisterServer/DllUnregisterServer.
+; For consistent, all sections are name as [***.Reg].
+;
+
+[Classes.Reg]
+
+HKCR,CLSID\%CLSID_IImgCtx%,,,"IImgCtx"
+HKCR,CLSID\%CLSID_IImgCtx%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_IImgCtx%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImgCtx%\ProgID,,,"IImgCtx"
+
+HKCR,CLSID\%CLSID_CBackgroundPropertyPage%,,,"Microsoft HTML Background Page"
+HKCR,CLSID\%CLSID_CBackgroundPropertyPage%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CBackgroundPropertyPage%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_CCDAnchorPropertyPage%,,,"Microsoft HTML Anchor Page"
+HKCR,CLSID\%CLSID_CCDAnchorPropertyPage%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CCDAnchorPropertyPage%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_CCDGenericPropertyPage%,,,"Microsoft HTML Generic Page"
+HKCR,CLSID\%CLSID_CCDGenericPropertyPage%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CCDGenericPropertyPage%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_CDwnBindInfo%,,,"Microsoft HTML DwnBindInfo"
+HKCR,CLSID\%CLSID_CDwnBindInfo%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CDwnBindInfo%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_CInlineStylePropertyPage%,,,"Microsoft HTML Inline Style Page"
+HKCR,CLSID\%CLSID_CInlineStylePropertyPage%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CInlineStylePropertyPage%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_HTMLWindowProxy%,,,"Microsoft HTML Window Security Proxy"
+HKCR,CLSID\%CLSID_HTMLWindowProxy%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_HTMLWindowProxy%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_JSProtocol%,,,"Microsoft HTML Javascript Pluggable Protocol"
+HKCR,CLSID\%CLSID_JSProtocol%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_JSProtocol%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_ResProtocol%,,,"Microsoft HTML Resource Pluggable Protocol"
+HKCR,CLSID\%CLSID_ResProtocol%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_ResProtocol%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_AboutProtocol%,,,"Microsoft HTML About Pluggable Protocol"
+HKCR,CLSID\%CLSID_AboutProtocol%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_AboutProtocol%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_MailtoProtocol%,,,"Microsoft HTML Mailto Pluggable Protocol"
+HKCR,CLSID\%CLSID_MailtoProtocol%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_MailtoProtocol%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_SysimageProtocol%,,,"Microsoft HTML Resource Pluggable Protocol"
+HKCR,CLSID\%CLSID_SysimageProtocol%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_SysimageProtocol%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_HTMLDocument%",,,"HTML Document"
+HKCR,"CLSID\%CLSID_HTMLDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_HTMLDocument%\DefaultIcon",,%REG_EXPAND_SZ%,"%IEXPLORE%,1"
+HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_HTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_HTMLDocument%\MiscStatus",,,"2228625"
+HKCR,"CLSID\%CLSID_HTMLDocument%\ProgID",,,"htmlfile"
+HKCR,"CLSID\%CLSID_HTMLDocument%\Version",,,"5.0"
+HKCR,"CLSID\%CLSID_HTMLDocument%\EnablePlugin\.css",,%REG_EXPAND_SZ%,"PointPlus plugin"
+
+HKCR,"CLSID\%CLSID_MHTMLDocument%",,,"MHTML Document"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_MHTMLDocument%\DefaultIcon",,%REG_EXPAND_SZ%,"%IEXPLORE%,1"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\MiscStatus",,,"2228625"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\ProgID",,,"mhtmlfile"
+HKCR,"CLSID\%CLSID_MHTMLDocument%\Version",,,"5.0"
+
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%",,,"Microsoft HTML Document 5.0"
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_HTMLPluginDocument%\ProgID",,,"htmlfile_FullWindowEmbed"
+
+HKCR,CLSID\%CLSID_HTMLServerDoc%,,,"Microsoft HTML Server Document 5.0"
+HKCR,CLSID\%CLSID_HTMLServerDoc%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_HTMLServerDoc%\InProcServer32,"ThreadingModel",,"Apartment"
+
+
+HKCR,CLSID\%CLSID_HTMLLoadOptions%,,,"Microsoft HTML Load Options"
+HKCR,CLSID\%CLSID_HTMLLoadOptions%\InProcServer32,,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_HTMLLoadOptions%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,CLSID\%CLSID_IntDitherer%,,,"IntDitherer Class"
+HKCR,CLSID\%CLSID_IntDitherer%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_IntDitherer%\InProcServer32,"ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_CrSource%",,,"Microsoft CrSource 4.0"
+HKCR,"CLSID\%CLSID_CrSource%\BrowseInPlace",,,""
+HKCR,"CLSID\%CLSID_CrSource%\DefaultIcon",,%REG_EXPAND_SZ%,"%IEXPLORE%,1"
+HKCR,"CLSID\%CLSID_CrSource%\EnablePlugin\.css",,%REG_EXPAND_SZ%,"PointPlus plugin"
+HKCR,"CLSID\%CLSID_CrSource%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CrSource%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CrSource%\MiscStatus",,,"2228625"
+HKCR,"CLSID\%CLSID_CrSource%\ProgID",,,"CrSource"
+HKCR,"CLSID\%CLSID_CrSource%\Version",,,"4.0"
+
+HKCR,"CLSID\%CLSID_Scriptlet%",,,"Microsoft Scriptlet Component"
+HKCR,"CLSID\%CLSID_Scriptlet%\Control"
+HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_Scriptlet%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_Scriptlet%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_Scriptlet%\ProgID",,,"ScriptBridge.ScriptBridge.1"
+HKCR,"CLSID\%CLSID_Scriptlet%\Programmable"
+HKCR,"CLSID\%CLSID_Scriptlet%\ToolboxBitmap32",,,"%IEXPLORE%,1"
+HKCR,"CLSID\%CLSID_Scriptlet%\TypeLib",,,"{3050f1c5-98b5-11cf-bb82-00aa00bdce0b}"
+HKCR,"CLSID\%CLSID_Scriptlet%\Version",,,"4.0"
+HKCR,"CLSID\%CLSID_Scriptlet%\VersionIndependentProgID",,,"ScriptBridge.ScriptBridge"
+
+HKCR,"CLSID\%CLSID_CPeerHandler%",,,"Microsoft Scriptlet Element Behavior Handler"
+HKCR,"CLSID\%CLSID_CPeerHandler%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CPeerHandler%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CPeerHandler%\ProgID",,,"Scriptlet.Behavior"
+
+HKCR,"CLSID\%CLSID_CHiFiUses%",,,"Microsoft Scriptlet HiFiTimer Uses"
+HKCR,"CLSID\%CLSID_CHiFiUses%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CHiFiUses%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CHiFiUses%\ProgID",,,"Scriptlet.HiFiTimer"
+
+HKCR,"CLSID\%CLSID_CRecalcEngine%",,,"Microsoft HTML Recalc"
+HKCR,"CLSID\%CLSID_CRecalcEngine%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CRecalcEngine%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_CSvrOMUses%",,,"Microsoft Scriptlet svr om Uses"
+HKCR,"CLSID\%CLSID_CSvrOMUses%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CSvrOMUses%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_CSvrOMUses%\ProgID",,,"Scriptlet.SvrOm"
+
+HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%",,,"Microsoft Html Component"
+HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CHtmlComponentConstructor%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%",,,"%Microsoft Anchor Element Browse Property Page%"
+HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CAnchorBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%",,,"%Microsoft Image Element Browse Property Page%"
+HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CImageBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%",,,"%Microsoft Document Browse Property Page%"
+HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CDocBrowsePropertyPage%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_TridentAPI%",,,"%Trident API%"
+HKCR,"CLSID\%CLSID_TridentAPI%\InProcServer32",,%REG_EXPAND_SZ%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_TridentAPI%\InProcServer32","ThreadingModel",,"Apartment"
+
+[Protocols.Reg]
+
+HKCR,"PROTOCOLS\Handler\javascript","CLSID",,"%CLSID_JSProtocol%"
+HKCR,"PROTOCOLS\Handler\vbscript","CLSID",,"%CLSID_JSProtocol%"
+HKCR,"PROTOCOLS\Handler\about","CLSID",,"%CLSID_AboutProtocol%"
+HKCR,"PROTOCOLS\Handler\res","CLSID",,"%CLSID_ResProtocol%"
+HKCR,"PROTOCOLS\Handler\mailto","CLSID",,"%CLSID_MailtoProtocol%"
+HKCR,"PROTOCOLS\Handler\sysimage","CLSID",,"%CLSID_SysImageProtocol%"
+
+[CompatTable.Reg]
+
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility", "Version",,"5.09"
+
+; Keep these sorted in order of increasing clsid value:
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_VivoViewer%", "Compatibility Flags",%REG_COMPAT%,0x8
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MSInvestorNews%", "Compatibility Flags",%REG_COMPAT%,0x180
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ActiveMovie%", "Compatibility Flags",%REG_COMPAT%,0x10000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_Plugin%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_AppletOCX%", "Compatibility Flags",%REG_COMPAT%,0x10000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_SaxCanvas%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MediaPlayer%", "Compatibility Flags",%REG_COMPAT%,0x10000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_CitrixWinframe%", "Compatibility Flags",%REG_COMPAT%,0x1000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_GregConsDieRoll%", "Compatibility Flags",%REG_COMPAT%,0x2020
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_VActive%", "Compatibility Flags",%REG_COMPAT%,0x8
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_IEMenu%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_WebBrowser%", "Compatibility Flags",%REG_COMPAT% ,0x21
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_Forms3Optionbutton%", "Compatibility Flags",%REG_COMPAT%,0x1
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_SurroundVideo%", "Compatibility Flags",%REG_COMPAT%,0x40
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_SheridanCommand%", "Compatibility Flags",%REG_COMPAT%,0x2000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MCSITree%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MSTreeView%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_Acrobat%", "Compatibility Flags",%REG_COMPAT%,0x8008
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MSInvestor%", "Compatibility Flags",%REG_COMPAT%,0x10
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_PowerPointAnimator%", "Compatibility Flags",%REG_COMPAT%,0x240
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_PowerPointAnimator%", "MiscStatus Flags",%REG_COMPAT%,0x180
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_NCompassBillboard%", "Compatibility Flags",%REG_COMPAT%,0x4000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_NCompassLightboard%", "Compatibility Flags",%REG_COMPAT%,0x4000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ProtoviewTreeView%", "Compatibility Flags",%REG_COMPAT%,0x4000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ActiveEarthTime%", "Compatibility Flags",%REG_COMPAT%,0x4000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_LeadControl%", "Compatibility Flags",%REG_COMPAT%,0x4000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_TextX%", "Compatibility Flags",%REG_COMPAT%,0x2000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_IISForm%", "Compatibility Flags",%REG_COMPAT%,0x2
+
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_GreetingsUpload%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_GreetingsDownload%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_COMCTLTree%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_COMCTLProg%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_COMCTLListview%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_COMCTLImageList%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_COMCTLSbar%", "Compatibility Flags",%REG_COMPAT%,0x820
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MCSIMenu%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MSNVer%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_RichTextCtrl%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_IETimer%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_SubScr%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_Scriptlet%", "Compatibility Flags",%REG_COMPAT%,0x20
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_OldXsl%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_MMC%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_IE4ShellFolderIcon%", "Compatibility Flags",%REG_COMPAT%,0x20000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_IE4ShellPieChart%", "Compatibility Flags",%REG_COMPAT%,0x20000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_RealAudio%", "Compatibility Flags",%REG_COMPAT%,0x10000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_WebCalc%", "Compatibility Flags",%REG_COMPAT%,0x40000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_AnswerList%", "Compatibility Flags",%REG_COMPAT%,0x80000
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_PreLoader%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_EyeDog%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ImgAdmin%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ImgThumb%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_HHOpen%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_RegWiz%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_SetupCtl%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ImgEdit%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ImgEdit2%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_ImgScan%", "Compatibility Flags",%REG_COMPAT%,0x400
+HKLM,"Software\Microsoft\Internet Explorer\ActiveX Compatibility\%CLSID_TlntSvr%", "Compatibility Flags",%REG_COMPAT%,0x400
+
+[UrlCompatTable.Reg]
+
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility", "Version",,"5.1"
+
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\~/CWIZINTR.HTM","Compatibility Flags",%REG_COMPAT%,0x4
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\~/CONNWIZ.HTM","Compatibility Flags",%REG_COMPAT%,0x4
+
+[UrlCompatTableDel.Reg]
+
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/START.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/TOOLBAR.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/WEL2.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/WELCOME.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/ENG/DEMOBIN/CONTBAR.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/ENG/DEMOBIN/START.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/ENG/DEMOBIN/TOOLBAR.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/ENG/DEMOBIN/WELCOME.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/WEBPAGES/CACHED/CARPOINT/DEFAULT.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/WEL2.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN31/ENG/DEMOBIN/WELCOME.HTM"
+HKLM,"Software\Microsoft\Internet Explorer\URL Compatibility\_:/WIN95/ENG/DEMOBIN/WELCOME.HTM"
+
+[InetPrint.Reg]
+
+HKCR,"InternetShortcut\shell\print\command",,%REG_EXPAND_SZ%,"rundll32.exe %_SYS_MOD_PATH%,PrintHTML ""%%1"""
+HKCR,"InternetShortcut\shell\printto\command",,%REG_EXPAND_SZ%,"rundll32.exe %_SYS_MOD_PATH%,PrintHTML ""%%1"" ""%%2"" ""%%3"" ""%%4"""
+HKCR,"htmlfile\shell\print\command",,%REG_EXPAND_SZ%,"rundll32.exe %_SYS_MOD_PATH%,PrintHTML ""%%1"""
+HKCR,"htmlfile\shell\printto\command",,%REG_EXPAND_SZ%,"rundll32.exe %_SYS_MOD_PATH%,PrintHTML ""%%1"" ""%%2"" ""%%3"" ""%%4"""
+
+[Misc.Reg]
+
+HKLM,"Software\Microsoft\Internet Explorer\Version Vector", "IE",,"5.0100"
+
+HKCR,IImgCtx,,,"IImgCtx"
+HKCR,IImgCtx\CLSID,,,%CLSID_IImgCtx%
+
+HKCR,Scriptlet.Behavior,,,"Element Behavior Handler"
+HKCR,Scriptlet.Behavior\CLSID,,,%CLSID_CPeerHandler%
+HKCR,Scriptlet.HiFiTimer,,,"HiFiTimer Uses"
+HKCR,Scriptlet.HiFiTimer\CLSID,,,%CLSID_CHiFiUses%
+HKCR,Scriptlet.SvrOm,,,"Server OM Uses"
+HKCR,Scriptlet.SvrOm\CLSID,,,%CLSID_CSvrOMUses%
+
+HKCR,CLSID\%CLSID_IImageDecodeFilter%,,,"CoGIFFilter Class"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\ProgID,,,"GIFFilter.CoGIFFilter.1"
+
+HKCR,GIFFilter.CoGIFFilter,,,"CoGIFFilter Class"
+HKCR,GIFFilter.CoGIFFilter\CLSID,,,%CLSID_IImageDecodeFilter%
+HKCR,GIFFilter.CoGIFFilter.1,,,"CoGIFFilter Class"
+HKCR,GIFFilter.CoGIFFilter.1\CLSID,,,%CLSID_IImageDecodeFilter%
+
+HKCR,CLSID\%CLSID_IImageDecodeFilter%,,,"CoJPEGFilter Class"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\ProgID,,,"JPEGFilter.CoJPEGFilter.1"
+
+HKCR,JPEGFilter.CoJPEGFilter,,,"CoJPEGFilter Class"
+HKCR,JPEGFilter.CoJPEGFilter\CLSID,,,%CLSID_IImageDecodeFilter%
+HKCR,JPEGFilter.CoJPEGFilter.1,,,"CoJPEGFilter Class"
+HKCR,JPEGFilter.CoJPEGFilter.1\CLSID,,,%CLSID_IImageDecodeFilter%
+
+HKCR,CLSID\%CLSID_IImageDecodeFilter%,,,"CoBMPFilter Class"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\ProgID,,,"BMPFilter.CoBMPFilter.1"
+
+HKCR,BMPFilter.CoBMPFilter,,,"CoBMPFilter Class"
+HKCR,BMPFilter.CoBMPFilter\CLSID,,,%CLSID_IImageDecodeFilter%
+HKCR,BMPFilter.CoBMPFilter.1,,,"CoBMPFilter Class"
+HKCR,BMPFilter.CoBMPFilter.1\CLSID,,,%CLSID_IImageDecodeFilter%
+
+HKCR,CLSID\%CLSID_IImageDecodeFilter%,,,"CoWMFFilter Class"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\ProgID,,,"WMFFilter.CoWMFFilter.1"
+
+HKCR,WMFFilter.CoWMFFilter,,,"CoWMFFilter Class"
+HKCR,WMFFilter.CoWMFFilter\CLSID,,,%CLSID_IImageDecodeFilter%
+HKCR,WMFFilter.CoWMFFilter.1,,,"CoWMFFilter Class"
+HKCR,WMFFilter.CoWMFFilter.1\CLSID,,,%CLSID_IImageDecodeFilter%
+
+HKCR,CLSID\%CLSID_IImageDecodeFilter%,,,"CoICOFilter Class"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,,,%_MOD_PATH%
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_IImageDecodeFilter%\ProgID,,,"ICOFilter.CoICOFilter.1"
+
+HKCR,ICOFilter.CoICOFilter,,,"CoICOFilter Class"
+HKCR,ICOFilter.CoICOFilter\CLSID,,,%CLSID_IImageDecodeFilter%
+HKCR,ICOFilter.CoICOFilter.1,,,"CoICOFilter Class"
+HKCR,ICOFilter.CoICOFilter.1\CLSID,,,%CLSID_IImageDecodeFilter%
+
+;
+; The following contains sections used in install section for DllInstall().
+; For consistent, all sections are name as [***.Inst].
+;
+
+
+[FileAssoc.Inst]
+
+; bmp
+HKCR,".bmp","Content Type",,"image/bmp"
+
+; css
+HKCR,".css","Content Type",,"text/css"
+
+; htc
+HKCR,".htc","Content Type",,"text/x-component"
+
+; dib
+HKCR,".dib","Content Type",,"image/bmp"
+
+;   HTML Files (*.htm, *.html)
+
+HKCR,"htmlfile",,,"Microsoft HTML Document 5.0"
+HKCR,"htmlfile\BrowseInPlace",,,""
+HKCR,"htmlfile\CLSID",,,"%CLSID_HTMLDocument%"
+
+HKCR,"ScriptBridge.ScriptBridge",,,"Microsoft Scriptlet Component"
+HKCR,"ScriptBridge.ScriptBridge\CurVer",,,"ScriptBridge.ScriptBridge.1"
+HKCR,"ScriptBridge.ScriptBridge.1",,,"Microsoft Scriptlet Component"
+HKCR,"ScriptBridge.ScriptBridge.1\CLSID",,,"%CLSID_Scriptlet%"
+
+HKCR,"htmlfile_FullWindowEmbed",,,"Microsoft HTML Document 5.0"
+HKCR,"htmlfile_FullWindowEmbed\BrowseInPlace",,,""
+HKCR,"htmlfile_FullWindowEmbed\CLSID",,,"%CLSID_HTMLPluginDocument%"
+
+HKCR,".mhtml",,,"mhtmlfile"
+HKCR,".mhtml","Content Type",,"message/rfc822"
+HKCR,".mht",,,"mhtmlfile"
+HKCR,".mht","Content Type",,"message/rfc822"
+HKCR,"mhtmlfile",,,"Microsoft MHTML Document 5.0"
+HKCR,"mhtmlfile\BrowseInPlace",,,""
+HKCR,"mhtmlfile\CLSID",,,"%CLSID_MHTMLDocument%"
+
+;   Other Formats
+HKCR,".txt","Content Type",,"text/plain"
+
+; ico
+HKCR,".ico","Content Type",,"image/x-icon"
+
+; To be remove -- Added to shdocvw
+
+HKCR,"htmlfile\DefaultIcon",,%REG_EXPAND_SZ%,"%IEXPLORE%,1"
+
+[GIF.Inst]
+
+;   GIF Files (*.gif)
+HKCR,".gif",,,"giffile"
+HKCR,".gif","Content Type",,"image/gif"
+HKCR,"giffile",,,"%GIF_IMAGE%"
+HKCR,"giffile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"giffile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"giffile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"giffile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"giffile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"giffile\DefaultIcon",,,"%IEXPLORE%,9"
+
+[PJPG.Inst]
+
+;   Progressive JPEG Files
+HKCR,".jfif",,,"pjpegfile"
+HKCR,".jfif","Content Type",,"image/pjpeg"
+HKCR,"pjpegfile",,,"%JPEG_IMAGE%"
+HKCR,"pjpegfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"pjpegfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"pjpegfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"pjpegfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"pjpegfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"pjpegfile\DefaultIcon",,,"%IEXPLORE%,8"
+
+[XBM.Inst]
+
+;   XBM Files
+HKCR,".xbm","Content Type",,"image/x-xbitmap"
+HKCR,"xbmfile",,,"%XBM_IMAGE%"
+HKCR,"xbmfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"xbmfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"xbmfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"xbmfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"xbmfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"xbmfile\DefaultIcon",,,"%IEXPLORE%,9"
+
+[JPEG.Inst]
+
+;   JPEG Files
+HKCR,".jpeg",,,"jpegfile"
+HKCR,".jpeg","Content Type",,"image/jpeg"
+
+HKCR,"jpegfile",,,"%JPEG_IMAGE%"
+HKCR,"jpegfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"jpegfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"jpegfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"jpegfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"jpegfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"jpegfile\DefaultIcon",,,"%IEXPLORE%,8"
+
+[JPE.Inst]
+
+;   JPEG Files
+HKCR,".jpe",,,"jpegfile"
+HKCR,".jpe","Content Type",,"image/jpeg"
+
+HKCR,"jpegfile",,,"%JPEG_IMAGE%"
+HKCR,"jpegfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"jpegfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"jpegfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"jpegfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"jpegfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"jpegfile\DefaultIcon",,,"%IEXPLORE%,8"
+
+[JPG.Inst]
+
+;   JPEG Files
+HKCR,".jpg",,,"jpegfile"
+HKCR,".jpg","Content Type",,"image/jpeg"
+
+HKCR,"jpegfile",,,"%JPEG_IMAGE%"
+HKCR,"jpegfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"jpegfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"jpegfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"jpegfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"jpegfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"jpegfile\DefaultIcon",,,"%IEXPLORE%,8"
+
+[PNG.Inst]
+
+;   PNG Files (*.png)
+HKCR,".png",,,"pngfile"
+HKCR,".png","Content Type",,"image/png"
+HKCR,"pngfile",,,"%PNG_IMAGE%"
+HKCR,"pngfile\CLSID",,,"%CLSID_HTMLDocument%"
+HKCR,"pngfile\shell\open\command",,,"""%IEXPLORE%"" -nohome"
+HKCR,"pngfile\shell\open\ddeexec",,,"""file:%%1"",,-1,,,,,"
+HKCR,"pngfile\shell\open\ddeexec\Application",,,"IExplore"
+HKCR,"pngfile\shell\open\ddeexec\Topic",,,"WWW_OpenURL"
+HKCR,"pngfile\DefaultIcon",,,"%IEXPLORE%,9"
+
+[MIME.Inst]
+
+HKCR,"MIME\Database\Content Type\image/bmp","Extension",,".bmp"
+HKCR,"MIME\Database\Content Type\image/bmp","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+HKCR,"MIME\Database\Content Type\image/bmp\Bits","0",1,02,00,00,00,FF,FF,42,4D
+HKCR,"MIME\Database\Content Type\image/gif","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/gif","Extension",,".gif"
+HKCR,"MIME\Database\Content Type\image/gif","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+HKCR,"MIME\Database\Content Type\image/gif\Bits","0",1,04,00,00,00,FF,FF,FF,FF,47,49,46,38
+HKCR,"MIME\Database\Content Type\image/jpeg","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/jpeg","Extension",,".jpg"
+HKCR,"MIME\Database\Content Type\image/jpeg\Bits","0",1,02,00,00,00,FF,FF,FF,D8
+HKCR,"MIME\Database\Content Type\image/jpeg","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+HKCR,"MIME\Database\Content Type\image/pjpeg","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/pjpeg","Extension",,".jpg"
+HKCR,"MIME\Database\Content Type\image/pjpeg\Bits","0",1,02,00,00,00,FF,FF,FF,D8
+HKCR,"MIME\Database\Content Type\image/pjpeg","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+HKCR,"MIME\Database\Content Type\image/xbm","Extension",,".xbm"
+HKCR,"MIME\Database\Content Type\image/x-jg","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/x-xbitmap","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/x-xbitmap","Extension",,".xbm"
+HKCR,"MIME\Database\Content Type\image/x-wmf","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+HKCR,"MIME\Database\Content Type\image/x-wmf\Bits","0",1,04,00,00,00,FF,FF,FF,FF,D7,CD,C6,9A
+HKCR,"MIME\Database\Content Type\message/rfc822","CLSID",,"%CLSID_MHTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/png","Extension",,".png"
+HKCR,"MIME\Database\Content Type\image/x-png","Extension",,".png"
+HKCR,"MIME\Database\Content Type\text/css","Extension",,".css"
+HKCR,"MIME\Database\Content Type\text/html","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\text/html","Extension",,".htm"
+HKCR,"MIME\Database\Content Type\text/html","Encoding",1,08,00,00,00
+HKCR,"MIME\Database\Content Type\text/plain","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\text/plain","Extension",,".txt"
+HKCR,"MIME\Database\Content Type\text/plain","Encoding",1,07,00,00,00
+HKCR,"MIME\Database\Content Type\text/x-component","CLSID",,"%CLSID_CHtmlComponentConstructor%"
+HKCR,"MIME\Database\Content Type\text/x-component","Extension",,".htc"
+HKCR,"MIME\Database\Content Type\text/x-scriptlet","CLSID",,"%CLSID_Scriptlet%"
+HKCR,"MIME\Database\Content Type\image/x-icon","CLSID",,"%CLSID_HTMLDocument%"
+HKCR,"MIME\Database\Content Type\image/x-icon","Extension",,".ico"
+HKCR,"MIME\Database\Content Type\image/x-icon","Image Filter CLSID",,%CLSID_IImageDecodeFilter%
+
+[Misc.Inst]
+;   About protocol settings
+
+HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","blank",2,"res://mshtml.dll/blank.htm"
+HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","PostNotCached",2,"res://mshtml.dll/repost.htm"
+HKLM,"Software\Microsoft\Internet Explorer\AboutURLs","mozilla",2,"res://mshtml.dll/about.moz"
+
+;   Default Behavior mappings
+HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","VML",,  "CLSID:10072CEC-8CC1-11D1-986E-00A0C955B42E"
+HKLM,"Software\Microsoft\Internet Explorer\Default Behaviors","TIME",, "CLSID:476C391C-3E0D-11D2-B948-00C04FA32195"
+
+; Remove old version mshtml
+
+[BaseDel.Reg]
+
+HKCR,"htmlfile\DocObject"
+HKCR,"htmlfile\Protocol"
+HKCR,"htmlfile\Insertable"
+HKLM,"Software\Classes\htmlfile\DocObject"
+HKLM,"Software\Classes\htmlfile\Protocol"
+HKLM,"Software\Classes\htmlfile\Insertable"
+HKCR,"CLSID\%CLSID_HTMLDocument%\DocObject"
+HKCR,"CLSID\%CLSID_HTMLDocument%\Insertable"
+
+; Remove old version mshtml
+
+[BaseDel.Inst]
+
+HKLM,"Software\Microsoft\Internet Explorer\PageSetup","header_left",2,"&w"
+HKLM,"Software\Microsoft\Internet Explorer\PageSetup","header_right",2,"Page &p of &P"
+HKLM,"Software\Microsoft\Internet Explorer\PageSetup","footer_left",2,"&u%"
+HKLM,"Software\Microsoft\Internet Explorer\PageSetup","footer_right",2,"&d"
+
+; Remove old typelib guid from IE3.0
+
+[IE3TypeLib]
+
+HKCR, "TypeLib\{3E76DB61-6F74-11CF-8F20-00805F2CD064}"
+
+; Remove old typelib guid from mshtmlwb
+
+[mshtmlwbTypeLib]
+
+HKCR, "TypeLib\{AE24FDA0-03C6-11D1-8B76-0080C744F389}"
+
+;
+; All the string definations go here.
+;
+
+[Strings]
+
+CLSID_CBackgroundPropertyPage       = "{3050F232-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_CCDAnchorPropertyPage         = "{3050F1FC-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_CCDGenericPropertyPage        = "{3050F17F-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_CDwnBindInfo                  = "{3050F3C2-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_CInlineStylePropertyPage      = "{3050F296-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_HTMLDocument                  = "{25336920-03F9-11cf-8FD0-00AA00686F13}"
+CLSID_Scriptlet                     = "{AE24FDAE-03C6-11D1-8B76-0080C744F389}"
+CLSID_MHTMLDocument                 = "{3050F3D9-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_HTMLPluginDocument            = "{25336921-03F9-11CF-8FD0-00AA00686F13}"
+CLSID_HTMLWindowProxy               = "{3050F391-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_IImgCtx                       = "{3050F3D6-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_JSProtocol                    = "{3050F3B2-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_ResProtocol                   = "{3050F3BC-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_AboutProtocol                 = "{3050F406-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_MailtoProtocol                = "{3050f3DA-98B5-11CF-BB82-00AA00BDCE0B}"
+CLSID_SysimageProtocol              = "{76E67A63-06E9-11D2-A840-006008059382}"
+CLSID_HTMLLoadOptions               = "{18845040-0fa5-11d1-ba19-00c04fd912d0}"
+CLSID_CRecalcEngine                 = "{3050f499-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_HTMLServerDoc                 = "{3050f4e7-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CrSource                      = "{65014010-9F62-11d1-A651-00600811D5CE}"
+CLSID_TridentAPI                    = "{429AF92C-A51F-11d2-861E-00C04FA35C89}"
+
+; IE Scriptoid handlers
+CLSID_CCSSFilterHandler             = "{5AAF51B1-B1F0-11d1-B6AB-00A0C90833E9}"
+CLSID_CPeerHandler                  = "{5AAF51B2-B1F0-11d1-B6AB-00A0C90833E9}"
+CLSID_CHiFiUses                     = "{5AAF51B3-B1F0-11d1-B6AB-00A0C90833E9}"
+CLSID_CSvrOMUses                    = "{3050f4f0-98b5-11cf-bb82-00aa00bdce0b}"
+
+CLSID_CPersistShortcut              = "{3050f4c6-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CPersistHistory               = "{3050f4c8-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CPersistSnapshot              = "{3050f4c9-98b5-11cf-bb82-00aa00bdce0b}"
+
+; Compatibility table class ids:
+; Keep these sorted in order of increasing clsid value.
+CLSID_VivoViewer                    = "{02466323-75ed-11cf-a267-0020af2546ea}"
+CLSID_MSInvestorNews                = "{025B1052-CB0B-11CF-A071-00A0C9A06E05}"
+CLSID_ActiveMovie                   = "{05589fa1-c356-11ce-bf01-00aa0055595a}"
+CLSID_Plugin                        = "{06DD38D3-D187-11CF-A80D-00C04FD74AD8}"
+CLSID_AppletOCX                     = "{08B0e5c0-4FCB-11CF-AAA5-00401C608501}"
+CLSID_SaxCanvas                     = "{1DF67C43-AEAA-11CF-BA92-444553540000}"
+CLSID_MediaPlayer                   = "{22D6F312-B0F6-11D0-94AB-0080C74C7E95}"
+CLSID_CitrixWinframe                = "{238f6f83-b8b4-11cf-8771-00a024541ee3}"
+CLSID_GregConsDieRoll               = "{46646B43-EA16-11CF-870C-00201801DDD6}"
+CLSID_VActive                       = "{5A20858B-000D-11D0-8C01-444553540000}"
+CLSID_IEMenu                        = "{7823A620-9DD9-11CF-A662-00AA00C066D2}"
+CLSID_WebBrowser                    = "{8856F961-340A-11D0-A96B-00C04FD705A2}"
+CLSID_Forms3Optionbutton            = "{8BD21D50-EC42-11CE-9E0D-00AA006002F3}"
+CLSID_SurroundVideo                 = "{928626A3-6B98-11CF-90B4-00AA00A4011F}"
+CLSID_SheridanCommand               = "{AAD093B2-F9CA-11CF-9C85-0000C09300C4}"
+CLSID_MCSITree                      = "{B3F8F451-788A-11D0-89D9-00A0C90C9B67}"
+CLSID_MSTreeView                    = "{B9D029D3-CDE3-11CF-855E-00A0C908FAF9}"
+CLSID_Acrobat                       = "{CA8A9780-280D-11CF-A24D-444553540000}"
+CLSID_MSInvestor                    = "{D2F97240-C9F4-11CF-BFC4-00A0C90C2BDB}"
+CLSID_PowerPointAnimator            = "{EFBD14F0-6BFB-11CF-9177-00805F8813FF}"
+CLSID_IISForm                       = "{812AE312-8B8E-11CF-93C8-00AA00C08FDF}"
+CLSID_IntDitherer                   = "{05f6fe1a-ecef-11d0-aae7-00c04fc9b304}"
+CLSID_NCompassBillboard             = "{6059B947-EC52-11CF-B509-00A024488F73}"
+CLSID_NCompassLightboard            = "{B2F87B84-26A6-11D0-B50A-00A024488F73}"
+CLSID_ProtoviewTreeView             = "{B283E214-2CB3-11D0-ADA6-00400520799C}"
+CLSID_ActiveEarthTime               = "{9590092D-8811-11CF-8075-444553540000}"
+CLSID_LeadControl                   = "{00080000-B1BA-11CE-ABC6-F5B2E79D9E3F}"
+CLSID_TextX                         = "{5B84FC03-E639-11CF-B8A0-00A024186BF1}"
+CLSID_GreetingsUpload               = "{03405265-b4e2-11d0-8a77-00aa00a4fbc5}"
+CLSID_GreetingsDownload             = "{03405269-b4e2-11d0-8a77-00aa00a4fbc5}"
+CLSID_COMCTLTree                    = "{0713E8A2-850A-101B-AFC0-4210102A8DA7}"
+CLSID_COMCTLProg                    = "{0713E8D2-850A-101B-AFC0-4210102A8DA7}"
+CLSID_COMCTLListview                = "{58DA8D8A-9D6A-101B-AFC0-4210102A8DA7}"
+CLSID_COMCTLImageList               = "{58DA8D8F-9D6A-101B-AFC0-4210102A8DA7}"
+CLSID_COMCTLSbar                    = "{6B7E638F-850A-101B-AFC0-4210102A8DA7}"
+CLSID_MCSIMenu                      = "{275E2FE0-7486-11D0-89D6-00A0C90C9B67}"
+CLSID_MSNVer                        = "{A123D693-256A-11d0-9DFE-00C04FD7BF41}"
+CLSID_RichTextCtrl                  = "{3B7C8860-D78F-101B-B9B5-04021C009402}"
+CLSID_IETimer                       = "{59CCB4A0-727D-11CF-AC36-00AA00A47DD2}"
+CLSID_SubScr                        = "{78A9B22E-E0F4-11D0-B5DA-00C0F00AD7F8}"
+CLSID_IImageDecodeFilter            = "{607fd4e8-0a03-11d1-ab1d-00c04fc9b304}"
+CLSID_OldXsl                        = "{2BD0D2F2-52EC-11D1-8C69-0E16BC000000}"
+CLSID_MMC                           = "{D306C3B7-2AD5-11D1-9E9A-00805F200005}"
+CLSID_MacromediaSwFlash             = "{D27CDB6E-AE6D-11cf-96B8-444553540000}"
+
+CLSID_CHtmlComponentConstructor     = "{3050f4f8-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CAnchorBrowsePropertyPage     = "{3050f3BB-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CImageBrowsePropertyPage      = "{3050f3B3-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_CDocBrowsePropertyPage        = "{3050f3B4-98b5-11cf-bb82-00aa00bdce0b}"
+CLSID_IE4ShellFolderIcon            = "{E5DF9D10-3B52-11D1-83E8-00A0C90DC849}"
+CLSID_IE4ShellPieChart              = "{1D2B4F40-1F10-11D1-9E88-00C04FDCAB92}"
+CLSID_RealAudio                     = "{CFCDAA03-8BE4-11cf-B84B-0020AFBBCCFA}"
+CLSID_WebCalc                       = "{0002E510-0000-0000-C000-000000000046}"
+CLSID_AnswerList                    = "{8F2C1D40-C3CD-11D1-A08F-006097BD9970}"
+CLSID_PreLoader                     = "{16E349E0-702C-11CF-A3A9-00A0C9034920}"
+CLSID_EyeDog                        = "{06A7EC63-4E21-11D0-A112-00A0C90543AA}"
+CLSID_ImgAdmin                      = "{009541A0-3B81-101C-92F3-040224009C02}"
+CLSID_ImgThumb                      = "{E1A6B8A0-3603-101C-AC6E-040224009C02}"
+CLSID_HHOpen                        = "{130D7743-5F5A-11D1-B676-00A0C9697233}"
+CLSID_RegWiz                        = "{50E5E3D1-C07E-11D0-B9FD-00A0249F6B00}"
+CLSID_SetupCtl                      = "{F72A7B0E-0DD8-11D1-BD6E-00AA00B92AF1}"
+CLSID_ImgEdit                       = "{6D940280-9F11-11CE-83FD-02608C3EC08A}"
+CLSID_ImgEdit2                      = "{6D940285-9F11-11CE-83FD-02608C3EC08A}"
+CLSID_ImgScan                       = "{84926CA0-2941-101C-816F-0E6013114B7F}"
+CLSID_TlntSvr                       = "{FE9E48A4-A014-11D1-855C-00A0C944138C}"
+
+REG_EXPAND_SZ                       = 0x00020000
+
+; Do not overwrite if the key already exists
+REG_SZ_NOCLOBBER                    = 0x00000002
+
+; this number is FLG_ADDREG_TYPE_DWORD.  See setupapi.h.
+REG_COMPAT                          = 0x00010001
+
+; PageSetup strings
+HEADER                              = "&w&bPage &p of &P"
+FOOTER                              = "&u&b&d"
+
+;International Registry Setting Strings
+
+DEFAULT_IEPROPFONTNAME              = "Times New Roman"
+DEFAULT_IEFIXEDFONTNAME             = "Courier New"
+UNIVERSAL_ALPHABET                  = "Universal Alphabet"
+CENTRAL_EUROPEAN                    = "Central European"
+CYRILLIC                            = "Cyrillic"
+WESTERN                             = "Western"
+GREEK                               = "Greek"
+
+; Image names
+
+JPEG_IMAGE                          = "JPEG Image"
+GIF_IMAGE                           = "GIF Image"
+XBM_IMAGE                           = "XBM Image"
+PNG_IMAGE                           = "PNG Image"
+
+;
+EngineMissing                       = "SETUPAPI.DLL is missing on this machine."
+
+[End]

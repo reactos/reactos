@@ -1,0 +1,782 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       cscui.rc
+//
+//--------------------------------------------------------------------------
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "version.h"
+#include "cscuiext.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_ADVOPTIONS_CONTEXTMENU MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Remove",                     IDM_ACTION_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Work Offline",               IDM_ACTION_WORKOFFLINE
+        MENUITEM "Ne&ver Go Offline",           IDM_ACTION_FAIL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_CSCUI_ICON          ICON    DISCARDABLE     "res\\cscui.ico"
+IDI_PIN_OVERLAY         ICON    DISCARDABLE     "res\\offline.ico"
+IDI_SHARE               ICON    DISCARDABLE     "res\\share.ico"
+IDI_DOCUMENT            ICON    DISCARDABLE     "res\\document.ico"
+IDI_NUKE                ICON    DISCARDABLE     "res\\nuke.ico"
+IDI_CSCNORMAL           ICON    DISCARDABLE     "res\\csc.ico"
+IDI_CSCINFORMATION      ICON    DISCARDABLE     "res\\netback.ico"
+IDI_CSCWARNING          ICON    DISCARDABLE     "res\\shareoff.ico"
+IDI_SERVER              ICON    DISCARDABLE     "res\\server.ico"
+IDI_SERVER_OFFLINE      ICON    DISCARDABLE     "res\\svroff.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDA_FILEDEL             AVI     MOVEABLE PURE   "res\\filedel.avi"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#include ""cscuiext.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""msg.rc""\r\n"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CSC_OPTIONS DIALOGEX 0, 0, 240, 220
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Offline Files"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_CSCUI_ICON,IDC_STATIC2,7,7,20,20
+    LTEXT           "Set up your computer so that files stored on the network are available when working offline (disconnected from the network).",
+                    IDC_STATIC3,35,7,198,27,NOT WS_GROUP
+    CONTROL         "&Enable Offline Files",IDC_CBX_ENABLE_CSC,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,14,43,215,10
+    CONTROL         "&Synchronize all offline files before logging off",
+                    IDC_CBX_FULLSYNC_AT_LOGOFF,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,14,59,216,10
+    CONTROL         "Enable &reminders",IDC_CBX_REMINDERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,75,213,10
+    LTEXT           "Display reminder &balloon every",IDC_TXT_REMINDERS1,25,
+                    91,105,9,NOT WS_GROUP
+    EDITTEXT        IDC_EDIT_REMINDERS,132,89,35,12,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER | WS_GROUP,
+                    WS_EX_NOPARENTNOTIFY
+    CONTROL         "Spin1",IDC_SPIN_REMINDERS,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,159,89,8,12,
+                    WS_EX_NOPARENTNOTIFY
+    LTEXT           "minutes.",IDC_TXT_REMINDERS2,172,91,37,8,NOT WS_GROUP
+    CONTROL         "&Place shortcut to Offline Files folder on the desktop",
+                    IDC_CBX_LINK_ON_DESKTOP,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,14,109,214,10
+    LTEXT           "A&mount of disk space to use for temporary offline files:",
+                    IDC_LBL_CACHESIZE_PCT,14,126,190,10,NOT WS_GROUP
+    CONTROL         "Slider1",IDC_SLIDER_CACHESIZE_PCT,"msctls_trackbar32",
+                    TBS_AUTOTICKS | TBS_NOTICKS | WS_GROUP | WS_TABSTOP,17,
+                    142,107,14
+    LTEXT           "999.99GB (100% of drive)",IDC_TXT_CACHESIZE_PCT,126,145,
+                    84,8,NOT WS_GROUP
+    PUSHBUTTON      "&Delete Files...",IDC_BTN_DELETE_CACHE,49,173,56,14,
+                    WS_GROUP
+    PUSHBUTTON      "Vie&w Files",IDC_BTN_VIEW_CACHE,110,173,56,14
+    PUSHBUTTON      "Ad&vanced",IDC_BTN_ADVANCED,170,173,56,14
+END
+
+IDD_CSC_ADVOPTIONS DIALOGEX 0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Offline Files - Advanced Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_CSCUI_ICON,IDC_STATIC2,7,10,20,20
+    LTEXT           "Set up how your computer behaves when the connection to another computer on the network is lost.",
+                    IDC_STATIC3,40,12,174,23,NOT WS_GROUP
+    GROUPBOX        "When a network connection is lost",IDC_STATIC4,7,41,213,
+                    44
+    CONTROL         "&Notify me and begin working offline",
+                    IDC_RBN_GOOFFLINE_SILENT,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | WS_GROUP | WS_TABSTOP,15,53,184,10
+    CONTROL         "Ne&ver allow my computer to go offline",
+                    IDC_RBN_GOOFFLINE_FAIL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP,15,67,184,10
+    GROUPBOX        "E&xception list",IDC_GRP_CUSTGOOFFLINE,7,93,213,86,
+                    WS_GROUP
+    CONTROL         "List1",IDC_LV_CUSTGOOFFLINE,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_GROUP | WS_TABSTOP,14,
+                    107,199,45,WS_EX_NOPARENTNOTIFY
+    PUSHBUTTON      "&Add...",IDC_BTN_ADD_CUSTGOOFFLINE,55,159,50,14
+    PUSHBUTTON      "&Edit",IDC_BTN_EDIT_CUSTGOOFFLINE,109,159,50,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Remove",IDC_BTN_DELETE_CUSTGOOFFLINE,163,159,50,14,
+                    WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,115,194,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,194,50,14
+END
+
+IDD_CSC_ADVOPTIONS_ADD DIALOGEX 0, 0, 227, 194
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Offline Files - Add Custom Action"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_CSCUI_ICON,IDC_STATIC2,7,10,20,20
+    LTEXT           "Set up how your computer behaves when a specific computer  becomes unavailable.  Enter the computer name and select an action.",
+                    IDC_STATIC3,40,12,174,28,NOT WS_GROUP
+    LTEXT           "&Computer:",IDC_STATIC4,14,60,37,8,NOT WS_GROUP
+    EDITTEXT        IDC_EDIT_GOOFFLINE_SERVER,54,57,166,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BTN_BROWSEFORSERVER,170,79,50,14
+    GROUPBOX        "When a network connection is lost",
+                    IDC_GRP_GOOFFLINE_DEFAULTS,7,109,213,44
+    CONTROL         "&Notify me and begin working offline",
+                    IDC_RBN_GOOFFLINE_SILENT,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | WS_GROUP | WS_TABSTOP,15,121,184,10
+    CONTROL         "Ne&ver allow my computer to go offline",
+                    IDC_RBN_GOOFFLINE_FAIL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP,15,135,184,10
+    DEFPUSHBUTTON   "OK",IDOK,116,173,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,170,173,50,14
+END
+
+IDD_CSC_ADVOPTIONS_EDIT DIALOGEX 0, 0, 227, 170
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Offline Files - Edit Custom Action"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_CSCUI_ICON,IDC_STATIC2,7,10,20,20
+    LTEXT           "Set up how your computer behaves when the computer becomes unavailable.",
+                    IDC_STATIC3,40,12,174,20,NOT WS_GROUP
+    LTEXT           "Computer:",IDC_STATIC4,10,40,38,8,NOT WS_GROUP
+    LTEXT           "Static",IDC_TXT_GOOFFLINE_SERVER,49,40,168,8,NOT 
+                    WS_GROUP
+    GROUPBOX        "When a network connection is lost",
+                    IDC_GRP_GOOFFLINE_DEFAULTS,7,56,213,44
+    CONTROL         "&Notify me and begin working offline",
+                    IDC_RBN_GOOFFLINE_SILENT,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | WS_GROUP | WS_TABSTOP,15,68,184,10
+    CONTROL         "Ne&ver allow my computer to go offline",
+                    IDC_RBN_GOOFFLINE_FAIL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP,15,82,184,10
+    DEFPUSHBUTTON   "OK",IDOK,116,149,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,170,149,50,14
+END
+
+IDD_CONFIRM_PIN DIALOGEX 0, 0, 252, 110
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Offline Subfolders"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "The folder you want to make available offline contains subfolders.  Do you also want to make the subfolders available offline?  ",
+                    IDC_STATIC,34,7,204,30
+    CONTROL         "No,  make only this folder available offline",
+                    IDC_PIN_NO_RECURSE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,34,56,211,10
+    CONTROL         "Yes, make this folder and all its subfolders available offline",
+                    IDC_PIN_RECURSE,"Button",BS_AUTORADIOBUTTON,34,42,211,10
+    DEFPUSHBUTTON   "OK",IDOK,140,89,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,195,89,50,14
+    ICON            IDI_CSCUI_ICON,IDC_STATIC,7,7,20,20
+END
+
+IDD_CONFIRM_UNPIN DIALOG DISCARDABLE  0, 0, 252, 110
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remove Offline Folders"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You have specified that you no longer want this folder available offline.  Does this include all subfolders?",
+                    IDC_STATIC,34,7,204,20
+    CONTROL         "No,  I still want the subfolders available offline",
+                    IDC_PIN_NO_RECURSE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,34,56,211,10
+    CONTROL         "Yes, I no longer want this folder and its subfolders available offline",
+                    IDC_PIN_RECURSE,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,34,34,211,20
+    DEFPUSHBUTTON   "OK",IDOK,140,89,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,195,89,50,14
+    ICON            IDI_CSCUI_ICON,IDC_STATIC,7,7,20,20
+END
+
+IDD_OPEN_FILES_WARNING DIALOGEX 0, 0, 250, 94
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Close Open Files"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            "",IDC_DLGTYPEICON,7,7,20,20
+    LTEXT           "Reconnecting to the network causes a synchronization to occur. In order to begin synchronizing, all of your files and folders must be closed.",
+                    IDC_STATIC,35,7,208,26
+    LTEXT           "Please close all of your files and folders then press OK. Any remaining open files will be forcibly closed by Windows.",
+                    IDC_STATIC,35,38,208,26
+    DEFPUSHBUTTON   "OK",IDOK,138,73,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,73,50,14
+END
+
+IDD_CONFIRM_PURGE DIALOG DISCARDABLE  0, 0, 236, 233
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NUKE,IDC_STATIC,7,7,21,20
+    LTEXT           "You have chosen to delete the offline versions of files stored on your computer.  Versions on the network will not be deleted.",
+                    IDC_TXT_CONFIRMPURGE,36,7,186,33,NOT WS_GROUP
+    LTEXT           "&Delete offline files for the following checked shared folders.",
+                    IDC_TXT_CONFIRMPURGE2,36,40,180,16,NOT WS_GROUP
+    CONTROL         "List1",IDC_LIST_PURGE,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,36,60,180,72
+    LTEXT           "Do you want to delete only temporary offline files or do you want to delete temporary offline files as well as offline files that are always available offline?",
+                    IDC_TXT_CONFIRMPURGE3,36,141,187,25,NOT WS_GROUP
+    CONTROL         "Delete only the &temporary offline versions",
+                    IDC_RBN_CONFIRMPURGE_UNPINNED,"Button",
+                    BS_AUTORADIOBUTTON | BS_TOP | BS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,36,170,187,10
+    CONTROL         "Delete &both the temporary offline versions and the versions that are always available offline.",
+                    IDC_RBN_CONFIRMPURGE_ALL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,36,184,187,20
+    DEFPUSHBUTTON   "OK",IDOK,123,212,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,179,212,50,14
+END
+
+IDD_CONFIRM_DELETE DIALOG DISCARDABLE  0, 0, 219, 92
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NUKE,IDC_STATIC,7,7,20,20
+    LTEXT           "You have chosen to delete the offline versions of the selected files.  Versions on the network will not be deleted.  The deleted files will no longer be available offline.",
+                    IDC_STATIC,36,7,170,34
+    DEFPUSHBUTTON   "OK",IDOK,106,71,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,162,71,50,14
+    CONTROL         "&Never show this again.",IDC_CBX_CONFIRMDEL_NOSHOW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,36,48,175,10
+END
+
+IDD_FILE_CONFLICT_DELETE DIALOGEX 0, 0, 280, 126
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Network Version of File Missing"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_DOCUMENT,IDC_DLGTYPEICON,7,7,20,20
+    EDITTEXT        IDC_FILENAME,35,12,238,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "You have a version of this file available for offline use, however the network version has been deleted.",
+                    IDC_STATIC,35,30,238,26
+    CONTROL         "&Keep my offline version and copy it to the network",
+                    IDC_KEEP_LOCAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,35,58,238,8
+    CONTROL         "&Delete my version of the file so that it is no longer available offline",
+                    IDC_DELETE_LOCAL,"Button",BS_AUTORADIOBUTTON,35,70,238,8
+    CONTROL         "Do this for e&very deleted file on this network share.",
+                    IDC_APPLY_TO_ALL,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
+                    WS_TABSTOP,35,89,238,8
+    DEFPUSHBUTTON   "OK",IDOK,168,105,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,223,105,50,14
+END
+
+IDD_FIRSTPIN_WELCOME DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Offline Files Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         1340,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,0,
+                    88,154
+    LTEXT           "Welcome to the Offline Files Wizard",
+                    IDC_TXT_FIRSTPIN_WELCOME_TITLE,100,7,187,32
+    LTEXT           "Offline Files are most useful when you are working on a laptop or remotely over a slow network connection.",
+                    IDC_STATIC,100,74,180,18
+    LTEXT           "Using Offline Files, you can work with network files when you are not connected to the network.",
+                    IDC_STATIC,100,46,180,18
+    LTEXT           "To continue, click Next.",IDC_STATIC,100,100,180,8
+END
+
+IDD_FIRSTPIN_PIN DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Offline Files Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Offline files are marked with a visual indicator so they are easy to identify.",
+                    IDC_STATIC,100,18,125,27
+    LTEXT           "Click Synchronize on the File menu of Windows Explorer to update the files on your computer and on the network.",
+                    IDC_STATIC,100,58,180,27
+    CONTROL         1350,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    WS_BORDER,234,10,38,38,WS_EX_TRANSPARENT
+    CONTROL         "&Automatically synchronize the Offline Files when I log on and log off my computer",
+                    IDC_CBX_FIRSTPIN_AUTOSYNC,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,100,95,180,27
+    CONTROL         1340,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,0,
+                    88,154
+END
+
+IDD_FIRSTPIN_OFFLINE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Offline Files Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "While you are offline, a message appears periodically to remind you that you are not connected to the network.",
+                    IDC_STATIC,100,7,180,27
+    LTEXT           "Whether you are working online or offline, you can access your Offline Files in the same network folders or in the Offline Files folder.",
+                    IDC_STATIC,100,86,180,27
+    CONTROL         1346,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    WS_BORDER,196,44,64,28
+    CONTROL         "&Enable reminders",IDC_CBX_REMINDERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,53,76,10
+    CONTROL         "&Create a shortcut to the Offline Files folder on my desktop",
+                    IDC_CBX_FIRSTPIN_FLDRLNK,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,100,123,180,20
+    CONTROL         1340,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,0,
+                    88,154
+END
+
+IDD_CSCUI_STATUS DIALOG DISCARDABLE  0, 0, 315, 201
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Offline Files Status"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_CSCUI_ICON,IDC_STATIC,7,7,20,20
+    LTEXT           "Static",IDC_TXT_STATUSDLG,38,7,212,52
+    DEFPUSHBUTTON   "OK",IDOK,258,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,258,25,50,14
+    PUSHBUTTON      "",IDC_BTN_DETAILS,258,43,50,14
+    CONTROL         "",IDC_SEP_STATUSDLG,"Static",SS_BLACKRECT | SS_SUNKEN,7,
+                    81,301,1
+    CONTROL         "&Work online without synchronizing changes",
+                    IDC_CBX_STATUSDLG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,65,212,10
+    CONTROL         "List1",IDC_LV_STATUSDLG,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,7,92,301,80
+    LTEXT           "Place a check next to the items above you wish to synchronize.",
+                    IDC_TXT_STATUSDLG_CHECKTOSYNC,7,177,187,16
+    PUSHBUTTON      "Se&ttings",IDC_BTN_SETTINGS,204,179,50,14
+    PUSHBUTTON      "&View Files",IDC_BTN_VIEWFILES,258,179,50,14
+END
+
+IDD_CONFIRM_DELETEMOD DIALOG DISCARDABLE  0, 0, 250, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NUKE,IDC_STATIC,7,7,20,20
+    LTEXT           "<static>",IDC_TXT_CONFIRM_DELETEMOD,36,7,207,48
+    DEFPUSHBUTTON   "&No",IDNO,85,73,50,14
+    PUSHBUTTON      "No to &All",IDIGNORE,139,73,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,73,50,14
+    PUSHBUTTON      "&Yes",IDYES,31,73,50,14
+END
+
+IDD_CONFIRM_PIN_EFS DIALOG DISCARDABLE  0, 0, 212, 82
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Offline Encrypted Files"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,100,63,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,155,63,50,14
+    ICON            IDI_CSCUI_ICON,IDC_STATIC,7,7,21,20
+    LTEXT           "",IDC_EFS_MSG,34,7,164,30
+    CONTROL         "Skip encrypted files",IDC_SKIP_EFS,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,34,42,171,10
+END
+
+IDD_FOLDER_CONFLICT_DELETE DIALOGEX 0, 0, 280, 126
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Network Version of Folder Missing"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_DOCUMENT,IDC_DLGTYPEICON,7,7,20,20
+    EDITTEXT        IDC_FILENAME,35,12,238,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "You have a version of this folder available for offline use, however the network version has been deleted.",
+                    IDC_STATIC,35,30,238,26
+    CONTROL         "&Keep my offline version and copy it to the network",
+                    IDC_KEEP_LOCAL,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,35,58,238,8
+    CONTROL         "&Delete my version of the folder so that it and any files it contains are no longer available offline",
+                    IDC_DELETE_LOCAL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,35,70,238,16
+    CONTROL         "Do this for e&very deleted folder on this network share.",
+                    IDC_APPLY_TO_ALL,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
+                    WS_TABSTOP,35,89,238,8
+    DEFPUSHBUTTON   "OK",IDOK,168,105,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,223,105,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_FIRSTPIN_COVER      BITMAP  DISCARDABLE     "res\\fpcover.bmp"
+IDB_FIRSTPIN_TRAY       BITMAP  DISCARDABLE     "res\\fptray.bmp"
+IDB_FIRSTPIN_OVERLAY    BITMAP  DISCARDABLE     "res\\fpovlay.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "cscui.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNKNOWN_USER        "Unknown user"
+    IDS_DISKCLEAN_DISPLAY   "Temporary Offline Files"
+    IDS_DISKCLEAN_DESCRIPTION 
+                            "Temporary Offline files are local copies of recently used network files that are automatically cached for you, enabling you to access them when you are disconnected from the network."
+    IDS_ERROR               "Error"
+    IDS_MENU_PIN            "Make A&vailable Offline"
+    IDS_MENU_SYNCHRONIZE    "S&ynchronize"
+    IDS_HELP_PIN            "Guarantee that this item will be available offline."
+    IDS_HELP_UPDATE_SEL     "Synchronize the selected items now."
+    IDS_PIN_ENCRYPT_WARNING "Encrypted file '%1' in folder %2 was copied without encryption."
+    IDS_DISKCLEAN_BTN_TEXT  "&View Files"
+    IDS_APPLICATION         "Offline Files"
+    IDS_DISKCLEAN_PIN_DESCRIPTION 
+                            "Offline files are local copies of network files that you specifically made available offline, enabling you to access them when you are disconnected from the network."
+    IDS_VERSION_FORMAT      "%1 (%2 v%3)%4"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SHARE_STATUS_ONLINE "Online"
+    IDS_SHARE_STATUS_OFFLINE "Offline"
+    IDS_TITLE_COL_SERVER    "Computer"
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PIN_FILE_ERROR      "Unable to make '%1' available offline on %2.  %3"
+    IDS_FILL_SPARSE_FILES_ERROR "Unable to synchronize '%1.'  %2"
+    IDS_MERGE_SHARE_ERROR   "Unable to merge offline changes on '%1.'  %2"
+    IDS_COPY_WARNING        "'%1' saved as '%2' on %3"
+    IDS_UNDO_SCAN           "Restoring '%1' on %2"
+    IDS_NEW_SCAN            "Scanning '%1' on %2"
+    IDS_DELETE_WARNING      "Deleted '%1' on %2"
+    IDS_FILE_OPEN_ERROR     "'%1' is in use on %2"
+    IDS_SERVER_FULL_ERROR   "The server disk is full."
+    IDS_LOCAL_DISK_FULL_ERROR "The local disk is full."
+    IDS_NET_ERROR           "Unable to access '%1' on %2.  %3"
+    IDS_NAME_CONFLICT_ERROR "Unable to resolve conflict for '%1' on %2.  %3"
+    IDS_ACCESS_ERROR        "Access to '%1' is denied on %2"
+    IDS_SHARE_CONNECT_ERROR "Unable to connect to '%1.'  %2"
+    IDS_UNKNOWN_SYNC_ERROR  "Error accessing '%1' on %2.  %3"
+    IDS_OPENFILE_MERGE_WARNING 
+                            "Offline changes on '%1' were not synchronized because there are open files."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STALEREASON_NOTSTALE "File is synchronized"
+    IDS_STALEREASON_ORPHAN  "Folder on server has been renamed or deleted"
+    IDS_STALEREASON_SUSPECT "Local copy may be corrupted"
+    IDS_STALEREASON_STALE   "Server copy has been modified"
+    IDS_STALEREASON_LOCALLY_MODATTR "Local copy attributes have been modified"
+    IDS_STALEREASON_LOCALLY_MODTIME "Local copy date/time has been modified"
+    IDS_STALEREASON_LOCALLY_MODDATA "Local copy data has been modified"
+    IDS_STALEREASON_LOCALLY_CREATED "Only local copy exists"
+    IDS_STALEREASON_SPARSE  "Local copy is incomplete"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONFIRM_UNPIN_OFFLINE 
+                            "The selected file(s) will no longer be available while offline. Any offline changes that have not been synchronized will be lost.\n\nPress OK to continue."
+    IDS_FMT_PIN_EFS_MSG     "'%1' is encrypted. If made available offline, the offline copy will not be encrypted."
+    IDS_FMT_DELETE_APPLY_ALL "Do this for e&very deleted file on '%1'."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_POLICY_NOVIEWCACHE 
+                            "System policy prohibits use of the Offline Files folder."
+    IDS_FMT_ERR_DELFROMCACHE "Cannot delete '%1'."
+    IDS_FMT_ERR_DELFROMCACHE_BUSY "Cannot delete '%1'.\n\nThe file is currently in use."
+    IDS_FMT_CACHESIZE_DISPLAY "%1 (%2%% of drive)"
+    IDS_ORDER_BYTES         "%%1 bytes"
+    IDS_ORDER_KB            "%%1 KB"
+    IDS_ORDER_MB            "%%1 MB"
+    IDS_ORDER_GB            "%%1 GB"
+    IDS_ORDER_TB            "%%1 TB"
+    IDS_ORDER_PB            "%%1 PB"
+    IDS_ORDER_EB            "%%1 EB"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CSC_CM_SHOWVIEWER   "View Files"
+    IDS_BROWSEFORSERVER     "Select a computer"
+    IDS_ERR_NOTSERVERNAME   "'%1' is not a valid computer name.  Enter a name formatted as 'Computer' or '\\\\Computer'."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPENDETAILS         "&Details >>"
+    IDS_NOTHING_TO_SYNC     "No computers are available for synchronization.\n\nDo you want to view the status of Offline Files?"
+    IDS_CSCOPT_PROPSHEET_TITLE "Offline Files Settings"
+    IDS_TITLE_COL_ACTION    "Behavior"
+    IDS_GOOFFLINE_ACTION_SILENT "Work offline"
+    IDS_GOOFFLINE_ACTION_FAIL "Never go offline"
+    IDS_ERR_INVALIDSERVER   "Computer '%1' is either invalid or currently not available. \n\n%2\nAdd action anyway?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_GOOFFLINE_DUPACTION 
+                            "An action for computer '%1' exists.  Replace it?"
+    IDS_ERR_GOOFFLINE_DUPACTION_NOCHG 
+                            "The action for '%1' has been set by system policy.  It cannot be changed or deleted."
+    IDS_FMT_GOOFFLINE_SERVER_POLICY "%1 ( policy )"
+    IDS_GOOFFLINE_MULTISERVER "Multiple selected"
+    IDS_CACHE_CORRUPT       "The Offline Files cache is corrupt.  Restart the computer to correct the cache."
+    IDS_REBOOTSYSTEM        "You must restart your computer before the new settings will take effect.\n\nDo you want to restart your computer now?"
+    IDS_CLOSEDETAILS        "<< &Details"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCANNING_DOTDOTDOT  "Scanning for offline files to delete..."
+    IDS_DELETING_DOTDOTDOT  "Deleting local copies of offline files..."
+    IDS_FILE_PINNED         "Always available offline"
+    IDS_FILE_NOTPINNED      "Temporarily available offline"
+    IDS_COL_NAME            "Name"
+    IDS_COL_TYPE            "Type"
+    IDS_COL_SYNCSTATUS      "Synchronization"
+    IDS_COL_PINSTATUS       "Availability"
+    IDS_COL_LOCATION        "Location"
+    IDS_COL_SIZE            "Size"
+    IDS_COL_DATE            "Modified"
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_SERVERSTATUS    "Server Status"
+    IDS_BTHDR_INITIAL       "Offline Files - "
+    IDS_BTHDR_REMIND        "Offline Files - "
+    IDS_BTSTA_OFFLINE       "Working offline"
+    IDS_BTBOD_OFFLINE       "You are no longer connected to '%1'.  You can continue working normally."
+    IDS_BTBOD_OFFLINE_M     "You are no longer connected to the computers on the network.  You can continue working normally."
+    IDS_BTBOD_STILLOFFLINE  "'%1' is still offline."
+    IDS_BTBOD_STILLOFFLINE_M "Computers are still offline."
+    IDS_BTDIR_VIEWSTATUS    "Click this icon to view status."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BTDIR_RECONNECT     "Click this icon to synchronize and work online."
+    IDS_BTSTA_DIRTY         "Need to synchronize"
+    IDS_BTSTA_SERVERBACK    "Computer available"
+    IDS_BTBOD_SERVERBACK    "'%1' is available for reconnection."
+    IDS_BTBOD_SERVERBACK_M  "Computers are available for reconnection."
+    IDS_BTBOD_DIRTY         "Offline changes on '%1' need to be synchronized."
+    IDS_BTBOD_DIRTY_M       "Offline changes need to be synchronized."
+    IDS_BTBOD_STILLBACK     "'%1' is still available for reconnection."
+    IDS_BTBOD_STILLBACK_M   "Computers are still available for reconnection."
+    IDS_BTBOD_STILLDIRTY    "Offline changes on '%1' are still not synchronized."
+    IDS_BTBOD_STILLDIRTY_M  "Offline changes on multiple computers are still not synchronized."
+    IDS_BTDIR_SYNC          "Click this icon to synchronize and work online."
+    IDS_CSC_CM_SETTINGS     "Settings"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CSC_CM_SYNCHRONIZE  "Synchronize"
+    IDS_STATUSDLG_OFFLINE_M "You are working offline and may continue working normally.  Changes to any offline files will be copied back to computers on the network when you synchronize."
+    IDS_STATUSDLG_SERVERBACK_M 
+                            "You can now connect to the computers on the network.\n\nYou may continue working offline.  To synchronize your offline changes and begin working online, click OK."
+    IDS_STATUSDLG_DIRTY_M   "You are working online, but changes you made offline have not been synchronized.\n\nTo access your offline changes, click OK."
+    IDS_SHARE_INFO_DIRTY    "Need to synchronize, %1!d! file(s) modified offline"
+    IDS_SHARE_INFO_AVAIL_MOD 
+                            "Available for reconnect,  %1!d! modified file(s)"
+    IDS_SHARE_INFO_UNAVAIL_MOD 
+                            "Unavailable for reconnect, %1!d! modified file(s)"
+    IDS_SHARE_INFO_AVAIL    "Available for reconnect"
+    IDS_SHARE_INFO_UNAVAIL  "Unavailable for reconnect"
+    IDS_SHARE_INFO_BLANK    " "
+    IDS_REFORMAT_CACHE      "The Offline Files cache on the local computer will be re-initialized.  Any changes that have not been synchronized with computers on the network will be lost.  Any files or folders made available offline will no longer be available offline.  A computer restart is required.\n\nDo you wish to re-initialize the cache?"
+    IDS_STATUSDLG_NONET     "The network is not available.  If this is unexpected, check your network connection.  You may continue working normally with offline files.  Changes to any offline files will be copied back to computers on the network when you synchronize.\n\nPress OK to attempt to synchronize and reconnect to the network."
+    IDS_BALLOONHDR_FORMAT   "%1 %2"
+    IDS_BALLOONBODY_FORMAT  "%1\n%2\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIRSTPIN_PIN_TITLE  "Make Network Files Available Offline"
+    IDS_FIRSTPIN_PIN_SUBTITLE 
+                            "Learn how to make network files available for offline use."
+    IDS_FIRSTPIN_OFFLINE_TITLE "Work Offline"
+    IDS_FIRSTPIN_OFFLINE_SUBTITLE "Learn about working with offline files."
+    IDS_FIRSTPIN_CONTROLS_TITLE "Offline Files Options"
+    IDS_FIRSTPIN_CONTROLS_SUBTITLE 
+                            "Set some common options for offline files."
+    IDS_FIRSTPIN_SYNC_TITLE "Synchronize Offline Files"
+    IDS_FIRSTPIN_SYNC_SUBTITLE "Learn about synchronizing file changes."
+    IDS_FIRSTPIN_FONTHT_PTS "16"
+    IDS_ERR_REGSYNCATLOGONLOGOFF 
+                            "Error registering for synchronization at logon and logoff."
+    IDS_BTSTA_NONET         "Network Unavailable"
+    IDS_BTBOD_NONET         "The network is not available."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CSC_CM_STATUS       "Status"
+    IDS_STATUSDLG_HDR_SERVER "Computer"
+    IDS_STATUSDLG_HDR_STATUS "Status"
+    IDS_STATUSDLG_HDR_INFO  "Information"
+    IDS_TT_HEADER           "Offline Files - "
+    IDS_TT_OFFLINE          "Computer(s) offline"
+    IDS_TT_OFFLINE_M        "Computer(s) offline"
+    IDS_TT_SERVERBACK       "Computer(s) available for reconnection"
+    IDS_TT_SERVERBACK_M     "Computer(s) available for reconnection"
+    IDS_TT_DIRTY            "Offline changes not synchronized."
+    IDS_TT_DIRTY_M          "Offline changes not synchronized"
+    IDS_TT_NONET            "The network is not available"
+    IDS_STATUSDLG_TITLE     "Offline Files Status"
+    IDS_STATUSDLG_OFFLINE   "You are working offline on '%1' and may continue working normally.  Changes to any offline files will be copied back to '%2' when you synchronize."
+    IDS_STATUSDLG_SERVERBACK 
+                            "You can now connect to '%1'.\n\nYou may continue working offline.  To synchronize your offline changes on '%2' and begin working online, click OK."
+    IDS_STATUSDLG_DIRTY     "You are working online on '%1', but changes you made offline have not been synchronized.\n\nTo access your offline changes on '%2', click OK."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FMT_DELCACHE_FILESDELETED "Deleted %1!d! files (%2)."
+    IDS_FMT_DELCACHE_FILEDELETED "Deleted %1!d! file (%2)."
+    IDS_DELFILEPROG_LINE1   "Deleting offline copy of..."
+    IDS_FMT_DELFILES_ERROR  "Error deleting local copy of '%1'."
+    IDS_FOLDER_LINK_NAME    "Shortcut to Offline Files"
+    IDS_OPENFILESONDISABLE  "Due to files open on the computer, a restart is required to disable Offline Files.\n\nTo avoid a restart of the computer, close all open files.  Press OK to continue."
+    IDS_ERR_DISABLECSC      "Offline Files cannot be disabled."
+    IDS_ERR_ENABLECSC       "Offline Files cannot be enabled."
+    IDS_COL_ACCESS          "Access"
+    IDS_ACCESS_NONE         "N"
+    IDS_ACCESS_READ         "R"
+    IDS_ACCESS_WRITE        "W"
+    IDS_ACCESS_READWRITE    "R/W"
+    IDS_NULLMERGE_ITEMNAME  "No offline edits found"
+    IDS_NULLSYNC_ITEMNAME   "All files are up to date"
+    IDS_CONFIRM_DELETEMOD   "Offline changes to '%1' have not been synchronized.  By deleting the offline version, these changes will be lost.\n\nDo you wish to delete this file?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DELCACHE_NOFILESDELETED "File deletion complete."
+    IDS_CMD_DELETE          "&Delete"
+    IDS_CMD_DELETE_HELPTEXT "Deletes local copy of the selected items."
+    IDS_BTN_TITLE_CLOSE     "&Close"
+    IDS_TXT_NO_FILES_TO_DELETE 
+                            "There are no offline files to delete at this time."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CANTPIN_SYNCINPROGRESS 
+                            "The selected file(s) cannot be made available offline at this time.  Synchronization of Offline Files is in progress.\n\nRetry this operation when the synchronization is complete."
+    IDS_CANTSYNC_SYNCINPROGRESS 
+                            "Synchronization cannot be performed at this time.  Synchronization of Offline Files is already in progress.\n\nRetry this operation when the current synchronization is complete."
+    IDS_CANTRECONN_SYNCINPROGRESS 
+                            "The computer(s) cannot be placed online at this time.  Synchronization of Offline Files is in progress.\n\nRetry this operation when the synchronization is complete."
+    IDS_CACHING_DISALLOWED  "Files of this type cannot be made available offline."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "msg.rc"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

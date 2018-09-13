@@ -1,0 +1,20 @@
+/********************************************************************/
+/*        MSRATING.RCV                                              */
+/********************************************************************/
+#ifndef WINNT
+#include <version.h>
+#else
+#define NASHVILLE		/* otherwise we get an NT version number */
+#include <ntverp.h>
+#endif /* WINNT */
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Local User Management DLL"
+#define VER_INTERNALNAME_STR		"MSLOCUSR"
+#define VER_ORIGINALFILENAME_STR	"MSLOCUSR.DLL"
+
+#define VER_LEGALCOPYRIGHT_YEARS	"1995-1999"
+
+#include <common.ver>
+

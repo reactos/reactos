@@ -1,0 +1,46 @@
+#ifndef _UNITMEAS_PDL_
+#define _UNITMEAS_PDL_ 1
+
+file unitmeas.pdl
+
+import types.pdl
+
+enum htmlUnits prefix:htmlUnits       guid:3050f214-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:             value:0  
+    eval Point      string:pt           value:1
+    eval Pica       string:pc           value:2
+    eval Inch       string:in           value:3
+    eval Cm         string:cm           value:4
+    eval Mm         string:mm           value:5
+    eval Em         string:em           value:6
+    eval En         string:en           value:7
+    eval Ex         string:ex           value:8
+    eval Pixels     string:px           value:9
+    eval Percent    string:%            value:10
+    eval Relative   string:*            value:11
+
+// Valid document unit types
+enum htmlDocUnits prefix:htmlDocUnits       guid:3050f292-98b5-11cf-bb82-00aa00bdce0b
+    eval Point      string:pt           value:1
+    eval Pica       string:pc           value:2
+    eval Inch       string:in           value:3
+    eval Cm         string:cm           value:4
+    eval Mm         string:mm           value:5
+    eval Em         string:em           value:6
+    eval En         string:en           value:7
+    eval Ex         string:ex           value:8
+    eval Pixels     string:px	        value:9
+
+interface IUnitMeasurement super:IDispatch guid:3050f226-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CUnitMeasurement:value
+    refprop     CUnitMeasurement:unit
+    refprop     CUnitMeasurement:unitValue
+    refprop     CUnitMeasurement:htmlText
+
+class CUnitMeasurement name:UnitMeasurement primaryinterface:IUnitMeasurement guid:3050f293-98b5-11cf-bb82-00aa00bdce0b
+    property value          atype:float             dispid:DISPID_VALUE     type:float                  dwFlags:0   get set abstract bindable displaybind   
+    property unit           atype:BSTR              dispid:1                type:htmlUnits              dwFlags:0   get set abstract bindable displaybind maxstrlen:pdlNoLimit
+    property unitValue      atype:float             dispid:2                type:float                  dwFlags:0   get set abstract bindable displaybind
+    property htmlText       atype:BSTR              dispid:3                type:BSTR                   dwFlags:0   get set abstract bindable displaybind maxstrlen:pdlNoLimit
+
+#endif _UNITMEAS_PDL_

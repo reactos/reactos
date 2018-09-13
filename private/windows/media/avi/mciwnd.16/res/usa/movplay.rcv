@@ -1,0 +1,9 @@
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME               "movplay.exe\0"
+#define VERSIONDESCRIPTION        "Movie Player\0"
+#define VERSIONTYPE               VFT_APP
+#define VERSIONSUBTYPE            VFT2_UNKNOWN
+
+#include <verinfo.ver>

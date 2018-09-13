@@ -1,0 +1,42 @@
+#include <ver.h>
+
+#define VER_PRODUCTVERSION_STR      "1.00.0001\0"
+#define VER_PRODUCTVERSION          1,00,0,0001
+#define VER_PRODUCTVERSION_BUILD    1
+#define VER_PRODUCTVERSION_DW       (0x01000000 | 0001)
+#define VER_PRODUCTVERSION_W        (0x0100)
+
+#define VER_LEGALCOPYRIGHT_YEARS	"1995-1999"
+
+VS_VERSION_INFO VERSIONINFO 
+FILEVERSION    VER_PRODUCTVERSION
+PRODUCTVERSION VER_PRODUCTVERSION
+FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+FILEFLAGS      VS_FF_DEBUG | VS_FF_PRERELEASE | VS_FF_SPECIALBUILD
+FILEOS         VOS_DOS_WINDOWS32
+FILETYPE       VFT_DLL
+FILESUBTYPE    VFT_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN 
+            VALUE "CompanyName"     ,"Microsoft Corporation"
+            VALUE "FileDescription" ,"Sample Rating Obtainer"
+            VALUE "FileVersion"     ,VER_PRODUCTVERSION_STR
+            VALUE "InternalName"    ,"SAMPLE"
+            VALUE "LegalCopyright"  ,"Copyright \251 Microsoft Corp. 1996"
+            VALUE "OriginalFilename","SAMPLE.DLL"
+            VALUE "ProductName"     ,"Microsoft Internet Explorer"
+            VALUE "ProductVersion"  ,VER_PRODUCTVERSION_STR
+        END 
+    END 
+ 
+    BLOCK "VarFileInfo" 
+    BEGIN 
+        /* the following line should be extended for localized versions */
+        VALUE "Translation", 0x0409, 0x04E4
+    END 
+END 
+
+

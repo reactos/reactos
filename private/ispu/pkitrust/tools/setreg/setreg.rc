@@ -1,0 +1,69 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       setreg.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "ECM SetReg"
+
+#define VER_INTERNALNAME_STR        "SETREG.EXE"
+#define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
+
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+
+IDS_SWITCH1                 "-"
+IDS_SWITCH2                 "/"
+IDS_OPTION_Q                "q"
+IDS_TRUE					"TRUE"
+IDS_FALSE					"FALSE"
+IDS_SYNTAX					"Usage: SetReg [options] {[<Choice #> <Value>]...}\n"
+IDS_OPTIONS				    "Options: \n"
+IDS_OPTION_Q_DESC			"  -%s    No display of key values after request is completed\n"
+IDS_ENDLN					"\n"
+IDS_CHOICES					"Choices: \n"
+IDS_DESC					"  %s %d \n"
+IDS_DISPLAY_LT_10			"   %d) %s %s\n"
+IDS_DISPLAY					"  %d) %s %s\n"
+IDS_NAME_TEST_ROOT			"Trust the Test Root..........................."
+IDS_NAME_EXPIRATION			"Use expiration date on certificates..........."
+IDS_NAME_REVOCATION			"Check the revocation list....................."
+IDS_NAME_REVOCATIONONTS     "Check the revocation list on Time Stamp Signer"
+IDS_NAME_OFFLINE_INDIVIDUAL	"Offline revocation server OK (Individual)....."
+IDS_NAME_OFFLINE_COMMERCIAL	"Offline revocation server OK (Commercial)....."
+IDS_NAME_JAVA_INDIVIDUAL	"Java offline revocation server OK (Individual)"
+IDS_NAME_JAVA_COMMERCIAL	"Java offline revocation server OK (Commercial)"
+IDS_NAME_VERSION_ONE		"Invalidate version 1 signed objects..........."
+IDS_NAME_ALLOWONLYPERTRUST  "Only trust items found in the Trust DB........"
+IDS_FAILED					"Failed"
+IDS_MANY_ARG				"Error: Too many arguments\n"
+IDS_INVALID_CHOICE			"Error: Invalid choice #\n"
+IDS_MISS_ARG				"Error: Missing argument\n"
+IDS_BAD_VALUE				"Error: Bad Value\n";
+IDS_NO_VALUE				"Error: No previous state value for %s%s\n"
+IDS_REG_OPEN_FAILED			"Error: RegOpenKeyEx failed for %s%s with error: %d\n"
+IDS_REG_QUERY_FAILED		"Error: RegQueryValueEx failed for %s%s with error: %d\n"
+IDS_REG_CREATE_FAILED		"Error: RegCreateKeyEx failed for failed for %s%s with error: %d\n"
+IDS_REG_SET_FAILED			"Error: RegSetValueEx failed: %d\n"
+IDS_WRONG_TYPE				"Error: Previous type (Not REG_DWORD) for State value of %s%s: %d\n"
+IDS_UPDATED					"Updated "
+IDS_VALUE					"Value:  TRUE | FALSE \n"
+IDS_STATE					"Software Publishing State Key Values (0x%x):\n"
+//IDS_KEY_STATE				"State"
+
+END
+
+#include <common.ver>

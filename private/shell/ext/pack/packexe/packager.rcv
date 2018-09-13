@@ -1,0 +1,16 @@
+/*
+ * May 1994, satona --- modified by t-ashm, Jul 95
+ *
+ * Copyright (c)1994 Microsoft Corporation, All Rights Reserved
+ */
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Object Packager2 EXE"
+#define VER_INTERNALNAME_STR        "packexe"
+#define VER_LEGALCOPYRIGHT_YEARS    "1995-1999"
+#define VER_ORIGINALFILENAME_STR    "packager.exe"
+
+#include <common.ver>

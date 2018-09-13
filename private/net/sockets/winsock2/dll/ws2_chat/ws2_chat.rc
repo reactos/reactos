@@ -1,0 +1,135 @@
+/*++
+
+Copyright (c) 1995 Intel Corp
+
+Module Name:
+
+    ws2_chat.rc
+
+Abstract:
+
+    Resource script for the WinSock2 Chat sample application.
+
+Author:
+
+    Dan Chou & Michael Grafton
+
+Revision History:
+
+    03-October-1995    mike_grafton@ccm.jf.intel.com
+        Several dialog boxes added/changed
+
+    19-June-1995       dchou@ccm.jf.intel.com
+        Initial version.
+
+--*/
+
+#include "ws2_chat.h"
+
+MdiMenuMain MENU
+{
+    POPUP "&File"
+    {
+        MENUITEM "Close Window",           IDM_CLOSE
+        MENUITEM "E&xit",                  IDM_EXIT
+    }
+
+    MENUITEM "&Connect...",                IDM_CONNECT
+
+    POPUP "Clear &Buffer"
+        {
+                MENUITEM "&Send Buffer (Top)",           IDM_CLEAR_SENDBUFFER
+            MENUITEM "&Receive Buffer (Bottom)",        IDM_CLEAR_RECVBUFFER
+        }
+
+    POPUP "&Window"
+    {
+        MENUITEM "&Cascade\tShift+F5",     IDM_CASCADE
+        MENUITEM "&Tile\tShift+F4",        IDM_TILE
+        MENUITEM "Arrange &Icons",         IDM_ARRANGE
+        MENUITEM "Close &All",             IDM_CLOSEALL
+    }
+}
+
+MdiAccel ACCELERATORS
+{
+    VK_F5, IDM_CASCADE, VIRTKEY, SHIFT
+    VK_F4, IDM_TILE,    VIRTKEY, SHIFT
+}
+
+AcceptConnectionDlg DIALOG DISCARDABLE  0, 0, 184, 45
+    STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    CAPTION "Accepting Connection"
+    FONT 8, "MS Shell Dlg"
+    {
+    LTEXT           "Your Name:",   IDC_STATIC,      5, 12, 40,  8
+    EDITTEXT                        IDC_CALLEENAME, 45, 10, 70, 13, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",           IDOK,          131,  6, 50, 14
+    }
+
+
+ChooseFamilyDlg DIALOG DISCARDABLE  0, 0, 179, 86
+        STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+        CAPTION "Choose..."
+        FONT 8, "MS Shell Dlg"
+        {
+    DEFPUSHBUTTON   "OK",IDOK,125,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,65,50,14
+    LISTBOX         IDC_FAM_LB,5,30,110,50,LBS_SORT | LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Please choose which type of connection you wish to make...",
+                    IDC_STATIC,6,8,169,17
+        }
+
+InetConnDlg DIALOG DISCARDABLE  0, 0, 187, 65
+        STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+        CAPTION "Dialog"
+        FONT 8, "MS Shell Dlg"
+        {
+    DEFPUSHBUTTON   "OK",IDOK,135,15,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,135,40,50,14
+    LTEXT           "Fill in the address and port to connect to:",IDC_STATIC,
+                    6,7,122,10
+    EDITTEXT        IDC_INET_ADDRESS,50,20,73,13,ES_AUTOHSCROLL
+    LTEXT           "Address...",IDC_STATIC,5,25,33,8
+    EDITTEXT        IDC_INET_PORT,50,40,40,13,ES_AUTOHSCROLL
+    LTEXT           "Port...",IDC_STATIC,5,45,30,8
+        }
+
+DefaultConnDlg DIALOG DISCARDABLE  0, 0, 187, 75
+        STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+        CAPTION "Unknown Address Family"
+        FONT 8, "MS Shell Dlg"
+        {
+    DEFPUSHBUTTON   "OK",IDOK,131,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,131,23,50,14
+    LTEXT           "Enter the hexidecimal value of the address you want to connect to...",
+                    IDC_STATIC,15,10,100,20
+    EDITTEXT        IDC_ADDRESS,10,50,165,13,ES_AUTOHSCROLL
+        }
+
+
+NameAndSubjectDlg DIALOG DISCARDABLE  0, 0, 187, 65
+        STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+        CAPTION "Dialog"
+        FONT 8, "MS Shell Dlg"
+        {
+    DEFPUSHBUTTON   "OK",IDOK,135,25,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,135,45,50,14
+    EDITTEXT        IDC_CALLERNAME,65,5,115,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SUBJECT,65,25,65,35,ES_AUTOHSCROLL
+    LTEXT           "Your name:",IDC_STATIC,5,10,40,8
+    LTEXT           "Subject of the call:",IDC_STATIC,5,30,55,8
+        }
+
+InetListenPortDlg DIALOG DISCARDABLE  0, 0, 187, 55
+        STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+        CAPTION "Internet Port"
+        FONT 8, "MS Shell Dlg"
+        {
+    DEFPUSHBUTTON   "OK",IDOK,5,35,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,125,35,50,14
+    LTEXT           "Please choose a port to listen on for Internet connections",
+                    IDC_STATIC,5,5,114,19
+    EDITTEXT        IDC_LISTEN_PORT,125,10,40,13,ES_AUTOHSCROLL
+        }

@@ -1,0 +1,470 @@
+// WARNING
+// localizable resources only
+// non-localizable resources must go in msrating.rc
+
+#include "resource.h"
+#include <windows.h>
+#include <commctrl.h>
+
+#include "msrating.rcv"
+
+// nonlocalizable resources used by localizable resources (dialogs, etc)
+IDI_INTERNET_RATINGS    ICON    DISCARDABLE     "irating.bmp"
+IDI_MASTER_KEY          ICON    DISCARDABLE     "masterky.ico"
+IDI_RATING_SYSTEMS      ICON    DISCARDABLE     "ratsys.bmp"
+IDI_APPROVED            ICON    DISCARDABLE     "Rsites.ico"
+
+IDD_RATINGS DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Ratings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select a category to view the rating levels:",
+                    IDC_STATIC,7,7,237,8
+    CONTROL         "Catagories",IDC_PT_TREE,"SysTreeView32",
+                    TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_BORDER | 
+                    WS_TABSTOP,7,18,237,60
+    LTEXT           "A&djust the slider to specify what users are allowed to see:",
+                    IDC_RATING_LABEL,7,82,237,8
+    CONTROL         "Catagory level",IDC_PT_TB_SELECT,"msctls_trackbar32",TBS_BOTH | 
+                    WS_TABSTOP,7,97,238,22
+    EDITTEXT        IDC_PT_T_RSN_SDESC,49,122,188,12,ES_CENTER | 
+                    ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT 
+                    WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    GROUPBOX        "Description",IDC_STATIC2,7,136,237,69
+    EDITTEXT        IDC_PT_T_RSN_LDESC,14,151,222,28,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | NOT WS_VISIBLE | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "",IDC_PT_T_BITMAP_CATEGORY,14,50,19,8
+    LTEXT           "",IDC_PT_T_BITMAP_LABEL,16,148,19,8
+    LTEXT           "To view the Internet page for this rating service, click More Info.",
+                    IDC_STATIC3,15,185,163,16
+    PUSHBUTTON      "&More Info...",IDC_DETAILSBUTTON,188,185,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC,0,0,0,0
+END
+
+IDD_GENERAL DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "User options",IDC_STATIC,7,7,239,50
+    CONTROL         "&Users can see sites that have no rating",IDC_UNRATED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,20,145,10
+    CONTROL         "&Supervisor can type a password to allow users to view restricted content",
+                    IDC_PLEASE_MOMMY,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | 
+                    WS_TABSTOP,14,32,188,20
+    GROUPBOX        "Supervisor password",IDC_STATIC1,7,61,239,75
+    ICON            IDI_MASTER_KEY,IDC_STATIC2,13,76,21,20
+    LTEXT           "The supervisor password allows you to change Content Advisor settings or turn Content Advisor on or off. To change the supervisor password, click Change Password.",
+                    IDC_STATIC3,40,74,176,33
+    PUSHBUTTON      "&Change Password...",IDC_CHANGE_PASSWORD,163,114,75,14
+    GROUPBOX        "Rating systems",IDC_STATIC4,7,140,239,56
+    ICON            IDI_RATING_SYSTEMS,IDC_STATIC5,13,158,21,20
+    LTEXT           "The rating systems you use are provided by other companies and organizations. To view or modify the list, click Rating Systems.",
+                    IDC_STATIC6,41,152,192,25
+    PUSHBUTTON      "&Find Rating Systems",IDC_FINDRATINGS,82,177,75,14
+    PUSHBUTTON      "&Rating Systems...",IDC_PROVIDER,163,177,75,14
+END
+
+IDD_PROVIDERS DIALOG DISCARDABLE  0, 0, 250, 113
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Rating Systems"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Rating &systems:",IDC_STATIC1,7,7,92,10
+    LISTBOX         IDC_PROVIDERLIST,7,18,178,47,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,193,7,50,14
+    PUSHBUTTON      "&Add...",IDC_OPENPROVIDER,193,24,50,14,WS_DISABLED
+    PUSHBUTTON      "&Remove",IDC_CLOSEPROVIDER,193,41,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,193,58,50,14
+    LTEXT           "Note: Any rating system files marked with an asterisk (*) are invalid or could not be found, and will be removed from your settings if you click OK. You can add them again later if you want.",
+                    IDC_STATIC,7,70,178,35
+END
+
+IDD_PLEASE DIALOG DISCARDABLE  0, 0, 252, 198
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Content Advisor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC1,17,177,40,8
+    EDITTEXT        IDC_PASSWORD,64,174,170,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "A&lways allow this Web site to be viewed",
+                    IDC_BLOCKING_SITE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,42,134,192,10
+    CONTROL         "Al&ways allow this Web page to be viewed",
+                    IDC_BLOCKING_PAGE,"Button",BS_AUTORADIOBUTTON,42,145,192,
+                    10
+    CONTROL         "All&ow viewing only this time",IDC_BLOCKING_ONCE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,42,156,192,10
+    DEFPUSHBUTTON   "OK",IDOK,195,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,25,50,14
+    LTEXT           "Sorry! Content Advisor will not allow you to see this site.",
+                    IDC_STATIC,8,10,181,21
+    LTEXT           "This page may contain some or all of the following:",
+                    IDC_CONTENTLABEL,8,32,159,8
+    EDITTEXT        IDC_CONTENTDESCRIPTION,6,47,239,46,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL
+    EDITTEXT        IDC_CONTENTERROR,13,47,232,46,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    LTEXT           "If you still want to see this site, someone must type in the supervisor password.",
+                    IDC_STATIC,42,109,192,19
+    GROUPBOX        "",IDC_STATIC,6,96,239,98
+    ICON            IDI_MASTER_KEY,IDC_STATIC,14,108,21,20
+END
+
+IDD_INTRO DIALOG DISCARDABLE  0, 0, 254, 100
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Ratings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&Settings...",IDC_SET_RATINGS,177,7,70,14
+    ICON            IDI_INTERNET_RATINGS,IDC_STATIC,7,7,21,20
+    PUSHBUTTON      "&Turn on/off...",IDC_TURN_ONOFF,177,25,70,14
+    LTEXT           "Content Advisor is not installed on this computer. To install it, click Settings.\n\nAfter Content Advisor is installed, only a parent or supervisor can turn it on or off.",
+                    IDC_INTRO_TEXT,33,7,137,106
+END
+
+IDD_CREATE_PASSWORD DIALOG DISCARDABLE  0, 0, 231, 106
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create Supervisor Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC4,7,71,54,8
+    EDITTEXT        IDC_CREATE_PASSWORD,72,69,80,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    LTEXT           "&Confirm password:",IDC_STATIC3,7,87,63,8
+    EDITTEXT        IDC_CONFIRM_PASSWORD,72,85,80,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,174,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,174,24,50,14
+    LTEXT           "To prevent children from changing their Content Advisor settings or turning it off, you must create a supervisor password.\n\nContent Advisor settings can be changed or turned on or off only by people who know the password.",
+                    IDC_STATIC,7,7,159,59
+END
+
+IDD_PASSWORD DIALOG DISCARDABLE  0, 0, 206, 53
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC1,7,33,33,8
+    EDITTEXT        IDC_PASSWORD,44,31,93,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,149,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,149,24,50,14
+    LTEXT           "The supervisor password is required before you can continue.",
+                    IDC_STATIC2,7,7,137,21
+END
+
+IDD_PRFPASSWORDEXISTS DIALOG DISCARDABLE  0, 0, 233, 58
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC1,7,39,33,8
+    EDITTEXT        IDC_PRFPASSWORD,44,37,93,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    LTEXT           "This will install the selected PICS Rules file into the Content Advisor feature of Internet Explorer.",
+                    IDC_STATIC2,33,7,137,27,NOT WS_GROUP
+    ICON            IDI_MASTER_KEY,IDC_STATIC,7,7,21,20
+END
+
+IDD_PRFPASSWORDNOEXIST DIALOG DISCARDABLE  0, 0, 233, 58
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    LTEXT           "This will install the selected PICS Rules file into the Content Advisor feature of Internet Explorer.",
+                    IDC_STATIC2,33,7,137,27,NOT WS_GROUP
+    ICON            IDI_MASTER_KEY,IDC_STATIC,7,7,21,20
+END
+
+IDD_RATPASSWORDEXISTS DIALOG DISCARDABLE  0, 0, 233, 58
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC1,7,39,33,8
+    EDITTEXT        IDC_RATPASSWORD,44,37,93,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    LTEXT           "This will install the selected rating system into the Content Advisor feature of Internet Explorer.",
+                    IDC_STATIC2,33,7,137,27,NOT WS_GROUP
+    ICON            IDI_MASTER_KEY,IDC_STATIC,7,7,21,20
+END
+
+IDD_RATPASSWORDNOEXIST DIALOG DISCARDABLE  0, 0, 233, 58
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    LTEXT           "This will install the selected rating system into the Content Advisor feature of Internet Explorer.",
+                    IDC_STATIC2,33,7,137,27,NOT WS_GROUP
+    ICON            IDI_MASTER_KEY,IDC_STATIC,7,7,21,20
+END
+
+IDD_CHANGE_PASSWORD DIALOG DISCARDABLE  0, 0, 231, 60
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Change Supervisor Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Old password:",IDC_STATIC1,7,10,54,8
+    EDITTEXT        IDC_OLD_PASSWORD,85,7,80,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&New password:",IDC_STATIC2,7,26,54,8
+    EDITTEXT        IDC_PASSWORD,85,23,80,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm new password:",IDC_STATIC3,7,42,74,8
+    EDITTEXT        IDC_CONFIRM_PASSWORD,85,39,80,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,174,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,174,24,50,14
+END
+
+IDD_ADVANCED DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Ratings bureau",IDC_TEXT1,7,7,239,67
+    LTEXT           "Some rating systems can obtain Internet ratings from a special ratings bureau. Using a ratings bureau may slow down Internet access time. ",
+                    IDC_TEXT2,13,18,220,18
+    LTEXT           "Ratings &bureau:",IDC_TEXT3,13,42,55,8
+    COMBOBOX        IDC_3RD_COMBO,13,56,171,42,CBS_DROPDOWN | CBS_SORT | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "PICSRules",IDC_STATIC_PICSRULES,7,80,239,125
+    LTEXT           "PICSRules files contain rules used to determine whether a site can be viewed.  They can utilize PICS labels, and can specify approved and disapproved Web sites like you can on the Approved Sites tab.",
+                    IDC_STATIC_PICSRULES2,13,91,225,25
+    LTEXT           "To adjust the order in which your installed rules are evaluated, use the arrows below.",
+                    IDC_STATIC,13,122,170,17
+    LISTBOX         IDC_PICSRULES_LIST,13,141,170,58,LBS_NOTIFY |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Import",IDC_PICSRULESOPEN,189,141,50,14
+    PUSHBUTTON      "&Remove",IDC_PICSRULESEDIT,189,163,50,14
+    PUSHBUTTON      "",IDC_PICSRULES_UP,195,185,19,14,BS_ICON
+    PUSHBUTTON      "",IDC_PICSRULES_DOWN,214,185,19,14,BS_ICON
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_DENY DIALOG DISCARDABLE  0, 0, 252, 100
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Content Advisor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDCANCEL,197,7,50,14
+    LTEXT           "Sorry! Content Advisor will not allow you to see this site.",
+                    IDC_STATIC,7,10,181,21
+    LTEXT           "This page may contain some or all of the following:",
+                    IDC_CONTENTLABEL,7,32,159,8
+    EDITTEXT        IDC_CONTENTDESCRIPTION,7,47,240,46,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL
+    EDITTEXT        IDC_CONTENTERROR,7,47,240,46,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+END
+
+IDD_APPROVEDSITES DIALOGEX 0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Approved Sites"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SECURITY,IDC_STATIC,7,7,21,20
+    LTEXT           "You can create a list of Web sites that are always viewable or never viewable regardless of how they are rated.",
+                    IDC_STATIC,34,7,211,20
+    LTEXT           "Allow &this Web site:",IDC_STATIC_ALLOW,13,33,62,8
+    EDITTEXT        IDC_PICSRULESAPPROVEDEDIT,13,47,176,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Al&ways",IDC_PICSRULESAPPROVEDALWAYS,195,37,50,14
+    PUSHBUTTON      "&Never",IDC_PICSRULESAPPROVEDNEVER,195,57,50,14
+    LTEXT           "&List of approved and disapproved Web sites:",
+                    IDC_STATIC_LIST,13,67,150,8
+    CONTROL         "ApprovedSitesList",IDC_PICSRULESAPPROVEDLIST,
+                    "SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | 
+                    LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | 
+                    WS_TABSTOP,13,81,176,124,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Remove",IDC_PICSRULESAPPROVEDREMOVE,195,81,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_EDIT | NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_TURNOFF DIALOG DISCARDABLE  0, 0, 186, 58
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Content Advisor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,37,50,14
+    LTEXT           "Content Advisor has been turned off. Make sure you turn it on again before you allow someone else to use your computer.",
+                    IDC_STATIC,7,7,172,30
+    CONTROL         "&Do not show this dialog again.",IDC_ADVISOR_OFF_CHECK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,41,111,10
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RAT_OPENFILE        "Open ratings system file"
+    IDS_RAT_FILTER_DESC     "Rating files (*.rat)"
+    IDS_RAT_FILTER          "*.rat"
+    IDS_NOCANDO_TITLE       "Unable to See Site"
+    IDS_NOCANDO             "Sorry! Content Advisor will not allow you to see this site."
+    IDS_RATING_OFF          "Content Advisor is currently turned off.\n\nOnly a parent or supervisor can turn on Content Advisor or change settings."
+    IDS_RATING_ON           "Content Advisor is currently turned on.\n\nOnly a parent or supervisor can turn on Content Advisor or change settings."
+    IDS_TURN_ON             "&Turn on..."
+    IDS_TURN_OFF            "&Turn off..."
+    IDS_GENERIC             "Content Advisor"
+    IDS_NOW_ON              "Content Advisor has been turned on.\r\n\r\n"
+    IDS_NOW_OFF             "Content Advisor has been turned off. Make sure you turn it on again before you allow someone else to use your computer."
+    IDS_NO_PASSWORD         "You must type in a password."
+    IDS_NO_CONFIRM          "You must type in a confirmation password."
+    IDS_NO_MATCH            "Your password and confirmation password do not match."
+    IDS_NO_NULL_PASSWORD    "You cannot have a blank password."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BADPASSWORD         "The password you typed in is incorrect."
+    IDS_NO_OLD              "You must type in the old supervisor password."
+    IDS_NO_PROVIDERS        "You must choose a rating system for Content Advisor to work."
+    IDS_INSTALL_INFO        "Content Advisor is not enabled because you are not currently using any rating system. To choose a rating system, click the Advanced tab, and then click Rating Systems."
+    IDS_TURN_ONOFF          "&Turn on/off..."
+    IDS_RATING_NEW          "Content Advisor is not installed on this computer. To install it, click Settings.\n\nAfter Content Advisor is installed, only a parent or supervisor can turn it on or off."
+    IDS_BADBUREAU           "Content Advisor could not find the Internet site for this rating system, so it is being set to None."
+    IDS_VALUE               "Value = %d"
+    IDS_NEEDBUREAU          "The current rating system %s requires a ratings bureau. If you continue, this rating system will be useless and may be removed. Do you want to continue?"
+    IDS_CANT_LAUNCH         "Unable to browse to %1."
+    IDS_PASSWORD_CHANGED    "The password was successfully changed."
+    IDS_RATINGTEMPLATE      "%1: %2 - %3\r\n"
+    IDS_UNRATED             "This page does not have a rating."
+    IDS_UNKNOWNSYSTEM       "This page has been rated by a rating system that you do not have installed. For more information about these ratings, connect to %1:\r\n"
+    IDS_INVALIDRATING       "The rating label on this page is invalid. ""%1"" is not recognized or is not the right format. You may want to notify the owner of this site."
+    IDS_TAMPEREDRATING1     "Either the rating label on this page is invalid,"
+    IDS_TAMPEREDRATING2     "or your settings have been tampered with."
+    IDS_EXPIRED             "The rating label for this page has expired. It may no longer be valid."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WRONGURL            "The rating label found for ""%1"" does not belong to this page. It is intended for ""%2"" instead.\r\n"
+    IDS_LABELERROR          "The rating service that rated this page reported an error.\r\n%1\r\n"
+    IDS_UNKNOWNRATING       "The rating ""%1"" is not recognized as a valid category for the %2 rating system.\r\n"
+    IDS_UNKNOWNRATINGTEMPLATE "%1 - %2\r\n"
+    IDS_NOWENABLED          "Content Advisor has been enabled. If you want to change the rating levels or other settings later, click Settings.\r\n\r\n"
+    IDS_LOADRAT_MEMORY      "There is not enough memory available to perform this operation."
+    IDS_LOADRAT_EXPECTEDLEFT "An opening parenthesis was expected near line %1."
+    IDS_LOADRAT_EXPECTEDRIGHT "A closing parenthesis was expected near line %1."
+    IDS_LOADRAT_EXPECTEDTOKEN "A keyword was expected near line %1."
+    IDS_LOADRAT_EXPECTEDSTRING "A quoted string was expected near line %1."
+    IDS_LOADRAT_EXPECTEDNUMBER "A number was expected near line %1."
+    IDS_LOADRAT_EXPECTEDBOOL "A true or false value was expected near line %1."
+    IDS_LOADRAT_DUPLICATEITEM "A duplicate keyword was found near line %1."
+    IDS_LOADRAT_MISSINGITEM "A required keyword was not found near line %1."
+    IDS_LOADRAT_UNKNOWNITEM "An unrecognized keyword was found near line %1."
+    IDS_LOADRAT_EXPECTEDEND "The end of the file was expected near line %1."
+    IDS_LOADRAT_UNKNOWNMANDATORY
+                            "An unsupported mandatory extension was found near line %1."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LOADRAT_UNKNOWNERROR "An unknown error occurred."
+    IDS_LOADRAT_WINERROR    "The file could not be opened. Make sure it exists and that you have access to it.\r\n(Error %1)"
+    IDS_LOADRAT_MISCERROR   "(Error %1)"
+    IDS_LOADRAT_SYNTAX_TEMPLATE
+                            "An error occurred while the rating system file %1 was being loaded:\r\n\r\n%2\r\n\r\nYou may want to contact the rating service for the correct version of this file."
+    IDS_LOADRAT_GENERIC_TEMPLATE
+                            "An error occurred while the rating system file %1 was being loaded:\r\n\r\n%2\r\n\r\nSites rated by this system will be considered unrated."
+    IDS_INVALID_PROVIDERS   "One or more of the rating systems you are using did not load successfully. To remove or change rating systems, click the General tab, and then click Rating Systems."
+    IDS_ALREADY_INSTALLED   "That rating system is already installed."
+    IDS_NO_BUREAU           "(None)"
+    IDS_NO_SETTINGS         "Please check your Content Advisor settings for missing information. Click the Tools menu and then click Internet Options. On the Content tab, check the Content Advisor settings."
+    IDS_DESCRIPTION_SEPARATOR   "----------------\r\n"
+    IDS_FRAME                   "Frame:\r\n"
+    IDS_ENABLE_WARNING      "To ensure that recently viewed sites cannot be viewed if they do not meet your criteria, please close any Internet Explorer windows, and then open a new one."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PICSRULES_SYNTAX_TEMPLATE 
+                            "An error occurred while the PICSRules file %s was being loaded.\nYou may want to contact the author for the correct version of this file.\n\n"
+    IDS_PICSRULES_GENERIC_TEMPLATE 
+                            "An error occurred while the PICSRules file %s was being loaded.\nThe contained rules will not be enforced.\n\n"
+    IDS_PICSRULES_MEMORY    "An error occuren while processing line %d:\nThere is not enough memory available to perform this operation."
+    IDS_PICSRULES_EXPECTEDLEFT 
+                            "An opening parenthesis was expected near line %d."
+    IDS_PICSRULES_EXPECTEDRIGHT 
+                            "A closing parenthesis was expected near line %d."
+    IDS_PICSRULES_EXPECTEDTOKEN "A keyword was expected near line %d."
+    IDS_PICSRULES_EXPECTEDSTRING "A quoted string was expected near line %d."
+    IDS_PICSRULES_EXPECTEDNUMBER "A number was expected near line %d."
+    IDS_PICSRULES_EXPECTEDBOOL "A boolean value was expected near line %d."
+    IDS_PICSRULES_DUPLICATEITEM "A duplicate keyword was found near line %d."
+    IDS_PICSRULES_MISSINGITEM "A required keyword was not found near line %d."
+    IDS_PICSRULES_UNKNOWNITEM 
+                            "An unrecognized keyword was found near line %d."
+    IDS_PICSRULES_UNKNOWNMANDATORY 
+                            "An unsupported mandatory extension was found near line %d."
+    IDS_PICSRULES_UNKNOWNERROR 
+                            "An unknown error occurred while processing line %d."
+    IDS_PICSRULES_WINERROR  "The file could not be opened. Make sure it exists and that you have access to it.\r\n(Error %x)"
+    IDS_PICSRULES_MISCERROR "(Error %x)"
+    IDS_PICSRULES_REQEXTENSIONUSED "An unsupported extension marked as Required was found near line %d."
+    IDS_PICSRULES_BADVERSION "The version of the PICSRules file you are trying to import (near line %d) is not supported.\nContent Advisor currently supports PICSRules version 1.1."
+    IDS_PICSRULES_EXPECTEDEND "The end of the file was expected near line %d."
+    IDS_ERROR               "Error"
+    IDS_PICSRULES_INVALID   "An invalid argument was found near line %d."
+    IDS_PICSRULES_SERVICEUNDEFINED 
+                            "The PICS Service referenced near line %d has not yet been defined."
+    IDS_OPENDIALOGFILTER    "PICSRules Files (*.PRF)"
+    IDS_OPENDIALOGTITLE     "Import Rules from a PICSRules File"
+    IDS_PICSRULES_SYSTEMERROR "A system error occurred.  Please close Content Advisor and try importing again."
+    IDS_PICSRULES_TAMPEREDTITLE "Error saving PICSRules"
+    IDS_PICSRULES_TAMPEREDMESSAGE "Your existing PICSRules settings appear to have been tampered with.\nWould you like Content Advisor to replace your settings with the PICSRules just imported?\n\nAnswering No will stop the current import, and the contained rules will not be enforced."
+    IDS_PICSRULES_EXISTSTITLE "PICSRules system already exists"
+    IDS_PICSRULES_EXISTSMESSAGE "A set of PICSRules already exists with the same name as the one just imported.\nWould you like to replace the existing system with the new one?"
+    IDS_PICSRULES_ERRORSAVINGTITLE "Error saving PICSRules"
+    IDS_PICSRULES_ERRORSAVINGMSG "The imported PICSRules file is valid, but there was an error saving the settings.\nThe contained rules will not be enforced."
+    IDS_PICSRULES_SUCCESSTITLE "PICSRules successfully imported"
+    IDS_PICSRULES_SUCCESSMESSAGE "The PICSRules import was successful."
+    IDS_PICSRULES_TAMPEREDREADTITLE "Content Advisor Error"
+    IDS_PICSRULES_TAMPEREDREADMSG "Your PICSRules settings appear to have been tampered with.\nExisting rules will not be enforced.\n\nPlease import the PICSRules files again to fix the problem."
+    IDS_PICSRULES_DUPLICATETITLE "Duplicate Web Site"
+    IDS_PICSRULES_DUPLICATEMSG "The Web Site you have entered already exists in your list of approved and disapproved Web sites."
+    IDS_PICSRULES_BADURLTITLE "Invalid Web Site"
+    IDS_PICSRULES_BADURLMSG "The Web Site you have entered is not valid."
+    IDS_PICSRULES_OUTOFMEMORY "There is not enough memory available to perform the requested operation."
+    IDS_PICSRULES_NOAPPROVEDSAVE "There was an unexpected internal error.\n\nYour Approved Sites list has not been saved, and will not be enforced."
+    IDS_APPROVEDSITES_ENFORCED "This Page was blocked by your Approved Sites list."
+    IDS_PICSRULES_ENFORCED "This Page was blocked by your PICSRules settings."
+    IDS_APPROVED_CANTSAVE "Could not save settings to the Approved Sites List."
+    IDS_SOURCE_SERVER       "The rating was obtained from the Web site's server."
+    IDS_SOURCE_EMBEDDED     "The rating was obtained from the Web page."
+    IDS_SOURCE_BUREAU       "The rating was obtained from a label bureau."
+    IDS_PICSRULES_CLICKIMPORTTITLE "Internet Explorer Content Advisor"
+    IDS_PICSRULES_CLICKIMPORTMESSAGE "This will import the selected PICSRules file and add it to your settings.\nAre you sure you want to continue?"
+    IDS_PICSRULES_CLICKIMPORTON "This will enable the Internet Explorer Content Advisor and import the selected PICSRules file.\nAre you sure you want to continue?"
+    IDS_PICSRULES_CLICKFINISHED "To alter your settings later:\n\nIn Internet Explorer, select Tools, then Internet Options, then Content, and then Settings."
+    IDS_PICSRULES_CLICKRATMESSAGE "This will add the selected ratings provider to your settings.\nAre you sure you want to continue?"
+    IDS_PICSRULES_CLICKRATON "This will enable the Internet Explorer Content Advisor and add the selected ratings provider.\nAre you sure you want to continue?"
+END

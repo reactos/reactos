@@ -1,0 +1,58 @@
+//-----------------------------------------------------------------------
+// Copyright (c)1997 Microsoft Corporation, All Rights Reserved
+//
+// ws2_if.rc
+//
+//-----------------------------------------------------------------------
+
+#ifdef NTENV
+#include <windows.h>
+#include <ntverp.h>
+#else
+#include <version.h>
+#define VER_LEGALCOPYRIGHT_YEARS    "1997"
+#endif
+
+#define VER_FILETYPE                 VFT_APP
+#define VER_FILESUBTYPE              VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "COM Sandbox WinSock2 Interface DLL"
+#define VER_INTERNALNAME_STR        "ws2_if.dll"
+#define VER_ORIGINALFILENAME_STR    "ws2_if.dll"
+
+#include "common.ver"
+
+VS_SERSION_INFO       VERSIONINFO
+  FILEVERSION         1,0,0,1
+  PRODUCTVERSION      1,0,0,1
+  FILEFLAGSMASK       VS_FFI_FILEFLAGSMASK
+  #ifdef DBG
+  FILEFLAGS           VS_FF_DEBUG|VS_FF_PRIVATEBUILD|VS_FF_PRERELEASE
+  #else
+  FILEFLAGS           0
+  #endif
+  // FILEEOS             VOS__WINDOWS32
+  FILETYPE            VFT_DLL
+  FILESUBTYPE         0
+BEGIN
+  BLOCK  "StringFileInfo"
+  BEGIN
+    BLOCK "040804E4"  // Lang=US English, CharSet=Windows Multilingual
+    BEGIN
+      VALUE "CompanyName",     "Microsoft"
+      VALUE "FileDescription", "COM Sandbox WinSock Interface DLL"
+      VALUE "FileVersion",     "1.0.000"
+      VALUE "InternalName",    "ws2_if"
+      VALUE "LegalCopyright",  "Copyright (c) Microsoft 1997"
+      VALUE "LegalTradmarks",  "\0"
+      VALUE "OriginalFileName","ws2_if.dll"
+      VALUE "ProductName",     "COM Sandbox"
+      VALUE "ProductVersion",  "1.0.000"
+      VALUE "OLESelfRegister", "\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation",     0x409, 1252
+  END
+END
+

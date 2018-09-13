@@ -1,0 +1,154 @@
+----------------------------------------------------------------------------
+-- WTASN.ASN
+--
+-- ASN.1 definitions for Indirect data contents
+----------------------------------------------------------------------------
+
+--#comment "Copyright (C) Microsoft Corporation, 1996-1999. All rights reserved."--
+--#comment "ASN.1 definitions for Indirect data contents"--
+
+--#SS.basic lenptr--   -- set of and sequence of w/o size constraint
+--#SS.sized lenptr--   -- set of and sequence of w/  size constraint
+
+WINTRUST
+DEFINITIONS EXPLICIT TAGS ::=
+BEGIN
+
+    HUGEINTEGER ::= INTEGER --#intx--                       -- tag 0x02
+    BITSTRING   ::= BIT STRING --#lenptr-- --#nomemcpy--   -- tag 0x03
+    OCTETSTRING ::= OCTET STRING --#lenptr-- --#nomemcpy-- -- tag 0x04
+    NOCOPYANY   ::= ANY --#nomemcpy--
+
+    NUMERICSTRING ::= NumericString --#lenptr--         -- tag 0x12 (18)
+    PRINTABLESTRING ::= PrintableString --#lenptr--     -- tag 0x13 (19)
+    TELETEXSTRING ::= TeletexString --#lenptr--         -- tag 0x14 (20)
+    T61STRING ::= T61String --#lenptr--                 -- tag 0x14 (20)
+    VIDEOTEXSTRING ::= VideotexString --#lenptr--       -- tag 0x15 (21)
+    IA5STRING ::= IA5String --#lenptr--                 -- tag 0x16 (22)
+    GRAPHICSTRING ::= GraphicString --#lenptr--         -- tag 0x19 (25)
+    VISIBLESTRING ::= VisibleString --#lenptr--         -- tag 0x1A (26)
+    ISO646STRING ::= ISO646String --#lenptr--           -- tag 0x1A (26)
+    GENERALSTRING ::= GeneralString --#lenptr--         -- tag 0x1B (27)
+    UNIVERSALSTRING ::= UniversalString --#lenptr--     -- tag 0x1C (28)
+    BMPSTRING ::= BMPString --#lenptr--                 -- tag 0x1E (30)
+
+    ObjectID ::= OBJECT IDENTIFIER --#public-- --#oid array--
+
+    --------------------------------------------
+    --  Algorithm Identifier
+    --------------------------------------------
+    AlgorithmIdentifier    ::=    SEQUENCE {
+        algorithm           ObjectID,
+        parameters          NOCOPYANY OPTIONAL    
+    }
+
+    --------------------------------------------
+    --  Digest Info
+    --------------------------------------------
+    DigestInfo ::= SEQUENCE {
+        digestAlgorithm     AlgorithmIdentifier,
+        digest              OCTETSTRING
+    }
+
+
+    --------------------------------------------
+    --  (SPC) --
+    --------------------------------------------
+    SpcIndirectDataContent ::= SEQUENCE {
+        data                    SpcAttributeTypeAndOptionalValue,
+        messageDigest           DigestInfo
+    } --#public--
+
+    SpcAttributeTypeAndOptionalValue ::= SEQUENCE {
+        type                    ObjectID,
+        value                   NOCOPYANY OPTIONAL
+    }
+
+    SpcString ::= CHOICE {
+        unicode                 [0] IMPLICIT BMPSTRING,
+        ascii                   [1] IMPLICIT IA5STRING
+    }
+
+    SpcSerializedObject ::= SEQUENCE {
+        classId             SpcUuid,
+        serializedData      OCTETSTRING
+    }
+
+    SpcUuid ::= OCTETSTRING
+    
+    SpcLink ::= CHOICE {
+        url                     [0] IMPLICIT IA5STRING,
+        moniker                 [1] IMPLICIT SpcSerializedObject,
+        file                    [2] EXPLICIT SpcString
+    } --#public--
+
+    SpcPeImageData ::= SEQUENCE {
+        flags                   SpcPeImageFlags DEFAULT { includeResources },
+        file                    [0] EXPLICIT SpcLink OPTIONAL
+    } --#public--
+
+    SpcPeImageFlags ::= BIT STRING {
+        includeResources            (0),
+        includeDebugInfo            (1),
+        includeImportAddressTable   (2)
+    }
+
+    SpcSigInfo ::= SEQUENCE {
+        dwSIPversion            INTEGER,
+        gSIPguid                SpcUuid,
+        dwReserved1             INTEGER,
+        dwReserved2             INTEGER,
+        dwReserved3             INTEGER,
+        dwReserved4             INTEGER,
+        dwReserved5             INTEGER
+    } --#public--
+
+    SpcSpAgencyInformation ::= SEQUENCE {
+        policyInformation       [0] EXPLICIT SpcLink OPTIONAL,
+        policyDisplayText       [1] EXPLICIT SpcString OPTIONAL,
+        logoImage               [2] IMPLICIT SpcImage OPTIONAL,
+        logoLink                [3] EXPLICIT SpcLink OPTIONAL
+    } --#public--
+
+    SpcImage ::= SEQUENCE {
+        imageLink               [0] EXPLICIT SpcLink OPTIONAL,
+        bitmap                  [1] IMPLICIT OCTETSTRING OPTIONAL,
+        metafile                [2] IMPLICIT OCTETSTRING OPTIONAL,
+        enhancedMetafile        [3] IMPLICIT OCTETSTRING OPTIONAL,
+        gifFile                 [4] IMPLICIT OCTETSTRING OPTIONAL
+    }
+
+    SpcMinimalCriteria ::= BOOLEAN --#public--
+
+    SpcFinancialCriteria ::= SEQUENCE {
+        financialInfoAvailable  BOOLEAN,
+        meetsCriteria           BOOLEAN
+    } --#public--
+
+    SpcStatementType ::= SEQUENCE --#public-- OF ObjectID
+
+    SpcSpOpusInfo ::= SEQUENCE {
+        programName             [0] EXPLICIT SpcString OPTIONAL,
+        moreInfo                [1] EXPLICIT SpcLink OPTIONAL,
+        publisherInfo           [2] EXPLICIT SpcLink OPTIONAL
+    } --#public--
+
+    UtcTime ::= UTCTime --#public--
+
+    --------------------------------------------
+    --  (Catalog) --
+    --------------------------------------------
+    NameValue ::= SEQUENCE {
+        refname     BMPSTRING,
+        typeaction  INTEGER,
+        value       OCTETSTRING
+    } --#public--
+
+    NameValues ::= SET OF NameValue
+
+    MemberInfo ::= SEQUENCE {
+        subguid     BMPSTRING,
+        certversion INTEGER
+    } --#public--
+
+END

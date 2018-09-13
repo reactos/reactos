@@ -1,0 +1,23 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\print=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=print
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES);$(BASEDIR)\PRIVATE\INC
+
+SOURCES= \
+    fprint.cxx \
+    headfoot.cxx \
+    pspooler.cxx \
+    putil.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

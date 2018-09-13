@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+ALT_PROJECT=WOW6432
+ALT_PROJECT_TARGET=WOW6432
+
+MAJORCOMP=ntos
+MINORCOMP=dll_
+
+TARGETNAME=ntdll
+TARGETPATH=$(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)
+TARGETTYPE=DYNLINK
+DLLDEF=obj\*\ntdll.def
+LINKLIBS=$(BASEDIR)\private\ntos\rtl\obj\*\rtl6432.lib $(BASEDIR)\public\sdk\lib\*\libcntpr.lib
+INCLUDES=..;\
+         $(BASEDIR)\private\ntos\inc;\
+         $(BASEDIR)\private\inc;\
+         $(BASEDIR)\private\inc\csr;\
+         $(BASEDIR)\private\genx\nls\obj\$(TARGET_DIRECTORY);\
+         ..\i386;\
+         $(BASEDIR)\private\ntos\wow64\inc;
+
+WIMPMASM=1
+
+C_DEFINES=$(C_DEFINES) -D_NTSYSTEM_ -D_NTDLLBUILD_ -DLITTLEENDIAN=1 -DBUILD_WOW6432
+
+MSC_WARNING_LEVEL=/W3 /WX
+DLLORDER=..\ntdll.prf
+
+SOURCES=\
+        ..\curdir.c    \
+        ..\dllssstb.c  \
+        ..\ldrinit.c   \
+        ..\ldrsnap.c   \
+        ..\ldrapi.c    \
+        ..\lpcsvr.c    \
+        ..\ntdll.rc    \
+        ..\resource.c  \
+        ..\seurtl.c    \
+        ..\uilist.c    \
+        ..\propfwd.cxx \
+        ..\query.c     \
+        ..\heaptag.c   \
+        ..\ldrwx86.c   \
+        wow64csr.c \
+        wow64dbg.c
+
+!if $(386)
+LINKER_FLAGS=$(LINKER_FLAGS) /align:65536 -ignore:4108
+!endif
+
+PRECOMPILED_INCLUDE=..\pch.cxx
+
+NTTARGETFILE0=obj\$(TARGET_DIRECTORY)\ntdll.def
+
+UMTYPE=console
+UMTEST=
+
+DLLBASE=@$(COFFBASE_TXT_FILE),ntdll32

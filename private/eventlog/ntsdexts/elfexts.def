@@ -1,0 +1,8 @@
+LIBRARY NTSDEXTS
+
+EXPORTS
+        help
+        logmodule
+        logfile
+        request
+        record

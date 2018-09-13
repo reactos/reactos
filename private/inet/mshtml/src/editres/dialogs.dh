@@ -1,0 +1,188 @@
+//+--------------------------------------------------
+//
+//  Dialog header file. This file contains functions
+//  common to all the dialogs.
+//
+//---------------------------------------------------
+
+#define SEC_MOUSE_BUTTON    2
+#define HTML_KEY_ESC        27
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Disables or enables a button depending in
+//              whether there is text in txtFileName.
+//
+//  Arguments:  fEvent   Whether or not the f'n was called by an
+//                          event
+//
+//  Macro Arguments:    NAME    Sets the name of the function 
+//                              (set##NAME##State)and the name of the 
+//                              constant (g_f##NAME##Enabled)
+//                      BUTTON  The button we're setting the state of.
+//                      TEXTBOX The textbox querying.
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+#define setState(NAME, BUTTON, TEXTBOX) function set##NAME##State(fEvent) \
+{                                                                       \
+    if (fEvent && (event.propertyName != "value"))                      \
+    {                                                                   \
+        return;                                                         \
+    }                                                                   \
+                                                                        \
+    if (("" == TEXTBOX.value) == g_f##NAME##Enabled)                    \
+    {                                                                   \
+        BUTTON.disabled = g_f##NAME##Enabled;                           \
+        g_f##NAME##Enabled  = !g_f##NAME##Enabled;                      \
+    }                                                                   \
+}                                                                       \
+var g_f##NAME##Enabled = false;                                         \
+
+
+//+-------------------------------------------------------------------------
+//
+//  Synopsis:   Opens the help file with the appropriate helpid
+//
+//  Arguments:  elm     The element we're looking for help with
+//
+//  Returns:    nothing
+//
+//--------------------------------------------------------------------------
+
+function callHelp(elm)
+{
+    if (null != elm.helpid)
+    {
+        //
+        //  Have to convert the helpid to a string
+        //
+        window.showHelp(elm.helpfile, "" + parseInt(elm.helpid),
+            "popup");
+    }
+    else
+    {
+        //
+        // Walk up the tree until we reach the body tag or
+        // an element with a help id.
+        //
+        if ("BODY" != elm.tagName)
+        {
+            callHelp(elm.parentElement);
+        }
+    }
+}   //  callHelp
+
+
+//----------------------------------------------------------------------
+//
+//  Synopsis:   Discard the user's changes and dismiss the dialog.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//----------------------------------------------------------------------
+
+function btnCancelClick()
+{
+    window.close();
+}   //  btnCancelClick
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Returns a range based on elm
+//
+//  Arguments:  elm     An element
+//
+//  Returns:    a text range
+//
+//-----------------------------------------------------------------------
+
+function getTextRange(elm)
+{
+    var r = elm.parentTextEdit.createTextRange();
+    r.moveToElementText(elm);
+    return r;
+}   //  getTextRange
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   Checks to see if the secondary mouse button was clicked
+//              and fires help if it was.
+//
+//  Arguments:  none
+//
+//  Retuens:    nothing
+//
+//-----------------------------------------------------------------------
+
+function mouseClick()
+{
+    //
+    //  First, let's make sure we're not in a textbox
+    //
+    if (window.event.srcElement.id.substring(0,3)
+        == "txt")
+    {
+        return;
+    }
+
+    if (window.event.button == SEC_MOUSE_BUTTON)
+    {
+        callHelp(window.event.srcElement);
+    }
+}   //  mouseClick
+
+
+//+----------------------------------------------------------------------
+//
+//  Synopsis:   If the enter key is pressed while in a textbox, 
+//              we do not want the default functionality. Instead,
+//              we close the dialog, doing nothing.
+//
+//  Arguments:  none
+//
+//  Retutns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function txtDefaultESC()
+{
+    if (event.keyCode == HTML_KEY_ESC)
+    {
+        window.close();
+        return;
+    }
+}   //  txtDefaultESC
+
+window.onerror = HandleError
+
+var L_Dialog_ErrorMessage = "An error has occurred in this dialog.";
+var L_ErrorNumber_Text = "Error: ";
+
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+function HandleError(message, url, line)
+{
+    var str = L_Dialog_ErrorMessage + "\n\n" 
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}

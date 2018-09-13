@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Default power policy profile processor"
+
+#define VER_INTERNALNAME_STR        "makeinf.exe"
+#define VER_ORIGINALFILENAME_STR    "makeinf.exe"
+
+#include <common.ver>

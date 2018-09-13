@@ -1,0 +1,373 @@
+////////////////////////////////////////////////////////////////////////////////
+// JPS.IDL
+//
+// Interface definitions for Java class location services ("classpath database")
+////////////////////////////////////////////////////////////////////////////////
+[
+    uuid(57771EF0-A46E-11d0-A8BE-00A0C921A4D2),
+    version(1.0)
+]
+library JavaPackageService
+{
+    importlib("stdole.tlb");
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Forward interface declarations
+    ////////////////////////////////////////////////////////////////////////////
+    interface IJavaClsStream;
+    interface IJavaCls;
+    interface IJavaPkg;
+    interface IEnumJavaPkg;
+    interface IEnumJavaCls;
+    interface IJavaPkgService;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Access flags, taken directly from Sun's Java VM Specification (Aug 21 1995)
+    ////////////////////////////////////////////////////////////////////////////
+    typedef enum _accflags
+    {
+        ACC_PUBLIC          = 0x0001,
+        ACC_PRIVATE         = 0x0002,
+        ACC_PROTECTED       = 0x0004,
+        ACC_STATIC          = 0x0008,
+        ACC_FINAL           = 0x0010,
+        ACC_SYNCHRONIZED    = 0x0020,
+        ACC_SUPER           = 0x0020,
+        ACC_VOLATILE        = 0x0040,
+        ACC_TRANSIENT       = 0x0080,
+        ACC_NATIVE          = 0x0100,
+        ACC_INTERFACE       = 0x0200,
+        ACC_ABSTRACT        = 0x0400
+    } ACCFLAGS;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Constant tags, also taken from the VM spec
+    ////////////////////////////////////////////////////////////////////////////
+    typedef enum _cptags
+    {
+        CONSTANT_Class                  = 7,
+        CONSTANT_Fieldref               = 9,
+        CONSTANT_Methodref              = 10,
+        CONSTANT_InterfaceMethodref     = 11,
+        CONSTANT_String                 = 8,
+        CONSTANT_Integer                = 3,
+        CONSTANT_Float                  = 4,
+        CONSTANT_Long                   = 5,
+        CONSTANT_Double                 = 6,
+        CONSTANT_NameAndType            = 12,
+        CONSTANT_Utf8                   = 1,
+        CONSTANT_Unicode                = 2
+    } CPTAGS;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Basic types
+    ////////////////////////////////////////////////////////////////////////////
+    typedef unsigned char       U1;
+    typedef unsigned short      U2;
+    typedef unsigned long       U4;
+    typedef unsigned __int64    U8;
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Helper struct
+    ////////////////////////////////////////////////////////////////////////////
+    typedef struct _longdbl
+    {
+        union
+        {
+            U8      iValue;
+            double  fValue;
+            struct
+            {
+                U4  iLow;
+                U4  iHigh;
+            };
+        };
+    } LONGDBL;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // CPOOLENTRY -- constant pool entry structure (union).  Note that all values
+    // are swapped into little-endian for you, but strings are still UTF8...
+    ////////////////////////////////////////////////////////////////////////////
+    typedef struct _cpoolentry
+    {
+        U1      iTag;       // CONSTANT_* tag
+        union
+        {
+            struct
+            {
+                U2      iName;
+            } Class;                // CONSTANT_Class;
+            struct
+            {
+                U2      iClass;
+                U2      iNameAndType;
+            } Fieldref;             // CONSTANT_Fieldref
+            struct
+            {
+                U2      iClass;
+                U2      iNameAndType;
+            } Methodref;            // CONSTANT_Methodref
+            struct
+            {
+                U2      iClass;
+                U2      iNameAndType;
+            } InterfaceMethodref;   // CONSTANT_InterfaceMethodref
+            struct
+            {
+                U2      iIndex;
+            } String;               // CONSTANT_String
+            struct
+            {
+                U4      iValue;
+            } Integer;              // CONSTANT_Integer
+            struct
+            {
+                float   fValue;
+            } Float;                // CONSTANT_Float
+            struct
+            {
+                LONGDBL *pVal;
+            } Long;                 // CONSTANT_Long
+            struct _DoubleStruct
+            {
+                LONGDBL *pVal;
+            } Double;               // CONSTANT_Double
+            struct
+            {
+                U2      iName;
+                U2      iSignature;
+            } NameAndType;          // CONSTANT_NameAndType
+            struct
+            {
+                U2      iLength;
+                U1      *pBytes;
+            } Utf8;                 // CONSTANT_Utf8
+            struct
+            {
+                U2      iLength;
+                U2      *pBytes;
+            } Unicode;              // CONSTANT_Unicode
+        };
+    } CPOOLENTRY;
+
+    //------------------------------------------------------------------------------
+    // ATTRINFO -- attribute information
+    //------------------------------------------------------------------------------
+    typedef struct _attrinfo
+    {
+        struct _attrinfo    *pNext;
+        U2                  iName;
+        U4                  iLength;
+        U1                  rgBytes[1];
+    } ATTRINFO;
+
+    //------------------------------------------------------------------------------
+    // MEMBERINFO -- method or field information
+    //------------------------------------------------------------------------------
+    typedef struct _memberinfo
+    {
+        U2          iAccessFlags;
+        U2          iName;
+        U2          iSignature;
+        ATTRINFO    *pAttrList;
+    } MEMBERINFO;
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // IJavaPkgService interface
+    ////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(57771EF1-A46E-11d0-A8BE-00A0C921A4D2)
+    ]
+    interface IJavaPkgService : IJavaPkg
+    {
+        // CLASSPATH management
+        HRESULT     SetClassPath (const WCHAR *pszClassPath);
+        HRESULT     AppendClassPath (const WCHAR *pszAppendPath);
+        HRESULT     PrependClassPath (const WCHAR *pszPrependPath);
+        HRESULT     RemoveClassPath (const WCHAR *pszRemovePath);
+        HRESULT     GetClassPath (BSTR *pbstrClassPath);
+
+        // Current directory.  If '.' appears on the classpath, the directory
+        // supplied here is used in place of it.  Upon initial creation, '.'
+        // is replaced by the current working directory.
+        HRESULT     SetCurrentDirectory (const WCHAR *pszCurDir);
+
+        // Archive locking means speed improvement.  It also means any .ZIP or other
+        // single-file archives that are classpath roots will remain open throughout
+        // use of the database, or until unlocked.  Calls to lock must be balanced.
+        HRESULT     LockArchives (BOOL fLock);
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // IJavaPkg interface
+    ////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(57771EF2-A46E-11d0-A8BE-00A0C921A4D2)
+    ]
+    interface IJavaPkg : IUnknown
+    {
+        // Get the full name of this package.
+        HRESULT     GetFullName (BSTR *pbstrName);
+
+        // Get the base name of this package.  (NOTE:  Direct pointer to internal
+        // data is returned -- only valid until final release!)
+        const WCHAR *GetBaseName ();
+
+        // Find a package given its dotted name starting from THIS package.  For
+        // example, if this object represents package "java", to find package
+        // java.awt.peer, call this with "awt.peer".
+        HRESULT     FindPackage (const WCHAR *pszPackage, IJavaPkg **ppFinder);
+
+        // Find a class in this package, or a sub-package if the name given is
+        // dotted.
+        HRESULT     FindClass (const WCHAR *pszClass, IJavaCls **ppClass);
+
+        // Enumerate sub-packages found as direct descendants of this package
+        HRESULT     EnumPackages (IEnumJavaPkg **ppEnum);
+
+        // Enumerate all classes found in this package
+        HRESULT     EnumClasses (IEnumJavaCls **ppEnum);
+
+		// Get the parent package of this package
+		HRESULT		GetParentPackage (IJavaPkg **ppPkg);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // IJavaCls interface
+    ////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(57771EF3-A46E-11d0-A8BE-00A0C921A4D2)
+    ]
+    interface IJavaCls : IUnknown
+    {
+        // Get the full name of this class.
+        HRESULT         GetFullName (BSTR *pbstrName);
+
+        // Get the base name of this class.  (NOTE:  Direct pointer to internal
+        // data is returned -- only valid until final release!)
+        const WCHAR     *GetBaseName ();
+
+        // Get a moniker uniquely identifying this class.
+        HRESULT         GetClassMoniker (BSTR *pbstrClassMoniker);
+
+        // Get an IJavaClsStream representing the class file contents
+        HRESULT         GetClassStream (IJavaClsStream **ppClassStream);
+
+        // Get a moniker uniquely identifying the source to this class
+        HRESULT         GetSourceMoniker (BSTR *pbstrSourceMoniker);
+
+        // Get an IStream representing the source to this class
+        HRESULT         GetSourceStream (IStream **ppSourceStream);
+
+        // Determine if the class is up to date with respect to its source
+        HRESULT         IsOutOfDate ();
+
+        // Class data access.  Availability of class data depends on "completeness"
+        // of the Open() call.  If fFullOpen is TRUE, all data is available; if
+        // FALSE, you can get the version info and access flags, and queries for
+        // other data will return 0/NULL.
+        //
+        // NOTE:  Everything returned from these methods is maintained by the class,
+        // and does NOT need to be released or freed.  Happens automatically on Close().
+        HRESULT         Open (BOOL fFullOpen);
+        void            Close ();
+        U2              GetMajorVersion ();
+        U2              GetMinorVersion ();
+        U2              GetCPCount ();
+        CPOOLENTRY *    GetCPArray ();
+        U2              GetAccessFlags ();
+        U2              GetThisClass ();
+        U2              GetSuperClass ();
+        U2              GetInterfaceCount ();
+        U2 *            GetInterfaceArray ();
+        U2              GetFieldCount ();
+        MEMBERINFO *    GetFieldArray ();
+        U2              GetMethodCount ();
+        MEMBERINFO *    GetMethodArray ();
+        U2              GetAttributeCount ();
+        ATTRINFO *      GetAttributeList ();
+
+        // Handy conversion -- given a constant pool entry CONSTANT_Utf8,
+        // CONSTANT_Unicode, or CONSTANT_String, return a BSTR with the string data
+        HRESULT         GetConstantString (U2 iCPEntry, BSTR *pbstrString);
+
+        // Another handy conversion -- given a pointer to a MEMBERINFO obtained by
+        // a call to GetFieldArray or GetMethodArray on THIS class, return the
+        // name of the identified member
+        HRESULT         GetMemberName (MEMBERINFO *pMbrInfo, BSTR *pbstrName);
+
+        // Correspondingly, return a BSTR containing the type signature of
+        // a field or method
+        HRESULT         GetMemberSignature (MEMBERINFO *pMbrInfo, BSTR *pbstrSignature);
+
+		// Check for existence of streams
+		HRESULT			DoesSourceStreamExist();
+		HRESULT			DoesClassStreamExist();
+    };
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // IEnumJavaPkg interface
+    ////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(57771EF4-A46E-11d0-A8BE-00A0C921A4D2)
+    ]
+    interface IEnumJavaPkg : IUnknown
+    {
+        HRESULT     Next (ULONG celt, IJavaPkg **rgelt, ULONG *pceltFetched);
+        HRESULT     Skip (ULONG celt);
+        HRESULT     Reset ();
+        HRESULT     Clone (IEnumJavaPkg **ppenum);
+    };
+
+    ////////////////////////////////////////////////////////////////////////////
+    // IEnumJavaCls interface
+    ////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(57771EF5-A46E-11d0-A8BE-00A0C921A4D2)
+    ]
+    interface IEnumJavaCls : IUnknown
+    {
+        HRESULT     Next (ULONG celt, IJavaCls **rgelt, ULONG *pceltFetched);
+        HRESULT     Skip (ULONG celt);
+        HRESULT     Reset ();
+        HRESULT     Clone (IEnumJavaCls **ppenum);
+    };
+
+	////////////////////////////////////////////////////////////////////////////
+	// IJavaClsStream interface
+	////////////////////////////////////////////////////////////////////////////
+	[
+	    uuid(57771EF7-A46E-11d0-A8BE-00A0C921A4D2)
+	]
+	interface IJavaClsStream : IStream
+	{
+	    // Simpler seek mechanism
+	    HRESULT     SetCurrentPosition (long iPos, DWORD dwMoveType);
+	
+	    // Reader
+	    HRESULT     Read (void *pvDest, long *piRead);
+	
+	    // Big-endian number readers to IStream object
+	    HRESULT     ReadU2 (U2 *piVal);
+	    HRESULT     ReadU4 (U4 *piVal);
+	};
+	
+	////////////////////////////////////////////////////////////////////////////
+	// JavaPkgService coclass
+	////////////////////////////////////////////////////////////////////////////
+	[
+	    uuid(57771EF6-A46E-11d0-A8BE-00A0C921A4D2)
+	]
+	coclass JavaPkgService
+	{
+	    interface IJavaPkgService;
+	};
+
+    cpp_quote("STDAPI_(IJavaPkgService *) CreateJPS ();")
+};
+
+

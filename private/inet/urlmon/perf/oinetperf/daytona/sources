@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+!ENDIF
+
+MAJORCOMP   = urlmon 
+MINORCOMP   = test
+
+#
+# This is the name of the target built from the source files specified
+# below.  The name should include neither the path nor the file extension.
+#
+
+TARGETNAME=  oinetperf
+
+#
+# This specifies where the target is to be built.  A private target of
+# type LIBRARY or DYNLINK should go to obj, whereas a public target of
+# type LIBRARY or DYNLINK should go to $(BASEDIR)\public\sdk\lib.
+#
+
+TARGETPATH=   obj
+
+#
+# This specifies the type of the target, such as PROGRAM, DYNLINK, LIBRARY,
+# etc.
+#
+
+TARGETTYPE=   PROGRAM
+
+INCLUDES=     ..\..\..\inc; $(BASEDIR)\private\windows\inc;
+
+
+!include      ..\..\..\daytona.inc
+
+C_DEFINES=    \
+              $(C_DEFINES)
+
+
+SOURCES=        \
+                ..\oinet.cxx
+
+
+
+UMTYPE=       console
+UMAPPL=
+UMTEST=
+UMLIBS=       \
+              ..\..\..\utils\daytona\$(_OBJ_DIR)\*\utils.lib    \
+              $(BASEDIR)\public\sdk\lib\*\urlmon.lib            \
+              $(BASEDIR)\public\sdk\lib\*\ole32.lib             \
+              $(BASEDIR)\public\sdk\lib\*\gdi32.lib             \
+              $(BASEDIR)\public\sdk\lib\*\kernel32.lib          \
+              $(BASEDIR)\public\sdk\lib\*\user32.lib            \
+              $(BASEDIR)\public\sdk\lib\*\advapi32.lib          \
+              $(BASEDIR)\public\sdk\lib\*\shell32.lib           \
+              $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib            \
+              $(BASEDIR)\public\sdk\lib\*\oleaut32.lib          \
+              $(BASEDIR)\public\sdk\lib\*\uuid.lib              \
+              $(BASEDIR)\public\sdk\lib\*\shlwapi.lib           \
+              $(BASEDIR)\public\sdk\lib\*\libcmt.lib
+
+
+USE_LIBCMT = 0
+
+#!include      ..\precomp1.inc
+

@@ -1,0 +1,1860 @@
+//Microsoft Developer Studio generated resource script.
+
+#include "resource.h"
+#include <windows.h>
+#include <commctrl.h>
+
+//
+// Our Build header files don't
+//  seem to have this defined so
+//  lets define it ourselves.
+//
+
+#ifndef TBS_AUTOTICKS
+#define TBS_AUTOTICKS 0x1
+#endif
+
+// nonlocalizable resources accessed by localizable resources (dialogs, etc)
+IDI_PROXY               ICON    DISCARDABLE     "proxy.ico"
+IDI_CACHE               ICON    DISCARDABLE     "cache.ico"
+IDI_CERTIFICATES        ICON    DISCARDABLE     "certific.ico"
+IDI_HOME                ICON    DISCARDABLE     "home.ico"
+IDI_HISTORY             ICON    DISCARDABLE     "history.ico"
+IDI_RATINGS             ICON    DISCARDABLE     "ratings.ico"
+IDI_MESSAGING           ICON    DISCARDABLE     "message.ico"
+IDI_APPEARANCE          ICON    DISCARDABLE     "appear.ico"
+IDI_LINKS               ICON    DISCARDABLE     "links.ico"
+IDI_CONGEN              ICON    DISCARDABLE     "congen.ico"
+IDI_WALLET              ICON    DISCARDABLE     "wallet.ico"
+
+#ifdef UNIX
+IDI_OE                  ICON    DISCARDABLE     "oe.ico"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+#ifndef UNIX
+IDD_FONTS DIALOGEX DISCARDABLE 0, 0, 213, 162
+#else
+IDD_FONTS DIALOGEX DISCARDABLE 0, 0, 213, 207
+#endif
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Fonts"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "The fonts you select here are displayed on Web pages and documents that do not have a specified text font.",
+                    IDC_STATIC,7,7,199,21
+    LTEXT           "&Language script:",IDC_STATIC,7,35,58,9
+    COMBOBOX        IDC_FONTS_CHAR_SET_COMBO,65,33,116,60,CBS_SORT | CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Web page font:",IDC_STATIC,7,51,96,9
+    LISTBOX         IDC_FONTS_PROP_FONT_LIST,7,63,96,43,LBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_FONTS_PROP_SAMPLE,7,104,96,30,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_VISIBLE,WS_EX_STATICEDGE
+    LTEXT           "&Plain text font:",IDC_STATIC,110,51,96,9
+    LISTBOX         IDC_FONTS_FIXED_FONT_LIST,110,63,96,43,LBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_FONTS_FIXED_SAMPLE,110,104,96,30,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_VISIBLE,WS_EX_STATICEDGE
+#ifndef UNIX
+    DEFPUSHBUTTON   "OK",IDOK,101,141,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,156,141,50,14
+#else
+    GROUPBOX        "",IDC_FONTS_UPDATE_GROUPBOX,7,136,199,43
+    LTEXT           "If fonts are installed on your computer but are not listed above, click ""Find Other Fonts"" and restart Internet Explorer.",IDC_STATIC,78,142,120,33
+    CONTROL         "Find Other Fonts",IDC_FONTS_UPDATE_BUTTON,
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,13,144,60,27
+    DEFPUSHBUTTON   "OK",IDOK,101,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,156,193,50,14
+#endif
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",NFS_ALL|NFS_USEFONTASSOC,0,0,0,0
+END
+
+#ifdef UNIX
+IDD_FONTUPD_PROG DIALOG DISCARDABLE  0, 0, 203, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enumerating Fonts"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_FONTUPD_PROG,"msctls_progress32", WS_BORDER,
+                    13,31,173,10
+    LTEXT           "Enumerating fonts on your system...",IDC_STATIC,13,11,
+                    151,8
+    //PUSHBUTTON      "Cancel",IDC_FONTUPD_CANCEL,190,28,50,14
+END
+#endif
+
+// Old IE4 font dialog
+IDD_FONTS_IE4 DIALOGEX DISCARDABLE 0, 0, 234, 209
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Fonts"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Font settings",IDC_FONTS_SCRIPTS_GROUPBOX,7,7,220,172
+    LISTBOX         IDC_FONTS_CODE_PAGES_LIST,14,21,206,55,LBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Proportional font:",IDC_UNUSED,14,82,65,9
+    COMBOBOX        IDC_FONTS_PROP_FONT_COMBO,83,80,137,60,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Fixed-width font:",IDC_UNUSED,14,100,65,9
+    COMBOBOX        IDC_FONTS_FIXED_FONT_COMBO,83,98,137,60,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Font &size:",IDC_UNUSED,14,118,65,9
+    COMBOBOX        IDC_FONTS_SIZE_FONT_COMBO,83,116,137,60,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Encoding:",IDC_UNUSED,14,136,65,9
+    COMBOBOX        IDC_FONTS_MIME_FONT_COMBO,83,134,137,60,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Default encoding:",IDC_UNUSED,14,158,65,9
+    LTEXT           "(def charset here)",IDC_FONTS_DEFAULT_LANG_TEXT,83,158,
+                    75,18
+    PUSHBUTTON      "Set as &Default",IDC_FONTS_SETDEFAULT_BUTTON,160,155,60,
+                    14
+    DEFPUSHBUTTON   "OK",IDOK,123,188,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,177,188,50,14
+END
+
+IDD_AUTOCNFG_SETTINGS DIALOG DISCARDABLE  0, 0, 222, 111
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Automatic Configuration Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Auto-proxy URL (.JS, .JVS, or .PAC file):",IDC_STATIC,
+                    8,8,157,8,NOT WS_GROUP
+    EDITTEXT        IDC_CONFIGJS_ADDR,11,19,200,14,ES_AUTOHSCROLL
+    LTEXT           "Automatically configure e&very ",IDC_STATIC,8,44,99,10,
+                    NOT WS_GROUP
+    EDITTEXT        IDC_CONFIGTIMER,109,41,42,14,ES_AUTOHSCROLL
+    LTEXT           "minutes.",IDC_STATIC,156,44,50,10,NOT WS_GROUP
+    CONTROL         "Only apply auto&matic configuration settings if the file on the server has changed",
+                    IDC_CONFIGOPTIMIZE,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,8,64,200,18
+    DEFPUSHBUTTON   "OK",IDOK,106,90,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,161,90,50,14
+END
+
+IDD_PROXY_SETTINGS DIALOGEX DISCARDABLE 0, 0, 241, 223
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Proxy Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Servers",IDC_GRP_SETTINGS2,7,7,225,118
+    ICON            IDI_PROXY,IDC_PROXY_ICON1,14,18,20,20
+    LTEXT           "Type",IDC_TYPE_TEXT,42,18,46,10
+    LTEXT           "Proxy address to use",IDC_ADDR_TEXT,88,18,107,10
+    LTEXT           "Port",IDC_PORT_TEXT,195,18,18,10
+    LTEXT           "&HTTP:",IDC_PROXY_HTTP_CAPTION,42,33,46,10
+    EDITTEXT        IDC_PROXY_HTTP_ADDRESS,88,32,99,12,ES_AUTOHSCROLL
+    CTEXT           ":",IDC_UNUSED,187,33,8,10
+    EDITTEXT        IDC_PROXY_HTTP_PORT,195,32,27,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    LTEXT           "&Secure:",IDC_PROXY_SECURITY_CAPTION,42,48,46,10
+    EDITTEXT        IDC_PROXY_SECURITY_ADDRESS,88,47,99,12,ES_AUTOHSCROLL
+    CTEXT           ":",IDC_UNUSED,187,48,8,10
+    EDITTEXT        IDC_PROXY_SECURITY_PORT,195,47,27,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    LTEXT           "&FTP:",IDC_PROXY_FTP_CAPTION,42,63,46,10
+    EDITTEXT        IDC_PROXY_FTP_ADDRESS,88,62,99,12,ES_AUTOHSCROLL
+    CTEXT           ":",IDC_UNUSED,187,64,8,10
+    EDITTEXT        IDC_PROXY_FTP_PORT,195,62,27,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    LTEXT           "&Gopher:",IDC_PROXY_GOPHER_CAPTION,42,78,46,10
+    EDITTEXT        IDC_PROXY_GOPHER_ADDRESS,88,77,99,12,ES_AUTOHSCROLL
+    CTEXT           ":",IDC_UNUSED,187,78,8,10
+    EDITTEXT        IDC_PROXY_GOPHER_PORT,195,77,27,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    LTEXT           "So&cks:",IDC_PROXY_SOCKS_CAPTION,42,94,46,10
+    EDITTEXT        IDC_PROXY_SOCKS_ADDRESS,88,92,99,12,ES_AUTOHSCROLL
+    CTEXT           ":",IDC_UNUSED,187,94,8,10
+    EDITTEXT        IDC_PROXY_SOCKS_PORT,195,92,27,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    CONTROL         "&Use the same proxy server for all protocols",
+                    IDC_PROXY_USE_SAME_SERVER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,42,109,172,10
+    GROUPBOX        "Exceptions",IDC_PROXY_EXCEPTIONS_GROUPBOX,7,130,225,67
+    ICON            IDI_PROXY,IDC_PROXY_ICON2,14,141,20,20
+    LTEXT           "Do &not use proxy server for addresses beginning with:",
+                    IDC_EXCEPT2_TEXT,42,141,183,10
+    EDITTEXT        IDC_PROXY_OVERRIDE,42,155,183,21,ES_MULTILINE |
+                    ES_WANTRETURN | WS_VSCROLL
+    LTEXT           "Use semicolons ( ; ) to separate entries.",
+                    IDC_EXCEPT_TEXT,42,181,183,10
+    DEFPUSHBUTTON   "OK",IDOK,129,203,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,183,203,50,14
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",0x1,0,0,0,0
+END
+
+IDD_TEMP_FILES DIALOGEX DISCARDABLE 20, 20, 232, 200
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_CACHE,IDC_UNUSED,7,7,20,20
+    LTEXT           "Check for newer versions of stored pages:",IDC_UNUSED,
+                    35,7,181,8
+    CONTROL         "&Every visit to the page",IDC_ADVANCED_CACHE_ALWAYS,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,35,18,134,10
+    CONTROL         "Every time you &start Internet Explorer",
+                    IDC_ADVANCED_CACHE_ONCEPERSESS,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,30,172,10
+    CONTROL         "&Automatically",IDC_ADVANCED_CACHE_AUTOMATIC,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,42,172,10
+    CONTROL         "&Never",IDC_ADVANCED_CACHE_NEVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,35,54,167,10
+#ifndef UNIX
+    GROUPBOX        "Temporary Internet files folder",
+#else
+    GROUPBOX        "Temporary Internet files directory",
+#endif
+                    IDC_TEMPORARY_INTERNET_FILES_SETTINGS_GROUPBOX,7,73,218,
+                    99
+    LTEXT           "<folder status>",IDC_ADVANCED_CACHE_STATUS,14,86,60,8
+    LTEXT           "<current folder>",IDC_ADVANCED_CACHE_LOCATION,80,86,130,
+                    24
+    LTEXT           "Amount of &disk space to use:",IDC_ADVANCED_CACHE_PERCENT_ACC,14,114,94,8
+    CONTROL         "",IDC_ADVANCED_CACHE_PERCENT,"msctls_trackbar32",
+                    TBS_AUTOTICKS | TBS_DOWNISLEFT | WS_TABSTOP,9,125,117,23
+    EDITTEXT        IDC_ADVANCED_CACHE_TEXT_PERCENT,134,126,52,12,ES_AUTOHSCROLL |
+                    ES_NUMBER | ES_RIGHT
+    CONTROL         "",IDC_ADVANCED_CACHE_SIZE_SPIN,"msctls_updown32",UDS_ALIGNRIGHT | UDS_NOTHOUSANDS
+                    | UDS_ARROWKEYS | UDS_SETBUDDYINT | UDS_AUTOBUDDY,187,125,11,18
+    LTEXT           "MB",IDC_UNUSED,195,128,17,12
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",0x2,0,0,0,0
+#ifndef UNIX
+    PUSHBUTTON      "&Move Folder...",IDC_ADVANCED_MOVE_CACHE_LOCATION,14,
+                    150,65,14
+    PUSHBUTTON      "&View Files...",IDC_ADVANCED_CACHE_BROWSE,83,150,65,14
+    PUSHBUTTON      "View &Objects...",IDC_ADVANCED_DOWNLOADED_CONTROLS,152,
+                    150,65,14
+    PUSHBUTTON      "OK",IDOK,121,179,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,179,50,14
+#else
+    PUSHBUTTON      "OK",IDOK,44,189,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,134,189,50,14
+#endif /* UNIX */
+END
+
+IDD_ADVANCED DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Settings:",IDC_UNUSED,7,7,60,11
+    CONTROL         "Settings",IDC_ADVANCEDTREE,"SysTreeView32",TVS_LINESATROOT |
+                    TVS_DISABLEDRAGDROP | TVS_CHECKBOXES | WS_BORDER |
+                    WS_TABSTOP,7,20,238,170
+    PUSHBUTTON      "&Restore Defaults",IDC_RESTORE_DEFAULT,172,197,73,14
+END
+
+IDD_SITECERTS DIALOGEX DISCARDABLE 0, 0, 251, 230
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Certificate Authorities"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Issuers",IDC_ISSUERS_GROUPBOX,7,7,237,196
+    ICON            IDI_CERTIFICATES,IDC_UNUSED,14,18,20,20
+    LTEXT           "Trust sites, people, and publishers with credentials issued by the following Certifying Authorities.",
+                    IDC_UNUSED,42,18,189,21
+    LTEXT           "Issuer &Type:",IDC_UNUSED,41,43,50,11
+    COMBOBOX        IDC_COMBO_SERVICE,41,55,190,69,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "List1",IDC_CERTLIST,"SysListView32",LVS_LIST |
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_SHAREIMAGELISTS |
+                    LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,41,72,189,
+                    102
+    PUSHBUTTON      "&View Certificate...",IDC_VIEWCERT,104,180,61,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Delete",IDC_DELETECERT,169,180,61,14,WS_DISABLED
+    DEFPUSHBUTTON   "Close",IDCANCEL,194,209,50,14
+END
+
+IDD_NEWSITECERT DIALOGEX DISCARDABLE 0, 0, 225, 164
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Site Certificate"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,113,143,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,168,143,50,14
+    ICON            IDI_CERTIFICATES,IDC_STATIC,7,7,21,20
+    LTEXT           "You have been offered a new site certificate to place in your list of trusted issuers. Please select the services for which this certificate will be used.",
+                    IDC_STATIC,42,7,176,33
+    CONTROL         "Enable certificate",IDC_CHECK_ENABLE_CERT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,42,41,148,10
+    GROUPBOX        "Available usages: ",IDC_STATIC,42,59,176,68
+    CONTROL         "Network &client authentication",
+                    IDC_CHECK_NETWORK_CLIENT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,53,71,109,10
+    CONTROL         "Network &server authentication",
+                    IDC_CHECK_NETWORK_SERVER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,53,84,113,10
+    CONTROL         "Secure &e-mail",IDC_CHECK_SECURE_EMAIL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,53,97,59,10
+    CONTROL         "Software &publishing",IDC_CHECK_SOFTWARE_PUBLISHING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,53,110,78,10
+    PUSHBUTTON      "&View Certificate...",IDC_VIEWCERT,42,143,67,14
+END
+
+IDD_LANG DIALOGEX DISCARDABLE 0, 0, 225, 174
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Language Preference"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Some Web sites offer content in multiple languages. You can choose several languages below; they will be treated in order of priority.",
+                    IDC_STATIC,7,7,211,27
+    LTEXT           "&Language:",IDC_STATIC,7,41,42,11
+    LISTBOX         IDC_LANG_ACCEPT_LIST,7,52,153,67,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Move &Up",IDC_LANG_MOVE_UP_BUTTON,168,52,50,14
+    PUSHBUTTON      "Move &Down",IDC_LANG_MOVE_DOWN_BUTTON,168,70,50,14
+    PUSHBUTTON      "Re&move",IDC_LANG_REMOVE_BUTTON,168,88,50,14
+    PUSHBUTTON      "&Add...",IDC_LANG_ADD_BUTTON,168,106,50,14
+    DEFPUSHBUTTON   "OK",IDOK,113,153,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,168,153,50,14
+    PUSHBUTTON      "&Change...",IDC_LANG_UI_PREF,168,131,50,14
+    LTEXT           "",IDC_LANG_CURSEL,7,130,153,18
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x4,0,0,0,0
+END
+
+IDD_LANG_ADD DIALOGEX DISCARDABLE 0, 0, 211, 186
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Add Language"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "&Language:",IDC_STATIC,7,7,48,11
+    LISTBOX         IDC_LANG_AVAILABLE_LIST,7,18,197,117,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Use&r defined:",IDC_STATIC,7,145,50,9
+    EDITTEXT        IDC_LANG_USER_DEFINED_EDIT,69,142,135,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,100,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,165,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x1,0,0,0,0
+END
+
+IDD_LANG_CHANGE DIALOGEX DISCARDABLE 0, 0, 226, 61
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Menus and Dialog Boxes"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,58,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,112,40,50,14
+    PUSHBUTTON      "Add...",IDC_LANG_ADDSPK,169,40,50,14
+    LTEXT           "Display menus and dialog boxes using:",IDC_STATIC,7,7,122,8
+    CONTROL         "", IDC_COMBO_UILANG, WC_COMBOBOXEX,CBS_DROPDOWNLIST| WS_TABSTOP| WS_VSCROLL | CBS_SORT,7,19,212,70
+END
+
+IDD_LANG_WARNING DIALOGEX DISCARDABLE 0, 0, 226, 74
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Menus and Dialog Boxes"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_STATIC,7,7,20,20
+    LTEXT           "To use the new language settings, Internet Explorer and Outlook Express need to be closed and restarted."
+                    IDC_STATIC,32,7,187,16,NOT WS_GROUP
+    LTEXT           "Close and restart Internet Explorer and Outlook Express now?",
+                    IDC_STATIC,32,30,187,16,NOT WS_GROUP
+    DEFPUSHBUTTON   "Yes",IDYES,61,53,50,14
+    PUSHBUTTON      "No",IDNO,115,53,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,53,50,14
+END
+
+IDD_LANG_INFO DIALOGEX DISCARDABLE 0, 0, 226, 59
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Menus and Dialog Boxes"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_STATIC,7,7,20,20
+    LTEXT           "The language settings have been updated and will take effect the next time you start Internet Explorer or Outlook Express.",
+                    IDC_STATIC,32,7,187,24,NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,88,38,50,14
+END
+
+#ifndef UNIX
+IDD_CACHE_EMPTY DIALOGEX DISCARDABLE  0, 0, 205, 81
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Delete Files"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_STATIC,7,7,20,20
+    LTEXT           "Delete all files in the Temporary Internet Files folder?",
+                    IDC_STATIC,32,7,166,8,NOT WS_GROUP
+    LTEXT           "You can also delete all your offline content stored locally.",
+                    IDC_STATIC,32,22,166,16,NOT WS_GROUP
+    CONTROL         "&Delete all offline content",IDC_DELETE_SUB,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,32,45,166,8
+    DEFPUSHBUTTON   "OK",IDOK,94,60,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,148,60,50,14
+END
+
+#else
+IDD_CACHE_EMPTY DIALOGEX DISCARDABLE  0, 0, 210, 50
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Delete Files"
+FONT 8, FONTNAME
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_STATIC,5,10,21,20
+    LTEXT           "Delete all files in the Temporary Internet Files directory?",
+                    IDC_STATIC,33,12,170,18,NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,52,35,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,108,35,50,14
+END
+#endif /* UNIX */
+
+IDD_DIALUP DIALOGEX DISCARDABLE 0, 0, 252, 258
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Settings for foo ISP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Automatic configuration",IDC_GRP_AUTO,7,7,238,79,
+                    WS_GROUP
+    LTEXT           "Automatic configuration may override manual settings.  To ensure the use of manual settings, disable automatic configuration.",
+                    IDC_STATIC,14,18,224,16
+    CONTROL         "&Automatically detect settings",
+                    IDC_AUTODISCOVER,"Button",BS_AUTOCHECKBOX | WS_GROUP |
+                    WS_TABSTOP,14,39,218,10
+    CONTROL         "Use automatic configuration &script",IDC_CONFIGSCRIPT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,52,208,10
+    LTEXT           "Add&ress",IDC_CONFIGADDR_TX,26,68,33,8
+    EDITTEXT        IDC_CONFIG_ADDR,59,65,123,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Advanced&...",IDC_AUTOCNFG_ADVANCED,188,65,50,14,WS_GROUP
+    GROUPBOX        "Proxy server",IDC_GRP_PROXY,7,88,238,59
+    CONTROL         "Use a pro&xy server",IDC_MANUAL,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,101,206,10
+    LTEXT           "Addr&ess:",IDC_ADDRESS_TEXT,26,117,31,8
+    EDITTEXT        IDC_PROXY_ADDR,59,115,61,12,ES_AUTOHSCROLL
+    LTEXT           "Por&t:",IDC_PORT_TEXT,130,117,18,8,NOT WS_GROUP
+    EDITTEXT        IDC_PROXY_PORT,150,115,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Advan&ced...",IDC_PROXY_ADVANCED,188,115,50,14,WS_GROUP
+    CONTROL         "&Bypass proxy server for local addresses",
+                    IDC_PROXY_OMIT_LOCAL_ADDRESSES,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,26,131,147,11
+    GROUPBOX        "Dial-up settings",IDC_GRP_DIAL,7,152,238,66,WS_GROUP
+    LTEXT           "&User name:",IDC_TX_USER,14,168,56,9,NOT WS_GROUP
+    EDITTEXT        IDC_USER,78,165,103,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_TX_PASSWORD,14,185,56,8,NOT WS_GROUP
+    EDITTEXT        IDC_PASSWORD,78,181,103,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_TX_DOMAIN,14,201,58,11,NOT
+                    WS_GROUP
+    EDITTEXT        IDC_DOMAIN,78,198,103,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Pr&operties",IDC_RAS_SETTINGS,188,165,50,14,WS_GROUP
+    PUSHBUTTON      "Ad&vanced",IDC_DIAL_ADVANCED,188,184,50,14
+    CONTROL         "Do &not allow Internet programs to use this connection",
+                    IDC_DONT_USE_CONNECTION,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,7,223,230,10
+    DEFPUSHBUTTON   "OK",IDOK,139,237,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,195,237,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x1,0,0,6,6
+END
+
+IDD_DIALUP_ADVANCED DIALOGEX DISCARDABLE  0, 0, 242, 76
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced Dial-Up"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Try to connect",IDC_TX_CONNECT,6,9,49,9
+    EDITTEXT        IDC_CONNECT,59,7,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_CONNECT_SPIN,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,81,7,10,12
+    LTEXT           "times",IDC_TX_TIMES,94,9,19,9
+    LTEXT           "&Wait",IDC_TX_INTERVAL,6,27,20,10
+    EDITTEXT        IDC_INTERVAL,27,26,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_INTERVAL_SPIN,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,49,26,10,12
+    LTEXT           "seconds between attempts",IDC_TX_SECONDS,61,27,101,10
+    CONTROL         "Dis&connect if idle for",IDC_ENABLE_AUTODISCONNECT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,45,77,10
+    EDITTEXT        IDC_IDLE_TIMEOUT,89,43,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_IDLE_SPIN,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,113,42,10,12
+    LTEXT           "minutes",IDC_TX_AUTODISCONNECT,124,45,88,10
+    CONTROL         "&Disconnect when connection may no longer be needed",
+                    IDC_EXIT_DISCONNECT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,6,59,228,10
+    DEFPUSHBUTTON   "OK",IDOK,185,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,185,24,50,14
+END
+
+IDD_SECURITY_ADD_SITES DIALOGEX DISCARDABLE 0, 0, 252, 191
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "[blank]"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            "",IDC_ZONE_ICON,9,11,20,20
+    LTEXT           "You can add and remove Web sites from this zone. All Web sites in this zone will use the zone's security settings.",
+                    IDC_STATIC,37,11,206,17
+    LTEXT           "A&dd this Web site to the zone:",IDC_STATIC,9,47,150,8
+    EDITTEXT        IDC_EDIT_ADD_SITE,9,57,177,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,193,56,50,14,WS_DISABLED
+    LTEXT           "&Web sites:",IDC_STATIC,9,78,98,8
+    LISTBOX         IDC_LIST_WEBSITES,9,88,177,49,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Remove",IDC_BUTTON_REMOVE,193,88,50,14
+    CONTROL         "Require &server verification (https:) for all sites in this zone",
+                    IDC_CHECK_REQUIRE_SERVER_VERIFICATION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,9,142,234,10
+    DEFPUSHBUTTON   "OK",IDOK,136,168,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,168,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x5,0,0,0,0
+END
+
+IDD_SECURITY_INTRANET DIALOGEX DISCARDABLE 0, 0, 250, 106
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Web Sites in the Local Intranet Zone"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            "",IDC_ZONE_ICON,7,7,21,20
+    LTEXT           "Use the settings below to define which Web sites are included in the Local Intranet zone.",
+                    IDC_STATIC,34,7,209,17
+    CONTROL         "Include all local (intranet) sites not listed in other &zones",
+                    IDC_CHECK_USEINTRANET,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,34,34,209,10
+    CONTROL         "Include all sites that bypass the &proxy server",
+                    IDC_CHECK_PROXY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,
+                    47,209,10
+    CONTROL         "Include all &network paths (UNCs)",IDC_CHECK_UNC,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,34,60,209,10
+    PUSHBUTTON      "&Advanced...",IDC_INTRANET_ADVANCED,85,87,50,14
+    DEFPUSHBUTTON   "OK",IDOK,139,87,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,87,50,14
+END
+
+IDD_SECURITY_CUSTOM_SETTINGS DIALOGEX DISCARDABLE  0, 0, 231, 234
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Settings:",IDC_STATIC,7,7,40,8
+    CONTROL         "Tree1",IDC_TREE_SECURITY_SETTINGS,"SysTreeView32",
+                    TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_BORDER |
+                    WS_TABSTOP,7,19,217,145
+    GROUPBOX        "Reset custom settings",IDC_DEFAULT_SETTINGS_GROUPBOX,7,
+                    170,217,37
+    LTEXT           "&Reset to:",IDC_STATIC,12,186,30,8
+    COMBOBOX        IDC_COMBO_RESETLEVEL,47,184,115,43,CBS_DROPDOWNLIST |
+                    CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "R&eset",IDC_BUTTON_APPLY,168,183,50,14
+    PUSHBUTTON      "&Java Custom Settings...",IDC_JAVACUSTOM,7,213,100,14,
+                    NOT WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,119,213,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,174,213,50,14
+END
+
+#ifndef UNIX
+IDD_GENERAL DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Home page",IDC_PLACES_CUSTOMIZE_GROUPBOX,7,7,238,62
+    ICON            IDI_HOME,IDC_UNUSED,14,19,21,20
+    LTEXT           "You can change which page to use for your home page.",
+                    IDC_UNUSED,42,19,194,11
+    LTEXT           "Add&ress:",IDC_UNUSED,43,34,29,8
+    EDITTEXT        IDC_START_ADDRESS,83,32,153,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Use &Current",IDC_USECURRENT,68,49,53,14
+    PUSHBUTTON      "Use &Default",IDC_USEDEFAULT,126,49,53,14
+    PUSHBUTTON      "Use &Blank",IDC_USEBLANK,183,49,53,14
+    GROUPBOX        "Temporary Internet files",
+                    IDC_ADVANCED_TEMP_FILES_GROUPBOX,7,74,238,55,WS_GROUP
+    ICON            IDI_CACHE,IDC_UNUSED,14,85,21,20
+    LTEXT           "Pages you view on the Internet are stored in a special folder for quick viewing later.",
+                    IDC_UNUSED,42,85,194,19
+    PUSHBUTTON      "Delete &Files...",IDC_CACHE_DELETE_FILES,126,108,53,14
+    PUSHBUTTON      "&Settings...",IDC_CACHE_SETTINGS,183,108,53,14
+    GROUPBOX        "History",IDC_PLACES_HISTORY_GROUPBOX,7,134,238,57
+    ICON            IDI_HISTORY,IDC_UNUSED,14,146,21,20
+    LTEXT           "The History folder contains links to pages you've visited, for quick access to recently viewed pages.",
+                    IDC_UNUSED,42,146,194,19
+    LTEXT           "Days to &keep pages in history:",IDC_UNUSED,42,171,97,8
+    EDITTEXT        IDC_HISTORY_DAYS,153,169,26,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    CONTROL         "",IDC_HISTORY_SPIN,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,178,169,11,12
+    PUSHBUTTON      "Clear &History",IDC_HISTORY_CLEAR,183,168,53,14
+    PUSHBUTTON      "C&olors...",IDC_COLORS,7,197,56,14
+    PUSHBUTTON      "Fo&nts...",IDC_FONTS,68,197,56,14
+    PUSHBUTTON      "&Languages...",IDC_LANGUAGES,129,197,56,14
+    PUSHBUTTON      "Acc&essibility...",IDC_ACCESSIBILITY,190,197,55,14
+END
+
+#else
+IDD_GENERAL DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "General"
+FONT 8, FONTNAME
+BEGIN
+    GROUPBOX        "Home page",IDC_PLACES_CUSTOMIZE_GROUPBOX,7,7,238,62
+    ICON            IDI_HOME,IDC_UNUSED,14,19,20,20
+    LTEXT           "You can change which page to use for your home page.",
+                    IDC_UNUSED,42,19,194,11
+    LTEXT           "Add&ress:",IDC_UNUSED,43,34,29,8
+    EDITTEXT        IDC_START_ADDRESS,83,32,153,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Use &Current",IDC_USECURRENT,68,49,53,14
+    PUSHBUTTON      "Use &Default",IDC_USEDEFAULT,126,49,53,14
+    PUSHBUTTON      "Use &Blank",IDC_USEBLANK,183,49,53,14
+    GROUPBOX        "Temporary Internet files",
+                    IDC_ADVANCED_TEMP_FILES_GROUPBOX,7,74,238,55,WS_GROUP
+    LTEXT           "",IDC_READONLY_CACHE_WARNING,42,85,194,20,NOT WS_VISIBLE|SS_SUNKEN
+    ICON            IDI_CACHE,IDC_UNUSED,14,85,20,20
+    LTEXT           "Pages you view on the Internet are stored in a special directory for quick viewing later.",
+                    IDC_TEMP_INTERNET_TEXT,42,85,194,19
+    PUSHBUTTON      "Delete &Files",IDC_CACHE_DELETE_FILES,126,108,53,14
+    PUSHBUTTON      "&Settings...",IDC_CACHE_SETTINGS,183,108,53,14
+    GROUPBOX        "History",IDC_PLACES_HISTORY_GROUPBOX,7,134,238,57
+    ICON            IDI_HISTORY,IDC_UNUSED,14,146,20,20
+    LTEXT           "The History directory contains links to pages you've visited, for quick access to recently viewed pages.",
+                    IDC_UNUSED,42,146,194,19
+    LTEXT           "Days to &keep pages in history:",IDC_UNUSED,42,171,117,8
+    EDITTEXT        IDC_HISTORY_DAYS,153,169,26,12,ES_AUTOHSCROLL |
+                    ES_NUMBER
+    CONTROL         "",IDC_HISTORY_SPIN,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,178,169,11,12
+    PUSHBUTTON      "Clear &History",IDC_HISTORY_CLEAR,183,168,53,14
+    PUSHBUTTON      "C&olors...",IDC_COLORS,7,197,56,14
+    PUSHBUTTON      "Acc&essibility...",IDC_ACCESSIBILITY,98,197,56,14
+    PUSHBUTTON      "Fo&nts...",IDC_FONTS,189,197,56,14
+END
+#endif /* UNIX */
+
+#ifndef UNIX
+IDD_CONTENT DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Content"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Content Advisor",IDC_ADVANCED_RATINGS_GROUPBOX,7,7,238,
+                    49
+    ICON            IDI_RATINGS,IDC_RATINGS_ICON,14,18,21,20
+    LTEXT           "Ratings help you control the Internet content that can be viewed on this computer.",
+                    IDC_RATINGS_TEXT,41,18,194,19
+    PUSHBUTTON      "&Enable ...",IDC_RATINGS_TURN_ON,112,37,60,14
+    PUSHBUTTON      "Se&ttings...",IDC_ADVANCED_RATINGS_BUTTON,176,37,60,14
+    GROUPBOX        "Certificates",IDC_SECURITY_ACTIVE_CONTENT_GROUPBOX,7,58,
+                    238,54
+    ICON            IDI_CERTIFICATES,IDC_UNUSED,14,71,21,20
+    LTEXT           "Use certificates to positively identify yourself, certification authorities, and publishers.",
+                    IDC_UNUSED,41,70,193,17
+    PUSHBUTTON      "&Certificates...",IDC_SECURITY_SITES_BUTTON,112,93,60,14
+    PUSHBUTTON      "Pu&blishers...",IDC_SECURITY_PUBLISHERS_BUTTON,176,93,60,14
+    GROUPBOX        "Personal information",IDC_PROGRAMS_WALLET_GROUPBOX,7,
+                    115,238,97
+    ICON            IDI_WALLET,IDC_UNUSED,14,140,20,20
+    LTEXT           "AutoComplete stores previous entries and suggests matches for you.",
+                    IDC_UNUSED,41,137,128,26
+    PUSHBUTTON      "A&utoComplete...",IDC_AUTOSUGGEST_SETTINGS,176,137,60,
+                    14
+    LTEXT           "Microsoft Profile Assistant stores your personal information.",
+                    IDC_UNUSED,41,176,128,19
+    PUSHBUTTON      "My P&rofile...",IDC_EDIT_PROFILE,176,176,60,14
+END
+
+#else
+IDD_CONTENT DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Content"
+FONT 8, FONTNAME
+BEGIN
+    GROUPBOX        "Certificates",IDC_SECURITY_ACTIVE_CONTENT_GROUPBOX,7,7,
+                    238,54
+    ICON            IDI_CERTIFICATES,IDC_UNUSED,14,18,21,20
+    LTEXT           "Use certificates to positively identify yourself, certificate authorities, and publishers.",
+                    IDC_UNUSED,42,18,193,17
+    PUSHBUTTON      "&Certificates...",IDC_SECURITY_SITES_BUTTON,182,37,54,14
+    GROUPBOX        "Personal information",IDC_PROGRAMS_WALLET_GROUPBOX,7,
+                    68,238,54
+    ICON            IDI_WALLET,IDC_UNUSED,14,79,21,20
+    LTEXT           "AutoComplete stores previous entries and suggests matches for you.",
+                    IDC_UNUSED,41,79, 199,26
+    PUSHBUTTON      "A&utoComplete...",IDC_AUTOSUGGEST_SETTINGS,182,98,54,14
+END
+#endif /* !UNIX */
+
+#ifndef UNIX
+IDD_PROGRAMS DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Programs"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Internet programs",IDC_PROGRAMS_MAILANDNEWS_GROUPBOX,7,
+                    7,238,140
+    ICON            IDI_MESSAGING,IDC_UNUSED,14,18,20,20
+    LTEXT           "You can specify which program Windows automatically uses for each Internet service.",
+                    IDC_UNUSED,42,18,194,19
+    LTEXT           "&HTML editor:",IDC_UNUSED,42,42,50,11
+    COMBOBOX        IDC_PROGRAMS_HTMLEDITOR_COMBO,92,41,144,59,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&E-mail:",IDC_UNUSED,42,59,50,11
+    COMBOBOX        IDC_PROGRAMS_MAIL_COMBO,92,58,144,59,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Newsgroups:",IDC_UNUSED,42,76,50,11
+    COMBOBOX        IDC_PROGRAMS_NEWS_COMBO,92,75,144,59,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "In&ternet call:",IDC_UNUSED,42,93,50,11
+    COMBOBOX        IDC_PROGRAMS_CALL_COMBO,92,92,144,59,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Calendar:",IDC_UNUSED,42,110,50,11
+    COMBOBOX        IDC_PROGRAMS_CALENDAR_COMBO,92,109,144,59,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Contact &list:",IDC_UNUSED,42,127,50,11
+    COMBOBOX        IDC_PROGRAMS_CONTACT_COMBO,92,126,144,59,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Reset Web Settings...",IDC_RESETWEBSETTINGS,7,155,82,14
+    LTEXT           "You can reset Internet Explorer defaults for home and search pages",
+                    IDC_RESETWEBSETTINGS_TEXT,96,154,148,18
+    CONTROL         "&Internet Explorer should check to see whether it is the default browser",
+                    IDC_CHECK_ASSOCIATIONS_CHECKBOX,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFT | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,176,238,
+                    10
+    CONTROL         "Use Internet Explorer for &FTP",
+                    IDC_PROGRAMS_IE_IS_FTPCLIENT,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFT | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,189,238,
+                    10
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",0x4,0,0,0,0
+END
+#else
+IDD_PROGRAMS DIALOGEX DISCARDABLE 0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Programs"
+FONT 8, FONTNAME
+
+BEGIN
+    GROUPBOX        "Messaging",IDC_PROGRAMS_MAILANDNEWS_GROUPBOX,7,7,238,191
+    ICON            IDI_MESSAGING,IDC_UNUSED,14,20,20,20
+    LTEXT           "Choose the programs you want to use for the following:",
+                    IDC_UNUSED,44,26,194,19
+    LTEXT           "&Mail command line",IDC_UNUSED,15,48,80,9
+    EDITTEXT        IDC_EDIT_PROGRAMS_MAIL,15,58,224,14,ES_AUTOHSCROLL
+    CONTROL         "Use Outlook Express", IDC_OE_MAIL, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,74,80,10
+    ICON            IDI_OE,IDC_UNUSED,97,74,10,14
+    PUSHBUTTON      "&Browse...",IDC_MAIL_FIND,136,74,50,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "View &Script",IDC_MAIL_EDIT,189,74,50,14,ES_AUTOHSCROLL
+    LTEXT           "&News command line",IDC_UNUSED,15,99,71,9
+    EDITTEXT        IDC_EDIT_PROGRAMS_NEWS,15,109,224,14,ES_AUTOHSCROLL
+    CONTROL         "Use Outlook Express", IDC_OE_NEWS, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,125,80,10
+    ICON            IDI_OE,IDC_UNUSED,97,125,10,14
+    PUSHBUTTON      "B&rowse...",IDC_NEWS_FIND,136,125,50,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "View Scri&pt",IDC_NEWS_EDIT,189,125,50,14,ES_AUTOHSCROLL
+    LTEXT           "View Sour&ce",IDC_UNUSED,15,150,48,9
+    EDITTEXT        IDC_EDIT_PROGRAMS_VSOURCE,15,160,224,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Br&owse...",IDC_VSOURCE_FIND,136,176,50,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "View Scr&ipt",IDC_VSOURCE_EDIT,189,176,50,14,ES_AUTOHSCROLL
+END
+#endif /* UNIX */
+
+IDD_ACCESSIBILITY DIALOGEX DISCARDABLE 0, 0, 226, 162
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Accessibility"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Formatting",IDC_GROUP_FORMATTING,7,7,212,61
+    CONTROL         "Ignore &colors specified on Web pages",IDC_CHECK_COLOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,21,150,10
+    CONTROL         "Ignore font &styles specified on Web pages",
+                    IDC_CHECK_FONT_STYLE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,17,35,150,10
+    CONTROL         "Ignore font si&zes specified on Web pages",
+                    IDC_CHECK_FONT_SIZE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,17,50,150,10
+    GROUPBOX        "User style sheet",IDC_GROUP_STYLESHEET,7,73,212,60
+#ifndef UNIX
+    CONTROL         "Format &documents using my style sheet",
+                    IDC_CHECK_USE_MY_STYLESHEET,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,17,86,139,10
+#else
+    CONTROL         "Format &documents using my style sheet",
+                    IDC_CHECK_USE_MY_STYLESHEET,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,17,86,150,10
+#endif
+    LTEXT           "S&tyle sheet:",IDC_STATIC_STYLESHEET,30,99,124,8
+    EDITTEXT        IDC_EDIT_STYLESHEET,30,110,124,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_STYLESHEET_BROWSE,161,110,50,14
+    DEFPUSHBUTTON   "OK",IDOK,114,141,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,141,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x1,0,0,6,6
+END
+
+IDD_COLORS DIALOGEX DISCARDABLE 0, 0, 257, 116
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Colors"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+#ifndef UNIX
+    GROUPBOX        "Colors",IDC_GENERAL_APPEARANCE_GROUPBOX,7,7,118,79
+#else
+    GROUPBOX        "Colors",IDC_GENERAL_APPEARANCE_GROUPBOX,7,7,122,79
+#endif
+    ICON            IDI_APPEARANCE,IDC_STATIC,14,17,20,20
+    CONTROL         "&Text:",IDC_GENERAL_APPEARANCE_COLOR_TEXT,"Button",
+                    BS_OWNERDRAW | WS_TABSTOP,42,17,74,12
+    CONTROL         "&Background:",IDC_GENERAL_APPEARANCE_COLOR_BACKGROUND,
+                    "Button",BS_OWNERDRAW | WS_TABSTOP, 42,33,74,12
+#ifndef UNIX
+    CONTROL         "Use &Windows colors",IDC_GENERAL_APPEARANCE_USE_CUSTOM_COLORS_CHECKBOX,
+                    "Button",BS_AUTOCHECKBOX | BS_LEFT | BS_TOP | BS_MULTILINE |
+                    WS_TABSTOP,42,50,78,10
+#else
+    CONTROL         "Use &session colors",
+                    IDC_GENERAL_APPEARANCE_USE_CUSTOM_COLORS_CHECKBOX,"Button",
+                    BS_AUTOCHECKBOX |
+                    WS_TABSTOP,42,50,85,10
+#endif
+
+    GROUPBOX        "Links",IDC_GENERAL_LINKS_GROUPBOX,132,7,118,79
+    ICON            IDI_LINKS,IDC_STATIC,140,17,20,20
+    CONTROL         "V&isited:",IDC_GENERAL_APPEARANCE_COLOR_VISITED_LINKS,
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,168,17,74,12
+    CONTROL         "U&nvisited:",IDC_GENERAL_APPEARANCE_COLOR_LINKS,"Button",
+                    BS_OWNERDRAW | WS_TABSTOP,168,33,74,12
+    CONTROL         "Use &hover color:",
+                    IDC_GENERAL_APPEARANCE_USE_HOVER_COLOR_CHECKBOX,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,168,50,75,10
+    CONTROL         "H&over:",IDC_GENERAL_APPEARANCE_COLOR_HOVER,"Button",
+                    BS_OWNERDRAW | WS_TABSTOP,177,65,65,12
+    PUSHBUTTON      "OK",IDOK,146,95,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,200,95,50,14
+END
+
+IDD_SECURITY DIALOGEX DISCARDABLE  0, 0, 253, 220
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select a Web content &zone to specify its security settings.",
+                    IDC_STATIC,7,7,243,9
+    CONTROL         "Select a Web content zone to specify its security settings"
+                    ,IDC_LIST_ZONE,"SysListView32",LVS_SINGLESEL |
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+                    LVS_AUTOARRANGE | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER |
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,19,236,46
+    ICON            "",IDC_ZONE_ICON,7,78,20,20
+    CONTROL         "Zone Name",IDC_ZONELABEL,"Static",SS_LEFTNOWORDWRAP |
+                    WS_GROUP,31,68,115,10
+    LTEXT           "No sites are in this zone.",IDC_STATIC_EMPTY,156,97,
+                    90,10,NOT WS_VISIBLE
+    LTEXT           "[blank]",IDC_ZONE_DESCRIPTION,31,78,120,27
+    PUSHBUTTON      "&Sites...",IDC_BUTTON_ADD_SITES,187,78,56,14
+    GROUPBOX        "Security &level for this zone",IDC_LEVEL_GROUPBOX,7,107,
+                    239,106
+    CONTROL         "Security level indicator",IDC_SLIDER,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_VERT | TBS_BOTH | WS_TABSTOP,13,123,24,69
+    LTEXT           "Move the slider to set the security level for this zone.",
+                    IDC_STATIC_SLIDERMOVETEXT,42,117,192,9
+//    LTEXT           "The current level is ", IDC_SEC_STATIC_CURRENT_LEVEL, 42, 72, 120, 10
+//    LTEXT           "Level name",IDC_LEVEL_NAME,114,138,62,10
+    LTEXT           "Level name",IDC_LEVEL_NAME,42,128,182,10
+    LTEXT           "Level description",IDC_LEVEL_DESCRIPTION,50,138,184,50
+    PUSHBUTTON      "&Custom Level...",IDC_BUTTON_SETTINGS,89,193,72,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Default Level",IDC_ZONE_RESET,168,193,72,14
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",NFS_STATIC|NFS_USEFONTASSOC,0,0,0,0
+END
+
+IDD_SECSTANDALONE DIALOGEX DISCARDABLE  0, 0, 253, 242
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",IDOK,89,221,72,14
+    PUSHBUTTON      "Cancel",IDCANCEL,166,221,72,14
+    LTEXT           "Select a Web content &zone to specify its security settings.",
+                    IDC_STATIC,7,7,243,9
+    CONTROL         "List1",IDC_LIST_ZONE,"SysListView32",LVS_SINGLESEL |
+                    LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+                    LVS_AUTOARRANGE | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER |
+                    LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP,7,19,236,46
+    ICON            "",IDC_ZONE_ICON,7,78,20,20
+    CONTROL         "Zone name",IDC_ZONELABEL,"Static",SS_LEFTNOWORDWRAP |
+                    WS_GROUP,31,68,115,10
+    LTEXT           "This zone is currently empty",IDC_STATIC_EMPTY,156,97,
+                    90,10,NOT WS_VISIBLE
+    LTEXT           "[blank]",IDC_ZONE_DESCRIPTION,31,78,120,27
+    PUSHBUTTON      "&Sites...",IDC_BUTTON_ADD_SITES,187,78,56,16
+    GROUPBOX        "Security &level for this zone",IDC_LEVEL_GROUPBOX,7,107,
+                    239,106
+    CONTROL         "Slider1",IDC_SLIDER,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_VERT | TBS_BOTH | WS_TABSTOP,13,123,18,69
+    LTEXT           "Move the slider to set the security level for this zone.",
+                    IDC_STATIC_SLIDERMOVETEXT,42,117,192,9
+//    LTEXT           "The current level is ", IDC_SEC_STATIC_CURRENT_LEVEL, 42, 72, 120, 10
+//    LTEXT           "Level name",IDC_LEVEL_NAME,114,138,62,10
+    LTEXT           "Level name",IDC_LEVEL_NAME,42,128,182,10
+    LTEXT           "Level description",IDC_LEVEL_DESCRIPTION,50,138,184,50
+    PUSHBUTTON      "&Custom Level...",IDC_BUTTON_SETTINGS,89,193,72,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Default Level",IDC_ZONE_RESET,168,193,72,14
+END
+
+IDD_PFX_EXPORT DIALOGEX DISCARDABLE  20, 20, 240, 134
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export Personal Certificates"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,113,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,183,113,50,14
+    ICON            IDI_CERTIFICATES,IDC_UNUSED,7,7,21,20
+    LTEXT           "Internet Explorer will now export the selected personal certificate to a file.",
+                    IDC_UNUSED,35,7,194,18
+    LTEXT           "Password to encrypt exported certificate with:",
+                    IDC_UNUSED,35,32,170,8
+    EDITTEXT        IDC_PASSWORD,35,41,198,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "Confirm password:",IDC_UNUSED,35,56,170,8
+    EDITTEXT        IDC_PASSWORD2,35,67,198,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "File name:",IDC_UNUSED,35,84,31,8
+    EDITTEXT        IDC_FILENAME,35,93,198,12,ES_AUTOHSCROLL
+END
+
+IDD_PFX_IMPORT DIALOGEX DISCARDABLE  20, 20, 250, 116
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Import Personal Certificates"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,139,94,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,94,50,14
+    ICON            IDI_CERTIFICATES,IDC_UNUSED,7,7,21,20
+    LTEXT           "Internet Explorer will now import any personal certificates contained in a file.  ",
+                    IDC_UNUSED,36,7,194,18
+    LTEXT           "Certificate file to import:",IDC_UNUSED,36,29,74,8
+    EDITTEXT        IDC_FILENAME,36,40,145,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_CERT_BROWSE,193,40,50,14
+    LTEXT           "Password:",IDC_UNUSED,36,57,103,8
+    EDITTEXT        IDC_PASSWORD,36,70,145,12,ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+IDD_CONNECTION DIALOGEX DISCARDABLE  0, 0, 252, 217
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connections"
+FONT 8, "MS Shell Dlg"
+BEGIN
+#ifndef UNIX
+    ICON            IDI_CONGEN,IDC_UNUSED,7,8,20,20
+    LTEXT           "Use the Internet Connection Wizard to connect your computer to the Internet.",
+                    IDC_UNUSED,36,11,139,25
+    PUSHBUTTON      "Set&up...",IDC_CONNECTION_WIZARD,183,11,54,14,WS_GROUP
+    GROUPBOX        "Dial-up setti&ngs",IDC_UNUSED,7,36,238,135
+    CONTROL         "Dial-up connections",IDC_CONN_LIST,"SysTreeView32",
+                    TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | WS_BORDER |
+                    WS_GROUP | WS_TABSTOP,14,49,165,49
+    PUSHBUTTON      "A&dd...",IDC_DIALUP_ADD,183,49,54,14,WS_GROUP
+    PUSHBUTTON      "&Remove",IDC_DIALUP_REMOVE,183,67,54,14
+    PUSHBUTTON      "&Settings...",IDC_MODEM_SETTINGS,183,84,54,14
+    CONTROL         "Never dial a &connection",IDC_DIALUP_NEVER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,14,106,224,10
+    CONTROL         "Dial &whenever a network connection is not present",
+                    IDC_DIALUP_ON_NONET,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,14,117,221,10
+    CONTROL         "Always dial my default c&onnection",IDC_DIALUP,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,14,128,224,10
+    LTEXT           "Current default:",IDC_DIAL_DEF_TXT,14,142,50,8
+    LTEXT           "None",IDC_DIAL_DEF_ISP,74,142,108,8,SS_NOPREFIX
+    PUSHBUTTON      "S&et Default",IDC_SET_DEFAULT,184,139,54,14,WS_GROUP
+    CONTROL         "&Perform system security check before dialing",
+                    IDC_ENABLE_SECURITY,"Button",BS_AUTOCHECKBOX | WS_GROUP |
+                    WS_TABSTOP,14,156,207,10
+    GROUPBOX        "Local Area Network (LAN) settings",IDC_UNUSED,7,175,238,35
+
+    PUSHBUTTON      "&Sharing...",IDC_CON_SHARING,126,185,54,14,WS_GROUP
+    PUSHBUTTON      "&LAN Settings...",IDC_LAN_SETTINGS,184,185,54,14,WS_GROUP
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",0x6,0,0,6,6
+#else
+    GROUPBOX        "Automatic configuration",IDC_GRP_AUTO,7,8,238,57
+    ICON            IDI_CONGEN,IDC_UNUSED,10,18,20,20
+#if 0
+    CONTROL         "&Automatic discovery of Internet Explorer settings ",IDC_AUTODISCOVER,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE |WS_DISABLED | WS_TABSTOP,
+                    34,20,205,10
+    CONTROL         "Use automatic configuration &script",IDC_CONFIGSCRIPT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,34,208,10
+    LTEXT           "Add&ress",IDC_CONFIGADDR_TX,46,50,33,8
+    EDITTEXT        IDC_CONFIG_ADDR,79,47,123,14,ES_AUTOHSCROLL
+#else
+    CONTROL         "Use automatic configuration &script",IDC_CONFIGSCRIPT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,34,22,208,10
+    LTEXT           "Add&ress",IDC_CONFIGADDR_TX,46,38,32,8
+    EDITTEXT        IDC_CONFIG_ADDR,79,35,123,14,ES_AUTOHSCROLL
+#endif /* 0 */
+    GROUPBOX        "Proxy server",IDC_GRP_PROXY,7,70,238,59
+    ICON            IDI_CONGEN,IDC_UNUSED,10,83,20,20
+    CONTROL         "Use a pro&xy server",IDC_MANUAL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,34,82,206,10
+    LTEXT           "Addr&ess:",IDC_ADDRESS_TEXT,46,98,31,8,NOT WS_GROUP
+    EDITTEXT        IDC_PROXY_ADDR,79,96,56,12,ES_AUTOHSCROLL
+    LTEXT           "Por&t:",IDC_PORT_TEXT,140,98,18,8
+    EDITTEXT        IDC_PROXY_PORT,160,96,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Advan&ced...",IDC_PROXY_ADVANCED,197,96,45,14
+    CONTROL         "&Bypass proxy server for local addresses",
+                    IDC_PROXY_OMIT_LOCAL_ADDRESSES,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,46,112,147,11
+#endif
+END
+
+IDD_AUTOSUGGEST_SETTINGS DIALOGEX DISCARDABLE  0, 0, 206, 188
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "AutoComplete Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "AutoComplete lists possible matches from entries you've typed before.",
+                    IDC_STATIC,7,7,192,23
+    GROUPBOX        "Use AutoComplete for",IDC_STATIC,7,32,192,66
+    CONTROL         "Web &addresses",IDC_AUTOSUGGEST_ENABLEADDR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,47,179,10
+    CONTROL         "&Forms",IDC_AUTOSUGGEST_ENABLEFORM,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,58,179,10
+    CONTROL         "User names and &passwords on forms",
+                    IDC_AUTOSUGGEST_SAVEPASSWORDS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,13,70,179,10
+    CONTROL         "P&rompt me to save passwords",
+                    IDC_AUTOSUGGEST_PROMPTPASSWORDS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,25,81,168,10
+    GROUPBOX        "Clear AutoComplete history",IDC_STATIC,7,101,192,54
+    PUSHBUTTON      "&Clear Forms",IDC_AUTOSUGGEST_CLEARFORM,15,114,82,14
+    PUSHBUTTON      "C&lear Passwords",IDC_AUTOSUGGEST_CLEARPASSWORDS,104,
+                    114,82,14
+    LTEXT           "To clear Web address entries, on the General tab in Internet Options, click Clear History.",
+                    IDC_STATIC,15,133,177,17
+    DEFPUSHBUTTON   "OK",IDOK,93,167,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,149,167,50,14
+END
+
+IDD_WALLET_SETTINGS DIALOGEX DISCARDABLE 0, 0, 186, 119
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Microsoft Wallet"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,67,98,50,14
+    LTEXT           "Microsoft Wallet provides a secure place to store private information for Internet shopping.",
+                    IDC_UNUSED,14,14,159,27
+    LTEXT           "View and modify addresses",IDC_UNUSED,14,44,86,8
+    PUSHBUTTON      "&Addresses...",IDC_PROGRAMS_WALLET_ADDRBUTTON,113,42,55,14
+    LTEXT           "View and modify payments",IDC_UNUSED,14,68,79,8
+    PUSHBUTTON      "&Payments...",IDC_PROGRAMS_WALLET_PAYBUTTON,113,68,55,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_FONTS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        VERTGUIDE, 14
+        VERTGUIDE, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_PROXY_SETTINGS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 233
+        VERTGUIDE, 42
+        VERTGUIDE, 88
+        VERTGUIDE, 225
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 216
+        HORZGUIDE, 36
+    END
+
+    IDD_TEMP_FILES, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 225
+        VERTGUIDE, 14
+        VERTGUIDE, 218
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_ADVANCED, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 16
+        VERTGUIDE, 42
+        VERTGUIDE, 132
+        VERTGUIDE, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 20
+    END
+
+    IDD_SITECERTS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 223
+    END
+
+    IDD_NEWSITECERT, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 42
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_LANG, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 158
+    END
+
+    IDD_LANG_ADD, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 204
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_CACHE_EMPTY, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 242
+        VERTGUIDE, 14
+        VERTGUIDE, 42
+        VERTGUIDE, 248
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 90
+    END
+
+    IDD_DIALUP, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 26
+        VERTGUIDE, 59
+        VERTGUIDE, 182
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 261
+    END
+
+    IDD_DIALUP_ADVANCED, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 235
+        BOTTOMMARGIN, 69
+        HORZGUIDE, 7
+    END
+
+    IDD_SECURITY_ADD_SITES, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 9
+        RIGHTMARGIN, 243
+        VERTGUIDE, 37
+        VERTGUIDE, 186
+        VERTGUIDE, 193
+        TOPMARGIN, 11
+        BOTTOMMARGIN, 182
+        HORZGUIDE, 137
+    END
+
+    IDD_SECURITY_INTRANET, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        VERTGUIDE, 34
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_SECURITY_CUSTOM_SETTINGS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 224
+        VERTGUIDE, 12
+        VERTGUIDE, 47
+        VERTGUIDE, 146
+        VERTGUIDE, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 227
+        HORZGUIDE, 121
+        HORZGUIDE, 129
+        HORZGUIDE, 149
+        HORZGUIDE, 164
+    END
+
+    IDD_GENERAL, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 42
+        VERTGUIDE, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+    END
+
+    IDD_CONTENT, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 32
+        VERTGUIDE, 42
+        VERTGUIDE, 83
+        VERTGUIDE, 88
+        VERTGUIDE, 180
+        VERTGUIDE, 236
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 212
+        HORZGUIDE, 122
+        HORZGUIDE, 182
+    END
+
+    IDD_PROGRAMS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 42
+        VERTGUIDE, 80
+        VERTGUIDE, 92
+        VERTGUIDE, 236
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 212
+        HORZGUIDE, 47
+        HORZGUIDE, 64
+        HORZGUIDE, 81
+        HORZGUIDE, 98
+        HORZGUIDE, 115
+        HORZGUIDE, 132
+    END
+    IDD_ACCESSIBILITY, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        VERTGUIDE, 30
+        VERTGUIDE, 211
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 138
+    END
+
+    IDD_COLORS, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        VERTGUIDE, 14
+        VERTGUIDE, 42
+        VERTGUIDE, 117
+        VERTGUIDE, 132
+        VERTGUIDE, 140
+        VERTGUIDE, 168
+        VERTGUIDE, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 109
+    END
+
+    IDD_SECURITY, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        VERTGUIDE, 14
+        VERTGUIDE, 42
+        VERTGUIDE, 54
+        VERTGUIDE, 187
+        VERTGUIDE, 239
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 213
+        HORZGUIDE, 46
+    END
+
+    IDD_SECSTANDALONE, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 9
+        RIGHTMARGIN, 244
+        VERTGUIDE, 16
+        VERTGUIDE, 37
+        VERTGUIDE, 50
+        VERTGUIDE, 237
+        TOPMARGIN, 11
+        BOTTOMMARGIN, 233
+    END
+
+    IDD_PFX_EXPORT, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 233
+        VERTGUIDE, 35
+        VERTGUIDE, 60
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 127
+    END
+
+    IDD_PFX_IMPORT, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        VERTGUIDE, 36
+        VERTGUIDE, 60
+        TOPMARGIN, 7
+    END
+
+    IDD_CONNECTION, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 42
+        VERTGUIDE, 53
+        VERTGUIDE, 64
+        VERTGUIDE, 183
+        VERTGUIDE, 187
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 210
+        HORZGUIDE, 210
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_REGISTRY_TITLE "Registry Error"
+    IDS_ERROR_WARNING_TITLE "Warning"
+    IDS_REBOOTING_TITLE     "Restart"
+    IDS_LOGOFF_TITLE        "Log Off"
+    IDS_ERROR_INVALID_PATH_MSG
+                            "This folder is a computer name or a special folder."
+    IDS_ERROR_INVALID_PATH_TITLE "Invalid Path"
+    IDS_APPNAME             "Internet Options"
+    IDS_RNADLL_FILENAME     "RASAPI32.DLL"
+    IDS_INTERNET_LOC        "Internet"
+#ifdef UNIX
+    IDS_HELPFILE            "iexplore.hlp"
+#else
+    IDS_HELPFILE            "IEXPLORE.HLP"
+#endif /* UNIX */
+    IDS_RATINGS_TURN_OFF    "Disabl&e..."
+    IDS_RATINGS_TURN_ON     "&Enable..."
+    IDS_ERROR_MOVE_TITLE    "Cannot move Temporary Internet Files."
+    IDS_ERROR_MOVE_MSG      "You do not have restart privileges."
+    IDS_ERROR_ARCHITECTURE  "You cannot place the folder here. Try another location."
+    IDS_ERROR_WRONG_PLACE   "This is inside the Temporary Internet Files folder."
+    IDS_ERROR_STRANGENESS   "Please select a folder to which you can add items."
+    IDS_ERROR_INVALID_PATH  "This folder's path has unsupported characters. Try another path."
+    IDS_BRAND_NAME          "Temporary Internet Files"
+    IDS_WRITE_WARNING       "Are you sure you want to change the security settings for this zone?"
+    IDS_TEMPLATE_DESC_HI    "- The safest way to browse, but also the least functional\n- Less secure features are disabled\n- Cookies are disabled (some Web sites will not work)\n- Appropriate for sites that might have harmful content"
+#ifndef UNIX
+    IDS_TEMPLATE_DESC_MED   "- Safe browsing and still functional\n- Prompts before downloading potentially unsafe content\n- Unsigned ActiveX controls will not be downloaded\n- Appropriate for most Internet sites"
+
+    IDS_TEMPLATE_DESC_MEDLOW
+                            "- Same as Medium without prompts\n- Most content will be run without prompts\n- Unsigned ActiveX controls will not be downloaded\n- Appropriate for sites on your local network (intranet)"
+#else
+    IDS_TEMPLATE_DESC_MED   "- Safe browsing and still functional\n- Prompts before downloading potentially unsafe content\n- Appropriate for most Internet sites"
+
+    IDS_TEMPLATE_DESC_MEDLOW
+                            "- Same as Medium without prompts\n- Most content will be run without prompts\n- All active content can run, although some requires permission\n- Appropriate for sites on your local network (intranet)"
+#endif /* UNIX */
+
+    IDS_RESTRICTED_TITLE    "Internet Control Panel"
+    IDS_RESTRICTED_MESSAGE  "Access to this feature has been disabled by a restriction set by your system administrator."
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_THE_INTERNET        "The Internet"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROutOfMemory      "There is not enough memory to continue. Quit one or more programs, and then try again."
+    IDS_ConnectoidNotSpecified
+                            "You need to choose a Dial-Up Networking connection in order to use AutoDial."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    105                     "Internet Options"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifndef UNIX
+    IDS_ClearHistory        "Delete all items in your History folder?"
+#else
+    IDS_ClearHistory        "Delete all items in your History directory?"
+#endif
+    IDS_FILETYPES           "File Types"
+    IDS_FTDLL_FILENAME      "url.dll"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CERT_EXPORTOKTEXT   "The certificate was successfully exported."
+    IDS_CERT_EXPORTOKTITLE  "Certificate Exported Successfully"
+    IDS_CERT_FILE_INVALID   "The selected file does not contain a valid certificate, or the certificate is not a Root Authority."
+    IDS_DELETE_CERT         "Are you sure you want to delete this certificate?"
+    IDS_PASSWORDS_NOMATCH   "The passwords you entered do not match.  Please re-enter."
+    IDS_SETTINGS            "Settings"
+    IDS_LAN_SETTINGS        "Local Area Network (LAN) Settings"
+    IDS_DELETECONNECTOID    "Are you sure you want to delete this Dial-Up Networking connection?"
+    IDS_CLEAR_FORMSUGGEST   "Clear all previously saved form entries except passwords?"
+    IDS_CLEAR_FORMPASSWORDS "Clear all previously saved form passwords?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifdef UNIX
+    IDC_ERROR_USING_SYSTEM_DIR
+                            "You are about to use a system directory or a root directory. Please use a different directory."
+    IDS_SELECT_CACHE        "Select a folder for the disk cache."
+    IDS_REBOOTING_WARNING   "You must restart Internet Explorer before these changes can take effect. Until it is restarted, the old directory will be used."
+#else
+    IDC_ERROR_USING_SYSTEM_DIR "You cannot use the system folder."
+    IDS_SELECT_CACHE        "Specify a location for your temporary Internet files."
+    IDS_REBOOTING_WARNING   "Windows will now restart to finish moving Temporary Internet Files.\nDo you want to continue?\n(All other changes have been saved.)"
+    IDS_LOGOFF_WARNING   "Windows will now log you off to finish moving Temporary Internet Files.\nDo you want to continue?\n(All other changes have been saved.)"
+    IDS_ERROR_CANT_MOVE_TIF "There won't be enough space in the new location for the currently downloaded content.\nPlease either delete these files first and try again, reduce the size of the folder, or pick another location."
+    IDS_ERROR_CANT_CONNECT  "Windows is unable to gather information about the location you have chosen.\nPlease select another, or verify that you have access rights to the location."
+#endif /* UNIX */
+    IDS_STATUS_FOLDER_CURRENT "Current location:"
+    IDS_STATUS_FOLDER_NEW   "New location:"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FONT_SIZE_LARGEST   "Largest"
+    IDS_FONT_SIZE_LARGE     "Larger"
+    IDS_FONT_SIZE_MEDIUM    "Medium"
+    IDS_FONT_SIZE_SMALL     "Smaller"
+    IDS_FONT_SIZE_SMALLEST  "Smallest"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USER_DEFINED_ERR    "A user-defined string cannot contain any of the following characters:\n\t  [ ] , ; ="
+    IDS_LCID_ENG            "English"
+    IDS_USER_DEFINED        "User Defined"
+    IDS_MISSING_DLL         "An error occurred setting up Automatic Configuration.\nPlease verify that the URL you entered is correct.  If it is, you may need to reinstall Internet Explorer to correct this problem."
+    IDS_REOPEN_INETCPL      "To view the new settings, close the Internet Options dialog box, and then reopen it."
+    IDS_INVALID_PROXY       "The settings for the proxy server you've chosen to use are blank. This prevents access to the Internet. Do you want to turn off the proxy connection?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INVALID_PROXY_TITLE "Invalid Proxy Server"
+    IDS_ICW_NAME            "ICWCONN1.EXE"
+    IDS_NONE                "None"
+    IDS_DEFAULT_TEXT        " (Default)"
+    IDS_SIZE_FORMAT         "Please select a value between 1 and %d for how much disk space temporary Internet files may use."
+    IDS_SECURITY_WARNING    "The recommended security level for this zone is ""%s"".\n\nThe security level that you have chosen is lower than this.\n\nAre you sure you want to change the security level?"
+    IDS_WARNING             "Warning!"
+    IDS_SECURITY_MINLEVEL   "You cannot set the security level for this zone below ""%s"" ."
+    IDS_SECURITY_HIGH       "High security"
+    IDS_SECURITY_MEDIUM     "Medium security"
+    IDS_SECURITY_LOW        "Low security"
+    IDS_CERT_NETWORK_CLIENT "Network client authentication"
+    IDS_CERT_NETWORK_SERVER "Network server authentication"
+    IDS_CERT_SECURE_EMAIL   "Secure e-mail"
+    IDS_CERT_SOFTWARE_PUBLISHING "Software Publishing"
+#ifndef UNIX
+    IDS_TEMPLATE_DESC_LOW   "- Minimal safeguards and warning prompts are provided\n- Most content is downloaded and run without prompts\n- All active content can run\n- Appropriate for sites that you absolutely trust"
+#else
+    IDS_TEMPLATE_DESC_LOW   "- Minimal safeguards and warning prompts are provided\n- Most content is downloaded and run without prompts\n- All active content can run\n- Appropriate for sites that you absolutely trust"
+#endif /* UNIX */
+    IDS_TEMPLATE_DESC_CUSTOM "Custom settings.\n- To change the settings, click Custom Level.\n- To use the recommended settings, click Default Level."
+    IDS_TEMPLATE_NAME_HI    "High"
+    IDS_TEMPLATE_NAME_MED   "Medium"
+    IDS_TEMPLATE_NAME_MEDLOW "Medium-low"
+    IDS_TEMPLATE_NAME_LOW   "Low"
+    IDS_TEMPLATE_NAME_CUSTOM "Custom"
+    IDS_TEMPLATE_NAME_UNDEFINED "Undefined"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INVALIDURL          "The site name you entered is not valid. You must use a valid protocol at the beginning of the name, such as http:// or https://."
+    IDS_SECURITY            "Security"
+    IDS_HTTPSREQ            "Sites added to this zone must use the  https:// prefix. This prefix assures a secure connection."
+    IDS_MAPPINGFAIL         "There was an unexpected error with your zone settings. Unable to add this site."
+    IDS_STYLESHEET_EXT      "css"
+    IDS_STYLESHEET_FILTER   "Stylesheets\0*.css\0All Files\0*.*\0"
+    IDS_FILENOTFOUND        "The style sheet you selected could not be found."
+    IDS_ERROR               "Error"
+    IDS_INTERNETOPTIONS     "Internet Options"
+    IDS_PFX_EXT             "pfx"
+    IDS_PFX_FILTER          "Personal Certificates\0*.pfx;*.p12\0All Files\0*.*\0"
+    IDS_SITEEXISTS          "The site you specified already exists in a zone.  Please remove the site from that zone before adding it to the current zone."
+#ifndef UNIX
+    IDS_INVALIDWILDCARD     "You have entered an invalid wildcard sequence.\nExamples of valid patterns:\n\t*://*.mysite.com\n\thttp://*.mysite.co.jp\n\tftp://157.54.23.41/\n\tfile:\\\\localsvr\\share\n\t*://157.54.100-200.*\nExamples of invalid patterns:\n\thttp://*.sub.mysite.edu\n\tftp://*"
+#else
+    IDS_INVALIDWILDCARD     "You have entered an invalid wildcard sequence.\nExamples of valid patterns:\n\t*://*.mysite.com\n\thttp://*.mysite.co.jp\n\tftp://157.54.23.41/\n\t*://157.54.100-200.*\nExamples of invalid patterns:\n\thttp://*.sub.mysite.edu\n\tftp://*"
+#endif
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INVALID_REDIAL_WAIT "You have entered an invalid redial interval."
+    IDS_INVALID_AUTODISCONNECT_TIME
+                            "You have entered an invalid autodisconnect time."
+    IDS_INVALID_REDIAL_ATTEMPTS
+                            "You have entered an invalid number of redial attempts."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_LANG_CURRENTUSE "Menus and dialog boxes are currently displayed in %s."
+IDS_LANG_FUTUREUSE  "Menus and dialog boxes will be displayed in %s."
+END
+
+//////////////////////////////////////////////
+// strings which are referenced by id from  //
+// the advanced options registry stuff      //
+//////////////////////////////////////////////
+
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+// these strings must remain synchronized with the strings in selfreg.inx
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_ALTTEXT_TEXT                "Always expand ALT text for images"
+IDS_MOVSYSCARET_TEXT            "Move system caret with focus/selection changes"
+IDS_BROWSE_PROCESS_TEXT         "Launch browser windows in a separate process"
+IDS_FRIEND_URL_TEXT             "Show friendly URLs"
+IDS_SMOOTH_SCROLL_TEXT          "Use smooth scrolling"
+IDS_ENABLE_SUB                  "Enable offline items to be synchronized on a schedule"
+IDS_CHAN_LOG_TEXT               "Enable page hit counting"
+IDS_SM_IMAGE_DITH_TEXT          "Smart image dithering"
+IDS_PL_SOUNDS_TEXT              "Play sounds"
+IDS_PL_VID_TEXT                 "Play videos"
+IDS_PL_ANI_TEXT                 "Play animations"
+IDS_SH_PIC_TEXT                 "Show pictures"
+IDS_MM_TEXT                     "Multimedia"
+IDS_BR_TEXT                     "Browsing"
+IDS_ACC_TEXT                    "Accessibility"
+IDS_SEC_TEXT                    "Security"
+IDS_IEONDESKTOP_TEXT            "Show Internet Explorer on the desktop"
+IDS_CACHE_SEC_TEXT              "Do not save encrypted pages to disk"
+IDS_CACHE_FLUSH_TEXT            "Empty Temporary Internet Files folder when browser is closed"
+IDS_PCT1_TEXT                   "Use PCT 1.0"
+IDS_SSL2_TEXT                   "Use SSL 2.0"
+IDS_SSL3_TEXT                   "Use SSL 3.0"
+IDS_TLS1_TEXT                   "Use TLS 1.0"
+IDS_FORTEZZA_TEXT               "Use Fortezza"
+IDS_P3_TEXT                     "Enable Profile Assistant"
+IDS_ZONE_CROS_TEXT              "Warn if changing between secure and not secure mode"
+IDS_SUBMIT_REDIR_TEXT           "Warn if forms submittal is being redirected"
+IDS_WARN_INV_CERT_TEXT          "Warn about invalid site certificates"
+IDS_SSL_REVOCATION_TEXT         "Check for server certificate revocation (requires restart)"
+IDS_CERT_REV_TEXT               "Check for publisher's certificate revocation"
+IDS_COOKIE_TEXT                 "Cookies"
+IDS_COOKIE_PERSISTENT_TEXT      "Allow cookies that are stored on your computer"
+IDS_COOKIE_SESSION_TEXT         "Allow per-session cookies (not stored)"
+IDS_PRINT_TEXT                  "Printing"
+IDS_PR_BACK_TEXT                "Print background colors and images"
+
+IDS_SEARCH_TEXT                 "Search from the Address bar"
+IDS_AUTOSEARCH_TEXT             "When searching"
+IDS_DISPLAY_AND_GO_TEXT         "Display results, and go to the most likely site"
+IDS_JUST_GO_TEXT                "Just go to the most likely site"
+IDS_JUST_DISPLAY_TEXT           "Just display the results in the main window"
+IDS_NO_SEARCH_TEXT              "Do not search from the Address bar"
+IDS_ACTIVEX_TEXT                "ActiveX controls and plug-ins"
+IDS_RUN_ACTIVEX_TEXT            "Run ActiveX controls and plug-ins"
+
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+// these strings must remain synchronized with the strings in selfreg.inx
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+
+IDS_DNLD_SIGN_ACTIVEX_TEXT      "Download signed ActiveX controls"
+IDS_DNLD_USIGN_ACTIVEX_TEXT     "Download unsigned ActiveX controls"
+IDS_JAVA_TEXT                   "Java"
+IDS_JAVA_PER_TEXT               "Java permissions"
+IDS_SCRIPT_TEXT                 "Scripting"
+IDS_SCRIPT_ACTIVEX_TEXT         "Initialize and script ActiveX controls not marked as safe"
+IDS_SCRIPT_SAFE_ACTIVEX_TEXT    "Script ActiveX controls marked safe for scripting"
+IDS_CROSS_DOMAIN_DATA_TEXT      "Access data sources across domains"
+IDS_ACT_SCR_TEXT                "Active scripting"
+IDS_SCR_JAVA_TEXT               "Scripting of Java applets"
+IDS_AUTH_TEXT                   "User Authentication"
+IDS_LOGIN_TEXT                  "Logon"
+IDS_DNLD_TEXT                   "Downloads"
+IDS_FILE_DNLD_TEXT              "File download"
+IDS_FONT_DNLD_TEXT              "Font download"
+IDS_MISC_TEXT                   "Miscellaneous"
+IDS_DT_TEXT                     "Installation of desktop items"
+IDS_DD_TEXT                     "Drag and drop or copy and paste files"
+IDS_SUB_FORM_TEXT               "Submit nonencrypted form data"
+IDS_LAUNCH_TEXT                 "Launching programs and files in an IFRAME"
+IDS_ALWAYS_TEXT                 "Always"
+IDS_AL_SEARCH_TEXT              "Always search"
+IDS_AL_ASK_TEXT                 "Always ask"
+IDS_NEV_SEARCH_TEXT             "Never search"
+IDS_ENABLE_TEXT                 "Enable"
+IDS_PROMPT_TEXT                 "Prompt"
+IDS_DISABLE_TEXT                "Disable"
+IDS_APPROVED_TEXT               "Administrator approved"
+IDS_ANON_LOG_TEXT               "Anonymous logon"
+IDS_LOG_PROMPT_TEXT             "Prompt for user name and password"
+IDS_AUTO_LOG_TEXT               "Automatic logon with current username and password"
+IDS_COND_PROMPT_TEXT            "Automatic logon only in Intranet zone"
+IDS_LOW_PER_TEXT                "Low safety"
+IDS_MED_PER_TEXT                "Medium safety"
+IDS_USERDATA_TEXT               "Userdata persistence"
+IDS_SCRIPTPASTE_TEXT            "Allow paste operations via script"
+IDS_SUBFRAME_NAVIGATE           "Navigate sub-frames across different domains"
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+// these strings must remain synchronized with the strings in selfreg.inx
+//
+// WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+//
+
+IDS_HIGH_PER_TEXT               "High safety"
+IDS_CUS_PER_TEXT                "Custom"
+IDS_DIS_JAVA_TEXT               "Disable Java"
+IDS_HTTP_TEXT                   "HTTP 1.1 settings"
+IDS_HTTP11_TEXT                 "Use HTTP 1.1"
+IDS_PXY_TEXT                    "Use HTTP 1.1 through proxy connections"
+IDS_ULINKS_ALWAYS_TEXT          "Always"
+IDS_ULINKS_NEVER_TEXT           "Never"
+IDS_ULINKS_HOVER_TEXT           "Hover"
+IDS_ULINKS_TEXT                 "Underline links"
+IDS_PAGETRANS_TEXT              "Enable page transitions"
+IDS_SOFTDIST_TEXT               "Software channel permissions"
+IDS_SCRDBG_TEXT                 "Disable script debugging"
+IDS_SCRCACHE_TEXT               "Display a notification about every script error"
+IDS_FE_TEXT                     "Show friendly HTTP error messages"
+IDS_CHANNELBAR_TEXT             "Show Channel bar at startup (if Active Desktop is off)"
+IDS_NOTIFYDOWNCOMPLETE_TEXT     "Notify when downloads complete"
+IDS_IOD_TEXT                    "Enable Install On Demand"
+IDS_IEUPDATECHECK_TEXT          "Automatically check for Internet Explorer updates"
+IDS_NSCSINGLEEXPAND_TEXT        "Close unused folders in History and Favorites"
+IDS_UTF8_TEXT                   "Always send URLs as UTF-8"
+IDS_GOBUTTON_TEXT               "Show Go button in Address bar"
+IDS_AUTOAPPEND_TEXT             "Use inline AutoComplete for Web addresses"
+IDS_AUTOAPPEND_IE4_TEXT         "Use inline AutoComplete in Windows Explorer"
+IDS_AUTOAPPEND_NT5_TEXT         "Use inline AutoComplete"
+IDS_SH_PLACEHOLDERS_TEXT        "Show image download placeholders"
+IDS_FAVINTELLIMENUS             "Enable Personalized Favorites Menu"
+IDS_REUSEWINDOWSTEXT            "Reuse windows for launching shortcuts"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_FONT_SAMPLE_DEFAULT          L"AaBbYyZz"  
+IDS_FONT_SAMPLE_ASCIILATIN       L"\x004c\x0061\x0074\x0069\x006e"
+IDS_FONT_SAMPLE_LATIN            L"\x004c\x0061\x0074\x0069\x006e"
+IDS_FONT_SAMPLE_GREEK            L"\x03b5\x03bb\x03bb\x03b7\x03bd\x03b9\x03ba\x03ac"
+IDS_FONT_SAMPLE_CYRILLIC         L"\x041a\x0438\x0440\x0438\x043b\x043b\x0438\x0446\x0430"
+IDS_FONT_SAMPLE_ARMENIAN         L"\x0540\x0561\x0575\x0565\x0580\x0565\x0576"
+IDS_FONT_SAMPLE_HEBREW           L"\x05e2\x05d1\x05e8\x05d9\x05ea"
+IDS_FONT_SAMPLE_ARABIC           L"\x0627\x0644\x0639\x0631\x0628\x064a\x0629"
+IDS_FONT_SAMPLE_DEVANAGARI       L"\x0926\x0947\x0935\x0928\x093E\x0917\x0930\x0940"
+IDS_FONT_SAMPLE_BENGALI          L"\x09AC\x09BE\x09A2\x09B2\x09BE"
+IDS_FONT_SAMPLE_GURMUKHI         L"\x0A2A\x0A70\x0A1C\x0A3E\x0A2C\x0A40"
+IDS_FONT_SAMPLE_GUJARATI         L"\x0A97\x0AC1\x0A9C\x0AB0\x0ABE\x0AA4\x0AC0"
+IDS_FONT_SAMPLE_ORIYA            L"\x0B13\x0B5C\x0B3F\x0B06"
+IDS_FONT_SAMPLE_TAMIL            L"\x0BA4\x0BAE\x0BBF\x0BB4\x0BCD"
+IDS_FONT_SAMPLE_TELUGU           L"\x0C24\x0C46\x0C32\x0C41\x0C17\x0C41"
+IDS_FONT_SAMPLE_KANNADA          L"\x0C95\x0CA8\x0CCD\x0CA8\x0CA1"
+IDS_FONT_SAMPLE_MALAYALAM        L"\x0D2E\x0D32\x0D2F\x0D3E\x0D33\x0D02"
+IDS_FONT_SAMPLE_THAI             L"\x0e44\x0e17\x0e22"
+IDS_FONT_SAMPLE_LAO              L"\x0ea5\x0eb2\x0ea7"
+IDS_FONT_SAMPLE_TIBETAN          L"AaBbYyZz"
+IDS_FONT_SAMPLE_GEORGIAN         L"\x10e5\x10d0\x10e0\x10d7\x10e3\x10da\x10d8"
+IDS_FONT_SAMPLE_HANGUL           L"\xD55C\xAE00"
+IDS_FONT_SAMPLE_KANA             L"\x65e5\x672c\x8a9e"
+IDS_FONT_SAMPLE_BOPOMOFO         L"\x7e41\x9ad4\x4e2d\x6587"
+IDS_FONT_SAMPLE_HAN              L"\x7b80\x4f53\x4e2d\x6587"
+IDS_FONT_SAMPLE_ETHIOPIC         L"AaBbYyZz"
+IDS_FONT_SAMPLE_CANSYLLABIC      L"\x1403\x14c4\x1483\x144e\x1450\x1466"
+IDS_FONT_SAMPLE_CHEROKEE         L"AaBbYyZz"
+IDS_FONT_SAMPLE_YI               L"AaBbYyZz"
+IDS_FONT_SAMPLE_BRAILLE          L"\x2820\x2803\x2817\x2801\x280a\x2807\x2807\x2811"
+IDS_FONT_SAMPLE_RUNIC            L"AaBbYyZz"
+IDS_FONT_SAMPLE_OGHAM            L"AaBbYyZz"
+IDS_FONT_SAMPLE_SINHALA          L"AaBbYyZz"
+IDS_FONT_SAMPLE_SYRIAC           L"AaBbYyZz"
+IDS_FONT_SAMPLE_BURMESE          L"AaBbYyZz"
+IDS_FONT_SAMPLE_KHMER            L"AaBbYyZz"
+IDS_FONT_SAMPLE_THAANA           L"AaBbYyZz"
+IDS_FONT_SAMPLE_MONGOLIAN        L"AaBbYyZz"
+IDS_FONT_SAMPLE_USERDEFINED      L"AaBbYyZz"
+END
+
+#ifdef UNIX
+
+/////////////////////////////////////////////////////////////////////////////
+
+STRINGTABLE DISCARDABLE
+BEGIN
+IDS_ERROR_EXTS_ALREADY_EXISTS  "The file extension(s) you entered are already in use."
+IDS_ERROR_DESC_ALREADY_EXISTS  "The description you entered is already in use."
+IDS_ERROR_NOT_AN_EXT           "Extension should always begin with a period \nfollowed by one or more characters."
+IDS_ERROR_MISSING_EXTS         "You must enter an extension."
+IDS_ERROR_MISSING_DESC         "You must enter a description."
+IDS_ERROR_MISSING_CMND         "You must enter a command line."
+IDS_ERROR_INVALID_MIME         "Invalid MIME type format. Please enter valid MIME type."
+IDS_FIRSTCOLUMN+0              "Name"
+IDS_FIRSTCOLUMN+1              "URL to Navigate"
+IDS_TITLE_ALIASEDIT            "Edit Alias"
+IDS_TITLE_ALIASADD             "Add Alias"
+IDS_ERROR_ALIAS_ALREADY_EXISTS "Another alias with same name already exists.\n Do you want to replace the existing alias?"
+IDS_READONLY_CACHE_TEXT        "You do not have permission to alter your Temporary Internet Files settings."
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Association Dialog
+//
+
+IDD_ASSOCIATIONS DIALOGEX  0, 0, 244, 223
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Associations"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_DOC_LIST,11,17,233,65,LBS_SORT | LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_DOC_DESC,66,89,178,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DOC_EXTS,66,108,178,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_DOC_MIME,66,127,178,50,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_DOC_CMND,66,145,178,12,ES_AUTOHSCROLL
+    GROUPBOX        "Associations",IDC_STATIC,4,7,248,188
+    LTEXT           "Description:",IDC_STATIC,10,91,53,18
+    LTEXT           "Extension(s):",IDC_STATIC,10,111,50,8
+    LTEXT           "MIME type:",IDC_STATIC,10,129,40,8
+    LTEXT           "Command line:",IDC_STATIC,10,147,50,8
+    CONTROL         "Al&ways ask before opening this type of file",
+                    IDC_ASSOC_EDIT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,8,181,172,10
+    PUSHBUTTON      "&New Association",IDC_ASSOC_ADD,4,201,63,14
+    PUSHBUTTON      "&Edit Association",IDC_ASSOC_UPD,91,201,70,14
+    PUSHBUTTON      "&Delete Association",IDC_ASSOC_DEL,182,201,66,14
+    LTEXT           "(The command line must contain %1 which will be replaced by the file name)",
+                    IDC_STATIC,10,161,238,18
+END
+
+IDD_ENTER_ASSOC DIALOGEX DISCARDABLE  0, 0, 256, 126
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Description:",IDC_STATIC,10,10,53,18
+    LTEXT           "Extension(s):",IDC_STATIC,10,30,50,8
+    LTEXT           "MIME type:",IDC_STATIC,10,48,40,8
+    LTEXT           "Command line:",IDC_STATIC,10,66,50,8
+    EDITTEXT        IDC_DOC_DESC,66,8,178,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DOC_EXTS,66,27,178,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_DOC_MIME,66,46,178,50,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_DOC_CMND,66,64,178,12,ES_AUTOHSCROLL
+    CONTROL         "Al&ways ask before opening this type of file",
+                    IDC_ASSOC_EDIT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,8,100,172,10
+    PUSHBUTTON      "&Browse",IDC_BROWSE,194,82,50,14
+    PUSHBUTTON      "&OK",IDOK,10,120,63,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,91,120,70,14
+    LTEXT           "(The command line must contain %1 which will be replaced by the file name)",
+                    IDC_STATIC,10,80,153,18
+END
+
+#ifdef UNIX_FEATURE_ALIAS
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Alias Dialog
+//
+
+IDD_ALIASDLG DIALOGEX DISCARDABLE  0, 0, 244, 210
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Aliases"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Aliases",IDC_STATIC,7,7,230,197
+    CONTROL         "List1",IDC_ALIAS_LIST,"SysListView32",LVS_REPORT |
+                    WS_BORDER | WS_TABSTOP,21,22,200,149
+    PUSHBUTTON      "&Add",IDC_ALIAS_ADD,21,178,50,14
+    PUSHBUTTON      "&Edit",IDC_ALIAS_EDIT,97,178,50,14
+    PUSHBUTTON      "&Delete",IDC_ALIAS_DEL,170,178,50,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ALIAS_EDIT DIALOGEX DISCARDABLE  0, 0, 186, 86
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Alias"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,36,65,45,14
+    PUSHBUTTON      "Cancel",IDCANCEL,106,65,46,14
+    LTEXT           "Alias:",IDC_STATIC,17,19,20,8
+    LTEXT           "URL:",IDC_STATIC,17,40,20,8
+    EDITTEXT        IDC_ALIAS_EDIT,44,17,127,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_URL_EDIT,44,38,127,14,ES_AUTOHSCROLL
+END
+
+
+#endif /* UNIX_FEATURE_ALIAS */
+
+#endif
+
+//
+//  Version stamp
+//
+
+#include "inetcpl.rcv"

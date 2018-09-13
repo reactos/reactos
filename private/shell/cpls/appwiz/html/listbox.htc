@@ -1,0 +1,1612 @@
+<PUBLIC:HTC URN="shellctls">
+
+
+//------------------------------------------------------------------------
+// Public methods
+//------------------------------------------------------------------------
+
+<METHOD name="ResetSelection" />
+<METHOD name="EnableTemplate" />
+<METHOD name="Refresh" />
+<METHOD name="focus" />
+<METHOD name="blur" />
+
+
+//------------------------------------------------------------------------
+// Events
+//------------------------------------------------------------------------
+
+// The onSelectItem event has the following attributes:
+//      srcIndex    - the row index
+//      srcRow      - the row element itself (the TR)
+//      srcChild    - the first child element in the row (inside the TD)
+//      selState    - the state of the selection ("selected", "deselected")
+//      recordset   - the recordset bound to this list
+//
+<EVENT id=onSelectItem name="onSelectItem" />
+
+// The onCustomDraw event has the following attributes:
+//      srcIndex    - the row index
+//      srcRow      - the row element itself (the TR)
+//      srcChild    - the first child element in the row (inside the TD)
+//      drawStage   - 'prepaint', 'postpaint'
+//      bSelected   - selection state (true/false)
+//      bFocus      - listbox has focus (true/false)
+//      recordset   - the recordset bound to this list
+//
+<EVENT id=onCustomDraw name="onCustomDraw" />
+
+// The onSetFocus event has the following attributes:
+//      srcIndex    - the row index
+//      srcRow      - the row element itself (the TR)
+//      srcChild    - the first child element in the row (inside the TD)
+//      bFocus      - listbox has focus (true/false)
+//
+<EVENT id=onSetFocus name="onSetFocus" />
+
+// The onListComplete event has the following attributes:
+//      tableList   - the table element
+//
+<EVENT id=onListComplete name="onListComplete" />
+
+
+//------------------------------------------------------------------------
+// Attach to element events
+//------------------------------------------------------------------------
+
+<ATTACH event="oncontentready" handler=_OnContentReady />
+
+
+//------------------------------------------------------------------------
+// The code...
+//------------------------------------------------------------------------
+
+<SCRIPT language="javascript">
+
+var _bLoading       = true;             // true if the behavior is still loading
+
+var _tblList            = null;         // the table treated as the list
+var _idDisplayName;                     // id for the display name element (drawn differently)
+var _divScroll          = null;         // the div used to scroll the table
+
+var _iSelCur            = -1;           // selection index
+var _iSelDefault        = -1;           // default selection when the table is refreshed
+
+var _nItemsPerPage      = 0;            // used for page-up/page-down
+
+var _idDataSource;                      // the dataSource object (id)
+var _ctlDataSource      = null;         // the dataSource object (the control)
+var _szRecordSetName    = "";           // named DSO recordset name
+var _idTemplateSource;                  // the template source span
+
+var _cRowsExpand        = 0;            // count of rows to expand the selection's layout table
+var _cRowsAdded         = 0;            // count of template rows added on the current selection
+var _bAutoExpand        = false;        // true if the listbox should autoexpand the selection
+var _rgTemplateRows     = new Array();
+
+var _htmlRow;                           // html that makes up the standard row item
+
+var _bHasFocus          = false;        // true if the element has focus
+var _bFreeze            = false;        // false in order to build and refresh the listbox
+var _bTableComplete     = false;        // true if the databound table is readystate complete
+var _bInternalFocusChange = false;      // true if the focus-change is caused by the behavior itself
+
+var _szFeedBack         = "";           // text for the feedback we display 
+var _dvFeedBack         = null;         // the feedback DIV
+
+var c_szStyle_Background = 
+        'style = "' +
+        'position:relative; '           +
+        'width:100%; '                  +
+        'height:100%; '                 +
+        'overflow-y:scroll; '           +
+        'border: 1px solid buttonface; '+
+        '"';
+
+var c_szStyle_Table = 
+        'style = "' +
+        'table-layout:fixed; '          +
+        'width:100%; '                  +
+        'height:auto; '                 +
+        '"';
+
+var c_szStyle_Feedback =
+        'style = "' +
+        'position:relative; '           +
+        'width:100%; '                  +
+        'height:100%; '                 +
+        'border: 1px solid buttonface; '+
+        '"';
+
+
+// This code is run when the behavior is instantiated...
+element.attachEvent("onkeydown", _OnKeyDown);
+element.attachEvent("onerror", _OnError);
+
+_GetPropertyDefaults();
+
+
+
+// **********************************************************************
+//                       PROPERTY GET/SET FUNCTIONS
+// **********************************************************************
+
+
+// Property:  selectionIndex = i
+//
+// Sets the selection to the i'th item (row) in the list.
+//
+function get_selIndex()                 { return _iSelCur; }
+function put_selIndex(iSel)          
+{ 
+    if (_bLoading)
+        return;
+
+    _SelectItem(parseInt(iSel), true);
+}
+
+// Property:  defaultSelection = i
+//
+// Sets the default selection to the i'th item (row) in the list.  The
+// default selection is used when the databound table is refreshed and
+// there is no initial selection.
+//
+function get_defaultSel()                 { return _iSelDefault; }
+function put_defaultSel(iSel)          
+{ 
+    if (_bLoading)
+        return;
+
+    _iSelDefault = parseInt(iSel);
+}
+
+
+// Property:  dataSource = ctlDataSrc
+//
+// Specifies the listbox contents is generated by a databound table.
+//
+function get_dataSource()                  { return _idDataSource; }
+function put_dataSource(szDatasrc)          
+{ 
+    if (_bLoading)
+        return;
+
+    // Detach events from previous datasource
+    if (_ctlDataSource)
+    {
+        _ctlDataSource.detachEvent("onrowsdelete", _OnRowsDelete);
+
+        if (_tblList)
+            _tblList.detachEvent("onreadystatechange", _OnTableReady);
+    }
+
+    // Set the datasource
+    if ("" == szDatasrc)
+    {
+        _idDataSource = null;
+        _ctlDataSource = null;
+    }
+    else
+    {
+        _idDataSource = szDatasrc;
+        _SetDataSourceObject(szDatasrc);
+    }
+
+    // Attach events for new datasource
+    if (_ctlDataSource)
+    {
+        _ctlDataSource.attachEvent("onrowsdelete", _OnRowsDelete);
+
+        if (_tblList)
+            _tblList.attachEvent("onreadystatechange", _OnTableReady);
+    }
+}
+
+
+// Property:  autoExpand = true | false
+//
+// The listbox will expand the selected item's layout table by the number of rows 
+// as specified by the expandNumRows property.
+//
+function get_autoExpand()                   { return _bAutoExpand; }
+function put_autoExpand(bAutoExpand)          
+{ 
+    if (_bLoading)
+        return;
+
+    _bAutoExpand = (bAutoExpand) ? true : false;
+}
+
+
+// Property:  freeze = true | false
+//
+// The listbox will be constructed/refreshed only if freeze == false.  The behavior
+// defaults to false.
+//
+function get_freeze()                   { return _bFreeze; }
+function put_freeze(bFreeze)
+{ 
+    if (_bLoading)
+        return;
+
+    _bFreeze = (bFreeze) ? true : false;
+}
+
+
+// Property:  templateSource = id
+//
+// Specifies the id of the SPAN containing the row templates.  If this is not
+// given the behavior defaults to the interior contents of the behavior element.
+// The span must contain a TABLE of TRs.
+//
+function get_templateSource()               { return _idTemplateSource; }
+function put_templateSource(szId)
+{ 
+    if (_bLoading)
+        return;
+
+    _idTemplateSource = szId;
+
+    _ResetTemplateStore();
+}
+
+
+// Property:  feedBack = Text
+//
+// Specifies the feedback text of the DIV for our listbox behavior 
+// This will show/hide the table/feedback DIV as necessary. 
+//
+function get_feedBack()               { return _szFeedBack; }
+function put_feedBack(szText)
+{
+    _szFeedBack = szText;
+
+    // Do we have feed back?
+    if (_szFeedBack == "")
+    {
+        // No, hide the feedback DIV and show the table
+        if (_dvFeedBack != null)        
+            _dvFeedBack.style.display = 'none';
+
+        // Don't show the _tblList here, it might cause a flash,
+        // _OnTableReady will show it depending on the _szFeedBack value
+
+    }
+    else
+    {
+        // Yes, turn on the feedback DIV and turn off the table
+        if (_dvFeedBack != null)
+        {
+            _dvFeedBack.style.display = '';
+            _dvFeedBack.innerHTML = _szFeedBack;
+        }
+
+        // Hide the table now. 
+        if (_tblList != null)
+        {
+            _tblList.style.display = 'none';
+        }
+    }
+}
+
+
+
+// **********************************************************************
+//                            EVENT HANDLERS
+// **********************************************************************
+
+
+/*-------------------------------------------------------------------------
+Purpose: When the behavior is completely loaded, set the loading flag to false.
+         To improve load time, we don't want the put methods on the properties
+         to be called.  We also need to keep events from getting fired while
+         the behavior is loading.
+*/
+function _OnContentReady()
+{
+    _bLoading = false;
+    _PrepHTML();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fired when the databound table fires onreadystatechange
+*/
+function _OnTableReady()
+{
+    var tblElem = window.event.srcElement;
+
+    // Is the table generated?
+    if ("complete" == tblElem.readyState)
+    {
+        if ((null != _tblList) && (_szFeedBack == "") && _tblList.style.display == 'none')
+        {
+            // Show the table list when there is no feed back. 
+            _tblList.style.display = '';
+        }
+        
+        var recordset = _GetRecordset();
+        if (recordset && recordset.state != 0)
+        {
+            // Fire a custom event for the benefit of the page
+            evt = createEventObject();
+            evt.tableList = tblElem;
+            onListComplete.fire(evt);
+
+            // Is there a selection to make?
+            if (-1 != _iSelDefault && _iSelDefault < _tblList.rows.length)
+            {
+                // Yes
+                _SelectItem(_iSelDefault, true);
+            }
+
+            _bTableComplete = true;
+            _CalcItemsPerPage();
+        }
+    }
+    else if ("loading" == tblElem.readyState)
+    {
+        // Are we downgrading the readystate?
+        if (_bTableComplete)
+        {
+            // Yes; this most likely means the dataset has changed and the
+            // table is rebuilding.  
+            _InternalResetSelection();
+        }
+        else
+        {
+            // No; first time
+
+            // Trick:
+            //
+            // Now display the behavior's element.  Waiting until the "loading" state
+            // prevents the flashing caused by the databinding agent removing the template 
+            // row (we eliminate the "now you see it, now you don't" effect).
+
+            _tblList.style.display = '';
+        }
+    }
+    else if ("interactive" == tblElem.readyState)
+    {
+        _tblList.style.display = '';
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fired when the document is loaded.  We must refrain from altering
+         any TABLE element until after the document is loaded.
+*/
+function _OnDocumentLoad()
+{
+    _ScanSpecialElements();
+
+    _CreateHTML();
+}
+
+
+
+// **********************************************************************
+//                            HELPER FUNCTIONS
+// **********************************************************************
+
+
+
+/*-------------------------------------------------------------------------
+Purpose: Reset the contents of the template rows.
+*/
+function _ResetTemplateStore()
+{
+    _cRowsExpand = 0;
+    _rgTemplateRows = new Array();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Called when the behavior is instantiated.  Sets up the internal
+         property values.
+*/
+function _GetPropertyDefaults()
+{
+    if (element.dataSource)
+    {
+        _idDataSource = element.dataSource;
+        _SetDataSourceObject(_idDataSource);
+
+        if (_ctlDataSource)
+            _ctlDataSource.attachEvent("onrowsdelete", _OnRowsDelete);
+    }
+    
+    if (element.selectionIndex)
+        _iSelCur = parseInt(element.selectionIndex);
+
+    if (element.defaultSelection)
+        _iSelDefault = parseInt(element.defaultSelection);
+
+    if (element.autoExpand)
+        _bAutoExpand = ('false' != element.autoExpand) ? true : false;
+
+    if (element.freeze)
+        _bFreeze = ('false' != element.freeze) ? true : false;
+
+    if (element.feedBack)
+        _szFeedBack = element.feedBack;
+
+    if (element.templateSource)
+        _idTemplateSource = element.templateSource;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Set the datasource object and (optional) the recordset name.
+*/
+function _SetDataSourceObject(szDatasrc)
+{
+    var rgszDatasrc = szDatasrc.split('.');
+    
+    _ctlDataSource = window.document.applets(rgszDatasrc[0])
+
+    if (rgszDatasrc.length > 1)
+    {
+        _szRecordSetName = rgszDatasrc[1];
+    }
+    else
+        _szRecordSetName = "";
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the recordset if there is a datasource, otherwise return null.
+*/
+function _GetRecordset()
+{
+    var recordset = null;
+
+    if (_ctlDataSource)
+        recordset = _ctlDataSource.namedRecordset(_szRecordSetName);
+
+    return recordset;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Calculate the number of items per page.
+*/
+function _CalcItemsPerPage()
+{
+    if (null == _tblList || 0 == _tblList.rows.length)
+    {
+        _nItemsPerPage = 0;
+        return;
+    }
+        
+    // Determine how many items to jump over by dividing the height of the listbox
+    // (in pixels) by the height of an unselected (unexpanded) item (in pixels).
+    
+    // Pick whatever item isn't selected.  Choose first or last to make it easy.
+    var iItem = (_iSelCur != 0) ? 0 : _tblList.rows.length - 1;
+    var dySelItem = 0;
+
+    if (-1 != _iSelCur)
+        dySelItem = _tblList.rows(_iSelCur).offsetHeight;
+    
+    if (0 <= iItem)
+    {
+        var dyItem = _tblList.rows(iItem).offsetHeight;
+        if (0 != dyItem)
+        {
+            // Since the selection expands, exclude that from the height of
+            // the listbox, so we'll jump the right number of items.
+            _nItemsPerPage = Math.round((_divScroll.offsetHeight - dySelItem) / dyItem);
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Walk thru the element's html and find the specially-tagged spans.
+         The special spans can be tagged as follows:
+
+            lbDisplayName    - marks the element as the display name, which is
+                               drawn differently when selected.
+    
+            lbExpandedRow    - the innerHTML of this span is used to fill the iRow'th
+                               row in the layout table.  (Only works if the autoExpand
+                               property is set.)
+
+            lbDisable        - start off by having this particular template row disabled
+         
+*/
+function _ScanSpecialElements()
+{
+    var i;
+    var elem;
+
+    // Was a templateSource provided?
+    if (_idTemplateSource)
+    {
+        // Yes; use that as the source for the template rows
+        elem = window.document.all(_idTemplateSource);
+    }
+    else
+    {
+        // No; default to the behavior's element
+        elem = element;
+    }
+    
+    // Scan the element for special spans
+    
+    var rgspan = elem.all.tags("SPAN");
+    var cspan = rgspan.length;
+
+    for (i = 0; i < cspan; i++)
+    {
+        var span = rgspan[i];
+        
+        if (null != span.lbDisplayName)
+            _idDisplayName = span.id;       // Display name span
+    }
+
+    // Scan the element for special rows
+    
+    var rgtr = elem.all.tags("TR");
+    var ctr = rgtr.length;
+    for (i = ctr - 1; i >= 0; i--)
+    {
+        var trElem = rgtr[i];
+        
+        if (null != trElem.lbExpandedRow)
+        {
+            var bEnable = (null != trElem.lbDisable) ? false : true;
+            
+            // This is a template row used when expanding a selection.
+            // Remember the number of TD cells and their contents, so we
+            // can reapply them when expanding a selection.
+            _StoreTemplateRow(trElem, _cRowsExpand++, bEnable);
+
+            // Once it is stored, remove the expansion template
+            trElem.parentElement.deleteRow(trElem.rowIndex);
+        }
+    }
+    
+    // Save the element's orginal innerHTML since it will be overwritten later
+    _htmlRow = elem.innerHTML;
+
+    if (_idTemplateSource)
+    {
+        // Clear out the template source
+        // BUGBUG (scotth): is this really the right thing to do here?
+        elem.innerHTML = "";
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Prepare the behavior for adding the needed html elements.
+*/
+function _PrepHTML()
+{
+    if (false == _bFreeze)
+    {
+        // We have code that munges the format table.  We must wait for
+        // the document to be loaded before we can do that, so most of 
+        // the work is deferred to then.
+        window.attachEvent("onload", _OnDocumentLoad);
+
+        // In the meantime, make the behavior hidden to reduce the flashing
+        element.style.display = 'none';
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Adds the HTML code to the main document to display the listbox.  The
+         listbox is composed of a table.  The table may be databound.  
+
+         If the table is databound, the behavior element is treated as the template
+         row for the databound table.
+
+         If the table is not databound, the first table in the behavior element
+         is considered the skeleton of the list.  I.e., each row in the table is a 
+         row in the listbox.
+*/
+function _CreateHTML()
+{
+    // Is this list databound?
+    if (_idDataSource)
+    {
+        // Yes; the behavior element is considered the template row for the
+        // databound table's repeating agent.
+        
+        // The DIV is for the scrollbar.  The TABLE inside the DIV is the databound
+        // table.  
+        
+        element.innerHTML = 
+        '<DIV ' + c_szStyle_Background + '> ' +
+        '   <DIV ' + c_szStyle_Feedback + '> ' + 
+                 _szFeedBack                    +
+        '   </DIV>'                             +          
+        '   <TABLE id=idTbl_' + uniqueID + ' ' + c_szStyle_Table + ' datasrc=#' + _idDataSource + ' cellpadding=0 cellspacing=0 style="display:none"> '  +
+        '       <TBODY>                     '   +
+        '           <TR> '                      +
+        '               <TD width=100%>     '   +
+                            _htmlRow            +
+        '               </TD> '                 +
+        '           </TR> '                     +
+        '       </TBODY> '                      +
+        '   </TABLE> '                          +
+        '</DIV';
+
+        _dvFeedBack = element.children[0].children[0];
+        _tblList = element.children[0].children[1];
+        if (_szFeedBack == "")
+            _dvFeedBack.style.display = 'none';
+        else 
+            _tblList.style.display = 'none';
+
+        // Wait on the 'onreadystatechange' so we know when the table is ready
+        _tblList.attachEvent("onreadystatechange", _OnTableReady);
+    }
+    else
+    {
+        // No; the behavior element uses the first table as the model of the list
+
+        // Is there any html in the element?
+        if ("" == _htmlRow)
+        {
+            // No; make up a simple table so we will keep working
+            _htmlRow = '<TABLE></TABLE>';
+        }
+        
+        element.innerHTML = 
+        '<DIV ' + c_szStyle_Background + '> ' +
+        _htmlRow +
+        '</DIV';
+        
+        _tblList = element.children[0].children[0];
+        
+        // Now display the behavior's element
+        element.style.display = '';
+    }
+
+    _divScroll = element.children[0];
+
+    _divScroll.attachEvent("onresize", _OnResize);
+    _tblList.attachEvent("onclick", _OnClick);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Copies certain properties from one element to another
+*/
+function InheritProperties(elemTo, elemFrom)
+{
+    elemTo['id'] = elemFrom['id'];
+    elemTo['className'] = elemFrom['className'];
+
+    if (elemTo._bStore)
+        elemTo['tagName'] = elemFrom['tagName'];
+
+    // The innerHTML is readonly for TR's 
+    if ('TR' != elemFrom['tagName'])
+        elemTo['innerHTML'] = elemFrom['innerHTML'];
+
+    elemTo['colSpan'] = elemFrom['colSpan'];
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Take the trTemplate and store it in the table store at iRowStore
+*/
+function _StoreTemplateRow(trTemplate, iRowStore, bEnable)
+{
+    var ctd = trTemplate.cells.length;
+    var i;
+    var rowStore = new Array(ctd);
+
+    rowStore._ctd = ctd;
+    rowStore._bStore = true;
+    rowStore._bEnable = bEnable;
+    InheritProperties(rowStore, trTemplate);
+    
+    // Walk thru the cells and remember their contents
+    for (i = 0; i < ctd; i++)
+    {
+        rowStore[i] = new Object();
+
+        rowStore[i]._bStore = true;
+        InheritProperties(rowStore[i], trTemplate.cells(i));
+    }
+
+    // Save this row
+    _rgTemplateRows[iRowStore] = rowStore;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Deletes the expansion rows to collapse the selection
+*/
+function _CollapseRow(tblElem)
+{
+    // Collapse the item by removing the expansion rows from 
+    // the format table
+    var cRow = _cRowsAdded;
+
+    for (; 0 < cRow; cRow--)
+    {
+        tblElem.deleteRow();
+    }
+
+    _cRowsAdded = 0;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Inserts the expansion rows to expand the selection
+*/
+function _ExpandRow(tblElem)
+{
+    // Collapse the item by removing the expansion rows from 
+    // the format table
+    var iRow;
+    
+    _cRowsAdded = 0;
+
+    // The templates were added backwards, so insert them backwards so
+    // they come out correct.
+    for (iRow = _cRowsExpand - 1; iRow >= 0; iRow--)
+    {
+        var rowTemplate = _rgTemplateRows[iRow];
+
+        // Is this template enabled?
+        if (rowTemplate._bEnable)
+        {
+            // Yes
+            var trNew = tblElem.insertRow();
+            if (trNew)
+            {
+                var cCol = rowTemplate._ctd;
+                var iCol;
+
+                InheritProperties(trNew, rowTemplate);
+                
+                for (iCol = 0; iCol < cCol; iCol++)
+                {
+                    var tdNew = trNew.insertCell();
+                    if (tdNew)
+                        InheritProperties(tdNew, rowTemplate[iCol]);
+                }
+                
+                _cRowsAdded++;
+            }
+        }
+    }
+}
+
+
+// ApplySelectionStyle states
+var ASF_SELECT      = 0x01;
+var ASF_FOCUS       = 0x02;
+
+/*-------------------------------------------------------------------------
+Purpose: Helper to apply the right styles to the selection
+         depending on the focus state.
+*/
+function _ApplySelectionStyle(tblElem, state)
+{
+    // Determine the different elements to change
+    var elemDisplayName = tblElem.all(_idDisplayName);
+    var trDisplayName = _GetParentElem(elemDisplayName, "TR");
+
+    if (state & ASF_SELECT)
+    {
+        // Select; apply the correct class names
+
+        if (state & ASF_FOCUS)
+        {
+            trDisplayName.style.backgroundColor = 'highlight';
+            trDisplayName.style.color = 'highlighttext';
+            
+            elemDisplayName.style.fontWeight = 'bold';
+            
+            tblElem.style.backgroundColor = 'highlight';
+            tblElem.style.color = 'highlighttext';
+        }
+        else
+        {
+            trDisplayName.style.backgroundColor = 'buttonface';
+            trDisplayName.style.color = '';
+
+            elemDisplayName.style.fontWeight = 'bold';
+
+            tblElem.style.backgroundColor = 'buttonface';
+            tblElem.style.color = '';
+        }
+    }
+    else
+    {
+        // Deselect; remove the class names and revert to the 
+        // default styles
+        trDisplayName.style.backgroundColor = '';
+        trDisplayName.style.color = '';
+
+        elemDisplayName.style.fontWeight = '';
+
+        tblElem.style.backgroundColor = '';
+        tblElem.style.color = '';
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Adjusts the scroll position to assure the given TR row 
+         (typically the selection) is visible.
+*/
+function _MakeRowVisible(trSel)
+{
+    var yTop = trSel.offsetTop - _divScroll.scrollTop;
+    var yBottom = trSel.offsetTop + trSel.offsetHeight - _divScroll.scrollTop;
+
+    // Is the bottom of the row below the listbox?
+    if (yBottom > _divScroll.offsetHeight)
+    {
+        // Yes; adjust
+        _divScroll.scrollTop += yBottom - _divScroll.offsetHeight;
+    }
+    // Is the top of the row above the listbox?
+    else if (yTop < 0)
+    {
+        // Yes; adjust
+        _divScroll.scrollTop += yTop;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Sets the tabIndex so this element can receive the focus.
+
+         It is only useful to set the tabIndex so the element can receive
+         the focus in the future (like when the user tabs to it).  Setting
+         the tabIndex does not change the focus in and of itself.
+*/
+function _SetTabIndex(elem, bSet, bFireFocus)
+{
+    if (elem)
+    {
+        if (bSet)
+        {
+            // TraceMsg('_SetTabIndex( ' + bSet + ', ' + bFireFocus + ')  _bHasFocus = ' + _bHasFocus);
+            
+            // We're setting the tabIndex on the SPAN in the TD.  We could set
+            // the tabIndex on the TD, but Trident's spec says that
+            // the MSAA aides get the Name of a TD from its title.  But setting
+            // the title means we see a tooltip.  No good.
+            //
+            // Alternatively, we can set the tabIndex on the span that shows the
+            // display name.  This is what we'll do.
+
+            elem.tabIndex = 0;
+
+            // We're checking for a couple of things here:
+            //
+            //  1) We only want to set the focus if we think the listbox already
+            //     has the focus.  It isn't friendly to steal the focus from another
+            //     control on the page!
+            //  2) It is possible that the focus event was already fired on this 
+            //     element just prior to us getting here, in which case firing
+            //     another focus will do nothing (and mess us up because we set
+            //     _bInternalFocusChange...with nothing to reset it!)
+            //     
+            if (bFireFocus && _bHasFocus && !elem._bFocus)
+            {
+                // Set the focus so the MSAA event is fired
+                // TraceMsg('_SetTabIndex firing focus');
+                _bInternalFocusChange = true;
+                elem.focus();
+            }
+        }
+        else
+            elem.tabIndex = -1;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Attach to some events for the given item.
+*/
+function _AttachItemEvents(elem)
+{
+    // Because the selected item can get the focus, we want to 
+    // attach to some events for it.  
+    //
+    // Events are inexpensive to be bound to, but they can be
+    // expensive when initially binding.  So we will bind to them
+    // on demand (ie, as the item is selected), and keep them bound
+    // even if another item is selected.  This is okay.
+    
+    if (elem)
+    {
+        // Have we bound to the events for this item yet?
+        if (null == elem._lbEventsBound)
+        {
+            // No; do it now
+            elem._lbEventsBound = true;
+            elem.attachEvent("onkeydown", _OnKeyDownItem);
+            elem.attachEvent("onblur", _OnBlurItem);
+            elem.attachEvent("onfocus", _OnFocusItem);
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the root child of the given row.  This is first child
+         of the first TD of the row.  Typically this is where the row's
+         content begins.
+*/
+function _GetItemSrcChild(trElem)
+{
+    if (trElem)
+    {
+        return trElem.children[0].children[0];
+    }
+    return null;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the display name element of the given row.
+*/
+function _GetItemDisplayNameElem(trElem)
+{
+    var srcChild = _GetItemSrcChild(trElem);
+    
+    if (srcChild)
+        return srcChild.all(_idDisplayName);
+
+    return null;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Select an item.  The order of events that are fired is:
+
+         Special autoExpand case:
+         
+         The contents of an item may be anything (pretty much).  One exception
+         is if autoExpand property is set.  In this case, the content must be another
+         table (called the layout table here), which is used to format the layout
+         of each item.  When selected, the listbox will add any number of rows to
+         the layout table, as specified by the expandNumRows property.
+
+         Returns true if the selection was set.
+*/
+function _SelectItem(iSelNew, bFireFocus)
+{
+    var bRet = false;
+    var trElem;
+    var srcChild;
+    var elemDisplayName;
+    var stateFocus = _bHasFocus ? ASF_FOCUS : 0;
+
+    // Is a row already selected?
+    if (-1 != _iSelCur)
+    {
+        // Yes; is it the same one being selected?
+        if (iSelNew == _iSelCur)
+        {
+            // Yes; ignore it and return
+            return false;
+        }
+
+        trElem = _tblList.rows(_iSelCur);
+        srcChild = _GetItemSrcChild(trElem);
+        elemDisplayName = srcChild.all(_idDisplayName);
+        
+        _FireCustomDraw(trElem, srcChild, false, 'prepaint');
+        
+        // Fire event to deselect it
+        _FireSelectItem(trElem, srcChild, 'deselected');
+
+        // Draw to deselect it
+        _ApplySelectionStyle(srcChild, stateFocus);
+        
+        if (_bAutoExpand)
+            _CollapseRow(srcChild);
+
+        // Fire event
+        _FireCustomDraw(trElem, srcChild, false, 'postpaint');
+
+        // Remove the tabIndex since this item is no longer selected
+        _SetTabIndex(elemDisplayName, false, false);
+
+        // We don't detach the events, because we don't need to
+    }
+
+    // Check boundaries
+    if (0 == _tblList.rows.length)
+        iSelNew = -1;
+    else if (iSelNew >= _tblList.rows.length)
+        iSelNew = _tblList.rows.length - 1;
+        
+    // Remember it as the currently open item
+    _iSelCur = iSelNew;
+
+    if (-1 != _iSelCur)
+    {
+        var recordset = _GetRecordset();
+        
+        // Select the item
+        trElem = _tblList.rows(_iSelCur);
+        srcChild = _GetItemSrcChild(trElem);
+        elemDisplayName = srcChild.all(_idDisplayName);
+
+        // If this list is databound, update the record position
+        if (recordset && recordset.state != 0)
+            recordset.AbsolutePosition = trElem.recordNumber;
+
+        _FireCustomDraw(trElem, srcChild, true, 'prepaint');
+
+        // Draw to select it
+        _ApplySelectionStyle(srcChild, ASF_SELECT | stateFocus);
+        
+        if (_bAutoExpand)
+            _ExpandRow(srcChild);
+        
+        _MakeRowVisible(trElem);
+
+        _FireCustomDraw(trElem, srcChild, true, 'postpaint');
+        
+        // Fire event to select it
+        _FireSelectItem(trElem, srcChild,'selected');
+
+        // Set the tabIndex. The tabIndex is set so MSAA can receive 
+        // notifications of 'focus' change as each item is selected.
+        // Also, don't fire the focus event if this selection is due
+        // to a mouse action -- the focus event will automatically
+        // be fired.
+        _SetTabIndex(elemDisplayName, true, bFireFocus);
+
+        _AttachItemEvents(elemDisplayName);
+        
+        bRet = true;
+    }
+
+    return bRet;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Set the focus state of the selected item
+*/
+function _PaintSelectedItem(stateFocus)
+{
+    if (-1 < _iSelCur)
+    {
+        // Select the item
+        var trElem = _tblList.rows(_iSelCur);
+        if (trElem)
+        {
+            var srcChild = _GetItemSrcChild(trElem);
+            if (srcChild)
+            {
+                var elemDisplayName = srcChild.all(_idDisplayName);
+                
+                _ApplySelectionStyle(srcChild, ASF_SELECT | stateFocus);
+                _FireSetFocus(trElem, srcChild, stateFocus & ASF_FOCUS);
+            }
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onSelectItem' to the document
+*/
+function _FireSelectItem(trElem, srcChild, szState)
+{
+    var evt = createEventObject();
+    evt.srcIndex = _iSelCur;
+    evt.srcRow = trElem;
+    evt.selState = szState;
+    evt.srcChild = srcChild;
+    evt.Recordset = _GetRecordset();
+    onSelectItem.fire(evt);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onCustomDraw' to the document
+*/
+function _FireCustomDraw(trElem, srcChild, bSelected, drawStage)
+{
+    var evt = createEventObject();
+    evt.srcIndex = _iSelCur;
+    evt.srcRow = trElem;
+    evt.srcChild = srcChild;
+    evt.Recordset = _GetRecordset();
+    evt.drawStage = drawStage;              // 'prepaint' or 'postpaint'
+    evt.bSelected = bSelected;
+    evt.bFocus = _bHasFocus;
+    onCustomDraw.fire(evt);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onSetFocus' to the document
+*/
+function _FireSetFocus(trElem, srcChild, bFocus)
+{
+    var evt = createEventObject();
+    evt.srcIndex = _iSelCur;
+    evt.srcRow = trElem;
+    evt.srcChild = srcChild;
+    evt.bFocus = bFocus;
+    onSetFocus.fire(evt);
+}
+
+
+function _FindTemplateByID(id)
+{
+    var i;
+
+    for (i = 0; i < _cRowsExpand; i++)
+    {
+        if (_rgTemplateRows[i].id == id)
+            return _rgTemplateRows[i];
+    }
+    return null;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Enable/disable a given expanded template
+*/
+function EnableTemplate(idTemplate, bEnable)
+{
+    var rowTemplate = _FindTemplateByID(idTemplate);
+
+    if (rowTemplate)
+        rowTemplate._bEnable = bEnable ? true : false;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Cause the listbox to be reconstructed based upon the current
+         properties
+*/
+function Refresh()
+{
+    _ScanSpecialElements();
+    _CreateHTML();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Overridden method so we handle focus properly
+*/
+function focus()
+{
+    if (_tblList && -1 != _iSelCur)
+    {
+        var trElem = _tblList.rows(_iSelCur);
+        var elem = _GetItemDisplayNameElem(trElem);
+
+        if (elem)
+            elem.focus();
+    }
+    else
+    {
+        // We failed to really set the focus, but let's maintain 
+        // our state correctly, anyway.
+        _bHasFocus = true;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Overridden method so we handle blur properly
+*/
+function blur()
+{
+    if (_tblList && -1 != _iSelCur)
+    {
+        var trElem = _tblList.rows(_iSelCur);
+        var elem = _GetItemDisplayNameElem(trElem);
+
+        if (elem)
+            elem.blur();
+    }
+    else
+    {
+        // We failed to really remove the focus, but let's maintain 
+        // our state correctly, anyway.
+        _bHasFocus = false;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Should be bound to the 'onrowsdelete' event of the datasource object.
+*/
+function _OnRowsDelete()
+{
+    // Only handle events for my recordset!
+    if (window.event.qualifier == _szRecordSetName)
+    {
+        if (-1 != _iSelCur)
+        {
+            var trSelCur = _tblList.rows(_iSelCur);
+            var recordset = _GetRecordset();
+            var rsClone = recordset.Clone();
+            if (null != rsClone)
+            {
+                // (These bookmarks refer to record(s) that were deleted)
+                var rgbkmk = window.event.bookmarks;
+                var cbkmk = rgbkmk.length;
+                var i;
+
+                // For each bookmark that was deleted, see if it was the selected
+                // one.
+                for (i = 0; i < cbkmk; i++)
+                {
+                    // Navigate to the record (in the cloned recordset) that was 
+                    // deleted in the real recordset.
+                    rsClone.Bookmark = rgbkmk(i);
+                    
+                    // Is the record that was deleted the same as what is currently
+                    // selected?
+                    if (rsClone.AbsolutePosition == trSelCur.recordNumber)
+                    {
+                        // Yes; select the row below this one.  Note the databinding
+                        // agent hasn't deleted the row yet, so we need to choose the
+                        // next one, but then adjust the selection index to accomodate
+                        // for the deletion
+
+                        var iSelT = _iSelCur + 1;
+                        var bDec = true;
+                        
+                        if (_iSelCur == _tblList.rows.length - 1)
+                        {
+                            iSelT = _iSelCur - 1;   // choose the one above, -1 is okay
+                            bDec = false;
+                        }
+                        
+                        _SelectItem(iSelT, true);
+
+                        if (bDec)
+                        {
+                            // Adjust the selection index since we know the row above will
+                            // be deleted
+                            _iSelCur--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Called to reset the selection state.  The table may be rebuilding,
+         so there are no elements in the DOM to actually modify.
+*/
+function _InternalResetSelection()
+{
+    _iSelCur = -1;
+    _cRowsAdded = 0;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Called to reset the selection.  Typically this happens when the dataset
+         has changed in the databound table.
+
+*/
+function ResetSelection()
+{
+    _SelectItem(-1, true);
+}
+
+
+// Key codes
+var KC_UP       = 38;
+var KC_DOWN     = 40;
+var KC_END      = 35;
+var KC_HOME     = 36;
+var KC_PGUP     = 33;
+var KC_PGDOWN   = 34;
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onKeyDown events on the behavior
+*/
+function _OnKeyDown()
+{
+    var keyCode = window.event.keyCode;
+
+    switch (keyCode)
+    {
+    case KC_UP:
+    case KC_DOWN:
+    case KC_END:
+    case KC_HOME:
+    case KC_PGUP:
+    case KC_PGDOWN:
+    
+        // Cancel event so div doesn't scroll independently.
+        window.event.returnValue = false;
+        break;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onKeyDown events on the item
+*/
+function _OnKeyDownItem()
+{
+    var keyCode = window.event.keyCode;
+    var iSelT = _iSelCur;
+    var bDoSomething = false;
+
+    switch (keyCode)
+    {
+    case KC_UP:
+        if (iSelT > 0)
+            iSelT--;
+        break;
+
+    case KC_DOWN:
+        if (iSelT < _tblList.rows.length - 1)
+            iSelT++;
+        break;
+
+    case KC_HOME:
+        iSelT = 0;
+        break;
+
+    case KC_END:
+        iSelT = _tblList.rows.length - 1;
+        break;
+
+    case KC_PGUP:
+        iSelT = _iSelCur - _nItemsPerPage;
+        if (iSelT < 0)
+            iSelT = 0;
+        break;
+        
+    case KC_PGDOWN:
+        iSelT = _iSelCur + _nItemsPerPage;
+
+        if (iSelT > _tblList.rows.length - 1)
+            iSelT = _tblList.rows.length - 1;
+        break;
+    }
+
+    if (iSelT != _iSelCur)
+    {
+        _SelectItem(iSelT, true);
+
+        // Cancel event so div doesn't scroll independently
+        window.event.returnValue = false;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onResize event for the scrolling div
+*/
+function _OnResize()
+{
+    _CalcItemsPerPage();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Debug spew
+*/
+/* Fake version 
+function TraceFocusMsg(sz, elem)
+{
+    var trTopParent = _GetTopmostElem(elem, "TR");
+    var iRow = "??";
+    var szFocus = " ";
+    var szInternal = " ";
+
+    if (trTopParent)
+        iRow = trTopParent.rowIndex;
+    if (_bHasFocus)
+        szFocus = " bHasFocus";
+    if (_bInternalFocusChange)
+        szInternal = " internal";
+        
+    // TraceMsg(sz + ' ' + iRow + szFocus + szInternal);
+}
+*/
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onClick event
+*/
+function _OnClick()
+{
+    var elem = window.event.srcElement;
+
+    // TraceFocusMsg('onclick', elem);
+
+    // A lot of this work is done because of Trident's inane view of focus.
+    // Trident doesn't have the concept that a group of elements can make up
+    // a single, logical entity, and then treat one as a part of the whole.  
+    //
+    // Because of this, we have a bunch of elements, and we designate one of 
+    // them (the display name span) to be the representative element for focus
+    // issues.  That is, if the listbox item is selected and focus goes to the 
+    // listbox, we set the display name span of that item to have the focus.
+    // 
+    // This presents wierd behavior whenever other elements (which make up that
+    // item) are clicked: the focus goes away from the display name span.  Not 
+    // what we want.  So we must re-set the focus back to the span in this case.
+
+    // Walk up the chain of elements until we find the _tblList's row that was clicked
+    var trTopParent = _GetTopmostElem(elem, "TR");
+
+    // Did we find a row at all (we wouldn't in an empty table)?
+    if (trTopParent)
+    {
+        // Yes; select the item
+        var elemDisplayName = trTopParent.all(_idDisplayName);
+        var iRow = trTopParent.rowIndex;
+        var bFireFocus = true;
+        var bOldFocus = _bHasFocus;
+        
+        // Was the display name itself clicked and will it automatically get
+        // the focus (because it already has tabIndex set)?
+        if (elem == elemDisplayName && iRow == _iSelCur)
+        {
+            // Yes; then don't bother explicitly setting the focus to it.
+            // TraceMsg(elemDisplayName.innerText + ' ' + elem._bFocus + ' don't fire focus');
+            bFireFocus = false;
+        }
+        
+        _bHasFocus = true;
+
+        // Do we need to repaint the selection according to the state change?
+        if (false == _SelectItem(iRow, bFireFocus) && 
+            bOldFocus != _bHasFocus)
+        {
+            // Yes
+            _PaintSelectedItem(ASF_FOCUS);
+            
+            if (bFireFocus)
+            {
+                // Set the focus so the MSAA event is fired
+                // TraceMsg('_onClick invoking _SetTabIndex');
+                _SetTabIndex(elemDisplayName, true, true);
+            }
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onBlur event.  Change the selection color so it is clear
+         the list no longer has the focus.
+*/
+function _OnBlurItem()
+{
+    var elem = window.event.srcElement;
+
+    elem._bFocus = false;
+    
+    // TraceFocusMsg('onblur', elem);
+
+    if (true == _bHasFocus && false == _bInternalFocusChange)
+    {
+        _bHasFocus = false;
+        
+        // Redraw the current selection to indicate this control
+        // has lost the focus
+        _PaintSelectedItem(0);
+    }
+    _bInternalFocusChange = false;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onFocus event.  Change the selection color.
+
+         The currently selected item has the tabIndex property == 0.  This 
+         handles the case when the user tabs around the page.
+
+         The second case is if the user uses the mouse to select one
+         of the listbox entries.  In this case, the anchor will not 
+         receive focus, but we have to pretend as if it did.  This is
+         why _bHasFocus keeps track of this.
+*/
+function _OnFocusItem()
+{
+    var elem = window.event.srcElement;
+
+    elem._bFocus = true;
+    
+    // TraceFocusMsg('onfocus', elem);
+
+    if (false == _bHasFocus)
+    {
+        _bHasFocus = true;
+
+        // Redraw the current selection to indicate this control
+        // has focus now
+        _PaintSelectedItem(ASF_FOCUS);
+    }
+    _bInternalFocusChange = false;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onerror event
+*/
+function _OnError(szMsg, szUrl, iLine)
+{
+    // Prevent scripting errors from displaying ugly messages
+    alert("An unexpected error occurred.\n\n" + szMsg + "\n" + szUrl + "\nLine: " + iLine);
+    return true;    // Suppress IE error messaging
+}
+
+
+
+
+/*-------------------------------------------------------------------------
+Purpose: Finds and returns the topmost element of type tagFind, or null if 
+         not found
+*/
+function _GetTopmostElem(elem, tagFind)
+{
+    // Walk up the chain of elements until we find the immediate parent row element
+    var elemLast = null;
+
+    while (elem != element)
+    {
+        if (tagFind == elem.tagName.toUpperCase())
+            elemLast = elem;
+        elem = elem.parentElement;
+    }
+    
+    return elemLast;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Finds and returns the immediate parent element of type tagFind, or 
+         null if not found
+*/
+function _GetParentElem(elem, tagFind)
+{
+    // Walk up the chain of elements until we find the immediate parent row element
+    while (elem != element)
+    {
+        if (tagFind == elem.tagName.toUpperCase())
+            return elem;
+        elem = elem.parentElement;
+    }
+    
+    return null;
+}
+
+</SCRIPT>
+
+
+//------------------------------------------------------------------------
+// Properties
+//------------------------------------------------------------------------
+
+<PROPERTY name="dataSource"         get=get_dataSource          put=put_dataSource />
+<PROPERTY name="selectionIndex"     get=get_selIndex            put=put_selIndex />
+<PROPERTY name="defaultSelection"   get=get_defaultSel          put=put_defaultSel />
+<PROPERTY name="autoExpand"         get=get_autoExpand          put=put_autoExpand />
+<PROPERTY name="freeze"             get=get_freeze              put=put_freeze />
+<PROPERTY name="feedBack"           get=get_feedBack            put=put_feedBack />
+<PROPERTY name="templateSource"     get=get_templateSource      put=put_templateSource />
+</PUBLIC:HTC>

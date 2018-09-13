@@ -1,0 +1,23 @@
+;******************************************************************************
+;
+;   Source File: ICMUi.Def
+;
+;   This defines the exports from the ICMUI Library
+;
+;   Copyright (c) 1996 by Microsoft Corporation
+;
+;   A Pretty Penny Enterprises Production
+;
+;   Change History:
+;   10-28-96 a-robkj@microsoft.com  Created it, OLE in-proc server exports
+;   12-12-96 a-robkj@microsoft.com  Added exports for Application UI
+;   01-07-97 KjelgaardR@ACM.org     Added export for open via RunDLL32
+;
+;******************************************************************************
+
+NAME    ICMUI.DLL
+EXPORTS
+    DllCanUnloadNow   PRIVATE
+    DllGetClassObject PRIVATE
+    SetupColorMatchingA
+    SetupColorMatchingW

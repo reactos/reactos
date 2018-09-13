@@ -1,0 +1,116 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+SYNCHRONIZE_BLOCK=1
+
+MAJORCOMP   = xmlpsr
+MINORCOMP   = dll
+
+COFFBASE    = msxml     # xmtok not defined in d:\nt\public\sdk\lib\coffbase.txt yet.
+
+# Do this to assure that we run on NT 4.0 and Win95, even with
+# NT5/Memphis headers.
+#
+
+MROOT=$(MAKEDIR:\xml\tokenizer\dll=)
+ROOT=$(MROOT)\xml\tokenizer
+!include $(ROOT)\common.inc
+
+TARGETNAME=   xmlpsr
+TARGETPATH=	  obj
+TARGETTYPE=   DYNLINK
+
+# Include makefile.inc
+NTTARGETFILES   =
+
+# Make sure the component libs are built before this.
+SYNCHRONIZE_DRAIN=1
+DLLDEF          = xmlpsr.def
+DLLENTRY        = _DllMainCRTStartup
+
+DELAYLOAD=urlmon.dll;oleaut32.dll
+
+
+TARGETLIBS = \
+            $(SDK_LIB_PATH)\iert.lib             \
+            $(SDK_LIB_PATH)\ole32.lib             \
+            $(SDK_LIB_PATH)\uuid.lib              \
+            $(SDK_LIB_PATH)\shlwapi.lib         	\
+            $(SDK_LIB_PATH)\shlwapip.lib         	\
+            $(SDK_LIB_PATH)\user32.lib            \
+            $(SDK_LIB_PATH)\shell32.lib           \
+            $(SDK_LIB_PATH)\kernel32.lib          \
+            $(SDK_LIB_PATH)\urlmon.lib            \
+            $(SDK_LIB_PATH)\oleaut32.lib          \
+            $(SDK_LIB_PATH)\version.lib 
+
+LINKLIBS        = \
+            $(MSXML)\include\$O\corepch.lib \
+            $(ROOT)\base\$O\tokbase.lib \
+            $(ROOT)\xmlstream\$O\xmlstream.lib \
+            $(ROOT)\encoder\$O\xmlencoder.lib \
+            $(ROOT)\parser\$O\xmlparser.lib \
+            $(ROOT)\net\$O\xmlnet.lib \
+!IFDEF _DEBUG
+	    $(SDK_LIB_PATH)\libcd.lib\
+	    $(MSXML_DEBUG_LIB) 
+!endif
+
+
+SOURCES =  \
+    MyClassFactory.cxx \
+    xmlpsr.cxx \
+    messages.mc \
+    xmlpsr.rc
+
+LOCALIZED_RESOURCES=messages.mc
+
+INCLUDES= \
+	$(ROOT); \
+	$(MSXML)\include; \
+    $(MSXML)\debug\include;\
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(MSXML)\include\$(O)core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(MSXML)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+CONDITIONAL_INCLUDES=\
+	macwin32.h\
+	macocidl.h\
+	winwlm.h\
+	rpcerr.h\
+	macname1.h\
+	macname2.h\
+	macpub.h\
+	macapi.h\
+	shlwapip.h\
+	rpcmac.h\
+	pure.h\
+	codepage.h

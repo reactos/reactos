@@ -1,0 +1,15 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <version.h>
+
+#define VER_FILETYPE			VFT_APP
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Shell Drag and Drop test app"
+#define VER_INTERNALNAME_STR		"shdrag"
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1999"
+#define VER_ORIGINALFILENAME_STR	"SHDRAG.EXE"
+
+
+
+#include <common.ver>

@@ -1,0 +1,32 @@
+#include <windows.h>
+#include <winver.h>
+
+#define WinSockVersion 1
+1 MESSAGETABLE res.bin
+
+WinSockVersion VERSIONINFO
+FILEVERSION 5,3,0,2
+PRODUCTVERSION 5,3,0,0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_APP
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4"
+		BEGIN
+			VALUE "CompanyName", "Hummingbird Communications Ltd.\0"
+			VALUE "FileDescription", "Hummingbird Socks V4 Winsock stub\0"
+			VALUE "FileVersion", "5.3.0.2\0"
+			VALUE "InternalName", "WSOCK32\0"
+			VALUE "OriginalFilename", "WSOCK32\0"
+			VALUE "ProductName", "Socks V4\0"
+			VALUE "ProductVersion", "5.3.0.0\0"
+			VALUE "LegalCopyright", "Copyright \251 Hummingbird Communications Ltd. 1990-1996\0"
+		END
+	END
+	BLOCK "VarFileInfo"
+		BEGIN	VALUE "Translation", 0x409, 0x4e4
+	END
+END
+
+ 

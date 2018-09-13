@@ -1,0 +1,150 @@
+/*---------------------------------------------------------------------------*\
+| WINCHAT RESOURCE FILE
+|   This module defines the resources for the WinChat application
+|
+|
+| Copyright (c) Microsoft Corp., 1990-1993
+|
+| created: 01-Nov-91
+| history: 01-Nov-91 <clausgi>  created.
+|          01-Jul-92 <gaylep>   help text edited.
+|          29-Dec-92 <chriswil> port to NT, cleanup.
+|
+\*---------------------------------------------------------------------------*/
+#define RC_INVOLKED  // prevents RC-compiler from choking on pragma's.
+
+#include <windows.h>
+#include "winchat.h"
+#include "dialogs.h"
+
+#ifdef WIN32
+#include <ntverp.h>
+#endif
+
+
+// Include other resources.
+//
+#include "winchat.rcv"
+#include "dialogs.dlg"
+
+
+// This section defines the resources used
+// throughout the application.
+//
+IDBITMAP BITMAP buttons.bmp
+phone1   ICON   phone1.ico
+phone2   ICON   phone2.ico
+phone3   ICON   phone3.ico
+
+
+
+// This table defines the keyboard accelerators
+// for the applicaton.
+//
+IDACCELERATORS ACCELERATORS PRELOAD
+BEGIN
+    VK_F1, IDM_CONTENTS, VIRTKEY
+    VK_F6, IDM_SWITCHWIN, NOINVERT, VIRTKEY
+END
+
+
+
+// Application menu.
+//
+WinChatMenu MENU
+BEGIN
+    POPUP "&Conversation"
+        BEGIN
+                MENUITEM "&Dial...", IDM_DIAL
+        MENUITEM "&Answer" , IDM_ANSWER
+        MENUITEM "&Hang Up", IDM_HANGUP
+                MENUITEM SEPARATOR
+        MENUITEM "E&xit"   , IDM_EXIT
+        END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X"  , IDM_EDITCUT
+        MENUITEM "&Copy\tCtrl+C" , IDM_EDITCOPY
+        MENUITEM "&Paste\tCtrl+V", IDM_EDITPASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All"   , IDM_EDITSELECT
+    END
+    POPUP "&Options"
+        BEGIN
+        MENUITEM "&Preferences..."     , IDM_PREFERENCES
+        MENUITEM "&Font..."            , IDM_FONT
+        MENUITEM "Background &Color...", IDM_COLOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Toolbar"            , IDM_TOOLBAR
+        MENUITEM "&Status Bar"         , IDM_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Sou&nd"              , IDM_SOUND
+        END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics"             , IDM_CONTENTS
+                MENUITEM SEPARATOR
+        MENUITEM "&About Chat..."        , IDM_ABOUT
+    END
+END
+
+
+// This section defines the string constants for
+// the application.
+//
+STRINGTABLE     PRELOAD
+BEGIN
+    // Misc strings.
+    //
+    IDS_HELV                "MS Shell Dlg"                             // max 32
+    IDS_APPNAME             "Chat"                                      // max 32
+    IDS_SERVICENAME         "WinChat"                                   // max 32
+    IDS_SYSERR              "The application cannot start."             // max 64
+    IDS_DIALING             "Dialing %s ..."                            // max 64
+    IDS_CONNECTABANDON      "No longer attempting to connect"           // max 64
+    IDS_HANGINGUP           "Hung up"                                   // max 64
+    IDS_HASTERMINATED       "%s hung up"                                // max 64
+    IDS_CONNECTEDTO         "Connected to %s"                           // max 64
+    IDS_CONNECTING          "Connecting..."                             // max 64
+    IDS_ISCALLING           "%s is calling"                             // max 64
+    IDS_NOCONNECT           "The other computer did not respond"        // max 64
+    IDS_ALWAYSONTOP         "Always on &Top"                            // max 64
+    IDS_NOCONNECTTO         "No connection to %s"                       // max 64
+    IDS_NONETINSTALLED      "The network is not installed or enabled.  You will not be able\nto make a  remote connection.  Do you wish to continue dialing?"  // max 255
+
+    IDS_INISECTION          "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\IniFileMapping\\Winchat.ini"
+    IDS_INIPREFKEY          "USR:Software\\Microsoft\\Winchat\\Preferences"
+    IDS_INIFONTKEY          "USR:Software\\Microsoft\\Winchat\\Font"
+    IDS_INIRINGIN           "ringin.wav, Incoming Call"
+    IDS_INIRINGOUT          "ringout.wav, Outgoing Call"
+
+    IDS_TSNOTSUPPORTED      "This application cannot be used from a Terminal Server remote session."
+
+
+    // Menuhelp strings
+    //
+    MH_BASE+IDM_DIAL        "Makes a call to someone at another computer"
+    MH_BASE+IDM_ANSWER      "Answers an incoming call"
+    MH_BASE+IDM_HANGUP      "Hangs up and ends the current conversation"
+    MH_BASE+IDM_EXIT        "Quits Chat"
+    MH_BASE+IDM_EDITCUT     "Deletes selected text and places it onto the Clipboard"
+    MH_BASE+IDM_EDITCOPY    "Copies selected text onto the Clipboard"
+    MH_BASE+IDM_EDITPASTE   "Pastes the contents of the Clipboard at the cursor position"
+    MH_BASE+IDM_EDITSELECT  "Selects entire contents of window"
+    MH_BASE+IDM_PREFERENCES "Changes the layout of the Chat window"
+    MH_BASE+IDM_FONT        "Changes the font in the Chat window"
+    MH_BASE+IDM_COLOR       "Changes the background color of the Chat window"
+    MH_BASE+IDM_TOOLBAR     "Shows or hides the toolbar"
+    MH_BASE+IDM_STATUSBAR   "Shows or hides the status bar"
+    MH_BASE+IDM_SOUND       "Turns sound on and off"
+    MH_BASE+IDM_CONTENTS    "Displays the contents for Chat Help"
+    MH_BASE+IDM_SEARCHHELP  "Searches for a topic in Chat Help"
+    MH_BASE+IDM_HELPHELP    "Displays information about how to use Help"
+    MH_BASE+IDM_ABOUT       "Displays version information about Chat"
+    MH_BASE+IDM_TOPMOST     "Keeps this window in the foreground"
+
+    MH_POPUPBASE+0          "Commands for starting or ending conversations"
+    MH_POPUPBASE+1          "Commands for transferring text to and from the Clipboard"
+    MH_POPUPBASE+2          "Commands for customizing Chat"
+    MH_POPUPBASE+3          "Commands for displaying Chat Help"
+END

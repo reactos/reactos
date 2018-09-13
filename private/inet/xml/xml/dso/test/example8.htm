@@ -1,0 +1,179 @@
+<html>  
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 2</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+</OBJECT>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso2">
+</OBJECT>
+
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("invoice.xml");
+</SCRIPT>
+<SCRIPT>
+    var selectedRow;
+
+    function mousemove(which, e)
+    {
+        var e;
+        var color = ((which == "over") ? "yellow" : "");
+
+		e = window.event.srcElement;
+
+        while (e.tagName != "TR" && e.tagName != "TABLE")
+            e = e.parentElement;
+
+        if (e.tagName == "TR" && e.style.backgroundColor != "red")
+            e.style.backgroundColor = color;
+    }
+    function SelectCell(cell)
+    {
+        var innerrow = window.event.srcElement;
+        while (innerrow.tagName != "TR")
+            innerrow = innerrow.parentElement;
+        
+        var innertable = innerrow;
+        while (innertable.tagName != "TABLE")
+            innertable = innertable.parentElement;
+
+        var outerrow = window.event.srcElement;
+        while (outerrow.tagName != "TR")
+            outerrow = outerrow.parentElement;
+        
+        var outertable = outerrow;
+        while (outertable.tagName != "TABLE")
+            outertable = outertable.parentElement;
+
+		var doc = xmldso.XMLDocument;
+        var rows = outertable.rows;
+        var customer;
+        for (i=0; i < rows.length; i++) {
+            if (outerrow == rows(i)) {
+                var root = doc.documentElement;
+                customer = FindChild(root, "CUSTOMER", i);
+            } 
+        }
+
+        // found customer, now which order ?
+        var rows = innertable.rows;
+        var order;
+        for (i=0; i < rows.length; i++) {
+            if (innerrow == rows(i)) {
+                order = FindChild(customer, "ORDER", i);
+				var xml = order.xml;
+                xmldso2.XMLDocument.loadXML(xml);
+                if (selectedRow != null)
+                {
+                    selectedRow.style.backgroundColor = "";
+                }
+                selectedRow = rows(i);
+                selectedRow.style.backgroundColor = "red";
+            }
+        }
+
+
+    }
+
+    function FindChild(root, name, i)
+    {
+        var children = root.childNodes;
+        var count = 0;
+        for (j = 0; j < children.length; j++)
+        {
+            var child = children.item(j);
+            if (child.nodeName == name)
+            {
+                if (count == i)
+                {
+                    return child;
+                }
+                count++;
+            }
+        }
+        return null;
+    }
+
+</SCRIPT>
+</HEAD>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR="#ffffff" LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+<table align=right>
+<tr><td bgcolor=black><a href="Example7.htm">
+    <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Previous<b></font></a>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+    <td bgcolor=black><a href="Example9.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 8</h3>
+<P>
+This example shows how the XML DSO can display hierarchy, and through
+some JavaScript multiple dso's can be used to display different parts
+of the XML document.
+<P>
+
+<table width=100%>
+<TR><TD valign=top width=50%>
+
+<table width=100% bgcolor="#80E0D0" cellpadding=3 datasrc=#xmldso >
+<TR><TD>
+		<span datafld='NAME'></span>
+
+        <table width=100% bgcolor="lightblue" cellspacing=0 cellpadding=2 datasrc=#xmldso datafld='ORDER' >
+        <TR onMouseOver="mousemove('over',this)" 
+		    onMouseOut="mousemove('out',this)" 
+		    onclick="SelectCell(this)">
+            <TD><span datafld='OrderID'></span>
+	        <TD><span datafld='Salesperson'></span>
+	        <TD><span datafld='OrderDate'></span>
+        </TABLE>
+	</TD>			
+</TABLE>
+
+<TD valign=top width=50%>
+
+<table width=100% bgcolor="#D070B0"cellpadding=2 border=2 datasrc=#xmldso2 >
+<THEAD><TH align=left>Product<TH>Price<TH>Quantity<TH>Discount</THEAD>
+
+<TR><TD><span datafld='ProductName'></span>
+	<TD><span datafld='UnitPrice'></span>
+	<TD><span datafld='Quantity'></span>
+	<TD><span datafld='Discount'></span>
+</TABLE>
+
+</TABLE>
+<P>
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+
+  </body>
+</html>

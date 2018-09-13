@@ -1,0 +1,50 @@
+/*---------------------------------------------------------------------------*\
+| WINCHAT DIALOGS FILE
+|   This module defines the dialog resources used for the application.
+|
+|
+| Copyright (c) Microsoft Corp., 1990-1993
+|
+| created: 01-Nov-91
+| history: 01-Nov-91 <clausgi>  created.
+|          29-Dec-92 <chriswil> port to NT, cleanup.
+|
+\*---------------------------------------------------------------------------*/
+
+
+DLGINCLUDE RCDATA DISCARDABLE
+BEGIN
+    "DIALOGS.H\0"
+END
+
+
+IDD_CONNECT DIALOG 3, 19, 241, 48
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT       "Computer &Name:", 102            ,  6,  13,  55,  8
+    EDITTEXT                       IDC_CONNECTNAME,  66, 12, 115, 12, ES_AUTOHSCROLL | ES_OEMCONVERT
+    PUSHBUTTON  "OK"             , IDOK           , 193,  5,  40, 14, WS_GROUP
+    PUSHBUTTON  "Cancel"         , IDCANCEL       , 193, 23,  40, 14
+END
+
+
+IDD_PREFERENCES DIALOG 12, 23, 144, 99
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Preferences"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX   "Window Style:"      , -1                 ,                                        4,  2, 89, 49
+    GROUPBOX   "Partner's Message:" , -1                 ,                                        4, 53, 89, 41
+    CONTROL    "&Top and Bottom"    , ID_TOPANDBOTTOM, "Button", BS_AUTORADIOBUTTON | WS_GROUP,   9, 16, 62, 10
+    CONTROL    "&Side by Side"      , ID_SIDEBYSIDE  , "Button", BS_AUTORADIOBUTTON           ,   9, 33, 51, 10
+    GROUPBOX   ""                   , -1                         ,                                           75, 29,  5, 15, WS_GROUP
+    GROUPBOX   ""                   , -1                         ,                                           81, 29,  5, 15
+    GROUPBOX   ""                   , -1                         ,                                           75, 19, 12,  9
+    GROUPBOX   ""                   , -1                         ,                                           75, 13, 12,  9
+    CONTROL    "Use &Partner's Font", ID_RECEIVEPFONT, "Button", BS_AUTORADIOBUTTON           ,   9, 64, 82, 10
+    CONTROL    "Use &Own Font"      , ID_RECEIVEOFONT, "Button", BS_AUTORADIOBUTTON           ,   9, 78, 67, 10
+    PUSHBUTTON "OK"                 , IDOK           ,                                          100,  5, 40, 14
+    PUSHBUTTON "Cancel"             , IDCANCEL       ,                                          100, 22, 40, 14
+END

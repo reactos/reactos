@@ -1,0 +1,109 @@
+LIBRARY         MSXMLDBG
+; DESCRIPTION     "Microsoft XML Debug Library"
+
+EXPORTS
+
+    DoTracePointsDialog
+
+    EnableTag
+    SetDiskFlag
+    SetBreakFlag
+    IsTagEnabled
+    FindTag
+
+    RestoreDefaultDebugState
+
+    TagError
+    TagWarning
+    TagThread
+    TagAssertExit
+    TagAssertPop
+    TagMemoryStrict
+    TagCoMemoryStrict
+    TagMemoryStrictTail
+    TagMemoryStrictAlign
+    TagOLEWatch
+    TagRegisterTrace
+    TagRegisterOther
+    TagPerf
+
+    TaggedTrace
+    TaggedTraceEx
+    TaggedTraceListEx
+    TaggedTraceCallers
+
+    AssertImpl
+    AssertThreadDisable
+
+    CheckAndReturnResult
+
+    DbgPreAlloc
+    DbgPostAlloc
+    DbgPreFree
+    DbgPostFree
+    DbgPreRealloc
+    DbgPostRealloc
+    DbgPreGetSize
+    DbgPostGetSize
+    DbgMemoryTrackDisable
+    DbgCoMemoryTrackDisable
+    DbgMemoryBlockTrackDisable
+    DbgMemSetHeader
+    DbgTotalAllocated
+	PointerRequestFromActual
+	
+    DbgRegisterMallocSpy
+    DbgRevokeMallocSpy
+
+    TraceMemoryLeaks
+    ValidateInternalHeap
+
+    TraceFailL
+    TraceWin32L
+    TraceHR
+    TraceOLE
+    TraceEnter
+    TraceExit
+    SetSimFailCounts
+    ShowSimFailDlg
+    FFail
+    GetFailCount
+
+    DbgTrackItf
+
+    OpenViewObjectMonitor
+    OpenMemoryMonitor
+
+    OpenLogFile
+
+    DbgMemSetName
+    DbgMemGetName
+
+    WsClear
+    WsTakeSnapshot
+    WsGetModule
+    WsGetSection
+    WsSize
+    WsCount
+    WsTotal
+    WsStartDelta
+    WsEndDelta
+
+    DbgDumpProcessHeaps
+    DbgDumpMemory
+
+    IsFullDebug
+
+    PerfRegister
+    PerfLogFn
+    PerfTags
+    PerfClear
+    PerfDump
+
+    MtRegister
+    MtAdd
+    MtSet
+    MtOpenMonitor
+    MtLogDump
+
+    DbgSetTopUrl

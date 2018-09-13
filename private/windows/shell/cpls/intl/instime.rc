@@ -1,0 +1,131 @@
+/*++
+
+Copyright (c) 1994-1999,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    instime.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the IME Installer
+    for the Regional Options applet.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include "intl.h"
+
+
+
+
+//
+//  Bitmaps.
+//
+
+IDB_WIZARD         BITMAP    MOVEABLE PURE  "wizard.bmp"
+
+
+
+
+//
+//  Icons.
+//
+
+IDI_UNINSTALL      ICON      DISCARDABLE    "uninstal.ico"
+IDI_DISK_INSTALL   ICON      DISCARDABLE    "flopinst.ico"
+
+
+
+
+//
+//  Dialogs.
+//
+
+DLG_INSTALL DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+      WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Keyboard Layout/IME Install/Uninstall"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "To install a new keyboard layout or IME (input method editor) from a floppy disk or CD-ROM, click Install.",
+                    IDC_INSTALL_INSTR, 40, 7, 179, 20
+    PUSHBUTTON      "&Install...", IDC_BUTTON_SETUP, 155, 36, 60, 14
+    CONTROL         "", IDC_GROUPBOX1, "Static", SS_SUNKEN, 7, 58, 212, 1
+    ICON            IDI_DISK_INSTALL, IDC_INSTALL_ICON, 7, 7, 18, 20
+
+    LTEXT           "&To remove a keyboard layout or IME, select it from the list and click Remove.",
+                    IDC_UNINSTALL_INSTR, 40, 67, 180, 40
+    LISTBOX         IDC_REGISTERED_IME, 7, 105, 212, 88,
+                    LBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&Remove...", IDC_UNINSTALL, 85, 194, 60, 14
+    PUSHBUTTON      "Close", IDOK, 155, 194, 60, 14
+
+    ICON            IDI_UNINSTALL, IDC_UNINSTALL_ICON, 7, 67, 18, 20
+END
+
+
+DLG_SETUP DIALOG DISCARDABLE  0, 0, WIZ_CXDLG, WIZ_CYDLG
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+      WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Install Keyboard Layout/IME From Floppy Disk or CD-ROM"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZARD, IDC_WIZARD_BMP, "Static",
+                    SS_CENTERIMAGE | SS_BITMAP | SS_SUNKEN,
+                    0, 0, WIZ_CXBMP, WIZ_CYDLG
+    LTEXT           "", IDC_SETUP_MSG, WIZ_BODYX, 0, WIZ_BODYCX, 33
+    ICON            0, IDC_SEARCH_ICON, 104, 40, 18, 20
+    LTEXT           "", IDC_SEARCH_NAME, 127, 46, 146, 8
+END
+
+
+DLG_SETUP_BROWSE DIALOG DISCARDABLE  0, 0, WIZ_CXDLG, WIZ_CYDLG
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+      WS_SYSMENU | DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Run Installation Program"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZARD, IDC_WIZARD_BMP, "Static",
+                    SS_CENTERIMAGE | SS_BITMAP | SS_SUNKEN,
+                    0, 0, WIZ_CXBMP, WIZ_CYDLG
+    LTEXT           "", IDC_SETUP_MSG, WIZ_BODYX, 0, WIZ_BODYCX, 40
+//  CONTROL         "", IDC_IME_LIST, WC_LISTVIEW,
+//                  WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL |
+//                  LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT |
+//                  LVS_NOCOLUMNHEADER | LVS_SORTASCENDING,
+//                  94, 44, 177, 70
+    LISTBOX         IDC_IME_LIST, 94, 44, 177, 70,
+                    LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Have Disk...", IDC_HAVE_DISK, 206, 123, 66, 14
+    ICON            IDI_DISK_INSTALL, IDC_CLASS_ICON, 94, 0, 18, 20
+    LTEXT           "Select the Keyboard Layout/IME that you want to install, then click OK. If you have an installation disk for this component, click Have Disk.",
+                    IDC_IME_TEXT, 94, 0, 170, 40
+END
+
+
+
+
+//
+//  String Tables.
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INSERT_DISK          "Insert the product's first installation floppy disk or CD-ROM, and then click Next."
+    IDS_SEARCHING            "Please wait while Windows looks for the Keyboard Layout/IME installation program."
+    IDS_APP_NAME             "Keyboard Layout/IME Installer"
+    IDS_CANNOT_REMOVE_IME    "Cannot remove the Keyboard Layout/IME!"
+    IDS_CANNOT_INSTALL_IME   "Cannot install the Keyboard Layout/IME!"
+    IDS_UNINSTALL_MISSED     "Missing uninstall information!  Continue uninstall?"
+    IDS_LOAD_FROM_DISK       "Install From Disk"
+    IDS_LAYOUT_EXIST         "This Layout value has already been registered. Do you wish to overwrite the existing one?"
+END

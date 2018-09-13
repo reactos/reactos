@@ -1,0 +1,17 @@
+!IF 0
+
+The bindrop directory is a drop point for binaries (dll, lib, exe) that are
+not built, but need to be binplaced.
+
+!ENDIF
+
+TARGETNAME=
+TARGETTYPE=NOTARGET
+TARGETPATH=
+
+SOURCES=
+
+# makefile.def will binplace any file listed in the MISCFILES macro.
+
+MISCFILES = \
+    *.cur

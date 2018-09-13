@@ -1,0 +1,18 @@
+ROOT=$(MAKEDIR:\src\dlay\types=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=
+TARGETTYPE=NOTARGET
+TARGETPATH=obj
+SOURCES= \
+   std.idl
+
+NTTARGETFILES=$(SDK_INC_PATH)\std.h
+
+INCLUDES= \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\dlay\include; \
+    $(ROOT)\src\core\types; \
+    $(ROOT)\src\ctrl\types;
+
+C_DEFINES = $(C_DEFINES) /DMUNGETYPELIB=1

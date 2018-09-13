@@ -1,0 +1,9 @@
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Joystick Control Panel\0"
+#define VER_INTERNALNAME_STR        "joystick\0"
+#define VER_ORIGINALFILENAME_STR    "JOYSTICK.DLL"
+
+#include <common.ver>

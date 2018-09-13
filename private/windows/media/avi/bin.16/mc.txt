@@ -1,0 +1,407 @@
+This document describes how messages will be input, stored and formatted
+by a Win32 application.
+
+1.  Message Input
+
+    Messages are input as ASCII text in a text file.  The format of this
+    file supports specifying multiple versions of the same message text,
+    one for each language supported.  It also supports automatic assignment
+    of code numbers to each message, along with the generation of a C
+    language include file for use by the application for accessing the
+    messages using symbolic constants.  The purpose of the message text
+    file is to define all of the messages needed by an application, in a
+    format that makes it easy to support multiple languages with the same
+    image file.
+
+    Message text files are converted into binary resource files by the
+    MC program.  These binary resource files are then input to the RC
+    compiler which will put them in the resource table for an
+    application or DLL.
+
+    The format of the message text file (default extension is .mc).
+    Basic syntax is Keyword=Value, where spaces around the equal sign
+    are ignored, and the value is delimited by white space from the next
+    keyword=value pair.  Case is ignored when comparing against keyword
+    names.  The value portion can either be a numeric integer constant,
+    {NUMBER}, using C syntax; a symbol name, {NAME}, that follows the
+    rules for C identifier names; or a file name that follows the
+    rules for the FAT file system (8 characters or less, no periods).
+
+    Comment lines are allowed in the message text file.  The comment
+    syntax is the same as for WIN.INI, namely a semicolon begins a
+    comment which is terminated by the end of the line.  Comments that
+    exist by themselves on a line are copied as is to the output .h
+    file, with the semicolon converted to the C end of line comment
+    syntax (//).
+
+    The overall structure of a message text file consists of a header
+    section which contains zero or more of the following keywords:
+
+        MessageIdTypedef={NAME}
+        SeverityNames=({NAME}={NUMBER}:{NAME})
+        FacilityNames=({NAME}={NUMBER}:{NAME})
+        LanguageNames=({NAME}={NUMBER}:{FILENAME})
+
+    These keywords have the following meaning:
+
+        MessageIdTypedef - gives a symbolic name that is output as the
+            typedef name for each numeric MessageId value.  The default
+            value for this is NULL, which means there will be no type
+            cast output when defining symbolic names for a MessageId.
+
+        SeverityNames - defines the set of names that are allowed as the
+            value of the Severity keyword in the message definition.
+            The set is delimited by left and right parenthesis.
+            Associated with each severity name is a number that, when
+            shifted left by 30, gives the bit pattern to logically OR
+            with the Facility value and MessageId to come up with the
+            full 32-bit message code.  The default value of this keyword
+            is:
+
+                SeverityNames=(Success=0x0
+                               Informational=0x1
+                               Warning=0x2
+                               Error=0x3
+                              )
+
+            Severity values occupy the high two bits of a 32-bit message
+            code.  Any severity value that does not fit in two bits is
+            an error.  The severity codes can be given symbolic names
+            by following each value with :{NAME}
+
+        FacilityNames - defines the set of names that are allowed as the
+            value of the Facility keyword in the message definition.
+            The set is delimited by left and right parenthesis.
+            Associated with each facility name is a number that, when
+            shift it left by 16 bits, gives the bit pattern to logically
+            OR with the Severity value and MessageId to come up with the
+            full 32-bit message code.  The default value of this keyword
+            is:
+
+                FacilityNames=(System=0x0FF
+                               Application=0xFFF
+                              )
+
+
+            Facility codes occupy the low order 12 bits of the high
+            order 16-bits of a 32-bit message code.  Any facility code
+            that does not fit in 12 bits is an error.  This allows for
+            4096 facility codes.  The first 256 are reserved for
+            use by the system software.
+
+            The facility codes can be given symbolic names by following
+            each value with :{NAME}
+
+        LanguageNames - defines the set of names that are allowed as the
+            value of the Language keyword in the message definition.
+            The set is delimited by left and right parenthesis.
+            Associated with each language name is a number and a file
+            name that will be used to name the binary output file that
+            will contain all of the message text for that language.  The
+            number corresponds to the Language Id tag to use in the
+            resource table.  The number is separate from the file name
+            with a colon.  The initial value of this keyword is:
+
+                LanguageNames=(English=1:MSG00001)
+
+            Any new names that an application defines in its .mc file
+            which don't override any of the builtin names will be added
+            to the list of valid languages.  This allows an application
+            to support private languages with descriptive names.
+
+    Following the header section are zero or more message definitions.
+    Each message definition begins with one or more of the following
+    keywords.
+
+        MessageId={|{NUMBER}|+{NUMBER}}
+        Severity={SEVERITY_NAME}
+        Facility={FACILITY_NAME}
+        SymbolicName={NAME}
+
+    The MessageId keyword is required to mark the beginning of the
+    message definition, although its value is optional.  If no value is
+    specified, then the value used will be the last value used for the
+    facility, plus one.  If the value is specified as +{NUMBER} then
+    the value used will be the last value used for the facility, plus
+    the number after the plus sign.  Otherwise if a numeric value is
+    given, that will be value used.  Any MessageId value that does not
+    fit in 16 bits is an error.
+
+    Severity and Facility are optional keywords that can specify
+    additional bits to OR into the final 32-bit message code.  If either
+    of these are not specified they default to the value last specified
+    for a message definition.  The initial values of these prior to
+    processing the first message definition is:
+
+        Severity=Success
+        Facility=Application
+
+    The value associated with these keywords must match one of the names
+    given to the FacilityNames and SeverityNames keywords.  The SymbolicName
+    keyword allows the ISV to associate a C symbolic constant name with the
+    final 32-bit message code that is a result of ORing together the
+    MessageId, Severity and Facility bits.  The constant definition is
+    output to the generated .h file with the following format:
+
+        //
+        // {MESSAGETEXT}
+        //
+
+        #define CONSTANT_SYMBOL_NAME ((MessageIdTypedef) 0x12345678)
+
+    where the comment before the definition is a copy of the message
+    text for the first language specified in the message definition.
+    The CONSTANT_SYMBOL_NAME is the value of the SymbolicName keyword.
+    The MessageIdTypedef is not output if it is NULL, the default value.
+
+    After the message definition keywords, comes one or more message text
+    definitions.  Each message text definition begins with the Language
+    keyword that identifies which binary output file this message text
+    is to be output to.  Beginning on the very next line is the first
+    line of the message text.  The message text is terminated by a line
+    containing a single period at the beginning of the line, immediately
+    followed by a new line.  No spaces allowed around keyword.  Within
+    the message text, blank lines and white space are preserved as part
+    of the message.
+
+        Language={LANGUAGE_NAME}
+        {MESSAGETEXT}
+        .
+
+    Within the message text, several escape sequences are supported for
+    dynamically formatting the message.  The percent sign character (%)
+    begins all escape sequences.
+
+
+        %0 - This terminates a message text line without a trailing
+             newline.  This can be used to build up long lines or to
+             terminate the message itself without a trailing newline,
+             which is useful for prompt messages.
+
+        %n!printf format string!  - This identifies an insert.  The
+             value of n can be between 1 and 99.  The printf format
+             string must be bracketed by exclamation marks.  It is
+             optional and defaults to !s! if not specified.
+
+             The printf format string can contain the * specifier for
+             either the precision or width components, and if so, they
+             will consume inserts %n+1 and %n+2 for their values at run
+             time.  MC will print a warning message if an explicit
+             reference is made to these inserts elsewhere in the message
+             text.
+
+    Inserts must reference a parameter passed to the FormatMessage API
+    call.  It will return an error if a message refers to an insert that
+    was not passed to the FormatMessage API call.
+
+    Any other character following a percent sign, other than a digit will
+    be formatted in the output message without the percent sign.  Some
+    examples:
+
+        %% - will output a single percent sign in the formatted message text.
+
+        %n - will output a hard line break when it occurs at the end of a
+             a line.  Useful when FormatMessage is supplying normal line
+             breaks so the message fits in a certain width.
+
+        %r - will output a hard carriage return, without a trailing newline.
+
+        %b - will output a space in the formatted message text.  This
+             can be used to insure there are the appropriate number of
+             trailing spaces in a message text line.
+
+        %t - will output a tab in the formatted message text.
+
+        %. - will output a single period in the formatted message text.
+             This can be used to get a single period at the beginning of
+             a line without terminating the message text definition.
+
+        %! - will output a single exclamation point in the formatted
+             message text.  This can be used to get an exclamation point
+             immediately after an insert without it being mistaken for
+             the beginning of a printf format string.
+
+    Unicode support is not understood yet.  If the input file is ASCII
+    text, do we need an escape sequence to allow input of Unicode values?
+    Or do we just let them use DBCS in the text file, assuming they have
+    a text editor that can do this.
+
+2.  Message Compiler (MC)
+
+    This program converts .mc message text files into binary files
+    suitable for inclusion into a .RC file by the resource compiler.
+
+    Command line syntax:
+
+        MC [-v] [-w] [-s] [-h DirSpec] [-r DirSpec] filename[.mc] ...
+
+    where:
+
+        -v - generates verbose output to stderr.
+
+        -w - generates a warning message whenever an insert escape
+             sequence is seen that is a superset of the type supported
+             by OS/2 mkmsgf (i.e.  anything other than %0 and %n).
+             Useful for converting old OS/2 message files to this
+             format.
+
+        -s - Add an extra line to the beginning of each message that is
+             the symbolic name associated with the message id.
+
+        -h DirSpec - specifies the target directory of the generated
+             .h file.  The file name is the name of the .mc file with a
+             .h extension.
+
+        -r DirSpec - specifies the target directory of the generated
+             .rc file.  The file name is the name of the .mc file with a
+             .rc extension.
+
+        filename.mc - specifes one or more input message files that
+                      will be compiled into one or more binary resource
+                      files, one for each language that the message
+                      files contain message text for.
+
+    The message compiler reads the .mc file and generates a .h file
+    containing all the symbolic name definitions.  For each LanguageId
+    that was used to specify message text, it outputs a binary file
+    containing a message table resource.  It also outputs a single .rc
+    file that contains the appropriate RC syntax to include each binary
+    file output as a resource with the appropriate name and type ids.
+
+3.  Message Win32 API Calls
+
+DWORD
+APIENTRY
+FormatMessage(
+    DWORD dwFlags,
+    LPVOID lpSource,
+    DWORD dwMessageId,
+    DWORD dwLanguageId,
+    LPSTR lpBuffer,
+    DWORD nSize,
+    va_list Arguments
+    )
+
+Routine Description:
+
+    This function formats a message string.  Input to this function is a
+    message definition.  It can come from a buffer passed into this
+    function.  It can come from a message table resource in a module
+    already loaded.  Or the caller can ask this function to search the
+    system message table resource(s) for the message.  This function
+    finds the message definition based on the Message Id and the
+    Language Id and copies the message text to the output buffer,
+    processing any imbedded insert sequences if requested.
+
+Arguments:
+
+    dwFlags - Specifies options to the formatting process along with how
+        to interpret the lpSource parameter.  The low order 16bits of
+        this parameter are the maximum width of a line, in characters.
+        Possible values are:
+
+        FORMAT_MESSAGE_ALLOCATE_BUFFER - the lpBuffer is a PVOID * and
+            nSize is the minimum size to allocate.  This function will
+            then allocate a buffer large enought to hold the formatted
+            message and store the pointer to the buffer in the location
+            pointed to by lpBuffer.   Caller should free the buffer
+            with LocalFree when they are done using it.
+
+        FORMAT_MESSAGE_IGNORE_INSERTS - insert sequences in the message
+            definition will be ignored and passed through to the output
+            buffer as is.  Useful for fetching a message for later
+            formatting.  If this flag is set, the lpArguments parameter
+            is ignored.
+
+        FORMAT_MESSAGE_FROM_STRING - lpSource is a pointer to a null
+            terminated message definition.  It can contain insert
+            sequences just as the message text in the .mc file can.
+
+        FORMAT_MESSAGE_FROM_HMODULE - lpSource is a module handle that
+            contains the message table resource(s) to search.  If this
+            handle is NULL, then the current process's application
+            image file will be searched.
+
+        FORMAT_MESSAGE_FROM_SYSTEM - If the requested message was not
+            found in lpSource or if lpSource was not examined (i.e. neither
+            of the preceeding two flags was specified), then this function
+            will search the system message table resource(s).
+
+        FORMAT_MESSAGE_ARGUMENT_ARRAY - If set, specifies that the passed
+            Arguments parameter is NOT a va_list structure but instead is
+            just a pointer to an array of 32-bit values that represent
+            the arguments.
+
+        FORMAT_MESSAGE_MAX_WIDTH_MASK - The low order 8 bits specify the
+            maximum width of each line formatted into the output buffer.
+            A maximum width of zero, means that no restrictions are
+            placed on the width, and only the line breaks in the message
+            definition will be placed in the output buffer.  If a non-zero
+            value is specified, then line breaks in the message definition
+            text are ignored, and instead line breaks are calculated based
+            on the maximum width, with white space delimited strings never
+            being split across a line break.  Hard coded line breaks in
+            the message definition text, that are identified by the %n
+            escape sequence, are always output to the output buffer.
+
+            If the width specified is FORMAT_MESSAGE_MAX_WIDTH_MASK, then
+            line breaks in the message file are ignored and only hard coded
+            line breaks are kept and none are generated.
+
+    lpSource - specifies where to retrieve the message definition from.
+        The type of this parameter depends upon the settings in the
+        dwFlags parameter.
+
+            FORMAT_MESSAGE_FROM_HMODULE - lpSource is an hModule of the
+                module that contains the message table to search.
+
+            FORMAT_MESSAGE_FROM_STRING - lpSource is an LPSTR that points
+                to unformatted message text.  It will be scanned for
+                inserts and formatted accordingly.
+
+        If neither of these options is specified, then this parameter is
+        ignored.
+
+    dwMessageId - specifices the 32-bit message identifier that identifies
+        the message being requested.  This parameter is ignored if the
+        FORMAT_MESSAGE_FROM_STRING flag is specified.
+
+    dwLanguageId - specifices the 32-bit language identifier that
+        identifies the language of the message being requested.  This
+        parameter is ignored if the FORMAT_MESSAGE_FROM_STRING flag is
+        specified.
+
+    lpBuffer - specifies a pointer to a buffer where the formatted message
+        is to be written.  A terminating null byte will also be written.
+        If the FORMAT_MESSAGE_ALLOCATE_BUFFER flag was specified, then
+        this parameter points to a 32-bit pointer value that is filled in
+        by this call with a pointer allocated via LocalAlloc to contain
+        the text of the message.
+
+    nSize - specifies the maximum number of bytes that can be stored in
+        the output buffer.  This parameter is ignore if the
+        FORMAT_MESSAGE_ALLOCATE_BUFFER flag is set.
+
+    Arguments - specifies a pointer to variable number of arguments.
+        These arguments are used to satisfy insert requests in the
+        format string.  Thus %1 in the format string specifies the
+        first argument in the variable number of arguments described
+        by the Arguments parameter; %3 would specify the third, etc.
+
+        The interpretation of each 32-bit arguments value depends upon
+        the formatting information associated with the insert in the
+        message definition.  The default is to treat each pointer as a
+        pointer to a null terminated string.
+
+        By default the Arguments parameter is of type va_list, which is
+        a language and implementation specific data type for describing
+        a variable number of arguments.  If you do not have a pointer of
+        type va_list, then specify the FORMAT_MESSAGE_ARGUMENT_ARRAY
+        flag and pass a pointer to an array of 32-bit values that are
+        are input to the message formatted as the insert values.
+Return Value:
+
+    DwORD - Returns the number of bytes actually stored in the output
+        buffer, excluding the terminating null character.  Returns 0 if
+        an error occurred.  Extended error status is available via the
+        GetLastError API.

@@ -1,0 +1,13 @@
+LIBRARY         MAIN
+SECTIONS
+    .bss READ WRITE SHARED
+    .data READ WRITE
+    .rodata READ SHARED
+    .idata READ WRITE
+    .instance READ WRITE
+    .rsrc READ SHARED
+
+HEAPSIZE  1024
+
+EXPORTS
+        CPlApplet

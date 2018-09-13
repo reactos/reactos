@@ -1,0 +1,28 @@
+// WARNING
+// localizable resources only
+// non-localizable resources should go in loadwc.rc
+
+#include <winuser.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include "resource.h"
+
+#include "loadwc.rcv"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESKTOP     "Internet Explorer"
+
+// Note to localizers:  it is desirable (though not absolutely necessary)
+// to keep the following directory names synchronized with their counterparts
+// in shell\shell32\shell32.rc.
+
+    IDS_CSIDL_PERSONAL_L        "My Documents"
+    IDS_CSIDL_FAVORITES_L       "Favorites"
+    IDS_CSIDL_APPDATA_L         "Application Data"
+    IDS_CSIDL_CACHE_L           "Temporary Internet Files"
+    IDS_CSIDL_COOKIES_L         "Cookies"
+    IDS_CSIDL_HISTORY_L         "History"
+END
+
+

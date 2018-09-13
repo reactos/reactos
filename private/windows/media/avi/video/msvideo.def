@@ -1,0 +1,131 @@
+LIBRARY     MSVIDEO
+
+EXETYPE     WINDOWS
+
+PROTMODE
+
+CODE        MOVEABLE DISCARDABLE LOADONCALL
+DATA        MOVEABLE SINGLE PRELOAD
+
+SEGMENTS
+;;      FIX         FIXED                   PRELOAD
+        INIT        MOVEABLE DISCARDABLE    PRELOAD
+        MSVIDEO     MOVEABLE DISCARDABLE
+
+HEAPSIZE    128
+
+IMPORTS
+        _DebugOutput            = KERNEL.328
+        GlobalHandleNoRip       = KERNEL.GlobalHandleNoRip
+        IsDCCurrentPalette      = GDI.412      ; for DrawDib
+;;      RealizeDefaultPalette   = GDI.365      ; for DrawDib
+;;      IsWinOldAppTask         = KERNEL.158   ; for DrawDib
+
+EXPORTS
+        WEP                     @1      RESIDENTNAME    ;Internal
+        VIDEOFORWINDOWSVERSION  @2      ; MUST be @2
+;
+; VIDEO interface
+;
+        VIDEOGETNUMDEVS                   	@20
+        VIDEOGETERRORTEXT                 	@21
+        VIDEOCAPDRIVERDESCANDVER                @22
+
+
+        VIDEOOPEN                       	@28
+        VIDEOCLOSE              	        @29
+        VIDEODIALOG     	                @30
+        VIDEOFRAME 	                 	@31
+        VIDEOCONFIGURE     	                @32
+        VIDEOCONFIGURESTORAGE  	                @33
+        VIDEOGETCHANNELCAPS                 	@34
+        VIDEOUPDATE                       	@35
+
+        VIDEOSTREAMADDBUFFER            	@40
+        VIDEOSTREAMFINI                 	@41
+        VIDEOSTREAMGETERROR             	@42
+        VIDEOSTREAMGETPOSITION          	@43
+        VIDEOSTREAMINIT                 	@44
+        VIDEOSTREAMPREPAREHEADER        	@46
+        VIDEOSTREAMRESET                	@47
+        VIDEOSTREAMSTART                	@49
+        VIDEOSTREAMSTOP                 	@50
+        VIDEOSTREAMUNPREPAREHEADER      	@51
+        VIDEOSTREAMALLOCHDRANDBUFFER            @52
+        VIDEOSTREAMFREEHDRANDBUFFER             @53
+
+        VIDEOMESSAGE                            @60
+
+;
+;   DrawDib interface.
+;
+        DrawDibOpen                             @102
+        DrawDibClose                            @103
+
+        DrawDibBegin                            @104
+        DrawDibEnd                              @105
+
+        DrawDibDraw                             @106
+
+;       DrawDibGetError                         @107
+        DrawDibGetPalette                       @108
+        DrawDibSetPalette                       @110
+        DrawDibChangePalette                    @111
+        DrawDibRealize                          @112
+
+	StretchDIB				@115
+        DrawDibGetBuffer                        @120
+
+        DrawDibTime                             @113
+        DrawDibProfileDisplay                   @114
+
+        DrawDibStart                            @118
+        DrawDibStop                             @119
+
+
+;
+;   CompMan interface.
+;
+        ICInfo                                  @200
+        ICInstall                               @201
+        ICRemove                                @202
+        ICOpen                                  @203
+        ICClose                                 @204
+        ICSendMessage                           @205
+        ICOpenFunction                          @206    ; New for 1.x
+        _ICMessage                              @207    ; New for 1.x
+
+        ICGetInfo                               @212
+        ICLocate                                @213
+
+        _ICCompress                             @224
+        _ICDecompress                           @230
+        _ICDrawBegin                            @232
+        _ICDraw                                 @234
+
+        ICGetDisplayFormat                      @239
+
+        ICImageCompress                         @240    ; New for 1.x
+        ICImageDecompress                       @241    ; New for 1.x
+
+        ICCompressorChoose                      @242    ; New for 1.x
+        ICCompressorFree                        @243    ; New for 1.x
+
+        ICSeqCompressFrameStart                 @244    ; New for 1.x
+        ICSeqCompressFrameEnd                   @245    ; New for 1.x
+        ICSeqCompressFrame                      @246    ; New for 1.x
+;
+; MCIWnd Interface
+;
+        _MCIWndCreate                           @250    ; New for 1.x
+        _MCIWndRegisterClass                    @251    ; New for 1.x
+        GetOpenFileNamePreview                  @252    ; New for 1.x
+        GetSaveFileNamePreview                  @253    ; New for Win95
+
+;
+; AVICap Interface
+;
+;   THESE ARE NOT IN THIS DLL THEY ARE IN AVICAP.DLL
+;
+;	capCreateCaptureWindow			@260
+;	capGetDriverDescription                 @261

@@ -1,0 +1,53 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name: PhBookLib
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author: Suresh Krishnan
+
+
+
+NOTE:
+
+!ENDIF
+
+MAJORCOMP=RegWiz
+MINORCOMP=PhBookLib
+REGWIZ_COMMON_FLAGS= $(REGWIZ_WITH_UCODE) -D_USRDLL -D_TAPI -D_WINDOWS -DWINNT -DNT
+NOT_LEAN_AND_MEAN=1
+MSC_WARNING_LEVEL=/W3 /WX
+USE_NATIVE_EH=1
+C_DEFINES=$(REGWIZ_COMMON_FLAGS)
+
+!if !$(FREEBUILD)
+DEBUG_CRTS=1
+MSC_OPTIMIZATION=/Odi
+USE_LIBCMT=1
+!else
+USE_MSVCRT=1
+!endif
+
+UMTYPE=windows
+TARGETNAME=PhBookLib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+INCLUDES=..\inc;
+
+SOURCES=CCSV.CPP  \
+        DEBUG.CPP \
+	Main.CPP \
+	MISC.CPP \
+	RNAAPI.CPP \
+	SUAPI.CPP \
+	PhBk.cpp

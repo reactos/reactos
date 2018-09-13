@@ -1,0 +1,32 @@
+MAJORCOMP=opengl
+MINORCOMP=scrnsave
+TARGETNAME=sstext3d
+TARGETPATH=obj
+TARGETTYPE=UMAPPL_NOLIB
+LINKLIBS=$(_NTDRIVE)\nt\public\sdk\lib\*\opengl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\comctl32.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glaux.lib  \
+         $(_NTDRIVE)\nt\public\sdk\lib\*\glu32.lib
+
+
+INCLUDES=..; ..\..\inc; ..\..\common; \
+         $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+SOURCES=..\dialog.c   \
+        ..\sstext3d.c  \
+        ..\font.c      \
+        ..\sstext3d.rc
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE -DWINVER=0x0400
+
+USE_MSVCRT = 1
+
+UMTYPE=windows
+UMAPPL=sstext3d
+UMAPPLEXT=.scr
+UMLIBS= \
+       ..\..\common\km\obj\*\sscommon.lib \
+       obj\*\dialog.obj \
+       obj\*\font.obj \
+       obj\*\sstext3d.res

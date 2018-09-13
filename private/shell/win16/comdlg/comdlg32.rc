@@ -1,0 +1,146 @@
+/*++
+
+Copyright (c) 1990-1995,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    comdlg32.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the Win32 common
+    dialogs.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#define WIN31 1
+#include <windows.h>
+#include "isz.h"
+#include "dlgs.h"
+#include "cdids.h"
+
+
+
+
+//
+//  Bitmaps.
+//
+
+bmpDirDrive    BITMAP  IMPURE filebmps.bmp
+
+BMFONT         BITMAP  font.bmp
+
+
+//
+//  Cursors.
+//
+
+
+//
+//  Fonts.
+//
+
+
+//
+//  Icons.
+//
+
+ICO_PORTRAIT    ICON    portrait.ico
+ICO_LANDSCAPE   ICON    landscap.ico
+
+ICO_P_NONE      ICON    p_none.ico
+ICO_L_NONE      ICON    l_none.ico
+ICO_P_HORIZ     ICON    p_horz.ico
+ICO_L_HORIZ     ICON    l_horz.ico
+ICO_P_VERT      ICON    p_vert.ico
+ICO_L_VERT      ICON    l_vert.ico
+ICO_COLLATE     ICON    collate.ico
+ICO_NO_COLLATE  ICON    nocoll8.ico
+ICO_P_PSSTAMP   ICON    psstampp.ico
+ICO_L_PSSTAMP   ICON    psstampl.ico
+
+
+//
+//  Menus.
+//
+
+
+//
+//  Accelerators.
+//
+
+IDA_OPENFILE ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F4,          IDC_DROPDRIVLIST,     VIRTKEY, NOINVERT
+    VK_F5,          IDC_REFRESH,          VIRTKEY, NOINVERT
+END
+
+
+IDA_OPENFILEVIEW ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F4,          IDC_DROPDRIVLIST,     VIRTKEY, NOINVERT
+    VK_F5,          IDC_REFRESH,          VIRTKEY, NOINVERT
+    VK_BACK,        IDC_PREVIOUSFOLDER,   VIRTKEY, NOINVERT
+END
+
+
+
+
+//
+//  Dialogs.
+//
+
+#include "FileOpen.dlg"
+#include "PrnSetup.dlg"
+#include "FindText.dlg"
+#include "Color.dlg"
+#include "Font.dlg"
+
+
+DUMMYFILEOPENORD DIALOG DISCARDABLE  0, 0, 0, 0
+STYLE DS_CONTROL | DS_3DLOOK | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+
+
+//
+//  Strings.
+//
+
+STRINGTABLE
+BEGIN
+    MH_TOOLTIPBASE + IDC_PARENT         "Up One Level"
+    MH_TOOLTIPBASE + IDC_NEWFOLDER      "Create New Folder"
+    MH_TOOLTIPBASE + IDC_VIEWLIST       "List"
+    MH_TOOLTIPBASE + IDC_VIEWDETAILS    "Details"
+END
+
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+    #include "sz.src"
+END
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Common Dialogs DLL"
+#define VER_INTERNALNAME_STR        "comdlg32\0"
+#define VER_ORIGINALFILENAME_STR    "comdlg32.dll"
+
+#include "common.ver"
+
+

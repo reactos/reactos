@@ -1,0 +1,17 @@
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+!include ..\sources.inc
+
+SOURCES=..\cmdline.c  \
+        ..\ctrlc.c    \
+        ..\ctrlc.c   \
+        ..\dllinit.c  \
+        ..\iostubs.c  \
+        ..\private.c  \
+        ..\stream.c   \
+        ..\getset.c   \
+        ..\convdm.c   \
+        ..\dbcs.c    
+
+

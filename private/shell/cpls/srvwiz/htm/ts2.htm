@@ -1,0 +1,48 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>Networking</TITLE>
+<SCRIPT LANGUAGE="JScript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("adv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:149 35;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Terminal Services</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1"><B>Remote Administration Mode</B>
+            <BR>Terminal Services also enables system administrators to remotely log on to 
+                and manage an entire Windows 2000 system from virtually anywhere in the world.
+            <P ID="para2"><B>Application Server Mode</B>
+            <BR>Terminal Services provides access to Windows-based applications by running the 
+                applications entirely on the server and sending only the display output to the client. 
+                Terminal Services facilitates centralized administration of applications; 
+                it is an efficient and cost effective way to manage older systems. 
+            <UL STYLE="margin-left:21px">
+                <LI TYPE="square" ID="bullet1">You must install Terminal Services Licensing to run in application server mode.</LI>
+            </UL>
+            
+            <P ID="para3"><B>Caution</B>
+            <BR>Installing Terminal Services affects the functionality of other Windows components. 
+                Microsoft recommends that you read the Deployment Guide before you install Terminal Services.
+            <P ID="para4">To set up Terminal Services, use the Windows Components wizard. 
+                After you finish with the wizard, your server will restart and the Configure Your Server screen will appear. 
+                Return to this screen to start using Terminal Services.
+            <P ID="para5"><A HREF="javascript:exec('sysocmgr.exe', '/x /i:%windir%/inf/sysoc.inf')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Windows Components wizard.
+            <P ID="para6"><A HREF="javascript:help('termsrv.chm::/sag_termsrv_topnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Terminal Services.
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

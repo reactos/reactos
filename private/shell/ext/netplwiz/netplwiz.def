@@ -1,0 +1,18 @@
+LIBRARY       NETPLWIZ
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION   'Network Places Wizard'
+
+EXPORTS
+              DllMain
+              DllCanUnloadNow       PRIVATE
+              DllGetClassObject     PRIVATE
+              DllRegisterServer     PRIVATE
+              DllUnregisterServer   PRIVATE
+
+              AddNetPlaceRunDll
+              UsersRunDll
+              NetAccWizRunDll
+
+              NetPlacesWizardDoModal
+              NetAccessWizard
+              ClearAutoLogon

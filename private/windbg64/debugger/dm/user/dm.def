@@ -1,0 +1,7 @@
+LIBRARY dm
+
+EXPORTS
+        DmDllInit       PRIVATE
+        DMInit          PRIVATE
+        DMFunc          PRIVATE
+        OSDebug4VersionCheck PRIVATE

@@ -1,0 +1,94 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = ${MWROOT}/ie4/xml.template
+
+SOURCES = 
+
+
+INCLUDES += \
+    -I. \
+
+DEFINES += -DWIN32=300 -D_CAIRO_=300 -DREGISTER_PROXY_DLL -DSTRICT -D_WIN32_LEAN_AND_MEAN -DINC_OLE2 -DDllMain=msxml_DllMain
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+
+WDLL = msxml
+# DLL = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+WRESOURCE = messages.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+
+## COMPILE_OPTION can have the values: debug, optimized
+ifndef COMPILE_OPTION
+  COMPILE_OPTION = debug
+endif
+
+# COMPILE_OPTION can have the values: debug, optimized
+ifeq (${COMPILE_OPTION}, debug)
+DEFINES += -DDBG=1 -DACTIVEX_DEBUG -D_DEBUG=1 -DNDEBUG
+endif
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+## NO_UNICODE = 1
+
+APP_CFLAGS += ${XML_CFLAGS} ${INCLUDES} ${DEFINES}
+APP_CCPPFLAGS += ${XML_CFLAGS} ${INCLUDES} ${DEFINES}
+
+
+TOOLSDIR =     ${MWHOME}/lib-${MWCONFIG_NAME}
+SLASH =        ${TOOLSDIR}/Slash
+DEC_PROTECT =  ${TOOLSDIR}/dec_protect
+HSPLIT =       ${TOOLSDIR}/hsplit
+WCSHDR =       ${TOOLSDIR}/wcshdr
+HEXTRACT =     ${TOOLSDIR}/hextract
+LISTMUNG =     ${TOOLSDIR}/listmung
+WS2HDR =       ${TOOLSDIR}/ws2hdr
+MCERR =        ${MWHOME}/bin/mcerr
+
+
+RM =	       /bin/rm -f
+
+PROTECT =      chmod a-w 
+CP =	       /bin/cp 
+
+__cplusplus = true
+
+# MAKE_VERBOSE=true	# Defined but not "true" means silent builds
+# MWEXTRA_INFO=true
+
+include $(MWHOME)/make.rules.simple
+
+MC =           ${MWHOME}/bin-${MWCONFIG_NAME}_optimized/mc
+
+ifeq (${MWOS}, ux10)
+messages.h messages.rc:  messages.mc msxml.rc
+	${DOS2UNIX} messages.mc > $(O)/messages.mc
+	${MC} $(O)/messages.mc
+else
+messages.h messages.rc:  messages.mc msxml.rc
+	${DOS2UNIX} messages.mc $(O)/messages.mc
+	${MC} $(O)/messages.mc
+endif
+
+$(O)/%.inx:%.inx
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+#$(O)/%.inf: $(O)/%.inx
+#	cleaninf -w $< $@
+

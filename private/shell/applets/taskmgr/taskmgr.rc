@@ -1,0 +1,833 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+LED_NUMBERS             BITMAP  DISCARDABLE     "numbers.bmp"
+LED_STRIP_LIT           BITMAP  DISCARDABLE     "ledlit.bmp"
+LED_STRIP_UNLIT         BITMAP  DISCARDABLE     "ledunlit.bmp"
+IDB_BMPBACK             BITMAP  DISCARDABLE     "bmpback.bmp"
+IDB_BMPFORWARD          BITMAP  DISCARDABLE     "bmpforwa.bmp"
+LED_STRIP_LIT_RED       BITMAP  DISCARDABLE     "bitmap1.bmp"
+IDB_TRAYUNLIT           BITMAP  DISCARDABLE     "bmp00001.bmp"
+IDB_TRAYLIT             BITMAP  DISCARDABLE     "bitmap2.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define VER_FILETYPE                    VFT_APP\r\n"
+    "#define VER_FILESUBTYPE                 VFT_UNKNOWN\r\n"
+    "#define VER_FILEDESCRIPTION_STR         ""Windows TaskManager""\r\n"
+    "#define VER_INTERNALNAME_STR            ""taskmgr""\r\n"
+    "#define VER_LEGALCOPYRIGHT_YEARS        ""1991-1999""\r\n"
+    "#define VER_ORIGINALFILENAME_STR        ""taskmgr.exe""\r\n"
+    "#include <ntverp.h>\r\n"
+    "#include <common.ver>\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINWND DIALOGEX 0, 0, 264, 247
+STYLE DS_3DLOOK | DS_FIXEDSYS | WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | 
+    WS_THICKFRAME
+MENU IDR_MAINMENU_TASK
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tab1",IDC_TABS,"SysTabControl32",WS_TABSTOP,3,3,91,116
+END
+
+IDD_PERFPAGE DIALOGEX 0, 0, 438, 303
+STYLE DS_FIXEDSYS | DS_CONTROL | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "CPU Usage Display",IDC_CPUMETER,"Button",BS_OWNERDRAW | WS_DISABLED,14,
+                    17,48,44,WS_EX_CLIENTEDGE
+    CONTROL         "Memory Usage Display",IDC_MEMMETER,"Button",BS_OWNERDRAW | WS_DISABLED,14,
+                    77,48,44,WS_EX_CLIENTEDGE
+    CONTROL         "Memory Usage History",IDC_MEMGRAPH,"Button",BS_OWNERDRAW | WS_DISABLED,82,
+                    77,48,44,WS_EX_CLIENTEDGE
+    LTEXT           "Handles",IDC_STATIC14,14,139,32,8
+    EDITTEXT        IDC_TOTAL_HANDLES,59,139,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Threads",IDC_STATIC15,14,148,32,8
+    EDITTEXT        IDC_TOTAL_THREADS,59,148,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Processes",IDC_STATIC16,14,157,34,8
+    EDITTEXT        IDC_TOTAL_PROCESSES,59,157,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Total",IDC_STATIC6,14,183,32,8
+    EDITTEXT        IDC_COMMIT_TOTAL,59,183,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Limit",IDC_STATIC8,14,192,32,8
+    EDITTEXT        IDC_COMMIT_LIMIT,59,192,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Peak",IDC_STATIC9,14,201,32,8
+    EDITTEXT        IDC_COMMIT_PEAK,59,201,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Total",IDC_STATIC2,136,139,32,8
+    EDITTEXT        IDC_TOTAL_PHYSICAL,182,139,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Available",IDC_STATIC3,136,148,32,8
+    EDITTEXT        IDC_AVAIL_PHYSICAL,182,148,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "System Cache",IDC_STATIC4,136,157,68,8
+    EDITTEXT        IDC_FILE_CACHE,182,157,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Total",IDC_STATIC11,136,183,32,8
+    EDITTEXT        IDC_KERNEL_TOTAL,182,183,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Paged",IDC_STATIC12,136,192,32,8
+    EDITTEXT        IDC_KERNEL_PAGED,182,192,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Nonpaged",IDC_STATIC17,136,201,34,8
+    EDITTEXT        IDC_KERNEL_NONPAGED,182,201,57,8,ES_AUTOHSCROLL | ES_READONLY | ES_RIGHT | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "CPU Usage",IDC_STATIC,"DavesFrameClass",0x7,8,5,60,60,
+                    WS_EX_NOPARENTNOTIFY
+    CONTROL         "MEM Usage",IDC_MEMBARFRAME,"DavesFrameClass",0x7,8,67,
+                    60,60,WS_EX_NOPARENTNOTIFY
+    CONTROL         "Memory Usage History",IDC_MEMFRAME,"DavesFrameClass",
+                    0x7,78,67,60,60,WS_EX_NOPARENTNOTIFY
+    CONTROL         "Totals",IDC_STATIC13,"DavesFrameClass",0x7,8,129,113,39,
+                    WS_EX_NOPARENTNOTIFY
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH,"Button",BS_OWNERDRAW | WS_DISABLED,82,
+                    15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH2,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,89,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH3,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,96,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH4,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,102,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH5,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,109,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH6,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,116,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH7,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,122,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH8,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,129,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH9,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,137,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH10,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,145,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH11,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,152,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH12,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,159,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH13,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,166,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH14,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,173,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH15,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,180,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH16,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,187,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH17,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,194,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH18,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,201,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH19,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,208,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH20,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,214,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH21,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,221,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH22,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,228,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH23,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,234,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH24,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,241,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH25,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,249,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH26,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,257,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH27,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,264,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH28,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,271,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH29,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,278,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH30,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,285,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH31,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,292,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUGRAPH32,"Button",BS_OWNERDRAW | NOT 
+                    WS_VISIBLE | WS_DISABLED,299,15,6,44,WS_EX_CLIENTEDGE
+    CONTROL         "CPU Usage History",IDC_CPUFRAME,"DavesFrameClass",0x7,
+                    78,5,8,60,WS_EX_NOPARENTNOTIFY
+    CONTROL         "Physical Memory (K)",IDC_STATIC1,"DavesFrameClass",0x7,
+                    130,129,114,39,WS_EX_NOPARENTNOTIFY
+    CONTROL         "Commit Charge (K)",IDC_STATIC5,"DavesFrameClass",0x7,8,
+                    173,113,39,WS_EX_NOPARENTNOTIFY
+    CONTROL         "Kernel Memory (K)",IDC_STATIC10,"DavesFrameClass",0x7,
+                    130,173,114,39,WS_EX_NOPARENTNOTIFY
+END
+
+IDD_PROCPAGE DIALOGEX 0, 0, 393, 197
+STYLE DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Processes",IDC_PROCLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,9,9,376,131
+    CONTROL         "&Show processes from all users",IDC_SHOWALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,144,120,10
+    PUSHBUTTON      "&End Process",IDC_TERMINATE,320,144,66,14
+END
+
+IDD_TASKPAGE DIALOGEX 0, 0, 393, 177
+STYLE DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Tasks",IDC_TASKLIST,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,9,9,378,139
+    PUSHBUTTON      "&End Task",IDC_ENDTASK,224,152,53,14
+    DEFPUSHBUTTON   "&Switch To",IDC_SWITCHTO,280,152,53,14
+    PUSHBUTTON      "&New Task...",IDM_RUN,336,152,53,14
+END
+
+IDD_CREATEDESKTOP DIALOGEX 0, 0, 222, 85
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CENTERMOUSE | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Create New Desktop"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,108,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,162,64,50,14
+    EDITTEXT        IDC_DESKTOPNAME,41,30,172,14,ES_AUTOHSCROLL
+    CONTROL         "Create an &Explorer on the new desktop",
+                    IDC_STARTEXPLORER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    41,46,158,10
+    LTEXT           "Enter the name that will identify the new desktop.",
+                    IDC_STATIC,41,10,155,8
+    ICON            IDI_MAIN,IDC_STATIC,8,3,18,20
+    LTEXT           "Desktop:",IDC_STATIC,4,33,30,8
+END
+
+IDD_SELECTPROCCOLS DIALOG DISCARDABLE  20, 20, 195, 198
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select Columns"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,83,176,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,137,176,50,14
+    LTEXT           "Select the columns that will appear on the Process page of the Task Manager.",
+                    IDC_STATIC,7,4,177,19
+    CONTROL         "&Image Name",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX | 
+                    WS_DISABLED | WS_TABSTOP,7,26,87,10
+    CONTROL         "&PID (Process Identifier)",IDC_PID,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,37,87,10
+    CONTROL         "&CPU Usage",IDC_CPU,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,48,87,10
+    CONTROL         "CPU Tim&e",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,59,87,10
+    CONTROL         "&Memory Usage",IDC_MEMUSAGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,70,87,10
+    CONTROL         "Memory Usage &Delta",IDC_MEMUSAGEDIFF,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,81,87,10
+    CONTROL         "Pea&k Memory Usage",IDC_MEMPEAK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,92,92,10
+    CONTROL         "Page &Faults",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,103,87,10
+    CONTROL         "&USER Objects",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,114,87,10
+    CONTROL         "I/O Reads",IDC_READOPERCOUNT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,125,87,10
+    CONTROL         "I/O Read Bytes",IDC_READXFERCOUNT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,136,87,10
+    CONTROL         "&Session ID",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,147,63,10
+    CONTROL         "User &Name",IDC_USERNAME,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,158,63,10
+    CONTROL         "Page F&aults Delta",IDC_PAGEFAULTSDIFF,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,26,87,10
+    CONTROL         "&Virtual Memory Size",IDC_COMMITCHARGE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,37,87,10
+    CONTROL         "Pa&ged Pool",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,48,87,10
+    CONTROL         "N&on-paged Pool",IDC_NONPAGEDPOOL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,59,87,10
+    CONTROL         "Base P&riority",IDC_BASEPRIORITY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,70,87,10
+    CONTROL         "&Handle Count",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,81,87,10
+    CONTROL         "&Thread Count",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,92,87,10
+    CONTROL         "GDI Ob&jects",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,103,87,10
+    CONTROL         "I/O Writes",IDC_WRITEOPERCOUNT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,114,87,10
+    CONTROL         "I/O Write Bytes",IDC_WRITEXFERCOUNT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,125,87,10
+    CONTROL         "I/O Other",IDC_OTHEROPERCOUNT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,103,136,87,10
+    CONTROL         "I/O Other Bytes",IDC_OTHERXFERCOUNT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,103,147,87,10
+END
+
+IDD_AFFINITY DIALOGEX 20, 20, 232, 157
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Processor Affinity"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,35,37,10
+    CONTROL         "CPU 1",IDC_CPU1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,47,37,10
+    CONTROL         "CPU 2",IDC_CPU2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,59,37,10
+    CONTROL         "CPU 3",IDC_CPU3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,71,37,10
+    CONTROL         "CPU 4",IDC_CPU4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,83,37,10
+    CONTROL         "CPU 5",IDC_CPU5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,95,37,10
+    CONTROL         "CPU 6",IDC_CPU6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,107,37,10
+    CONTROL         "CPU 7",IDC_CPU7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,119,37,10
+    CONTROL         "CPU 8",IDC_CPU8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,35,37,10
+    CONTROL         "CPU 9",IDC_CPU9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,47,37,10
+    CONTROL         "CPU 10",IDC_CPU10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,59,41,10
+    CONTROL         "CPU 11",IDC_CPU11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,71,41,10
+    CONTROL         "CPU 12",IDC_CPU12,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,83,41,10
+    CONTROL         "CPU 13",IDC_CPU13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,95,41,10
+    CONTROL         "CPU 14",IDC_CPU14,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,107,41,10
+    CONTROL         "CPU 15",IDC_CPU15,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    65,119,41,10
+    CONTROL         "CPU 16",IDC_CPU16,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,35,41,10
+    CONTROL         "CPU 17",IDC_CPU17,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,47,41,10
+    CONTROL         "CPU 18",IDC_CPU18,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,59,41,10
+    CONTROL         "CPU 19",IDC_CPU19,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,71,41,10
+    CONTROL         "CPU 20",IDC_CPU20,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,83,41,10
+    CONTROL         "CPU 21",IDC_CPU21,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,95,41,10
+    CONTROL         "CPU 22",IDC_CPU22,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,107,41,10
+    CONTROL         "CPU 23",IDC_CPU23,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    119,119,41,10
+    CONTROL         "CPU 24",IDC_CPU24,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,35,38,10
+    CONTROL         "CPU 25",IDC_CPU25,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,47,38,10
+    CONTROL         "CPU 26",IDC_CPU26,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,59,38,10
+    CONTROL         "CPU 27",IDC_CPU27,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,71,38,10
+    CONTROL         "CPU 28",IDC_CPU28,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,83,38,10
+    CONTROL         "CPU 29",IDC_CPU29,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,95,38,10
+    CONTROL         "CPU 30",IDC_CPU30,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,107,38,10
+    CONTROL         "CPU 31",IDC_CPU31,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    178,119,38,10
+    DEFPUSHBUTTON   "OK",IDOK,121,138,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,138,50,14
+    LTEXT           "The Processor Affinity setting controls which CPUs the process will be allowed to execute on.",
+                    IDC_STATIC,7,6,218,19
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINMENU_TASK MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Task (Run...)",          IDM_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit Task Manager",          IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Always On Top",              IDM_ALWAYSONTOP
+        MENUITEM "&Minimize On Use",            IDM_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Hide When Minimized",        IDM_HIDEWHENMIN, CHECKED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Refresh Now",                IDM_REFRESH
+        POPUP "&Update Speed"
+        BEGIN
+            MENUITEM "&High",                       IDM_HIGH
+            MENUITEM "&Normal",                     IDM_NORMAL
+            MENUITEM "&Low",                        IDM_LOW
+            MENUITEM "&Paused",                     IDM_PAUSED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Lar&ge Icons",                IDM_LARGEICONS
+        MENUITEM "S&mall Icons",                IDM_SMALLICONS
+        MENUITEM "&Details",                    IDM_DETAILS
+    END
+    POPUP "&Windows"
+    BEGIN
+        MENUITEM "Tile &Horizontally",          IDM_TASK_TILEHORZ
+        MENUITEM "Tile &Vertically",            IDM_TASK_TILEVERT
+        MENUITEM "&Minimize",                   IDM_TASK_MINIMIZE
+        MENUITEM "Ma&ximize",                   IDM_TASK_MAXIMIZE
+        MENUITEM "&Cascade",                    IDM_TASK_CASCADE
+        MENUITEM "&Bring To Front",             IDM_TASK_BRINGTOFRONT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Task Manager &Help Topics",   IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Task Manager",         IDM_ABOUT
+    END
+END
+
+IDR_PROC_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "Banana"
+    BEGIN
+        MENUITEM "&End Process",                IDM_PROC_TERMINATE
+        MENUITEM "End Process &Tree",           IDM_ENDTREE
+        MENUITEM "&Debug",                      IDM_PROC_DEBUG
+        MENUITEM SEPARATOR
+        POPUP "Set &Priority"
+        BEGIN
+            MENUITEM "&Realtime",                   IDM_PROC_REALTIME
+            MENUITEM "&High",                       IDM_PROC_HIGH
+            MENUITEM "&AboveNormal",                IDM_PROC_ABOVENORMAL
+            MENUITEM "&Normal",                     IDM_PROC_NORMAL
+            MENUITEM "&BelowNormal",                IDM_PROC_BELOWNORMAL
+            MENUITEM "&Low",                        IDM_PROC_LOW
+        END
+        MENUITEM "Set &Affinity...",            IDM_AFFINITY
+    END
+END
+
+IDR_TASK_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP "Apple"
+    BEGIN
+        MENUITEM "&Switch To",                  IDM_TASK_SWITCHTO
+        MENUITEM "&Bring To Front",             IDM_TASK_BRINGTOFRONT
+        MENUITEM SEPARATOR
+        MENUITEM "&Minimize",                   IDM_TASK_MINIMIZE
+        MENUITEM "Ma&ximize",                   IDM_TASK_MAXIMIZE
+        MENUITEM "&Cascade",                    IDM_TASK_CASCADE
+        MENUITEM "Tile &Horizontally",          IDM_TASK_TILEHORZ
+        MENUITEM "Tile &Vertically",            IDM_TASK_TILEVERT
+        MENUITEM SEPARATOR
+        MENUITEM "&End Task",                   IDM_TASK_ENDTASK
+        MENUITEM "&Go To Process",              IDM_TASK_FINDPROCESS
+    END
+END
+
+IDR_TASKVIEW MENU DISCARDABLE 
+BEGIN
+    POPUP "Peach"
+    BEGIN
+        MENUITEM "New Task (&Run...)",          IDM_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "Lar&ge Icons",                IDM_LARGEICONS
+        MENUITEM "S&mall Icons",                IDM_SMALLICONS
+        MENUITEM "&Details",                    IDM_DETAILS
+    END
+END
+
+IDR_MAINMENU_PERF MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Task (Run..)",           IDM_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit Task Manager",          IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Always On Top",              IDM_ALWAYSONTOP
+        MENUITEM "&Minimize On Use",            IDM_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Hide When Minimized",        IDM_HIDEWHENMIN, CHECKED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Refresh Now",                IDM_REFRESH
+        POPUP "&Update Speed"
+        BEGIN
+            MENUITEM "&High",                       IDM_HIGH
+            MENUITEM "&Normal",                     IDM_NORMAL
+            MENUITEM "&Low",                        IDM_LOW
+            MENUITEM "&Paused",                     IDM_PAUSED
+        END
+        MENUITEM SEPARATOR
+        POPUP "&CPU History"
+        BEGIN
+            MENUITEM "&One Graph, All CPUs",        IDM_ALLCPUS
+            MENUITEM "One Graph &Per CPU",          IDM_MULTIGRAPH
+        END
+        MENUITEM "&Show Kernel Times",          IDM_KERNELTIMES
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Task Manager &Help Topics",   IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Task Manager",         IDM_ABOUT
+    END
+END
+
+IDR_MAINMENU_PROC MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New Task (Run...)",          IDM_RUN
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit Task Manager",          IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Always On Top",              IDM_ALWAYSONTOP
+        MENUITEM "&Minimize On Use",            IDM_MINIMIZEONUSE, CHECKED
+        MENUITEM "&Hide When Minimized",        IDM_HIDEWHENMIN, CHECKED
+        MENUITEM "&Show 16-bit tasks",          IDM_SHOW16BIT, CHECKED
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Refresh Now",                IDM_REFRESH
+        POPUP "&Update Speed"
+        BEGIN
+            MENUITEM "&High",                       IDM_HIGH
+            MENUITEM "&Normal",                     IDM_NORMAL
+            MENUITEM "&Low",                        IDM_LOW
+            MENUITEM "&Paused",                     IDM_PAUSED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Columns...",          IDM_PROCCOLS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Task Manager &Help Topics",   IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Task Manager",         IDM_ABOUT
+    END
+END
+
+IDR_TRAYMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "Pear"
+    BEGIN
+        MENUITEM "&Restore",                    IDM_RESTORETASKMAN
+        MENUITEM "&Close",                      IDM_EXIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Always on Top",              IDM_ALWAYSONTOP
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON    DISCARDABLE     "main.ico"
+IDI_DEFAULT             ICON    DISCARDABLE     "default.ico"
+IDI_TRAY0               ICON    DISCARDABLE     "tray0.ico"
+IDI_TRAY1               ICON    DISCARDABLE     "tray1.ico"
+IDI_TRAY2               ICON    DISCARDABLE     "tray2.ico"
+IDI_TRAY3               ICON    DISCARDABLE     "tray3.ico"
+IDI_TRAY4               ICON    DISCARDABLE     "tray4.ico"
+IDI_TRAY5               ICON    DISCARDABLE     "tray5.ico"
+IDI_TRAY6               ICON    DISCARDABLE     "tray6.ico"
+IDI_TRAY7               ICON    DISCARDABLE     "tray7.ico"
+IDI_TRAY8               ICON    DISCARDABLE     "tray8.ico"
+IDI_TRAY9               ICON    DISCARDABLE     "tray9.ico"
+IDI_TRAY10              ICON    DISCARDABLE     "tray10.ico"
+IDI_TRAY11              ICON    DISCARDABLE     "tray11.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATORS ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_DELETE,      IDC_ENDTASK,            VIRTKEY, NOINVERT
+    VK_ESCAPE,      IDM_HIDE,               VIRTKEY, SHIFT, NOINVERT
+    VK_F1,          IDM_HELP,               VIRTKEY, NOINVERT
+    VK_F5,          IDM_REFRESH,            VIRTKEY, NOINVERT
+    VK_RETURN,      IDC_SWITCHTO,           VIRTKEY, NOINVERT
+    VK_RETURN,      IDC_BRINGTOFRONT,       VIRTKEY, SHIFT, NOINVERT
+    VK_TAB,         IDC_NEXTTAB,            VIRTKEY, CONTROL, NOINVERT
+    VK_TAB,         IDC_PREVTAB,            VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    VK_PRIOR,       IDC_PREVTAB,            VIRTKEY, CONTROL, NOINVERT
+    VK_NEXT,        IDC_NEXTTAB,            VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SELECTPROCCOLS, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 190
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_RUN                 "Runs a new program"
+    IDM_EXIT                "Exits the Task Manager application"
+    IDM_SWITCHTO            "Brings a task to the foreground, switch focus to that task."
+    IDM_BRINGTOFONT         "Brings a task to the front, but does not switch focus to that task"
+    IDM_ALWAYSONTOP         "Task Manager remains in front of all other windows unless minimized"
+    IDM_MINIMIZEONUSE       "Task Manager is minimized when a SwitchTo operation is performed"
+    IDM_MINIMIZE            "Minimizes the selected windows tasks"
+    IDM_MAXIMIZE            "Maximizes the windows to the size of the desktop"
+    IDM_RESTORE             "Restores the selected windows to their default state"
+    IDM_CASCADE             "Cascades the selected windows diagonally on the screen"
+    IDM_TILEHORIZONTALLY    "Tiles the selected windowed tasks horizontally"
+    IDM_TILEVERTICALLY      "Tiles the selected windowed tasks vertically"
+    IDM_LARGEICONS          "Displays tasks by using large icons"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_SMALLICONS          "Displays tasks by using small icons"
+    IDM_DETAILS             "Displays information about each task"
+    IDM_ALLCPUS             "A single history graph shows total CPU usage"
+    IDM_MULTIGRAPH          "Each CPU has its own history graph"
+    IDM_ABOUT               "Displays program information, version number, and copyright"
+    IDM_HIGH                "Updates the display twice per second"
+    IDM_NORMAL              "Updates the display every two seconds"
+    IDM_LOW                 "Updates the display every four seconds"
+    IDM_PAUSED              "Display does not automatically update"
+    IDM_PROC_DEBUG          "Attaches the debugger to this process"
+    IDM_PROC_TERMINATE      "Removes the process from the system"
+    IDM_PROC_REALTIME       "Sets process to the REALTIME priority class"
+    IDM_PROC_ABOVENORMAL    "Sets process to the ABOVE NORMAL priority class"
+    IDM_PROC_HIGH           "Sets process to the HIGH priority class"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_HELP                "Displays Task Manager help topics"
+    IDM_PROCCOLS            "Select which columns will be visible on the Process page"
+    IDM_REFRESH             "Force Task Manager to update now, regardless of Update Speed setting"
+    IDM_WHATSTHIS           "Provides access to point and click help"
+    IDM_AFFINITY            "Controls which processors the process will be allowed to run on"
+    IDM_KERNELTIMES         "Displays kernel time in the performance graphs"
+    IDS_NOAFFINITYMASK      "The process must have affinity with at least one processor."
+    IDS_INVALIDOPTION       "Invalid Option"
+    IDS_FMTCPUNUM           "CPU %d"
+    IDS_TOTALTIME           "Total CPU"
+    IDS_KERNELTIME          "Kernel CPU"
+    IDS_MEMUSAGE            "Memory Usage"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CANTSETAFFINITY     "Unable to Access or Set Process Affinity"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERFPAGETITLE       "Performance"
+    IDS_RUNTITLE            "Create New Task"
+    IDS_RUNTEXT             "Type the name of a program, folder, document, or Internet resource, and Windows will open it for you."
+    IDS_APPTITLE            "Windows Task Manager"
+    IDS_PROCPAGETITLE       "Processes"
+    IDS_SYSPROC             "System Idle Process"
+    IDS_K                   "K"
+    IDS_WARNING             "Task Manager Warning"
+    IDS_PRICHANGE           "WARNING: Changing the priority class of this process may\ncause undesired results including system instability.  Are you\nsure you want to change the priority class?"
+    IDS_KILL                "WARNING: Terminating a process can cause undesired\nresults including loss of data and system instability. The\nprocess will not be given the chance to save its state or\ndata before it is terminated.  Are you sure you want to\nterminate the process?"
+    IDS_DEBUG               "WARNING: Debugging this process may result in loss of data.\nAre you sure you wish to attach the debugger?"
+    IDS_LOW                 "Low"
+    IDS_HIGH                "High"
+    IDS_REALTIME            "Realtime"
+    IDS_NORMAL              "Normal"
+    IDS_UNKNOWN             "N/A"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_GENFAILURE          "The operation could not be completed.\n\n"
+    IDS_CANTKILL            "Unable to Terminate Process"
+    IDS_CANTDEBUG           "Unable to Attach Debugger"
+    IDS_CANTCHANGEPRI       "Unable to Change Priority"
+    IDS_BADPROC             "The operation is not valid for this process."
+    IDS_TASKPAGETITLE       "Applications"
+    IDS_HUNG                "Not Responding"
+    IDS_RUNNING             "Running"
+    IDS_CANTCREATEDESKTOP   "Unable to Create New Desktop"
+    IDS_TASKMGR             "Task Manager"
+    IDS_TASKMGRDISABLED     "Task Manager has been disabled by your administrator."
+    IDS_ABOVENORMAL         "Above Normal"
+    IDS_BELOWNORMAL         "Below Normal"
+    IDS_KILLSYS             "This is a critical system process.  Task Manager cannot end this process."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_IMAGENAME       "Image Name"
+    IDS_COL_PID             "PID"
+    IDS_COL_CPU             "CPU"
+    IDS_COL_CPUTIME         "CPU Time"
+    IDS_COL_MEMUSAGE        "Mem Usage"
+    IDS_COL_MEMUSAGEDIFF    "Mem Delta"
+    IDS_COL_PAGEFAULTS      "Page Faults"
+    IDS_COL_PAGEFAULTSDIFF  "PF Delta"
+    IDS_COL_COMMITCHARGE    "VM Size"
+    IDS_COL_PAGEDPOOL       "Paged Pool"
+    IDS_COL_NONPAGEDPOOL    "NP Pool"
+    IDS_COL_BASEPRIORITY    "Base Pri"
+    IDS_COL_HANDLECOUNT     "Handles"
+    IDS_COL_THREADCOUNT     "Threads"
+    IDS_COL_USEROBJECTS     "USER Objects"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_GDIOBJECTS      "GDI Objects"
+    IDS_COL_SESSIONID       "Session ID"
+    IDS_COL_USERNAME        "Username"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_TASKNAME        "Task"
+    IDS_COL_TASKSTATUS      "Status"
+    IDS_COL_TASKWINSTATION  "WinStation"
+    IDS_COL_TASKDESKTOP     "Desktop"
+    IDS_COL_MEMPEAK         "Peak Mem Usage"
+    IDS_COL_READOPERCOUNT   "I/O Reads"
+    IDS_COL_WRITEOPERCOUNT  "I/O Writes"
+    IDS_COL_OTHEROPERCOUNT  "I/O Other"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_READXFERCOUNT   "I/O Read Bytes"
+    IDS_COL_WRITEXFERCOUNT  "I/O Write Bytes"
+    IDS_COL_OTHERXFERCOUNT  "I/O Other Bytes"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_PROC_NORMAL         "Sets process to the NORMAL priority class"
+    IDM_PROC_BELOWNORMAL    "Sets process to the BELOW NORMAL priority class"
+    IDM_PROC_LOW            "Sets process to the LOW priority class"
+    IDM_TASK_MINIMIZE       "Minimizes the windows"
+    IDM_TASK_MAXIMIZE       "Maximizes the windows"
+    IDM_TASK_CASCADE        "Cascades the windows diagonally on the desktop"
+    IDM_TASK_TILEHORZ       "Tiles the windows horizontally on the desktop"
+    IDM_TASK_BRINGTOFRONT   "Brings the window front, but does not switch to it"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_SHOW16BIT           "Shows 16-bit Windows tasks under the associated ntvdm.exe"
+    IDM_NOTITLE             "Hides the title and menu bars"
+    IDM_ENDTREE             "Removes this process and all descendants from the system."
+    IDS_KILLTREE            "This operation will attempt to terminate this process and any\nprocesses which were directly or indirectly started by it.\n\nForcing processes to terminate in this manner can cause\ndata loss and system instability.\n\nAre you sure you wish to continue?"
+    IDS_KILLTREEFAIL        "Unable to Completely End the Process Tree "
+    IDS_KILLTREEFAILBODY    "One or more of the processes in this process tree could not\nbe ended.  The operation was not fully successful."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FMTTASKS            "Tasks: %d"
+    IDS_FMTPROCS            "Processes: %d"
+    IDS_FMTMEM              "Mem Usage: %dK / %dK"
+    IDS_FMTCPU              "CPU Usage: %d%%"
+    IDM_TASK_TILEVERT       "Tiles the windows vertically on the desktop"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_RESTORETASKMAN      "Restores the Task Manager from its hidden state"
+    IDM_HIDEWHENMIN         "Hide the Task Manager when it is minimized"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows TaskManager"
+#define VER_INTERNALNAME_STR            "taskmgr"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1999"
+#define VER_ORIGINALFILENAME_STR        "taskmgr.exe"
+#include <ntverp.h>
+#include <common.ver>
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

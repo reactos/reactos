@@ -1,0 +1,397 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       webchk.idl
+//
+//  Contents:
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    11-17-1996   JohannP (Johann Posch)   Created
+//
+//----------------------------------------------------------------------------
+
+import "objidl.idl";
+import "oleidl.idl";
+
+interface IOInetItem;
+interface IOInetDestination;
+
+// the client exposes this interfaces
+interface IOInetItemSink;
+interface IOInetItemFilter;
+
+// the core of the webcheck agent
+interface IOInetAgent;
+//interface IOInetSpooler;
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetItem interface definition
+//
+//  Description:
+//
+//  An item is an object which might be delivered by
+//  a protocol or the client which should be delivered
+//  to a destination at a given "WHEN"
+//
+//  The data for an item might not be available as the item
+//  gets announced for availability.
+//
+//  Many items will in fact arrive with all data.
+//
+//  The same object will expose I(Async)Moniker and the client
+//  can call BindToXXX to bind to the object of the data.
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKITEM")
+cpp_quote("#define _LPWCHKITEM")
+
+[
+        local,
+        object,
+        uuid(79eacbe1-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetItem : IUnknown
+{
+        typedef [unique] IOInetItem *LPWCHKITEM;
+
+        typedef enum _tagITEMDATA_FLAGS
+        {
+             ID_FROMCACHE       = 0x00000001
+        } ITEMDATA_FLAGS;
+
+        typedef enum _tagITEM_TYPE
+        {
+             IT_ANOUNCMENT       = 1
+            ,IT_ALERT
+            ,IT_ALERT_NO_ITEM
+            ,IT_DATA
+        } ITEMTYPE;
+
+        typedef struct _tagItemData
+        {
+            ULONG       cbSize;
+            // more info about category etc.
+            ITEMDATA_FLAGS grfItem;
+            // the prefered tymed the client wants the data
+            TYMED       tymedPrefered;
+            STGMEDIUM   stgmed;
+        } ITEMDATA, *LPITEMDATA;
+
+        HRESULT GetURL(
+                [out] LPOLESTR *ppwzUrl
+                );
+
+        HRESULT GetInfo(
+                [in]  DWORD     dwOptions,
+                [out] LPOLESTR *ppwzItemMime,
+                [out] LPCLSID  *pclsidItem,
+                [out] LPOLESTR *ppwzProtocol,
+                [out] LPCLSID  *pclsidProtocol,
+                [out] DWORD    *pdwOut
+                );
+
+        HRESULT GetItemData(
+                [in, out] DWORD *grfITEMF,
+                [in, out, unique] ITEMDATA * pitemdata
+                );
+
+        // new hresult: data might not be available
+        //
+
+        // Question: is the following method needed or is QI enough?
+        //HRESULT GetMoniker(
+        //        [out, unique] IMoniker **ppMoniker
+        //        );
+
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetItemSink interface definition
+//
+//  Description:
+//
+//  The item sink is the interface where an item gets consumed or added to
+//  the agent where it might be downloaded later and put to the destination.
+//
+//  The ItemSink migh also act as the item filter, hence it can drop an item.
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKITEMSINK_DEFINED")
+cpp_quote("#define _LPWCHKITEMSINK_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe5-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetItemSink : IUnknown
+{
+        typedef [unique] IOInetItemSink *LPWCHKITEMSINK;
+
+        HRESULT OnItem(
+            [in] ITEMTYPE   itemtype,
+            [in] IOInetItem *pWChkItem,
+            [in] DWORD      dwReserved
+            );
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetDestination interface definition
+//
+//  Description:
+//
+//  This interface is the gateway to the item data's destination.
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKDESTINATION_DEFINED")
+cpp_quote("#define _LPWCHKDESTINATION_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbea-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetDestination : IUnknown
+{
+        typedef [unique] IOInetDestination *LPWCHKDESTINATION;
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetAgent interface definition
+//
+//  Description:
+//
+//  This is the object provide by webcheck will can start listening on
+//  different protocols (APP) by using the custom verb "listen".
+//
+//  The clien can also add an item to the agents scheduler or spooler which
+//  will the item deliver to a distination at a given "WHEN"
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKAGENT_DEFINED")
+cpp_quote("#define _LPWCHKAGENT_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe7-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetAgent : IUnknown
+{
+        typedef [unique] IOInetAgent *LPWCHKAGENT;
+
+        typedef enum _tagScheduleMode
+        {
+            SMODE_ONCEAT        = 1,
+            SMODE_FIRSTAT
+
+        } SCHEDULEMODE;
+
+        typedef struct _tagScheduleTime
+        {
+            ULONG date;
+            ULONG time;
+
+        } SCHEDULETIME;
+
+        typedef struct _tagScheduleData
+        {
+            SCHEDULEMODE schMode;
+            SCHEDULETIME schtimeFirst;
+            SCHEDULETIME schtimeRepeat;
+        } SCHEDULEDATA;
+
+
+        // will start a listening protocol (APP) and listen for items
+        // eg. mc or alert etc.
+        HRESULT StartListen(
+            [in] const LPCWSTR  szProtocol,
+            [in] IOInetItemFilter *pWChkItemFilter,
+            [in] DWORD          grfMode,
+            [out] CLSID        *pclsidProtocol,
+            [in] DWORD          dwReserved
+            );
+
+        // will release the sink passed in at StartListen
+        HRESULT StopListen(
+            [out] CLSID   *pclsidProtocol
+            );
+
+        // add item to the spooler
+        HRESULT ScheduleItem(
+            [in] IOInetItem          *pWChkItem,
+            [in] IOInetDestination   *pWChkDest,
+            [in] SCHEDULEDATA       *pschdata,
+            [in] DWORD               dwMode,
+            [out, unique] DWORD     *pdwCookie
+            );
+
+        HRESULT RevokeItem(
+            [in] DWORD      dwCookie
+            );
+
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetAdvisor interface definition
+//
+//  Description:
+//
+//  This is the object provide by webcheck will can start listening on
+//  different protocols (APP) by using the custom verb "listen".
+//
+//  The clien can also add an item to the agents scheduler or spooler which
+//  will the item deliver to a distination at a given "WHEN"
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKADVISOR_DEFINED")
+cpp_quote("#define _LPWCHKADVISOR_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe8-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetAdvisor : IUnknown
+{
+        typedef [unique] IOInetAdvisor *LPWCHKADVISOR;
+
+
+        // will start a listening protocol (APP) and listen for items
+        // eg. mc or alert etc.
+        HRESULT StartListen(
+            [in] const LPCWSTR  szProtocol,
+            [in] IOInetItemFilter *pWChkItemFilter,
+            [in] DWORD          grfMode,
+            [out] CLSID        *pclsidProtocol,
+            [in] DWORD          dwReserved
+            );
+
+        // will release the sink passed in at StartListen
+        HRESULT StopListen(
+            [out] CLSID   *pclsidProtocol
+            );
+
+        HRESULT Advise(
+            [in] IOInetItemSink *pWChkItemSink,
+            [in] DWORD          grfMode,
+            [in] ULONG          cMimes,
+            [in] const LPCWSTR *ppwzItemMimes,
+            [in] DWORD          dwReserved
+            );
+
+        HRESULT Unadvise(
+            [in] IOInetItemSink *pWChkItemSink,
+            [in] ULONG          cMimes,
+            [in] const LPCWSTR *ppwzItemMimes
+            );
+
+        HRESULT SendAdvise(
+            [in] ITEMTYPE       itemtype,
+            [in] IOInetItem     *pWChkItem,
+            [in] DWORD          grfMode,
+            [in] LPCWSTR        pwzItemMimes,
+            [in] DWORD          dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IOInetItemSink interface definition
+//
+//  Description:
+//
+//  The item sink is the interface where an item gets consumed or added to
+//  the agent where it might be downloaded later and put to the destination.
+//
+//  The ItemSink migh also act as the item filter, hence it can drop an item.
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWCHKITEMFILTER_DEFINED")
+cpp_quote("#define _LPWCHKITEMFILTER_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe9-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IOInetItemFilter : IUnknown
+{
+        typedef [unique] IOInetItemFilter *LPWCHKITEMFILTER;
+
+        typedef struct _tagAnouncmentData
+        {
+            ULONG       cbSize;
+            // more info about category etc.
+            LPWSTR      pwzName;
+
+        } ANOUNCMENTDATA, *LPANOUNCMENTDATA;
+
+
+        HRESULT OnAnouncment(
+            [in] ANOUNCMENTDATA *pAnouncementData,
+            [in] LPCWSTR         pwzUrl,
+            [in] DWORD           dwReserved
+            );
+}
+cpp_quote("#endif")
+
+
+
+// new API
+#pragma midl_echo("STDAPI GetOInetAdvisor(DWORD dwMode, IOInetAdvisor **ppOInetAdvisor, DWORD dwReserved); ")
+
+
+cpp_quote("#define INET_E_USE_DEFAULT_PROTOCOLHANDLER _HRESULT_TYPEDEF_(0x800C0011L)      ")
+cpp_quote("#define INET_E_USE_DEFAULT_SETTING         _HRESULT_TYPEDEF_(0x800C0012L)      ")
+
+
+
+
+
+
+

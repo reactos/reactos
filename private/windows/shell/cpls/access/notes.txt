@@ -1,0 +1,29 @@
+Bug Notes
+
+Initialization is hard to follow
+Conditional statements for tests that could not possibly true.
+Invalid setting of flags
+Improperly initialized structures before calling SPI_GETHIGHCONTRAST
+Obsolete functions being used
+Non-NULL values passed to functions that require NULL values
+There was code that appended spaces to color scheme and then more code that removed the spaces - looked like 2 programmers worked on it. 
+There were loops that would never execute.
+Incorrect array sizes passed to many, many functions
+Variables declared, initialized but never used
+HIGHCONTRAST and MOUSEKEYS did not have ??F_HOTKEYSOUND and ??F_CONFIRMHOTKEY flags set properly
+Functions exist that never get called
+Incorrect access rights specified when creating a registry key - system would not allow values to be set.
+Code fragments repeated throughout
+Repeated useless code: x = 5; x = 5;
+FilterKeys Slider controls were handled incorrectly - worked on Win95 by coincidence
+
+SPI_?ETKEYBOARDPREF is not on WinNT
+SPI_?ETHIGHCONTRAST is not on WinNT
+SPI_?ETSERIALKEYS is not on WinNT
+// NT doesn't support SSF_INDICATOR but it's not documented or exposed by this Applet.
+SOUNDSENTRY.iFSTextEffect is not supported on WinNT
+SOUNDSENTRY.iWindowsEffectMSec is not supported on WinNT
+
+MouseKeys:
+WinNT only supports: MKF_MOUSEKEYSON, MKF_AVAILABLE, MKF_HOTKEYACTIVE, MKF_HOTKEYSOUND
+WinNT does not support: MKF_CONFIRMHOTKEY, MKF_INDICATOR, MKF_MODIFIERS, MKF_REPLACENUMBERS	

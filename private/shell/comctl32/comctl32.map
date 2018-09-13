@@ -1,0 +1,277 @@
+// This file contains directives for how to order the functions.
+#include "comctl32.fmap"
+
+libcomctl32.so.1
+{
+    global:
+
+//#=========================================================================
+//# Win;
+//#=========================================================================
+
+        MenuHelp;
+        ShowHideMenuCtl;
+        GetEffectiveClientRect;
+        DrawStatusTextA;
+        CreateStatusWindowA;
+        CreateToolbar;
+        CreateMappedBitmap;
+        GetWindowSubclass;
+        MakeDragList;
+        LBItemFromPt;
+        DrawInsert;
+        CreateUpDownControl;
+        InitCommonControls;
+
+//#=========================================================================
+//# these are public APIs that are exported by name
+//#=========================================================================
+
+        InitCommonControlsEx;
+        CreateToolbarEx;
+        PropertySheetA;
+        CreatePropertySheetPageA;
+        DestroyPropertySheetPage;
+        DllGetVersion                                   ;
+        DllInstall                                      ;
+        _TrackMouseEvent;
+
+//#=========================================================================
+//# Flat Window Scroll Bar APIs
+//#=========================================================================
+
+        FlatSB_SetScrollInfo;
+        FlatSB_SetScrollPos;
+        FlatSB_SetScrollRange;
+        FlatSB_SetScrollProp;
+
+        FlatSB_GetScrollInfo;
+        FlatSB_GetScrollPos;
+        FlatSB_GetScrollRange;
+        FlatSB_GetScrollProp;
+
+        FlatSB_EnableScrollBar;
+        FlatSB_ShowScrollBar;
+
+        InitializeFlatSB;
+        UninitializeFlatSB;
+
+//#=========================================================================
+//#  ImageList APIs, so many they get a custom comment!
+//#=========================================================================
+
+        ImageList_LoadImageA;
+        ImageList_Create;
+        ImageList_SetFilter;
+        ImageList_Destroy;
+        ImageList_GetImageCount;
+        ImageList_SetImageCount;
+        ImageList_SetBkColor;
+        ImageList_GetBkColor;
+        ImageList_Add;
+        ImageList_AddIcon;
+        ImageList_Replace;
+        ImageList_ReplaceIcon;
+        ImageList_Remove;
+        ImageList_Copy;
+        ImageList_Draw;
+        ImageList_DrawEx;
+        ImageList_GetImageInfo;
+        ImageList_GetImageRect;
+        ImageList_Merge;
+        ImageList_Write;
+        ImageList_Read;
+        ImageList_GetIcon;
+        ImageList_AddMasked;
+        ImageList_GetIconSize;
+        ImageList_SetIconSize;
+        ImageList_SetOverlayImage;
+
+//		ImageList_StartDrag;
+
+        ImageList_DragShowNolock;
+        ImageList_BeginDrag;
+        ImageList_EndDrag;
+        ImageList_DragEnter;
+        ImageList_DragMove;
+        ImageList_DragLeave;
+        ImageList_GetDragImage;
+        ImageList_SetDragCursorImage;
+        ImageList_Duplicate;
+        ImageList_DrawIndirect;
+
+
+//#=========================================================================
+//#  ANSI/UNICODE stuff
+//#=========================================================================
+
+//        DrawStatusTextA;
+//        CreateStatusWindowA;
+//        PropertySheetA;
+//        CreatePropertySheetPageA;
+//        ImageList_LoadImageA;
+
+        DrawStatusTextW;
+        CreateStatusWindowW;
+        PropertySheetW;
+        CreatePropertySheetPageW;
+        ImageList_LoadImageW;
+
+//#=========================================================================
+//#  MUI functions
+//#=========================================================================
+
+        InitMUILanguage;
+        GetMUILanguage;
+
+//#=========================================================================
+//# these are internal APIs
+//# NOTE if you change these ordinals, you must change the ordinal defines
+//# in commctrl.h, because COMDLG;
+//#=========================================================================
+
+#ifndef WINNT
+//		  Cctl1632_ThunkData32;
+#ifdef EXPORT_BY_FORWARDERS_BY_NAME
+
+//        CreateMRUList = CreateMRUListA;
+//        AddMRUString = AddMRUStringA;
+//        EnumMRUList = EnumMRUListA;
+//        FindMRUString = FindMRUStringA;
+
+//        StrToInt = StrToIntA;
+//        StrChr = StrChrA;
+//        StrRChr = StrRChrA;
+//        StrStr = StrStrA;
+//        StrStrI = StrStrIA;
+//        Str_SetPtr = Str_SetPtrA;
+//        Str_GetPtr = Str_GetPtrA;
+//        StrCmpN = StrCmpNA;
+//        StrCmpNI = StrCmpNIA;
+//        StrCSpn = StrCSpnA;
+
+#endif
+#endif
+
+        Alloc;
+        ReAlloc;
+        Free;
+        GetSize;
+        Str_GetPtrA;
+        Str_SetPtrA;
+        Str_GetPtrW;
+        Str_SetPtrW;
+
+
+        CreateMRUListA;
+        FreeMRUList;
+        AddMRUStringA;
+        EnumMRUListA;
+        FindMRUStringA;
+        DelMRUString;
+        CreateMRUListLazyA;
+
+        CreateMRUListW;
+        AddMRUStringW;
+        FindMRUStringW;
+        EnumMRUListW;
+        CreateMRUListLazyW;
+
+        CreatePage;
+        CreateProxyPage;
+
+        AddMRUData;
+        FindMRUData;
+
+        DSA_Create;
+        DSA_Destroy;
+        DSA_GetItem;
+        DSA_GetItemPtr;
+        DSA_InsertItem;
+        DSA_SetItem;
+        DSA_DeleteItem;
+        DSA_DeleteAllItems;
+
+        DPA_Create;
+        DPA_Destroy;
+        DPA_Grow;
+        DPA_Clone;
+        DPA_GetPtr;
+        DPA_GetPtrIndex;
+        DPA_InsertPtr;
+        DPA_SetPtr;
+        DPA_DeletePtr;
+        DPA_DeleteAllPtrs;
+        DPA_Sort;
+        DPA_Search;
+        DPA_CreateEx;
+        DPA_LoadStream;
+        DPA_SaveStream;
+        DPA_Merge;
+
+        SendNotify;
+        SendNotifyEx;
+
+//#; those string things
+        StrChrA;
+        StrRChrA;
+        StrCmpNA;
+        StrCmpNIA;
+        StrStrA;
+        StrStrIA;
+        StrCSpnA;
+        StrToIntA;
+
+//#; Unicode version of string functions
+        StrChrW;
+        StrRChrW;
+        StrCmpNW;
+        StrCmpNIW;
+        StrStrW;
+        StrStrIW;
+        StrCSpnW;
+
+//# Not Implemented : Use the one exported by shlwapi
+//        StrToIntW;
+
+        StrChrIA;
+        StrChrIW;
+        StrRChrIA;
+        StrRChrIW;
+
+        StrRStrIA;
+        StrRStrIW;
+
+        StrCSpnIA;
+        StrCSpnIW;
+
+        IntlStrEqWorkerA;
+        IntlStrEqWorkerW;
+
+//#; APIs added after Win;
+        SmoothScrollWindow;
+        DoReaderMode;
+        SetPathWordBreakProc;
+        
+        DPA_EnumCallback;
+        DPA_DestroyCallback;
+        DSA_EnumCallback;
+        DSA_DestroyCallback;
+
+//#; For shdocvw to call Win;
+        SHGetProcessDword;
+        ImageList_SetColorTable;
+
+//# Shdocvw missing these symbols.
+        LoadHandCursor;
+        UnixPaintArrow;
+        RemoveWindowSubclass;
+        SetWindowSubclass;
+        DefSubclassProc;
+        MirrorIcon;
+
+        _____comctl32_initDLL;
+
+    local:
+       *;
+};

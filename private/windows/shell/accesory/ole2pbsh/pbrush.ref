@@ -1,0 +1,98 @@
+NAME PbrushX
+
+DESCRIPTION 'PC Paintbrush+'
+EXETYPE WINDOWS
+STUB    'WINSTUB.EXE'
+
+CODE MOVEABLE
+DATA MOVEABLE MULTIPLE PRELOAD
+
+HEAPSIZE     16000
+STACKSIZE    32000
+
+SEGMENTS
+  _TEXT         MOVEABLE DISCARDABLE PRELOAD
+  _INI          MOVEABLE DISCARDABLE PRELOAD
+  _RES          MOVEABLE DISCARDABLE PRELOAD 
+  _RES2         MOVEABLE DISCARDABLE PRELOAD
+  _AIR          MOVEABLE DISCARDABLE
+  _BRUSH        MOVEABLE DISCARDABLE PRELOAD
+  _BRUSHDLG     MOVEABLE DISCARDABLE
+  _CLEAR        MOVEABLE DISCARDABLE
+  _CLIP         MOVEABLE DISCARDABLE
+  _COLORDLG     MOVEABLE DISCARDABLE
+  _CURVE        MOVEABLE DISCARDABLE
+  _ERASE        MOVEABLE DISCARDABLE
+  _FLOOD        MOVEABLE DISCARDABLE
+  _FULL         MOVEABLE DISCARDABLE
+  _IO           MOVEABLE DISCARDABLE PRELOAD 
+  _IO2          MOVEABLE DISCARDABLE  
+  _IO3          MOVEABLE DISCARDABLE PRELOAD 
+  _LINE         MOVEABLE DISCARDABLE
+  _MENU         MOVEABLE DISCARDABLE PRELOAD 
+  _MSD          MOVEABLE DISCARDABLE
+  _OLEINIT      MOVEABLE DISCARDABLE PRELOAD     ; OLE server init code
+  _OLE          MOVEABLE DISCARDABLE             ; OLE server code
+  _OVAL         MOVEABLE DISCARDABLE
+  _PAL          MOVEABLE DISCARDABLE PRELOAD 
+  _PICK         MOVEABLE DISCARDABLE 
+  _POLY         MOVEABLE DISCARDABLE
+  _PRINT        MOVEABLE DISCARDABLE 
+  _RECT         MOVEABLE DISCARDABLE
+  _SIZE         MOVEABLE DISCARDABLE PRELOAD 
+  _TEXTDP       MOVEABLE DISCARDABLE
+  _TOOL         MOVEABLE DISCARDABLE PRELOAD 
+  _ZOOMIN       MOVEABLE DISCARDABLE
+  _ZOOMOT       MOVEABLE DISCARDABLE
+  _SCOOLVM	MOVEABLE DISCARDABLE PRELOAD
+
+EXPORTS
+  ParentWP @1
+  PaintWP  @2
+  ToolWP   @3
+  SizeWP   @4
+  ColorWP  @5
+  ClearDlg @7
+  InfoDlg  @9
+  MouseDlg @10
+  BrushDlg @11
+  ColorDlg @12
+  AbortDlg @14
+  AbortPrt @15
+  FullWP   @16
+  ZoomOtWP @17
+  PrintFileDlg @18
+  PageSetDlg @24
+  TiltBlt @25
+  NullWP @26
+  PalWndProc @27
+  EnumPens @28
+
+         SrvrOpen                   @30
+         SrvrCreate                 @31
+         SrvrCreateFromTemplate     @32
+         SrvrEdit                   @33
+         SrvrExit                   @34
+         SrvrRelease                @35
+
+         DocSave                    @40
+         DocClose                   @41
+         DocSetHostNames            @42
+         DocSetDocDimensions        @43
+         DocGetObject               @44
+         DocRelease                 @45
+         DocSetColorScheme          @46
+
+         ItemQueryProtocol          @50
+         ItemDelete                 @51
+         ItemShow                   @52
+         ItemGetData                @53
+         ItemSetData                @54
+         ItemSetTargetDevice        @55
+         ItemSetBounds              @56
+         ItemEnumFormats            @57
+         ItemSetColorScheme         @58
+         ItemDoVerb                 @59
+
+         FileDialog                 @60
+         ObjectUpdateDlgProc        @61

@@ -1,0 +1,88 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Cathcart (stevecat) 15-Nov-1994
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+Use the following line when this is UNICODE ported
+
+C_DEFINES=-DWIN32 -DWINNT -DUNICODE -D_WIN32 -DWINVER=0x0400 (huh? -bobday)
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=cpls
+
+TARGETNAME=tweakui
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib             \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib               \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib             \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib              \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib                \
+           $(BASEDIR)\public\sdk\lib\*\libc.lib                 \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib             \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib             \
+           $(BASEDIR)\public\sdk\lib\*\version.lib              \
+
+
+DLLENTRY= Entry32
+DLLBASE=0x40000000
+
+INCLUDES=.;..\..\inc;$(BASEDIR)\private\windows\inc
+
+# Don't turn on -DWINNT because we're still building Win95 binaries this way
+
+C_DEFINES=-DNT -DNOWINRES
+
+UMTYPE=windows
+EXPECTED_WINVER=4.0
+
+SOURCES=  tweakui.rc \
+          addrm.c    \
+          boot.c     \
+          common.c   \
+          desktop.c  \
+          mycomp.c   \
+          network.c  \
+          explorer.c \
+          general.c  \
+          mouse.c    \
+          link.c     \
+          lv.c       \
+          lvchk.c    \
+          misc.c     \
+          ole.c      \
+          paranoia.c \
+          ie4.c      \
+          control.c  \
+          pickicon.c \
+          pidl.c     \
+          reg.c      \
+          repair.c   \
+          strings.c  \
+          tools.c    \
+          tweakui.c  \
+          with.c
+
+PRECOMPILED_INCLUDE=tweakui.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj

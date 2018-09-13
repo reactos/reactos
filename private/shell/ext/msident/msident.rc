@@ -1,0 +1,304 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winuser.h"
+#include "winnt.h"
+#include "commctrl.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winuser.h""\r\n"
+    "#include ""winnt.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""msident.rcv""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+iddPasswordOff DIALOGEX 0, 0, 217, 78
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Confirm Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC,7,37,34,8
+    EDITTEXT        idcConfirmPwd,64,35,146,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,106,56,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,160,56,50,14
+    LTEXT           "Confirm your password before it is turned off.",
+                    idcConfirmMsg,7,7,201,25
+END
+
+iddChgPwd DIALOGEX 0, 0, 209, 82
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Change Identity Password"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Old Password:",IDC_STATIC,7,12,46,8
+    EDITTEXT        idcOldPwd,90,10,112,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&New Password:",IDC_STATIC,7,28,50,8
+    EDITTEXT        idcNewPwd,90,26,112,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm New Password:",IDC_STATIC,7,44,76,8
+    EDITTEXT        idcConfPwd,90,42,112,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,97,61,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,61,50,14
+END
+
+iddConfirmUserDelete DIALOGEX 0, 0, 239, 76
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Warning"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&Delete",IDOK,125,55,50,14
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,182,55,50,14
+    ICON            103,idcWarningIcon,7,7,21,20
+    LTEXT           "msg",idcErrorMsg,40,7,192,37
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x22,0,0,6,6
+END
+
+iddLogin DIALOGEX 0, 0, 180, 165
+STYLE DS_SYSMODAL | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Identity Login"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LISTBOX         idcUserNameList,7,47,166,44,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Password:",idcPwdCaption,7,100,47,8
+    EDITTEXT        idcPwd,58,97,115,14,ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON      "&Log Off Identity",idcLogoff,7,122,75,14
+    PUSHBUTTON      "&Manage Identities",idcManage,93,122,80,14
+    DEFPUSHBUTTON   "OK",IDOK,70,146,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,146,50,14
+    LTEXT           "",idcWelcomeMsg,36,6,137,8
+    ICON            idiLogin,IDC_NO_HELP_1,6,7,21,20
+    LTEXT           "To switch identities, select a new identity, and then click OK. To add or modify an identity, click Manage Identities",
+                    idcLoginInstr,36,20,137,24
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,140,166,1
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x26,0,0,6,6
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,116,166,1
+END
+
+iddNewPwd DIALOGEX 0, 0, 209, 63
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Enter Password"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&New Password:",IDC_STATIC,7,9,50,8
+    EDITTEXT        idcNewPwd,90,7,112,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm New Password:",IDC_STATIC,7,24,76,8
+    EDITTEXT        idcConfPwd,90,23,112,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,97,42,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,42,50,14
+END
+
+iddUserProperties DIALOGEX 0, 0, 276, 148
+STYLE DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Identity Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Type your &name:",IDC_STATIC,42,24,64,8
+    EDITTEXT        idcUserName,110,22,159,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Help",idcTellMeMore,193,102,76,14
+    CONTROL         "&Require a password",idcUsePwd,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,42,85,145,10
+    PUSHBUTTON      "Change &Password",idcChgPwd,193,83,76,14
+    DEFPUSHBUTTON   "OK",IDOK,162,128,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,219,128,50,14
+    LTEXT           "Identity name",IDC_NO_HELP_5,7,7,30,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,42,11,227,1
+    ICON            idiLogin,IDC_NO_HELP_1,7,17,21,20
+    LTEXT           "Password",IDC_NO_HELP_4,7,43,32,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,42,47,227,1
+    ICON            idiKeys,IDC_NO_HELP_2,7,53,21,20
+    LTEXT           "You can require a password for this identity.  This provides a moderate level of security. However, other users may still be able to see your data. For information about security, click Help.",
+                    IDC_NO_HELP_3,42,54,226,28
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,121,262,1
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x25,0,0,6,6
+END
+
+iddManager DIALOGEX 0, 0, 234, 233
+STYLE DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Manage Identities"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Identities:",idcStaticNames,7,36,55,8
+    LISTBOX         idcUserNameList,7,47,156,73,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&New",idcAdd,172,47,55,14
+    PUSHBUTTON      "&Remove",idcDelete,172,66,55,14
+    PUSHBUTTON      "&Properties",idcProperties,172,85,55,14
+    CONTROL         "&Use this identity when starting a program",
+                    idcCheckDefault,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+                    129,200,10
+    COMBOBOX        idcStartupCombo,19,143,144,47,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Use &this identity when a program cannot ask you to choose an identity",
+                    IDC_STATIC,19,165,208,19
+    COMBOBOX        idcDefaultCombo,19,187,144,47,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Close",IDOK,172,212,55,14
+    ICON            idiLogin,IDC_NO_HELP_1,6,7,20,20
+    LTEXT           "To add a new identity, click New.  To modify an identity, select it, and then click Properties.  To delete an identity, select it, and then click Remove",
+                    IDC_NO_HELP_2,37,7,190,27
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,124,220,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,160,220,1
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x24,0,0,6,6
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,204,220,1
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+idiUser                 ICON    DISCARDABLE     "user.ico"
+idiKeys                 ICON    DISCARDABLE     "keys.ico"
+idiLogin                ICON    DISCARDABLE     "login.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    iddUserProperties, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 146
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    idsPwdNotMatch          "The passwords you typed don't match. Please type and confirm the password again."
+    idsPwdError             "Password Error"
+    idsPwdDoesntMatch       "The password you typed is incorrect."
+    idsPwdChgNotMatch       "The new and confirm passwords do not match.  Try again."
+    idsConfirmDeleteMsg     "Are you sure you want to delete %1?  Deleting an identity may make information in identity-aware applications inaccessible.  This operation cannot be undone."
+    idsConfirmDelPwd        "Confirm the password for identity %1 before deleting the identity."
+    idsConfirmDisablePwd    "Confirm your password before it is turned off."
+    idsUserNameExists       "Identity name is already in use. Choose another."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    idsUserNameInUse        "Identity Name In Use"
+    idsCantDeleteCurrUser   "You cannot delete the current identity."
+    idsCantDeleteUser       "Can't Delete Identity"
+    idsLoginAsUser          "Do you want to switch to %s now?"
+    idsUserAdded            "Identity Added"
+    idsSwitchUser           "Switch Identity"
+    idsMaintainConnection   "You are currently connected to the Internet. Do you want to keep the current connection for the next user?"
+    idsUserNameTooShort     "You must enter an identity name"
+    idsNameTooShort         "Name Missing"
+    idsMainUser             "Main Identity"
+    idsRootDirName          "Identities"
+    idsDefault              " (Default)"
+    idsLoginDefault         "The default identity"
+    idsLoginLast            "Ask Me"
+    idsLoginAsk             "Prompted for an identity"
+    idsSwitchCancelled      "The current identity could not be changed because one of the applications was unable to switch.\r\nClose any open dialog boxes in other applications  before trying again."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    idsSwitchCancelCaption  "Identity Switch Cancelled"
+    idsLogoutCancelled      "The current identity could not be logged out because one of your applications was unable to quit."
+    idsConfirmEdit          "You must confirm the password for identity %1 before editing its properties."
+    idsIdentityLogin        "Identity Login"
+    idsSwitchIdentities     "Switch Identities"
+    idsIdentityProperties   "Identity Properties"
+    idsNewIdentity          "New Identity"
+    idsLoginWithCurrent     "Current &identity: %s"
+    idsLoginNoCurrent       "There is no current &identity"
+    idsLogoff               "Log Off Current Identity"
+    idsConfirmLogoff        "Are you sure you want to log off the current identity?"
+    idsNameCantBeDefault    "The identity name cannot include (Default).  You can set the default identity in the Manage Identities dialog by selecting an identity and clicking Make Default."
+    idsNameProblem          "Name Problem"
+    idsSwitchInProgressSwitch 
+                            "Another application has the Switch Identities or Identity Login dialog showing. Choose an identity in that dialog to switch identities."
+    idsSwitchInProgressLaunch 
+                            "Another application has the Switch Identities or Identity Login dialog showing. Choose an identity in that dialog before launching this application again."
+    idsNoIdentityInstr      "Select your identity name below.  To add or modify an identity, click Manage Identities."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    idsCurrIdentityInstr    "To switch identities, select the name below. To add or modify an identity, click Manage Identities."
+    idsPwdNotFound          "Windows cannot validate the password for this identity. You can access this identity only from the profile in which it was created."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "msident.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,113 @@
+This file contains random notes on the implementation of a shell name space
+extension.
+
+The shareui name space extension mostly independent of the shell, and only uses
+a few shell interfaces that are internal, particularly the standard shell
+folder view, using SHCreateShellFolderViewEx.
+
+Menus
+=================================================
+Menus appear in several places:
+1. Context-menus on a selection
+2. Context-menu on the background
+3. The menu bar, with a selection
+4. The menu bar, with nothing selected
+
+=======
+For (1), the menu is:
+
+    Delete
+    ------
+    Properties
+
+and the default is Properties. Properties is grayed if there is more than one
+item selected.
+
+=======
+For (2), the menu is the standard shell folder view menu, plus a "New" item:
+
+    View
+        Large Icons
+        Small Icons
+        List
+        Details
+    -------
+    Arrange Icons
+        by Name
+        by Comment
+        by Max Uses         -- only for administrators
+        by Current Uses     -- only for administrators
+        by Path             -- only for administrators
+        -------
+        Auto Arrange
+    Line up Icons
+    -------
+    Paste                   -- always grayed
+    Paste Shortcut          -- always grayed
+    -------
+    New
+        Share
+
+=======
+For (3), the File menu should be:
+
+    New
+        Share
+    -------
+    Create Shortcut         -- always grayed
+    Delete
+    Rename                  -- always grayed
+    Properties
+    -------
+    Close
+
+and the View->Arrange Icons menu should be:
+
+    by Name
+    by Comment
+    by Max Uses         -- only for administrators
+    by Current Uses     -- only for administrators
+    by Path             -- only for administrators
+    -------
+    Auto Arrange
+
+As with (1), Properties will be the default, and will be grayed if the
+selection includes more than one item.
+
+=======
+For (4), the File menu should be:
+
+    New
+        Share
+    -------
+    Create Shortcut         -- always grayed
+    Delete                  -- grayed
+    Rename                  -- always grayed
+    Properties              -- grayed
+    -------
+    Close
+
+and the View->Arrange Icons menu should be the same as in (3).
+
+=======
+The implementation for these various menus occurs in several different places
+and should be synchronized to make sure the menus all do the same thing.
+
+Case (1) is implemented by the shell calling IShellFolder::GetUIObjectOf asking
+for IContextMenu.
+
+Case (2) is implemented by the shell calling IShellFolder::CreateViewObject
+asking for IContextMenu.
+
+Case (3) is implemented by the shell calling IShellFolder::GetUIObjectOf asking
+for IContextMenu. The context-menu is created. Also, the ...?
+
+Case (4) is implemented as follows. When a shell folder view created using
+SHCreateShellFolderViewEx is created, it calls back the passed-in callback
+function with the message DVM_MERGEMENU. At this point, the background menus
+are created.
+
+The IContextMenu interfaces are also invoked for other uses, namely performing operations from the toolbar. The toolbar calls IShellFolder::GetUIObjectOf
+asking for IContextMenu when it needs to call properties or delete an item.
+It calls IContextMenu::InvokeCommand with string commands "delete" or
+"properties" in these cases.

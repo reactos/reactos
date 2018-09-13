@@ -1,0 +1,32 @@
+#ifndef _SELECOBJ_PDL_
+#define _SELECOBJ_PDL_ 1
+
+#include "types.pdl"
+
+file selecobj.pdl
+
+import types.pdl
+
+
+enum htmlSelection prefix:htmlSelection guid:3050f259-98b5-11cf-bb82-00aa00bdce0b
+    eval None      string:None      value:0
+    eval Text      string:Text
+    eval Control   string:Control
+    eval Table     string:Table
+
+
+interface IHTMLSelectionObject super:IDispatch       guid:3050f25A-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CSelectionObject:createRange
+    refmethod CSelectionObject:empty
+    refmethod CSelectionObject:clear
+    refprop   CSelectionObject:type
+
+
+class CSelectionObject name:HTMLSelectionObject primaryinterface:IHTMLSelectionObject
+    method HRESULT  createRange  dispid:DISPID_SELECTOBJ+1 (out retval type:IDispatch**  arg:range)
+    method HRESULT  empty        dispid:DISPID_SELECTOBJ+2
+    method HRESULT  clear        dispid:DISPID_SELECTOBJ+3
+
+    property type  atype:BSTR    dispid:DISPID_SELECTOBJ+4   type:htmlSelection   abstract get
+
+#endif _SELECOBJ_PDL_

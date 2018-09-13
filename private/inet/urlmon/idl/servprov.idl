@@ -1,0 +1,64 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1996.
+//
+//  File:       servprov.idl
+//
+//  Contents:   IServiceProvider description
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    02-15-95	JoePe Created
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright 1995 - 1996 Microsoft Corporation. All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("//  File: servprov.h")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid3.lib\")")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IServiceProvoder interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPSERVICEPROVIDER_DEFINED")
+cpp_quote("#define _LPSERVICEPROVIDER_DEFINED")
+
+[
+        object,
+	local,
+	uuid(6d5140c1-7436-11ce-8034-00aa006009fa),
+        pointer_default(unique)
+]
+
+
+interface IServiceProvider : IUnknown
+{
+    typedef [unique] IServiceProvider *LPSERVICEPROVIDER;
+
+    HRESULT QueryService(
+                [in] REFGUID rsid,
+                [in] REFIID iid,
+                [out] void ** ppvObj);
+}
+
+cpp_quote("#endif")
+

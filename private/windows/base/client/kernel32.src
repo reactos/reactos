@@ -1,0 +1,878 @@
+LIBRARY KERNEL32
+
+EXPORTS
+    AddAtomA
+    AddAtomW
+    AddConsoleAliasA                   PRIVATE
+    AddConsoleAliasW                   PRIVATE
+    AllocConsole
+    AllocateUserPhysicalPages
+    AreFileApisANSI
+    AssignProcessToJobObject
+    BackupRead
+    BackupSeek
+    BackupWrite
+    BaseAttachCompleteThunk            PRIVATE
+    Beep
+    BeginUpdateResourceA
+    BeginUpdateResourceW
+    BindIoCompletionCallback
+    BuildCommDCBA
+    BuildCommDCBAndTimeoutsA
+    BuildCommDCBAndTimeoutsW
+    BuildCommDCBW
+    CallNamedPipeA
+    CallNamedPipeW
+    CancelDeviceWakeupRequest
+    CancelIo
+    CancelTimerQueueTimer
+    CancelWaitableTimer
+    ChangeTimerQueueTimer
+    ClearCommBreak
+    ClearCommError
+    CloseConsoleHandle                 PRIVATE
+    CloseHandle
+    CloseProfileUserMapping            PRIVATE
+    CmdBatNotification                 PRIVATE
+    CommConfigDialogA
+    CommConfigDialogW
+    CompareFileTime
+    CompareStringA
+    CompareStringW
+    ConnectNamedPipe
+    ConsoleMenuControl                 PRIVATE
+    ContinueDebugEvent
+    ConvertDefaultLocale
+    ConvertThreadToFiber
+    CopyFileA
+    CopyFileExA
+    CopyFileExW
+    CopyFileW
+    CreateConsoleScreenBuffer
+    CreateDirectoryA
+    CreateDirectoryExA
+    CreateDirectoryExW
+    CreateDirectoryW
+    CreateEventA
+    CreateEventW
+    CreateFiber
+    CreateFileA
+    CreateFileMappingA
+    CreateFileMappingW
+    CreateFileW
+    CreateHardLinkA
+    CreateHardLinkW
+    CreateIoCompletionPort
+    CreateJobObjectA
+    CreateJobObjectW
+    CreateMailslotA
+    CreateMailslotW
+    CreateMutexA
+    CreateMutexW
+    CreateNamedPipeA
+    CreateNamedPipeW
+    CreatePipe
+    CreateProcessA
+    CreateProcessW
+    CreateRemoteThread
+    CreateSemaphoreA
+    CreateSemaphoreW
+    CreateTapePartition
+    CreateThread
+    CreateTimerQueue
+    CreateTimerQueueTimer
+    CreateToolhelp32Snapshot
+    CreateVirtualBuffer                PRIVATE
+    CreateWaitableTimerA
+    CreateWaitableTimerW
+    DebugActiveProcess
+    DebugBreak
+    DefineDosDeviceA
+    DefineDosDeviceW
+    DelayLoadFailureHook               PRIVATE
+    DeleteAtom
+    DeleteCriticalSection = NTDLL.RtlDeleteCriticalSection
+    DeleteFiber
+    DeleteFileA
+    DeleteFileW
+    DeleteTimerQueue
+    DeleteTimerQueueEx
+    DeleteTimerQueueTimer
+    DeleteVolumeMountPointA
+    DeleteVolumeMountPointW
+    DeviceIoControl
+    DisableThreadLibraryCalls
+    DisconnectNamedPipe
+    DnsHostnameToComputerNameA
+    DnsHostnameToComputerNameW
+    DosDateTimeToFileTime
+    DosPathToSessionPathA              PRIVATE
+    DosPathToSessionPathW              PRIVATE
+    DuplicateConsoleHandle             PRIVATE
+    DuplicateHandle
+    EndUpdateResourceA
+    EndUpdateResourceW
+    EnterCriticalSection = NTDLL.RtlEnterCriticalSection
+    EnumCalendarInfoA
+    EnumCalendarInfoExA
+    EnumCalendarInfoExW
+    EnumCalendarInfoW
+    EnumDateFormatsA
+    EnumDateFormatsExA
+    EnumDateFormatsExW
+    EnumDateFormatsW
+    EnumLanguageGroupLocalesA
+    EnumLanguageGroupLocalesW
+    EnumResourceLanguagesA
+    EnumResourceLanguagesW
+    EnumResourceNamesA
+    EnumResourceNamesW
+    EnumResourceTypesA
+    EnumResourceTypesW
+    EnumSystemCodePagesA
+    EnumSystemCodePagesW
+    EnumSystemLanguageGroupsA
+    EnumSystemLanguageGroupsW
+    EnumSystemLocalesA
+    EnumSystemLocalesW
+    EnumTimeFormatsA
+    EnumTimeFormatsW
+    EnumUILanguagesA
+    EnumUILanguagesW
+    EraseTape
+    EscapeCommFunction
+    ExitProcess
+    ExitThread
+    ExitVDM                            PRIVATE
+    ExpandEnvironmentStringsA
+    ExpandEnvironmentStringsW
+    ExpungeConsoleCommandHistoryA      PRIVATE
+    ExpungeConsoleCommandHistoryW      PRIVATE
+    ExtendVirtualBuffer                PRIVATE
+    FatalAppExitA
+    FatalAppExitW
+    FatalExit
+    FileTimeToDosDateTime
+    FileTimeToLocalFileTime
+    FileTimeToSystemTime
+    FillConsoleOutputAttribute
+    FillConsoleOutputCharacterA
+    FillConsoleOutputCharacterW
+    FindAtomA
+    FindAtomW
+    FindClose
+    FindCloseChangeNotification
+    FindFirstChangeNotificationA
+    FindFirstChangeNotificationW
+    FindFirstFileA
+    FindFirstFileExA
+    FindFirstFileExW
+    FindFirstFileW
+    FindFirstVolumeA
+    FindFirstVolumeMountPointA
+    FindFirstVolumeMountPointW
+    FindFirstVolumeW
+    FindNextChangeNotification
+    FindNextFileA
+    FindNextFileW
+    FindNextVolumeA
+    FindNextVolumeMountPointA
+    FindNextVolumeMountPointW
+    FindNextVolumeW
+    FindResourceA
+    FindResourceExA
+    FindResourceExW
+    FindResourceW
+    FindVolumeClose
+    FindVolumeMountPointClose
+    FlushConsoleInputBuffer
+    FlushFileBuffers
+    FlushInstructionCache
+    FlushViewOfFile
+    FoldStringA
+    FoldStringW
+    FormatMessageA
+    FormatMessageW
+    FreeConsole
+    FreeEnvironmentStringsA
+    FreeEnvironmentStringsW
+    FreeLibrary
+    FreeLibraryAndExitThread
+    FreeResource
+    FreeUserPhysicalPages
+    FreeVirtualBuffer                  PRIVATE
+    GenerateConsoleCtrlEvent
+    GetACP
+    SetCPGlobal                        PRIVATE
+    GetAtomNameA
+    GetAtomNameW
+    GetBinaryType = GetBinaryTypeA
+    GetBinaryTypeA
+    GetBinaryTypeW
+    GetCPInfo
+    GetCPInfoExA
+    GetCPInfoExW
+    GetCalendarInfoA
+    GetCalendarInfoW
+    GetCommConfig
+    GetCommMask
+    GetCommModemStatus
+    GetCommProperties
+    GetCommState
+    GetCommTimeouts
+    GetCommandLineA
+    GetCommandLineW
+    GetCompressedFileSizeA
+    GetCompressedFileSizeW
+    GetComputerNameA
+    GetComputerNameExA
+    GetComputerNameExW
+    GetComputerNameW
+    GetConsoleAliasA                   PRIVATE
+    GetConsoleAliasExesA               PRIVATE
+    GetConsoleAliasExesLengthA         PRIVATE
+    GetConsoleAliasExesLengthW         PRIVATE
+    GetConsoleAliasExesW               PRIVATE
+    GetConsoleAliasW                   PRIVATE
+    GetConsoleAliasesA                 PRIVATE
+    GetConsoleAliasesLengthA           PRIVATE
+    GetConsoleAliasesLengthW           PRIVATE
+    GetConsoleAliasesW                 PRIVATE
+    GetConsoleCP
+    GetConsoleCharType                 PRIVATE
+    GetConsoleCommandHistoryA          PRIVATE
+    GetConsoleCommandHistoryLengthA    PRIVATE
+    GetConsoleCommandHistoryLengthW    PRIVATE
+    GetConsoleCommandHistoryW          PRIVATE
+    GetConsoleCursorInfo
+    GetConsoleCursorMode               PRIVATE
+    GetConsoleDisplayMode              PRIVATE
+    GetConsoleFontInfo                 PRIVATE
+    GetConsoleFontSize                 PRIVATE
+    GetConsoleHardwareState            PRIVATE
+    GetConsoleInputExeNameA            PRIVATE
+    GetConsoleInputExeNameW            PRIVATE
+    GetConsoleInputWaitHandle          PRIVATE
+    GetConsoleKeyboardLayoutNameA      PRIVATE
+    GetConsoleKeyboardLayoutNameW      PRIVATE
+    GetConsoleMode
+    GetConsoleNlsMode                  PRIVATE
+    GetConsoleOutputCP
+    GetConsoleScreenBufferInfo
+    GetConsoleTitleA
+    GetConsoleTitleW
+    GetConsoleWindow                   PRIVATE
+    GetCurrencyFormatA
+    GetCurrencyFormatW
+    GetCurrentConsoleFont              PRIVATE
+    GetCurrentDirectoryA
+    GetCurrentDirectoryW
+    GetCurrentProcess
+    GetCurrentProcessId
+    GetCurrentThread
+    GetCurrentThreadId
+    GetDateFormatA
+    GetDateFormatW
+    GetDefaultCommConfigA
+    GetDefaultCommConfigW
+    GetDefaultSortkeySize              PRIVATE
+    GetDevicePowerState
+    GetDiskFreeSpaceA
+    GetDiskFreeSpaceExA
+    GetDiskFreeSpaceExW
+    GetDiskFreeSpaceW
+    GetDriveTypeA
+    GetDriveTypeW
+    GetEnvironmentStrings
+    GetEnvironmentStringsA = GetEnvironmentStrings
+    GetEnvironmentStringsW
+    GetEnvironmentVariableA
+    GetEnvironmentVariableW
+    GetExitCodeProcess
+    GetExitCodeThread
+    GetFileAttributesA
+    GetFileAttributesExA
+    GetFileAttributesExW
+    GetFileAttributesW
+    GetFileInformationByHandle
+    GetFileSize
+    GetFileSizeEx
+    GetFileTime
+    GetFileType
+    GetFullPathNameA
+    GetFullPathNameW
+    GetHandleInformation
+    GetLargestConsoleWindowSize
+    GetLastError
+    GetLinguistLangSize                PRIVATE
+    GetLocalTime
+    GetLocaleInfoA
+    GetLocaleInfoW
+    GetLogicalDriveStringsA
+    GetLogicalDriveStringsW
+    GetLogicalDrives
+    GetLongPathNameA
+    GetLongPathNameW
+    GetMailslotInfo
+    GetModuleFileNameA
+    GetModuleFileNameW
+    GetModuleHandleA
+    GetModuleHandleW
+    GetNamedPipeHandleStateA
+    GetNamedPipeHandleStateW
+    GetNamedPipeInfo
+    GetNextVDMCommand                  PRIVATE
+    GetNlsSectionName                  PRIVATE
+    OpenDataFile                       PRIVATE
+    NlsConvertIntegerToString          PRIVATE
+    GetNumberFormatA
+    GetNumberFormatW
+    GetNumberOfConsoleFonts            PRIVATE
+    GetNumberOfConsoleInputEvents
+    GetNumberOfConsoleMouseButtons
+    GetOEMCP
+    GetOverlappedResult
+    GetPriorityClass
+    GetPrivateProfileIntA
+    GetPrivateProfileIntW
+    GetPrivateProfileSectionA
+    GetPrivateProfileSectionNamesA
+    GetPrivateProfileSectionNamesW
+    GetPrivateProfileSectionW
+    GetPrivateProfileStringA
+    GetPrivateProfileStringW
+    GetPrivateProfileStructA
+    GetPrivateProfileStructW
+    GetProcAddress
+    GetProcessAffinityMask
+    GetProcessHeap
+    GetProcessHeaps
+    GetProcessIoCounters
+    GetProcessPriorityBoost
+    GetProcessShutdownParameters
+    GetProcessTimes
+    GetProcessVersion
+    GetProcessWorkingSetSize
+    GetProfileIntA
+    GetProfileIntW
+    GetProfileSectionA
+    GetProfileSectionW
+    GetProfileStringA
+    GetProfileStringW
+    GetQueuedCompletionStatus
+    GetShortPathNameA
+    GetShortPathNameW
+    GetStartupInfoA
+    GetStartupInfoW
+    GetStdHandle
+    GetStringTypeA
+    GetStringTypeExA
+    GetStringTypeExW
+    GetStringTypeW
+    GetSystemDefaultLCID
+    GetSystemDefaultLangID
+    GetSystemDefaultUILanguage
+    GetSystemDirectoryA
+    GetSystemDirectoryW
+    GetSystemInfo
+#if defined(REMOTE_BOOT)
+    GetSystemInfoExA
+    GetSystemInfoExW
+#endif // defined(REMOTE_BOOT)
+    GetSystemPowerStatus
+    GetSystemTime
+    GetSystemTimeAdjustment
+    GetSystemTimeAsFileTime
+    GetSystemWindowsDirectoryA
+    GetSystemWindowsDirectoryW
+    GetTapeParameters
+    GetTapePosition
+    GetTapeStatus
+    GetTempFileNameA
+    GetTempFileNameW
+    GetTempPathA
+    GetTempPathW
+    GetThreadContext
+    GetThreadLocale
+    GetThreadPriority
+    GetThreadPriorityBoost
+    GetThreadSelectorEntry
+    GetThreadTimes
+    GetTickCount
+    GetTimeFormatA
+    GetTimeFormatW
+    GetTimeZoneInformation
+    GetUserDefaultLCID
+    GetUserDefaultLangID
+    GetUserDefaultUILanguage
+    GetVDMCurrentDirectories           PRIVATE
+    GetVersion
+    GetVersionExA
+    GetVersionExW
+    GetVolumeInformationA
+    GetVolumeInformationW
+    GetVolumeNameForVolumeMountPointA
+    GetVolumeNameForVolumeMountPointW
+    GetVolumePathNameA
+    GetVolumePathNameW
+    GetWindowsDirectoryA
+    GetWindowsDirectoryW
+    GetWriteWatch
+    GlobalAddAtomA
+    GlobalAddAtomW
+    GlobalAlloc
+    GlobalCompact
+    GlobalDeleteAtom
+    GlobalFindAtomA
+    GlobalFindAtomW
+    GlobalFix
+    GlobalFlags
+    GlobalFree
+    GlobalGetAtomNameA
+    GlobalGetAtomNameW
+    GlobalHandle
+    GlobalLock
+    GlobalMemoryStatus
+    GlobalMemoryStatusEx
+    GlobalReAlloc
+    GlobalSize
+    GlobalUnWire
+    GlobalUnfix
+    GlobalUnlock
+    GlobalWire
+    Heap32First
+    Heap32ListFirst
+    Heap32ListNext
+    Heap32Next
+    HeapAlloc = NTDLL.RtlAllocateHeap
+    HeapCompact
+    HeapCreate
+    HeapCreateTagsW                    PRIVATE
+    HeapDestroy
+    HeapExtend                         PRIVATE
+    HeapFree = NTDLL.RtlFreeHeap
+    HeapLock
+    HeapQueryTagW                      PRIVATE
+    HeapReAlloc = NTDLL.RtlReAllocateHeap
+    HeapSize = NTDLL.RtlSizeHeap
+    HeapSummary                        PRIVATE
+    HeapUnlock
+    HeapUsage                          PRIVATE
+    HeapValidate
+    HeapWalk
+    InitAtomTable
+    InitializeCriticalSection
+    InitializeCriticalSectionAndSpinCount
+    InterlockedCompareExchange
+    InterlockedDecrement
+    InterlockedExchange
+    InterlockedExchangeAdd
+    InterlockedIncrement
+    InvalidateConsoleDIBits            PRIVATE
+    IsBadCodePtr
+    IsBadHugeReadPtr
+    IsBadHugeWritePtr
+    IsBadReadPtr
+    IsBadStringPtrA
+    IsBadStringPtrW
+    IsBadWritePtr
+    IsDBCSLeadByte
+    IsDBCSLeadByteEx
+    IsDebuggerPresent
+    IsProcessorFeaturePresent
+    IsSystemResumeAutomatic
+    IsValidCodePage
+    IsValidLanguageGroup
+    IsValidLocale
+    LCMapStringA
+    LCMapStringW
+    LeaveCriticalSection = NTDLL.RtlLeaveCriticalSection
+    LoadLibraryA
+    LoadLibraryExA
+    LoadLibraryExW
+    LoadLibraryW
+    LoadModule
+    LoadResource
+    LocalAlloc
+    LocalCompact
+    LocalFileTimeToFileTime
+    LocalFlags
+    LocalFree
+    LocalHandle
+    LocalLock
+    LocalReAlloc
+    LocalShrink
+    LocalSize
+    LocalUnlock
+    LockFile
+    LockFileEx
+    LockResource
+    MapUserPhysicalPages
+    MapUserPhysicalPagesScatter
+    MapViewOfFile
+    MapViewOfFileEx
+    Module32First
+    Module32FirstW
+    Module32Next
+    Module32NextW
+    MoveFileA
+    MoveFileExA
+    MoveFileExW
+    MoveFileW
+    MoveFileWithProgressA
+    MoveFileWithProgressW
+    MulDiv
+    MultiByteToWideChar
+    NlsGetCacheUpdateCount             PRIVATE
+    NlsResetProcessLocale              PRIVATE
+    OpenConsoleW                       PRIVATE
+    OpenEventA
+    OpenEventW
+    OpenFile
+    OpenFileMappingA
+    OpenFileMappingW
+    OpenJobObjectA
+    OpenJobObjectW
+    OpenMutexA
+    OpenMutexW
+    OpenProcess
+    OpenProfileUserMapping             PRIVATE
+    OpenSemaphoreA
+    OpenSemaphoreW
+    OpenThread
+    OpenWaitableTimerA
+    OpenWaitableTimerW
+    OutputDebugStringA
+    OutputDebugStringW
+    PeekConsoleInputA
+    PeekConsoleInputW
+    PeekNamedPipe
+    PostQueuedCompletionStatus
+    PrepareTape
+    PrivCopyFileExW                    PRIVATE
+    PrivMoveFileIdentityW              PRIVATE
+    Process32First
+    Process32FirstW
+    Process32Next
+    Process32NextW
+    ProcessIdToSessionId
+    PulseEvent
+    PurgeComm
+    QueryDosDeviceA
+    QueryDosDeviceW
+    QueryInformationJobObject
+    QueryPerformanceCounter
+    QueryPerformanceFrequency
+    QueryWin31IniFilesMappedToRegistry PRIVATE
+    QueueUserAPC
+    QueueUserWorkItem
+    RaiseException
+    ReadConsoleA
+    ReadConsoleInputA
+    ReadConsoleInputExA                PRIVATE
+    ReadConsoleInputExW                PRIVATE
+    ReadConsoleInputW
+    ReadConsoleOutputA
+    ReadConsoleOutputAttribute
+    ReadConsoleOutputCharacterA
+    ReadConsoleOutputCharacterW
+    ReadConsoleOutputW
+    ReadConsoleW
+    ReadDirectoryChangesW
+    ReadFile
+    ReadFileEx
+    ReadFileScatter
+    ReadProcessMemory
+    RegisterConsoleIME                 PRIVATE
+    RegisterConsoleOS2                 PRIVATE
+    RegisterConsoleVDM                 PRIVATE
+    RegisterWaitForInputIdle           PRIVATE
+    RegisterWaitForSingleObject
+    RegisterWaitForSingleObjectEx
+    RegisterWowBaseHandlers            PRIVATE
+    RegisterWowExec                    PRIVATE
+    ReleaseMutex
+    ReleaseSemaphore
+    RemoveDirectoryA
+    RemoveDirectoryW
+    ReplaceFile = ReplaceFileW
+    ReplaceFileA
+    ReplaceFileW
+    RequestDeviceWakeup
+    RequestWakeupLatency
+    ResetEvent
+    ResetWriteWatch
+    ResumeThread
+    RtlFillMemory = NTDLL.RtlFillMemory
+    RtlMoveMemory = NTDLL.RtlMoveMemory
+    RtlUnwind = NTDLL.RtlUnwind
+    RtlZeroMemory = NTDLL.RtlZeroMemory
+    ScrollConsoleScreenBufferA
+    ScrollConsoleScreenBufferW
+    SearchPathA
+    SearchPathW
+    SetCalendarInfoA
+    SetCalendarInfoW
+    SetCommBreak
+    SetCommConfig
+    SetCommMask
+    SetCommState
+    SetCommTimeouts
+    SetComputerNameA
+    SetComputerNameExA
+    SetComputerNameExW
+    SetComputerNameW
+    SetConsoleActiveScreenBuffer
+    SetConsoleCP
+    SetConsoleCommandHistoryMode       PRIVATE
+    SetConsoleCtrlHandler
+    SetConsoleCursor
+    SetConsoleCursorInfo
+    SetConsoleCursorMode               PRIVATE
+    SetConsoleCursorPosition
+    SetConsoleDisplayMode              PRIVATE
+    SetConsoleFont                     PRIVATE
+    SetConsoleHardwareState            PRIVATE
+    SetConsoleIcon                     PRIVATE
+    SetConsoleInputExeNameA            PRIVATE
+    SetConsoleInputExeNameW            PRIVATE
+    SetConsoleKeyShortcuts             PRIVATE
+    SetConsoleLocalEUDC                PRIVATE
+    SetConsoleMaximumWindowSize        PRIVATE
+    SetConsoleMenuClose                PRIVATE
+    SetConsoleMode
+    SetConsoleNlsMode                  PRIVATE
+    SetConsoleNumberOfCommandsA        PRIVATE
+    SetConsoleNumberOfCommandsW        PRIVATE
+    SetConsoleOS2OemFormat             PRIVATE
+    SetConsoleOutputCP
+    SetConsolePalette                  PRIVATE
+    SetConsoleScreenBufferSize
+    SetConsoleTextAttribute
+    SetConsoleTitleA
+    SetConsoleTitleW
+    SetConsoleWindowInfo
+    SetCriticalSectionSpinCount = NTDLL.RtlSetCriticalSectionSpinCount
+    SetCurrentDirectoryA
+    SetCurrentDirectoryW
+    SetDefaultCommConfigA
+    SetDefaultCommConfigW
+    SetEndOfFile
+    SetEnvironmentVariableA
+    SetEnvironmentVariableW
+    SetErrorMode
+    SetEvent
+    SetFileApisToANSI
+    SetFileApisToOEM
+    SetFileAttributesA
+    SetFileAttributesW
+    SetFilePointer
+    SetFilePointerEx
+    SetFileTime
+    SetHandleCount
+    SetHandleInformation
+    SetInformationJobObject
+    SetLastConsoleEventActive          PRIVATE
+    SetLastError
+    SetLocalTime
+    SetLocaleInfoA
+    SetLocaleInfoW
+    SetMailslotInfo
+    SetMessageWaitingIndicator
+    SetNamedPipeHandleState
+    SetPriorityClass
+    SetProcessAffinityMask
+    SetProcessPriorityBoost
+    SetProcessShutdownParameters
+    SetProcessWorkingSetSize
+    SetStdHandle
+    SetSystemPowerState
+    SetSystemTime
+    SetSystemTimeAdjustment
+    SetTapeParameters
+    SetTapePosition
+    SetTermsrvAppInstallMode           PRIVATE
+    SetThreadAffinityMask
+    SetThreadContext
+    SetThreadExecutionState
+    SetThreadIdealProcessor
+    SetThreadLocale
+    SetThreadPriority
+    SetThreadPriorityBoost
+    SetTimeZoneInformation
+    SetTimerQueueTimer
+    SetUnhandledExceptionFilter
+    SetVDMCurrentDirectories           PRIVATE
+    SetVolumeLabelA
+    SetVolumeLabelW
+    SetVolumeMountPointA
+    SetVolumeMountPointW
+    SetWaitableTimer
+    SetupComm
+    ShowConsoleCursor                  PRIVATE
+    SignalObjectAndWait
+    SizeofResource
+    Sleep
+    SleepEx
+    SuspendThread
+    SwitchToFiber
+    SwitchToThread
+    SystemTimeToFileTime
+    SystemTimeToTzSpecificLocalTime
+    TerminateJobObject
+    TerminateProcess
+    TerminateThread
+    TermsrvAppInstallMode              PRIVATE
+    Thread32First
+    Thread32Next
+    TlsAlloc
+    TlsFree
+    TlsGetValue
+    TlsSetValue
+    Toolhelp32ReadProcessMemory
+    TransactNamedPipe
+    TransmitCommChar
+    TrimVirtualBuffer                  PRIVATE
+    TryEnterCriticalSection = NTDLL.RtlTryEnterCriticalSection
+    UTRegister                         PRIVATE
+    UTUnRegister                       PRIVATE
+    UnhandledExceptionFilter
+    UnlockFile
+    UnlockFileEx
+    UnmapViewOfFile
+    UnregisterConsoleIME               PRIVATE
+    UnregisterWait
+    UnregisterWaitEx
+    UpdateResourceA
+    UpdateResourceW
+    VDMConsoleOperation                PRIVATE
+    VDMOperationStarted                PRIVATE
+    ValidateLCType                     PRIVATE
+    ValidateLocale                     PRIVATE
+    VerLanguageNameA
+    VerLanguageNameW
+    VerSetConditionMask = NTDLL.VerSetConditionMask
+    VerifyConsoleIoHandle              PRIVATE
+    VerifyVersionInfoA
+    VerifyVersionInfoW
+    VirtualAlloc
+    VirtualAllocEx
+    VirtualBufferExceptionHandler      PRIVATE
+    VirtualFree
+    VirtualFreeEx
+    VirtualLock
+    VirtualProtect
+    VirtualProtectEx
+    VirtualQuery
+    VirtualQueryEx
+    VirtualUnlock
+    WaitCommEvent
+    WaitForDebugEvent
+    WaitForMultipleObjects
+    WaitForMultipleObjectsEx
+    WaitForSingleObject
+    WaitForSingleObjectEx
+    WaitNamedPipeA
+    WaitNamedPipeW
+    WideCharToMultiByte
+    WinExec
+    WriteConsoleA
+    WriteConsoleInputA
+    WriteConsoleInputVDMA              PRIVATE
+    WriteConsoleInputVDMW              PRIVATE
+    WriteConsoleInputW
+    WriteConsoleOutputA
+    WriteConsoleOutputAttribute
+    WriteConsoleOutputCharacterA
+    WriteConsoleOutputCharacterW
+    WriteConsoleOutputW
+    WriteConsoleW
+    WriteFile
+    WriteFileEx
+    WriteFileGather
+    WritePrivateProfileSectionA
+    WritePrivateProfileSectionW
+    WritePrivateProfileStringA
+    WritePrivateProfileStringW
+    WritePrivateProfileStructA
+    WritePrivateProfileStructW
+    WriteProcessMemory
+    WriteProfileSectionA
+    WriteProfileSectionW
+    WriteProfileStringA
+    WriteProfileStringW
+    WriteTapemark
+    _hread = _lread
+    _hwrite = _lwrite
+    _lclose
+    _lcreat
+    _llseek
+    _lopen
+    _lread
+    _lwrite
+    lstrcat = lstrcatA
+    lstrcatA
+    lstrcatW
+    lstrcmp = lstrcmpA
+    lstrcmpA
+    lstrcmpW
+    lstrcmpi= lstrcmpiA
+    lstrcmpiA
+    lstrcmpiW
+    lstrcpy = lstrcpyA
+    lstrcpyA
+    lstrcpyW
+    lstrcpyn = lstrcpynA
+    lstrcpynA
+    lstrcpynW
+    lstrlen = lstrlenA
+    lstrlenA
+    lstrlenW
+
+
+#if defined(_ALPHA_)
+
+    RtlCaptureContext = NTDLL.RtlCaptureContext
+    RtlLookupFunctionEntry = NTDLL.RtlLookupFunctionEntry
+    RtlUnwindReturn = NTDLL.RtlUnwindReturn
+    RtlUnwindRfp = NTDLL.RtlUnwindRfp
+    RtlVirtualUnwind = NTDLL.RtlVirtualUnwind
+
+#if defined(_AXP64_)
+
+    RtlCopyMemory = NTDLL.RtlCopyMemory
+    RtlCompareMemory = NTDLL.RtlCompareMemory
+
+#endif
+
+#elif defined (IA64)
+
+    RtlCaptureContext = NTDLL.RtlCaptureContext
+    RtlRestoreContext = NTDLL.RtlRestoreContext
+    RtlLookupFunctionEntry = NTDLL.RtlLookupFunctionEntry
+    RtlVirtualUnwind = NTDLL.RtlVirtualUnwind
+    RtlCopyMemory = NTDLL.RtlCopyMemory
+    RtlZeroMemory = NTDLL.RtlZeroMemory
+    RtlCompareMemory = NTDLL.RtlCompareMemory
+    RtlUnwind2 = NTDLL.RtlUnwind2
+    _RtlCheckStack = NTDLL._RtlCheckStack
+    memset = NTDLL.memset
+    memcpy = NTDLL.memcpy
+
+#endif
+
+#if defined(BUILD_WOW6432) || defined(_WIN64)
+; Exports for the WOW64 context mapper
+#if defined(_ALPHA_) || defined(_AXP64_)
+    BaseProcessStart        PRIVATE
+    BaseThreadStart         PRIVATE
+#elif defined(_X86_) || defined(_IA64_)
+    BaseProcessStartThunk   PRIVATE
+    BaseThreadStartThunk    PRIVATE
+#else
+#error Need to fix this
+#endif
+    BaseAttachComplete      PRIVATE
+    CtrlRoutine             PRIVATE
+    ConsoleIMERoutine       PRIVATE
+#endif

@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+!ENDIF
+
+!INCLUDE ..\..\..\sources.inc
+
+MAJORCOMP=dbg
+MINORCOMP=tlser
+
+TARGETNAME=tlser$(D)
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=tlser.def
+COFFBASE=tlser
+
+SOURCES=tlser.c   \
+        tlser.rc
+
+UMTYPE=windows
+
+C_DEFINES=$(C_DEFINES) -DWIN32 -DTARGET32 -DHOST32 -DADDR_MIXED -DOSDEBUG4
+
+INCLUDES=..\xport;\
+        $(LANGAPI_ROOT)\debugger;\
+        $(DEBUGGER_ROOT)\include;\
+        $(DEBUGGER_ROOT)\od\include;\
+        $(DEBUG_INCLUDES)
+
+
+LINKLIBS=..\xport\obj\*\xport.lib
+
+!IFDEF CALL_PROFILE
+MORE_LIBS=$(MORE_LIBS) $(BASEDIR)\public\sdk\lib\*\cap.lib
+MSC_OPTIMIZATION=$(MSC_OPTIMIZATION) /Od /Gh
+!ENDIF
+
+TARGETLIBS=$(MORE_LIBS) \
+           $(SDK_LIB_PATH)\kernel32.lib \
+           $(SDK_LIB_PATH)\user32.lib

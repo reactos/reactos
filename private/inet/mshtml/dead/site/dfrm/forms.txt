@@ -1,0 +1,64 @@
+Begin Layout Customers
+Database:"nwind.mdo"
+BackColor:12632256
+; BackStyle:1
+; BorderColor:0
+; BorderWidth:3
+; CanGrow:1
+; CanShrink:0
+DisplayWhen:0
+; DragIcon:
+; DragMode:1
+ForceNewPage:0
+;ForeColor:0
+HelpContextID:0
+; KeepWithChildren:False
+; LayoutForPrint:True
+Name:Customers
+; Outline:False
+RowSource:"Select * from customers"
+; RecordSelector:0
+Repeat:1
+Scrollbars:3
+ShowWhen:0
+; Splitter:0
+Tag:
+Left:200
+Top:450
+Width:10000
+Height:3000
+Visible:True
+; ControlHeader:Headers
+
+        Begin Control CustomerID
+            Left:200
+            Top:450
+            Width:2000
+            Height:800
+            ControlSource:CustomerID
+            ; ControlHeader:LCustomerID
+        End Control CustomerID
+        Begin Control CompanyName
+            Left:2250
+            Top:450
+            Width:1500
+            Height:800
+            ControlSource:CompanyName
+            ; ControlHeader:LCompanyName
+        End Control CompanyName
+        Begin Control ContactName
+            Left:3800
+            Top:450
+            Width:1500
+            Height:800
+            ControlSource:ContactName
+            ; ControlHeader:LContactName
+        End Control ContactName
+End Layout Customers
+
+
+
+
+
+
+

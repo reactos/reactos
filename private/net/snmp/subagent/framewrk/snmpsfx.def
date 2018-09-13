@@ -1,0 +1,7 @@
+LIBRARY snmpsfx
+
+EXPORTS
+    SnmpTfxOpen
+    SnmpTfxClose
+    SnmpTfxQuery
+

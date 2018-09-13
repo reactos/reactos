@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS RU Keyboard Layout"
-#define REACTOS_STR_INTERNAL_NAME     "kbdru"
-#define REACTOS_STR_ORIGINAL_FILENAME "kbdru.dll"
-#include <reactos/version.rc>

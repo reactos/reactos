@@ -1,0 +1,9 @@
+#include <debmsg.rc>
+#include <verstamp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Expression Evaluator (ANSI C++) for Debugger"
+#define VER_INTERNALNAME_STR        "EECXX.DLL"
+
+#include <common.ver>

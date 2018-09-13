@@ -1,0 +1,10 @@
+C_DEFINES=$(C_DEFINES) -DWIN32
+
+NOT_UNICODE     = 1
+TARGET_WIN95    = 1
+ALT_PROJECT_TARGET = chicago
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+

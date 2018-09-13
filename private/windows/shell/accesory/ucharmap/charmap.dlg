@@ -1,0 +1,26 @@
+1 DLGINCLUDE "CMDLG.H"
+
+CHARMAP DIALOG PRELOAD IMPURE 9, 33, 359, 160
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+CAPTION "Unicode Character Map"
+FONT 8, "MS Shell Dlg"
+CLASS "MyDlgClass"
+BEGIN
+    LTEXT           "&Font:", 106, 3, 5, 17, 8, NOT WS_GROUP
+    COMBOBOX        ID_FONT, 22, 3, 123, 67, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_SORT | CBS_HASSTRINGS |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "S&ubset:", ID_SUBSETLB, 2, 21, 26, 8, NOT WS_GROUP
+    COMBOBOX        ID_UNICODESUBSET, 29, 19, 116, 67, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Next", ID_NEXTSUBSET, 149, 2, 38, 14
+    PUSHBUTTON      "&Previous", ID_PREVSUBSET, 149, 18, 38, 14
+    LTEXT           "Ch&aracters to Copy:", ID_TOPLEFT, 192, 5, 65, 8, NOT
+                    WS_GROUP
+    EDITTEXT        ID_STRING, 257, 1, 100, 14, ES_AUTOHSCROLL |
+                    ES_NOHIDESEL
+    DEFPUSHBUTTON   "&Select", ID_SELECT, 194, 19, 38, 14
+    PUSHBUTTON      "&Copy", ID_COPY, 235, 19, 38, 14
+    PUSHBUTTON      "&Help", ID_HELP, 276, 19, 38, 14
+    PUSHBUTTON      "Close", ID_CLOSE, 317, 19, 38, 14
+END

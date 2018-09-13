@@ -1,0 +1,40 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP= shell
+MINORCOMP= ntshrui
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+NOT_LEAN_AND_MEAN=1
+
+UMTYPE=     windows
+
+TARGETNAME= debug
+TARGETPATH= obj
+TARGETTYPE= LIBRARY
+
+C_DEFINES = -DUNICODE
+
+SOURCES=    assert.cxx

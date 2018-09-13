@@ -1,0 +1,225 @@
+<html>
+
+<body topmargin=0 leftmargin=0 background=white scrolling=no>
+
+<OBJECT
+    classid = "clsid:59CCB4A0-727D-11CF-AC36-00AA00A47DD2"
+	id      = timer1
+    valign  = bottom
+>
+<param name="Interval" value="30">
+<param name="Enabled" value="false">
+</OBJECT>
+<center>
+
+<div id=mainBody style="position: relative; width: 640px; height: 480px; background-color: white">
+
+<!-- img id=face src="face.gif" style="position: absolute; left: 0px; top: 245px"-->
+<img id=bar src="bar.gif" style="position: absolute; left: 530px; top: 100px">
+<img id=suite src="suite.gif" style="position: absolute; left: 470px; top: 380px">
+
+<div style="font-family: wingdings; font-size: 12pt; font-weight: bold; color: red">
+<div id=dot1 style="position: absolute; left: 90px; top: 325px; width: 10px">l</div>
+<div id=dot2 style="position: absolute; left: 120px; top: 325px; width: 10px">l</div>
+<div id=dot3 style="position: absolute; left: 150px; top: 325px; width: 10px">l</div>
+<div id=dot4 style="position: absolute; left: 180px; top: 325px; width: 10px">l</div>
+<div id=dot5 style="position: absolute; left: 210px; top: 325px; width: 10px">l</div>
+<div id=dot6 style="position: absolute; left: 240px; top: 325px; width: 10px">l</div>
+<div id=dot7 style="position: absolute; left: 270px; top: 325px; width: 10px">l</div>
+<div id=dot8 style="position: absolute; left: 300px; top: 325px; width: 10px">l</div>
+<div id=dot9 style="position: absolute; left: 330px; top: 325px; width: 10px">l</div>
+<div id=dot10 style="position: absolute; left: 360px; top: 325px; width: 10px">l</div>
+<div id=dot11 style="position: absolute; left: 390px; top: 325px; width: 10px">l</div>
+<div id=dot12 style="position: absolute; left: 420px; top: 325px; width: 10px">l</div>
+<div id=dot13 style="position: absolute; left: 450px; top: 325px; width: 10px">l</div>
+<div id=dot14 style="position: absolute; left: 480px; top: 325px; width: 10px">l</div>
+<div id=dot15 style="position: absolute; left: 510px; top: 325px; width: 10px">l</div>
+<div id=dotv1 style="position: absolute; left: 330px; top: 295px; width: 10px">l</div>
+<div id=dotv2 style="position: absolute; left: 330px; top: 265px; width: 10px">l</div>
+<div id=dotv3 style="position: absolute; left: 330px; top: 235px; width: 10px">l</div>
+<div id=dotv4 style="position: absolute; left: 330px; top: 205px; width: 10px">l</div>
+<div id=dotv5 style="position: absolute; left: 330px; top: 175px; width: 10px">l</div>
+<div id=dotv6 style="position: absolute; left: 330px; top: 145px; width: 10px">l</div>
+<div id=dotv7 style="position: absolute; left: 330px; top: 115px; width: 10px">l</div>
+</div>
+
+<div id=welcome style="position: absolute; left: 130px; top: 35px; width: 190px; font-family: arial black; font-size: 20pt; font-weight: bold; color: gray">Welcome to</div>
+<div id=IE style="position: absolute; left: 230px; top: 55px; width: 300px; font-family: arial black; font-size: 12pt; color: black">Internet Explorer</div>
+
+<div style="font-family: arial black; font-size: 40pt; font-weight: bold; color: navy">
+<div id=cast1 style="position: absolute; left: 200px; top: 50px; width: 10px">W</div>
+<div id=cast2 style="position: absolute; left: 251px; top: 50px; width: 10px">e</div>
+<div id=cast3 style="position: absolute; left: 285px; top: 50px; width: 10px">b</div>
+<div id=cast4 style="position: absolute; left: 320px; top: 50px; width: 10px">c</div>
+<div id=cast5 style="position: absolute; left: 355px; top: 50px; width: 10px">a</div>
+<div id=cast6 style="position: absolute; left: 390px; top: 50px; width: 10px">s</div>
+<div id=cast7 style="position: absolute; left: 422px; top: 50px; width: 10px">t</div>
+<div id=cast8 style="position: absolute; left: 445px; top: 50px; width: 10px">i</div>
+<div id=cast9 style="position: absolute; left: 463px; top: 50px; width: 10px">n</div>
+<div id=cast10 style="position: absolute; left: 498px; top: 50px; width: 10px">g</div>
+</div>
+
+</div>
+</center>
+</body>
+
+<script language="vbscript">
+
+'Dim faceX, faceY
+Dim n, suiteX, barY, welcomeX, ieY
+Dim castY, dotmark, vdotmark
+
+
+SUB window_onLoad
+
+  hortRes = window.screen.width
+
+  if hortres = 640 then
+	topMargin = 0
+  elseif hortres = 800 then
+	topMargin = 60
+  else
+	topMargin = 144
+  end if
+	
+  mainBody.style.top = topMargin
+  timer1.enabled = true
+  n=0
+  dotmark = 155
+  vdotmark = 400
+END SUB
+
+SUB timer1_timer
+  n=n+1
+  
+  If n=1 then
+    cast1.style.top = -100
+	cast2.style.top = -120
+	cast3.style.top = -140
+	cast4.style.top = -160
+	cast5.style.top = -180
+	cast6.style.top = -200
+	cast7.style.top = -220
+	cast8.style.top = -240
+	cast9.style.top = -260
+	cast10.style.top = -280
+	castY = -100
+
+	welcome.style.left = -200
+	welcomeX = -200
+	ie.style.top = 505
+	ieY = 505
+
+	dot1.style.top = -20
+	dot2.style.top = -20
+	dot3.style.top = -20
+	dot4.style.top = -20
+	dot5.style.top = -20
+	dot6.style.top = -20
+	dot7.style.top = -20
+	dot8.style.top = -20
+	dot9.style.top = -20
+	dot10.style.top = -20
+	dot11.style.top = -20
+	dot12.style.top = -20
+	dot13.style.top = -20
+	dot14.style.top = -20
+	dot15.style.top = -20
+
+	dotv1.style.left = -20
+	dotv2.style.left = -20
+	dotv3.style.left = -20
+	dotv4.style.left = -20
+	dotv5.style.left = -20
+	dotv6.style.left = -20
+	dotv7.style.left = -20
+
+	'face.style.left = 647
+	'face.style.top = -304
+	'faceX = 647
+	'faceY = -304
+
+	suite.style.left = 645
+	suiteX = 645
+	
+	bar.style.top = 485
+	barY = 485
+
+    n = 100
+  End If
+
+  If n>1 and n<100 then
+	
+	'faceX = faceX - 6.6
+	'faceY = faceY + 5.6
+
+	'face.style.left = faceX
+	'face.style.top = faceY
+
+  End If
+
+  If n>100 and n<150 then
+
+	suiteX = suiteX - 3.5
+	suite.style.left = suiteX
+
+	barY = barY - 7
+	bar.style.top = barY
+
+  End If
+
+  If n = dotmark then dot1.style.top = 325	
+  If n = dotmark + 5 then dot2.style.top = 325	
+  If n = dotmark + 10 then dot3.style.top = 325	
+  If n = dotmark + 15 then dot4.style.top = 325	
+  If n = dotmark + 20 then dot5.style.top = 325	
+  If n = dotmark + 25 then dot6.style.top = 325	
+  If n = dotmark + 30 then dot7.style.top = 325	
+  If n = dotmark + 35 then dot8.style.top = 325	
+  If n = dotmark + 40 then dot9.style.top = 325	
+  If n = dotmark + 45 then dot10.style.top = 325	
+  If n = dotmark + 50 then dot11.style.top = 325	
+  If n = dotmark + 55 then dot12.style.top = 325	
+  If n = dotmark + 60 then dot13.style.top = 325	
+  If n = dotmark + 65 then dot14.style.top = 325	
+  If n = dotmark + 70 then dot15.style.top = 325	
+
+  If n>230 and n<330 then
+
+	welcomeX = welcomeX + 3.3
+	welcome.style.left = welcomeX
+	
+	ieY = ieY - 4.5
+	ie.style.top = ieY
+
+  End If
+
+  If n>330 and n<400 then
+
+	castY = castY + 5
+	if castY < 60 then cast1.style.top = castY
+	if castY < 80 then cast2.style.top = casty - 20
+	if castY < 100 then cast3.style.top = casty - 40
+	if castY < 120 then cast4.style.top = casty - 60
+	if castY < 140 then cast5.style.top = casty - 80
+	if castY < 160 then cast6.style.top = casty - 100
+	if castY < 180 then cast7.style.top = casty - 120
+	if castY < 200 then cast8.style.top = casty - 140
+	if castY < 220 then cast9.style.top = casty - 160
+	if castY < 240 then cast10.style.top = casty - 180
+	
+  End If
+
+  If n = vdotmark then dotv1.style.left = 330	
+  If n = vdotmark + 5 then dotv2.style.left = 330	
+  If n = vdotmark + 10 then dotv3.style.left = 330	
+  If n = vdotmark + 15 then dotv4.style.left = 330	
+  If n = vdotmark + 20 then dotv5.style.left = 330
+  If n = vdotmark + 25 then dotv6.style.left = 330	
+  If n = vdotmark + 30 then dotv7.style.left = 330
+
+  if n = 600 then n = 0
+
+END SUB
+</script>
+</html>

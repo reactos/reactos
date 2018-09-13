@@ -1,0 +1,11 @@
+NOT_UNICODE     = 1
+TARGET_WIN95    = 1
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+
+TARGETLIBS      = $(TARGETLIBS) \
+                  $(LIBRARY_PLATFORM_PATH)\*\kernel32.lib
+
+INCLUDES        = $(CCSHELL_DIR)\applets\smtidy;$(INCLUDES)

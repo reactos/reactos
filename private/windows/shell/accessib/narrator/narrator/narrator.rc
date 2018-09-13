@@ -1,0 +1,288 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON    DISCARDABLE     "narrator.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAIN DIALOGEX 0, 0, 193, 111
+STYLE DS_SETFOREGROUND | DS_3DLOOK | WS_MINIMIZEBOX | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Narrator"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Help",IDC_MSRHELP,28,89,50,14
+    PUSHBUTTON      "&Voice...",IDC_MSRCONFIG,82,89,50,14
+    PUSHBUTTON      "E&xit",IDC_EXIT,136,89,50,14
+    LISTBOX         IDC_LIST1,154,89,25,11,LBS_NOINTEGRALHEIGHT | NOT 
+                    WS_VISIBLE | WS_VSCROLL | WS_HSCROLL,0,HIDC_LIST1
+    LISTBOX         IDC_WINDOWINFO,156,89,29,12,LBS_NOINTEGRALHEIGHT | NOT 
+                    WS_VISIBLE | WS_VSCROLL
+    LTEXT           "Narrator can read aloud menu commands, dialog box options and more.",
+                    IDC_CAPTION,7,7,184,21
+    CONTROL         "&Announce events on screen",IDC_ANNOUNCE,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,
+                    27,172,10
+    CONTROL         "&Read typed characters",IDC_READING,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,
+                    42,172,10
+    CONTROL         "&Move mouse pointer to the active item",IDC_MOUSEPTR,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | 
+                    WS_TABSTOP,7,57,172,10
+    CONTROL         "&Start Narrator minimized",IDC_STARTMIN,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,
+                    72,172,10
+END
+
+IDD_VOICE DIALOG DISCARDABLE  0, 0, 219, 146
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Voice Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Voice:",IDC_VOICE,8,5,21,8
+    LISTBOX         IDC_NAME,38,5,175,60,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Speed:",IDC_STATIC,8,72,24,8
+    EDITTEXT        IDC_EDITSPEED,38,70,25,12,ES_CENTER | ES_NUMBER
+    CONTROL         "Speed Spin Control",IDC_SPEEDSPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,63,70,8,12
+    LTEXT           "V&olume:",IDC_STATIC,8,92,26,8
+    EDITTEXT        IDC_EDITVOLUME,38,90,25,12,ES_CENTER | ES_NUMBER
+    CONTROL         "Volume Spin Control",IDC_VOLUMESPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,63,90,8,12
+    LTEXT           "&Pitch:",IDC_STATIC,8,112,19,8
+    EDITTEXT        IDC_EDITPITCH,38,110,25,12,ES_CENTER | ES_NUMBER
+    CONTROL         "Pitch Spin Control",IDC_PITCHSPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,63,110,8,12
+    DEFPUSHBUTTON   "OK",IDOK,102,122,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,163,122,50,14
+END
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 286, 182
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Narrator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,229,161,50,14
+    ICON            IDI_ICON1,IDC_ABOUTICON,10,10,20,20
+    LTEXT           "Microsoft Narrator ",IDC_ABOUTVERSION,40,10,164,8
+    LTEXT           "Copyright © 1997,1999 Microsoft Corporation ",
+                    IDC_ABOUTCOPYRIGHT,40,30,239,8
+    LTEXT           "Narrator is intended to provide a minimum level of functionality for blind users. Blind users will need a screen reader utility program with higher functionality for daily use.",
+                    IDC_ABOUTDISCLAIMER,40,51,239,25
+    LTEXT           "Narrator was produced for Microsoft by Sensory Software, makers of educational, access and communication systems for people with disabilities. For information about products from Sensory Software, see http://www.SensorySoftware.com",
+                    IDC_ABOUTWEBSITE,40,123,239,34
+    LTEXT           "Version 1.0",IDC_STATIC,40,20,38,8
+    LTEXT           "All rights reserved.",IDC_STATIC,40,40,239,8
+    LTEXT           "To read this or any window again, Press Ctrl + Shift + Space bar. For more shortcuts refer to Help ",
+                    IDC_ABOUTWEBSITE3,40,102,239,16
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEBA,
+                    "Link Window",WS_TABSTOP,40,87,203,12
+    LTEXT           "For a list of Windows-based screen reader utilities, see",
+                    IDC_WARND3,40,78,207,9
+END
+
+IDD_CONFIRMEXIT DIALOG DISCARDABLE  0, 0, 165, 47
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Exit Narrator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,29,26,50,14
+    PUSHBUTTON      "&No",IDCANCEL,87,26,50,14
+    LTEXT           "Are you sure you want to exit Narrator ?",IDC_STATIC,20,
+                    7,125,8
+END
+
+IDD_WARNING DIALOG DISCARDABLE  0, 0, 250, 108
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Microsoft Narrator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,193,87,50,14
+    ICON            IDI_ICON1,IDC_ABOUTICON,8,7,20,20
+    LTEXT           "Narrator is intended to help people with low vision to setup their own computers, or use other people's computers. Narrator may not perform well with some applications. Most users with visual ",
+                    IDC_WARND,36,7,203,24
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEB,
+                    "Link Window",WS_TABSTOP,36,53,203,12
+    CONTROL         "&Do not show this message again",IDC_WARNING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,91,118,10
+    LTEXT           "impairments will need a utility with higher functionality for daily use. ",
+                    IDC_WARND2,36,31,207,11
+    LTEXT           "To read this or any window again, Press Ctrl + Shift + Space bar. For more shortcuts refer to Help ",
+                    IDC_STATIC,36,67,203,16
+    LTEXT           "For a list of Windows-based screen reader utilities, see",
+                    IDC_WARND3,36,44,207,9
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAIN, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 143
+        VERTGUIDE, 186
+        VERTGUIDE, 191
+        BOTTOMMARGIN, 106
+        HORZGUIDE, 7
+        HORZGUIDE, 82
+        HORZGUIDE, 89
+        HORZGUIDE, 103
+    END
+
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        VERTGUIDE, 40
+        TOPMARGIN, 10
+        BOTTOMMARGIN, 175
+    END
+
+    IDD_CONFIRMEXIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 158
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
+
+    IDD_WARNING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        VERTGUIDE, 36
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 101
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COPYRIGHT           "Copyright 1997-1998 (C) by Microsoft Corporation.  All rights reserved."
+    IDS_LISTBOX1            "Overview: To bring up the Start Menu, press Control and Escape."
+    IDS_LISTBOX2            "Overview: To switch between running applications press Alt and TAB."
+    IDS_LISTBOX3            "Controls: Press the space bar to toggle checkboxes and radio buttons."
+    IDS_LISTBOX4            "Controls: Press up and down arrow keys to select items in dropdown list."
+    IDS_VOICE               "Voice"
+    IDS_THETEXT             "Are you sure you want to exit Narrator?"
+    IDS_THETITLE            "Exit Narrator"
+    IDS_NO_OLE              "Narrator was unable to initialize the COM subsystem."
+    IDS_NO_SOUNDCARD        "Narrator was unable to find a sound card on the computer. Check that a sound card is installed and working properly."
+    IDS_NO_TTS              "Narrator was unable to find a Text To Speech engine."
+    IDS_MSR_ERROR           "Narrator Installation error"
+    IDS_DEFAULTVOICE        "Melanie Granfors"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About Narrator..."
+    IDS_HELLO               "Hello"
+    IDS_ENABLEWEB           "http://www.microsoft.com/enable/"
+    IDS_LANGW               "Narrator cannot find a speech engine for the user interface language.  Narrator may not speak well."
+    IDS_WARNING             "Warning"
+    IDS_ERROR               "Error"
+    IDS_SECURE              "Narrator has detected that a Non-Microsoft speech engine is selected. Narrator cannot run at logon desktop. "
+    IDS_SAM                 "Sam, English, Microsoft"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

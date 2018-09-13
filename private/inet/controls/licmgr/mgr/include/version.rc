@@ -1,0 +1,28 @@
+/////////////////////////////////////////////////////////////////////////////
+// version.rc
+/////////////////////////////////////////////////////////////////////////////
+// Copyright  1995  Microsoft Corporation.  All Rights Reserved.
+//
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+/////////////////////////////////////////////////////////////////////////////
+
+#include "Windows.H"
+
+/////////////////////////////////////////////////////////////////////////////
+// Version Information
+/////////////////////////////////////////////////////////////////////////////
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "ActiveX License Manager"
+#define VER_INTERNALNAME_STR        "licmgr.dll"
+#define VER_ORIGINALFILENAME_STR    "licmgr"
+#define VER_OLESELFREGISTER
+
+#include "common.ver"
+

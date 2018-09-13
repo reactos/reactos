@@ -1,0 +1,40 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for test program for cryptapi
+#
+# History:
+#
+#       11/29/94 larrys created
+#       03/15/95 raymondm added conditional linking to capi.dll
+#
+#----------------------------------------------------------------------------
+
+MAJORCOMP=crypt
+MINORCOMP=EXE
+
+TARGETNAME=crypt
+TARGETPATH=..\bin
+TARGETTYPE=PROGRAM
+
+LINKLIBS=\
+        $(CLIBS)
+
+INCLUDES=     $(NTINCLUDES); \
+              ..\inc;
+
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\private\lib\*\rsa32.lib \
+           $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+SOURCES=\
+                crypt.c  \
+		crypt.rc
+
+UMTYPE=console
+UMENTRY=
+UMTEST=
+UMAPPL=
+UMLIBS=

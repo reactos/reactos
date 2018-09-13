@@ -1,0 +1,22 @@
+LIBRARY msv1_0
+
+EXPORTS
+        SpLsaModeInitialize
+        SpUserModeInitialize
+
+        SpInitialize                  @1
+        SpInstanceInit                @32
+        LsaApMsInitialize
+        MsvSamLogoff
+        MsvSamValidate
+        MsvGetLogonAttemptCount
+
+        LsaApInitializePackage
+        LsaApLogonUserEx2
+        LsaApCallPackage
+        LsaApLogonTerminated
+        LsaApCallPackageUntrusted
+        LsaApCallPackagePassthrough
+        Msv1_0SubAuthenticationPresent
+        Msv1_0ExportSubAuthenticationRoutine
+

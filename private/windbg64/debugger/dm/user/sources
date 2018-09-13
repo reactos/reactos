@@ -1,0 +1,103 @@
+!IF 0
+
+Copyright (c) 1989-1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Kent Forschmiedt (kentf)
+
+!ENDIF
+
+OSDEBUG4=1
+
+!include ..\..\sources.inc
+
+386_STDCALL=1
+USE_NATIVE_EH=0
+
+
+MAJORCOMP=windbg
+MINORCOMP=dm
+
+TARGETNAME=dm$D
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=dm.def
+COFFBASE=dm
+DLLENTRY=DllMain
+
+SOURCES= \
+    ..\bp.c        \
+    ..\dmdisasm.c  \
+    ..\dmx32.c     \
+    ..\event.c     \
+    ..\funccall.c  \
+    ..\procem.c    \
+    ..\step.c      \
+    ..\util.c      \
+    ..\walk.c      \
+    dmole.c        \
+    process.c      \
+    userapi.c      \
+    wow.c          \
+    dm.rc
+
+i386_SOURCES=      \
+    ..\i386mach.c  \
+    ..\i386thnk.c
+
+ia64_SOURCES=      \
+    ..\ia64mach.c  \
+    ..\ia64thnk.c  
+
+alpha_SOURCES=     \
+    ..\alpmach.c   \
+    ..\alpthnk.c   \
+    ..\alphaopt.c  \
+    ..\alphaasm.c
+
+axp64_SOURCES= $(alpha_SOURCES)
+
+UMTYPE=windows
+
+C_DEFINES=$(C_DEFINES) -DDWORDLONG=ULONGLONG -DDOLPHIN
+386_FLAGS=$(386_FLAGS) -DWOW -DTARGET_i386
+ALPHA_FLAGS=$(ALPHA_FLAGS) -DNO_TRACE_BIT -DTARGET_ALPHA
+AXP64_FLAGS=$(AXP64_FLAGS) -DNO_TRACE_BIT -DTARGET_AXP64
+IA64_FLAGS=$(IA64_FLAGS) -DTARGET_IA64
+
+INCLUDES=   ..;                             \
+            $(DEBUGGER_ROOT)\include;       \
+            $(DEBUGGER_ROOT)\od\include;    \
+            $(DEBUG_INCLUDES)
+
+
+CONDITIONAL_INCLUDES=odp.h win32dm.h
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\msvcirt.lib  \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib   \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\version.lib \
+    $(NONSHIP_LIB_PATH)\crashlib.lib \
+    $(SDK_LIB_PATH)\disasm$(D).lib   \
+    $(MORE_LIBS)
+
+NTTARGETFILES=
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

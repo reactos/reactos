@@ -1,0 +1,70 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=security
+MINORCOMP=efsadu
+
+TARGETNAME=efsadu
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+
+DLLENTRY=_DllMainCRTStartup
+UMTYPE=windows
+DLLDEF=obj\*\efsadu.def
+
+USE_NATIVE_EH=1
+C_DEFINES=-DUNICODE
+USE_MFCUNICODE=1
+USE_VCCOM=1
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_CXX=1
+
+INCLUDES=$(BASEDIR)\public\sdk\inc; \
+         $(BASEDIR)\public\sdk\inc\crt; \
+         $(BASEDIR)\public\sdk\inc\mfc42; \
+         $(BASEDIR)\private\inc
+
+
+SOURCES=efsadu.cpp \
+        efsadu.rc  \
+        addsheet.cpp \
+        complete.cpp \
+        locate.cpp \
+        userlist.cpp \
+        welcome.cpp \
+        users.cpp        
+
+
+TARGETLIBS=             \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\oleaut32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib           \
+           $(BASEDIR)\public\sdk\lib\*\ntdsapi.lib        \
+           $(BASEDIR)\public\sdk\lib\*\crypt32.lib 
+

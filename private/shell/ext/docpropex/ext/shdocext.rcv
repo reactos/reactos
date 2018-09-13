@@ -1,0 +1,12 @@
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEVERSION				VER_PRODUCTVERSION
+#define VER_FILEVERSION_STR			VER_PRODUCTVERSION_STR
+#define VER_FILEDESCRIPTION_STR     "DocProp2"
+#define VER_INTERNALNAME_STR        "DocProp2"
+#define VER_ORIGINALFILENAME_STR    "docprop2.DLL"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>

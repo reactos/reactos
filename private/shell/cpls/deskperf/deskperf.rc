@@ -1,0 +1,83 @@
+
+#include "deskperf.h"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_MONITOR  ICON    DISCARDABLE     "MONITOR.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+PROP_SHEET_DLG DIALOGEX 20, 20, 252, 175
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_NOIDLEMSG | DS_3DLOOK
+CAPTION "Display Troubleshooter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON        IDI_MONITOR,IDI_MONITOR,7,7,18,20,WS_GROUP
+    LTEXT       " Are you having problems with your graphics hardware? These settings control how Windows uses your graphics hardware. They can help you to troubleshoot display-related problems.",IDC_DESCRIPTION,36,6,210,26S
+    GROUPBOX    "Hardware acceleration",IDC_STATIC,7,40,242,102
+    LTEXT       " Manually control the level of acceleration and performance supplied by your graphics hardware. Use the Display Troubleshooter to assist you in making the change.",IDC_STATIC,18,52,230,28
+    LTEXT       "&Hardware acceleration:",IDC_STATIC,18,88,90,9
+    RTEXT       "None",IDC_STATIC,110,88,19,9
+    LTEXT       "Full",IDC_STATIC,218,88,19,9
+    CONTROL     "",IDC_ACCELERATION_SLIDER,TRACKBAR_CLASS,
+                WS_TABSTOP | WS_GROUP | TBS_AUTOTICKS, 134,86,79,18
+    LTEXT       "",IDC_ACCELERATION_TEXT,18,112,218,28
+END
+
+
+//! We should use a common resource in desk.cpl and deskperf.dll
+DLG_ASKDYNACDS DIALOGEX DISCARDABLE  132, 64, 233, 115
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | DS_CENTERMOUSE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Compatibility Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&Restart the computer with the new display settings?",IDC_NODYNA,
+                    30,45,190,8,
+    AUTORADIOBUTTON "&Apply the new display settings without restarting?",IDC_YESDYNA,
+                    30,57,190,8,    
+    DEFPUSHBUTTON   "OK",IDOK,121,70,50,14,WS_TABSTOP|WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,175,70,50,14,WS_TABSTOP|WS_GROUP
+    AUTOCHECKBOX    "&Don't ask this question again",IDC_SHUTUP,
+                    7,94,200,13,WS_TABSTOP|WS_GROUP
+
+    LTEXT           "The settings you have chosen may cause some programs to operate improperly if you do not restart your computer now.\r\n\nWould you like to:",
+                    -1,7,7,219,36
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE DISCARDABLE PRELOAD
+BEGIN
+IDS_PAGE_TITLE "Troubleshooting"
+IDS_LEVEL0     "All accelerations are enabled. Use this setting if your computer has no problems. (Recommended)"
+IDS_LEVEL1     "Disable cursor and bitmap accelerations. Use this setting to correct problems with the mouse pointer, or to correct problems with corrupt images."
+IDS_LEVEL2     "Disable all cursor and advanced drawing accelerations. Use this setting to correct drawing problems."
+IDS_LEVEL3     "Disable all DirectDraw and Direct3D accelerations, as well as all cursor and advanced drawing accelerations. Use this setting to correct severe problems with DirectX accelerated applications."
+IDS_LEVEL4     "Disable all but basic accelerations. Use this setting to correct more severe problems."
+IDS_LEVEL5     "Disable all accelerations. Use this setting only if your computer frequently stops responding or has other severe problems."
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Advanced display performance properties"
+#define VER_INTERNALNAME_STR        "deskperf.dll"
+
+#include "common.ver"
+

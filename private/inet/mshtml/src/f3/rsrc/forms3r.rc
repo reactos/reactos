@@ -1,0 +1,103 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Forms
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       forms.rc
+//
+//  Contents:   Resources for forms project.
+//
+//----------------------------------------------------------------------------
+
+#include <winver.h>
+
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Viewer"
+#define VER_INTERNALNAME_STR        "MSHTML"
+#define VER_ORIGINALFILENAME_STR    "MSHTML.DLL"
+#define VER_OLESELFREGISTER
+#include "common.ver"
+
+#include "mshtmlrc.h"
+
+blank.htm           HTML     "blank.htm"
+repost.htm          HTML     "repost.htm"
+about.moz           HTML     "about.moz"
+
+//+-------------------------------------------------------------------------
+//
+// Cursors
+//
+//--------------------------------------------------------------------------
+
+IDC_SELBAR                  CURSOR "selbar.cur"
+IDC_SCROLLWEST              CURSOR "west.cur"
+IDC_SCROLLSOUTH             CURSOR "south.cur"
+IDC_SCROLLNORTH             CURSOR "north.cur"
+IDC_NOSCROLLVH              CURSOR "nomove2d.cur"
+IDC_SCROLLEAST              CURSOR "east.cur"
+IDC_SCROLLSW                CURSOR "sw.cur"
+IDC_SCROLLSE                CURSOR "se.cur"
+IDC_SCROLLNW                CURSOR "nw.cur"
+IDC_SCROLLNE                CURSOR "ne.cur"
+IDC_HYPERLINK               CURSOR "hyperlnk.cur"
+IDC_HYPERLINK_OFFLINE       CURSOR "hlnocach.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg_mshtml.inf"
+
+//+------------------------------------------------------------------------
+//
+// Put all icons here.  Note that the order icons are included is important
+// since the index (not resource id) of an icon is used in the Windows
+// ExtractIcon API.
+//
+//-------------------------------------------------------------------------
+//  NOTE -- PLEASE READ:
+//  The icon index of RES_ICO_JPEG and RES_ICO_GIF are used for register,
+//  (see dllreg.cxx). So please add new icon at end.
+//  And if you change index, please update dllreg.cxx!!
+
+// BUGBUG (lmollico): we need to find out what icons are really used
+
+RES_ICO_FRAME               ICON "rc_frame.ico"
+RES_ICO_HTML                ICON "rc_html.ico"
+IDI_APPEARANCE              ICON "rc_o_app.ico"
+IDI_ADVANCED                ICON "rc_o_adv.ico"
+IDI_GOTOURL                 ICON "rc_goto.ico"
+IDI_HOMEPAGE_MSHTML         ICON "rc_home.ico"
+IDI_FINDTEXT                ICON "rc_find.ico"
+IDI_UNKNOWN_FILETYPE        ICON "rc_u_ft.ico"
+RES_ICO_GIF                 ICON "rc_gif.ico"
+RES_ICO_JPEG                ICON "rc_jpeg.ico"
+RES_ICON_FOLDER_OPEN        ICON "folder_o.ico"
+RES_ICON_FOLDER_CLOSED      ICON "folder_c.ico"
+RES_ICON_URL_FILE           ICON "urlfile.ico"
+RES_ICO_NOICON              ICON "noicon.ico"
+RES_ICO_FINDING             ICON "finding.ico"
+RES_ICO_CONNECTING          ICON "connto.ico"
+RES_ICO_ACCESSING           ICON "access.ico"
+RES_ICO_RECEIVING           ICON "receive.ico"
+IDI_INTERNET                ICON "internet.ico"
+IDI_SECURITY                ICON "rc_sec.ico"
+IDI_NEWS                    ICON "news.ico"
+IDI_VRML                    ICON "vrml.ico"
+
+//+--------------------------------------------------------------------------
+//
+// Bitmaps
+//
+//---------------------------------------------------------------------------
+
+IDB_DITHER              BITMAP "dither.bmp"
+IDR_HATCHBMP            BITMAP "hatch.bmp"
+
+IDB_NOTLOADED           BITMAP "notload.bmp"
+IDB_MISSING             BITMAP "missing.bmp"
+

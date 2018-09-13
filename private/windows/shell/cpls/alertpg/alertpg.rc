@@ -1,0 +1,20 @@
+#include "id.h"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_ALERTICON ICON DISCARDABLE "alertpg.ico"
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAME            "Computer Object Alert Configuration"
+    IDS_INFO            "Loads the Computer Object Alert Configuration Page"
+END

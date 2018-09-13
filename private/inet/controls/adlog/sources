@@ -1,0 +1,59 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+USE_ATL  = 1
+
+C_DEFINES = $(C_DEFINES) -D_USRDLL
+
+TARGETNAME      = adlog
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETLIBS      = $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+                  $(BASEDIR)\public\sdk\lib\*\gdi32.lib       \
+                  $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+                  $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+                  $(BASEDIR)\public\sdk\lib\*\ole32.lib       \
+                  $(BASEDIR)\public\sdk\lib\*\oleaut32.lib    \
+                  $(BASEDIR)\public\sdk\lib\*\urlmon.lib      \
+                  $(BASEDIR)\public\sdk\lib\*\wininet.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\uuid.lib
+
+UMTYPE=windows
+MSC_WARNING_LEVEL=/W3 /WX
+NOT_LEAN_AND_MEAN=1
+
+DLLENTRY        = DllMain
+DLLDEF          = imglog.def
+DLLBASE         = @..\inc\base.txt,adlog
+
+USE_CRTDLL      = 1
+
+SOURCES         = \
+                  imglog.idl      \
+                  imglog.rc       \
+                  ielogctl.cpp    \
+                  imglog.cpp      \
+                  stdafx.cpp      \
+                  utils.cpp

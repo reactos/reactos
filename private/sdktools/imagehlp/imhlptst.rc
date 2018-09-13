@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE       VFT_APP
+#define VER_FILESUBTYPE    VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Imagehlp.dll unit test"
+#define VER_INTERNALNAME_STR        "imhlptst.exe"
+#define VER_ORIGINALFILENAME_STR    "imhlptst.exe"
+
+#include "common.ver"
+

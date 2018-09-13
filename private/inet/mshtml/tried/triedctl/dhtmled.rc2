@@ -1,0 +1,31 @@
+// Copyright (c)1997-1999 Microsoft Corporation, All Rights Reserved
+// #include <vers.h>		// devbin\vs\v6\include
+#include <version.h>		// for 1.0 SDK ship only
+#include <vidstamp.h>		// vsdev\pkgs\vid\include
+
+///////////////////////////////////////////
+//
+// Set up the defines for use in common.ver
+//
+
+// defines for the VS_VERSION block
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE 		VFT2_UNKNOWN
+
+
+// strings for the "StringFileInfo" block
+
+#define VER_LEGALCOPYRIGHT_YEARS	"1998"
+#define VER_FILEDESCRIPTION_STR 	"Microsoft (R) Dynamic HTML Editing Control"
+#define VER_INTERNALNAME_STR		"DHTMLEd"
+#define VER_ORIGINALFILENAME_STR	"DHTMLEd.OCX"
+
+#ifdef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTNAME_STR
+#endif
+#define VER_PRODUCTNAME_STR		"DHTML Editing Component"
+
+
+#include <vidcomn.ver>	// vsdev\pkgs\vid\include
+

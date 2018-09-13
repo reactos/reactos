@@ -1,0 +1,62 @@
+URLMON_BUILD_TARGETS = world all depend
+URLMON_MISC_TARGETS = clean install cscope tags
+
+DIRS = idl download iapp mon proxy trans urlhlink utils zones stg urltrack eapp compress dll
+
+.NOTPARALLEL: ${URLMON_BUILD_TARGETS} ${URLMON_MISC_TARGETS}
+
+${URLMON_BUILD_TARGETS} : urlmon_dll
+
+urlmon_dll : idl download iapp mon proxy trans urlhlink utils zones stg urltrack eapp compress dll
+
+idl:
+	@enterdir idl ${MAKE} ${MWFLAGS}
+  	
+download :
+	@enterdir download ${MAKE} ${MFLAGS}
+
+iapp :
+	@enterdir iapp ${MAKE} ${MFLAGS}
+
+mon :
+	@enterdir mon ${MAKE} ${MFLAGS}
+
+notifctn :
+	@enterdir notifctn ${MAKE} ${MFLAGS}
+
+proxy :
+	@enterdir proxy ${MAKE} ${MFLAGS}
+
+trans :
+	@enterdir trans ${MAKE} ${MFLAGS}
+
+urlhlink :
+	@enterdir urlhlink ${MAKE} ${MFLAGS}
+
+utils :
+	@enterdir utils ${MAKE} ${MFLAGS}
+
+zones :
+	@enterdir zones ${MAKE} ${MFLAGS}
+
+stg :
+	@enterdir stg ${MAKE} ${MFLAGS}
+
+urltrack:
+	@enterdir urltrack ${MAKE} ${MFLAGS}
+
+eapp:
+	@enterdir eapp ${MAKE} ${MFLAGS}
+
+compress:
+	@enterdir compress ${MAKE} ${MFLAGS}
+
+dll :
+	@enterdir dll ${MAKE} ${MFLAGS}
+
+${URLMON_MISC_TARGETS} :
+	@for dir in ${DIRS}; do \
+		enterdir $$dir ${MAKE} ${MFLAGS} $@; \
+	done
+
+.PHONY : ${URLMON_BUILD_TARGETS} ${URLMON_MISC_TARGETS} ${DIRS}

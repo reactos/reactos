@@ -1,0 +1,19 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE			VFT_APP
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows Control Panel"
+#define VER_INTERNALNAME_STR		"Control"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1999"
+#endif
+#define VER_ORIGINALFILENAME_STR	"CONTROL.EXE"
+
+#include <common.ver>

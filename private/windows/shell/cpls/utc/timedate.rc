@@ -1,0 +1,147 @@
+/*++
+
+Copyright (c) 1994-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    timedate.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the Date/Time
+    applet.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include <windows.h>
+#include <commctrl.h>
+#include "rc.h"
+
+
+
+
+//
+//  Icons.
+//
+
+IDI_TIMEDATE  ICON    PRELOAD DISCARDABLE  "date.ico"
+
+
+
+
+//
+//  Bitmaps.
+//
+
+IDB_TIMEZONE  BITMAP  DISCARDABLE          "smalwrld.bmp"
+
+
+
+
+//
+//  Dialogs.
+//
+
+DLG_DATETIME DIALOG DISCARDABLE  0, 0, 252, 146
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Date && Time"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Date", IDD_GROUPBOX1, 4, 2, 122, 125
+    COMBOBOX        DATETIME_MONTHNAME, 11, 17, 50, 120,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        DATETIME_YEAR, 68, 17, 42, 13, WS_TABSTOP | WS_BORDER
+    CONTROL         "", DATETIME_YARROW, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_NOTHOUSANDS | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT | UDS_WRAP, 110, 17, 8, 12
+
+    CONTROL         "", DATETIME_CALENDAR, CALENDAR_CLASS,
+                    WS_BORDER | WS_TABSTOP, 11, 37, 108, 80
+
+    GROUPBOX        "&Time", IDD_GROUPBOX2, 132, 2, 113, 125
+    CONTROL         "", DATETIME_CLOCK, CLOCK_CLASS, 0x0, 144, 13, 90, 90
+
+    EDITTEXT        DATETIME_TBORDER, 159, 105, 57, 12,
+                    NOT WS_GROUP | WS_DISABLED
+    EDITTEXT        DATETIME_HOUR, 161, 107, 8, 8,
+                    ES_RIGHT | ES_MULTILINE | NOT WS_BORDER |
+                    WS_GROUP | WS_TABSTOP
+    CTEXT           "", DATETIME_TSEP1, 169, 107, 4, 8, SS_NOPREFIX
+    EDITTEXT        DATETIME_MINUTE, 173, 107, 8, 8,
+                    ES_RIGHT | ES_MULTILINE | NOT WS_BORDER |
+                    WS_GROUP | WS_TABSTOP
+    CTEXT           "", DATETIME_TSEP2, 181, 107, 4, 8, SS_NOPREFIX
+    EDITTEXT        DATETIME_SECOND, 185, 107, 8, 8,
+                    ES_RIGHT | ES_MULTILINE | NOT WS_BORDER |
+                    WS_GROUP | WS_TABSTOP
+    LISTBOX         DATETIME_AMPM, 193, 107, 21, 17,
+                    NOT WS_BORDER | WS_GROUP | WS_TABSTOP
+    CONTROL         "", DATETIME_TARROW, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_NOTHOUSANDS | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT | UDS_WRAP, 217, 105, 7, 11
+
+    LTEXT           "Current time zone:  %s", DATETIME_CURTZ, 4, 136, 243, 8
+END
+
+DLG_TIMEZONE DIALOG  0, 0, 252, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Time Zone"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDD_TIMEZONES, 5, 4, 241, 136,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "", IDD_TIMEMAP, MAPCTL_CLASSNAME, WS_BORDER,
+                    5, 22, 241, 113
+    AUTOCHECKBOX    "Automatically adjust clock for &daylight saving changes",
+                    IDD_AUTOMAGIC, 5, 139, 242, 10, WS_TABSTOP | WS_GROUP
+END
+
+
+
+
+//
+//  String Tables.
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIMEDATE            "Date/Time"
+    IDS_TIMEDATEINFO        "Changes date, time and time zone information."
+
+    IDS_WARNAUTOTIMECHANGE  "Windows has updated your clock as a result of Daylight Saving Time.  Please verify that your new clock settings are correct."
+    IDS_WATC_CAPTION        "New clock settings"
+
+    IDS_CAPTION             "Date/Time Properties"
+    IDS_NOTIMEERROR         "You do not have the proper privilege level to change the System Time."
+END
+
+
+
+
+//
+//  Version Info.
+//
+
+#ifdef WINNT
+  #include <winver.h>
+  #include <ntverp.h>
+#else
+  #include <version.h>
+#endif
+
+#define VER_FILETYPE                   VFT_DLL
+#define VER_FILESUBTYPE                VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR        "Time Date Control Panel Applet"
+#define VER_INTERNALNAME_STR           "timedate.cpl"
+#define VER_LEGALCOPYRIGHT_YEARS       "1991-1998"
+#define VER_ORIGINALFILENAME_STR       "timedate.cpl"
+
+#include <common.ver>

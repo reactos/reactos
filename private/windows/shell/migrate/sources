@@ -1,0 +1,56 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=shmgrate
+
+INCLUDES=$(BASEDIR)\private\windows\inc
+
+C_DEFINES=-DWINNT -DUNICODE -D_UNICODE
+
+TARGETNAME=shmgrate
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=shmcvt1.c \
+        profile.c \
+        gradient.c \
+        shmgrate.c \
+        schemNT5.c \
+        res.rc
+
+USE_MSVCRT=1
+UMTYPE=windows
+UMENTRY=main
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\setargv.obj \
+    $(BASEDIR)\public\sdk\lib\*\userenv.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib \
+    $(BASEDIR)\public\sdk\lib\*\shlwapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib
+

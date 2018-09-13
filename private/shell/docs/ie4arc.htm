@@ -1,0 +1,308 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>Internet Explorer 4.</title>
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<h1 align="center">IE 4.0: Shell &amp; Browser Architecture</h1>
+
+<h2 align="center"><em>Exective Summary: Evolution from IE 3.0</em></h2>
+
+<p><font color="#408080" size="2"><em>Note 1: In this document,
+the word </em>&quot;browser&quot;<em> means the code which
+provides the browser frame-UI (menu, title and toolbars) and the
+navigational behavior. The clear separation of the browser-frame
+and viewers (e.g., HTML viewer, shell folder viewers, etc.) is
+one of our major technical advantages over our competitors.</em></font></p>
+
+<p><font color="#408080" size="2"><em>Note 2: Most of features
+described in this documents are pure shell/browser features, but
+some of them are cross-components features which involves changes
+in URLMON, WININET and MSHTML.</em></font><font size="2"><em> </em></font></p>
+
+<p>This document describes the changes in the IE 4.0 shell
+achitecture from IE 3.0 and Win95 shell. Please notice that it's
+not the list of features, but the list of components or
+architectual changes with which we implement various features.
+The corresponding features are highlighted by underlines. </p>
+
+<ol>
+    <li>New HTML Viewer<font color="#408080"><em> -- Beta1</em></font><p>IE
+        1.0 and 2.0 was a monolithic EXE which was not
+        componentized at all and hard to maintain. During the
+        development of IE 3.0, we packaged HTML viewer code from
+        IE 2.0 into a COM object -- an HTML Viewer, and wrote a
+        mini-explorer on top of it, which is capable hosting any
+        shell view windows (file system folder views and etc.)
+        and any DocObjects (such as Excel, Word or Visio) as well
+        as HTML viewers. IE 4.0 replaced the HTML viewer with
+        much more advanced viewer which supports &quot; the
+        dynamic HTML. <u>It allows the web authors to create much
+        richer and interactive pages</u>. <font color="#408080">Contact:
+        GaryBu, SatoNa</font></p>
+    </li>
+    <li>Shell Integration<font color="#408080"><em> -- Beta1</em></font><p>IE
+        3.0 was a mini shell-explorer which is capable hosting
+        any shell view windows, and we added the internet (http,
+        ftp and etc.) as a separate name space extension. Under
+        IE 4.0, we are fully integrating these two by (1) making
+        the internet as a part of the shell namespace, and (2)
+        merging the IE 3.0 browser and the Windows 95 shell
+        explorer into a single browser frame code. <u>It allows
+        the end-user to navigate local and remove file system and
+        the internet from the same Explorer window</u>.We also
+        make it highly componentized so that we can configure the
+        explorer window as needed (such as folder vs. explorer,
+        or integrated-shell vs. browser-only). <font
+        color="#408080">Contact: CheeChew, SatoNa</font></p>
+    </li>
+    <li>Layout Negotiation (Toolbar and Toolband)<font
+        color="#408080"><em> -- some in Beta1, will be completed
+        in Beta2</em></font><p>IE 3.0 introduced limited layout
+        negotiation mechanism to support OLE-style toolbar space
+        negotiation and its own toolbar. IE 4.0 extended that
+        mechanism and it has three types of layout negotiations,
+        (1) OLE-style negotiation for ActiveX Document, such as
+        Excel and Visio, (2) toolbar space negotiation for
+        internal and external components, such as its own toolbar
+        and explorer pane, (3) toolband space negotiation within
+        a toolbar for internal and external bands, such as
+        address band, search band and quick launch band. The
+        desktop window also support (2) and (3) and that's how we
+        made the tray and deskband extensible. <u>These mechanism
+        allows the users to customizes their browser and desktop
+        more flexibly and gives opportunities to ISVs and ICPs to
+        add values to the user's environment.</u> <font
+        color="#408080">Contact: CheeChew, AndyP, SatoNa</font></p>
+    </li>
+    <li>Browser Object Model<font color="#408080"><em> -- Beta1</em></font><p>Under
+        IE 3.0, the <em>window, location, navigator and history </em>objects
+        were implemented as a part of the currently viewed HTML
+        document. That implemenation was causing many Navigator
+        compatibility problems (such as window.open(&quot;&quot;)
+        and document.write). To fix this problem, we've moved the
+        majority of those implementation to the browser side of
+        code. This new architecture is much more compatible with
+        the implied object mode. It also allows us to make the <em>document</em>
+        object of a newly created browser window available much
+        more earlier. <u>This change alone is contributing to
+        over 10% of jump in our compatibility measurement</u>. <font
+        color="#408080">Contact: ChrisFra, SatoNa</font></p>
+    </li>
+    <li>HTTP-EQUIV tags and HTTP headers<font color="#408080"><em>
+        -- some in Beta1, will be completed in Beta2</em></font><p>Under
+        IE3.0, HTTP-EQUIV tags are handled by the code HTML
+        viewer, which is written specifically for HTTP-EQUIV. It
+        is causing some bugs and inconsistencies -- for example,
+        IE 3.0 does not support the client-pull passed via the
+        real HTTP headers. IE 4.0, all HTTP-EQUIV tags are simply
+        passed up to the containing browser and handled by the
+        same code that handles real HTTP headers. <u>This change
+        has fixed several problems in client-pull, PICS rating
+        and expiration date and removed the inconsistencies
+        between HTTP-EQUIV tags and real HTTP headers</u>. <font
+        color="#408080">Contact: TonyCi, SatoNa</font></p>
+    </li>
+    <li>View-State<font color="#408080"><em> -- Beta2</em></font><p>IE
+        3.0 relied on the object-cache to maintain the view state
+        (such as texts in a form or the scroll position) of last
+        couple of pages. This mechanism was limitted in the
+        number of pages it remembers the view state (up to 4
+        pages) and was not working well with certain pages (such
+        as those that immediately expires). IE 4.0's browser
+        solves this problem by providing a view state storage for
+        each pages in the navigation stack. <u>It remembers the
+        view state of up to 100 pages</u>. <font color="#408080">Contact:
+        TonyCi, SatoNa</font></p>
+    </li>
+    <li>Asynchronous Navigation and Activation Blocking<font
+        color="#408080"><em> -- Beta1</em></font><p>To <u>improve
+        the scripting compatibility</u>, we've changed how we
+        handle the navigation request from the script. When we
+        receive it, we start the navigation asynchronously but
+        deffer the activation of the new page until the first
+        page finishes running the script. We've also added <u>the
+        asynchronous PICS rating query</u>. We sends a request to
+        the PICS server asynchronously (at the same time we sends
+        the HTTP request for the page itself). In case we
+        receives the responce from the HTTP server before the
+        PICS server, we deffer the activation of the new page
+        until the PICS server responces. <font color="#408080">Contact:
+        ChisFra, GregJ, SatoNa</font></p>
+    </li>
+    <li>Background Page Formatting for better perceived
+        performance<font color="#408080"><em> -- Beta1</em></font><p>To
+        improved the perceived performance, we start formatting
+        HTML pages before we display it. IE 3.0 emulated this
+        behavior by synchronously activating the new page but
+        leaving the bits of the previous page on the screen for a
+        certain amount of time. This mechanism, however, does not
+        work all the time (does not work with frame-set pages)
+        and makes the browser inaccessible during that delay.
+        We've solved this problem by not showing (UIActivating)
+        the new page (leaving the previous page fully accessible)
+        until the format of the first page is done (the
+        Ready-State property becomes &quot;interactive&quot;). <u>The
+        user will see less re-painting and re-layouting when
+        browsing the web and feels faster</u>. <font
+        color="#408080">Contact: MikeSh, SatoNa</font></p>
+    </li>
+    <li>Keyboard Navigation and Dispatching<font color="#408080"><em>
+        -- Beta1</em></font><p>Keyboard Navigation of IE 3.0 was
+        implemented very specifically for the scenario we had and
+        was not extensible. In order to dispatch and translate
+        input messages appropriately among multiple frame
+        components (toolbars, toolbands, the frame and the main
+        document/shellview), we introduced a generic mechanism to
+        keep track of the focus and let them translate messages
+        correctly. We've also changed how the input messages are
+        translated to make it much more in-synced with OC96 spec
+        (window-less control spec). <u>These changes allow the
+        user to tabbing between the main page, toolbars and bands
+        (such as the addressbar, search band)</u>. <font
+        color="#408080">Contact: AndyP, SatoNa</font></p>
+    </li>
+    <li>Inter-page Transition<font color="#408080"><em> -- some
+        in Beta1, will be completed in Beta2</em></font><p>IE 4.0
+        supports the inter-page transitoin, which allows external
+        components (ActiveX transition controls) to play page
+        transition animations (such as fade-out/fade-in or
+        page-flipping) when the user navigates from one page to
+        another. <u>It allows the page authors to specify the
+        transitions to be played when the page is being opened</u>
+        via either HTTP header or HTTP-EQUIV tag.<u> It will make
+        the web-browsing much more like TV experience</u>. <font
+        color="#408080">Contact: MWinser, SatoNa</font></p>
+    </li>
+    <li>User Feedback<font color="#408080"><em> -- some in Beta1,
+        will be completed in Beta2</em></font><p>Lack of (or not
+        enough) user feedback ma cause some frustration to the
+        end-user, especially under slow or asynchonous
+        environment like browsing over a modem. IE 4.0 improves
+        the usability of the browser by (1) introducing sound
+        scheme such as &quot;start navigation&quot; and
+        &quot;complete navigation&quot;, (2) showing the <em>total</em>
+        progress in the progress bar and (3) making the animating
+        logo state more accurate. <font color="#408080">Contact:
+        Satona, Dinart</font></p>
+    </li>
+    <li>File Download<p><font color="#000000">When we start
+        downloading files with types which we can't browse
+        in-plate, we start the file-download UI. To make it fully
+        modeless (so that the user can continue using the browser
+        window), we start a separate thread for this
+        file-download UI. Under IE3.0, it causes double-download
+        (sending the same HTTP request to the server twice)
+        because there was no way to pass the download transaction
+        from on thread to another. Under IE 4.0, we've solved
+        this problem by adding the transactoin marshalling
+        capability to URLMON. <u>This makes it more reliable to
+        download files from busy servers</u>. </font><font
+        color="#408080">Contact: JudeJ, SatoNa</font></p>
+    </li>
+    <li>Mail/News Integration<p><font color="#000000">IE 3.0 's
+        Mail/News integration is limitted -- the list of those
+        external components (under the Go menu) is limitted and
+        the only thing the user can do is opening Mail and News
+        window. IE4.0 extended it by making fully registry based.
+        <u>It allows other clients (such as the address book and
+        the calender) to add their meuitems to the browser. It
+        also allows those clients to provide items under the
+        File-&gt;New menu, such as &quot;create a new mail
+        message&quot; or &quot;add a new appointment&quot;</u>.</font><font
+        color="#408080"> Contact: JudeJ, SatoNa</font></p>
+    </li>
+    <li>Pluggable Protocol Support<font color="#408080"><em> --
+        some in Beta1, will be completed in Beta2</em></font><p><font
+        color="#000000">The pluggable protocol support of IE 3.0
+        was very limitted and not extensible enough to really add
+        new protocols. IE 4.0 made it possible. IE 4.0 itself add
+        various new protocols (such as &quot;javascript:&quot;,
+        &quot;about:&quot; and &quot;help:&quot;) to fully
+        utilize thie new feature. Each protocol provider provides
+        a COM object which can transfer byte streams and a set of
+        registry settings which specifies various properties of
+        the protocol (such as opaqueness and default PICS
+        rating). </font><font color="#408080">Contact: ChrisFra,
+        TonyCi, JohannP, SatoNa</font></p>
+    </li>
+    <li>Internet Shortcut<font color="#408080"><em> -- some in
+        Beta2 (punt others to IE 5.0)</em></font><p><font
+        color="#000000">Windows 95 introduced the shell shortcut
+        (.LNK files) and IE 2.0 and 3.0 introduced the internet
+        shortcut (.URL files). When we integrate the shell
+        explorer and the browser under IE 4.0, we also merged
+        features of shell shotcut into the internet shotcut, so
+        that it became THE shortcut which can points any objects
+        in the shell name space. <u>We are also adding the
+        scripting capability to it so that it becomes the shell
+        script file format</u>. The channel bar will use this
+        scripting capability to <u>open browsers in theater mode</u>.
+        </font><font color="#408080">Contact: ScottH, SatoNa</font></p>
+    </li>
+    <li>Auto Complete<p><font color="#000000">(To Be Filled) </font><font
+        color="#408080">Contact: BryanSt, MattSq, CheeChew</font></p>
+    </li>
+    <li>Auto Search<p><font color="#000000">(To Be Filled) </font><font
+        color="#408080">Contact: Dli, CheeChew, SatoNa</font></p>
+    </li>
+    <li>Browser Band<font color="#408080"><em> -- Beta1</em></font><p><font
+        color="#000000">The browser band is an implementation of
+        a toolband which contains a web browser control (WebOC). <u>This
+        component allows the end-users to configure their
+        browsers and desktops with much more rich contents -- the
+        search band, the history band and ticker uses this
+        component</u>.</font><font color="#408080"> Contact:
+        AndyP, CheeChew, SatoNa</font></p>
+    </li>
+    <li>Shell Folder Band <font color="#408080"><em>-- some in
+        Beta1, will be completed in Beta2</em></font><p><font
+        color="#000000">The shell folder band is an implemetation
+        of a toolband which shows the contents of any shell
+        folders (a folder in the shell name space). <u>It allows
+        the end-users to cofigue their browsers and desktops with
+        various links -- the quick lancher and the quick links
+        this component</u>. The Windows 95 start menu will be
+        re-implemented with this mechanism to <u>allows the user
+        to configure the start menu much more easily and directly</u>.
+        </font><font color="#408080">Contact: MikeSh, CheeChew</font></p>
+    </li>
+    <li>Extended Behavior of Frame Targetting<font
+        color="#408080"><em> -- some in Beta1</em></font><p><font
+        color="#000000">We extended the frame-targetting
+        mechanism slighly so that the search band (a browser
+        band) can target the main frame and the existing web
+        pages work reasonably well when they are embedded on the
+        desktop (as a desktop component). </font><font
+        color="#408080">Contact: ChrisFra, JCordell, SatoNa</font></p>
+    </li>
+    <li>Shell Object Model<p><font color="#000000">(To Be Filled)
+        </font><font color="#408080">Contact: MikeSh, KurtE</font></p>
+    </li>
+    <li>WebView<p><font color="#000000">(To Be Filled) </font><font
+        color="#408080">Contact: MikeSh, Sankar, MikeSch</font></p>
+    </li>
+    <li>Def-View extention<p><font color="#000000">(To Be Filled)
+        </font><font color="#408080">Contact: MikeSh, CDTurner</font></p>
+    </li>
+    <li>IE DDE<p><font color="#000000">(To Be Filled) </font><font
+        color="#408080">Contact: MattSq</font></p>
+    </li>
+    <li>Performance Improvement<font color="#408080"><em> --
+        Beta2</em></font><p>To impove the browser performance
+        over IE 3.0, we made following changed in the browser:
+        (1) pre-merged menu for the HTML viewer, which eliminate
+        expensive OLE menu negotiation and (2) better window
+        re-use to avoid unnecessary destruction and creation of
+        windows (such as progressbar and icon windows). <font
+        color="#408080">Contact: AndyP, SatoNa</font></p>
+    </li>
+</ol>
+</body>
+</html>

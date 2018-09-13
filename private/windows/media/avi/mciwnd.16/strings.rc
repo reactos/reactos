@@ -1,0 +1,141 @@
+#define SZCODE static char _based(_segname("_CODE"))
+
+/****************************************************************************/
+/*		            Please internationalize me			    */
+/****************************************************************************/
+
+// Make sure these don't conflict with other MSVIDEO numbers!
+#define MCIWND_BASE	333
+
+#define IDS_MCIFILES 	(MCIWND_BASE + 0)
+#define IDS_ALLFILES 	(MCIWND_BASE + 1)
+#define IDS_MCIERROR 	(MCIWND_BASE + 2)
+#define IDS_NODEVICE 	(MCIWND_BASE + 3)
+#define IDS_HALFSIZE 	(MCIWND_BASE + 4)
+#define IDS_NORMALSIZE  (MCIWND_BASE + 5)
+#define IDS_DOUBLESIZE 	(MCIWND_BASE + 6)
+#define IDS_PLAY 	(MCIWND_BASE + 7)
+#define IDS_STOP 	(MCIWND_BASE + 8)
+#define IDS_RECORD 	(MCIWND_BASE + 9)
+#define IDS_EJECT 	(MCIWND_BASE + 10)
+#define IDS_CLOSE 	(MCIWND_BASE + 11)
+#define IDS_NEW 	(MCIWND_BASE + 12)
+#define IDS_VIEW 	(MCIWND_BASE + 13)
+#define IDS_VOLUME 	(MCIWND_BASE + 14)
+#define IDS_SPEED 	(MCIWND_BASE + 15)
+#define IDS_OPEN 	(MCIWND_BASE + 16)
+#define IDS_SAVE 	(MCIWND_BASE + 17)
+#define IDS_CONFIGURE 	(MCIWND_BASE + 18)
+#define IDS_COMMAND 	(MCIWND_BASE + 19)
+#define IDS_COPY 	(MCIWND_BASE + 20)
+
+#define DLG_MCICOMMAND  942
+#define IDC_MCICOMMAND  10
+#define IDC_RESULT      11
+#define MPLAYERICON	943
+
+#ifdef RC_INVOKED
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+IDS_MCIFILES 	"MCI Files"
+IDS_ALLFILES 	"All Files"
+IDS_MCIERROR 	"MCI Error"
+IDS_NODEVICE 	"No Device"
+IDS_HALFSIZE 	"Half Size \tAlt+2"
+IDS_NORMALSIZE  "Normal Size \tCtrl+1"
+IDS_DOUBLESIZE 	"Double Size \tCtrl+2"
+IDS_PLAY 	"&Play \tCtrl+P"
+IDS_STOP 	"&Stop \tCtrl+S"
+IDS_RECORD 	"&Record"
+IDS_EJECT 	"&Eject"
+IDS_CLOSE 	"C&lose"
+IDS_NEW 	"&New"
+IDS_VIEW 	"&View"
+IDS_VOLUME 	"&Volume"
+IDS_SPEED 	"&Speed"
+IDS_OPEN 	"&Open... \tCtrl+O"
+IDS_SAVE 	"&Save..."
+IDS_COPY	"&Copy \tCtrl+C"
+IDS_CONFIGURE   "Con&figure... \tCtrl+D"
+IDS_COMMAND	"Co&mmand... \tCtrl+F5"
+//IDS_PLAY        "&Play"
+//IDS_PLAY        "&Play Reverse"
+//IDS_PLAY        "&Play Fullscreen"
+
+END
+
+DLG_MCICOMMAND DIALOG 6, 18, 240, 59
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Send MCI String Command"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_MCICOMMAND, 50, 4, 186, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Send", IDOK, 7, 43, 40, 14
+    PUSHBUTTON      "Close", IDCANCEL, 50, 43, 40, 14
+    LTEXT           "Command:", -1, 7, 4, 40, 8
+    LTEXT           "Result:",  -1, 7, 20, 40, 8
+    LTEXT           "", IDC_RESULT, 50, 20, 190, 20
+END
+
+MPLAYERICON ICON PRELOAD MPlayer.ico
+
+#else
+
+/****************************************************************************/
+/*		       Please don't internationalize me			    */
+/****************************************************************************/
+
+SZCODE	szNULL[] = "";
+SZCODE  szMCIExtensions[] = "MCI Extensions";
+SZCODE  szPutDest[] = "put destination at %d %d %d %d";
+SZCODE  szPutSource[] = "put source at %d %d %d %d";
+SZCODE  szSetFormatTMSF[] = "set time format tmsf";
+SZCODE  szSetFormatMS[] = "set time format ms";
+SZCODE  szSetFormatFrames[] = "set time format frames";
+SZCODE  szSetFormat[] = "set time format %s";
+SZCODE  szStatusFormat[] = "status time format";
+SZCODE  szStatusNumTracks[] = "status number of tracks";
+SZCODE  szStatusPosTrack[] = "status position track %d";
+SZCODE  szStatusVolume[] = "status volume";
+SZCODE  szStatusSpeed[] = "status speed";
+SZCODE  szSetSpeed[] = "set speed %d";
+SZCODE  szSetVolume[] = "setaudio volume to %d";
+SZCODE  szSysInfo[] = "sysinfo installname";
+SZCODE  szSetPalette[] = "setvideo palette handle to %d";
+SZCODE  szMDIClient[] = "MDIClient";
+SZCODE  szSave[] = "save %s";
+SZCODE  szNew[] = "open new type %s alias %d wait";
+SZCODE  szOpenShareable[] = "open %s alias %d wait shareable";
+SZCODE  szOpen[] = "open %s alias %d wait";
+SZCODE  szOpenAVI[] = "open %s alias %d wait type AVIVideo";
+SZCODE  szWindowHandle[] = "window handle %u";
+SZCODE  szStatusPalette[] = "status palette handle";
+SZCODE  szConfigureTest[] = "configure test";
+SZCODE  szConfigure[] = "configure";
+SZCODE  szSetSpeed1000Test[] = "set speed 1000 test";
+SZCODE  szSetSpeed500Test[] = "set speed 500 test";
+SZCODE  szSetSpeedTest[] = "set speed %d test";
+SZCODE  szSetVolume0Test[] = "setaudio volume to 0 test";
+SZCODE  szSetVolumeTest[] = "setaudio volume to %d test";
+SZCODE  szStatusMode[] = "status mode";
+//SZCODE  szSetSeekExactOn[] = "set seek exactly on";
+//SZCODE  szSetSeekExactOff[] = "set seek exactly off";
+//SZCODE  szStatusSeekExactly[] = "status seek exactly";
+SZCODE  szPlay[] = "play %s";
+SZCODE  szPlayReverse[] = "play reverse %s";
+SZCODE  szPlayFrom[] = "play from %ld";
+SZCODE  szPlayTo[] = "play to %ld";
+SZCODE  szRepeat[] = "repeat";
+SZCODE  szSetDoorOpen[] = "set door open";
+SZCODE  szStep[] = "step by %ld";
+SZCODE  szSeek[] = "seek to %ld";
+SZCODE  szClose[] = "close";
+SZCODE  szStatusPosition[] = "status position";
+SZCODE  szStatusStart[] = "status start position";
+SZCODE  szPlayFullscreenReverse[] = "play fullscreen reverse %s";
+SZCODE  szPlayFullscreen[] = "play fullscreen %s";
+SZCODE  szSmallFonts[] = "small fonts";
+SZCODE  szDebug[] = "debug";
+SZCODE  szStatusForward[] = "status forward";
+SZCODE	szInterface[] = "AVIVideo!@%ld";
+#endif

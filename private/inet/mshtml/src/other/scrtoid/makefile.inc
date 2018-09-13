@@ -1,0 +1,2 @@
+!include $(ROOT)\commonmk.inc
+

@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Auto Enrollment DLL"
+
+#define VER_INTERNALNAME_STR        "Auto Enrollment DLL"
+#define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
+
+#include <common.ver>

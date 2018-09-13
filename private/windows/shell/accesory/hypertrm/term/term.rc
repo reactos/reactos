@@ -1,0 +1,908 @@
+/*              File: D:\WACKER\term\term.rc (Created: 26-Nov-1993)
+ *
+ *      Copyright 1994, 1998 by Hilgraeve Inc. -- Monroe, MI
+ *      All rights reserved
+ *
+ *      $Revision: 15 $
+ *      $Date: 9/24/99 5:01p $
+ */
+
+#include <winver.h>
+#include <winuser.h>
+#include <commctrl.h>
+#include <richedit.h>
+
+#include "res.h"
+#include "..\tdll\features.h"
+#include "xfer_dlg.h"
+#include "version.h"
+
+#include "..\cncttapi\cncttapi.rc"
+
+//#define TESTMENU
+
+MAINMENU MENU DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+	MENUITEM "&New Connection",             IDM_NEW
+	MENUITEM "&Open...",                    IDM_OPEN
+	MENUITEM "&Save",                       IDM_SAVE
+	MENUITEM "Save &As...",                 IDM_SAVE_AS
+	MENUITEM SEPARATOR
+		MENUITEM "Page Set&up...",                              IDM_PAGESETUP
+	MENUITEM "&Print...",                   IDM_PRINT
+	MENUITEM SEPARATOR
+		MENUITEM "P&roperties",                                 IDM_PROPERTIES
+	MENUITEM SEPARATOR
+	MENUITEM "E&xit\tAlt+F4",               IDM_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+	MENUITEM "&Copy\tCtrl+C",               IDM_COPY, GRAYED
+	MENUITEM "&Paste to Host\tCtrl+V",      IDM_PASTE, GRAYED
+	MENUITEM SEPARATOR
+	MENUITEM "&Select All",                 IDM_SELECT_ALL
+#if defined(INCL_TERMINAL_CLEAR)
+	MENUITEM SEPARATOR
+	MENUITEM "Clear &Backscroll",           IDM_CLEAR_BACKSCROLL
+	MENUITEM "C&lear Screen",               IDM_CLEAR_SCREEN
+#endif
+    END
+    POPUP "&View"
+    BEGIN
+	MENUITEM "&Tool Bar",                   IDM_VIEW_TOOLBAR
+	MENUITEM "&Status Bar",                 IDM_VIEW_STATUS
+	MENUITEM SEPARATOR
+		MENUITEM "&Font...",                                    IDM_VIEW_FONTS
+	MENUITEM SEPARATOR
+	MENUITEM "Sna&p",                       IDM_VIEW_SNAP
+#ifdef INCL_KEY_MACROS
+	MENUITEM SEPARATOR
+	MENUITEM "&Key Macros",                  IDM_KEY_MACROS
+#endif
+    END
+	POPUP "&Call"
+    BEGIN
+#ifdef INCL_CALL_ANSWERING
+		MENUITEM "&Call",                                           IDM_ACTIONS_DIAL
+	MENUITEM "&Wait for a Call"             IDM_ACTIONS_WAIT_FOR_CALL
+	MENUITEM "&Stop Waiting"                IDM_ACTIONS_STOP_WAITING
+	MENUITEM SEPARATOR
+		MENUITEM "&Disconnect",                                 IDM_ACTIONS_HANGUP
+#else
+		MENUITEM "&Connect",                                IDM_ACTIONS_DIAL
+		MENUITEM "&Disconnect",                                 IDM_ACTIONS_HANGUP
+#endif
+	END
+	POPUP "&Transfer"
+	BEGIN
+		MENUITEM "&Send File...",                               IDM_ACTIONS_SEND
+	MENUITEM "&Receive File...",            IDM_ACTIONS_RCV
+	MENUITEM "&Capture File...",            IDM_ACTIONS_CAP
+	MENUITEM "Send &Text File...",          IDM_ACTIONS_SEND_TEXT
+	MENUITEM SEPARATOR
+	MENUITEM "Capture to &Printer",         IDM_ACTIONS_PRINT
+	END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                        IDM_HELPTOPICS
+	MENUITEM SEPARATOR
+#ifdef INCL_NAG_SCREEN
+        MENUITEM "&Purchase Information..."             IDM_PURCHASE_INFO
+        MENUITEM "&Enter Authorization Code..."         IDM_REG_CODE
+        MENUITEM "&Register..."                         IDM_REGISTER
+        MENUITEM SEPARATOR
+#endif
+#ifndef NT_EDITION
+        MENUITEM "Hilgraeve &Discussion Forum"          IDM_DISCUSSION
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&About HyperTerminal",                IDM_ABOUT
+    END
+
+#if defined(TESTMENU) && !defined(NDEBUG)
+
+    POPUP "&Test"
+    BEGIN
+	MENUITEM "Save &As...",                 IDM_TEST_SAVEAS,
+	MENUITEM "Connect",                     IDM_TEST_CONNECT,
+	MENUITEM "Disconnect",                  IDM_TEST_DISCONNECT,
+	MENUITEM SEPARATOR
+	MENUITEM "Clear T&erminal",             IDM_TEST_CLEARTERM,
+	MENUITEM "Clear B&ackscroll",           IDM_TEST_CLEARBACK, GRAYED
+	MENUITEM SEPARATOR
+	MENUITEM "Select &Terminal",            IDM_TEST_SELECTTERM, GRAYED
+	MENUITEM "Select &Backscroll",          IDM_TEST_SELECTBACK, GRAYED
+	MENUITEM SEPARATOR
+	MENUITEM "&Test File..."                IDM_TEST_TESTFILE
+	MENUITEM SEPARATOR
+	MENUITEM "&Bezel",                      IDM_TEST_BEZEL
+	MENUITEM "S&nap",                       IDM_TEST_SNAP
+	MENUITEM SEPARATOR
+	MENUITEM "&Show Tips",                  IDM_TEST_SHOWTIPS, GRAYED
+	MENUITEM SEPARATOR
+	MENUITEM "New Connection...",           IDM_TEST_NEW_CONNECTION
+	MENUITEM "Flush backscroll",            IDM_TEST_FLUSH_BACKSCRL
+	MENUITEM SEPARATOR
+	POPUP "&Load emulator..."
+	BEGIN
+	    MENUITEM "Ansi",                    IDM_TEST_LOAD_ANSI
+	    MENUITEM "Auto",                    IDM_TEST_LOAD_AUTO
+	    MENUITEM "Minitel",                 IDM_TEST_LOAD_MINITEL
+	    MENUITEM "TTY",                     IDM_TEST_LOAD_TTY
+	    MENUITEM "Viewdata",                IDM_TEST_LOAD_VIEWDATA
+	    MENUITEM "VT52",                    IDM_TEST_LOAD_VT52
+	    MENUITEM "VT100",                   IDM_TEST_LOAD_VT100
+	END
+	MENUITEM SEPARATOR
+	MENUITEM "Query Session Name",                      IDM_TEST_SESSNAME
+    END
+#endif
+END
+
+MENUCAPTURE MENU DISCARDABLE
+BEGIN
+    MENUITEM "&Stop",                       IDM_CAPTURE_STOP
+    MENUITEM "&Pause",                      IDM_CAPTURE_PAUSE
+    MENUITEM "&Resume",                     IDM_CAPTURE_RESUME
+END
+
+PRINTCAPTURE MENU DISCARDABLE
+BEGIN
+    MENUITEM "&Stop",                       IDM_PRNECHO_STOP
+    MENUITEM "&Pause",                      IDM_PRNECHO_PAUSE
+    MENUITEM "&Resume",                     IDM_PRNECHO_RESUME
+END
+
+SESSIONCONTEXTMENU MENU DISCARDABLE
+BEGIN
+    POPUP "Dummy popup"
+    BEGIN
+	MENUITEM "Send File...",                IDM_CONTEXT_SEND
+	MENUITEM "Receive File...",             IDM_CONTEXT_RECEIVE
+	MENUITEM "Print...",                    IDM_CONTEXT_PRINT
+	MENUITEM SEPARATOR
+	MENUITEM "Copy\tCtrl+C",                IDM_CONTEXT_COPY, GRAYED
+	MENUITEM "Paste to Host\tCtrl+V",       IDM_CONTEXT_PASTE, GRAYED
+	MENUITEM SEPARATOR
+	MENUITEM "Select All",                  IDM_CONTEXT_SELECT_ALL
+	MENUITEM SEPARATOR
+	MENUITEM "Snap",                        IDM_CONTEXT_SNAP
+#if defined(INCL_TERMINAL_CLEAR)
+	MENUITEM SEPARATOR
+	MENUITEM "Clear &Backscroll",           IDM_CONTEXT_CLEAR_BACKSCROLL
+	MENUITEM "C&lear Screen",               IDM_CONTEXT_CLEAR_SCREEN
+#endif
+    /*
+	MENUITEM SEPARATOR
+		MENUITEM "What's This?",                                IDM_CONTEXT_WHATS_THIS
+		*/
+    END
+END
+
+
+/* ---------------------------------------------------------------------- */
+
+#include "dialogs.rc"
+
+/* ---------------------------------------------------------------------- */
+/* For upper-WACKER the emulator dialogs will be bound with the emu DLL.  */
+
+#include "..\emu\emudlgs.rc"
+
+/* ---------------------------------------------------------------------- */
+
+#include "tables.rc"
+
+/* ---------------------------------------------------------------------- */
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_GNRL_APPNAME        "HyperTerminal"
+#ifdef INCL_NAG_SCREEN
+    IDS_GNRL_UNREGISTERED   " (Unlicensed)"
+#endif
+    IDS_GNRL_AUTHOR         "Developed for Microsoft\nby Hilgraeve, Incorporated"
+//mpt:08-22-97 added HTML help
+#if defined(INCL_USE_HTML_HELP)
+	IDS_HTML_HELPFILE       "HYPERTRM.CHM::/term_whatis_intro.htm"
+#endif
+	IDS_GNRL_HELPFILE       "HYPERTRM.HLP"
+    IDS_GNRL_PRSHT_TITLE    "Properties for "
+    IDS_GNRL_NEW_CNCT       "New Connection"
+    IDS_GNRL_HAS            ".ht"
+//#if defined(NT_EDITION) //jmh: 8/2/96
+    IDS_GNRL_PROFILE_DIR    "Accessories\\Communications\\"
+//#endif  // defined(NT_EDITION)
+	/* General confirmation messages */
+    IDS_GNRL_CNFRM_SAVE     "Do you want to save session %s ?"
+	IDS_GNRL_CNFRM_OVER     "%s file already exists.\rDo you want to replace the existing file?"
+	IDS_GNRL_CNFRM_DCNCT    "You are currently connected.\rAre you sure you want to disconnect now?"
+	IDS_GNRL_ELLIPSIS               " ... "
+	IDS_GNRL_CREATE_PATH    "The path '%s' does not exist.  Create it?"
+	IDS_GNRL_INVALID_CHARS  "A connection name cannot contain any of the following characters: /\\:*?\x22<>|"
+	IDS_GNRL_INVALID_NAME   "The connection name is a reserved device name.\nUse a different connection name."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CMM_ALL_FILES1      "All Files (*.*)"
+    IDS_CMM_ALL_FILES2      "*.*"
+    IDS_CMM_SEL_FILES       "Select File"
+	IDS_CMM_SEL_DIR                 "Select a Folder"
+    IDS_CMM_SAVE_AS         "Save As..."
+	IDS_CMM_LOAD_SESS               "Open"
+	IDS_CMM_HAS_FILES1              "Session files (*.ht)"
+	IDS_CMM_HAS_FILES2              "*.ht"
+	IDS_CMM_HAS_FILES3              "Terminal files (*.trm)"
+	IDS_CMM_HAS_FILES4              "*.trm"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_SND_DLG_DD                  "You can also drag files from a folder and drop them in the list box."
+	IDS_SND_DLG_FILE                "Select File to Send"
+	IDS_SND_TXT_FILE                "Send Text File"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* Messages for one of the receive dialogs */
+	IDS_RM_APPEND                   "If more than one file is received, subsequent files will be appended to this file."
+	IDS_RM_OVERWRITE                "If more than one file is received, subsequent files will overwrite this file."
+	IDS_RM_REFUSE                   "If more than one file is received, subsequent files will be refused."
+	IDS_RM_NEWER                    "If more than one file is received, subsequent files will be refused unless they are newer."
+	IDS_RM_DATE                     "If more than one file is received, subsequent files will be renamed by differences in the date."
+	IDS_RM_SEQUENCE                 "If more than one file is received, subsequent files will be renamed by differences in the file name."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPF_DLG_FILE        "Select Capture File"
+    IDS_CPF_FILES1          "Text file (*.TXT)"
+    IDS_CPF_FILES2          "*.TXT"
+	IDS_CPF_SELECT_FILE             "Select File"
+    IDS_CPF_FILES3          "All files (*.*)"
+    IDS_CPF_FILES4          "*.*"
+    IDS_CPF_CAP_OFF         "&Capture Text..."
+    IDS_CPF_CAP_ON          "&Capture Text"
+	IDS_CPF_CAP_FILE                "CAPTURE.TXT"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_XD_RECEIVE          "Receiving Files"
+    IDS_XD_SEND             "Sending Files"
+    IDS_XD_ON               "On"
+    IDS_XD_OFF              "Off"
+    IDS_XD_CRC              "CRC"
+    IDS_XD_CHECK            "Checksum"
+    IDS_XD_STREAM           "Streaming"
+    IDS_XD_CB               "Classic B"
+    IDS_XD_BP               "B Plus"
+	IDS_XD_INT                              "%d"
+	IDS_XD_ONLY_1                   "%1!d!"
+	IDS_XD_I_OF_I                   "%1!d! of %2!d!"
+    IDS_XD_KILO             "%dK"
+    IDS_XD_K_OF_K           "%1k of %2K"
+    IDS_XD_BPS              "%d bps"
+    IDS_XD_CPS              "%d cps"
+    IDS_XD_PERCENT          "%d%%"
+    IDS_XD_RECV_TITLE       "%1 file receive for %2"
+    IDS_XD_SEND_TITLE       "%1 file send for %2"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_XD_PROTO_X_1        "1K Xmodem"
+    IDS_XD_PROTO_X          "Xmodem"
+    IDS_XD_PROTO_Y          "Ymodem"
+    IDS_XD_PROTO_Y_G        "Ymodem-G"
+    IDS_XD_PROTO_Z          "Zmodem"
+    IDS_XD_PROTO_K          "Kermit"
+    IDS_XD_PROTO_Z_CR           "Zmodem with Crash Recovery"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* Transfer status messages, displayed at end of transfer */
+	IDS_MB_TITLE_WARN               "HyperTerminal"
+	IDS_MB_TITLE_ERR                "HyperTerminal"
+	IDS_MB_MSG_NO_FILE              "HyperTerminal couldn't find the file: "
+	IDS_ER_TAPI_INIFILE     "TAPI.DLL cannot read TELEPHON.INI. Edit the file and then try again."
+	IDS_ER_TAPI_NODRIVER    "Windows could not find the Telephony device driver or one of its component files.  Use the Telephony control panel to find or reinstall the driver."
+	IDS_ER_TAPI_NOMULTI     "A duplicate service provider exists in the TELEPHON.INI file.  Use the Telephony Control Panel to correct the problem."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* A block of ZMODEM dialog text strings */
+    IDS_TM_SD_ONE           "<None>"
+    IDS_TM_SD_TWO           "Newer or longer"
+    IDS_TM_SD_THREE         "CRC differs"
+    IDS_TM_SD_FOUR          "Append to file"
+    IDS_TM_SD_FIVE          "Overwrite"
+    IDS_TM_SD_SIX           "Newer"
+    IDS_TM_SD_SEVEN         "Length or date differs"
+    IDS_TM_SD_EIGHT         "Refuse"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TM_XFER_ZERO        "Transfer successful"
+	IDS_TM_XFER_ONE                 "Transfer cancelled by remote system"
+	IDS_TM_XFER_TWO                 "Transfer cancelled by user"
+    IDS_TM_XFER_THREE       "Carrier lost"
+    IDS_TM_XFER_FOUR        "Error limit exceeded"
+    IDS_TM_XFER_FIVE        "No response from remote system"
+	IDS_TM_XFER_SIX                 "Packet sequence error"
+    IDS_TM_XFER_SEVEN       "Illegal message format"
+    IDS_TM_XFER_EIGHT       "Too many errors"
+    IDS_TM_XFER_NINE        "Cannot write file to disk"
+    IDS_TM_XFER_TEN         "Cannot open file"
+	IDS_TM_XFER_ELEVEN              "Disk error"
+    IDS_TM_XFER_TWELVE      "Not enough memory"
+	IDS_TM_XFER_THIRTEEN    "File exists but cannot be opened"
+    IDS_TM_XFER_FOURTEEN    "Transfer complete"
+    IDS_TM_XFER_FIFTEEN,    ""
+    IDS_TM_XFER_SIXTEEN     "File is too old"
+    IDS_TM_XFER_SEVENTEEN   "No file time available"
+    IDS_TM_XFER_EIGHTEEN    "Would not cancel"
+    IDS_TM_XFER_NINETEEN    "General failure"
+    IDS_TM_XFER_TWENTY      "No virus scanning"
+    IDS_TM_XFER_TWENTYONE   "Virus detected"
+    IDS_TM_XFER_TWENTYTWO   "User skipped"
+    IDS_TM_XFER_TWENTYTHREE "User refused"
+    IDS_TM_XFER_TWENTYFOUR  "This file cannot be transferred, because an identically named file exists which cannot be renamed at this time. The existing file may be in use or write protected."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* A block of ZMODEM display messages, more blocks will follow */
+    IDS_TM_SZ_ZERO,         ""
+    IDS_TM_SZ_ONE           "Carrier lost"
+    IDS_TM_SZ_TWO           "Connection timed out"
+    IDS_TM_SZ_THREE         "Bad data packet"
+    IDS_TM_SZ_FOUR          "Waiting for start request"
+    IDS_TM_SZ_FIVE          "Requesting start packet"
+    IDS_TM_SZ_SIX           "Got start request"
+    IDS_TM_SZ_SEVEN         "Got acknowledgement"
+    IDS_TM_SZ_EIGHT         "Got start request"
+    IDS_TM_SZ_NINE          "File refused"
+    IDS_TM_SZ_TEN           "Remote error"
+	IDS_TM_SZ_ELEVEN                "Transfer canceled by remote user"
+    IDS_TM_SZ_TWELVE        "Finished"
+    IDS_TM_SZ_THIRTEEN      "Sending"
+    IDS_TM_SZ_FOURTEEN      "Receiving"
+    IDS_TM_SZ_FIFTEEN       "End of file"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TM_SZ_SIXTEEN       "Disk error"
+    IDS_TM_SZ_SEVENTEEN     "Service request"
+    IDS_TM_SZ_EIGHTEEN      "Challenge"
+    IDS_TM_SZ_NINETEEN      "Completed"
+    IDS_TM_SZ_TWENTY        "Cancelled"
+    IDS_TM_SZ_TWENTYONE     "Service request"
+    IDS_TM_SZ_TWENTYTWO     "Command error"
+    IDS_TM_SZ_TWENTYTHREE   "Command error"
+    IDS_TM_SZ_TWENTYFOUR    "Error in packet format"
+    IDS_TM_SZ_TWENTYFIVE    "Sending acknowledgement"
+    IDS_TM_SZ_TWENTYSIX     "Virus detected"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* A block of X and Y modem display messages, more blocks will follow */
+    IDS_TM_RX_ZERO,         ""
+    IDS_TM_RX_ONE           "Good packet"
+    IDS_TM_RX_TWO           "Alt packet"
+    IDS_TM_RX_THREE         "No batch packet"
+    IDS_TM_RX_FOUR          "End packet"
+    IDS_TM_RX_FIVE          "Repeat packet"
+    IDS_TM_RX_SIX           "Wrong packet"
+    IDS_TM_RX_SEVEN         "Short packet"
+    IDS_TM_RX_EIGHT         "Bad format"
+    IDS_TM_RX_NINE          "Bad check value"
+    IDS_TM_RX_TEN           "No packet"
+    IDS_TM_RX_ELEVEN        "Block aborted"
+    IDS_TM_RX_TWELVE        "No response"
+    IDS_TM_RX_THIRTEEN      "Got retry request"
+    IDS_TM_RX_FOURTEEN      "Unrequested response"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TM_KRM_CANT_OPEN    "Can't open or create %s."
+    IDS_TM_KRM_CANT_WRITE   "Can't write to disk."
+    IDS_TM_KRM_VIRUS_DETECT "Transfer failed - virus detected!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TM_K_ZERO,          ""
+    IDS_TM_K_ONE            "No response (timeout)"
+    IDS_TM_K_TWO            "Retry request"
+    IDS_TM_K_THREE          "Data error"
+    IDS_TM_K_FOUR           "Remote system error"
+    IDS_TM_K_FIVE           "Bad packet format"
+    IDS_TM_K_SIX            "Packet repeated"
+    IDS_TM_K_SEVEN          "Packet out of sequence"
+    IDS_TM_K_EIGHT          "Fatal error"
+	IDS_TM_K_NINE                   "Transfer canceled by user"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* --- Statusbar Strings --- */
+    IDS_STATUSBR_CONNECT    "Connected"
+    IDS_STATUSBR_CONNECT_FORMAT "Connected %s"
+    //
+    // The string directly below is only used to calculate the size of
+    // the connection part when time connected is showing.
+    //
+    IDS_STATUSBR_CONNECT_FORMAT_X "Connected 00:00:00"
+    IDS_STATUSBR_DISCONNECT "Disconnected"
+    IDS_STATUSBR_CONNECTING "Connecting"
+    IDS_STATUSBR_DISCONNECTING "Disconnecting"
+    IDS_STATUSBR_SCRL       "SCROLL"
+    IDS_STATUSBR_CAPL       "CAPS"
+    IDS_STATUSBR_NUML       "NUM"
+    IDS_STATUSBR_CAPTUREON  "Capture"
+	IDS_STATUSBR_PRINTECHOON "Print echo"
+	IDS_STATUSBR_COM                "19200 8-N-1"
+	IDS_STATUSBR_AUTODETECT "Auto detect"
+    IDS_STATUSBR_COM_TCPIP  "TCP/IP"
+    IDS_STATUSBR_ANSWERING  "Waiting for calls"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* --- Error Messages --- */
+	IDS_ER_CNCT_BADLINE     "You may need to install a modem before you can make a connection.\r\nWould you like to do this now?"
+/*	IDS_ER_CNCT_TAPIFAILED  "HyperTerminal has reported a general TAPI Error. \nPlease close HyperTerminal and try again." */
+	IDS_ER_CNCT_TAPIFAILED  "Windows has reported a TAPI error. Use the Phone and Modem Options icon in the control panel to ensure that a modem is installed. Then restart HyperTerminal."
+	IDS_ER_CNCT_TAPINOMEM   "There is not enough memory available. Quit some programs, and then try again."
+	IDS_ER_CNCT_CALLUNAVAIL "Another program is using the selected Telephony device.\nTry again after the other program completes."
+	IDS_ER_CNCT_PORTFAILED  "Unable to open %s. Please check your port settings"
+	IDS_ER_TAPI_CONFIG      "Please confirm the modem/port selection in the following dialog.  (This session either had no previous selection or that selection is absent from your TAPI configuration.)"
+	IDS_ER_CNCT_BADADDRESS  "The phone number, area code or country/region code contain invalid characters."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ER_TITLE            "Fatal Error"
+    IDS_ER_XFER_NO_FILE     "No matching file was found."
+    IDS_ER_BAD_SESSION      "Could not read session file: %s."
+	IDS_ER_REINIT           "Could not reinitalize."
+	IDS_ER_TAPI_REINIT      "Quit HyperTerminal so your new communications settings can take effect."
+	IDS_ER_TAPI_REINIT2     "You cannot use any telephony devices until you do."
+	IDS_ER_TAPI_NEEDS_INFO  "Before HyperTerminal can dial or make connections, you must provide information about your location."
+    IDS_ER_OPEN_FAILED      "Could not open file."
+    IDS_ER_INVALID_TELNETID "Invalid telnet terminal id."
+	IDS_ER_TAPI_UNKNOWN     "Windows has reported a TAPI error (%x). Use the Phone and Modem Options icon in the control panel to ensure that a modem is installed properly."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* --- Print Messages --- */
+	IDS_PRINT_ERROR                 "A general printer error occured while printing.  Click OK to cancel printing."
+    IDS_PRINT_NOW_PRINTING          "Now printing page %d of"
+	IDS_PRINT_NOMEM                 "There is not enough memory to print this file. Quit some programs and then try again."
+	IDS_PRINT_CANCEL                "There is not enough memory to complete this operation. Quit some programs and then try again."
+    IDS_PRINT_OF_DOC                "'%s' on the"
+	IDS_PRINT_ON_DEV                "%1 on %2"
+	IDS_PRINT_NO_PRINTER            "There is no default printer selected.\x0ATo install and select a default printer, click the Start button, point to Settings, click Printers, and then double-click Add Printer."
+	IDS_PRINT_TITLE                 "Print Error"
+	IDS_PRINT_FILTER_1              "Printer Files (*.prn)"
+	IDS_PRINT_FILTER_2              "*.prn"
+	IDS_PRINT_FILTER_3              "All Files (*.*)"
+	IDS_PRINT_FILTER_4              "*.*"
+	IDS_PRINT_TOFILE                "Print To File"
+	IDS_PRINT_FILENAME              "Output"
+	IDS_PRINT_CAPTURE_DOC           "HyperTerminal Capture"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* --- ToolTip Text --- */
+    IDS_TTT_NEW             "New"
+    IDS_TTT_OPEN            "Open"
+#ifdef INCL_CALL_ANSWERING
+	IDS_TTT_DIAL                    "Call"
+#else
+	IDS_TTT_DIAL                    "Connect"
+#endif
+	IDS_TTT_HANGUP                  "Disconnect"
+    IDS_TTT_SEND            "Send"
+    IDS_TTT_RECEIVE         "Receive"
+    IDS_TTT_PROPERTY        "Properties"
+ /* IDS_TTT_HELP                        "Help" */
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	/* --- Minitel buttons --- */
+	IDS_SIDEBAR_INDEX               "Index"
+	IDS_SIDEBAR_CANCEL              "Cancel"
+	IDS_SIDEBAR_PREVIOUS    "Previous"
+	IDS_SIDEBAR_REPEAT              "Repeat"
+	IDS_SIDEBAR_GUIDE               "Guide"
+	IDS_SIDEBAR_CORRECT     "Correct"
+	IDS_SIDEBAR_NEXT                "Next"
+	IDS_SIDEBAR_MSEND               "Send"
+	IDS_SIDEBAR_CONFIN              "Cnct/Discnct"
+END
+
+/* --- Menu Help Text --- */
+STRINGTABLE DISCARDABLE
+BEGIN
+    40100                   "Creates a new connection"
+    40101                   "Opens an existing session"
+    40102                   "Saves the current session"
+    40103                   "Saves the current session with a new name"
+    40104                   "Changes page layout settings"
+    40105                   "Selects a printer"
+	40106                                   "Prints the current session"
+	40107                                   "Displays the properties of the current session"
+	40108                                   "Quits HyperTerminal and saves the current session"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    40200                   "Copies the selection to the Clipboard"
+	40201                   "Sends the contents of the Clipboard to the remote computer"
+	40202                   "Selects the entire session, including the backscroll buffer"
+    40203                   "Clears the backscroll buffer"
+    40204                   "Clears the terminal screen"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	40300                                   "Shows or hides the tool bar"
+	40301                                   "Shows or hides the status bar"
+	40302                                   "Selects a font for the current session"
+	40303									"Sizes the window based on the current font size"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    40400                   "Connects to remote system"
+    40401                   "Disconnects from the remote system"
+	40402                   "Sends a file to the remote system"
+    40403                   "Receives a file from the remote system"
+    40404                   "Creates a file of all incoming text"
+    40405                   "Prints incoming text as it is received"
+    40406                   "Sends a text file to the remote system"
+    40407                   "Waits for incoming calls"
+    40408                   "Stops waiting for incoming calls"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    40420                   "Stop capturing..."
+    40421                   "Pause capturing..."
+    40422                   "Resume capturing..."
+    40424                   "Stop..."
+    40425                   "Pause..."
+    40426                   "Resume..."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	40501                   "Displays Help topics"
+	40502                   "Displays program information, version number, and copyright"
+    40503                   "Manage keyboard macros"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    40000                   "File"
+    40001                   "Edit"
+    40002                   "View"
+    40003                   "Actions"
+    40004                   "Transfer"
+    40005                   "Help"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	40800                                   "Sends a file to the remote system"
+	40801                                   "Receives a file from the remote system"
+	40802                                   "Prints the current session"
+	40803                                   "Copies the selection to the Clipboard"
+	40804                                   "Sends the contents of the Clipboard to the remote computer"
+	40805                                   "Selects the entire session, including the backscroll buffer"
+	40806                                   "What's This..."
+	40807                                   "Resizes the HyperTerminal window to match the terminal size"
+    40808                                   "Cannot dial without phone number"
+    40809                                   "Access denied"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    /* --- Connection dialog strings --- */
+    IDS_DIAL_OFFERING       "Connecting"
+    IDS_DIAL_DIALTONE       "Dial Tone"
+    IDS_DIAL_DIALING        "Dialing"
+    IDS_DIAL_RINGBACK       "Ring Back"
+    IDS_DIAL_BUSY           "Busy"
+    IDS_DIAL_CONNECTED      "Connected"
+	IDS_DIAL_DISCONNECTED   "Disconnected"
+	IDS_DIAL_NOANSWER               "No Answer"
+	IDS_DIAL_NODIALTONE     "No Dialtone"
+    IDS_DIAL_REDIAL_IN      "Redial in %d"
+    /* --- Connection messages --- */
+    IDS_CNCT_OPEN           "\r\n=====> Connected %1, %2\r\n"
+    IDS_CNCT_CLOSE          "\r\n=====> Disconnected %1, %2"
+    /* --- Default terminal font --- */
+    #if defined(INCL_USE_TERMINAL_FONT)
+    IDS_TERM_DEF_FONT       "Terminal"
+	IDS_TERM_DEF_NONVGA_SIZE        "-15"
+    #else
+	IDS_TERM_DEF_FONT               "Courier New"
+	IDS_TERM_DEF_NONVGA_SIZE        "-15"
+    #endif
+	IDS_TERM_DEF_CHARSET    "255"
+	IDS_TERM_DEF_VGA_SIZE   "-11"
+	/* --- Default printer font --- */
+    IDS_PRINT_DEF_FONT      "Courier New"
+    IDS_PRINT_DEF_CHARSET   "255"
+	/* --- Upgrade button font and size ---*/
+	IDS_UPGRADE_FONT                "MS Sans Serif"
+	IDS_UPGRADE_FONT_SIZE   "-8"
+	/* --- Base name of direct com ports --- */
+	IDS_CNCT_DIRECTCOM              "Direct to Com%d"
+    IDS_CNCT_DIRECTCOM_NT   "Direct to %s"
+	/* --- Delayed dialing string --- */
+	IDS_CNCT_DELAYEDDIAL    "Dialing is paused.  Click OK when you are ready to continue dialing."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_EMUNAME_AUTO		"Auto detect"
+	IDS_EMUNAME_ANSI		"ANSI"
+	IDS_EMUNAME_MINI		"Minitel"
+	IDS_EMUNAME_VIEW		"Viewdata"
+	IDS_EMUNAME_TTY 		"TTY"
+	IDS_EMUNAME_VT100		"VT100"
+	IDS_EMUNAME_VT52		"VT52"
+	IDS_EMUNAME_VT100J		"VT100J"
+	IDS_EMUNAME_ANSIW		"ANSIW"
+	IDS_EMUNAME_VT220		"VT220"
+	IDS_EMUNAME_VT320		"VT320"
+END
+
+#if defined(NT_EDITION) // mrw:7/8/95
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USE_RTF    "True"  // This is a special flag to make upgrade text localizable
+                           // Default is True for US English.
+                           // If you change this to anything else, following upgrade text will be localizable.
+    IDS_UPGRADE+0  "\t\t\tHyperTerminal"
+    IDS_UPGRADE+1  "\n\n"
+
+    IDS_UPGRADE+2  "HyperTerminal is a small, easy to use product, designed to satisfy basic terminal communications "
+    IDS_UPGRADE+3  "needs. HyperTerminal was written for Microsoft by Hilgraeve Inc., and contains a subset of the "
+    IDS_UPGRADE+4  "capabilities available in Hilgraeve's full-featured communications software, HyperACCESS."
+    IDS_UPGRADE+5  "\n\n"
+    IDS_UPGRADE+6  "Hilgraeve provides a popular upgrade to HyperTerminal, called HyperTerminal Private Edition, which "
+    IDS_UPGRADE+7  "may be downloaded free for personal use from http://www.hilgraeve.com. This upgrade offers added "
+    IDS_UPGRADE+8  "capabilities such as the ability to assign macros to keys, to reduce the number of keystrokes "
+    IDS_UPGRADE+9  "required to send passwords, user IDs, or host commands. This free upgrade also enables you to define "
+    IDS_UPGRADE+10 "the colors and size (rows and columns) used by the terminal screen."
+    IDS_UPGRADE+11 "\n\n"
+    IDS_UPGRADE+12 "If you need features beyond those of HyperTerminal or HyperTerminal Private Edition, you may wish "
+    IDS_UPGRADE+13 "to consider purchasing Hilgraeve's full-featured communications software, HyperACCESS, or comparable "
+    IDS_UPGRADE+14 "products from other manufacturers. Here are some of the features and benefits you can expect from "
+    IDS_UPGRADE+15 "such full-featured products:"
+    IDS_UPGRADE+16 "\n\n"
+    IDS_UPGRADE+17 "� Additional terminal emulators and file transfer protocols\n"
+    IDS_UPGRADE+18 "� Record and play back logons and other repetitive steps\n"
+    IDS_UPGRADE+19 "� Define your own keys and buttons with text or bitmap labels\n"
+    IDS_UPGRADE+20 "� Automate communications with powerful script languages"
+    IDS_UPGRADE+21 "\n\n"
+    IDS_UPGRADE+22 "For information on HyperACCESS, HyperTerminal Private Edition, or other Hilgraeve products, contact "
+    IDS_UPGRADE+23 "Hilgraeve at sales@hilgraeve.com or go to http://www.hilgraeve.com."
+    IDS_UPGRADE+24 "\n\n"
+
+    //IDS_UPGRADE+2  "HyperTerminal is designed to satisfy your basic communications needs in a small, easy-to-use product.  "
+    //IDS_UPGRADE+3  "It demonstrates many of the new features of Windows 98 including TAPI, Unimodem, and the Windows 98 user interface."
+    //IDS_UPGRADE+4  "\n\n"
+    //IDS_UPGRADE+5  "HyperTerminal Version 1.2 is a more powerful version of the HyperTerminal program that shipped in the first release of Windows 98.  "
+    //IDS_UPGRADE+6  "HyperTerminal Version 1.2 includes Telnet, Zmodem crash recovery, redial on busy, and better font handling and display.  HyperTerminal was written for Microsoft by Hilgraeve Inc."
+    //IDS_UPGRADE+7  "\n\n"
+    //IDS_UPGRADE+8  "If you need features beyond what HyperTerminal offers, Hilgraeve and other vendors of Windows 98 software have larger full-featured products that may better satisfy your needs.  "
+    //IDS_UPGRADE+9  "Here are some of the features and benefits you can expect from many commercial products."
+    //IDS_UPGRADE+10 "\n\n"
+    //IDS_UPGRADE+11 "* Record and play back logons and other repetitive steps\n"
+    //IDS_UPGRADE+12 "* Define your own keys and buttons with text or bitmap labels\n"
+    //IDS_UPGRADE+13 "* Automate communications with a powerful script language\n"
+    //IDS_UPGRADE+14 "* Make the backscroll buffer as large as you want\n"
+    //IDS_UPGRADE+15 "* Additional terminal emulators and file transfer protocols\n"
+    //IDS_UPGRADE+16 "* Added connectivity, like telnet access to Internet, modem pool support, and much more\n"
+    //IDS_UPGRADE+17 "\n"
+    //IDS_UPGRADE+18 "For sales information on full-featured Hilgraeve products, ask any software dealer, or call Hilgraeve sales lines at 800-826-2760 (US and Canada), 734-243-0576, fax 734-243-0645.  "
+    //IDS_UPGRADE+19 "You can also find information on Hilgraeve products at http://www.hilgraeve.com."
+    //IDS_UPGRADE+20 "\n\n"
+    //IDS_UPGRADE+21 " "
+    //IDS_UPGRADE+22 " "
+    //IDS_UPGRADE+23 " "
+    //IDS_UPGRADE+24 " "
+
+    IDS_UPGRADE+25 " "
+    IDS_UPGRADE+26 " "
+    IDS_UPGRADE+27 " "
+    IDS_UPGRADE+28 " "
+    IDS_UPGRADE+29 " "
+    IDS_UPGRADE+30 " "
+    IDS_UPGRADE+31 " "
+    IDS_UPGRADE+32 " "
+    IDS_UPGRADE+33 " "
+    IDS_UPGRADE+34 " "
+    IDS_UPGRADE+35 " "
+    IDS_UPGRADE+36 " "
+    IDS_UPGRADE+37 " "
+    IDS_UPGRADE+38 " "
+    IDS_UPGRADE+39 " "
+    IDS_UPGRADE+40 " "
+    IDS_UPGRADE+41 " "
+    IDS_UPGRADE+42 " "
+    IDS_UPGRADE+43 " "
+    IDS_UPGRADE+44 " "
+    IDS_UPGRADE+45 " "
+    IDS_UPGRADE+46 " "
+    IDS_UPGRADE+47 " "
+    IDS_UPGRADE+48 " "
+    IDS_UPGRADE+49 " "
+    IDS_UPGRADE+50 " "
+END
+#endif
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_UPGRADE_INFO "Upgrade Info..."
+END
+
+#ifdef INCL_KEY_MACROS
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_DELETE_KEY_MACRO "Are you sure you want to delete the %s key"
+	IDS_DUPLICATE_KEY_MACRO "%s, is already defined."
+	IDS_MISSING_KEY_MACRO "You must specify a key to be mapped."
+    IDS_KEY_MACRO_REDEFINITION "%s is already in use as a windows key or an emulator key.\nDo you wish to override this definition?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MACRO_INSERT        "INSERT"
+    IDS_MACRO_DEL           "DEL"
+    IDS_MACRO_HOME          "HOME"
+    IDS_MACRO_END           "END"
+    IDS_MACRO_UP            "UP"
+    IDS_MACRO_DOWN          "DOWN"
+    IDS_MACRO_PAGEUP        "PAGEUP"
+    IDS_MACRO_PAGEDOWN      "PAGEDOWN"
+    IDS_MACRO_LEFT          "LEFT"
+    IDS_MACRO_RIGHT         "RIGHT"
+    IDS_MACRO_CENTER        "CENTER"
+    IDS_MACRO_F1            "F1"
+    IDS_MACRO_F2            "F2"
+    IDS_MACRO_F3            "F3"
+    IDS_MACRO_F4            "F4"
+    IDS_MACRO_F5            "F5"
+END
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MACRO_F6            "F6"
+    IDS_MACRO_F7            "F7"
+    IDS_MACRO_F8            "F8"
+    IDS_MACRO_F9            "F9"
+    IDS_MACRO_F10           "F10"
+    IDS_MACRO_F11           "F11"
+    IDS_MACRO_F12           "F12"
+    IDS_MACRO_F13           "F13"
+    IDS_MACRO_F14           "F14"
+    IDS_MACRO_F15           "F15"
+    IDS_MACRO_F16           "F16"
+    IDS_MACRO_F17           "F17"
+    IDS_MACRO_F18           "F18"
+    IDS_MACRO_F19           "F19"
+    IDS_MACRO_F20           "F20"
+    IDS_MACRO_F21           "F21"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MACRO_F22           "F22"
+    IDS_MACRO_F23           "F23"
+    IDS_MACRO_F24           "F24"
+    IDS_MACRO_UNKNOWN       "UNKNOWN"
+    IDS_MACRO_BUTTON1       "BUTTON1"
+    IDS_MACRO_BUTTON2       "BUTTON2"
+    IDS_MACRO_BUTTON3       "BUTTON3"
+    IDS_MACRO_BREAK         "BREAK"
+    IDS_MACRO_BACKTAB       "BACKTAB"
+    IDS_MACRO_NEWLINE       "NEWLINE"
+    IDS_MACRO_ALTGRAF       "ALTGRAF"
+    IDS_MACRO_PAUSE         "PAUSE"
+    IDS_MACRO_CAPLOCK       "CAPLOCK"
+    IDS_MACRO_ESC           "ESC"
+    IDS_MACRO_PRNTSCREEN    "PRINT SCREEN"
+    IDS_MACRO_CLEAR         "CLEAR"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MACRO_EREOF         "EREOF"
+    IDS_MACRO_PA1           "PA1"
+    IDS_MACRO_ADD           "ADD"
+    IDS_MACRO_SUB           "SUB"
+    IDS_MACRO_2             "2"
+    IDS_MACRO_6             "6"
+    IDS_MACRO_MINUS         "MINUS"
+    IDS_MACRO_NUMPAD0       "0"
+    IDS_MACRO_NUMPAD1       "1"
+    IDS_MACRO_NUMPAD2       "2"
+    IDS_MACRO_NUMPAD3       "3"
+    IDS_MACRO_NUMPAD4       "4"
+    IDS_MACRO_NUMPAD5       "5"
+    IDS_MACRO_NUMPAD6       "6"
+    IDS_MACRO_NUMPAD7       "7"
+    IDS_MACRO_NUMPAD8       "8"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MACRO_NUMPAD9       "9"
+    IDS_MACRO_NUMPADPERIOD  "."
+    IDS_MACRO_DECIMAL       "DECIMAL"
+    IDS_MACRO_FSLASH        "DIVIDE"
+    IDS_MACRO_MULTIPLY      "MULTIPLY"
+    IDS_MACRO_NUMLOCK       "NUMLOCK"
+    IDS_MACRO_SCRLLOCK      "SCROLL LOCK"
+    IDS_MACRO_INTERRUPT     "INTERRUPT"
+    IDS_MACRO_CTRL          "CTRL-"
+    IDS_MACRO_ALT           "ALT-"
+    IDS_MACRO_SHIFT         "SHIFT-"
+    IDS_MACRO_ENTER         "ENTER"
+    IDS_MACRO_TAB           "TAB"
+    IDS_MACRO_BS            "BACKSPACE"
+    IDS_MACRO_CAPSLOCK      "CAPSLOCK"
+END
+
+
+#endif
+
+/* ---------------------------------------------------------------------- */
+
+IDA_WACKER ACCELERATORS MOVEABLE PURE
+BEGIN
+    VK_F10,         IDA_CONTEXT_MENU,       VIRTKEY, SHIFT; SHIFT+F10
+END
+
+/* ---------------------------------------------------------------------- */
+
+IDB_BUTTONS_LARGE BITMAP  buttons.bmp
+IDB_BUTTONS_SMALL BITMAP  sbuttons.bmp
+
+#if defined(NT_EDITION)
+IDD_BM_BANNER     BITMAP  banner.bmp
+#elif defined(INCL_PRIVATE_EDITION_BANNER) && defined(USE_PRIVATE_EDITION_3_BANNER)
+IDD_BM_BANNER     BITMAP  htpe3bnr.bmp
+//IDD_BM_BANNER     BITMAP  banner1.bmp
+#elif defined(INCL_PRIVATE_EDITION_BANNER)
+IDD_BM_BANNER     BITMAP  htpebnr.bmp
+#else
+IDD_BM_BANNER     BITMAP  banner1.bmp
+#endif
+
+#if defined(INCL_SPINNING_GLOBE)
+IDR_GLOBE_AVI     AVI     globe.avi
+#endif
+
+/* ---------------------------------------------------------------------- */
+
+#include "..\tdll\ver_dll.i"

@@ -1,0 +1,79 @@
+.NOTPARALLEL:
+
+PRODUCT = F3
+VOBS=/vobs
+VPATH= $(O) 
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+WRESOURCE = $(O)/htmlpad.rc
+
+DLLDEF_SRC = ../htmlpad.def
+DLLDEF_EXPORTS = \
+	_____htmlpad_initDLL
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+__cplusplus = true
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%} -DW16TLS_MINIMUM_AVAILABLE=50 -DCTHREADVAR
+
+PROJECT_OBJS = \
+        $(ROOT)/src/f3/crt/$(O)/strutil.o \
+        $(ROOT)/src/core/wrappers/$(O)/unicwrap.o \
+        $(ROOT)/src/core/wrappers/$(O)/dynwrap.o \
+        $(ROOT)/src/core/wrappers/$(O)/wininet.o \
+        $(ROOT)/src/core/wrappers/$(O)/urlmon.o
+
+PROJECT_LIBS = \
+        -lsitemisc  \
+        -lcoremisc \
+        -lcdutil   \
+        -lmshtmdbg \
+        -lcorepch  \
+        -lole32    \
+        -loleaut32 \
+        -lshell32  \
+        -lcomdlg32 \
+        -lcomctl32 \
+        -lshlwapi  \
+        -luuid \
+        -ladvapi32
+
+PROJECT_DLLFLAGS = \
+        ${PROJECT_OBJS} ${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS}
+
+include $(MWHOME)/make.rules.simple
+
+all world: ${OBJS.list}
+
+${OBJS.list} $(O)/pad_i.c: $(O)/f3pad.h
+
+MIDL_FLAGS = \
+	-wchar 4bytes \
+	-env unix \
+	-new \
+	-DMIDL_COMPILER \
+	-D__MKTYPLIB__ \
+	-I${SDK_DIR}  \
+	${PUBLIC_INCLUDES}
+
+$(O)/htmlpad.rc: ../pad.rc $(O)/pad.tlb
+	dos2unix $< $@
+
+$(O)/pad_i.c $(O)/pad.tlb $(O)/f3pad.h : ../pad.odl
+	${ECHONOISE} "[ $(notdir $<) --> pad.tlb pad_i.c f3pad.h ]"
+	midl \
+		-tlb $(O)/pad.tlb \
+		-h $(O)/f3pad.h \
+		-iid $(O)/pad_i.c \
+		-I${CORE_DIR}/include \
+		-I${SITE_DIR}/include \
+		${MIDL_FLAGS} \
+		../pad.odl
+		cp $(O)/pad.tlb ${RUN.dir}/${PROG}.tlb
+
+

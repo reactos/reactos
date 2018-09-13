@@ -1,0 +1,238 @@
+/* for WIN3, comment out WIN2 define
+   for WIN2, restore it */
+/* #define WIN2 1 */
+
+#include <windows.h>
+#ifdef WIN2
+#include "combo.h"
+#define NOHELP 1
+#endif
+#include "recorder.h"
+#include "msgs.h"
+
+#define VK_NUMLOCK 0x90
+#define VK_SCROLLLOCK 0x91
+#define VK_COMMA 0x2c
+
+Recorder icon recorder.ico
+
+/* RKEYS DATA keys.dat */
+
+RMENU MENU
+begin
+    popup "&File"
+    begin
+        menuitem "&New", ID_NEW
+        menuitem "&Open...", ID_OPEN
+        menuitem "&Save", ID_SAVE
+        menuitem "Save &As...", ID_SAVEAS
+        menuitem "&Merge...", ID_MERGE
+        menuitem separator
+        menuitem "E&xit", ID_EXIT
+#ifdef NOHELP
+	menuitem "A&bout Recorder...", ID_ABOUT
+#endif
+    end
+    popup "&Macro"
+    begin
+        menuitem "&Run", ID_PLAYBACK
+        menuitem "Re&cord...", ID_RECORD
+        menuitem "&Delete", ID_DELETE
+        menuitem "&Properties...", ID_EDIT
+    end
+    popup "&Options"
+    begin
+        menuitem "&Control+Break Checking", ID_BREAK, CHECKED
+        menuitem "&Shortcut Keys", ID_HOTKEY, CHECKED
+	menuitem "&Minimize On Use", ID_MINIMIZE, CHECKED
+        menuitem "&Preferences...", ID_PROFILE
+    end
+#ifndef NOHELP
+    popup "&Help"
+    begin
+        menuitem "&Index", ID_INDEX
+        menuitem "&Keyboard", ID_KEYBOARD
+	menuitem "&Commands", ID_COMMANDS
+	menuitem "&Procedures", ID_PROCEDURES
+	menuitem "&Using Help", ID_USEHELP
+        menuitem separator
+        menuitem "&About Recorder...", ID_ABOUT
+    end
+#endif
+end
+
+Recorder ACCELERATORS
+    BEGIN
+	VK_F1, ID_INDEX, VIRTKEY
+    END
+
+stringtable
+begin
+    /* system stuff */
+    M_UNTITLED, "(untitled)"
+    M_TEMPFILE, "reXXXXXX"
+    M_STAREXT, "*.REC"
+    M_CAPTION, "Recorder"
+    M_TEMPDIR, "TEMP"
+    M_DOTHLP, ".HLP"
+
+    /* misc messages */
+    M_ERROR, "Recorder Error"
+    M_WARNING, "Recorder Warning"
+    M_BADWINVERSION, "Recorder Requires Windows Version 3.0 or Higher"
+    M_JRBREAK, "Macro Record Interrupt; continue recording?"
+    M_NOEVENTS, "No events recorded"
+    M_DELETEQ, "Delete ""%s""?"
+    M_SAVECHANGES, "Save changes to file %s?"
+    M_JPABORT, "Macro playback terminated"
+    M_CLEAREDDUPHOT, "Duplicate shortcut key(s) from merged file were cleared;\n\nassign new shortcut keys to duplicates."
+    M_DUPCOMMENT, "Two or more macros have identical names;\n\nassign new name or shortcut key."
+    M_WRONGSCREEN, "Mouse messages recorded on %d by %d display may not work"
+    M_RIGHTSCREEN, "Recorded on (compatible) %d by %d display"
+    M_NOMOUSE, "Contains no mouse messages"
+    M_REPLACEFILE, "Replace existing %s?"
+    M_DELETEEMPTY, "Empty file will be deleted"
+
+    /* strings used in dialog box fields */
+    M_SAMEWINDOW, "Same Application"
+    M_ANYWINDOW, "Any Application"
+    M_FAST, "Fast"
+    M_RECSPEED, "Recorded Speed"
+    M_EVERYTHING, "Everything"
+    M_CLICKDRAG, "Clicks + Drags"
+    M_NOTHING, "Ignore Mouse"
+    M_WINDOW, "Window"
+    M_SCREEN, "Screen"
+    M_DELETE, "&Delete"
+    M_DELMACRO, "Delete Macro"
+    M_SYSMODAL, "System Modal Dialog Box"
+    M_TOOLONG, "Macro too long"
+    M_PBERECORD, "Playback error during recording"
+    M_BREAKRECORD, "Playback abort during recording"
+    M_EXTRAINFO, "Developed for Microsoft by Softbridge Ltd."
+    /* new name for merged macro */
+    M_MERGECLEARED, "Shortcut key cleared by file merge"
+
+    /* for displaying dialog/message box class names */
+    M_DLGINT, "#32770"	/* a Windows magic number - don't translate */
+    M_DLGBOX, "DialogBox"
+    M_DESKTOP, "Desktop"
+    M_WINDOWS, "WINDOWS"
+    M_WINOLDAPP, "WinOldApp"
+#ifdef WIN2
+    M_MSDOS, "MSDOS"
+    M_WIN200, "WIN200"
+    M_MSGINT, "#32771"	/* a Windows magic number - don't translate */
+    M_MSGBOX, "MessageBox"
+#endif
+
+    /* cmd line switch for hot key */
+    M_SWITCH, "-"
+    M_HOTSWITCH, "H"
+
+    /* error messages used in MessageBox'es */
+    E_NOMEM, "Insufficient memory for this operation;\n\nclose one or more Windows applications to increase available memory."
+    E_CANTCREATEFILE, "Cannot create file %s;\n\ncheck to ensure the path and filename are correct and the disk has available space."
+    E_WRITE, "Cannot write file %s;\n\ncheck to ensure the disk has available space."
+    E_CANTOPEN, "Cannot open file %s;\n\ncheck to ensure the path and filename are correct."
+    E_READ, "Cannot read file %s."
+    E_BADFILE, "File %s is damaged;\n\nrecreate the file."
+    E_NOTRECORDERFILE, "File %s is not a Recorder file."
+    E_BADVERSION, "Incorrect Recorder file version."
+    E_TOOMANYHOT, "Too many shortcut keys;\n\ndelete unused macros."
+    E_BADMACRO, "Bad or corrupt macro;\n\nrecreate the macro."
+    E_BADHOTKEY, "Unknown shortcut key;\n\ncheck to ensure the spelling of the shortcut key is correct."
+    E_DUPHOTKEY, "Shortcut key is already defined;\n\nassign the macro to another shortcut key."
+    E_DUPCOMMENT, "Macro name is already defined;\n\nchange the name or assign the macro to another shortcut key."
+    E_KEYORCOMMENT, "Shortcut key or macro name required"
+    E_BADTDYN, "Wrong version of RECORDER.DLL"
+    E_BADCMDLINE, "Invalid command line argument %s"
+    M_CMDSYNTAX, "Syntax: Recorder [-h shortcutkey] [file]"
+    E_HKNOFILE, "File has no shortcut key %s"
+    E_NOFILENOHOT, "No macro file - ignoring shortcut key %s"
+    E_BOGUSHOTKEY, "Invalid shortcut key argument %s"
+    E_ERRRESOURCE, "Internal error;\n\nexit Windows and try again."
+    E_JRSYSMODAL, "Cannot record through a system modal dialog box;\n\ncancel macro and begin again."
+    E_NOFILE, "Cannot find file ""%s"";\n\ncheck to ensure the path and filename are correct."
+    E_BADFILENAME, "Invalid filename;\n
+check to ensure the path is correct and the filename is no more than 8 characters followed by a period and a 3-letter extension."
+
+    /* playback errors - NEVER take arguments */
+    E_WRONGTARGET, "Cannot play back to correct window"
+    E_PBWININVISIBLE, "Cannot play back to invisible window"
+    E_WINONTOP, "Cannot play back to obscured window"
+    E_NOPBWIN, "Playback window does not exist"
+    E_TOONESTED, "Too many macros running at once"
+    E_OUTOFBOUNDS, "Pointer is outside of window"
+    E_JPSYSMODAL, "Cannot play back to system modal dialog box"
+
+    /* for displaying what a hot key is */
+    M_CONTROL, "ctrl"
+    M_SHIFT, "shift"
+    M_ALT, "alt"
+
+    /* sprintf templates for macro events */
+    M_MOUSECMD, "%4.4d %s (%u,%u) %s, %ld msec"
+    M_KEYCMD, "%4.4d %s, %s, %s, %ld msec"
+
+    /* message strings for code in Edit/View listbox */
+    MSG_LDOWN, "Left Down"
+    MSG_MDOWN, "Middle Down"
+    MSG_RDOWN, "Right Down"
+    MSG_LUP, "Left Up"
+    MSG_MUP, "Middle Up"
+    MSG_RUP, "Right Up"
+    MSG_MOVE, "Move"
+    MSG_KDOWN, "Key Down"
+    MSG_KUP, "Key Up"
+    MSG_SKDOWN, "Syskey Down"
+    MSG_SKUP, "Syskey Up"
+end
+
+RKEYS rcdata
+/* VK_MENU must be first special key which cannot be a hot key.
+    The terminating 0 at end of RKEYS block is necessary. */
+begin
+  "Backspace",VK_BACK,
+  "Caps Lock",VK_CAPITAL,
+  "Delete",VK_DELETE,
+  "Down",VK_DOWN,
+  "End",VK_END,
+  "Enter",VK_RETURN,
+  "Esc",VK_ESCAPE,
+  "Home",VK_HOME,
+  "Insert",VK_INSERT,
+  "Left",VK_LEFT,
+  "Num Lock",VK_NUMLOCK,
+  "Page Down",VK_NEXT,
+  "Page Up",VK_PRIOR,
+  "Right",VK_RIGHT,
+  "Scroll Lock",VK_SCROLLLOCK,
+  "Space",VK_SPACE,
+  "Tab",VK_TAB,
+  "Up",VK_UP,
+  "F1",VK_F1,
+  "F2",VK_F2,
+  "F3",VK_F3,
+  "F4",VK_F4,
+  "F5",VK_F5,
+  "F6",VK_F6,
+  "F7",VK_F7,
+  "F8",VK_F8,
+  "F9",VK_F9,
+  "F10",VK_F10,
+  "F11",VK_F11,
+  "F12",VK_F12,
+  "F13",VK_F13,
+  "F14",VK_F14,
+  "F15",VK_F15,
+  "F16",VK_F16,
+  "Alt",VK_MENU,
+  "Break",VK_CANCEL,
+  "Comma",VK_COMMA,
+  "Ctrl",VK_CONTROL,
+  "Shift",VK_SHIFT,
+  0
+end
+
+rcinclude Recorder.dlg

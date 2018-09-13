@@ -1,0 +1,13 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1996 - 1999
+
+Module Name:
+
+    sources.
+
+!ENDIF
+
+!include ..\..\common.inc
+!include ..\sources.inc
+SOURCES_USED = $(SOURCES_USED) $(SEC_DIR)\rshx32\sources.inc

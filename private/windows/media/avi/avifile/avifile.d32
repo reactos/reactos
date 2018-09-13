@@ -1,0 +1,116 @@
+; NT link definition file
+LIBRARY		AVIFIL32
+;DESCRIPTION	'Microsoft AVI File Read/Write library'
+;PROTMODE
+
+;EXETYPE         WINDOWS
+HEAPSIZE        1024
+
+EXPORTS
+                DllGetClassObject					PRIVATE
+		DllCanUnloadNow						PRIVATE
+
+                IID_IAVIStream                 ;@10
+                IID_IAVIFile                   ;@11
+                IID_IAVIEditStream             ;@12
+                IID_IGetFrame                  ;@13
+;win95          CLSID_AVISimpleUnMarshal       ;@14
+
+		AVIFileInit			;@100
+		AVIFileExit			;@101
+
+		AVIFileOpenW			;@102
+		AVIStreamOpenFromFileW		;@103
+		AVIStreamCreate			;@104
+		
+		AVIMakeCompressedStream		;@105
+		AVIMakeFileFromStreams		;@106
+		AVIMakeStreamFromClipboard	;@107
+
+		AVIStreamGetFrame		;@110
+		AVIStreamGetFrameClose		;@111
+		AVIStreamGetFrameOpen		;@112
+		
+                AVISaveW                        ;@120
+		AVISaveVW			;@121
+		AVISaveOptions			;@122
+		AVIBuildFilterW			;@123
+		AVISaveOptionsFree		;@124
+
+		AVIStreamStart			;@130
+		AVIStreamLength			;@131
+		AVIStreamTimeToSample		;@132
+		AVIStreamSampleToTime		;@133
+		
+		;; These just all call methods...
+		AVIFileAddRef			;@140
+		AVIFileRelease			;@141	
+		AVIFileInfoW		        ;@142
+		AVIFileGetStream		;@143
+		AVIFileCreateStreamW	        ;@144
+                AVIFileCreateStream=AVIFileCreateStreamW
+		AVIFileCreateStreamA	
+; note: because NT 3.5 shipped without defining AVIFileCreateStreamA
+; or AVIFileCreateStreamW we must equate AVIFileCreateStream to
+; AVIFileCreateStreamW.  Normally we would equate the null suffix entry
+; to the 'A' entry point.  This way existing built binaries will continue
+; to work.  Win95 equates AVIFileCreateStream to AVIFileCreateStreamA
+;;		AVIFileAddStream		;@145
+		AVIFileWriteData		;@146
+		AVIFileReadData			;@147
+		AVIFileEndRecord		;@148
+
+		AVIStreamAddRef			;@160
+		AVIStreamRelease        	;@161
+		AVIStreamInfoW			;@162
+		AVIStreamFindSample		;@163
+		AVIStreamReadFormat		;@164
+		AVIStreamReadData		;@165
+		AVIStreamWriteData		;@166
+		AVIStreamRead			;@167
+		AVIStreamWrite			;@168
+		AVIStreamSetFormat		;@169
+
+		EditStreamCopy			;@180
+		EditStreamCut			;@181
+		EditStreamPaste			;@182
+                EditStreamClone                 ;@190
+                EditStreamSetNameW              ;@191
+                EditStreamSetInfoW              ;@192
+
+
+		CreateEditableStream		;@184
+		AVIPutFileOnClipboard		;@185
+		AVIGetFromClipboard		;@187
+		AVIClearClipboard		;@188
+                AVIStreamBeginStreaming         ;@200
+                AVIStreamEndStreaming           ;@201
+
+; ansi thunk entrypoints
+;
+                AVIFileOpenA                    ;@301
+                AVIFileOpen=AVIFileOpenA
+
+		AVIStreamOpenFromFileA		;@302
+                AVIStreamOpenFromFile=AVIStreamOpenFromFileA
+
+		AVIFileInfoA			;@303
+                AVIFileInfo=AVIFileInfoA
+
+                AVIStreamInfoA                  ;@304
+                AVIStreamInfo=AVIStreamInfoA
+
+                AVISaveA                        ;@305
+                AVISave=AVISaveA
+
+		AVISaveVA			;@306
+                AVISaveV=AVISaveVA
+
+		AVIBuildFilterA			;@307
+                AVIBuildFilter=AVIBuildFilterA
+
+                EditStreamSetNameA              ;@308
+                EditStreamSetName=EditStreamSetNameA
+
+                EditStreamSetInfoA              ;@309
+                EditStreamSetInfo=EditStreamSetInfoA

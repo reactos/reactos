@@ -1,0 +1,39 @@
+MSC_WARNING_LEVEL=/W3 /WX
+GPSIZE=32
+ALPHA_SOURCES=..\alpha\byteme.s   \
+              ..\alpha\xxalign.s  \
+              ..\alpha\alignem.c  \
+              ..\alpha\allproc.c  \
+              ..\alpha\apcint.s   \
+              ..\alpha\apcuser.c  \
+              ..\alpha\buserror.c \
+              ..\alpha\byteem.c   \
+              ..\alpha\callback.c \
+              ..\alpha\callout.s  \
+              ..\alpha\clock.s    \
+              ..\alpha\ctxsw.s    \
+              ..\alpha\exceptn.c  \
+              ..\alpha\floatem.c  \
+              ..\alpha\flush.c    \
+              ..\alpha\flushtb.c  \
+              ..\alpha\getsetrg.c \
+              ..\alpha\initkr.c   \
+              ..\alpha\intobj.c   \
+              ..\alpha\intsup.s   \
+              ..\alpha\ipi.c      \
+              ..\alpha\irql.s     \
+              ..\alpha\miscs.s    \
+              ..\alpha\mpipi.s    \
+              ..\alpha\pcr.s      \
+              ..\alpha\regsav.s   \
+              ..\alpha\spinlock.s \
+              ..\alpha\start.s    \
+              alpha\sysstubs.s    \
+              alpha\systable.s    \
+              ..\alpha\tb.s       \
+              ..\alpha\threadbg.s \
+              ..\alpha\thredini.c \
+              ..\alpha\timindex.s \
+              ..\alpha\trap.s     \
+              ..\alpha\trigger.c  \
+              ..\alpha\vdm.c

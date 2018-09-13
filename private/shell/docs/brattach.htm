@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE4.0</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h2>IE 4.0 : Browser Helper Extension</h2>
+
+<p>This document describes one of new features of IE 4.0, which
+is called &quot;browser helper&quot;, which allows programmers to
+&quot;attach&quot; a COM object to each browser window to monitor
+user's action or add some capability to the browser window. </p>
+
+<p>When a browser window (only top-level one, not an WebBrowser
+OC) is created, it looks up the registry enumerate all keys under
+the following registry key:</p>
+
+<p>HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\BrowserHelperObject</p>
+
+<p>Each key must be a valid CLSID for an In-Proc server. For each
+CLSID, the browser creates an instance of that class (by calling
+CoCreateInstance), QueryInterface to IID_IObjectWithSite (must be
+supported) and call its SetSite member with the IUnknown pointer
+to the automation interface of the browser window itself. Each
+attachment will be added as a browser property with the CLSID
+string as the property ID (using PutProperty member of
+IWebBrowserApp). </p>
+
+<p>Such an helper object may register itself as an event sink to
+monitor the user's navigation or call automation interfaces to
+control the browser window. It's up to the helper object what it
+does when it receives such an event. If it requires to display
+any UI within the browser frame window, the programmer should
+register a UI component as one of <a href="browbar.htm">BrowserBar
+extension</a>. </p>
+
+<p>Those helper objects will be released when the browser is
+being closed. They must release all the out-going interfaces and
+unregister themselves as event sinks when their SetSite member is
+called with NULL pointer -- not when their last reference counts
+are released (to break any circular reference counts). </p>
+
+<hr>
+
+<p>Go back to <a href="ie4ext.htm">IE 4.0 : Browser Extension
+Mechanism</a>. </p>
+</body>
+</html>

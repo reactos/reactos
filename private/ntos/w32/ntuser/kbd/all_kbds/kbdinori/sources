@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinori
+
+TARGETNAME=kbdinori
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinori.c kbdinori.rc
+
+NTTARGETFILE0=kbdinori.h kbdinori.rc kbdinori.def

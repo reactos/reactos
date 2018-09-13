@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Socket 2.0 32-Bit DLL"
+#define VER_INTERNALNAME_STR        "ws2_32.dll"
+#define VER_ORIGINALFILENAME_STR    "ws2_32.dll"
+
+#include "common.ver"
+

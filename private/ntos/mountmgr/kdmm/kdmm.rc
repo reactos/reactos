@@ -1,0 +1,9 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Mount Manager Kernel Debugger Extensions"
+#define VER_INTERNALNAME_STR        "kdmm\0"
+
+#include "common.ver"

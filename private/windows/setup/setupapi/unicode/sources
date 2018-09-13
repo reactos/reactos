@@ -1,0 +1,58 @@
+!include ..\sources.inc
+
+SYNCHRONIZE_BLOCK=1
+
+MINORCOMP=apidll
+
+TARGETNAME=setupapi
+
+USE_CRTDLL=1
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE -D_SETUPAPI_ -D_CFGMGR32_
+
+# To enable asserts, add: -DASSERTS_ON=1
+# To enable memory debugging, use : -DMEM_DBG=1
+# To enable heap validation, use : -DDBGHEAP_CHECK
+
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapip.lib \
+    $(BASEDIR)\public\sdk\lib\*\cabinet.lib  \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+    $(BASEDIR)\public\sdk\lib\*\crypt32.lib  \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\kernl32p.lib \
+    $(BASEDIR)\public\sdk\lib\*\lz32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\mpr.lib      \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\rpcndr.lib   \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib   \
+    $(BASEDIR)\public\sdk\lib\*\rpcutil.lib  \
+    $(BASEDIR)\public\sdk\lib\*\sfc.lib      \
+    $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+    $(BASEDIR)\public\sdk\lib\*\version.lib  \
+    $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+    $(BASEDIR)\public\sdk\lib\*\wintrust.lib \
+    $(BASEDIR)\public\sdk\lib\*\userenv.lib  \
+    ..\..\setuplog\obj\*\setuplgu.lib        \
+    $(BASEDIR)\public\sdk\lib\*\umpnplib.lib
+
+LINKLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\cfgmgr.lib
+
+DELAYLOAD=\
+    cabinet.dll;    \
+    comctl32.dll;   \
+    comdlg32.dll;   \
+    crypt32.dll;    \
+    lz32.dll;       \
+    mpr.dll;        \
+    ole32.dll;      \
+    shell32.dll;    \
+    sfc.dll;        \
+    version.dll;    \
+    winspool.drv;   \
+    wintrust.dll

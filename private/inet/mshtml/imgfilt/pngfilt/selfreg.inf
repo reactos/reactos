@@ -1,0 +1,29 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Unreg]
+DelReg=PNGFilt.Reg
+
+[Reg]
+AddReg=PNGFilt.Reg
+
+[PNGFilt.Reg]
+HKCR,CLSID\%CLSID_CoPNGFilter%,,,"CoPNGFilter Class"
+HKCR,CLSID\%CLSID_CoPNGFilter%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CoPNGFilter%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_CoPNGFilter%\ProgID,,,"PNGFilter.CoPNGFilter.1"
+
+HKCR,PNGFilter.CoPNGFilter,,,"CoPNGFilter Class"
+HKCR,PNGFilter.CoPNGFilter\CLSID,,,%CLSID_CoPNGFilter%
+HKCR,PNGFilter.CoPNGFilter.1,,,"CoPNGFilter Class"
+HKCR,PNGFilter.CoPNGFilter.1\CLSID,,,%CLSID_CoPNGFilter%
+
+HKCR,"MIME\Database\Content Type\image/x-png\Bits","0",1,08,00,00,00,FF,FF,FF,FF,FF,FF,FF,FF,89,50,4E,47,0D,0A,1A,0A
+HKCR,"MIME\Database\Content Type\image/x-png","Image Filter CLSID",,%CLSID_CoPNGFilter%
+HKCR,"MIME\Database\Content Type\image/png\Bits","0",1,08,00,00,00,FF,FF,FF,FF,FF,FF,FF,FF,89,50,4E,47,0D,0A,1A,0A
+HKCR,"MIME\Database\Content Type\image/png","Image Filter CLSID",,%CLSID_CoPNGFilter%
+
+[Strings]
+CLSID_CoPNGFilter={A3CCEDF7-2DE2-11D0-86F4-00A0C913F750}
+
+[End]

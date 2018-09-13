@@ -1,0 +1,53 @@
+TARGETNAME=bind
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+USE_MSVCRT=1
+C_DEFINES=$(C_DEFINES) -DCC_CVTYPE32 -D_VC_VER_INC
+
+INCLUDES=..; \
+         $(BASEDIR)\private\sdktools\vctools\pdb6\langapi\include;
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=..\bind.c
+
+UMRES=$(@R).res
+UMLIBS=..\imagehlp\$(O)\pimagehlp.lib \
+       $(BASEDIR)\public\sdk\lib\*\setargv.obj \
+       $(BASEDIR)\private\sdktools\imagehlp\*\msdbi60l.lib \
+       $(BASEDIR)\private\lib\*\rsa32.lib \
+       obj\*\symutil.obj
+
+UMTYPE=console
+
+MISCFILES = \
+    ..\setnt351.cmd \
+    ..\setwin95.cmd
+
+SUBSYSTEM_VERSION=4.00
+
+!ifndef ALL_IMAGEHLP_CRAP
+UMAPPL=binplace*imagecfg*imagechk*rebase*smashlck*splitsym*undname*upddbg
+!else
+UMAPPL=binplace*certify*checkfix*editsym*imagecfg*imagechk*impchk*rebase*smashlck*splitsym*stripcv*undname*verfix*mapdebugtst
+!endif
+
+NTTARGETFILE0=obj\*\bind.res     \
+              obj\*\binplace.res \
+              obj\*\imagecfg.res \
+              obj\*\imagechk.res \
+              obj\*\rebase.res   \
+              obj\*\smashlck.res \
+              obj\*\splitsym.res \
+              obj\*\undname.res  \
+              obj\*\upddbg.res  \
+!ifdef ALL_IMAGEHLP_CRAP
+              obj\*\certify.res  \
+              obj\*\checkfix.res \
+              obj\*\editsym.res  \
+              obj\*\impchk.res   \
+              obj\*\imhlptst.res \
+              obj\*\mapdebugtst.res \
+              obj\*\stripcv.res  \
+              obj\*\verfix.res
+!endif

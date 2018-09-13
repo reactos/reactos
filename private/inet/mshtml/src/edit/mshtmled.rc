@@ -1,0 +1,135 @@
+
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Forms
+//  Copyright (C) Microsoft Corporation, 1998
+//
+//  File:       mshtmled.rc
+//
+//  Contents:   Resources for mshtmled.dll
+//
+//----------------------------------------------------------------------------
+
+#include "resource.h" //Microsoft Developer Studio generated resource script.
+
+#define APSTUDIO_READONLY_SYMBOLS
+
+#include "winres.h" // Generated from the TEXTINCLUDE 2 resource.
+
+#undef APSTUDIO_READONLY_SYMBOLS
+
+//
+// English (U.S.) resources
+//
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "1 TYPELIB ""OptsHold.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Editing Component"
+#define VER_INTERNALNAME_STR        "MSHTMLED"
+#define VER_ORIGINALFILENAME_STR    "MSHTMLED.DLL"
+#define VER_OLESELFREGISTER
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_HTMLDLGHELPER       REGISTRY DISCARDABLE    "dlghelpr.rgs"
+IDR_MSHTMLED            REGISTRY DISCARDABLE    "mshtmled.rgs"
+IDR_FONTSOPTION         REGISTRY DISCARDABLE    "fontname.rgs"
+IDR_HTMLEDITOR                  REGISTRY DISCARDABLE    "htmled.rgs"
+
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// UI Goodies.
+//
+
+IDR_FEEDBACKRECTBMP  BITMAP "seltrack.bmp"
+IDR_HATCHBMP         BITMAP "hatch.bmp"
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "OptsHold.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Non-localizable strings
+//
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BLOCKFMT_NORMAL            "Normal"
+    IDS_BLOCKFMT_PRE               "Formatted"
+    IDS_BLOCKFMT_ADDRESS           "Address"
+    IDS_BLOCKFMT_H1                "Heading 1"
+    IDS_BLOCKFMT_H2                "Heading 2"
+    IDS_BLOCKFMT_H3                "Heading 3"
+    IDS_BLOCKFMT_H4                "Heading 4"
+    IDS_BLOCKFMT_H5                "Heading 5"
+    IDS_BLOCKFMT_H6                "Heading 6"
+    IDS_BLOCKFMT_OL                "Numbered List"
+    IDS_BLOCKFMT_UL                "Bulleted List"
+    IDS_BLOCKFMT_DIR               "Directory List"
+    IDS_BLOCKFMT_MENU              "Menu List"
+    IDS_BLOCKFMT_DT                "Definition Term"
+    IDS_BLOCKFMT_DD                "Definition"
+    IDS_BLOCKFMT_P                 "Paragraph"
+    IDS_BLOCKFMT_PRE_TAG           "<pre>"
+    IDS_BLOCKFMT_ADDRESS_TAG       "<address>"
+    IDS_BLOCKFMT_H1_TAG            "<h1>"
+    IDS_BLOCKFMT_H2_TAG            "<h2>"
+    IDS_BLOCKFMT_H3_TAG            "<h3>"
+    IDS_BLOCKFMT_H4_TAG            "<h4>"
+    IDS_BLOCKFMT_H5_TAG            "<h5>"
+    IDS_BLOCKFMT_H6_TAG            "<h6>"
+    IDS_BLOCKFMT_OL_TAG            "<ol>"
+    IDS_BLOCKFMT_UL_TAG            "<ul>"
+    IDS_BLOCKFMT_DIR_TAG           "<dir>"
+    IDS_BLOCKFMT_MENU_TAG          "<menu>"
+    IDS_BLOCKFMT_DT_TAG            "<dt>"
+    IDS_BLOCKFMT_DD_TAG            "<dd>"
+    IDS_BLOCKFMT_P_TAG             "<p>"
+    IDS_BLOCKFMT_DIV_TAG           "<div>"
+END
+

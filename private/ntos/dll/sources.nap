@@ -1,0 +1,73 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=ntos
+MINORCOMP=dll_
+
+TARGETNAME=ntdll
+TARGETPATH=\nt\public\sdk\lib
+TARGETTYPE=DYNLINK
+DLLENTRY=RtlpInitializeRtl
+LINKLIBS=..\obj\*\rtl.lib \nt\public\sdk\lib\*\smdll.lib
+INCLUDES=\nt\public\sdk\inc;..\inc;i386
+
+SOURCES=curdir.c    \
+        environ.c   \
+        urtlinit.c  \
+        resource.c  \
+        ldrinit.c   \
+        ldrsnap.c   \
+        ldrhack.c   \
+        ldrrsrc.c   \
+        ldrapi.c    \
+        configfl.c  \
+	proflib.c   \
+	ntnaptbl.c  \
+	ntnap.c
+
+i860_SOURCES=i860\critsect.s \
+             i860\usrstubs.s \
+             i860\ldrthunk.s
+
+i386_SOURCES=i386\critsect.asm \
+             i386\ldrthunk.asm \
+	     i386\emulator.asm \
+	     i386\napstubs.asm \
+	     i386\ntnapntr.asm
+
+MIPS_SOURCES=mips\x3critsc.s \
+             mips\x4critsc.s \
+             mips\usrstubs.s \
+             mips\ldrthunk.s
+
+PPC_SOURCES=ppc\critsect.s \
+            ppc\usrstubs.s \
+            ppc\ldrthunk.s 
+
+NTTARGETFILE0=ntdll.def getntdlldef
+
+ASM_DEFINES=-DNT386
+
+UMTYPE=windows
+UMTEST=theap

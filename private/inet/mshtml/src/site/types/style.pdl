@@ -1,0 +1,861 @@
+#ifndef _STYLE_PDL_
+#define _STYLE_PDL_ 1
+
+#include "types.pdl"
+
+file style.pdl
+
+import types.pdl
+
+enum styleTextTransform prefix:styleTextTransform     guid:3050f295-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet         string:
+    eval Capitalize     string:capitalize
+    eval Lowercase      string:lowercase
+    eval Uppercase      string:uppercase
+    eval None           string:none
+
+enum styleDataRepeat prefix:styleDataRepeat guid:3050f297-98b5-11cf-bb82-00aa00bdce0b
+    eval None       string:none
+    eval Inner      string:inner
+
+enum styleOverflow prefix:styleOverflow     guid:3050f298-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet         string:
+    eval Auto           string:auto
+    eval Hidden         string:hidden
+    eval Visible        string:visible
+    eval Scroll         string:scroll
+
+enum styleTableLayout prefix:styleTableLayout     guid:3050f299-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Auto       string:auto
+    eval Fixed      string:fixed
+
+enum styleBorderCollapse prefix:styleBorderCollapse          guid:3050f49e-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Separate   string:separate
+    eval Collapse   string:collapse
+
+enum styleFontStyle prefix:styleFontStyle                    guid:3050f2e6-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Italic     string:italic
+    eval Oblique    string:oblique
+    eval Normal     string:normal
+
+enum styleFontVariant prefix:styleFontVariant                guid:3050f327-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval SmallCaps  string:small-caps
+    eval Normal     string:normal
+
+enum styleBackgroundRepeat prefix:styleBackgroundRepeat      guid:3050f334-98b5-11cf-bb82-00aa00bdce0b
+    eval Repeat   string:repeat
+    eval RepeatX  string:repeat-x
+    eval RepeatY  string:repeat-y
+    eval NoRepeat string:no-repeat
+    eval NotSet   string:
+
+enum styleBackgroundAttachment prefix:styleBackgroundAttachment      guid:3050f355-98b5-11cf-bb82-00aa00bdce0b
+    eval Fixed      string:fixed
+    eval Scroll     string:scroll
+    eval NotSet     string:
+
+enum styleVerticalAlign prefix:styleVerticalAlign      guid:3050f356-98b5-11cf-bb82-00aa00bdce0b
+    eval Baseline   string:baseline
+    eval Sub        string:sub
+    eval Super      string:super
+    eval Top        string:top
+    eval TextTop    string:text-top
+    eval Middle     string:middle
+    eval Bottom     string:bottom
+    eval TextBottom string:text-bottom
+    eval Percentage
+    eval NotSet     string:
+
+enum styleFontWeight prefix:styleFontWeight                    guid:3050f2e8-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string:
+    eval 100    // ExtraLight
+    eval 200    // Light
+    eval 300    // DemiLight
+    eval 400    // Normal
+    eval 500    // Medium
+    eval 600    // DemiBold
+    eval 700    // Bold
+    eval 800    // ExtraBold
+    eval 900    // ExtraExtraBold
+    eval Normal     string:normal   // same as 400
+    eval Bold       string:bold     // same as 700
+    eval Bolder     string:bolder
+    eval Lighter    string:lighter
+
+enum styleBackgroundPositionX prefix:styleBackgroundPositionX   guid:3050f3c5-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Left       string:left
+    eval Center     string:center
+    eval Right      string:right
+
+enum styleBackgroundPositionY prefix:styleBackgroundPositionY   guid:3050f3c6-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Top        string:top
+    eval Center     string:center
+    eval Bottom     string:bottom
+
+//  This is used only indirectly through the CUnit value, so it should not have a NotSet enum.
+enum styleFontSize prefix:styleFontSize                         guid:3050f3c7-98b5-11cf-bb82-00aa00bdce0b
+    eval XXSmall    string:xx-small
+    eval XSmall     string:x-small
+    eval Small      string:small
+    eval Medium     string:medium
+    eval Large      string:large
+    eval XLarge     string:x-large
+    eval XXLarge    string:xx-large
+    eval Smaller    string:smaller
+    eval Larger     string:larger
+
+//  This is used only indirectly through the CUnit value, so it should not have a NotSet enum.
+enum styleAuto prefix:styleAuto                                 guid:3050f3c8-98b5-11cf-bb82-00aa00bdce0b
+    eval Auto       string:auto
+
+//  This is used only indirectly through the CUnit value, so it should not have a NotSet enum.
+enum styleNormal prefix:styleNormal                             guid:3050f3c9-98b5-11cf-bb82-00aa00bdce0b
+    eval Normal     string:normal
+
+//  This is used only indirectly through the CUnit value, so it should not have a NotSet enum.
+enum styleBorderWidth prefix:styleBorderWidth                   guid:3050f3ca-98b5-11cf-bb82-00aa00bdce0b
+    eval Thin       string:thin
+    eval Medium     string:medium
+    eval Thick      string:thick
+
+enum stylePosition prefix:stylePosition                     guid:3050f37c-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string:
+    eval static
+    eval relative
+    eval absolute
+    eval fixed
+
+enum styleBorderStyle prefix:styleBorderStyle                guid:3050f333-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Dotted     string:dotted
+    eval Dashed     string:dashed
+    eval Solid      string:solid
+    eval Double     string:double
+    eval Groove     string:groove
+    eval Ridge      string:ridge
+    eval Inset      string:inset
+    eval Outset     string:outset
+    eval None       string:none
+
+enum styleStyleFloat prefix:styleStyleFloat                  guid:3050f358-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Left       string:left
+    eval Right      string:right
+    eval None       string:none
+
+enum styleDisplay prefix:styleDisplay                        guid:3050f359-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Block      string:block
+    eval Inline     string:inline
+    eval ListItem   string:list-item
+    eval None       string:none
+    eval TableHeaderGroup string:table-header-group
+    eval TableFooterGroup string:table-footer-group
+
+enum styleVisibility prefix:styleVisibility                  guid:3050f3B5-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Inherit    string:inherit
+    eval Visible    string:visible
+    eval Hidden     string:hidden
+
+enum styleListStyleType prefix:styleListStyleType            guid:3050f37a-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Disc       string:disc
+    eval Circle     string:circle
+    eval Square     string:square
+    eval Decimal    string:decimal
+    eval LowerRoman string:lower-roman
+    eval UpperRoman string:upper-roman
+    eval LowerAlpha string:lower-alpha
+    eval UpperAlpha string:upper-alpha
+    eval None       string:none
+
+enum styleListStylePosition prefix:styleListStylePosition    guid:3050f37b-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Inside     string:inside
+    eval OutSide    string:outside
+
+enum styleWhiteSpace prefix:styleWhiteSpace                  guid:3050f359-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Normal     string:normal
+    eval Pre        string:pre
+    eval Nowrap     string:nowrap
+
+enum stylePageBreak prefix:stylePageBreak                    guid:3050f37d-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Auto       string:auto
+    eval Always     string:always
+    eval Left       string:left
+    eval Right      string:right
+
+enum styleCursor    prefix:styleCursor                        guid:3050f3d8-98b5-11cf-bb82-00aa00bdce0b
+    eval Auto       string:auto
+    eval Crosshair  string:crosshair
+    eval Default    string:default
+    eval Hand       string:hand
+    eval Move       string:move
+    eval E_resize   string:e-resize
+    eval Ne_resize  string:ne-resize
+    eval Nw_resize  string:nw-resize
+    eval N_resize   string:n-resize
+    eval Se_resize  string:se-resize
+    eval Sw_resize  string:sw-resize
+    eval S_resize   string:s-resize
+    eval W_resize   string:w-resize
+    eval Text       string:text
+    eval Wait       string:wait
+    eval Help       string:help
+    eval NotSet     string:
+
+enum styleDir prefix:styleDir                  guid:3050f4a8-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet       string:
+    eval LeftToRight  string:ltr
+    eval RightToLeft  string:rtl
+    eval Inherit      string:inherit
+
+enum styleBidi prefix:styleBidi                guid:3050f4e4-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Normal     string:normal
+    eval Embed      string:embed
+    eval Override   string:bidi-override
+    eval Inherit    string:inherit
+
+enum styleImeMode prefix:styleImeMode          guid:3050f4f7-98b5-11cf-bb82-00aa00bdce0b
+    eval Auto       string:auto
+    eval Active     string:active
+    eval Inactive   string:inactive
+    eval Disabled   string:disabled
+    eval NotSet     string:
+
+enum styleRubyAlign prefix:styleRubyAlign           guid:3050f5bf-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Auto                  string:auto
+    eval Left                  string:left
+    eval Center                string:center
+    eval Right                 string:right
+    eval DistributeLetter      string:distribute-letter
+    eval DistributeSpace       string:distribute-space
+    eval LineEdge              string:line-edge
+
+enum styleRubyPosition prefix:styleRubyPosition     guid:3050f5c0-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Above                 string:above
+    eval Inline                string:inline
+
+enum styleRubyOverhang prefix:styleRubyOverhang     guid:3050f5c1-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Auto                  string:auto
+    eval Whitespace            string:whitespace
+    eval None                  string:none
+
+enum styleLayoutGridChar prefix:styleLayoutGridChar     guid:3050f5c3-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Auto                  string:auto
+    eval None                  string:none
+
+enum styleLayoutGridLine prefix:styleLayoutGridLine     guid:3050f5c4-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Auto                  string:auto
+    eval None                  string:none
+
+// 
+// Following functions depend on order of layout-grid-mode values:
+//   ApplyBehaviorProperty()
+//   CCharFormat::HasLineGrid()
+//   CCharFormat::HasCharGrid()
+// These functions depend on following binary values:
+//   | NotSet       | 000
+//   | Char         | 001
+//   | Line         | 010
+//   | Both         | 011  (Char | Line)
+//   | None         | 100
+//
+enum styleLayoutGridMode prefix:styleLayoutGridMode     guid:3050f5d3-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Char                  string:char
+    eval Line                  string:line
+    eval Both                  string:both
+    eval None                  string:none
+
+enum styleLayoutGridType prefix:styleLayoutGridType     guid:3050f5d4-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet                string:
+    eval Loose                 string:loose 
+    eval Strict                string:strict
+    eval Fixed                 string:fixed
+
+enum styleLineBreak prefix:styleLineBreak                  guid:3050f5e7-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Normal     string:normal
+    eval Strict     string:strict
+
+enum styleWordBreak prefix:styleWordBreak                  guid:3050f5e8-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet     string:
+    eval Normal     string:normal
+    eval BreakAll   string:break-all
+    eval KeepAll    string:keep-all
+
+enum styleTextJustify prefix:styleTextJustify              guid:3050f5e9-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet              string:
+    eval InterWord           string:inter-word              
+    eval Newspaper           string:newspaper               
+    eval Distribute          string:distribute              
+    eval DistributeAllLines  string:distribute-all-lines    
+    eval InterIdeograph      string:inter-ideograph         
+    eval Auto                string:auto                    
+
+enum styleTextJustifyTrim prefix:styleTextJustifyTrim      guid:3050f5ea-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet             string:
+    eval None               string:none
+    eval Punctuation        string:punctuation
+    eval PunctAndKana       string:punct-and-kana
+
+enum styleAccelerator prefix:styleAccelerator              guid:3050f5fb-98b5-11cf-bb82-00aa00bdce0b
+    eval False              string:false
+    eval True               string:true
+
+interface IHTMLStyle      guid:3050f25e-98b5-11cf-bb82-00aa00bdce0b
+    refprop CStyle:fontFamily
+    refprop CStyle:fontStyle
+    refprop CStyle:fontVariant
+    refprop CStyle:fontWeight
+    refprop CStyle:fontSize
+    refprop CStyle:font
+    refprop CStyle:color
+    refprop CStyle:background
+    refprop CStyle:backgroundColor
+    refprop CStyle:backgroundImage
+    refprop CStyle:backgroundRepeat
+    refprop CStyle:backgroundAttachment
+    refprop CStyle:backgroundPosition
+    refprop CStyle:backgroundPositionX
+    refprop CStyle:backgroundPositionY
+    refprop CStyle:wordSpacing
+    refprop CStyle:letterSpacing
+    refprop CStyle:textDecoration
+    refprop CStyle:textDecorationNone
+    refprop CStyle:textDecorationUnderline
+    refprop CStyle:textDecorationOverline
+    refprop CStyle:textDecorationLineThrough
+    refprop CStyle:textDecorationBlink
+    refprop CStyle:verticalAlign
+    refprop CStyle:textTransform
+    refprop CStyle:textAlign
+    refprop CStyle:textIndent
+    refprop CStyle:lineHeight
+    refprop CStyle:marginTop
+    refprop CStyle:marginRight
+    refprop CStyle:marginBottom
+    refprop CStyle:marginLeft
+    refprop CStyle:margin
+    refprop CStyle:paddingTop
+    refprop CStyle:paddingRight
+    refprop CStyle:paddingBottom
+    refprop CStyle:paddingLeft
+    refprop CStyle:padding
+    refprop CStyle:border
+    refprop CStyle:borderTop
+    refprop CStyle:borderRight
+    refprop CStyle:borderBottom
+    refprop CStyle:borderLeft
+    refprop CStyle:borderColor
+    refprop CStyle:borderTopColor       // Extension
+    refprop CStyle:borderRightColor     // Extension
+    refprop CStyle:borderBottomColor    // Extension
+    refprop CStyle:borderLeftColor      // Extension
+    refprop CStyle:borderWidth
+    refprop CStyle:borderTopWidth
+    refprop CStyle:borderRightWidth
+    refprop CStyle:borderBottomWidth
+    refprop CStyle:borderLeftWidth
+    refprop CStyle:borderStyle
+    refprop CStyle:borderTopStyle       // Extension
+    refprop CStyle:borderRightStyle     // Extension
+    refprop CStyle:borderBottomStyle    // Extension
+    refprop CStyle:borderLeftStyle      // Extension
+    refprop CStyle:width
+    refprop CStyle:height
+    refprop CStyle:styleFloat
+    refprop CStyle:clear
+    refprop CStyle:display
+    refprop CStyle:visibility
+    refprop CStyle:listStyleType
+    refprop CStyle:listStylePosition
+    refprop CStyle:listStyleImage
+    refprop CStyle:listStyle
+    refprop CStyle:whiteSpace
+    refprop CStyle:top                  // CSS Positioning
+    refprop CStyle:left                 // CSS Positioning
+    refprop CStyle:position2            // CSS Positioning
+    refprop CStyle:zIndex               // CSS Positioning
+    refprop CStyle:overflow             // CSS Positioning
+    refprop CStyle:pageBreakBefore      // CSS Extension
+    refprop CStyle:pageBreakAfter       // CSS Extension
+    refprop CStyle:cssText              // Entire set of properties
+    refprop CStyle:pixelTop
+    refprop CStyle:pixelLeft
+    refprop CStyle:pixelWidth
+    refprop CStyle:pixelHeight
+    refprop CStyle:posTop
+    refprop CStyle:posLeft
+    refprop CStyle:posWidth
+    refprop CStyle:posHeight
+    refprop CStyle:cursor               // CSS Extension
+    refprop CStyle:clip                 // CSS Positioning
+    refprop CStyle:filter               // CSS Extension
+    refmethod   CBase:setAttribute
+    refmethod   CBase:getAttribute
+    refmethod   CBase:removeAttribute
+    refmethod   CStyle:toString
+
+interface IHTMLStyle2 super:IDispatch      guid:3050f4a2-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CStyle:tableLayout          // CSS2 Extension
+    refProp     CStyle:borderCollapse       // CSS2 Extension
+    refprop     CStyle:direction            // CSS2 Extension
+    refprop     CStyle:behavior             // extensibility
+    refmethod   CBase:setExpression
+    refmethod   CBase:getExpression
+    refmethod   CBase:removeExpression
+    refprop     CStyle:position             // CSS Positioning set/get
+    refprop     CStyle:unicodeBidi          // CSS2 Extension for unicode-bidi
+    refprop     CStyle:bottom               // CSS Positioning
+    refprop     CStyle:right                // CSS Positioning
+    refprop     CStyle:pixelBottom
+    refprop     CStyle:pixelRight
+    refprop     CStyle:posBottom
+    refprop     CStyle:posRight
+    refprop     CStyle:imeMode
+    refprop     CStyle:rubyAlign
+    refprop     CStyle:rubyPosition
+    refprop     CStyle:rubyOverhang
+    refprop     CStyle:layoutGridChar
+    refprop     CStyle:layoutGridLine
+    refprop     CStyle:layoutGridMode
+    refprop     CStyle:layoutGridType
+    refprop     CStyle:layoutGrid
+    refprop     CStyle:wordBreak
+    refprop     CStyle:lineBreak
+    refprop     CStyle:textJustify
+    refprop     CStyle:textJustifyTrim
+    refprop     CStyle:textKashida
+    refprop     CStyle:textAutospace
+    refprop     CStyle:overflowX
+    refprop     CStyle:overflowY
+    refprop     CStyle:accelerator
+
+interface IHTMLRuleStyle      guid:3050f3cf-98b5-11cf-bb82-00aa00bdce0b
+    refprop CStyle:fontFamily
+    refprop CStyle:fontStyle
+    refprop CStyle:fontVariant
+    refprop CStyle:fontWeight
+    refprop CStyle:fontSize
+    refprop CStyle:font
+    refprop CStyle:color
+    refprop CStyle:background
+    refprop CStyle:backgroundColor
+    refprop CStyle:backgroundImage
+    refprop CStyle:backgroundRepeat
+    refprop CStyle:backgroundAttachment
+    refprop CStyle:backgroundPosition
+    refprop CStyle:backgroundPositionX
+    refprop CStyle:backgroundPositionY
+    refprop CStyle:wordSpacing
+    refprop CStyle:letterSpacing
+    refprop CStyle:textDecoration
+    refprop CStyle:textDecorationNone
+    refprop CStyle:textDecorationUnderline
+    refprop CStyle:textDecorationOverline
+    refprop CStyle:textDecorationLineThrough
+    refprop CStyle:textDecorationBlink
+    refprop CStyle:verticalAlign
+    refprop CStyle:textTransform
+    refprop CStyle:textAlign
+    refprop CStyle:textIndent
+    refprop CStyle:lineHeight
+    refprop CStyle:marginTop
+    refprop CStyle:marginRight
+    refprop CStyle:marginBottom
+    refprop CStyle:marginLeft
+    refprop CStyle:margin
+    refprop CStyle:paddingTop
+    refprop CStyle:paddingRight
+    refprop CStyle:paddingBottom
+    refprop CStyle:paddingLeft
+    refprop CStyle:padding
+    refprop CStyle:border
+    refprop CStyle:borderTop
+    refprop CStyle:borderRight
+    refprop CStyle:borderBottom
+    refprop CStyle:borderLeft
+    refprop CStyle:borderColor
+    refprop CStyle:borderTopColor       // Extension
+    refprop CStyle:borderRightColor     // Extension
+    refprop CStyle:borderBottomColor    // Extension
+    refprop CStyle:borderLeftColor      // Extension
+    refprop CStyle:borderWidth
+    refprop CStyle:borderTopWidth
+    refprop CStyle:borderRightWidth
+    refprop CStyle:borderBottomWidth
+    refprop CStyle:borderLeftWidth
+    refprop CStyle:borderStyle
+    refprop CStyle:borderTopStyle       // Extension
+    refprop CStyle:borderRightStyle     // Extension
+    refprop CStyle:borderBottomStyle    // Extension
+    refprop CStyle:borderLeftStyle      // Extension
+    refprop CStyle:width
+    refprop CStyle:height
+    refprop CStyle:styleFloat
+    refprop CStyle:clear
+    refprop CStyle:display
+    refprop CStyle:visibility
+    refprop CStyle:listStyleType
+    refprop CStyle:listStylePosition
+    refprop CStyle:listStyleImage
+    refprop CStyle:listStyle
+    refprop CStyle:whiteSpace
+    refprop CStyle:top                  // CSS Positioning
+    refprop CStyle:left                 // CSS Positioning
+    refprop CStyle:position2            // CSS Positioning
+    refprop CStyle:zIndex               // CSS Positioning
+    refprop CStyle:overflow             // CSS Positioning
+    refprop CStyle:pageBreakBefore      // CSS Extension
+    refprop CStyle:pageBreakAfter       // CSS Extension
+    refprop CStyle:cssText              // Entire set of properties
+    refprop CStyle:cursor               // CSS Extension
+    refprop CStyle:clip                 // CSS Positioning
+    refprop CStyle:filter               // CSS Extension
+    refmethod   CBase:setAttribute
+    refmethod   CBase:getAttribute
+    refmethod   CBase:removeAttribute
+
+interface IHTMLRuleStyle2 super:IDispatch guid:3050f4ac-98b5-11cf-bb82-00aa00bdce0b
+    refprop CStyle:tableLayout          // CSS2 Extension
+    refProp CStyle:borderCollapse       // CSS2 Extension
+    refprop CStyle:direction            // CSS2 Extension
+    refprop CStyle:behavior             // extensibility
+    refprop CStyle:position             // CSS Positioning set/get
+    refprop CStyle:unicodeBidi          // CSS2 Extension for unicode-bidi
+    refprop CStyle:bottom               // CSS Positioning
+    refprop CStyle:right                // CSS Positioning
+    refprop CStyle:pixelBottom
+    refprop CStyle:pixelRight
+    refprop CStyle:posBottom
+    refprop CStyle:posRight
+    refprop CStyle:imeMode
+    refprop CStyle:rubyAlign
+    refprop CStyle:rubyPosition
+    refprop CStyle:rubyOverhang
+    refprop CStyle:layoutGridChar
+    refprop CStyle:layoutGridLine
+    refprop CStyle:layoutGridMode
+    refprop CStyle:layoutGridType
+    refprop CStyle:layoutGrid
+    refprop CStyle:textAutospace
+    refprop CStyle:wordBreak
+    refprop CStyle:lineBreak
+    refprop CStyle:textJustify
+    refprop CStyle:textJustifyTrim
+    refprop CStyle:textKashida
+    refprop CStyle:overflowX
+    refprop CStyle:overflowY
+    refprop CStyle:accelerator
+
+
+tearoff CStyle interface:IDispatchEx BaseImpl:super::
+     tearmethod InvokeEx         mapto:InvokeEx
+
+tearoff CStyle interface:IHTMLStyle2 
+
+tearoff CStyle interface:IHTMLStyle
+
+tearoff CStyle interface:IPerPropertyBrowsing BaseImpl:super::
+
+class CStyle name:HTMLStyle \
+            primaryinterface:IHTMLStyle \
+            super:CBase keepnopersist \
+            noaamethods \
+            guid:3050f285-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f55a-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLStyle
+    implements IHTMLStyle2
+    implements IPerPropertyBrowsing
+
+    property fontFamily     atype:BSTR      dispid:DISPID_A_FONTFACE        type:CStr               get set caa  displaybind stylesheetproperty szattribute:FONT-FAMILY maxstrlen:pdlNoLimit
+    property fontStyle      atype:BSTR      dispid:DISPID_A_FONTSTYLE       type:styleFontStyle     get set caa  displaybind szattribute:FONT-STYLE       default:styleFontStyleNotSet maxstrlen:pdlToken
+    property fontVariant    atype:BSTR      dispid:DISPID_A_FONTVARIANT     type:styleFontVariant   get set caa  displaybind szattribute:FONT-VARIANT     default:styleFontVariantNotSet maxstrlen:pdlToken
+    property fontWeight     atype:BSTR      dispid:DISPID_A_FONTWEIGHT      type:styleFontWeight    get set caa  displaybind szattribute:FONT-WEIGHT      default:styleFontWeightNotSet maxstrlen:pdlToken
+    property fontSize       atype:VARIANT   dispid:DISPID_A_FONTSIZE        type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:FONT-SIZE     ppflags:PP_UV_UNITFONT \
+        default:NULL_UNITVALUE min:0 enumref:styleFontSize maxstrlen:pdlLength
+    property font                       atype:BSTR      dispid:DISPID_A_FONT            type:CStyleComponent    get set caa  displaybind nonbrowsable szattribute:FONT maxstrlen:pdlNoLimit
+    property color          atype:VARIANT      dispid:DISPID_A_COLOR           type:CColorValue        get set caa  displaybind stylesheetproperty szattribute:COLOR default:VALUE_UNDEF maxstrlen:pdlColor
+    property background             atype:BSTR  dispid:DISPID_A_BACKGROUND      type:CStyleComponent    get set caa  displaybind dwFlags:ELEMCHNG_RESIZENONSITESONLY nonbrowsable siteredraw szattribute:BACKGROUND maxstrlen:4736
+    property backgroundColor    atype:VARIANT  dispid:DISPID_BACKCOLOR         type:CColorValue        get set caa  displaybind dwFlags:ELEMCHNG_RESIZENONSITESONLY stylesheetproperty default:VALUE_UNDEF  szattribute:BACKGROUND-COLOR maxstrlen:pdlColor
+    property backgroundImage    atype:BSTR  dispid:DISPID_A_BACKGROUNDIMAGE type:CStyleComponent    get set caa  displaybind dwFlags:ELEMCHNG_RESIZENONSITESONLY szattribute:BACKGROUND-IMAGE maxstrlen:pdlUrlLen
+    property backgroundRepeat   atype:BSTR dispid:DISPID_A_BACKGROUNDREPEAT type:styleBackgroundRepeat get set caa  displaybind szattribute:BACKGROUND-REPEAT  default:styleBackgroundRepeatNotSet maxstrlen:pdlToken
+    property backgroundAttachment atype:BSTR  dispid:DISPID_A_BACKGROUNDATTACHMENT  type:styleBackgroundAttachment get set caa  displaybind szattribute:BACKGROUND-ATTACHMENT  default:styleBackgroundAttachmentNotSet maxstrlen:pdlToken
+    property backgroundPosition  atype:BSTR             dispid:DISPID_A_BACKGROUNDPOSITION                      type:CStyleComponent            get set caa  displaybind nonbrowsable szattribute:BACKGROUND-POSITION maxstrlen:256
+    property backgroundPositionX   atype:VARIANT  dispid:DISPID_A_BACKGROUNDPOSX   type:CUnitValue   get  set   caa  displaybind stylesheetproperty szattribute:BACKGROUND-POSITION-X \
+        default:NULL_UNITVALUE ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleBackgroundPositionX maxstrlen:pdlLength
+    property backgroundPositionY   atype:VARIANT  dispid:DISPID_A_BACKGROUNDPOSY   type:CUnitValue   get set    caa  displaybind stylesheetproperty szattribute:BACKGROUND-POSITION-Y \
+        default:NULL_UNITVALUE ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleBackgroundPositionY maxstrlen:pdlLength
+    property wordSpacing    atype:VARIANT  dispid:DISPID_A_WORDSPACING    type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:WORD-SPACING   \
+        default:NULL_UNITVALUE ppflags:PP_UV_SCALER enumref:styleNormal maxstrlen:pdlLength
+    property letterSpacing    atype:VARIANT  dispid:DISPID_A_LETTERSPACING    type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:LETTER-SPACING   \
+        default:NULL_UNITVALUE ppflags:PP_UV_SCALER enumref:styleNormal maxstrlen:pdlLength
+    property textDecoration             atype:BSTR         dispid:DISPID_A_TEXTDECORATION            type:CStyleComponent get set caa displaybind                               szattribute:TEXT-DECORATION maxstrlen:512
+    property textDecorationNone         atype:VARIANT_BOOL dispid:DISPID_A_TEXTDECORATIONNONE            type:CStyleComponent get set caa displaybind vt:VT_BOOL baseimplementation clearcaches nopersist
+    property textDecorationUnderline    atype:VARIANT_BOOL dispid:DISPID_A_TEXTDECORATIONUNDERLINE   type:CStyleComponent get set caa displaybind vt:VT_BOOL baseimplementation clearcaches nopersist
+    property textDecorationOverline     atype:VARIANT_BOOL dispid:DISPID_A_TEXTDECORATIONOVERLINE        type:CStyleComponent get set caa displaybind vt:VT_BOOL baseimplementation clearcaches nopersist
+    property textDecorationLineThrough  atype:VARIANT_BOOL dispid:DISPID_A_TEXTDECORATIONLINETHROUGH type:CStyleComponent get set caa displaybind vt:VT_BOOL baseimplementation clearcaches nopersist
+    property textDecorationBlink            atype:VARIANT_BOOL dispid:DISPID_A_TEXTDECORATIONBLINK               type:CStyleComponent get set caa displaybind vt:VT_BOOL baseimplementation clearcaches nopersist
+    property accelerator                atype:BSTR  dispid:DISPID_A_ACCELERATOR          type:styleAccelerator \
+                    get set caa  displaybind szattribute:ACCELERATOR default:styleAcceleratorFalse maxstrlen:pdlToken accessibilitystate
+    property verticalAlign    atype:VARIANT dispid:DISPID_A_VERTICALALIGN    type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:VERTICAL-ALIGN   default:NULL_UNITVALUE \
+        ppflags:PROPPARAM_PERCENTAGE enumref:styleVerticalAlign maxstrlen:pdlToken
+    property textTransform    atype:BSTR dispid:DISPID_A_TEXTTRANSFORM    type:styleTextTransform  get set caa  displaybind szattribute:TEXT-TRANSFORM   default:styleTextTransformNotSet maxstrlen:pdlToken
+    property textAlign        atype:BSTR     dispid:STDPROPID_XOBJ_BLOCKALIGN type:htmlBlockAlign    get set caa  displaybind szattribute:TEXT-ALIGN  default:htmlBlockAlignNotSet maxstrlen:pdlToken
+    property textIndent       atype:VARIANT  dispid:DISPID_A_TEXTINDENT       type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:TEXT-INDENT     \
+        default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property lineHeight       atype:VARIANT  dispid:DISPID_A_LINEHEIGHT       type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:LINE-HEIGHT enumref:styleNormal    \
+        default:NULL_UNITVALUE min:0 noassigndefault:MAKEUNITVALUE(10000,UNIT_FLOAT) noassigntypeonly ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property marginTop       atype:VARIANT  dispid:DISPID_A_MARGINTOP       type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:MARGIN-TOP enumref:styleAuto \
+        default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property marginRight     atype:VARIANT  dispid:DISPID_A_MARGINRIGHT     type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:MARGIN-RIGHT enumref:styleAuto \
+        default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property marginBottom    atype:VARIANT  dispid:DISPID_A_MARGINBOTTOM    type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:MARGIN-BOTTOM enumref:styleAuto \
+        default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property marginLeft      atype:VARIANT  dispid:DISPID_A_MARGINLEFT      type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:MARGIN-LEFT enumref:styleAuto \
+        default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property margin             atype:BSTR              dispid:DISPID_A_MARGIN          type:CStyleComponent \
+        get set caa  displaybind nonbrowsable szattribute:MARGIN maxstrlen:512
+    property paddingTop       atype:VARIANT  dispid:DISPID_A_PADDINGTOP       type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:PADDING-TOP \
+        default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property paddingRight     atype:VARIANT  dispid:DISPID_A_PADDINGRIGHT     type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:PADDING-RIGHT \
+        default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property paddingBottom    atype:VARIANT  dispid:DISPID_A_PADDINGBOTTOM    type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:PADDING-BOTTOM \
+        default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property paddingLeft      atype:VARIANT  dispid:DISPID_A_PADDINGLEFT      type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:PADDING-LEFT \
+        default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property padding    atype:BSTR              dispid:DISPID_A_PADDING         type:CStyleComponent            get set caa  displaybind nonbrowsable nopersist     szattribute:PADDING maxstrlen:512
+    property border             atype:BSTR      dispid:DISPID_A_BORDER              type:CStyleComponent \
+                    get set caa  displaybind nonbrowsable   szattribute:BORDER maxstrlen:1152
+    property borderTop          atype:BSTR      dispid:DISPID_A_BORDERTOP           type:CStyleComponent \
+                    get set caa  displaybind                szattribute:BORDER-TOP maxstrlen:384
+    property borderRight        atype:BSTR      dispid:DISPID_A_BORDERRIGHT         type:CStyleComponent \
+                    get set caa  displaybind                szattribute:BORDER-RIGHT maxstrlen:384
+    property borderBottom       atype:BSTR      dispid:DISPID_A_BORDERBOTTOM        type:CStyleComponent \
+                    get set caa  displaybind                szattribute:BORDER-BOTTOM maxstrlen:384
+    property borderLeft         atype:BSTR      dispid:DISPID_A_BORDERLEFT          type:CStyleComponent \
+                    get set caa  displaybind                szattribute:BORDER-LEFT maxstrlen:384
+//<--Extensions
+    property borderColor        atype:BSTR      dispid:DISPID_A_BORDERCOLOR         type:CStyleComponent \
+                    get set caa  displaybind  nopersist     szattribute:BORDER-COLOR maxstrlen:512
+    property borderTopColor     atype:VARIANT   dispid:DISPID_A_BORDERTOPCOLOR      type:CColorValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-TOP-COLOR       default:VALUE_UNDEF maxstrlen:pdlColor
+    property borderRightColor   atype:VARIANT   dispid:DISPID_A_BORDERRIGHTCOLOR      type:CColorValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-RIGHT-COLOR       default:VALUE_UNDEF maxstrlen:pdlColor
+    property borderBottomColor  atype:VARIANT   dispid:DISPID_A_BORDERBOTTOMCOLOR      type:CColorValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-BOTTOM-COLOR       default:VALUE_UNDEF maxstrlen:pdlColor
+    property borderLeftColor    atype:VARIANT   dispid:DISPID_A_BORDERLEFTCOLOR      type:CColorValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-LEFT-COLOR       default:VALUE_UNDEF maxstrlen:pdlColor
+//-->
+    property borderWidth        atype:BSTR      dispid:DISPID_A_BORDERWIDTH         type:CStyleComponent \
+                    get set caa  displaybind  nopersist     szattribute:BORDER-WIDTH maxstrlen:pdlLength
+    property borderTopWidth     atype:VARIANT   dispid:DISPID_A_BORDERTOPWIDTH      type:CUnitValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-TOP-WIDTH enumref:styleBorderWidth \
+                    default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER maxstrlen:pdlLength
+    property borderRightWidth   atype:VARIANT   dispid:DISPID_A_BORDERRIGHTWIDTH    type:CUnitValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-RIGHT-WIDTH enumref:styleBorderWidth \
+                    default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER maxstrlen:pdlLength
+    property borderBottomWidth  atype:VARIANT   dispid:DISPID_A_BORDERBOTTOMWIDTH   type:CUnitValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-BOTTOM-WIDTH enumref:styleBorderWidth \
+                    default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER maxstrlen:pdlLength
+    property borderLeftWidth    atype:VARIANT   dispid:DISPID_A_BORDERLEFTWIDTH     type:CUnitValue \
+                    get set caa  displaybind stylesheetproperty szattribute:BORDER-LEFT-WIDTH enumref:styleBorderWidth \
+                    default:NULL_UNITVALUE min:0 ppflags:PP_UV_SCALER maxstrlen:pdlLength
+    property borderStyle        atype:BSTR      dispid:DISPID_A_BORDERSTYLE         type:CStyleComponent \
+                    get set caa  displaybind  nopersist     szattribute:BORDER-STYLE maxstrlen:512
+//<--Extensions
+    property borderTopStyle     atype:BSTR      dispid:DISPID_A_BORDERTOPSTYLE      type:styleBorderStyle \
+                    get set caa  displaybind szattribute:BORDER-TOP-STYLE       default:styleBorderStyleNotSet maxstrlen:pdlToken
+    property borderRightStyle   atype:BSTR      dispid:DISPID_A_BORDERRIGHTSTYLE    type:styleBorderStyle \
+                    get set caa  displaybind szattribute:BORDER-RIGHT-STYLE     default:styleBorderStyleNotSet maxstrlen:pdlToken
+    property borderBottomStyle  atype:BSTR      dispid:DISPID_A_BORDERBOTTOMSTYLE   type:styleBorderStyle \
+                    get set caa  displaybind szattribute:BORDER-BOTTOM-STYLE    default:styleBorderStyleNotSet maxstrlen:pdlToken
+    property borderLeftStyle    atype:BSTR      dispid:DISPID_A_BORDERLEFTSTYLE     type:styleBorderStyle \
+                    get set caa  displaybind szattribute:BORDER-LEFT-STYLE      default:styleBorderStyleNotSet maxstrlen:pdlToken
+//-->
+    property styleFloat         atype:BSTR  dispid:DISPID_A_FLOAT               type:styleStyleFloat \
+                    get set caa  displaybind szattribute:FLOAT default:styleStyleFloatNotSet maxstrlen:pdlToken
+    property clear              atype:BSTR  dispid:DISPID_A_CLEAR               type:htmlClear \
+                    get set caa  displaybind szattribute:CLEAR maxstrlen:pdlLength
+    property display            atype:BSTR  dispid:DISPID_A_DISPLAY             type:styleDisplay \
+                    get set caa  displaybind szattribute:DISPLAY default:styleDisplayNotSet maxstrlen:pdlToken accessibilitystate
+    property visibility         atype:BSTR  dispid:DISPID_A_VISIBILITY          type:styleVisibility \       
+                    get set caa  displaybind dwFlags:ELEMCHNG_REMEASUREINPARENT|ELEMCHNG_REMEASURECONTENTS szattribute:VISIBILITY default:styleVisibilityNotSet maxstrlen:pdlToken accessibilitystate
+    property listStyleType      atype:BSTR  dispid:DISPID_A_LISTSTYLETYPE       type:styleListStyleType \
+                    get set caa  displaybind nopersist szattribute:LIST-STYLE-TYPE       default:styleListStyleTypeNotSet maxstrlen:pdlToken
+    property listStylePosition  atype:BSTR  dispid:DISPID_A_LISTSTYLEPOSITION   type:styleListStylePosition \
+                    get set caa  displaybind nopersist szattribute:LIST-STYLE-POSITION   default:styleListStylePositionNotSet maxstrlen:pdlToken
+    property listStyleImage     atype:BSTR  dispid:DISPID_A_LISTSTYLEIMAGE      type:CStyleComponent \
+                    get set caa  displaybind siteredraw nopersist szattribute:LIST-STYLE-IMAGE maxstrlen:pdlUrlLen
+    property listStyle          atype:BSTR  dispid:DISPID_A_LISTSTYLE           type:CStyleComponent \
+                    get set caa  displaybind nonbrowsable szattribute:LIST-STYLE maxstrlen:4352
+    property whiteSpace         atype:BSTR  dispid:DISPID_A_WHITESPACE          type:styleWhiteSpace \
+                    get set caa  displaybind szattribute:WHITE-SPACE default:styleWhiteSpaceNotSet maxstrlen:pdlToken
+
+//<--CSS Feature Extensions:
+    property top           atype:VARIANT  dispid:STDPROPID_XOBJ_TOP        type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty dwFlags:ELEMCHNG_SITEPOSITION szattribute:TOP       default:NULL_UNITVALUE  \
+        ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto maxstrlen:pdlLength
+    property bottom        atype:VARIANT  dispid:STDPROPID_XOBJ_BOTTOM     type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty dwFlags:ELEMCHNG_SITEPOSITION szattribute:BOTTOM    default:NULL_UNITVALUE  \
+        ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto maxstrlen:pdlLength
+    property left          atype:VARIANT  dispid:STDPROPID_XOBJ_LEFT       type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty dwFlags:ELEMCHNG_SITEPOSITION szattribute:LEFT      default:NULL_UNITVALUE  \
+        ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto maxstrlen:pdlLength
+    property right         atype:VARIANT  dispid:STDPROPID_XOBJ_RIGHT      type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty dwFlags:ELEMCHNG_SITEPOSITION szattribute:RIGHT     default:NULL_UNITVALUE  \
+        ppflags:PP_UV_SCALER_OR_PERCENT enumref:styleAuto maxstrlen:pdlLength
+    property width         atype:VARIANT  dispid:STDPROPID_XOBJ_WIDTH      type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty szattribute:WIDTH            default:NULL_UNITVALUE \
+        ppflags:PP_UV_SCALER_OR_PERCENT min:0 enumref:styleAuto maxstrlen:pdlLength
+    property height        atype:VARIANT  dispid:STDPROPID_XOBJ_HEIGHT     type:CUnitValue            \
+        get set caa      displaybind stylesheetproperty szattribute:HEIGHT           default:NULL_UNITVALUE \
+        ppflags:PP_UV_SCALER_OR_PERCENT min:0 enumref:styleAuto maxstrlen:pdlLength
+
+    property pixelTop         atype:long  dispid:DISPID_STYLE+0 abstract get set displaybind hidden
+    property pixelLeft        atype:long  dispid:DISPID_STYLE+1 abstract get set displaybind hidden
+    property pixelWidth       atype:long  dispid:DISPID_STYLE+2 abstract get set displaybind hidden
+    property pixelHeight      atype:long  dispid:DISPID_STYLE+3 abstract get set displaybind hidden
+
+    property posTop           atype:float dispid:DISPID_STYLE+4 abstract get set displaybind
+    property posLeft          atype:float dispid:DISPID_STYLE+5 abstract get set displaybind
+    property posWidth         atype:float dispid:DISPID_STYLE+6 abstract get set displaybind
+    property posHeight        atype:float dispid:DISPID_STYLE+7 abstract get set displaybind
+
+    property pixelBottom      atype:long  dispid:DISPID_STYLE+9  abstract get set displaybind hidden
+    property pixelRight       atype:long  dispid:DISPID_STYLE+10 abstract get set displaybind hidden
+
+    property posBottom        atype:float dispid:DISPID_STYLE+11 abstract get set displaybind
+    property posRight         atype:float dispid:DISPID_STYLE+12 abstract get set displaybind
+
+
+    property overflow         atype:BSTR    dispid:DISPID_A_OVERFLOW        type:styleOverflow      get set caa  displaybind szattribute:OVERFLOW            default:styleOverflowNotSet maxstrlen:pdlToken
+
+    property pageBreakBefore  atype:BSTR    dispid:DISPID_A_PAGEBREAKBEFORE type:stylePageBreak     get set caa  displaybind                szattribute:PAGE-BREAK-BEFORE   default:stylePageBreakNotSet maxstrlen:pdlToken
+    property pageBreakAfter   atype:BSTR    dispid:DISPID_A_PAGEBREAKAFTER  type:stylePageBreak     get set caa  displaybind                szattribute:PAGE-BREAK-AFTER    default:stylePageBreakNotSet maxstrlen:pdlToken
+
+//<--Entire CSS rule string:
+    property cssText          atype:BSTR    dispid:DISPID_A_STYLETEXT       type:CStyleComponent    get set caa  displaybind nonbrowsable nopersist remeasure clearcaches maxstrlen:pdlNoLimit
+
+    property position2        szInterfaceExpose:position atype:BSTR     dispid:DISPID_A_POSITION        \
+        type:stylePosition    get caa  displaybind szattribute:POSITION  default:stylePositionNotSet maxstrlen:pdlToken nopropdesc:nameonly
+    property zIndex          atype:VARIANT  dispid:DISPID_A_ZINDEX          type:long \
+        get set caa  displaybind szattribute:Z-INDEX    dwFlags:ELEMCHNG_SITEPOSITION maxstrlen:pdlLength
+    property clip            atype:BSTR     dispid:DISPID_A_CLIP            type:CStyleComponent \
+        get set caa  displaybind szattribute:CLIP maxstrlen:528
+    property clipTop         atype:VARIANT  dispid:DISPID_A_CLIPRECTTOP     type:CUnitValue enumref:styleAuto \
+        get set caa  displaybind stylesheetproperty hidden default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property clipRight       atype:VARIANT  dispid:DISPID_A_CLIPRECTRIGHT   type:CUnitValue enumref:styleAuto \
+        get set caa  displaybind stylesheetproperty hidden default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property clipBottom      atype:VARIANT  dispid:DISPID_A_CLIPRECTBOTTOM  type:CUnitValue enumref:styleAuto \
+        get set caa  displaybind stylesheetproperty hidden default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property clipLeft        atype:VARIANT  dispid:DISPID_A_CLIPRECTLEFT    type:CUnitValue enumref:styleAuto \
+        get set caa  displaybind stylesheetproperty hidden default:NULL_UNITVALUE  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+
+//<--CSS "Frosting" properties
+    property cursor          atype:BSTR     dispid:DISPID_A_CURSOR        type:styleCursor      get set caa  displaybind szattribute:CURSOR default:styleCursorNotSet maxstrlen:4112
+    property filter          atype:BSTR     dispid:DISPID_A_FILTER        type:CStr             get set caa  displaybind stylesheetproperty szattribute:FILTER clearcaches maxstrlen:16384
+    property tableLayout     atype:BSTR     dispid:DISPID_A_TABLELAYOUT   type:styleTableLayout get set caa displaybind szattribute:TABLE-LAYOUT  default:styleTableLayoutNotSet maxstrlen:pdlToken
+    property borderCollapse  atype:BSTR     dispid:DISPID_A_BORDERCOLLAPSE type:styleBorderCollapse get set caa displaybind szattribute:BORDER-COLLAPSE  default:styleBorderCollapseNotSet maxstrlen:pdlToken
+
+
+//-<---
+    method HRESULT   toString   dispid:DISPID_STYLE+8  \
+        (out retval type:BSTR* arg:String ) 
+
+// ComplexText properties
+    property direction      atype:BSTR      dispid:DISPID_A_DIRECTION     type:styleDir         get set caa displaybind szattribute:DIRECTION maxstrlen:pdlToken
+// BUGBUG (a-pauln) UNICODE is defined for preprocessor. Since we are doing case insensitive checking of szattribute, we use lower case 
+//                  to keep from having to change PDLPARSE.EXE. DO NOT CHANGE "unicode-bidi" to UPPER CASE OR WE WILL BREAK.
+    property unicodeBidi    atype:BSTR      dispid:DISPID_A_UNICODEBIDI   type:styleBidi        get set caa displaybind szattribute:unicode-bidi maxstrlen:pdlToken
+
+    property behavior       atype:BSTR      dispid:DISPID_A_BEHAVIOR      type:CStyleComponent  get set caa displaybind szattribute:BEHAVIOR maxstrlen:pdlUrlLen
+    property position       atype:BSTR      dispid:DISPID_A_POSITION      type:stylePosition    get set caa displaybind szattribute:POSITION  default:stylePositionNotSet maxstrlen:pdlToken
+    property imeMode        atype:BSTR      dispid:DISPID_A_IMEMODE       type:styleImeMode     get set caa displaybind szattribute:IME-MODE  default:styleImeModeNotSet  maxstrlen:pdlToken
+
+// CSS Ruby Properties
+    property rubyAlign      atype:BSTR      dispid:DISPID_A_RUBYALIGN     type:styleRubyAlign      get set caa  displaybind remeasure szattribute:RUBY-ALIGN      default:styleRubyAlignNotSet        maxstrlen:pdlToken
+    property rubyPosition   atype:BSTR      dispid:DISPID_A_RUBYPOSITION  type:styleRubyPosition   get set caa  displaybind remeasure szattribute:RUBY-POSITION   default:styleRubyPositionNotSet    maxstrlen:pdlToken
+    property rubyOverhang   atype:BSTR      dispid:DISPID_A_RUBYOVERHANG  type:styleRubyOverhang   get set caa  displaybind remeasure szattribute:RUBY-OVERHANG   default:styleRubyOverhangNotSet     maxstrlen:pdlToken
+
+    property textAutospace  atype:BSTR      dispid:DISPID_A_TEXTAUTOSPACE type:CStyleComponent get set caa displaybind                               szattribute:TEXT-AUTOSPACE maxstrlen:512
+//    property textAutospace  atype:BSTR      dispid:DISPID_A_TEXTAUTOSPACE type:CStr  get set caa  displaybind \
+//        stylesheetproperty szattribute:TEXT-AUTOSPACE maxstrlen:pdlToken
+
+    property lineBreak      atype:BSTR      dispid:DISPID_A_LINEBREAK     type:styleLineBreak      get set caa  displaybind szattribute:LINE-BREAK default:styleLineBreakNotSet maxstrlen:pdlToken
+    property wordBreak      atype:BSTR      dispid:DISPID_A_WORDBREAK     type:styleWordBreak      get set caa  displaybind szattribute:WORD-BREAK default:styleWordBreakNotSet maxstrlen:pdlToken
+
+// CSS Grid layout properties
+    property layoutGridChar  atype:VARIANT  dispid:DISPID_A_LAYOUTGRIDCHAR  type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:LAYOUT-GRID-CHAR  ppflags:PP_UV_SCALER_OR_PERCENT \
+        default:NULL_UNITVALUE min:0 enumref:styleLayoutGridChar maxstrlen:pdlLength
+    property layoutGridLine  atype:VARIANT  dispid:DISPID_A_LAYOUTGRIDLINE type:CUnitValue \
+        get set caa  displaybind stylesheetproperty szattribute:LAYOUT-GRID-LINE  ppflags:PP_UV_SCALER_OR_PERCENT \
+        default:NULL_UNITVALUE min:0 enumref:styleLayoutGridLine maxstrlen:pdlLength
+    property layoutGridMode    atype:BSTR   dispid:DISPID_A_LAYOUTGRIDMODE  type:styleLayoutGridMode  \
+        get set caa  displaybind szattribute:LAYOUT-GRID-MODE   default:styleLayoutGridModeNotSet     maxstrlen:pdlToken
+    property layoutGridType    atype:BSTR   dispid:DISPID_A_LAYOUTGRIDTYPE  type:styleLayoutGridType  \
+        get set caa  displaybind szattribute:LAYOUT-GRID-TYPE   default:styleLayoutGridTypeNotSet     maxstrlen:pdlToken
+    property layoutGrid        atype:BSTR   dispid:DISPID_A_LAYOUTGRID      type:CStyleComponent    \
+        get set caa  displaybind nonbrowsable szattribute:LAYOUT-GRID maxstrlen:pdlNoLimit default:""
+
+    property textJustify     atype:BSTR     dispid:DISPID_A_TEXTJUSTIFY     type:styleTextJustify     get set caa displaybind szattribute:TEXT-JUSTIFY default:styleTextJustifyNotSet maxstrlen:pdlToken
+    property textJustifyTrim atype:BSTR     dispid:DISPID_A_TEXTJUSTIFYTRIM type:styleTextJustifyTrim get set caa displaybind szattribute:TEXT-JUSTIFY-TRIM default:styleTextJustifyTrimNotSet maxstrlen:pdlToken
+    property textKashida     atype:VARIANT  dispid:DISPID_A_TEXTKASHIDA     type:CUnitValue           get set caa displaybind \
+        szattribute:TEXT-KASHIDA default:NULL_UNITVALUE ppflags:PROPPARAM_PERCENTAGE enumref:styleVerticalAlign maxstrlen:pdlToken
+
+    property overflowX         atype:BSTR    dispid:DISPID_A_OVERFLOWX        type:styleOverflow      get set caa  displaybind szattribute:OVERFLOW-X            default:styleOverflowNotSet maxstrlen:pdlToken
+    property overflowY         atype:BSTR    dispid:DISPID_A_OVERFLOWY        type:styleOverflow      get set caa  displaybind szattribute:OVERFLOW-Y            default:styleOverflowNotSet maxstrlen:pdlToken
+
+tearoff CRuleStyle interface:IDispatchEx BaseImpl:super::
+     tearmethod GetDispID        mapto:GetDispID
+     tearmethod InvokeEx         mapto:InvokeEx
+
+tearoff CRuleStyle interface:IHTMLRuleStyle2 
+
+tearoff CRuleStyle interface:IHTMLRuleStyle
+
+class CRuleStyle name:HTMLRuleStyle \
+            primaryinterface:IHTMLRuleStyle \
+            super:CBase \
+            keepnopersist \
+            noaamethods \
+            guid:3050f3d0-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f55c-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLRuleStyle
+    implements IHTMLRuleStyle2
+
+#endif _STYLE_PDL_

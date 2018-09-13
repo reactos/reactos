@@ -1,0 +1,65 @@
+#include <windows.h>
+#include <cplib.h>
+#include <dlgs.h>
+
+#include "cursors.h"
+#include "dialogs.dlg"
+
+
+CURSORSICON ICON    PRELOAD    cursors.ico
+
+
+CP_ACCEL ACCELERATORS PRELOAD
+BEGIN
+  VK_F1, MENU_INDHELP, VIRTKEY
+END
+
+/*
+ * WARNING! Keep these strings to less than 256 characters or they will be
+ * truncated.  Also, note that all characters of value \001 will be conveted
+ * to \0 when the string is loaded.
+ */
+
+STRINGTABLE DISCARDABLE PRELOAD
+BEGIN
+  IDS_NAME,	    "Cursors"
+  IDS_INFO,         "Changes the mouse cursor images"
+  IDS_CUR_NOMEM,    "There are not enough system resources available to continue."
+  IDS_CUR_BADFILE,  "The cursor file \042%s\042 that is selected as the %s cursor is missing or damaged.\n\nReset the cursor to the system default version?"
+  IDS_CUR_BROWSE,   "Browse"
+  IDS_CUR_FILTER,   "Cursors (*.ani, *.cur)\1*.ani;*.cur\1Animated Cursors (*.ani)\1*.ani\1Static Cursors (*.cur)\1*.cur\1All Files\1*.*\1";
+  IDS_ARROW,        "Arrow"
+  IDS_WAIT,         "Wait"
+  IDS_APPSTARTING,  "Application Starting"
+  IDS_NO,           "No"
+  IDS_IBEAM,        "I-Beam"
+  IDS_CROSS,        "Cross Hair"
+  IDS_SIZENS,       "Size N-S"
+  IDS_SIZEWE,       "Size W-E"
+  IDS_SIZENWSE,     "Size NW-SE"
+  IDS_SIZENESW,     "Size NE-SW"
+  IDS_SIZEALL,      "Size All"
+  IDS_REMOVESCHEME, "Remove \042%s\042 cursor scheme?"
+
+  1000, "Windows Default=,,,,,,,,,,"
+  1001, "Default Variations=fillitup.ani,counter.ani,raindrop.ani,wagtail.ani,,cross.cur,sizens.ani,sizewe.ani,sizenwse.ani,sizenesw.ani,"
+  1002, "3D-Bronze=3dgarro.cur,hourgla2.ani,appstar2.ani,3dgno.cur,,cross.cur,3dgns.cur,3dgwe.cur,3dgnwse.cur,3dgnesw.cur,3dgmove.cur"
+  1003, "3D-White=3dwarro.cur,3dwwait.cur,3dwapst.cur,3dwno.cur,,cross.cur,3dwns.cur,3dwwe.cur,3dwnwse.cur,3dwnesw.cur,3dwmove.cur"
+  1004, "3D-White Mirror=3dwarrol.cur,3dwwait.cur,3dwapstl.cur,3dwnol.cur,,cross.cur,3dwns.cur,3dwwe.cur,3dwnwse.cur,3dwnesw.cur,3dwmove.cur"
+  1005, "3D-Bronze Mirror=3dgarrol.cur,3dgwait.cur,3dgapstl.cur,3dgnol.cur,,cross.cur,3dgns.cur,3dgwe.cur,3dgnwse.cur,3dgnesw.cur,3dgmove.cur"
+  1006, "3D-Silver=3dsarro.cur,hourglas.ani,3dsapst.cur,3dsno.cur,,cross.cur,3dsns.cur,3dswe.cur,3dsnwse.cur,3dsnesw.cur,3dsmove.cur"
+  1007, "Small-Black=bsarro.cur,bswait.cur,bsapst.cur,bsno.cur,,cross.cur,bsns.cur,bswe.cur,bsnwse.cur,bsnesw.cur,bsmove.cur"
+  1008, "Medium-Black=bmarro.cur,bmwait.cur,bmapst.cur,bmno.cur,,cross.cur,bmns.cur,bmwe.cur,bmnwse.cur,bmnesw.cur,bmmove.cur"
+  1009, "Magnified=larrow.cur,lwait.cur,lappstrt.cur,lnodrop.cur,libeam.cur,lcross.cur,lns.cur,lwe.cur,lnwse.cur,lnesw.cur,lmove.cur"
+  1010, "Small-Red=rsarro.cur,rswait.cur,rsapst.cur,rsno.cur,,cross.cur,rsns.cur,rswe.cur,rsnwse.cur,rsnesw.cur,rsmove.cur"
+  1011, "Small-Dark Red=psarro.cur,pswait.cur,psapst.cur,psno.cur,,cross.cur,psns.cur,pswe.cur,psnwse.cur,psnesw.cur,psmove.cur"
+  1012, "Small-Blue=msarro.cur,mswait.cur,msapst.cur,msno.cur,,cross.cur,msns.cur,mswe.cur,msnwse.cur,msnesw.cur,msmove.cur"
+  1013, "Hands 1=harrow.cur,hand.ani,handapst.ani,hnodrop.cur,hibeam.cur,hcross.cur,hns.cur,hwe.cur,hnwse.cur,hnesw.cur,hmove.cur"
+  1014, "Hands 2=harrow.cur,handwait.ani,handapst.ani,handno.ani,hibeam.cur,hcross.cur,handns.ani,handwe.ani,handnwse.ani,handnesw.ani,hmove.cur"
+  1015, "Conductor=harrow.cur,metronom.ani,drum.ani,piano.ani,hibeam.cur,hcross.cur,hns.cur,hwe.cur,hnwse.cur,hnesw.cur,hmove.cur"
+  1016, "Dinosaur=rainbow.ani,dinosau2.ani,dinosaur.ani,banana.ani,,cross.cur,3dsns.cur,3dgwe.cur,3dsnwse.cur,3dgnesw.cur,3dsmove.cur"
+  1017, "Old Fashioned=harrow.cur,barber.ani,horse.ani,coin.ani,hibeam.cur,hcross.cur,3dgns.cur,3dgwe.cur,3dgnwse.cur,3dgnesw.cur,3dgmove.cur"
+
+  IDS_DEFAULTSCHEME, "Windows Default"
+END
+

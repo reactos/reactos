@@ -1,0 +1,48 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=OCCache.Reg, EmptyVol.Reg, EmptyVol.Explorer.Reg
+
+[OCCache.Reg]
+HKCR,CLSID\%CLSID_CONTROL%,,,%STR_CACHE_FOLDER_TYPE%
+HKCR,CLSID\%CLSID_CONTROL%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CONTROL%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_CONTROL%\DefaultIcon,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CONTROL%\ShellFolder,"Attributes",1,04,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_CONTROL%",,"%STR_CACHE_FOLDER_TYPE%"
+
+[EmptyVol.Reg]
+HKCR,CLSID\%CLSID_EMPTYVOLUMECACHE%,,,%STR_CACHE_FILES%
+HKCR,CLSID\%CLSID_EMPTYVOLUMECACHE%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_EMPTYVOLUMECACHE%\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\%CLSID_EMPTYVOLUMECACHE%\DefaultIcon,,131072,"%_SYS_MOD_PATH%,0"
+
+[EmptyVol.Explorer.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files",,,%CLSID_EMPTYVOLUMECACHE%
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files",Display,,%STR_EVC_DISPLAY%
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files",Description,,%STR_EVC_DESCRIPTION%
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files",Priority,1,64,00,00,00
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files",AdvancedButtonText,,%STR_EVC_VIEWFILES%
+
+[EmptyVol.Explorer.DelReg]
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Internet Settings\ActiveX Cache\Expire"
+
+[EmptyVol.DelReg]
+HKCR,CLSID\%CLSID_EMPTYVOLUMECACHE%
+
+[Unreg]
+DelReg=OCCache.Reg, EmptyVol.DelReg, EmptyVol.Explorer.DelReg
+
+[Strings]
+CLSID_CONTROL="{88C6C381-2E85-11D0-94DE-444553540000}"
+CLSID_EMPTYVOLUMECACHE="{8369AB20-56C9-11D0-94E8-00AA0059CE02}"
+
+STR_CACHE_FOLDER_TYPE="ActiveX Cache Folder"
+STR_CACHE_FILES="Cleaner for Downloaded Program Files"
+STR_EVC_DISPLAY="Downloaded Program Files"
+STR_EVC_DESCRIPTION="Downloaded Program Files are ActiveX controls and Java applets downloaded automatically from the Internet when you view certain pages. They are temporarily stored in the Downloaded Program Files folder on your hard disk."
+STR_EVC_VIEWFILES="&View Files"
+
+[End]

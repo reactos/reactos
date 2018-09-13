@@ -1,1 +1,0 @@
-@ stdcall RunOnceExProcess(ptr ptr str long)

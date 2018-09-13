@@ -1,0 +1,100 @@
+; Author: Win95 Shell Team
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles = TweakUI.Files.Sys, TweakUI.Files.Inf, TweakUI.Files.Hlp
+AddReg    = TweakUI.Add.Reg
+Ini2Reg	  = TweakUI.Add.Ini2Reg
+
+[DefaultInstall.ntx86]
+CopyFiles = TweakUI.Files.Sys, TweakUI.Files.Inf, TweakUI.Files.Hlp
+AddReg    = TweakUI.Add.Reg
+
+[DefaultInstall.ntmips]
+
+[DefaultInstall.ntalpha]
+
+[DefaultInstall.ntppc]
+
+[Optional Components]
+TweakUIInstall
+
+[TweakUIInstall]
+CopyFiles = TweakUI.Files.Sys, TweakUI.Files.Inf, TweakUI.Files.Hlp
+AddReg    = TweakUI.Add.Reg
+Ini2Reg	  = TweakUI.Add.Ini2Reg
+
+OptionDesc     = %TWEAKUI%
+Tip            = %TWEAKTIP%
+;Parent         = AccessTop
+InstallType    = 10 ;Typical, Custom.
+IconIndex          = 16  ;Windows Logo mini-icon for dialogs
+Uninstall      = DefaultUnInstall
+
+[DefaultUnInstall]
+DelFiles  = TweakUI.Files.Sys, TweakUI.Files.Inf, TweakUI.Files.Hlp, TweakUI.Files.AutoGen
+DelReg    = TweakUI.Del.Reg
+
+[DestinationDirs]
+TweakUI.Files.Sys = 11
+TweakUI.Files.Inf = 17
+TweakUI.Files.Hlp = 18
+TweakUI.Files.AutoGen = 18
+
+[SourceDisksNames]
+1="Tweak UI","",1
+
+[SourceDisksFiles]
+TWEAKUI.CPL=1
+TWEAKUI.INF=1
+TWEAKUI.HLP=1
+TWEAKUI.CNT=1
+
+[TweakUI.Files.Sys]
+TWEAKUI.CPL
+
+[TweakUI.Files.Inf]
+TWEAKUI.INF
+
+[TweakUI.Files.Hlp]
+TWEAKUI.HLP
+TWEAKUI.CNT
+
+[TweakUI.Files.AutoGen]
+TWEAKUI.GID
+TWEAKUI.FTS
+
+[TweakUI.Add.Reg]
+HKLM,%UTWEAK%,DisplayName,,"PowerToy - %TWEAKUI% - Uninstall"
+HKLM,%UTWEAK%,UninstallString,,"%10%\rundll.exe setupx.dll,InstallHinfSection DefaultUninstall 132 %17%\Tweakui.inf"
+HKLM,%SMWCV%\Run,%TWEAKUI%,,"RUNDLL32.EXE TWEAKUI.CPL,TweakMeUp"
+HKLM,%SMWCV%\RunOnce\Setup,%UPTWEAK%,,"RUNDLL32.EXE TWEAKUI.CPL,TweakMeUp 0"
+HKLM,%SMWCV%\RunOnce\Setup,%ITWEAK%,,"WINHLP32.EXE -i Main %18%\TWEAKUI.HLP"
+
+; repair a commonly-damaged part of the registry while we're here
+HKCR,lnkfile,IsShortcut
+HKCR,piffile,IsShortcut
+
+[TweakUI.Add.Ini2Reg]
+win.ini,Desktop,Wallpaper,HKLM,%BK%,2
+win.ini,Desktop,TileWallpaper,HKLM,%BK%,2
+
+[TweakUI.Del.Reg]
+HKLM,%UTWEAK%
+HKLM,%SMWCV%\Run,%TWEAKUI%
+HKLM,%SMWCV%\RunServices,%TWEAKUI%
+HKLM,%SMWCV%\Explorer\Shell Icons,29
+HKLM,%SMWCV%\Applets\TweakUI
+HKCU,%SMWCV%\Applets\TweakUI
+
+[Strings]
+TWEAKUI="Tweak UI"
+UPTWEAK="Importing old Tweak UI settings"
+ITWEAK="Introducing Tweak UI"
+UTWEAK="Software\Microsoft\Windows\CurrentVersion\Uninstall\TweakUI"
+SMWCV="Software\Microsoft\Windows\CurrentVersion"
+BK="Software\Microsoft\Windows\CurrentVersion\Setup"
+TWEAKTIP="Change various user interface settings."

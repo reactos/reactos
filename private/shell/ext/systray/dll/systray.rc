@@ -1,0 +1,271 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "commctrl.h"
+#include "version.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "stresid.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""stresid.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BATTERYMETER DIALOGEX 0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Power Meter"
+CLASS "SystemTray_Main"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Power status",IDC_POWERSTATUSGROUPBOX,9,20,234,189
+    CONTROL         "&Always show icon on the taskbar.",IDC_ENABLEMETER,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,6,6,120,10
+    CONTROL         "Show details for each &battery.",IDC_ENABLEMULTI,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,135,6,120,8
+    LTEXT           "",IDC_STATIC_FRAME_BATMETER,11,29,229,178,NOT 
+                    WS_VISIBLE
+END
+
+#include "faxreg.h"
+
+IDD_FAX_STATUS DIALOG DISCARDABLE  0, 0, 210, 218
+STYLE DS_CONTEXTHELP | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU
+CAPTION "Fax Monitor"
+CLASS FAXSTAT_WINCLASS
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "", IDC_FAX_ANIMATE, "SysAnimate32", ACS_CENTER | ACS_TRANSPARENT | ACS_TIMER, 5, 5, 200, 45
+    LTEXT           "", IDC_FAX_STATUS, 5, 55, 200, 8
+    LTEXT           "", IDC_FAX_ETIME, 5, 68, 200, 8
+    LTEXT           "", IDC_FAX_FROMTO, 5, 81, 200, 8
+    DEFPUSHBUTTON   "", IDC_FAX_DETAILS, 155, 94, 50, 14
+    CONTROL         "", IDC_FAX_DETAILS_LIST, "SysListView32", LVS_REPORT | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 5, 113, 200, 100
+    AUTOCHECKBOX    "&Answer Next Call as Fax", IDC_ANSWER_NEXT_CALL, 5, 96, 90, 10
+    PUSHBUTTON      "&End Fax Call", IDC_END_FAX_CALL, 100, 94, 50, 14
+END
+
+IDD_FAX_ANSWER_CALL DIALOG DISCARDABLE  0, 0, 120, 37
+STYLE WS_CAPTION | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Incoming Call"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Answer this call?", -1, 5, 5, 110, 8
+    DEFPUSHBUTTON   "&Yes", IDYES, 5, 18, 50, 14
+    PUSHBUTTON      "&No", IDNO, 60, 18, 50, 14
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_HOTPLUG             ICON    DISCARDABLE     "HOTPLUG.ICO"
+IDI_VOLUME              ICON    DISCARDABLE     "VOLUME.ICO"
+IDI_MUTE                ICON    DISCARDABLE     "MUTE.ICO"
+IDI_BATTERYPLUG         ICON    DISCARDABLE     "battplug.ico"
+IDI_STK000              ICON    DISCARDABLE     "stk0000.ico"
+IDI_STK001              ICON    DISCARDABLE     "stk0001.ico"
+IDI_STK002              ICON    DISCARDABLE     "stk0010.ico"
+IDI_STK003              ICON    DISCARDABLE     "stk0011.ico"
+IDI_STK004              ICON    DISCARDABLE     "stk0100.ico"
+IDI_STK005              ICON    DISCARDABLE     "stk0101.ico"
+IDI_STK006              ICON    DISCARDABLE     "stk0110.ico"
+IDI_STK007              ICON    DISCARDABLE     "stk0111.ico"
+IDI_STK008              ICON    DISCARDABLE     "stk1000.ico"
+IDI_STK009              ICON    DISCARDABLE     "stk1001.ico"
+IDI_STK00A              ICON    DISCARDABLE     "stk1010.ico"
+IDI_STK00B              ICON    DISCARDABLE     "stk1011.ico"
+IDI_STK00C              ICON    DISCARDABLE     "stk1100.ico"
+IDI_STK00D              ICON    DISCARDABLE     "stk1101.ico"
+IDI_STK00E              ICON    DISCARDABLE     "stk1110.ico"
+IDI_STK00F              ICON    DISCARDABLE     "stk1111.ico"
+IDI_MKTT                ICON    DISCARDABLE     "mk_tt.ico"
+IDI_MKTB                ICON    DISCARDABLE     "mk_tb.ico"
+IDI_MKTG                ICON    DISCARDABLE     "mk_tg.ico"
+IDI_MKBT                ICON    DISCARDABLE     "mk_bt.ico"
+IDI_MKBB                ICON    DISCARDABLE     "mk_bb.ico"
+IDI_MKBG                ICON    DISCARDABLE     "mk_bg.ico"
+IDI_MKGT                ICON    DISCARDABLE     "mk_gt.ico"
+IDI_MKGB                ICON    DISCARDABLE     "mk_gb.ico"
+IDI_MKGG                ICON    DISCARDABLE     "mk_gg.ico"
+IDI_MKPASS              ICON    DISCARDABLE     "mk_pass.ico"
+IDI_FILTER              ICON    DISCARDABLE     "fk.ico"
+IDI_FAX_NORMAL          ICON    DISCARDABLE     "faxing.ico"
+IDI_FAX_INFO            ICON    DISCARDABLE     "faxnew.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDR_FAX_IDLE            AVI     DISCARDABLE     "idle_blk.avi"
+IDR_FAX_RECEIVE         AVI     DISCARDABLE     "to_comp.avi"
+IDR_FAX_SEND            AVI     DISCARDABLE     "to_fax.avi"
+
+#ifndef _MAC
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROPFORPOWER        "&Adjust Power Properties"
+    IDS_OPEN                "&Open Power Meter"
+    IDS_RUNPOWERPROPERTIES  "shell32.dll,Control_RunDLL PowerCfg.cpl"
+    IDS_REMAINING           "%1!u!%% remaining"
+    IDS_CHARGING            " (charging)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNKNOWN             "Unknown remaining"
+    IDS_ACPOWER             "On AC power"
+    IDS_TIMEREMFORMATHOUR   "%1!u!:%2!02u! hours (%3!u!%%) remaining"
+    IDS_TIMEREMFORMATMIN    "%1!u! min (%2!u!%%) remaining"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HOTPLUGTIP          "Unplug or Eject Hardware"
+    IDS_LOCATION            "Unknown Device at %s"
+    IDS_LOCATION_NOUINUMBER "Unknown Device on %s"
+    IDS_HPLUGMENU_PROPERTIES "&Unplug or eject hardware"
+    IDS_HPLUGMENU_REMOVE    "Stop %s"
+    IDS_SEPARATOR           ", "
+    IDS_DISKDRIVE           " - Drive(%s)"
+    IDS_DISKDRIVES          " - Drives(%s)"
+    IDS_DRIVELETTERS        "A:\0B:\0C:\0D:\0E:\0F:\0G:\0H:\0I:\0J:\0K:\0L:\0M:\0N:\0O:\0P:\0Q:\0R:\0S:\0T:\0U:\0V:\0W:\0X:\0Y:\0Z:\0\0"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RUNHPLUGPROPERTIES  "shell32.dll,Control_RunDLL hotplug.dll"
+    IDS_VOLUME              "Volume"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_VOLUMEMENU1         "&Adjust Audio Properties"
+    IDS_VOLUMEMENU2         "&Open Volume Controls"
+    IDS_VOLUMEAPP           "SNDVOL32.EXE"
+    IDS_MUTED               "Volume (muted)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STICKYKEYS          "StickyKeys"
+    IDS_MOUSEKEYS           "MouseKeys"
+    IDS_FILTERKEYS          "FilterKeys"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FAX_DIALING            "Dialing %s"
+    IDS_FAX_SENDING            "Sending Page %d of %d"
+    IDS_FAX_RECEIVING          "Receiving Page %d"
+    IDS_FAX_COMPLETED          "Complete"
+    IDS_FAX_BUSY               "Busy"
+    IDS_FAX_NO_ANSWER          "No Answer"
+    IDS_FAX_BAD_ADDRESS        "Bad Address"
+    IDS_FAX_NO_DIAL_TONE       "No Dial Tone"
+    IDS_FAX_DISCONNECTED       "Disconnected"
+    IDS_FAX_FATAL_ERROR_SND    "Transmission Error"
+    IDS_FAX_FATAL_ERROR_RCV    "Reception Error"
+    IDS_FAX_NOT_FAX_CALL       "Not a Fax Call"
+    IDS_FAX_CALL_DELAYED       "Call Delayed"
+    IDS_FAX_CALL_BLACKLISTED   "Call Blacklisted"
+    IDS_FAX_RINGING            "Ringing"
+    IDS_FAX_ABORTING           "Cancelled Fax Call"
+    IDS_FAX_MODEM_POWERED_OFF  "Modem Powered Off"
+    IDS_FAX_IDLE               "Idle"
+    IDS_FAX_IDLE_RECEIVE       "Ready to Receive Faxes"
+    IDS_FAX_ANSWERED           "Answered"
+    IDS_FAX_ETIME              "Elapsed Time: %d%s%02d"
+    IDS_FAX_FROM               "From: %s"
+    IDS_FAX_TO                 "To: %s"
+    IDS_FAX_TIMELABEL          "Time"
+    IDS_FAX_EVENTLABEL         "Event"
+    IDS_FAX_MENU_CFG           "Fax &Monitor Properties"
+    IDS_FAX_MENU_QUEUE         "Fax &Queue"
+    IDS_FAX_MENU_FOLDER        "My &Faxes"
+    IDS_FAX_RCV_COMPLETE       "You Have Received a Fax"
+    IDS_FAX_DETAILS_EXPAND     "&Details >>"
+    IDS_FAX_DETAILS_COLLAPSE   "&Details <<"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

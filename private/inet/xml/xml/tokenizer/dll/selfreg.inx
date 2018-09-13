@@ -1,0 +1,30 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+AddReg=XMLPSR.Reg
+
+[Unreg]
+DelReg=XMLPSR.Reg
+
+[XMLPSR.Reg]
+
+HKCR,CLSID\%CLSID_XMLParser%,,,"XMLParser"
+HKCR,CLSID\%CLSID_XMLParser%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_XMLParser%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_XMLParser%\ProgID,,,"XMLParser"
+HKCR,CLSID\%CLSID_XMLParser%\TypeLib,,,%TypeLibID%
+
+HKCR,XMLParser,,,"Microsoft XML Parser 1.0"
+HKCR,XMLParser\CLSID,,,%CLSID_XMLParser%
+
+
+; Other keys that we nuke when we get unregistered
+HKCU,%XMLParser_PATH%,,,
+
+[Strings]
+CLSID_XMLParser ="{3aaa7326-09ee-11d2-9cab-0060b0ec3d39}"
+TypeLibID = "{3aaa7322-09ee-11d2-9cab-0060b0ec3d39}"
+XMLParser_PATH="Software\Microsoft\Windows\CurrentVersion\XMLParser"
+
+[End]

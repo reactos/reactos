@@ -1,0 +1,465 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "shellp.h"
+#include "cmnquryp.h"
+#include "dsqueryp.h"
+#include "query.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU_FILE MENU DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+#if !DOWNLEVEL_SHELL
+        MENUITEM "Create &Shortcut",            DSQH_FILE_CREATESHORTCUT
+#endif
+        MENUITEM "P&roperties",                 DSQH_FILE_PROPERTIES
+        MENUITEM SEPARATOR
+
+        MENUITEM "S&ave Search...",             DSQH_FILE_SAVEQUERY
+        MENUITEM SEPARATOR
+    END
+END
+
+IDR_MENU_VIEW MENU DISCARDABLE
+BEGIN
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Filter",                     DSQH_VIEW_FILTER
+        MENUITEM SEPARATOR
+        MENUITEM "Lar&ge Icons",                DSQH_VIEW_LARGEICONS
+        MENUITEM "S&mall Icons",                DSQH_VIEW_SMALLICONS
+        MENUITEM "&List",                       DSQH_VIEW_LIST
+        MENUITEM "&Details",                    DSQH_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "Arrange &Icons",              DSQH_VIEW_ARRANGEICONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Choose Columns...",          DSQH_VIEW_PICKCOLUMNS
+        MENUITEM "&Refresh",                    DSQH_VIEW_REFRESH
+    END
+END
+
+IDR_MENU_HELP MENU DISCARDABLE
+BEGIN
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                DSQH_HELP_CONTENTS
+        MENUITEM "What's &This?",               DSQH_HELP_WHATISTHIS
+    END
+END
+
+IDR_VIEWBACKGROUND MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "&Filter",                     DSQH_VIEW_FILTER
+            MENUITEM SEPARATOR
+            MENUITEM "Lar&ge Icon",                 DSQH_VIEW_LARGEICONS
+            MENUITEM "S&mall Icon",                 DSQH_VIEW_SMALLICONS
+            MENUITEM "&List",                       DSQH_VIEW_LIST
+            MENUITEM "&Details",                    DSQH_VIEW_DETAILS
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Arrange &Icons",              DSQH_VIEW_ARRANGEICONS
+    END
+END
+
+IDR_MENU_EDIT MENU DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Select &All",                 DSQH_EDIT_SELECTALL
+        MENUITEM "&Invert Selection",           DSQH_EDIT_INVERTSELECTION
+    END
+END
+
+IDR_OP_STRING MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Contains",                    FILTER_CONTAINS
+        MENUITEM "Does not contain",            FILTER_NOTCONTAINS
+        MENUITEM "Starts with",                 FILTER_STARTSWITH
+        MENUITEM "Ends with",                   FILTER_ENDSWITH
+        MENUITEM "Is (exactly)",                FILTER_IS
+        MENUITEM "Is not",                      FILTER_ISNOT
+        MENUITEM SEPARATOR
+        MENUITEM "Clear filter",                DSQH_CLEARFILTER
+        MENUITEM "Clear all filters",           DSQH_CLEARALLFILTERS
+    END
+END
+
+IDR_OP_NUMBER MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Equal to",                    FILTER_IS
+        MENUITEM "Not equal to",                FILTER_ISNOT
+        MENUITEM "Less than or equal",          FILTER_LESSEQUAL
+        MENUITEM "Greater than or equal",       FILTER_GREATEREQUAL
+        MENUITEM SEPARATOR
+        MENUITEM "Clear filter",                DSQH_CLEARFILTER
+        MENUITEM "Clear all filters",           DSQH_CLEARALLFILTERS
+    END
+END
+
+IDR_OP_OTHER MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Equal to",                    FILTER_IS
+        MENUITEM "Not equal to",                FILTER_ISNOT
+        MENUITEM SEPARATOR
+        MENUITEM "Clear filter",                DSQH_CLEARFILTER
+        MENUITEM "Clear all filters",           DSQH_CLEARALLFILTERS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_FIND                ICON    DISCARDABLE     "..\\..\\res\\findds.ico"
+IDI_GLOBALCATALOG       ICON    DISCARDABLE     "..\\..\\res\\directory.ico"
+IDI_FINDPRINTER         ICON    DISCARDABLE     "..\\..\\res\\print.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDR_DSFINDANIMATION     AVI     DISCARDABLE     "..\\..\\res\\findds.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""shellp.h""\r\n"
+    "#include ""cmnquryp.h""\r\n"
+    "#include ""dsqueryp.h""\r\n"
+    "#include ""query.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ARRANGEBY_HELP      "Sort the items by %s."
+    IDS_FIND                "&Find..."
+    IDS_FINDINDIRECTORY     "In the %1!s!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STARTFINDCAPTION    "Find in the %1!s!"
+    IDS_FINDHELP            "Search the Directory for objects"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SAVEFILTER          "Directory Search\n*.qds\n\n"
+    IDS_SAVETITLE           "Save Directory Search As"
+    IDS_DSQ                 "Directory Search"
+    IDS_NOTHINGFOUND        "No items match the current search"
+    IDS_SEARCHING           "Searching..."
+    IDS_FILTERING           "Filtering results..."
+    IDS_FOUNDITEMS          "%1!d! item(s) found"
+    IDS_FOUNDITEMSHIDDEN    "%1!d! item(s) found and %2!d! filtered from view"
+    IDS_ARRANGEBY           "By %s"
+    IDS_INITALIZING         "Preparing to search"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FINDUSER            "Users, Contacts, and Groups"
+    IDS_FINDPRINTERS        "Printers"
+    IDS_FINDCOMPUTER        "Computers"
+    IDS_FINDSHAREDFOLDERS   "Shared Folders"
+    IDS_FINDOU              "Organizational Units"
+    IDS_CUSTOMSEARCH        "Custom Search"
+    IDS_FINDDOMCTL          "Domain Controllers"
+    IDS_FINDFRSMEMBER       "FRS Members"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WINDOWTITLE         "Find in the Directory"
+    IDS_BROWSEPROMPT        "Select the folder where you want to begin the search"
+    IDS_GENERAL             "General"
+    IDS_CUSTOM              "Custom"
+    IDS_ADVANCED            "Advanced"
+    IDS_MORECHOICES         "Features"
+    IDS_GLOBALCATALOG       "Entire %1!s!"
+    IDS_ENTERCRITERIA       "Do you wish to add the current criteria to your search?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SELECT              "Select"
+    IDS_CRITERIAEMPTY       "<Add criteria from above to this list>"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CN                  "Name"
+    IDS_OWNER               "Owner"
+    IDS_MACHINEROLE         "Machine Role"
+    IDS_DESCRIPTION         "Description"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ADSPATH             "Published At"
+    IDS_OBJECTCLASS         "Type"
+    IDS_KEYWORDS            "Keywords"
+    IDS_UNCNAME             "Share Name"
+    IDS_LOCATION            "Location"
+    IDS_MODEL               "Model"
+    IDS_CONTACTNAME         "Contact Name"
+    IDS_COMMENT             "Comment"
+    IDS_SERVERNAME          "Server Name"
+    IDS_SITE                "Site"
+    IDS_DOMAIN              "Domain"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_32000               "32000"
+    IDS_ANY                 "Any"
+    IDS_WKSSERVER           "Workstations and Servers"
+    IDS_DC                  "Domain Controller"
+    IDS_WKSORSERVER         "Workstation or Server"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_72                  "72"
+    IDS_144                 "144"
+    IDS_300                 "300"
+    IDS_600                 "600"
+    IDS_1200                "1200"
+    IDS_2400                "2400"
+    IDS_4800                "4800"
+    IDS_9600                "9600"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    DSQH_EDIT_SELECTALL     "Select all items in the window."
+    DSQH_EDIT_INVERTSELECTION
+                            "Reverse which items are selected and which are not."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#if !DOWNLEVEL_SHELL
+    DSQH_FILE_CREATESHORTCUT "Creates shortcuts to the selected items."
+#endif
+    DSQH_FILE_PROPERTIES    "Displays the properties of the selected items."
+    DSQH_FILE_SAVEQUERY     "Saves the current search criteria."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    DSQH_BG_SELECT          "Invokes the current selection."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    DSQH_HELP_CONTENTS      "Opens Help."
+    DSQH_HELP_WHATISTHIS    "Let's you click on any item for additional help."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    DSQH_VIEW_FILTER        "Toggles the filter bar on and off."
+    DSQH_VIEW_LARGEICONS    "Displays items using large icons."
+    DSQH_VIEW_SMALLICONS    "Displays items using small icons."
+    DSQH_VIEW_LIST          "Displays items in a list."
+    DSQH_VIEW_DETAILS       "Displays information about each item in the window."
+    DSQH_VIEW_ARRANGEICONS  "Contains commands for arranging the items in the window."
+    DSQH_VIEW_REFRESH       "Refresh the current results."
+    DSQH_VIEW_PICKCOLUMNS   "Pick the properties to display for each item in the window."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_IS                  "Is (exactly)"
+    IDS_ISNOT               "Is not"
+    IDS_STARTSWITH          "Starts with"
+    IDS_ENDSWITH            "Ends with"
+    IDS_GREATERTHAN         "Greater than or equal to"
+    IDS_LESSTHAN            "Less than or equal to"
+    IDS_DEFINED             "Present"
+    IDS_NOTDEFINED          "Not present"
+    IDS_ISTRUE              "Is TRUE"
+    IDS_ISFALSE             "Is FALSE"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERR_NOSCOPES        "The Directory Service is currently unavailable."
+    IDS_ERR_BADDSQ          """%1!s!"" is not accessible.  The file contents may be corrupt, or the file may not be a valid Directory Service query."
+    IDS_ERR_MAXRESULT       "The number of objects found exceeds the maximum allowed.  Please refine your search."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FORM_LETTER             "Letter"
+    IDS_FORM_LETTER_SMALL       "Letter Small"
+    IDS_FORM_TABLOID            "Tabloid"
+    IDS_FORM_LEDGER             "Ledger"
+    IDS_FORM_LEGAL              "Legal"
+    IDS_FORM_STATEMENT          "Statement"
+    IDS_FORM_EXECUTIVE          "Executive"
+    IDS_FORM_A3                 "A3"
+    IDS_FORM_A4                 "A4"
+    IDS_FORM_A4_SMALL           "A4 Small"
+    IDS_FORM_A5                 "A5"
+    IDS_FORM_B4                 "B4 (JIS)"
+    IDS_FORM_B5                 "B5 (JIS)"
+    IDS_FORM_FOLIO              "Folio"
+    IDS_FORM_QUARTO             "Quarto"
+    IDS_FORM_10X14              "10x14"
+    IDS_FORM_11X17              "11x17"
+    IDS_FORM_NOTE               "Note"
+    IDS_FORM_ENVELOPE9          "Envelope #9"
+    IDS_FORM_ENVELOPE10         "Envelope #10"
+    IDS_FORM_ENVELOPE11         "Envelope #11"
+    IDS_FORM_ENVELOPE12         "Envelope #12"
+    IDS_FORM_ENVELOPE14         "Envelope #14"
+    IDS_FORM_ENVELOPE_CSIZE_SHEET        "C size sheet"
+    IDS_FORM_ENVELOPE_DSIZE_SHEET        "D size sheet"
+    IDS_FORM_ENVELOPE_ESIZE_SHEET        "E size sheet"
+    IDS_FORM_ENVELOPE_DL        "Envelope DL"
+    IDS_FORM_ENVELOPE_C5        "Envelope C5"
+    IDS_FORM_ENVELOPE_C3        "Envelope C3"
+    IDS_FORM_ENVELOPE_C4        "Envelope C4"
+    IDS_FORM_ENVELOPE_C6        "Envelope C6"
+    IDS_FORM_ENVELOPE_C65       "Envelope C65"
+    IDS_FORM_ENVELOPE_B4        "Envelope B4"
+    IDS_FORM_ENVELOPE_B5        "Envelope B5"
+    IDS_FORM_ENVELOPE_B6        "Envelope B6"
+    IDS_FORM_ENVELOPE           "Envelope"
+    IDS_FORM_ENVELOPE_MONARCH   "Envelope Monarch"
+    IDS_FORM_SIX34_ENVELOPE     "6 3/4 Envelope"
+    IDS_FORM_US_STD_FANFOLD     "US Std Fanfold"
+    IDS_FORM_GMAN_STD_FANFOLD   "German Std Fanfold"
+    IDS_FORM_GMAN_LEGAL_FANFOLD "German Legal Fanfold"
+    IDS_FORM_ISO_B4             "B4 (ISO)"
+    IDS_FORM_JAPANESE_POSTCARD  "Japanese Postcard"
+    IDS_FORM_9X11               "9x11"
+    IDS_FORM_10X11              "10x11"
+    IDS_FORM_15X11              "15x11"
+    IDS_FORM_ENV_INVITE                 "Envelope Invite"
+    IDS_FORM_RESERVED_48                "Reserved48"
+    IDS_FORM_RESERVED_49                "Reserved49"
+    IDS_FORM_LETTER_EXTRA               "Letter Extra"
+    IDS_FORM_LEGAL_EXTRA                "Legal Extra"
+    IDS_FORM_TABLOID_EXTRA              "Tabloid Extra"
+    IDS_FORM_A4_EXTRA                   "A4 Extra"
+    IDS_FORM_LETTER_TRANSVERSE          "Letter Transverse"
+    IDS_FORM_A4_TRANSVERSE              "A4 Transverse"
+    IDS_FORM_LETTER_EXTRA_TRANSVERSE    "Letter Extra Transverse"
+    IDS_FORM_A_PLUS                     "Super A"
+    IDS_FORM_B_PLUS                     "Super B"
+    IDS_FORM_LETTER_PLUS                "Letter Plus"
+    IDS_FORM_A4_PLUS                    "A4 Plus"
+    IDS_FORM_A5_TRANSVERSE              "A5 Transverse"
+    IDS_FORM_B5_TRANSVERSE              "B5 (JIS) Transverse"
+    IDS_FORM_A3_EXTRA                   "A3 Extra"
+    IDS_FORM_A5_EXTRA                   "A5 Extra"
+    IDS_FORM_B5_EXTRA                   "B5 (ISO) Extra"
+    IDS_FORM_A2                         "A2"
+    IDS_FORM_A3_TRANSVERSE              "A3 Transverse"
+    IDS_FORM_A3_EXTRA_TRANSVERSE        "A3 Extra Transverse"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRINT_WORKING_TEXT              "Checking..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

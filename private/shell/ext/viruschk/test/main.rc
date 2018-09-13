@@ -1,0 +1,76 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+//#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAIN_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "IVirusCheck &File"
+    BEGIN
+        MENUITEM "CheckFor&Virus",               ID_CHECKFORVIRUS
+        MENUITEM "Check for Virus &API",         ID_APICHECKFORVIRUS
+    END
+    POPUP "IVirusCheck &IStream"
+    BEGIN
+        MENUITEM "CheckFor&Virus",               ID_ISTR_SCAN
+        MENUITEM "Check for Virus &API",         ID_ISTR_SCAN_API
+    END
+    POPUP "I&RegisterVirusProvider"
+    BEGIN
+        MENUITEM "&Register",                    ID_REGISTER
+        MENUITEM "&Unregister",                  ID_UNREGISTER
+    END
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,1198 @@
+#include "format.h"
+
+IDI_CHKICON    ICON    DISCARDABLE LOADONCALL check.ico
+IDI_CHKDLGICON ICON    DISCARDABLE LOADONCALL checkdlg.ico
+#ifdef OPK2
+IDI_CHKDLGICN2 ICON    DISCARDABLE LOADONCALL chkdlg2.ico
+IDI_CHKDLGICN3 ICON    DISCARDABLE LOADONCALL chkdlg3.ico
+#endif
+
+DLG_FORMATREPORT DIALOG DISCARDABLE LOADONCALL 32, 18, 192, 148
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Format Results - %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	    "%1 bytes total disk space", DLGFORREP_TOT, 8, 8, 174, 8
+    LTEXT	    "%1 bytes used by system files", DLGFORREP_SYS, 8, 22, 174, 8
+    LTEXT	    "%1 bytes in bad sectors", DLGFORREP_BAD, 8, 36, 174, 8
+    LTEXT	    "%1 bytes available on disk", DLGFORREP_AVAIL, 8, 50, 174, 8
+    LTEXT	    "%1 bytes in each allocation unit", DLGFORREP_BCLUS, 8, 72, 174, 8
+    LTEXT	    "%1 total allocation units on disk", DLGFORREP_TCLUS, 8, 86, 174, 8
+    LTEXT	    "%s serial number", DLGFORREP_SER, 8, 108, 174, 8
+
+    DEFPUSHBUTTON   "Close", DLGFORREP_CLOSE, 76, 127, 40, 14
+END
+
+DLG_FORMAT DIALOG DISCARDABLE LOADONCALL 32, 18, 224, 202
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION "Format - %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX	    "Format type", IDC_GROUPBOX_1, 7, 34, 155, 48
+    GROUPBOX	    "Other options", IDC_GROUPBOX_2,  7,  86, 155, 79
+
+    LTEXT	    "", DLGCONFOR_STATTXT, 7, 169, 209, 8
+    CONTROL	    "", DLGCONFOR_PBAR, PROGRESS_CLASS, WS_CHILD, 7, 181, 209, 14
+
+    LTEXT	    "Ca&pacity:", IDC_TEXT, 7, 7, 42, 8
+
+    COMBOBOX	    DLGCONFOR_CAPCOMB, 7, 16, 155, 35, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON	    "&Start",	 DLGCONFOR_START , 169, 16, 47, 14, WS_GROUP | WS_TABSTOP
+    DEFPUSHBUTTON   "&Close",	 DLGCONFOR_CANCEL, 169, 33, 47, 14, WS_TABSTOP
+    RADIOBUTTON     "&Quick (erase)",	     DLGCONFOR_QUICK, 13, 45, 142, 10, WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "&Full",		     DLGCONFOR_FULL , 13, 56, 142, 10, WS_TABSTOP
+    RADIOBUTTON     "Copy system files &only",	 DLGCONFOR_DOSYS, 13, 67, 142, 10, WS_TABSTOP
+    LTEXT	    "&Label:",	      IDC_TEXT_2, 13, 97,  25, 8
+    EDITTEXT	    DLGCONFOR_LABEL, 13, 106, 142, 14, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_GROUP | WS_TABSTOP
+    CHECKBOX	    "&No label",	      DLGCONFOR_NOLAB ,  13, 126, 142, 10, WS_TABSTOP
+    CHECKBOX	    "&Display summary when finished", DLGCONFOR_REPORT, 13, 137, 142, 10, WS_TABSTOP
+    CHECKBOX	    "Copy s&ystem files",    DLGCONFOR_MKSYS , 13, 148, 142, 10, WS_TABSTOP
+
+END
+
+STRINGTABLE DISCARDABLE LOADONCALL
+BEGIN
+	IDS_DRIVETITLEF,	"Format - %s"
+	IDS_WRTPROT,		"Windows cannot format this disk because it is write protected. If you are sure you want to continue, remove or move the write-protect tab, reinsert the disk, and then click Retry."
+	IDS_NOTRDY,		"There is no disk in this drive or the drive door is open. Insert a disk in the drive and make sure the drive door is closed, and then click Retry."
+	IDS_INVFMT,		"The specified capacity is invalid for this disk. This disk cannot be formatted."
+	IDS_INVFMTREC,		"The capacity you specified is invalid for this disk. Do you want to format the disk with %s capacity instead?"
+	IDS_NOQCKREC,		"You cannot perform a Quick format on this disk because it is not formatted or its capacity does not match what you specified.\n\nClick OK to perform a Full format using the capacity you specified."
+	IDS_NOQCKRECREM,	"You cannot do a Quick format because the disk is not formatted, its capacity does not match, or there is no disk in the drive.\n\nClick OK to perform a Full format using the capacity you specified."
+	IDS_NOQCK,		"You cannot perform a Quick format on this disk because it is not formatted or its capacity does not match what you specified. Try again using the Full format option."
+	IDS_NOQCKREM,		"You cannot perform a Quick format on this disk because it is not formatted or its capacity does not match what you specified or there is no disk in the drive. Try again using the Full format option."
+	IDS_BADVOLREC,		"The label could not be created on this drive. Do you want to continue without creating a label?"
+	IDS_BADVOL,		"The label could not be created on this drive."
+	IDS_FATERRSYS,		"Windows could not copy system files to this disk because an error occurred while trying to access the file allocation table. This disk is damaged and may need to be replaced."
+	IDS_FATERR,		"Windows could not format this disk because an error occurred while trying to format the file allocation table area. This disk is damaged and may need to be replaced."
+        IDS_BOOTERRSYS,         "Windows could not copy system files to this disk because an error occurred while attempting to write to the boot sector. This disk is damaged and may need to be replaced."
+        IDS_BOOTERR,            "Windows could not format this disk. Either the selected capacity is not valid for this disk, or the disk is damaged and may need to be replaced."
+	IDS_ROOTDERR,		"Windows could not format this disk because an error occurred while attempting to format the top-level folder (root directory) area. This disk is damaged and may need to be replaced."
+	IDS_OSAREC,		"Windows detected a problem in the area of the disk where the system files were being copied. Do you want to continue?"
+	IDS_OSA,		"Windows detected a problem in the area of the disk where the system files were being copied."
+	IDS_DATAERRREC, 	"Windows detected a problem in the data area of the disk. Windows can continue formatting this disk, but you may not be able to use it reliably. Do you want to continue?"
+	IDS_DATAERR,		"Windows detected a problem in the data area of the disk."
+	IDS_TOSREC,		"Windows could not copy system files to this disk. Do you want to continue formatting without copying system files?"
+	IDS_TOS,		"Windows could not copy system files to this disk."
+	IDS_FULLDISK,		"Windows could not copy system files to this disk because there is not enough free disk space. Free some space on this disk and then try again."
+	IDS_NOSYSFILES, 	"Windows could not copy system files to this disk because there are other files in the area where system files must be copied."
+	IDS_NOSREC,		"Windows could not find the system files to copy to this disk. Do you want to continue formatting without copying system files?"
+	IDS_NOS,		"Windows could not find the system files to copy to this disk."
+	IDS_UNKERRSYS,		"Windows could not copy system files to this disk."
+	IDS_UNKERR,		"Windows could not format this disk."
+	IDS_F_INIT,		"Initializing..."
+	IDS_CANCEL,		"Cancel"
+	IDS_F_LOWFMT,		"Formatting..."
+	IDS_F_VERIFY,		"Testing for bad sectors..."
+	IDS_F_FSFMT,		"Creating file system..."
+	IDS_F_TSYS,		"Copying system files..."
+	IDS_F_GETLABEL, 	"Setting drive label..."
+	IDS_F_SHTDOWN,		"Completing task..."
+	IDS_NAME,		"Format"
+	IDS_NOFORMATSYS,	"This drive cannot be formatted."
+	IDS_NOFORMATSYSW,	"Windows cannot format this drive because it contains files in use by Windows."
+	IDS_NOFORMATSYSP,	"Windows cannot format this drive because it contains the Windows swap file."
+	IDS_NOFORMATSYSH,	"Windows cannot format this drive because it is the host drive of a mounted compressed drive."
+	IDS_GENDISKPROB,	"This drive cannot be formatted."
+	IDS_GENDISKPROBA,	"Windows cannot format this drive because it not a real drive but just an alias for part of another drive."
+	IDS_GENDISKPROBI,	"Windows cannot format this drive because the device driver for the disk does not support formatting, or because the drive is locked by another disk utility."
+	IDS_GENDISKPROBC,	"Windows cannot format this drive because it is compressed. If it is compressed with DoubleSpace or DriveSpace, use DriveSpace to format it. Otherwise, use the program you used to compress the drive."
+	IDS_GENDISKPROBL,	"Windows cannot format this drive. Quit any programs that are using this drive, and make sure that My Computer or Windows Explorer is not displaying the contents of the drive. Then try formatting again."
+	IDS_FCONFIRM,		"This drive is either a hard disk or a large removable disk. Formatting it will destroy all files currently on the drive. Are you sure you want to format this drive?"
+        IDS_FDOSURF,            "Windows has formatted this disk. Before using it, run ScanDisk and choose the Thorough option to verify that data can be stored reliably on all areas of the disk."
+	IDS_NOMEMF,		"Windows could not finish formatting this disk because your computer does not have enough available memory. If any other programs are running, quit one or more of them, and then try formatting again."
+	IDS_FBADOPT,		"The options currently selected are invalid. Choose a different option and try again."
+	IDS_FNOTSUP,		"This type of drive is not supported. Windows cannot format it."
+	IDS_FLOCK,		"Windows cannot format this drive. Quit any disk utilities or other programs that are using this drive, and make sure that no window is displaying the contents of the drive. Then try formatting again."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+        IDS_BOOT,               "this drive's boot sector"
+        IDS_FAT,                "this drive's file allocation table"
+        IDS_ROOTD,              "this drive's top-level folder"
+	IDS_C_FAT,		"Checking file allocation tables..."
+	IDS_C_DIR,		"Checking folders..."
+	IDS_C_FILEDIR,		"Checking folders and files..."
+	IDS_C_LOSTCLUS, 	"Checking for lost file fragments..."
+	IDS_C_COMPLETE, 	"Complete"
+#ifdef OPK2
+	IDS_C_BOOT,		"Checking boot area..."
+#endif
+	IDS_B_INIT,		"Initializing surface scan..."
+	IDS_B_UNMOV,		"Identifying unrepairable sectors..."
+	IDS_B_SYS,		"Scanning disk surface (system area)..."
+#ifdef OPK2
+	IDS_B_SYSNUM,		"Sector %1!ld! of %2!ld!"
+#endif
+	IDS_B_DATA,		"Scanning disk surface (data area)..."
+	IDS_B_DATANUM,		"Cluster %1!ld! of %2!ld!"
+	IDS_CANTCHK,		"ScanDisk cannot check this drive now because the disk is not properly formatted, or a program such as a disk utility has locked it. Format the disk or wait for the utility to finish, and then restart ScanDisk."
+	IDS_INVALID,		"ScanDisk cannot check this drive. It may be a network or CD-ROM drive. Try running ScanDisk again, but specify a different drive letter."
+	IDS_CANTCHKR,		"ScanDisk cannot check this drive because there is no disk in it, it is not formatted, or a disk utility has locked it. Insert a valid disk in the drive or wait for the utility to finish, and then restart ScanDisk."
+	IDS_CANTCHKALL, 	"ScanDisk cannot currently check any of the drives you specified. They may be locked by another disk utility.  Specify different drives or wait for the disk utility to complete. Then try running ScanDisk again."
+	IDS_NOSEL,		"You must select at least one drive."
+	IDS_NOMEM2,		"Your computer does not have enough available memory to run ScanDisk now.\n\nQuit some running programs, and then try starting ScanDisk again."
+	IDS_CHKTIT,		"ScanDisk"
+	IDS_CHKTITABOUT,	"ScanDisk for Windows"
+	IDS_CHKTIT2,		"ScanDisk - %s"
+	IDS_CHKTIT3,		"ScanDisk - %s (Preview)"
+	IDS_CLOSEM,		"Close"
+	IDS_DD_HEAD,		"Checking compressed volume file header..."
+	IDS_DD_STRUC,		"Checking compressed volume data structures..."
+	IDS_DD_FAT,		"Checking compressed volume file allocation table..."
+	IDS_DD_SIG,		"Checking compressed volume file signatures..."
+	IDS_DD_BOOT,		"Checking compressed volume boot sector..."
+	IDS_NOERROR,		"ScanDisk did not find any errors on this drive."
+	IDS_ALLFIXED,		"ScanDisk found errors on this drive and fixed them all."
+	IDS_SOMEFIXED,		"ScanDisk found errors on this drive but did not fix all of them."
+	IDS_NONEFIXED,		"ScanDisk found errors on this drive but did not fix any of them."
+	IDS_LOCKRSTART, 	"ScanDisk has restarted 10 times because Windows or another program has been writing to this drive. Quitting some running programs may enable ScanDisk to finish sooner. Do you want to continue receiving this warning?"
+	IDS_UNEXP3,		"ScanDisk could not continue."
+	IDS_UNSUP,		"ScanDisk could not continue on this drive. The drive may be unsupported or locked by another disk utility."
+	IDS_UNSUPR,		"ScanDisk could not continue on this drive. The drive may be unsupported, locked by another disk utility, or there may not be a valid disk in the drive."
+	IDS_CANTWRT,		"ScanDisk could not write to this disk because it is write protected. Remove or move the write-protect tab, reinsert the disk, and then restart ScanDisk."
+	IDS_SERDISK,		"ScanDisk could not continue because a serious disk error occured."
+	IDS_SERFS,		"ScanDisk continue because a serious system error occured."
+	IDS_ACTIVE,		"ScanDisk could not continue because files on the drive are open. Quit all programs using this drive, and then try running ScanDisk again."
+	IDS_LOCKVIOL,		"ScanDisk cannot continue because a program such as a disk utility has locked this drive. Close the program or wait for it to finish.  Then restart ScanDisk."
+	IDS_LOCKVIOL2,		"ScanDisk could not continue because a program such as a disk utility has locked this drive, or because files on the drive are open. Quit all programs using this drive, and then try running ScanDisk again."
+	IDS_NOMEM3,		"ScanDisk could not continue because your computer does not have enough available memory. If any other programs are running, quit one or more of them, and then try running ScanDisk again."
+	IDS_CANTDELROOT,	"ScanDisk cannot delete the top-level folder (root directory). Choose a different option."
+	IDS_CANTDELF,		"ScanDisk cannot delete this file because it is a system file. Choose a different option."
+	IDS_CANTDELD,		"ScanDisk cannot delete this folder because it contains system files or folders. Choose a different option."
+	IDS_CANTFIX,		"ScanDisk cannot repair this error because the file involved is a system file. Choose a different option."
+	IDS_NODSKMNT,		"ScanDisk could not find or access the file DSKMAINT.DLL, which ScanDisk needs to operate."
+	IDS_ERRRSTART,		"ScanDisk must now restart because another program (or Windows itself) wrote to your disk. Any errors that were previously reported, but not corrected, may be reported again."
+	IDS_ISDMF,		"This is one of the original Setup disks that came with a software program. Writing to this disk can damage it. If ScanDisk detects errors, it will report them, but will not fix them.\n\nDo you want to continue?"
+	IDS_CHELP,		"&What's This?"
+	IDS_ABOUT,		"&About ScanDisk"
+	IDS_NORMWARN,		"ScanDisk has made a change to a compressed drive that requires you to restart your computer before you can run any programs in MS-DOS mode. When ScanDisk is finished, restart your computer."
+END
+
+DLG_CHKDSKADVOPT DIALOG DISCARDABLE  32, 18, 238, 181
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION "ScanDisk Advanced Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX	    "Check files for",	  IDC_GROUPBOX_1,122, 56,106,50
+    GROUPBOX	    "Cross-linked files", IDC_GROUPBOX_2,  8,109,106,50
+    GROUPBOX	    "Lost file fragments",IDC_GROUPBOX_3,122,  4,106,48
+    GROUPBOX	    "Display summary",	  IDC_GROUPBOX_4,  8,  4,106,48
+    GROUPBOX	    "Log file", 	  IDC_GROUPBOX_5,  8, 56,106,50
+
+    DEFPUSHBUTTON   "OK",    DLGCHKADV_OK,    120,162,50,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON	    "Cancel",DLGCHKADV_CANCEL,176,162,50,14,WS_TABSTOP
+
+    RADIOBUTTON     "&Always",		    DLGCHKADV_REPALWAYS,13,15,94,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "N&ever",			DLGCHKADV_NOREP,13,26,94,10,WS_TABSTOP
+    RADIOBUTTON     "&Only if errors found", DLGCHKADV_REPIFERR,13,38,94,10,WS_TABSTOP
+
+    RADIOBUTTON     "&Replace log",	DLGCHKADV_LOGREP,14,67,94,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "A&ppend to log", DLGCHKADV_LOGAPPND,14,78,94,10,WS_TABSTOP
+    RADIOBUTTON     "&No log",		 DLGCHKADV_NOLOG,14,89,94,10,WS_TABSTOP
+
+    RADIOBUTTON     "&Delete",	   DLGCHKADV_XLDEL,14,120,94,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "Make &copies",DLGCHKADV_XLCPY,14,132,94,10,WS_TABSTOP
+    RADIOBUTTON     "&Ignore",	   DLGCHKADV_XLIGN,14,144,94,10,WS_TABSTOP
+
+    RADIOBUTTON     "&Free",		DLGCHKADV_LSTF, 127,15,94,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "Con&vert to files",DLGCHKADV_LSTMF,127,27,94,10,WS_TABSTOP
+
+    CHECKBOX	    "Invalid file na&mes",	DLGCHKADV_CHKNM,128,68,94,10,WS_GROUP | WS_TABSTOP
+    CHECKBOX	    "Invalid dates and &times",DLGCHKADV_CHKDT,128,83,94,10,WS_TABSTOP
+
+    CHECKBOX	    "Check &host drive first",DLGCHKADV_CHKHST,128,112,94,10,WS_GROUP | WS_TABSTOP
+END
+
+DLG_CHKDSKSAOPT DIALOG DISCARDABLE LOADONCALL 0, 0, 227, 141
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION "Surface Scan Options"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX	    "Areas of the disk to scan",IDC_GROUPBOX_1,9,30,207,53
+    LTEXT           "ScanDisk will use the following settings when scanning the surface of your disk for errors.",
+		    IDC_TEXT,5,7,215,21
+
+    DEFPUSHBUTTON   "OK",	 DLGCHKSAO_OK,108,121,50,14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON	    "Cancel",DLGCHKSAO_CANCEL,167,121,50,14, WS_TABSTOP
+
+    RADIOBUTTON     "System &and data areas.",DLGCHKSAO_DOALL,17,42,178,10, WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "&System area only.",DLGCHKSAO_NODATA,17,55,178,10, WS_TABSTOP
+    RADIOBUTTON     "&Data area only.",DLGCHKSAO_NOSYS,17,68,178,10, WS_TABSTOP
+
+    CHECKBOX	    "Do not perform &write-testing.",
+		    DLGCHKSAO_NOWRTTST,17,88,194,10, WS_GROUP | WS_TABSTOP
+    CHECKBOX	    "Do not repair bad sectors in &hidden and system files.",
+		    DLGCHKSAO_ALLHIDSYS,17,102,194,10, WS_TABSTOP
+END
+
+DLG_CHKDSKREPORT DIALOG DISCARDABLE LOADONCALL 32, 18, 192, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "ScanDisk Results - %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CTEXT	  ""				      DLGCHKREP_ESTAT, 8,  6, 173, 16
+    LTEXT	  "%1 bytes total disk space",	      DLGCHKREP_TOT,   8, 26, 173, 8
+    LTEXT	  "%1 bytes in bad sectors",	      DLGCHKREP_BAD,   8, 38, 173, 8
+    LTEXT	  "%1 bytes in %2 folders",	      DLGCHKREP_DIR,   8, 50, 173, 8
+    LTEXT	  "%1 bytes in %2 hidden files",      DLGCHKREP_HID,   8, 62, 173, 8
+    LTEXT	  "%1 bytes in %2 user files",	      DLGCHKREP_USER,  8, 74, 173, 8
+    LTEXT	  "%1 bytes available on disk",       DLGCHKREP_AVAIL, 8, 86, 173, 8
+    LTEXT	  "%1 bytes in each allocation unit", DLGCHKREP_BCLUS, 8, 98, 173, 8
+    LTEXT	  "%1 total allocation units on disk",DLGCHKREP_TCLUS, 8,110, 173, 8
+    LTEXT	  "%1 available allocation units",    DLGCHKREP_ACLUS, 8,122, 173, 8
+    DEFPUSHBUTTON "Close",			      DLGCHKREP_CLOSE,76,139,  40, 14
+END
+
+//
+// The following two dialogs are a pair, make sure you modify them both in
+// exactly the same way. DLG_CHKDSK is the dialog box form (has a parent window)
+// DLG_CHKDSKTL is the top level window form (parent window is 0).
+//
+DLG_CHKDSK DIALOG DISCARDABLE LOADONCALL  32, 18, 306, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+#ifdef OPK2
+    LTEXT	    "",DLGCHK_STATTXT,	10,160,189,8
+    RTEXT	    "",DLGCHK_STATTXT2,200,160, 95,8
+#else
+    LTEXT	    "",DLGCHK_STATTXT,	10,160,197,8
+    RTEXT	    "",DLGCHK_STATTXT2,208,160, 87,8
+#endif
+    CONTROL	    "",DLGCHK_PBAR, PROGRESS_CLASS, WS_CHILD,10,174,285,14
+
+    ICON            IDI_CHKDLGICON,IDC_ICON_1,10,5,18,20
+
+    PUSHBUTTON	    "&Start",	   DLGCHK_START,   108,195,58,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON	    "&Close",	   DLGCHK_CANCEL,  172,195,58,14,WS_TABSTOP
+    PUSHBUTTON	    "&Advanced...",DLGCHK_ADVANCED,235,195,58,14,WS_TABSTOP
+
+    LTEXT	    "Select the dri&ve(s) you want to check for errors:",IDC_TEXT,
+                    10,27,285,8
+    LISTBOX	    DLGCHK_DRVLIST,10,38,285,39,LBS_EXTENDEDSEL |
+						LBS_OWNERDRAWFIXED |
+						LBS_HASSTRINGS | WS_VSCROLL |
+						WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Type of test",IDC_GROUPBOX_1,10,80,285,62
+    RADIOBUTTON     "Stan&dard",DLGCHK_NOBADB,17,93,216,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "&Thorough",DLGCHK_DOBAD,17,115,216,10,WS_TABSTOP
+    LTEXT	    "(checks files and folders for errors)",DLGCHK_DTXT1,28,104,205,8
+    LTEXT           "(performs Standard test and scans disk surface for errors)",
+		    DLGCHK_DTXT2,28,126,205,8
+    PUSHBUTTON	    "&Options...",DLGCHK_BADOPT,239,123,49,14,WS_TABSTOP
+
+    CHECKBOX	    "Automatically &fix errors",DLGCHK_AUTOFIX,10,147,284,10,WS_GROUP | WS_TABSTOP
+END
+
+DLG_CHKDSKTL DIALOG DISCARDABLE LOADONCALL 32, 18, 306, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | DS_3DLOOK | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Sans Serif"
+CLASS "ScanDskWDlgClass"
+BEGIN
+#ifdef OPK2
+    LTEXT	    "",DLGCHK_STATTXT,	10,160,189,8
+    RTEXT	    "",DLGCHK_STATTXT2,200,160, 95,8
+#else
+    LTEXT	    "",DLGCHK_STATTXT,	10,160,197,8
+    RTEXT	    "",DLGCHK_STATTXT2,208,160, 87,8
+#endif
+    CONTROL	    "",DLGCHK_PBAR, PROGRESS_CLASS, WS_CHILD,10,174,285,14
+
+    ICON            IDI_CHKDLGICON,IDC_ICON_1,10,5,18,20
+
+    PUSHBUTTON	    "&Start",	   DLGCHK_START,   108,195,58,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON	    "&Close",	   DLGCHK_CANCEL,  172,195,58,14,WS_TABSTOP
+    PUSHBUTTON	    "&Advanced...",DLGCHK_ADVANCED,235,195,58,14,WS_TABSTOP
+
+    LTEXT	    "Select the dri&ve(s) you want to check for errors:",IDC_TEXT,
+                    10,27,285,8
+    LISTBOX	    DLGCHK_DRVLIST,10,38,285,39,LBS_EXTENDEDSEL |
+						LBS_OWNERDRAWFIXED |
+						LBS_HASSTRINGS | WS_VSCROLL |
+						WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Type of test",IDC_GROUPBOX_1,10,80,285,62
+    RADIOBUTTON     "Stan&dard",DLGCHK_NOBADB,17,93,216,10,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "&Thorough",DLGCHK_DOBAD,17,115,216,10,WS_TABSTOP
+    LTEXT	    "(checks files and folders for errors)",DLGCHK_DTXT1,28,104,205,8
+    LTEXT           "(performs Standard test and scans disk surface for errors)",
+		    DLGCHK_DTXT2,28,126,205,8
+    PUSHBUTTON	    "&Options...",DLGCHK_BADOPT,239,123,49,14,WS_TABSTOP
+
+    CHECKBOX	    "Automatically &fix errors",DLGCHK_AUTOFIX,10,147,284,10,WS_GROUP | WS_TABSTOP
+END
+
+IDD_SE_DLG DIALOG DISCARDABLE LOADONCALL 32, 18, 233, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Radio1",IDC_SE_BUT1,"Button",BS_AUTORADIOBUTTON | 
+		    WS_GROUP,7,122,195,8
+    CONTROL	    "Radio2",IDC_SE_BUT2,"Button",BS_AUTORADIOBUTTON,7,131,
+		    195,8
+    CONTROL	    "Radio3",IDC_SE_BUT3,"Button",BS_AUTORADIOBUTTON,7,140,
+		    195,8
+    CONTROL	    "Radio4",IDC_SE_BUT4,"Button",BS_AUTORADIOBUTTON,7,149,
+		    195,8
+    PUSHBUTTON	    "OK",IDC_SE_OK,7,164,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDC_SE_CANCEL,61,164,50,14
+    PUSHBUTTON	    "&More Info...",IDC_SE_MOREINFO,115,164,50,14
+    PUSHBUTTON	    "&Help",IDC_SE_HELP,169,164,50,14
+    EDITTEXT	    IDC_SE_TXT,7,2,221,116, WS_VSCROLL | WS_BORDER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_NOHIDESEL
+END
+
+
+IDD_XL_DLG DIALOG DISCARDABLE LOADONCALL  32, 18, 220, 198
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	    "The following &files or folders are cross-linked:",
+		    IDC_XL_TXT1,11,4,200,16
+    LISTBOX	    IDC_XL_LIST,11,28,195,43,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL	    "&Give each file a separate copy of the shared cluster(s).",
+                    IDC_XL_BUT1,"Button",
+					BS_AUTORADIOBUTTON | WS_GROUP, 11,120,182,8
+    CONTROL	    "&Delete all affected files.",
+					IDC_XL_BUT1+1,"Button",
+					BS_AUTORADIOBUTTON,11,129,182,8
+    CONTROL	    "&Truncate all files at the point of the crosslink.",
+                    IDC_XL_BUT1+2,"Button",
+					BS_AUTORADIOBUTTON,11,138,182,8
+    CONTROL	    "&Keep selected file and delete others",
+					IDC_XL_BUT1+3,"Button",
+					BS_AUTORADIOBUTTON,11,147,182,8
+    CONTROL	    "K&eep selected file and truncate others",
+					IDC_XL_BUT1+4,"Button",
+					BS_AUTORADIOBUTTON,11,156,182,8
+    CONTROL	    "&Ignore this error and continue",
+                    IDC_XL_BUT1+5,"Button",
+					BS_AUTORADIOBUTTON,11,165,182,8
+    DEFPUSHBUTTON   "OK",IDC_SE_OK,11,178,50,14,WS_GROUP
+    PUSHBUTTON	    "Cancel",IDC_SE_CANCEL,66,178,50,14
+    PUSHBUTTON	    "&Help",IDC_SE_HELP,121,178,50,14
+    LTEXT	    "A crosslink occurs when two or more files use the same cluster (area of a disk) at the same time. Except in unusual circumstances, the data in the crosslinked cluster(s) is correct for only one of the files.",
+		    IDC_XL_TXT2 ,11,74,195,40
+
+END
+
+IDD_XL_CANT DIALOG DISCARDABLE LOADONCALL  32, 18, 220, 111
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Cannot Delete or Truncate"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX	    IDC_XL_LIST,11,42,200,43,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDC_SE_OK,11,93,50,14,WS_GROUP
+    PUSHBUTTON	    "Cancel",IDC_SE_CANCEL,65,93,50,14
+    LTEXT           "These files or folders cannot be deleted or truncated. If you click OK, ScanDisk will continue without deleting or truncating these files.",
+		    IDC_XL_CTXT,11,4,200,32
+END
+
+STRINGTABLE DISCARDABLE LOADONCALL
+BEGIN
+	// ******
+	//
+	// LOGging error message boxes
+	//
+	IDS_SEADDLOGNOMEM   "There is not enough available memory to continue recording information in the ScanDisk log file (C:\\SCANDISK.LOG). You can continue, but ScanDisk will not log any additional information."
+	IDS_SELOGNOWRITE    "ScanDisk was unable to write a log file. Drive C is either invalid, not writable, or does not have enough available space. Free space on drive C or click the Advanced button, and then specify No Log."
+
+	// ******
+	//
+	// The following IDL_ENG... guys are used when the call to the
+	// DSKMAINT engine returns something other than NOERROR ERR_FSCORRECTED
+	// or ERR_FSUNCORRECTED.
+	//
+	// 80 column limit										    *
+	//
+	IDL_ENGBADOPT	    "\r\nScanDisk could not continue.\r\n"
+	IDL_ENGNOTSUPP	    "\r\nScanDisk could not check this drive.\r\n"
+	IDL_ENGCANTWRT	    "\r\nThe disk was write protected.\r\n"
+	IDL_ENGOS	    "\r\nA serious disk error occurred.\r\n"  
+	IDL_ENGFS	    "\r\nA serious system error occured.\r\n"  //What is this for?
+	IDL_ENGACTIVE	    "\r\nScanDisk could not continue because of open files.\r\n"
+	IDL_ENGLOCK	    "\r\nA lock violation occurred.\r\n"
+	IDL_ENGMEM	    "\r\nAn insufficient-memory error occurred.\r\n"
+	IDL_ENGCANCEL	    "\r\nScanDisk was canceled.\r\n"
+	IDL_ENGCHKHSTRST    "\r\nScanDisk restarted so it could check the host drive.\r\n"
+	IDL_ENGSARST	    "\r\nScanDisk restarted so it could perform a thorough test.\r\n"
+	IDL_ENGUXP	    "\r\nScanDisk failed for an unknown reason.\r\n"
+
+	// ******
+	//
+	// Following are used just as they are in the report dialog.
+	//
+	IDL_NOERROR	    "\r\nScanDisk did not find any errors on this drive.\r\n"
+	IDL_ALLFIXED	    "\r\nScanDisk found errors on this drive and fixed them all.\r\n"
+	IDL_SOMEFIXED	    "\r\nScanDisk found errors on this drive but did not fix all of them.\r\n"
+	IDL_NONEFIXED	    "\r\nScanDisk found errors on this drive but did not fix any of them.\r\n"
+
+	// ******
+	//
+	// The following are used to form the "header" for the log.
+	//
+	IDL_TITLE1	    "*******************\r\n\r\nMicrosoft ScanDisk for Windows\r\n\r\n"
+	IDL_TITLE1A	    "NOTE: If you use an MS-DOS program to view this file, some of the characters\r\nmay appear incorrectly. Use a Windows program such as Notepad instead.\r\n\r\n"
+
+	// in following %1!s! is 24 hour HH:MM time using [intl] sTime as the
+	//		seperator. %2!s! is the date as specified by [intl]
+	//		sShortDate and sTime
+	IDL_TITLE2	    "Log file generated at %1!s! on %2!s!.\r\n\r\n"
+	IDL_TITLE3	    "ScanDisk used the following options:\r\n"
+	IDL_OPTST	    "  Standard test\r\n"
+	IDL_OPTTH	    "  Thorough test\r\n"
+	IDL_OPTNWRT	    "    No write-testing\r\n"
+	IDL_OPTSYSO	    "    System area only\r\n"
+	IDL_OPTDTAO	    "    Data area only\r\n"
+	IDL_OPTHDSYS	    "    Don't repair hidden and system files\r\n"
+	IDL_OPTPRE	    "  Preview (corrections were not saved)\r\n"
+	IDL_OPTCDT	    "  Check dates and times\r\n"
+	IDL_OPTCFN	    "  Don't check file names\r\n"
+	IDL_OPTCHST	    "  Don't check host drive first\r\n"
+	IDL_OPTAUTOFIX	    "  Automatically fix errors\r\n"
+	IDL_CRLF	    "\r\n"
+
+	// in following %1!s! is the name of the disk as used by the shell
+	//		(name of the drive as under the drive icon in
+	//		My Computer) or is the string specified by
+	//		IDL_COMPDISKH
+	IDL_TITLE4	    "Drive %1!s! contained the following errors:\r\n"
+
+	// in following %1!s! is the name of the disk as used by the shell
+	//		(name of the drive as under the drive icon in
+	//		My Computer) and %2!c! is the drive letter
+	IDL_COMPDISKH	    "%2!c!: (host for drive %1!s!)"
+
+	// ******
+	//
+	// Line written in log after each drive check NOTE that if this line
+	// isn't present at the end of a drive check, the log is incomplete.
+	//
+	IDL_TRAILER	    "\r\n-------------------\r\n\r\n"
+	//
+	// Following when front end has a memory problem and cancels the run
+	// (ONLY on engine call backs)
+	//
+	IDL_NOMEMCAN	    "  ScanDisk was canceled due to insufficient memory.\r\n\r\n"
+
+	// ******
+	//
+	// ENGINE RESTART messages
+	//
+	IDL_RSTLOCKLIM	    "Restarted 10 times because another program wrote to this disk.\r\n\r\n"
+	IDL_RSTUNFERR	    "ScanDisk restarted. Unrepaired errors may be reported again.\r\n\r\n"
+
+	// ******
+	//
+	// ERROR CORRECTED
+	//
+	IDL_ECPRE	    "  Results: "
+	IDL_ECFULLCORR	    "Error was corrected as specified above.\r\n"
+	IDL_ECNOCORR	    "Error was not corrected.\r\n"
+	IDL_ECPCORROK	    "Error was partially corrected.\r\n"
+	IDL_ECPCORRBAD	    "Error was partially corrected. Your disk may still have some serious problems.\r\n"
+	IDL_ECCANTFIX	    "Correction failed. The error is not correctable or involves system files.\r\n"
+	IDL_ECOTHERWRT	    "Correction failed. Another program wrote to the disk.\r\n"
+	IDL_ECNOMEM	    "Correction failed. Your computer had insufficient memory.\r\n"
+	IDL_ECUNEXP	    "Correction failed\r\n"
+	IDL_ECDISKE	    "Correction failed due to a disk error.\r\n"
+	IDL_ECFILCOL	    "Correction failed due to a file name collision.\r\n"
+	IDL_ECFILCRT	    "Correction failed because a file could not be created.\r\n"
+	IDL_ECCLUSA	    "Correction failed because clusters could not be allocated.\r\n"
+
+	// ******
+	//
+	// ERRORs
+	//
+	IDL_ERUNKNO	    "An undefined error occurred\r\n  Resolution: Default action (repair, cancel or ignore)\r\n"  //What is this for?
+	IDL_ERFATXL	    "The following files or folders were crosslinked:\r\n"
+	IDL_ERDDXLQ	    "The following file(s), file fragment(s) or folder(s) were internaly crosslinked:\r\n"
+
+	// in following, first %c is one of IDL_XLFILE IDL_XLFOLD or IDL_XLFRAG
+	//		 second %c is either a space or IDL_XLUNMO
+	//		 %d is the "file list number" of the file (1,2,3,...)
+	//		 %s is the file name
+	//
+	// WARNING DANGER PLEASE PAY ATTENTION!!!!!!!!!!!!!!
+	// THIS IDL_XL??? STUFF IS ALL DONE WITH WSPRINTF YOU ABSOLUTELY
+	// POSITIVELY CANNOT CHANGE THE ORDER OF ANY OF THE ARGUMENTS OF THE
+	// IDL_XLLIST STRING.
+	IDL_XLLIST	    " %c%c %d) %s\r\n"
+	IDL_XLFILE	    "I"
+	IDL_XLFOLD	    "O"
+	IDL_XLFRAG	    "R"
+	IDL_XLUNMO	    "U"
+
+      IDL_FATERRDIR_DOTS    "The entries that identified this folder and the folder it is in\r\nwere missing or damaged.\r\n"
+      IDL_FATERRDIR_LFNLST  "This folder contained one or more long filenames that were no longer\r\nassociated with files.\r\n"
+      IDL_FATERRDIR_ZRLEN   "This folder did not have any disk space set aside for it.\r\n"
+      IDL_FATERRDIR_LOSTFIL "There were files or folders within this folder that were not accessible.\r\n"
+      IDL_FATERRDIR_DUPNM   "This folder contained two or more files or folders that have identical names.\r\n"
+      IDL_FATERRDIR_BAD     "Its contents did not appear to be valid for a folder.\r\n"
+      IDL_FATERRDIR_PNOTD   "Some of this folder's contents did not appear to be valid.\r\n"
+      IDL_FATERRDIR_BDENTS  "One or more entries in this folder had severely damaged MS-DOS names.\r\n"
+
+      // in following, %1!s! is one of IDS_DIRS or IDS_FILEMS
+      //	       %2!s! is one of IDS_DIR	or IDS_FILEM
+      //	       %3!s! is the SHORT name of the file or folder with the err
+      //	       %4!s! is the LONG name of the file or folder with the err
+      IDL_FATERRFILE_INVLFN "The file or folder's long name was invalid.\r\n"
+      IDL_FATERRFILE_INVNM  "The file or folder's short name (%3!s!) contained invalid characters.\r\n"
+      IDL_FATERRFILE_LFNSTR "The file or folder's long name was stored incorrectly on your disk.\r\n"
+      IDL_FATERRFILE_LFNLEN "The file or folder could not be accessed because its long name was longer than 255 characters.\r\n"
+      IDL_FATERRFILE_DEVNM  "This file or folder could not be accessed because its short name was the\r\nsame as the name of a hardware device or port.\r\n"
+      IDL_FATERRFILE_SIZE   "The size of the file was different from the size recorded for it in its folder.\r\n"
+      IDL_FATERRFILE_SIZED  "The folder's size should have been zero, but was not.\r\n"
+#ifdef OPK2
+      IDL_FATERRFILE_SIZETB "The size of the file's allocation chain is greater than 4GB.\r\n"
+     IDL_FATERRFILE_SIZETBD "The size of the folder's allocation chain is greater than 4GB.\r\n"
+#endif
+      IDL_FATERRFILE_DTTM1  "The last-modified date or time for the file or folder was invalid.\r\n"
+      IDL_FATERRFILE_DTTM2  "The last-accessed date for the file or folder was invalid.\r\n"
+      IDL_FATERRFILE_DTTM3  "The date or time on which the file or folder was created was invalid.\r\n"
+
+      // in following, %1!s! is the name of the file or folder with the error
+      //	       %2!s! is the name of the folder the file or folder is in
+      IDL_FATERRVOLLABALT   "The %1!s!\r\nfile or folder in the %2!s!\r\nfolder is incorrectly marked as a volume label.\r\n"
+
+      // in following, %1!s! is the LONG  name of the file or folder with the error
+      //	       %2!s! is the SHORT name of the file or folder with the error
+      IDL_FATERRMXPLENLALT  "The %1!s!\r\nfolder could not be accessed because its name was longer than 259 characters.\r\n"
+      IDL_FATERRMXPLENSALT  "The %1!s!\r\nfolder could not be accessed in MS-DOS mode because its MS-DOS name\r\n(%2!s!)\r\nwas longer than 127 characters.\r\n"
+
+      IDL_DDERRMDFATALT     "This drive contained an invalid MDFAT entry that is not associated with a file.\r\n"
+#ifdef OPK2
+      IDL_FATERRRTDIR_INVFC  "The drive's root folder pointer is invalid.\r\n"
+      IDL_FATERRRTDIR_PNOTD  "The drive's root folder pointer is valid, but isn't a folder.\r\n"
+      IDL_FATERRRTDIR_RECRT  "ScanDisk could not find a valid root folder.\r\n"
+      IDL_FATERRRTDIR_FND    "ScanDisk found a valid root folder.\r\n"
+      IDL_FATERRRTDIR_MBYFND "ScanDisk found a valid folder, but it may not be the root.\r\n"
+      IDL_FATERRRTDIR_INVC   "Part of this drive's root folder was stored in an invalid location.\r\n"
+      IDL_FATERRRTDIR_CIRCC  "This drive's root folder was stored in the same place on your disk\r\nas an earlier part of the folder.\r\n"
+      IDL_FATERRRTDIR_TOOBIG "This drive's root folder was too large to be a folder.\r\n"
+#endif
+
+	// 80 column limit											    !
+
+// in following, %1!s! is the name of the folder with the error
+(IDL_ER_FIRST+IERR_FATERRDIR)	    "The %1!s!\r\nfolder was damaged:\r\n"
+
+// in following, %1!lu! is the count of lost bytes
+//		 %2!lu! is the count of lost file chains
+(IDL_ER_FIRST+IERR_FATLSTCLUS)	    "ScanDisk found %1!lu! bytes of data in %2!lu! lost file fragment(s).\r\n"
+
+// in following, %1!s! is the name of the file or folder with the error
+//		 %2!s! is the name of the folder the file or folder is in
+(IDL_ER_FIRST+IERR_FATCIRCC)	    "Part of the %1!s!\r\nfile or folder in the %2!s!\r\nfolder was stored in the same place on your disk as an earlier part of\r\nthe file or folder.\r\n"
+
+// in following, %1!s! is the name of the file or folder with the error
+//		 %2!s! is the name of the folder the file or folder is in
+(IDL_ER_FIRST+IERR_FATINVCLUS)	    "Part of the %1!s!\r\nfile or folder in the %2!s!\r\nfolder was stored in an invalid location.\r\n"
+
+(IDL_ER_FIRST+IERR_FATRESVAL)	    "The FAT media byte was missing or incorrect.\r\n"
+(IDL_ER_FIRST+IERR_FATFMISMAT)	    "The drive's file allocation tables (FATs) did not match.\r\n"
+
+// in following, %1!s! is the name of the folder the file or folder is in
+//		 %2!s! is the LONG name of the file or folder with the error
+//		 %3!s! is one of IDS_DIR or IDS_FILEM
+//		 %4!s! is the SHORT name of the file or folder with the error
+//		 %5!s! is one of IDS_DIRS or IDS_FILEMS
+(IDL_ER_FIRST+IERR_FATERRFILE)	    "The %1!s!\r\nfolder contained incorrect information about %2!s! (MS-DOS name %4!s!):\r\n"
+
+// in following, %1!s! is the name of the file or folder with the error
+//		 %2!s! is the name of the folder the file or folder is in
+(IDL_ER_FIRST+IERR_FATERRVOLLAB)    "The volume label (%1!s!) for this drive was invalid.\r\n"
+
+// in following, %1!s! is the LONG  name of the file or folder with the error
+//		 %2!s! is the SHORT name of the file or folder with the error
+(IDL_ER_FIRST+IERR_FATERRMXPLENL)   "The %1!s!\r\nfile could not be accessed because its name was longer than 259 characters.\r\n"
+(IDL_ER_FIRST+IERR_FATERRMXPLENS)   "The %1!s!\r\nfile could not be accessed in MS-DOS mode because its MS-DOS name\r\n(%2!s!)\r\nwas longer than 127 characters.\r\n"
+
+// in following, %1!s! is the SHORT name of the file or folder with the error
+(IDL_ER_FIRST+IERR_FATERRCDLIMIT)   "The %1!s!\r\nfolder could not be opened in MS-DOS mode because its complete short name\r\nwas longer than 66 characters.\r\n"
+
+(IDL_ER_FIRST+IERR_DDERRSIZE1)	    "The size of this compressed drive was invalid.\r\n"
+(IDL_ER_FIRST+IERR_DDERRFRAG)	    "The free space on this compressed drive was highly fragmented.\r\n"
+(IDL_ER_FIRST+IERR_DDERRALIGN)	    "The ratio that Windows was using to estimate the amount of free space\r\navailable on this drive was too high.\r\n"
+(IDL_ER_FIRST+IERR_DDERRNOXLCHK)    "One of your programs had files open in a way that prevented ScanDisk from detecting or repairing internal crosslink errors.\r\n"
+(IDL_ER_FIRST+IERR_DDERRUNSUP)	    "This drive was compressed by a program that is not supported by ScanDisk.\r\n"
+
+// in following, %1!s! is one of IDS_DBLSPACE or IDS_DRVSPACE
+//		 %2!s! is one of IDS_DRVSPACE or IDS_DBLSPACE
+(IDL_ER_FIRST+IERR_DDERRCVFNM)	    "This drive was compressed using %1!s!, but its compressed volume file identified it as a %2!s! drive.\r\n"
+
+(IDL_ER_FIRST+IERR_DDERRSIG)	    "One or both of the volume file signatures were damaged.\r\n"
+(IDL_ER_FIRST+IERR_DDERRBOOT)	    "This drive's boot sector was damaged.\r\n"
+(IDL_ER_FIRST+IERR_DDERRMDBPB)	    "This drive's compressed volume file had a damaged header.\r\n"
+(IDL_ER_FIRST+IERR_DDERRSIZE2A)     "The compressed volume file for this drive was too small.\r\nThis may have been caused by an error on your host drive.\r\n"
+(IDL_ER_FIRST+IERR_DDERRSIZE2B)     "The compressed volume file for this drive was too small.\r\nThe contents of the drive are probably not recoverable.\r\n"
+
+// in following, %1!s! is the name of the file or folder with the error
+//		 %2!s! is one of IDS_DIR or IDS_FILEM
+(IDL_ER_FIRST+IERR_DDERRMDFAT)	    "This drive contained an invalid MDFAT entry for %1!s!.\r\n"
+
+// in following, %1!lu! is the count of lost MDFAT entries
+(IDL_ER_FIRST+IERR_DDERRLSTSQZ)     "The compression file allocation table (MDFAT) contained %1!lu! reference(s)\r\nto data that the file allocation table (FAT) had no record of.\r\n"
+
+
+// in following, %1!lu! is the cluster number of the cluster
+(IDL_ER_FIRST+IERR_ERRISNTBAD)	    "Cluster %1!lu! was marked as bad, but ScanDisk could not detect anything\r\nwrong with it.\r\n"
+
+// in following, %1!lu! is the sector or cluster number
+//		 %2!s!	is the name of the involved file or folder
+//		 %3!s!	is one of IDS_DIR or IDS_FILEM OR is one of
+//			IDS_BOOT, IDS_FAT or IDS_ROOTD
+(IDL_ER_FIRST+IERR_ERRISBAD1)       "ScanDisk could not read sector %1!lu! of %3!s!.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD2)	    "ScanDisk could not properly read the data in cluster %1!lu!,\r\nwhich contains some or all of %2!s!.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD3)       "ScanDisk could no longer write to or read from sector %1!lu! of %3!s!.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD4)	    "ScanDisk could not properly read cluster %1!lu!, which contains\r\nsome or all of %2!s!.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD5)	    "ScanDisk could not properly read from or write to cluster %1!lu!,\r\nwhich contains some or all of %2!s!.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD6)	    "ScanDisk could not properly read from or write to cluster %1!lu!.\r\nThis cluster is currently unused.\r\n"
+
+(IDL_ER_FIRST+IERR_ERRMEM)	    "There was not enough available memory to complete this task.\r\n"
+
+// in following, %1!s! is the name of the folder the problem occured on
+(IDL_ER_FIRST+IERR_ERRCANTDEL)	    "ScanDisk was unable to delete the %1!s!\r\nfolder.\r\n"
+
+// in following %1!s! is the name of the disk as used by the shell
+//		(name of the drive as under the drive icon in My Computer)
+(IDL_ER_FIRST+IERR_DDERRMOUNT)	    "ScanDisk was unable to remount the %1!s! drive.\r\n"
+
+(IDL_ER_FIRST+IERR_READERR1)	    "ScanDisk could not continue because the disk was removed from the drive.\r\n"
+(IDL_ER_FIRST+IERR_READERR2)	    "Error reading your drive.\r\nScanDisk may have corrected this error when it performed a surface scan.\r\nHowever, other errors may remain on your drive.\r\n"
+(IDL_ER_FIRST+IERR_READERR3)	    "Error reading a system area sector on this drive.\r\nThe disk is seriously damaged.\r\n"
+(IDL_ER_FIRST+IERR_READERR4)	    "Error reading a data area sector on this drive.\n\nScanDisk may have repaired this error when it performed a surface scan.\r\n"
+(IDL_ER_FIRST+IERR_READERR5)	    "Error reading a system area sector on this drive.\r\nA thorough test might repair this error.\r\n"
+(IDL_ER_FIRST+IERR_READERR6)	    "Error reading a data area sector on this drive.\r\nA thorough test of this drive's host might repair this error.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR1)	    "ScanDisk could not write to this disk because it is write protected.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR2)	    "Error writing to your drive.\r\nScanDisk may have corrected this error when it performed a surface scan.\r\nHowever, other errors may remain on your drive.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR3)	    "ScanDisk was correcting an error but encountered another error while writing to one of the\r\ndrive's system area sectors. The disk is seriously damaged.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR4)	    "ScanDisk was correcting an error but encountered another error while writing to one of the\r\ndrive's data area sectors. A thorough test might repair this error.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR5)	    "ScanDisk was correcting an error but encountered another error while writing to one of the\r\nsystem area sectors. A thorough test of this drive and host might repair this error.\r\n"
+(IDL_ER_FIRST+IERR_WRITEERR6)	    "ScanDisk was correcting an error but encountered another error while writing to one of the\r\ndata area sectors. A thorough test of this drive and host might repair this error.\r\n"
+#ifdef OPK2
+(IDL_ER_FIRST+IERR_FATERRBOOT)    "The drive contained an error in its FSInfoSector.\r\n"
+(IDL_ER_FIRST+IERR_FATERRSHDSURF) "The drive should be thorough tested.\r\n"
+(IDL_ER_FIRST+IERR_FATERRROOTDIR) "The drive contained an error in its root folder.\r\n"
+(IDL_ER_FIRST+IERR_ERRISBAD7)	  "ScanDisk could not properly read from or write to %2!lu! sector/clusters starting at %1!lu!.\r\n"
+#endif
+
+	// ******
+	//
+	// ERROR RESOLUTIONS
+	//
+	IDL_RSPRE	    "  Resolution: "
+	IDL_RSREP	    "Repair the error\r\n"
+	IDL_RSREPFF	    "Repair the file or folder\r\n"
+	IDL_RSIGN	    "Ignore this error and continue\r\n"
+	IDL_RSDEL	    "Delete the affected file or folder\r\n"
+	IDL_RSTRNC	    "Repair by truncating the file or folder\r\n"
+	IDL_RSCAN	    "Cancel ScanDisk\r\n"
+	IDL_RSUNK	    "Unexpected resolution\r\n"
+	IDL_RSRMDF	    "Repair the invalid MDFAT entry\r\n"
+	IDL_RSRMDBPB	    "Repair the MDBPB\r\n"
+	IDL_RSFLMDF	    "Discard lost MDFAT reference(s)\r\n"
+	IDL_RSKLMDF	    "Keep lost MDFAT reference(s)\r\n"
+	IDL_RSFLC	    "Discard lost file fragment(s)\r\n"
+	IDL_RSKLC	    "Convert the lost file fragment(s) into file(s)\r\n"
+	IDL_RSREPVL	    "Repair the volume label\r\n"
+	IDL_RSDELVL	    "Delete the volume label\r\n"
+	IDL_RSMVRT	    "Repair the error by moving the file or folder to the top-level folder\r\n"
+	IDL_RSRETBD	    "Test this sector or cluster again\r\n"
+	IDL_RSUNMARK	    "Clear the bad cluster mark\r\n"
+	IDL_RSDELXL	    "Delete all affected files\r\n"
+	IDL_RSDELXLQ	    "Delete the affected file(s), file fragment(s), or folder(s)\r\n"
+	IDL_RSMCXL	    "Give each file a separate copy of the shared cluster(s)\r\n"
+	IDL_RSTNCXL	    "Truncate all files at the point of the crosslink\r\n"
+
+	// in following, %d is the "file list" number of the file selected
+	//		    (see IDL_XLLIST)
+	// PLEASE NOTE THAT IDL_RSSODXL AND IDL_RSSOTXL ARE DONE WITH WSPRINTF
+	// NOT FORMATMESSAGE.....
+	IDL_RSSODXL	    "Keep file %d and delete others\r\n"
+	IDL_RSSOTXL	    "Keep file %d and truncate others\r\n"
+
+	IDL_RSRETMM	    "Retry the task\r\n"
+	IDL_RSRETRD	    "Retry the read\r\n"
+	IDL_RSRETWR	    "Retry the write\r\n"
+#ifdef OPK2
+	IDL_RSDOSURF	    "Restart and do thorough test\r\n"
+#endif
+END
+
+STRINGTABLE DISCARDABLE LOADONCALL
+BEGIN
+	IDS_FILEM	      "file"
+	IDS_FILEMS	      "file's"
+	IDS_DIR 	      "folder"
+	IDS_DIRS	      "folder's"
+	IDS_XLNOFIL	      "Lost file fragment(s)"
+	IDS_DBLSPACE	      "DoubleSpace"
+	IDS_DRVSPACE	      "DriveSpace"
+
+#ifdef FROSTING
+	// The following string is used as the text for a pushbutton
+	IDS_OK                "OK"
+	// The following string is used as the window title while the
+	// System Agent is requesting the user to set scheduling parameters.
+	IDS_SAGETITLE         "Scheduled Settings for ScanDisk"
+#endif
+#ifdef OPK2
+	IDS_REP_TOTM   "%1 MB total disk space"
+	IDS_REP_BADM   "%1 MB in bad sectors"
+	IDS_REP_DIRM   "%1 MB in %2 folders"
+	IDS_REP_HIDM   "%1 MB in %2 hidden files"
+	IDS_REP_USERM  "%1 MB in %2 user files"
+	IDS_REP_AVAILM "%1 MB available on disk"
+	IDS_REP_TOTK   "%1 KB total disk space"
+	IDS_REP_BADK   "%1 KB in bad sectors"
+	IDS_REP_DIRK   "%1 KB in %2 folders"
+	IDS_REP_HIDK   "%1 KB in %2 hidden files"
+	IDS_REP_USERK  "%1 KB in %2 user files"
+	IDS_REP_AVAILK "%1 KB available on disk"
+#endif
+
+	ISTR_SE_IGNORE	      "&Ignore this error and continue."
+	ISTR_SE_DIRDEL	      "&Delete the affected folder."
+	ISTR_SE_FILDEL	      "&Delete the affected file."
+	ISTR_SE_FILTRNC       "&Repair by truncating the file."
+	ISTR_SE_DIRTRNC       "&Repair by truncating the folder."
+	ISTR_SE_REPAIR	      "&Repair the error."
+
+	ISTR_SE_CONTB	      "&Continue"
+
+        IDS_CXL_DIRDEL        "All of the files and folders within these folders will become lost. ScanDisk will report them later as lost file fragments. Do you want to continue?"
+        IDS_CXL_DIRTIT        "Are You Sure?"
+        IDS_DIRDEL            "All of the files and folders within this folder will become lost. ScanDisk will report them later as lost file fragments. Do you want to continue?"
+
+	//
+	// in ALL of the following the %1!s! in the TITLE(xxxx) string is the
+	// shell name of the drive (the text that appears under the drive icon
+	// in My Computer).
+	//
+	// This is also the %1!s! (or %s) in IDS_DRIVETITLEC IDS_COMPDISKH
+	// and ISTR_XL_TITLE
+	//
+	IDS_DRIVETITLEC,      "ScanDisk - %s"
+	IDS_COMPDISKH,	      "Host for %s"
+	ISTR_XL_TITLE	      "ScanDisk Found an Error on %1!s!"
+
+	TITLE(ISTR_FATERRDIR)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the folder with the error
+	DLTXT1(ISTR_FATERRDIR) "The '%1!s!' folder is damaged."
+	
+	ISTR_FATERRDIR_DOTS    "\n\nThe entries that identify this folder and the folder it is in are missing or damaged. This may prevent you from using the folder or its contents. ScanDisk repairs the error by correcting these entries."
+	ISTR_FATERRDIR_LFNLST  "\n\nThis folder contains one or more long filenames that are no longer associated with files. ScanDisk repairs the error by deleting these filenames."
+	ISTR_FATERRDIR_ZRLEN   "\n\nA valid folder must have some space set aside for it on your disk, but this folder does not. If this folder contained any files or folders, ScanDisk may recover them later as lost file fragments."
+	ISTR_FATERRDIR_ZRLENC  " If you want to preserve these files or folders, be sure to save any lost file fragments that ScanDisk finds."
+	ISTR_FATERRDIR_LOSTFIL "\n\nThere are files or folders within this folder that are not visible or usable. ScanDisk repairs this error by making the files or folders accessible."
+	ISTR_FATERRDIR_DUPNM   "\n\nThis folder contains two or more files or folders that have identical names. This makes all but the first file or folder with this name inaccessible."
+	ISTR_FATERRDIR_DUPNMC  " ScanDisk repairs this error by replacing some characters in duplicate names with hyphens to make the names unique."
+	ISTR_FATERRDIR_BAD     "\n\nThis folder is invalid. Although it is marked as a folder, its contents do not appear to be valid. ScanDisk repairs this error by converting this folder into a file. NOTE: If you choose to repair this error,"
+	ISTR_FATERRDIR_BADC    " make sure you recover lost file fragments later. If files in this folder were named using an international character set other than the one you are using now, click Cancel, and then refer to the Readme.txt file."
+	ISTR_FATERRDIR_PNOTD   "\n\nSome of this folder's contents do not appear to be valid. ScanDisk repairs this error by erasing the invalid data in the folder. NOTE: If you choose to repair this error, make sure you recover"
+	ISTR_FATERRDIR_PNOTDC  " lost file fragments later. If files in this folder were named using an international character set (code page) other than the one you are using now, click Cancel, and then refer to the Readme.txt file."
+	ISTR_FATERRDIR_BDENTS  "\n\nSome of this folder's contents have badly damaged MS-DOS names. ScanDisk repairs this error by erasing the damaged names in the folder. If you want to preserve these files or folders, be sure to save any lost"
+	ISTR_FATERRDIR_BDENTSC " file fragments that ScanDisk finds. If files in this folder were named using an international character set (code page) other than the one you are using now, click Cancel, and then refer to the Readme.txt file."
+
+	TITLE(ISTR_FATERRFILE)	"ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the folder the file or folder is in
+	//		 %2!s! is the LONG name of the file or folder with the error
+	//		 %3!s! is one of IDS_DIR or IDS_FILEM
+	//		 %4!s! is the SHORT name of the file or folder with the error
+	//		 %5!s! is one of IDS_DIRS or IDS_FILEMS
+	DLTXT1(ISTR_FATERRFILE)    "The '%1!s!' folder contains incorrect information about '%2!s!'."
+	ALTDLTXT1(ISTR_FATERRFILE) "The '%1!s!' folder contains incorrect information about the file or folder whose MS-DOS name is '%4!s!'."
+
+	// in following, %1!s! is one of IDS_DIRS or IDS_FILEMS
+	//		 %2!s! is one of IDS_DIR  or IDS_FILEM
+	//		 %3!s! is the SHORT name of the file or folder with the err
+	//		 %4!s! is the LONG name of the file or folder with the err
+	ISTR_FATERRFILE_INVLFN1 "\n\nThe file or folder's name is invalid, which may prevent you from using it. If the name contains invalid characters, ScanDisk displays them as question marks. ScanDisk repairs invalid"
+	ISTR_FATERRFILE_INVLFN2 " characters by substituting hyphens. If the name is truncated, ScanDisk repairs the name so that the file or folder will be usable, but the truncated portion of the name will be lost."
+	ALTISTR_FATERRFILE_INVLFN1 "\n\nThe file or folder's long name is invalid, which may prevent you from using it. If the name contains invalid characters, ScanDisk displays them as question marks. ScanDisk repairs"
+	ALTISTR_FATERRFILE_INVLFN2 " invalid characters by substituting hyphens. If the file or folder's name is truncated, ScanDisk repairs the name so that it will be usable, but the truncated portion of the name will be lost."
+	ISTR_FATERRFILE_INVNM1	"\n\nThe file or folder's MS-DOS name ('%3!s!') contains invalid characters, as represented by question mark(s). This may prevent you from using the file or folder. ScanDisk repairs the error by changing lowercase"
+	ISTR_FATERRFILE_INVNM2	" letters to uppercase letters and by replacing invalid characters with hyphens. If this file was named using a different international character set, click Ignore, and then refer to the Readme.txt file."
+	ALTISTR_FATERRFILE_INVNM1  "\n\nThe file or folder's MS-DOS name contains invalid characters, as represented by question marks. This may prevent you from using the file or folder. ScanDisk repairs the error by changing lowercase letters"
+	ALTISTR_FATERRFILE_INVNM2  " to uppercase letters and by replacing invalid characters with hyphens. If this file was named using a different international character set, click Ignore, and then refer to the Readme.txt file."
+	ISTR_FATERRFILE_LFNSTR1 "\n\nThe file or folder's long name ('%4!s!') is either stored incorrectly on your disk or is incorrectly associated with '%3!s!'. ScanDisk repairs the error by storing the name in the"
+	ISTR_FATERRFILE_LFNSTR2 " correct format or by deleting the long name. If ScanDisk deletes the long name, you will still be able to access the file or folder by using the name '%3!s!'."
+	ISTR_FATERRFILE_LFNLEN	"\n\nThe file or folder cannot be accessed because its name is longer than 255 characters. ScanDisk repairs the error by shortening its name by as many characters as necessary."
+	ISTR_FATERRFILE_DEVNM1	"\n\nThe file or folder cannot be accessed because its name is the same as the name of a hardware device or port. ScanDisk makes the name unique by adding one or more hyphens."
+	ISTR_FATERRFILE_DEVNM2	" If you choose Repair the error, and this file is a device driver that is loaded by your CONFIG.SYS file, make sure you update the name of the driver in the device= line of your CONFIG.SYS file."
+	ISTR_FATERRFILE_SIZE1	"\n\nThe size of the file is different from the size recorded for it in its folder. If you attempt to open the file before correcting this error, the file's data may become damaged or your program may fail."
+	ISTR_FATERRFILE_SIZE2	" ScanDisk repairs the error by changing the size recorded in the folder to be consistent with the actual size of the file."
+	ISTR_FATERRFILE_SIZED1	"\n\nFolders should have a size of zero, but the '%4!s!' folder does not."
+	ISTR_FATERRFILE_SIZED2	" Scandisk repairs the error by changing the size of the '%4!s!' folder to zero."
+#ifdef OPK2
+	ISTR_FATERRFILE_SIZETB1   "\n\nThe size of the file is greater than 4GB. Only the first 4GB of the file is accessible."
+        ISTR_FATERRFILE_SIZETB2   " ScanDisk repairs the error by truncating the file and changing the size recorded in the folder to 4GB."
+        ISTR_FATERRFILE_SIZEDTB1  "\n\nThe '%4!s!' folder is greater than 4GB in size, which is invalid."
+	ISTR_FATERRFILE_SIZEDTB2  " Scandisk repairs the error by truncating the '%4!s!' folder to 4GB."
+#endif
+	ISTR_FATERRFILE_DTTM11	"\n\nThis file or folder's last-modified date or time is invalid or is in the future. This may be because your computer's clock is set incorrectly."
+	ISTR_FATERRFILE_DTTM12	" ScanDisk repairs future dates by changing them to your computer's current date setting. ScanDisk repairs out-of-range dates or times by changing them to the nearest setting within the valid range."
+	ISTR_FATERRFILE_DTTM21	"\n\nThis file or folder's last-accessed date is invalid or is in the future. This may be because your computer's clock is set incorrectly."
+	ISTR_FATERRFILE_DTTM22	" ScanDisk repairs future dates by changing them to ""unknown"". ScanDisk repairs out-of-range dates by changing them to the nearest setting within the valid range."
+	ISTR_FATERRFILE_DTTM31	"\n\nThis file or folder's creation date is invalid or is in the future. This may be because your computer's clock is set incorrectly."
+	ISTR_FATERRFILE_DTTM32	" ScanDisk repairs future dates by changing them to ""unknown"". ScanDisk repairs out-of-range dates by changing them to the nearest setting within the valid range."
+
+	TITLE(ISTR_FATCIRCC)   "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the file or folder with the error
+	//		 %2!s! is the name of the folder the file or folder is in
+	DLTXT1(ISTR_FATCIRCC)  "The allocation chain for '%1!s!' in the '%2!s!' folder indicates that part of this file or folder is stored in the same place on your disk as an earlier part of the file."
+	DLTXT2(ISTR_FATCIRCC)  " Your computer uses the allocation chain to track where each of your files and folders is stored."
+
+	TITLE(ISTR_FATINVCLUS)	"ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the file or folder with the error
+	//		 %2!s! is the name of the folder the file or folder is in
+	DLTXT1(ISTR_FATINVCLUS) "The allocation chain for '%1!s!' in the '%2!s!' folder indicates that part of this file or folder is stored in an invalid location."
+	DLTXT2(ISTR_FATINVCLUS) " Your computer uses the allocation chain to track where each of your files and folders is stored."
+
+	TITLE(ISTR_FATRESVAL)	"ScanDisk Found an Error on %1!s!"
+        DLTXT1(ISTR_FATRESVAL)  "The first FAT media byte is missing or incorrect.\n\nThis is a code that is located at the beginning of your file allocation table (FAT). It indicates that a disk is properly formatted."
+        ALTDLTXT1(ISTR_FATRESVAL)  "The second FAT media byte is missing or incorrect.\n\nThis is a code that is located at the beginning of your file allocation table (FAT). It indicates that a disk is properly formatted."
+
+	TITLE(ISTR_FATFMISMAT)	"ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_FATFMISMAT) "This drive contains one or more backup copies of the file allocation table (FAT). The copies should be identical, but aren't."
+
+	TITLE(ISTR_FATLSTCLUS)	  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the count of lost bytes
+	//		 %2!lu! is the count of lost file chains
+	DLTXT1(ISTR_FATLSTCLUS)   "ScanDisk found %1!lu! bytes of data in %2!lu! lost file fragment(s). Lost file fragments might be useful files or folders, but are probably just taking up space."
+
+	BUTT1(ISTR_FATLSTCLUS)	  "&Discard lost file fragment(s) and recover disk space."
+	BUTT2(ISTR_FATLSTCLUS)	  "&Convert the lost file fragment(s) into file(s)."
+
+	// in following, %1!lu! is the count of lost clusters
+	//		 %2!lu! is the count of lost cluster chains
+	MORETXT1(ISTR_FATLSTCLUS) "Scandisk detected %1!lu! lost cluster(s) in %2!lu! chain(s). "
+	MORETXT2(ISTR_FATLSTCLUS) "\n\nAlthough the lost cluster(s) are not currently associated with files, they contain data that was once part of one or more files. "
+	MORETXT3(ISTR_FATLSTCLUS) "In many cases, this data is left over from previously deleted files and can be safely discarded--especially if the number of lost clusters is equal to the number of lost chains. "
+	MORETIT(ISTR_FATLSTCLUS)  "More Infomation"
+
+	TITLE(ISTR_FATERRVOLLAB)     "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the file or folder with the error
+	//		 %2!s! is the name of the folder the file or folder is in
+	DLTXT1(ISTR_FATERRVOLLAB)    "The volume label ('%1!s!') for this drive is invalid because it is either marked as a folder or has data attached to it."
+	ALTDLTXT1(ISTR_FATERRVOLLAB) "The '%1!s!' file or folder in the '%2!s!' folder is incorrectly marked as a volume label."
+
+	BUTT1(ISTR_FATERRVOLLAB)     "&Repair the volume label."
+	BUTT2(ISTR_FATERRVOLLAB)     "&Delete the volume label."
+	ALTBUTT1(ISTR_FATERRVOLLAB)  "&Repair the file or folder."
+	ALTBUTT2(ISTR_FATERRVOLLAB)  "&Delete the file or folder."
+
+	TITLE(ISTR_FATERRMXPLENL)     "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the LONG  name of the file or folder with the error
+	//		 %2!s! is the SHORT name of the file or folder with the error
+	DLTXT1(ISTR_FATERRMXPLENL)    "The '%1!s!' file cannot be accessed because its name is too long. This name, including the name(s) of the folder(s) it is in, cannot exceed 259 characters."
+	ALTDLTXT1(ISTR_FATERRMXPLENL) "The '%1!s!' folder cannot be accessed because its name is too long. This name, including the name(s) of the folder(s) it is in, cannot exceed 259 characters."
+
+	BUTT1(ISTR_FATERRMXPLENL)     "&Repair the error by moving the file."
+	ALTBUTT1(ISTR_FATERRMXPLENL)  "&Repair the error by moving the folder."
+
+	TITLE(ISTR_FATERRMXPLENS)     "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the LONG  name of the file or folder with the error
+	//		 %2!s! is the SHORT name of the file or folder with the error
+	DLTXT1(ISTR_FATERRMXPLENS)    "The '%1!s!' file cannot be accessed in MS-DOS mode because its MS-DOS name ('%2!s!') is too long."
+	DLTXT2(ISTR_FATERRMXPLENS)    " This name, including the name(s) of the folder(s) it is in, cannot exceed 127 characters."
+	ALTDLTXT1(ISTR_FATERRMXPLENS) "The '%1!s!' folder cannot be accessed in MS-DOS mode because its MS-DOS name ('%2!s!') is too long."
+	ALTDLTXT2(ISTR_FATERRMXPLENS) " This name, including the name(s) of the folder(s) it is in, cannot exceed 127 characters."
+
+	TITLE(ISTR_FATERRCDLIMIT)     "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the SHORT name of the file or folder with the error
+	DLTXT1(ISTR_FATERRCDLIMIT)    "The '%1!s!' folder cannot be opened in MS-DOS mode because its MS-DOS name, including the names of any folders it is in, is longer than 66 characters."
+
+	TITLE(ISTR_DDERRSIZE1)	"ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRSIZE1) "The size of this compressed drive is invalid. To change the size, click the Help button, and then carry out the procedure for changing your compression ratio."
+
+	TITLE(ISTR_DDERRFRAG)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRFRAG) "The free space on this compressed drive is so fragmented that you may be unable to save files on it--even though it appears to have ample free space."
+	DLTXT2(ISTR_DDERRFRAG) " To defragment this drive, click the Help button, and then carry out the procedure."
+
+	TITLE(ISTR_DDERRALIGN)	"ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRALIGN) "The ratio that Windows is using to estimate the amount of free space available on this drive is too high. As a result, Windows reports that your disk contains more free space than it actually does."
+	DLTXT2(ISTR_DDERRALIGN) " To change the ratio, click the Help button, and then carry out the procedure for changing your compression ratio."
+
+	TITLE(ISTR_DDERRNOXLCHK)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRNOXLCHK) "One of your programs has files open in a way that prevents ScanDisk from detecting or repairing internal crosslink errors.\n\nTo continue using ScanDisk without checking for these errors. click OK."
+	DLTXT2(ISTR_DDERRNOXLCHK) "\n\nTo check for these errors, quit ScanDisk, quit any running programs, and then restart ScanDisk."
+
+	ISTR_XL_ALTTXT1 	  "The following &file(s), file fragment(s) or folder(s) contain internal crosslinks:"
+	ISTR_XL_ALTTXT2A	  "Each portion of a file or folder should be stored in a separate place on your disk. An internal crosslink occurs when portions of one or more files are stored in the same place."
+	ISTR_XL_ALTTXT2B	  " The data in this location is probably valid for only one of these portions."
+	ISTR_XL_ALTBUTTDEL	  "&Delete the affected file(s), file fragment(s), or folder(s)."
+
+	TITLE(ISTR_DDERRUNSUP)	  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRUNSUP)   "This drive was compressed by a program that is not supported by ScanDisk. As a result, ScanDisk is unable to detect and repair compression-related errors."
+
+	TITLE(ISTR_DDERRCVFNM)	  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is one of IDS_DBLSPACE or IDS_DRVSPACE
+	//		 %2!s! is one of IDS_DRVSPACE or IDS_DBLSPACE
+	DLTXT1(ISTR_DDERRCVFNM)   "This drive was compressed using %1!s!, but its compressed volume file identifies it as a %2!s! drive."
+
+	TITLE(ISTR_DDERRSIG)	  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRSIG)	  "The volume file for this compressed drive contains two signatures that identify it as a valid volume file and verify its integrity. One or both of these signatures have been damaged."
+
+	TITLE(ISTR_DDERRBOOT)	  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRBOOT)	  "This drive's boot sector is damaged. The boot sector is a portion of the drive that contains vital information about the drive and a small program used to start your computer."
+
+	TITLE(ISTR_DDERRMDBPB)	  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRMDBPB)   "This drive's compressed volume file has a damaged MDBPB. The MDBPB contains critical information that describes the layout of the compressed drive."
+	DLTXT2(ISTR_DDERRMDBPB)   " A damaged MDBPB may prevent the volume file from being mounted as a drive the next time you start your computer."
+	BUTT1(ISTR_DDERRMDBPB)	  "&Repair the MDBPB."
+
+	TITLE(ISTR_DDERRSIZE2A)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRSIZE2A) "The compressed volume file for this drive is too small. It must be at least 512K in size."
+	DLTXT2(ISTR_DDERRSIZE2A) " This may be caused by an error on your host drive, which is the uncompressed drive on which the compressed volume file is stored. For information about how to continue, click Help."
+
+	TITLE(ISTR_DDERRSIZE2B)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_DDERRSIZE2B) "The compressed volume file for this drive is too small. It must be at least 512K in size."
+	DLTXT2(ISTR_DDERRSIZE2B) " Although ScanDisk can make this drive's compressed volume file a valid size, the contents of the drive are probably not recoverable."
+
+	TITLE(ISTR_DDERRMDFAT)	   "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!s! is the name of the file or folder with the error
+	//		 %2!s! is one of IDS_DIR or IDS_FILEM
+	DLTXT1(ISTR_DDERRMDFAT)    "This drive contains an invalid MDFAT entry for '%1!s!'. An invalid MDFAT causes Windows to search for compressed data in the wrong place, resulting in a data error."
+	DLTXT2(ISTR_DDERRMDFAT)    " Some or all of the data in this file or folder is already lost and cannot be recovered."
+	ALTDLTXT1(ISTR_DDERRMDFAT) "This drive contains an invalid MDFAT entry that is not associated with a file. The MDFAT entry does not contain any useful data and is just wasting space."
+
+	BUTT1(ISTR_DDERRMDFAT)	   "&Repair the invalid MDFAT entry."
+
+	TITLE(ISTR_DDERRLSTSQZ)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the count of lost MDFAT entries
+	DLTXT1(ISTR_DDERRLSTSQZ) "The compression file allocation table (MDFAT) contains %1!lu! reference(s) to data that the file allocation table (FAT) has no record of."
+	DLTXT2(ISTR_DDERRLSTSQZ) " This data is probably just taking up space, but may be lost portions of one or more files."
+
+	BUTT1(ISTR_DDERRLSTSQZ)  "&Discard lost MDFAT reference(s) and recover disk space."
+	BUTT2(ISTR_DDERRLSTSQZ)  "&Keep lost MDFAT reference(s)."
+
+	TITLE(ISTR_ERRISNTBAD)	"ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the cluster number of the cluster
+	DLTXT1(ISTR_ERRISNTBAD) "Cluster %1!lu! is marked as bad, but ScanDisk cannot detect anything wrong with it. Bad clusters are physical areas of your disk that a program has identified as being unreliable for storing data."
+
+	BUTT1(ISTR_ERRISNTBAD)	"&Leave the cluster marked bad and continue."
+	BUTT2(ISTR_ERRISNTBAD)	"&Clear the bad cluster mark."
+	BUTT3(ISTR_ERRISNTBAD)	"&Test the cluster again."
+
+	TITLE(ISTR_ERRISBAD1)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is the name of the involved file or folder
+        //               %3!s!  is one of IDS_BOOT, IDS_FAT or IDS_ROOTD
+        DLTXT1(ISTR_ERRISBAD1) "ScanDisk could not read sector %1!lu! of %3!s!. This error may be caused by physical damage on this drive's uncompressed host drive."
+	DLTXT2(ISTR_ERRISBAD1) " If you check the host drive, ScanDisk may be able to move the unreadable portion of the compressed drive to a valid location on the host drive."
+
+	BUTT1(ISTR_ERRISBAD1)  "Re&start and check the host drive."
+	BUTT2(ISTR_ERRISBAD1)  "&Test this sector again."
+
+	TITLE(ISTR_ERRISBAD2)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is the name of the involved file or folder
+	//		 %3!s!	is one of IDS_DIR or IDS_FILEM
+	DLTXT1(ISTR_ERRISBAD2) "ScanDisk could not properly read the data in cluster %1!lu!, which contains some or all of '%2!s!'. The data in this cluster is probably already lost."
+	DLTXT2(ISTR_ERRISBAD2) "\n\nThis error may be caused by physical damage on this drive's uncompressed host drive,"
+	DLTXT3(ISTR_ERRISBAD2) " ScanDisk may be able to move the unreadable portion of the compressed drive to a valid location on the host drive."
+
+	TITLE(ISTR_ERRISBAD3)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is not used
+	//		 %3!s!	is one of IDS_BOOT, IDS_FAT or IDS_ROOTD
+	//
+        DLTXT1(ISTR_ERRISBAD3) "ScanDisk can no longer write to or read from sector %1!lu! of %3!s!."
+	DLTXT2(ISTR_ERRISBAD3) " ScanDisk cannot repair this error because this part of the file system cannot be relocated to another section of your disk. You may need to replace this disk."
+
+	TITLE(ISTR_ERRISBAD4)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is the name of the involved file or folder
+	//		 %3!s!	is one of IDS_DIR or IDS_FILEM
+	DLTXT1(ISTR_ERRISBAD4) "ScanDisk could not properly read cluster %1!lu!, which contains some or all of the '%2!s!' %3!s!. The contents of this cluster are probably already lost."
+
+	BUTT2(ISTR_ERRISBAD4)  "&Try to read this cluster again."
+
+	TITLE(ISTR_ERRISBAD5)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is the name of the involved file or folder
+	//		 %3!s!	is one of IDS_DIR or IDS_FILEM
+	DLTXT1(ISTR_ERRISBAD5) "ScanDisk could not properly read from or write to cluster %1!lu!, which contains some or all of the '%2!s!' %3!s!. The contents of this cluster are probably already lost."
+
+	TITLE(ISTR_ERRISBAD6)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!s!	is not used
+	//		 %3!s!	is not used
+	DLTXT1(ISTR_ERRISBAD6) "ScanDisk could not properly read from or write to cluster %1!lu!. This cluster is currently unused, but should be marked as bad so Windows does not attempt to store data in it in the future."
+
+	TITLE(ISTR_ERRMEM)     "ScanDisk Is Out of Memory"
+	DLTXT1(ISTR_ERRMEM)    "Your computer does not have enough available memory to complete this task. If any other programs are running, quit one or more of them, and then click OK."
+	ALTDLTXT1(ISTR_ERRMEM) "Your computer does not have enough available memory to complete this task. ScanDisk may be unable to continue."
+	BUTT1(ISTR_ERRMEM)     "&Retry the task."
+	BUTT2(ISTR_ERRMEM)     "&Ignore this error and continue anyway."
+
+	TITLE(ISTR_ERRCANTDEL) "ScanDisk Cannot Delete Folder on %1!s!"
+
+	// in following, %1!s! is the name of the folder the problem occured on
+	DLTXT1(ISTR_ERRCANTDEL) "Although you previously instructed ScanDisk to delete the %1!s! folder, ScanDisk was unable to delete it."
+	DLTXT2(ISTR_ERRCANTDEL) " The '%1!s!' folder contains files that cannot be removed while Windows is running. To continue without deleting this folder, click OK."
+
+	TITLE(ISTR_DDERRMOUNT)	"ScanDisk Cannot Remount Drive %1!s!"
+
+	// in following %1!s! is the name of the disk as used by the shell
+	//		(name of the drive as under the drive icon in My Computer)
+	DLTXT1(ISTR_DDERRMOUNT) "After repairing an error, ScanDisk was unable to remount compressed drive %1!s!."
+	DLTXT2(ISTR_DDERRMOUNT) " Although ScanDisk can continue checking your disk for errors, it is recomended that you quit ScanDisk, restart your computer, and then restart ScanDisk."
+
+	TITLE(ISTR_READERR1)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR1) "ScanDisk cannot continue because the disk it was checking was removed from the drive. Reinsert the disk, and then restart ScanDisk."
+
+	TITLE(ISTR_READERR2)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR2) "ScanDisk detected an error while reading your drive. ScanDisk will correct this error later. However, other errors may remain on your drive when ScanDisk is done."
+	DLTXT2(ISTR_READERR2) " After the thorough test is complete, perform a standard test on this drive to ensure that all errors are corrected."
+
+	TITLE(ISTR_READERR3)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR3) "ScanDisk detected an error while reading one of the system area sectors on this drive.\n\nThe disk is seriously damaged and may need to be replaced."
+	DLTXT2(ISTR_READERR3) " The damaged portion of the disk contains critical information about the location of some or all of the files on this drive."
+	DLTXT3(ISTR_READERR3) " If you continue to use this drive, you will probably encounter errors using many of the files on it and will risk losing all the data on it."
+	DLTXT4(ISTR_READERR3) " To determine whether other areas on this disk are damaged, perform a thorough test now."
+	BUTT1(ISTR_READERR3)  "&Perform a thorough test."
+	BUTT2(ISTR_READERR3)  "&Try to read this sector again."
+	BUTT3(ISTR_READERR3)  "&Continue standard test."
+
+	TITLE(ISTR_READERR4)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR4) "ScanDisk detected an error while reading one of the data area sectors on this drive.\n\nScanDisk can repair this error and detect other damaged sectors on the disk"
+	DLTXT2(ISTR_READERR4) " if you choose to perform a thorough test now. However, the data stored in this and any other damaged sectors may already be lost."
+
+	TITLE(ISTR_READERR5)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR5) "ScanDisk detected an error while reading one of the system area sectors on this drive. The error may be caused by physical damage on this drive's uncompressed host drive."
+	DLTXT2(ISTR_READERR5) " ScanDisk may be able to repair the damage if you perform a thorough test of this drive and its host drive now."
+	BUTT1(ISTR_READERR5)  "&Perform a thorough test of this drive and its host."
+
+	TITLE(ISTR_READERR6)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_READERR6) "ScanDisk detected an error while reading one of the data area sectors on this drive. The error may be caused by physical damage on this drive's uncompressed host drive."
+	DLTXT2(ISTR_READERR6) " ScanDisk may be able to repair the damage if you perform a thorough test of this drive and its host drive now."
+
+	TITLE(ISTR_WRITEERR1)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR1) "ScanDisk could not write to this disk because it is write protected. Remove or move the write-protect tab, reinsert the disk, and then restart ScanDisk."
+
+	TITLE(ISTR_WRITEERR2)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR2) "ScanDisk detected an error while writing to your drive. ScanDisk will correct this error later. However, other errors may remain on your drive when ScanDisk is done."
+	DLTXT2(ISTR_WRITEERR2) " After the thorough test is complete, perform a standard test on this drive to ensure that all errors are corrected."
+
+	TITLE(ISTR_WRITEERR3)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR3) "ScanDisk was attempting to correct an error, but encountered another error while writing to one of the drive's system area sectors.\n\nThe disk is seriously damaged and may need to be replaced."
+	DLTXT2(ISTR_WRITEERR3) " The damaged portion of the disk contains critical information about the location of some or all of the files on this drive."
+	DLTXT3(ISTR_WRITEERR3) " If you continue to use this drive, you will probably encounter errors using many of the files on it and will risk losing all the data on it."
+	DLTXT4(ISTR_WRITEERR3) " To determine whether other areas on this disk are damaged, perform a thorough test now."
+	BUTT2(ISTR_WRITEERR3) "&Try to write this sector again."
+
+	TITLE(ISTR_WRITEERR4)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR4) "ScanDisk was attempting to correct an error, but encountered another error while writing to one of the drive's data area sectors.\n\nScanDisk can repair this error and detect other damaged sectors on the disk"
+	DLTXT2(ISTR_WRITEERR4) " if you choose to perform a through test now. However, the data stored in this and any other damaged sectors may already be lost."
+
+	TITLE(ISTR_WRITEERR5)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR5) "ScanDisk was attempting to correct an error, but encountered another error while writing to one of the system area sectors on this drive. The error may be caused by physical damage on this"
+	DLTXT2(ISTR_WRITEERR5) " drive's uncompressed host drive. ScanDisk may be able to repair the damage if you perform a thorough test of this drive and its host drive now."
+
+	TITLE(ISTR_WRITEERR6)  "ScanDisk Found an Error on %1!s!"
+	DLTXT1(ISTR_WRITEERR6) "ScanDisk was attempting to correct an error, but encountered another error while writing to one of the data area sectors on this drive. The error may be caused by physical damage on this"
+	DLTXT2(ISTR_WRITEERR6) " drive's uncompressed host drive. ScanDisk may be able to repair the damage if you perform a thorough test of this drive and its host drive now."
+
+	TITLE(ISTR_ECORRDISK)	  "ScanDisk Was Unable to Correct an Error on %1!s!"
+	DLTXT1(ISTR_ECORRDISK)	  "ScanDisk could not finish correcting this error because there was a problem reading from or writing to this drive."
+	DLTXT2(ISTR_ECORRDISK)	  " There may be a physical problem with the surface of this disk, if so, ScanDisk will report this error later."
+	ALTDLTXT1(ISTR_ECORRDISK) "ScanDisk could not finish correcting this error because there was a problem reading from or writing to this drive."
+
+	TITLE(ISTR_ECORRMEM)  "ScanDisk Was Unable to Correct an Error on %1!s!"
+	DLTXT1(ISTR_ECORRMEM) "ScanDisk could not finish correcting this error because your computer does not have enough available memory."
+
+	TITLE(ISTR_ECORRFILCOL)     "ScanDisk Was Unable to Correct an Error on %1!s!"
+
+	// in following, %1!s! is one of IDS_DIR or IDS_FILEM
+	//		 %2!s! is the name of the file or folder with the error
+	DLTXT1(ISTR_ECORRFILCOL)    "ScanDisk was unable to correct this error because there is already a file or folder named '%2!s!' in the top-level folder of this drive. To repair this error, quit ScanDisk by clicking Cancel, rename the %1!s!"
+	DLTXT2(ISTR_ECORRFILCOL)    " in the top-level folder, and then restart ScanDisk. To continue checking your disk without repairing this error, click OK."
+	ALTDLTXT1(ISTR_ECORRFILCOL) "ScanDisk was unable to correct this error because there is already a file or folder named '%2!s!' in the same folder."
+	ALTDLTXT2(ISTR_ECORRFILCOL) " To repair this error, quit ScanDisk by clicking Cancel, rename '%2!s!', and then restart ScanDisk. To continue checking your disk without repairing this error, click OK."
+
+	TITLE(ISTR_ECORRUNEXP)	"ScanDisk Was Unable to Correct an Error on %1!s!"
+	DLTXT1(ISTR_ECORRUNEXP) "An error occurred while ScanDisk was attempting to correct the previous error. Complete a thorough check of this drive,"
+	DLTXT2(ISTR_ECORRUNEXP) " then run ScanDisk again and choose to conduct a standard test on the drive."
+
+	TITLE(ISTR_ECORRCLUSA)	"ScanDisk Was Unable to Correct an Error on %1!s!"
+	DLTXT1(ISTR_ECORRCLUSA) "ScanDisk was unable to completely correct this error because this drive does not have enough space."
+	DLTXT2(ISTR_ECORRCLUSA) " Quit ScanDisk, free some space on this drive, and then restart ScanDisk."
+
+	TITLE(ISTR_ECORRFILCRT)     "ScanDisk Was Unable to Correct an Error on %1!s!"
+	DLTXT1(ISTR_ECORRFILCRT)    "ScanDisk was unable to finish correcting this error because the top-level folder on this drive is full."
+	DLTXT2(ISTR_ECORRFILCRT)    " Quit ScanDisk, delete some files from that folder, and then restart ScanDisk."
+	ALTDLTXT1(ISTR_ECORRFILCRT) "ScanDisk was unable to finish correcting this error because it could not create a file."
+
+	TITLE(ISTR_ECORROTHWRT)     "ScanDisk Needs to Restart"
+	DLTXT1(ISTR_ECORROTHWRT)    "A program (or Windows itself) saved information to your drive after the previous error was detected.  ScanDisk must restart so it can include this new information in the scan for errors."
+	DLTXT2(ISTR_ECORROTHWRT)    " This error, and any other errors that were previously reported, but not corrected, may be reported again."
+
+#ifdef OPK2
+	TITLE(ISTR_FATERRBOOT)	   "ScanDisk Found an Error on %1!s!"
+        DLTXT1(ISTR_FATERRBOOT)    "This drive's boot area contains important information that is damaged or invalid.  This can cause Windows to report the drive's free space incorrectly or slowly."
+        DLTXT2(ISTR_FATERRBOOT)    " ScanDisk repairs the boot area by recording the correct values in this area."
+
+        TITLE(ISTR_FATERRSHDSURF)  "ScanDisk Found a Possible Problem on %1!s!"
+        DLTXT1(ISTR_FATERRSHDSURF) "There may be physical errors on this drive that can only be detected and corrected by performing a thorough test."
+	DLTXT2(ISTR_FATERRSHDSURF) " Do you want to proceed with a thorough test?"
+	BUTT1(ISTR_FATERRSHDSURF)  "&Restart and do a thorough test."
+	BUTT2(ISTR_FATERRSHDSURF)  "&Ignore and continue standard test."
+
+	TITLE(ISTR_FATERRROOTDIR)     "ScanDisk Found an Error on %1!s!"
+        DLTXT1(ISTR_FATERRROOTDIR)    "This drive's top-level folder is damaged."
+        ALTDLTXT1(ISTR_FATERRROOTDIR) "This drive's top-level folder is missing or severely damaged."
+
+        ISTR_FATERRRTDIR_INVFC     "\n\nWindows is unable to locate the top-level folder of this drive, so none of the files on this drive can be accessed."
+        ISTR_FATERRRTDIR_PNOTD     "\n\nThe information in the top-level folder does not appear to be valid for a top-level folder."
+        ISTR_FATERRRTDIR_INVC      "\n\nPart of the top-level folder is stored in an invalid location. ScanDisk repairs this error by removing this portion of the folder. Any files it contains will be recovered later as lost file fragments."
+        ISTR_FATERRRTDIR_CIRCC     "\n\nThe allocation chain for the top-level folder indicates that part of it is stored in the same place as an earlier part of the folder. ScanDisk repairs this by storing the folder on your disk correctly."
+        ISTR_FATERRRTDIR_TOOBIG    "\n\nThe top-level folder is too large for it to be a valid folder. ScanDisk repairs this error by truncating the folder at the largest valid size."
+        ISTR_FATERRRTDIR_FND       " ScanDisk repairs this error by restoring the correct top-level folder."
+        ISTR_FATERRRTDIR_MBYFND    " ScanDisk repairs this error by attempting to restore the correct the top-level folder. However, many files on this drive may already be lost. If so, ScanDisk may recover them later as lost file fragments."
+        ISTR_FATERRRTDIR_RECRT     " ScanDisk repairs this error by creating a new, empty top-level folder. Any other files or folders on this drive may be reported later as lost file fragments."
+
+	TITLE(ISTR_ERRISBAD7)  "ScanDisk Found an Error on %1!s!"
+
+	// in following, %1!lu! is the sector or cluster number
+	//		 %2!lu! is the number of sectors or clusters starting at %1!lu!
+	//		 %3!s!	is one of IDS_BOOT, IDS_FAT or IDS_ROOTD if ALT form only
+	DLTXT1(ISTR_ERRISBAD7) "ScanDisk cannot reliably read from or write to a section of this drive starting at cluster %1!lu!."
+	DLTXT2(ISTR_ERRISBAD7) " Your drive may be failing. It is recommended that you backup your data and consider replacing this drive."
+
+	ALTDLTXT1(ISTR_ERRISBAD7) "ScanDisk cannot reliably read from or write to a section of this drive starting at sector %1!lu! of %3!s!."
+	ALTDLTXT2(ISTR_ERRISBAD7) " Your drive may be failing. It is recommended that you backup your data and consider replacing this drive."
+
+	BUTT1(ISTR_ERRISBAD7)  "&Test this area again."
+#endif
+END

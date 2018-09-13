@@ -1,0 +1,85 @@
+#include <windows.h>
+#include "verstamp.h"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Debuggee Module for WinDbg"
+#define VER_INTERNALNAME_STR        "dm\0"
+#define VER_ORIGINALFILENAME_STR    "dm.dll\0"
+
+#include <common.ver>
+
+#include "resource.h"
+
+STRINGTABLE DISCARDABLE
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+BEGIN
+    IDS_STATUS_DLL_NOT_FOUND        "DLL not found"
+//    IDS_tstRunnable                 "Runnable"
+//    IDS_tstStopped                  "Stopped"
+//    IDS_tstRunning                  "Running"
+//    IDS_tstExiting                  "Exiting"
+//    IDS_tstDead                     "Dead"
+
+// These strings are currently hard-coded in PROCEM.C
+//    IDS_DBG_CONTROL_C               "Control-C"
+//    IDS_DBG_CONTROL_BREAK           "Control-Break"
+//    IDS_EXCEPTION_DATATYPE_MISALIGNMENT "Datatype Misalignment"
+//    IDS_EXCEPTION_ACCESS_VIOLATION  "Access Violation"
+//    IDS_EXCEPTION_IN_PAGE_ERROR     "In Page Error"
+//    IDS_STATUS_ILLEGAL_INSTRUCTION  "Illegal Instruction"
+//    IDS_EXCEPTION_ARRAY_BOUNDS_EXCEEDED "Array Bounds Exceeded"
+//    IDS_EXCEPTION_FLT_DENORMAL_OPERAND "Float Denormal Operand"
+//    IDS_EXCEPTION_FLT_DIVIDE_BY_ZERO "Float Divide by Zero"
+//    IDS_EXCEPTION_FLT_INEXACT_RESULT "Float Inexact Result"
+//    IDS_EXCEPTION_FLT_INVALID_OPERATION "Float Invalid Operation"
+//    IDS_EXCEPTION_FLT_OVERFLOW      "Float Overflow"
+//    IDS_EXCEPTION_FLT_STACK_CHECK   "Float Stack Check"
+//    IDS_EXCEPTION_FLT_UNDERFLOW     "Float Underflow"
+//    IDS_STATUS_NO_MEMORY            "No Memory"
+//    IDS_STATUS_NONCONTINUABLE_EXCEPTION "Noncontinuable Exception"
+//    IDS_STATUS_INVALID_DISPOSITION  "Invalid Disposition"
+//    IDS_EXCEPTION_INT_DIVIDE_BY_ZERO "Integer Divide by Zero"
+//    IDS_EXCEPTION_INT_OVERFLOW      "Integer Overflow"
+//    IDS_EXCEPTION_PRIV_INSTRUCTION  "Privileged Instruction"
+//    IDS_STATUS_STACK_OVERFLOW       "Stack Overflow"
+//    IDS_STATUS_DLL_INIT_FAILED      "DLL Initialization Failed"
+//    IDS_EXCEPTION_MSC_THROW         "Microsoft C++ Exception"
+//    IDS_EXCEPTION_UNKNOWN           "(unknown)"
+//    IDS_pstRunning                  "Running"
+//    IDS_pstStopped                  "Stopped"
+//    IDS_pstExited                   "Exited"
+//    IDS_pstDead                     "Dead"
+// end of PROCEM.C strings
+    IDS_CANT_TRACE                  "Can't trace into system DLLs"
+    IDS_CannotEnableORPC            "Administrator privileges required for OLE Remote Procedure Call debugging: this feature will not work."
+    IDS_FILE_NOT_FOUND              "File not found"
+    IDS_PATH_NOT_FOUND              "Path not found"
+    IDS_INVALID_HANDLE              "Invalid handle"
+    IDS_INVALID_DRIVE               "Invalid drive"
+    IDS_INVALID_PARAMETER           "Invalid paramter"
+    IDS_INVALID_NAME                "Invalid name"
+    IDS_BAD_PATHNAME                "Bad pathname"
+    IDS_FILENAME_EXCED_RANGE        "Filename or extension too long"
+    IDS_OUTOFMEMORY                 "Out of memory"
+    IDS_NOT_ENOUGH_MEMORY           "Not enough memory"
+    IDS_ACCESS_DENIED               "Access denied"
+    IDS_SHARING_VIOLATION           "File is in use by another process"
+    IDS_OPEN_FAILED                 "Cannot open file"
+    IDS_BAD_FORMAT                  "Program has incorrect format"
+    IDS_CHILD_NOT_COMPLETE          "Cannot run in Windows mode"
+    IDS_INVALID_MODULETYPE          "Invalid module type"
+    IDS_INVALID_EXE_SIGNATURE       "Invalid executable signature"
+    IDS_EXE_MARKED_INVALID          "Executable is marked invalid"
+    IDS_BAD_EXE_FORMAT              "Bad executable format"
+    IDS_DIRECTORY                   "Invalid directory"
+    IDS_UNKNOWN_ERROR               "Unknown error"
+    IDS_COULD_NOT_LOAD_DEBUGGEE "Could not execute: "
+    IDS_EXECUTE_FAILED              "Error executing program"
+    IDS_EXECUTE_OK                  "" // Must be ""
+    IDS_NTError                     "(Win32 error %lu)"
+    IDS_UnknownExe                  "Unknown .EXE"
+    IDS_NOSQLDEBUG              "Warning: %s does not support SQL debugging"
+END
+
+

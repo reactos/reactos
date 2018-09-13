@@ -1,0 +1,139 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       perftest.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+#include "version.rc"
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""version.rc""\r\n"
+    "#endif\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// CERTS
+//
+
+IDR_CERTS               CERTS   DISCARDABLE     ".\\certs\\certs.sst"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAM_HELP          "?"
+    IDS_PARAM_VERBOSE       "v"
+    IDS_PARAMTEXT_HELP      "Show this screen"
+    IDS_PARAMTEXT_VERBOSE   "Verbose output"
+    IDS_USAGETEXT_OPTIONS   "[options]"
+    IDS_USAGETEXT_CMDFILE   "[@commandfile]"
+    IDS_USAGETEXT_ADD       "optional_input_file"
+    IDS_USAGETEXT_USAGE     "usage"
+    IDS_USAGETEXT_OPTPARAM  "<param>"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAM_EXPERROR      "h"
+    IDS_PARAMTEXT_EXPERROR  "expected last error (<param> is the hex error. eg: -h 0x80090001)"
+    IDS_PARAM_NOTHREADS     "c"
+    IDS_PARAMTEXT_NOTHREADS "number of threads to spawn (eg: -c 5)"
+    IDS_PARAM_NOPASSES      "n"
+    IDS_PARAMTEXT_NOPASSES  "number of passes to execute per thread (eg: -n 2)"
+    IDS_PARAM_WVTCAT        "twvtcat"
+    IDS_PARAMTEXT_WVTCAT    "run Catalog WinVerifyTrust functions (WVT_CAT)"
+    IDS_PARAM_CATADD        "tcatadd"
+    IDS_PARAMTEXT_CATADD    "run Catalog Add function (CAT_ADD)"
+    IDS_PARAM_WVTFILE       "twvtfile"
+    IDS_PARAMTEXT_WVTFILE   "run various files against WinVerifyTrust (WVT_FILE)"
+    IDS_PARAM_CRYPTHASH     "tchash"
+    IDS_PARAMTEXT_CRYPTHASH "hash files based on input_files (CRYPT_HASH)"
+    IDS_PARAM_WVTCERT       "twvtcert"
+    IDS_PARAMTEXT_WVTCERT   "run various certs against WinVerifyTrust (WVT_CERT)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAM_HASHSHA1      "sha1"
+    IDS_PARAMTEXT_HASHSHA1  "use SHA1 algorithm instead of MD5 (only valid with -tchash)"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

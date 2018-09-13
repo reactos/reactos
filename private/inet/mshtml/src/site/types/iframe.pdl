@@ -1,0 +1,47 @@
+#ifndef _IFRAME_PDL_
+#define _IFRAME_PDL_ 1
+
+#include "frmsite.pdl"
+
+file iframe.pdl
+
+import frmsite.pdl
+
+interface IHTMLIFrameElement guid:3050f315-98b5-11cf-bb82-00aa00bdce0b
+    refprop CIFrameElement:vspace
+    refprop CIFrameElement:hspace
+    refprop COleSite:align
+
+interface IHTMLIFrameElement2 super:IDispatch guid:3050f4e6-98b5-11cf-bb82-00aa00bdce0b
+    refprop CIFrameElement:height
+    refprop CIFrameElement:width
+
+tearoff CIFrameElement interface:IHTMLIFrameElement2
+
+tearoff CIFrameElement interface:IHTMLIFrameElement
+
+class CIFrameElement name:HTMLIFrame \
+            primaryinterface:IHTMLIFrameElement \
+            super:CFrameSite \
+            events:HTMLControlElementEvents \
+            nonprimaryevents:HTMLControlElementEvents2 \
+            guid:3050f316-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f51b-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLFrameBase
+    implements IHTMLIFrameElement
+    implements IHTMLIFrameElement2
+
+    property height atype:VARIANT type:CUnitValue   dispid:STDPROPID_XOBJ_HEIGHT \
+   		get set caa default:NULL_UNITVALUE ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property width  atype:VARIANT type:CUnitValue   dispid:STDPROPID_XOBJ_WIDTH  \
+    	get set caa default:NULL_UNITVALUE ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property vspace atype:long    type:long         dispid:DISPID_IFRAME+1 \
+        get set caa default:0
+    property hspace atype:long    type:long         dispid:DISPID_IFRAME+2 \
+        get set caa default:0
+
+#endif _IFRAME_PDL_
+

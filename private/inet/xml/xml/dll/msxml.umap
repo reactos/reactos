@@ -1,0 +1,17 @@
+// This file contains directives for how to order the functions.
+// #include "msxml.fmap"
+
+
+libmsxml.so
+{
+  global:
+
+    DllCanUnloadNow;
+    DllGetClassObject;
+    DllRegisterServer;
+    DllUnregisterServer;
+    _____msxml_initDLL;
+  local:
+    *;
+};
+

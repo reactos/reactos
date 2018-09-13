@@ -1,0 +1,140 @@
+LANGUAGE 0x3, 0x0 // Really 0x03, 0x01 - Catalan (Catalan)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Catalan resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 345, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Personalitzaci\x00f3 de la barra d'eines"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Tanca",2,296,17,44,14
+    PUSHBUTTON      L"&Reinicia",202,296,34,44,14
+    PUSHBUTTON      L"&Ajuda",205,296,51,44,14
+    PUSHBUTTON      L"Am&unt",206,296,85,44,14
+    PUSHBUTTON      L"A&vall",207,296,102,44,14
+    LTEXT           L"&Botons disponibles:",-1,4,5,84,10
+    LISTBOX         201,4,17,117,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"A&fegeix ->",1,125,42,44,14
+    PUSHBUTTON      L"<- &Suprimeix",204,125,62,44,14
+    LTEXT           L"Botons de la barra d'&eines:",-1,174,5,88,8
+    LISTBOX         203,174,17,117,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"D'acord",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Anul\x00b7la",2,58,122,50,14
+    PUSHBUTTON      L"&Aplica",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Ajuda",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Endarrera",12323,12,26,50,14
+    DEFPUSHBUTTON   L"Enda&vant >",12324,62,26,50,14
+    PUSHBUTTON      L"Final",12325,119,26,50,14
+    PUSHBUTTON      L"Anul\x00b7la",2,176,26,50,14
+    PUSHBUTTON      L"Ajuda",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Separador"
+    1025                    L" + "
+    1026                    L"Cap"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Tanca"
+    4161                    L"D'acord"
+    4162                    L"Propietats de: %s"
+    4163                    L"Avui:"
+    4164                    L"A&neu a avui"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Introdu\x00efu el text aqu\x00ed"
+    4177                    L"Propietats"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Redimensiona aquesta finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Despla\x00e7a aquesta finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Redueix aquesta finestra a una icona."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Engrandeix aquesta finestra fins a omplir la pantalla."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Passa a la finestra MDI seg\x00fcent."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Tanca aquesta finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Restaura la finestra a la grand\x00e0ria normal."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Passa a una altra tasca."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Cont\x00e9 les ordres per manipular finestres."
+    36849                   L"Arrossegar cap a l'esquerra o la dreta per redimensionar les columnes."
+    36850                   L"Redimensiona les columnes utilitzant les tecles de direcci\x00f3 i de tabulaci\x00f3."
+    36851                   L"Afegeix, despla\x00e7a i elimina botons de la barra d'eines."
+END
+

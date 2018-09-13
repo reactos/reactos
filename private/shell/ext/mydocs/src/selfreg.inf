@@ -1,0 +1,102 @@
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+AddReg=DllGoo
+
+[UnregDll]
+DelReg=DllGoo
+
+[RegNewMenu]
+AddReg=NewMenuGoo
+
+[UnregNewMenu]
+DelReg=NewMenuGoo
+
+[RegSendTo]
+AddReg=SendToGoo
+
+[UnregSendTo]
+DelReg=SendToGoo
+
+[RegPerUserWin98]
+AddReg=Win98PerUserGoo
+
+[RegPerUserNT]
+AddReg=NTPerUserGoo
+
+[UnregPerUser]
+DelReg=PerUserGoo
+
+[DllGoo]
+;
+; These are CLSID things...
+;
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32",,,"mydocs.dll"
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_MyDocuments%\InProcServer32","LoadWithoutCOM"
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder","WantsFORPARSING",,
+HKCR,"CLSID\%CLSID_MyDocuments%\ShellFolder","CallForAttributes",,
+HKCR,"CLSID\%CLSID_MyDocuments%\DefaultIcon",,,"mydocs.dll,0"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\ContextMenuHandlers\%CLSID_MyDocuments%",,,
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\DropHandler",,,"%CLSID_MyDocuments%"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\IconHandler",,,"%CLSID_MyDocuments%"
+HKCR,"CLSID\%CLSID_MyDocuments%\shellex\PropertySheetHandlers\%CLSID_MyDocuments%",,,
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\command",,,"Explorer.exe /e,/idlist,%I,/L"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\ddeexec",,,"[ExploreFolder("%l", %I, %S)]"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\ddeexec","NoActivateHandler",,""
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\ddeexec\application",,,"Folders"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\ddeexec\ifexec",,,"[]"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SEXPLORE%\ddeexec\topic",,,"AppProperties"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\command",,,"Explorer.Exe /idlist,%I,/L"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\ddeexec",,,"[ViewFolder("%l", %I, %S)]"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\ddeexec","NoActivateHandler",,""
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\ddeexec\application",,,"Folders"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\ddeexec\ifexec",,,"[]"
+HKCR,"CLSID\%CLSID_MyDocuments%\AllSpecialItems\%SOPEN%\ddeexec\topic",,,"AppProperties"
+HKCR,"CLSID\%CLSID_MyDocuments%","SortOrderIndex",65537,0x00000010
+HKCR,"CLSID\%CLSID_MyDocuments%","NeverShowExt",,
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved","%CLSID_MyDocuments%",,"My Documents Folder"
+
+;
+; This is for the copyhook
+;
+HKCR,"Directory\ShellEx\CopyHookHandlers\MyDocuments",,,"%CLSID_MyDocuments%"
+
+
+[NewMenuGoo]
+;
+; These are for enabling the new menu
+;
+HKCR,".mydocs",,,"My Documents"
+HKCR,".mydocs\ShellNew","Command",,"rundll32 mydocs.dll,RestoreMyDocsFolder"
+HKCR,"My Documents\shell\open\command",,,"Explorer.Exe /idlist,%I,/L"
+HKCR,"My Documents\DefaultIcon",,,"mydocs.dll,0"
+
+
+[SendToGoo]
+;
+; This is for enabling the sendto menu
+;
+HKCR,".mydocs",,,"CLSID\%CLSID_MyDocuments%"
+
+
+[Win98PerUserGoo]
+;
+; These are per-user entries for Win98
+;
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Documents",,,
+HKCU,"Software\Classes\CLSID\%CLSID_MyDocuments%",,,
+
+[NTPerUserGoo]
+;
+; These are per-user entries for NT
+;
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Documents",,,
+
+
+[Strings]
+CLSID_MyDocuments="{450D8FBA-AD25-11D0-98A8-0800361B1103}"
+SEXPLORE="shell\explore"
+SOPEN="shell\open"
+

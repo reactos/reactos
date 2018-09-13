@@ -1,0 +1,618 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resrc1.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "resource.h"
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+
+
+IDD_SCIENTIFIC DIALOGEX 32768, 0, 316, 164
+STYLE WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Calculator"
+MENU IDM_DECCALCMENU
+CLASS "SciCalc"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Hyp",IDC_HYP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    49,41,34,10
+
+    CONTROL         "Inv",IDC_INV,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    8,41, 34,10
+
+    GROUPBOX        "",IDC_STATIC,5,34,84,20,0,WS_EX_NOPARENTNOTIFY
+
+    CONTROL         "",IDC_STAT,"Button",BS_OWNERDRAW,5,60,24,18
+    RTEXT           "",IDC_DISPLAY,5,0,305,16,SS_NOTIFY | SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+
+    RADIOBUTTON     "Hex",IDC_HEX,8,21,30,10,WS_TABSTOP
+    RADIOBUTTON     "Dec",IDC_DEC,41,21,30,10,WS_TABSTOP
+    RADIOBUTTON     "Oct",IDC_OCT,74,21,30,10,WS_TABSTOP
+    RADIOBUTTON     "Bin",IDC_BIN,107,21,30,10,WS_TABSTOP
+
+    GROUPBOX        "",IDC_STATIC,5,14,141,20,0,WS_EX_NOPARENTNOTIFY
+
+    GROUPBOX        "",IDC_STATIC,147,14,163,20,0,WS_EX_NOPARENTNOTIFY
+
+    RADIOBUTTON     "Degrees",IDC_DEG,150,21,41,10,WS_TABSTOP
+    RADIOBUTTON     "Radians",IDC_RAD,204,21,41,10,WS_TABSTOP
+    RADIOBUTTON     "Grads",IDC_GRAD,258,21,41,10,WS_TABSTOP
+
+    RADIOBUTTON     "Qword",IDC_QWORD,150,21,38,10,WS_TABSTOP
+    RADIOBUTTON     "Dword",IDC_DWORD,190,21,38,10,WS_TABSTOP
+    RADIOBUTTON     "Word",IDC_WORD,230,21,38,10,WS_TABSTOP
+    RADIOBUTTON     "Byte",IDC_BYTE,270,21,38,10,WS_TABSTOP
+
+    CONTROL         "",IDC_AVE,"Button",BS_OWNERDRAW,5,80,24,18
+    CONTROL         "",IDC_B_SUM,"Button",BS_OWNERDRAW,5,100,24,18
+    CONTROL         "",IDC_DEV,"Button",BS_OWNERDRAW,5,120,24,18
+    CONTROL         "",IDC_DATA,"Button",BS_OWNERDRAW,5,140,24,18
+
+    CONTROL         "",IDC_FE,"Button",BS_OWNERDRAW,38,60,24,18
+    CONTROL         "",IDC_DMS,"Button",BS_OWNERDRAW,38,80,24,18
+    CONTROL         "",IDC_SIN,"Button",BS_OWNERDRAW,38,100,24,18
+    CONTROL         "",IDC_COS,"Button",BS_OWNERDRAW,38,120,24,18
+    CONTROL         "",IDC_TAN,"Button",BS_OWNERDRAW,38,140,24,18
+
+    CONTROL         "",IDC_OPENP,"Button",BS_OWNERDRAW,64,60,24,18
+    CONTROL         "",IDC_EXP,"Button",BS_OWNERDRAW,64,80,24,18
+    CONTROL         "",IDC_PWR,"Button",BS_OWNERDRAW,64,100,24,18
+    CONTROL         "",IDC_CUB,"Button",BS_OWNERDRAW,64,120,24,18
+    CONTROL         "",IDC_SQR,"Button",BS_OWNERDRAW,64,140,24,18
+
+    CONTROL         "",IDC_CLOSEP,"Button",BS_OWNERDRAW,90,60,24,18
+    CONTROL         "",IDC_LN,"Button",BS_OWNERDRAW,90,80,24,18
+    CONTROL         "",IDC_LOG,"Button",BS_OWNERDRAW,90,100,24,18
+    CONTROL         "",IDC_FAC,"Button",BS_OWNERDRAW,90,120,24,18
+    CONTROL         "",IDC_REC,"Button",BS_OWNERDRAW,90,140,24,18
+
+    CONTROL         "",IDC_MCLEAR,"Button",BS_OWNERDRAW,123,60,24,18
+    CONTROL         "",IDC_RECALL,"Button",BS_OWNERDRAW,123,80,24,18
+    CONTROL         "",IDC_STORE,"Button",BS_OWNERDRAW,123,100,24,18
+    CONTROL         "",IDC_MPLUS,"Button",BS_OWNERDRAW,123,120,24,18
+    CONTROL         "",IDC_PI,"Button",BS_OWNERDRAW,123,140,24,18
+
+    CONTROL         "",IDC_7,"Button",BS_OWNERDRAW,156,60,24,18
+    CONTROL         "",IDC_4,"Button",BS_OWNERDRAW,156,80,24,18
+    CONTROL         "",IDC_1,"Button",BS_OWNERDRAW,156,100,24,18
+    CONTROL         "",IDC_0,"Button",BS_OWNERDRAW,156,120,24,18
+    CONTROL         "",IDC_A,"Button",BS_OWNERDRAW,156,140,24,18
+
+    CONTROL         "",IDC_8,"Button",BS_OWNERDRAW,182,60,24,18
+    CONTROL         "",IDC_5,"Button",BS_OWNERDRAW,182,80,24,18
+    CONTROL         "",IDC_2,"Button",BS_OWNERDRAW,182,100,24,18
+    CONTROL         "",IDC_SIGN,"Button",BS_OWNERDRAW,182,120,24,18
+    CONTROL         "",IDC_B,"Button",BS_OWNERDRAW,182,140,24,18
+
+    CONTROL         "",IDC_9,"Button",BS_OWNERDRAW,208,60,24,18
+    CONTROL         "",IDC_6,"Button",BS_OWNERDRAW,208,80,24,18
+    CONTROL         "",IDC_3,"Button",BS_OWNERDRAW,208,100,24,18
+    CONTROL         "",IDC_PNT,"Button",BS_OWNERDRAW,208,120,24,18
+    CONTROL         "",IDC_C,"Button",BS_OWNERDRAW,208,140,24,18
+
+    CONTROL         "",IDC_DIV,"Button",BS_OWNERDRAW,234,60,24,18
+    CONTROL         "",IDC_MUL,"Button",BS_OWNERDRAW,234,80,24,18
+    CONTROL         "",IDC_SUB,"Button",BS_OWNERDRAW,234,100,24,18
+    CONTROL         "",IDC_ADD,"Button",BS_OWNERDRAW,234,120,24,18
+    CONTROL         "",IDC_D,"Button",BS_OWNERDRAW,234,140,24,18
+
+    CONTROL         "",IDC_MOD,"Button",BS_OWNERDRAW,260,60,24,18
+    CONTROL         "",IDC_OR,"Button",BS_OWNERDRAW,260,80,24,18
+    CONTROL         "",IDC_LSHF,"Button",BS_OWNERDRAW,260,100,24,18
+    CONTROL         "",IDC_EQU,"Button",BS_OWNERDRAW,260,120,24,18
+    CONTROL         "",IDC_E,"Button",BS_OWNERDRAW,260,140,24,18
+
+    CONTROL         "",IDC_AND,"Button",BS_OWNERDRAW,286,60,24,18
+    CONTROL         "",IDC_XOR,"Button",BS_OWNERDRAW,286,80,24,18
+    CONTROL         "",IDC_COM,"Button",BS_OWNERDRAW,286,100,24,18
+    CONTROL         "",IDC_CHOP,"Button",BS_OWNERDRAW,286,120,24,18
+    CONTROL         "",IDC_F,"Button",BS_OWNERDRAW,286,140,24,18
+
+    CONTROL         "",IDC_BACK,"Button",BS_OWNERDRAW,177,38,43,18
+    CONTROL         "",IDC_CENTR,"Button",BS_OWNERDRAW,222,38,43,18
+    CONTROL         "",IDC_CLEAR,"Button",BS_OWNERDRAW,267,38,43,18
+
+    CTEXT           "",IDC_MEMTEXT,126,38,18,16,SS_NOTIFY | SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CTEXT           "",IDC_PARTEXT,93,38,18,16,SS_NOTIFY | SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    LTEXT           "",IDC_SIZERCONTROL,0,162,1,1
+
+END
+
+IDD_STANDARD DIALOGEX 32768, 0, 169, 129
+STYLE WS_MINIMIZEBOX | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Calculator"
+MENU IDM_CALCMENU
+CLASS "SciCalc"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT           "",IDC_DISPLAY,5,0,159,16,SS_NOTIFY | SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_MCLEAR,"Button",BS_OWNERDRAW,5,45,24,18
+    CONTROL         "",IDC_RECALL,"Button",BS_OWNERDRAW,5,65,24,18
+    CONTROL         "",IDC_STORE,"Button",BS_OWNERDRAW,5,85,24,18
+    CONTROL         "",IDC_MPLUS,"Button",BS_OWNERDRAW,5,105,24,18
+    CONTROL         "",IDC_7,"Button",BS_OWNERDRAW,36,45,24,18
+    CONTROL         "",IDC_4,"Button",BS_OWNERDRAW,36,65,24,18
+    CONTROL         "",IDC_1,"Button",BS_OWNERDRAW,36,85,24,18
+    CONTROL         "",IDC_0,"Button",BS_OWNERDRAW,36,105,24,18
+    CONTROL         "",IDC_8,"Button",BS_OWNERDRAW,62,45,24,18
+    CONTROL         "",IDC_5,"Button",BS_OWNERDRAW,62,65,24,18
+    CONTROL         "",IDC_2,"Button",BS_OWNERDRAW,62,85,24,18
+    CONTROL         "",IDC_SIGN,"Button",BS_OWNERDRAW,62,105,24,18
+    CONTROL         "",IDC_9,"Button",BS_OWNERDRAW,88,45,24,18
+    CONTROL         "",IDC_6,"Button",BS_OWNERDRAW,88,65,24,18
+    CONTROL         "",IDC_3,"Button",BS_OWNERDRAW,88,85,24,18
+    CONTROL         "",IDC_PNT,"Button",BS_OWNERDRAW,88,105,24,18
+    CONTROL         "",IDC_DIV,"Button",BS_OWNERDRAW,114,45,24,18
+    CONTROL         "",IDC_MUL,"Button",BS_OWNERDRAW,114,65,24,18
+    CONTROL         "",IDC_SUB,"Button",BS_OWNERDRAW,114,85,24,18
+    CONTROL         "",IDC_ADD,"Button",BS_OWNERDRAW,114,105,24,18
+    CONTROL         "",IDC_EQU,"Button",BS_OWNERDRAW,140,105,24,18
+    CONTROL         "",IDC_BACK,"Button",BS_OWNERDRAW,36,23,42,18
+    CONTROL         "",IDC_CENTR,"Button",BS_OWNERDRAW,80,23,41,18
+    CONTROL         "",IDC_CLEAR,"Button",BS_OWNERDRAW,123,23,41,18
+    CTEXT           "",IDC_MEMTEXT,8,24,18,16,SS_NOTIFY | SS_CENTERIMAGE,
+                    WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_REC,"Button",BS_OWNERDRAW,140,85,24,18
+    CONTROL         "",IDC_SQRT,"Button",BS_OWNERDRAW,140,45,24,18
+    CONTROL         "",IDC_PERCENT,"Button",BS_OWNERDRAW,140,65,24,18
+    LTEXT           "",IDC_SIZERCONTROL,0,127,1,1
+END
+
+IDD_SB DIALOG DISCARDABLE  80, 80, 146, 86
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Statistics Box"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_STATLIST,3,3,140,50,WS_VSCROLL
+    DEFPUSHBUTTON   "&RET",IDC_FOCUS,4,58,28,14
+    PUSHBUTTON      "&LOAD",IDC_LOAD,40,58,28,14
+    PUSHBUTTON      "&CD",IDC_CD,76,58,28,14
+    PUSHBUTTON      "C&AD",IDC_CAD,112,58,28,14
+    RTEXT           "n=",IDC_NTEXT,0,76,74,8
+    LTEXT           "0",IDC_NUMTEXT,74,76,32,8
+END
+
+IDD_TIMEOUT DIALOG DISCARDABLE  8, 18, 240, 70
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Calculator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515,-1,6,6,20,20
+    LTEXT           "The requested operation may take a very long time to complete.",
+                    -1,34,4,198,20
+    LTEXT           "Do you want to let the calculation continue, or stop the operation now?",
+                    -1,34,31,198,20
+    DEFPUSHBUTTON   "&Continue",IDRETRY,73,52,40,14
+    PUSHBUTTON      "&Stop",IDCANCEL,119,52,40,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+SC                      ICON    DISCARDABLE     "calc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_CALCMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",              IDM_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "S&tandard",                   IDM_SSC
+        MENUITEM "&Scientific",                 IDM_SC
+        MENUITEM SEPARATOR
+        MENUITEM "D&igit grouping",             IDM_USE_SEPARATOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics ",               IDM_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Calculator",           IDM_ABOUT
+    END
+END
+
+
+IDM_DECCALCMENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",              IDM_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "S&tandard",                   IDM_SSC
+        MENUITEM "&Scientific",                 IDM_SC
+        MENUITEM SEPARATOR
+        MENUITEM "&Hex\tF5",                    IDM_HEX
+        MENUITEM "&Decimal\tF6",                IDM_DEC
+        MENUITEM "&Octal\tF7",                  IDM_OCT
+        MENUITEM "&Binary\tF8",                 IDM_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "D&egrees\tF2",                IDM_DEG
+        MENUITEM "&Radians\tF3",                IDM_RAD
+        MENUITEM "&Grads\tF4",                  IDM_GRAD
+        MENUITEM SEPARATOR
+        MENUITEM "D&igit grouping",             IDM_USE_SEPARATOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics ",               IDM_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Calculator",           IDM_ABOUT
+    END
+END
+
+
+IDM_HEXCALCMENU MENU DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",              IDM_PASTE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "S&tandard",                   IDM_SSC
+        MENUITEM "&Scientific",                 IDM_SC
+        MENUITEM SEPARATOR
+        MENUITEM "&Hex\tF5",                    IDM_HEX
+        MENUITEM "&Decimal\tF6",                IDM_DEC
+        MENUITEM "&Octal\tF7",                  IDM_OCT
+        MENUITEM "&Binary\tF8",                 IDM_BIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Qword\tF12",                 IDM_QWORD
+        MENUITEM "Dwo&rd\tF2",                  IDM_DWORD
+        MENUITEM "&Word\tF3",                   IDM_WORD
+        MENUITEM "B&yte\tF4",                   IDM_BYTE
+        MENUITEM SEPARATOR
+        MENUITEM "D&igit grouping",             IDM_USE_SEPARATOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics ",               IDM_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Calculator",           IDM_ABOUT
+    END
+END
+
+
+IDM_HELPPOPUP MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&What's This?",               8
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDA_ACCELTABLE ACCELERATORS MOVEABLE PURE 
+BEGIN
+    "0",            IDC_0,                  ASCII   
+    "1",            IDC_1,                  ASCII   
+    "2",            IDC_2,                  ASCII   
+    "3",            IDC_3,                  ASCII   
+    "4",            IDC_4,                  ASCII   
+    "5",            IDC_5,                  ASCII   
+    "6",            IDC_6,                  ASCII   
+    "7",            IDC_7,                  ASCII   
+    "8",            IDC_8,                  ASCII   
+    "9",            IDC_9,                  ASCII   
+    "A",            IDC_A,                  VIRTKEY 
+    "B",            IDC_B,                  VIRTKEY 
+    "C",            IDC_C,                  VIRTKEY 
+    "D",            IDC_D,                  VIRTKEY 
+    "E",            IDC_E,                  VIRTKEY 
+    "F",            IDC_F,                  VIRTKEY 
+    "!",            IDC_FAC,                ASCII   
+    "S",            IDC_SIN,                VIRTKEY 
+    "O",            IDC_COS,                VIRTKEY 
+    "T",            IDC_TAN,                VIRTKEY 
+    "R",            IDC_REC,                VIRTKEY 
+    "Y",            IDC_PWR,                VIRTKEY 
+    "#",            IDC_CUB,                ASCII   
+    "@",            IDC_SQR,                ASCII   
+    "M",            IDC_DMS,                VIRTKEY 
+    "N",            IDC_LN,                 VIRTKEY 
+    "L",            IDC_LOG,                VIRTKEY 
+    "V",            IDC_FE,                 VIRTKEY 
+    "X",            IDC_EXP,                VIRTKEY 
+    "I",            IDC_INV,                VIRTKEY 
+    "H",            IDC_HYP,                VIRTKEY 
+    "P",            IDC_PI,                 VIRTKEY 
+    "K",            IDM_ABOUT,              VIRTKEY, SHIFT, CONTROL
+    VK_LEFT,        IDC_BACK,               VIRTKEY 
+    VK_BACK,        IDC_BACK,               VIRTKEY 
+    VK_DELETE,      IDC_CENTR,              VIRTKEY 
+    VK_ESCAPE,      IDC_CLEAR,              VIRTKEY 
+
+    VK_F2,          IDM_DEG,                VIRTKEY  // IDM_DWORD
+    VK_F3,          IDM_RAD,                VIRTKEY  // IDM_WORD
+    VK_F4,          IDM_GRAD,               VIRTKEY  // IDM_BYTE
+    VK_F5,          IDM_HEX,                VIRTKEY
+    VK_F6,          IDM_DEC,                VIRTKEY
+    VK_F7,          IDM_OCT,                VIRTKEY
+    VK_F8,          IDM_BIN,                VIRTKEY
+
+    VK_F9,          IDC_SIGN,               VIRTKEY 
+
+    // VK_F1 and VK_F10 are used by the system
+
+//    VK_F11,       IDM_OWORD,              VIRTKEY  // reserved 128bit
+    VK_F12,         IDM_QWORD,              VIRTKEY  // 64 bit
+
+    "^S",           IDC_STAT,               ASCII   
+    "^M",           IDC_STORE,              ASCII   
+    "^P",           IDC_MPLUS,              ASCII   
+    "^L",           IDC_MCLEAR,             ASCII   
+    "^R",           IDC_RECALL,             ASCII   
+    "^A",           IDC_AVE,                ASCII   
+    "^T",           IDC_B_SUM,              ASCII   
+    "^D",           IDC_DEV,                ASCII   
+    "/",            IDC_DIV,                ASCII   
+    "*",            IDC_MUL,                ASCII   
+    "%",            IDC_MOD,                ASCII   
+    "-",            IDC_SUB,                ASCII   
+    "=",            IDC_EQU,                ASCII   
+    "+",            IDC_ADD,                ASCII   
+    VK_ADD,         IDC_ADD,                VIRTKEY 
+    "&",            IDC_AND,                ASCII   
+    "|",            IDC_OR,                 ASCII   
+    "~",            IDC_COM,                ASCII   
+    94,             IDC_XOR,                ASCII   
+    "(",            IDC_OPENP,              ASCII   
+    ")",            IDC_CLOSEP,             ASCII   
+    ";",            IDC_CHOP,               ASCII   
+    "<",            IDC_LSHF,               ASCII   
+    ".",            IDC_PNT,                ASCII   
+    ",",            IDC_PNT,                ASCII   
+    VK_RETURN,      IDC_EQU,                VIRTKEY 
+    VK_INSERT,      IDC_DATA,               VIRTKEY 
+    "^C",           IDM_COPY,               ASCII   
+    "^V",           IDM_PASTE,              ASCII   
+    VK_INSERT,      IDM_COPY,               VIRTKEY, CONTROL
+    VK_INSERT,      IDM_PASTE,              VIRTKEY, SHIFT
+    "A",            IDC_A,                  VIRTKEY, SHIFT
+    "B",            IDC_B,                  VIRTKEY, SHIFT
+    "C",            IDC_C,                  VIRTKEY, SHIFT
+    "D",            IDC_D,                  VIRTKEY, SHIFT
+    "E",            IDC_E,                  VIRTKEY, SHIFT
+    "F",            IDC_F,                  VIRTKEY, SHIFT
+    "S",            IDC_SIN,                VIRTKEY, SHIFT
+    "O",            IDC_COS,                VIRTKEY, SHIFT
+    "T",            IDC_TAN,                VIRTKEY, SHIFT
+    "R",            IDC_REC,                VIRTKEY, SHIFT
+    "Y",            IDC_PWR,                VIRTKEY, SHIFT
+    "M",            IDC_DMS,                VIRTKEY, SHIFT
+    "N",            IDC_LN,                 VIRTKEY, SHIFT
+    "L",            IDC_LOG,                VIRTKEY, SHIFT
+    "V",            IDC_FE,                 VIRTKEY, SHIFT
+    "X",            IDC_EXP,                VIRTKEY, SHIFT
+    "I",            IDC_INV,                VIRTKEY, SHIFT
+    "H",            IDC_HYP,                VIRTKEY, SHIFT
+    "P",            IDC_PI,                 VIRTKEY, SHIFT
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""calc.rcv""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SCIENTIFIC, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 310
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_STANDARD, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 128
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIRSTKEY            "+/-"
+    1                       "C"
+    2                       "CE"
+    3                       "Backspace"
+    4                       "Sta"
+    IDS_DECIMAL             "."
+    6                       "And"
+    7                       "Or"
+    8                       "Xor"
+    9                       "Lsh"
+    10                      "/"
+    11                      "*"
+    12                      "+"
+    13                      "-"
+    14                      "Mod"
+    15                      "x^y"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    16                      "Int"
+    17                      "Not"
+    18                      "sin"
+    19                      "cos"
+    20                      "tan"
+    21                      "ln"
+    22                      "log"
+    23                      "sqrt"
+    24                      "x^2"
+    25                      "x^3"
+    26                      "n!"
+    27                      "1/x"
+    28                      "dms"
+    29                      "%"
+    30                      "F-E"
+    31                      "pi"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    32                      "="
+    33                      "MC"
+    34                      "MR"
+    35                      "MS"
+    36                      "M+"
+    37                      "Exp"
+    38                      "Ave"
+    39                      "Sum"
+    40                      "s"
+    41                      "Dat"
+    42                      "("
+    43                      ")"
+    44                      "0"
+    45                      "1"
+    46                      "2"
+    47                      "3"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    48                      "4"
+    49                      "5"
+    50                      "6"
+    51                      "7"
+    52                      "8"
+    53                      "9"
+    54                      "A"
+    55                      "B"
+    56                      "C"
+    57                      "D"
+    58                      "E"
+    59                      "F"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RADIX               "Hex"
+    61                      "Dec"
+    62                      "Oct"
+    63                      "Bin"
+    IDS_HEX_MODES           "Qword"
+    65                      "Dword"
+    66                      "Word"
+    67                      "Byte"
+    IDS_DEC_MODES           "Degrees"
+    69                      "Radians"
+    70                      "Grads"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERRORS              "Cannot divide by zero."
+    72                      "Invalid input for function."
+    73                      "Result of function is undefined."
+    74                      "Error: Positive Infinity."
+    75                      "Error: Negative Infinity."
+    76                      "Operation was canceled."
+    IDS_OUTOFMEM            "Calc does not have enough memory to continue."
+    IDS_TIMEOUT             "The requested function may take a very long time to complete.\rDo you want to abort the operation now?"
+    IDS_HELPFILE            "calc.hlp"
+    IDS_NOPASTE             "Cannot open Clipboard."
+    IDS_STATMEM             "There is not enough memory for data.\rClose one or more programs, and then try again."
+    IDS_CHMHELPFILE         "calc.chm"
+    IDS_CALC                "Calculator"
+    IDS_NOMEM               "Not Enough Memory"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "calc.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

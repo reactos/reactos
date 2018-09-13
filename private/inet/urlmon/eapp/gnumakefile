@@ -1,0 +1,47 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = /vobs/ie4/urlmon.template
+
+SOURCES =  \
+              cmimeft.cxx     \
+              ccodeft.cxx     \
+              clshndlr.cxx    \
+              cdlprot.cxx     \
+              cdlbsc.cxx      \
+              protbase.cxx    \
+              knownhnd.cxx
+
+INCLUDES += \
+            -I.\
+            -I${URLMON_DIR}/inc\
+            -I${IEDEV_DIR}/inc
+ 
+WLIB    = eapp
+LIB     = lib${WLIB}.a
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+NO_UNICODE=1
+
+APP_CFLAGS += ${URLMON_CFLAGS} ${INCLUDES} ${DEFINES} -DFLAT
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple

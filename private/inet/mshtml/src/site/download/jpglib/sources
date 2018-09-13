@@ -1,0 +1,43 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\download\jpglib=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=jpglib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+    jcomapi.c \
+    jdapimin.c \
+    jdapistd.c \
+    jdcoefct.c \
+    jdcolor.c \
+    jddctmgr.c \
+    jdhuff.c \
+    jdinput.c \
+    jdmainct.c \
+    jdmarker.c \
+    jdmaster.c \
+    jdmerge.c \
+    jdphuff.c \
+    jdpostct.c \
+    jdsample.c \
+    jdtrans.c \
+    jidctflt.c \
+    jidctfst.c \
+    jidctint.c \
+    jidctred.c \
+    jmemmgr.c \
+    jmemnobs.c \
+    jquant1.c \
+    jquant2.c \
+    jutils.c
+
+PRECOMPILED_INCLUDE=all.h

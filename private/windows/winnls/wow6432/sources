@@ -1,0 +1,25 @@
+ALT_PROJECT=WOW6432
+ALT_PROJECT_TARGET=WOW6432
+
+C_DEFINES = $(C_DEFINES) -DBUILD_WOW6432
+
+!include ..\sources.inc
+
+SOURCES = ..\ansi.c       \
+          ..\datetime.c   \
+          ..\enum.c       \
+          ..\init.c       \
+          ..\locale.c     \
+          ..\csrlocal.c  \
+          ..\map.c        \
+          ..\mbcs.c       \
+          ..\number.c     \
+          ..\section.c    \
+          ..\string.c     \
+          ..\tables.c     \
+          ..\csrtables.c  \
+          ..\utf.c        \
+          ..\util.c       \
+          ..\security.c
+
+C_DEFINES=$(C_DEFINES)

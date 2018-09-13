@@ -1,0 +1,9 @@
+
+C_DEFINES=$(C_DEFINES) -DWIN32 -DWINNT
+
+TARGETLIBS=$(BASEDIR)\private\windows\shell\accessib\Narrator\NarrHook\WinNT\obj\*\NarrHook.lib
+
+!include ..\sources.inc
+
+SOURCES_USED    = $(SOURCES_USED) ..\sources.inc
+

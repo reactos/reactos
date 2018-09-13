@@ -1,0 +1,179 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "1 TYPELIB ""iextag.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Internet Explorer Peer Objects"
+#define VER_INTERNALNAME_STR        "iepeers.dll"
+#define VER_ORIGINALFILENAME_STR    "iepeers.dll"
+#define VER_OLESELFREGISTER
+#include "common.ver"
+
+#endif //_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGISTRY
+//
+
+IDR_PEERFACTORY         REGISTRY DISCARDABLE    "peerfact.rgs"
+IDR_CLIENTCAPS          REGISTRY DISCARDABLE    "ccaps.rgs"
+IDR_CPERSISTUSERDATA    REGISTRY DISCARDABLE    "userdata.rgs"
+IDR_CPERSISTSNAPSHOT    REGISTRY DISCARDABLE    "snapshot.rgs"
+IDR_CPERSISTFAVORITE    REGISTRY DISCARDABLE    "favorite.rgs"
+IDR_CPERSISTHISTORY     REGISTRY DISCARDABLE    "history.rgs"
+IDR_HOMEPAGE            REGISTRY DISCARDABLE    "homepg.rgs"
+IDR_DOWNLOADBEHAVIOR    REGISTRY DISCARDABLE    "download.rgs"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WEBFOLDER_SEARCH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 150
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 75
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WEBFOLDER_SEARCH DIALOGEX 0, 0, 157, 82
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON      "&Cancel",IDCANCEL,53,59,50,16,BS_CENTER | BS_VCENTER | 
+                    WS_GROUP
+    LTEXT           "Please wait while Internet Explorer searches for your Web Folder.",
+                    IDC_WEBFOLDER_MESSAGE,53,7,97,47
+    CONTROL         "Animate1",IDC_WEBFOLDER_ANIMATE,"SysAnimate32",
+                    ACS_CENTER | ACS_TRANSPARENT | ACS_AUTOPLAY | ACS_TIMER,
+                    7,7,42,28,WS_EX_TRANSPARENT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDA_ISEARCH             AVI     MOVEABLE PURE   "search.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME            "IEXtag"
+    IDS_SETHOMEPAGE_TITLE   "Home Page"
+    IDS_SETHOMEPAGE_MSG     "Would you like to set your Home Page to '%s'?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WEBFOLDER_FIND      "Please wait while Internet Explorer searches for %ls."
+    IDS_ERRORINTERNAL       "There was an internal error."
+    IDS_ERRORINTTITLE       "Internal Error"
+    IDS_ERRORBADURL         "%ls is not a valid location."
+    IDS_ERRORBADURLTITLE    "Error"
+    IDS_ERRORBADSERVER      "Internet Explorer could not open %ls as a Web Folder.  Would you like to see its default view instead?"
+    IDS_ERRORBADSERVERTITLE "Open Folder"
+    IDS_ERROROUTOFMEMORY    "There was insufficient memory to complete this operation.  Please close some applications to free up memory."
+    IDS_ERROROUTOFMEMORYTITLE "Insufficient Memory"
+    IDS_ERRORTIMEOUT        "The folder %ls is no longer available."
+    IDS_ERRORTIMEOUTTITLE   "Web Folder No Longer Valid"
+    IDS_ERRORURLTOOLONG     "The web folder address Internet Explorer was given was too long.  Please use a shorter address."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERRORURLTOOLONGTITLE "Address Too Long"
+    IDS_ERROROFFLINE        "The requested operation could not be completed because the resource is offline."
+    IDS_ERROROFFLINETITLE   "Resource Offline"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+1 TYPELIB "iextag.tlb"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+// Home page icon
+
+IDI_HOMEPAGE                ICON    DISCARDABLE     "home.ico"

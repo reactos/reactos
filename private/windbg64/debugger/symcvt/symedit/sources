@@ -1,0 +1,47 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+!ENDIF
+
+MAJORCOMP=windbg
+MINORCOMP=symedit
+
+TARGETNAME=symedit
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+UMTYPE=console
+
+!include ..\..\sources.inc
+
+INCLUDES=.\;..\include;$(DEBUG_INCLUDES);$(O)
+
+SOURCES= \
+    symedit.rc \
+    symedit.c
+
+TARGETLIBS= \
+    ..\symcvt\$(O)\symcvt.lib \
+    $(SDK_LIB_PATH)\dbghelp.lib \
+    $(SDK_LIB_PATH)\setargv.obj \
+    $(SDK_LIB_PATH)\kernel32.lib   \
+    $(SDK_LIB_PATH)\user32.lib
+
+NTTARGETFILES=

@@ -1,0 +1,706 @@
+/* DynaComm.RC - defines resources for the Resource Compiler */
+#define WIN31     TRUE                       /* for win31 functions */
+#include "windows.h"                           /* non-standard version (mbbx) */
+#include "dcrc.h"
+
+rcinclude fileopen.rc
+
+ICO_DYNACOMM     ICON    TERMINAL.ICO
+HAND             CURSOR  HAND.CUR /* jtf 3.20 */
+
+STRINGTABLE
+BEGIN
+   STR_APPNAME          "Terminal"
+   STR_DEVELOPER        "Microsoft Corporation"
+   STR_TERMINAL         "(Untitled)"
+   STR_ERRCAPTION       "Terminal - Error"
+   STR_HELPFILE         "TERMINAL.HLP"
+   STR_AUTOLOAD         "TERMINAL.TRM"
+
+   STR_VERSION          "3.30"               /* must match version in About */
+   STR_EXTRAINFO        "Developed for Microsoft\nby Future Soft Engineering, Inc."
+
+/* >>>>>>>>>>>>>>>>>>>>> DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+   STR_APPNAME_PRIVATE  "Terminal"
+   STR_TEMPFILE         "TEMP.$$$"
+   STR_COM              "COM%d"
+   STR_PATH             "PATH"               /* mbbx 1.04: REZ... */
+   STR_PHONE            ""
+   STR_DIALPREFIX       "ATDT"
+   STR_DIALSUFFIX       ""
+   STR_HANGPREFIX       "+++"
+   STR_HANGSUFFIX       "ATH"
+   STR_ANSWER           "ATQ1E0S0=1"
+   STR_ORIGINATE        "ATQ0V1E1S0=0"
+   STR_XFERLINESTR      "^M"
+   STR_ANSWERBACK       "Terminal^M"
+/* >>>>>>>>>>>>>>>>>>>>> END OF DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<< */
+
+   STR_HIDEFKEYS        "Hide &Function Keys"
+   STR_SHOWFKEYS        "Show &Function Keys"
+   STR_STOP             "Stop"               /* mbbx 2.00: xfer ctrls... */
+   STR_BREAK            "Break"
+   STR_PAUSE            "Pause"
+   STR_RESUME           "Resume"
+
+   STR_SAVE             "Save"               /* mbbx 1.10: no accel on OK... */
+   STR_SAVEAS           "File Save As"
+   STR_PRINT            "Print"
+   STR_SENDTEXTFILE     "Send Text File"
+   STR_VIEWTEXTFILE     "View Text File"
+   STR_LOAD             "Load"
+   STR_CREATE           "Create"
+
+   STR_RETRIES          "Retries: %d"
+   STR_BYTECOUNT        "Bytes: %ld"
+   STR_SENDING          "Sending: "
+   STR_RECEIVING        "Receiving: "
+   STR_VIEWING          "Viewing: "
+   STR_FILENAME         "Filename:"          /* mbbx 1.04: REZ... */
+   STR_DIRECTORY        "Directory:"
+   STR_TO               "To:"
+   STR_LEVEL            "Level: %d"          /* jtf 3.Final */
+
+   STR_STOPXFER         "A file transfer is in progress. Do you want to stop it?"
+   STR_SAVECHANGES      "Do you want to save the changes to the terminal settings?"
+   STR_OTHERCOM         "The selected COM port is either not supported or is being used by another device.\n\nSelect another port."
+   STR_OVERWRITEFILE    "Are you sure you want to overwrite the %s file?"
+   STR_AREYOUSURE       "Are you sure?"
+   STR_XOFFSTATE	"[XOFF]  (Press Ctrl-Break to reset.)"
+   STR_TELNETFAIL	"Terminal failed to open the telnet session.\nPlease use the Services option in Control Panel to make sure that\nthe telnet service is started."
+//sdj: added this msg to report when telnet open fails
+   STR_SETCOMFAIL	"Terminal failed to set the new communication settings.\nVerify that the hardware supports these settings."
+
+   STR_NOCOMMPORTS      "All COM ports are being used.\n\nRemove a device connected to one of the ports and try again."
+   STR_COMMNOTREADY     "Serial port not initialized; please check your communication settings and try again."
+   STR_HANGUP           "You are already connected to the remote computer. If the remote computer has hung up, you need to renew your connection.\n\nChoose Hangup from the Phone menu and try again."
+   STR_RETRYCOUNT       "Redial Count: %u"   /* mbbx 2.00: CUA... */
+   STR_ABORTSND         "Terminal could not send the binary file %s.\n\nVerify that you are using the correct protocol and try again."
+   STR_ABORTRCV         "Terminal could not receive the binary file %s.\n\nVerify that you are using the correct protocol and try again."
+   STR_LOADEMUL         "Emulation selected is not available."
+   STR_OUTOFMEMORY      "Not enough memory available for this operation.\n\nQuit one or more applications to increase available memory, and then try again."
+   STR_NOMEMORY 	"Not enough memory available for this operation.\n\nQuit one or more applications to increase available memory, and then try again."
+   STR_PORTDISCONNECT	"The port which was in use, is no longer available. \n\nPlease select another port."
+
+
+   STR_MINTIME          "Specify a value of 30 or greater for the Timeout If Not Connected In option."
+
+   STRDRIVEDIR		"Cannot find the specified drive or directory.\n\nMake sure the path is correct."
+   STREWRERR            "Cannot create specified file. Make sure that: \n You have enough disk space.\n The file is not read-only.\n The filename is valid."
+   STRFNOTFOUND         "Cannot find the specified file.\n\nMake sure the path and filename are correct."
+   STRFINVALIDNAME      "The filename is invalid.\n\nMake sure the filename is not longer than 8 characters, followed by a period and an extension."
+   STRFERROPEN          "Cannot open the specified file.\n\nMake sure the path and filename are correct."
+   STRFERRREAD          "Cannot read the specified file.\n\nMake sure the path and filename are correct."
+   STRFERRFILELENGTH    "Cannot open the settings file because it is invalid.\n\nSpecify the settings you want to use, and then save them to a new file."
+   STRFERRCLOSE         "Cannot close file."
+   STR_PRINTERROR       "Cannot print the specified file.\n\nMake sure your printer is properly configured and connected to your computer."
+
+
+   STRERRHANGUP         "You are still connected to a remote computer. Do you want to hang up and end your connection?" /* jtf 3.23 */
+   STRERRNOFILE         "Cannot find the settings file %s.\n\nInsert the disk with the file in drive A."
+   STRERRNOTIMERS       "All system timers are currently being used by other applications.\n\nQuit one or more applications, and then try again."
+/* >>>>>>>>>>>>>>>>>>>>> DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+   STR_INI_WINDOWS      "windows"            /* mbbx 1.04: REZ... */
+   STR_INI_EXTENSIONS   "extensions"
+   STR_INI_DEVICE       "device"
+   STR_INI_INTL         "intl"
+   STR_INI_ICOUNTRY     "iCountry"
+   STR_INI_IDATE        "iDate"
+   STR_INI_SDATE        "sDate"
+   STR_INI_ITIME        "iTime"
+   STR_INI_STIME        "sTime"
+   STR_INI_S1159        "i1159"
+   STR_INI_S2359        "s2359"
+   STR_INI_SWAP         "Swap"
+   STR_INI_PORT         "Port"
+   STR_INI_BUFFER       "Buffer"
+   STR_INI_FONT         "Font"
+   STR_INI_FONTFACE     "FixedSys"
+   STR_INI_COLORS       "Colors"
+   STR_INI_WINDOWTEXT   "WindowText"
+   STR_INI_TEXTCOLOR    "0 0 0"
+   STR_INI_WINDOW       "Window"
+   STR_INI_BKGDCOLOR    "255 255 255"
+   STR_INI_DEVICES      "devices"
+   STR_INI_ON           " on "
+   STR_INI_DEVICEMODE   "DeviceMode"
+   STR_INI_MAXIMIZED    "Maximized"          /* mbbx 2.00: new INI options... */
+   STR_INI_SETTINGS     "Settings"
+   STR_INI_DATA 	"Data"
+   STR_INI_XPOSITION	"XPosition"	     /* sdj: added these so that terminal   */
+   STR_INI_YPOSITION	"YPosition"	     /* sdj: can remember the prev pos/size */
+   STR_INI_WIDTH	"WIDTH" 	     /* sdj: set by the user and use them in*/
+   STR_INI_HEIGHT	"Height"	     /* sdj: CreateWindow arguments	    */
+
+   STR_FI               "  "  /* FI    jtf 3.17 removed from display */
+   STR_RF               "  "  /* RF   jtf 3.17 removed from display */
+   STR_DF               "  "  /* DF   jtf 3.17 removed from display */
+   STR_RI               "  "  /* RI   jtf 3.17 removed from display */
+   STR_RE               "  "  /* RE   jtf 3.17 removed from display */
+   STR_SI               "  "  /* SI   jtf 3.17 removed from display */
+   STR_SE               "  "  /* SE   jtf 3.17 removed from display */
+/* >>>>>>>>>>>>>>>>>>>>> END OF DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<< */
+
+   STR_KER_BADPACKET    "Could not transfer the file because of unrecognized data in the packet.\n\nTry sending or receiving the file again."
+   STR_KER_BADPACKNUM   "Could not transfer the file because of an invalid packet number.\n\nTry sending or receiving the file again."
+   STR_KER_RETRYABORT   "Could not transfer the file because of too many tries to send or receive a data packet.\n\nTry sending or receiving the file again."
+   STR_KER_SNDABORT     "The file transfer failed because the transmission was stopped by the sender."
+   STR_KER_RCVABORT     "The file transfer failed because the transmission was stopped by the receiver."
+   STR_KER_CREATEFILE   "Cannot transfer multiple files.\n\nWait until one file has been transferred before transferring another file"
+   STR_KER_XFERABORT    "The remote computer cancelled the file transfer with this message:\n\n\015\012 %s"
+   STR_KER_BADPACKTYPE  "Could not transfer the file because of an unrecognized packet type.\n\nTry sending or receiving the file again."
+
+
+/*---------------------------------------------------------------------------*/
+
+   FO_STR_ERRCAPTION    " - Error"
+   FO_STR_WARNCAPTION   " - Warning"
+   FO_STR_BADFILENAME   "The filename is invalid. Make sure the filename is not longer than 8 characters, followed by a period and a 3-letter extension."
+   FO_STR_FILENOTFOUND  "Cannot find the specified file. Make sure the path and filename are correct."
+   FO_STR_REPLACEFILE   "Do you want to replace the existing file?"
+
+   STR_ICS_NAME         "None"               /* mbbx 1.04: ics... */
+   STR_ICS_NAME+1       "United Kingdom"
+   STR_ICS_NAME+2       "Denmark/Norway"
+   STR_ICS_NAME+3       "Finland"
+   STR_ICS_NAME+4       "France"
+   STR_ICS_NAME+5       "French Canada"
+   STR_ICS_NAME+6       "Germany"
+   STR_ICS_NAME+7       "Italy"
+   STR_ICS_NAME+8       "Spain"
+   STR_ICS_NAME+9       "Sweden"
+   STR_ICS_NAME+10      "Switzerland"
+   STR_ICS_NAME+11      ""
+
+/* >>>>>>>>>>>>>>>>>>>>> DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+   STR_ICS_DATA         "#@[\\]^_`{|}~"      /* US */
+   STR_ICS_DATA+1       "£@[\\]^_`{|}~"      /* UK */
+   STR_ICS_DATA+2       "#ÄÆØÅÜ_äæøåü"       /* DANISH/NORWEGIAN */
+   STR_ICS_DATA+3       "#@ÄÖÅÜ_éäöåü"       /* FINISH */
+   STR_ICS_DATA+4       "£à°ç§^_`éùè¨"       /* FRENCH */
+   STR_ICS_DATA+5       "#àâçêî_ôéùèû"       /* CANADIAN */
+   STR_ICS_DATA+6       "#§ÄÖÜ^_`äöüß"       /* GERMAN */
+   STR_ICS_DATA+7       "£§°çé^_ùàòèì"       /* ITALIAN */
+   STR_ICS_DATA+8       "£§¡Ñ¿^_`°ñç~"       /* SPANISH */
+   STR_ICS_DATA+9       "#ÉÄÖÅÜ_éäöåü"       /* SWEDISH */
+   STR_ICS_DATA+10      "ùàéçêîèôäöüû"       /* SWISS */
+/* >>>>>>>>>>>>>>>>>>>>> END OF DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<< */
+
+   STR_COM_CONNECT      "None"
+   STR_COM_CONNECT+1    ""
+   STR_COM_CONNECT+2    "COM%d:"
+   STR_COM_CONNECT+3    ""
+
+/* >>>>>>>>>>>>>>>>>>>>> DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+   STR_MDM_HAYES        "ATDT"
+   STR_MDM_HAYES+1      ""
+   STR_MDM_HAYES+2      "+++"
+   STR_MDM_HAYES+3      "ATH"
+   STR_MDM_HAYES+4      ""
+   STR_MDM_HAYES+5      ""
+   STR_MDM_HAYES+6      ""
+   STR_MDM_HAYES+7      ""
+   STR_MDM_HAYES+8      ""
+   STR_MDM_HAYES+9      ""
+   STR_MDM_HAYES+10     "ATQ1E0S0=1"
+   STR_MDM_HAYES+11     "ATQ0V1E1S0=0"
+
+   STR_MDM_TELEBIT      "ATDT"
+   STR_MDM_TELEBIT+1    ""
+   STR_MDM_TELEBIT+2    "+++"
+   STR_MDM_TELEBIT+3    "ATH"
+   STR_MDM_TELEBIT+4    "ATS58=0S68=3"
+   STR_MDM_TELEBIT+5    "ATS58=3S68=255"
+   STR_MDM_TELEBIT+6    "ATS58=3S68=0"
+   STR_MDM_TELEBIT+7    "ATS58=3S68=255"
+   STR_MDM_TELEBIT+8    "ATI2"
+   STR_MDM_TELEBIT+9    "FAST"
+   STR_MDM_TELEBIT+10   "ATQ1E0S0=1"
+   STR_MDM_TELEBIT+11   "ATQ0E1S0=0"
+
+   STR_MDM_MNP          "ATDT"
+   STR_MDM_MNP+1        ""
+   STR_MDM_MNP+2        "+++"
+   STR_MDM_MNP+3        "ATH"
+   STR_MDM_MNP+4        ""
+   STR_MDM_MNP+5        ""
+   STR_MDM_MNP+6        ""
+   STR_MDM_MNP+7        ""
+   STR_MDM_MNP+8        "ATO"
+   STR_MDM_MNP+9        "RELIABLE"
+   STR_MDM_MNP+10       "ATQ1E0&E1&E3S0=1"
+   STR_MDM_MNP+11       "ATQ0E1&E1&E3S0=0"
+
+   STR_MDM_NONE         ""
+   STR_MDM_NONE+1       ""
+   STR_MDM_NONE+2       ""
+   STR_MDM_NONE+3       ""
+   STR_MDM_NONE+4       ""
+   STR_MDM_NONE+5       ""
+   STR_MDM_NONE+6       ""
+   STR_MDM_NONE+7       ""
+   STR_MDM_NONE+8       ""
+   STR_MDM_NONE+9       ""
+   STR_MDM_NONE+10      ""
+   STR_MDM_NONE+11      ""
+/* >>>>>>>>>>>>>>>>>>>>> END OF DO NOT TRANSLATE <<<<<<<<<<<<<<<<<<<<<<<< */
+/*- Added 02/13/91 for win 3.1 common dialog  support -----*/
+   STR_FILTERTRM     "Terminal Files(*.TRM)#*.TRM#"
+   STR_FILTERTXT     "Text files(*.TXT)#*.TXT#"
+   STR_FILTERALL     "All files(*.*)#*.*#"
+END
+
+
+/*---------------------------------------------------------------------------*/
+
+Terminal MENU
+BEGIN
+   POPUP "&File"
+   BEGIN
+      MENUITEM "&New",                       FMNEW
+      MENUITEM "&Open...",                      FMOPEN
+      MENUITEM SEPARATOR
+      MENUITEM "&Save",                         FMSAVE
+      MENUITEM "Save &As...",                   FMSAVEAS
+      MENUITEM SEPARATOR
+      MENUITEM "P&rint Setup...",               FMPRINTSETUP
+      MENUITEM SEPARATOR
+      MENUITEM "E&xit",                         FMEXIT   /* mbbx 1.10: CUA... */
+   END
+
+   POPUP "&Edit"                             /* mbbx 2.00: CUA... */
+   BEGIN
+      MENUITEM "&Copy        Ctrl+C",           EMCOPY
+      MENUITEM "&Paste       Ctrl+V",           EMPASTE
+      MENUITEM "Se&nd        Ctrl+Shift+Ins",   EMCOPYTHENPASTE
+      MENUITEM "Select &All",                   EMSELECTALL
+      MENUITEM SEPARATOR
+      MENUITEM "Cl&ear Buffer",                 EMCLEAR
+   END
+
+   POPUP "&Settings"
+   BEGIN
+      MENUITEM "Phone &Number...",              SMPHONE
+      MENUITEM "&Terminal Emulation...",        SMEMULATE
+      MENUITEM "Terminal &Preferences...",      SMTERMINAL
+      MENUITEM "Function &Keys...",             SMFUNCTIONKEYS
+      MENUITEM "Te&xt Transfers...",            SMTEXTXFERS
+      MENUITEM "&Binary Transfers...",          SMBINXFERS
+      MENUITEM "&Communications...",            SMCOMMUNICATIONS
+      MENUITEM "Mo&dem Commands...",            SMMODEM
+      MENUITEM SEPARATOR                                    /* mbbx 2.00: CUA... */
+      MENUITEM "Printer &Echo",                 FMPRINTER
+      MENUITEM "T&imer Mode",                   FMTIMER
+      MENUITEM "Show &Function Keys",           WMFKEYS /* rjs bugs 005 */
+   END
+
+   POPUP "&Phone"
+   BEGIN
+      MENUITEM "&Dial",                         PMDIAL
+      MENUITEM "&Hangup",                       PMHANGUP
+   END
+
+   POPUP "&Transfers"
+   BEGIN
+      MENUITEM "&Send Text File...",            TMSENDTEXTFILE
+      MENUITEM "&Receive Text File...",         TMRCVTEXTFILE
+      MENUITEM "&View Text File...",            TMVIEWTEXTFILE
+      MENUITEM SEPARATOR
+      MENUITEM "Send &Binary File...",          TMSENDBINFILE
+      MENUITEM "Receive Binary &File...",       TMRCVBINFILE
+      MENUITEM SEPARATOR
+      MENUITEM "&Pause",                        TMPAUSE
+      MENUITEM "R&esume",                       TMRESUME
+      MENUITEM "St&op",                         TMSTOP
+   END
+
+
+   POPUP "&Help"                           /* mbbx 2.00: CUA... */
+   BEGIN
+      MENUITEM "&Contents",                     HMINDEX      /* 0xFFFF */
+      MENUITEM "&Search For Help On ..."        HMSEARCH     /* 0x0105 */
+      MENUITEM "&How to Use Help"		HMHELP	     /* 0xFFFC -sdj bug5750*/
+      MENUITEM SEPARATOR
+      MENUITEM "&About Terminal...",            HMABOUT
+   END
+
+END
+
+
+/*---------------------------------------------------------------------------*/
+
+IDDBMYCONTROLS DIALOG 0, 0, 320, 25  /* mbbx 2.00: fkeys... */
+STYLE WS_CHILD | WS_BORDER
+FONT 8 "MS Shell Dlg"
+BEGIN
+   CONTROL ""              IDFK1,     "button",    WS_CHILD | BS_USERBUTTON,                           0,   0,  64,  12
+   CONTROL ""              IDFK2,     "button",    WS_CHILD | BS_USERBUTTON,                           0,  12,  64,  12
+   CONTROL ""              IDFK3,     "button",    WS_CHILD | BS_USERBUTTON,                          64,   0,  64,  12
+   CONTROL ""              IDFK4,     "button",    WS_CHILD | BS_USERBUTTON,                          64,  12,  64,  12
+   CONTROL ""              IDFK5,     "button",    WS_CHILD | BS_USERBUTTON,                         128,   0,  64,  12
+   CONTROL ""              IDFK6,     "button",    WS_CHILD | BS_USERBUTTON,                         128,  12,  64,  12
+   CONTROL ""              IDFK7,     "button",    WS_CHILD | BS_USERBUTTON,                         192,   0,  64,  12
+   CONTROL ""              IDFK8,     "button",    WS_CHILD | BS_USERBUTTON,                         192,  12,  64,  12
+   CONTROL ""              IDMORE,    "button",    WS_CHILD | BS_USERBUTTON,                         256,   0,  64,  12
+   CONTROL ""              IDTIMER,   "button",    WS_CHILD | BS_USERBUTTON,                         256,  12,  64,  12
+END
+
+IDDBXFERCTRLS DIALOG 0, 0, 320, 12           /* mbbx 2.00 ... */
+STYLE WS_CHILD | WS_BORDER | WS_CLIPSIBLINGS
+FONT 8 "MS Shell Dlg"
+BEGIN
+   CONTROL "Stop"   IDSTOP,    "button", WS_CHILD | BS_USERBUTTON,   0,   0,  36,  12
+   CONTROL "Pause"  IDPAUSE,   "button", WS_CHILD | BS_USERBUTTON,   0,   0,  40,  12
+   CONTROL ""       IDFORK,    "static", SS_WHITERECT,               0,   0,  18,  12 /* was 14 */
+   CONTROL ""       IDSCALE,   "static", SS_WHITERECT,               0,   0,  64,  12
+   CONTROL ""       IDSENDING, "static", SS_WHITERECT,               0,   0,  136,  12 /* was 98 */
+   CONTROL ""       IDBERRORS, "static", SS_WHITERECT,               0,   0,  54,  12
+END
+
+
+IDDBPORTINIT DIALOG 10, 10, 106, 60          /* mbbx 2.01.10 ... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Default Serial Port"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   LTEXT "Serial &Ports:" -1,                     4,   4,  56,  10, WS_GROUP
+   LISTBOX ITMCONNECTOR,                          4,  16,  56,  41, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+
+   DEFPUSHBUTTON "OK" IDOK,                      66,   4,  36,  14, WS_GROUP
+END
+
+
+IDDBPRTSETUP DIALOG 10, 10, 190, 78          /* mbbx 2.00: CUA (jtfx)... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Printer Setup"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   LTEXT "&Printer" -1,                          4,   4,  52,  10, WS_GROUP
+   LISTBOX IDPRINTNAME,                          4,  16, 132,  57, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+
+   DEFPUSHBUTTON "OK" IDOK,                     142,   4,  44,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                142,  20,  44,  14
+   PUSHBUTTON "&Setup..." IDPRTSETUP,           142,  48,  44,  14
+END
+
+
+IDABORTDLG DIALOG 10, 10, 120, 60
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Terminal"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   CTEXT "Sending to Print" -1,                   0,   8, 120,   8, WS_GROUP
+   CTEXT ""                      99,              0,  18, 120,   8
+   DEFPUSHBUTTON "Cancel" IDCANCEL,              44,  36,  32,  14, WS_GROUP
+END
+
+
+IDDBPHON DIALOG 10, 10, 218, 58             /* mbbx 1.10: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Phone Number"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   LTEXT "&Dial:" -1,                            10,   6,  20,  10
+   EDITTEXT ITMPHONENUMBER,                      34,   4, 128,  12, ES_AUTOHSCROLL
+
+   LTEXT "&Time-out If Not Connected In" -1,	  10,  22, 108,  10 /* -sdj Timeout->Time-out bug# 5750 */
+   EDITTEXT ITMRETRYTIME,                       120,  20,  16,  12
+   LTEXT "Seconds" -1,                          138,  22,  28,  10
+
+   CHECKBOX "&Redial After Timing Out" ITMRETRY,  4,  42, 104,  10, WS_GROUP
+   CHECKBOX "&Signal When Connected" ITMSIGNAL, 120,  42,  96,  10
+
+   DEFPUSHBUTTON "OK" IDOK,                     178,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                178,  20,  36,  14
+END
+
+
+IDDBEMUL DIALOG 10, 10, 144, 46
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Terminal Emulation"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   RADIOBUTTON "&TTY (Generic)" ITMTTY,          10,   4,  80,  10
+   RADIOBUTTON "DEC VT-&100 (ANSI)" ITMVT100,    10,  16,  80,  10
+   RADIOBUTTON "DEC VT-&52" ITMVT52,             10,  28,  80,  10
+
+   DEFPUSHBUTTON "OK" IDOK,                     100,   4,  40,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                100,  20,  40,  14
+END
+
+IDDBTERM DIALOG 10, 10, 176, 176             /* mbbx 1.10: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+Caption "Terminal Preferences"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Terminal Modes"    -1,               4,   2,  66,  50
+   CHECKBOX "Line &Wrap"        ITMLINEWRAP,     10,  14,  52,  10, WS_GROUP
+   CHECKBOX "Local &Echo"       ITMLOCALECHO,    10,  26,  52,  10
+   CHECKBOX "&Sound"            ITMSOUND,        10,  38,  52,  10
+
+   GROUPBOX "CR -> CR/LF"       -1,              76,   4,  54,  38, WS_GROUP
+   CHECKBOX "&Inbound"          ITMINCRLF,       82,  16,  44,  10, WS_GROUP
+   CHECKBOX "&Outbound"         ITMOUTCRLF,      82,  28,  44,  10
+
+   GROUPBOX "Columns"           -1,               4,  58,  66,  26, WS_GROUP
+   RADIOBUTTON "&80"            ITM80COL,        10,  70,  24,  10, WS_GROUP
+   RADIOBUTTON "&132"           ITM132COL,       40,  70,  24,  10
+
+   GROUPBOX "Cursor"            -1,              76,  46,  96,  38, WS_GROUP
+   RADIOBUTTON "&Block",        ITMBLKCURSOR,    82,  58,  32,  10, WS_GROUP
+   RADIOBUTTON "&Underline",    ITMUNDCURSOR,   118,  58,  48,  10
+   CHECKBOX "Blin&k"            ITMBLINKCURSOR,  82,  70,  32,  10, WS_GROUP
+
+   GROUPBOX "Terminal &Font"    -1,               4,  88,  88,  48, WS_GROUP
+   LISTBOX                      ITMFONTFACE,     10, 104,  46,  33, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+   LISTBOX                      ITMFONTSIZE,     62, 104,  24,  33, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+
+   GROUPBOX "&Translations"     -1,              94,  88,  78,  52              /* rjs swat */
+   LISTBOX                      ITMTRANSLATE,    96, 100,  74,  33, WS_VSCROLL | WS_TABSTOP  /* mbbx 2.01.167 */
+   CHECKBOX "IBM to &ANSI"      ITMIBMXANSI,    102, 126,  60,  12, WS_GROUP    /* rjs swat */
+
+   CHECKBOX "S&how Scroll Bars" ITMSCROLLBARS,    4, 144,  78,  12, WS_GROUP
+
+   LTEXT "Buffer &Lines:"       -1,              98, 146,  52,  10, WS_GROUP
+   EDITTEXT                     ITMBUFFERLINES, 154, 144,  18,  12
+
+   CHECKBOX "Use Function, Arrow, and &Ctrl Keys for Windows" /* -sdj ,(sp) bug# 5750 */
+                                ITMWINCTRL,       4, 158,  170,  12, WS_GROUP
+
+   DEFPUSHBUTTON "OK"           IDOK,           136,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel"          IDCANCEL,       136,  20,  36,  14
+END
+
+IDDBFKEY DIALOG 10, 10, 256, 130             /* mbbx 2.00: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Function Keys"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   LTEXT "Key Name:" -1,                         24,   4,  48,  10
+   LTEXT "Command:" -1,                          78,   4,  48,  10
+
+   LTEXT "F&1:" -1,                              10,  18,  12,  10
+   EDITTEXT ITMFKEYTITLE+1,                      24,  16,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+1,                       78,  16, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&2:" -1,                              10,  32,  12,  10
+   EDITTEXT ITMFKEYTITLE+2,                      24,  30,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+2,                       78,  30, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&3:" -1,                              10,  46,  12,  10
+   EDITTEXT ITMFKEYTITLE+3,                      24,  44,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+3,                       78,  44, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&4:" -1,                              10,  60,  12,  10
+   EDITTEXT ITMFKEYTITLE+4,                      24,  58,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+4,                       78,  58, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&5:" -1,                              10,  74,  12,  10
+   EDITTEXT ITMFKEYTITLE+5,                      24,  72,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+5,                       78,  72, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&6:" -1,                              10,  88,  12,  10
+   EDITTEXT ITMFKEYTITLE+6,                      24,  86,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+6,                       78,  86, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&7:" -1,                              10, 102,  12,  10
+   EDITTEXT ITMFKEYTITLE+7,                      24, 100,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+7,                       78, 100, 108,  12, ES_AUTOHSCROLL
+
+   LTEXT "F&8:" -1,                              10, 116,  12,  10
+   EDITTEXT ITMFKEYTITLE+8,                      24, 114,  52,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMFKEYTEXT+8,                       78, 114, 108,  12, ES_AUTOHSCROLL
+
+   GROUPBOX "Key &Level" -1,                    198,  40,  46,  38
+   RADIOBUTTON "1" ITMLEVEL1,                   204,  52,  16,  10, WS_GROUP
+   RADIOBUTTON "2" ITMLEVEL2,                   224,  52,  16,  10
+   RADIOBUTTON "3" ITMLEVEL3,                   204,  64,  16,  10
+   RADIOBUTTON "4" ITMLEVEL4,                   224,  64,  16,  10
+
+   CHECKBOX "Keys &Visible" ITMSHOWFKEYS,       198, 116,  60,  10, WS_GROUP
+
+   DEFPUSHBUTTON "OK" IDOK,                     204,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                204,  20,  36,  14
+END
+
+IDDBTXTX DIALOG 10, 10, 180, 116             /* mbbx 1.10: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Text Transfers"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Flow Control" -1,                                   4,   2, 106,  50, WS_GROUP
+   RADIOBUTTON "&Standard Flow Control" ITMSTD,                 10,  14,  96,  10, WS_GROUP
+   RADIOBUTTON "&Character at a Time" ITMCHR,                   10,  26,  96,  10
+   RADIOBUTTON "&Line at a Time" ITMLIN,                        10,  38,  96,  10
+
+   GROUPBOX "Transfer Using Standard Flow Control" ITMSTDGRP,    4,  56, 172,  26, WS_GROUP
+   LTEXT "Selected Flow Control Method: Xon/Xoff" ITMSTDXON,    10,  68, 152,   8
+   LTEXT "Selected Flow Control Method: Hardware" ITMSTDHARD,   10,  68, 152,   8
+   LTEXT "Selected Flow Control Method: None" ITMSTDNONE,       10,  68, 152,   8
+
+   GROUPBOX "Transfer a Character at a Time" ITMCHRGRP,          4,  56, 172,  40
+   RADIOBUTTON "&Delay Between Characters:" ITMCHRDELAY,        10,  66, 112,  12, WS_GROUP
+   RADIOBUTTON "Wait for Character &Echo" ITMCHRWAIT,           10,  80, 104,  12
+   EDITTEXT ITMCHRTIME,                                        122,  66,  18,  12, WS_GROUP
+   LTEXT "/10 Sec" ITMCHRUNITS,                                142,  68,  28,   8
+
+   GROUPBOX "Transfer a Line at a Time" ITMLINGRP,               4,  56, 172,  40
+   RADIOBUTTON "Delay &Between Lines:" ITMLINDELAY,             10,  66,  92,  12, WS_GROUP
+   RADIOBUTTON "Wait for &Prompt String:" ITMLINWAIT,           10,  80, 104,  12
+   EDITTEXT ITMLINTIME,                                        102,  66,  18,  12, WS_GROUP
+   LTEXT "/10 Sec" ITMLINUNITS,                                122,  68,  28,   8
+   EDITTEXT ITMLINSTR,                                         114,  80,  56,  12, ES_AUTOHSCROLL
+
+   CHECKBOX "Word &Wrap Outgoing Text at Column:" ITMWORDWRAP,   4, 100, 148,  12, WS_GROUP
+   EDITTEXT ITMWRAPCOL,                                        152, 100,  18,  12
+
+   DEFPUSHBUTTON "OK" IDOK,                                    140,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                               140,  20,  36,  14
+END
+
+
+IDDBBINX DIALOG 10, 10, 140, 38
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Binary Transfers"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   RADIOBUTTON "&XModem/CRC" ITMXMODEM,          10,   8,  80,  10, WS_GROUP
+   RADIOBUTTON "&Kermit" ITMKERMIT,              10,  20,  80,  10
+
+   DEFPUSHBUTTON "OK" IDOK,                     100,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                100,  20,  36,  14
+END
+
+
+IDDBCOMM DIALOG 10, 10, 200, 178
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Communications"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   GROUPBOX "&Baud Rate" -1,			  4,   4, 150,	48, WS_GROUP
+   RADIOBUTTON "110" ITMBD110,                   10,  16,  32,  10, WS_GROUP
+   RADIOBUTTON "300" ITMBD300,			 45,  16,  32,	10
+   RADIOBUTTON "600" ITMBD600,			 77,  16,  32,	10
+   RADIOBUTTON "1200" ITMBD120, 		113,  16,  32,	10
+   RADIOBUTTON "2400" ITMBD240,                  10,  28,  32,  10
+   RADIOBUTTON "4800" ITMBD480, 		 45,  28,  32,	10
+   RADIOBUTTON "9600" ITMBD960, 		 77,  28,  32,	10
+   RADIOBUTTON "14.4K" ITMBD144,		113,  28,  32,	10
+   RADIOBUTTON "19.2K" ITMBD192,		 10,  40,  32,	10
+   RADIOBUTTON "38.4K" ITMBD384,		 45,  40,  32,	10
+   RADIOBUTTON "57.6K" ITMBD576,		 77,  40,  32,	10
+   RADIOBUTTON "115.2K" ITMBD1152,		113,  40,  35,	10
+
+   GROUPBOX "&Data Bits" -1,			  4,  56,  94,	26, WS_GROUP
+   RADIOBUTTON "5" ITMDATA5,			 10,  68,  16,	10
+   RADIOBUTTON "6" ITMDATA6,			 30,  68,  16,	10
+   RADIOBUTTON "7" ITMDATA7,			 50,  68,  16,	10
+   RADIOBUTTON "8" ITMDATA8,			 70,  68,  16,	10
+
+   GROUPBOX "&Stop Bits" -1,			114,  56,  72,	26, WS_GROUP
+   RADIOBUTTON "1" ITMSTOP1,			120,  68,  16,	10, WS_GROUP
+   RADIOBUTTON "1.5" ITMSTOP5,			140,  68,  24,	10
+   RADIOBUTTON "2" ITMSTOP2,			168,  68,  16,	10
+
+   GROUPBOX "&Parity" -1,			  4,  86,  40,	74, WS_GROUP
+   RADIOBUTTON "None" ITMNOPARITY,		 10,  98,  32,	10, WS_GROUP
+   RADIOBUTTON "Odd" ITMODDPARITY,		 10, 110,  32,	10
+   RADIOBUTTON "Even" ITMEVENPARITY,		 10, 122,  32,	10
+   RADIOBUTTON "Mark" ITMMARKPARITY,		 10, 134,  32,	10
+   RADIOBUTTON "Space" ITMSPACEPARITY,		 10, 146,  32,	10
+
+   GROUPBOX "&Flow Control" -1, 		 50,  86,  58,	52, WS_GROUP
+   RADIOBUTTON "Xon/Xoff" ITMXONFLOW,		 56,  98,  44,	10, WS_GROUP
+   RADIOBUTTON "Hardware" ITMHARDFLOW,		 56, 110,  44,	10
+   RADIOBUTTON "None" ITMNOFLOW,		 56, 122,  44,	10
+
+   LTEXT "&Connector" -1,			119,  86,  60,	10, WS_GROUP
+   LISTBOX ITMCONNECTOR,			119,  98,  70,	32, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+   PUSHBUTTON "Se&tup..." ITMSETUP,		134, 132,  40,	14
+
+   CHECKBOX "Parity Chec&k" ITMPARITY,		 50, 148,  60,	10, WS_GROUP
+   CHECKBOX "Ca&rrier Detect" ITMCARRIER,	120, 148,  68,	10, WS_GROUP
+
+   DEFPUSHBUTTON "OK" IDOK,			160,  4,  36,	14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,		160, 20,  36,	14
+END
+
+IDDBMODEM DIALOG 10, 10, 230, 116            /* mbbx 2.00: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Modem Commands"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   GROUPBOX "Commands" -1,                        4,   2, 150, 108, WS_GROUP
+   LTEXT "Prefix:" -1,                           58,  14,  36,   10
+   LTEXT "Suffix:" -1,                          104,  14,  48,   10
+
+   LTEXT "&Dial:" -1,                            10,  26,  44,   10
+   EDITTEXT ITMDIAL,                             58,  24,  44,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMDIAL+1,                          104,  24,  44,  12, ES_AUTOHSCROLL
+
+   LTEXT "&Hangup:" -1,                          10,  40,  44,   10
+   EDITTEXT ITMHANGUP,                           58,  38,  44,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMHANGUP+1,                        104,  38,  44,  12, ES_AUTOHSCROLL
+
+   LTEXT "Binary &TX:" -1,                       10,  54,  44,   10
+   EDITTEXT ITMBINTX,                            58,  52,  44,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMBINTX+1,                         104,  52,  44,  12, ES_AUTOHSCROLL
+
+   LTEXT "Binary &RX:" -1,                       10,  68,  44,   10
+   EDITTEXT ITMBINRX,                            58,  66,  44,  12, ES_AUTOHSCROLL
+   EDITTEXT ITMBINRX+1,                         104,  66,  44,  12, ES_AUTOHSCROLL
+
+/* rjs bugs 002 */
+   LTEXT "&Originate:" -1,                       10,  82,  44,   10
+   EDITTEXT ITMORIGIN,                           58,  80,  90,  12, ES_AUTOHSCROLL
+
+   GROUPBOX "&Modem Defaults" -1,               160,  48,  66,  62
+   RADIOBUTTON "Hayes" ITMHAYES,                166,  60,  56,  10, WS_GROUP
+   RADIOBUTTON "MultiTech" ITMMULTITECH,        166,  72,  56,  10
+   RADIOBUTTON "Trail Blazer" ITMTRAILBLAZER,	 166,  84,  56,  10 /* -sdj sp after Trail,bug#5750*/
+   RADIOBUTTON "None" ITMNOMODEM,               166,  96,  56,  10
+
+   DEFPUSHBUTTON "OK" IDOK,                     190,   4,  36,  14, WS_GROUP
+   PUSHBUTTON "Cancel" IDCANCEL,                190,  20,  36,  14
+END
+
+IDDBDIALING DIALOG 10, 10, 182, 38           /* mbbx 2.00: CUA... */
+STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+CAPTION "Terminal"
+FONT 8 "MS Shell Dlg"
+BEGIN
+   ICON ICO_DYNACOMM -1,                          6,   6,   0,   0, WS_GROUP
+
+   LTEXT "Dialing:" -1,                             28,   8,  24,   10
+   LTEXT "" IDDIALING,                           52,   8,  84,   10
+   LTEXT "Time Remaining:" -1,                   28,  22,  64,   10
+   LTEXT "" IDDIALTIME,                          92,  22,  12,   10
+   LTEXT "" IDDIALRETRY,                        114,  22,  64,   10
+
+   DEFPUSHBUTTON "Cancel" IDCANCEL,             142,   4,  36,  14, WS_GROUP
+END
+
+IDDBABOUT DIALOG 16, 16, 192, 68
+STYLE DS_MODALFRAME | WS_CAPTION | WS_VISIBLE
+CAPTION "About Terminal"
+BEGIN
+   CTEXT "Terminal for NT"                      -1,       0,  4, 192,  8
+   CTEXT "Developed for Microsoft"              -1,       0, 14, 192,  8
+   CTEXT "by Future Soft Engineering, Inc."     -1,       0, 24, 192,  8
+   CTEXT "Version 3.10NT"                       -1,       0, 34, 192,  8
+   DEFPUSHBUTTON "OK",                          IDOK,    71, 50,  50, 14
+END
+/*---------------------------------------------------------------------------*/
+
+1000 CCTL TRMTTY.BIN
+1002 CCTL TRMVT52.BIN
+1003 CCTL TRMVT100.BIN
+
+#include <ntverp.h>
+
+#define     VER_FILETYPE     VFT_APP
+#define     VER_FILESUBTYPE     VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Terminal Emulator Applet"
+#define VER_INTERNALNAME_STR        "terminal\0"
+
+#include "common.ver"

@@ -1,0 +1,8 @@
+!include ..\sources.inc
+
+SOURCES_USED = $(SOURCES_USED) ..\sources.inc 
+
+TARGETLIBS = $(TARGETLIBS)                           \
+             $(LIBRARY_PLATFORM_PATH)\*\user32p.lib  \
+             $(LIBRARY_PLATFORM_PATH)\*\ntdll.lib
+

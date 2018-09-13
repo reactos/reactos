@@ -1,0 +1,40 @@
+TARGETNAME=cdcache
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+#Statically link CRT
+#don't define USE_CRTDLL=1
+
+# resolve the _main
+UMENTRY=winmain
+
+PRECOMPILED_INCLUDE=
+PRECOMPILED_CXX=
+
+INCLUDES=$(BASEDIR)\public\sdk\inc;
+
+SOURCES=	\
+		cdcache.cpp	\
+		cdcache.rc
+
+UMAPPL=cdcache
+UMTYPE=windows
+TARGETLIBS=	\
+	$(BASEDIR)\public\sdk\lib\*\user32.lib		\
+	$(BASEDIR)\public\sdk\lib\*\gdi32.lib		\
+	$(BASEDIR)\public\sdk\lib\*\advapi32.lib	\
+	$(BASEDIR)\public\sdk\lib\*\version.lib		\
+	$(BASEDIR)\public\sdk\lib\*\shell32.lib
+
+C_DEFINES=    \
+              $(C_DEFINES)          \
+              -DWIN32=100           \
+              $(TRACELOG)
+
+# Do this to assure that we run on NT 4.0 and Win95, even with
+# NT5/Memphis headers.
+#
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+WARNING_LEVEL=-W4

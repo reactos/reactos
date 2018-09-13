@@ -1,0 +1,5 @@
+i386_SOURCES=..\i386\init386.c  \
+             ..\i386\data386.c  \
+             ..\i386\debugsup.c \
+             ..\i386\hypermap.c \
+             ..\i386\setmodfy.c

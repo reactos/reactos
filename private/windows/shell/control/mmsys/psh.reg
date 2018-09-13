@@ -1,0 +1,28 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{00022613-0000-0000-C000-000000000046}]
+   @= "Multimedia File Property Sheet"
+[HKEY_CLASSES_ROOT\CLSID\{00022613-0000-0000-C000-000000000046}\InProcServer32]
+   @= "mmsys.cpl"
+[HKEY_CLASSES_ROOT\SoundRec\shellex\PropertySheetHandlers]
+   @= "WavPage"
+[HKEY_CLASSES_ROOT\SoundRec\shellex\PropertySheetHandlers\WavPage]
+   @= "{00022613-0000-0000-C000-000000000046}"
+
+[HKEY_CLASSES_ROOT\midfile\shellex\PropertySheetHandlers]
+   @= "MidiPage"
+[HKEY_CLASSES_ROOT\midfile\shellex\PropertySheetHandlers\MidiPage]
+   @= "{00022613-0000-0000-C000-000000000046}"
+
+[HKEY_CLASSES_ROOT\avifile\shellex\PropertySheetHandlers]
+   @= "AviPage"
+[HKEY_CLASSES_ROOT\avifile\shellex\PropertySheetHandlers\AviPage]
+   @= "{00022613-0000-0000-C000-000000000046}"
+
+[HKEY_CLASSES_ROOT\mplayer\shellex\PropertySheetHandlers]
+   @= "MediaPage"
+[HKEY_CLASSES_ROOT\mplayer\shellex\PropertySheetHandlers\MediaPage]
+   @= "{00022613-0000-0000-C000-000000000046}"
+
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
+   "{00022613-0000-0000-C000-000000000046}" = "Multimedia File Property Sheet"

@@ -1,0 +1,6 @@
+# Build win95 binary first, so the PDB file of the NT version won't
+# get stomped on by the linker.
+
+DIRS    = win95 winnt
+
+OPTIONAL_DIRS = 

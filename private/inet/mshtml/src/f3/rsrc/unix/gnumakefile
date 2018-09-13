@@ -1,0 +1,135 @@
+
+PRODUCT = NONE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+WDLL=mshtml
+WRESOURCE = ${O}/${WDLL}.rc    # Windows resource
+#TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+NOTYET = \
+    $(BASEDIR)/public/sdk/inc/ieverp.h \
+    $O/selfreg_msthml.inf
+
+#
+# change unixfind.dlx to find.dlx in RESOURCES, on Windows NT
+#
+UNIXRESOURCES = \
+    $(O)/dialogs.dh \
+    $(O)/unixdialogs.dh
+
+RESOURCES = \
+    $(UNIXRESOURCES) \
+    $(O)/replace.dlx \
+    $(O)/forpar.dlx \
+    $(O)/forchar.dlx \
+    $(O)/gobook.dlx \
+    $(O)/insimage.dlx \
+    $(O)/edlink.dlx \
+    $(O)/edbook.dlx \
+    ../east.cur     \
+    ../hyperlnk.cur \
+    ../nomoveh.cur  \
+    ../nw.cur       \
+    ../south.cur    \
+    ../hlnocach.cur \
+    ../ne.cur       \
+    ../nomovev.cur  \
+    ../se.cur       \
+    ../sw.cur       \
+    ../hlwait.cur   \
+    ../nomove2d.cur \
+    ../north.cur    \
+    ../selbar.cur   \
+    ../west.cur     \
+    ../backgrnd.ppg \
+    ../backgrnd.jpg \
+    ../clouds.gif \
+    ../waves.gif \
+    ../authfla.gif \
+    ../cforms.ico \
+    ../csimtool.bmp \
+    ${O}/selfreg_mshtml.inf
+
+INCLUDES= \
+    ${O} \
+    /vobs/ie4/slm/cursors \
+    .. \
+    $(ROOTDIR)/types/${O} \
+    $(ROOTDIR)/external/inc \
+    $(SRCDIR)/core/include \
+    $(SRCDIR)/core/cdutil \
+    $(SRCDIR)/other/include \
+    $(SRCDIR)/ctrl/include \
+    $(SRCDIR)/dlay/include \
+    $(SRCDIR)/site/include \
+    $(SRCDIR)/f3/include
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+__cplusplus = true
+
+ALL: world
+
+include $(MWHOME)/make.rules.simple
+
+################
+# Rules
+
+OBJS := ${RESOURCES}
+
+SILENT_CPP := gcc -P -E -DUNIX
+SILENT_CPP2 := ${APOGEEDIR}/apcc -P -DUNIX
+#SILENT_CPP := /usr/ccs/lib/cpp -B -P -DUNIX
+
+${O}/mshtml.rc: ../forms3r.rc ${OBJS} 
+	${ECHOOBJ}
+	sed -f ../rc.sed $< > $@
+
+$(O)/%.dh: ../%.dh
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX}  > $@
+
+$(O)/dlg.sed: ../dlg.sed
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX}  > $@
+
+$(O)/%.C: ../%.dlg
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX}  > $@
+
+${O}/%.dls: $(O)/%.C $(O)/unixdialogs.dh $(O)/dialogs.dh 
+	${ECHOOBJ}
+	-$(SILENT_CPP) $< > $@
+
+${O}/%.dlx: $(O)/%.dls $(O)/dlg.sed
+	${ECHOOBJ}
+	sed -f $(O)/dlg.sed < $< > $@
+
+$(O)/%_mshtml.inf: ../%.inx
+	${ECHOOBJ}
+	cleaninf -w $< $@
+
+$(O)/%.CPP: ../%.ppg
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX}  > $@
+
+./%.i: $(O)/%.CPP
+	${ECHOOBJ}
+	-$(SILENT_CPP2) $<
+
+$(O)/%.ppg: ./%.i
+	${ECHOOBJ}
+	mv $< $@
+
+# Run the HTML property pages through a sed
+# script to remove extra whitespaces.
+
+$(O)/%.ppx : $(O)/%.ppg $(O)/dlg.sed
+	${ECHOOBJ}
+	sed -f $(O)/dlg.sed < $< > $@
+
+

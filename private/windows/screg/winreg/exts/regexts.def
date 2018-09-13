@@ -1,0 +1,12 @@
+LIBRARY CSDBG
+
+DESCRIPTION 'Class Store Debug KD and NTSD Extensions'
+
+EXPORTS
+    help
+    version
+    keys
+    ExtensionApiVersion
+    WinDbgExtensionDllInit
+	
+

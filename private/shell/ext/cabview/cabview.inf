@@ -1,0 +1,67 @@
+; CABVIEW.INF entries
+;
+; Cabinet File Viewer Install/Uninstall
+; Copyright 1992-1997 Microsoft Corporation.  All Rights Reserved.
+
+[version]
+signature="$CHICAGO$"
+
+[DefaultInstall]
+CopyFiles=AddViewer,AddAPI
+AddReg=Registry
+DelReg=Obsolete
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[DefaultUninstall]
+DelFiles=DelViewer
+DelReg=Registry,Obsolete
+
+[Registry]
+HKCR,.cab,,,"%CLSID%"
+HKCR,%CLSID%,,,"Cabinet"
+HKCR,%CLSID%\InProcServer32,,,"%11%\%EXT%\CabView.DLL"
+HKCR,%CLSID%\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,%CLSID%\DefaultIcon,,,"%11%\%EXT%\CabView.DLL,0"
+HKCR,%CLSID%\shell\open,,,"View"
+HKCR,%CLSID%\shell\open\command,,,"explorer /root,%GUID%,%1"
+HKLM,%UNINST%,,,
+HKLM,%UNINST%,"DisplayName",,"%FULL%"
+HKLM,%UNINST%,"UninstallString",,"rundll32.exe %11%\%EXT%\CabView.DLL,Uninstall %11%\%EXT%\cabview.inf"
+
+[Obsolete]
+HKLM,%WINDOWS%\Uninstall\MSCabFileView
+HKLM,%WINDOWS%\SharedDLLs,%11%\Cabinet.DLL
+
+[AddViewer]
+CabView.INF
+CabView.DLL
+
+[DelViewer]
+CabView.INF,,,1
+CabView.DLL,,,1
+
+[AddAPI]
+Cabinet.DLL
+
+[DestinationDirs]
+AddViewer=11,"%EXT%"
+DelViewer=11,"%EXT%"
+AddAPI=11
+
+[SourceDisksNames]
+55=%FULL%,"",1
+
+[SourceDisksFiles]
+CabView.INF=55
+CabView.DLL=55
+Cabinet.DLL=55
+
+[Strings]
+FULL="Microsoft Cabinet File Viewer"
+SHORT="CabView"
+GUID="{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}"
+CLSID="CLSID\{0CD7A5C0-9F37-11CE-AE65-08002B2E1262}"
+WINDOWS="Software\Microsoft\Windows\CurrentVersion"
+UNINST="Software\Microsoft\Windows\CurrentVersion\Uninstall\CabView"
+EXT="ShellExt"
+ERR_NOSETUPAPI="Can not register CABVIEW.DLL because SETUPAPI.DLL is missing."

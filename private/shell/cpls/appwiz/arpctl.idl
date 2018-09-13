@@ -1,0 +1,90 @@
+// ARPCtl.idl : IDL source for ARPCtl.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (ARPCtl.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(0CB57B1E-D652-11D1-B1DE-00C04FC2A118),
+	version(1.0),
+	helpstring("ARPCtl 1.0 Type Library")
+]
+library ARPCTLLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        object,
+        uuid(0CB57B2B-D652-11D1-B1DE-00C04FC2A118),
+        dual,
+        helpstring("IARPCtl Interface"),
+        pointer_default(unique)
+    ]
+    interface IARPCtl : IDispatch
+    {
+        [propget, id(1), helpstring("property ItemCount")] HRESULT ItemCount([out, retval] long *pVal);
+        [propget, id(2), helpstring("property DisplayName")] HRESULT DisplayName([out, retval] BSTR *pVal);
+        [propget, id(3), helpstring("property Version")] HRESULT Version([out, retval] BSTR *pVal);
+        [propget, id(4), helpstring("property Publisher")] HRESULT Publisher([out, retval] BSTR *pVal);
+        [propget, id(5), helpstring("property ProductID")] HRESULT ProductID([out, retval] BSTR *pVal);
+        [propget, id(6), helpstring("property RegisteredOwner")] HRESULT RegisteredOwner([out, retval] BSTR *pVal);
+        [propget, id(7), helpstring("property Language")] HRESULT Language([out, retval] BSTR *pVal);
+        [propget, id(8), helpstring("property SupportUrl")] HRESULT SupportUrl([out, retval] BSTR *pVal);
+        [propget, id(9), helpstring("property SupportTelephone")] HRESULT SupportTelephone([out, retval] BSTR *pVal);
+        [propget, id(10), helpstring("property HelpLink")] HRESULT HelpLink([out, retval] BSTR *pVal);
+        [propget, id(11), helpstring("property InstallLocation")] HRESULT InstallLocation([out, retval] BSTR *pVal);
+        [propget, id(12), helpstring("property InstallSource")] HRESULT InstallSource([out, retval] BSTR *pVal);
+        [propget, id(13), helpstring("property InstallDate")] HRESULT InstallDate([out, retval] BSTR *pVal);
+        [propget, id(14), helpstring("property RequiredByPolicy")] HRESULT RequiredByPolicy([out, retval] BSTR *pVal);
+        [propget, id(15), helpstring("property Contact")] HRESULT Contact([out, retval] BSTR *pVal);
+        [propget, id(16), helpstring("property Size")] HRESULT Size([out, retval] BSTR *pVal);
+        [propget, id(17), helpstring("property TimesUsed")] HRESULT TimesUsed([out, retval] BSTR *pVal);
+        [propget, id(18), helpstring("property LastUsed")] HRESULT LastUsed([out, retval] BSTR *pVal);
+        [propget, id(19), helpstring("property Capability")] HRESULT Capability([out, retval] long * pVal);
+        [id(100), helpstring("method InitData")] HRESULT InitData([in] BSTR bstrEnum, [in] DWORD dwSortOrder);
+        [id(101), helpstring("method MoveFirst")] HRESULT MoveFirst([out, retval] BOOL* pbool);
+        [id(102), helpstring("method MoveNext")] HRESULT MoveNext([out, retval] BOOL* pbool);
+        [id(103), helpstring("method MoveTo")] HRESULT MoveTo([in] DWORD dwRecNum, [out, retval] BOOL* pbool);
+
+        // Valid Exec command strings:
+        //
+        //  "install"       - install app at nRecord
+        //  "uninstall"     - uninstall app
+        //  "modify"        - modify app
+        //  "repair"        - repair app
+        //  "upgrade"       - upgrade app
+        //  "generic install" - invoke the 'install from floppy or CD' wizard
+        //  "ntoptions"     - add/remove NT options
+        //  "winupdate"     - update windows
+        //
+        [id(104), helpstring("method Exec")] HRESULT Exec([in] BSTR bstrExec);
+    };
+
+
+    [
+        uuid(0E5B1C7E-D87D-11d1-B1DE-00C04FC2A118),
+        helpstring("Event interface for ARPCtl")
+    ]
+    dispinterface _ARPCtlEvents
+    {
+    properties:
+    methods:
+        [id(1)] void OnSyncDataReady();
+        [id(2)] void OnAsyncDataReady([in]long row);
+        [id(3)] void OnRowReady([in]long row);
+    };
+
+	[
+		uuid(0CB57B2C-D652-11D1-B1DE-00C04FC2A118),
+		helpstring("ARPCtl Class")
+	]
+	coclass CARPCtl
+	{
+		[default] interface IARPCtl;
+        [default, source] dispinterface _ARPCtlEvents;
+	};
+};

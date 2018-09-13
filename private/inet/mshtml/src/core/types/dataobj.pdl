@@ -1,0 +1,24 @@
+#ifndef _DATAOBJ_PDL_
+#define _DATAOBJ_PDL_ 1
+
+#include "types.pdl"
+
+
+file dataobj.pdl
+
+import types.pdl
+
+
+interface IDataAutoWrapper super:IDispatch guid:ec72f590-f375-11ce-b9e8-00aa006b1a69
+    method HRESULT clear     dispid:DISPID_DATAAUTOWRAPPER
+    method HRESULT getFormat (in type:VARIANT arg:format out retval type:VARIANT_BOOL* arg:support) dispid:DISPID_DATAAUTOWRAPPER+1
+    method HRESULT getText (in optional type:VARIANT arg:format out retval type:BSTR* arg:text) dispid:DISPID_DATAAUTOWRAPPER+2
+    method HRESULT setText (in type:BSTR arg:text in optional type:VARIANT arg:format) dispid:DISPID_DATAAUTOWRAPPER+3
+    method HRESULT putInClipboard dispid:DISPID_DATAAUTOWRAPPER+4
+    method HRESULT getFromClipboard dispid:DISPID_DATAAUTOWRAPPER+5
+    method HRESULT startDrag (in optional type:VARIANT arg:okEffect out retval type:fmDropEffect* arg:effect) dispid:DISPID_DATAAUTOWRAPPER+6
+
+class DataObject name:DataObject primaryinterface:IDataAutoWrapper guid:3050f1cc-98b5-11cf-bb82-00aa00bdce0b
+
+
+#endif // _DATAOBJ_PDL_

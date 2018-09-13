@@ -1,0 +1,13 @@
+WHAT=creatcon
+TYPE=cxx
+
+TARGETNAME=$(WHAT)
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+SOURCES=$(WHAT).$(TYPE)
+
+UMTYPE=console
+UMAPPL=$(WHAT)
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib

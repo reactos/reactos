@@ -1,0 +1,65 @@
+#ifndef _TXTEDIT_PDL_
+#define _TXTEDIT_PDL_ 1
+
+#include "types.pdl"
+#include "csite.pdl"
+#include "range.pdl"
+#include "siterang.pdl"
+
+file txtedit.pdl
+
+import csite.pdl
+import range.pdl
+
+/* New style element events w/ eventObject parameter: */
+event HTMLTextContainerEvents2 super:HTMLControlElementEvents2 guid:3050f624-98b5-11cf-bb82-00aa00bdce0b
+    method void    onchange (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONCHANGE
+    method void    onselect (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONSELECT
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLTextContainerEvents super:HTMLControlElementEvents guid:1FF6AA72-5842-11cf-A707-00AA00C0098D
+    method void    onchange            dispid:DISPID_EVMETH_ONCHANGE ()
+    method void    onselect            dispid:DISPID_EVMETH_ONSELECT ()
+
+interface IHTMLTextContainer super:IDispatch guid:3050f230-98b5-11cf-bb82-00aa00bdce0b
+    refmethod CTxtSite:createControlRange
+
+    refprop CTxtSite:scrollHeight
+    refprop CTxtSite:scrollWidth
+    refprop CTxtSite:scrollTop
+    refprop CTxtSite:scrollLeft
+    refprop CTxtSite:onscroll
+
+
+tearoff CTxtSite interface:IHTMLTextContainer
+
+class CTxtSite \
+            primaryinterface:IHTMLTextContainer \
+            super:CSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            abstract
+
+    method   HRESULT  createControlRange dispid:DISPID_TEXTSITE+1  (out retval type:IDispatch** arg:range) nopropdesc
+
+    property scrollHeight        abstract atype:long dispid:DISPID_TEXTSITE+2 internal \
+    		 type:long get     displaybind default:NULL_UNITVALUE  nopropdesc
+    property scrollWidth         abstract atype:long dispid:DISPID_TEXTSITE+3 internal \
+    		 type:long get     displaybind default:NULL_UNITVALUE  nopropdesc
+    property scrollTop           abstract atype:long dispid:DISPID_TEXTSITE+4 internal \
+    		 type:long get set displaybind default:NULL_UNITVALUE  nopropdesc
+    property scrollLeft          abstract atype:long dispid:DISPID_TEXTSITE+5 internal \
+    		 type:long get set displaybind default:NULL_UNITVALUE  nopropdesc
+
+    //
+    // the onscroll property has migrated from here to CElement. however for interface access, we still need the vtable and a live
+    //  function to remap from here.  but we do not want THIS property to show up in the mondoDispInterface, since it will
+    //  be there anyhow due to CElement.  The flag "nopropdesc" indicates this very desire.
+    //
+    property onscroll  atype:VARIANT type:code dispid:DISPID_EVPROP_ONSCROLL   caa scriptlet get set bindable displaybind \
+        baseimplementation maxstrlen:pdlEvent nopropdesc
+
+
+#endif //_TEXTELEM_PDL_

@@ -1,0 +1,61 @@
+#ifndef _OPTION_PDL_
+#define _OPTION_PDL_ 1
+
+#include "element.pdl"
+#include "eform.pdl"
+
+file option.pdl
+
+import element.pdl
+import eform.pdl
+
+
+interface IHTMLOptionElement guid:3050f211-98b5-11cf-bb82-00aa00bdce0b
+    refprop COptionElement:selected
+    refprop COptionElement:value
+    refprop COptionElement:defaultSelected
+    refprop COptionElement:index
+    refprop COptionElement:text
+    refprop COptionElement:form
+
+tearoff COptionElement interface:IHTMLOptionElement
+
+class COptionElement name:HTMLOptionElement \
+            primaryinterface:IHTMLOptionElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f24d-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f52b-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLOptionElement
+
+    property selected     atype:VARIANT_BOOL  dispid:DISPID_OPTION+1  type:VARIANT_BOOL  \
+        get set method:SelectedHelper  vt:VT_BOOL min:0 max:1 default:0 
+    property value        atype:BSTR          dispid:DISPID_OPTION+2  type:BSTR          \
+       get set caa setaahr maxstrlen:pdlNoLimit
+    property defaultSelected   atype:VARIANT_BOOL  dispid:DISPID_OPTION+3  type:VARIANT_BOOL  \
+       get set abstract        vt:VT_BOOL min:0 max:1 default:0   
+    property text         atype:BSTR              dispid:DISPID_OPTION+4   type:BSTR          \
+       get set abstract maxstrlen:pdlNoLimit
+    property index        atype:LONG              dispid:DISPID_OPTION+5   type:long          \
+       get set abstract
+    property form         atype:IHTMLFormElement* dispid:DISPID_OPTION+6   type:IHTMLFormElement*     \
+        abstract get
+
+
+interface IHTMLOptionElementFactory super:IDispatch guid:3050f38c-98b5-11cf-bb82-00aa00bdce0b
+    refmethod COptionElementFactory:create
+
+tearoff COptionElementFactory interface:IHTMLOptionElementFactory
+class COptionElementFactory name:HTMLOptionElementFactory primaryinterface:IHTMLOptionElementFactory \
+        guid:3050f38d-98b5-11cf-bb82-00aa00bdce0b
+    method HRESULT create maxstrlen:pdlNoLimit dispid:DISPID_VALUE  \
+        (   in optional type:VARIANT arg:text, \
+            in optional type:VARIANT arg:value \
+            in optional type:VARIANT arg:defaultselected \
+            in optional type:VARIANT arg:selected \
+            out retval type:IHTMLOptionElement** )      
+
+#endif _OPTION_PDL_

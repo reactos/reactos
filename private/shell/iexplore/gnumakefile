@@ -1,0 +1,66 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+
+# COMPONENT = SHELL
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+SOURCES =  \
+	debug.c \
+	dllload.c \
+	mainloop.cpp \
+	unixstuff.cpp
+
+PROG	= iexplorer
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+OBJS	 = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+WRESOURCE = iexplore.rc   # Windows resource
+TRESOURCE = ${PROG}.rxt   # Target X resource (must match program name)
+
+# IEUNIX - generating tlib causing mktyplib to crash
+#TYPELIB_FILES = iedisp.tlb
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+NO_UNICODE = 1
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+## you may define the following variables
+APP_CFLAGS=-DMWXCLASS_NAME=\"Iexplorer\" \
+           -DMWNO_INITIAL_FONT_CACHE_UPDATE	
+
+PROJECT_CFLAGS = -DWINDOWS_ME -DWINNT \
+                 -DFE_IME -DDBCS -DPRIVATE= -DULTRAPRIVATE=  \
+                 -DUSE_PRIVATE_VERSION_NUMBER -DNOPRAGMAS 
+
+ifeq (${MWOS},sunos5)
+PROJECT_LDFLAGS = -libmieee  
+endif
+PROJECT_LDFLAGS += -lshlwapi -luuid -lstocklib -ladvapi32
+
+__cplusplus = true
+
+# Map files are not currently supported by quantify.  So added the ifndef
+# so that the use of function maps can be def'ed out when doing a build
+# for quantify. (prasadt)
+
+ifndef NO_MAP_FILES
+MAPFILE.sunos5=iexplore.map
+endif
+
+include $(MWHOME)/make.rules.simple

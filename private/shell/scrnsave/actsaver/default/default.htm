@@ -1,0 +1,183 @@
+<html>
+<body style="background-color: white" scrolling=no>
+<div id="chguideLink" style="position: absolute; visibility: hidden; filter: revealtrans(duration=1.5, transition=3); top: 100%; text-align: center; font-family: 'verdana'; font-size: 8pt">
+[To setup your Active Channel Screen Saver, add channels from the <a href="http://www.iechannelguide.com/guide/en/en_us.asp" style="color: #FF6633">Microsoft Channel Guide</a>]
+</div>
+<img id="banner" src="banner.gif" style="position:absolute; left: 99%; top: 800px">
+<center>
+<div id="dots" style="position: relative; width: 452px; height: 480px; color: white; zindex: 1; font-family: 'times new roman'; font-size: 400pt">
+<script language=vbscript>
+  hortRes = window.screen.width
+  if hortres = 640 then
+	topMargin = -50
+  elseif hortres = 800 then
+	topMargin = 30
+  else
+	topMargin = 100
+  end if
+  dots.style.top = topMargin
+</script>
+
+ <img id="gleam" src="gleam.gif" style="position:absolute; left: 208px; top: 225px; width: 42px; height: 42px">
+ <img id="satdishc" src="sat_clr.gif" style="position:absolute; left: 172px; top: 191px; width: 112px; height: 112px">
+ <img id="satdishg" src="sat_grey.gif" style="position:absolute; left: 172px; top: 191px; width: 112px; height: 112px">
+ <img src="bdot.gif" id="bdot11" STYLE="visibility: hidden; position:absolute; left: 117px; top: 222px">
+ <img src="bdot.gif" id="bdot12" STYLE="visibility: hidden; position:absolute; left: 292px; top: 222px">
+ <img src="bdot.gif" id="bdot13" STYLE="visibility: hidden; position:absolute; left: 205px; top: 135px">
+ <img src="bdot.gif" id="bdot14" STYLE="visibility: hidden; position:absolute; left: 205px; top: 310px">
+ <img src="bdot.gif" id="bdot15" STYLE="visibility: hidden; position:absolute; left: 142px; top: 160px">
+ <img src="bdot.gif" id="bdot16" STYLE="visibility: hidden; position:absolute; left: 142px; top: 285px">
+ <img src="bdot.gif" id="bdot17" STYLE="visibility: hidden; position:absolute; left: 267px; top: 160px">
+ <img src="bdot.gif" id="bdot18" STYLE="visibility: hidden; position:absolute; left: 267px; top: 285px">
+
+ <img src="odot.gif" id="odot11" STYLE="visibility: hidden; position:absolute; left: 12px; top: 222px">
+ <img src="odot.gif" id="odot12" STYLE="visibility: hidden; position:absolute; left: 397px; top: 222px">
+ <img src="odot.gif" id="odot13" STYLE="visibility: hidden; position:absolute; left: 205px; top: 30px">
+ <img src="odot.gif" id="odot14" STYLE="visibility: hidden; position:absolute; left: 205px; top: 415px">
+ <img src="odot.gif" id="odot15" STYLE="visibility: hidden; position:absolute; left: 67px; top: 85px">
+ <img src="odot.gif" id="odot16" STYLE="visibility: hidden; position:absolute; left: 67px; top: 360px">
+ <img src="odot.gif" id="odot17" STYLE="visibility: hidden; position:absolute; left: 342px; top: 85px">
+ <img src="odot.gif" id="odot18" STYLE="visibility: hidden; position:absolute; left: 342px; top: 360px">
+
+ <img id="arrow" src="arrow.gif" style="visibility: visible; position:absolute; left: 208px; top: 430px; width: 33px; height: 57px">
+</div>
+</center>
+
+<script language="vbscript">
+DIM n, ArrowTop, BannerTop
+
+SUB window_onLoad
+  unusedretval = setInterval("call OnTimerTick", 100, "vbscript")
+  ResetPage
+END SUB
+
+SUB OnTimerTick
+  IF n>0 AND n<11 THEN GoArrow
+  IF n=10 THEN ChangeSatdish
+  IF n=11 THEN showBlue: blueDrawPattern 0,0
+  IF n=14 THEN blueDrawPattern 4,3
+  IF n=17 THEN blueDrawPattern 12,11
+  IF n=20 THEN blueDrawPattern 38,27
+  IF n=23 THEN blueDrawPattern 93,67
+  IF n=26 THEN blueDrawPattern 105,75
+  IF n=29 THEN showOrange
+  IF n=32 THEN orangeDrawPattern 93,67
+  IF n=35 THEN orangeDrawPattern 38,27
+  IF n=38 THEN orangeDrawPattern 12,11
+  IF n=41 THEN orangeDrawPattern 4,3
+  IF n=44 THEN orangeDrawPattern 0,0
+  IF n=46 THEN ChangeGleam: ShowLink
+  IF n=90 THEN ResetPage
+  n=n+1
+END SUB
+
+SUB ResetPage
+  n=0
+  orangeDrawPattern 105,75
+  blueDrawPattern 0,0
+  ArrowTop = 450
+  BannerTop = 870
+  GoArrow
+  Satdishg.style.visibility = "visible"
+  arrow.style.visibility = "visible"
+  chguideLink.style.visibility = "hidden"
+END SUB
+
+SUB GoArrow
+  ArrowTop=ArrowTop - 20
+  Arrow.Style.Top = ArrowTop 
+  BannerTop=BannerTop - 70
+  Banner.Style.Top = BannerTop 
+END SUB 
+
+SUB ShowLink
+  chguideLink.filters.revealtrans.Apply()
+  chguideLink.style.visibility = "visible"
+  chguideLink.filters.revealtrans.Play()
+END SUB
+
+SUB ChangeSatdish
+  Satdishg.style.visibility = "hidden"
+  Satdishc.style.visibility = "visible"   
+END SUB
+
+SUB ChangeGleam
+  Satdishc.style.visibility = "hidden"
+  odot11.style.visibility = "hidden"
+  odot12.style.visibility = "hidden"
+  odot13.style.visibility = "hidden"
+  odot14.style.visibility = "hidden"
+  odot15.style.visibility = "hidden"
+  odot16.style.visibility = "hidden"
+  odot17.style.visibility = "hidden"
+  odot18.style.visibility = "hidden"
+  Gleam.style.visibility = "visible"
+END SUB
+
+SUB showOrange
+  bdot11.style.visibility = "hidden"
+  bdot12.style.visibility = "hidden"
+  bdot13.style.visibility = "hidden"
+  bdot14.style.visibility = "hidden"
+  bdot15.style.visibility = "hidden"
+  bdot16.style.visibility = "hidden"
+  bdot17.style.visibility = "hidden"
+  bdot18.style.visibility = "hidden"
+  odot11.style.visibility = "visible"
+  odot12.style.visibility = "visible"
+  odot13.style.visibility = "visible"
+  odot14.style.visibility = "visible"
+  odot15.style.visibility = "visible"
+  odot16.style.visibility = "visible"
+  odot17.style.visibility = "visible"
+  odot18.style.visibility = "visible"
+END SUB
+
+SUB showBlue
+  arrow.style.visibility = "hidden"
+  bdot11.style.visibility = "visible"
+  bdot12.style.visibility = "visible"
+  bdot13.style.visibility = "visible"
+  bdot14.style.visibility = "visible"
+  bdot15.style.visibility = "visible"
+  bdot16.style.visibility = "visible"
+  bdot17.style.visibility = "visible"
+  bdot18.style.visibility = "visible"
+END SUB
+
+
+SUB blueDrawPattern (a1,a2)
+  bdot11.style.left = 117-a1
+  bdot12.style.left = 292+a1
+  bdot13.style.top = 135-a1
+  bdot14.style.top = 310+a1
+
+  bdot15.style.left = 142-a2
+  bdot15.style.top = 160-a2
+  bdot16.style.left = 142-a2
+  bdot16.style.top = 285+a2
+  bdot17.style.left = 267+a2
+  bdot17.style.top = 160-a2
+  bdot18.style.left = 267+a2
+  bdot18.style.top = 285+a2
+END SUB
+
+SUB OrangeDrawPattern (a1,a2)
+  odot11.style.left = 117-a1
+  odot12.style.left = 292+a1
+  odot13.style.top = 135-a1
+  odot14.style.top = 310+a1
+
+  odot15.style.left = 142-a2
+  odot15.style.top = 160-a2
+  odot16.style.left = 142-a2
+  odot16.style.top = 285+a2
+  odot17.style.left = 267+a2
+  odot17.style.top = 160-a2
+  odot18.style.left = 267+a2
+  odot18.style.top = 285+a2
+END SUB
+
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+libmlang.so.1
+{
+    global:
+        
+        DllGetClassObject;
+        DllCanUnloadNow;
+
+        DllRegisterServer;
+        DllUnregisterServer;
+
+#        ; Character conversion stuff
+        IsConvertINetStringAvailable;
+        ConvertINetString;
+        ConvertINetUnicodeToMultiByte;
+        ConvertINetMultiByteToUnicode;
+        ConvertINetReset;
+
+#        ; Rfc1766 and LCID mapping stuff
+        LcidToRfc1766A;
+        LcidToRfc1766W;
+        Rfc1766ToLcidA;
+        Rfc1766ToLcidW;
+
+#       DIP required
+        _____mlang_initDLL;
+
+    local:
+        *;
+};
+

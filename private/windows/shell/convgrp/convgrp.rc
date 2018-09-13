@@ -1,0 +1,12 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft\256 Win16 -> Win32 .grp Conversion Utility"
+
+#define VER_INTERNALNAME_STR        "convgrp.exe"
+#define VER_ORIGINALFILENAME_STR    "convgrp.exe"
+
+#include <common.ver>
+

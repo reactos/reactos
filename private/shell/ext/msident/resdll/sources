@@ -1,0 +1,60 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+# Include makefile.inc
+NTTARGETFILES   =
+
+NO_BROWSER_FILE = 1
+
+# !!!!!!!!!!!!!!!!!
+#
+# READ THIS!!!  Do not add -DFEATURE_* defines here. Add it to browseui.inc.
+#
+# !!!!!!!!!!!!!!!!!
+
+# Don't include core Windows resource header
+C_DEFINES       = $(C_DEFINES) -DNOWINRES -DNASHVILLE
+
+
+TARGETNAME      = msidntld
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+LINKER_FLAGS    = $(LINKER_FLAGS) /NOENTRY
+
+TARGETLIBS      = 
+
+RESOURCE_ONLY_DLL=1
+
+# Maintain the sources list in the alphabetical order
+
+SOURCES         = \
+                  ..\msident.rc
+
+USE_LIBCMT=1
+USE_NTDLL=1
+UMTYPE=windows
+

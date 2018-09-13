@@ -1,0 +1,156 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\f3\crt=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=crt
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\external\inc; \
+    $(ROOT)\src\core\include; \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    atexit.cxx \
+    atox.cxx \
+    crt0dat.cxx \
+    dllcrt0.c \
+    dllmain1.cxx \
+    dllmain2.cxx \
+    dllmain3.cxx \
+    dllmain4.cxx \
+    sbheap.c \
+    strtol.cxx \
+    strutil.cxx \
+    ti_utils.c \
+    wcstok.cxx \
+    wcstol.cxx \
+    dbgstk.cxx \
+
+MAIN_CRT_LIB = $(SDK_LIB_PATH)\libcmt.lib
+MAIN_CRT_PDB = $(SDK_LIB_PATH)\libcmt.pdb
+OBJ_CRT_PDB  = $(O)\libcmt.pdb
+
+OBJLIBFILES = \
+    $(O)\bsearch.obj \
+    $(O)\lfind.obj \
+    $(O)\qsort.obj \
+    $(O)\rtti.obj \
+    $(O)\stdexcpt.obj \
+    $(O)\strncmp.obj \
+    $(O)\typname.obj \
+    $(O)\typinfo.obj \
+    $(O)\undname.obj \
+    $(O)\wcscat.obj \
+    $(O)\wcschr.obj \
+    $(O)\wcslen.obj \
+    $(O)\wcsncpy.obj \
+    $(O)\wcspbrk.obj \
+    $(O)\wcsrchr.obj \
+    $(O)\wcsrev.obj \
+    $(O)\wcsspn.obj \
+    $(O)\wcsstr.obj \
+    $(O)\wtox.obj \
+    $(O)\xtoa.obj \
+    $(O)\xtow.obj
+
+!if $(386)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\exsup.obj \
+    $(O)\exsup3.obj \
+    $(O)\ftol.obj \
+    $(O)\memmove.obj \
+    $(O)\strchr.obj \
+    $(O)\strrchr.obj
+
+!if !defined(USE_STACK_SPEW)
+OBJLIBFILES = $(OBJLIBFILES) $(O)\chkstk.obj
+!endif
+
+!elseif $(MIPS)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\chandler.obj \
+    $(O)\chkstk.obj \
+    $(O)\jmpuwind.obj \
+    $(O)\memorym.obj \
+    $(O)\strcatm.obj \
+    $(O)\strchrm.obj \
+    $(O)\strcmpm.obj \
+    $(O)\strcpym.obj \
+    $(O)\strlenm.obj \
+    $(O)\strrchrm.obj
+
+!elseif $(ALPHA) || $(AXP64)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\divdat.obj \
+    $(O)\chandler.obj \
+    $(O)\chkstk.obj \
+    $(O)\extv.obj \
+    $(O)\extvvol.obj \
+    $(O)\extzv.obj \
+    $(O)\extzvvol.obj \
+    $(O)\ghandler.obj \
+    $(O)\insv.obj \
+    $(O)\jmpuwind.obj \
+    $(O)\memcmp.obj \
+    $(O)\memmove.obj \
+    $(O)\otsdiv.obj \
+    $(O)\scmpeql.obj \
+    $(O)\sfill.obj \
+    $(O)\smove.obj \
+    $(O)\smovem.obj \
+    $(O)\strcat.obj \
+    $(O)\strchr.obj \
+    $(O)\strcmp_.obj \
+    $(O)\strcpy_.obj \
+    $(O)\strlen_.obj \
+    $(O)\strrchr.obj \
+    $(O)\szero.obj
+
+!elseif $(PPC)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\chandler.obj \
+    $(O)\chkstk.obj \
+    $(O)\exsup.obj \
+    $(O)\jmpuwind.obj \
+    $(O)\memcpyp.obj \
+    $(O)\strchrp.obj \
+    $(O)\strrchrp.obj
+!endif
+
+!if $(AXP64)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\strcmps.obj \
+    $(O)\strlens.obj \
+!endif
+
+!if $(IA64)
+OBJLIBFILES = $(OBJLIBFILES) \
+    $(O)\abs.obj \
+    $(O)\chandler.obj \
+    $(O)\chkstk.obj \
+    $(O)\jmpuwind.obj \
+    $(O)\memcmp.obj \
+    $(O)\memcpys.obj \
+    $(O)\memmove.obj \
+    $(O)\memsets.obj \
+    $(O)\rotr.obj \
+    $(O)\strchr.obj \
+    $(O)\strcmp.obj \
+    $(O)\strcat.obj \
+    $(O)\strlen.obj \
+    $(O)\strrchr.obj \
+!endif
+
+NTTARGETFILES=$(OBJ_CRT_PDB)
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\..\core\include\$(O)\headers.pch
+PRECOMPILED_CXX=1
+

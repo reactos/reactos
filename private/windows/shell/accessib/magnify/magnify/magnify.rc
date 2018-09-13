@@ -1,0 +1,296 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""res\\Magnify.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_STATIONARY, DIALOG
+    BEGIN
+        RIGHTMARGIN, 56
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_MAGNIFY_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 145
+        VERTGUIDE, 14
+        VERTGUIDE, 121
+        VERTGUIDE, 131
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 199
+        HORZGUIDE, 20
+        HORZGUIDE, 77
+        HORZGUIDE, 131
+        HORZGUIDE, 137
+        HORZGUIDE, 177
+    END
+
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 281
+        VERTGUIDE, 40
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 123
+    END
+
+    IDD_WARNING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        VERTGUIDE, 40
+        TOPMARGIN, 10
+        BOTTOMMARGIN, 90
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\Magnify.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_STATIONARY DIALOGEX 0, 0, 58, 52
+STYLE DS_ABSALIGN | DS_3DLOOK | DS_CONTROL | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Magnifier"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+END
+
+IDD_MAGNIFY_DIALOG DIALOGEX 0, 0, 152, 206
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | 
+    DS_CENTERMOUSE | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+EXSTYLE WS_EX_NOPARENTNOTIFY | WS_EX_APPWINDOW
+CAPTION "Magnifier Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Magnification &level:",IDC_STATIC,7,10,62,8
+    EDITTEXT        IDC_STATIONARYMAGLEVEL,75,7,38,13,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_STATIONARYMAGSPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,109,7,11,13
+    CONTROL         "Follow &mouse cursor",IDC_STATIONARYTRACKMOUSECURSOR,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | 
+                    WS_TABSTOP,14,37,95,10
+    CONTROL         "Follow &keyboard focus",IDC_STATIONARYTRACKKYBDFOCUS,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | 
+                    WS_TABSTOP,14,52,95,10
+    CONTROL         "Follow &text editing",IDC_STATIONARYTRACKTEXT,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,14,
+                    67,95,10
+    CONTROL         "&Invert colors",IDC_STATIONARYINVERTCOLORS,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,14,
+                    99,95,10
+    CONTROL         "Use High &Contrast mode",IDC_STATIONARYHIGHCONTRAST,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | 
+                    WS_TABSTOP,14,114,95,10
+    CONTROL         "&Start Minimized",IDC_STATIONARYSTARTMINIMIZED,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,14,
+                    145,95,10
+    CONTROL         "Sh&ow Magnifier",IDC_STATIONARYSHOWMAGNIFIER,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,14,
+                    160,95,10
+    CONTROL         "2nd focus",IDC_STATIONARYTRACKSECONDARYFOCUS,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,98,188,47,
+                    10
+    PUSHBUTTON      "E&xit",IDC_EXIT,94,185,50,14
+    PUSHBUTTON      "&Help",ID_MHELP,40,185,50,14
+    GROUPBOX        "Tracking",IDC_STATIC,7,25,138,59
+    GROUPBOX        "Colors",IDC_STATIC,7,87,138,43
+    GROUPBOX        "Presentation",IDC_STATIC,7,133,138,44
+END
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 288, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Magnifier"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "Microsoft Magnifier",IDC_STATIC,40,10,241,8,SS_NOPREFIX
+    LTEXT           "Copyright © 1997, 1999 Microsoft Corporation",
+                    IDC_STATIC,40,30,241,8
+    DEFPUSHBUTTON   "OK",IDOK,231,109,50,14,WS_GROUP
+    LTEXT           "All rights reserved.",IDC_STATIC,40,40,241,8
+    LTEXT           "Magnifier is intended to provide a minimum level of functionality for users with slight visual impairments. Most users with visual impairments will need a magnification utility program with higher functionality for daily use.",
+                    IDC_STATIC,40,55,241,29
+    LTEXT           "Version 1.0",IDC_STATIC,40,20,241,8
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEB2,
+                    "Link Window",WS_TABSTOP,40,96,203,12
+    LTEXT           "For a list of Windows-based magnification utilities, see",
+                    IDC_WARND3,40,86,207,9
+END
+
+IDD_WARNING DIALOG DISCARDABLE  0, 0, 250, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Microsoft Magnifier"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDR_MAINFRAME,-1,11,17,20,20
+    DEFPUSHBUTTON   "OK",IDOK,193,76,50,14,WS_GROUP
+    LTEXT           "Magnifier is intended to provide a minimum level of functionality for users with slight visual impairments. Most users with visual impairments will need a magnification utility program with higher functionality for daily use.",
+                    -1,39,10,197,37
+    CONTROL         "Do not show this message again",IDC_SHOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,40,79,118,10
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEB,
+                    "Link Window",WS_TABSTOP,39,59,203,12
+    LTEXT           "For a list of Windows-based magnification utilities, see",
+                    IDC_WARND3,39,49,207,9
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_STATIONARY MENU DISCARDABLE 
+BEGIN
+    POPUP "PlaceHolder"
+    BEGIN
+        MENUITEM "&Options",                    ID_APPBAR_OPTIONS
+        MENUITEM "&Hide",                       ID_APPBAR_HIDE
+        MENUITEM "E&xit",                       ID_APPBAR_EXIT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINTER             CURSOR  DISCARDABLE     "res\\arrow.cur"
+IDC_CUSTOM_HAND         CURSOR  DISCARDABLE     "res\\hand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP  DISCARDABLE     "res\\bitmap1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About Magnifier..."
+    IDS_MOVESTRING          "Click and drag the window to dock."
+    IDS_MOVEFLOAT           "Click and drag the window to make it float."
+    IDS_ENABLEWEB           "http://www.microsoft.com/enable/"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "res\Magnify.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

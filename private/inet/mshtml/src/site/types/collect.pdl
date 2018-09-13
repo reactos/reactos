@@ -1,0 +1,44 @@
+#ifndef _COLLECT_PDL_
+#define _COLLECT_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+#include "domcoll.pdl"
+
+
+file collect.pdl
+
+import types.pdl
+import element.pdl
+import domcoll.pdl
+
+
+interface IHTMLElementCollection super:IDispatch guid:3050f21f-98b5-11cf-bb82-00aa00bdce0b  
+    refmethod   CElementCollection:toString 
+
+#define EXPAND_COLLECTION_REFS CElementCollection
+#include "basecoll.pdl"
+
+
+interface IHTMLElementCollection2 super:IDispatch guid:3050f5ee-98b5-11cf-bb82-00aa00bdce0b
+    refmethod  CElementCollection:urns  
+
+
+tearoff CElementCollection interface:IHTMLElementCollection2
+
+class CElementCollection \
+    name:HTMLElementCollection \
+    primaryinterface:IHTMLElementCollection \
+    guid:3050f4cb-98b5-11cf-bb82-00aa00bdce0b \
+    mondoguid:3050f56b-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLElementCollection
+    implements IHTMLElementCollection2
+
+    method HRESULT  toString   dispid:DISPID_COLLECTION+1   (out retval type:BSTR* arg:String ) 
+
+
+#define EXPAND_COLLECTION_DEFNS
+#include "basecoll.pdl"
+        
+#endif _COLLECT_PDL_

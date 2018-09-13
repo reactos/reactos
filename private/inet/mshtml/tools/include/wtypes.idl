@@ -1,0 +1,1305 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1996.
+//
+//  File: wtypes.idl
+//
+//  Contents: This interface definition contains typedefs for remotable
+//            data types.
+//
+//  History:  09-May-96  MikeHill  Updated VARENUM comments.
+//            22-May-96  MikeHill  Added FMTID defintions/macros.
+//            06-Jun-96  MikeHill  Added CBPCLIPDATA macro.
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1992 - 1996.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+[ uuid(D3980A60-910C-1068-9341-00DD010F2F1C),
+  version(0.1), pointer_default(unique) ]
+
+interface IWinTypes
+{
+
+typedef struct tagRemHGLOBAL
+{
+        long fNullHGlobal;
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHGLOBAL;
+
+typedef struct tagRemHMETAFILEPICT
+{
+        long        mm;
+        long        xExt;
+        long        yExt;
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHMETAFILEPICT;
+
+
+typedef struct tagRemHENHMETAFILE
+{
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHENHMETAFILE;
+
+typedef struct tagRemHBITMAP
+{
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHBITMAP;
+
+typedef struct tagRemHPALETTE
+{
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHPALETTE;
+
+typedef struct tagRemBRUSH
+{
+        unsigned long cbData;
+        [size_is(cbData)] byte data[];
+} RemHBRUSH;
+
+cpp_quote("#if !defined(_WIN32) && !defined(_MPPC_)" )
+cpp_quote("// The following code is for Win16 only")
+
+cpp_quote("#ifndef WINAPI          // If not included with 3.1 headers...")
+
+cpp_quote("#define FAR             _far")
+cpp_quote("#define PASCAL          _pascal")
+cpp_quote("#define CDECL           _cdecl")
+
+cpp_quote("#define VOID            void")
+cpp_quote("#define WINAPI      FAR PASCAL")
+cpp_quote("#define CALLBACK    FAR PASCAL")
+
+
+cpp_quote("#ifndef FALSE")
+cpp_quote("#define FALSE 0")
+cpp_quote("#define TRUE 1")
+cpp_quote("#endif // !FALSE")
+
+cpp_quote("#ifndef _BYTE_DEFINED")
+cpp_quote("#define _BYTE_DEFINED")
+typedef unsigned char BYTE;
+cpp_quote("#endif // !_BYTE_DEFINED")
+
+cpp_quote("#ifndef _WORD_DEFINED")
+cpp_quote("#define _WORD_DEFINED")
+typedef unsigned short WORD;
+cpp_quote("#endif // !_WORD_DEFINED")
+
+typedef unsigned int UINT;
+typedef int  INT;
+typedef long BOOL;
+
+cpp_quote("#ifndef _LONG_DEFINED")
+cpp_quote("#define _LONG_DEFINED")
+typedef long LONG;
+cpp_quote("#endif // !_LONG_DEFINED")
+
+cpp_quote("#ifndef _WPARAM_DEFINED")
+cpp_quote("#define _WPARAM_DEFINED")
+typedef UINT WPARAM;
+cpp_quote("#endif // _WPARAM_DEFINED")
+
+cpp_quote("#ifndef _DWORD_DEFINED")
+cpp_quote("#define _DWORD_DEFINED")
+typedef unsigned long DWORD;
+cpp_quote("#endif // !_DWORD_DEFINED")
+
+cpp_quote("#ifndef _LPARAM_DEFINED")
+cpp_quote("#define _LPARAM_DEFINED")
+typedef LONG LPARAM;//BUGBUG: this should be a discriminated union.
+cpp_quote("#endif // !_LPARAM_DEFINED")
+
+cpp_quote("#ifndef _LRESULT_DEFINED")
+cpp_quote("#define _LRESULT_DEFINED")
+typedef LONG LRESULT;
+cpp_quote("#endif // !_LRESULT_DEFINED")
+
+typedef void * HANDLE;
+#define DECLARE_WIREM_HANDLE(name)  \
+                             typedef [wire_marshal(wire ## name)] void * name
+#define DECLARE_HANDLE(name) typedef void * name
+
+DECLARE_HANDLE(HMODULE);
+DECLARE_HANDLE(HINSTANCE);
+DECLARE_HANDLE(HRGN);
+DECLARE_HANDLE(HTASK);
+DECLARE_HANDLE(HKEY);
+
+DECLARE_HANDLE(HDESK);
+
+DECLARE_HANDLE(HMF);
+DECLARE_HANDLE(HEMF);
+
+DECLARE_HANDLE(HPEN);
+DECLARE_HANDLE(HRSRC);
+DECLARE_HANDLE(HSTR);
+DECLARE_HANDLE(HWINSTA);
+DECLARE_HANDLE(HKL);
+DECLARE_HANDLE(HGDIOBJ);
+
+typedef HANDLE HDWP;
+
+cpp_quote("#ifndef _HFILE_DEFINED")
+cpp_quote("#define _HFILE_DEFINED")
+typedef INT HFILE;      /* Polymorphic with C runtime file handle type */
+cpp_quote("#endif // !_HFILE_DEFINED")
+
+
+cpp_quote("#ifndef _LPWORD_DEFINED")
+cpp_quote("#define _LPWORD_DEFINED")
+typedef WORD *LPWORD;
+cpp_quote("#endif // !_LPWORD_DEFINED")
+
+
+cpp_quote("#ifndef _LPDWORD_DEFINED")
+cpp_quote("#define _LPDWORD_DEFINED")
+typedef DWORD *LPDWORD;
+cpp_quote("#endif // !_LPDWORD_DEFINED")
+
+
+typedef char CHAR;
+typedef [string] CHAR *LPSTR;
+typedef [string] const CHAR *LPCSTR;
+
+
+cpp_quote("#ifndef _WCHAR_DEFINED")
+cpp_quote("#define _WCHAR_DEFINED")
+typedef wchar_t WCHAR;
+typedef WCHAR   TCHAR;
+cpp_quote("#endif // !_WCHAR_DEFINED")
+
+typedef [string] WCHAR *LPWSTR;
+
+
+typedef [string] TCHAR *LPTSTR;
+
+typedef [string] const WCHAR *LPCWSTR;
+typedef [string] const TCHAR *LPCTSTR;
+
+
+typedef struct tagPALETTEENTRY {
+    BYTE        peRed;
+    BYTE        peGreen;
+    BYTE        peBlue;
+    BYTE        peFlags;
+} PALETTEENTRY, *PPALETTEENTRY, *LPPALETTEENTRY;
+
+// Logical Palette
+cpp_quote("#if 0")
+
+    typedef struct tagLOGPALETTE {
+        WORD        palVersion;
+        WORD        palNumEntries;
+        [size_is(palNumEntries)] PALETTEENTRY        palPalEntry[];
+    } LOGPALETTE, *PLOGPALETTE, *LPLOGPALETTE;
+
+cpp_quote("#else")
+cpp_quote("typedef struct tagLOGPALETTE {")
+cpp_quote("    WORD        palVersion;")
+cpp_quote("    WORD        palNumEntries;")
+cpp_quote("    PALETTEENTRY        palPalEntry[1];")
+cpp_quote("} LOGPALETTE, *PLOGPALETTE, *LPLOGPALETTE;")
+cpp_quote("#endif")
+
+
+cpp_quote("#ifndef _COLORREF_DEFINED")
+cpp_quote("#define _COLORREF_DEFINED")
+typedef DWORD COLORREF;
+cpp_quote("#endif // !_COLORREF_DEFINED")
+
+cpp_quote("#ifndef _LPCOLORREF_DEFINED")
+cpp_quote("#define _LPCOLORREF_DEFINED")
+typedef DWORD *LPCOLORREF;
+cpp_quote("#endif // !_LPCOLORREF_DEFINED")
+
+
+typedef HANDLE *LPHANDLE;
+
+//typedefs for remotable types from wingdi.h
+
+typedef struct _RECTL
+{
+    LONG    left;
+    LONG    top;
+    LONG    right;
+    LONG    bottom;
+} RECTL, *PRECTL, *LPRECTL;
+
+
+typedef struct tagPOINT
+{
+    LONG  x;
+    LONG  y;
+} POINT, *PPOINT, *LPPOINT;
+
+typedef struct _POINTL
+{
+    LONG  x;
+    LONG  y;
+} POINTL, *PPOINTL;
+
+
+cpp_quote("#ifndef WIN16")
+typedef struct tagSIZE
+{
+    LONG        cx;
+    LONG        cy;
+} SIZE, *PSIZE, *LPSIZE;
+cpp_quote("#else // WIN16")
+cpp_quote("typedef struct tagSIZE")
+cpp_quote("{")
+cpp_quote("    INT cx;")
+cpp_quote("    INT cy;")
+cpp_quote("} SIZE, *PSIZE, *LPSIZE;")
+cpp_quote("#endif // WIN16")
+
+
+typedef struct tagSIZEL
+{
+    LONG cx;
+    LONG cy;
+} SIZEL, *PSIZEL, *LPSIZEL;
+
+
+cpp_quote("#endif  //WINAPI")
+cpp_quote("#endif  //!WIN32 && !MPPC")
+
+cpp_quote("#if defined(_WIN32) && !defined(OLE2ANSI)")
+
+typedef WCHAR                   OLECHAR;
+typedef [string] OLECHAR       *LPOLESTR;
+typedef [string] const OLECHAR *LPCOLESTR;
+cpp_quote("#define OLESTR(str) L##str")
+
+cpp_quote("")
+cpp_quote("#else")
+cpp_quote("")
+
+cpp_quote("typedef char      OLECHAR;")
+cpp_quote("typedef LPSTR     LPOLESTR;")
+cpp_quote("typedef LPCSTR    LPCOLESTR;")
+cpp_quote("#define OLESTR(str) str")
+
+cpp_quote("#endif")
+
+
+// This block contains types that are normally defined by the nt sdk in WINDEF.H
+// but we need them here for definitions that follow in this file.  If WINDEF.H
+// hasn't been included then we need to define them now so that WTYPES.H
+// will compile.
+cpp_quote("#ifndef _WINDEF_")
+typedef const RECTL *LPCRECTL;
+
+typedef void * PVOID, * LPVOID;
+typedef float   FLOAT;
+
+typedef struct tagRECT
+{
+    LONG    left;
+    LONG    top;
+    LONG    right;
+    LONG    bottom;
+} RECT, *PRECT, *LPRECT;
+typedef const RECT *LPCRECT;
+
+cpp_quote("#endif  //_WINDEF_")
+
+
+typedef unsigned char   UCHAR;
+typedef short           SHORT;
+typedef unsigned short  USHORT;
+typedef DWORD           ULONG;
+typedef double          DOUBLE;
+
+cpp_quote("#ifndef _DWORDLONG_")
+typedef unsigned __int64 DWORDLONG;
+typedef DWORDLONG *PDWORDLONG;
+cpp_quote("#endif // !_DWORDLONG_")
+
+//
+// __int64 is only supported by 2.0 and later midl.
+// __midl is set by the 2.0 midl and not by 1.0 midl.
+//
+
+cpp_quote("#ifndef _ULONGLONG_")
+
+#if (defined(__midl))
+typedef __int64 LONGLONG;
+typedef unsigned __int64 ULONGLONG;
+#else
+typedef double LONGLONG;
+typedef double ULONGLONG;
+#endif
+
+typedef LONGLONG *PLONGLONG;
+typedef ULONGLONG *PULONGLONG;
+cpp_quote("#endif // _ULONGLONG_")
+
+// just for local wtypes
+cpp_quote("#if 0")
+
+typedef struct _LARGE_INTEGER {
+    LONGLONG QuadPart;
+} LARGE_INTEGER;
+
+typedef LARGE_INTEGER *PLARGE_INTEGER;
+
+typedef struct _ULARGE_INTEGER {
+    ULONGLONG QuadPart;
+} ULARGE_INTEGER;
+
+// just for local wtypes
+cpp_quote("#endif // 0")
+
+
+cpp_quote("#ifndef _WINBASE_")
+
+cpp_quote("#ifndef _FILETIME_")
+cpp_quote("#define _FILETIME_")
+typedef struct _FILETIME
+{
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+} FILETIME, *PFILETIME, *LPFILETIME;
+cpp_quote("#endif // !_FILETIME")
+
+cpp_quote("#ifndef _SYSTEMTIME_")
+cpp_quote("#define _SYSTEMTIME_")
+typedef struct _SYSTEMTIME {
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
+} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+
+cpp_quote("#endif // !_SYSTEMTIME")
+
+cpp_quote("#ifndef _SECURITY_ATTRIBUTES_")
+cpp_quote("#define _SECURITY_ATTRIBUTES_")
+typedef struct _SECURITY_ATTRIBUTES {
+    DWORD nLength;
+    [size_is(nLength)] LPVOID lpSecurityDescriptor;
+    BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+cpp_quote("#endif // !_SECURITY_ATTRIBUTES_")
+
+cpp_quote("#ifndef SECURITY_DESCRIPTOR_REVISION")
+
+typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
+
+typedef PVOID PSID;     // winnt
+
+typedef struct _ACL {
+    UCHAR AclRevision;
+    UCHAR Sbz1;
+    USHORT AclSize;
+    USHORT AceCount;
+    USHORT Sbz2;
+} ACL;
+typedef ACL *PACL;
+
+typedef struct _SECURITY_DESCRIPTOR {
+    UCHAR Revision;
+    UCHAR Sbz1;
+    SECURITY_DESCRIPTOR_CONTROL Control;
+    PSID Owner;
+    PSID Group;
+    PACL Sacl;
+    PACL Dacl;
+} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+
+cpp_quote("#endif // !SECURITY_DESCRIPTOR_REVISION")
+
+cpp_quote("#endif //_WINBASE_")
+
+typedef struct _COAUTHIDENTITY
+{
+  [size_is(UserLength+1)] USHORT *      User;
+  ULONG                                 UserLength;
+  [size_is(DomainLength+1)] USHORT *    Domain;
+  ULONG                                 DomainLength;
+  [size_is(PasswordLength+1)] USHORT *  Password;
+  ULONG                                 PasswordLength;
+  ULONG                                 Flags;
+} COAUTHIDENTITY;
+
+typedef struct _COAUTHINFO
+{
+    DWORD               dwAuthnSvc;
+    DWORD               dwAuthzSvc;
+    LPWSTR              pwszServerPrincName;
+    DWORD               dwAuthnLevel;
+    DWORD               dwImpersonationLevel;
+    COAUTHIDENTITY *    pAuthIdentityData;
+    DWORD               dwCapabilities;
+} COAUTHINFO;
+
+typedef struct _COSERVERINFO
+{
+    DWORD           dwReserved1;
+    LPWSTR          pwszName;
+    COAUTHINFO *    pAuthInfo;
+    DWORD           dwReserved2;
+} COSERVERINFO;
+
+//
+// SCODE, HRESULT
+//
+//
+//  Status values are 32 bit values layed out as follows:
+//
+//   3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
+//   1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+//  +-+-----------------------------+-------------------------------+
+//  |S|       Facility              |               Code            |
+//  +-+-----------------------------+-------------------------------+
+//
+//  where
+//
+//      S - is the severity code
+//
+//          0 - Success
+//          1 - Error
+//
+//
+//      Facility - is the facility code
+//
+//      Code - is the facility's status code
+//
+// SCODE and HRESULT are mktyplib base types.
+//
+typedef LONG SCODE;
+cpp_quote("#ifndef _HRESULT_DEFINED")
+cpp_quote("#define _HRESULT_DEFINED")
+#if defined(_STRICT_HRESULT)
+typedef struct _HRESULT_STRUCT {
+        DWORD Data1;
+} HRESULT_STRUCT, *PHRESULT_STRUCT;
+typedef PHRESULT_STRUCT HRESULT;
+#else // defined(_STRICT_HRESULT)
+typedef LONG HRESULT;
+#endif // defined(_STRICT_HRESULT)
+cpp_quote("#endif // !_HRESULT_DEFINED")
+
+typedef SCODE *PSCODE;
+
+
+cpp_quote("#ifndef GUID_DEFINED")
+cpp_quote("#define GUID_DEFINED")
+typedef struct _GUID
+{
+    DWORD Data1;
+    WORD  Data2;
+    WORD  Data3;
+    BYTE  Data4[8];
+} GUID;
+cpp_quote("#endif // !GUID_DEFINED")
+
+cpp_quote("#if !defined( __LPGUID_DEFINED__ )")
+cpp_quote("#define __LPGUID_DEFINED__")
+typedef GUID *LPGUID;
+cpp_quote("#endif // !__LPGUID_DEFINED__")
+
+cpp_quote("#ifndef __OBJECTID_DEFINED")
+cpp_quote("#define __OBJECTID_DEFINED")
+cpp_quote("#define _OBJECTID_DEFINED")
+typedef struct _OBJECTID     // NOTE!! Order of structure members is important for OFS
+{                            // enumeration.
+   GUID Lineage;             // Unique for objects copied from same original and copies of.
+   unsigned long Uniquifier; // Random, to provide uniqueness within small set with same
+} OBJECTID;                  // lineage id.
+cpp_quote("#endif // !_OBJECTID_DEFINED")
+
+
+
+
+cpp_quote("#if !defined( __IID_DEFINED__ )")
+cpp_quote("#define __IID_DEFINED__")
+
+// Interface ID are just a kind of GUID
+typedef GUID IID;
+typedef IID *LPIID;
+cpp_quote("#define IID_NULL            GUID_NULL")
+cpp_quote("#define IsEqualIID(riid1, riid2) IsEqualGUID(riid1, riid2)")
+
+// Class ID are just a kind of GUID
+typedef GUID CLSID;
+typedef              CLSID *LPCLSID;
+cpp_quote("#define CLSID_NULL          GUID_NULL")
+cpp_quote("#define IsEqualCLSID(rclsid1, rclsid2) IsEqualGUID(rclsid1, rclsid2)")
+
+// Format ID are just a kind of GUID
+typedef GUID FMTID;
+typedef              FMTID *LPFMTID;
+cpp_quote("#define FMTID_NULL          GUID_NULL")
+cpp_quote("#define IsEqualFMTID(rfmtid1, rfmtid2) IsEqualGUID(rfmtid1, rfmtid2)")
+
+//The following typedefs are used internally by MIDL.
+cpp_quote("#if 0")
+#if defined(__midl)
+    /* MIDL 2.0 definitions */
+    typedef GUID *REFGUID;
+    typedef IID *REFIID;
+    typedef CLSID *REFCLSID;
+    typedef FMTID *REFFMTID;
+#else
+    /* MIDL 1.1 definitions */
+    typedef GUID REFGUID;
+    typedef IID REFIID;
+    typedef CLSID REFCLSID;
+    typedef FMTID REFFMTID;
+#endif
+cpp_quote("#endif // 0")
+
+cpp_quote("#if defined(__cplusplus)")
+
+cpp_quote("#ifndef _REFGUID_DEFINED")
+cpp_quote("#define _REFGUID_DEFINED")
+cpp_quote("#define REFGUID             const GUID &")
+cpp_quote("#endif // !_REFGUID_DEFINED")
+
+cpp_quote("#ifndef _REFIID_DEFINED")
+cpp_quote("#define _REFIID_DEFINED")
+cpp_quote("#define REFIID              const IID &")
+cpp_quote("#endif // !_REFIID_DEFINED")
+
+cpp_quote("#ifndef _REFCLSID_DEFINED")
+cpp_quote("#define _REFCLSID_DEFINED")
+cpp_quote("#define REFCLSID            const CLSID &")
+cpp_quote("#endif // !_REFCLSID_DEFINED")
+
+cpp_quote("#ifndef _REFFMTID_DEFINED")
+cpp_quote("#define _REFFMTID_DEFINED")
+cpp_quote("#define REFFMTID            const FMTID &")
+cpp_quote("#endif // !_REFFMTID_DEFINED")
+
+
+cpp_quote("#else // !__cplusplus")
+
+cpp_quote("#ifndef _REFGUID_DEFINED")
+cpp_quote("#define _REFGUID_DEFINED")
+cpp_quote("#define REFGUID             const GUID * const")
+cpp_quote("#endif // !_REFGUID_DEFINED")
+
+cpp_quote("#ifndef _REFIID_DEFINED")
+cpp_quote("#define _REFIID_DEFINED")
+cpp_quote("#define REFIID              const IID * const")
+cpp_quote("#endif // !_REFIID_DEFINED")
+
+
+cpp_quote("#ifndef _REFCLSID_DEFINED")
+cpp_quote("#define _REFCLSID_DEFINED")
+cpp_quote("#define REFCLSID            const CLSID * const")
+cpp_quote("#endif // !_REFCLSID_DEFINED")
+
+cpp_quote("#ifndef _REFFMTID_DEFINED")
+cpp_quote("#define _REFFMTID_DEFINED")
+cpp_quote("#define REFFMTID            const FMTID * const")
+cpp_quote("#endif // !_REFFMTID_DEFINED")
+
+cpp_quote("#endif // !__cplusplus")
+
+cpp_quote("#endif // !__IID_DEFINED__")
+
+/************************* Misc types ***********************************/
+
+// Common typdefs used in API paramaters, gleamed from compobj.h
+
+// memory context values; passed to CoGetMalloc
+typedef enum tagMEMCTX
+{
+    MEMCTX_TASK = 1,            // task (private) memory
+    MEMCTX_SHARED = 2,          // shared memory (between processes)
+    MEMCTX_MACSYSTEM = 3,       // on the mac, the system heap
+    // these are mostly for internal use...
+    MEMCTX_UNKNOWN = -1,        // unknown context (when asked about it)
+    MEMCTX_SAME = -2,           // same context (as some other pointer)
+} MEMCTX;
+
+
+// For IRunningObjectTable::Register
+cpp_quote("#ifndef _ROTFLAGS_DEFINED")
+cpp_quote("#define _ROTFLAGS_DEFINED")
+cpp_quote("#define ROTFLAGS_REGISTRATIONKEEPSALIVE 0x1")
+cpp_quote("#define ROTFLAGS_ALLOWANYCLIENT 0x2")
+cpp_quote("#endif // !_ROTFLAGS_DEFINED")
+
+// Maximum size of comparison buffer for IROTData::GetComparisonData
+cpp_quote("#ifndef _ROT_COMPARE_MAX_DEFINED")
+cpp_quote("#define _ROT_COMPARE_MAX_DEFINED")
+cpp_quote("#define ROT_COMPARE_MAX 2048")
+cpp_quote("#endif // !_ROT_COMPARE_MAX_DEFINED")
+
+
+// class context: used to determine what scope and kind of class object to use
+// NOTE: this is a bitwise enum
+typedef enum tagCLSCTX
+{
+    CLSCTX_INPROC_SERVER = 0x01,   // server dll (runs in same process as caller)
+    CLSCTX_INPROC_HANDLER = 0x02,  // handler dll (runs in same process as caller)
+    CLSCTX_LOCAL_SERVER = 0x04,    // server exe (runs on same machine; diff proc)
+    CLSCTX_INPROC_SERVER16 = 0x08, // 16-bit server dll (runs in same process as caller)
+    CLSCTX_REMOTE_SERVER = 0x10,    // remote server exe (runs on different machine)
+    CLSCTX_INPROC_HANDLER16 = 0x20, // 16-bit handler dll (runs in same process as caller)
+    CLSCTX_INPROC_SERVERX86 = 0x40, // Wx86 server dll (runs in same process as caller)
+    CLSCTX_INPROC_HANDLERX86 = 0x80, // Wx86 handler dll (runs in same process as caller)
+} CLSCTX;
+
+
+    // marshaling flags; passed to CoMarshalInterface
+    typedef enum tagMSHLFLAGS
+    {
+        MSHLFLAGS_NORMAL = 0,       // normal marshaling via proxy/stub
+        MSHLFLAGS_TABLESTRONG = 1,  // keep object alive; must explicitly release
+	MSHLFLAGS_TABLEWEAK = 2,    // doesn't hold object alive; still must release
+	MSHLFLAGS_NOPING = 4	    // remote clients dont 'ping' to keep objects alive
+    } MSHLFLAGS;
+
+
+// marshal context: determines the destination context of the marshal operation
+typedef enum tagMSHCTX
+{
+    MSHCTX_LOCAL = 0,           // unmarshal context is local (eg.shared memory)
+    MSHCTX_NOSHAREDMEM = 1,     // unmarshal context has no shared memory access
+    MSHCTX_DIFFERENTMACHINE = 2,// unmarshal context is on a different machine
+    MSHCTX_INPROC = 3,          // unmarshal context is on different thread
+} MSHCTX;
+
+
+//
+// Common typedefs for paramaters used in data view API's, gleamed
+// from dvobj.h
+//
+
+// Data/View aspect; specifies the desired aspect of the object when
+// drawing or getting data.
+typedef enum tagDVASPECT
+{
+    DVASPECT_CONTENT = 1,
+    DVASPECT_THUMBNAIL = 2,
+    DVASPECT_ICON = 4,
+    DVASPECT_DOCPRINT = 8
+} DVASPECT;
+
+/****** Storage types *************************************************/
+
+
+/* Storage commit types */
+typedef enum tagSTGC
+{
+    STGC_DEFAULT        = 0,
+    STGC_OVERWRITE      = 1,
+    STGC_ONLYIFCURRENT  = 2,
+    STGC_DANGEROUSLYCOMMITMERELYTODISKCACHE = 4
+} STGC;
+
+
+typedef enum tagSTGMOVE
+{
+    STGMOVE_MOVE    = 0,
+    STGMOVE_COPY    = 1,
+    STGMOVE_SHALLOWCOPY = 2
+} STGMOVE;
+
+typedef enum tagSTATFLAG
+{
+    STATFLAG_DEFAULT = 0,
+    STATFLAG_NONAME = 1,
+    STATFLAG_NOOPEN = 2
+} STATFLAG;
+
+
+typedef [context_handle] void *HCONTEXT;
+
+/****** Critical Section Wrappers ***********************************/
+
+
+/* if not already picked up from olenls.h */
+cpp_quote("#ifndef _LCID_DEFINED")
+cpp_quote("#define _LCID_DEFINED")
+typedef DWORD LCID;
+cpp_quote("#endif // !_LCID_DEFINED")
+
+// #######################################################################
+//
+//  User marshal support for Windows data types.
+
+//
+//  Frequently used helpers: sized blobs
+//
+//      Never put [user_marshal] or [wire_marshal] on the helpers directly.
+//
+
+// Simple blobs.
+
+typedef struct _BYTE_BLOB {
+                        unsigned long   clSize;
+    [size_is(clSize)]   byte            abData[];
+} BYTE_BLOB;
+
+typedef [unique] BYTE_BLOB * UP_BYTE_BLOB;
+
+typedef struct _WORD_BLOB {
+                        unsigned long   clSize;
+    [size_is(clSize)]   unsigned short  asData[];
+} WORD_BLOB;
+
+typedef [unique] WORD_BLOB * UP_WORD_BLOB;
+
+typedef struct _DWORD_BLOB {
+                        unsigned long   clSize;
+    [size_is(clSize)]   unsigned long   alData[];
+} DWORD_BLOB;
+
+typedef [unique] DWORD_BLOB * UP_DWORD_BLOB;
+
+// Flagged blobs.
+
+typedef struct _FLAGGED_BYTE_BLOB {
+                        unsigned long   fFlags;
+                        unsigned long   clSize;
+    [size_is(clSize)]   byte            abData[];
+} FLAGGED_BYTE_BLOB;
+
+typedef [unique] FLAGGED_BYTE_BLOB * UP_FLAGGED_BYTE_BLOB;
+
+typedef struct _FLAGGED_WORD_BLOB {
+                        unsigned long   fFlags;
+                        unsigned long   clSize;
+    [size_is(clSize)]   unsigned short  asData[];
+} FLAGGED_WORD_BLOB;
+
+typedef [unique] FLAGGED_WORD_BLOB * UP_FLAGGED_WORD_BLOB;
+
+// Frequently used helpers with sized pointers.
+
+typedef struct _BYTE_SIZEDARR {
+                        unsigned long   clSize;
+    [size_is(clSize)]   byte     *      pData ;
+} BYTE_SIZEDARR;
+
+typedef struct _SHORT_SIZEDARR {
+                        unsigned long   clSize;
+    [size_is(clSize)]   unsigned short* pData ;
+} WORD_SIZEDARR;
+
+typedef struct _LONG_SIZEDARR {
+                        unsigned long   clSize;
+    [size_is(clSize)]   unsigned long * pData ;
+} DWORD_SIZEDARR;
+
+typedef struct _HYPER_SIZEDARR {
+                        unsigned long   clSize;
+    [size_is(clSize)]   hyper         * pData ;
+} HYPER_SIZEDARR;
+
+
+// #########################################################################
+//
+//   Constants for the call context
+//
+
+const unsigned long WDT_INPROC_CALL = 0x48746457;
+const unsigned long WDT_REMOTE_CALL = 0x52746457;
+
+
+// #########################################################################
+//
+//  CLIPFORMAT
+//
+
+typedef union _userCLIPFORMAT switch(long fContext) u
+{
+    case WDT_INPROC_CALL:	     DWORD     dwValue;
+    case WDT_REMOTE_CALL:   [string] wchar_t * pwszName;
+} userCLIPFORMAT;
+
+typedef [unique] userCLIPFORMAT *  wireCLIPFORMAT;
+
+typedef [wire_marshal(wireCLIPFORMAT)] WORD  CLIPFORMAT;
+
+
+// #########################################################################
+//
+//  Good for most of the gdi handles.
+
+typedef union _GDI_NONREMOTE switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long        hInproc;
+    case WDT_REMOTE_CALL:   DWORD_BLOB *hRemote;
+} GDI_NONREMOTE;
+
+// #########################################################################
+//
+//  HGLOBAL
+//
+// A global may be Null or may be non-NULL with 0 length.
+
+typedef union _userHGLOBAL switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long            hInproc;
+    case WDT_REMOTE_CALL:   FLAGGED_BYTE_BLOB *     hRemote;
+    default:                long            hGlobal;
+} userHGLOBAL;
+
+typedef [unique] userHGLOBAL       * wireHGLOBAL;
+
+// #########################################################################
+//
+//  HMETAFILE
+//
+
+typedef union _userHMETAFILE switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long            hInproc;
+    case WDT_REMOTE_CALL:   BYTE_BLOB *     hRemote;
+    default:                long            hGlobal;
+} userHMETAFILE;
+
+// #########################################################################
+//
+//  HMETAFILEPICT
+//
+typedef struct _remoteMETAFILEPICT
+{
+    long            mm;
+    long            xExt;
+    long            yExt;
+    userHMETAFILE * hMF;
+} remoteMETAFILEPICT;
+
+typedef union _userHMETAFILEPICT switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long                hInproc;
+    case WDT_REMOTE_CALL:   remoteMETAFILEPICT* hRemote;
+    default:                long                hGlobal;
+} userHMETAFILEPICT;
+
+// #########################################################################
+//
+//  HENHMETAFILE
+//
+
+typedef union _userHENHMETAFILE switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long            hInproc;
+    case WDT_REMOTE_CALL:   BYTE_BLOB *     hRemote;
+    default:                long            hGlobal;
+} userHENHMETAFILE;
+
+// #########################################################################
+//
+//  HBITMAP
+//
+
+// RemHBITMAP was just a byte blob, but the whole bitmap structure was copied
+// at the beginning of the buffer.
+
+// So, we take BITMAP fields from wingdi.x
+
+typedef struct _userBITMAP
+{
+    LONG            bmType;
+    LONG            bmWidth;
+    LONG            bmHeight;
+    LONG            bmWidthBytes;
+    WORD            bmPlanes;
+    WORD            bmBitsPixel;
+    ULONG                       cbSize;
+    [size_is(cbSize)]   byte    pBuffer[];
+} userBITMAP;
+
+
+typedef union _userHBITMAP switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long            hInproc;
+    case WDT_REMOTE_CALL:   userBITMAP *    hRemote;
+    default:                long            hGlobal;
+} userHBITMAP;
+
+// #########################################################################
+//
+//  HPALETTE
+//
+
+// PALETTEENTRY is in wingdi.x, it is a struct with 4 bytes.
+// LOGPALETTE   is in wingdi.x, it is a conf struct with paletteentries and
+//                                    a version field
+
+typedef struct tagrpcLOGPALETTE {
+    WORD                        palVersion;
+    WORD                        palNumEntries;
+    [size_is( palNumEntries )]  PALETTEENTRY        palPalEntry[];
+} rpcLOGPALETTE;
+
+typedef union _userHPALETTE switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long            hInproc;
+    case WDT_REMOTE_CALL:   rpcLOGPALETTE * hRemote;
+    default:                long            hGlobal;
+} userHPALETTE;
+
+
+// #########################################################################
+//
+//  Handles passed locally as longs.
+//
+
+typedef union _RemotableHandle switch( long fContext ) u
+{
+    case WDT_INPROC_CALL:   long   hInproc;
+    case WDT_REMOTE_CALL:   long   hRemote;
+} RemotableHandle;
+
+typedef [unique] RemotableHandle * wireHWND;
+typedef [unique] RemotableHandle * wireHMENU;
+typedef [unique] RemotableHandle * wireHACCEL;
+typedef [unique] RemotableHandle * wireHBRUSH;
+typedef [unique] RemotableHandle * wireHFONT;
+typedef [unique] RemotableHandle * wireHDC;
+typedef [unique] RemotableHandle * wireHICON;
+
+
+cpp_quote("#if 0")
+#ifndef _MIDL_DECLARE_WIREM_HANDLE
+DECLARE_WIREM_HANDLE( HWND );
+DECLARE_WIREM_HANDLE( HMENU );
+DECLARE_WIREM_HANDLE( HACCEL );
+DECLARE_WIREM_HANDLE( HBRUSH );
+DECLARE_WIREM_HANDLE( HFONT );
+DECLARE_WIREM_HANDLE( HDC );
+DECLARE_WIREM_HANDLE( HICON );
+#endif
+
+cpp_quote("#ifndef _HCURSOR_DEFINED")
+cpp_quote("#define _HCURSOR_DEFINED")
+typedef HICON HCURSOR;      /* HICONs & HCURSORs are polymorphic */
+cpp_quote("#endif // !_HCURSOR_DEFINED")
+
+cpp_quote("/* tagTEXTMETRICW was copied from wingdi.h for MIDL */")
+typedef struct tagTEXTMETRICW {
+    LONG  tmHeight;
+    LONG  tmAscent;
+    LONG  tmDescent;
+    LONG  tmInternalLeading;
+    LONG  tmExternalLeading;
+    LONG  tmAveCharWidth;
+    LONG  tmMaxCharWidth;
+    LONG  tmWeight;
+    LONG  tmOverhang;
+    LONG  tmDigitizedAspectX;
+    LONG  tmDigitizedAspectY;
+    WCHAR tmFirstChar;
+    WCHAR tmLastChar;
+    WCHAR tmDefaultChar;
+    WCHAR tmBreakChar;
+    BYTE  tmItalic;
+    BYTE  tmUnderlined;
+    BYTE  tmStruckOut;
+    BYTE  tmPitchAndFamily;
+    BYTE  tmCharSet;
+} TEXTMETRICW;
+
+cpp_quote("#endif //0")
+
+cpp_quote("#ifndef _WIN32           // The following code is for Win16 only")
+cpp_quote("#ifndef WINAPI          // If not included with 3.1 headers...")
+
+// Message structure
+
+typedef struct tagMSG {
+    HWND        hwnd;
+    UINT        message;
+    WPARAM      wParam;
+    LPARAM      lParam;
+    DWORD       time;
+    POINT       pt;
+} MSG, *PMSG, *NPMSG, *LPMSG;
+cpp_quote("#endif // _WIN32")
+cpp_quote("#endif // WINAPI")
+
+
+typedef [unique] userHBITMAP      * wireHBITMAP;
+typedef [unique] userHPALETTE     * wireHPALETTE;
+typedef [unique] userHENHMETAFILE * wireHENHMETAFILE;
+typedef [unique] userHMETAFILE    * wireHMETAFILE;
+typedef [unique] userHMETAFILEPICT* wireHMETAFILEPICT;
+
+cpp_quote("#if 0")
+
+DECLARE_WIREM_HANDLE( HGLOBAL );
+typedef HGLOBAL HLOCAL;
+
+DECLARE_WIREM_HANDLE( HBITMAP );
+DECLARE_WIREM_HANDLE( HPALETTE );
+DECLARE_WIREM_HANDLE( HENHMETAFILE );
+DECLARE_WIREM_HANDLE( HMETAFILE );
+cpp_quote("#endif //0")
+
+DECLARE_WIREM_HANDLE( HMETAFILEPICT );
+
+}
+
+// #########################################################################
+//
+
+typedef double DATE;
+
+/* This is a helper struct for use in handling currency. */
+cpp_quote("#ifndef _tagCY_DEFINED")
+cpp_quote("#define _tagCY_DEFINED")
+cpp_quote("#define _CY_DEFINED")
+
+cpp_quote("#if 0")
+
+cpp_quote("/* the following isn't the real definition of CY, but it is */")
+cpp_quote("/* what RPC knows how to remote */")
+typedef struct tagCY {
+    LONGLONG    int64;
+} CY;
+
+cpp_quote("#else /* 0 */")
+
+cpp_quote("/* real definition that makes the C++ compiler happy */")
+cpp_quote("typedef union tagCY {")
+cpp_quote("    struct {")
+cpp_quote("#ifdef _MAC")
+cpp_quote("        long      Hi;")
+cpp_quote("        long Lo;")
+cpp_quote("#else")
+cpp_quote("        unsigned long Lo;")
+cpp_quote("        long      Hi;")
+cpp_quote("#endif")
+cpp_quote("    };")
+cpp_quote("    LONGLONG int64;")
+cpp_quote("} CY;")
+cpp_quote("#endif /* 0 */")
+
+cpp_quote("#endif /* _tagCY_DEFINED */")
+
+cpp_quote("#if 0 /* _tagDEC_DEFINED */")
+cpp_quote("/* The following isn't the real definition of Decimal type, */")
+cpp_quote("/* but it is what RPC knows how to remote */")
+
+typedef struct tagDEC {
+    USHORT wReserved;
+    BYTE  scale;
+    BYTE  sign;
+    ULONG Hi32;
+    ULONGLONG Lo64;
+} DECIMAL;
+
+cpp_quote("#else /* _tagDEC_DEFINED */")
+
+cpp_quote("/* real definition that makes the C++ compiler happy */")
+cpp_quote("typedef struct tagDEC {")
+cpp_quote("    USHORT wReserved;")
+cpp_quote("    union {")
+cpp_quote("        struct {")
+cpp_quote("            BYTE scale;")
+cpp_quote("            BYTE sign;")
+cpp_quote("        };")
+cpp_quote("        USHORT signscale;")
+cpp_quote("    };")
+cpp_quote("    ULONG Hi32;")
+cpp_quote("    union {")
+cpp_quote("        struct {")
+cpp_quote("#ifdef _MAC")
+cpp_quote("            ULONG Mid32;")
+cpp_quote("            ULONG Lo32;")
+cpp_quote("#else")
+cpp_quote("            ULONG Lo32;")
+cpp_quote("            ULONG Mid32;")
+cpp_quote("#endif")
+cpp_quote("        };")
+cpp_quote("        ULONGLONG Lo64;")
+cpp_quote("    };")
+cpp_quote("} DECIMAL;")
+
+cpp_quote("#define DECIMAL_NEG ((BYTE)0x80)")
+cpp_quote("#define DECIMAL_SETZERO(dec) \\")
+cpp_quote("        {(dec).Lo64 = 0; (dec).Hi32 = 0; (dec).signscale = 0;}")
+
+cpp_quote("#endif /* _tagDEC_DEFINED */")
+
+/* IDL declarations for BSTR how to transmit them */
+//
+typedef [unique] FLAGGED_WORD_BLOB * wireBSTR;
+typedef [wire_marshal( wireBSTR )] OLECHAR *  BSTR;
+typedef BSTR * LPBSTR;
+
+cpp_quote("/* 0 == FALSE, -1 == TRUE */")
+typedef short VARIANT_BOOL;
+cpp_quote("#if !__STDC__ && (_MSC_VER <= 1000)")
+cpp_quote("/* For backward compatibility */")
+typedef VARIANT_BOOL _VARIANT_BOOL;
+cpp_quote("#else")
+cpp_quote("/* ANSI C/C++ reserve bool as keyword */")
+cpp_quote("#define _VARIANT_BOOL    /##/")
+cpp_quote("#endif")
+typedef boolean BOOLEAN;
+
+cpp_quote("#define VARIANT_TRUE ((VARIANT_BOOL)0xffff)")
+cpp_quote("#define VARIANT_FALSE ((VARIANT_BOOL)0)")
+
+cpp_quote("#ifndef _tagBLOB_DEFINED")
+cpp_quote("#define _tagBLOB_DEFINED")
+cpp_quote("#define _BLOB_DEFINED")
+cpp_quote("#define _LPBLOB_DEFINED")
+typedef struct tagBLOB {
+    ULONG cbSize;
+    [size_is(cbSize)]
+    BYTE  *pBlobData;
+} BLOB, * LPBLOB;
+cpp_quote("#endif")
+
+typedef struct tagCLIPDATA {
+    ULONG cbSize;       // count that includes sizeof(ulClipFmt)
+    long ulClipFmt;     // long to keep alignment
+    [size_is(cbSize-4)]
+    BYTE * pClipData;   // cbSize-sizeof(ULONG) bytes of data in clipboard format
+} CLIPDATA;
+
+cpp_quote("// Macro to calculate the size of the above pClipData")
+cpp_quote("#define CBPCLIPDATA(clipdata)    ( (clipdata).cbSize - sizeof((clipdata).ulClipFmt) )")
+
+
+typedef unsigned short VARTYPE;
+
+// #########################################################################
+//
+//  VARTYPE
+//
+// #########################################################################
+
+
+cpp_quote("/*")
+cpp_quote(" * VARENUM usage key,")
+cpp_quote(" *")
+cpp_quote(" * * [V] - may appear in a VARIANT")
+cpp_quote(" * * [T] - may appear in a TYPEDESC")
+cpp_quote(" * * [P] - may appear in an OLE property set")
+cpp_quote(" * * [S] - may appear in a Safe Array")
+cpp_quote(" *")
+cpp_quote(" *")
+cpp_quote(" *  VT_EMPTY            [V]   [P]     nothing")
+cpp_quote(" *  VT_NULL             [V]   [P]     SQL style Null")
+cpp_quote(" *  VT_I2               [V][T][P][S]  2 byte signed int")
+cpp_quote(" *  VT_I4               [V][T][P][S]  4 byte signed int")
+cpp_quote(" *  VT_R4               [V][T][P][S]  4 byte real")
+cpp_quote(" *  VT_R8               [V][T][P][S]  8 byte real")
+cpp_quote(" *  VT_CY               [V][T][P][S]  currency")
+cpp_quote(" *  VT_DATE             [V][T][P][S]  date")
+cpp_quote(" *  VT_BSTR             [V][T][P][S]  OLE Automation string")
+cpp_quote(" *  VT_DISPATCH         [V][T][P][S]  IDispatch *")
+cpp_quote(" *  VT_ERROR            [V][T]   [S]  SCODE")
+cpp_quote(" *  VT_BOOL             [V][T][P][S]  True=-1, False=0")
+cpp_quote(" *  VT_VARIANT          [V][T][P][S]  VARIANT *")
+cpp_quote(" *  VT_UNKNOWN          [V][T]   [S]  IUnknown *")
+cpp_quote(" *  VT_DECIMAL          [V][T]   [S]  16 byte fixed point")
+cpp_quote(" *  VT_I1                  [T]        signed char")
+cpp_quote(" *  VT_UI1              [V][T][P][S]  unsigned char")
+cpp_quote(" *  VT_UI2                 [T][P]     unsigned short")
+cpp_quote(" *  VT_UI4                 [T][P]     unsigned short")
+cpp_quote(" *  VT_I8                  [T][P]     signed 64-bit int")
+cpp_quote(" *  VT_UI8                 [T][P]     unsigned 64-bit int")
+cpp_quote(" *  VT_INT                 [T]        signed machine int")
+cpp_quote(" *  VT_UINT                [T]        unsigned machine int")
+cpp_quote(" *  VT_VOID                [T]        C style void")
+cpp_quote(" *  VT_HRESULT             [T]        Standard return type")
+cpp_quote(" *  VT_PTR                 [T]        pointer type")
+cpp_quote(" *  VT_SAFEARRAY           [T]        (use VT_ARRAY in VARIANT)")
+cpp_quote(" *  VT_CARRAY              [T]        C style array")
+cpp_quote(" *  VT_USERDEFINED         [T]        user defined type")
+cpp_quote(" *  VT_LPSTR               [T][P]     null terminated string")
+cpp_quote(" *  VT_LPWSTR              [T][P]     wide null terminated string")
+cpp_quote(" *  VT_FILETIME               [P]     FILETIME")
+cpp_quote(" *  VT_BLOB                   [P]     Length prefixed bytes")
+cpp_quote(" *  VT_STREAM                 [P]     Name of the stream follows")
+cpp_quote(" *  VT_STORAGE                [P]     Name of the storage follows")
+cpp_quote(" *  VT_STREAMED_OBJECT        [P]     Stream contains an object")
+cpp_quote(" *  VT_STORED_OBJECT          [P]     Storage contains an object")
+cpp_quote(" *  VT_BLOB_OBJECT            [P]     Blob contains an object")
+cpp_quote(" *  VT_CF                     [P]     Clipboard format")
+cpp_quote(" *  VT_CLSID                  [P]     A Class ID")
+
+cpp_quote(" *  VT_VECTOR                 [P]     simple counted array")
+cpp_quote(" *  VT_ARRAY            [V]           SAFEARRAY*")
+cpp_quote(" *  VT_BYREF            [V]           void* for local use")
+cpp_quote(" */")
+
+enum VARENUM
+{
+    VT_EMPTY           = 0,
+    VT_NULL            = 1,
+    VT_I2              = 2,
+    VT_I4              = 3,
+    VT_R4              = 4,
+    VT_R8              = 5,
+    VT_CY              = 6,
+    VT_DATE            = 7,
+    VT_BSTR            = 8,
+    VT_DISPATCH        = 9,
+    VT_ERROR           = 10,
+    VT_BOOL            = 11,
+    VT_VARIANT         = 12,
+    VT_UNKNOWN         = 13,
+    VT_DECIMAL         = 14,
+
+    VT_I1              = 16,
+    VT_UI1             = 17,
+    VT_UI2             = 18,
+    VT_UI4             = 19,
+    VT_I8              = 20,
+    VT_UI8             = 21,
+    VT_INT             = 22,
+    VT_UINT            = 23,
+    VT_VOID            = 24,
+    VT_HRESULT         = 25,
+    VT_PTR             = 26,
+    VT_SAFEARRAY       = 27,
+    VT_CARRAY          = 28,
+    VT_USERDEFINED     = 29,
+    VT_LPSTR           = 30,
+    VT_LPWSTR          = 31,
+
+    VT_FILETIME        = 64,
+    VT_BLOB            = 65,
+    VT_STREAM          = 66,
+    VT_STORAGE         = 67,
+    VT_STREAMED_OBJECT = 68,
+    VT_STORED_OBJECT   = 69,
+    VT_BLOB_OBJECT     = 70,
+    VT_CF              = 71,
+    VT_CLSID           = 72,
+
+    VT_VECTOR          = 0x1000,
+    VT_ARRAY           = 0x2000,
+    VT_BYREF           = 0x4000,
+    VT_RESERVED        = 0x8000,
+
+    VT_ILLEGAL         = 0xffff,
+    VT_ILLEGALMASKED   = 0x0fff,
+    VT_TYPEMASK        = 0x0fff
+};
+
+// Property stuff
+typedef ULONG PROPID;
+
+

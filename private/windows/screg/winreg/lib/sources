@@ -1,0 +1,36 @@
+!IF 0
+
+Copyright (c) 1991  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    David J. Gilman (davegi) 15-Nov-1991
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=winreg
+MINORCOMP=wrlib
+
+TARGETNAME=wrlib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=.;..;..\..\..\inc
+
+C_DEFINES=$(C_DEFINES) -DRPC_NO_WINDOWS_H -D_ADVAPI32_
+
+SOURCES=support.c

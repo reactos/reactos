@@ -1,0 +1,149 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       rshx32.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Security Shell Extension"
+#define VER_INTERNALNAME_STR     "rshx32.dll"
+#define VER_ORIGINALFILENAME_STR "rshx32.dll"
+#include <common.ver>
+
+#include "resource.h"
+
+#if(_WIN32_WINNT >= 0x0500)
+#define RSHX32_INF_FILE "rshx32.inf"
+#else
+#define RSHX32_INF_FILE "rshx32_5.inf"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     RSHX32_INF_FILE
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SET_SECURITY_ERROR DIALOGEX 5, 5, 241, 89
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Error Applying Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_EXCLAMATION,IDC_STATIC,7,7,21,20
+    LTEXT           "An error occurred applying security information to:",
+                    IDC_MSG1,36,7,198,9
+    LTEXT           "",IDC_FILENAME,36,23,198,9
+    LTEXT           "Unknown error",IDC_ERROR_TXT,36,39,198,18
+    DEFPUSHBUTTON   "&Continue",IDOK,130,71,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,184,71,50,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Context menu strings
+    IDS_SECURITY_MENU                   "Security..."
+    IDS_SECURITY_HELPSTRING             "View or set security information on the selected item."
+
+    // Other general strings
+    IDS_PROPPAGE_TITLE                  "Security"
+    IDS_NONE                            "None"
+    IDS_MULTISEL_ELLIPSIS               ", ..."
+
+    /* This message is displayed when we try and do the intersection of a
+     * multi-selection but one or more SACLs/DACLs are different.
+     *
+     *  %1 - The base selection
+     *  %2 - The first file/dir that has a different SACL/DACL then %1
+     */
+    IDS_BAD_DACL_INTERSECTION           "The permissions cannot be displayed because they are different between %2 and %1.  Do you wish to reset the permissions on all the selected items?"
+    IDS_BAD_SACL_INTERSECTION           "The audit information cannot be displayed because it is different between %2 and %1.  Do you wish to reset the audit information on all the selected items?"
+
+    IDS_READ_DIR_ERR                    "An error occurred attempting to read the directory:"
+    IDS_FMT_VOLUME_DISPLAY              "%1 (%2)"
+    IDS_FMT_UNKNOWN_ERROR               "Unknown error (0x%1!08x!)"
+    IDS_FMT_WRITE_OWNER_ERR             "You do not have permission to read the contents of directory %1. Do you want to replace the directory permissions with permissions granting you Full Control?\n\nAll permissions will be replaced if you press Yes."
+    IDS_RESET_OWNER_TREE                "Taking ownership of:"
+    IDS_RESET_DACL_TREE                 "Setting permissions on:"
+    IDS_RESET_SACL_TREE                 "Setting audit information on:"
+    IDS_RESET_SEC_TREE                  "Setting security information on:"
+
+    //
+    // NTFS Permission strings
+    //
+    IDS_NTFS_GENERIC_ALL                "Full Control"          // RWXDPO
+    IDS_NTFS_GENERIC_READ               "Read"                  // R    (READ_CONTROL | FILE_READ_DATA | FILE_READ_ATTRIBUTES | FILE_READ_EA | SYNCHRONIZE)
+    IDS_NTFS_GENERIC_WRITE              "Write"                 // W    (READ_CONTROL | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA | FILE_APPEND_DATA | SYNCHRONIZE)
+    IDS_NTFS_GENERIC_EXECUTE            "Traverse / Execute"    // X    (READ_CONTROL | FILE_READ_ATTRIBUTES | FILE_EXECUTE | SYNCHRONIZE)
+
+    IDS_NTFS_GENERAL_MODIFY             "Modify"                // RWXD(RWXD)   ("Change")
+    IDS_NTFS_GENERAL_PUBLISH            "Read, Write & Execute" // RWX (WX)     ("Add & Read")
+    IDS_NTFS_GENERAL_DEPOSIT            "Write & Execute"       // WX  (0)      ("Add")
+    IDS_NTFS_GENERAL_READ               "Read & Execute"        // RX  (RX)
+    IDS_NTFS_GENERAL_LIST               "List Folder Contents"  // RX  (0)
+
+    IDS_NTFS_STD_DELETE                 "Delete"                // D    (DELETE)
+    IDS_NTFS_STD_READ_CONTROL           "Read Permissions"      //      (READ_CONTROL)
+    IDS_NTFS_STD_WRITE_DAC              "Change Permissions"    // P    (WRITE_DAC)
+    IDS_NTFS_STD_WRITE_OWNER            "Take Ownership"        // O    (WRITE_OWNER)
+    IDS_NTFS_STD_SYNCHRONIZE            "Synchronize"           //      (SYNCHRONIZE)
+
+    IDS_NTFS_FILE_READ_DATA             "List Folder / Read Data"       // FILE_READ_DATA/FILE_LIST_DIRECTORY
+    IDS_NTFS_FILE_WRITE_DATA            "Create Files / Write Data"     // FILE_WRITE_DATA/FILE_ADD_FILE
+    IDS_NTFS_FILE_APPEND_DATA           "Create Folders / Append Data"  // FILE_APPEND_DATA/FILE_ADD_SUBDIRECTORY
+    IDS_NTFS_FILE_READ_EA               "Read Extended Attributes"      // FILE_READ_EA
+    IDS_NTFS_FILE_WRITE_EA              "Write Extended Attributes"     // FILE_WRITE_EA
+    IDS_NTFS_FILE_EXECUTE               "Traverse Folder / Execute File"// FILE_EXECUTE/FILE_TRAVERSE
+    IDS_NTFS_FILE_DELETE_CHILD          "Delete Subfolders and Files"   // FILE_DELETE_CHILD
+    IDS_NTFS_FILE_READ_ATTR             "Read Attributes"               // FILE_READ_ATTRIBUTES
+    IDS_NTFS_FILE_WRITE_ATTR            "Write Attributes"              // FILE_WRITE_ATTRIBUTES
+    IDS_NTFS_FILE_CREATE_PIPE           "Create Named Pipe"             // FILE_CREATE_PIPE_INSTANCE (unused)
+
+    //
+    // NTFS Inherit strings
+    //
+    IDS_NTFS_FOLDER                     "This folder only"              // <none>
+    IDS_NTFS_FOLDER_SUBITEMS            "This folder, subfolders and files" // OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE
+    IDS_NTFS_FOLDER_SUBFOLDER           "This folder and subfolders"    // CONTAINER_INHERIT_ACE
+    IDS_NTFS_FOLDER_FILE                "This folder and files"         // OBJECT_INHERIT_ACE
+    IDS_NTFS_SUBITEMS_ONLY              "Subfolders and files only"     // INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE
+    IDS_NTFS_SUBFOLDER_ONLY             "Subfolders only"               // INHERIT_ONLY_ACE | CONTAINER_INHERIT_ACE
+    IDS_NTFS_FILE_ONLY                  "Files only"                    // INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE
+
+    //
+    // Printer Permission strings
+    //
+    IDS_PRINT_PRINT                     "Print"                         // PRINTER_EXECUTE
+    IDS_PRINT_ADMINISTER                "Manage Printers"               // PRINTER_ALL_ACCESS
+    IDS_PRINT_ADMINISTER_JOBS           "Manage Documents"              // JOB_ALL_ACCESS
+    IDS_PRINT_DELETE                    "Delete"                        // DELETE
+    IDS_PRINT_READ                      "Read Permissions"              // STANDARD_RIGHTS_READ (READ_CONTROL)
+    IDS_PRINT_CHANGE_PERM               "Change Permissions"            // WRITE_DAC
+    IDS_PRINT_CHANGE_OWNER              "Take Ownership"                // WRITE_OWNER
+    IDS_PRINT_JOB_ALL                   "Full Control"                  // PRINTER_ALL_ACCESS | JOB_ALL_ACCESS
+
+    //
+    // Printer Inherit strings
+    //
+    IDS_PRINT_PRINTER                   "This printer only"             // <none>
+    IDS_PRINT_DOCUMENT_ONLY             "Documents only"                // INHERIT_ONLY_ACE | OBJECT_INHERIT_ACE
+    IDS_PRINT_PRINTER_DOCUMENT          "This printer and documents"    // OBJECT_INHERIT_ACE
+END

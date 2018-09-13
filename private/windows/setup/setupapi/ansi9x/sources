@@ -1,0 +1,36 @@
+MINORCOMP=apilib_a
+
+TARGETNAME=setup9x
+
+!if !$(386)
+# Do nothing for non-x86 platforms
+
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+!else
+
+!include ..\sources.inc
+
+TARGETTYPE=DYNLINK
+
+USE_LIBCMT=1
+
+C_DEFINES=-D_MBCS -D_SETUPAPI_ -DASSERTS_ON=1
+# To enable asserts, add: -DASSERTS_ON=1
+
+TARGETLIBS=$(TARGETLIBS) \
+           $(BASEDIR)\public\sdk\lib\*\dload.lib \
+           ..\..\setuplog\obj\*\setuplga.lib\
+           ..\ansi\cfgmgr32.lib
+
+DLLDEF=setup9x.def
+
+!endif
+
+i386_SOURCES=$(SOURCES)
+SOURCES=
+
+
+
+

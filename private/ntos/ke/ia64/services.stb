@@ -1,0 +1,63 @@
+//++
+//
+// Module Name:
+//
+//    sysstubs.s
+//
+// Abstract:
+//
+//    This module implements the system service dispatch stub procedures.
+//
+// Author:
+//
+//    William K. Cheung (wcheung) 5-Mar-1996
+//
+// Environment:
+//
+//    User or kernel mode.
+//
+// Revision History:
+//
+//--
+
+#include "ksia64.h"
+
+#define STUBS_BEGIN1( t )
+#define STUBS_BEGIN2( t )
+#define STUBS_BEGIN3( t )
+#define STUBS_BEGIN4( t )
+#define STUBS_BEGIN5( t )
+#define STUBS_BEGIN6( t )
+#define STUBS_BEGIN7( t )
+#define STUBS_BEGIN8( t )
+
+#define STUBS_END
+
+#define SYSSTUBS_ENTRY1( ServiceNumber, Name, NumArgs ) LEAF_ENTRY(Zw##Name)
+#define SYSSTUBS_ENTRY2( ServiceNumber, Name, NumArgs ) mov     v0 = ServiceNumber
+#define SYSSTUBS_ENTRY3( ServiceNumber, Name, NumArgs ) movl    t0 = MM_EPC_VA;;
+#define SYSSTUBS_ENTRY4( ServiceNumber, Name, NumArgs ) mov     bt0 = t0
+#define SYSSTUBS_ENTRY5( ServiceNumber, Name, NumArgs ) br##.##sptk bt0
+#define SYSSTUBS_ENTRY6( ServiceNumber, Name, NumArgs ) LEAF_EXIT(Zw##Name) ;
+#define SYSSTUBS_ENTRY7( ServiceNumber, Name, NumArgs )
+#define SYSSTUBS_ENTRY8( ServiceNumber, Name, NumArgs )
+
+
+#define USRSTUBS_ENTRY1( ServiceNumber, Name, NumArgs)  LEAF_ENTRY(Zw##Name)
+#define USRSTUBS_ENTRY2( ServiceNumber, Name, NumArgs)  ALTERNATE_ENTRY(Nt##Name)
+#define USRSTUBS_ENTRY3( ServiceNumber, Name, NumArgs)  mov     v0 = ServiceNumber
+#define USRSTUBS_ENTRY4( ServiceNumber, Name, NumArgs)  movl    t0 = MM_EPC_VA+0x20;;
+#define USRSTUBS_ENTRY5( ServiceNumber, Name, NumArgs)  mov     bt0 = t0
+#define USRSTUBS_ENTRY6( ServiceNumber, Name, NumArgs)  br##.##sptk bt0
+#define USRSTUBS_ENTRY7( ServiceNumber, Name, NumArgs)  LEAF_EXIT(Zw##Name) ;
+#define USRSTUBS_ENTRY8( ServiceNumber, Name, NumArgs)
+
+
+        STUBS_BEGIN1( "System Service Stub Procedures" )
+        STUBS_BEGIN2( "System Service Stub Procedures" )
+        STUBS_BEGIN3( "System Service Stub Procedures" )
+        STUBS_BEGIN4( "System Service Stub Procedures" )
+        STUBS_BEGIN5( "System Service Stub Procedures" )
+        STUBS_BEGIN6( "System Service Stub Procedures" )
+        STUBS_BEGIN7( "System Service Stub Procedures" )
+        STUBS_BEGIN8( "System Service Stub Procedures" )

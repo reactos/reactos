@@ -1,0 +1,42 @@
+//-------------------------------------------------------------------------//
+// shdocext.idl : IDL source for shdocext.dll
+//-------------------------------------------------------------------------//
+
+// Produces type library (shdocext.tlb) and marshalling code.
+import "oaidl.idl";
+import "ocidl.idl";
+
+//-------------------------------------------------------------------------//
+//	Dummy interface IShDocPropExt
+[
+	uuid(883373C2-BF89-11D1-BE35-080036B11A03),
+
+	helpstring("ShDocExt Interface"),
+	pointer_default(unique)
+]
+interface IShDocPropExt : IUnknown
+{
+};
+
+
+//-------------------------------------------------------------------------//
+//	Type library def
+[
+	uuid(883373B5-BF89-11D1-BE35-080036B11A03),
+	version(1.0),
+	helpstring("ShDocPropExt 1.0 Type Library")
+]
+library SHDOCPROPEXTLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(883373C3-BF89-11D1-BE35-080036B11A03),
+		helpstring("ShDocPropExt Class")
+	]
+	coclass ShDocPropExt
+	{
+		[default] interface IShDocPropExt;
+	};
+};

@@ -1,0 +1,302 @@
+//*************************************************************
+//
+//  Userenv.rc  -   resource file
+//
+//  Microsoft Confidential
+//  Copyright (c) Microsoft Corporation 1995
+//  All rights reserved
+//
+//*************************************************************
+
+#include <windows.h>
+#include <commctrl.h>
+#include "resource.h"
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Userenv"
+#define VER_INTERNALNAME_STR        "userenv\0"
+#define VER_ORIGINALFILENAME_STR    "userenv.dll"
+
+#include "common.ver"
+
+#include "uevents.rc"
+
+IDB_SLOWLINK JPEG DISCARDABLE "msft.jpg"
+
+STRINGTABLE
+BEGIN
+    IDS_FAILED_LOAD_PROFILE,      "Windows cannot log you on because the profile cannot be loaded. Contact your network administrator.\r\n\r\nDETAIL - %s"
+    IDS_ACCESSDENIED,             "You do not have permission to access your central profile located at %s. Contact your network administrator."
+    IDS_FAILEDDIRCREATE,          "Windows cannot create profile directory %s.  Another file exists with the same name. \
+                                   You are logged on with a local profile only. Changes to the profile will not be propagated to the server. Contact your network administrator."
+    IDS_FAILEDDIRCREATE2,         "Windows cannot create profile directory %s.  You will be logged on with a local profile only. \
+				   Changes to the profile will not be propagated to the server. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_TEMP_DIR_FAILED,          "Windows cannot create a temporary profile directory. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_FAILED_LOAD_LOCAL,        "Windows cannot load the locally stored profile. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_SECURITY_FAILED,          "Windows cannot set security on your registry. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_CENTRAL_UPDATE_FAILED,    "Windows cannot update your roaming profile. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_ADMIN_OVERRIDE,           "Windows cannot load the user's profile but has logged you on with the default profile for the system. \r\n\r\nDETAIL - %s"
+    IDS_CENTRAL_NOT_AVAILABLE,    "Your roaming profile is not available.  You are logged on with the locally stored profile. Changes to the profile will not be propagated to the server. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_CENTRAL_NOT_AVAILABLE2,   "Windows cannot locate your roaming profile and is attempting to log you on with your local profile. Changes to the profile will not be propagated to the server. \r\n\r\nDETAIL - %s"
+    IDS_MANDATORY_NOT_AVAILABLE , "Windows cannot locate your roaming mandatory profile and is attempting to log you on with your local profile. \r\n\r\nDETAIL - %s"
+    IDS_MANDATORY_NOT_AVAILABLE2, "Windows cannot log you on because your roaming mandatory profile is not available. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_MISSINGPOLICYFILEENTRY,   "This computer is in manual policy mode, but the policy file cannot be found. Windows is logging you on without applying any policy. Return value (%d)."
+    IDS_REGLOADKEYFAILED,         "RegLoadKey failed. Return value %s for %s."
+    IDS_COMMON,                   " (Common)"
+    IDS_COPYERROR,                "Windows cannot copy file %.500s to location %.500s. Contact your network administrator. \r\n\r\nDETAIL - %s"
+    IDS_FAILED_LOAD_1009,         "Windows cannot load your profile because it may be corrupted. Contact your administrator."
+    IDS_FAILED_LOAD_1450,         "Windows cannot load your profile. Please increase the registry size and restart the computer."
+    IDS_TEMPPROFILEASSIGNED,      "Windows cannot find the local profile and is logging you on with a temporary profile. Changes you make to this profile will be lost when you log off."
+    IDS_TEMPPROFILEASSIGNED1,     "Windows cannot load the profile and is logging you on with a temporary profile. Changes you make to this profile will be lost when you log off."
+    IDS_FAILED_HIVE_UNLOAD,       "Windows cannot unload your registry file.  If you have a roaming profile, your settings are not replicated. Contact your administrator.  \r\n\r\nDETAIL - %s, Build number ((%d))."
+    IDS_FAILED_HIVE_UNLOAD1,      "Windows cannot unload your registry class file.  If you have a roaming profile, your settings are not replicated. Contact your administrator.  \r\n\r\nDETAIL %s, Build number ((%d))."
+    IDS_FAILED_ALLOCATION,        "Windows cannot allocate memory. Contact your administrator. (%d)Return value ((%d))."
+    IDS_PROFILEUPDATE_6002,       "Windows cannot copy your profile  because it contains encrypted files or directories. The keys to decrypt the files or directories are also stored in the profile and are not 
+available now. Please decrypt the files and try again."
+    IDS_PROFILE_PATH_TOOLONG      "The roaming profile path %.500s is too long. Windows is logging you on with a default profile."
+    IDS_PROFILE_DIR_BACKEDUP      "Windows has backed up this user's profile. Windows will automatically try to use the backed up profile the next time this user logs on."
+    IDS_HIVE_UNLOAD_RETRY         "Windows could not save the registry settings in your user profile on its first try because another program or service was editing them. Windows tried again and saved them after %d attempts."
+
+
+
+    
+    //
+    // Profile directory name
+    //
+
+    IDS_PROFILES_ROOT,            "%SystemDrive%\\Documents and Settings"
+
+    //
+    // Special Folder directory names
+    //
+
+    IDS_SH_APPDATA,               "Application Data"
+    IDS_SH_DESKTOP,               "Desktop"
+    IDS_SH_FAVORITES,             "Favorites"
+    IDS_SH_NETHOOD,               "NetHood"
+    IDS_SH_PRINTHOOD,             "PrintHood"
+    IDS_SH_RECENT,                "Recent"
+    IDS_SH_SENDTO,                "SendTo"
+    IDS_SH_STARTMENU,             "Start Menu"
+    IDS_SH_TEMPLATES,             "Templates"
+    IDS_SH_PERSONAL,              "My Documents"
+    IDS_SH_PROGRAMS,              "Start Menu\\Programs"
+    IDS_SH_STARTUP,               "Start Menu\\Programs\\Startup"
+    IDS_SH_LOCALSETTINGS,         "Local Settings"
+    IDS_SH_LOCALAPPDATA,          "Application Data"            // Local Settings
+    IDS_SH_CACHE                  "Temporary Internet Files"    // Local Settings
+    IDS_SH_TEMP,                  "Temp"                        // Local Settings
+    IDS_SH_COOKIES,               "Cookies"
+    IDS_SH_HISTORY,               "History"                     // Local Settings
+    IDS_SH_MYPICTURES,            "My Documents\\My Pictures"
+    IDS_SH_SHAREDDOCS,            "Documents"
+
+    IDS_SH_PERSONAL2              "Personal"
+    IDS_SH_MYPICTURES2            "Personal\\My Pictures"
+    IDS_SH_TEMPLATES2,            "%systemroot%\\shellnew"
+
+    //
+    // Format for profile directory naming
+    //
+
+    IDS_PROFILE_FORMAT,           "%s.%s"
+    IDS_PROFILEDOMAINNAME_FORMAT, ".%s"
+
+    //
+    // Well known domain names
+    //
+
+    IDS_NT_AUTHORITY,             "NT AUTHORITY"
+    IDS_BUILTIN,                  "BUILTIN"
+
+
+    //
+    // Copy dialog status strings
+    //
+
+    IDS_COPYING,                  "Copying user profile..."
+    IDS_CREATING,                 "Creating user profile..."
+
+    //
+    // Misc
+    //
+
+    IDS_LOCALGPONAME,             "Local Group Policy"
+    IDS_TEMPINTERNETFILES,        "Temporary Internet files"
+    IDS_HISTORY,                  "History"
+    IDS_EXCLUSIONLIST,            "Local Settings;Temporary Internet Files;History;Temp"
+    IDS_REGISTRYNAME,             "Registry"
+    IDS_CALLEXTENSION,            "Applying %.50s policy..."
+    IDS_USER_SETTINGS,            "Applying your personal settings..."
+    IDS_COMPUTER_SETTINGS,        "Applying computer settings..."
+
+
+    //
+    // Verbose output strings
+    //
+
+
+    IDS_NO_LOCAL_GPO              "The local Group Policy Object is disabled."
+    IDS_FAILED_WLDAP32            "Windows cannot load wldap32.dll with (%d)."
+    IDS_FAILED_DS_CONNECT         "Windows cannot connect to %s with (0x%x)."
+    IDS_FAILED_DS_BIND            "Windows cannot establish a connection to %s with (%d)."
+    IDS_FAILED_NETAPI32           "Windows cannot load netapi32.dll with (%d)."
+    IDS_FAILED_QUERY_SITE         "Windows cannot query for the site (%d)."
+    IDS_FAILED_ROOT_SEARCH        "The search for the root Active Directory object failed with (%d)."
+    IDS_NO_NAMING_CONTEXT         "Windows cannot retrieve naming context from %s."
+    IDS_SEARCHING                 "Windows is searching %s for Group Policy objects."
+    IDS_FOUND_GPO                 "Windows found Group Policy object: %s, also known as %s."
+    IDS_FOUND_LOCAL_GPO           "Windows found a local Group Policy object."
+    IDS_GPO_FORCE                 "Other Group Policy objects cannot overwrite Group Policy object %s."
+    IDS_GPO_NO_FORCE              "Other Group Policy objects can overwrite Group Policy object %s."
+    IDS_GPO_DISABLED              "Windows cannot apply Group Policy object %s because it is disabled."
+    IDS_GPO_LINK_DISABLED         "Windows cannot apply the link to Group Policy object %s because it is disabled. "
+    IDS_NO_GPOS                   "Windows cannot find any Group Policy objects ."
+    IDS_OBJECT_NOT_FOUND          "Windows cannot find Group Policy object %s in Active Directory. The object may not exist, or access to the object may be denied. Contact your network administrator for more information. The Return value  (%d)."
+    IDS_SET_STRING_VALUE          "Windows is setting registry value %s to %s."
+    IDS_SET_DWORD_VALUE           "Windows is setting registry value %s to (%d)."
+    IDS_SET_UNKNOWN_VALUE         "Windows set the registry value %s successfully."
+    IDS_FAILED_SET                "Windows cannot set registry value %s with (%d)."
+    IDS_FAILED_CREATE             "Windows cannot create registry key %s with (%d)."
+    IDS_DELETED_VALUE             "Windows deleted registry value %s."
+    IDS_FAIL_DELETE_VALUE         "Windows cannot delete registry value %s with (%d)."
+    IDS_DELETED_KEY               "Windows deleted registry key %s."
+    IDS_USER_POLICY_APPLIED       "Windows applied User Group Policy."
+    IDS_MACHINE_POLICY_APPLIED    "Windows applied Computer Group Policy."
+    IDS_USERNAME                  "User or computer name: %.500s"
+    IDS_DOMAINNAME                "Domain name:  %.500s"
+    IDS_DCNAME                    "Domain controller name: %s"
+    IDS_SLOWLINK                  "Windows detected a slow network link."
+    IDS_GPO_QUERY_FAILED          "Windows cannot query for the list of Group Policy objects . A message that describes the reason for this was previously logged by this policy engine."
+    IDS_GPO_LIST                  "Group Policy objects to be applied: %.500s."
+    IDS_START_MACHINE_POLICY      "Windows is starting computer Group Policy processing..."
+    IDS_START_USER_POLICY         "Windows is starting user Group Policy processing..."
+    IDS_NO_GPOS2                  "There are no Group Policy objects for this user/computer."
+    IDS_FAILED_CRITICAL_SECTION   "Windows cannot claim critical section. Return value(%d)."
+    IDS_PROCESSING                "Windows is processing Group Policy object  %s."
+    IDS_CALL_EXTENSION            "Windows is calling extension %s with flags (0x%x)."
+    IDS_EXT_LOAD_FAIL             "Windows cannot load extension %s with (%d)."
+    IDS_EXT_FUNC_FAIL             "Windows cannot find the entry point function in extension %s."
+    IDS_EXT_MISSING_FUNC          "Windows cannot query ProcessGroupPolicy registry entry for %s."
+    IDS_EXT_MISSING_DLLNAME       "Windows cannot query DllName registry entry for %s."
+    IDS_REMOVEGPOS                "Windows is removing old Group Policy objects."
+    IDS_REMOVEGPO                 "Windows is removing Group Policy object: %s."
+    IDS_FINISHED_REMOVEGPOS       "Windows has removed Group Policyobjects."
+    IDS_GPO_LIST_CHANGED          "The list of Group Policy objects for this user or computer has changed. Windows will remove some Group Policy objects and apply the new list."
+    IDS_NO_REGISTRY               "Windows cannot access the registry information at %s with (%d)."
+    IDS_NO_ACCESS                 "The user or computer does not have access to the Group Policy object %s."
+    IDS_NO_CHANGES                "Windows did not detect any changes in the list of Group Policy objects: the revision numbers and the list of Group Policy objects are the same as the last time the policy was applied."
+    IDS_FAILED_READ_GPO_LIST      "Windows cannot read the history of GPOs from the registry."
+    IDS_FAILED_SAVE_GPO_LIST      "Windows cannot save the history of GPOs in the registry."
+    IDS_FAILED_REMOVE_GPO_LIST    "Windows cannot remove old Group Policy objects."
+
+    IDS_GPO_DELETED               "Windows deleted the Group Policy object %s.  You can remove the link to this GPO by using Group Policy Editor."
+    IDS_NO_DS_OBJECT              "The object %s does not exist in Active Directory."
+    IDS_ROLE_STANDALONE           "This computer is not a member of a domain.  Windows will apply local Group Policy only."
+    IDS_ROLE_DOWNLEVEL_DOMAIN     "This computer is a member of a downlevel domain."
+    IDS_ROLE_DS_DOMAIN            "This computer is a member of a domain with Active Directory support."
+    IDS_FAILED_ROLE               "Windows cannot determine the role of this computer."
+    IDS_FAILED_USERNAME           "Windows cannot determine the user or computer name. Return value (%d)."
+    IDS_FAILED_DSNAME             "Windows cannot obtain the domain controller name for your computer network. Return value (%d)."
+
+    IDS_FAILED_MACHINENAME        "Windows cannot determine the computer name. Return value (%d)."
+    IDS_FAILED_SECUR32            "Windows cannot load secur32.dll. Return value (%d)."
+
+    IDS_NO_MACHINE_DOMAIN         "The computer's domain %s is unavailable. Return value (%d)."
+    IDS_CORRUPT_GPO_FSPATH        "GPO %s does not have a file system path defined. The gPCFileSysPath property must have a UNC path to the GPO storage location on the SysVol."
+    IDS_CORRUPT_GPO_COMMONNAME    "GPO %s does not have a common name defined (usually a GUID). Check the cn property for a GUID and confirm that the corresponding GUID subdirectory exists on the SysVol."
+    IDS_SKIP_GPO                  "Windows will not add GPO %s to the list of Group Policy objects because the 'Block from Above' attribute is set and the link to this GPO does not have ""No Override"" attribute set."
+    IDS_BLOCK_ENABLED             "%s has the 'Block From Above' attribute set.  All policies that can be overwritten will be removed from the list."
+    IDS_OUT_OF_MEMORY             "Windows cannot allocate memory with (%d)."
+    IDS_FAILED_ACCESS_CHECK       "Windows cannot check security for %s with (%d)."
+    IDS_READ_EXT_FAILED           "Windows cannot read extensions from registry."
+    IDS_EXT_SKIPPED               "Windows did not apply extension %s, and flags are (0x%x)."
+    IDS_GPO_PROC_STOPPED          "Windows ended GPO processing because the computer shut down or the user logged off."
+    IDS_CHANGES_FAILED            "Windows cannot process extension %s ProcessGroupPolicy. Return value (0x%x)."
+    IDS_FAILED_GETDELETED_LIST    "Windows cannot obtain the deleted list for extension %s."
+    IDS_EXT_SKIPPED_DUETO_FAILED_REG "Windows did not apply extension %s because the registry extension failed."
+    IDS_CORRUPT_GPO_FUNCVERSION   "GPO %s does not have a functionality version number defined."
+    IDS_GPO_TOO_OLD               "GPO %s was created by an older version of Group Policy Editor and cannot be processed. Please create a new Group Policy Object to replace this one."
+    IDS_GPO_NO_DATA               "GPO %s does not contain any policy information because the version number is 0. Windows will not apply it." 
+    IDS_SETUP_GPOFILTER_FAILED    "Windows cannot set up filtering of Group Policy objects."
+    IDS_EXT_HAS_EMPTY_LISTS       "Windows did not apply extension %s because there are no deleted or changed Group Policy objects."
+    IDS_INCORRECT_CLASS           "Object %s is not a member of objectClass %s."
+    IDS_FAILED_GET_SID            "Windows cannot obtain the security ID of the user."
+    IDS_FAILED_ICMP               "Windows cannot load icmp.dll with (%d)."
+    IDS_FAILED_WSOCK32            "Windows cannot load wsock32.dll with (%d)."
+    IDS_FAILED_DSAPI              "Windows cannot load ntdsapi.dll with (%d)."
+    IDS_CAUGHT_EXCEPTION          "Windows cannot process extension %s. Return value (0x%x)."
+    IDS_FAILED_GPO_SEARCH         "Windows cannot search for Group Policy objects with (%d)."
+    IDS_FAILED_OU_SEARCH          "Windows cannot search for Organizational Unit hierarchy with (%d)."
+    IDS_FAILED_IMPERSONATE        "Windows cannot perform this task. Return value (%d)."
+    IDS_FAILED_TIMER              "Windows cannot set the timer. %s Return value  (%d)."
+    IDS_FAILED_SHELL32API         "Windows cannot load shell32.dll with (%d)."
+    IDS_FAILED_WRITE_SID_MAPPING  "Windows cannot write the security ID of the user to the registry."
+    IDS_FAILED_MIGRATION          "Windows cannot move group policy history data from the user's old security ID to new security ID."
+    IDS_EXT_FAILED                "The Group Policy client-side extension %s was passed flags (%d) and returned a failure status code of (%d)."
+    IDS_LOOPBACK_DISABLED1        "Windows cannot do loopback processing for downlevel or local users.  Loopback processing will be disabled."
+    IDS_LOOPBACK_DISABLED2        "Windows cannot do loopback processing when the computer is joined to a downlevel domain or is a member of a workgroup.  Loopback processing will be disabled."
+    IDS_TOO_MANY_GPOS             "Windows cannot query the list of Group Policy Objects because the number of GPOs has exceeded a maximum limit. Contact your network administrator to reduce the number of Group Policy Objects applied to you."
+
+END
+
+IDI_PROFILE  ICON  profile.ico
+
+IDD_SLOW_LINK DIALOG 6, 18, 225, 75
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Slow Network Connection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PROFILE, 101, 10, 12, 18, 20
+    LTEXT           "Windows detected a slow network connection.  Would you like to download your profile or use the locally stored copy?",
+                    -1, 45, 10, 114, 48
+    DEFPUSHBUTTON   "&Download", IDC_DOWNLOAD, 165, 10, 50, 14, BS_NOTIFY
+    PUSHBUTTON      "Use &Local", IDC_LOCAL, 165, 27, 50, 14
+    RTEXT           "Time remaining:", IDC_TIMETITLE, 147, 60, 54, 8
+    LTEXT           "", IDC_TIMEOUT, 205, 60, 12, 8
+END
+
+
+IDD_ERROR DIALOG 6, 18, 250, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "User Environment"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PROFILE, 101, 6, 10, 18, 20
+    DEFPUSHBUTTON   "OK", IDOK, 190, 10, 50, 14, BS_NOTIFY
+    EDITTEXT        IDC_ERRORTEXT, 37, 10, 145, 66, ES_MULTILINE |
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    RTEXT           "Time remaining:", IDC_TIMETITLE, 172, 80, 54, 8
+    LTEXT           "", IDC_TIMEOUT, 230, 80, 12, 8
+END
+
+IDD_COPYSTATUS DIALOG 6, 18, 220, 57
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Copying User Profile..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_PROFILE, 101, 8, 7, 18, 20
+    LTEXT           "Copying files...", -1, 45, 13, 204, 8
+    CONTROL         "", IDC_PROGRESS, PROGRESS_CLASS, 0, 8, 41, 204, 10
+END
+
+IDD_COPYERROR DIALOG 6, 18, 240, 120
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Error Copying File"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The following error has occurred:", -1, 8, 10, 134, 8
+    LTEXT           "", IDC_ERRORMSG, 8, 21, 160, 31
+    LTEXT           "Source:", -1, 8, 57, 51, 8
+    LTEXT           "", IDC_SOURCE, 8, 66, 218, 8, SS_PATHELLIPSIS
+    LTEXT           "Destination:", -1, 8, 82, 51, 8
+    LTEXT           "", IDC_DESTINATION, 8, 91, 218, 8, SS_PATHELLIPSIS
+    DEFPUSHBUTTON   "&Skip File", IDC_SKIPFILE, 182, 8, 50, 14
+    PUSHBUTTON      "&End", IDC_ABORT, 182, 26, 50, 14, BS_NOTIFY
+    RTEXT           "Time Remaining:", IDC_TIMETITLE, 148, 107, 61, 8
+    LTEXT           "", IDC_TIME, 214, 107, 20, 8
+END

@@ -1,0 +1,321 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE/Shell ActiveX Document Hosting</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h1>IE/Shell ActiveX<font size="5"><tt>TM</tt></font> Document
+Hosting</h1>
+
+<h2>Features and Known bugs</h2>
+
+<p>Because ActiveX Document (DocObject) mechanism is new to us
+and it is sometimes difficult to tell what we can expect and what
+should be reported as a bug. Therefore, I wrote this document to
+summarize list of features that are supposed to work, may work or
+are expected not to work, including known bugs. I also describe
+some of work-around we put in the container code (IE/shell frame)
+to work around some bugs in ActiveX Document objects. </p>
+
+<ul>
+    <li><a href="#features">ActiveX Document Features</a></li>
+    <li><a href="#bugs">Known app-specific bugs (build 1115)</a>
+        -- <a href="#Word95">Word95</a>, <a href="#Excel95">Excel95</a>,
+        <a href="#Excel 97">Excel97</a>, <a href="#PowerPoint">PowerPoint95</a>,
+        <a href="#PowerPoint">Visio</a></li>
+    <li><a href="#news">What's New (or latest check-in's)</a></li>
+</ul>
+
+<p>By the way, please remember that application programs may
+intentionally behave differently when it's opened as a DocObject.
+If you notice a certain feature is disabled under IE, please
+double check if it is disabled under the Office binder as well.
+If it is disabled, it's most likely a by-design. </p>
+
+<hr>
+
+<h2><a name="features">ActiveX Document Features</a></h2>
+
+<h3>A. Features that are supposed to work</h3>
+
+<ol>
+    <li>Navigate-in-place a document over HTTP protocol</li>
+    <li>Navigate-in-place a document over FILE protocol</li>
+    <li>File-&gt;Save is always disabled over HTTP protocol</li>
+    <li>File-&gt;Save is enabled (and works) after modified over
+        FILE protocol</li>
+    <li>File-&gt;SaveAs is always enabled regardress the protocol
+        (Default name is not fancy -- #23452 shdocvw)</li>
+    <li>Refresh button re-loads the document (does not work
+        except for HTML -- #20995 shdocvw)</li>
+    <li>Negotiate the toolbar space correctly (opening,
+        drag&amp;drop, activating an embedding, etc.)</li>
+    <li>Closing the browser window will shutdown the app
+        correctly.</li>
+    <li>Navigate-in-place in a sub-frame works and shouldn't
+        merge menu or add toolbars.</li>
+    <li>Help pulldown is either merged or replaced and works.</li>
+    <li>When navigating away from the modified document, a
+        &quot;may save&quot; message box will pop up (IE does,
+        but Explorer doesn't -- #5067 explorer).</li>
+    <li>If the user says No to the &quot;may save&quot; message
+        box and navigate back, the document should be re-loaded.</li>
+    <li>Dragging a DocObject document (from the shell) onto the
+        title bar of a browser window (which is looking at
+        another DocObject including a HTML document) will open
+        that document in-place. </li>
+    <li>Typically a LocalServer DocObject application creates its
+        own top-level stand-alone window. It is supposed to keep
+        it invisible (or inactivated if it's already visible)
+        while we are navigating in-place. </li>
+    <li>Keyboard input (including accelerators) will be handled
+        by the appropriate component. </li>
+</ol>
+
+<h3>B. Features that will work only if the DocObject support it</h3>
+
+<ol>
+    <li>File-&gt;Print and Print button in the Internet Toolbar
+        is enabled and works.</li>
+    <li>File-&gt;Page Setup is enabled and works.</li>
+    <li>File-&gt;Properties is enabled and works</li>
+    <li>Print/Pring-Preview buttons on app's toolbar (donot work
+        right now -- #19852 shdocvw)</li>
+    <li>Save button on app's toolbar</li>
+    <li>Non-conflicting accelerator should work Conflicting
+        accelerator will be handled by the DocObject.</li>
+    <li>Help menu will be merged (both IE help menu items and
+        DocObject help menu items will be available under a
+        single Help menu) only if the DocObject supports the help
+        menu merging. Word supports it, but Excel doesn't. If
+        DocObject does not support it, only DocObject help menu
+        items will be available. </li>
+</ol>
+
+<h3>C. Features that are not supposed to work</h3>
+
+<ol>
+    <li>New/Open button on app's toolbar -- they are supposed to
+        be disabled.</li>
+    <li>App specific status bar components -- the status bar is
+        owned by the frame.</li>
+    <li>Edit-&gt;Copy/Paste/Cut applies to text on the Internet
+        Toolbar -- just like Word95.</li>
+    <li>DocObject in sub-frame being UIActivated (merging
+        menu/toolbar) -- the top-level HTML DocObject is supposed
+        to be UIActivated no matter which sub-frame has the
+        focus. </li>
+    <li>Many other features DocObjects intentionally disable
+        (which we can reproduce under Office Binder)</li>
+</ol>
+
+<hr>
+
+<h2><a name="bugs">Known app-specific bugs (build 1089)</a></h2>
+
+<h3><a name="Word95">Word95</a></h3>
+
+<p>A-1&amp;2 (was able to work-around): Word95 (and 97 as well)
+has an internal state which indicates whether or not that's an
+embedding or not. Just loading a document (via
+IPersistFile::Load) and activating in-place won't work because of
+this internal state. In order to make it work we need to call its
+IOleObject::SetHostName. To avoid side-effect with other apps, we
+do it only for Word95 and Word97. </p>
+
+<p>A-1&amp;2: A few people reported a problem in in-place
+navigation (opens up in a separate window instead), but
+reinstalling Office solved that problem in all cases. In one of
+these cases, we found that docobj.dll was not registered
+correctly as a marshaller of IOleDocument interface -- the cause
+is unknown.</p>
+
+<p>A-7 (won't fix): When switching the view mode (among Normal,
+Outline, Page Layout, ...), Word puts its toolbar behind the
+internet toolbar. It relocated those toolbars correctly if I
+resize the frame window. As far as I can tell, it seems that Word
+is assuming that the border rectangle (which we return from
+IOleInPlaceUIWindow::GetBorder) is the same as the client
+rectangle of the hwndFrame in this particular senario. Because
+this Word bug is hard to work-around (we need to call its
+ResizeBorder when we detecct this senario, but it's very hard to
+detect it) and the user can work-around (need to resize the frame
+window), we resolve this bug as &quot;won't fix&quot;. -- #23271</p>
+
+<p>A-9 (was able to work-around): We found a bug in Word95, which
+does not display anything until we <em>UIActivate</em> it. This
+is fine if the document is the top-level DocObject, but not fine
+if the document is opened in a sub-frame. To work-around this
+bug, we detect this case by calling <em>SetRect</em> right after
+SetInPlaceSite. If it fails, we call <em>UIActivate</em> on it
+(with a hidden frame window so that added toolbar won't be
+shown). </p>
+
+<p>A-13 (probably won't fix): There is a report that
+drag&amp;dropping a Word document onto a browser window will
+cause many problems occationally (the exact repro senario is not
+known). It's most likely a bug in WinWord. Unless we can come up
+with a way to work-around this bug, we have no choice other than
+shipping IE/Nashville without adressing this bug. -- #20475</p>
+
+<p>A-14 (won't fix): Under a certain condition (typically the
+document is already opened by another machine), Word pops up its
+own dialog box (such as &quot;Document is already opened by foo.
+Do you want to open it read-only?&quot;) while we are activating
+it. When this happens, Word incorrectly make its own MDI frame
+visible and bring it to the front.</p>
+
+<p>Other (to be investigated): Under Nashvile opening a Word's
+dialog (such as View-&gt;Toolbar) multiple times while the
+dropdown box on the shell toolbar has the focus will eventually
+cause GPF in Word. It sounds like a bug in Word. -- #6530</p>
+
+<p>Other (by design): The Wizard button if Table-&gt;Insert
+dialog box is disabled. This button is disabled when you open a
+Word document in a binder file. -- #24095</p>
+
+<p>&nbsp;</p>
+
+<h3><a name="Excel95">Excel95</a></h3>
+
+<p>A-1 (probably by-design): When opening an Excel document over
+HTTP for the second time (when it's cached), Excel complains that
+the document is being modified and can be opened only as
+read-only. This is caused by the fact that WININET keeps the
+cached file left open when it's already cached. Although there is
+a bug in WININET (WININET must be consistent -- #29828), it is
+almost by-design that Excel pops up this dialog box for a cached
+file because a http protocol is virtually a read-only protocol
+(don't argue about POST). </p>
+
+<p>A-1/2 (Excecl bug - won't fix): Excel95 fails to perform
+IPersistFile::Load while another excel file is UIActive. This is
+a known problem and Binder95 has a work around (it calls
+pUIActiveObject-&gt;OnFrammeWindowActivate(FALSE) before calling
+pmk-&gt;BindToObject). We can't apply this work around in IE
+because we need to make it sure that we hit this code path only
+if we are navigating from an Excel page to another. Even though
+we put this work around (using the CLSID nodified by the URLMON),
+it won't cover all the cases, which involves a frame-set. (#4214)</p>
+
+<p>A-8 (looking for a work-around): It's known that Excel does
+not shutdown correctly even after we close the browser window. It
+seems that the excel object is not closed/released correctly.
+Because of this bug, visiting the same page causes a wrong
+message box, which says &quot;XXX is being modified by YYY. Open
+as read-only?&quot;. We have been trying to work-around this
+Excel bug, but not successful at this moment The latest
+work-around suggested by Excel team (QI'ing to IDataObject
+calling OleCreateFromData) stopped the GPF but leaks a temp file,
+which is pretty BAD (#6030 excel)</p>
+
+<p>A-4: A person is experience that File-&gt;Save menu is always
+enabled when opening an Excel document over File protocol,
+although I can't reproduce it on my machine. It very much looks
+like a bug in Excel, which returns S_OK to IsDirty under a
+certain condition even though the document has not been modified.
+Since this is an Excel bug and the symptom is minor; we will not
+do anything on this bug. (#15551 won't fix -- Excel bug). </p>
+
+<p>B-4/5 (won't fix): The Print/PrintPreview/Save buttons on
+Excel's toolbar are disabled, which is a bug in Excel. </p>
+
+<p>B-6 (probably won't fix): Ctrl+O does not work. Excel is
+unneccessarily eating ctrl+O key even though it does not own the
+File menu. -- #25633</p>
+
+<p>B-7 (won't fix): Excel95 does not support help menu merging.
+Therefore, only Excel's help menu items are available under the
+Help menu. You'll see the same result under the Office binder. </p>
+
+<p>Other (won't fix): Selecting the &quot;Insert...&quot;
+menuitem of the context menu of a tab won't allow you to insert a
+module. Excel doesn't allow you to add it when it's opened under
+the Office Binder either. This is an Excel bug and we won't fix
+(#19840 won't fix). Harvard Chart XL Chart causes a Macro error,
+&quot;a method of Workbook class failed&quot; -- it also happens
+under the Office Binder (#25876 won't fix).</p>
+
+<h3><a name="Excel 97">Excel 97</a></h3>
+
+<p>A-15 (won't fix -- app bug): When the user clicks the address
+bar then clicks the client are of Excel, the input focus remains
+on the address bar. This is caused by the fact that Excel does
+not call SetFocus when it's clicked. From IE's point of view,
+there is nothing we can do. The same problem happens under both
+Outlook and Binder. We've exchanged <a
+href="email/ExcelFocusProblem_4441.msg">a couple of e-mail</a>
+and concluded that Excel guys are going to fix this problem. (IE
+bug #4441). </p>
+
+<h3><a name="PowerPoint">PowerPoint</a></h3>
+
+<p>A-4 (won't fix): Powerpoint does not save when the user select
+the File-&gt;Save (after modifying the document over file
+protocol). IPersistFile::Save always returns E_NOIMPLE. It looks
+like the Powerpoint does not implement IPersistFile::Save. --
+#35211</p>
+
+<p>A-9 (looking for a work-around): Just like Word95, PowerPoint
+does not create a window (leave it blank) when it's opened in a
+sub-frame, in which case we won't <em>UIActivate</em> it. This is
+a PowerPoint bug but we need to come up with a work-around --
+#23495</p>
+
+<h3><a name="Visio">Visio</a></h3>
+
+<p>A-1/2 (investigating): We have a report that there is a case
+when Visio opens up in a saparate window. I was able to repro
+this bug on my own machine a couple of times but not
+consistently. The cause is unknown, but probably a Visio bug
+(#17878).&nbsp; </p>
+
+<p>A-4 (postponed): After opening a VISIO file over file protocol
+and modify it, File-&gt;Save is enabled correctly. It, however,
+does nothing when the user select it. We've found out that
+passing TRUE as fRemember to IPersistFile::Save will fix this
+problem, but we are not making that change for IE 3.0 (#35077 -
+#29938 and 35101 are realted)</p>
+
+<hr>
+
+<h2><a name="news">What's New (latest resolved/understood bugs)</a></h2>
+
+<ul>
+    <li>5/30/96 24776-fixed in 1089: Toolbar flashes heavily when
+        navigating from one Word document to another.</li>
+    <li>5/30/96 24763-fixed in 1089: Explorer popup menus missing
+        when hosting a Word document with embedded (24764 is also
+        fixed by the same delta).</li>
+    <li>5/31/96 23271-won't fix: When you open a word doc in
+        IE3.0, and use the page layout button, you loose the
+        toolbars. See <a href="#Word95">Word95</a>/A-7 for
+        detail.</li>
+    <li>6/12/96 25633 - fixed: Ctrl+O and Ctrl+X now works
+        correctly while hosting a Word document. The number of
+        entries in the accelerator table returned from
+        IOleInPlaceSite::GetWindowContext was wrong. </li>
+    <li>7/5/96 We call SetHostName only for Word95 and Word97
+        (instead of always). We found calling SetHostName causes
+        some side effect on other apps (such as Excel and
+        MSPaint). See <a href="#Word95">Word95</a>/A-1&amp;2 for
+        detail.</li>
+    <li>7/8/96 29828 -- by-design. Found out why Excel complains
+        that the document is already &quot;being modified&quot;
+        when the file is cached. See <a href="#PowerPoint">Excel95</a>/A-1
+        for detail. </li>
+    <li>9/27/96 IE bug 4441 -- Resolved as won't fix. See <a
+        href="#Excel 97">Excel97</a>/A-15 for detail. </li>
+</ul>
+
+<hr>
+
+<p><a href="dochost0.htm">Go to the parent page</a></p>
+</body>
+</html>

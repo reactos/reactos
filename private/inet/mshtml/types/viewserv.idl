@@ -1,0 +1,490 @@
+interface IMarkupPointer;
+interface IHTMLElement;
+interface ISegmentList;
+interface IHTMLCaret;
+interface ISelectionRenderingServices;
+interface IElementAdorner;
+
+typedef enum
+{
+    HIGHLIGHT_TYPE_None     =  0x00000000,
+    HIGHLIGHT_TYPE_Selected =  0x00000001,
+    HIGHLIGHT_TYPE_Squiggle =  0x00000002
+} HIGHLIGHT_TYPE;
+typedef struct 
+{
+    UINT                message;
+    POINT               pt  ;
+    POINT               ptContent;
+    WPARAM              wParam;
+    LPARAM              lParam;
+    int                 characterCookie;
+    void*               elementCookie;  
+} SelectionMessage;
+
+typedef struct tagHTMLPtrDispInfoRec
+{
+    DWORD dwSize;
+    LONG lBaseline;
+    LONG lXPosition;
+    LONG lLineHeight;
+    LONG lTextHeight;
+    LONG lDescent;
+} HTMLPtrDispInfoRec;
+
+
+typedef enum
+{
+    CHAR_FORMAT_None = 0,
+    CHAR_FORMAT_FontStyle = 1,
+    CHAR_FORMAT_FontInfo = 2,
+    CHAR_FORMAT_FontName = 4,
+    CHAR_FORMAT_ColorInfo = 8
+} CHAR_FORMAT_FAMILY;
+
+typedef enum
+{
+    SELECTION_TYPE_None, 
+    SELECTION_TYPE_Caret,
+    SELECTION_TYPE_Selection,
+    SELECTION_TYPE_Control,
+    SELECTION_TYPE_Auto
+    
+} SELECTION_TYPE ;
+
+
+typedef struct stHTMLCharFormatData
+{
+    DWORD               dwSize;
+    WORD                 wFamilyFlags;
+    // FontStyle
+    unsigned short      fBold :1;
+    unsigned short      fItalic :1;
+    unsigned short      fUnderline :1;
+    unsigned short      fOverline :1;
+    unsigned short      fStrike :1;
+    unsigned short      fSubScript :1;
+    unsigned short      fSuperScript :1;
+    // FontColor (a)
+    unsigned short      fHasBgColor :1;
+    // FontInfo
+    unsigned short      fExplicitFace :1;
+    unsigned short      fLangFace :1;
+    WORD                wWeight;
+    WORD                wFontSize;
+    // FontName
+    TCHAR               szFont[ 32 ];
+    // FontColor (b)
+    DWORD               dwTextColor;
+    DWORD                 dwBackColor;
+} HTMLCharFormatData;
+
+
+typedef enum
+{
+    LAYOUT_MOVE_UNIT_PreviousLine = 1,
+    LAYOUT_MOVE_UNIT_NextLine = 2,
+    LAYOUT_MOVE_UNIT_CurrentLineStart = 3,
+    LAYOUT_MOVE_UNIT_CurrentLineEnd = 4,
+    LAYOUT_MOVE_UNIT_PreviousPage = 5,
+    LAYOUT_MOVE_UNIT_NextPage = 6
+} LAYOUT_MOVE_UNIT;
+
+
+/////////////////////////////////////////////////////////////////
+//  IHTMLViewServices
+[
+        object,
+        uuid(3050f4ef-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+
+interface IHTMLViewServices : IUnknown
+{
+    HRESULT MoveMarkupPointerToPoint(
+        [in] POINT pt,
+        [in] IMarkupPointer *pPointer,
+        [in,out] BOOL * pAtEOL
+    );
+
+    HRESULT MoveMarkupPointerToPointEx(
+        [in] POINT pt,
+        [in] IMarkupPointer *pPointer,
+        [out] BOOL * pAtEOL,
+        [in] BOOL bLockInZOrder,
+        [in,out] IHTMLElement **ppElementZOrder,
+        [in,out] DWORD *pZOrder
+    );  
+    
+    HRESULT MoveMarkupPointerEx(
+        [in] IMarkupPointer *pPointer,
+        [in,out] BOOL   *fEOL,
+        [in] int         characterCookie,
+        [in] POINT pt,
+        [in] POINT ptContent,
+        [in] void*       elementCookie,
+        [in,out] BOOL   *fValidTree
+    );
+
+    HRESULT GetCharFormatInfo(
+        [in] IMarkupPointer *pPointer,
+        [in] WORD wFamilyFlags,
+        [in,out] HTMLCharFormatData *pInfo
+    );
+
+    HRESULT GetLineInfo(
+        [in] IMarkupPointer *pPointer,
+        [in] BOOL fAtEndOfLine,
+        [in,out] HTMLPtrDispInfoRec *pInfo
+    );
+
+    HRESULT GetElementsInZOrder(
+        [in] POINT pt,
+        [in,out,size_is(*pCount)] IHTMLElement **rgElements,
+        [in,out] DWORD *pCount
+    ); 
+
+    HRESULT GetTopElement(
+        [in] POINT pt,
+        [out] IHTMLElement **ppElement
+    );
+
+    HRESULT MoveMarkupPointer(
+        [in] IMarkupPointer *pPointer,
+        [in] LAYOUT_MOVE_UNIT eUnit,
+        [in] LONG lXCurReally
+    );
+
+    HRESULT RegionFromMarkupPointers(
+        [in] IMarkupPointer *pPointerStart,
+        [in] IMarkupPointer *pPointerEnd,
+        [out] HRGN *phrgn
+    );
+
+    HRESULT GetCurrentSelectionRenderingServices (
+        [in,out] ISelectionRenderingServices ** ppSelRenSvc );
+        
+    HRESULT GetCurrentSelectionSegmentList( 
+        [in,out] ISegmentList ** ppSegment);
+
+    HRESULT FireOnSelectStartFromMessage(
+        [in] SelectionMessage *peSelectionMessage );
+
+    HRESULT GetCaret(
+        [out] IHTMLCaret ** ppCaret );
+
+    HRESULT ConvertVariantFromHTMLToTwips(
+        [in,out] VARIANT *pvarargInOut
+    );
+    
+    HRESULT ConvertVariantFromTwipsToHTML(
+        [in,out] VARIANT *pvarargInOut
+    );
+    
+    HRESULT IsBlockElement (
+        [in]  IHTMLElement * pIElement,
+        [out] BOOL  * fResult ) ;
+        
+    HRESULT IsLayoutElement (
+        [in]  IHTMLElement * pIElement,
+        [out] BOOL  * fResult ) ;
+
+    HRESULT IsContainerElement (
+        [in]  IHTMLElement * pIElement,
+        [out] BOOL         * pfContainer,
+        [out] BOOL         * pfHTML ) ;
+ 
+    HRESULT GetFlowElement (
+        [in]  IMarkupPointer * pIPointer,
+        [out] IHTMLElement  ** ppIElement ) ;
+        
+    HRESULT GetElementFromCookie(
+        [in] void* elementCookie,
+        [out] IHTMLElement ** ppIElement );
+        
+    HRESULT CompareElementCookie(
+        [in] void* elementCookie1,
+        [in] void* elementCookie2,
+        [in,out] BOOL* compareResult );
+        
+    HRESULT AddElementAdorner( 
+        [in] IHTMLElement* pElement, 
+        [in] IElementAdorner* pAdorner,
+        [in,out] void** ppeAdornerCookie ); 
+    
+    HRESULT RemoveElementAdorner( 
+        [in] void* eAdornerCookie );    
+        
+    HRESULT GetElementAdornerBounds( 
+        [in] void* eAdornerCookie,
+        [in,out] RECT* pRectBounds );
+        
+    HRESULT InflateBlockElement( IHTMLElement * pElem );
+
+    HRESULT IsMultiLineFlowElement(
+        [in]  IHTMLElement * pIElement,
+        [out] BOOL         * fMultiLine);
+
+    HRESULT IsEditableElement (
+        [in]  IHTMLElement * pIElement,
+        [out] BOOL         * pfEditable ) ;
+    HRESULT GetOuterContainer( 
+        [in]        IHTMLElement* pIElement, 
+        [in, out]   IHTMLElement** ppIOuterElement, 
+        [in]        BOOL fIgnoreOutermostContainer, 
+        [in,out]    BOOL * pfHitContainer    );
+	HRESULT GetViewHWND(
+		[in,out] HWND ** ppHWND );
+}
+
+typedef enum{
+    CARET_GRAVITY_NoChange,
+    CARET_GRAVITY_BeginningOfLine,
+    CARET_GRAVITY_EndOfLine
+} CARET_GRAVITY;
+
+
+/////////////////////////////////////////////////////////////////
+//  IHTMLCaret
+[
+        object,
+        uuid(3050f4f9-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+interface IHTMLCaret : IUnknown
+{
+    HRESULT MoveCaretToPointer( 
+        [in] IMarkupPointer* pIMarkupPointerCaret,
+        [in] CARET_GRAVITY eCaretGravity )  ;
+
+    HRESULT MovePointerToCaret( 
+        [in] IMarkupPointer* pIMarkupPointerCaret );
+
+    HRESULT IsVisible(
+        [in,out] BOOL * pIsVisible );
+
+    HRESULT Show();
+
+    HRESULT Hide();
+
+    HRESULT GetGravity(
+        [in,out] CARET_GRAVITY *    pGravity );
+
+    HRESULT SetGravity( 
+        [in] CARET_GRAVITY      eGravity );
+
+    HRESULT InsertText(
+        [in] OLECHAR * pText,
+        [in] CARET_GRAVITY eGravity );
+
+    HRESULT InsertMarkup( 
+        [in] OLECHAR * pMarkup, 
+        [in] CARET_GRAVITY eGravity );
+
+    HRESULT ScrollIntoView();
+
+    HRESULT GetElementContainer( 
+        [out] IHTMLElement ** ppElement );
+
+    HRESULT GetLocation(
+        [in,out] POINT * pPoint,
+        [in] BOOL fTranslate );
+
+    HRESULT UpdateCaret();
+
+    HRESULT SetMoveDirection(
+        [in] BOOL fMoveForward );
+
+}
+
+    
+/////////////////////////////////////////////////////////////////
+//  ISegmentList
+[
+        object,
+        uuid(3050f571-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+
+interface ISegmentList : IUnknown
+{    
+    HRESULT MovePointersToSegment( 
+        [in] int iSegmentIndex, 
+        [in] IMarkupPointer* pIPointerStart, 
+        [in] IMarkupPointer* pIPointerEnd ) ;
+        
+    HRESULT GetSegmentCount(
+        [in,out] int* piSegmentCount,
+        [in,out] SELECTION_TYPE * peType );
+}
+
+typedef enum
+{
+    CARET_TYPE_Hide = 0,
+    CARET_TYPE_Show = 1     
+} CARET_VISIBILITY;
+
+
+
+/////////////////////////////////////////////////////////////////
+//  ISelectionRenderingServices
+[
+    object,
+    uuid(3050f570-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+
+interface ISelectionRenderingServices : ISegmentList
+{    
+    HRESULT AddSegment( 
+        [in] IMarkupPointer* pIMarkupPointerStart, 
+        [in] IMarkupPointer* pIMarkupPointerEnd, 
+        [in,out] int * piSegmentIndex )  ;
+        
+    HRESULT AddElementSegment( 
+        [in] IHTMLElement* pIElement ,
+        [in,out] int * piSegmentIndex )  ;
+        
+    HRESULT MoveSegmentToPointers( 
+        [in] int iSegmentIndex,
+        [in] IMarkupPointer* pIMarkupPointerStart, 
+        [in] IMarkupPointer* pIMarkupPointerEnd )  ;
+
+    HRESULT GetElementSegment( 
+        [in] int iSegmentIndex, 
+        [in,out] IHTMLElement** ppIElement ) ;    
+        
+    HRESULT SetElementSegment( 
+        [in] int iSegmentIndex,
+        [in] IHTMLElement* pIElement )  ;
+            
+    HRESULT ClearSegments ();
+
+    HRESULT ClearElementSegments() ;    
+
+
+}
+
+/////////////////////////////////////////////////////////////////
+//  IElementAdorner
+[
+    object,
+    uuid(3050f572-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface IElementAdorner : IUnknown
+{
+    HRESULT Draw(
+                HDC hDc,                
+                RECT * pElementBounds)  ;
+                
+    HRESULT HitTestPoint( 
+                const POINT * hitPoint,
+                const RECT * pAdornerBounds,
+                BOOL * pfHitTestResult );
+                
+    HRESULT GetSize( SIZE* pElementSize, SIZE* ppAdornerSize );
+
+    HRESULT GetPosition( POINT* pElementPosition, POINT* ppAdornerPosition );
+}
+
+//-------------------------------------------------------------------------
+// IHTMLEditor - provides host ability to drive Selection
+//
+//
+//-------------------------------------------------------------------------
+
+//
+// marka BUGBUG - move this to mshtmhst.idl after FUNfork merges!
+//
+
+typedef enum                        // must agree with FR_xxx (commdlg.h)
+{
+    FOLLOW_UP_ACTION_None           = 0x00000000,
+    FOLLOW_UP_ACTION_ReBubbleEvent  = 0x00000001,
+    FOLLOW_UP_ACTION_TakeCapture    = 0x00000002,
+    FOLLOW_UP_ACTION_ReleaseCapture = 0x00000004,
+    FOLLOW_UP_ACTION_StartTimer     = 0x00000008,
+    FOLLOW_UP_ACTION_StopTimer      = 0x00000010,
+    FOLLOW_UP_ACTION_OnClick        = 0x00000020,        // Bubble OnClick
+    FOLLOW_UP_ACTION_ParentCurrent  = 0x00000040,
+    FOLLOW_UP_ACTION_BecomeCurrent  = 0x00000080,
+    FOLLOW_UP_ACTION_BecomeUIActive = 0x00000100
+}
+FOLLOW_UP_ACTION_FLAGS;
+
+
+typedef enum
+{
+    SELECT_NOTIFY_TIMER_TICK,
+    SELECT_NOTIFY_RANGE_SELECT,
+    SELECT_NOTIFY_EMPTY_SELECTION,
+    SELECT_NOTIFY_DOC_ENDED,
+    SELECT_NOTIFY_DOC_CHANGED,
+    SELECT_NOTIFY_LOSE_FOCUS,
+} SELECTION_NOTIFICATION ;
+
+cpp_quote("DEFINE_GUID(SID_SHTMLEditor,0x3050f4f4,0x98b5,0x11cf,0xbb,0x82,0x00,0xaa,0x00,0xbd,0xce,0x0b);")
+
+[
+    object,
+    uuid(3050f4f3-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface IHTMLEditor : IUnknown
+{
+    HRESULT HandleMessage( 
+        [in,out] SelectionMessage* pSelectionMessage ,
+        [in,out] DWORD* pdwFollowUpActionFlag )  ;
+
+    HRESULT Initialize(
+        [in] IUnknown * pUnkDoc,
+        [in] IUnknown * pUnkView );
+
+    HRESULT SetEditContext( 
+        [in] BOOL fEditable,
+        [in] BOOL fSetSelection,
+        [in] BOOL fParentEditable,
+        [in] IMarkupPointer* pStartPointer,
+        [in] IMarkupPointer* pEndPointer );
+
+    HRESULT GetSelectionType(
+        [in,out] SELECTION_TYPE * eSelectionType );
+    
+    HRESULT Notify(
+        [in] SELECTION_NOTIFICATION eSelectionNotification,
+        [in] IUnknown *pUnknown,
+        [in,out] DWORD* pdwFollowUpActionFlag);
+
+    HRESULT GetRangeCommandTarget(
+		[in] ISegmentList* pContext,
+        [in,out] IUnknown ** ppUnkTarget );
+
+}
+
+////////////////////////////////////////////////////////////////////
+//	IHTMLEditingServices
+[
+    object,
+    uuid(3050f5d1-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique)
+]
+interface IHTMLEditingServices : IUnknown
+{
+    HRESULT Delete( 
+    	[in] IMarkupPointer* pStart, 
+    	[in] IMarkupPointer* pEnd );   
+    
+    HRESULT MergeElements( 
+    	[in] IHTMLElement* pElement1, 
+    	[in] IHTMLElement* pElement2 );
+
+    HRESULT Paste( 
+    	[in] IMarkupPointer* pStart, 
+    	[in] BSTR bstrText = NULL );   
+
+    HRESULT LaunderSpaces ( 
+    	[in] IMarkupPointer  * pStart,
+    	[in] IMarkupPointer  * pEnd  );
+
+}

@@ -1,0 +1,28 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for the key container management library
+#
+# History:
+#
+#       03/17/96 jeffspel Created
+#
+#----------------------------------------------------------------------------
+
+
+MINORCOMP=contman
+
+TARGETNAME=contman
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+#C_DEFINES= -DUSE_HW_RNG $(C_DEFINES) 
+
+INCLUDES=     $(BASEDIR)\private\inc\crypto; \
+              ..\inc; \
+              ..\randlib;
+
+SOURCES= contman.c 
+
+UMTYPE=console

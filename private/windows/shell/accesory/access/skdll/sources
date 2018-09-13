@@ -1,0 +1,17 @@
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=skdll
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+INCLUDES=.;..\skeys
+
+SOURCES=skdll.c skdll.rc
+
+UMTYPE=windows
+
+DLLBASE=0x79000000

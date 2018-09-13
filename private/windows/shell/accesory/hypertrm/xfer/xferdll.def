@@ -1,0 +1,30 @@
+;  File: D:\WACKER\xfer\xferdll.def (Created: 08-Dec-1993)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.8 $
+;  $Date: 1997/09/09 15:25:06 $
+;
+
+LIBRARY   XFERDLL
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; xferdll.c
+	XferEntry@12
+
+	; x_entry.c -- the entry points
+	xfrGetProtocols@8
+	xfrGetParameters@16
+	xfrReceive@8
+	xfrSend@8
+
+	; various dialog procedures
+	XandYmodemParamsDlg@16
+	ZmodemParamsDlg@16
+	HyperProtocolParamsDlg@16
+	KermitParamsDlg@16
+

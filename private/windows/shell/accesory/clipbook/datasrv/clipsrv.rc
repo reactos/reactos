@@ -1,0 +1,29 @@
+#include "windows.h"
+#include "clipsrv.h"
+
+#include "clipsrv.rcv"
+
+IDI_CLIPSRV ICON clipsrv.ico
+
+STRINGTABLE DISCARDABLE
+BEGIN
+        CF_TEXT,            "&Text"
+        CF_BITMAP,          "&Bitmap"
+        CF_METAFILEPICT,    "&Picture"
+        CF_SYLK,            "&Sylk"
+        CF_DIF,             "&DIF"
+        CF_TIFF,            "T&IFF"
+        CF_OEMTEXT,         "&OEM Text"
+        CF_DIB,             "&DIB Bitmap"
+        CF_PALETTE,         "Pal&ette"
+        CF_PENDATA,         "Pe&n Data"
+        CF_RIFF,            "&RIFF"
+        CF_WAVE,            "&Wave Audio"
+        CF_OWNERDISPLAY,    "O&wner display"
+        CF_DSPTEXT,         "Disp&lay Text"
+        CF_DSPBITMAP,       "Displa&y Bitmap"
+        CF_DSPMETAFILEPICT, "Display Pict&ure"
+        CF_ENHMETAFILE,     "&Enhanced Metafile"
+        CF_DSPENHMETAFILE,  "Display En&hanced Metafile"
+        CF_UNICODETEXT,     "&Unicode Text"
+END

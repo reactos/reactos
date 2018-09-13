@@ -1,0 +1,5 @@
+LIBRARY Schemes
+
+EXPORTS
+    CPlApplet
+    DllInitialize

@@ -1,0 +1,18 @@
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <ver.h>
+#endif
+#include <aviver.h>
+
+
+#ifdef WIN32
+#define MMVERSIONNAME               "msvfw32.dll\0"
+#else
+#define MMVERSIONNAME               "msvideo.dll\0"
+#endif
+#define MMVERSIONDESCRIPTION        "Microsoft Video for Windows DLL\0"
+#define MMVERSIONTYPE               VFT_DLL
+#define MMVERSIONSUBTYPE            VFT2_UNKNOWN
+
+#include <aviver.ver>

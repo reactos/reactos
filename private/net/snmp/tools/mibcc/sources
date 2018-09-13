@@ -1,0 +1,24 @@
+TARGETNAME=mibcc
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+UMTYPE=console
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\snmp.lib \
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib  \
+    $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+INCLUDES=\
+    ..\..\..\inc;
+
+SOURCES=\
+    mibcc.rc \
+    mibcc.c  \
+    mibcc2.c  \
+    miblex.c  \
+    mibyacc.c \
+    mibtree.c \
+    oidconv.c

@@ -1,0 +1,4 @@
+DIRS=oleacc     \
+     oleaccrc
+
+OPTIONAL_DIRS=

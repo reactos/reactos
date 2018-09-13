@@ -1,0 +1,44 @@
+#
+# build instructions for sample app aviplay.exe
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=aviview
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+DLLDEF=aviview.def
+
+
+C_DEFINES=-DWIN32 -DUNICODE -D__RPC_H__ -DINC_OLE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=                                             \
+           $(_NTBINDIR)\public\sdk\lib\*\user32.lib     \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\crtdll.lib     \
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\msvfw32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\compob32.lib \
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\avifil32.lib
+
+
+INCLUDES=$(_NTBINDIR)\private\windows\media\avi\inc;$(_NTBINDIR)\private\windows\media\inc;
+
+SOURCES=        	\
+        aviview.c       \
+        aviplay.c       \
+        audplay.c       \
+        aviball.c       \
+        aviview.rc
+

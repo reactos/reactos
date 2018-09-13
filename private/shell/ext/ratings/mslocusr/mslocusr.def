@@ -1,0 +1,25 @@
+LIBRARY  MSLOCUSR
+DESCRIPTION 'Windows local user management DLL'
+
+SECTIONS
+    .shared READ WRITE SHARED
+
+EXPORTS
+    DllCanUnloadNow     PRIVATE
+    DllGetClassObject   PRIVATE
+    DllRegisterServer	PRIVATE
+    DllUnregisterServer	PRIVATE
+    DllInstall      	PRIVATE
+
+	VerifySupervisorPassword
+	ChangeSupervisorPassword
+
+    InstallWizard
+    AddUserWizard
+    UserCPL
+
+    NPGetCaps           @13
+    NPLogon             @43     NONAME
+    NPLogoff            @44     NONAME
+    NPGetPolicyPath	@50	NONAME
+

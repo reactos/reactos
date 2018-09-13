@@ -1,0 +1,72 @@
+!if 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Created 31-Oct-1996 by Beomseok Oh (beomoh)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!endif
+
+CCSHELL_DIR         = $(BASEDIR)\private\shell
+
+# the indicdll would need to support win95 etc as well
+TARGET_BOTH         = 1
+
+# omitting this would set -DUNICODE -D_UNICODE at common.inc
+# NOT_UNICODE         = 1
+
+PRECOMPILED_CXX     = 1
+
+
+!include $(CCSHELL_DIR)\common.inc
+
+NO_BROWSER_FILE     = 1
+
+SOURCES_USED        = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+# NTTARGETFILES       =
+
+TARGETTYPE          = DYNLINK
+TARGETNAME          = indicdll
+TARGETPATH          = obj
+
+UMTYPE              = windows
+WINVER_VERSION      = 0x0500
+WIN32_WINNT_VERSION = 0x0500
+WIN32_WIN95_VERSION = 0x0500
+DLLENTRY            = IndicDll_DllMain
+DLLDEF              = $(O)\indicdll.def
+
+# PRECOMPILED_INCLUDE = private.h
+
+TARGETLIBS          = $(SDK_LIB_PATH)\kernel32.lib      \
+                      $(SDK_LIB_PATH)\user32p.lib       \
+                      $(SDK_LIB_PATH)\gdi32p.lib        \
+                      $(SDK_LIB_PATH)\comctl32.lib      \
+                      $(SDK_LIB_PATH)\imm32.lib         \
+                      $(SDK_LIB_PATH)\shell32.lib       \
+                      $(CCSHELL_DIR)\lib\$O\stocklib.lib
+
+USE_LIBCMT          = 1
+
+
+SOURCES = indicdll.rc    \
+          indicdll.c     \
+          imemenu.c      \
+          debug.c

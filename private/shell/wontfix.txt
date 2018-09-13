@@ -1,0 +1,22 @@
+This document is a compilation of all the known applications that have compatibility
+problems on IE40 that we are unable to resolve.
+
+Application                             Bug                                             Contact         Reason
+=====================                   ==========================================      =======         ==========================
+IBM shell                               Animating icons problem                         mikesch         Active Desktop
+My Yahoo                                Multi-row taskbar shafts them                   cheechew
+NEC's shell                             Icons don't animate???                          mikesch         Active Desktop
+Norton Navigator                        Can't attach window                             judej           Class name changed
+Norton Navigator                        Recycle bin, quick launch & desktop chooser     cheechew        Different window hierarchy
+Norton Navigator                        Recycle bin                                     cheechew        Different format
+OM Express                              Unable to attach control to browser window      judej           Class name changed
+Surfbot                                 Unable to attach control to browser window      judej           Class name changed
+Symantec FastFind                       Can't attach window                             judej           Class name changed
+Internet Chameleon(4.5)                 WebSurfer faults after print preview            mikesch         Old version of app, upgrade to 5.0
+Quicken Financial Plan2                 Wizard does not find iexplore.exe in IE4        dli             Hard coded to run on ie3 only
+Intuit Turbo Tax/Quick Books etc.       Wizard doesn't recognize IE4 being installed    mikesch         Hard coded to run on ie3 only
+Mastering Internet Development          5012: "need a recent version of IE3" message    mikesh          Buggy version check on iexplore.exe
+Mastering Internet Development          fault on some systems when check for above      mikesh          Upgrade to "MOD" version or wait for VB5 version of app
+Freeloader 2.5                          Toolbar doesn't load, basically useless         mikesch         Task name must be "iexplore" (works if browse in sep. process is on)
+Cleansweep 3.0                          Crashes entire system, hoses you.               mikesch         They replace wininet and urlmon, we'll need to prevent their setup from running 
+DocuMagix HotPagePlus DE 2.0            Indicate that they can't find the browser       mikesch         Hard coded to run on version 4.70 only

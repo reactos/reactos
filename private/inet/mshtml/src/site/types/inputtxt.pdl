@@ -1,0 +1,446 @@
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//
+//  LAST GUID 3050F2Af NEXT ONE IS 3050F2B0 -- DONT USE ANY ID OVER 3050f2af unless you update inputbtn.pdl
+//
+//  PLEASE UPDATE AS YOU ASSIGN NEW ID's!!!!!!
+//
+//  BUGBUG: I used it up to and including 3050f2af -- now what? (LaszloG)
+//
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+#ifndef _INPUTTXT_PDL_
+#define _INPUTTXT_PDL_ 1
+
+#include "txtedit.pdl"
+#include "csite.pdl"
+
+import "csite.pdl"
+import "txtedit.pdl"
+
+file inputtxt.pdl
+
+/* New style element events w/ eventObject parameter: */
+event HTMLButtonElementEvents2 super:HTMLControlElementEvents2 guid:3050f617-98b5-11cf-bb82-00aa00bdce0b
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLButtonElementEvents super:HTMLControlElementEvents guid:3050f2b3-98b5-11cf-bb82-00aa00bdce0b
+
+interface IHTMLInputElement guid:3050f5d2-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:type
+    refprop CInput:value
+    refprop CInput:name
+    refprop CInput:status
+    refprop CElement:disabled
+    refprop CSite:form
+    refprop CInput:size
+    refprop CInput:maxLength
+    refmethod CInput:select
+    refprop CInput:onchange
+    refprop CInput:onselect
+    refprop CInput:defaultValue
+    refprop CInput:readOnly
+    refmethod CInput:createTextRange
+    refprop CInput:indeterminate
+    refprop CInput:defaultChecked
+    refprop CInput:checked
+    refprop CInput:border
+    refprop CInput:vSpace
+    refprop CInput:hSpace
+    refprop CInput:alt
+    refprop CInput:src
+    refprop CInput:lowSrc
+    refprop CInput:vrml
+    refprop CInput:dynSrc
+    refprop CInput:readyState
+    refprop CInput:complete
+    refprop CInput:loop
+    refprop CInput:align
+    refprop CInput:onload
+    refprop CInput:onerror
+    refprop CInput:onabort
+    refprop CInput:width
+    refprop CInput:height
+    refprop CInput:start
+
+/* New style element events w/ eventObject parameter: */
+event HTMLInputTextElementEvents2 super:HTMLControlElementEvents2 guid:3050f618-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onchange (in type:IHTMLEventObj* arg:pEvtObj)   cancelable \
+           dispid:DISPID_EVMETH_ONCHANGE
+    method void         onselect (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONSELECT
+    method void         onload (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONLOAD
+    method void         onerror (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONERROR
+    method void         onabort (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONABORT
+
+event HTMLOptionButtonElementEvents2 super:HTMLInputTextElementEvents2 guid:3050f619-98b5-11cf-bb82-00aa00bdce0b
+
+event HTMLInputFileElementEvents2 super:HTMLInputTextElementEvents2 guid:3050f61a-98b5-11cf-bb82-00aa00bdce0b
+
+event HTMLInputImageEvents2 super:HTMLControlElementEvents2 guid:3050f61b-98b5-11cf-bb82-00aa00bdce0b
+    method void         onload (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONLOAD
+    method void         onerror (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONERROR
+    method void         onabort (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONABORT
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLInputTextElementEvents super:HTMLControlElementEvents guid:3050f2a7-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onchange    cancelable      dispid:DISPID_EVMETH_ONCHANGE ()
+    method void         onselect                    dispid:DISPID_EVMETH_ONSELECT ()
+    method void         onload                      dispid:DISPID_EVMETH_ONLOAD ()
+    method void         onerror                     dispid:DISPID_EVMETH_ONERROR ()
+    method void         onabort                     dispid:DISPID_EVMETH_ONABORT ()
+
+event HTMLOptionButtonElementEvents super:HTMLInputTextElementEvents guid:3050f2bd-98b5-11cf-bb82-00aa00bdce0b
+
+event HTMLInputFileElementEvents super:HTMLInputTextElementEvents guid:3050f2af-98b5-11cf-bb82-00aa00bdce0b
+
+event HTMLInputImageEvents super:HTMLControlElementEvents guid:3050f2c3-98b5-11cf-bb82-00aa00bdce0b
+    method void         onload                      dispid:DISPID_EVMETH_ONLOAD ()
+    method void         onerror                     dispid:DISPID_EVMETH_ONERROR ()
+    method void         onabort                     dispid:DISPID_EVMETH_ONABORT ()
+
+tearoff CInput interface:IHTMLInputElement
+
+tearoff CInput interface:IHTMLInputHiddenElement
+    tearmethod createTextRange2    mapto:createTextRange
+
+tearoff CInput interface:IHTMLInputTextElement
+    tearmethod createTextRange2    mapto:createTextRange
+    tearmethod select2             mapto:select
+
+tearoff CInput interface:IHTMLInputButtonElement
+    tearmethod createTextRange2    mapto:createTextRange
+    tearmethod select2             mapto:select
+
+tearoff CInput interface:IHTMLInputFileElement
+    tearmethod createTextRange2    mapto:createTextRange
+    tearmethod select2             mapto:select
+
+tearoff CInput interface:IHTMLOptionButtonElement
+    tearmethod createTextRange2    mapto:createTextRange
+    tearmethod select2             mapto:select
+
+tearoff CInput interface:IDispatchEx BaseImpl:super::
+    tearmethod InvokeEx         mapto:ContextThunk_InvokeExReady
+    tearmethod GetDispID        mapto:GetDispID
+
+tearoff CInput interface:IHTMLInputImage
+    tearmethod readyState          mapto:readyState
+
+tearoff CInput interface:IHTMLElement2
+    tearmethod readyState           mapto:readyState
+    tearmethod get_readyStateValue  mapto:get_readyStateValue
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+class CInput name:HTMLInputElement \
+            primaryinterface:IHTMLInputElement \
+            super:CSite \
+            events:HTMLInputTextElementEvents \
+            nonprimaryevents:HTMLInputTextElementEvents2 \
+            nonprimaryevents2:HTMLOptionButtonElementEvents \
+            nonprimaryevents3:HTMLButtonElementEvents \
+            guid:3050f5d8-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f57d-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLInputElement
+    implements IHTMLInputTextElement
+    implements IHTMLInputHiddenElement
+    implements IHTMLInputButtonElement
+    implements IHTMLInputFileElement
+    implements IHTMLOptionButtonElement
+    implements IHTMLInputImage
+
+    property type          atype:BSTR  dispid:DISPID_INPUT  type:htmlInput get set setaahr caa default:htmlInputText maxstrlen:pdlToken
+    property type2         nopropdesc:nameonly szInterfaceExpose:type  atype:BSTR  dispid:DISPID_INPUT type:htmlInput get setaahr caa default:htmlInputText maxstrlen:pdlToken
+    property value         atype:BSTR  dispid:DISPID_A_VALUE  type:BSTR      method:ValueHelper get set     bindable displaybind siteredraw maxstrlen:pdlNoLimit
+    property value2        nopropdesc:nameonly szInterfaceExpose:value atype:BSTR  dispid:DISPID_A_VALUE  type:BSTR      method:ValueHelper get set     bindable displaybind siteredraw maxstrlen:pdlNoLimit
+    property name          atype:BSTR  dispid:STDPROPID_XOBJ_NAME   type:CStr  noassigndefault:"" get set method:nameHelper baseimplementation bindable displaybind  maxstrlen:pdlNoLimit
+    property name2         nopropdesc:nameonly szInterfaceExpose:name  atype:BSTR  dispid:STDPROPID_XOBJ_NAME   type:CStr  noassigndefault:"" get set method:nameHelper baseimplementation bindable displaybind  maxstrlen:pdlNoLimit
+    property status        atype:VARIANT_BOOL  dispid:DISPID_INPUT+1  type:VARIANT_BOOL get set abstract 
+    property status2       nopropdesc:nameonly szInterfaceExpose:status atype:VARIANT_BOOL  dispid:DISPID_INPUT+1  type:VARIANT_BOOL get set abstract
+
+    property disabled      nopropdesc:nameonly szInterfaceExpose:disabled atype:VARIANT_BOOL dispid:STDPROPID_XOBJ_DISABLED type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0
+    property form          nopropdesc:nameonly szInterfaceExpose:form atype:IHTMLFormElement*       dispid:DISPID_SITE+4    type:IHTMLFormElement*     \
+        abstract get
+
+    property size          atype:long       dispid:DISPID_INPUT+2        type:long  get set caa bindable displaybind clearcaches resize default:20 min:1
+    property size2         nopropdesc:nameonly szInterfaceExpose:size       atype:long       dispid:DISPID_INPUT+2        type:long  get set caa bindable displaybind clearcaches resize default:20 min:1
+    property maxLength     atype:long       dispid:DISPID_INPUT+3        type:long  get set caa bindable displaybind clearcaches remeasure default:0x7fffffff
+    property maxLength2    nopropdesc:nameonly szInterfaceExpose:maxLength  atype:long       dispid:DISPID_INPUT+3        type:long  get set caa bindable displaybind clearcaches remeasure default:0x7fffffff
+
+    method HRESULT select                   dispid:DISPID_INPUT+4    ()
+    method HRESULT select2 nopropdesc:nameonly szInterfaceExpose:select dispid:DISPID_INPUT+4    ()
+
+    property onchange      atype:VARIANT    dispid:DISPID_EVPROP_ONCHANGE   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onchange2     nopropdesc:nameonly szInterfaceExpose:onchange       atype:VARIANT    dispid:DISPID_EVPROP_ONCHANGE   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onselect      atype:VARIANT    dispid:DISPID_EVPROP_ONSELECT   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onselect2     nopropdesc:nameonly szInterfaceExpose:onselect       atype:VARIANT    dispid:DISPID_EVPROP_ONSELECT   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+
+    property defaultValue  atype:BSTR       dispid:DISPID_DEFAULTVALUE      type:BSTR      member:_cstrDefaultValue get set     hidden bindable displaybind nopersist maxstrlen:pdlNoLimit
+    property defaultValue2 nopropdesc:nameonly szInterfaceExpose:defaultValue   atype:BSTR       dispid:DISPID_DEFAULTVALUE      type:BSTR      member:_cstrDefaultValue get set     hidden bindable displaybind nopersist maxstrlen:pdlNoLimit
+    property readOnly      atype:VARIANT_BOOL dispid:DISPID_INPUT+5    type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0
+    property readOnly2     nopropdesc:nameonly szInterfaceExpose:readOnly       atype:VARIANT_BOOL dispid:DISPID_INPUT+5    type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0
+
+    method   HRESULT  createTextRange      dispid:DISPID_INPUT+6  ( out retval type:IHTMLTxtRange** arg:range )
+    method   HRESULT  createTextRange2     nopropdesc:nameonly szInterfaceExpose:createTextRange dispid:DISPID_INPUT+6  ( out retval type:IHTMLTxtRange** arg:range )
+
+    property indeterminate atype:VARIANT_BOOL  dispid:DISPID_INPUT+7                 \
+        type:VARIANT_BOOL method:IndeterminateHelper                                    \
+        get set bindable
+    property indeterminate2 nopropdesc:nameonly szInterfaceExpose:indeterminate atype:VARIANT_BOOL  dispid:DISPID_INPUT+7                 \
+        type:VARIANT_BOOL method:IndeterminateHelper                                    \
+        get set bindable
+
+    property defaultChecked  szattribute:CHECKED atype:VARIANT_BOOL                     \
+        dispid:DISPID_INPUT+8   type:VARIANT_BOOL                                    \
+        get set caa  bindable setaahr vt:VT_BOOL default:FALSE
+    property defaultChecked2  nopropdesc:nameonly szInterfaceExpose:defaultChecked szattribute:CHECKED atype:VARIANT_BOOL                     \
+        dispid:DISPID_INPUT+8   type:VARIANT_BOOL                                    \
+        get set caa  bindable setaahr vt:VT_BOOL default:FALSE
+
+    property checked atype:VARIANT_BOOL  dispid:DISPID_INPUT+9 type:VARIANT_BOOL     \
+        get set caa  baseimplementation bindable nopersist accessibilitystate
+    property checked2 nopropdesc:nameonly szInterfaceExpose:checked atype:VARIANT_BOOL  dispid:DISPID_INPUT+9 type:VARIANT_BOOL     \
+        get set caa  baseimplementation bindable nopersist accessibilitystate
+
+    property align      atype:BSTR     dispid:STDPROPID_XOBJ_CONTROLALIGN   type:htmlControlAlign  \
+                        baseimplementation caa get set displaybind maxstrlen:pdlToken
+    property align2     nopropdesc:nameonly szInterfaceExpose:align \
+                        atype:BSTR     dispid:STDPROPID_XOBJ_CONTROLALIGN   type:htmlControlAlign  \
+                        baseimplementation caa get set displaybind maxstrlen:pdlToken
+    property alt        atype:BSTR           dispid:DISPID_INPUT+10           type:CStr          \
+                        caa get set displaybind    remeasure   maxstrlen:pdlNoLimit
+    property alt2       nopropdesc:nameonly szInterfaceExpose:alt \
+                        atype:BSTR           dispid:DISPID_INPUT+10           type:CStr          \
+                        caa get set displaybind    remeasure   maxstrlen:pdlNoLimit
+    property src        atype:BSTR           dispid:DISPID_INPUT+11           type:url           \
+                        caa get set setaahr displaybind baseimplementation maxstrlen:pdlUrlLen
+    property src2       nopropdesc:nameonly szInterfaceExpose:src \
+                        atype:BSTR           dispid:DISPID_INPUT+11           type:url           \
+                        caa get set setaahr displaybind baseimplementation maxstrlen:pdlUrlLen
+
+    property height     baseimplementation caa get set atype:long \
+                        type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) \
+                        min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    property height2    nopropdesc:nameonly szInterfaceExpose:height \
+                        baseimplementation caa get set atype:long \
+                        type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) \
+                        min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    property width      baseimplementation caa get set atype:long \
+                        type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) \
+                        min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    property width2     nopropdesc:nameonly szInterfaceExpose:width \
+                        baseimplementation caa get set atype:long \
+                        type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) \
+                        min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH_OR_PERCENT
+
+    // Note the  switchdefaults here -
+    // If border not present value = default
+    // If border present, but unassigned, value = default
+    // If border present, but invalid, value = noassigndefault
+    property border     atype:VARIANT dispid:DISPID_INPUT+12 \
+                        type:CUnitValue caa get set displaybind \
+                        remeasure min:MAKE_PIXEL_UNITVALUE(0) clearcaches \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(0) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH maxstrlen:pdlToken
+
+    property border2    nopropdesc:nameonly szInterfaceExpose:border \
+                        atype:VARIANT dispid:DISPID_INPUT+12 \
+                        type:CUnitValue caa get set displaybind \
+                        remeasure min:MAKE_PIXEL_UNITVALUE(0) clearcaches \
+                        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(0) invalid=noassigndefault \
+                        ppflags:PP_UV_LENGTH maxstrlen:pdlToken
+
+    property vspace     atype:long           dispid:DISPID_INPUT+13           type:long \
+                        caa get set displaybind    remeasure min:0 clearcaches
+
+    property vspace2    nopropdesc:nameonly szInterfaceExpose:vspace \     
+                        atype:long           dispid:DISPID_INPUT+13           type:long \
+                        caa get set displaybind    remeasure min:0 clearcaches
+
+    property hspace     atype:long           dispid:DISPID_INPUT+14           type:long \
+                        caa get set baseimplementation displaybind    remeasure min:0 default:-1 clearcaches
+
+    property hspace2    nopropdesc:nameonly szInterfaceExpose:hspace \     
+                        atype:long           dispid:DISPID_INPUT+14           type:long \
+                        caa get set baseimplementation displaybind    remeasure min:0 default:-1 clearcaches
+
+    property lowsrc     atype:BSTR           dispid:DISPID_INPUT+15           type:CStr \
+                        caa get set displaybind maxstrlen:pdlUrlLen
+
+    property lowsrc2    nopropdesc:nameonly szInterfaceExpose:lowsrc \
+                        atype:BSTR           dispid:DISPID_INPUT+15           type:CStr \
+                        caa get set displaybind maxstrlen:pdlUrlLen
+
+    property vrml       atype:BSTR           dispid:DISPID_INPUT+16           type:CStr \
+                        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+
+    property vrml2      nopropdesc:nameonly szInterfaceExpose:vrml \
+                        atype:BSTR           dispid:DISPID_INPUT+16           type:CStr \
+                        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+
+    property dynsrc     atype:BSTR           dispid:DISPID_INPUT+17           type:CStr \
+                        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+
+    property dynsrc2    nopropdesc:nameonly szInterfaceExpose:dynsrc \
+                        atype:BSTR           dispid:DISPID_INPUT+17           type:CStr \
+                        caa get set displaybind    remeasure   maxstrlen:pdlUrlLen
+
+    property readyState aType:BSTR           dispid:DISPID_A_READYSTATE type:CStr \
+                        abstract   get nopropdesc:nameonly
+
+    property readyState2 nopropdesc:nameonly szInterfaceExpose:readyState \
+                        aType:BSTR           dispid:DISPID_A_READYSTATE type:CStr \
+                        abstract   get nopropdesc:nameonly
+
+    property complete   aType:VARIANT_BOOL   dispid:DISPID_INPUT+18          type:VARIANT_BOOL \
+                        caa get setaahr                   nopersist vt:VT_BOOL
+
+    property complete2  nopropdesc:nameonly szInterfaceExpose:complete \
+                        aType:VARIANT_BOOL   dispid:DISPID_INPUT+18          type:VARIANT_BOOL \
+                        caa get setaahr                   nopersist vt:VT_BOOL
+
+    property loop       atype:VARIANT        dispid:DISPID_INPUT+19          type:long  enum:htmlLoop  \
+                        caa get set displaybind     default:1   maxstrlen:pdlLength
+
+    property loop2      nopropdesc:nameonly szInterfaceExpose:loop \
+                        atype:VARIANT        dispid:DISPID_INPUT+19          type:long  enum:htmlLoop  \
+                        caa get set displaybind     default:1   maxstrlen:pdlLength
+
+    property start      atype:BSTR           dispid:DISPID_INPUT+20          type:htmlStart  \
+                        caa get set displaybind     default:htmlStartfileopen   maxstrlen:pdlToken
+
+    property start2     nopropdesc:nameonly szInterfaceExpose:start \
+                        atype:BSTR           dispid:DISPID_INPUT+20          type:htmlStart  \
+                        caa get set displaybind     default:htmlStartfileopen   maxstrlen:pdlToken
+
+    property onload     atype:VARIANT   dispid:DISPID_EVPROP_ONLOAD   type:code \
+                        scriptlet get set caa baseimplementation displaybind maxstrlen:pdlEvent
+
+    property onload2    nopropdesc:nameonly szInterfaceExpose:onload \
+                        atype:VARIANT   dispid:DISPID_EVPROP_ONLOAD   type:code \
+                        scriptlet get set caa baseimplementation displaybind maxstrlen:pdlEvent
+
+    property onerror    atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+                        scriptlet get set caa displaybind maxstrlen:pdlEvent
+
+    property onerror2   nopropdesc:nameonly szInterfaceExpose:onerror \
+                        atype:VARIANT   dispid:DISPID_EVPROP_ONERROR  type:code \
+                        scriptlet get set caa displaybind maxstrlen:pdlEvent
+
+    property onabort    atype:VARIANT   dispid:DISPID_EVPROP_ONABORT  type:code \
+                        scriptlet get set caa displaybind maxstrlen:pdlEvent
+
+    property onabort2   nopropdesc:nameonly szInterfaceExpose:onabort \
+                        atype:VARIANT   dispid:DISPID_EVPROP_ONABORT  type:code \
+                        scriptlet get set caa displaybind maxstrlen:pdlEvent
+    // property ie4vtblslot atype:BSTR  dispid:DISPID_INPUT+14   type:CStr  noassigndefault:"" set abstract bindable hidden restricted displaybind maxstrlen:pdlNoLimit
+
+    property status3    nopropdesc:nameonly szInterfaceExpose:status atype:VARIANT dispid:DISPID_INPUT+21 maxstrlen:pdlNoLimit type:VARIANT get set abstract
+
+    property cache             atype:VARIANT_BOOL	dispid:DISPID_INPUT+21	type:VARIANT_BOOL \
+    caa get default:0 vt:VT_BOOL
+
+interface IHTMLInputButtonElement super:IDispatch guid:3050f2b2-98b5-11cf-bb82-00aa00bdce0b 
+    refprop CInput:type2
+    refprop CInput:value2
+    refprop CInput:name2
+    refprop CInput:status3
+    refprop CInput:disabled
+    refprop CInput:form
+    refmethod CInput:createTextRange2
+
+interface IHTMLInputHiddenElement super:IDispatch guid:3050f2a4-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:type2
+    refprop CInput:value2
+    refprop CInput:name2
+    refprop CInput:status3
+    refprop CInput:disabled
+    refprop CInput:form
+    refmethod CInput:createTextRange2
+
+interface IHTMLInputTextElement super:IDispatch guid:3050f2a6-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:type2
+    refprop CInput:value2
+    refprop CInput:name2
+    refprop CInput:status3
+    refprop CInput:disabled
+    refprop CInput:form
+    refprop CInput:defaultValue2
+    refprop CInput:size2
+    refprop CInput:maxLength2
+    refmethod CInput:select2
+    refprop CInput:onchange2
+    refprop CInput:onselect2    
+    refprop CInput:readOnly2
+    refmethod CInput:createTextRange2
+
+interface IHTMLInputFileElement super:IDispatch guid:3050f2ad-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:type2
+    refprop CInput:name2
+    refprop CInput:status3
+    refprop CInput:disabled
+    refprop CInput:form
+    refprop CInput:size2
+    refprop CInput:maxLength2
+
+    refmethod CInput:select2
+    refprop CInput:onchange2
+    refprop CInput:onselect2
+    refprop CInput:value2
+
+interface IHTMLOptionButtonElement super:IDispatch guid:3050f2bc-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:value2
+    refprop CInput:type2
+    refprop CInput:name2
+    refprop CInput:checked2
+    refprop CInput:defaultChecked2
+    refprop CInput:onchange2
+    refprop CInput:disabled
+    refprop CInput:status2
+    refprop CInput:indeterminate2
+    refprop CInput:form
+
+interface IHTMLInputImage super:IDispatch guid:3050f2c2-98b5-11cf-bb82-00aa00bdce0b
+    refprop CInput:type2
+    refprop CInput:disabled
+    refprop CInput:border2
+    refprop CInput:vSpace2
+    refprop CInput:hSpace2
+    refprop CInput:alt2
+    refprop CInput:src2
+    refprop CInput:lowSrc2
+    refprop CInput:vrml2
+    refprop CInput:dynSrc2
+    refprop CInput:readyState2
+    refprop CInput:complete2
+    refprop CInput:loop2
+    refprop CInput:align2
+    refprop CInput:onload2
+    refprop CInput:onerror2
+    refprop CInput:onabort2
+    refprop CInput:name2
+    refprop CInput:width2
+    refprop CInput:height2
+    refprop CInput:start2
+
+#endif _INPUTTXT_PDL_

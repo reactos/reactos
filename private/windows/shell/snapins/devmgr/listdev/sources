@@ -1,0 +1,34 @@
+MAJORCOMP=listdev
+MINORCOMP=test
+
+# before changing the DLL name, resolve the references in applib\domthred.cxx
+TARGETNAME=listdev
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+C_DEFINES = -DUNICODE
+USE_MFCUNICODE=1
+TARGETLIBS=\
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\uuid.lib       \
+	   $(BASEDIR)\public\sdk\lib\*\comctl32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\netapi32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\netui2.lib   \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib   \
+	   $(BASEDIR)\public\sdk\lib\*\cfgmgr32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\setupapi.lib \
+	   $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib  \
+	   $(BASEDIR)\public\sdk\lib\*\version.lib \
+
+
+PRECOMPILED_INCLUDE = stdafx.h
+PRECOMPILED_CXX = 1
+
+SOURCES= listdev.cpp	\
+	 listdevdlg.cpp	\
+	 devtree.cpp	\
+	 computer.cpp	\
+	 listdev.rc

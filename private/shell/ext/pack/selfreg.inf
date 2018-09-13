@@ -1,0 +1,59 @@
+; PACKAGER.INF entries
+;
+
+[version]
+signature="$CHICAGO$"
+
+[RegDll]
+AddReg=Registry
+
+[UnregDll]
+DelReg=RegRemove
+
+[Registry]
+HKCR,CLSID\%CLSID_Packager%,,,"Packager Shell Object"
+HKCR,CLSID\%CLSID_Packager%\InProcServer32,,,"packager.dll"
+HKCR,CLSID\%CLSID_Packager%\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%CLSID_Packager%\verb\0,,,"&Activate Contents,0,2"
+HKCR,CLSID\%CLSID_Packager%\verb\1,,,"&Edit Package,0,2"
+HKCR,CLSID\%CLSID_Packager%\AuxUserType\2,,,"Package"
+HKCR,CLSID\%CLSID_Packager%\AuxUserType\3,,,"Object Packager"
+HKCR,CLSID\%CLSID_Packager%\MiscStatus,,,"2"
+HKCR,CLSID\%CLSID_Packager%\DataFormats\GetSet\0,,,"FileContents,1,3,1"
+HKCR,CLSID\%CLSID_Packager%\DataFormats\GetSet\1,,,"FileGroupDescriptor,1,1,1"
+HKCR,CLSID\%CLSID_Packager%\DataFormats\GetSet\2,,,"Embed Source,1,8,1"
+HKCR,CLSID\%CLSID_Packager%\DataFormats\GetSet\3,,,"3,1,32,1"
+HKCR,CLSID\%CLSID_Packager%\DataFormats\GetSet\4,,,"Object Descriptor,1,1,1"
+HKCR,CLSID\%CLSID_Packager%\Insertable,,,""
+HKCR,CLSID\%CLSID_Packager%\ProgID,,,"Package2.1"
+HKCR,CLSID\%CLSID_Packager%\VersionIndependentProgID,,,"Package2"
+HKCR,CLSID\%CLSID_Packager%\DefaultIcon,,,"packager.dll,0"
+
+HKCR,Package2,,,"Packager Shell Object"
+HKCR,Package2\CLSID,,,"%CLSID_Packager%"
+HKCR,Package2\CurVer,,,"Package2.1"
+
+HKCR,Package2.1,,,"Packager Shell Object"
+HKCR,Package2.1\CLSID,,,"%CLSID_Packager%"
+HKCR,Package2.1\Insertable,,,""
+HKCR,Package2.1\protocol\StdFileEditing\server,,,"packager.dll"
+HKCR,Package2.1\protocol\StdFileEditing\verb\0,,,"&Activate Contents"
+HKCR,Package2.1\protocol\StdFileEditing\verb\1,,,"&Edit Package"
+
+HKCR,Package\protocol\StdFileEditing\verb\0,,,"&Activate Contents"
+HKCR,Package\protocol\StdFileEditing\verb\1,,,"&Edit Package"
+
+HKCR,CLSID\%CLSID_OldPackager%\TreatAs,,,"%CLSID_Packager%"
+HKCR,CLSID\%CLSID_OldPackager%\NotInsertable,,,""
+
+[RegRemove]
+HKCR,CLSID\%CLSID_Packager%
+HKCR,Package2
+HKCR,Package2.1
+HKCR,CLSID\%CLSID_OldPackager%\TreatAs
+HKCR,CLSID\%CLSID_OldPackager%\NotInsertable
+
+[Strings]
+CLSID_Packager = "{F20DA720-C02F-11CE-927B-0800095AE340}"
+CLSID_OldPackager = "{0003000C-0000-0000-C000-000000000046}"
+

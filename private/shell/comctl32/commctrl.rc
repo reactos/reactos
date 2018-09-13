@@ -1,0 +1,108 @@
+#include "windows.h"
+#if defined(WINNT) || defined(WINNT_ENV)
+#include "winver.h"
+#endif
+
+#include "commctrl.h"
+#if defined(WINNT) || defined(WINNT_ENV)
+#include "comctrlp.h"
+#endif
+#include "mirstyls.h"
+#include "rcids.h"
+
+#ifndef UNIX
+REGINST                 REGINST MOVEABLE PURE   "selfreg_comctl32.inf"
+#endif
+
+IDC_MOVEBUTTON          CURSOR  mvbtn.cur
+IDC_COPY                CURSOR  copy.cur
+IDC_MOVE                CURSOR  move.cur
+IDC_DIVIDER             CURSOR  "divider.cur"
+IDC_DIVOPEN             CURSOR  "divopen.cur"
+IDC_DIVOPENV            CURSOR  "divopenv.cur"
+
+IDC_HAND_INTERNAL       CURSOR  "brhand.cur"
+
+IDI_INSERT              ICON    insert.ico
+
+// The following are used by ReaderMode
+IDC_VERTICALONLY        CURSOR  nomovev.cur
+IDC_HORIZONTALONLY      CURSOR  nomoveh.cur
+IDC_MOVE2D              CURSOR  nomove2d.cur
+IDC_NORTH               CURSOR  north.cur
+IDC_SOUTH               CURSOR  south.cur
+IDC_EAST                CURSOR  east.cur
+IDC_WEST                CURSOR  west.cur
+IDC_NORTHEAST           CURSOR  ne.cur
+IDC_NORTHWEST           CURSOR  nw.cur
+IDC_SOUTHEAST           CURSOR  se.cur
+IDC_SOUTHWEST           CURSOR  sw.cur
+IDB_2DSCROLL            BITMAP  scroll2d.bmp
+IDB_VSCROLL             BITMAP  vscroll.bmp
+IDB_HSCROLL             BITMAP  hscroll.bmp
+
+IDB_STDTB_SMALL_COLOR   BITMAP          "stdsm.bmp"
+IDB_STDTB_LARGE_COLOR   BITMAP          "stdlg.bmp"
+IDB_VIEWTB_SMALL_COLOR  BITMAP          "viewsm.bmp"
+IDB_VIEWTB_LARGE_COLOR  BITMAP          "viewlg.bmp"
+
+IDB_HISTTB_SMALL_COLOR  BITMAP          "histsm.bmp"
+IDB_HISTTB_LARGE_COLOR  BITMAP          "histlg.bmp"
+
+IDB_FILTERIMAGE         BITMAP  filter.bmp
+
+IDI_TITLE_INFO          ICON "info.ico"
+IDI_TITLE_WARNING       ICON "warning.ico"
+IDI_TITLE_ERROR         ICON "error.ico"
+
+// WARNING! WARNING! WARNING! WARNING!
+//
+// Before you mess with any language stuff, be aware that MFC loads
+// resources directly out of comctl32.dll, so if you change the language
+// codes, you risk breaking MFC apps.  See NT bug 302959.
+//
+
+
+// All of string tables and dialogbox templates are gone into en.rc, 
+// which is re-used in neutral.rc for fall-back cases (unknown languages)
+//
+#include "en.rc"
+
+#ifndef UNIX
+// Turnoff multi lang stuff.
+#include "loc\ar.rc"
+#include "loc\br.rc"
+#include "loc\ca.rc"
+#include "loc\cn.rc"
+#include "loc\cs.rc"
+#include "loc\da.rc"
+#include "loc\de.rc"
+#include "loc\el.rc"
+#include "loc\es.rc"
+#include "loc\esm.rc"
+#include "loc\fi.rc"
+#include "loc\fr.rc"
+#include "loc\hu.rc"
+#include "loc\it.rc"
+#include "loc\iw.rc"
+#include "loc\ja.rc"
+#include "loc\ja2.rc"
+#include "loc\ko.rc"
+#include "loc\neutral.rc"
+#include "loc\nl.rc"
+#include "loc\no.rc"
+#include "loc\pl.rc"
+#include "loc\pt.rc"
+#include "loc\ru.rc"
+#include "loc\sl.rc"
+#include "loc\sv.rc"
+#include "loc\tr.rc"
+#include "loc\tw.rc"
+#include "loc\eu.rc"
+#include "loc\sk.rc"
+#include "loc\vi.rc"
+          
+LANGUAGE 0x00, 0x00
+#endif /*!UNIX*/
+
+#include "commctrl.rcv"

@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+
+!include $(CCSHELL_DIR)\shlwapi\shlwapi.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\shlwapi\shlwapi.inc
+
+NO_BROWSER_FILE = 1
+
+TARGETNAME      = srccpp
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+SOURCES         = \
+                  ..\aboutinf.cpp   \
+                  ..\connect.cpp    \
+                  ..\datablok.cpp   \
+                  ..\gcount.cpp     \
+                  ..\fstream.cpp    \
+                  ..\strmwrap.cpp   \
+                  ..\httpfnc.cpp    \
+                  ..\mime.cpp       \
+                  ..\mlui.cpp       \
+                  ..\nullstm.cpp    \
+                  ..\qistub.cpp     \
+                  ..\security.cpp   \
+                  ..\stream.cpp     \
+                  ..\tpstimer.cpp   \
+                  ..\tpsutil.cpp    \
+                  ..\tpswork.cpp    \
+                  ..\tpswait.cpp    \
+                  ..\urlpars.cpp    \
+                  ..\util.cpp       \
+                  ..\machinfo.cpp   \
+                  ..\inistr.cpp     \
+                  ..\itfwrap.cpp    \
+
+PRECOMPILED_CXX   = 1
+PRECOMPILED_INCLUDE = ..\priv.h

@@ -1,0 +1,38 @@
+#----------------------------------------------------------------------------
+#
+# Description:
+#
+#       sources file for Software Crypto Provider
+#
+# History:
+#
+#----------------------------------------------------------------------------
+
+TARGETTYPE=NOTARGET
+TARGETNAME=
+TARGETPATH=
+
+!if $(386)
+
+MISCFILES= \
+    $(TARGET_DIRECTORY)\rsabase.dll \
+    $(TARGET_DIRECTORY)\rsabase.dbg \
+    $(TARGET_DIRECTORY)\rsabase.pdb \
+    $(TARGET_DIRECTORY)\rsaenh.dll \
+    $(TARGET_DIRECTORY)\rsaenh.dbg \
+    $(TARGET_DIRECTORY)\rsaenh.pdb \
+    $(TARGET_DIRECTORY)\dssbase.dll \
+    $(TARGET_DIRECTORY)\dssbase.dbg \
+    $(TARGET_DIRECTORY)\dssbase.pdb \
+    $(TARGET_DIRECTORY)\dssenh.dll \
+    $(TARGET_DIRECTORY)\dssenh.dbg \
+    $(TARGET_DIRECTORY)\dssenh.pdb \
+    $(TARGET_DIRECTORY)\gpkcsp.dll \
+    $(TARGET_DIRECTORY)\gpkcsp.dbg \
+    $(TARGET_DIRECTORY)\gpkcsp.pdb \
+    $(TARGET_DIRECTORY)\slbcsp.dll \
+    $(TARGET_DIRECTORY)\slbcsp.dbg \
+    $(TARGET_DIRECTORY)\slbcsp.pdb
+!endif
+
+SOURCES=

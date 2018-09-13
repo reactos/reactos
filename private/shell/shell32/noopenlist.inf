@@ -1,0 +1,309 @@
+; Author: Win95 Shell Team
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE 
+
+[DefaultInstall]
+AddReg    = NoOpenWith
+
+[NoOpenWith]
+;-> Conferencing Utility Dll
+;    Exe Name - msconf.dll
+;    Handles Extension .323
+;    By Command - "rundll32.exe" msconf.dll,NewMediaPhone %l
+HKCR,"Applications\msconf.dll","NoOpenWith",,
+
+;-> Windows Explorer
+;    Exe Name - explorer.exe
+;    Handles Extension .bfc
+;    By Command - explorer.exe %1
+HKCR,"Applications\explorer.exe","NoOpenWith",,
+
+;-> Crypto Shell Extensions
+;    Exe Name - cryptext.dll
+;    Handles Extension .cat
+;    By Command - rundll32.exe cryptext.dll,CryptExtOpenCAT %1
+HKCR,"Applications\cryptext.dll","NoOpenWith",,
+
+;-> Microsoft Chat
+;    Exe Name - CChat.exe
+;    Handles Extension .ccc
+;    By Command - C:\Program Files\Microsoft Chat\CChat.exe "%1"
+HKCR,"Applications\CChat.exe","NoOpenWith",,
+
+;-> Deluxe CD Player
+;    Exe Name - cdplayer.exe
+;    Handles Extension .cda
+;    By Command - C:\WINNT\system32\cdplayer.exe -play %1
+HKCR,"Applications\cdplayer.exe","NoOpenWith",,
+
+;-> Channel Definition File Viewer
+;    Exe Name - cdfview.dll
+;    Handles Extension .cdf
+;    By Command - rundll32 cdfview.dll,Subscribe %L
+HKCR,"Applications\cdfview.dll","NoOpenWith",,
+
+;-> Microsoft® HTML Help Executable
+;    Exe Name - hh.exe
+;    Handles Extension .chm
+;    By Command - "C:\WINNT\hh.exe" %1
+HKCR,"Applications\hh.exe","NoOpenWith",,
+
+;-> Clip Gallery 3.0 OLE Server 16 bit application interface
+;    Exe Name - ARTGALRY.EXE
+;    Handles Extension .cil
+;    By Command - C:\Program Files\Common Files\Microsoft Shared\Artgalry\ARTGALRY.EXE %1
+HKCR,"Applications\ARTGALRY.EXE","NoOpenWith",,
+
+;-> Windows NT ClipBook Viewer
+;    Exe Name - clipbrd.exe
+;    Handles Extension .clp
+;    By Command - clipbrd.exe %1
+HKCR,"Applications\clipbrd.exe","NoOpenWith",,
+
+;-> Fax Cover Page Editor
+;    Exe Name - faxcover.exe
+;    Handles Extension .cov
+;    By Command - C:\WINNT\system32\faxcover.exe "%1"
+HKCR,"Applications\faxcover.exe","NoOpenWith",,
+
+;-> Windows Shell Common Dll
+;    Exe Name - shell32.dll
+;    Handles Extension .cpl
+;    By Command - rundll32.exe shell32.dll,Control_RunDLL %1,%*
+HKCR,"Applications\shell32.dll","NoOpenWith",,
+
+;-> Windows Explorer
+;    Exe Name - Explorer.exe
+;    Handles Extension .fnd
+;    By Command - C:\WINNT\Explorer.exe
+HKCR,"Applications\Explorer.exe","NoOpenWith",,
+
+;-> HyperTerminal Applet
+;    Exe Name - HYPERTRM.EXE
+;    Handles Extension .ht
+;    By Command - C:\Program Files\Windows NT\HYPERTRM.EXE %1
+HKCR,"Applications\HYPERTRM.EXE","NoOpenWith",,
+
+;-> Microsoft (R) HTML Application host
+;    Exe Name - mshta.exe
+;    Handles Extension .hta
+;    By Command - C:\WINNT\System32\mshta.exe %1
+HKCR,"Applications\mshta.exe","NoOpenWith",,
+
+;-> FrontPage Internet Database Connector Wizard
+;    Exe Name - fpidcwiz.exe
+;    Handles Extension .idc
+;    By Command - C:\Program Files\Microsoft FrontPage\pages\fpidcwiz.wiz\fpidcwiz.exe "%1"
+HKCR,"Applications\fpidcwiz.exe","NoOpenWith",,
+
+;-> Internet Signup
+;    Exe Name - ISIGNUP.EXE
+;    Handles Extension .ins
+;    By Command - "C:\WINNT\Connection Wizard\ISIGNUP.EXE" %1
+HKCR,"Applications\ISIGNUP.EXE","NoOpenWith",,
+
+;-> Windows Based Scripting Host 
+;    Exe Name - WScript.exe
+;    Handles Extension .JS
+;    By Command - C:\WINNT\System32\WScript.exe "%1" %*
+HKCR,"Applications\WScript.exe","NoOpenWith",,
+
+;-> mnyimprt
+;    Exe Name - mnyimprt.exe
+;    Handles Extension .mns
+;    By Command - "C:\Program Files\Microsoft Money\System\mnyimprt.exe" %1
+HKCR,"Applications\mnyimprt.exe","NoOpenWith",,
+
+;-> Microsoft Management Console
+;    Exe Name - MMC.exe
+;    Handles Extension .msc
+;    By Command - C:\WINNT\system32\MMC.exe "%1" %*
+HKCR,"Applications\MMC.exe","NoOpenWith",,
+
+;-> Windows® installer
+;    Exe Name - msiexec.exe
+;    Handles Extension .msi
+;    By Command - C:\WINNT\system32\msiexec.exe /I "%1"
+HKCR,"Applications\msiexec.exe","NoOpenWith",,
+
+;-> System Information
+;    Exe Name - MSInfo32.exe
+;    Handles Extension .nfo
+;    By Command - C:\Program Files\Common Files\Microsoft Shared\MSInfo\MSInfo32.exe /nfo "%1"
+HKCR,"Applications\MSInfo32.exe","NoOpenWith",,
+
+;-> Microsoft Office Wrapper
+;    Exe Name - OSA.EXE
+;    Handles Extension .ofn
+;    By Command - C:\PROGRA~1\MICROS~1\Office\OSA.EXE -n
+HKCR,"Applications\OSA.EXE","NoOpenWith",,
+
+;-> Microsoft Organization Chart Executable
+;    Exe Name - ORGCHART.EXE
+;    Handles Extension .OPX
+;    By Command - C:\Program Files\Common Files\Microsoft Shared\Orgchart\ORGCHART.EXE %1
+HKCR,"Applications\ORGCHART.EXE","NoOpenWith",,
+
+;-> Microsoft Outlook Item Finder
+;    Exe Name - finder.exe
+;    Handles Extension .oss
+;    By Command - C:\Program Files\Microsoft Office\Office\finder.exe /f "%1"
+HKCR,"Applications\finder.exe","NoOpenWith",,
+
+;-> Microsoft (R) Address Book Viewer
+;    Exe Name - wab.exe
+;    Handles Extension .p7c
+;    By Command - "C:\Program Files\Outlook Express\wab.exe" /certificate %1
+HKCR,"Applications\wab.exe","NoOpenWith",,
+
+;-> Performance Monitor
+;    Exe Name - perfmon.exe
+;    Handles Extension .pma
+;    By Command - C:\WINNT\system32\perfmon.exe %1
+HKCR,"Applications\perfmon.exe","NoOpenWith",,
+
+;-> Registry Editor
+;    Exe Name - regedit.exe
+;    Handles Extension .reg
+;    By Command - regedit.exe "%1"
+HKCR,"Applications\regedit.exe","NoOpenWith",,
+
+;-> setmime 
+;    Exe Name - wltmime.exe
+;    Handles Extension .setpay
+;    By Command - wltmime.exe %1
+HKCR,"Applications\wltmime.exe","NoOpenWith",,
+
+;-> Shell scrap object handler
+;    Exe Name - shscrap.dll
+;    Handles Extension .shb
+;    By Command - rundll32 C:\WINNT\System32\shscrap.dll,OpenScrap_RunDLL /r /x %1
+HKCR,"Applications\shscrap.dll","NoOpenWith",,
+
+;-> Product Family Resource File
+;    Exe Name - Ttxmpc97.exe
+;    Handles Extension .TAX
+;    By Command - C:\Tax97\32bit\Ttxmpc97.exe %1
+HKCR,"Applications\Ttxmpc97.exe","NoOpenWith",,
+
+;-> OLE DB Core DLL
+;    Exe Name - oledb32.dll
+;    Handles Extension .UDL
+;    By Command - Rundll32.exe C:\PROGRA~1\COMMON~1\system\OLEDB~1\oledb32.dll,OpenDSLFile %1
+HKCR,"Applications\oledb32.dll","NoOpenWith",,
+
+;-> Shell Doc Object and Control Library
+;    Exe Name - shdocvw.dll
+;    Handles Extension .url
+;    By Command - rundll32.exe shdocvw.dll,OpenURL %l
+HKCR,"Applications\shdocvw.dll","NoOpenWith",,
+
+;-> Support exe for Internet Printing
+;    Exe Name - wpnpinst.exe
+;    Handles Extension .webpnp
+;    By Command - C:\WINNT\system32\wpnpinst.exe %1
+HKCR,"Applications\wpnpinst.exe","NoOpenWith",,
+
+;-> NetMeeting Whiteboard
+;    Exe Name - WB32.EXE
+;    Handles Extension .WHT
+;    By Command - "C:\Program Files\NetMeetingNT\WB32.EXE" "%1"
+HKCR,"Applications\WB32.EXE","NoOpenWith",,
+
+;-> AWD Viewer Stub
+;    Exe Name - awdvstub.exe
+;    Handles Extension .awd
+;    By Command - "C:\WINDOWS\system32\awdvstub.exe" "%1"
+HKCR,"Applications\awdvstub.exe","NoOpenWith",,
+
+;-> Internet Control Panel
+;    Exe Name - inetcpl.cpl
+;    Handles Extension .cer
+;    By Command - rundll32.exe C:\WINDOWS\system32\inetcpl.cpl,SiteCert_RunFromCmdLine %1
+HKCR,"Applications\inetcpl.cpl","NoOpenWith",,
+
+;-> Clip Gallery 5.0 Helper Application
+;    Exe Name - cag.exe
+;    Handles Extension .cil
+;    By Command - "C:\Program Files\Common Files\Microsoft Shared\Artgalry\cag.exe" "%1"
+HKCR,"Applications\cag.exe","NoOpenWith",,
+
+;-> Microsoft Office 2000
+;    Exe Name - graflink.exe
+;    Handles Extension .gfi
+;    By Command - C:\Program Files\Microsoft Office\Office\graflink.exe "%1"
+HKCR,"Applications\graflink.exe","NoOpenWith",,
+
+;-> Windows Progman Group Converter
+;    Exe Name - grpconv.exe
+;    Handles Extension .grp
+;    By Command - C:\WINDOWS\System32\grpconv.exe %1
+HKCR,"Applications\grpconv.exe","NoOpenWith",,
+
+;-> MapInfo Data Installer for Microsoft Map
+;    Exe Name - datainst.exe
+;    Handles Extension .gst
+;    By Command - C:\Program Files\Common Files\Microsoft Shared\Datamap\datainst.exe
+HKCR,"Applications\datainst.exe","NoOpenWith",,
+
+;-> Windows Winhlp32 Stub
+;    Exe Name - winhlp32.exe
+;    Handles Extension .hlp
+;    By Command - C:\WINDOWS\System32\winhlp32.exe %1
+HKCR,"Applications\winhlp32.exe","NoOpenWith",,
+
+;-> Windows Font Viewer
+;    Exe Name - fontview.exe
+;    Handles Extension .otf
+;    By Command - C:\WINDOWS\System32\fontview.exe %1
+HKCR,"Applications\fontview.exe","NoOpenWith",,
+
+;-> NT Tape Backup Utility
+;    Exe Name - ntbackup.exe
+;    Handles Extension .qic
+;    By Command - C:\WINDOWS\System32\ntbackup.exe %1
+HKCR,"Applications\ntbackup.exe","NoOpenWith",,
+
+;-> Microsoft Snapshot Viewer Application
+;    Exe Name - snapview.exe
+;    Handles Extension .snp
+;    By Command - C:\PROGRA~1\SNAPSH~1\snapview.exe /dde
+HKCR,"Applications\snapview.exe","NoOpenWith",,
+
+;-> Connection Manager
+;    Exe Name - CMMGR32.EXE
+;    Handles Extension .cmp
+;    By Command - C:\Program Files\Plus!\Microsoft Internet\Connection Manager\CMMGR32.EXE "%1"
+HKCR,"Applications\CMMGR32.EXE","NoOpenWith",,
+
+;-> Dependency Walker for Win32 (Intel x86)
+;    Exe Name - depends.exe
+;    Handles Extension .drv
+;    By Command - e:\nt\idw\depends.exe /dde
+HKCR,"Applications\depends.exe","NoOpenWith",,
+
+;-> Microsoft Compressed Folders Shell Extension
+;    Exe Name - zipfldr.dll
+;    Handles Extension .zip
+;    By Command - rundll32.exe zipfldr.dll,RouteTheCall %L
+HKCR,"Applications\zipfldr.dll","NoOpenWith",,
+
+;-> Internet Ratings and Local User Management DLL
+;    Exe Name - msrating.dll
+;    Handles Extension .prf
+;    By Command - rundll32.exe msrating.dll,ClickedOnPRF %1
+HKCR,"Applications\msrating.dll","NoOpenWith",,
+
+;-> Microsoft Accessibility Wizard
+;    Exe Name - accwiz.exe
+;    Handles Extension .acw
+;    By Command - C:\WINNT\system32\accwiz.exe %1
+HKCR,"Applications\accwiz.exe","NoOpenWith",,
+
+;-> Remote Access Phonebook
+;    Exe Name - rasphone.exe
+;    Handles Extension .rnk
+;    By Command - C:\WINNT\system32\rasphone.exe -lt "%1"
+HKCR,"Applications\rasphone.exe","NoOpenWith",,

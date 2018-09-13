@@ -1,0 +1,17 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\debuglib=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=debuglib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(COREINCLUDES)
+
+SOURCES= \
+    debuglib.cxx

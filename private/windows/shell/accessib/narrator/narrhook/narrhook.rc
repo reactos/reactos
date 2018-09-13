@@ -1,0 +1,143 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    TXT_NOMORE              "No More"
+    IDS_MENUEND             "Menu end"
+    IDS_MENU                "Menu"
+    IDS_POPUP               "Popup start"
+    IDS_DIALOGEND           "Dialog end"
+    IDS_WINDOW              "Window"
+    IDS_LINEEND             "Line end"
+    IDS_KEYBOARD            "Keyboard"
+    IDS_SPACE               "space"
+    IDS_DELETE              "delete"
+    IDS_BACKSPACE           "back space"
+    IDS_TAB                 "tab"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CONTROL             "control"
+    IDS_ALT                 "alt"
+    IDS_SHIFT               "shift"
+    IDS_RETURN              "enter"
+    IDS_POPUPEND            "Popup menu end"
+    IDS_NAMELESS            " "
+    IDS_SHOW                "Show"
+    IDS_VALUE               "Value"
+    IDS_FOREGROUND          "Foreground window"
+    IDS_TOOLTIP             "Tooltip:"
+    IDS_LINESTART           "Line start"
+    IDS_DIALOG              "Dialog"
+    IDS_LINK                " Link"
+    IDS_PASSWORD            "Password field"
+    IDS_TOPRESS             ", to press, use space bar."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOSELECT            ", to select a different item in the cluster, use the arrow keys."
+    IDS_TO_CHECK            ", to check, press space bar."
+    IDS_PRESSSPACE          ", press space bar."
+    IDS_SUBMENU             ", has a sub-menu."
+    IDS_TO_UNCHECK          ", to uncheck, press space bar."
+    IDS_DRIVE               " Drive"
+    IDS_TREELEVEL           ", Level : %s"
+    IDS_TEXPAND             ", to Expand, Press right arrow"
+    IDS_TCOLLAP             ", to collapse, Press left arrow"
+    IDS_LEAF                "Leaf node"
+    IDS_ROOT                "Root node"
+    IDS_NOTSEL              ", Not Selected."
+    IDS_WINKEY              "start"
+    IDS_PASS                "Password"
+    IDS_INSERT              "insert"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HOME                "home"
+    IDS_END                 "end"
+    IDS_PAGEUP              "page up"
+    IDS_PAGEDOWN            "page down"
+    IDS_CAPS_ON             "Caps Lock - ON"
+    IDS_NUM_ON              "Num Lock - ON"
+    IDS_PRINT               "Print screen"
+    IDS_NUM_OFF             "Num Lock - OFF"
+    IDS_CAPS_OFF            "Caps Lock - OFF"
+    IDS_ESC                 "escape"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,170 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "scrnsave.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_SCRNSAVECONFIGURE DIALOG DISCARDABLE  28, 25, 237, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "3D Flying Objects Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,180,5,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",2,180,25,50,14,WS_GROUP
+    PUSHBUTTON      "Te&xture...",DLG_SETUP_TEXTURE,180,50,50,15
+    GROUPBOX        "Object",IDC_STATIC,5,0,165,40
+    LTEXT           "S&tyle:",IDC_STATIC,20,20,27,12
+    COMBOBOX        DLG_SETUP_TYPES,50,20,95,86,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    GROUPBOX        "Color Usage",IDC_STATIC,5,45,165,35
+    CONTROL         "&Color-cycling",DLG_SETUP_CYCLE,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,20,60,60,12
+    CONTROL         "&Smooth shading",DLG_SETUP_SMOOTH,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,90,60,70,13
+    GROUPBOX        "&Resolution",IDC_STATIC_TESS,5,85,105,40
+    LTEXT           "Min",IDC_STATIC_TESS_MIN,15,95,15,7
+    LTEXT           "Max",IDC_STATIC_TESS_MAX,85,95,15,7
+    CONTROL         "Slider1",DLG_SETUP_TESSEL,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_GROUP | WS_TABSTOP,10,105,95,15
+    GROUPBOX        "Si&ze",IDC_STATIC_SIZE,120,85,110,40
+    LTEXT           "Min",IDC_STATIC_SIZE_MIN,125,95,15,7
+    LTEXT           "Max",IDC_STATIC_SIZE_MAX,205,95,15,7
+    CONTROL         "Slider1",DLG_SETUP_SIZE,"msctls_trackbar32",TBS_NOTICKS | 
+                    WS_GROUP | WS_TABSTOP,125,105,100,15
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""scrnsave.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 100
+//
+
+IDB_DEFTEX              100     DISCARDABLE     "cover8.bmp"
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OpenGL 3D Flying Objects Screen Saver"
+#define VER_INTERNALNAME_STR        "ss3dfo\0"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "3D Flying Objects (OpenGL)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_OBJTYPE             "Type"
+    IDS_SCREENSAVERTITLE    "3D Flying Objects Screen Saver"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_LOGO                "Windows Logo"
+    IDS_EXPLODE             "Explode"
+    IDS_RIBBON              "Ribbon"
+    IDS_2RIBBON             "Two Ribbons"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SPLASH              "Splash"
+    IDS_TWIST               "Twist"
+    IDS_FLAG                "Textured Flag"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SAVERNAME           "Screen Saver.3DFlyingObj"
+    IDS_OPTIONS             "Options"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

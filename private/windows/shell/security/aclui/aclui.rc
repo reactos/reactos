@@ -1,0 +1,388 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       aclui.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "version.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SID_ICONS           BITMAP  MOVEABLE PURE   "icons.bmp"
+IDB_LOCKS               BITMAP  MOVEABLE PURE   "locks.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SIMPLE_PERM_PAGE DIALOGEX 0, 0, 227, 215
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Security"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Permissions for:",IDC_SPP_PRINCIPALS,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | 
+                    LVS_SORTASCENDING | LVS_NOSORTHEADER | WS_TABSTOP,7,7,
+                    158,78,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "A&dd...",IDC_SPP_ADD,170,7,50,14
+    PUSHBUTTON      "&Remove",IDC_SPP_REMOVE,170,26,50,14
+    PUSHBUTTON      "De&fault",IDC_SPP_RESET,170,45,50,14
+    CTEXT           "Allow",IDC_SPP_ALLOW,149,90,32,8
+    CTEXT           "Deny",IDC_SPP_DENY,181,90,32,8
+    LTEXT           "&Permissions:",IDC_SPP_ACCESS,7,90,50,8
+    CONTROL         "",IDC_SPP_PERMS,"CHECKLIST_ACLUI",0x2,7,102,213,72,
+                    WS_EX_CLIENTEDGE | WS_EX_CONTROLPARENT
+    PUSHBUTTON      "Ad&vanced...",IDC_SPP_ADVANCED,7,179,55,14
+    LTEXT           "Additional permissions are present but not viewable here. Press Advanced to see them.",
+                    IDC_SPP_MORE_MSG,67,178,153,16,NOT WS_VISIBLE
+    CONTROL         "Allow in&heritable permissions from parent to propagate to this object",
+                    IDC_SPP_PROTECT,"Button",BS_AUTOCHECKBOX | BS_VCENTER | 
+                    BS_MULTILINE | WS_TABSTOP,7,197,213,16
+    LTEXT           "Unable to display security information.",
+                    IDC_SPP_NO_SECURITY,30,30,180,28,NOT WS_VISIBLE
+END
+
+IDD_ACELIST_PERM_PAGE DIALOGEX 0, 0, 306, 215
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Permissions"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Permission En&tries:",-1,7,4,116,8
+    CONTROL         "",IDC_ACEL_DETAILS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP,8,15,292,99,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "A&dd...",IDC_ACEL_ADD,8,117,62,14
+    PUSHBUTTON      "&Remove",IDC_ACEL_REMOVE,74,117,62,14
+    PUSHBUTTON      "&View/Edit...",IDC_ACEL_EDIT,140,117,62,14
+    PUSHBUTTON      "De&fault",IDC_ACEL_RESET,206,117,62,14
+    LTEXT           "",-1,8,136,292,1,SS_SUNKEN | NOT WS_GROUP
+    EDITTEXT        IDC_ACEL_DESCRIPTION,8,140,292,41,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT 
+                    WS_TABSTOP
+    CONTROL         "Allow in&heritable permissions from parent to propagate to this object",
+                    IDC_ACEL_PROTECT,"Button",BS_AUTOCHECKBOX | BS_VCENTER | 
+                    BS_MULTILINE | WS_TABSTOP,4,183,260,10
+    CONTROL         "Re&set permissions on all child objects and enable propagation of inheritable permissions.",
+                    IDC_ACEL_RESET_ACL_TREE,"Button",BS_AUTOCHECKBOX | 
+                    BS_VCENTER | BS_MULTILINE | WS_TABSTOP,4,195,260,18
+END
+
+IDD_ACELIST_AUDIT_PAGE DIALOGEX 0, 0, 306, 215
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Auditing"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Auditing En&tries:",-1,7,4,60,8
+    CONTROL         "",IDC_ACEL_DETAILS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP,8,15,292,99,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "A&dd...",IDC_ACEL_ADD,8,117,62,14
+    PUSHBUTTON      "&Remove",IDC_ACEL_REMOVE,74,117,62,14
+    PUSHBUTTON      "&View/Edit...",IDC_ACEL_EDIT,140,117,62,14
+    PUSHBUTTON      "De&fault",IDC_ACEL_RESET,206,117,62,14
+    LTEXT           "",-1,8,136,292,1,SS_SUNKEN | NOT WS_GROUP
+    EDITTEXT        IDC_ACEL_DESCRIPTION,8,140,292,41,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT 
+                    WS_TABSTOP
+    CONTROL         "Allow in&heritable auditing entries from parent to propagate to this object",
+                    IDC_ACEL_PROTECT,"Button",BS_AUTOCHECKBOX | BS_VCENTER | 
+                    BS_MULTILINE | WS_TABSTOP,4,183,260,10
+    CONTROL         "Re&set auditing entries on all child objects and enable propagation of inheritable auditing entries.",
+                    IDC_ACEL_RESET_ACL_TREE,"Button",BS_AUTOCHECKBOX | 
+                    BS_VCENTER | BS_MULTILINE | WS_TABSTOP,4,195,260,18
+END
+
+IDD_OWNER_PAGE DIALOGEX 0, 0, 306, 209
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Owner"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Current owner of this item:",
+                    IDC_OWN_CURRENTOWNER_STATIC,8,4,90,8
+    EDITTEXT        IDC_OWN_CURRENTOWNER,8,16,292,12,ES_AUTOHSCROLL | 
+                    ES_READONLY,WS_EX_CLIENTEDGE
+    LTEXT           "Change &owner to:",IDC_OWN_OWNERLIST_STATIC,8,32,70,8
+    CONTROL         "",IDC_OWN_OWNERLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_NOSORTHEADER | WS_TABSTOP,8,44,292,110,
+                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "De&fault",IDC_OWN_RESET,232,156,62,14
+    CONTROL         "&Replace owner on subcontainers and objects",
+                    IDC_OWN_RECURSE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,
+                    156,170,10
+END
+
+IDD_ACEENTRY_PERM_PAGE DIALOGEX 0, 0, 227, 230
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Object"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This permission is inherited from the parent object.",
+                    IDC_ACEE_INHERITWARNING,7,7,213,16
+    LTEXT           "Name:",IDC_ACEE_NAME_STATIC,8,29,30,8
+    EDITTEXT        IDC_ACEE_NAME,35,27,130,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Change...",IDC_ACEE_NAMEBUTTON,170,26,50,14
+    LTEXT           "Apply &onto:",IDC_ACEE_APPLYONTO_STATIC,7,48,40,8
+    COMBOBOX        IDC_ACEE_INHERITTYPE,47,46,173,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Allow",IDC_ACEE_ALLOW,149,65,32,8
+    CTEXT           "Deny",IDC_ACEE_DENY,181,65,32,8
+    LTEXT           "&Permissions:",IDC_ACEE_ACCESS,7,65,50,8
+    CONTROL         "",IDC_ACEE_LIST,"CHECKLIST_ACLUI",0x2,7,75,213,126,
+                    WS_EX_CLIENTEDGE | WS_EX_CONTROLPARENT
+    CONTROL         "Apply &these permissions to objects and/or containers within this container only",
+                    IDC_ACEE_INHERITIMMEDIATE,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,7,203,150,24
+    PUSHBUTTON      "C&lear All",IDC_ACEE_CLEAR,170,204,50,14
+END
+
+IDD_ACEENTRY_AUDIT_PAGE DIALOGEX 0, 0, 227, 230
+STYLE WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Object"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This auditing entry is inherited from the parent object.",
+                    IDC_ACEE_INHERITWARNING,7,7,213,16
+    LTEXT           "Name:",IDC_ACEE_NAME_STATIC,8,29,30,8
+    EDITTEXT        IDC_ACEE_NAME,35,27,130,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "&Change...",IDC_ACEE_NAMEBUTTON,170,26,50,14
+    LTEXT           "Apply &onto:",IDC_ACEE_APPLYONTO_STATIC,7,48,40,8
+    COMBOBOX        IDC_ACEE_INHERITTYPE,47,46,173,80,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "Successful",IDC_ACEE_ALLOW,132,65,40,8
+    CTEXT           "Failed",IDC_ACEE_DENY,172,65,40,8
+    LTEXT           "Acce&ss:",IDC_ACEE_ACCESS,7,65,50,8
+    CONTROL         "",IDC_ACEE_LIST,"CHECKLIST_ACLUI",0x2,7,75,213,126,
+                    WS_EX_CLIENTEDGE | WS_EX_CONTROLPARENT
+    CONTROL         "Apply &these auditing entries to objects and/or containers within this container only",
+                    IDC_ACEE_INHERITIMMEDIATE,"Button",BS_AUTOCHECKBOX | 
+                    BS_MULTILINE | WS_TABSTOP,7,203,150,24
+    PUSHBUTTON      "C&lear All",IDC_ACEE_CLEAR,170,204,50,14
+END
+
+IDD_CONFIRM_DACL_PROTECT DIALOG DISCARDABLE  0, 0, 292, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You are preventing any inheritable permissions from propagating to this object.  What do you want to do?",
+                    IDC_STATIC,48,4,232,16
+    ICON            "",IDC_CONFIRM_ICON,12,12,21,20
+    LTEXT           "- To copy previously inherited permissions to this object, click Copy.",
+                    IDC_STATIC,48,28,232,8
+    LTEXT           "- To Remove the inherited permissions and keep only the permissions explicitly specified on this object, click Remove.",
+                    IDC_STATIC,48,36,232,16
+    LTEXT           "- To abort this operation, click Cancel.",IDC_STATIC,48,
+                    52,232,8
+    PUSHBUTTON      "&Copy",IDC_CONFIRM_COPY,64,88,50,14
+    PUSHBUTTON      "&Remove",IDC_CONFIRM_REMOVE,119,88,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,88,50,14
+END
+
+IDD_CONFIRM_SACL_PROTECT DIALOG DISCARDABLE  0, 0, 292, 109
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You are preventing any inheritable auditing entries from propagating to this object.  What do you want to do?",
+                    IDC_STATIC,48,4,232,16
+    ICON            "",IDC_CONFIRM_ICON,12,12,20,20
+    LTEXT           "- To copy previously inherited auditing entries to this object, click Copy.",
+                    IDC_STATIC,48,28,232,8
+    LTEXT           "- To Remove the inherited auditing entries and keep only the auditing entries explicitly specified on this object, click Remove.",
+                    IDC_STATIC,48,36,232,16
+    LTEXT           "- To abort this operation, click Cancel.",IDC_STATIC,48,
+                    52,232,8
+    PUSHBUTTON      "&Copy",IDC_CONFIRM_COPY,64,88,50,14
+    PUSHBUTTON      "&Remove",IDC_CONFIRM_REMOVE,119,88,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,175,88,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SECURITY            "Security"
+    IDS_NAME                "Name"
+    IDS_VIEW                "&View..."
+    IDS_INITDLG_FAILED      "Unable to continue due to the following condition.%n%n%1"
+    IDS_OUT_OF_MEMORY       "Not enough memory is available to complete the requested operation."
+    IDS_OPERATION_FAILED    "Unable to complete the requested operation.%n%n%1"
+    IDS_SID_UNKNOWN         "Account Unknown"
+    IDS_SID_DELETED         "Account Deleted"
+    IDS_GET_USER_FAILED     "Unable to display the user selection dialog.%n%n%1"
+    IDS_SID_LOOKUP_FAILED   "Unable to lookup user names for display."
+    IDS_RESET_DACL_WARNING  "This will remove explicitly defined permissions on all child objects and enable propagation of inheritable permissions to those child objects. Only inheritable permissions propagated from %1 will take effect.\n\nDo you wish to continue?"
+    IDS_FMT_USER_DISPLAY    "%1 (%2)"
+    IDS_FMT_CHECKLABEL      "%2 %1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERM_READONLY       "You only have permission to view the current security information on %1."
+    IDS_PERM_WRITE_FAILED   "Unable to save permission changes on %2.%n%n%1"
+    IDS_PERM_NOT_CANONICAL  "The permissions on %1 are incorrectly ordered, which may cause some entries to be ineffective.  Press OK to continue and sort the permissions correctly, or Cancel to reset the permissions."
+    IDS_PERM_DENY_ALL       "You have denied everyone access to %1.  No one will be able to access %1 and only the owner will be able to change the permissions.\n\nDo you wish to continue?"
+    IDS_PERM_CANT_REMOVE    "You cannot remove ""%1"" because this object is inheriting permissions from its parent. To remove ""%1,"" you must prevent this object from inheriting permissions.  Turn off the option for inheriting permissions, and then try removing ""%1"" again."
+    IDS_PERM_CANT_READ_CAN_WRITE_DACL 
+                            "You do not have permission to view the current permission settings for %1, but you can make permission changes."
+    IDS_PERM_CANT_READ_CAN_WRITE_OWNER 
+                            "You do not have permission to view the current permission settings for %1, but you can take ownership."
+    IDS_PERM_CANT_READ_CAN_AUDIT 
+                            "You do not have permission to view or edit the current permission settings for %1, but you can change auditing settings."
+    IDS_PERM_CANT_READ_CAN_AUDIT_WRITE_OWNER 
+                            "You do not have permission to view or edit the current permission settings for %1, but you can take ownership or change auditing settings."
+    IDS_PERM_NO_ACCESS      "You do not have permission to view or edit the current permission settings for %1."
+    IDS_AUDIT_WRITE_FAILED  "Unable to save auditing changes on %2.%n%n%1"
+    IDS_AUDIT_OFF_WARNING   "The current Audit Policy for this computer does not have auditing turned on.  If this computer gets audit policy from the domain, please ask a domain administrator to turn on auditing using Group Policy Editor.  Otherwise, use the Local Computer Policy Editor to configure the audit policy locally on this computer."
+    IDS_OWNER_READONLY      "You only have permission to view the current owner on %1."
+    IDS_OWNER_WRITE_FAILED  "Unable to set new owner on %2.%n%n%1"
+    IDS_OWNER_CANT_DISPLAY  "Unable to display current owner."
+    IDS_PERM_DENY           "Caution! Deny entries take priority over Allow entries, which can cause unintended effects due to group memberships.\n\nDo you wish to continue?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SPP_TITLE           "Permissions for %1"
+    IDS_ACEL_TITLE          "Access Control Settings for %1"
+    IDS_ACEE_PERM_TITLE     "Permission Entry for %1"
+    IDS_ACEE_AUDIT_TITLE    "Auditing Entry for %1"
+    IDS_ACEE_PROPERTY_TITLE "Properties"
+    IDS_ACE_PERM_COLUMN_TYPE "Type"
+    IDS_ACE_PERM_COLUMN_NAME "Name"
+    IDS_ACE_PERM_COLUMN_ACCESS "Permission"
+    IDS_ACE_PERM_COLUMN_INHERIT "Apply to"
+    IDS_ACE_AUDIT_COLUMN_TYPE "Type"
+    IDS_ACE_AUDIT_COLUMN_NAME "Name"
+    IDS_ACE_AUDIT_COLUMN_ACCESS "Access"
+    IDS_ACE_AUDIT_COLUMN_INHERIT "Apply to"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALLOW               "Allow"
+    IDS_DENY                "Deny"
+    IDS_AUDIT               "Audit"
+    IDS_ALARM               "Alarm"
+    IDS_UNKNOWN             "Unknown"
+    IDS_SPECIAL             "Special"
+    IDS_AUDITPASS           "Success"
+    IDS_AUDITFAIL           "Fail"
+    IDS_AUDITBOTH           "All"
+    IDS_READ_PROP           "Read Property"
+    IDS_WRITE_PROP          "Write Property"
+    IDS_READ_WRITE_PROP     "Read/Write Property"
+    IDS_THIS_OBJECT_ONLY    "This object only"
+    IDS_THIS_OBJECT_AND_SUBOBJECTS "This object and child objects"
+    IDS_SUBOBJECTS_ONLY     "Child objects only"
+    IDS_INVALID_INHERIT     "Nothing"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SELCHANGE_WARNING   "You are attempting to define permissions that apply to %1 in this container.  If you later create %1 in this container, they will not receive default permissions. Do you want to continue?"
+    IDS_FMT_ACE_DESC        "%1 %2"
+    IDS_PERMISSION_LOCALACE_DESC 
+                            "This permission is defined directly on this object."
+    IDS_AUDITENTRY_LOCALACE_DESC 
+                            "This auditing entry is defined directly on this object."
+    IDS_PERMISSION_INHERITEDACE_DESC 
+                            "This permission is inherited from the parent object and controls access to this object.  To stop inheriting permissions, clear the checkbox below.  You can edit the permission only at the parent object where it is defined."
+    IDS_AUDITENTRY_INHERITEDACE_DESC 
+                            "This auditing entry is inherited from the parent object and controls access to this object.  To stop inheriting auditing entries, clear the checkbox below.  You can edit the auditing entry only at the parent object where it is defined."
+    IDS_PERMISSION_INHERITEDONLYACE_DESC 
+                            "This permission is inherited from the parent object but does not control access to this object. It may control access to child objects of this object.  To stop inheriting permissions, clear the checkbox below.  You can edit the permission only at the parent object where it is defined."
+    IDS_AUDITENTRY_INHERITEDONLYACE_DESC 
+                            "This auditing entry is inherited from the parent object but does not control access to this object. It may control access to child objects of this object.  To stop inheriting auditing entries, clear the checkbox below.  You can edit the auditing entry only at the parent object where it is defined."
+    IDS_PERMISSION_NOINHERIT_DESC 
+                            "This permission is not inherited by child objects."
+    IDS_AUDITENTRY_NOINHERIT_DESC 
+                            "This auditing entry is not inherited by child objects."
+    IDS_PERMISSION_DOESINHERIT_DESC 
+                            "This permission is inherited by child objects."
+    IDS_AUDITENTRY_DOESINHERIT_DESC 
+                            "This auditing entry is inherited by child objects."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,94 @@
+
+Important: (NT5)
+1. Replace "Download Dialog" with SHBrowserForFolder2.
+2. Fix shell32 drop.
+3. Make it UNICODE.
+4. Add "ASCII, Binary, Auto-Detect" Download Types to menu.
+5. Have WebView Support Login.
+6. File.Open login.
+7. File.Open upload.
+8. 
+9. 
+10. Perf
+
+Not Important: (NT6)
+1. Need to call InternetAttemptConnect() to display log-in dialog?  (To save passwords?)
+2. Installer doesn't block and require IE4.
+3. Change "View->Internet Options" to "View->Ftp Options".
+4. Password Cache
+5. Check Move/Cut.
+6. R/W/E for User/All/Group in Prop Dlg for UNIX web servers.
+
+IE4 Compatibility Blockers/Issues:
+
+
+DONE:
+1. Convert from C to C++.
+2. Search for hard coded strings.
+3. Move Constructor/Destructor to protected.
+4. Fix compiling bugs.
+5. Get downloading to work.
+6. Remove Name Space reg key.
+7. Make Upload permissions denied error dialog
+8. Fix uploading, delete, rename.
+9. Wire up CStatusBar().
+10. Make appropriate member functions private.
+11. Upload Recursive Directories.
+12. Download Recursive Directories.
+13. DLL Ref Counting Problem.
+14. Impl FileGroupDescriptorW and FileDescriptorW so this will work w/o IE 5.
+15. Get someone to do a real "Open FTP Folder" icon (ofolder.ico)
+16. Impl "Download" verb Context Menu item for files/folders. (Default verb for files).
+17. Fix "Properties" being added each time File menu is dropped down.
+18. Non-Annonymous Logon.
+19. Get Virtual Directories to work.
+20. Impl Recursive delete.
+21. WINSOCK: HREF to Ftp File (Host In Place)
+22. WINSOCK: HREF to Ftp File (Launch/Save)
+23. WINSOCK: HREF to Ftp Dir (Navigate)
+24. WINSOCK: HREF to Ftp File (Host In Place w/Login)
+25. WINSOCK: HREF to Ftp File (Launch/Save w/Login)
+26. WINSOCK: HREF to Ftp Dir (Navigate w/Login)
+27. WINSOCK: IFRAME of Ftp File (HTML File)
+28. WINSOCK: IFRAME of Ftp Dir
+29. WINSOCK: IFRAME of Ftp File (HTML File w/Login)
+30. WINSOCK: IFRAME of Ftp Dir (w/Login)
+31. NO WINSOCK: HREF to Ftp File (Host In Place)
+32. NO WINSOCK: HREF to Ftp File (Launch/Save)
+33. NO WINSOCK: HREF to Ftp Dir (Navigate)
+34. NO WINSOCK: HREF to Ftp File (Host In Place w/Login)
+35. NO WINSOCK: HREF to Ftp File (Launch/Save w/Login)
+36. NO WINSOCK: HREF to Ftp Dir (Navigate w/Login)
+37. NO WINSOCK: IFRAME of Ftp File (HTML File)
+38. NO WINSOCK: IFRAME of Ftp Dir
+39. NO WINSOCK: IFRAME of Ftp File (HTML File w/Login)
+40. NO WINSOCK: IFRAME of Ftp Dir (w/Login)
+41. Add "New Folder" to context menu.
+42. Alpha DWORD align data structures
+43. Improve leak detection.
+44. Refresh doesn't really re-enum folder.
+45. Enable "Up Directory" button in Shell Toolbar.
+46. If logging in puts you into a virtual dir (ftp://server/ user=me ends up in ftp://server/users/me/), do we update the addressband?
+47. Impl Web View for FTP.
+48. Start StatusBar support with Zone and User Name.
+49. Finish Status Bar control (DefView vs. Shell Ext)
+50. Finish Upload Progress Dialog.
+51. Create "Open Local Copy" verb for singlely selected files.
+52. Disable password and finish name population in login dialog.
+53. Redirect on Login fail login dialog.
+54. Navigate to blank page if Ftp Dir not found
+55. Add "Log in as..." to File Menu.
+56. Add support so IIDEnum can get to IShellView using ::SetSite().
+57. Delete directory/file doesn't update IShellView/IShellFolder.  FtpDropNotifyCreate()?
+58. See if we need to add the rest of the calls to SHChangeNotify();
+59. Resize StatusBar parts on WM_SIZE messages.
+60. Finish Download Progress Dialog.
+61. Add MessageOfTheDay info in WebView.
+62. Create better Download Dialog.
+63. Make Download happen in the Background.
+64. Make Download Display Progress dialog with correct byte progress.
+65. Create another drag/drop type for FTP->FTP file copy for same server or diff server. Call it FTP_Files.
+   It should have Server name and File List.
+66. Make delete directory detect "Directory is not Empty" and ask to Continue. (Which will delete recursively)
+67. Make Open & Save dialogs work.
+68. Make the upload and drop progress dialog give acurate progress. (Count file sizes recursively) (Download done)

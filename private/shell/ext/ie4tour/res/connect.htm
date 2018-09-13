@@ -1,0 +1,70 @@
+<HTML>
+<HEAD>
+	<TITLE>Welcome</TITLE>
+
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+</SCRIPT>
+
+<STYLE>
+.head2{
+	position:	absolute;
+	top:	20px;
+	left:	20px;
+	width:	390px;
+	font: 16pt Verdana, Arial, Helvetica, Sans-serif;
+	color:	#0099FF;
+	font-weight:	bold;
+	visibility:	hidden;
+}
+
+.body{
+	position:	absolute;
+	top:	80px;
+	left:	20px;
+	width:	390px;
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	12pt;
+	color:	#000000;
+	visibility:	hidden;
+	margin: 0;
+}
+</STYLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Take a Quick Tour
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)">
+Click the following link to connect to the internet and start the tour:
+<br><br>
+<b>Connect Now</b>
+<br><br>
+If you just installed Internet Explorer 4.0, clicking Connect Now starts the <b>Internet Connection Wizard</b>. Just follow the instructions on your screen to get connected.
+<br><br>
+Happy touring!
+
+</DIV>
+
+
+</BODY>
+</HTML>

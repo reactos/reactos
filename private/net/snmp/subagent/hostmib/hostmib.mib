@@ -1,0 +1,1074 @@
+--   SNMPv1 MIB generated from Digital Equipment Corporation
+--   Manage Factory, in conjunction with Paradigm Plus(tm) V2.01a.
+--  
+--   Using Paradigm: RUMBAUGH
+--   From Project:   D:\TEMP\EXAMPLE\HOSTMIB
+--   With Scripts:   SNMPv1, 0.16, Apr 25, 1996
+--   Date:           Thu Nov 07 16:38:04 1996
+
+HOSTMIB-MIB DEFINITIONS ::= BEGIN
+
+
+IMPORTS
+    mgmt, enterprises, NetworkAddress, IpAddress, Counter, Gauge, TimeTicks
+        FROM RFC1155-SMI
+    OBJECT-TYPE
+        FROM RFC-1212
+    DisplayString
+        FROM RFC1213-MIB;
+
+ -- dec { iso(1) org(3) dod(6) internet(1) private(4) enterprises(1) 36 }
+ -- ema { iso(1) org(3) dod(6) internet(1) private(4) enterprises(1) 36 2 }
+ -- snmp { iso(1) org(3) dod(6) internet(1) mgmt(2) mib-2(1) 11 }
+
+
+ -- textual conventions for types
+
+--  a truth value
+Boolean ::= INTEGER {
+                true(1) , 
+                false(2) 
+            }
+--  memory size, expressed in units of 1024 bytes
+KBytes ::= INTEGER (0..2147483647)
+INTAccess ::= INTEGER {
+                readWrite(1) , 
+                readOnly(2) 
+            }
+INTSWType ::= INTEGER {
+                unknown(1) , 
+                operatingSystem(2) , 
+                deviceDriver(3) , 
+                application(4) 
+            }
+--  A date-time specification for the local time of day.  This data type is 
+--  intended toprovide a consistent method of  reporting dat
+DateAndTime ::= OCTET STRING (SIZE ( 8 | 11))
+--  This data type is used to model textual information in some character set.  
+--  A network management station should use a local algo
+InternationalDisplayString ::= OCTET STRING
+--  This textual convention is intended to identify the manufacturer, model, 
+--  and version of a specific hardware or software product.
+ProductID ::= OBJECT IDENTIFIER
+--  The host resources mib.
+host                             OBJECT IDENTIFIER ::= { mib-2 25 }
+
+ -- groups in hostmib
+
+hrSystem                        OBJECT IDENTIFIER ::= { host 1 }
+hrStorage                       OBJECT IDENTIFIER ::= { host 2 }
+hrDevice                        OBJECT IDENTIFIER ::= { host 3 }
+hrSWRun                         OBJECT IDENTIFIER ::= { host 4 }
+hrSWRunPerf                     OBJECT IDENTIFIER ::= { host 5 }
+hrSWInstalled                   OBJECT IDENTIFIER ::= { host 6 }
+
+--  
+--  hrSystem
+--  
+--  The Host Resources System Group.  Implementation of the this group is 
+--  mandatory for all host systems.
+hrSystemUptime OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The amount of time since this host was last initialized."
+    ::= { hrSystem 1 }
+
+hrSystemDate OBJECT-TYPE
+    SYNTAX  DateAndTime
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The host's notion of the local date and time of day."
+    ::= { hrSystem 2 }
+
+hrSystemInitialLoadDevice OBJECT-TYPE
+    SYNTAX  INTEGER (1..2147483647)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of the hrDeviceEntry for the device from which this host is 
+        configured to load its initial operating system configurat"
+    ::= { hrSystem 3 }
+
+hrSystemInitialLoadParameters OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE (0..128))
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "This object contains the paramets (e.g. a pathname and parameter) 
+        supplied to the load device when requesting the initial operat"
+    ::= { hrSystem 4 }
+
+hrSystemNumUsers OBJECT-TYPE
+    SYNTAX  Gauge
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of user sessions for which this host is storing state 
+        information."
+    ::= { hrSystem 5 }
+
+hrSystemProcesses OBJECT-TYPE
+    SYNTAX  Gauge
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of process contexts currently loaded or running on this 
+        system."
+    ::= { hrSystem 6 }
+
+hrSystemMaxProcesses OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The maximum number of process contexts this system can support.  If 
+        there is no fixed maximum, the value should be zero."
+    ::= { hrSystem 7 }
+
+--  
+--  hrStorage
+--  
+--  The Host Resources Storage Group.  Implementation of this group is 
+--  mandatory for all host systems.
+hrMemorySize OBJECT-TYPE
+    SYNTAX  KBytes
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The amount of physical main memory contained by the host."
+    ::= { hrStorage 2 }
+
+--  Registration for some storage types, for use with hrStorageType.
+hrStorageTypes                   OBJECT IDENTIFIER ::= { hrStorage 1 }
+hrStorageOther                   OBJECT IDENTIFIER ::= { hrStorageTypes 1 }
+hrStorageRAM                     OBJECT IDENTIFIER ::= { hrStorageTypes 2 }
+hrStorageVirtualMemory           OBJECT IDENTIFIER ::= { hrStorageTypes 3 }
+hrStorageFixedDisk               OBJECT IDENTIFIER ::= { hrStorageTypes 4 }
+hrStorageRemovableDisk           OBJECT IDENTIFIER ::= { hrStorageTypes 5 }
+hrStorageFloppyDisk              OBJECT IDENTIFIER ::= { hrStorageTypes 6 }
+hrStorageCompactDisk             OBJECT IDENTIFIER ::= { hrStorageTypes 7 }
+hrStorageRamDisk                 OBJECT IDENTIFIER ::= { hrStorageTypes 8 }
+
+hrStorageTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrStorageEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of logicalstorage areas on the host.   An entry 
+        shall be placed in the storage table for each logical are"
+    ::= { hrStorage 3 }
+
+hrStorageEntry OBJECT-TYPE
+    SYNTAX HrStorageEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one logical storage area on the host.  As an 
+        example, an instance of the hrStorageType object might be "
+    INDEX    {
+             hrStorageIndex
+             }
+    ::= { hrStorageTable 1 }
+
+HrStorageEntry  ::=
+    SEQUENCE {
+        hrStorageIndex
+            INTEGER,
+        hrStorageType
+            OBJECT IDENTIFIER,
+        hrStorageDesc
+            DisplayString,
+        hrStorageAllocationUnits
+            INTEGER,
+        hrStorageSize
+            INTEGER,
+        hrStorageUsed
+            INTEGER,
+        hrStorageAllocationFailures
+            Counter
+             }
+
+hrStorageIndex OBJECT-TYPE
+    SYNTAX  INTEGER (1..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each logical storage are contained by the host."
+    ::= { hrStorageEntry 1 }
+
+hrStorageType OBJECT-TYPE
+    SYNTAX  OBJECT IDENTIFIER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The type of strage represented by this entry."
+    ::= { hrStorageEntry 2 }
+
+hrStorageDesc OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A description of the type and instance of the storage described by 
+        this entry."
+    ::= { hrStorageEntry 3 }
+
+hrStorageAllocationUnits OBJECT-TYPE
+    SYNTAX  INTEGER (1..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The size, in bytes, of the data objects allocated from this pool.  If 
+        this entry is monitoring sectors, blocks, buffers, or pack"
+    ::= { hrStorageEntry 4 }
+
+hrStorageSize OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The size of the storage represented by this entry, in units of 
+        hrStorageAllocationUnits."
+    ::= { hrStorageEntry 5 }
+
+hrStorageUsed OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The amount of the storage represented by this entry that is allocated, 
+        in units of hrStorageAllocationUnits."
+    ::= { hrStorageEntry 6 }
+
+hrStorageAllocationFailures OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of requests for storage represented by this entry that 
+        could not be honored due to not enough storage.  It should be "
+    ::= { hrStorageEntry 7 }
+
+--  
+--  hrDevice
+--  
+--  Implementation of this group is mandatory for all host systems. 
+--  Registration for some device types, for use with hrDeviceType.
+hrDeviceTypes                    OBJECT IDENTIFIER ::= { hrDevice 1 }
+hrDeviceOther                    OBJECT IDENTIFIER ::= { hrDeviceTypes 1 }
+hrDeviceUnknown                  OBJECT IDENTIFIER ::= { hrDeviceTypes 2 }
+hrDeviceProcessor                OBJECT IDENTIFIER ::= { hrDeviceTypes 3 }
+hrDeviceNetwork                  OBJECT IDENTIFIER ::= { hrDeviceTypes 4 }
+hrDevicePrinter                  OBJECT IDENTIFIER ::= { hrDeviceTypes 5 }
+hrDeviceDiskStorage              OBJECT IDENTIFIER ::= { hrDeviceTypes 6 }
+hrDeviceVideo                    OBJECT IDENTIFIER ::= { hrDeviceTypes 10 }
+hrDeviceAudio                    OBJECT IDENTIFIER ::= { hrDeviceTypes 11 }
+hrDeviceCoprocessor              OBJECT IDENTIFIER ::= { hrDeviceTypes 12 }
+hrDeviceKeyboard                 OBJECT IDENTIFIER ::= { hrDeviceTypes 13 }
+hrDeviceModem                    OBJECT IDENTIFIER ::= { hrDeviceTypes 14 }
+hrDeviceParallelPort             OBJECT IDENTIFIER ::= { hrDeviceTypes 15 }
+hrDevicePointing                 OBJECT IDENTIFIER ::= { hrDeviceTypes 16 }
+hrDeviceSerialPort               OBJECT IDENTIFIER ::= { hrDeviceTypes 17 }
+hrDeviceTape                     OBJECT IDENTIFIER ::= { hrDeviceTypes 18 }
+hrDeviceClock                    OBJECT IDENTIFIER ::= { hrDeviceTypes 19 }
+hrDeviceVolatileMemory           OBJECT IDENTIFIER ::= { hrDeviceTypes 20 }
+hrDeviceNonVolatileMemory        OBJECT IDENTIFIER ::= { hrDeviceTypes 21 }
+
+hrDeviceTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrDeviceEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of devices contained by the host."
+    ::= { hrDevice 2 }
+
+hrDeviceEntry OBJECT-TYPE
+    SYNTAX HrDeviceEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one device contained by the host.  As an 
+        example, an instance of the hrDeviceType object might be named"
+    INDEX    {
+             hrDeviceIndex
+             }
+    ::= { hrDeviceTable 1 }
+
+HrDeviceEntry  ::=
+    SEQUENCE {
+        hrDeviceIndex
+            INTEGER,
+        hrDeviceType
+            OBJECT IDENTIFIER,
+        hrDeviceDesc
+            DisplayString,
+        hrDeviceID
+            ProductID,
+        hrDeviceStatus
+            INTEGER,
+        hrDeviceErrors
+            Counter
+             }
+
+hrDeviceIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0.2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each device contained by the host.  The value for 
+        each device must remain constant at least from one re-initi"
+    ::= { hrDeviceEntry 1 }
+
+hrDeviceType OBJECT-TYPE
+    SYNTAX  OBJECT IDENTIFIER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "An indication of the type of device."
+    ::= { hrDeviceEntry 2 }
+
+hrDeviceDesc OBJECT-TYPE
+    SYNTAX  DisplayString (SIZE (0..64))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A textual description of this device, including the device's 
+        manufacturer and revision, and optionally, its serial number."
+    ::= { hrDeviceEntry 3 }
+
+hrDeviceID OBJECT-TYPE
+    SYNTAX  ProductID
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The product ID for this device."
+    ::= { hrDeviceEntry 4 }
+
+hrDeviceStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+                unknown(1) , 
+                running(2) , 
+                warning(3) , 
+                testing(4) , 
+                down(5) 
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The current operational state of the device described by this row of 
+        the table.  A value unknown (1) indicates that the current "
+    ::= { hrDeviceEntry 5 }
+
+hrDeviceErrors OBJECT-TYPE
+    SYNTAX  Counter
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of errors detected on this device.  It should be noted that 
+        as this object has a SYNTAX of Counter, that it does not "
+    ::= { hrDeviceEntry 6 }
+
+hrProcessorTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrProcessorEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of processors contained by the host.  Note that 
+        this table is potentially sparse: a (conceptual) entry ex"
+    ::= { hrDevice 3 }
+
+hrProcessorEntry OBJECT-TYPE
+    SYNTAX HrProcessorEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) entry for one processor contained by the host.  The 
+        hrDeviceIndex in the index represents the entry in the hrDe"
+    INDEX    {
+             hrDeviceIndex
+             }
+    ::= { hrProcessorTable 1 }
+
+HrProcessorEntry  ::=
+    SEQUENCE {
+        hrProcessorFrwID
+            ProductID,
+        hrProcessorLoad
+            INTEGER
+             }
+
+hrProcessorFrwID OBJECT-TYPE
+    SYNTAX  ProductID
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The product ID of the firmware associated with the processor."
+    ::= { hrProcessorEntry 1 }
+
+hrProcessorLoad OBJECT-TYPE
+    SYNTAX  INTEGER (0..100)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The average, over the last minute, of the percentage of time that this 
+        processor was not idle."
+    ::= { hrProcessorEntry 2 }
+
+hrNetworkTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrNetworkEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of network devices contained by the host.  Note 
+        that his table is potentially sparse: a (conceptual) entr"
+    ::= { hrDevice 4 }
+
+hrNetworkEntry OBJECT-TYPE
+    SYNTAX HrNetworkEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one network device contained by the host.  
+        The hrDeviceIndex in the index represents the entry in the h"
+    INDEX    {
+             hrDeviceIndex
+             }
+    ::= { hrNetworkTable 1 }
+
+HrNetworkEntry  ::=
+    SEQUENCE {
+        hrNetworkIfIndex
+            INTEGER
+             }
+
+hrNetworkIfIndex OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The value of the ifIndex which corresponds to this network device."
+    ::= { hrNetworkEntry 1 }
+
+hrPrinterTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrPrinterEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of printers local to the host.  Note that this 
+        table is potentially sparse:  a (conceptual) entry exists "
+    ::= { hrDevice 5 }
+
+hrPrinterEntry OBJECT-TYPE
+    SYNTAX HrPrinterEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one printer local to the host.  The 
+        hrDeviceIndex in the index represents the entry in the hrDeviceTabl"
+    INDEX    {
+             hrDeviceIndex
+             }
+    ::= { hrPrinterTable 1 }
+
+HrPrinterEntry  ::=
+    SEQUENCE {
+        hrPrinterStatus
+            INTEGER,
+        hrPrinterDetectedErrorState
+            OCTET STRING
+             }
+
+hrPrinterStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+                other(1) , 
+                unknown(2) , 
+                idle(3) , 
+                printing(4) , 
+                warmup(5) 
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The current status of this printer device."
+    ::= { hrPrinterEntry 1 }
+
+hrPrinterDetectedErrorState OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The error conditions as detected by the printer."
+    ::= { hrPrinterEntry 2 }
+
+hrDiskStorageTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrDiskStorageEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of long-term storage devices contained by the 
+        host.  In particular, disk devices accessed remotely over a"
+    ::= { hrDevice 6 }
+
+hrDiskStorageEntry OBJECT-TYPE
+    SYNTAX HrDiskStorageEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one long-term storage device contained by the 
+        host.  The hrDeviceIndex in the index represents the entr"
+    INDEX    {
+             hrDeviceIndex
+             }
+    ::= { hrDiskStorageTable 1 }
+
+HrDiskStorageEntry  ::=
+    SEQUENCE {
+        hrDiskStorageAccess
+            INTAccess,
+        hrDiskStorageMedia
+            INTEGER,
+        hrDiskStorageRemoveble
+            Boolean,
+        hrDiskStorageCapacity
+            KBytes
+             }
+
+hrDiskStorageAccess OBJECT-TYPE
+    SYNTAX  INTAccess
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "An indication if this long-term storage device is readable and 
+        writable or only readable.  This should reflect the media type, a"
+    DEFVAL  {INT_Access}
+    ::= { hrDiskStorageEntry 1 }
+
+hrDiskStorageMedia OBJECT-TYPE
+    SYNTAX  INTEGER {
+                other(1) , 
+                unknown(2) , 
+                hardDisk(3) , 
+                floppyDisk(4) , 
+                opticalDiskROM(5) , 
+                opticalDiskWORM(6) , --  Write once Read Many
+                opticalDiskRW(7) , 
+                ramDisk(8) 
+            }
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "An indication of the type of media used in this long-term storage 
+        device."
+    ::= { hrDiskStorageEntry 2 }
+
+hrDiskStorageRemoveble OBJECT-TYPE
+    SYNTAX  Boolean
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "Denotes whether or not the disk media may be removed from the drive."
+    ::= { hrDiskStorageEntry 3 }
+
+hrDiskStorageCapacity OBJECT-TYPE
+    SYNTAX  KBytes
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The total size for this long-term storage device."
+    ::= { hrDiskStorageEntry 4 }
+
+hrPartitionTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrPartitionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of partitions for long-term storage devices 
+        contained by the host.  In particular, partitions accessed re"
+    ::= { hrDevice 7 }
+
+hrPartitionEntry OBJECT-TYPE
+    SYNTAX HrPartitionEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one partition.  The hrDeviceIndex in the 
+        index represents the entry in the hrDeviceTable that correspon"
+    INDEX    {
+             hrDeviceIndex,
+             hrPartitionIndex
+             }
+    ::= { hrPartitionTable 1 }
+
+HrPartitionEntry  ::=
+    SEQUENCE {
+        hrPartitionIndex
+            INTEGER,
+        hrPartitionLabel
+            InternationalDisplayString,
+        hrPartitionID
+            OCTET STRING,
+        hrPartitionSize
+            KBytes,
+        hrPartitionFSIndex
+            INTEGER
+             }
+
+hrPartitionIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each partition on this long term storage device.  
+        The value for each long-term storage device must remain con"
+    ::= { hrPartitionEntry 1 }
+
+hrPartitionLabel OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE (0..128))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A textual description of this partition."
+    ::= { hrPartitionEntry 2 }
+
+hrPartitionID OBJECT-TYPE
+    SYNTAX  OCTET STRING
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A descriptor which uniquely represents this partition to the 
+        responsible operating system.  On some systems, this might take on "
+    ::= { hrPartitionEntry 3 }
+
+hrPartitionSize OBJECT-TYPE
+    SYNTAX  KBytes
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The size of this partition."
+    ::= { hrPartitionEntry 4 }
+
+hrPartitionFSIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of the file system mounted on this partition.  If no file 
+        system is mounted on this partition, then this value shall b"
+    ::= { hrPartitionEntry 5 }
+
+hrFSTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrFSEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of file systems local to this host or remotely 
+        mounted from a file server.  File systems that are remotel"
+    ::= { hrDevice 8 }
+
+hrFSEntry OBJECT-TYPE
+    SYNTAX HrFSEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one file system local to this host or 
+        remotely mounted from a file server.  File systems that are in on"
+    INDEX    {
+             hrFSIndex
+             }
+    ::= { hrFSTable 1 }
+
+HrFSEntry  ::=
+    SEQUENCE {
+        hrFSIndex
+            INTEGER,
+        hrFSMountPoint
+            InternationalDisplayString,
+        hrFSRemoteMountPoint
+            InternationalDisplayString,
+        hrFSType
+            OBJECT IDENTIFIER,
+        hrFSAccess
+            INTAccess,
+        hrFSBootable
+            Boolean,
+        hrFSStorageIndex
+            INTEGER,
+        hrFSLastFullBackupDate
+            DateAndTime,
+        hrFSLastPartialBackupDate
+            DateAndTime
+             }
+
+hrFSIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each file system local to this host.  The value for 
+        each file system must remain constant at least from one r"
+    ::= { hrFSEntry 1 }
+
+hrFSMountPoint OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE(0..128))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The path name of the root of this file system."
+    ::= { hrFSEntry 2 }
+
+hrFSRemoteMountPoint OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE(0..128))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A description of the name and/or address of the server that this file 
+        system is mounted from.  This may also include parameters "
+    ::= { hrFSEntry 3 }
+
+hrFSType OBJECT-TYPE
+    SYNTAX  OBJECT IDENTIFIER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The value of this object identifies the type of this file system."
+    ::= { hrFSEntry 4 }
+
+hrFSAccess OBJECT-TYPE
+    SYNTAX  INTAccess
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "An indication if this file system is logically configured by the 
+        operating system to be readable and writable or only readable. "
+    ::= { hrFSEntry 5 }
+
+hrFSBootable OBJECT-TYPE
+    SYNTAX  Boolean
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A falg indicating whether this file system is bootable."
+    ::= { hrFSEntry 6 }
+
+hrFSStorageIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The index of the hrStorageEntry that represents information about this 
+        file system.  If there is no such information available, "
+    ::= { hrFSEntry 7 }
+
+hrFSLastFullBackupDate OBJECT-TYPE
+    SYNTAX  DateAndTime
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The last date at which this complete file system was copied to another 
+        storage device for backup.  This information is useful fo"
+    ::= { hrFSEntry 8 }
+
+hrFSLastPartialBackupDate OBJECT-TYPE
+    SYNTAX  DateAndTime
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The last date at which a portion of thes file system was copied to 
+        another storage device for backup.  This information is usefu"
+    ::= { hrFSEntry 9 }
+
+--  Registration for some popular File System types, for use with hrFSType.
+hrFSTypes                        OBJECT IDENTIFIER ::= { hrDevice 9 }
+hrFSOther                        OBJECT IDENTIFIER ::= { hrFSTypes 1 }
+hrFSUnknown                      OBJECT IDENTIFIER ::= { hrFSTypes 2 }
+hrFSBerkeleyFFS                  OBJECT IDENTIFIER ::= { hrFSTypes 3 }
+hrFSSys5FS                       OBJECT IDENTIFIER ::= { hrFSTypes 4 }
+--  DOS
+hrFSFat                          OBJECT IDENTIFIER ::= { hrFSTypes 5 }
+--  OS/2 High Performance File System
+hrFSHPFS                         OBJECT IDENTIFIER ::= { hrFSTypes 6 }
+--  Macintosh Hierarchical File System
+hrFSHFS                          OBJECT IDENTIFIER ::= { hrFSTypes 7 }
+--  Macintosh File System
+hrFSMFS                          OBJECT IDENTIFIER ::= { hrFSTypes 8 }
+--  Windows NT
+hrFSNTFS                         OBJECT IDENTIFIER ::= { hrFSTypes 9 }
+hrFSVNode                        OBJECT IDENTIFIER ::= { hrFSTypes 10 }
+hrFSJournaled                    OBJECT IDENTIFIER ::= { hrFSTypes 11 }
+--  CD File System
+hrFSiso9660                      OBJECT IDENTIFIER ::= { hrFSTypes 12 }
+hrFSRockRidge                    OBJECT IDENTIFIER ::= { hrFSTypes 13 }
+hrFSNFS                          OBJECT IDENTIFIER ::= { hrFSTypes 14 }
+hrFSNetware                      OBJECT IDENTIFIER ::= { hrFSTypes 15 }
+--  Andrew File System
+hrFSAFS                          OBJECT IDENTIFIER ::= { hrFSTypes 16 }
+--  OSF DCE Distributed File System
+hrFSDFS                          OBJECT IDENTIFIER ::= { hrFSTypes 17 }
+hrFSApplshare                    OBJECT IDENTIFIER ::= { hrFSTypes 18 }
+hrFSRFS                          OBJECT IDENTIFIER ::= { hrFSTypes 19 }
+--  Data General
+hrFSDGFS                         OBJECT IDENTIFIER ::= { hrFSTypes 20 }
+--  SVR4 Boot File System
+hrFSBFS                          OBJECT IDENTIFIER ::= { hrFSTypes 21 }
+
+--  
+--  hrSWRun
+--  
+--  The Host Resources Running Software Group.  Implementation of this group is 
+--  optional.  The hrSWRunTable contains an entry for ea
+hrSWOSIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The value of the hrSWRunIndex for the hrSWRunEntry that represents the 
+        primary operating system running on this host.  This obje"
+    ::= { hrSWRun 1 }
+
+hrSWRunTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrSWRunEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of software running on the host."
+    ::= { hrSWRun 2 }
+
+hrSWRunEntry OBJECT-TYPE
+    SYNTAX HrSWRunEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for one piece of software running on the host.  
+        Note that because the installed software table only contain"
+    INDEX    {
+             hrSWRunIndex
+             }
+    ::= { hrSWRunTable 1 }
+
+HrSWRunEntry  ::=
+    SEQUENCE {
+        hrSWRunIndex
+            INTEGER,
+        hrSWRunName
+            InternationalDisplayString,
+        hrSWRunID
+            ProductID,
+        hrSWRunPath
+            InternationalDisplayString,
+        hrSWRunType
+            INTSWType,
+        hrSWRunStatus
+            INTEGER
+             }
+
+hrSWRunIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each piece of software running on the host.  
+        Wherever possible, this should be the system's native, unique id"
+    ::= { hrSWRunEntry 1 }
+
+hrSWRunName OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE(0..64))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A textual description of this running piece of software, including the 
+        manufacturer, revision, and the name by which it is commo"
+    ::= { hrSWRunEntry 2 }
+
+hrSWRunID OBJECT-TYPE
+    SYNTAX  ProductID
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The product ID of this running piece of software."
+    ::= { hrSWRunEntry 3 }
+
+hrSWRunPath OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE(0..128))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A description of the location on long-term storage (e.g. a disk drive) 
+        from which this software was loaded."
+    ::= { hrSWRunEntry 4 }
+
+hrSWRunType OBJECT-TYPE
+    SYNTAX  INTSWType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The type of this software."
+    ::= { hrSWRunEntry 6 }
+
+hrSWRunStatus OBJECT-TYPE
+    SYNTAX  INTEGER {
+                running(2) , 
+                runnable(2) , --  waiting for resource (CPU, memory, IO)
+                notRunnable(3) , --  loaded but waiting for event
+                invalid(4) --  not loaded
+            }
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+        "The status of this running piece of software.  Setting this value to 
+        invalid(4) shall cause this software to stop running and be"
+    ::= { hrSWRunEntry 7 }
+
+--  
+--  hrSWRunPerf
+--  
+--  The Host Resources Running Software Performance Group.  Implementation of 
+--  this group is optional.  The hrSWRunPerfTable contains
+hrSWRunPerfTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrSWRunPerfEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of running software performance metrics."
+    ::= { hrSWRunPerf 1 }
+
+hrSWRunPerfEntry OBJECT-TYPE
+    SYNTAX HrSWRunPerfEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry containing software performance metrics.  As an 
+        example, an instance of the hrSWRunPerfCPU object might be "
+    INDEX    {
+             hrSWRunIndex
+             }
+    ::= { hrSWRunPerfTable 1 }
+
+HrSWRunPerfEntry  ::=
+    SEQUENCE {
+        hrSWRunPerfCPU
+            INTEGER,
+        hrSWRunPerfMem
+            KBytes
+             }
+
+hrSWRunPerfCPU OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The number of centi-seconds of the total system's CPU resources 
+        consumed by this process.  Note that  on a multi-processor syste"
+    ::= { hrSWRunPerfEntry 1 }
+
+hrSWRunPerfMem OBJECT-TYPE
+    SYNTAX  KBytes
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The total amount of real system memory allocated to this process."
+    ::= { hrSWRunPerfEntry 2 }
+
+--  
+--  hrSWInstalled
+--  
+--  The Host Resources Installed Software Group.  Implementation of this group 
+--  is optional.  The hrSWInstalledTable contains an entr
+hrSWInstalledLastChange OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The value of sysUpTime when an entry in the hrSWInstalledTable was 
+        last added, renamed, or deleted.  Because this table is likel"
+    ::= { hrSWInstalled 1 }
+
+hrSWInstalledLastUpdateTime OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The value of sysUpTime when the hrSWInstalledTAble was last completely 
+        updated.  Because caching of this data will be a popular "
+    ::= { hrSWInstalled 2 }
+
+hrSWInstalledTable OBJECT-TYPE
+    SYNTAX SEQUENCE OF HrSWInstalledEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "The (conceptual) table of software installed on this host."
+    ::= { hrSWInstalled 3 }
+
+hrSWInstalledEntry OBJECT-TYPE
+    SYNTAX HrSWInstalledEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    DESCRIPTION
+        "A (conceptual) entry for a piece of software installed on this host.  
+        As an example of how objects in this table are named, an i"
+    INDEX    {
+             hrSWInstalledIndex
+             }
+    ::= { hrSWInstalledTable 1 }
+
+HrSWInstalledEntry  ::=
+    SEQUENCE {
+        hrSWInstalledIndex
+            INTEGER,
+        hrSWInstalledName
+            InternationalDisplayString,
+        hrSWInstalledID
+            ProductID,
+        hrSWInstalledType
+            INTSWType,
+        hrSWInstalledDate
+            DateAndTime
+             }
+
+hrSWInstalledIndex OBJECT-TYPE
+    SYNTAX  INTEGER (0..2147483647)
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A unique value for each piece of software installed on the host.  This 
+        value shall be in the range from 1 to the number of piece"
+    ::= { hrSWInstalledEntry 1 }
+
+hrSWInstalledName OBJECT-TYPE
+    SYNTAX  InternationalDisplayString (SIZE(0..64))
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "A textual description of this installed piece of software, including 
+        the manufacturer, revision, the name by which it is commonl"
+    ::= { hrSWInstalledEntry 2 }
+
+hrSWInstalledID OBJECT-TYPE
+    SYNTAX  ProductID
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The product ID of this installed piece of software."
+    ::= { hrSWInstalledEntry 3 }
+
+hrSWInstalledType OBJECT-TYPE
+    SYNTAX  INTSWType
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The type of this software."
+    ::= { hrSWInstalledEntry 4 }
+
+hrSWInstalledDate OBJECT-TYPE
+    SYNTAX  DateAndTime
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+        "The last-modification date of this application as it would appear in a 
+        directory listing."
+    ::= { hrSWInstalledEntry 5 }
+
+END

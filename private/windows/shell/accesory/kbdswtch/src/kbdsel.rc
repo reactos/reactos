@@ -1,0 +1,75 @@
+#include <windows.h>
+#include <ntverp.h>
+#include "kbdsel.h"
+
+
+KBDCONFDLG DIALOG 6, 18, 186, 199
+CAPTION "Keyboard Switching Configuration"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_SYSMENU | WS_CAPTION | DS_ABSALIGN
+BEGIN
+    LTEXT           "The Primary Keyboard selected will be activated by the ALT or CTRL-LeftShift key combination.",
+                    -1, 9, 4, 170, 16
+    LTEXT           "The Alternate Keyboard selected will be activated by the ALT or CTRL-RightShift key combination.",
+                    -1, 9, 21, 170, 16
+    LTEXT           "The Ctrl-Alt-Space key combination will toggle the activation between the two selections.",
+                    -1, 9, 38, 170, 16
+    LTEXT           "&Primary Keyboard", -1, 9, 64, 63, 12
+    COMBOBOX        IDD_PRIMARY_CONF, 76, 66, 100, 100,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP, WS_GROUP
+    LTEXT           "&Alternate Keyboard", -1, 9, 88, 63, 11
+    COMBOBOX        IDD_ALTERNATE_CONF, 76, 86, 100, 100,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP, WS_GROUP
+    GROUPBOX        "Hot key combinations", IDD_HOTKEY_GROUP, 9, 104, 168, 25
+    AUTORADIOBUTTON "A&LT-SHIFT", IDD_ALT_SHIFT, 20, 116, 60, 10,
+                    WS_GROUP | WS_TABSTOP,
+    AUTORADIOBUTTON "C&TRL-SHIFT", IDD_CTRL_SHIFT, 108, 116, 60, 10
+    AUTOCHECKBOX    "Add to &Startup group in Program Manager", IDD_ADD_STARTUP,
+                    17, 137, 155, 10, WS_TABSTOP
+    AUTOCHECKBOX    "Keep On Top?", IDD_ONTOP,
+                    17, 156, 155, 10, WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 42, 177, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 104, 177, 40, 14
+END
+
+
+ICON_ID  ICON   kbdsel.ico
+
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_CAPTION,      "Keyboard Switching Configuration"
+    IDS_PRIMARY,      "&Primary"
+    IDS_ALTERNATE,    "&Alternate"
+    IDS_OTHER,        "&Other..."
+    IDS_DEFAULT_KL,   "00000409"
+    IDS_KEYBOARD,     "Keyboard Layout"
+    IDS_PRIMARY_KL,   "PrimaryKeyboardLayout"
+    IDS_ALTERNATE_KL, "AlternateKeyboardLayout"
+    IDS_HOTKEYS,      "HotKeyCombination"
+    IDS_SAMEKBD,      "Cannot select the same keyboard layout.\n\tPlease try again."
+    IDS_NOLOAD,       "The layout you have chosen must first be installed.\n
+                       Please install this layout by choosing it in the Control Panel - International applet,
+                       then you may select it within this dialog."
+    IDS_ERRINITCONFIG,"There was an error initializing the Keyboard Select Configuration dialog."
+    IDS_CREATEKEY,    "Error in creating/opening/reading %ws key in the registry: %d"
+    IDS_CANNOTFIND,   "Cannot find KBDDLL.DLL."
+    IDS_DISABLE,      "&Disable"
+    IDS_ENABLE,       "&Enable"
+    IDS_ONTOP,        "On Top"
+    IDS_ONBOTTOM,     "On Bottom"
+    IDS_STARTUP,      "Startup"
+    IDS_ADDERR,       "Cannot add %s to the Startup Group in Program Manager."
+    IDS_CPL_INTERNATIONAL "control.exe international"
+END
+
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft Keyboard Selector"
+#define VER_INTERNALNAME_STR        "kbdsel.exe"
+#define VER_ORIGINALFILENAME_STR    "kbdsel.exe"
+
+#include "common.ver"
+
+

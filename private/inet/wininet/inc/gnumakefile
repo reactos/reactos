@@ -1,0 +1,48 @@
+# Disable clearcase parallele makefiles.
+.NOTPARALLEL:
+
+
+TOOLSDIR =     ${MWHOME}/lib-${MWCONFIG_NAME}
+HSPLIT =       ${TOOLSDIR}/hsplit
+WCSHDR =       ${TOOLSDIR}/wcshdr
+
+CUSTOM_RULES = /vobs/ie4/wininet.template
+CUSTOM_CLEAN_TARGET=cleanheaders
+CUSTOM_ALL_TARGET=buildheaders
+
+OGEN = ${WININET_GENFILE_DIR}
+
+OBJ.dir = $(OGEN)
+
+include ${MWHOME}/make.rules.simple
+
+DEST = \
+          ${OGEN}/unsup.h \
+          ${OGEN}/unsupp.h
+
+buildheaders: ${OGEN} ${DEST}
+
+%.h: %.x
+	${ECHONOISE} "[ $(notdir $<) --> ${OGEN}/$(notdir $@) ]"
+	${X_TO_H}
+	-${PROTECT} $@
+
+${OGEN}/%.x : %.w
+	${ECHONOISE} "[ $(notdir $<) --> ${OGEN}/$(notdir $*.x) ${OGEN}/$(notdir $*p.x) ]"
+	${RM} ${OGEN}/$*.x ${OGEN}/$*p.x
+	${HSPLIT} -e -o ${OGEN}/$*.x ${OGEN}/$*p.x $<
+	-${PROTECT} ${OGEN}/$*.x ${OGEN}/$*p.x
+
+${OGEN}/%p.x: %.w
+	${ECHONOISE} "[ $(notdir $<) --> ${OGEN}/$(notdir $*.x) ${OGEN}/$(notdir $*p.x) ]"
+	${RM} ${OGEN}/$*.x ${OGEN}/$*p.x
+	${HSPLIT} -e -o ${OGEN}/$*.x ${OGEN}/$*p.x $<
+	-${PROTECT} ${OGEN}/$*.x ${OGEN}/$*p.x
+
+cleanheaders:
+	-${RM} -r ${OGEN}
+
+${OGEN}:
+	${ECHONOISE} "[ $@ ]"
+	mkdir -p $@
+

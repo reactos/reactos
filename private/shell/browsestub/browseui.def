@@ -1,0 +1,8 @@
+LIBRARY         BROWSEUI
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Browse UI Stub DLL'
+
+EXPORTS
+    DllCanUnloadNow            PRIVATE
+    DllGetClassObject          PRIVATE
+

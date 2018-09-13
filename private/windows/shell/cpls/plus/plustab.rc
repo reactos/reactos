@@ -1,0 +1,201 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "rc.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "rc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+PLUSPACK_DLG DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Plus Pack"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Desktop icons",IDC_GRPBOX_1,7,5,237,88
+    CONTROL         "Generic1",IDC_ICONS,"SysListView32",WS_BORDER |
+                    WS_TABSTOP | 0xc004,15,17,221,48
+    PUSHBUTTON      "&Change Icon...",IDC_CHANGEICON,112,71,60,15
+    PUSHBUTTON      "D&efault Icon",IDC_ICONDEFAULT,177,71,60,15
+    GROUPBOX        "Visual settings",IDC_GRPBOX_2,7,99,237,112
+    ICON            IDI_USELARGEICONS,IDC_STATIC,16,107,18,20
+    CONTROL         "Use &large icons",IDC_LARGEICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,49,114,130,10
+    ICON            IDI_WINDRAGICON,IDC_STATIC,16,130,18,20
+    CONTROL         "&Show window contents while dragging",
+                    IDC_FULLWINDOWDRAGGING,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,49,135,135,10
+    ICON            IDI_FONTSMOOTHICON,IDC_STATIC,16,150,18,20
+    CONTROL         "Smooth edges of screen &fonts",IDC_FONTSMOOTHING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,49,155,110,10
+    ICON            IDI_HIGHCOLORICON,IDC_STATIC,16,170,18,20
+    CONTROL         "Show &icons using all possible colors",
+                    IDC_ICONHIGHCOLOR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    49,175,130,10
+    ICON            IDI_WALLPAPERFITICON,IDC_STATIC,16,190,18,20
+    CONTROL         "Stretch &desktop wallpaper to fit the screen",
+                    IDC_STRETCHWALLPAPERFITSCREEN,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,49,195,150,10
+END
+
+DLG_PICKICON DIALOG DISCARDABLE  25, 22, 212, 121
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Icon"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&File Name:",-1,7,7,43,10,NOT WS_GROUP
+    EDITTEXT        IDD_PATH,7,17,197,14,ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "&Current icon:",-1,7,36,79,10,NOT WS_GROUP
+    LISTBOX         IDD_ICON,7,47,197,41,LBS_OWNERDRAWFIXED |
+                    LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN |
+                    LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,46,99,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,99,50,14
+    PUSHBUTTON      "&Browse...",IDD_BROWSE,154,99,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "rc.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""rc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_WINDRAGICON         ICON    DISCARDABLE     "ppp0.ICO"
+IDI_FONTSMOOTHICON      ICON    DISCARDABLE     "ppp1.ICO"
+IDI_HIGHCOLORICON       ICON    DISCARDABLE     "ppp2.ICO"
+IDI_WALLPAPERFITICON    ICON    DISCARDABLE     "ppp3.ICO"
+IDI_USELARGEICONS       ICON    DISCARDABLE     "ppp4.ICO"
+
+//Microsoft uses RCV files for the version tab.
+#include "plustab.rcv"
+
+#ifdef JOE
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,40,0,50
+ PRODUCTVERSION 4,40,0,50
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0xbL
+#else
+ FILEFLAGS 0xaL
+#endif
+ FILEOS 0x10001L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4"
+        BEGIN
+            VALUE "CompanyName", "Microsoft Corporation\0"
+            VALUE "FileDescription", "Plus! Control Panel extension\0"
+            VALUE "FileVersion", "4.40.50\0"
+            VALUE "InternalName", "PlusTab\0"
+            VALUE "LegalCopyright", "Copyright (C) Microsoft Corp. 1995$\0"
+            VALUE "OriginalFilename", "PLUSTAB.DLL\0"
+            VALUE "ProductName", "Microsoft(R) Windows(TM) Operating System\0"
+            VALUE "ProductVersion", "4.40.50\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+#endif //JOE
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELPFILE            "WINDOWS.HLP"
+    IDS_NOICONSMSG1         "The specified file does not contain any icons."
+    IDS_NOICONSMSG          "The specified file does not contain any icons."
+    IDS_BADPATHMSG          "The path %s is invalid."
+#ifdef WINNT
+    IDS_REBOOTFORCHANGE     "For this change to take effect, you must restart Windows NT."
+#else
+    IDS_REBOOTFORCHANGE     "For this change to take effect, you must restart Windows."
+#endif
+    IDS_FONTSMOOTHWONTWORK  "\n\nTo use font smoothing, your display's color palette must be set to either High Color or True Color.\n (You can change your color palette by using the settings tab.)"
+    IDS_ICONCOLORWONTWORK   "\n\nTo use high color icons, your display's color palette must be set to either High Color or True Color.\n (You can change your color palette by using the settings tab.)"
+    IDS_FULL                " (full)"
+    IDS_EMPTY               " (empty)"
+    IDS_MYCOMPUTER          "My Computer"
+    IDS_NETNEIGHBOUR        "Network Neighborhood"
+    IDS_TRASHFULL           "Recycle Bin (full)"
+    IDS_TRASHEMPTY          "Recycle Bin (empty)"
+    IDS_TRASHDEFAULT        "Recycle Bin"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USE_LARGE           "Use &large icons"
+    IDS_256COLORPROBLEM     "Your display is currently configured for 256 colors or less."
+    IDS_ICONFILTER          "Icon Files\1*.ico;*.exe;*.dll\1Programs (*.exe)\1*.exe\1Libraries (*.dll)\1*.dll\1Icons (*.ico)\1*.ico\1All Files (*.*)\1*.*\1\1"
+END
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

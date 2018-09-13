@@ -1,0 +1,48 @@
+<HTML>
+<HEAD>
+<TITLE>Add/Remove Programs prototype</TITLE>
+</HEAD>
+
+<OBJECT ID=ARPCtl CLASSID="clsid:0CB57B2C-D652-11D1-B1DE-00C04FC2A118">
+</OBJECT>
+
+<SCRIPT LANGUAGE=JScript FOR="ARPCtl" EVENT="OnSyncDataReady()">
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JScript FOR="window" EVENT="onload()">
+    var i;
+    i = 0;
+    var j;
+    ARPCtl.InitData(0);
+    tbl = document.all("Data");
+    for (i = 0 ; i < 6 ; i++)
+    {
+    if (ARPCtl.MoveFirst())
+    {
+        j = 0;
+        do
+        {
+            newRow = tbl.insertRow();
+            newCell = newRow.insertCell();
+            newCell.innerHTML = ARPCtl.DisplayName;
+            newCell = newRow.insertCell();
+            newCell.innerHTML = "<B>" + (i + 1) + "</b>";
+            newCell = newRow.insertCell();
+            newCell.innerHTML = "<I>" + ++j + "</I>";
+        }
+        while (ARPCtl.MoveNext());
+    }
+    }
+</SCRIPT>
+
+<BODY>
+
+<H1>ARP Test</H1>
+
+<TABLE ID="Data" BORDER=1 STYLE="table-layout:fixed">
+</TABLE>
+
+</BODY>
+</HTML>
+
+

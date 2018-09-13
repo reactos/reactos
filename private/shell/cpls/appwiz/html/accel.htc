@@ -1,0 +1,169 @@
+<PUBLIC:HTC URN="shellctls">
+
+
+//------------------------------------------------------------------------
+// Public methods
+//------------------------------------------------------------------------
+
+//------------------------------------------------------------------------
+// Events
+//------------------------------------------------------------------------
+
+//------------------------------------------------------------------------
+// Attach to element events
+//------------------------------------------------------------------------
+
+<ATTACH event="oncontentready" handler=_OnContentReady />
+
+
+//------------------------------------------------------------------------
+// The code...
+//------------------------------------------------------------------------
+
+<SCRIPT language="javascript">
+
+
+var _bLoading           = true;         // true if the behavior is still loading
+
+var _idFor              = null;
+
+var _szText             = null;
+var _ichAccel           = 0;
+var _chAccel;
+
+var c_szAccelStyle = "style = 'text-decoration:underline; accelerator:true'";
+
+
+// This code is run when the behavior is instantiated...
+element.attachEvent("onerror", _OnError);
+
+_GetPropertyDefaults();
+
+
+
+// **********************************************************************
+//                       PROPERTY GET/SET FUNCTIONS
+// **********************************************************************
+
+
+// Property:  forElem = idElem
+//
+// Sets the 'for' attribute of the inserted LABEL element
+//
+function get_forCtl()                 { return _idFor; }
+function put_forCtl(id)          
+{ 
+    if (_bLoading)
+        return;
+
+    _idFor = id;
+}
+
+
+
+
+
+// **********************************************************************
+//                            EVENT HANDLERS
+// **********************************************************************
+
+
+/*-------------------------------------------------------------------------
+Purpose: When the behavior is completely loaded, set the loading flag to false.
+         To improve load time, we don't want the put methods on the properties
+         to be called.  We also need to keep events from getting fired while
+         the behavior is loading.
+*/
+function _OnContentReady()
+{
+    _bLoading = false;
+    _ScanForAccelerator();
+    _CreateHTML();
+}
+
+
+
+// **********************************************************************
+//                            HELPER FUNCTIONS
+// **********************************************************************
+
+
+/*-------------------------------------------------------------------------
+Purpose: Called when the behavior is instantiated.  Sets up the internal
+         property values.
+*/
+function _GetPropertyDefaults()
+{
+    if (element.forElem)
+        _idFor = element.forElem;
+}
+
+
+
+/*-------------------------------------------------------------------------
+Purpose: Walk thru the element's innertext and find which letter is tagged as
+         the accelerator (as indicated by '&' -- Win32 style).
+*/
+function _ScanForAccelerator()
+{
+    // Pick off first '&'
+    var sz = element.innerText;
+    
+    _ichAccel = sz.indexOf('&');
+    _szText = sz.substring(0, _ichAccel);
+
+    if (_ichAccel < sz.length - 1)
+        _szText = _szText + sz.substring(_ichAccel+1, sz.length);
+
+    if (0 <= _ichAccel)
+        _chAccel = sz.charAt(_ichAccel+1);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Adds the HTML code to the main document to display the accelerator.
+
+         Given this innertext: "Cl&ose", this behavior inserts text like 
+         the following: 
+
+         <LABEL id=idxxxx for=idyyyyy accesskey="o">
+            Cl<SPAN class=Accelerator>o</SPAN>se
+         </LABEL>
+
+*/
+function _CreateHTML()
+{
+    // Construct the html
+
+    element.innerHTML =
+    '<LABEL id=idLblAccel_' + uniqueID + ' for=' + _idFor + ' accesskey="' + _chAccel + '">' +
+        _szText.substring(0, _ichAccel) +
+        '<SPAN ' + c_szAccelStyle + '>' +
+        _szText.substring(_ichAccel, _ichAccel+1) +
+        '</SPAN>' +
+        _szText.substring(_ichAccel+1, _szText.length) +
+    '</LABEL>';
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onerror event
+*/
+function _OnError(szMsg, szUrl, iLine)
+{
+    // Prevent scripting errors from displaying ugly messages
+    alert("An unexpected error occurred.\n\n" + szMsg + "\n" + szUrl + "\nLine: " + iLine);
+    return true;    // Suppress IE error messaging
+}
+
+
+</SCRIPT>
+
+
+//------------------------------------------------------------------------
+// Properties
+//------------------------------------------------------------------------
+
+<PROPERTY name="forElem"        get=get_forCtl              put=put_forCtl />
+
+</PUBLIC:HTC>

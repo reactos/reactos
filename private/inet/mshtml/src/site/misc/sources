@@ -1,0 +1,18 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\misc=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=misc
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    siteid.c \
+    siteidpr.c

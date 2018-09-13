@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>File Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("flsrv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:148 43;
+    }
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">File Server</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Use the Shared Folder wizard to create shared folders. 
+            Computers running Windows, Novell NetWare, or Apple Macintosh operating systems 
+            can gain access to files placed in a shared folder.
+            
+            <P ID="para2"><A HREF="javascript:exec('shrpubw.exe', '/s')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Shared Folder wizard.</P>
+            
+            <TABLE BORDER="0">
+                <TR>
+                    <TD ID="para3"><B>To manage shared folders</B></TD>
+                </TR>
+            </TABLE>
+            <TABLE BORDER="0">
+                <TR>
+                    <TD VALIGN="top" ID="num1">1.</TD>
+                    <TD ID="para4"><A HREF="javascript:exec('compmgmt.msc')">Open</A> Computer Management.</TD>
+                </TR>
+                <TR>
+                    <TD VALIGN="top" ID="num2">2. </TD>
+                    <TD ID="para5">In the console tree, expand <B>System tools</B>, expand <B>Shared Folders</B>, and click <B>Shares</B>.</TD>
+                </TR>
+            </TABLE>
+            <P ID="para6"><A HREF="javascript:help('windows.chm::/file_srv.chm::/file_srv_overview.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about shared folders.</P>
+        </TD>
+   </TR>
+</TABLE>
+</BODY>
+</HTML>

@@ -1,0 +1,75 @@
+/*
+ * MSLinoCMM.RC
+ * MSLinoCMM Version 1.00
+ *
+ * Version resource file for the CMM DLL
+ *
+ *	Copyright:	© 1993-1997 by Heidelberger Druckmaschinen AG, all rights reserved.
+ *
+ * U.Krabbenhoeft, Software Design Engineer
+ *
+ * Internet  :  uKrabbenhoeft@ccl.lhag.de
+ */
+
+#ifdef WIN32
+#include <winver.h>
+#else
+#include <ver.h>
+#endif
+
+//Default is nodebug
+#ifndef DEBUG
+#define VER_DEBUG                   0
+#else
+#define VER_DEBUG                   VS_FF_DEBUG
+#endif
+
+#ifndef UNICODE
+#define PRODUCTNAME                "Microsoft\256 Windows\256 Operating System"
+#else
+#define PRODUCTNAME                "Microsoft(R) Windows NT(TM) Operating System"
+#endif
+
+#define IDR_PROFILTYPE 100
+IDR_PROFILTYPE          ICON    DISCARDABLE     "icm32.ico"
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_PROFILTYPE    "LinoColorCMM © by Heidelberger Druckmaschinen AG"
+END
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION        5,0,0,0
+ PRODUCTVERSION     5,0,0,0
+ FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
+ FILEFLAGS          VER_DEBUG
+#ifdef WIN32
+ FILEOS             VOS_NT_WINDOWS32
+#else
+ FILEOS             VOS_DOS_WINDOWS16
+#endif
+ FILETYPE           VFT_DLL
+ FILESUBTYPE        VFT_UNKNOWN
+
+ BEGIN
+   BLOCK "StringFileInfo"
+    BEGIN
+     BLOCK "040904E4"
+      BEGIN
+       VALUE "CompanyName",     "Microsoft Corporation\0", "\0"
+       VALUE "FileDescription", "Color Management Module (CMM)", "\0"
+       VALUE "FileVersion",     "5.00\0", "\0"
+       VALUE "InternalName",    "ICM32", "\0"
+       VALUE "LegalCopyright",  "Copyright \2511995-1997 Heidelberger Druckmaschinen AG", "\0"
+       VALUE "OriginalFilename","ICM32.DLL", "\0"
+       VALUE "ProductName",     PRODUCTNAME, "\0"
+       VALUE "ProductVersion",  "5.00\0"
+      END
+   END
+
+   BLOCK "VarFileInfo"
+    BEGIN
+     VALUE "Translation", 0x0409, 0x04E4
+    END
+ END
+.
+

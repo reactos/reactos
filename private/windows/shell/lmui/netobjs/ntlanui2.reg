@@ -1,0 +1,19 @@
+\Registry\MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AlwaysUnloadDll
+
+\Registry\MACHINE\SOFTWARE\Classes
+    CLSID
+        {59be4990-f85c-11ce-aff7-00aa003ca9f6}
+            = Shell extensions for Microsoft Windows Network objects
+            InProcServer32
+                = ntlanui2.dll
+                ThreadingModel = Free
+    Microsoft_Windows_Network
+        shellex
+            PropertySheetHandlers
+                Microsoft Windows Network objects
+                    = {59be4990-f85c-11ce-aff7-00aa003ca9f6}
+
+\Registry\MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion
+    Shell Extensions
+        Approved
+            {59be4990-f85c-11ce-aff7-00aa003ca9f6} = Shell extensions for Microsoft Windows Network objects

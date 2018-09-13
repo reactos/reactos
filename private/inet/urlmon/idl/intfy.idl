@@ -1,0 +1,32 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:	iprognot.idl
+//
+//  Contents:	IProgressNotify
+//
+//  History:	28-Dec-95	SusiA	Created
+//
+//----------------------------------------------------------------------------
+
+
+[
+    local,
+    object,
+    uuid(a9d758a0-4617-11cf-95fc-00aa00680db4),
+    pointer_default(unique)
+]
+
+interface IProgressNotify: IUnknown
+{
+    import "unknwn.idl";
+
+    HRESULT OnProgress (
+    [in]	DWORD		dwProgressCurrent,
+    [in]	DWORD		dwProgressMaximum,
+    [in]	BOOL		fAccurate
+	);
+
+}

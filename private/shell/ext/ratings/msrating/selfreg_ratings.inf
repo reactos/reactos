@@ -1,0 +1,29 @@
+[Version]
+Signature="$CHICAGO$"
+
+[InstallAssociations]
+ComponentName=IEContentAdvisor.Assoc
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegAssociations
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnInstallAssociations]
+ComponentName=IEContentAdvisor.Assoc
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegAssociations]
+HKCR,.prf,,,"prffile"
+HKCR,.prf,"Content Type",,"application/pics-rules"
+HKCR,prffile,,,"PICSRules File"
+HKCR,prffile\DefaultIcon,,,"msrating.dll,3"
+HKCR,prffile\Shell\Open\Command,,,"rundll32.exe msrating.dll,ClickedOnPRF %1"
+HKCR,.rat,,,"ratfile"
+HKCR,ratfile,"Content Type",,"application/rat-file"
+HKCR,ratfile,,,"Rating System File"
+HKCR,ratfile\DefaultIcon,,,"msrating.dll,8"
+HKCR,ratfile\Shell\Open\Command,,,"rundll32.exe msrating.dll,ClickedOnRAT %1"
+
+[Strings]
+ERR_NOSETUPAPI="Cannot register msrating.dll because setupapi.dll is missing."

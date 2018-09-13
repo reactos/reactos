@@ -1,0 +1,444 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""NetClip.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "NetClip.ico"
+IDR_NETCLITYPE          ICON    DISCARDABLE     "Doc.ico"
+IDR_NONETOLE            ICON    DISCARDABLE     "idr_main.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "Toolbar.bmp"
+IDR_NONETOLE            BITMAP  MOVEABLE PURE   "mainfram.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR DISCARDABLE  16, 17
+BEGIN
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE_AS
+    SEPARATOR
+    BUTTON      ID_EDIT_DELETE
+    SEPARATOR
+    BUTTON      ID_CONNECT_CONNECT
+    BUTTON      ID_CONNECT_DISCONNECT
+END
+
+IDR_NONETOLE TOOLBAR DISCARDABLE  16, 17
+BEGIN
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE_AS
+    SEPARATOR
+    BUTTON      ID_EDIT_DELETE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN, GRAYED
+        MENUITEM "Save &As...\tCtrl-S",         ID_FILE_SAVE_AS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "C&ut\tCtrl-X",                ID_EDIT_CUTLOCAL
+        MENUITEM "&Copy\tCtrl-C",               ID_EDIT_COPYLOCAL
+        MENUITEM "&Paste\tCtrl-V",              ID_EDIT_PASTELOCAL
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Auto",                       ID_DISPLAY_AUTO
+        MENUITEM SEPARATOR
+    END
+    POPUP "&Connection"
+    BEGIN
+        MENUITEM "&Connect...",                 ID_CONNECT_CONNECT
+        MENUITEM "&Disconnect",                 ID_CONNECT_DISCONNECT
+        MENUITEM SEPARATOR
+        MENUITEM "&Permissions...",             ID_CONNECTION_PERMISSIONS
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Clipboard Viewer...",  ID_APP_ABOUT
+    END
+END
+
+IDR_NONETOLE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN, GRAYED
+        MENUITEM "Save &As...\tCtrl-S",         ID_FILE_SAVE_AS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+    END
+    POPUP "&Display"
+    BEGIN
+        MENUITEM "&Auto",                       ID_DISPLAY_AUTO
+        MENUITEM SEPARATOR
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Clipboard Viewer...",  ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "C",            ID_EDIT_COPYLOCAL,      VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTELOCAL,     VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUTLOCAL,       VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPYLOCAL,      VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTELOCAL,     VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPYLOCAL,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "X",            ID_EDIT_CUTLOCAL,       VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_NONETOLE ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "C",            ID_EDIT_COPYLOCAL,      VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTELOCAL,     VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_DELETE,         VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUTLOCAL,       VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPYLOCAL,      VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTELOCAL,     VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPYLOCAL,      VIRTKEY, SHIFT, CONTROL, 
+                                                    NOINVERT
+    "X",            ID_EDIT_CUTLOCAL,       VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVERINFO DIALOG DISCARDABLE  0, 0, 257, 58
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect to Clipboard on Remote Machine"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Remote Machine:",IDC_STATIC,7,7,57,8
+    EDITTEXT        IDC_MACHINE,7,16,184,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,208,7,42,14
+    LTEXT           "You may enter a NetBIOS machine name (e.g. ""mymachine""), a DNS name (""mymachine.mydomain.com""), or an IP address.",
+                    IDC_STATIC,7,32,243,16
+END
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  34, 22, 281, 74
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Clipboard Viewer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,5,8,18,20
+    LTEXT           "NetClip",IDC_APPNAME,35,9,176,8
+    LTEXT           "Copyright © 1993-96 Microsoft Corporation.",
+                    IDC_COPYRIGHT,35,29,176,8
+    DEFPUSHBUTTON   "OK",IDCANCEL,226,6,47,14,WS_GROUP
+    LTEXT           "All Rights Reserved.",IDC_ALLRIGHTSRESERVED,35,38,176,8
+    LTEXT           "Written by Charlie Kindel",IDC_WRITTENBY,35,49,176,8
+    LTEXT           "Microsoft Desktop and Business Systems Division",
+                    IDC_GROUP,35,58,234,8
+    LTEXT           "Version 2",IDC_VERSION,35,18,176,8
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,5
+ PRODUCTVERSION 4,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Written by Charlie Kindel\0"
+            VALUE "CompanyName", "Microsoft\0"
+            VALUE "FileDescription", "Distributed COM Enabled Clipboard Viewer\0"
+            VALUE "FileVersion", "1.00.005\0"
+            VALUE "InternalName", "NetClip\0"
+            VALUE "LegalCopyright", "Copyright © 1996 Microsoft Corporation\0"
+            VALUE "OriginalFilename", "NETCLIP.EXE\0"
+            VALUE "ProductName", "Microsoft® Windows (TM) Operating System\0"
+            VALUE "ProductVersion", "4.0\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SERVERINFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 51
+    END
+
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "NetClip\n\nNetClip\nClipboard Files (*.clp)\n.clp\n\n"
+    IDR_NONETOLE            "NetClip\n\nNetClip\nClipboard Files (*.clp)\n.clp\n\n"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "Clipboard Viewer"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Clear the contents of this clipboard\nClear"
+    ID_FILE_OPEN            "Put the contents of an existing document on the clipboard\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the contents to a file\nSave"
+    ID_FILE_SAVE_AS         "Save the contents of the clipboard to a new file\nSave As"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Delete the contents of the clipboard\nDelete"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_PASTE           "Paste local clipboard contents to the remote clipboard."
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_REGISTRYKEY         "Microsoft"
+    IDS_AUTOREGFAILED1      "Could not find NCLIPPS.DLL to auto-register.\n\n"
+    IDS_AUTOREGFAILED2      "The Clipboard Viewer will operate without this DLL, but with limited functionality (no network access)."
+    IDS_AUTOREGFAILED3      "Could not find DllRegisterServer function in NCLIPPS.DLL.\n\n"
+    IDS_AUTOREGFAILED4      "  Do you want to try to find NCLIPPS.DLL in a different location?"
+    IDS_AUTOREGFAILED       "DllRegisterServer in NCLIPPS.DLL failed.\n\n"
+    IDS_SELFREFFAILED       "Could not write to the registry."
+    IDS_STATUS_UPDATE       "Updating view..."
+    IDS_STATUS_GETTING_CLIPDATA "Getting clipboard data..."
+    IDS_STATUS_GETLOCAL     "Getting local clipboard..."
+    IDS_STATUS_SETLOCAL     "Setting local clipboard..."
+    IDS_STATUS_GETREMOTE    "Getting remote clipboard..."
+    IDS_STATUS_SETREMOTE    "Setting remote clipboard..."
+    IDS_STATUS_CONNECTING   "Attempting to connect to %1..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_CONNECT_CONNECT      "Connect to a remote clipboard\nConnect"
+    ID_CONNECT_DISCONNECT   "Disconnect from the remote machine\nDisconnect"
+    ID_DISPLAY_AUTO         "Choose display format automatically."
+    ID_DISPLAY_VIEWDATAOBJECT "Display Uniform Data Transfer Viewer."
+    ID_DISPLAY_TEXT         "Display clipboard as text."
+    ID_DISPLAY_FIRST        "Display clipboard using this format."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_DELETE          "Delete contents of the clipboard.\nDelete"
+    ID_CONNECTION_PERMISSIONS "Set access permissions."
+    ID_EDIT_CUTLOCAL        "Cut selection to local clipboard."
+    ID_EDIT_COPYLOCAL       "Copy selelction to local clipboard."
+    ID_EDIT_PASTELOCAL      "Paste the contents of the local clipboard to the remote clipboard."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "NetClip.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

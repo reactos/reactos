@@ -1,0 +1,24 @@
+!ifdef DEBUG
+NTDEBUG=ntsd
+MTDEBUGTYPE=both
+MSC_OPTIMIZATION=/Od
+!endif
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=access
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.
+
+SOURCES=access.c  \
+        access.rc \
+        dialogs.c \
+        init.c    \
+        reg.c
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS=..\skdll\obj\*\skdll.lib

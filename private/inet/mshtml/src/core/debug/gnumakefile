@@ -1,0 +1,35 @@
+PRODUCT = CORE
+CUSTOM_RULES = ${MWROOT}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+WRESOURCE = f3debug.rc    # Windows resource
+
+DLLDEF_SRC = f3debug.def
+DLLDEF_EXPORTS = \
+	_____mshtmdbg_initDLL
+
+#MAPFILE.sunos5 = f3debug.map
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_DLLFLAGS : additional link flags
+## 
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+PROJECT_DLLFLAGS = \
+	${CORE_DIR}/misc/${LIBOBJ.dir}/objextid.o \
+	-lcoremisc \
+	-luuid \
+	-lole32 \
+	-loleaut32
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+

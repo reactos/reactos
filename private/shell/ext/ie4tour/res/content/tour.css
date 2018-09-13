@@ -1,0 +1,88 @@
+.PageArt{
+	position:	absolute;
+	top:	80px;
+	left:	20px;
+	width:	160px;
+	text-align: center;
+	visibility:	hidden;
+	margin-top: 5px;
+}
+
+.CalloutArt{
+	position:	absolute;
+	left:	-800px;
+        width:400px;
+}
+
+.head2{
+	position:	absolute;
+	top:	20px;
+	left:	20px;
+	width:	590px;
+	font: 16pt Verdana, Arial, Helvetica, Sans-serif;
+	color:	#0099FF;
+	font-weight:	bold;
+	visibility:	hidden;
+}
+
+.head1{
+	position:	absolute;
+	top:	20px;
+	left:	220px;
+        width:  390px;
+	font: 24pt Verdana, Arial, Helvetica, Sans-serif;
+	color:	#0099FF;
+	font-weight:	bold;
+}
+
+.body{
+	position:	absolute;
+	top:	80px;
+	left:	220px;
+	width:	390px;
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	12pt;
+	color:	#000000;
+	visibility:	hidden;
+	margin: 0;
+}
+
+SPAN.list{
+	width:	390px;
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	18pt;
+	color:	#000000;
+}
+
+SPAN.listitem{
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	18pt;
+	color:	#FF6633;
+	text-decoration:	underline;
+	cursor:	hand;
+}
+
+.artlinks{
+
+}
+
+SPAN.CalloutText{
+	font: 8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:	10pt;
+	color:	#000000;
+	font-weight:	bold;
+	display:	none;
+	padding:	5em;
+}
+
+.bubble{
+	display: none;
+}
+
+.rule{
+	position:	absolute;
+	top:	-20px;
+	left:	210px;
+	width:	10px;
+	border-top: 1px solid #FF6633;
+}

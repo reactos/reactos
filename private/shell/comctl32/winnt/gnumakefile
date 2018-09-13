@@ -1,0 +1,120 @@
+# This makefile was generated automatically by mwgenmake.
+
+COMPONENT = SHELL
+PRODUCT = COMCTL32
+
+ifndef COMPILE_OPTION
+COMPILE_OPTION = debug
+endif
+
+VOBS = /vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+VPATH = ..
+
+SOURCES =  \
+	rlefile.cpp \
+	animate.c \
+	comboex.c \
+	commctrl.c \
+	cstrings.c \
+	cutils.c \
+	da.c \
+	draglist.c \
+	dlgcset.cpp \
+	dlgcvt.cpp \
+	flat_sb.c \
+	header.c \
+	hotkey.c \
+	image.c \
+	ipaddr.c \
+	listview.c \
+	lvicon.c \
+	lvlist.c \
+	lvrept.c \
+	lvsmall.c \
+	mem.c \
+	menuhelp.c \
+	mirror.c \
+	monthcal.c \
+	mru.c \
+	notify.c \
+	os.c \
+	progress.c \
+	prsht.c \
+	prpage.c \
+	reader.c \
+	rebar.c \
+	scdttime.c \
+	selrange.c \
+	status.c \
+	strings.c \
+	subclass.c \
+	tab.c \
+	tbcust.c \
+	thunk.c \
+	toolbar.c \
+	tooltips.c \
+	trackbar.c \
+	trackme.c \
+	treeview.c \
+	tvmem.c \
+	tvpaint.c \
+	tvscroll.c \
+	updown.c \
+	olestuff.cpp \
+	ddproxy.cpp \
+	pager.cpp \
+    unixstuff.cpp \
+    unicwrap.cpp 
+
+
+## Original Windows DLL name:
+WDLL = comctl32
+
+## Target Unix shared library:
+DLL  = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+DLLOBJS := ${SOURCES:%.c=%.o}
+DLLOBJS := ${DLLOBJS:%.cpp=%.o}
+SRCS=${SOURCES}
+WRESOURCE = ${O}/commctrl.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+## you may define the following variables
+PROJECT_CFLAGS = -I${O} -I.. -DWINDOWS_ME -DWINNT -DFE_IME -DDBCS \
+		 -DUSE_PRIVATE_VERSION_NUMBER -DNOPRAGMAS -DKEYBOARDCUES
+
+#PROJECT_CCPPFLAGS = +inst_all
+
+PROJECT_DLLFLAGS = -lstocklib5 -lstocklib -lcomctl32_nt5api -ladvapi32 -luuid 
+
+ifeq (${MWOS},ux10)
+PROJECT_DLLFLAGS += -Wl,-c../hpux.map
+endif
+
+MAPFILE.sunos5=../comctl32.map
+
+include $(MWHOME)/make.rules.simple
+
+# Using original bitmaps.
+# TMP_BITMAPS := /vobs/ie4/slm/bitmaps
+TMP_BITMAPS := ..
+
+${O}/commctrl.rc: ../commctrl.rc ${O}/selfreg.inf
+	${ECHOOBJ}
+	rm -f ${O}/stdlg.bmp
+	rm -f ${O}/stdsm.bmp
+	rm -f ${O}/viewlg.bmp
+	rm -f ${O}/viewsm.bmp
+	cp -f ${TMP_BITMAPS}/stdlg.bmp   ${O}/stdlg.bmp
+	cp -f ${TMP_BITMAPS}/stdsm.bmp   ${O}/stdsm.bmp
+	cp -f ${TMP_BITMAPS}/viewlg.bmp  ${O}/viewlg.bmp
+	cp -f ${TMP_BITMAPS}/viewsm.bmp  ${O}/viewsm.bmp
+	cp -f $< $@
+
+# Just link libmw32 for comctl32 
+MAINWIN_LIBS_ONLY := -L${MWLIBDIR} -lmw${MWTECHNO}
+
+${O}/%.inf: %.inx
+	cleaninf -w $< $@

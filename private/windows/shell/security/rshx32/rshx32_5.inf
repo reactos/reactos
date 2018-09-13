@@ -1,0 +1,31 @@
+[Version]
+signature = $Windows NT$
+
+[DefaultInstall]
+AddReg=RegistryAdd
+
+[DefaultUninstall]
+DelReg=RegistryDelete
+
+[RegistryAdd]
+HKCR,Clsid\%CLSID_RSHX_NTFS%,,,%DESCRIPTION%
+HKCR,Clsid\%CLSID_RSHX_NTFS%\InProcServer32,,,%MODULENAME%
+HKCR,Clsid\%CLSID_RSHX_NTFS%\InProcServer32,"ThreadingModel",,Apartment
+HKCR,*\%SHEXPS%\%CLSID_RSHX_NTFS%,,,
+HKCR,Drive\%SHEXPS%\%CLSID_RSHX_NTFS%,,,
+HKCR,Directory\%SHEXPS%\%CLSID_RSHX_NTFS%,,,
+HKCR,Clsid\%CLSID_BRIEFCASE%\%SHEXPS%\%CLSID_RSHX_NTFS%,,,
+
+[RegistryDelete]
+HKCR,Clsid\%CLSID_RSHX_NTFS%
+HKCR,*\%SHEXPS%\%CLSID_RSHX_NTFS%
+HKCR,Drive\%SHEXPS%\%CLSID_RSHX_NTFS%
+HKCR,Directory\%SHEXPS%\%CLSID_RSHX_NTFS%
+HKCR,Clsid\%CLSID_BRIEFCASE%\%SHEXPS%\%CLSID_RSHX_NTFS%
+
+[Strings]
+MODULENAME=rshx32_5.dll
+DESCRIPTION=Security Shell Extension
+SHEXPS=shellex\PropertySheetHandlers
+CLSID_RSHX_NTFS={1f2e5c40-9550-11ce-99d2-00aa006e086c}
+CLSID_BRIEFCASE={85BBD920-42A0-1069-A2E4-08002B30309D}

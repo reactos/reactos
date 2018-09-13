@@ -1,0 +1,108 @@
+!IF 0
+
+Copyright (c) 1989-92  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=net
+MINORCOMP=api
+
+NTPROFILEINPUT=YES
+
+TARGETNAME=netapi32
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=obj\*\netapi32.def
+LINKLIBS = \
+    $(BASEDIR)\public\sdk\lib\*\netlib.lib                   \
+    ..\svcdlls\srvsvc\client\obj\*\srvsvc.lib                \
+    ..\svcdlls\srvsvc\lib\obj\*\srvcomn.lib                  \
+    ..\svcdlls\wkssvc\client\obj\*\wkssvc.lib                \
+    ..\svcdlls\browser\client\obj\*\bowser.lib               \
+    ..\svcdlls\browser\common\obj\*\brcommon.lib             \
+    ..\svcdlls\dfs\lib\*\netdfscl.lib                        \
+    ..\svcdlls\logonsrv\client\winnt5\obj\*\logonsrv.lib     \
+    ..\svcdlls\repl\common\obj\*\replcom.lib                 \
+    ..\svcdlls\repl\client\obj\*\replcli.lib                 \
+    $(BASEDIR)\Public\SDK\Lib\*\rxapi.lib                    \
+    $(BASEDIR)\Public\SDK\Lib\*\rxcommon.lib                 \
+    ..\NetBios\Obj\*\NetBios.lib                             \
+    ..\svcctrl\client\obj\*\service.lib                      \
+    ..\svcdlls\msgsvc\client\obj\*\msgsvc.lib                \
+    ..\svcdlls\at\client\obj\*\atsvc.lib                     \
+    ..\access\obj\*\access.lib                               \
+    $(BASEDIR)\Public\sdk\Lib\*\dsrole.lib                   \
+    $(BASEDIR)\Private\Lib\*\rsa32.lib                       \
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\secur32.lib                  \
+    $(BASEDIR)\Public\SDK\Lib\*\ntdsapi.lib                  \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib                 \
+    $(BASEDIR)\public\sdk\lib\*\netrap.lib                   \
+    $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib                   \
+    $(BASEDIR)\public\sdk\lib\*\rpcndr.lib                   \
+    $(BASEDIR)\Public\Sdk\Lib\*\kernel32.lib                 \
+    $(BASEDIR)\public\sdk\lib\*\samlib.lib                   \
+    ..\svcdlls\repl\common\obj\*\replcom.lib                 \
+    ..\svcdlls\repl\client\obj\*\replcli.lib                 \
+    ..\svcctrl\client\obj\*\service.lib                      \
+    $(BASEDIR)\public\sdk\lib\*\rpcutil.lib                  \
+    $(BASEDIR)\public\sdk\lib\*\lsadll.lib                   \
+    $(BASEDIR)\Public\SDK\Lib\*\ws2_32.lib                   \
+    $(BASEDIR)\Public\SDK\Lib\*\wldap32.lib                  \
+    $(BASEDIR)\Public\SDK\Lib\*\dnsapi.lib                   \
+
+
+DLLENTRY=NetapipInitialize
+
+INCLUDES=..\inc;..\..\inc;$(BASEDIR)\private\inc\net;..\svcdlls\srvsvc;..\svcdlls\wkssvc
+
+!IFNDEF DISABLE_NET_UNICODE
+UNICODE=1
+NET_C_DEFINES=-DUNICODE
+!ENDIF
+
+USE_CRTDLL=1
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        Alert.c     \
+        apibuff.c   \
+        apisubs.c   \
+        AudStub.c   \
+        canonapi.c  \
+        ConfStub.c  \
+        ErrStub.c   \
+        isremote.c  \
+        netapi32.rc \
+        notify.c    \
+        supports.c  \
+        svcstats.c
+
+
+UMTYPE=console
+OPTIONAL_UMTEST=GetStats
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\netapi32.lib
+
+C_DEFINES=$(C_DEFINES) -DRPC_NO_WINDOWS_H
+

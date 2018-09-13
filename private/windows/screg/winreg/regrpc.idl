@@ -1,0 +1,774 @@
+/*++
+
+Copyright(c) 1992  Microsoft Corporation
+
+Module Name:
+
+    Regrpc.idl
+
+Abstract:
+
+    This module contains the MIDL definitions for the Win32 Registry
+    service.
+
+Author:
+
+    David J. Gilman (davegi) 27-Jan-1992
+
+--*/
+
+//
+// Interface Attributes
+//
+
+[
+    uuid( 338CD001-2244-31F1-AAAA-900038001003 ),
+    pointer_default( unique ),
+#ifdef __midl
+        ms_union,
+#endif // __midl
+    version( 1.0 )
+]
+
+//
+// Interface Keyword
+//
+
+interface winreg
+
+//
+// Interface Body
+//
+
+{
+
+import "imports.idl";
+
+
+//
+// Context handle for registry keys.
+//
+
+typedef [context_handle] HKEY RPC_HKEY;
+typedef RPC_HKEY *PRPC_HKEY;
+
+//
+// Server name, binding handles.
+//
+
+typedef [handle] PWCHAR PREGISTRY_SERVER_NAME;
+
+//
+// RPCable security structures (see winbase.h).
+//
+
+typedef struct _RPC_SECURITY_DESCRIPTOR {
+    [ size_is( cbInSecurityDescriptor ), length_is( cbOutSecurityDescriptor ) ] PBYTE lpSecurityDescriptor;
+    DWORD cbInSecurityDescriptor;
+    DWORD cbOutSecurityDescriptor;
+} RPC_SECURITY_DESCRIPTOR, *PRPC_SECURITY_DESCRIPTOR;
+
+
+typedef struct _RPC_SECURITY_ATTRIBUTES {
+    DWORD nLength;
+    RPC_SECURITY_DESCRIPTOR RpcSecurityDescriptor;
+    BOOLEAN bInheritHandle;
+} RPC_SECURITY_ATTRIBUTES, *PRPC_SECURITY_ATTRIBUTES;
+
+//
+// Local function prototypes.
+//
+
+[local]
+LONG
+ClosePredefinedHandle(
+    [ in ] RPC_HKEY Handle
+    );
+
+[local]
+BOOL
+CleanupPredefinedHandles(
+    );
+
+[local]
+BOOL
+InitializeWinreg(
+    );
+
+[local]
+RPC_HKEY
+MapPredefinedHandle(
+    [ in ] RPC_HKEY Handle,
+    [ out ] PRPC_HKEY phToClose
+    );
+
+[local]
+LONG
+RemapPredefinedHandle(
+    [in] RPC_HKEY     Handle,
+    [in] RPC_HKEY     NewHandle
+    );
+
+[local]
+LONG
+MapSAToRpcSA(
+    [ in ] LPSECURITY_ATTRIBUTES lpSA,
+    [ out ] PRPC_SECURITY_ATTRIBUTES pRpcSA
+    );
+
+[local]
+LONG
+MapSDToRpcSD(
+    [ in ] PSECURITY_DESCRIPTOR lpSD,
+    [ in, out ] PRPC_SECURITY_DESCRIPTOR pRpcSD
+    );
+
+[local]
+LONG
+OpenPredefinedKeyForSpecialAccess(
+    [ in ] RPC_HKEY Handle,
+    [ in ] REGSAM AccessMask,
+    [ out ] PRPC_HKEY pKey
+    );
+
+//
+// Perflib pseudo APIs. Signatures should mirror the real server
+// (i.e.Base...) functions.
+//
+
+[local]
+LONG
+PerfRegCloseKey (
+    [ in, out ] PRPC_HKEY hKey
+    );
+
+[local]
+LONG
+PerfRegEnumKey (
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpName,
+    [ in, out, unique ] LPDWORD lpReserved,
+    [ in, out, unique ] PUNICODE_STRING lpClass,
+    [ in, out, unique ] PFILETIME lpftLastWriteTime
+    );
+
+[local]
+LONG
+PerfRegQueryInfoKey (
+    [ in ] RPC_HKEY hKey,
+    [ in, out ] PUNICODE_STRING lpClass,
+    [ in, out, unique ] LPDWORD lpReserved,
+    [ out ] LPDWORD lpcSubKeys,
+    [ out ] LPDWORD lpcbMaxSubKeyLen,
+    [ out ] LPDWORD lpcbMaxClassLen,
+    [ out ] LPDWORD lpcValues,
+    [ out ] LPDWORD lpcbMaxValueNameLen,
+    [ out ] LPDWORD lpcbMaxValueLen,
+    [ out ] LPDWORD lpcbSecurityDescriptor,
+    [ out ] PFILETIME lpftLastWriteTime
+    );
+
+[local]
+LONG
+PerfRegQueryValue (
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpReserved,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+[local]
+LONG
+PerfRegSetValue (
+    [ in ] RPC_HKEY hKey,
+    [ in ] LPWSTR lpValueName,
+    [ in ] DWORD Reserved,
+    [ in ] DWORD dwType,
+    [ in, size_is( cbData )] LPBYTE lpData,
+    [ in ] DWORD cbData
+    );
+
+[local]
+LONG
+PerfRegEnumValue (
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpReserved,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+//
+// RegNotifyChangeKeyValue support functions.
+//
+
+[local]
+BOOL
+MakeSemiUniqueName(
+    [ out ] PUNICODE_STRING    Name,
+    [ in ]  DWORD              Sequence
+    );
+
+[local]
+BOOL
+InitializeRegNotifyChangeKeyValue(
+    );
+
+[local]
+BOOL
+CleanDeadClientInfo(
+    HKEY    hKey
+    );
+
+[local]
+BOOL
+CleanupRegNotifyChangeKeyValue(
+    );
+
+//
+//******
+//
+// Local versions of server functions. Make sure these stay in synch
+// with the remote (ssrver) versions below.
+//
+//******
+//
+
+//
+// RPC stubs for opening predefined handles.
+//
+
+[local]
+error_status_t
+LocalOpenClassesRoot(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenCurrentUser(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenLocalMachine(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenUsers(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenPerformanceData(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenCurrentConfig(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+[local]
+error_status_t
+LocalOpenDynData(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+//
+// API (server) function prototypes.
+//
+
+[local]
+error_status_t
+LocalBaseRegCloseKey(
+    [ in, out ] PRPC_HKEY hKey
+    );
+
+[local]
+error_status_t
+LocalBaseRegCreateKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpClass,
+    [ in ] DWORD dwOptions,
+    [ in ] REGSAM samDesired,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES lpSecurityAttributes,
+    [ out ] PRPC_HKEY phkResult,
+    [ in, out, unique ] LPDWORD lpdwDisposition
+    );
+
+[local]
+error_status_t
+LocalBaseRegDeleteKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey
+    );
+
+[local]
+error_status_t
+LocalBaseRegDeleteValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName
+    );
+
+[local]
+error_status_t
+LocalBaseRegEnumKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpName,
+    [ in, out, unique ] PUNICODE_STRING lpClass,
+    [ in, out, unique ] PFILETIME lpftLastWriteTime
+    );
+
+[local]
+error_status_t
+LocalBaseRegEnumValue (
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+[local]
+error_status_t
+LocalBaseRegFlushKey(
+    [ in ] RPC_HKEY hKey
+    );
+
+[local]
+error_status_t
+LocalBaseRegGetKeySecurity(
+    [ in ] RPC_HKEY hKey,
+    [ in ] SECURITY_INFORMATION SecurityInformation,
+    [ in, out ] PRPC_SECURITY_DESCRIPTOR pRpcSecurityDescriptor
+    );
+
+[local]
+error_status_t
+LocalBaseRegLoadKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpFile
+    );
+
+[local]
+error_status_t
+LocalBaseRegNotifyChangeKeyValue(
+    [ in ] RPC_HKEY         hKey,
+    [ in ] BOOLEAN          bWatchSubtree,
+    [ in ] DWORD            dwNotifyFilter,
+    [ in ] DWORD            hEvent,
+    [ in ] PUNICODE_STRING  MachineName,
+    [ in ] PUNICODE_STRING  PipeName,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES pRpcSecurityAttributes
+    );
+
+[local]
+error_status_t
+LocalBaseRegOpenKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] DWORD dwOptions,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phkResult
+    );
+
+[local]
+error_status_t
+LocalBaseRegQueryInfoKey(
+    [ in ] RPC_HKEY hKey,
+    [ in, out ] PUNICODE_STRING lpClass,
+    [ out ] LPDWORD lpcSubKeys,
+    [ out ] LPDWORD lpcbMaxSubKeyLen,
+    [ out ] LPDWORD lpcbMaxClassLen,
+    [ out ] LPDWORD lpcValues,
+    [ out ] LPDWORD lpcbMaxValueNameLen,
+    [ out ] LPDWORD lpcbMaxValueLen,
+    [ out ] LPDWORD lpcbSecurityDescriptor,
+    [ out ] PFILETIME lpftLastWriteTime
+    );
+
+[local]
+error_status_t
+LocalBaseRegQueryValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+[local]
+error_status_t
+LocalBaseRegQueryMultipleValues(
+    [ in ] RPC_HKEY hKey,
+    [ in, out, size_is(num_vals), length_is(num_vals) ] PRVALENT val_list,
+    [ in ] DWORD num_vals,
+    [ in, out, unique, size_is(*ldwTotsize), length_is(*ldwTotsize) ] LPSTR lpvalueBuf,
+    [ in, out, ref ] LPDWORD ldwTotsize
+    );
+
+[local]
+error_status_t
+LocalBaseRegReplaceKey(
+    [ in ] RPC_HKEY  hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpNewFile,
+    [ in ] PUNICODE_STRING lpOldFile
+    );
+
+[local]
+error_status_t
+LocalBaseRegRestoreKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpFile,
+    [ in ] DWORD    Flags
+    );
+
+[local]
+error_status_t
+LocalBaseRegSaveKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpFile,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES pSecurityAttributes
+    );
+
+[local]
+error_status_t
+LocalBaseRegSetKeySecurity(
+    [ in ] RPC_HKEY hKey,
+    [ in ] SECURITY_INFORMATION SecurityInformation,
+    [ in ] PRPC_SECURITY_DESCRIPTOR pRpcSecurityDescriptor
+    );
+
+[local]
+error_status_t
+LocalBaseRegSetValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName,
+    [ in ] DWORD dwType,
+    [ in, size_is( cbData )] LPBYTE lpData,
+    [ in ] DWORD cbData
+    );
+
+[local]
+error_status_t
+LocalBaseRegUnLoadKey(
+    [ in ] RPC_HKEY  hKey,
+    [ in ] PUNICODE_STRING lpSubKey
+    );
+
+//
+//******
+//
+// Remote versions of server functions. Make sure these stay in synch
+// with the local versions above.
+//
+//******
+//
+
+//
+// RPC stubs for opening predefined handles.
+//
+
+error_status_t
+OpenClassesRoot(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+OpenCurrentUser(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+OpenLocalMachine(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+OpenPerformanceData(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+OpenUsers(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+//
+// API (server) function prototypes.
+//
+
+error_status_t
+BaseRegCloseKey(
+    [ in, out ] PRPC_HKEY hKey
+    );
+
+error_status_t
+BaseRegCreateKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpClass,
+    [ in ] DWORD dwOptions,
+    [ in ] REGSAM samDesired,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES lpSecurityAttributes,
+    [ out ] PRPC_HKEY phkResult,
+    [ in, out, unique ] LPDWORD lpdwDisposition
+    );
+
+error_status_t
+BaseRegDeleteKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey
+    );
+
+error_status_t
+BaseRegDeleteValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName
+    );
+
+error_status_t
+BaseRegEnumKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpName,
+    [ in, out, unique ] PUNICODE_STRING lpClass,
+    [ in, out, unique ] PFILETIME lpftLastWriteTime
+    );
+
+error_status_t
+BaseRegEnumValue (
+    [ in ] RPC_HKEY hKey,
+    [ in ] DWORD dwIndex,
+    [ in, out ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+error_status_t
+BaseRegFlushKey(
+    [ in ] RPC_HKEY hKey
+    );
+
+error_status_t
+BaseRegGetKeySecurity(
+    [ in ] RPC_HKEY hKey,
+    [ in ] SECURITY_INFORMATION SecurityInformation,
+    [ in, out ] PRPC_SECURITY_DESCRIPTOR pRpcSecurityDescriptor
+    );
+
+error_status_t
+BaseRegLoadKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpFile
+    );
+
+error_status_t
+BaseRegNotifyChangeKeyValue(
+    [ in ] RPC_HKEY         hKey,
+    [ in ] BOOLEAN          bWatchSubtree,
+    [ in ] DWORD            dwNotifyFilter,
+    [ in ] DWORD            hEvent,
+    [ in ] PUNICODE_STRING  MachineName,
+    [ in ] PUNICODE_STRING  PipeName,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES pRpcSecurityAttributes
+    );
+
+error_status_t
+BaseRegOpenKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] DWORD dwOptions,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phkResult
+    );
+
+error_status_t
+BaseRegQueryInfoKey(
+    [ in ] RPC_HKEY hKey,
+    [ in, out ] PUNICODE_STRING lpClass,
+    [ out ] LPDWORD lpcSubKeys,
+    [ out ] LPDWORD lpcbMaxSubKeyLen,
+    [ out ] LPDWORD lpcbMaxClassLen,
+    [ out ] LPDWORD lpcValues,
+    [ out ] LPDWORD lpcbMaxValueNameLen,
+    [ out ] LPDWORD lpcbMaxValueLen,
+    [ out ] LPDWORD lpcbSecurityDescriptor,
+    [ out ] PFILETIME lpftLastWriteTime
+    );
+
+error_status_t
+BaseRegQueryValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName,
+    [ in, out, unique ] LPDWORD lpType,
+    [ in, out, unique, size_is( lpcbData ? *lpcbData : 0 ), length_is ( lpcbLen ? *lpcbLen : 0 ) ] LPBYTE lpData,
+    [ in, out, unique ] LPDWORD lpcbData,
+    [ in, out, unique ] LPDWORD lpcbLen
+    );
+
+error_status_t
+BaseRegReplaceKey(
+    [ in ] RPC_HKEY  hKey,
+    [ in ] PUNICODE_STRING lpSubKey,
+    [ in ] PUNICODE_STRING lpNewFile,
+    [ in ] PUNICODE_STRING lpOldFile
+    );
+
+error_status_t
+BaseRegRestoreKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpFile,
+    [ in ] DWORD    Flags
+    );
+
+error_status_t
+BaseRegSaveKey(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpFile,
+    [ in, unique ] PRPC_SECURITY_ATTRIBUTES pSecurityAttributes
+    );
+
+error_status_t
+BaseRegSetKeySecurity(
+    [ in ] RPC_HKEY hKey,
+    [ in ] SECURITY_INFORMATION SecurityInformation,
+    [ in ] PRPC_SECURITY_DESCRIPTOR pRpcSecurityDescriptor
+    );
+
+error_status_t
+BaseRegSetValue(
+    [ in ] RPC_HKEY hKey,
+    [ in ] PUNICODE_STRING lpValueName,
+    [ in ] DWORD dwType,
+    [ in, size_is( cbData )] LPBYTE lpData,
+    [ in ] DWORD cbData
+    );
+
+error_status_t
+BaseRegUnLoadKey(
+    [ in ] RPC_HKEY  hKey,
+    [ in ] PUNICODE_STRING lpSubKey
+    );
+
+//
+// Shutdown APIs.
+//
+
+ULONG
+BaseInitiateSystemShutdown(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in, unique ] PUNICODE_STRING lpMessage,
+    [ in ] DWORD dwTimeout,
+    [ in ] BOOLEAN bForceAppsClosed,
+    [ in ] BOOLEAN bRebootAfterShutdown
+    );
+
+ULONG
+BaseAbortSystemShutdown(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName
+    );
+
+
+//
+// New Remote Registry APIs for Chicago
+//
+
+error_status_t
+BaseRegGetVersion(
+    [ in ] RPC_HKEY hKey,
+    [ out ] LPDWORD lpdwVersion
+    );
+
+error_status_t
+OpenCurrentConfig(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+OpenDynData(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in ] REGSAM samDesired,
+    [ out ] PRPC_HKEY phKey
+    );
+
+error_status_t
+BaseRegQueryMultipleValues(
+    [ in ] RPC_HKEY hKey,
+    [ in, out, size_is(num_vals), length_is(num_vals) ] PRVALENT val_list,
+    [ in ] DWORD num_vals,
+    [ in, out, unique, size_is(*ldwTotsize), length_is(*ldwTotsize) ] LPSTR lpvalueBuf,
+    [ in, out, ref ] LPDWORD ldwTotsize
+    );
+
+
+//
+// Dragos Sambotin (dragoss) 01/07/1999 - Moved at the end to persist compatibility with NT4 !
+// New Shutdown API .
+//
+ULONG
+BaseInitiateSystemShutdownEx(
+    [ in, unique ] PREGISTRY_SERVER_NAME ServerName,
+    [ in, unique ] PUNICODE_STRING lpMessage,
+    [ in ] DWORD dwTimeout,
+    [ in ] BOOLEAN bForceAppsClosed,
+    [ in ] BOOLEAN bRebootAfterShutdown,
+    [ in ] DWORD dwReason
+    );                      
+
+[local]
+BOOL
+ShutdownWinreg(
+	);
+
+}
+

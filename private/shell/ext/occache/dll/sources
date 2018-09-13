@@ -1,0 +1,108 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    CONDITIONAL_INCLUDES added to eliminate bogus errors 10-Jul-97 Andrew Guletsky (andrewgu)
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!IF 0
+Start of AndrewGu
+
+Added below script to get rid of stupid warnings generated when compiling *.rc
+!ENDIF
+
+CONDITIONAL_INCLUDES = \
+                       winwlm.h   \
+                       macwin32.h
+
+!IF 0
+End of AndrewGu
+!ENDIF
+
+TARGET_BOTH     = 1
+NOT_UNICODE     = 1
+
+!include ..\occache.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) ..\occache.inc
+
+NTTARGETFILES   = 
+NTTARGETFILE0= \
+               ..\selfreg_occache.inf
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) ..\selfreg_occache.inf
+!endif
+
+TARGETNAME      = occache
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+TARGETLIBS      = \
+                  $(LIBRARY_PATH)\gdi32.lib         \
+                  $(LIBRARY_PATH)\user32.lib        \
+                  $(LIBRARY_PATH)\kernel32.lib      \
+                  $(LIBRARY_PATH)\advapi32.lib      \
+                  $(LIBRARY_PATH)\shlwapi.lib       \
+                  $(LIBRARY_PATH)\shlwapip.lib      \
+                  $(LIBRARY_PATH)\comctl32.lib      \
+                  $(LIBRARY_PATH)\shell32p.lib      \
+                  $(LIBRARY_PATH)\ole32.lib         \
+                  $(LIBRARY_PATH)\oleaut32.lib      \
+                  $(LIBRARY_PATH)\version.lib       \
+                  $(LIBRARY_PATH)\wininet.lib       \
+                  $(LIBRARY_PATH)\uuid.lib          \
+                  $(LIBRARY_PATH)\urlmon.lib        \
+                  $(CCSHELL_DIR)\lib\$O\shguid.lib  \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib\
+                  $(SDK_LIB_PATH)\htmlhelp.lib      \
+
+DELAYLOAD       = SHELL32.DLL;OLE32.DLL;OLEAUT32.DLL;VERSION.DLL;URLMON.DLL
+USE_LIBCMT      = 1
+
+DLLDEF          = ..\occache.def
+DLLENTRY        = DllMain
+
+SOURCES         = \
+                  ..\folder.cpp   \
+                  ..\view.cpp     \
+                  ..\enum.cpp     \
+                  ..\item.cpp     \
+                  ..\init.c       \
+                  ..\debug.c      \
+                  ..\general.cpp  \
+                  ..\persist.cpp  \
+                  ..\occache.rc   \
+                  ..\property.cpp \
+                  ..\menu.cpp     \
+                  ..\parseinf.cpp \
+                  ..\cleanoc.cpp  \
+                  ..\utils.cpp    \
+                  ..\filenode.cpp \
+                  ..\cdlbsc.cpp   \
+                  ..\dlg.cpp      \
+                  ..\emptyvol.cpp

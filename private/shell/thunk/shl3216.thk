@@ -1,0 +1,108 @@
+__foldwin32sstuff __foldwin32sstuff;
+//foldstyleinitialization = true;
+
+enablemapdirect3216 = true;
+flatthunks = true;
+
+#include "..\types.thk"
+
+//
+// thunks for 32 -> 16 calls
+//
+// these calls are implemented in shell.dll (16) and are
+// exported or called from shell32.dll (32)
+//
+// 1st function is the 16 bit name
+// 2nd is the 32 bit name
+//
+
+DWORD CallCPLEntry16(UINT hinst, DWORD lpfnEntry, HWND hwndCPL, UINT msg, DWORD lParam1, DWORD lParam2)
+{
+    body = special;
+}
+
+
+//
+// The next 2 thunks are used by Copy.c
+//
+
+// This actually returns an HMODULE
+UINT GetModuleHandle16(LPSTR szName)
+{
+}
+
+
+INT GetModuleFileName16(UINT hinst, LPSTR szFileName, INT cbMax)
+{
+}
+
+
+BOOL RegisterShellHook(HWND hwnd, BOOL fInstall)
+{
+}
+
+BOOL CheckResourcesBeforeExec()
+{
+}
+
+typedef LPSTR LPPAGEARRAY;
+
+VOID CallAddPropSheetPages16(DWORD lpfn16, LPVOID hdrop, LPPAGEARRAY papg)
+{
+}
+
+typedef HANDLE HDRVR;
+
+HDRVR ShellGetNextDriverName(HDRVR hdrv, LPSTR pszName, int cbName)
+{
+}
+
+BOOL SHRestartWindows(DWORD dwReturn)
+{
+}
+
+
+VOID SHGetAboutInformation(LPWORD puSysResource, LPDWORD plMem)
+{
+}
+
+DWORD SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
+{
+}
+
+//
+// PIFMGR thunks
+//
+int  PifMgr_OpenProperties(LPSTR lpszApp, LPSTR lpszPIF, int hInf, int flOpt)
+{
+}
+
+int  PifMgr_GetProperties(int hProps, LPSTR lpszGroup, LPVOID lpProps, int cbProps, int flOpt)
+{
+}
+
+int  PifMgr_SetProperties(int hProps, LPSTR lpszGroup, LPVOID lpProps, int cbProps, int flOpt)
+{
+}
+
+int  PifMgr_CloseProperties(int hProps, int flOpt)
+{
+}
+
+//
+// Special DDE thunk just for WinFax Pro.
+//
+
+void SHGlobalDefect(DWORD dwHnd32)
+{
+}
+
+
+//
+// Thunk for RunDll32
+//
+typedef hinstance HINSTANCE;
+
+void RunDll_CallEntry16(DWORD pfn, HWND hwndStub, HINSTANCE hinst, LPSTR pszParam, int nCmdShow)
+{
+}

@@ -1,0 +1,103 @@
+
+
+- development -
+
+Jay Borseth
+Geoff Dahl
+Jim Geist
+Tim Harris
+Todd Laney
+David Maymudes
+Danny Miller
+Thomas O'Rourke
+Curtis Palmer
+
+- nt development -
+
+Andrew Bell
+Geraint Davies
+Steve Davies
+Stephen Estrop
+Laurie Griffiths
+Robin Speed
+
+- production -
+
+Alistair Banks
+Heidi Breslauer
+Bruno Lambert
+Kevin Larkin
+Cristiano Pierry
+
+- testing -
+
+Vadim Bluvshteyn
+John Bresemann
+Preston Byargeon
+Alok Chakrabarti
+Noel Cross
+Jim Glass
+Olan Hanley
+Faris Hattab
+Lisa Hayward
+Steve Morrow
+Eric O'Brien
+Ken Oien
+Mike Savage
+Frank Wong
+
+- nt testing -
+
+Mike Tricker
+Andrew Guy
+Anthony Phillips
+John Quick
+
+- beta support -
+
+Lisa Garrett
+
+- documentation -
+
+Eric Artzt
+Beth Carter
+John Ellison
+Harry Fagundes
+Mark Horowitz
+Crista Johnson
+
+- marketing -
+
+Mark Anderson
+Tim Breidigan
+Steve Linowes
+
+- samples -
+
+Mark Buczek
+Karen Nuxoll
+Steven Tyler
+
+- product support -
+
+John Langhans
+Greg Landon
+
+- administrative -
+
+Laurie Clayton
+Chris Cryer
+Jill Heal
+
+- old friends -
+
+Eric Ledoux
+Nigel Thompson
+
+
+
+
+
+
+
+@

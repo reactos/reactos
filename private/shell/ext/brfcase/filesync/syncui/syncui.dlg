@@ -1,0 +1,268 @@
+//{{NO_DEPENDENCIES}}
+//Microsoft App Studio generated resource script.
+//
+#include "dlgids.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "recact.h"
+#ifndef _WIN32
+#define _WIN32
+#endif
+#include "commctrl.h"
+#include "prsht.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_LEATHER_BRIEF      ICON    DISCARDABLE     "LEATHER.ICO"
+IDI_METAL_BRIEF        ICON    DISCARDABLE     "BRFCASE.ICO"
+IDI_SPLIT_FILE         ICON    DISCARDABLE     "SPLFILE.ICO"
+IDI_SPLIT_FOLDER       ICON    DISCARDABLE     "SPLFOLDR.ICO"
+IDI_SPLIT_MULT         ICON    DISCARDABLE     "SPLALL.ICO"
+IDI_UPDATE_FILE        ICON    DISCARDABLE     "UPDFILE.ICO"
+IDI_UPDATE_FOLDER      ICON    DISCARDABLE     "UPDFOLDR.ICO"
+IDI_UPDATE_MULT        ICON    DISCARDABLE     "UPDALL.ICO"
+IDI_UPDATE_DOCK        ICON    DISCARDABLE     "UPDDOCK.ICO"
+IDI_UPDATE             ICON    DISCARDABLE     "UPDATE.ICO"
+IDI_ADD_FOLDER         ICON    DISCARDABLE     "ADDFOLDR.ICO"
+IDI_REPLACE_FILE       ICON    DISCARDABLE     "REPFILE.ICO"
+IDI_REPLACE_FOLDER     ICON    DISCARDABLE     "REPFOLDR.ICO"
+IDI_OPEN_FOLDER        ICON    DISCARDABLE     "FOLDEROP.ICO"
+
+IDA_UPDATE              AVI     update2.avi
+IDA_CHECK               AVI     check.avi
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_ACTIONS             BITMAP  DISCARDABLE     "ACTIONS2.BMP"
+IDB_LOGO                BITMAP  DISCARDABLE     "WELCOME.BMP"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REPLACE_FILE DIALOG DISCARDABLE  10, 20, 275, 141
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+    | 0x200
+CAPTION "Confirm File Replace"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "",IDC_BUTTON4,41,120,53,14
+    PUSHBUTTON      "",IDC_BUTTON3,99,120,53,14
+    PUSHBUTTON      "",IDC_BUTTON2,157,120,53,14
+    PUSHBUTTON      "",IDC_BUTTON1,215,120,53,14
+    ICON            IDI_REPLACE_FILE,IDC_ICCR,10,10,18,20
+
+    LTEXT           "",IDC_DESC,41,10,222,22
+
+    LTEXT           "Would you like to replace the existing file",IDC_STATIC,
+                    41,35,180,10, SS_NOPREFIX
+
+    LTEXT           "",
+                    IDC_EXISTING,84,51,184,18, SS_NOPREFIX
+    ICON            "", IDC_ICON_EXISTING,56,49,18,20
+    LTEXT           "with this one?",IDC_STATIC,41,75,180,10, SS_NOPREFIX
+    LTEXT           "", IDC_OTHER,84,91,184,18, SS_NOPREFIX
+    ICON            "",IDC_ICON_OTHER,56,89,18,20
+END
+
+IDD_REPLACE_FOLDER DIALOG DISCARDABLE  0, 0, 275, 85
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Folder Replace"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "",IDC_BUTTON4,41,64,53,14
+    PUSHBUTTON      "",IDC_BUTTON3,99,64,53,14
+    PUSHBUTTON      "",IDC_BUTTON2,157,64,53,14
+    PUSHBUTTON      "",IDC_BUTTON1,215,64,53,14
+    ICON            IDI_REPLACE_FOLDER,IDC_STATIC,10,10,18,20
+    LTEXT           "",IDC_DESC,41,10,222,53,SS_NOPREFIX
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  20, 20, 252, 88
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_NOIDLEMSG | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_LEATHER_BRIEF,IDC_ICON1,7,2,18,20
+    CONTROL         "",IDC_ANIMATE,ANIMATE_CLASS,ACS_TRANSPARENT,
+                    30,4,187,25
+    ICON            IDI_OPEN_FOLDER,IDC_ICON2,223,2,18,20
+    CONTROL         "",IDC_NAME,"Static",SS_SIMPLE | SS_NOPREFIX,7,32,236,10
+    CONTROL         "",IDC_TONAME,"Static",SS_SIMPLE | SS_NOPREFIX,7,43,236,
+                    10
+    CONTROL         "",IDC_TEXT,"Static",SS_SIMPLE | SS_NOPREFIX,7,54,236,10
+    CONTROL         "",IDC_PROGRESS,PROGRESS_CLASS,0x0,7,68,180,10
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,194,66,50,14,NOT WS_TABSTOP
+END
+
+IDD_INFO DIALOG DISCARDABLE  34, 28, 227, 215
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    | DS_SETFOREGROUND | DS_CONTEXTHELP
+CAPTION "Update Info"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Include files of type",IDC_GBIN,10,10,207,152
+    CONTROL         "All &types",IDC_RBINALL,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,20,25,92,10
+    CONTROL         "&Selected types:",IDC_RBINSELECTED,"Button",
+                    BS_AUTORADIOBUTTON,20,40,90,10
+    LISTBOX         IDC_LBINTYPES,31,55,172,94,LBS_SORT | LBS_MULTIPLESEL |
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | WS_GROUP | LBS_USETABSTOPS
+    CONTROL         "&Include subfolders of the folder '%s'",IDC_CHININCLUDE,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | BS_VCENTER |
+                    WS_TABSTOP,10,170,208,10
+END
+
+IDD_INFOCREATE DIALOG DISCARDABLE  34, 28, 227, 215
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    | DS_SETFOREGROUND | DS_CONTEXTHELP
+CAPTION "Add '%s' to the Briefcase"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Include files of type",IDC_GBIN,10,10,207,152
+    CONTROL         "All &types ",IDC_RBINALL,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,20,25,92,10
+    CONTROL         "&Selected types:",IDC_RBINSELECTED,"Button",
+                    BS_AUTORADIOBUTTON,20,40,91,10
+    LISTBOX         IDC_LBINTYPES,31,55,172,94,LBS_SORT | LBS_MULTIPLESEL |
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | WS_GROUP | LBS_USETABSTOPS
+    CONTROL         "&Include subfolders of the folder '%s'",IDC_CHININCLUDE,
+                    "Button",BS_AUTOCHECKBOX | BS_MULTILINE | BS_VCENTER |
+                    WS_TABSTOP,10,170,208,10
+    DEFPUSHBUTTON   "OK",IDOK,113,191,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,167,191,50,14
+END
+
+IDD_STATUS DIALOG DISCARDABLE  37, 61, 227, 215
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    | DS_SETFOREGROUND | DS_CONTEXTHELP
+CAPTION "Update Status"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_ICTSMAIN,10,9,18,20
+    EDITTEXT        IDC_NAME,40,15,140,12,ES_AUTOHSCROLL | ES_READONLY | NOT
+                    WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,10,40,207,1
+    LTEXT           "",IDC_STTSDIRECT,10,46,207,32
+    CONTROL         "",IDC_UPDATEACTIONS,"recaction",RAS_SINGLEITEM | WS_TABSTOP,
+                    10,84,207,48
+    PUSHBUTTON      "&Update",IDC_PBTSRECON,10,142,60,14
+    PUSHBUTTON      "&Split From Original",IDC_PBTSSPLIT,75,142,75,14
+    PUSHBUTTON      "&Find Original...",IDC_PBTSFIND,156,142,60,14
+END
+
+IDD_UPDATE DIALOG DISCARDABLE  0, 0, 280, 200
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+    | DS_SETFOREGROUND | DS_CONTEXTHELP
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_UPDATE,IDC_UPDICON,7,7,18,20
+    LTEXT           "The following files need to be updated. To change the update action, use the right mouse button to click the file you want to change.",
+                    IDC_STUPTEXT,38,9,229,17
+    CONTROL         "",IDC_UPDATEACTIONS,"recaction",WS_TABSTOP,7,34,265,138
+    DEFPUSHBUTTON   "Update",IDOK,149,178,60,14
+    PUSHBUTTON      "Cancel",IDCANCEL,213,178,60,14
+END
+
+IDC_MSGBOX DIALOG DISCARDABLE  0, 0, 227, 64
+STYLE DS_MODALFRAME | DS_CENTER | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION
+    | WS_SYSMENU | 0x200
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "",IDC_BUTTON3,58,40,50,14
+    PUSHBUTTON      "",IDC_BUTTON2,112,40,50,14
+    PUSHBUTTON      "",IDC_BUTTON1,166,40,50,14
+    ICON            "",IDC_MSGICON,10,10,18,20
+    LTEXT           "",IDC_TEXT,40,10,176,24
+END
+
+
+IDD_INTRO_WIZARD DIALOG DISCARDABLE  0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome to the Windows Briefcase"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_LOGO,IDC_STATIC,"Static",SS_BITMAP,0,0,88,154
+    LTEXT           "You can use the Windows Briefcase to help you organize and keep your documents up-to-date between two PCs.",
+                    IDC_STATIC,100,7,187,22
+    LTEXT           "There are four easy steps:",IDC_STATIC,100,31,187,10
+    LTEXT           "Drag your important files into the Briefcase.",
+                    IDC_STATIC,121,43,166,11
+    LTEXT           "Take the Briefcase with you as you travel by keeping it on your laptop computer or dragging it onto a floppy disk.",
+                    IDC_STATIC,121,56,166,28
+    LTEXT           "Make changes either to the files inside the Briefcase or to the original files.",
+                    IDC_STATIC,121,85,166,20
+    LTEXT           "Click Update All on the Briefcase menu to bring your files up-to-date.",
+                    IDC_STATIC,121,106,166,16
+    LTEXT           "To learn more about how to use the Briefcase, look up Briefcase in the Help Index.",
+                    IDC_STATIC,100,131,187,17
+    LTEXT           "1.",IDC_STATIC,109,43,8,8
+    LTEXT           "2.",IDC_STATIC,109,56,8,8
+    LTEXT           "3.",IDC_STATIC,109,85,8,8
+    LTEXT           "4.",IDC_STATIC,109,106,8,8
+END
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "dlgids.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""recact.h""\r\n"
+    "#ifndef _WIN32\r\n"
+    "#define _WIN32\r\n"
+    "#endif\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

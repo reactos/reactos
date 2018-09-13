@@ -1,0 +1,1120 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZFINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Accessibility Wizard",IDC_BIGTITLE,115,8,
+                    188,24
+    LTEXT           "You made the following changes:",IDC_STATIC,115,51,176,
+                    8
+    EDITTEXT        IDC_SZCHANGES,115,61,176,55,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL | NOT WS_TABSTOP
+    LTEXT           "For more information about using Windows for users with disabilities:",
+                    IDC_STATIC,115,121,188,17
+    LTEXT           "Look up accessibility in Windows Help.",IDC_STATIC,115,
+                    143,188,8
+    CONTROL         "See the Microsoft Accessibility and Disabilities Web page at: <A>http://www.microsoft.com/enable/</A>",
+                    IDC_WEBLINK,"Link Window",WS_TABSTOP,115,156,188,19
+    LTEXT           "To close the wizard, click Finish.",IDC_STATIC,115,178,
+                    188,8
+    LTEXT           "You have successfully completed the Accessibility wizard.",
+                    IDC_STATIC,115,40,188,8
+END
+
+IDD_WIZOPTIONS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "I am b&lind or have difficulty seeing things on screen",
+                    IDC_DOBLIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,22,
+                    275,10
+    CONTROL         "I am &deaf or have difficulty hearing sounds from the computer",
+                    IDC_DOSOUND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,35,
+                    275,10
+    CONTROL         "I have difficulty using the &keyboard or mouse",
+                    IDC_DOKEYBOARDMOUSE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,21,48,275,10
+    CONTROL         "I want to set &administrative options",IDC_DOADMIN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,61,275,10
+    PUSHBUTTON      "&Restore Default Settings",IDC_BTNRESTORETODEFAULT,21,
+                    78,100,14
+    LTEXT           "Select the statements that apply to you:",IDC_STATIC,21,
+                    8,275,8
+END
+
+IDD_WIZWORKSTATIONDEFAULT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Use my accessibility settings when I log on, and apply my settings to new user accounts.",
+                    IDC_STATIC,33,35,263,16
+    LTEXT           "Do you want to make these settings the default?",
+                    IDC_STATIC,21,8,275,16
+    CONTROL         "&Yes",IDC_CHECKSAVESETTINGTODEFAULT,"Button",
+                    BS_AUTORADIOBUTTON,21,23,57,10
+    CONTROL         "N&o",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,21,58,49,10
+    LTEXT           "Save these settings for the current user profile only.",
+                    IDC_STATIC,33,70,263,16
+END
+
+IDD_WIZNOOPTIONSSELECTED DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You did not select any areas to configure.  Click Back to return to the options page, or click Next to continue.",
+                    IDC_STATIC,21,8,273,16
+END
+
+IDD_MSEWIZMOUSECURSOR DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Current Cursor",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_PUSHLIKE,248,127,61,14
+    CONTROL         "Small White Cursors",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,100,30,32,32
+    CONTROL         "Medium White Cursors",IDC_RADIO3,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,100,70,32,32
+    CONTROL         "Large White Cursors",IDC_RADIO4,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,100,110,32,32
+    CONTROL         "Small Black Cursors",IDC_RADIO5,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,150,30,32,32
+    CONTROL         "Medium Black Cursors",IDC_RADIO6,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,150,70,32,32
+    CONTROL         "Large Black Cursors",IDC_RADIO7,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,150,110,32,32
+    CONTROL         "Small Inverting Cursors",IDC_RADIO8,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,200,30,32,32
+    CONTROL         "Medium Inverting Cursors",IDC_RADIO9,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,200,70,32,32
+    CONTROL         "Large Inverting Cursors",IDC_RADIO10,"Button",
+                    BS_AUTORADIOBUTTON | BS_ICON | BS_PUSHLIKE,200,110,32,32
+    LTEXT           "Black",IDC_STATIC,150,14,42,14
+    LTEXT           "White",IDC_STATIC,100,14,42,14
+    LTEXT           "Inverting",IDC_STATIC,200,14,42,14
+    LTEXT           "Regular",IDC_STATIC,55,40,42,14
+    LTEXT           "Large",IDC_STATIC,55,80,42,14
+    LTEXT           "Extra Large",IDC_STATIC,55,120,42,14
+    LTEXT           "Select the mouse cursor that is the size and color you want:",
+                    IDC_STATIC,21,0,226,8
+END
+
+IDD_SNDWIZSENTRYSHOWSOUNDS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "If you are deaf or hard of hearing, you may want to have visual warnings notify you of system events.",
+                    IDC_STATIC,21,8,275,16
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,46,71,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,61,85,
+                    10
+    LTEXT           "Do you want programs that offer this feature to display captions for speech and sounds?",
+                    IDC_STATIC,21,31,275,15
+END
+
+IDD_MSEWIZMOUSEKEYS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,97,50,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,112,71,
+                    10
+    LTEXT           "Do you want to use your numeric keypad instead of the mouse?",
+                    IDC_STATIC,21,82,275,8
+    LTEXT           "If you have difficulty using a mouse, you can use your numeric keypad instead.",
+                    IDC_STATIC,21,8,275,8
+    LTEXT           "To move the mouse pointer, press the arrow keys.\nTo click, press 5.\nTo double-click, press +.",
+                    IDC_STATIC,21,36,275,24
+    LTEXT           "To ""hold down"" the mouse button, press INS.\r\nTo release the mouse button, press DEL.",
+                    IDC_STATIC,21,60,275,16
+    LTEXT           "On the numeric keypad:",IDC_STATIC,21,23,192,8
+END
+
+IDD_KBDWIZSTICKYKEYS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "If you find it difficult to hold down several keys at once, you may have trouble with key combinations (such as CTRL+ALT+DELETE).  Instead of pressing and holding several",
+                    IDC_STATIC,21,8,275,17
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,61,81,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,75,78,
+                    10
+    LTEXT           "keys at once, you can press each key one at a time.  This applies to key combinations that use SHIFT, CTRL, or ALT.",
+                    IDC_STATIC,21,24,275,16
+    LTEXT           "Do you want to press keys in key combinations one at a time?",
+                    IDC_STATIC,21,47,275,8
+END
+
+IDD_KBDWIZTOGGLEKEYS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,46,74,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,61,71,
+                    10
+    LTEXT           "Do you want Windows to play a sound whenever you press CAPS LOCK, NUM LOCK or SCROLL LOCK?",
+                    IDC_STATIC,21,23,275,19
+    LTEXT           "It's easy to accidentally press CAPS LOCK, NUM LOCK, or SCROLL LOCK. ",
+                    IDC_STATIC,21,8,275,16
+END
+
+IDD_KBDWIZSHOWEXTRAKEYBOARDHELP DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,38,71,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,53,77,
+                    10
+    LTEXT           "Do you want extra keyboard help to be displayed whenever it is available?",
+                    IDC_STATIC,21,23,274,8
+    LTEXT           "If you do not use a mouse, you may want extra keyboard help.",
+                    IDC_STATIC,21,8,274,8
+END
+
+IDD_MSEWIZBUTTONCONFIG DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Right-handed",MOUSE_RIGHTHAND,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,21,39,59,10
+    CONTROL         "&Left-handed",MOUSE_LEFTHAND,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,21,53,54,10
+    LTEXT           "Left button:",IDC_GROUPBOX_2,134,39,37,8
+    LTEXT           " -  Normal select\r\n -  Normal drag",IDC_SELECTDRAG,
+                    138,53,77,16
+    LTEXT           "Right button:",IDC_GROUPBOX_3,134,75,42,8
+    LTEXT           " -  Context menu\r\n -  Special drag",IDC_OBJECTMENU,
+                    138,89,77,16
+    CONTROL         100,IDC_MOUSEPIC1,"Static",SS_BITMAP,226,44,55,49
+    CONTROL         2570,IDC_MOUSEPIC2,"Static",SS_BITMAP | NOT WS_VISIBLE,
+                    225,44,55,49
+    LTEXT           "How do you prefer to use your mouse?",IDC_STATIC,21,23,
+                    275,8
+    LTEXT           "You may want to configure your mouse to work with the hand you prefer.",
+                    IDC_STATIC,21,8,275,8
+END
+
+IDD_WIZSAVETOFILE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can save the new settings to a file.  You can then take this file to other computers to configure them the same way you have configured this computer.",
+                    IDC_STATIC,21,8,275,22
+    PUSHBUTTON      "&Save Settings...",IDC_BTNBROWSE,21,35,65,14
+END
+
+IDD_WIZWELCOME2 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the options you want.  The preselected options are based on the font size you selected on the previous screen.",
+                    IDC_STATIC,7,8,303,16
+    CONTROL         "&Change the font size",IDC_CHANGEFONTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,30,223,10
+    LTEXT           "Changes the font size for window title bars, menus, and other features.  This option does not increase the size of text inside windows.",
+                    IDC_STATIC,23,42,287,19
+    CONTROL         "&Switch to a lower screen resolution",
+                    IDC_SWITCHRESOLUTION,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,11,66,234,10
+    LTEXT           "Increases the size of items on screen, including the text inside windows.",
+                    IDC_SZRESMESSAGE,23,78,287,8
+    CONTROL         "&Use Microsoft Magnifier",IDC_USEMAGNIFY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,95,185,10
+    LTEXT           "Opens a floating window that displays an enlarged view of part of the screen.",
+                    IDC_STATIC,23,106,287,8
+    CONTROL         "&Disable personalized menus",IDC_PERMENU,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,11,124,275,10
+END
+
+IDD_FNTWIZSCROLLBAR DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the scroll bar and window border size you want:",
+                    IDC_STATIC,21,3,202,8,WS_TABSTOP
+    CONTROL         "Scroll bar - Normal",IDC_SCROLL1,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE | WS_GROUP | WS_TABSTOP,21,15,45,120
+    CONTROL         "Scroll bar - Large",IDC_SCROLL2,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE,80,15,54,120
+    CONTROL         "Scroll bar - Extra Large",IDC_SCROLL3,"Button",
+                    BS_OWNERDRAW | BS_PUSHLIKE,148,15,59,120
+    CONTROL         "Scroll bar - Largest",IDC_SCROLL4,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE,221,15,71,120
+END
+
+IDD_PREV_COLOR DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_LOOKPREV,"LookPreview",0x0,152,26,161,116
+    LTEXT           "Select the color scheme you want:",IDC_STATIC,7,1,152,8
+    LISTBOX         IDC_PREVLIST,7,26,137,116,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Color schemes:",IDC_STATIC,7,15,93,8
+    LTEXT           "Preview:",IDC_STATIC,152,15,71,8
+END
+
+IDD_WIZACCESSTIMEOUT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Turn off StickyKeys, FilterKeys, ToggleKeys, and High Contrast features when the computer has been idle for:",
+                    IDC_TO_ENABLE,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE | WS_GROUP,21,33,275,16
+    CONTROL         "&Leave accessibility features on",IDC_TO_DISABLE,"Button",
+                    BS_AUTORADIOBUTTON,21,76,252,10
+    LTEXT           "&minutes",IDC_STATIC,80,57,56,8
+    COMBOBOX        IDC_TO_TIMEOUTVAL,34,55,42,100,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "If more than one person uses this computer, you might want Windows to turn off accessibility settings automatically when you've finished using the computer.",
+                    IDC_STATIC,21,8,275,16
+END
+
+IDD_MSEWIZMOUSEKEYS1 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "MouseKeys options",IDC_STATIC,7,8,303,61
+    LTEXT           "If you use the arrow, INS, and DEL keys on the numeric keypad, you might want to have MouseKeys on when NUM LOCK is on. If you use the numeric keypad for data entry, You might want to have MouseKeys on when NUM LOCK is off.",
+                    IDC_STATIC,16,19,285,28
+    LTEXT           "Use MouseKeys when NUM LOCK is:",IDC_MK_LBL7,16,52,139,
+                    13
+    CONTROL         "&On",IDC_MK_NLOFF,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,160,50,31,15
+    CONTROL         "Of&f",IDC_MK_NLON,"Button",BS_AUTORADIOBUTTON,202,50,33,
+                    15
+    GROUPBOX        "Pointer speed",IDC_STATIC,7,74,303,62,WS_GROUP
+    LTEXT           "&Top speed:",IDC_MK_LBL1,16,94,59,11
+    LTEXT           "Low",IDC_MK_LBL2,94,94,32,15
+    CONTROL         "",IDC_MK_TOPSPEED,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,127,88,105,20
+    LTEXT           "High",IDC_MK_LBL3,244,94,32,15
+    LTEXT           "&Acceleration:",IDC_MK_LBL4,16,115,60,15
+    LTEXT           "Slow",IDC_MK_LBL5,94,115,32,15
+    CONTROL         "",IDC_MK_ACCEL,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,127,110,105,21
+    LTEXT           "Fast",IDC_MK_LBL6,244,115,32,15
+END
+
+IDD_SNDWIZSENTRYSHOWSOUNDS2 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "If you are deaf or hard of hearing, you may want to see captions for speech and sounds.",
+                    IDC_STATIC,21,8,275,16
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,46,68,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,61,60,
+                    10
+    LTEXT           "Do you want programs that offer this feature to display captions for speech and sounds?",
+                    IDC_STATIC,21,31,281,15
+END
+
+IDD_WIZWELCOME DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Use usual text size for Windows",IDC_TEXT1,"Button",
+                    BS_OWNERDRAW | BS_PUSHLIKE | WS_GROUP | WS_TABSTOP,7,52,
+                    304,22
+    CONTROL         "Use large titles and menus",IDC_TEXT2,"Button",
+                    BS_OWNERDRAW | BS_PUSHLIKE,7,80,304,24
+    CONTROL         "Use Microsoft Magnifier, and large titles and menus",
+                    IDC_TEXT3,"Button",BS_OWNERDRAW | BS_PUSHLIKE,7,110,304,
+                    27
+    LTEXT           "Click or use the arrow keys to select the smallest text you can read:",
+                    IDC_BOLDTITLE,7,3,309,41
+END
+
+IDD_PREV_ICON2 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the icon size you want:",IDC_STATIC,7,8,142,8
+    CONTROL         "Normal Icon",IDC_ICON1,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE | WS_GROUP | WS_TABSTOP,7,38,94,87
+    CONTROL         "Large Icon",IDC_ICON2,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE,110,38,94,87
+    CONTROL         "Extra Large Icon",IDC_ICON3,"Button",BS_OWNERDRAW | 
+                    BS_PUSHLIKE,213,38,94,87
+END
+
+IDD_MSEWIZMOUSESPEED DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "If you have difficulty positioning the mouse pointer to select items on the screen, you can adjust the speed of the pointer.",
+                    IDC_STATIC,21,8,275,16
+    LTEXT           "&Mouse pointer speed:",IDC_STATIC,21,44,88,8
+    LTEXT           "Slow",IDC_STATIC,119,44,16,8
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,140,42,100,18
+    LTEXT           "Fast",IDC_STATIC,242,44,14,8
+END
+
+IDD_KBDWIZFILTERKEYS1 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Do you want Windows to ignore repeated keystrokes?",
+                    IDC_STATIC,21,23,275,8
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,38,67,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,53,72,
+                    10
+    LTEXT           "If you have motion disabilities, You might accidentally press a key too many times.",
+                    IDC_STATIC,21,8,275,11
+END
+
+IDD_KBDWIZFILTERKEYS2 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Ignore keystrokes repeated faster than:",IDC_STATIC,21,
+                    8,136,8
+    EDITTEXT        IDC_BK_TIME,21,27,20,14,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_TABSTOP
+    LTEXT           "seconds",IDC_BK_TIME_LBL2,43,30,28,8
+    LTEXT           "Short",IDC_BK_TIME_LBL_SHORT,81,30,17,10
+    CONTROL         "",IDC_BK_BOUNCERATE,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_TABSTOP,102,27,99,18
+    LTEXT           "Long",IDC_BK_TIME_LBL_LONG,205,30,18,10
+    CONTROL         "&Yes",IDC_RADIOBEEPYES,"Button",BS_AUTORADIOBUTTON,21,
+                    72,28,10
+    CONTROL         "N&o",IDC_RADIOBEEPNO,"Button",BS_AUTORADIOBUTTON,21,86,
+                    25,10
+    LTEXT           "Do you want Windows to beep when it accepts a keystroke?",
+                    IDC_STATIC,21,57,275,8
+    LTEXT           "&Type here to test BounceKeys settings:",
+                    IDC_FK_LBL_TESTBOX,21,104,275,8
+    EDITTEXT        IDC_FK_TESTBOX,21,115,275,14,ES_AUTOHSCROLL
+END
+
+IDD_WIZLAUNCHMAGNIFY DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can use Microsoft Magnifier to BLAH BLAH BLAH",
+                    IDC_STATIC,21,13,267,8
+    LTEXT           "Do you want to use Microsoft Magnifier:",IDC_STATIC,21,
+                    47,155,8
+    CONTROL         "&When Windows starts, before anyone has logged on",
+                    IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,21,62,224,10
+    CONTROL         "W&hen you log on to Windows",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON,21,78,163,10
+    CONTROL         "&Only when I launch it from the Start Menu",IDC_RADIO3,
+                    "Button",BS_AUTORADIOBUTTON,21,94,174,10
+END
+
+IDD_WIZLAUNCHSCREENREADER DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can use Microsoft Screen Reader to BLAH BLAH BLAH",
+                    IDC_STATIC,21,13,283,8
+    LTEXT           "Do you want to use Microsoft Screen Reader:",IDC_STATIC,
+                    21,47,193,8
+    CONTROL         "When Windows starts, before anyone has logged on",
+                    IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,21,62,224,10
+    CONTROL         "When you log on to Windows",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON,21,78,144,10
+    CONTROL         "Only when I launch it from the Start Menu",IDC_RADIO3,
+                    "Button",BS_AUTORADIOBUTTON,21,94,188,10
+END
+
+IDD_WIZLAUNCHONSCREENKEYBOARD DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can use Microsoft On Screen Keyboard to BLAH BLAH BLAH",
+                    IDC_STATIC,21,13,210,8
+    LTEXT           "Do you want to use Microsoft On Screen Keyboard:",
+                    IDC_STATIC,21,47,203,8
+    CONTROL         "When Windows starts, before anyone has logged on",
+                    IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,21,62,193,10
+    CONTROL         "When you log on to Windows",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON,21,78,137,10
+    CONTROL         "Only when I launch it from the Start Menu",IDC_RADIO3,
+                    "Button",BS_AUTORADIOBUTTON,21,94,165,10
+END
+
+IDD_MSEWIZMOUSETRAILS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "It's easier to see and follow the mouse pointer if it leaves a trail.",
+                    IDC_STATIC,21,8,264,8
+    CONTROL         "&Yes",IDC_RADIOYES,"Button",BS_AUTORADIOBUTTON,21,36,28,
+                    10
+    CONTROL         "N&o",IDC_RADIONO,"Button",BS_AUTORADIOBUTTON,21,50,25,
+                    10
+    LTEXT           "Do you want the mouse pointer to leave a trail?",
+                    IDC_STATIC,21,22,204,8
+END
+
+IDD_WIZNEWWELCOME DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Accessibility Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Welcome to the Accessibility Wizard",IDC_BIGTITLE,115,8,
+                    185,24
+    LTEXT           "To continue, click Next",IDC_STATIC,115,102,150,13
+    LTEXT           "This wizard helps you configure Windows for your vision, hearing, and mobility needs.",
+                    IDC_STATIC,115,40,185,18
+    LTEXT           "If you are using an input device other than a mouse, instead of clicking, use the appropriate action to complete commands or select items throughout the wizard.",
+                    IDC_STATIC,115,63,185,34
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WIZFINISH, DIALOG
+    BEGIN
+        VERTGUIDE, 115
+        VERTGUIDE, 303
+    END
+
+    IDD_WIZOPTIONS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZWORKSTATIONDEFAULT, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZNOOPTIONSSELECTED, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZMOUSECURSOR, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+    END
+
+    IDD_SNDWIZSENTRYSHOWSOUNDS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZMOUSEKEYS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_KBDWIZSTICKYKEYS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_KBDWIZTOGGLEKEYS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_KBDWIZSHOWEXTRAKEYBOARDHELP, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 295
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZBUTTONCONFIG, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZSAVETOFILE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZWELCOME2, DIALOG
+    BEGIN
+        RIGHTMARGIN, 310
+        VERTGUIDE, 7
+        VERTGUIDE, 23
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_FNTWIZSCROLLBAR, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_PREV_COLOR, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZACCESSTIMEOUT, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZMOUSEKEYS1, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 16
+        VERTGUIDE, 301
+        VERTGUIDE, 310
+        HORZGUIDE, 136
+    END
+
+    IDD_SNDWIZSENTRYSHOWSOUNDS2, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZWELCOME, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 311
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_PREV_ICON2, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 308
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZMOUSESPEED, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_KBDWIZFILTERKEYS1, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_KBDWIZFILTERKEYS2, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 141
+    END
+
+    IDD_WIZLAUNCHMAGNIFY, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZLAUNCHSCREENREADER, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZLAUNCHONSCREENKEYBOARD, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_MSEWIZMOUSETRAILS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        BOTTOMMARGIN, 142
+    END
+
+    IDD_WIZNEWWELCOME, DIALOG
+    BEGIN
+        RIGHTMARGIN, 314
+        VERTGUIDE, 115
+        VERTGUIDE, 300
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_APP_ICON            ICON    DISCARDABLE     "Access.ico"
+IDI_CURSOR_LARGE_INVERTING ICON    DISCARDABLE     "cursorLI.ico"
+IDI_CURSOR_SMALL_WHITE  ICON    DISCARDABLE     "cursorSW.ico"
+IDI_CURSOR_MEDIUM_WHITE ICON    DISCARDABLE     "cursorMW.ico"
+IDI_CURSOR_LARGE_WHITE  ICON    DISCARDABLE     "cursorLW.ico"
+IDI_CURSOR_LARGE_BLACK  ICON    DISCARDABLE     "cursorLB.ico"
+IDI_CURSOR_SMALL_BLACK  ICON    DISCARDABLE     "cursorSB.ico"
+IDI_CURSOR_SMALL_INVERTING ICON    DISCARDABLE     "cursorSI.ico"
+IDI_CURSOR_MEDIUM_BLACK ICON    DISCARDABLE     "cursorMB.ico"
+IDI_CURSOR_MEDIUM_INVERTING ICON    DISCARDABLE     "cursorMI.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_MOUSE               BITMAP  PRELOAD DISCARDABLE "MOUSE.BMP"
+IDB_MOUSE2              BITMAP  PRELOAD DISCARDABLE "mouse2.bmp"
+IDB_ICON_SAMPLE_NORMAL2 BITMAP  DISCARDABLE     "SampleN.bmp"
+IDB_ICON_SAMPLE_LARGE2  BITMAP  DISCARDABLE     "SampleL.bmp"
+IDB_ICON_SAMPLE_EXLARGE2 BITMAP  DISCARDABLE     "SampleXL.bmp"
+IDB_ACCWIZ              BITMAP  DISCARDABLE     "accwiz.bmp"
+IDB_ACCMARK             BITMAP  DISCARDABLE     "accmark.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU DISCARDABLE 
+BEGIN
+    MENUITEM "Normal",                      IDM_NORMAL
+    MENUITEM "Disabled",                    IDM_DISABLED
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WIZNOOPTIONSSELECTEDTITLE "No Options Selected"
+    IDS_WIZNOOPTIONSSELECTEDSUBTITLE "You did not select any options."
+    IDS_GENERICPAGETITLE    "Generic Title"
+    IDS_GENERICPAGESUBTITLE "Generic Sub-Title."
+    IDS_WIZFILTERKEYSTITLE  "BounceKeys"
+    IDS_WIZFILTERKEYSSUBTITLE 
+                            "You can set Windows to ignore repeated keystrokes."
+    IDS_WIZSTICKYKEYSTITLE  "StickyKeys"
+    IDS_WIZSTICKYKEYSSUBTITLE "You do not have to hold down two keys at once."
+    IDS_WIZTOGGLEKEYSTITLE  "ToggleKeys"
+    IDS_WIZTOGGLEKEYSSUBTITLE 
+                            "You can set Windows to play a sound when you press CAPS LOCK, NUM LOCK, or SCROLL LOCK."
+    IDS_WIZSHOWEXTRAKEYBOARDHELPTITLE "Extra Keyboard Help"
+    IDS_WIZSHOWEXTRAKEYBOARDHELPSUBTITLE 
+                            "Some programs offer ToolTip and other instructions that help you use the keyboard to complete tasks."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WIZHOTKEYANDNOTIFICATIONTITLE "Shortcut keys"
+    IDS_WIZHOTKEYANDNOTIFICATIONSUBTITLE 
+                            "Shortcuts allow you to quickly turn on or off accessibility features at any time by typing certain key combinations."
+    IDS_WIZSAVEASDEFAULTTITLE "Default Accessibility Settings"
+    IDS_WIZSAVEASDEFAULTSUBTITLE 
+                            "You can make your accessibility settings the default for new users."
+    IDS_WIZACCESSTIMEOUTTITLE "Set Automatic Timeouts"
+    IDS_WIZACCESSTIMEOUTSUBTITLE 
+                            "You can set certain accessibility features to turn off if the computer is idle for a specified amount of time."
+    IDS_WIZSAVETOFILETITLE  "Save Settings to File"
+    IDS_WIZSAVETOFILESUBTITLE 
+                            "You can apply these accessibility settings to another computer."
+    IDS_WIZOPTTITLE         "Set Wizard Options"
+    IDS_WIZOPTSUBTITLE      "You can configure Windows for your vision, hearing, and mobility needs."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSEWIZMOUSESPEEDTITLE "Mouse Speed"
+    IDS_MSEWIZMOUSESPEEDSUBTITLE 
+                            "You can change the speed of your mouse pointer."
+    IDS_MSEWIZMOUSETRAILSTITLE "Mouse Trails"
+    IDS_MSEWIZMOUSETRAILSSUBTITLE "Your mouse pointer can leave a trail."
+    IDS_SNDWIZSENTRYSHOWSOUNDSTITLE "Sound Sentry and Show Sounds"
+    IDS_SNDWIZSENTRYSHOWSOUNDSSUBTITLE 
+                            "Change Sound Sentry and Show Sounds options."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSEWIZMOUSEKEYSTITLE "MouseKeys"
+    IDS_MSEWIZMOUSEKEYSSUBTITLE 
+                            "You can use your keyboard instead of a mouse, to move the mouse pointer."
+    IDS_MSEWIZMOUSECURSORTITLE "Mouse Cursor"
+    IDS_MSEWIZMOUSECURSORSUBTITLE 
+                            "You can choose the size and color of your mouse cursor."
+    IDS_MSEWIZBUTTONCONFIGTITLE "Mouse Button Settings"
+    IDS_MSEWIZBUTTONCONFIGSUBTITLE 
+                            "You can change how the mouse buttons function."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTIVE              "Active Window"
+    IDS_INACTIVE            "Inactive Window"
+    IDS_MINIMIZED           "Minimized Window"
+    IDS_ICONTITLE           "Very Long Icon Title"
+    IDS_NORMAL              "Normal"
+    IDS_DISABLED            "Disabled"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SELECTED            "Selected"
+    IDS_MSGBOX              "Message Box"
+    IDS_BUTTONTEXT          "OK"
+    IDS_SMCAPTION           "Miniature Title Bar"
+    IDS_WINDOWTEXT          "Window Text"
+    IDS_MSGBOXTEXT          "Message Text"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCHEME_HIGHCONTRASTBLACK "High Contrast Black"
+    IDS_SCHEME_HIGHCONTRASTWHITE "High Contrast White"
+    IDS_SCHEME_HIGHCONTRASTBLACKALTERNATE "High Contrast #1"
+    IDS_SCHEME_HIGHCONTRASTWHITEALTERNATE "High Contrast #2"
+    IDS_SCHEME_WINDOWSSTANDARD "Default Windows Colors"
+    IDS_SCHEME_CURRENTCOLORSCHEME "Current Color Scheme"
+    IDS_SCHEME_BLAHBLAHBLAH "!!! THE SCHEMES ABOVE MUST MATCH WHAT IS INSTALLED BY DEFAULT IN CONTROL PANEL !!!"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LKPREV_SCROLLSIZES  "16 20 25 30"
+    IDS_LKPREV_MINTEXTSIZES "8 10 12 14 16 18 20 22 24"
+    IDS_LKPREV_BORDERSIZES  "1 2 3 4 5 6"
+    IDS_LKPREV_WELCOME_MINTEXTSIZES "8 10 14"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LKPREV_MINTEXTTITLE "Display Size"
+    IDS_LKPREV_MINTEXTSUBTITLE 
+                            "You can select the size of text, graphics, and buttons that display on your screen."
+    IDS_LKPREV_COLORTITLE   "Display Color Settings"
+    IDS_LKPREV_COLORSUBTITLE 
+                            "You can choose high contrast display colors that make text easier to read."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LKPREV_SCROLLBARTITLE "Scroll Bar and Window Border Size"
+    IDS_LKPREV_SCROLLBARSUBTITLE 
+                            "You can select the size of scroll bars and window borders."
+    IDS_LKPREV_BORDERTITLE  "Border Size"
+    IDS_LKPREV_BORDERSUBTITLE "Scroll Bar and Window Border Size."
+    IDS_LKPREV_ICONTITLE    "Icon Size"
+    IDS_LKPREV_ICONSUBTITLE "You can choose the size of the icons on your desktop."
+    IDS_WELCOME2TITLE       "Display Settings"
+    IDS_WELCOME2SUBTITLE    "The following options determine the size of text and other items on your screen."
+    IDS_ICONPREV_ITEM1      "3½ Floppy (A:)"
+    IDS_ICONPREV_ITEM2      "Jeff_CDrive (C:)"
+    IDS_ICONPREV_ITEM3      "Atlas 97 (D:)"
+    IDS_ICONPREV_ITEM4      "Control Panel"
+    IDS_ICONPREV_ITEM5      "Printers"
+    IDS_ICONPREV_ITEM6      "Dial-Up Networking"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SNDSEN_SSWF_NONE    "[None]"
+    IDS_SNDSEN_SSWF_TITLE   "Flash active caption bar"
+    IDS_SNDSEN_SSWF_WINDOW  "Flash active window"
+    IDS_SNDSEN_SSWF_DISPLAY "Flash desktop"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SNDSEN_SSTF_NONE    "[None]"
+    IDS_SNDSEN_SSTF_CHARS   "Flash chars"
+    IDS_SNDSEN_SSTF_BORDER  "Flash border"
+    IDS_SNDSEN_SSTF_DISPLAY "Flash display"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BIGBOLDFONTSIZE     "16"
+    IDS_BIGBOLDFONTNAME     "MS Shell Dlg"
+    IDS_BOLDFONTSIZE        "16"
+    IDS_BOLDFONTNAME        "MS Shell Dlg"
+    IDS_BIGFONTSIZE         "12"
+    IDS_BIGFONTNAME         "Verdana Bold"
+    IDS_SYSTEMFONTNAME      "MS Shell Dlg"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WELCOMETITLE        "Welcome to the Accessibility Wizard"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SNDWIZSENTRYTITLE   "SoundSentry"
+    IDS_SNDWIZSENTRYSUBTITLE 
+                            "Windows can display visual warnings for system sounds."
+    IDS_SNDWIZSHOWSOUNDSTITLE "ShowSounds"
+    IDS_SNDWIZSHOWSOUNDSSUBTITLE 
+                            "In some software programs, you can display captions for speech and sounds."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CURSOR_SCHEME_WINDOWS_STANDARD_LARGE "Windows Standard (large)"
+    IDS_CURSOR_SCHEME_WINDOWS_STANDARD_EXTRALARGE 
+                            "Windows Standard (extra large)"
+    IDS_CURSOR_SCHEME_WINDOWS_BLACK "Windows Black "
+    IDS_CURSOR_SCHEME_WINDOWS_BLACK_LARGE "Windows Black (large)"
+    IDS_CURSOR_SCHEME_WINDOWS_BLACK_EXTRALARGE "Windows Black (extra large)"
+    IDS_CURSOR_SCHEME_WINDOWS_INVERTED "Windows Inverted"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CURSOR_SCHEME_WINDOWS_INVERTED_LARGE "Windows Inverted (large)"
+    IDS_CURSOR_SCHEME_WINDOWS_INVERTED_EXTRALARGE 
+                            "Windows Inverted (extra large)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WELCOMETEXT1        "Use usual text size for Windows."
+    IDS_WELCOMETEXT2        "Use large window titles and menus."
+    IDS_WELCOMETEXT3        "Use Microsoft Magnifier, and large titles and menus."
+    IDS_WELCOMETEXT4        "Large window titles and menus, and reduce screen resolution."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CHANGESFILTERKEYS   "FilterKeys"
+    IDS_CHANGESMOUSEKEYS    "MouseKeys"
+    IDS_CHANGESSERIALKEYS   "SerialKeys"
+    IDS_CHANGESSTICKYKEYS   "StickyKeys"
+    IDS_CHANGESTOGGLEKEYS   "ToggleKeys"
+    IDS_CHANGESSOUNDSENTRY  "SoundSentry"
+    IDS_CHANGESACCESSTIMEOUT "Accessibility Time Out option"
+    IDS_CHANGESHIGHCONTRAST "High Contrast"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CHANGESShowSounds   "ShowSounds"
+    IDS_CHANGESShowExtraKeyboardHelp "Show Extra Keyboard Help"
+    IDS_CHANGESSwapMouseButtons "Swap Mouse Buttons"
+    IDS_CHANGESCOLOR        "Color Schemes"
+    IDS_CHANGESNONCLIENTMETRICS "Sizes of Window Elements"
+    IDS_CHANGESMouseSpeed   "Mouse Speed"
+    IDS_CHANGESMouseTrails  "Mouse Trails"
+    IDS_CHANGESIconSize     "Icon Size"
+    IDS_CHANGESCursorScheme "Mouse Cursor Scheme"
+    IDS_CHANGESScrollWidth  "Scroll Bar Size"
+    IDS_CHANGESBorderWidth  "Window Border Width"
+    IDS_CHANGES19           "Changes 4"
+    IDS_CHANGES20           "Changes 4"
+    IDS_CHANGES21           "Changes 4"
+    IDS_CHANGES22           "Changes 4"
+    IDS_CHANGESNOCHANGES    "No changes have been made."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WIZSAVECHANGESMESSAGETITLE "Save Changes"
+    IDS_WIZSAVECHANGESMESSAGETEXT 
+                            "Do you want to keep the changes you have made so far?\r\n\r\nClick Yes to keep the changes.\r\nClick No to undo any changes.\r\n"
+    IDS_WIZERRORLOADINGFILETITLE "Accessibility Wizard"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WIZERRORLOADINGFILETEXT 
+                            "There was a problem loading the file specified when running the Accessibility Wizard."
+    IDS_WIZERRORNEEDADMINTITLE "Accessibility Wizard"
+    IDS_WIZERRORNEEDADMINTEXT 
+                            "You must have administrative priveleges on this machine to make changes to the logon screen settings.  Contact your system administrator for assistance."
+    IDS_WIZERRORSAVINGFILETITLE "Accessibility Wizard"
+    IDS_WIZERRORSAVINGFILETEXT 
+                            "There was a problem saving the specified file."
+    IDS_WIZCHANGESHAPPENINGTITLE "Accessibility Wizard"
+    IDS_WIZCHANGESHAPPENINGTEXT 
+                            "These changes are going to take effect immediately.\r\nIf you don't like the new settings, you will be given an opportunity to undo the changes.\r\n\r\nIf for some reason your display becomes illegible, press the ESCAPE key once."
+    IDS_WIZCANCELCHANGESTITLE "Accessibility Wizard"
+    IDS_WIZCANCELCHANGESTEXT 
+                            "Click OK to accept these settings, or Cancel to restore the original settings."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ICONSIZENAMENORMAL  "Normal"
+    IDS_ICONSIZENAMELARGE   "Large"
+    IDS_ICONSIZENAMEEXTRALARGE "Extra Large"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEFAULTSAVEFILENAME "MySettings.acw"
+    IDS_FILTERNAME          "Accessibility Wizard Settings (*.acw)"
+    IDS_FILTER              "*.acw"
+    IDS_DISPLAYRESOLUTIONINFO 
+                            "You are currently at %i x %i.  By switching to %i x %i, the text on screen will be more readable."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NAMEOFMAGNIFIER     "Magnifier"
+    IDS_WIZFILTERKEYSETTING "BounceKeys Settings"
+    IDS_MSEWIZMOUSEKEYSETTING "MouseKeys Settings"
+    IDS_TEXTSIZESUBTITLE    "Windows can alter the size of the items on your screen."
+    IDS_TEXTSIZETITLE       "Text Size"
+    IDS_ENABLEWEB           "http://www.microsoft.com/enable/"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PREVIEWMENUTEXT     "  File   Edit   Help"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FONTCHARSET         "0"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WINDOWSDEFAULTSIZES "1 16 16 18 18 -11 700 15 15 -8 700 18 18 -11 400 -11 400 -11 400 -11 400"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

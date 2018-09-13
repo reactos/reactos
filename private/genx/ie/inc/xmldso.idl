@@ -1,0 +1,62 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998.
+//
+//  File: xmldso.idl
+//
+//--------------------------------------------------------------------------
+#ifdef UNIX
+import "wtypes.idl";
+import "ocidl.idl";
+#endif
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#include <idispids.h>
+#include "xmldsodid.h"
+
+interface IXMLDOMDocument;
+
+[
+	local, object,
+	uuid(310afa62-0575-11d2-9ca9-0060b0ec3d39),
+    odl,
+    dual,
+    oleautomation,
+    nonextensible,
+    hidden, // Because that this is the default interface of coclass XMLDSOControl
+	helpstring("XML DSO Control"),
+	pointer_default(unique)
+]
+interface IXMLDSOControl : IDispatch
+{
+	[propget,id(DISPID_XMLDSO_DOCUMENT)] 
+        HRESULT XMLDocument([out, retval] IXMLDOMDocument** ppDoc);
+	[propput,id(DISPID_XMLDSO_DOCUMENT)] 
+        HRESULT XMLDocument([in] IXMLDOMDocument* ppDoc);
+
+	[propget,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)] 
+        HRESULT JavaDSOCompatible([out, retval] BOOL* fJavaDSOCompatible);
+	[propput,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)] 
+        HRESULT JavaDSOCompatible([in]  BOOL fJavaDSOCompatible);
+
+	[propget, id(DISPID_READYSTATE)] 
+        HRESULT readyState([out, retval] long *state);
+};
+
+[
+	uuid(550dda30-0541-11d2-9ca9-0060b0ec3d39),
+	helpstring("XML Data Source Object")
+]
+coclass XMLDSOControl
+{
+	[default] interface IXMLDSOControl;
+};
+
+

@@ -1,0 +1,185 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifdef APSTUDIO_INVOKED
+#include "afxres.h"
+#else // APSTUDIO_INVOKED
+#include <windows.h>
+#include <commctrl.h>
+#define IDC_STATIC -1
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#ifdef APSTUDIO_INVOKED\r\n"
+    "#include ""afxres.h""\r\n"
+    "#else // APSTUDIO_INVOKED\r\n"
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#define IDC_STATIC -1\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""app.rc2""\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SERVER              ICON    DISCARDABLE     "server.ico"
+IDI_WORKGROUP           ICON    DISCARDABLE     "group.ico"
+IDI_SHARE               ICON    DISCARDABLE     "share.ico"
+IDI_NETWORK             ICON    DISCARDABLE     "network.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVER_SUMMARYINFO DIALOG DISCARDABLE  0, 0, 228, 200
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SERVER,IDC_SERVER_ICON,7,7,18,20
+    LTEXT           "",IDC_SERVER,40,11,172,10,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,32,212,1
+    LTEXT           "Comment:",IDC_COMMENT_TEXT,7,40,37,10
+    LTEXT           "",IDC_COMMENT,68,40,134,9,SS_NOPREFIX
+    LTEXT           "",IDC_WORKGROUP_OR_DOMAIN,7,53,37,10
+    LTEXT           "",IDC_WORKGROUP_OR_DOMAIN_NAME,68,53,134,10,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,91,212,1
+    LTEXT           "Type:",IDC_TYPE_TEXT,7,99,37,10
+    LTEXT           "",IDC_TYPE,68,99,133,28,SS_NOPREFIX
+END
+
+IDD_SHARE_SUMMARYINFO DIALOG DISCARDABLE  0, 0, 228, 200
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SHARE,IDC_SHARE_ICON,7,7,18,20
+    LTEXT           "",IDC_SHARE,40,11,173,8,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,32,212,1
+    LTEXT           "Computer name:",IDC_SERVER_TEXT,7,40,54,8
+    EDITTEXT        IDC_SERVER,68,40,120,8,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Computer type:",IDC_TYPE_TEXT,7,53,54,8
+    EDITTEXT        IDC_TYPE,68,53,134,8,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "",IDC_WORKGROUP_OR_DOMAIN,7,66,64,8
+    EDITTEXT        IDC_WORKGROUP_OR_DOMAIN_NAME,68,66,120,8,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+
+END
+
+IDD_WRKGRP_SUMMARYINFO DIALOG DISCARDABLE  0, 0, 228, 200
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_WORKGROUP,IDC_WORKGROUP_OR_DOMAIN_NAME_2_ICON,7,7,18,
+                    20
+    LTEXT           "",IDC_WORKGROUP_OR_DOMAIN_NAME_2,40,11,173,10,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,32,212,1
+    LTEXT           "Type:",IDC_WRKGRP_TYPE_TEXT,7,40,28,10
+    LTEXT           "",IDC_WRKGRP_TYPE,40,40,166,27,SS_NOPREFIX
+END
+
+IDD_NETWORK_SUMMARYINFO DIALOG DISCARDABLE  0, 0, 228, 200
+STYLE WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NETWORK,IDC_NETWORK_ICON,9,15,18,20
+    LTEXT           "",IDC_NETWORK,42,20,173,10,SS_NOPREFIX
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,9,41,212,1
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_MSG_NOT_FOUND   "Could not find message 0x%08lx in the application message file."
+    IDS_MSGTITLE            "Microsoft Networking"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELPFILENAME        "windows.hlp"
+    IDS_ROLE_PRIMARY        "Primary"
+    IDS_ROLE_BACKUP         "Backup"
+    IDS_ROLE_WKSTA          "Workstation"
+    IDS_ROLE_SERVER         "Server"
+    IDS_ROLE_PROFESSIONAL   "Professional"
+    IDS_SERVER_TYPE_WINNT   "Windows NT"
+    IDS_SERVER_TYPE_LANMAN  "Lanman"
+    IDS_SERVER_TYPE_WFW     "Windows for Workgroups"
+    IDS_SERVER_TYPE_WIN2K   "Windows 2000"
+    IDS_SERVER_TYPE_POSTWIN2K "Windows"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SERVER_TYPE_WINDOWS95 "Windows 95"
+    IDS_LOGON_DOMAIN        "Domain:"
+    IDS_LOGON_WORKGROUP     "Workgroup:"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "app.rc2"
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

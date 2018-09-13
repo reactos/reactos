@@ -1,0 +1,48 @@
+<AUCTIONBLOCK>
+
+	<ITEM>
+		<TITLE>Vase and Stones</TITLE>
+		<ARTIST>Linda Mann</ARTIST>
+		<DIMENSIONS>20x30 inches</DIMENSIONS>
+		<MATERIALS>Oil</MATERIALS>
+		<YEAR>1996</YEAR>
+		<DESCRIPTION>Still Life</DESCRIPTION>
+		<PREVIEW-SMALL src="burl-s.jpg" width="300" height="194" alt="Vase and Stones"/>
+		<BIDS>
+			<BID>
+				<PRICE>6000</PRICE>
+				<TIME>3:02:22 PM</TIME>
+				<BIDDER>Chris</BIDDER>
+				<TIMESTAMP>1307</TIMESTAMP>
+			</BID>
+			<BID>
+				<PRICE>5700</PRICE>
+				<TIME>2:58:42 PM</TIME>
+				<BIDDER>John</BIDDER>
+				<TIMESTAMP>1315</TIMESTAMP>
+			</BID>
+			<BID>
+				<PRICE>5600</PRICE>
+				<TIME>2:54:32 PM</TIME>
+				<BIDDER>Andrew</BIDDER>
+				<TIMESTAMP>1308</TIMESTAMP>
+			</BID>
+			<BID>
+				<PRICE>5500</PRICE>
+				<TIME>2:48:08 PM</TIME>
+				<BIDDER>Chris</BIDDER>
+				<TIMESTAMP>1307</TIMESTAMP>
+			</BID>
+			<BID>
+				<PRICE>5000</PRICE>
+				<TIME>2:47:58 PM</TIME>
+				<BIDDER>opening price</BIDDER>
+				<TIMESTAMP>1298</TIMESTAMP>
+			</BID>
+	
+		</BIDS>
+		<TIMESTAMP>1315</TIMESTAMP>
+	</ITEM>
+
+</AUCTIONBLOCK>
+

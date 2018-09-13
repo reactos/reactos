@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdth2
+
+TARGETNAME=kbdth2
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdth2.c kbdth2.rc
+
+NTTARGETFILE0=kbdth2.h kbdth2.rc kbdth2.def

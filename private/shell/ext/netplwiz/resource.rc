@@ -1,0 +1,1287 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "version.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PSW_PERMISSIONS DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "What level of access do you want to grant <user>?",
+                    IDC_WHATACCESS,21,1,275,8
+    LTEXT           "Users can modify the computer and install programs, but cannot read files that belong to other users.",
+                    IDC_STATIC,33,27,263,16,NOT WS_GROUP
+    LTEXT           "Users can operate the computer and save documents, but cannot install programs or make potentially damaging changes to the system files and settings.",
+                    IDC_STATIC,33,60,263,16,NOT WS_GROUP
+    CONTROL         "&Standard user",IDC_POWERUSERS,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,21,16,106,10
+    CONTROL         "&Restricted user",IDC_USERS,"Button",BS_AUTORADIOBUTTON,
+                    21,49,96,10
+    CONTROL         "&Other:",IDC_OTHER,"Button",BS_AUTORADIOBUTTON,21,82,44,
+                    10
+    LTEXT           "Other &Group:",IDC_OTHER_STATIC,-1,-1,0,0
+    COMBOBOX        IDC_GROUPS,66,80,179,200,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Group Description",IDC_GROUPDESC,66,97,230,39
+    RTEXT           "(Users Group)",IDC_STATIC,175,49,70,8
+    RTEXT           "(Power Users Group)",IDC_STATIC,138,16,107,8
+END
+
+IDD_PSW_DOMAININFO DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "To connect your computer to a Windows network, you need the following information:",
+                    IDC_STATIC,21,1,275,8
+    LTEXT           "•  User name",IDC_STATIC,21,16,164,8
+    LTEXT           "•  Password",IDC_STATIC,21,31,164,8
+    LTEXT           "•  User account domain",IDC_STATIC,21,44,164,8
+    LTEXT           "You might also need:",IDC_STATIC,21,64,164,8
+    LTEXT           "•  Computer name",IDC_STATIC,21,79,164,8
+    LTEXT           "If you do not have this information, contact your network administrator before proceeding.",
+                    IDC_STATIC,21,111,275,17
+    LTEXT           "•  Computer domain",IDC_STATIC,21,93,164,8
+END
+
+IDD_PSW_USERINFO DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Type your Windows user account and domain information. If you do not have this information, ask your network administrator.",
+                    IDC_STATIC,21,1,275,22
+    LTEXT           "&User name:",IDC_STATIC,21,29,49,8
+    EDITTEXT        IDC_USER,71,26,164,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,21,47,49,8
+    EDITTEXT        IDC_PASSWORD,71,44,164,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_STATIC,21,65,49,8
+    EDITTEXT        IDC_DOMAIN,71,63,164,14,ES_UPPERCASE | ES_AUTOHSCROLL
+    CONTROL         "Log on using a dial-up &connection",IDC_DIALUP,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,84,275,10
+END
+
+IDD_PSW_DONE DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Completing the Network Identification Wizard",IDC_TITLE,
+                    115,8,190,34
+    LTEXT           "To close this wizard, click Finish.",IDC_FINISHSTATIC,
+                    115,42,190,134
+END
+
+IDD_PSW_WHICHNET DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "My &company uses a network with a domain",IDC_DOMAIN,
+                    "Button",BS_AUTORADIOBUTTON | BS_TOP | BS_MULTILINE,21,
+                    16,275,10
+    CONTROL         "My co&mpany uses a network without a domain",
+                    IDC_WORKGROUP,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,21,31,275,10
+    LTEXT           "Select the option that best describes your company network:",
+                    IDC_STATIC,21,1,275,8
+END
+
+IDD_PSW_WORKGROUP DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Type the name of the workgroup to which this computer belongs. Windows uses this name in My Network Places to show you other computers in your workgroup.\n\nIf you do not know the name of your workgroup, go to the next screen.",
+                    IDC_STATIC,21,1,275,34
+    LTEXT           "&Workgroup name:",IDC_STATIC,21,45,69,8
+    EDITTEXT        IDC_WORKGROUP,91,43,159,14,ES_UPPERCASE | ES_AUTOHSCROLL
+END
+
+IDD_PSW_AUTOLOGON DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "You can require all users to enter a user name and password to log on, or you can have Windows assume the same user will always log on to this computer.\n\nWhich option do you prefer?",
+                    IDC_STATIC,21,1,275,39
+    CONTROL         "Users &must enter a user name and password to use this computer.",
+                    IDC_NOAUTOLOGON,"Button",BS_AUTORADIOBUTTON,21,45,275,10
+    CONTROL         "&Windows always assumes the following user has logged on to this computer:",
+                    IDC_AUTOLOGON,"Button",BS_AUTORADIOBUTTON,21,60,275,10
+    LTEXT           "&User name:",IDC_USERSLABEL,34,79,73,8
+    COMBOBOX        IDC_USERS,108,76,142,200,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Password:",IDC_PASSWORDLABEL,34,95,73,8
+    EDITTEXT        IDC_PASSWORD,108,92,142,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm password:",IDC_CONFIRMPASSWORDLABEL,34,113,73,
+                    8
+    EDITTEXT        IDC_CONFIRMPASSWORD,108,111,142,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+END
+
+IDD_PSW_WELCOME DIALOGEX 0, 0, 317, 193
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Welcome to the Network Identification Wizard",IDC_TITLE,
+                    115,8,190,32
+    LTEXT           "This wizard helps you connect your computer to a network.",
+                    IDC_STATIC,115,44,188,19
+    LTEXT           "To continue, click Next.",IDC_STATIC,115,67,188,8
+END
+
+IDD_PSW_JOINCREDENTIALS DIALOGEX DISCARDABLE  46, 21, 247, 105
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Domain User Name and Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&User name:",IDC_STATIC,7,31,54,8
+    EDITTEXT        IDC_USER,62,29,178,14,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "&Password:",IDC_STATIC,7,49,54,8
+    EDITTEXT        IDC_PASSWORD,62,47,178,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_STATIC,7,67,54,8
+    EDITTEXT        IDC_DOMAIN,62,64,178,14,ES_AUTOHSCROLL | ES_UPPERCASE
+    DEFPUSHBUTTON   "OK",IDOK,136,84,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,190,84,50,14
+    LTEXT           "Type the name and password of an account with permission to join the domain.",
+                    IDC_MESSAGE,7,7,220,20
+END
+
+IDD_WIZ_NETPASSWORD DIALOGEX 40, 40, 245, 127
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Access Denied"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&User Name:",IDC_STATIC,7,70,52,8
+    EDITTEXT        IDC_USER,60,68,178,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,7,88,52,8
+    EDITTEXT        IDC_PASSWORD,60,86,178,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,134,107,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,188,107,50,14
+    LTEXT           "Windows cannot connect to <resource> as <domain\\user> because:",
+                    IDC_MESSAGE,7,7,231,16
+    LTEXT           "To connect as another user, enter their user name and password below.",
+                    IDC_STATIC,7,45,231,16
+    LTEXT           "Error message goes here.",IDC_ERROR,7,30,231,8
+END
+
+IDD_WIZ_NETPASSWORD9X DIALOGEX 40, 40, 245, 109
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Access Denied"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC,7,70,52,8
+    EDITTEXT        IDC_PASSWORD,60,68,178,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,134,89,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,188,89,50,14
+    LTEXT           "Windows cannot connect to <resource> because:",
+                    IDC_MESSAGE,7,7,231,8
+    LTEXT           "To connect, enter the network password below.",
+                    IDC_STATIC,7,53,231,16
+    LTEXT           "Error message goes here.",IDC_ERROR,7,22,231,16
+END
+
+
+IDD_WIZ_COMPLETION_ADDPLACE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add Network Place Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "You are ready to connect to \\\\server\\share\nMay be two lines.",
+                    IDC_COMPLETION_STATIC,100,37,187,16
+    LTEXT           "&Enter a name for this Network Place:",IDC_STATIC,100,
+                    60,187,8
+    EDITTEXT        IDC_NETPLNAME_EDIT,100,70,187,14,ES_AUTOHSCROLL
+    LTEXT           "To connect to this Network Place, click Finish.",
+                    IDC_STATIC,100,91,187,8
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP,0,0,88,157
+    LTEXT           "Completing the Add Network Place Wizard",
+                    IDC_COMPLETE_TITLE,100,7,187,24
+END
+
+IDD_WIZ_WELCOME_ADDPLACE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add Network Place Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Welcome to the Add Network Place Wizard",
+                    IDC_WELCOME_TITLE,100,7,187,24
+    LTEXT           "This wizard helps you add a link to a Network Place where you can store your documents. A Network Place can be a shared folder, a Web folder on the Internet, or an FTP site.",
+                    IDC_STATIC,100,37,187,32
+    LTEXT           "Type the &location of the Network Place:",
+                    IDC_FOLDER_STATIC,100,76,194,8
+    EDITTEXT        IDC_FOLDER_EDIT,100,86,133,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,237,86,50,14
+    LTEXT           "To continue, click Next.",IDC_STATIC,100,126,187,8
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP,0,0,88,157
+    CONTROL         "Here are <A>some examples</A>.",IDC_EXAMPLESLINK,
+                    "Link Window",WS_TABSTOP,100,104,187,8
+END
+
+IDD_WIZ_SELECTFOLDER_ADDPLACE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add Network Place Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Static",IDC_SELECTFOLDER_STATIC,100,7,187,20
+    CONTROL         "Folder List",IDC_SELECTFOLDER_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_NOSORTHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,100,33,187,64
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP,0,0,82,157
+END
+
+IDD_WIZ_PASSWORD_ADDPLACE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add Network Place Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Most FTP servers allow users to log on anonymously with limited access to the server.  Would you like to log on anonymously?",
+                    IDC_STATIC,100,7,187,24
+    CONTROL         "Log on &anonymously",IDC_PASSWORD_ANONYMOUS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,40,187,8
+    LTEXT           "&User name:",IDC_USERNAME_LABEL,100,62,45,8
+    EDITTEXT        IDC_USER,146,60,142,14,ES_AUTOHSCROLL
+    LTEXT           "You will be prompted for your password when you connect to the FTP server.",
+                    IDC_PWD_PROMPT,100,85,187,16
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP,0,0,88,157
+    LTEXT           "&User name:",IDC_ANON_USERNAME_LABEL,100,62,45,8,NOT WS_VISIBLE
+    EDITTEXT        IDC_ANON_USERNAME,146,60,142,14,ES_AUTOHSCROLL
+END
+
+IDD_WIZ_WNETBROWSE DIALOGEX 0, 0, 331, 169
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Browse Network Resources"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Select a &server from the list below:",IDC_STATIC,7,7,
+                    317,8
+    CONTROL         "Server List",IDC_SERVER_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_SHAREIMAGELISTS | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_TABSTOP,7,24,317,112
+    DEFPUSHBUTTON   "OK",IDOK,220,148,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,274,148,50,14
+END
+
+IDD_PSW_COMPINFO DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Formatted using IDS_COMPNOTFOUND",IDC_COMPINFO,21,1,275,
+                    40
+    LTEXT           "C&omputer name:",IDC_STATIC,21,51,69,8
+    EDITTEXT        IDC_COMPUTERNAME,91,48,159,14,ES_UPPERCASE | 
+                    ES_AUTOHSCROLL
+    LTEXT           "Computer &domain:",IDC_STATIC,21,69,69,8
+    EDITTEXT        IDC_DOMAIN,91,66,159,14,ES_UPPERCASE | ES_AUTOHSCROLL
+END
+
+IDD_USR_ADVANCED_PAGE DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Certificate Management",IDC_STATIC,7,7,238,54
+    ICON            IDI_CERTIFICATES,IDC_CERT_ICON,14,21,20,20
+    LTEXT           "Use certificates to positively identify yourself, certification authorities and publishers.",
+                    IDC_CERT_TEXT,41,21,197,16
+    PUSHBUTTON      "&New Certificate...",IDC_CERTWIZARD_BUTTON,116,40,68,14
+    PUSHBUTTON      "&Certificates",IDC_CERTIFICATE_BUTTON,188,40,50,14
+    GROUPBOX        "Advanced User Management",IDC_STATIC,7,64,238,54
+    ICON            IDI_USR_USERS,IDC_STATIC,14,78,20,20
+    LTEXT           "Local Users and Groups can be used to perform advanced user management tasks.",
+                    IDC_STATIC,41,78,197,16
+    PUSHBUTTON      "Ad&vanced",IDC_ADVANCED_BUTTON,188,97,50,14
+    GROUPBOX        "Secure Boot Settings",IDC_STATIC,7,121,238,70
+    LTEXT           "It is recommended that you require users to press Ctrl-Alt-Delete before logging on. This ensures password security and helps protect the system from harmful programs.",
+                    IDC_BOOT_TEXT,41,135,197,32
+    CONTROL         "&Require users to press Ctrl-Alt-Delete before logging on.",
+                    IDC_REQUIRECAD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,
+                    174,225,10
+    ICON            IDI_REQUIRECAD,IDC_BOOT_ICON,14,135,20,20
+END
+
+IDD_USR_AUTOLOGON_DLG DIALOGEX 0, 0, 256, 116
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Automatically Log On"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SECURITYCHECK,IDC_STATIC,7,7,21,20
+    LTEXT           "You can set up your computer so that users do not have to type a user name and password to log on. To do this, specify a user that will be automatically logged on below:",
+                    IDC_STATIC,35,7,214,24
+    LTEXT           "&User name:",IDC_STATIC,7,40,75,8
+    EDITTEXT        IDC_USER,83,38,166,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,7,58,75,8
+    EDITTEXT        IDC_PASSWORD,83,56,166,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm Password:",IDC_STATIC,7,76,75,8
+    EDITTEXT        IDC_CONFIRMPASSWORD,83,74,166,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,143,95,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,199,95,50,14
+END
+
+IDD_USR_CHOOSEGROUP_PROP_PAGE DIALOGEX 0, 0, 212, 188
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Group Membership"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "What level of access do you want to grant this user?",
+                    IDC_STATIC,7,7,198,8
+    LTEXT           "Users can modify the computer and install programs, but cannot read files that belong to other users.",
+                    IDC_STATIC,19,33,186,16
+    LTEXT           "Users can operate the computer and save documents, but cannot install programs or make potentially damaging changes to the system files and settings.",
+                    IDC_STATIC,19,67,186,24
+    CONTROL         "&Standard user",IDC_POWERUSERS,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,7,22,88,10
+    CONTROL         "&Restricted user",IDC_USERS,"Button",BS_AUTORADIOBUTTON,
+                    7,56,90,10
+    CONTROL         "&Other:",IDC_OTHER,"Button",BS_AUTORADIOBUTTON,7,98,44,
+                    10
+    LTEXT           "Other &Group:",IDC_OTHER_STATIC,-1,-1,0,0
+    COMBOBOX        IDC_GROUPS,54,96,151,200,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "Group Description",IDC_GROUPDESC,54,111,151,70
+    RTEXT           "(Power Users Group)",IDC_STATIC,119,22,86,8
+    RTEXT           "(Users Group)",IDC_STATIC,119,56,86,8
+END
+
+IDD_USR_CHOOSEGROUP_WIZARD_PAGE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add New User"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         4412,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,
+                    0,88,155
+    LTEXT           "What level of access do you want to grant this user?",
+                    IDC_STATIC,100,7,187,8
+    LTEXT           "Users can modify the computer and install programs, but cannot read files that belong to other users.",
+                    IDC_STATIC,112,33,175,16
+    LTEXT           "Users can operate the computer and save documents, but cannot install programs or make potentially damaging changes to the system files and settings.",
+                    IDC_STATIC,112,69,175,24
+    CONTROL         "&Standard user",IDC_POWERUSERS,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,100,23,89,10
+    CONTROL         "&Restricted user",IDC_USERS,"Button",BS_AUTORADIOBUTTON,
+                    100,57,96,10
+    CONTROL         "&Other:",IDC_OTHER,"Button",BS_AUTORADIOBUTTON,100,99,
+                    44,10
+    LTEXT           "Other &Group:",IDC_OTHER_STATIC,-1,-1,0,0
+    COMBOBOX        IDC_GROUPS,147,98,140,200,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    LTEXT           "Group Description",IDC_GROUPDESC,147,114,140,32
+    RTEXT           "(Power Users Group)",IDC_STATIC,203,23,84,8
+    RTEXT           "(Users Group)",IDC_STATIC,202,57,85,8
+END
+
+IDD_USR_FINDNETUSER_WIZARD_PAGE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add New User"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Type the domain and user name of a user to give them permission to use this computer.",
+                    IDC_STATIC,100,7,187,16
+    LTEXT           "&User name:",IDC_STATIC,100,32,49,8
+    EDITTEXT        IDC_USER,150,30,137,14,ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_STATIC,100,51,49,8
+    EDITTEXT        IDC_DOMAIN,150,48,137,14,ES_AUTOHSCROLL | ES_UPPERCASE
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE_BUTTON,237,69,50,14
+    CONTROL         4412,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,
+                    0,88,155
+    LTEXT           "To continue, click Next.",IDC_STATIC,100,102,187,8
+END
+
+IDD_USR_PASSWORD_WIZARD_PAGE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add New User"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC,100,24,71,8
+    EDITTEXT        IDC_PASSWORD,172,22,115,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm password:",IDC_STATIC,100,42,71,8
+    EDITTEXT        IDC_CONFIRMPASSWORD,172,40,115,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    CONTROL         4412,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,
+                    0,88,155
+    LTEXT           "Type and confirm a password for this user.",IDC_STATIC,
+                    100,7,171,8
+    LTEXT           "To continue, click Next.",IDC_STATIC,100,73,187,8
+END
+
+IDD_USR_SECURITYCHECK_DLG DIALOGEX 0, 0, 252, 180
+STYLE DS_MODALFRAME | DS_SHELLFONT | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Users and Passwords"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&User name:",IDC_STATIC,7,71,48,8
+    EDITTEXT        IDC_USER,56,69,189,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_STATIC,7,89,48,8
+    EDITTEXT        IDC_PASSWORD,56,88,189,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain:",IDC_DOMAIN_STATIC,7,108,48,8
+    EDITTEXT        IDC_DOMAIN,56,106,189,14,ES_AUTOHSCROLL | ES_UPPERCASE
+    DEFPUSHBUTTON   "OK",IDOK,141,159,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,159,50,14
+    LTEXT           "You must be a member of the Administrators group on this computer to open the Users and Passwords control panel.  You are logged in as <username>, which is not a member of the Administrators group.",
+                    IDC_CANTRUNCPL_STATIC,33,7,212,32
+    LTEXT           "Specify the user name and password of an Administrator on this computer to continue:",
+                    IDC_STATIC,7,46,238,16
+    LTEXT           "You can change your password without opening the Users and Passwords control panel by pressing Ctrl-Alt-Delete and selecting Change Password.",
+                    IDC_PASSWORD_STATIC,7,127,238,24
+    ICON            IDI_SECURITYCHECK,IDC_STATIC,7,7,21,20
+END
+
+IDD_USR_SETPASSWORD_DLG DIALOGEX 0, 0, 212, 68
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Set Password"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "New &password:",IDC_STATIC,7,8,87,8
+    EDITTEXT        IDC_PASSWORD,95,7,110,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm new password:",IDC_STATIC,7,27,87,8
+    EDITTEXT        IDC_CONFIRMPASSWORD,95,25,110,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",IDOK,101,46,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,155,46,50,14
+END
+
+IDD_USR_USERLIST_PAGE DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Users"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Use the list below to grant or deny users access to your computer, and to change passwords and other settings.",
+                    IDC_ULISTPG_TEXT,35,7,210,18
+    CONTROL         "Users must &enter a user name and password to use this computer.",
+                    IDC_AUTOLOGON_CHECK,"Button",BS_AUTOCHECKBOX | BS_TOP | 
+                    BS_MULTILINE | WS_TABSTOP,7,34,238,10
+    LTEXT           "&Users for this computer:",IDC_LISTTITLE_STATIC,7,49,98,
+                    8
+    CONTROL         "Users for this computer:",IDC_USER_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    WS_BORDER | WS_TABSTOP,7,60,238,72
+    PUSHBUTTON      "A&dd...",IDC_ADDUSER_BUTTON,87,137,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVEUSER_BUTTON,141,137,50,14
+    PUSHBUTTON      "Pr&operties",IDC_USERPROPERTIES_BUTTON,195,137,50,14
+    GROUPBOX        "Password for <user>",IDC_PWGROUP_STATIC,7,157,238,54
+    ICON            "",IDC_CURRENTUSER_ICON,16,171,20,20
+    LTEXT           "To change the password for <user>, click Set Password.",
+                    IDC_PASSWORD_STATIC,42,171,196,16
+    PUSHBUTTON      "Set &Password...",IDC_PASSWORD_BUTTON,163,189,74,14
+    ICON            IDI_USR_USERS,IDC_USERLISTPAGE_ICON,7,7,20,20
+END
+
+IDD_USR_USERNAME_PROP_PAGE DIALOGEX 0, 0, 212, 188
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&User name:",IDC_STATIC,7,8,48,8
+    EDITTEXT        IDC_USER,56,7,149,14,ES_AUTOHSCROLL
+    LTEXT           "&Full name:",IDC_STATIC,7,27,48,8
+    EDITTEXT        IDC_FULLNAME,56,25,149,14,ES_AUTOHSCROLL
+    LTEXT           "&Description:",IDC_STATIC,7,44,48,8
+    EDITTEXT        IDC_DESCRIPTION,56,43,149,14,ES_AUTOHSCROLL
+END
+
+IDD_USR_USERNAME_WIZARD_PAGE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Add New User"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         4412,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,0,
+                    0,88,155
+    LTEXT           "&User name:",IDC_STATIC,100,24,49,8
+    EDITTEXT        IDC_USER,150,22,137,14,ES_AUTOHSCROLL
+    LTEXT           "&Full name:",IDC_STATIC,100,41,49,8
+    EDITTEXT        IDC_FULLNAME,150,40,137,14,ES_AUTOHSCROLL
+    LTEXT           "&Description:",IDC_STATIC,100,58,49,8
+    EDITTEXT        IDC_DESCRIPTION,150,57,137,14,ES_AUTOHSCROLL
+    LTEXT           "Enter the basic information for the new user.",
+                    IDC_STATIC,100,7,187,8
+    LTEXT           "To continue, click Next.",IDC_STATIC,100,90,187,8
+END
+
+IDD_PSW_HOWUSE DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "&This computer is part of a business network, and I use it to connect to other computers at work",
+                    IDC_NETWORKED,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,21,16,275,20
+    CONTROL         "This &computer is for home use and is not part of a business network",
+                    IDC_NOTNETWORKED,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,21,39,275,20
+    LTEXT           "Select the option that best describes your computer:",
+                    IDC_STATIC,21,1,275,8
+END
+
+IDD_MND_PROGRESS_DLG DIALOGEX 0, 0, 212, 53
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Map Network Drive"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Cancel",IDCANCEL,80,30,50,14
+    LTEXT           "Attempting to connect to WHEE-BONG! (built at runtime from string resources)",
+                    IDC_CONNECTING,7,7,198,16
+END
+
+IDD_MND_CONNECTAS DIALOGEX 0, 0, 212, 95
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Connect As..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "By default, you will connect to <\\\\server\\share> as <domain\\user>. To connect as another user, enter their user name and password below.",
+                    IDC_MESSAGE,7,7,198,24
+    LTEXT           "&User name:",IDC_USER_STATIC,7,38,50,8
+    EDITTEXT        IDC_USER,59,35,91,14,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_PASSWORD_STATIC,7,57,50,8
+    EDITTEXT        IDC_PASSWORD,59,54,91,14,ES_PASSWORD | ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,155,35,50,14
+    DEFPUSHBUTTON   "OK",IDOK,100,75,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,155,75,50,14
+END
+
+IDD_MND_PAGE DIALOGEX 0, 0, 294, 154
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Map Network Drive"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP,0,0,88,157
+    LTEXT           "Windows can help you connect to a shared network folder and assign a drive letter to the connection so that you can access the folder using My Computer.",
+                    IDC_STATIC,100,7,187,24
+    LTEXT           "Specify the drive letter for the connection and the folder that you want to connect to:",
+                    IDC_STATIC,100,38,187,16
+    LTEXT           "&Drive:",IDC_STATIC,100,61,30,8
+    COMBOBOX        IDC_DRIVELETTER,131,58,102,200,CBS_DROPDOWNLIST | 
+                    CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "F&older:",IDC_STATIC,100,77,30,8
+    COMBOBOX        IDC_FOLDER,131,74,102,73,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...",IDC_FOLDERBROWSE,237,74,50,14
+    LTEXT           "Example: \\\\server\\share",IDC_STATIC,131,92,157,8
+    CONTROL         "&Reconnect at logon",IDC_RECONNECT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,131,104,156,10
+    CONTROL         "Connect using a <A>different user name</A>.",
+                    IDC_CONNECTASLINK,"Link Window",WS_TABSTOP,131,118,156,8
+    CONTROL         "Create a shortcut to a <A>Web folder or FTP site</A>.",
+                    IDC_ADDPLACELINK,"Link Window",WS_TABSTOP,131,130,156,8
+END
+
+IDD_PSW_ADDUSER DIALOGEX 0, 0, 317, 143
+STYLE DS_SHELLFONT | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Adding a user to this computer grants the user access to all the resources on this computer and to all shared resources on the network.",
+                    IDC_STATIC,21,1,275,16
+    LTEXT           "Type your network user account information, or type the account information of another user on your network.",
+                    IDC_STATIC,21,24,275,16,NOT WS_GROUP
+    CONTROL         "&Add the following user:",IDC_ADDUSER,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,21,47,87,10
+    CONTROL         "D&o not add a user at this time.",IDC_DONTADDUSER,
+                    "Button",BS_AUTORADIOBUTTON,21,104,110,10
+    LTEXT           "&User name:",IDC_USER_STATIC,33,67,55,8
+    EDITTEXT        IDC_USER,89,64,207,14,ES_AUTOHSCROLL
+    LTEXT           "User &domain:",IDC_DOMAIN_STATIC,33,86,55,8
+    EDITTEXT        IDC_DOMAIN,89,83,207,14,ES_AUTOHSCROLL | ES_UPPERCASE
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_PSW_PERMISSIONS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 245
+        VERTGUIDE, 296
+        TOPMARGIN, 1
+        HORZGUIDE, 16
+        HORZGUIDE, 136
+    END
+
+    IDD_PSW_DOMAININFO, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 136
+        HORZGUIDE, 7
+    END
+
+    IDD_PSW_USERINFO, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 71
+        VERTGUIDE, 296
+        HORZGUIDE, 7
+    END
+
+    IDD_PSW_DONE, DIALOG
+    BEGIN
+        VERTGUIDE, 305
+    END
+
+    IDD_PSW_WHICHNET, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        HORZGUIDE, 7
+    END
+
+    IDD_PSW_WORKGROUP, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 91
+        VERTGUIDE, 250
+        VERTGUIDE, 296
+        HORZGUIDE, 7
+    END
+
+    IDD_PSW_AUTOLOGON, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 34
+        VERTGUIDE, 108
+        VERTGUIDE, 250
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 136
+        HORZGUIDE, 7
+        HORZGUIDE, 93
+    END
+
+    IDD_PSW_WELCOME, DIALOG
+    BEGIN
+        RIGHTMARGIN, 303
+        VERTGUIDE, 115
+    END
+
+    IDD_PSW_JOINCREDENTIALS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 240
+        VERTGUIDE, 62
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_WIZ_NETPASSWORD, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 60
+        VERTGUIDE, 184
+        VERTGUIDE, 238
+        BOTTOMMARGIN, 120
+        HORZGUIDE, 7
+        HORZGUIDE, 30
+        HORZGUIDE, 45
+    END
+
+    IDD_WIZ_COMPLETION_ADDPLACE, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 31
+        HORZGUIDE, 147
+    END
+
+    IDD_WIZ_WELCOME_ADDPLACE, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 151
+        VERTGUIDE, 197
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 70
+        HORZGUIDE, 98
+        HORZGUIDE, 120
+        HORZGUIDE, 147
+    END
+
+    IDD_WIZ_SELECTFOLDER_ADDPLACE, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 33
+        HORZGUIDE, 113
+        HORZGUIDE, 147
+    END
+
+    IDD_WIZ_PASSWORD_ADDPLACE, DIALOG
+    BEGIN
+        VERTGUIDE, 146
+    END
+
+    IDD_WIZ_WNETBROWSE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 324
+        VERTGUIDE, 270
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+
+    IDD_PSW_COMPINFO, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 91
+        VERTGUIDE, 250
+        VERTGUIDE, 296
+    END
+
+    IDD_USR_ADVANCED_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 14
+        VERTGUIDE, 238
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+        HORZGUIDE, 68
+        HORZGUIDE, 125
+    END
+
+    IDD_USR_AUTOLOGON_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        VERTGUIDE, 83
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
+
+    IDD_USR_CHOOSEGROUP_PROP_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        VERTGUIDE, 19
+        VERTGUIDE, 54
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+        HORZGUIDE, 22
+    END
+
+    IDD_USR_CHOOSEGROUP_WIZARD_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 287
+        VERTGUIDE, 100
+        VERTGUIDE, 112
+        VERTGUIDE, 147
+        HORZGUIDE, 7
+        HORZGUIDE, 23
+        HORZGUIDE, 147
+    END
+
+    IDD_USR_FINDNETUSER_WIZARD_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 287
+        VERTGUIDE, 100
+        VERTGUIDE, 150
+        HORZGUIDE, 7
+    END
+
+    IDD_USR_PASSWORD_WIZARD_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 287
+        VERTGUIDE, 100
+        VERTGUIDE, 172
+        HORZGUIDE, 7
+    END
+
+    IDD_USR_SECURITYCHECK_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 33
+        VERTGUIDE, 56
+        VERTGUIDE, 191
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+        HORZGUIDE, 46
+        HORZGUIDE, 69
+        HORZGUIDE, 127
+        HORZGUIDE, 150
+    END
+
+    IDD_USR_SETPASSWORD_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        VERTGUIDE, 95
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_USR_USERLIST_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        VERTGUIDE, 137
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+    END
+
+    IDD_USR_USERNAME_PROP_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        VERTGUIDE, 56
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_USR_USERNAME_WIZARD_PAGE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 287
+        VERTGUIDE, 100
+        VERTGUIDE, 150
+        HORZGUIDE, 7
+    END
+
+    IDD_PSW_HOWUSE, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        HORZGUIDE, 7
+    END
+
+    IDD_MND_PROGRESS_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 46
+    END
+
+    IDD_MND_CONNECTAS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        VERTGUIDE, 57
+        VERTGUIDE, 59
+        VERTGUIDE, 150
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+        HORZGUIDE, 31
+        HORZGUIDE, 35
+        HORZGUIDE, 54
+        HORZGUIDE, 75
+    END
+
+    IDD_MND_PAGE, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 131
+        VERTGUIDE, 233
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 38
+        HORZGUIDE, 58
+        HORZGUIDE, 74
+        HORZGUIDE, 92
+        HORZGUIDE, 104
+        HORZGUIDE, 118
+        HORZGUIDE, 138
+        HORZGUIDE, 147
+    END
+
+    IDD_PSW_ADDUSER, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 33
+        VERTGUIDE, 89
+        VERTGUIDE, 296
+        TOPMARGIN, 1
+        HORZGUIDE, 24
+        HORZGUIDE, 47
+        HORZGUIDE, 64
+        HORZGUIDE, 83
+        HORZGUIDE, 104
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WIZ_BANNER          BITMAP  DISCARDABLE     "res\\mapnet.bmp"
+IDB_PSW_BANNER          BITMAP  DISCARDABLE     "res\\banner.bmp"
+IDB_PSW_WATERMARK       BITMAP  DISCARDABLE     "res\\watermrk.bmp"
+IDB_USR_BANNER          BITMAP  DISCARDABLE     "res\\wiz_bann.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_USR_USERS           ICON    DISCARDABLE     "res\\users.ico"
+IDI_PSW                 ICON    DISCARDABLE     "res\\mynet.ico"
+IDI_USR_DOMAINUSER_ICON ICON    DISCARDABLE     "res\\domuser.ico"
+IDI_USR_GROUP_ICON      ICON    DISCARDABLE     "res\\grpuser.ico"
+IDI_USR_LOCALUSER_ICON  ICON    DISCARDABLE     "res\\lcluser.ico"
+IDI_ADDNETPLACE         ICON    DISCARDABLE     "res\\addnP.ico"
+IDI_CERTIFICATES        ICON    DISCARDABLE     "res\\cert.ico"
+IDI_REQUIRECAD          ICON    DISCARDABLE     "res\\needcad.ICO"
+IDI_SECURITYCHECK       ICON    DISCARDABLE     "res\\seccheck.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "netplwiz_selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPENFILES_WITH_NAME_WARNING 
+                            "There are currently files open on %1 (connected to %2). If you do not close the files before disconnecting from the network device, data may be lost.  Do you want to disconnect the device anyway?"
+    IDS_CONNECT_OVER_REMEMBERED 
+                            "The device %1 is already connected to %2, and is set to reconnect at logon. Do you want to overwrite this connection with %3?"
+    IDS_ALREADY_CONNECTED   "The device %1 is already connected to %2."
+    IDS_MPRHELPFILENAME     "network.hlp"
+    IDS_PASSWORD_TEXT       "You last connected to this computer as"
+    IDS_ERR_NOPASSWORD      "No password supplied."
+    IDS_GETTING_INFO        "Working..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_NETPROVIDER     "An error occurred in network provider %1.  Error %2: %3"
+    IDS_ERR_DISCONNECTNOREMOTEDRIVES 
+                            "There are no network connections to disconnect."
+    IDS_ERR_CANNOT_SET_SAVECONNECTION 
+                            "Cannot change your save connections setting."
+    IDS_ERR_PROFILELOADERROR 
+                            "An error occurred while reconnecting %1 to %2\n\n%3 %4: %5\n\nThis connection has not been restored."
+    IDS_ERR_TEXT1           "An error occurred while reconnecting %1 to %2"
+    IDS_ERR_TEXT2           "%3 %4: %5"
+    IDS_ERR_CANNOT_SET_EXPANDLOGONDOMAIN 
+                            "Cannot change your expand logon domain setting."
+    IDS_ERR_INVALID_PATH    "Invalid Name"
+    IDS_ERR_BADUSER         "The user account %1 cannot be added to the local group %2."
+    IDS_ERR_NOSUCHUSER      "The user account '%1' (in domain '%2') does not exist.\n\nPlease check the name and domain and try again."
+    IDS_ERR_JOINWGFAIL      "Failed to join the workgroup '%1'. "
+    IDS_ERR_FAILTOFIND      "The system could not find a computer in your domain that matches the name you specified.\n\nYou can change or correct the name of the computer or domain."
+    IDS_ERR_BADPWUSER       "The system could not log you on.  Make sure your user name and domain are correct, then type your password again.  Letters in passwords must be typed using the correct case.  \n\nMake sure that Caps Lock is not accidentally on."
+    IDS_ERR_PWDNOMATCH      "The passwords you typed do not match.  Type the password for this account in both text boxes."
+    IDS_ERR_BADDOMAIN       "The domain name ""%1"" is either invalid or does not exist."
+    IDS_ERR_BADWORKGROUP    "The workgroup name ""%1"" is invalid."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BROWSE_DRIVE_CAPTION "Browse Network"
+    IDS_BROWSE_PRINTER_CAPTION "Browse Network Printer"
+    IDS_CONNECT_DRIVE_CAPTION "Map Network Drive"
+    IDS_CONNECT_PRINTER_CAPTION "Connect Network Printer"
+    IDS_DISCONNECT_DRIVE_CAPTION "Disconnect Network Drive"
+    IDS_DISCONNECT_PRINTER_CAPTION "Disconnect Network Printer"
+    IDS_DEVICE_NAME_DRIVE   "&Drive:"
+    IDS_DEVICE_NAME_PRINTER "Pri&nter:"
+    IDS_SERVERS_LISTBOX_DRIVE "&Shared Directories:"
+    IDS_SERVERS_LISTBOX_PRINTER "&Shared Printers:"
+    IDS_DEVICELESS_CONNECTION_NAME "(none)"
+    IDS_OPENFILES_WARNING   "There are currently files open on this device. If you do not close the files before disconnecting from the network device, data may be lost.  Do you want to disconnect the device anyway?"
+    IDS_CONNECT_OVER_EXISTING 
+                            "The device %1 is already connected to %2. Do you wish to replace the current connection with %3?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WIZARD_CAPTION_MAPDRIVE "Map Network Drive"
+    IDS_WELCOME             "Welcome"
+    IDS_SELECT_FOLDER       "Select Folder"
+    IDS_NOFOLDERS_LISTED    "No Folders Listed"
+    IDS_COMPLETION          "Completion"
+    IDS_SELECTFOLDER_STATIC "These are the shared folders on %1.  Select the one you want, and then click Next."
+    IDS_NOFOLDERS_STATIC    "No shared folders are currently available for %1.  To look elsewhere, click OK."
+    IDS_COMPLETION_STATIC   "You are ready to connect to %1."
+    IDS_CLOSE               "Close"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FIRSTCOLUMN         "Folder"
+    IDS_SECONDCOLUMN        "Comment"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_CAPTION         "Windows"
+    IDS_ERR_OPENFILES       "There are currently open files on this device.  If you do not close the files before disconnecting from the network device, data may be lost.  Do you want to disconnect the device anyway?"
+    IDS_ERR_ALREADY_ASSIGNED 
+                            "The device %1 is already connected to %2.  Do you wish to replace the current connection with %3?"
+    IDS_ERR_ALREADY_REMEMBERED 
+                            "The device %1 has a remembered connection to %2.  Do you wish to replace the current connection with %3?"
+    IDS_INVALID_REMOTE_PATH "The network path %1 could not be found."
+    IDS_ERR_PROVIDERBUSY    "The network provider is currently busy.  Please try again later."
+    IDS_ERR_NONETWORK       "The drive could not be mapped because no network was found."
+    IDS_ERR_UNEXPECTED      "An unexpected error has occurred."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PWD_STATIC          "Windows cannot access %1 as %2 due to the following error:"
+    IDS_PWD_STATIC9X        "Windows cannot access %1 due to the following error:"
+    IDS_UNCPLACE_FORMAT     "%1 on %2"
+    IDS_TITLEFONTNAME       "Verdana Bold"
+    IDS_TITLEFONTSIZE       "12"
+    IDS_CANTFINDFOLDER_CAPTION "Cannot Find Folder"
+    IDS_CANTFINDFOLDER_TEXT "The folder you entered does not appear to be valid. Please choose another."
+    IDS_CONNECTASUSER_MESSAGE 
+                            "By default, you will connect to the network folder as %1. To connect as another user, enter their user name and password below."
+    IDS_ADDPLACE_ERROR      "An unexpected error has occurred and the specified network place could not be added."
+    IDS_DRIVE_NONE          "(none)"
+    IDS_BAD_NETPLACE_NAME   "The name you entered for this network place is not valid."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVERLIST_FIRSTCOLUMN "Server Name"
+    IDS_SERVERLIST_SECONDCOLUMN "Comment"
+    IDS_FTP_NAME_FORMAT_DIR "%1 on %2"
+    IDS_CANTCLOSEFILES_WARNING 
+                            "The open files or folders on this device could not be closed automatically. Close these files or folders and try again."
+    IDS_USR_DESC            "Adds, removes, or changes properties for users including user passwords."
+    IDS_USR_NEWUSERWIZARD_CAPTION "Add User Wizard"
+    IDS_USR_TITLEFONTNAME   "Verdana Bold"
+    IDS_USR_TITLEFONTSIZE   "12"
+    IDS_USR_NAME_COLUMN     "User Name"
+    IDS_USR_DOMAIN_COLUMN   "Domain"
+    IDS_USR_GROUP_COLUMN    "Group"
+    IDS_USR_TOOLTIPFULLNAME_FORMAT "%1"
+    IDS_USR_TOOLTIPCOMMENT_FORMAT "%1"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWIZCAPTION       "Network Identification Wizard"
+    IDS_WORKGROUP           "Workgroup"
+    IDS_PERMISSIONS         "Access Level"
+    IDS_PERMISSIONS_SUB     "You can decide the user's level of access to this computer."
+    IDS_WHICHNET            "Connecting to the Network"
+    IDS_WHICHNET_SUB        "What kind of network do you use?"
+    IDS_WORKGROUP_SUB       "A workgroup is a group of computers that share files and resources."
+    IDS_DOMAININFO          "Network Information"
+    IDS_DOMAININFO_SUB      "Gather domain and account information before you proceed."
+    IDS_COMPINFO            "Computer Domain"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMPINFO_SUB        "Your computer must also belong to a domain."
+    IDS_USERINFO            "User Account and Domain Information"
+    IDS_USERINFO_SUB        "A user account gives you access to files and resources on a network."
+    IDS_DONE                "bla"
+    IDS_DONE_SUB            "bla"
+    IDS_WELCOME_SUB         "bla"
+    IDS_ABOUTTOJOIN         "An account for this computer has been found in the domain ""%1"". \n\n Would you like to use this?"
+    IDS_AUTOLOGON           "Users of This Computer"
+    IDS_AUTOLOGON_SUB       "Who can log on to this computer?"
+    IDS_HOWUSE              "Connecting to the Network"
+    IDS_HOWUSE_SUB          "How do you use this computer?"
+    IDS_COMPNOTFOUND        "Windows cannot find an account for your computer on the %1 domain.\n\nType your computer name and computer domain. (The computer domain might not be the same as the user account domain to which you log on.)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USR_TOOLTIPBOTH_FORMAT "Full Name: %1,\nComment: %2"
+    IDS_USR_PASSWORDSDONTMATCH_ERROR 
+                            "The password and the confirmation you typed do not match. You need to retype this information."
+    IDS_USR_NOUSERNAMEENTERED_ERROR "You must enter a user name to continue."
+    IDS_USR_DEFAULTGROUP    "Administrators"
+    IDS_USR_NETUSERNAME_ERROR 
+                            "The network user name you entered does not appear to be valid. Please type a valid user name or click browse... to search for a network user."
+    IDS_USR_REMOVEUSER_WARNING 
+                            "You have chosen to remove %1 from this computer's user list. %1 will no longer be allowed to use this computer.\n\nAre you sure you want to remove %1?"
+    IDS_USR_APPLET_CAPTION  "Users and Passwords"
+    IDS_USR_REMOVE_MISC_ERROR "The user %1 could not be removed.\n"
+    IDS_USR_COULDNTFINDUSER_ERROR "The specified user could not be found."
+    IDS_USR_PWGROUP_FORMAT  "Password for %1"
+    IDS_USR_PWMESSAGE_FORMAT 
+                            "To change the password for %1, click Set Password."
+    IDS_USR_CREATE_MISC_ERROR 
+                            "An unexpected error has occurred while trying to add the user."
+    IDS_USR_CREATE_USEREXISTS_ERROR 
+                            "The user %1 could not be added because this user already has permission to use this computer."
+    IDS_USR_BADUSERINFO_ERROR 
+                            "The user name and domain name you entered may be wrong or the password may be incorrect for the specified user. Do you want to try again?"
+    IDS_USR_PROPERTIES_ERROR "Error accessing user properties."
+    IDS_USR_CREATE_GROUPEXISTS_ERROR 
+                            "The user %1 could not be added because a group exists with the same name."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USR_YOURPWMESSAGE_FORMAT 
+                            "To change your password, press Ctrl-Alt-Del and select Change Password."
+    IDS_USR_CANTCHANGEPW_FORMAT "You cannot change the password for %1."
+    IDS_USR_CANTRUNCPL_FORMAT 
+                            "You must be a member of the Administrators group on this computer to open the Users and Passwords control panel.  You are logged in as %1, which is not a member of the Administrators group."
+    IDS_USR_CANTOPENCPLASUSER_ERROR 
+                            "User Options could not be started with the supplied user information.\nEnsure that the supplied user information identifies an Administrator on this computer."
+    IDS_USR_UPDATE_PASSWORD_TOOSHORT_ERROR 
+                            "The supplied password does not meet the requirements for passwords on this computer.\nIt may be too short, too long, or too simple."
+    IDS_USR_UPDATE_FULLNAME_ERROR "The full name for %1 could not be updated."
+    IDS_USR_UPDATE_GROUP_ERROR 
+                            "The group membership for %1 could not be updated."
+    IDS_USR_UPDATE_PASSWORD_ERROR "The password for %1 could not be set."
+    IDS_USR_UPDATE_USERNAME_ERROR "The user name for %1 could not be changed."
+    IDS_USR_UPDATE_DESCRIPTION_ERROR 
+                            "The description for %1 could not be changed."
+    IDS_USR_CREATE_PASSWORDTOOSHORT_ERROR 
+                            "The user %1 could not be added because the supplied password does not meet the requirements for passwords on this computer.\nIt may be too short, too long, or too simple."
+    IDS_ADMINISTRATOR       "Administrator"
+    IDS_MND_ADDPLACELINK    "<A>Click here</A> to create a shortcut to a FTP or HTTP folder."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MND_HIDEADVANCED    "<A>Hide</A> advanced connection options."
+    IDS_MND_SHOWADVANCED    "<A>Show</A> advanced connection options."
+    IDS_MND_SHAREBROWSE     "Select a shared network folder"
+    IDS_MND_FINDINDS        "<A>Find</A> a shared folder in the Active Directory."
+    IDS_MND_ADDPLACEERR     "The Add Network Place wizard could not be launched due to an unexpected error."
+    IDS_MND_PROGRESS        "Attempting to connect to %1..."
+    IDS_MND_ALREADYMAPPED   "The network folder specified is currently mapped using a different user name and password.\nTo connect using a different user name and password, first disconnect any existing mappings to this network share."
+    IDS_USR_POWERUSERS      "Power Users"
+    IDS_USR_USERS           "Users"
+    IDS_USR_GUESTS          "Guests"
+    IDS_ADDUSER             "User Account"
+    IDS_ADDUSER_SUB         "You can add a user to this computer."
+    IDS_WHATACCESS_FORMAT   "What level of access do you want to grant %1?"
+    IDS_ADDNETPLACE_CAPTION "Add Network Place Wizard"
+    IDS_USR_CHANGEGROUP_ERR "The user %1 could not be added to the %2 group because %1 does not exist."
+    IDS_NETPLACE_EXAMPLES   "\\\\server\\share   (shared folder)\nhttp://webserver/share   (Web folder)\nftp://ftp.microsoft.com   (FTP site)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETPLACE_EXAMPLES_TITLE "Examples:"
+    IDS_BADFRIENDLYNAME     "The friendly name you entered is invalid. Friendly names can not contain any of the following characters:\n  * + , / : ; < = > ? [ \\ ] | """
+    IDS_COULDNTRENAMEPLACE  "The network place was created successfully but its friendly name could not be set. The network place was instead created with a default name."
+    IDS_ANP_GENERICERROR    "The network place could not be added because the following error has occurred:\n\n%1"
+    IDS_MND_GENERICERROR    "The mapped network drive could not be created because the following error has occurred:\n\n%1"
+    IDS_NAW_JOIN_GENERICERROR 
+                            "Your computer could not be joined to the domain because the following error has occurred:\n\n%1"
+    IDS_NAW_NAMECHANGE_ERROR 
+                            "Your computer was joined to the domain using your computer's old name because the following error has occurred:\n\n%1"
+    IDS_COMPNAME_EXISTS     "Another computer in the domain is already using the specified new computer name."
+    IDS_ERR_ADDUSER         "The user could not be added because the following error has occurred:\n\n%1"
+    IDS_LOGOFFREQUIRED      "You have made changes to your user account. You must log off and log back on for these changes to take effect.\n\nDo you want to log off now?"
+    IDS_USERSANDPASSWORDS   "Users and Passwords"
+    IDS_USERCREATE_GENERICERROR 
+                            "The user could not be created because the following error has occurred:\n\n%1"
+    IDS_BADSTANDARDUSER     "The user %1 could not be granted Standard user access because %1 does not exist."
+    IDS_BADRESTRICTEDUSER   "The user %1 could not be granted Restricted user access because %1 does not exist."
+    IDS_MACHINENAMEINUSE    "The computer name you entered can not be used because:\n\n%1"
+    IDS_FRIENDLYNAMEINUSE   "The name ""%1"" can not be used because a network place named ""%1"" already exists.\n\nType another name for this network place."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NETWIZFINISHREBOOT  "You have successfully completed the Network Identification Wizard.\n\nYour computer must be restarted in order for these changes to take effect.\n\nTo close this wizard and restart your computer, click Finish."
+    IDS_NETWIZFINISH        "You have successfully completed the Network Identification Wizard.\n\nTo close this wizard, click Finish."
+    IDS_RESTARTREQUIRED     "The changes made require the computer to be restarted."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BADUSERNAME         "The user name you entered is invalid. User names can not contain any of the following characters:\n  * + , / : ; < = > ? [ \\ ] |"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,17 @@
+//---------------------------------------------------------------------------
+// wx86.rc
+//
+// Copyright (c) Microsoft Corporation, 1996-
+//---------------------------------------------------------------------------
+
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "WMI DC and DP functionality"
+#define VER_INTERNALNAME_STR            "wmi"
+#define VER_ORIGINALFILENAME_STR        "wmi.DLL"
+
+#include "common.ver"

@@ -1,0 +1,234 @@
+<HTML id=dlgAbout STYLE="width: 25.8em; height: 22.6em">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<head>
+<TITLE>
+About Internet Explorer
+</TITLE>
+<style>
+    .versionformat {
+        color: black;
+        font-family: MS Sans Serif;
+        font-size: 8pt;
+        position: absolute;
+        left: 0em;
+        top: 0em;
+        height: 2em;
+        width:25em;
+        z-index: 20;
+    }
+
+    .textformat {
+        color: black;
+        font-family: Verdana;
+        font-size:8pt;
+        position: absolute;
+        left: 10.2em;
+        top: 19.8em;
+        height: 3em;
+        width:26.5em;
+    }
+
+    .logo {
+        color: LIGHTGREY;
+        font-family: MS Sans Serif;
+        font-size:40pt;
+        position: absolute;
+        left: 1.9em;
+        top: 4.5em;
+        height: 0.5em;
+        width:1em;
+        z-index: -1;
+    }
+
+    .button {
+        width: 7em;
+        height: 2.2em;
+        color: buttontext;
+        font-family: MS Sans Serif;
+        font-size:8pt;
+        cursor: hand;
+
+            }
+</style>
+
+
+<script>
+//+-------------------------------------------------------------------
+//
+//  Synopsis:   Turns off error messages in dialogs
+//
+//  Arguments:  none
+//
+//  returns:    true (tells browser not to handle message)
+//
+//--------------------------------------------------------------------
+
+function HandleError(message, url, line)
+{
+    var L_Dialog_ErrorMessage = "An error has occured in this dialog.";
+    var L_ErrorNumber_Text = "Error: ";
+
+    var str = L_Dialog_ErrorMessage + "\n\n"
+        + L_ErrorNumber_Text + line + "\n"
+        + message;
+
+    alert (str);
+    window.close();
+
+    return true;
+}
+
+function BodyOnKeyPress(nCode)
+{
+    if (nCode == 27)    //ESC
+    {
+        window.close();
+        return;
+    }
+
+}
+
+// Grabs the version, encryption and product ID information from the dialog arguments
+function OnPageLoad()
+{
+    var L_PreCipherStrength_Text = "";
+    var L_PostCipherStrength_Text = "-bit";
+    var L_UpdateInfo_Text = "Update Information";
+    var L_Unknown_Text = "Unknown ";
+
+    L_UpdateVersions_Text = "Update Versions:";
+
+    L_updateWidth_number= "9em";
+    L_updateFontSize_number="8pt";
+    L_UpdateFont_Fontname ="Tahoma, MS Shell Dlg";
+
+    updateUrl = "";
+
+    var cipherStrength = "";
+
+    if ((null != window.dialogArguments))
+    {
+        arrArgs = window.dialogArguments.split("~");
+        spaVersion.innerText = arrArgs[0];
+
+        if (arrArgs[3] == "168")
+            cipherStrength = 128;
+        else if (arrArgs[3] == "128")
+            cipherStrength = 40;
+        else
+            cipherStrength = arrArgs[3];
+
+        spaCipher.innerText = L_PreCipherStrength_Text + cipherStrength + L_PostCipherStrength_Text;
+
+        pID.innerText=arrArgs[4];
+        // Fill in custom IEAK line if there is one
+        if (null != arrArgs[6])
+            spaIEAKInfo.innerText = arrArgs[6];
+        updateUrl = arrArgs[5];
+    }
+    else
+    {
+        spaVersion.innerText = L_Unknown_Text;
+        spaCipher.innerText = L_Unknown_Text;
+        pID.innerText = L_Unknown_Text;
+    }
+            
+    // If no custom IEAK update url location, fill in with default
+
+    if ("" == updateUrl)
+        updateUrl = "http://www.microsoft.com/isapi/redir.dll?prd=ie&ar=128bit";
+    spaUpdateUrl.innerHTML = "<a style='WIDTH: " + L_updateWidth_number + "; COLOR: black; FONT: " + L_updateFontSize_number + L_UpdateFont_Fontname + " ' href='" + updateUrl + "' id='copyright'>" + L_UpdateInfo_Text + "</a>";
+    
+    //Check for QFEs
+    var mv=window.navigator.appMinorVersion;
+    if(mv!="0") minorversion.innerText=L_UpdateVersions_Text + mv;
+}
+
+window.onerror = HandleError;
+</script>
+
+
+
+</head>
+<BODY bgcolor="#FFFFFF" onload="OnPageLoad()" onkeydown="BodyOnKeyPress(event.keyCode)" onkeypress="BodyOnKeyPress(event.keyCode)"
+scroll=no>
+
+<table border=0>
+<TR height=10>
+    <TD></TD>
+    <TD></TD>
+    <TD></TD>
+    <TD></TD>
+    <TD></TD>
+</TR>
+<TR>
+    <TD></TD>
+    <TD colspan=3><img src="ie5.gif"></TD>
+    <TD></TD>
+</TR>
+<TR>
+    <TD></TD>
+    <TD></TD>
+    <TD id=ProdInfoAlign colspan=2 align=left>
+        <ID id=ProductInfo1>
+        <span id=ProdInfoStyle style="WIDTH: 25em; COLOR: black; FONT: 8pt Tahoma, MS Shell Dlg">
+        <BR>
+        <ID id=ProductInfo2>
+        Version:</id> <SPAN id=spaVersion></SPAN><br>
+        <ID id=ProductInfo3>
+        Cipher Strength: </id><SPAN id=spaCipher ></SPAN>&nbsp;(<SPAN id=spaUpdateUrl></SPAN>)<br>
+        <ID id=ProductInfo4>
+        Product ID:</id><SPAN id=pID></SPAN><br>
+        <span id=minorversion></SPAN><br>
+        <ID id=ProductInfo6></id>
+        <SPAN id=spaIEAKInfo>&nbsp;</SPAN>
+    </TD>
+    <TD></TD>
+</TR>
+<TR>
+    <TD></TD>
+    <TD></TD>
+
+#ifdef UNIX
+    <TD colspan=2 align=left> <TEXTAREA style="WITDH: 28em; Font: 8pt Tahoma " id=copyrightText border=0 cols=55 rows=4 readonly>
+#else
+    <TD id=copyrightAlign colspan=2 align=left> <TEXTAREA style="WIDTH: 28em; Font: 8pt Tahoma, MS Shell Dlg" id=copyrightText border=0 cols=55 rows=4 readonly>
+#endif 
+Based on NCSA Mosaic. NCSA Mosaic(TM); was developed at the National Center for Supercomputing Applications at the University of Illinois at Urbana-Champaign.
+
+Distributed under a licensing agreement with Spyglass, Inc.
+
+Contains security software licensed from RSA Data Security Inc.
+
+Portions of this software are based in part on the work of the Independent JPEG Group.
+
+Contains SOCKS client software licensed from Hummingbird Communications Ltd.
+
+Contains ASN.1 software licensed from Open Systems Solutions, Inc.
+
+Multimedia software components, including Indeo(R); video, Indeo(R) audio, and Web Design Effects are provided by Intel Corp.
+
+Unix version contains software licensed from Mainsoft Corporation.  Copyright (c) 1998-1999 Mainsoft Corporation.  All rights reserved.  Mainsoft is a trademark of Mainsoft Corporation.
+
+Warning:  This computer program is protected by copyright law and international treaties.  Unauthorized reproduction or distribution of this program, or any portion of it, may result in severe civil and criminal penalties, and will be prosecuted to the maximum extent possible under the law.
+    </TEXTAREA>
+    </TD>
+    <TD></TD>
+</TR>
+<TR>
+    <TD></TD>
+    <TD width=80><img src="flag.gif"></TD>
+#ifndef UNIX
+    <TD id=ProductInfo5><a style="WIDTH: 20em; COLOR: black; FONT: 8pt Tahoma, MS Shell Dlg" href="http://www.microsoft.com/isapi/redir.dll?prd=ie&pver=5.0&ar=aboutie&sba=copyr" id="copyright"><ID id=copyrghtText>Copyright &copy;1995-1999 Microsoft Corp.</ID></a>
+#else
+    <TD id=ProductInfo5><DIV id="copyright">Copyright &copy;1995-1999 Microsoft Corp.</DIV>
+#endif
+    </TD>
+    <TD id=ok-button align=right><BUTTON tabindex=1 type=submit align=right id="okButton" class=button onClick="window.close();" >OK</BUTTON>
+    </TD>
+    <Td></TD>
+</TR>
+</table>
+</span>
+</BODY>
+</HTML>

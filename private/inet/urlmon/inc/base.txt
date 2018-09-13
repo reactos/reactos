@@ -1,0 +1,24 @@
+;
+; This file defines the base virtual address for Dynamic Link Libraries (DLL)
+; that are part of the Windows NT System.  The first token on a line is the name
+; of the DLL and the second token is the base virtual address, in hexidecimal.
+; The third token is the maximum size of the DLL image file, including symbols.
+;
+;  NOTE:  I have used the convention of labelling unused areas as _FREExx_.
+;  If you need an address,  these are available.  They were used by printer
+;  drivers.
+
+;
+;  URLMON dll
+;
+; BUGBUG: need an official base address
+urlmon        0x1a400000  0x00a00000
+urlhlink      0x1a600000  0x00a00000
+
+;
+; This section contains the Cairo images.  Free areas are labelled with
+; _CFREExx_
+;
+
+
+

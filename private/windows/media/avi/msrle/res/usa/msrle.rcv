@@ -1,0 +1,9 @@
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME             "msrle.drv\0"
+#define VERSIONDESCRIPTION      "Microsoft RLE Compressor\0"
+#define VERSIONTYPE             VFT_DRV
+#define VERSIONSUBTYPE          VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>

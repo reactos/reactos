@@ -1,0 +1,101 @@
+#include "dialogs.h"
+
+/*
+ * Define the language dependant strings 
+ *
+ * IMPORTANT!!!
+ *    These strings are concatenated together in the code and then 
+ *    sized to fit in the dialog.  So different translations will
+ *    be word wrapped automatically, and as long as it will fit in
+ *    4 lines of text we'll be fine.
+ */
+
+STRINGTABLE LOADONCALL DISCARDABLE
+BEGIN
+    //
+    // Stickykeys notification.
+    //
+
+    ID_STICKY_TITLE "StickyKeys"
+                                                                  
+    ID_STICKY_TEXT+1        "By pressing the SHIFT key five times you have turned on the StickyKeys "
+    ID_STICKY_TEXT+2        "feature. With this feature, you can lock down the CTRL, ALT, or SHIFT "
+    ID_STICKY_TEXT+3        "keys. This is useful if you are unable to hold down more than one "
+    ID_STICKY_TEXT+4        "key at a time."
+
+    //
+    // FilterKeys notification
+    //
+
+    ID_FILTER_TITLE "FilterKeys"
+    ID_FILTER_TEXT+1        "By holding down the right SHIFT key for eight or more seconds, you have "
+    ID_FILTER_TEXT+2        "turned on the FilterKeys feature. With this feature, the keyboard "
+    ID_FILTER_TEXT+3        "repeat rates, acceptance rate and bounce rates are set for users with "
+    ID_FILTER_TEXT+4        "disabilities."
+
+    //
+    // MouseKeys notification
+    //
+
+    ID_MOUSE_TITLE  "MouseKeys"
+    ID_MOUSE_TEXT+1 "By pressing the left SHIFT, left ALT, and NUM LOCK keys, you have turned on the "
+    ID_MOUSE_TEXT+2 "MouseKeys feature. With this feature, you can use the numeric "
+    ID_MOUSE_TEXT+3 "keypad to move the mouse and use the mouse "
+    ID_MOUSE_TEXT+4 "buttons."
+
+    //
+    // HighContrast notification
+    //
+
+    ID_HC_TITLE             "HighContrast"
+    ID_HC_TEXT+1            "By pressing the left SHIFT, left ALT, and PRINT SCREEN keys, you have "
+    ID_HC_TEXT+2            "turned on the HighContrast feature. With this feature, the display "
+    ID_HC_TEXT+3            "colors are changed for easier "
+    ID_HC_TEXT+4            "visibility."
+
+    //
+    // Togglekeys notification
+    //
+
+    ID_TOGGLE_TITLE "ToggleKeys"
+    ID_TOGGLE_TEXT+1        "By holding down the NUM LOCK key for five seconds, you have turned on "
+    ID_TOGGLE_TEXT+2        "the ToggleKeys feature. With this feature, your computer will beep "
+    ID_TOGGLE_TEXT+3        "each time you press the CAPS LOCK, NUM LOCK, or "
+    ID_TOGGLE_TEXT+4        "SCROLL LOCK key."
+
+    //
+    // Notification text for machine booting with accessability feature
+    // Filterkeys on.
+    //
+
+    ID_ACCESS_TITLE "Accessibility Options"
+    ID_ACCESS_TEXT+1        "Your computer is configured to start with the FilterKeys feature "
+    ID_ACCESS_TEXT+2        "turned on. With this feature, the keyboard repeat rates, acceptance rate "
+    ID_ACCESS_TEXT+3        "and bounce rates are set for users with "
+    ID_ACCESS_TEXT+4        "disabilities."
+
+    ID_CONTINUE             "\r\rClick OK to turn this feature on.  If you do not want to use the feature, click Cancel."
+
+    ID_WHITEBLACK_HC "High Contrast Black (large)"
+    ID_PRE_HC_SCHEME "Pre-High Contrast Scheme"
+END
+
+DLG_CONFIRM DIALOG 80, 65, 269, 85
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_SYSMODAL
+CAPTION "Dialog Title"
+FONT 8, "MS Shell Dlg"
+BEGIN
+//    LTEXT           "", ID_HELPTEXT, 15, 10, 185, 55
+//    PUSHBUTTON      "&OK", IDOK, 15, 70, 45, 14
+//    PUSHBUTTON      "&Cancel", IDCANCEL, 80, 70, 50, 14
+//    PUSHBUTTON      "&Settings...", IDHELP, 155, 70, 45, 14
+
+    CONTROL         "&Turn off keyboard shortcut for this accessibility feature",
+                    ID_NOHOTKEY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,72,
+                    204,10
+    PUSHBUTTON		"OK",IDOK,215,7,50,14
+    DEFPUSHBUTTON	"Cancel",IDCANCEL,215,23,50,14
+    PUSHBUTTON		"&Settings...",IDHELP,215,39,50,14
+
+    LTEXT           "",ID_HELPTEXT,9,7,200,57
+END

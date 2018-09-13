@@ -1,0 +1,42 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=urlmon
+MINORCOMP=umonidl
+
+C_DEFINES= -DWIN32=300 -D_CAIRO_=300 -DREGISTER_PROXY_DLL
+
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+SYNCHRONIZE_BLOCK=1
+
+SDKINC=$(BASEDIR)\public\sdk\inc
+
+PASS0_HEADERDIR=$(SDKINC)
+PASS0_SOURCEDIR=..\proxy
+MIDL_UUIDDIR=..\uuid
+MIDL_NO_ROBUST=1
+
+# needs to run on Win95 and NT 3.51
+MIDL_OPTIMIZATION=$(MIDL_OPTIMIZATION) -Oic
+
+
+INCLUDES=$(SDKINC)
+
+SOURCES= \
+    urlmki.idl

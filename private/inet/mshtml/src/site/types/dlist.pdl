@@ -1,0 +1,31 @@
+#ifndef _DLIST_PDL_
+#define _DLIST_PDL_ 1
+
+#include "element.pdl"
+#include "list.pdl"
+
+file dlist.pdl
+
+import element.pdl
+
+interface IHTMLDListElement guid:3050f1f1-98b5-11cf-bb82-00aa00bdce0b
+    refprop CDListElement:compact
+
+tearoff CDListElement interface:IHTMLDListElement
+
+class CDListElement name:HTMLDListElement \
+            super:CListElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            primaryinterface:IHTMLDListElement \
+            guid:3050f27d-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f53b-98b5-11cf-bb82-00aa00bdce0b
+ 
+#include "basedom.pdl"
+    implements IHTMLListElement
+    implements IHTMLDListElement
+
+    property    compact    atype:VARIANT_BOOL  dispid:DISPID_DL+1  type:BYTE \
+                vt:VT_BOOL min:0 max:1 default:0 get set caa bindable clearcaches remeasure
+
+#endif _DLIST_PDL_

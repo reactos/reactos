@@ -1,0 +1,75 @@
+;Copyright (c) 1994-1995 Microsoft Corp.
+;
+
+[version]
+signature="$CHICAGO$"
+
+[DefaultInstall]
+CopyFiles = shell.files.sys
+AddReg = shdocvw.reg, URLRoot.reg
+
+[SHDocVwInstall]
+CopyFiles = shell.files.sys
+AddReg = shdocvw.reg, URLRoot.reg
+
+[DestinationDirs]
+shell.files.sys = 11
+
+[shell.files.sys]
+shdocvw.dll
+
+[SourceDisksNames]
+55=shdocvw,"",1,shdocvw\nashvile\retail
+
+[SourceDisksFiles]
+shdocvw.dll=55
+shdocvw.sym=55
+
+[URLRoot.reg]
+HKCR,CLSID\{%CLSID_CURLRoot%},,,"The Internet"
+HKCR,CLSID\{%CLSID_CURLRoot%}\InProcServer32,,,"shdocvw.dll"
+HKCR,CLSID\{%CLSID_CURLRoot%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CURLRoot%}\ShellEx\PropertySheetHandlers\{FBF23B42-E3F0-101B-8488-00AA003E56F8},,,""
+HKCR,CLSID\{%CLSID_CURLRoot%}\ShellFolder,"Attributes",1,50,00,00,A4
+HKCR,CLSID\{%CLSID_CURLRoot%}\DefaultIcon,,2,"%11%\mshtml.dll,0"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\explorer\Desktop\NameSpace\{%CLSID_CURLRoot%},,,"The Internet"
+
+[shdocvw.reg]
+; Shell DocObject Viewer
+HKCR,CLSID\{%CLSID_CShellDocFolder%},,,%DESC_SHDOCV%
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CShellDocFolder%}\ShellFolder,"Attributes",1,50,00,00,A0
+
+; Shell Folder Viewer
+HKCR,CLSID\{%CLSID_CShellViewOcx%},,,%DESC_SHFLDV%
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\ProgId,,,"ShellFolderView"
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\Insertable,,,""
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\AuxUserType\2,,,"Folder"
+HKCR,CLSID\{%CLSID_CShellViewOcx%}\AuxUserType\3,,,"Shell Folder Viewer"
+HKCR,ShellFolderView,,,"Shell Folder Viewer"
+HKCR,ShellFolderView\Insertable,,,""
+HKCR,ShellFolderView\CLSID,,,"{%CLSID_CShellViewOcx%}"
+
+; Shell Item Viewer
+HKCR,CLSID\{%CLSID_CShellItemOcx%},,,%DESC_SHITMV%
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\InProcServer32,,,"%11%\shdocvw.dll"
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\InProcServer32,"ThreadingModel",,"Apartment"
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\ProgId,,,"ShellItemView"
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\Insertable,,,""
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\AuxUserType\2,,,"Item"
+HKCR,CLSID\{%CLSID_CShellItemOcx%}\AuxUserType\3,,,"Shell Item Viewer"
+HKCR,ShellItemView,,,"Shell Item Viewer"
+HKCR,ShellItemView\Insertable,,,""
+HKCR,ShellItemView\CLSID,,,"{%CLSID_CShellItemOcx%}"
+
+[Strings]
+DESC_SHDOCV = "Shell DocObject Viewer"
+DESC_SHFLDV = "Shell Folder Viewer"
+DESC_SHITMV = "Shell Item Viewer"
+CLSID_CShellDocFolder = E7E4BC40-E76A-11CE-A9BB-00AA004AE837
+CLSID_CShellViewOcx   = 2E295260-FFD5-11CE-A9BB-00AA004AE837
+CLSID_CShellItemOcx   = CCF44200-1ABB-11CF-A7EB-0000C05BAE0B
+CLSID_CURLRoot        = 3DC7A020-0ACD-11CF-A9BB-00AA004AE837

@@ -1,0 +1,366 @@
+<HTML>
+<HEAD>
+<STYLE>
+BODY     { background:skyblue }
+#hdr     { position:relative;
+           left:-800px;width:50%;
+           font-family:"Arial" }
+TD       { color:white;font-weight:bold;text-align:center }
+TD SPAN  { visibility:hidden }
+H2       { color:darkblue;font-family:"Times New Roman";font-style:italic }
+#ld, #rd
+         { position:absolute;width:100px;
+           color:darkred;
+           overflow:clip;
+           font-weight:bold;text-align:center;
+           top:-300px;left:0px}
+</STYLE>
+
+<SCRIPT>
+N=new Array(
+"Adam Bosworth",
+"Alex Shtaygrud",
+"Alex Zotov",
+"Ambrosio Blanco",
+"Anand Ramakrishna",
+"Art Becker",
+"Artak Kalantarian",
+"Arye Gittelman",
+"Ben Chronister",
+"Brendan Dixon",
+"Briggs Willoughby",
+"Carl Edlund",
+"Charles Frankston",
+"Chris Rude",
+"Chris Thrasher",
+"Chris Wilson",
+"Christian Fortini",
+"Dan Duffek",
+"Dave C. Mitchell",
+"Dave Massy",
+"David Bau",
+"David Schach",
+"Dean Paron",
+"Debby Engevik",
+"Dinarte Morais",
+"Eric Rockey",
+"Eric Vasilik",
+"Ferhan Elvanoglu",
+"Frank Mantek",
+"Gary Burd",
+"George Chen",
+"Gideon Schaller",
+"Greg Franklin",
+"Hoang Nguyen",
+"Holly Marklyn",
+"Istvan Cseri",
+"Jacqueline Sowell",
+"Jean Paoli",
+"Jen-Lung Chiu",
+"Jennifer Teed",
+"Jerry Dunietz",
+"John Harding",
+"John Veson",
+"Julia Cai",
+"Ken Ong",
+"Kris Markel",
+"Lajos Frank",
+"Laszlo Gaal",
+"Laurent Mollicone",
+"Laurent Vernhes",
+"Laurie Anna Edlund",
+"Lawrence Wood",
+"Lyle Corbin",
+"Mario Mitre",
+"Mark Kuharich",
+"Mark Wagner",
+"Michael Tucker",
+"Michael Wallent",
+"Michael Winser",
+"Mike Reilly",
+"Mohan Bulusu",
+"Neetu Rajpal",
+"Oliver Seeliger",
+"Phillip Cooper",
+"Ramin Halviatti",
+"Rashmi Kohli",
+"Rich Rollman",
+"Richard Gardner",
+"Rod Chavez",
+"Sam Bent",
+"Samrach Tun",
+"Scott Ferguson",
+"Scott Isaacs",
+"Sherri Duran",
+"Srinivasa Burugapalli",
+"Steve Benedict",
+"Steve Coy",
+"Sujal Parikh",
+"Sumit Chakravarty",
+"Sundaram Ramani",
+"Ted Weinberg",
+"Teri Lum",
+"Terry Lucas",
+"Tom Polucci",
+"Tom Snyder",
+"Val Horvath",
+"William Hsu",
+"Yin Xie");
+
+// Array used to store the names in the order they were written to the
+//   document.
+N2 = new Array();
+
+var g_c  = 0;     // Which name we're on.
+var g_cy = 0;     // Y coordinate we're shooting for.
+
+var g_eltL = 0;   // Current SPAN on the left side.
+var g_eltR = 0;   // Current SPAN on the right side.
+
+var g_cxL;        // X coord. we're shooting for on the left side.
+var g_cxR;        // X coord. we're shooting for on the right side.
+
+//  ***********************
+//
+//  Function: Init
+//
+//  Synopsis: Sets up the global variables and gets things ready for
+//            animating the DIVs on the first row in the table.
+//
+//  ***********************
+function Init()
+{
+    g_cxL = cell1.offsetLeft + tbl.offsetLeft - 1;
+    g_cxR = cell3.offsetLeft + tbl.offsetLeft - 1;
+
+    ld.style.width = cell1.offsetWidth;
+    rd.style.width = cell3.offsetWidth;
+
+    Next();
+
+    setTimeout("Tmr()", 20);
+}
+
+//  ***********************
+//
+//  Function: Next
+//
+//  Synopsis: Unhides the previous table row, and sets everything up for
+//            animating the DIVs on the next row.
+//
+//  ***********************
+function Next()
+{
+    //
+    // Un-hide the previous row
+    //
+    if (typeof(g_eltL) == "object")
+    {
+        g_eltL.style.visibility = "visible";
+
+        g_c += 2;
+    }
+
+    if (typeof(g_eltR) == "object")
+    {
+        g_eltR.style.visibility = "visible";
+    }
+
+    //
+    // Move the animating DIVs just off the top of the screen.
+    //
+    ld.style.posTop  = -tbl.offsetTop - 100;
+    ld.style.posLeft = g_cxL - 150;
+    rd.style.posTop  = -tbl.offsetTop - 100;
+    rd.style.posLeft = g_cxR + 150;
+
+    //
+    // Are we done?
+    //
+    if (g_c >= N2.length)
+    {
+        g_eltL = 0;
+        g_eltR = 0;
+        return;
+    }
+
+    //
+    // Set g_eltL to the SPAN tag in the left column of the table for the
+    //  row we're working on.
+    //
+    g_eltL = "s_" + g_c;
+    g_eltL = document.all(g_eltL);
+
+    // Make sure that SPAN is visible.
+    g_eltL.scrollIntoView(false);
+
+    // If it exists, set g_eltR to the SPAN tag in the right column
+    if ((g_c+1) < N2.length)
+    {
+        g_eltR = "s_" + (g_c+1);
+        g_eltR = document.all(g_eltR);
+    }
+    else
+    {
+        g_eltR = 0;
+    }
+
+    //
+    // Set up the target Y coordinate for the DIVs to the table row we're
+    //  working on. (parentElement for the SPAN in the TD it's in).
+    //
+    g_cy = 0;
+    m = g_eltL;
+    while (m.tagName != 'TABLE')
+    {
+        g_cy += m.offsetTop;
+        m = m.parentElement;
+    }
+
+    //
+    // Set the text of the DIVs to the names in the cells.
+    //
+    ld.innerText = N2[g_c];
+
+    if ((g_c+1) < N2.length)
+    {
+        rd.innerText = N2[g_c+1];
+    }
+}
+
+//  ***********************
+//
+//  Function: Tmr
+//
+//  Synopsis: Animates the current object(s). Starts by animating the header,
+//            then animates the DIVs for each row in the table.
+//
+//  ***********************
+function Tmr()
+{
+    if (hdr.style.posLeft < 0)
+    {
+        //
+        // Animate the header. (Fly it in to the right)
+        //
+        hdr.style.posLeft += 10;
+        setTimeout("Tmr()", 20);
+    }
+    else if (g_c < N2.length)
+    {
+        if (ld.style.posTop < g_cy)
+        {
+            //
+            // Animate both DIVs from off the top of the screen down
+            // vertically until they are equal to g_cy.
+            //
+            v = g_cy - ld.style.posTop;
+            if (v > 10) v = 10;
+
+            ld.style.posTop += v;
+            if (typeof(g_eltR) == "object")
+            {
+                rd.style.posTop += v;
+            }
+        }
+        else if (ld.style.posLeft < g_cxL)
+        {
+            //
+            // Animate both DIVs from to the left (or right) until they are on
+            // top of their table cells.
+            //
+            v = g_cxL - ld.style.posLeft;
+            if (v > 10) v = 10;
+
+            ld.style.posLeft += v;
+
+            if (typeof(g_eltR) == "object")
+            {
+                rd.style.posLeft -= v;
+            }
+        }
+        else
+        {
+            //
+            // We've finished the row. Move to the next row.
+            //
+            Next();
+        }
+
+        setTimeout("Tmr()", 20);
+    }
+    else
+    {
+        //
+        // Make sure the floating DIVs are gone now that we're all done.
+        //
+        ld.style.posTop = -300;
+        rd.style.posTop = -300;
+
+        hr.scrollIntoView(false);
+    }
+}
+</SCRIPT>
+</HEAD>
+
+<BODY>
+<CENTER>
+
+<DIV id=hdr>
+<H2>The Trident Team, 1997</H2>
+</DIV>
+
+<BR>
+<TABLE id=tbl cellpadding=0>
+<TR>
+    <TD id=cell1 width=30%></TD>
+    <TD id=cell2 width=3%></TD>
+    <TD id=cell3 width=30%></TD>
+</TR>
+<SCRIPT>
+
+//
+// Generate the table containing all the names. We randomly sort the list so
+//   each person has an equal chance of being at the top of the list.
+//
+i=N.length;
+while(i>0)
+{
+    j=Math.floor(Math.random()*i);
+
+    // Write the table cell in the left column.
+    document.write("<TR><TD><SPAN id=s_"+(N.length-i)+">"+N[j]+"</SPAN></TD><TD></TD>");
+
+    N2[N.length-i]=N[j];
+    i--;
+    N[j]=N[i];
+
+    if (i > 0)
+    {
+        j=Math.floor(Math.random()*i);
+
+        // Write the table cell in the right column.
+        document.write("<TD><SPAN id=s_"+(N.length-i)+">"+N[j]+"</SPAN></TD></TR>");
+
+        N2[N.length-i]=N[j];
+        i--;
+        N[j]=N[i];
+    }
+}
+
+setTimeout("Init()", 500);
+</SCRIPT>
+</TABLE>
+
+<HR WIDTH=75%>
+
+
+<DIV id=ld> . </DIV>
+<DIV id=rd> . </DIV>
+
+<HR id=hr WIDTH=75%>
+
+</CENTER>
+
+</BODY>
+</HTML>

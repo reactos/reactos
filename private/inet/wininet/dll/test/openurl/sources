@@ -1,0 +1,44 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+
+    Created 12-Sep-1991 by Richard L Firth (rfirth)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#!INCLUDE ..\..\..\..\place.inc
+
+MAJORCOMP=wininet
+MINORCOMP=openurl
+
+TARGETNAME=openurl
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=..\..\..\test\inc;$(BASEDIR)\private\inc
+
+SOURCES=openurl.c
+
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib  \
+       ..\..\..\lib\*\catlib.lib

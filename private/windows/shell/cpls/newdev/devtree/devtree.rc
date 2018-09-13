@@ -1,0 +1,76 @@
+//---------------------------------------------------------------------------
+// newdev.rc
+//
+// Copyright (c) Microsoft Corporation, 1996-
+//---------------------------------------------------------------------------
+
+
+#include <windows.h>
+#include <commctrl.h>
+#include <setupapi.h>
+#include "resource.h"
+
+//
+// Version information
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Device Tree viewer"
+#define VER_INTERNALNAME_STR            "devicetree"
+#define VER_ORIGINALFILENAME_STR        "devtree.dll"
+
+#include "common.ver"
+
+
+//
+//This is the main device manager dialog
+//
+DLG_DEVTREE DIALOG DISCARDABLE  32, 10, 512, 218
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Device Tree"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT     "Local Machine Device Tree",IDC_DEVTREE_MACHINE,7,7,200,16
+    CONTROL   "",IDC_DEVTREE,WC_TREEVIEW,
+              WS_TABSTOP | WS_BORDER | TVS_LINESATROOT |  TVS_HASBUTTONS | TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS,
+              10,24,235,164
+
+    EDITTEXT  IDC_DEVSTATUS, 10+256,24,235,164,ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY
+
+END
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+//IDI_NEWDEVICEICON       ICON    DISCARDABLE     "NEWDEV.ICO"
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+//IDB_NDW_WELCOME_BMP     BITMAP  DISCARDABLE     "NEWDEV.BMP"
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_FILLER "Hi\n"
+END
+END

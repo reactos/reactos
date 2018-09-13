@@ -1,0 +1,257 @@
+Feature: ListView per instance icon spacing setting
+        LVM_SETICONSPACING
+
+Feature: Grid lines in list view report mode
+        LVS_EX_GRIDLINES
+
+Feature: Listview extended styles
+        LVM_SETEXTENDEDLISTVIEWSTYLE
+        LVM_GETEXTENDEDLISTVIEWSTYLE
+
+Feature: ListView: support adding images to the column headers
+
+Feature: Listview: smooth scrolling for item deletion.
+
+Feature: Listview: indent
+        LVIF_INDENT
+
+Feature: Listview: custom draw
+
+Feature: ListView: sub item images
+        LVS_EX_SUBITEMIMAGES
+
+Feature/bugfix: listview doesn't go into label edit mode on click unless it had
+        focus
+
+Feature: Listview (report mode) 
+        setting column order
+        LVCF_ORDER
+
+Feature: ListView new selection features.
+        1) first click to gain focus WON"T deselect stuff if it's clicked on bkg
+        2) right click with shift or control won't modify selection
+
+Feature: ListView LVN_MARQUEEBEGIN is sent at the beginning of marquee drag
+
+Feature: ListView & TreeView.  New inactive selection look for ShowSelAlways 
+
+Feature: Virtual ListView.  Listview supports an "infinite item" mode
+        where we store no data per item
+
+BugFix: Virtual ListView sends itemchanged notification
+        Description:  this is a little different than the non-vlv case.
+                at this time it does NOT send an LVN_ITEMCHANGING message beforehand
+                if batch (all) state change is sent, the notify's iItem is -1 and an 
+                individual notify for each item is NOT sent.  Thus, you can get:
+                item 1 selected
+                item 2 selected
+                item 3 selected
+                item -1 selected
+                item 1 selected
+
+                if you multi-select items 1,2,3 then single select item 1.
+
+                Focus changes are sent for when something loses focus as well as 
+                        when another gains focus
+
+
+
+Feature: Tracking tooltips
+
+        TTF_TRACK
+        TTM_TRACKACTIVATE
+        TTM_TRACKPOSITION
+        
+Feature: Tooltips in trackbar
+        
+        TBS_TOOLTIPS
+        TBM_GETTOOLTIPS
+        TBM_SETTOOLTIPS
+        TBM_SETTIPSIDE
+
+Bug fix: ToolTips strings are strdup'ed
+
+Feature: Header Api's
+
+        HDM_GETITEMRECT
+
+Feature: Header Full window drag (resize column)
+
+Feature: allow cancel out of header tracking (escape and right click)
+
+Feature: smooth scrolling (internal api)
+
+Bug fix: trackbar.  store pointer offset on dragging
+
+Feature: Progress bar:  vertical mode
+        PBS_VERTICAL
+
+Feature: Progress bar: smooth mode
+        PBS_SMOOTH
+        
+Feature: vertical tabs (mutually exclusive with button, single line and draw text modes)
+        TCS_VERTICAL  
+
+Feature: tab: opposite bank scrolling
+        TCS_SCROLLOPPOSITE
+
+Feature: tab: smooth scrolling in multibanks
+
+Feature: Header Bitmap and Text simultaneously
+
+Feature: Header: Bitmap on right
+        HDF_BITMAP_ON_RIGHT
+
+Feature: Header: ImageList functionality
+        HDM_GETIMAGELIST
+        HDM_SETIMAGELIST
+
+Feature: image: new API
+        ImageList_DrawIndirect
+
+Feature: tooltips: TTF_DI_SETITEM
+
+Feature: custom draw infrastructure.  see the custom draw section in commctrl.w
+
+Feature: Header: callback functionality
+        HDDISPINFO
+
+Feature: Header: support both image and bitmap
+
+Feature: uniform api structure naming convention
+
+Feature: Trackbar: custom draw
+
+Feature: Trackbar: set buddy windows to automatically place on right and left
+        TBM_SETBUDDY
+        TBM_GETBUDDY
+
+Feature: Treeview: double click on line collapses.
+
+Feature: Treeview: smooth scrolling for expand and collapse.
+
+Feature: Toolbar: punt cache crap and add ImageList support
+        TB_SETIMAGELIST
+        TB_GETIMAGELIST
+        TB_LOADIMAGES
+
+Feature: ImageList: add bitblt rop
+        ILD_ROP
+
+Feature: Treeview: tooltips on treeitems
+
+Feature: Header setting item draw order
+        HDI_ORDER
+        HDM_ORDERTOINDEX
+
+Feature: Animate control. Force it to use timers
+        ACS_TIMER
+
+Feature: Progress bar has 32bit ranges
+        PBM_SETRANGE32
+
+Feature: Toolbar: dropdown style for button
+        TBSTYLE_DROPDOWN
+
+Feature: ComboBoxEx : new control
+        does images and text for you
+
+Feature: Listview:  set selection/focus state for sub items
+
+Feature: Listview: automatic checkbox support
+        LVS_EX_CHECKBOXES
+        ListView_GetCheckState
+
+Feature: Wizard: Next and finish button 
+        PSH_WIZARDHASFINISH
+
+Feature: Tab: tabs on right and on bottom
+
+Feature: Tab:
+        TCM_SETMINTABWIDTH   -- sets the minimum tab width.
+                -- lParam = min width in pixels.. -1 means use defaults
+
+Feature: TreeView partially expanded items
+        TVIS_EXPANDPARTIAL -- this is a new state for the treeview... the partially expanded tree.  in this state, the tree node will show a + but will also show its children.  you get this state by doing a TVM_EXPAND with the TVE_EXPANDPARTIAL flag.
+        TVE_EXPANDPARTIAL
+
+Feature: Listview: subitem hittesting/get rects
+        LVM_GETSUBITEMRECT 
+        LVM_SUBITEMHITTEST
+        (there are convenience macros that show how to use these)
+	these are for hittesting and getting the rects for subitems in report mode.  They are coarsegrain...  they don't clip to the text right now, they give the full column width.  this may change as the need arises (or not..)
+
+Feature: ComboEx
+-- CBES_EX_NOEDITIMAGE
+-- CBES_EX_NOEDITIMAGEINDENT
+	These are for the combo ex wrapper.  with these bits, the combo box edit won't paint the image...  (see the use in the explorer when you start typing, the icon goes away so you odn't think you're doing a rename).
+
+-- CBEM_SETEXSTYLE
+-- CBEM_GETEXSTYLE
+	these get and set the above CBES_EX_* flags as in the LVM_SETEXSTYLE
+
+-- CBEM_HASEDITCHANGED
+	This queries to see if the typed text in the edit box is any different than what it initially was.
+
+Feature: Listview:
+        Perf wins on placing/moving items
+
+Feature: Tab: multi select
+        TVIF_STATE
+        TVIS_BUTTONPRESSED
+
+Feature: Hot tracking:
+        ListView
+        Header
+        Updown
+        Treeview
+        Tabs
+        
+Feature: Header: drag drop/reordering
+        HDS_DRAGDROP
+        HDM_CREATEDRAGIMAGE     (HDM_FIRST + 16)  // wparam = which item (by index)
+
+        HDM_GETORDERARRAY       (HDM_FIRST + 17)  
+        HDM_SETORDERARRAY       (HDM_FIRST + 18)  
+// lparam = int array of size HDM_GETITEMCOUNT
+// the array specifies the order that all items should be displayed.
+// e.g.  { 2, 0, 1}
+// says the index 2 item should be shown in the 0ths position 
+//      index 0 should be shown in the 1st position
+//      index 1 should be shown in the 2nd position
+
+
+         HDM_SETHOTDIVIDER          (HDM_FIRST + 19)
+// convenience message for external dragdrop
+// wParam = BOOL  specifying whether the lParam is a dwPos of the cursor
+//              position or the index of which divider to hotlight
+// lParam = depends on wParam  (-1 and wParm = FALSE turns off hotlight)
+
+
+Feature: Listview: support drag/drop columns in report view
+        LVS_EX_HEADERDRAGDROP
+
+
+Feature: ListView: Hover Select
+        LVS_EX_TRACKSELECT
+
+Feature: ListView: Full Row Select mode
+        LVS_EX_FULLROWSELECT
+
+Feature: ToolTips: Multiline
+        TTM_SETMAXTIPWIDTH
+        TTM_GETMAXTIPWIDTH
+
+Feature: ToolTips: Customdraw
+
+
+
+Feature: ReaderMode (still private)
+
+Feature: unicode string funcs (still private)
+
+
+
+Feature: ListView: LVN_ACTIVATEITEM
+
+Feature: ListView: SingleClick/DoubleClick mode

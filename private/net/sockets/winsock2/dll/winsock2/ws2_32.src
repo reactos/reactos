@@ -1,0 +1,170 @@
+LIBRARY         WS2_32
+
+#if 0
+#endif
+
+SECTIONS
+    .WS2_32_SHARED READ WRITE SHARED
+
+#if DBG
+#define DECLARE_HOOKABLE_EXPORT(x) x = DTHOOK_##x
+#else
+#define DECLARE_HOOKABLE_EXPORT(x) x
+#endif
+
+EXPORTS
+
+;;
+;; WinSock 1.1 Compatible API
+;;
+;; N.B. These API must have ordinals, and they must EXACTLY match
+;;      the ordinals used in WinSock 1.1.
+;;
+
+        DECLARE_HOOKABLE_EXPORT(accept)                   @1
+        DECLARE_HOOKABLE_EXPORT(bind)                     @2
+        DECLARE_HOOKABLE_EXPORT(closesocket)              @3
+        DECLARE_HOOKABLE_EXPORT(connect)                  @4
+        DECLARE_HOOKABLE_EXPORT(getpeername)              @5
+        DECLARE_HOOKABLE_EXPORT(getsockname)              @6
+        DECLARE_HOOKABLE_EXPORT(getsockopt)               @7
+        DECLARE_HOOKABLE_EXPORT(htonl)                    @8
+        DECLARE_HOOKABLE_EXPORT(htons)                    @9
+        DECLARE_HOOKABLE_EXPORT(ioctlsocket)              @10
+        DECLARE_HOOKABLE_EXPORT(inet_addr)                @11
+        DECLARE_HOOKABLE_EXPORT(inet_ntoa)                @12
+        DECLARE_HOOKABLE_EXPORT(listen)                   @13
+        DECLARE_HOOKABLE_EXPORT(ntohl)                    @14
+        DECLARE_HOOKABLE_EXPORT(ntohs)                    @15
+        DECLARE_HOOKABLE_EXPORT(recv)                     @16
+        DECLARE_HOOKABLE_EXPORT(recvfrom)                 @17
+        DECLARE_HOOKABLE_EXPORT(select)                   @18
+        DECLARE_HOOKABLE_EXPORT(send)                     @19
+        DECLARE_HOOKABLE_EXPORT(sendto)                   @20
+        DECLARE_HOOKABLE_EXPORT(setsockopt)               @21
+        DECLARE_HOOKABLE_EXPORT(shutdown)                 @22
+        DECLARE_HOOKABLE_EXPORT(socket)                   @23
+
+        DECLARE_HOOKABLE_EXPORT(gethostbyaddr)            @51
+        DECLARE_HOOKABLE_EXPORT(gethostbyname)            @52
+        DECLARE_HOOKABLE_EXPORT(getprotobyname)           @53
+        DECLARE_HOOKABLE_EXPORT(getprotobynumber)         @54
+        DECLARE_HOOKABLE_EXPORT(getservbyname)            @55
+        DECLARE_HOOKABLE_EXPORT(getservbyport)            @56
+        DECLARE_HOOKABLE_EXPORT(gethostname)              @57
+
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncSelect)           @101
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetHostByAddr)    @102
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetHostByName)    @103
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetProtoByNumber) @104
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetProtoByName)   @105
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetServByPort)    @106
+        DECLARE_HOOKABLE_EXPORT(WSAAsyncGetServByName)    @107
+        DECLARE_HOOKABLE_EXPORT(WSACancelAsyncRequest)    @108
+        DECLARE_HOOKABLE_EXPORT(WSASetBlockingHook)       @109
+        DECLARE_HOOKABLE_EXPORT(WSAUnhookBlockingHook)    @110
+        DECLARE_HOOKABLE_EXPORT(WSAGetLastError)          @111
+        DECLARE_HOOKABLE_EXPORT(WSASetLastError)          @112
+        DECLARE_HOOKABLE_EXPORT(WSACancelBlockingCall)    @113
+        DECLARE_HOOKABLE_EXPORT(WSAIsBlocking)            @114
+        DECLARE_HOOKABLE_EXPORT(WSAStartup)               @115
+        DECLARE_HOOKABLE_EXPORT(WSACleanup)               @116
+
+        DECLARE_HOOKABLE_EXPORT(__WSAFDIsSet)             @151
+
+        WEP                      @500
+
+;;
+;; WinSock 2.x API
+;;
+;; N.B. These API will never, never, never have explicit ordinals
+;;      assigned.
+;;
+
+        DECLARE_HOOKABLE_EXPORT(WSAAccept)
+        DECLARE_HOOKABLE_EXPORT(WSACloseEvent)
+        DECLARE_HOOKABLE_EXPORT(WSAConnect)
+        DECLARE_HOOKABLE_EXPORT(WSACreateEvent)
+        DECLARE_HOOKABLE_EXPORT(WSADuplicateSocketA)
+        DECLARE_HOOKABLE_EXPORT(WSADuplicateSocketW)
+        DECLARE_HOOKABLE_EXPORT(WSAEnumNetworkEvents)
+        DECLARE_HOOKABLE_EXPORT(WSAEnumProtocolsA)
+        DECLARE_HOOKABLE_EXPORT(WSAEnumProtocolsW)
+        DECLARE_HOOKABLE_EXPORT(WSAEventSelect)
+        DECLARE_HOOKABLE_EXPORT(WSAGetOverlappedResult)
+        DECLARE_HOOKABLE_EXPORT(WSAGetQOSByName)
+        DECLARE_HOOKABLE_EXPORT(WSAHtonl)
+        DECLARE_HOOKABLE_EXPORT(WSAHtons)
+        DECLARE_HOOKABLE_EXPORT(WSAIoctl)
+        DECLARE_HOOKABLE_EXPORT(WSAJoinLeaf)
+        DECLARE_HOOKABLE_EXPORT(WSANtohl)
+        DECLARE_HOOKABLE_EXPORT(WSANtohs)
+        DECLARE_HOOKABLE_EXPORT(WSARecv)
+        DECLARE_HOOKABLE_EXPORT(WSARecvDisconnect)
+        DECLARE_HOOKABLE_EXPORT(WSARecvFrom)
+        DECLARE_HOOKABLE_EXPORT(WSAResetEvent)
+        DECLARE_HOOKABLE_EXPORT(WSASend)
+        DECLARE_HOOKABLE_EXPORT(WSASendDisconnect)
+        DECLARE_HOOKABLE_EXPORT(WSASendTo)
+        DECLARE_HOOKABLE_EXPORT(WSASetEvent)
+        DECLARE_HOOKABLE_EXPORT(WSASocketA)
+        DECLARE_HOOKABLE_EXPORT(WSASocketW)
+        DECLARE_HOOKABLE_EXPORT(WSAWaitForMultipleEvents)
+
+        DECLARE_HOOKABLE_EXPORT(WSAAddressToStringA)
+        DECLARE_HOOKABLE_EXPORT(WSAAddressToStringW)
+        DECLARE_HOOKABLE_EXPORT(WSAStringToAddressA)
+        DECLARE_HOOKABLE_EXPORT(WSAStringToAddressW)
+        DECLARE_HOOKABLE_EXPORT(WSALookupServiceBeginA)
+        DECLARE_HOOKABLE_EXPORT(WSALookupServiceBeginW)
+        DECLARE_HOOKABLE_EXPORT(WSALookupServiceNextA)
+        DECLARE_HOOKABLE_EXPORT(WSALookupServiceNextW)
+        DECLARE_HOOKABLE_EXPORT(WSALookupServiceEnd)
+
+        DECLARE_HOOKABLE_EXPORT(WSAInstallServiceClassA)
+        DECLARE_HOOKABLE_EXPORT(WSAInstallServiceClassW)
+        DECLARE_HOOKABLE_EXPORT(WSARemoveServiceClass)
+        DECLARE_HOOKABLE_EXPORT(WSAGetServiceClassInfoA)
+        DECLARE_HOOKABLE_EXPORT(WSAGetServiceClassInfoW)
+        DECLARE_HOOKABLE_EXPORT(WSAEnumNameSpaceProvidersA)
+        DECLARE_HOOKABLE_EXPORT(WSAEnumNameSpaceProvidersW)
+        DECLARE_HOOKABLE_EXPORT(WSAGetServiceClassNameByClassIdA)
+        DECLARE_HOOKABLE_EXPORT(WSAGetServiceClassNameByClassIdW)
+        DECLARE_HOOKABLE_EXPORT(WSASetServiceA)
+        DECLARE_HOOKABLE_EXPORT(WSASetServiceW)
+
+;;
+;; Configuration functions
+;;
+
+        DECLARE_HOOKABLE_EXPORT(WSCDeinstallProvider)
+        DECLARE_HOOKABLE_EXPORT(WSCInstallProvider)
+        DECLARE_HOOKABLE_EXPORT(WSCEnumProtocols)
+        DECLARE_HOOKABLE_EXPORT(WSCGetProviderPath)
+
+        DECLARE_HOOKABLE_EXPORT(WSCInstallNameSpace)
+        DECLARE_HOOKABLE_EXPORT(WSCUnInstallNameSpace)
+        DECLARE_HOOKABLE_EXPORT(WSCEnableNSProvider)
+
+;;
+;; NT WOW support
+;;
+
+        WSApSetPostRoutine
+
+;;
+;; Non-IFS provider support (it is actually exported in WSPStartup2, but
+;; this chage did not make it into the spec in time)
+;;
+        WPUCompleteOverlappedRequest
+
+;;
+;; PnP support
+;;
+
+        WSAProviderConfigChange
+;;
+;; Moved from sporder dll
+;;
+        WSCWriteProviderOrder
+        WSCWriteNameSpaceOrder

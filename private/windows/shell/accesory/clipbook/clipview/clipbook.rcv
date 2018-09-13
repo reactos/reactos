@@ -1,0 +1,22 @@
+/********************************************************************/
+/*        CLIPBOOK.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#include <version.h>
+
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows NT ClipBook Viewer"
+#define VER_INTERNALNAME_STR            "CLIPBRD"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1994"
+#define VER_ORIGINALFILENAME_STR        "CLIPBRD.EXE"
+// #define VER_COMPANYNAME_STR          "MICROSOFT"
+
+// #define VER_FILEFLAGSMASK   1
+// #define VER_FILEFLAGS       1
+// #define VER_FILEOS          1
+
+
+
+#include <common.ver>

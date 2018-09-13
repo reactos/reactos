@@ -1,0 +1,71 @@
+Ambients.cpp    Implements the ambient property UserMode.
+
+DEInsTab.cpp    Implements DEInsertTableParam, a COM object which is passed to ExecCommand
+                to create a table.
+
+DENames.cpp     Implements DEGetBlockFmtNamesParam, which returns a SAFEARRAY of format
+                names for populating style menus.
+
+DHSHWUI.cpp     Implements a very bland IDocHostShowUI interface.
+
+DHTMLEd.cpp     Basic DLL functions.  DllRegisterServer removes some older GUIDs as well.
+                DllUnregisterServer deals with ATL bugs for logo compliance.
+
+DHTMLEd.idl     Automation enumerations and interfaces.  Includes DEGetBlockFmtNamesParam,
+                DEGetBlockFmtNamesParam, and both Safe and Unsafe versions of the control.
+                Two duplicate event interfaces were required for VB5 compatibility.
+
+DHTMLEdit.cpp   Registry scripts and toolbox bitmaps.  One string ("DHTMLEd") unused.
+
+DHTMLEdit.cpp   Implements safe and unsafe controls.  Unsafe control aggregates safe control
+                and contains all unsafe code.  Sinks safe control events and fires them on
+                unsafe control (required for VB5 compat.)
+                Also implements IInternetSecurityManager for unsafe control when in edit mode,
+                copied from VID's implementation.
+
+DHTMLUIHNDL.cpp Implements IDocHostUIHandler, overriding GetHostInfo and ShowContextMenu.
+
+DispExA.cpp     GetLength and GetElement for a JavaScript array.  Used by SetContextMenu
+                when called from JS.
+
+IAdvSink.cpp    Implements perfectly empty IAdviseSink for TriEdit site.
+
+ICliSite.cpp    Implements IOleClientSite for TriEdit site, does nothing but GetContainer.
+
+Idocsite.cpp    Implements IOleDocumentSite for TriEdit site, handles ActivateMe.
+
+IIPsite.cpp     Implements IOleInPlaceSite for TriEdit site, minimal functionality.
+
+Inc.cpp         Same as StdAfx.cpp in basic ATL control.  Compiles ATL cpp's.
+
+IOleObj.cpp     For unsafe control, overrides GetUserClassID and GetUserType.
+
+IPropSink.cpp   Implements minimal CImplPropertyNotifySink for TriEdit site.
+
+PlgProt.cpp     Pluggable protocol handler for protocol "dhtmledN[N...]", adapted from VID.
+                Allows us to override BaseURL, reload and optionally filter stream via
+                URLOpenBlockingStream.  Parses security URL from outer most containing
+                Trident instance.
+
+ProxyFrame.cpp  Implements the bulk of the controls properties and methods.
+                Creates and destroys hosted TriEdit aggregating Trident.  Handles ExecCommand.
+                LoadDocument stashes string, URL or file name and loads via pluggable protocol.
+                LATE_BIND_URLMON_WININET ifdefs allowed late loading of WinINet and UrlMon in 1.0.
+                Switches between edit and browse mode.  Handles accelerators.  Finds default
+                BaseURL. Calculates security URL for pluggable protocol.  Returns HTML stream to
+                pluggable protocol.  Fires events from Trident on control.  Registers and
+                unregisters pluggable protocol.
+
+Site.cpp        Implements site for TriEdit.  Creates, destroys, initializes, loads and saves it.
+
+TriFilter.cpp   Converts between stream, BSTR, file and URL.  Converts to and from Unicode.
+                Provides single routine which interfaces with TriEdit's filtering.
+
+Win95Wrp.cpp    Translates to ANSI API routines on win95/98, uses Unicode APIs on NT.
+
+CPDHTMLEd.h     ATL event firing code for safe and unsafe control.
+
+Private.h       A few interfaces used only internally.
+
+TriEdSnk.cpp    Allows easy sinking of various Trident event interfaces.
+

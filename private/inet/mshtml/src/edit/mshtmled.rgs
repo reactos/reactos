@@ -1,0 +1,18 @@
+HKCR
+{
+	Trident.Mshtmled.1 = s 'Trident Editing Command Target'
+	{
+		CLSID = s '{3050F494-98B5-11CF-BB82-00AA00BDCE0B}'
+	}
+	CLSID
+	{
+		ForceRemove {3050F494-98B5-11CF-BB82-00AA00BDCE0B} = s 'Trident Editing Command Target'
+		{
+			ProgID = s 'Trident.Mshtmled.1'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

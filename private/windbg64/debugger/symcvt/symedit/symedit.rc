@@ -1,0 +1,12 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Symbol Editing Program\0"
+#define VER_INTERNALNAME_STR        "symedit.exe\0"
+#define VER_ORIGINALFILENAME_STR    "symedit.exe\0"
+
+#include "common.ver"
+#include "strings.i"
+

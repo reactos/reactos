@@ -1,0 +1,17 @@
+/********************************************************************/
+/*        PBRUSH.RCV                                                 */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#include <ntverp.h>
+
+
+#define VER_FILETYPE			VFT_APP
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows Paintbrush application file"
+#define VER_INTERNALNAME_STR		"PBrushX"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1994"
+#define VER_ORIGINALFILENAME_STR	"PBRUSH.EXE"
+
+
+
+#include <common.ver>

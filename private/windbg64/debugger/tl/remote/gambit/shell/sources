@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+
+!ENDIF
+
+!INCLUDE ..\..\..\..\sources.inc
+
+MAJORCOMP=dbg
+MINORCOMP=windbgrm
+
+TARGETNAME=windbgrm
+TARGETPATH=obj$(D)
+TARGETTYPE=PROGRAM
+
+SOURCES=    windbgrm.c  
+
+UMTYPE=windows
+
+IA64_FLAGS=/Gs5000
+LINKER_FLAGS=-ignore:505 -opt:noref
+MSC_WARNING_LEVEL=/WX /W3
+PPC_WARNING_LEVEL=/W3
+
+INCLUDES=$(LANGAPI_ROOT)\debugger;\
+         $(DEBUGGER_ROOT)\include;\
+         $(DEBUGGER_ROOT)\od\include;\
+         $(DEBUG_INCLUDES)
+
+LINKLIBS=$(MORE_LIBS) \
+         $(DEBUG_LIB)\*\memlist.lib \
+         $(BASEDIR)\public\sdk\lib\*\user32.lib \
+         $(BASEDIR)\public\sdk\lib\*\msvcrt.lib \
+         $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+NTKEEPRESOURCETMPFILES=1
+

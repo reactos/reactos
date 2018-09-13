@@ -1,0 +1,11 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1995 - 1999
+
+Module Name:
+
+    dirs.
+
+!ENDIF
+
+DIRS=common aclui rshx32 dssec

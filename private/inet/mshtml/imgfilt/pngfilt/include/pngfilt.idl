@@ -1,0 +1,26 @@
+// PNGFilt.idl : IDL source for PNGFilt.dll
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (PNGFilt.tlb) and marshalling code.
+
+import "ocmm.idl";
+
+[
+	uuid( 5DADDD20-2DCF-11D0-B724-00AA006C1A01 ),
+	version( 1.0 ),
+	helpstring( "PNGFilter 1.0 Type Library" )
+]
+library PNGFilterLib
+{
+	importlib( "stdole2.tlb" );
+
+	[
+		uuid(A3CCEDF7-2DE2-11D0-86F4-00A0C913F750),
+		helpstring("CoPNGFilter Class")
+	]
+	coclass CoPNGFilter
+	{
+		[default] interface IImageDecodeFilter;
+	};
+
+};

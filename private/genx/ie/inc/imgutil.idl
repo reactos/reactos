@@ -1,0 +1,87 @@
+// BitmapSurfaces.idl : IDL source for BitmapSurfaces.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (BitmapSurfaces.tlb) and marshalling code.
+
+import "ocmm.idl";
+
+interface IDirectDrawSurface;
+
+cpp_quote( "STDAPI CreateMIMEMap( IMapMIMEToCLSID** ppMap );" )
+cpp_quote( "STDAPI DecodeImage( IStream* pStream, IMapMIMEToCLSID* pMap," )
+cpp_quote( "   IUnknown* pEventSink );" )
+cpp_quote( "STDAPI SniffStream( IStream* pInStream, UINT* pnFormat," )
+cpp_quote( "   IStream** ppOutStream );" )
+cpp_quote( "STDAPI GetMaxMIMEIDBytes( ULONG* pnMaxBytes );" )
+cpp_quote( "STDAPI IdentifyMIMEType( const BYTE* pbBytes, ULONG nBytes," )
+cpp_quote( "   UINT* pnFormat );" )
+cpp_quote( "STDAPI ComputeInvCMAP(const RGBQUAD *pRGBColors, ULONG nColors, BYTE *pInvTable," )
+cpp_quote( "   ULONG cbTable);" )
+cpp_quote( "STDAPI DitherTo8( BYTE * pDestBits, LONG nDestPitch, BYTE * pSrcBits, LONG nSrcPitch," )
+cpp_quote( "   REFGUID bfidSrc, RGBQUAD * prgbDestColors, RGBQUAD * prgbSrcColors, BYTE * pbDestInvMap," )
+cpp_quote( "   LONG x, LONG y, LONG cx, LONG cy, LONG lDestTrans, LONG lSrcTrans);" )
+cpp_quote( "STDAPI CreateDDrawSurfaceOnDIB(HBITMAP hbmDib, IDirectDrawSurface **ppSurface);" )
+
+[
+	object,
+   local,
+	uuid( 4EF17940-30E0-11d0-B724-00AA006C1A01 ),
+	helpstring( "ISniffStream Interface" ),
+	pointer_default( unique )
+]
+interface ISniffStream : IUnknown
+{
+   HRESULT Init( IStream* pStream );
+   HRESULT Peek( void* pBuffer, ULONG nBytes, ULONG* pnBytesRead );
+};
+
+[
+	object,
+   local,
+	uuid( 7C48E840-3910-11d0-86FC-00A0C913F750 ),
+	helpstring( "IDithererImpl Interface" ),
+	pointer_default( unique )
+]
+interface IDithererImpl : IUnknown
+{
+   HRESULT SetDestColorTable( ULONG nColors, const RGBQUAD* prgbColors );
+   HRESULT SetEventSink( IImageDecodeEventSink* pEventSink );
+};
+
+[
+	uuid( CF790840-2DC4-11D0-B724-00AA006C1A01 ),
+	version( 1.0 ),
+	helpstring( "ImgUtil 1.0 Type Library")
+]
+library ImgUtilLib
+{
+	importlib("stdole2.tlb");
+
+	[
+      uuid( A860CE50-3910-11d0-86FC-00A0C913F750 ),
+		helpstring( "CoDitherToRGB8 Class" )
+	]
+	coclass CoDitherToRGB8
+	{
+		[default] interface IImageDecodeEventSink;
+	};
+
+	[
+      uuid( 6A01FDA0-30DF-11d0-B724-00AA006C1A01 ),
+		helpstring( "CoSniffStream Class" )
+	]
+	coclass CoSniffStream
+	{
+		[default] interface IStream;
+	};
+
+	[
+      uuid( 30C3B080-30FB-11d0-B724-00AA006C1A01 ),
+		helpstring( "CoMapMIMEToCLSID Class" )
+	]
+	coclass CoMapMIMEToCLSID
+	{
+		[default] interface IMapMIMEToCLSID;
+	};
+};

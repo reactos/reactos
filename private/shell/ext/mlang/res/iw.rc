@@ -1,0 +1,485 @@
+LANGUAGE 0x0D,0x00
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+101 DIALOGEX 0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION L"\x05d4\x05ea\x05e7\x05e0\x05ea \x05e2\x05e8\x05db\x05ea \x05e9\x05e4\x05d4"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x05d4\x05ea\x05e7\x05e0\x05d4",1,68,74,50,14
+    PUSHBUTTON      L"\x05d1\x05d9\x05d8\x05d5\x05dc",2,126,74,50,14
+    LTEXT           L"\x05db\x05d3\x05d9 \x05dc\x05d4\x05e6\x05d9\x05d2 \x05d0\x05ea \x05ea\x05d5\x05d5\x05d9 \x05d4\x05e9\x05e4\x05d4 \x05d1\x05d0\x05d5\x05e4\x05df \x05ea\x05e7\x05d9\x05df \x05e2\x05dc\x05d9\x05da \x05dc\x05d4\x05ea\x05e7\x05d9\x05df \x05d0\x05ea \x05e2\x05e8\x05db\x05ea \x05d4\x05e9\x05e4\x05d4 \x05d4\x05d1\x05d0\x05d4:",
+                    -1,10,7,166,22
+    LTEXT           L"",201,10,28,166,11
+    CONTROL         L"\x05d0\x05dc &\x05ea\x05ea\x05e7\x05d9\x05df \x05e2\x05e8\x05db\x05d5\x05ea \x05e9\x05e4\x05d4.",1000,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,56,166,11
+END
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4096                    L"\x05e7\x05d9\x05d3\x05d5\x05d3 \x05d4\x05d3\x05e3 %d"
+    4097                    L"\x05d4\x05ea\x05e7\x05e0\x05ea \x05e2\x05e8\x05db\x05ea \x05e9\x05e4\x05d4"
+    4098                    L"\x200f\x200f\x05d0\x05d9\x05df \x05dc\x05da \x05d4\x05e8\x05e9\x05d0\x05d5\x05ea \x05e0\x05d9\x05d4\x05d5\x05dc \x05d1\x05de\x05d7\x05e9\x05d1 \x05d6\x05d4. \r\n \x05d4\x05ea\x05e7\x05e0\x05d4 \x05d6\x05d5 \x05d0\x05d9\x05e0\x05d4 \x05d9\x05db\x05d5\x05dc\x05d4 \x05dc\x05d4\x05ea\x05d1\x05e6\x05e2 .\x05db\x05d4\x05dc\x05db\x05d4 \x05d0\x05dc\x05d0 \x05d0\x05dd \x05d4\x05d9\x05d0 \x05e0\x05e2\x05e9\x05d9\x05ea \x05e2""\x05d9 \x05de\x05e0\x05d4\x05dc \x05d4\x05de\x05e2\x05e8\x05db\x05ea."
+    4099                    L"\x200f\x200f\x05e2\x05e8\x05db\x05ea \x05e9\x05e4\x05d4 \x05dc Internet Explorer \x05d4\x05d5\x05ea\x05e7\x05e0\x05d4. \r\n \x05d9\x05ea\x05db\x05df \x05e9\x05ea\x05e6\x05d8\x05e8\x05da \x05dc\x05d4\x05e4\x05e2\x05d9\x05dc \x05de\x05d7\x05d3\x05e9 \x05d0\x05ea \x05d4\x05de\x05d7\x05e9\x05d1 \x05db\x05d3\x05d9 \x05e9\x05dc \x05d4\x05d4\x05d2\x05d3\x05e8\x05d5\x05ea \x05d9\x05db\x05e0\x05e1\x05d5 \x05dc\x05ea\x05d5\x05e7\x05e4\x05df."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4352                    L"\x05d0\x05e4\x05e8\x05d9\x05e7\x05d0\x05e0\x05e1"
+    4353                    L"\x05d0\x05dc\x05d1\x05e0\x05d9\x05ea"
+    4354                    L"\x05e2\x05e8\x05d1\x05d9\x05ea"
+    4355                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05e2\x05e8\x05d1 \x05d4\x05e1\x05e2\x05d5\x05d3\x05d9\x05ea)\x200f"
+    4356                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05e2\x05d9\x05e8\x05e7)\x200f"
+    4357                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05de\x05e6\x05e8\x05d9\x05dd)\x200f"
+    4358                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05dc\x05d5\x05d1)\x200f"
+    4359                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d0\x05dc\x05d2'\x05d9\x05e8\x05d9\x05d4)\x200f"
+    4360                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05de\x05e8\x05d5\x05e7\x05d5)\x200f"
+    4361                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d8\x05d5\x05e0\x05d9\x05e1\x05d9\x05d4)\x200f"
+    4362                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05e2\x05d5\x05de\x05d0\x05df)\x200f"
+    4363                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05ea\x05d9\x05de\x05df)\x200f"
+    4364                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05e1\x05d5\x05e8\x05d9\x05d4)\x200f"
+    4365                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d9\x05e8\x05d3\x05df)\x200f"
+    4366                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05dc\x05d1\x05e0\x05d5\x05df)\x200f"
+    4367                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05db\x05d5\x05d5\x05d9\x05ea)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4368                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d0\x05de\x05d9\x05e8\x05d5\x05d9\x05d5\x05ea \x05e2\x05e8\x05d1\x05d9\x05d5\x05ea \x05de\x05d0\x05d5\x05d7\x05d3\x05d5\x05ea)\x200f"
+    4369                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d1\x05d7\x05e8\x05d9\x05d9\x05df)\x200f"
+    4370                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05e7\x05d8\x05d0\x05e8)\x200f"
+    4371                    L"\x05d1\x05d0\x05e1\x05e7\x05d9\x05ea"
+    4372                    L"\x05d1\x05d5\x05dc\x05d2\x05e8\x05d9\x05ea"
+    4373                    L"\x05d1\x05d9\x05dc\x05d5\x05e8\x05d5\x05e1\x05d9\x05ea"
+    4374                    L"\x05e7\x05d8\x05dc\x05d0\x05e0\x05d9\x05ea"
+    4375                    L"\x05e1\x05d9\x05e0\x05d9\x05ea"
+    4376                    L"\x05e1\x05d9\x05e0\x05d9\x05ea (\x05d8\x05d9\x05d5\x05d5\x05d0\x05df)\x200f"
+    4377                    L"\x05e1\x05d9\x05e0\x05d9\x05ea (\x05e1\x05d9\x05df)\x200f"
+    4378                    L"\x05e1\x05d9\x05e0\x05d9\x05ea (\x05d4\x05d5\x05e0\x05d2 \x05e7\x05d5\x05e0\x05d2)\x200f"
+    4379                    L"\x05e1\x05d9\x05e0\x05d9\x05ea (\x05e1\x05d9\x05e0\x05d2\x05e4\x05d5\x05e8)\x200f"
+    4380                    L"\x05e7\x05e8\x05d5\x05d0\x05d8\x05d9\x05ea"
+    4381                    L"\x05e6'\x05db\x05d9\x05ea"
+    4382                    L"\x05d3\x05e0\x05d9\x05ea"
+    4383                    L"\x05d4\x05d5\x05dc\x05e0\x05d3\x05d9\x05ea(\x05ea\x05e7\x05e0\x05d9\x05ea)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4384                    L"\x05d4\x05d5\x05dc\x05e0\x05d3\x05d9\x05ea (\x05d1\x05dc\x05d2\x05d9\x05d4)\x200f"
+    4385                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea"
+    4386                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d0\x05e8\x05e6\x05d5\x05ea \x05d4\x05d1\x05e8\x05d9\x05ea)\x200f"
+    4387                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d1\x05e8\x05d9\x05d8\x05e0\x05d9\x05d4)\x200f"
+    4388                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d0\x05d5\x05e1\x05d8\x05e8\x05dc\x05d9\x05d4)\x200f"
+    4389                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05e7\x05e0\x05d3\x05d4)\x200f"
+    4390                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05e0\x05d9\x05d5 \x05d6\x05d9\x05dc\x05e0\x05d3)\x200f"
+    4391                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d0\x05d9\x05e8\x05dc\x05e0\x05d3)\x200f"
+    4392                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d3\x05e8\x05d5\x05dd \x05d0\x05e4\x05e8\x05d9\x05e7\x05d4)\x200f"
+    4393                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d2'\x05de\x05d0\x05d9\x05e7\x05d4)\x200f"
+    4394                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d1\x05dc\x05d9\x05d6)\x200f"
+    4395                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d8\x05e8\x05d9\x05e0\x05d9\x05d3\x05d3)\x200f"
+    4396                    L"\x05d0\x05e1\x05d8\x05d5\x05e0\x05d9\x05ea"
+    4397                    L"\x05e4\x05d0\x05e8\x05d5\x05e1"
+    4398                    L"\x05e4\x05d0\x05e8\x05e1\x05d9\x05ea"
+    4399                    L"\x05e4\x05d9\x05e0\x05d9\x05ea"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4400                    L"\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05e6\x05e8\x05e4\x05ea)\x200f"
+    4401                    L"\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05d1\x05dc\x05d2\x05d9\x05d4)\x200f"
+    4402                    L"\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05e7\x05e0\x05d3\x05d4)\x200f"
+    4403                    L"\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05e9\x05d5\x05d5\x05d9\x05e5)\x200f"
+    4404                    L"\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05dc\x05d5\x05e7\x05e1\x05de\x05d1\x05d5\x05e8\x05d2)\x200f"
+    4405                    L"\x05d2\x05d0\x05dc\x05d9\x05ea"
+    4406                    L"\x05d2\x05e8\x05de\x05e0\x05d9\x05ea (\x05d2\x05e8\x05de\x05e0\x05d9\x05d4)\x200f"
+    4407                    L"\x05d2\x05e8\x05de\x05e0\x05d9\x05ea (\x05e9\x05d5\x05d5\x05d9\x05e5)\x200f"
+    4408                    L"\x05d2\x05e8\x05de\x05e0\x05d9\x05ea (\x05d0\x05d5\x05e1\x05d8\x05e8\x05d9\x05d4)\x200f"
+    4409                    L"\x05d2\x05e8\x05de\x05e0\x05d9\x05ea (\x05dc\x05d5\x05e7\x05e1\x05de\x05d1\x05d5\x05e8\x05d2)\x200f"
+    4410                    L"\x05d2\x05e8\x05de\x05e0\x05d9\x05ea (\x05dc\x05d9\x05db\x05d8\x05e0\x05e9\x05d8\x05d9\x05d9\x05df)\x200f"
+    4411                    L"\x05d9\x05d5\x05d5\x05e0\x05d9\x05ea"
+    4412                    L"\x05e2\x05d1\x05e8\x05d9\x05ea"
+    4413                    L"\x05d4\x05d9\x05e0\x05d3\x05d9"
+    4414                    L"\x05d4\x05d5\x05e0\x05d2\x05e8\x05d9\x05ea"
+    4415                    L"\x05d0\x05d9\x05e1\x05dc\x05e0\x05d3\x05d9\x05ea"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4416                    L"\x05d0\x05d9\x05e0\x05d3\x05d5\x05e0\x05d6\x05d9\x05ea"
+    4417                    L"\x05d0\x05d9\x05d8\x05dc\x05e7\x05d9\x05ea (\x05d0\x05d9\x05d8\x05dc\x05d9\x05d4)\x200f"
+    4418                    L"\x05d0\x05d9\x05d8\x05dc\x05e7\x05d9\x05ea (\x05e9\x05d5\x05d5\x05d9\x05e5)\x200f"
+    4419                    L"\x05d9\x05e4\x05e0\x05d9\x05ea"
+    4420                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea"
+    4421                    L"\x05dc\x05d8\x05d1\x05d9\x05ea"
+    4422                    L"\x05dc\x05d9\x05d8\x05d5\x05d0\x05e0\x05d9\x05d4"
+    4423                    L"\x05de\x05e7\x05d3\x05d5\x05e0\x05d9\x05ea (FYROM)"
+    4424                    L"\x05de\x05d0\x05dc\x05d0\x05d9\x05ea(\x05de\x05dc\x05d0\x05d6\x05d9\x05d4)\x200f"
+    4425                    L"\x05de\x05dc\x05d8\x05d6"
+    4426                    L"\x05e0\x05d5\x05e8\x05d5\x05d5\x05d2\x05d9\x05ea (\x05d1\x05d5\x05e7\x05de\x05d0\x05dc)\x200f"
+    4427                    L"\x05e0\x05d5\x05e8\x05d5\x05d5\x05d2\x05d9\x05ea (\x05e0\x05d9\x05d9\x05e8\x05d5\x05e1\x05e7)\x200f"
+    4428                    L"\x05e4\x05d5\x05dc\x05e0\x05d9\x05ea"
+    4429                    L"\x05e4\x05d5\x05e8\x05d8\x05d5\x05d2\x05d6\x05d9\x05ea (\x05d1\x05e8\x05d6\x05d9\x05dc)\x200f"
+    4430                    L"\x05e4\x05d5\x05e8\x05d8\x05d5\x05d2\x05d6\x05d9\x05ea (\x05e4\x05d5\x05e8\x05d8\x05d5\x05d2\x05dc)\x200f"
+    4431                    L"\x05e8\x05d9\x05d9\x05d8\x05d5-\x05e8\x05d5\x05de\x05d0\x05e0\x05d9\x05ea"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4432                    L"\x05e8\x05d5\x05de\x05e0\x05d9\x05ea"
+    4433                    L"\x05e8\x05d5\x05de\x05e0\x05d9\x05ea (\x05de\x05d5\x05dc\x05d3\x05d5\x05d1\x05d4)\x200f"
+    4434                    L"\x05e8\x05d5\x05e1\x05d9\x05ea"
+    4435                    L"\x05e8\x05d5\x05e1\x05d9\x05ea (\x05de\x05d5\x05dc\x05d3\x05d5\x05d1\x05d4)\x200f"
+    4436                    L"\x05e1\x05e8\x05d1\x05d9\x05ea (\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea)\x200f"
+    4437                    L"\x05e1\x05e8\x05d1\x05d9\x05ea (Latin)"
+    4438                    L"\x05e1\x05dc\x05d5\x05d1\x05e7\x05d9\x05ea"
+    4439                    L"\x05e1\x05dc\x05d5\x05d1\x05e0\x05d9\x05ea"
+    4440                    L"\x05e1\x05d5\x05e8\x05d1\x05d5\x05df"
+    4441                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea)\x200f"
+    4442                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05de\x05e7\x05e1\x05d9\x05e7\x05d5)\x200f"
+    4443                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d1\x05d9\x05df \x05dc\x05d0\x05d5\x05de\x05d9\x05ea)"
+    4444                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d2\x05d5\x05d0\x05d8\x05d5\x05d5\x05de\x05dc\x05d4)\x200f"
+    4445                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e7\x05d5\x05e1\x05d8\x05d4 \x05e8\x05d9\x05e7\x05d4)\x200f"
+    4446                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e4\x05e0\x05de\x05d4)\x200f"
+    4447                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d4\x05e8\x05e4\x05d5\x05d1\x05dc\x05d9\x05e7\x05d4 \x05d4\x05d3\x05d5\x05de\x05d9\x05e0\x05d9\x05e7\x05e0\x05d9\x05ea)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4448                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d5\x05e0\x05e6\x05d5\x05d0\x05dc\x05d4)\x200f"
+    4449                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e7\x05d5\x05dc\x05d5\x05de\x05d1\x05d9\x05d4)\x200f"
+    4450                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e4\x05e8\x05d5)\x200f"
+    4451                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d0\x05e8\x05d2\x05e0\x05d8\x05d9\x05e0\x05d4)\x200f"
+    4452                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d0\x05e7\x05d5\x05d5\x05d3\x05d5\x05e8)\x200f"
+    4453                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e6'\x05d9\x05dc\x05d4)\x200f"
+    4454                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d0\x05d5\x05e8\x05d5\x05d2\x05d5\x05d5\x05d9)\x200f"
+    4455                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e4\x05e8\x05d2\x05d5\x05d5\x05d0\x05d9)\x200f"
+    4456                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d1\x05d5\x05dc\x05d9\x05d1\x05d9\x05d4)\x200f"
+    4457                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d0\x05dc \x05e1\x05dc\x05d5\x05d5\x05d3\x05d5\x05e8)\x200f"
+    4458                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05d4\x05d5\x05e0\x05d3\x05d5\x05e8\x05e1)\x200f"
+    4459                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e0\x05d9\x05e7\x05e8\x05d2\x05d5\x05d0\x05d4)\x200f"
+    4460                    L"\x05e1\x05e4\x05e8\x05d3\x05d9\x05ea (\x05e4\x05d5\x05e8\x05d8\x05d5 \x05e8\x05d9\x05e7\x05d5)\x200f"
+    4461                    L"\x05e1\x05d5\x05d8\x05d5"
+    4462                    L"\x05e9\x05d5\x05d5\x05d3\x05d9\x05ea"
+    4463                    L"\x05e9\x05d5\x05d5\x05d3\x05d9\x05ea (\x05e4\x05d9\x05e0\x05dc\x05e0\x05d3)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4464                    L"\x05ea\x05d0\x05d9\x05ea"
+    4465                    L"\x05d8\x05e1\x05d5\x05e0\x05d2\x05d4"
+    4466                    L"\x05d8\x05e6\x05d5\x05d0\x05e0\x05d4"
+    4467                    L"\x05d8\x05d5\x05e8\x05e7\x05d9\x05ea"
+    4468                    L"\x05d0\x05d5\x05e7\x05e8\x05d0\x05d9\x05e0\x05d9\x05ea"
+    4469                    L"\x05d0\x05d5\x05e8\x05d3\x05d5"
+    4470                    L"\x05d5\x05d9\x05d8\x05e0\x05d0\x05de\x05d9\x05ea"
+    4471                    L"Xhosa"
+    4472                    L"\x05d0\x05d9\x05d3\x05d9\x05e9"
+    4473                    L"\x05d6\x05d5\x05dc\x05d5"
+    4474                    L"\x05e1\x05d9\x05e0\x05d9\x05ea (\x05de\x05d0\x05e7\x05d0\x05d5)\x200f"
+    4475                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d4\x05d0\x05d9\x05d9\x05dd \x05d4\x05e7\x05e8\x05d9\x05d1\x05d9\x05d9\x05dd)\x200f"
+    4476                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d6\x05d9\x05de\x05d1\x05d0\x05d1\x05d5\x05d4)\x200f"
+    4477                    L"\x05d0\x05e0\x05d2\x05dc\x05d9\x05ea (\x05d4\x05e4\x05d9\x05dc\x05d9\x05e4\x05d9\x05e0\x05d9\x05dd)\x200f"
+    4478                    L"\x200f\x05e6\x05e8\x05e4\x05ea\x05d9\x05ea (\x05de\x05d5\x05e0\x05e7\x05d5)\x200f"
+    4479                    L"\x05d0\x05d6\x05e8\x05d9(\x05dc\x05d8\x05d9\x05e0\x05d9\x05ea)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4480                    L"\x05d0\x05d5\x05d6\x05d1\x05e7\x05d9\x05ea (\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea)\x200f"
+    4481                    L"\x05d0\x05d5\x05d6\x05d1\x05e7\x05d9\x05ea (\x05dc\x05d8\x05d9\x05e0\x05d9\x05ea)\x200f"
+    4482                    L"\x05d0\x05e8\x05de\x05e0\x05d9\x05ea"
+    4483                    L"\x05d2\x05e8\x05d5\x05d6\x05d9\x05e0\x05d9\x05ea"
+    4484                    L"\x05e7\x05d0\x05d6\x05d0\x05d7\x05e1\x05d8\x05e0\x05d9\x05ea"
+    4485                    L"\x05e1\x05d5\x05d0\x05d4\x05d9\x05dc\x05d9\x05ea"
+    4486                    L"\x05d8\x05e8\x05d8\x05e8\x05d9\x05ea"
+    4487                    L"\x05d1\x05e0\x05d2\x05d0\x05dc\x05d9\x05ea"
+    4488                    L"\x05e4\x05d5\x05e0\x05d2'\x05d0\x05d1\x05d9\x05ea"
+    4489                    L"\x05d2\x05d5\x05d6'\x05d0\x05e8\x05d8\x05d9\x05ea"
+    4490                    L"\x05d0\x05d5\x05e8\x05d9\x05d4"
+    4491                    L"\x05d8\x05de\x05d9\x05dc\x05d9\x05ea"
+    4492                    L"\x05d8\x05d2\x05d5\x05dc\x05d5"
+    4493                    L"\x05e7\x05d0\x05e0\x05d0\x05d3\x05d4"
+    4494                    L"\x05de\x05d0\x05dc\x05d0\x05d9\x05d9\x05dd"
+    4495                    L"\x05d0\x05e1\x05d0\x05de\x05d9\x05d6\x05d9\x05ea"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4497                    L"\x05de\x05d0\x05e8\x05d0\x05d8\x05d9\x05ea"
+    4498                    L"(Brunei Darussalam) \x05de\x05d0\x05dc\x05d0\x05d9\x05ea"
+    4499                    L"\x05e0\x05d0\x05e4\x05dc\x05d9\x05ea (\x05d4\x05d5\x05d3\x05d5\x200f)\x200f"
+    4500                    L"\x05e1\x05e0\x05e1\x05e7\x05e8\x05d9\x05d8"
+    4501                    L"\x05dc\x05d8\x05d1\x05d9\x05ea"
+    4502                    L"\x05e7\x05d5\x05e0\x05e7\x05d0\x05e0\x05d9"
+    4503                    L"\x05d0\x05d6\x05e8\x05d9 (\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea)\x200f"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4608                    L"Unicode"
+    4609                    L"Unicode (Big-Endian)"
+    4610                    L"\x05de\x05e8\x05db\x05d6 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d4 (Windows)"
+    4611                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (Windows)"
+    4612                    L"\x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d4 (Windows)"
+    4613                    L"\x05d9\x05d5\x05d5\x05e0\x05d9\x05ea (Windows)"
+    4614                    L"\x05d8\x05d5\x05e8\x05e7\x05d9\x05ea (Windows)"
+    4615                    L"\x05e2\x05d1\x05e8\x05d9\x05ea (Windows)"
+    4616                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (Windows)"
+    4617                    L"\x05d1\x05d0\x05dc\x05d8\x05d9\x05ea (Windows)"
+    4618                    L"\x05d5\x05d5\x05d9\x05d0\x05d8\x05e0\x05de\x05d9\x05ea (Windows)"
+    4619                    L"(IA5) \x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9\x05ea"
+    4620                    L"(IA5) \x05d2\x05e8\x05de\x05e0\x05d9\x05ea"
+    4621                    L"(IA5) \x05e9\x05d5\x05d5\x05d3\x05d9\x05ea"
+    4622                    L"(IA5) \x05e0\x05d5\x05e8\x05d5\x05d5\x05d2\x05d9\x05ea"
+    4623                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (KOI8-R)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4624                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (KOI8-U)"
+    4625                    L"\x05de\x05e8\x05db\x05d6 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9 (ISO)"
+    4626                    L"Latin 3 (ISO)"
+    4627                    L"\x05d1\x05dc\x05d8\x05d9\x05ea (ISO)"
+    4628                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (ISO)"
+    4629                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (ISO)"
+    4630                    L"\x05d9\x05d5\x05d5\x05e0\x05d9\x05ea (ISO)"
+    4631                    L"\x05e2\x05d1\x05e8\x05d9\x05ea (ISO-Visual)"
+    4632                    L"\x05de\x05d5\x05d2\x05d3\x05e8 \x05e2\x05dc-\x05d9\x05d3\x05d9 \x05d4\x05de\x05e9\x05ea\x05de\x05e9"
+    4633                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (JIS)"
+    4634                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (JIS-Allow 1 byte Kana)"
+    4635                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (JIS-Allow 1 byte Kana)"
+    4636                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea (ISO)"
+    4637                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4638                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4639                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (EUC)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4640                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea (EUC)"
+    4641                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea (HZ)"
+    4642                    L"Unicode (UTF-7)"
+    4643                    L"Unicode (UTF-8)"
+    4644                    L"\x05de\x05e8\x05db\x05d6 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d4 (DOS)"
+    4645                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (DOS)"
+    4646                    L"\x05ea\x05d0\x05d9\x05dc\x05e0\x05d3\x05d9\x05ea (Windows)"
+    4647                    L"\x05d9\x05e4\x05e0\x05d9\x05ea (Shift-JIS)"
+    4648                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea (GB2312)"
+    4649                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea"
+    4650                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea (Big5)"
+    4651                    L"\x05e2\x05d1\x05e8\x05d9\x05ea (ISO-Logical)"
+    4652                    L"\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea"
+    4653                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (ASMO 708)"
+    4654                    L"\x05e2\x05e8\x05d1\x05d9\x05ea(DOS)"
+    4655                    L"\x05e2\x05d1\x05e8\x05d9\x05ea(DOS)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4656                    L"\x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d4 (ISO)"
+    4657                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4658                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4659                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4660                    L"\x05d9\x05d5\x05d5\x05e0\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4661                    L"\x05e2\x05e8\x05d1\x05d9\x05ea (\x05d1\x05d7\x05d9\x05e8\x05d4 \x05d0\x05d5\x05d8\x05d5\x05de\x05d8\x05d9\x05ea)\x200f"
+    4662                    L"\x05d8\x05d5\x05e8\x05e7\x05d9\x05ea (ISO)"
+    4663                    L"Latin 9 (ISO)"
+    4664                    L"US-ASCII"
+    4665                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea (EUC)"
+    4666                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea (Johab)"
+    4667                    L"OEM United States"
+    4668                    L"\x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9\x05ea"
+    4669                    L"\x05d0\x05d9\x05e8\x05d5\x05e4\x05d4"
+    4670                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea(CNS)"
+    4671                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea(Eten)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4672                    L"\x05d0\x05e1\x05d8\x05d5\x05e0\x05d9\x05ea(ISO)"
+    4673                    L"\x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9\x05ea (DOS)"
+    4674                    L"\x05d9\x05d5\x05e0\x05d9\x05ea(DOS)"
+    4675                    L"\x05d9\x05d5\x05e0\x05d9\x05ea \x05de\x05d5\x05d3\x05e8\x05e0\x05d9\x05ea(DOS)"
+    4676                    L"\x05d1\x05dc\x05d8\x05d9\x05ea(DOS)"
+    4677                    L"\x05d8\x05d5\x05e8\x05e7\x05d9\x05ea(DOS)"
+    4678                    L"\x05d0\x05d9\x05e1\x05dc\x05e0\x05d3\x05d9\x05ea(DOS)"
+    4679                    L"\x05de\x05e2\x05e8\x05d1 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9\x05ea (Mac)"
+    4680                    L"\x05d9\x05e4\x05e0\x05d9\x05ea(Mac)"
+    4681                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea(Mac)"
+    4682                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea(Mac)"
+    4683                    L"\x05e2\x05e8\x05d1\x05d9\x05ea(Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4700                    L"\x05e2\x05d1\x05e8\x05d9\x05ea(Mac)"
+    4701                    L"\x05d9\x05d5\x05e0\x05d9\x05ea(Mac)"
+    4702                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea(Mac)"
+    4703                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea(Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4704                    L"\x05de\x05e8\x05db\x05d6 \x05d0\x05d9\x05e8\x05d5\x05e4\x05d9\x05ea (Mac)"
+    4705                    L"\x05d0\x05d9\x05e1\x05dc\x05e0\x05d3\x05d9\x05ea(Mac)"
+    4706                    L"\x05d8\x05d5\x05e8\x05e7\x05d9\x05ea(Mac)"
+    4707                    L"IBM EBCDIC (US-Canada)"
+    4708                    L"IBM EBCDIC (International)"
+    4709                    L"IBM EBCDIC (Multilingual Latin-2)"
+    4710                    L"IBM EBCDIC (Greek Modern)"
+    4711                    L"IBM EBCDIC (Turkish Latin-5)"
+    4712                    L"IBM EBCDIC (Germany)"
+    4713                    L"IBM EBCDIC (Denmark-Norway)"
+    4714                    L"IBM EBCDIC (Finland-Sweden)"
+    4715                    L"IBM EBCDIC (Italy)"
+    4716                    L"IBM EBCDIC (Spain)"
+    4717                    L"IBM EBCDIC (UK)"
+    4718                    L"IBM EBCDIC (Japanese katakana)"
+    4719                    L"IBM EBCDIC (France)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4720                    L"IBM EBCDIC (Arabic)"
+    4721                    L"IBM EBCDIC (Greek)"
+    4722                    L"IBM EBCDIC (Hebrew)"
+    4723                    L"IBM EBCDIC (Korean Extended)"
+    4724                    L"IBM EBCDIC (Thai)"
+    4725                    L"IBM EBCDIC (Icelandic)"
+    4726                    L"IBM EBCDIC (Cyrillic Russian)"
+    4727                    L"IBM EBCDIC (Turkish)"
+    4728                    L"IBM EBCDIC (Cyrillic Serbian-Bulgarian)"
+    4729                    L"IBM EBCDIC (Japanese and Japanese Katakana)"
+    4730                    L"IBM EBCDIC (Japanese and US-Canada)"
+    4731                    L"IBM EBCDIC (Japanese and Japanese-Latin)"
+    4732                    L"IBM EBCDIC (Korean and Korean Extended)"
+    4733                    L"IBM EBCDIC (Simplified Chinese)"
+    4734                    L"IBM EBCDIC (Traditional Chinese)"
+    4735                    L"IBM EBCDIC (US-Canada-Euro)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4736                    L"IBM EBCDIC (Germany-Euro)"
+    4737                    L"IBM EBCDIC (Denmark-Norway-Euro)"
+    4738                    L"IBM EBCDIC (Finland-Sweden-Euro)"
+    4739                    L"IBM EBCDIC (Italy-Euro)"
+    4740                    L"IBM EBCDIC (Spain-Euro)"
+    4741                    L"IBM EBCDIC (UK-Euro)"
+    4742                    L"IBM EBCDIC (France-Euro)"
+    4743                    L"IBM EBCDIC (International-Euro)"
+    4744                    L"IBM EBCDIC (Icelandic-Euro)"
+    4745                    L"ISCII Assamese"
+    4746                    L"ISCII Bengali"
+    4747                    L"ISCII Devanagari"
+    4748                    L"ISCII Gujarathi"
+    4749                    L"ISCII Kannada"
+    4750                    L"ISCII Malayalam"
+    4751                    L"ISCII Oriya"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4752                    L"ISCII Panjabi"
+    4753                    L"ISCII Telugu"
+    4754                    L"ISCII Tamil"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4864                    L"MS Gothic"
+    4865                    L"MS PGothic"
+    4866                    L"Simsun"
+    4867                    L"Simsun"
+    4868                    L"GulimChe"
+    4869                    L"Gulim"
+    4870                    L"GulimChe"
+    4871                    L"GulimChe"
+    4872                    L"\x05de\x05d9\x05e0\x05d2\x05dc\x05d9\x05d5 "
+    4873                    L"\x05de\x05d9\x05e0\x05d2\x05dc\x05d9\x05d5 \x05d7\x05d3\x05e9\x05d4"
+    4874                    L"Courier New"
+    4875                    L"Arial"
+    4876                    L"Lucida Sans Unicode"
+    4877                    L"Miriam Fixed"
+    4878                    L"David"
+    4879                    L"Cordia New"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4880                    L"Cordia New"
+    4881                    L"Simplified Arabic Fixed"
+    4882                    L"Simplified Arabic"
+    4883                    L"Mangal"
+    4884                    L"Mangal"
+    4885                    L"Latha"
+    4886                    L"Latha"
+    4887                    L"Times New Roman"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5120                    L"Latin based"
+    5121                    L"Latin"
+    5122                    L"\x05d9\x05d5\x05d5\x05e0\x05d9\x05ea"
+    5123                    L"\x05e7\x05d9\x05e8\x05d9\x05dc\x05d9\x05ea"
+    5124                    L"\x05d0\x05e8\x05de\x05e0\x05d9\x05ea"
+    5125                    L"\x05e2\x05d1\x05e8\x05d9\x05ea"
+    5126                    L"\x05e2\x05e8\x05d1\x05d9\x05ea"
+    5127                    L"\x05d3\x05d1\x05e0\x05d2\x05d0\x05e8\x05d9"
+    5128                    L"\x05d1\x05e0\x05d2\x05dc\x05d9\x05ea"
+    5129                    L"\x05d2\x05d5\x05e8\x05de\x05d5\x05e7\x05d4\x05d9"
+    5130                    L"\x05d2\x05d5\x05d6'\x05d8\x05d0\x05e8\x05d9"
+    5131                    L"\x05d0\x05d5\x05e8\x05d9\x05d0\x05d4"
+    5132                    L"\x05d8\x05de\x05d9\x05dc"
+    5133                    L"\x05d8\x05dc\x05d5\x05d2\x05d5"
+    5134                    L"\x05e7\x05e0\x05d0\x05d3\x05d4"
+    5135                    L"\x05de\x05dc\x05d0\x05e1\x05d9\x05ea"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5136                    L"\x05ea\x05d0\x05d9\x05dc\x05e0\x05d3\x05d9\x05ea"
+    5137                    L"\x05dc\x05d0\x05d5"
+    5138                    L"\x05d8\x05d9\x05d1\x05d8\x05d9\x05ea"
+    5139                    L"\x05d2\x05e8\x05d5\x05d2\x05d9\x05d0\x05e0\x05d9\x05ea"
+    5140                    L"\x05e7\x05d5\x05e8\x05d9\x05d0\x05e0\x05d9\x05ea"
+    5141                    L"\x05d9\x05e4\x05e0\x05d9\x05ea"
+    5142                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05e1\x05d5\x05e8\x05ea\x05d9\x05ea"
+    5143                    L"\x05e1\x05d9\x05e0\x05d9\x05ea \x05de\x05d5\x05e4\x05e9\x05d8\x05ea"
+    5144                    L"\x05d0\x05ea\x05d9\x05d5\x05e4\x05d9\x05ea"
+    5145                    L"CanSyllabic"
+    5146                    L"\x05e6'\x05d9\x05e8\x05d5\x05e7\x05d9"
+    5147                    L"\x05d9\x05d9"
+    5148                    L"\x05d1\x05e8\x05d9\x05d9\x05dc"
+    5149                    L"\x05e8\x05d5\x05e0\x05d9\x05ea"
+    5150                    L"\x05d0\x05d5\x05d2\x05d4\x05dd"
+    5151                    L"\x05e1\x05d9\x05e0\x05d4\x05dc\x05d4"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5152                    L"\x05e1\x05d9\x05e8\x05d9\x05d0\x05e7"
+    5153                    L"\x05d1\x05d5\x05e8\x05de\x05d6\x05d9\x05ea"
+    5154                    L"\x05e7\x05d4\x05de\x05e8"
+    5155                    L"\x05ea\x05d0\x05e0\x05d0\x05d4"
+    5156                    L"\x05de\x05d5\x05e0\x05d2\x05d5\x05dc\x05d9\x05ea"
+    5158                    L"\x05d1\x05e8\x05d9\x05e8\x05ea \x05de\x05d7\x05d3\x05dc"
+    5159                    L"Merge"
+    5160                    L"Asciisym"
+    5161                    L"User Defined"
+END
+

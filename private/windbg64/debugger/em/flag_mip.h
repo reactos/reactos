@@ -1,0 +1,43 @@
+#define FLGGRP1 3
+#define FLGGRP2 4
+#define FLGGRP3 5
+    //{ szFlagCu,     rtRegular|rtExtended, 4,  FLGGRP1, CV_M4_Psr, 28 },
+    { szFlagCu3,    rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 31 },
+    { szFlagCu2,    rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 30 },
+    { szFlagCu1,    rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 29 },
+    { szFlagCu0,    rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 28 },
+    { szFlagRP,     rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 27 },
+    { szFlagFR,     rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 26 },
+    { szFlagRE,     rtRegular|rtExtended, 1,  FLGGRP1, CV_M4_Psr, 25 },
+    //{ szFlagDS,     rtRegular|rtExtended, 9,  FLGGRP1, CV_M4_Psr, 16 },
+
+    //{ szFlagImsk,   rtRegular|rtExtended, 8,  FLGGRP2, CV_M4_Psr, 8},
+    { szFlagInt5,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 15 },
+    { szFlagInt4,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 14 },
+    { szFlagInt3,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 13 },
+    { szFlagInt2,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 12 },
+    { szFlagInt1,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 11 },
+    { szFlagInt0,   rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 10 },
+    { szFlagSw1,    rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 9  },
+    { szFlagSw0,    rtRegular|rtExtended, 1,  FLGGRP2, CV_M4_Psr, 8 },
+
+// R{2,3,6}000 flags
+//    { szFlagKuo,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 5 },
+//    { szFlagIeo,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 4 },
+//    { szFlagKup,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 3 },
+//    { szFlagIep,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 2 },
+//    { szFlagKuc,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 1 },
+//    { szFlagIec,    rtRegular|rtExtended, 1,  0, CV_M4_Psr, 0 },
+
+    //{ szFlagKsu,    rtRegular|rtExtended, 2,  FLGGRP3, CV_M4_Psr, 3 },
+    { szFlagErl,    rtRegular|rtExtended, 1,  FLGGRP3, CV_M4_Psr, 2 },
+    { szFlagExl,    rtRegular|rtExtended, 1,  FLGGRP3, CV_M4_Psr, 1 },
+    { szFlagIe,     rtRegular|rtExtended, 1,  FLGGRP3, CV_M4_Psr, 0 },
+    { szFlagFcc0,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 23 },
+    { szFlagFcc1,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 25 },
+    { szFlagFcc2,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 26 },
+    { szFlagFcc3,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 27 },
+    { szFlagFcc4,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 28 },
+    { szFlagFcc5,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 29 },
+    { szFlagFcc6,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 30 },
+    { szFlagFcc7,    rtFPU|rtExtended,     1,  FLGGRP3, CV_M4_FltFsr, 31 },

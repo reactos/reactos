@@ -1,0 +1,37 @@
+
+#include "immcli.h"
+#include "winuserp.h"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_INTERNALNAME_STR        "imm32\0"
+
+#ifdef _HYDRA_
+#define VER_FILEDESCRIPTION_STR     "Multi-User Windows 2000 IMM32 API Client DLL"
+#else
+#define VER_FILEDESCRIPTION_STR     "Windows 2000 IMM32 API Client DLL"
+#endif
+
+#include "common.ver"
+
+BACK_T1   BITMAP    "BACK_T1.BMP"
+TAB_T1    BITMAP    "TAB_T1.BMP"
+CAPS_T1   BITMAP    "CAPS_T1.BMP"
+ENTER_T1  BITMAP    "ENTER_T1.BMP"
+SHIFT_T1  BITMAP    "SHIFT_T1.BMP"
+CTRL_T1   BITMAP    "CTRL_T1.BMP"
+ESC_T1    BITMAP    "ESC_T1.BMP"
+ALT_T1    BITMAP    "ALT_T1.BMP"
+LABEL_T1  BITMAP    "LABEL_T1.BMP"
+
+BACKSP_C1 BITMAP    "BACK_C1.BMP"
+TAB_C1    BITMAP    "TAB_C1.BMP"
+CAPS_C1   BITMAP    "CAPS_C1.BMP"
+ENTER_C1  BITMAP    "ENTER_C1.BMP"
+SHIFT_C1  BITMAP    "SHIFT_C1.BMP"
+INS_C1    BITMAP    "INS_C1.BMP"
+DEL_C1    BITMAP    "DEL_C1.BMP"
+ESC_C1    BITMAP    "ESC_C1.BMP"
+LABEL_C1  BITMAP    "LABEL_C1.BMP"

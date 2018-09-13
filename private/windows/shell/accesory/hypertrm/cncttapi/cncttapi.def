@@ -1,0 +1,27 @@
+;  File: D:\WACKER\cncttapi\cncttapi.def (Created: 08-Feb-1994)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.5 $
+;  $Date: 1997/09/09 15:24:58 $
+;
+
+LIBRARY   CNCTTAPI
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; cncttapi.c
+	cnctdrvEntry@12
+	cnctdrvCreate@8
+	cnctdrvDestroy@4
+	cnctdrvQueryStatus@4
+	cnctdrvComEvent@4
+	cnctdrvConnect@8
+	cnctdrvDisconnect@8
+	lineCallbackFunc@24
+	ConfirmDlg@16
+	NewPhoneDlg@16
+

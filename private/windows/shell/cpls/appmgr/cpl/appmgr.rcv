@@ -1,0 +1,24 @@
+/*******************************************************************************
+*
+*  (C) COPYRIGHT MICROSOFT CORP., 1993-1997
+*
+*  TITLE:       appmgr.RCV
+*
+*  AUTHOR:      Dave Hastings
+*
+*  DATE:        13 Aug 1994
+*
+*  Version information resource file.
+*
+********************************************************************************/
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Programs Wizard Control Panel Applet"
+#define VER_INTERNALNAME_STR        "appmgr"
+#define VER_LEGALCOPYRIGHT_YEARS    "1991-1997"
+#define VER_ORIGINALFILENAME_STR    "appmgr.CPL"
+
+#include <common.ver>

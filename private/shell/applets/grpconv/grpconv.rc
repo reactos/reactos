@@ -1,0 +1,145 @@
+//{{NO_DEPENDENCIES}}
+//Microsoft App Studio generated resource script.
+//
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "grpconv.h"
+#else
+#include <winuser.h>
+#include <commctrl.h>
+#endif
+
+#include "rcids.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_GRPCONV             ICON    PRELOAD DISCARDABLE "GRPCONV.ICO"
+IDI_PROGMAN             ICON    PRELOAD DISCARDABLE "PROGMAN.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmaps
+//
+#ifdef OLD_WELCOME
+IDB_REDCARPET           BITMAP  DISCARDABLE     "WELCOME.BMP"
+#endif
+
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include <winuser.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#include ""rcids.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_PROGRESS DIALOGEX DISCARDABLE  0, 0, 171, 50
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | 0x800
+CAPTION "Start Menu Shortcuts"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Converting Shortcuts:",IDC_STATIC,35,15,70,8
+    LTEXT           "",IDC_GROUPNAME,105,15,60,8,SS_NOPREFIX
+    ICON            IDI_PROGMAN,-1,10,10,18,20
+    CONTROL         "",IDC_PROGRESS,PROGRESS_CLASS,WS_TABSTOP,10,35,150,8
+END
+
+#ifdef OLD_WELCOME
+IDD_REDCARPET DIALOGEX DISCARDABLE  0, 0, 226, 161
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | DS_SETFOREGROUND | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,170,142,50,14
+END
+#endif
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_FILTER              "Groups (*.grp)#*.grp#All Files (*.*)#*.*#"
+    IDS_COMMDLGTITLE        "Select a Group to Convert"
+    IDS_APPTITLE            "Program Manager Group Converter"
+    IDS_OKTOCONVERT         "Are you sure you want to convert the '%s' group?"
+    IDS_CONVERTERROR        "There was a problem trying to convert this group. As much as possible was converted."
+    IDS_NOTGROUPFILE        "%s is not a valid Program Manager Group file."
+    IDS_MISSINGFILE         "The file %s cannot be read."
+    IDS_BADOLDGROUP         "This group is damaged. Some items could not be converted."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_PROGRAMS            "Programs"
+    IDS_GROUPTYPENAME       "Microsoft Program Group"
+
+    // NB This guy needs a space after it.
+    IDS_ANOTHER             "Another "
+
+    IDS_CREATINGNEWSCS      "Updating Shortcuts:"
+    IDS_DDEMLTEST           "Testing shell:"
+    IDS_DEFLANGCHARSET      "040904E4"
+
+    // These must match the equivalent section names in setup.ini
+    // and so *probably* don't need to be localised.
+    IDS_STARTUP             "StartUp"
+    IDS_DESKTOP             "Desktop"
+    IDS_SENDTO              "SendTo"
+    IDS_RECENT              "Documents"
+    IDS_GROUP               "Group"
+
+END
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "grpconv.rcv"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

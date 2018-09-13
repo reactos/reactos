@@ -1,0 +1,91 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\cdutil=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=cdutil
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=\
+    $(COREINCLUDES) \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\f3\crt; \
+
+SOURCES= \
+    assoc.cxx \
+    atomtbl.cxx \
+    baseprot.cxx \
+    border.cxx \
+    brush.cxx \
+    brushbmp.cxx \
+    buffer.cxx \
+    buttutil.cxx \
+    cbufstr.cxx \
+    cenum.cxx \
+    color.cxx \
+    color3d.cxx \
+    cputil.cxx \
+    csimutil.cxx \
+    cstr.cxx \
+    datastm.cxx \
+    disputil.cxx \
+    disputl2.cxx \
+    dvutils.cxx \
+    errinfo.cxx \
+    errtbl.cxx \
+    fatstg.cxx \
+    fbstr.cxx \
+    file.cxx \
+    format.cxx \
+    formsary.cxx \
+    genutil.cxx \
+    gwnd.cxx \
+    help.cxx \
+    himetric.cxx \
+    htpvpv.cxx \
+    identpal.cxx \
+    memmg.cxx \
+    memutils.cxx \
+    misc.cxx \
+    misccom.cxx \
+    offscrn.cxx \
+    perfdbg.cxx \
+    regdbhlp.cxx \
+    rostm.cxx \
+    specpage.cxx \
+    stdenum.cxx \
+    stdfact.cxx \
+    stgutils.cxx \
+    stmbuff.cxx \
+    substm.cxx \
+    taskman.cxx \
+    tearoff.cxx \
+    timer.cxx   \
+    tooltip.cxx \
+    triapi.cxx \
+    vmem.cxx \
+    wndclass.cxx \
+    wutils.cxx \
+    xform.cxx
+
+ALPHA_SOURCES = \
+    alpha\thunks.s
+
+AXP64_SOURCES = \
+    axp64\thunks.s
+
+IA64_SOURCES = \
+    ia64\thunks.s
+
+PPC_SOURCES = \
+    ppc\thunks.s
+
+MIPS_SOURCES = tearoffm.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

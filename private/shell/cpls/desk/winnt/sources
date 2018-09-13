@@ -1,0 +1,4 @@
+TARGETNAME = desk2
+USE_CRTDLL = 1
+
+!include ..\sources.inc

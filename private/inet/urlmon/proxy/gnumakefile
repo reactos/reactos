@@ -1,0 +1,55 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = /vobs/ie4/urlmon.template
+
+#
+# Please note that ${URLMON_PROXY_DIR}/urlmki_p.c is built from build in ../idl
+#
+
+VPATH += ${URLMON_PROXY_DIR}
+
+SOURCES =  \
+	call_as.cxx \
+	dlldatax.c \
+	transmit.cxx \
+    ${URLMON_PROXY_DIR}/urlmki_p.c
+
+
+INCLUDES += \
+           -I.\
+           -I${URLMON_DIR}/inc\
+           -I${IEDEV_DIR}/inc\
+           -I${URLMON_PROXY_DIR}
+
+DEFINES += -DREGISTER_PROXY_DLL -DCOBJMACROS
+
+WLIB = urlproxy
+LIB  = lib${WLIB}.a
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+CPP_OBJS := ${CPP_OBJS:${URLMON_PROXY_DIR}/%.c=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+NO_UNICODE = 1
+
+APP_CFLAGS += ${URLMON_CFLAGS} ${DEFINES} ${INCLUDES}
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+

@@ -1,0 +1,14 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir crt ${MAKE} ${MFLAGS} $@
+	@enterdir rsrc ${MAKE} ${MFLAGS} $@
+	@enterdir dll ${MAKE} ${MFLAGS} $@
+#	@enterdir htmlpad ${MAKE} ${MFLAGS} $@
+#	@enterdir tlb ${MAKE} ${MFLAGS} $@
+
+NOT_USED_FOR_NOW:
+	@enterdir drt/samples/dllscripts ${MAKE} ${MFLAGS} $@
+

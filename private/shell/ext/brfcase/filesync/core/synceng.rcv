@@ -1,0 +1,10 @@
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Windows Briefcase Engine"
+#define VER_INTERNALNAME_STR     "SYNCENG"
+#define VER_LEGALCOPYRIGHT_YEARS "1992-1999"
+#define VER_ORIGINALFILENAME_STR "SYNCENG.DLL"
+
+#include <ntverp.h>
+#include <common.ver>
+

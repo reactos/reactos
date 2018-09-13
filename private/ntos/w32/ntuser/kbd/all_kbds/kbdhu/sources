@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhu
+
+TARGETNAME=kbdhu
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhu.c kbdhu.rc
+
+NTTARGETFILE0=kbdhu.h kbdhu.rc kbdhu.def

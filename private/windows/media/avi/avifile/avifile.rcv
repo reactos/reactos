@@ -1,0 +1,36 @@
+#ifndef _WIN32   //!!!!
+#include <ver.h>
+#endif
+
+#ifndef NT_VERSION
+#include <verinfo.h>
+
+#ifdef _WIN32
+#define VERSIONNAME               "avifil32.dll\0"
+#else
+#define VERSIONNAME               "avifile.dll\0"
+#endif
+#define VERSIONDESCRIPTION        "Microsoft AVI File support library\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>
+#endif
+
+#ifdef NT_VERSION
+#include <ntverp.h>
+
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
+ */
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_DRV_INSTALLABLE
+
+#define VER_FILEDESCRIPTION_STR     "Microsoft AVI File support library"
+#define VER_INTERNALNAME_STR        "AVIFIL32.DLL"
+#define VER_ORIGINALFILENAME_STR    "AVIFIL32.DLL"
+
+#include <common.ver>
+#endif

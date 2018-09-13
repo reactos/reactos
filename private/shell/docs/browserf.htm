@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>BrowserFlags -- Customizing the behavior of ActiveX/OLE documents</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h1>BrowserFlags -- Customizing the behavior of ActiveX/OLE
+documents</h1>
+
+<p align="center">Last Updated at 23-Jun-97 (SatoNa)</p>
+
+<p>After releasing IE 3.0, we have received several requests from
+our customers (especially large accounts, such as BBC) that they
+don't like the fact that IE always opens Office documents (which
+are ActiveX documents) in-place. They want to <u>configure the IE
+so that it opens certain types of documents using the
+application's frame window</u> (instead of in-place-navigate in
+the IE frame). </p>
+
+<p>We've also encountered several bugs in application programs
+during the development of IE 3.0, which required special code in
+the browser side to work around those bugs. For IE 3.0, we hard
+coded ProgIDs of those applications and were not extensible.</p>
+
+<p>For IE 4.0 (and IE 3.01 as well), we added a feature to
+specify a set of minor behaviors changes in the browser side for
+a particular application program (based on its <em>ProgID</em>).
+The user (or the setup program of an application program) may put
+a named DWORD value (&quot;<strong>BrowserFlags</strong>&quot;)
+under the <em>ProgID </em>key of the application program (e.g.,
+&quot;Excel.Sheet.8&quot; for Excel97). This DWORD may contain a
+combination of following flags.</p>
+
+<ul>
+    <li>0x00000001 BROWSERFLAG_OPENCOPY</li>
+    <li>0x00000002 BROWSERFLAG_OPENVERB</li>
+    <li>0x00000004 BROWSERFLAG_SETHOSTNAME</li>
+    <li>0x00000008 BROWSERFLAG_DONTINPLACE</li>
+    <li>0x00000020 BROWSERFLAG_DONTUIDEACTIVATE</li>
+    <li>0x00000040 BROWSERFLAG_NEVERERASEBKGND</li>
+    <li>0x00000080 BROWSERFLAG_PRINTPROMPTUI</li>
+    <li>0x00000200 BROWSERFLAG_INITNEWTOKEEP</li>
+    <li>0x40000000 BROWSERFLAG_MSHTML</li>
+    <li>0x80000000 BROWSERFLAG_REPLACE</li>
+</ul>
+
+<p>BROWSERFLAG_OPENCOPY: This flag is needed for Excel in Office
+95 (ProgID = &quot;Excel.Sheet.5&quot; or
+&quot;Excel.Chart.5&quot;). Simply binding to an excel file
+(which initializes the object via IPersist::Load) and opening it
+as an embedding confuses Excel and causes GPF. When this flag is
+set, the browser creates a copy of the object (by calling
+OleCreateFromData) and activate the copy instead of the original
+object.</p>
+
+<p>BROWSERFLAG_OPENVERB: This flag is needed for Sound Recorder
+(ProgID = &quot;SoundRec&quot;), which does not provide any UI
+(to stop playing) if we activate it with OLEVERB_PRIMARY. </p>
+
+<p>BROWSERFLAG_SETHOSTNAME: This flag is needed for Word in
+Office 95 (ProgID = &quot;Word.Document.6&quot;), which does not
+work as an embedding unless IOleObject::SetHostName is called. </p>
+
+<p>BROWSERFLAG_DONTINPLACE: We also provide an UI for the
+end-user to control this flag from File-Type dialog box (select
+View-&gt;Options menu after opening the MyComputer). Select the
+application in the list and click Edit button. At the bottom
+right (right above the OK button), you'll see a check-box titled
+&quot;Browse in same window&quot;, which is checked (enabled) by
+default.<em> </em></p>
+
+<p>BROWSERFLAG_DONTUIDEACTIVATE: This is a work around for Word,
+Powerpoint and Excel in Office 97. Those apps don't support
+UI-deactivation correctly and calling
+IOleDocumentView::UIActivate(FALSE) causes some problems. If this
+flag is set, the browser calls
+IOleInPlaceActiveObject::OnDocWindowActivate(FALSE) instead. </p>
+
+<p>BROWSERFLAG_NEVERERASEBKGND: This is an optimization flag to
+avoid extra painting when the ActiveX document paints the entire
+rectangle the host give (via IOleDocumentView::SetRect). </p>
+
+<p>BROWSERFLAG_PRINTPROMPTUI: This is a work around for
+Powerpoint 97. It fails to print if we call
+IOleCommandTarget::Exec(OLECMDID_PRINT) with
+PRINTFLAG_PRINTPROMPTUI. If this flag is set, the browser always
+removes this flag before calling Exec(OLECMDID_PRINT). </p>
+
+<p>BROWSERFLAG_INITNEWTOKEEP: This is a work around for Excel 97.
+When the browser opens an ActiveX document, it calls
+IClassFactory::LockServer to keep the server running for a while.
+Since Excel does not implement it correctly, it shuts down
+immediately. If this flag is set, we create an extra instance and
+call its IPersistStorage::InitNew. </p>
+
+<p>BROWSERFLAG_MSHTML (private): This is a special flag for the
+browser to distinguish ActiveX documents created by MSHTML.DLL.
+The browser has some specific code (such as pre-merged menu) for
+this case and this flag enable it. This flag must not set for any
+other types of ActiveX documents. </p>
+
+<p>BROWSERFLAG_REPLACE: This flag has no effect unless the
+browser already have a set of browser flags for the type of
+document (such as Word97 and Excel97). When dealing with those
+&quot;known&quot; types, the browser retrieves browser flags from
+the registry and perform an OR operation with the flags from its
+built-in table unless this flag is set. If this flag is set, the
+flags in the built-in table is ignored and flags from the
+registry will be used. </p>
+
+<hr>
+
+<p><a href="default.htm">Go to the home page</a></p>
+</body>
+</html>

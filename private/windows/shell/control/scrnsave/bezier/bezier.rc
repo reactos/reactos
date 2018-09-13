@@ -1,0 +1,34 @@
+#include            <windows.h>
+#include            <commctrl.h>
+#include            "scrnsave.h"
+#include            "strings.h"
+#include            "bezdlg.h"
+#include            "bezdlg.dlg"
+
+/* This is the icon for the program and must be defined as ID_APP... */
+ID_APP              ICON        bezier.ico
+
+STRINGTABLE PRELOAD
+BEGIN
+    idsDescription      "Beziers"
+    idsAppName          "Screen Saver.Bezier"
+    idsName             "Bezier"
+END
+
+#include "..\common\strings.rc"
+
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Bezier Curves Screen Saver"
+#define VER_INTERNALNAME_STR        "ssbezier\0"
+
+#include "common.ver"

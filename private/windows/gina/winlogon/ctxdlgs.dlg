@@ -1,0 +1,60 @@
+1 DLGINCLUDE "ctxdlgs.h"
+
+IDD_CONNECT DIALOG 54, 54, 268, 84
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Connect to existing Windows NT session"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "These existing Windows NT sessions are available for you to connect to.  Select the desired session and press Enter to connect to it.",
+                    -1, 6, 6, 258, 20
+/*
+ *  LTEXT           "ID", -1, 14, 27, 9, 8
+ *  LTEXT           "Mode", -1, 44, 27, 19, 8
+ *  LTEXT           "Disconnect Time", -1, 99, 27, 56, 8
+ *  LTEXT           "Connect Time", -1, 189, 27, 46, 8
+ *  LISTBOX         IDC_CONNECTBOX, 6, 40, 258, 38, LBS_USETABSTOPS |
+ *                  WS_VSCROLL | WS_TABSTOP
+ */
+    LTEXT           "ID",               -1,  14, 27,  9, 8
+    LTEXT           "Mode/Color",       -1,  44, 27, 46, 8
+    LTEXT           "Connect Time",     -1,  99, 27, 46, 8
+    LTEXT           "Disconnect Time",  -1, 189, 27, 56, 8
+    LISTBOX         IDC_CONNECTBOX, 6, 40, 258, 38, LBS_USETABSTOPS |
+                    WS_VSCROLL | WS_TABSTOP
+
+END
+
+
+IDD_CALLBACK DIALOG 70, 42, 160, 65
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Phone number:", 103, 10, 17, 55, 8
+    EDITTEXT        IDD_PHONENUMBER, 68, 15, 76, 12, ES_AUTOHSCROLL
+    PUSHBUTTON      "OK", IDOK, 32, 45, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 88, 45, 40, 14
+END
+
+
+IDD_CALLBACK_WAIT DIALOG 6, 18, 121, 48
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Callback in Progress"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait for callback.", 101, 17, 16, 85, 8
+END
+
+
+IDD_DISABLED DIALOG 94, 47, 195, 69
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Terminal Server Sessions Disabled"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Remote logins are currently disabled.", 101, 33, 18, 125, 8
+DEFPUSHBUTTON   "OK", IDOK, 70, 40, 40, 14
+END
+
+

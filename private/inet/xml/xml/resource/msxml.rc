@@ -1,0 +1,33 @@
+#include <windows.h>
+#include <ntverp.h>
+#include "resource.h"
+/////////////////////////////////////////////////////////////////////////////
+//
+// 
+// Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+// 
+//
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "XML OM for Win32"
+#define VER_INTERNALNAME_STR        "MsXML.dll"
+#define VER_ORIGINALFILENAME_STR    "MsXML.dll"
+#define VER_OLESELFREGISTER
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#ifndef UNIX
+#include "messages.rc"
+#else
+#include "messages.h"
+#include "messages.rc"
+#endif

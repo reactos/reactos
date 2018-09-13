@@ -1,0 +1,91 @@
+#include "resource.h"
+#include "winver.h"
+#include "resource.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_WEBAPP              ICON    DISCARDABLE     "res\\autorun.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_BRHAND              CURSOR  DISCARDABLE     "res\\brhand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BKGND0              BITMAP  DISCARDABLE     "res\\register.bmp"
+IDB_BKGND1              BITMAP  DISCARDABLE     "res\\discover.bmp"
+IDB_BKGND2              BITMAP  DISCARDABLE     "res\\connect.bmp"
+IDB_BKGND3              BITMAP  DISCARDABLE     "res\\maintain.bmp"
+
+#if BUILD_SERVER_VERSION
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\server.bmp"
+#elif BUILD_ADVANCED_SERVER_VERSION
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\advanced.bmp"
+#elif BUILD_DATACENTER_VERSION
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\datacenter.bmp"
+#else
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\autorun.bmp"
+IDB_BANNER16            BITMAP  DISCARDABLE     "res\\autorun16.bmp"
+#endif
+
+IDB_256MENU             BITMAP  DISCARDABLE     "res\\256Menu.bmp"
+IDB_256BORDER           BITMAP  DISCARDABLE     "res\\256Border.bmp"
+
+IDB_16MENU              BITMAP  DISCARDABLE     "res\\16Menu.bmp"
+IDB_16BORDER            BITMAP  DISCARDABLE     "res\\16Border.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE               "Microsoft Windows 2000 CD"
+
+    IDS_DEFTITLE            "Windows 2000"
+    IDS_DEFBODY             "The new version of Windows sets the standard for reliability, speed, security, manageability and ease of use.  Windows 2000 is packed with many new features and improvements to the current ones.\n\nTo perform a command, just click it."
+    IDS_FONTFACE            "Tahoma"
+
+    IDS_OLDCDROM            "This CD-ROM is from an older version of Windows than the one you are presently using.\r\nSetup functionality from this disk will be disabled."
+    IDS_NEWCDROM            "This CD-ROM contains a newer version of Windows than the one you are presently using.\r\n\nWould you like to upgrade to Windows 2000?"
+
+    IDS_CYMENUITEMFONT      "11"    // pixel height of font used on the left column of menu items
+    IDS_CYTITLEFONT         "16"    // pixel height of font used for the title along the top of the right panel
+    IDS_CYBODYFONT          "11"    // pixel height of font used for the body text of the right panel
+    IDS_CYCHECKTEST         "9"     // pixel height of font used for the checkbox text
+
+    IDS_TITLE0              "Install Windows 2000"
+    IDS_TITLE1              "Install Add-On Components"
+    IDS_TITLE2              "Browse This CD"
+    IDS_TITLE3              "Windows 2000"
+
+    IDS_MENU0               "&Install Windows 2000"
+    IDS_MENU1               "Install &Add-On Components"
+    IDS_MENU2               "&Browse This CD"
+    IDS_MENU3               "E&xit"
+
+    IDS_DESC0               "Set up Windows 2000 on this computer.  You can upgrade your current version of Windows, or create a separate Windows installation."
+    IDS_DESC1               "Customize your Windows 2000 experience with a variety of optional components."
+    IDS_DESC2               "Explore the contents of this CD to find additional tools and documentation, including the Release Notes."
+    IDS_DESC3               "The new version of Windows sets the standard for reliability, speed, security, manageability and ease of use.  Windows 2000 is packed with many new features and improvements to the current ones.\n\nTo perform a command, just click it."
+
+    IDS_CONFIG0             "winnt32.exe"
+    IDS_CONFIG1             "sysocmgr.exe"
+    IDS_CONFIG2             "explorer.exe"
+    IDS_CONFIG3             ""
+
+    IDS_ARGS0               ""
+    IDS_ARGS1               "/i:sysoc.inf"
+    IDS_ARGS2               ""
+    IDS_ARGS3               ""
+END

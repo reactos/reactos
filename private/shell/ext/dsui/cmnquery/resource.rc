@@ -1,0 +1,197 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+#include "version.h"
+#include "cmnquryp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#include ""..\\..\\windows\\inc\\cmnquryp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_FIND DIALOGEX 46, 21, 318, 150
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_CLIPCHILDREN | 
+    WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Find"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Fin&d:",CQID_LOOKFORLABEL,7,6,16,14,SS_CENTERIMAGE
+    CONTROL         "",CQID_LOOKFOR,"ComboBoxEx32",CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP,26,7,107,137
+    LTEXT           "I&n:",CQID_LOOKINLABEL,138,6,12,14,SS_CENTERIMAGE
+    CONTROL         "",CQID_LOOKIN,"ComboBoxEx32",CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP,152,7,101,137
+    PUSHBUTTON      "&Browse...",CQID_BROWSE,261,7,50,14
+    DEFPUSHBUTTON   "F&ind Now",CQID_FINDNOW,261,38,50,14
+    PUSHBUTTON      "Sto&p",CQID_STOP,261,56,50,14,WS_DISABLED
+    PUSHBUTTON      "&Clear All",CQID_CLEARALL,261,74,50,14
+    PUSHBUTTON      "OK",IDOK,261,130,50,14
+    CONTROL         "Animate1",IDC_FINDANIMATION,"SysAnimate32",
+                    ACS_TRANSPARENT,273,96,24,24
+    CONTROL         "",IDC_FORMAREA,"SysTabControl32",WS_CLIPCHILDREN | 
+                    WS_GROUP | WS_TABSTOP,7,26,246,118
+END
+
+IDD_FILTER DIALOGEX 46, 21, 315, 170
+STYLE WS_POPUP | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Find"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Fin&d:",CQID_LOOKFORLABEL,7,6,16,14,SS_CENTERIMAGE
+    CONTROL         "",CQID_LOOKFOR,"ComboBoxEx32",CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP,26,7,107,137
+    LTEXT           "I&n:",CQID_LOOKINLABEL,138,6,12,14,SS_CENTERIMAGE
+    CONTROL         "",CQID_LOOKIN,"ComboBoxEx32",CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP,152,7,101,137
+    PUSHBUTTON      "&Browse...",CQID_BROWSE,258,7,50,14
+    DEFPUSHBUTTON   "OK",IDOK,203,150,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,258,150,50,14
+    CONTROL         "",IDC_FORMAREA,"SysTabControl32",WS_CLIPCHILDREN | 
+                    WS_GROUP | WS_TABSTOP,7,26,301,118
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_FIND, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 144
+    END
+
+    IDD_FILTER, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 308
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 164
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+AVI_FIND                AVI     MOVEABLE PURE   "res\\find.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_FILEMENUGROUP MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Close",                      CQID_FILE_CLOSE
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CLEARCURRENT        "This will clear your current search results."
+    IDS_FIND                "Find %s"
+    IDS_INITIALIZING        "Initializing..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    CQID_FILE_CLOSE         "Closes the window."
+    CQID_VIEW_SEARCHPANE    "Toggles the state of the search pane."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_NOPARAMS        "You need to enter a search criteria using the query form."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,15 @@
+/*
+ * May 1994, satona
+ *
+ * Copyright (c)1994 Microsoft Corporation, All Rights Reserved
+ */
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Shell Browser UI Library"
+#define VER_INTERNALNAME_STR        "BROWSEUI.DLL"
+#define VER_ORIGINALFILENAME_STR    "BROWSEUI.DLL"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>

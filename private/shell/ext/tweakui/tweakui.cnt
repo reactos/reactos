@@ -1,0 +1,99 @@
+:Base tweakui.hlp
+:Title Tweak UI
+1 About Tweak UI=Main
+1 Using Tweak UI
+2 Mouse settings
+3 Menu speed=IDH_SPEEDHELP
+3 Double-click sensitivity=IDH_DBLCLK
+3 Drag sensitivity=IDH_DRAG
+3 Mouse wheel settings=IDH_WHEEL
+3 Activation follows mouse=IDH_XMOUSE
+3 Tips=IDH_TIPSTIP
+3 Restore factory settings=IDH_RESET
+3 The Test Area=IDH_TEST
+2 General settings
+3 Window animation=IDH_ANIMATE
+3 Smooth scrolling=IDH_SMOOTHSCROLL
+3 Beep on errors=IDH_BEEP
+3 Special folders=IDH_FOLDERNAME
+3 Internet Explorer search engine=IDH_IE3ENGINE
+3 Restore factory settings=IDH_RESET
+2 Explorer settings
+3 Shortcut overlay effect=IDH_LINKEFFECT
+3 Animated "Click here to begin"=IDH_BANNER
+3 Tip of the day=IDH_WELCOME
+3 Prefix "Shortcut to" on new shortcuts=IDH_PREFIX
+3 Save Explorer window settings on exit=IDH_EXITSAVE
+3 Adjust case of 8.3 filenames=IDH_MAKEPRETTY
+3 Color of compressed files=IDH_COMPRESSCLR
+3 Restore factory settings=IDH_RESET
+2 Desktop settings
+3 Special desktop icons=IDH_ICONLV
+3 Create as file=IDH_CREATENOW
+2 My Computer settings
+3 Drive icons=IDH_MYCOMP
+2 Network settings
+3 Automatic logon=IDH_AUTOLOGON
+3 Automatic logon user name=IDH_AUTOLOGONUSER
+3 Automatic logon password=IDH_AUTOLOGONPASS
+2 New Documents
+3 Document template settings=IDH_TEMPLATE
+3 Removing document templates=IDH_TEMPLATEDEL
+2 Add/Remove Program customization
+3 Uninstallable program entries=IDH_UNINSTALL
+3 Create new uninstallable program entry=IDH_UNINSTALLNEW
+3 Delete uninstallable program entry=IDH_UNINSTALLDELETE
+3 Edit uninstallable program entry=IDH_UNINSTALLEDIT
+3 Editing an uninstallable program entry
+4 Uninstallable program description=IDH_UNINSTALLEDITDESC
+4 Uninstallable program command=IDH_UNINSTALLEDITCOMMAND
+2 System startup settings (Windows 95 only)
+3 Function keys available for .. seconds=IDH_BOOTKEYS
+3 Start GUI automatically=IDH_BOOTGUI
+3 Display splash screen while booting=IDH_LOGO
+3 Allow F4 to boot previous operating system=IDH_BOOTMULTI
+3 Always show boot menu=IDH_BOOTMENU
+3 Continue booting after .. seconds=IDH_BOOTMENUDELAY
+3 Autorun Scandisk=IDH_AUTOSCAN
+3 Restore factory settings=IDH_RESET
+2 Repair
+3 Repairing icons=IDH_REPAIRICON
+3 Repairing the Font Folder=IDH_REPAIRFONTFLD
+3 Repairing system files=IDH_REPAIRDLLS
+3 Repairing Regedit=IDH_REPAIRREGEDIT
+3 Repairing icons and associations=IDH_REPAIRASSOC
+2 Paranoia settings
+3 Clear Run history at logon=IDH_CLEARRUN
+3 Clear Find Files history at logon=IDH_CLEARFINDDOCS
+3 Clear Find Computer history at logon=IDH_CLEARFINDCOMP
+3 Clear Document history at logon=IDH_CLEARDOC
+3 Clear URL history at logon=IDH_CLEARURL
+3 Clear Network Connection history at logon=IDH_CLEARNETUSE
+3 Clear Last User at logon=IDH_CLEARUSER
+3 Play audio CDs automatically=IDH_CDROMAUDIO
+3 Play data CDs automatically=IDH_CDROMDATA
+3 Log application errors to FAULTLOG.TXT=IDH_FAULTLOG
+1 How to...
+2 Display/hide the speaker on the taskbar=HOWTO_SPEAKER
+2 Display/hide the battery meter=HOWTO_BATMETER
+2 Open a file with your favorite editor=HOWTO_SENDTO
+2 Save a file without a default extension=HOWTO_EXTENSIONS
+2 Use another program to play audio CDs=HOWTO_CDPLAYER
+2 Disable Tweak UI for a particular user=HOWTO_DISABLE
+2 Uninstall Tweak UI=HOWTO_UNINSTALL
+1 Tips and Tricks
+2 Uncluttering your desktop=TIP_ICONFOLDER
+2 Hiding desktop icons from other users=TIP_PERUSER
+2 Deleting files without confirmation=TIP_RECYCLE
+2 Putting special icons onto the Start Menu=TIP_STARTMENU
+1 Troubleshooting
+2 If you have trouble creating a new document template=MISC_TEMPLATE
+2 If Explorer opens unwanted folders when Windows starts=MISC_EXITSAVE
+2 See also=MISC_ISSUES
+1 Issues and Limitations
+2 Consequences of hiding Network Neighborhood=IDH_NONETHOOD
+2 Windows NT issues=MISC_NT
+2 Windows 95 issues=MISC_95
+2 Icons which behave strangely when created as files
+3 The Microsoft Network created as a file acts strangely=CAF_MSN
+3 Inbox created as a file acts strangely=CAF_INBOX

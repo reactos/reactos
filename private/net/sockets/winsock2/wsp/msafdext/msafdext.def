@@ -1,0 +1,31 @@
+LIBRARY         MSAFDEXT
+
+EXPORTS
+        CheckVersion
+        WinDbgExtensionDllInit
+        ExtensionApiVersion
+        version
+        Help
+        Sock
+        Mssock
+        Addr
+        Port
+        Rport
+        State
+        Dprov
+        Nsprov
+		Sansock
+		Sanaddr
+
+        help
+        sock
+        mssock
+        addr
+        port
+        rport
+        state
+        dprov
+        nsprov
+		sansock
+		sanaddr
+

@@ -1,0 +1,275 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>Externel Toolbar Layout Negotion Mechanism</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h1>External Toolbar Layout Negotiation Mechanism</h1>
+
+<p align="center">Last updated: 29 September 1996 -- satona</p>
+
+<p>This document describes two interfaces we've introduced in the
+IE 3.0 (Internet Explorer 3.0) to share the &quot;Internet Toolbar&quot;
+implementation between two browser frames, IE 3.0 (a stand-alone
+web browser) and IE 4.0 (the windows shell). Although I describe
+this interface in this particular context, there is nothing
+specific to this particular application or implementation in
+these interfaces. </p>
+
+<blockquote>
+    <p><em>Notes: IE 3.0 hosted only one toolbar, but IE 4.0 is
+    going to host more than one (including the tree pane). The
+    (private) interfaces we've introduced in IE 3.0 is not
+    efficient for it. It requires to allocate a site for each
+    toolbar. To avoid that inefficiency, we are changing the interface.
+    All the member function calls to IDockingWindowSite takes an additiona
+    parameter punkOuter, which identifies the toolbar. All the changes
+    are marked in italic fonts. </em></p>
+</blockquote>
+
+<p>When the browser frame is created, it CoCreateInstance an
+instance of the &quot;Internet Toolbar&quot; and attach it the
+frame window. The browser frame implements the IDockingWindowSite interface
+and the toolbar implements the IDockingWindow interface. Those interfaces
+are used only for layout negotiation and accelerators and actual
+navigation commands (that's what this particular toolbar does) is
+sent via the OLE automation interface (IWebBrowserApp in this particular
+case). </p>
+
+<p>The idea is very similar to the toolbar layout negotiation
+between in-place active object and in-place frame, but uses different
+set of interfaces which are specific to the negotiation between
+the frame and the toolbar that is not provided by the active
+object. </p>
+
+<p>In IE 4.0, we added another interface, IDockingWindowFrame,
+which provides a way to add or remove toolbars programatically.
+Both the <a href="webbar.htm">WebBar</a> and the DesktopChannel
+(a vertical toolbar with channel change UI buttons) will use this
+mechanism.</p>
+
+<ul>
+    <li><a href="#IDockingWindowFrame interface">IDockingWindowFrame
+        interface</a></li>
+    <li><a href="#IDockingWindowSite interface">IDockingWindowSite
+        interface</a></li>
+    <li><a href="#IDockingWindow interface">IDockingWindow
+        interface</a></li>
+    <li><a href="#Notes">Notes</a></li>
+    <li><a href="#Interface Definitions">Interface Definitions</a></li>
+</ul>
+
+<h3><a name="IDockingWindowFrame interface">IDockingWindowFrame
+interface</a> (New IE 4.0)</h3>
+
+<p>In addition to the standard &quot;Internet Toolbar&quot;, ISVs
+(or ICPs) can add any toolbars (any COM objects which supports
+IDockingWindow interface) to browser windows (including browser
+window OCs, sub-frames in frame sets and the desktop window)
+programatically. It will be done by (1) obtaining the
+IDockingWindowFrame inteface via IServiceProvider::QueryService
+(sid = SID_SShellBrowser for the immediate parent or SID_STopLevelBrowser
+for the top-level browser), (2) then calling AddToolbar member with
+a COM object, which supports IDockingWindow interface. Member
+functions of IDockingWindowFrame are described below:</p>
+
+<ul>
+    <li>The <strong>AddToolbar</strong> member will attach the
+        specified toolbar to the toolbar frame (e.g., IE browser
+        window). When successfully attached, SetToolbarSite and
+        ShowST member functions (of its IDockingWindow) will be
+        called. It's important to note that the IDockingWindowSite
+        object may or may not be the same as the
+        IDockingWindowFrame object. Therefore, toolbars must
+        establish the communication with the browser by the IDockingWindowSite interface
+        passed via SetToolbarSite. </li>
+    <li>The <strong>RemoveToolbar</strong> member will detach the
+        specified toolbar from the site. CloseST and
+        SetToolbarSite(NULL) will be called by the toolbar site. </li>
+</ul>
+
+<h3><a name="IDockingWindowSite interface">IDockingWindowSite
+interface</a></h3>
+
+<p>This interface is implemented by a frame window object, which
+typically implements the IOleInPlaceUIWindow as well It inherits
+IOleWindow, and it has four additional member functions,
+GetBorderST, RequestBorderSpaceST, SetBorderSpaceST and OnFocusChange.
+These member functions are always called by one of associated
+toolbars. </p>
+
+<ul>
+    <li><strong>GetBorderST</strong>/<strong>RequestBorderSpaceST</strong>/<strong>SetBorderSpaceST</strong>:
+        The definitions are exactly the same as corresponding
+        methods in IOleInPlaceUIWindow. The prefix &quot;ST&quot; is
+        added to allow C++ programmers to implement both
+        interfaces in a single frame object. </li>
+    <li><em>[New IE 4.0] </em>The <strong>OnFocusChangeST</strong>
+        member will be called by the toolbar that is either
+        getting or loosing the input focus. The frame will use
+        this event to keep track of which toolbar has the focus. </li>
+</ul>
+
+<h3><a name="IDockingWindow interface">IDockingWindow interface</a></h3>
+
+<p>This interface is implemented by a toolbar object, which
+displays some tools within the border space of the frame window,
+with which it is associated. This interface also inherits IOleWindow.
+It has six additional member functions, SetToolbarSite, ShowST,
+CloseST, ResizeBorderST, TranslateAcceleratorST and HasFocus. </p>
+
+<ul>
+    <li><strong>SetToolbarSite</strong> is called by the frame to
+        establish the relationship between the frame and the
+        toolbar object. The frame also calls SetToolbarSite with
+        NULL when it is disconnecting the toolbar (typically when
+        the frame is being closed). When SetToolbarSite(NULL) is
+        called, the toolbar object must release all interface pointers obtained
+        from the site (or frame). </li>
+    <li><strong>ShowST</strong> is called by the frame with a
+        Boolean parameter, indicating whether it should be shown
+        or not. When being shown, the toolbar should get an
+        appropriate border space (by calling IDockingWindowSite
+        members) and make it visible filling the entire border
+        space it acquired. When being hidden, it should make it
+        invisible and return the border space by calling
+        SetBorderSpaceST with 0s. </li>
+    <li><strong>CloseST</strong> is called by the frame (before
+        calling SetToolbarSite with NULL) when it is about
+        disconnect the toolbar from the frame. If the toolbar has
+        some global state to be persisted (to a registry or
+        something), this is a good time to do it.</li>
+    <li>ResizeBorderST is called by the frame when the border
+        space has to be re-negotiated. It typically happens when
+        the user changes the size of the entire frame window or another
+        border space negotiation (which happens outside of the
+        border rectangle for this toolbar) changed the border
+        rectangle for this toolbar. </li>
+    <li><strong>TranslateAcceleratorST</strong> is called by the
+        frame only if the toolbar has the input focus.</li>
+    <li><strong>HasFocus</strong> is called by the frame
+        (typically from its message loop) to determine if it should
+        call its TranslateAcceleratorST or not. </li>
+</ul>
+
+<h3><a name="Notes">Notes</a></h3>
+
+<p>TranslateAcceleratorST and HasFocus might need some
+improvement if we are going to use these interfaces widely. </p>
+
+<p>Not calling TranslateAcceleratorST at all when it does not
+have the input focus simplifies the issue but there is a restriction.
+There might be some cases where a toolbar wants to process a certain
+set of accelerators even though it does not have the input focus
+(of course, we need to worry about conflicts -- that's a general
+problem with multiple UI components). </p>
+
+<p>We found a case where the browser frame needs to be notified
+when its toolbar (of one of its toolbars) gets the input focus
+(to redirect OLECMDID_CUT/COPY/PASET commands via IOleCommandTarget
+-- see another document <a href="editmenu.htm">&quot;DocObject:
+Edit Menu command dispatching&quot;</a> for further discussion).
+We probably needs to add OnSetFocus member for IDockingWindowSite
+for this particular purpose. </p>
+
+<p>IE 4.0 frame (the shell explorer) will probably support
+multiple toolbars (the tree pane will be added as a toolbar). To implement
+it under the current interfaces, the frame needs to have a IDockingWindowSite
+for each toolbar, which is not efficient. We can avoid it by
+adding a parameter to its member functions, which identifies the
+toolbar. It can be an object pointer or a DWORD identifier (which
+will be set by the frame via SetOwner). </p>
+
+<h3><a name="Interface Definitions">Interface Definitions</a></h3>
+
+<pre><font face="Courier New">
+//==========================================================================
+// IDockingWindowSite/IDockingWindow interfaces
+//
+// These interfaces allows us (or ISVs) to install/update external Internet
+// Toolbar for IE and the shell. The frame will simply get the CLSID from
+// registry (to be defined) and CoCreateInstance it.
+// 
+//==========================================================================
+
+#undef INTERFACE 
+#define INTERFACE IDockingWindowSite 
+
+DECLARE_INTERFACE_(IDockingWindowSite, IOleWindow) 
+{ 
+    // *** IUnknown methods *** 
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE; 
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE; 
+    STDMETHOD_(ULONG,Release) (THIS) PURE; 
+    
+    // *** IOleWindow methods *** 
+    STDMETHOD(GetWindow) (THIS_ HWND * lphwnd) PURE; 
+    STDMETHOD(ContextSensitiveHelp) (THIS_ BOOL fEnterMode) PURE; 
+    
+    // *** IDockingWindowSite methods *** 
+    STDMETHOD(GetBorderST) (THIS_ IUnkown* punkSrc, LPRECT prcBorder) PURE; 
+    STDMETHOD(RequestBorderSpaceST) (THIS_ IUnkown* punkSrc,
+                LPCBORDERWIDTHS pbw) PURE; 
+    STDMETHOD(SetBorderSpaceST) (THIS_ IUnkown* punkSrc,
+                LPCBORDERWIDTHS pbw) PURE;
+    STDMETHOD(OnFocusChangeST) (THIS_ IUnknown* punkSrc, BOOL fSetFocus) PURE;
+}; 
+</font></pre>
+
+<pre><font face="Courier New">
+#undef  INTERFACE                                                            
+#define INTERFACE   IDockingWindowFrame                                       
+                                                                             
+DECLARE_INTERFACE_(IDockingWindowFrame, IOleWindow)                           
+{                                                                            
+    // *** IUnknown methods ***                                              
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE;     
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;                                   
+    STDMETHOD_(ULONG,Release) (THIS) PURE;                                   
+                                                                             
+    // *** IOleWindow methods ***                                            
+    STDMETHOD(GetWindow) (THIS_ HWND * lphwnd) PURE;                         
+    STDMETHOD(ContextSensitiveHelp) (THIS_ BOOL fEnterMode) PURE;            
+                                                                             
+    // *** IDockingWindowFrame methods ***                                     
+    STDMETHOD(AddToolbar) (THIS_ IUnkown* punkSrc, DWORD dwReserved) PURE;                    
+    STDMETHOD(RemoveToolbar) (THIS_ IUnkown* punkSrc) PURE;                    
+};                                                                           
+</font></pre>
+
+<pre><font face="Courier New">
+#undef  INTERFACE                                                            
+#define INTERFACE   IDockingWindow                                            
+                                                                             
+DECLARE_INTERFACE_(IDockingWindow, IOleWindow)                                
+{                                                                            
+    // *** IUnknown methods ***                                              
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE;     
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;                                   
+    STDMETHOD_(ULONG,Release) (THIS) PURE;                                   
+                                                                             
+    // *** IOleWindow methods ***                                            
+    STDMETHOD(GetWindow) (THIS_ HWND * lphwnd) PURE;                         
+    STDMETHOD(ContextSensitiveHelp) (THIS_ BOOL fEnterMode) PURE;            
+                                                                             
+    // *** IDockingWindow methods ***                                         
+    STDMETHOD(SetToolbarSite) (THIS_ IUnknown* punkSite) PURE;               
+    STDMETHOD(ShowST)         (THIS_ BOOL fShow) PURE;                       
+    STDMETHOD(CloseST)        (THIS_ DWORD dwReserved) PURE;                 
+    STDMETHOD(ResizeBorderST) (THIS_ LPCRECT   prcBorder,                    
+                                     IUnknown* punkToolbarSite,              
+                                     BOOL      fReserved) PURE;              
+    STDMETHOD(TranslateAcceleratorST) (THIS_ LPMSG lpmsg) PURE;              
+    STDMETHOD(HasFocus)       (THIS) PURE;                                   
+};                                                                           
+</font></pre>
+
+<p><a href="default.htm">Go to the home page</a></p>
+</body>
+</html>

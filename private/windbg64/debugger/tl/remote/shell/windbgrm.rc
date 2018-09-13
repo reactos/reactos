@@ -1,0 +1,68 @@
+#include "windows.h"
+#include "resource.h"
+#include <ntverp.h>
+
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Remote WinDbg Target Module"
+#define VER_INTERNALNAME_STR        "WinDbgRm\0"
+
+#include "common.ver"
+
+
+WinDbgRm MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP   "&Options"
+    {
+        MENUITEM "&Transport DLL...",   IDM_OPTIONS_DEBUG_DLLS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",               IDM_OPTIONS_EXIT
+    }
+    POPUP   "&Help"
+    {
+        MENUITEM "&Contents",           IDM_HELP_CONTENTS
+        MENUITEM "&About WinDbgRm...",  IDM_HELP_ABOUT
+    }
+END
+
+WinDbgRm ACCELERATORS
+BEGIN
+        VK_F1,  IDM_HELP_CONTENTS,      VIRTKEY
+END
+
+#include "windbgrm.dlg"
+
+WindbgRmIcon     ICON PRELOAD DISCARDABLE "windbgrm.ico"
+CONNECTING_ICON  ICON PRELOAD DISCARDABLE "connect.ico"
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_APPNAME,                        "WinDbgRm"
+    IDS_Usage,                          "windbgrm -c -p<proc num> -e<event num> -s<short name>\n"
+    IDS_Version,                        "0030"
+    IDS_SYS_TRANSPORT_LAYER_COL_HDR1,   "Name"
+    IDS_SYS_TRANSPORT_LAYER_COL_HDR2,   "Description"
+    IDS_SYS_TRANSPORT_LAYER_COL_HDR3,   "DLL"
+    IDS_SYS_TRANSPORT_LAYER_COL_HDR4,   "Params"
+    IDS_DBG_Deleting_DLL_Title,         "Confirm deletion of Transport Layer"
+    IDS_DBG_Deleting_DLL,               "If a workspace refers to this configuration, you will need to correct it when that workspace is next loaded.\r\nPress OK to delete, Cancel to keep it."
+    IDS_ERR_Empty_Shortname,            "You must enter a display name."
+    IDS_ERR_Not_Unique_Shortname,       "The display name '%s' duplicates an existing name, and must be unique."
+    IDS_ERR_No_Transport_Layers_Defined, "No tranport layers have been defined. Please add a transport layer."
+    IDS_ERR_Transport_Doesnt_Exist,     "The transport layer [%s] does not exist. Please select a valid transport layer."
+    IDS_ERR_No_TL_Selected,             "Please select a transport layer."
+    IDS_Sys_Default_TL_Overriden,       "The current transport layer [%s] was specified via the command line, and it is different than the default transport layer [%s]. Your actions may cause the selection of a new transport layer."
+    IDS_Sys_Warning,                    "Warning"
+    IDS_Sys_Informational,              "Informational"
+    IDS_ERR_TL_Both_Overrides,          "-n and -N are mutually exclusive, and both switches have been ignored. Using the default Transport Layer."
+    IDS_ERR_TL_N_Need_dll_In_Name,      "-N requires that you include <.dll> in the DLL name."
+    IDS_ERR_Inst_Postmortem_Debugger,   "An error occurred while trying to install Windows Remote Debugger as the postmortem debugger. Please make sure [AEDebug] key exists in the registry and your account has permission to modify it."
+    IDS_ERR_Pipes_Not_Supported_On_Win9x, "The transport layer <%s> is currently in use, but it uses named pipes, which are not supported on Microsoft Windows 95/98. Windbgrm may not run correctly. Please select a transport layer that does not use %s."    
+    IDS_Status_Connected,               "Connected"
+    IDS_Status_Not_Connected,           "Not connected"
+    IDS_Status_Debuggee_Info,           "Name of client computer: <%s>"
+    IDS_Status_Transport_Layer,         "Transport Layer: <%s>   DLL: <%s>   Params: <%s>"
+    IDS_Success_Inst_Postmortem_Debugger, "WinDbgRm has been installed as the default postmortem application debugger"
+    IDS_ERR_Initializing_TL_DM,         "A fatal error occurec trying to initialize the transport layer<%s> and /or the DM."
+END

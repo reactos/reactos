@@ -1,0 +1,58 @@
+// WARNING
+// only non-localizable resources may go in this file
+// localizable resources must go in cdfvwlc.rc
+
+//
+// Includes
+//
+
+#include "windows.h"
+#include "resource.h"
+
+//
+// Self registration information.
+//
+
+#ifndef UNIX
+REGINST REGINST MOVEABLE PURE   "res\selfreg_cdfview.inf"
+#else
+REGINST REGINST MOVEABLE PURE   "selfreg_cdfview.inf"
+#endif /* UNIX */
+
+//
+// Icons.
+//
+
+IDI_CHANNEL            ICON    "res\channel.ico"
+IDI_STORY              ICON    "res\page.ico"
+IDI_OPENSUBCHANNEL     ICON    "res\open.ico"
+IDI_CLOSESUBCHANNEL    ICON    "res\close.ico"
+IDI_CHANNELFOLDER      ICON    "res\chanfldr.ico"
+IDI_DESKTOP            ICON    "res\desktop.ico"
+
+LOGOGLEAM              ICON    "res\gleam.ico"
+ICONGLEAM              ICON    "res\igleam.ico"
+
+
+//
+// AVI files
+//
+
+IDA_DOWNLOAD            AVI     MOVEABLE PURE   "res/download.avi"
+
+//
+// Gifs used as resource URLs
+//
+
+ccbiz.gif       2110     DISCARDABLE    "res\ccbiz.gif"
+//cccustom.gif    2110     DISCARDABLE    "res\cccustom.gif"
+ccent.gif       2110     DISCARDABLE    "res\ccent.gif"
+cclife.gif      2110     DISCARDABLE    "res\cclife.gif"
+ccnews.gif      2110     DISCARDABLE    "res\ccnews.gif"
+ccsports.gif    2110     DISCARDABLE    "res\ccsports.gif"
+
+#ifdef MLUI_SUPPORT
+#include "res\version.rcv"
+#else
+#include "cdfvwlc.rc"
+#endif

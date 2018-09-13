@@ -1,0 +1,37 @@
+#
+# build instructions for sample app langplay.exe
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=langplay
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+DLLDEF=langplay.def
+
+
+C_DEFINES=-DWIN32 -D__RPC_H__ -DINC_OLE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=                                             \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\crtdll.lib     \
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\msvfw32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\compob32.lib \
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\avifil32.lib
+
+
+INCLUDES=$(_NTBINDIR)\private\windows\media\avi\inc;$(_NTBINDIR)\private\windows\media\inc;
+
+SOURCES=        	\
+        langplay.c      \
+        langplay.rc
+
+

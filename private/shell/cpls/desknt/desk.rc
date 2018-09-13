@@ -1,0 +1,501 @@
+//{{NO_DEPENDENCIES}}
+//Microsoft App Studio generated resource script.
+//
+#include "rc.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "deskid.h"
+#include "desk.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDS_ICON                ICON    DISCARDABLE     "DESK.ICO"
+IDI_DISPLAY             ICON    PRELOAD DISCARDABLE         "desk.ico"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+BMP_MONITOR             BITMAP  DISCARDABLE     "MONITOR.BMP"
+IDB_COLOR1              BITMAP  DISCARDABLE     "COLOR1.BMP"
+IDB_COLOR4              BITMAP  DISCARDABLE     "COLOR4.BMP"
+IDB_COLOR8              BITMAP  DISCARDABLE     "COLOR8.BMP"
+IDB_ENERGYSTAR		BITMAP	DISCARDABLE	"ENERGYST.BMP"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+DLG_BACKGROUND DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Background"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Pattern",IDC_NO_HELP_1,7,118,115,92
+    LISTBOX         IDC_PATLIST,13,130,103,42,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Edit Pattern...",IDC_EDITPAT,55,175,61,14
+    GROUPBOX        "&Wallpaper",IDC_NO_HELP_2,129,118,115,92
+    LISTBOX         IDC_WALLLIST,135,130,103,42,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Browse...",IDC_BROWSEWALL,177,175,61,14
+    LTEXT           "&Display:",IDC_TXT_DISPLAY,135,196,26,8
+    RADIOBUTTON     "&Tile",IDC_TILE,170,196,27,8,WS_GROUP
+    RADIOBUTTON     "&Center",IDC_CENTER,205,196,34,8
+    CONTROL         "",IDC_BACKPREV,"BackgroundPreview",WS_GROUP,63,4,125,107
+END
+
+
+DLG_PATTERN DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 70, 252, 144
+STYLE WS_BORDER | DS_CONTEXTHELP | DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK |
+    WS_CAPTION | WS_POPUP | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Pattern Editor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_STATIC,7,7,23,9
+    COMBOBOX        IDD_PATTERNCOMBO,7,17,182,64,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Sample:",IDD_PATSAMPLE_TXT,104,36,44,9
+    CONTROL         "",IDD_PATSAMPLE,"Static",SS_BLACKFRAME,104,47,85,90
+    LTEXT           "Pattern:",IDD_PATTERN_TXT,7,36,36,9
+    CONTROL         "",IDD_PATTERN,"Static",SS_BLACKFRAME,7,47,90,90
+    DEFPUSHBUTTON   "&Done",IDCANCEL,195,7,50,14,WS_GROUP
+    PUSHBUTTON      "&Add",IDD_ADDPATTERN,195,24,50,14,
+    PUSHBUTTON      "&Change",IDD_CHANGEPATTERN,195,42,50,14
+    PUSHBUTTON      "&Remove",IDD_DELPATTERN,196,60,49,14
+END
+
+DLG_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE |
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Screen Saver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_BIGICON,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    63,4,125,107
+    GROUPBOX        "&Screen Saver",IDC_NO_HELP_1,7,118,238,48
+    COMBOBOX        IDC_CHOICES,13,129,115,90,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Se&ttings...",IDC_SETTING,132,128,50,14,WS_TABSTOP |
+                    WS_GROUP
+    PUSHBUTTON      "Pre&view",IDC_TEST,186,128,50,14
+    CONTROL         "&Password protected",IDC_USEPASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,149,80,9
+#ifndef WINNT
+    PUSHBUTTON      "&Change...",IDC_SETPASSWORD,96,146,50,14
+#endif
+    LTEXT           "&Wait:",IDC_SSDELAYLABEL,154,149,17,9
+    EDITTEXT        IDC_SCREENSAVEDELAY,173,147,30,12,ES_RIGHT | WS_TABSTOP |
+                    WS_GROUP
+    CONTROL         "",IDC_SCREENSAVEARROW,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,203,147,11,12
+    LTEXT           "minutes",IDC_SSDELAYSCALE,207,149,28,9
+    GROUPBOX        "&Energy saving features of monitor",IDC_ENERGY_TEXT,
+                    7,168,238,43
+    CONTROL         "",IDC_ENERGYSTAR_BMP,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    13,179,74,27
+    CONTROL         "&Low-power standby",IDC_LOWPOWERSWITCH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,93,179,78,10
+    LTEXT           "minutes",IDC_ENERGY_TEXT2,208,179,28,9
+    EDITTEXT        IDC_LOWPOWERDELAY,174,177,30,12,ES_RIGHT | WS_TABSTOP |
+                    WS_GROUP
+    CONTROL         "",IDC_LOWPOWERARROW,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,203,178,11,12
+    CONTROL         "Sh&ut off monitor",IDC_POWEROFFSWITCH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,93,195,70,10
+    LTEXT           "minutes",IDC_ENERGY_TEXT3,208,195,28,9
+    EDITTEXT        IDC_POWEROFFDELAY,174,193,30,12,ES_RIGHT | WS_TABSTOP |
+                    WS_GROUP
+    CONTROL         "",IDC_POWEROFFARROW,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,203,193,11,12
+END
+
+DLG_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Appearance"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_LOOKPREV,"LookPreview",NOT WS_TABSTOP,7,5,238,120
+    LTEXT           "&Scheme:",IDC_STATIC,7,130,30,9
+    COMBOBOX        IDC_SCHEMES,7,140,131,120,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Sa&ve As...",IDC_SAVESCHEME,142,140,50,14
+    PUSHBUTTON      "&Delete",IDC_DELSCHEME,195,140,50,14
+    LTEXT           "&Item:",IDC_STATIC,7,159,26,9
+    COMBOBOX        IDC_ELEMENTS,7,169,131,100,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Si&ze:",IDC_SIZELABEL,142,159,16,9
+    EDITTEXT        IDC_MAINSIZE,142,169,38,13,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SIZEARROWS,UPDOWN_CLASS,WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,172,169,10,13
+    LTEXT           "Co&lor:",IDC_COLORLABEL,184,159,20,9
+    CONTROL         "",IDC_MAINCOLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,184,
+                    169,28,13
+    LTEXT           "&Font:",IDC_FONTLABEL,7,188,20,9
+    COMBOBOX        IDC_FONTNAME,7,198,131,100,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Siz&e:",IDC_FONTSIZELABEL,142,188,17,8
+    COMBOBOX        IDC_FONTSIZE,142,198,38,80,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Colo&r:",IDC_FNCOLORLABEL,184,188,20,9
+    CONTROL         "",IDC_TEXTCOLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,184,
+                    198,28,13
+    CHECKBOX        "B",IDC_FONTBOLD,216,198,14,13,BS_PUSHLIKE
+    CHECKBOX        "I",IDC_FONTITAL,230,198,14,13,BS_PUSHLIKE
+END
+
+DLG_SAVESCHEME DIALOGEX DISCARDABLE  132, 64, 233, 57
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Scheme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Save this color scheme as:",IDC_NO_HELP_1,7,7,88,9
+    EDITTEXT        IDC_SAVESCHEME,7,16,217,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,121,36,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,175,36,50,14,WS_GROUP
+END
+
+DLG_COLORPICK DIALOGEX DISCARDABLE  0, 0, 56, 74
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_DLGFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_16COLORS,"Static",0xd,0,0,56,56
+    LTEXT           "",IDC_COLORETCH,1,56,55,1,NOT WS_GROUP | 0x10
+    PUSHBUTTON      "&Other...",IDC_COLOROTHER,0,59,41,14
+    CONTROL         "",IDC_COLORCUST,"Static",0xd,43,59,14,14
+END
+
+
+
+#if 0
+DLG_MONITOR DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_SCREENSAMPLE,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    63,4,125,107
+    GROUPBOX        "&Color palette",IDC_NO_HELP_1,7,118,115,42
+    COMBOBOX        IDC_COLORLIST,13,130,103,80,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "&Desktop area",IDC_NO_HELP_2,129,118,115,42
+    CONTROL         "",IDC_RESSIZE,"msctls_trackbar32",WS_TABSTOP |
+                    TBS_AUTOTICKS | TBS_DOWNISLEFT,156,130,58,15
+    LTEXT           "Less",IDC_ZOOMIN,135,130,15,8
+    LTEXT           "More",IDC_ZOOMOUT,219,130,21,8
+    CTEXT           "",IDC_RESXY,136,146,100,10
+    CONTROL         "",IDC_COLORSAMPLE,"Static",WS_BORDER | SS_BITMAP |
+                    SS_CENTERIMAGE,13,146,103,9
+    GROUPBOX        "&Font size",IDC_FONTGROUPBOX,7,161,237,30
+    COMBOBOX        IDC_FONTLIST,13,173,160,80,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "C&ustom...",IDC_CUSTOMFONT,177,172,61,14
+    PUSHBUTTON      "Change Display &Type...",IDC_CHANGEDRV,129,196,115,14
+    CONTROL         "Full &window drag/size",IDC_FULLDRAG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,193,104,11
+    CONTROL         "Use font &smoothing",IDC_SMOOTHFONTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,204,104,12
+END
+#else
+
+#include "settings.rc"
+
+#endif
+
+#ifndef WINNT
+DLG_ADAPTER DIALOGEX DISCARDABLE  20, 20, 252, 157
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Display Type"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel",IDOK,194,136,50,14
+    PUSHBUTTON      "C&hange...",IDC_ADAPTERCHANGE,186,19,50,14
+    PUSHBUTTON      "Cha&nge...",IDC_MONITORCHANGE,186,94,50,14
+    GROUPBOX        "&Adapter Type",IDC_NO_HELP_1,7,7,237,72
+    EDITTEXT        IDC_ADAPTERNAME,13,19,169,14,ES_AUTOHSCROLL |
+                    ES_READONLY
+    LTEXT           "Manufacturer:",IDC_DRVMAN_TXT,13,39,52,8
+    LTEXT           "Version:",IDC_DRVVER_TXT,13,51,52,8
+    LTEXT           "Current Files:",IDC_DRVFILES_TXT,13,63,52,8
+    LTEXT           "",IDC_DRVMAN,72,39,162,8
+    LTEXT           "",IDC_DRVVER,72,51,162,8
+    LTEXT           "",IDC_DRVFILES,72,63,162,8
+    GROUPBOX        "&Monitor Type",IDC_NO_HELP_2,7,82,237,49
+    EDITTEXT        IDC_MONITORNAME,13,94,169,14,ES_AUTOHSCROLL |
+                    ES_READONLY
+    CONTROL         "Monitor is &Energy Star compliant",IDC_DPMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,112,130,14
+END
+
+DLG_KEEPNEW DIALOGEX DISCARDABLE  20, 30, 233, 57
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Monitor Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&No",IDNO,175,36,50,14
+    PUSHBUTTON      "&Yes",IDYES,121,36,50,14
+    LTEXT           "You resized your desktop.  Do you want to keep this setting?",
+                    IDC_STATIC,33,7,191,21
+    ICON            "",IDC_BIGICON,7,7,18,20
+END
+
+DLG_CUSTOMFONT DIALOGEX DISCARDABLE  20, 20, 252, 141
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Custom Font Size"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,140,120,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,194,120,50,14
+    LTEXT           "&Scale fonts to be",IDC_STATIC,13,7,57,8
+    LTEXT           "of normal size.",IDC_STATIC,111,7,46,8
+    COMBOBOX        IDC_CUSTOMCOMBO,72,5,36,67,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Sample",IDC_NO_HELP_1,7,20,237,92
+    CONTROL         "",IDC_CUSTOMRULER,"DragSizeWindow",0x0,15,30,221,35
+    LTEXT           "",IDC_CUSTOMSAMPLE,15,70,221,40
+END
+
+#endif
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""deskid.h""\r\n"
+    "#include ""desk.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""desk.rcv""\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU DISCARDABLE
+BEGIN
+    MENUITEM "Normal",                      IDM_NORMAL
+    MENUITEM "Disabled",                    IDM_DISABLED
+    MENUITEM "Selected",                    IDM_SELECTED
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAME                "Display"
+    IDS_INFO                "Customizes your desktop display and screen saver"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_DESK_NOMEM          "There are not enough system resources available to continue."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NONE                "(None)"
+    IDS_UNLISTEDPAT         "Unlisted Pattern"
+    IDS_BITMAPOPENERR       "Bitmap Open Error"
+    IDS_DIB_NOOPEN          "Unable to open the file %s." //unused
+    IDS_BROWSETITLE         "Browsing for wallpaper"
+    IDS_BROWSEFILTER        "Bitmaps|*.bmp;*.dib|"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DIB_INVALID         "The file %s is not a valid bitmap file." //unused
+    IDS_DIB_NOMEM           "Insufficient memory to load %s." //unused
+    IDS_BADWALLPAPER        "Windows cannot display the wallpaper you selected. Choose different wallpaper."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACTIVE              "Active Window"
+    IDS_INACTIVE            "Inactive Window"
+    IDS_MINIMIZED           "Minimized Window"
+    IDS_ICONTITLE           "Very Long Icon Title"
+    IDS_NORMAL              "Normal"
+    IDS_DISABLED            "Disabled"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SELECTED            "Selected"
+    IDS_MSGBOX              "Message Box"
+    IDS_BUTTONTEXT          "OK"
+    IDS_SMCAPTION           "Miniature Title Bar"
+    IDS_WINDOWTEXT          "Window Text"
+    IDS_MSGBOXTEXT          "Message Text"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_1             "Monochrome"
+    IDS_COLOR_4             "16 Color"
+    IDS_COLOR_8             "256 Color"
+    IDS_COLOR_16            "High Color (16 bit)"
+    IDS_COLOR_24            "True Color (24 bit)"
+    IDS_COLOR_32            "True Color (32 bit)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLOSE               "Close"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CANCELNEW           "Windows has restored your original desktop size."
+    IDS_FAILRESET           "Windows cannot implement your new display settings. Click OK, and then choose different settings."
+    IDS_X_BY_Y              "%d by %d pixels"
+    IDS_UNKNOWN             "(Unknown)"
+    IDS_NOINFO              "The display driver you chose is not providing Windows with information it needs to configure your video hardware. Windows may be unable to configure your hardware for this reason."
+    IDS_CUSTFONTPER         "Custom Font (%d%%)"
+    IDS_CUSTFONTWARN        "This font size setting may cause some programs to appear incorrectly."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WARNFLICK1          "Windows will now resize your desktop. This could take a few seconds, during which your screen might flicker.  "
+    IDS_WARNFLICK2          "If Windows does not reappear correctly, wait 15 seconds, and your original settings will be restored."
+    IDS_NOVALID1            "The current display driver does not match your graphics adapter. If you continue, Windows will change your display driver to one that your graphics adapter supports."
+    IDS_NOVALID2            "Your graphics adapter does not have enough memory to implement these settings. If you continue, Windows will use settings that your adapter's memory can accommodate."
+    IDS_NOVALID3            "Your graphics adapter cannot display the number of colors you chose. If you continue, Windows will use a setting that your adapter can display."
+    IDS_NOVALID4            "Your graphics adapter cannot display the setting you chose. The selected adapter or monitor type may be incorrect. If you continue, Windows will use a setting that your adapter can display."
+    IDS_NOMONITOR           "You have not specified what type of monitor you use. Your new settings may not work correctly.\n\nDo you want to specify a monitor now?"
+//  IDS_FALLBACKMODE        "Windows cannot use the display settings you chose. Click OK, and then choose different display settings."
+//  IDS_FALLBACKDRV         "Windows was unable to use the requested adapter setting. Click OK, and then choose a different display adapter."
+
+    IDS_NOADAPTER           "Your display adapter is not configured properly.  To correct the problem, click OK to start the Hardware Installation wizard."
+    IDS_CONFLICT            "Your display adapter conflicts with another device in your computer.  To correct the problem, click OK to start the Hardware Conflict Troubleshooter."
+    IDS_DISPDISABLED        "Your display adapter is disabled.  To correct the problem, click OK to open the Device Manager."
+    IDS_BADSETTINGS         "There is a problem with your display settings. The adapter type is incorrect, or the current settings do not work with your hardware."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ELNAME_DESKTOP          "Desktop"
+    ELNAME_INACTIVECAPTION  "Inactive Title Bar"
+    ELNAME_INACTIVEBORDER   "Inactive Window Border"
+    ELNAME_ACTIVECAPTION    "Active Title Bar"
+    ELNAME_ACTIVEBORDER     "Active Window Border"
+    ELNAME_MENU             "Menu"
+    ELNAME_MENUSELECTED     "Selected Items"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ELNAME_WINDOW           "Window"
+    ELNAME_SCROLLBAR        "Scrollbar"
+    ELNAME_BUTTON           "3D Objects"
+    ELNAME_SMALLCAPTION     "Palette Title"
+    ELNAME_ICONTITLE        "Icon Title"
+    ELNAME_CAPTIONBUTTON    "Caption Buttons"
+    ELNAME_DISABLEDMENU     "Disabled Menu Item"
+    ELNAME_MSGBOX           "Message Box"
+    ELNAME_SCROLLBUTTON     "Scrollbar Buttons"
+    ELNAME_APPSPACE         "Application Background"
+    ELNAME_SMCAPSYSBUT      "Small Caption Button"
+    ELNAME_DXICON           "Icon Spacing (Horizontal)"
+    ELNAME_DYICON           "Icon Spacing (Vertical)"
+    ELNAME_INFO             "ToolTip"
+    ELNAME_ICON             "Icon"
+    ELNAME_SMICON           "Small Icon"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BLANKNAME           "Type a name for the scheme you want to save."
+    IDS_NOSCHEME2DEL        "Select the scheme you want to delete."
+    IDS_PAT_REMOVE,         "Removing the \042%s\042 pattern will permanently delete it from your disk. \n\nAre you sure you want to remove this pattern?"
+    IDS_PAT_CHANGE,         "The pattern \042%s\042 has changed.\n\nDo you want to save the changes to this pattern?"
+    IDS_PAT_CREATE,         "You have not saved the \042%s\042 pattern.\n\nDo you want to save it?"
+    IDS_REMOVEPATCAPTION,   "Confirm Pattern Removal"
+    IDS_CHANGEPATCAPTION,   "Unsaved Pattern"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_10PTSAMPLEFACENAME  "Arial"
+    IDS_10PTSAMPLE          "10 point %s at %d pixels per inch."
+    IDS_RULERDIRECTION      "To set custom font size, drag ruler."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWSETTINGS            "New Display Settings"
+    IDS_NEWSETTINGS_RESTART    "Windows has updated the display settings for your hardware configuration.  Your computer needs to be restarted for these new settings to take effect.\n\nPress OK to restart your computer now."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_TITLE         "Display"
+    IDS_DISPLAY_EXPLAIN       "Changes settings for your display."
+    IDS_DISPLAY_DISABLED      "Your system administrator disabled the Display control panel."
+    IDS_ERRRegistryWrite      "An error occurred while Windows was writing to the Registry."
+END
+
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "desk.rcv"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

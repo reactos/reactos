@@ -1,0 +1,14 @@
+L"define"        L""      P0_DEFINE
+L"elif"          L""      P0_ELIF
+L"else"          L""      P0_ELSE
+L"endif"         L""      P0_ENDIF
+L"if"            L""      P0_IF
+L"ifdef"         L""      P0_IFDEF
+L"ifndef"        L""      P0_IFNDEF
+L"include"       L""      P0_INCLUDE
+L"line"          L""      P0_LINE
+L"pragma"        L""      P0_PRAGMA
+L"undef"         L""      P0_UNDEF
+L"error"         L""      P0_ERROR
+L"ident"         L""      P0_IDENT
+

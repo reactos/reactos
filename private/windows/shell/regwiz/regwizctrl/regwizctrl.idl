@@ -1,0 +1,51 @@
+// RegwizCtrl.idl : IDL source for RegwizCtrl.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (RegwizCtrl.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	[
+		object,
+		uuid(50E5E3CF-C07E-11D0-B9FD-00A0249F6B00),
+		dual,
+		helpstring("IRegWizCtrl Interface"),
+		pointer_default(unique)
+	]
+	interface IRegWizCtrl : IDispatch
+	{
+		[propget, id(0)]
+		HRESULT IsRegistered([out, retval]VARIANT_BOOL *pbStatus);
+		[propput, id(0)]
+		HRESULT IsRegistered([in]BSTR strText);
+		
+		[id(1), helpstring("method InvokeRegWizard")] HRESULT InvokeRegWizard(BSTR ProductPath);
+		//[id(2), helpstring("method TransferRegWizInformation")] HRESULT TransferRegWizInformation(BSTR  InformationPath);
+		//[propget, id(3), helpstring("property MSID")] HRESULT MSID([out, retval] BSTR *pVal);
+		//[propput, id(3), helpstring("property MSID")] HRESULT MSID([in] BSTR newVal);
+		//[propget, id(4), helpstring("property HWID")] HRESULT HWID([out, retval] BSTR *pVal);
+		//[propput, id(4), helpstring("property HWID")] HRESULT HWID([in] BSTR newVal);
+		//[id(5), helpstring("method TransferOEMRegWizInformation")] HRESULT TransferOEMRegWizInformation(BSTR InformationPath);
+		[propget, id(2), helpstring("property Version")] HRESULT Version([out, retval] BSTR *pVal);
+	};
+[
+	uuid(50E5E3C0-C07E-11D0-B9FD-00A0249F6B00),
+	version(1.0),
+	helpstring("RegwizCtrl 1.0 Type Library")
+]
+library REGWIZCTRLLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(50E5E3D1-C07E-11D0-B9FD-00A0249F6B00),
+		helpstring("RegWizCtrl Class")
+	]
+	coclass RegWizCtrl
+	{
+		[default] interface IRegWizCtrl;
+	};
+};

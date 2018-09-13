@@ -1,0 +1,166 @@
+// WARNING
+// non-localizable resources only
+// localizable resources must go in msratelc.rc
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+REGINST                 REGINST "selfreg_ratings.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SECURITY            ICON    DISCARDABLE     "security.ico"
+IDI_KEYS                ICON    DISCARDABLE     "keys.ico"
+IDI_UNRATED             ICON    DISCARDABLE     "unrated.bmp"
+IDI_RATING_CATEGORIES   ICON    DISCARDABLE     "ratcats.bmp"
+IDI_RATED_SITES         ICON    DISCARDABLE     "ratsites.bmp"
+IDI_ACCEPTALWAYS        ICON    DISCARDABLE     "trusted.ico"
+IDI_ACCEPTNEVER         ICON    DISCARDABLE     "nottrust.ico"
+IDI_PICSRULES_UP        ICON	DISCARDABLE     "up.ico"
+IDI_PICSRULES_DOWN      ICON	DISCARDABLE     "down.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_KEYS                BITMAP  DISCARDABLE     "keys.bmp"
+IDB_LOCK                BITMAP  DISCARDABLE     "locks.bmp"
+IDB_SYSTEMS             BITMAP  DISCARDABLE     "systems.bmp"
+IDB_CATEGORIES          BITMAP  DISCARDABLE     "category.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""msrating.rcv""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+// These dialogs have moves to msratelc.rc but this design info is being
+// preserved in order to retain the dev studio information
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_RATINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 244
+        BOTTOMMARGIN, 211
+    END
+
+    IDD_GENERAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 246
+        BOTTOMMARGIN, 203
+    END
+
+    IDD_PROVIDERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 106
+    END
+
+    IDD_PLEASE, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 245
+        TOPMARGIN, 7
+    END
+
+    IDD_INTRO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+    END
+
+    IDD_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 245
+        BOTTOMMARGIN, 196
+    END
+
+    IDD_DENY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 93
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifdef MLUI_SUPPORT
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "msrating.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+#else
+#include "msratelc.rc"
+#endif  // MLUI_SUPPORT

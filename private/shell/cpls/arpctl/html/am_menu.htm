@@ -1,0 +1,114 @@
+<HTML>
+
+<HEAD>
+    <LINK REL="stylesheet" TYPE="text/css" HREF="am.css">
+
+    <SCRIPT LANGUAGE="JavaScript">
+
+    var g_menuCur = null;
+    var g_menuHot = null;
+    
+    function CMenuBarOnMouseEvent() 
+    {
+        var obj = window.event.srcElement;
+        
+        window.event.cancelBubble = true;
+
+        if (obj.className == "CMenuItem") 
+        {
+            // Is there a current hot item?
+            if (g_menuHot != null)
+            {
+                // Yes; don't draw it hot anymore
+                g_menuHot.style.textDecoration = "none";
+				//g_menuHot.style.background = "inactivecaption";
+				//g_menuHot.style.color = "white";
+            }
+
+            switch (event.type)
+            {
+            case "mouseover":
+                obj.style.textDecoration = "underline";
+				//obj.style.background = "buttonface";
+				//obj.style.color = "blue";
+                g_menuHot = obj;
+                break;
+
+            case "mouseout":
+                g_menuHot = null;
+                break;
+            }
+        }
+    }
+
+
+    function CMenuBarOnClick() 
+    {
+        var obj = window.event.srcElement;
+        
+        window.event.cancelBubble = true;
+
+        if (obj.className == "CMenuItem") 
+        {
+            // Is there a current selection?
+            if (g_menuCur != null)
+            {
+                // Yes; set its class back to a menu item
+                g_menuCur.className = "CMenuItem";
+            }
+
+            obj.className = "CMenuItemSel";
+            g_menuCur = obj;
+
+            // Now let's execute the command.  We just navigate
+            // according to the _pMenuCmd property.
+            parent.main.location = obj._PMENUCMD;
+        }
+    }
+
+    function keyboardClick (current)
+    {
+        document.all[current].click();
+    }
+
+    </SCRIPT>
+    
+</HEAD>
+
+
+<BODY STYLE="background: buttonface; margin: 0;">
+
+
+<DIV STYLE="width:100%;height:100%;background-color:buttonface; border-right: solid 1 threedshadow;">
+
+<IMG SRC="branding.gif">
+
+<DIV ID="idAppMgrMenu" CLASS="CMenuBar" STYLE="top:100"
+        ONCLICK="CMenuBarOnClick()" 
+        ONMOUSEOVER="CMenuBarOnMouseEvent()"
+        ONMOUSEOUT="CMenuBarOnMouseEvent()">
+
+    <DIV ID="idMenuRemove" CLASS="CMenuItem"
+            TITLE="Click here to remove a program from your computer"
+            _PMENUCMD="am_remove.htm">
+        <IMG SRC="remove_icon.GIF" CLASS="CMenuImg" ALIGN=absmiddle HSPACE="4"><A HREF="javascript:keyboardClick('idMenuRemove')" CLASS="hotspot">Remove Programs</A>
+    </DIV>
+
+    <DIV ID="idMenuAdd" CLASS="CMenuItem"
+            TITLE="Click here to add a new a program to your computer"
+            STYLE="top: 25;"
+            _PMENUCMD="am_add.htm">
+        <IMG SRC="add_icon.GIF" CLASS="CMenuImg" ALIGN=absmiddle HSPACE="4"><A HREF="javascript:keyboardClick('idMenuAdd')" CLASS="hotspot">Add New Programs</A>
+    </DIV>
+
+    <DIV ID="idMenuWinSetup" CLASS="CMenuItem"
+            TITLE="Click here to modify or update your Windows installation"
+            STYLE="top: 50;"
+            _PMENUCMD="am_winupd.htm">
+        <IMG SRC="wu_icon.GIF" CLASS="CMenuImg" ALIGN=absmiddle HSPACE="4"><A HREF="javascript:keyboardClick('idMenuWinSetup')" CLASS="hotspot">Windows NT Setup</A>
+    </DIV>
+</DIV>
+</DIV>
+</BODY>
+</HTML>
+

@@ -1,0 +1,11 @@
+DriverProc@20
+DecompressFrame8@24
+Decompress@56
+DrawBegin@12
+VideoOpen@4
+SetState@12
+DecompressQueryFmt@8
+DecompressQuery@56
+DecompressGetFormat@12
+DecompressBegin@56
+DecompressGetPalette@12

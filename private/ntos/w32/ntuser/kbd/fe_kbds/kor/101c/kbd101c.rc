@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	          VFT_DLL
+#define	VER_FILESUBTYPE	          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR   "KO Hangeul Keyboard Layout for 101(Type C)"
+#define VER_INTERNALNAME_STR      "kbd101c"
+#define VER_ORIGINALFILENAME_STR  "kbd101c.dll"
+
+#define VER_LANGNEUTRAL
+#include "common.ver"

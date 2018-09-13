@@ -1,0 +1,110 @@
+//Microsoft Visual C++ generated resource script.
+//
+
+#include "windows.h"
+#include "rc.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+PROP_SHEET_DLG DIALOGEX DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Effects"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Desktop icons",IDC_GRPBOX_1,7,5,237,94
+    CONTROL         "Generic1",IDC_ICONS,"SysListView32",LVS_SINGLESEL | 
+                    LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_TABSTOP,15,17,221,56
+    PUSHBUTTON      "&Change Icon...",IDC_CHANGEICON,111,77,60,15
+    PUSHBUTTON      "D&efault Icon",IDC_ICONDEFAULT,176,77,60,15
+    GROUPBOX        "Visual effects",IDC_GRPBOX_2,7,106,237,99
+    CONTROL         "Use &transition effects for menus and tooltips",
+                    IDC_MENUANIMATION,"Button",BS_3STATE | WS_TABSTOP,15,118,
+                    154,10
+    COMBOBOX        IDC_COMBOEFFECT,173,116,64,42,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Smooth edges of screen fonts",IDC_FONTSMOOTH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,132,108,10
+#ifdef CLEARTYPECOMBO
+    CONTROL         "(<A>show me</A>) :",IDC_SHOWME,"Link Window",WS_TABSTOP,
+                    123,133,40,11
+    COMBOBOX        IDC_COMBOFSMOOTH,173,130,64,42,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+#endif //CLEARTYPECOMBO
+    CONTROL         "Use &large icons",IDC_LARGEICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,15,146,210,10
+    CONTROL         "Show &icons using all possible colors",
+                    IDC_ICONHIGHCOLOR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    15,160,210,10
+    CONTROL         "Show &window contents while dragging",IDC_SHOWDRAG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,174,153,10
+    CONTROL         "&Hide keyboard navigation indicators until I use the Alt key",
+                    IDC_KEYBOARDINDICATORS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,188,210,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PAGE_TITLE          "Effects"
+    IDS_USE_LARGE           "Use &large icons"
+    IDS_256COLORPROBLEM     "Your display is currently configured for 256 colors or fewer."
+    IDS_ICONFILTER          "Icon Files\001*.ico;*.exe;*.dll\001Programs (*.exe)\001*.exe\001Libraries (*.dll)\001*.dll\001Icons (*.ico)\001*.ico\001All Files (*.*)\001*.*\001\001"
+    IDS_INVALIDPATH         " - Invalid Path"
+    IDS_HELPFILE_PLUS       "PLUS!.HLP"
+    IDS_MYDOCUMENTS         "My Documents"
+    IDS_INTERNET            "Internet Explorer"
+    IDS_DIRECTORY           "Directory"
+    IDS_EFFECTS             "Effects"
+	IDS_FADEEFFECT			"Fade effect"
+	IDS_SCROLLEFFECT		"Scroll effect"
+	IDS_CLEARTYPE			"ClearType"
+	IDS_STANDARDSMOOTHING	"Standard"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELPFILE            "DISPLAY.HLP"
+    IDS_NOICONSMSG1         "The specified file does not contain any icons."
+    IDS_NOICONSMSG          "The specified file does not contain any icons."
+    IDS_BADPATHMSG          "The path %s is invalid.\n\nPlease type a valid path name.    \n"
+    IDS_FONTSMOOTHWONTWORK  "\n\nTo use font smoothing, your display's color palette must be set to either High Color or True Color.\n (You can change your color palette by using the settings tab.)"
+    IDS_ICONCOLORWONTWORK   "\n\nTo use high-color icons, your display's color palette must be set to either High Color or True Color.\nTo change your color palette, click the Settings tab."
+    IDS_FULL                " (full)"
+    IDS_EMPTY               " (empty)"
+    IDS_MYCOMPUTER          "My Computer"
+    IDS_NETNEIGHBOUR        "My Network Places"
+    IDS_TRASHFULL           "Recycle Bin (full)"
+    IDS_TRASHEMPTY          "Recycle Bin (empty)"
+    IDS_TRASHDEFAULT        "Recycle Bin"
+END
+
+
+
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Effects Control Panel extension"
+#define VER_INTERNALNAME_STR        "PlusTab"
+#define VER_ORIGINALFILENAME_STR    "PLUSTAB.DLL"
+
+#include <common.ver>

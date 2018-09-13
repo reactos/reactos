@@ -1,0 +1,135 @@
+LANGUAGE 0x0b, 0x00 // Really 0x0B, 0x00 - Finnish (Finnish)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Finnish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Mukauta tyˆkalurivi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Sulje",2,308,6,44,14
+    PUSHBUTTON      "Pala&uta",202,308,23,44,14
+    PUSHBUTTON      "&Ohje",205,308,40,44,14
+    PUSHBUTTON      "Siirr‰ yl&ˆs",206,308,74,44,14
+    PUSHBUTTON      "Siirr‰ &alas",207,308,91,44,14
+    LTEXT           "&K‰ytett‰viss‰ olevat painikkeet:",-1,4,5,121,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Lis‰‰ ->",1,131,42,44,14
+    PUSHBUTTON      "<- &Poista",204,131,62,44,14
+    LTEXT           "&Tyˆkalurivin painikkeet:",-1,182,5,115,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Peruuta",2,58,122,50,14
+    PUSHBUTTON      "&K‰yt‰",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Ohje",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Edellinen",12323,12,26,50,14
+    DEFPUSHBUTTON   "&Seuraava >",12324,62,26,50,14
+    PUSHBUTTON      "Valmis",12325,119,26,50,14
+    PUSHBUTTON      "Peruuta",2,176,26,50,14
+    PUSHBUTTON      "Ohje",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Erotin"
+    1025                    " + "
+    1026                    "Ei mit‰‰n"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Sulje"
+    4161                    "OK"
+    4162                    "Ominaisuudet: %s"
+    4163                    "T‰n‰‰n:"
+    4164                    "&Siirry"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+    4176                    "Kirjoita teksti t‰h‰n"
+    4177                    "Ominaisuudet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Muuttaa ikkunan kokoa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Siirt‰‰ ikkunaa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Pienent‰‰ ikkunan kuvakkeeksi."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Suurentaa ikkunan koko n‰ytˆn kokoiseksi."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Siirt‰‰ seuraavaan MDI-ikkunaan."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Sulkee t‰m‰n ikkunan."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Palauttaa ikkunan normaaliin kokoon."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Siirt‰‰ toiseen teht‰v‰‰n."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Komennot, joilla k‰sitell‰‰n ikkunoita."
+    36849                   "Muuta sarakkeiden leveytt‰ vet‰m‰ll‰ vasemmalle tai oikealle."
+    36850                   "Muuttaa sarakkeiden kokoa nuolin‰pp‰imill‰ ja sarkaimella."
+    36851                   "Lis‰‰. siirt‰‰ ja poistaa tyˆkalurivin painikkeita."
+END
+
+

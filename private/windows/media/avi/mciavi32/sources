@@ -1,0 +1,77 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+SDKLIB = $(_NTROOT)\public\sdk\lib
+
+TARGETNAME=mciavi32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=mciavi32.def
+
+USE_NTDLL=1
+
+
+#
+# Retail
+#
+C_DEFINES=-DUNICODE -DVFW -DINC_OLE2 -DSTEALWAVE -DREMOTESTEAL
+
+#
+# Debug (normally commented out but leave in file)
+#
+#C_DEFINES=-DUNICODE -DVFW -DINC_OLE2 -DSTEALWAVE -DREMOTESTEAL -DDEBUG
+#MSC_OPTIMIZATION=-Od -Zi
+#NTDEBUG=ntsd
+#NTDEBUGTYPE=both
+
+
+######NTPROFILEINPUT=yes
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+	   $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+	   $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib \
+	   $(_NTBINDIR)\public\sdk\lib\*\winmm.lib \
+	   $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+	   ..\lib\*\msvfw32.lib
+
+INCLUDES=..\inc;.\res\usa;..\..\verinfo\usa;..\..\inc;..\video
+
+SOURCES=avidraw.c       \
+	aviplay.c       \
+	avisound.c      \
+	avitask.c       \
+	aviopen.c       \
+	common.c        \
+	config.c        \
+	device.c        \
+	drvproc.c       \
+	graphic.c       \
+	window.c        \
+	fullproc.c      \
+	aviread.c       \
+	drawproc.c      \
+	profile.c       \
+	mciavi.rc
+
+####    avirle.c        \
+
+# Set   \
+
+### DLLENTRY=DllInstanceInit
+DLLBASE=0x1c000000
+
+MISCFILES=vfw16\msvideo.dll  \
+	  vfw16\mciavi.drv   \
+	  vfw16\mciseq.drv   \
+	  vfw16\mciwave.drv  \
+          vfw16\avifile.dll  \
+          vfw16\avicap.dll   \
+	  ..\clock.avi
+
+NTTARGETFILE1=$(SDKLIB)\*\vfw32.lib

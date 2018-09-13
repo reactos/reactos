@@ -1,0 +1,38 @@
+//
+// DESK.RC
+//
+// this project's resources
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include "windows.h"
+#include "rc.h"
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Icons
+
+// applet icons
+
+IDI_DISPLAY     ICON    PRELOAD DISCARDABLE         "desk.ico"
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Strings
+
+// applet names and descriptions
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DISPLAY_TITLE         "Display"
+    IDS_DISPLAY_EXPLAIN       "Customizes your desktop display and screen saver"
+	IDS_DISPLAY_DISABLED 	  "Your system administrator disabled the Display control panel."
+	IDS_ERRRegistryWrite	  "An error occurred while Windows was writing to the Registry."
+END
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Version Resource
+
+#include "desk.rcv"
+

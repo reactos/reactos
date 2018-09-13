@@ -1,0 +1,74 @@
+#include <windows.h>
+#include "rc_id.h"
+
+REVISION DIALOG 10, 31, 152, 42
+CAPTION "Revision Dialog"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+BEGIN
+        CONTROL "$Revision: 2 $", 100, "static", SS_LEFT | WS_CHILD, 6, 6, 150, 8
+        CONTROL "$Date: 2/05/99 3:19p $", 101, "static", SS_LEFT | WS_CHILD, 6, 19, 150, 8
+END
+
+
+STDCOM DIALOG 86, 29, 145, 232
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Standard Com"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Software handshaking", -1, 6, 6, 132, 80
+    CONTROL         "&Use Xon/Xoff for receiving", ID_CB_XRECVING, "Button", 
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14, 17, 103, 13
+    CONTROL         "U&se Xon/Xoff for sending", ID_CB_XSENDING, "Button", 
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14, 30, 98, 13
+    CONTROL         "", -1, "Static", SS_BLACKRECT, 30, 46, 76, 1
+    LTEXT           "&Xon:", -1, 35, 53, 19, 11, NOT WS_GROUP
+    COMBOBOX        ID_CMB_XON, 57, 52, 38, 24, CBS_DROPDOWN | WS_TABSTOP
+    LTEXT           "Xo&ff:", -1, 35, 67, 21, 10, NOT WS_GROUP
+    COMBOBOX        ID_CMB_XOFF, 57, 68, 38, 24, CBS_DROPDOWN | WS_TABSTOP
+    GROUPBOX        "Hardware handshaking", -1, 6, 88, 132, 66
+    LTEXT           "Receiving:", -1, 16, 99, 36, 10
+    CONTROL         "&None", ID_RB_RX_NONE, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 20, 109, 28, 12
+    CONTROL         "&RTS", ID_RB_RX_RTS, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 57, 109, 28, 12
+    CONTROL         "D&TR", ID_RB_RX_DTR, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 94, 109, 28, 12
+    LTEXT           "Sending:", -1, 17, 126, 37, 10
+    CONTROL         "N&one", ID_RB_TX_NONE, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 20, 137, 28, 12
+    CONTROL         "&CTS", ID_RB_TX_CTS, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 57, 137, 28, 12
+    CONTROL         "&DSR", ID_RB_TX_DSR, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 94, 137, 28, 12
+    LTEXT           "&Break signal duration:", -1, 9, 157, 45, 16
+    COMBOBOX        ID_CMB_BREAK_DUR, 59, 161, 43, 45, CBS_DROPDOWN | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "msec.", -1, 107, 163, 23, 9, NOT WS_GROUP
+    GROUPBOX        "Errors", -1, 6, 175, 132, 34
+    LTEXT           "Parity:", -1, 16, 186, 24, 8
+    LTEXT           "0", ID_TEXT_PARITY, 51, 187, 18, 8, NOT WS_GROUP
+    LTEXT           "Framing:", -1, 16, 196, 32, 8, NOT WS_GROUP
+    LTEXT           "0", ID_TEXT_FRAMING, 51, 197, 18, 8, NOT WS_GROUP
+    LTEXT           "Overrun:", -1, 81, 186, 31, 8, NOT WS_GROUP
+    LTEXT           "0", ID_TEXT_OVERRUN, 115, 186, 18, 8, NOT WS_GROUP
+    LTEXT           "Overflow:", -1, 81, 196, 34, 8, NOT WS_GROUP
+    LTEXT           "0", ID_TEXT_OVERFLOW, 115, 196, 18, 8, NOT WS_GROUP
+    DEFPUSHBUTTON   "OK", IDOK, 6, 213, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 51, 213, 40, 14
+    PUSHBUTTON      "&Help", 8, 97, 213, 40, 14
+END
+
+
+STRINGTABLE 
+BEGIN
+	SID_DEVICE_NAME,	"Standard Com Port"
+	SID_ERR_NOMEM,		"Not enough memory for Standard Com Port Driver"
+	SID_ERR_NOPORT, 	"There is not a port named %s available"
+	SID_ERR_NOOPEN, 	"Could not open port %s"
+	SID_ERR_NOTIMER,	"Standard Com Port driver could not create a timer"
+	SID_ERR_WINDRIVER,	"An error occurred in the Windows Com Driver"
+	SID_ERR_BADSETTING, "The Windows Com Driver does not support one of the current communications settings"
+	SID_ERR_BADBAUD,	"The Windows Com Driver does not support the current baud rate"
+	SID_ERR_BADCHARVAL, "Enter the ASCII value of a character in decimal or hex (i.e. 13 or 0Dh)"
+END

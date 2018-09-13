@@ -1,0 +1,70 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\download\lib=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=download
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+USE_ATL=1
+ATL_VER=10
+
+C_DEFINES = $(C_DEFINES) /D_DOWNLOAD_DIRECTORY_
+
+INCLUDES= \
+    $(ROOT)\src\site\download; \
+    $(SITEINCLUDES) \
+    $(ROOT)\src\site\download\jpglib6a; \
+    $(ROOT)\imgfilt \
+
+SOURCES= \
+    ..\dwnbind.cxx \
+    ..\dwncache.cxx \
+    ..\dwndoc.cxx \
+    ..\dwnpost.cxx \
+    ..\dwntask.cxx \
+    ..\dwnutil.cxx \
+    ..\bits.cxx \
+    ..\htmctx.cxx \
+    ..\htmdesc.cxx \
+    ..\htmload.cxx \
+    ..\htmparse.cxx \
+    ..\htmpost.cxx \
+    ..\htmpre.cxx \
+    ..\htmsrc.cxx \
+    ..\htmtag.cxx \
+    ..\htmtok.cxx \
+    ..\htmver.cxx \
+    ..\imgctx.cxx \
+    ..\imginfo.cxx \
+    ..\imgload.cxx \
+    ..\imgart.cxx \
+    ..\imgbmp.cxx \
+    ..\imgbits.cxx \
+    ..\imgwmf.cxx \
+    ..\imgemf.cxx \
+    ..\imggif.cxx \
+    ..\imgjpg.cxx \
+    ..\imgxbm.cxx \
+    ..\imgplug.cxx \
+    ..\imgutil.cxx \
+    ..\dither.cxx \
+    ..\spacectx.cxx \
+    ..\bodyctx.cxx \
+    ..\rootctx.cxx \
+    ..\imgico.cxx
+
+CONDITIONAL_INCLUDES= \
+    $(CONDITIONAL_INCLUDES) \
+    palettes.h \
+    quickdraw.h \
+    qdoffscreen.h \
+    conditionalmacros.h \
+    strings.h \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

@@ -1,0 +1,14 @@
+-machine:mips
+-gpsize:32
+-base:@f:\nt\public\sdk\lib\coffbase.txt,usermode
+-subsystem:console
+-entry:mainCRTStartup
+obj\mips\flpt.obj
+obj\mips\flpt2.obj
+obj\mips\flptx.obj
+f:\nt\public\sdk\lib\mips\small.lib
+f:\nt\public\sdk\lib\mips\user32.lib
+f:\nt\public\sdk\lib\mips\kernel32.lib
+f:\nt\public\sdk\lib\mips\advapi32.lib
+f:\nt\public\sdk\lib\mips\libc.lib
+f:\nt\public\sdk\lib\mips\ntdll.lib

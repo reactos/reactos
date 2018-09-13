@@ -1,0 +1,2 @@
+i386_SOURCES = ..\i386\callret.asm \
+               ..\i386\callproc.asm

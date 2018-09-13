@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=osk
+
+TARGETNAME=msswchx
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+USE_CRTDLL=1
+
+#
+# this is to get the DDE stuff
+#
+NOT_LEAN_AND_MEAN=1
+
+INCLUDES=$(BASEDIR)\public\sdk\inc\mfc42
+
+
+
+SOURCES=msswchx.rc  \
+        dbg.c    
+
+UMTYPE=windows
+UMAPPL=msswchx
+UMENTRY=winmain
+
+UMLIBS=obj\*\msswchx.lib \
+       obj\*\msswchx.res
+
+TARGETLIBS=
+
+
+C_DEFINES=-DUNICODE -D_UNICODE
+
+  

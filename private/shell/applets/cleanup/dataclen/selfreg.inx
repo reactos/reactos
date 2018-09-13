@@ -1,0 +1,257 @@
+
+;
+;  Control registration and DLL installation
+;
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  Because of the length limitations, we use shorthand names for the
+;  sections.
+;
+;
+;  RegItems with %11% or %25% are substituted on NT with
+;  %SystemRoot%\whatever. But this needs to be REGEXSZ!  Use the
+;  token %REGEXSZ% (0x20000).
+;
+;  Any entries that go into the registry that contain
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+;
+;
+;  Do not do any HKCU registration here.  If you are trying to set
+;  defaults for the current user, set them in HKLM and use
+;  the SHRegXXXUSValue functions
+;
+
+[Version]
+Signature="$CHICAGO$"
+
+
+;
+; reg.cpp calls these entry points:
+;
+[RegDll]
+ComponentName=Shell.Dataclen
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegCleaners
+DelReg=DelRegCleaners, 
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegDllNT]
+ComponentName=Shell.Dataclen
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegCleanersNT
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegDllW95]
+ComponentName=Shell.Dataclen
+ComponentVersion=5.0
+AdvOptions=44
+AddReg=RegCleanersW95
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnregDll]
+ComponentName=Shell.Dataclen
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Shell32 General Registration
+;
+;  This is broken up into chunks so there's some sanity to these
+;  sections.
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+; Some things moved to new locations, or disappeared entirely:
+;
+[DelRegCleaners]
+
+[RegCleaners]
+;
+; the basic data driver cleaner
+;
+HKCR,"CLSID\%CLSID_DATACLEANER%",,2,"%DESC_DATACLEANER%"
+HKCR,"CLSID\%CLSID_DATACLEANER%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_DATACLEANER%\%INPROC%","ThreadingModel",2,"Apartment"
+
+;
+; The prop bags
+;
+HKCR,"CLSID\%CLSID_OLDFILESPROPBAG%",,2,"%DESC_OLDFILESPROPBAG%"
+HKCR,"CLSID\%CLSID_OLDFILESPROPBAG%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_OLDFILESPROPBAG%\%INPROC%","ThreadingModel",2,"Apartment"
+
+HKCR,"CLSID\%CLSID_TEMPFILESPROPBAG%",,2,"%DESC_TEMPFILESPROPBAG%"
+HKCR,"CLSID\%CLSID_TEMPFILESPROPBAG%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_TEMPFILESPROPBAG%\%INPROC%","ThreadingModel",2,"Apartment"
+
+HKCR,"CLSID\%CLSID_SETUPFILESPROPBAG%",,2,"%DESC_SETUPFILESPROPBAG%"
+HKCR,"CLSID\%CLSID_SETUPFILESPROPBAG%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_SETUPFILESPROPBAG%\%INPROC%","ThreadingModel",2,"Apartment"
+
+HKCR,"CLSID\%CLSID_UNNSTALLPROPBAG%",,2,"%DESC_UNINSTALLPROPBAG%"
+HKCR,"CLSID\%CLSID_UNNSTALLPROPBAG%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_UNNSTALLPROPBAG%\%INPROC%","ThreadingModel",2,"Apartment"
+
+;
+; the cleaners
+;
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%",,2,"%CLSID_DATACLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%","PropertyBag",2,"%CLSID_TEMPFILESPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%","FileList",2,"*.TMP|~*.*|CDMINSTALL"
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%","Folder",%REGEXSZ%,"%TEMP_PATH%"
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%","Flags",%REGDW%,"0x41"
+HKLM,"%ADV_CLEANERS%\%KEY_TEMPFILES%","LastAccess",%REGDW%,"7"
+
+[RegCleanersW95]
+;
+; register Old files in root (this is a win95 cleaner)
+;
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%",,2,"%CLSID_DATACLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%","PropertyBag",2,"%CLSID_OLDFILESPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%","FileList",2,"*.CHK"
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%","Folder",2,""
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%","Flags",%REGDW%,"0x20"
+HKLM,"%ADV_CLEANERS%\%KEY_OLDFILES%","IconPath",%REGEXSZ%,"%11%\DATACLEN.DLL,3"
+
+;
+; setup files cleaner
+;
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%",,2,"%CLSID_DATACLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%","PropertyBag",2,"%CLSID_SETUPFILESPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%","FileList",2,"WININST?.400"
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%","Folder",2,""
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%","FailIfProcessRunning",2,"W98SETUP.BIN"
+HKLM,"%ADV_CLEANERS%\%KEY_SETUPFILES%","Flags",%REGDW%,"0x7E"
+
+;
+; Uninstall cleaner
+;
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%",,2,"%CLSID_DATACLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%","PropertyBag",2,"%CLSID_UNINSTALLPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%","FileList",2,"WINUNDO.DAT|WINUNDO.INI|WINLFN.INI|W95UNDO.DAT|W95UNDO.INI"
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%","Folder",2,"%MSDOS_PROFILE_PATH%"
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%","CleanupString",2,"rundll32.exe setupapi.dll,InstallHinfSection DiskCleanup.Uninstall 0 setupc.inf"
+HKLM,"%ADV_CLEANERS%\%KEY_UNINSTALL%","Flags",%REGDW%,"0x3E"
+
+
+[RegCleanersNT]
+;
+; register the cleaner for the content indexer
+;
+HKCR,"CLSID\%CLSID_INDEXCLEANER%",,2,"%DESC_INDEXCLEANER%"
+HKCR,"CLSID\%CLSID_INDEXCLEANER%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_INDEXCLEANER%\%INPROC%","ThreadingModel",2,"Apartment"
+HKCR,"CLSID\%CLSID_INDEXCLEANER%\%DEFICON%",,%REGEXSZ%,"%11%\DATACLEN.DLL,1"
+
+HKCR,"CLSID\%CLSID_INDEXCLEANERPROPBAG%",,2,"%DESC_INDEXCLEANERPROPBAG%"
+HKCR,"CLSID\%CLSID_INDEXCLEANERPROPBAG%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_INDEXCLEANERPROPBAG%\%INPROC%","ThreadingModel",2,"Apartment"
+
+;
+; register the compression cleaner
+;
+HKCR,"CLSID\%CLSID_COMPRESSCLEANER%",,2,"%DESC_COMPRESSCLEANER%"
+HKCR,"CLSID\%CLSID_COMPRESSCLEANER%\%INPROC%",,%REGEXSZ%,"%11%\DATACLEN.DLL"
+HKCR,"CLSID\%CLSID_COMPRESSCLEANER%\%INPROC%","ThreadingModel",2,"Apartment"
+HKCR,"CLSID\%CLSID_COMPRESSCLEANER%\%DEFICON%",,%REGEXSZ%,"%11%\DATACLEN.DLL,2"
+
+;
+; register Old files in root, the NT one...
+;
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%",,2,"%CLSID_DATACLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%","PropertyBag",2,"%CLSID_OLDFILESPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%","FileList",2,"*.CHK"
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%","Folder",2,"%FLDR_CHKDSK%"
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%","Flags",%REGDW%,"0x120"
+HKLM,"%ADV_CLEANERS%\%KEY_CHKDSK%","IconPath",%REGEXSZ%,"%11%\DATACLEN.DLL,3"
+
+;
+; The content indexer cleaner
+;
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%",,2,"%CLSID_INDEXCLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%","PropertyBag",2,"%CLSID_INDEXCLEANERPROPBAG%"
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%","FileList",2,"*.*"
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%","Folder",2,"?:\Catalog.wci"
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%","Flags",%REGDW%,"0x141"
+HKLM,"%ADV_CLEANERS%\%KEY_INDEXCLEANER%","Priority",%REGDW%,"0x12c"
+
+;
+; the compression cleaner
+;
+HKLM,"%ADV_CLEANERS%\%KEY_COMPRESSCLEANER%",,2,"%CLSID_COMPRESSCLEANER%"
+HKLM,"%ADV_CLEANERS%\%KEY_COMPRESSCLEANER%","Priority",%REGDW%,"0x12c"
+;
+;
+; Other shell cocreateinstance()able objects, including activex controls
+;
+[RegShellObjects]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; NT Specific stuff
+;
+; General assumption should be that any new shell32 feature goes to ALL
+; platforms.  So don't put anything in this section.
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[RegCleanersNT]
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; And finally, our string section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[Strings]
+
+; These lines compress the file:
+ADV_CLEANERS = "Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches"
+
+; (REG_EXPAND_SZ << 16)
+REGEXSZ=0x00020000
+; (REG_DWORD << 16)
+REGDW=0x00010001
+REGMULSZ=0x00010000
+
+
+CLSID_DATACLEANER          = "{C0E13E61-0CC6-11d1-BBB6-0060978B2AE6}"
+CLSID_INDEXCLEANER         = "{A9B48EAC-3ED8-11d2-8216-00C04FB687DA}"
+CLSID_COMPRESSCLEANER      = "{B50F5260-0C21-11D2-AB56-00A0C9082678}"
+
+CLSID_OLDFILESPROPBAG      = "{60F6E464-4DEF-11d2-B2D9-00C04F8EEC8C}"
+CLSID_TEMPFILESPROPBAG     = "{60F6E465-4DEF-11d2-B2D9-00C04F8EEC8C}"
+CLSID_SETUPFILESPROPBAG    = "{60F6E466-4DEF-11d2-B2D9-00C04F8EEC8C}"
+CLSID_UNNSTALLPROPBAG      = "{60F6E467-4DEF-11d2-B2D9-00C04F8EEC8C}"
+CLSID_INDEXCLEANERPROPBAG  = "{24400D16-5754-11d2-8218-00C04FB687DA}"
+
+KEY_TEMPFILES              = "Temporary Files"
+KEY_OLDFILES               = "Old Files In Root"
+KEY_SETUPFILES             = "Temporary Setup Files"
+KEY_UNINSTALL              = "Uninstall information"
+KEY_CHKDSK                 = "Old ChkDsk Files"
+KEY_INDEXCLEANER           = "Content Indexer Cleaner"
+KEY_COMPRESSCLEANER        = "Compress old files"
+
+INPROC                     = "InProcServer32"
+DEFICON                    = "DefaultIcon"
+
+DESC_DATACLEANER           = "Data Driven Cleaner"
+DESC_INDEXCLEANER          = "Content Indexer Cleaner"
+DESC_COMPRESSCLEANER       = "Compress Files Cleaner"
+DESC_OLDFILESPROPBAG       = "Old Files In Root Prop Bag"
+DESC_TEMPFILESPROPBAG      = "Temp Files Prop Bag"
+DESC_SETUPFILESPROPBAG     = "Setup Files Prop Bag"
+DESC_UNINSTALLPROPBAG      = "Uninstall Prop Bag"
+DESC_INDEXCLEANERPROPBAG   = "Index Cleaner Prop Bag"
+
+
+FLDR_CHKDSK                = "?:\FOUND.000|?:\FOUND.001|?:\FOUND.002|?:\FOUND.003|?:\FOUND.004|?:\FOUND.005|?:\FOUND.006|?:\FOUND.007|?:\FOUND.008|?:\FOUND.009"
+
+ERR_NOSETUPAPI             = "Can not register DATACLEN.DLL because SETUPAPI.DLL is missing."

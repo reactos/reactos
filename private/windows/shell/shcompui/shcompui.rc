@@ -1,0 +1,156 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1995.
+//
+//  FILE: SHCOMPUI.RC
+//
+//  DESCRIPTION:
+//
+//    Resource definitions for SHCOMPUI.DLL.
+//
+//       String resources.
+//       Confirmation dialog.
+//       Error dialog.
+//       Compress and Uncompress progress dialogs.
+//
+//    REVISIONS:
+//
+//    Date       Description                                         Programmer
+//    ---------- --------------------------------------------------- ----------
+//    09/15/95   Initial creation.                                   brianau
+//
+///////////////////////////////////////////////////////////////////////////////
+#include "windows.h"
+#include "resids.h"
+
+//
+// There is a lot of duplicated text in this file to handle the various
+// selection possibilities.  A more efficient method might be to generalize
+// the basic strings and then replace the "Compress" or "Uncompress"
+// action string.  I'm afraid that such a method might break in
+// foreign languages.
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APP_NAME                  "Explorer"
+   IDS_COMPRESS_CMDVERB          "COMPRESS"   // This is language-independent!
+   IDS_COMPRESS_MENUITEM         "Compress"
+   IDS_COMPRESS_MENUITEM_ELLIP   "Compress..."
+   IDS_COMPRESS_SBARTEXT         "Compress selected file."
+   IDS_COMPRESS_SBARTEXT_M       "Compress selected files."
+   IDS_COMPRESS_SBARTEXT_DRV     "Compress selected volume."
+   IDS_COMPRESS_SBARTEXT_DRV_M   "Compress selected volumes."
+   IDS_COMPRESS_CONFIRMATION     "Compress all files in %1."
+   IDS_COMPRESS_ALSO             "Also compress &subfolders"
+   IDS_COMPRESS_ACTION           "This action compresses all files but does not compress subfolders."
+
+
+   IDS_UNCOMPRESS_CMDVERB        "UNCOMPRESS" // This is language-independent!
+   IDS_UNCOMPRESS_MENUITEM       "Uncompress"
+   IDS_UNCOMPRESS_MENUITEM_ELLIP "Uncompress..."
+   IDS_UNCOMPRESS_SBARTEXT       "Uncompress selected file."
+   IDS_UNCOMPRESS_SBARTEXT_M     "Uncompress selected files."
+   IDS_UNCOMPRESS_SBARTEXT_DRV   "Uncompress selected volume."
+   IDS_UNCOMPRESS_SBARTEXT_DRV_M "Uncompress selected volumes."
+   IDS_UNCOMPRESS_CONFIRMATION   "Uncompress all files in %1."
+   IDS_UNCOMPRESS_ALSO           "Also uncompress &subfolders"
+   IDS_UNCOMPRESS_ACTION         "This action uncompresses all files but does not uncompress subfolders."
+
+   IDS_COMPRESS_ATTRIB_ERR       "Explorer cannot change compress attributes for %s."
+   IDS_NTLDR_COMPRESS_ERR        "The file %s will not be compressed.  Compressing this file may render your system unbootable."
+   IDS_MULTI_COMPRESS_ERR        "Explorer is currently in the process of compressing/uncompressing files.\nYou must wait until this is complete before attempting to compress/uncompress additional files."
+   IDS_BYTECNT_FMT               "%1 bytes"
+   IDS_UNCOMPRESS_DISKFULL       "Explorer cannot uncompress files because this disk is full.\nYou must free up space on this disk to uncompress more files."
+END
+
+
+#define DLG_WD 282
+#define DLG_HT  84
+#define BTN_HT  14
+#define BTN_WD  40
+#define BTN_SPC  4
+#define EDGE_SPC 7
+#define CNX_X  (DLG_WD - EDGE_SPC - BTN_WD)
+#define CNX_Y  (DLG_HT - EDGE_SPC - BTN_HT)
+#define OK_X   (CNX_X - BTN_SPC - BTN_WD)
+#define OK_Y   (CNX_Y)
+
+//
+// Folder compression confirmation dialog.
+//
+DLG_COMPRESS_CONFIRMATION DIALOG 5, 15, DLG_WD, DLG_HT
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_EXCLAMATION, IDI_EXCLAMATION, 10, 8, 18, 20
+    EDITTEXT        IDC_COMPRESS_CONFIRM_TEXT, 40, 12, 235, 8,
+                         ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "", IDC_COMPRESS_ACTION_TEXT,  40, 31, 235, 8
+    AUTOCHECKBOX    "", IDC_COMPRESS_SUBFOLDERS,   40, 43, 115, 10
+    DEFPUSHBUTTON   "OK", IDOK, OK_X, OK_Y, BTN_WD, BTN_HT
+    PUSHBUTTON      "Cancel", IDCANCEL, CNX_X, CNX_Y, BTN_WD, BTN_HT
+END
+
+
+
+DLG_COMPRESS_PROGRESS DIALOG 123, 60, 207, 117
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Compress Files Progress"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File being compressed:", -1, 6, 8, 79, 8
+    LTEXT           "filename.xxx", IDC_COMPRESS_FILE, 86, 8, 90, 8
+    LTEXT           "Directory:", -1, 6, 20, 39, 8
+    LTEXT           "d:\\aa\\bb\\......\\xx\\yy\\zz\\", IDC_COMPRESS_DIR, 43,
+                    20, 150, 8
+    LTEXT           "Directories compressed:", -1, 6, 32, 102, 8
+    LTEXT           "1,888,888,999", IDC_COMPRESS_DIRCNT, 90, 32, 60, 8
+    LTEXT           "Files compressed:", -1, 6, 44, 62, 8
+    LTEXT           "1,888,888,999", IDC_COMPRESS_FILECNT, 74, 44, 58, 8
+    LTEXT           "Total size of files before compression:", -1, 6, 56,
+                    124, 8
+    LTEXT           "9,999,999,999,999", IDC_COMPRESS_USIZE, 134, 56, 68, 8
+    LTEXT           "Total size of files after compression:", -1, 6, 68, 123,
+                    8
+    LTEXT           "9,999,999,999,999", IDC_COMPRESS_CSIZE, 134, 69, 68, 8
+    LTEXT           "File compression ratio:", -1, 6, 80, 78, 8
+    LTEXT           "100%", IDC_COMPRESS_RATIO, 91, 80, 27, 8
+    PUSHBUTTON      "Cancel", IDCANCEL, 76, 97, 55, 14
+END
+
+DLG_UNCOMPRESS_PROGRESS DIALOG 114, 62, 197, 84
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Uncompress Files Progress"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File being uncompressed:", -1, 6, 8, 83, 8
+    LTEXT           "filename.xxx", IDC_UNCOMPRESS_FILE, 93, 8, 66, 8
+    LTEXT           "Directory:", -1, 6, 20, 39, 8
+    LTEXT           "d:\\aa\\bb\\..........\\xx\\yy\\zz\\",
+                    IDC_UNCOMPRESS_DIR, 45, 20, 144, 8
+    LTEXT           "Directories uncompressed:", -1, 6, 32, 91, 8
+    LTEXT           "1,999,999,999", IDC_UNCOMPRESS_DIRCNT, 99, 32, 70, 8
+    LTEXT           "Files uncompressed:", -1, 6, 44, 86, 8
+    LTEXT           "1,999,999,999", IDC_UNCOMPRESS_FILECNT, 92, 44, 78, 8
+    PUSHBUTTON      "Cancel", IDCANCEL, 74, 64, 49, 14
+END
+
+DLG_COMPRESS_ERROR DIALOG LOADONCALL MOVEABLE DISCARDABLE 11, 28, 285, 65
+CAPTION "Explorer"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+BEGIN
+    ICON 32515 -1, 8, 8, 21, 20
+    LTEXT "", IDC_COMPRESS_ERRTEXT, 35, 8, 230, 20
+
+    DEFPUSHBUTTON "&Ignore",     IDIGNORE,      53,  47, 40, 14, WS_TABSTOP | WS_CHILD | WS_GROUP
+    PUSHBUTTON    "I&gnore All", IDC_COMPRESS_IGNOREALL, 99,  47, 40, 14, WS_TABSTOP | WS_CHILD
+    PUSHBUTTON    "&Retry",      IDRETRY,       145, 47, 40, 14, WS_TABSTOP | WS_CHILD
+    PUSHBUTTON    "&Abort",      IDABORT,       191, 47, 40, 14, WS_TABSTOP | WS_CHILD
+END
+
+
+#include "shcompui.rcv"

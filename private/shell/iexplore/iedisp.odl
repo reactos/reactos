@@ -1,0 +1,193 @@
+//LIBID_SHELL
+// 4547D580-355D-11CF-A9BC-00AA004AE837
+// DEFINE_GUID(varNameHere, 0x4547D580L, 0x355D, 0x11CF, 0xA9, 0xBC, 0x00, 0xAA, 0x00, 0x4A, 0xE8, 0x37);
+
+[
+uuid(4547D580-355D-11CF-A9BC-00AA004AE837)
+    , helpstring("Shell Explorer Type Library")
+    , lcid(0x0000)
+    , version(1.0)
+]
+
+library ShellExplorerTypeLibrary
+    {
+    importlib("STDOLE32.TLB");
+// IID_DHyperLink: {0002DF07-0000-0000-C000-000000000046}
+	[
+		uuid(0002DF07-0000-0000-C000-000000000046),
+		helpstring("HyperLink Object."),
+		helpcontext(0x0000),
+		hidden,
+		oleautomation,
+		dual
+	]
+	interface DHyperLink : IDispatch
+	{
+		// id(0) indicates that this is the "value" member.
+		[id(0), propget, helpstring("Returns or sets the Friendly Name for the HyperLink."), helpcontext(0x0000)]
+		HRESULT FriendlyName([out, retval] BSTR* pbstrName);
+
+		[id(0), propput, helpstring("Returns or sets the Friendly Name for the HyperLink."), helpcontext(0x0000)]
+		HRESULT FriendlyName([in] BSTR bstrName);
+
+		[propget, helpstring("Returns or sets the string reference for the HyperLink."), helpcontext(0x0000)]
+		HRESULT Source([out,retval] BSTR* pbstrSource);
+
+		[propput, helpstring("Returns or sets the string reference for the HyperLink."), helpcontext(0x0000)]
+		HRESULT Source([in] BSTR bstrSource);
+
+		[helpstring("Jumps to the hyperlink."), helpcontext(0x0000)]
+			HRESULT Navigate([in,optional]VARIANT* OpenInNewWindow, [in,optional] VARIANT* NoHistory);
+
+		[propget, helpstring("Returns a pointer to creator of the object."), helpcontext(0x0000)]
+		HRESULT Application([out,retval] IDispatch** ppDisp);
+
+		[propget, helpstring("Returns a pointer to the IExplorer Object."), helpcontext(0x0000)]
+		HRESULT Parent([out,retval] IDispatch** ppDisp);
+	};
+
+// IID_DInternetHistory: {0002DF04-0000-0000-C000-000000000046}
+	[
+		uuid(0002DF04-0000-0000-C000-000000000046),
+		helpstring("Internet History Object."),
+		helpcontext(0x0000),
+		oleautomation,
+		hidden,
+		dual
+	]
+	interface DInternetHistory : IDispatch
+	{
+		// id(0) indicates that this is the "value" member.
+		[id(0), helpstring("Returns a specific Hyperlink object either by HLID or name."), helpcontext(0x0000)]
+	HRESULT Item([in] VARIANT* Index, [out, retval] VARIANT* pVarResult);
+	        [helpstring("Adds a Hyperlink to the collection"), helpcontext(0x0000)]
+	HRESULT Add(
+                        	[in] DHyperLink* HLink,
+	                        [in, optional] VARIANT* Key,
+        	                [in, optional] VARIANT* Before,
+                	        [in, optional] VARIANT* After);
+	        [helpstring("Returns the number of Hyperlinks in the collection"), helpcontext(0x0000)]
+	HRESULT Count([out,retval] long* plCount);
+	        [helpstring("Removes a Hyperlink from a Collection object"), helpcontext(0x0000)]
+	HRESULT Remove([in] VARIANT* Index);
+		[id(-4), restricted, propget]
+	HRESULT _NewEnum([out, retval] IUnknown** ppUnk);
+		[propget, helpstring("Returns a pointer to the IExplorer Object."), helpcontext(0x0000)]
+	HRESULT Application([out,retval] IDispatch** ppDisp);
+		[propget, helpstring("Returns a pointer to creator of the object."), helpcontext(0x0000)]
+	HRESULT Parent([out,retval] IDispatch** ppDisp);
+	};
+
+// IID_DIExplorer: {0002DF05-0000-0000-C000-000000000046}
+	[
+		uuid(0002DF05-0000-0000-C000-000000000046),
+		helpstring("Internet Explorer Frame Object."),
+		helpcontext(0x0000),
+		hidden,
+		oleautomation,
+		dual
+	]
+	interface DIExplorer : IDispatch
+	{
+		// Standard OLE Automation required methods and properties
+		// id(0) indicates that this is the "value" member.
+		[id(0), propget, helpstring("Returns name of the application."), helpcontext(0x0000)]
+			HRESULT Name([out,retval] BSTR* pbstrName);
+		[propget, helpstring("Returns the full pathname to the IExplorer executable."), helpcontext(0x0000)]
+			HRESULT FullName([out,retval] BSTR* pbstrFullName);
+		[propget, helpstring("Returns a pointer to the IExplorer Object."), helpcontext(0x0000)]
+			HRESULT Application([out,retval] IDispatch** ppDisp);
+		[propget, helpstring("Returns a pointer to the IExplorer Object."), helpcontext(0x0000)]
+			HRESULT Parent([out,retval] IDispatch** ppDisp);
+
+                [propget, helpstring("The horizontal position (pixels) of the frame window relative to the screen"), helpcontext(0x0000)]
+                        HRESULT Left([out, retval] long *pl);
+                [propput]
+                        HRESULT Left([in] long Left);
+                [propget, helpstring("The vertical position (pixels) of the frame window relative to the screen"), helpcontext(0x0000)]
+                        HRESULT Top([out, retval] long *pl);
+                [propput]
+                        HRESULT Top([in] long Top);
+                [propget, helpstring("The horizontal dimension (pixels) of the frame window"), helpcontext(0x0000)]
+                        HRESULT Width([out, retval] long *pl);
+                [propput]
+                        HRESULT Width([in] long Width);
+                [propget, helpstring("The vertical dimension (pixels) of the frame window"), helpcontext(0x0000)]
+                        HRESULT Height([out, retval] long *pl);
+                [propput]
+                        HRESULT Height([in] long Height);
+        //        [propget, helpstring("The text in the status bar"), helpcontext(0x0000)]
+        //            BSTR    StatusBar(void);
+        //        [propput]
+        //                HRESULT   StatusBar([in] BSTR Text);
+
+		[propget, helpstring("Determines whether IExplorer is visible or hidden."), helpcontext(0x0000)]
+	HRESULT Visible([out, retval] boolean* pBool);
+		[propput, helpstring("Determines whether IExplorer is visible or hidden."), helpcontext(0x0000)]
+	HRESULT Visible([in] boolean Value);
+		[propget, helpstring("Returns the active Document."), helpcontext(0x0000)]
+	HRESULT Document([out,retval] IDispatch** ppDisp);
+// Added a property to see if the viewer is currenly busy or not...
+		[propget, helpstring("Query to see if something is still in progress."), helpcontext(0x0000)]
+	HRESULT Busy([out,retval] boolean *pBool);
+// End of modifications
+		[helpstring("Exits IExplorer and closes the open document."), helpcontext(0x0000)]
+	HRESULT Quit();
+
+		// IExplorer specific methods and properties
+		[helpstring("Opens a file."), helpcontext(0x0000)]
+	HRESULT Open( [in] BSTR Source);
+		[helpstring("Prints the current document."), helpcontext(0x0000)]
+	HRESULT PrintOut([in] long What,
+		[in] VARIANT Numbering,
+				[in, optional] VARIANT FirstPage,
+				[in, optional] VARIANT Sections,
+				[in, optional] VARIANT FileName,
+				[in, optional] VARIANT PrinterName,
+				[in, optional] VARIANT DriverName,
+				[in, optional] VARIANT NoPrinting);
+		[helpstring("Navigates to a hyperlink."), helpcontext(0x0000)]
+	HRESULT Navigate([in]DHyperLink* Hlink,
+							[in,optional]VARIANT* OpenInNewWindow,
+							[in,optional] VARIANT* NoHistory);
+		[helpstring("Navigates to the previous item in the history list."), helpcontext(0x0000)]
+	HRESULT GoBack();
+		[helpstring("Navigates to the next item in the history list."), helpcontext(0x0000)]
+	HRESULT GoForward();
+		[helpstring("Go home/start page."), helpcontext(0x0000)]
+	HRESULT GoHome();
+		[helpstring("Stops opening a file."), helpcontext(0x0000)]
+	HRESULT Stop();
+		[helpstring("Refreshes the current file."), helpcontext(0x0000)]
+	HRESULT Refresh();
+ 	        [propget, helpstring("Returns the history list."), helpcontext(0x0000)]
+	HRESULT History([out, retval] DInternetHistory** ppDInternetHistory);
+// 	        [propget, helpstring("Returns the Favorites list."), helpcontext(0x0000)]
+//	HRESULT Favorites([out, retval] DInternetHistory** ppDInternetHistory);
+	};
+
+    //CLSID_InternetExplorer
+    [
+		uuid(0002DF01-0000-0000-C000-000000000046),
+		helpstring("Internet Explorer Application Object."),
+    ]
+    coclass InternetExplorer
+        {
+        [default] interface       DIExplorer;
+        }
+
+ 	typedef
+    	[
+		uuid(0002DF08-0000-0000-C000-000000000046),
+		helpstring("Constants for DInternetHistory")
+	]
+	enum HlinkIDConstants	{
+		[helpstring("Previous Item")] 	hlidPrevious = 0,
+		[helpstring("Next Item")] 		hlidNext = 0xFFFFFFFF,
+		[helpstring("Current Item")] 	hlidCurrent = 0xFFFFFFFE,
+		[helpstring("Last Item")] 		hlidStackBottom = 0xFFFFFFFD,
+		[helpstring("First Item")] 		hlidStackTop = 0xFFFFFFFC
+	} HlinkIDConstants;
+
+    };
+

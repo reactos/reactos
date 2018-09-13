@@ -1,0 +1,29 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\style=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=style
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    sheets.cxx \
+    sheetcol.cxx \
+    atblocks.cxx \
+    fontface.cxx \
+    t2emwrap.cxx \
+    sprop.cxx \
+    style.cxx \
+    rulescol.cxx \
+    rulestyl.cxx \
+    curstyle.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

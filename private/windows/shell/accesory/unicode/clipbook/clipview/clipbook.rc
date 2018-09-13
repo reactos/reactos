@@ -1,0 +1,262 @@
+#include "windows.h"
+#include "clipbook.h"
+#include "dialogs.h"
+#include "clipdsp.h"
+
+#include "clipbook.rcv"
+
+IDBITMAP      BITMAP    buttons.bmp
+IDSTATUS      BITMAP    status.bmp
+IBM_UPARROW   BITMAP    arrup.bmp
+IBM_DNARROW   BITMAP    arrdn.bmp
+IBM_UPARROWD  BITMAP    arrupd.bmp
+IBM_DNARROWD  BITMAP    arrdnd.bmp
+IDFRAMEICON   ICON      clipbk.ico
+IDI_CLIPBRD   ICON      clipbrd.ico
+IDI_CLIPBOOK  ICON      scrpbk.ico
+IDI_REMOTE    ICON      scrpbk2.ico
+IDLOCKICON    ICON      locked.ico
+IDSHAREICON   ICON      shared.ico
+
+IDC_CLIPBOOK  CURSOR    clipbook.cur
+IDC_CLIPBRD   CURSOR    clipbrd.cur
+IDC_REMOTE    CURSOR    scrpbk2.cur
+
+
+IDACCELERATORS ACCELERATORS
+BEGIN
+    VK_F5,        IDM_REFRESH,    VIRTKEY
+    VK_F1,        IDM_CONTENTS,   VIRTKEY
+    VK_F5,        IDM_CASCADE,    VIRTKEY, SHIFT
+    VK_F4,        IDM_TILEVERT,   VIRTKEY, SHIFT
+    "V",          IDM_KEEP,       VIRTKEY, CONTROL
+    VK_INSERT,    IDM_KEEP,       VIRTKEY, SHIFT
+    "C",          IDM_COPY,       VIRTKEY, CONTROL
+    VK_INSERT,    IDM_COPY,       VIRTKEY, CONTROL
+    VK_DELETE,    IDM_DELETE,     VIRTKEY
+    VK_RETURN,    IDM_PAGEVIEW,   VIRTKEY
+    VK_PRIOR,     ID_PAGEUP,      VIRTKEY, CONTROL
+    VK_NEXT,      ID_PAGEDOWN,    VIRTKEY, CONTROL
+END
+
+IDCVMENU MENU
+BEGIN
+    POPUP        "&File"
+    BEGIN
+        MENUITEM "&Open...", IDM_OPEN
+        MENUITEM "Save &As...", IDM_SAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "&Share...", IDM_SHARE
+        MENUITEM "S&top Sharing", IDM_UNSHARE
+#if 0
+        MENUITEM "&Properties...", IDM_PROPERTIES
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "&Connect...", IDM_CONNECT
+        MENUITEM "&Disconnect", IDM_DISCONNECT
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", IDM_EXIT
+    END
+
+    POPUP    "&Edit"
+    BEGIN
+#if 0
+        MENUITEM "&Undo\tCtrl+Z", IDM_UNDO
+        MENUITEM SEPARATOR
+#endif
+        MENUITEM "&Copy\tCtrl+C", IDM_COPY
+        MENUITEM "&Paste...\tCtrl+V", IDM_KEEP
+        MENUITEM "&Delete\tDel", IDM_DELETE
+    END
+
+    popup        "&Security"
+    begin
+        menuitem "&Permissions...", IDM_PERMISSIONS
+        menuitem "&Auditing...",    IDM_AUDITING
+        menuitem "&Owner...",       IDM_OWNER
+    end
+
+    POPUP        "&View"
+    BEGIN
+        MENUITEM "&Toolbar", IDM_TOOLBAR
+        MENUITEM "&Status Bar", IDM_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Table of &Contents", IDM_LISTVIEW
+        MENUITEM "Thumb&nails", IDM_PREVIEWS
+        MENUITEM "&Full Page", IDM_PAGEVIEW
+    END
+
+    POPUP        "&Window"
+    BEGIN
+        MENUITEM "&Cascade\tShift+F5", IDM_CASCADE
+        MENUITEM "Tile &Horizontally", IDM_TILEHORZ
+        MENUITEM "&Tile Vertically\tShift+F4", IDM_TILEVERT
+        MENUITEM "&Arrange &Icons", IDM_ARRANGEICONS
+        MENUITEM "&Refresh\tF5", IDM_REFRESH
+    END
+
+    POPUP        "&Help"
+    BEGIN
+        MENUITEM "&Contents", IDM_CONTENTS
+        MENUITEM "&Search for Help on...", IDM_SEARCHHELP
+        MENUITEM "&How to Use Help", IDM_HELPHELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About ClipBook Viewer...", IDM_ABOUT
+    END
+END
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_HELV,            "MS Shell Dlg"                        // max 32
+    IDS_APPNAME,        "ClipBook Viewer"                    // max 32
+    IDS_SHROBJNAME,     "ClipBook Page" // max 80
+
+    // used by clipdsp.c
+    IDS_ERROR,      "The ClipBook Viewer cannot display the information you have copied. To view the information, try pasting it into a document."
+    IDS_BINARY,     "The information is in a binary format. ClipBook Viewer cannot display this format. To view the information, try pasting it into a document."
+    IDS_CLEAR,      "The contents of Clipboard cannot be deleted."
+    IDS_CANTDISPLAY,"ClipBook Viewer cannot display the information in its current format. To view the information, try pasting it into a document."
+    IDS_NOTRENDERED,"ClipBook Viewer cannot display the information in its current format or there is not enough memory to display it. Quit one or more applications to increase the available memory, and then try again."
+    IDS_ALREADYOPEN, "Cannot open Clipboard because another application is using it. Try closing any open applications."
+    IDS_CLEARTITLE, "Clear Clipboard"
+    IDS_CONFIRMCLEAR, "Do you want to clear the contents of the Clipboard?"
+    IDS_BADBMPFMT,    "The display driver on this computer cannot display this information in bitmap format."
+    IDS_INTERNALERR, "An error has occurred. ClipBook Viewer cannot complete this procedure."
+    IDS_DATAUNAVAIL, "There is a problem with the connection to the other computer. Try reconnecting to the computer that contains the ClipBook page."
+    IDS_NOCLPBOOK,   "The ClipBook service is unavailable or is not started. Contact your system administrator to have this service started."
+
+    IDS_LOCALCLIP,    "Local ClipBook"
+    IDS_CLIPBOARD,    "Clipboard"
+    IDS_READINGITEM, "Opening the Clipboard file."
+    IDS_VIEWHELPFMT, "Displays information in %s format."
+    IDS_ACTIVATEFMT, "Makes %s window active."
+    IDS_DEFFORMAT,     "&Default Format"
+    IDS_GETTINGDATA, "Preparing to display the contents of the Clipboard."
+    IDS_NAMEEXISTS,     "The name is already being used. Use another name."
+    IDS_ESTABLISHING, "Establishing connection"
+    IDS_NOCONNECTION, "A connection could not be established to the specified computer."
+    IDS_CLIPBOOKONFMT, "ClipBook on %s"
+    IDS_PAGEFMT,        "1 Page"
+    IDS_PAGEFMTPL,        "%d Pages"
+    IDS_PAGEOFPAGEFMT,    "Page %d of %d"        // BUGBUG? order fixed!
+    IDS_DELETE,            "Delete"
+    IDS_DELETECONFIRMFMT, "Delete '%s'?"
+    IDS_FILEFILTER,        "Clipboard Files(*.CLP)"
+    IDS_CB_PAGE,           "ClipBook Page:"
+    IDS_GETPERMS,          "Getting permissions..."
+
+    IDS_PASTEDLGTITLE        "Paste"
+    IDS_SHAREDLGTITLE        "Share"
+    IDS_PASSWORDSYNTAX        "You cannot use a comma (,) in a password. Use another password."
+    IDS_PAGENAMESYNTAX        "You cannot use an equal sign (=) or a comma (,) in a page name. Use another name."
+    IDS_SHARINGERROR        "This page could not be shared."
+    IDS_MAXPAGESERROR        "The ClipBook is full. Before you can save this information, you must delete some existing pages."
+    IDS_PRIVILEGEERROR,   "You do not have sufficient privileges to perform this action."
+
+    // DO NOT LOCALIZE the below formats!
+    CF_TEXT,        "&Text"
+    CF_BITMAP,      "&Bitmap"
+    CF_METAFILEPICT,"&Picture"
+    CF_SYLK,        "&Sylk"
+    CF_DIF,         "&DIF"
+    CF_TIFF,        "T&IFF"
+    CF_OEMTEXT,     "&OEM Text"
+    CF_DIB,         "&DIB Bitmap"
+    CF_PALETTE,     "Pal&ette"
+    CF_PENDATA,     "Pe&n Data"
+    CF_RIFF,        "&RIFF"
+    CF_WAVE,        "&Wave Audio"
+    CF_OWNERDISPLAY,"O&wner display"
+    CF_DSPTEXT,     "Disp&lay Text"
+    CF_DSPBITMAP,   "Displa&y Bitmap"
+    CF_DSPMETAFILEPICT,   "Display Pict&ure"
+    CF_ENHMETAFILE, "&Enhanced Metafile"
+    CF_DSPENHMETAFILE, "Display En&hanced Metafile"
+    CF_UNICODETEXT, "&Unicode Text"
+    IDS_CLPBKKEY,   "Software\\Microsoft\\Clipbook"
+    IDS_TRUSTSHRKEY, "Software\\Microsoft\\NetDDE\\DDE Trusted Shares\\"
+
+    // Permission names used in "Security..Permissions" dialog, localize
+    // (max length = 64 chars or MAC_PERMNAMELEN - 1)
+    IDS_PERMNAMEFIRST,     "No Access"
+    IDS_PERMNAMEFIRST + 1, "Read"
+    IDS_PERMNAMEFIRST + 2, "Read and Link"
+    IDS_PERMNAMEFIRST + 3, "Change"
+    IDS_PERMNAMEFIRST + 4, "Full Control"
+
+    // Names for audit types, localize (max length = 64 chars or
+    // MAC_PERMNAMELEN - 1)
+    IDS_AUDITNAMEFIRST,     "Read"
+    IDS_AUDITNAMEFIRST + 1, "Delete"
+    // IDS_AUDITNAMEFIRST + 2, "Create New Page"
+    IDS_AUDITNAMEFIRST + 2, "Change Permissions"
+    IDS_AUDITNAMEFIRST + 3, "Change Audit Types"
+
+    // MenuHelp Strings, localize
+
+    MH_BASE+IDM_OPEN,         "Opens a Clipboard file and displays its contents."
+    MH_BASE+IDM_SAVEAS,       "Saves the Clipboard contents in a new file."
+    MH_BASE+IDM_SHARE,        "Makes the information in the page available to others."
+    MH_BASE+IDM_UNSHARE,      "Makes the information no longer available to others."
+#if 0
+    MH_BASE+IDM_PROPERTIES,   "View properties of ClipBook page."
+#endif
+    MH_BASE+IDM_CONNECT,      "Opens the ClipBook on another computer."
+    MH_BASE+IDM_DISCONNECT,   "Closes the ClipBook from another computer."
+    MH_BASE+IDM_EXIT,         "Quits ClipBook Viewer."
+#if 0
+    MH_BASE+IDM_UNDO,         "Undo last operation."
+#endif
+    MH_BASE+IDM_COPY,         "Copies the contents of the ClipBook page onto the Clipboard."
+    MH_BASE+IDM_KEEP,         "Pastes the contents of the Clipboard onto a ClipBook page."
+    MH_BASE+IDM_DELETE,       "Deletes ClipBook page or contents of Clipboard."
+
+    MH_BASE+IDM_PERMISSIONS,  "Change access permissions on the selected page."
+    MH_BASE+IDM_AUDITING,     "Set auditing levels for the selected page."
+    MH_BASE+IDM_OWNER,        "Take ownership of the selected page."
+
+    MH_BASE+IDM_TOOLBAR,      "Displays or hides the toolbar."
+    MH_BASE+IDM_STATUSBAR,    "Displays or hides the status bar."
+    MH_BASE+IDM_LISTVIEW,     "Displays the contents of the selected ClipBook by title."
+    MH_BASE+IDM_PREVIEWS,     "Displays a snapshot of each page of the selected ClipBook."
+    MH_BASE+IDM_PAGEVIEW,     "Displays pages of the selected ClipBook one at a time."
+    MH_BASE+IDM_TILEVERT,     "Arranges open windows one on top of the other without overlapping."
+    MH_BASE+IDM_TILEHORZ,     "Arranges open windows side-by-side."
+    MH_BASE+IDM_CASCADE,      "Arranges open windows so that their title bars are visible."
+    MH_BASE+IDM_ARRANGEICONS, "Arranges icons in a row at the bottom of the window."
+    MH_BASE+IDM_REFRESH,      "Updates the active window."
+    MH_BASE+IDM_CONTENTS,     "Displays the contents of the Help file."
+    MH_BASE+IDM_SEARCHHELP,   "Searches the Help file by topic."
+    MH_BASE+IDM_HELPHELP,     "Displays information about using Help."
+    MH_BASE+IDM_ABOUT,        "Displays information about the ClipBook Viewer."
+    MH_BASE+CBM_AUTO,         "Displays the data in the default format."
+
+    MH_POPUPBASE+0,           "Commands to open files and manage connections."
+    MH_POPUPBASE+1,           "Commands to transfer Clipboard information."
+    MH_POPUPBASE+2,           "Commands to change the security attributes of ClipBook pages."
+    MH_POPUPBASE+3,           "Commands to change the display of information."
+    MH_POPUPBASE+4,           "Commands to manage ClipBook windows."
+    MH_POPUPBASE+5,           "Commands to use Help."
+END
+
+
+/* Filter strings for use in File Open & File Save dialogs.. these have */
+/* to be custom resources because they contain embedded nulls.          */
+// Note: 'NT Clipboard Files' should be the first filter listed.
+
+#ifdef JAPAN
+//RCDATA problem v-hirot
+IDS_FILTERTEXT ENVSTR
+BEGIN
+        "NT ¸Ø¯ÌßÎÞ°ÄÞ (*.CLP)\0*.CLP\0Win3.1 ¸Ø¯ÌßÎÞ°ÄÞ (*.CLP)\0*.CLP\0"
+        "‚·‚×‚Ä‚ÌÌ§²Ù (*.*)\0*.*\0\0"
+END
+#else
+IDS_FILTERTEXT ENVSTR
+BEGIN
+        "NT Clipboard File (*.CLP)\0*.CLP\0Win 3.1 Clipbrd (*.CLP)\0*.CLP\0"
+        "All Files (*.*)\0*.*\0\0"
+END
+#endif
+
+#include "dialogs.dlg"

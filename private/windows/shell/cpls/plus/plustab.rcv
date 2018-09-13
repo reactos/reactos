@@ -1,0 +1,20 @@
+/********************************************************************/
+/*        PLUSTAB.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#define FROSTING YES
+
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Plus! Control Panel extension\0"
+#define VER_INTERNALNAME_STR        "PlusTab\0"
+#define VER_LEGALCOPYRIGHT_YEARS    "1995"
+#define VER_ORIGINALFILENAME_STR    "PLUSTAB.DLL\0"
+
+#include <common.ver>

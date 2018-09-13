@@ -1,0 +1,50 @@
+/*** mmproto.h - Memory Manager public data and routines
+*
+*   Copyright <C> 1989, Microsoft Corporation
+*
+* Purpose:  handle the near and far memory requests of cw and help systems.
+*
+*
+*************************************************************************/
+
+
+
+
+//
+// CW CALLBACKS ONLY !!!!
+//
+void ** FAR PASCAL PpvAllocCb( unsigned short sb, unsigned short cb);
+void FAR PASCAL FreePpv( unsigned short sb, void ** ppv);
+void * FAR PASCAL PbAllocWork( unsigned short cb);
+void FAR PASCAL FreeWork( void * pv);
+void FAR * FAR PASCAL LpbAllocWorkFAR( unsigned short cb);
+void FAR PASCAL FreeWorkFar( void FAR * lpb);
+
+#if 0
+HDEP PASCAL FAR GlobalAlloc(unsigned short flags,unsigned long    cb);
+unsigned short PASCAL FAR GlobalFree(unsigned short wHandle);
+unsigned long  PASCAL FAR GlobalHandle(unsigned short h);
+HDEP PASCAL FAR GlobalRealloc(unsigned short wHandle,unsigned long cb,unsigned short flags);
+#endif
+
+//
+// Farpointer based Memory Manager API
+//
+
+unsigned short PASCAL MMwInit (void);
+void FAR * FAR PASCAL MMlpvAlloc( unsigned short wPriority, unsigned short cb);
+void FAR PASCAL MMFreeLpv( void FAR * lpv);
+void FAR PASCAL MMOutOfMemory(void);
+
+
+//
+// Handle Based Memory Manager API
+//
+HDEP PASCAL FAR MMhAllocMb ( unsigned short wPriority, unsigned char bWhere, unsigned short cb );
+void FAR * PASCAL FAR MMlpvHandleToLp ( HDEP hmem );
+void PASCAL FAR MMDeallocMb ( HDEP hmem );
+unsigned short PASCAL FAR MMwHandleSize ( HDEP hmem );
+void FAR * FAR PASCAL MMlpvLockMb ( HDEP hmem);
+unsigned short FAR PASCAL MMbUnlockMb ( HDEP hmem );
+unsigned short FAR PASCAL MMcbGetLockFromMb ( HDEP hmem );
+HDEP FAR PASCAL MMhReallocMb ( HDEP hmem, unsigned long cb, unsigned short flags );

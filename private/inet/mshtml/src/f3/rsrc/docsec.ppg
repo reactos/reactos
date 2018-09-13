@@ -1,0 +1,45 @@
+<html id=docsec STYLE="font-family: ms sans serif; font-size: 8pt;
+background: buttonface; width: 31.5em; height: 32.5em">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Security</title></head>
+<body id=bdy style="background: buttonface;">
+
+<table cellPadding=3 cellspacing=2 border=0 ID=tbl1
+style="font-family: ms sans serif; font-size: 8pt;"
+width=100%>
+
+<TR>
+
+<TD id=td1 style="font-family: ms sans serif; font-size: 8pt">
+<img  src=security.gif width=39 height=37 border=0>
+</td>
+
+
+<td id=td2 style="font-family: ms sans serif; font-size: 8pt">
+If the page you are currently viewing is secure,
+information about its privacy certificate will be shown below.
+</td></tr>
+<tr>
+<td id=td2a style="font-family: ms sans serif; font-size: 8pt" colspan=2>&nbsp;
+<hr>
+</td>
+</tr>
+
+<tr>
+
+<td id=td3 style="font-family: ms sans serif; font-size: 8pt" colspan=2>
+Certificate information:<BR>
+
+<TEXTAREA id=_security STYLE="font-family: 'ms sans serif'; font-size: '8pt';
+background: buttonface; width: '30em'; height: '20em';" readonly>
+</TEXTAREA>
+
+</td>
+</tr>
+
+</table>
+
+</body>
+</HTML>

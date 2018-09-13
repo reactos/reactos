@@ -1,0 +1,126 @@
+#ifndef _ANCHOR_PDL_
+#define _ANCHOR_PDL_ 1
+
+#include "element.pdl"
+
+file anchor.pdl
+
+import element.pdl
+
+
+/* New style element events w/ eventObject parameter: */
+event HTMLAnchorEvents2  super:HTMLElementEvents2  guid:3050f610-98b5-11cf-bb82-00aa00bdce0b
+
+/* old style element events w/o eventObject parameter: */
+event HTMLAnchorEvents super:HTMLElementEvents guid:3050f29d-98b5-11cf-bb82-00aa00bdce0b
+
+
+interface IHTMLAnchorElement guid:3050f1da-98b5-11cf-bb82-00aa00bdce0b
+    refprop CAnchorElement:href
+    refprop CAnchorElement:target
+    refprop CAnchorElement:rel
+    refprop CAnchorElement:rev
+    refprop CAnchorElement:urn
+    refprop CAnchorElement:Methods
+    refprop CAnchorElement:name
+
+    refprop CAnchorElement:host
+    refprop CAnchorElement:hostname
+    refprop CAnchorElement:pathname
+    refprop CAnchorElement:port
+    refprop CAnchorElement:protocol
+    refprop CAnchorElement:search
+    refprop CAnchorElement:hash
+    refprop CAnchorElement:onblur
+    refprop CAnchorElement:onfocus
+    refprop CAnchorElement:accessKey
+
+    refprop CAnchorElement:protocolLong
+    refprop CAnchorElement:mimeType
+    refprop CAnchorElement:nameProp
+
+    refprop CAnchorElement:tabIndex
+
+    refmethod CAnchorElement:focus
+    refmethod CAnchorElement:blur
+
+
+tearoff CAnchorElement interface:IHTMLElement2
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+tearoff CAnchorElement interface:IHTMLAnchorElement
+    tearmethod get_host             mapto:super::get_host
+    tearmethod get_hostname         mapto:super::get_hostname
+    tearmethod get_pathname         mapto:super::get_pathname
+    tearmethod get_port             mapto:super::get_port
+    tearmethod get_protocol         mapto:super::get_protocol
+    tearmethod get_search           mapto:super::get_search
+    tearmethod get_hash             mapto:super::get_hash
+    tearmethod put_host             mapto:super::put_host
+    tearmethod put_hostname         mapto:super::put_hostname
+    tearmethod put_pathname         mapto:super::put_pathname
+    tearmethod put_port             mapto:super::put_port
+    tearmethod put_protocol         mapto:super::put_protocol
+    tearmethod put_search           mapto:super::put_search
+    tearmethod put_hash             mapto:super::put_hash
+    tearmethod get_tabIndex         mapto:super::get_tabIndex
+
+class CAnchorElement name:HTMLAnchorElement \
+            super:CElement \
+            primaryinterface:IHTMLAnchorElement \
+            events:HTMLAnchorEvents \
+            nonprimaryevents:HTMLAnchorEvents2 \
+            guid:3050f248-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f502-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLAnchorElement
+
+    property href        caa atype:BSTR         dispid:DISPID_VALUE  type:url       \
+        clearcaches updatecollection get set caa bindable displaybind setaahr baseimplementation    maxstrlen:pdlUrlLen
+    property name        method:nameHelper baseimplementation atype:BSTR                         dispid:STDPROPID_XOBJ_NAME type:CStr   \
+        clearcaches  get set bindable displaybind    maxstrlen:pdlNoLimit
+    property target      caa atype:BSTR         dispid:DISPID_ANCHOR+3  type:CStr      \
+        get set bindable displaybind    maxstrlen:pdlNoLimit
+    property rel         caa atype:BSTR         dispid:DISPID_ANCHOR+5  type:CStr      \
+        get set bindable displaybind    maxstrlen:pdlNoLimit
+    property rev         caa atype:BSTR         dispid:DISPID_ANCHOR+6  type:CStr      \
+        get set bindable displaybind    maxstrlen:pdlNoLimit
+    property urn         caa atype:BSTR         dispid:DISPID_ANCHOR+7  type:CStr      \
+        get set bindable displaybind    maxstrlen:pdlUrlLen
+    property Methods     caa atype:BSTR    szAttribute:methods dispid:DISPID_ANCHOR+8  type:CStr      \
+        get set bindable displaybind    maxstrlen:pdlNoLimit
+
+    property host           atype:BSTR          dispid:DISPID_ANCHOR+12    vt:VT_BSTR   nopersist \
+        get set	abstract clearcaches    maxstrlen:pdlUrlLen
+    property hostname       atype:BSTR          dispid:DISPID_ANCHOR+13    vt:VT_BSTR   nopersist \
+        get set	abstract clearcaches    maxstrlen:pdlUrlLen
+    property pathname       atype:BSTR          dispid:DISPID_ANCHOR+14    vt:VT_BSTR   nopersist \
+        get set	abstract clearcaches    maxstrlen:pdlUrlLen
+    property port           atype:BSTR          dispid:DISPID_ANCHOR+15    vt:VT_BSTR   nopersist \
+        get set abstract clearcaches    maxstrlen:pdlToken
+    property protocol       atype:BSTR          dispid:DISPID_ANCHOR+16    vt:VT_BSTR   nopersist \
+        get set abstract clearcaches    maxstrlen:pdlNoLimit
+    property search             atype:BSTR          dispid:DISPID_ANCHOR+17    vt:VT_BSTR   nopersist \
+        get set abstract clearcaches    maxstrlen:pdlUrlLen
+    property hash           atype:BSTR          dispid:DISPID_ANCHOR+18    vt:VT_BSTR   nopersist \
+        get set abstract clearcaches    maxstrlen:pdlUrlLen
+
+    property mimeType          atype:BSTR  dispid:DISPID_ANCHOR+30 vt:VT_BSTR get abstract
+    property protocolLong      atype:BSTR  dispid:DISPID_ANCHOR+31 vt:VT_BSTR get abstract
+    property nameProp          atype:BSTR  dispid:DISPID_ANCHOR+32 vt:VT_BSTR get abstract
+
+    property accessKey caa atype:BSTR           dispid:DISPID_ANCHOR+22	   type:CStr \
+        clearcaches	updatecollection    get set bindable displaybind    maxstrlen:pdlToken nopropdesc
+    property onblur         atype:VARIANT       dispid:DISPID_EVPROP_ONBLUR    type:code \  
+        get set caa bindable displaybind scriptlet  maxstrlen:pdlEvent nopropdesc
+    property onfocus        atype:VARIANT       dispid:DISPID_EVPROP_ONFOCUS   type:code \
+        get set caa bindable displaybind scriptlet  maxstrlen:pdlEvent nopropdesc
+    method HRESULT focus     dispid:DISPID_ANCHOR+33 nopropdesc
+    method HRESULT blur      dispid:DISPID_ANCHOR+34 nopropdesc
+
+    property tabIndex  atype:short  type:short default:htmlTabIndexNotSet  dispid:STDPROPID_XOBJ_TABINDEX \
+        dwFlags:0  caa get set bindable displaybind help:f3proTabIndex nopropdesc
+
+
+#endif _ANCHOR_PDL_

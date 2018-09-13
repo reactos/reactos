@@ -1,0 +1,1035 @@
+
+LIBRARY USER32
+
+EXPORTS
+    ClientThreadSetup                                   PRIVATE ;csrss uses GetProcAddr().
+    DialogBoxIndirectParamAorW                          PRIVATE ; comdlg, wow
+    CreateDialogIndirectParamAorW                       PRIVATE ; comdlg
+    EndTask                                             PRIVATE
+    GetAppCompatFlags                                   PRIVATE
+    LoadLocalFonts                                      PRIVATE ; winlogon
+    LoadRemoteFonts                                     PRIVATE
+    LockWindowStation = NtUserLockWindowStation         PRIVATE
+    MBToWCSEx                                           PRIVATE
+    WCSToMBEx                                           PRIVATE
+    MenuWindowProcA                                     PRIVATE
+    MenuWindowProcW                                     PRIVATE
+    QuerySendMessage = NtUserQuerySendMessage           PRIVATE
+    RegisterServicesProcess                             PRIVATE
+    RegisterLogonProcess                                PRIVATE
+    SetLogonNotifyWindow = NtUserSetLogonNotifyWindow   PRIVATE ; Chicago!
+    ShowStartGlass                                      PRIVATE
+    UnlockWindowStation = NtUserUnlockWindowStation     PRIVATE ; Chicago!
+    UpdatePerUserSystemParameters                       PRIVATE
+    UserClientDllInitialize                             PRIVATE
+    UserRealizePalette                                  PRIVATE ; GDI32
+    UserRegisterWowHandlers                             PRIVATE
+    RegisterSystemThread                                PRIVATE ; Chicago!
+    SetWindowStationUser                                PRIVATE
+    GetCursorFrameInfo                                  PRIVATE
+    SetCursorContents = NtUserSetCursorContents         PRIVATE
+
+    DrawCaptionTempA                                    PRIVATE ; desk.cpl
+    DrawCaptionTempW                                    PRIVATE ; desk.cpl
+    SetSysColorsTemp                                    PRIVATE ; desk.cpl
+    DrawMenuBarTemp                                     PRIVATE
+
+    TranslateMessageEx                                  PRIVATE
+    SetConsoleReserveKeys = NtUserSetConsoleReserveKeys PRIVATE
+    PrivateExtractIconExA                               PRIVATE
+    PrivateExtractIconExW                               PRIVATE
+    PrivateExtractIconsA                                PRIVATE
+    PrivateExtractIconsW                                PRIVATE
+
+    VRipOutput                                          PRIVATE
+;
+; These are macros
+;
+; GetNextWindow
+; CopyCursor
+
+;
+; this stuff wasn't exported from win31 but was in this file
+; for some reason
+;
+;    InitQueue
+;    GetSysInputMode
+;    IsTwoByteCharPrefix
+;    Lookupmenuitem
+;    RecalcTabStrings
+
+;
+; win32 will not support these functions
+;
+;    SetSysModalWindow
+;    GetSysModalWindow
+
+;
+; do we support these functions?
+;
+;    EnableHardwareInput
+;    GetSystemDebugState
+;    GetCSSwitchCount
+
+;
+; Callbacks from Server
+;
+    EditWndProc
+
+;
+; class.c "Window class manipulation APIs and support routines."
+;
+    RegisterClassA
+    RegisterClassW
+    UnregisterClassA
+    UnregisterClassW
+    GetClassInfoA
+    GetClassInfoW
+    GetClassWord
+    SetClassWord = NtUserSetClassWord
+    GetClassLongA
+    GetClassLongW
+    SetClassLongA
+    SetClassLongW
+    GetClassNameA
+    GetClassNameW
+
+;
+; clres.c "Resource loading/manipulation APIs."
+;
+    LookupIconIdFromDirectory
+    CreateIconFromResource
+    GetIconInfo
+    CreateIconIndirect
+    LoadMenuA
+    LoadMenuW
+    LoadCursorA
+    LoadCursorW
+    LoadIconA
+    LoadIconW
+    LoadBitmapA
+    LoadBitmapW
+    LoadAcceleratorsA
+    LoadAcceleratorsW
+    LoadStringA
+    LoadStringW
+
+;
+; input.c "Window message receiving/dispatching APIs and support routines."
+;
+    GetMessageA
+    GetMessageW
+    PeekMessageA
+    PeekMessageW
+    TranslateMessage
+    DispatchMessageA
+    DispatchMessageW
+    SetMessageQueue
+    GetMessagePos
+    GetMessageTime
+    WaitMessage = NtUserWaitMessage
+    WaitForInputIdle
+    RegisterHotKey = NtUserRegisterHotKey
+    UnregisterHotKey = NtUserUnregisterHotKey
+    GetMessageExtraInfo
+    AttachThreadInput = NtUserAttachThreadInput
+
+;
+; sendmsg.c "Window message sending/posting APIs and support routines."
+;
+    SendMessageA
+    SendMessageW
+    SendMessageTimeoutA
+    SendMessageTimeoutW
+    SendNotifyMessageA
+    SendNotifyMessageW
+    SendMessageCallbackA
+    SendMessageCallbackW
+    PostMessageA
+    PostMessageW
+    PostThreadMessageA
+    PostThreadMessageW
+    ReplyMessage
+    PostQuitMessage
+    InSendMessage
+    InSendMessageEx
+    RegisterWindowMessageA
+    RegisterWindowMessageW
+
+;
+; sysmet.c "System metrics APIs and support routines."
+;
+    SwapMouseButton
+    GetDoubleClickTime = NtUserGetDoubleClickTime
+    SetDoubleClickTime
+    GetSystemMetrics
+    GetSysColor
+    SetSysColors
+
+;
+; enumwin.c "Window Enumeration APIs and support routines."
+;
+    EnumWindows
+    EnumChildWindows
+    EnumThreadWindows
+
+;
+; showwin.c "ShowWindow and related APIs and support routines."
+;
+    ShowWindow = NtUserShowWindow
+    ShowOwnedPopups
+    OpenIcon
+    CloseWindow
+
+;
+; createw.c "CreateWindow and related APIs and support routines."
+;
+    CreateWindowExA
+    CreateWindowExW
+    DestroyWindow = NtUserDestroyWindow
+
+;
+; swp.c "SetWindowPos and related APIs and support routines."
+;
+    SetWindowPos = NtUserSetWindowPos
+    BeginDeferWindowPos
+    DeferWindowPos = NtUserDeferWindowPos
+    EndDeferWindowPos
+    MoveWindow = NtUserMoveWindow
+    BringWindowToTop
+
+;
+; spb.c
+;
+    LockWindowUpdate = NtUserLockWindowUpdate
+
+;
+; winmgr.c "Core Window Manager APIs and support routines."
+;
+    DefWindowProcA
+    DefWindowProcW
+    CallWindowProcA
+    CallWindowProcW
+    FlashWindow
+    FlashWindowEx       = NtUserFlashWindowEx
+    EnableWindow
+    IsWindowEnabled
+    IsWindowUnicode
+    SetWindowTextA
+    SetWindowTextW
+    GetWindowTextA
+    GetWindowTextW
+    InternalGetWindowText                       PRIVATE
+    IsHungAppWindow                             PRIVATE
+    GetWindowTextLengthA
+    GetWindowTextLengthW
+    GetClientRect
+    GetWindowRect
+    AdjustWindowRect
+    AdjustWindowRectEx
+    GetParent
+    SetParent = NtUserSetParent
+    FindWindowA
+    FindWindowW
+    GetTopWindow
+    GetLastActivePopup
+    GetWindow
+    ClientToScreen
+    ScreenToClient
+    MapWindowPoints
+    IsWindow
+    IsChild
+    IsWindowVisible
+    IsIconic
+    IsZoomed
+    AnyPopup
+    GetInternalWindowPos = NtUserGetInternalWindowPos   PRIVATE
+    SetInternalWindowPos = NtUserSetInternalWindowPos   PRIVATE
+    SystemParametersInfoA
+    SystemParametersInfoW
+    GetWindowThreadProcessId
+    GetWindowPlacement = NtUserGetWindowPlacement
+    SetWindowPlacement = NtUserSetWindowPlacement
+    AnimateWindow
+    QueryUserCounters = NtUserQueryUserCounters         PRIVATE
+
+    GetProcessDefaultLayout = NtUserGetProcessDefaultLayout
+    SetProcessDefaultLayout = NtUserSetProcessDefaultLayout
+
+
+;
+; dlgmgr.c "Dialog Manager APIs and support routines."
+;
+    CreateDialogParamA
+    CreateDialogParamW
+    CreateDialogIndirectParamA
+    CreateDialogIndirectParamW
+    DialogBoxParamA
+    DialogBoxParamW
+    DialogBoxIndirectParamA
+    DialogBoxIndirectParamW
+    EndDialog
+    DefDlgProcA
+    DefDlgProcW
+    GetDlgItem
+    SetDlgItemInt
+    GetDlgItemInt
+    SetDlgItemTextA
+    SetDlgItemTextW
+    GetDlgItemTextA
+    GetDlgItemTextW
+    SendDlgItemMessageA
+    SendDlgItemMessageW
+    CheckDlgButton
+    CheckRadioButton
+    IsDlgButtonChecked
+    GetNextDlgGroupItem
+    GetNextDlgTabItem
+    GetDlgCtrlID
+    GetDialogBaseUnits
+    MapDialogRect
+    IsDialogMessageA
+    IsDialogMessageW
+    IsDialogMessage = IsDialogMessageA
+
+;
+; clipbrd.c "Clipboard Manager APIs and support routines."
+;
+    OpenClipboard
+    CloseClipboard = NtUserCloseClipboard
+    EnumClipboardFormats
+    EmptyClipboard = NtUserEmptyClipboard
+    SetClipboardData
+    GetClipboardData
+    RegisterClipboardFormatA
+    RegisterClipboardFormatW
+    IsClipboardFormatAvailable = NtUserIsClipboardFormatAvailable
+    GetClipboardFormatNameA
+    GetClipboardFormatNameW
+    CountClipboardFormats = NtUserCountClipboardFormats
+    GetPriorityClipboardFormat = NtUserGetPriorityClipboardFormat
+    GetClipboardOwner = NtUserGetClipboardOwner
+    GetClipboardSequenceNumber
+    GetClipboardViewer = NtUserGetClipboardViewer
+    SetClipboardViewer = NtUserSetClipboardViewer
+    ChangeClipboardChain = NtUserChangeClipboardChain
+
+;
+; paint.c "Window painting APIs and support routines."
+;
+    BeginPaint = NtUserBeginPaint
+    EndPaint = NtUserEndPaint
+    GetWindowRgn
+    SetWindowRgn
+
+;
+; update.c "Window updating APIs and support routines."
+;
+    UpdateWindow
+    GetUpdateRect
+    GetUpdateRgn
+    ExcludeUpdateRgn = NtUserExcludeUpdateRgn
+    InvalidateRect = NtUserInvalidateRect
+    ValidateRect = NtUserValidateRect
+    InvalidateRgn = NtUserInvalidateRgn
+    ValidateRgn
+    RedrawWindow = NtUserRedrawWindow
+
+;
+; focus.c "Focus/Activation APIs and support routines."
+;
+    SetFocus = NtUserSetFocus
+    GetFocus
+    SetActiveWindow = NtUserSetActiveWindow
+    GetActiveWindow
+    SetForegroundWindow
+    GetForegroundWindow = NtUserGetForegroundWindow
+
+;
+; capture.c "Window capture APIs and support routines."
+;
+    GetCapture
+    SetCapture = NtUserSetCapture
+    ReleaseCapture
+
+;
+; kbdlyout.c "Keyboard Layout APIs and support routines."
+;
+    LoadKeyboardLayoutA
+    LoadKeyboardLayoutW
+    ActivateKeyboardLayout = NtUserActivateKeyboardLayout
+    UnloadKeyboardLayout = NtUserUnloadKeyboardLayout
+    GetKeyboardLayoutNameA
+    GetKeyboardLayoutNameW
+    LoadKeyboardLayoutEx             PRIVATE
+
+;
+; keyboard.c "Keyboard management APIs and support routines."
+;
+    GetKBCodePage
+    GetKeyState
+    GetAsyncKeyState
+    GetKeyboardState
+    SetKeyboardState = NtUserSetKeyboardState
+    GetKeyNameTextA
+    GetKeyNameTextW
+    GetKeyboardType
+
+;
+; toascii.c "Virtual Keycode to Character translation"
+;
+    ToAscii
+    ToUnicode
+    VkKeyScanA
+    VkKeyScanW
+
+;
+; winable.c "Active Accessibility - Win Event hooks"
+;
+    BlockInput
+    GetAltTabInfoA
+    GetAltTabInfoW
+    GetAltTabInfo = GetAltTabInfoA
+
+    GetAncestor = NtUserGetAncestor
+    GetComboBoxInfo = NtUserGetComboBoxInfo
+    GetCursorInfo = NtUserGetCursorInfo
+    GetGUIThreadInfo = NtUserGetGUIThreadInfo
+    GetListBoxInfo = NtUserGetListBoxInfo
+    GetMenuBarInfo = NtUserGetMenuBarInfo
+    GetScrollBarInfo = NtUserGetScrollBarInfo
+    GetTitleBarInfo = NtUserGetTitleBarInfo
+    GetWindowInfo
+    GetWindowModuleFileNameA
+    GetWindowModuleFileNameW
+    GetWindowModuleFileName = GetWindowModuleFileNameA
+
+    NotifyWinEvent
+    RealChildWindowFromPoint = NtUserRealChildWindowFromPoint
+    RealGetWindowClass = RealGetWindowClassA
+    RealGetWindowClassA
+    RealGetWindowClassW
+
+    SetWinEventHook
+    UnhookWinEvent = NtUserUnhookWinEvent
+
+;
+; xlate.c "Scancode, Virtual Key, and Character translations"
+;
+    MapVirtualKeyA
+    MapVirtualKeyW
+    OemKeyScan
+
+;
+; lowinput.c "Low-level input APIs and support routines."
+;
+    GetInputState
+    GetQueueStatus
+    MsgWaitForMultipleObjects
+    MsgWaitForMultipleObjectsEx
+
+;
+; timers.c "Timer APIs and support routines."
+;
+    SetTimer = NtUserSetTimer
+    KillTimer = NtUserKillTimer
+    SetSystemTimer = NtUserSetSystemTimer
+    KillSystemTimer
+
+;
+; menu.c "Menu APIs and support routines."
+;
+    TranslateAcceleratorA
+    TranslateAcceleratorW
+    TranslateAccelerator = TranslateAcceleratorA
+    LoadMenuIndirectW = CreateMenuFromResource
+    LoadMenuIndirectA = CreateMenuFromResource
+    GetMenu
+    SetMenu
+    SetSystemMenu = NtUserSetSystemMenu
+    ChangeMenuA
+    ChangeMenuW
+    HiliteMenuItem = NtUserHiliteMenuItem
+    GetMenuStringA
+    GetMenuStringW
+    GetMenuState
+    DrawMenuBar
+    GetSystemMenu = NtUserGetSystemMenu
+    CreateMenu
+    CreatePopupMenu
+    DestroyMenu = NtUserDestroyMenu
+    CheckMenuItem
+    EnableMenuItem
+    GetSubMenu
+    GetMenuItemID
+    GetMenuItemCount
+    InsertMenuA
+    InsertMenuW
+    AppendMenuA
+    AppendMenuW
+    ModifyMenuA
+    ModifyMenuW
+    RemoveMenu = NtUserRemoveMenu
+    DeleteMenu = NtUserDeleteMenu
+    SetMenuItemBitmaps
+    GetMenuCheckMarkDimensions
+    TrackPopupMenu
+;
+; scroll.c "Window/DC scrolling APIs and support routines."
+;
+; later scrollwindow can be removed
+    ScrollWindow
+    ScrollDC
+    ScrollWindowEx
+
+;
+; sbapi.c "Scrollbar control"
+;
+    SetScrollPos
+    GetScrollPos
+    SetScrollRange
+    GetScrollRange
+    ShowScrollBar = NtUserShowScrollBar
+
+;
+; prop.c "Window property APIs and support routines."
+;
+    SetPropA
+    SetPropW
+    GetPropA
+    GetPropW
+    RemovePropA
+    RemovePropW
+    EnumPropsA
+    EnumPropsW
+    EnumPropsExA
+    EnumPropsExW
+
+;
+; msgbox.c "Message Box APIs and support routines."
+;
+    MessageBoxA
+    MessageBoxW
+    MessageBoxExA
+    MessageBoxExW
+    ;MessageBoxIndirectA
+    ;MessageBoxIndirectW
+    MessageBeep
+    MB_GetString                                PRIVATE
+    SoftModalMessageBox                         PRIVATE
+
+;
+; rmcreate.c
+;
+    CreateCursor
+    DestroyCursor
+    CreateIcon
+    DestroyIcon             = DestroyCursor
+    CreateAcceleratorTableA
+    CreateAcceleratorTableW = NtUserCreateAcceleratorTable
+    DestroyAcceleratorTable
+    CopyAcceleratorTableA
+    CopyAcceleratorTableW = NtUserCopyAcceleratorTable
+
+;
+; cursor.c "Mouse cursor APIs and support routines."
+;
+    ShowCursor
+    SetCursorPos
+    SetCursor = NtUserSetCursor
+    GetCursorPos
+    ClipCursor = NtUserClipCursor
+    GetClipCursor = NtUserGetClipCursor
+    GetCursor
+    SetSystemCursor
+    LoadCursorFromFileA
+    LoadCursorFromFileW
+
+;
+; icon.c "Icon management APIs and support routines"
+;
+    DrawIcon
+
+;
+; caret.c "Input caret APIs and support routines."
+;
+    CreateCaret = NtUserCreateCaret
+    GetCaretBlinkTime = NtUserGetCaretBlinkTime
+    SetCaretBlinkTime
+    DestroyCaret
+    HideCaret = NtUserHideCaret
+    ShowCaret = NtUserShowCaret
+    SetCaretPos
+    GetCaretPos = NtUserGetCaretPos
+
+;
+; winwhere.c "Window hit-testing APIs and support routines."
+;
+    WindowFromPoint = NtUserWindowFromPoint
+    ChildWindowFromPoint
+
+;
+; getset.c "window word manipulation APIs"
+;
+    GetWindowWord
+    SetWindowWord = NtUserSetWindowWord
+    GetWindowLongA
+    GetWindowLongW
+    SetWindowLongA
+    SetWindowLongW
+
+;
+; desktop.c "Desktop window APIs and window procedure."
+;
+
+;   GetDesktopHwnd
+    GetDesktopWindow
+
+    CreateDesktopA
+    CreateDesktopW
+
+    OpenDesktopA
+    OpenDesktopW
+    OpenInputDesktop = NtUserOpenInputDesktop
+
+    SwitchDesktop = NtUserSwitchDesktop
+    GetInputDesktop
+    SetThreadDesktop = NtUserSetThreadDesktop
+    GetThreadDesktop
+    CloseDesktop = NtUserCloseDesktop
+    RegisterTasklist = NtUserRegisterTasklist   PRIVATE
+    SetDeskWallpaper
+    EnumDisplayDevicesA                         PRIVATE
+    EnumDisplayDevicesW                         PRIVATE
+    EnumDisplaySettingsA
+    EnumDisplaySettingsW
+    EnumDisplaySettingsExA
+    EnumDisplaySettingsExW
+    EnumWindowStationsA
+    EnumWindowStationsW
+    EnumDesktopsA
+    EnumDesktopsW
+    EnumDesktopWindows
+    ResolveDesktopForWOW = NtUserResolveDesktopForWOW PRIVATE
+
+
+;
+; winsta.c "Windowstation APIs."
+;
+    CreateWindowStationA
+    CreateWindowStationW
+    OpenWindowStationA
+    OpenWindowStationW
+    CloseWindowStation = NtUserCloseWindowStation
+    SetProcessWindowStation = NtUserSetProcessWindowStation
+    GetProcessWindowStation = NtUserGetProcessWindowStation
+
+;
+; security.c "USER object security routines."
+;
+    SetUserObjectSecurity
+    GetUserObjectSecurity
+    SetUserObjectInformationW = NtUserSetObjectInformation
+    SetUserObjectInformationA = NtUserSetObjectInformation
+    GetUserObjectInformationW = NtUserGetObjectInformation
+    GetUserObjectInformationA
+
+;
+; dirlist.c "Directory list APIs and support routines."
+;
+    DlgDirListA
+    DlgDirListW
+    DlgDirSelectExA
+    DlgDirSelectExW
+    DlgDirListComboBoxA
+    DlgDirListComboBoxW
+    DlgDirSelectComboBoxExA
+    DlgDirSelectComboBoxExW
+
+;
+; hooks.c "Hook APIs and support routines."
+;
+    SetWindowsHookA
+    SetWindowsHookW
+    UnhookWindowsHook
+    SetWindowsHookExA
+    SetWindowsHookExW
+    UnhookWindowsHookEx = NtUserUnhookWindowsHookEx
+    CallNextHookEx
+    CallMsgFilterA
+    CallMsgFilterW
+    CallMsgFilter = CallMsgFilterA
+
+;
+; MDI.c "Multiple Document Interface APIs, window procs, and support routines."
+;
+    DefFrameProcA
+    DefFrameProcW
+    DefMDIChildProcA
+    DefMDIChildProcW
+    ArrangeIconicWindows
+    CascadeChildWindows
+    TileChildWindows
+;   CalcChildScroll                 ; Private API used by progman
+    CreateMDIWindowA
+    CreateMDIWindowW
+    ScrollChildren
+
+;
+; help.c "Front end API for Windows Help Manager."
+;
+    WinHelpA
+    WinHelpW
+
+;
+; draw.c "Miscellaneous exported and internal drawing routines."
+;
+    GrayStringA
+    GrayStringW
+    DrawTextA
+    DrawTextW
+    TabbedTextOutA
+    TabbedTextOutW
+    GetTabbedTextExtentA
+    GetTabbedTextExtentW
+    DrawFocusRect
+
+;
+; dc.c "DC management APIs and support routines."
+;
+    GetWindowDC = NtUserGetWindowDC
+    GetDC = NtUserGetDC
+    ReleaseDC
+    WindowFromDC
+    GetDCEx = NtUserGetDCEx
+
+;
+; palman.c "Palette Manager APIs and support routines."
+;
+;   SelectPalette
+;   RealizePalette
+
+;
+; misc.c "Miscellanous APIs and routines that don't fit well anywhere else."
+;
+    ExitWindowsEx
+    SwitchToThisWindow                          PRIVATE
+    SetDebugErrorLevel
+
+    InitializeWin32EntryTable                   PRIVATE
+
+
+;
+; clrect.c "Client-side rectangle drawing primitives"
+;
+    FillRect
+    InvertRect
+    FrameRect
+
+;
+; ddeml.c "DDEML APIs"
+;
+    DdeInitializeA
+    DdeInitializeW
+    DdeUninitialize
+    DdeCmpStringHandles
+    DdeConnectList
+    DdeQueryNextServer
+    DdeDisconnectList
+    DdeConnect
+    DdeDisconnect
+    DdeReconnect
+    DdeQueryConvInfo
+    DdeSetUserHandle
+    DdeAbandonTransaction
+    DdePostAdvise
+    DdeEnableCallback
+    DdeNameService
+    DdeClientTransaction
+    DdeCreateDataHandle
+    DdeAddData
+    DdeGetData
+    DdeAccessData
+    DdeFreeDataHandle
+    DdeUnaccessData
+    DdeGetLastError
+    DdeCreateStringHandleA
+    DdeCreateStringHandleW
+    DdeQueryStringA
+    DdeQueryStringW
+    DdeFreeStringHandle
+    DdeKeepStringHandle
+    DdeImpersonateClient
+    ImpersonateDdeClientWindow = NtUserImpersonateDdeClientWindow
+    DdeGetQualityOfService = NtUserDdeGetQualityOfService
+    DdeSetQualityOfService = NtUserDdeSetQualityOfService
+
+;
+; ddetrack.c
+;
+    PackDDElParam
+    UnpackDDElParam
+    FreeDDElParam
+    ReuseDDElParam
+
+;
+; dragdrop.c "Drag/Drop support functions."
+;
+    DragObject = NtUserDragObject
+    DragDetect = NtUserDragDetect
+
+;
+; Merge 3.1.1
+;
+    GetOpenClipboardWindow = NtUserGetOpenClipboardWindow
+    DrawFrame
+    EnableScrollBar = NtUserEnableScrollBar
+    CopyIcon
+
+;
+; winmgrc.c
+;
+    IsMenu
+
+;
+; rect.c "Rectangle management APIs."
+;
+    SetRect
+    SetRectEmpty
+    CopyRect
+    InflateRect
+    SubtractRect
+    IntersectRect
+    UnionRect
+    OffsetRect
+    IsRectEmpty
+    EqualRect
+    PtInRect
+
+;
+; alignrec.c "Rectangle management APIs."
+;
+    AlignRects                                  PRIVATE
+
+;
+; strings.c "String manipulation routines.  Should be replaced with Rtl macros."
+;
+    wvsprintfA
+    wvsprintfW
+    wsprintfA
+    wsprintfW
+
+    CharLowerA
+    CharLowerW
+    CharUpperA
+    CharUpperW
+    CharNextA
+    CharNextW
+    CharPrevA
+    CharPrevW
+    IsCharLowerA
+    IsCharLowerW
+    IsCharUpperA
+    IsCharUpperW
+    IsCharAlphaA
+    IsCharAlphaW
+    IsCharAlphaNumericA
+    IsCharAlphaNumericW
+    CharLowerBuffA
+    CharLowerBuffW
+    CharUpperBuffA
+    CharUpperBuffW
+
+;
+; oemxlate.c "OEM to ANSI/Unicode, ANSI/Unicode to OEM character translation"
+;
+    CharToOemA
+    CharToOemW
+    CharToOemBuffA
+    CharToOemBuffW
+    OemToCharA
+    OemToCharW
+    OemToCharBuffA
+    OemToCharBuffW
+
+;
+; ntinput
+;
+    keybd_event
+    mouse_event
+
+    SendInput = NtUserSendInput
+    GetMouseMovePoints = NtUserGetMouseMovePoints
+    GetLastInputInfo
+
+    SetLastErrorEx      ; to be moved!!!
+;
+; Chicago/Cairo APIs
+;
+    BroadcastSystemMessageA
+    BroadcastSystemMessageW
+    BroadcastSystemMessage = BroadcastSystemMessageA
+    CascadeWindows
+    ChangeDisplaySettingsA
+    ChangeDisplaySettingsW
+    ChangeDisplaySettingsExA
+    ChangeDisplaySettingsExW
+    CharNextExA                 ; Ansi Only
+    CharPrevExA                 ; Ansi Only
+    CheckMenuRadioItem
+    ChildWindowFromPointEx = NtUserChildWindowFromPointEx
+    CopyImage
+    CreateIconFromResourceEx
+    DrawAnimatedRects = NtUserDrawAnimatedRects
+    DrawCaption
+    DrawEdge
+    DrawFrameControl
+    DrawIconEx
+    DrawStateA
+    DrawStateW
+    DrawTextExA
+    DrawTextExW
+    EndMenu = NtUserEndMenu
+    FindWindowExA
+    FindWindowExW
+    GetClassInfoExA
+    GetClassInfoExW
+    GetKeyboardLayout
+    GetKeyboardLayoutList = NtUserGetKeyboardLayoutList
+    GetMenuContextHelpId
+    GetMenuDefaultItem
+    GetMenuInfo
+    GetMenuItemInfoA
+    GetMenuItemInfoW
+    GetMenuItemRect = NtUserGetMenuItemRect
+    GetScrollInfo
+    GetShellWindow
+    GetSysColorBrush
+    GetWindowContextHelpId
+    InsertMenuItemA
+    InsertMenuItemW
+    LoadImageA
+    LoadImageW
+    LookupIconIdFromDirectoryEx
+    MapVirtualKeyExA
+    MapVirtualKeyExW
+    MenuItemFromPoint = NtUserMenuItemFromPoint
+    MessageBoxIndirectA
+    MessageBoxIndirectW
+    PaintDesktop = NtUserPaintDesktop
+    RegisterClassExA
+    RegisterClassExW
+    SetMenuContextHelpId = NtUserSetMenuContextHelpId
+    SetMenuDefaultItem = NtUserSetMenuDefaultItem
+    SetMenuInfo
+    SetMenuItemInfoA
+    SetMenuItemInfoW
+    SetMessageExtraInfo
+    SetScrollInfo = NtUserSetScrollInfo
+    SetShellWindow
+    SetShellWindowEx = NtUserSetShellWindowEx   PRIVATE
+    SetWindowContextHelpId
+    ShowWindowAsync = NtUserShowWindowAsync
+    TileWindows
+    ToAsciiEx
+    ToUnicodeEx
+    TrackMouseEvent = NtUserTrackMouseEvent
+    TrackPopupMenuEx = NtUserTrackPopupMenuEx
+    TranslateMDISysAccel
+    VkKeyScanExA
+    VkKeyScanExW
+
+; Win 5.0 APIs
+    GetGuiResources     = NtUserGetGuiResources
+    RegisterDeviceNotificationA
+    RegisterDeviceNotificationW
+    UnregisterDeviceNotification
+    DeviceEventWorker                           PRIVATE
+
+
+    DbgSetPoolAllocation = NtUserDbgSetPoolAllocation
+
+
+    LockWorkStation = NtUserLockWorkStation
+
+    UserHandleGrantAccess = NtUserUserHandleGrantAccess
+
+; multimonitor apis
+    GetMonitorInfoA
+    GetMonitorInfoW
+    EnumDisplayMonitors = NtUserEnumDisplayMonitors
+    MonitorFromPoint
+    MonitorFromRect
+    MonitorFromWindow
+
+    SetTaskmanWindow                            PRIVATE
+    GetTaskmanWindow                            PRIVATE
+    SetProgmanWindow                            PRIVATE
+    GetProgmanWindow                            PRIVATE
+    RegisterShellHookWindow                     PRIVATE
+    DeregisterShellHookWindow                   PRIVATE
+
+    PrivateKDBreakPoint                         PRIVATE
+    PrivateSetDbgTag = NtUserSetDbgTag          PRIVATE
+    PrivateSetRipFlags = NtUserSetRipFlags      PRIVATE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    WINNLSGetIMEHotkey
+    WINNLSEnableIME
+    WINNLSGetEnableStatus
+    SendIMEMessageExW
+    SendIMEMessageExA
+    IMPGetIMEW
+    IMPGetIMEA
+    IMPQueryIMEW
+    IMPQueryIMEA
+    IMPSetIMEW
+    IMPSetIMEA
+    User32InitializeImmEntryTable               PRIVATE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;
+; LPK APIs
+;
+    InitializeLpkHooks                          PRIVATE
+    UserLpkTabbedTextOut                        PRIVATE
+    UserLpkPSMTextOut                           PRIVATE

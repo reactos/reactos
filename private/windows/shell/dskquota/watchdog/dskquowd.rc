@@ -1,0 +1,141 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include "..\common\resource.h"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include ""..\\common\\resource.h""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""..\\common\\common.rc""\r\n"
+    "#include ""dskquowd.rcv""\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_QUOTA_POPUP DIALOG DISCARDABLE  0, 0, 312, 178
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Windows NT Disk Quota"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,255,157,50,14
+    CONTROL         "List3",IDC_LIST_POPUP,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,7,87,298,64
+    LTEXT           "Text goes here.",IDC_TXT_POPUP_HEADER,36,7,269,70
+    ICON            32515,IDC_STATIC,7,7,20,20
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_QUOTA_POPUP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 305
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 171
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_QUOTA               ICON    DISCARDABLE     "quota.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EMAIL_VOLUME        "Location:"
+    IDS_EMAIL_WARNING       "Warning Level:"
+    IDS_EMAIL_LIMIT         "Quota Limit:"
+    IDS_EMAIL_USED          "Amount Used:"
+    IDS_EMAIL_FMT_VOLUME    "%1!-15s!\t%2!s!\n"
+    IDS_EMAIL_FMT_WARNING   "%1!-15s!\t%2!s!\n"
+    IDS_EMAIL_FMT_LIMIT     "%1!-15s!\t%2!s!\n"
+    IDS_EMAIL_FMT_USED      "%1!-15s!\t%2!s!  (%3!s! over warning)\n"
+    IDS_EMAIL_SUBJECT_LINE  "Disk Quota warning on  '%1!s!'."
+    IDS_EMAIL_HEADER        "You are exceeding the disk space warning level set by the Administrator on the storage volumes listed below.  If you exceed a volume's quota limit, you may not be able to save data to it.\n\nTo free up space on a volume, delete some of the files you own or move them onto another volume.\n\n"
+    IDS_EMAIL_DENY_AT_LIMIT "You will not be able to write to your files once you exceed the quota limit on this volume.\n"
+    IDS_EMAIL_FROM_NAME     "Windows NT Disk Quota Administrator"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LVHDR_VOLUME        "Location"
+    IDS_LVHDR_WARNING       "Warning Level"
+    IDS_LVHDR_LIMIT         "Quota Limit"
+    IDS_LVHDR_USED          "Amount Used"
+    IDS_LVFMT_USED          "%1  (%2 over warning)"
+    IDS_POPUP_HEADER        "You are exceeding the disk space warning level set by the Administrator on the storage volumes listed below.  If you exceed a volume's quota limit, you may not be able to save data to it.\n\nTo free up space on a volume, delete some of the files you own or move them onto another volume."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "..\common\common.rc"
+#include "dskquowd.rcv"
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

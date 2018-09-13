@@ -1,0 +1,123 @@
+;++
+;
+; Copyright (c) 1989  Microsoft Corporation
+;
+; Module Name:
+;
+;    services.nap
+;
+; Abstract:
+;
+;    This module implements the system service dispatch stub procedures.
+;    It also creates a "profile" of each service by counting and
+;    timing calls.
+;
+; Author:
+;
+;    Shie-Lin Tzong (shielint) 6-Feb-1990
+;    Russ Blake (russbl) 22-Apr-1991
+;
+; Environment:
+;
+;    User or kernel mode.
+;
+; Revision History:
+;
+;--
+
+include ks386.inc
+
+.386
+STUBS_BEGIN1 macro t
+    TITLE t
+endm
+STUBS_BEGIN2 macro t
+endm
+STUBS_BEGIN3 macro t
+_TEXT   SEGMENT DWORD USE32 PUBLIC 'CODE'
+endm
+STUBS_BEGIN4 macro t
+        ASSUME  CS:FLAT
+endm
+STUBS_BEGIN5 macro t
+    align 4
+endm
+STUBS_BEGIN6 macro t
+endm
+STUBS_BEGIN7 macro t
+endm
+STUBS_BEGIN8 macro t
+endm
+
+STUBS_END    macro t
+_TEXT ENDS
+      end
+endm
+
+SYSSTUBS_ENTRY1 macro ServiceNumber, Name
+        public  _Zw&Name
+_Zw&Name proc   near
+        mov     eax, ServiceNumber      ; (eax) = service number
+	lea	edx, [esp]+4		; (edx) -> arguments
+        INT     2Eh                     ; invoke system service
+        ret
+_Zw&Name endp
+endm
+
+SYSSTUBS_ENTRY2 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY3 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY4 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY5 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY6 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY7 macro ServiceNumber, Name
+endm
+SYSSTUBS_ENTRY8 macro ServiceNumber, Name
+endm
+
+
+USRSTUBS_ENTRY1 macro ServiceNumber, Name
+        public  _Zw&Name, _Nt&Name
+_Zw&Name proc  near
+_Nt&Name proc  near
+
+        mov     eax, ServiceNumber      ; (eax) = service number
+	lea	edx, [esp]+4		; (edx) -> arguments
+
+
+	call	_NapProfileDispatch   ; invoke profiled system service
+
+        ret
+_Nt&Name endp
+_Zw&Name endp
+endm
+
+USRSTUBS_ENTRY2 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY3 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY4 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY5 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY6 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY7 macro ServiceNumber, Name
+endm
+USRSTUBS_ENTRY8 macro ServiceNumber, Name
+endm
+
+        STUBS_BEGIN1 <"System Service Stub Procedures">
+        STUBS_BEGIN2 <"System Service Stub Procedures">
+        STUBS_BEGIN3 <"System Service Stub Procedures">
+        STUBS_BEGIN4 <"System Service Stub Procedures">
+        STUBS_BEGIN5 <"System Service Stub Procedures">
+        STUBS_BEGIN6 <"System Service Stub Procedures">
+        STUBS_BEGIN7 <"System Service Stub Procedures">
+        STUBS_BEGIN8 <"System Service Stub Procedures">
+
+EXTRN		_NapProfileDispatch:NEAR

@@ -1,0 +1,9 @@
+i386_SOURCES=..\i386\divlarge.c   \
+             ..\i386\debug3.c     \
+             ..\i386\debug2.asm   \
+             ..\i386\ioaccess.asm \
+             ..\i386\largeint.asm \
+             ..\i386\lzntx86.asm  \
+             ..\i386\movemem.asm  \
+             ..\i386\ntcurteb.asm
+

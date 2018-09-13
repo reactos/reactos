@@ -1,0 +1,1164 @@
+/*	File: D:\WACKER\term\dialogs.rc (Created: 26-Nov-1993)
+ *
+ *	Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+ *	All rights reserved
+ *
+ *	$Revision: 9 $
+ *	$Date: 8/18/99 10:52a $
+ */
+
+/* ---------------------------------------------------------------------- */
+
+#include <winuser.h>
+
+IDD_REGISTRATION_REMINDER DIALOG DISCARDABLE  0, 0, 187, 102
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Please Register Now"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,68,81,50,14
+    LTEXT           "Please register your copy of HyperTerminal. Registration is easy, and allows you to receive notifications of product news and updates.",
+                    IDC_STATIC,7,7,173,31
+    CONTROL         "&Register now",IDC_REGISTER_NOW,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,50,39,57,10
+    CONTROL         "Re&mind me to register later",IDC_REGISTER_LATER,"Button",
+                    BS_AUTORADIOBUTTON,50,51,96,10
+    CONTROL         "&Don't remind me again",IDC_REGISTER_NOT,"Button",
+                    BS_AUTORADIOBUTTON,50,63,83,10
+END
+
+#ifdef INCL_DEFAULT_TELNET_APP
+IDD_DEFAULT_TELNET DIALOG DISCARDABLE  0, 0, 270, 77
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Default Telnet Application?"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,105,56,49,14
+    PUSHBUTTON      "&No",IDCANCEL,159,56,50,14
+    CONTROL         "&Stop asking me this question",200,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,50,38,213,10
+    LTEXT           "Do you want Netscape Navigator and/or Microsoft Internet Explorer to use HyperTerminal as its default telnet application?  We recommend Yes.",
+                    201,50,7,213,28
+    ICON            IDI_EXCLAMATION,202,7,7,16,16
+END
+#endif
+
+#ifdef INCL_KEY_MACROS
+IDD_KEYDLG DIALOG 0, 0, 267, 138
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Key"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Key:",100,7,10,14,8
+    EDITTEXT        101,23,7,107,14,WS_GROUP | ES_MULTILINE
+    LTEXT           "To define a key as Enter, Tab, etc.,",102,137,7,121,8,
+                    NOT WS_GROUP
+    LTEXT           "press Ins, then the desired key.",103,138,14,108,8,NOT
+                    WS_GROUP
+    GROUPBOX        "Action",104,7,31,252,72
+    EDITTEXT        105,19,46,228,28,ES_MULTILINE | ES_AUTOVSCROLL |
+                    WS_GROUP
+    LTEXT           "To include Enter, Tab, etc., press",106,68,78,132,8,NOT
+                    WS_GROUP
+    LTEXT           "Ins, then the desired key.",107,70,86,106,8,NOT
+                    WS_GROUP
+    PUSHBUTTON      "OK",IDOK,152,113,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,206,113,50,14
+END
+
+IDD_KEYSUMMARYDLG DIALOG 0, 0, 275, 172
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Keys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Existing keys:",100,12,7,60,8
+    LISTBOX         101,9,19,259,83,LBS_SORT | LBS_USETABSTOPS |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Modify...",102,7,111,50,14
+    PUSHBUTTON      "&New...",103,61,111,50,14
+    PUSHBUTTON      "&Delete",104,115,111,50,14
+    DEFPUSHBUTTON   "OK",IDOK,160,152,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,214,152,50,14
+    CONTROL         "",105,"Static",SS_BLACKFRAME | SS_SUNKEN,8,139,261,1
+END
+#endif
+
+IDD_CAPTURE DIALOG DISCARDABLE  0,10,241,62
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE |
+	WS_CAPTION | WS_SYSMENU
+CAPTION "Capture Text"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT			"Folder:",106,7,7,33,8
+    LTEXT           "",107,43,7,170,8,SS_NOPREFIX
+    LTEXT           "&File:",100,7,20,15,10,NOT WS_GROUP
+    EDITTEXT        105,43,19,137,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",123,184,18,50,14,WS_GROUP
+    DEFPUSHBUTTON   "Start",124,130,41,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,184,41,50,14
+END
+
+IDD_TRANSFERSEND DIALOG DISCARDABLE  0, 10, 229, 98
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Send File"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Folder:",106,7,7,33,8
+    LTEXT           "",107,32,7,188,8,SS_NOPREFIX
+    DEFPUSHBUTTON   "&Send",108,70,79,50,14
+    PUSHBUTTON      "&Close",IDOK,122,79,49,14
+    PUSHBUTTON      "Cancel",IDCANCEL,173,79,50,14
+    LTEXT           "&Filename:",100,7,19,32,8
+    EDITTEXT        101,7,28,162,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",102,172,27,50,14
+    LTEXT           "&Protocol:",103,7,46,31,8
+    COMBOBOX        104,7,55,215,73,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+END
+
+IDD_TRANSFERRECEIVE DIALOG DISCARDABLE  0,10,229,87
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Receive File"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"&Receive",106,69,67,50,14
+	PUSHBUTTON		"&Close",105,121,67,49,14
+    PUSHBUTTON      "Cancel",IDCANCEL,173,67,50,14
+	LTEXT			"&Place received file in the following folder:",100,7,
+                    7,182,8
+    EDITTEXT        101,7,16,162,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",102,172,15,50,14
+    LTEXT           "&Use receiving protocol:",103,7,34,164,8
+    COMBOBOX        104,7,43,215,73,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+END
+
+IDD_RECEIVEFILENAME2 DIALOG DISCARDABLE  0,10,210,98
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Receive Filename"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT			"Folder:",101,7,7,33,10,NOT WS_GROUP
+    LTEXT           "",102,41,6,154,10,SS_NOPREFIX | NOT WS_GROUP
+    LTEXT           "&Filename:",103,7,23,32,10,NOT WS_GROUP
+    EDITTEXT        104,41,22,161,12
+    LTEXT           "",105,7,43,194,23,SS_NOPREFIX | NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,98,77,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,77,50,14
+END
+
+IDD_RECEIVEFILENAME DIALOG DISCARDABLE  0,10,197,90
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+	WS_SYSMENU
+CAPTION "Receive Filename"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT			"Xmodem never sends a filename, so you must specify a filename for storing the received file.",
+                    100,7,7,174,18,NOT WS_GROUP
+    LTEXT           "Folder:",101,7,32,32,10,NOT WS_GROUP
+    LTEXT           "&Filename:",103,7,47,32,10,NOT WS_GROUP
+    EDITTEXT        104,40,46,150,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,86,68,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,140,68,50,14
+    EDITTEXT        102,40,32,150,12,ES_AUTOHSCROLL | ES_READONLY | NOT
+                    WS_BORDER
+END
+
+IDD_FINDDIRECTORY DIALOG DISCARDABLE  0,10,168,133
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+	WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File &Name:",1090,-10,-10,1,1
+    EDITTEXT        1152,-10,-10,1,1,ES_LOWERCASE | ES_AUTOHSCROLL | NOT
+                    WS_TABSTOP
+    LISTBOX         1120,-10,-10,1,1,LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | WS_VSCROLL
+    LTEXT           "&Folders:",-1,7,6,92,9
+    LTEXT           "",1088,7,17,92,9,SS_NOPREFIX | NOT WS_GROUP
+    LISTBOX         1121,7,33,96,68,LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",1047,"Button",BS_AUTOCHECKBOX,-10,-10,1,1
+    LTEXT           "List Files of &Type:",1089,-10,-10,1,1
+    COMBOBOX        1136,-10,-10,1,1,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_BORDER | WS_VSCROLL
+    LTEXT           "Dri&ves:",1091,7,99,24,8
+    COMBOBOX        1137,7,109,96,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED |
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,110,6,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,110,23,50,14,WS_GROUP
+    CONTROL         "&Read Only",1040,"Button",BS_AUTOCHECKBOX | WS_GROUP,
+                    -10,-10,1,1
+END
+
+IDD_TAB_TERMINAL DIALOG DISCARDABLE  0, 10, 190, 198
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+#ifdef INCL_USER_DEFINED_BACKSPACE_AND_TELNET_TERMINAL_ID
+    GROUPBOX        " Function, arrow, and ctrl keys act as ",323,7,5,177,29
+    CONTROL         " &Terminal keys",324,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    15,17,72,10
+	CONTROL 		" &Windows keys",325,"Button",BS_AUTORADIOBUTTON,92,17,
+					79,10
+    GROUPBOX        " Backspace key sends",331,7,38,177,29
+    CONTROL         " &Ctrl+H",332,"Button",BS_AUTORADIOBUTTON | WS_GROUP,15,50,
+                    34,10
+    CONTROL         " &Del",333,"Button",BS_AUTORADIOBUTTON,57,50,27,
+                    10
+    CONTROL         " Ctrl+&H, Space, Ctrl+H",334,"Button",
+                    BS_AUTORADIOBUTTON,92,50,84,10
+
+#ifdef INCL_TERMINAL_SIZE_AND_COLORS
+    LTEXT           "&Emulation:",321,7,71,35,8
+    COMBOBOX        322,7,81,58,72,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "Terminal &Setup...",326,70,80,69,14
+    PUSHBUTTON      "C&olors...",IDC_TERMINAL_SIZE_AND_COLORS,144,80,40,14
+#else
+    LTEXT           "&Emulation:",321,7,71,35,8
+    COMBOBOX        322,7,81,101,72,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "Terminal &Setup...",326,111,81,73,14
+#endif
+
+    LTEXT           "Tel&net terminal ID:",335,7,104,58,8
+    EDITTEXT        336,83,102,101,12,ES_AUTOHSCROLL
+    LTEXT           "&Backscroll buffer lines:",308,7,123,76,8
+    EDITTEXT        328,83,121,101,12,ES_AUTOHSCROLL
+	CONTROL 		" &Play sound when connecting or disconnecting",
+                    304,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,139,177,10
+#ifdef INCL_EXIT_ON_DISCONNECT
+	//MPT:10-28-97 Added control to exit program upon disconnection
+	CONTROL 		" E&xit program upon disconnecting",337,"Button",
+					BS_AUTOCHECKBOX | WS_TABSTOP,7,150,177,10
+#endif
+    PUSHBUTTON      "&ASCII Setup...",327,115,165,73,14
+    PUSHBUTTON      "&Input Translation...",330,18,163,73,14
+#else
+    GROUPBOX        " Function, arrow, and ctrl keys act as ",323,7,5,177,33
+    CONTROL         " &Terminal keys",324,"Button",BS_AUTORADIOBUTTON,15,19,
+					72,10
+	CONTROL 		" &Windows keys",325,"Button",BS_AUTORADIOBUTTON,92,19,
+					79,10
+    LTEXT           "&Emulation:",321,7,45,35,8
+    COMBOBOX        322,7,55,101,72,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "Terminal &Setup...",326,111,55,73,14
+    LTEXT           "&Backscroll buffer lines:",308,7,74,76,8
+    EDITTEXT        328,7,83,101,12,ES_AUTOHSCROLL
+	CONTROL 		" Bee&p three times when connecting or disconnecting.",304,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
+					102,177,10
+    PUSHBUTTON      "AS&CII Setup...",327,111,156,73,14
+    PUSHBUTTON      "&Input Translation...",330,18,156,73,14
+#endif
+END
+
+IDD_PRINTABORT DIALOG DISCARDABLE  0,10,142,70
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+	WS_CAPTION | WS_SYSMENU
+CAPTION "Printing"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "",101,1,9,140,8
+    CTEXT           "",102,1,19,140,8
+    CTEXT           "",103,2,29,140,8
+    PUSHBUTTON      "Cancel",104,45,49,50,14
+END
+
+IDD_CUSTOM_PAGE_SETUP DIALOG DISCARDABLE  32, 32, 240, 240
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Page Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Si&ze:",1089,16,112,36,8
+    COMBOBOX        1137,64,110,160,160,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Source:",1090,16,132,36,8
+    COMBOBOX        1138,64,130,160,160,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "P&ortrait",1056,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,16,170,52,12
+    CONTROL         "L&andscape",1057,"Button",BS_AUTORADIOBUTTON,16,190,52,
+                    12
+    LTEXT           "&Left:",1102,88,172,32,8
+    EDITTEXT        1155,120,170,28,12,WS_GROUP
+    LTEXT           "&Right:",1103,164,172,32,8
+    EDITTEXT        1157,196,170,28,12,WS_GROUP
+    LTEXT           "&Top:",1104,88,192,32,8
+    EDITTEXT        1156,120,190,28,12,WS_GROUP
+    LTEXT           "&Bottom:",1105,164,192,32,8
+    EDITTEXT        1158,196,190,28,12,WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,9,219,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,68,219,48,14
+    PUSHBUTTON      "&Printer...",1026,127,219,48,14
+    PUSHBUTTON      "&Font...",1027,186,219,48,14
+    CONTROL         "",1080,"Static",SS_WHITERECT | WS_GROUP,80,8,80,80
+    CONTROL         "",1081,"Static",SS_GRAYRECT | WS_GROUP,160,12,4,80
+    CONTROL         "",1082,"Static",SS_GRAYRECT | WS_GROUP,84,88,80,4
+    GROUPBOX        "Paper",1073,8,96,224,56,WS_GROUP
+    GROUPBOX        "Orientation",1072,8,156,64,56,WS_GROUP
+    GROUPBOX        "Margins",1075,80,156,152,56,WS_GROUP
+END
+
+IDD_ASCII_SETUP DIALOG DISCARDABLE 0, 10, 171, 175
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+	WS_CAPTION | WS_SYSMENU
+CAPTION "ASCII Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,60,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,114,155,50,14
+    GROUPBOX        " ASCII Sending ",400,7,5,157,75
+    CONTROL         " &Send line ends with line feeds",401,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,18,109,10
+    CONTROL         " &Echo typed characters locally",402,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,31,108,10
+    LTEXT           "&Line delay:",407,15,46,39,11
+    EDITTEXT        408,54,44,28,12,ES_AUTOHSCROLL
+	LTEXT			"milliseconds.",409,85,46,47,7
+    LTEXT           "&Character delay:",410,15,62,54,11
+    EDITTEXT        411,70,60,28,12,ES_AUTOHSCROLL
+	LTEXT			"milliseconds.",412,102,62,47,7
+    GROUPBOX        " ASCII Receiving ",403,7,89,157,59
+    CONTROL         " &Append line feeds to incoming line ends",404,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,103,141,10
+    CONTROL         " &Force incoming data to 7-bit ASCII",405,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,116,123,10
+    CONTROL         " &Wrap lines that exceed terminal width",406,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,129,133,10
+END
+
+IDD_TAB_PHONENUMBER DIALOG DISCARDABLE  0, 10, 190, 181
+STYLE DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Connect To"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",101,7,7,18,20
+    LTEXT           "System Name",103,32,15,72,8,SS_NOPREFIX
+    PUSHBUTTON      "Change &Icon...",117,112,12,70,14
+    LTEXT           "",112,7,40,176,2,NOT WS_GROUP
+    LTEXT           "&Country/region:",113,7,47,50,8
+    LTEXT           "&Host address:",213,7,47,47,8,NOT WS_VISIBLE | WS_DISABLED
+    COMBOBOX        114,60,45,122,59,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        214,60,45,122,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "Ar&ea code:",106,7,81,37,8
+    LTEXT           "Port nu&mber:",206,7,81,55,8,NOT WS_VISIBLE | WS_DISABLED
+    EDITTEXT        107,60,79,46,12,ES_AUTOHSCROLL
+    EDITTEXT        207,60,79,122,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "&Phone number:",108,7,99,51,8
+    EDITTEXT        109,60,97,122,12,ES_AUTOHSCROLL
+    LTEXT           "Co&nnect using:",110,7,117,51,8
+    COMBOBOX        111,60,115,122,72,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Con&figure...",115,60,136,70,14
+
+#if defined(INCL_REDIAL_ON_BUSY)
+    CONTROL         "&Use country/region code and area code",116,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,157,140,10
+    CONTROL         "&Redial on busy",119,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,7,168,142,10
+#else
+    CONTROL         "&Use country/region code and area code",116,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,163,140,10
+#endif
+
+    LTEXT           "Enter the area code without the long-distance prefix.",
+					118,7,64,172,12
+END
+
+IDD_NEWCONNECTION DIALOG DISCARDABLE 0,10,217,164
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+	WS_CAPTION | WS_SYSMENU
+CAPTION "Connection Description"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",101,7,7,18,20
+    LTEXT           "New Connection",102,32,15,172,8,SS_NOPREFIX
+    CONTROL         "",103,"Static",SS_ETCHEDHORZ,7,132,203,2
+    LTEXT           "Enter a name and choose an icon for the connection:",
+                    104,7,41,175,8
+    LTEXT           "&Name:",105,7,55,22,8
+    EDITTEXT        106,7,64,203,12,ES_AUTOHSCROLL
+    LTEXT           "&Icon:",107,7,81,18,8
+    LISTBOX         108,7,90,203,35,LBS_OWNERDRAWFIXED |
+                    LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN |
+                    LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,107,141,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,160,141,50,14
+END
+
+#ifdef INCL_NAG_SCREEN
+IDD_NAG_SCREEN DIALOGEX 0, 0, 223, 95
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION
+CAPTION "License Agreement Reminder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You may use this product for evaluation purposes only, in order to decide whether to purchase a license for ongoing use of the product.",
+                    100,36,6,173,29
+    DEFPUSHBUTTON   "OK",IDOK,6,73,36,14
+    PUSHBUTTON      "&Purchase Information...",IDC_NAG_PURCHASE,45,73,84,14
+    PUSHBUTTON      "&Enter Authorization Code...",IDC_NAG_CODE,133,73,85,14
+    ICON            IDI_PROG1,IDC_NAG_ICON,7,7,21,20,0,WS_EX_TRANSPARENT
+    LTEXT           "This dialog will go away in",104,36,56,83,9
+    LTEXT           "15",IDC_NAG_TIME,121,56,10,9
+    LTEXT           "seconds.",106,133,56,34,10
+    LTEXT           "Your evaluation period expires in %d days.",IDC_NAG_EXP_DAYS,
+                    36,39,164,9
+END
+
+IDD_NAG_REGISTER DIALOG DISCARDABLE  0, 0, 186, 83
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION
+CAPTION "Authorization Code"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,75,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,127,64,50,14
+    LTEXT           "&Authorization code:",100,5,40,80,10
+    EDITTEXT        IDC_REGISTER_EDIT,65,40,111,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    LTEXT           "When you purchase a HyperTerminal Private Edition license, you will receive a code you can enter here to convert this evaluation program to a licensed copy.",
+                    IDC_STATIC,7,9,172,29
+END
+
+IDD_NAG_PURCHASE DIALOG DISCARDABLE  0, 0, 261, 244
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Purchase HyperTerminal Private Edition Now!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the purchase method you prefer:",-1,7,7,125,8
+    CONTROL         "&Take me to the Hilgraeve Web site for more information",
+                    IDC_PURCHASE_METHOD_WEB,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP | WS_TABSTOP,7,23,247,10
+    CONTROL         "&Order HyperTerminal Private Edition authorization code:",
+                    IDC_PURCHASE_METHOD_ORDER,"Button",BS_AUTORADIOBUTTON,7,
+                    35,184,10
+    LTEXT           "&Your Name:",-1,20,51,38,8
+    EDITTEXT        IDC_ORDER_INFO_NAME,82,49,172,12,ES_AUTOHSCROLL
+    LTEXT           "&Company:",-1,20,67,32,8
+    EDITTEXT        IDC_ORDER_INFO_COMPANY,82,65,172,12,ES_AUTOHSCROLL
+    LTEXT           "Email &address:",-1,20,83,46,8
+    EDITTEXT        IDC_ORDER_INFO_ADDRESS,82,81,172,12,ES_AUTOHSCROLL
+    LTEXT           "Daytime &phone:",-1,20,99,50,8
+    EDITTEXT        IDC_ORDER_INFO_PHONE,82,97,92,12,ES_AUTOHSCROLL
+    LTEXT           "&Extension:",-1,183,99,34,8
+    EDITTEXT        IDC_ORDER_INFO_EXTENSION,219,97,35,12,ES_AUTOHSCROLL
+    LTEXT           "Credit card:",-1,20,115,37,8
+    CONTROL         "&MasterCard",IDC_CREDIT_CARD_MASTERCARD,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,82,114,52,10
+    CONTROL         "&VISA",IDC_CREDIT_CARD_VISA,"Button",BS_AUTORADIOBUTTON,
+                    138,114,32,10
+    CONTROL         "American E&xpress",IDC_CREDIT_CARD_AMERICAN_EXPRESS,
+                    "Button",BS_AUTORADIOBUTTON,174,114,72,10
+    LTEXT           "Card n&umber:",-1,20,131,43,8
+    EDITTEXT        IDC_ORDER_INFO_CARD_NUMBER,82,129,92,12,ES_AUTOHSCROLL
+    LTEXT           "Exp&ires:",-1,183,131,26,8
+    EDITTEXT        IDC_ORDER_INFO_CARD_EXPIRATION,219,129,35,12,
+                    ES_AUTOHSCROLL
+    LTEXT           "TODO: Product costs... shipping? What to expect back and when?",
+                    -1,20,147,234,18,SS_NOPREFIX
+    CONTROL         "E-mai&l my order to Hilgraeve",IDC_ORDER_EMAIL,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,20,169,103,10
+    CONTROL         "P&rint my order for me to mail or fax Hilgraeve",
+                    IDC_ORDER_PRINT,"Button",BS_AUTORADIOBUTTON,20,181,153,
+                    10
+    CONTROL         "Order &by phone (please have information above handy when you call)",
+                    IDC_ORDER_PHONE,"Button",BS_AUTORADIOBUTTON,20,193,234,
+                    10
+    LTEXT           "Call 800-826-2760 or 734-243-0576, 9:00am-6:00pm EST weekdays",
+                    IDC_ORDER_HOURS,32,204,215,8
+    DEFPUSHBUTTON   "OK",IDOK,147,220,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,204,220,50,14
+END
+#endif
+
+/* ------------------ Transfer Display Templates ------------------------ */
+
+IDD_XFERZMDMSNDSTANDARDDOUBLE DIALOG 10, 15, 289, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 178, 150, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 150, 50, 14
+	EDITTEXT		105, 5, 70, 277, 2, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 105, "Static", SS_ETCHEDHORZ, 5, 70, 277, 2
+	LTEXT			"Sending:", 125, 6, 10, 30, 8
+	EDITTEXT		126, 45, 8, 237, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 8,
+	//				  237, 12
+	LTEXT			"Last event:", 135, 6, 31, 38, 8
+	EDITTEXT		136, 45, 29, 144, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 136, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 29,
+	//				  144, 12
+    LTEXT           "Files:", 130, 215, 31, 19, 8
+	EDITTEXT		131, 235, 29, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 29,
+	//				  47, 12
+	LTEXT			"Status:", 150, 6, 53, 24, 8
+	EDITTEXT		151, 45, 51, 144, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 151, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 51,
+	//				  144, 12
+    LTEXT           "Retries:", 145, 207, 53, 27, 8
+	EDITTEXT		146, 235, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 51,
+	//				  47, 12
+    LTEXT           "File:", 160, 6, 81, 15, 8
+	CONTROL 		"", 161, "VuMeterDisplay", 0x0000, 45, 79, 149, 12
+	EDITTEXT		162, 199, 79, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 79,
+	//				  69, 12
+    LTEXT           "Total:", 165, 6, 101, 20, 8
+	CONTROL 		"", 166, "VuMeterDisplay", 0x0000, 45, 99, 149, 12
+	EDITTEXT		167, 199, 99, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 167, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 99,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 120, 30, 8
+	EDITTEXT		171, 45, 118, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 118,
+	//				  47, 12
+    LTEXT           "Remaining:", 175, 103, 120, 38, 8
+	EDITTEXT		176, 142, 118, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 142, 118,
+	//				  47, 12
+    LTEXT           "Throughput:", 180, 194, 120, 41, 8
+	EDITTEXT		181, 235, 118, 47, 12,ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 118,
+	//				  47, 12
+END
+
+IDD_XFERZMDMSNDSTANDARDSINGLE DIALOG 10, 17, 289, 153
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 178, 130, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 130, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 72, 277, 2
+	LTEXT			"Sending:", 125, 6, 10, 30, 8
+	EDITTEXT		126, 46, 8, 236, 12, ES_AUTOHSCROLL | ES_READONLY
+
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 8,
+	//				  236, 12
+    LTEXT           "Last event:", 135, 6, 31, 38, 8
+	EDITTEXT		 136, 46, 29, 142, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 136, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 29,
+	//				  142, 12
+	LTEXT			"Files:", 130, 215, 31, 21, 8
+	EDITTEXT		131, 235, 29, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 29,
+	//				  47, 12
+    LTEXT           "Status:", 150, 6, 53, 24, 8
+	EDITTEXT		151, 46, 51, 142, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 151, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 51,
+	//				  142, 12
+    LTEXT           "Retries:", 145, 207, 53, 29, 8
+	EDITTEXT		146, 235, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 51,
+	//				  47, 12
+    LTEXT           "File:", 160, 6, 82, 15, 8
+	CONTROL 		"", 161, "VuMeterDisplay", 0x0000, 46, 80, 149, 12
+	EDITTEXT		162, 199, 80, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 80,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 102, 30, 8
+	EDITTEXT		171, 46, 100, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 100,
+	//				  47, 12
+    LTEXT           "Remaining:", 175, 100, 102, 41, 8
+	EDITTEXT		176, 141, 100, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 141, 100,
+	//				  47, 12
+    LTEXT           "Throughput:", 180, 193, 102, 43, 8
+	EDITTEXT		181, 235, 100, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 100,
+	//				  47, 12
+END
+
+IDD_XFERZMDMRECSTANDARDDOUBLE DIALOG 9, 15, 289, 191
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 124, 170, 50, 14
+    PUSHBUTTON      "&Skip file", 102, 178, 170, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 170, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 92, 277, 2
+	LTEXT			"Receiving:", 110, 6, 13, 39, 8
+	EDITTEXT		111, 47, 11, 235, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 111, "Static", SS_SUNKEN | SS_NOPREFIX, 47, 11,
+	//				  235, 12
+    LTEXT           "Storing as:", 125, 6, 33, 39, 8
+	EDITTEXT		126, 47, 31, 142, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 47, 31,
+	//				  142, 12
+    LTEXT           "Files:", 130, 217, 33, 19, 8
+	EDITTEXT		131, 236, 31, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 236, 31,
+	//				  46, 12
+	LTEXT			"Last event:", 135, 6, 53, 39, 8
+	EDITTEXT		136, 47, 51, 142, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 136, "Static", SS_SUNKEN | SS_NOPREFIX, 47, 51,
+	//				  142, 12
+    LTEXT           "Retries:", 145, 209, 53, 27, 8
+	EDITTEXT		146, 236, 51, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 236, 51,
+	//				  46, 12
+    LTEXT           "Status:", 150, 6, 74, 25, 8
+	EDITTEXT		151, 47, 72, 142, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 151, "Static", SS_SUNKEN | SS_NOPREFIX, 47, 72,
+	//				  142, 12
+    LTEXT           "File:", 160, 6, 103, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 47, 101, 151, 12
+	EDITTEXT		162, 203, 101, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 203, 101,
+	//				  69, 12
+    LTEXT           "Total:", 165, 6, 122, 20, 8
+    CONTROL         "", 166, "VuMeterDisplay", 0x0000, 47, 120, 151, 12
+	EDITTEXT		167, 203, 120, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 167, "Static", SS_SUNKEN | SS_NOPREFIX, 203, 120,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 143, 30, 8
+	EDITTEXT		171, 47, 141, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 47, 141,
+	//				  46, 12
+    LTEXT           "Remaining:", 175, 100, 143, 38, 8
+	EDITTEXT		176, 139, 141, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 139, 141,
+	//				  46, 12
+    LTEXT           "Throughput:", 180, 194, 143, 43, 8
+	EDITTEXT		181, 236, 141, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 236, 141,
+	//				  46, 12
+END
+
+IDD_XFERZMDMRECSTANDARDSINGLE DIALOG 14, 18, 289, 173
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 124, 152, 50, 14
+    PUSHBUTTON      "&Skip file", 102, 178, 152, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 152, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 93, 277, 2
+    LTEXT           "Receiving:", 110, 6, 12, 39, 8
+	EDITTEXT		111, 46, 10, 236, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 111, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 10,
+	//				  236, 12
+    LTEXT           "Storing as:", 125, 6, 33, 39, 8
+	EDITTEXT		126, 46, 31, 137, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 31,
+	//				  137, 12
+    LTEXT           "Files:", 130, 215, 33, 19, 8
+	EDITTEXT		131, 235, 31, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 31,
+	//				  47, 12
+    LTEXT           "Last event:", 135, 6, 53, 39, 8
+	EDITTEXT		136, 46, 51, 137, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 136, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 51,
+	//				  137, 12
+    LTEXT           "Retries:", 145, 207, 53, 27, 8
+	EDITTEXT		146, 235, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 51,
+	//				  47, 12
+    LTEXT           "Status:", 150, 6, 74, 25, 8
+	EDITTEXT		151, 46, 72, 137, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 151, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 72,
+	//				  137, 12
+    LTEXT           "File:", 160, 6, 104, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 46, 102, 151, 12
+	EDITTEXT		162, 201, 102, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 201, 102,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 7, 123, 30, 8
+	EDITTEXT		171, 46, 121, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 46, 121,
+	//				  47, 12
+    LTEXT           "Remaining:", 175, 98, 123, 38, 8
+	EDITTEXT		176, 137, 121, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 137, 121,
+	//				  47, 12
+    LTEXT           "Throughput:", 180, 188, 123, 41, 8
+	EDITTEXT		181, 229, 121, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 229, 121,
+	//				  47, 12
+END
+
+IDD_XFERYMDMSNDSTANDARDDOUBLE DIALOG 8, 17, 289, 196
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 179, 173, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 173, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 93, 277, 2
+    LTEXT           "Sending:", 125, 6, 10, 30, 8
+	EDITTEXT		126, 44, 8, 238, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 8,
+	//				  238, 12
+    LTEXT           "Packet:", 140, 6, 31, 27, 8
+	EDITTEXT		141, 44, 29, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 29,
+	//				  44, 12
+    LTEXT           "Files:", 130, 218, 52, 21, 8
+	EDITTEXT		131, 238, 51, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 238, 51,
+	//				  44, 12
+    LTEXT           "Last error:", 200, 6, 74, 36, 8
+	EDITTEXT		201, 44, 72, 151, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 72,
+	//				  151, 12
+    LTEXT           "Retries:", 185, 6, 53, 27, 8
+	EDITTEXT		186, 44, 51, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 51,
+	//				  44, 12
+    LTEXT           "File:", 160, 6, 104, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 44, 102, 151, 12
+	EDITTEXT		162, 201, 102, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 201, 102,
+	//				  69, 12
+    LTEXT           "Total:", 165, 6, 124, 20, 8
+    CONTROL         "", 166, "VuMeterDisplay", 0x0000, 44, 122, 151, 12
+	EDITTEXT		167, 201, 122, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 167, "Static", SS_SUNKEN | SS_NOPREFIX, 201, 122,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 145, 30, 8
+	EDITTEXT		171, 44, 143, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 143,
+	//				  44, 12
+    LTEXT           "Remaining:", 175, 112, 145, 38, 8
+	EDITTEXT		176, 151, 143, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 151, 143,
+	//				  44, 12
+    LTEXT           "Throughput:", 180, 197, 145, 41, 8
+	EDITTEXT		181, 238, 143, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 238, 143,
+	//				  44, 12
+    LTEXT           "Error checking:", 190, 98, 31, 54, 8
+	EDITTEXT		191, 151, 29, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 191, "Static", SS_SUNKEN | SS_NOPREFIX, 151, 29,
+	//				  44, 12
+    LTEXT           "File size:", 195, 206, 31, 33, 8
+	EDITTEXT		196, 238, 29, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 196, "Static", SS_SUNKEN | SS_NOPREFIX, 238, 29,
+	//				  44, 12
+    LTEXT           "Total retries:", 145, 106, 53, 46, 8
+	EDITTEXT		146, 151, 51, 44, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 151, 51,
+	//				  44, 12
+END
+
+IDD_XFERYMDMSNDSTANDARDSINGLE DIALOG 13, 18, 289, 174
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 180, 153, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 234, 153, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 94, 277, 2
+    LTEXT           "Sending:", 125, 6, 11, 30, 8
+	EDITTEXT		126, 45, 9, 237, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 9,
+	//				  237, 12
+    LTEXT           "Packet:", 140, 6, 32, 27, 8
+	EDITTEXT		141, 45, 30, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 30,
+	//				  47, 12
+    LTEXT           "Files:", 130, 216, 53, 21, 8
+	EDITTEXT		131, 235, 52, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 52,
+	//				  47, 12
+    LTEXT           "Last error:", 200, 6, 74, 36, 8
+	EDITTEXT		201, 45, 72, 153, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 72,
+	//				  153, 12
+    LTEXT           "Retries:", 185, 6, 53, 27, 8
+	EDITTEXT		186, 45, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 51,
+	//				  47, 12
+    LTEXT           "File:", 160, 6, 105, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0084, 45, 103, 153, 12
+	EDITTEXT		162, 201, 103, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 201, 103,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 124, 30, 8
+	EDITTEXT		171, 45, 122, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 122,
+	//				  47, 12
+    LTEXT           "Remaining:", 175, 108, 124, 41, 8
+	EDITTEXT		176, 147, 122, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 147, 122,
+	//				  47, 12
+    LTEXT           "Throughput:", 180, 195, 124, 41, 8
+	EDITTEXT		181, 235, 122, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 122,
+	//				  47, 12
+    LTEXT           "Error checking:", 190, 96, 32, 54, 8
+	EDITTEXT		191, 148, 30, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 191, "Static", SS_SUNKEN | SS_NOPREFIX, 148, 30,
+	//				  47, 12
+    LTEXT           "File size:", 195, 204, 32, 33, 8
+	EDITTEXT		196, 235, 30, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 196, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 30,
+	//				  47, 12
+    LTEXT           "Total retries:", 145, 104, 53, 46, 8
+	EDITTEXT		146, 148, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 148, 51,
+	//				  47, 12
+END
+
+IDD_XFERYMDMRECSTANDARDDISPLAY DIALOG 12, 20, 289, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 179, 174, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 174, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 113, 277, 2
+    LTEXT           "Receiving:", 110, 6, 10, 39, 8
+	EDITTEXT		111, 45, 8, 237, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 111, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 8,
+	//				  237, 12
+    LTEXT           "Storing as:", 125, 6, 32, 39, 8
+	EDITTEXT		126, 45, 30, 237, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 30,
+	//				  237, 12
+    LTEXT           "Files:", 130, 219, 74, 21, 8
+	EDITTEXT		131, 239, 72, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 239, 72,
+	//				  43, 12
+    LTEXT           "Packet:", 140, 6, 53, 28, 8
+	EDITTEXT		141, 45, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 51,
+	//				  43, 12
+    LTEXT           "Retries:", 185, 6, 74, 26, 8
+	EDITTEXT		186, 45, 72, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 72,
+	//				  43, 12
+    LTEXT           "Last error:", 200, 6, 95, 38, 8
+	EDITTEXT		201, 45, 93, 149, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 93,
+	//				  149, 12
+    LTEXT           "File:", 160, 6, 126, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 45, 124, 149, 12
+	EDITTEXT		162, 200, 124, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 200, 124,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 145, 30, 8
+	EDITTEXT		171, 45, 143, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN, 45, 143, 43, 12
+    LTEXT           "Remaining:", 175, 112, 145, 38, 8
+	EDITTEXT		176, 151, 143, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN, 151, 143, 43, 12
+    LTEXT           "Throughput:", 180, 198, 145, 41, 8
+	EDITTEXT		181, 239, 143, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN, 239, 143, 43, 12
+    LTEXT           "Total retries:", 145, 106, 75, 46, 8
+	EDITTEXT		146, 151, 72, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 151, 72,
+	//				  43, 12
+    LTEXT           "Error checking:", 190, 98, 53, 54, 8
+	EDITTEXT		191, 151, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 191, "Static", SS_SUNKEN | SS_NOPREFIX, 151, 51,
+	//				  43, 12
+    LTEXT           "File size:", 195, 207, 53, 33, 8
+	EDITTEXT		196, 239, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 196, "Static", SS_SUNKEN | SS_NOPREFIX, 239, 51,
+	//				  43, 12
+END
+
+IDD_XFERXMDMSNDSTANDARDDISPLAY DIALOG 20, 20, 289, 173
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 180, 152, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 233, 152, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 93, 277, 2
+    LTEXT           "Sending:", 125, 6, 10, 30, 8
+	EDITTEXT		126, 44, 8, 238, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 8,
+	//				  238, 12
+    LTEXT           "Packet:", 140, 6, 33, 27, 8
+	EDITTEXT		141, 44, 31, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 31,
+	//				  43, 12
+    LTEXT           "Last error:", 200, 6, 75, 36, 8
+	EDITTEXT		201, 44, 73, 148, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 73,
+	//				  148, 12
+    LTEXT           "Retries:", 185, 6, 54, 27, 8
+	EDITTEXT		186, 44, 52, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 52,
+	//				  43, 12
+    LTEXT           "File:", 160, 6, 105, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 44, 103, 149, 12
+	EDITTEXT		162, 199, 103, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 103,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 125, 30, 8
+	EDITTEXT		171, 44, 123, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 123,
+	//				  43, 12
+    LTEXT           "Remaining:", 175, 106, 125, 38, 8
+	EDITTEXT		176, 145, 123, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 145, 123,
+	//				  43, 12
+    LTEXT           "Throughput:", 180, 197, 125, 41, 8
+	EDITTEXT		181, 239, 123, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 239, 123,
+	//				  43, 12
+    LTEXT           "Error checking:", 190, 96, 33, 54, 8
+	EDITTEXT		191, 149, 31, 133, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 191, "Static", SS_SUNKEN | SS_NOPREFIX, 149, 31,
+	//				  133, 12
+    LTEXT           "Total retries:", 145, 104, 54, 46, 8
+	EDITTEXT		146, 149, 52, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 149, 52,
+	//				  43, 12
+END
+
+IDD_XFERXMDMRECSTANDARDDISPLAY DIALOG 9, 18, 290, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 177, 133, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 133, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 94, 277, 2
+    LTEXT           "Storing as:", 125, 6, 11, 39, 8
+	EDITTEXT		126, 48, 9, 234, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 48, 9,
+	//				  234, 12
+    LTEXT           "Packet:", 140, 6, 31, 28, 8
+	EDITTEXT		141, 48, 29, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 48, 29,
+	//				  43, 12
+    LTEXT           "Retries:", 185, 6, 53, 26, 8
+	EDITTEXT		186, 48, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 48, 51,
+	//				  43, 12
+    LTEXT           "Last error:", 200, 6, 74, 38, 8
+	EDITTEXT		201, 48, 72, 141, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 48, 72,
+	//				  141, 12
+    LTEXT           "Elapsed:", 170, 6, 106, 30, 8
+	EDITTEXT		171, 48, 104, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN, 48, 104, 43, 12
+    LTEXT           "Throughput:", 180, 193, 75, 43, 8
+	EDITTEXT		181, 235, 73, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN, 235, 73, 47, 12
+    LTEXT           "Total retries:", 145, 100, 53, 46, 8
+	EDITTEXT		146, 146, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 146, 51,
+	//				  43, 12
+    LTEXT           "File:", 160, 219, 53, 17, 8
+	EDITTEXT		162, 235, 51, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 51,
+	//				  47, 12
+    LTEXT           "Error checking:", 190, 99, 30, 54, 8
+	EDITTEXT		191, 152, 29, 130, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 191, "Static", SS_SUNKEN | SS_NOPREFIX, 152, 29,
+	//				  130, 12
+END
+
+IDD_XFERKRMSNDSTANDARDDOUBLE DIALOG 19, 18, 289, 191
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 178, 171, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 171, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 93, 277, 2
+    LTEXT           "Sending:", 125, 6, 9, 30, 8
+	EDITTEXT		126, 45, 8, 237, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 8,
+	//				  237, 12
+    LTEXT           "Packet:", 140, 6, 32, 27, 8
+	EDITTEXT		141, 45, 30, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 30,
+	//				  46, 12
+    LTEXT           "Files:", 130, 124, 32, 19, 8
+	EDITTEXT		131, 144, 30, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 144, 30,
+	//				  46, 12
+    LTEXT           "Total retries:", 145, 99, 53, 46, 8
+	EDITTEXT		146, 144, 51, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 144, 51,
+	//				  46, 12
+    LTEXT           "File:", 160, 6, 104, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 42, 102, 149, 12
+	EDITTEXT		162, 199, 102, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 102,
+	//				  69, 12
+    LTEXT           "Total:", 165, 6, 123, 20, 8
+    CONTROL         "", 166, "VuMeterDisplay", 0x0000, 42, 121, 149, 12
+	EDITTEXT		167, 199, 121, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 167, "Static", SS_SUNKEN | SS_NOPREFIX, 199, 121,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 143, 30, 8
+	EDITTEXT		171, 42, 141, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 42, 141,
+	//				  43, 12
+    LTEXT           "Remaining:", 175, 95, 143, 38, 8
+	EDITTEXT		176, 135, 141, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 135, 141,
+	//				  43, 12
+    LTEXT           "Throughput:", 180, 193, 143, 43, 8
+	EDITTEXT		181, 235, 141, 47, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 235, 141,
+	//				  47, 12
+    LTEXT           "Retries:", 185, 6, 53, 29, 8
+	EDITTEXT		186, 45, 51, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 51,
+	//				  46, 12
+    LTEXT           "Last error:", 200, 6, 74, 35, 8
+	EDITTEXT		201, 45, 72, 145, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 45, 72,
+	//				  145, 12
+END
+
+IDD_XFERKRMSNDSTANDARDSINGLE DIALOG 25, 17, 289, 174
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Cancel", 103, 177, 153, 50, 14
+    PUSHBUTTON      "&cps/bps", 106, 232, 153, 50, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 92, 277, 2
+    LTEXT           "Sending:", 125, 6, 11, 30, 8
+	EDITTEXT		126, 43, 9, 239, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 43, 9,
+	//				  239, 12
+    LTEXT           "Packet:", 140, 6, 32, 27, 8
+	EDITTEXT		141, 43, 30, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 43, 30,
+	//				  43, 12
+    LTEXT           "Files:", 130, 122, 32, 21, 8
+	EDITTEXT		131, 142, 30, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 142, 30,
+	//				  43, 12
+    LTEXT           "Total retries:", 145, 97, 53, 46, 8
+	EDITTEXT		146, 142, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 142, 51,
+	//				  43, 12
+    LTEXT           "File:", 160, 6, 104, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 43, 102, 149, 12
+	EDITTEXT		162, 198, 102, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 198, 102,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 126, 30, 8
+	EDITTEXT		171, 43, 124, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN | SS_NOPREFIX, 43, 124,
+	//				  46, 12
+    LTEXT           "Remaining:", 175, 95, 126, 38, 8
+	EDITTEXT		176, 135, 124, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN | SS_NOPREFIX, 135, 124,
+	//				  46, 12
+    LTEXT           "Throughput:", 180, 192, 126, 41, 8
+	EDITTEXT		181, 234, 124, 46, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 181, "Static", SS_SUNKEN | SS_NOPREFIX, 234, 124,
+	//				  46, 12
+    LTEXT           "Retries:", 185, 6, 53, 29, 8
+	EDITTEXT		186, 43, 51, 43, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 43, 51,
+	//				  43, 12
+    LTEXT           "Last error:", 200, 6, 74, 35, 8
+	EDITTEXT		201, 43, 72, 109, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 43, 72,
+	//				  109, 12
+END
+
+IDD_XFERKRMRECSTANDARDDISPLAY DIALOG 11, 17, 288, 194
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Skip File", 102, 180, 174, 49, 14
+    PUSHBUTTON      "&cps/bps", 106, 233, 174, 49, 14
+    CONTROL         "", 105, "Static", SS_ETCHEDHORZ, 5, 112, 277, 2
+    LTEXT           "Receiving:", 110, 6, 10, 39, 8
+	EDITTEXT		111, 44, 8, 238, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 111, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 8,
+	//				  238, 12
+    LTEXT           "Storing as:", 125, 6, 32, 39, 8
+	EDITTEXT		126, 44, 30, 238, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 126, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 30,
+	//				  238, 12
+    LTEXT           "Files:", 130, 214, 73, 19, 8
+	EDITTEXT		131, 234, 71, 48, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 131, "Static", SS_SUNKEN | SS_NOPREFIX, 234, 71,
+	//				  48, 12
+    LTEXT           "Packet:", 140, 6, 53, 28, 8
+	EDITTEXT		141, 44, 51, 30, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 141, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 51,
+	//				  30, 12
+    LTEXT           "Total retries:", 145, 84, 73, 46, 8
+	EDITTEXT		146, 129, 71, 41, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 146, "Static", SS_SUNKEN | SS_NOPREFIX, 129, 71,
+	//				  41, 12
+    LTEXT           "File:", 160, 6, 124, 15, 8
+    CONTROL         "", 161, "VuMeterDisplay", 0x0000, 44, 122, 139, 12
+	EDITTEXT		162, 189, 122, 69, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 162, "Static", SS_SUNKEN | SS_NOPREFIX, 189, 122,
+	//				  69, 12
+    LTEXT           "Elapsed:", 170, 6, 147, 30, 8
+	EDITTEXT		171, 44, 145, 40, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 171, "Static", SS_SUNKEN, 44, 145, 40, 12
+    LTEXT           "Remaining:", 175, 91, 147, 38, 8
+	EDITTEXT		176, 130, 145, 40, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 176, "Static", SS_SUNKEN, 130, 145, 40, 12
+    LTEXT           "Throughput:", 180, 192, 147, 41, 8
+    CONTROL         "", 181, "Static", SS_SUNKEN, 234, 145, 48, 12
+    LTEXT           "Retries:", 185, 6, 73, 25, 8
+	EDITTEXT		186, 44, 71, 30, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 186, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 71,
+	//				  30, 12
+    LTEXT           "File size:", 195, 97, 53, 33, 8
+	EDITTEXT		196, 129, 51, 41, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 196, "Static", SS_SUNKEN | SS_NOPREFIX, 129, 51,
+	//				  41, 12
+    LTEXT           "Last error:", 200, 6, 93, 37, 8
+	EDITTEXT		201, 44, 92, 126, 12, ES_AUTOHSCROLL | ES_READONLY
+	//CONTROL		  "", 201, "Static", SS_SUNKEN | SS_NOPREFIX, 44, 92,
+	//				  126, 12
+    PUSHBUTTON      "Cancel", 103, 127, 174, 49, 14
+END
+
+IDD_CNCT_PCMCIA DIALOG DISCARDABLE	0, 0, 151, 57
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "HyperTerminal"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"Cancel",IDCANCEL,50,37,50,14
+    LTEXT           "Please insert your modem now.  Click Cancel to quit dialing.",
+                    101,38,6,100,25
+	ICON			IDI_ASTERISK,102,9,7,18,20
+END
+
+#if defined(INCL_PRIVATE_EDITION_BANNER)
+IDD_ABOUT_DLG DIALOG DISCARDABLE  0, 0, 246, 210
+STYLE DS_MODALFRAME | DS_CENTER | WS_CLIPCHILDREN | WS_POPUP | WS_VISIBLE |
+      WS_CAPTION | WS_SYSMENU
+CAPTION "About HyperTerminal"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,52,190,50,14
+    PUSHBUTTON      "&Upgrade Information...",100,118,190,75,14
+END
+
+IDD_UPGRADE_INFO DIALOG DISCARDABLE  0, 0, 324, 183
+STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Upgrade Information"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,137,163,50,14
+    CONTROL         "", 100, "RichEdit", ES_MULTILINE | ES_READONLY |
+                    WS_VSCROLL | ES_SUNKEN | ES_AUTOVSCROLL, 13,9,297,144
+END
+
+#if defined(NT_EDITION)
+IDR_UPGRADE_TEXT TEXT DISCARDABLE htntupgd.rtf
+#else
+IDR_UPGRADE_TEXT TEXT DISCARDABLE htpeupgd.rtf
+#endif
+
+#endif
+/* ---------------------------------------------------------------------- */

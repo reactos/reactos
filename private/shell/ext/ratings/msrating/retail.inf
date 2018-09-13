@@ -1,0 +1,24 @@
+; Author: ChrisG
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles=sys_files
+
+[sys_files]
+msrating.dll
+msrating.sym
+
+[DestinationDirs]
+sys_files=11 ; to System
+win_files=25 ; to Windows
+
+[SourceDisksNames]
+55="msrating","",1,retail32
+
+[SourceDisksFiles]
+msrating.dll=55
+msrating.sym=55
+

@@ -1,0 +1,13 @@
+LIBRARY   APPWIZ
+
+EXPORTS
+    CPlApplet
+    AppWizard
+
+    SingleMSDOSWizard
+    NewLinkHere
+    NewLinkHereW
+    NewLinkHereA = NewLinkHere
+
+    ConfigStartMenu
+    InstallAppFromFloppyOrCDROM

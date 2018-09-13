@@ -1,0 +1,33 @@
+TARGETNAME=mibcc
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+!if !$(FREEBUILD)
+C_DEFINES=$(C_DEFINES) -DYYDEBUG=1
+MSC_OPTIMIZATION=/Odi
+!endif
+MSC_WARNING_LEVEL=/W3 /WX
+USE_MFC=1
+USE_IOSTREAM=1
+
+SOURCES=\
+    Debug.cpp \
+    Configs.cpp \
+    OidToF.cpp \
+    Oid.cpp \
+    OTScan.cpp \
+    Mibcc.cpp \
+    Mibcc.rc
+
+INCLUDES=\
+    ..\frontend\inc;\
+    $(BASEDIR)\private\net\inc
+
+UMTYPE=console
+UMENTRY=_MainCRTStartup
+TARGETLIBS=\
+    ..\frontend\lib\*\simclib.lib \
+    ..\frontend\lib\*\smierrsm.lib \
+    ..\frontend\lib\*\smierrsy.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \

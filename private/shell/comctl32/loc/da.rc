@@ -1,0 +1,134 @@
+LANGUAGE 0x06, 0x00 // Really 0x06, 0x01 - Danish (Danish)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Danish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Tilpas v\x00e6rkt\x00f8jslinje"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Luk",2,308,6,44,14
+    PUSHBUTTON      L"N&ulstil",202,308,23,44,14
+    PUSHBUTTON      L"&Hj\x00e6lp",205,308,40,44,14
+    PUSHBUTTON      L"Flyt &op",206,308,74,44,14
+    PUSHBUTTON      L"Flyt &ned",207,308,91,44,14
+    LTEXT           L"Tilg\x00e6ngelige kn&apper:",-1,4,5,116,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Tilf\x00f8j ->",1,131,42,44,14
+    PUSHBUTTON      L"<- &Fjern",204,131,62,44,14
+    LTEXT           L"&Knapper p\x00e5 v\x00e6rkt\x00f8jslinjen:",-1,182,5,117,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Annuller",2,58,122,50,14
+    PUSHBUTTON      L"&Anvend",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Hj\x00e6lp",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Tilbage",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&N\x00e6ste >",12324,62,26,50,14
+    PUSHBUTTON      L"Udf\x00f8r",12325,119,26,50,14
+    PUSHBUTTON      L"Annuller",2,176,26,50,14
+    PUSHBUTTON      L"Hj\x00e6lp",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Separator"
+    1025                    L" + "
+    1026                    L"Ingen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Luk"
+    4161                    L"OK"
+    4162                    L"Egenskaber for %s"
+    4163                    L"I dag:"
+    4164                    L"&G\x00e5 til dags dato"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+    4176                    L"Skriv tekst her"
+    4177                    L"Egenskaber"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Tilpasser vinduets st\x00f8rrelse"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Flytter vinduet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Formindsker vinduet til et ikon"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Forst\x00f8rrer vinduet, s\x00e5 det fylder hele sk\x00e6rmen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Skifter til n\x00e6ste MDI-vindue"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Lukker vinduet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Gendanner vinduet til normal st\x00f8rrelse"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Skifter til en anden opgave"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Kommandoer til h\x00e5ndtering af vinduer"
+    36849                   L"Tr\x00e6k til venstre eller h\x00f8jre for at \x00e6ndre kolonnebredden."
+    36850                   L"\x00c6ndrer kolonnebredden ved hj\x00e6lp af piltasterne og TAB-tasten"
+    36851                   L"Tilf\x00f8jer, flytter eller fjerner knapper p\x00e5 v\x00e6rkt\x00f8jslinjen"
+END
+
+

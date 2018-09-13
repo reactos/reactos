@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdintel
+
+TARGETNAME=kbdintel
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdintel.c kbdintel.rc
+
+NTTARGETFILE0=kbdintel.h kbdintel.rc kbdintel.def

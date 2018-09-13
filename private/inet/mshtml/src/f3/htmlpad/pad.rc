@@ -1,0 +1,1023 @@
+//Microsoft Developer Studio generated resource script.
+//
+
+#include "padrc.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include <mshtmcid.h>
+#ifndef APSTUDIO_INVOKED
+#include "pad.rc2"
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_PADICON             ICON    DISCARDABLE     "padicon.ico"
+IDI_ALLSTORES           ICON    DISCARDABLE     "allstrs.ico"
+IDI_ROOTFLD             ICON    DISCARDABLE     "rootfld.ico"
+IDI_OPENFLD             ICON    DISCARDABLE     "openfld.ico"
+IDI_CLSDFLD             ICON    DISCARDABLE     "clsfld.ico"
+IDI_PADSMALLICON        ICON    DISCARDABLE     "padsmall.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "padrc.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""..\\..\\site\\include\\mshtmcid.h""\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""pad.rc2""\r\n"
+    "#endif\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ZOOM_1000           "1000%"
+    IDS_ZOOM_900            "900%"
+    IDS_ZOOM_800            "800%"
+    IDS_ZOOM_700            "700%"
+    IDS_ZOOM_600            "600%"
+    IDS_ZOOM_500            "500%"
+    IDS_ZOOM_400            "400%"
+    IDS_ZOOM_300            "300%"
+    IDS_ZOOM_275            "275%"
+    IDS_ZOOM_250            "250%"
+    IDS_ZOOM_225            "225%"
+    IDS_ZOOM_200            "200%"
+    IDS_ZOOM_175            "175%"
+    IDS_ZOOM_150            "150%"
+    IDS_ZOOM_125            "125%"
+    IDS_ZOOM_100            "100%"
+    IDS_ZOOM_90             "90%"
+    IDS_ZOOM_80             "80%"
+    IDS_ZOOM_75             "75%"
+    IDS_ZOOM_70             "70%"
+    IDS_ZOOM_60             "60%"
+    IDS_ZOOM_50             "50%"
+    IDS_ZOOM_40             "40%"
+    IDS_ZOOM_30             "30%"
+    IDS_ZOOM_25             "25%"
+    IDS_ZOOM_20             "20%"
+    IDS_ZOOM_15             "15%"
+    IDS_ZOOM_10             "10%"
+    IDS_ZOOM_5              "5%"
+    IDS_ZOOM_1              "1%"
+END
+
+//
+// Colors for editing Toolbar
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_BLACK         "Black"
+    IDS_COLOR_NAVY          "Navy"
+    IDS_COLOR_BLUE          "Blue"
+    IDS_COLOR_CYAN          "Cyan"
+    IDS_COLOR_RED           "Red"
+    IDS_COLOR_LIME          "Lime"
+    IDS_COLOR_GRAY          "Gray"
+    IDS_COLOR_GREEN         "Green"
+    IDS_COLOR_YELLOW        "Yellow"
+    IDS_COLOR_PINK                      "Pink"
+    IDS_COLOR_VIOLET            "Violet"
+    IDS_COLOR_WHITE                     "White"
+END
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_PADMENU MENU FIXED IMPURE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "N&ew",                        IDM_PAD_NEW_HTML
+        MENUITEM "&Open File...\tCtrl+O",       IDM_PAD_OPEN_FILE
+        MENUITEM "Open &URL...",                IDM_PAD_OPEN_URL
+        MENUITEM "&Save\tCtrl+S",               IDM_PAD_SAVE
+        MENUITEM "Save &As File...",            IDM_PAD_SAVEAS
+        MENUITEM "Close Document",              IDM_PAD_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xecute Script...",          IDM_PAD_EXECUTE_SCRIPT
+        MENUITEM "&Run the DRT",                IDM_PAD_EXECUTE_DRT
+        MENUITEM SEPARATOR
+        MENUITEM "Pa&ge Setup...",              IDM_PAD_PAGESETUP
+        MENUITEM "&Print...\tCtrl+P",           IDM_PAD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&New Window\tCtrl+N",         IDM_PAD_NEWWIN
+        MENUITEM "&Close Window",               IDM_PAD_EXIT
+    END
+
+
+    POPUP "&Go"
+    BEGIN
+        MENUITEM "&Back",                       IDM_PAD_BACK
+        MENUITEM "&Forward",                    IDM_PAD_FORWARD
+        MENUITEM "&Up One Level",               IDM_PAD_UPLEVEL
+        MENUITEM SEPARATOR
+        POPUP "&History"
+        BEGIN
+            MENUITEM "(Empty)",                     0, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Revisit"                     IDM_PAD_RELOADHIST
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                 IDM_PAD_OPTIONS
+    END
+    POPUP "Favo&rites"
+    BEGIN
+        MENUITEM "&Open Favorite Folder",       IDM_PAD_OPENFAVORITE
+        MENUITEM "&Add to Favorite",            IDM_PAD_ADDFAVORITE
+        MENUITEM SEPARATOR
+    END
+
+
+
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Forms³ Trident",       IDM_PAD_ABOUT
+    END
+    POPUP " "
+    BEGIN
+        MENUITEM "Debug &Settings...",          IDM_PAD_DEBUG_TRACE
+        MENUITEM "&Immediate Window",           IDM_PAD_IMMEDIATE_WINDOW
+        MENUITEM "&View Object Monitor",        IDM_PAD_VIEW_MON
+        MENUITEM "Memory Monitor",              IDM_PAD_MEM_MON
+        MENUITEM "Performance Meters",          IDM_PAD_METERS
+        MENUITEM "Clear Download Cache",        IDM_PAD_CLEAR_CACHE
+        MENUITEM "Open Source In Debugger",     IDM_LAUNCHDEBUGGER
+        MENUITEM SEPARATOR
+#ifdef WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        MENUITEM "&Toolbox",                    IDM_PAD_TOOLBOX
+        MENUITEM SEPARATOR
+#endif // WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        MENUITEM "Open &Netscape",              IDM_PAD_OPENNSCP
+#if defined(_DEBUG)
+        MENUITEM SEPARATOR
+        MENUITEM "TestNile",                    IDM_PAD_TESTNILE
+#endif
+    END
+END
+
+IDR_PADHELPMENU MENU FIXED IMPURE
+BEGIN
+    MENUITEM "&About Forms³ Trident",       IDM_PAD_ABOUT
+END
+
+IDR_READ_FORM MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Save &As",                    IDM_MESSAGE_SAVE_AS
+        MENUITEM "Mo&ve ...",                   IDM_MESSAGE_MOVE
+        MENUITEM "Cop&y ...",                   IDM_MESSAGE_COPY
+        MENUITEM "&Print\tCtrl+P",              IDM_MESSAGE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete\tCtrl+D",             IDM_MESSAGE_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      IDM_MESSAGE_CLOSE
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo-Pad\tCtrl+Z",           IDM_UNDO
+        MENUITEM "&Redo-Pad\tCtrl+Y",           IDM_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t-Pad\tCtrl+X",            IDM_CUT
+        MENUITEM "&Copy-Pad\tCtrl+C",           IDM_COPY
+        MENUITEM "&Paste-Pad\tCtrl+V",          IDM_PASTE
+        MENUITEM "Paste &Insert-Pad",           IDM_PASTEINSERT
+        MENUITEM SEPARATOR
+        MENUITEM "Cle&ar-Pad\tDel",             IDM_DELETE
+        MENUITEM "Select All-Pad\tCtrl+A",      IDM_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find-Pad...\tCtrl+F",        IDM_FIND
+        MENUITEM "R&eplace-Pad...\tCtrl+H",     IDM_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bookmark-Pad...\tCtrl+G",    IDM_BOOKMARK
+        MENUITEM "&Link-Pad...\tCtrl+K",        IDM_HYPERLINK
+        MENUITEM "Remove Book&mark-Pad",        IDM_UNBOOKMARK
+        MENUITEM "Remove Li&nk-Pad",            IDM_UNLINK
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse Current Page-Pad",    IDM_BROWSEMODE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbars-Pad...",            IDM_TOOLBARS
+        MENUITEM "&Status Bar-Pad",             IDM_STATUSBAR, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Marks-Pad",           IDM_FORMATMARK, CHECKED
+        MENUITEM "Te&xt Only-Pad",              IDM_TEXTONLY, CHECKED
+        POPUP "Fonts-Pad"
+        BEGIN
+            MENUITEM "Lar&gest-Pad",                IDM_BASELINEFONT5
+            MENUITEM "&Larger-Pad",                 IDM_BASELINEFONT4
+            MENUITEM "&Medium-Pad",                 IDM_BASELINEFONT3
+            , CHECKED
+            MENUITEM "&Smaller-Pad",                IDM_BASELINEFONT2
+            MENUITEM "Sm&allest-Pad",               IDM_BASELINEFONT1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh-Pad\tF5",            IDM_PAD_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Source-Pad",                  IDM_EDITSOURCE
+        MENUITEM SEPARATOR
+        POPUP "Open &Link-Pad"
+        BEGIN
+            MENUITEM "In &Current Window-Pad",      IDM_FOLLOWLINKC
+            MENUITEM "In &New Window-Pad",          IDM_FOLLOWLINKN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties-Pad...",          IDM_PROPERTIES
+        MENUITEM "&Options-Pad...",             IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Previous\tCtrl+<",           IDM_VIEW_ITEMABOVE
+        MENUITEM "&Next\tCtrl+>",               IDM_VIEW_ITEMBELOW
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "Hori&zontal Line-Pad",        IDM_HORIZONTALLINE
+        POPUP "Line Brea&k"
+        BEGIN
+            MENUITEM "Normal Line Break-Pad",       IDM_LINEBREAKNORMAL
+            MENUITEM "Clear Left Margin-Pad",       IDM_LINEBREAKLEFT
+            MENUITEM "Clear Right Margin-Pad",      IDM_LINEBREAKRIGHT
+            MENUITEM "Clear Both Margins-Pad",      IDM_LINEBREAKBOTH
+        END
+        MENUITEM "Non-Breaking &Space-Pad",     IDM_NONBREAK
+        MENUITEM "&Special Character-Pad...",   IDM_SPECIALCHAR
+        MENUITEM SEPARATOR
+        MENUITEM "&HTML-Pad...",                IDM_HTMLSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Frame-Pad",                   IDM_IFRAME
+        POPUP "&Container"
+        BEGIN
+            MENUITEM "1D Container-Pad",            IDM_1D
+        END
+        POPUP "Control"
+        BEGIN
+            MENUITEM "&Text Box-Pad",               IDM_TEXTBOX
+            MENUITEM "Text &Area-Pad",              IDM_TEXTAREA
+            MENUITEM "&Check Box-Pad",              IDM_CHECKBOX
+            MENUITEM "&Radio Button-Pad",           IDM_RADIOBUTTON
+            MENUITEM "&Dropdown Box-Pad",           IDM_DROPDOWNBOX
+            MENUITEM "&List Box-Pad",               IDM_LISTBOX
+            MENUITEM "&Button-Pad",                 IDM_BUTTON
+        END
+        MENUITEM "&Image-Pad...",               IDM_IMAGE
+        MENUITEM "&Object-Pad...",              IDM_INSERTOBJECT
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Characters-Pad...",          IDM_FONT
+        MENUITEM "&Paragraph-Pad...",           IDM_PARAGRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "Apply Form-Pad",              IDM_FORM
+        MENUITEM "Apply Marquee-Pad",           IDM_MARQUEE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bullets and Numbering-Pad...", IDM_LIST
+        MENUITEM "&Increase Indent-Pad",        IDM_INDENT
+        MENUITEM "&Decrease Indent-Pad",        IDM_OUTDENT
+        MENUITEM SEPARATOR
+        MENUITEM "&1. Preformatted-Pad",        IDM_PREFORMATTED
+        MENUITEM "&2. Address-Pad",             IDM_ADDRESS
+        MENUITEM "&3. Blink-Pad",               IDM_BLINK
+        MENUITEM "&4. Div-Pad",                 IDM_DIV
+    END
+    POPUP "T&able"
+    BEGIN
+        MENUITEM "&Insert Table-Pad...",        IDM_TABLEINSERT
+        MENUITEM "Insert Ro&ws-Pad...",         IDM_ROWINSERT
+        MENUITEM "Insert Colum&n-Pad...",       IDM_COLUMNINSERT
+        MENUITEM "Insert Cel&l-Pad",            IDM_CELLINSERT
+        MENUITEM "Insert C&aption-Pad",         IDM_CAPTIONINSERT
+        MENUITEM "&Merge Cells-Pad",            IDM_CELLMERGE
+        MENUITEM "&Unmerge Cells-Pad...",       IDM_CELLSPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "Select &Cell-Pad",            IDM_CELLSELECT
+        MENUITEM "Select &Row-Pad",             IDM_ROWSELECT
+        MENUITEM "Select C&olumn-Pad",          IDM_COLUMNSELECT
+        MENUITEM "Select &Table-Pad",           IDM_TABLESELECT
+        MENUITEM SEPARATOR
+        MENUITEM "C&ell Properties-Pad...",     IDM_CELLPROPERTIES
+        MENUITEM "Table &Properties-Pad...",    IDM_TABLEPROPERTIES
+    END
+    POPUP "Co&mpose"
+    BEGIN
+        MENUITEM "Reply\tCtrl+R",               IDM_MESSAGE_REPLY
+        MENUITEM "Reply to &All\tCtrl+Shift+R", IDM_MESSAGE_REPLY_ALL
+        MENUITEM "Forward\tCtrl+F",             IDM_MESSAGE_FORWARD
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Trident Help Topics-Pad ",    IDM_HELP_CONTENT
+        MENUITEM "About Microsoft Trident-Pad", IDM_HELP_ABOUT
+    END
+END
+
+IDR_SEND_FORM MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "Se&nd\tCtrl+Enter",           IDM_MESSAGE_SUBMIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Open HTML",                  IDM_MESSAGE_OPENHTM
+        MENUITEM "&Save\tCtrl+S",               IDM_MESSAGE_SAVE
+        MENUITEM "Mo&ve ...",                   IDM_MESSAGE_MOVE
+        MENUITEM "Cop&y ...",                   IDM_MESSAGE_COPY
+        MENUITEM "&Delete\tCtrl+D",             IDM_MESSAGE_DELETE
+        MENUITEM "&Print\tCtrl+P",              IDM_MESSAGE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      IDM_MESSAGE_CLOSE
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo-Pad\tCtrl+Z",           IDM_UNDO
+        MENUITEM "&Redo-Pad\tCtrl+Y",           IDM_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t-Pad\tCtrl+X",            IDM_CUT
+        MENUITEM "&Copy-Pad\tCtrl+C",           IDM_COPY
+        MENUITEM "&Paste-Pad\tCtrl+V",          IDM_PASTE
+        MENUITEM "Paste &Insert-Pad",           IDM_PASTEINSERT
+        MENUITEM SEPARATOR
+        MENUITEM "Cle&ar-Pad\tDel",             IDM_DELETE
+        MENUITEM "Select All-Pad\tCtrl+A",      IDM_SELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find-Pad...\tCtrl+F",        IDM_FIND
+        MENUITEM "R&eplace-Pad...\tCtrl+H",     IDM_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bookmark-Pad...\tCtrl+G",    IDM_BOOKMARK
+        MENUITEM "&Link-Pad...\tCtrl+K",        IDM_HYPERLINK
+        MENUITEM "Remove Book&mark-Pad",        IDM_UNBOOKMARK
+        MENUITEM "Remove Li&nk-Pad",            IDM_UNLINK
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse Current Page-Pad",    IDM_BROWSEMODE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbars-Pad...",            IDM_TOOLBARS
+        MENUITEM "&Status Bar-Pad",             IDM_STATUSBAR, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Marks-Pad",           IDM_FORMATMARK, CHECKED
+        MENUITEM "Te&xt Only-Pad",              IDM_TEXTONLY, CHECKED
+        POPUP "Fonts-Pad"
+        BEGIN
+            MENUITEM "Lar&gest-Pad",                IDM_BASELINEFONT5
+            MENUITEM "&Larger-Pad",                 IDM_BASELINEFONT4
+            MENUITEM "&Medium-Pad",                 IDM_BASELINEFONT3
+            , CHECKED
+            MENUITEM "&Smaller-Pad",                IDM_BASELINEFONT2
+            MENUITEM "Sm&allest-Pad",               IDM_BASELINEFONT1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh-Pad\tF5",            IDM_PAD_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Source-Pad",                  IDM_EDITSOURCE
+        MENUITEM SEPARATOR
+        POPUP "Open &Link-Pad"
+        BEGIN
+            MENUITEM "In &Current Window-Pad",      IDM_FOLLOWLINKC
+            MENUITEM "In &New Window-Pad",          IDM_FOLLOWLINKN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties-Pad...",          IDM_PROPERTIES
+        MENUITEM "&Options-Pad...",             IDM_OPTIONS
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "Hori&zontal Line-Pad",        IDM_HORIZONTALLINE
+        POPUP "Line Brea&k"
+        BEGIN
+            MENUITEM "Normal Line Break-Pad",       IDM_LINEBREAKNORMAL
+            MENUITEM "Clear Left Margin-Pad",       IDM_LINEBREAKLEFT
+            MENUITEM "Clear Right Margin-Pad",      IDM_LINEBREAKRIGHT
+            MENUITEM "Clear Both Margins-Pad",      IDM_LINEBREAKBOTH
+        END
+        MENUITEM "Non-Breaking &Space-Pad",     IDM_NONBREAK
+        MENUITEM "&Special Character-Pad...",   IDM_SPECIALCHAR
+        MENUITEM SEPARATOR
+        MENUITEM "&HTML-Pad...",                IDM_HTMLSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Frame-Pad",                   IDM_IFRAME
+        POPUP "&Container"
+        BEGIN
+            MENUITEM "1D Container-Pad",            IDM_1D
+        END
+        POPUP "Control"
+        BEGIN
+            MENUITEM "&Text Box-Pad",               IDM_TEXTBOX
+            MENUITEM "Text &Area-Pad",              IDM_TEXTAREA
+            MENUITEM "&Check Box-Pad",              IDM_CHECKBOX
+            MENUITEM "&Radio Button-Pad",           IDM_RADIOBUTTON
+            MENUITEM "&Dropdown Box-Pad",           IDM_DROPDOWNBOX
+            MENUITEM "&List Box-Pad",               IDM_LISTBOX
+            MENUITEM "&Button-Pad",                 IDM_BUTTON
+        END
+        MENUITEM "&Image-Pad...",               IDM_IMAGE
+        MENUITEM "&Object-Pad...",              IDM_INSERTOBJECT
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Characters-Pad...",          IDM_FONT
+        MENUITEM "&Paragraph-Pad...",           IDM_PARAGRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "Apply Form-Pad",              IDM_FORM
+        MENUITEM "Apply Marquee-Pad",           IDM_MARQUEE
+        MENUITEM SEPARATOR
+        MENUITEM "&Bullets and Numbering-Pad...", IDM_LIST
+        MENUITEM "&Increase Indent-Pad",        IDM_INDENT
+        MENUITEM "&Decrease Indent-Pad",        IDM_OUTDENT
+        MENUITEM SEPARATOR
+        MENUITEM "&1. Preformatted-Pad",        IDM_PREFORMATTED
+        MENUITEM "&2. Address-Pad",             IDM_ADDRESS
+        MENUITEM "&3. Blink-Pad",               IDM_BLINK
+        MENUITEM "&4. Div-Pad",                 IDM_DIV
+    END
+    POPUP "T&able"
+    BEGIN
+        MENUITEM "&Insert Table-Pad...",        IDM_TABLEINSERT
+        MENUITEM "Insert Ro&ws-Pad...",         IDM_ROWINSERT
+        MENUITEM "Insert Colum&n-Pad...",       IDM_COLUMNINSERT
+        MENUITEM "Insert Cel&l-Pad",            IDM_CELLINSERT
+        MENUITEM "Insert C&aption-Pad",         IDM_CAPTIONINSERT
+        MENUITEM "&Merge Cells-Pad",            IDM_CELLMERGE
+        MENUITEM "&Unmerge Cells-Pad...",       IDM_CELLSPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "Select &Cell-Pad",            IDM_CELLSELECT
+        MENUITEM "Select &Row-Pad",             IDM_ROWSELECT
+        MENUITEM "Select C&olumn-Pad",          IDM_COLUMNSELECT
+        MENUITEM "Select &Table-Pad",           IDM_TABLESELECT
+        MENUITEM SEPARATOR
+        MENUITEM "C&ell Properties-Pad...",     IDM_CELLPROPERTIES
+        MENUITEM "Table &Properties-Pad...",    IDM_TABLEPROPERTIES
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Chec&k Names",                IDM_MESSAGE_CHECK_NAMES
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Trident Help Topics-Pad ",    IDM_HELP_CONTENT
+        MENUITEM "About Microsoft Trident-Pad", IDM_HELP_ABOUT
+    END
+END
+
+IDR_HTMLPAD_CONTEXT_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "Default"
+    BEGIN
+        POPUP "&Open Link"
+        BEGIN
+            MENUITEM "In &Current Window-Pad",      IDM_FOLLOWLINKC
+            MENUITEM "In &New Window-Pad",          IDM_FOLLOWLINKN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t-Pad",                    IDM_CUT
+        MENUITEM "&Copy-Pad",                   IDM_COPY
+        MENUITEM "&Paste-Pad",                  IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Document Properties-Pad...", IDM_DOCPROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse View-Pad",            IDM_BROWSEMODE
+        MENUITEM "&Edit View-Pad",              IDM_EDITMODE
+        MENUITEM "S&ource View-Pad",            IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Characters-Pad...",   IDM_FONT
+        MENUITEM "Format P&aragraph-Pad...",    IDM_PARAGRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties-Pad...",          IDM_PROPERTIES
+        MENUITEM SEPARATOR
+    END
+    POPUP "Image"
+    BEGIN
+        POPUP "&Open Link"
+        BEGIN
+            MENUITEM "In &Current Window-Pad",      IDM_FOLLOWLINKC
+            MENUITEM "In &New Window-Pad",          IDM_FOLLOWLINKN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t-Pad",                    IDM_CUT
+        MENUITEM "&Copy-Pad",                   IDM_COPY
+        MENUITEM "&Paste-Pad",                  IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Show Image-Pad",             IDM_SHOWPICTURE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties-Pad...",          IDM_PROPERTIES
+    END
+    POPUP "Control"
+    BEGIN
+        MENUITEM "Cu&t-Pad",                    IDM_CUT
+        MENUITEM "&Copy-Pad",                   IDM_COPY
+        MENUITEM "&Paste-Pad",                  IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Edit Script/Comment-Pad...",  IDM_EDITSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties-Pad...",          IDM_PROPERTIES
+    END
+    POPUP "Table"
+    BEGIN
+        MENUITEM "&Paste Insert-Pad",           IDM_PASTEINSERT
+        MENUITEM SEPARATOR
+        POPUP "&Select-Pad"
+        BEGIN
+            MENUITEM "&Cell-Pad",                   IDM_CELLSELECT
+            MENUITEM "&Row-Pad",                    IDM_ROWSELECT
+            MENUITEM "&Column-Pad",                 IDM_COLUMNSELECT
+            MENUITEM "&Table-Pad",                  IDM_TABLESELECT
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Cell Properties-Pad...",     IDM_CELLPROPERTIES
+        MENUITEM "&Table Properties-Pad...",    IDM_TABLEPROPERTIES
+    END
+END
+
+
+IDR_PADMENU_EDIT MENU FIXED IMPURE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "N&ew",                        IDM_PAD_NEW_HTML
+        MENUITEM "&Open File...\tCtrl+O",       IDM_PAD_OPEN_FILE
+        MENUITEM "Open &URL...",                IDM_PAD_OPEN_URL
+        MENUITEM "&Save\tCtrl+S",               IDM_PAD_SAVE
+        MENUITEM "Save &As File...",            IDM_PAD_SAVEAS
+        MENUITEM "Close Document",              IDM_PAD_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xecute Script...",          IDM_PAD_EXECUTE_SCRIPT
+        MENUITEM "&Run the DRT",                IDM_PAD_EXECUTE_DRT
+        MENUITEM SEPARATOR
+        MENUITEM "Pa&ge Setup...",              IDM_PAD_PAGESETUP
+        MENUITEM "&Print...\tCtrl+P",           IDM_PAD_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "&New Window\tCtrl+N",         IDM_PAD_NEWWIN
+        MENUITEM "&Close Window",               IDM_PAD_EXIT
+    END
+
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",                 IDM_UNDO
+#ifdef UNIX
+        MENUITEM "&Redo\tAlt+Z",                  IDM_REDO
+#else
+        MENUITEM "&Redo\tCtrl+Y",                 IDM_REDO
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                  IDM_CUT
+        MENUITEM "&Copy\tCtrl+C",                 IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",                IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Cle&ar\tDel",                   IDM_DELETE
+#ifdef UNIX
+        MENUITEM "Select Al&l\tCtrl+/",           IDM_SELECTALL
+#else
+        MENUITEM "Select Al&l\tCtrl+A",           IDM_SELECTALL
+#endif
+        MENUITEM SEPARATOR
+#ifdef UNIX
+        MENUITEM "&Find...\tCtrl+S",        IDM_FIND
+#else
+        MENUITEM "&Find...\tCtrl+F",        IDM_FIND
+#endif
+//v2        MENUITEM "R&eplace...\tCtrl+H", IDM_REPLACE
+        MENUITEM SEPARATOR
+//v2        MENUITEM "&Bookmark...",                          IDM_BOOKMARK
+#ifdef UNIX
+        MENUITEM "&Link...\tAlt+K",        IDM_HYPERLINK
+#else
+        MENUITEM "&Link...\tCtrl+K",        IDM_HYPERLINK
+#endif
+        MENUITEM "Remove Book&mark",                          IDM_UNBOOKMARK
+        MENUITEM "Remove Li&nk",                              IDM_UNLINK
+    END
+
+    POPUP "&View"
+    BEGIN
+
+        POPUP "Fo&nts"
+        BEGIN
+            MENUITEM "Lar&gest",                IDM_BASELINEFONT5
+            MENUITEM "&Larger",                 IDM_BASELINEFONT4
+            MENUITEM "&Medium",                 IDM_BASELINEFONT3, CHECKED
+            MENUITEM "&Smaller",                IDM_BASELINEFONT2
+            MENUITEM "Sm&allest",               IDM_BASELINEFONT1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Sour&ce",                     IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              IDM_PROPERTIES
+    END
+
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "Hori&zontal Line",                 IDM_HORIZONTALLINE
+        POPUP "&Line Break"
+        BEGIN
+            MENUITEM "&Normal Line Break",           IDM_LINEBREAKNORMAL
+            MENUITEM "Clear &Left Margin",           IDM_LINEBREAKLEFT
+            MENUITEM "Clear &Right Margin",          IDM_LINEBREAKRIGHT
+            MENUITEM "Clear &Both Margins",          IDM_LINEBREAKBOTH
+        END
+        MENUITEM "&Non-Breaking Space\tCtrl+Shift+Space", IDM_NONBREAK
+        MENUITEM "Page &Break",                           IDM_PAGEBREAK
+        MENUITEM "&Special Character...",                 IDM_SPECIALCHAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Marquee...",                           IDM_MARQUEE
+        MENUITEM "&HTML Text",                            IDM_1D
+        POPUP "&Control"
+        BEGIN
+            MENUITEM "&Text Box",                    IDM_TEXTBOX
+            MENUITEM "Text &Area",                   IDM_TEXTAREA
+            MENUITEM "&Check Box",                   IDM_CHECKBOX
+            MENUITEM "&Radio Button",                IDM_RADIOBUTTON
+            MENUITEM "&Dropdown Box",                IDM_DROPDOWNBOX
+            MENUITEM "&List Box",                    IDM_LISTBOX
+            MENUITEM "&Button",                      IDM_BUTTON
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Image...",                        IDM_IMAGE
+        MENUITEM "&Frame...",                        IDM_IFRAME
+        MENUITEM "&Object...",                       IDM_INSERTOBJECT
+    END
+
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Characters...",                    IDM_FONT
+//v2        MENUITEM "&Paragraph...",                     IDM_PARAGRAPH
+        MENUITEM SEPARATOR
+        POPUP "D&ocument Direction"
+        BEGIN
+            MENUITEM "&Left-To-Right",                IDM_DIRLTR
+            MENUITEM "&Right-To-Left",                IDM_DIRRTL
+        END
+        POPUP "&Block Direction"
+        BEGIN
+            MENUITEM "&Left-To-Right",                IDM_BLOCKDIRLTR
+            MENUITEM "&Right-To-Left",                IDM_BLOCKDIRRTL
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Increase Indent",                  IDM_INDENT
+        MENUITEM "&Decrease Indent",                  IDM_OUTDENT
+    END
+
+    POPUP "&Go"
+    BEGIN
+        MENUITEM "&Back",                       IDM_PAD_BACK
+        MENUITEM "&Forward",                    IDM_PAD_FORWARD
+        MENUITEM "&Up One Level",               IDM_PAD_UPLEVEL
+        MENUITEM SEPARATOR
+        POPUP "&History"
+        BEGIN
+            MENUITEM "(Empty)",                     0, GRAYED
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Revisit"                     IDM_PAD_RELOADHIST
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                 IDM_PAD_OPTIONS
+    END
+    POPUP "Favo&rites"
+    BEGIN
+        MENUITEM "&Open Favorite Folder",       IDM_PAD_OPENFAVORITE
+        MENUITEM "&Add to Favorite",            IDM_PAD_ADDFAVORITE
+        MENUITEM SEPARATOR
+    END
+
+
+
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About Forms³ Trident",       IDM_PAD_ABOUT
+    END
+    POPUP " "
+    BEGIN
+        MENUITEM "Debug &Settings...",          IDM_PAD_DEBUG_TRACE
+        MENUITEM "&Immediate Window",           IDM_PAD_IMMEDIATE_WINDOW
+        MENUITEM "&View Object Monitor",        IDM_PAD_VIEW_MON
+        MENUITEM "Memory Monitor",              IDM_PAD_MEM_MON
+        MENUITEM "Performance Meters",          IDM_PAD_METERS
+        MENUITEM "Clear Download Cache",        IDM_PAD_CLEAR_CACHE
+        MENUITEM "Open Source In Debugger",     IDM_LAUNCHDEBUGGER
+        MENUITEM SEPARATOR
+#ifdef WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        MENUITEM "&Toolbox",                    IDM_PAD_TOOLBOX
+        MENUITEM SEPARATOR
+#endif // WHEN_CONTROL_PALETTE_IS_SUPPORTED
+        MENUITEM "Open &Netscape",              IDM_PAD_OPENNSCP
+#if defined(_DEBUG)
+        MENUITEM SEPARATOR
+        MENUITEM "TestNile",                    IDM_PAD_TESTNILE
+#endif
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_SELECT_TOOL         BITMAP  DISCARDABLE     "arrow.bmp"
+IDB_HTMLPAD_TOOLBAR     BITMAP  DISCARDABLE     "padtool.bmp"
+IDB_HTMLPAD_TBSTANDARD  BITMAP  DISCARDABLE     "padstd.bmp"
+IDB_HTMLPAD_TBFORMAT    BITMAP  DISCARDABLE     "padfmt.bmp"
+IDR_FRAMESITE_TOOL      BITMAP  DISCARDABLE     "frmsite.bmp"
+IDR_TWODSITE_TOOL       BITMAP  DISCARDABLE     "2dsite.bmp"
+IDR_TEXTSITE_TOOL       BITMAP  DISCARDABLE     "textsite.bmp"
+IDB_PAD_SPLASH          BITMAP  DISCARDABLE     "trident.bmp"
+IDB_MESSAGE_TOOLBAR     BITMAP  DISCARDABLE     "msgtool.bmp"
+IDB_MESSAGE_SEND        BITMAP  DISCARDABLE     "send.bmp"
+IDR_IMAGE_TOOL          BITMAP  DISCARDABLE     "..\\rsrc\\image.bmp"
+IDR_TEXTBOX_TOOL        BITMAP  DISCARDABLE     "..\\rsrc\\txtbox.bmp"
+IDR_LISTBOX_TOOL        BITMAP  DISCARDABLE     "..\\rsrc\\lstbox.bmp"
+IDR_CHECKBOX_TOOL       BITMAP  DISCARDABLE     "..\\rsrc\\chkbox.bmp"
+IDR_RADIOBUTTON_TOOL    BITMAP  DISCARDABLE     "..\\rsrc\\optbtn.bmp"
+IDR_BUTTON_TOOL         BITMAP  DISCARDABLE     "..\\rsrc\\cmdbtn.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDR_OPEN_URL DIALOG FIXED IMPURE  20, 20, 241, 82
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Open Internet Address"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    RTEXT           "&Address:",1144,5,43,30,10
+    EDITTEXT        IDI_ADDRESS,40,41,194,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,121,63,52,14
+    PUSHBUTTON      "Cancel",IDCANCEL,182,63,52,14
+    ICON            IDR_PADICON,32537,7,7,18,20
+    LTEXT           "Type the address of a document, folder, or computer on the Internet, and Windows will open it for you.",
+                    1145,40,7,186,17
+    LTEXT           "Example: http://www.microsoft.com",1146,40,27,194,11
+END
+
+IDR_WELCOME_DLG DIALOGEX 4, 18, 200, 170
+STYLE DS_CONTROL | WS_CHILD | WS_VISIBLE
+EXSTYLE WS_EX_TRANSPARENT
+FONT 9, "Arial"
+BEGIN
+    PUSHBUTTON      "",IDM_PAD_NEW_HTML,6,53,8,8
+    CONTROL         "New Document",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP |
+                    SS_NOPREFIX | WS_GROUP,19,53,60,8
+    PUSHBUTTON      "",IDM_PAD_OPEN_FILE,6,69,8,8
+    LTEXT           "Open File",IDC_STATIC,19,69,42,8
+    PUSHBUTTON      "",IDM_PAD_OPEN_URL,6,85,8,8
+    CONTROL         "Open URL",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP |
+                    SS_NOPREFIX | WS_GROUP,19,85,44,8
+    PUSHBUTTON      "",IDM_PAD_EXECUTE_SCRIPT,6,101,8,8
+    LTEXT           "Execute Script",IDC_STATIC,19,101,55,8
+    PUSHBUTTON      "",IDM_PAD_EXECUTE_DRT,6,117,8,8
+    LTEXT           "Run the DRT",IDC_STATIC,19,117,55,8
+    PUSHBUTTON      "",IDM_PAD_REGISTER_MSG,102,53,8,8
+    LTEXT           "Register Trident Mail",IDC_STATIC,115,53,80,8
+    PUSHBUTTON      "",IDM_PAD_REGISTER_PAD,102,69,8,8
+    LTEXT           "Register HTMLPad",IDC_STATIC,115,69,71,8
+    PUSHBUTTON      "",IDM_PAD_REGISTER_LOCAL_TRIDENT,102,85,8,8
+    CONTROL         "Register Local Trident",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP |
+                    SS_NOPREFIX | WS_GROUP,115,85,80,8
+    PUSHBUTTON      "",IDM_PAD_REGISTER_SYSTEM_TRIDENT,102,101,8,8
+    LTEXT           "Register System Trident",IDC_STATIC,115,101,90,8
+    PUSHBUTTON      "",IDM_PAD_SCRUB,102,117,8,8
+    LTEXT           "Scrub Registry",IDC_STATIC,115,117,57,8
+    PUSHBUTTON      "",IDM_PAD_ABOUT,102,133,8,8
+    CONTROL         "Command Line Help",IDC_STATIC,"Static",SS_LEFTNOWORDWRAP |
+                    SS_NOPREFIX | WS_GROUP,115,133,80,8
+    PUSHBUTTON      "",IDM_PAD_EXIT,6,133,8,8
+    LTEXT           "Exit",IDC_STATIC,19,133,22,8
+    CONTROL         112,IDC_BITMAPSPLASH,"Static",SS_BITMAP | SS_SUNKEN,6,7,180,38
+END
+
+IDR_READ_FORM DIALOG DISCARDABLE  0, 0, 154, 78
+STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "From:",ID_FROM_LABEL,3,4,30,11
+    LTEXT           "Sent:",ID_SENT_LABEL,3,19,30,11
+    LTEXT           "To:",ID_TO_LABEL,3,34,30,11
+    LTEXT           "Cc:",ID_CC_LABEL,3,49,30,11
+    LTEXT           "Subject:",ID_SUBJECT_LABEL,3,64,30,11
+END
+
+IDR_SEND_FORM DIALOG DISCARDABLE  0, 0, 167, 47
+STYLE DS_3DLOOK | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "T&o ...",ID_TO_BUTTON,3,3,30,11
+    PUSHBUTTON      "&Cc ...",ID_CC_BUTTON,3,19,30,11
+    LTEXT           "Subject:",ID_SUBJECT_LABEL,3,35,30,11
+    PUSHBUTTON      "",ID_SUBMIT,131,3,30,27,BS_BITMAP | NOT WS_TABSTOP
+END
+
+IDD_CFDIALOG DIALOG DISCARDABLE  0, 0, 298, 212
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,241,7,50,14,WS_DISABLED
+    PUSHBUTTON      "New Folder",IDC_NEWFLD,241,24,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,241,41,50,14
+    CONTROL         "Tree1",IDC_TREEVIEW,"SysTreeView32",TVS_HASBUTTONS |
+                    TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP,
+                    7,19,217,186
+    LTEXT           "&Move this item to the selected folder:",IDC_STATIC,8,7,
+                    150,10
+END
+
+IDD_NEWNAME DIALOG DISCARDABLE  0, 0, 189, 45
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "New Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,130,7,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,130,24,50,14
+    EDITTEXT        IDC_NAME,5,15,115,15,ES_AUTOHSCROLL
+    LTEXT           "New Folder Name",IDC_NAMELABEL,5,5,110,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDR_WELCOME_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 188
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+
+    IDR_READ_FORM, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 77
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_READ_FORM ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    188,            IDM_VIEW_ITEMABOVE,     VIRTKEY, CONTROL, NOINVERT
+    188,            IDM_VIEW_ITEMABOVE,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    190,            IDM_VIEW_ITEMBELOW,     VIRTKEY, CONTROL, NOINVERT
+    190,            IDM_VIEW_ITEMBELOW,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "D",            IDM_MESSAGE_DELETE,     VIRTKEY, CONTROL, NOINVERT
+    "F",            IDM_MESSAGE_FORWARD,    VIRTKEY, CONTROL, NOINVERT
+    "N",            IDM_VIEW_ITEMBELOW,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "P",            IDM_MESSAGE_PRINT,      VIRTKEY, CONTROL, NOINVERT
+    "P",            IDM_VIEW_ITEMABOVE,     VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "R",            IDM_MESSAGE_REPLY,      VIRTKEY, CONTROL, NOINVERT
+    "R",            IDM_MESSAGE_REPLY_ALL,  VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "S",            IDM_MESSAGE_SAVE,       VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      IDM_MESSAGE_CLOSE,      VIRTKEY, NOINVERT
+END
+
+IDR_SEND_FORM ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "D",            IDM_MESSAGE_DELETE,     VIRTKEY, CONTROL, NOINVERT
+    "K",            IDM_MESSAGE_CHECK_NAMES, VIRTKEY, CONTROL, NOINVERT
+    "K",            IDM_MESSAGE_CHECK_NAMES, VIRTKEY, ALT, NOINVERT
+    "P",            IDM_MESSAGE_PRINT,      VIRTKEY, CONTROL, NOINVERT
+    "S",            IDM_MESSAGE_SAVE,       VIRTKEY, CONTROL, NOINVERT
+    "S",            IDM_MESSAGE_SUBMIT,     VIRTKEY, ALT, NOINVERT
+    VK_ESCAPE,      IDM_MESSAGE_CLOSE,      VIRTKEY, NOINVERT
+    VK_RETURN,      IDM_MESSAGE_SUBMIT,     VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_PAD_OPEN_URL        "Opens an existing document"
+    IDM_PAD_OPEN_FILE       "Opens an existing document"
+    IDM_PAD_NEW_HTML        "Creates a new HTML document"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_PAD_SAVE            "Saves the document"
+    IDM_PAD_SAVEAS          "Saves the document with a new name"
+    IDM_PAD_EXIT            "Quits the application"
+    IDM_PAD_ABOUT           "Displays the program information"
+#ifdef WHEN_CONTROL_PALETTE_IS_SUPPORTED
+    IDM_PAD_TOOLBOX         "Display the control toolbox"
+#endif // WHEN_CONTROL_PALETTE_IS_SUPPORTED
+    IDM_PAD_DEBUG_TRACE     "Displays debug settings dialog"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_PAD_EXECUTE_SCRIPT  "Executes a VB or JavaScript Script"
+    IDM_PAD_EXECUTE_DRT     "Executes the DRT script (0drt.js)"
+    IDM_PAD_IMMEDIATE_WINDOW "Display window for executing VB commands"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_PAD_SCRUB           "Remove dangling references from the registry"
+    IDM_PAD_REGISTER_PAD    "Register this instance of HTMLPad as your mail reader"
+    IDS_ErrorCaptionMail    "Microsoft Exchange"
+    IDS_TripoleFullName     "Tripole Object"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_E_OUTOFMEMORY       "Not enough memory"
+    IDS_INVALID_ARGUMENT    "Invalid arguments"
+    IDS_INVALID_OBJECT      "Invalid object"
+    IDS_INTERFACE_NOT_SUPPORTED "Interface not supported"
+    IDS_ACCESS_DENIED       "Access denied"
+    IDS_NOT_SUPPORTED       "No support"
+    IDS_INVALID_CHARWIDTH   "Wrong character set"
+    IDS_NOT_FOUND           "Item not found"
+    IDS_CALL_FAILED         "Call failed"
+    IDS_USER_CANCEL         "User cancel"
+    IDS_ERRORS_RETURNED     "Errors returned"
+    IDS_UNKNOWN_FLAGS       "Invalid flags"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNEXPECTED          "Unexpected error"
+    IDS_CANTNOW             "Can't perform the required action at this time"
+    IDS_COMPONENT           "Simple Sample Form"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_PAD_MEM_MON         "Display memory monitor window"
+    IDM_PAD_METERS          "Display performance meters window"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

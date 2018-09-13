@@ -1,0 +1,68 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=win32
+MINORCOMP=snmp
+
+
+TARGETNAME=snmpapi
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\sockets;\
+    $(BASEDIR)\private\net\inc
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\wsock32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+LINKLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\authapi.lib
+
+C_DEFINES=$(C_DEFINES) -DWIN32 -DCHICAGO -D_SNMPDLL_
+
+SOURCES=\
+    snmp.c \
+    regconf.c \
+    trapapi.c \
+    uniconv.c \
+    snmpapi.rc
+
+DLLENTRY=InitializeDLL
+
+UMTYPE=console
+UMTEST=snmptst1
+UMLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\wsock32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\snmp.lib
+
+NTTARGETFILE0=evtlog.h
+
+NTTARGETFILES=renameit

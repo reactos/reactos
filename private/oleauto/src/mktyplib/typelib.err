@@ -1,0 +1,85 @@
+//
+// UNDONE: need to make a pass through these errors, making them more
+// UNDONE: useful/readable.
+//
+// NOTE: code in TYPEOUT.CPP assumes that TYPE_E_IOERROR is first.
+TYPELIBERR(TYPE_E_IOERROR, "I/O error"),
+TYPELIBERR(TYPE_E_OUTOFBOUNDS, "Invalid number of arguments"),
+TYPELIBERR(TYPE_E_TYPEMISMATCH, "Type mismatch"),
+TYPELIBERR(TYPE_E_CANTCREATETMPFILE, "Error creating unique tmp file"),
+TYPELIBERR(TYPE_E_BUFFERTOOSMALL, "Buffer too small"),
+TYPELIBERR(TYPE_E_INVDATAREAD, "Old format or invalid type library"),
+TYPELIBERR(TYPE_E_UNSUPFORMAT, "Old format or invalid type library"),
+TYPELIBERR(TYPE_E_REGISTRYACCESS, "Error accessing the OLE registry"),
+TYPELIBERR(TYPE_E_LIBNOTREGISTERED, "Library not registered"),
+TYPELIBERR(TYPE_E_UNDEFINEDTYPE, "Bound to unknown type"),
+TYPELIBERR(TYPE_E_QUALIFIEDNAMEDISALLOWED, "Qualified name disallowed"),
+TYPELIBERR(TYPE_E_INVALIDSTATE, "Invalid forward reference, or reference to uncompiled type"),
+TYPELIBERR(TYPE_E_WRONGTYPEKIND, "Type mismatch"),
+TYPELIBERR(TYPE_E_ELEMENTNOTFOUND, "Element not found"),
+TYPELIBERR(TYPE_E_AMBIGUOUSNAME, "Ambiguous name"),
+TYPELIBERR(TYPE_E_NAMECONFLICT, "Name already exists in the library"),
+TYPELIBERR(TYPE_E_UNKNOWNLCID, "Unknown LCID"),
+TYPELIBERR(TYPE_E_DLLFUNCTIONNOTFOUND, "Function not defined in specified DLL"),
+
+TYPELIBERR(TYPE_E_BADMODULEKIND, "Wrong module kind for the operation"),
+TYPELIBERR(TYPE_E_CIRCULARTYPE, "Circular dependency between types/modules"),
+TYPELIBERR(TYPE_E_INCONSISTENTPROPFUNCS, "Inconsistent property functions"),
+TYPELIBERR(TYPE_E_SIZETOOBIG, "Size may not exceed 64K"),
+TYPELIBERR(TYPE_E_DUPLICATEID, "Duplicate ID in inheritance heirarchy"),
+
+#if VBA2
+TYPELIBERR(TYPE_E_INVALIDID, "Incorrect inheritence depth in standard OLE hmember."),
+#endif // VBA2
+
+TYPELIBERR(TYPE_E_CANTLOADLIBRARY, "Error loading type library/DLL"),
+
+TYPELIBERR(E_NOTIMPL, "OLE error E_NOTIMPL"),
+TYPELIBERR(E_OUTOFMEMORY, "Out of memory"),
+TYPELIBERR(E_INVALIDARG, "OLE error E_INVALIDARG"),
+TYPELIBERR(E_NOINTERFACE, "OLE error E_NOINTERFACE"),
+TYPELIBERR(E_ABORT, "OLE error E_ABORT"),
+TYPELIBERR(E_UNEXPECTED, "OLE error E_UNEXPECTED"),
+TYPELIBERR(E_POINTER, "OLE error E_POINTER"),
+TYPELIBERR(E_HANDLE, "OLE error E_HANDLE"),
+TYPELIBERR(E_FAIL, "OLE error E_FAIL"),
+TYPELIBERR(E_ACCESSDENIED, "Access denied"),
+
+TYPELIBERR(STG_E_INVALIDFUNCTION, "Invalid Function"),
+TYPELIBERR(STG_E_FILENOTFOUND, "File not found"),
+TYPELIBERR(STG_E_PATHNOTFOUND, "Path not found"),
+TYPELIBERR(STG_E_TOOMANYOPENFILES, "Too many open files"),
+TYPELIBERR(STG_E_ACCESSDENIED, "Access denied"),
+TYPELIBERR(STG_E_INVALIDHANDLE, "Invalid handle"),
+TYPELIBERR(STG_E_INSUFFICIENTMEMORY, "Out of memory"),
+TYPELIBERR(STG_E_INVALIDPOINTER, "Invalid pointer"),
+TYPELIBERR(STG_E_NOMOREFILES, "No more files"),
+TYPELIBERR(STG_E_DISKISWRITEPROTECTED, "Disk is write-protected"),
+TYPELIBERR(STG_E_SEEKERROR, "Seek error"),
+TYPELIBERR(STG_E_WRITEFAULT, "Write fault"),
+TYPELIBERR(STG_E_READFAULT, "Read fault"),
+TYPELIBERR(STG_E_SHAREVIOLATION, "Share violation"),
+TYPELIBERR(STG_E_LOCKVIOLATION, "Lock violation"),
+//This error is returned by OpenTypeLib when it is given a file which is not
+//an OLE docfile.
+TYPELIBERR(STG_E_FILEALREADYEXISTS, "File is not a valid type library"),
+TYPELIBERR(STG_E_INVALIDPARAMETER, "Invalid parameter"),
+TYPELIBERR(STG_E_MEDIUMFULL, "Disk full"),
+TYPELIBERR(STG_E_ABNORMALAPIEXIT, "Abnormal API exit"),
+TYPELIBERR(STG_E_INVALIDHEADER, "Invalid header"),
+TYPELIBERR(STG_E_INVALIDNAME, "Invalid name"),
+TYPELIBERR(STG_E_UNKNOWN, "OLE error STG_E_UNKNOWN"),
+TYPELIBERR(STG_E_UNIMPLEMENTEDFUNCTION, "Unimplemented OLE function"),
+TYPELIBERR(STG_E_INVALIDFLAG, "Invalid flag"),
+TYPELIBERR(STG_E_INUSE, "OLE error STG_E_INUSE"),
+TYPELIBERR(STG_E_NOTCURRENT, "OLE error STG_E_NOTCURRENT"),
+TYPELIBERR(STG_E_REVERTED, "OLE error STG_E_REVERTED"),
+TYPELIBERR(STG_E_CANTSAVE, "Can't save"),
+TYPELIBERR(STG_E_OLDFORMAT, "Old format or invalid type library"),
+TYPELIBERR(STG_E_OLDDLL, "Old DLL"),
+TYPELIBERR(STG_E_SHAREREQUIRED, "SHARE.EXE required"),
+TYPELIBERR(STG_E_NOTFILEBASEDSTORAGE, "OLE error STG_E_NOTFILEBASEDSTORAGE"),
+TYPELIBERR(STG_E_EXTANTMARSHALLINGS, "OLE error STG_E_EXTANTMARSHALLINGS"),
+ 
+// CONSIDER: these are just warnings -- correct to treat them as errors?
+TYPELIBERR(STG_S_CONVERTED, "OLE warning STG_S_CONVERTED"),

@@ -1,0 +1,3280 @@
+/****************************************************************************************************
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ *                                                                                                  *
+ *       LOCALISABLE RESOURCES ONLY - LOCALISABLE RESOURCES ONLY - LOCALISABLE RESOURCES ONLY       *
+ *                                                                                                  *
+ * This file must ONLY contain resources that need LOCALISATION. Any non-localised resources should *
+ * go into shdocvw.rc. Abuse of this will be on pain of death.                                      *
+ *                                                                                                  *
+ * 06/11/98 - gilesv                                                                                *
+ *                                                                                                  *
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ ****************************************************************************************************/
+
+#include <windows.h>
+#include <shlobj.h>     // for FCIDM_SHVIEWFIRST
+
+#include <mshtmcid.h>
+
+#include "shdocvw.rcv"
+#include "urlmon.h"
+#include <shellp.h>
+#include <shdocvw.h>
+#include "resource.h"
+#include <platform.h>
+
+#include <shellp.h>
+
+#include <stubres.h>
+#include <inststub.rc>
+
+#include "mshtmlrc.h"
+
+//
+// non-localizable resouces which are directly accessed by
+// localizable resources (bitmaps for HTML dialogs, etc)
+//
+
+back.gif            RT_FILE     "back.gif"
+refresh.gif         RT_FILE     "refresh.gif"
+search.gif          RT_FILE     "search.gif"
+
+lines.bmp           RT_FILE     "lines.bmp"
+ie.gif              RT_FILE     "ie.gif"
+ie256.gif           RT_FILE     "ie256.gif"
+world.bmp           RT_FILE     "world.bmp"
+world256.gif        RT_FILE     "world256.gif"
+flag.gif                  RT_FILE     "flag.gif"
+ie5.gif           RT_FILE     "ie5.gif"
+
+#ifndef UNIX
+ietxt256.bmp        RT_FILE     "ietxt256.bmp"
+lines256.bmp        RT_FILE     "lines256.bmp"
+#else
+ietxt256.gif        RT_FILE     "ietxt256.gif"
+lines256.gif        RT_FILE     "lines256.gif"
+#endif
+
+ietext.bmp          RT_FILE     "ietext.bmp"
+warning.gif         RT_FILE     "warning.gif"
+
+pagerror.gif        RT_FILE DISCARDABLE     "pagerror.gif"
+
+#ifdef UNIX
+alert.gif           RT_FILE DISCARDABLE     "alert.gif"
+#endif
+
+
+IDB_DOWNLOAD            BITMAP "download.bmp"
+IDI_HISTORYDELETE       ICON "histdel.ico"
+IDI_UNLOCK              ICON "unlock.ico"
+IDI_FRAME               ICON "rc_frame.ico"                 // 1
+IDI_SAVEAS_WARNING      ICON "warn.ico"
+IDI_FAVORITE            ICON "..\shell32\fave.ico"          // 4
+
+// Software Update dialog icon
+IDI_SUGENERIC           ICON "download.ico"
+
+IDB_IMPEXPWATERMARK BITMAP "watermark.bmp"
+IDB_IMPEXPHEADER    BITMAP "header.bmp"
+
+//
+// DocView menu when it (or the object) has the focus.
+//
+
+MID_FOCUS MENUEX DISCARDABLE
+BEGIN
+    POPUP "&File", FCIDM_MENU_FILE
+    BEGIN
+    POPUP "&New",                            DVIDM_NEW
+    BEGIN
+#ifndef UNIX
+    MENUITEM "&Window \tCtrl+N",        DVIDM_NEWWINDOW
+#else
+    MENUITEM "&Window \tAlt+N",         DVIDM_NEWWINDOW
+#endif
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Message",                DVIDM_NEWMESSAGE
+    MENUITEM "&Post",                   DVIDM_NEWPOST
+#ifndef UNIX
+    MENUITEM "&Contact",                DVIDM_NEWCONTACT
+    MENUITEM "&Appointment",            DVIDM_NEWAPPOINTMENT
+    MENUITEM "Meeting &Request",        DVIDM_NEWMEETING
+    MENUITEM "&Task",                   DVIDM_NEWTASK
+    MENUITEM "Task Re&quest",           DVIDM_NEWTASKREQUEST
+    MENUITEM "&Journal",                DVIDM_NEWJOURNAL
+    MENUITEM "&Note",                   DVIDM_NEWNOTE
+    MENUITEM "&Internet Call",          DVIDM_CALL
+#endif
+    END
+
+#ifndef UNIX
+    MENUITEM "&Open...\tCtrl+O",            DVIDM_OPEN
+    MENUITEM "&Save\tCtrl+S",               DVIDM_SAVE ,, MFS_GRAYED
+    MENUITEM "Save &As...",                DVIDM_SAVEASFILE  // ,, MFS_GRAYED
+#else
+    MENUITEM "&Open...\tAlt+O",            DVIDM_OPEN
+    MENUITEM "Save &As...\tAlt+S",                DVIDM_SAVEASFILE  // ,, MFS_GRAYED
+#endif
+
+    MENUITEM "", -1, MFT_SEPARATOR
+
+    MENUITEM "Page Set&up...",              DVIDM_PAGESETUP ,, MFS_GRAYED
+#ifndef UNIX
+    MENUITEM "&Print...\tCtrl+P",           DVIDM_PRINT ,, MFS_GRAYED
+#else
+    MENUITEM "&Print...\tAlt+P",           DVIDM_PRINT ,, MFS_GRAYED
+#endif
+
+    MENUITEM "", -1, MFT_SEPARATOR
+    POPUP "S&end",                  DVIDM_SEND
+    BEGIN
+    MENUITEM "&Page By E-mail..." ,  DVIDM_SENDPAGE
+    MENUITEM "&Link By E-mail...",   DVIDM_SENDSHORTCUT
+#ifndef UNIX
+    MENUITEM "&Shortcut To Desktop",         DVIDM_DESKTOPSHORTCUT
+#endif
+    END
+
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Import and Export...",       DVIDM_IMPORTEXPORT
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "P&roperties",                 DVIDM_PROPERTIES
+    MENUITEM "", -1, MFT_SEPARATOR
+    END
+
+    POPUP "&Help", FCIDM_MENU_HELP
+    BEGIN
+//////  The Number of items in this menu MUST correspond to HELP_ITEM_COUNT (currently 7)
+    MENUITEM "&Contents and Index",         DVIDM_HELPSEARCH
+    MENUITEM "&Product Updates",            (DVIDM_HELPMSWEB+2)
+    MENUITEM "Web &Tutorial",               DVIDM_HELPTUTORIAL
+    MENUITEM "Online &Support",             (DVIDM_HELPMSWEB+4)
+    POPUP "Microsoft on the &Web",          DVIDM_HELPMSWEB
+    BEGIN
+    MENUITEM "&Free Stuff",                 (DVIDM_HELPMSWEB+1)
+    MENUITEM "&Get Faster Internet Access", (DVIDM_HELPMSWEB+9)
+    MENUITEM "Frequently Asked &Questions", (DVIDM_HELPMSWEB+3)
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Internet Start Page",        (DVIDM_HELPMSWEB+10)
+    MENUITEM "Send Feedbac&k...",           (DVIDM_HELPMSWEB+5)
+    MENUITEM "&Best of the Web",            (DVIDM_HELPMSWEB+6)
+    MENUITEM "Search the &Web",             (DVIDM_HELPMSWEB+7)
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "Microsoft &Home Page",        (DVIDM_HELPMSWEB+8)
+    END
+    MENUITEM "", -1,                        MFT_SEPARATOR
+    MENUITEM "&About Internet Explorer",    DVIDM_HELPABOUT
+    END
+
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+MENU_SCRDEBUG MENUEX DISCARDABLE
+BEGIN
+    POPUP "Script Deb&ugger",                  (DVIDM_MSHTML_FIRST+IDM_SCRIPTDEBUGGER)
+    BEGIN
+        MENUITEM "&Open",                      (DVIDM_MSHTML_FIRST+IDM_LAUNCHDEBUGGER)
+        MENUITEM "&Break at Next Statement",   (DVIDM_MSHTML_FIRST+IDM_BREAKATNEXT)
+    END
+END
+
+POPUP_CACHECONTEXT_URL MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "&Open",                       RSVIDM_OPEN
+    MENUITEM "Open in &New Window",         RSVIDM_OPEN_NEWWINDOW
+    MENUITEM "&Add To Favorites",           RSVIDM_ADDTOFAVORITES
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Copy",                       RSVIDM_COPY
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Delete",                     RSVIDM_DELCACHE
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "P&roperties",                 RSVIDM_PROPERTIES
+    END
+END
+
+POPUP_HISTORYCONTEXT_URL MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "&Open",                       RSVIDM_OPEN
+    MENUITEM "", -1, MFT_SEPARATOR
+    MENUITEM "&Delete",                     RSVIDM_DELCACHE
+    END
+END
+
+POPUP_CONTEXT_URL_VERBSONLY MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "&Open",                       RSVIDM_OPEN
+    END
+END
+
+
+MENU_HISTORY MENUEX DISCARDABLE
+BEGIN
+    POPUP "", SFVIDM_MENU_ARRANGE
+    BEGIN
+    MENUITEM "by &Title",                   IDM_SORTBYTITLE
+    MENUITEM "by &Internet Address",        IDM_SORTBYADDRESS
+    MENUITEM "by Last &Visited",            IDM_SORTBYVISITED
+    MENUITEM "by Last &Updated",            IDM_SORTBYUPDATED
+    END
+END
+
+MENU_CACHE MENUEX DISCARDABLE
+BEGIN
+    POPUP "", SFVIDM_MENU_ARRANGE
+    BEGIN
+    MENUITEM "by &Name",                    IDM_SORTBYNAME
+    MENUITEM "by &Internet Address",        IDM_SORTBYADDRESS2
+    MENUITEM "by &Size",                    IDM_SORTBYSIZE
+    MENUITEM "by &Expires",                 IDM_SORTBYEXPIRES2
+    MENUITEM "by &Modified",                IDM_SORTBYMODIFIED
+    MENUITEM "by Last &Accessed",           IDM_SORTBYACCESSED
+    MENUITEM "by Last &Checked",            IDM_SORTBYCHECKED
+    END
+END
+
+
+//+-------------------------------------------------------------------------
+//
+// Menus
+//
+//--------------------------------------------------------------------------
+IDR_FORM_CONTEXT_MENU MENU
+BEGIN
+    POPUP "Default"
+    BEGIN
+    MENUITEM "&Open",                   IDM_FOLLOWLINKC
+    MENUITEM "Open in &New Window",     IDM_FOLLOWLINKN
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",                    IDM_CUT
+    MENUITEM "&Copy",                   IDM_COPY
+    MENUITEM "&Paste",                  IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "&Document Properties", IDM_DOCPROPERTIES
+    MENUITEM SEPARATOR
+    MENUITEM "&Browse View",            IDM_BROWSEMODE
+    MENUITEM SEPARATOR
+    MENUITEM "&View Source",            IDM_VIEWSOURCE
+    MENUITEM SEPARATOR
+    MENUITEM "Edit &Hyperlink...",      IDM_HYPERLINK
+    MENUITEM "Insert &Image...",        IDM_IMAGE
+//v2        MENUITEM "Format P&aragraph...",    IDM_PARAGRAPH
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",             IDM_PROPERTIES
+    END
+
+    POPUP "Image"
+    BEGIN
+    MENUITEM "&Open Link",                 IDM_FOLLOWLINKC
+    MENUITEM "Open Link in &New Window",   IDM_FOLLOWLINKN
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",                    IDM_CUT
+    MENUITEM "&Copy",                   IDM_COPY
+    MENUITEM "&Paste",                  IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "&Show Image",             IDM_SHOWPICTURE
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",             IDM_PROPERTIES
+    END
+
+    POPUP "Control"
+    BEGIN
+    MENUITEM "Cu&t",                    IDM_CUT
+    MENUITEM "&Copy",                   IDM_COPY
+    MENUITEM "&Paste",                  IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",             IDM_PROPERTIES
+    END
+
+    POPUP "Table"
+    BEGIN
+    MENUITEM "&Paste Insert",        IDM_PASTEINSERT
+    MENUITEM SEPARATOR
+    POPUP "&Select"
+    BEGIN
+        MENUITEM "&Cell",            IDM_CELLSELECT
+        MENUITEM "&Row",             IDM_ROWSELECT
+        MENUITEM "&Column",          IDM_COLUMNSELECT
+        MENUITEM "&Table",           IDM_TABLESELECT
+    END
+    MENUITEM SEPARATOR
+    MENUITEM "&Cell Properties",  IDM_CELLPROPERTIES
+    MENUITEM "&Table Properties", IDM_TABLEPROPERTIES
+    END
+
+    // These dummy popups let us have neat external CONTEXT_MENU_XXX numbers
+    Popup "Dummy"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+    Popup "Dummy"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+    Popup "Dummy"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+    Popup "Dummy"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+    Popup "Dummy"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+    Popup "Debug"
+    BEGIN
+    MENUITEM "Trace Tags",          IDM_DEBUG_TRACETAGS
+    MENUITEM "Resource Failures",   IDM_DEBUG_RESFAIL
+    MENUITEM "Dump Tracking Info",  IDM_DEBUG_DUMPOTRACK
+    MENUITEM "Debug Break",         IDM_DEBUG_BREAK
+    MENUITEM "Debug View",          IDM_DEBUG_VIEW
+    MENUITEM "Dump Tree",           IDM_DEBUG_DUMPTREE
+    MENUITEM "Dump Lines",          IDM_DEBUG_DUMPLINES
+    MENUITEM "Dump DisplayTree",    IDM_DEBUG_DUMPDISPLAYTREE
+    MENUITEM "Dump FormatCaches",   IDM_DEBUG_DUMPFORMATCACHES
+    MENUITEM "Memory Monitor",      IDM_DEBUG_MEMMON
+    MENUITEM "Performance Meters",  IDM_DEBUG_METERS
+    MENUITEM SEPARATOR
+    MENUITEM "&Browse View",        IDM_BROWSEMODE
+    MENUITEM "&Edit View",          IDM_EDITMODE
+    END
+END
+
+IDR_BROWSE_CONTEXT_MENU MENU
+BEGIN
+    POPUP "Default"
+    BEGIN
+    MENUITEM "&Back"                   IDM_GOBACKWARD
+    MENUITEM "F&orward"                IDM_GOFORWARD
+#ifndef UNIX
+    MENUITEM SEPARATOR
+    MENUITEM "&Save Background As...", IDM_SAVEBACKGROUND
+    MENUITEM "Set as &Wallpaper",      IDM_SETWALLPAPER
+    MENUITEM "&Copy Background",       IDM_COPYBACKGROUND
+    MENUITEM "Set as &Desktop Item...",IDM_SETDESKTOPITEM
+#endif
+    MENUITEM SEPARATOR
+    MENUITEM "Select &All",            IDM_SELECTALL
+    MENUITEM "&Paste",                 IDM_PASTE
+    MENUITEM SEPARATOR
+#ifndef UNIX
+    MENUITEM "Create Shor&tcut",       IDM_CREATESHORTCUT
+#endif
+    MENUITEM "Add to &Favorites...",   IDM_ADDFAVORITES
+    MENUITEM "&View Source",           IDM_VIEWSOURCE
+    MENUITEM SEPARATOR
+    MENUITEM "&Encoding",              IDM_LANGUAGE
+    MENUITEM SEPARATOR
+    MENUITEM "Pr&int",                 IDM_PRINT
+    MENUITEM "&Refresh",               IDM_REFRESH_THIS
+    MENUITEM "",                       IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "&Properties",            IDM_PROPERTIES
+    END
+
+    POPUP "Image"
+    BEGIN
+    MENUITEM "&Open Link",                 IDM_FOLLOWLINKC
+    MENUITEM "Open Link in &New Window",   IDM_FOLLOWLINKN
+    MENUITEM "Save Target &As...",     IDM_SAVETARGET
+    MENUITEM "&Print Target",          IDM_PRINTTARGET
+    MENUITEM SEPARATOR
+    MENUITEM "S&how Picture",          IDM_SHOWPICTURE
+    MENUITEM "&Save Picture As...",    IDM_SAVEPICTURE
+#ifndef UNIX
+    MENUITEM "Set as &Wallpaper",      IDM_SETWALLPAPER
+    MENUITEM "Set as &Desktop Item...",IDM_SETDESKTOPITEM
+#endif
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",                   IDM_CUT
+    MENUITEM "&Copy",                  IDM_COPY
+#ifndef WIN16
+    MENUITEM "Copy Shor&tcut",         IDM_COPYSHORTCUT
+#endif // ndef WIN16
+    MENUITEM "&Paste"                  IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "Add to &Favorites...",   IDM_ADDFAVORITES
+    MENUITEM "",                       IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",            IDM_PROPERTIES
+    END
+
+    POPUP "Control"
+    BEGIN
+    MENUITEM "&Undo",         IDM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",          IDM_CUT
+    MENUITEM "&Copy",         IDM_COPY
+    MENUITEM "&Paste",        IDM_PASTE
+    MENUITEM "&Delete",       IDM_DELETE
+    MENUITEM "",              IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "Select &All",   IDM_SELECTALL
+    END
+
+    POPUP "Table"
+    BEGIN
+    POPUP "&Select"
+    BEGIN
+        MENUITEM "&Cell",            IDM_CELLSELECT
+        MENUITEM "&Row",             IDM_ROWSELECT
+        MENUITEM "&Column",          IDM_COLUMNSELECT
+        MENUITEM "&Table",           IDM_TABLESELECT
+    END
+    MENUITEM "",                     IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "&Cell Properties",  IDM_CELLPROPERTIES
+    MENUITEM "&Table Properties", IDM_TABLEPROPERTIES
+    END
+
+    POPUP "1DSite Select"
+    BEGIN
+    MENUITEM "Cu&t",                IDM_CUT
+    MENUITEM "&Copy",               IDM_COPY
+    MENUITEM "Paste",               IDM_PASTE
+    MENUITEM "Select &All",         IDM_SELECTALL
+    MENUITEM "&Print",              IDM_PRINT
+    MENUITEM "",                    IDM_MENUEXT_PLACEHOLDER
+    END
+
+    Popup "Anchor"
+    BEGIN
+    MENUITEM "&Open",                  IDM_FOLLOWLINKC
+    MENUITEM "Open in &New Window",    IDM_FOLLOWLINKN
+    MENUITEM "Save Target &As...",     IDM_SAVETARGET
+    MENUITEM "&Print Target",          IDM_PRINTTARGET
+    MENUITEM SEPARATOR
+    MENUITEM "Cut",                    IDM_CUT
+    MENUITEM "&Copy",                  IDM_COPY
+#ifndef WIN16
+    MENUITEM "Copy Shor&tcut",         IDM_COPYSHORTCUT
+#endif // ndef WIN16
+    MENUITEM "&Paste"                  IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "Add to &Favorites...",   IDM_ADDFAVORITES
+    MENUITEM "",                       IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",            IDM_PROPERTIES
+    END
+
+    // These dummy popups let us have neat external CONTEXT_MENU_XXX numbers
+    Popup "Context Unknown"
+    BEGIN
+    MENUITEM SEPARATOR
+    END
+
+#ifndef NO_AVI
+    POPUP "DYNSRC Image"
+    BEGIN
+    MENUITEM "&Open Link",                 IDM_FOLLOWLINKC
+    MENUITEM "Open Link in &New Window",   IDM_FOLLOWLINKN
+    MENUITEM "Save Target &As...",         IDM_SAVETARGET
+    MENUITEM "&Print Target",              IDM_PRINTTARGET
+    MENUITEM SEPARATOR
+    MENUITEM "S&how Picture",              IDM_SHOWPICTURE
+    MENUITEM "&Save Video As...",          IDM_SAVEPICTURE
+#ifndef UNIX
+    MENUITEM "Set as &Wallpaper",          IDM_SETWALLPAPER
+    MENUITEM "Set as &Desktop Item...",    IDM_SETDESKTOPITEM
+#endif
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",                       IDM_CUT
+    MENUITEM "&Copy",                      IDM_COPY
+    MENUITEM "Copy Shor&tcut",             IDM_COPYSHORTCUT
+    MENUITEM "&Paste"                      IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "Add to &Favorites...",       IDM_ADDFAVORITES
+    MENUITEM "",                           IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "Play",                       IDM_DYNSRCPLAY
+    MENUITEM "Stop",                       IDM_DYNSRCSTOP
+    MENUITEM "P&roperties",                IDM_PROPERTIES
+    END
+#endif // ndef NO_AVI
+
+    POPUP "ART Image"
+    BEGIN
+    MENUITEM "&Open Link",                 IDM_FOLLOWLINKC
+    MENUITEM "Open Link in &New Window",   IDM_FOLLOWLINKN
+    MENUITEM "Save Target &As...",         IDM_SAVETARGET
+    MENUITEM "&Print Target",              IDM_PRINTTARGET
+    MENUITEM SEPARATOR
+    MENUITEM "S&how Picture",              IDM_SHOWPICTURE
+    MENUITEM "&Save Picture As...",        IDM_SAVEPICTURE
+#ifndef UNIX
+    MENUITEM "Set as &Wallpaper",          IDM_SETWALLPAPER
+    MENUITEM "Set as &Desktop Item...",    IDM_SETDESKTOPITEM
+#endif
+    MENUITEM SEPARATOR
+    MENUITEM "Cu&t",                       IDM_CUT
+    MENUITEM "&Copy",                      IDM_COPY
+    MENUITEM "Copy Shor&tcut",             IDM_COPYSHORTCUT
+    MENUITEM "&Paste"                      IDM_PASTE
+    MENUITEM SEPARATOR
+    MENUITEM "Add to &Favorites...",       IDM_ADDFAVORITES
+    MENUITEM SEPARATOR
+    MENUITEM "Play",                       IDM_IMGARTPLAY
+    MENUITEM "Stop",                       IDM_IMGARTSTOP
+    MENUITEM "Rewind",                     IDM_IMGARTREWIND
+    MENUITEM "",                           IDM_MENUEXT_PLACEHOLDER
+    MENUITEM SEPARATOR
+    MENUITEM "P&roperties",                IDM_PROPERTIES
+    END
+
+    Popup "Debug"
+    BEGIN
+    MENUITEM "Trace Tags",          IDM_DEBUG_TRACETAGS
+    MENUITEM "Resource Failures",   IDM_DEBUG_RESFAIL
+    MENUITEM "Dump Tracking Info",  IDM_DEBUG_DUMPOTRACK
+    MENUITEM "Debug Break",         IDM_DEBUG_BREAK
+    MENUITEM "Debug View",          IDM_DEBUG_VIEW
+    MENUITEM "Dump Tree",           IDM_DEBUG_DUMPTREE
+    MENUITEM "Dump Lines",          IDM_DEBUG_DUMPLINES
+    MENUITEM "Dump DisplayTree",    IDM_DEBUG_DUMPDISPLAYTREE
+    MENUITEM "Dump FormatCaches",   IDM_DEBUG_DUMPFORMATCACHES
+    MENUITEM "Memory Monitor",      IDM_DEBUG_MEMMON
+    MENUITEM "Performance Meters",  IDM_DEBUG_METERS
+    MENUITEM SEPARATOR
+    MENUITEM "&Browse View",        IDM_BROWSEMODE
+    MENUITEM "&Edit View",          IDM_EDITMODE
+    END
+END
+
+
+//////
+// Save-As strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MIME_SAVEAS_HEADER_FROM        "Saved by Microsoft Internet Explorer 5"
+    IDS_SAVING_STATUS_TEXT             "Saving"
+END
+
+//////
+// Open Web Folder String Table
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERRORINTERNAL       "The httpFolder behavior (iepeers.dll) failed to load."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HELP_OPEN           "Opens a document in this window."
+    IDS_HELP_SAVE           "Saves changes."
+    IDS_HELP_SAVEASFILE     "Saves this document as a file."
+    IDS_HELP_PAGESETUP      "Changes paper, headers and footers, orientation, and margins for this page."
+    IDS_HELP_PRINT          "Prints this page."
+    IDS_HELP_SEND           "Sends this page by e-mail or to your desktop."
+    IDS_HELP_SENDPAGE       "Sends this page in the body of an e-mail message."
+    IDS_HELP_SENDSHORTCUT   "Sends a link to this page in an e-mail message."
+    IDS_HELP_SENDTODESKTOP  "Creates a shortcut to this page on your desktop"
+    IDS_HELP_IMPORTEXPORT   "Imports and exports your favorites and bookmarks."
+    IDS_HELP_PROPERTIES     "Displays the properties of this document."
+    IDS_HELP_CUT            "Removes the selected items and copies them to the clipboard."
+    IDS_HELP_COPY           "Copies the selected items to the clipboard."
+    IDS_HELP_PASTE          "Inserts the items you have copied or cut into the selected location."
+    IDS_HELP_STOPDOWNLOAD   "Cancels the current download."
+    IDS_HELP_REFRESH        "Opens the current page again."
+    IDS_HELP_GOHOME         "Opens your start page."
+    IDS_HELP_GOSEARCH       "Opens/closes your search bar."
+    IDS_HELP_NEWWINDOW      "Opens a new Internet Explorer window."
+    IDS_HELP_PRINTPREVIEW   "Previews how this document will print."
+    IDS_HELP_PRINTFRAME     "Prints the document in the selected frame."
+    IDS_HELP_NEWMESSAGE     "Creates a new mail message."
+    IDS_HELP_DHFAVORITES    "Adds the current page to your Favorites folder."
+    IDS_HELP_HELPABOUT      "Displays program information, version number, and copyright."
+    IDS_HELP_HELPSEARCH     "Opens Help."
+    IDS_HELP_HELPTUTORIAL   "Opens the Web tutorial page (on the Internet)."
+    IDS_HELP_NEW            "Open a new document."
+    IDS_HELP_NEWPOST        "Post a new article."
+    IDS_HELP_NEWAPPOINTMENT "Create a new Appointment."
+    IDS_HELP_NEWMEETING     "Schedule a new Meeting."
+    IDS_HELP_NEWCONTACT     "Create a new contact."
+    IDS_HELP_NEWTASK        "Create a new Task."
+    IDS_HELP_NEWTASKREQUEST "Request a new Task."
+    IDS_HELP_NEWJOURNAL     "Create a new Journal Entry."
+    IDS_HELP_NEWNOTE        "Create a new Note."
+    IDS_HELP_CALL           "Make a new call."
+
+    IDS_HELP_HELPNETSCAPEUSERS  "Displays information about switching to Internet Explorer from Netscape."
+    IDS_HELP_HELPONLINESUPPORT  "Opens the Microsoft Product Support page."
+    IDS_HELP_HELPSENDFEEDBACK   "Opens a Microsoft Web page where you can provide feedback about this program."
+    IDS_HELP_PRODUCTUPDATES     "Opens the Windows Update Web page to update components."
+//    IDS_HELP_ADDTOFAVORITES     "Adds the current page to your Favorites list."
+//    IDS_HELP_ORGANIZEFAVORITES  "Organizes your Favorites list."
+
+    // IDS_HELP_HELPMSWEB   "Opens %s (on the Internet)."
+END
+
+
+// Internet Shortcut strings
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BROWSER_TB_LABELS       "|Cut|Copy|Paste|Encoding||"
+    IDS_SHORT_NEW_INTSHCUT      "ishortct.url"
+    IDS_NEW_INTSHCUT            "New Internet Shortcut.url"
+    IDS_INTERNET_SHORTCUT       "Internet Shortcut"
+
+    IDS_IS_APPLY_FAILED         "Cannot apply changes to this Internet Shortcut."
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_IS_EXEC_FAILED          "This Internet Shortcut cannot be opened because %1!.1023ws! failed to run."
+    IDS_IS_EXEC_OUT_OF_MEMORY   "There is not enough free memory to open this Internet Shortcut. Quit one or more programs, and then try again."
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_IS_EXEC_INVALID_SYNTAX  "The target ""%1!.1023ws!"" of this Internet Shortcut is not valid. Go to the Internet Shortcut property sheet and make sure the target is correct."
+    IDS_IS_EXEC_UNREGISTERED_PROTOCOL
+    "Unable to open this Internet Shortcut. The protocol ""%1!.1023ws!"" does not have a registered program."
+    IDS_UNREGISTERED_PROTOCOL   "The protocol ""%1!.1023ws!"" does not have a registered program. Do you want to keep this target anyway?"
+    IDS_INVALID_URL_SYNTAX      "The name ""%1!.1023ws!"" specified in the Target URL box is not valid. Make sure the name is correct."
+    IDS_SHORTCUT_ERROR_TITLE    "Problem with Shortcut"
+
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_IS_LOADFROMFILE_FAILED  "Unable to open Internet Shortcut ""%1!.1023ws!""."
+
+    //these 4 go through wvnsprintf, not FormatMessage
+    IDS_FAV_LASTVISIT           "%sLast Visited:  %s"
+    IDS_FAV_LASTMOD             "%sLast Updated: %s"
+    IDS_FAV_WHATSNEW            "%sWhat's New:   %s"
+    IDS_FAV_STRING              "%s%s"
+
+    IDS_AUTHOR                  "%sAuthor: %s"
+    IDS_SUBJECT                 "%sSubject: %s"
+    IDS_DOCTITLE                "%sTitle: %s"
+    IDS_COMMENTS                "%sComments: %s"
+    IDS_URL_DESC_FORMAT         "URL:%s Protocol"
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MENUOPEN                "&Open"
+    IDS_MH_OPEN                 "Opens this page."
+
+
+    IDS_SYNCHRONIZE             "S&ynchronize"
+    IDS_MH_SYNCHRONIZE          "Synchonize this page now"
+    IDS_MAKE_OFFLINE            "Make &available offline"
+    IDS_MH_MAKE_OFFLINE         "Saves this page for offline viewing."
+    IDS_VALUE_UNKNOWN           "Unknown"
+
+    // Used by menu extension for "Related Sites"
+    IDS_RELATEDSITESMENUTEXT    "Show &Related Links"
+    IDS_RELATEDSITESSTATUSBAR   "Shows links related to the current page."
+    IDS_RELATEDSITESBUTTONTEXT  "Related"
+
+    // Used by menu extension for "Tip of the Day"
+    IDS_TIPOFTHEDAYTEXT         "&Tip of the Day"
+    IDS_TIPOFTHEDAYSTATUSBAR    "Shows the Tip of the Day."
+
+END
+
+// Strings for the IEmptyVolumeCache2 cleaners
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CACHECLN_DISPLAY        "Temporary Internet Files"
+    IDS_CACHECLN_DESCRIPTION    "The Temporary Internet Files folder contains Web pages stored on your hard disk for quick viewing. Your personalized settings for Web pages will be left intact."
+    IDS_CACHECLN_BTNTEXT        "&View Files"
+    IDS_CACHEOFF_DISPLAY        "Offline Web Pages"
+    IDS_CACHEOFF_DESCRIPTION    "Offline pages are Web pages that are stored on your computer so you can view them without being connected to the Internet.  \
+If you delete these pages now, you can still view your favorites offline later by synchronizing them.  \
+Your personalized settings for Web pages will be left intact."
+    IDS_CACHEOFF_BTNTEXT        "&View Pages"
+END
+
+
+
+
+///
+// BUGBUG:CHEE
+// these are duplicated with explorer.exe
+//
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_FAV_UNABLETOCREATE  "Unable to create '%1!.1023ws!':\n\n%2!.1023ws!"
+    IDS_CHANNEL_UNAVAILABLE "Channel or item is unavailable '%1!.1023ws!':\n\n%2!.1023ws!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+    IDS_OPEN                "&Open"
+    IDS_DESKTOP             "Desktop"
+
+END
+// ENDBUGBUG
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VERB_EDIT           "&Edit"
+    IDS_MAYSAVEDOCUMENT     "This document has been modified. Do you want to save changes?\n\n\tYes:\tSaves your changes\n\tNo:\tDiscards your changes\n\tCancel:\tKeeps this document open"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CANTACCESSDOCUMENT  "Internet Explorer cannot go to the specified page.\n\n%1!.1023ws!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TYPELIB         "Microsoft Internet and Shell Object Type Library"
+    IDS_SHELLEXPLORER   "Microsoft Web Browser Control"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAVIGATEBACKTO          "Back to %s"
+    IDS_NAVIGATEFORWARDTO       "Forward to %s"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_BINDSTATUS_FIN   "Finding site: %s"
+   IDS_BINDSTATUS_CON   "Connecting to site %s"
+   IDS_BINDSTATUS_RED   "Redirecting to site: %s"
+   IDS_BINDSTATUS_BEG   "Start downloading from site: %s"
+   IDS_BINDSTATUS_DOW   "Downloading from site: %s"
+   IDS_BINDSTATUS_END   "Downloading from site: %s"
+   IDS_BINDSTATUS_BEGC  "Start downloading component %s"
+   IDS_BINDSTATUS_INSC  "Installing component %s"
+   IDS_BINDSTATUS_ENDC  "End downloading component %s"
+   IDS_BINDSTATUS_USEC  "Getting data from cache %s"
+   IDS_BINDSTATUS_SEND  "Web site found. Waiting for reply..."
+   IDS_BINDSTATUS_PROXYDETECTING "Detecting proxy settings..."
+   IDS_SSL40            "SSL secured (40 Bit)"
+   IDS_SSL56            "SSL secured (56 Bit)"
+   IDS_SSL128           "SSL Secured (128 Bit)"
+   IDS_SSL_FORTEZZA     "SSL secured (Fortezza)"
+END
+
+
+// IDS_TB_WIDTH_EXTRA & IDS_QL_WIDTH_EXTRA can be used to change the width of toolbar and
+// quicklink buttons. The valid range is from "0" to "9". "0" is the default size. "1" makes
+// the _max width_ of the button 4 pixels wider and "9" makes it 36 pixels wider.
+// The two TEXTROWS fields are used to determine how many line of text are used IF text is to be shown
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SUBSTR_PRD      "ie"
+    IDS_SUBSTR_PVER     "5.0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAME_COL            "Internet Address"
+    IDS_ORIGINAL_COL        "Local File Name"
+    IDS_STATUS_COL          "Status"
+    IDS_SIZE_COL            "Size"
+    IDS_TYPE_COL            "Type"
+    IDS_MODIFIED_COL        "Last Modified"
+    IDS_EXPIRES_COL         "Expires"
+    IDS_ACCESSED_COL        "Last Accessed"
+    IDS_LASTSYNCED_COL      "Last Checked"
+    IDS_HSFNONE             "None"
+    IDS_LASTVISITED_COL     "Last Visited"
+    IDS_NUMVISITS_COL       "Number of Visits"
+    IDS_HOSTNAME_COL        "Internet Host"
+    IDS_TIMEPERIOD_COL      "Time Period"
+    IDS_FILE_TYPE           "File"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WHATSNEW_COL        "What's New"
+    IDS_DESCRIPTION_COL     "Description"
+    IDS_AUTHOR_COL          "Author"
+    IDS_TITLE_COL           "Title"
+    IDS_LASTUPDATED_COL     "Last Updated"
+    IDS_SHORTNAME_COL       "Name"
+    IDS_NOTNETHOST          "My Computer"
+    IDS_TODAY               "Today"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_FROMTO              "%1!.1023ws! to %2!.1023ws!"
+    IDS_WEEKOF              "Week of %1!.1023ws!"
+    IDS_LASTWEEK            "Last Week"
+    IDS_WEEKSAGO            "%d Weeks Ago"
+    IDS_SITETOOLTIP         "Pages visited at %s"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_DAYTOOLTIP          "Pages visited %s"
+    IDS_WEEKTOOLTIP         "Pages visited in week starting %1!.1023ws!"
+    IDS_MISCTOOLTIP         "Pages visited from %1!.1023ws! to %2!.1023ws!"
+    IDS_TODAYTOOLTIP        "Pages visited Today"
+
+    // Cached in static buffer.  Maximium is 8 characters including terminating nul
+    IDS_HISTHOST_FMT        " (%s)"  
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BYTES               "%s bytes"
+    IDS_ORDERKB             "%sKB"
+    IDS_ORDERMB             "%sMB"
+    IDS_ORDERGB             "%sGB"
+    IDS_ORDERTB             "%sTB"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SB_OPEN            "Opens the selected items."
+    IDS_SB_COPY            "Copies the selected items to the clipboard."
+    IDS_SB_DELETE          "Deletes the selected items."
+    IDS_SB_PROPERTIES      "Displays the properties of the selected items."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MH_TITLE           "Sorts items alphabetically by title."
+    IDS_MH_ADDRESS         "Sorts items alphabetically by Internet address."
+    IDS_MH_VISITED         "Sorts items by last visited time."
+    IDS_MH_UPDATED         "Sorts items by last updated time."
+
+    IDS_MH_NAME            "Sorts items alphabetically by name."
+    IDS_MH_ADDRESS2        "Sorts items alphabetically by Internet address."
+    IDS_MH_SIZE            "Sorts items by size, from smallest to largest."
+    IDS_MH_EXPIRES2        "Sorts items by expiration time."
+    IDS_MH_MODIFIED        "Sorts items by last modified time."
+    IDS_MH_ACCESSED        "Sorts items by last accessed time."
+    IDS_MH_CHECKED         "Sorts items by last checked time."
+
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WARN_DELETE_HISTORYITEM  "Are you sure you want to delete History Item: %s ?"
+    IDS_WARN_DELETE_MULTIHISTORY "Are you sure you want to delete these %d History items ?"
+    IDS_WARN_DELETE_CACHE        "Are you sure you want to delete the selected Cookie(s) ?"
+END
+
+ACCEL_FAVBAR ACCELERATORS DISCARDABLE
+BEGIN
+    "X",            FCIDM_MOVE,             VIRTKEY,NOINVERT,CONTROL
+    "C",            FCIDM_COPY,             VIRTKEY,NOINVERT,CONTROL
+    "V",            FCIDM_PASTE,            VIRTKEY,NOINVERT,CONTROL
+    VK_F2,          FCIDM_RENAME,           VIRTKEY,NOINVERT
+    VK_INSERT,      FCIDM_COPY,             VIRTKEY,NOINVERT,CONTROL
+    VK_INSERT,      FCIDM_PASTE,            VIRTKEY,NOINVERT,SHIFT
+    VK_DELETE,      FCIDM_DELETE,           VIRTKEY,NOINVERT
+    VK_DELETE,      FCIDM_DELETE,           VIRTKEY,NOINVERT,SHIFT
+    "D",            FCIDM_DELETE,           VIRTKEY,NOINVERT,PLATFORM_ACCEL_KEY
+    VK_RETURN,      FCIDM_PROPERTIES,       VIRTKEY,NOINVERT,ALT
+END
+
+//
+// WARNING: READ THIS BEFORE MODIFYING THIS ACCELERATOR TABLE.
+//
+//  When we return the accelerator handle from GetWindowContext member
+// (in dochost.cpp), we need to specifies the number of entries in that
+// handle. Since there is no programatic way to get it, it's hard-coded.
+// When you add or remove any item, change that number as well.
+//
+ACCEL_DOCVIEW ACCELERATORS DISCARDABLE
+BEGIN
+    // ***************************************
+    // *** WARNING: read the comment above ***
+    // ***************************************
+#ifndef UNIX
+    "s",            DVIDM_SAVE,  PLATFORM_ACCEL_KEY, VIRTKEY
+#else
+    "s",            DVIDM_SAVEASFILE,  PLATFORM_ACCEL_KEY, VIRTKEY
+#endif
+    "p",            DVIDM_PRINT, PLATFORM_ACCEL_KEY, VIRTKEY
+    "n",            DVIDM_NEWWINDOW,  PLATFORM_ACCEL_KEY, VIRTKEY
+#ifdef UNIX
+    "m",            DVIDM_NEWWINDOW,  PLATFORM_ACCEL_KEY, VIRTKEY
+     // IEUNIX : Need both ctrl/alt
+    "o",            DVIDM_OPEN,  CONTROL, VIRTKEY
+#endif
+    "o",            DVIDM_OPEN,  PLATFORM_ACCEL_KEY, VIRTKEY
+    "l",            DVIDM_OPEN,  PLATFORM_ACCEL_KEY, VIRTKEY
+#ifdef DEBUG
+    "x",            WM_CLOSE,  PLATFORM_ACCEL_KEY, VIRTKEY
+#endif
+    // ***************************************
+    // *** WARNING: read the comment above ***
+    // ***************************************
+END
+
+// if REST_NOFILEMENU is set then beside removing file menu we should also
+// disable the accelerators for Open, Save and Print
+ACCEL_DOCVIEW_NOFILEMENU ACCELERATORS DISCARDABLE
+BEGIN
+    // ***************************************
+    // *** WARNING: read the comment above ***
+    // ***************************************
+    "n",            DVIDM_NEWWINDOW,  CONTROL, VIRTKEY
+#ifdef DEBUG
+    "x",            WM_CLOSE,  CONTROL, VIRTKEY
+#endif
+    // ***************************************
+    // *** WARNING: read the comment above ***
+    // ***************************************
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_HISTITEMPROP DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDD_ITEMICON,7,7,20,20
+    LTEXT           "(unknown)",IDD_TITLE,45,12,175,20
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,7,37,213,1
+    LTEXT           "Type:",IDD_FILETYPE_TXT,7,47,50,11
+    LTEXT           "(unknown)",IDD_FILETYPE,71,47,149,11
+    CONTROL         "",IDD_LINE_2,"Static",SS_ETCHEDHORZ,7,82,213,1
+    LTEXT           "Internet Address:",-1,7,62,54,10
+    LTEXT           "Last Visited:",-1,7,92,50,11
+    LTEXT           "(unknown)",IDD_LAST_VISITED,71,92,149,11
+    EDITTEXT        IDD_INTERNET_ADDRESS,71,62,149,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT|NFS_STATIC|NFS_USEFONTASSOC,0,0,0,0
+    LTEXT           "Times Visited:",-1,7,108,50,11
+    LTEXT           "(unknown)",IDD_NUMHITS,71,108,149,11
+END
+
+DLG_CACHEITEMPROP DIALOG DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDD_ITEMICON,7,7,21,20
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,7,37,213,1
+    LTEXT           "Type:",-1,7,47,23,10
+    LTEXT           "(unknown)",IDD_FILETYPE,45,47,175,10
+    LTEXT           "Size:",-1,7,63,23,10
+    LTEXT           "(unknown)",IDD_FILESIZE,45,63,175,10
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,7,83,213,1
+    LTEXT           "Cache name:",-1,7,93,50,10
+    LTEXT           "(unknown)",IDD_CACHE_NAME,72,93,148,10
+    LTEXT           "Expires:",-1,7,108,50,10
+    LTEXT           "(unknown)",IDD_EXPIRES,72,108,148,10
+    LTEXT           "Last Modified:",-1,7,123,50,10
+    LTEXT           "(unknown)",IDD_LAST_MODIFIED,72,123,148,10
+    LTEXT           "Last Accessed:",-1,7,138,50,10
+    LTEXT           "(unknown)",IDD_LAST_ACCESSED,72,138,148,10
+    EDITTEXT        IDD_HSFURL,45,11,175,12,ES_AUTOHSCROLL | ES_READONLY | NOT
+        WS_BORDER
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT|NFS_STATIC|NFS_USEFONTASSOC,0,0,0,0
+END
+
+DLG_HISTCACHE_WARNING DIALOG DISCARDABLE  0, 0, 275, 73
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "WARNING"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,147,51,58,14
+    PUSHBUTTON      "&No",IDNO,210,51,58,14
+    ICON            IDI_HISTORYDELETE,IDI_HISTORYDELETE,10,10,18,20
+    LTEXT           "DELETE WARNING",IDD_TEXT4,41,10,220,38,SS_NOPREFIX
+    CONTROL         "",-1,"NativeFontCtl",NFS_STATIC,0,0,0,0
+END
+
+// Save-as warning dialog
+
+DLG_SAVEAS_WARNING DIALOG DISCARDABLE  0, 0, 297, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Web Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SAVEAS_WARNING,IDI_SAVEAS_WARNING,9,9,21,20
+    DEFPUSHBUTTON   "OK",IDOK,187,45,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,241,45,50,14
+    LTEXT           "This Web page may not save correctly. Would you like to save it anyway?",
+                    IDC_SAVEAS_WARNING_STATIC,43,10,245,8
+    CONTROL         "Ne&ver ask me again",IDC_SAVEAS_WARNING_CB,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,45,23,213,10
+END
+
+
+#ifndef ALPHA_WARNING_IS_DUMB
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ALPHAWARNING "This is a pre-release version of Microsoft Internet Explorer.\n"
+    IDS_ALPHAWARNING+1 "This software is still in development; \n"
+    IDS_ALPHAWARNING+2 "Some of the functionality may be incomplete at this time. \n"
+    IDS_ALPHAWARNING+3 "Microsoft assumes no responsibility for any damages that \n"
+    IDS_ALPHAWARNING+4 "may occur either directly or indirectly from use of this\n"
+    IDS_ALPHAWARNING+5 "software product.\n\n"
+    IDS_ALPHAWARNING+6 "To obtain release versions of Microsoft Internet Explorer, go to\n"
+    IDS_ALPHAWARNING+7 "http://www.microsoft.com/ie\n"
+// if you need to add more stuff, you can use IDS_ALPHAWARNING++
+END
+#endif
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifndef POSTPOSTSPLIT
+    // Shell Name Space Parsing Errors
+    IDS_SHURL_ERR_PARSE_NOTALLOWED   "Accessing the resource '%1' has been disallowed."
+
+#endif
+
+    IDS_FOLDEROPTIONS           "Folder Options"
+    IDS_INTERNETOPTIONS         "Internet Options"
+    IDS_TITLE                   "Microsoft Internet Explorer"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_ERROR_GOTO              "Cannot find '%1!.1023ws!'. Make sure the path or Internet address is correct."
+    IDS_NAME                    "Microsoft Internet Explorer"
+
+    IDS_INVALIDURL              "Internet Explorer cannot open the Internet site %1!.1023ws!.\n\n%2!.1023ws!"
+    IDS_CREATE_SHORTCUT_MSG     "A shortcut to the current page will be placed on your desktop."
+    IDS_UNDEFINEDERR            "An unexpected error has occurred.\n"
+    IDS_DEF_HOME                "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=home"
+    IDS_DEF_SEARCH              "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=search"
+    IDS_DEF_UPDATE              "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=update&os={SUB_OS}"
+    IDS_DEF_CHANNELGUIDE        "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=changuide"
+    IDS_DOCUMENT                "Document"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_EXTDOCUMENT             "%ws Document%c*%ws"
+    IDS_ERR_OLESVR              "Cannot start the OLE server for this type of document.\n%1!.1023ws!\n\nDo you want to download it as a file?"
+    IDS_ERR_LOAD                "The associated OLE server cannot load this document.\n%1!.1023ws!\n\nDo you want to download it as a file?"
+
+    IDS_EXCHANGE                "Windows Messaging"
+    IDS_BROWSEFILTER            "HTML Files@*.htm;*.html;*.mhtml;*.mht@Text Files@*.txt@GIF Files@*.gif@JPEG Files@*.jpg;*.jpeg@PNG Files@*.png@ART Files@*.art@AU Files@*.au@AIFF Files@*.aif;*.aiff@XBM Files@*.xbm@All Files@*.*@"
+    IDS_UNTITLE_SHORTCUT        "Untitled"
+
+    // For drag and drop to the toolbar
+    IDS_SETHOME_TITLE           "Start Page"
+    IDS_SETHOME_TEXT            "Would you like to set your Start Page to ""%s""?"
+    // The space at the end is very important
+    IDS_URL_SEARCH_KEY          "? go find search "
+
+    IDS_SEARCH_URL              "http://auto.search.msn.com/response.asp?MT=%1&srch=%2&prov=%3&utf8"
+    IDS_SEARCH_INTRANETURL      "http://ieautosearch/response.asp?MT=%1&srch=%2"
+
+    // Characters to be substituted in the above search string.  The first character defines the deliminator
+    // followed by replacement pairs (" " replaced by "+", "#" replaced by "%23", etc).
+    IDS_SEARCH_SUBSTITUTIONS     ", ,+,#,%23,&,%26,?,%3F,+,%2B,=,%3d,%,%25"
+
+    // Download strings
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CANTDOWNLOAD            "Internet Explorer cannot download %1!.1023ws!.\n\n%2!.1023ws!"
+    IDS_TARGETFILE              "%1!.1023ws! from %2!.1023ws!"
+    IDS_DOWNLOADCOMPLETE        "Download complete"
+    IDS_TITLEPERCENT            "%1!d!%% of %2!.1023ws! Completed"
+    IDS_ESTIMATE                "%1!.1023ws! (%2!.1023ws! of %3!.1023ws! copied)"
+    IDS_DEFDLGTITLE             "File Download"
+    IDS_OPENING                 "Opening:"
+    IDS_SAVING                  "Saving:"
+    IDS_SAVED                   "Saved:"
+    IDS_ALLFILES                "All Files"
+    IDS_DOWNLOADFAILED          "Download could not complete!"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_TRANSFERRATE            "%1!.1023ws!/Sec"
+    IDS_DOWNLOADTOCACHE         "Temporary Folder"
+    IDS_TITLEBYTES              "%1!.1023ws! of %2!.1023ws! Copied"
+    IDS_BYTESCOPIED             "Not known (Opened so far %1!.1023ws!)"
+    IDS_BYTESTIME               "%1!.1023ws! in %2!.1023ws!"
+    IDS_OPENFROMINTERNET        "&Open this file from its current location"
+    IDS_SAVEFILETODISK          "&Save this file to disk"
+    IDS_DOWNLOADDISALLOWED      "Your current security settings do not allow this file to be downloaded."
+    IDS_ON_DESKTOP              "The target you specified is on the desktop."
+    IDS_FIND_TITLE              "Find Target"
+
+    IDS_ERR_NAV_FAILED          "Windows cannot navigate to this location.  %1!ls!"
+    IDS_ERR_NAV_FAILED_TITLE    "Cannot Navigate"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+    IDS_SECURITYALERT           "Security Alert"
+    IDS_ADDTOFAV_WARNING        "You are adding a favorite that may not be safe.  Do you want to continue?"
+    IDS_ADDTOLINKS_WARNING      "You are adding a link that may not be safe.  Do you want to continue?"
+    IDS_MAKEHOME_WARNING        "You are setting your home page to a link that may not be safe.  Do you want to continue?"
+    IDS_DROP_WARNING            "Navigating to this link may not be safe.  Do you want to continue?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    //BUGBUG many of these are now unused, since they're directly in the dialog resource
+    //now -- t-mattgi
+#ifndef POSTPOSTSPLIT
+    IDS_FAVORITEBROWSE          "Click the folder that you want to move the selected files to."
+
+    IDS_FAVS_TITLE              "Organize Favorites"
+    IDS_FAVS_FOLDER             "&Folder:"
+    IDS_FAVS_BROWSETEXT         "Internet Explorer will create a shortcut to this page on your Favorites menu, and use your Local intranet zone security settings."
+    IDS_FAVS_NEWFOLDERBUTTON    "Ne&w Folder..."
+    IDS_FAVS_NAME               "&Name:"
+    IDS_FAVS_ADVANCED_EXPAND    "&Create in >>"
+    IDS_FAVS_ADVANCED_COLLAPSE  "&Create in <<"
+//    IDS_FAVS_SUBSCRIBE          "&Subscribe"
+//    IDS_FAVS_SUBSCRIBE_TEXT     "You can also subscribe to this site to monitor it for changes or download its content."
+    IDS_FAVS_ADDTOFAVORITES     "Add to Favorites"
+    IDS_FAVS_MORE               "&More Favorites..."
+    IDS_FAVS_FILEEXISTS         "The name you have entered for the shortcut already exists on your Favorites menu.  Would you like to overwrite it?"
+    IDS_FAVS_FNTOOLONG          "The name you have entered for the favorite is too long."
+    IDS_FAVS_SAVE               "Create &in:"
+    IDS_FAVS_INVALIDFN         "A filename cannot contain any of the following characters:\n\t \\ / :  * ? "" < > | "
+    IDS_CHANNELS_FILEEXISTS    "The name you have entered for the channel already exists on your Channels Bar.  Would you like to overwrite it?"
+#endif
+
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CANTSHELLEX             "Internet Explorer cannot open this helper application for %1!.1023ws!.\n\n%2!.1023ws!"
+    IDS_FAVORITES               "Favorites"
+    IDS_NEED_CHANNEL_PASSWORD   "This channel is password-protected.  \
+You will not be able to synchronize this channel without \
+a username and password.  If you know your username and password, click \
+Customize and use the wizard to enter them.  If you don't want this channel \
+available offline, uncheck 'Make available offline'."
+    IDS_SUBS_UNKNOWN            "Unknown"
+    // Text for autosearch prompting box
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CANTFINDURL             "Internet Explorer could not open the Internet site %1!.1023ws!.\n\nWould you like to search for this site?"
+    IDS_CANTFINDSEARCH          "Internet Explorer could not open the search page."
+    // IDS_BETAEXPIRED         "Your pre-release version of ""Internet Explorer 4.0"" has expired.\nPlease update to the latest release of ""Internet Explorer 4.0"" from WWW.MICROSOFT.COM"
+    IDS_CLOSE                   "Close"
+END
+
+//BUGBUG davemi: many of these are unused now or will be soon
+STRINGTABLE DISCARDABLE
+BEGIN
+    (IDS_HELPTUTORIAL)          "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=tutorial"
+    (IDS_HELPMSWEB+1)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=free"
+    (IDS_HELPMSWEB+2)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=ienews&os={SUB_OS}"
+    (IDS_HELPMSWEB+3)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=faq"
+    (IDS_HELPMSWEB+4)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=support"
+    (IDS_HELPMSWEB+5)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=feedback"
+    (IDS_HELPMSWEB+6)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=best"
+    (IDS_HELPMSWEB+7)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=allinone"
+    (IDS_HELPMSWEB+8)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=ms"
+    (IDS_HELPMSWEB+9)           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=isdn"
+    (IDS_HELPMSWEB+10)          "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=inetstart"
+    (IDS_HELPMSWEB+11)          "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=compare"
+    (IDS_HELPMSWEB+12)          "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=homeuser&sba=tour"
+END
+
+//
+// NOTES: See "NOTES" in IE_ErrorMsgBox.
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERRMSG_FIRST            "This address is not valid. Check the address, and try again."
+    (IDS_ERRMSG_FIRST+1)        "The site was not found. Make sure the address is correct, and try again."
+    (IDS_ERRMSG_FIRST+2)        "The protocol specified in this address is not valid. Make sure the address is correct, and try again."
+    (IDS_ERRMSG_FIRST+3)        "The site was found but exceeded the system limits for redirection."
+    (IDS_ERRMSG_FIRST+4)        "Internet Explorer was not able to open this Internet site.  The requested site is either unavailable or cannot be found.  Please try again later."
+    IDS_CATDESKBAND             "Desktop Bands"
+    IDS_CATINFOBAND             "Internet Explorer Browser Band"
+    IDS_CATCOMMBAND             "Internet Explorer Browser Communication Band"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // n.b. same text as in explorer
+    IDS_CONFIRM_RESETFLAG   "Would you like to import your original wallpaper into the Active Desktop?  This will restore your wallpaper to the way it looked before you installed Internet Explorer 4.0."
+    IDS_CONFIRM_RESET_SAFEMODE "Are you sure you want to restore your Active Desktop settings?"
+
+    IDS_CONFIRM_SCRIPT_CLOSE_TEXT "The Web page you are viewing is trying to close the window.\n\nDo you want to close this window?"
+
+
+    IDS_CHANNEL     "Channels"
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SPLASH_FONT    "Small Fonts"
+    IDS_SPLASH_SIZE    "-9" // size of font in splash screen
+    IDS_SPLASH_Y1      "180" // y coordinate for IDS_SPLASH_STR1
+    IDS_SPLASH_Y2      "200" // y coordinate for IDS_SPLASH_STR2
+    IDS_SPLASH_STR1    "[ This product is licensed. ]"
+    IDS_SPLASH_STR2    "Copyright\251 1995-99 Microsoft Corporation.  All rights reserved.\nThis program is protected by US and international copyright\nlaws as described in Help About."
+END
+
+// Strings that were commented as "used in DESKHTML" but really weren't
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INTERNETSECURITY    "Internet Security"
+END
+
+
+// Strings used in OPSPROFILE
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OPS_REQUEST             "%s has requested information from you"
+    IDS_PROFILE_ASSISTANT       "Profile Assistant"
+    IDS_DEFAULT_FNAME           "This site"
+    IDS_OPS_CONFIRM             "You have chosen to allow this site \
+to read your profile information for \n\
+one visit only. If you want to make sure the site does not remember \n\
+your profile information, you may want to disable 'Internet cookies' \n\
+from the 'Advanced' tab of the Internet Options dialog."
+    IDS_OPS_BLANK               "<Blank>"
+    IDS_OPS_NO_INFORMATION      "All items you have agreed to share with this site are blank.\nWould you like to enter this information now?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OPS_COMMONNAME                  "Common Name"
+    IDS_OPS_GIVENNAME                   "First Name"
+    IDS_OPS_LASTNAME                    "Last Name"
+    IDS_OPS_MIDDLENAME                  "Middle Name"
+    IDS_OPS_GENDER                      "Gender"
+    IDS_OPS_CELLULAR                    "Cellular Phone"
+    IDS_OPS_EMAIL                       "E-mail"
+    IDS_OPS_URL                         "Personal Home Page"
+
+    IDS_OPS_COMPANY                     "Company"
+    IDS_OPS_DEPARTMENT                  "Department"
+    IDS_OPS_JOBTITLE                    "Job Title"
+    IDS_OPS_PAGER                       "Pager"
+    IDS_OPS_OFFICE                      "Office"
+
+    IDS_OPS_HOME_ADDRESS                "Home Address"
+    IDS_OPS_HOME_CITY                   "City (Home)"
+    IDS_OPS_HOME_ZIPCODE                "Zip Code (Home)"
+    IDS_OPS_HOME_STATE                  "State (Home)"
+    IDS_OPS_HOME_COUNTRY                "Country (Home)"
+    IDS_OPS_HOME_PHONE                  "Home Phone"
+    IDS_OPS_HOME_FAX                    "Fax (Home)"
+
+    IDS_OPS_BUSINESS_ADDRESS            "Business Address"
+    IDS_OPS_BUSINESS_CITY               "City (Business)"
+    IDS_OPS_BUSINESS_ZIPCODE            "Zip Code (Business)"
+    IDS_OPS_BUSINESS_STATE              "State (Business)"
+    IDS_OPS_BUSINESS_COUNTRY            "Country (Business)"
+
+    IDS_OPS_BUSINESS_PHONE              "Business Phone"
+    IDS_OPS_BUSINESS_FAX                "Fax (Business)"
+    IDS_OPS_BUSINESS_URL                "Business Home Page"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OPS_USAGEUNK        "Can not determine what this information is used for."
+    IDS_OPS_USAGE0          "Used solely to administer the system and its rules, such as identifying problems at the site."
+    IDS_OPS_USAGE1          "Used for research and product development."
+    IDS_OPS_USAGE2          "Used to complete a current transaction, such as a purchase."
+    IDS_OPS_USAGE3          "Used to customize the content and design of the site for you."
+    IDS_OPS_USAGE4          "Used to improve the content of the site including advertisements."
+    IDS_OPS_USAGE5          "Used to send you Web site updates."
+    IDS_OPS_USAGE6          "Used to contact you for marketing of services or products."
+    IDS_OPS_USAGE7          "Combined with other information about you."
+    IDS_OPS_USAGE8          "Used by site for other purposes."
+    IDS_OPS_USAGE9          "Disclosed to others for customization or improvement of the content and design of the site."
+    IDS_OPS_USAGE10         "Disclosed to others who may contact you for marketing of services and/or products."
+    IDS_OPS_USAGE11         "Disclosed to others who may contact you for marketing of services and/or products. You will have an opportunity to ask the site not to do this."
+    IDS_OPS_USAGE12         "Disclosed to others for any purposes."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SUDETAILSFMT        "Title: %s\r\n\r\nAbstract:\r\n%s"
+    IDS_SUDETAILSOPEN       "Details >>"
+    IDS_SUDETAILSCLOSE      "Details <<"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HISTVIEW_DEFAULT    "By &Date"
+    IDS_HISTVIEW_SITE       "By S&ite"
+    IDS_HISTVIEW_FREQUENCY  "By &Most Visited"
+    IDS_HISTVIEW_TODAY      "By &Order Visited Today"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+    IDS_PRINTTOFILE_TITLE           "Print To File..."
+    IDS_PRINTTOFILE_OK              "OK"
+    // !!localizer: attention     !!!
+    // this string get's parsed for the print to file dialog
+    // the format is : <title>,<filespec>
+    // the "," will be replaced by 0 in the string, so don't change them
+    //  the first string will be the default
+#ifndef UNIX
+    IDS_PRINTTOFILE_SPEC            "Printer Files (*.prn),*.prn,All Files (*.*),*.*"
+#else
+    IDS_PRINTTOFILE_SPEC            "Postscript Files (*.ps),*.ps,All Files (*),*"
+#endif
+
+END
+
+// strings for explorer bar buttons
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FAVS_BAR_LABELS   "|Add...|Organize...||\0"
+    IDS_HIST_BAR_LABELS "|Vie&w|&Search||\0"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BAND_FAVORITES      "Favorites"
+    IDS_BAND_HISTORY        "History"
+    IDS_BAND_CHANNELS       "Channels"
+END
+
+POPUP_CONTEXT_NSC MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        // Alt+A conflicts with Make Available Offline, but that's okay
+        // because we use this only for folders, and Make Available Offline
+        // is only for URL files.
+
+        // At runtime we choose one of the following three and delete the
+        // other two.
+        MENUITEM "Exp&and",                 RSVIDM_EXPAND
+        MENUITEM "Coll&apse",               RSVIDM_COLLAPSE
+        MENUITEM "&Open",                   RSVIDM_OPEN
+
+        MENUITEM "Create Ne&w Folder",      RSVIDM_NEWFOLDER
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RESTRICTED              "This action is restricted. For more information, please contact your system administrator."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SCRIPT_ERROR_ON_PAGE    "Error on page."
+    IDS_DONE_WITH_SCRIPT_ERRORS "Done, but with errors on page."
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPS_CONSENT DIALOG 0, 0, 252, 250
+STYLE DS_MODALFRAME | DS_CENTER | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Profile Assistant"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Deny",IDCANCEL,195,229,50,14
+    PUSHBUTTON      "A&llow",IDOK,136,229,50,14
+    LTEXT           "Text with site information.",IDC_SITE_IDENTITY,7,7,238,9
+    GROUPBOX        "Profile information requested",IDC_OPS_INFO_REQUESTED,7,32,238,126
+    LTEXT           "Clear the checkbox for information you do not want to share.",
+                    IDC_STATIC,14,42,211,8
+    CONTROL         "List1", IDC_OPS_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
+                    LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER | WS_BORDER |  WS_TABSTOP,
+                    14,56,223,77,WS_EX_CLIENTEDGE
+    GROUPBOX        "Privacy",IDC_OPS_PRIVACY,7,160,238,65
+    LTEXT           "Usage details",IDC_USAGE_STRING,36,198,199,18
+    PUSHBUTTON      "View Certificate", IDC_VIEW_CERT,173,170,63,14
+    LTEXT           "This information will be sent on a secure connection.",
+                    IDC_SECURE_CONNECTION,36,172,122,23
+    ICON            IDI_UNLOCK, IDC_SECURITY_ICON, 10,170,21,20
+    LTEXT           "This information will be sent over the Internet on an insecure connection.",
+                    IDC_UNSECURE_CONNECTION,35,172,193,25
+    LTEXT           "Site:", IDC_STATIC, 7,18,24,8
+    LTEXT           "Replace with URL", IDC_OPS_URL,31,18,189,8
+    PUSHBUTTON      "&Edit Profile", IDC_EDIT_PROFILE,173,140,64,14
+    CONTROL         "&Always allow this site to see checked items. ", IDC_KEEP_SETTINGS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,140,153,10
+END
+
+IDD_OPS_UPDATE DIALOG DISCARDABLE  0, 0, 202, 176
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Microsoft Profile Assistant"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,86,155,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,145,155,50,14
+    LTEXT           "The following items in your profile will be updated. Clear the checkbox for information you don't want updated.",
+        IDC_STATIC,7,7,188,20
+    CONTROL         "List1",IDC_OPS_LIST,"SysListView32",LVS_LIST |
+        LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER |
+        WS_BORDER | WS_TABSTOP,7,30,188,113
+END
+
+IDD_AUTOSUGGEST_SAVEPASSWORD DIALOG DISCARDABLE  0, 0, 251, 74
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AutoComplete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_QUESTION,IDC_AUTOSUGGEST_ICON,7,7,21,20
+#ifndef UNIX
+    LTEXT           "Do you want Windows to remember this password, so that you don't have to type it again the next time you visit this page?",IDC_STATIC,
+                    40,7,197,25
+#else
+    LTEXT           "Do you want Internet Explorer to remember this password, so that you don't have to type it again the next time you visit this page?",IDC_STATIC,
+                    40,7,197,25
+#endif
+    CONTROL         "&Don't offer to remember any more passwords",IDC_AUTOSUGGEST_NEVER,
+                        "Button",BS_AUTOCHECKBOX | WS_TABSTOP,40,34,197,10
+    PUSHBUTTON      "&Yes",IDYES,140,53,50,14
+    DEFPUSHBUTTON   "&No",IDNO,194,53,50,14
+END
+
+IDD_AUTOSUGGEST_CHANGEPASSWORD DIALOG DISCARDABLE  0, 0, 251, 84
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AutoComplete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_QUESTION,IDC_AUTOSUGGEST_ICON,7,7,20,20
+    LTEXT           "The password you entered does not match the password stored in Windows for this user name.",
+                    IDC_STATIC,40,7,197,20
+    LTEXT           "Do you want to change the password stored in Windows to your new entry?",
+                    IDC_STATIC,40,31,197,20
+    DEFPUSHBUTTON   "&Yes",IDYES,137,63,50,14
+    PUSHBUTTON      "&No",IDNO,194,63,50,14
+END
+
+IDD_AUTOSUGGEST_DELETEPASSWORD DIALOG DISCARDABLE  0, 0, 251, 58
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AutoComplete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_QUESTION,IDC_AUTOSUGGEST_ICON,7,7,20,20
+    LTEXT           "Windows has a password stored for this user name. Do you want to delete the user name and password?",
+                    IDC_STATIC,40,7,197,20
+    DEFPUSHBUTTON   "&Yes",IDYES,137,37,50,14
+    PUSHBUTTON      "&No",IDNO,194,37,50,14
+END
+
+IDD_AUTOSUGGEST_ASK_USER DIALOG DISCARDABLE  0, 0, 260, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "AutoComplete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "AutoComplete remembers entries in Web forms, like the one you just typed. In the future it can check your previous entries and list suggestions as you type.\n\nWould you like to turn AutoComplete on?",
+                    IDC_STATIC,77,8,172,65
+#ifndef UNIX
+    DEFPUSHBUTTON   "&Yes",IDYES,95,73,50,14
+    PUSHBUTTON      "&No",IDNO,149,73,50,14
+    PUSHBUTTON      "&More Info...",IDC_AUTOSUGGEST_HELP,203,73,50,14
+#else
+    DEFPUSHBUTTON   "&Yes",IDYES,149,73,50,14
+    PUSHBUTTON      "&No",IDNO,203,73,50,14
+#endif
+    CONTROL         "",IDD_ANIMATE,ANIMATE_CLASS,ACS_TRANSPARENT|ACS_AUTOPLAY|ACS_TIMER,7,8,61,46
+END
+
+
+IDD_INTSHCUT_PROP DIALOG DISCARDABLE  20, 20, 227, 215
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP |
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Web Document"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_ICON,7,7,21,20
+    EDITTEXT        IDC_NAME,34,12,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT
+                    WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,34,213,1
+    LTEXT           "&URL:",IDC_URL_TEXT,7,45,18,8
+    EDITTEXT        IDC_URL,57,42,163,14,ES_AUTOHSCROLL
+#ifndef UNIX
+    LTEXT           "Shortcut &key:",IDC_HOTKEY_TEXT,7,62,43,8
+    CONTROL         "",IDC_HOTKEY,"msctls_hotkey32",WS_BORDER | WS_TABSTOP,
+                    57,59,163,14
+    LTEXT           "Visits:",IDC_VISITS_TEXT,7,80,43,8
+    LTEXT           "",IDC_VISITS,57,80,163,8
+#else
+    LTEXT           "Visits:",IDC_VISITS_TEXT,7,62,43,8
+    LTEXT           "",IDC_VISITS,57,62,163,8
+#endif
+
+#ifdef UNIX_FEATURE_ALIAS
+    LTEXT           "Alias:",IDC_STATIC,7,95,213,8
+    LTEXT           "",IDC_ALIAS_NAME,57,95,163,8
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,110,213,1
+#endif
+
+#ifndef UNIX
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,95,213,1
+    CONTROL         "Make this page available &offline",IDC_MAKE_OFFLINE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,103,145,10
+    PUSHBUTTON      "&Change Icon...",IDC_CHANGE_ICON,160,101,60,14
+    GROUPBOX        "Summary",IDC_SUMMARY,5,116,213,87,NOT WS_VISIBLE
+    LTEXT           "Last Synchronization:",IDC_LAST_SYNC_TEXT,12,129,68,8,
+                    NOT WS_VISIBLE
+    LTEXT           "",IDC_LAST_SYNC,94,129,119,8,NOT WS_VISIBLE
+    LTEXT           "Download Size:",IDC_DOWNLOAD_SIZE_TEXT,12,143,68,8,NOT
+                    WS_VISIBLE
+    LTEXT           "",IDC_DOWNLOAD_SIZE,94,143,119,8,NOT WS_VISIBLE
+    LTEXT           "Download Result:",IDC_DOWNLOAD_RESULT_TEXT,12,157,68,8,
+                    NOT WS_VISIBLE
+    EDITTEXT        IDC_DOWNLOAD_RESULT,94,157,119,22,ES_MULTILINE | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | NOT WS_VISIBLE
+    LTEXT           "To free hard disk space taken by this offline favorite, uncheck the box above.",
+                    IDC_FREESPACE_TEXT,12,179,203,21
+#endif
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT | NFS_STATIC,0,0,0,0
+END
+
+DLG_DOWNLOADPROGRESS DIALOG DISCARDABLE  60, 60, 245, 145
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_NOIDLEMSG | WS_POPUP | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | DS_CENTER
+CAPTION "File Download"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_FRAME,IDD_DOWNLOADICON,7,7,18,20
+    CONTROL         "",IDD_ANIMATE,ANIMATE_CLASS,ACS_TRANSPARENT|ACS_AUTOPLAY|ACS_TIMER,7,0,236,35
+    CONTROL         IDI_SUGENERIC,IDD_DNLDCOMPLETEICON, "Static", SS_ICON | NOT WS_VISIBLE, 7,10,40,25
+    CONTROL         "Download Complete",IDD_DNLDCOMPLETETEXT, "Static", SS_SIMPLE | SS_NOPREFIX | NOT WS_VISIBLE, 45,20,150,10
+    CONTROL         "Getting File Information:",IDD_OPENIT,"Static",SS_SIMPLE | SS_NOPREFIX,             7,38,236,10
+    CONTROL         "",IDD_NAME,"Static",SS_SIMPLE | SS_NOPREFIX,       7,48,236,10
+    CONTROL         "",IDD_PROBAR,PROGRESS_CLASS, NOT WS_VISIBLE ,                  7,58,231,8
+    CONTROL         "File size unknown",IDD_NOFILESIZE,"Static", SS_SIMPLE | SS_NOPREFIX | NOT WS_VISIBLE, 7,68,176,10
+    CONTROL         "Estimated time left:",IDD_DNLDESTTIME,"Static",SS_SIMPLE | SS_NOPREFIX,    7,68,60,10
+    CONTROL         "Downloaded:",IDD_DNLDTIME,"Static",SS_SIMPLE | SS_NOPREFIX | NOT WS_VISIBLE,    7,68,60,10
+    CONTROL         "Download to:",-1,"Static",SS_SIMPLE | SS_NOPREFIX,7,78,60,10
+    CONTROL         "Transfer rate:",-1,"Static",SS_SIMPLE | SS_NOPREFIX,7,88,60,10
+    CONTROL         "",IDD_TIMEEST,"Static",SS_SIMPLE | SS_NOPREFIX,    70,68,168,10
+    CONTROL         "",IDD_DIR,"Static",SS_SIMPLE | SS_NOPREFIX,70,78,168,10
+    CONTROL         "",IDD_TRANSFERRATE,"Static",SS_SIMPLE | SS_NOPREFIX,70,88,85,10
+    CONTROL         "&Close this dialog box when download completes", IDD_DISMISS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,100,230,10
+#ifndef UNIX
+    PUSHBUTTON      "&Open",  IDD_OPENFILE,        80,124,50,14
+    PUSHBUTTON      "Open &Folder",IDD_BROWSEDIR, 134,124,50,14
+#endif
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,            188,124,50,14
+    CONTROL         "",-1,"NativeFontCtl",NFS_STATIC,0,0,0,0
+END
+
+DLG_SAFEOPEN DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "File Download"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You have chosen to download a file from this location. ",-1,99,7,182,18
+    CONTROL         "",IDC_SAFEOPEN_EXPL,"Static",SS_SIMPLE | SS_NOPREFIX,100,25,182,27
+    CONTROL         IDB_DOWNLOAD,-1,"Static",SS_BITMAP | SS_SUNKEN | SS_CENTERIMAGE,8,7,80,140
+    LTEXT           "What would you like to do with this file?",-1,99,55,182,8
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,8,154,275,1
+    CONTROL         "&Run this program from its current location",
+        IDC_SAFEOPEN_AUTOOPEN,"Button",BS_AUTORADIOBUTTON,99,68,178,8
+    CONTROL         "&Save this program to disk",IDC_SAFEOPEN_AUTOSAVE,"Button",
+        BS_AUTORADIOBUTTON,99,80,178,8
+    CONTROL         "Al&ways ask before opening this type of file",
+        IDC_SAFEOPEN_ALWAYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,99,108,182,12
+    DEFPUSHBUTTON      "OK",IDOK,126,162,50,14
+    PUSHBUTTON   "Cancel",IDCANCEL,180,162,50,14
+    PUSHBUTTON      "&More Info",IDM_MOREINFO,233,162,50,14
+END
+
+IDD_ASSOC DIALOG DISCARDABLE  100, 50, 248, 70
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION 
+CAPTION "Internet Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_QUESTION,IDI_QUESTION,7,8,18,20
+    LTEXT           "Internet Explorer 5 is not currently your default browser. Would you like to make it your default browser?",
+    IDC_ASSOC_IE40,38,8,199,20,SS_NOPREFIX
+    PUSHBUTTON      "&Yes",IDYES,135,50,50,14
+    PUSHBUTTON      "&No",IDNO,190,50,50,14
+    CONTROL         "&Always perform this check when starting Internet Explorer.",
+    IDC_ASSOC_CHECK,"Button",BS_MULTILINE | BS_TOP | BS_AUTOCHECKBOX | WS_TABSTOP,37,33,206,10
+END
+
+IDD_PRINTOPTIONS DIALOG DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Print frames",-1,7,7,213,59
+    CONTROL         "As la&id out on screen",rad4,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,126,21,90,8
+    CONTROL         "Onl&y the selected frame",rad5,"Button",
+                    BS_AUTORADIOBUTTON,126,34,90,8
+    CONTROL         "All f&rames individually",rad6,"Button",
+                    BS_AUTORADIOBUTTON,126,47,90,8
+    CONTROL         "",IDC_PREVIEW,"Static",SS_BITMAP | SS_SUNKEN,17,19,16,
+                    14
+    CONTROL         "Print all lin&ked documents",IDC_LINKED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,72,96,8
+    CONTROL         "Print ta&ble of links",IDC_SHORTCUTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,144,72,98,8
+END
+
+
+#ifndef UNIX
+DLG_RUN DIALOG DISCARDABLE  0, 0, 227, 89
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_RUNDLG,IDD_ICON,7,7,20,20
+    LTEXT           "Type the Internet address of a document or folder, and Internet Explorer will open it for you.",
+                    IDD_PROMPT,34,7,182,18
+    LTEXT           "&Open:",IDD_RUNDLGOPENPROMPT,7,34,24,10
+    CONTROL         "",IDD_COMMAND,WC_COMBOBOXEX,
+                    CBS_DROPDOWN | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | WS_TABSTOP,
+                    34,34,185,100
+    CONTROL         "Open as Web &Folder",
+                    IDC_ASWEBFOLDER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP, 34,51,184,10
+    DEFPUSHBUTTON   "OK",IDOK,62,68,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,116,68,50,14
+    PUSHBUTTON      "B&rowse...",IDD_BROWSE,170,68,50,14
+END
+#else
+DLG_RUN DIALOG DISCARDABLE  0, 0, 227, 85
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_RUNDLG,IDD_ICON,7,11,18,20
+    LTEXT           "Type the Internet address of a document or directory, and Internet Explorer will open it for you.",
+    IDD_PROMPT,36,11,182,18
+    LTEXT           "&Open:",IDD_RUNDLGOPENPROMPT,7,39,24,10
+    CONTROL         "",IDD_COMMAND, WC_COMBOBOXEX,
+        CBS_DROPDOWN | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | WS_TABSTOP,
+        36,37,183,100
+    DEFPUSHBUTTON   "OK",IDOK,62,63,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,116,63,50,14
+    PUSHBUTTON      "B&rowse...",IDD_BROWSE,170,63,50,14
+END
+#endif  // UNIX
+
+#ifndef POSTPOSTSPLIT
+
+DLG_NEWFOLDER DIALOG DISCARDABLE  10, 40, 227, 85
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Internet Explorer will create the following folder for you. You can use this folder to organize shortcuts on your Favorites menu.",
+    IDD_PROMPT,7,11,213,18
+    LTEXT           "&Folder name:",-1,7,39,44,10
+    EDITTEXT        IDD_NAME,56,37,163,14, ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,116,63,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,63,50,14
+END
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ADDTOFAVORITES_TEMPLATE DIALOG DISCARDABLE  0, 0, 279, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | NOT WS_VISIBLE
+CAPTION "Add Favorite"
+FONT 8, "MS Shell Dlg"
+BEGIN
+#ifndef UNIX
+    CONTROL         "&Make available offline",
+                    IDC_MAKE_OFFLINE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    34,24,90,14
+    PUSHBUTTON      "C&ustomize...",IDC_SUBSCRIBE_CUSTOMIZE,162,24,50,14
+    LTEXT           "&Name:",IDC_NAMESTATIC,7,50,22,8
+    EDITTEXT        IDC_FAVORITE_NAME,34,48,178,14,ES_AUTOHSCROLL | WS_TABSTOP | WS_VISIBLE,WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE
+#else
+    CONTROL         "&Make available offline",
+                    IDC_MAKE_OFFLINE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    34,-25,90,14
+    PUSHBUTTON      "C&ustomize...",IDC_SUBSCRIBE_CUSTOMIZE,162,-25,50,14
+    LTEXT           "&Name:",IDC_NAMESTATIC,7,30,22,8
+    EDITTEXT        IDC_FAVORITE_NAME,34,28,178,14,ES_AUTOHSCROLL | WS_TABSTOP | WS_VISIBLE,WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE
+
+#ifdef UNIX_FEATURE_ALIAS
+    LTEXT           "&Alias:",IDC_STATIC,7,50,22,8
+    EDITTEXT        IDC_ALIAS_NAME,34,48,178,14,ES_AUTOHSCROLL | WS_TABSTOP | WS_VISIBLE,WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE
+#endif
+
+#endif
+    PUSHBUTTON      "",IDC_FAVORITE_CREATEIN,222,48,50,14
+    LTEXT           "Create &in:",IDC_FOLDERLISTSTATIC,7,70,31,8
+    CONTROL         "",IDC_SUBSCRIBE_FOLDERLIST_PLACEHOLDER,
+                    "SysTreeView32",WS_BORDER | WS_TABSTOP,44,71,168,99
+    PUSHBUTTON      "Ne&w Folder...",IDC_FAVORITE_NEWFOLDER,222,71,50,14
+    ICON            IDI_FAVORITE,IDC_FAVORITE_ICON,7,7,20,20
+    LTEXT           "Internet Explorer will add this page to your Favorites list.",IDC_FAVORITE_DESC,
+                    34,7,175,16
+    DEFPUSHBUTTON   "OK",IDOK_PLACEHOLDER,222,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL_PLACEHOLDER,222,24,50,14
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT,0,0,0,0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs used by SoftwareUpdateMessageBox
+//
+
+IDD_SUAVAILABLE DIALOG DISCARDABLE  0, 0, 238, 146
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "Software Update Available"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Show Update",IDYES,71,60,50,14
+    PUSHBUTTON      "D&on't Update",IDNO,125,60,50,14
+    PUSHBUTTON      "&Details >>",IDC_DETAILS,180,60,50,14
+    ICON            IDI_SUGENERIC,IDC_ICON,7,7,32,32
+    CONTROL         "&Remind me until I update the current version.",
+                    IDC_REMIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,46,43,
+                    154,12
+    LTEXT           "An updated version of this program is available. To view this program's web page for download instructions, click Show Update.",
+                    IDC_STATIC,47,7,184,25
+    EDITTEXT        IDC_DETAILSTEXT,7,81,224,58,ES_MULTILINE |
+                        ES_AUTOVSCROLL | NOT WS_TABSTOP | ES_READONLY
+END
+
+IDD_SUDOWNLOADED DIALOG DISCARDABLE  0, 0, 238, 146
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "Software Update Downloaded"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Show Update",IDYES,71,60,50,14
+    PUSHBUTTON      "D&on't Update",IDNO,125,60,50,14
+    PUSHBUTTON      "&Details >>",IDC_DETAILS,180,60,50,14
+    ICON            IDI_SUGENERIC,IDC_ICON,7,7,32,32
+    CONTROL         "&Remind me until I update the current version.",
+                    IDC_REMIND,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,46,43,
+                    154,12
+    LTEXT           "An updated version of this program has been downloaded. To view this program's web page for installation instructions, click Show Update.",
+                    IDC_STATIC,47,7,178,25
+    EDITTEXT        IDC_DETAILSTEXT,7,81,224,58, ES_MULTILINE |
+                        ES_AUTOVSCROLL | NOT WS_TABSTOP | ES_READONLY
+END
+
+IDD_SUINSTALLED DIALOG DISCARDABLE  0, 0, 238, 146
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "Software Update Installed"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "About &Update",IDYES,71,60,50,14
+    PUSHBUTTON      "&Cancel",IDNO,125,60,50,14
+    PUSHBUTTON      "&Details >>",IDC_DETAILS,180,60,50,14
+    ICON            IDI_SUGENERIC,IDC_ICON,7,7,32,32
+    LTEXT           "An updated version of this program has been installed on your computer. For more information, click About Update.",
+                    IDC_STATIC,47,7,177,25
+    EDITTEXT        IDC_DETAILSTEXT,7,81,224,58,ES_MULTILINE |
+                        ES_AUTOVSCROLL | NOT WS_TABSTOP | ES_READONLY
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs used by Save As Thicket
+//
+
+IDD_SAVETHICKET DIALOG DISCARDABLE  60, 60, 200, 90
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | DS_CENTER
+CAPTION "Save Web Page"
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    ICON            IDI_FRAME,IDD_DOWNLOADICON,7,7,18,20
+    CONTROL         "",IDD_ANIMATE,ANIMATE_CLASS,ACS_TRANSPARENT|ACS_AUTOPLAY|ACS_TIMER,7,0,186,25
+    CONTROL         "",IDC_THICKETSAVING,"Static",SS_SIMPLE | SS_NOPREFIX,             7,38,186,10
+    CONTROL         "",IDC_THICKETPROGRESS,PROGRESS_CLASS, 0x0,                  7,48,183,8
+    CONTROL         "0% complete.",IDC_THICKETPCT,"Static", SS_SIMPLE | SS_NOPREFIX, 7,60,176,10
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,            140,70,50,14
+    CONTROL         "",-1,"NativeFontCtl",NFS_STATIC,0,0,0,0
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_THICKETDIRFMT   "_files"
+    // NOTE: the code that uses IDS_THICKETTEMPFMT assumes that the %s%03d portion of
+    //       this string is at least 3 characters long.
+    IDS_THICKETTEMPFMT  "%s%03d.tmp"
+    IDS_THICKET_SAVE    "Save Web Page|htm|Web Page, complete (*.htm;*.html)|*.htm;*.html|Web Archive, single file (*.mht)|*.mht|Web Page, HTML only (*.htm;*.html)|*.htm;*.html|Text File (*.txt)|*.txt|"
+    IDS_NOMHTML_SAVE    "Save Web Page|htm|Web Page, complete (*.htm;*.html)|*.htm;*.html|Web Page, HTML only (*.htm;*.html)|*.htm;*.html|Text File (*.txt)|*.txt|"
+    IDS_NOTHICKET_SAVE  "Save Web Page|htm|Web Page, HTML only (*.htm;*.html)|*.htm;*.html|Text File (*.txt)|*.txt|"
+    IDS_UNTITLED        "untitled"
+    IDS_THICKETERRTITLE "Error Saving Web Page"
+    IDS_THICKETERRMEM   "There is insufficient memory to save this Web Page."
+    IDS_THICKETERRMISC  "This Web page could not be saved."
+    IDS_THICKETERRACC   "The Web page could not be saved to the selected location."
+    IDS_THICKETERRFULL  "The Web page could not be saved because the disk is full."
+    IDS_THICKETABORT    "Web Page save canceled."
+    IDS_THICKETSAVINGFMT "Saving: %s to %s."
+    IDS_THICKETPCTFMT    "%d%% complete."
+    IDS_THICKETERRFNF   "The Web page could not be saved because one of its files is missing."
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs used by Import Export Favorites
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_IMPORTCONVERTERROR   "Error Converting Bookmarks"
+    IDS_NOTVALIDBOOKMARKS    "Not a valid bookmark file"
+    IDS_COULDNTOPENBOOKMARKS "Couldn't open bookmarks file"
+    IDS_INVALIDURLFILE       "Please enter a valid URL or complete path and filename"
+    IDS_IMPORTFAILURE_FAV    "Unable to download favorites"
+    IDS_IMPORTSUCCESS_FAV    "Successfully imported favorites"
+    IDS_EXPORTFAILURE_FAV    "Unable to export favorites"
+    IDS_EXPORTSUCCESS_FAV    "Successfully exported favorites"
+    IDS_IMPORTFAILURE_COOK   "Unable to download cookies"
+    IDS_IMPORTSUCCESS_COOK   "Successfully imported cookies"
+    IDS_EXPORTFAILURE_COOK   "Unable to export cookies"
+    IDS_EXPORTSUCCESS_COOK   "Successfully exported cookies"
+    IDS_EXPORTDIALOGTITLE    "Save Favorites As HTML File"
+    IDS_IMPORTDIALOGTITLE    "Import Bookmarks HTML into Favorites"
+    IDS_CONFIRM_IMPTTL_FAV   "Import Favorites"
+    IDS_CONFIRM_EXPTTL_FAV   "Export Favorites"
+    IDS_CONFIRM_IMPTTL_COOK  "Import Cookies"
+    IDS_CONFIRM_EXPTTL_COOK  "Export Cookies"
+    IDS_CONFIRM_IMPORT       "Are you sure you want to import '%s' to your Favorites folder?"
+    IDS_CONFIRM_EXPORT       "Are you sure you want to export your Favorites to '%s'?"
+    IDS_IMPORT_DISABLED      "Favorites cannot be imported because modification of favorites on this machine has been disabled."
+    IDS_EXPORT_DISABLED      "Exporting of favorites has been disabled on this machine."
+    IDS_IMPORTEXPORTTITLE    "Select Folder to Import Bookmarks into or Export Favorites from."
+END
+
+// Print Dialogs
+#include "print.dlg"
+#include "prnsetup.dlg"
+
+DLG_HISTSEARCH2 DIALOG DISCARDABLE  0, 0, 200, 58
+STYLE DS_CONTROL | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Search for:",IDC_HISTSRCH_STATIC,6,5,135,8,0,
+                    WS_EX_TRANSPARENT
+    EDITTEXT        IDC_EDITHISTSEARCH,5,16,135,14,ES_AUTOHSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Search Now",IDB_HISTSRCH_GO,35,34,50,14, WS_DISABLED
+    PUSHBUTTON      "Stop",IDCANCEL,90,34,50,14,BS_PUSHBUTTON | WS_TABSTOP | WS_DISABLED
+    CONTROL         "Search Progress",IDD_HISTSRCH_ANIMATION,"SysAnimate32",
+                    ACS_CENTER | ACS_TRANSPARENT,147,4,33,27
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT,0,0,0,0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs and strings used by Import / Export wizard
+//
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+
+//  The following strings are import/export options, followed by a description.
+//  The description MUST follow the name in resource ID value, specified in
+//  resource.h
+//  The length of these strings must not exceed MAX_PATH (see shdocvw\impexpwz.cpp)
+
+  IDS_IMPFAVORITES                  "Import Favorites"
+  IDS_IMPFAVORITESDESC              "Import favorites from another browser or file."
+  IDS_EXPFAVORITES                  "Export Favorites"
+  IDS_EXPFAVORITESDESC              "Export favorites to another browser or file."
+  IDS_IMPCOOKIES                    "Import Cookies"
+  IDS_IMPCOOKIESDESC                "Import cookies from another browser or file."
+  IDS_EXPCOOKIES                    "Export Cookies"
+  IDS_EXPCOOKIESDESC                "Export cookies to another browser or file."
+
+  IDS_IMPEXPTRANSFERTYPE_TITLE      "Import/Export Selection"
+  IDS_IMPEXPTRANSFERTYPE_SUBTITLE   "You can select what to import or export."
+
+  IDS_IMPEXPIMPFAVSRC_TITLE         "Import Favorites Source"
+  IDS_IMPEXPIMPFAVSRC_SUBTITLE      "You can select where to import your favorites from."
+
+  IDS_IMPEXPIMPFAVDES_TITLE         "Import Favorites Destination Folder"
+  IDS_IMPEXPIMPFAVDES_SUBTITLE      "Select the folder where the imported favorites will be placed."
+
+  IDS_IMPEXPEXPFAVSRC_TITLE         "Export Favorites Source Folder"
+  IDS_IMPEXPEXPFAVSRC_SUBTITLE      "Select which folder you want to export from."
+
+  IDS_IMPEXPEXPFAVDES_TITLE         "Export Favorites Destination"
+  IDS_IMPEXPEXPFAVDES_SUBTITLE      "Select where you would like your favorites exported to."
+
+  IDS_IMPEXPIMPCKSRC_TITLE          "Import Cookies Source"
+  IDS_IMPEXPIMPCKSRC_SUBTITLE       "You can select where we should import your cookies from."
+
+  IDS_IMPEXPEXPCKDES_TITLE          "Export Cookies Destination"
+  IDS_IMPEXPEXPCKDES_SUBTITLE       "You can select where we should export your cookies to."
+
+  IDS_IMPEXP_FILEEXISTS             "%s already exists.\nDo you want to replace it?"
+  IDS_IMPEXP_FILENOTFOUND           "Cannot find %s.\nPlease choose another file."
+
+  IDS_IMPEXP_COMPLETE_IMPCK         "Import the cookies from %s"
+  IDS_IMPEXP_COMPLETE_EXPCK         "Export the cookies to %s"
+  IDS_IMPEXP_COMPLETE_IMPFV         "Import the favorites from %s"
+  IDS_IMPEXP_COMPLETE_EXPFV         "Export the favorites to %s"
+
+  IDS_IMPEXP_CAPTION                "Import/Export Wizard"
+
+  IDS_NS3_VERSION_CAPTION           "Netscape versions less than 4.0"
+  IDS_NS4_FRIENDLY_PROFILE_NAME     "Netscape Navigator 4.0 profile: %s"
+  IDS_FB_FRIENDLY_PROFILE_NAME      "Netscape Navigator profile: %s"
+
+  IDS_IMPEXP_CHOSEBOOKMARKFILE      "Select Bookmark File"
+  IDS_IMPEXP_CHOSECOOKIEFILE        "Select Cookie File"
+
+  IDS_IMPEXP_BOOKMARKFILTER         "HTML files (*.htm, *.html)@*.htm;*.html@All (*.*)@*.*@"
+  IDS_IMPEXP_COOKIEFILTER           "Text files (*.txt)@*.txt@All (*.*)@*.*@"
+
+  IDS_NETSCAPE_COOKIE_FILE          "cookies.txt"
+  IDS_NETSCAPE_BOOKMARK_FILE        "bookmark.htm"
+
+#ifndef UNIX
+  IDS_NETSCAPE_USERS_DIR            "\\..\\Users"
+#else
+  IDS_NETSCAPE_USERS_DIR            "/../Users"
+#endif
+
+END
+
+IDD_IMPEXPWELCOME DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT         "Welcome to the Import/Export Wizard",IDC_IMPEXPTITLETEXT,115,8,189,24
+    LTEXT         "The Import/Export wizard allows you to easily import and export information from Internet Explorer like Favorites and Cookies to other applications or a file on your computer.\n\n\
+Click Next to continue or Cancel to exit this wizard.",IDC_STATIC,115,40,189,142
+END
+
+IDD_IMPEXPTRANSFERTYPE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT           "Choose an action to perform.",IDC_STATIC,0,0,298,8
+    LISTBOX         IDC_IMPEXPACTIONLISTBOX,0,10,155,133, 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Description",IDC_STATIC,162,10,155,133
+    LTEXT           "",IDC_IMPEXPACTIONDESCSTATIC,169,20,141,120
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPIMPFAVSRC DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT           "You can import your favorites from another web browser or file.",
+                    IDC_STATIC,0,0,298,8
+    CONTROL         "Import from an &Application",IDC_IMPEXPRADIOAPP,"Button",
+                    BS_AUTORADIOBUTTON,0,15,147,8
+    COMBOBOX        IDC_IMPEXPEXTERNALCOMBO,14,25,180,120,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Import from a File or A&ddress",IDC_IMPEXPRADIOFILE,"Button",
+                    BS_AUTORADIOBUTTON,0,44,118,8
+    EDITTEXT        IDC_IMPEXPMANUAL,14,54,180,15,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse",IDC_IMPEXPBROWSE,142,75,51,13
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPIMPFAVDES DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    CONTROL         "Tree1",IDC_IMPEXPFAVTREE,"SysTreeView32", 
+                    TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP,0,0,317,143
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPEXPFAVSRC DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    CONTROL         "Tree1",IDC_IMPEXPFAVTREE,"SysTreeView32",
+                    TVS_SHOWSELALWAYS | TVS_DISABLEDRAGDROP | TVS_HASLINES | TVS_HASBUTTONS | WS_BORDER | WS_TABSTOP,0,0,317,143
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPEXPFAVDES DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT           "You can export your favorites to another web browser or file.",
+                    IDC_STATIC,0,0,298,8
+    CONTROL         "Export to an &Application",IDC_IMPEXPRADIOAPP,"Button",
+                    BS_AUTORADIOBUTTON,0,15,147,8
+    COMBOBOX        IDC_IMPEXPEXTERNALCOMBO,14,25,180,120,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Export to a F&ile or Address",IDC_IMPEXPRADIOFILE,"Button",
+                    BS_AUTORADIOBUTTON,0,44,118,8
+    EDITTEXT        IDC_IMPEXPMANUAL,14,54,180,15,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse",IDC_IMPEXPBROWSE,142,75,51,13
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPIMPCKSRC DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT           "You can import your cookies from another web browser or file.",
+                    IDC_STATIC,0,0,298,8
+    CONTROL         "Import from an &Application",IDC_IMPEXPRADIOAPP,"Button",
+                    BS_AUTORADIOBUTTON,0,15,147,8
+    COMBOBOX        IDC_IMPEXPEXTERNALCOMBO,14,25,180,120,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Import from a F&ile",IDC_IMPEXPRADIOFILE,"Button",
+                    BS_AUTORADIOBUTTON,0,44,118,8
+    EDITTEXT        IDC_IMPEXPMANUAL,14,54,180,15,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse",IDC_IMPEXPBROWSE,142,75,51,13
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPEXPCKDES DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT           "You can export your cookies to another browser or file.",
+                    IDC_STATIC,0,0,298,8
+    CONTROL         "Export to an &Application",IDC_IMPEXPRADIOAPP,"Button",
+                    BS_AUTORADIOBUTTON,0,15,147,8
+    COMBOBOX        IDC_IMPEXPEXTERNALCOMBO,14,25,180,120,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Export to a F&ile",IDC_IMPEXPRADIOFILE,"Button",
+                    BS_AUTORADIOBUTTON,0,44,118,8
+    EDITTEXT        IDC_IMPEXPMANUAL,14,54,180,15,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse",IDC_IMPEXPBROWSE,142,75,51,13
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+IDD_IMPEXPCOMPLETE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_CONTROL | WS_CHILD | WS_TABSTOP
+#ifdef WIN16
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    LTEXT         "Completing the Import/Export Wizard",IDC_IMPEXPTITLETEXT,115,8,189,24
+    LTEXT         "You have successfully completed the Import/Export wizard.  When you click Finish we will:",IDC_STATIC,115,40,189,24
+    CONTROL         "",IDC_IMPEXPCOMPLETECONFIRM,"SysListView32",LVS_REPORT | LVS_NOSCROLL | LVS_NOCOLUMNHEADER,115,71,189,10
+    CONTROL         "",-1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+//+------------------------------------------------------------------------
+//
+//  HTML Dialogs/Property Pages
+//
+//-------------------------------------------------------------------------
+
+//  NOTE: (krisma) if you add more HTML dialogs or property pages,
+//  you should add preprocessor and sed instructions to resdll\makefile.inc.
+about.dlg           HTML        "about.dlx"
+error.dlg           HTML        "error.dlx"
+ieerror.dlg         HTML        "ieerror.dlx"
+navcancl.htm        RT_FILE     "navcancl.htm"
+offcancl.htm        RT_FILE     "offcancl.htm"
+
+findinc.dlg         HTML     "findinc.dlx"
+bidifind.dlg        HTML     "bidifind.dlx"
+#ifdef UNIX
+find.dlg            HTML     "unixfind.dlx"
+#else
+find.dlg            HTML     "find.dlx"
+#endif // UNIX
+
+anchrppg.ppg        HTML     "anchbrws.ppx"
+link.gif            HTML     "link.gif"
+imageppg.ppg        HTML     "imgbrows.ppx"
+image.gif           HTML     "image.gif"
+docppg.ppg          HTML     "docbrows.ppx"
+page.gif            HTML     "page.gif"
+analyze.dlg         HTML     "analyze.dlx"
+
+wcee.htm            HTML    DISCARDABLE     "wcee.htm"
+
+http_400.htm        HTML    DISCARDABLE     "http_400.htm"
+http_403.htm        HTML    DISCARDABLE     "http_403.htm"
+http_404.htm        HTML    DISCARDABLE     "http_404.htm"
+http_406.htm        HTML    DISCARDABLE     "http_406.htm"
+http_410.htm        HTML    DISCARDABLE     "http_410.htm"
+http_500.htm        HTML    DISCARDABLE     "http_500.htm"
+http_501.htm        HTML    DISCARDABLE     "http_501.htm"
+http_gen.htm        HTML    DISCARDABLE     "http_gen.htm"
+servbusy.htm        HTML    DISCARDABLE     "servbusy.htm"
+dnserror.htm        HTML    DISCARDABLE     "dnserror.htm"
+syntax.htm          HTML    DISCARDABLE     "syntax.htm"
+
+orgfav.dlg          HTML    DISCARDABLE     "orgfav.dls"
+
+
+#ifdef UNIX
+
+cachewrn.htm        HTML    DISCARDABLE     "cachewrn.htm"
+unimpl.htm          HTML    DISCARDABLE     "unimpl.htm"
+fav_hlp.htm         HTML    DISCARDABLE     "fav_hlp.htm"
+
+#endif /* UNIX */
+
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Trident/MSHTML
+//  Copyright (C) Microsoft Corporation, 1992 - 1998
+//
+//  File:       shdoclc.rc
+//
+//  Contents:   Resources for Trident/MSHTML project.
+//
+//----------------------------------------------------------------------------
+
+#ifndef NO_HTML_DIALOG
+//+------------------------------------------------------------------------
+//
+//  HTML Dialogs/Property Pages
+//
+//-------------------------------------------------------------------------
+
+printerr.htm        HTML     "prntserv.htm"
+printnf.htm         HTML     "prntnfnd.htm"
+printunk.htm        HTML     "prntunkn.htm"
+#endif // NO_HTML_DIALOG
+
+//+-------------------------------------------------------------------------
+//
+// Menus
+//
+//--------------------------------------------------------------------------
+
+
+#ifndef NO_MENU
+
+// DROPEFFECT_xxx values copied from OLE header file.
+#define DROPEFFECT_NONE ( 0 )
+#define DROPEFFECT_COPY ( 1 )
+#define DROPEFFECT_MOVE ( 2 )
+#define DROPEFFECT_LINK ( 4 )
+
+IDR_DRAG_CONTEXT_MENU MENU
+BEGIN
+// Note: Context menu does not have accelerator
+    POPUP "Drag"
+    BEGIN
+        MENUITEM "Move Here",          DROPEFFECT_MOVE
+        MENUITEM "Copy Here",          DROPEFFECT_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "Cancel",             DROPEFFECT_NONE
+    END
+END
+
+IDR_HTMLFORM_MENUDESIGN MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",                 IDM_UNDO
+#ifdef UNIX
+        MENUITEM "&Redo\tAlt+Z",                  IDM_REDO
+#else
+        MENUITEM "&Redo\tCtrl+Y",                 IDM_REDO
+#endif
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                  IDM_CUT
+        MENUITEM "&Copy\tCtrl+C",                 IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",                IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Cle&ar\tDel",                   IDM_DELETE
+#ifdef UNIX
+        MENUITEM "Select Al&l\tCtrl+/",           IDM_SELECTALL
+#else
+        MENUITEM "Select Al&l\tCtrl+A",           IDM_SELECTALL
+#endif
+        MENUITEM SEPARATOR                                    
+#ifdef UNIX
+        MENUITEM "&Find...\tCtrl+S",        IDM_FIND
+#else
+        MENUITEM "&Find...\tCtrl+F",        IDM_FIND
+#endif
+//v2        MENUITEM "R&eplace...\tCtrl+H", IDM_REPLACE
+#ifdef UNIX
+        MENUITEM "&Go To...\tAlt+G",                   IDM_GOTO
+#else
+        MENUITEM "&Go To...\tCtrl+G",                    IDM_GOTO
+#endif
+        MENUITEM SEPARATOR                                    
+//v2        MENUITEM "&Bookmark...",                          IDM_BOOKMARK
+#ifdef UNIX
+        MENUITEM "&Link...\tAlt+K",        IDM_HYPERLINK
+#else
+        MENUITEM "&Link...\tCtrl+K",        IDM_HYPERLINK
+#endif
+        MENUITEM "Remove Book&mark",                          IDM_UNBOOKMARK
+        MENUITEM "Remove Li&nk",                              IDM_UNLINK
+    END
+
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    IDM_TOOLBARS
+        MENUITEM "&Status Bar",                 IDM_STATUSBAR, CHECKED
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Marks",               IDM_FORMATMARK, CHECKED
+        MENUITEM "Te&xt Only",                  IDM_TEXTONLY, CHECKED
+        POPUP "Fo&nts"
+        BEGIN
+            MENUITEM "Lar&gest",                IDM_BASELINEFONT5
+            MENUITEM "&Larger",                 IDM_BASELINEFONT4
+            MENUITEM "&Medium",                 IDM_BASELINEFONT3, CHECKED
+            MENUITEM "&Smaller",                IDM_BASELINEFONT2
+            MENUITEM "Sm&allest",               IDM_BASELINEFONT1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh\tF5",                IDM_REFRESH_TOP
+        MENUITEM SEPARATOR
+        MENUITEM "Sour&ce",                     IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        POPUP "Open &Link"
+        BEGIN
+            MENUITEM "In &Current Window",      IDM_FOLLOWLINKC
+            MENUITEM "In &New Window",          IDM_FOLLOWLINKN
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Properties...",              IDM_PROPERTIES
+        MENUITEM "&Options...",                 IDM_OPTIONS
+    END
+
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "Hori&zontal Line",                 IDM_HORIZONTALLINE
+        POPUP "&Line Break"
+        BEGIN
+            MENUITEM "&Normal Line Break",           IDM_LINEBREAKNORMAL
+            MENUITEM "Clear &Left Margin",           IDM_LINEBREAKLEFT
+            MENUITEM "Clear &Right Margin",          IDM_LINEBREAKRIGHT
+            MENUITEM "Clear &Both Margins",          IDM_LINEBREAKBOTH
+        END
+        MENUITEM "&Non-Breaking Space\tCtrl+Shift+Space", IDM_NONBREAK
+        MENUITEM "Page &Break",                           IDM_PAGEBREAK
+        MENUITEM "&Special Character...",                 IDM_SPECIALCHAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Marquee...",                           IDM_MARQUEE
+        MENUITEM "&HTML Text",                            IDM_1D
+        POPUP "&Control"
+        BEGIN
+            MENUITEM "&Text Box",                    IDM_TEXTBOX
+            MENUITEM "Text &Area",                   IDM_TEXTAREA
+            MENUITEM "&Check Box",                   IDM_CHECKBOX
+            MENUITEM "&Radio Button",                IDM_RADIOBUTTON
+            MENUITEM "&Dropdown Box",                IDM_DROPDOWNBOX
+            MENUITEM "&List Box",                    IDM_LISTBOX
+            MENUITEM "&Button",                      IDM_BUTTON
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Image...",                        IDM_IMAGE
+        MENUITEM "&Frame...",                        IDM_IFRAME
+        MENUITEM "&Object...",                       IDM_INSERTOBJECT
+    END
+
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Characters...",                    IDM_FONT
+//v2        MENUITEM "&Paragraph...",                     IDM_PARAGRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "&Increase Indent",                  IDM_INDENT
+        MENUITEM "&Decrease Indent",                  IDM_OUTDENT
+    END
+
+    // HELP menu if no DocObject HELP menu merging.
+    //
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Trident Help Topics ",    IDM_HELP_CONTENT
+        MENUITEM "Trident Readme File",     IDM_HELP_README
+        MENUITEM "About Microsoft Trident", IDM_HELP_ABOUT
+    END
+
+    // HELP sub-menu if DocObject HELP menu merging.
+    //
+    POPUP "Help for Microsoft Trident"
+    BEGIN
+        MENUITEM "Trident Help Topics ",    IDM_HELP_CONTENT
+        MENUITEM "Trident Readme File",     IDM_HELP_README
+        MENUITEM "About Microsoft Trident", IDM_HELP_ABOUT
+    END
+
+END
+
+IDR_HTMLFORM_MENURUN MENU PRELOAD DISCARDABLE
+BEGIN
+    //
+    // Browse mode menus that will be merged
+    //
+
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "Cu&t\tCtrl+X",                    IDM_CUT
+        MENUITEM "&Copy\tCtrl+C",                   IDM_COPY
+        MENUITEM "&Paste\tCtrl+V",                  IDM_PASTE
+        MENUITEM SEPARATOR
+#ifdef UNIX
+        MENUITEM "Select &All\tCtrl+/",             IDM_SELECTALL
+#else
+        MENUITEM "Select &All\tCtrl+A",             IDM_SELECTALL
+#endif
+        MENUITEM SEPARATOR
+#ifdef UNIX
+        MENUITEM "&Find (on this page)...\tCtrl+S", IDM_FIND
+#else
+        MENUITEM "&Find (on this page)...\tCtrl+F", IDM_FIND
+#endif
+    END
+
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    IDM_TOOLBARS
+        MENUITEM "&Status Bar",                 IDM_STATUSBAR, CHECKED
+        MENUITEM SEPARATOR
+        POPUP "&Fonts"
+        BEGIN
+            MENUITEM "Lar&gest",                IDM_BASELINEFONT5
+            MENUITEM "&Larger",                 IDM_BASELINEFONT4
+            MENUITEM "&Medium",                 IDM_BASELINEFONT3, CHECKED
+            MENUITEM "&Smaller",                IDM_BASELINEFONT2
+            MENUITEM "Sm&allest",               IDM_BASELINEFONT1
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Language",                   IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Sto&p\tEsc",                  IDM_STOP
+        MENUITEM "&Refresh\tF5",                IDM_REFRESH_TOP
+        MENUITEM SEPARATOR
+        MENUITEM "Sour&ce",                     IDM_VIEWSOURCE
+        POPUP "&Debugger"
+        BEGIN
+            MENUITEM "&Launch Debugger",        IDM_LAUNCHDEBUGGER
+            MENUITEM "&Break at Next",          IDM_BREAKATNEXT
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                 IDM_OPTIONS
+    END
+
+    // HELP menu if no DocObject HELP menu merging.
+    //
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "Trident Help Topics ",    IDM_HELP_CONTENT
+        MENUITEM "Trident Readme File",     IDM_HELP_README
+        MENUITEM "About Microsoft Trident", IDM_HELP_ABOUT
+    END
+
+    // HELP sub-menu if DocObject HELP menu merging.
+    //
+    POPUP "Help for Microsoft Trident"
+    BEGIN
+        MENUITEM "Trident Help Topics ",    IDM_HELP_CONTENT
+        MENUITEM "Trident Readme File",     IDM_HELP_README
+        MENUITEM "About Microsoft Trident", IDM_HELP_ABOUT
+    END
+END
+
+IDR_HTMLFORM_DOCDIR MENU PRELOAD DISCARDABLE
+BEGIN
+    MENUITEM "Left-To-Right Document",  IDM_DIRLTR
+    MENUITEM "Right-To-Left Document",  IDM_DIRRTL
+END
+
+
+
+#endif // NO_MENU
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_SITE_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "Z",        IDM_UNDO,               VIRTKEY, CONTROL
+    VK_BACK,    IDM_UNDO,               VIRTKEY, ALT
+#ifdef UNIX
+    "Z",        IDM_REDO,               VIRTKEY, ALT
+#else
+    "Y",        IDM_REDO,               VIRTKEY, CONTROL
+#endif
+    "X",        IDM_CUT,                VIRTKEY, CONTROL
+    VK_DELETE,  IDM_CUT,                VIRTKEY, SHIFT
+    "C",        IDM_COPY,               VIRTKEY, CONTROL
+    VK_INSERT,  IDM_COPY,               VIRTKEY, CONTROL
+    "V",        IDM_PASTE,              VIRTKEY, CONTROL
+    VK_INSERT,  IDM_PASTE,              VIRTKEY, SHIFT
+    VK_DELETE,  IDM_DELETE,             VIRTKEY
+    VK_DELETE,  IDM_DELETEWORD,         VIRTKEY, CONTROL
+#ifdef UNIX
+    VK_OEM_SLASH,   IDM_SELECTALL,      VIRTKEY, CONTROL
+#else
+    "A",        IDM_SELECTALL,          VIRTKEY, CONTROL
+#endif
+    "5",        IDM_SELECTALL,          VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_NUMPAD5, IDM_SELECTALL,          VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_RETURN,  IDM_PROPERTIES,         VIRTKEY, ALT
+    "P",        IDM_PRINT,              VIRTKEY, PLATFORM_ACCEL_KEY
+#ifndef UNIX
+    "O",        IDM_OPEN,               VIRTKEY, PLATFORM_ACCEL_KEY
+#endif
+    VK_F2,      IDM_SAVE,               VIRTKEY, ALT, SHIFT
+END
+
+
+IDR_ACCELS_SITE_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    VK_BACK,    IDM_GOBACKWARD,         VIRTKEY
+    VK_BACK,    IDM_GOFORWARD ,         VIRTKEY, SHIFT
+    VK_LEFT,    IDM_GOBACKWARD,         VIRTKEY, ALT
+    VK_RIGHT,   IDM_GOFORWARD ,         VIRTKEY, ALT
+    "C",        IDM_COPY,               VIRTKEY, CONTROL
+    VK_INSERT,  IDM_COPY,               VIRTKEY, CONTROL
+#ifdef UNIX
+    VK_OEM_SLASH,   IDM_SELECTALL,      VIRTKEY, CONTROL
+#else
+    "A",        IDM_SELECTALL,          VIRTKEY, CONTROL
+#endif
+    "5",        IDM_SELECTALL,          VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_NUMPAD5, IDM_SELECTALL,          VIRTKEY, PLATFORM_ACCEL_KEY
+    "P",        IDM_PRINT,              VIRTKEY, PLATFORM_ACCEL_KEY
+    "O",        IDM_OPEN,               VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_F2,      IDM_SAVE,               VIRTKEY, ALT, SHIFT
+    VK_F5,      IDM_REFRESH_TOP,        VIRTKEY
+    VK_F5,      IDM_REFRESH_TOP_FULL,   VIRTKEY, PLATFORM_ACCEL_KEY
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_FRAMESET_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "S",        IDM_SAVE,               VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_F12,     IDM_SAVE,               VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_F12,     IDM_SAVE,               VIRTKEY, ALT, SHIFT
+    "F",        IDM_FIND,               VIRTKEY, CONTROL
+END
+
+IDR_ACCELS_FRAMESET_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "F",        IDM_FIND,               VIRTKEY, CONTROL
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_INPUTTXT_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "X",        IDM_CUT,        VIRTKEY, CONTROL
+    VK_DELETE,  IDM_CUT,        VIRTKEY, SHIFT
+    "C",        IDM_COPY,       VIRTKEY, CONTROL
+    VK_INSERT,  IDM_COPY,       VIRTKEY, CONTROL
+    "V",        IDM_PASTE,      VIRTKEY, CONTROL
+    VK_INSERT,  IDM_PASTE,      VIRTKEY, SHIFT
+    VK_DELETE,  IDM_DELETE,     VIRTKEY
+    VK_SPACE,   IDM_NONBREAK,   VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+    VK_F3,      IDM_CHANGECASE, VIRTKEY, SHIFT
+    "Z",        IDM_UNDO,       VIRTKEY, CONTROL
+    VK_BACK,    IDM_UNDO,       VIRTKEY, ALT
+#ifdef UNIX
+    "Z",        IDM_REDO,       VIRTKEY, ALT
+#else                           
+    "Y",        IDM_REDO,       VIRTKEY, CONTROL
+#endif
+#ifdef UNIX
+    VK_OEM_SLASH,IDM_SELECTALL, VIRTKEY, CONTROL
+#else
+    "A",         IDM_SELECTALL, VIRTKEY, CONTROL
+#endif
+END
+
+IDR_ACCELS_INPUTTXT_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "X",        IDM_CUT,        VIRTKEY, CONTROL
+    VK_DELETE,  IDM_CUT,        VIRTKEY, SHIFT
+    "C",        IDM_COPY,       VIRTKEY, CONTROL
+    VK_INSERT,  IDM_COPY,       VIRTKEY, CONTROL
+    "V",        IDM_PASTE,      VIRTKEY, CONTROL
+    VK_INSERT,  IDM_PASTE,      VIRTKEY, SHIFT
+    VK_DELETE,  IDM_DELETE,     VIRTKEY
+    VK_SPACE,   IDM_NONBREAK,   VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+    VK_F3,      IDM_CHANGECASE, VIRTKEY, SHIFT
+    "Z",        IDM_UNDO,       VIRTKEY, CONTROL
+    VK_BACK,    IDM_UNDO,       VIRTKEY, ALT
+#ifdef UNIX
+    "Z",        IDM_REDO,       VIRTKEY, ALT
+#else                           
+    "Y",        IDM_REDO,       VIRTKEY, CONTROL
+#endif
+#ifdef UNIX
+    VK_OEM_SLASH,IDM_SELECTALL, VIRTKEY, CONTROL
+#else
+    "A",         IDM_SELECTALL, VIRTKEY, CONTROL
+#endif
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_TCELL_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    VK_NUMPAD5, IDM_TABLESELECT,    VIRTKEY, ALT
+END
+
+IDR_ACCELS_TCELL_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    VK_NUMPAD5, IDM_TABLESELECT,    VIRTKEY, ALT
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_BODY_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "C",        IDM_COPYFORMAT,             VIRTKEY, CONTROL, SHIFT
+#ifdef UNIX
+    "S",        IDM_FIND,                   VIRTKEY, CONTROL
+#else
+    "F",        IDM_FIND,                   VIRTKEY, CONTROL
+#endif
+END
+
+IDR_ACCELS_BODY_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "C",        IDM_COPYFORMAT,             VIRTKEY, CONTROL, SHIFT
+    "V",        IDM_PASTEFORMAT,            VIRTKEY, CONTROL, SHIFT
+    VK_SPACE,   IDM_NONBREAK,               VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#ifndef UNIX
+    "F",        IDM_CHANGEFONT,             VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#endif
+    "P",        IDM_CHANGEFONTSIZE,         VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+    VK_F3,      IDM_CHANGECASE,             VIRTKEY, SHIFT
+    "B",        IDM_BOLD,                   VIRTKEY, PLATFORM_ACCEL_KEY
+    "U",        IDM_UNDERLINE,              VIRTKEY, PLATFORM_ACCEL_KEY
+    "I",        IDM_ITALIC,                 VIRTKEY, PLATFORM_ACCEL_KEY
+    "B",        IDM_BOLD,                   VIRTKEY, CONTROL, SHIFT
+    "U",        IDM_UNDERLINE,              VIRTKEY, CONTROL, SHIFT
+    "I",        IDM_ITALIC,                 VIRTKEY, CONTROL, SHIFT
+    "Z",        IDM_REMOVEFORMAT,           VIRTKEY, CONTROL, SHIFT
+    VK_SPACE,   IDM_REMOVEFORMAT,           VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_MULTIPLY,IDM_SHOWSPECIALCHAR,        VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#ifndef UNIX
+    "E",        IDM_CENTERALIGNPARA,        VIRTKEY, PLATFORM_ACCEL_KEY
+#endif
+    "L",        IDM_LEFTALIGNPARA,          VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_PRIOR,   IDM_RIGHTALIGNPARA,         VIRTKEY, ALT
+    "Q",        IDM_REMOVEPARAFORMAT,       VIRTKEY, PLATFORM_ACCEL_KEY
+    "N",        IDM_APPLYNORMAL,            VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+//    "1",        IDM_APPLYHEADING1,          VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+//    "2",        IDM_APPLYHEADING2,          VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+//    "3",        IDM_APPLYHEADING3,          VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+    "L",        IDM_LIST,                   VIRTKEY, PLATFORM_ACCEL_KEY
+    "S",        IDM_SAVE,                   VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_F12,     IDM_SAVE,                   VIRTKEY, ALT, SHIFT
+    VK_F12,     IDM_SAVE,                   VIRTKEY
+#ifdef UNIX
+    "S",        IDM_FIND,                   VIRTKEY, CONTROL
+#else
+    "F",        IDM_FIND,                   VIRTKEY, CONTROL
+#endif
+//    "H",        IDM_REPLACE,                VIRTKEY, PLATFORM_ACCEL_KEY
+//    "G",        IDM_GOTO,                   VIRTKEY, PLATFORM_ACCEL_KEY
+    "K",        IDM_HYPERLINK,              VIRTKEY, PLATFORM_ACCEL_KEY
+    //these are non-localizable
+#if 0
+    "=",        IDM_SUBSCRIPT,              PLATFORM_ACCEL_KEY
+    "=",        IDM_SUPERSCRIPT,            PLATFORM_ACCEL_KEY,  SHIFT
+    ">",        IDM_INCFONTSIZE,            PLATFORM_ACCEL_KEY,  SHIFT
+    "<",        IDM_DECFONTSIZE,            PLATFORM_ACCEL_KEY,  SHIFT
+    "]",        IDM_INCFONTSIZE1PT,         PLATFORM_ACCEL_KEY
+    "[",        IDM_DECFONTSIZE1PT,         PLATFORM_ACCEL_KEY
+#endif
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+IDR_ACCELS_TXTSITE_RUN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "C",        IDM_COPYFORMAT,         VIRTKEY, CONTROL, SHIFT
+#ifdef UNIX
+    "S",        IDM_FIND,                   VIRTKEY, CONTROL
+#else
+    "F",        IDM_FIND,                   VIRTKEY, CONTROL
+#endif
+END
+
+IDR_ACCELS_TXTSITE_DESIGN ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "C",        IDM_COPYFORMAT,         VIRTKEY, CONTROL, SHIFT
+    "V",        IDM_PASTEFORMAT,        VIRTKEY, CONTROL, SHIFT
+    VK_SPACE,   IDM_NONBREAK,           VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#ifdef UNIX
+    "O",        IDM_CHANGEFONT,         VIRTKEY, CONTROL, SHIFT
+#else
+    "F",        IDM_CHANGEFONT,         VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#endif
+    "P",        IDM_CHANGEFONTSIZE,     VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+    VK_F3,      IDM_CHANGECASE,         VIRTKEY, SHIFT
+    "B",        IDM_BOLD,               VIRTKEY, PLATFORM_ACCEL_KEY
+    "U",        IDM_UNDERLINE,          VIRTKEY, PLATFORM_ACCEL_KEY
+    "I",        IDM_ITALIC,             VIRTKEY, PLATFORM_ACCEL_KEY
+    "B",        IDM_BOLD,               VIRTKEY, CONTROL, SHIFT
+    "U",        IDM_UNDERLINE,          VIRTKEY, CONTROL, SHIFT
+    "I",        IDM_ITALIC,             VIRTKEY, CONTROL, SHIFT
+    "Z",        IDM_REMOVEFORMAT,       VIRTKEY, CONTROL, SHIFT
+    VK_SPACE,   IDM_REMOVEFORMAT,       VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_MULTIPLY,IDM_SHOWSPECIALCHAR,    VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+#ifndef UNIX
+    "E",        IDM_CENTERALIGNPARA,    VIRTKEY, PLATFORM_ACCEL_KEY
+#endif
+    "L",        IDM_LEFTALIGNPARA,      VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_PRIOR,   IDM_RIGHTALIGNPARA,     VIRTKEY, ALT
+    "Q",        IDM_REMOVEPARAFORMAT,   VIRTKEY, PLATFORM_ACCEL_KEY
+    "N",        IDM_APPLYNORMAL,        VIRTKEY, PLATFORM_ACCEL_KEY, SHIFT
+//    "1",        IDM_APPLYHEADING1,      VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+//    "2",        IDM_APPLYHEADING2,      VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+//    "3",        IDM_APPLYHEADING3,      VIRTKEY, PLATFORM_ACCEL_KEY, ALT
+    "L",        IDM_LIST,               VIRTKEY, PLATFORM_ACCEL_KEY
+    "S",        IDM_SAVE,               VIRTKEY, PLATFORM_ACCEL_KEY
+    VK_F12,     IDM_SAVE,               VIRTKEY, ALT, SHIFT
+    VK_F12,     IDM_SAVE,               VIRTKEY
+#ifdef UNIX
+    "S",        IDM_FIND,               VIRTKEY, CONTROL
+#else                                   
+    "F",        IDM_FIND,               VIRTKEY, CONTROL
+#endif
+    "H",        IDM_REPLACE,            VIRTKEY, PLATFORM_ACCEL_KEY
+    "G",        IDM_GOTO,               VIRTKEY, PLATFORM_ACCEL_KEY
+    "K",        IDM_HYPERLINK,          VIRTKEY, PLATFORM_ACCEL_KEY
+    //these are non-localizable
+#if 0
+    "=",        IDM_SUBSCRIPT,          PLATFORM_ACCEL_KEY
+    "=",        IDM_SUPERSCRIPT,        PLATFORM_ACCEL_KEY, SHIFT
+    ">",        IDM_INCFONTSIZE,        PLATFORM_ACCEL_KEY, SHIFT
+    "<",        IDM_DECFONTSIZE,        PLATFORM_ACCEL_KEY, SHIFT
+    "]",        IDM_INCFONTSIZE1PT,     PLATFORM_ACCEL_KEY
+    "[",        IDM_DECFONTSIZE1PT,     PLATFORM_ACCEL_KEY
+#endif
+END
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+STRINGTABLE
+BEGIN
+    IDS_MESSAGE_BOX_TITLE,          "Microsoft Internet Explorer"
+    IDS_ERROR_SOLUTION,             "Solution:\n<0s>"
+    IDS_EA_SETTING_PROPERTY,        "Could not set the <0s> property."
+    IDS_EA_GETTING_PROPERTY,        "Could not get the <0s> property."
+    IDS_EA_CALLING_METHOD,          "Could not call the <0s> method."
+    IDS_EE_INVALID_PROPERTY_VALUE,  "The value entered for the <0s> property is not valid."
+    IDS_ES_ENTER_VALUE_IN_RANGE,    "Enter a value between <0d> and <1d>."
+    IDS_ES_ENTER_VALUE_GT_ZERO,     "Enter a value greater than zero."
+    IDS_ES_ENTER_VALUE_GE_ZERO,     "Enter a value greater than or equal to zero."
+    IDS_EE_SETNOTSUPPORTEDATRUNTIME,"Can not set property at runtime."
+    IDS_EE_METHODNOTAPPLICABLE,     "This method can't be used in this context."
+    IDS_ES_ENTER_PROPER_VALUE,      "Enter a proper value."
+    IDS_EE_INVALIDPICTURETYPE,      "The picture type is not valid."
+    IDS_EE_CANTMOVEFOCUSTOCTRL,     "Can't move focus to the control because it is invisible, not enabled, or of a type that does not accept the focus."
+    IDS_EE_FAIL,                    "Unspecified error."
+    IDS_EE_UNEXPECTED,              "Unexpected call to method or property access."
+    IDS_EE_INVALIDARG,              "Invalid argument."
+    IDS_EE_INVALIDPICTURE,          "The value is not a picture object."
+    IDS_EE_INVALIDPROPERTYARRAYINDEX "Invalid property array index."
+    IDS_EE_INVALIDPROPERTYVALUE     "Invalid property value."
+    IDS_EE_OVERFLOW                 "Overflow."
+    IDS_EE_PERMISSIONDENIED         "Permission denied."
+    IDS_MSG_SAVE_MODIFIED_OBJECT,   "The object has changed. Do you want to update it?"
+    IDS_EA_PASTE_CONTROL,           "Could not paste the control."
+    IDS_EA_INSERT_CONTROL,          "Could not insert the control."
+    IDS_UNKNOWN_ERROR,              "Could not complete the operation due to error <0x>."
+    IDS_EE_CONTROLNEEDSFOCUS,       "The control needs to have the focus."
+    IDS_EE_NOTLICENSED,             "The control could not be created because it is not properly licensed."
+    IDS_EE_INVALIDPASTETARGET,      "Invalid target element for this operation."
+    IDS_EE_INVALIDPASTESOURCE,      "Invalid source HTML for this operation."
+    IDS_EE_MISMATCHEDTAG,           "This document was not completely loaded because it contains mismatched tags."
+    IDS_EE_INCOMPATIBLEPOINTERS,    "Incompatible markup pointers for this operation."
+    IDS_EE_UNPOSITIONEDPOINTER,     "Unpositioned markup pointer for this operation."
+    IDS_EE_UNPOSITIONEDELEMENT,     "Unpositioned element for this operation."
+
+    // The following 4 are copied from shdocvw.dll
+    IDS_EE_INTERNET_INVALID_URL,    "This address is not valid. Check the address, and try again."
+    IDS_EE_INTERNET_NAME_NOT_RESOLVED,"The site was not found. Make sure the address is correct, and try again."
+
+    IDS_EDITVERB,               "&Edit"
+    IDS_PROPVERB,               "&Properties..."
+    IDS_CTRLPROPERTIES,         "Control Properties"
+    IDS_NAMEDCTRLPROPERTIES,    "<0s> Properties"
+    IDS_PPG_GENERIC,            "All Properties"
+    IDS_PPG_INLINE_STYLE,       "Inline Style Properties"
+    IDS_UNKNOWN,                "Unknown"
+
+    IDS_CANTUNDO,               "Can't Undo"
+    IDS_CANTREDO,               "Can't Redo"
+    IDS_UNDO,                   "Undo <0s>"
+    IDS_REDO,                   "Redo <0s>"
+    IDS_UNDONEWCTRL,            "Insert Object"
+    IDS_UNDODELETE,             "Delete Object"
+    IDS_UNDOPROPCHANGE,         "Property Change"
+    IDS_UNDOMOVE,               "Move"
+    IDS_UNDODRAGDROP,           "Drop"
+    IDS_UNDOPASTE,              "Paste"
+    IDS_UNDOTYPING,             "Typing"
+    IDS_UNDOGENERICTEXT,        "Text Operation"
+
+    IDS_E_CMDNOTSUPPORTED,  "This command is not supported."
+
+    IDS_HTMLDEFAULTFONT         "Times New Roman"
+
+    IDS_VAR2STR_VTERROR         "<undefined>"
+    IDS_VAR2STR_VTNULL          "null"
+    IDS_VAR2STR_VTBOOL_TRUE     "true"
+    IDS_VAR2STR_VTBOOL_FALSE    "false"
+
+    IDS_DISPID_FONTNAME         "FontName"      // DISPID_CommonCtrl_FONTNAME
+    IDS_DISPID_FONTSIZE         "FontSize"      // DISPID_CommonCtrl_FONTSIZE
+    IDS_DISPID_FONTSUPERSCRIPT  "FontSuperscript" // DISPID_CommonCtrl_FONTSUPERSCRIPT
+    IDS_DISPID_FONTSUBSCRIPT    "FontSubscript" // DISPID_CommonCtrl_FONTSUBSCRIPT
+    IDS_DISPID_FONTBOLD         "FontBold"      // DISPID_CommonCtrl_FONTBOLD
+    IDS_DISPID_FONTITAL         "FontItalic"    // DISPID_CommonCtrl_FONTITAL
+    IDS_DISPID_FONTUNDER        "FontUnder"     // DISPID_CommonCtrl_FONTUNDER
+    IDS_DISPID_BACKCOLOR        "BackColor"     // DISPID_BACKCOLOR
+    IDS_DISPID_BORDERCOLOR      "BorderColor"   // DISPID_BORDERCOLOR
+    IDS_DISPID_BORDERSTYLE      "BorderStyle"   // DISPID_BORDERSTYLE
+    IDS_DISPID_TEXTALIGN        "TextAlign"     // DISPID_CommonCtrl_TextAlign
+    IDS_DISPID_SPECIALEFFECT    "SpecialEffect" // DISPID_CommonCtrl_SpecialEffect
+
+    IDS_RUNAWAYSCRIPT           "A script on this page is causing Internet Explorer to run slowly.  If it continues to run, your computer may become unresponsive.\n\nDo you want to abort the script?"
+
+#ifndef UNIX
+    IDS_PROTECTEDFROMUNSAFEOCX  "An ActiveX control on this page is not safe.  \nYour current security settings prohibit running unsafe controls on this page.  \nAs a result, this page may not display as intended."
+#else
+    IDS_PROTECTEDFROMUNSAFEOCX  "Content on this page is not safe.  \nYour current security settings prohibit running unsafe controls on this page.  \nAs a result, this page may not display as intended."
+#endif
+
+    IDS_PROTECTEDFROMOCXINIT    "This page provides potentially unsafe information to an ActiveX control.  Your current security settings prohibit running controls in this manner.  As a result, this page may not display correctly."
+    IDS_REPOSTFORMDATA          "The page cannot be refreshed without resending the information.\nClick Retry to send the information again,\nor click Cancel to return to the page that you were trying to view."
+    IDS_OCXDISABLED             "Your current security settings prohibit running ActiveX controls on this page.  As a result, the page may not display correctly."
+    IDS_MISMATCHEDXML           "Mismatched or improperly closed XML tag at ""<1s><2s>"" on line <0d>."
+
+    IDS_ERR_SAVEPICTUREAS       "Could not save the picture."
+    IDS_ERR_SETWALLPAPER        "Could not set the wallpaper."
+    IDS_ERR_SETDESKTOPITEM      "Could not set the desktop item."
+
+    IDS_BUTTONCAPTION_RESET     "Reset"
+    IDS_BUTTONCAPTION_SUBMIT    "Submit Query"
+    IDS_BUTTONCAPTION_UPLOAD    "Browse..."
+
+    IDS_PRINT_URLTITLE          "This document contains the following shortcuts:"
+    IDS_PRINT_URLCOL1HEAD       "Shortcut Text"
+    IDS_PRINT_URLCOL2HEAD       "Internet Address"
+    
+    IDS_CANNOTLOAD                "Internet Explorer cannot open the Internet site <0s>.\n\n<1s>" // <0s>=URL; <1s>=Reason for failure.
+    
+    IDS_ONBEFOREUNLOAD_PREAMBLE   "Are you sure you want to navigate away from this page?"
+    IDS_ONBEFOREUNLOAD_POSTAMBLE  "Press OK to continue, or Cancel to stay on the current page."
+
+// default prompt for ISINDEX
+    IDS_DEFAULT_ISINDEX_PROMPT  "You can search this index. Type the keyword(s) you want to search for:"
+
+    IDS_UNKNOWNPROTOCOL         "Unknown Protocol"
+
+    IDS_SECURECONNECTIONINFO    "<0s>, <1s> with <2d> bit encryption <3i>; <5s> with <6d> bit exchange"
+    IDS_SECURE_LOW              "(Low)"
+    IDS_SECURE_MEDIUM           "(Medium)"
+    IDS_SECURE_HIGH             "(High)"
+    IDS_SECURESOURCE            "Encrypted"
+
+    IDS_DEBUGCONTINUE           "A Runtime Error has occurred.\nDo you wish to Debug?"
+    IDS_FMTDEBUGCONTINUE        "<0i>\n\nLine: <2d>\nError: <3s>"
+
+#ifdef WIN16
+    // Page setup strings
+    IDS_NODEFAULTPRINTER        "No default printer\n\nUse Control Panel to install and select a default printer"
+    IDS_PAGE_SETUP              "Page Setup"
+    IDS_INCH,                   """"
+    IDS_MM,                     "mm"
+
+    // Paper size strings
+    IDS_DMPAPER_LETTER             "Letter, 8 1/2 \064 11 in.")
+    IDS_DMPAPER_LETTERSMALL        "Letter Small, 8 1/2 \064 11 in.")
+    IDS_DMPAPER_TABLOID            "Tabloid, 11 \064 17 in.")
+    IDS_DMPAPER_LEDGER             "Ledger, 17 \064 11 in.")
+    IDS_DMPAPER_LEGAL              "Legal, 8 1/2 \064 14 in.")
+    IDS_DMPAPER_STATEMENT          "Statement, 5 1/2 \064 8 1/2 in.")
+    IDS_DMPAPER_EXECUTIVE          "Executive, 7 1/2 \064 10 1/2 in.")
+    IDS_DMPAPER_A3                 "A3, 297 \064 420 mm")
+    IDS_DMPAPER_A4                 "A4, 210 \064 297 mm")
+    IDS_DMPAPER_A4SMALL            "A4 Small, 210 \064 297 mm")
+    IDS_DMPAPER_A5                 "A5, 148 \064 210 mm")
+    IDS_DMPAPER_B4                 "B4, 250 \064 354 mm")
+    IDS_DMPAPER_B5                 "B5, 182 \064 257 mm")
+    IDS_DMPAPER_FOLIO              "Folio, 8 1/2 \064 13 in.")
+    IDS_DMPAPER_QUARTO             "Quarto, 215 \064 275 mm")
+    IDS_DMPAPER_10X14              "10 \064 14 in.")
+    IDS_DMPAPER_11X17              "11 \064 17 in.")
+    IDS_DMPAPER_NOTE               "Note, 8 1/2 \064 11 in.")
+    IDS_DMPAPER_ENV_9              "Envelope #9, 3 7/8 \064 8 7/8 in.")
+    IDS_DMPAPER_ENV_10             "Envelope #10, 4 1/8 \064 9 1/2 in.")
+    IDS_DMPAPER_ENV_11             "Envelope #11, 4 1/2 \064 10 3/8 in.")
+    IDS_DMPAPER_ENV_12             "Envelope #12, 4 1/2 \064 11 in.")
+    IDS_DMPAPER_ENV_14             "Envelope #14, 5 \064 11 1/2 in.")
+    IDS_DMPAPER_CSHEET             "C size sheet")
+    IDS_DMPAPER_DSHEET             "D size sheet")
+    IDS_DMPAPER_ESHEET             "E size sheet")
+    IDS_DMPAPER_ENV_DL             "Envelope DL, 110 \064 220 mm")
+    IDS_DMPAPER_ENV_C3             "Envelope C3, 324 \064 458 mm")
+    IDS_DMPAPER_ENV_C4             "Envelope C4, 229 \064 324 mm")
+    IDS_DMPAPER_ENV_C5             "Envelope C5, 162 \064 229 mm")
+    IDS_DMPAPER_ENV_C6             "Envelope C6, 114 \064 162 mm")
+    IDS_DMPAPER_ENV_C65            "Envelope C65, 114 \064 229 mm")
+    IDS_DMPAPER_ENV_B4             "Envelope B4, 250 \064 353 mm")
+    IDS_DMPAPER_ENV_B5             "Envelope B5, 176 \064 250 mm")
+    IDS_DMPAPER_ENV_B6             "Envelope B6, 176 \064 125 mm")
+    IDS_DMPAPER_ENV_ITALY          "Envelope, 110 \064 230 mm")
+    IDS_DMPAPER_ENV_MONARCH        "Envelope Monarch, 3 7/8 \064 7 1/2 in.")
+    IDS_DMPAPER_ENV_PERSONAL       "Envelope, 3 5/8 \064 6 1/2 in.")
+    IDS_DMPAPER_FANFOLD_US         "U.S. Standard Fanfold, 14 7/8 \064 11 in.")
+    IDS_DMPAPER_FANFOLD_STD_GERMAN "German Standard Fanfold, 8 1/2 \064  12 in.")
+    IDS_DMPAPER_FANFOLD_LGL_GERMAN "German Legal Fanfold, 8 1/2 \064 13 in.")
+#endif
+END
+
+
+IDD_PROMPT_MSHTML DIALOG DISCARDABLE  0, 0, 321, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_SYSMENU | WS_CAPTION
+CAPTION "Explorer User Prompt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_PROMPT_EDIT,7,42,307,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,264,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,264,24,50,14
+    LTEXT           "JavaScript Prompt:",IDC_STATIC,7,7,137,10
+    LTEXT           "",IDC_PROMPT_PROMPT,7,20,249,18
+END
+
+#ifndef WIN16
+IDD_PLUGIN_UPGRADE DIALOG DISCARDABLE  100, 50, 244, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ActiveX Viewer Not Installed"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515,32515,7,8,21,20
+    LTEXT           "The page you are about to view contains an embedded object of the following type:",
+                    IDC_STATIC,34,10,203,18,SS_NOPREFIX
+    PUSHBUTTON      "&Yes",IDYES,127,136,51,16
+    PUSHBUTTON      "&No",IDNO,186,136,51,16
+    CONTROL         "&Always check before displaying this type of object",
+                    IDC_PLUGIN_UPGRADE_CHECK,"Button",BS_AUTOCHECKBOX |
+                    BS_TOP | WS_TABSTOP,34,113,203,11
+    LTEXT           "",IDC_PLUGIN_UPGRADE_EXTENSION,85,48,141,8
+    LTEXT           "Your computer does not have an ActiveX viewer for this type of object. Do you want to download and install an ActiveX viewer automatically?",
+                    IDC_STATIC,34,84,203,25
+    GROUPBOX        "Embedded object type",IDC_STATIC,34,35,203,43,BS_LEFT
+    LTEXT           "Extension:",IDC_STATIC,40,48,41,8
+    LTEXT           "MIME type:",IDC_STATIC,40,61,41,8
+    LTEXT           "",IDC_PLUGIN_UPGRADE_MIME_TYPE,85,61,141,8
+END
+#endif
+
+
+
+#include "genpage.dlg"
+#include "taborder.dlg"
+
+#define IDC_SHORTCUT_TABLE 201
+#ifndef WINCE
+#ifdef WIN16
+#include "pgstup16.dlg"
+#endif // !WINCE
+#endif // WIN16
+
+//+---------------------------------------------------------------------------
+//
+//  Control short names
+//  Notes: If you add name here , please also add usertypefull name
+//  in src\f3\dll\forms3.rc
+//
+//----------------------------------------------------------------------------
+
+STRINGTABLE
+BEGIN
+    IDS_HTMLFORM_USERTYPESHORT  "HTML Document"
+    IDS_HTMLFORM_USERTYPEFULL   "Microsoft HTML Document 5.0"
+END
+
+
+//+---------------------------------------------------------------------------
+//
+//  Common Dialog Options. String tables because of localization tool issues
+//
+//----------------------------------------------------------------------------
+
+STRINGTABLE
+BEGIN
+#ifndef _MAC
+#ifndef UNIX
+    IDS_PROPERTYOPENPICTURE,    "Load Picture|bmp|\
+All Picture Files|*.bmp;*.wmf;*.emf;*.ico;*.dib;*.cur;*.gif;*.jpg|\
+Bitmaps(*.Bmp;*.Dib)|*.bmp;*.dib|\
+Metafiles(*.Wmf;*.Emf)|*.wmf;*.emf|\
+Icons(*.Ico;*.Cur)|*.ico;*.cur|\
+GIF(*.Gif)|*.gif|\
+JPEG(*.Jpg)|*.jpg|\
+All Files(*.*)|*.*|"
+#else
+    IDS_PROPERTYOPENPICTURE,    "Load Picture|bmp|\
+All Picture Files|*.bmp;*.wmf;*.emf;*.ico;*.dib;*.cur;*.gif;*.jpg|\
+Bitmaps(*.Bmp;*.Dib)|*.bmp;*.dib|\
+Metafiles(*.Wmf;*.Emf)|*.wmf;*.emf|\
+Icons(*.Ico;*.Cur)|*.ico;*.cur|\
+GIF(*.Gif)|*.gif|\
+JPEG(*.Jpg)|*.jpg|\
+All Files(*)|*|"
+#endif
+
+#ifndef UNIX
+    IDS_PROPERTYOPENMOUSEICON,  "Load Picture|bmp|Icons(*.Ico;*.Cur)|*.ico;*.cur|All Files(*.*)|*.*|"
+#else
+    IDS_PROPERTYOPENMOUSEICON,  "Load Picture|bmp|Icons(*.Ico;*.Cur)|*.ico;*.cur|All Files(*)|*|"
+#endif
+
+    IDS_HTMLFORM_SAVE           "Save HTML Document|htm|HTML File (*.htm;*.html)|*.htm;*.html|Text File (*.txt)|*.txt|"
+
+#ifndef UNIX
+    IDS_SAVEPICTUREAS_GIF       "Save Picture|gif|GIF (*.gif)|*.gif|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_JPG       "Save Picture|jpg|JPEG (*.jpg)|*.jpg|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_XBM       "Save Picture|xbm|XBM (*.xbm)|*.xbm|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_ART       "Save Picture|art|ART (*.art)|*.art|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_WMF       "Save Picture|wmf|WMF (*.wmf)|*.wmf|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_EMF       "Save Picture|emf|EMF (*.emf)|*.emf|Bitmap (*.bmp)|*.bmp|"
+
+    IDS_SAVEPICTUREAS_PNG       "Save Picture|png|PNG (*.png)|*.png|Bitmap (*.bmp)|*.bmp|"
+#else
+    // Removing Save as BMP Options from the SaveAs Dialogbox
+    IDS_SAVEPICTUREAS_GIF       "Save Picture|gif|GIF (*.gif)|*.gif|"
+    IDS_SAVEPICTUREAS_JPG       "Save Picture|jpg|JPEG (*.jpg)|*.jpg|"
+    IDS_SAVEPICTUREAS_XBM       "Save Picture|xbm|XBM (*.xbm)|*.xbm|"
+    IDS_SAVEPICTUREAS_ART       "Save Picture|art|ART (*.art)|*.art|"
+    IDS_SAVEPICTUREAS_WMF       "Save Picture|wmf|WMF (*.wmf)|*.wmf|"
+    IDS_SAVEPICTUREAS_EMF       "Save Picture|emf|EMF (*.emf)|*.emf|"
+    IDS_SAVEPICTUREAS_PNG       "Save Picture|png|PNG (*.png)|*.png|"
+#endif
+
+    IDS_SAVEPICTUREAS_BMP       "Save Picture|bmp|Bitmap (*.bmp)|*.bmp|"
+    IDS_SAVEPICTUREAS_AVI       "Save Picture|avi|AVI (*.avi)|*.avi|"
+    IDS_SAVEPICTUREAS_MPG       "Save Picture|mpg|MPEG (*.mpg)|*.mpg|"
+    IDS_SAVEPICTUREAS_MOV       "Save Picture|mov|MOV (*.mov)|*.mov|"
+#ifndef UNIX
+    IDS_SAVEPICTUREAS_ORIGINAL  "Save Picture||Original (*.*)|*.*|"
+    IDS_UPLOADFILE              "Choose file|*|All Files (*.*)|*.*|Pictures (*.gif, *.jpg)|*.gif;*.jpg|HTML (*.htm, *.html)|*.htm;*.html|"
+#else
+    IDS_SAVEPICTUREAS_ORIGINAL  "Save Picture||Original (*)|*|"
+    IDS_UPLOADFILE              "Choose file|*|All Files (*)|*|Pictures (*.gif, *.jpg)|*.gif;*.jpg|HTML (*.htm, *.html)|*.htm;*.html|"
+#endif
+   
+#ifdef UNIX
+    IDS_PRINT_ERROR             "Printing Error"
+    IDS_PRINT_ERROR_MSG         "The print job failed.  Please check standard error for any messages and check that the print command is correct under the File/Print menu."
+#endif
+
+
+#endif
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MSG_DB_CANTSAVE          "A value could not be saved into the data source's '<0s>' field.\n<1s>\n\nDiscard changed value?"
+
+    IDS_EE_DB_COERCE             "A type conversion error occurred."
+    IDS_EE_DB_DELROW             "The data source record was previously deleted."
+    IDS_EE_DB_READ               "The data source field is read-only."
+    IDS_EE_DB_SCHEMA             "The value is not consistent with the data source's constraints."
+    IDS_EE_DB_CANCELED           "Operation was cancelled."
+
+    // Note that the status here is not an HRESULT, but an OLE-DB defined enum.
+    IDS_EE_DB_OTHER_STATUS       "Operation failed with status <1d>."
+
+    IDS_MENUHELP(IDM_UNDO)  "Undoes the last action."
+    IDS_MENUHELP(IDM_REDO)  "Redoes the previously undone action."
+    IDS_MENUHELP(IDM_CUT)   "Cuts the selection and puts it on the Clipboard."
+    IDS_MENUHELP(IDM_COPY)  "Copies the selection to the Clipboard."
+    IDS_MENUHELP(IDM_PASTE) "Inserts the Clipboard contents at the insertion point."
+    IDS_MENUHELP(IDM_DELETE) "Deletes the selection."
+    IDS_MENUHELP(IDM_SELECTALL) "Selects all of the items on this page."
+    IDS_MENUHELP(IDM_FIND)      "Searches for text on this page."
+//v2    IDS_MENUHELP(IDM_REPLACE)   "Replaces text in the current window"
+//v2    IDS_MENUHELP(IDM_GOTO)      "Shows list of bookmarks to jump to"
+//v2    IDS_MENUHELP(IDM_BOOKMARK)  "Inserts or edits a bookmark"
+    IDS_MENUHELP(IDM_HYPERLINK) "Inserts or edits a link."
+    IDS_MENUHELP(IDM_UNBOOKMARK)"Removes bookmarks in selection."
+    IDS_MENUHELP(IDM_UNLINK)    "Removes links in selection."
+
+    IDS_MENUHELP(IDM_TOOLBARS)  "Shows or hides the toolbar."
+    IDS_MENUHELP(IDM_STATUSBAR) "Shows or hides the status bar."
+    IDS_MENUHELP(IDM_FORMATMARK)    "Shows or hides formatting indicators."
+    IDS_MENUHELP(IDM_TEXTONLY)      "Hides all elements except text."
+    IDS_MENUHELP(IDM_BASELINEFONT5)  "Selects largest font size."
+    IDS_MENUHELP(IDM_BASELINEFONT4)  "Selects large font size."
+    IDS_MENUHELP(IDM_BASELINEFONT3)  "Selects medium font size."
+    IDS_MENUHELP(IDM_BASELINEFONT2)  "Selects small font size."
+    IDS_MENUHELP(IDM_BASELINEFONT1)  "Selects smallest font size."
+    IDS_MENUHELP(IDM_STOP)          "Stops opening a file."
+    IDS_MENUHELP(IDM_REFRESH_TOP)   "Refreshes the contents of the current page."
+    IDS_MENUHELP(IDM_REFRESH_THIS)  "Refreshes the contents of the current frame."
+    IDS_MENUHELP(IDM_BROWSEMODE)    "Browse this page."
+    IDS_MENUHELP(IDM_EDITMODE)      "Edit this page."
+    IDS_MENUHELP(IDM_LANGUAGE)      "Changes the language encoding of the document."
+    IDS_MENUHELP(IDM_VIEWSOURCE)    "Displays the source (HTML) for this page."
+    IDS_MENUHELP(IDM_FOLLOWLINKC)   "Opens selected link in current window."
+    IDS_MENUHELP(IDM_FOLLOWLINKN)   "Opens selected link in a new window."
+    IDS_MENUHELP(IDM_OPTIONS)       "Changes the options for Internet Explore."
+    IDS_MENUHELP(IDM_PROPERTIES) "Edits the current selection's properties."
+
+    IDS_MENUHELP(IDM_HORIZONTALLINE)    "Inserts a horizontal line."
+    IDS_MENUHELP(IDM_LINEBREAKNORMAL)   "Inserts line break, ignoring images."
+    IDS_MENUHELP(IDM_LINEBREAKLEFT)     "Inserts line break below left-aligned images."
+    IDS_MENUHELP(IDM_LINEBREAKRIGHT)    "Inserts line break below right-aligned images."
+    IDS_MENUHELP(IDM_LINEBREAKBOTH)     "Inserts line break below images."
+    IDS_MENUHELP(IDM_NONBREAK)          "Inserts a space that won't line break."
+    IDS_MENUHELP(IDM_PAGEBREAK)         ""
+    IDS_MENUHELP(IDM_SPECIALCHAR)       "Inserts a symbol or international character."
+    IDS_MENUHELP(IDM_MARQUEE)           "Inserts a marquee control."
+    IDS_MENUHELP(IDM_IMAGE)             "Inserts a picture from a file."
+    IDS_MENUHELP(IDM_INSERTOBJECT)      "Inserts an ActiveX Object."
+
+    IDS_MENUHELP(IDM_FONT)          "Sets formatting for current selection."
+//v2    IDS_MENUHELP(IDM_PARAGRAPH)     "Sets formatting for current paragraph"
+    IDS_MENUHELP(IDM_LIST)          "Creates or changes bulleting or numbering."
+    IDS_MENUHELP(IDM_INDENT)        "Increases indent."
+    IDS_MENUHELP(IDM_OUTDENT)       "Removes indent."
+
+    IDS_MENUHELP(MENU_INDEX_EDIT)   "Contains commands for the clipboard, finding text, and editing links."
+    IDS_MENUHELP(MENU_INDEX_VIEW)   "Contains commands for controlling the display of your page."
+    IDS_MENUHELP(MENU_INDEX_INSERT) "Contains commands for inserting elements into the page."
+    IDS_MENUHELP(MENU_INDEX_FORMAT) "Contains commands for formatting the selected elements on the page."
+
+//    IDS_MENUHELP(IDM_SCRIPTDEBUGGER) "Contains commands for debugging scripts on the current page."
+    IDS_MENUHELP(IDM_LAUNCHDEBUGGER) "Opens script debugger."
+    IDS_MENUHELP(IDM_BREAKATNEXT)    "Jumps to script debugger before next script statement is executed."
+
+    IDS_TOOLTIP(IDM_NEW)           "New HTML Document"
+    IDS_TOOLTIP(IDM_OPEN)          "Open HTML Document"
+    IDS_TOOLTIP(IDM_SAVE)          "Save"
+    IDS_TOOLTIP(IDM_PRINT)         "Print"
+    IDS_TOOLTIP(IDM_SPELL)         "Spell Check"
+    IDS_TOOLTIP(IDM_CUT)           "Cut"
+    IDS_TOOLTIP(IDM_COPY)          "Copy"
+    IDS_TOOLTIP(IDM_PASTE)         "Paste"
+    IDS_TOOLTIP(IDM_PASTESPECIAL)  "Paste Format"
+    IDS_TOOLTIP(IDM_UNDO)          "Undo"
+    IDS_TOOLTIP(IDM_REDO)          "Redo"
+    IDS_TOOLTIP(IDM_TABLE)         "Table"
+// v2    IDS_TOOLTIP(IDM_BOOKMARK)      "Bookmark"
+    IDS_TOOLTIP(IDM_HYPERLINK)     "Link"
+    IDS_TOOLTIP(IDM_HORIZONTALLINE) "Horizontal Line"
+    IDS_TOOLTIP(IDM_IMAGE)         "Image"
+    IDS_TOOLTIP(IDM_PROPERTIES)    "Properties"
+    IDS_TOOLTIP(IDM_PAGEINFO)      "Page Information"
+
+    IDS_TOOLTIP(IDM_FONTNAME)      "Font Name"
+    IDS_TOOLTIP(IDM_FONTSIZE)      "Font Size"
+    IDS_TOOLTIP(IDM_SUPERSCRIPT)   "Superscript"
+    IDS_TOOLTIP(IDM_SUBSCRIPT)     "Subscript"
+    IDS_TOOLTIP(IDM_BOLD)          "Bold"
+    IDS_TOOLTIP(IDM_ITALIC)        "Italic"
+    IDS_TOOLTIP(IDM_UNDERLINE)     "Underline"
+    IDS_TOOLTIP(IDM_ORDERLIST)     "Numbered List"
+    IDS_TOOLTIP(IDM_UNORDERLIST)   "Bulleted List"
+    IDS_TOOLTIP(IDM_INDENT)        "Increase Indent"
+    IDS_TOOLTIP(IDM_OUTDENT)       "Decrease Indent"
+    IDS_TOOLTIP(IDM_JUSTIFYLEFT)   "Left Justify"
+    IDS_TOOLTIP(IDM_JUSTIFYCENTER) "Center Justify"
+    IDS_TOOLTIP(IDM_JUSTIFYRIGHT)  "Right Justify"
+    IDS_TOOLTIP(IDM_TELETYPE)      "Teletype"
+
+    IDS_TOOLTIP(IDM_BACKCOLOR)     "Background Color"
+    IDS_TOOLTIP(IDM_FORECOLOR)     "Font Color"
+    IDS_TOOLTIP(IDM_BLOCKFMT)      "Paragraph Style"
+    IDS_TOOLTIP(IDM_SHOWHIDE_CODE) "Show/Hide Codes"
+
+    IDS_TOOLTIP(IDM_DIRLTR)        "Left-To-Right Document"
+    IDS_TOOLTIP(IDM_DIRRTL)        "Right-To-Left Document"
+    IDS_TOOLTIP(IDM_BLOCKDIRLTR)   "Left-To-Right Paragraph"
+    IDS_TOOLTIP(IDM_BLOCKDIRRTL)   "Right-To-Left Paragraph"
+    IDS_TOOLTIP(IDM_INLINEDIRLTR)  "Left-To-Right Selection"
+    IDS_TOOLTIP(IDM_INLINEDIRRTL)  "Right-To-Left Selection"
+
+    IDS_BLOCKFMT_NORMAL            "Normal"
+    IDS_BLOCKFMT_PRE               "Formatted"
+    IDS_BLOCKFMT_ADDRESS           "Address"
+    IDS_BLOCKFMT_H1                "Heading 1"
+    IDS_BLOCKFMT_H2                "Heading 2"
+    IDS_BLOCKFMT_H3                "Heading 3"
+    IDS_BLOCKFMT_H4                "Heading 4"
+    IDS_BLOCKFMT_H5                "Heading 5"
+    IDS_BLOCKFMT_H6                "Heading 6"
+    IDS_BLOCKFMT_OL                "Numbered List"
+    IDS_BLOCKFMT_UL                "Bulleted List"
+    IDS_BLOCKFMT_DIR               "Directory List"
+    IDS_BLOCKFMT_MENU              "Menu List"
+    IDS_BLOCKFMT_DT                "Definition Term"
+    IDS_BLOCKFMT_DD                "Definition"
+    IDS_BLOCKFMT_P                 "Paragraph"
+
+    IDS_NULL_TITLE                 "(untitled)"
+    IDS_UNTITLED_MSHTML            "untitled.html"
+    IDS_UNTITLED_BITMAP            "untitled.bmp"
+#ifdef WIN16
+    IDS_WALLPAPER_BMP              "<0s>\\Internet.bmp"
+#else
+    IDS_WALLPAPER_BMP              "<0s>\\Internet Explorer Wallpaper.bmp"
+#endif
+
+    IDS_HELPABOUT_STRING           "Microsoft Internet Explorer <0d>.<1d2>.<2d4>.<3d><4s><5s>"
+
+    IDS_BINDSTATUS_DOWNLOADINGDATA_PICTURE      "Downloading picture <0s>..."
+    IDS_BINDSTATUS_DOWNLOADINGDATA_TEXT         "Opening page <0s>..."
+    IDS_BINDSTATUS_DOWNLOADINGDATA_BITS         "Downloading data <0s>..."
+    IDS_BINDSTATUS_GENERATINGDATA_TEXT          "Generating page <0s>..."
+    IDS_BINDSTATUS_INSTALLINGCOMPONENTS         "Installing components...<0s>"
+    IDS_BINDSTATUS_DOWNLOADING                  "(<0d> item<0p//s/> remaining) "
+    IDS_DONE                                    "Done"
+
+    IDS_LOADINGTABLE                            "Loading dataset..."
+    IDS_DATABINDING                             "Databinding..."
+
+    IDS_FRIENDLYURL_SHORTCUTTO                  "Shortcut to <0s> <1s>" // <0s>: URL, <1s>: suffix (local, Gopher, ...)
+    IDS_FRIENDLYURL_AT                          "<0s> at <1s>"          // image.gif at www.microsoft.com
+    IDS_FRIENDLYURL_SENDSMAILTO                 "Sends mail to <0s>"
+
+//  Suffix
+    IDS_FRIENDLYURL_LOCAL                       "(local)"
+    IDS_FRIENDLYURL_GOPHER                      "(Gopher)"
+    IDS_FRIENDLYURL_FTP                         "(FTP)"
+    IDS_FRIENDLYURL_SECUREWEBSITE               "(secure Web site)"
+
+// default document security property
+    IDS_DEFAULT_DOC_SECURITY_PROP               "This type of document does not have a security certificate."
+
+// default subject line when mailto has no subject
+    IDS_MAILTO_SUBMITALERT                      "This form is being submitted using e-mail.\n\
+Submitting this form will reveal your e-mail address to the recipient,\n\
+and will send the form data without encrypting it for privacy.\n\n\
+You may continue or cancel this submission."
+    IDS_MAILTO_DEFAULTSUBJECT                   "Form posted from Microsoft Internet Explorer."
+    IDS_MAILTO_MAILCLIENTNOTFOUND               "Could not perform this operation because the default mail client is not properly installed"
+
+// Lang menu strings
+    RES_STRING_ENCODING_MORE        "&More"
+
+// Colors
+
+#if DBG == 1
+
+    IDS_COLOR_BLACK                 "Black"
+    IDS_COLOR_NAVY                  "Navy"
+    IDS_COLOR_BLUE                  "Blue"
+    IDS_COLOR_CYAN                  "Cyan"
+    IDS_COLOR_RED                   "Red"
+    IDS_COLOR_LIME                  "Lime"
+    IDS_COLOR_GRAY                  "Gray"
+    IDS_COLOR_GREEN                 "Green"
+    IDS_COLOR_YELLOW                "Yellow"
+    IDS_COLOR_PINK                  "Pink"
+    IDS_COLOR_VIOLET                "Violet"
+    IDS_COLOR_WHITE                 "White"
+#endif // DBG == 1
+
+    IDS_DEFAULTHEADER               "&w&bPage &p of &P"
+    IDS_DEFAULTFOOTER               "&u&b&d"
+    IDS_DEFAULTMARGINTOP            "0.750000"
+    IDS_DEFAULTMARGINBOTTOM         "0.750000"
+    IDS_DEFAULTMARGINLEFT           "0.750000"
+    IDS_DEFAULTMARGINRIGHT          "0.750000"
+#ifdef WIN16
+    IDS_PRINTTOFILE_TITLE           "Print To File..."
+    IDS_PRINTTOFILE_OK              "OK"
+    // !!localizer: attention     !!!
+    // this string get's parsed for the print to file dialog
+    // the format is : <title>,<filespec>
+    // the "," will be replaced by 0 in the string, so don't change them
+    //  the first string will be the default
+#ifndef UNIX
+    IDS_PRINTTOFILE_SPEC            "Printer Files (*.prn),*.prn,All Files (*.*),*.*"
+#else
+    IDS_PRINTTOFILE_SPEC            "Postscript Files (*.ps),*.ps,All Files (*),*"    
+#endif
+#endif // WIN16
+
+
+    IDS_WEBPAGEDIALOG               " -- Web Page Dialog"
+    IDS_CODEPAGE                    "iso-8859-1"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RESET_WEB_SETTINGS_TITLE    "Reset Web Settings"
+    IDS_RESET_WEB_SETTINGS_SUCCESS  "Your Web settings have been reset to their original Internet Explorer defaults."
+    IDS_RESET_WEB_SETTINGS_FAILURE  "Unable to reset Web settings."
+END
+
+IDD_RESET_WEB_SETTINGS DIALOG DISCARDABLE  100, 50, 248, 70
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Reset Web Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_QUESTION,IDI_QUESTION,7,8,18,20
+    LTEXT           "Do you want to reset your Web settings to their original Internet Explorer defaults?",
+                    IDC_STATIC,38,8,199,20,SS_NOPREFIX
+    PUSHBUTTON      "&Yes",IDYES,135,50,50,14
+    PUSHBUTTON      "&No",IDNO,190,50,50,14
+    CONTROL         "&Also reset my home page",
+                    IDC_RESET_WEB_SETTINGS_HOMEPAGE,"Button",BS_MULTILINE | BS_TOP | BS_AUTOCHECKBOX | WS_TABSTOP,37,33,206,10
+END
+
+IDD_ADDTOSAVE_DIALOG_MSHTML DIALOG DISCARDABLE 0, 0, 250, 20
+STYLE WS_CHILD | WS_VISIBLE | DS_3DLOOK | DS_CONTROL | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Language:"IDC_STATIC, 5, 0, 50, 10, NOT WS_GROUP
+    COMBOBOX        IDC_SAVE_CHARSET_MSHTML,53,0,156,70,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+#ifdef WIN16
+#include "sdv16.rc"
+#endif

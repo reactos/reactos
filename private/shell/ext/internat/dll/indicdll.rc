@@ -1,0 +1,53 @@
+/*++
+
+Copyright (c) 1994-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    indicdll.rc
+
+Abstract:
+
+    This module contains the resource descriptions for the Multilingual
+    Language Indicator dll.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Icons.
+//
+
+10  ICON imeopen.ico
+11  ICON imeclose.ico
+12  ICON imedisab.ico
+13  ICON imee_h.ico
+14  ICON imee_f.ico
+15  ICON imeh_h.ico
+16  ICON imeh_f.ico
+
+
+
+
+//
+//  Version Info.
+//
+
+#ifdef WINNT
+  #include <winver.h>
+  #include <ntverp.h>
+#else
+  #include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Keyboard Language Indicator Shell Hook Extension"
+#define VER_INTERNALNAME_STR            "INDICDLL"
+#define VER_LEGALCOPYRIGHT_YEARS        "1994-1999"
+#define VER_ORIGINALFILENAME_STR        "INDICDLL.DLL"
+
+#include <common.ver>

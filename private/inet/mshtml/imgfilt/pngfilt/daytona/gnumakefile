@@ -1,0 +1,73 @@
+PRODUCT = PNGFILT
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+PNG_DIR = ..
+USER_SRC_DIR = ..
+
+SOURCES = \
+	pngfilt.cpp \
+	cpngfilt.cpp \
+	scanline.cpp 
+
+
+# Windows DLL name:
+
+WDLL = pngfilt
+DLL  = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+WRESOURCE = pngfilt.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+CPP_OBJS := ${CPP_OBJS:%.c=%.o}
+DLLOBJS = ${CPP_OBJS}
+
+DLL-EXPORTS = pngfilt.def
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+##
+
+PROJECT_CFLAGS = \
+	-D_ATL_NO_CONNECTION_POINTS \
+	-D_ATL_NO_SECURITY \
+	-D_ATL_NO_OLEAUT \
+	-D_ATL_NO_FORCE_LIBS \
+	-DNASHVILLE \
+	-I${SDK_DIR}/atl21 \
+	-I${PNG_DIR}/include/${O} \
+	-I${PNG_DIR} \
+    
+
+#	-D_ATL_DLL_SERVER 
+
+PROJECT_LIBS = \
+	-loleaut32 \
+	-lpngzlib \
+	-luuid
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+PROJECT_DLLFLAGS := \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

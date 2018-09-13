@@ -1,0 +1,93 @@
+// WARNING
+// non-localizable resources only
+// localizable resources must go in shel32lc.rc
+
+// included in ..\shell32.rc
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// bitmaps used by DESKHTML.
+//
+IDB_MONITOR             BITMAP "monitor.bmp"
+IDB_WIZARD              BITMAP "wizard.bmp"
+
+IDI_BACK_NONE           ICON "none.ico"
+IDI_FRAME               ICON "rc_frame.ico"
+
+/* The  Following statements define the bitmaps used in the folder options dialog box
+The naming is based on the following scheme
+A - Active Desktop   0 means Off                        1 Means on
+W - Window           1 means Single Window              2 Means Multiple Window
+V - View             0 means Classic View               1 means Web View
+U - Underline/Click  0 means Double Click               1 means single Click
+
+  Example :
+   A1W2V1U0
+
+   Bitmap corresponding to the case where Active Desktop is turned on, folders are opened in
+   multiple window , we have Web Style View and Double Click is necessary to invoke the item
+*/
+IDB_A1W1V1U1            BITMAP "unicpp\\A1W1V1U1.BMP"
+IDB_A1W1V1U0            BITMAP "unicpp\\A1W1V1U0.BMP"                   
+IDB_A1W1V0U1            BITMAP "unicpp\\A1W1V0U1.BMP"
+IDB_A1W1V0U0            BITMAP "unicpp\\A1W1V0U0.BMP"
+IDB_A1W2V1U1            BITMAP "unicpp\\A1W2V1U1.BMP"
+IDB_A1W2V1U0            BITMAP "unicpp\\A1W2V1U0.BMP"
+IDB_A1W2V0U1            BITMAP "unicpp\\A1W2V0U1.BMP"
+IDB_A1W2V0U0            BITMAP "unicpp\\A1W2V0U0.BMP"
+IDB_A0W1V1U1            BITMAP "unicpp\\A0W1V1U1.BMP"
+IDB_A0W1V1U0            BITMAP "unicpp\\A0W1V1U0.BMP"
+IDB_A0W1V0U1            BITMAP "unicpp\\A0W1V0U1.BMP"
+IDB_A0W1V0U0            BITMAP "unicpp\\A0W1V0U0.BMP"
+IDB_A0W2V1U1            BITMAP "unicpp\\A0W2V1U1.BMP"
+IDB_A0W2V1U0            BITMAP "unicpp\\A0W2V1U0.BMP"
+IDB_A0W2V0U1            BITMAP "unicpp\\A0W2V0U1.BMP"
+IDB_A0W2V0U0            BITMAP "unicpp\\A0W2V0U0.BMP"
+
+//
+// resources which are accessed by third parties who don't
+// understand our plugUI scheme
+//
+
+IDD_COMPONENTS DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Web"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        " ",IDC_COMP_CHANNELS,7,114,238,82
+    CONTROL         "&View my Active Desktop as a web page",IDC_COMP_ENABLEAD,
+        "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,114,140,9
+    CONTROL         "List1",IDC_COMP_LIST,"SysListView32",LVS_REPORT |
+        LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
+        LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP | WS_GROUP,
+        14,124,168,65
+    PUSHBUTTON      "&New...",IDC_COMP_NEW,188,124,50,14
+    PUSHBUTTON      "&Delete",IDC_COMP_DELETE,188,141,50,14
+    PUSHBUTTON      "&Properties",IDC_COMP_PROPERTIES,188,158,50,14
+    PUSHBUTTON      "&Reset All",IDC_COMP_RESET,188,175,50,14
+    LTEXT           "To change the way you click on desktop icons, click:",-1,
+        7,202,172,10
+    PUSHBUTTON      "&Folder Options",IDC_COMP_FOLDEROPT,181,200,64,14
+    CONTROL         "",IDC_COMP_PREVIEW,"ComponentPreview",WS_GROUP,63,4,125,107
+END
+
+IDD_BACKGROUND DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Background"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Wallpaper",IDC_BACK_GROUP,7,118,238,93
+    LTEXT           "&Select an HTML Document or a picture:",
+                    IDC_STATIC,13,132,162,10
+    CONTROL         "List1",IDC_BACK_WPLIST,"SysListView32",LVS_REPORT |
+        LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
+        LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP | WS_GROUP,
+        14,144,166,59
+    PUSHBUTTON      "&Browse...",IDC_BACK_BROWSE,187,144,50,14
+    PUSHBUTTON      "&Pattern...",IDC_BACK_PATTERN,187,162,50,14
+    LTEXT           "&Display:",IDC_BACK_DISPLAY,187,181,50,10
+    COMBOBOX        IDC_BACK_WPSTYLE,187,191,50,40,CBS_DROPDOWNLIST | WS_VSCROLL |
+        WS_TABSTOP
+    CONTROL         "",IDC_BACK_PREVIEW,"BackgroundPreview2",WS_GROUP,63,4,125,107
+END
+

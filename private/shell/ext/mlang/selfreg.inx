@@ -1,0 +1,758 @@
+[Version]
+Signature="$CHICAGO$"
+
+[Reg]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=MLang.Reg, MIME.Database.Codepage, MIME.Database.Charset, Rfc1766.Reg
+DelReg=TEMP.Unreg, CP.Reg
+
+[Reg.NT]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=MLang.Reg, MIME.Database.Codepage, MIME.Database.Charset, Rfc1766.Reg
+DelReg=TEMP.Unreg, CP.Reg.NT
+
+[Unreg]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=MLang.Reg, TEMP.Unreg
+
+[TEMP.Unreg]
+HKCR,MIME\Database\Codepage\28599,,,""
+HKCR,MIME\Database\Codepage\50225,HeaderCharset,,
+
+[MLang.Reg]
+HKCR,CLSID\%CLSID_MLANG%,,,"Multi Language Support"
+HKCR,CLSID\%CLSID_MLANG%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_MLANG%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_MLSTR%,,,"Multi Language String"
+HKCR,CLSID\%CLSID_MLSTR%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_MLSTR%\InProcServer32,"ThreadingModel",,"Both"
+HKCR,CLSID\%CLSID_MLCONVCHAR%,,,"Multi Language Convert Charset"
+HKCR,CLSID\%CLSID_MLCONVCHAR%\InProcServer32,,131072,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_MLCONVCHAR%\InProcServer32,"ThreadingModel",,"Both"
+
+[CP.Reg]
+HKLM,System\CurrentControlSet\control\Nls\Codepage,50000,,"cp_1252.nls"
+
+[CP.Reg.NT]
+HKLM,System\CurrentControlSet\control\Nls\Codepage,50000,,"c_1252.nls"
+
+[Rfc1766.Reg]
+HKCR,MIME\Database\Rfc1766,0436,,"af;%LCID0436%"
+HKCR,MIME\Database\Rfc1766,041C,,"sq;%LCID041C%"
+HKCR,MIME\Database\Rfc1766,0001,,"ar;%LCID0001%"
+HKCR,MIME\Database\Rfc1766,0401,,"ar-sa;%LCID0401%"
+HKCR,MIME\Database\Rfc1766,0801,,"ar-iq;%LCID0801%"
+HKCR,MIME\Database\Rfc1766,0C01,,"ar-eg;%LCID0C01%"
+HKCR,MIME\Database\Rfc1766,1001,,"ar-ly;%LCID1001%"
+HKCR,MIME\Database\Rfc1766,1401,,"ar-dz;%LCID1401%"
+HKCR,MIME\Database\Rfc1766,1801,,"ar-ma;%LCID1801%"
+HKCR,MIME\Database\Rfc1766,1C01,,"ar-tn;%LCID1C01%"
+HKCR,MIME\Database\Rfc1766,2001,,"ar-om;%LCID2001%"
+HKCR,MIME\Database\Rfc1766,2401,,"ar-ye;%LCID2401%"
+HKCR,MIME\Database\Rfc1766,2801,,"ar-sy;%LCID2801%"
+HKCR,MIME\Database\Rfc1766,2C01,,"ar-jo;%LCID2C01%"
+HKCR,MIME\Database\Rfc1766,3001,,"ar-lb;%LCID3001%"
+HKCR,MIME\Database\Rfc1766,3401,,"ar-kw;%LCID3401%"
+HKCR,MIME\Database\Rfc1766,3801,,"ar-ae;%LCID3801%"
+HKCR,MIME\Database\Rfc1766,3C01,,"ar-bh;%LCID3C01%"
+HKCR,MIME\Database\Rfc1766,4001,,"ar-qa;%LCID4001%"
+HKCR,MIME\Database\Rfc1766,042D,,"eu;%LCID042D%"
+HKCR,MIME\Database\Rfc1766,0402,,"bg;%LCID0402%"
+HKCR,MIME\Database\Rfc1766,0423,,"be;%LCID0423%"
+HKCR,MIME\Database\Rfc1766,0403,,"ca;%LCID0403%"
+HKCR,MIME\Database\Rfc1766,0004,,"zh;%LCID0004%"
+HKCR,MIME\Database\Rfc1766,0404,,"zh-tw;%LCID0404%"
+HKCR,MIME\Database\Rfc1766,0804,,"zh-cn;%LCID0804%"
+HKCR,MIME\Database\Rfc1766,0C04,,"zh-hk;%LCID0C04%"
+HKCR,MIME\Database\Rfc1766,1004,,"zh-sg;%LCID1004%"
+HKCR,MIME\Database\Rfc1766,041A,,"hr;%LCID041A%"
+HKCR,MIME\Database\Rfc1766,0405,,"cs;%LCID0405%"
+HKCR,MIME\Database\Rfc1766,0406,,"da;%LCID0406%"
+HKCR,MIME\Database\Rfc1766,0413,,"nl;%LCID0413%"
+HKCR,MIME\Database\Rfc1766,0813,,"nl-be;%LCID0813%"
+HKCR,MIME\Database\Rfc1766,0009,,"en;%LCID0009%"
+HKCR,MIME\Database\Rfc1766,0409,,"en-us;%LCID0409%"
+HKCR,MIME\Database\Rfc1766,0809,,"en-gb;%LCID0809%"
+HKCR,MIME\Database\Rfc1766,0C09,,"en-au;%LCID0C09%"
+HKCR,MIME\Database\Rfc1766,1009,,"en-ca;%LCID1009%"
+HKCR,MIME\Database\Rfc1766,1409,,"en-nz;%LCID1409%"
+HKCR,MIME\Database\Rfc1766,1809,,"en-ie;%LCID1809%"
+HKCR,MIME\Database\Rfc1766,1C09,,"en-za;%LCID1C09%"
+HKCR,MIME\Database\Rfc1766,2009,,"en-jm;%LCID2009%"
+HKCR,MIME\Database\Rfc1766,2809,,"en-bz;%LCID2809%"
+HKCR,MIME\Database\Rfc1766,2C09,,"en-tt;%LCID2C09%"
+HKCR,MIME\Database\Rfc1766,0425,,"et;%LCID0425%"
+HKCR,MIME\Database\Rfc1766,0438,,"fo;%LCID0438%"
+HKCR,MIME\Database\Rfc1766,0429,,"fa;%LCID0429%"
+HKCR,MIME\Database\Rfc1766,040B,,"fi;%LCID040B%"
+HKCR,MIME\Database\Rfc1766,040C,,"fr;%LCID040C%"
+HKCR,MIME\Database\Rfc1766,080C,,"fr-be;%LCID080C%"
+HKCR,MIME\Database\Rfc1766,0C0C,,"fr-ca;%LCID0C0C%"
+HKCR,MIME\Database\Rfc1766,100C,,"fr-ch;%LCID100C%"
+HKCR,MIME\Database\Rfc1766,140C,,"fr-lu;%LCID140C%"
+HKCR,MIME\Database\Rfc1766,043C,,"gd;%LCID043C%"
+HKCR,MIME\Database\Rfc1766,0407,,"de;%LCID0407%"
+HKCR,MIME\Database\Rfc1766,0807,,"de-ch;%LCID0807%"
+HKCR,MIME\Database\Rfc1766,0C07,,"de-at;%LCID0C07%"
+HKCR,MIME\Database\Rfc1766,1007,,"de-lu;%LCID1007%"
+HKCR,MIME\Database\Rfc1766,1407,,"de-li;%LCID1407%"
+HKCR,MIME\Database\Rfc1766,0408,,"el;%LCID0408%"
+HKCR,MIME\Database\Rfc1766,040D,,"he;%LCID040D%"
+HKCR,MIME\Database\Rfc1766,0439,,"hi;%LCID0439%"
+HKCR,MIME\Database\Rfc1766,040E,,"hu;%LCID040E%"
+HKCR,MIME\Database\Rfc1766,040F,,"is;%LCID040F%"
+HKCR,MIME\Database\Rfc1766,0421,,"in;%LCID0421%"
+HKCR,MIME\Database\Rfc1766,0410,,"it;%LCID0410%"
+HKCR,MIME\Database\Rfc1766,0810,,"it-ch;%LCID0810%"
+HKCR,MIME\Database\Rfc1766,0411,,"ja;%LCID0411%"
+HKCR,MIME\Database\Rfc1766,0412,,"ko;%LCID0412%"
+HKCR,MIME\Database\Rfc1766,0426,,"lv;%LCID0426%"
+HKCR,MIME\Database\Rfc1766,0427,,"lt;%LCID0427%"
+HKCR,MIME\Database\Rfc1766,042F,,"mk;%LCID042F%"
+HKCR,MIME\Database\Rfc1766,043E,,"ms;%LCID043E%"
+HKCR,MIME\Database\Rfc1766,043A,,"mt;%LCID043A%"
+HKCR,MIME\Database\Rfc1766,0414,,"no;%LCID0414%"
+HKCR,MIME\Database\Rfc1766,0814,,"no;%LCID0814%"
+HKCR,MIME\Database\Rfc1766,0415,,"pl;%LCID0415%"
+HKCR,MIME\Database\Rfc1766,0416,,"pt-br;%LCID0416%"
+HKCR,MIME\Database\Rfc1766,0816,,"pt;%LCID0816%"
+HKCR,MIME\Database\Rfc1766,0417,,"rm;%LCID0417%"
+HKCR,MIME\Database\Rfc1766,0418,,"ro;%LCID0418%"
+HKCR,MIME\Database\Rfc1766,0818,,"ro-mo;%LCID0818%"
+HKCR,MIME\Database\Rfc1766,0419,,"ru;%LCID0419%"
+HKCR,MIME\Database\Rfc1766,0819,,"ru-mo;%LCID0819%"
+HKCR,MIME\Database\Rfc1766,0C1A,,"sr;%LCID0C1A%"
+HKCR,MIME\Database\Rfc1766,081A,,"sr;%LCID081A%"
+HKCR,MIME\Database\Rfc1766,041B,,"sk;%LCID041B%"
+HKCR,MIME\Database\Rfc1766,0424,,"sl;%LCID0424%"
+HKCR,MIME\Database\Rfc1766,042E,,"sb;%LCID042E%"
+HKCR,MIME\Database\Rfc1766,040A,,"es;%LCID040A%"
+HKCR,MIME\Database\Rfc1766,080A,,"es-mx;%LCID080A%"
+HKCR,MIME\Database\Rfc1766,0C0A,,"es;%LCID0C0A%"
+HKCR,MIME\Database\Rfc1766,100A,,"es-gt;%LCID100A%"
+HKCR,MIME\Database\Rfc1766,140A,,"es-cr;%LCID140A%"
+HKCR,MIME\Database\Rfc1766,180A,,"es-pa;%LCID180A%"
+HKCR,MIME\Database\Rfc1766,1C0A,,"es-do;%LCID0C0A%"
+HKCR,MIME\Database\Rfc1766,200A,,"es-ve;%LCID200A%"
+HKCR,MIME\Database\Rfc1766,240A,,"es-co;%LCID240A%"
+HKCR,MIME\Database\Rfc1766,280A,,"es-pe;%LCID280A%"
+HKCR,MIME\Database\Rfc1766,2C0A,,"es-ar;%LCID2C0A%"
+HKCR,MIME\Database\Rfc1766,300A,,"es-ec;%LCID300A%"
+HKCR,MIME\Database\Rfc1766,340A,,"es-cl;%LCID340A%"
+HKCR,MIME\Database\Rfc1766,380A,,"es-uy;%LCID380A%"
+HKCR,MIME\Database\Rfc1766,3C0A,,"es-py;%LCID3C0A%"
+HKCR,MIME\Database\Rfc1766,400A,,"es-bo;%LCID400A%"
+HKCR,MIME\Database\Rfc1766,440A,,"es-sv;%LCID440A%"
+HKCR,MIME\Database\Rfc1766,480A,,"es-hn;%LCID480A%"
+HKCR,MIME\Database\Rfc1766,4C0A,,"es-ni;%LCID4C0A%"
+HKCR,MIME\Database\Rfc1766,500A,,"es-pr;%LCID500A%"
+HKCR,MIME\Database\Rfc1766,0430,,"sx;%LCID0430%"
+HKCR,MIME\Database\Rfc1766,041D,,"sv;%LCID041D%"
+HKCR,MIME\Database\Rfc1766,081D,,"sv-fi;%LCID081D%"
+HKCR,MIME\Database\Rfc1766,041E,,"th;%LCID041E%"
+HKCR,MIME\Database\Rfc1766,0431,,"ts;%LCID0431%"
+HKCR,MIME\Database\Rfc1766,0432,,"tn;%LCID0432%"
+HKCR,MIME\Database\Rfc1766,041F,,"tr;%LCID041F%"
+HKCR,MIME\Database\Rfc1766,0422,,"uk;%LCID0422%"
+HKCR,MIME\Database\Rfc1766,0420,,"ur;%LCID0420%"
+HKCR,MIME\Database\Rfc1766,042A,,"vi;%LCID042A%"
+HKCR,MIME\Database\Rfc1766,0434,,"xh;%LCID0434%"
+HKCR,MIME\Database\Rfc1766,043D,,"ji;%LCID043D%"
+HKCR,MIME\Database\Rfc1766,0435,,"zu;%LCID0435%"
+
+[MIME.Database.Codepage]
+HKCR,MIME\Database\Codepage\1200,BodyCharset,2,"unicode"
+HKCR,MIME\Database\Codepage\1200,FixedWidthFont,2,"%DESC_UNIFONT%"
+HKCR,MIME\Database\Codepage\1200,ProportionalFont,2,"%DESC_UNIFONTP%"
+HKCR,MIME\Database\Codepage\1200,Description,,"%DESC_1200%"
+HKCR,MIME\Database\Codepage\1200,Level,1,04,02,00,00
+HKCR,MIME\Database\Codepage\1200,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\1201,BodyCharset,2,"unicodeFEFF"
+HKCR,MIME\Database\Codepage\1201,FixedWidthFont,2,"%DESC_UNIFONT%"
+HKCR,MIME\Database\Codepage\1201,ProportionalFont,2,"%DESC_UNIFONTP%"
+HKCR,MIME\Database\Codepage\1201,Description,,"%DESC_1201%"
+HKCR,MIME\Database\Codepage\1201,Level,1,00,00,00,00
+HKCR,MIME\Database\Codepage\1201,Encoding,3,01,01,00,00
+HKCR,MIME\Database\Codepage\1201,Family,0x10001,1200
+
+HKCR,MIME\Database\Codepage\1250,BodyCharset,2,"iso-8859-2"
+HKCR,MIME\Database\Codepage\1250,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1250,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1250,WebCharset,2,"windows-1250"
+HKCR,MIME\Database\Codepage\1250,Description,,"%DESC_1250%"
+HKCR,MIME\Database\Codepage\1250,Level,1,03,03,00,00
+HKCR,MIME\Database\Codepage\1250,Encoding,3,02,02,00,00
+
+HKCR,MIME\Database\Codepage\1251,BodyCharset,2,"koi8-r"
+HKCR,MIME\Database\Codepage\1251,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1251,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1251,WebCharset,2,"windows-1251"
+HKCR,MIME\Database\Codepage\1251,Description,,"%DESC_1251%"
+HKCR,MIME\Database\Codepage\1251,Level,1,03,03,00,00
+HKCR,MIME\Database\Codepage\1251,Encoding,3,02,02,00,00
+
+HKCR,MIME\Database\Codepage\1252,BodyCharset,2,"iso-8859-1"
+HKCR,MIME\Database\Codepage\1252,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1252,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1252,WebCharset,2,"iso-8859-1"
+HKCR,MIME\Database\Codepage\1252,Description,,"%DESC_1252%"
+HKCR,MIME\Database\Codepage\1252,Level,1,07,07,00,00
+
+HKCR,MIME\Database\Codepage\1253,BodyCharset,,"iso-8859-7"
+HKCR,MIME\Database\Codepage\1253,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1253,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1253,HeaderCharset,2,"iso-8859-7"
+HKCR,MIME\Database\Codepage\1253,WebCharset,,"windows-1253"
+HKCR,MIME\Database\Codepage\1253,Description,,"%DESC_1253%"
+HKCR,MIME\Database\Codepage\1253,Level,1,03,03,00,00
+HKCR,MIME\Database\Codepage\1253,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\1254,BodyCharset,2,"iso-8859-9"
+HKCR,MIME\Database\Codepage\1254,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1254,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1254,WebCharset,2,"iso-8859-9"
+HKCR,MIME\Database\Codepage\1254,Description,,"%DESC_1254%"
+HKCR,MIME\Database\Codepage\1254,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\1254,Encoding,3,02,02,00,00
+
+HKCR,MIME\Database\Codepage\1255,BodyCharset,2,"iso-8859-8"
+HKCR,MIME\Database\Codepage\1255,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1255,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1255,Description,,"%DESC_1255%"
+HKCR,MIME\Database\Codepage\1255,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\1255,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\1256,BodyCharset,2,"iso-8859-6"
+HKCR,MIME\Database\Codepage\1256,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1256,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1256,WebCharset,2,"windows-1256"
+HKCR,MIME\Database\Codepage\1256,Description,,"%DESC_1256%"
+HKCR,MIME\Database\Codepage\1256,Level,1,02,02,00,00
+HKCR,MIME\Database\Codepage\1256,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\1257,BodyCharset,2,"iso-8859-4"
+HKCR,MIME\Database\Codepage\1257,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\1257,ProportionalFont,2,"Arial"
+HKCR,MIME\Database\Codepage\1257,WebCharset,2,"windows-1257"
+HKCR,MIME\Database\Codepage\1257,Description,,"%DESC_1257%"
+HKCR,MIME\Database\Codepage\1257,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\1257,Encoding,3,02,02,00,00
+
+HKCR,MIME\Database\Codepage\1258,BodyCharset,2,"windows-1258"
+HKCR,MIME\Database\Codepage\1258,Description,,"%DESC_1258%"
+HKCR,MIME\Database\Codepage\1258,WebCharset,2,"windows-1258"
+HKCR,MIME\Database\Codepage\1258,Level,1,07,07,00,00
+
+HKCR,MIME\Database\Codepage\20866,BodyCharset,2,"koi8-r"
+HKCR,MIME\Database\Codepage\20866,Description,,"%DESC_20866%"
+HKCR,MIME\Database\Codepage\20866,Family,0x10003,1251
+HKCR,MIME\Database\Codepage\20866,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\20866,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\21866,BodyCharset,2,"koi8-ru"
+HKCR,MIME\Database\Codepage\21866,Description,,"%DESC_21866%"
+HKCR,MIME\Database\Codepage\21866,Family,0x10003,1251
+HKCR,MIME\Database\Codepage\21866,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\21866,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\28592,BodyCharset,2,"iso-8859-2"
+HKCR,MIME\Database\Codepage\28592,Description,,"%DESC_28592%"
+HKCR,MIME\Database\Codepage\28592,Family,0x10003,1250
+HKCR,MIME\Database\Codepage\28592,Level,1,07,07,00,00
+
+HKCR,MIME\Database\Codepage\28593,BodyCharset,2,"iso-8859-3"
+HKCR,MIME\Database\Codepage\28593,Description,,"%DESC_28593%"
+HKCR,MIME\Database\Codepage\28593,Family,0x10003,1254
+HKCR,MIME\Database\Codepage\28593,Level,1,01,07,00,00
+
+HKCR,MIME\Database\Codepage\28594,BodyCharset,2,"iso-8859-4"
+HKCR,MIME\Database\Codepage\28594,Description,,"%DESC_28594%"
+HKCR,MIME\Database\Codepage\28594,Family,0x10003,1257
+HKCR,MIME\Database\Codepage\28594,Level,1,01,03,00,00
+
+HKCR,MIME\Database\Codepage\28595,BodyCharset,2,"iso-8859-5"
+HKCR,MIME\Database\Codepage\28595,Description,,"%DESC_28595%"
+HKCR,MIME\Database\Codepage\28595,Family,0x10003,1251
+HKCR,MIME\Database\Codepage\28595,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\28595,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\28596,BodyCharset,2,"iso-8859-6"
+HKCR,MIME\Database\Codepage\28596,Description,,"%DESC_28596%"
+HKCR,MIME\Database\Codepage\28596,Family,0x10003,1256
+
+HKCR,MIME\Database\Codepage\28597,BodyCharset,,"iso-8859-7"
+HKCR,MIME\Database\Codepage\28597,Description,,"%DESC_28597%"
+HKCR,MIME\Database\Codepage\28597,Family,0x10003,1253
+HKCR,MIME\Database\Codepage\28597,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\28597,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\50000,BodyCharset,2,"x-user-defined"
+HKCR,MIME\Database\Codepage\50000,FixedWidthFont,2,"Courier New"
+HKCR,MIME\Database\Codepage\50000,ProportionalFont,2,"Lucida Sans Unicode"
+HKCR,MIME\Database\Codepage\50000,Description,,"%DESC_50000%"
+HKCR,MIME\Database\Codepage\50000,Level,1,03,03,00,00
+
+HKCR,MIME\Database\Codepage\50220,BodyCharset,,"iso-2022-jp"
+HKCR,MIME\Database\Codepage\50220,Description,,"%DESC_50220%"
+HKCR,MIME\Database\Codepage\50220,Family,0x10001,932
+HKCR,MIME\Database\Codepage\50220,Level,1,01,01,00,00
+
+HKCR,MIME\Database\Codepage\50221,BodyCharset,,"_iso-2022-jp$ESC"
+HKCR,MIME\Database\Codepage\50221,Description,,"%DESC_50221%"
+HKCR,MIME\Database\Codepage\50221,Family,0x10001,932
+HKCR,MIME\Database\Codepage\50221,Level,1,01,03,00,00
+HKCR,MIME\Database\Codepage\50221,WebCharset,,"csISO2022JP"
+
+HKCR,MIME\Database\Codepage\50222,BodyCharset,,"_iso-2022-jp$SIO"
+HKCR,MIME\Database\Codepage\50222,Description,,"%DESC_50222%"
+HKCR,MIME\Database\Codepage\50222,Family,0x10001,932
+HKCR,MIME\Database\Codepage\50222,Level,1,01,01,00,00
+HKCR,MIME\Database\Codepage\50222,WebCharset,,"iso-2022-jp"
+
+HKCR,MIME\Database\Codepage\50225,BodyCharset,2,"iso-2022-kr"
+HKCR,MIME\Database\Codepage\50225,Description,,"%DESC_50225%"
+HKCR,MIME\Database\Codepage\50225,Family,0x10003,949
+HKCR,MIME\Database\Codepage\50225,Level,1,01,01,00,00
+HKCR,MIME\Database\Codepage\50225,WebCharset,2,"iso-2022-kr"
+
+HKCR,MIME\Database\Codepage\50932,BodyCharset,,"_autodetect"
+HKCR,MIME\Database\Codepage\50932,Description,,"%DESC_50932%"
+HKCR,MIME\Database\Codepage\50932,Family,0x10003,932
+HKCR,MIME\Database\Codepage\50932,Level,1,07,00,00,00
+HKCR,MIME\Database\Codepage\50932,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\50949,BodyCharset,2,"_autodetect_kr"
+HKCR,MIME\Database\Codepage\50949,Description,,"%DESC_50949%"
+HKCR,MIME\Database\Codepage\50949,Family,0x10003,949
+HKCR,MIME\Database\Codepage\50949,Level,1,01,00,00,00
+HKCR,MIME\Database\Codepage\50949,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\51932,BodyCharset,,"euc-jp"
+HKCR,MIME\Database\Codepage\51932,Description,,"%DESC_51932%"
+HKCR,MIME\Database\Codepage\51932,Family,0x10003,932
+HKCR,MIME\Database\Codepage\51932,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\51932,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\51949,BodyCharset,,"euc-kr"
+HKCR,MIME\Database\Codepage\51949,Description,,"%DESC_51949%"
+HKCR,MIME\Database\Codepage\51949,Family,0x10003,949
+HKCR,MIME\Database\Codepage\51949,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\52936,BodyCharset,0,"hz-gb-2312"
+HKCR,MIME\Database\Codepage\52936,Description,,"%DESC_52936%"
+HKCR,MIME\Database\Codepage\52936,Family,0x10003,936
+HKCR,MIME\Database\Codepage\52936,Level,1,03,03,00,00
+
+HKCR,MIME\Database\Codepage\65000,BodyCharset,2,"utf-7"
+HKCR,MIME\Database\Codepage\65000,Description,,"%DESC_65000%"
+HKCR,MIME\Database\Codepage\65000,Family,0x10003,1200
+HKCR,MIME\Database\Codepage\65000,Level,1,01,01,00,00
+
+HKCR,MIME\Database\Codepage\65001,BodyCharset,2,"utf-8"
+HKCR,MIME\Database\Codepage\65001,Description,,"%DESC_65001%"
+HKCR,MIME\Database\Codepage\65001,Family,0x10003,1200
+HKCR,MIME\Database\Codepage\65001,Level,1,03,03,00,00
+
+HKCR,MIME\Database\Codepage\852,BodyCharset,2,"ibm852"
+HKCR,MIME\Database\Codepage\852,Description,,"%DESC_852%"
+HKCR,MIME\Database\Codepage\852,Level,1,02,02,00,00
+HKCR,MIME\Database\Codepage\852,Family,0x10001,1250
+
+HKCR,MIME\Database\Codepage\866,BodyCharset,2,"cp866"
+HKCR,MIME\Database\Codepage\866,Description,,"%DESC_866%"
+HKCR,MIME\Database\Codepage\866,Level,1,02,02,00,00
+HKCR,MIME\Database\Codepage\866,Family,0x10003,1251
+
+HKCR,MIME\Database\Codepage\874,BodyCharset,2,"windows-874"
+HKCR,MIME\Database\Codepage\874,Description,,"%DESC_874%"
+HKCR,MIME\Database\Codepage\874,Level,1,07,07,00,00
+
+HKCR,MIME\Database\Codepage\932,BodyCharset,,"iso-2022-jp"
+HKCR,MIME\Database\Codepage\932,FixedWidthFont,2,"%DESC_JAFONT%"
+HKCR,MIME\Database\Codepage\932,ProportionalFont,2,"%DESC_JAFONTP%"
+HKCR,MIME\Database\Codepage\932,WebCharset,2,"shift_jis"
+HKCR,MIME\Database\Codepage\932,Description,,"%DESC_932%"
+HKCR,MIME\Database\Codepage\932,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\932,Encoding,1,01,01,00,00
+
+HKCR,MIME\Database\Codepage\936,BodyCharset,2,"gb2312"
+HKCR,MIME\Database\Codepage\936,FixedWidthFont,2,"%DESC_CNFONT%"
+HKCR,MIME\Database\Codepage\936,ProportionalFont,2,"%DESC_CNFONTP%"
+HKCR,MIME\Database\Codepage\936,Description,,"%DESC_936%"
+HKCR,MIME\Database\Codepage\936,Level,1,07,07,00,00
+
+HKCR,MIME\Database\Codepage\949,BodyCharset,,"euc-kr"
+HKCR,MIME\Database\Codepage\949,FixedWidthFont,2,"%DESC_KOFONT%"
+HKCR,MIME\Database\Codepage\949,ProportionalFont,2,"%DESC_KOFONTP%"
+HKCR,MIME\Database\Codepage\949,HeaderCharset,,"euc-kr"
+HKCR,MIME\Database\Codepage\949,WebCharset,,"ks_c_5601-1987"
+HKCR,MIME\Database\Codepage\949,Description,,"%DESC_949%"
+HKCR,MIME\Database\Codepage\949,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\949,Encoding,3,01,01,00,00
+
+HKCR,MIME\Database\Codepage\950,BodyCharset,2,"big5"
+HKCR,MIME\Database\Codepage\950,FixedWidthFont,2,"%DESC_TWFONT%"
+HKCR,MIME\Database\Codepage\950,ProportionalFont,2,"%DESC_TWFONTP%"
+HKCR,MIME\Database\Codepage\950,Description,,"%DESC_950%"
+HKCR,MIME\Database\Codepage\950,Level,1,07,07,00,00
+HKCR,MIME\Database\Codepage\950,Encoding,3,01,01,00,00
+
+
+[MIME.Database.Charset]
+HKCR,MIME\database\Charset\_autodetect,Codepage,0x10003,50932
+HKCR,MIME\database\Charset\_autodetect,InternetEncoding,0x10003,50932
+HKCR,MIME\database\Charset\_autodetect_kr,Codepage,0x10003,50949
+HKCR,MIME\database\Charset\_autodetect_kr,InternetEncoding,0x10003,50949
+HKCR,MIME\database\Charset\_iso-2022-jp$ESC,Codepage,0x10003,932
+HKCR,MIME\database\Charset\_iso-2022-jp$ESC,InternetEncoding,0x10003,50221
+HKCR,MIME\database\Charset\_iso-2022-jp$SIO,Codepage,0x10001,932
+HKCR,MIME\database\Charset\_iso-2022-jp$SIO,InternetEncoding,0x10001,50222
+HKCR,MIME\database\Charset\Big5,Codepage,0x10003,950
+HKCR,MIME\database\Charset\Big5,InternetEncoding,0x10003,950
+HKCR,MIME\database\Charset\ks_c_5601-1987,Codepage,0x10001,949
+HKCR,MIME\database\Charset\ks_c_5601-1987,InternetEncoding,0x10001,949
+HKCR,MIME\database\Charset\euc-kr,Codepage,0x10001,949
+HKCR,MIME\database\Charset\euc-kr,InternetEncoding,0x10001,949
+HKCR,MIME\database\Charset\GB2312,Codepage,0x10003,936
+HKCR,MIME\database\Charset\GB2312,InternetEncoding,0x10003,936
+HKCR,MIME\database\Charset\hz-gb-2312,Codepage,0x10003,936
+HKCR,MIME\database\Charset\hz-gb-2312,InternetEncoding,0x10003,52936
+HKCR,MIME\database\Charset\ibm852,Codepage,0x10001,852
+HKCR,MIME\database\Charset\ibm852,InternetEncoding,0x10001,852
+HKCR,MIME\database\Charset\ibm866,Codepage,0x10001,866
+HKCR,MIME\database\Charset\ibm866,InternetEncoding,0x10001,866
+HKCR,MIME\database\Charset\iso-2022-jp,Codepage,0x10001,932
+HKCR,MIME\database\Charset\iso-2022-jp,InternetEncoding,0x10001,50220
+HKCR,MIME\database\Charset\iso-2022-kr,Codepage,0x10001,949
+HKCR,MIME\database\Charset\iso-2022-kr,InternetEncoding,0x10001,50225
+HKCR,MIME\database\Charset\iso-8859-1,Codepage,0x10003,1252
+HKCR,MIME\database\Charset\iso-8859-1,InternetEncoding,0x10003,1252
+HKCR,MIME\database\Charset\iso-8859-2,Codepage,0x10003,1250
+HKCR,MIME\database\Charset\iso-8859-2,InternetEncoding,0x10003,28592
+HKCR,MIME\database\Charset\iso-8859-3,Codepage,0x10003,1254
+HKCR,MIME\database\Charset\iso-8859-3,InternetEncoding,0x10003,28593
+HKCR,MIME\database\Charset\iso-8859-4,Codepage,0x10003,1257
+HKCR,MIME\database\Charset\iso-8859-4,InternetEncoding,0x10003,28594
+HKCR,MIME\database\Charset\iso-8859-5,Codepage,0x10003,1251
+HKCR,MIME\database\Charset\iso-8859-5,InternetEncoding,0x10003,28595
+HKCR,MIME\database\Charset\iso-8859-6,Codepage,0x10003,1256
+HKCR,MIME\database\Charset\iso-8859-6,InternetEncoding,0x10003,28596
+HKCR,MIME\database\Charset\iso-8859-7,Codepage,0x10003,1253
+HKCR,MIME\database\Charset\iso-8859-7,InternetEncoding,0x10003,28597
+HKCR,MIME\database\Charset\iso-8859-8,Codepage,0x10003,1255
+HKCR,MIME\database\Charset\iso-8859-8,InternetEncoding,0x10003,1255
+HKCR,MIME\database\Charset\iso-8859-9,Codepage,0x10003,1254
+HKCR,MIME\database\Charset\iso-8859-9,InternetEncoding,0x10003,1254
+HKCR,MIME\database\Charset\koi8-r,Codepage,0x10003,1251
+HKCR,MIME\database\Charset\koi8-r,InternetEncoding,0x10003,20866
+HKCR,MIME\database\Charset\koi8-ru,Codepage,0x10003,1251
+HKCR,MIME\database\Charset\koi8-ru,InternetEncoding,0x10001,21866
+HKCR,MIME\database\Charset\shift_jis,Codepage,0x10003,932
+HKCR,MIME\database\Charset\shift_jis,InternetEncoding,0x10003,932
+HKCR,MIME\database\Charset\unicode-1-1-utf-7,AliasForCharSet,,"utf-7"
+HKCR,MIME\database\Charset\unicode-1-1-utf-8,AliasForCharSet,2,"utf-8"
+HKCR,MIME\database\Charset\x-unicode-2-0-utf-7,AliasForCharset,0,"utf-7"
+HKCR,MIME\database\Charset\x-unicode-2-0-utf-8,AliasForCharset,0,"utf-8"
+HKCR,MIME\database\Charset\utf-7,Codepage,0x10001,1200
+HKCR,MIME\database\Charset\utf-7,InternetEncoding,0x10003,65000
+HKCR,MIME\database\Charset\utf-8,Codepage,0x10001,1200
+HKCR,MIME\database\Charset\utf-8,InternetEncoding,0x10003,65001
+HKCR,MIME\database\Charset\unicode,Codepage,0x10003,1200
+HKCR,MIME\database\Charset\unicode,InternetEncoding,0x10003,1200
+HKCR,MIME\database\Charset\unicodeFEFF,Codepage,0x10003,1200
+HKCR,MIME\database\Charset\unicodeFEFF,InternetEncoding,0x10003,1201
+HKCR,MIME\database\Charset\windows-1250,Codepage,0x10003,1250
+HKCR,MIME\database\Charset\windows-1250,InternetEncoding,0x10003,1250
+HKCR,MIME\database\Charset\windows-1251,Codepage,0x10003,1251
+HKCR,MIME\database\Charset\windows-1251,InternetEncoding,0x10003,1251
+HKCR,MIME\database\Charset\windows-1252,Codepage,0x10003,1252
+HKCR,MIME\database\Charset\windows-1252,InternetEncoding,0x10003,1252
+HKCR,MIME\database\Charset\windows-1253,Codepage,0x10003,1253
+HKCR,MIME\database\Charset\windows-1253,InternetEncoding,0x10003,1253
+HKCR,MIME\database\Charset\windows-1255,Codepage,0x10003,1255
+HKCR,MIME\database\Charset\windows-1255,InternetEncoding,0x10003,1255
+HKCR,MIME\database\Charset\windows-1256,Codepage,0x10003,1256
+HKCR,MIME\database\Charset\windows-1256,InternetEncoding,0x10003,1256
+HKCR,MIME\database\Charset\windows-1257,Codepage,0x10003,1257
+HKCR,MIME\database\Charset\windows-1257,InternetEncoding,0x10003,1257
+HKCR,MIME\database\Charset\windows-1258,Codepage,0x10003,1258
+HKCR,MIME\database\Charset\windows-1258,InternetEncoding,0x10003,1258
+HKCR,MIME\database\Charset\windows-874,Codepage,0x10003,874
+HKCR,MIME\database\Charset\windows-874,InternetEncoding,0x10003,874
+HKCR,MIME\database\Charset\x-user-defined,Codepage,0x10003,50000
+HKCR,MIME\database\Charset\x-user-defined,InternetEncoding,0x10003,50000
+HKCR,MIME\database\Charset\x-ansi,AliasForCharSet,2,"windows-1252"
+HKCR,MIME\database\Charset\euc-jp,Codepage,0x10003,932
+HKCR,MIME\database\Charset\euc-jp,InternetEncoding,0x10003,51932
+HKCR,MIME\database\Charset\x-euc-jp,AliasForCharSet,2,"euc-jp"
+HKCR,MIME\database\Charset\x-euc,AliasForCharset,2,"euc-jp"
+HKCR,MIME\database\Charset\x-ms-cp932,AliasForCharSet,2,"shift_jis"
+HKCR,MIME\database\Charset\x-sjis,AliasForCharset,2,"shift_jis"
+HKCR,MIME\database\Charset\ANSI_X3.4-1968,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\ANSI_X3.4-1986,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\ascii,AliasForCharset,2,"iso-8859-1"
+HKCR,MIME\database\Charset\chinese,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\cp866,AliasForCharset,2,"ibm866"
+HKCR,MIME\database\Charset\cp852,AliasForCharset,2,"ibm852"
+HKCR,MIME\database\Charset\cp367,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\cp819,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\csASCII,AliasForCharset,2,"iso-8859-1"
+HKCR,MIME\database\Charset\csbig5,AliasForCharset,2,"big5"
+HKCR,MIME\database\Charset\csEUCPkdFmtJapanese,AliasForCharset,2,"euc-jp"
+HKCR,MIME\database\Charset\csGB2312,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\csISO2022KR,AliasForCharset,2,"iso-2022-kr"
+HKCR,MIME\database\Charset\csISO58GB231280,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\csISOLatin2,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\csISOLatin4,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\csISOLatin5,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\csISOLatinCyrillic,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\csISOLatinGreek,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\csISOLatinHebrew,AliasForCharset,2,"iso-8859-8"
+HKCR,MIME\database\Charset\csKSC56011987,AliasForCharset,2,"ks_c_5601-1987"
+HKCR,MIME\database\Charset\csShiftJIS,AliasForCharset,2,"shift_jis"
+HKCR,MIME\database\Charset\csUnicode11UTF7,AliasForCharset,2,"utf-7"
+HKCR,MIME\database\Charset\csWindows31J,AliasForCharset,2,"shift_jis"
+HKCR,MIME\database\Charset\cyrillic,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\ECMA-118,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\ELOT_928,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\greek,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\greek8,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\hebrew,AliasForCharset,2,"iso-8859-8"
+HKCR,MIME\database\Charset\IBM367,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\ibm819,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\ISO_646.irv:1991,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso_8859-1,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso_8859-1:1987,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso_8859-2,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\iso_8859-2:1987,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\ISO_8859-4,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\ISO_8859-5,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\ISO_8859-7,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\ISO_8859-8,AliasForCharset,2,"iso-8859-8"
+HKCR,MIME\database\Charset\ISO_8859-9,AliasForCharset,2,"iso-8859-9"
+HKCR,MIME\database\Charset\ISO646-US,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso8859-1,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso-ir-100,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\iso-ir-101,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\iso-ir-110,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\iso-ir-126,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\iso-ir-138,AliasForCharset,2,"iso-8859-8"
+HKCR,MIME\database\Charset\iso-ir-144,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\iso-ir-148,AliasForCharset,2,"iso-8859-9"
+HKCR,MIME\database\Charset\iso-ir-58,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\iso-ir-6,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\korean,AliasForCharset,2,"ks_c_5601-1987"
+HKCR,MIME\database\Charset\ks_c_5601,AliasForCharset,2,"ks_c_5601-1987"
+HKCR,MIME\database\Charset\l2,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\l4,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\l5,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\latin1,AliasForCharset,,"iso-8859-1"
+HKCR,MIME\database\Charset\latin2,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\latin4,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\latin5,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\ms_Kanji,AliasForCharset,2,"shift_jis"
+HKCR,MIME\database\Charset\shift-jis,AliasForCharset,2,"shift_jis"
+HKCR,MIME\database\Charset\unicode-2-0-utf-8,AliasForCharset,2,"utf-8"
+HKCR,MIME\database\Charset\us-ascii,AliasForCharSet,2,"iso-8859-1"
+HKCR,MIME\database\Charset\us,AliasForCharset,2,"iso-8859-1"
+HKCR,MIME\database\Charset\x-cp1250,AliasForCharset,2,"Windows-1250"
+HKCR,MIME\database\Charset\x-cp1251,AliasForCharset,2,"Windows-1251"
+HKCR,MIME\database\Charset\x-x-big5,AliasForCharset,2,"big5"
+HKCR,MIME\database\Charset\csISO2022JP,AliasForCharset,,"_iso-2022-jp$ESC"
+HKCR,MIME\database\Charset\csKOI8R,AliasForCharset,2,"koi8-r"
+HKCR,MIME\database\Charset\Extended_UNIX_Code_Packed_Format_for_Japanese,AliasForCharset,2,"euc-jp"
+HKCR,MIME\database\Charset\GB_2312-80,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\GBK,AliasForCharset,2,"gb2312"
+HKCR,MIME\database\Charset\ISO_8859-4:1988,AliasForCharset,2,"iso-8859-4"
+HKCR,MIME\database\Charset\ISO_8859-5:1988,AliasForCharset,2,"iso-8859-5"
+HKCR,MIME\database\Charset\ISO_8859-7:1987,AliasForCharset,2,"iso-8859-7"
+HKCR,MIME\database\Charset\ISO_8859-8:1988,AliasForCharset,2,"iso-8859-8"
+HKCR,MIME\database\Charset\ISO_8859-9:1989,AliasForCharset,2,"iso-8859-9"
+HKCR,MIME\database\Charset\iso8859-2,AliasForCharset,2,"iso-8859-2"
+HKCR,MIME\database\Charset\koi,AliasForCharset,2,"koi8-r"
+HKCR,MIME\database\Charset\Windows-1254,AliasForCharset,2,"iso-8859-9"
+
+[Strings]
+EngineErrorMsg="SETUPAPI.DLL is missing"
+
+CLSID_MLANG="{275C23E2-3747-11D0-9FEA-00AA003F8646}"
+CLSID_MLSTR="{C04D65CF-B70D-11D0-B188-00AA0038C969}"
+CLSID_MLCONVCHAR="{D66D6F99-CDAA-11D0-B822-00C04FC9B31F}"
+
+DESC_1200="Universal Alphabet"
+DESC_1201="Universal Alphabet (Big-Endian)"
+DESC_1250="Central European Alphabet (Windows)"
+DESC_1251="Cyrillic Alphabet (Windows)"
+DESC_1252="Western Alphabet"
+DESC_1253="Greek Alphabet (Windows)"
+DESC_1254="Turkish Alphabet"
+DESC_1255="Hebrew Alphabet (Windows)"
+DESC_1256="Arabic Alphabet (Windows)"
+DESC_1257="Baltic Alphabet (Windows)"
+DESC_1258="Vietnamese Alphabet (Windows)"
+DESC_20105="IA5 (IRV)"
+DESC_20106="IA5 (German)"
+DESC_20107="IA5 (Swedish)"
+DESC_20108="IA5 (Norwegian)"
+DESC_20866="Cyrillic Alphabet (KOI8-R)"
+DESC_21866="Ukrainian Alphabet (KOI8-RU)"
+DESC_28592="Central European Alphabet (ISO)"
+DESC_28593="Latin 3 Alphabet (ISO)"
+DESC_28594="Baltic Alphabet (ISO)"
+DESC_28595="Cyrillic Alphabet (ISO)"
+DESC_28596="Arabic Alphabet (ISO)"
+DESC_28597="Greek Alphabet (ISO)"
+DESC_28598="Hebrew Alphabet (ISO)"
+DESC_50000="User Defined"
+DESC_50220="Japanese (JIS)"
+DESC_50221="Japanese (JIS-Allow 1 byte Kana)"
+DESC_50222="Japanese (JIS-Allow 1 byte Kana)"
+DESC_50225="Korean (ISO)"
+DESC_50932="Japanese (Auto Select)"
+DESC_50949="Korean (Auto Select)"
+DESC_51932="Japanese (EUC)"
+DESC_51949="Korean (EUC)"
+DESC_52936="Chinese Simplified (HZ)"
+DESC_65000="Universal Alphabet (UTF-7)"
+DESC_65001="Universal Alphabet (UTF-8)"
+DESC_852="Central European (DOS)"
+DESC_866="Cyrillic Alphabet (DOS)"
+DESC_874="Thai (Windows)"
+DESC_932="Japanese (Shift-JIS)"
+DESC_936="Chinese Simplified (GB2312)"
+DESC_949="Korean"
+DESC_950="Chinese Traditional (Big5)"
+DESC_JAFONT="MS Mincho"
+DESC_JAFONTP="MS Mincho"
+DESC_CNFONT="MS Song"
+DESC_CNFONTP="MS Song"
+DESC_KOFONT="GulimChe"
+DESC_KOFONTP="GulimChe"
+DESC_TWFONT="MingLiu"
+DESC_TWFONTP="MingLiu"
+DESC_UNIFONT="Courier New"
+DESC_UNIFONTP="Arial"
+LCID0436="Afrikaans"
+LCID041C="Albanian"
+LCID0001="Arabic"
+LCID0401="Arabic (Saudi Arabia)"
+LCID0801="Arabic (Iraq)"
+LCID0C01="Arabic (Egypt)"
+LCID1001="Arabic (Libya)"
+LCID1401="Arabic (Algeria)"
+LCID1801="Arabic (Morocco)"
+LCID1C01="Arabic (Tunisia)"
+LCID2001="Arabic (Oman)"
+LCID2401="Arabic (Yemen)"
+LCID2801="Arabic (Syria)"
+LCID2C01="Arabic (Jordan)"
+LCID3001="Arabic (Lebanon)"
+LCID3401="Arabic (Kuwait)"
+LCID3801="Arabic (U.A.E.)"
+LCID3C01="Arabic (Bahrain)"
+LCID4001="Arabic (Qatar)"
+LCID042D="Basque"
+LCID0402="Bulgarian"
+LCID0423="Belarusian"
+LCID0403="Catalan"
+LCID0004="Chinese"
+LCID0404="Chinese (Taiwan)"
+LCID0804="Chinese (PRC)"
+LCID0C04="Chinese (Hong Kong)"
+LCID1004="Chinese (Singapore)"
+LCID041A="Croatian"
+LCID0405="Czech"
+LCID0406="Danish"
+LCID0413="Dutch (Standard)"
+LCID0813="Dutch (Belgian)"
+LCID0009="English"
+LCID0409="English (United States)"
+LCID0809="English (British)"
+LCID0C09="English (Australian)"
+LCID1009="English (Canadian)"
+LCID1409="English (New Zealand)"
+LCID1809="English (Ireland)"
+LCID1C09="English (South Africa)"
+LCID2009="English (Jamaica)"
+LCID2809="English (Belize)"
+LCID2C09="English (Trinidad)"
+LCID0425="Estonian"
+LCID0438="Faeroese"
+LCID0429="Farsi"
+LCID040B="Finnish"
+LCID040C="French (Standard)"
+LCID080C="French (Belgian)"
+LCID0C0C="French (Canadian)"
+LCID100C="French (Swiss)"
+LCID140C="French (Luxembourg)"
+LCID043C="Gaelic"
+LCID0407="German (Standard)"
+LCID0807="German (Swiss)"
+LCID0C07="German (Austrian)"
+LCID1007="German (Luxembourg)"
+LCID1407="German (Liechtenstein)"
+LCID0408="Greek"
+LCID040D="Hebrew"
+LCID0439="Hindi"
+LCID040E="Hungarian"
+LCID040F="Icelandic"
+LCID0421="Indonesian"
+LCID0410="Italian (Standard)"
+LCID0810="Italian (Swiss)"
+LCID0411="Japanese"
+LCID0412="Korean"
+LCID0426="Latvian"
+LCID0427="Lithuanian"
+LCID042F="Macedonian"
+LCID043E="Malaysian"
+LCID043A="Maltese"
+LCID0414="Norwegian (bokmal)"
+LCID0814="Norwegian (Nynorsk)"
+LCID0415="Polish"
+LCID0416="Portuguese (Brazilian)"
+LCID0816="Portuguese (Standard)"
+LCID0417="Rhaeto-Romanic"
+LCID0418="Romanian"
+LCID0818="Romanian (Moldavia)"
+LCID0419="Russian"
+LCID0819="Russian (Moldavia)"
+LCID0C1A="Serbian (Cyrillic)"
+LCID081A="Serbian (Latin)"
+LCID041B="Slovak"
+LCID0424="Slovenian"
+LCID042E="Sorbian"
+LCID040A="Spanish"
+LCID080A="Spanish (Mexican)"
+LCID0C0A="Spanish"
+LCID100A="Spanish (Guatemala)"
+LCID140A="Spanish (Costa Rica)"
+LCID180A="Spanish (Panama)"
+LCID1C0A="Spanish (Dominican Republic)"
+LCID200A="Spanish (Venezuela)"
+LCID240A="Spanish (Colombia)"
+LCID280A="Spanish (Peru)"
+LCID2C0A="Spanish (Argentina)"
+LCID300A="Spanish (Ecuador)"
+LCID340A="Spanish (Chile)"
+LCID380A="Spanish (Uruguay)"
+LCID3C0A="Spanish (Paraguay)"
+LCID400A="Spanish (Bolivia)"
+LCID440A="Spanish (El Salvador)"
+LCID480A="Spanish (Honduras)"
+LCID4C0A="Spanish (Nicaragua)"
+LCID500A="Spanish (Puerto Rico)"
+LCID0430="Sutu"
+LCID041D="Swedish"
+LCID081D="Swedish (Finland)"
+LCID041E="Thai"
+LCID0431="Tsonga"
+LCID0432="Tswana"
+LCID041F="Turkish"
+LCID0422="Ukrainian"
+LCID0420="Urdu"
+LCID042A="Vietnamese"
+LCID0434="Xhosa"
+LCID043D="Yiddish"
+LCID0435="Zulu"
+[End]

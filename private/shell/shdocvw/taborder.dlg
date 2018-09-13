@@ -1,0 +1,30 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Forms
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       taborder.dlg
+//
+//  Contents:   Resource for the tab order dialog.
+//
+//  History:    12-Jul-95   t-AnandR    Created
+//
+//----------------------------------------------------------------------------
+
+IDR_TABORDERDLG DIALOG DISCARDABLE  0, 0, 217, 125
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Tab Order"
+#ifndef _MAC
+FONT 8, "MS Shell Dlg"
+#else
+FONT 9, "geneva"
+#endif
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,160,18,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,160,36,50,14
+    PUSHBUTTON      "Move &Up",IDR_BTNMOVEUP,160,66,50,14
+    PUSHBUTTON      "Move &Down",IDR_BTNMOVEDOWN,160,84,50,14
+    LTEXT           "&Tab Order:",IDR_TABORDERLBL,7,7,142,10
+    LISTBOX         IDR_TABORDERLSTBOX,7,18,142,101,LBS_MULTIPLESEL | 
+                    LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP
+END

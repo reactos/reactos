@@ -1,0 +1,91 @@
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//
+//  LAST GUID 3050F2Af NEXT ONE IS 3050F2B0 -- DONT USE ANY ID OVER 3050f2af unless you update inputbtn.pdl
+//
+//  PLEASE UPDATE AS YOU ASSIGN NEW ID's!!!!!!
+//
+//  BUGBUG: I used it up to and including 3050f2af -- now what? (LaszloG)
+//
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+#ifndef _TEXTAREA_PDL_
+#define _TEXTAREA_PDL_ 1
+
+#include "txtedit.pdl"
+#include "csite.pdl"
+#include "inputtxt.pdl"
+
+import "csite.pdl"
+import "txtedit.pdl"
+import "inputtxt.pdl"
+
+file textarea.pdl
+
+interface IHTMLTextAreaElement guid:3050f2aa-98b5-11cf-bb82-00aa00bdce0b
+    refprop CRichtext:type
+    refprop CRichtext:value
+    refprop CRichtext:name
+    refprop CRichtext:status
+    refprop CElement:disabled
+    refprop CSite:form
+    refprop CRichtext:defaultValue
+    refmethod CRichtext:select
+    refprop CRichtext:onchange
+    refprop CRichtext:onselect
+    refprop CRichtext:readOnly
+    refprop CRichtext:rows
+    refprop CRichtext:cols
+    refprop CRichtext:wrap
+    refmethod CRichtext:createTextRange
+
+tearoff CTextArea interface:IHTMLTextAreaElement
+
+class CTextArea name:HTMLTextAreaElement \
+            primaryinterface:IHTMLTextAreaElement \
+            super:CRichtext \
+            events:HTMLInputTextElementEvents \
+            nonPrimaryEvents:HTMLInputTextElementEvents2 \
+            nonPrimaryEvents2:HTMLTextContainerEvents \
+            nonPrimaryEvents3:HTMLTextContainerEvents2 \
+            guid:3050f2ac-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f521-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLTextAreaElement
+
+tearoff CRichtext Interface:IHTMLTextAreaElement
+
+class CRichtext name:HTMLRichtextElement \
+            primaryinterface:IHTMLTextAreaElement \
+            super:CTxtSite \
+            events:HTMLInputTextElementEvents \
+            nonPrimaryEvents:HTMLInputTextElementEvents2 \
+            guid:3050f2df-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f54d-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLTextAreaElement
+
+    property value         atype:BSTR       dispid:DISPID_A_VALUE          type:BSTR      method:ValueHelper get set     bindable displaybind clearcaches nopersist maxstrlen:pdlNoLimit
+    property type          atype:BSTR       dispid:DISPID_INPUT  type:htmlInput get setaahr caa default:htmlInputText maxstrlen:pdlToken nopersist
+    property name          atype:BSTR       dispid:STDPROPID_XOBJ_NAME    type:CStr  noassigndefault:"" get set method:nameHelper baseimplementation bindable displaybind   maxstrlen:pdlNoLimit
+    property status        atype:VARIANT  dispid:DISPID_INPUT+1  type:VARIANT get set abstract maxstrlen:pdlNoLimit
+    property defaultValue  atype:BSTR       dispid:DISPID_DEFAULTVALUE    type:BSTR      member:_cstrDefaultValue get set     hidden bindable displaybind nopersist maxstrlen:pdlNoLimit
+    property onchange      atype:VARIANT    dispid:DISPID_EVPROP_ONCHANGE type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onselect      atype:VARIANT    dispid:DISPID_EVPROP_ONSELECT type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property rows          atype:long       dispid:DISPID_RICHTEXT+1      type:long  get set caa bindable displaybind clearcaches resize default:2 min:1
+    property cols          atype:long       dispid:DISPID_RICHTEXT+2      type:long  get set caa bindable displaybind clearcaches resize default:20 min:1
+    property wrap          atype:BSTR       dispid:DISPID_RICHTEXT+3      type:htmlWrap get set caa bindable displaybind clearcaches remeasure default:htmlWrapSoft maxstrlen:pdlToken
+    property readOnly      atype:VARIANT_BOOL dispid:DISPID_RICHTEXT+4    type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0
+
+    method HRESULT select                   dispid:DISPID_RICHTEXT+5    ()
+
+    method   HRESULT  createTextRange       dispid:DISPID_RICHTEXT+6  ( out retval type:IHTMLTxtRange** arg:range )
+
+
+#endif _TEXTAREA_PDL_

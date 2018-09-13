@@ -1,0 +1,17 @@
+#include "windows.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows System Process Performance Objects DLL"
+#define VER_INTERNALNAME_STR        "PERFPROC.DLL"
+
+#include "common.ver"
+
+#include "procmsg.rc"

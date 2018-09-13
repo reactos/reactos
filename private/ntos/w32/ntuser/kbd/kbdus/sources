@@ -1,0 +1,15 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdus
+
+TARGETNAME=kbdus
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\sources.inc
+
+INCLUDES=..\..\inc
+
+SOURCES=kbdus.c kbdus.rc
+
+NTTARGETFILE0=kbdus.h kbdus.rc kbdus.def

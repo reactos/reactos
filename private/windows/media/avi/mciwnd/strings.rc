@@ -1,0 +1,64 @@
+
+#include "strings.h"
+
+STRINGTABLE PRELOAD MOVEABLE DISCARDABLE
+BEGIN
+IDS_MCIFILES 	"MCI Files"
+IDS_ALLFILES 	"All Files"
+IDS_MCIERROR 	"MCI Error"
+IDS_NODEVICE 	"No Device"
+IDS_HALFSIZE 	"Half Size \tAlt+2"
+IDS_NORMALSIZE  "Normal Size \tCtrl+1"
+IDS_DOUBLESIZE 	"Double Size \tCtrl+2"
+IDS_PLAY 	"&Play \tCtrl+P"
+IDS_STOP 	"&Stop \tCtrl+S"
+IDS_RECORD 	"&Record"
+IDS_EJECT 	"&Eject"
+IDS_CLOSE 	"C&lose"
+IDS_NEW 	"&New"
+IDS_VIEW 	"Vie&w"
+IDS_VOLUME 	"&Volume"
+IDS_SPEED 	"&Speed"
+IDS_OPEN 	"&Open... \tCtrl+O"
+IDS_SAVE 	"&Save..."
+IDS_COPY	"&Copy \tCtrl+C"
+IDS_CONFIGURE   "Con&figure... \tCtrl+D"
+IDS_COMMAND	"Co&mmand... \tCtrl+F5"
+
+#ifndef CHICAGO
+//
+// These strings are displayed by tooltips.  Their ID's match those of
+// corresponding button on the toolbar.
+//
+IDS_TT_PLAY   "Play"
+IDS_TT_STOP   "Stop"
+IDS_TT_RECORD "Record"
+IDS_TT_EJECT  "Eject"
+IDS_TT_MENU   "Command Menu"
+#endif
+
+//IDS_PLAY        "&Play"
+//IDS_PLAY        "&Play Reverse"
+//IDS_PLAY        "&Play Fullscreen"
+
+END
+
+DLG_MCICOMMAND DIALOG 6, 18, 240, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Send MCI String Command"
+#ifdef CHICAGO
+FONT 8, "MS Sans Serif"
+#else
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    EDITTEXT        IDC_MCICOMMAND, 50, 4, 186, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Send", IDOK, 7, 43, 40, 14
+    PUSHBUTTON      "Close", IDCANCEL, 50, 43, 40, 14
+    LTEXT           "Command:", -1, 7, 4, 40, 8
+    LTEXT           "Result:",  -1, 7, 20, 40, 8
+    LTEXT           "", IDC_RESULT, 50, 20, 190, 20
+END
+
+MPLAYERICON     ICON    PRELOAD MPlayer.ico
+IDBMP_TOOLBAR   BITMAP  PRELOAD toolbar.bmp

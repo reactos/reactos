@@ -1,0 +1,36 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>Details</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript">
+    function backup()
+    {
+      self.location.href = "intro2.htm";
+      srvwiz.Home = 2;
+    }
+</SCRIPT>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <UL STYLE="margin-left: 16pt">
+                <LI TYPE="square" ID="para1">This server is being assigned a static IP address of 10.10.1.1.</LI>
+                <LI TYPE="square" ID="para2">This server will be configured to assign addresses to a maximum of 253 TCP/IP clients in the address range of 10.10.0.2 to 10.10.0.254 inclusive.</LI>
+                <LI TYPE="square" ID="para3">If you add a routing services, you will need to reconfigure this server.</LI>
+            </UL>
+            <P ID="para4">To cancel, click <B>Home</B> in the menu at the left, and click <B>There is more than one server in my network</B>. You can then manually choose the services you want to install on this server and customize them to fit your needs.
+        </TD>
+    </TR>
+    <TR>
+        <TD HEIGHT="108" VALIGN="bottom">
+            <P ID="button" ALIGN="right"><BUTTON TYPE="button" ACCESSKEY="b" ID="back" ONCLICK="backup()"><U>B</U>ack</BUTTON>
+        </TD>
+    </TR>
+</TABLE>
+</BODY>
+</HTML>

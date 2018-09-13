@@ -1,0 +1,428 @@
+// included in ..\shell32.rc
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// bitmaps used by DESKHTML.
+//
+IDB_MONITOR             BITMAP "monitor.bmp"
+IDB_WIZARD              BITMAP "wizard.bmp"
+
+IDI_BACK_NONE           ICON "none.ico"
+IDI_FRAME               ICON "rc_frame.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs used by DESKHTML
+//
+
+IDD_BACKGROUND DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Background"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Select a background picture or HTML document as Wallpaper:",
+                    IDC_BACK_SELECT,7,131,238,8
+    CONTROL         "List1",IDC_BACK_WPLIST,"SysListView32",LVS_REPORT |
+        LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
+        LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP | WS_GROUP,
+        7,141,181,70
+    PUSHBUTTON      "&Browse...",IDC_BACK_BROWSE,195,142,50,14,WS_GROUP
+    LTEXT           "Picture &Display:",IDC_BACK_DISPLAY,195,164,50,8
+    COMBOBOX        IDC_BACK_WPSTYLE,195,174,50,40,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Pattern...",IDC_BACK_PATTERN,195,195,50,14,WS_GROUP
+    CONTROL         "",IDC_BACK_PREVIEW,"BackgroundPreview2",WS_GROUP,63,7,125,107
+END
+
+IDD_PATTERN DIALOG DISCARDABLE  0, 0, 208, 111
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pattern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "You can choose a pattern for your Active Desktop.  The pattern is used to fill any leftover space around your wallpaper.",
+        IDC_STATIC,7,7,137,30
+    LTEXT           "&Pattern:",IDC_PAT_PATTERN,7,44,80,10
+    LISTBOX         IDC_PAT_LIST,7,54,80,50,LBS_SORT |
+        LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Preview:",IDC_PAT_PREVIEW,94,44,50,10
+    CONTROL         "",IDC_PAT_SAMPLE,"Static",SS_BLACKFRAME,94,54,50,50
+    DEFPUSHBUTTON   "OK",IDOK,151,7,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,151,25,50,14
+    PUSHBUTTON      "&Edit Pattern...",IDC_PAT_EDIT,151,43,50,14
+END
+
+IDD_EDITPAT DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 70, 252, 144
+STYLE WS_BORDER | DS_CONTEXTHELP | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK |
+    WS_CAPTION | WS_POPUP | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Pattern Editor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDC_EPAT_NAME,7,7,23,9
+    COMBOBOX        IDC_EPAT_COMBO,7,17,182,64,CBS_DROPDOWN | CBS_SORT |
+        WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Sample:",IDC_EPAT_SAMPTEXT,104,36,44,9
+    CONTROL         "",IDC_EPAT_SAMPLE,"Static",SS_BLACKFRAME,104,47,85,90
+    LTEXT           "Pattern:",IDC_EPAT_PATTEXT,7,36,36,9
+    CONTROL         "",IDC_EPAT_PATTERN,"Static",SS_BLACKFRAME,7,47,90,90
+    DEFPUSHBUTTON   "&Done",IDCANCEL,195,7,50,14,WS_GROUP
+    PUSHBUTTON      "&Add",IDC_EPAT_ADD,195,24,50,14,
+    PUSHBUTTON      "&Change",IDC_EPAT_CHANGE,195,42,50,14
+    PUSHBUTTON      "&Remove",IDC_EPAT_DEL,196,60,49,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs used by Options property sheet
+//
+
+IDD_FOLDEROPTIONS DIALOG DISCARDABLE  0, 0, 240, 230
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Active Desktop",IDC_STATIC,6,7,227,38,WS_GROUP
+    CONTROL         "&Enable Web content on my desktop",
+                    IDC_FCUS_WEB,"Button",BS_AUTORADIOBUTTON,41,18,185,8
+    CONTROL         "&Use Windows classic desktop",IDC_FCUS_CLASSIC,"Button",
+                    BS_AUTORADIOBUTTON,41,29,185,8
+    GROUPBOX        "Web View",IDC_FCUS_WEBVIEW_GROUP_STATIC,7,53,226,37,WS_GROUP
+    CONTROL         "Enable Web content in &folders",
+                    IDC_FCUS_WHENEVER_POSSIBLE,"Button",BS_AUTORADIOBUTTON,
+                    41,64,185,8
+    CONTROL         "Use Windows class&ic folders",IDC_FCUS_WHEN_CHOOSE,
+                    "Button",BS_AUTORADIOBUTTON,41,75,185,8
+    GROUPBOX        "Browse Folders",IDC_STATIC,7,97,226,38,WS_GROUP
+    CONTROL         "Open each folder in the sa&me window",
+                    IDC_FCUS_SAME_WINDOW,"Button",BS_AUTORADIOBUTTON,41,109,
+                    185,8
+    CONTROL         "Open each folder in its own &window",
+                    IDC_FCUS_SEPARATE_WINDOWS,"Button",BS_AUTORADIOBUTTON,41,
+                    120,185,8
+    GROUPBOX        "Click items as follows",IDC_STATIC,7,142,226,60,
+                    WS_GROUP
+    CONTROL         "&Single-click to open an item (point to select)",
+                    IDC_FCUS_SINGLECLICK,"Button",BS_AUTORADIOBUTTON,41,154,
+                    174,8
+    CONTROL         "&Double-click to open an item (single-click to select)",
+                    IDC_FCUS_DOUBLECLICK,"Button",BS_AUTORADIOBUTTON,41,187,
+                    185,8
+    CONTROL         "Underline icon titles consistent with my &browser",
+                    IDC_FCUS_ICON_IE,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    54,165,172,8
+    CONTROL         "Underline icon titles only when I &point at them",
+                    IDC_FCUS_ICON_HOVER,"Button",BS_AUTORADIOBUTTON,54,176,
+                    172,8
+    PUSHBUTTON      "&Restore Defaults",IDC_FCUS_RESTORE_DEFAULTS,161,210,72,
+                    14
+    ICON            "",IDC_FCUS_ICON_ACTIVEDESKTOP,14,18,21,20
+    ICON            "",IDC_FCUS_ICON_WEBVIEW,14,64,21,20
+    ICON            "",IDC_FCUS_ICON_WINDOW,14,109,21,20
+    ICON            "",IDC_FCUS_ICON_CLICKS,14,154,21,20
+END
+
+IDD_ADVANCEDOPTIONS DIALOGEX 0, 0, 240, 230
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "View"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Folder views",IDC_STATIC,10,5,220,55
+    PUSHBUTTON      "&Like Current Folder",IDC_ADVO_USECURRENTFOLDER,60,35,75,15
+    PUSHBUTTON      "&Reset All Folders",IDC_ADVO_RESETTOORIGINAL,145,35,75,15
+    ICON            IDI_STSPROGS,IDC_ADVO_IMAGEFOLDER,20,20,20,20
+    LTEXT           "Advanced settings:",IDC_ADVO_ADVANCEDTEXT,10,70,108,8
+    CONTROL         "Tree1",IDC_ADVO_ADVANCEDTREE,"SysTreeView32",TVS_LINESATROOT |
+                    TVS_DISABLEDRAGDROP | TVS_CHECKBOXES | WS_BORDER | WS_TABSTOP,10,80,220,
+                    120
+    PUSHBUTTON      "Restore &Defaults",IDC_ADVO_ADV_RESTORE_DEF,160,210,70,14
+    LTEXT           "You can set all of your folders to the same view.",
+                    IDC_ADVO_STATICTEXT,60,20,165,10,0,0,IDC_STATIC
+END
+
+IDD_COMPONENTS DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Web"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Show &Web content on my Active Desktop",IDC_COMP_ENABLEAD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP | WS_GROUP,7,130,238,9
+    CONTROL         "Show Web content on my Active Desktop",IDC_COMP_LIST,"SysListView32",LVS_REPORT |
+        LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER |
+        LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP | WS_GROUP,
+        7,141,181,70
+    PUSHBUTTON      "&New...",IDC_COMP_NEW,195,142,50,14,WS_GROUP
+    PUSHBUTTON      "&Delete",IDC_COMP_DELETE,195,160,50,14
+    PUSHBUTTON      "&Properties",IDC_COMP_PROPERTIES,195,178,50,14
+    CONTROL         "",IDC_COMP_PREVIEW,"ComponentPreview",WS_GROUP,63,7,125,107
+END
+
+IDD_ADDCOMPONENT DIALOG DISCARDABLE  0, 0, 294, 183
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "New Active Desktop Item"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Location:",IDC_STATIC,100,99,30,10
+    EDITTEXT        IDC_CPROP_SOURCE,144,97,143,14,ES_AUTOHSCROLL
+    LTEXT           "Click Browse to find a picture or HTML document.",
+                    IDC_STATIC,100,122,187,8
+    PUSHBUTTON      "&Browse...",IDC_CPROP_BROWSE,237,133,50,14
+    DEFPUSHBUTTON   "OK",IDOK,183,162,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,237,162,50,14
+    LTEXT           "You can add new Desktop Items, live Web content, or pictures to your Active Desktop.",
+                    IDC_STATIC,100,7,187,16
+    PUSHBUTTON      "Visit &Gallery",IDC_GOTO_GALLERY,237,54,50,14
+    LTEXT           "To add a Web page or picture from the Internet, type or paste its Web address (URL) below.",
+                    IDC_STATIC,100,78,187,18
+    CONTROL         IDB_WIZARD,IDC_STATIC,"Static",SS_BITMAP,0,-1,88,155
+    LTEXT           "To add new Desktop Items, visit Microsoft's Active Desktop Gallery on the Internet. Click Visit Gallery to connect to the gallery now.",
+                    IDC_STATIC,100,29,187,25
+    LTEXT           "",IDC_STATIC,0,154,294,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings used in DESKHTML
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HTMLDOCUMENT        "HTML document"
+    IDS_PICTURE             "Picture"
+    IDS_WEBSITE             "Web Site"
+    IDS_ADDTODESKTOP        "New - "
+    IDS_EDITDESKTOPCOMP     "Edit - "
+    IDS_TYPETHENAMESTRING   "Type the location (URL) of the %s below:"
+    IDS_IMAGES_FILTER       "*.bmp;*.gif;*.jpg;*.jpeg;*.dib;*.png"
+    IDS_HTMLDOC_FILTER      "*.htm;*.html"
+    IDS_MHTML_FILTER        "*.mhtml;*.mht"
+    IDS_URL_FILTER          "*.URL"
+    IDS_CDF_FILTER          "*.cdf"
+    IDS_CONFIRM_ADD         "Do you want to add this Active Desktop item to your desktop?"
+    IDS_NOHTML_SELECTED     "No local HTML document is selected to be displayed as the desktop background.\r\nUse the Browse button to select one."
+    IDS_URL_EXTENSION       ".URL"
+    IDS_CONFIRM_OVERWRITE_SUBSCR "This website is already subscribed.\r\n Do you want to overwrite its subscription?"
+    IDS_INTERNET_EXPLORER   "Internet Explorer"
+    IDS_COMMENT_BEGIN       "<!----\r\n"
+    IDS_COMMENT1            "***** This file is automatically generated by Microsoft Windows 2000 *****\r\n"
+    IDS_COMMENT_END         "-------->\r\n"
+    IDS_HEADER_BEGIN        "<HTML>\r\n"
+    IDS_BODY_BEGIN          "<BODY background=""%s"" style=""border:none;"" bgcolor=#%02lx%02lx%02lx topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0 %s>\r\n"
+    IDS_BODY_BEGIN2         "<BODY background=""%s"" style=""border:none;"" bgcolor=#%02lx%02lx%02lx topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0>\r\n"
+    IDS_BODY_CENTER_WP      "<BODY background=""%s"" style=""background-attachment:fixed; background-position:50%% 50%%; background-repeat:no-repeat; border:none"" bgcolor=#%02lx%02lx%02lx topmargin=0 leftmargin=0 rightmargin=0 bottommargin=0>\r\n"
+    IDS_BODY_CENTER_WP2     "<BODY bgcolor=#%02lx%02lx%02lx>\r\n"
+    IDS_BODY_PATTERN_AND_WP "<DIV style=""width:100%%; height:100%%; background-repeat:no-repeat; background:URL(%s) 50%% 50%% no-repeat""></DIV>\r\n"
+    IDS_BODY_PATTERN_AND_WP2 "<DIV style=""position:absolute; LEFT: %d; TOP: %d; WIDTH: %d; HEIGHT: %d; background-repeat:no-repeat; background:URL(%s) 50%% 50%% no-repeat""></DIV>\r\n"
+    IDS_STRETCH_WALLPAPER   "<IMG src=""%s"" cache style=""position: absolute; left:0; top:0; width: 100%%; height: 100%%;"">\r\n"
+    IDS_DIV_START           "\t<DIV  id=%s name=""DeskMovr"" style=""position:absolute; \r\n"
+    IDS_DIV_START2          "\t<DIV  id=%d name=""DeskMovr"" src=""%s"" style=""position:absolute; \r\n"
+    IDS_DIV_START2W         "\t<DIV  id=%d name=""DeskMovr"" style=""position:absolute; \r\n"
+    IDS_DIV_START3          "\r\n\t<DIV  style=""position:absolute; LEFT: %d; TOP: %d; WIDTH: %d; HEIGHT: %d;"">\r\n"
+    IDS_DIV_SIZE            "\t\tBackground=orange; HEIGHT: %d; LEFT: %d; TOP: %d; WIDTH: %d; Z-INDEX: %d"">\r\n"
+    IDS_IMAGE_BEGIN         "\t<IMG id=%s name=""DeskMovr"" src=""%s"" cache\r\n"
+    IDS_IMAGE_BEGIN2        "\t<IMG id=%d name=""DeskMovr"" src=""%s"" cache\r\n"
+    IDS_IMAGE_LOCATION      "\t\tstyle=""BACKGROUND: transparent; position:absolute; LEFT: %d; TOP: %d; Z-INDEX: %d"">\r\n"
+    IDS_IMAGE_SIZE          "\t\tstyle=""BACKGROUND: transparent; position:absolute; LEFT: %d; TOP: %d; WIDTH: %d; HEIGHT: %d; Z-INDEX: %d"">\r\n"
+    IDS_DIV_END             "\t</DIV>\r\n"
+    IDS_IFRAME_BEGIN        "\t<IFRAME id=%s MARGINWIDTH=0 MARGINHEIGHT=0 name=""DeskMovrW"" src=""%s"" %s\r\n"
+    IDS_IFRAME_BEGIN2       "\t<IFRAME id=%d MARGINWIDTH=0 MARGINHEIGHT=0 name=""DeskMovrW"" src=""%s"" %s\r\n"
+    IDS_IFRAME_SIZE         "\t\tframeborder=0 style=""BACKGROUND: transparent; position:absolute; LEFT:%d; TOP:%d; WIDTH:%d; HEIGHT:%d; Z-INDEX:%d""> </IFRAME>\r\n"
+    IDS_BODY_END2           "&nbsp</BODY>\r\n"
+    IDS_BODY_END            "&nbsp</BODY> </HTML>\r\n"
+    IDS_CONTROL_1           "\t<OBJECT id=%d name=""DeskMovrW"" style=""position:absolute; \r\n"
+    IDS_CONTROL_2           "\t\tBackground=orange; HEIGHT: %d; LEFT: %d; TOP: %d; WIDTH: %d; Z-INDEX: %d""\r\n"    
+    IDS_CONTROL_3           "\t\tclassid=""clsid:%s"">\r\n\t</OBJECT>\r\n"
+    IDS_WPNONE              "(None)"
+    IDS_WPSTYLE_CENTER      "Center"
+    IDS_WPSTYLE_TILE        "Tile"
+    IDS_WPSTYLE_STRETCH     "Stretch"
+    IDS_SUBSCRIBEDURL       "\t\tsubscribed_url=""%s""\r\n"
+    IDS_RESIZEABLE          "\t\tresizeable=""%s""\r\n"
+    IDS_BASE_TAG            "<BASE HREF=""%s"">"
+    IDS_PAT_UNLISTED        "Unlisted Pattern"
+    IDS_EPAT_REMOVECAP      "Confirm Pattern Removal"
+    IDS_EPAT_REMOVE         "Removing the \042%s\042 pattern will permanently delete it from your disk. \n\nAre you sure you want to remove this pattern?"
+    IDS_EPAT_CHANGECAP      "Unsaved Pattern"
+    IDS_EPAT_CHANGE         "The pattern \042%s\042 has changed.\n\nDo you want to save the changes to this pattern?"
+    IDS_EPAT_CREATE         "You have not saved the \042%s\042 pattern.\n\nDo you want to save it?"
+    IDS_COMP_BADURL         "The control panel is unable to process this Content Definition File (CDF)."
+    IDS_COMP_ICW_ADD		"The Active Desktop item cannot be added because your internet connection settings have not been configured. Click on the OK button to launch the Internet Connection Wizard."
+    IDS_COMP_ICW_DISABLE	"One or more Active Desktop items cannot be displayed because your internet connection settings have not been configured. Click on the OK button to launch the Internet Connection Wizard."
+    IDS_COMP_ICW_TOGGLE		"The Active Desktop component you have chosen cannot be display because your internet connection settings have not been configured. Click on the OK button to launch the Internet Connection Wizard."
+    IDS_COMP_ICW_TITLE		"Active Desktop Error"
+    IDS_COMP_TITLE          "Active Desktop Item"
+    IDS_COMP_EXISTS         "This Active Desktop item already exists. You will need to delete the existing item before you can add it again."
+    IDS_COMP_EXISTS_2       "\nTo do this, right click on the Desktop, point to Active Desktop, and then click Customize My Desktop. Then select the item and click the Delete button."
+    IDS_COMP_SUBSCRIBED     "You already have a subscription for this Active Desktop item. If you continue, the original subscription settings will be lost.\n\nDo you wish to add this Active Desktop item?"
+    IDS_COMP_BADSUBSCRIBE   "This Active Desktop item was not created."
+    IDS_SAMPLE_COMPONENT    "Internet Explorer Generic Active Desktop item"
+    IDS_CHANNEL_BAR         "Internet Explorer Channel Bar"
+    IDS_COMP_CONFIRMDEL     "Are you sure you want to delete this item from your Active Desktop?"
+    IDS_VALIDFN_FMT         "%1 you selected is a hidden and/or system file. Choosing this file for use as %2 is not recommended.\n\nAre you sure you want to continue?"
+    IDS_VALIDFN_TITLE       "Warning"
+    IDS_BACK_TYPE1          "The wallpaper"
+    IDS_BACK_TYPE2          "a wallpaper"
+    IDS_COMP_TYPE1          "The Active Desktop item"
+    IDS_COMP_TYPE2          "an Active Desktop item"
+    IDS_VISIT_URL           "http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=cust"
+    IDS_COMP_CONFIRMRESET   "Are you sure you want to reset your desktop to the default settings? Your wallpaper will be changed and all Active Desktop items will be removed except for the Internet Explorer Channel Bar."
+    IDS_BACK_FILETYPES      "Background Files"
+    IDS_COMP_FILETYPES      "Active Desktop Files"
+    IDS_ADDCOMP_ERROR_CDFNODTI "It will not be possible to create a desktop item because this CDF file does not contain information on how to create one."
+    IDS_ADDCOMP_ERROR_CDFINALID "It will not be possible to create a desktop item because this CDF file appears to be incorrectly authored."
+    IDS_VISITGALLERY_TEXT   "If you want, you can visit the Active Desktop gallery on the Microsoft web site to preview and install new Active Desktop items.\n\nWould you like to save and close Display Properties, and connect to the gallery now?"
+    IDS_VISITGALLERY_TITLE  "New Active Desktop Item"
+    IDS_CONFIRM_ADI_REINSTALL "This desktop item is already installed on your desktop. Do you wish to reinstall?"
+    IDS_ADDRBAND_ACCELLERATOR "D"
+    IDS_FOLDEROPT_TEXT      "Would you like to save and close the Display Properties and view the Folder Options instead?"
+    IDS_FOLDEROPT_TITLE     "Folder Options"
+    IDS_FOLDERVIEWS			"Folder views"
+    IDS_LIKECURRENT_TEXT	"Set all the folders on your computer to match the current folder's view settings (except for toolbars and webview)? \nChanges will occur the next time you open them."
+    IDS_RESETALL_TEXT		"Reset all the folders on your computer to the default view settings (except for toolbars and webview)? \nChanges will occur the next time you open them."
+    IDS_CONFIRM_TURNINGON_AD "The wallpaper you selected can be shown on the desktop only if Active Desktop is enabled.\n Do you want to enable it?"
+    IDS_MENU_SUBSCRIBE_DESKCOMP "&Subscribe..."
+    IDS_MENU_RESET              "&Reset to Original Size"
+    IDS_YOULOSE             "Critical information about the desktop could not be retrieved from the registry. Your registry may be corrupted."
+    IDS_MY_CURRENT_HOMEPAGE    "My Current Home Page"
+    IDS_CONNECTING              "Connecting to site:"
+    IDS_ALL_PICTURES        "All Picture Files (*.bmp;*.gif;*.jpg;*.jpeg;*.dib;*.png)"
+    IDS_ALL_HTML            "HTML Documents (*.htm;*.html;*.mhtml;*.url;*.cdf)"
+    IDS_HTMLDOC             "HTML Documents (*.htm;*.html)"
+END
+
+
+
+MENU_STARTMENU_MYDOCS MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "My Documents",            IDM_MYDOCUMENTS
+        MENUITEM "",-1,MFT_SEPARATOR
+    END
+END
+
+MENU_STARTMENU_OPENFOLDER MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "",-1,MFT_SEPARATOR
+        MENUITEM "&Open Folder",            IDM_OPEN_FOLDER
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus used in DESKHTML
+//
+
+///////////////////////////////////
+// Desktop Component Menu (Context Menu)
+MENU_DESKCOMP_CONTEXTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP "", MENU_DESKCOMP_CONTEXTMENU
+    BEGIN
+    MENUITEM "Make A&vailable Offline",       IDM_DCCM_OFFLINE
+    MENUITEM "S&ynchronize",               IDM_DCCM_SYNCHRONIZE
+    MENUITEM "&Properties",                   IDM_DCCM_PROPERTIES
+    MENUITEM "", -1,                          MFT_SEPARATOR
+    MENUITEM "Customize My &Desktop",      IDM_DCCM_CUSTOMIZE
+    MENUITEM "", -1,                          MFT_SEPARATOR
+    MENUITEM "Open in &New Window",           IDM_DCCM_OPEN
+    MENUITEM "", -1,                          MFT_SEPARATOR
+    MENUITEM "&Restore",                      IDM_DCCM_RESTORE
+    MENUITEM "Sp&lit Desktop With Icons",     IDM_DCCM_SPLIT
+    MENUITEM "C&over Desktop",                IDM_DCCM_FULLSCREEN
+    MENUITEM "", -1,                          MFT_SEPARATOR
+    MENUITEM "&Close",                        IDM_DCCM_CLOSE
+    END
+END
+
+/////////////////////////////////////////////////////
+//
+// Stuff used by desktop.cpp
+//
+ACCEL_DESKTOP ACCELERATORS DISCARDABLE
+BEGIN
+    "s",            IDC_KBSTART,        ALT
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT,SHIFT
+    VK_F5,          FCIDM_REFRESH,      VIRTKEY,NOINVERT
+    VK_F6,          FCIDM_NEXTCTL,      VIRTKEY,NOINVERT
+    VK_F3,          FCIDM_FINDFILES,    VIRTKEY,NOINVERT
+    VK_F4,          IDM_CLOSE,          VIRTKEY,NOINVERT,ALT
+END
+
+////////////////////////////////////////////////////////
+//
+// Misc stuff
+//
+
+// COPY/MOVE TO strings.
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CMTF_COPYTO         "Copy To &Folder..."
+    IDS_CMTF_MOVETO         "Mo&ve To Folder..."
+    IDS_CMTF_COPY_DLG_TITLE "Copy the selected item(s) to the folder:"
+    IDS_CMTF_MOVE_DLG_TITLE "Move the selected item(s) to the folder:"
+    IDS_CMTF_COPYORMOVE_DLG_TITLE "Copy or Move to folder"
+    //IDS_HELP_COPYTO         "Copy selected items."
+    //IDS_HELP_MOVETO         "Move selected items."
+    //    IDS_HELP_SENDTO         "Sends a shortcut to the location you specify."
+    IDS_CMTF_ERRORMSG       "The Target can not handle this type of document"
+
+// sendto strings
+    IDS_SENDLINKTO          "Se&nd To"
+    IDS_SENDPAGETO          "Se&nd Page To"
+    IDS_SENDTO_ERRORMSG     "The Target can not handle this type of document"
+END
+
+// newmenu strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWMENU             "Ne&w"
+    IDS_NEWFILEPREFIX       "New "
+    IDS_FOLDERTEMPLATE      "fldr"
+    IDS_FOLDERLONGPLATE     "New Folder"
+    IDS_NEWLINKTEMPLATE     "New Shortcut"
+    IDS_NEWFOLDER           "&Folder"
+    IDS_NEWLINK             "&Shortcut"
+    IDS_NEWFILE_ERROR_TITLE "Problem creating object"
+    IDS_NEWHELP_FOLDER      "Creates a new, empty folder."
+    IDS_NEWHELP_LINK        "Creates a new, empty shortcut."
+END
+
+// DDE strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CANTFINDDIR         "The folder '%1' does not exist."
+    IDS_CABINET             "Windows Explorer"
+END
+
+// Start Menu strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FIND_MEUMONIC       "F"		// The OLD &Find accelerator for mapping
+
+// Fill these in if needed.
+//    IDS_PROGRAMS_TIP        ""
+//    IDS_FAVORITES_TIP       ""
+//    IDS_RECENT_TIP          ""
+//    IDS_SETTINGS_TIP        ""
+//    IDS_FIND_TIP            ""
+//    IDS_HELP_TIP            ""
+//    IDS_RUN_TIP             ""
+//    IDS_LOGOFF_TIP          ""
+//    IDS_EJECT_TIP           ""
+//    IDS_SHUTDOWN_TIP        ""
+    IDS_CONTROL_TIP         "Customizes the appearance of your desktop and configures your computer"
+    IDS_PRINTERS_TIP        "Adds, removes and configures local and network printers"
+    IDS_TRAYPROP_TIP        "Customizes the Start Menu, which lists available programs and files, and the taskbar, which contains buttons for open programs and a clock"
+    IDS_MYDOCS_TIP          "Stores and manages documents"
+    IDS_NETCONNECT_TIP      "Displays network and dial-up connections on this computer and helps you create new ones"
+    IDS_CHEVRONTIPTITLE     "Where are my Programs?"
+    IDS_CHEVRONTIP          "Click here to view programs that you have not used recently. To turn this off, use the Taskbar & Start Menu settings."
+END
+
+// The shell automation control strings
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INFOTIP             "Infotip"    // Used in IFolderItem::ExtendedProperty()
+END

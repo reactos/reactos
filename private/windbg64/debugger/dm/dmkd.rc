@@ -1,0 +1,11 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Kernel Debugger Debuggee Module for WinDbg"
+#define VER_INTERNALNAME_STR        "dmkd.dll\0"
+#define VER_ORIGINALFILENAME_STR    "dmkd.dll\0"
+
+#include <common.ver>
+

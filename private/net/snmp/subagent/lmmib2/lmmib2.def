@@ -1,0 +1,8 @@
+LIBRARY lmmib2
+
+HEAPSIZE  1024
+
+EXPORTS
+  SnmpExtensionInit
+  SnmpExtensionTrap
+  SnmpExtensionQuery

@@ -1,0 +1,115 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Mark Lucovsky (markl) 18-Sep-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+WININET_PCH=1
+!INCLUDE ..\wininet.inc
+
+DLLBASE=0x1000000
+
+MAJORCOMP=ntsd
+MINORCOMP=ntsdexts
+
+TARGETNAME=wininext
+TARGETPATH=\nt\public\sdk\lib
+TARGETTYPE=DYNLINK
+TARGETLIBS=\nt\public\sdk\lib\*\kernel32.lib
+DLLDEF = wininext.def
+MSC_WARNING_LEVEL=/W3
+
+USE_NTDLL=1
+
+!IFNDEF WININET_PCH
+
+#PRECOMPILED_OPTION=/Fp..\inc\$(_OBJ_DIR)\*\wininetp.pch /Yuwininetp.h
+#PRECOMPILED_CXX=1
+
+!ENDIF
+
+#INCLUDES=..\mtrt\;.;..\trans\winnt\common;..\..\..\inc;..\inc;..\..\..\..\public\sdk\inc;
+
+!IF 0
+INCLUDES=\
+    ..\inc; \
+    $(BASEDIR)\public\sdk\inc; \
+    $(BASEDIR)\private\windows\shell\ccshell\inc; \
+    $(BASEDIR)\private\windows\inc; \
+!ELSE
+!IF 1
+INCLUDES=\
+#       $(INCLUDES); \
+        $(BASEDIR)\private\windows\inc; \
+        ..\inc\private; \
+        ..\inetui; \
+        .\; \
+        ..\inc;
+!ELSE
+# copied from ..\inc\sources
+INCLUDES=private;..\inetui;$(BASEDIR)\private\windows\inc;..\inc
+!ENDIF
+!ENDIF
+
+#C_DEFINES=-DNTENV -DWIN32RPC -DNTWIN32RPC -DMSWMSG -D_RPCRT4_
+#C_DEFINES=-DNTENV -DTHREAD_POOL -DRETAIL -D_WINX32_ -DNASHVILLE -DW95_FIBERS -DRETAIL_LOGGING
+
+#USER_C_FLAGS= /c /P
+#USER_C_FLAGS=/TP
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\shlwapip.lib    \
+    $(BASEDIR)\public\sdk\lib\*\crypt32.lib     \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib        \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib
+!IF 0
+# Added to be able to call methods of Objects
+LINKLIBS=\
+    $(LIBDIR)\*\debug.lib       \
+    $(LIBDIR)\*\dummy.lib       \
+    $(LIBDIR)\*\common.lib      \
+    $(LIBDIR)\*\ftp.lib         \
+    $(LIBDIR)\*\gopher.lib      \
+    $(LIBDIR)\*\hndlobj.lib     \
+    $(LIBDIR)\*\http.lib        \
+    $(LIBDIR)\*\httpauth.lib    \
+    $(LIBDIR)\*\urlcache.lib    \
+    $(LIBDIR)\*\inetui.lib
+
+
+
+!IF "$(PROCESSOR_ARCHITECTURE)"=="x86"
+LINKLIBS=$(LINKLIBS)    \
+    ..\lib\w95fbrst.lib \
+    ..\lib\vxdcalls.lib
+!ENDIF
+
+!ENDIF
+
+SOURCES=winidbg.cxx     \
+#        nttrans.cxx    \
+        rpcdbg.rc
+
+UMTYPE=console

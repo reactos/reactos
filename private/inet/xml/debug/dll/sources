@@ -1,0 +1,64 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\debug\dll=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+!if "$(BUILD_XMLDBG_AS_LIB)" == "1"
+TARGETPATH=$(ROOT)\$(_OBJ_DIR)
+TARGETPATHLIB=$(ROOT)\debug\$(_OBJ_DIR)
+TARGETNAME=msxmldbg
+!else
+TARGETPATHLIB=obj
+TARGETPATH=obj
+TARGETNAME=xmldbg
+!endif
+
+SYNCHRONIZE_DRAIN=1	
+
+# Change this to "DYNLINK" to build as a DLL
+TARGETTYPE=DYNLINK
+
+DLLDEF=$(O)\f3debug.def
+DLLENTRY=_DllMainCRTStartup
+DLLBASE=0x65000000
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+
+USE_LIBCMT=1
+
+INCLUDES = \
+    $(SDK_INC_PATH); \
+    $(ROOT)\debug\include; \
+    $(ROOT)\debug\src
+
+SOURCES= \
+    dll.cxx \
+    msxmldbg.rc
+
+LINKLIBS= \
+    $(MSXML_DEBUG_LIB)
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\shlwapi.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=..\include\$(O)\headers.pch
+!else
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+!endif
+PRECOMPILED_CXX=1
+

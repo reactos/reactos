@@ -1,0 +1,1063 @@
+#include "tweakui.h"
+#include "tweakui.rcv"
+
+IDI_DEFAULT	ICON TWEAKUI.ICO
+IDI_GEAR1	ICON TWEAK01.ICO
+IDI_GEAR2	ICON TWEAK02.ICO
+
+IDI_ALTLINK	ICON ALTLINK.ICO
+IDI_BLANK	ICON BLANK.ICO
+
+IDI_ICONS	ICON ICONS.ICO
+IDI_FONTFOLDER	ICON FNTFLDER.ICO
+IDI_REGEDIT	ICON REGEDIT.ICO
+IDI_DLL		ICON SYSFILES.ICO
+IDI_ASSOC	ICON ASSOC.ICO
+
+IDB_CHECK	BITMAP DISCARDABLE PURE "chk.bmp"
+
+IDX_SETUP	EXE SETUP.EXE
+IDX_FONTFOLDER  EXE FONTFLDR.INI
+IDX_HISTORY     EXE HISTORY.INI
+IDX_TEMPINET    EXE TEMPINET.INI
+
+/*****************************************************************************
+ *
+ *  Dialogs
+ *
+ *  All property sheets must be PROP_SM_CXDLG by PROP_SM_CYDLG (212 x 188).
+ *
+ *  Top left right and bottom margins are 7 units.  With the uniform exception
+ *  that the top of a group box begins at 4 units instead of 7, because the
+ *  extra height of the text causes the top line of the group box to appear
+ *  about 3 units lower than you would otherwise expect.
+ *
+ *  So a group box that spans the entire width is 212 - 7 - 7 = 198 units
+ *  across.  And the first thing inside a group box lives 7 units beyond
+ *  the start of the group box.
+ *
+ *  Buttons are 50 x 14 and gather aligned at the right margin.  They have
+ *  4 units of vertical spacing.  (dyButton = 18)
+ *
+ *  Radio buttons are 10 units tall, with 2 units spacing between them.
+ *  (dyRadio = 12)
+ *
+ *  Check buttons are 10 units tall, with 2 units spacing between them.
+ *  (dyCheck = 12)
+ *
+ *  Group boxes are separated by 7 units horizontally, 4 units vertically.
+ *  (Again, you need only 4 units of vertical separation because the height
+ *  of the group box label gives you the extra 3 bonus units.)
+ *
+ *****************************************************************************/
+
+#ifdef SMALL
+
+#define cxDlg		PROP_SM_CXDLG
+#define cyDlg		PROP_SM_CYDLG
+
+#else
+
+#define cxDlg		PROP_MED_CXDLG
+#define cyDlg		PROP_MED_CYDLG
+
+#endif
+
+#define cxGrp		(cxDlg-14)
+
+#define dyButton	18
+#define dyButton2	36
+#define dyButton3	54
+#define dyButton4	72
+#define	dyRadio		12
+#define	dyRadio2	24
+#define	dyRadio3	36
+#define	dyCheck		12
+#define	dyCheck2	24
+#define	dyCheck3	36
+#define	dyCheck4	48
+#define	dyCheck5	60
+
+/*****************************************************************************
+ *
+ *  Common metrics
+ *
+ *****************************************************************************/
+
+#define xRest	(cxDlg-95)		/* Location of "Restore" button */
+#define yRest	(cyDlg-21)
+
+#define xLvTxt	7			/* Listview descriptive text */
+#define yLvTxt	7			/* Listview descriptive text */
+#define cxLvTxt	cxGrp			/* Listview descriptive text */
+#define cyLvTxt	43			/* Listview descriptive text */
+
+#define xLvTtl	7			/* Listview title */
+#define yLvTtl	48			/* Listview title */
+#define xLvCtl	7			/* Listview control */
+#define yLvCtl	59			/* Listview control */
+#define cyLvCtl (cyDlg - 105)		/* Listview control */
+
+/*****************************************************************************
+ *
+ *  IDD_GENERAL
+ *
+ *****************************************************************************/
+
+IDD_GENERAL DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xEfx	7
+#define yEfx	4
+#define cyEfx	52
+
+    GROUPBOX        "&Effects",IDC_EFFECTGROUP,xEfx,yEfx,cxGrp,cyEfx
+    CONTROL         "",IDC_LISTVIEW,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS |
+                    WS_TABSTOP | WS_BORDER,
+                    14,yEfx+12,cxGrp-14, dyCheck3
+
+#define xFld	7
+#define yFld	yEfx+cyEfx+4
+#define cyFld	50
+
+    GROUPBOX        "&Special Folders",IDC_FLDGROUP,xFld,yFld,cxGrp,cyFld
+
+    LTEXT           "&Folder:",IDC_FLDNAMETXT,14,yFld+15,24,8
+    COMBOBOX        IDC_FLDNAMELIST,49,yFld+13,95,150,CBS_DROPDOWNLIST |
+		    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "&Change Location",IDC_FLDCHG,152,yFld+11,60,14
+
+    LTEXT           "Location:",IDC_FLDLOCTXT,14,yFld+15+16,32,8
+    EDITTEXT        IDC_FLDLOC,49,yFld+13+16,155,13,ES_AUTOHSCROLL | ES_READONLY
+
+#define xIE3	7
+#define yIE3	yFld+cyFld+4
+#define cyIE3	54
+
+    GROUPBOX        "&Internet Explorer",IDC_IE3GROUP,xIE3,yIE3,cxGrp,cyIE3
+    LTEXT           "Select the service used when you type ""? keyword keyword"" in the Internet Explorer Address bar.",
+                    IDC_IE3TXT,xIE3+7,yIE3+10,202,21
+    LTEXT           "Sea&rch engine:",IDC_IE3ENGINETXT,14,yIE3+33,51,8
+    COMBOBOX        IDC_IE3ENGINE,76,yIE3+31,95,150,CBS_DROPDOWNLIST |
+		    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+
+END
+
+#undef xEfx
+#undef yEfx
+#undef cyEfx
+
+#undef xFld
+#undef yFld
+#undef cyFld
+
+#undef xIE3
+#undef yIE3
+#undef cyIE3
+
+/*****************************************************************************
+ *
+ *  IDD_MOUSE
+ *
+ *****************************************************************************/
+
+IDD_MOUSE DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Mouse"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xMnu	7
+#define yMnu	4
+#define cyMnu	48
+
+    GROUPBOX        "&Menu speed",IDC_SPEEDTEXT,xMnu,yMnu,cxGrp,cyMnu
+    LTEXT           "Fast",IDC_SPEEDFAST,14,17,30,7
+    RTEXT           "Slow",IDC_SPEEDSLOW,cxGrp-105,17,37,7
+    CONTROL         "",IDC_SPEEDTRACK,TRACKBAR_CLASS,
+		    WS_TABSTOP | 1,14,27,cxGrp-82,20
+    LTEXT           "Right-click the test icon to test the setting.",
+		    IDC_SPEEDHELP,cxGrp-59,17,58,33
+
+#define xMse	7
+#define yMse	xMnu+cyMnu+4
+#define cyMse	48
+
+    GROUPBOX        "Mouse sensiti&vity",IDC_SENSGROUP,xMse,yMse,168,cyMse
+
+    LTEXT           "&Double-click",IDC_DBLCLKTEXT,14,yMse+15,43,8
+    EDITTEXT        IDC_DBLCLK,56,yMse+13,24,12,ES_RIGHT | ES_NUMBER
+    CONTROL         "",IDC_DBLCLKUD,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,75,yMse+13,11,12
+
+    LTEXT           "Dra&g",IDC_DRAGTEXT,14,yMse+15+14,44,8
+    EDITTEXT        IDC_DRAG,56,yMse+13+14,24,12,ES_RIGHT | ES_NUMBER
+    CONTROL         "",IDC_DRAGUD,UPDOWN_CLASS,WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,75,yMse+13+14,11,12
+
+    LTEXT           "Drag or double-click the test icon with the left mouse button to test settings.",
+                    IDC_SENSHELP,83,yMse+12,90,30
+
+    GROUPBOX        "Test Icon",IDC_TESTGROUP,179,yMse,cxGrp-179+7,cyMse
+    ICON            IDI_GEAR1,IDC_TEST,190,yMse+17,18,20
+
+#define yWhl 114
+#define cyWhl 50
+
+    GROUPBOX        "",IDC_WHEELGROUP,7,yWhl,213,cyWhl
+    CONTROL         "&Use mouse wheel for scrolling",IDC_WHEELENABLE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,yWhl,108,10
+    CONTROL         "Scroll a &page at a time",IDC_WHEELPAGE,"Button",
+                    BS_AUTORADIOBUTTON,16,yWhl+13,85,10
+    CONTROL         "&Scroll by",IDC_WHEELLINE,"Button",BS_AUTORADIOBUTTON,16,
+		    yWhl+13+14,39,10
+    EDITTEXT        IDC_WHEELLINENO,59,yWhl+13+12,24,12,ES_RIGHT
+    CONTROL         "",IDC_WHEELLINEUD,UPDOWN_CLASS,WS_BORDER | WS_GROUP | 
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+		    UDS_SETBUDDYINT,78,yWhl+13+12,11,12
+    LTEXT           "lines at a time",IDC_WHEELLINESTXT,86,yWhl+13+14,47,8
+
+#define xEfx	7
+#define yEfx	yWhl+cyWhl+4
+#define cyEfx	30
+
+    CONTROL         "A&ctivation follows mouse (X-Mouse)",IDC_XMOUSE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,yEfx,130,10
+
+#ifdef IDC_BUGREPORT
+    PUSHBUTTON      "&Bug Report",IDC_BUGREPORT,xRest-54-54,yRest,50,14
+#endif
+    PUSHBUTTON      "&Tips",IDC_TIPS,xRest-54,yRest,50,14
+    PUSHBUTTON      "&Restore Factory Settings",IDC_RESET,xRest,yRest,86,14
+END
+
+#undef xMnu
+#undef yMnu
+#undef cyMnu
+#undef xMse
+#undef yMse
+#undef cyMse
+#undef xWhl
+#undef yWhl
+#undef cyWhl
+#undef xEfx
+#undef yEfx
+#undef cyEfx
+
+/*****************************************************************************
+ *
+ *  IDD_EXPLORER
+ *
+ *****************************************************************************/
+
+IDD_EXPLORER DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Explorer"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xOvl	7
+#define yOvl	4
+#define cyOvl	63
+
+    GROUPBOX        "Shortcut &overlay",IDC_LINKGROUP,xOvl,yOvl,cxGrp,cyOvl
+    CONTROL         "Arro&w",IDC_LINKARROW,"Button",BS_AUTORADIOBUTTON,
+		    14,yOvl+12,38,10
+    CONTROL         "&Light arrow",IDC_LIGHTARROW,"Button",BS_AUTORADIOBUTTON,
+		    14,yOvl+12+dyRadio,48,10
+    CONTROL         "&None",IDC_NOARROW,"Button",BS_AUTORADIOBUTTON,
+		    14,yOvl+12+dyRadio2,30,10
+    CONTROL         "&Custom",IDC_CUSTOMARROW,"Button",BS_AUTORADIOBUTTON,
+		    14,yOvl+12+dyRadio3,36,10
+
+    LTEXT           "Before",IDC_LINKBEFORETEXT,cxGrp-80,yOvl+7,23,8
+    ICON            IDI_DEFAULT,IDC_LINKBEFORE,cxGrp-80,yOvl+7+10,18,20
+    LTEXT           "After",IDC_LINKAFTERTEXT,cxGrp-39,yOvl+7,17,8
+    ICON            0,IDC_LINKAFTER,cxGrp-39,yOvl+7+10,18,20
+    LTEXT           "Note: This will affect all users.",IDC_LINKHELP,cxGrp-102,50,100,8
+
+#define xStp	7
+#define yStp	yOvl+cyOvl+4
+#define cyStp	40
+
+    GROUPBOX        "&Startup",IDC_STARTUPGROUP,xStp,yStp,cxGrp,cyStp
+    CONTROL         "Ani&mated ""Click here to begin"" (if room)",IDC_BANNER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,yStp+12,140,10
+    CONTROL         "&Tip of the day",IDC_WELCOME,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,yStp+12+dyCheck,57,10
+
+#define xSet	7
+#define ySet	yStp+cyStp+4
+#define cySet	64
+
+    GROUPBOX        "Settin&gs",IDC_SETGROUP,xSet,ySet,cxGrp,cySet
+    CONTROL         "&Prefix ""Shortcut to"" on new shortcuts",IDC_PREFIX,
+		    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,ySet+12,133,10
+    CONTROL         "Sa&ve Explorer window settings",IDC_EXITSAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,ySet+12+dyCheck,133,10
+    CONTROL         "Adjust case of 8.3 filenames",IDC_MAKEPRETTY,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,ySet+12+dyCheck2,133,10
+
+    LTEXT	    "Color of compressed files:",IDC_COMPRESSTXT,
+		    14,ySet+12+dyCheck3,84,10
+    LTEXT	    "",IDC_COMPRESSCLR,99,ySet+12+dyCheck3,30,10
+    PUSHBUTTON      "Chan&ge Color",IDC_COMPRESSBTN,137,ySet+10+dyCheck3,50,14
+
+    PUSHBUTTON      "&Restore Factory Settings",IDC_RESET,xRest,yRest,86,14
+END
+
+#undef xOvl
+#undef yOvl
+#undef cyOvl
+#undef xStp
+#undef yStp
+#undef cyStp
+#undef xSet
+#undef ySet
+#undef cySet
+
+/*****************************************************************************
+ *
+ *  IDD_DESKTOP
+ *
+ *****************************************************************************/
+
+IDD_DESKTOP DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Desktop"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+    LTEXT           "Not all icons can successfully \
+be placed on the desktop or created as a file.  \
+Tweak UI cannot tell for sure, \
+so you'll just have to try it and see.  \
+Right-click an icon for a menu of things you can do.",
+                    IDC_ICONLVTEXT,xLvTxt,yLvTxt,cxLvTxt,cyLvTxt
+    LTEXT           "&Special desktop icons:",IDC_ICONLVTEXT2,xLvTtl,yLvTtl,75,8
+    CONTROL         "",IDC_ICONLV,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+		    LVS_SHAREIMAGELISTS | LVS_EDITLABELS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+		    xLvCtl,yLvCtl,cxGrp,cyLvCtl
+    LTEXT "When an icon is created as a file, you can put it in any folder.",
+                    IDC_CREATENOWTEXT,81,cyDlg-40,117,26
+    PUSHBUTTON      "&Create As File...",IDC_CREATENOW,7,cyDlg-37,58,14
+#if 0
+    PUSHBUTTON      "&Restore Factory Settings",IDC_RESET,cyDlg-69,167,86,14
+#endif
+END
+
+/*****************************************************************************
+ *
+ *  IDD_MYCOMP
+ *
+ *****************************************************************************/
+
+IDD_MYCOMP DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "My Computer"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+    LTEXT           "Remove the check-mark from a drive to prevent the drive from being displayed in My Computer",
+                    IDC_ICONLVTEXT,xLvTxt,yLvTxt,cxLvTxt,cyLvTxt
+    LTEXT           "&Drives:",IDC_ICONLVTEXT2,xLvTtl,yLvTtl,75,8
+    CONTROL         "",IDC_ICONLV,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+		    LVS_SHAREIMAGELISTS | LVS_EDITLABELS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+		    xLvCtl,yLvCtl,cxGrp,cyLvCtl
+#if 0
+    PUSHBUTTON      "&Restore Factory Settings",IDC_RESET,cyDlg-69,167,86,14
+#endif
+END
+
+/*****************************************************************************
+ *
+ *  IDD_TOOLS
+ *
+ *****************************************************************************/
+
+IDD_TOOLS DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "New"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	    "&Windows can create new documents of the following types.  Drag a template into the area below to define a new document template.",
+                    IDC_TEMPLATETEXT,xLvTxt,yLvTxt,cxLvTxt,cyLvTxt
+    CONTROL         "",IDC_TEMPLATE,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+		    LVS_SHAREIMAGELISTS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+		    xLvCtl,yLvCtl,cxGrp,cyLvCtl
+    PUSHBUTTON      "&Remove",IDC_LVDELETE,cxGrp-43,cyDlg-35,50,14
+END
+
+/*****************************************************************************
+ *
+ *  IDD_ADDREMOVE
+ *
+ *****************************************************************************/
+
+IDD_ADDREMOVE DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Add/Remove"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT	    "&The following software can be automatically \
+removed by Windows.  \
+Note that removing an entry does not actually uninstall the program; \
+it merely removes the entry from the list of programs presented \
+by the Add/Remove Programs Control Panel.",
+                    IDC_UNINSTALLTEXT,xLvTxt,yLvTxt,cxLvTxt,cyLvTxt
+    CONTROL         "",IDC_UNINSTALL,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+		    LVS_SHAREIMAGELISTS | LVS_EDITLABELS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+		    xLvCtl,yLvCtl,cxGrp,cyLvCtl
+    PUSHBUTTON      "&New...",IDC_UNINSTALLNEW,cxGrp-43-54-54,cyDlg-35,50,14
+    PUSHBUTTON      "&Remove",IDC_LVDELETE,cxGrp-43-54,cyDlg-35,50,14
+    PUSHBUTTON      "&Edit",IDC_UNINSTALLEDIT,cxGrp-43,cyDlg-35,50,14
+END
+
+/*****************************************************************************
+ *
+ *  IDD_BOOT
+ *
+ *****************************************************************************/
+
+IDD_BOOT DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Boot"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Ge&neral",IDC_BOOTGROUP1,7,4,cxGrp,97
+
+    CONTROL         "Function &keys available",IDC_BOOTKEYS,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,22,88,10
+    LTEXT           "&for",IDC_BOOTDELAYTEXT,102,23,10,8
+    EDITTEXT        IDC_BOOTDELAY,114,20,24,12,ES_RIGHT | ES_NUMBER
+    CONTROL         "",IDC_BOOTDELAYUD,UPDOWN_CLASS, WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,138,20,11,12
+    LTEXT           "seconds.",IDC_BOOTDELAYTEXT2,141,23,31,8
+
+    CONTROL         "Start &GUI automatically",IDC_BOOTGUI,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,37,86,10
+    CONTROL         "&Display splash screen while booting",IDC_LOGO,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,52,127,10
+    CONTROL         "Allow F4 to boot &previous operating system",IDC_BOOTMULTI,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,67,150,10
+
+    LTEXT	    "A&utorun Scandisk:",IDC_SCANDISKTEXT,14,82,61,8,
+		    NOT WS_VISIBLE
+    COMBOBOX	    IDC_SCANDISK,75,80,82,80,
+		    CBS_DROPDOWN | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP |
+		    NOT WS_VISIBLE
+
+    GROUPBOX        "&Boot menu",IDC_BOOTMENUGROUP,7,108,cxGrp,52
+    CONTROL         "Always &show boot menu",IDC_BOOTMENU,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,121,121,10
+
+#ifdef BOOTMENUDEFAULT
+    LTEXT           "Default menu &option:",-1,23,122,69,8
+    COMBOBOX        IDC_BOOTMENUDEFAULT,92,120,110,80,CBS_DROPDOWN | 
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+#endif
+
+    LTEXT           "&Continue booting after",IDC_BOOTMENUDELAYTEXT,23,137,74,8
+    EDITTEXT        IDC_BOOTMENUDELAY,98,135,24,12,ES_RIGHT | ES_NUMBER
+    CONTROL         "",IDC_BOOTMENUDELAYUD,UPDOWN_CLASS, WS_BORDER |
+                    WS_GROUP | UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,122,135,11,12
+    LTEXT           "seconds.",IDC_BOOTMENUDELAYTEXT2,125,137,31,8
+
+    PUSHBUTTON      "&Restore Factory Settings",IDC_RESET,xRest,yRest,86,14
+END
+
+/*****************************************************************************
+ *
+ *  IDD_NETWORK
+ *
+ *****************************************************************************/
+
+IDD_NETWORK DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Network"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xLog	7
+#define yLog	4
+#define cyLog	105
+
+    GROUPBOX        "Logon",IDC_LOGONGROUP,xLog,yLog,cxGrp,cyLog+20
+    CONTROL         "&Log on automatically at system startup",
+		    IDC_LOGONAUTO,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,18,yLog+10,136,10
+
+    RTEXT           "&User name:",IDC_LOGONUSERTXT,28,yLog+24,38,8, NOT WS_GROUP
+    EDITTEXT        IDC_LOGONUSER,70,yLog+24-2,80,13,ES_AUTOHSCROLL
+
+    RTEXT           "&Password:",IDC_LOGONPASSTXT,28,yLog+38,38,8, NOT WS_GROUP
+    EDITTEXT        IDC_LOGONPASS,70,yLog+38-2,80,13,
+		    ES_PASSWORD | ES_AUTOHSCROLL
+
+    LTEXT           "Note:  The automatic logon password is not encrypted.  \
+Any user with access to Regedit can view or modify it.  \
+Furthermore, the ""Clear last user"" setting must be disabled on the \
+Paranoia page.",
+                    -1,18,69,cxGrp-36,44
+
+END
+
+#undef xLog
+#undef yLog
+#undef cyLog
+
+/*****************************************************************************
+ *
+ *  IDD_REPAIR
+ *
+ *****************************************************************************/
+
+#define xBtnImg	15
+#define xBtns	45
+#define yBtns	48
+#define yBtnImg	44
+#define dyIcon	21
+#define dyIcon2	42
+#define dyIcon3	63
+#define dyIcon4	84
+
+IDD_REPAIR DIALOG DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Repair"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+    LTEXT           "Tweak UI can attempt to repair the following aspects of your system.",
+                    -1,14,14,176,24
+    ICON            IDI_DEFAULT,-1,xBtnImg,yBtnImg,18,20
+    COMBOBOX        IDC_REPAIRCOMBO,41,48,116,92,
+                    CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Repair Now",IDC_REPAIRNOW,169,47,50,14
+    GROUPBOX        "Description",-1,7,73,cxGrp,97
+    LTEXT           "",IDC_REPAIRHELP,15,82,cxGrp-16,97-10
+
+#if 0
+
+    LTEXT           "For an explanation of a button, click the question mark at the top of the dialog box, then click the button you wish explained.",
+                    -1,14,14,176,24
+    ICON            IDI_ICONS,IDC_REBUILDCACHEICON,xBtnImg,yBtnImg,18,20
+    PUSHBUTTON      "Rebuild &Icons",IDC_REBUILDCACHE,xBtns,yBtns,86,14
+    ICON            IDI_FONTFOLDER,IDC_REPAIRFONTFLDICON,
+                    xBtnImg,yBtnImg+dyIcon,19,21
+    PUSHBUTTON      "Repair &Font Folder",IDC_REPAIRFONTFLD,
+                    xBtns,yBtns+dyIcon,86,14
+    ICON            IDI_DLL,IDC_REPAIRDLLSICON,xBtnImg,yBtnImg+dyIcon2,19,21
+    PUSHBUTTON      "Repair S&ystem Files",IDC_REPAIRDLLS,xBtns,yBtns+dyIcon2,
+                    86,14
+    ICON            IDI_REGEDIT,IDC_REPAIRREGEDITICON,
+                    xBtnImg,yBtnImg+dyIcon3,19,21
+    PUSHBUTTON      "Repair &Regedit",IDC_REPAIRREGEDIT,xBtns,
+                    yBtns+dyIcon3,86,14
+    ICON            IDI_ASSOC,IDC_REPAIRASSOCICON,xBtnImg,yBtnImg+dyIcon4,18,20
+    PUSHBUTTON      "Repair A&ssociations",IDC_REPAIRASSOC,xBtns,yBtns+dyIcon4,
+                    86,14
+#endif
+END
+
+#undef xBtns
+#undef xBtnImg
+#undef yBtns
+#undef yBtnImg
+
+/*****************************************************************************
+ *
+ *  IDD_PARANOIA
+ *
+ *****************************************************************************/
+
+IDD_PARANOIA DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Paranoia"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xCov	7
+#define yCov	4
+#define cyCov	105
+
+    GROUPBOX        "Co&vering Your Tracks",IDC_CLEARGROUP,xCov,yCov,cxGrp,cyCov
+
+    CONTROL         "",IDC_LISTVIEW,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+                    14,yCov+12,cxGrp-14, dyCheck5+dyCheck
+
+
+    PUSHBUTTON      "C&lear Selected Items Now",IDC_CLEARNOW,
+		    cxGrp-93,yCov+12+dyCheck5+14,93,14
+
+#define xCdr	7
+#define yCdr	yCov+cyCov+4
+#define cyCdr	56
+
+    GROUPBOX        "Things That Happen &Behind Your Back",
+		    IDC_CDROMGROUP,xCdr,yCdr,cxGrp,cyCdr
+    CONTROL         "Play aud&io CDs automatically",IDC_CDROMAUDIO,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,yCdr+12,105,10
+    CONTROL         "Play da&ta CDs automatically",IDC_CDROMDATA,"Button",
+		    BS_AUTOCHECKBOX | WS_TABSTOP,14,yCdr+12+dyCheck,102,10
+    LTEXT           "(Requires Auto-Insert Notification enabled.)",
+                    -1,14,yCdr+12+dyCheck+15,142,8
+
+#define xLog	7
+#define yLog	yCdr+cyCdr+4
+#define cyLog	30
+
+    GROUPBOX        "Illegal &Operations",
+		    IDC_FAULTLOGGROUP,xLog,yLog,cxGrp,cyLog
+    CONTROL         "Lo&g application errors to FAULTLOG.TXT",IDC_FAULTLOG,
+		    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,yLog+12,145,10
+
+END
+
+#undef xCov
+#undef yCov
+#undef cyCov
+#undef xCdr
+#undef yCdr
+#undef cyCdr
+#undef xLog
+#undef yLog
+#undef cyLog
+
+/*****************************************************************************
+ *
+ *  IDD_IE4
+ *
+ *****************************************************************************/
+
+IDD_IE4 DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "IE4"
+FONT 8, "MS Sans Serif"
+BEGIN
+
+#define xSet	7
+#define ySet	4
+#define cySet	105
+
+    GROUPBOX        "&Settings",IDC_SETTINGSGROUP,xSet,ySet,cxGrp,cySet
+
+    CONTROL         "",IDC_LISTVIEW,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+		    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS |
+		    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+                    14,ySet+12,cxGrp-14, dyCheck5+dyCheck
+
+// BUGBUG -- restore factory defaults
+END
+
+#undef xSet
+#undef ySet
+#undef cySet
+
+/*****************************************************************************
+ *
+ *  IDD_CONTROL
+ *
+ *****************************************************************************/
+
+IDD_CONTROL DIALOG DISCARDABLE  0, 0, cxDlg, cyDlg
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Control Panel"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&The following control panel extensions are installed. \
+Note that hiding an extension does not uninstall it.  You can still run it \
+from a shortcut that you created before hiding it.",
+                    IDC_UNINSTALLTEXT,xLvTxt,yLvTxt,cxLvTxt,cyLvTxt
+    CONTROL         "",IDC_UNINSTALL,WC_LISTVIEW,LVS_REPORT | LVS_SINGLESEL |
+                    LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS |
+                    LVS_SHAREIMAGELISTS | LVS_EDITLABELS |
+                    LVS_SORTASCENDING | WS_TABSTOP | WS_BORDER,
+                    xLvCtl,yLvCtl,cxGrp,cyLvCtl
+END
+
+/*****************************************************************************
+ *
+ *  IDD_PICKICON
+ *
+ *****************************************************************************/
+
+IDD_PICKICON DIALOG DISCARDABLE  25, 22, 212, 181
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Icon"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&File Name:",-1,7,7,43,10,NOT WS_GROUP
+    EDITTEXT        IDC_PICKPATH,7,17,197,14,ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "&Current icon:",-1,7,36,79,10,NOT WS_GROUP
+    LISTBOX         IDC_PICKICON,7,47,197,101,LBS_OWNERDRAWFIXED |
+                    LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN |
+                    LBS_DISABLENOSCROLL | WS_HSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,46,159,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,100,159,50,14
+    PUSHBUTTON      "&Browse...",IDC_PICKBROWSE,154,159,50,14
+END
+
+/*****************************************************************************
+ *
+ *  IDD_UNINSTALLEDIT
+ *
+ *****************************************************************************/
+
+IDD_UNINSTALLEDIT DIALOG DISCARDABLE  32, 80, 267, 73
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Uninstall Command"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Description:",IDC_UNINSTALLDESCTEXT,13,12,40,8
+    EDITTEXT        IDC_UNINSTALLDESC,59,9,199,13,ES_AUTOHSCROLL
+    LTEXT           "&Command:",IDC_UNINSTALLCMDTEXT,18,30,35,8
+    EDITTEXT        IDC_UNINSTALLCMD,59,28,199,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,154,50,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,208,50,50,14
+END
+
+/*****************************************************************************
+ *
+ *  IDD_SEARCHURL
+ *
+ *****************************************************************************/
+
+IDD_SEARCHURL DIALOG DISCARDABLE  32, 80, 243, 71
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Explorer Search Engine"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Type the URL to be used to invoke the search engine.  %s will be replaced by the search keywords.",
+                    -1,7,4,210,22
+    LTEXT           "&URL:",-1,8,30,18,8
+    EDITTEXT        IDC_SEARCHURL,32,28,199,13,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,181,49,50,14
+END
+
+#ifdef	PRERELEASE
+/*****************************************************************************
+ *
+ *  IDD_BETAPASSWORD
+ *
+ *****************************************************************************/
+
+IDD_BETAPASSWORD DIALOG DISCARDABLE  32, 80, 267, 73
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Your Beta Password Has Expired"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Your beta password has expired.  Please enter your new password.",-1,6,4,219,8
+    LTEXT           "Beta &ID:",-1,13,17,52,8
+    EDITTEXT        32,76,14,182,13,ES_AUTOHSCROLL
+    LTEXT           "Beta &Password:",-1,13,35,52,8
+    EDITTEXT        33,76,33,182,13,ES_AUTOHSCROLL | ES_UPPERCASE
+    DEFPUSHBUTTON   "OK",IDOK,154,50,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,208,50,50,14
+END
+
+#endif
+
+IDM_MAIN MENU PRELOAD
+BEGIN
+    POPUP ""
+    BEGIN
+	POPUP "Sample menu"
+	BEGIN
+	    MENUITEM "Sample menu", -1
+	    MENUITEM "Sample menu", -1
+	    MENUITEM "Sample menu", -1
+	    MENUITEM "Sample menu", -1
+	END
+	POPUP "Test menu"
+	BEGIN
+	    MENUITEM "Test menu", -1
+	    MENUITEM "Test menu", -1
+	    MENUITEM "Test menu", -1
+	    MENUITEM "Test menu", -1
+	END
+	POPUP "Example menu"
+	BEGIN
+	    MENUITEM "Example menu", -1
+	    MENUITEM "Example menu", -1
+	    MENUITEM "Example menu", -1
+	    MENUITEM "Example menu", -1
+	END
+    END
+
+    /* Used by Desktop page as context menu */
+    POPUP ""
+    BEGIN
+	MENUITEM "&Show on Desktop", IDC_LVTOGGLE
+	MENUITEM "&Create As File...", IDC_CREATENOW
+	MENUITEM "Rena&me", IDC_LVRENAME
+    END
+
+    /* Used by Add/Remove page as context menu */
+    POPUP ""
+    BEGIN
+	MENUITEM "&Edit", IDC_UNINSTALLEDIT
+	MENUITEM "&Remove", IDC_LVDELETE
+	MENUITEM "Rena&me", IDC_LVRENAME
+    END
+
+    /* Used by Template page as context menu */
+    POPUP ""
+    BEGIN
+	MENUITEM "&Show on New menu", IDC_LVTOGGLE
+	MENUITEM "&Remove", IDC_LVDELETE
+    END
+
+    /* Used by MyComp page as context menu */
+    POPUP ""
+    BEGIN
+	MENUITEM "&Show in My Computer", IDC_LVTOGGLE
+    END
+
+    /* Used by Paranoia page as context menu */
+    POPUP ""
+    BEGIN
+        MENUITEM "&Clear at logon", IDC_LVTOGGLE
+        MENUITEM "&What's This?", IDC_WHATSTHIS
+    END
+
+    /* Used by IE4 and General page as context menu */
+    POPUP ""
+    BEGIN
+        MENUITEM "&What's This?", IDC_WHATSTHIS
+    END
+
+   /* Used by Control Panel page as context menu */
+    POPUP ""
+    BEGIN
+        MENUITEM "&Show in Control Panel", IDC_LVTOGGLE
+    END
+
+END
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+IDS_NAME, "Tweak UI"
+IDS_DESCRIPTION, "Customizes more user interface settings"
+IDS_ALLFILES, "All files|*.*|"
+IDS_BADEXT, "No application is associated with this file.  Create an association by using the Explorer."
+IDS_COPYFAIL, "Unable to copy the file to the templates folder."
+IDS_REGFAIL, "Unable to update the registry."
+IDS_CONFIRMNEWTEMPLATE, "Overwrite the existing template with this file?"
+IDS_TOOMANY, "Drop only one file at a time, please."
+IDS_CANNOTTEMPLATE, "Templates cannot be created for this document type."
+IDS_NETHOOD, "Network Neighborhood"
+IDS_LOGONOFF, "You need to log off and back on before the new settings will take effect."
+IDS_SCANDISKNEVER, "Never"
+IDS_SCANDISKPROMPT, "After prompting"
+IDS_SCANDISKALWAYS, "Without prompting"
+#ifdef BOOTMENUDEFAULT
+IDS_BOOTMENU, "Normal"
+IDS_BOOTMENULOGGED, "Logged (\\BOOTLOG.TXT)"
+IDS_BOOTMENUSAFE, "Safe mode"
+IDS_BOOTMENUSAFENET, "Safe mode with network support"
+IDS_BOOTMENUSTEP, "Step-by-step confirmation"
+IDS_BOOTMENUCMD, "Command prompt only"
+IDS_BOOTMENUSAFECMD, "Safe mode command prompt only"
+IDS_BOOTMENUPREV, "Previous version of MS-DOS"
+#endif
+IDS_ERRMSDOSSYS, "Error updating MSDOS.SYS file.  Changes were not saved."
+IDS_DESKTOPRESETOK, "Resetting desktop icons will override any customizations that may have been made, including changes made by Microsoft Plus! and Norton Protected Recycle Bin.  Reset the desktop now?"
+IDS_ICONFILES, "Icon Files|*.ico;*.exe;*.dll|Programs|*.exe|Libraries|*.dll|Icons|*.ico|All Files|*.*|";
+IDS_NOTHINGTOCLEAR, "You didn't select anything to clear."
+IDS_BADRUN, "Tweak UI should be run from the Control Panel.  Would you like to install it now?"
+IDS_CANTINSTALL, "Unable to install Tweak UI.\r\n\r\nCannot locate the tweakui.inf file."
+IDS_NONETHOOD, "Removing the Network Neighborhood from the desktop has additional consequences which are not obvious.\r\n\r\nWould you like to see additional information about this?"
+IDS_ADDRMWARN, "You will not be able to uninstall this program if you remove it from the Add/Remove list.\r\n\r\nRemove the entry anyway?"
+IDS_FIXED, "Uninstall information has been written to the registry."
+IDS_TEMPLATEDELETEWARN, "You will need to reinstall the program responsible for this file type in order to restore the template.  Remove the template for this file type?"
+IDS_MAYBEREBOOT, "You will need to restart the computer for the remainder of the repairs to be completed."
+IDS_ICONSREBUILT, "You may need to close and re-open windows to ensure that the correct icons are displayed."
+IDS_RESTRICTED, "Tweak UI has been disabled by your administrator."
+IDS_ASKREPAIRADDRM, "The Add/Remove Programs list appears to be corrupted.\n\
+\n\
+Would you like Tweak UI to repair it?"
+
+IDS_FOLDER_PATTERN, "Select a new %s folder"
+
+IDS_FOLDER_DESKTOP, "Desktop"
+IDS_FOLDER_PROGRAMS, "Programs"
+IDS_FOLDER_PERSONAL, "My Documents"
+IDS_FOLDER_FAVORITES, "Favorites"
+IDS_FOLDER_STARTUP, "Startup"
+IDS_FOLDER_RECENT, "Recent Documents"
+IDS_FOLDER_SENDTO, "Send To"
+IDS_FOLDER_STARTMENU, "Start Menu"
+IDS_FOLDER_TEMPLATES, "Document Templates"
+IDS_FOLDER_PROGRAMFILES, "Program Files"
+IDS_FOLDER_COMMONFILES, "Common Program Files"
+IDS_FOLDER_SOURCEPATH, "Installation Path"
+
+IDS_DEFAULT_DESKTOP, "Desktop"
+IDS_DEFAULT_PROGRAMS, "Start Menu\\Programs"
+IDS_DEFAULT_PERSONAL, "My Documents"
+IDS_DEFAULT_FAVORITES, "Favorites"
+IDS_DEFAULT_STARTUP, "Start Menu\\Programs\\StartUp"
+IDS_DEFAULT_RECENT, "Recent"
+IDS_DEFAULT_SENDTO, "SendTo"
+IDS_DEFAULT_STARTMENU, "Start Menu"
+IDS_DEFAULT_TEMPLATES, "ShellNew"
+
+IDS_ENGINE+0, "Custom"
+
+/* Engine #1 is the default engine */
+IDS_ENGINE+1, "Yahoo"
+IDS_URL+1, "http://av.yahoo.com/bin/search?p=%s"
+
+IDS_ENGINE+2, "Alta Vista"
+IDS_URL+2, "http://www.altavista.digital.com/cgi-bin/query?pg=q&what=web&fmt=.&q=%s"
+
+IDS_ENGINE+3, "InfoSeek"
+IDS_URL+3, "http://guide-p.infoseek.com/Titles?qt=%s&col=WW&sv=I2"
+
+IDS_ENGINE+4, "WebCrawler"
+IDS_URL+4, "http://www.webcrawler.com/cgi-bin/WebQuery?%s"
+
+IDS_ENGINE+5, "Excite"
+IDS_URL+5, "http://www.excite.com/search.gw?search=%s&trace=2"
+
+IDS_ENGINE+6, "Magellan"
+IDS_URL+6, "http://www.mckinley.com/extsearch.cgi?query=%s"
+
+IDS_ENGINE+7, "Open Text"
+IDS_URL+7, "http://search.opentext.com/omw/simplesearch?mode=and&SearchFor=%s"
+
+IDS_ENGINE+8, "Lycos"
+IDS_URL+8, "http://www.lycos.com/cgi-bin/pursuit?query=%s"
+
+IDS_ENGINE+9, "InfoSeek Ultra"
+IDS_URL+9, "http://ultra.infoseek.com/Titles?qt=%s&sv=I2"
+
+IDS_ENGINE+10, "HotBot"
+IDS_URL+10, "http://www.hotbot.com/search.html?_v=1.0&MT=%s&SM=MC"
+
+IDS_ENGINE+11, "MetaCrawler"
+IDS_URL+11, "http://www.metacrawler.com/cgi-bin/nph-metaquery.p?general=%s"
+
+
+IDS_PARANOIA+0  "Clear Run history at logon"
+IDS_PARANOIA+1  "Clear Find Files history at logon"
+IDS_PARANOIA+2  "Clear Find Computer history at logon"
+IDS_PARANOIA+3  "Clear Document history at logon"
+IDS_PARANOIA+4  "Clear Internet Explorer history at logon"
+IDS_PARANOIA+5  "Clear Network Connection history at logon"
+IDS_PARANOIA+6  "Clear Last User at logon"
+
+IDS_IE4+0       "Show Internet icon on desktop"
+IDS_IE4+1       "Add new documents to Documents on Start Menu"
+IDS_IE4+2       "Show Documents on Start Menu"
+IDS_IE4+3       "Active Desktop enabled"
+IDS_IE4+4       "Allow changes to Active Desktop"
+IDS_IE4+5       "Show Favorites on taskbar"
+IDS_IE4+6       "Clear document, run, typed-URL history on exit"
+IDS_IE4+7       "IE4 enabled"
+
+IDS_GENERALEFFECTS+0    "Window animation"
+IDS_GENERALEFFECTS+1    "Smooth scrolling"
+IDS_GENERALEFFECTS+2    "Beep on errors"
+IDS_GENERALEFFECTS+3    "Menu animation"
+IDS_GENERALEFFECTS+4    "Combo box animation"
+IDS_GENERALEFFECTS+5    "List box animation"
+IDS_GENERALEFFECTS+6    "Menu underlines"
+IDS_GENERALEFFECTS+7    "X-Mouse AutoRaise"
+IDS_GENERALEFFECTS+8    "Mouse hot tracking effects"
+IDS_GENERALEFFECTS+9    "Show Windows version on desktop"
+
+IDS_CPL_BORING          "Control Panel DLL"
+IDS_CPL_ADDRM           "Add/Remove Programs"
+IDS_CPL_DESK            "Desktop Settings"
+IDS_CPL_INTL            "Regional Settings"
+IDS_CPL_MAIN            "Mouse, Keyboard, etc."
+IDS_CPL_TIMEDATE        "Time/Date Settings"
+
+IDS_REPAIR+0            "Rebuild Icons"
+IDS_REPAIRHELP+0        "Rebuilds all Explorer icons \
+and removes unused Explorer icons from memory.\n\
+\n\
+Rebuild icons when you find that Explorer is displaying the \
+wrong icon for a program or shortcut."
+
+IDS_REPAIR+1            "Repair Font Folder"
+IDS_REPAIRHELP+1        "Restores the functionality of the Font Folder.\n\
+\n\
+Repair the Font Folder when you find that the Font Folder has lost \
+its magic and is acting like a normal folder."
+
+IDS_REPAIR+2            "Repair System Files"
+IDS_REPAIRHELP+2        "Checks files which are commonly \
+replaced by application installation programs.  If the system \
+file has been improperly overwritten, Windows will restore the \
+original file.\n\
+\n\
+In particular, repairing system files will restore the damaged files  \
+which lead to the error message ""The Comdlg32.dll file cannot start.""\n\
+\n\
+Repairing system files requires that the files in the \
+hidden SysBckup folder are still installed."
+
+IDS_REPAIR+3            "Repair Regedit"
+IDS_REPAIRHELP+3        "Resets Regedit view state \
+information to the defaults.\n\
+\n\
+Repair Regedit when you find that Regedit is not showing all the \
+columns in its view."
+
+IDS_REPAIR+4            "Repair Associations"
+IDS_REPAIRHELP+4        "Returns icons to their factory \
+settings and restores the default associations for standard file types.\n\
+\n\
+Repairing associations solves such common problems as \
+losing the ""Install"" command on the right-click context menu \
+for .INF files."
+
+IDS_REPAIR+5            "Repair URL History"
+IDS_REPAIRHELP+5        "Restores the functionality of the URL History \
+folder.\n\
+\n\
+Repair the URL History when you find that the URL History folder has lost \
+its magic and is acting like a normal folder.\n\
+\n\
+In Details view, the URL \
+History folder should have special columns such as \
+""Last Visited"" and ""Expires""."
+
+IDS_REPAIR+6            "Repair Temporary Internet Files"
+IDS_REPAIRHELP+6        "Restores the functionality of the \
+Temporary Internet Files folder.\n\
+\n\
+Repair the Temporary Internet Files folder \
+when you find that the Temporary Internet Files folder has lost \
+its magic and is acting like a normal folder.\n\
+\n\
+In Details view, the Temporary Internet Files \
+folder should have special columns such as \
+""Internet Address"" and ""Expires""."
+
+END

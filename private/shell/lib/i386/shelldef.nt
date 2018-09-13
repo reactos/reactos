@@ -1,0 +1,631 @@
+;
+;  This def file is for reference only.  It is the def file
+;  of the SHELL32 shipped in NT 4.0 (1381).
+;
+;
+
+
+LIBRARY         SHELL32
+DESCRIPTION     'Windows Shell (32bit) Library'
+
+SECTIONS
+    .bss        READ WRITE              ; initialized data
+    .data       READ WRITE              ; global data (opposite of normal)
+    .idata      READ WRITE              ; import tables
+;     INSTDATA    READ WRITE              ; instance data
+    .rsrc       READ                    ; resources
+
+EXPORTS
+        ;========================================================
+        ; Public exports
+        ;
+        ;       Must be named
+        ;       SHould not have any ordinals
+        ;       Must NOT be marked internal
+        ;========================================================
+        ; Win 3.1 Drag API
+        DragAcceptFiles                      ;public
+        DragFinish                           ;public
+        DragQueryPoint                       ;public
+        DragQueryFileA                       ;public
+
+        ;
+        ; PaintShop Pro needs this
+        ;
+        DragQueryFile=DragQueryFileA         ;public
+
+        ;
+        ; Copied from NT shell32.def
+        ;
+        ShellExecuteA
+        FindExecutableA
+        ShellAboutA
+        FreeIconList
+        DoEnvironmentSubstA
+        ExtractIconA
+
+        ExtractAssociatedIconA
+        ;InternalExtractIconA
+
+        ;
+        ;   Win32 (NT) APIs we dont support (see shlunimp.c)
+        ;
+        SheGetCurDrive
+        SheSetCurDrive
+        DuplicateIcon
+        CheckEscapesA
+        CheckEscapesW
+        DragQueryFileAorW
+
+        ;
+        ;   Win32 (NT) ANSI APIs we dont support (see shlunimp.c)
+        ;
+        SheChangeDirA
+        SheFullPathA
+        SheGetDirA
+        RealShellExecuteA
+        RealShellExecuteExA
+        RegenerateUserEnvironment
+
+        ;
+        ;   Win32 (NT) UNICODE APIs we dont support    (see shlunimp.c)
+        ;
+        SheChangeDirW
+        SheFullPathW
+        SheGetDirW
+        RealShellExecuteW
+        RealShellExecuteExW
+        ShellExecuteW
+        FindExecutableW
+        ShellAboutW
+        ExtractAssociatedIconW
+        ExtractAssociatedIconExA
+        ExtractAssociatedIconExW
+        ExtractIconW
+        ExtractIconResInfoA
+        ExtractIconResInfoW
+        DragQueryFileW
+        ;InternalExtractIconW
+        InternalExtractIconListA
+        InternalExtractIconListW
+        DoEnvironmentSubstW
+        ;FindEnvironmentStringW
+        ExtractVersionResource16W
+
+        ;
+        ; More Win32 (NT) UNICODE APIs they don't support - John Vert (jvert) 15-Oct-1994
+        ;
+        SheGetDirExW
+        SheChangeDirExW
+        SheGetPathOffsetW
+
+#ifdef WINNT
+        ;
+        ; Forward all of these old string functions over to COMCTL32.DLL
+        ;
+        StrChrA     = ShellStrChrA
+        StrRChrA    = ShellStrRChrA
+        StrChrIA    = ShellStrChrIA
+        StrRChrIA   = ShellStrRChrIA
+        StrCmpNA    = ShellStrCmpNA
+        StrCmpNIA   = ShellStrCmpNIA
+        StrCpyNA    = ShellStrCpyNA
+        StrNCmpA    = ShellStrNCmpA
+        StrNCmpIA   = ShellStrNCmpIA
+        StrNCpyA    = ShellStrNCpyA
+        StrStrA     = ShellStrStrA
+        StrRStrA    = ShellStrRStrA
+        StrStrIA    = ShellStrStrIA
+        StrRStrIA   = ShellStrRStrIA
+
+        StrChrW     = ShellStrChrW
+        StrRChrW    = ShellStrRChrW
+        StrChrIW    = ShellStrChrIW
+        StrRChrIW   = ShellStrRChrIW
+        StrCmpNW    = ShellStrCmpNW
+        StrCmpNIW   = ShellStrCmpNIW
+        StrCpyNW    = ShellStrCpyNW
+        StrNCmpW    = ShellStrNCmpW
+        StrNCmpIW   = ShellStrNCmpIW
+        StrNCpyW    = ShellStrNCpyW
+        StrStrW     = ShellStrStrW
+        StrRStrW    = ShellStrRStrW
+        StrStrIW    = ShellStrStrIW
+        StrRStrIW   = ShellStrRStrIW
+#endif
+
+; speed up winfile, bypass old IsCharAlpha fcn
+
+        SheChangeDirExA
+
+; export RemoveQuotes since it's already here and we can save space in pm/tm
+
+        SheRemoveQuotesA
+        SheRemoveQuotesW
+
+        SheConvertPathW
+        SheShortenPathA
+        SheShortenPathW
+
+        CommandLineToArgvW
+        ExtractVersionResource16W
+        FindExeDlgProc
+        ShellHookProc
+
+        ;
+        ; More Win32 (NT) UNICODE APIs they don't support - John Vert (jvert) 15-Oct-1994
+        ;
+        SheGetDirExW
+        SheChangeDirExW
+        SheGetPathOffsetW
+
+; speed up winfile, bypass old IsCharAlpha fcn
+
+        SheChangeDirExA
+
+; export RemoveQuotes since it's already here and we can save space in pm/tm
+
+        SheRemoveQuotesA
+        SheRemoveQuotesW
+
+        SheConvertPathW
+        SheShortenPathA
+        SheShortenPathW
+
+        CommandLineToArgvW
+#ifdef WINNT
+        WOWShellExecute
+#endif
+
+        ;
+        ;   new Chicago APIs
+        ;
+        ; BUGBUG: SHGetFileInfoA?
+        SHLoadInProc                        ;public
+        SHGetInstanceExplorer               ;public
+        SHAddToRecentDocs                   ;public
+
+        SHGetDataFromIDListA
+        SHGetDataFromIDListW
+
+        SHGetMalloc
+        SHGetDesktopFolder
+        SHChangeNotify
+
+        SHGetSpecialFolderLocation
+
+        ExtractIconEx = ExtractIconExA
+        SHGetFileInfo = SHGetFileInfoA
+        ShellExecuteEx = ShellExecuteExA
+        Shell_NotifyIcon = Shell_NotifyIconA
+        SHGetPathFromIDList = SHGetPathFromIDListA
+        SHBrowseForFolder = SHBrowseForFolderA
+        SHFileOperation = SHFileOperationA
+        SHGetNewLinkInfo=SHGetNewLinkInfoA  ;Internal
+
+        SHFreeNameMappings
+        SHAppBarMessage
+        SHFormatDrive
+
+        ;========================================================
+        ; Exports to be GetProcAddressed.
+        ;       Must be named
+        ;       Should not have any ordinals
+        ;       Must be marked internal
+        ;       Should be marked PRIVATE so then dont end up in SHELL32.LIB
+        ;========================================================
+
+        ; To be In-Proc server DLL
+        DllGetClassObject                   PRIVATE     ;internal
+
+        ; For the thunk of it.
+        ;
+        ; BUGBUG_SUNILP: The routines below need not be exported by
+        ; the shell32.dll because we have a different thunking model.
+        ;
+        ; Shl3216_ThunkData32                             ;Internal
+        ; Shl1632_ThunkData32                             ;Internal
+
+        ; To be called from RUNDLL32.EXE
+        Control_RunDLL                                          ;Internal
+        Control_RunDLLA = Control_RunDLL                        ;Internal
+        Control_RunDLLW                                         ;Internal
+        Control_FillCache_RunDLL                                ;Internal
+        Control_FillCache_RunDLLA = Control_FillCache_RunDLL    ;Internal
+        Control_FillCache_RunDLLW                               ;Internal
+        OpenAs_RunDLL                                           ;Internal
+        OpenAs_RunDLLA = OpenAs_RunDLL                          ;Internal
+        OpenAs_RunDLLW                                          ;Internal
+        PrintersGetCommand_RunDLL                               ;Internal
+        PrintersGetCommand_RunDLLA = PrintersGetCommand_RunDLL  ;Internal
+        PrintersGetCommand_RunDLLW                              ;Internal
+        SHHelpShortcuts_RunDLL                                  ;Internal
+        SHHelpShortcuts_RunDLLA = SHHelpShortcuts_RunDLL        ;Internal
+        SHHelpShortcuts_RunDLLW                                 ;Internal
+
+        ;========================================================
+        ; private exports
+        ;       Should NOT be named
+        ;       Should have ordinals
+        ;       Must be marked internal
+        ;========================================================
+
+        ;========================================================
+        ; PIFMGR thunks
+        ;========================================================
+        PifMgr_OpenProperties           @9  NONAME      ;Internal
+        PifMgr_GetProperties            @10 NONAME      ;Internal
+        PifMgr_SetProperties            @11 NONAME      ;Internal
+        PifMgr_CloseProperties          @13 NONAME      ;Internal
+
+        ;========================================================
+        ;========================================================
+        ; name space notification
+
+        ; Make sure to keep SHChangeNotifyRegisterORD updated in shlobj.h
+        SHChangeNotifyRegister            @2 NONAME       ;Internal
+        ; Make sure to keep SHChangeNotifyDeregisterORD updated in shlobj.h
+        SHChangeNotifyDeregister          @4 NONAME       ;Internal
+
+        SHChangeNotifyUpdateEntryList        @5 NONAME       ;Internal
+        ;               Reserved up to  @8 NONAME
+
+        ILGetSize                       @152 NONAME     ;Internal
+        ILGetNext                       @153 NONAME     ;Internal
+        ILAppendID                      @154 NONAME     ;Internal
+        ILFree                          @155 NONAME     ;Internal
+        ILGlobalFree                    @156 NONAME     ;Internal
+        ILCreateFromPath                @157 NONAME     ;Internal
+        ILGetDisplayName                @15  NONAME     ;Internal
+        ILFindLastID                    @16  NONAME     ;Internal
+        ILRemoveLastID                  @17  NONAME     ;Internal
+        ILClone                         @18  NONAME     ;Internal
+        ILCloneFirst                    @19  NONAME     ;Internal
+        ILGlobalClone                   @20  NONAME     ;Internal
+        ILIsEqual                       @21  NONAME     ;Internal
+        ILIsParent                      @23  NONAME     ;Internal
+        ILFindChild                     @24  NONAME     ;Internal
+        ILCombine                       @25  NONAME     ;Internal
+        ILLoadFromStream                @26  NONAME     ;Internal
+        ILSaveToStream                  @27  NONAME     ;Internal
+        SHILCreateFromPath              @28  NONAME     ;Internal
+
+        ; Path parsing stuff
+        PathIsRoot                      @29  NONAME     ;Internal
+        PathBuildRoot                   @30  NONAME     ;Internal
+        ; Ordinal #define'd in SHSEMIP.H
+        PathFindExtension               @31  NONAME     ;Internal
+        PathAddBackslash                @32  NONAME     ;Internal
+        ; Ordinal #define'd in SHSEMIP.H
+        PathRemoveBlanks                @33  NONAME     ;Internal
+        ; Ordinal #define'd in SHSEMIP.H
+        PathFindFileName                @34  NONAME     ;Internal
+        PathRemoveFileSpec              @35  NONAME     ;Internal
+        PathAppend                      @36  NONAME     ;Internal
+        PathCombine                     @37  NONAME     ;Internal
+        PathStripPath                   @38  NONAME     ;Internal
+        PathIsUNC                       @39  NONAME     ;Internal
+        PathIsRelative                  @40  NONAME     ;Internal
+        ; Ordinal #define'd in SHSEMIP.H
+        PathGetExtension                @158 NONAME     ;Internal
+        PathIsDirectory                 @159 NONAME     ;Internal
+        PathIsExe                       @43  NONAME     ;Internal
+        PathFileExists                  @45  NONAME     ;Internal
+        PathMatchSpec                   @46  NONAME     ;Internal
+        PathMakeUniqueName              @47  NONAME     ;Internal
+        PathSetDlgItemPath              @48  NONAME     ;Internal
+        PathQualify                     @49  NONAME     ;Internal
+        PathStripToRoot                 @50  NONAME     ;Internal
+        PathResolve                     @51  NONAME     ;Internal
+        PathCleanupSpec                 @171 NONAME     ;Internal
+
+        PathGetArgs                     @52  NONAME     ;Internal
+        PathQuoteSpaces                 @55  NONAME     ;Internal
+        PathUnquoteSpaces               @56  NONAME     ;Internal
+        PathGetDriveNumber              @57  NONAME     ;Internal
+
+        PathParseIconLocation           @249 NONAME     ;Internal
+        PathRemoveExtension             @250 NONAME     ;Internal
+        PathRemoveArgs                  @251 NONAME     ;Internal
+
+        ; MISC function
+        ParseField                      @58  NONAME     ;Internal
+        RestartDialog                   @59  NONAME     ;Internal
+        ExitWindowsDialog               @60  NONAME     ;Internal
+        RunFileDlg                      @61  NONAME     ;Internal
+        PickIconDlg                     @62  NONAME     ;Internal
+        GetFileNameFromBrowse           @63  NONAME     ;Internal
+
+        ; Drive type
+        DriveType                       @64  NONAME     ;Internal
+        RealDriveType                   @524 NONAME     ;Internal
+        RealDriveTypeFlags              @525 NONAME     ;Internal
+
+        InvalidateDriveType             @65  NONAME     ;Internal
+        IsNetDrive                      @66  NONAME     ;Internal
+
+        Shell_MergeMenus                @67  NONAME     ;Internal
+        SHGetSetSettings                @68  NONAME     ;Internal
+        SHGetNetResource                @69  NONAME     ;Internal
+        SHCreateDefClassObject          @70  NONAME     ;Internal
+
+        SHObjectProperties              @178 NONAME     ;Internal
+
+
+        ;========================================================
+        ; Private exports
+        ;========================================================
+        Shell_GetImageLists             @71 NONAME      ;Internal
+        Shell_GetCachedImageIndex       @72 NONAME      ;Internal
+        SHShellFolderView_Message       @73 NONAME      ;Internal
+        SHCreateStdEnumFmtEtc           @74 NONAME      ;Internal
+        PathYetAnotherMakeUniqueName    @75 NONAME      ;Internal
+        DragQueryInfo                   @76 NONAME      ;Internal
+        SHMapPIDLToSystemImageListIndex @77 NONAME      ;Internal
+
+        OleStrToStrN                    @78 NONAME      ;Internal
+        StrToOleStrN                    @79 NONAME      ;Internal
+
+#ifndef WINNT
+        SHAddPages16                    @81 NONAME      ;Internal
+#endif
+
+        CIDLData_CreateFromIDArray      @83 NONAME      ;Internal
+        SHIsBadInterfacePtr             @84 NONAME      ;Internal
+        OpenRegStream                   @85 NONAME      ;Internal
+
+        SHRegisterDragDrop              @86 NONAME      ;Internal
+        SHRevokeDragDrop                @87 NONAME      ;Internal
+        SHDoDragDrop                    @88 NONAME      ;Internal
+        SHFlushClipboard                @121 NONAME     ;Internal
+        SHFreeUnusedLibraries           @123 NONAME     ;Internal
+
+        SHCloneSpecialIDList            @89 NONAME      ;Internal
+
+        ; BUGBUG: MPREXE calls this, remove for build 259
+        FOOBAR1217 = SHCloneSpecialIDList @1217 NONAME  ;Internal BUGBUG
+
+        SHFindFiles                     @90 NONAME      ;Internal
+        SHFindComputer                  @91 NONAME      ;Internal
+
+        PathGetShortPath                @92 NONAME      ;Internal
+        Win32CreateDirectory            @93 NONAME      ;Internal
+        Win32RemoveDirectory            @94 NONAME      ;Internal
+        SHLogILFromFSIL                 @95 NONAME      ;Internal
+
+        StrRetToStrN                    @96 NONAME      ;Internal
+        SHWaitForFileToOpen             @97 NONAME      ;Internal
+        SHGetRealIDL                    @98 NONAME      ;Internal
+
+        SetAppStartingCursor             @99 NONAME     ;Internal
+        SHRestricted                    @100 NONAME     ;Internal
+        SHCoCreateInstance              @102 NONAME     ;Internal
+        SignalFileOpen                  @103 NONAME     ;Internal
+
+        FileMenu_DeleteAllItems            @104 NONAME  ;Internal
+        FileMenu_DrawItem                  @105 NONAME  ;Internal
+        FileMenu_FindSubMenuByPidl         @106 NONAME  ;Internal
+        FileMenu_GetLastSelectedItemPidls  @107 NONAME  ;Internal
+        FileMenu_HandleMenuChar            @108 NONAME  ;Internal
+        FileMenu_InitMenuPopup             @109 NONAME  ;Internal
+        FileMenu_InsertUsingPidl           @110 NONAME  ;Internal
+        FileMenu_Invalidate                @111 NONAME  ;Internal
+        FileMenu_MeasureItem               @112 NONAME  ;Internal
+        FileMenu_ReplaceUsingPidl          @113 NONAME  ;Internal
+        FileMenu_Create                    @114 NONAME  ;Internal
+        FileMenu_AppendItem                @115 NONAME  ;Internal
+        FileMenu_TrackPopupMenuEx          @116 NONAME  ;Internal
+        FileMenu_DeleteItemByCmd           @117 NONAME  ;Internal
+        FileMenu_Destroy                   @118 NONAME  ;Internal
+
+        IsLFNDrive                         @119 NONAME  ;Internal
+
+        FileMenu_AbortInitMenu             @120 NONAME  ;Internal
+        FileMenu_AppendFilesForPidl        @124 NONAME  ;Internal
+        FileMenu_AddFilesForPidl           @125 NONAME  ;Internal
+
+        SHOutOfMemoryMessageBox            @126 NONAME  ;Internal
+        SHWinHelp                          @127 NONAME  ;Internal
+
+        SHDllGetClassObject = DllGetClassObject @128 NONAME ;Internal
+
+        DAD_AutoScroll                          @129 NONAME ;Internal
+        DAD_DragEnter                           @130 NONAME ;Internal
+        DAD_DragEnterEx                         @131 NONAME ;Internal
+        DAD_DragLeave                           @132 NONAME ;Internal
+        DAD_DragLeave                           @133 NONAME ;Internal
+        DAD_DragMove                            @134 NONAME ;Internal
+        DAD_DragMove                            @135 NONAME ;Internal
+        DAD_SetDragImage                        @136 NONAME ;Internal
+        DAD_ShowDragImage                       @137 NONAME ;Internal
+        DAD_ShowDragImage                       @138 NONAME ;Internal
+        DAD_SetDragImageFromListView            @177 NONAME ;Internal
+        Desktop_UpdateBriefcaseOnEvent          @139 NONAME ;Internal
+        FileMenu_DeleteItemByIndex              @140 NONAME ;Internal
+        FileMenu_DeleteMenuItemByFirstID        @141 NONAME ;Internal
+        FileMenu_DeleteSeparator                @142 NONAME ;Internal
+        FileMenu_EnableItemByCmd                @143 NONAME ;Internal
+        FileMenu_GetItemExtent                  @144 NONAME ;Internal
+        PathFindOnPath                          @145 NONAME ;Internal
+        RLBuildListOfPaths                      @146 NONAME ;Internal
+        SHCLSIDFromString                       @147 NONAME ;Internal
+        SHFind_InitMenuPopup                    @149 NONAME ;Internal
+        SHFind_InitMenuPopup                    @150 NONAME ;Internal
+        SHLoadOLE                               @151 NONAME ;Internal
+        SHNetConnectionDialog                   @160 NONAME ;Internal
+        SHRunControlPanel                       @161 NONAME ;Internal
+        SHSimpleIDListFromPath                  @162 NONAME ;Internal
+        StrToOleStr                             @163 NONAME ;Internal
+        Win32DeleteFile                         @164 NONAME ;Internal
+        SHCreateDirectory                       @165 NONAME ;Internal
+        CallCPLEntry16                          @166 NONAME ;Internal
+        RunDll_CallEntry16                      @122 NONAME ;Internal
+
+        ;
+        ; WARNING: Following three APIs are explicitly GetProcced by NETCP.CPL
+        ;
+        SHAddFromPropSheetExtArray              @167 NONAME ;Internal
+        SHCreatePropSheetExtArray               @168 NONAME ;Internal
+        SHDestroyPropSheetExtArray              @169 NONAME ;Internal
+
+        SHReplaceFromPropSheetExtArray          @170 NONAME ;Internal
+        SHCreateLinks                           @172 NONAME ;Internal
+
+        ; Make sure to keep SHValidateUNCORD updated in shellp.h
+        SHValidateUNC                           @173 NONAME ;Internal
+
+        SHCreateShellFolderViewEx               @174 NONAME ;Internal
+        SHGetSpecialFolderPath                  @175 NONAME ;Internal
+        SHSetInstanceExplorer                   @176 NONAME ;Internal
+
+        SHGetNewLinkInfoA                       @179 NONAME ;Internal
+        SHGetNewLinkInfoW                       @180 NONAME ;Internal
+        RegisterShellHook                       @181 NONAME ;Internal
+        ArrangeWindows                          @184 NONAME ;Internal
+
+        SHHandleDiskFull                        @185 NONAME ;Internal
+        SHFree                                  @195 NONAME ;Internal
+        SHAlloc                                 @196 NONAME ;Internal
+
+        SHGlobalDefect                          @197 NONAME ;Internal
+
+        ShellMessageBoxW                        @182 NONAME ;Internal
+        ShellMessageBoxA                        @183 NONAME ;Internal
+        SHAbortInvokeCommand                    @198 NONAME ;Internal
+
+
+        ;
+        ; Being removed (SCCVIEW is still linked)
+        ;
+        SHGetFileIcon                           @199 NONAME ;being removed
+
+        ; In debug these do heap checking, in retail they map to Win32
+        ; versions.
+        SHLocalAlloc                            @200 NONAME ;Internal
+        SHLocalFree                             @201 NONAME ;Internal
+        SHLocalReAlloc                          @202 NONAME ;Internal
+
+#ifdef WINNT // PRINTQ
+        ;
+        ; Print queue support
+        ;
+        AddCommasW                              @203 NONAME ;Internal
+        ShortSizeFormatW                        @204 NONAME ;Internal
+        Printer_LoadIconsW                      @205 NONAME ;Internal
+        Printers_GetPidl                        @211 NONAME ;Internal
+        Printer_AddPrinterPropPages             @212 NONAME ;Internal
+        Printers_RegisterWindowW                @213 NONAME ;Internal
+        Printers_UnregisterWindow               @214 NONAME ;Internal
+#endif
+
+#ifdef WINNT // enable console.cpl to be able to read/write link files
+        Link_AddExtraDataSection                @206 NONAME ;Internal
+        Link_ReadExtraDataSection               @207 NONAME ;Internal
+        Link_RemoveExtraDataSection             @208 NONAME ;Internal
+#endif
+
+#ifdef WINNT
+        ;
+        ; 64-bit integer string formatting.
+        ;
+        Int64ToString                           @209 NONAME ;Internal
+        LargeIntegerToString                    @210 NONAME ;Internal
+#endif
+        //
+        // BUGBUG - Why is the last few above out of sequence?
+        //
+
+        SHStartNetConnectionDialog              @215 NONAME ;Internal
+
+#if (defined(UNICODE) && (defined(_MIPS_) || defined(_ALPHA_) || defined(_PPC_)))
+
+        ; Private unaligned string functions in uastrfnc.c
+
+        ualstrcpynW                             @500 NONAME ;Internal
+        ualstrcmpiW                             @501 NONAME ;Internal
+        ualstrcmpW                              @502 NONAME ;Internal
+        ualstrlenW                              @503 NONAME ;Internal
+        ualstrcpyW                              @504 NONAME ;Internal
+
+#endif
+
+        ; BUGBUG: Temporalily exported until new APIs come on line
+        SHRegCloseKey                           @505 NONAME ;Internal
+        SHRegOpenKeyA                           @506 NONAME ;Internal
+        SHRegOpenKeyW                           @507 NONAME ;Internal
+        SHRegQueryValueA                        @508 NONAME ;Internal
+        SHRegQueryValueExA                      @509 NONAME ;Internal
+        SHRegQueryValueW                        @510 NONAME ;Internal
+        SHRegQueryValueExW                      @511 NONAME ;Internal
+
+        SHRegDeleteKeyW                         @512 NONAME ;Internal
+
+        ; Shared memory mapping stuff
+        SHAllocShared                           @520 NONAME ;Internal
+        SHLockShared                            @521 NONAME ;Internal
+        SHUnlockShared                          @522 NONAME ;Internal
+        SHFreeShared                            @523 NONAME ;Internal
+
+        ; Make sure to keep SHChangeNotifyRegisterORD updated in shlobj.h
+        ; BUGBUG:: We converted back to one set of APIS... will remove these
+        ; once all of the clients have been rebuilt!!!
+        NTSHChangeNotifyRegister                  @640 NONAME ;Internal
+        ; Make sure to keep SHChangeNotifyDeregisterORD updated in shlobj.h
+        NTSHChangeNotifyDeregister                @641 NONAME ;Internal
+
+        SHChangeNotifyReceive                   @643 NONAME ;Internal
+        SHChangeNotification_Lock               @644 NONAME ;Internal
+        SHChangeNotification_Unlock             @645 NONAME ;Internal
+        SHChangeRegistrationReceive             @646 NONAME ;Internal
+
+        ReceiveAddToRecentDocs                  @647 NONAME ;Internal
+
+        SHWaitOp_Operate                        @648 NONAME ;Internal
+
+        ; Exported for the cabinet to use (desktop MRU code)
+        PathIsSameRoot                          @650 NONAME ;Internal
+
+        ; Cabinet state APIs
+        ReadCabinetState                        @651 NONAME ;Internal
+        WriteCabinetState                       @652 NONAME ;Internal
+
+        PathProcessCommand                      @653 NONAME ;Internal
+
+        FileIconInit                            @660 NONAME ;Internal
+
+        SHUpdateRecycleBinIcon
+
+        ; New Dual language entry points
+        ExtractIconExA
+        ExtractIconExW
+        SHGetFileInfoA
+        SHGetFileInfoW
+        SHGetPathFromIDListA
+        SHGetPathFromIDListW
+        SHBrowseForFolderA
+        SHBrowseForFolderW
+        ShellExecuteExA
+        ShellExecuteExW
+        Shell_NotifyIconA
+        Shell_NotifyIconW
+        SHFileOperationA
+        SHFileOperationW
+
+#ifdef WINNT
+
+        StrChrA     = COMCTL32.350
+        StrRChrA    = COMCTL32.351
+        StrCmpNA    = COMCTL32.352
+        StrCmpNIA   = COMCTL32.353
+        StrStrA     = COMCTL32.354
+
+        StrChrW     = COMCTL32.358
+        StrRChrW    = COMCTL32.359
+        StrCmpNW    = COMCTL32.360
+        StrCmpNIW   = COMCTL32.361
+        StrStrW     = COMCTL32.362
+#endif
+
+        ; Security
+
+        IsUserAnAdmin                           @680 NONAME ;Internal

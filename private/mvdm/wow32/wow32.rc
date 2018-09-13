@@ -1,0 +1,31 @@
+//---------------------------------------------------------------------------
+// wow32.rc
+//
+// Copyright (c) Microsoft Corporation, 1990-
+//---------------------------------------------------------------------------
+
+#define WIN31 1
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_INTERNALNAME_STR            "WOW32"
+#define VER_ORIGINALFILENAME_STR	"WOW32.DLL"
+
+#ifdef _HYDRA_
+#define VER_FILEDESCRIPTION_STR 	"Multi-User 32-bit WOW Subsystem Library"
+#else
+#define VER_FILEDESCRIPTION_STR 	"32-bit WOW Subsystem Library"
+#endif
+
+#include "common.ver"
+
+#include "isz.h"
+
+//----Strings----------------------------------------------------------------
+
+STRINGTABLE LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+#include "sz.src"
+END

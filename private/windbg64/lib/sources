@@ -1,0 +1,48 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Miche Baker-Harvey (v-michbh)
+
+!ENDIF
+
+MAJORCOMP=windbg
+MINORCOMP=mathlib
+
+TARGETNAME=mathlib
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES=strtoli.c   \
+        strgtold.c  \
+        mantold.c   \
+        tenpow.c    \
+        constpow.c  \
+        x10fout.c   \
+        cvt.c       \
+        cfout.c     \
+        cfin.c      \
+        intrncvt.c  \
+        atold.c     \
+        heap.c
+
+
+UMTYPE=windows
+
+!include ..\common.src
+
+INCLUDES=..\include;$(LANGAPI)\debugger

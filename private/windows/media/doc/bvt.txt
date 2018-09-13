@@ -1,0 +1,80 @@
+
+A suitable Build Verification Test for Multi-Media
+
+[NEW]
+When the multimedia merge with USER and WINLOGON takes place this
+new section will become effective.
+
+Prereq: Ensure you have a sound capable machine with speakers/headphones
+        - MIPS or x86 with Soundblaster or clone
+
+        Ensure that WIN.INI [SOUNDS] section points SYSTEMWELCOME and
+        SYSTEMSTART to a sound of your choice.
+
+Boot:   When the Welcome (Press C-A-D) box appears the SYSTEMWELCOME sound
+        should be played.
+
+        When you logon successfully the SYSTEMSTART sound should be played.
+        If at the logon panel an invalid key is pressed, e.g. Ctrl+Q, the
+        SYSTEMHAND sound should play.
+
+[END OF NEW SECTION]
+
+1. Bring up MPlayer.exe
+   Click on Devices
+   - should see listed Sound...
+                       MIDI Sequencer...
+                       CDAudio
+
+   Click on SOUND...
+   - File open dialog comes up
+   Go to \NT\WINDOWS\SYSTEM
+   Select any .WAV file e.g. laughs.wav
+   - Dialog box goes away
+   - MPlayer lefthand button becomes un-grayed
+   Click on left hand button
+   - Sound should play
+
+   Click on Devices
+   Click on MIDI...
+   - File open dialog comes up
+   Go to \NT\WINDOWS\SYSTEM
+   Select any .MID file e.g. canyon.mid
+   - Dialog box goes away
+   - MPlayer lefthand button becomes un-grayed
+   Click on left hand button
+   - Sound should play (but you may need a MIDI box plugged in externally)
+   - Slider should move along the track
+
+   Click on Devices
+   Click on CDAudio
+   Click on left hand (play) button
+   CD starts playing (plug headphones into CD to hear the sound).
+
+2. Bring up Soundrec.exe
+   - (Known bug - says cannot register as OLE server).
+   - slider in scroll bar is flashing
+   Click on File
+   Click on Open
+   - File open dialog comes up
+   Go to \NT\WINDOWS\SYSTEM
+   Select any .WAV file e.g. laughs.wav
+   - Dialog box goes away
+   - Soundrec middle button becomes un-grayed
+   Click on left hand button
+   - Sound should play
+   Alt+F4
+
+3. Bring up control panel
+   - Sound applet appears with a couple of music notes in icon
+   Click on sound icon
+   - Message appears "Assigns sounds to system events"
+   Double-click on sound icon
+   - Sounds applet comes up
+   - Two list boxes appear
+   Pick a sound from right hand box
+   - Click on Test button
+   - Sound should play
+   Alt+F4
+
+

@@ -1,0 +1,129 @@
+/* Clipboard resources */
+/*  Copyright 1985-92, Microsoft Corporation                                */
+
+#define NOKERNEL
+#define NORASTEROPS
+#define NOCOLOR
+#define NOSHOWWINDOW
+#define NOWINOFFSETS
+#define NONCMESSAGES
+#define NOKEYSTATES
+#define NOWINSTYLES
+#define NOLSTRING
+#define NOLFILEIO
+#define NODEFERWINDOWPOS
+#define NOCTLMGR
+#define NOSCROLL
+
+#define NOATOM
+#define NOGDI
+#define NOGDICAPMASKS
+#define NOMETAFILE
+#define NOMINMAX
+#define NOOPENFILE
+#define NORASTEROPS
+#define NOSCROLL
+#define NOSOUND
+#define NOSYSMETRICS
+#define NOTEXTMETRIC
+#define NOWH
+#define NODBCS
+#define NOSYSPARAMSINFO
+
+#include "windows.h"
+#include "clipbrd.h"
+
+CBICON   ICON    clipbrd.ico
+
+STRINGTABLE DISCARDABLE
+BEGIN
+     IDS_INVALIDFILENAME, "Filename is not valid.\nVerify that the filename is no longer than 8 characters, followed by a period and a CLP extension."
+     IDS_NAME,          "Clipboard Viewer"
+     IDS_ERROR,           "<Cannot display. Data in Clipboard is not valid.>"
+     IDS_BINARY,          "<Cannot display. Data in Clipboard is in binary format.>"
+     IDS_CLEAR,          "Cannot delete contents of Clipboard."
+     IDS_FMTNOTSAV,       "Not enough memory or disk space.\n\nFormats not saved."
+        IDS_DEFAULT,         "DEFAULT.CLP"
+     IDS_CANTDISPLAY,     "<Cannot display. Data in Clipboard is in an unknown format.>"
+     IDS_NOTRENDERED,     "<Not enough memory to display data.\n\nQuit one or more applications to increase available memory, and then try again.>"
+     IDS_HELPFILE,        "CLIPBRD.HLP"
+     IDS_CLEARTITLE,      "Clear Clipboard"
+     IDS_CONFIRMCLEAR,    "Clear Contents of the Clipboard?"
+     IDS_ALREADYOPEN,     "<Cannot open Clipboard.>"
+     IDS_MEMERROR,        "Not enough memory to display data.\n\nClose one or more applications to increase available memory, and then try again."
+     IDS_READFORMATERR,   "The selected file is not in the correct format for use with Clipboard Viewer.\n\nCreate a new file or open a file with the .CLP extension."
+     IDS_READOPENCLIPERR, "Cannot open this file. It is currently being used by another application.\n\nQuit the application that is using it or select a different filename."
+     IDS_OPENCAPTION,     "Open"
+     IDS_SAVECAPTION,     "Save As"
+        IDS_DEFEXTENSION,    "CLP"
+        CF_TEXT,             "&Text"
+        CF_BITMAP,           "&Bitmap"
+        CF_METAFILEPICT,     "&Picture"
+        CF_SYLK,             "&Sylk"
+        CF_DIF,              "&DIF"
+        CF_TIFF,             "T&IFF"
+        CF_OEMTEXT,          "&OEM Text"
+        CF_DIB,              "&DIB Bitmap"
+        CF_PALETTE,          "Pal&ette"
+        CF_PENDATA,          "Pe&n Data"
+        CF_RIFF,             "&RIFF"
+        CF_WAVE,             "&Wave Audio"
+        CF_OWNERDISPLAY,     "O&wner display"
+        CF_DSPTEXT,          "Disp&lay Text"
+        CF_DSPBITMAP,        "Displa&y Bitmap"
+        CF_DSPMETAFILEPICT,  "Display Pict&ure"
+        CF_UNICODETEXT,      "&Unicode Text"
+        CF_ENHMETAFILE,      "En&hanced Metafile"
+        CF_DSPENHMETAFILE,   "Display Enhanced &Metafile"
+
+/*
+ * Filter strings for use in File Open & File Save dialogs.
+ * Note: 'NT Clipboard Files' should be the first filter listed.
+ */
+    IDS_FILTERTEXT "NT Clipboard File\0*.CLP\0Win 3.1 Clipbrd\0*.CLP\0All Files\0*.*\0\0"
+END
+
+CBMENU MENU
+    BEGIN
+        POPUP "&File"
+        BEGIN
+                MENUITEM        "&Open..."      CBM_OPEN
+                MENUITEM        "Save &As..."   CBM_SAVEAS
+                MENUITEM        SEPARATOR
+                MENUITEM        "E&xit"         CBM_EXIT
+        END
+        POPUP "&Edit"
+        BEGIN
+                MENUITEM        "&Delete\tDel", CBM_CLEAR
+        END
+
+
+        POPUP "&Display"
+        BEGIN
+                MENUITEM        "&Auto",        CBM_AUTO
+                MENUITEM        SEPARATOR
+        END
+        POPUP "&Help"
+        BEGIN
+            MENUITEM "&Contents",               CBM_HELP
+            MENUITEM "&Search for Help On...",  CBM_SEARCH
+            MENUITEM "&How to Use Help",        CBM_USEHELP
+            MENUITEM SEPARATOR
+            MENUITEM "&About Clipboard Viewer...", CBM_ABOUT
+        END
+    END
+
+CBACCEL ACCELERATORS
+BEGIN
+    VK_DELETE, CBM_CLEAR, VIRTKEY
+    VK_F1, CBM_HELP, VIRTKEY
+END
+
+#include <ntverp.h>
+
+#define        VER_FILETYPE        VFT_APP
+#define        VER_FILESUBTYPE        VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Clipboard Applet"
+#define VER_INTERNALNAME_STR        "clipbrd\0"
+
+#include "common.ver"

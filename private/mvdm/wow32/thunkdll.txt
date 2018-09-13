@@ -1,0 +1,22 @@
+
+How to add a new thunk table for a new 16-bit thunk DLL:
+
+ - modify wow16\kernel31\kernel.def and add an export similar to __MOD_KERNEL
+   rebuild the 16-bit libraries  (nmake in mvdm\wow16\lib)
+
+ - modify the Thunk macro in inc\wow.h and add another externA
+   update the MOD_ constants in wow.h, the profiling code still uses them.
+   regenerate wow.inc
+
+ - update kernel31\kdata.asm and add another MOD_ variable
+
+ - declare and make public a new __MOD_ value for exporting  (ldboot.asm)
+
+ - create the table (.h file) for inclusion into wowtbl.c
+
+ - wowtbl.h  - add a field to the tableoffsets structure
+
+ - wowtbl.c  - #include the table into aw32WOW and update apszModNames,
+    InitThunkTableOffsets, ModFromCallID, and TableOffsetFromName
+
+ - update makefile.inc with the new dependency

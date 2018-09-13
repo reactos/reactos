@@ -1,0 +1,23 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       version.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+
+#define VER_FILEDESCRIPTION_STR     VER_FILEDESCRIPTION_STR_TRUST "Utility: stipqts"
+
+#define VER_INTERNALNAME_STR        "STRIPQTS.EXE"
+#define VER_ORIGINALFILENAME_STR    "STRIPQTS.EXE"
+
+#include <common.ver>

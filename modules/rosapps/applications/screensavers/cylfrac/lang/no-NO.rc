@@ -1,8 +1,0 @@
-LANGUAGE LANG_NORWEGIAN, SUBLANG_NEUTRAL
-
-STRINGTABLE DISCARDABLE
-BEGIN
-   IDS_DESCRIPTION "Sylindere fraktal"
-   IDS_TITLE       "Om"
-   IDS_TEXT        "Sylindere fraktal av unC0Rr.\nSpesielt for ReactOS."
-END

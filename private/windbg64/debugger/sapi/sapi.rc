@@ -1,0 +1,13 @@
+//
+//  Adapted from OAK\BIN\VERRC.TPL
+//
+#include "verstamp.h"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_LEGALCOPYRIGHT_YEARS    "1996"
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Symbol Handler"
+#define VER_INTERNALNAME_STR        "sapi\0"
+#define VER_ORIGINALFILENAME_STR    "sapi.dll\0"
+
+#include <common.ver>

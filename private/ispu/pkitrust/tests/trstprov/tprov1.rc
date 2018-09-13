@@ -1,0 +1,23 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       tprov1.rc
+//
+//--------------------------------------------------------------------------
+
+//
+// Version resources
+//
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Test Policy Provider"
+#define VER_INTERNALNAME_STR        "TPROV1.DLL"
+#define VER_ORIGINALFILENAME_STR    "TPROV1.DLL"
+
+#include <common.ver>

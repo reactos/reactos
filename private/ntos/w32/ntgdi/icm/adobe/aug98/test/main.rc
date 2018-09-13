@@ -1,0 +1,411 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "dlgs.h"
+#include "main.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+CMNDLGMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...",                    IDM_OPENFILE
+        MENUITEM "&Save",                       IDM_SAVEFILE, GRAYED
+        MENUITEM "Save &As...",                 IDM_SAVEFILEAS, GRAYED
+        MENUITEM "&Print...",                   IDM_PRINT, GRAYED
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Enter New Text...",          IDM_ENTERNEW
+        MENUITEM "&Chose Color...",             IDM_CHOOSECOLOR
+        MENUITEM "Chose &Font...",              IDM_CHOOSEFONT
+        MENUITEM "&Find Text...",               IDM_FINDTEXT
+        MENUITEM "&Replace Text...",            IDM_REPLACETEXT
+        MENUITEM SEPARATOR
+        MENUITEM "&Standard",                   IDM_STANDARD
+        MENUITEM "&Using a Hook",               IDM_HOOK
+        MENUITEM "&Custom Template",            IDM_CUSTOM, CHECKED
+    END
+    POPUP "&Settings"
+    BEGIN
+        MENUITEM "CSA",                         IDM_CSA, CHECKED
+        MENUITEM "CRD",                         IDM_CRD
+        MENUITEM "PROF_CRD",                    IDM_PROFCRD
+        MENUITEM "INTENT",                      IDM_INTENT
+        MENUITEM SEPARATOR
+        MENUITEM "&Percepual",                  IDM_PERCEPUAL, CHECKED
+        MENUITEM "&Colorimrtric",               IDM_COLOR
+        MENUITEM "&saturation",                 IDM_SATURATION
+        MENUITEM SEPARATOR
+        MENUITEM "&Ascii",                      IDM_ASCII, CHECKED
+        MENUITEM "&Binary",                     IDM_BINARY
+        MENUITEM SEPARATOR
+        MENUITEM "A&uto",                       IDM_AUTO, CHECKED
+        MENUITEM "C&ieABC",                     IDM_ABC
+        MENUITEM "CieDEFG",                     IDM_DEFG
+        MENUITEM SEPARATOR
+        MENUITEM "Auto Detect",                 IDM_INP_AUTO, CHECKED
+        MENUITEM "Gray",                        IDM_INP_GRAY
+        MENUITEM "RGB",                         IDM_INP_RGB
+        MENUITEM "CMYK",                        IDM_INP_CMYK
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About CmnDlg...",            IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+ABOUTBOX DIALOG DISCARDABLE  22, 17, 144, 75
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About Generic"
+FONT 8, "System"
+BEGIN
+    CTEXT           "Adobe Printer Driver",-1,0,5,144,8
+    CTEXT           "CIEBASED DEFG Color Space",-1,0,14,144,8
+    CTEXT           "Version 1.01",-1,0,34,144,8
+    DEFPUSHBUTTON   "OK",IDOK,53,59,32,14,WS_GROUP
+END
+
+ENTERNEWBOX DIALOG DISCARDABLE  6, 18, 243, 72
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter New Text"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "Enter new text for buffer here:",-1,7,18,134,8
+    EDITTEXT        IDEDIT,6,32,237,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",IDOK,66,55,40,14
+    PUSHBUTTON      "Cancel",IDCANCEL,134,55,40,14
+END
+
+1536 DIALOG DISCARDABLE  36, 24, 264, 134
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Open"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "File &Name:",1090,6,6,76,9
+    EDITTEXT        1152,6,16,90,12,ES_AUTOHSCROLL | ES_OEMCONVERT
+    LISTBOX         1120,6,32,90,68,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Directories:",-1,110,6,92,9
+    LTEXT           "",1088,110,18,92,9,SS_NOPREFIX
+    LISTBOX         1121,110,32,92,68,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "List Files of &Type:",1089,6,104,90,9
+    COMBOBOX        1136,6,114,90,36,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:",1091,110,104,92,9
+    COMBOBOX        1137,110,114,92,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,208,6,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,208,24,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,208,46,50,14,WS_GROUP
+    CONTROL         "&Read Only",1040,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
+                    WS_TABSTOP,208,68,50,12
+    CONTROL         "&Create",1041,"Button",BS_AUTOCHECKBOX | WS_GROUP | 
+                    WS_TABSTOP,208,68,50,12
+    LTEXT           "File?",1092,208,82,50,9
+END
+
+1543 DIALOG DISCARDABLE  13, 54, 264, 147
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "&Font:",1088,6,3,40,9
+    COMBOBOX        1136,6,13,94,54,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | 
+                    CBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Font St&yle:",1089,108,3,44,9
+    COMBOBOX        1137,108,13,64,54,CBS_SIMPLE | CBS_DISABLENOSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Size:",1090,179,3,30,9
+    COMBOBOX        1138,179,13,32,54,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_SORT | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,218,6,40,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,218,23,40,14,WS_GROUP
+    PUSHBUTTON      "&Apply",1026,218,40,40,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,218,57,40,14,WS_GROUP
+    GROUPBOX        "Effects",1072,6,72,84,34,WS_GROUP
+    CONTROL         "Stri&keout",1040,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    10,82,49,10
+    CONTROL         "&Underline",1041,"Button",BS_AUTOCHECKBOX,10,94,51,10
+    LTEXT           "&Color:",1091,6,110,30,9
+    COMBOBOX        1139,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Sample",1073,98,72,160,49,WS_GROUP
+    CTEXT           "",1093,98,124,160,20,SS_NOPREFIX | NOT WS_GROUP
+    CTEXT           "AaBbYyZz",1092,104,81,149,37,SS_NOPREFIX | NOT 
+                    WS_VISIBLE
+END
+
+1540 DIALOG DISCARDABLE  30, 73, 236, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "Fi&nd What:",-1,4,8,42,8,NOT WS_GROUP
+    EDITTEXT        1152,47,7,128,12,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Match &Whole Word Only",1040,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,4,26,100,12
+    CONTROL         "Match &Case",1041,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    4,42,64,12
+    GROUPBOX        "Direction",1072,107,26,68,28
+    CONTROL         "&Up",1056,"Button",BS_AUTORADIOBUTTON | WS_GROUP | 
+                    WS_TABSTOP,111,38,20,12
+    CONTROL         "&Down",1057,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,
+                    138,38,30,12
+    DEFPUSHBUTTON   "&Find",IDOK,182,5,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,182,23,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,182,45,50,14,WS_GROUP
+END
+
+1541 DIALOG DISCARDABLE  36, 44, 230, 94
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Replace"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "Fi&nd What:",-1,4,9,48,8,NOT WS_GROUP
+    EDITTEXT        1152,54,7,114,12,ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Re&place With:",-1,4,26,48,8,NOT WS_GROUP
+    EDITTEXT        1153,54,24,114,12,ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Match &Whole Word Only",1040,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,5,46,104,12
+    CONTROL         "Match &Case",1041,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    5,62,59,12
+    DEFPUSHBUTTON   "&Find",IDOK,174,4,50,14,WS_GROUP
+    PUSHBUTTON      "&Replace",1024,174,21,50,14,WS_GROUP
+    PUSHBUTTON      "Replace &All",1025,174,38,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,174,55,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,174,75,50,14,WS_GROUP
+END
+
+1538 DIALOG DISCARDABLE  36, 52, 225, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Print"
+FONT 8, "Helv"
+BEGIN
+    LTEXT           "Printer:",1093,4,4,40,8
+    LTEXT           "System Default",1088,44,4,120,18
+    GROUPBOX        "Print Range",1072,4,27,132,67
+    RADIOBUTTON     "&All",1056,10,39,76,12,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "S&election",1057,10,52,76,12
+    RADIOBUTTON     "&Pages",1058,10,65,76,12
+    RTEXT           "&From:",1089,24,80,24,9
+    EDITTEXT        1152,52,78,26,12,ES_RIGHT
+    RTEXT           "&To:",1090,82,80,16,9
+    EDITTEXT        1153,102,78,26,12,ES_RIGHT
+    LTEXT           "Print &Quality:",1091,4,100,50,9
+    COMBOBOX        1136,55,98,81,36,CBS_DROPDOWNLIST | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Copies:",1092,153,100,29,9
+    EDITTEXT        1154,184,98,22,12,ES_RIGHT
+    CONTROL         "Print to Fi&le",1040,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,4,113,120,12
+    CONTROL         "Collate Cop&ies",1041,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,153,113,67,12
+    DEFPUSHBUTTON   "OK",IDOK,170,4,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,170,21,50,14,WS_GROUP
+    PUSHBUTTON      "&Setup...",1024,170,41,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,170,75,50,14,WS_GROUP
+END
+
+1539 DIALOG DISCARDABLE  30, 23, 287, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Print Setup"
+FONT 8, "Helv"
+BEGIN
+    GROUPBOX        "Printer",1074,4,6,224,66
+    LTEXT           "(No Default Printer)",1088,18,30,208,9
+    RADIOBUTTON     "&Default Printer",1058,8,16,218,12,WS_GROUP | 
+                    WS_TABSTOP
+    RADIOBUTTON     "Specific &Printer:",1059,8,42,218,12
+    COMBOBOX        1136,18,56,208,80,CBS_DROPDOWNLIST | WS_BORDER | 
+                    WS_VSCROLL | WS_GROUP
+    GROUPBOX        "Orientation",1072,4,74,91,46
+    ICON            "",1084,12,92,24,16
+    RADIOBUTTON     "Po&rtrait",1056,40,86,53,12,WS_GROUP | WS_TABSTOP
+    RADIOBUTTON     "&Landscape",1057,40,102,53,12
+    GROUPBOX        "Paper",1073,100,74,128,46,WS_GROUP
+    LTEXT           "Si&ze:",1089,104,88,26,9
+    COMBOBOX        1137,134,86,92,80,CBS_DROPDOWNLIST | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Source:",1090,104,104,28,9
+    COMBOBOX        1138,134,102,92,80,CBS_DROPDOWNLIST | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,232,4,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,232,20,50,14,WS_GROUP
+    PUSHBUTTON      "&Options...",1024,232,40,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",1038,232,56,50,14,WS_GROUP
+END
+
+OPENFILES DIALOG DISCARDABLE  0, 0, 274, 166
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select input and output file"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,25,133,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,132,50,14
+    EDITTEXT        IDC_EDIT1,25,28,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse",IDC_BUTTON1,195,27,51,16
+    LTEXT           "Device icc profile:",IDC_STATIC,26,14,117,8
+    EDITTEXT        IDC_EDIT2,25,64,146,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT3,25,102,146,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse",IDC_BUTTON2,195,64,51,16
+    PUSHBUTTON      "Browse",IDC_BUTTON3,195,101,51,16
+    LTEXT           "Target icc profile:",IDC_STATIC,25,50,117,8
+    LTEXT           "Output file(CSA or CRD):",IDC_STATIC,25,89,117,8
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""dlgs.h""\r\n"
+    "#include ""cmndlg.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    "OPENFILES", DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 267
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON1               ICON    DISCARDABLE     "rgb.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DIALOGFAILURE       "Creation of CD failed on call to DialogBox()"
+    IDS_STRUCTSIZE          "Invalid structure size passed to CD"
+    IDS_INITIALIZATION      "Failure initializing CD.  Possibly\n\r do to insufficient memory."
+    IDS_NOTEMPLATE          "Failure finding custom template for CD"
+    IDS_NOHINSTANCE         "Instance handle not passed to CD"
+    IDS_LOADSTRFAILURE      "Failure loading specified string"
+    IDS_FINDRESFAILURE      "Failure finding specified resource"
+    IDS_LOADRESFAILURE      "Failure loading specified resource"
+    IDS_LOCKRESFAILURE      "Failure locking specified resource"
+    IDS_MEMALLOCFAILURE     "Failure allocating memory for internal CD structure"
+    IDS_MEMLOCKFAILURE      "Failure locking memory for internal CD structure"
+    IDS_NOHOOK              "No hook function passed to CD but ENABLEHOOK\n\r was passed as a flag"
+    IDS_SETUPFAILURE        "Failure setting up resources for CD"
+    IDS_PARSEFAILURE        "Failure parsing strings in [devices]\n\rsection of WIN.INI"
+    IDS_RETDEFFAILURE       "PD_RETURNDEFAULT flag was set but either the \n\rhDevMode or hDevNames field was nonzero"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LOADDRVFAILURE      "Failure loading the printers device driver"
+    IDS_GETDEVMODEFAIL      "The printer driver failed to initialize a DEVMODE data structure"
+    IDS_INITFAILURE         "Print CD failed during initialization"
+    IDS_NODEVICES           "No printer device drivers were found"
+    IDS_NODEFAULTPRN        "No default printer was found"
+    IDS_DNDMMISMATCH        "Data in DEVMODE contradicts data in DEVNAMES"
+    IDS_CREATEICFAILURE     "Failure creating an IC"
+    IDS_PRINTERNOTFOUND     "Printer not found"
+    IDS_NOFONTS             "No fonts exist"
+    IDS_SUBCLASSFAILURE     "Failure subclassing during initialization of CD"
+    IDS_INVALIDFILENAME     "Invalide filename passed to FileOpen or FileSave"
+    IDS_BUFFERTOOSMALL      "Buffer passed to CD too small to accomodate string"
+    IDS_FILTERSTRING        "Write Files(*.WRI)|*.WRI|Word  Files(*.DOC; *.TXT)|*.doc;*.txt|"
+    IDS_UNKNOWNERROR        "Unknown error."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,56 @@
+
+!IF 0
+REGWIZ
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Brad Pedersen
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=RegWiz
+MINORCOMP=RegWizExe
+
+REGWIZ_WITH_UCODE=  -DUNICODE  -D_UNICODE
+REGWIZ_COMMON_FLAGS= -D_WINNT -DMT -DUWIN32_LEAN_AND_MEAN  -DWINDOWS -DNT -DWINNT
+
+C_DEFINES=-D_WIN32_=1 $(REGWIZ_COMMON_FLAGS)
+
+UMTYPE=windows
+TARGETNAME=RegWiz
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+INCLUDES=$(REGWIZ_INCLUDES);..\inc;
+
+!if $(FREEBUILD)
+USE_MSVCRT=1
+!else
+USE_LIBCMT=1
+DEBUG_CRTS=1
+!endif
+
+MSC_WARNING_LEVEL=/W3 /WX
+LINKER_FLAGS= -VERSION:3.0
+SOURCES=RWExe.rc \
+        RWExe_M.cpp
+UMTYPE=windows
+UMENTRY=winmain
+
+TARGETLIBS= \
+       $(BASEDIR)\public\sdk\lib\*\Ole32.lib

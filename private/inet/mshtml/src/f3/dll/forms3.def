@@ -1,0 +1,63 @@
+LIBRARY         "MSHTML"
+
+EXPORTS
+
+    //
+    // COM Exports
+    //
+
+    DllGetClassObject                   PRIVATE
+    DllCanUnloadNow                     PRIVATE
+    DllRegisterServer                   PRIVATE
+    DllUnregisterServer                 PRIVATE
+    DllInstall                          PRIVATE
+    
+    //
+    //  Shell callback for printing.
+    //
+
+    PrintHTML                           PRIVATE
+
+    //
+    // Functions used by our own tools but not by external clients.
+    //
+
+    DllEnumClassObjects                 PRIVATE
+
+    //
+    // Function used by shdocvw to do a case sensitive compare of a type library.
+    //
+    MatchExactGetIDsOfNames             PRIVATE
+
+#if DBG == 1
+    TestNileSTD                         PRIVATE
+	DeinitDynamicLibrary				PRIVATE
+	IsDynamicLibraryLoaded				PRIVATE
+#endif
+
+    ShowModalDialog                     PRIVATE
+    ShowHTMLDialog                      PRIVATE
+    ShowModelessHTMLDialog              PRIVATE
+
+    RunHTMLApplication                  PRIVATE
+
+    CreateHTMLPropertyPage              PRIVATE
+    
+    //
+    // Functions to support server side trident
+    //
+
+    SvrTri_NormalizeUA                  PRIVATE
+    SvrTri_GetDLText                    PRIVATE
+    SvrTri_ClearCache                   PRIVATE
+    
+    //
+    // Functions used for osp custom java marshaling
+    //
+    RNIGetCompatibleVersion                 PRIVATE
+
+    com_ms_osp_ospmrshl_toJava              PRIVATE
+    com_ms_osp_ospmrshl_copyToExternal      PRIVATE
+
+    com_ms_osp_ospmrshl_releaseByValExternal   PRIVATE
+    com_ms_osp_ospmrshl_classInit              PRIVATE

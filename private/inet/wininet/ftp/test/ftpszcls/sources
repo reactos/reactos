@@ -1,0 +1,17 @@
+MAJORCOMP=wininet
+MINORCOMP=ftpszcls
+
+TARGETNAME=ftpszcls
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=..\..\..\inc;..\..\..\test\inc
+
+SOURCES=ftpszcls.cxx
+
+UMAPPL=ftpszcls
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib \
+       ..\..\..\lib\*\catlib.lib

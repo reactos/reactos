@@ -1,0 +1,7 @@
+#MIDL= $(DEVTOOLS)\midl.exe
+
+$O\msaahtml.h $O\msaahtml.tlb : msaahtml.idl
+
+#   $(MIDL) wb.idl /h $O\wb.h /tlb $O\wb.tlb
+
+# ..\imgutil.rc : ..\selfreg.inf

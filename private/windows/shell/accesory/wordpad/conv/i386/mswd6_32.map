@@ -1,0 +1,1010 @@
+ mswd6_32
+
+ Timestamp is 324c3854 (Fri Sep 27 13:25:56 1996)
+
+ Preferred load address is 01400000
+
+ Start         Length     Name                   Class
+ 0001:00000000 00022230H .text                   CODE
+ 0002:00000000 00005940H .rdata                  DATA
+ 0002:00005940 000000f4H .edata                  DATA
+ 0003:00000000 00000004H .CRT$XCA                DATA
+ 0003:00000004 00000004H .CRT$XCZ                DATA
+ 0003:00000008 00000004H .CRT$XIA                DATA
+ 0003:0000000c 00000004H .CRT$XIZ                DATA
+ 0003:00000010 000012a1H .data                   DATA
+ 0003:000012b8 00003a28H .bss                    DATA
+ 0004:00000000 0000008cH .idata$2                DATA
+ 0004:0000008c 00000014H .idata$3                DATA
+ 0004:000000a0 00000140H .idata$4                DATA
+ 0004:000001e0 00000140H .idata$5                DATA
+ 0004:00000320 000004f8H .idata$6                DATA
+ 0005:00000000 000003d0H .rsrc$01                DATA
+ 0005:000003d0 00001c98H .rsrc$02                DATA
+
+  Address         Publics by Value              Rva+Base   Lib:Object
+
+ 0001:00000000       _InitConverter32@8         01401000 f initcnt.obj
+ 0001:00000027       _DllMain@12                01401027 f initcnt.obj
+ 0001:000000c0       _my_DialogBox@16           014010c0 f winlib.obj
+ 0001:0000013b       _my_GlobalLock@4           0140113b f winlib.obj
+ 0001:00000172       _my_GlobalReAlloc@12       01401172 f winlib.obj
+ 0001:000001b3       _LibOpenProfileProc@12     014011b3 f winlib.obj
+ 0001:000002b5       _LibCloseProfile@4         014012b5 f winlib.obj
+ 0001:0000032f       _LibGetProfileString@24    0140132f f winlib.obj
+ 0001:0000051f       _DisableWindows@4          0140151f f winlib.obj
+ 0001:00000561       _DisableEnumerator@8       01401561 f winlib.obj
+ 0001:000005c4       _EnableWindows@0           014015c4 f winlib.obj
+ 0001:00000607       _IszRtfFromSz@4            01401607 f ConvTabl.obj
+ 0001:00000697       _GetszFmrgszRtfSym@8       01401697 f ConvTabl.obj
+ 0001:000006ef       _InitConversion@0          014016ef f WpToWp.obj
+ 0001:00000794       _FreeConversion@0          01401794 f WpToWp.obj
+ 0001:000007cf       _HAllocAbort@4             014017cf f Heap.obj
+ 0001:00000801       _ReAllocHAbort@8           01401801 f Heap.obj
+ 0001:00000826       _HgAllocAbort@4            01401826 f Heap.obj
+ 0001:00000858       _ReAllocHgAbort@8          01401858 f Heap.obj
+ 0001:0000087d       _FMakeFileSpec@12          0140187d f winutil.obj
+ 0001:000008d0       _FTruncateFileSpec@4       014018d0 f winutil.obj
+ 0001:00000907       _FileNameSplit@16          01401907 f winutil.obj
+ 0001:00000b20       __AbortProcessing@4        01401b20 f winutil.obj
+ 0001:00000b3e       __FhOpenFs_NT@8            01401b3e f NtLoIo.obj
+ 0001:00000d0c       __CbReadFh_NT@12           01401d0c f NtLoIo.obj
+ 0001:00000d4b       __CbWriteFh_NT@12          01401d4b f NtLoIo.obj
+ 0001:00000d8a       __FGetConverterDir_NT@4    01401d8a f NtLoIo.obj
+ 0001:00000e39       __FGetTempDir_NT@4         01401e39 f NtLoIo.obj
+ 0001:00000f2a       __FGetPrefsDir_NT@4        01401f2a f NtLoIo.obj
+ 0001:00000fcb       _FOpenRootStorage_NT@12    01401fcb f convdfio.obj
+ 0001:000010a4       _FOpenStorage@16           014020a4 f convdfio.obj
+ 0001:0000114a       _FOpenStream@16            0140214a f convdfio.obj
+ 0001:000012a5       _FInitDfIO@4               014022a5 f convdfio.obj
+ 0001:00001325       _FUninitDfIO@4             01402325 f convdfio.obj
+ 0001:00001359       _FOpenDf_NT@20             01402359 f convdfio.obj
+ 0001:00001491       _FCloseDf@12               01402491 f convdfio.obj
+ 0001:0000156f       _CbReadStm@12              0140256f f convdfio.obj
+ 0001:000015ba       _CbWriteStm@12             014025ba f convdfio.obj
+ 0001:00001605       _FcSeekStm@12              01402605 f convdfio.obj
+ 0001:0000167f       _FcMaxStm@4                0140267f f convdfio.obj
+ 0001:000016bf       _CbIntToPpch@8             014026bf f ConvUtil.obj
+ 0001:00001742       _CbUnsToPpch@8             01402742 f ConvUtil.obj
+ 0001:000017a5       _CbLongToPpchR@8           014027a5 f ConvUtil.obj
+ 0001:00001828       _CbULongToPpch@8           01402828 f ConvUtil.obj
+ 0001:0000188b       _PchSkipSpacesPch@4        0140288b f ConvUtil.obj
+ 0001:000018dc       _CbDiffer                  014028dc f ConvUtil.obj
+ 0001:0000193c       _shutDown@8                0140293c f ConvUtil.obj
+ 0001:00001a35       _strcpyh@8                 01402a35 f ConvUtil.obj
+ 0001:00001a75       _NoMemAbortProc@0          01402a75 f ConvUtil.obj
+ 0001:00001a89       _FillHaszFromSzz@12        01402a89 f ConvUtil.obj
+ 0001:00001b11       _CallGetMainStream@4       01402b11 f ConvUtil.obj
+ 0001:00001b59       _FhOpenUnique_NT@12        01402b59 f convio.obj
+ 0001:00001beb       _AllocateFCB@12            01402beb f convio.obj
+ 0001:00001d74       _DisposeFCB@4              01402d74 f convio.obj
+ 0001:00001dfa       _FlushBuffer@4             01402dfa f convio.obj
+ 0001:00001ebf       _FInitConvIO_NT@8          01402ebf f convio.obj
+ 0001:00002032       _UninitConvIO_NT@0         01403032 f convio.obj
+ 0001:000020c5       _FOpenFn@20                014030c5 f convio.obj
+ 0001:000022cb       _FOpenMemoryFn@16          014032cb f convio.obj
+ 0001:0000239a       _FCloseFn@4                0140339a f convio.obj
+ 0001:00002592       _CbReadFn@12               01403592 f convio.obj
+ 0001:00002785       __CbReadFn@12              01403785 f convio.obj
+ 0001:00002854       _CbWriteFn@12              01403854 f convio.obj
+ 0001:00002a00       __CbWriteFn@12             01403a00 f convio.obj
+ 0001:00002b4d       _FcCurrFn@4                01403b4d f convio.obj
+ 0001:00002ca2       _FcMaxFn@4                 01403ca2 f convio.obj
+ 0001:00002dfa       _FcSeekFn@12               01403dfa f convio.obj
+ 0001:00002f15       __FcSeekFn@12              01403f15 f convio.obj
+ 0001:00002fd0       _FIsOpenFn@4               01403fd0 f convio.obj
+ 0001:00003014       _FOpenStmPstgFn@16         01404014 f convio.obj
+ 0001:0000310a       _StgRootFromFn@4           0140410a f convio.obj
+ 0001:0000312b       _FGetDir_Win@8             0140412b f convio.obj
+ 0001:00003156       _FCloseAllFiles@0          01404156 f convio.obj
+ 0001:0000320c       _FDeleteFn@4               0140420c f convio.obj
+ 0001:0000329e       _FCloseAndDeleteFn@4       0140429e f convio.obj
+ 0001:000032f1       _GetCbFcPch@16             014042f1 f convio.obj
+ 0001:00003343       _SetOutBuffer@20           01404343 f convio.obj
+ 0001:000033a2       _UnsetOutBuffer@4          014043a2 f convio.obj
+ 0001:000033af       __PchMacBltSz@8            014043af f convcom.obj
+ 0001:000033f1       __ICmpRgb@12               014043f1 f convcom.obj
+ 0001:00003464       __ICmpSz@8                 01404464 f convcom.obj
+ 0001:000034c4       __ICmpLpsz@8               014044c4 f convcom.obj
+ 0001:00003524       __PchFindSzCh@8            01404524 f convcom.obj
+ 0001:0000357c       __PchFindLastSzCh@8        0140457c f convcom.obj
+ 0001:000035dd       __PchBltSz@8               014045dd f convcom.obj
+ 0001:00003624       __LpchBltLpsz@8            01404624 f convcom.obj
+ 0001:0000366b       __LpchBltLpszCch@12        0140466b f convcom.obj
+ 0001:000036ca       __SzFromUl@12              014046ca f convcom.obj
+ 0001:00003762       __SzFromL@12               01404762 f convcom.obj
+ 0001:000037ad       __IFromSz@4                014047ad f convcom.obj
+ 0001:0000385e       _ConvSprintf               0140485e f convcom.obj
+ 0001:00003895       _ConvVsprintf              01404895 f convcom.obj
+ 0001:00003bc7       _CchFormatLongToSz@16      01404bc7 f convcom.obj
+ 0001:00003f01       _SetOutFn@4                01404f01 f convout.obj
+ 0001:00003f7d       _OutIszRtf@4               01404f7d f convout.obj
+ 0001:00004094       _OutIszRtfInt@8            01405094 f convout.obj
+ 0001:000041df       _OutInt@4                  014051df f convout.obj
+ 0001:000042a2       _OutIszRtfUns@8            014052a2 f convout.obj
+ 0001:000043ed       _OutIszRtfLong@8           014053ed f convout.obj
+ 0001:00004538       _OutLong@4                 01405538 f convout.obj
+ 0001:000045fb       _OutB@4                    014055fb f convout.obj
+ 0001:000046a5       _OutBHex@4                 014056a5 f convout.obj
+ 0001:00004798       _OutSz@4                   01405798 f convout.obj
+ 0001:0000489a       _OutRgb@8                  0140589a f convout.obj
+ 0001:000049db       _OutRgbHex@8               014059db f convout.obj
+ 0001:00004b6b       _OutLRgb@8                 01405b6b f convout.obj
+ 0001:00004cac       _OutLRgbHex@8              01405cac f convout.obj
+ 0001:00004e3c       __GetDateTimePdt_Nt@4      01405e3c f convtime.obj
+ 0001:00004ea3       _GetReadNames@12           01405ea3 f convmwin.obj
+ 0001:00004ee4       _GetWriteNames@12          01405ee4 f convmwin.obj
+ 0001:00004f25       _GetRWNames@16             01405f25 f convmwin.obj
+ 0001:0000502a       _FCopyRcSozToHaszz@8       0140602a f convmwin.obj
+ 0001:000050de       _CbSzz@4                   014060de f convmwin.obj
+ 0001:00005127       _RegisterApp@8             01406127 f convmwin.obj
+ 0001:000051e4       _IsFormatCorrect32@8       014061e4 f convmwin.obj
+ 0001:00005393       _ForeignToRtf32@24         01406393 f convmwin.obj
+ 0001:000056d5       _RtfToForeign32@20         014066d5 f convmwin.obj
+ 0001:000059cc       _InitRFP@0                 014069cc f convmwin.obj
+ 0001:000059f3       _GetAppVer@0               014069f3 f convmwin.obj
+ 0001:00005be4       _Error                     01406be4 f convmwin.obj
+ 0001:00005c5d       _FCopyGhszToSz@8           01406c5d f convmwin.obj
+ 0001:00005cb4       _InitLibGlobs@8            01406cb4 f convmwin.obj
+ 0001:00005d0e       _cbCopyGhToRgch@8          01406d0e f convmwin.obj
+ 0001:00005d68       _cbGetMoreRtf@8            01406d68 f convmwin.obj
+ 0001:00005ee7       _InitGlobalRtfBuff@0       01406ee7 f convmwin.obj
+ 0001:00005f04       _SendGlobalRtfBuff@4       01406f04 f convmwin.obj
+ 0001:00005f54       _WriteMoreRtf@16           01406f54 f convmwin.obj
+ 0001:00006099       _FClearStg@4               01407099 f convmwin.obj
+ 0001:00006114       _PvAllocFixedWin@4         01407114 f winheap.obj
+ 0001:00006131       _HAllocWin@4               01407131 f winheap.obj
+ 0001:0000616b       _FReAllocHWin@8            0140716b f winheap.obj
+ 0001:000061b3       _FreeHWin@4                014071b3 f winheap.obj
+ 0001:000061df       _FreePHWin@4               014071df f winheap.obj
+ 0001:0000621a       _HgAllocWin@4              0140721a f winheap.obj
+ 0001:00006254       _FReAllocHgWin@8           01407254 f winheap.obj
+ 0001:0000629c       _LpvLockHgWin@4            0140729c f winheap.obj
+ 0001:000062b7       _UnlockHgWin@4             014072b7 f winheap.obj
+ 0001:000062cd       _FreeHgWin@4               014072cd f winheap.obj
+ 0001:000062ed       __FIsDirSz_Win@4           014072ed f convwin.obj
+ 0001:000063e7       _PwcsFromSz@4              014073e7 f convwin.obj
+ 0001:00006417       _ConvertForeigntoRTFWWord@0 01407417 f WwRtf.obj
+ 0001:0000694c       _RtfVersion@0              0140794c f WwRtf.obj
+ 0001:00006ae6       _Cleanup@0                 01407ae6 f WwRtf.obj
+ 0001:00006b31       _CleanupRiblHandles@0      01407b31 f WwRtf.obj
+ 0001:00006b4e       _DwFromHexSz@4             01407b4e f WwRtf.obj
+ 0001:00006ca8       _RtfOut@4                  01407ca8 f WwRtfIn.obj
+ 0001:00007449       _CchOutputPlxText@28       01408449 f WwRtfIn.obj
+ 0001:00008a88       _FEmitPic@8                01409a88 f WwRtfIn.obj
+ 0001:00008ced       _OutputHdd@8               01409ced f WwRtfIn.obj
+ 0001:00009095       _EmitTemplate@0            0140a095 f WwRtfIn.obj
+ 0001:00009229       _EmitDopRtfFromSep@8       0140a229 f WwRtfIn.obj
+ 0001:000092c0       _EmitDatafield@8           0140a2c0 f WwRtfIn.obj
+ 0001:000093f4       _FEmptyRc@4                0140a3f4 f WwRtfIn.obj
+ 0001:0000943d       _GetSzFontForIftc@8        0140a43d f WwRtfIn.obj
+ 0001:00009522       _GenField@4                0140a522 f WwRtfIn.obj
+ 0001:00009568       _StartField@0              0140a568 f WwRtfIn.obj
+ 0001:000095a3       _FinishField@0             0140a5a3 f WwRtfIn.obj
+ 0001:000095d4       _InitMpchrcidSpec@0        0140a5d4 f WwRtfIn.obj
+ 0001:000096bf       _FFakeWmfPict@12           0140a6bf f WwRtfIn.obj
+ 0001:00009770       _PropToRtf@12              0140a770 f WwRtfOu.obj
+ 0001:000099cf       _FPropToRtfSpec@12         0140a9cf f WwRtfOu.obj
+ 0001:0000c3b5       _GetRtfBrcsForItc@12       0140d3b5 f WwRtfOu.obj
+ 0001:0000c5d7       _InsFromNfc@4              0140d5d7 f WwRtfOu.obj
+ 0001:0000c5f5       _ColorTableToRTF@0         0140d5f5 f WRInit.obj
+ 0001:0000c6f9       _FontTableToRTF@8          0140d6f9 f WRInit.obj
+ 0001:0000c956       _StyleCodeInfoToRTF@8      0140d956 f WRInit.obj
+ 0001:0000cd68       _RevTableToRtf@8           0140dd68 f WRInit.obj
+ 0001:0000ce7c       _InfoToRtf@8               0140de7c f WRInit.obj
+ 0001:0000d334       _ReadInputPlxs@4           0140e334 f WRInit.obj
+ 0001:0000d5da       _CleanupPlxInfoHandles@0   0140e5da f WRInit.obj
+ 0001:0000d669       _EmitLongInfo@8            0140e669 f WRInit.obj
+ 0001:0000d691       _EmitDttmInfo@8            0140e691 f WRInit.obj
+ 0001:0000d6ce       _EmitDttmFormat@4          0140e6ce f WRInit.obj
+ 0001:0000d7d1       _EmitColorInfo@12          0140e7d1 f WRInit.obj
+ 0001:0000d80f       _EmitFontInfo@8            0140e80f f WRInit.obj
+ 0001:0000d9ed       _ReadClx@4                 0140e9ed f WRInit.obj
+ 0001:0000e671       _IReadRgCpUntil@8          0140f671 f WRInit.obj
+ 0001:0000e70d       _ReadBtePlx@12             0140f70d f WRInit.obj
+ 0001:0000e7de       _ReadSepx@4                0140f7de f WRInit.obj
+ 0001:0000e8b5       _GetAnmLpchText@16         0140f8b5 f wrlist.obj
+ 0001:0000ea4b       _OutFormatUlNfc@8          0140fa4b f wrlist.obj
+ 0001:0000ef8b       _DumpPnProps@8             0140ff8b f wrlist.obj
+ 0001:0000efb9       _ResetRgpnacc@8            0140ffb9 f wrlist.obj
+ 0001:0000f025       _HrgpnaccSaveAndClear@0    01410025 f wrlist.obj
+ 0001:0000f0d7       _RestoreHrgpnacc@4         014100d7 f wrlist.obj
+ 0001:0000f129       _OutputParaNumbering@8     01410129 f wrlist.obj
+ 0001:0000f7a4       _ApplyPnProps@8            014107a4 f wrlist.obj
+ 0001:0000f940       _EmitFld@28                01410940 f wrfield.obj
+ 0001:0001002a       _FSkipFldCh@4              0141102a f wrfield.obj
+ 0001:000107cc       _FGetFldr@16               014117cc f wrfield.obj
+ 0001:00010919       _ParseFld@20               01411919 f wrfield.obj
+ 0001:00010b58       _XlatChrFmt@0              01411b58 f wrfield.obj
+ 0001:00010d48       _XlatFldPic@8              01411d48 f wrfield.obj
+ 0001:000115d1       _EmitSubscriberData@8      014125d1 f wrfield.obj
+ 0001:000117de       _EmitSpecFld@8             014127de f wrfield.obj
+ 0001:000118a6       _InitBkmk@0                014128a6 f wrbkmk.obj
+ 0001:00011c82       _DumpBkmks@8               01412c82 f wrbkmk.obj
+ 0001:0001222d       _DumpAllBkmks@0            0141322d f wrbkmk.obj
+ 0001:00012276       _InitAtnBkmk@0             01413276 f wrbkmk.obj
+ 0001:0001242c       _DumpAtnBkmks@8            0141342c f wrbkmk.obj
+ 0001:0001261f       _DumpAllAtnBkmks@0         0141361f f wrbkmk.obj
+ 0001:00012668       _FreeBkmk@0                01413668 f wrbkmk.obj
+ 0001:000126bd       _ReadPlx@16                014136bd f wrclx.obj
+ 0001:00012824       _ReadSubdocPlx@12          01413824 f wrclx.obj
+ 0001:000128c1       _AdvancePiece@8            014138c1 f wrclx.obj
+ 0001:0001298a       _AdvancePlxIndex@4         0141398a f wrclx.obj
+ 0001:000129b8       _CbReadInPlxInfo@4         014139b8 f wrclx.obj
+ 0001:00012ba1       _GetCurPlx@12              01413ba1 f wrclx.obj
+ 0001:00012bd0       _RestorePlx@8              01413bd0 f wrclx.obj
+ 0001:00012c72       _SavePlx@8                 01413c72 f wrclx.obj
+ 0001:00012d4c       _SavePlxGeneric@8          01413d4c f wrclx.obj
+ 0001:00012dfa       _RestorePlxGeneric@8       01413dfa f wrclx.obj
+ 0001:00012eb5       _CpCurPlxInfoCp@4          01413eb5 f wrclx.obj
+ 0001:00012ed8       _CpNextPlxInfoCp@4         01413ed8 f wrclx.obj
+ 0001:00012f3a       _GetCurPcd@8               01413f3a f wrclx.obj
+ 0001:00012fac       _ApplyClxGrpprl@8          01413fac f wrclx.obj
+ 0001:000130b8       _GetNextChp@12             014140b8 f wrfile.obj
+ 0001:000131ff       _GetNextPap@20             014141ff f wrfile.obj
+ 0001:000137e5       _GetNextSep@8              014147e5 f wrfile.obj
+ 0001:00013a6b       _GetNextFtn@0              01414a6b f wrfile.obj
+ 0001:00013ab5       _GetNextEdn@0              01414ab5 f wrfile.obj
+ 0001:00013b01       _GetNextAtn@0              01414b01 f wrfile.obj
+ 0001:00013b48       _ReadFkp@8                 01414b48 f wrfile.obj
+ 0001:00013bb4       _GetNextRef@24             01414bb4 f wrfile.obj
+ 0001:00013eb3       _FFindNextEndPar@16        01414eb3 f wrfile.obj
+ 0001:000140c2       _ChFindTermInPiece@16      014150c2 f wrfile.obj
+ 0001:0001426b       _LoadandIndexFkp@12        0141526b f wrfile.obj
+ 0001:00014416       _ApplyCurFkpProps@12       01415416 f wrfile.obj
+ 0001:000145de       _GrpprlToProp@16           014155de f wrprops.obj
+ 0001:000149a9       _DoSpecActn@16             014159a9 f wrprops.obj
+ 0001:0001669f       _AddTabToPap@12            0141769f f wrprops.obj
+ 0001:000167a7       _DelTabsInPap@12           014177a7 f wrprops.obj
+ 0001:000168ca       _FindIrgdxaTab@12          014178ca f wrprops.obj
+ 0001:000169a9       _SprmFromOldSprm@8         014179a9 f wrprops.obj
+ 0001:00016a82       _MacSwapObjHeader          01417a82 f ole.obj
+ 0001:00016a8d       _AllocOLF@8                01417a8d f ole.obj
+ 0001:00016be7       _FSkipOleFldCh@8           01417be7 f ole.obj
+ 0001:00017089       _EmitOleFldToRtf@20        01418089 f ole.obj
+ 0001:0001775b       _FileBytesToHexRtf@12      0141875b f ole.obj
+ 0001:000177f6       _StartRtfGroup@8           014187f6 f ole.obj
+ 0001:00017825       _EndRtfGroup@0             01418825 f ole.obj
+ 0001:00017837       _GetObjInfo@8              01418837 f ole.obj
+ 0001:000178bf       _HgMFPGetObjMeta@8         014188bf f ole.obj
+ 0001:00017e5d       _HgMFPGetFcMeta@8          01418e5d f ole.obj
+ 0001:0001805a       _OutPictGroup@4            0141905a f ole.obj
+ 0001:00018137       _FreeHgMFP@4               01419137 f ole.obj
+ 0001:00018185       _InitOleStream@0           01419185 f ole.obj
+ 0001:00018242       _FreeOleStream@0           01419242 f ole.obj
+ 0001:0001826d       _LcbOleGet@12              0141926d f ole.obj
+ 0001:00018282       _LcbOlePut@12              01419282 f ole.obj
+ 0001:000182a2       _LcbWriteOleRtf@12         014192a2 f ole.obj
+ 0001:0001832c       _GetLcbFcHpb@16            0141932c f ole.obj
+ 0001:0001837c       _InitStandardStyleNames@0  0141937c f style.obj
+ 0001:00018675       _InitStyCache@4            01419675 f style.obj
+ 0001:000186d3       _DeinitStyCache@0          014196d3 f style.obj
+ 0001:00018748       _FIstdHasSty@4             01419748 f style.obj
+ 0001:000187c8       _AllocIstd@4               014197c8 f style.obj
+ 0001:0001881d       _ReAllocDataIstd@8         0141981d f style.obj
+ 0001:00018878       _LpstyLockIstd@4           01419878 f style.obj
+ 0001:000188b4       _UnlockIstd@4              014198b4 f style.obj
+ 0001:000188eb       _GetStyleName@8            014198eb f style.obj
+ 0001:00018987       _GetStyleUPX@12            01419987 f style.obj
+ 0001:00018a91       _BuildOneStyle@4           01419a91 f style.obj
+ 0001:00018e01       _BuildAllStyles@0          01419e01 f style.obj
+ 0001:00018ea9       _CacheStyles@8             01419ea9 f style.obj
+ 0001:00019065       _ApplyStyle@12             0141a065 f style.obj
+ 0001:0001919b       _Shdt@4                    0141a19b f shading.obj
+ 0001:00019202       _Pctx10FromShd@4           0141a202 f shading.obj
+ 0001:00019264       _Pctx10FromIpatNew@4       0141a264 f shading.obj
+ 0001:000192a2       _MapFont@4                 0141a2a2 f fontmap.obj
+ 0001:0001939a       _InitFontMapping@0         0141a39a f fontmap.obj
+ 0001:00019429       _FreeFontMapping@0         0141a429 f fontmap.obj
+ 0001:0001943f       _FInitFontCache@0          0141a43f f fontmap.obj
+ 0001:00019478       _CacheFontChs@8            0141a478 f fontmap.obj
+ 0001:0001950e       _ChsCachedForFtc@4         0141a50e f fontmap.obj
+ 0001:00019568       _FreeFontCache@0           0141a568 f fontmap.obj
+ 0001:00019593       _OpenFontMapFile@0         0141a593 f fontmap.obj
+ 0001:00019637       _ParseUserFontMap@0        0141a637 f fontmap.obj
+ 0001:00019b72       _ChNext@12                 0141ab72 f fontmap.obj
+ 0001:00019bdd       _FmcFromSz@4               0141abdd f fontmap.obj
+ 0001:00019cf2       _InitFiltVars@0            0141acf2 f wrgraph.obj
+ 0001:00019d18       _ConvertMacPictToWMF@8     0141ad18 f wrgraph.obj
+ 0001:00019d6f       _HgMFPConvertMacPictToWMF@8 0141ad6f f wrgraph.obj
+ 0001:00019e31       _TerminateImportFilters@0  0141ae31 f wrgraph.obj
+ 0001:00019f41       _EmitRTFforWMF@8           0141af41 f wrgraph.obj
+ 0001:0001a0f2       _ConvertEmbPICTtoWMF@8     0141b0f2 f wrgraph.obj
+ 0001:0001a173       _FLoadImportFilter@16      0141b173 f wrgraph.obj
+ 0001:0001a338       _FreeImportFilter@0        0141b338 f wrgraph.obj
+ 0001:0001a3a8       _FProcessIE@4              0141b3a8 f wrgraph.obj
+ 0001:0001a47a       _QD2GDI@8                  0141b47a f wrgraph.obj
+ 0001:0001a498       _GrProbDlg@16              0141b498 f wrgraph.obj
+ 0001:0001a561       _PchExtension              0141b561 f wrgraph.obj
+ 0001:0001a5bf       _CfltReadCvt@8             0141b5bf f wrgraph.obj
+ 0001:0001a9aa       _HgrpszProfileKeys         0141b9aa f wrgraph.obj
+ 0001:0001aa51       _IfltFindGrFlt@16          0141ba51 f wrgraph.obj
+ 0001:0001aa98       _IfltFromFt@12             0141ba98 f wrgraph.obj
+ 0001:0001ab81       _IfltFindFmt@16            0141bb81 f wrgraph.obj
+ 0001:0001ac39       _FReadExtFromList@8        0141bc39 f wrgraph.obj
+ 0001:0001ac97       _CchCopySzTkn@16           0141bc97 f wrgraph.obj
+ 0001:0001ad51       _PchSkipPath               0141bd51 f wrgraph.obj
+ 0001:0001ada2       _CchStripSz@4              0141bda2 f wrgraph.obj
+ 0001:0001aeb5       _OutRgchMixedCs@8          0141beb5 f xchar.obj
+ 0001:0001afac       _OutRgxch@8                0141bfac f xchar.obj
+ 0001:0001b06e       _OutXch@4                  0141c06e f xchar.obj
+ 0001:0001b0aa       _FDbcsInRgxch@8            0141c0aa f xchar.obj
+ 0001:0001b0e9       _FDbcsInMixedRgch@8        0141c0e9 f xchar.obj
+ 0001:0001b12d       _FNonLowAnsiInMixedRgch@8  0141c12d f xchar.obj
+ 0001:0001b16e       _OutSzEscapeRtf@4          0141c16e f xchar.obj
+ 0001:0001b1d2       _ConvertRTFtoForeignWWord@0 0141c1d2 f RWMain.obj
+ 0001:0001baed       _WriteTextRun@12           0141caed f RWMain.obj
+ 0001:0001bb5b       _WriteClassInfoToFn@4      0141cb5b f RWMain.obj
+ 0001:0001bbd9       _WriteFib@4                0141cbd9 f RWMain.obj
+ 0001:0001bc00       _WriteNullSummaryInfo@8    0141cc00 f RWMain.obj
+ 0001:0001bc77       _WriteNullStylesheet@8     0141cc77 f RWMain.obj
+ 0001:0001c06c       _WriteDop@12               0141d06c f RWMain.obj
+ 0001:0001c0a0       _PushRtfState@0            0141d0a0 f RWMain.obj
+ 0001:0001c16c       _PopRtfState@0             0141d16c f RWMain.obj
+ 0001:0001c216       _HandleSpecCharAct@4       0141d216 f RWMain.obj
+ 0001:0001c274       _WriteCmds@8               0141d274 f RWMain.obj
+ 0001:0001c2bb       _CbHexToBin@8              0141d2bb f RWMain.obj
+ 0001:0001c362       _InitScanner@0             0141d362 f rtfscan.obj
+ 0001:0001c38b       _ChNextRtf@0               0141d38b f rtfscan.obj
+ 0001:0001c426       _Rewind@4                  0141d426 f rtfscan.obj
+ 0001:0001c446       _GetToken@4                0141d446 f rtfscan.obj
+ 0001:0001c5b7       _GetBSObject@4             0141d5b7 f rtfscan.obj
+ 0001:0001c78f       _IFromHexPair@0            0141d78f f rtfscan.obj
+ 0001:0001c8ac       _GetDataToken@4            0141d8ac f rtfscan.obj
+ 0001:0001ca23       _GetKeywordToken@8         0141da23 f rtfscan.obj
+ 0001:0001cbf7       _LParamFromStream@0        0141dbf7 f rtfscan.obj
+ 0001:0001ccd3       _GetBinToken@8             0141dcd3 f rtfscan.obj
+ 0001:0001cd8c       _FGetRsymForIsz@8          0141dd8c f ct_rtfww.obj
+ 0001:0001ce32       _HfkplAlloc@4              0141de32 f rwfkp.obj
+ 0001:0001cf36       _AddRunOnHfkpl@20          0141df36 f rwfkp.obj
+ 0001:0001d0d1       _CfkpWriteHfkplPn@12       0141e0d1 f rwfkp.obj
+ 0001:0001d1cd       _TerminateHfkpl@8          0141e1cd f rwfkp.obj
+ 0001:0001d225       _FreeHfkpl@4               0141e225 f rwfkp.obj
+ 0001:0001d268       _InsertFcOnHfkpl@8         0141e268 f rwfkp.obj
+ 0001:0001d31b       _InitProps@0               0141e31b f rwprops.obj
+ 0001:0001d390       _PropsForNewSect@4         0141e390 f rwprops.obj
+ 0001:0001d4b6       _PropsForNewRun@4          0141e4b6 f rwprops.obj
+ 0001:0001d524       _PropsForNewPara@4         0141e524 f rwprops.obj
+ 0001:0001d5bd       _WriteProps@16             0141e5bd f rwprops.obj
+ 0001:0001d7e2       _FreeProps@0               0141e7e2 f rwprops.obj
+ 0001:0001d819       _CbGrpprlFromProp@20       0141e819 f rwprops.obj
+ 0001:0001d9ce       _ApplyPropChange@12        0141e9ce f rwprops.obj
+ 0001:0001dc7f       _PbMSpecActnProp@20        0141ec7f f rwprops.obj
+ 0001:0001e22b       _DoSpecRrbActions@20       0141f22b f rwprops.obj
+ 0001:0001e6f6       _InitFontTable@4           0141f6f6 f rwfont.obj
+ 0001:0001e72f       _AddFontToFontTable@8      0141f72f f rwfont.obj
+ 0001:0001e83f       _FinishFontTable@4         0141f83f f rwfont.obj
+ 0001:0001e887       _HplcAlloc@4               0141f887 f rwplc.obj
+ 0001:0001e94a       _AddRecAtCpOnHplc@12       0141f94a f rwplc.obj
+ 0001:0001e9f1       _TermAtCpOnHplc@8          0141f9f1 f rwplc.obj
+ 0001:0001ea61       _FGetRecForIrecOnHplc@12   0141fa61 f rwplc.obj
+ 0001:0001eae5       _FPutRecForIrecOnHplc@12   0141fae5 f rwplc.obj
+ 0001:0001eb69       _CrecForHplc@4             0141fb69 f rwplc.obj
+ 0001:0001eb87       _LcbWriteHplcFc@8          0141fb87 f rwplc.obj
+ 0001:0001ec22       _FreeHplc@4                0141fc22 f rwplc.obj
+ 0001:0001ec5e       _ExpandHplcByCrec@8        0141fc5e f rwplc.obj
+ 0001:0001ecba       _HgrAllocAbort@8           0141fcba f hgresize.obj
+ 0001:0001ed75       _FGetIrecFromHgr@12        0141fd75 f hgresize.obj
+ 0001:0001ede0       _PutIrecIntoHgr@12         0141fde0 f hgresize.obj
+ 0001:0001ee23       _IrecMacHgr@4              0141fe23 f hgresize.obj
+ 0001:0001ee42       _FreeHgr@4                 0141fe42 f hgresize.obj
+ 0001:0001ee6f       _HpvLockHgrIrec@8          0141fe6f f hgresize.obj
+ 0001:0001ef0c       _UnlockHgr@4               0141ff0c f hgresize.obj
+ 0001:0001ef39       _InitDataStream@0          0141ff39 f rwpic.obj
+ 0001:0001ef7d       _FcWriteDataStream@4       0141ff7d f rwpic.obj
+ 0001:0001f008       _TermDataStream@0          01420008 f rwpic.obj
+ 0001:0001f01a       _NewPicture@4              0142001a f rwpic.obj
+ 0001:0001f08e       _WritePictureData@8        0142008e f rwpic.obj
+ 0001:0001f0cc       _EndPicture@4              014200cc f rwpic.obj
+ 0001:0001f121       _NewObject@0               01420121 f rwpic.obj
+ 0001:0001f173       _CacheObjInfo@12           01420173 f rwpic.obj
+ 0001:0001f236       _WriteObjectInfo@4         01420236 f rwpic.obj
+ 0001:0001f600       _WriteObjectData@8         01420600 f rwpic.obj
+ 0001:0001f63e       _EndObjectData@0           0142063e f rwpic.obj
+ 0001:0001f695       _EndObject@4               01420695 f rwpic.obj
+ 0001:0001f6c6       _InitFieldPlc@0            014206c6 f rwfield.obj
+ 0001:0001f6dd       _FieldBegin@8              014206dd f rwfield.obj
+ 0001:0001f750       _FieldSeparate@4           01420750 f rwfield.obj
+ 0001:0001f7bc       _FieldEnd@4                014207bc f rwfield.obj
+ 0001:0001f828       _WriteFieldPlc@8           01420828 f rwfield.obj
+ 0001:0001f882       _InitColorTable@0          01420882 f rwcolor.obj
+ 0001:0001f8a3       _AddColorTableEntry@0      014208a3 f rwcolor.obj
+ 0001:0001fa7d       _FreeColorTable@0          01420a7d f rwcolor.obj
+ 0001:0001faa0       _StandardFib@4             01420aa0 f WwUtil.obj
+ 0001:0001fb0e       _StandardChp@4             01420b0e f WwUtil.obj
+ 0001:0001fcea       _StandardPap@8             01420cea f WwUtil.obj
+ 0001:0001fed0       _StandardPic@4             01420ed0 f WwUtil.obj
+ 0001:0001ff14       _AddTbdToPap@12            01420f14 f WwUtil.obj
+ 0001:0001ff5d       _StandardSep@8             01420f5d f WwUtil.obj
+ 0001:000202a8       _StandardDop@4             014212a8 f WwUtil.obj
+ 0001:000202de       _FParaEq@8                 014212de f WwUtil.obj
+ 0001:00020314       _CopyPap@8                 01421314 f WwUtil.obj
+ 0001:00020335       _FreePap@4                 01421335 f WwUtil.obj
+ 0001:00020342       _StandardTap@8             01421342 f WwUtil.obj
+ 0001:0002036e       _OutIszRtfSpace@4          0142136e f WwUtil.obj
+ 0001:00020397       _bltbMap@12                01421397 f WwUtil.obj
+ 0001:00020437       _InitFieldMap@0            01421437 f WwUtil.obj
+ 0001:0002084d       _CleanupFieldMap@0         0142184d f WwUtil.obj
+ 0001:0002088c       _InitMiscStr@0             0142188c f WwUtil.obj
+ 0001:00020b58       _CleanupMiscStr@0          01421b58 f WwUtil.obj
+ 0001:00020b97       _PadFnToFc@8               01421b97 f WwUtil.obj
+ 0001:00020c08       _IszFromImpVal@8           01421c08 f ct_wwrtf.obj
+ 0001:00020c51       _IszFromTlc@4              01421c51 f ct_wwrtf.obj
+ 0001:00020c73       _IszFromTjc@4              01421c73 f ct_wwrtf.obj
+ 0001:00020c95       _IszFromIbrcImpibrcisz@8   01421c95 f ct_wwrtf.obj
+ 0001:00020d09       _IszFromIhdt@4             01421d09 f ct_wwrtf.obj
+ 0001:00020d2c       _IszFromIpat@4             01421d2c f ct_wwrtf.obj
+ 0001:00020d4f       _IszFromClIpat@4           01421d4f f ct_wwrtf.obj
+ 0001:00020d73       _GetiszFmmpirrbisz@8       01421d73 f ct_wwrtf.obj
+ 0001:00020d8f       _GetrrbFmrgrrb@8           01421d8f f ct_wwrtf.obj
+ 0001:00020dae       _GetSprmPropFmSprm@8       01421dae f ct_wwrtf.obj
+ 0001:00020dca       _GetMainStream@4           01421dca f pvexp.obj
+ 0001:00020dfa       _GrfTypeFetch@0            01421dfa f pvexp.obj
+ 0001:00020e0e       _FFileRecognized32@12      01421e0e f pvexpwin.obj
+ 0001:00020fa0       __CRT_INIT@12              01421fa0 f msvcrt:crtdll.obj
+ 0001:00021110       __DllMainCRTStartup@12     01422110 f msvcrt:crtdll.obj
+ 0001:000211d0       __setjmp3                  014221d0 f msvcrt:MSVCRT.dll
+ 0001:000211d6       __initterm                 014221d6 f msvcrt:MSVCRT.dll
+ 0001:000211dc       _VerQueryValueA@16         014221dc f version:VERSION.dll
+ 0001:000211e2       _GetFileVersionInfoA@16    014221e2 f version:VERSION.dll
+ 0001:000211e8       _GetFileVersionInfoSizeA@8 014221e8 f version:VERSION.dll
+ 0001:000211f0       _CbCmNeeded                014221f0 f ChMapfpd:ChMap.obj
+ 0001:00021241       _UchMpCpgCpg               01422241 f ChMapfpd:ChMap.obj
+ 0001:000212a4       _GenCm                     014222a4 f ChMapfpd:ChMap.obj
+ 0001:00021354       _MapRguch                  01422354 f ChMapfpd:ChMap.obj
+ 0001:000213c3       _FGetOemCodePage           014223c3 f ChMapfpd:ChMap.obj
+ 0001:000213df       _FGetOemCpgNT              014223df f ChMapfpd:ChMap.obj
+ 0001:00021400       _UchMpAnsiTo437            01422400 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002141b       _UchMpAnsiTo850            0142241b f ChMapfpd:ChMpNoDs.obj
+ 0001:00021436       _UchMpAnsiTo860            01422436 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021451       _UchMpAnsiTo863            01422451 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002146c       _UchMpAnsiTo865            0142246c f ChMapfpd:ChMpNoDs.obj
+ 0001:00021487       _UchMpAnsiToMac            01422487 f ChMapfpd:ChMpNoDs.obj
+ 0001:000214a2       _UchMp850ToAnsi            014224a2 f ChMapfpd:ChMpNoDs.obj
+ 0001:000214bd       _UchMp437ToAnsi            014224bd f ChMapfpd:ChMpNoDs.obj
+ 0001:000214d8       _UchMp860ToAnsi            014224d8 f ChMapfpd:ChMpNoDs.obj
+ 0001:000214f3       _UchMp863ToAnsi            014224f3 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002150e       _UchMp865ToAnsi            0142250e f ChMapfpd:ChMpNoDs.obj
+ 0001:00021529       _UchMp437To850             01422529 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021544       _UchMp437To860             01422544 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002155f       _UchMp437To863             0142255f f ChMapfpd:ChMpNoDs.obj
+ 0001:0002157a       _UchMp437To865             0142257a f ChMapfpd:ChMpNoDs.obj
+ 0001:00021595       _UchMp850To437             01422595 f ChMapfpd:ChMpNoDs.obj
+ 0001:000215b0       _UchMp850To860             014225b0 f ChMapfpd:ChMpNoDs.obj
+ 0001:000215cb       _UchMp850To863             014225cb f ChMapfpd:ChMpNoDs.obj
+ 0001:000215e6       _UchMp850To865             014225e6 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021601       _UchMpMacTo437             01422601 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002161c       _UchMpMacTo850             0142261c f ChMapfpd:ChMpNoDs.obj
+ 0001:00021637       _UchMpMacTo860             01422637 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021652       _UchMpMacTo863             01422652 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002166d       _UchMpMacTo865             0142266d f ChMapfpd:ChMpNoDs.obj
+ 0001:00021688       _UchMpMacToAnsi            01422688 f ChMapfpd:ChMpNoDs.obj
+ 0001:000216a3       _UchMp437ToMac             014226a3 f ChMapfpd:ChMpNoDs.obj
+ 0001:000216be       _UchMp850ToMac             014226be f ChMapfpd:ChMpNoDs.obj
+ 0001:000216d9       _UchMp860ToMac             014226d9 f ChMapfpd:ChMpNoDs.obj
+ 0001:000216f4       _UchMp863ToMac             014226f4 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002170f       _UchMp865ToMac             0142270f f ChMapfpd:ChMpNoDs.obj
+ 0001:0002172a       _UchMp863To850             0142272a f ChMapfpd:ChMpNoDs.obj
+ 0001:00021745       _UchMp860To850             01422745 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021760       _UchMp865To437             01422760 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002177b       _UchMp852To1250            0142277b f ChMapfpd:ChMpNoDs.obj
+ 0001:00021796       _UchMp1250To852            01422796 f ChMapfpd:ChMpNoDs.obj
+ 0001:000217b1       _UchMp737To1253            014227b1 f ChMapfpd:ChMpNoDs.obj
+ 0001:000217cc       _UchMp1253To737            014227cc f ChMapfpd:ChMpNoDs.obj
+ 0001:000217e7       _UchMp857To1254            014227e7 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021802       _UchMp857ToMacTur          01422802 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002181d       _UchMp1254To857            0142281d f ChMapfpd:ChMpNoDs.obj
+ 0001:00021838       _UchMpMacTurTo857          01422838 f ChMapfpd:ChMpNoDs.obj
+ 0001:00021853       _UchMp866To1251            01422853 f ChMapfpd:ChMpNoDs.obj
+ 0001:0002186e       _UchMp1251To866            0142286e f ChMapfpd:ChMpNoDs.obj
+ 0001:00021889       _UchMp1254ToMacTur         01422889 f ChMapfpd:ChMpNoDs.obj
+ 0001:000218a4       _UchMpMacTurTo1254         014228a4 f ChMapfpd:ChMpNoDs.obj
+ 0001:000218bf       _ImpFindMap                014228bf f ChMapfpd:ChMpNoDs.obj
+ 0001:00021e28       _UchFromImpUch             01422e28 f ChMapfpd:ChMpNoDs.obj
+ 0002:00001c08       _rgszRtfSym                01425c08   ConvTabl.obj
+ 0002:00002698       _IID_IEnumUnknown          01426698   convdfio.obj
+ 0002:000026a8       _IID_IEnumString           014266a8   convdfio.obj
+ 0002:000026b8       _IID_IEnumMoniker          014266b8   convdfio.obj
+ 0002:000026c8       _IID_IEnumFORMATETC        014266c8   convdfio.obj
+ 0002:000026d8       _IID_IEnumOLEVERB          014266d8   convdfio.obj
+ 0002:000026e8       _IID_IEnumSTATDATA         014266e8   convdfio.obj
+ 0002:000026f8       _IID_IEnumGeneric          014266f8   convdfio.obj
+ 0002:00002708       _IID_IEnumHolder           01426708   convdfio.obj
+ 0002:00002718       _IID_IEnumCallback         01426718   convdfio.obj
+ 0002:00002728       _IID_IPersistStream        01426728   convdfio.obj
+ 0002:00002738       _IID_IPersistStorage       01426738   convdfio.obj
+ 0002:00002748       _IID_IPersistFile          01426748   convdfio.obj
+ 0002:00002758       _IID_IPersist              01426758   convdfio.obj
+ 0002:00002768       _IID_IViewObject           01426768   convdfio.obj
+ 0002:00002778       _IID_IDataObject           01426778   convdfio.obj
+ 0002:00002788       _IID_IAdviseSink           01426788   convdfio.obj
+ 0002:00002798       _IID_IDataAdviseHolder     01426798   convdfio.obj
+ 0002:000027a8       _IID_IOleAdviseHolder      014267a8   convdfio.obj
+ 0002:000027b8       _IID_IOleObject            014267b8   convdfio.obj
+ 0002:000027c8       _IID_IOleInPlaceObject     014267c8   convdfio.obj
+ 0002:000027d8       _IID_IOleWindow            014267d8   convdfio.obj
+ 0002:000027e8       _IID_IOleInPlaceUIWindow   014267e8   convdfio.obj
+ 0002:000027f8       _IID_IOleInPlaceFrame      014267f8   convdfio.obj
+ 0002:00002808       _IID_IOleInPlaceActiveObject 01426808   convdfio.obj
+ 0002:00002818       _IID_IOleClientSite        01426818   convdfio.obj
+ 0002:00002828       _IID_IOleInPlaceSite       01426828   convdfio.obj
+ 0002:00002838       _IID_IParseDisplayName     01426838   convdfio.obj
+ 0002:00002848       _IID_IOleContainer         01426848   convdfio.obj
+ 0002:00002858       _IID_IOleItemContainer     01426858   convdfio.obj
+ 0002:00002868       _IID_IOleLink              01426868   convdfio.obj
+ 0002:00002878       _IID_IOleCache             01426878   convdfio.obj
+ 0002:00002888       _IID_IOleManager           01426888   convdfio.obj
+ 0002:00002898       _IID_IOlePresObj           01426898   convdfio.obj
+ 0002:000028a8       _IID_IDropSource           014268a8   convdfio.obj
+ 0002:000028b8       _IID_IDropTarget           014268b8   convdfio.obj
+ 0002:000028c8       _IID_IDebug                014268c8   convdfio.obj
+ 0002:000028d8       _IID_IDebugStream          014268d8   convdfio.obj
+ 0002:000028e8       _IID_IAdviseSink2          014268e8   convdfio.obj
+ 0002:000028f8       _IID_IRunnableObject       014268f8   convdfio.obj
+ 0002:00002908       _IID_IViewObject2          01426908   convdfio.obj
+ 0002:00002918       _IID_IOleCache2            01426918   convdfio.obj
+ 0002:00002928       _IID_IOleCacheControl      01426928   convdfio.obj
+ 0002:00002938       _CLSID_Picture_Metafile    01426938   convdfio.obj
+ 0002:00002948       _CLSID_Picture_Dib         01426948   convdfio.obj
+ 0002:00002968       _rgbWmfFake                01426968   WwRtfIn.obj
+ 0002:00002a78       __mpnfcins                 01426a78   WwRtfOu.obj
+ 0002:00002a90       _mpRoman                   01426a90   wrlist.obj
+ 0002:00002ac8       _rgchRoman                 01426ac8   wrlist.obj
+ 0002:00002ad0       _mpnpatpct                 01426ad0   shading.obj
+ 0002:00002b08       _mpipatpct                 01426b08   shading.obj
+ 0002:00002b18       _szFltExt                  01426b18   wrgraph.obj
+ 0002:00002b20       _szPICTexp                 01426b20   wrgraph.obj
+ 0002:00002b30       _szPICTimp                 01426b30   wrgraph.obj
+ 0002:00002b40       _CLSID_WordDocument        01426b40   RWMain.obj
+ 0002:00002b50       _szCFWordDoc               01426b50   RWMain.obj
+ 0002:00002b60       _rgrsym                    01426b60   ct_rtfww.obj
+ 0002:00003038       _rgicoNew                  01427038   rwcolor.obj
+ 0002:00003050       _rgiszRtf                  01427050   ct_wwrtf.obj
+ 0002:000032e8       _mpvaliisz                 014272e8   ct_wwrtf.obj
+ 0002:00003360       _rgvalMax                  01427360   ct_wwrtf.obj
+ 0002:000033d8       _mpibrciszPap              014273d8   ct_wwrtf.obj
+ 0002:000033f0       _mpibrciszTc               014273f0   ct_wwrtf.obj
+ 0002:00003400       _mpibrciszTr               01427400   ct_wwrtf.obj
+ 0002:00003418       _mpirrbisz                 01427418   ct_wwrtf.obj
+ 0002:00003858       _rgrrb                     01427858   ct_wwrtf.obj
+ 0002:00003ed0       _mpsprmSprmProp            01427ed0   ct_wwrtf.obj
+ 0002:00004210       _szStream                  01428210   pvexp.obj
+ 0002:00004220       _szzReadClasses            01428220   pvexpwin.obj
+ 0002:00004234       _szzWriteClasses           01428234   pvexpwin.obj
+ 0002:00004238       _szzReadExts               01428238   pvexpwin.obj
+ 0002:00004244       _szzWriteExts              01428244   pvexpwin.obj
+ 0002:000042c0       _mpAnsiTo437               014282c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004340       _mpAnsiTo850               01428340   ChMapfpd:ChMpNoDs.obj
+ 0002:000043c0       _mpAnsiTo860               014283c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004440       _mpAnsiTo863               01428440   ChMapfpd:ChMpNoDs.obj
+ 0002:000044c0       _mpAnsiTo865               014284c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004540       _mpAnsiToMac               01428540   ChMapfpd:ChMpNoDs.obj
+ 0002:000045c0       _mp850ToAnsi               014285c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004640       _mp437ToAnsi               01428640   ChMapfpd:ChMpNoDs.obj
+ 0002:000046c0       _mp860ToAnsi               014286c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004740       _mp863ToAnsi               01428740   ChMapfpd:ChMpNoDs.obj
+ 0002:000047c0       _mp865ToAnsi               014287c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004840       _mp437To850                01428840   ChMapfpd:ChMpNoDs.obj
+ 0002:000048c0       _mp437To860                014288c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004940       _mp437To863                01428940   ChMapfpd:ChMpNoDs.obj
+ 0002:000049c0       _mp437To865                014289c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004a40       _mp850To437                01428a40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004ac0       _mp850To860                01428ac0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004b40       _mp850To863                01428b40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004bc0       _mp850To865                01428bc0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004c40       _mpMacTo437                01428c40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004cc0       _mpMacTo850                01428cc0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004d40       _mpMacTo860                01428d40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004dc0       _mpMacTo863                01428dc0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004e40       _mpMacTo865                01428e40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004ec0       _mpMacToAnsi               01428ec0   ChMapfpd:ChMpNoDs.obj
+ 0002:00004f40       _mp850ToMac                01428f40   ChMapfpd:ChMpNoDs.obj
+ 0002:00004fc0       _mp437ToMac                01428fc0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005040       _mp860ToMac                01429040   ChMapfpd:ChMpNoDs.obj
+ 0002:000050c0       _mp863ToMac                014290c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005140       _mp865ToMac                01429140   ChMapfpd:ChMpNoDs.obj
+ 0002:000051c0       _mp863To850                014291c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005240       _mp860To850                01429240   ChMapfpd:ChMpNoDs.obj
+ 0002:000052c0       _mp865To437                014292c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005340       _mp852To1250               01429340   ChMapfpd:ChMpNoDs.obj
+ 0002:000053c0       _mp1250To852               014293c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005440       _mp737To1253               01429440   ChMapfpd:ChMpNoDs.obj
+ 0002:000054c0       _mp1253To737               014294c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005540       _mp857To1254               01429540   ChMapfpd:ChMpNoDs.obj
+ 0002:000055c0       _mp857ToMacTur             014295c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005640       _mp1254To857               01429640   ChMapfpd:ChMpNoDs.obj
+ 0002:000056c0       _mpMacTurTo857             014296c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005740       _mp866To1251               01429740   ChMapfpd:ChMpNoDs.obj
+ 0002:000057c0       _mp1251To866               014297c0   ChMapfpd:ChMpNoDs.obj
+ 0002:00005840       _mp1254ToMacTur            01429840   ChMapfpd:ChMpNoDs.obj
+ 0002:000058c0       _mpMacTurTo1254            014298c0   ChMapfpd:ChMpNoDs.obj
+ 0003:00000000       ___xc_a                    0142a000   msvcrt:cinitexe.obj
+ 0003:00000004       ___xc_z                    0142a004   msvcrt:cinitexe.obj
+ 0003:00000008       ___xi_a                    0142a008   msvcrt:cinitexe.obj
+ 0003:0000000c       ___xi_z                    0142a00c   msvcrt:cinitexe.obj
+ 0003:00000010       _vfHeapOk                  0142a010   initcnt.obj
+ 0003:00000014       _vfInit                    0142a014   initcnt.obj
+ 0003:00000018       _szWinIni                  0142a018   winlib.obj
+ 0003:00000020       _szConvIni                 0142a020   winlib.obj
+ 0003:00000030       _szRegPath                 0142a030   winlib.obj
+ 0003:00000038       _szRegExtensions           0142a038   winlib.obj
+ 0003:00000048       _szRegName                 0142a048   winlib.obj
+ 0003:00000050       _szRegOptions              0142a050   winlib.obj
+ 0003:00000058       _szRegGraphicsFilters      0142a058   winlib.obj
+ 0003:00000070       _szRegSharedToolsGraphicsFilters 0142a070   winlib.obj
+ 0003:000000a8       _szRegSharedTools          0142a0a8   winlib.obj
+ 0003:000000c8       _szRegImport               0142a0c8   winlib.obj
+ 0003:000000d0       _szRegExport               0142a0d0   winlib.obj
+ 0003:000000e0       _mpRtfFntFamilytoFtc       0142a0e0   ConvTbl2.obj
+ 0003:00000100       _RtfFntFamily              0142a100   ConvTbl2.obj
+ 0003:00000120       _szFieldNameSEQ            0142a120   ConvTbl2.obj
+ 0003:00000128       _szFieldNameFN             0142a128   ConvTbl2.obj
+ 0003:00000138       _szFieldNamePGREF          0142a138   ConvTbl2.obj
+ 0003:00000148       _szCRLF                    0142a148   Global.obj
+ 0003:0000014c       _szNil                     0142a14c   Global.obj
+ 0003:00000150       _hszNil                    0142a150   Global.obj
+ 0003:00000154       _vinBuffer                 0142a154   Global.obj
+ 0003:00000158       _vpinBuffer                0142a158   Global.obj
+ 0003:0000015c       _vpinBufferLimit           0142a15c   Global.obj
+ 0003:00000160       _vpinBufferLim             0142a160   Global.obj
+ 0003:00000164       _vfoutBufferLocked         0142a164   Global.obj
+ 0003:00000168       _fnoStylePrompt            0142a168   Global.obj
+ 0003:0000016c       _foperateSilent            0142a16c   Global.obj
+ 0003:00000170       _foverWrite                0142a170   Global.obj
+ 0003:00000174       _fConvertMerge             0142a174   Global.obj
+ 0003:00000178       _fSSCreate                 0142a178   Global.obj
+ 0003:0000017c       _fForceMerge               0142a17c   Global.obj
+ 0003:00000180       _fSawAlias                 0142a180   Global.obj
+ 0003:00000184       _fWroteEndPara             0142a184   Global.obj
+ 0003:00000188       _fKeyCode                  0142a188   Global.obj
+ 0003:0000018c       _fEndnO                    0142a18c   Global.obj
+ 0003:00000190       _pdttm                     0142a190   Global.obj
+ 0003:00000194       _fIntlMetric               0142a194   Global.obj
+ 0003:00000198       _vfComplex                 0142a198   Global.obj
+ 0003:000001a0       _rgPicChar                 0142a1a0   Global.obj
+ 0003:000001e0       _vfNeedOleInit             0142a1e0   convdfio.obj
+ 0003:000001e8       _mpErrorOpusError          0142a1e8   ConvUtil.obj
+ 0003:000001f4       _szRTFCompare              0142a1f4   convio.obj
+ 0003:0000020c       _fSpaceOn                  0142a20c   convout.obj
+ 0003:00000210       _fnOutCur                  0142a210   convout.obj
+ 0003:00000230       _cDayMonth                 0142a230   convtime.obj
+ 0003:00000248       _host                      0142a248   convmwin.obj
+ 0003:0000025c       _cbRtfLeft                 0142a25c   convmwin.obj
+ 0003:00000260       _cbRtfInTotal              0142a260   convmwin.obj
+ 0003:00000264       _fEndOfRtf                 0142a264   convmwin.obj
+ 0003:00000268       _vjb                       0142a268   convmwin.obj
+ 0003:000002f0       _szVersion                 0142a2f0   WwRtf.obj
+ 0003:00000324       _szMrgData                 0142a324   WwRtfIn.obj
+ 0003:00000330       _vfcLastBrace              0142a330   WwRtfOu.obj
+ 0003:00000338       _rgiszTapJust              0142a338   WwRtfOu.obj
+ 0003:00000340       _rgiszClBrdr               0142a340   WwRtfOu.obj
+ 0003:00000350       _rgszOrdOnes               0142a350   wrlist.obj
+ 0003:00000378       _rgszCardOnes              0142a378   wrlist.obj
+ 0003:000003a0       _rgszOrdTeens              0142a3a0   wrlist.obj
+ 0003:000003c8       _rgszCardTeens             0142a3c8   wrlist.obj
+ 0003:000003f0       _rgszOrdTens               0142a3f0   wrlist.obj
+ 0003:00000418       _rgszCardTens              0142a418   wrlist.obj
+ 0003:0000043c       _szHundredth               0142a43c   wrlist.obj
+ 0003:00000440       _szHundred                 0142a440   wrlist.obj
+ 0003:00000444       _szThousandth              0142a444   wrlist.obj
+ 0003:00000448       _szThousand                0142a448   wrlist.obj
+ 0003:0000069c       _fDateStartQuote           0142a69c   wrfield.obj
+ 0003:000006a0       _fDateEndQuote             0142a6a0   wrfield.obj
+ 0003:000006a8       _fOleStreamInit            0142a6a8   ole.obj
+ 0003:000006b0       _szObjPool                 0142a6b0   ole.obj
+ 0003:000006c0       _szObjInfo                 0142a6c0   ole.obj
+ 0003:000006d0       _szPresMeta                0142a6d0   ole.obj
+ 0003:000006d8       _szPresPict                0142a6d8   ole.obj
+ 0003:000006e0       _szPic                     0142a6e0   ole.obj
+ 0003:000006e8       _szWordPicture             0142a6e8   ole.obj
+ 0003:000006f8       _STREAM_COPYALL            0142a6f8   ole.obj
+ 0003:00000aa8       _rgfmpDefault              0142aaa8   fontmap.obj
+ 0003:00000ca0       _qd2gdiprefs               0142aca0   wrgraph.obj
+ 0003:00000cd0       _hrgfltImp                 0142acd0   wrgraph.obj
+ 0003:00000d58       _szStiNormal               0142ad58   RWMain.obj
+ 0003:00000d60       _szStiNormalChar           0142ad60   RWMain.obj
+ 0003:00000d80       _rgfkpd                    0142ad80   rwfkp.obj
+ 0003:00000d98       _rgsprmCHP                 0142ad98   rwprops.obj
+ 0003:00000da8       _rgsprmPAP                 0142ada8   rwprops.obj
+ 0003:00000db0       _rgsprmSEP                 0142adb0   rwprops.obj
+ 0003:00000dd8       _vnCnvType                 0142add8   WwUtil.obj
+ 0003:00000de0       _mplvlonpnfmt              0142ade0   WwUtil.obj
+ 0003:0000129c       ___win32sflag              0142b29c   msvcrt:atonexit.obj
+ 0003:000012a4       _cpgDefault                0142b2a4   ChMapfpd:ChMap.obj
+ 0003:00001838       _hcmNull                   0142b838   <common>
+ 0003:0000183c       _hcmCurr                   0142b83c   <common>
+ 0003:00001840       _hcmXPlatform              0142b840   <common>
+ 0003:00001844       _hplcFld                   0142b844   <common>
+ 0003:00001848       _vfcPictureMin             0142b848   <common>
+ 0003:0000184c       _vcbObjectData             0142b84c   <common>
+ 0003:00001850       _vfDataStreamDirty         0142b850   <common>
+ 0003:00001854       _vcbPictureData            0142b854   <common>
+ 0003:00001858       _vfcObjectMin              0142b858   <common>
+ 0003:00001860       _rggr                      0142b860   <common>
+ 0003:000018a0       _rgplc                     0142b8a0   <common>
+ 0003:000018c8       _ftcMac                    0142b8c8   <common>
+ 0003:000018cc       _fcFntTblMac               0142b8cc   <common>
+ 0003:000018d0       _fcFntTblMin               0142b8d0   <common>
+ 0003:000018d4       _cbFntTbl                  0142b8d4   <common>
+ 0003:000018e0       _papSty                    0142b8e0   <common>
+ 0003:000019e8       _vpfcFixup                 0142b9e8   <common>
+ 0003:000019ec       _hfkplChp                  0142b9ec   <common>
+ 0003:000019f0       _hggrpsepx                 0142b9f0   <common>
+ 0003:000019f4       _ibsepxMac                 0142b9f4   <common>
+ 0003:000019f8       _hfkplPap                  0142b9f8   <common>
+ 0003:00001a00       _chpSty                    0142ba00   <common>
+ 0003:00001a30       _sepBase                   0142ba30   <common>
+ 0003:00001cd0       _hplcSep                   0142bcd0   <common>
+ 0003:00001cd4       _cbsepxAlloc               0142bcd4   <common>
+ 0003:00001ce0       _rgbRTFdata                0142bce0   <common>
+ 0003:000024e0       _fcSectMin                 0142c4e0   <common>
+ 0003:000024e4       _fcTextMac                 0142c4e4   <common>
+ 0003:000024e8       _fcPapMin                  0142c4e8   <common>
+ 0003:000024ec       _irsc                      0142c4ec   <common>
+ 0003:000024f0       _rgrsc                     0142c4f0   <common>
+ 0003:000026f0       _rgfarprocImp              0142c6f0   <common>
+ 0003:00002704       _hrgfmpUser                0142c704   <common>
+ 0003:00002708       _fmpdirDefault             0142c708   <common>
+ 0003:0000270c       _ifmpUserMax               0142c70c   <common>
+ 0003:00002710       _vfStylesBuilt             0142c710   <common>
+ 0003:00002714       _istdMac                   0142c714   <common>
+ 0003:00002720       _rgszStiName               0142c720   <common>
+ 0003:0000284c       _vfNullStylesheet          0142c84c   <common>
+ 0003:00002850       _hgOleStream               0142c850   <common>
+ 0003:00002854       _lpolestream               0142c854   <common>
+ 0003:00002858       _vfMacPictOnly             0142c858   <common>
+ 0003:00002860       _olestreamvtbl             0142c860   <common>
+ 0003:00002868       _vhrgbst                   0142c868   <common>
+ 0003:00002870       _vbkmkRtf                  0142c870   <common>
+ 0003:0000288c       _vhgstBkmk                 0142c88c   <common>
+ 0003:00002890       _vhatnbeAtnBkmk            0142c890   <common>
+ 0003:000028a0       _vAtnBkmkRtf               0142c8a0   <common>
+ 0003:000028bc       _fldrBegin                 0142c8bc   <common>
+ 0003:000028c0       _fldbkmref                 0142c8c0   <common>
+ 0003:000028de       _fldrEnd                   0142c8de   <common>
+ 0003:000028e0       _cpFldBegin                0142c8e0   <common>
+ 0003:000028e4       _hszData                   0142c8e4   <common>
+ 0003:000028f0       _mpchrcidSpec              0142c8f0   <common>
+ 0003:00002990       _tbs                       0142c990   <common>
+ 0003:00002994       _fEdnOnly                  0142c994   <common>
+ 0003:000029a0       _wcsName                   0142c9a0   <common>
+ 0003:00002ba0       _vghszSubset               0142cba0   <common>
+ 0003:00002ba4       _pcbBufferMac              0142cba4   <common>
+ 0003:00002ba8       _pcbBufferCurr             0142cba8   <common>
+ 0003:00002bac       _pbBufferMin               0142cbac   <common>
+ 0003:00002bb0       _pfWriting                 0142cbb0   <common>
+ 0003:00002bb4       _vgrf                      0142cbb4   <common>
+ 0003:00002bc0       _vribl                     0142cbc0   <common>
+ 0003:00003d40       _rgMiscStr                 0142dd40   <common>
+ 0003:00003ef0       _vcpHFPlxFirst             0142def0   <common>
+ 0003:00003ef8       _vpcdLast                  0142def8   <common>
+ 0003:00003f00       _pInfoFields               0142df00   <common>
+ 0003:00003f20       _vrgfldsStk                0142df20   <common>
+ 0003:00004060       _vParseFld                 0142e060   <common>
+ 0003:00004070       _PapxFkp                   0142e070   <common>
+ 0003:00004280       _vrgchFldName              0142e280   <common>
+ 0003:0000429c       _vfHadSlashFld             0142e29c   <common>
+ 0003:000042a0       _rgPlxInfo                 0142e2a0   <common>
+ 0003:000046d0       _rgchFldCharFmt            0142e6d0   <common>
+ 0003:000046f0       _fRtfToForeign             0142e6f0   <common>
+ 0003:000046f4       _hrgPlxSave                0142e6f4   <common>
+ 0003:000046f8       _vcpFtnPlxFirst            0142e6f8   <common>
+ 0003:00004700       _rgFieldMap                0142e700   <common>
+ 0003:000049a8       _fLoseResult               0142e9a8   <common>
+ 0003:000049ac       _hrgCpSave                 0142e9ac   <common>
+ 0003:000049b0       _ChpxFkp                   0142e9b0   <common>
+ 0003:00004bc0       _vichFldName               0142ebc0   <common>
+ 0003:00004bc4       _fForeignToRtf             0142ebc4   <common>
+ 0003:00004bc8       _vfldsCur                  0142ebc8   <common>
+ 0003:00004bd0       _fRtfFormatChecked         0142ebd0   <common>
+ 0003:00004bd4       _vifldsTop                 0142ebd4   <common>
+ 0003:00004bd8       _vcpHdrTxbxPlxFirst        0142ebd8   <common>
+ 0003:00004bdc       _vprebl                    0142ebdc   <common>
+ 0003:00004be0       _cEntriesCur               0142ebe0   <common>
+ 0003:00004be4       _cpSepNext                 0142ebe4   <common>
+ 0003:00004be8       _vcpTxbxPlxFirst           0142ebe8   <common>
+ 0003:00004bec       _vcpEdnPlxFirst            0142ebec   <common>
+ 0003:00004bf0       _vcpAtnPlxFirst            0142ebf0   <common>
+ 0003:00004bf4       _iFldCharFmt               0142ebf4   <common>
+ 0003:00004c00       _ObjPicInfo                0142ec00   <common>
+ 0003:00004c20       _rghWndDisabled            0142ec20   <common>
+ 0003:00004cc0       _iWnd                      0142ecc0   <common>
+ 0003:00004cc4       _vszModule                 0142ecc4   <common>
+ 0003:00004cc8       _hWndCaller                0142ecc8   <common>
+ 0003:00004ccc       _hInstance                 0142eccc   <common>
+ 0003:00004cd0       __adjust_fdiv              0142ecd0   <common>
+ 0003:00004cd4       ___onexitend               0142ecd4   <common>
+ 0003:00004cd8       ___onexitbegin             0142ecd8   <common>
+ 0003:00004cdc       __pRawDllMain              0142ecdc   <common>
+ 0004:00000000       __IMPORT_DESCRIPTOR_MSVCRT 0142f000   msvcrt:MSVCRT.dll
+ 0004:00000014       __IMPORT_DESCRIPTOR_KERNEL32 0142f014   kernel32:KERNEL32.dll
+ 0004:00000028       __IMPORT_DESCRIPTOR_USER32 0142f028   user32:USER32.dll
+ 0004:0000003c       __IMPORT_DESCRIPTOR_ADVAPI32 0142f03c   advapi32:ADVAPI32.dll
+ 0004:00000050       __IMPORT_DESCRIPTOR_VERSION 0142f050   version:VERSION.dll
+ 0004:00000064       __IMPORT_DESCRIPTOR_ole32  0142f064   ole32:ole32.dll
+ 0004:00000078       __IMPORT_DESCRIPTOR_GDI32  0142f078   gdi32:GDI32.dll
+ 0004:0000008c       __NULL_IMPORT_DESCRIPTOR   0142f08c   msvcrt:MSVCRT.dll
+ 0004:000001e0       __imp__RegQueryValueExA@24 0142f1e0   advapi32:ADVAPI32.dll
+ 0004:000001e4       __imp__RegEnumKeyExA@32    0142f1e4   advapi32:ADVAPI32.dll
+ 0004:000001e8       __imp__RegOpenKeyExA@20    0142f1e8   advapi32:ADVAPI32.dll
+ 0004:000001ec       __imp__RegCloseKey@4       0142f1ec   advapi32:ADVAPI32.dll
+ 0004:000001f0       \177ADVAPI32_NULL_THUNK_DATA 0142f1f0   advapi32:ADVAPI32.dll
+ 0004:000001f4       __imp__GetMetaFileBitsEx@12 0142f1f4   gdi32:GDI32.dll
+ 0004:000001f8       __imp__DeleteMetaFile@4    0142f1f8   gdi32:GDI32.dll
+ 0004:000001fc       __imp__SetMetaFileBitsEx@8 0142f1fc   gdi32:GDI32.dll
+ 0004:00000200       \177GDI32_NULL_THUNK_DATA  0142f200   gdi32:GDI32.dll
+ 0004:00000204       __imp__SetErrorMode@4      0142f204   kernel32:KERNEL32.dll
+ 0004:00000208       __imp__GlobalLock@4        0142f208   kernel32:KERNEL32.dll
+ 0004:0000020c       __imp__GlobalReAlloc@12    0142f20c   kernel32:KERNEL32.dll
+ 0004:00000210       __imp__GetPrivateProfileStringA@24 0142f210   kernel32:KERNEL32.dll
+ 0004:00000214       __imp__lstrlenA@4          0142f214   kernel32:KERNEL32.dll
+ 0004:00000218       __imp__GetCurrentProcess@0 0142f218   kernel32:KERNEL32.dll
+ 0004:0000021c       __imp__lstrcatA@8          0142f21c   kernel32:KERNEL32.dll
+ 0004:00000220       __imp__SetFilePointer@16   0142f220   kernel32:KERNEL32.dll
+ 0004:00000224       __imp__CreateFileA@28      0142f224   kernel32:KERNEL32.dll
+ 0004:00000228       __imp__ReadFile@20         0142f228   kernel32:KERNEL32.dll
+ 0004:0000022c       __imp__WriteFile@20        0142f22c   kernel32:KERNEL32.dll
+ 0004:00000230       __imp__GetModuleFileNameA@12 0142f230   kernel32:KERNEL32.dll
+ 0004:00000234       __imp__DeleteFileA@4       0142f234   kernel32:KERNEL32.dll
+ 0004:00000238       __imp__GetTempFileNameA@16 0142f238   kernel32:KERNEL32.dll
+ 0004:0000023c       __imp__GetTempPathA@8      0142f23c   kernel32:KERNEL32.dll
+ 0004:00000240       __imp__GetWindowsDirectoryA@8 0142f240   kernel32:KERNEL32.dll
+ 0004:00000244       __imp__lstrcmpiA@8         0142f244   kernel32:KERNEL32.dll
+ 0004:00000248       __imp__CloseHandle@4       0142f248   kernel32:KERNEL32.dll
+ 0004:0000024c       __imp__GetFileSize@8       0142f24c   kernel32:KERNEL32.dll
+ 0004:00000250       __imp__GetLocalTime@4      0142f250   kernel32:KERNEL32.dll
+ 0004:00000254       __imp__GlobalUnlock@4      0142f254   kernel32:KERNEL32.dll
+ 0004:00000258       __imp__GlobalAlloc@8       0142f258   kernel32:KERNEL32.dll
+ 0004:0000025c       __imp__LocalAlloc@8        0142f25c   kernel32:KERNEL32.dll
+ 0004:00000260       __imp__LocalReAlloc@12     0142f260   kernel32:KERNEL32.dll
+ 0004:00000264       __imp__LocalFree@4         0142f264   kernel32:KERNEL32.dll
+ 0004:00000268       __imp__GlobalFree@4        0142f268   kernel32:KERNEL32.dll
+ 0004:0000026c       __imp__GetFileAttributesA@4 0142f26c   kernel32:KERNEL32.dll
+ 0004:00000270       __imp__MultiByteToWideChar@24 0142f270   kernel32:KERNEL32.dll
+ 0004:00000274       __imp__IsDBCSLeadByte@4    0142f274   kernel32:KERNEL32.dll
+ 0004:00000278       __imp__GlobalSize@4        0142f278   kernel32:KERNEL32.dll
+ 0004:0000027c       __imp__GetProcAddress@8    0142f27c   kernel32:KERNEL32.dll
+ 0004:00000280       __imp__LoadLibraryA@4      0142f280   kernel32:KERNEL32.dll
+ 0004:00000284       __imp__FreeLibrary@4       0142f284   kernel32:KERNEL32.dll
+ 0004:00000288       __imp__GetVersion@0        0142f288   kernel32:KERNEL32.dll
+ 0004:0000028c       __imp__GetOEMCP@0          0142f28c   kernel32:KERNEL32.dll
+ 0004:00000290       \177KERNEL32_NULL_THUNK_DATA 0142f290   kernel32:KERNEL32.dll
+ 0004:00000294       __imp___adjust_fdiv        0142f294   msvcrt:MSVCRT.dll
+ 0004:00000298       __imp___initterm           0142f298   msvcrt:MSVCRT.dll
+ 0004:0000029c       __imp__longjmp             0142f29c   msvcrt:MSVCRT.dll
+ 0004:000002a0       __imp__free                0142f2a0   msvcrt:MSVCRT.dll
+ 0004:000002a4       __imp__malloc              0142f2a4   msvcrt:MSVCRT.dll
+ 0004:000002a8       __imp___setjmp3            0142f2a8   msvcrt:MSVCRT.dll
+ 0004:000002ac       __imp__memmove             0142f2ac   msvcrt:MSVCRT.dll
+ 0004:000002b0       \177MSVCRT_NULL_THUNK_DATA 0142f2b0   msvcrt:MSVCRT.dll
+ 0004:000002b4       __imp__OemToCharA@8        0142f2b4   user32:USER32.dll
+ 0004:000002b8       __imp__RegisterClipboardFormatA@4 0142f2b8   user32:USER32.dll
+ 0004:000002bc       __imp__LoadStringA@16      0142f2bc   user32:USER32.dll
+ 0004:000002c0       __imp__EnableWindow@8      0142f2c0   user32:USER32.dll
+ 0004:000002c4       __imp__EndDialog@8         0142f2c4   user32:USER32.dll
+ 0004:000002c8       __imp__MessageBoxA@16      0142f2c8   user32:USER32.dll
+ 0004:000002cc       __imp__IsWindowEnabled@4   0142f2cc   user32:USER32.dll
+ 0004:000002d0       __imp__DialogBoxParamA@20  0142f2d0   user32:USER32.dll
+ 0004:000002d4       __imp__GetFocus@0          0142f2d4   user32:USER32.dll
+ 0004:000002d8       __imp__EnumThreadWindows@12 0142f2d8   user32:USER32.dll
+ 0004:000002dc       __imp__SetFocus@4          0142f2dc   user32:USER32.dll
+ 0004:000002e0       \177USER32_NULL_THUNK_DATA 0142f2e0   user32:USER32.dll
+ 0004:000002e4       __imp__GetFileVersionInfoA@16 0142f2e4   version:VERSION.dll
+ 0004:000002e8       __imp__VerQueryValueA@16   0142f2e8   version:VERSION.dll
+ 0004:000002ec       __imp__GetFileVersionInfoSizeA@8 0142f2ec   version:VERSION.dll
+ 0004:000002f0       \177VERSION_NULL_THUNK_DATA 0142f2f0   version:VERSION.dll
+ 0004:000002f4       __imp__OleSave@12          0142f2f4   ole32:ole32.dll
+ 0004:000002f8       __imp__OleLoad@16          0142f2f8   ole32:ole32.dll
+ 0004:000002fc       __imp__WriteFmtUserTypeStg@12 0142f2fc   ole32:ole32.dll
+ 0004:00000300       __imp__WriteClassStg@8     0142f300   ole32:ole32.dll
+ 0004:00000304       __imp__OleConvertIStorageToOLESTREAM@8 0142f304   ole32:ole32.dll
+ 0004:00000308       __imp__OleUninitialize@0   0142f308   ole32:ole32.dll
+ 0004:0000030c       __imp__OleBuildVersion@0   0142f30c   ole32:ole32.dll
+ 0004:00000310       __imp__OleInitialize@4     0142f310   ole32:ole32.dll
+ 0004:00000314       __imp__StgOpenStorage@24   0142f314   ole32:ole32.dll
+ 0004:00000318       __imp__StgCreateDocfile@16 0142f318   ole32:ole32.dll
+ 0004:0000031c       \177ole32_NULL_THUNK_DATA  0142f31c   ole32:ole32.dll
+
+ entry point at        0001:00021110
+
+ Static symbols
+
+
+FIXUPS: 222be 52 be b9e 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+FIXUPS: 2308d 11 11 11 11 11 11 11 11 11 11 11 fffff0c2 51 38 fffdf533
+FIXUPS: 1646 fffffa90 1c 6d 41 1f cb 18 55 23 20d66 e6 1d 14 11 cb4 11
+FIXUPS: 22e7e 11 11 11 11 11 11 11 11 11 11 11 11 11 fffde932 20 e 24 6c
+FIXUPS: 195d c 14 23 13 8 16 3c 13 1c 21 4b 13 2e 18 c fffffccf 12 20 d
+FIXUPS: 1833 12 20 d fffffec4 32 46 12d2 4a 8 34 17 b 8 e 8 8 fffff4ea
+FIXUPS: 2074 a1 c2 47 72 fe 25 13 30 16 45 16 fffff932 47 f 5c 41 6a 8
+FIXUPS: 1f39 41 1ad3 22 51 b c 63 9a 14d 9c 12d d e 6d 101 4c 39 49 3e
+FIXUPS: 41f4 ed 1f 1e ffffe3ed 62 84 62 10f f 5 29 8b 2a 55d d 15 d 10
+FIXUPS: 303e 5 21 c 39 c4 33 21 35 31 3a 58 6a 65 ae 85 3e 83 89 63 10d
+FIXUPS: 37bb 22 13 d7 40 e9 2097 126 69 d8 6a ffffea3f e0 1e2 25 25 1f
+FIXUPS: 2ba5 1b b 3d a1 f 6e f 81 2a f 5c 45 3b d 21 d 31 18 11 1a 3ef3
+FIXUPS: 6ebb 40 44 38 b2 5 b ffffdf03 26 8c 3c de 3c 31 c2 28 b7 3c 31
+FIXUPS: 5461 3c 31 c2 28 96 af da 6d 98 69 d8 e1a b b b 5 b 19 19 2e 12
+FIXUPS: 68f8 42 3f 26 12 5 81 23 34 38 45 21 18 27 27 27 1d 94 74 40 88
+FIXUPS: 6dee fffff674 23 13 1d b b 15 1e 20 42 1f 3f 42 e 28 b 5 2d 27
+FIXUPS: 66a1 7 12 5 56 3a 30 10 d 23 13 27 38 fffff6c4 25 6c e 2c 1e e
+FIXUPS: 605f d9 89 4f 26 f 2d 10 d 23 13 1d b b c 1c 1f 26 c a 5 53 42
+FIXUPS: 6445 10 131a 44 12 10 dd 2d 11 17 17 8 7 7 5 5 5 27 e 16 e 27 16
+FIXUPS: 79e6 f7 10 5 5 5 5 b 1c ffffe38c 25 463e 15 2c 5 14 a 7 7 a 7 12
+FIXUPS: a5b3 a 7 7 100 24 d ffffcd98 2c b c 15 5 5 5 2e 1b 5 17 1d7 c 2988
+FIXUPS: a0fc 4a 28 7 7 a 7b 13 c 1f 24 f f f f 16 2a 35 38 7 7 a 7 53 f
+FIXUPS: a3e9 60 1b 4a 43 1a fffff6c9 15 d 8 13 10 12 3c 3e f 1c 3b 71 111
+FIXUPS: 9e9f b d 11 42 8 1a 38 27 11 32 6b e 19 a b 8 d fffff0ac 7 19 29
+FIXUPS: 91e5 7 93 1b2 50 a4 7f 25 1bf 14 32 98 10 95 28 27 7 6c 64 3f 37
+FIXUPS: 9af3 38 30 30 a 1a 1a fffff3af a b 7 d 7 7 7 7 7 7 12 c 7 7 7 7
+FIXUPS: 900c 7 f 16 7 7 7 a 12 12 7 28 7 7 77 fffff666 7 4f 12 7 7a 10
+FIXUPS: 88d3 27 8f 4c 80 88 62 24 cd 19 16 20 a 7 7 16 a 7 7 1c9 50 1a
+FIXUPS: 8f12 55 a fffff24a 7 a 7 7 12 3e 2b 16 36 cc 14 2c 1b 18 20 12
+FIXUPS: 841e b b 5 5 7f b 104 b 21 54 10f 12 7 f fffff669 5 5 5 13 19 25
+FIXUPS: 7e61 28 12 23 23 2f 5 3c 106 2b f 13 1c 4e a 7 a 7 7 a b 7 3e e
+FIXUPS: 81b4 44c3 72 1e1 a 4c 27 4c 27 1f 27 1f 1f 37 20c 19 21 6 19 12
+FIXUPS: cdcb 24 32 24 32 21 6 32 12 d4 64 ffffada4 9 38a7 91 1b 7 7 7 28f
+FIXUPS: b9dc 25 bb 16 e5 f ce f ce f d2 21f 145 12 89 9f 6 cb b3 6 6d 25
+FIXUPS: c53c 1c bd ffffec23 a 3f e 3b 21 23 a 7 88 13 7 23 a 7 88 13 7
+FIXUPS: b4c8 1e f f 48 26 1b a 7 89 14 7 1b a fffff1f8 3c 26 12 12 32 71
+FIXUPS: a998 13 c9 d 2e 12e 13 4b e7 b 43 97 6 23 4d 29 6a 42 b9 42 b0
+FIXUPS: b123 26 21 c7 3f20 b b b b b b da 44 3e 5b 27 61 27 6d 27 73 27
+FIXUPS: f5a0 27 7f 4c 13 10f 11 e b6 13 e ffffaed8 73 1e 41c1 7 7 b8 19
+FIXUPS: eaed 17 14 25 3b 2f 2f 2f 25 2f 2f 2f 3c 7d 13 7a 13 85 13 97 13
+FIXUPS: efe3 13 8b 13 8b 13 fffff3ef 1d 1d 1d 1d 1d 1d 58 18 33 d 7 23
+FIXUPS: e6b3 9 7 49 29 35 35 27 1c f c 7 48 7 f c8 12 7 83 fffff6dc c7
+FIXUPS: e18a 1e c 15 1a 4b f f 10 3d 15 10 10 12 10 12 10 10 7 18 8 17
+FIXUPS: e377 1d 2d 2d 47 41 47 47 fffff631 96 50 11 7 f ad 12 a 1f 11 7
+FIXUPS: dd49 8 c 27 7 a 10 3d 28 23 1b 7 7 1b 6b a 1d 62 28 aa fffff667
+FIXUPS: d6a9 b b b b 14 7 1f c 12 7 a 22 4e 1e 3e 130 c 5 1e 19 a 80 10
+FIXUPS: da74 38 14 1a 14 15 1e 258e 17 58 21e a b 7d b4 15 1a 8a 15 13e
+FIXUPS: 106a3 1a 8a 15 7 17 f ffffce75 7 7 b e 11 e 11 e 11 14 b 5128 7
+FIXUPS: 127cc 7 69 a 14 a 14 7 8 14 ffffd211 cf 58 2c b2 127 15 1f 15 38
+FIXUPS: fe6e 11 15 7 5b 11 90 b c 86 19cf b3 7 1dc 45 a 20 525 2ed d6 3f
+FIXUPS: 12667 12 d 7 a a 7 7 a 7 11 42 f c 7 7 a 7 11 42 f ffffec6f 7 8
+FIXUPS: 1143a d 8 8 8 7c 113 7 8 7 d d 8 8 8 11a 7 55 d 33 16 1f e 4f e
+FIXUPS: 118d9 b d0 2d fffff423 a 7 7 a 7 7 7 a 7 7 7 28 7 a 7 7 65 7 22
+FIXUPS: 10f36 27 2e c a c 61 11 1a9 c4 98 3b 2133 7 a bd 7 43 15 3b 15
+FIXUPS: 1363b 1f 1e b 18 e b ffffd436 a 20 25 20 2d 7 7 a 2a 18 18 11a
+FIXUPS: 10d68 7 a 1eee d 1e 55 c4 7 a 13e 153 b4 16 35 17 7 43 15 3b 15
+FIXUPS: 13222 27 1f 51 23 1a 1f 17 44 5d b 1d 1c d 63a 38 1b 218 17 af
+FIXUPS: 13da0 ff b 145 3b 32 24 16 17 ffffe846 23 1a 10 13 f 17 44 23 165
+FIXUPS: 12b83 48 32 1c 10 b 17 233c 24 31 fd 17 12 58 17d 8 11 28 43 2a
+FIXUPS: 1547f 22 24 62 47 2f 36 ffffe1b1 17 e c e9 18 21 b 2f 6e 2e 90
+FIXUPS: 14c16 8 23 14 7 7 7 b 7 8 a 11 55 2f 45 17 38 83 e 17 a 8 8 e b
+FIXUPS: 14e9d 4b 29 c 16 a 1c fffff82a c 12 8 b c c 66 12 43 29 1b 41 f
+FIXUPS: 14923 20 14 35 4d 2d 17 c f 6f 4c 47 2f 7a 13 b 7 7 fffff4fe 54
+FIXUPS: 14173 c 94 8 21 c 18 3e 32 c 31 47 29 146 28 1b c c 1f 1b 1b c
+FIXUPS: 1458b 88 17 99 f 1a 7a b 4b21 82 2a 1e ffffc2c2 9 334 7f 7c 10a
+FIXUPS: 15c74 68 6d 6d 12b 3d 16 16 16 a6 36 11 210 17 c 15 143b 101 ffffc8f4
+FIXUPS: 140d0 12 1e 4e76 b 15 8 8 17 17 8 1f b 39 8 2e 1a 8 1e b 3e 19
+FIXUPS: 1911f 8 5 18 15 19 8 14 22 74 b 20 b fffff951 2d 16 22 20 b 15
+FIXUPS: 18c90 8 3f 8 3a b 15 8 8 44 8 8 8 32 8 7 b 51 8 2f 48 38 1e b 15
+FIXUPS: 185d1 c af 1d c 14 5 c 33 8 19 5 47 d 32 19 14 19 11 a 14 22 8e
+FIXUPS: 18902 3b f6 4d 28 36 7c 11 35 151f 30 6c 35 ffffd90c 643 28 2b
+FIXUPS: 18147 39 2c 3a d 2c b 18 1b c 5 1e e 5 1e e 5 18 c4 18 b9 39 36
+FIXUPS: 185b5 15fb 17 2d 33 1f 33 2c 13 8 52 1d 8 b7 8 1a 3e 10 20 12 10
+FIXUPS: 19ed8 2f 2b 42 2a 8 8 92 10 3b 12 d fffff741 27 2c 8 27 15 22 1a
+FIXUPS: 198e0 18 1b 2c f 26 8 20 1d 4a 17 2f 23 15 23 25 24 d 1f d 8 27
+FIXUPS: 19b71 1d 218b 18 ffffe64f 7b 13 12 16 2a 50 b 48 2e 1b 3e 22 17
+FIXUPS: 1a5ec 29 68 3c9 1c 1f 9 df 2d 125 fffff599 fffff42b d a3 10 95
+FIXUPS: 1b6eb 24 1b d8 1a 34 14 1a 28 14 1a 28 14 1a 16 33 b b 42 1c 1e
+FIXUPS: 1ba26 d d 24 1e 10c 26 40 54 1b 47 fffff321 d 21 21 21 21 7 1a
+FIXUPS: 1b088 3a 1d 8 4d 13 b 11 44 65 2e 32 a3 16 bd 1d 25 11 13b 1d 69
+FIXUPS: 1b61a 14 24 8de 4d 8 c 8 56 53 8 c 8 19 12 7 f 118 8 ffffeb80 1b
+FIXUPS: 1ad96 16 b 67 70 30 30 30 10 24 36 12 12 12 1c57 13 26 70 13 d
+FIXUPS: 1ce19 d 12 1d 14 40 ed d 12 1d 14 40 66 23 1e 4f 91 4f 11 2e b
+FIXUPS: 1d285 2b ffffec4c 8 24 8fa 14b 11 7 6 8 25 12 6 12 6 12 f 12 6
+FIXUPS: 1ca33 6 21 15 7 5f 5 5 24 2d e d 20 3b 1b 25 f fffff620 46 12 12
+FIXUPS: 1c291 e 10 10 9 10 49 15 a f 48 2e e1 6 a f a f 18b 34 d b8 12
+FIXUPS: 1c7a6 10 20 32 10 da9 3f a 3e a9 a8 79 f 70 35 15 1a 4a 14 36 bb
+FIXUPS: 1da59 41 47 5 6b 95 22 15 4b a3 1f ffffe4bd 1a 5 5 5 25ea b b 49
+FIXUPS: 1e974 6b 253 2f5 e4 d4 1b5 120 5f 82 ffffea2d 1e ae 4f c4 57 43
+FIXUPS: 1e176 3a 3e 2c 35 e fffff158 cd 35 40 2d f22 47 1e 40 2e 40 59
+FIXUPS: 1e5c9 23 e 11 20 10 b 19 d d 30 19 d d 30 e 11 b 15 b 2d 22 c 1d
+FIXUPS: 1e7ef 123c 1d 57 31 53 31 51 e f 18 1c e b 31 b 44 17 fffffac8
+FIXUPS: 1f79c 57 d 50 e ffffeacb a c 7 c c 24 48 67 2079 2c 31 47 f 1d
+FIXUPS: 20588 4a 23 25 d 4e d 24 b fffff68c 45 21 28 25 28 3d 85 45 fffff9f6
+FIXUPS: 1f927 52 b 1d b 34 40 e43 14 fffff6d6 27 2f f b 11 12 15 1c 19
+FIXUPS: 20060 23 25 d 35 c 8 2f 118 41 37 12 38 e 3f e 3f e 3f e 1a25 14d
+FIXUPS: 21dd7 10 8 fffffe74 22 ffffee6f 9 7f3 92 45f 18 85 26e 18 85 27
+FIXUPS: 21bc0 32 ffffec99 1ab 61 fffffc38 51 25 46 1d 4f 1d 2b 7

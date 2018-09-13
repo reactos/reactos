@@ -1,0 +1,3 @@
+EXPORTS
+    EEInitializeExpr   PRIVATE
+    OSDebug4VersionCheck PRIVATE

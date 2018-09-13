@@ -1,0 +1,10 @@
+#include <verstamp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Local Transport Layer for the Debugger"
+#define VER_INTERNALNAME_STR        "tlloc.dll"
+#define VER_ORIGINALFILENAME_STR    "tlloc.dll"
+
+#include <common.ver>
+

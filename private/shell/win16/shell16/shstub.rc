@@ -1,0 +1,44 @@
+#include "shprv.h"
+#include "shell.rcv"
+
+#if 0
+
+IDB_WINDOWS BITMAP windows.bmp
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_DEBUG              "(Debug)"                     /* 32 */
+   IDS_VERSIONMSG         "Version %s %s"               /* 32 */
+   IDS_LDK                "%s KB Free"                  /* 16 */
+   IDS_PERCENTFREE        "%d%% Free"
+END
+
+
+DLG_ABOUT DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 220, 158
+CAPTION "About %s"
+FONT 8 "MS Sans Serif"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_SYSMENU | DS_3DLOOK
+BEGIN
+    CONTROL 0, IDD_ICON, "static", SS_ICON | WS_CHILD, 10, 3, 18, 16
+    CONTROL "Microsoft Windows %s", IDD_APPNAME, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 5, 120, 10
+    CONTROL "", IDD_VERSION, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 15, 100, 10
+    CONTROL "Copyright \251 1985-1994 Microsoft Corp.", -1, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 25, 145, 10
+    CONTROL "", IDD_OTHERSTUFF, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 35, 145, 20
+    CONTROL "This product is licensed to:", 9999, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 55, 145, 10
+    CONTROL "User Name goes here", IDD_USERNAME, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 65, 145, 10
+    CONTROL "Organization Name goes here", IDD_COMPANYNAME, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 75, 145, 10
+    CONTROL "", 9998, "static", SS_BLACKRECT | WS_CHILD, 52, 85, 165, 1
+
+    // the string for this control gets loaded from USER.EXE
+    CONTROL "", IDD_SERIALNUM, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 93, 165, 20
+
+    CONTROL "", 9997, "static", SS_BLACKRECT | WS_CHILD, 52, 115, 165, 1
+    CONTROL "Enhanced Mode", IDD_CONFIG, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 120, 150, 10
+    CONTROL "Physical Memory:", IDD_CONVTITLE, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 130, 70, 10
+    CONTROL "", IDD_CONVENTIONAL, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 127, 130, 74, 10
+    CONTROL "System Resources:", IDD_EMSTEXT, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 52, 140, 70, 10
+    CONTROL "", IDD_EMSFREE, "static", SS_LEFT | SS_NOPREFIX | WS_CHILD, 127, 140, 65, 10
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 177, 5, 40, 14
+END
+
+#endif

@@ -1,0 +1,24 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+!ENDIF
+
+TARGETNAME=
+TARGETPATH=obj
+TARGETTYPE=NOTARGET
+
+PRIVATE_PRF_PATH=$(BASEDIR)\private\prf
+
+SOURCES=
+
+NTTARGETFILE0=  \
+    $(PRIVATE_PRF_PATH)\browseui.prf  \
+    $(PRIVATE_PRF_PATH)\url.prf       \
+    $(PRIVATE_PRF_PATH)\urlmon.prf    \
+    $(PRIVATE_PRF_PATH)\wininet.prf
+

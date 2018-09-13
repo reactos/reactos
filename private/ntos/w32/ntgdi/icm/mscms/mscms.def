@@ -1,0 +1,78 @@
+LIBRARY mscms
+
+EXPORTS
+
+; Public ICM 2.0 API
+
+        OpenColorProfileA
+        OpenColorProfileW
+        CloseColorProfile
+        GetColorProfileFromHandle
+        IsColorProfileValid
+        CreateProfileFromLogColorSpaceA
+        CreateProfileFromLogColorSpaceW
+        IsColorProfileTagPresent
+        GetCountColorProfileElements
+        GetColorProfileElement
+        GetColorProfileElementTag
+        GetColorProfileHeader
+        SetColorProfileElementSize
+        SetColorProfileElement
+        SetColorProfileElementReference
+        SetColorProfileHeader
+        GetPS2ColorSpaceArray
+        GetPS2ColorRenderingIntent
+        GetPS2ColorRenderingDictionary
+        GetNamedProfileInfo
+        ConvertColorNameToIndex
+        ConvertIndexToColorName
+        CreateDeviceLinkProfile
+        CreateColorTransformA
+        CreateColorTransformW
+        CreateMultiProfileTransform
+        DeleteColorTransform
+        TranslateColors
+        CheckColors
+        TranslateBitmapBits
+        CheckBitmapBits
+        GetCMMInfo
+        RegisterCMMA
+        RegisterCMMW
+        UnregisterCMMA
+        UnregisterCMMW
+        SelectCMM
+        GetColorDirectoryA
+        GetColorDirectoryW
+        InstallColorProfileA
+        InstallColorProfileW
+        UninstallColorProfileA
+        UninstallColorProfileW
+        AssociateColorProfileWithDeviceA
+        AssociateColorProfileWithDeviceW
+        DisassociateColorProfileFromDeviceA
+        DisassociateColorProfileFromDeviceW
+        EnumColorProfilesA
+        EnumColorProfilesW
+        SetStandardColorSpaceProfileA
+        SetStandardColorSpaceProfileW
+        GetStandardColorSpaceProfileA
+        GetStandardColorSpaceProfileW
+
+; Internal API for Spooler
+
+        GenerateCopyFilePaths
+        SpoolerCopyFileEvent
+
+; Internal API for PostScrpt driver
+
+        InternalGetPS2CSAFromLCS
+        InternalGetPS2ColorRenderingDictionary
+        InternalGetPS2PreviewCRD
+        InternalGetPS2ColorSpaceArray
+
+; Internal API for ICMUI and GDI32
+
+        InternalGetDeviceConfig
+        InternalSetDeviceConfig
+
+

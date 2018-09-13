@@ -1,0 +1,151 @@
+/*++
+
+Copyright (c) 1990-1995,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    fileopen.dlg
+
+Abstract:
+
+    This module contains the resource descriptions for the Win32
+    file open and save as common dialogs.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include <shlobj.h>
+
+
+
+
+//
+//  Constant Declarations.
+//
+
+#define LBS_DISABLENOSCROLL   0x1000L
+
+
+
+
+//
+//  New File Open and Save As Dialogs.
+//
+
+NEWFILEOPENORD DIALOG DISCARDABLE  0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+      WS_SYSMENU | DS_CONTEXTHELP | WS_CLIPCHILDREN
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Look &in:", stc4, 7, 6, 41, 8, SS_NOTIFY
+    COMBOBOX        cmb2, 50, 3, 138, 100,
+                    CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "", stc1, 188, 2, 82, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX         lst1, 4, 20, 272, 85,
+                    LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN |
+                    WS_HSCROLL | NOT WS_VISIBLE
+    LTEXT           "File &name:", stc3, 5, 112, 36, 8, SS_NOTIFY
+    EDITTEXT        edt1, 54, 110, 155, 12, ES_AUTOHSCROLL
+    LTEXT           "Files of &type:", stc2, 5, 128, 46, 8, SS_NOTIFY
+    COMBOBOX        cmb1, 54, 126, 155, 100,
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX    "Open as &read-only", chx1, 54, 145, 74, 10, WS_TABSTOP
+    DEFPUSHBUTTON   "&Open", IDOK, 222, 110, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 222, 128, 50, 14
+    PUSHBUTTON      "&Help", pshHelp, 222, 145, 50, 14
+END
+
+
+
+
+//
+//  Old File Open and Save As Dialogs.
+//
+
+FILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File &Name:", stc3, 6, 6, 76, 9
+    EDITTEXT        edt1, 6, 16, 90, 12,
+                    ES_AUTOHSCROLL | WS_TABSTOP | ES_OEMCONVERT
+    LISTBOX         lst1, 6, 32, 90, 68, 
+                    LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | LBS_OWNERDRAWFIXED
+
+    LTEXT           "&Directories:", -1, 110, 6, 92, 9
+    LTEXT           "", stc1, 110, 18, 92, 9, SS_NOPREFIX
+    LISTBOX         lst2, 110, 32, 92, 68, 
+                    LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | LBS_OWNERDRAWFIXED
+
+    LTEXT           "List Files of &Type:", stc2, 6, 104, 90, 9
+    COMBOBOX        cmb1, 6, 114, 90, 36,
+                    CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Dri&ves:", stc4, 110, 104, 92, 9
+    COMBOBOX        cmb2, 110, 114, 92, 68,
+                    CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED |
+                    CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK", IDOK, 208, 6, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 208, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON      "&Help", pshHelp, 208, 46, 50, 14, WS_GROUP
+    AUTOCHECKBOX    "&Read Only", chx1, 208, 68, 50, 12, WS_TABSTOP | WS_GROUP
+
+    PUSHBUTTON      "Net&work...", psh14, 208, 114, 50, 14, WS_GROUP
+END
+
+
+MULTIFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File &Name:", stc3, 6, 6, 76, 10
+    EDITTEXT        edt1, 6, 16, 90, 12,
+                    ES_AUTOHSCROLL | WS_TABSTOP | ES_OEMCONVERT
+    LISTBOX         lst1, 6, 32, 90, 68,
+                    LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | LBS_EXTENDEDSEL | LBS_HASSTRINGS |
+                    LBS_OWNERDRAWFIXED
+
+    LTEXT           "&Directories:", -1, 110, 6, 92, 9
+    LTEXT           "", stc1, 110, 16, 92, 9, SS_NOPREFIX
+    LISTBOX         lst2, 110, 32, 92, 68,
+                    LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL |
+                    WS_TABSTOP | LBS_OWNERDRAWFIXED
+
+    LTEXT           "List Files of &Type:", stc2, 6, 102, 90, 9
+    COMBOBOX        cmb1, 6, 112, 90, 36,
+                    CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Dri&ves:", stc4, 110, 102, 92, 9
+    COMBOBOX        cmb2, 110, 112, 92, 68,
+                    CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED |
+                    CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+
+    DEFPUSHBUTTON   "OK", IDOK, 208, 6, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 208, 24, 50, 14, WS_GROUP
+
+    PUSHBUTTON      "&Help", pshHelp, 208, 46, 50, 14, WS_GROUP
+    AUTOCHECKBOX    "&Read Only", chx1, 208, 68, 50, 12, WS_TABSTOP | WS_GROUP
+
+    PUSHBUTTON      "Net&work...", psh14, 208, 114, 50, 14, WS_GROUP
+END
+
+

@@ -1,0 +1,15 @@
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "MicrosoftUnicode String Utility"
+#define VER_INTERNALNAME_STR        "mkuni.exe"
+#define VER_ORIGINALFILENAME_STR    "mkuni.exe"
+
+#include <common.ver>
+

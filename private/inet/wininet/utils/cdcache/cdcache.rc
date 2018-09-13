@@ -1,0 +1,184 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "CDCache.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+AUTORUN                 ICON    DISCARDABLE     "AUTORUN.ICO"
+SMALL                   ICON    DISCARDABLE     "SMALL.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+AUTORUN ACCELERATORS MOVEABLE PURE 
+BEGIN
+    VK_ESCAPE,      IDM_EXIT,               VIRTKEY 
+    VK_RETURN,      IDM_INSTALL,            VIRTKEY 
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Data
+//
+
+DLGINCLUDE RCDATA DISCARDABLE 
+BEGIN
+    "CDCache.H\0"
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Cache Container Utility"
+#define VER_INTERNALNAME_STR        "cdcache.exe"
+#define VER_ORIGINALFILENAME_STR    "cdcache.exe"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""CDCache.h""\r\n"
+    "#include ""winver.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINAPP DIALOG DISCARDABLE  0, 0, 243, 126
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Explorer CD-ROM Content"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Yes",IDM_INSTALL,63,105,50,14
+    PUSHBUTTON      "No",IDM_UNINSTALL,129,105,50,14
+    LTEXT           "The following Web Sites are available on this CD-ROM:",
+                    IDC_HEADER,7,7,229,10
+    LISTBOX         IDC_LIST,7,24,229,54,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    LBS_NOSEL | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+    LTEXT           "Would you like to use the Web Sites from this CD-ROM?",
+                    IDC_QUESTION,7,89,229,11
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MAINAPP, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_INSTALL             "Install"
+    IDM_UNINSTALL           "Uninstall"
+    IDM_SUCCESS             "Successfully installed %d of %d cache container(s)."
+    IDM_SUCCESS_REMOVE      "Successfully removed %d of %d cache container(s)."
+    IDM_HEADER              "The following Installable Cache Containers are present on this CD. Press 'Install' to install, 'Uninstall' to uninstall, 'Cancel' to exit"
+    IDM_FAILED              "Unable to install the %d cache container(s)."
+    IDM_FAILED_REMOVE       "Unable to remove the %d cache container(s)."
+    IDM_NEEDIE4WININET      "Microsoft Internet Explorer 4.0 or higher is required to run this program."
+    IDM_ERR_IE4REQFORUNINSTALL	"Microsoft Internet Explorer 4.0 or higher is required to uninstall cached content."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_EXIT                "Cancel"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_COMPANY              "Microsoft"
+    ID_INFNAME              "autorun"
+    ID_APPNAME              "Internet Explorer Cache Containers - Install"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

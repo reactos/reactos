@@ -1,0 +1,34 @@
+TO INSTALL SMAILSVR.PL AS A NT SERVICE
+------------------------------------------------------------------
+1.  Be sure the global environment variable _F3QADIR is set to your enlistment of the F3QA SLM project.
+
+2.  Copy the file SRVANY.EXE to the WINNT35\SYSTEM drive.
+
+3.  Add it as a service, with the following command:
+      INSTSRV SMAILSVR C:\WINNT35\SYSTEM\SRVANY.EXE
+
+4.  Using Services in the Control Panel, specify that the SMailSvr service starts automatically, uses the system account, and can interact with the desktop. (If you don't want to see a window or icon, leave this last option turned off)
+
+5.  Begin REGEDT32, and add a 'Parameters' key under:
+      HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\SMailSvr
+
+6.  Under this key, add the following 3 values:
+      'Application' (type REG_SZ - Fully qualified Path Name)
+       =D:\F3QA\TOOLS\X86\PERL.EXE
+      'AppParameters' (type REG_SZ - Command Line Parameters)
+       =D:\F3QA\BUILD\SMAILSVR.PL D:\MAILOUT
+      'AppDirectory' (type REG_SZ - Starting Directory)
+       =D:\MAILOUT
+
+7.  Create the following 3 directories on your machine:
+       D:\MAILOUT\SENT
+       D:\MAILOUT\PENDING
+       D:\MAILOUT\DEAD
+
+8.  The frm3bld.mmf should be stored in the D:\MAILOUT directory
+
+9.  Reboot the system to start the service if you selected automatic start, or use the follwoing commands to start and stop it manually:
+      SC start SMailSvr
+      SC stop SMailSvr
+      
+10.  If you selected "allow service to interact with desktop", you may wish to change the window properties so that it always remains small and out of your way.

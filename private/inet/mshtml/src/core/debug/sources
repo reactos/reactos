@@ -1,0 +1,53 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\debug=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=mshtmdbg
+TARGETPATH=..\..\..\$(_OBJ_DIR)
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLDEF=$(O)\f3debug.def
+DLLENTRY=_DllMainCRTStartup
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+
+USE_LIBCMT=1
+
+INCLUDES=$(COREINCLUDES)
+
+SOURCES= \
+    allocspy.cxx \
+    assert.cxx \
+    assertui.cxx \
+    dbgalloc.cxx \
+    debug.cxx \
+    debugui.cxx \
+    ffail.cxx \
+    iwatch.cxx \
+    magic.cxx \
+    meter.cxx \
+    perftags.cxx \
+    simfail.cxx \
+    view.cxx \
+    ws.cxx \
+    f3debug.rc \
+    othrthrd.cxx \
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1
+
+TARGETLIBS = \
+    $(ROOT)\src\core\misc\$(O)\objextid.obj \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+#    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\uuid.lib
+

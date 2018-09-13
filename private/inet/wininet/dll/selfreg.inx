@@ -1,0 +1,38 @@
+;
+;   This file setups the default zones registry information. 
+;
+;   Note the AddReg and DelReg keys have a maximum length of 255 characters
+;   Only one Addreg and DelReg key per header sections.
+;
+
+[Version]
+Signature="$CHICAGO$"
+
+;   We use one section each for the "Zones", "TemplatePolicies" and the "ZoneMap" keys
+;   
+
+[Reg.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=
+
+[UnReg.HKCU]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=
+
+[Reg.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+AddReg=
+
+[UnReg.HKLM]
+RequiredEngine=SETUPAPI, %EngineErrorMsg%
+DelReg=
+
+
+[Strings]
+PATH_AUTODIAL="System\CurrentControlSet\Services\Winsock\Autodial"
+PATH_INTERNET_SETTINGS="Software\Microsoft\Windows\CurrentVersion\Internet Settings"
+
+
+
+
+

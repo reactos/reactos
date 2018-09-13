@@ -1,0 +1,46 @@
+#include <windows.h>
+#include "messages.h"
+
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_APP
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "LZ Expansion Utility"
+#define VER_INTERNALNAME_STR        "expand\0"
+
+#include "common.ver"
+
+STRINGTABLE
+BEGIN
+SID_INSUFF_MEM		"Insufficient memory for buffers.\n"
+SID_NOT_A_DIR		"Destination is not a directory: %s.\n"
+SID_BAD_SWITCH		"Unrecognized switch -%c.\n"
+SID_BAD_SWITCH2		"Unrecognized switch -%s.\n"
+SID_NO_FILE_SPECS	"No files specified.\n"
+SID_NO_OVERWRITE	"No destination specified for: %s.\n"
+SID_NO_OPEN_INPUT	"Can't open input file: %s.\n"
+SID_NO_READ_INPUT	"Can't read from input file: %s.\n"
+SID_NO_OPEN_OUTPUT	"Can't open output file: %s.\n"
+SID_OUT_OF_SPACE	"Out of disk space writing output file: %s.\n"
+SID_BANNER_TEXT		"Microsoft (R) File Expansion Utility  Version " VER_PRODUCTVERSION_STR "\nCopyright (C) Microsoft Corp 1990-1999.  All rights reserved.\n\n"
+
+SID_INSTRUCTIONS	"Expands one or more compressed files.\n\nEXPAND [-r] Source Destination\nEXPAND -r Source [Destination]\nEXPAND -D Source.cab [-F:Files]\nEXPAND Source.cab -F:Files Destination\n\n  -r\t\tRename expanded files.\n  -D\t\tDisplay list of files in source.\n  Source\tSource file specification.  Wildcards may be used.\n  -F:Files\tName of files to expand from a .CAB.\n  Destination\tDestination file | path specification.\n\t\tDestination may be a directory.\n\t\tIf Source is multiple files and -r is not specified,\n\t\tDestination must be a directory.\n"
+
+SID_GEN_FAILURE		"Expanding %s to %s failed.\n"
+SID_COLLISION		"Cannot expand a file onto itself: %s.\n"
+SID_EXPANDING		"Expanding %s to %s.\n"
+SID_COPYING		"Copying %s to %s.\n"
+SID_FILE_REPORT		"%s: %ld bytes expanded to %ld bytes, %d%% increase.\n"
+SID_COPY_REPORT		"%s: %ld bytes copied.\n"
+SID_TOTAL_REPORT	"Total increase: %d files, %ld bytes expanded to %ld bytes, %d%% increase.\n"
+SID_FORMAT_ERROR	"Error in compressed input file format: %s.\n"
+SID_UNKNOWN_ALG		"Unrecognized compression scheme: %s.\n"
+SID_UNEXP_TARGET        "No destination directory expected.\n"
+SID_LISTING             "%s: %s\n"
+SID_NO_MATCHES          "%s: No files matching '%s'.\n"
+SID_TOTAL_COUNT         "%d files total.\n"
+SID_DEST_REQUIRED       "%s: Destination directory required for a multi-file CAB.\n\n"
+SID_FILESPEC_REQUIRED   "The source file contains multiple files.  The -F:filespec option is\nrequired to specify which file(s) are to be expanded.  -F:* may be\nused to expand all files.  Type EXPAND -? for more details.\n"
+
+END
+

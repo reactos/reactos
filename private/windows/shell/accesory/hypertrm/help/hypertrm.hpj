@@ -1,0 +1,16 @@
+; This file is maintained by HCW. Do not modify this file directly.
+
+[OPTIONS]
+HCW=0
+ERRORLOG=.\Hypertrm.ERR
+LCID=0x409 0x0 0x0 ;English (United States)
+REPORT=Yes
+CNT=.\Hypertrm.cnt
+HLP=.\HYPERTRM.hlp
+
+[FILES]
+.\Hyper_pr.rtf
+.\Hypertrm.rtf
+
+[MAP]
+#include ..\TDLL\Hlptable.h

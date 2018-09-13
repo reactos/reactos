@@ -1,0 +1,66 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+Revision History:
+
+!ENDIF
+
+MAJORCOMP = opengl
+MINORCOMP = scrnsave
+
+TARGETNAME = ssflwbox
+TARGETPATH = obj
+ALT_PROJECT_TARGET=Nashvile\Win95
+TARGETTYPE = UMAPPL_NOLIB
+
+LINKLIBS = \
+	$(BASEDIR)\public\sdk\lib\*\opengl32.lib\
+        $(BASEDIR)\public\sdk\lib\*\comdlg32.lib\
+        $(BASEDIR)\public\sdk\lib\*\comctl32.lib\
+        $(BASEDIR)\public\sdk\lib\*\glaux.lib\
+        $(BASEDIR)\public\sdk\lib\*\glu32.lib
+
+
+INCLUDES = \
+        ..;\
+	..\..\common;\
+        ..\..\..\toolkits\libaux
+
+SOURCES = \
+	..\ssflwbox.c\
+	..\geom.c\
+	..\ssflwbox.rc
+
+#SSDEV = 1
+!if "$(SSDEV)" == ""
+UMAPPLEXT = .scr
+!else
+C_DEFINES = $(C_DEFINES) -DSS_DEBUG -DSS_DEVELOP
+!endif
+
+UMTYPE = windows
+UMAPPL = ssflwbox
+UMLIBS= \
+        ..\..\common\win95\obj\*\sscommon.lib\
+        obj\*\geom.obj\
+        obj\*\ssflwbox.res
+
+PRECOMPILED_INCLUDE = ..\precomp.h
+PRECOMPILED_PCH = precomp.pch
+PRECOMPILED_OBJ = precomp.obj

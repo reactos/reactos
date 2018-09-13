@@ -1,0 +1,52 @@
+###############################################################################
+# webck17.per  
+#   
+# Perl script for creating webcheck download test page for Top17 workload
+#   
+# History:  
+#   07/24/97 vincentr	Created.
+#      
+# Copyright(C) 1996.  Microsoft Corporation.  All rights reserved.  
+###############################################################################
+
+$Server = "http://vincentr-iis";
+if( $ARGV[0] ne "" )
+{
+	$Server = $ARGV[0];
+}
+
+print STDOUT "<HTML>\n";
+print STDOUT "<HEAD>\n";
+print STDOUT "<TITLE>WEBCHECK17</TITLE>\n";
+print STDOUT "</HEAD>\n";
+print STDOUT "<BODY LINK=\"#0000ff\" VLINK=\"#800080\">\n";
+print STDOUT "\n";
+print STDOUT "<B><U><FONT SIZE=4><P ALIGN=\"CENTER\">WEBCHECK DOWNLOAD TEST</P></U></FONT>\n";
+print STDOUT "<FONT SIZE=2><P ALIGN=\"CENTER\">Webcrawl for Top17 Workload</P></B>\n";
+print STDOUT "<P>&nbsp;</P></FONT>\n";
+print STDOUT "<P ALIGN=\"CENTER\"><CENTER><TABLE CELLSPACING=0 BORDER=0 CELLPADDING=7 WIDTH=280>\n";
+print STDOUT "<TR><TD VALIGN=\"TOP\">\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/dummy1/default.htm\">"     . $Server . "/dummy1/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/b5/default.htm\">"         . $Server . "/b5/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Cnet/default.htm\">"       . $Server . "/Cnet/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Cnn/default.htm\">"        . $Server . "/Cnn/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Dilbert/default.htm\">"    . $Server . "/Dilbert/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Disney/default.htm\">"     . $Server . "/Disney/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Espnet/default.htm\">"     . $Server . "/Espnet/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Infoseek/default.htm\">"   . $Server . "/Infoseek/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Mindspring/default.htm\">" . $Server . "/Mindspring/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/MrShowBiz/default.htm\">"  . $Server . "/MrShowBiz/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/MsTravel/default.htm\">"   . $Server . "/MsTravel/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/NBA/default.htm\">"        . $Server . "/NBA/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/NFL/default.htm\">"        . $Server . "/NFL/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Pathfinder/default.htm\">" . $Server . "/Pathfinder/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/W3C/default.htm\">"        . $Server . "/W3C/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Web21/default.htm\">"      . $Server . "/Web21/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Holodeck/default.htm\">"   . $Server . "/Holodeck/default.htm</A>\n";
+print STDOUT "<P><A HREF=\"" . $Server . "/top17/Microsoft/default.htm\">"  . $Server . "/Microsoft/default.htm</A>\n";
+print STDOUT "<P></TD></TR></TABLE></CENTER></P>\n";
+print STDOUT "\n";
+print STDOUT "<FONT SIZE=2><P>&nbsp;</P></FONT>\n";
+print STDOUT "</BODY>\n";
+print STDOUT "</HTML>\n";
+

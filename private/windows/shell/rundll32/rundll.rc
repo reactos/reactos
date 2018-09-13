@@ -1,0 +1,30 @@
+#include "rundll.h"
+
+IDI_DEFAULT ICON rundll.ico
+
+#include "rundll.rcv"
+
+STRINGTABLE PRELOAD MOVEABLE
+BEGIN
+  IDS_UNKNOWNERROR,     "An error has occurred"
+END
+
+//
+// We need this resources only for 16-bit code.
+//
+STRINGTABLE LOADONCALL DISCARDABLE
+BEGIN
+  IDS_LOADERR+00,       "There is not enough memory to run the file %s.\n\nPlease close other windows and try again."
+  IDS_LOADERR+02,       "The file %s or one of its components could not be opened."
+  IDS_LOADERR+06,       "The file %s or one of its components cannot run."
+  IDS_LOADERR+10,       "The file %s or one of its components requires a different version of Windows."
+  IDS_LOADERR+15,       "The file %s or one of its components cannot run in standard or enhanced mode Windows."
+  IDS_LOADERR+16,       "Another instance of the file %s is already running."
+  IDS_LOADERR+17,       "An exception occurred while trying to run ""%s""\n"
+END
+
+STRINGTABLE LOADONCALL DISCARDABLE
+BEGIN
+  IDS_GETPROCADRERR,    "Error in %s\nMissing entry:%s"
+  IDS_CANTLOADDLL,      "Error loading %s\n\n%s"
+END

@@ -1,0 +1,78 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\debug\src=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+!if "$(BUILD_XMLDBG_AS_LIB)" == "1"
+TARGETNAME=xmldbg
+TARGETPATH=$(ROOT)\debug\$(_OBJ_DIR)
+TARGETTYPE=LIBRARY
+!else
+TARGETPATH=obj
+TARGETPATHLIB=obj
+TARGETNAME=msxmldbg
+TARGETTYPE=DYNLINK
+!endif
+
+!if "$(TARGETTYPE)" == "DYNLINK"
+DLLDEF=$(O)\f3debug.def
+DLLENTRY=_DllMainCRTStartup
+DLLBASE=0x65000000
+BUILD_DBG_AS_LIB=0
+!else
+BUILD_DBG_AS_LIB=1
+!endif
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+
+USE_LIBCMT=1
+
+INCLUDES=$(SDK_INC_PATH);\
+    ..\include;
+
+SOURCES= \
+    allocspy.cxx \
+    assert.cxx \
+    assertui.cxx \
+    dbgalloc.cxx \
+    debug.cxx \
+    debugui.cxx \
+    ffail.cxx \
+    iwatch.cxx \
+    magic.cxx \
+    meter.cxx \
+    perftags.cxx \
+    simfail.cxx \
+    view.cxx \
+    ws.cxx \
+    f3debug.rc \
+    othrthrd.cxx \
+    wsprintf.cxx
+
+
+LINKLIBS= \
+    ..\include\$O\debugpch.lib 
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=..\include\$(O)\headers.pch
+!else
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+!endif
+PRECOMPILED_CXX=1
+

@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=joy
+TARGETEXT=cpl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=LibMain
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\shell32.lib  \
+           $(_NTBINDIR)\public\sdk\lib\*\comctl32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib
+#          $(_NTBINDIR)\public\sdk\lib\*\libc.lib
+
+INCLUDES=..\..\..\inc;..\h;..\main
+
+#
+# Retail
+#
+C_DEFINES=
+
+#
+# Debug (please comment out, don't remove)
+#
+#C_DEFINES=/DDEBUG
+#NTDEBUG=ntsd
+#NTDEBUGTYPE=both
+#MSC_OPTIMIZATION=/Od /Zi /WX
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+SOURCES=main.c      \
+        joycpl.c    \
+        joytest.c   \
+        joycal.c    \
+        joymisc.c   \
+        joy.rc
+

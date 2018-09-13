@@ -1,0 +1,121 @@
+#define APSTUDIO_READONLY_SYMBOLS
+#include <winuser.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#undef APSTUDIO_READONLY_SYMBOLS
+
+// get resource info from ntverp.h
+#include "ie4tour.rcv"
+#include "..\resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HTML Entry points
+//
+
+welcome.htm     HTML    DISCARDABLE     "..\\Res\\welcome.htm"
+tour.htm        HTML    DISCARDABLE     "..\\Res\\tour.htm"
+channels.htm    HTML    DISCARDABLE     "..\\Res\\channels.htm"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Aux files for ie4tour frame window
+//
+
+t-back.bmp      HTML    DISCARDABLE     "..\\Res\\t-back.bmp"
+t-check.bmp     HTML    DISCARDABLE     "..\\Res\\t-check.bmp"
+t-next.bmp      HTML    DISCARDABLE     "..\\Res\\t-next.bmp"
+t-noback.bmp    HTML    DISCARDABLE     "..\\Res\\t-noback.bmp"
+t-nonext.bmp    HTML    DISCARDABLE     "..\\Res\\t-nonext.bmp"
+t-one.bmp       HTML    DISCARDABLE     "..\\Res\\t-one.bmp"
+t-three.bmp     HTML    DISCARDABLE     "..\\Res\\t-three.bmp"
+t-two.bmp       HTML    DISCARDABLE     "..\\Res\\t-two.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Aux files for welcome.exe dialog
+//
+
+msielogo.bmp    HTML    DISCARDABLE     "..\\Res\\msielogo.bmp"
+w-begin.bmp     HTML    DISCARDABLE     "..\\Res\\w-begin.bmp"
+w-blue.bmp      HTML    DISCARDABLE     "..\\Res\\w-blue.bmp"
+w-chan.bmp      HTML    DISCARDABLE     "..\\Res\\w-chan.bmp"
+w-orange.bmp    HTML    DISCARDABLE     "..\\Res\\w-orange.bmp"
+w-reg.bmp       HTML    DISCARDABLE     "..\\Res\\w-reg.bmp"
+w-tour.bmp      HTML    DISCARDABLE     "..\\Res\\w-tour.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// The actual contents of the ie4tour pages
+//
+
+page1-1.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-1.htm"
+page1-2.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-2.htm"
+page1-3.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-3.htm"
+page1-4.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-4.htm"
+page1-5.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-5.htm"
+page1-6.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-6.htm"
+page1-7.htm     HTML    DISCARDABLE     "..\\Res\\content\\page1-7.htm"
+page2-1.htm     HTML    DISCARDABLE     "..\\Res\\content\\page2-1.htm"
+page3-1.htm     HTML    DISCARDABLE     "..\\Res\\content\\page3-1.htm"
+page3-1c.htm    HTML    DISCARDABLE     "..\\Res\\content\\page3-1c.htm"
+
+tour.css        HTML    DISCARDABLE     "..\\Res\\content\\tour.css"
+
+address.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\address.bmp"
+backforw.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\backforw.bmp"
+bdefault.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\bdefault.bmp"
+cdefault.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\cdefault.bmp"
+chanbar.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\chanbar.bmp"
+chanadd.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\chanadd.bmp"
+chanfull.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\chanfull.bmp"
+chanview.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\chanview.bmp"
+channels.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\channels.bmp"
+edefault.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\edefault.bmp"
+explorer.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\explorer.bmp"
+fav.bmp         BITMAP  DISCARDABLE     "..\\Res\\content\\fav.bmp"
+four.bmp        BITMAP  DISCARDABLE     "..\\Res\\content\\four.bmp"
+guide.bmp       BITMAP  DISCARDABLE     "..\\Res\\content\\guide.bmp"
+history.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\history.bmp"
+levels.bmp      BITMAP  DISCARDABLE     "..\\Res\\content\\levels.bmp"
+netmtg.bmp      BITMAP  DISCARDABLE     "..\\Res\\content\\netmtg.bmp"
+one.bmp         BITMAP  DISCARDABLE     "..\\Res\\content\\one.bmp"
+outlook.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\outlook.bmp"
+overview.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\overview.bmp"
+register.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\register.bmp"
+sdefault.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\sdefault.bmp"
+search.bmp      BITMAP  DISCARDABLE     "..\\Res\\content\\search.bmp"
+single.bmp      BITMAP  DISCARDABLE     "..\\Res\\content\\single.bmp"
+three.bmp       BITMAP  DISCARDABLE     "..\\Res\\content\\three.bmp"
+two.bmp         BITMAP  DISCARDABLE     "..\\Res\\content\\two.bmp"
+zones.bmp       BITMAP  DISCARDABLE     "..\\Res\\content\\zones.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Contents of qlink pages
+//
+
+qlinks.htm      HTML    DISCARDABLE     "..\\Res\\content\\qlinks.htm"
+qlexplor.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\qlexplor.bmp"
+qlcontxt.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\qlcontxt.bmp"
+qldrgdrp.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\qldrgdrp.bmp"
+qlreordr.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\qlreordr.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Contents of qlink pages
+//
+
+adinfo.htm      HTML    DISCARDABLE     "..\\Res\\content\\adinfo.htm"
+adefault.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\adefault.bmp"
+adwpaper.bmp    BITMAP  DISCARDABLE     "..\\Res\\content\\adwpaper.bmp"
+aditems.bmp     BITMAP  DISCARDABLE     "..\\Res\\content\\aditems.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Required to build RunOnce (ActiveX ctl)
+//
+
+IDR_RUNONCECHECKBOX     REGISTRY    DISCARDABLE     "..\\RunOnceCB.rgs"
+
+1 TYPELIB "RunOnce.tlb"

@@ -1,0 +1,449 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998
+//
+//  File: xmlparser.idl
+//7
+//--------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "wtypes.idl";
+import "objidl.idl";
+import "oaidl.idl";
+#endif
+
+interface IXMLNodeSource;
+interface IXMLParser;
+interface IXMLNodeFactory;
+interface IMoniker;
+
+// This is the full list of node types that can be used in CreateNode.
+typedef enum 
+{
+    // -------------- Container Nodes -----------------
+    XML_ELEMENT = 1,        // <foo ... >
+    XML_ATTRIBUTE,      // <foo bar=...> 
+    XML_PI,             // <?foo ...?>   
+    XML_XMLDECL,        // <?xml version=...
+    XML_DOCTYPE,        // <!DOCTYPE          
+    XML_DTDATTRIBUTE,   // properties of DTD declarations (like XML_SYSTEM)
+    XML_ENTITYDECL,     // <!ENTITY ...       
+    XML_ELEMENTDECL,    // <!ELEMENT ...      
+    XML_ATTLISTDECL,    // <!ATTLIST ...        
+    XML_NOTATION,       // <!NOTATION ...
+    XML_GROUP,          // The ( ... ) grouping in content models.
+    XML_INCLUDESECT,    // <![ INCLUDE [... ]]>  
+
+    // -------------- Terminal Nodes -------------------
+    XML_PCDATA,  // text inside a node or an attribute.
+    XML_CDATA,          // <![CDATA[...]]>   
+    XML_IGNORESECT,     // <![ IGNORE [...]]>
+    XML_COMMENT,        // <!--' and '-->
+    XML_ENTITYREF,      // &foo;
+    XML_WHITESPACE,     // white space between elements 
+    XML_NAME,           // general NAME token for typed attribute values or DTD declarations
+    XML_NMTOKEN,        // general NMTOKEN for typed attribute values or DTD declarations
+    XML_STRING,         // general quoted string literal in DTD declarations.
+    XML_PEREF,          // %foo;        
+    XML_MODEL,                      // EMPTY, ANY of MIXED.
+    XML_ATTDEF,         // Name of attribute being defined.
+    XML_ATTTYPE,
+    XML_ATTPRESENCE,
+
+    XML_DTDSUBSET,      // entire DTD subset as a string. 
+                    
+    XML_LASTNODETYPE,    // not used    
+
+} XML_NODE_TYPE; 
+
+// The subtypes
+typedef enum 
+{
+    // for XML_ATTRIBUTE
+    XML_VERSION = XML_LASTNODETYPE,       // for <?xml declarations?>  
+    XML_ENCODING,                               
+    XML_STANDALONE,                             
+    XML_NS,                     // for namespace attributes.
+    XML_XMLSPACE,               // xml:space            
+    XML_XMLLANG,                // xml:lang
+
+    // for XML_DTDATTRIBUTE
+    XML_SYSTEM,         // SYSTEM literal
+    XML_PUBLIC,         // PUBLIC literal
+    XML_NDATA,                  // NDATA name in ENTITY declarations
+        
+    // for XML_ATTTYPE
+    XML_AT_CDATA,       // ATTLIST attribute types. 
+    XML_AT_ID,
+    XML_AT_IDREF,                       
+    XML_AT_IDREFS,
+    XML_AT_ENTITY,                      
+    XML_AT_ENTITIES,
+    XML_AT_NMTOKEN,
+    XML_AT_NMTOKENS,
+    XML_AT_NOTATION,
+
+    // for XML_ATTPRESENCE
+    XML_AT_REQUIRED,    
+    XML_AT_IMPLIED,         
+    XML_AT_FIXED,
+
+    // XML_ENTITYDECL subtype
+    XML_PENTITYDECL,   // <!ENTITY % ...      
+
+    // XML_MODEL subtypes
+    XML_EMPTY,                  // EMPTY
+    XML_ANY,                    // ANY
+    XML_MIXED,                  // (#PCDATA
+    XML_SEQUENCE,       // ,
+    XML_CHOICE,         // |                
+    XML_STAR,           // +            
+    XML_PLUS,           // *
+    XML_QUESTIONMARK,   // ?
+
+    XML_LASTSUBNODETYPE,  // not used    
+}
+XML_NODE_SUBTYPE;
+
+// Possible error codes include S_OK, E_PENDING and the following:
+typedef enum
+{
+    XML_E_PARSEERRORBASE = 0xC00CE500L,
+
+    // character level error codes.
+    XML_E_ENDOFINPUT            = XML_E_PARSEERRORBASE,
+    XML_E_MISSINGEQUALS,            // 1
+    XML_E_MISSINGQUOTE,             // 2    
+    XML_E_COMMENTSYNTAX,            // 3
+    XML_E_BADSTARTNAMECHAR,         // 4
+    XML_E_BADNAMECHAR,              // 5
+    XML_E_BADCHARINSTRING,          // 6
+    XML_E_XMLDECLSYNTAX,            // 7
+    XML_E_BADCHARDATA,              // 8
+    XML_E_MISSINGWHITESPACE,        // 9
+    XML_E_EXPECTINGTAGEND,          // A
+    XML_E_BADCHARINDTD,             // B
+    XML_E_BADCHARINDECL,            // C
+    XML_E_MISSINGSEMICOLON,         // D
+    XML_E_BADCHARINENTREF,          // E
+    XML_E_UNBALANCEDPAREN,          // F
+    XML_E_EXPECTINGOPENBRACKET,     // 10
+    XML_E_BADENDCONDSECT,           // 11
+    XML_E_INTERNALERROR,            // 12
+    XML_E_UNEXPECTED_WHITESPACE,    // 13
+    XML_E_INCOMPLETE_ENCODING,      // 14
+    XML_E_BADCHARINMIXEDMODEL,      // 15
+    XML_E_MISSING_STAR,             // 16
+    XML_E_BADCHARINMODEL,           // 17
+    XML_E_MISSING_PAREN,            // 18
+    XML_E_BADCHARINENUMERATION,     // 19
+    XML_E_PIDECLSYNTAX,             // 1A
+    XML_E_EXPECTINGCLOSEQUOTE,      // 1B
+    XML_E_MULTIPLE_COLONS,          // 1C
+    XML_E_INVALID_DECIMAL,          // 1D
+    XML_E_INVALID_HEXIDECIMAL,      // 1E
+    XML_E_INVALID_UNICODE,          // 1F
+    XML_E_WHITESPACEORQUESTIONMARK, // 20
+
+    // token level error codes
+    XML_E_TOKEN_ERROR = XML_E_PARSEERRORBASE + 0x50,
+    XML_E_SUSPENDED = XML_E_TOKEN_ERROR,// 50
+    XML_E_STOPPED,                  // 51
+    XML_E_UNEXPECTEDENDTAG,         // 52
+    XML_E_UNCLOSEDTAG,              // 53
+    XML_E_DUPLICATEATTRIBUTE,       // 54
+    XML_E_MULTIPLEROOTS,            // 55
+    XML_E_INVALIDATROOTLEVEL,       // 56
+    XML_E_BADXMLDECL,               // 57
+    XML_E_MISSINGROOT,              // 58
+    XML_E_UNEXPECTEDEOF,            // 59
+    XML_E_BADPEREFINSUBSET,         // 5A
+    XML_E_PE_NESTING,               // 5B
+    XML_E_INVALID_CDATACLOSINGTAG,  // 5C
+    XML_E_UNCLOSEDPI,               // 5D
+    XML_E_UNCLOSEDSTARTTAG,         // 5E
+    XML_E_UNCLOSEDENDTAG,           // 5F
+    XML_E_UNCLOSEDSTRING,           // 60
+    XML_E_UNCLOSEDCOMMENT,          // 61
+    XML_E_UNCLOSEDDECL,             // 62
+    XML_E_UNCLOSEDMARKUPDECL,       // 63
+    XML_E_UNCLOSEDCDATA,            // 64
+    XML_E_BADDECLNAME,              // 65
+    XML_E_BADEXTERNALID,            // 66
+    XML_E_BADELEMENTINDTD,          // 67
+    XML_E_RESERVEDNAMESPACE,        // 68
+    XML_E_EXPECTING_VERSION,        // 69
+    XML_E_EXPECTING_ENCODING,       // 6A
+    XML_E_EXPECTING_NAME,           // 6B
+    XML_E_UNEXPECTED_ATTRIBUTE,     // 6C
+    XML_E_ENDTAGMISMATCH,           // 6D
+    XML_E_INVALIDENCODING,          // 6E
+    XML_E_INVALIDSWITCH,            // 6F
+    XML_E_EXPECTING_NDATA,          // 70
+    XML_E_INVALID_MODEL,            // 71
+    XML_E_INVALID_TYPE,             // 72
+    XML_E_INVALIDXMLSPACE,          // 73
+    XML_E_MULTI_ATTR_VALUE,         // 74
+    XML_E_INVALID_PRESENCE,         // 75
+    XML_E_BADXMLCASE,               // 76
+    XML_E_CONDSECTINSUBSET,         // 77
+    XML_E_CDATAINVALID,             // 78
+    XML_E_INVALID_STANDALONE,       // 79
+    XML_E_UNEXPECTED_STANDALONE,    // 7A
+    XML_E_DOCTYPE_IN_DTD,           // 7B
+    XML_E_MISSING_ENTITY,           // 7C
+    XML_E_ENTITYREF_INNAME,         // 7D
+    XML_E_DOCTYPE_OUTSIDE_PROLOG,   // 7E
+    XML_E_INVALID_VERSION,          // 7F
+    XML_E_DTDELEMENT_OUTSIDE_DTD,   // 80
+    XML_E_DUPLICATEDOCTYPE,         // 81
+    XML_E_RESOURCE,                 // 82
+
+    XML_E_LASTERROR,
+} XML_ERROR_CODE;
+
+// Possible ready states
+typedef enum
+{
+    XMLPARSER_IDLE,
+    XMLPARSER_WAITING,
+    XMLPARSER_BUSY,
+    XMLPARSER_ERROR,
+    XMLPARSER_STOPPED,
+    XMLPARSER_SUSPENDED
+} XML_PARSER_STATE;
+
+// Some parser flags which can be OR'd together.
+// By default all flags are clear.  
+// DTD and ENTITY are mutually exclusive.
+typedef enum
+{
+    XMLFLAG_FLOATINGAMP       = 1, 
+    XMLFLAG_SHORTENDTAGS      = 2,
+    XMLFLAG_CASEINSENSITIVE   = 4,
+    XMLFLAG_NONAMESPACES      = 8,
+    XMLFLAG_NOWHITESPACE      = 16,
+    XMLFLAG_IE4QUIRKS         = 32,
+    XMLFLAG_NODTDNODES        = 64,
+    XMLFLAG_IE4COMPATIBILITY  = 255,
+} XML_PARSER_FLAGS;
+
+
+// Some things that node factories can be notified of
+typedef enum 
+{
+    XMLNF_STARTDOCUMENT,
+    XMLNF_STARTDTD,
+    XMLNF_ENDDTD,
+    XMLNF_STARTDTDSUBSET,
+    XMLNF_ENDDTDSUBSET,
+    XMLNF_ENDPROLOG,
+    XMLNF_STARTENTITY,
+    XMLNF_ENDENTITY,
+    XMLNF_ENDDOCUMENT,
+    XMLNF_DATAAVAILABLE,
+    XMLNF_LASTEVENT = XMLNF_DATAAVAILABLE
+} XML_NODEFACTORY_EVENT;
+
+typedef struct _XML_NODE_INFO
+{
+    DWORD           dwSize;             // size of this struct
+    DWORD           dwType;             // node type (XML_NODE_TYPE)
+    DWORD           dwSubType;          // node sub type (XML_NODE_SUBTYPE)
+    BOOL            fTerminal;          // whether this node can have any children
+    const WCHAR*    pwcText;            // element names, or text node contents.
+    ULONG           ulLen;              // length of pwcText
+    ULONG           ulNsPrefixLen;      // if element name, this is namespace prefix length.
+    PVOID           pNode;              // optionally created by & returned from node factory
+    PVOID           pReserved;          // reserved for factories to use between themselves.
+} XML_NODE_INFO;
+
+//------------------------------------------------------------------------
+// See http://xmlweb/msxml/xmlparser.htm for a description of this interface.
+
+
+[
+    uuid(d242361c-51a0-11d2-9caf-0060b0ec3d39),     // LIBID_XMLPARSER
+    helpstring("Microsoft XML Parser 1.0"),
+    lcid(0x0000),
+    version(1.0)
+]
+
+library XMLPSR
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+[
+    object,
+    local,
+    uuid(d242361d-51a0-11d2-9caf-0060b0ec3d39), // IID_IXMLNodeSource
+    helpstring("IXMLParser Interface"),
+    pointer_default(unique)
+]
+interface IXMLNodeSource : IUnknown
+{
+    HRESULT SetFactory(
+        [in] IXMLNodeFactory* pNodeFactory);
+
+    HRESULT GetFactory(
+        [out] IXMLNodeFactory** ppNodeFactory);
+
+    HRESULT Abort(
+        [in] BSTR bstrErrorInfo);
+
+    ULONG GetLineNumber();
+
+    ULONG GetLinePosition();
+
+    ULONG GetAbsolutePosition();
+
+    HRESULT GetLineBuffer(
+        [out] const WCHAR** ppwcBuf,
+        [out] ULONG* pulLen,
+        [out] ULONG* pulStartPos);
+
+    HRESULT GetLastError();
+
+    HRESULT GetErrorInfo(
+        [out] BSTR* pbstrErrorInfo);
+
+    ULONG GetFlags();
+
+    HRESULT GetURL(
+        [out] const WCHAR** ppwcBuf);
+};
+
+[
+    object,
+    local,
+    uuid(d242361e-51a0-11d2-9caf-0060b0ec3d39), // IID_IXMLParser
+    helpstring("IXMLParser Interface"),
+    pointer_default(unique)
+]
+interface IXMLParser : IXMLNodeSource
+{   
+    HRESULT SetURL(
+        [in] const WCHAR* pszBaseUrl,
+        [in] const WCHAR* pszRelativeUrl,
+        [in] BOOL fAsync);
+
+    HRESULT Load( 
+        [in] BOOL fFullyAvailable,
+        [in] IMoniker *pimkName,
+        [in] LPBC pibc,
+        [in] DWORD grfMode);
+
+    HRESULT SetInput(
+        [in] IUnknown *pStm);
+
+    HRESULT PushData(
+        [in] const char* pData, 
+        [in] ULONG ulChars,
+        [in] BOOL fLastBuffer);
+
+    HRESULT LoadDTD(
+        [in] const WCHAR* pszBaseUrl,
+        [in] const WCHAR* pszRelativeUrl);
+
+    HRESULT LoadEntity(
+        [in] const WCHAR* pszBaseUrl,
+        [in] const WCHAR* pszRelativeUrl,
+        [in] BOOL fpe);
+
+    HRESULT ParseEntity(
+        [in] const WCHAR* pwcText, 
+        [in] ULONG ulLen,
+        [in] BOOL fpe);
+
+    // Similar to parsing internal parameter entities, except
+    // it doesn't insert any spaces.  This is used to expand
+    // named entities inside attribute values when DTD specifies
+    // attribute type other than CDATA.
+    HRESULT ExpandEntity(
+        [in] const WCHAR* pwcText, 
+        [in] ULONG ulLen);
+
+    HRESULT SetRoot(
+        [in] PVOID pRoot);
+
+    HRESULT GetRoot(
+        [in] PVOID* ppRoot);
+
+    HRESULT Run(
+        [in] long lChars);
+
+    HRESULT GetParserState();
+
+    HRESULT Suspend();
+
+    HRESULT Reset();
+
+    HRESULT SetFlags(
+        [in] ULONG iFlags);
+
+    // This is used as a default if LoadDTD or LoadEntity or SetURL is called
+    // with a NULL base URL.
+    HRESULT SetSecureBaseURL(
+        [in] const WCHAR* pszBaseUrl);
+
+    HRESULT GetSecureBaseURL(
+        [out] const WCHAR** ppwcBuf);
+};
+
+[
+    object,
+    local,
+    uuid(d242361f-51a0-11d2-9caf-0060b0ec3d39), // IID_IXMLNodeFactory
+    helpstring("IXMLNodeFactory Interface"),
+    pointer_default(unique)
+]
+interface IXMLNodeFactory : IUnknown
+{   
+    HRESULT NotifyEvent(
+            [in] IXMLNodeSource* pSource,
+            [in] XML_NODEFACTORY_EVENT iEvt);
+
+    HRESULT BeginChildren(
+            [in] IXMLNodeSource* pSource, 
+            [in] XML_NODE_INFO* pNodeInfo);   
+            
+    HRESULT EndChildren(
+            [in] IXMLNodeSource* pSource,
+            [in] BOOL fEmpty,
+            [in] XML_NODE_INFO* pNodeInfo);
+
+    HRESULT Error(
+            [in] IXMLNodeSource* pSource,
+            [in] HRESULT hrErrorCode,
+            [in] USHORT cNumRecs,
+            [in] XML_NODE_INFO** apNodeInfo);
+
+    HRESULT CreateNode(
+            [in] IXMLNodeSource* pSource, 
+            [in] PVOID pNodeParent,
+            [in] USHORT cNumRecs,
+            [in] XML_NODE_INFO** apNodeInfo);
+
+};
+
+// XMLParser co-Class 
+[
+    uuid(d2423620-51a0-11d2-9caf-0060b0ec3d39), // CLSID_XMLParser
+    helpstring("XML Parser coclass")
+]
+coclass XMLParser
+{
+    [default] interface IXMLParser;
+}
+
+}

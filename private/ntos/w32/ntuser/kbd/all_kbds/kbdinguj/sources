@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdinguj
+
+TARGETNAME=kbdinguj
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdinguj.c kbdinguj.rc
+
+NTTARGETFILE0=kbdinguj.h kbdinguj.rc kbdinguj.def

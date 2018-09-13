@@ -1,0 +1,102 @@
+; chat.adm
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+CLASS USER   ;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!Chat
+KEYNAME "Software\Microsoft\Microsoft Comic Chat"
+
+	POLICY !!ServerList
+		PART !!ServerListName EDITTEXT REQUIRED
+			DEFAULT !!ServerListDefault
+			VALUENAME "ServerList"
+		END PART
+	END POLICY
+
+	POLICY !!IRCServer
+		PART !!IRCServerText EDITTEXT  REQUIRED
+			DEFAULT !!IRCServerTextDefault
+			VALUENAME "IRCServer"
+		END PART
+	END POLICY
+
+	POLICY !!IRCChannel
+		PART !!IRCChannelText EDITTEXT  REQUIRED
+			DEFAULT !!IRCChannelTextDefault
+			VALUENAME "IRCChannel"
+		END PART
+	END POLICY
+
+	POLICY !!Character
+		PART !!CharacterText EDITTEXT  REQUIRED
+			DEFAULT !!CharacterTextDefault
+			VALUENAME "Character"
+		END PART
+	END POLICY
+
+	POLICY !!Backdrop
+		PART !!BackdropText EDITTEXT  REQUIRED
+			DEFAULT !!BackdropTextDefault
+			VALUENAME "Backdrop"
+		END PART
+	END POLICY
+
+	POLICY !!Profile
+		PART !!ProfileText EDITTEXT  REQUIRED
+			DEFAULT !!ProfileTextDefault
+			VALUENAME "Profile"
+		END PART
+	END POLICY
+
+	POLICY !!ListRegistered
+		PART !!ListRegisteredText CHECKBOX
+			VALUENAME "ListRegistered"
+			DEFCHECKED
+			VALUEON NUMERIC 1
+			VALUEOFF NUMERIC 0
+		END PART
+	END POLICY
+END CATEGORY
+
+
+[strings]
+
+Chat="Microsoft Chat"
+ServerList="Change chat server list"
+ServerListName="Server list"
+ServerListDefault="comicsrv1.microsoft.com;comisrv2.microsoft.com;comicsrv3.microsoft.com"
+
+IRCServer="Change default chat server"
+IRCServerText="Default chat server"
+IRCServerTextDefault="comicsrv.microsoft.com"
+
+IRCChannel="Change default chat room"
+IRCChannelText="Default chat room"
+IRCChannelTextDefault="#Comic_Chat"
+
+Character="Change default character"
+CharacterText="Default character"
+CharacterTextDefault="TIKI"
+
+Backdrop="Change default backdrop bitmap"
+BackdropText="Default backdrop"
+BackdropTextDefault="Field"
+
+Profile="Change user's profile for Microsoft Chat"
+ProfileText="User profile string"
+ProfileTextDefault="This person is too lazy to create a profile entry."
+
+ListRegistered="Turn on option to show only registered rooms in room list"
+ListRegisteredText="Show only registered rooms in room list"
+
+IEAK_Title=Microsoft Chat
+IEAK_DescriptionTitle=Microsoft Chat Settings
+IEAK_Description1=Microsoft Chat, formerly called Comic Chat, is a new kind of chat program that combines conventional text-based chat with unconventional graphic features. Microsoft Chat offers countless ways for you to communicate, share ideas, and have fun as you reach out and meet new friends.
+IEAK_Description2=Through these settings, you can preset default values for your users. These settings include default server, character, and profile settings. Refer to the Microsoft Chat documentation for information on these settings.
+
+[IEAK]
+Lock=1
+Roles=111
+NumOfDescLines=2
+Platform=010

@@ -1,0 +1,9 @@
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel MIDI Mapper Applet"
+#define VER_INTERNALNAME_STR        "midimap"
+#define VER_ORIGINALFILENAME_STR    "midimap.dll"
+
+#include <common.ver>

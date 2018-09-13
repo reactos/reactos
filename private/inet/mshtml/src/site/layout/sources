@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\layout=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=layout
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES) c:\icecap\include;
+
+SOURCES= \
+    flowlyt.cxx\
+    e1dlyt.cxx\
+    olelyt.cxx \
+    layout.cxx\
+    fslyt.cxx\
+    hrlyt.cxx\
+    imglyt.cxx\
+    inputlyt.cxx\
+    marqlyt.cxx\
+    sellyt.cxx\
+    bodylyt.cxx\
+    framelyt.cxx\
+    tarealyt.cxx\
+    btnlyt.cxx\
+    ckboxlyt.cxx\
+    scrollbar.cxx\
+    scrollbarcontroller.cxx
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

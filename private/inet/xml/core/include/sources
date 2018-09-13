@@ -1,0 +1,33 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\core\include=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+TARGETNAME=corepch
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK = 1
+
+SOURCES= \
+    headers.cxx
+
+INCLUDES= \
+	$(ROOT)\core\include; \
+	$(ROOT)\core\base; \
+	$(ROOT); \
+    $(WINDOWS_INC_PATH);
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fh=$(O)\core.pch
+!else
+PRECOMPILED_INCLUDE=core.hxx
+!endif
+PRECOMPILED_CXX=1
+
+

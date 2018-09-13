@@ -1,0 +1,3 @@
+I386_SOURCES=os2ssmig.c  \
+             os2ssrtl.c  \
+             ..\nddeagnt.c

@@ -1,0 +1,29 @@
+#ifndef _OLESITE_PDL_
+#define _OLESITE_PDL_   1
+
+#ifndef _CSITE_PDL_
+#   include "csite.pdl"
+#endif
+
+file olesite.pdl
+
+import csite.pdl
+
+tearoff COleSite interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID            mapto:GetDispID
+    tearmethod InvokeEx             mapto:ContextThunk_InvokeEx
+    tearmethod GetNextDispID        mapto:GetNextDispID
+    tearmethod GetNameSpaceParent   mapto:GetNameSpaceParent
+    tearmethod GetMemberName        mapto:GetMemberName
+
+tearoff COleSite interface:IHTMLElement2
+    tearmethod attachEvent            mapto:attachEvent
+    tearmethod detachEvent            mapto:detachEvent
+    tearmethod get_tabIndex           mapto:super::get_tabIndex
+
+class COleSite super:CSite
+    property align      dispid:STDPROPID_XOBJ_CONTROLALIGN  atype:BSTR      \
+        type:htmlControlAlign   get set getaa setaahr caa bindable   \
+        displaybind  default:htmlControlAlignNotSet maxstrlen:pdlToken
+
+#endif // _OLESITE_PDL_

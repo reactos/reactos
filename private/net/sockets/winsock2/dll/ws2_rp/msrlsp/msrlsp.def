@@ -1,0 +1,10 @@
+LIBRARY MSRLSP
+
+EXPORTS
+    DllMain
+    WSPStartup
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+

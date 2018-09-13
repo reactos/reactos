@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>IE Website Start Page</TITLE>
+<LINK REL=STYLESHEET HREF="/CSS/master.css" TYPE="text/css">
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on "1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<META http-equiv=Bulletin-Text content="This page now uses new Favorites tags that take advantage of Smart Favorites to display information updates, author, and the page description.">
+<META content="IPTD Division" name=Author>
+<META content="Contains details on the Integrated shell and Web Browser, Internet Communications and other Internet Explorer 4.0 Features" name=Description>
+<SCRIPT LANGUAGE="VBScript">
+<!--
+option explicit
+dim majorver
+dim ua
+dim ie3
+dim ie4
+dim aol
+dim minorver4
+dim update
+dim winplat
+dim win32
+dim nav
+dim intButton
+ua = navigator.useragent
+minorver4 = ""
+intButton = 0
+
+	if len(ua) >=1 then 'nav object is supported
+		winplat = mid(ua,instr(ua,"Windows") + 8, 2)
+		win32 = mid(ua,instr(ua,"Win") + 3, 2) 		'in some user agent strings the platform is referred to as Win32
+		majorver = mid(ua,instr(ua,"MSIE") + 5, 1)
+		ie3 = majorver = 3 and (winplat = "NT" or winplat = "95" or win32 = "32")
+		ie4 = majorver = 4 and (winplat = "NT" or winplat = "95" or win32 = "32")
+		update = instr(ua,"Update a")
+		aol = instr(ua,"AOL")
+        if ie4 then minorver4 = mid(ua,instr(ua,"MSIE") + 7, 3)		
+		
+		if minorver4 = "0b1" and update = 0 and aol = 0 then
+		    intButton = msgbox ("Get Authenticode 2.0 now!  This update provides valuable new features and renews key Authenticode certificates that help you safely download software from the Web. The update should take less than 5 minutes to download over a 28.8 Kbps modem. Do you want to visit our Authenticode Update page?", 4 + 64, "Download the Authenticode 2.0 Update Now!") 
+			If intButton = 6 then
+				location.href="http://itgweb/ie3/"
+			end if
+		end if
+
+		If ie3 and update = 0 and aol = 0 then 'filter down to ie3 or ie40b1(PP1) then see if "update a" is true and not AOL
+			'CHANGE ME on the next line after SRC=' 
+			document.write"<IFRAME ID='auth2' SRC='file:\\trio\public\internet\ie302upd\auth2_object.htm' WIDTH=1 HEIGHT=1 BORDER=0 FRAMEBORDER=0 FRAMESPACING=0 HSPACE=0 VSPACE=0 NORESIZE SCROLLING=NO></IFRAME>"
+		end if
+	end if
+
+-->
+</SCRIPT>
+</HEAD>
+
+<FRAMESET ROWS=26,* frameborder=0 FRAMESPACING=0>
+	<FRAME SRC="http://ie/NavBar.htm?tab=teams" name="nav_bar" SCROLLING="no" NORESIZE>
+	<FRAME SRC="MainArea.htm" name="main_area">
+	<NOFRAMES>
+		<CENTER>
+		<B><h1>Internet Explorer 4.0</b></h1>
+		<br>
+		<h3>To view the IE4.0 internal website you must be running a frames-capable browser.</h3><BR>
+		Install the latest version of <A HREF="http://ie40/ie30/302/install.htm">IE3</A> or <A HREF="http://ie40/install">IE4</A>.
+		</CENTER>
+	</NOFRAMES>
+</FRAMESET>
+</HTML>

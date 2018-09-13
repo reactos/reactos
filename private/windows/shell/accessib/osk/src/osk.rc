@@ -1,0 +1,481 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 251, 175
+STYLE DS_MODALFRAME | DS_NOFAILCREATE | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About On-Screen Keyboard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,192,154,52,14
+    LTEXT           "For technical support, contact Microsoft.",IDC_TXT6,7,
+                    109,237,8
+    LTEXT           "Copyright © 1998, 1999 Madenta Inc.",IDC_TXT7,7,140,235,
+                    8
+    ICON            "APP_OSK",IDC_STATIC,7,7,20,20
+    LTEXT           "On-Screen Keyboard         version 1.0",IDC_STATIC,40,
+                    13,129,11
+    LTEXT           "by",IDC_STATIC,7,40,23,8
+    CONTROL         "",IDC_LOGO,"Static",SS_BITMAP,35,31,15,13
+    LTEXT           "On-Screen Keyboard is intended to provide a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.",
+                    IDC_ABOUTDISCLAIMER,7,54,237,29
+    PUSHBUTTON      "&Upgrade ...",BUT_UPGRADE,194,123,50,14
+    LTEXT           "For additional information or to upgrade, go to:",
+                    IDC_TXT4,7,123,181,11
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEB2,
+                    "Link Window",WS_TABSTOP,7,93,207,12
+    LTEXT           "For a list of Windows-based accessibility utilities, see",
+                    IDC_WARND3,7,83,207,9
+END
+
+IDD_THANK_YOU DIALOG DISCARDABLE  0, 0, 273, 116
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "On-Screen Keyboard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,211,8,50,14
+    LTEXT           "Tip:     You have typed over 200 keystrokes with this On-Screen Keyboard. You can increase your typing speed significantly by upgrading to the commercial version of this software. ",
+                    IDC_STATIC,51,33,211,28
+    PUSHBUTTON      "&Web site",TXT_WEBSITE,162,70,93,11
+    RTEXT           "Email: ",IDC_STATIC,16,89,137,8
+    PUSHBUTTON      "&Madenta",BUT_MAIL,162,88,93,11
+    RTEXT           "For more information, go to:",IDC_STATIC,11,71,141,8
+    ICON            "APP_OSK",IDC_STATIC,26,5,21,20
+    LTEXT           "Window On-Screen Keyboard",IDC_STATIC,63,10,106,13
+END
+
+DLG_TYPE_MODE DIALOGEX 0, 0, 223, 129
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Typing Mode"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,103,108,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,165,108,50,14
+    CONTROL         "Clic&k to select",chk_Click,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,16,8,84,10
+    CONTROL         "&Hover to select",chk_Dwell,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,16,25,63,10,WS_EX_TRANSPARENT
+    CONTROL         "&Joystick or key to select ",chk_Scan,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,16,63,90,10,
+                    WS_EX_TRANSPARENT
+    LTEXT           "Scan interval:",IDC_SCAN_DESC,16,79,46,8
+    EDITTEXT        TXT_SCAN,66,76,29,14,ES_AUTOHSCROLL
+    CONTROL         "Spin2",scl_Scan,"msctls_updown32",UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | WS_DISABLED | WS_TABSTOP,96,76,10,14
+    LTEXT           "seconds",TXT_SCAN_SECOND,110,79,35,8
+    PUSHBUTTON      "&Advanced...",BUT_ADVANCED,159,76,50,14,WS_DISABLED
+    LTEXT           "Minimum time to hover:",IDC_HOVER_DESC,16,39,78,8
+    EDITTEXT        TXT_DWELL,99,36,29,14,ES_AUTOHSCROLL
+    CONTROL         "Spin1",scl_Dwell,"msctls_updown32",UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | WS_DISABLED | WS_TABSTOP,129,36,10,14
+    LTEXT           "seconds",TXT_DWELL_SECOND,143,39,64,8
+    GROUPBOX        "",IDC_STATIC,7,25,207,32
+    GROUPBOX        "",IDC_STATIC,7,63,207,32
+END
+
+IDD_ADVANCE_SCANNING DIALOGEX 0, 0, 199, 75
+STYLE DS_MODALFRAME | DS_NOFAILCREATE | DS_CONTEXTHELP | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Scanning Options"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,88,54,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,142,54,50,14
+    CONTROL         "&Keyboard key",CHK_KEY,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,7,22,60,10,0,HCHK_KEY
+    COMBOBOX        COMBO_KB_KEY,83,21,55,91,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP,0,
+                    HCOMBO_KB_KEY
+    CONTROL         "&Serial, parallel, or game port",CHK_PORT,"Button",
+                    BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP,7,7,
+                    185,10,0,HCHK_PORT
+END
+
+DLG_UPGRADE DIALOGEX 0, 0, 264, 141
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Upgrade to ScreenDoors 98 (TM)"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,205,120,52,14,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "&Madenta",BUT_MAIL,58,99,72,14,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "&Upgrade Now",BUT_WEBSITE,58,76,72,14,0,
+                    WS_EX_TRANSPARENT
+    LTEXT           "The Windows On-Screen Keyboard is a scaled - down version of a powerful product made by Madenta called ""ScreenDoors"", which contains many features that can significantly improve your productivity.",
+                    IDC_STATIC,7,30,250,27,0,WS_EX_TRANSPARENT
+    LTEXT           "To upgrade to ScreenDoors, simply click on the button below:",
+                    IDC_STATIC,7,61,250,8,0,WS_EX_TRANSPARENT
+    LTEXT           "Email:",IDC_STATIC,17,102,19,8,0,WS_EX_TRANSPARENT
+    LTEXT           "Web:",IDC_STATIC,17,79,18,8,0,WS_EX_TRANSPARENT
+    CONTROL         "",IDC_LOGO1,"Static",SS_BITMAP,7,7,15,13,
+                    WS_EX_TRANSPARENT
+END
+
+IDD_WARNING_MSG DIALOG DISCARDABLE  0, 0, 250, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "On-Screen Keyboard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,192,76,50,14
+    LTEXT           "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.",
+                    IDC_WARNING_TEXT1,36,9,207,34
+    ICON            "APP_OSK",IDC_WARNING_ICON,7,8,21,20
+    CONTROL         "<A>http://www.microsoft.com/enable/</A>",IDC_ENABLEWEB,
+                    "Link Window",WS_TABSTOP,36,53,207,12
+    LTEXT           "For a list of Windows-based accessibility utilities, see",
+                    IDC_WARND3,36,43,207,9
+    CONTROL         "&Do not show this message again",IDC_SHOW_AGAIN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,36,78,148,13
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#endif\0"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Add to Utility Manager",     IDM_ADDUM
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_Exit
+    END
+    POPUP "&Keyboard"
+    BEGIN
+        MENUITEM "&Enhanced Keyboard",          IDM_LARGE_KB
+        MENUITEM "&Standard Keyboard",          IDM_SMALL_KB
+        MENUITEM SEPARATOR
+        MENUITEM "&Regular Layout",             IDM_REGULAR_LAYOUT
+        MENUITEM "&Block Layout",               IDM_BLOCK_LAYOUT
+        MENUITEM SEPARATOR
+        MENUITEM "10&1 keys",                   IDM_101_LAYOUT
+        MENUITEM "10&2 keys",                   IDM_102_LAYOUT
+        MENUITEM "10&6 keys",                   IDM_106_LAYOUT
+    END
+    POPUP "&Settings"
+    BEGIN
+        MENUITEM "&Always on Top",              IDM_ALWAYS_ON_TOP
+        MENUITEM SEPARATOR
+        MENUITEM "&Use Click Sound",            IDM_CLICK_SOUND
+        MENUITEM SEPARATOR
+        MENUITEM "&Typing Mode ...",            IDM_TYPE_MODE
+        MENUITEM SEPARATOR
+        MENUITEM "&Font ...",                   IDM_SET_FONT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   CM_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About On-Screen Keyboard...", CM_HELPABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_ABOUT, DIALOG
+    BEGIN
+        RIGHTMARGIN, 250
+        VERTGUIDE, 7
+        VERTGUIDE, 244
+        BOTTOMMARGIN, 168
+        HORZGUIDE, 7
+        HORZGUIDE, 23
+        HORZGUIDE, 44
+        HORZGUIDE, 137
+    END
+
+    IDD_THANK_YOU, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 266
+        BOTTOMMARGIN, 109
+    END
+
+    DLG_TYPE_MODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 221
+        VERTGUIDE, 12
+        VERTGUIDE, 17
+        VERTGUIDE, 100
+        VERTGUIDE, 137
+        VERTGUIDE, 141
+        VERTGUIDE, 162
+        VERTGUIDE, 166
+        VERTGUIDE, 215
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 122
+        HORZGUIDE, 13
+        HORZGUIDE, 29
+        HORZGUIDE, 53
+        HORZGUIDE, 57
+        HORZGUIDE, 66
+        HORZGUIDE, 71
+        HORZGUIDE, 90
+        HORZGUIDE, 108
+    END
+
+    IDD_ADVANCE_SCANNING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 192
+        VERTGUIDE, 138
+        VERTGUIDE, 142
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 68
+    END
+
+    DLG_UPGRADE, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 17
+        VERTGUIDE, 58
+        VERTGUIDE, 257
+        BOTTOMMARGIN, 134
+        HORZGUIDE, 7
+        HORZGUIDE, 120
+        HORZGUIDE, 138
+    END
+
+    IDD_WARNING_MSG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 243
+        VERTGUIDE, 36
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 90
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURHAND1            CURSOR  DISCARDABLE     "..\\res\\H_point.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ENT_UP                  ICON    DISCARDABLE     "..\\res\\Ent_up.ico"
+ENT_DN                  ICON    DISCARDABLE     "..\\res\\Ent_dn.ico"
+I_ENTER                 ICON    DISCARDABLE     "..\\res\\i_enter.ico"
+WINLOGOUP               ICON    DISCARDABLE     "..\\res\\winlogoup.ico"
+MENUKEYUP               ICON    DISCARDABLE     "..\\res\\menukeyup.ico"
+MENUKEYDN               ICON    DISCARDABLE     "..\\res\\menukeydn.ico"
+I_MENUKEY               ICON    DISCARDABLE     "..\\res\\i_menu.ico"
+I_WINLOGO               ICON    DISCARDABLE     "..\\res\\i_winlogo.ico"
+WINLOGODN               ICON    DISCARDABLE     "..\\res\\winlogodn.ico"
+LIGHT                   ICON    DISCARDABLE     "..\\res\\icon1.ico"
+APP_OSK                 ICON    DISCARDABLE     "..\\res\\OSK.ico"
+LED_LIGHT               ICON    DISCARDABLE     "..\\res\\Led_light.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// WAVE
+//
+
+WAV_CLICKUP             WAVE    DISCARDABLE     "..\\res\\Clickup.wav"
+WAV_SWITCH_CLICK        WAVE    DISCARDABLE     "..\\res\\UtopiaEx.wav"
+WAV_CLICKDN             WAVE    DISCARDABLE     "..\\res\\Clickdwn.wav"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP4             BITMAP  DISCARDABLE     "..\\res\\bitmap4.bmp"
+IDB_BITMAP9             BITMAP  DISCARDABLE     "..\\res\\bitmap9.bmp"
+IDB_HENKAN              BITMAP  DISCARDABLE     "..\\res\\henkan.bmp"
+IDB_KANA                BITMAP  DISCARDABLE     "..\\res\\kana.bmp"
+IDB_KANJI               BITMAP  DISCARDABLE     "..\\res\\kanji.bmp"
+IDB_MHENKAN             BITMAP  DISCARDABLE     "..\\res\\mhenkan.bmp"
+IDB_HENKANB             BITMAP  DISCARDABLE     "..\\res\\henkenb.bmp"
+IDB_KANAB               BITMAP  DISCARDABLE     "..\\res\\kanab.bmp"
+IDB_KANJIB              BITMAP  DISCARDABLE     "..\\res\\kanjib.bmp"
+IDB_MHENKANB            BITMAP  DISCARDABLE     "..\\res\\mhenkanb.bmp"
+IDB_DOWN                BITMAP  DISCARDABLE     "..\\res\\down.bmp"
+IDB_LEFT                BITMAP  DISCARDABLE     "..\\res\\left.bmp"
+IDB_RIGHT               BITMAP  DISCARDABLE     "..\\res\\right.bmp"
+IDB_UP                  BITMAP  DISCARDABLE     "..\\res\\up.bmp"
+IDB_UPDNARW             BITMAP  DISCARDABLE     "..\\res\\updnarw.bmp"
+IDB_BITMAP2             BITMAP  DISCARDABLE     "..\\res\\bitmap2.bmp"
+IDB_BITMAP3             BITMAP  DISCARDABLE     "..\\res\\bmp00001.bmp"
+IDB_UPUPARW             BITMAP  DISCARDABLE     "..\\res\\upuparw.bmp"
+IDB_RHUPARW             BITMAP  DISCARDABLE     "..\\res\\rhuparw.bmp"
+IDB_RHDNARW             BITMAP  DISCARDABLE     "..\\res\\rhdnarw.bmp"
+IDB_LFUPARW             BITMAP  DISCARDABLE     "..\\res\\lfuparw.bmp"
+IDB_LFDNARW             BITMAP  DISCARDABLE     "..\\res\\lfdnarw.bmp"
+IDB_DNUPARW             BITMAP  DISCARDABLE     "..\\res\\dnuparw.bmp"
+IDB_DNDNARW             BITMAP  DISCARDABLE     "..\\res\\dndnarw.bmp"
+IDB_BITMAP7             BITMAP  DISCARDABLE     "..\\res\\bitmap7.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE1              "On-Screen Keyboard"
+    IDS_CANNOTCREATEDLG     "Cannot create dialog"
+    IDS_REGISTRY_DAMAGE     "Registry damaged."
+    IDS_REGISTRY_ACCESS_ERROR "Registry access error"
+    IDS_MEMORY_LIMITED      "Memory limited."
+    IDS_SECURITY_FAILURE    "Security failure."
+    IDS_CANNOT_REGISTER     "Cannot register keyboard class."
+    IDS_NO_MOUSE            "No mouse is installed. Program will quit."
+    IDS_CANNOT_SWITCH_LANG  "Cannot switch to the language. You can switch manually by the indicator in the taskbar."
+    IDS_CANNOT_CREATE_KB    "Cannot create Keyboard Window."
+    IDS_CANNOT_CREATE_KEY   "Error in create key."
+    IDS_CANNOT_LOAD_ICON    "Cannot load icon."
+    IDS_WEDSITE             "http://www.madenta.com/sd2k"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MAIL                "mailto:sales@madenta.com"
+    IDS_CANNOT_OPEN_SWPORT  "Cannot open switch port. Scanning will not be available."
+    IDS_SETTING_DAMAGE      "The setting in registry is damaged.\nPlease reinstall On-Screen Keyboard."
+    IDS_MOUSE_HOOK          "Cannot install mouse hook."
+    IDS_JOURNAL_HOOK        "Cannot install journal hook."
+    IDS_ABOUTBOX            "About box"
+    IDS_CREDITSBOX          "Credits box"
+    IDS_THANKYOU            "Thank you"
+    IDS_MOUSE_UNHOOK        "Cannot uninstall mouse hook."
+    IDS_JOURNAL_UNHOOK      "Cannot uninstall journal hook."
+    IDS_ADDTOUM             "&Add to Utility Manager"
+    IDS_REMUM               "&Remove from Utility Manager"
+    IDS_WARNING_MSG         "Warning message"
+    IDS_SPACE_KEY           "Space"
+    IDS_ENTER_KEY           "Enter"
+    IDS_F2_KEY              "F2"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_F3_KEY              "F3"
+    IDS_F4_KEY              "F4"
+    IDS_F5_KEY              "F5"
+    IDS_F6_KEY              "F6"
+    IDS_F7_KEY              "F7"
+    IDS_F8_KEY              "F8"
+    IDS_F9_KEY              "F9"
+    IDS_F12_KEY             "F12"
+    IDS_ENABLEWEB           "http://www.microsoft.com/enable/"
+    IDS_TSERROR             "On-Screen Keyboard does not work in remote sessions."
+    IDS_TOOLTIP             "Set focus to the application window into which you want to type."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

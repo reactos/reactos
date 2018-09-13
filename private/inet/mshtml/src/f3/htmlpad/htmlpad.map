@@ -1,0 +1,7 @@
+htmlpad
+{
+   global:
+     mainwin_init;
+   local:
+     *;
+};

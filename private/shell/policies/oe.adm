@@ -1,0 +1,82 @@
+; oe.adm
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+CLASS USER ;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!OutlookExpress
+	KEYNAME "Software\Microsoft\Outlook Express"
+	POLICY !!Zones
+		PART !!RestSite CHECKBOX 
+		VALUENAME "Security Zone"
+		VALUEON NUMERIC 4 
+		VALUEOFF NUMERIC 3
+		END PART
+	END POLICY
+
+	POLICY !!HTMLMail
+		PART !!DisableHTMLinMail CHECKBOX 
+		KEYNAME "Software\Microsoft\Outlook Express\Mail"
+		VALUENAME "Message Send HTML"
+		VALUEON NUMERIC 0 
+		VALUEOFF NUMERIC 1
+		END PART
+
+		PART !!DisablePlaininNews CHECKBOX 
+	  	KEYNAME "Software\Microsoft\Outlook Express\News"
+		VALUENAME "Message Send HTML"
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 0
+		END PART
+	END POLICY
+END CATEGORY
+
+CATEGORY !!OENav
+	KEYNAME "Software\Microsoft\Outlook Express\"
+	POLICY !!Navigation
+		PART !!FolderView CHECKBOX 
+		VALUENAME "Tree"
+		VALUEON NUMERIC 0 
+		VALUEOFF NUMERIC 1
+		END PART
+
+		PART !!FolderBar CHECKBOX 
+		VALUENAME "FolderBar"
+		VALUEON NUMERIC 1 
+		VALUEOFF NUMERIC 0
+		END PART
+
+		PART !!TipofDay CHECKBOX 
+		VALUENAME "Tip of the Day"
+		VALUEON NUMERIC 0 
+		VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+END CATEGORY
+
+[strings]
+OutlookExpress="General Settings"
+OENav="View Customization"
+ServerSettings="Mail, news, and directory server settings"
+Zones="Mail and news security zones"
+RestSite="Put mail and news in the Restricted Sites zone (instead of the Internet zone)"
+HTMLMail="HTML mail and news composition settings"
+DisableHTMLinMail="Mail: Make plain text message composition the default for mail messages (instead of HTML mail)"
+DisablePlaininNews="News: Make HTML message composition the default for news posts (instead of plain text)"
+Navigation="Folder and Message Navigational Elements"
+FolderView="Turn off Folder List (tree view of folders)"
+FolderBar="Turn on Folder Bar (horizontal line that displays the selected folder's name)"
+TipofDay="Turn off the Tip of the Day"
+
+IEAK_Title=Outlook Express
+IEAK_DescriptionTitle=Outlook Express Policy Settings and Restrictions
+IEAK_Description1=Outlook Express provides system policies designed to reduce mail and news support costs.
+IEAK_Description2=Outlook Express uses Internet Explorer 4.0's security zones. Normally, all user mail is placed in the Internet zone, where users are prompted before potentially dangerous active content is run. However, you can place Outlook Express mail and news in the Restricted Sites zone. The default settings for the Restricted Sites zone prohibit running almost all active content (the user will be protected from the content without any prompts).
+IEAK_Description3=By default, Outlook Express composes mail messages in HTML and news messages in plain text. You are strongly encouraged to retain these settings.
+IEAK_Description4=Outlook Express allows you to customize your default view for consistency with the configuration of other programs familiar to your users.
+
+[IEAK]
+Lock=1
+Roles=011
+NumOfDescLines=4
+Platform=010

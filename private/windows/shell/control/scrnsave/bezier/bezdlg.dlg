@@ -1,0 +1,25 @@
+
+DLG_SCRNSAVECONFIGURE DIALOG 8, 16, 208, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Bezier Screen Saver Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 162, 8, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 162, 26, 40, 14
+    GROUPBOX        "&Length", 65535, 6, 4, 150, 26
+    LTEXT           "Beziers in each loop (1-10)", ID_LENGTH_LABEL, 10, 18, 90, 8
+    EDITTEXT        ID_LENGTH, 123, 15, 26, 12
+    CONTROL         "", ID_LENGTHARROW, "msctls_updown32", UDS_WRAP |
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_AUTOBUDDY, 141, 15, 8, 12
+    GROUPBOX        "&Width", 65535, 6, 34, 150, 26
+    LTEXT           "Repeat each loop (1-100)", 65535, 10, 48, 92, 8
+    EDITTEXT        ID_WIDTH, 123, 45, 26, 12
+    CONTROL         "", ID_WIDTHARROW, "msctls_updown32", UDS_WRAP |
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_AUTOBUDDY, 141, 45, 8, 12
+    GROUPBOX        "&Speed", 65535, 6, 64, 150, 36
+    LTEXT           "Slow", ID_VELOCITY_SLOW, 10, 76, 32, 8
+    RTEXT           "Fast", ID_VELOCITY_FAST, 116, 76, 32, 8
+    SCROLLBAR       ID_VELOCITY, 10, 84, 138, 12, WS_GROUP | WS_TABSTOP
+END

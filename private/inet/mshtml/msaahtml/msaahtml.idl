@@ -1,0 +1,44 @@
+DEADDEAD DEAD DEAD
+:wq
+//===================================================================
+// MSAAHTML.idl : IDL source for MSAAHTML.dll
+//
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (MSAAHTML.tlb) and marshalling code.
+//===================================================================
+
+[
+	uuid(2961904B-D2F6-11D0-BDE6-00AA001A1953),
+	version(1.0),
+	helpstring("MSAAHTML 1.0 Type Library")
+]
+
+library MSAAHTMLLib
+{
+    import "oleacc.idl";
+    cpp_quote("DEFINE_GUID(CLSID_MSAAHTML, 0xe9975030, 0xd326, 0x11d0, 0xbd, 0xe6, 0x0, 0xaa, 0x0, 0x1a, 0x19, 0x53);")
+    cpp_quote("DEFINE_GUID(IID_IHTMLAccessible, 0x8d0031e0, 0xca36, 0x11d1, 0xb1, 0x04, 0x00, 0x80, 0x5f, 0x6d, 0xc1, 0xb6);")
+    importlib("stdole2.tlb");
+
+//===================================================================
+// Interfaces
+//===================================================================
+
+[
+	object,
+	uuid(8D0031E0-CA36-11d1-B104-00805F6DC1B6),
+	oleautomation,
+	pointer_default(unique)
+]
+
+interface IHTMLAccessible : IUnknown
+{
+	typedef [unique] IHTMLAccessible *LPHTMLACCESSIBLE;
+
+	HRESULT Initialize( [in] DWORD dwReserved );
+	HRESULT Uninitialize( void );
+	HRESULT AccObjectFromID( [in] long hwnd, [in] long lObjectID, [out] LPACCESSIBLE *pIAccessible );
+}
+
+};

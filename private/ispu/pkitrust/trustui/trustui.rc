@@ -1,0 +1,319 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       trustui.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "trustuir.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "winver.h"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "trustuir.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""winver.h""\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1_VERIFIED DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&No",IDNO,180,162,50,14
+    PUSHBUTTON      "&More Info",IDMORE,233,162,50,14
+    CONTROL         "",IDC_INSTALLANDRUN,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY | WS_TABSTOP,100,5,185,10
+    CONTROL         "",IDC_PUBLISHER,"RICHEDIT",ES_MULTILINE | ES_READONLY |
+                    WS_TABSTOP,100,21,185,10
+    CONTROL         "",IDC_AUTHENTICITY,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY | WS_TABSTOP,100,40,185,10
+    CONTROL         "",IDC_ADVANCED,"RICHEDIT",ES_MULTILINE | ES_READONLY |
+                    WS_TABSTOP,98,123,185,10
+    CONTROL         "",IDC_PERSONALTRUST,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY | WS_TABSTOP,111,139,174,10
+    PUSHBUTTON      "&Yes",IDYES,127,162,50,14
+    CONTROL         "&Always trust software from %1",IDC_PTCHECK,"Button",
+                    BS_AUTOCHECKBOX,99,139,8,8
+    CONTROL         4103,IDC_VERBMP,"Static",SS_BITMAP | SS_CENTERIMAGE |
+                    SS_SUNKEN,8,7,80,139
+    CONTROL         "",IDC_SEPARATORLINE,"Static",SS_ETCHEDHORZ,8,154,275,1
+    CONTROL         "",IDC_CAUTION,"RICHEDIT",ES_MULTILINE | ES_READONLY,100,
+                    60,185,10
+END
+
+IDD_DIALOG3_NOSIGNATURE DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&No",IDNO,180,162,50,14
+    PUSHBUTTON      "&More Info",IDMORE,233,162,50,14
+    PUSHBUTTON      "&Yes",IDYES,127,162,50,14
+    CONTROL         "",IDC_SEPARATORLINE,"Static",SS_ETCHEDHORZ,8,154,275,1
+    CONTROL         4109,IDC_NOVERBMP,"Static",SS_BITMAP | SS_CENTERIMAGE |
+                    SS_SUNKEN,8,7,80,140
+    CONTROL         "",IDC_INSTALLANDRUN2,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY,100,5,180,10
+    CONTROL         "",IDC_NOPUBLISHERFOUND,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY,100,70,180,10
+END
+
+IDD_DIALOG2_UNVERIFIED DIALOG DISCARDABLE  0, 0, 290, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&No",IDNO,180,162,50,14
+    PUSHBUTTON      "&More Info",IDMORE,233,162,50,14
+    CONTROL         "",IDC_INSTALLANDRUN3,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY | WS_TABSTOP,100,80,185,10
+    CONTROL         "",IDC_PUBLISHER2,"RICHEDIT",ES_MULTILINE | ES_READONLY |
+                    WS_TABSTOP,100,95,185,10
+    CONTROL         "",IDC_ADVANCED,"RICHEDIT",ES_MULTILINE | ES_READONLY |
+                    WS_TABSTOP,98,123,185,10
+    PUSHBUTTON      "&Yes",IDYES,127,162,50,14
+    CONTROL         "",IDC_SEPARATORLINE,"Static",SS_ETCHEDHORZ,8,154,275,1
+    CONTROL         4109,IDC_NOVERBMP2,"Static",SS_BITMAP | SS_CENTERIMAGE |
+                    SS_SUNKEN,8,7,80,140
+    CONTROL         "",IDC_NOAUTHENTICITY,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY,100,5,185,10
+    CONTROL         "",IDC_PROBLEMSBELOW,"RICHEDIT",ES_MULTILINE |
+                    ES_READONLY,100,40,185,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_DIALOG1_VERIFIED, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 283
+        VERTGUIDE, 99
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_DIALOG3_NOSIGNATURE, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 283
+        VERTGUIDE, 99
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_DIALOG2_UNVERIFIED, DIALOG
+    BEGIN
+        LEFTMARGIN, 8
+        RIGHTMARGIN, 283
+        VERTGUIDE, 99
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_LOCK                ICON    DISCARDABLE     "lock.ico"
+IDI_CERT                ICON    DISCARDABLE     "cert.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP  DISCARDABLE     "unsigned.bmp"
+IDB_BITMAP2             BITMAP  DISCARDABLE     "signed.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_TUIHAND             CURSOR  DISCARDABLE     "hand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACTIONSIGNED        "Do you want to install and run ""%1!s!"" signed on %2!s! and distributed by:"
+    IDS_ACTIONSIGNED_NODATE "Do you want to install and run ""%1!s!"" signed on an unknown date/time and distributed by:"
+    IDS_ACTIONNOTSIGNED     "Do you want to install and run ""%1!s!""?"
+    IDS_AUTHENTICITY        "Publisher authenticity verified by %1!s!"
+    IDS_CAUTION             "Caution: %1!s! asserts that this content is safe.  You should only install/view this content if you trust %1!s! to make that assertion."
+    IDS_PERSONALTRUST       "&Always trust content from %1!s!"
+    IDS_UNKNOWNPUBLISHER    "Unknown Publisher"
+    IDS_NOPUBLISHERFOUND    "The publisher cannot be determined due to the problems below: %n%n%1!s!"
+    IDS_NOAUTHENTICITY      "Warning: The authenticity of this content cannot be verified, therefore it cannot be trusted."
+    IDS_PROBLEMSBELOW       "Problem listed below:%n%n%1!s!"
+    IDS_UNKNOWNPUBLISHERCERTISSUER "Unknown Publisher Certificate Issuer"
+    IDS_TESTCERTINCHAIN     "WARNING! The signer has been validated using a TEST CERTIFICATE."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SPC_CERT_EXPIRED    "A certificate (signing or issuer) has expired."
+    IDS_SPC_REVOCATION_OFFLINE
+                            "Could not connect to online revocation server."
+    IDS_SPC_CERT_REVOKED    "Signing certificate or issuing certificate has been revoked."
+    IDS_SPC_OSS_ERROR       "Error in ASN encoding (MSOSS error code: 0x%1)"
+    IDS_SPC_UNKNOWN         "Error in Authenticode (error code: 0x%1)"
+    IDS_SPC_INVALID_EXTENSION
+                            "The extension in a certificate means the certificate can not be used for Authenticode."
+    IDS_SPC_UNEXPECTED      "Unexpected error in Authenticode"
+    IDS_SPC_CHAINING        "Unable to create certificate chain from the signing certificate to a root."
+    IDS_SPC_CERT_SIGNATURE  "Certificate signature could not be verified using issuer's certificate."
+    IDS_SPC_REVOCATION_ERROR
+                            "An error occurred while accessing online revocation server."
+    IDS_SPC_UNTRUSTED       "Signature is not trusted by Authenticode."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SPC_UNKNOWN_SIGNER_ROOT
+                            "Verified chain to an unknown root certificate."
+    IDS_FILE_NOT_FOUND      "File not found or not valid format."
+    IDS_SPC_SECSET_INVV1    "The Security setting to invalidate version one signatures is set."
+    IDS_SPC_SECURITY_SETTINGS
+                            "Signature is not trusted by Authenticode with the current policy settings."
+    IDS_WRONG_USAGE         "The root certificate has not been enabled for the requested use."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TESTCERTTITLE       "  *** TEST CERTIFICATE ***"
+    IDS_SPC_SIGNER_CERT     "Signature does not contain a valid signing certificate."
+    IDS_SPC_TIMESTAMP       "The signature contains a time stamp.  However, the time stamp could not be verified."
+    IDS_SPC_SUBJECT         "The object to be verified is unknown to the Trust Provider."
+    IDS_SPC_PROVIDER        "The Trust Provider is unknown or not configured properly."
+    IDS_SPC_VALID_COUNTERSIGNER
+                            "Signature does not contain a valid counter signing certificate."
+    IDS_SPC_BAD_SIGNATURE   "The signature does not match the content of the signed message."
+    IDS_SPC_BAD_FILE_DIGEST "Content does not match the signature."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SPC_NO_VALID_SIGNER "Signature does not contain a valid signer."
+    IDS_SPC_NO_SIGNER_ROOT  "The signing certificate did not have a valid root certificate."
+    IDS_SPC_UNTRUSTED_ROOT  "The root certificate has not been enabled as a trusted root."
+    IDS_SPC_UNTRUSTED_TEST_ROOT
+                            "The test root has not been enabled as a trusted root."
+    IDS_SPC_NO_STATEMENT_TYPE
+                            "Signing certificate does not contain Authenticode extensions."
+    IDS_SPC_NO_COMMERCIAL_TYPE
+                            "No commercial or individual setting in signing certificate."
+    IDS_SPC_INVALID_CERT_NESTING
+                            "Signing certificate's starting or ending time is outside one of its issuer's starting or ending time."
+    IDS_SPC_INVALID_ISSUER  "Wrong issuing certificate used to verify a certificate."
+    IDS_SPC_INVALID_PURPOSE "A purpose specified in a certificate (signing or issuer) makes it invalid for Authenticode."
+    IDS_SPC_INVALID_BASIC_CONSTRAINTS
+                            "A basic constraint of a certificate in the signature failed for Authenticode."
+    IDS_SPC_UNSUPPORTED_BASIC_CONSTRAINTS
+                            "Unsupported basic constraint found in a certificate used by the signature."
+    IDS_SPC_INVALID_CERT_TIME
+                            "The date for the signing certificate is not valid."
+    IDS_SPC_UNTRUSTED_TIMESTAMP_ROOT
+                            "The root is not trusted as the time stamp root."
+    IDS_SPC_INVALID_FINANCIAL
+                            "Certificate does not contain or does not meet the Authenticode financial extension."
+    IDS_SPC_NO_OPUS_INFO    "No opus information provided for the signing certificate."
+    IDS_SPC_NO_SIGNATURE    "Authenticode signature not found."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLICKHEREFORCERT    "Click here to view the publisher's certificate."
+    IDS_CLICKHEREFOROPUSINFO
+                            "Click here to find out more about the software being verified."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLICKHEREFORADVANCED
+                            "Click here to view advanced information about the signature."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

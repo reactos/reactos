@@ -1,0 +1,174 @@
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#include <windows.h>
+#include "commctrl.h"
+#include "saver.h"
+#include "ntverp.h"
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif  // _WIN32
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+// Version
+/////////////////////////////////////////////////////////////////////////////
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Channel Screen Saver"
+#define VER_INTERNALNAME_STR        "ACTSAVER.SCR"
+#define VER_ORIGINALFILENAME_STR    "ACTSAVER.SCR"
+
+#include "common.ver"
+#endif  // !_MAC
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+// TEXTINCLUDE
+/////////////////////////////////////////////////////////////////////////////
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winnt.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "1 TYPELIB ""actsaver.tlb""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+// Strings
+/////////////////////////////////////////////////////////////////////////////
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SCREENSAVER_DESC            "Channel Screen Saver"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DLG_CAPTION                 "Screen Saver"
+    IDS_DLG_CAPTION+1               "General"
+    IDS_DLG_CAPTION+2               "Advanced"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_TB_PROPERTIES_TOOLTIP       "Properties"
+    IDS_TB_CLOSE_TOOLTIP            "Close"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_REQUIREMENTSNOTMET    "The Channel Screen Saver requires Internet Explorer 5.0."
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Icons
+/////////////////////////////////////////////////////////////////////////////
+ID_APP          ICON    DISCARDABLE "active.ico"
+IDI_SCHEDULE    ICON    DISCARDABLE "schedule.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+// Bitmaps
+/////////////////////////////////////////////////////////////////////////////
+IDB_PREVIEW             BITMAP  DISCARDABLE "preview.bmp"
+IDB_PROPERTIES_DEFAULT  BITMAP  DISCARDABLE "propsdef.bmp"
+IDB_PROPERTIES          BITMAP  DISCARDABLE "props.bmp"
+IDB_CLOSE               BITMAP  DISCARDABLE "close.bmp"
+IDB_CHECKED             BITMAP  DISCARDABLE "checked.bmp"
+IDB_UNCHECKED           BITMAP  DISCARDABLE "uncheckd.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+// Dialogs
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+// Settings dialog
+/////////////////////////////////////////////////////////////////////////////
+IDD_PAGE1_DIALOG DIALOG DISCARDABLE  0, 0, 251, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Channels",IDC_STATIC,7,7,237,104
+    CONTROL         "", IDC_SUBSCRIPTION_LIST,"SysTreeView32", TVS_DISABLEDRAGDROP |
+                    WS_BORDER | WS_TABSTOP,14,18,222,52
+    LTEXT           "&Display each Channel for",IDC_STATIC,14,78,80,8
+    EDITTEXT        IDC_CHANNEL_TIME,97,76,39,12,ES_RIGHT
+    CONTROL         "",IDC_CHANNEL_TIME_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,130,76,9,12
+    LTEXT           "seconds",IDC_STATIC,141,78,28,8
+    CONTROL         "&Play background sounds",IDC_PLAY_SOUNDS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,95,94,8
+    GROUPBOX        "Closing the Screen Saver",IDC_NAVIGATE_GROUP_BOX,7,117,237,41
+    CONTROL         "Close the Screen Saver by using the Close &button",
+                    IDC_NAVIGATE_CLICK,"Button",BS_AUTORADIOBUTTON,14,131,217,8
+    CONTROL         "Close the Screen Saver by moving the &mouse",IDC_NAVIGATE_ALTCLICK,
+                    "Button",BS_AUTORADIOBUTTON,14,143,217,8
+
+#ifdef FEATURE_FONT_SETTINGS
+    // REVIEW: Position of button is incorrect. Fix if enabled. [jaym]
+    CONTROL         "Font Settings...",IDC_FONT_SETTINGS,"Button",WS_TABSTOP,
+                    187,162,54,14
+#endif  // FEATURE_FONT_SETTINGS
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Create subscription dialog
+/////////////////////////////////////////////////////////////////////////////
+IDD_CREATESUBS_DIALOG DIALOG DISCARDABLE  0, 0, 261, 73
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Make Available Offline"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SCHEDULE,IDC_STATIC,7,6,20,20
+    LTEXT           "Some channels that you have selected must be made available offline so that content for the screen saver may be downloaded and updated.\n\nWould you like to make them available offline now?"
+                    IDC_STATIC,37,6,217,40
+    CONTROL         "Don't &ask me this again.",IDC_DONTASKAGAIN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,54,100,10
+    DEFPUSHBUTTON   "&Yes",IDOK,148,52,50,14
+    PUSHBUTTON      "N&o",IDCANCEL,204,52,50,14
+END
+
+/////////////////////////////////////////////////////////////////////////////
+// Default HTML
+/////////////////////////////////////////////////////////////////////////////
+SAT_CLR.GIF     HTML    DISCARDABLE "default/sat_clr.gif"
+SAT_GREY.GIF    HTML    DISCARDABLE "default/sat_grey.gif"
+BDOT.GIF        HTML    DISCARDABLE "default/bdot.gif"
+ODOT.GIF        HTML    DISCARDABLE "default/odot.gif"
+BANNER.GIF      HTML    DISCARDABLE "default/banner.gif"
+GLEAM.GIF       HTML    DISCARDABLE "default/gleam.gif"
+ARROW.GIF       HTML    DISCARDABLE "default/arrow.gif"
+SSEMPTY.HTM     HTML    DISCARDABLE "default/default.htm"
+
+#endif    // English (U.S.) resources
+
+/////////////////////////////////////////////////////////////////////////////
+// Registry
+/////////////////////////////////////////////////////////////////////////////
+IDR_SCREENSAVER     REGISTRY    DISCARDABLE "saver.rgs"
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+// TYPELIB
+/////////////////////////////////////////////////////////////////////////////
+1                   TYPELIB     DISCARDABLE "actsaver.tlb"
+#endif    // not APSTUDIO_INVOKED
+

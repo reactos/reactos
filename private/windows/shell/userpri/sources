@@ -1,0 +1,19 @@
+
+MAJORCOMP=shell
+MINORCOMP=userpri
+
+TARGETNAME=userpri
+TARGETPATH=lib
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=..\inc;..\..\..\inc
+
+
+
+C_DEFINES=-DWIN32 -DW3 -DUNICODE -D_UNICODE
+
+SOURCES=unicrt.c   \
+        unifile.c
+
+UMTYPE=windows

@@ -1,0 +1,193 @@
+COMPONENT_TYPE=dll
+COMPONENT_NAME=ws2_32
+
+COMPONENT_RELEASE_DIR=winsock2
+#COMPONENT_EXPORTS_FILE=exports
+COMPONENT_ADDITIONAL_TARGETS=ws2_32.lib
+COMPONENT_CLEAN_TARGETS= *obj ws2_32.lib ws2_32.dll *~[5-9]~ build.log *pch\
+                         *exp *lrf
+COMPONENT_SUBSYSTEM=windows
+
+#
+# The following flag controls whether or not debug/trace hooks are built into
+# the WinSock2 dll.
+#
+DEBUG_TRACING= /DDEBUG_TRACING
+
+
+#
+# Optional tool macros
+#
+!if defined(BUILD_TAG)
+D_BUILD_TAG_STRING= /DBUILD_TAG_STRING=\"$(BUILD_TAG)\"
+!endif
+COMPONENT_EXTRA_CFLAGS= /DTRACING $(D_BUILD_TAG_STRING) $(DEBUG_TRACING)
+COMPONENT_EXTRA_CPPFLAGS= /DTRACING $(D_BUILD_TAG_STRING) $(DEBUG_TRACING)
+COMPONENT_EXTRA_AFLAGS=
+COMPONENT_EXTRA_INCLUDE_DIRS=
+COMPONENT_EXTRA_LIB_DIRS=
+COMPONENT_EXTRA_LIBS=ws2help.lib
+COMPONENT_EXTRA_OBJECTS= trace.obj
+
+#####################
+# Component type specific macros
+#
+
+# EXE and DLL macros
+COMPONENT_C_FILES=
+COMPONENT_CPP_FILES= addrconv.cpp dprocess.cpp dprovide.cpp dsocket.cpp\
+!if defined(DEBUG_TRACING)
+                                         dthook.cpp\
+!endif
+                     dthread.cpp dupsock.cpp event.cpp\
+                             recv.cpp send.cpp sockctrl.cpp\
+                     socklife.cpp sputil.cpp startup.cpp wsautil.cpp\
+                     dcatalog.cpp dcatitem.cpp enumprot.cpp spinstal.cpp\
+                     getxbyy.cpp perthrd.cpp ioctl.cpp select.cpp\
+                     qos.cpp dllmain.cpp nsprovid.cpp\
+                     nsquery.cpp nscatalo.cpp nscatent.cpp\
+                     nspinstl.cpp qshelpr.cpp rnr.cpp scihlpr.cpp
+
+COMPONENT_ASM_FILES=
+COMPONENT_RESOURCE_FILES=
+
+# Include the files that will be part of a source release.
+COMPONENT_SOURCES= $(COMPONENT_C_FILES)\
+                   $(COMPONENT_CPP_FILES)\
+                   $(COMPONENT_EXTRA_LIBS)\
+                   precomp.h\
+                   makefile.vc\
+                   makefile
+
+#
+# The exports for the DLL
+#
+!if defined(DEBUG_TRACING)
+DT_PREFIX=DTHOOK_
+!endif
+
+COMPONENT_EXPORTS=\
+#
+# Back to normal entry points:
+#
+   /EXPORT:accept=$(DT_PREFIX)accept\
+   /EXPORT:bind=$(DT_PREFIX)bind\
+   /EXPORT:closesocket=$(DT_PREFIX)closesocket\
+   /EXPORT:connect=$(DT_PREFIX)connect\
+   /EXPORT:getpeername=$(DT_PREFIX)getpeername\
+   /EXPORT:getsockname=$(DT_PREFIX)getsockname\
+   /EXPORT:getsockopt=$(DT_PREFIX)getsockopt\
+   /EXPORT:htonl=$(DT_PREFIX)htonl\
+   /EXPORT:htons=$(DT_PREFIX)htons\
+   /EXPORT:ioctlsocket=$(DT_PREFIX)ioctlsocket\
+   /EXPORT:listen=$(DT_PREFIX)listen\
+   /EXPORT:ntohl=$(DT_PREFIX)ntohl\
+   /EXPORT:ntohs=$(DT_PREFIX)ntohs\
+   /EXPORT:recv=$(DT_PREFIX)recv\
+   /EXPORT:recvfrom=$(DT_PREFIX)recvfrom\
+   /EXPORT:select=$(DT_PREFIX)select\
+   /EXPORT:send=$(DT_PREFIX)send\
+   /EXPORT:sendto=$(DT_PREFIX)sendto\
+   /EXPORT:setsockopt=$(DT_PREFIX)setsockopt\
+   /EXPORT:shutdown=$(DT_PREFIX)shutdown\
+   /EXPORT:socket=$(DT_PREFIX)socket\
+   /EXPORT:WSAAccept=$(DT_PREFIX)WSAAccept\
+   /EXPORT:WSAAsyncSelect=$(DT_PREFIX)WSAAsyncSelect\
+   /EXPORT:WSACleanup=$(DT_PREFIX)WSACleanup\
+   /EXPORT:WSACloseEvent=$(DT_PREFIX)WSACloseEvent\
+   /EXPORT:WSAConnect=$(DT_PREFIX)WSAConnect\
+   /EXPORT:WSACreateEvent=$(DT_PREFIX)WSACreateEvent\
+   /EXPORT:WSADuplicateSocketA=$(DT_PREFIX)WSADuplicateSocketA\
+   /EXPORT:WSADuplicateSocketW=$(DT_PREFIX)WSADuplicateSocketW\
+   /EXPORT:WSAEnumNetworkEvents=$(DT_PREFIX)WSAEnumNetworkEvents\
+   /EXPORT:WSAEnumProtocolsA=$(DT_PREFIX)WSAEnumProtocolsA\
+   /EXPORT:WSAEnumProtocolsW=$(DT_PREFIX)WSAEnumProtocolsW\
+   /EXPORT:WSAEventSelect=$(DT_PREFIX)WSAEventSelect\
+   /EXPORT:WSAGetLastError=$(DT_PREFIX)WSAGetLastError\
+   /EXPORT:WSAGetOverlappedResult=$(DT_PREFIX)WSAGetOverlappedResult\
+   /EXPORT:WSAGetQOSByName=$(DT_PREFIX)WSAGetQOSByName\
+   /EXPORT:WSAHtonl=$(DT_PREFIX)WSAHtonl\
+   /EXPORT:WSAHtons=$(DT_PREFIX)WSAHtons\
+   /EXPORT:WSAIoctl=$(DT_PREFIX)WSAIoctl\
+   /EXPORT:WSAJoinLeaf=$(DT_PREFIX)WSAJoinLeaf\
+   /EXPORT:WSANtohl=$(DT_PREFIX)WSANtohl\
+   /EXPORT:WSANtohs=$(DT_PREFIX)WSANtohs\
+   /EXPORT:WSARecv=$(DT_PREFIX)WSARecv\
+   /EXPORT:WSARecvDisconnect=$(DT_PREFIX)WSARecvDisconnect\
+   /EXPORT:WSARecvFrom=$(DT_PREFIX)WSARecvFrom\
+   /EXPORT:WSAResetEvent=$(DT_PREFIX)WSAResetEvent\
+   /EXPORT:WSASend=$(DT_PREFIX)WSASend\
+   /EXPORT:WSASendDisconnect=$(DT_PREFIX)WSASendDisconnect\
+   /EXPORT:WSASendTo=$(DT_PREFIX)WSASendTo\
+   /EXPORT:WSASetEvent=$(DT_PREFIX)WSASetEvent\
+   /EXPORT:WSASetLastError=$(DT_PREFIX)WSASetLastError\
+   /EXPORT:WSASocketA=$(DT_PREFIX)WSASocketA\
+   /EXPORT:WSASocketW=$(DT_PREFIX)WSASocketW\
+   /EXPORT:WSAStartup=$(DT_PREFIX)WSAStartup\
+   /EXPORT:WSAWaitForMultipleEvents=$(DT_PREFIX)WSAWaitForMultipleEvents\
+   /EXPORT:__WSAFDIsSet=$(DT_PREFIX)__WSAFDIsSet\
+#
+# GetXByY Functions
+#
+   /EXPORT:gethostbyaddr=$(DT_PREFIX)gethostbyaddr\
+   /EXPORT:gethostbyname=$(DT_PREFIX)gethostbyname\
+   /EXPORT:gethostname=$(DT_PREFIX)gethostname\
+   /EXPORT:getprotobyname=$(DT_PREFIX)getprotobyname\
+   /EXPORT:getprotobynumber=$(DT_PREFIX)getprotobynumber\
+   /EXPORT:getservbyname=$(DT_PREFIX)getservbyname\
+   /EXPORT:getservbyport=$(DT_PREFIX)getservbyport\
+   /EXPORT:inet_addr=$(DT_PREFIX)inet_addr\
+   /EXPORT:inet_ntoa=$(DT_PREFIX)inet_ntoa\
+   /EXPORT:WSAAsyncGetHostByAddr=$(DT_PREFIX)WSAAsyncGetHostByAddr\
+   /EXPORT:WSAAsyncGetHostByName=$(DT_PREFIX)WSAAsyncGetHostByName\
+   /EXPORT:WSAAsyncGetProtoByNumber=$(DT_PREFIX)WSAAsyncGetProtoByNumber\
+   /EXPORT:WSAAsyncGetProtoByName=$(DT_PREFIX)WSAAsyncGetProtoByName\
+   /EXPORT:WSAAsyncGetServByPort=$(DT_PREFIX)WSAAsyncGetServByPort\
+   /EXPORT:WSAAsyncGetServByName=$(DT_PREFIX)WSAAsyncGetServByName\
+   /EXPORT:WSACancelAsyncRequest=$(DT_PREFIX)WSACancelAsyncRequest\
+#
+# Upcalls for service providers
+   /EXPORT:WSCDeinstallProvider=$(DT_PREFIX)WSCDeinstallProvider\
+   /EXPORT:WSCInstallProvider=$(DT_PREFIX)WSCInstallProvider\
+   /EXPORT:WSCEnumProtocols=$(DT_PREFIX)WSCEnumProtocols\
+#
+# Install API for RNR
+# Note that these do not have debug hooks yet
+#
+   /EXPORT:WSAAddressToStringA\
+   /EXPORT:WSAAddressToStringW\
+   /EXPORT:WSAStringToAddressA\
+   /EXPORT:WSAStringToAddressW\
+   /EXPORT:WSALookupServiceBeginA\
+   /EXPORT:WSALookupServiceBeginW\
+   /EXPORT:WSALookupServiceNextA\
+   /EXPORT:WSALookupServiceNextW\
+   /EXPORT:WSALookupServiceEnd\
+   /EXPORT:WSAInstallServiceClassA\
+   /EXPORT:WSAInstallServiceClassW\
+   /EXPORT:WSARemoveServiceClass\
+   /EXPORT:WSAGetServiceClassInfoA\
+   /EXPORT:WSAGetServiceClassInfoW\
+   /EXPORT:WSAEnumNameSpaceProvidersA\
+   /EXPORT:WSAEnumNameSpaceProvidersW\
+   /EXPORT:WSAGetServiceClassNameByClassIdA\
+   /EXPORT:WSAGetServiceClassNameByClassIdW\
+   /EXPORT:WSCInstallNameSpace\
+   /EXPORT:WSCUnInstallNameSpace\
+   /EXPORT:WSCEnableNSProvider\
+   /EXPORT:WSCEnableNSProvider
+
+# Document macros
+
+# Sample App macros
+!include <project.mkh>
+
+
+trace.obj: ..\common\trace.c
+        $(CC) $(PROJ_CFLAGS) ..\common\trace.c
+
+
+
+
+
+

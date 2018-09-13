@@ -1,0 +1,26 @@
+/*---------------------------------------------------------------------------*\
+| WINCHAT RESOURCE VERSION FILE
+|   This module defines the resource version data.
+|
+|
+| Copyright (c) Microsoft Corp., 1990-1993
+|
+| created: 01-Nov-91
+| history: 01-Nov-91 <clausgi>  created.
+|          29-Dec-92 <chriswil> port to NT, cleanup.
+|
+\*---------------------------------------------------------------------------*/
+#ifndef WIN32
+#include <ver.h>
+#endif
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows for Workgroups Chat (NT)"
+#define VER_INTERNALNAME_STR		"WINCHAT"
+#define VER_LEGALCOPYRIGHT_YEARS    "1991-1993"
+#define VER_ORIGINALFILENAME_STR	"WINCHAT.EXE"
+
+#ifdef WIN32
+#include <common.ver>
+#endif

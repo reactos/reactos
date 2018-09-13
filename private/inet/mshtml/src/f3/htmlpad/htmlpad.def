@@ -1,0 +1,5 @@
+LIBRARY         "HTMLPAD"
+
+EXPORTS
+
+    PadMain             PRIVATE

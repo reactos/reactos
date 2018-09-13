@@ -1,0 +1,49 @@
+#include <olectl.h>
+// ImgLog.idl : IDL source for ImgLog.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (ImgLog.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	
+
+	[
+		object,
+		uuid(A145F826-6114-11D1-ADE3-00C04FB66F63),
+		dual,
+		helpstring("IIeLogControl Interface"),
+		pointer_default(unique)
+	]
+	interface IIeLogControl : IDispatch
+	{
+		[propget, id(1), helpstring("property images -- number of images on page")] HRESULT images([out, retval] short *pVal);
+		[propput, id(1), helpstring("property images -- number of images on page")] HRESULT images([in] short newVal);
+		[propput, id(2), helpstring("property msover")] HRESULT msover([in] BSTR bstrVal);
+		[propput, id(3), helpstring("property msclick")] HRESULT msclick([in] BSTR bstrVal);
+		[propput, id(4), helpstring("property URL")] HRESULT URL([in] BSTR newVal);
+
+		[id(6), helpstring("method ImageList")] HRESULT ImageList(BSTR bstrKey, BSTR bstrVal);
+	};
+[
+	uuid(A145F819-6114-11D1-ADE3-00C04FB66F63),
+	version(1.0),
+	helpstring("ImgLog 1.0 Type Library")
+]
+library IMGLOGLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(A145F827-6114-11D1-ADE3-00C04FB66F63),
+		helpstring("IeLogControl Class")
+	]
+	coclass IeLogControl
+	{
+		[default] interface IIeLogControl;
+	};
+
+};

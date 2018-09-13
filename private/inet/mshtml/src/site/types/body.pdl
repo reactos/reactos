@@ -1,0 +1,117 @@
+#ifndef _BODY_PDL_
+#define _BODY_PDL_ 1
+
+#include "txtedit.pdl"
+
+file body.pdl
+
+import txtedit.pdl
+
+//Now uses styleBackgroundAttachment
+//enum htmlBGProperties guid:3050f1d7-98b5-11cf-bb82-00aa00bdce0b
+//    eval NotSet  string:      value:0
+//    eval Fixed   string:fixed            value:1
+//    eval Scroll  string:scroll           value:2
+//    eval Center  string:center           value:3
+
+// NOTE: these values have to stay in ssync with FRAMEOPTIONS_SCROLL_YES/NO values
+enum bodyScroll prefix:bodyScroll guid:3050f3B0-98b5-11cf-bb82-00aa00bdce0b
+    eval yes      string:yes      value:1  /*==FRAMEOPTIONS_SCROLL_YES*/
+    eval no       string:no       value:2  /*==FRAMEOPTIONS_SCROLL_NO*/
+    eval auto     string:auto     value:4  /*==FRAMEOPTIONS_SCROLL_AUTO*/
+    eval default  string:         value:3  /* default value*/
+
+interface IHTMLBodyElement guid:3050f1d8-98b5-11cf-bb82-00aa00bdce0b
+    refprop   CBodyElement:background
+    refprop   CBodyElement:bgProperties
+    refprop   CBodyElement:leftMargin
+    refprop   CBodyElement:topMargin
+    refprop   CBodyElement:rightMargin
+    refprop   CBodyElement:bottomMargin
+    refprop   CBodyElement:noWrap
+    refprop   CBodyElement:bgColor
+    refprop   CBodyElement:text
+    refprop   CBodyElement:link
+    refprop   CBodyElement:vLink
+    refprop   CBodyElement:aLink
+    refprop   CBodyElement:onload
+    refprop   CBodyElement:onunload
+    refprop   CBodyElement:scroll
+    refprop   CBodyElement:onselect
+    refprop   CBodyElement:onbeforeunload
+    refmethod CBodyElement:createTextRange
+
+// if you add properties here that need to delegate to the window,
+// make sure to update cElement::addscriptlet
+
+interface IHTMLBodyElement2 guid:3050f5c5-98b5-11cf-bb82-00aa00bdce0b super:IDispatch
+    refprop   CBodyElement:onbeforeprint
+    refprop   CBodyElement:onafterprint
+
+tearoff CBodyElement interface:IHTMLBodyElement
+tearoff CBodyElement interface:IHTMLBodyElement2
+
+class CBodyElement name:HTMLBody \
+            super:CTxtSite \
+            primaryinterface:IHTMLBodyElement \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f24a-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f507-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLBodyElement
+    implements IHTMLBodyElement2
+
+    property bgColor         atype:VARIANT   dispid:DISPID_BACKCOLOR        type:CColorValue   dwFlags:ELEMCHNG_SITEREDRAW   get set caa displaybind getaa    maxstrlen:pdlColor
+    property background      atype:BSTR   dispid:DISPID_A_BACKGROUNDIMAGE   type:CStr          dwFlags:ELEMCHNG_SITEREDRAW   get set caa displaybind          maxstrlen:4736
+    property bgProperties    atype:BSTR   dispid:DISPID_A_BACKGROUNDATTACHMENT              type:styleBackgroundAttachment  dwFlags:ELEMCHNG_SITEREDRAW      default:styleBackgroundAttachmentNotSet   get set caa displaybind  maxstrlen:pdlToken
+
+    property topMargin       atype:VARIANT  dispid:DISPID_A_MARGINTOP         type:CUnitValue         \
+        default:MAKE_PIXEL_UNITVALUE(15) get set caa displaybind  \
+        ppflags:PP_UV_LENGTH   \
+        min:MAKE_PIXEL_UNITVALUE(0) minout maxstrlen:pdlLength
+    property leftMargin      atype:VARIANT  dispid:DISPID_A_MARGINLEFT         type:CUnitValue         \
+        default:MAKE_PIXEL_UNITVALUE(10) get set caa displaybind  \
+        ppflags:PP_UV_LENGTH   \
+        min:MAKE_PIXEL_UNITVALUE(0) minout maxstrlen:pdlLength
+    property rightMargin     atype:VARIANT  dispid:DISPID_A_MARGINRIGHT         type:CUnitValue                 \
+        default:MAKE_PIXEL_UNITVALUE(10) get set caa displaybind  \
+        ppflags:PP_UV_LENGTH   \
+        min:MAKE_PIXEL_UNITVALUE(0) minout maxstrlen:pdlLength
+    property bottomMargin    atype:VARIANT  dispid:DISPID_A_MARGINBOTTOM         type:CUnitValue         \
+        default:MAKE_PIXEL_UNITVALUE(15) get set caa displaybind  \
+        ppflags:PP_UV_LENGTH   \
+        min:MAKE_PIXEL_UNITVALUE(0) minout maxstrlen:pdlLength
+
+    property noWrap          atype:VARIANT_BOOL       dispid:DISPID_A_NOWRAP       type:BYTE               vt:VT_BOOL  default:0        get set caa displaybind
+    property text            atype:VARIANT            dispid:DISPID_A_COLOR        type:CColorValue                                     get set caa displaybind maxstrlen:pdlColor
+    property link            atype:VARIANT            dispid:DISPID_BODY+10        type:CColorValue        clearcaches siteredraw       get set caa displaybind maxstrlen:pdlColor
+    property aLink           atype:VARIANT            dispid:DISPID_BODY+11        type:CColorValue        clearcaches siteredraw       get set caa displaybind maxstrlen:pdlColor
+    property vLink           atype:VARIANT            dispid:DISPID_BODY+12        type:CColorValue        clearcaches siteredraw       get set caa displaybind maxstrlen:pdlColor
+
+    property onload          atype:VARIANT            dispid:DISPID_EVPROP_ONLOAD        \
+        type:code scriptlet get set caa displaybind baseimplementation  maxstrlen:pdlEvent
+    property onunload        atype:VARIANT            dispid:DISPID_EVPROP_ONUNLOAD        \
+        type:code scriptlet get set caa displaybind baseimplementation  maxstrlen:pdlEvent
+
+    property scroll          atype:BSTR               dispid:DISPID_A_SCROLL       \
+        type:bodyScroll     get set setaahr caa displaybind default:bodyScrolldefault    \
+             clearcaches dwFlags:ELEMCHNG_SIZECHANGED maxstrlen:pdlToken
+
+    property onselect      atype:VARIANT    dispid:DISPID_EVPROP_ONSELECT   type:code  get set caa bindable displaybind scriptlet   maxstrlen:pdlEvent
+
+    property onbeforeunload  atype:VARIANT      dispid:DISPID_EVPROP_ONBEFOREUNLOAD     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+
+    method   HRESULT  createTextRange      dispid:DISPID_BODY+13  ( out retval type:IHTMLTxtRange** arg:range )
+
+    property onbeforeprint   atype:VARIANT      dispid:DISPID_EVPROP_ONBEFOREPRINT     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+
+    property onafterprint    atype:VARIANT      dispid:DISPID_EVPROP_ONAFTERPRINT     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+
+#endif _BODY_PDL_

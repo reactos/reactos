@@ -1,0 +1,51 @@
+#define IDS_APPNAME                         100
+#define IDS_USNAME                          101
+#define IDS_Usage                           102
+#define IDS_Version                         103
+
+#define IDM_DO_CONNECT                      200
+#define IDM_OPTIONS                         201
+#define IDM_CONNECT                         202
+#define IDM_DISCONNECT                      203
+#define IDM_NOT_CONNECTING                  204
+#define IDM_HELP                            205
+#define IDM_STATUS                          206
+#define IDM_OPTIONS_DEBUG_DLLS              207
+#define IDM_OPTIONS_EXIT                    208
+#define IDM_HELP_CONTENTS                   209
+#define IDM_HELP_ABOUT                      210
+
+#define ID_KNOWN_DLLS                       301
+#define ID_ADD                              302
+#define ID_DELETE                           303
+#define ID_DEFAULT                          304
+#define ID_DESCRIPTION                      305
+#define ID_PATH                             306
+#define ID_PARAMETERS                       307
+#define ID_HELP                             308
+#define ID_ADVANCED                         309
+#define ID_TRANSPORT_HELP                   310 // this must match the one
+                                                // in win32s\shell\wdbg32s.h
+#define ID_SHORT_NAME                       311
+#define ID_KD_DEBUGGERGROUP                 312
+#define ID_KD_VERBOSE                       313
+#define ID_KD_INITIALBP                     314
+#define ID_KD_DEFER                         315
+#define ID_KD_MODEM                         316
+#define ID_KD_PORT_LABEL                    317
+#define ID_KD_PORT                          318
+#define ID_KD_BAUDRATE_LABEL                319
+#define ID_KD_BAUDRATE                      320
+#define ID_KD_CACHE_LABEL                   321
+#define ID_KD_CACHE                         322
+#define ID_KD_PLATFORM_LABEL                323
+#define ID_KD_PLATFORM                      324
+#define ID_KD_ENABLE                        325
+#define ID_KD_GOEXIT                        326
+
+#define DLG_TRANSPORTS                      500
+#define DLG_CONNECTING                      501
+#define DLG_KERNELDBG                       502
+#define DISCONNECT_OK                       503
+#define CONNECT_OK                          504
+#define CONNECTING_ICON                     505

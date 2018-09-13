@@ -1,0 +1,31 @@
+# Shdoc401 is for 32-bit platforms only
+
+DIRS    =\
+          lib       \
+          tools     \
+          iert      \
+          comctl32  \
+          comdlg32  \
+          shlwapi   \
+          shell32   \
+          shdocvw   \
+          browseui  \
+          browsestub  \
+          explorer  \
+          iexplore  \
+          shdoc401{32}  \
+          ext       \
+          applets   \
+          cpls      \
+          scrnsave  \
+          tests     \
+          policies  \
+
+
+#         types{32} \
+
+
+
+OPTIONAL_DIRS =\
+          samples   \
+          browseinfo

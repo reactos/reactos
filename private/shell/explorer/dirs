@@ -1,0 +1,5 @@
+# Build the win95 binary first, so the PDB file of the NT version won't
+# get stomped on by the linker.
+
+DIRS =  w5api{x86} win95{x86} \
+        ntc nt5api winnt

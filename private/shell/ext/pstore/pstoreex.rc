@@ -1,0 +1,52 @@
+#include "resource.h"
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_PSTORE              ICON    DISCARDABLE     "pstoreex.ico"
+IDI_PROVIDER            ICON    DISCARDABLE     "provider.ico"
+IDI_ITEM                ICON    DISCARDABLE     "item.ico"
+IDI_FOLDER              ICON    DISCARDABLE     "folder.ico"
+IDI_FOLDEROPEN          ICON    DISCARDABLE     "folderop.ico"
+IDI_GLOBAL              ICON    DISCARDABLE     "global.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PSTORE_TITLE        "Protected Storage: "
+    IDS_MI_REGISTRY         "&Test"
+    IDS_MI_MESSAGE1         "&Message 1"
+    IDS_TB_MESSAGE1         "Message 1"
+    IDS_MI_MESSAGE2         "&Message 2"
+    IDS_TB_MESSAGE2         "Message 2"
+    IDS_MI_VIEW_IETB        "Show IExplorerToolbar"
+    IDS_COLUMN1             "Name"
+    IDS_COLUMN2             "Data"
+    IDS_DEFAULT             "(Default)"
+    IDS_NODATA              "(value not set)"
+END
+
+
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Protected Storage Explorer"
+#define VER_INTERNALNAME_STR        "Protected Storage Explorer"
+
+#undef VER_PRODUCTVERSION
+#undef VER_FILEVERSION
+#undef VER_PRODUCTVERSION_STR
+#undef VER_FILEVERSION_STR
+
+#include "common.ver"
+

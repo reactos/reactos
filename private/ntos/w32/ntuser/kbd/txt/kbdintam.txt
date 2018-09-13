@@ -1,0 +1,166 @@
+KBD	INTAM	"Tamil"
+
+	//LCID	0449
+
+VERSION	1.0
+
+SHIFTSTATE
+
+	0	//Column 4:
+	1	//Column 5:	Shift
+	6	//Column 6: 		Control	Alt
+	3	//Column 7: 	Shift	Control
+	2	//Column 8: 		Control
+
+LAYOUT
+
+//SC	VK_       Cap	0	1	6	3	2
+//--	--------- ---	----	---	----	----	----
+  29	OEM_3      0	0bca	0b92			//Tamil Vowel Sign O, Tamil Letter O
+  02	1          0	1	-1	0be7	200d	//Tamil Digit One, ZWJ
+  03	2          0	2	-1	0be8	200c	//Tamil Digit Two, ZWNJ
+  04	3          0	3	-1	0be9		//Tamil Digit Three
+  05	4          0	4	-1	0bea		//Tamil Digit Four
+  06	5          0	5	-1	0beb		//Tamil Digit Five
+  07	6          0	6	%%	0bec		//0BA4+0BCD+0BB0, Tamil Digit Six
+  08	7          0	7	%%	0bed		//0B95+0BCD+0BB7, Tamil Digit Seven
+  09	8          0	8	%%	0bee		//0BB7+0BCD+0BB0, Tamil Digit Eight
+  0a	9          0	9	-1 	0bef		//Tamil Digit Nine
+  0b	0          0	0	-1      0bf0            //Tamil Number Ten
+  0c	OEM_MINUS  0	-	0b83	0bf1		//Tamil Sign Visarga, Tamil Number 100
+  0d	OEM_PLUS   0	-1	-1	0bf2		//Tamil Number 1000
+//--	--------- ---	----	---	----	----	----
+  10	Q          0	0BCC	0B94			//Tamil Vowel Sign Au, Tamil Letter Au
+  11	W          0	0BC8	0B90			//Tamil Vowel Sign Ai, Tamil Letter Ai
+  12	E          0	0BBE	0B86			//Tamil Vowel Sign Aa, Tamil Letter Aa
+  13	R          0	0BC0	0B88			//Tamil Vowel Sign Ii, Tamil Letter Ii
+  14	T          0	0BC2	0B8A			//Tamil Vowel Sign Uu, Tamil Letter Uu
+  15	Y          0	0BAA	0BAA			//Tamil Letter Pa
+  16	U          0	0BB9	0B99			//Tamil Letter Ha, Tamil Letter Nga
+  17	I          0	0B95	0B95			//Tamil Letter Ka
+  18	O          0	0BA4	0BA4			//Tamil Letter Ta
+  19	P          0	0B9C	0B9A			//Tamil Letter Ja, Tamil Letter Ca
+  1a	OEM_4      0	0B9F	0B9F			//Tamil Letter Tta
+  1b	OEM_6      0	0B9E	-1			//Tamil Letter Nya
+  2b	OEM_5      0	-1	-1			//Tamil Letter Aa, Tamil Vowel Sign Aa
+//--	--------- ---	----	---	----	----	----
+  1e	A          0	0BCB	0B93			//Tamil Vowel Sign Oo, Tamil Letter Oo
+  1f	S          0	0BC7	0B8F			//Tamil Vowel Sign Ee, Tamil Letter Ee
+  20	D          0	0BCD	0B85			//Tamil Sign Virama, Tamil Letter A
+  21	F          0	0BBF	0B87			//Tamil Vowel Sign I, Tamil Letter I
+  22	G          0	0BC1	0B89			//Tamil Vowel Sign U, Tamil Letter U
+  23	H          0	0BAA	0BAA			//Tamil Letter Pa
+  24	J          0	0BB0	0BB1			//Tamil Letter Ra, Tamil Letter Rra
+  25	K          0	0B95	0B95			//Tamil Letter Ka, Tamil Letter Ka
+  26	L          0	0BA4	0BA4			//Tamil Letter Ta
+  27	OEM_1      0	0B9A	0B9A			//undefined, Tamil Letter Ca
+  28	OEM_7      0	0B9F	0B9F			//Tamil Letter Tta
+//--	--------- ---	----	---	----	----	----
+  2c	Z          0	0BC6	0B8E			//Tamil Vowel Sign E, Tamil Letter E
+  2d	X          0	-1	-1			
+  2e	C          0	0BAE	0BA3			//Tamil Letter Ma, Tamil Letter Nna
+  2f	V          0	0BA8	0BA9			//Tamil Letter Na, Tamil Letter Nnna
+  30	B          0	0BB5	0BB4			//Tamil Letter Va, Tamil Letter Llla
+  31	N          0	0BB2	0BB3			//Tamil Letter La, Tamil Letter Lla
+  32	M          0	0BB8	0BB7			//Tamil Letter Sa, Tamil Letter Ssa
+  33	OEM_COMMA  0	,       0BB7			//comma, Tamil Letter Ssa
+  34	OEM_PERIOD 0	002E	%%                      //period, 0BB8+0BCD+0BB0+0BC0 
+  35	OEM_2	   0	0BAF	0BAF                    //Tamil Letter Ya
+  56	OEM_102	   0	-1	-1
+//--	--------- ---	----	---	----	----	----
+  53	DECIMAL    0	.	.
+//--	--------- ---	----	---	----	----	----
+//SC	VK_       Cap	0	1	6	3	2
+
+
+LIGATURE
+
+//VK_	        Mod#	Char0	Char1	Char2   Char3
+//---	        ----	-----	-----	-----   -----
+  6	        1	0BA4	0BCD	0BB0
+  7	        1	0B95	0BCD	0BB7
+  8	        1	0BB7	0BCD 	0BB0
+  OEM_PERIOD    1       0BB8    0BCD    0BB0    0BC0
+
+KEYNAME
+
+  01    Esc
+  0e    Backspace
+  0f    Tab
+  1c    Enter
+  1d    Ctrl
+  2a    Shift
+  36    "Right Shift"
+  37    "Num *"
+  38    Alt
+  39    Space
+  3a    "Caps Lock"
+  3b    F1
+  3c    F2
+  3d    F3
+  3e    F4
+  3f    F5
+  40    F6
+  41    F7
+  42    F8
+  43    F9
+  44    F10
+  45    Pause
+  46    "Scroll Lock"
+  47    "Num 7"
+  48    "Num 8"
+  49    "Num 9"
+  4a    "Num -"
+  4b    "Num 4"
+  4c    "Num 5"
+  4d    "Num 6"
+  4e    "Num +"
+  4f    "Num 1"
+  50    "Num 2"
+  51    "Num 3"
+  52    "Num 0"
+  53    "Num Del"
+  54    "Sys Req"
+  57    F11
+  58    F12
+  7c    F13
+  7d    F14
+  7e    F15
+  7f    F16
+  80    F17
+  81    F18
+  82    F19
+  83    F20
+  84    F21
+  85    F22
+  86    F23
+  87    F24
+
+KEYNAME_EXT
+
+  1c    "Num Enter"
+  1d    "Right Control"
+  35    "Num /"
+  37    "Prnt Scrn"
+  38    "Right Alt"
+  45    "Num Lock"
+  46    Break
+  47    Home
+  48    Up
+  49    "Page Up"
+  4b    Left
+  4d    Right
+  4f    End
+  50    Down
+  51    "Page Down"
+  52    Insert
+  53    Delete
+  54    <00>
+  56    Help
+  5b    "Left Windows"
+  5c    "Right Windows"
+  5d    Application
+
+ENDKBD
+
+

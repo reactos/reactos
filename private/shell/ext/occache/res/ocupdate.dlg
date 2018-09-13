@@ -1,0 +1,28 @@
+//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
+//
+// ocupdate.dlg
+//
+//   dialog resource for occache.dll
+//
+//   History:
+//
+//       7/14/97   seanf    Poached from cdfview.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#define IDC_STATIC -1
+
+IDD_OCUPDATE DIALOG 20, 20, 250, 60
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Program File Update"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_DOWNLOADANIMATE,"SysAnimate32",ACS_TRANSPARENT |
+                    ACS_AUTOPLAY,7,0,236,25
+    CONTROL         "Progress1",IDC_DOWNLOADPROGRESS,"msctls_progress32",0x0,
+                    7,38,190,8,WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,202,38,40,14
+//    LTEXT           "Place holder text.",IDC_DOWNLOADMSG,40,7,195,32
+//    ICON            IDI_CHANNEL,IDC_STATIC,7,7,20,20
+END
+

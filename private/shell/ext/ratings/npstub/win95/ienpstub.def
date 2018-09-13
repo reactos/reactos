@@ -1,0 +1,22 @@
+LIBRARY		IENPSTUB
+DESCRIPTION	'IENPSTUB - Network provider delay loading stub'
+
+EXPORTS
+    NPGetCaps                   @13
+    NPGetUniversalName          @36     NONAME
+    NPGetUser                   @16     NONAME
+    NPValidLocalDevice          @42     NONAME
+    NPAddConnection             @17     NONAME
+    NPCancelConnection          @18     NONAME
+    NPGetConnection             @12     NONAME
+    NPGetConnectionPerformance  @49     NONAME
+    NPFormatNetworkName         @46     NONAME
+    NPOpenEnum                  @33     NONAME
+    NPEnumResource              @34     NONAME
+    NPCloseEnum                 @35     NONAME
+    NPGetResourceParent         @41     NONAME
+    NPGetResourceInformation    @52     NONAME
+    NPLogon                     @43     NONAME
+    NPLogoff                    @44     NONAME
+    NPGetHomeDirectory          @45     NONAME
+    NPGetPolicyPath             @50     NONAME

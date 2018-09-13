@@ -1,0 +1,48 @@
+;
+; This file defines the base virtual address for Dynamic Link Libraries (DLL)
+; that are part of the Windows NT System.  The first token on a line is the name
+; of the DLL and the second token is the base virtual address, in hexidecimal.
+; The third token is the maximum size of the DLL image file, including symbols.
+;
+;  NOTE:  I have used the convention of labelling unused areas as _FREExx_.
+;  If you need an address,  these are available.  They were used by printer
+;  drivers.
+
+;
+;  CONTROLS
+;
+; BUGBUG: need an official base address
+urlmon        0x1a400000  0x00a00000
+urlhlink      0x1a600000  0x00a00000
+iegrad        0x1a610000  0x00a00000
+ieanbtn       0x1a620000  0x00a00000
+ielabel       0x1a630000  0x00a00000
+iemenu        0x1a640000  0x00a00000
+ienewitm      0x1a650000  0x00a00000
+iepreld       0x1a660000  0x00a00000
+iestock       0x1a670000  0x00a00000
+ietimer       0x1a680000  0x00a00000
+ietrack       0x1a690000  0x00a00000
+iechart       0x1a6a0000  0x00a00000
+htmlctl       0x1a6b0000  0x00a00000
+marquee       0x1a6d0000  0x00a00000
+iedate        0x1a6e0000  0x00a00000
+plugin        0x1a710000  0x00a00000
+iepopwnd      0x1a730000  0x00a00000
+btnmenu       0x1a750000  0x00a00000
+licmgr        0x1a770000  0x00a00000
+autofill      0x1a790000  0x00a00000    ; was msticker
+_FREE00_      0x1a7b0000  0x00a00000    ; was infohelp
+_FREE00_      0x1a7d0000  0x00a00000    ; was multibut
+_FREE00_      0x1a7f0000  0x00a00000    ; was parsetbl
+adlog         0x1a810000  0x00a00000    ; was addinfo
+npmsjava      0x1a820000  0x00a00000
+_FREE00_      0x1a830000  0x00040000 
+_FREE00_      0x1a870000  0x00a00000    ; was advert
+
+;
+; This section contains the Cairo images.  Free areas are labelled with
+; _CFREExx_
+;
+
+

@@ -1,0 +1,140 @@
+#ifndef _HEDELEMS_PDL_
+#define _HEDELEMS_PDL_ 1
+
+#include "element.pdl"
+
+file hedelems.pdl
+
+import element.pdl
+
+
+class CHtmlElement name:HTMLHtmlElement super:CElement primaryinterface:IHTMLElement \
+            guid:3050f491-98b5-11cf-bb82-00aa00bdce0b \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            mondoguid:3050f560-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+
+class CHeadElement name:HTMLHeadElement super:CElement primaryinterface:IHTMLElement \
+            guid:3050f493-98b5-11cf-bb82-00aa00bdce0b \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            mondoguid:3050f561-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+
+
+interface IHTMLTitleElement guid:3050f322-98b5-11cf-bb82-00aa00bdce0b
+    refprop CTitleElement:text
+
+tearoff CTitleElement interface:IHTMLTitleElement
+
+class CTitleElement name:HTMLTitleElement \
+            primaryinterface:IHTMLTitleElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f284-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f516-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLTitleElement
+
+    property text  dispid:DISPID_A_VALUE   atype:BSTR   type:BSTR   member:_cstrTitle \
+        get set bindable nopersist maxstrlen:pdlNoLimit
+
+interface IHTMLMetaElement guid:3050f203-98b5-11cf-bb82-00aa00bdce0b
+    refprop CMetaElement:httpEquiv
+    refprop CMetaElement:content
+    refprop CMetaElement:name
+    refprop CMetaElement:url
+    refprop CMetaElement:charset
+
+tearoff CMetaElement interface:IHTMLMetaElement
+
+class CMetaElement name:HTMLMetaElement \
+            primaryinterface:IHTMLMetaElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f275-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f517-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLMetaElement
+
+    property httpEquiv  szAttribute:http-equiv atype:BSTR    dispid:DISPID_HEDELEMS+1 \
+        type:CStr  get set caa bindable displaybind maxstrlen:pdlNoLimit
+    property name       atype:BSTR    dispid:STDPROPID_XOBJ_NAME  type:CStr  get set method:nameHelper \
+        baseimplementation bindable displaybind   maxstrlen:pdlNoLimit
+    property content    atype:BSTR    dispid:DISPID_HEDELEMS+2    type:CStr  get set caa \
+        bindable displaybind setaahr maxstrlen:pdlNoLimit
+    property url        atype:BSTR    dispid:DISPID_HEDELEMS+3    type:CStr  get set caa \
+        bindable displaybind maxstrlen:pdlUrlLen
+    property charset    atype:BSTR    dispid:DISPID_HEDELEMS+13   type:CStr  get set caa \
+        bindable displaybind maxstrlen:pdlLength
+
+
+interface IHTMLBaseElement guid:3050f204-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBaseElement:href
+    refprop CBaseElement:target
+
+tearoff CBaseElement interface:IHTMLBaseElement
+
+class CBaseElement name:HTMLBaseElement \
+            primaryinterface:IHTMLBaseElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f276-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f518-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBaseElement
+
+    property href       atype:BSTR    dispid:DISPID_HEDELEMS+3  type:CStr    get set caa setaahr bindable displaybind maxstrlen:pdlUrlLen
+    property target     atype:BSTR    dispid:DISPID_HEDELEMS+4  type:CStr    get set caa bindable displaybind maxstrlen:pdlNoLimit
+
+
+interface IHTMLIsIndexElement guid:3050f206-98b5-11cf-bb82-00aa00bdce0b
+    refprop CIsIndexElement:prompt
+    refprop CIsIndexElement:action
+
+tearoff CIsIndexElement interface:IHTMLIsIndexElement
+
+class CIsIndexElement name:HTMLIsIndexElement \
+            primaryinterface:IHTMLIsIndexElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f278-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f519-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLIsIndexElement
+
+    property prompt     atype:BSTR    dispid:DISPID_HEDELEMS+10  type:CStr   get set caa bindable displaybind maxstrlen:pdlNoLimit
+    property action     atype:BSTR    dispid:DISPID_HEDELEMS+11  type:CStr   get set caa bindable displaybind maxstrlen:pdlUrlLen
+
+
+interface IHTMLNextIdElement guid:3050f207-98b5-11cf-bb82-00aa00bdce0b
+    refprop CNextIdElement:n
+
+tearoff CNextIdElement interface:IHTMLNextIdElement
+
+class CNextIdElement name:HTMLNextIdElement \
+            primaryinterface:IHTMLNextIdElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f279-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f51a-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLNextIdElement
+
+    property n          atype:BSTR    dispid:DISPID_HEDELEMS+12  type:CStr   get set caa bindable displaybind maxstrlen:pdlNoLimit
+
+
+#endif _HEDELEMS_PDL_

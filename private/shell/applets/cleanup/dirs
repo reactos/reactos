@@ -1,0 +1,4 @@
+DIRS    = dataclen cleanmgr
+
+OPTIONAL_DIRS=
+

@@ -1,0 +1,639 @@
+
+
+//  resource.rc - resource file (I can't believe I just wrote that)
+
+
+#include "priv.h"
+#include "resource.h"
+#include "resource.rcv"
+
+#include <commctrl.h>     // for WC_COMBOBOXEX
+
+
+REGINST                 REGINST "selfreg_msieftp.inf"
+
+/*****************************************************************************
+ *
+ *    Icons
+ *
+ *****************************************************************************/
+
+// BUGBUG: Use icons from other dlls (\shell32\NUKE.ICO;REPLACE.ICO, \wininet\KEY.ICO)
+//IDI_FTPSERVER               ICON SERVER.ICO     // Icon for an FTP Server 
+IDI_FTPFOLDER               ICON FOLDER.ICO     // Icon for a closed folder on a FTP Server 
+IDI_FTPOPENFOLDER           ICON OFOLDER.ICO    // Icon for an open folder on a FTP Server 
+IDI_DELETEITEM              ICON NUKE.ICO       // Delete File, Folder, or multiple items
+IDI_REPLACE                 ICON REPLACE.ICO    // File getting mashed 
+IDI_KEY                     ICON KEY.ICO        // Key icon for Login As dialog
+//IDI_NETFOLDER               ICON NETFOLDR.ICO   // Folder for Proxy Blocking dialog
+
+//IDI_WRITE_ALLOWED           ICON WRITE.ICO      // This folder has write access 
+//IDI_WRITE_NOTALLOWED        ICON NOWRITE.ICO    // This folder does not have write access 
+
+/*****************************************************************************
+ *
+ *    IDM_ITEMCONTEXT - Context menu for items
+ *
+ *****************************************************************************/
+
+IDM_ITEMCONTEXT MENUEX PRELOAD
+BEGIN
+    //    Verbs for folders. (IDM_M_FOLDERVERBS)
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",               IDC_ITEM_OPEN
+        MENUITEM "&Explore",            IDC_ITEM_EXPLORE
+    END
+
+    //    Verbs for folders. (IDM_M_FILEVERBS)
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",               IDC_ITEM_OPEN
+    END
+
+    //    Verbs for all occasions. (IDM_M_VERBS)
+    POPUP ""
+    BEGIN
+        MENUITEM "Copy To &Folder...",     IDC_ITEM_DOWNLOAD
+    END
+
+    // (IDM_M_SHAREDVERBS)
+    //    Verbs only on the pop-up context menu for the object directly.
+    //    (Not on the File menu and not on shortcuts.)
+    //    These are called "non-required" verbs...
+    // _UNDOCUMENTED_:  The magic SFVIDM_* values are not documented.
+    POPUP ""
+    BEGIN
+        // We cannot cut because the way the shell does Cut is
+        //  not exported to the outside world.  Furthermore, the
+        //  the way the shell does Cut works only for HDROPs.
+        //
+        //  BUGBUG -- Note that we do not support Paste Shortcut.
+        //  Maybe we should.
+#ifdef FEATURE_CUT_MOVE
+        MENUITEM "Cu&t",                IDM_SHARED_EDIT_CUT
+#endif // FEATURE_CUT_MOVE
+        MENUITEM "&Copy",               IDM_SHARED_EDIT_COPY
+        MENUITEM "&Paste",              IDM_SHARED_EDIT_PASTE
+#ifdef _SOMEDAY_PASTESHORTCUT
+        MENUITEM "Paste &Shortcut",     IDM_SHARED_EDIT_PASTE_SHORTCUT
+#endif
+
+        MENUITEM "", -1,                MFT_SEPARATOR
+        // TODO: Someday we can actually, upload this link, but not now.
+        //       MENUITEM "Create &Shortcut",    IDM_SHARED_FILE_LINK
+        MENUITEM "&Delete",             IDM_SHARED_FILE_DELETE
+        MENUITEM "Rena&me",             IDM_SHARED_FILE_RENAME
+        MENUITEM "", -1,                MFT_SEPARATOR
+        MENUITEM "P&roperties",         IDM_SHARED_FILE_PROP
+    END
+
+    //    Verbs for the background menu. (IDM_M_BACKGROUNDVERBS)
+    POPUP ""
+    BEGIN
+        MENUITEM "Login &As...",        IDC_LOGIN_AS
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Folder",         IDC_ITEM_NEWFOLDER
+        END
+        MENUITEM "", -1,                MFT_SEPARATOR
+        MENUITEM "P&roperties",         IDC_ITEM_BKGNDPROP
+    END
+
+END
+
+
+IDM_M_BACKGROUND_POPUPMERGE MENUEX PRELOAD
+BEGIN
+    POPUP "",                        SFVIDM_MENU_ARRANGE
+    BEGIN
+        MENUITEM "by &Name",        IDM_SORTBYNAME
+        MENUITEM "by &Type",        IDM_SORTBYTYPE
+        MENUITEM "by Si&ze",        IDM_SORTBYSIZE
+        MENUITEM "by &Date",        IDM_SORTBYDATE
+    END
+END
+
+
+/*****************************************************************************
+ *
+ *    IDM_FTPMERGE - Menu that is merged into the view menu bar.
+ *
+ *    _UNDOCUMENTED_:  SFVIDM_CLIENT_FIRST is not documented.
+ *
+ *****************************************************************************/
+
+IDM_FTPMERGE MENUEX DISCARDABLE
+BEGIN
+    POPUP "",                FCIDM_MENU_FILE
+    BEGIN
+    MENUITEM "&Login As...",        IDC_LOGIN_AS
+    POPUP "&New"
+    BEGIN
+        MENUITEM "&Folder",         IDC_ITEM_NEWFOLDER
+    END
+    END
+
+    POPUP "",                SFVIDM_MENU_ARRANGE
+    BEGIN
+    MENUITEM "by &Name",            IDM_SORTBYNAME
+    MENUITEM "by &Type",            IDM_SORTBYTYPE
+    MENUITEM "by Si&ze",            IDM_SORTBYSIZE
+    MENUITEM "by &Date",            IDM_SORTBYDATE
+    END
+
+    POPUP "",                FCIDM_MENU_HELP
+    BEGIN
+    MENUITEM "FTP Server &Welcome Message...",     IDC_ITEM_ABOUTSITE
+    MENUITEM "", -1,                               MFT_SEPARATOR
+    MENUITEM "&FTP Help",                          IDC_ITEM_FTPHELP
+#ifdef ADD_ABOUTBOX
+    MENUITEM "About FTP Folder",                   IDC_ITEM_ABOUTFTP
+#endif // ADD_ABOUTBOX
+    END
+END
+
+
+
+/*****************************************************************************
+ *
+ *    IDM_DROPCONTEXT - Context menu used during drag/drop.
+ *
+ *****************************************************************************/
+
+IDM_DROPCONTEXT MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "&Copy Here",                  DROPEFFECT_COPY
+    MENUITEM "&Move Here",                  DROPEFFECT_MOVE
+    MENUITEM SEPARATOR
+    MENUITEM "Cancel",                      0
+    END
+END
+
+/*****************************************************************************
+ *
+ *    IDM_FOLDERCONTEXT - Context menu used for folder background menu.
+ *
+ *****************************************************************************/
+
+IDM_FOLDERCONTEXT MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+    MENUITEM "Cancel",                      0
+    END
+END
+
+/*****************************************************************************
+ *
+ *    IDD_REPLACE - Confirmation dialog for file overwrite warning
+ *              resulting from a drag/drop (or Paste).
+ *
+ *    We need to say "(no details available)" in case somebody
+ *    dropped a data object on us that doesn't support the Stat()
+ *    function, so we don't know anything about it...
+ *
+ *****************************************************************************/
+
+IDD_REPLACE DIALOGEX DISCARDABLE  0, 0, 280, 141
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK |
+      WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Replace"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes", IDC_REPLACE_YES,46,120,53,14
+    PUSHBUTTON      "Yes to &All", IDC_REPLACE_YESTOALL,104,120,53,14
+    PUSHBUTTON      "&No", IDC_REPLACE_NO,161,120,53,14
+    PUSHBUTTON      "Cancel", IDC_REPLACE_CANCEL,219,120,53,14
+    ICON            IDI_REPLACE,-1,10,10,18,20
+
+    LTEXT           "This folder already contains a file called '%s'.",
+                    IDC_FILENAME,41,10,222,22,SS_NOPREFIX
+
+    LTEXT           "Would you like to replace the existing file",-1,
+                    41,35,180,10, SS_NOPREFIX
+
+    LTEXT           "(no details available)", IDC_FILESIZE2, 79,51,194,8, SS_NOPREFIX
+    LTEXT           "", IDC_FILETIME2, 79,59,194,8, SS_NOPREFIX
+    ICON            "", IDC_FILEICON2,51,49,18,20
+
+    LTEXT           "with this one?",-1,41,75,180,10, SS_NOPREFIX
+    LTEXT           "(no details available)", IDC_FILESIZE, 79,91,194,8, SS_NOPREFIX
+    LTEXT           "", IDC_FILETIME, 79,99,194,8, SS_NOPREFIX
+    ICON            "", IDC_FILEICON,51,89,18,20
+END
+
+/*****************************************************************************
+ *
+ *    IDD_DELETEFILE - Confirmation dialog for single-file delete warning.
+ *
+ *****************************************************************************/
+
+IDD_DELETEFILE DIALOGEX DISCARDABLE  0, 0, 275, 73
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm File Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes", IDC_REPLACE_YES,147,51,58,14
+    PUSHBUTTON      "&No", IDC_REPLACE_NO,210,51,58,14
+    ICON            IDI_DELETEITEM,-1,10,10,18,20
+    LTEXT           "Are you sure you want to delete the file '%s'? \n\n",IDC_FILENAME,41,10,
+                    220,28,SS_NOPREFIX
+END
+
+/*****************************************************************************
+ *
+ *    IDD_DELETEFOLDER - Confirmation dialog for single-file delete warning.
+ *
+ *****************************************************************************/
+
+IDD_DELETEFOLDER DIALOGEX DISCARDABLE  0, 0, 275, 73
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Folder Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes", IDC_REPLACE_YES,147,51,58,14
+    PUSHBUTTON      "&No", IDC_REPLACE_NO,210,51,58,14
+    ICON            IDI_DELETEITEM,-1,10,10,18,20
+    LTEXT           "Are you sure you want to delete the folder '%s'?\n(Deleting a folder will delete all of its contents)",IDC_FILENAME,41,10,
+                    220,36,SS_NOPREFIX
+END
+
+/*****************************************************************************
+ *
+ *    IDD_DELETEMULTI - Confirmation dialog for multi-file delete warning.
+ *
+ *****************************************************************************/
+// BUGBUG: Use single icon
+IDD_DELETEMULTI DIALOGEX DISCARDABLE  0, 0, 275, 65
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Multiple File Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes", IDC_REPLACE_YES,147,43,58,14
+    PUSHBUTTON      "&No", IDC_REPLACE_NO,210,43,58,14
+    ICON            IDI_DELETEITEM,-1,10,10,18,20
+
+    LTEXT           "Are you sure you want to delete these %u items?  \n(Deleting a folder will delete all of its contents)",
+                    IDC_COUNT,41,14,224,24
+END
+
+/*****************************************************************************
+ *
+ *    IDD_FILEPROP - Generic property sheet
+ *
+ *****************************************************************************/
+
+IDD_FILEPROP DIALOGEX DISCARDABLE 0, 0, 227, 200
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_FILEICON,7,7,18,20
+    EDITTEXT        IDC_FILENAME,48,14,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    EDITTEXT        IDC_FILENAME_EDITABLE,48,12,172,14,ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+    CONTROL         "",IDC_UNUSED,"Static",SS_ETCHEDHORZ,7,32,213,1
+    LTEXT           "Type:",-1,7,40,40,9
+    EDITTEXT        IDC_FILETYPE,48,40,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Location:",IDC_UNUSED,7,53,40,9
+    EDITTEXT        IDC_LOCATION,48,53,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Size:",IDC_FILESIZE_LABEL,7,66,24,9
+    LTEXT           "",IDC_FILESIZE,48,66,172,10
+//    CONTROL         "",-1,"Static",SS_ETCHEDHORZ,7,149,213,1
+//    CONTROL         "&Read-only",IDC_READONLY,"Button",BS_AUTOCHECKBOX |
+//                    WS_TABSTOP,68,157,58,10
+//    LTEXT           "Attributes:",-1,7,157,32,9
+#ifdef FEATURE_CHANGE_PERMISSIONS
+    CONTROL         "",IDC_UNUSED,"Static",SS_ETCHEDHORZ,7,94,213,1
+    LTEXT           "Modified:",IDC_FILETIME_LABEL,7,79,40,9
+    CONTROL         "(unknown)",IDC_FILETIME,"edit",ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER,48,79,152,14
+
+    EDITTEXT        IDC_CHMOD_GROUPBOX,7,113,210,55,WS_DISABLED,WS_EX_CLIENTEDGE
+
+    LTEXT           "This server does not support changing file permissions.",IDC_CHMOD_NOT_ALLOWED,7,100,190,9
+    LTEXT           "Permissions:",IDC_CHMOD_LABEL_PERM,7,100,40,9
+    LTEXT           "Owner",IDC_CHMOD_LABEL_OWNER,18,118,40,9
+    LTEXT           "Group",IDC_CHMOD_LABEL_GROUP,18,135,40,9
+    LTEXT           "All Users",IDC_CHMOD_LABEL_ALL,18,152,40,9
+    LTEXT           "Read",IDC_CHMOD_LABEL_READ,126,100,24,9
+    LTEXT           "Write",IDC_CHMOD_LABEL_WRITE,156,100,26,9
+    LTEXT           "Execute",IDC_CHMOD_LABEL_EXECUTE,183,100,30,9
+    CONTROL         "",IDC_CHMOD_OR,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,130,118,16,8
+    CONTROL         "",IDC_CHMOD_OW,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,160,118,16,8
+    CONTROL         "",IDC_CHMOD_OE,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,190,118,16,8
+    CONTROL         "",IDC_CHMOD_GR,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,130,135,16,8
+    CONTROL         "",IDC_CHMOD_GW,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,160,135,16,8
+    CONTROL         "",IDC_CHMOD_GE,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,190,135,16,8
+    CONTROL         "",IDC_CHMOD_AR,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,130,152,16,8
+    CONTROL         "",IDC_CHMOD_AW,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,160,152,16,8
+    CONTROL         "",IDC_CHMOD_AE,"Button", BS_AUTOCHECKBOX | BS_FLAT | WS_TABSTOP,190,152,16,8
+#else // FEATURE_CHANGE_PERMISSIONS
+    CONTROL         "",IDC_UNUSED,"Static",SS_ETCHEDHORZ,7,84,213,1
+    LTEXT           "Modified:",IDC_FILETIME_LABEL,7,92,40,9
+    CONTROL         "(unknown)",IDC_FILETIME,"edit",ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER,48,92,152,14
+#endif // FEATURE_CHANGE_PERMISSIONS
+    CONTROL         "",IDC_UNUSED,"NativeFontCtl",NFS_ALL|NFS_USEFONTASSOC|NFS_EDIT|NFS_STATIC,0,0,0,0
+END
+
+
+/*****************************************************************************\
+    DIALOG: Login
+\*****************************************************************************/
+IDD_LOGINDLG DIALOGEX DISCARDABLE  0, 0, 254, 156
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Login As"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_KEY,-1,10,10,21,20
+    LTEXT           "Either the server does not allow anonymous logins or the e-mail address was not accepted.",
+                    IDC_LOGINDLG_MESSAGE_ANONREJECT,38,12,187,24
+    LTEXT           "Enter a user name and password to login to this FTP server.",
+                    IDC_LOGINDLG_MESSAGE_NORMAL,38,12,187,16
+    LTEXT           "Could not login to the FTP server with the user name and password specified.",
+                    IDC_LOGINDLG_MESSAGE_USERREJECT,38,12,187,16
+
+    LTEXT           "FTP Server:",-1,38,36,39,8
+    EDITTEXT        IDC_LOGINDLG_FTPSERVER,90,36,133,8,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+
+    LTEXT           "&User Name:",-1,38,52,42,8
+    COMBOBOX        IDC_LOGINDLG_USERNAME,90,50,133,300,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LOGINDLG_USERNAME_ANON,90,50,133,12,ES_AUTOHSCROLL | WS_TABSTOP | WS_DISABLED
+
+    LTEXT           "&Password:",IDC_LOGINDLG_PASSWORD_LABEL_DLG1,38,70,42,8
+    EDITTEXT        IDC_LOGINDLG_PASSWORD_DLG1,90,68,133,12,ES_AUTOHSCROLL | WS_TABSTOP | ES_PASSWORD
+    LTEXT           "&E-mail Address:",IDC_LOGINDLG_PASSWORD_LABEL_DLG2,38,70,50,8
+    EDITTEXT        IDC_LOGINDLG_PASSWORD_DLG2,90,68,133,12,ES_AUTOHSCROLL | WS_TABSTOP
+
+    LTEXT           "After you login, you can return to this FTP server easily by adding it to your Favorites List.",
+                    IDC_LOGINDLG_NOTES_DLG1,38,88,184,24
+    LTEXT           "After you login, you can return to this FTP server easily by adding it to your Favorites List.  The FTP server will use the e-mail address to identify anonymous users.",
+                    IDC_LOGINDLG_NOTES_DLG2,38,88,184,24
+
+    CONTROL         "Login &Anonymously",IDC_LOGINDLG_ANONYMOUS_CBOX,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,38,122,101,8
+#ifdef FEATURE_SAVE_PASSWORD
+    CONTROL         "&Save Password",IDC_LOGINDLG_SAVE_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,145,122,65,10
+#endif // FEATURE_SAVE_PASSWORD
+    DEFPUSHBUTTON   "&Login",IDOK,143,137,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,197,137,50,14
+END
+
+
+/*****************************************************************************\
+    DIALOG: Message Of the Day
+\*****************************************************************************/
+IDD_MOTDDLG DIALOGEX DISCARDABLE  0, 0, 250, 175
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "FTP Server Welcome Message"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_FTPFOLDER,-1,10,10,21,20
+    LTEXT           "The FTP server provided the following message:",-1,36,17,200,8
+    EDITTEXT        IDC_MOTDDLG_MESSAGE,10,36,233,111,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | WS_VSCROLL | WS_HSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "&Close",IDOK,193,154,50,14
+END
+
+
+
+/*****************************************************************************\
+    DIALOG: Download Dialog
+\*****************************************************************************/
+IDD_DOWNLOADDIALOG DIALOGEX DISCARDABLE  20, 20, 268, 93
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Copy To Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The selected file(s) will be copied to the folder specified.  Click Download to continue.",
+                    IDC_DOWNLOAD_MESSAGE,7,7,254,20
+    LTEXT           "Copy To:",IDC_DOWNLOAD_TITLE,7,34,50,8
+    EDITTEXT        IDC_DOWNLOAD_DIR,57,31,130,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_BROWSE_BUTTON,193,31,62,14
+    LTEXT           "Download As:",IDC_DOWNLOAD_AS,7,53,48,8
+    COMBOBOX        IDC_DOWNLOAD_AS_LIST,57,49,198,90,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Download",IDC_DOWNLOAD_BUTTON,154,72,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,211,72,50,14
+END
+
+
+/*****************************************************************************\
+    DIALOG: Proxy Blocking Dialog
+\*****************************************************************************/
+IDD_PROXYDIALOG DIALOGEX DISCARDABLE  20, 20, 225, 135
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "FTP proxy warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NETFOLDER,-1,10,10,21,20
+    LTEXT           "", IDC_PROXY_MESSAGE,38,12,180,72
+    CONTROL         "&Do not show me this message in the future",IDC_MESSAGECHECKEX,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,38,96,180,8
+    DEFPUSHBUTTON   "&Close",IDOK,168,114,50,14
+END
+
+
+/*****************************************************************************
+ *
+ *    String table
+ *
+ *****************************************************************************/
+
+STRINGTABLE MOVEABLE DISCARDABLE
+BEGIN
+
+/*
+ *  Help strings.
+ */
+IDS_ITEM_HELP(IDC_ITEM_OPEN)            "Opens the selected items."
+IDS_ITEM_HELP(IDC_ITEM_EXPLORE)         "Explores the selected items."
+IDS_ITEM_HELP(IDC_ITEM_DOWNLOAD)        "Copies the selected items to this computer."
+IDS_ITEM_HELP(IDC_ITEM_BKGNDPROP)       "Open the properties for the current folder."
+IDS_ITEM_HELP(IDC_LOGIN_AS)             "Login using a different user name and password."
+IDS_ITEM_HELP(IDC_ITEM_NEWFOLDER)       "Create a new folder."
+
+IDS_ITEM_HELP(IDC_ITEM_ABOUTSITE)       "Opens the FTP Server Welcome Message."
+IDS_ITEM_HELP(IDC_ITEM_FTPHELP)         "Get Help about FTP (File Transfer)"
+IDS_ITEM_HELP(IDC_ITEM_ABOUTFTP)        "Opens a dialog that explains this FTP program."
+
+IDS_ITEM_HELP(IDM_SHARED_EDIT_CUT)      "Delete the selected item(s) when they are pasted into another folder."
+IDS_ITEM_HELP(IDM_SHARED_EDIT_COPY)     "Copy the selected files or folders."
+IDS_ITEM_HELP(IDM_SHARED_EDIT_PASTE)    "Paste previously copied or cut files or folders."
+IDS_ITEM_HELP(IDM_SHARED_FILE_LINK)     "Create a link to the selected item."
+IDS_ITEM_HELP(IDM_SHARED_FILE_DELETE)   "Delete the selected files or folders."
+IDS_ITEM_HELP(IDM_SHARED_FILE_RENAME)   "Rename the selected file or folder."
+IDS_ITEM_HELP(IDM_SHARED_FILE_PROP)     "Get the properties on the selected item(s)."
+
+//  BUGBUG -- Help strings that the shell ought to handle for me...
+IDS_ITEM_HELP(SHARED_EDIT_PASTE) "Inserts the items you have copied or cut into the selected location."
+
+//  Column headers.
+IDS_HEADER_NAME(COL_NAME) "Name"
+IDS_HEADER_NAME(COL_SIZE) "Size"
+IDS_HEADER_NAME(COL_TYPE) "Type"
+IDS_HEADER_NAME(COL_MODIFIED) "Modified"
+
+//  Column headers help.
+IDS_HEADER_HELP(COL_NAME) "Sorts items alphabetically by name."
+IDS_HEADER_HELP(COL_SIZE) "Sorts items by size, from smallest to largest."
+IDS_HEADER_HELP(COL_TYPE) "Sorts items by type."
+IDS_HEADER_HELP(COL_MODIFIED) "Sorts items by date, from oldest to most recent."
+
+//  Progress feedback strings
+IDS_EMPTY               ""
+IDS_CONNECTING          "Connecting to %s"
+IDS_CHDIR               "Looking for folder %s"
+IDS_LS                  "Getting contents of folder"
+IDS_DELETING            "Deleting '%s'"
+IDS_RENAMING            "Renaming '%s'"
+IDS_GETFINDDATA         "Checking for '%s'"
+IDS_COPYING             "Copying '%s'"
+IDS_DOWNLOADING         "Copying '%s'"
+IDS_DL_SRC_DEST         "From '%1!ls!' to '%2!ls!'"
+IDS_DL_SRC_DIR          "From '%ls'"
+IDS_COPY_TITLE          "Copying..."
+IDS_MOVE_TITLE          "Moving..."
+IDS_DELETE_TITLE        "Deleting..."
+IDS_DOWNLOAD_TITLE      "Copying..."
+
+IDS_DL_TYPE_AUTOMATIC   "Automatic"
+IDS_DL_TYPE_ASCII       "Text Files (ASCII)"
+IDS_DL_TYPE_BINARY      "Data Files (Binary)"
+
+//  Random strings
+IDS_NUMBERK "%uK"
+IDS_NUMBERTB "%uTB"
+IDS_PROP_SHEET_TITLE            "FTP"       // The dialog code already appends " Properties".
+IDS_PRETTYNAMEFORMAT            "%2!ls! on %1!s!"       // The dialog code already appends " Properties".
+IDS_SEVERAL_SELECTED            "Multiple Items"
+IDS_ELLIPSES                    "..."
+IDS_NEW_FOLDER_FIRST            "New Folder"
+IDS_NEW_FOLDER_TEMPLATE         "New Folder (%d)"
+IDS_CANTSHUTDOWN                "An FTP Folder is currently uploading a file.\n\nEither wait for the upload to finish, or cancel it before you quit Windows."
+IDS_PROGRESS_CANCEL             "Copying will cancel after the current file finishes."
+IDS_NO_MESSAGEOFTHEDAY          "None"
+IDS_ITEMTYPE_FOLDER             "Folder"            // Displayed when 'Properties' is selected on the background folder.
+IDS_ITEMTYPE_SERVER             "FTP Server"        // Displayed when 'Properties' is selected on the background folder and it's the root of a server.
+IDS_PROGRESS_UPLOADTIMECALC     "Calculating the time required to upload the files."
+IDS_PROGRESS_DELETETIMECALC     "Calculating the time required to delete the files."
+IDS_PROGRESS_DOWNLOADTIMECALC   "Calculating the time required to copy the files."
+IDS_OFFLINE_PROMPTTOGOONLINE    "You are currently in offline mode.  Do you want to go Online?"
+IDS_RECYCLE_IS_PERM_WARNING     "Moving items from an FTP server to the Recycle Bin will cause them to be deleted permanently.  Are you sure you want to continue?"
+
+
+// Operation Errors
+IDS_FTPERR_TITLE                "FTP Folder"
+IDS_FTPERR_TITLE_ERROR          "FTP Folder Error"
+IDS_FTPERR_UNKNOWN              "That operation was unsuccessful."
+IDS_FTPERR_WININET              "\n\nDetails:\n%s"  // This goes before the wininet error and after IDS_FTPERR_FILECOPY or a similar error.
+IDS_FTPERR_WININET_CONTINUE     "\n\nDetails:\n%s\n\nDo you want to continue?"  // This goes before the wininet error and after IDS_FTPERR_FILECOPY or a similar error.
+IDS_FTPERR_FILECOPY             "An error occurred copying a file to the FTP Server.  Make sure you have permission to put files on the server."
+IDS_FTPERR_DIRCOPY              "An error occurred creating a folder on the FTP Server.  Make sure you have permission to put files on the server."
+IDS_FTPERR_FILERENAME           "An error occurred renaming the file or folder on the FTP Server.  Make sure you have permission to make this modification."
+IDS_FTPERR_CHANGEDIR            "An error occurred opening the folder on the FTP Server.  Make sure you have permission to access this folder."
+IDS_FTPERR_DELETE               "An error occurred deleting the file or folder on the FTP Server.  Make sure you have permission to access this folder."
+IDS_FTPERR_OPENFOLDER           "An error occurred opening that folder on the FTP Server.  Make sure you have permission to access that folder."
+IDS_FTPERR_FOLDERENUM           "An error occurred reading all of the contents of this folder on the FTP Server."
+IDS_FTPERR_NEWFOLDER            "An error occurred creating a new folder on the FTP Server."
+IDS_FTPERR_DROPFAIL             "The item could not be transferred.  Make sure you have permission to store files here and that the file name is valid."
+IDS_FTPERR_INVALIDFTPNAME       "This operation could not be completed because some characters in the file name are not allowed on the FTP Server."
+IDS_FTPERR_CREATEDIRPROMPT      "The folder '%s' doesn't exist.  Do you want to create it?"
+IDS_FTPERR_CREATEFAILED         "The folder could not be created.  Make sure the file name is valid and you have permission to create a folder in the location specified."
+IDS_FTPERR_GETDIRLISTING        "An error occurred reading the contents of the folder.  Make sure the file name is valid and you have permission to access the location specified."
+IDS_FTPERR_DOWNLOADING          "An error occurred copying the selected items from the FTP Server."
+IDS_FTPERR_RENAME_REPLACE       "A file with this name already exists.  Do you want to replace that file?"
+IDS_FTPERR_RENAME_EXT_WRN       "If you change a filename extension, the file may become unusable.\n\nAre you sure you want to change it?"
+IDS_FTPERR_RENAME_TITLE         "Rename"
+IDS_FTPERR_CHMOD                "An error occurred changing the permissions on the file or folder on the FTP Server.  Make sure you have permission to change this item."
+IDS_FTPERR_BAD_DL_TARGET        "The selected items can not be downloaded to the specified folder.  Please choose another folder."
+
+// Login Dialog Message
+IDS_LOGIN_LOGINAS               "Enter an User Name and Password to login to the server."
+IDS_LOGIN_SERVER                "The server was unable to login with the username and password provided.  Please change your login information or click cancel to cancel logging into this FTP Server."
+IDS_FTP_PROXY_WARNING           "The folder '%s' is read-only because the proxy server is not set up to allow full access.\n\nTo move, paste, rename, or delete files, you must use a different proxy.  For information on changing your proxy, contact your administrator."
+
+
+// User Status Bar Pane
+IDS_DLG_DOWNLOAD_TITLE           "Copy the selected item(s) to the folder:"
+
+
+//  UI Strings
+IDS_HELP_MSIEFTPTITLE           "Microsoft Internet Explorer FTP"
+IDS_HELP_ABOUTFOLDER            "FTP Folder Message"
+IDS_HELP_ABOUTBOX               "This is the Microsoft Internet Explorer FTP Shell Extension."
+IDS_HELP_WELCOMEMSGTITLE        "FTP Server Welcome Message"
+
+//  Status Bar Icon ToolTips
+IDS_WRITE_ALLOWED               "You have permission to write and modify files in this folder."
+IDS_WRITE_NOTALLOWED            "You do not have permission to write and modify files in this folder"
+
+//  Progress Bar ToolTips
+IDS_PROG_ZERO                   "Nothing is downloading."
+IDS_PROG_NPERCENT               "Downloading the names of the files in this Folder.  %ld%% finished."
+IDS_PROG_DONE                   "The contents of this FTP folder have finished downloading."
+
+// Zones
+IDS_ZONES_UNKNOWN               "Unknown Zone"
+IDS_ZONES_TOOLTIP               "The box indicates where the files in the folder are stored."
+
+// User StatusBar Pane
+IDS_USER_TEMPLATE               "User: %s"
+IDS_USER_ANNONYMOUS             "Anonymous"
+IDS_USER_USERTOOLTIP            "You are logged in as %s.  This login will determine your permissions and your actions may be logged."
+IDS_USER_ANNONTOOLTIP           "You are logged in anonymously.  Select 'Log in as...' in the File menu to log in as another user.  Your email name is used as your password and that can be changed in 'FTP Options' in the View menu."
+
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_TEMPLATE         "ftp.htt"
+    IDS_INSTALL_TEMPLATE_NT5     "ftpnt5.htt"
+END
+
+
+
+
+//+------------------------------------------------------------------------
+//
+//  Files
+//
+//-------------------------------------------------------------------------
+
+
+IDA_FTPUPLOAD               AVI     upload.avi      // FS->Ftp Animation
+IDA_FTPDOWNLOAD             AVI     download.avi    // Ftp->FS Animation
+IDA_FTPDELETE               AVI     ftpdel.avi      // Ftp->Air (Hard Delete)
+
+
+1 TYPELIB "msieftp.tlb"
+
+
+
+//+------------------------------------------------------------------------
+//
+//  HTML Dialogs/Property Pages
+//
+//-------------------------------------------------------------------------
+
+//lines.bmp           RT_FILE     "lines.bmp"
+//ie.gif              RT_FILE     "ie.gif"
+//ie256.gif           RT_FILE     "ie256.gif"
+//world.bmp           RT_FILE     "world.bmp"
+//world256.gif        RT_FILE     "world256.gif"
+//ietxt256.bmp        RT_FILE     "ietxt256.bmp"
+//lines256.bmp        RT_FILE     "lines256.bmp"
+//ietext.bmp          RT_FILE     "ietext.bmp"
+//closed.bmp          RT_FILE     "closed.bmp"
+//open.bmp            RT_FILE     "open.bmp"
+
+
+#ifdef ADD_ABOUTBOX
+about.htm           HTML        "about.htm"
+wcee.htm            HTML    DISCARDABLE     "wcee.htm"
+#endif // ADD_ABOUTBOX
+
+//dirnoxst.htm        HTML    DISCARDABLE     "dirnoxst.htm"
+//loginfal.htm        HTML    DISCARDABLE     "loginfal.htm"
+
+ftp.htt              HTML DISCARDABLE        "ftp.htt"
+ftpnt5.htt           HTML DISCARDABLE        "ftpnt5.htt"

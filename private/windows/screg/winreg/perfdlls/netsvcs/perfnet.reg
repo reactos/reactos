@@ -1,0 +1,13 @@
+REGEDIT4
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfNet\Performance]
+"Library" = "perfnet.dll"
+"Open" = "OpenNetSvcsObject"
+"Collect" = "CollectNetSvcsObjectData"
+"Close" = "CloseNetSvcsObject"
+"Object List" = "52 262 330 1300"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\PerfNet]
+"EventMessageFile" = "%systemroot%\\system32\\perfnet.dll"
+"TypesSupported" = dword:00000007
+
+

@@ -1,0 +1,189 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SEARCHDS DIALOGEX 0, 0, 398, 342
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "DS Query Test App"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",IDOK,341,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,341,24,50,14
+    DEFPUSHBUTTON   "&Search...",IDC_SEARCH,341,45,50,14
+    CONTROL         "Single selection",IDC_SINGLESELECT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,153,146,65,10
+    CONTROL         "Default form:",IDC_DEFAULTFORM,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,20,59,10
+    COMBOBOX        IDC_FORMLIST,76,19,193,221,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "Default scope:",IDC_DEFAULTSCOPE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,101,59,10
+    EDITTEXT        IDC_SCOPELOCN,103,98,166,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_SCOPEBROWSE,273,98,50,14
+    CONTROL         "Remove ""Save Search"" menu item",IDC_NOSAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,153,133,87,10
+    CONTROL         "Default Save location:",IDC_SAVEWHERE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,117,87,10
+    EDITTEXT        IDC_SAVELOCN,103,114,166,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse...",IDC_SAVEBROWSE,273,114,50,14
+    CONTROL         "List2",IDC_RESULTS,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,16,228,305,39,WS_EX_CLIENTEDGE
+    GROUPBOX        "Options",IDC_STATIC,7,7,322,159
+    LTEXT           "CLSID Namespace:",IDC_STATIC,14,213,64,8
+    EDITTEXT        IDC_CLSIDNAMESPACE,84,211,144,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "Items:",IDC_STATIC,234,213,22,8
+    EDITTEXT        IDC_ITEMCOUNT,260,211,58,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "Include ""hidden"" objects in results",IDC_SHOWHIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,133,124,10
+    CONTROL         "No scope controls",IDC_NOSCOPES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,151,36,73,10
+    CONTROL         "No ""Form:"" controls",IDC_NOFORMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,36,78,10
+    CONTROL         "Start Query on Open",IDC_ISSUEONOPEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,49,83,10
+    CONTROL         "Show optional forms and pages",IDC_SHOWOPTIONAL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,151,49,116,10
+    CONTROL         "Enable Admin menus, property pages",IDC_ADMINBITS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,146,135,10
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,13,90,312,1
+    CONTROL         "Hide Search Pane",IDC_HIDESEARCHPANE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,62,72,10
+    LTEXT           "LDAP filter:",IDC_STATIC,14,195,36,8
+    EDITTEXT        IDC_LDAPFILTER,55,193,263,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "Persist query on OK",IDC_SAVEONCLOSE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,151,62,78,10
+    GROUPBOX        "Results",IDC_STATIC,7,170,320,103
+    GROUPBOX        "Persisted Information",IDC_STATIC,7,278,320,56
+    CONTROL         "List1",IDC_PERSISTDATA,"SysListView32",LVS_REPORT | 
+                    WS_BORDER | WS_TABSTOP,13,289,305,39
+    CONTROL         "Hide Menus",IDC_HIDEMENUS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,14,75,54,10
+    CONTROL         "Hide Search UI",IDC_HIDESEARCHUI,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,151,75,65,10
+    CONTROL         "Invoke with OK/Cancel and collect results",
+                    IDC_GETRESULTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,
+                    180,149,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SEARCHDS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 391
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 334
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OBJECTNAME          "Object name"
+    IDS_CLASS               "Class"
+    IDS_FLAGS               "Flags"
+    IDS_PROVIDERFLAGS       "Provider flags"
+    IDS_SECTION             "Section"
+    IDS_TAG                 "Tag"
+    IDS_DATA                "Value"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FORMUSERS           "Users and groups"
+    IDS_FORMCOMPUTERS       "Computers"
+    IDS_FORMPRINT           "Printers"
+    IDS_FORMFILEFOLDERS     "Shared File Folders"
+    IDS_FORMDSFOLDERS       "Directory Folders"
+    IDS_FORMOBJECTS         "Objects"
+    IDS_FORMPWELL           "Property Well"
+    IDS_FORMDC              "Find Domain Controller"
+    IDS_FORMLOCALPOLICY     "Local Policy"
+    IDS_FORMUSERSANDCONTACTS "Users and Contacts"
+    IDS_FORMGROUPS          "Groups"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

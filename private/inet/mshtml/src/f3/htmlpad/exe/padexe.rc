@@ -1,0 +1,4 @@
+#include "winver.h"
+#include "..\pad.rcv"
+
+IDR_PADICON             ICON    DISCARDABLE     "..\\padicon.ico"

@@ -1,0 +1,5 @@
+DIRS = msswch \
+       src
+
+OPTIONAL_DIRS = 
+

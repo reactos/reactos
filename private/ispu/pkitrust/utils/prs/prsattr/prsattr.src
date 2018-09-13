@@ -1,0 +1,19 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       prsattr.src
+//
+//--------------------------------------------------------------------------
+
+LIBRARY      prsattr
+
+EXPORTS
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+    InitAttr
+    GetAttr
+    ExitAttr
+	ReleaseAttr

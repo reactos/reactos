@@ -1,0 +1,234 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT	= SHDOCVW
+
+#NO_UNICODE = 1
+
+NO_BROWSER_FILE = 1
+
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+ifeq (${MWOS},sunos5)
+CHMOD = chmod -f
+endif
+ifeq (${MWOS},ux10)
+CHMOD = chmod
+endif
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME
+DLLENTRY=DllMain
+
+DLLDEF_SRC = ../shdocvw.src
+
+DLLDEF_EXPORTS = \
+        _____shdocvw_initDLL\
+        IEAboutBox\
+        CoCreateInternetExplorer\
+        _UnixSendDocToOE\
+        CheckAndExecNewsScript\
+        OEHandlesMail\
+        SelectMotifMenu\
+        UnixAdjustWindowSize\
+        PaintUnixMenuArrow\
+        ConvertModuleNameToUnix\
+        UnixSendDocToMailRecipient\
+        CheckAndDisplayEULA\
+        UnixHelp\
+        UnixUrlToPidl\
+
+WRESOURCE = ${O}/shdocvw.rc
+
+TYPELIB_FILES = \
+        exdisp.tlb
+
+DEFINES = \
+	-D_MT=1 \
+	-DNASHVILLE \
+	-DIN_SHDOCVW \
+	-DUNICODE_SHDOCVW \
+	-DFEATURE_FRAMES \
+	-DMSOCT2=1 \
+	-DFEATURE_URLHIST \
+	-DFEATURE_PICS \
+	-DFEATURE_MENUBAND \
+	-DPAGER \
+	-D_HSFOLDER \
+	-D_NTSDK \
+	-D_USRDLL \
+	-D_ATL_MIN_CRT \
+	-D_DESK_MOVER \
+	-DVSTF \
+	-DNOWINRES \
+	-DNO_SPLASHSCREEN \
+    -DNO_INITIAL_BOOKMARKS\
+    -DNO_RPCSS_ON_UNIX \
+    -D_NO_DBGMEMORY_REDEFINITION_ \
+    -D_ATL_STATIC_REGISTRY
+
+# Removed from IEUNIX rtw
+#	-DBETA1_DIALMON_HACK \
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+WDLL = shdocvw
+## Target Unix shared library:
+DLL	= lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+PROJECT_CFLAGS = ${DEFINES} -I${O} -I. -I..
+APP_RCFLAGS = -I${SDK_DIR}/../lib/${MWARCH}
+
+PROJECT_DLLFLAGS = -lshdocvwsrcc  -lshdoccdfview -lhist -lutil\
+                   -lshell32 -lshlwapi -lstocklib5 -lstocklib -lcomctl32 -lole32 -ladvapi32 -luuid 
+
+DIP_CFLAGS = -DDLL_SPECIFIC_OPERATOR_NEW 
+
+__cplusplus = true
+
+MAPFILE.sunos5=shdocvw.map
+
+include $(MWHOME)/make.rules.simple
+
+
+SILENT_CPP := mwcpp -lang-c++ -P -E -DUNIX
+
+
+${O}/shdocvw.rc: ../shdocvw.rc ${O}/selfreg_shdocvw.inf ${O}/error.dlx ${O}/about.dlx ${O}/print.dlx ${O}/findinc.dlx ${O}/bidifind.dlx ${O}/ieerror.dlx ${O}/orgfav.dlx ${O}/unixfind.dlx ${O}/fav_hlp.htm ${O}/ietxt256.gif ${O}/lines256.gif ${O}/analyze.dlx ${O}/docbrows.ppx ${O}/imgbrows.ppx ${O}/anchbrws.ppx
+	${ECHOOBJ}
+	sed -f rc.sed <  $< > $@
+
+TMP_BITMAPS := /vobs/ie4/slm/bitmaps
+
+${O}/ietxt256.gif:${TMP_BITMAPS}/ietxt256.gif
+	rm -f $@
+	cp -f ${TMP_BITMAPS}/ietxt256.gif  $@ 
+
+${O}/lines256.gif:${TMP_BITMAPS}/lines256.gif
+	rm -f $@
+	cp -f ${TMP_BITMAPS}/lines256.gif $@
+
+${O}/%.dls: %.dlg
+	${ECHOOBJ}
+	rm -f ${O}/tmp.C
+	rm -f ${O}/tmp.dl
+	sed -f unixpp.sed < $< > ${O}/tmp.C
+	$(SILENT_CPP) ${O}/tmp.C > ${O}/tmp.dl
+	sed -f unixap.sed < ${O}/tmp.dl > $@
+	rm -f ${O}/tmp.C
+	rm -f ${O}/tmp.dl
+
+${O}/%.pps: %.ppg
+	${ECHOOBJ}
+	rm -f ${O}/tmp.C
+	cp -f $< ${O}/tmp.C
+	$(SILENT_CPP) ${O}/tmp.C > $@
+	rm -f ${O}/tmp.C
+
+${O}/fav_hlp.htm: /vobs/ie4/help/html/fav_hlp.htm
+	${ECHOOBJ}
+	rm -f $@
+	cp -f $< $@
+
+${O}/error.dlx: ${O}/error.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/about.dlx: ${O}/about.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/analyze.dlx: ${O}/analyze.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/print.dlx: ${O}/print.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/prnsetup.dlx: ${O}/dialogs.dh ${O}/prnsetup.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/findinc.dlx: ${O}/prnsetup.dlx ${O}/findinc.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/bidifind.dlx: ${O}/bidifind.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/ieerror.dlx: ${O}/ieerror.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/orgfav.dlx: ${O}/orgfav.dls ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/unixfind.dlx:  ${O}/unixfind.dls ${O}/unixdialogs.dh ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/anchbrws.ppx: ${O}/anchbrws.pps ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/imgbrows.ppx: ${O}/imgbrows.pps ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+${O}/docbrows.ppx: ${O}/docbrows.pps ${O}/dlg_unix.sed
+	${ECHOOBJ}
+	sed -f ${O}/dlg_unix.sed < $< > $@
+
+
+ifeq (${MWOS},ux10)
+${O}/selfreg.inx: ../selfreg.inx
+	${ECHOOBJ}
+	rm -f ${O}/tmp.C ${O}/tmp.i
+	cp -f $< ${O}/tmp.C
+	sed '/\/\/Tip/d;' < ${O}/tmp.C > ${O}/tmp1.C
+	sed '/\/\/ IE3/d;' < ${O}/tmp1.C > ${O}/tmp2.C
+	sed '/\/\/ Edit/d;' < ${O}/tmp2.C > ${O}/tmp3.C
+	/usr/ccs/lbin/cpp -P -DUNIX ${O}/tmp3.C > $@
+	rm -f ${O}/tmp.C ${O}/tmp1.C ${O}/tmp2.C ${O}/tmp3.C ${O}/tmp.i
+else
+${O}/selfreg.inx: ../selfreg.inx
+	${ECHOOBJ}
+	rm -f ${O}/tmp.C ${O}/tmp.i
+	cp -f $< ${O}/tmp.C
+	/usr/ccs/lib/cpp -P -B -DUNIX ${O}/tmp.C > $@
+	rm -f ${O}/tmp.C ${O}/tmp.i
+endif
+
+
+${O}/selfreg_shdocvw.inf: ${O}/selfreg.inx
+	${ECHOOBJ}
+	cleaninf -w $< $@
+
+${O}/dlg_unix.sed: ../dlg.sed
+	${ECHOOBJ}
+	${DOS2UNIX} < ../dlg.sed >${O}/dlg_unix.sed
+
+${O}/dialogs.dh: ../dialogs.dh
+	${ECHOOBJ}
+	${DOS2UNIX} < ../dialogs.dh > ${O}/dialogs.dh
+
+${O}/unixdialogs.dh: ../unixdialogs.dh
+	${ECHOOBJ}
+	${DOS2UNIX} < ../unixdialogs.dh > ${O}/unixdialogs.dh
+
+${RUN.dir}/%.tlb: ${SDK_DIR}/../lib/${MWARCH}/%.tlb
+	${ECHOOBJ}
+	/bin/rm -f $@
+	/bin/rm -f ${RUN.dir}/${WDLL}.tlb 
+	/bin/cp $< $@
+	/bin/cp $< ${RUN.dir}/${WDLL}.tlb
+	${CHMOD} a-w $@

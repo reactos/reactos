@@ -1,5 +1,0 @@
-@ stdcall SmCompleteSession(ptr ptr ptr)
-@ stdcall SmConnectApiPort(ptr ptr long ptr)
-@ stdcall SmExecuteProgram(ptr ptr)
-@ stdcall SmQueryInformation(ptr long ptr long ptr)
-@ stdcall SmLookupSubsystem(ptr ptr ptr ptr ptr)

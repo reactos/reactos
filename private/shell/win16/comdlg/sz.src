@@ -1,0 +1,185 @@
+/*++
+
+Copyright (c) 1990-1995,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    sz.src
+
+Abstract:
+
+    This module contains the string table resources for the Win32 common
+    dialogs.
+
+Revision History:
+
+--*/
+
+
+
+iszOverwriteCaption         "File Exists"
+iszOverwriteQuestion        "%s already exists.\nDo you want to replace it?"
+iszDefExitCaption           "Exiting"
+iszDefExitText              "Do you really want to exit?"
+
+dlgFileOpen                 "FileOpen"
+dlgMultiFileOpen            "MultiFileOpen"
+dlgFileSave                 "FileSave"
+dlgExitChanges              "ExitChanges"
+dlgChooseColor              "ChooseColor"
+dlgFindText                 "FindText"
+dlgReplaceText              "ReplaceText"
+dlgFormatChar               "FormatChar"
+dlgFontInfo                 "FontInfo"
+dlgPrintDlg                 "PrintDlg"
+dlgPrintSetupDlg            "PrintSetupDlg"
+
+iszFileSaveIn               "Save &in:"
+iszFileOpenButton           "&Open"
+iszFileSaveButton           "&Save"
+
+iszFileOpenTitle            "Open"
+iszFileSaveTitle            "Save As"
+iszSaveFileAsType           "Save file as &type:"
+iszNetworkButtonText        "Network..."
+iszNetworkButtonTextAccel   "Net&work..."
+iszDriveDoesNotExist        "Drive %c: does not exist.\nPlease verify the appropriate drive was given."
+iszNoDiskInDrive            "Windows NT is unable to read drive %c:. Make sure the drive door is closed and that the disk is formatted and free of errors."
+iszNoDiskInCDRom            "Windows NT is unable to read the CD ROM in drive %c:.  Make sure the drive door is closed and that there is a valid data disk in the drive."
+iszWrongDiskInDrive         "A different disk is expected in drive %c:.  Please insert the appropriate disk."
+iszUnformatedDisk           "The disk in drive %c: is not formatted;\nPlease insert a formatted disk and try this operation again."
+iszFileNotFound             "%s\nFile not found.\nPlease verify the correct file name was given."
+iszPathNotFound             "%s\nPath does not exist.\nPlease verify the correct path was given."
+iszInvalidFileName          "%s\nThe above file name is invalid."
+iszSharingViolation         "%s\nThis file is already in use.\nSelect a new name or close the file in use by another application."
+iszNetworkAccessDenied      "%s\nCannot access this file.\nCheck security privileges over the network drive."
+iszReadOnly                 "%s\nThis file exists with Read Only attributes.\nPlease use a different file name."
+iszPortName                 "%s\nThis file name is a reserved device name.\nPlease choose another name."
+iszWriteProtection          "Disk %c: is write-protected.\nA file cannot be saved on a write-protected disk."
+iszDiskFull                 "This directory of disk %c: is full.\nChoose another directory or disk."
+iszNoFileHandles            "Cannot open %s.  Maximum number of files already open.\nClose a file or application in order to open this file."
+iszCreatePrompt             "%s\nThis file does not exist.\n\nCreate the file?"
+iszCreateNoModify           "%s\nThis file is on a network drive with create but no modify privileges.\n\nAsk the administrator of this network to change this condition."
+iszSelectDriveTrouble       "Cannot select drive %c:."
+iszNoNetButtonResponse      "Network service not responding."
+iszFileAccessDenied         "%s\nYou do not have permission to open this file. \n\n See the owner of the file or an administrator to obtain permission."
+iszDirAccessDenied          "%s\nYou do not have permission to open this directory. \n\n See the owner of the directory or an administrator to obtain permission."
+iszTooManyFiles             "More than one file has the name '%s'.\n\nChoose one from the list of files."
+iszSaveAsType               "Save as &type:"
+
+iszBlack                    "Black"
+iszDkRed                    "Maroon"
+iszDkGreen                  "Green"
+iszDkYellow                 "Olive"
+iszDkBlue                   "Navy"
+iszDkPurple                 "Purple"
+iszDkAqua                   "Teal"
+iszDkGrey                   "Gray"
+iszLtGrey                   "Silver"
+iszLtRed                    "Red"
+iszLtGreen                  "Lime"
+iszLtYellow                 "Yellow"
+iszLtBlue                   "Blue"
+iszLtPurple                 "Fuschia"
+iszLtAqua                   "Aqua"
+iszWhite                    "White"
+
+iszAtomData                 "DlgInstData"
+
+iszHighPrnQ                 "High"
+iszMedPrnQ                  "Medium"
+iszLowPrnQ                  "Low"
+iszDraftPrnQ                "Draft"
+
+iszPrinter                  "Printer:  "
+iszSysPrn                   "System Printer ("
+iszPrnOnPort                " on "
+iszDefCurOn                 "(currently %s)"
+
+iszPageRangeError           "This value is not within the page range.\nEnter a number between %u and %u."
+iszFromToError              "The 'From' value cannot be greater than the 'To' value."
+iszPageFromError            "The 'From' value cannot be empty and must be a positive value."
+iszPageToError              "The 'To' value cannot be empty and must be a positive value."
+iszBadMarginError           "The margins overlap or they are off the paper.\nEnter a different margin size."
+iszCopiesZero               "The 'Copies' value cannot be empty and must be a positive value."
+iszTooManyCopies            "This printer cannot support this many copies.\nEnter a number between 1 and %u."
+iszWarningTitle             "Printing Error"
+iszNoPrnsInstalled          "There is no default printer.\nUse Print Manager to install and select a default printer."
+iszPrnNotFound              "The printer could not be found."
+iszMemoryError              "There is not enough memory for this operation."
+iszGeneralWarning           "An error occured during this operation."
+iszUnknownDriver            "Unknown printer driver.\nPlease verify that a driver is installed on %s."
+
+
+iszStatusReady              "Ready"
+
+iszStatusPaused             "Paused; "
+iszStatusError              "Error; "
+iszStatusPendingDeletion    "Pending deletion; "
+iszStatusPaperJam           "Paper jam; "
+iszStatusPaperOut           "Paper out; "
+iszStatusManualFeed         "Manual feed; "
+iszStatusPaperProblem       "Paper problem; "
+iszStatusOffline            "Offline; "
+iszStatusIOActive           "I/O active; "
+iszStatusBusy               "Busy; "
+iszStatusPrinting           "Printing; "
+iszStatusOutputBinFull      "Output bin full; "
+iszStatusNotAvailable       "Not available; "
+iszStatusWaiting            "Waiting; "
+iszStatusProcessing         "Processing; "
+iszStatusInitializing       "Initializing; "
+iszStatusWarmingUp          "Warming up; "
+iszStatusTonerLow           "Toner low; "
+iszStatusNoToner            "No toner; "
+iszStatusPagePunt           "Page punt; "
+iszStatusUserIntervention   "User intervention; "
+iszStatusOutOfMemory        "Out of memory; "
+iszStatusDoorOpen           "Door open; "
+
+iszStatusDocumentsWaiting   "%lu documents waiting"
+iszStatusDefaultPrinter     "Default printer; "
+
+//
+//  Used only when more than 1 page.
+//
+iszPrintRangeAll            "&All %lu pages"
+
+iszMarginsInches            "Margins (inches)"
+iszMarginsMillimeters       "Margins (millimeters)"
+iszInches                   """"
+iszMillimeters              "mm"
+iszDefaultSource            "Print Manager Setting"
+
+
+//
+//  Sample text for Font picker.
+//
+iszSampleString             "AaBbCcYyZz"
+
+//
+//  "Close" text for find/replace.
+//
+iszClose                    "Close"
+
+iszSizeNumber               "Size must be a number."
+iszSizeRange                "Size must be between %d and %d points."
+iszSynth                    "This font style is imitated for the display. The closest matching style will be used for printing."
+iszTrueType                 "This is a TrueType font. This same font will be used on both your printer and your screen."
+iszPrinterFont              "This is a printer font.  The closest matching Windows NT font will be used on your screen."
+iszGDIFont                  "This is a screen font.  The closest matching printer font will be used for printing."
+
+iszNoFontsTitle             "Fonts"
+iszNoFontsMsg               "There are no fonts installed;\r\nRun Control Panel to install fonts."
+iszNoFaceSel                "Invalid font name.\nChoose a font from the list of fonts."
+iszNoStyleSel               "Invalid font style.\nChoose a style from the list of styles."
+
+//
+//  iszRegular thru iszBoldItalic must be 31 characters or less.
+//
+iszRegular                  "Regular"
+iszBold                     "Bold"
+iszItalic                   "Italic"
+iszBoldItalic               "Bold Italic"
+
+

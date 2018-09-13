@@ -1,0 +1,34 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "MSAAHTML Module\0"
+#define VER_INTERNALNAME_STR        "msaahtml.dll"
+#define VER_ORIGINALFILENAME_STR    "msaahtml.dll"
+
+#include "common.ver"
+
+#include "resource.h"
+// String Table
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PROJNAME            "MSAAHTML"
+    IDS_PRESS_ACTION        "Press"
+    IDS_JUMP_ACTION         "Jump"
+    IDS_CHECK_ACTION        "Check"
+    IDS_UNCHECK_ACTION      "Uncheck"
+    IDS_SELECT_ACTION       "Select"
+    IDS_MAP_DESCRIPTION     "Map associated with image = %s, has %d hotspots"
+    IDS_WINDOW_DESCRIPTION  "MSAA Registered Handler"
+    IDS_EMBED_DESCRIPTION   "Plugin type= EMBED"
+    IDS_APPLET_DESCRIPTION  "Plugin type= APPLET"
+    IDS_OBJECT_DESCRIPTION  "Plugin type= OBJECT"
+    IDS_LINK_DESCRIPTION    "Link region type: "
+    IDS_SELECT_DESCRIPTION  "Uninitialized Select Element"
+END
+
+// Generated from the TEXTINCLUDE 3 resource.
+//
+//1 TYPELIB "MSAAHTML.tlb"

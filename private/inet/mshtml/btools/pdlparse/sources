@@ -1,0 +1,26 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\btools\pdlparse=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=pdlparse
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+NO_BINPLACE=1
+
+INCLUDES=$(ROOT)\src\core\include
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+USE_MSVCRT=1
+
+NOT_LEAN_AND_MEAN=1
+
+SOURCES= \
+    main.cxx
+
+UMTYPE=console

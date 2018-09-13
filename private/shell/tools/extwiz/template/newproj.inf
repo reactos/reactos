@@ -1,0 +1,51 @@
+$$// newproj.inf = template for list of template files
+$$//  format is 'sourceResName' \t 'destFileName'
+$$//    The source res name may be preceded by any combination of '=', '-',  '!', '?', ':', '#', and/or '*'
+$$//       '=' => the resource is binary
+$$//       '-' => the file should not be added to the project (all files are added to the project by default)
+$$//       '!' => the file should be marked exclude from build
+$$//       '?' => the file should be treated as a help file
+$$//       ':' => the file should be treated as a resource
+$$//       '#' => the file should be treated as a template (implies '!')
+$$//       '*' => bypass the custom AppWizard's resources when loading
+$$//	if name starts with / => create new subdir
+
+
+
+
+$$IF(IContextMenu)
+CM.CPP	$$ClassType$$CM.cpp
+CM.H	$$ClassType$$CM.h
+$$ENDIF
+$$IF(Icon)
+EI.CPP	$$ClassType$$EI.cpp
+EI.H	$$ClassType$$EI.h
+$$ENDIF
+$$IF(PropertySheet)
+PS.CPP	$$ClassType$$PS.cpp
+PS.H	$$ClassType$$PS.h
+$$ENDIF
+$$IF(InfoTip)
+IT.cpp	$$ClassType$$IT.cpp
+IT.h	$$ClassType$$IT.h
+$$ENDIF
+
+DLLDATA.C	dlldata.c
+=:ICON1.ICO	$$ClassType$$.ico
+RESOURCE.H	resource.h
+ROOT.CLW	$$root$$.clw
+ROOT.CPP	$$root$$.cpp
+ROOT.DEF	$$root$$.def
+ROOT.H	$$root$$.h
+ROOT.RC	$$root$$.rc
+ROOT.RGS	$$root$$.rgs
+=ROOT.TLB	$$root$$.tlb
+STDAFX.CPP	StdAfx.cpp
+STDAFX.H	StdAfx.h
+
+!SHLOBJ.IDL	Shlobj.idl
+!SHELLEXTENSIONS.IDL	$$ClassType$$.idl
+shlobj.c	shlobj.c
+
+
+

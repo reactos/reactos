@@ -1,0 +1,37 @@
+LIBRARY     SYNCUI
+#ifdef WINNT
+SECTIONS
+    .bss READ WRITE
+    .data READ WRITE
+    .rodata READ
+    .idata READ WRITE
+    .instance READ WRITE
+#else
+SECTIONS
+    .bss READ WRITE SHARED
+    .data READ WRITE SHARED
+    .rodata READ SHARED
+    .idata READ WRITE SHARED
+    .instance READ WRITE
+#endif
+
+CODE        MOVEABLE DISCARDABLE
+DATA        PRELOAD MOVEABLE SINGLE
+
+HEAPSIZE    1024
+
+SEGMENTS
+   INIT_TEXT        PRELOAD
+   COMMON_TEXT      PRELOAD
+   DLGS_TEXT        LOADONCALL
+   EXTRA_TEXT       LOADONCALL
+
+EXPORTS
+    DllCanUnloadNow         @2      ; DLL unloading
+    Brief_RunOnlyOnce       @3      ; Setup time
+
+    Brief_GetPages          @40     ; Property pages
+    Brief_CMHandler         @42     ; Context menu handler
+
+    ; Briefcase functions
+    Brief_Init              @50

@@ -1,0 +1,53 @@
+!IF 0
+
+Copyright (c) 1989-1996  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Kent Forschmiedt (kentf)
+
+!ENDIF
+
+!INCLUDE ..\..\sources.inc
+
+
+386_STDCALL=1
+USE_NATIVE_EH=0
+
+MAJORCOMP=dbg
+MINORCOMP=tlloc
+
+TARGETNAME=tlloc$(D)
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=tlloc.def
+COFFBASE=tlloc
+
+DLLENTRY=DllMain
+UMTYPE=windows
+SOURCES=    tllp.c  \
+            tlloc.rc
+
+
+C_DEFINES= $(C_DEFINES) -DADDR_MIXED -DOSDEBUG4 -DDOLPHIN
+
+INCLUDES=$(LANGAPI_ROOT)\debugger;\
+	$(DEBUGGER_ROOT)\include;\
+	$(DEBUGGER_ROOT)\od\include;\
+	$(DEBUG_INCLUDES)
+
+
+TARGETLIBS=$(SDK_LIB_PATH)\kernel32.lib \
+           $(SDK_LIB_PATH)\user32.lib

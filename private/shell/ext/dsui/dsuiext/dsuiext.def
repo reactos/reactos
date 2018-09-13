@@ -1,0 +1,63 @@
+LIBRARY         dsuiext
+
+EXPORTS
+                DllMain                     @ 1
+                DllCanUnloadNow             @ 2 PRIVATE
+                DllGetClassObject           @ 3 PRIVATE
+                DllRegisterServer           @ 4 PRIVATE
+                DllUnregisterServer         @ 5 PRIVATE
+                DllInstall                  @ 6 PRIVATE
+
+                DsBrowseForContainerA       @ 9
+                DsBrowseForContainerW       @ 10
+
+                DsGetIcon                   @ 257
+                DsGetFriendlyClassName      @ 259
+;
+; Avoid using these:
+;
+;   8 - was DsGetConfigPath (removed by daviddv 11/10/98)
+; 256 - was DsGetIconLocation (removed by daviddv 10/16/98)
+; 258 - was DsGetDisplaySpecifier (removed by daviddv 10/16/98)
+; 260 - was DsIsClassContainer (removed by daviddv 10/16/98)
+; 261 - was DsGetFriendlyAttributeName  (removed by daviddv 04/16/99)
+; 262 - was DsEnumClassAttributes (removed by daviddv 10/16/98)
+; 263 - was DsGetClassCreationInfo (removed by daviddv 11/10/98)
+
+; ---------------------------------------------------------------
+; Shared APIs for dsclient and dsadmin
+; ---------------------------------------------------------------
+
+                StringDPA_InsertStringA     @ 512 NONAME
+                StringDPA_InsertStringW     @ 513 NONAME
+                StringDPA_AppendStringA     @ 514 NONAME
+                StringDPA_AppendStringW     @ 515 NONAME
+                StringDPA_DeleteString      @ 516 NONAME
+                StringDPA_Destroy           @ 517 NONAME
+
+                LocalAllocStringA           @ 520 NONAME
+                LocalAllocStringLenA        @ 521 NONAME
+                LocalFreeStringA            @ 522 NONAME
+                LocalQueryStringA           @ 523 NONAME
+                LocalAllocStringW2A         @ 524 NONAME
+
+                LocalAllocStringW           @ 540 NONAME
+                LocalAllocStringLenW        @ 541 NONAME
+                LocalFreeStringW            @ 542 NONAME
+                LocalQueryStringW           @ 543 NONAME
+                LocalAllocStringA2W         @ 544 NONAME
+
+                PutStringElementA           @ 560 NONAME
+                PutStringElementW           @ 561 NONAME
+                GetStringElementA           @ 562 NONAME
+                GetStringElementW           @ 563 NONAME
+
+                FormatMsgResource           @ 570 NONAME
+                FormatMsgBox                @ 571 NONAME
+                StringFromSearchColumn      @ 572 NONAME
+                ObjectClassFromSearchColumn @ 573 NONAME
+                GetDisplayNameFromADsPath   @ 574 NONAME           
+                CheckDsPolicy               @ 575 NONAME
+                GetArrayContents            @ 576 NONAME
+                ShowDirectoryUI             @ 577 NONAME
+                FormatDirectoryName         @ 578 NONAME

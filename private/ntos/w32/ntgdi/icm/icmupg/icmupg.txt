@@ -1,0 +1,31 @@
+
+In ICM, the following two stuff will be migrated to NT 5 from Win9x.
+
++ Color Management Module (CMM).
+   - System default CMM:
+         Win95 uses Kodak CMM, but Win98 use Lino's one. The case for Win95
+         to Win98 update, Win98 just overwrite kodak CMM with Lino's one,
+         so they does not consider to keep Kodak as default.
+         So, here same thing as NT5. NT5 just use Lino's one and does not
+         consider Kodak at all (at migrate from Win95).
+   - Application installed CMM:
+         If the CMM is able to fit NT5 (which mean they have enough exports
+         from DLL), we will migrate it, but if apps does not register it to
+         right registry path, we will not. So in this case only migrate from
+         Win98 need to be considerred, since there is no installable CMM
+         supported in Win95.  
+
++ Color Profile.
+   - Device Profile:
+         This is depend on driver, so shouldn't be migrate from Win9x.
+         it mean the color profile which used in Win9x will not be associated
+         to corresponding device automatically. but otherhand, if NT driver
+         specified color profile in INF, we will associate it automatically 
+         (same as regular driver installation). But still all the device profile
+         which installed on Win98 will keeps "installed" state after migration.
+   - Other profiles:
+         If apps (not driver !) installed thier own color profile to system,
+         should be migrate to NT. so these profile keeps "installed" state
+         after migrate from Win9x.
+
+

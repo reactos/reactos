@@ -1,0 +1,93 @@
+<HTML>
+
+<HEAD>
+
+<META content="text/html; charset=iso-8859-1" http-equiv=Content-Type>
+
+<LINK REL="stylesheet" TYPE="text/css" HREF="arp.css">
+
+<STYLE TYPE="text/css">
+
+BODY {
+    background: infobackground; 
+    color: infotext;
+    }
+
+BUTTON {
+    width: 7em;             /* this is == 50dlus and should be the default */
+    }
+    
+TD {
+    xborder: '1px solid burlywood';    /* Used for debugging the layout */
+    }
+
+</STYLE>
+
+<SCRIPT LANGUAGE="JavaScript" SRC="util.js"></SCRIPT>
+
+<SCRIPT LANGUAGE="JavaScript">
+
+function Body_Load()
+{
+    idBtnOK.focus();
+}
+
+
+function Body_KeyPress()
+{
+    // Was this the escape key?
+    if (KC_ESCAPE == window.event.keyCode || KC_RETURN == window.event.keyCode)
+    {
+        // Yes; close the window
+        window.close();
+    }
+}
+
+</SCRIPT>
+
+<TITLE>Definition: Frequency Of Use</TITLE>
+</HEAD>
+
+<BODY>
+
+<TABLE style='height:auto; width:100%'>
+<TR>
+    <TD valign=top>
+        <H1 id=idHFreqHeader>Frequency of Use</H1>
+        <P id=idPDefn1>
+        Windows measures the number of times the program has been run in the past 30 
+        days and labels it accordingly.
+        <P id=idPDefn2>
+        Frequency is divided into three areas:
+        <UL>
+        <LI id=idLiRarely>Rarely - the program is rarely or never run.
+        <LI id=idLiSometimes>Occasionally - the program is run sometimes.
+        <LI id=idLiFrequently>Frequently - the program is run often.
+        </UL>
+    </TD>
+</TR>
+<TR>
+    <TD style='padding:0px; margin:0px'>
+        <HR style='width:100%' noshade size=2>
+    </TD>
+</TR>
+<TR>
+    <TD id=idTdClose align=right valign=bottom>
+        <BUTTON id=idBtnOK>Close</BUTTON>
+    </TD>
+</TR>
+</TABLE>
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+// Events
+document.body.onload = Body_Load;
+document.body.onkeypress = Body_KeyPress;
+
+idBtnOK.onclick = window.close;
+
+</SCRIPT>
+
+</BODY>
+</HTML>

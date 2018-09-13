@@ -1,0 +1,36 @@
+#
+#   Create a codec DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=msrle32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=msrle32.def
+
+C_DEFINES=-DUNICODE -DVFW
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\winmm.lib
+
+INCLUDES=..\inc;..\..\verinfo\usa;..\..\inc;..\video
+
+SOURCES=		\
+	drvproc.c	\
+	msrle.c		\
+	rlec.c		\
+	rle.c		\
+        profile.c       \
+        msrle.rc
+
+
+## DLLENTRY=DLLEntryPoint  NOT NEEDED
+DLLBASE=0x1c200000
+

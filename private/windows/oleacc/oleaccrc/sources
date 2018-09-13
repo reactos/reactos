@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (c) 1997  Microsoft Corporation
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=oleacc
+
+TARGETNAME=oleaccrc
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+RESOURCE_ONLY_DLL=1
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+INCLUDES=$(BASEDIR)\private\windows\inc;
+
+UMTYPE=windows
+
+SOURCES= \
+    oleaccrc.rc

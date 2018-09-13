@@ -1,0 +1,71 @@
+/*****************************************************************************\
+    FILE: msieftp.idl
+
+    DESCRIPTION:
+		This is an IDL file that allows webview to talk to the Ftp Shell Extension.
+\*****************************************************************************/
+
+// This file will be processed by the MIDL tool to
+// produce the type library (msieftp.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+[
+	uuid(6E8CEDE1-746A-11d1-91F7-006097DF5BD4),
+	helpstring("MSIEFTP 1.0 Type Library"),
+    lcid(0x0000),
+	version(1.0)
+]
+
+library MSIEFTPLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+        object,
+        uuid(21DCE770-ABD0-11d2-A32B-006097DF5BD4),
+        dual,
+        hidden,
+        helpstring("IFtpWebView Interface"),
+        oleautomation
+	]
+	interface IFtpWebView : IDispatch
+	{
+        //Properties
+        [id(1), propget, helpstring("Get name of the server we are currently connected to."), helpcontext(0x0000)]
+        HRESULT Server([out, retval] BSTR * pbstr);
+        [id(2), propget, helpstring("Get the current directory on the server."), helpcontext(0x0000)]
+        HRESULT Directory([out, retval] BSTR * pbstr);
+        [id(3), propget, helpstring("Get The currently logged in user."), helpcontext(0x0000)]
+        HRESULT UserName([out, retval] BSTR * pbstr);
+        [id(4), propget, helpstring("Get length of the password of the current login."), helpcontext(0x0000)]
+        HRESULT PasswordLength([out, retval] long * plLength);
+        [id(5), propget, helpstring("Get The Email Address used for Anonymous Logins."), helpcontext(0x0000)]
+        HRESULT EmailAddress([out, retval] BSTR * pbstr);
+        [id(5), propput, helpstring("Set The Email Address used for Anonymous Logins."), helpcontext(0x0000)]
+        HRESULT EmailAddress([in] BSTR bstr);
+        [id(6), propget, helpstring("Get The Message of the Day."), helpcontext(0x0000)]
+        HRESULT CurrentLoginAnonymous([out, retval] VARIANT_BOOL * pfAnonymousLogin);
+        [id(7), propget, helpstring("Get The Message of the Day."), helpcontext(0x0000)]
+        HRESULT MessageOfTheDay([out, retval] BSTR * pbstr);
+
+        //Methods
+        [helpstring("Login Anonymously.")]
+        HRESULT LoginAnonymously(void);
+        [helpstring("Login with the specified User Name and Password.")]
+        HRESULT LoginWithPassword([in] BSTR bUserName, [in] BSTR bPassword);
+        [helpstring("Login with the specified User Name and Password of the current login.")]
+        HRESULT LoginWithoutPassword([in] BSTR bUserName);
+        [helpstring("Display FTP Specific help.")]
+        HRESULT InvokeHelp(void);
+	};
+	[
+		uuid(210DA8A2-7445-11d1-91F7-006097DF5BD4),
+		helpstring("FtpWebView Class")
+	]
+	coclass FtpWebView
+	{
+		[default] interface IFtpWebView;
+	};
+};

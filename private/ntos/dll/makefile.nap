@@ -1,0 +1,67 @@
+!include $(NTMAKEENV)\makefile.plt
+
+ntnaptbl.c: \nt\private\ntos\ke\services.tab
+    gensrv -d i386 -e asm -P \nt\private\ntos\ke
+
+ntnapdef.h: \nt\private\ntos\ke\services.tab
+    gensrv -d i386 -e asm -P \nt\private\ntos\ke
+
+i386\ntnap.inc: \nt\private\ntos\ke\services.tab
+    gensrv -d i386 -e asm -P \nt\private\ntos\ke
+
+obj\i386\usrstubs.obj: i386\usrstubs.asm ntdll.def
+
+obj\i386\napstubs.obj: i386\napstubs.asm ntdll.def
+
+obj\mips\usrstubs.obj: mips\usrstubs.s ntdll.def
+
+obj\ppc\usrstubs.obj: ppc\usrstubs.s ntdll.def
+
+obj\ia64\usrstubs.obj: ia64\usrstubs.s ntdll.def
+
+ntdll.xtr: \nt\private\ntos\ke\services.tab
+    gensrv -f ntdll.xtr \nt\private\ntos\ke
+
+i386\usrstubs.asm: \nt\private\ntos\ke\services.tab
+    gensrv -d i386 -e asm \nt\private\ntos\ke
+
+i386\napstubs.asm: \nt\private\ntos\ke\services.tab
+    gensrv -d i386 -e asm -P \nt\private\ntos\ke
+
+mips\usrstubs.s: \nt\private\ntos\ke\services.tab
+    gensrv -d mips -e s -B \nt\private\ntos\ke
+
+ppc\usrstubs.s: \nt\private\ntos\ke\services.tab
+    gensrv -d ppc -e s -B \nt\private\ntos\ke
+
+ia64\usrstubs.s: \nt\private\ntos\ke\services.tab
+    gensrv -d ia64 -e s -B \nt\private\ntos\ke
+
+!IF $(MIPS)
+getntdlldef:
+    copy obj\mips\ntdll.def ntdll.def
+
+ntdll.def: obj\mips\ntdll.def
+
+!ENDIF
+
+!IF $(386)
+getntdlldef:
+    copy obj\i386\ntdll.def ntdll.def
+
+ntdll.def: obj\i386\ntdll.def
+
+!ENDIF
+
+!IF $(IA64)
+getntdlldef:
+    copy obj\ia64\ntdll.def ntdll.def
+
+ntdll.def: obj\ia64\ntdll.def
+
+!ENDIF
+
+obj\$(TARGET_DIRECTORY)\ntdll.def: ntdlldef.src ntnapdef.src ntdll.xtr
+    copy ntdlldef.src+ntnapdef.src+ntdll.xtr  ntdll.pp
+    $(TARGET_CPP) $(TARGET_DEFINES) /Tc ntdll.pp > $@
+    -del ntdll.pp

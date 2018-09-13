@@ -1,8 +1,0 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-STRINGTABLE
-BEGIN
-    IDS_DllNotLoaded "LoadLibrary, ""%s"" kitaplığını yüklemede başarısız oldu."
-    IDS_MissingEntry "%s içinde %s giriş noktası eksik."
-END

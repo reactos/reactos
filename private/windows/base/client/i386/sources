@@ -1,0 +1,3 @@
+i386_SOURCES=..\i386\critsect.asm \
+             ..\i386\thunk.asm \
+             ..\i386\context.c

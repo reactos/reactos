@@ -1,0 +1,73 @@
+
+====================================================================
+=                                                                  =
+=                                                                  =
+=  Microsoft systems UK multi-media project review log             =
+=                                                                  =
+=                                                                  =
+====================================================================
+
+
+Each line represents 1 request to review and the review itself.
+
+Key :
+  Component - eg 'sounddd\sndblst'
+
+  Strt - Date when request for review was put on the list (MMDD)
+
+  Auth - Author's initials
+
+  Rvwr - Review's initials
+
+  Code - Status :
+     R - Ready for review
+     P - In progress (set when reviewer's name added).
+     C - Review complete
+     F - Failed for some reason (may need another review ...).
+
+  Errs - Number of errors found (SENSIBLE judgement here please !
+         no dups for repetitive errors etc).
+
+  Date - Date of latest change (DDMM).
+
+
+1992 :
+
+Component           File name      Size   Strt   Auth Rvwr Code Errs Date
+=========================================================================
+sounddd\sndblst     openclse.c      6720  2801   RCBS      R         2801
+sounddd\sndblst     record.c        9436  2901   RCBS      R         2901
+sounddd\sndblst     play.c         18019  2901   RCBS      R         2901
+sounddd\sndblst     position.c      1849  2901   RCBS      R         2901
+sounddd\sndblst     midi.c         15064  2901   RCBS      R         2901
+sounddd\sndblst     state.c        11102  2901   RCBS      R         2901
+sounddd\sndblst     unload.c         694  2901   RCBS      R         2901
+sounddd\sndblst     util.c          5005  2901   RCBS      R         2901
+sounddd\sndblst     devcaps.c       9766  2901   RCBS      R         2901
+sounddd\sndblst     dispatch.c     10896  2901   RCBS      R         2901
+sounddd\sndblst     dma.c           3874  2901   RCBS      R         2901
+sounddd\sndblst     debug.c         1582  2901   RCBS      R         2901
+sounddd\sndblst     init.c         17945  2901   RCBS      R         2901
+sounddd\sndblst     isr.c           4185  2901   RCBS      R         2901
+sounddd\sndblst     dsp.c          11945  2901   RCBS      R         2901
+sounddd\sndblst     sndblst.h      18706  2901   RCBS      R         2901
+sounddd\sndblst     sources         1200  2901   RCBS      R         2901
+sdk\inc             ntddwave.h      3519  3101   RCBS      R         3101
+sdk\inc             ntddmidi.h      3353  3101   RCBS      R         3101
+sdk\inc             ntddsnd.h        881  3101   RCBS      R         3101
+ukmedia\winmm       wave.c         74882  3101   RCBS      R         3101
+ukmedia\winmm       midi.c         63439  3101   RCBS      R         3101
+ukmedia\winmm       midi.c          9594  3101   RCBS      R         3101
+ukmedia\winmm       util.c          5416  3101   RCBS      R         3101
+ukmedia\winmm       debug.c        14086  3101   RCBS      R         3101
+ukmedia\mmdrv       sources          554  3101   RCBS      R         3101
+ukmedia\mmdrv       mmdrv.def        119  3101   RCBS      R         3101
+ukmedia\mmdrv       drvutil.c       9198  3101   RCBS SD   C    1    0402
+ukmedia\mmdrv       mmdrv.h         3420  3101   RCBS      R         3101
+ukmedia\mmdrv       wavedd.c      137366  3101   RCBS SD   C    1    0402
+ukmedia\mmdrv       mididd.c      170605  3101   RCBS      R         3101
+ukmedia\mmdrv       mmdrv.c         9375  3101   RCBS SD   C    0    0402
+ukmedia\mmdrv       playwav.h       1301  0802   SD   RCBS C    0    1102
+ukmedia\mmdrv       playsnd.c      12540  0802   SD   RCBS C    0    1102
+ukmedia\mmdrv       playwav.c      13892  0802   SD   RCBS C    0    1102
+
