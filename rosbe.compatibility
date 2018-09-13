@@ -1,0 +1,8 @@
+version=latest
+compatibility=true
+force=true
+repeatuntilsucceeded=true
+
+build=rosbe
+#define true=false
+if(!true) #reparse_file
