@@ -426,6 +426,9 @@ VOID DumpPrivateFontList(BOOL bDoLock)
 {
     PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
 
+    if (!Win32Process)
+        return;
+
     if (bDoLock)
         IntLockProcessPrivateFonts(Win32Process);
 
