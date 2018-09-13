@@ -18,6 +18,7 @@ add_executable(ntoskrnl
     guid.c
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
+set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntoskrnl KiSystemStartup 4)

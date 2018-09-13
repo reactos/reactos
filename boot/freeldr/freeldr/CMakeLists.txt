@@ -223,6 +223,9 @@ endif()
 add_executable(freeldr_pe ${FREELDR_BASE_SOURCE})
 add_executable(freeldr_pe_dbg EXCLUDE_FROM_ALL ${FREELDR_BASE_SOURCE})
 
+set_property(TARGET freeldr_pe PROPERTY ENABLE_EXPORTS TRUE)
+set_property(TARGET freeldr_pe_dbg PROPERTY ENABLE_EXPORTS TRUE)
+
 if(NOT MSVC AND SEPARATE_DBG)
     set_target_properties(freeldr_pe PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
     set_target_properties(freeldr_pe_dbg PROPERTIES LINKER_LANGUAGE LDR_PE_HELPER)
