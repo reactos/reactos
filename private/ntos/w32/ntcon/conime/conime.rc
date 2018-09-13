@@ -1,0 +1,64 @@
+/****************************** Module Header ******************************\
+* Module Name: CONIME.RC
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Resources
+*
+* History:
+* Jul.06.1995 V-HirShi (Hirotoshi Shimizu)   Created.
+\***************************************************************************/
+
+#include "precomp.h"
+#pragma hdrstop
+#include <ntverp.h>
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+ID_CONSOLEIME_ICON       ICON    CONIME.ICO
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+DebugMenu MENU
+BEGIN
+    POPUP  "&Debug"
+    BEGIN
+        MENUITEM  "E&xit Console IME",                 MM_EXIT
+        MENUITEM  "Access &Violation on Console IME",  MM_ACCESS_VIOLATION
+        MENUITEM  SEPARATOR
+        MENUITEM  "&About Console IME...",             MM_ABOUT
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+STRINGTABLE PRELOAD
+BEGIN                                              /* Maximum # of chars: */
+    errTitle                "Console IME control" /* 50 */
+    IDS_MENUNAME,           "DebugMenu"
+    IDS_APPNAME,            "ConIme"
+    IDS_CLASSNAME,          "ConsoleIMEClass"
+    IDS_TITLE,              "Console IME"
+END
+
+//
+// Version resource information
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Console IME"
+#define VER_INTERNALNAME_STR        "Console\0"
+#define VER_ORIGINALFILENAME_STR    "CONIME.EXE"
+
+#include "common.ver"
+

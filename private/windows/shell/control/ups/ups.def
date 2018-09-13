@@ -1,0 +1,6 @@
+EXPORTS
+        UPSDlg
+        CPlApplet
+        DllInitialize
+        ArrowControlProc
+        ArrowTimerProc

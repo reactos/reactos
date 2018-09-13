@@ -1,0 +1,30 @@
+MAJORCOMP=snmp
+MINORCOMP=snmpmib
+
+TARGETNAME=snmpmib
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+TARGETLIBS=\
+    $(BASEDIR)\Public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib 
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc;  \
+    $(BASEDIR)\private\net\inc; \
+    ..\..\newagent\inc
+
+SOURCES=\
+    dllmain.c   \
+    mibentry.c  \
+    mibfuncs.c  \
+    snmpmib.rc
+

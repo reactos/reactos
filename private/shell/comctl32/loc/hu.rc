@@ -1,0 +1,138 @@
+LANGUAGE 0x0e, 0x00 // Really 0x0E, 0x00 - Hungarian (Hungarian)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Hungarian resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 361, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Eszk\x00f6zt\x00e1r testreszab\x00e1sa"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Be&z\x00e1r\x00e1s",2,308,6,48,14
+    PUSHBUTTON      L"&Alaphelyzet",202,308,23,48,14
+    PUSHBUTTON      L"&S\x00fag\x00f3",205,308,40,48,14
+    PUSHBUTTON      L"&Fel",206,308,74,48,14
+    PUSHBUTTON      L"&Le",207,308,91,48,14
+    LTEXT           L"&Rendelkez\x00e9sre \x00e1ll\x00f3 gombok:",-1,4,5,119,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Hozz\x00e1ad\x00e1s ->",1,127,42,52,14
+    PUSHBUTTON      L"<- &Elt\x00e1vol\x00edt\x00e1s",204,127,61,52,14
+    LTEXT           L"Eszk\x00f6zt\x00e1rg&ombok:",-1,182,5,115,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"M\x00e9gse",2,58,122,50,14
+    PUSHBUTTON      L"Alkalma&z",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"S\x00fag\x00f3",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Vissza",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&Tov\x00e1bb >",12324,62,26,50,14
+    PUSHBUTTON      L"Befejez\x00e9s",12325,119,26,50,14
+    PUSHBUTTON      L"M\x00e9gse",2,176,26,50,14
+    PUSHBUTTON      L"S\x00fag\x00f3",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Elv\x00e1laszt\x00f3"
+    1025                    L" + "
+    1026                    L"Nincs"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Bez\x00e1r\x00e1s"
+    4161                    L"OK"
+    4162                    L"%s tulajdons\x00e1gai"
+    4163                    L"Ma:"
+    4164                    L"&Ugr\x00e1s a mai napra"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Sz\x00f6veg"
+    4177                    L"Tulajdons\x00e1gok"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Az ablak \x00e1tm\x00e9retez\x00e9se."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Az ablak mozgat\x00e1sa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Az ablak \x00f6sszecsuk\x00e1sa ikon m\x00e9retre."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Az ablak k\x00e9perny\x0151m\x00e9retre n\x00f6vel\x00e9se."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"A k\x00f6vetkez\x0151 MDI ablakra kapcsol."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Az ablak bez\x00e1r\x00e1sa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Az ablak norm\x00e1l m\x00e9retre hoz\x00e1sa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"\x00c1tkapcsol\x00e1s m\x00e1sik feladatra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Ablakok m\x00f3dos\x00edt\x00e1s\x00e1hoz tartalmaz parancsokat."
+    36849                   L"Az oszlopok \x00e1tm\x00e9retez\x00e9s\x00e9hez h\x00fazza balra vagy jobbra."
+    36850                   L"Oszlopok \x00e1tlm\x00e9retez\x00e9se a ny\x00edl \x00e9s a tabul\x00e1tor billenty\x0151k seg\x00edts\x00e9g\x00e9vel."
+    36851                   L"Az eszk\x00f6zt\x00e1r gombok hozz\x00e1ad\x00e1sa, \x00e1thelyez\x00e9se \x00e9s t\x00f6rl\x00e9se."
+END

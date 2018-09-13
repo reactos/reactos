@@ -1,0 +1,249 @@
+/*--
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    generic.rc
+
+Abstract:
+
+    generic resource file
+
+Author:
+
+    Mark Enstrom (marke) 30-Dec-1992
+
+Revision History:
+
+    Dan Almosnino (danalm)  20-Sep-1995
+
+1.  Added "Run Text-Suite" option to Run Menu
+2.  Added "Options" to main menu bar with drop-down to choose text string length
+    as well as font.
+3.  Added units of time measurements to caption of the results window
+
+    Dan Almosnino (danalm)  17-Oct-1995
+
+1. Added "Transparent Background" option to text menu options
+
+    Dan Almosnino (danalm) 25-July-1996
+
+1. Adapted to same format as GDIbench, added help Dlg.
+
+--*/
+
+#include "precomp.h"
+#include "resource.h"
+
+IDR_USRBENCH_MENU ICON    mp300.ico       /* main icon              */
+IDNOTE      ICON    note300.ico     /* icon for child windows */
+
+//
+//      Draw Menu
+//
+
+IDR_USRBENCH_MENU MENU
+{
+        POPUP "&File"
+        BEGIN
+                MENUITEM "&Show Results",IDM_SHOW
+                MENUITEM "E&xit",IDM_EXIT
+        END
+
+        POPUP "&Run"
+        BEGIN
+                MENUITEM "Run All",IDM_RUN
+                MENUITEM "Run Group 1",IDM_QRUN1
+                MENUITEM "Run Group 2",IDM_QRUN2
+        END
+
+        POPUP "&Options"
+        BEGIN
+            POPUP "&Text String"
+            BEGIN
+    POPUP "&String Length"
+           {
+        MENUITEM "&\t1",IDM_S001
+        MENUITEM "&\t2",IDM_S002
+        MENUITEM "&\t4",IDM_S004
+        MENUITEM "&\t8",IDM_S008
+        MENUITEM "&\t16",IDM_S016
+        MENUITEM "&\t32",IDM_S032
+        MENUITEM "&\t64",IDM_S064
+        MENUITEM "&\t128",IDM_S128
+        MENUITEM "&\tOther",IDM_SXXX,GRAYED
+            }
+        MENUITEM "&Font and Color",IDM_FONT
+        MENUITEM "&Transparent Background",IDM_TRANSPARENT
+             END
+        END
+
+        POPUP "&Help"
+        BEGIN
+            MENUITEM "Display Help",IDM_HELP
+        END
+}
+
+IDD_RESULTS DIALOG 48, 24, 490, 163
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "USERBENCH Results for Interactive Mode Run"
+FONT 8, "Arial"
+BEGIN
+    DEFPUSHBUTTON   "&OK", IDOK, 196, 142, 40, 14
+    PUSHBUTTON      "&Save...", IDM_SAVERESULTS, 252, 142, 40, 14
+    CONTROL         "List1",IDC_RESULTSLIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,1,0,489,135
+END
+/*
+*/
+IDD_HELP DIALOG 48, 24, 442, 162
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "USERBENCH HELP DIALOG"
+FONT 10, "MS Shell Dlg"
+BEGIN
+    LISTBOX         IDC_HELPLIST, 3, 3, 436, 133, LBS_USETABSTOPS |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "&OK", IDOK, 73, 142, 40, 14
+END
+
+
+/*
+ *  frame window menu
+ */
+
+IDUSERBENCH  MENU
+BEGIN
+    POPUP   "&File"
+    BEGIN
+        MENUITEM    "&View Results...",    IDM_VIEWRESULTS
+        MENUITEM    "&Save Results...",    IDM_SAVERESULTS
+        MENUITEM    "E&xit",              IDM_EXIT
+        MENUITEM    SEPARATOR
+        MENUITEM    "&About UserBench...", IDM_ABOUT
+    END
+    POPUP   "&Edit"
+    BEGIN
+        MENUITEM    "&Undo\tAlt+BkSp",   IDM_DUMMY
+        MENUITEM    SEPARATOR
+        MENUITEM    "Cu&t\tShift+Del",   IDM_DUMMY
+        MENUITEM    "&Copy\tCtrl+Ins",   IDM_DUMMY
+        MENUITEM    "&Paste\tShift+Ins", IDM_DUMMY
+        MENUITEM    "&Delete\tDel",      IDM_DUMMY
+        MENUITEM    SEPARATOR
+        MENUITEM    "&Select All",       IDM_DUMMY
+        MENUITEM    "&Word Wrap"         IDM_DUMMY
+        MENUITEM    SEPARATOR
+        MENUITEM    "JUNK1",             0, CHECKED
+        MENUITEM    "JUNK2",             0, CHECKED
+        MENUITEM    "JUNK3",             0, CHECKED
+        MENUITEM    "JUNK4",             0, CHECKED
+    END
+    POPUP   "&Benchmark"
+    BEGIN
+        MENUITEM    "&Standard Profile", IDM_ALL
+        MENUITEM    "&Quick Profile", IDM_PROFILEALL
+        MENUITEM    SEPARATOR
+    END
+END
+
+
+/*
+ *  frame menu accelerators
+ */
+
+IDUSERBENCH ACCELERATORS
+BEGIN
+    VK_INSERT,  IDM_DUMMY,      VIRTKEY, CONTROL
+    VK_INSERT,  IDM_DUMMY,      VIRTKEY, SHIFT
+    VK_DELETE,  IDM_DUMMY,      VIRTKEY, SHIFT
+    VK_BACK,    IDM_DUMMY,      VIRTKEY, ALT
+    VK_F5,      IDM_DUMMY,      VIRTKEY
+    VK_F3,      IDM_DUMMY,      VIRTKEY
+    VK_F4,      IDM_DUMMY,      VIRTKEY
+    VK_F1,      IDM_DUMMY,      VIRTKEY
+    VK_F1,      IDM_DUMMY,      VIRTKEY, SHIFT
+END
+
+
+/*
+ * ProfAvgDlg
+ */
+CLEARBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 81, 34, 180, 118
+CAPTION "Image Attributes"
+STYLE WS_DLGFRAME | WS_POPUP | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8 "MS Shell Dlg"
+BEGIN
+    CONTROL "&Width:",  -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 6, 21, 24, 9
+    CONTROL "",    IDWIDTH, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 21, 32, 12
+    CONTROL "&Height:", -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 5, 45, 28, 9
+    CONTROL "",   IDHEIGHT, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 43, 32, 12
+    CONTROL "&Units",   -1, "button",   BS_GROUPBOX | WS_CHILD, 78, 9, 43, 55
+    CONTROL "in",     IDIN, "button",   BS_RADIOBUTTON | WS_CHILD | WS_GROUP | WS_TABSTOP, 87, 20, 28, 12
+    CONTROL "cm",     IDCM, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 33, 27, 12
+    CONTROL "pels", IDPELS, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 49, 28, 12
+    CONTROL "C&olors",  -1, "button",   BS_GROUPBOX | WS_GROUP | WS_CHILD, 8, 69, 111, 43
+    CONTROL "Black and White", ID2, "button", BS_RADIOBUTTON | WS_GROUP | WS_CHILD, 17, 82, 99, 12
+    CONTROL "Colors", ID256, "button",  BS_RADIOBUTTON | WS_TABSTOP | WS_CHILD, 17, 96, 37, 12
+    CONTROL "OK",       -1, "button",   BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 3, 46, 16
+    CONTROL "Cancel", CLEARBOX, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 25, 46, 16
+    CONTROL "&Default", -1, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 57, 46, 16
+END
+
+CLEARBOXNOMENU DIALOG LOADONCALL MOVEABLE DISCARDABLE 81, 34, 180, 118
+CAPTION "Image Attributes"
+STYLE WS_DLGFRAME | WS_POPUP | DS_MODALFRAME | WS_CAPTION
+FONT 8 "MS Shell Dlg"
+BEGIN
+    CONTROL "&Width:",  -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 6, 21, 24, 9
+    CONTROL "",    IDWIDTH, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 21, 32, 12
+    CONTROL "&Height:", -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 5, 45, 28, 9
+    CONTROL "",   IDHEIGHT, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 43, 32, 12
+    CONTROL "&Units",   -1, "button",   BS_GROUPBOX | WS_CHILD, 78, 9, 43, 55
+    CONTROL "in",     IDIN, "button",   BS_RADIOBUTTON | WS_CHILD | WS_GROUP | WS_TABSTOP, 87, 20, 28, 12
+    CONTROL "cm",     IDCM, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 33, 27, 12
+    CONTROL "pels", IDPELS, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 49, 28, 12
+    CONTROL "C&olors",  -1, "button",   BS_GROUPBOX | WS_GROUP | WS_CHILD, 8, 69, 111, 43
+    CONTROL "Black and White", ID2, "button", BS_RADIOBUTTON | WS_GROUP | WS_CHILD, 17, 82, 99, 12
+    CONTROL "Colors", ID256, "button",  BS_RADIOBUTTON | WS_TABSTOP | WS_CHILD, 17, 96, 37, 12
+    CONTROL "OK",       -1, "button",   BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 3, 46, 16
+    CONTROL "Cancel", CLEARBOX, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 25, 46, 16
+    CONTROL "&Default", -1, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 57, 46, 16
+END
+
+CLEARBOXNOFONT DIALOG LOADONCALL MOVEABLE DISCARDABLE 81, 34, 180, 118
+CAPTION "Image Attributes"
+STYLE WS_DLGFRAME | WS_POPUP | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+BEGIN
+    CONTROL "&Width:",  -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 6, 21, 24, 9
+    CONTROL "",    IDWIDTH, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 21, 32, 12
+    CONTROL "&Height:", -1, "static",   SS_LEFT | WS_GROUP | WS_CHILD, 5, 45, 28, 9
+    CONTROL "",   IDHEIGHT, "edit",     ES_LEFT | WS_BORDER | WS_TABSTOP | WS_CHILD, 35, 43, 32, 12
+    CONTROL "&Units",   -1, "button",   BS_GROUPBOX | WS_CHILD, 78, 9, 43, 55
+    CONTROL "in",     IDIN, "button",   BS_RADIOBUTTON | WS_CHILD | WS_GROUP | WS_TABSTOP, 87, 20, 28, 12
+    CONTROL "cm",     IDCM, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 33, 27, 12
+    CONTROL "pels", IDPELS, "button",   BS_RADIOBUTTON | WS_CHILD, 87, 49, 28, 12
+    CONTROL "C&olors",  -1, "button",   BS_GROUPBOX | WS_GROUP | WS_CHILD, 8, 69, 111, 43
+    CONTROL "Black and White", ID2, "button", BS_RADIOBUTTON | WS_GROUP | WS_CHILD, 17, 82, 99, 12
+    CONTROL "Colors", ID256, "button",  BS_RADIOBUTTON | WS_TABSTOP | WS_CHILD, 17, 96, 37, 12
+    CONTROL "OK",       -1, "button",   BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 3, 46, 16
+    CONTROL "Cancel", CLEARBOX, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 25, 46, 16
+    CONTROL "&Default", -1, "button",   BS_PUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_CHILD, 128, 57, 46, 16
+END
+
+EMPTY DIALOG LOADONCALL MOVEABLE DISCARDABLE 81, 34, 180, 118
+CAPTION "Image Attributes"
+STYLE WS_DLGFRAME | WS_POPUP | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+BEGIN
+END
+
+
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR2 ACCELERATORS DISCARDABLE
+BEGIN
+    "R",            ID_RUN,    ALT, VIRTKEY, NOINVERT
+END
+

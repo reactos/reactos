@@ -1,0 +1,375 @@
+/****************************** Module Header ******************************\
+* Module Name: console.rc
+*
+* Copyright (c) 1985-95, Microsoft Corporation
+*
+* Constants
+*
+* History:
+* 08-21-91      Created.
+\***************************************************************************/
+
+#include <windows.h>
+#include <ntverp.h>
+#include <commctrl.h>
+#include "dialogs.h"
+#include "console.h"
+
+IDI_CONSOLE      ICON   console.ico
+
+//
+//    Dialogs
+//
+
+
+//
+// This is the template for the settings dialog
+//
+
+DID_SETTINGS DIALOG  0, 0, 233, 226
+CAPTION " Options "
+STYLE WS_VISIBLE | WS_CAPTION | WS_CHILD | DS_MODALFRAME
+FONT 8,"MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Cursor Size", -1, 10, 11, 120, 44
+    AUTORADIOBUTTON "&Small", IDD_CURSOR_SMALL, 14, 23, 84, 10,
+                    WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Medium", IDD_CURSOR_MEDIUM, 14, 33, 84, 10,
+    AUTORADIOBUTTON "&Large", IDD_CURSOR_LARGE, 14, 43, 84, 10,
+
+    GROUPBOX        "Command History", -1, 10, 57, 120, 59, WS_GROUP
+    LTEXT           "&Buffer Size:", -1, 14, 71, 78, 9
+    EDITTEXT        IDD_HISTORY_SIZE, 92, 69, 31, 12, WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_HISTORY_SIZESCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "&Number of Buffers:", -1, 14, 86, 78, 9
+    EDITTEXT        IDD_HISTORY_NUM, 92, 84, 31, 12, WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_HISTORY_NUMSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    AUTOCHECKBOX    "&Discard Old Duplicates", IDD_HISTORY_NODUP, 14, 101, 108, 9
+
+    GROUPBOX        "Edit Options",-1,141,57,86,59
+    CONTROL         "&QuickEdit Mode", IDD_QUICKEDIT, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 146, 71, 75, 10
+    CONTROL         "&Insert Mode", IDD_INSERT, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 146, 85, 75, 10
+
+    GROUPBOX        "Display Options", IDD_DISPLAY_GROUPBOX, 141, 11, 86, 44, WS_GROUP
+    AUTORADIOBUTTON "&Window", IDD_WINDOWED, 144, 25, 64, 12,
+                    WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "F&ull Screen", IDD_FULLSCREEN, 144, 37, 64, 12
+
+#if defined(FE_SB)
+    GROUPBOX        "Default code page", IDD_LANGUAGE_GROUPBOX,   10, 118, 217, 34, WS_GROUP
+    COMBOBOX        IDD_LANGUAGELIST, 24, 132, 188, 78,
+                    CBS_SORT |
+                    CBS_DISABLENOSCROLL |
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP | WS_GROUP
+#endif
+
+END
+
+#if defined(FE_SB) // v-HirShi Nov.20.1996
+//
+// This is the template for the settings dialog called from console
+//
+
+DID_SETTINGS2 DIALOG  0, 0, 233, 226
+CAPTION " Options "
+STYLE WS_VISIBLE | WS_CAPTION | WS_CHILD | DS_MODALFRAME
+FONT 8,"MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Cursor Size", -1, 10, 11, 120, 44
+    AUTORADIOBUTTON "&Small", IDD_CURSOR_SMALL, 14, 23, 84, 10,
+                    WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Medium", IDD_CURSOR_MEDIUM, 14, 33, 84, 10,
+    AUTORADIOBUTTON "&Large", IDD_CURSOR_LARGE, 14, 43, 84, 10,
+
+    GROUPBOX        "Command History", -1, 10, 57, 120, 59, WS_GROUP
+    LTEXT           "&Buffer Size:", -1, 14, 71, 78, 9
+    EDITTEXT        IDD_HISTORY_SIZE, 92, 69, 31, 12, WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_HISTORY_SIZESCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "&Number of Buffers:", -1, 14, 86, 78, 9
+    EDITTEXT        IDD_HISTORY_NUM, 92, 84, 31, 12, WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_HISTORY_NUMSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    AUTOCHECKBOX    "&Discard Old Duplicates", IDD_HISTORY_NODUP, 14, 101, 108, 9
+
+    GROUPBOX        "Edit Options",-1,141,57,86,59
+    CONTROL         "&QuickEdit Mode", IDD_QUICKEDIT, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 146, 71, 75, 10
+    CONTROL         "&Insert Mode", IDD_INSERT, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 146, 85, 75, 10
+
+    GROUPBOX        "Display Options", IDD_DISPLAY_GROUPBOX, 141, 11, 86, 44, WS_GROUP
+    AUTORADIOBUTTON "&Window", IDD_WINDOWED, 144, 25, 64, 12,
+                    WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "F&ull Screen", IDD_FULLSCREEN, 144, 37, 64, 12
+
+    GROUPBOX        "Current code page", IDD_LANGUAGE_GROUPBOX,   10, 118, 217, 34, WS_GROUP
+    LTEXT           "",IDD_LANGUAGE, 26, 134, 184, 8, WS_GROUP
+
+END
+#endif
+
+//
+// This is the template for the font selection dialog
+//
+
+DID_FONTDLG DIALOG 0, 0, 233, 226
+CAPTION " Font "
+STYLE WS_VISIBLE | WS_CAPTION | WS_CHILD | DS_MODALFRAME
+FONT 8,"MS Shell Dlg"
+BEGIN
+// Window Preview (top left)
+//
+    LTEXT           "Window Preview", IDD_PREVIEWLABEL, 5,  4, 109, 8
+    CONTROL         "", IDD_PREVIEWWINDOW, "WOAWinPreview",
+                    WS_BORDER | WS_CHILD,  5, 17, 109, 83
+
+// Buttons (bottom)
+//
+    CONTROL         "&Bold fonts", IDD_BOLDFONT, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 60, 104, 60, 10
+
+// FaceName listbox (top middle)
+    LTEXT           "&Font", IDD_STATIC,              5, 104,  20, 8
+    LISTBOX         IDD_FACENAME,                     5, 117, 109, 42,
+                    LBS_SORT | WS_VSCROLL | WS_TABSTOP |
+                    LBS_OWNERDRAWFIXED | LBS_HASSTRINGS
+
+// PixelSize listbox & PointSize combobox (top right)
+//
+    LTEXT           "&Size", IDD_FONTSIZE,            118,  4,  60, 8
+    LISTBOX         IDD_PIXELSLIST,                   118, 17,  50, 83,
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDD_POINTSLIST,                   118, 17, 30, 86,
+                    CBS_SORT |
+                    CBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+
+// Bottom portion (middle)
+//
+    GROUPBOX        "", IDD_GROUP, 5, 169, 218, 46
+    CONTROL         "", IDD_FONTWINDOW, "WOAFontPreview",
+                    WS_BORDER | WS_CHILD, 12, 179, 118, 30
+    LTEXT           "Each character is:", IDD_STATIC2, 133, 179, 75, 8, NOT
+                    WS_GROUP
+    RTEXT           "", IDD_FONTWIDTH, 134, 189, 12, 8, NOT WS_GROUP
+    LTEXT           "screen pixels wide", IDD_STATIC3, 148, 189, 65, 8, NOT
+                    WS_GROUP
+    LTEXT           "screen pixels high", IDD_STATIC4, 148, 199, 65, 8, NOT
+                    WS_GROUP
+    RTEXT           "", IDD_FONTHEIGHT, 134, 199, 12, 8, NOT WS_GROUP
+
+END
+
+//
+// This is the template for the screenbuffer size dialog
+//
+
+DID_SCRBUFSIZE DIALOG  0, 0, 233, 226
+CAPTION " Layout "
+STYLE WS_VISIBLE | WS_CAPTION | WS_CHILD | DS_MODALFRAME
+FONT 8,"MS Shell Dlg"
+BEGIN
+// Window Preview (top left)
+//
+    LTEXT           "Window Preview", IDD_PREVIEWLABEL, 5,  4, 109, 8
+    CONTROL         "", IDD_PREVIEWWINDOW, "WOAWinPreview",
+                    WS_BORDER | WS_CHILD,  5, 17, 109, 83
+
+    LTEXT           "", IDD_WARNING, 5, 99, 109, 57
+
+    GROUPBOX        "Screen Buffer Size", -1, 118, 11, 110, 42
+    LTEXT           "&Width:", -1, 122, 25, 54, 9
+    EDITTEXT        IDD_SCRBUF_WIDTH, 186, 23, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_SCRBUF_WIDTHSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "&Height:", -1, 122, 39, 54, 9
+    EDITTEXT        IDD_SCRBUF_HEIGHT, 186, 37, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_SCRBUF_HEIGHTSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+
+    GROUPBOX        "Window Size", -1, 118, 55, 110, 42
+    LTEXT           "W&idth:", -1, 122, 69, 54, 9
+    EDITTEXT        IDD_WINDOW_WIDTH, 186, 67, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_WINDOW_WIDTHSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "H&eight:", -1, 122, 83, 54, 9
+    EDITTEXT        IDD_WINDOW_HEIGHT, 186, 81, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_WINDOW_HEIGHTSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+
+    GROUPBOX        "Window Position", -1, 118, 99, 110, 57
+    LTEXT           "&Left:", -1, 122, 113, 54, 9
+    EDITTEXT        IDD_WINDOW_POSX, 186, 111, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_WINDOW_POSXSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "&Top:", -1, 122, 127, 54, 9
+    EDITTEXT        IDD_WINDOW_POSY, 186, 125, 36, 12,
+                    ES_AUTOHSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "", IDD_WINDOW_POSYSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    CONTROL         "Let system &position window", IDD_AUTO_POSITION, "Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 122, 142, 100, 10
+END
+
+//
+// This is the template for the screen colors dialog
+//
+
+DID_COLOR DIALOG  0, 0, 233, 226
+CAPTION " Colors "
+STYLE WS_VISIBLE | WS_CAPTION | WS_CHILD | DS_MODALFRAME
+FONT 8,"MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "Screen &Text", IDD_COLOR_SCREEN_TEXT, 10, 10, 84, 12,
+                    WS_TABSTOP|WS_GROUP
+    AUTORADIOBUTTON "Screen &Background", IDD_COLOR_SCREEN_BKGND, 10, 22, 84, 12,
+    AUTORADIOBUTTON "&Popup Text", IDD_COLOR_POPUP_TEXT, 10, 34, 84, 12,
+    AUTORADIOBUTTON "Pop&up Background", IDD_COLOR_POPUP_BKGND, 10, 46, 84, 12,
+
+    CONTROL         "", IDD_COLOR_1, "cpColor",
+                    WS_BORDER | WS_CHILD | WS_GROUP | WS_TABSTOP,
+                    10, 85, 13, 13
+    CONTROL         "", IDD_COLOR_2, "cpColor", WS_BORDER | WS_CHILD,
+                    23, 85, 13, 13
+    CONTROL         "", IDD_COLOR_3, "cpColor", WS_BORDER | WS_CHILD,
+                    36, 85, 13, 13
+    CONTROL         "", IDD_COLOR_4, "cpColor", WS_BORDER | WS_CHILD,
+                    49, 85, 13, 13
+    CONTROL         "", IDD_COLOR_5, "cpColor", WS_BORDER | WS_CHILD,
+                    62, 85, 13, 13
+    CONTROL         "", IDD_COLOR_6, "cpColor", WS_BORDER | WS_CHILD,
+                    75, 85, 13, 13
+    CONTROL         "", IDD_COLOR_7, "cpColor", WS_BORDER | WS_CHILD,
+                    88, 85, 13, 13
+    CONTROL         "", IDD_COLOR_8, "cpColor", WS_BORDER | WS_CHILD,
+                    101, 85, 13, 13
+    CONTROL         "", IDD_COLOR_9, "cpColor", WS_BORDER | WS_CHILD,
+                    114, 85, 13, 13
+    CONTROL         "", IDD_COLOR_10, "cpColor", WS_BORDER | WS_CHILD,
+                    127, 85, 13, 13
+    CONTROL         "", IDD_COLOR_11, "cpColor", WS_BORDER | WS_CHILD,
+                    140, 85, 13, 13
+    CONTROL         "", IDD_COLOR_12, "cpColor", WS_BORDER | WS_CHILD,
+                    153, 85, 13, 13
+    CONTROL         "", IDD_COLOR_13, "cpColor", WS_BORDER | WS_CHILD,
+                    166, 85, 13, 13
+    CONTROL         "", IDD_COLOR_14, "cpColor", WS_BORDER | WS_CHILD,
+                    179, 85, 13, 13
+    CONTROL         "", IDD_COLOR_15, "cpColor", WS_BORDER | WS_CHILD,
+                    192, 85, 13, 13
+    CONTROL         "", IDD_COLOR_16, "cpColor", WS_BORDER | WS_CHILD,
+                    205, 85, 13, 13
+
+    GROUPBOX        "Selected Screen Colors", -1, 10, 119, 213, 46
+    CONTROL         "", IDD_COLOR_SCREEN_COLORS, "WOAFontPreview",
+                    WS_BORDER | WS_GROUP | WS_CHILD, 15, 129, 204, 31
+
+    GROUPBOX        "Selected Popup Colors", -1, 10, 169, 213, 46
+    CONTROL         "", IDD_COLOR_POPUP_COLORS, "WOAFontPreview",
+                    WS_BORDER | WS_GROUP | WS_CHILD, 15, 179, 204, 31
+
+    GROUPBOX        "Selected Color Values", -1, 120, 9, 94, 56
+    LTEXT           "&Red:", -1, 124, 23, 54, 9
+    EDITTEXT        IDD_COLOR_RED, 167, 21, 30, 12, WS_TABSTOP | WS_GROUP |
+                    ES_AUTOHSCROLL
+    CONTROL         "", IDD_COLOR_REDSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "&Green:", -1, 124, 37, 54, 9
+    EDITTEXT        IDD_COLOR_GREEN, 167, 35, 30, 12, WS_GROUP | WS_TABSTOP |
+                    ES_AUTOHSCROLL
+    CONTROL         "", IDD_COLOR_GREENSCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+    LTEXT           "B&lue:", -1, 124, 51, 54, 9
+    EDITTEXT        IDD_COLOR_BLUE, 167, 49, 30, 12, WS_GROUP | WS_TABSTOP |
+                    ES_AUTOHSCROLL
+    CONTROL         "", IDD_COLOR_BLUESCROLL, UPDOWN_CLASS,
+                    UDS_AUTOBUDDY | UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS, 0, 0, 0, 0
+END
+
+//
+// This is the template for the save or apply dialog
+//
+
+DID_SAVE_QUERY DIALOG 29, 47, 200, 70
+STYLE WS_VISIBLE | WS_CAPTION | WS_POPUP | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK | DS_SETFONT
+CAPTION "Apply Properties"
+FONT 8,"MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&Apply properties to current window only",
+                    IDD_APPLY, 14, 14, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "&Save properties for future windows with same title",
+                    IDD_SAVE, 14, 28, 180, 10
+    DEFPUSHBUTTON   "OK", IDOK, 40, 48, 50, 14, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 110, 48, 50, 14, WS_TABSTOP | WS_GROUP
+END
+
+
+//
+// This is the template for the save or apply dialog when started from a link
+//
+
+DID_SAVE_QUERY_LINK DIALOG 29, 47, 200, 70
+STYLE WS_VISIBLE | WS_CAPTION | WS_POPUP | WS_SYSMENU | DS_MODALFRAME | DS_3DLOOK | DS_SETFONT
+CAPTION "Apply Properties To Shortcut"
+FONT 8,"MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&Apply properties to current window only",
+                    IDD_APPLY, 14, 14, 180, 10, WS_TABSTOP | WS_GROUP
+    AUTORADIOBUTTON "Modify &shortcut that started this window",
+                    IDD_SAVE, 14, 28, 180, 10
+    DEFPUSHBUTTON   "OK", IDOK, 40, 48, 50, 14, WS_TABSTOP | WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 110, 48, 50, 14, WS_TABSTOP | WS_GROUP
+END
+
+
+//
+//  Strings
+//
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_NAME,         "Console"
+    IDS_INFO,         "Configures console properties."
+    IDS_TITLE,        "Console Windows"
+    IDS_RASTERFONT,   "Raster Fonts"
+    IDS_FONTSIZE,     "Point size should be between %d and %d"
+    IDS_SELECTEDFONT, "Selected Font : "
+    IDS_LINKERRCAP,   "Error Updating Shortcut"
+    IDS_LINKERROR,    "Unable to modify the shortcut:\n%s.\nCheck to make sure it has not been deleted or renamed."
+    IDS_WARNING       "WARNING: Screen buffer size will require %d MB of memory per window"
+END
+
+
+//
+// Version resource information
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel Console Applet"
+#define VER_INTERNALNAME_STR        "Console\0"
+#define VER_ORIGINALFILENAME_STR    "CONSOLE.DLL"
+
+#include "common.ver"

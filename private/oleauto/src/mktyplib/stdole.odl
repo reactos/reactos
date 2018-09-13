@@ -1,0 +1,117 @@
+
+#define FAR _far
+
+[
+    uuid(00020430-0000-0000-C000-000000000046),
+    lcid(0x0000),           // lcid =0; locale independent.
+    helpstring("OLE Automation"),
+    version(1.0),
+    restricted
+]
+library stdole
+{
+    typedef unsigned long DWORD;        // non-public typedef's
+    typedef unsigned long ULONG;
+    typedef unsigned short WORD;
+    typedef unsigned char BYTE;
+    typedef unsigned int UINT;
+    typedef DWORD LCID;
+
+    typedef struct GUID
+    {
+      DWORD Data1;
+      WORD  Data2;
+      WORD  Data3;
+      BYTE  Data4[8];
+    } GUID;
+
+    typedef GUID IID;               // non-public typedef's
+    typedef IID FAR * REFIID;
+    typedef LONG DISPID;
+
+    //UNDONE: what to do about ITypeInfo ???
+    #define ITypeInfo void
+
+    typedef VARIANT VARIANTARG;
+
+    typedef struct tagDISPPARAMS{
+      VARIANTARG FAR* rgvarg;
+      DISPID FAR* rgdispidNamedArgs;
+      UINT cArgs;
+      UINT cNamedArgs;
+    } DISPPARAMS;
+
+
+    typedef struct tagEXCEPINFO {
+      WORD wCode;
+      WORD wReserved;
+      BSTR bstrSource;
+      BSTR bstrDescription;
+      BSTR bstrHelpFile;
+      DWORD dwHelpContext;
+      void FAR* pvReserved;
+#if 0
+      // REVIEW: the current TypeInfo implementation cant represent
+      // function pointers, so we just fillin with a void* for now.
+      HRESULT (STDAPICALLTYPE FAR* pfnDeferredFillIn)(struct tagEXCEPINFO FAR*);
+#else
+      void FAR* pfnDeferredFillIn;
+#endif
+      SCODE scode;
+    } EXCEPINFO;
+
+    [uuid(00000000-0000-0000-C000-000000000046), odl]
+    interface IUnknown
+    {
+      [restricted] HRESULT QueryInterface([in] REFIID riid, [out] void FAR* FAR* ppvObj);
+      [restricted] ULONG AddRef(void);
+      [restricted] ULONG Release(void);
+    };
+
+    [uuid(00020400-0000-0000-C000-000000000046), odl]
+    interface IDispatch:IUnknown
+    {
+      [restricted] HRESULT GetTypeInfoCount([out]UINT FAR* pctinfo);
+
+      [restricted] HRESULT GetTypeInfo(
+        [in] UINT itinfo,
+        [in] LCID lcid,
+        [out] ITypeInfo FAR* FAR* pptinfo);
+
+      [restricted] HRESULT GetIDsOfNames(
+        [in] REFIID riid,
+        [in] char FAR* FAR* rgszNames,
+        [in] UINT cNames,
+        [in] LCID lcid,
+        [out] DISPID FAR* rgdispid);
+
+      [restricted] HRESULT Invoke(
+        [in] DISPID dispidMember,
+        [in] REFIID riid,
+        [in] LCID lcid,
+        [in] WORD wFlags,
+        [in] DISPPARAMS FAR* pdispparams,
+        [out] VARIANT FAR* pvarResult,
+        [out] EXCEPINFO FAR* pexcepinfo,
+        [out] UINT FAR* puArgErr);
+    };
+
+    [uuid(00020404-0000-0000-C000-000000000046), odl]
+    interface IEnumVARIANT:IUnknown
+    {
+
+      HRESULT Next(
+	[in] unsigned long celt,
+	[in] VARIANT FAR* rgvar,
+	[out] unsigned long FAR* pceltFetched);
+
+      HRESULT Skip([in] unsigned long celt);
+
+      HRESULT Reset(void);
+
+      HRESULT Clone([out] IEnumVARIANT FAR* FAR* ppenum);
+
+    };
+
+
+}   // eof

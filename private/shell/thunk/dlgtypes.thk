@@ -1,0 +1,133 @@
+/*
+ * COMMONDLG APIs types.
+ */
+
+/************************************************************************
+ * OPENFILENAME structure type.
+ ************************************************************************/
+
+typedef struct tagOFN {
+    DWORD   lStructSize;
+    HWND    hwndOwner;
+    HANDLE  hInstance;
+    LPSTR   lpstrFilter;
+    LPSTR   lpstrCustomFilter;
+    DWORD   nMaxCustFilter;
+    DWORD   nFilterIndex;
+    LPSTR   lpstrFile;
+    DWORD   nMaxFile;
+    LPSTR   lpstrFileTitle;
+    DWORD   nMaxFileTitle;
+    LPSTR   lpstrInitialDir;
+    LPSTR   lpstrTitle;
+    DWORD   Flags;
+    WORD    nFileOffset;
+    WORD    nFileExtension;
+    LPSTR   lpstrDefExt;
+    DWORD   lCustData;
+    WNDPROC lpfnHook;
+    LPSTR   lpTemplateName;
+} OPENFILENAME;
+typedef OPENFILENAME *LPOPENFILENAME;
+
+
+/************************************************************************
+ * CHOOSECOLOR structure type.
+ ************************************************************************/
+
+typedef struct tagCC {
+    DWORD   lStructSize;
+    HWND    hwndOwner;
+    HWND    hInstance;
+    DWORD   rgbResult;
+    LPDWORD lpCustColors;
+    DWORD   Flags;
+    DWORD   lCustData;
+    WNDPROC lpfnHook;
+    LPSTR   lpTemplateName;
+} CHOOSECOLOR;
+typedef CHOOSECOLOR *LPCHOOSECOLOR;
+
+
+/************************************************************************
+ * LOGFONT structure type.
+ ************************************************************************/
+
+typedef struct tagLF {
+    int       lfHeight;
+    int       lfWidth;
+    int       lfEscapement;
+    int       lfOrientation;
+    int       lfWeight;
+    BYTE      lfItalic;
+    BYTE      lfUnderline;
+    BYTE      lfStrikeOut;
+    BYTE      lfCharSet;
+    BYTE      lfOutPrecision;
+    BYTE      lfClipPrecision;
+    BYTE      lfQuality;
+    BYTE      lfPitchAndFamily;
+    BYTE      lfFaceName[32];
+} LOGFONT;
+typedef LOGFONT *LPLOGFONT;
+
+
+/************************************************************************
+ * CHOOSEFONT structure type.
+ ************************************************************************/
+
+typedef struct tagCF {
+    DWORD           lStructSize;        /* */
+    HWND            hwndOwner;          /* caller's window handle   */
+    HDC             hDC;                /* printer DC/IC or NULL    */
+    LPLOGFONT       lpLogFont;          /* ptr. to a LOGFONT struct */
+    int             iPointSize;         /* 10 * size in points of selected font */
+    DWORD           Flags;              /* enum. type flags         */
+    DWORD           rgbColors;          /* returned text color      */
+    DWORD           lCustData;          /* data passed to hook fn.  */
+    WNDPROC         lpfnHook;           /* ptr. to hook function    */
+    LPSTR           lpTemplateName;     /* custom template name     */
+    HANDLE          hInstance;          /* instance handle of.EXE that
+                                         * contains cust. dlg. template
+                                         */
+    LPSTR           lpszStyle;          /* return the style field here
+                                         * must be LF_FACESIZE or bigger */
+    WORD            nFontType;          /* same value reported to the EnumFonts
+                                         * call back with the extra FONTTYPE_
+                                         * bits added */
+    WORD            ___MISSING_ALIGNMENT___;
+    int             nSizeMin;           /* minimum pt size allowed & */
+    int             nSizeMax;           /* max pt size allowed if    */
+                                        /* CF_LIMITSIZE is used      */
+} CHOOSEFONT;
+typedef CHOOSEFONT *LPCHOOSEFONT;
+
+
+/************************************************************************
+ * PRINTDLG structure type.
+ ************************************************************************/
+
+typedef struct tagPD {
+    DWORD   lStructSize;
+    HWND    hwndOwner;
+    HANDLE  hDevMode;
+    HANDLE  hDevNames;
+    HDC     hDC;
+    DWORD   Flags;
+    WORD    nFromPage;
+    WORD    nToPage;
+    WORD    nMinPage;
+    WORD    nMaxPage;
+    WORD    nCopies;
+    HANDLE  hInstance;
+    DWORD   lCustData;
+    WNDPROC lpfnPrintHook;
+    WNDPROC lpfnSetupHook;
+    LPSTR   lpPrintTemplateName;
+    LPSTR   lpSetupTemplateName;
+    HANDLE  hPrintTemplate;
+    HANDLE  hSetupTemplate;
+} PRINTDLG;
+typedef PRINTDLG *LPPRINTDLG;
+
+

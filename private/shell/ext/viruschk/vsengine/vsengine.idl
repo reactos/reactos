@@ -1,0 +1,31 @@
+// vsengine.idl : IDL source for vsengine.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (vsengine.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "vrsscan.idl";
+	
+[
+	uuid(68E721D2-CD58-11D0-BD3D-00AA00B92AF1),
+	version(1.0),
+	helpstring("Microsoft VSEngine Test Driver")
+]
+library VSENGINELib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	
+	[
+		uuid(68E721E0-CD58-11D0-BD3D-00AA00B92AF1),
+		helpstring("Provider Class")
+	]
+	coclass Provider
+	{
+		[default] interface IVirusScanEngine;
+	};
+
+};

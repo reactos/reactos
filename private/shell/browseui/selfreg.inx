@@ -1,0 +1,574 @@
+;
+;  BrowseUI Registry for:
+;  1. Control: COM Objects provided for 3rd party redistribution use.
+;  2. Browser: Base IE40 functionality.
+;  3. ShellIntegration: IE40 functionality available only with Shell Integration.
+;
+;  Section Names: (Names beginning with '!' AREN'T BACKED
+;    !RegRollback<SectionName> - Used by installer to restore during uninstall. Weird Advpack.dll requirement.
+;    Reg<SectionName>
+;           Install: Backup IE3 values and add IE4 values.
+;           UnInstall: Delete IE4 values and restore IE3 values.
+;    DelReg<SectionName>
+;           Install: Backup IE3 values and leave them blank because IE4 doesn't use these values.
+;           UnInstall: Restore the IE3 values.
+;    !Reg<SectionName>IE4B2
+;           Install: Delete permenately because we don't need them in this new version of IE4
+;                    and uninstall gets us back to IE3 where they aren't needed either.
+;           UnInstall: nothing.
+;
+;  WARNINGS:
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  RegItems with %11% or %25% are substituted on NT with
+;  %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!  Use the
+;  token %RES% (0x20000).
+;
+;  Any entries that go into the registry that contain
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+
+
+[Version]
+Signature="$CHICAGO$"
+
+[InstallControls]
+
+
+[InstallBrowseUIShell]
+ComponentName=IE40.BrowseUI
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegBrowser, RegExternal
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+DelReg=DeleteKeys
+
+
+[InstallBrowseUINonShell]
+ComponentName=IE40.BrowseUI
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegBrowser
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+DelReg=DeleteKeys
+
+
+[UnInstallBrowseUI]
+ComponentName=IE40.BrowseUI
+AdvOptions=260
+RequireEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+[InstallPerUser_BrowseUIShell]
+ComponentName=IE40.BrowseUI
+ComponentVersion=5.0
+AdvOptions=36
+DelReg=DelRegNT5Upgrade
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegExternal]
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Objects\{DB8DC413-C0AA-11D0-9545-080009B1C2F3}",OTNEEDSSFCACHE,,
+
+[RegBrowser]
+; CLSID_ChannelBand
+; In: IE4
+HKCR,"CLSID\%CLSID_ChannelBand%",,,"%DESC_ChannelBand%"
+HKCR,"CLSID\%CLSID_ChannelBand%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,6"
+HKCR,"CLSID\%CLSID_ChannelBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ChannelBand%\%IPS%","ThreadingModel",,"Apartment"
+; CLSID_ExplorerBand
+; In: IE4
+HKCR,"CLSID\%CLSID_ExplorerBand%",,,"%DESC_ExplorerBand%"
+HKCR,"CLSID\%CLSID_ExplorerBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ExplorerBand%\%IPS%","ThreadingModel",,"Apartment"
+
+; Internet Toolbar
+; In: IE4 (B1, B2)
+HKCR,"CLSID\%CLSID_InternetToolbar%",,,"%DESC_InternetToolbar%"
+HKCR,"CLSID\%CLSID_InternetToolbar%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_InternetToolbar%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_InternetToolbar%",,"%DESC_InternetToolbar%"
+
+; BrandBand
+; In: IE4
+HKCR,"CLSID\%CLSID_BrandBand%",,,"%DESC_BrandBand%"
+HKCR,"CLSID\%CLSID_BrandBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BrandBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BrandBand%",,"%DESC_BrandBand%"
+
+; CLSID_MenuISF
+; In: IE4
+HKCR,"CLSID\%CLSID_MenuISF%",,,"%DESC_MenuISF%"
+HKCR,"CLSID\%CLSID_MenuISF%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MenuISF%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MenuISF%",,"%DESC_MenuISF%"
+
+; MenuBand
+; In: IE4
+HKCR,"CLSID\%CLSID_MenuBand%",,,"%DESC_MenuBand%"
+HKCR,"CLSID\%CLSID_MenuBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MenuBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MenuBand%",,"%DESC_MenuBand%"
+
+; TrackShellMenu
+; In: IE5/Shell 5
+HKCR,"CLSID\%CLSID_TrackShellMenu%",,,"%DESC_TrackShellMenu%"
+HKCR,"CLSID\%CLSID_TrackShellMenu%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_TrackShellMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_TrackShellMenu%",,"%DESC_TrackShellMenu%"
+
+; MenuBandSite
+; In: IE4
+HKCR,"CLSID\%CLSID_MenuBandSite%",,,"%DESC_MenuBandSite%"
+HKCR,"CLSID\%CLSID_MenuBandSite%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MenuBandSite%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MenuBandSite%",,"%DESC_MenuBandSite%"
+
+; CLSID_MenuDeskBar
+; In: IE4
+HKCR,"CLSID\%CLSID_MenuDeskBar%",,,"%DESC_MenuDeskBar%"
+HKCR,"CLSID\%CLSID_MenuDeskBar%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_MenuDeskBar%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_MenuDeskBar%",,"%DESC_MenuDeskBar%"
+
+; CLSID_OrderListExport
+; In: IE4
+HKCR,"CLSID\%CLSID_OrderListExport%",,,"%DESC_OrderListExport%"
+HKCR,"CLSID\%CLSID_OrderListExport%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_OrderListExport%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_AugmentedISF
+; In: IE4
+HKCR,"CLSID\%CLSID_AugmentedISF%",,,"%DESC_AugmentedISF%"
+HKCR,"CLSID\%CLSID_AugmentedISF%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_AugmentedISF%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_AugmentedISF%",,"%DESC_AugmentedISF%"
+
+; CLSID_AugmentedISF
+; In: IE5
+HKCR,"CLSID\%CLSID_AugmentedMergeISF%",,,"%DESC_AugmentedMergeISF%"
+HKCR,"CLSID\%CLSID_AugmentedMergeISF%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_AugmentedMergeISF%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_AugmentedMergeISF%",,"%DESC_AugmentedMergeISF%"
+
+; BandProxy
+; In: IE4 (B1, B2)
+HKCR,"CLSID\%CLSID_BandProxy%",,,"%DESC_BandProxy%"
+HKCR,"CLSID\%CLSID_BandProxy%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BandProxy%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BandProxy%",,"%DESC_BandProxy%"
+
+; CLSID_ISFBand
+; In: IE4
+HKCR,"CLSID\%CLSID_ISFBand%",,,"%DESC_ISFBand%"
+HKCR,"CLSID\%CLSID_ISFBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ISFBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ISFBand%",,"%DESC_ISFBand%"
+
+; BrowserBand
+; In: IE4
+HKCR,"CLSID\%CLSID_BrowserBand%",,,"%DESC_BrowserBand%"
+HKCR,"CLSID\%CLSID_BrowserBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BrowserBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BrowserBand%",,"%DESC_BrowserBand%"
+
+; SearchBand
+; In: IE4
+HKCR,"CLSID\%CLSID_SearchBand%",,,"%DESC_SearchBand%"
+HKCR,"CLSID\%CLSID_SearchBand%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,8"
+HKCR,"CLSID\%CLSID_SearchBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SearchBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_SearchBand%",,"%DESC_SearchBand%"
+
+; CommBand
+; In: IE4
+HKCR,"CLSID\%CLSID_CommBand%",,,"%DESC_CommBand%"
+HKCR,"CLSID\%CLSID_CommBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CommBand%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_ShellSearchExt
+HKCR,"CLSID\%CLSID_ShellSearchExt%",,,"%DESC_ShellSearchExt%"
+HKCR,"CLSID\%CLSID_ShellSearchExt%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellSearchExt%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ShellSearchExt%",,"%DESC_ShellSearchExt%"
+
+; CLSID_WebSearchExt
+HKCR,"CLSID\%CLSID_WebSearchExt%",,,"%DESC_WebSearchExt%"
+HKCR,"CLSID\%CLSID_WebSearchExt%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_WebSearchExt%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_WebSearchExt%",,"%DESC_WebSearchExt%"
+HKLM,"%SMWCE%\FindExtensions\Static\WebSearch",,,"%CLSID_WebSearchExt%"
+HKLM,"%SMWCE%\FindExtensions\Static\WebSearch\0",,,"%WEB_SEARCH_EXT_MENU%"
+HKLM,"%SMWCE%\FindExtensions\Static\WebSearch\0\DefaultIcon",,%RES%,"%11%\shdocvw.dll,-111"
+HKLM,"%SMWCE%\FindExtensions\Static\WebSearch\0\HelpText",,,"%WEB_SEARCH_EXT_HELP%"
+
+; QuickLinks
+; In: IE4 (B2)
+HKCR,"CLSID\%CLSID_QuickLinks%",,,"%DESC_QuickLinks%"
+HKCR,"CLSID\%CLSID_QuickLinks%","MenuTextPUI",,"@browselc.dll,-13138"
+HKCR,"CLSID\%CLSID_QuickLinks%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_QuickLinks%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_QuickLinks%",,"%DESC_QuickLinks%"
+
+; CRegTreeOptions
+HKCR,"CLSID\%CLSID_CRegTreeOptions%",,,"%DESC_CRegTreeOptions%"
+HKCR,"CLSID\%CLSID_CRegTreeOptions%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CRegTreeOptions%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_CRegTreeOptions%",,"%DESC_CRegTreeOptions%"
+
+; AddressBand
+HKCR,"CLSID\%CLSID_AddressBand%",,,"%DESC_AddressBand%"
+HKCR,"CLSID\%CLSID_AddressBand%","MenuTextPUI",,"@browselc.dll,-13137"
+HKCR,"CLSID\%CLSID_AddressBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_AddressBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_AddressBand%",,"%DESC_AddressBand%"
+
+; AddressEditBox
+HKCR,"CLSID\%CLSID_AddressEditBox%",,,"%DESC_AddressEditBox%"
+HKCR,"CLSID\%CLSID_AddressEditBox%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_AddressEditBox%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_AddressEditBox%",,"%DESC_AddressEditBox%"
+
+; BandProxy
+HKCR,"CLSID\%CLSID_BandProxy%",,,"%DESC_BandProxy%"
+HKCR,"CLSID\%CLSID_BandProxy%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BandProxy%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BandProxy%",,"%DESC_BandProxy%"
+
+; AutoComplete
+HKCR,"CLSID\%CLSID_AutoComplete%",,,"%DESC_AutoComplete%"
+HKCR,"CLSID\%CLSID_AutoComplete%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_AutoComplete%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_AutoComplete%",,"%DESC_AutoComplete%"
+
+; Thumbnail
+; In: IE4 (B1, B2)
+HKCR,"CLSID\%CLSID_Thumbnail%",,,"%DESC_Thumbnail%"
+HKCR,"CLSID\%CLSID_Thumbnail%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_Thumbnail%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_Thumbnail%",,"%DESC_Thumbnail%"
+
+; IImgCtx Image extractors
+; In: IE4
+HKCR,".gif\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".jpeg\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".jpg\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".jpe\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".jfif\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".xif\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".png\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".wmf\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".emf\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".art\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".tif\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".tiff\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".dib\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,".bmp\ShellEx\%_IID_IExtractImage%",,,"%CLSID_ImgCtxExtractor%"
+HKCR,"CLSID\%CLSID_ImgCtxExtractor%",,,"%DESC_ImgCtxExtractor%"
+HKCR,"CLSID\%CLSID_ImgCtxExtractor%\%IPS%","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_ImgCtxExtractor%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+;
+; REVIEW: in IE4 we *only* registered this on NT5 systems.  Why?
+HKLM,"%SMWCVSEA%","%CLSID_ImgCtxExtractor%",,"%DESC_ImgCtxExtractor%"
+
+; File Association stuff
+; Moved from shell32 because we need this for non-integrated mode too
+HKLM, "%SMWCVEFA%","CutList",%REGMULSZ%,"Application File","MFC Application"
+
+; ACLMRU
+; In: IE4
+HKCR,"CLSID\%CLSID_ACLMRU%",,,"%DESC_ACLMRU%"
+HKCR,"CLSID\%CLSID_ACLMRU%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ACLMRU%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ACLMRU%",,"%DESC_ACLMRU%"
+
+; ACLHistory
+; In: IE4
+HKCR,"CLSID\%CLSID_ACLHistory%",,,"%DESC_ACLHistory%"
+HKCR,"CLSID\%CLSID_ACLHistory%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ACLHistory%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ACLHistory%",,"%DESC_ACLHistory%"
+
+; ACListISF
+; In: IE4 (B2)
+HKCR,"CLSID\%CLSID_ACListISF%",,,"%DESC_ACListISF%"
+HKCR,"CLSID\%CLSID_ACListISF%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ACListISF%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ACListISF%",,"%DESC_ACListISF%"
+
+; ACLMulti
+HKCR,"CLSID\%CLSID_ACLMulti%",,,"%DESC_ACLMulti%"
+HKCR,"CLSID\%CLSID_ACLMulti%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ACLMulti%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_ACLMulti%",,"%DESC_ACLMulti%"
+
+; CCommonBrowser
+HKCR,"CLSID\%CLSID_CCommonBrowser%",,,"%DESC_CCommonBrowser%"
+HKCR,"CLSID\%CLSID_CCommonBrowser%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CCommonBrowser%\%IPS%","ThreadingModel",,"Apartment"
+
+; CDockingBarPropertyBag
+HKCR,"CLSID\%CLSID_CDockingBarPropertyBag%",,,"%DESC_CDockingBarPropertyBag%"
+HKCR,"CLSID\%CLSID_CDockingBarPropertyBag%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CDockingBarPropertyBag%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_BandSiteMenu
+; In: IE4
+HKCR,"CLSID\%CLSID_BandSiteMenu%",,,"%DESC_BandSiteMenu%"
+HKCR,"CLSID\%CLSID_BandSiteMenu%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_BandSiteMenu%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_BandSiteMenu%",,"%DESC_BandSiteMenu%"
+
+; CLSID_ShellTaskScheduler
+; In: IE4
+HKCR,"CLSID\%CLSID_ShellTaskScheduler%",,,"%DESC_ShellTaskScheduler%"
+HKCR,"CLSID\%CLSID_ShellTaskScheduler%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellTaskScheduler%\%IPS%","ThreadingModel",,"Apartment"
+
+; CLSID_SharedTaskScheduler
+; In: IE4
+HKCR,"CLSID\%CLSID_SharedTaskScheduler%",,,"%DESC_SharedTaskScheduler%"
+HKCR,"CLSID\%CLSID_SharedTaskScheduler%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SharedTaskScheduler%\%IPS%","ThreadingModel",,"Apartment"
+
+; ImageCache
+; CLSID_ImageListCache
+; In IE4
+HKCR,"CLSID\%CLSID_ImageListCache%",,,"%DESC_ImageListCache%"
+HKCR,"CLSID\%CLSID_ImageListCache%\%IPS%","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_ImageListCache%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+
+; CLSID_BrowseuiPreloader
+; In: IE5
+HKCR,"CLSID\%CLSID_BrowseuiPreloader%",,,"%DESC_BrowseuiPreloader%"
+HKCR,"CLSID\%CLSID_BrowseuiPreloader%\%IPS%","ThreadingModel",,"Both"
+HKCR,"CLSID\%CLSID_BrowseuiPreloader%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKLM,"%SMWCE%\SharedTaskScheduler\","%CLSID_BrowseuiPreloader%",,"%DESC_BrowseuiPreloader%"
+
+; CLSID_DeskBarApp
+; In: IE4
+HKCR,"CLSID\%CLSID_DeskBarApp%",,,"%DESC_DeskBarApp%"
+HKCR,"CLSID\%CLSID_DeskBarApp%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DeskBarApp%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_DeskBarApp%",,"%DESC_DeskBarApp%"
+
+; CLSID_DeskBar
+; In: IE4
+HKCR,"CLSID\%CLSID_DeskBar%",,,"%DESC_DeskBar%"
+HKCR,"CLSID\%CLSID_DeskBar%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DeskBar%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_DeskBar%",,"%DESC_DeskBar%"
+
+; CLSID_RebarBandSite
+; In: IE4
+HKCR,"CLSID\%CLSID_RebarBandSite%",,,"%DESC_RebarBandSite%"
+HKCR,"CLSID\%CLSID_RebarBandSite%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_RebarBandSite%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_RebarBandSite%",,"%DESC_RebarBandSite%"
+
+; CLSID_UserAssist
+; In: IE5
+HKCR,"CLSID\%CLSID_UserAssist%",,,"%DESC_UserAssist%"
+HKCR,"CLSID\%CLSID_UserAssist%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_UserAssist%\%IPS%","ThreadingModel",,"Both"
+HKLM,"%SMWCVSEA%","%CLSID_UserAssist%",,"%DESC_UserAssist%"
+
+; CLSID_GlobalFolderSettings
+; In: IE5
+HKCR,"CLSID\%CLSID_GlobalFolderSettings%",,,"%DESC_GlobalFolderSettings%"
+HKCR,"CLSID\%CLSID_GlobalFolderSettings%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_GlobalFolderSettings%\%IPS%","ThreadingModel",,"Both"
+HKLM,"%SMWCVSEA%","%CLSID_GlobalFolderSettings%",,"%DESC_GlobalFolderSettings%"
+
+
+; CLSID_ProgressDialog
+; In: IE5
+HKCR,"CLSID\%CLSID_ProgressDialog%",,,"%DESC_ProgressDialog%"
+HKCR,"CLSID\%CLSID_ProgressDialog%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ProgressDialog%\%IPS%","ThreadingModel",,"Both"
+
+
+; CLSID_ComCatCacheTask
+; In: IE5
+HKCR,"CLSID\%CLSID_ComCatCacheTask%",,,"%DESC_ComCatCacheTask%"
+HKCR,"CLSID\%CLSID_ComCatCacheTask%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ComCatCacheTask%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_ComCatConditionalCacheTask%",,,"%DESC_ComCatConditionalCacheTask%"
+HKCR,"CLSID\%CLSID_ComCatConditionalCacheTask%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ComCatConditionalCacheTask%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCE%\SharedTaskScheduler","%CLSID_ComCatCacheTask%",,"%DESC_ComCatCacheTask%"
+
+[DeleteKeys]
+; Remove IE4 "On The Internet" -- we replace with browseui's own "On The Internet"
+HKLM,"%SMWCE%\FindExtensions\Static\InetFind"
+
+; BUGBUG raymondc remove before 15 Sep 98
+; CLSID_BROWSEUI
+; Was In: IE5
+HKCR,"CLSID\%CLSID_BROWSEUI%"
+HKCR,"CLSID\%CLSID_BROWSEUI%\%IPS%"
+HKCR,"CLSID\%CLSID_BROWSEUI%\%IPS%"
+HKLM,"%SMWCVSEA%","%CLSID_BROWSEUI%"
+
+
+; This section will be run at PER-USER Install and will remove keys
+; on the IE3/4->NT5 upgrade.
+[DelRegNT5Upgrade]
+; We delete this because we want to default to small icons on NT5 and
+; do this even in upgrade cases.
+HKCU,"%SMWCE%\SmallIcons"
+
+
+[Strings]
+RES= 0x00020000
+REGMULSZ=0x00010000
+IPS="InProcServer32"
+
+SMWCVSEA      = "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+SMWCE         = "Software\Microsoft\Windows\CurrentVersion\Explorer"
+ADV_FOLDER    = "Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder"
+SMWCVEFA      = "Software\Microsoft\Windows\CurrentVersion\Explorer\FileAssociation"
+
+DESC_DeskBar            = "Shell DeskBar"
+CLSID_DeskBar           = "{ECD4FC4C-521C-11D0-B792-00A0C90312E1}"
+
+CLSID_RebarBandSite     = "{ECD4FC4D-521C-11D0-B792-00A0C90312E1}"
+DESC_RebarBandSite      = "Shell Rebar BandSite"
+
+CLSID_DeskBarApp        = "{3CCF8A41-5C85-11d0-9796-00AA00B90ADF}"
+DESC_DeskBarApp         = "Shell DeskBarApp"
+
+CLSID_InternetToolbar   = "{5E6AB780-7743-11CF-A12B-00AA004AE837}"
+DESC_InternetToolbar    = "Microsoft Internet Toolbar"
+
+CLSID_ISFBand           = "{D82BE2B0-5764-11D0-A96E-00C04FD705A2}"
+DESC_ISFBand            = "IShellFolderBand"
+
+CLSID_BandProxy         = "{F61FFEC1-754F-11d0-80CA-00AA005B4383}"
+DESC_BandProxy          = "BandProxy"
+
+CLSID_AddressEditBox    = "{A08C11D2-A228-11d0-825B-00AA005B4383}"
+DESC_AddressEditBox     = "Address EditBox"
+
+CLSID_AddressBand       = "{01E04581-4EEE-11d0-BFE9-00AA005B4383}"
+DESC_AddressBand        = "&Address"
+
+CLSID_MenuBand          = "{5b4dae26-b807-11d0-9815-00c04fd91972}"
+DESC_MenuBand           = "Menu Band"
+
+CLSID_MenuBandSite      = "{E13EF4E4-D2F2-11d0-9816-00C04FD91972}"
+DESC_MenuBandSite       = "Menu Site"
+
+CLSID_MenuDeskBar       = "{ECD4FC4F-521C-11D0-B792-00A0C90312E1}"
+DESC_MenuDeskBar        = "Menu Desk Bar"
+
+CLSID_TrackShellMenu    = "{8278F931-2A3E-11d2-838F-00C04FD918D0}"
+DESC_TrackShellMenu     = "Tracking Shell Menu"
+
+CLSID_AutoComplete      = "{00BB2763-6A77-11D0-A535-00C04FD7D062}"
+DESC_AutoComplete       = "Microsoft AutoComplete"
+
+CLSID_Thumbnail         = "{7487cd30-f71a-11d0-9ea7-00805f714772}"
+DESC_Thumbnail          = "Thumbnail Image"
+
+CLSID_MenuISF           = "{568804CA-CBD7-11d0-9816-00C04FD91972}"
+DESC_MenuISF            = "Menu Shell Folder"
+
+CLSID_AugmentedISF      = "{91EA3F8B-C99B-11d0-9815-00C04FD91972}"
+DESC_AugmentedISF       = "Augmented Shell Folder"
+
+CLSID_AugmentedMergeISF = "{6413BA2C-B461-11d1-A18A-080036B11A03}"
+DESC_AugmentedMergeISF  = "Augmented Merge Shell Folder"
+
+CLSID_BrandBand         = "{22BF0C20-6DA7-11D0-B373-00A0C9034938}"
+DESC_BrandBand          = "Download Status"
+
+CLSID_QuickLinks        = "{0E5CBF21-D15F-11d0-8301-00AA005B4383}"
+DESC_QuickLinks         = "&Links"
+
+CLSID_BrowserBand       = "{7BA4C742-9E81-11CF-99D3-00AA004AE837}"
+DESC_BrowserBand        = "Microsoft BrowserBand"
+
+CLSID_SearchBand        = "{30D02401-6A81-11d0-8274-00C04FD5AE38}"
+DESC_SearchBand         = "Microsoft SearchBand"
+
+CLSID_CommBand          = "{4D5C8C2A-D075-11d0-B416-00C04FB90376}"
+DESC_CommBand           = "Microsoft CommBand"
+
+CLSID_CRegTreeOptions   = "{AF4F6510-F982-11d0-8595-00AA004CD6D8}"
+DESC_CRegTreeOptions    = "Registry Tree Options Utility"
+
+CLSID_ACLMRU            = "{6756A641-DE71-11d0-831B-00AA005B4383}"
+DESC_ACLMRU             = "MRU AutoComplete List"
+
+CLSID_ACLHistory        = "{00BB2764-6A77-11D0-A535-00C04FD7D062}"
+DESC_ACLHistory         = "Microsoft History AutoComplete List"
+
+CLSID_ACListISF         = "{03C036F1-A186-11D0-824A-00AA005B4383}"
+DESC_ACListISF          = "Microsoft Shell Folder AutoComplete List"
+
+CLSID_ACLMulti          = "{00BB2765-6A77-11D0-A535-00C04FD7D062}"
+DESC_ACLMulti           = "Microsoft Multiple AutoComplete List Container"
+
+CLSID_ChannelBand       = "{EFA24E63-B078-11d0-89E4-00C04FC9E26E}"
+DESC_ChannelBand        = "Channels Band"
+
+CLSID_ExplorerBand      = "{EFA24E64-B078-11d0-89E4-00C04FC9E26E}"
+DESC_ExplorerBand       = "Explorer Band"
+
+CLSID_CCommonBrowser    = "{AF604EFE-8897-11D1-B944-00A0C90312E1}"
+DESC_CCommonBrowser     = "Microsoft Common Browser Architecture"
+
+CLSID_CDockingBarPropertyBag = "{4AF4A5FC-912A-11D1-B945-00A0C90312E1}"
+DESC_CDockingBarPropertyBag  = "Microsoft Docking Bar Property Bag"
+
+CLSID_BandSiteMenu      = "{ECD4FC4E-521C-11D0-B792-00A0C90312E1}"
+DESC_BandSiteMenu       = "Shell Band Site Menu"
+
+CLSID_BrowseuiPreloader = "{438755C2-A8BA-11D1-B96B-00A0C90312E1}"
+DESC_BrowseuiPreloader  = "Browseui preloader"
+
+CLSID_ShellTaskScheduler = "{603D3800-BD81-11d0-A3A5-00C04FD706EC}"
+DESC_ShellTaskScheduler  = "Background Task Scheduler"
+
+CLSID_SharedTaskScheduler = "{603D3801-BD81-11d0-A3A5-00C04FD706EC}"
+DESC_SharedTaskScheduler  = "Shared Task Scheduler"
+
+_IID_IExtractImage      = "{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}"
+CLSID_ImgCtxExtractor   = "{7376D660-C583-11d0-A3A5-00C04FD706EC}"
+DESC_ImgCtxExtractor    = "TridentImageExtractor"
+
+CLSID_ImageListCache    = "{3F4EEF80-BFE8-11d0-A3A5-00C04FD706EC}"
+DESC_ImageListCache     = "Image List Cache "
+
+CLSID_UserAssist        = "{DD313E04-FEFF-11d1-8ECD-0000F87A470C}"
+DESC_UserAssist         = "User Assist"
+
+CLSID_ShellSearchExt    = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}"
+DESC_ShellSearchExt     = "In-pane search"
+
+CLSID_WebSearchExt      = "{07798131-AF23-11d1-9111-00A0C98BA67D}"
+DESC_WebSearchExt       = "Web Search"
+WEB_SEARCH_EXT_MENU     = "On the &Internet..."
+WEB_SEARCH_EXT_HELP     = "Search the web"
+
+CLSID_GlobalFolderSettings = "{EF8AD2D1-AE36-11D1-B2D2-006097DF8C11}"
+DESC_GlobalFolderSettings  = "Global Folder Settings"
+
+CLSID_ProgressDialog       = "{F8383852-FCD3-11d1-A6B9-006097DF5BD4}"
+DESC_ProgressDialog        = "Progress Dialog"
+
+CLSID_OrderListExport   = "{F3368374-CF19-11d0-B93D-00A0C90312e1}"
+DESC_OrderListExport    = "OrderListExport"
+
+CLSID_INETFind          = "{37865980-75D1-11CF-BFC7-444553540000}"
+
+CLSID_ComCatCacheTask   = "{8C7461EF-2B13-11d2-BE35-3078302C2030}"
+DESC_ComCatCacheTask    = "Component Categories cache daemon"
+CLSID_ComCatConditionalCacheTask   = "{E56829C9-2D59-11d2-BE38-3078302C2030}"
+DESC_ComCatConditionalCacheTask    = "Component Categories conditional cache daemon"
+
+
+CLSID_BrowseuiTypelib   = "{EABEABEA-30C1-11CF-A7EB-0000C05BAE0B}"
+

@@ -1,0 +1,402 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""ShWizard.rc2""      // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""shwizard.rcv""      // version info\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_SHELLWIZ            ICON    DISCARDABLE     "ShWizard.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WELCOME DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_DISABLED | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Welcome to the Customize This Folder Wizard",
+                    IDC_TITLE_WELCOME,115,9,189,22
+    LTEXT           "This wizard will help you change the appearance of this folder. The changes you make can be seen by anyone who opens the folder.",
+                    IDC_STATIC,115,40,189,81
+    LTEXT           "Click Next to continue or Cancel to exit the Customize This Folder wizard.",
+                    IDC_STATIC,115,152,189,31
+END
+
+IDD_CHOOSE_PATH DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "What would you like to do?",IDC_STATIC,21,8,279,8
+    CONTROL         "&Customize",IDC_CUSTOMIZE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,21,20,279,10
+    CONTROL         "Choose or edit an &HTML template for this folder",
+                    IDC_WEBVIEW_TEMPLATE,"Button",BS_AUTOCHECKBOX,34,32,265,
+                    10
+    CONTROL         "Modify background &picture and filename appearance",
+                    IDC_LISTVIEW_STUFF,"Button",BS_AUTOCHECKBOX,34,44,265,10
+    CONTROL         "Add &folder comment",IDC_COMMENT,"Button",
+                    BS_AUTOCHECKBOX,34,57,265,10
+    CONTROL         "&Remove customizations",IDC_REMOVE,"Button",
+                    BS_AUTORADIOBUTTON,21,74,279,10
+    LTEXT           "",IDC_INTRO_DESC,27,103,266,28
+    GROUPBOX        "Task Description",IDC_STATIC,19,90,280,48
+END
+
+IDD_PAGET1 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Preview:",IDC_STATIC,7,8,64,10
+    CONTROL         104,IDC_EXPLORER,"Static",SS_BITMAP | SS_SUNKEN,7,19,85,
+                    73
+    LTEXT           "&Select a background picture from the list below:",
+                    IDC_STATIC,106,8,203,8
+    LISTBOX         IDC_PICLIST,106,19,203,52,LBS_SORT | LBS_USETABSTOPS | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Background picture for this folder:",IDC_STATIC,106,79,
+                    150,8
+    PUSHBUTTON      "B&rowse...",IDC_BROWSE,259,77,50,13
+    GROUPBOX        "Filename Appearance",IDC_STATIC,106,97,203,39
+    LTEXT           "&Text:",IDC_STATIC,112,115,29,8
+    CONTROL         "",IDC_BTN_TEXT_COLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,
+                    144,114,22,12
+    LTEXT           "B&ackground:",IDC_STATIC,221,115,52,8
+    CONTROL         "",IDC_BTN_BKGND_COLOR,"Button",BS_OWNERDRAW | 
+                    WS_TABSTOP,278,114,22,12
+END
+
+IDD_COMMENT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Note:  This comment can be any HTML and will be visible in the left pane of the folder view.",
+                    IDC_STATIC,21,94,275,19
+    LTEXT           "Folder comment:",IDC_STATIC,21,8,275,10
+    EDITTEXT        IDC_EDIT_COMMENT,21,20,275,66,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | 
+                    WS_VSCROLL | WS_HSCROLL
+END
+
+IDD_PAGEA3 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Choose a template:",IDC_STATIC,21,7,153,8
+    CONTROL         "Choose a template:",IDC_LIST_TEMPLATES,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_GROUP | WS_TABSTOP,21,17,156,71
+    LTEXT           "Preview:",IDC_TEXT_CUSTOMIZED,192,7,95,10
+    CONTROL         "",IDC_BITMAP_PREVIEW,"Static",SS_BITMAP | 
+                    SS_CENTERIMAGE | WS_BORDER | WS_GROUP,192,17,99,73
+    CONTROL         "I want to &edit this template.",IDC_CHECK1,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,127,274,10
+    GROUPBOX        "Template description",IDC_STATIC,21,93,271,31
+    LTEXT           "",IDC_TEXT_DESC,25,103,265,17
+END
+
+IDD_FINISHT DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Customize This Folder Wizard",
+                    IDC_TITLE_WELCOME,115,9,189,23
+    LTEXT           "You have successfully completed the Customize This Folder wizard.  You have customized the following:",
+                    IDC_STATIC,115,40,189,35
+    LTEXT           "",IDC_FINISHT,115,78,189,62
+    LTEXT           "To complete this wizard, click Finish.",IDC_STATIC,115,
+                    164,186,17
+END
+
+IDD_REMOVE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Check one or more items:",IDC_STATIC,21,8,279,8
+    CONTROL         "Restore default folder &template",IDC_RESTORE_HTML,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,24,112,10
+    CONTROL         "Remove background &picture",IDC_REMOVE_BACKGROUND,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,38,106,10
+    CONTROL         "Restore filename &appearance",IDC_RESTORE_ICONTEXT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,28,52,109,10
+    CONTROL         "Remove folder &comment",IDC_REMOVE_COMMENT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,28,66,93,10
+END
+
+IDD_FINISHR DIALOG DISCARDABLE  0, 0, 317, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Customize This Folder Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Customize This Folder Wizard",
+                    IDC_TITLE_WELCOME,115,9,189,23
+    LTEXT           "You have successfully completed the Customize This Folder wizard.  You have chosen the following:",
+                    IDC_STATIC,115,40,189,35
+    LTEXT           "",IDC_FINISHT,115,78,189,62
+    LTEXT           "To complete this wizard, click Finish.",IDC_STATIC,115,
+                    165,186,17
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP3             BITMAP  DISCARDABLE     "custom.BMP"
+IDB_WATERMARK           BITMAP  DISCARDABLE     "watermark.BMP"
+IDB_BANNER              BITMAP  DISCARDABLE     "banner.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// HTML
+//
+
+UNKNOWN.HTM             HTML    DISCARDABLE     "unknown.htm"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WELCOME, DIALOG
+    BEGIN
+        RIGHTMARGIN, 237
+        VERTGUIDE, 118
+        BOTTOMMARGIN, 184
+    END
+
+    IDD_PAGET1, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 106
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 27
+        HORZGUIDE, 95
+        HORZGUIDE, 125
+    END
+
+    IDD_PAGEA3, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 181
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 17
+        HORZGUIDE, 99
+        HORZGUIDE, 133
+    END
+
+    IDD_FINISHT, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 147
+    END
+
+    IDD_REMOVE, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+    END
+
+    IDD_FINISHR, DIALOG
+    BEGIN
+        VERTGUIDE, 88
+        VERTGUIDE, 100
+        VERTGUIDE, 287
+        HORZGUIDE, 7
+        HORZGUIDE, 147
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROPSHT_CAPTION     "Wizard"
+    IDS_CONGRATS            "Congratulations!  You have chosen to make the \r\nfollowing changes:\r\n"
+    IDS_PICTURE             "Change the background picture to: "
+    IDS_CREATE              "The Wizard will now start your preferred HTML editor with the template file you select below.  You may customize the document any way you like."
+    IDS_LAUNCH              "The wizard is now starting your HyperText Template editor..."
+    IDS_EDITPAGE            "You are about to use your HyperText Template editor to edit the appearance of the folder."
+    IDS_FOLDER              "Folder.htt"
+    IDS_WEB                 "as Web Page"
+    IDS_NOTEPAD             "Notepad.exe "
+    IDS_FOLDERHTML          "Set the folder HTML"
+    IDS_EXIST               "File doesn't exist"
+    IDS_FERROR              "The file could not be opened because of this error:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CURRENT_TEMPLATE    "Current"
+    IDS_CURRENT_TEMPLATE_DESC 
+                            "This is the template currently in use by the folder, including any changes you may have made. Choose this if you want to keep editing its contents."
+    IDS_NOTAVAILABLE        "Preview: (Not Available)"
+    IDS_ORIGINAL            "Preview: (Original)"
+    IDS_WEBVIEW_ON          "You have to enable WebView for all folders, before you can proceed with this option. Proceed?"
+    IDS_HTML                "This option enables you to customize the appearance of this folder by choosing from a list of templates."
+    IDS_BACKGROUND          "This option enables you to set a picture as the background of the icon area, and to set icon caption colors. "
+    IDS_REMOVECUST          "This option restores this folder to the state it was in before it was customized."
+    IDS_COMMENT             "This option enables you to specify a string that will be used as the comment for this folder."
+    IDS_WELCOME_TITLE_FONT  "Verdana Bold"
+    IDS_PREVIEW             "Preview:"
+    IDS_COMPLETE_BACKGROUND "Background picture and filename appearance"
+    IDS_COMPLETE_COMMENT    "Folder comment"
+    IDS_COMPLETE_TEMPLATE   "HTML template"
+    IDS_REMOVE_BACKGROUND   "Remove background picture"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RESTORE_ICONTEXTCOLOR "Restore filename appearance"
+    IDS_REMOVE_COMMENT      "Remove folder comment"
+    IDS_RESTORE_HTML        "Restore default folder template"
+    IDS_CHOOSEPATH_TITLE    "Customize This Folder"
+    IDS_CHOOSEPATH_SUBTITLE "Do you want to customize this folder or remove previous customizations?"
+    IDS_BACKGROUND_TITLE    "Modify Background and Filename Appearance"
+    IDS_BACKGROUND_SUBTITLE "This may help you better see the folder's contents."
+    IDS_FOLDERCOMMENT_TITLE "Add folder comment"
+    IDS_FOLDERCOMMENT_SUBTITLE 
+                            "Add a folder comment to help you and everyone else keep track of what is in this folder."
+    IDS_HTML_TITLE          "Change Folder Template"
+    IDS_HTML_SUBTITLE       "Customize the folder template to best fit your needs for this folder."
+    IDS_UNCUSTOMIZE_TITLE   "Remove Customizations"
+    IDS_UNCUSTOMIZE_SUBTITLE 
+                            "You can remove specific customizations that you no longer need"
+    IDS_CUSTOMIZE           "This option allows you to customize one or many of the aspects of the folder's appearance."
+    IDS_UNCUSTOMIZE         "This option allows you to remove parts of previous customizations done on this folder and restore it to the default state."
+    IDS_BACKGROUND_FILES    "Background Files (*.bmp; *.jpg; *.gif; *.tif; *.dib)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ENTRY_NONE          "(None)"
+    IDS_ERROR_GENERIC       "The file could not be opened because of this error: "
+    IDS_CAN_MODIFY          "Click Finish to open it in your Hypertext template editor (Notepad by default). You can modify this file. When you save it, your folder will reflect this."
+    IDS_TITLE               "Customize This Folder"
+    IDS_ACCESSERROR         "The wizard cannot customize this folder.  One of the customization files is not accessible."
+    IDS_REMOVE              "Remove the current folder's Web View customization.\r\n\r\n\t* Folder.htt     -  Move to the Recycle Bin\r\n\t* Desktop.ini  -  Remove Web View keys"
+    IDS_SCRATCH             "Scratch.htt"
+    IDS_WEBVIEW_DLL         "webvw.dll"
+    IDS_TEMPLATE_DONE1      "This folder has been customized with the Web View template you chose."
+    IDS_TEMPLATE_DONE2      "The folder now contains two hidden files, desktop.ini and folder.htt."
+    IDS_TEMPLATE_DONE3      "The folder now contains a hidden file, desktop.ini."
+    IDS_ERR_FILEOPEN        "Could not open file."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "ShWizard.rc2"      // non-Microsoft Visual C++ edited resources
+#include "shwizard.rcv"      // version info
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

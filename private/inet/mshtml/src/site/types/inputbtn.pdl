@@ -1,0 +1,49 @@
+#ifndef _INPUTBTN_PDL_
+#define _INPUTBTN_PDL_ 1
+
+#include "inputtxt.pdl"
+#include "txtedit.pdl"
+
+file inputbtn.pdl
+    
+import inputtxt.pdl
+import txtedit.pdl
+                      
+interface IHTMLButtonElement guid:3050f2bb-98b5-11cf-bb82-00aa00bdce0b
+    refprop CButton:type
+    refprop CButton:value
+    refprop CButton:name
+    refprop CButton:status
+    refprop CElement:disabled
+    refprop CSite:form
+    refmethod CButton:createTextRange
+
+tearoff CButton Interface:IHTMLButtonElement
+
+class CButton name:HTMLButtonElement \
+            primaryinterface:IHTMLButtonElement \
+            super:CTxtSite \
+            events:HTMLButtonElementEvents \
+            nonprimaryevents:HTMLButtonElementEvents2 \
+            guid:3050f2c6-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f51f-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLButtonElement
+
+    property value atype:BSTR dispid:DISPID_A_VALUE type:BSTR \
+           method:ValueHelper get set bindable displaybind clearcaches nopersist maxstrlen:pdlNoLimit
+    property type   atype:BSTR   dispid:DISPID_INPUT  \
+           type:htmlInput  \
+           get setaahr caa \
+           default:htmlInputButton maxstrlen:pdlToken
+    property name atype:BSTR dispid:STDPROPID_XOBJ_NAME maxstrlen:pdlNoLimit \
+           type:CStr  noassigndefault:"" get set method:nameHelper baseimplementation bindable displaybind 
+    property status atype:VARIANT  dispid:DISPID_BUTTON+1 \
+           type:VARIANT get set abstract maxstrlen:pdlNoLimit
+
+    method   HRESULT  createTextRange dispid:DISPID_BUTTON+2  ( out retval type:IHTMLTxtRange** arg:range )
+
+#endif _INPUTBTN_PDL_

@@ -1,0 +1,204 @@
+LIBRARY         SHDOCVW
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Shell extension DLL for DocView host'
+
+SECTIONS
+
+EXPORTS
+    DllCanUnloadNow                 ULTRAPRIVATE
+    DllGetClassObject               ULTRAPRIVATE
+    DllRegisterServer               ULTRAPRIVATE
+    DllUnregisterServer             ULTRAPRIVATE
+    DllGetVersion = CCDllGetVersion ULTRAPRIVATE
+    DllInstall                      ULTRAPRIVATE
+
+    URLQualifyA
+    URLQualifyW
+    OpenURL
+
+    IEWinMain                   @101 NONAME     PRIVATE
+
+    ;;  CreateShortcutInDir is GetProcAddressed by ORDINAL... if
+    ;;  you need to change it from 102, here, fix up explorer.exe
+    ;;  likewise for 103 the unicode version for NT merge
+    CreateShortcutInDirA        @102 NONAME     PRIVATE
+    CreateShortcutInDirW        @103 NONAME     PRIVATE
+
+    WhichPlatform=WhichPlatformFORWARD  @104 NONAME     PRIVATE
+    CreateShortcutInDirEx       @105 NONAME     PRIVATE
+
+    DllRegisterWindowClasses
+
+    ;; BUGBUG: used only for OC Host apps, probably should remove later
+    DoFileDownload
+    DoFileDownloadEx
+
+    ; Helper function to be called by MSHTML.DLL
+    HlinkFrameNavigate
+    HlinkFrameNavigateNHL
+    HlinkFindFrame
+    DoAddToFavDlg
+    DoAddToFavDlgW
+    DoOrganizeFavDlg
+    DoOrganizeFavDlgW
+    IEWriteErrorLog
+    AddUrlToFavorites
+    SetShellOfflineState    
+
+
+    ; For lack of a better home, called by browser and other apps
+    SoftwareUpdateMessageBox
+
+    WinList_Init                @110 NONAME     PRIVATE
+    WinList_Terminate           @111 NONAME     PRIVATE
+
+    CreateFromDesktop           @115 NONAME     PRIVATE
+    DDECreatePostNotify         @116 NONAME     PRIVATE
+    DDEHandleViewFolderNotify   @117 NONAME     PRIVATE
+    ShellDDEInit                @118 NONAME     PRIVATE
+    SHCreateDesktop             @119 NONAME     PRIVATE
+    SHDesktopMessageLoop        @120 NONAME     PRIVATE
+    
+    ; Shell Performance Functions
+    ;
+    ; Shell32 on IE4 still calls these functions, so we have
+    ; dumb forwarders that send them to their new home in shlwapi
+    StopWatchMode   = StopWatchModeFORWARD    @121 NONAME     PRIVATE
+    StopWatchFlush  = StopWatchFlushFORWARD   @122 NONAME     PRIVATE
+    StopWatch       = StopWatchFORWARD        @123 NONAME     PRIVATE
+
+
+    ; Code to run install/uninstall stubs.  A separate copy of the code is
+    ; used in loadwc.exe in browser-only mode;  the first of these exports
+    ; is called from explorer.exe in integrated shell mode (loaded by ordinal).
+    ; ActiveSetup calls the other one to execute a specific install stub.
+    RunInstallUninstallStubs    @125 NONAME PRIVATE
+    RunInstallUninstallStubs2   @130 NONAME PRIVATE
+
+    SetQueryNetSessionCount
+
+    ;; BUGBUG Should we really export this for everyone?
+    SHGetIDispatchForFolder
+
+    SHCreateSplashScreen        @131 NONAME PRIVATE
+
+    IsFileUrl                   @135 NONAME PRIVATE
+    IsFileUrlW                  @136 NONAME PRIVATE
+    PathIsFilePath              @137 NONAME PRIVATE
+    URLSubLoadString            @138 NONAME PRIVATE
+    OpenPidlOrderStream         @139 NONAME PRIVATE
+    DragDrop                    @140 NONAME PRIVATE
+    IEInvalidateImageList       @141 NONAME PRIVATE
+    IEMapPIDLToSystemImageListIndex @142 NONAME PRIVATE
+    ILIsWeb                     @143 NONAME PRIVATE
+    IEGetAttributesOf           @145 NONAME PRIVATE
+    IEBindToObject              @146 NONAME PRIVATE
+    IEGetNameAndFlags           @147 NONAME PRIVATE
+    IEGetDisplayName            @148 NONAME PRIVATE
+    IEBindToObjectEx            @149 NONAME PRIVATE
+
+    _GetStdLocation             @150 NONAME PRIVATE
+
+    URLSubRegQueryA             @151 NONAME PRIVATE
+    CShellUIHelper_CreateInstance2 @152 NONAME PRIVATE
+    IsURLChild                  @153 NONAME PRIVATE
+
+
+    ;; Export restrictions for webcheck, cdfview, browseui
+    SHRestricted2A              @158 NONAME PRIVATE
+    SHRestricted2W              @159 NONAME PRIVATE
+    SHIsRestricted2W            @160 NONAME PRIVATE
+
+    ;; Debug memory Leak detection API
+
+    GetLeakDetectionFunctionTable @161 NONAME PRIVATE
+
+    ;; BUGBUG: get rid of this, Helper function for CDFView
+    CDDEAuto_Navigate           @162 NONAME PRIVATE
+
+    ;; Export of add/activate channel/favorite to webcheck (SubscriptionMgr
+    ;; is the official access point for this functionality)
+    SHAddSubscribeFavorite      @163 PRIVATE
+
+    ; Helper function be called from InetCpl
+    ResetProfileSharing         @164 NONAME PRIVATE
+
+    ;; called from browseui
+    ;; temporary till after the split
+    URLSubstitution         @165 NONAME PRIVATE
+    ;unused                        @166 NONAME PRIVATE
+    IsIEDefaultBrowser          @167    NONAME PRIVATE
+    ;unused                        @168 NONAME PRIVATE
+    ParseURLFromOutsideSourceA     @169 NONAME PRIVATE
+    ParseURLFromOutsideSourceW     @170 NONAME PRIVATE
+    _DeletePidlDPA                 @171 NONAME PRIVATE
+    IURLQualify                    @172 NONAME PRIVATE
+    SHIsRestricted                 @173 NONAME PRIVATE
+    SHIsGlobalOffline              @174 NONAME PRIVATE
+    DetectAndFixAssociations       @175 NONAME PRIVATE
+    EnsureWebViewRegSettings       @176 NONAME PRIVATE
+    WinList_NotifyNewLocation      @177 NONAME PRIVATE
+    WinList_FindFolderWindow       @178 NONAME PRIVATE
+    WinList_GetShellWindows        @179 NONAME PRIVATE
+    WinList_RegisterPending        @180 NONAME PRIVATE
+    WinList_Revoke                 @181 NONAME PRIVATE
+
+    SHMapNbspToSp                  @183 NONAME PRIVATE
+    ;Unused                        @184 NONAME PRIVATE 
+    FireEvent_Quit                 @185 NONAME PRIVATE
+    
+    SHDGetPageLocation             @187 NONAME PRIVATE
+    SHIEErrorMsgBox                 @188 NONAME PRIVATE
+    IEGetDisplayNameW = IEGetDisplayName  @189 NONAME PRIVATE
+    SHIsRegisteredClient            @191 NONAME PRIVATE
+    SHGetHistoryPIDL                @192 NONAME PRIVATE
+    IECleanUpAutomationObject       @194 NONAME PRIVATE
+    IEOnFirstBrowserCreation        @195 NONAME PRIVATE
+    IEDDE_WindowDestroyed           @196 NONAME PRIVATE
+    IEDDE_NewWindow                 @197 NONAME PRIVATE
+
+    IsErrorUrl                      @198 NONAME PRIVATE
+    ;unused                         @199 NONAME PRIVATE
+    SHGetViewStream                 @200 NONAME PRIVATE
+
+    ;; called from shell32
+    ;; temporary till after the split; these start at 200 to avoid
+    ;; colliding with the temporary browseui functions
+    ;unused                     @201 NONAME PRIVATE
+    ;unused                     @202 NONAME PRIVATE
+    NavToUrlUsingIEA            @203 NONAME PRIVATE
+    NavToUrlUsingIEW            @204 NONAME PRIVATE
+    ;unused                     @205 NONAME PRIVATE
+    ; called from browseui
+    ; if you change ordinal - then change ENTRY_ORDINAL_DOWNLOADICONFORSHORTCUT in shdocvw.h
+    ;unused                     @207 NONAME PRIVATE
+    SearchForElementInHead      @208 NONAME PRIVATE
+    JITCoCreateInstance         @209 NONAME PRIVATE
+    UrlHitsNetW                 @210 NONAME PRIVATE
+
+    ; helper function called from InetCPL
+    ClearAutoSuggestForForms    @211 NONAME PRIVATE
+
+    GetLinkInfo                 @212 NONAME PRIVATE ; used by browseui
+
+    UseCustomInternetSearch         @213 NONAME PRIVATE ; browseui for these as well
+    GetSearchAssistantUrlW          @214 NONAME PRIVATE
+    GetSearchAssistantUrlA          @215 NONAME PRIVATE
+    GetDefaultInternetSearchUrlW    @216 NONAME PRIVATE
+    GetDefaultInternetSearchUrlA    @217 NONAME PRIVATE
+    IEParseDisplayNameWithBCW       @218 NONAME PRIVATE
+    IEILIsEqual                     @219 NONAME PRIVATE
+ 
+    
+    ; debug - move tlog stuff to 
+    ; different thread
+    TLTransferToThreadMemlist       @220 NONAME PRIVATE
+
+    IECreateFromPathCPWithBCA       @221 NONAME PRIVATE
+    IECreateFromPathCPWithBCW       @222 NONAME PRIVATE
+    ResetWebSettings                @223 NONAME PRIVATE
+    IsResetWebSettingsRequired      @224 NONAME PRIVATE
+
+    PrepareURLForDisplayUTF8W       @225 NONAME PRIVATE
+
+    IEIsLinkSafe                    @226 NONAME PRIVATE

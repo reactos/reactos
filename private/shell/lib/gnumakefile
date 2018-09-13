@@ -1,0 +1,8 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir stock    ${MAKE} ${MFLAGS} $@
+	@enterdir stock5   ${MAKE} ${MFLAGS} $@
+

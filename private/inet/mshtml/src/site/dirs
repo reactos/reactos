@@ -1,0 +1,21 @@
+# site
+DIRS = \
+    include \
+    display \
+    misc \
+    util \
+    base \
+    print \
+    style \
+    text \
+    ole \
+    builtin \
+    download \
+    miscelem \
+    miscsite \
+    dbind \
+    encode \
+    layout \
+    table \
+    view \
+    acc \

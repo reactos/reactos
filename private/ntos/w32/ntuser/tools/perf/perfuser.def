@@ -1,0 +1,6 @@
+LIBRARY perfuser
+
+EXPORTS
+    OpenUserPerformanceData     @1
+    CollectUserPerformanceData  @2
+    CloseUserPerformanceData    @3

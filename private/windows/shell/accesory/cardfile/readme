@@ -1,0 +1,164 @@
+Win 3.0 file format:
+{
+
+MGC                             3 bytes for the cardfile signature
+cCards                          int
+
+cCards CARDHEADERs              one header per card.
+Each CardHeader contains
+    {
+    6 bytes reserved
+    DWORD offset to data
+    1 byte for flags
+    41 bytes for header text including NUL
+    }
+
+Each Card data  contains:
+bmSize                          int, size of bitmap
+  
+    if non-zero bmSize then,
+    {
+        cxBitmap,
+        cyBitmap,
+        <x,y> for bitmap, in eights of char width
+        bmSize bytes of bitmap bits
+    }
+    int Text size
+    card text
+}
+
+|Subject: New Cardfile file format
+|Date: Tue Apr 02 16:09:28 PDT 1991
+|
+|RRG                             3 bytes for the cardfile signature
+|idObjectMax                     DWORD, maximum object id
+|cCards                          int, same as before
+|
+|cCards CARDHEADERs              same as before, one header per card.
+|
+|cCards Cards                    where a Card contains:
+|      0/1, int       - Tells whether the card contains an object.
+|      id, DWORD      - A unique object number, used for link management
+|      OLE Object     - OleLoadFromStream will read this.
+|      CharWid, int   - Character width, used for device independence
+|      CharHgt, int   - Character height
+|      RECT           - Rectangle in pixels where the object resides
+|      Object Type    - 0 = EMBEDDED, 1 = LINKED, 2 = STATIC
+|
+|      text size, int  (as before)
+|      text
+|
+|It's possible that it would be better to save CharHt and CharWd 
+|at the top of the card file, to save space... but I don't, currently.
+|I guess this will allow cardfiles to be edited across devices w/o having
+|to read in the entire card file.
+|
+|Cheers,
+|Mike
+|
+
+Files
+-----
+CARDFILE.DEF
+CARDFILE.DLG
+CARDFILE.ICO
+CARDFILE.LNK
+CARDFILE.RC		Resource file
+ECDA.DLG		Special OLE dialogs (Properties...)
+ECDA.H			Contains OLE related definitions/function declarations
+INCARD.C		Handles Card "reshuffling"/movement
+INCLIP.C		Clipboard interfacing routines
+INDB.C			Dialog box control procedures
+INDEX.C
+INDEX.H
+INDEXRC.H		Definitions of resource file constants
+INDIAL.C		Handles the phone dialing
+INDOS.ASM
+INDOS2.ASM
+INFILE.C		Handles File I/O (makes many Pic() calls)
+INFIND.C		Routines for "Search..." and "Find Next"
+ININPUT.C		Contains the main window procedure
+INNEW.C
+INOBJECT.C		Handles picture movement (mouse and keyboard)
+INOPEN.C		File open dialog code (superceded by commdlg)
+INPAINT.C
+INPRINT.C		Contains the printing code
+INRES.C
+INSCROLL.C
+INTEXT.C		Contains the MLE handling code
+MAKEFILE
+PICTURE.C		Contains the picture handling code
+REGISTER.H
+REGISTER.C		Contains the registration database code
+
+Notes
+-----
+This application has been written in an attempt to minimize memory usage.
+It only keeps all of the card headers plus the text/picture of the current
+card in memory; everything else is on disk.  If a card is modified, it
+is marked as dirty; and when the focus moves away from it, it is written
+to a temporary file.  Thus, when a cardfile is written, it writes out the
+card header and merges the old file with the temporary file.  When a cardfile
+is read, only the card headers are read; and then the current card is read.
+
+The contents of the current card have been modified to store a RECT which
+gives the coordinates of the picture; the picture, which is an OLE Object
+(except in the case of real mode, when the object's selector is filled in
+with 0 and the displacement really represents an HBITMAP); and the text,
+which is just read into an MLE.  The file Picture.C handles the majority of
+the picture manipulation, processing the LPECDOBJECT or HBITMAP as appropriate.
+
+Printing of OLE objects is accomplished by converting the image to a 
+monochrome BITMAP, and using the old printing code.  This conversion also
+takes place if the user wants to save old 3.0 compatible files.
+
+The registration database is called to initialize the Change Link... dialog
+and to interpret the server key strings.  The server keys, even though they
+appear readable (e.g. "PBrush") should not be displayed if possible, because
+their key values are NLS/localizable strings (e.g. "PaintBrush Picture").
+
+The ...ClientDoc() functions were added to support the link management which
+will be present in Windows 3.2.  Currently, all this will do is that it will
+cause the file name being edited by the application to be prepended to object
+names when editing objects (e.g. "(untitled)%Embedded #01").
+
+There was a bug where the common dialogs would not function correctly in real
+mode:  This resulted because the lpstr fields like lpstrFile were initialized
+once in InitInstance(), but since the DS moved, the addresses were not valid
+upon later calls to the library.  The solution is to re-init these fields before
+each call.  For the "Search/Find" dialog box, it is necessary to allocate a
+memory chunk and lock it, because the dialog is modeless (and the DS can move
+while the dialog is active).
+
+The new cardfile file format includes the width and height of character units.
+If on a device with the same character size, the objects will not move when you
+save them.  Otherwise, Scale() is called to give the correct size on the new
+display device.  The objects may move upwards/leftwards because of roundoff 
+errors.  
+
+Possible Improvements
+---------------------
+Currently, when printing OLE objects I create a monochrome BITMAP copy of the
+image.  If this BITMAP were made to be compatible with the printing device, I
+think that color printing can also be supported by CardFile.
+
+InitPhoneList is called at several places. Instead of doing an LB_INSERTSTRING,
+LB_DELETESTRING, the list box is reinitialized every time an entry changes.
+Procedures to add/delete an item from the list box should be used instead.
+
+Should replace IndexOkError with ErrorMessage and also make ErrorMessage
+return FALSE to facilitate error return from functions.
+
+May be we can get rid of the C run times like strchr(use MyStrChr instead) etc,
+in inprint.c.If we badly need a few of them still, use local versions of 
+atoi,atol etc.
+
+------------------------------------------------------------------------
+
+Date: Dec 30, 1993
+Subject: new format to handle unicode
+Author: Chris Walker
+
+The only difference in the unicode format is the signature (DKO)
+and the characters, now 16 bits wide.
+

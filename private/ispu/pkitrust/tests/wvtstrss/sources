@@ -1,0 +1,44 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=wvtstrss
+!include $(CRYPT_ROOT)\cryptexe.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+INCLUDES=$(PKITRUST_ROOT)\common;$(INCLUDES)
+
+UMTYPE=console
+UMENTRY=wmain
+
+PRECOMPILED_INCLUDE = global.hxx
+PRECOMPILED_PCH =     global.pch
+PRECOMPILED_OBJ =     global.obj
+
+SYNCHRONIZE_DRAIN=1
+USE_MFC=1
+
+!IF 0
+LINKER_FLAGS=/VERBOSE /MAP $(LINKER_FLAGS)
+!ENDIF
+
+SOURCES=\
+    $(MINORCOMP).rc     \
+    $(MINORCOMP).cpp
+
+TARGETLIBS= \
+    $(CRYPT_LIB)                        \
+    $(CRYPT_LOCALLIB)\authclib.lib \
+    $(CRYPT_LOCALLIB)\unicode.lib \
+    $(CRYPT_SDKORLOCALLIB)\wintrust.lib \
+    $(CRYPT_SDKLIB)\user32.lib \
+    $(TARGETLIBS)
+

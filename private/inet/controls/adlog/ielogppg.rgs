@@ -1,0 +1,22 @@
+HKCR
+{
+	IeLogppg.IeLogppg.1 = s 'IeLogppg Class'
+	{
+		CLSID = s '{A145F82A-6114-11D1-ADE3-00C04FB66F63}'
+	}
+	IeLogppg.IeLogppg = s 'IeLogppg Class'
+	{
+		CurVer = s 'IeLogppg.IeLogppg.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {A145F82A-6114-11D1-ADE3-00C04FB66F63} = s 'IeLogppg Class'
+		{
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

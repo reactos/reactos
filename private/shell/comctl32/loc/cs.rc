@@ -1,0 +1,138 @@
+LANGUAGE 0x05, 0x00 // Really 0x05, 0x01 - Czech (Czech)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Czech resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Upravit panel n\x00e1stroj\x016f"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Zav\x0159\x00edt",2,308,6,44,14
+    PUSHBUTTON      L"P\x016fvod&n\x00ed",202,308,23,44,14
+    PUSHBUTTON      L"N\x00e1po&v\x011bda",205,308,40,44,14
+    PUSHBUTTON      L"Na&horu",206,308,74,44,14
+    PUSHBUTTON      L"&Dol\x016f",207,308,91,44,14
+    LTEXT           L"Tl&a\x010d\x00edtka k\x00a0dispozici:",-1,4,5,114,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&P\x0159idat ->",1,131,42,44,14
+    PUSHBUTTON      L"<- Ode&brat",204,131,62,44,14
+    LTEXT           L"&Tla\x010d\x00edtka panelu n\x00e1stroj\x016f:",-1,182,5,116,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Storno",2,58,122,50,14
+    PUSHBUTTON      L"P&ou\x017e\x00edt",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"N\x00e1pov\x011bda",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Zp\x011bt",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&Dal\x0161\x00ed >",12324,62,26,50,14
+    PUSHBUTTON      L"Dokon\x010dit",12325,119,26,50,14
+    PUSHBUTTON      L"Storno",2,176,26,50,14
+    PUSHBUTTON      L"N\x00e1pov\x011bda",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Odd\x011blova\x010d"
+    1025                    L" + "
+    1026                    L"nen\x00ed"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Zav\x0159\x00edt"
+    4161                    L"OK"
+    4162                    L"%s - vlastnosti"
+    4163                    L"Dnes:"
+    4164                    L"&P\x0159ej\x00edt k\x00a0dne\x0161ku"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Sem zadejte text"
+    4177                    L"Vlastnosti"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"M\x011bn\x00ed velikost okna."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"P\x0159esune okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Zmen\x0161\x00ed okno do ikony."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Zv\x011bt\x0161\x00ed okno na maxim\x00e1ln\x00ed velikost."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"P\x0159epne do n\x00e1sleduj\x00edc\x00edho okna v aplikaci."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Zav\x0159e okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Obnov\x00ed okno do p\x016fvodn\x00ed velikosti."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"P\x0159epne do jin\x00e9ho \x00fakolu."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Obsahuje p\x0159\x00edkazy pro uspo\x0159\x00e1d\x00e1n\x00ed oken."
+    36849                   L"Ta\x017een\x00edm vlevo nebo vpravo se m\x011bn\x00ed \x0161\x00ed\x0159ka sloupc\x016f."
+    36850                   L"\x0160ipkami a tabul\x00e1torem se m\x011bn\x00ed velikost sloupc\x016f."
+    36851                   L"P\x0159id\x00e1, p\x0159esune nebo odstran\x00ed tla\x010d\x00edtka na panelu n\x00e1stroj\x016f."
+END

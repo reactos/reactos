@@ -1,0 +1,765 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1998.
+//
+//  File: dom.idl
+//
+//--------------------------------------------------------------------------
+
+#ifdef UNIX
+import "ocidl.idl";
+#endif
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#include "domdid.h"
+#include <idispids.h>
+
+interface IDOMImplementation;
+interface IDOMNode;
+interface IDOMDocumentFragment;
+interface IDOMDocument;
+interface IDOMNodeList;
+interface IDOMNamedNodeMap;
+interface IDOMCharacterData;
+interface IDOMAttribute;
+interface IDOMElement;
+interface IDOMText;
+interface IDOMComment;
+interface IDOMProcessingInstruction;
+interface IDOMCDATASection;
+interface IDOMDocumentType;
+interface IDOMNotation;
+interface IDOMEntity;
+interface IDOMEntityReference;
+
+
+[
+//    local, object,
+//    nonextensible,
+//    pointer_default(unique),
+    odl,
+    oleautomation,
+    dual,
+    uuid(3efaa410-272f-11d2-836f-0000f87a7782) // IID_IDOMImplementation
+]
+interface IDOMImplementation : IDispatch
+{
+    //  boolean                   hasFeature(in wstring feature, 
+    //                                   in wstring version);
+    [id(DISPID_DOM_IMPLEMENTATION_HASFEATURE)]
+//    [id(-1)]
+    HRESULT hasFeature(
+        [in] BSTR feature,
+        [in] BSTR version,
+        [out, retval] VARIANT_BOOL * hasFeature);
+};
+
+typedef [
+helpstring("Constants that define a node's type")
+] enum tagDOMNodeType 
+{  
+    NODE_INVALID, // = 0
+    NODE_ELEMENT, // = 1
+    NODE_ATTRIBUTE, // = 2
+    NODE_TEXT, // = 3
+    NODE_CDATA_SECTION, // = 4
+    NODE_ENTITY_REFERENCE, // = 5
+    NODE_ENTITY, // = 6
+    NODE_PROCESSING_INSTRUCTION, // = 7
+    NODE_COMMENT, // = 8
+    NODE_DOCUMENT, // = 9
+    NODE_DOCUMENT_TYPE, // = 10
+    NODE_DOCUMENT_FRAGMENT, // = 11
+    NODE_NOTATION // = 12
+} DOMNodeType; 
+
+
+[
+    local, object,
+    uuid(3efaa411-272f-11d2-836f-0000f87a7782), // IID_INode
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    helpstring("Core DOM node interface"),
+    pointer_default(unique)
+]
+interface IDOMNode : IDispatch
+{
+    // readonly attribute  wstring              nodeName;
+    [propget, id(DISPID_DOM_NODE_NODENAME), 
+     helpstring("name of the node")]
+    HRESULT nodeName(
+        [out, retval] BSTR * name);
+
+    //          attribute  wstring              nodeValue;
+    [propget, id(DISPID_DOM_NODE_NODEVALUE), 
+     helpstring("value stored in the node")]
+    HRESULT nodeValue(
+        [out, retval] VARIANT * value);
+
+    [propput, id(DISPID_DOM_NODE_NODEVALUE), 
+     helpstring("value stored in the node")]
+    HRESULT nodeValue(
+        [in] VARIANT value);
+
+    // readonly attribute  unsigned short       nodeType;
+    [propget, id(DISPID_DOM_NODE_NODETYPE), 
+     helpstring("the node's type")]
+    HRESULT nodeType(
+        [out, retval] DOMNodeType * type);
+
+    // readonly attribute  Node                 parentNode;
+    [propget, id(DISPID_DOM_NODE_PARENTNODE), 
+     helpstring("parent of the node")]
+    HRESULT parentNode(
+        [out, retval] IDOMNode ** parent);
+
+    // readonly attribute  NodeList             childNodes;
+    [propget, id(DISPID_DOM_NODE_CHILDNODES), 
+     helpstring("the collection of the node's children")]
+    HRESULT childNodes(
+        [out, retval] IDOMNodeList ** childList);
+
+    // readonly attribute  Node                 firstChild;
+    [propget,id(DISPID_DOM_NODE_FIRSTCHILD),
+     helpstring("first child of the node")]
+    HRESULT firstChild(
+        [out, retval] IDOMNode ** firstChild);
+
+    // readonly attribute  Node                 lastChild;
+    [propget,id(DISPID_DOM_NODE_LASTCHILD),
+     helpstring("first child of the node")]
+    HRESULT lastChild(
+        [out, retval] IDOMNode ** lastChild);
+
+    // readonly attribute  Node                 previousSibling;
+    [propget,id(DISPID_DOM_NODE_PREVIOUSSIBLING),
+     helpstring("left sibling of the node")]
+    HRESULT previousSibling(
+        [out, retval] IDOMNode ** previousSibling);
+
+    // readonly attribute  Node                 nextSibling;
+    [propget,id(DISPID_DOM_NODE_NEXTSIBLING),
+     helpstring("right sibling of the node")]
+    HRESULT nextSibling(
+        [out, retval] IDOMNode ** nextSibling);
+
+    // readonly attribute  NamedNodeMap         attributes;
+    [propget, id(DISPID_DOM_NODE_ATTRIBUTES), 
+     helpstring("the collection of the node's attributes")]
+    HRESULT attributes(
+        [out, retval] IDOMNamedNodeMap ** atrributeMap);
+
+
+    // Node                      insertBefore(in Node newChild, 
+    //                                        in Node refChild)
+    //                                        raises(DOMException);
+    [id(DISPID_DOM_NODE_INSERTBEFORE),
+     helpstring("insert a child node")]
+    HRESULT insertBefore(
+        [in] IDOMNode * newChild,
+        [in] VARIANT refChild,
+        [out, retval] IDOMNode ** outNewChild);
+
+    // Node                      replaceChild(in Node newChild, 
+    //                                        in Node oldChild)
+    //                                        raises(DOMException);
+    [id(DISPID_DOM_NODE_REPLACECHILD),
+     helpstring("replace a child node")]
+    HRESULT replaceChild(
+        [in] IDOMNode * newChild,
+        [in] IDOMNode * oldChild,
+        [out, retval] IDOMNode ** outOldChild);
+  
+    // Node                      removeChild(in Node childNode)
+    //                                       raises(DOMException);
+    [id(DISPID_DOM_NODE_REMOVECHILD),
+     helpstring("remove a child node")]
+    HRESULT removeChild(
+        [in] IDOMNode * childNode,
+        [out, retval] IDOMNode ** oldChild);
+
+    // Node                      appendChild(in Node newChild);
+    [id(DISPID_DOM_NODE_APPENDCHILD),
+     helpstring("append a child node")]
+    HRESULT appendChild(
+        [in] IDOMNode * newChild,
+        [out, retval] IDOMNode ** outNewChild);
+
+    // boolean                   hasChildNodes();
+    [id(DISPID_DOM_NODE_HASCHILDNODES),
+     helpstring("")]
+    HRESULT hasChildNodes(
+        [out, retval] VARIANT_BOOL * hasChild);
+
+    // readonly attribute  Node                 ownerDocument;
+    [propget, id(DISPID_DOM_NODE_OWNERDOC), 
+     helpstring("document that contains the node")]
+    HRESULT ownerDocument(
+        [out, retval] IDOMDocument ** DOMDocument);
+
+    // Node                      cloneNode(in boolean deep);
+    [id(DISPID_DOM_NODE_CLONENODE),
+     helpstring("")]
+    HRESULT cloneNode(
+        [in] VARIANT_BOOL deep,
+        [out, retval] IDOMNode ** cloneRoot);
+
+};
+
+[
+    local, object,
+    uuid(3efaa413-272f-11d2-836f-0000f87a7782), // IID_IDOMDocumentFragment
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMDocumentFragment : IDOMNode 
+{
+};
+
+[
+    local, object,
+    uuid(3efaa414-272f-11d2-836f-0000f87a7782), // IID_IDOMDocument
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMDocument : IDOMNode 
+{
+    // readonly attribute  DocumentType         doctype;
+    [propget, id(DISPID_DOM_DOCUMENT_DOCTYPE),
+     helpstring("node corresponding to the DOCTYPE")]
+    HRESULT doctype(
+        [out, retval] IDOMDocumentType ** documentType); 
+
+    // readonly attribute  DOMImplementation    implementation;
+    [propget, id(DISPID_DOM_DOCUMENT_IMPLEMENTATION),
+     helpstring("info on this DOM implementation")]
+    HRESULT implementation(
+        [out, retval] IDOMImplementation ** impl);
+
+    // attribute  Element              documentElement;
+    [propget, id(DISPID_DOM_DOCUMENT_DOCUMENTELEMENT),
+     helpstring("the root of the tree")]
+    HRESULT documentElement(
+        [out, retval] IDOMElement ** DOMElement);
+
+    [propputref, id(DISPID_DOM_DOCUMENT_DOCUMENTELEMENT),
+     helpstring("the root of the tree")]
+    HRESULT documentElement(
+        [in] IDOMElement * DOMElement);
+
+    // Element                   createElement(in wstring tagName);
+    [id(DISPID_DOM_DOCUMENT_CREATEELEMENT),
+     helpstring("create an Element node")]
+    HRESULT createElement(
+        [in] BSTR tagName,
+        [out, retval] IDOMElement ** element);
+
+    // DocumentFragment          createDocumentFragment();
+    [id(DISPID_DOM_DOCUMENT_CREATEDOCUMENTFRAGMENT),
+     helpstring("create a DocumentFragment node")]
+    HRESULT createDocumentFragment(
+        [out, retval] IDOMDocumentFragment ** docFrag );
+
+    // Text                      createTextNode(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATETEXTNODE),
+     helpstring("create a text node")]
+    HRESULT createTextNode(
+        [in] BSTR data,
+        [out, retval] IDOMText ** text);
+
+    // Comment                   createComment(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATECOMMENT),
+     helpstring("create a comment node")]
+    HRESULT createComment(
+        [in] BSTR data,
+        [out, retval] IDOMComment ** comment);
+
+    // CDATASection              createCDATASection(in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATECDATASECTION),
+     helpstring("create a CDATA section node")]
+    HRESULT createCDATASection(
+        [in] BSTR data,
+        [out, retval] IDOMCDATASection ** cdata);
+
+    // ProcessingInstruction     createProcessingInstruction(in wstring target, 
+    //                                                       in wstring data);
+    [id(DISPID_DOM_DOCUMENT_CREATEPROCESSINGINSTRUCTION),
+     helpstring("create a processing instruction node")]
+    HRESULT createProcessingInstruction(
+        [in] BSTR target,
+        [in] BSTR data,
+        [out, retval] IDOMProcessingInstruction ** pi);
+
+    // Attribute                 createAttribute(in wstring name);
+    [id(DISPID_DOM_DOCUMENT_CREATEATTRIBUTE),
+     helpstring("create an attribute node")]
+    HRESULT createAttribute(
+        [in] BSTR name,
+        [out, retval] IDOMAttribute ** attribute);
+
+    // EntityReference           createEntityReference(in wstring name);
+    [id(DISPID_DOM_DOCUMENT_CREATEENTITYREFERENCE),
+     helpstring("create an entity reference node")]
+    HRESULT createEntityReference(
+        [in] BSTR name,
+        [out, retval] IDOMEntityReference ** entityRef);
+
+    // NodeList                  getElementsByTagName(in wstring tagname);
+    [id(DISPID_DOM_DOCUMENT_GETELEMENTSBYTAGNAME),
+     helpstring("build a list of elements by name")]
+    HRESULT getElementsByTagName(
+        [in] BSTR tagName,
+        [out, retval] IDOMNodeList ** resultList);
+};
+
+
+[
+    local, object,
+    uuid(3efaa416-272f-11d2-836f-0000f87a7782), // IID_IDOMNodeList
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMNodeList : IDispatch
+{
+    // Node                      item(in unsigned long index);
+    [propget, id(DISPID_VALUE),
+     helpstring("collection of nodes")]
+    HRESULT item(
+        [in] long index,
+        [out, retval] IDOMNode ** listItem);
+
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_NODELIST_LENGTH),
+     helpstring("number of nodes in the collection")]
+    HRESULT length(
+        [out, retval] long * listLength);
+};
+
+
+[
+    local, object,
+    uuid(3efaa418-272f-11d2-836f-0000f87a7782), // IID_IDOMNamedNodeMap
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMNamedNodeMap : IDispatch
+{
+    // Node                      getNamedItem(in wstring name);
+    [id(DISPID_DOM_NAMEDNODEMAP_GETNAMEDITEM),
+     helpstring("lookup item by name")]
+    HRESULT getNamedItem(
+        [in] BSTR name,
+        [out, retval] IDOMNode ** namedItem);
+
+    // void                      setNamedItem(in Node arg);
+    [id(DISPID_DOM_NAMEDNODEMAP_SETNAMEDITEM),
+     helpstring("set item by name")]
+    HRESULT setNamedItem(
+        [in] IDOMNode * newItem,
+        [out, retval] IDOMNode ** nameItem);
+
+    // Node                      removeNamedItem(in wstring name);
+    [id(DISPID_DOM_NAMEDNODEMAP_REMOVENAMEDITEM),
+     helpstring("remove item by name")]
+    HRESULT removeNamedItem(
+        [in] BSTR name,
+        [out, retval] IDOMNode ** namedItem);
+
+    // Node                      item(in unsigned long index);
+    [propget, id(DISPID_VALUE),
+     helpstring("collection of nodes")]
+    HRESULT item(
+        [in] long index,
+        [out, retval] IDOMNode ** listItem);
+
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_NODELIST_LENGTH),
+     helpstring("number of nodes in the collection")]
+    HRESULT length(
+        [out, retval] long * listLength);
+
+};
+
+
+[
+    local, object,
+    uuid(3efaa41a-272f-11d2-836f-0000f87a7782), // IID_IDOMCharacterData
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMCharacterData : IDOMNode 
+{
+    //          attribute  wstring              data;
+    [propget, id(DISPID_VALUE),
+     helpstring("value of the node")]
+    HRESULT data(
+        [out, retval] BSTR * data);
+
+    [propput, id(DISPID_VALUE),
+     helpstring("value of the node")]
+    HRESULT data(
+        [in] BSTR data);
+    
+    // readonly attribute  unsigned long        length;
+    [propget, id(DISPID_DOM_DATA_LENGTH),
+     helpstring("number of characters in value")]
+    HRESULT length(
+        [out, retval] long * dataLength);
+
+    // wstring                   substring(in unsigned long offset, 
+    //                                     in unsigned long count)
+    //                                     raises(DOMException);
+    [id(DISPID_DOM_DATA_SUBSTRING),
+     helpstring("retrieve substring of value")]
+    HRESULT substringData(
+        [in] long offset,
+        [in] long count,
+        [out, retval] BSTR * data);
+
+    // void                      append(in wstring arg);
+    [id(DISPID_DOM_DATA_APPEND),
+     helpstring("append string to value")]
+    HRESULT appendData(
+        [in] BSTR data);
+
+    // void                      insert(in unsigned long offset, 
+    //                                  in wstring arg)
+    //                                  raises(DOMException);
+    [id(DISPID_DOM_DATA_INSERT),
+     helpstring("insert string into value")]
+    HRESULT insertData(
+        [in] long offset,
+        [in] BSTR data);
+
+    // void                      delete(in unsigned long offset, 
+    //                                  in unsigned long count)
+    //                                  raises(DOMException);
+    [id(DISPID_DOM_DATA_DELETE),
+     helpstring("delete string within the value")]
+    HRESULT deleteData(
+        [in] long offset,
+        [in] long count);
+
+    // void                      replace(in unsigned long offset, 
+    //                                   in unsigned long count, 
+    //                                   in wstring arg)
+    //                                   raises(DOMException);
+    [id(DISPID_DOM_DATA_REPLACE),
+     helpstring("replace string within the value")]
+    HRESULT replaceData(
+        [in] long offset,
+        [in] long count,
+        [in] BSTR data);
+};
+
+
+[
+    local, object,
+    uuid(3efaa41b-272f-11d2-836f-0000f87a7782), // IID_IDOMAttribute
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMAttribute : IDOMNode 
+{
+    // wstring                   name;
+    [propget, id(DISPID_DOM_ATTRIBUTE_GETNAME),
+     helpstring("get name of the attribute")]
+    HRESULT name(
+        [out, retval] BSTR * attributeName);
+
+    //         attribute  boolean              specified;
+    [propget, id(DISPID_DOM_ATTRIBUTE_SPECIFIED),
+     helpstring("indicates whether attribute has a default value")]
+    HRESULT specified(
+        [out, retval] VARIANT_BOOL * isSpecified);
+
+    // attribute wstring                   value;
+    [propget, id(DISPID_VALUE),
+     helpstring("string value of the attribute")]
+    HRESULT value(
+        [out, retval] VARIANT * attributeValue);
+
+    [propput, id(DISPID_VALUE),
+     helpstring("string value of the attribute")]
+    HRESULT value(
+        [in] VARIANT attributeValue);
+};
+
+
+[
+    local, object,
+    uuid(3efaa41c-272f-11d2-836f-0000f87a7782), // IID_IDOMElement
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMElement : IDOMNode 
+{
+    // readonly attribute wstring                   tagName;
+    [propget, id(DISPID_DOM_ELEMENT_GETTAGNAME),
+     helpstring("get the tagName of the element")]
+    HRESULT tagName(
+        [out, retval] BSTR * tagName);
+
+    // wstring                   getAttribute(in wstring name);
+    [id(DISPID_DOM_ELEMENT_GETATTRIBUTE),
+     helpstring("look up the string value of an attribute by name")]
+    HRESULT getAttribute(
+        [in] BSTR name,
+        [out, retval] VARIANT * value);
+
+    // void                      setAttribute(in string name, 
+    //                                        in string value);
+    [id(DISPID_DOM_ELEMENT_SETATTRIBUTE),
+     helpstring("set the string value of an attribute by name")]
+    HRESULT setAttribute(
+        [in] BSTR name,
+        [in] VARIANT value);
+
+    // void                      removeAttribute(in wstring name);
+    [id(DISPID_DOM_ELEMENT_REMOVEATTRIBUTE),
+     helpstring("remove an attribute by name")]
+    HRESULT removeAttribute(
+        [in] BSTR name);
+
+    // Attribute                 getAttributeNode(in wstring name);
+    [id(DISPID_DOM_ELEMENT_GETATTRIBUTENODE),
+     helpstring("look up the attribute node by name")]
+    HRESULT getAttributeNode(
+        [in] BSTR name,
+        [out, retval] IDOMAttribute ** attributeNode);
+
+    // void                      setAttributeNode(in Attribute newAttr);
+    [id(DISPID_DOM_ELEMENT_SETATTRIBUTENODE),
+     helpstring("set the specified attribute on the element")]
+    HRESULT setAttributeNode(
+        [in] IDOMAttribute * DOMAttribute,
+        [out, retval] IDOMAttribute ** attributeNode);
+
+    // void                      removeAttributeNode(in Attribute oldAttr);
+    [id(DISPID_DOM_ELEMENT_REMOVEATTRIBUTENODE),
+     helpstring("remove the specified attribute")]
+    HRESULT removeAttributeNode(
+        [in] IDOMAttribute * DOMAttribute,
+        [out, retval] IDOMAttribute ** attributeNode);
+
+    // NodeList                  getElementsByTagName(in wstring tagname);
+    [id(DISPID_DOM_ELEMENT_GETELEMENTSBYTAGNAME),
+     helpstring("build a list of elements by name")]
+    HRESULT getElementsByTagName(
+        [in] BSTR tagName,
+        [out, retval] IDOMNodeList ** resultList);
+
+    // void                      normalize();
+    [id(DISPID_DOM_ELEMENT_NORMALIZE),
+     helpstring("collapse all adjacent text nodes in sub-tree")]
+    HRESULT normalize();
+};
+
+
+[
+    local, object,
+    uuid(9cafc72d-272e-11d2-836f-0000f87a7782), // IID_IDOMText
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMText : IDOMCharacterData 
+{
+    // Text                      splitText(in unsigned long offset);
+    [id(DISPID_DOM_TEXT_SPLITTEXT),
+     helpstring("split the text node into two text nodes at the position specified")]
+    HRESULT splitText(
+        [in] long offset,
+        [out, retval] IDOMText ** rightHandTextNode);
+};
+
+
+[
+    local, object,
+    uuid(3efaa41e-272f-11d2-836f-0000f87a7782), // IID_IDOMComment
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMComment : IDOMCharacterData 
+{
+};
+
+
+[
+    local, object,
+    uuid(3efaa41f-272f-11d2-836f-0000f87a7782), // IID_IDOMProcessingInstruction
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMProcessingInstruction : IDOMNode 
+{
+    //         read-only attribute  wstring              target;
+    [propget, id(DISPID_DOM_PI_TARGET),
+     helpstring("the target")]
+    HRESULT target(
+        [out, retval] BSTR * name);
+
+    //         attribute  wstring              data;
+    [propget, id(DISPID_VALUE),
+     helpstring("the data")]
+    HRESULT data(
+        [out, retval] BSTR * value);
+
+    [propput, id(DISPID_VALUE),
+     helpstring("the data")]
+    HRESULT data(
+        [in] BSTR value);
+};
+
+
+[
+    local, object,
+    uuid(3efaa420-272f-11d2-836f-0000f87a7782), // IID_IDOMCDATASection
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMCDATASection : IDOMText 
+{
+};
+
+
+[
+    local, object,
+    uuid(3efaa421-272f-11d2-836f-0000f87a7782), // IID_IDOMDocumentType
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMDocumentType : IDOMNode 
+{
+    //          readonly attribute  wstring              name;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_NAME),
+     helpstring("name of the document type (root of the tree)")]
+    HRESULT name(
+        [out, retval] BSTR * rootName);
+
+    // readonly attribute  NamedNodeMap         entities;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_ENTITIES),
+     helpstring("a list of entities in the document")]
+    HRESULT entities(
+        [out, retval] IDOMNamedNodeMap ** entityMap);
+
+    // readonly attribute  NamedNodeMap         notations;
+    [propget, id(DISPID_DOM_DOCUMENTTYPE_NOTATIONS),
+     helpstring("a list of notations in the document")]
+    HRESULT notations(
+        [out, retval] IDOMNamedNodeMap ** notationMap);
+};
+
+
+[
+    local, object,
+    uuid(3efaa422-272f-11d2-836f-0000f87a7782), // IID_IDOMNotation
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMNotation : IDOMNode 
+{
+    //         attribute  wstring              publicId;
+    [propget, id(DISPID_DOM_NOTATION_PUBLICID),
+     helpstring("the public ID")]
+    HRESULT publicId(
+        [out, retval] VARIANT * publicID);
+
+    //         attribute  wstring              systemId;
+    [propget, id(DISPID_DOM_NOTATION_SYSTEMID),
+     helpstring("the system ID")]
+    HRESULT systemId(
+        [out, retval] VARIANT * systemID);
+};
+
+
+[
+    local, object,
+    uuid(3efaa423-272f-11d2-836f-0000f87a7782), // IID_IDOMEntity
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMEntity : IDOMNode 
+{
+    //         attribute  wstring              publicId;
+    [propget, id(DISPID_DOM_ENTITY_PUBLICID),
+     helpstring("the public ID")]
+    HRESULT publicId(
+        [out, retval] VARIANT * publicID);
+
+    //         attribute  wstring              systemId;
+    [propget, id(DISPID_DOM_ENTITY_SYSTEMID),
+     helpstring("the system ID")]
+    HRESULT systemId(
+        [out, retval] VARIANT * systemID);
+
+    //         attribute  wstring              notationName;
+    [propget, id(DISPID_DOM_ENTITY_NOTATIONNAME),
+     helpstring("the name of the notation")]
+    HRESULT notationName(
+        [out, retval] BSTR * name);
+};
+
+
+[
+    local, object,
+    uuid(3efaa424-272f-11d2-836f-0000f87a7782), // IID_IDOMEntityReference
+    odl, 
+    dual,
+    oleautomation,
+    nonextensible,
+    pointer_default(unique)
+]
+interface IDOMEntityReference : IDOMNode 
+{
+};

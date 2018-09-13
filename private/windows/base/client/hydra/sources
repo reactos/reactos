@@ -1,0 +1,22 @@
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc
+SOURCES_USED=..\sources.inc
+
+LINKLIBS=$(BASEDIR)\public\sdk\lib\*\conlibk.lib \
+         ..\..\..\obj\*\nlslib.lib \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\ntdll.lib
+
+SOURCES=$(SOURCES) ..\backup.c ..\sessdev.c
+
+#
+#
+TARGETPATH=$(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)
+
+NTTARGETFILES=$(TARGETPATH)\*\kernl32p.lib obj\$(TARGET_DIRECTORY)\kernl32p.def
+
+DLLDEF=obj\*\kernel32.def
+
+C_DEFINES=$(C_DEFINES)

@@ -1,0 +1,40 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\other\scrtoid=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=scrtoid
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES= \
+    $(ROOT)\src\other\include; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\f3\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(ROOT)\src\core\types; \
+    $(ROOT)\src\f3\types; \
+    $(ROOT)\src\other\proppage; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\src\site\base; \
+    $(ROOT)\src\site\style; \
+    $(ROOT)\src\site\ole; \
+    $(ROOT)\src\site\util; \
+    $(BASEDIR)\private\windows\inc;
+
+SOURCES= \
+    peerhand.cxx \
+    peerdisp.cxx \
+    cssfilt.cxx  \
+    attrbag.cxx  \
+    hifitime.cxx \
+    misc.cxx     \
+    svrom.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

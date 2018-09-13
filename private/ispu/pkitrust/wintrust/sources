@@ -1,0 +1,94 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=wintrust
+!include $(CRYPT_ROOT)\cryptdll.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+INCLUDES=$(CRYPT_ROOT)\pki\siphelp;$(INCLUDES);$(BASEDIR)\private\inc\asn1
+
+PRECOMPILED_INCLUDE = global.hxx
+PRECOMPILED_PCH =     global.pch
+PRECOMPILED_OBJ =     global.obj
+
+TARGETPATHLIB=$(CRYPT_SDKTARGETPATHLIB)
+NTTARGETFILES=wintrust_all
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+SYNCHRONIZE_DRAIN=1
+
+DELAYLOAD=COMCTL32.DLL
+
+!IF 0
+LINKER_FLAGS=/VERBOSE /MAP $(LINKER_FLAGS)
+!ENDIF
+
+SOURCES=\
+    $(MINORCOMP).rc     \
+    certhlp.cpp         \
+    certtrst.cpp        \
+    chains.cpp          \
+    dllmain.cpp         \
+    memory.cpp          \
+    ossfunc.cpp         \
+    provider.cpp        \
+    provload.cpp        \
+    registry.cpp        \
+    storprov.cpp        \
+    trustapi.cpp        \
+    usagedef.cpp        \
+    winvtrst.cpp        \
+    wthelper.cpp        \
+    wtasn.c             \
+    wvtver1.cpp         \
+    catcache.cpp
+
+
+!IF $(FREEBUILD)
+
+!UNDEF USE_MSVCRT
+
+!IF 1
+USE_MSVCRT  = 1
+!ELSE
+USE_LIBCMT  = 1
+USE_NOLIBS  = 1
+!ENDIF
+NO_NTDLL    = 1
+
+!ENDIF
+
+LINKLIBS = \
+    $(CRYPT_LOCALLIB)\softpubl.lib      \
+    $(CRYPT_LOCALLIB)\mssip32l.lib      \
+    $(CRYPT_LOCALLIB)\mscat32l.lib      \
+    $(CRYPT_LOCALLIB)\unicode.lib       \
+    $(CRYPT_LOCALLIB)\base64.lib        \
+    $(CRYPT_LOCALLIB)\pkiutil.lib       \
+    $(CRYPT_LOCALLIB)\authclib.lib      \
+    $(CRYPT_SDKLIB)\uuid.lib            \
+    $(BASEDIR)\private\lib\*\rsa32.lib  \
+    $(LINKLIBS)
+
+
+TARGETLIBS= \
+    $(CRYPT_LIB)                        \
+    $(CRYPT_SDKLIB)\msasn1.lib          \
+    $(CRYPT_SDKLIB)\gdi32.lib           \
+    $(CRYPT_SDKLIB)\user32.lib          \
+    $(CRYPT_SDKLIB)\kernel32.lib        \
+    $(CRYPT_SDKLIB)\advapi32.lib        \
+    $(CRYPT_SDKLIB)\comctl32.lib        \
+    $(CRYPT_SDKLIB)\imagehlp.lib        \
+    $(TARGETLIBS)
+

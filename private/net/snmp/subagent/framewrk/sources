@@ -1,0 +1,25 @@
+TARGETNAME=snmpsfx
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\sockets;\
+    $(BASEDIR)\private\net\inc
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+    $(BASEDIR)\public\sdk\lib\*\wsock32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+SOURCES=\
+    snmpsfx.rc \
+    snmptfx.c \
+    init.c
+
+DLLENTRY=InitializeDLL
+UMTYPE=console
+
+SYNCHRONIZE_BLOCK=1

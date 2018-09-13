@@ -1,0 +1,10 @@
+# core
+DIRS = \
+    include \
+    cdutil \
+    wrappers \
+    cdbase \
+    misc \
+    dlc \
+    debug \
+    debuglib \

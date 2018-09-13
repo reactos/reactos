@@ -1,0 +1,14 @@
+!INCLUDE ..\..\..\..\place.inc
+
+MAJORCOMP=wininet
+MINORCOMP=multfind
+
+TARGETNAME=multfind
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+SOURCES=multfind.c
+
+UMAPPL=multfind
+UMTYPE=console
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\wininet.lib

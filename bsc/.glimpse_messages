@@ -1,0 +1,452 @@
+Index: maximum number of indexed words per file = infinity
+Index: maximum percentage of numeric words per file = 50
+Warning: ignoring very long word '4567890123456789012345678901234567890123456789012345678901234567' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/dlay/nile2std/rowhndl.cxx
+NUMBERS occur in 66% of 1354 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/iehelpid.h
+NUMBERS occur in 82% of 650 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/mshtmcid.h
+NUMBERS occur in 61% of 4424 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/mshtmdid.h
+NUMBERS occur in 67% of 806 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/mshtmlrc.h
+NUMBERS occur in 50% of 492 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/oleacc.h
+NUMBERS occur in 53% of 81 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/pkgguid.h
+NUMBERS occur in 82% of 585 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/qcorecid.h
+NUMBERS occur in 54% of 1229 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/uuids.h
+NUMBERS occur in 57% of 918 words contributed by /usr/ms/win2k_sp1/private/genx/ie/inc/wabtags.h
+NUMBERS occur in 61% of 157 words contributed by /usr/ms/win2k_sp1/private/genx/ie/tokens/ntverdef.h
+NUMBERS occur in 75% of 444 words contributed by /usr/ms/win2k_sp1/private/genx/shell/inc/dlgs.h
+NUMBERS occur in 68% of 472 words contributed by /usr/ms/win2k_sp1/private/genx/shell/inc/shellids.h
+NUMBERS occur in 65% of 1797 words contributed by /usr/ms/win2k_sp1/private/genx/shell/inc/shlguid.w
+NUMBERS occur in 70% of 360 words contributed by /usr/ms/win2k_sp1/private/inet/controls/inc/ipserver.h
+NUMBERS occur in 73% of 220 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/btools/pdlparse/data.hxx
+NUMBERS occur in 73% of 1308 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/afxres.h
+NUMBERS occur in 80% of 92 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/cderr.h
+NUMBERS occur in 52% of 132 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/cguid.h
+NUMBERS occur in 78% of 407 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/dlgs.h
+NUMBERS occur in 50% of 171 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/limits.h
+NUMBERS occur in 63% of 1845 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/mapitags.h
+NUMBERS occur in 67% of 56 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/nddesec.h
+NUMBERS occur in 52% of 465 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/oleacc.h
+NUMBERS occur in 53% of 796 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/olectl.h
+NUMBERS occur in 64% of 279 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/shlguid.h
+NUMBERS occur in 75% of 908 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/winres.h
+NUMBERS occur in 52% of 1592 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/include/winresrc.h
+NUMBERS occur in 59% of 120419 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/ppcmac/lib.prf/mso97crh.map
+NUMBERS occur in 52% of 94656 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tools/ppcmac/lib.prf/mso97drh.map
+NUMBERS occur in 50% of 63 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tried/triedit/guids.h
+NUMBERS occur in 75% of 101 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tried/triedit/privcid.h
+NUMBERS occur in 76% of 94 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tried/triedit/resource.h
+NUMBERS occur in 61% of 993 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/tried/triedit/token.h
+NUMBERS occur in 87% of 726 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/external/inc/f3ctx.h
+NUMBERS occur in 75% of 145 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/external/inc/ado/adoid.h
+NUMBERS occur in 71% of 57 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/external/inc/ado/adosecur.h
+NUMBERS occur in 70% of 62 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/iextag/resource.h
+NUMBERS occur in 100% of 256 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/imgfilt/pngfilt/pngcrc.cpp
+NUMBERS occur in 67% of 395 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/imgfilt/pngfilt/zlib/crc32.c
+NUMBERS occur in 56% of 71 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/msaahtml/aomtypes.h
+NUMBERS occur in 75% of 216 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/debug/resource.h
+NUMBERS occur in 60% of 1024 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/include/coredisp.h
+NUMBERS occur in 61% of 478 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/include/corerc.h
+NUMBERS occur in 68% of 173 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/include/privcid.h
+NUMBERS occur in 83% of 675 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/include/qi_impl.h
+NUMBERS occur in 80% of 156 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/include/sdv16rc.h
+NUMBERS occur in 62% of 144 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/misc/coreidpr.c
+NUMBERS occur in 66% of 101 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/core/misc/uuid16.c
+Warning: ignoring very long word '4567890123456789012345678901234567890123456789012345678901234567' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/dlay/nile2std/rowhndl.cxx
+NUMBERS occur in 62% of 96 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/edit/resource.h
+Warning: ignoring very long word '__0ftregisterwindowclasspwpfp6ghwnd__uitcl_luitbppfp6ghwnd__uitc' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0fmreadcodepagesettingsfromregistryhelperpwp6qcodepagesettings' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0fjcdispnodesgettransformoffsetp6fcsize6utagcoordinate_systemt' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0fpcviewdispclientudrawclientbackgroundpc6htagrecttbp6mcdispsu' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0ftcalculatecellminmaxp6qctablecelllayoutp6octablecalcinfop6ht' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0ficelementlquerystatusp6f_guidulp6k_tagolecmdp6o_tagolecmdtex' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0focdispcontainerodrawbackgroundp6qcdispdrawcontextp6jcdispinf' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0fhcmarkupbsearchbranchforblockelementp6jctreenodep6lcflowlayo' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+Warning: ignoring very long word '__0fqchtmbodyparsectxmbeginelementpp6jctreenodep6icelementp6jctr' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/dll/forms3.fmap
+NUMBERS occur in 80% of 330 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/htmlpad/padrc.h
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwpwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/mshtml/src/f3/rsrc/csimtool.bmp
+NUMBERS occur in 50% of 235 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/other/include/othrguid.h
+NUMBERS occur in 51% of 116 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/site/display/dispdefs.hxx
+NUMBERS occur in 65% of 401 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/site/download/zlib/crc32.c
+NUMBERS occur in 65% of 134 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/site/include/codepage.h
+NUMBERS occur in 69% of 439 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/site/include/siterc.h
+NUMBERS occur in 53% of 116 words contributed by /usr/ms/win2k_sp1/private/inet/mshtml/src/site/lequill/iid_quillsite.h
+NUMBERS occur in 98% of 261 words contributed by /usr/ms/win2k_sp1/private/inet/urlmon/compress/gzip/crc32.h
+Warning: ignoring very long word '__0fkcbscholderlsetmainnodep6tibindstatuscallbackpp6tibindstatus' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/urlmon/dll/urlmon.fmap
+NUMBERS occur in 78% of 57 words contributed by /usr/ms/win2k_sp1/private/inet/urlmon/download/strids.h
+NUMBERS occur in 73% of 1323 words contributed by /usr/ms/win2k_sp1/private/inet/urlmon/zones/afxres.h
+NUMBERS occur in 82% of 122 words contributed by /usr/ms/win2k_sp1/private/inet/urlmon/zones/resource.h
+NUMBERS occur in 66% of 57 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/apdetect/debug.h
+NUMBERS occur in 60% of 145 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/apdetect/ipinfo.h
+NUMBERS occur in 51% of 133 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/apdetect/tdistat.h
+NUMBERS occur in 55% of 61 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/auth/msnssp.h
+Warning: ignoring very long word '__0fwinternet_handle_objectwexchangestatuscallbackppfpvultctbtc_' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/wininet/dll/wininet.fmap
+Warning: ignoring very long word '__0fnurl_containerlcopyurlinfop6s_url_filemap_entrypp6b_internet' (with > 64 chars) in /usr/ms/win2k_sp1/private/inet/wininet/dll/wininet.fmap
+NUMBERS occur in 67% of 64 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/ftp/ftphelp.h
+NUMBERS occur in 73% of 1344 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/inc/afxres.h
+NUMBERS occur in 62% of 159 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/inc/private/ipinfo.h
+NUMBERS occur in 56% of 83 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/inc/private/llinfo.h
+NUMBERS occur in 70% of 319 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/inetui/resource.h
+NUMBERS occur in 52% of 97 words contributed by /usr/ms/win2k_sp1/private/inet/wininet/utils/cdcache/cdcache.h
+NUMBERS occur in 63% of 639 words contributed by /usr/ms/win2k_sp1/private/inet/xml/debug/src/corerc.h
+NUMBERS occur in 70% of 143 words contributed by /usr/ms/win2k_sp1/private/inet/xml/debug/src/resource.h
+NUMBERS occur in 53% of 141 words contributed by /usr/ms/win2k_sp1/private/inet/xml/xml/om/msxmldid.h
+Warning: ignoring very long word 'miicitccafkgawibagien4dnrdanbgkqhkig9w0baqufadb1mqswcqydvqqgewji' (with > 64 chars) in /usr/ms/win2k_sp1/private/ispu/pkitrust/initpki/certs/belgacom/primary.crt
+NUMBERS occur in 80% of 207 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/softpub/resource.h
+NUMBERS occur in 78% of 114 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/tests/pkicheck/resource.h
+NUMBERS occur in 79% of 62 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/tools/setreg/resource.h
+NUMBERS occur in 76% of 149 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/trustui/trustuir.h
+NUMBERS occur in 95% of 61 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/wintrust/certs/mstest1.h
+NUMBERS occur in 84% of 58 words contributed by /usr/ms/win2k_sp1/private/ispu/pkitrust/wintrust/certs/mstestb1.h
+NUMBERS occur in 52% of 225 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/dossvc.h
+NUMBERS occur in 56% of 92 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/enumapis.h
+NUMBERS occur in 61% of 256 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowddeml.h
+NUMBERS occur in 64% of 2853 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowgdi.h
+NUMBERS occur in 58% of 112 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowkbd.h
+NUMBERS occur in 54% of 2169 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowkrn.h
+NUMBERS occur in 58% of 1688 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowmmed.h
+NUMBERS occur in 51% of 281 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowshell.h
+NUMBERS occur in 58% of 123 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowsnd.h
+NUMBERS occur in 62% of 4257 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowusr.h
+NUMBERS occur in 58% of 486 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/wowwsock.h
+NUMBERS occur in 55% of 52 words contributed by /usr/ms/win2k_sp1/private/mvdm/inc/xmssvc.h
+NUMBERS occur in 59% of 209 words contributed by /usr/ms/win2k_sp1/private/mvdm/wow32/wctlm32.c
+NUMBERS occur in 71% of 77 words contributed by /usr/ms/win2k_sp1/private/mvdm/wow32/wsdynmc.h
+Warning: ignoring very long word 'adfasdfasdfasdfasdfaasdfasdfasdfasdfasdfadfadfadsfadfadfadsfasdf' (with > 64 chars) in /usr/ms/win2k_sp1/private/net/snmp/agent/authapi/bertest.c
+NUMBERS occur in 50% of 1144 words contributed by /usr/ms/win2k_sp1/private/net/snmp/subagent/hostmib/mib.c
+NUMBERS occur in 81% of 177 words contributed by /usr/ms/win2k_sp1/private/net/snmp/subagent/snmpevnt/evntcmd/eventcmd.h
+NUMBERS occur in 74% of 182 words contributed by /usr/ms/win2k_sp1/private/net/snmp/subagent/snmpevnt/evntcmd/resource.h
+NUMBERS occur in 80% of 98 words contributed by /usr/ms/win2k_sp1/private/net/snmp/subagent/snmpevnt/evntwin/ewhelparr.h
+NUMBERS occur in 50% of 119 words contributed by /usr/ms/win2k_sp1/private/net/snmp/subagent/snmpevnt/evntwin/resource.h
+NUMBERS occur in 74% of 352 words contributed by /usr/ms/win2k_sp1/private/net/sockets/winsock2/dll/ws2_rp/msrlsp/dt_dll.h
+NUMBERS occur in 67% of 146 words contributed by /usr/ms/win2k_sp1/private/net/sockets/winsock2/util/sockeye/resource.h
+NUMBERS occur in 55% of 106 words contributed by /usr/ms/win2k_sp1/private/net/sockets/winsock2/wsp/msafd/sockerr.c
+Warning: ignoring very long word 'cmregistrymachinesystemcurrentcontrolsetcontrolsessionmanagermem' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/config/cmdat.c
+Warning: ignoring very long word 'cmpregistrymachinesystemcurrentcontrolsethardwareprofilescurrent' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/config/cmdatini.c
+Warning: ignoring very long word 'cmregistrymachinesystemcurrentcontrolsetcontrolsessionmanagermem' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/config/i386/init386.c
+NUMBERS occur in 80% of 75 words contributed by /usr/ms/win2k_sp1/private/ntos/dll/alphadef.src
+NUMBERS occur in 55% of 172 words contributed by /usr/ms/win2k_sp1/private/ntos/dll/heaptag.c
+NUMBERS occur in 98% of 127 words contributed by /usr/ms/win2k_sp1/private/ntos/dll/i386def.src
+NUMBERS occur in 74% of 81 words contributed by /usr/ms/win2k_sp1/private/ntos/inc/apm.h
+Warning: ignoring very long word 'cmregistrymachinesystemcurrentcontrolsetcontrolsessionmanagermem' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/inc/cm.h
+NUMBERS occur in 60% of 103 words contributed by /usr/ms/win2k_sp1/private/ntos/inc/mi386.inc
+NUMBERS occur in 55% of 65 words contributed by /usr/ms/win2k_sp1/private/ntos/inc/ntc.txt
+NUMBERS occur in 53% of 138 words contributed by /usr/ms/win2k_sp1/private/ntos/inc/physlogi.h
+NUMBERS occur in 57% of 970 words contributed by /usr/ms/win2k_sp1/private/ntos/ke/ia64/fetypes.h
+NUMBERS occur in 59% of 362 words contributed by /usr/ms/win2k_sp1/private/ntos/ke/ia64/ia32def.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/ke/ppc/timindex.s
+NUMBERS occur in 90% of 1342 words contributed by /usr/ms/win2k_sp1/private/ntos/rtl/generr.c
+NUMBERS occur in 82% of 160 words contributed by /usr/ms/win2k_sp1/private/ntos/rtl/rtldata.c
+Warning: ignoring very long word 'alphabravocharliedeltaechofoxtrotgolfhotelindiajuliettkilolimami' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/rtl/tprefix.c
+NUMBERS occur in 50% of 51 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntcon/server/menu.h
+NUMBERS occur in 68% of 83 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/adobe/aug98/test/cderr.h
+NUMBERS occur in 72% of 93 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/adobe/dec97/test/cderr.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_core/fragment.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_core/frgmnt16.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_core/memlink.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_core/stdconv.c
+NUMBERS occur in 68% of 1341 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_core/stdconv.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_open/pi_cmm.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_open/pi_color.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/lh_open/pi_run.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm/mscmm/icm32.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_core/fragment.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_core/frgmnt16.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_core/memlink.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_core/stdconv.c
+NUMBERS occur in 67% of 1312 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_core/stdconv.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_open/pi_cmm.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_open/pi_color.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/lh_open/pi_run.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntgdi/icm/mscmm.w98/mscmm/icm32.c
+Warning: ignoring very long word 'afx_controllist_h__7ff8c61f_86bc_11d1_96a5_00c04fb177b1__include' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/client/nt6/edge.h
+Warning: ignoring very long word 'afx_parentinfo_h__cbcb8816_7899_11d1_96a4_00c04fb177b1__included' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/client/nt6/parentinfo.h
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/imm/back_c1.bmp
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/imm/esc_c1.bmp
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/imm/shift_c1.bmp
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/imm/tab_c1.bmp
+NUMBERS occur in 56% of 1794 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/inc/messages.h
+NUMBERS occur in 53% of 343 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kbd/txt/kbdcz2.txt
+NUMBERS occur in 55% of 154 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kbd/txt/kbdth0.txt
+NUMBERS occur in 61% of 583 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kdexts/kd/kd.txt
+NUMBERS occur in 54% of 112 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kdexts/ntsd/ntsd.txt
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kdexts/userexts.c
+NUMBERS occur in 100% of 374 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kdexts/vktbl.txt
+NUMBERS occur in 57% of 667 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/kdexts/wm.txt
+NUMBERS occur in 74% of 105 words contributed by /usr/ms/win2k_sp1/private/ntos/w32/ntuser/tools/usrbench/resource.h
+NUMBERS occur in 72% of 104 words contributed by /usr/ms/win2k_sp1/private/oleauto/src/mktyplib/errors.h
+NUMBERS occur in 86% of 301 words contributed by /usr/ms/win2k_sp1/private/sdktools/vctools/rcdll/grammar.h
+NUMBERS occur in 78% of 346 words contributed by /usr/ms/win2k_sp1/private/security/msv_sspi/crc32.c
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/autorun/res/autorun.bmp
+NUMBERS occur in 70% of 101 words contributed by /usr/ms/win2k_sp1/private/shell/applets/autorun/resource.h
+NUMBERS occur in 80% of 466 words contributed by /usr/ms/win2k_sp1/private/shell/applets/taskmgr/resource.h
+NUMBERS occur in 59% of 101 words contributed by /usr/ms/win2k_sp1/private/shell/applets/cleanup/dataclen/dataguid.h
+NUMBERS occur in 56% of 76 words contributed by /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/diskutil.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/drivlist.cpp
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/drivlist.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/miniicon.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/textout.cpp
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/cleanup/cleanmgr/textout.h
+NUMBERS occur in 77% of 83 words contributed by /usr/ms/win2k_sp1/private/shell/applets/smtidy/resource.h
+NUMBERS occur in 72% of 102 words contributed by /usr/ms/win2k_sp1/private/shell/applets/welcome/resource.h
+Warning: ignoring very long word 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/applets/welcome/res/workstation.bmp
+Warning: ignoring very long word '__0fs_convertpathtopidlp6qibrowserservice2p6ghwnd__pcwpp6l_itemi' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/browseui/dll/browseui.fmap
+Warning: ignoring very long word '__0focshellbrowser2qcreateviewwindowp6kishellviewtbp6htagrectpp6' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/browseui/dll/browseui.fmap
+Warning: ignoring very long word 'hackhackhackhackhackhackhackhackhackhackhackhackhackhackhackhack' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/browseui/menubar.cpp
+NUMBERS occur in 70% of 1174 words contributed by /usr/ms/win2k_sp1/private/shell/browseui/resource.h
+NUMBERS occur in 68% of 387 words contributed by /usr/ms/win2k_sp1/private/shell/browseui/tools/uadump.cpp
+NUMBERS occur in 60% of 200 words contributed by /usr/ms/win2k_sp1/private/shell/comctl32/fontlink.h
+NUMBERS occur in 69% of 167 words contributed by /usr/ms/win2k_sp1/private/shell/comctl32/rcids.h
+NUMBERS occur in 52% of 419 words contributed by /usr/ms/win2k_sp1/private/shell/comdlg32/isz.h
+NUMBERS occur in 64% of 421 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/system/resource.h
+NUMBERS occur in 69% of 147 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/appwiz/appwizid.h
+NUMBERS occur in 65% of 394 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/desk/deskid.h
+NUMBERS occur in 64% of 79 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/desknt/setdlg.h
+NUMBERS occur in 73% of 575 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/desknt5/deskid.h
+NUMBERS occur in 73% of 202 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/inetcpl/inethelp.cpp
+NUMBERS occur in 86% of 1735 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/inetcpl/resource.h
+NUMBERS occur in 76% of 235 words contributed by /usr/ms/win2k_sp1/private/shell/cpls/plus/addon.h
+Warning: ignoring very long word 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/cplwiz/access/cursor_s.bmp
+NUMBERS occur in 73% of 361 words contributed by /usr/ms/win2k_sp1/private/shell/cplwiz/access/deskid.h
+NUMBERS occur in 65% of 428 words contributed by /usr/ms/win2k_sp1/private/shell/explorer/rcids.h
+NUMBERS occur in 84% of 182 words contributed by /usr/ms/win2k_sp1/private/shell/ext/brfcase/filesync/syncui/dlgids.h
+NUMBERS occur in 65% of 305 words contributed by /usr/ms/win2k_sp1/private/shell/ext/brfcase/filesync/syncui/resids.h
+NUMBERS occur in 74% of 135 words contributed by /usr/ms/win2k_sp1/private/shell/ext/cabview/resource.h
+NUMBERS occur in 83% of 140 words contributed by /usr/ms/win2k_sp1/private/shell/ext/dsui/dsquery/dialogs.h
+NUMBERS occur in 74% of 83 words contributed by /usr/ms/win2k_sp1/private/shell/ext/dsui/dsquery/iids.h
+NUMBERS occur in 78% of 288 words contributed by /usr/ms/win2k_sp1/private/shell/ext/dsui/dsquery/resource.h
+NUMBERS occur in 73% of 116 words contributed by /usr/ms/win2k_sp1/private/shell/ext/dsui/dsuiext/resource.h
+NUMBERS occur in 60% of 71 words contributed by /usr/ms/win2k_sp1/private/shell/ext/dsui/samples/query/resource.h
+NUMBERS occur in 61% of 146 words contributed by /usr/ms/win2k_sp1/private/shell/ext/msident/resource.h
+NUMBERS occur in 67% of 76 words contributed by /usr/ms/win2k_sp1/private/shell/ext/mydocs2/resource.h
+NUMBERS occur in 58% of 165 words contributed by /usr/ms/win2k_sp1/private/shell/ext/systray/dll/stresid.h
+NUMBERS occur in 60% of 341 words contributed by /usr/ms/win2k_sp1/private/shell/ext/systray/dll/vpowerd.h
+NUMBERS occur in 74% of 126 words contributed by /usr/ms/win2k_sp1/private/shell/ext/cdfview/resource.h
+NUMBERS occur in 55% of 69 words contributed by /usr/ms/win2k_sp1/private/shell/ext/cscui/inc/uihelp.h
+NUMBERS occur in 79% of 83 words contributed by /usr/ms/win2k_sp1/private/shell/ext/cscui/inc/uuid.h
+NUMBERS occur in 73% of 367 words contributed by /usr/ms/win2k_sp1/private/shell/ext/cscui/lib/resource.h
+NUMBERS occur in 77% of 143 words contributed by /usr/ms/win2k_sp1/private/shell/ext/docprop/msohelp.h
+NUMBERS occur in 72% of 133 words contributed by /usr/ms/win2k_sp1/private/shell/ext/docprop/propdlg.h
+NUMBERS occur in 74% of 67 words contributed by /usr/ms/win2k_sp1/private/shell/ext/docpropex/inc/fmtids.h
+NUMBERS occur in 75% of 309 words contributed by /usr/ms/win2k_sp1/private/shell/ext/docpropex/inc/resource.h
+NUMBERS occur in 95% of 104 words contributed by /usr/ms/win2k_sp1/private/shell/ext/ftp/codepage.h
+NUMBERS occur in 95% of 107 words contributed by /usr/ms/win2k_sp1/private/shell/ext/mlang/codepage.h
+Warning: ignoring very long word '__0fnatlmoduleinitp6l_atl_modulep6r_atl_objmap_entryp6lhinstance' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/ext/mlang/mlang.fmap
+NUMBERS occur in 83% of 645 words contributed by /usr/ms/win2k_sp1/private/shell/ext/mlang/resource.h
+NUMBERS occur in 79% of 149 words contributed by /usr/ms/win2k_sp1/private/shell/ext/mydocs/src/resource.h
+NUMBERS occur in 84% of 597 words contributed by /usr/ms/win2k_sp1/private/shell/ext/netplwiz/resource.h
+NUMBERS occur in 79% of 351 words contributed by /usr/ms/win2k_sp1/private/shell/ext/ratings/inc/contxids.h
+NUMBERS occur in 54% of 120 words contributed by /usr/ms/win2k_sp1/private/shell/ext/ratings/mslocusr/resource.h
+NUMBERS occur in 64% of 234 words contributed by /usr/ms/win2k_sp1/private/shell/ext/ratings/msrating/resource.h
+NUMBERS occur in 53% of 277 words contributed by /usr/ms/win2k_sp1/private/shell/ext/rnaui/inc/raserror.h
+NUMBERS occur in 82% of 109 words contributed by /usr/ms/win2k_sp1/private/shell/ext/rnaui/inc/rnahelp.h
+NUMBERS occur in 75% of 60 words contributed by /usr/ms/win2k_sp1/private/shell/ext/settings/resource.h
+NUMBERS occur in 84% of 69 words contributed by /usr/ms/win2k_sp1/private/shell/ext/shscrap/ids.h
+NUMBERS occur in 76% of 167 words contributed by /usr/ms/win2k_sp1/private/shell/ext/shwizard/resource.h
+NUMBERS occur in 71% of 163 words contributed by /usr/ms/win2k_sp1/private/shell/ext/thumbvw/thsmgd.h
+NUMBERS occur in 64% of 430 words contributed by /usr/ms/win2k_sp1/private/shell/ext/tweakui/expire.c
+NUMBERS occur in 64% of 241 words contributed by /usr/ms/win2k_sp1/private/shell/ext/tweakui/strings.h
+NUMBERS occur in 77% of 168 words contributed by /usr/ms/win2k_sp1/private/shell/ext/tweakui/tweakhlp.h
+NUMBERS occur in 79% of 218 words contributed by /usr/ms/win2k_sp1/private/shell/ext/url/addon.h
+NUMBERS occur in 76% of 295 words contributed by /usr/ms/win2k_sp1/private/shell/ext/url/contxids.h
+NUMBERS occur in 60% of 153 words contributed by /usr/ms/win2k_sp1/private/shell/ext/url/resource.h
+NUMBERS occur in 67% of 64 words contributed by /usr/ms/win2k_sp1/private/shell/ext/viruschk/resource.h
+NUMBERS occur in 56% of 487 words contributed by /usr/ms/win2k_sp1/private/shell/ext/viruschk/util.cpp
+NUMBERS occur in 55% of 145 words contributed by /usr/ms/win2k_sp1/private/shell/ext/webcheck/notfcvt.h
+NUMBERS occur in 83% of 792 words contributed by /usr/ms/win2k_sp1/private/shell/ext/webcheck/resource.h
+NUMBERS occur in 68% of 181 words contributed by /usr/ms/win2k_sp1/private/shell/iexplore/rcids.h
+NUMBERS occur in 66% of 102 words contributed by /usr/ms/win2k_sp1/private/shell/inc/adoid.h
+NUMBERS occur in 78% of 65 words contributed by /usr/ms/win2k_sp1/private/shell/inc/findhlp.h
+NUMBERS occur in 74% of 558 words contributed by /usr/ms/win2k_sp1/private/shell/inc/shdguid.h
+NUMBERS occur in 60% of 1514 words contributed by /usr/ms/win2k_sp1/private/shell/inc/shguidp.h
+NUMBERS occur in 82% of 85 words contributed by /usr/ms/win2k_sp1/private/shell/inc/startids.h
+NUMBERS occur in 53% of 143 words contributed by /usr/ms/win2k_sp1/private/shell/inc/trayp.h
+NUMBERS occur in 53% of 524 words contributed by /usr/ms/win2k_sp1/private/shell/inc/win95/vpowerd.h
+NUMBERS occur in 54% of 381 words contributed by /usr/ms/win2k_sp1/private/shell/lib/dump.c
+NUMBERS occur in 67% of 158 words contributed by /usr/ms/win2k_sp1/private/shell/shdoc401/resource.h
+NUMBERS occur in 67% of 275 words contributed by /usr/ms/win2k_sp1/private/shell/shdoc401/shellids.h
+NUMBERS occur in 64% of 1476 words contributed by /usr/ms/win2k_sp1/private/shell/shdoc401/shguidp.h
+NUMBERS occur in 67% of 481 words contributed by /usr/ms/win2k_sp1/private/shell/shdoc401/unicpp/resource.h
+NUMBERS occur in 56% of 64 words contributed by /usr/ms/win2k_sp1/private/shell/shdocvw/genpage.dlg
+Warning: ignoring very long word 'donewithentryinpopulateexternallistforcookiesorbookmarkswithns4e' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/shdocvw/impexpwz.cpp
+Warning: ignoring very long word '__0fnatlmoduleinitp6l_atl_modulep6r_atl_objmap_entryp6lhinstance' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/shdocvw/dll/shdocvw.fmap
+Warning: ignoring very long word '__0fncintelliformsvshouldattachtoelementp6iiunknownipp6nihtmlele' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/shdocvw/dll/shdocvw.fmap
+NUMBERS occur in 76% of 2016 words contributed by /usr/ms/win2k_sp1/private/shell/shdocvw/resource.h
+NUMBERS occur in 70% of 142 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/defview.h
+NUMBERS occur in 58% of 1305 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/format.h
+NUMBERS occur in 70% of 4794 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/ids.h
+NUMBERS occur in 70% of 67 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/privshl.h
+NUMBERS occur in 68% of 175 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/shitemid.h
+NUMBERS occur in 50% of 170 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/tools/uadump.cpp
+NUMBERS occur in 66% of 547 words contributed by /usr/ms/win2k_sp1/private/shell/shell32/unicpp/resource.h
+NUMBERS occur in 72% of 118 words contributed by /usr/ms/win2k_sp1/private/shell/shlwapi/ids.h
+Warning: ignoring very long word '__0fbwrap_createformatenumeratoruip6mtagformatetcpp6oienumformat' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/shlwapi/dll/shlwapi.fmap
+NUMBERS occur in 55% of 65 words contributed by /usr/ms/win2k_sp1/private/shell/tools/extwiz/ext.clw
+Warning: ignoring very long word 'afx_extensions_h__8dedb8f6_5c6d_11d1_8ccd_00c04fd918d0__included' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/tools/extwiz/ext.h
+Warning: ignoring very long word 'afx_extensionsaw_h__8dedb8fa_5c6d_11d1_8ccd_00c04fd918d0__includ' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/tools/extwiz/extaw.h
+Warning: ignoring very long word 'afx_extensionchoice_h__aa4dba53_5d3e_11d1_8cce_00c04fd918d0__inc' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/tools/extwiz/extdlg.h
+Warning: ignoring very long word 'afx_shellextensions_h__aa4dba54_5d3e_11d1_8cce_00c04fd918d0__inc' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/tools/extwiz/shextdlg.h
+NUMBERS occur in 69% of 52 words contributed by /usr/ms/win2k_sp1/private/shell/win16/comdlg/colordlg.h
+NUMBERS occur in 53% of 103 words contributed by /usr/ms/win2k_sp1/private/shell/win16/comdlg/font.dlg
+NUMBERS occur in 53% of 328 words contributed by /usr/ms/win2k_sp1/private/shell/win16/commctrl/comctl25.def
+NUMBERS occur in 72% of 90 words contributed by /usr/ms/win2k_sp1/private/shell/win16/commctrl/rcids.h
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/shell/win16/commctrl/viewsm.bmp
+NUMBERS occur in 87% of 407 words contributed by /usr/ms/win2k_sp1/private/shell/win16/inc/apperr.h
+NUMBERS occur in 67% of 227 words contributed by /usr/ms/win2k_sp1/private/shell/win16/inc/shguidp.h
+NUMBERS occur in 50% of 151 words contributed by /usr/ms/win2k_sp1/private/shell/win16/shell16/shell.rc
+NUMBERS occur in 57% of 56 words contributed by /usr/ms/win2k_sp1/private/windbg64/common.src
+NUMBERS occur in 61% of 315 words contributed by /usr/ms/win2k_sp1/private/windbg64/dbgwiz/resource.h
+NUMBERS occur in 60% of 521 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/dm/alphastr.h
+NUMBERS occur in 57% of 103 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/dm/resource.h
+NUMBERS occur in 57% of 91 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/ee/fmtstr.h
+NUMBERS occur in 66% of 99 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/ee/resource.h
+NUMBERS occur in 80% of 1376 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/decem.h
+NUMBERS occur in 68% of 221 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/disem.h
+NUMBERS occur in 55% of 999 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/em.h
+NUMBERS occur in 98% of 284 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/em_hints.h
+NUMBERS occur in 67% of 352 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/emdb_types.h
+NUMBERS occur in 99% of 1718 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/falcon/inst_ids.h
+NUMBERS occur in 59% of 378 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/em/win32msg.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windbg64/debugger/sapi/inc/exe386.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windbg64/debugger/sapi/inc/newexe.h
+NUMBERS occur in 88% of 105 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/tl/remote/gambit/shell/resource.h
+NUMBERS occur in 65% of 76 words contributed by /usr/ms/win2k_sp1/private/windbg64/debugger/tl/remote/shell/resource.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windbg64/langapi/debugger/newexe.h
+NUMBERS occur in 51% of 6173 words contributed by /usr/ms/win2k_sp1/private/windbg64/langapi/include/cvinfo.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windbg64/langapi/include/exe_vxd.h
+NUMBERS occur in 57% of 510 words contributed by /usr/ms/win2k_sp1/private/windbg64/lib/constpow.c
+NUMBERS occur in 78% of 405 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/cntxthlp.h
+NUMBERS occur in 80% of 710 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/dialogs.h
+NUMBERS occur in 84% of 362 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/filedll.h
+NUMBERS occur in 80% of 248 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/helpid.h
+NUMBERS occur in 64% of 125 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/ntsdtok.h
+NUMBERS occur in 69% of 71 words contributed by /usr/ms/win2k_sp1/private/windbg64/windbg/include/resource.h
+NUMBERS occur in 56% of 66 words contributed by /usr/ms/win2k_sp1/private/windows/base/ntcrypto/cppapi/resource.h
+NUMBERS occur in 68% of 228 words contributed by /usr/ms/win2k_sp1/private/windows/gina/userenv/resource.h
+NUMBERS occur in 83% of 180 words contributed by /usr/ms/win2k_sp1/private/windows/gina/winlogon/stringid.h
+NUMBERS occur in 50% of 110 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/avifile/avifil32.def
+NUMBERS occur in 58% of 60 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/avifile.16/avifile.d32
+NUMBERS occur in 70% of 104 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc/targa.h
+NUMBERS occur in 80% of 78 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/cderr.h
+NUMBERS occur in 76% of 77 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/colordlg.h
+NUMBERS occur in 78% of 405 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/dlgs.h
+NUMBERS occur in 63% of 167 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/doserr.h
+NUMBERS occur in 55% of 294 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/float.h
+NUMBERS occur in 70% of 157 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/int31.inc
+NUMBERS occur in 67% of 117 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/oleguid.h
+NUMBERS occur in 73% of 345 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/style.h
+NUMBERS occur in 59% of 247 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/inc.16/syscall.h
+NUMBERS occur in 52% of 120 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/mciavi.16/res/usa/cnfgdlg.dlg
+NUMBERS occur in 64% of 149 words contributed by /usr/ms/win2k_sp1/private/windows/media/avi/vidcap32/dialogs.h
+NUMBERS occur in 79% of 238 words contributed by /usr/ms/win2k_sp1/private/windows/oleacc/oleacc/strtable.h
+NUMBERS occur in 78% of 74 words contributed by /usr/ms/win2k_sp1/private/windows/opengl/scrsave/flwbox/rsrc.h
+NUMBERS occur in 53% of 104 words contributed by /usr/ms/win2k_sp1/private/windows/opengl/scrsave/pipes/dialog.h
+NUMBERS occur in 73% of 108 words contributed by /usr/ms/win2k_sp1/private/windows/setup/setupapi/prompt.h
+NUMBERS occur in 76% of 326 words contributed by /usr/ms/win2k_sp1/private/windows/setup/setupapi/rc_ids.h
+NUMBERS occur in 80% of 114 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/access/access/access35.hpj
+NUMBERS occur in 75% of 125 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/access/access/dialogs.h
+NUMBERS occur in 68% of 285 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/access/skeys/gidei.h
+NUMBERS occur in 53% of 141 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/calc/calchelp.h
+NUMBERS occur in 64% of 290 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/clipbook/clipview/clpbkrc.h
+NUMBERS occur in 82% of 145 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/clipbook/clipview/helpids.h
+NUMBERS occur in 78% of 64 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/eudcedit/eudcid.h
+NUMBERS occur in 60% of 314 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/eudcedit/resource.h
+NUMBERS occur in 65% of 70 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/emu/emuid.h
+NUMBERS occur in 69% of 233 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/tdll/hlptable.h
+NUMBERS occur in 59% of 173 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/tdll/sess_ids.h
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/term/htperead.txt
+Warning: ignoring very long word '________________________________________________________________' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/term/orderfrm.txt
+NUMBERS occur in 73% of 1158 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/term/res.h
+NUMBERS occur in 85% of 897 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/hypertrm/term/tables.rc
+NUMBERS occur in 86% of 53 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/mspaint/debugres.h
+NUMBERS occur in 68% of 82 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/mspaint/hlpcntxt.h
+NUMBERS occur in 85% of 328 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/mspaint/props.h
+NUMBERS occur in 73% of 498 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/mspaint/resource.h
+NUMBERS occur in 60% of 58 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/netclip/netclip/resource.h
+NUMBERS occur in 79% of 193 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/packager/ids.h
+NUMBERS occur in 54% of 296 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/ratpak/ratconst.h
+NUMBERS occur in 69% of 104 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/spechars/cmdlg.h
+NUMBERS occur in 88% of 72 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/terminal/cderr.h
+NUMBERS occur in 61% of 344 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/terminal/dcdata.h
+NUMBERS occur in 79% of 388 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/terminal/dlgs.h
+NUMBERS occur in 59% of 54 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/terminal/netubci.h
+NUMBERS occur in 84% of 155 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/uce/uce/cmdlg.h
+NUMBERS occur in 85% of 74 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/unicode/clipbook/clipview/helpids.h
+Warning: ignoring very long word 'offunderwhenwindowyouandanotheranswerappearsbackgroundbarbottomb' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/shell/accesory/winchat/winchat.hlp
+NUMBERS occur in 58% of 3489 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/conv/alpha/mswd6_32.map
+NUMBERS occur in 67% of 4169 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/conv/i386/mswd6_32.map
+NUMBERS occur in 64% of 2394 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/conv/mips/mswd6_32.map
+NUMBERS occur in 71% of 3321 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/conv/ppc/mswd6_32.map
+NUMBERS occur in 67% of 62 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/helpids.h
+NUMBERS occur in 73% of 343 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accesory/wordpad/memphis/resource.h
+NUMBERS occur in 79% of 449 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accessib/accwiz/deskid.h
+NUMBERS occur in 61% of 318 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accessib/accwiz/resource.h
+NUMBERS occur in 57% of 102 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accessib/narrator/narrator/resource.h
+Warning: ignoring very long word 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/shell/accessib/osk/res/bitmap4.bmp
+NUMBERS occur in 58% of 145 words contributed by /usr/ms/win2k_sp1/private/windows/shell/accessib/osk/src/resource.h
+NUMBERS occur in 51% of 105 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/console/dialogs.h
+NUMBERS occur in 60% of 215 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/main/cphelp.h
+NUMBERS occur in 80% of 215 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/mmsys/medhelp.h
+NUMBERS occur in 56% of 126 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/t1instal/t1instal.ini
+NUMBERS occur in 62% of 162 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/t1instal/trig.c
+NUMBERS occur in 72% of 188 words contributed by /usr/ms/win2k_sp1/private/windows/shell/control/ups/cphelp.h
+NUMBERS occur in 85% of 141 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/access/acchelp.h
+NUMBERS occur in 51% of 235 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/desk/deskid.h
+NUMBERS occur in 50% of 137 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/desk/look.h
+NUMBERS occur in 88% of 158 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/desk/setdlg.h
+NUMBERS occur in 74% of 195 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/hdwwiz/resource.h
+NUMBERS occur in 69% of 153 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/hotplug/resource.h
+NUMBERS occur in 78% of 123 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/intl/intlhlp.h
+NUMBERS occur in 75% of 60 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/main/mousehlp.h
+NUMBERS occur in 77% of 175 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/newdev/resource.h
+NUMBERS occur in 73% of 217 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/plus/addon.h
+NUMBERS occur in 56% of 97 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/ports/resource.h
+NUMBERS occur in 53% of 401 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/powercfg/pwrmn_cs.h
+NUMBERS occur in 58% of 327 words contributed by /usr/ms/win2k_sp1/private/windows/shell/cpls/powercfg/pwrresid.h
+NUMBERS occur in 51% of 202 words contributed by /usr/ms/win2k_sp1/private/windows/shell/dskquota/common/guidsp.h
+NUMBERS occur in 86% of 475 words contributed by /usr/ms/win2k_sp1/private/windows/shell/dskquota/ui/resource.h
+NUMBERS occur in 73% of 394 words contributed by /usr/ms/win2k_sp1/private/windows/shell/fontfldr/fontext/inc/resource.h
+NUMBERS occur in 87% of 366 words contributed by /usr/ms/win2k_sp1/private/windows/shell/inc/apperr.h
+NUMBERS occur in 54% of 181 words contributed by /usr/ms/win2k_sp1/private/windows/shell/lmui/shareui/defview.h
+NUMBERS occur in 52% of 205 words contributed by /usr/ms/win2k_sp1/private/windows/shell/lmui/shareui.new/defview.h
+NUMBERS occur in 59% of 112 words contributed by /usr/ms/win2k_sp1/private/windows/shell/lmui/shareui.new/resource.h
+NUMBERS occur in 53% of 106 words contributed by /usr/ms/win2k_sp1/private/windows/shell/pifmgr/pifmgr.rc
+NUMBERS occur in 60% of 60 words contributed by /usr/ms/win2k_sp1/private/windows/shell/progman/pmdlg.h
+NUMBERS occur in 68% of 80 words contributed by /usr/ms/win2k_sp1/private/windows/shell/progman/pmhelp.h
+NUMBERS occur in 51% of 188 words contributed by /usr/ms/win2k_sp1/private/windows/shell/regedit/regdef.h
+NUMBERS occur in 66% of 56 words contributed by /usr/ms/win2k_sp1/private/windows/shell/regwiz/phbooklib/phbkrc.h
+Warning: ignoring very long word '150y150y200y100y100n100y100y20y32n150n150n100n100n20n64n30n11n30' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/shell/regwiz/regwizctrl/regwizctrl.rc
+NUMBERS occur in 69% of 882 words contributed by /usr/ms/win2k_sp1/private/windows/shell/regwiz/res/resource.h
+NUMBERS occur in 70% of 58 words contributed by /usr/ms/win2k_sp1/private/windows/shell/security/dssec/resource.h
+NUMBERS occur in 55% of 78 words contributed by /usr/ms/win2k_sp1/private/windows/shell/security/rshx32/deadcode/helpnums.h
+NUMBERS occur in 87% of 63 words contributed by /usr/ms/win2k_sp1/private/windows/shell/shole/ids.h
+NUMBERS occur in 75% of 623 words contributed by /usr/ms/win2k_sp1/private/windows/shell/snapins/devmgr/snapin/resource.h
+NUMBERS occur in 73% of 83 words contributed by /usr/ms/win2k_sp1/private/windows/shell/userpri/uconvert.h
+NUMBERS occur in 75% of 20362 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/ansi/932.txt
+NUMBERS occur in 88% of 80805 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/ansi/936.txt
+NUMBERS occur in 59% of 74196 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/ansi/949.txt
+NUMBERS occur in 86% of 62264 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/ansi/950.txt
+NUMBERS occur in 61% of 76908 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/1361.txt
+NUMBERS occur in 85% of 56765 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20000.txt
+NUMBERS occur in 86% of 62867 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20001.txt
+NUMBERS occur in 82% of 44384 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20002.txt
+NUMBERS occur in 85% of 59628 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20003.txt
+NUMBERS occur in 87% of 46257 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20004.txt
+NUMBERS occur in 86% of 60320 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/extra/20005.txt
+NUMBERS occur in 88% of 25757 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/mac/10001.txt
+NUMBERS occur in 85% of 58292 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/mac/10002.txt
+NUMBERS occur in 69% of 29830 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/mac/10003.txt
+NUMBERS occur in 83% of 22601 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/mac/10008.txt
+NUMBERS occur in 51% of 991 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/codepage/mac/10010.txt
+NUMBERS occur in 85% of 32323 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20930.txt
+NUMBERS occur in 87% of 34669 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20931.txt
+NUMBERS occur in 87% of 51170 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20932.txt
+NUMBERS occur in 67% of 32231 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20933.txt
+NUMBERS occur in 84% of 26854 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20935.txt
+NUMBERS occur in 75% of 14219 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20936.txt
+NUMBERS occur in 88% of 63217 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20937.txt
+NUMBERS occur in 86% of 32886 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20939.txt
+NUMBERS occur in 65% of 25386 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20949.txt
+NUMBERS occur in 85% of 61108 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/dlls/nls/20950.txt
+NUMBERS occur in 57% of 2278 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/other/l_intl.txt
+NUMBERS occur in 60% of 6054 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/other/unicode.txt
+NUMBERS occur in 76% of 38256 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/sorting/big5.txt
+NUMBERS occur in 66% of 30036 words contributed by /usr/ms/win2k_sp1/private/windows/winnls/data/sorting/bopomofo.txt
+Warning: ignoring very long word 'hhhhhmmmmmssssshhhhhmmmmmssssshhhhhmmmmmssssshhhhhmmmmmssssshhhh' (with > 64 chars) in /usr/ms/win2k_sp1/private/windows/winnls/test/nlstest/slitest.c

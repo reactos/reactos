@@ -1,0 +1,37 @@
+all:
+   cd xml\resource
+   build -O
+   nmake BUILDMSG= -l PASS0ONLY=1 NOLINK=1
+   cd..\..
+   cd xml\tokenizer\parser
+   build -O
+   nmake BUILDMSG= -l PASS0ONLY=1 NOLINK=1
+   cd..\..\..
+   cd xml\tokenizer\dll
+#   build -O
+#   nmake BUILDMSG= -l PASS0ONLY=1 NOLINK=1
+   cd..\..\..
+   cd xml\om
+   build -O
+   nmake BUILDMSG= -l PASS0ONLY=1 NOLINK=1
+   cd..\..
+
+clean:
+   cd xml\resource
+   build -O
+   nmake BUILDMSG= -la PASS0ONLY=1 NOLINK=1
+   cd..\..
+   cd xml\tokenizer\parser
+   build -O
+   nmake BUILDMSG= -la PASS0ONLY=1 NOLINK=1
+   cd..\..\..
+   cd xml\tokenizer\dll
+#   build -O
+#   nmake BUILDMSG= -la PASS0ONLY=1 NOLINK=1
+   cd..\..\..
+   cd xml\om
+   build -O
+   nmake BUILDMSG= -la PASS0ONLY=1 NOLINK=1
+   cd..\..
+
+

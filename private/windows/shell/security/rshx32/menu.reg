@@ -1,0 +1,23 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+@="Remote Administration Shell Extension"
+
+[HKEY_CLASSES_ROOT\CLSID\{1f2e5c40-9550-11ce-99d2-00aa006e086c}\InProcServer32]
+@="rshx32.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+[HKEY_CLASSES_ROOT\Drive\shellex\ContextMenuHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+[HKEY_CLASSES_ROOT\Directory\shellex\ContextMenuHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+;[HKEY_CLASSES_ROOT\Microsoft_Network\shellex\ContextMenuHandlers\{1f2e5c40-9550-11ce-99d2-00aa006e086c}]
+
+
+[HKEY_CLASSES_ROOT\CLSID\{F37C5810-4D3F-11d0-B4BF-00AA00BBB723}]
+@="Remote Administration Shell Extension"
+
+[HKEY_CLASSES_ROOT\CLSID\{F37C5810-4D3F-11d0-B4BF-00AA00BBB723}\InProcServer32]
+@="rshx32.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_CLASSES_ROOT\Printers\shellex\ContextMenuHandlers\{F37C5810-4D3F-11d0-B4BF-00AA00BBB723}]

@@ -1,0 +1,50 @@
+MAJORCOMP = opengl
+MINORCOMP = scrnsave
+
+TARGETNAME = ssmaze
+TARGETPATH = obj
+#TARGETTYPE = PROGRAM
+TARGETTYPE = LIBRARY
+UMTYPE = windows
+UMAPPL = ssmaze
+
+INCLUDES = ..; ..\..\common; \
+           $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+#SSDEV = 1
+!if "$(SSDEV)" != ""
+C_DEFINES = $(C_DEFINES) -DSS_DEBUG -DSS_DEVELOP
+!else
+UMAPPLEXT = .scr
+!endif
+
+UMLIBS = \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+       $(BASEDIR)\public\sdk\lib\*\opengl32.lib \
+       $(BASEDIR)\public\sdk\lib\*\glaux.lib \
+       $(BASEDIR)\public\sdk\lib\*\glu32.lib \
+       obj\*\ssmaze.lib \
+       obj\*\maze.res \
+       ..\..\common\km\obj\*\sscommon.lib
+
+SOURCES = \
+	..\genmaze.c\
+	..\glmaze.c\
+	..\ssmaze.c\
+	..\slvmaze.c \
+    ..\dialog.cxx \
+    ..\maze.rc
+
+
+C_DEFINES = $(C_DEFINES) -DFX_SINGLE -DUNICODE -D_UNICODE -DWINVER=0x0400
+
+USE_MSVCRT = 1
+
+!IF "$(NTNOPCH)" == ""
+PRECOMPILED_INCLUDE=..\pch.c
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+!ENDIF

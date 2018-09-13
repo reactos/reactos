@@ -1,0 +1,48 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+
+Revision History:
+
+!ENDIF
+
+#!include ..\..\..\place.inc
+BINPLACE_PLACEFILE=$(MAKEDIR)\placefil.txt
+
+MAJORCOMP=internet
+MINORCOMP=cache
+
+TARGETNAME=fndquota
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.;..;..\..\inc;..\..\..\inc;..\..\..\..\inc
+
+TARGETLIBS= $(BASEDIR)\public\sdk\lib\*\wininet.lib
+
+SOURCES= fndquota.c
+
+C_DEFINES= $(C_DEFINES) -DWIN32
+USE_CRTDLL=1
+WARNING_LEVEL=-W4
+
+UMTYPE=console
+UMAPPL=
+UMLIBS=

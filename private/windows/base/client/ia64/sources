@@ -1,0 +1,3 @@
+IA64_SOURCES=..\ia64\critsect.s \
+             ..\ia64\thunk.s \
+             ..\ia64\context.c

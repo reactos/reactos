@@ -1,0 +1,10 @@
+TARGETNAME=snmp
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=LIBRARY
+
+INCLUDES=\
+    $(BASEDIR)\public\sdk\inc\sockets;\
+    $(BASEDIR)\private\net\inc
+
+SOURCES=\
+    dummy.c

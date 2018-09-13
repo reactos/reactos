@@ -1,0 +1,349 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE>DA Sample</TITLE>
+<style>
+  body
+  {
+    font-family: Verdana;
+    font-weight: bold;
+  }
+
+  #DAControl
+  {
+    position:absolute;
+    left:0;
+    top:0;
+    width:478;
+    height:322;
+    z-index:10;
+  }
+
+  <!--#banner
+  {
+    position: absolute;
+    top: -73;
+    left: 146;
+    z-index:20;
+  }-->
+
+  <!--#smallflag
+  {
+    position: absolute;
+    top: -73;
+    left: 16;
+    z-index:20;
+  }-->
+
+  #contents
+  {
+    position:absolute;
+    left:0;
+    top:322;
+    width:478;
+    height:209;
+    z-index:20;
+    padding: 0;
+  }
+
+  #fadebar
+  {
+     position:absolute;
+     top:0;
+     left:0;
+  }
+
+  #leftpanel
+  {
+    position: absolute;
+    left:0;
+    top:5;
+    width:179;
+    height:204;
+    background-color: #CEDFEF;
+  }
+
+  #cmdlist
+  {
+    background-color: #639ECE;
+    padding-left: 12;
+    margin-top:0;
+  }
+
+  #menuitem
+  {
+    width: 167;
+    height: 22;
+    margin-bottom: 1;
+    padding-left: 6;
+    padding-top: 6;
+    background-color: #CEDFEF;
+    font-size: 10px;
+    cursor: hand;
+  }
+
+  #rightpanel
+  {
+    position: absolute;
+    left:179;
+    top:5;
+    width:299;
+    height:204;
+    padding-top: 9;
+    padding-left: 17;
+    padding-right: 8;
+    background: #E6F0F9 URL("res://welcome.exe/computer.gif") no-repeat bottom right;
+  }
+
+  #header
+  {
+    font-size: 18px;
+    color: #3875B3;
+  }
+
+  #description
+  {
+    font-size: 11px;
+    position: relative;
+    top: 4;
+  }
+
+  #checkboxarea
+  {
+    position: absolute;
+    visibility: hidden;
+    left: 2;
+    top:  180;
+    font-size: 9px;
+    font-weight: normal;
+  }
+</style>
+<script LANGUAGE=JScript>
+  var timerID = 0;
+  var displayedItem;
+  var LHeader = "Welcome";
+  var LBody = "Welcome to the exciting new world of Windows NT Workstation 5.0, where your computer desktop meets the Internet!<p>Sit back and relax as you take a brief tour of the options available on this screen.<p>If you want to explore an option, just click it.";
+  var aBitmaps = new Array( "computer.gif", "register.gif", "internet.gif", "disk.gif");
+
+  function Select()
+  {
+    var target = window.event.srcElement;
+
+    var newImage;
+    var name;
+    var body;
+
+    if ( timerID )
+    {
+      window.clearTimeout(timerID);
+      timerID = 0;
+    }
+
+    if (displayedItem)
+    {
+      displayedItem.style.backgroundColor = "#CEDFEF";
+    }
+
+    if ( (target.imgindex >= 0) && (target.imgindex < 4) )
+    {
+      newImage = "URL(res://welcome.exe/"+aBitmaps[target.imgindex]+")";
+    }
+    else
+    {
+      newImage = "URL(res://welcome.exe/computer.gif)";
+    }
+
+    target.style.backgroundColor = "#E6F0F9";
+    header.innerText = target.header;
+    description.innerHTML = target.body;
+    rightpanel.style.backgroundImage = newImage;
+    displayedItem = target;
+  }
+  function ReturnToDefault()
+  {
+    if (displayedItem)
+    {
+      displayedItem.style.backgroundColor = "#CEDFEF";
+      displayedItem = null;
+    }
+    header.innerText = LHeader;
+    description.innerHTML = LBody;
+    rightpanel.style.backgroundImage = "URL(res://welcome.exe/computer.gif)";
+    timerID = 0;
+  }
+  function TimedSelect()
+  {
+    timerID = window.setTimeout( "ReturnToDefault();", 100 );
+  }
+  function Click( item )
+  {
+    var target = window.event.srcElement;
+
+    target.style.color = "gray";
+    window.navigate("app://"+target.appindex);
+  }
+</script>
+<script LANGUAGE=JScript FOR=window EVENT=OnLoad>
+  ReturnToDefault();
+  window.setTimeout( "StartDA();", 10 );  // part of HackHack
+</script>
+</HEAD>
+<!-- HACK NOTE: the property "basedir" is dynamically set on the body tag by the container.
+     This property contains the windows directory path without a trailing slash (eg "c:\winnt"). -->
+<BODY scroll=no>
+<OBJECT ID="DAControl"
+  CLASSID="CLSID:B6FFC24C-7E13-11D0-9B47-00C04FC2F51D">
+</OBJECT>
+<!--<img ID=banner src="title.gif">-->
+<!--<img ID=smallflag src="flagsm.gif">-->
+<div ID=contents>
+ <img ID=fadebar src="bar.jpg">
+ <div ID=leftpanel>
+  <div ID=cmdlist onmouseout="TimedSelect();">
+  </div>
+  <div ID=checkboxarea>
+    <input ID=showmecheck type=checkbox checked ONCLICK="blur();">
+    <span style="position:relative;top:-3;left:-5;">Show this screen at startup.</span>
+  </div>
+ </div>
+ <div id=rightpanel>
+  <div id=header></div>
+  <div id=description></div>
+ </div>
+</div>
+<SCRIPT LANGUAGE="JScript">
+function StartDA()
+{
+  m = DAControl.PixelLibrary;
+
+  // workaround will be fix by NT 5 final.
+  // if you have any questions please contact:
+  // Pablo Fernicola or Viresh Ramdatmiser.
+  function myDuration(bvr, val) {
+    ate = m.AppTriggeredEvent();
+	if(val == 0)
+	  return m.Until(bvr, ate, bvr);
+	else
+      return (m.Until(bvr, ate, bvr)).Duration(val);
+  }
+
+  
+  //basedir = document.body.basedir;  // hackhack, overcome DA limitation
+
+  // the logo
+  x =
+    m.Until(m.InterpolateAnim(myDuration(m.DANumber(60),0),m.DANumber(-60),m.DANumber(1)), m.Timer(1), m.DANumber(-60));
+
+  pt1 = m.Point2Anim( x, m.DANumber(50));
+  myNum = m.Sequence(myDuration(m.DANumber(60),1),x);
+  pt2 = m.Point2Anim( myNum,m.DANumber(-50));
+  pt3 = m.Point2Anim( myNum,m.DANumber(50));
+  pt4 = m.Point2(60,-50);
+  sfac = myDuration(m.Interpolate(1.0, 0.46, 1),0);
+  img1 = m.ImportImage("flagblk.gif").Crop( pt1, pt2 );
+  img2 = m.ImportImage("flag.gif").Crop( pt3, pt4 );
+  moveAndShrink =
+    m.Sequence(
+      myDuration(m.IdentityTransform2,3),
+      m.Compose2(
+        myDuration(m.Translate2Rate( -196, -118 ),1),
+        myDuration(m.Scale2Anim(sfac,sfac),1)
+      )
+    );
+  logoFinal = m.Overlay( img1.Opacity(0.95).Transform(moveAndShrink), img2.Opacity(0.95).Transform(moveAndShrink));
+
+  // the main box
+  //rect1_1 = m.Rect(-93,-93,186,186);
+  //rect1_2 = m.Rect(-66,-66,132,132);
+
+  rectMain1 = m.Rect(186,186);
+  rectMImg1 = rectMain1.Fill(m.EmptyLineStyle, 
+    m.SolidColorImage(m.ColorRgb(0.38, 0.61, 0.81)));
+
+  rectMain2 = m.Rect(132,132);
+  rectMImg2 = rectMain2.Fill(m.EmptyLineStyle, 
+    m.SolidColorImage(m.ColorRgb(1.0, 1.0, 1.0)));
+
+  mainBoxImg = m.Overlay(rectMImg2, rectMImg1);
+
+  sfac = myDuration(m.Interpolate(0.0, 1.0, 0.5),0);
+  trans = m.Compose2( moveAndShrink,
+  m.Sequence( myDuration(m.IdentityTransform2, 2),
+    myDuration(m.Scale2UniformAnim(sfac),0.5) ) );
+
+  mainBoxImg = mainBoxImg.Transform(trans).OpacityAnim(
+    m.Sequence( myDuration(m.DANumber(0.0),2), m.DANumber(1.0) ));
+
+  // second box
+  ds = m.NewDrawingSurface();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.80, 0.84, 0.93));
+  ds.Rect(-239, -88,86,13);
+  ds.Rect(-239,-161,86,13);
+  ds.Rect(-239,-148,13,60);
+  ds.Rect(-166,-148,13,60);
+  trans =
+    m.Sequence(
+      myDuration(m.IdentityTransform2,4),
+      myDuration(m.Translate2Rate( 58, 84 ),0.5)
+    );
+
+  boxTwo = ds.Image.Transform(trans).OpacityAnim(m.Sequence( myDuration(m.DANumber(0),4), m.DANumber(1.0) ));
+
+  // third box
+  ds.Clear();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.87, 0.90, 0.97));
+  ds.Rect(-210,-119,86,86);
+  ds.FillColor(m.ColorRgb(1.0, 1.0, 1.0));
+  ds.Rect(-197,-106,60,60);
+  sfac = myDuration(m.Interpolate(1.0, 0.5, 0.5),0);
+  trans =
+    m.Sequence(
+      myDuration(m.IdentityTransform2,4.5),
+      m.Compose2(
+        myDuration(m.Translate2Rate( -38, -205 ),0.5),
+        myDuration(m.Scale2Anim(sfac,sfac),0.5)
+      )
+    );
+  boxThree = ds.Image.Transform(trans).OpacityAnim(m.Sequence( myDuration(m.DANumber(0.0),4.5), m.DANumber(1.0) ));
+
+  // the last two boxes (4 and 5)
+  ds.Clear();
+  ds.borderStyle = m.EmptyLineStyle;
+  ds.FillColor(m.ColorRgb(0.87, 0.90, 0.97));
+  ds.Rect(126,-48,86,86);
+  ds.FillColor(m.ColorRgb(0.80, 0.84, 0.93));
+  ds.Rect(82,38,44,44);
+  ds.FillColor(m.ColorRgb(1.0, 1.0, 1.0));
+  ds.Rect(139,-35,60,60);
+  ds.Rect(89,45,30,30);
+  trans =
+    m.Sequence(
+      myDuration(m.IdentityTransform2,6.5),
+      myDuration(m.Translate2Rate( 0, -98 ),1)
+    );
+  box4and5 = ds.Image.Transform(trans).OpacityAnim(m.Sequence( myDuration(m.DANumber(0.0),6.5), m.DANumber(1.0) ));
+  
+  flagImg = m.ImportImage("flagsm.gif").Transform(m.Translate2(-197, -118));
+  finalFlagImg = m.Sequence( myDuration(m.EmptyImage,5), flagImg );
+
+  // import the banner
+  bannerImg = m.ImportImage("title.gif").Transform(m.Translate2(30, -105));
+  finalBannerImg = m.Sequence( myDuration(m.EmptyImage,5), bannerImg );
+
+  // move up the contents
+  myNum = m.Sequence( myDuration(m.DANumber(322),6), m.DANumber(113) );
+  DAControl.AddBehaviorToRun(myNum.AnimateProperty("contents.style.pixelTop", "JScript", false, .1));
+
+  DAControl.Image = m.Overlay(finalFlagImg,m.Overlay(finalBannerImg,
+    m.Overlay( logoFinal, m.Overlay(mainBoxImg, m.Overlay(boxTwo, 
+          m.Overlay(boxThree, m.Overlay(box4and5,m.SolidColorImage(m.White))))))));
+
+  // for trident timers
+//  DAControl.TimerSource = 1;
+  DAControl.Start();
+}
+</SCRIPT>
+</BODY>
+</HTML>

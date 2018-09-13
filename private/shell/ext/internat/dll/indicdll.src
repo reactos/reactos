@@ -1,0 +1,25 @@
+#define NEED_ORDINAL_ONLY
+#include <intlshar.h>
+LIBRARY  ShellHook  INITINSTANCE
+
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION  'Multilingual Language Indicator DLL'
+
+
+EXPORTS
+    IndicDll_RegisterHookSendWindow    @ORD_REGISTERHOOK,       noname
+    IndicDll_StartShell                @ORD_STARTSHELL,         noname
+    IndicDll_StopShell                 @ORD_STOPSHELL,          noname
+    IndicDll_GetLastActiveWnd          @ORD_GETLASTACTIVE,      noname
+    IndicDll_GetLastFocusWnd           @ORD_GETLASTFOCUS,       noname
+    IndicDll_SetNotifyWnd              @ORD_SETNOTIFYWND,       noname
+    IndicDll_GetLayout                 @ORD_GETLAYOUT,          noname
+    IndicDll_GetIMEStatus              @ORD_GETIMESTAT,         noname
+    IndicDll_GetIMEMenu                @ORD_GETIMEMENU,         noname
+    IndicDll_BuildIMEMenu              @ORD_BUILDIMEMENU,       noname
+    IndicDll_GetIMEMenuItemID          @ORD_GETIMEMENUITEMID,   noname
+    IndicDll_GetIMEMenuItemData        @ORD_GETIMEMENUITEMDATA, noname
+    IndicDll_DestroyIMEMenu            @ORD_DESTROYIMEMENU,     noname
+    IndicDll_SetIMEMenuItemData        @ORD_SETIMEMENUITEMDATA, noname
+    IndicDll_GetConsoleImeWnd          @ORD_GETCONSOLEIMEWND,   noname
+    IndicDll_GetDefaultImeMenuItem     @ORD_GETDEFAULTIMEMENUITEM, noname

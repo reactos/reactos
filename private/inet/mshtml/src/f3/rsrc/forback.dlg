@@ -1,0 +1,466 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD W3 HTML 3.2//EN">
+<HTML>
+<HEAD>
+<META name=GENERATOR content="Trident 119">
+<TITLE>
+Background
+</TITLE>
+
+<!--
+BLOCKING:
+    1.  Tab index
+    2.  No color picker - raid 9692
+    3.  No browse dialog - raid 9698
+    4.  No onclick for checkboxes - raid 9702
+
+TO DO:
+    1.  Localization
+    2.  Add BUTTON tags
+-->
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    //  Set dialog dimensions
+    window.dialogLeft = 50;
+    window.dialogTop = 100;
+    window.dialogWidth = 360;
+    window.dialogHeight = 385;
+
+    //  Constants
+    var htmlNotSet = "";
+    var htmlBGPropertiesFixed = "fixed";
+
+    var htmlKeyReturn = 13;
+    var htmlKeyEscape = 27;
+
+    //  Global variables
+    var gdocBackground;     //  The document we're modifying the background of.
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript FOR=document EVENT="keyPress(scrElement)">
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+    //              appropriate action.
+    //
+    //-----------------------------------------------------------------------
+
+        var dummy;
+
+        if (event.keyCode == htmlKeyReturn)                     //  Enter
+        {
+            btnOKClick();
+            btnOK.focus();
+        }
+
+        else if (event.keyCode == htmlKeyEscape)     //  Esc
+        {
+            btnCancelClick();
+        }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnCancelClick()
+    {
+        window.close();
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnBrowseImageClick()
+    {
+        alert("No browse available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnBrowseSoundClick()
+    {
+        alert("No browse available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnChooseBackClick()
+    {
+        alert("No color picker available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnChooseTextClick()
+    {
+        alert("No color picker available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnChooseLinkClick()
+    {
+        alert("No color picker available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnChooseVLinkClick()
+    {
+        alert("No color picker available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnChooseALinkClick()
+    {
+        alert("No color picker available yet.");
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function bdyLoad()
+    {
+
+    //+-----------------------------------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks at the settings for the current document and fills the dialog box
+    //              accordingly.
+    //
+    //-------------------------------------------------------------------------------------------------
+
+        gdocBackground = window.dialogArguments;
+
+        txtImageFileName.value = gdocBackground.body.background;
+
+        if (gdocBackground.body.bgProperties == htmlBGPropertiesFixed)
+        {
+            chkDontScroll.checked = true;
+        }
+        else
+        {
+            chkDontScroll.checked = false;
+        }
+
+        if (gdocBackground.body.bgcolor != "")
+        {
+            chkBackground.checked = true;
+            tdBackground.bgcolor = gdocBackground.body.bgcolor;
+        }
+        if (gdocBackground.body.text != "")
+        {
+            chkText.checked = true;
+            tdText.bgcolor = gdocBackground.body.text;
+        }
+        if (gdocBackground.body.link != "")
+        {
+            chkHyperlink.checked = true;
+            tdHyperlink.bgcolor = gdocBackground.body.link;
+        }
+        if (gdocBackground.body.vlink != "")
+        {
+            chkVLink.checked = true;
+            tdVLink.bgcolor = gdocBackground.body.vlink;
+        }
+        if (gdocBackground.body.alink != "")
+        {
+            chkALink.checked = true;
+            tdALink.bgcolor = gdocBackground.body.alink;
+        }
+    }
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE=JavaScript>
+
+    function btnOKClick()
+    {
+
+    //+-----------------------------------------------------------------------------------------
+    //
+    //  Synopsis:   Goes through all the controls on the dialog and modifies the current
+    //              document appropriately.
+    //
+    //------------------------------------------------------------------------------------------
+
+        gdocBackground.body.background = txtImageFileName.value
+
+        if (chkDontScroll.checked)
+        {
+            gdocBackground.body.bgProperties = htmlBGPropertiesFixed;
+        }
+        else
+        {
+            gdocBackground.body.bgProperties = htmlNotSet;
+        }
+
+        if (chkBackground.checked)
+        {
+            gdocBackground.body.bgcolor = tdBackground.bgcolor;
+        }
+        else
+        {
+            gdocBackground.body.bgcolor = "";
+        }
+        if (chkText.checked)
+        {
+            gdocBackground.body.text = tdText.bgcolor;
+        }
+        else
+        {
+            gdocBackground.body.text = "";
+        }
+        if (chkHyperlink.checked)
+        {
+            gdocBackground.body.link = tdHyperlink.bgcolor;
+        }
+        else
+        {
+            gdocBackground.body.link = "";
+        }
+        if (chkVLink.checked)
+        {
+            gdocBackground.body.vlink = tdVLink.bgcolor;
+        }
+        else
+        {
+            gdocBackground.body.vlink = "";
+        }
+        if (chkALink.checked)
+        {
+            gdocBackground.body.alink = tdALink.bgcolor;
+        }
+        else
+        {
+            gdocBackground.body.alink = "";
+        }
+
+        window.close();
+
+    }
+
+</SCRIPT>
+
+</HEAD>
+<BODY background="waves.gif" onload="bdyLoad()">
+<DIV style="WIDTH: 350; HEIGHT: 345">
+
+<INPUT type=text style="position: absolute; LEFT: 0; TOP: 32; WIDTH: 228; HEIGHT: 20" value=""
+ID=txtImageFileName>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 24; WIDTH: 96; HEIGHT: 23" type=button
+value=Browse ID=btnBrowseImage onclick="btnBrowseImageClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 24; WIDTH: 96; HEIGHT: 25"
+ID=btnBrowseImage onclick="btnBrowseImageClick()">
+Browse
+</BUTTON>
+
+<INPUT style="position: absolute; LEFT: 0; TOP: 56; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkDontScroll>
+
+<DIV style="position: absolute; LEFT: 16; TOP: 56; WIDTH: 160; HEIGHT: 19">
+<LABEL FOR=chkDontScroll ACCESSKEY=d>
+<U>D</U>on't Scroll Background
+</LABEL>
+</DIV>
+
+<DIV style="position: absolute; LEFT: 0; TOP: 88; WIDTH: 128; HEIGHT: 19">
+Background Sound:
+</DIV>
+
+<INPUT type=text value="No bgsound.src until M5" style="position: absolute; LEFT: 0; TOP: 104;
+WIDTH: 228; HEIGHT: 20" ID=txtSoundFileName>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 96; WIDTH: 96; HEIGHT: 23" type=button
+value=Browse ID=btnBrowseSound onclick="btnBrowseSoundClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 96; WIDTH: 96; HEIGHT: 25"
+ID=btnBrowseSound onclick="btnBrowseSoundClick()">
+Browse
+</BUTTON>
+
+<DIV style="position: absolute; LEFT: 0; TOP: 128; WIDTH: 48; HEIGHT: 19">
+Loop:
+</DIV>
+
+<INPUT type=text style="position: absolute; LEFT: 40; TOP: 128; WIDTH: 68; HEIGHT: 20"
+ID=txtLoop value="no bgsound.loop until M5">
+
+<DIV style="position: absolute; LEFT: 8; TOP: 160; WIDTH: 104; HEIGHT: 19">
+Custom Colors:
+</DIV>
+
+<INPUT style="position: absolute; LEFT: 16; TOP: 187; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkBackground>
+
+<INPUT style="position: absolute; LEFT: 16; TOP: 211; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkText>
+
+<INPUT style="position: absolute; LEFT: 16; TOP: 235; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkHyperlink>
+
+<INPUT style="position: absolute; LEFT: 16; TOP: 259; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkVLink>
+
+<INPUT style="position: absolute; LEFT: 16; TOP: 283; WIDTH: 13; HEIGHT: 13"
+type=checkbox ID=chkALink>
+
+<DIV style="position: absolute; LEFT: 32; TOP: 184; WIDTH: 88; HEIGHT: 16">
+<LABEL FOR=chkBackground ACCESSKEY=n>
+Backgrou<U>n</U>d
+</LABEL>
+</DIV>
+
+<DIV style="position: absolute; LEFT: 32; TOP: 208; WIDTH: 32; HEIGHT: 19">
+<LABEL FOR=chkText ACCESSKEY=x>
+Te<U>x</U>t
+</LABEL>
+</DIV>
+
+<DIV style="position: absolute; LEFT: 32; TOP: 232; WIDTH: 64; HEIGHT: 19">
+<LABEL FOR=chkHyperlink ACCESSKEY=k>
+Hyperlin<U>k</U>
+</LABEL>
+</DIV>
+
+<DIV style="position: absolute; LEFT: 32; TOP: 256; WIDTH: 112; HEIGHT: 19">
+<LABEL FOR=chkVLink ACCESSKEY=v>
+<U>V</U>isited Hyperlink
+</LABEL>
+</DIV>
+
+<DIV style="position: absolute; LEFT: 32; TOP: 280; WIDTH: 112; HEIGHT: 19">
+<LABEL FOR=chkALink ACCESSKEY=a>
+<U>A</U>ctive Hyperlink
+</LABEL>
+</DIV>
+
+<TABLE style="position: absolute; LEFT: 144; TOP: 176; WIDTH: 88; HEIGHT: 120">
+<TR>
+<TD ID=tdBackground BGCOLOR="gray">
+<DIV style="position:absolute; WIDTH: 88; HEIGHT: 19">
+</DIV>
+</TD>
+</TR>
+<TR>
+<TD ID=tdText BGCOLOR="black">
+<DIV style="position:absolute; WIDTH: 88; HEIGHT: 19">
+</DIV>
+</TD>
+</TR>
+<TR>
+<TD ID=tdHyperlink BGCOLOR="blue">
+<DIV style="position:absolute; WIDTH: 88; HEIGHT: 19">
+</DIV>
+</TD>
+</TR>
+<TR>
+<TD ID=tdVLink BGCOLOR="purple">
+<DIV style="position:absolute; WIDTH: 88; HEIGHT: 19">
+</DIV>
+</TD>
+</TR>
+<TR>
+<TD ID=tdAlink BGCOLOR="red">
+<DIV style="position:absolute; WIDTH: 88; HEIGHT: 19">
+</DIV>
+</TD>
+</TR>
+</TABLE>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 180; WIDTH: 96; HEIGHT: 23" type=button
+value=Choose ID=btnChooseBack onclick="btnChooseBackClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 180; WIDTH: 96; HEIGHT: 25"
+ID=btnChooseBack onclick="btnChooseBackClick()">
+Choose
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 206; WIDTH: 96; HEIGHT: 23" type=button
+value=Choose ID=btnChooseText onclick="btnChooseTextClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 206; WIDTH: 96; HEIGHT: 25"
+ID=btnChooseBack onclick="btnChooseTextClick()">
+Choose
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 231; WIDTH: 96; HEIGHT: 23" type=button
+value=Choose ID=btnChooseLink onclick="btnChooseLinkClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 231; WIDTH: 96; HEIGHT: 25"
+ID=btnChooseBack onclick="btnChooseLinkClick()">
+Choose
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 257; WIDTH: 96; HEIGHT: 23" type=button
+value=Choose ID=btnChooseVLink onclick="btnChooseVLinkClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 257; WIDTH: 96; HEIGHT: 25"
+ID=btnChooseBack onclick="btnChooseVLinkClick()">
+Choose
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 283; WIDTH: 96; HEIGHT: 23" type=button
+value=Choose ID=btnChooseALink onclick="btnChooseALinkClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 283; WIDTH: 96; HEIGHT: 25"
+ID=btnChooseBack onclick="btnChooseALinkClick()">
+Choose
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 240; TOP: 312; WIDTH: 96; HEIGHT: 23" type=button
+value=Cancel ID=btnCancel onclick="btnCancelClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 240; TOP: 312; WIDTH: 96; HEIGHT: 25"
+ID=btnCancel onclick="btnCancelClick()">
+Cancel
+</BUTTON>
+
+<!--
+<INPUT style="position: absolute; LEFT: 136; TOP: 312; WIDTH: 96; HEIGHT: 23" type=button
+value=OK ID=btnOK onclick="btnOKClick()">
+-->
+<BUTTON style="position: absolute; LEFT: 136; TOP: 312; WIDTH: 96; HEIGHT: 25"
+ID=btnOK onclick="btnOKClick()">
+OK
+</BUTTON>
+
+<DIV style="position: absolute; LEFT: 0; TOP: 8; WIDTH: 128; HEIGHT: 19">
+<LABEL FOR=txtImageFileName ACCESSKEY=b>
+<U>B</U>ackground Image:
+</LABEL>
+</DIV>
+
+<IMG SRC="authfla.gif" style="position: absolute; LEFT: 0px; TOP: 300px">
+
+</DIV>
+
+</BODY>
+</HTML>
+

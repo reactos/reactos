@@ -1,0 +1,22 @@
+# Nmake macros for building Windows 32-Bit apps
+
+!include <ntwin32.mak>
+ldebug=
+#ldebug= -DEBUG:full -DEBUGTYPE:both
+# *** Connect Next line for WIN95 and uncomment for Windows NT
+# crtdll = crtdll.lib
+# This line allows NMAKE to work as well
+
+all: wsock32.dll
+
+wsock32.dll: wsock32.obj wsock32.def wsock32.rbj
+	lib -machine:$(CPU) -def:wsock32.def -out:wsock32.lib
+	link $(ldebug) -dll -entry:Win32LibMain$(DLLENTRY) -out:wsock32.dll wsock32.obj wsock32.exp wsock32.rbj $(guilibsdll) advapi32.lib mpr.lib 
+
+wsock32.obj: wsock32.c
+	$(cc) $(cdebug) $(cflags) $(cvarsdll) -MD wsock32.c 
+
+wsock32.rbj: wsock32.rc
+	rc -r $(rcvars) -fo wsock32.res wsock32.rc
+	cvtres -$(CPU) wsock32.res -o wsock32.rbj
+

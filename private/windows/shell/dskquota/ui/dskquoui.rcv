@@ -1,0 +1,14 @@
+/********************************************************************/
+/*        DSKQUOUI.RCV                                              */
+/********************************************************************/
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Shell Disk Quota UI DLL"
+#define VER_INTERNALNAME_STR            "DSKQUOUI"
+#define VER_ORIGINALFILENAME_STR        "DSKQUOUI.DLL"
+#define VER_OLESELFREGISTER             1
+
+#include <ntverp.h>
+#include <common.ver>
+

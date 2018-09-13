@@ -1,0 +1,4 @@
+ALT_PROJECT_TARGET=chicago
+USE_MAPSYM=1
+USE_MFC=1
+!include ..\sources.inc

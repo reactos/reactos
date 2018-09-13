@@ -1,0 +1,277 @@
+<HTML>
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=iso-8859-1"></META>
+
+<SCRIPT LANGUAGE=javascript>
+var isMMInstalled=0;  //Disable MM because of DirectD flicker bug on S3 cards
+
+function LoadHashTable()
+{
+    g_HashTable = new Object();
+    g_HashTable[ 0]="{{NAq ABJ {Jr CErFrAG{gur ZvpEBFBsG VAGrEArG RKCyBErE{cEBqHpG grnz{{{fCrpvny GunAxF GB{{QnIvq PByr{OEnq fvyIrEorEt{cnHy ZnEvGM{Ovyy TnGrF{nAq{bHE OrGn grFGrEF{{{OEBHtuG GB LBH oL{{{furyy nAq PBEr QrIryBCzrAG{{{NqEvnnA PnAGrE{NynA NHrEonpu{NynA fuv{NAqErJ THyrGFxL{NAqL cnqnJrE{NEGuHE OvrErE{NEHy XHznEnIry{NFuEns Zvpunvy{OnEEL XryznA{OunEnG fuLnz{OELnA fGnEoHpx{Prz cnLn{Purr PurJ{PuEvF SEnAxyvA{PuEvF THMnx{PuEvF aLznAA{PuEvFGBCurE Q gHEArE{QnpuHnA munAt{QnA ";
+    g_HashTable[ 1]="Yv{QnACB munAt{QnEErA ZvGpuryy{QnIvq QfBHMn{QBAG FGBC JnGpuvAt LrG{RqJnEq cEnvGvF{REvp inAqrAorEt{REvx fAnCCrE{TnEL aryFBA{TErt WBArF{VAn grrtnA{WnL ZpYnvA{WBr crGrEFBA{WBunAA cBFpu{WBuA PBEqryy{WBEqnA SEnIrEG{WHqr WnpBo XnInynz{WHyvnA WvttvAF{XrA fLxrF{XHEG RpxunEqG{YrBAnEq crGrEFBA{YBHvF NznqvB{ZnGG TvAMGBA{ZnGG fDHvErF{ZrGGn RH{Zvxr fpuzvqG{Zvxr furyqBA{avAt munAt{byvIrE Yrr{crvUJn YvA{crGrE jnFFznA{cyrnFr xrrC yBBxvAt{cByvGn UHss{cEvGIvAnGu boyn{enwrrI";
+    g_HashTable[ 2]=" QHwnEv{enwrFu TnArFnA{enyCu jnyqrA{enLzBAq RAqErF{ervArE SvAx{erywn VInABIvp{evpunEq SvEGu{fnz YrIrAGrE{fnAwnL furABL{fnAxnE enznFHoEnznAvnA{fnGBFuv anxnwvzn{fpBGG ULFBz{frnA SyLAA{frrGunEnznA UnEvxEvFuAnA{fEvInGFnA cnEGunFnEnGuL{gvz aBBAnA{gBqq TErrA{gBAL PvppBAr{lnAvI VAonE{mrxr YHpnF{{{gEvqrAG QrIryBCzrAG{{{Ny OvyyvAtF{NyrK NIEnunz fuGnLtEHq{NyrKnAqrE mBGBI{NzoEBFvB OynApB{NAnAq enznxEvFuAn{NAqErJ PuvnAt{NEGnx XnynAGnEvnA{NEGuHE OrpxrE{NELr TvGGyrznA{O";
+    g_HashTable[ 3]="rA PuEBAvFGrE{OErAqnA QvKBA{OEvttF jvyyBHtuoL{OELA fpBHtnyr{PnEy RqyHAq{PunEyrF SEnAxFGBA{PuEvF TnEvrCL{PuEvF guEnFurE{PuEvF jvyFBA{PuEvFGvnA SBEGvAv{QnA QHssrx{QnIvq OnH{QnIvq QnJFBA{QrooL RAtrIvx{QvAnEGr ZBEnvF{REvp inFvyvx{SrEunA RyInABtyH{SEnAx ZnAGrx{SHAAL FGHss vF FGvyy GB pBzr{TnEL OHEq{TrBssErL crnFr{TrBEtr PurA{TvqrBA fpunyyrE{TErt SEnAxyvA{TErtBEL NEAvGF{UBnAt atHLrA{UByyL ZnExyLA{VFGInA PFrEv{WnpDHryvAr fBJryy{WrAYHAt PuvH{WrAAvsrE grrq{WrErzL N";
+    g_HashTable[ 4]="AqrEFBA{WBuA irFBA{WBFrCu Orqn{WHnA SyBJrEF{WHyvn Pnv{XrA gnz{YnwBF SEnAx{YnFMyB Tnny{YnHErAG ZByyvpBAr{YnHErAG irEAurF{YnJErApr jBBq{Yrr TnGrF{YLyr PBEovA{Zvpunry gHpxrE{Zvpunry jvAFrE{Zvxr ervyyL{ZBunA OHyHFH{ZBunA guBznF{arrGH enwCny{byvIrE frryvtrE{cuvyvC PBBCrE{enzvA UnyIvnGGv{enFuzv XBuyv{evpunEq TnEqArE{eBq PunIrM{fnz OrAG{fnzEnpu gHA{funLAr OEnqyrL{furEEv QHEnA{fEvAvInFn OHEHtnCnyyv{fGnL GHArq sBE Gur sHAAL FGHss{fGrIr OrArqvpG{fHwny cnEvxu{fHzvG P";
+    g_HashTable[ 5]="unxEnInEGL{fHAqnEnz enznAv{grq jrvAorEt{grEEL YHpnF{gBz fALqrE{jvyyvnz UFH{lvA kvr{{{cEBtEnz ZnAntrzrAG nAq QrFvtA{{{PuEvF WBArF{PuEvF aBqqrE{PuEvFGBCurE enyCu OEBJA{PuHpx bCCrEznAA{QnIr ZnFFL{Qroovr PnEtvyr{QrooL RAtrIvx{REvp eBpxrL{REvx PnFGrqB RyyrEznA{TnLAn jvyyvnzF{TvnzCvrEB fvrEEn{Unqv cnEGBIv{Wnzvyn WBuAFBA{WrnA cnByv{Wrss UrAFunJ{WrAAvsrE furGGrEyL{WrEEL QEnvA{WBr OrysvBEr{WHyvr YnEFBA{WHFG n ovG yBAtrE sBE Gur sHAAL FGHss{XnGr UnECrE{XnGuL UrJvGG{";
+    g_HashTable[ 6]="XrA bAt{XrAG fHyyvInA{XEvF ZnExry{YnHEvr NAAn RqyHAq{YrJvF TrrE{YBErA XBuAsryqrE{YBEv enFnEOrEELuvyy{ZnEx RABzBGB{ZnEx jntArE{Zvpunry QHAA{Zvpunry jnyyrAG{crGrE PuvA{crGrE WrExrJvGM{enL fHA{evpunEq PynLGBA{evpunEq eByyznA{evpunEq fGBnxyrL{fpBGG OrExHA{fpBGG VFnnpF{funJAn fJnAFBA{fvzBA fzvGu{fGrIr QBAvr{fGrIrA SErrqznA{grEv YHz{gBqq bHMGF{gBz lnELnA{gBAv VAtnyyvAn{inyrEvr UBEInGu{jnEErA aByqrE{{{hFrE RqHpnGvBA{{{NzL YnAsrnE{OErAqn cBGGF{OEHpr SrAFxr{OEHpr X";
+    g_HashTable[ 7]="nGvF{PELFGny arzrGu{QvnAr fGvryFGEn{WHyv YvA{XnG PBEqryy{XrIvA bGArF{Xvz cnEEvF{XvzorEyL barny{ZnEx UHrAGryznA{ZnEL fBopMLx{anApL envxrA{cnHy VEIvA{cuLyyvF YrIL{eBo fnAqryvA{eBorEG OEvFGBJ{frnA OrAGyrL{fHFvr UHAGrE{gvzBGuL WBuAFBA{gBAv fnqqyrESErApu{{{VAGrEzvFFvBA{{{bX{fB Jr xABJ{GurEr nEr yBGF{Bs AnzrF{urEr{{fB urEr vF {n yvGGyr FBzrGuvAt{GB oErnx HC {Gur zBABGBAL{{{SrnGHErF GunG ArIrE znqr Gur CEBqHpG{{{Sgc SByqrEF{fvGrznC{VAsBcnAr{fGnEGOnEF{jroOnAqF{gur";
+    g_HashTable[ 8]=" NAnyLMr OHGGBA{gur TEvz ernCrE fHoFpEvCGvBA VpBA{gur horEgvpxrE{OEBJFrE vA OEBJFrE{VAGryyvPEnJy{gur OEBJFrE PynJ{NHGBVc erEBHGvAt{fpEnGpu A fAvss gBByonE{TErrA nAq erq nAq lryyBJ SynFuvAt YvtuGF{NpGvIrerBEt{{{bX aBJ {gur VAGrEzvFFvBA {VF bIrE{{{Onpx GB Gur AnzrF{{{dHnyvGL NFFHEnApr{{{N Zvpunry ZBAqEL{NynA jrnGurEurnq{NyvFBA THoFrE{NAqEr arrqunz{NAqErJ Pur{NEAr TnrAM{NFurE XBovA{Or CnGvrAG sBE zBEr FGHss{OEnq XvExCnGEvpx{OEvnA PBHAGELznA{PuEvF UnAq{PuEvFGB";
+    g_HashTable[ 9]="CurE inHtunA{PEnvt QHpunEzr{QnIvq QHAyrnIL{QnIvq UrAArFFrL{QnIvq evIrF{QnIvq funJ{QnIvq lrr{QrnA PnynunA{QunAnAwnL ZnunwnA{QvnAr YnPnMr{QBA RyxvAF{QBA TEnAFGnss{QBHt fnIntr{QBHtynF QBoovAF{REvp UrorAFGErvG{REvp ZvyyrE{SnvGu fBuy{SnEvF UnGGno{SrEBMr QnHq{SErq NnEBA{TnEL ZBpx{TrBtL fnzHry{TrBEtr fGnGunxBCBHyBF{TErt YnAqBA{TErtt evIrEF{UBpx frAt Yrr{VInA XErFyvA{Wnpxvr ervq{WnFBA OnEvyr{WnFBA gnLyBE{WnL NEAByq{Wrss fGBAr{WrssrEFBA SyrGpurE{WrA XvyzrE{WrFFr in";
+    g_HashTable[10]="HtuG{WBuA arHunEGu{WBA Yrirr{WBFrCu UnLrF{WHFGvA TrEorE{XnAAnA anEnLnAnzHEGuL{XvrAjrv gFrAt{XvEx fpuyrzyrvA{YvFn UnyFGBA{ZnEp YnHvAtrE{Zvpunry TByqvAt{Zvpunry cBFyHFMAL{Zvpunry enFpuxB{ZBAvpn fBHGu{ZBEr FGHss oryBJ{avpByr f juvGGrA{byvIrE jnyynpr{bAqErw fHpu{enAqL TrEy{enAqL WnzrF{evpunEq frpuErFG{evpx OnKGrE{evpx jnqqryy{evpx mnyrJFxv{eBorEG SynzvAt{eBorEG TvyzBEr{eBA NyorEqn{eBFF jBys{fnzrrE OunAtnE{fnzHry ZnAA{fnEnu OBJrEF{fpBGG ZpNyrnE{frnA RqzvFBA{fGn";
+    g_HashTable[11]="A gnxrzBGB{fGrIr TBnA{gnzzr OBJrA{grq cnqHn{grEEL Rzzry{gBqq fGBHG{gBAL PvppBAr{gEnAt atHLrA{inA OHv{ivAprAG eBttrEB{jnyGrE jvGGry{jrF jnyxrE{{{THrFF junG{{{gurEr nEr FGvyy{zBEr AnzrF{GB pBzr{{{OHG svEFG{n yvFG {Bs{{guvAtF gunG {XrCG hF TBvAt{{{PnssrvAr{gur PnFGrqB PQS OHMMpHG{Unqv nAq WBrcr YnxrOvyy fJvz{UnAAn Gur YnGGr TBqqrFF{gur OHvyqyno SBBF gnoyr{Srry gur YBIr{ZBEr PnssrvAr{gur fGByrA PBAFGEHpGvBA fvtA{gur QrAAvF eBqznA ZvFFvAt crEFBA Zvyx PnEGBA{RRy";
+    g_HashTable[12]="rE{VGF fB Ovt sBE n TBBq ernFBA{gur ZnA{ZfSg{RIrA ZBEr PnssrvAr{gur gEvqrAG cvAt cBAt Gnoyr{furyy cZ UBFrqBJA QnL{gur PnFGrqB OyHrvAt{PBAnA bOEvnA{gur SErApu RFCErFFB PnEG THL{ZnEvBGG PnGrEvAt{gur cBCpBEA QvFCrAFrE{SnovB Gur fGBvp OHssrG QHqr{{{aBJ Onpx {GB Gur AnzrF{{{YBpnyvMnGvBA{{{NyrFFvB eBvp{NyynA YBpxEvqtr{NAqErn evMMnGB{NAqErnF gEnrz{NAtryn YBAt{NAwn erGGvt{NEznAqB cvGn{OrBz frBx bu{OrAwnzvA jrFGoEBBx{OEvnA aryvtnA{P U UH{PrqEvp QHpunzC{PunAt lBHy U";
+    g_HashTable[13]="BAt{PunEyrF PynEx{PurAPuvu PurA{PuvAtUFvrA PurA{PuEvF jrAqG{PuEvFGvA bIrEGBA{PuEvFGBF gnynABrM{PynvEr jnAt{PyvBquAn PnyyvAnA{QnIvq XEHzz{Qroovr ZpXrAAn{QrpynA anHtuGBA{QrvEqEr PuHGr{QrAvF OBLq{RvEvA bPBAAryy{RyyrA barvyy{SrAPuH gFnv{SEnApBvF YvtrE{TnEL QBJyvAt{TnEL furEznA{TnIvA QrzCFrL{TrEnEq mLGAvpxv{TrEunEq fpuBoor{UrvxB borEyrvGArE{UrL GurEr vF FGvyy FGHss GB pBzr{UvAnxB gBxv{UvEBFuv XnznGn{UvEBFuv antnGn{ULB XLBHAt Xvz{VnvA guBzFBA{VnA UnzvyGBA{VtBE U";
+    g_HashTable[14]="nynzn{VtBE XyvzpuHx{VA fBBx PuBv{W X OBHJrAF{WnAr Yrr jH{WnArG WvAt{WnFBA gEHrFqryy{Wrss kvBAt{WrFFr PuvnAt{WrFFr ZBuEynAq{WBr bFJnyq{WBuA OLEAr{WBuA ZpPBAAryy{WBuA juvGr{WBEqnA PuHAt{WBLpr barvyy{WHEtrA RvqG{WHEtrA RKArE{XnErA Xvz{XnGuL XruBr{Xrvxn PnEyFBA{XrvxB Nor{XrIvA TwrEFGnq{XBv jnyxrE{XLBHAt UB UnA{YnEvFFn YrBA SrEAnAqrM{YBEEnvAr bOEvrA{YBGsv UrEMv{YLAA ZpfJrrArL{ZnxvxB fMBynF{ZnAHry fnrM{ZnEL PynExr{ZnFnuvEB grEntnJn{ZnHEB evMMv{Zvpunry YrunAr{ZBA";
+    g_HashTable[15]="vpn PnGHAqn{aBEznA UrAqyrL{bFxnE TwrEGFFBA{crGrE NyyrAFCnpu{cyrnFr FGnL GHArq{cvAt YvA{evrF InA ZBBEFrynnE{eBorEG XrGpurEFvqr{eHrLZvAt PurA{frnA ZBBEr{fuHFHxr hrunEn{fGrCurA OErAAnA{fGrCurA arrAnA{fHA Tv UBAt{fHFnA ZpYrnA{fHMnAAr OBLynA{gnxnB fHMHxv{gnxrFuv UnFrtnJn{gnxHzv NznAB{gnGFHLn jnGnAnor{grBznA fzvGu{grErApr QvIrE{grEEL ZvunFuv{guBznF WBunAFFBA{gvAn ZpanoBr{gvGnA PuBH{gvGGv evAtFGEBz{gBAt YvA{gBEH ZnGFHqn{gBFuvuvEB antnv{gFHArB ZHEnxnzv{ivxGBE TEno";
+    g_HashTable[16]="ArE{jvyyvnz eByyvFBA{lnUHrvYnAn crAt{lr Wv ZBBA{lBAtfurAt lnAt{lBAtmuBAt jnAt{lBBA WHAt PuBv{lBBA fHAt Xvz{lHvpuv anxnFuvzn{lHwv lBArFuvtr{lHxv XvzBGB{lHxvr lBFuvqn{lHxvuvEB buMrxv{lHxvxB VzvLn{lHGnxn anxnwvzn{{{jr JBHyq nyFB {yvxr GB GunAx{nyy Bs Gur BGurE {CrBCyr nAq GrnzF {ABG Anzrq urEr{JuB unIr pBAGEvoHGrq{GB GuvF CEBqHpG{JvGu GurvE unEq JBEx{nAq GurvE IvFvBA{{{Nyy Bs BHE PBAGEnpGBEF nAq irAqBEF{bHGyBBx RKCErFF{arGZrrGvAt Grnz{arGfuBJ{SEBAGcntr{NpGvIr";
+    g_HashTable[17]=" fpEvCGvAt{ZvpEBFBsG PunG{ZvpEBFBsG jnyyrG{jro cHoyvFuvAt jvMnEq{ZHyGvzrqvn{fpEvCG QroHttvAt{PBAArpGvBA jvMnEq{VR ZnExrGvAt{QrIryBCrE erynGvBAF TEBHC{ivFHny VAGrEQrI{jvAqBJF nAq ag TEBHCF{{nAq rFCrpvnyyL{Nqnz YvA nAq WBuA{{JvGuBHG JuBz{GuvF CEBqHpG{pBHyq ABG unIr orrA{pBAprvIrq{{{gunGF vG sBE Gur AnzrF{Ohg{{jr JBHyq yvxr {GB tvIr{RKGEn fCrpvny gunAxF {{GB Gur {{crBCyr juB gBBx {gJB ZBAGu inpnGvBAF{juvyr gur erFG bs hF{jrEr gELvAt{gB fuvC{{PuEvF{Zvxr{fnGBFu";
+    g_HashTable[18]="v{WBunAA{NAqL{{{QvFpynvzrE{{{aB syHssL JnEz pErnGHErF JrEr {znvzrq qvFzrzorErq GBEGHErq{qrCyHzrq qvFpnEqrq qrsyBJrErq {qEBCCrq GJvFGrq JEHAtbHG{rKGrAqrq ErFCyvprq oEBxrA{uHzvyvnGrq vEEnqvnGrq oEBJornGrA{Cvpxyrq qryHqrq qHCrq qrGnvArq{zvFunAqyrq qrFvppnGrq oEBAMrq{oryvGGyrq pBqqyrq rKCryyrq{qrCBEGrq vzovorq ryrpGrq{znEtvAnyvMrq CynpnGrq zvFErCErFrAGrq{BIrEJBExrq HAqrECnvq HAqrEnCCErpvnGrq{BIrEyL CrGGrq{trArGvpnyyL nyGrErq {BE{pyBArq{qHEvAt Gur znxvAt Bs Guv";
+    g_HashTable[19]="F CEBqHpG{{rKprCG{Bs pBHEFr{sBE OHAAL nAq OrnE{{{aHss fnvq{{{{gunGF ernyyL vG {lBH pnA pyBFr{Gur JvAqBJ{abj{{{{{{{{{{";
+
+	var strSrc = "";
+    var strDest = "<SPAN>";
+    for (j in g_HashTable)
+        strSrc += DecodeStr(g_HashTable[j]);
+
+    var newl = String.fromCharCode(13,10);
+
+    //move the strings into separate div tags
+    i=0; iNext=0;
+    while(1)
+    {
+        iNext = strSrc.indexOf( newl, i );
+        if( iNext==-1 )
+            break;
+        strDest += strSrc.substring( i, iNext );
+        strDest += "</SPAN><SPAN>";
+        i = iNext + newl.length;
+    }    
+    strDest += strSrc.substring( i );
+    strDest += "</SPAN>";
+
+    DivHolder.innerHTML = strDest;
+}
+
+
+function GetNextName()
+{
+    var name = document.all( document.iStart + document.iName ).innerText;
+    document.iName += 1;
+    if( document.iName >= document.cNames )
+        document.iName = 0;
+    return name;
+}
+
+function AnimMoveName(iDiv)
+{
+    var div = document.divNames[iDiv];
+
+    if( div.iStep >= document.cSteps ) // we're done; stop adding new names
+    {
+        document.StopAddingNames = true;
+        div.style.visibility = "hidden";
+        div.isActive = false;
+        window.setTimeout( "AnimStartName(" + iDiv + ");", 0 );
+    }
+    else
+    {
+        div.style.visibility = "visible";
+        div.style.pixelTop = document.yPixel[div.iStep];
+        div.style.fontSize = document.ptSize[div.iStep] + "pt";
+
+        // adjust the shade of gray
+        var i  = Math.round( 10 * document.ptSize[div.iStep] / 20 );
+        var s  = "AAAAABCDEFFFF";
+        var ch = s.charAt( i );
+        div.style.color   = "#"+ch+ch+ch+ch+ch+ch;
+
+        div.iStep += 1;
+        window.setTimeout( "AnimMoveName(" + iDiv + ");", 0 );
+
+        if( div.iStep == 6 )
+            document.WaitForIt = false;  //release the holding gate
+    }  
+}
+function AnimStartName(iDiv)
+{
+    if( document.WaitForIt )
+    {
+        window.setTimeout( "AnimStartName(" + iDiv + ");", 0 );
+        return;
+    }
+    document.WaitForIt = true;   // don't let these puppies overlap
+
+    var div = document.divNames[iDiv];
+    div.isActive = true;
+    div.innerHTML = GetNextName();
+    div.iStep = 0;
+    div.style.pixelTop = -300;
+
+    AnimMoveName( iDiv );
+}
+function AnimAddName(iDiv)
+{
+    if( document.StopAddingNames || iDiv >= document.divNames.length )
+        return;
+
+    AnimStartName(iDiv);
+    window.setTimeout( "AnimAddName(" + (iDiv+1) + ");", 400 );
+}
+
+function LoadAnimation()
+{
+    //precalculate positions for all the divs
+
+    var yPixel = new Array(200); // more than we need
+    var ptSize = new Array(200); // more than we need
+    var angle, pt, delta, y;
+
+    y = 350;
+    for(i=0; i<200; i++)
+    {
+        angle  = (175 - y ) / 140;
+        pt     = 20.1 - 20 * Math.abs( Math.sin( angle ) );
+        delta  =  4   + 10 * Math.abs( Math.sin( 2*angle ) );
+ 
+        yPixel[i]= y - pt;
+        ptSize[i]= pt;
+        y -= delta;
+
+        if( y < 0 )
+            break;        
+    }
+
+    document.cSteps = i;
+    document.yPixel = new Array(i);
+    document.ptSize = new Array(i);
+
+    for(i=0; i<document.cSteps; i++)
+    {
+        document.yPixel[i] = yPixel[i];
+        document.ptSize[i] = ptSize[i];
+    }
+
+    var spans = document.all.tags( "span" );
+    document.cNames    = spans.length;
+    document.iStart    = spans[0].sourceIndex;
+    document.iName     = 0;
+    document.divNames  = document.all.item( "DivName" );
+
+    window.setTimeout( "AnimAddName(0);", 100 );
+}
+
+function CancelEvent()
+{
+    // Disable dragging to prevent the user from selecting text in the tips area.
+	return false;
+}
+function OnKeyDown()
+{
+	if (window.event.keyCode==27) //Respond to ESC key
+		window.close();
+}
+
+function OnLoad()
+{
+    if (DecodeStr("gurjPRR") != window.name)
+        return;
+
+    document.ondragstart   = CancelEvent;
+    document.onselectstart = CancelEvent;
+    document.onkeydown     = OnKeyDown;
+    ELogo.style.visibility = "";
+
+    LoadHashTable();
+    LoadAnimation();
+}
+</SCRIPT>
+
+
+<SCRIPT LANGUAGE="vbscript">
+Const g_nEncodeOffset = 13
+Const g_nEndOfLineEncoding = 123
+Const g_nBeginningOfCharSet = 65
+Const g_nCharSetSize = 52
+Const g_nStartOfUpperSet = 90
+Const g_nSetDelta = 6
+
+
+Function DecodeChar(chIn)
+	Dim nOut
+	Dim nIn
+
+    nIn = Asc(chIn)
+
+	if 32 = nIn then
+		nOut = nIn
+	else
+        if nIn > g_nStartOfUpperSet then
+            nIn = nIn - g_nSetDelta
+        end if
+
+    	nOut = (nIn - g_nEncodeOffset)
+
+		if nOut < g_nBeginningOfCharSet then
+			nOut = (nOut + g_nCharSetSize)
+		end if
+
+        if nOut > g_nStartOfUpperSet then
+            nOut = nOut + g_nSetDelta
+        end if
+
+    end if
+
+	DecodeChar = Chr(nOut)
+end Function
+
+Function DecodeStr(strIn)
+	Dim strOut
+	strOut = ""
+
+	While 0 < Len(strIn)
+		if Asc(strIn) = g_nEndOfLineEncoding then
+			strOut = strOut & vbCrLf
+		else
+			strOut = strOut & DecodeChar(strIn)
+		end if
+
+		strIn = Right(strIn, Len(strIn) - 1)
+	Wend
+
+	DecodeStr = strOut
+end Function
+</SCRIPT>
+
+<STYLE>
+.DivName { 
+    position:absolute; width:200%; height:50px; left:-50%; top:0; font-family:Verdana,Arial; visibility:hidden; text-align : center;
+}
+body { 
+    border:none; margin:0; color:white; background: black;
+}
+</STYLE>
+</HEAD>
+
+<BODY onload="OnLoad()" scroll=no>
+
+<IMG ID=ELogo src="ierocks.gif" style="position:absolute; left: 0; top: 0; visibility:hidden">
+
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+<DIV ID=DivName CLASS=DivName>&nbsp</DIV>
+
+<DIV ID=DivHolder STYLE="display:none">&nbsp</DIV>
+
+</BODY>
+</HTML>
+

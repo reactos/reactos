@@ -1,0 +1,159 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1996-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   Empty Volume Cache Interfaces
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// emptyvc.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1996-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Empty Volume Cache Interfaces.")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+
+interface IEmptyVolumeCache;
+interface IEmptyVolumeCache2;
+
+cpp_quote("// IEmptyVolumeCache Flags")
+#pragma midl_echo("#define EVCF_HASSETTINGS             0x0001")
+#pragma midl_echo("#define EVCF_ENABLEBYDEFAULT         0x0002")
+#pragma midl_echo("#define EVCF_REMOVEFROMLIST          0x0004")
+#pragma midl_echo("#define EVCF_ENABLEBYDEFAULT_AUTO    0x0008")
+#pragma midl_echo("#define EVCF_DONTSHOWIFZERO          0x0010")
+#pragma midl_echo("#define EVCF_SETTINGSMODE            0x0020")
+#pragma midl_echo("#define EVCF_OUTOFDISKSPACE          0x0040")
+
+cpp_quote("")
+cpp_quote("// IEmptyVolumeCacheCallBack Flags")
+#pragma midl_echo("#define EVCCBF_LASTNOTIFICATION  0x0001")
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Interface Definitions")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1996-1998
+//
+//  Contents:    IEmptyVolumeCacheCallBack interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPEMPTYVOLUMECACHECALLBACK_DEFINED")
+cpp_quote("#define _LPEMPTYVOLUMECACHECALLBACK_DEFINED")
+[
+    object,
+    uuid(6E793361-73C6-11D0-8469-00AA00442901),
+    pointer_default(unique)
+]
+interface IEmptyVolumeCacheCallBack : IUnknown
+{
+    typedef [unique] IEmptyVolumeCacheCallBack* LPEMPTYVOLUMECACHECALLBACK;
+
+    HRESULT ScanProgress(
+        [in] DWORDLONG dwlSpaceUsed,
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pcwszStatus
+        );
+
+    HRESULT PurgeProgress(
+        [in] DWORDLONG dwlSpaceFreed,
+        [in] DWORDLONG dwlSpaceToFree,
+        [in] DWORD dwFlags,
+        [in] LPCWSTR pcwszStatus
+        );
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1996-1998
+//
+//  Contents:    IEmptyVolumeCache interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPEMPTYVOLUMECACHE_DEFINED")
+cpp_quote("#define _LPEMPTYVOLUMECACHE_DEFINED")
+[
+    object,
+    uuid(8FCE5227-04DA-11d1-A004-00805F8ABE06),
+    pointer_default(unique)
+]
+interface IEmptyVolumeCache : IUnknown
+{
+    typedef [unique] IEmptyVolumeCache* LPEMPTYVOLUMECACHE;
+
+    [local]
+    HRESULT Initialize(
+        [in] HKEY hkRegKey,
+        [in] LPCWSTR pcwszVolume,
+        [out] LPWSTR *ppwszDisplayName,
+        [out] LPWSTR *ppwszDescription,
+        [out] DWORD *pdwFlags
+        );
+
+    HRESULT GetSpaceUsed(
+        [out] DWORDLONG *pdwlSpaceUsed,
+        [in] IEmptyVolumeCacheCallBack *picb
+        );
+
+    HRESULT Purge(
+        [in] DWORDLONG dwlSpaceToFree,
+        [in] IEmptyVolumeCacheCallBack *picb
+        );
+
+    HRESULT ShowProperties(
+        [in] HWND hwnd
+        );
+
+    HRESULT Deactivate(
+        [out] DWORD *pdwFlags
+        );
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1996-1998
+//
+//  Contents:    IEmptyVolumeCache2 interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPEMPTYVOLUMECACHE2_DEFINED")
+cpp_quote("#define _LPEMPTYVOLUMECACHE2_DEFINED")
+[
+    object,
+    uuid(02b7e3ba-4db3-11d2-b2d9-00c04f8eec8c),
+    pointer_default(unique)
+]
+interface IEmptyVolumeCache2 : IEmptyVolumeCache
+{
+    typedef [unique] IEmptyVolumeCache2* LPEMPTYVOLUMECACHE2;
+
+    [local]
+    HRESULT InitializeEx(
+        [in] HKEY hkRegKey,
+        [in] LPCWSTR pcwszVolume,
+        [in] LPCWSTR pcwszKeyName,
+        [out] LPWSTR *ppwszDisplayName,
+        [out] LPWSTR *ppwszDescription,
+        [out] LPWSTR *ppwszBtnText,
+        [out] DWORD *pdwFlags
+        );
+}
+cpp_quote("#endif")

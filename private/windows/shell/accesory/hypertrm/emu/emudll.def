@@ -1,0 +1,51 @@
+;  File: D:\WACKER\emu\emudll.def (Created: 08-Dec-1993)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.21 $
+;  $Date: 1994/02/24 12:27:20 $
+;
+
+LIBRARY   EMUDLL
+
+CODE	  PRELOAD MOVEABLE DISCARDABLE
+DATA	  MULTIPLE
+
+EXPORTS
+	; emudll.c
+	EmuEntry@12
+
+	; emuhdl.c
+	@emuCreateHdl@4
+	@emuDestroyHdl@4
+	@emuLock@4
+	@emuUnlock@4
+	@emuGetTxtBuf@4
+	@emuGetAttrBuf@4
+	@emuIsEmuKey@8
+	@emuQueryClearAttr@8
+	@emuRemoteIn@8
+	@emuKbdIn@12
+	@emuComDone@4
+	@emuQueryCurPos@12
+	@emuTrackingNotify@4
+	@emuQueryPrintEchoHdl@4
+	@emuQueryRowsCols@12
+	@emuQueryCursorType@4
+	@emuQueryName@12
+	@emuInitializeHdl@4
+	@emuSaveHdl@4
+	@emuQueryEmulatorId@4
+	@emuQuerySettings@8
+	@emuSetSettings@8
+
+	; emu_load.c
+	@emuLoad@8
+
+	; emudlgs.c
+	@emuSettingsDlg@16
+    emuTTY_SettingsDlgProc@16
+    emuANSI_SettingsDlgProc@16
+    emuVT52_SettingsDlgProc@16
+    emuVT100_SettingsDlgProc@16

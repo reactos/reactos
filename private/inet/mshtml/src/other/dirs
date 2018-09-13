@@ -1,0 +1,9 @@
+# other
+DIRS = \
+    misc \
+    include \
+    proppage \
+    moniker \
+    htmldlg \
+    htmlapp \
+    hta 

@@ -1,0 +1,30 @@
+;  File: D:\WACKER\tdll\tdll.def (Created: 26-Nov-1993)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.91 $
+;  $Date: 1997/09/09 14:00:50 $
+;
+
+LIBRARY   HYPERTRM
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; tdll.c
+	InitInstance
+    MessageLoop
+
+	; pageext.c
+	DllCanUnloadNow PRIVATE
+	DllGetClassObject PRIVATE
+
+	; sesshdl.c
+	sessQueryTranslateHdl
+	sessQuerySysFileHdl
+
+	; sf.c
+	sfGetSessionItem
+	sfPutSessionItem

@@ -1,0 +1,179 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifdef APSTUDIO_INVOKED
+#include "afxres.h"
+#else // APSTUDIO_INVOKED
+#include <windows.h>
+#include <commctrl.h>
+#define IDC_STATIC -1
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#ifdef APSTUDIO_INVOKED\r\n"
+    "#include ""afxres.h""\r\n"
+    "#else // APSTUDIO_INVOKED\r\n"
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#define IDC_STATIC -1\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""app.rc2""\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SHARE_PROPERTIES DIALOG DISCARDABLE  0, 0, 227, 166
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Sharing"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "N&ot Shared",IDC_SHARE_NOTSHARED,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,12,6,70,10
+    GROUPBOX        "",-1,6,19,214,123
+    CONTROL         "S&hared As:",IDC_SHARE_SHAREDAS,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,12,19,49,10
+    LTEXT           "&Share Name:",IDC_SHARE_SHARENAME_TEXT,16,34,46,8
+    EDITTEXT        IDC_SHARE_SHARENAME,66,32,108,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SHARE_SHARENAME_COMBO,66,32,108,76,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Comment:",IDC_SHARE_COMMENT_TEXT,16,52,46,8
+    EDITTEXT        IDC_SHARE_COMMENT,66,50,146,12,ES_AUTOHSCROLL
+    GROUPBOX        "User Limit:",IDC_SHARE_LIMIT,16,67,108,45,WS_GROUP
+    CONTROL         "&Maximum Allowed",IDC_SHARE_MAXIMUM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,22,80,87,10
+    CONTROL         "Allo&w",IDC_SHARE_ALLOW,"Button",
+                    BS_AUTORADIOBUTTON,22,95,32,10
+    EDITTEXT        IDC_SHARE_ALLOW_VALUE,54,94,43,12,ES_MULTILINE |
+                    WS_GROUP | NOT WS_TABSTOP
+    CONTROL         "",IDC_SHARE_ALLOW_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,88,94,9,12
+    LTEXT           "Users",IDC_SHARE_USERS_TEXT,100,96,20,8
+    PUSHBUTTON      "&Permissions...",IDC_SHARE_PERMISSIONS,16,120,65,14
+    PUSHBUTTON      "&New Share...",IDC_SHARE_NEWSHARE,147,74,65,14
+    PUSHBUTTON      "&Remove Share",IDC_SHARE_REMOVE,147,95,65,14
+    PUSHBUTTON      "OK",IDOK,109,146,51,14
+    PUSHBUTTON      "Cancel",IDCANCEL,168,146,51,14
+END
+
+IDD_NEW_SHARE DIALOGEX 6, 18, 249, 83
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "New Share"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Share Name:",IDC_SHARE_SHARENAME_TEXT,6,8,46,8
+    EDITTEXT        IDC_SHARE_SHARENAME,56,6,125,12,ES_AUTOHSCROLL
+    LTEXT           "&Comment:",IDC_SHARE_COMMENT_TEXT,6,22,46,8
+    EDITTEXT        IDC_SHARE_COMMENT,56,20,125,12,ES_AUTOHSCROLL
+    GROUPBOX        "User Limit:",IDC_SHARE_LIMIT,6,37,108,42,WS_GROUP
+    CONTROL         "&Maximum Allowed",IDC_SHARE_MAXIMUM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,12,49,87,10
+    CONTROL         "Allo&w",IDC_SHARE_ALLOW,"Button",
+                    BS_AUTORADIOBUTTON,12,62,32,10
+    EDITTEXT        IDC_SHARE_ALLOW_VALUE,44,61,43,12,ES_MULTILINE |
+                    WS_GROUP | NOT WS_TABSTOP
+    CONTROL         "",IDC_SHARE_ALLOW_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,78,61,9,12
+    LTEXT           "Users",IDC_SHARE_USERS_TEXT,90,63,20,8
+    DEFPUSHBUTTON   "OK",IDOK,189,6,54,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,189,23,54,14
+    PUSHBUTTON      "&Permissions...",IDC_SHARE_PERMISSIONS,189,40,54,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_SHARE_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 221
+        VERTGUIDE, 6
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_MSG_NOT_FOUND   "Could not find message 0x%08lx in the application message file."
+    IDS_NET_MSG_NOT_FOUND   "Could not find message 0x%08lx in the network message file."
+    IDS_NO_NET_MSG          "Could not find network error messages."
+    IDS_MSGTITLE            "Sharing"
+    IDS_SHARING             "S&haring..."
+    IDS_MENUHELP            "Displays the properties for sharing the selected folder"
+    IDS_ACLEDIT_PERM_GEN_NO_ACCESS "No Access"
+    IDS_ACLEDIT_PERM_GEN_READ "Read"
+    IDS_ACLEDIT_PERM_GEN_MODIFY "Change"
+    IDS_ACLEDIT_PERM_GEN_ALL  "Full Control"
+    IDS_ACLEDIT_TITLE       "Access Through &Share"
+    IDS_HELPFILENAME        "ntshrui.hlp"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "app.rc2"
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

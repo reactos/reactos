@@ -1,0 +1,56 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+NOT_LEAN_AND_MEAN=1
+
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=plustab
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllMain
+INCLUDES=..\..\inc;
+
+C_DEFINES=-DWIN32 -DWINNT -DW3 -DWINVER=0x0500
+
+SOURCES= plustab.rc     \
+         clssfact.cpp   \
+         plustab.cpp    \
+         propsext.cpp   \
+         regutils.cpp
+
+
+
+UMTYPE = windows
+
+EXPECTED_WINVER=4.0
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\UUID.LIB     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib
+
+!IF $(ALPHA)
+USE_NTDLL=1
+!ELSE
+USE_NOLIBS=1
+!ENDIF
+
+DLLBASE=0x1000000
+
+PRECOMPILED_INCLUDE=precomp.hxx
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

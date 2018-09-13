@@ -1,0 +1,72 @@
+LIBRARY         USERENV
+
+EXPORTS
+        LoadUserProfileA
+        LoadUserProfileW
+        UnloadUserProfile
+        GetProfilesDirectoryA
+        GetProfilesDirectoryW
+        GetDefaultUserProfileDirectoryA
+        GetDefaultUserProfileDirectoryW
+        GetAllUsersProfileDirectoryA
+        GetAllUsersProfileDirectoryW
+        GetUserProfileDirectoryA
+        GetUserProfileDirectoryW
+        CreateEnvironmentBlock
+        DestroyEnvironmentBlock
+        ExpandEnvironmentStringsForUserA
+        ExpandEnvironmentStringsForUserW
+        RefreshPolicy
+        EnterCriticalPolicySection
+        LeaveCriticalPolicySection
+        GetGPOListA
+        GetGPOListW
+        FreeGPOListA
+        FreeGPOListW
+        RegisterGPNotification
+        UnregisterGPNotification
+        ProcessGroupPolicyCompleted
+        GetProfileType
+        GetAppliedGPOListA
+        GetAppliedGPOListW
+        DeleteProfileW
+        DeleteProfileA
+
+
+
+;;=========================================================================
+;; Internal API's
+;;=========================================================================
+
+        InitializeProfiles           @100    NONAME ;Internal
+        CreateGroupA                 @101    NONAME ;Internal
+        CreateGroupW                 @102    NONAME ;Internal
+        DeleteGroupA                 @103    NONAME ;Internal
+        DeleteGroupW                 @104    NONAME ;Internal
+        AddItemA                     @105    NONAME ;Internal
+        AddItemW                     @106    NONAME ;Internal
+        DeleteItemA                  @107    NONAME ;Internal
+        DeleteItemW                  @108    NONAME ;Internal
+        CreateUserProfileA           @109    NONAME ;Internal
+        CreateUserProfileW           @110    NONAME ;Internal
+        CopyProfileDirectoryA        @111    NONAME ;Internal
+        CopyProfileDirectoryW        @112    NONAME ;Internal
+        AddDesktopItemA              @113    NONAME ;Internal
+        AddDesktopItemW              @114    NONAME ;Internal
+        DeleteDesktopItemA           @115    NONAME ;Internal
+        DeleteDesktopItemW           @116    NONAME ;Internal
+        ApplyGroupPolicy             @117    NONAME ;Internal
+        DetermineProfilesLocation    @118    NONAME ;Internal
+        CreateLinkFileA              @119    NONAME ;Internal
+        CreateLinkFileW              @120    NONAME ;Internal
+        DeleteLinkFileA              @121    NONAME ;Internal
+        DeleteLinkFileW              @122    NONAME ;Internal
+        CopyProfileDirectoryExA      @123    NONAME ;Internal
+        CopyProfileDirectoryExW      @124    NONAME ;Internal
+        GetSystemTempDirectoryA      @125    NONAME ;Internal
+        GetSystemTempDirectoryW      @126    NONAME ;Internal
+        MigrateNT4ToNT5              @127    NONAME ;Internal
+        ResetUserSpecialFolderPaths  @128    NONAME ;Internal
+        ApplySystemPolicyA           @129    NONAME ;Internal
+        ApplySystemPolicyW           @130    NONAME ;Internal
+        ShutdownGPOProcessing        @131    NONAME ;Internal

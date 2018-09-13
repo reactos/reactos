@@ -1,0 +1,33 @@
+/*++ BUILD Version: 0001
+ *
+ *  WOW v1.0
+ *
+ *  Copyright (c) 1991, Microsoft Corporation
+ *
+ *  WKGLOBAL.C
+ *  WOW32 16-bit Kernel API support
+ *
+ *  History:
+ *  Created 07-Mar-1991 by Jeff Parsons (jeffpar)
+--*/
+
+
+
+ULONG FASTCALL WK32GlobalAlloc(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalCompact(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalFix(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalFlags(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalFree(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalHandle(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalLRUNewest(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalLRUOldest(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalLock(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalNotify(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalPageLock(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalPageUnlock(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalReAlloc(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalSize(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalUnWire(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalUnfix(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalUnlock(PVDMFRAME pFrame);
+ULONG FASTCALL WK32GlobalWire(PVDMFRAME pFrame);

@@ -1,0 +1,28 @@
+#include <windows.h>
+#include "strings.h"
+
+iw ICON idlewild.ico
+
+STRINGTABLE PRELOAD
+BEGIN
+    1  "Default Screen Saver"
+
+ idsAppName,      "Default Screen Saver"
+ idsNoConfigure,  "This screen saver has no options that you can set."
+END
+
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Default Screen Saver"
+#define VER_INTERNALNAME_STR        "scrnsave\0"
+
+#include "common.ver"

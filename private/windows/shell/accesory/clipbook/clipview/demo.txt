@@ -1,0 +1,58 @@
+Making Clipbook Work
+
+Do this:
+
+1. Copy all of the files into the %_NTROOT%system32
+   directory.
+
+2. Log on as an administrator.
+
+3. Run NINSTALL.EXE. It should give you about four "things
+   are OK" message boxes.
+
+4. Create a common program group named "Startup" if there
+   isn't already one.
+
+5. Create an icon in the "Startup" group with the command
+   line     NDDEAGNT.EXE    .
+
+This process installs NetDDE and places the Clipbook files
+where they need to be.
+
+Next,
+
+1. Run Clipbook once and immediately exit.
+
+2. Run Regedit.
+
+3. Under the key HKEY_CURRENT_USER, "Software\Description\
+   Microsoft\ClipBook Viewer", create a new value named
+   "EnableShare." This value has type REG_DWORD, and should
+   be given a non-zero value.
+
+This enables the current user to share Clipbook pages
+on the network.
+
+Known Problems
+
+If you exit Clipbook with pages marked as "shared," log off,
+log back on again, and run Clipbook, the pages will still be
+marked as shared, but they won't be available to other
+computers.
+
+The toolbar buttons don't activate properly the first
+time you select an item in the list of Clipbook pages.
+To activate them, select an item and hit the <Del> key.
+
+DON'T GO INTO "PREVIEW" OR "FULL PAGE" VIEW, YOU WILL
+CRASH THE MACHINE!!! The two rightmost tools on the toolbar
+do this, as do the selections "Previews" and "Full Page"
+on the View menu. Don't, don't, DON'T.
+
+NetDDE transfers data rather slowly at the moment, and
+Clipbook times out of a transaction if it isn't done in
+thirty seconds. Avoid transferring large data items- big
+bitmaps are the main thing to avoid. Try not to transfer
+more than about 40-50k on a page.
+
+

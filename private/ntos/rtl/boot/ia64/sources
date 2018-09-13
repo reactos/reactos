@@ -1,0 +1,7 @@
+IA64_SOURCES=..\IA64\debugstb.s   \
+             ..\IA64\largeint.s   \
+             ..\IA64\chksum.s     \
+             ..\IA64\chkstk.s     \
+             ..\IA64\fillmem.s    \
+             ..\IA64\largeic.c    \
+             ..\IA64\miscc.c

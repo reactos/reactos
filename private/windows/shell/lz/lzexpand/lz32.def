@@ -1,0 +1,17 @@
+LIBRARY LZ32
+
+EXPORTS
+            LZCopy
+            LZOpenFileA
+            LZOpenFileW
+            LZInit
+            LZSeek
+            LZRead
+            LZClose
+            LZStart
+            CopyLZFile
+            LZDone
+            GetExpandedNameA
+            GetExpandedNameW
+            LZCreateFileW
+            LZCloseFile

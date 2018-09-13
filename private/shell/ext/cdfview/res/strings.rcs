@@ -1,0 +1,64 @@
+//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
+//
+// strings.rcs 
+//
+//   String resources for cdfview.dll.
+//
+//   History:
+//
+//       3/19/97  edwardp   Created.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+//
+// Explorer column names for cdf items.
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLUMN_NAME         "Name"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_NO_CACHE_ENTRY "Couldn't find a cache entry for '%1'!"
+    IDS_ERROR_DLG_TEXT       "Failed to open or parse the channel definition format file"
+    IDS_ERROR_DLG_TITLE      "Channel Error"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INFO_MUST_CONNECT   "This channel is unavailable or you are not connected to the Internet.  You must be connected to the Internet to add an Active Channel."
+    IDS_INFO_DLG_TITLE      "Microsoft Internet Explorer"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CHANNEL_FOLDER      "Channels"
+    IDS_SOFTWAREUPDATE_FOLDER   "Software Updates"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SHARING             "S&haring..."
+    IDS_RENAME              "Rena&me"
+    IDS_SENDTO              "Send &To"
+    IDS_PROPERTIES          "P&roperties"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OVERWRITE_DLG_TEXT  "This site is already configured for viewing offline.  Would you like to overwrite the existing settings?"
+    IDS_OVERWRITE_DLG_TITLE "Active Desktop Item Offline Settings"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BROWSERONLY_DLG_TEXT  "To use Active Desktop items you need an updated version of Windows."
+    IDS_BROWSERONLY_DLG_TITLE "Internet Explorer"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VALUE_UNKNOWN   "Unknown"
+END

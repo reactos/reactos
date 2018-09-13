@@ -1,0 +1,13 @@
+#include <ver.h>
+#include <verinfo.h>
+
+#ifndef WIN32
+#define VERSIONNAME               "mciavi.drv\0"
+#else
+#define VERSIONNAME               "mciavi32.dll\0"
+#endif
+#define VERSIONDESCRIPTION        "MCI driver for AVI\0"
+#define VERSIONTYPE               VFT_DRV
+#define VERSIONSUBTYPE            VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>

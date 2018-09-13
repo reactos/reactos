@@ -1,0 +1,634 @@
+LIBRARY         SHELL32
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Windows Shell Library'
+
+SECTIONS
+#ifndef WINNT
+     SHARED      READ WRITE SHARED
+#endif
+
+;;
+;; this macro helps us use loader forwarders for TCHAR functions 
+;; on WINNT it uses a forwarder, but on win9x lets the linker make a stub (cant use forwarders b/c of bug in win9x ldr)
+;;
+#ifdef WINNT
+#define ForwardTcharFnToOtherDll(_OtherDllName, _OtherFunctionName, _ordinal, _NONAME, _PRIVATE) \
+        _OtherFunctionName = _OtherDllName._OtherFunctionName##W  _ordinal _NONAME _PRIVATE
+#else
+#define ForwardTcharFnToOtherDll(_OtherDllName, _OtherFunctionName, _ordinal, _NONAME, _PRIVATE) \
+        _OtherFunctionName = _OtherFunctionName##A  _ordinal _NONAME _PRIVATE
+#endif // WINNT
+
+
+EXPORTS
+;;
+;; !!!  READ THIS  !!!
+;;
+;; private exports use NONAME and define an ordinal
+;; public APIs should not use an ordinal
+;; 
+;; what ordinals are available.  The fewer the gaps, the smaller
+;; the table.  Keep this list up to date.
+
+        DragAcceptFiles
+        DragFinish
+        DragQueryPoint
+        DragQueryFileA
+#ifndef WINNT
+        DragQueryFile=DragQueryFileA         ;public - msshrui.dll relies on this!
+#endif
+        ; PaintShop Pro needs this
+        DragQueryFile=DragQueryFileA
+
+        ShellExecuteA
+        FindExecutableA
+        ShellAboutA
+        FreeIconList
+        DoEnvironmentSubstA
+        ExtractIconA
+
+        ExtractAssociatedIconA
+
+        SheGetCurDrive
+        SheSetCurDrive
+        DuplicateIcon
+        CheckEscapesA
+        CheckEscapesW
+        DragQueryFileAorW
+
+        SheChangeDirA
+        SheFullPathA
+        SheGetDirA
+        RealShellExecuteA
+        RealShellExecuteExA
+        RegenerateUserEnvironment
+
+        SheChangeDirW
+        SheFullPathW
+        SheGetDirW
+        RealShellExecuteW
+        RealShellExecuteExW
+        ShellExecuteW
+        FindExecutableW
+        ShellAboutW
+        ExtractAssociatedIconW
+        ExtractAssociatedIconExA
+        ExtractAssociatedIconExW
+        ExtractIconW
+        ExtractIconResInfoA
+        ExtractIconResInfoW
+        DragQueryFileW
+        InternalExtractIconListA
+        InternalExtractIconListW
+        DoEnvironmentSubstW
+        ExtractVersionResource16W
+
+        SheGetDirExW
+        SheChangeDirExW
+        SheGetPathOffsetW
+
+#ifdef WINNT
+        ;
+        ; Forward all of these old string functions over to COMCTL32.DLL
+        ;
+        StrChrA
+        StrRChrA
+        StrChrIA
+        StrRChrIA
+        StrCmpNA
+        StrCmpNIA
+        StrStrA
+        StrStrIA
+        StrRStrIA
+
+        StrChrW
+        StrRChrW
+        StrChrIW
+        StrRChrIW
+        StrCmpNW
+        StrCmpNIW
+        StrStrW
+        StrStrIW
+        StrRStrIW
+
+        ;
+        ; These are NOT in comctl32. We exported them from shell32, so we keep doing so
+        ; god only knows who uses them...
+        ;
+        StrCpyNA    = Shell32_StrCpyNA      ; need wrapper since this is slightly different (return # bytes copied, not cch)
+        StrCpyNW    = Shell32_StrCpyNW      ; need wrapper since this is slightly different (return # bytes copied, not cch)
+        StrNCmpA
+        StrNCmpW
+        StrNCmpIA
+        StrNCmpIW
+        StrNCpyA
+        StrNCpyW
+        StrRStrA
+        StrRStrW
+#endif
+
+        SheChangeDirExA
+
+        SheRemoveQuotesA
+        SheRemoveQuotesW
+
+        SheConvertPathW
+        SheShortenPathA
+        SheShortenPathW
+
+        CommandLineToArgvW
+        FindExeDlgProc
+        ShellHookProc
+
+#ifdef WINNT
+        WOWShellExecute
+#endif
+        SHLoadInProc
+        SHGetInstanceExplorer
+        SHAddToRecentDocs
+
+        SHGetDataFromIDListA
+        SHGetDataFromIDListW
+
+        SHGetMalloc
+        SHGetDesktopFolder
+        SHChangeNotify
+
+        SHGetSpecialFolderLocation
+
+        ExtractIconEx                   = ExtractIconExA
+        SHGetFileInfo                   = SHGetFileInfoA
+        ShellExecuteEx                  = ShellExecuteExA
+        Shell_NotifyIcon                = Shell_NotifyIconA
+        SHGetPathFromIDList             = SHGetPathFromIDListA
+        SHBrowseForFolder               = SHBrowseForFolderA
+        SHFileOperation                 = SHFileOperationA
+
+        SHInvokePrinterCommandA
+        SHInvokePrinterCommandW
+
+        SHFreeNameMappings
+        SHAppBarMessage
+        SHFormatDrive
+
+        SHGetSettings
+
+        SHGetDiskFreeSpaceA             = SHGetDiskFreeSpaceExA
+        SHGetDiskFreeSpaceExA
+        SHGetDiskFreeSpaceExW
+
+        SHExtractIconsW
+
+        SHGetSpecialFolderPathA
+        SHGetSpecialFolderPathW
+        SHGetFolderPathA
+        SHGetFolderPathW
+        SHGetFolderLocation
+
+        ; X86 emulation mode on Alpha requires this!
+        SHUpdateRecycleBinIcon
+
+        ExtractIconExA
+        ExtractIconExW
+        SHGetFileInfoA
+        SHGetFileInfoW
+        SHGetPathFromIDListA
+        SHGetPathFromIDListW
+        SHBrowseForFolderA
+        SHBrowseForFolderW
+        ShellExecuteExA
+        ShellExecuteExW
+        Shell_NotifyIconA
+        Shell_NotifyIconW
+        SHFileOperationA
+        SHFileOperationW
+
+        SHQueryRecycleBinA
+        SHQueryRecycleBinW
+        SHEmptyRecycleBinA
+        SHEmptyRecycleBinW
+#ifdef WINNT
+        SHCreateProcessAsUserW
+#endif
+        SHBindToParent
+        
+        ; Exports to be GetProcAddressed.
+        ; marked ULTRAPRIVATE so then dont end up in SHELL32.LIB
+
+        DllGetClassObject                                       ULTRAPRIVATE
+        DllCanUnloadNow                                         ULTRAPRIVATE
+        DllGetVersion   = CCDllGetVersion                       ULTRAPRIVATE
+        DllInstall                                              ULTRAPRIVATE
+        DllRegisterServer                                       ULTRAPRIVATE
+        DllUnregisterServer                                     ULTRAPRIVATE
+
+        Control_RunDLL                                          PRIVATE
+        Control_RunDLLA = Control_RunDLL                        PRIVATE
+        Control_RunDLLW                                         PRIVATE
+#ifdef WINNT
+        Control_RunDLLAsUserW                                   PRIVATE
+#endif
+        Control_FillCache_RunDLL                                PRIVATE
+        Control_FillCache_RunDLLA = Control_FillCache_RunDLL    PRIVATE
+        Control_FillCache_RunDLLW                               PRIVATE
+        OpenAs_RunDLL                                           PRIVATE
+        OpenAs_RunDLLA = OpenAs_RunDLL                          PRIVATE
+        OpenAs_RunDLLW                                          PRIVATE
+        PrintersGetCommand_RunDLL                               PRIVATE
+        PrintersGetCommand_RunDLLA = PrintersGetCommand_RunDLL  PRIVATE
+        PrintersGetCommand_RunDLLW                              PRIVATE
+        SHHelpShortcuts_RunDLL                                  PRIVATE
+        SHHelpShortcuts_RunDLLA = SHHelpShortcuts_RunDLL        PRIVATE
+        SHHelpShortcuts_RunDLLW                                 PRIVATE
+        ShellExec_RunDLLA                                       PRIVATE
+        ShellExec_RunDLLW                                       PRIVATE
+        ShellExec_RunDLL = ShellExec_RunDLLA                    PRIVATE
+
+        ; Make sure to keep SHChangeNotifyRegisterORD updated in shlobj.h
+        SHChangeNotifyRegister          @2   NONAME     PRIVATE
+        SHDefExtractIconA               @3   NONAME     PRIVATE
+        ; Make sure to keep SHChangeNotifyDeregisterORD updated in shlobj.h
+        SHChangeNotifyDeregister        @4   NONAME     PRIVATE
+        SHChangeNotifyUpdateEntryList   @5   NONAME     PRIVATE
+        SHDefExtractIconW               @6   NONAME     PRIVATE
+        SHLookupIconIndexA              @7   NONAME     PRIVATE
+        SHLookupIconIndexW              @8   NONAME     PRIVATE
+        PifMgr_OpenProperties           @9   NONAME     PRIVATE
+        PifMgr_GetProperties            @10  NONAME     PRIVATE
+        PifMgr_SetProperties            @11  NONAME     PRIVATE
+        SHStartNetConnectionDialogA     @12  NONAME     PRIVATE
+        PifMgr_CloseProperties          @13  NONAME     PRIVATE
+        SHStartNetConnectionDialogW     @14  NONAME     PRIVATE
+        ILGetDisplayName                @15  NONAME     PRIVATE
+        ILFindLastID                    @16  NONAME     PRIVATE
+        ILRemoveLastID                  @17  NONAME     PRIVATE
+        ILClone                         @18  NONAME     PRIVATE
+        ILCloneFirst                    @19  NONAME     PRIVATE
+        ILGlobalClone                   @20  NONAME     PRIVATE
+        ILIsEqual                       @21  NONAME     PRIVATE
+        DAD_DragEnterEx2                @22  NONAME     PRIVATE
+        ILIsParent                      @23  NONAME     PRIVATE
+        ILFindChild                     @24  NONAME     PRIVATE
+        ILCombine                       @25  NONAME     PRIVATE
+        ILLoadFromStream                @26  NONAME     PRIVATE
+        ILSaveToStream                  @27  NONAME     PRIVATE
+        SHILCreateFromPath              @28  NONAME     PRIVATE
+        PathIsRoot                      @29  NONAME     PRIVATE
+        ForwardTcharFnToOtherDll(shlwapi, PathBuildRoot, @30, NONAME, PRIVATE)
+        ; Ordinal #define'd in SHSEMIP.H
+        PathFindExtension               @31  NONAME     PRIVATE
+        PathAddBackslash                @32  NONAME     PRIVATE
+        ; Ordinal #define'd in SHSEMIP.H
+        PathRemoveBlanks                @33  NONAME     PRIVATE
+        ; Ordinal #define'd in SHSEMIP.H
+        PathFindFileName                @34  NONAME     PRIVATE
+        PathRemoveFileSpec              @35  NONAME     PRIVATE
+        PathAppend                      @36 NONAME PRIVATE
+        ForwardTcharFnToOtherDll(shlwapi, PathCombine, @37, NONAME, PRIVATE)
+        PathStripPath                   @38  NONAME     PRIVATE
+        ForwardTcharFnToOtherDll(shlwapi, PathIsUNC, @39, NONAME, PRIVATE)
+        ForwardTcharFnToOtherDll(shlwapi, PathIsRelative, @40, NONAME, PRIVATE)
+        IsLFNDriveA                     @41  NONAME     PRIVATE
+        IsLFNDriveW                     @42  NONAME     PRIVATE
+        PathIsExe                       @43  NONAME     PRIVATE
+        PathFileExists                  @45  NONAME PRIVATE
+        PathMatchSpec                   @46 NONAME      PRIVATE
+        PathMakeUniqueName              @47 NONAME      PRIVATE
+        PathSetDlgItemPath              @48 NONAME      PRIVATE
+        PathQualify                     @49 NONAME      PRIVATE
+        PathStripToRoot                 @50 NONAME      PRIVATE
+        PathResolve                     @51 NONAME      PRIVATE
+        PathGetArgs                     @52 NONAME      PRIVATE
+        IsSuspendAllowed                @53 NONAME      PRIVATE
+        LogoffWindowsDialog             @54 NONAME      PRIVATE
+        PathQuoteSpaces                 @55 NONAME      PRIVATE
+        PathUnquoteSpaces               @56 NONAME      PRIVATE
+        ForwardTcharFnToOtherDll(shlwapi, PathGetDriveNumber, @57, NONAME, PRIVATE)
+        ParseField                      @58 NONAME      PRIVATE
+        RestartDialog                   @59 NONAME      PRIVATE
+        ExitWindowsDialog               @60 NONAME      PRIVATE
+        RunFileDlg                      @61 NONAME      PRIVATE
+        PickIconDlg                     @62 NONAME      PRIVATE
+        GetFileNameFromBrowse           @63 NONAME      PRIVATE
+        DriveType                       @64 NONAME      PRIVATE
+        InvalidateDriveType             @65 NONAME      PRIVATE
+        IsNetDrive                      @66 NONAME      PRIVATE
+        Shell_MergeMenus                @67 NONAME      PRIVATE
+        SHGetSetSettings                @68 NONAME      PRIVATE
+        SHGetNetResource                @69 NONAME      PRIVATE
+        SHCreateDefClassObject          @70 NONAME      PRIVATE
+        Shell_GetImageLists             @71 NONAME      PRIVATE
+        Shell_GetCachedImageIndex       @72 NONAME      PRIVATE
+        SHShellFolderView_Message       @73 NONAME      PRIVATE
+        SHCreateStdEnumFmtEtc           @74 NONAME      PRIVATE
+        PathYetAnotherMakeUniqueName    @75 NONAME      PRIVATE
+        DragQueryInfo                   @76 NONAME      PRIVATE
+        SHMapPIDLToSystemImageListIndex @77 NONAME      PRIVATE
+        OleStrToStrN                    @78 NONAME      PRIVATE
+        StrToOleStrN                    @79 NONAME      PRIVATE
+        SHOpenPropSheetW                @80 NONAME      PRIVATE
+#ifndef WINNT
+        SHAddPages16                    @81 NONAME      PRIVATE
+#endif
+        DDECreatePostNotify             @82 NONAME      PRIVATE
+        CIDLData_CreateFromIDArray      @83 NONAME      PRIVATE
+        SHIsBadInterfacePtr             @84 NONAME      PRIVATE
+        OpenRegStream                   @85 NONAME      PRIVATE
+        SHRegisterDragDrop              @86 NONAME      PRIVATE
+        SHRevokeDragDrop                @87 NONAME      PRIVATE
+        SHDoDragDrop                    @88 NONAME      PRIVATE
+        SHCloneSpecialIDList            @89 NONAME      PRIVATE
+        SHFindFiles                     @90 NONAME      PRIVATE
+        SHFindComputer                  @91 NONAME      PRIVATE
+        PathGetShortPath                @92 NONAME      PRIVATE
+        Win32CreateDirectory            @93 NONAME      PRIVATE
+        Win32RemoveDirectory            @94 NONAME      PRIVATE
+        SHLogILFromFSIL                 @95 NONAME      PRIVATE
+        StrRetToStrN                    @96 NONAME      PRIVATE
+        SHWaitForFileToOpen             @97 NONAME      PRIVATE
+        SHGetRealIDL                    @98 NONAME      PRIVATE
+        SetAppStartingCursor            @99 NONAME      PRIVATE
+        SHRestricted                    @100 NONAME     PRIVATE
+        FileMenu_HandleNotify              @101 NONAME  PRIVATE
+        SHCoCreateInstance                 @102 NONAME  PRIVATE
+        SignalFileOpen                     @103 NONAME  PRIVATE
+        FileMenu_DeleteAllItems            @104 NONAME  PRIVATE
+        FileMenu_DrawItem                  @105 NONAME  PRIVATE
+        FileMenu_FindSubMenuByPidl         @106 NONAME  PRIVATE
+        FileMenu_GetLastSelectedItemPidls  @107 NONAME  PRIVATE
+        FileMenu_HandleMenuChar            @108 NONAME  PRIVATE
+        FileMenu_InitMenuPopup             @109 NONAME  PRIVATE
+        FileMenu_ComposeA                  @110 NONAME  PRIVATE
+        FileMenu_Invalidate                @111 NONAME  PRIVATE
+        FileMenu_MeasureItem               @112 NONAME  PRIVATE
+        FileMenu_ComposeW                  @113 NONAME  PRIVATE
+        FileMenu_Create                    @114 NONAME  PRIVATE
+        FileMenu_AppendItem                @115 NONAME  PRIVATE
+        FileMenu_TrackPopupMenuEx          @116 NONAME  PRIVATE
+        FileMenu_DeleteItemByCmd           @117 NONAME  PRIVATE
+        FileMenu_Destroy                   @118 NONAME  PRIVATE
+#ifdef WINNT
+        IsLFNDrive = IsLFNDriveW           @119 NONAME  PRIVATE     ; old TCHAR export needs to be maintaied for compat
+#else
+        IsLFNDrive = IsLFNDriveA           @119 NONAME  PRIVATE     ; old TCHAR export needs to be maintaied for compat
+#endif
+        FileMenu_AbortInitMenu             @120 NONAME  PRIVATE
+        SHFlushClipboard                   @121 NONAME  PRIVATE
+        RunDll_CallEntry16                 @122 NONAME  PRIVATE
+        SHFreeUnusedLibraries              @123 NONAME  PRIVATE
+        FileMenu_AppendFilesForPidl        @124 NONAME  PRIVATE
+
+        SHOutOfMemoryMessageBox            @126 NONAME  PRIVATE
+        SHWinHelp                          @127 NONAME  PRIVATE
+        SHDllGetClassObject = DllGetClassObject @128 NONAME PRIVATE
+
+        DAD_AutoScroll                          @129 NONAME PRIVATE
+        DAD_DragEnter                           @130 NONAME PRIVATE
+        DAD_DragEnterEx                         @131 NONAME PRIVATE
+        DAD_DragLeave                           @132 NONAME PRIVATE
+
+        DAD_DragMove                            @134 NONAME PRIVATE
+
+        DAD_SetDragImage                        @136 NONAME PRIVATE
+        DAD_ShowDragImage                       @137 NONAME PRIVATE
+
+        Desktop_UpdateBriefcaseOnEvent          @139 NONAME PRIVATE
+        FileMenu_DeleteItemByIndex              @140 NONAME PRIVATE
+        FileMenu_DeleteMenuItemByFirstID        @141 NONAME PRIVATE
+        FileMenu_DeleteSeparator                @142 NONAME PRIVATE
+        FileMenu_EnableItemByCmd                @143 NONAME PRIVATE
+        FileMenu_GetItemExtent                  @144 NONAME PRIVATE
+        PathFindOnPath                          @145 NONAME PRIVATE
+        RLBuildListOfPaths                      @146 NONAME PRIVATE
+        SHCLSIDFromString                       @147 NONAME PRIVATE
+
+        SHFind_InitMenuPopup                    @149 NONAME PRIVATE
+
+        SHLoadOLE                               @151 NONAME PRIVATE
+        ILGetSize                               @152 NONAME PRIVATE
+        ILGetNext                               @153 NONAME PRIVATE
+        ILAppendID                              @154 NONAME PRIVATE
+        ILFree                                  @155 NONAME PRIVATE
+        ILGlobalFree                            @156 NONAME PRIVATE
+#ifdef WINNT
+        ILCreateFromPath = ILCreateFromPathW    @157 NONAME PRIVATE
+#else
+        ILCreateFromPath = ILCreateFromPathA    @157 NONAME PRIVATE
+#endif
+        ; Ordinal #define'd in SHSEMIP.H
+        PathGetExtension                        @158 NONAME PRIVATE
+        PathIsDirectory                         @159 NONAME PRIVATE
+        SHNetConnectionDialog                   @160 NONAME PRIVATE
+        SHRunControlPanel                       @161 NONAME PRIVATE
+        SHSimpleIDListFromPath                  @162 NONAME PRIVATE
+        StrToOleStr                             @163 NONAME PRIVATE
+        Win32DeleteFile                         @164 NONAME PRIVATE
+        SHCreateDirectory                       @165 NONAME PRIVATE
+        CallCPLEntry16                          @166 NONAME PRIVATE
+
+        SHAddFromPropSheetExtArray              @167 NONAME PRIVATE
+        SHCreatePropSheetExtArray               @168 NONAME PRIVATE
+        SHDestroyPropSheetExtArray              @169 NONAME PRIVATE
+        SHReplaceFromPropSheetExtArray          @170 NONAME PRIVATE
+        PathCleanupSpec                         @171 NONAME PRIVATE
+        SHCreateLinks                           @172 NONAME PRIVATE
+        ; Make sure to keep SHValidateUNCORD updated in shellp.h
+        SHValidateUNC                           @173 NONAME PRIVATE
+        SHCreateShellFolderViewEx               @174 NONAME PRIVATE
+#ifdef WINNT
+        SHGetSpecialFolderPath = SHGetSpecialFolderPathW  @175 NONAME PRIVATE
+#else
+        SHGetSpecialFolderPath = SHGetSpecialFolderPathA  @175 NONAME PRIVATE
+#endif
+        SHSetInstanceExplorer                   @176 NONAME PRIVATE
+        DAD_SetDragImageFromListView            @177 NONAME PRIVATE
+        SHObjectProperties                      @178 NONAME PRIVATE
+
+        ; SHGetNewLinkInfo=SHGetNewLinkInfoA was internal on Win95, 
+        ; but was exported by name NT4. keep the ordianls the same 
+        ; but export by name now since these are documented APIs
+        SHGetNewLinkInfoA                       @179
+        SHGetNewLinkInfoW                       @180
+        SHGetNewLinkInfo = SHGetNewLinkInfoA  ;Internal
+
+        RegisterShellHook                       @181 NONAME PRIVATE
+
+        ; Only the TCHAR version of ShellMessageBox existed on
+        ; Win95 as export 183.  A/W versions were added in Nashville
+        ; and NT SUR.
+        ShellMessageBoxW = ShellMessageBoxWrapW @182 NONAME PRIVATE ; can't use forwarder since shlwapi.ShellMessageBoxWrapW is exported by ordinal only
+        ShellMessageBoxA                        @183 NONAME PRIVATE
+        ArrangeWindows                          @184 NONAME PRIVATE
+        SHHandleDiskFull                        @185 NONAME PRIVATE
+        ILGetDisplayNameEx                      @186 NONAME PRIVATE
+        ILGetPseudoNameW                        @187 NONAME PRIVATE
+        ShellDDEInit                            @188 NONAME PRIVATE
+        ILCreateFromPathA                       @189 NONAME PRIVATE
+        ILCreateFromPathW                       @190 NONAME PRIVATE
+        SHUpdateImageA                          @191 NONAME PRIVATE
+        SHUpdateImageW                          @192 NONAME PRIVATE
+        SHHandleUpdateImage                     @193 NONAME PRIVATE
+        SHCreatePropSheetExtArrayEx             @194 NONAME PRIVATE
+        SHFree                                  @195 NONAME PRIVATE
+        SHAlloc                                 @196 NONAME PRIVATE
+        SHGlobalDefect                          @197 NONAME PRIVATE
+        SHAbortInvokeCommand                    @198 NONAME PRIVATE
+#ifndef WINNT
+        SHExitWindowsEx                         @199        PRIVATE
+#endif
+        ; For explorer/shdocvw to create the desktop
+        SHCreateDesktop                         @200 NONAME PRIVATE
+        SHDesktopMessageLoop                    @201 NONAME PRIVATE
+        DDEHandleViewFolderNotify               @202 NONAME PRIVATE
+#ifdef WINNT
+        // PRINTQ
+        AddCommasW                              @203 NONAME PRIVATE
+        ShortSizeFormatW                        @204 NONAME PRIVATE
+        Printer_LoadIconsW                      @205 NONAME PRIVATE
+        // enable NT4's console.cpl to be able to read/write link files
+        // NOTE: NT5's console.cpl uses IShellLinkDataSection
+        Link_AddExtraDataSection                @206 NONAME PRIVATE
+        Link_ReadExtraDataSection               @207 NONAME PRIVATE
+        Link_RemoveExtraDataSection             @208 NONAME PRIVATE
+        Int64ToString                           @209 NONAME PRIVATE
+        LargeIntegerToString                    @210 NONAME PRIVATE
+        Printers_GetPidl                        @211 NONAME PRIVATE
+        Printer_AddPrinterPropPages             @212 NONAME PRIVATE
+        Printers_RegisterWindowW                @213 NONAME PRIVATE
+        Printers_UnregisterWindow               @214 NONAME PRIVATE
+#endif
+        SHStartNetConnectionDialog = SHStartNetConnectionDialogW @215 NONAME PRIVATE
+
+        FileMenu_ProcessCommand                 @217 NONAME PRIVATE
+        FileMenu_IsFileMenu                     @216 NONAME PRIVATE
+        FileMenu_InsertItem                     @218 NONAME PRIVATE
+        FileMenu_InsertSeparator                @219 NONAME PRIVATE
+        FileMenu_GetPidl                        @220 NONAME PRIVATE
+        FileMenu_EditMode                       @221 NONAME PRIVATE
+        FileMenu_HandleMenuSelect               @222 NONAME PRIVATE
+        FileMenu_IsUnexpanded                   @223 NONAME PRIVATE
+        FileMenu_DelayedInvalidate              @224 NONAME PRIVATE
+        FileMenu_IsDelayedInvalid               @225 NONAME PRIVATE
+        FileMenu_CreateFromMenu                 @227 NONAME PRIVATE
+
+        FirstUserLogon                          @230 NONAME PRIVATE
+
+        SHSetFolderPathA                        @231 NONAME PRIVATE
+        SHSetFolderPathW                        @232 NONAME PRIVATE
+
+        PathIsSlowW                             @239 NONAME PRIVATE
+        PathIsSlowA                             @240 NONAME PRIVATE
+
+        ; For shdocvw to call Win95's private GetProcessDword
+        SHGetProcessDword                       @242 NONAME PRIVATE
+        SHSetShellWindowEx                      @243 NONAME PRIVATE
+
+        SHSettingsChanged                       @244 NONAME PRIVATE
+
+        PathParseIconLocation                   @249 NONAME PRIVATE
+        PathRemoveExtension                     @250 NONAME PRIVATE
+        PathRemoveArgs                          @251 NONAME PRIVATE
+        PathIsURL                               @252 NONAME PRIVATE
+
+        SHCreateShellFolderView                 @256 NONAME PRIVATE
+        SHGetShellFolderViewCB                  @257 NONAME PRIVATE
+
+        ; link window
+        LinkWindow_RegisterClass                @258 NONAME PRIVATE
+        LinkWindow_UnregisterClass              @259 NONAME PRIVATE
+
+
+
+
+#if (defined(UNICODE) && (defined(ALIGNMENT_MACHINE)))
+
+        ; Private unaligned string functions forward to shlwapi.dll
+
+        ; NOTE: we can use forwarders here since these are NT only functions
+
+        SHLualstrcpynW = shlwapi.ualstrcpynW    @500 NONAME PRIVATE
+        SHLualstrcmpiW = shlwapi.ualstrcmpiW    @501 NONAME PRIVATE
+        SHLualstrcmpW = shlwapi.ualstrcmpW      @502 NONAME PRIVATE
+        SHLualstrlenW = shlwapi.ualstrlenW      @503 NONAME PRIVATE
+        SHLualstrcpyW = shlwapi.ualstrcpyW      @504 NONAME PRIVATE
+#endif
+
+        ; Shared memory mapping stuff
+        SHAllocShared  = _SHAllocShared         @520 NONAME PRIVATE
+        SHLockShared   = _SHLockShared          @521 NONAME PRIVATE
+        SHUnlockShared = _SHUnlockShared        @522 NONAME PRIVATE
+        SHFreeShared   = _SHFreeShared          @523 NONAME PRIVATE
+        RealDriveType                           @524 NONAME PRIVATE
+        RealDriveTypeFlags                      @525 NONAME PRIVATE
+        SHFlushSFCache                          @526 NONAME PRIVATE
+
+
+        ; Make sure to keep SHChangeNotifyRegisterORD updated in shlobj.h
+        ; BUGBUG:: We converted back to one set of APIS... will remove these
+        ; once all of the clients have been rebuilt!!!
+        ; BUGBUG (scotth): as of NT beta 2 (1314) no components are
+        ;                  using 640 and 641.  Can we remove?
+        NTSHChangeNotifyRegister                @640 NONAME PRIVATE
+        ; Make sure to keep SHChangeNotifyDeregisterORD updated in shlobj.h
+        NTSHChangeNotifyDeregister              @641 NONAME PRIVATE
+
+        SHChangeNotifyReceive                   @643 NONAME PRIVATE
+        SHChangeNotification_Lock               @644 NONAME PRIVATE
+        SHChangeNotification_Unlock             @645 NONAME PRIVATE
+        SHChangeRegistrationReceive             @646 NONAME PRIVATE
+        ReceiveAddToRecentDocs                  @647 NONAME PRIVATE
+        SHWaitOp_Operate                        @648 NONAME PRIVATE
+
+        PathIsSameRoot                          @650 NONAME PRIVATE
+        ; used to process NT beta 2 callers (ComDlg32...)
+        OldReadCabinetState                     @651 NONAME PRIVATE
+        WriteCabinetState                       @652 NONAME PRIVATE
+        PathProcessCommand                      @653 NONAME PRIVATE
+        ReadCabinetState                        @654 NONAME PRIVATE
+
+        FileIconInit                            @660 NONAME PRIVATE
+
+        IsUserAnAdmin                           @680 NONAME PRIVATE
+        SHGetAppCompatFlags                     @681 NONAME PRIVATE
+
+        SHStgOpenStorageW                       @683 NONAME PRIVATE
+        SHStgOpenStorageA                       @684 NONAME PRIVATE
+        SHPropStgCreate                         @685 NONAME PRIVATE
+        SHPropStgReadMultiple                   @688 NONAME PRIVATE
+        SHPropStgWriteMultiple                  @689 NONAME PRIVATE
+        SHIsLegacyAnsiProperty                  @690 NONAME PRIVATE
+        
+        ; Exported for the OLE DS name space extension
+        ; BUGBUG REVIEW: WHY DO THIS? Make this object CoCreateInstance()able!!!
+
+        CDefFolderMenu_Create                   @700 NONAME PRIVATE
+        CDefFolderMenu_Create2                  @701 NONAME PRIVATE
+        CDefFolderMenu_MergeMenu                @702 NONAME PRIVATE
+        GUIDFromStringA                         @703 NONAME PRIVATE    ; can't use linker forwarder since only exported from shlwapi by ordinal
+        GUIDFromStringW                         @704 NONAME PRIVATE    ; can't use linker forwarder since only exported from shlwapi by ordinal
+
+        SHOpenPropSheetA                        @707 NONAME PRIVATE
+        SHGetSetFolderCustomSettingsA           @708 NONAME PRIVATE
+        SHGetSetFolderCustomSettingsW           @709 NONAME PRIVATE
+
+        CheckWinIniForAssocs                    @711 NONAME PRIVATE
+        SHCopyMonikerToTemp                     @712 NONAME PRIVATE
+        PathIsTemporaryA                        @713 NONAME PRIVATE
+        PathIsTemporaryW                        @714 NONAME PRIVATE
+
+        SHCreatePropertyBag                     @715 NONAME PRIVATE
+        SHMultiFileProperties                   @716 NONAME PRIVATE
+
+        SHChangeNotifySuspendResume
+        SHCreateDirectoryExA
+        SHCreateDirectoryExW
+
+        SHPathPrepareForWriteA
+        SHPathPrepareForWriteW
+        
+        SHLoadNonloadedIconOverlayIdentifiers
+
+        SHGetIconOverlayIndexA
+        SHGetIconOverlayIndexW
+
+        SHIsFileAvailableOffline

@@ -1,0 +1,6 @@
+IA64_SOURCES=..\ia64\fmutex.s   \
+             ..\ia64\hifreqlk.s \
+             ..\ia64\intrlock.s \
+             ..\ia64\raisests.c \
+             ..\ia64\gettickc.c \
+             ..\ia64\splocks.c

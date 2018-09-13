@@ -1,0 +1,1312 @@
+#if version <= 2
+
+CLASS USER
+
+CATEGORY  !!GPOnly
+
+    POLICY !!GPOnlyPolicy
+        KEYNAME "Software\Policies"
+
+        PART !!GPOnly_Tip1  TEXT
+        END PART
+
+        PART !!GPOnly_Tip2  TEXT
+        END PART
+
+        PART !!GPOnly_Tip3  TEXT
+        END PART
+
+        PART !!GPOnly_Tip4  TEXT
+        END PART
+
+        PART !!GPOnly_Tip5  TEXT
+        END PART
+    END POLICY
+
+END CATEGORY
+
+CLASS MACHINE
+
+CATEGORY  !!GPOnly
+
+    POLICY !!GPOnlyPolicy
+        KEYNAME "Software\Policies"
+
+        PART !!GPOnly_Tip1  TEXT
+        END PART
+
+        PART !!GPOnly_Tip2  TEXT
+        END PART
+
+        PART !!GPOnly_Tip3  TEXT
+        END PART
+
+        PART !!GPOnly_Tip4  TEXT
+        END PART
+
+        PART !!GPOnly_Tip5  TEXT
+        END PART
+    END POLICY
+
+END CATEGORY
+
+
+#endif
+
+#if version >= 3
+
+
+CLASS USER 
+CATEGORY !!WindowsComponents
+  CATEGORY !!InternetExplorer
+
+    POLICY !!Search_NoSearchCustomization
+    	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+        EXPLAIN !!ExplainNoSearchCustomization
+        VALUENAME NoSearchCustomization
+	END POLICY
+
+	POLICY  !!Search_NoFindFiles
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+        EXPLAIN !!ExplainSearch_NoFindFiles
+        VALUENAME "NoFindFiles"
+        END POLICY
+
+	POLICY  !!Branding_NoExternalBranding
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+        EXPLAIN !!ExplainBranding_NoExternalBranding
+        VALUENAME "NoExternalBranding"
+        END POLICY
+	
+	POLICY !!FavImportExport
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer"
+        EXPLAIN !!ExplainFavImportExport
+        VALUENAME "DisableImportExportFavorites"
+	END POLICY
+
+	CATEGORY !!EnableTabs
+
+	POLICY !!ControlPanel_RestrictGeneralTab
+        EXPLAIN !!ExplainControlPanel_RestrictGeneralTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+        VALUENAME GeneralTab
+	END POLICY
+
+	POLICY !!ControlPanel_RestrictSecurityTab
+        EXPLAIN !!ExplainControlPanel_RestrictSecurityTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"	
+        VALUENAME SecurityTab
+	END POLICY
+
+	POLICY !!ControlPanel_RestrictContentTab
+        EXPLAIN !!ExplainControlPanel_RestrictContentTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"	
+        VALUENAME ContentTab
+	END POLICY
+
+	POLICY !!ControlPanel_RestrictConnectionsTab
+        EXPLAIN !!ExplainControlPanel_RestrictConnectionsTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+                VALUENAME ConnectionsTab
+	END POLICY
+
+	POLICY !!ControlPanel_RestrictProgramsTab
+        EXPLAIN !!ExplainControlPanel_RestrictProgramsTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+                VALUENAME ProgramsTab
+	END POLICY
+
+	POLICY !!ControlPanel_RestrictAdvancedTab
+        EXPLAIN !!ExplainControlPanel_RestrictAdvancedTab
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+                VALUENAME AdvancedTab
+	END POLICY
+	END CATEGORY
+
+	POLICY !!ControlPanel_RestrictAdvanced
+        EXPLAIN !!ExplainControlPanel_RestrictAdvanced
+	KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+                VALUENAME Advanced
+        END POLICY
+
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Control Panel"
+	POLICY !!RestrictHomePage
+        EXPLAIN !!ExplainRestrictHomePage
+                VALUENAME HomePage
+        END POLICY
+
+        POLICY !!DialupSettings
+            EXPLAIN !!ExplainDialupSettings
+            KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+                VALUENAME DialupAutodetect
+                VALUEON NUMERIC 1
+                VALUEOFF NUMERIC 0
+        END POLICY
+
+        POLICY !!AutoProxyCache
+            EXPLAIN !!ExplainAutoProxyCache
+            KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+		VALUENAME EnableAutoProxyResultCache
+		VALUEON NUMERIC 0
+		VALUEOFF NUMERIC 1
+	END POLICY
+
+        POLICY !!DisplayScriptFailureUI
+            EXPLAIN !!ExplainDisplayScriptFailureUI
+            KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+            VALUENAME DisplayScriptDownloadFailureUI
+        END POLICY
+
+	POLICY !!RestrictCache
+        EXPLAIN !!ExplainRestrictCache
+                VALUENAME Cache
+        END POLICY
+
+	POLICY !!RestrictHistory
+        EXPLAIN !!ExplainRestrictHistory
+                VALUENAME History
+        END POLICY
+
+	POLICY !!RestrictColors
+        EXPLAIN !!ExplainRestrictColors
+                VALUENAME Colors
+        END POLICY
+
+	POLICY !!RestrictLinks
+        EXPLAIN !!ExplainRestrictLinks
+                VALUENAME links
+        END POLICY
+
+	POLICY !!RestrictFonts
+        EXPLAIN !!ExplainRestrictFonts
+                VALUENAME Fonts
+        END POLICY
+
+	POLICY !!RestrictLanguages
+        EXPLAIN !!ExplainRestrictLanguages
+                VALUENAME Languages
+        END POLICY
+
+	POLICY	!!RestrictAccessibility
+        EXPLAIN !!ExplainRestrictAccessibility
+                VALUENAME Accessibility
+        END POLICY
+
+        POLICY !!RestrictConnectionWizard
+        EXPLAIN !!ExplainRestrictConnectionWizard
+                VALUENAME "Connwiz Admin Lock"
+	END POLICY
+
+	POLICY !!RestrictConnectionSettings
+        EXPLAIN !!ExplainRestrictConnectionSettings
+                VALUENAME "Connection Settings"
+	END POLICY
+
+	POLICY !!RestrictProxy
+        EXPLAIN !!ExplainRestrictProxy
+                VALUENAME Proxy
+	END POLICY
+
+	POLICY !!RestrictAutoconfig
+        EXPLAIN !!ExplainRestrictAutoconfig
+                VALUENAME Autoconfig
+        END POLICY
+
+        POLICY !!RestrictRatings
+        EXPLAIN !!ExplainRestrictRatings
+                VALUENAME Ratings
+	END POLICY
+
+	POLICY !!RestrictCertificates
+        EXPLAIN !!ExplainRestrictCertificates
+                VALUENAME Certificates
+	END POLICY
+
+	POLICY !!RestrictProfiles
+        EXPLAIN !!ExplainRestrictProfiles
+                VALUENAME Profiles
+	END POLICY
+
+	POLICY !!RestrictFormSuggest
+        EXPLAIN !!ExplainRestrictFormSuggest
+                VALUENAME FormSuggest
+	END POLICY
+
+	POLICY !!RestrictFormSuggestPW
+        EXPLAIN !!ExplainRestrictFormSuggestPW
+                VALUENAME "FormSuggest Passwords"
+        END POLICY
+
+        POLICY !!RestrictMessaging
+        EXPLAIN !!ExplainRestrictMessaging
+                VALUENAME Messaging
+	END POLICY
+
+	POLICY !!RestrictCalendarContact
+        EXPLAIN !!ExplainRestrictCalendarContact
+                VALUENAME CalendarContact
+	END POLICY
+
+	POLICY !!RestrictResetWebSettings
+        EXPLAIN !!ExplainRestrictResetWebSettings
+                VALUENAME ResetWebSettings
+	END POLICY
+
+	POLICY !!RestrictCheckBrowser
+        EXPLAIN !!ExplainRestrictCheckBrowser
+                VALUENAME Check_If_Default
+        END POLICY
+
+	POLICY !!Identities
+        EXPLAIN !!ExplainIdentities
+        KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Identities"
+                VALUENAME "Locked Down"
+	END POLICY
+
+
+   CATEGORY !!Channels
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+        POLICY !!NoAddingChannels
+        EXPLAIN !!ExplainNoAddingChannels
+                VALUENAME NoAddingChannels
+        END POLICY
+
+        POLICY !!NoRemovingChannels
+        EXPLAIN !!ExplainNoRemovingChannels
+                VALUENAME NoRemovingChannels
+        END POLICY
+
+        POLICY !!NoAddingSubscriptions
+        EXPLAIN !!ExplainNoAddingSubscriptions
+		VALUENAME NoAddingSubscriptions
+        END POLICY
+
+        POLICY !!NoEditingSubscriptions
+        EXPLAIN !!ExplainNoEditingSubscriptions
+                VALUENAME NoEditingSubscriptions
+        END POLICY
+
+        POLICY !!NoRemovingSubscriptions
+        EXPLAIN !!ExplainNoRemovingSubscriptions
+                VALUENAME NoRemovingSubscriptions              
+        END POLICY
+
+        POLICY !!NoChannelLogging
+        EXPLAIN !!ExplainNoChannelLogging
+                VALUENAME NoChannelLogging               
+        END POLICY
+
+        POLICY !!NoScheduledUpdates
+        EXPLAIN !!ExplainNoScheduledUpdates
+                VALUENAME NoScheduledUpdates               
+        END POLICY
+
+        POLICY !!NoChannelUI
+        EXPLAIN !!ExplainNoChannelUI
+                VALUENAME NoChannelUI               
+        END POLICY
+
+        POLICY !!NoSubscriptionContent
+        EXPLAIN !!ExplainNoSubscriptionContent
+                VALUENAME NoSubscriptionContent               
+        END POLICY
+
+        POLICY !!NoEditingScheduleGroups
+        EXPLAIN !!ExplainNoEditingScheduleGroups
+                VALUENAME NoEditingScheduleGroups               
+        END POLICY
+
+        POLICY !!MaxSubscription
+        EXPLAIN !!ExplainMaxSubscription
+		PART !!MaxSubscriptionSize NUMERIC SPIN 250
+	        VALUENAME MaxSubscriptionSize
+	        END PART
+
+	        PART !!MaxSubscriptionCount NUMERIC SPIN 5
+	        VALUENAME MaxSubscriptionCount
+		END PART
+
+	        PART !!MinUpdateInterval NUMERIC SPIN 60
+	        VALUENAME MinUpdateInterval
+	        END PART
+
+	        PART !!UpdateExcludeBegin NUMERIC SPIN 60
+	        MAX 1440
+	        VALUENAME UpdateExcludeBegin
+        	END PART
+	        
+	        PART !!UpdateExcludeEnd NUMERIC SPIN 60
+	        MAX 1440
+	        VALUENAME UpdateExcludeEnd
+	        END PART
+
+	        PART !!MaxWebcrawlLevels DROPDOWNLIST
+	        VALUENAME MaxWebcrawlLevels
+	        ITEMLIST
+        	NAME !!MaxWebcrawlDepth0 VALUE NUMERIC 1 DEFAULT
+        	NAME !!MaxWebcrawlDepth1 VALUE NUMERIC 2
+        	NAME !!MaxWebcrawlDepth2 VALUE NUMERIC 3
+        	NAME !!MaxWebcrawlDepth3 VALUE NUMERIC 4
+        	END ITEMLIST
+	        END PART
+        END POLICY
+
+   END CATEGORY ;Subscriptions
+
+
+   CATEGORY !!Menus
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+        POLICY !!File_NoBrowserSaveAs
+        EXPLAIN !!ExplainFile_NoBrowserSaveAs
+                VALUENAME NoBrowserSaveAs
+        END POLICY
+
+	POLICY !!File_NoFileNew
+        EXPLAIN !!ExplainFile_NoFileNew
+                VALUENAME NoFileNew
+        END POLICY
+
+	POLICY !!File_NoFileOpen
+        EXPLAIN !!ExplainFile_NoFileOpen
+                VALUENAME NoFileOpen
+        END POLICY
+
+	POLICY !!File_NoBrowserSaveWebComplete
+        EXPLAIN !!ExplainFile_NoBrowserSaveWebComplete
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+                VALUENAME NoBrowserSaveWebComplete
+        END POLICY
+
+	Policy !!File_NoBrowserClose
+        EXPLAIN !!ExplainFile_NoBrowserClose
+                VALUENAME NoBrowserClose
+        END POLICY
+
+        POLICY !!View_NoViewSource
+        EXPLAIN !!ExplainView_NoViewSource
+                VALUENAME NoViewSource
+	END POLICY
+
+	POLICY !!View_NoTheaterMode
+        EXPLAIN !!ExplainView_NoTheaterMode
+                VALUENAME NoTheaterMode
+        END POLICY
+
+        POLICY !!NoFavorites
+        EXPLAIN !!ExplainNoFavorites
+                VALUENAME NoFavorites
+        END POLICY
+
+        POLICY !!Tools_Menu
+        EXPLAIN !!ExplainTools_Menu
+                VALUENAME NoBrowserOptions
+        END POLICY
+
+        POLICY !!Help_NoTip
+        EXPLAIN !!ExplainHelp_NoTip
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+                VALUENAME NoHelpItemTipOfTheDay
+	END POLICY
+
+	POLICY !!Help_NoNetscapeHelp
+        EXPLAIN !!ExplainHelp_NoNetscapeHelp
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+                VALUENAME NoHelpItemNetscapeHelp
+	END POLICY
+
+	POLICY !!Help_NoTutorial
+        EXPLAIN !!ExplainHelp_NoTutorial
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+                VALUENAME NoHelpItemTutorial
+	END POLICY
+
+	POLICY !!Help_NoFeedback
+        EXPLAIN !!ExplainHelp_NoFeedback
+        KEYNAME "Software\Policies\Microsoft\Internet Explorer\Restrictions"
+                VALUENAME NoHelpItemSendFeedback
+        END POLICY
+
+        POLICY !!NoBrowserContextMenu
+        EXPLAIN !!ExplainNoBrowserContextMenu
+                VALUENAME NoBrowserContextMenu
+	END POLICY
+
+	POLICY !!NoOpeninNewWnd
+        EXPLAIN !!ExplainNoOpeninNewWnd
+                VALUENAME NoOpeninNewWnd
+        END POLICY
+
+        POLICY !!NoSelectDownloadDir
+        EXPLAIN !!ExplainNoSelectDownloadDir
+                VALUENAME "NoSelectDownloadDir"
+        END POLICY
+   END CATEGORY
+
+;toolbars
+   CATEGORY !!Toolbars
+   KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+
+	   POLICY !!NoToolbarCustomize
+           EXPLAIN !!ExplainNoToolbarCustomize
+           KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+                   VALUENAME "NoToolbarCustomize"
+	   END POLICY
+
+	   POLICY !!NoBandCustomize
+           EXPLAIN !!ExplainNoBandCustomize
+           KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+                   VALUENAME "NoBandCustomize"
+	   END POLICY
+
+	   POLICY !!ToolbarButtons
+           KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+           EXPLAIN !!ExplainToolbarButtons
+	   VALUENAME SpecifyDefaultButtons 
+
+		PART !!Btn_Back CHECKBOX
+		VALUENAME Btn_Back
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+		END PART
+	   
+
+                PART !!Btn_Forward CHECKBOX
+                VALUENAME Btn_Forward
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Stop CHECKBOX
+                VALUENAME Btn_Stop
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Refresh CHECKBOX
+                VALUENAME Btn_Refresh
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Home CHECKBOX
+                VALUENAME Btn_Home
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Search CHECKBOX
+                VALUENAME Btn_Search
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_History CHECKBOX
+                VALUENAME Btn_History
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Favorites CHECKBOX
+                VALUENAME Btn_Favorites
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Folders CHECKBOX
+                VALUENAME Btn_Folders
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Fullscreen CHECKBOX
+                VALUENAME Btn_Fullscreen
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Tools CHECKBOX
+                VALUENAME Btn_Tools
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_MailNews CHECKBOX
+                VALUENAME Btn_MailNews
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Size CHECKBOX
+                VALUENAME Btn_Size
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Print CHECKBOX
+                VALUENAME Btn_Print
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Edit CHECKBOX
+                VALUENAME Btn_Edit
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Discussions CHECKBOX
+                VALUENAME Btn_Discussions
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Cut CHECKBOX
+                VALUENAME Btn_Cut
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Copy CHECKBOX
+                VALUENAME Btn_Copy
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Paste CHECKBOX
+                VALUENAME Btn_Paste
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+
+                PART !!Btn_Encoding CHECKBOX
+                VALUENAME Btn_Encoding
+		VALUEON NUMERIC 1
+		VALUEOFF NUMERIC 2
+                END PART
+        END POLICY
+   END CATEGORY ;toolbars
+
+
+   CATEGORY !!Persistence
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence"
+        POLICY !!Persistence_FileLimits0
+        EXPLAIN !!ExplainPersistence_FileLimits0
+                PART !!FileLimits_Domain0 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\0"
+                VALUENAME DomainLimit
+                DEFAULT 1024
+                END PART
+
+                PART !!FileLimits_Document0 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\0"
+                VALUENAME DocumentLimit
+                DEFAULT 128
+                END PART
+	END POLICY
+
+        POLICY !!Persistence_FileLimits1
+        EXPLAIN !!ExplainPersistence_FileLimits1
+		PART !!FileLimits_Domain1 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\1"
+                VALUENAME DomainLimit
+                DEFAULT 10240 MAX 20480
+                END PART
+
+                PART !!FileLimits_Document1 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\1"
+                VALUENAME DocumentLimit
+                DEFAULT 512
+                END PART
+	END POLICY
+
+        POLICY !!Persistence_FileLimits2
+        EXPLAIN !!ExplainPersistence_FileLimits2
+                PART !!FileLimits_Domain2 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\2"
+                VALUENAME DomainLimit
+                DEFAULT 1024
+                END PART
+
+                PART !!FileLimits_Document2 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\2"
+                VALUENAME DocumentLimit
+                DEFAULT 128
+                END PART
+	END POLICY
+
+        POLICY !!Persistence_FileLimits3
+        EXPLAIN !!ExplainPersistence_FileLimits3
+                PART !!FileLimits_Domain3 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\3"
+                VALUENAME DomainLimit
+                DEFAULT 1024
+                END PART
+
+                PART !!FileLimits_Document3 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\3"
+                VALUENAME DocumentLimit
+                DEFAULT 128
+                END PART
+	END POLICY
+
+        POLICY !!Persistence_FileLimits4
+        EXPLAIN !!ExplainPersistence_FileLimits4
+                PART !!FileLimits_Domain4 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\4"
+                VALUENAME DomainLimit
+                DEFAULT 640
+                END PART
+
+                PART !!FileLimits_Document4 NUMERIC
+		KEYNAME "Software\Policies\Microsoft\Internet Explorer\Persistence\4"
+                VALUENAME DocumentLimit
+                DEFAULT 64
+                END PART
+        END POLICY
+   END CATEGORY
+
+  CATEGORY !!AdminApproved
+   KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings\AllowedControls"
+
+	POLICY !!Media_Player
+	EXPLAIN !!ExplainMedia_Player
+		PART !!ActiveMovie_Control CHECKBOX
+	            VALUENAME {05589FA1-C356-11CE-BF01-00AA0055595A}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+
+		PART !!Windows_Media_Player CHECKBOX
+	            VALUENAME {22D6F312-B0F6-11D0-94AB-0080C74C7E95}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+
+	POLICY !!Menu_Controls
+	EXPLAIN !!ExplainMenu_Controls
+		PART !!MCSiMenu CHECKBOX
+                VALUENAME {275E2FE0-7486-11D0-89D6-00A0C90C9B67}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+
+		PART !!PopupMenu_Object CHECKBOX
+                VALUENAME {7823A620-9DD9-11CF-A662-00AA00C066D2}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	    
+        PART !!Ikonic_Control CHECKBOX
+	            VALUENAME {F5131C24-E56D-11CF-B78A-444553540000}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+
+	END POLICY
+
+	POLICY !!Microsoft_Agent
+	EXPLAIN !!Explain_Microsoft_Agent
+		PART !!Microsoft_Agent_Control CHECKBOX
+                VALUENAME {D45FD31B-5C6E-11D1-9EC1-00C04FD7081F}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+
+	POLICY !!Microsoft_Chat
+	EXPLAIN !!ExplainMicrosoft_Chat
+		PART !!Microsoft_MSChat_Control CHECKBOX
+                VALUENAME {D6526FE0-E651-11CF-99CB-00C04FD64497}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+
+	POLICY !!Survey
+	    PART !!Survey CHECKBOX
+	            VALUENAME {BD1F006E-174F-11D2-95C0-00C04F9A8CFA}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+	END POLICY
+
+	POLICY !!Flash
+	    PART !!Flash CHECKBOX
+	            VALUENAME {D27CDB6E-AE6D-11CF-96B8-444553540000}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+	END POLICY
+
+	POLICY !!NetShowFile
+	    PART !!NetShowFile CHECKBOX
+	            VALUENAME {26F24A93-1DA2-11D0-A334-00AA004A5FC5}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+	END POLICY
+
+	POLICY !!DHTMLEdit
+	    PART !!DHTMLEdit CHECKBOX
+	            VALUENAME {2D360201-FFF5-11D1-8D03-00A0C959BC0A}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+	END POLICY
+
+	POLICY !!Scriptlet
+	    PART !!Scriptlet CHECKBOX
+	            VALUENAME {AE24FDAE-03C6-11D1-8B76-0080C744F389}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+	END POLICY
+
+	POLICY !!Carpoint
+	EXPLAIN !!ExplainCarpoint
+		PART !!CarPoint_AutoPricer_Control CHECKBOX
+	            VALUENAME {DED22F57-FEE2-11D0-953B-00C04FD9152D}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+
+	POLICY !!Investor
+	EXPLAIN !!ExplainInvestor
+	    PART !!InvestorChart_Control CHECKBOX
+	            VALUENAME {9276B91A-E780-11d2-8A8D-00C04FA31D93}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+	    END PART
+
+		PART !!MS_Investor_Ticker CHECKBOX
+                VALUENAME {52ADE293-85E8-11D2-BB22-00104B0EA281}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+    END POLICY
+
+	POLICY !!MSNBC
+	EXPLAIN !!ExplainMSNBC
+		PART !!NewsBrowser CHECKBOX
+	            VALUENAME {2FF18E10-DE11-11D1-8161-00A0C90DD90C}
+	            VALUEON  NUMERIC 0
+	            VALUEOFF NUMERIC 1
+		END PART
+	END POLICY
+  END CATEGORY ;AdminApproved
+
+
+  END CATEGORY ;; Internet Explorer
+END CATEGORY ;; WindowsComponents
+
+CLASS MACHINE
+
+CATEGORY !!WindowsComponents
+  CATEGORY !!InternetExplorer
+
+   POLICY !!Security_HKLM_only
+        EXPLAIN !!ExplainSecurity_HKLM_only
+   KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+                VALUENAME Security_HKLM_only
+   END POLICY
+
+   POLICY !!Security_options_edit
+        EXPLAIN !!ExplainSecurity_options_edit
+   KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+                VALUENAME Security_options_edit
+   END POLICY
+
+   POLICY !!Security_zones_map_edit 
+        EXPLAIN !!ExplainSecurity_zones_map_edit 
+   KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+                VALUENAME Security_zones_map_edit
+   END POLICY
+
+   POLICY !!UserProxy
+        EXPLAIN !!ExplainUserProxy
+   KEYNAME "Software\Policies\Microsoft\Windows\CurrentVersion\Internet Settings"
+		VALUENAME ProxySettingsPerUser
+		VALUEON NUMERIC 0
+		VALUEOFF NUMERIC 1
+   END POLICY
+
+   POLICY !!NoJITSetup
+        EXPLAIN !!ExplainNoJITSetup
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+                VALUENAME NoJITSetup
+   END POLICY
+
+   POLICY !!NoUpdateCheck
+        EXPLAIN !!ExplainNoUpdateCheck
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+                VALUENAME NoUpdateCheck
+   END POLICY
+
+   POLICY !!ShellNotifications
+        EXPLAIN !!ExplainShellNotifications
+	KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+        VALUENAME "NoMSAppLogo5ChannelNotify"
+   END POLICY
+
+   POLICY !!NoSplash
+        EXPLAIN !!ExplainNoSplash
+   KEYNAME "Software\Policies\Microsoft\Internet Explorer\Infodelivery\Restrictions"
+        VALUENAME NoSplash
+   END POLICY
+
+  END CATEGORY ;; Internet Explorer
+END CATEGORY ;; WindowsComponents
+#endif
+
+[strings]
+
+GPOnly_Tip1="The Inetres.adm file you have loaded requires Group Policy"
+GPOnly_Tip2="in Windows 2000.  You cannot use the System Policy Editor"
+GPOnly_Tip3="to display Windows 2000 Group Policy settings."
+GPOnly_Tip4="  "
+GPOnly_Tip5="Enabling or disabling this policy has no effect."
+GPOnly="Unsupported Administrative Templates"
+GPOnlyPolicy="Inetres.adm"
+
+WindowsComponents="Windows Components"
+InternetExplorer="Internet Explorer"
+
+EnableTabs="Internet Control Panel"
+ControlPanel_RestrictGeneralTab="Disable the General page"
+ControlPanel_RestrictSecurityTab="Disable the Security page"
+ControlPanel_RestrictContentTab="Disable the Content page"
+ControlPanel_RestrictConnectionsTab="Disable the Connections page"
+ControlPanel_RestrictProgramsTab="Disable the Programs page"
+ControlPanel_RestrictAdvancedTab="Disable the Advanced page"
+ControlPanel_RestrictAdvanced="Disable changing Advanced page settings"
+RestrictGeneralTab="Disable viewing the General page"
+RestrictSecurityTab="Disable viewing the Security page"
+RestrictContentTab="Disable viewing the Content page"
+RestrictConnectionsTab="Disable viewing the Connections page"
+RestrictProgramsTab="Disable viewing the Programs page"
+RestrictAdvancedTab="Disable viewing the Advanced page"
+RestrictAdvanced="Disable changing any settings on the Advanced page"
+
+GeneralTab="General Settings"
+General_RestrictHomePage = "Disable home page settings"
+General_RestrictCache="Disable Temporary Internet files settings"
+General_RestrictHistory="Disable history settings"
+General_RestrictColors="Disable color settings"
+General_RestrictLinks="Disable link color settings"
+General_RestrictFonts="Disable font settings"
+General_RestrictLanguages="Disable language settings"
+General_RestrictAccessibility="Disable accessibility settings"
+RestrictHomePage = "Disable changing home page settings"
+DialupSettings="Use Automatic Detection for dial-up connections"
+AutoProxyCache="Disable caching of Auto-Proxy scripts"
+DisplayScriptFailureUI="Display error message on proxy script download failure"
+RestrictCache="Disable changing Temporary Internet files settings"
+RestrictHistory="Disable changing history settings"
+RestrictColors="Disable changing color settings"
+RestrictLinks="Disable changing link color settings"
+RestrictFonts="Disable changing font settings"
+RestrictLanguages="Disable changing language settings"
+RestrictAccessibility="Disable changing accessibility settings"
+
+ContentTab="Content"
+RestrictRatings="Disable changing ratings settings"
+RestrictCertificates="Disable changing certificate settings"
+RestrictProfiles="Disable changing Profile Assistant settings"
+RestrictFormSuggest="Disable AutoComplete for forms"
+RestrictFormSuggestPW="Do not allow AutoComplete to save passwords"
+RestrictAutoComplete="Disable AutoComplete"
+RestrictAutoCompletePW="Disable AutoComplete for passwords"
+
+ConnectionTab="Connection Settings"
+RestrictConnectionWizard="Disable Internet Connection wizard"
+RestrictConnectionSettings="Disable changing connection settings"
+RestrictProxy="Disable changing proxy settings"
+RestrictAutoconfig="Disable changing Automatic Configuration settings"
+
+ProgramsTab="Programs"
+RestrictMessaging="Disable changing Messaging settings"
+RestrictCalendarContact="Disable changing Calendar and Contact settings"
+RestrictResetWebSettings="Disable the Reset Web Settings feature"
+RestrictCheckBrowser="Disable changing default browser check"
+CheckBrowser="Disable default Browser checking"
+
+Persistence="Persistence Behavior"
+Persistence_FileLimits0="File size limits for Local Machine zone"
+Persistence_FileLimits1="File size limits for Intranet zone"
+Persistence_FileLimits2="File size limits for Trusted Sites zone"
+Persistence_FileLimits3="File size limits for Internet zone"
+Persistence_FileLimits4="File size limits for Restricted Sites zone"
+FileLimits_Domain0="Per domain(in kilobytes)"
+FileLimits_Document0="Per document (in kilobytes)"
+FileLimits_Domain1="Per domain (in kilobytes)"
+FileLimits_Document1="Per document (in kilobytes)"
+FileLimits_Domain2="Per domain (in kilobytes)"
+FileLimits_Document2="Per document (in kilobytes)"
+FileLimits_Domain3="Per domain (in kilobytes)"
+FileLimits_Document3="Per document (in kilobytes)"
+FileLimits_Domain4="Per domain (in kilobytes)"
+FileLimits_Document4="Per document (in kilobytes)"
+
+Channels="Offline Pages"
+
+NoAddingChannels="Disable adding channels"
+NoRemovingChannels="Disable removing channels"
+NoAddingSubscriptions="Disable adding schedules for offline pages"
+NoEditingSubscriptions="Disable editing schedules for offline pages"
+NoRemovingSubscriptions="Disable removing schedules for offline pages"
+
+NoChannelLogging="Disable offline page hit logging"
+NoScheduledUpdates="Disable all scheduled offline pages"
+NoSubscriptionPasswords="Disable password caching for offline pages"
+NoSubscriptionContent="Disable downloading of site subscription content"
+NoEditingScheduleGroups="Disable editing and creating of schedule groups"
+NoChannelUI="Disable channel user interface completely"
+
+MaxSubscription="Subscription Limits"
+MaxSubscriptionSize="Maximum size of subscriptions in kilobytes:"
+MaxSubscriptionCount="Maximum number of offline pages:"
+MinUpdateInterval="Minimum number of minutes between scheduled updates:"
+UpdateExcludeBegin="Time to begin preventing scheduled updates:"
+UpdateExcludeEnd="Time to end preventing scheduled updates:"
+MaxWebcrawlLevels="Maximum offline page crawl depth:"
+MaxWebcrawlDepth0="0"
+MaxWebcrawlDepth1="1"
+MaxWebcrawlDepth2="2"
+MaxWebcrawlDepth3="3"
+
+
+Menus="Browser menus"
+File_Menu="File menu"
+File_NoBrowserSaveAs="File menu: Disable Save As... menu option"
+File_NoFileNew="File menu: Disable New menu option"
+File_NoFileOpen="File menu: Disable Open menu option"
+File_NoBrowserSaveWebComplete="File menu: Disable Save As Web Page Complete"
+File_NoBrowserClose="File menu: Disable closing the browser and Explorer windows"
+
+View_Menu="View menu"
+View_NoViewSource="View menu: Disable Source menu option"
+View_NoTheaterMode="View menu: Disable Full Screen menu option"
+
+Favorites_Menu="Favorites menu"
+NoFavorites="Hide Favorites menu"
+Tools_Menu="Tools menu: Disable Internet Options... menu option"
+
+Help_Menu="Help menu"
+Help_NoTip="Help menu: Remove 'Tip of the Day' menu option"
+Help_NoNetscapeHelp="Help menu: Remove 'For Netscape Users' menu option"
+Help_NoTutorial="Help menu: Remove 'Tour' menu option"
+Help_NoFeedback="Help menu: Remove 'Send Feedback' menu option"
+
+Context_Menu="Context menu (right click)"
+NoBrowserContextMenu="Disable Context menu"
+NoOpeninNewWnd="Disable Open in New Window menu option"
+FileDownload="File Download Dialog"
+NoSelectDownloadDir="Disable Save this program to disk option"
+
+Toolbars="Toolbars"
+ToolbarButtons="Configure Toolbar Buttons"
+NoToolbarCustomize="Disable customizing browser toolbar buttons"
+NoBandCustomize="Disable customizing browser toolbars"
+ToolbarState="Toolbar buttons"
+Btn_Back="Show Back button"
+Btn_Forward="Show Forward button"
+Btn_Stop="Show Stop button"
+Btn_Refresh="Show Refresh button"
+Btn_Home="Show Home button"
+Btn_Search="Show Search button"
+Btn_History="Show History button"
+Btn_Favorites="Show Favorites button"
+Btn_Folders="Show Folders button"
+Btn_Fullscreen="Show Fullscreen button"
+Btn_Tools="Show Tools button"
+Btn_MailNews="Show Mail button"
+Btn_Size="Show Font size button"
+Btn_Print="Show Print button"
+Btn_Edit="Show Edit button"
+Btn_Discussions="Show Discussions button"
+Btn_Cut="Show Cut button"
+Btn_Copy="Show Copy button"
+Btn_Paste="Show Paste button"
+Btn_Encoding="Show Encoding button"
+
+Identities="Identity Manager: Prevent users from using Identities"
+
+FavSearch="Favorites and Search"
+FavImpExp="Disable Favorites Import/Export"
+FavImportExport="Disable importing and exporting of favorites"
+
+Search="Search"
+NoSearchCustomization="Disable Search Customization"
+NoFindFiles="Disable Find Files via F3 within the browser"
+Search_NoSearchCustomization="Search: Disable Search Customization"
+Search_NoFindFiles="Search: Disable Find Files via F3 within the browser"
+
+Branding_NoExternalBranding="Disable external branding of Internet Explorer"
+
+AdminApproved="Administrator Approved Controls"
+Media_Player = "Media Player"
+ActiveMovie_Control = "ActiveMovie Control"
+Windows_Media_Player = "Windows Media Player"
+Menu_Controls = "Menu Controls"
+MCSiMenu = "MCSiMenu"
+PopupMenu_Object = "PopupMenu Object"
+Ikonic_Control="Ikonic Menu Control"
+Microsoft_Agent = "Microsoft Agent"
+Microsoft_Agent_Control = "Microsoft Agent Control"
+Microsoft_Chat = "Microsoft Chat"
+Microsoft_MSChat_Control = "MSChat Control"
+Carpoint = "Carpoint"
+CarPoint_AutoPricer_Control = "CarPoint AutoPricer Control"
+CarPoint_Grid_Control = "CarPoint Grid Control"
+CarPointProximityCtrl = "CarPointProximityCtrl"
+ExteriorSurround_Object = "ExteriorSurround Object"
+SurroundVideoCtrl_Object = "SurroundVideoCtrl Object"
+Setup_BBS_Control = "Setup BBS Control"
+Investor = "Investor"
+InvestorChart_Control="MSN Investor Chart Control"
+MS_Investor_Ticker = "MS Investor Ticker"
+Stock_Ticker = "Stock Ticker"
+MSNBC = "MSNBC"
+NewsBrowser = "MSNBC News Control"
+Music = "Music"
+Evita_Character_Converter = "Evita Character Converter"
+Imixer_10 = "Imixer 1.0"
+Imixer_30 = "Imixer 3.0"
+Interactive_Music_Junior = "Interactive Music Junior"
+Quick_View_Access = "Quick View Access"
+MSNViaDC_Control = "MSNViaDC Control"
+Survey="Microsoft Survey Control"
+Flash="Shockwave Flash"
+NetShowFile="NetShow File Transfer Control"
+DHTMLEdit="DHTML Edit Control"
+Scriptlet="Microsoft Scriptlet Component"
+
+Security="Security Page"
+PolicyName="Security Tab Settings"
+Security_HKLM_only="Security Zones: Use only machine settings "
+Security_options_edit="Security Zones: Do not allow users to change policies"
+Security_zones_map_edit="Security Zones: Do not allow users to add/delete sites"
+UserProxy="Make proxy settings per-machine (rather than per-user)"
+HKLM_only="Use only machine settings for security zones"
+options_edit="Do not allow users to change policies for any security zone"
+zones_map_edit="Do not allow users to add/delete sites from a security zone"
+
+SoftwareUpdates="Software Updates"
+IOD="Software Updates: Automatic Install"
+NoJITSetup="Disable Automatic Install of Internet Explorer components"
+PUC="Software Updates: Periodic Update Check"
+NoUpdateCheck="Disable Periodic Check for Internet Explorer software updates"
+MSAppLogo5="Software Updates: Logo5 Software Update Channel"
+ShellNotifications="Disable software update shell notifications on program launch"
+
+Startup="Startup: Disable showing the splash screen"
+NoSplash="Disable showing the splash screen"
+
+
+ExplainSecurity_HKLM_only="Applies security zone information to all users of the same computer. A security zone is a group of Web sites with the same security level.\n\nIf you enable this policy, changes that the user makes to a security zone will apply to all users of that computer.\n\nIf you disable this policy or do not configure it, users of the same computer can establish their own security zone settings.\n\nThis policy is intended to ensure that security zone settings apply uniformly to the same computer and do not vary from user to user.\n\nAlso, see the "Security zones: Do not allow users to change policies" policy."
+
+ExplainSecurity_options_edit="Prevents users from changing security zone settings. A security zone is a group of Web sites with the same security level.\n\nIf you enable this policy, the Custom Level button and security-level slider on the Security tab in the Internet Options dialog box are disabled.\n\nIf you disable this policy or do not configure it, users can change the settings for security zones.\n\nThis policy prevents users from changing security zone settings established by the administrator.\n\nNote: The "Disable the Security page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Security tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored.\n\nAlso, see the "Security zones: Use only machine settings" policy."
+
+ExplainSecurity_zones_map_edit="Prevents users from adding or removing sites from security zones. A security zone is a group of Web sites with the same security level.\n\nIf you enable this policy, the site management settings for security zones are disabled. (To see the site management settings for security zones, in the Internet Options dialog box, click the Security tab, and then click the Sites button.)\n\nIf you disable this policy or do not configure it, users can add Web sites to or remove sites from the Trusted Sites and Restricted Sites zones, and alter settings for the Local Intranet zone.\n\nThis policy prevents users from changing site management settings for security zones established by the administrator.\n\nNote:  The "Disable the Security page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Security tab from the interface, takes precedence over this policy. If it is enabled, this policy is ignored.\n\nAlso, see the "Security zones: Use only machine settings" policy."
+
+
+ExplainUserProxy="Applies proxy settings to all users of the same computer.\n\nIf you enable this policy, users cannot set user-specific proxy settings. They must use the zones created for all users of the computer.\n\nIf you disable this policy or do not configure it, users of the same computer can establish their own proxy settings.\n\nThis policy is intended to ensure that proxy settings apply uniformly to the same computer and do not vary from user to user."
+
+ExplainTrustedPublisherLockDown="Restricts Internet Explorer to loading only ActiveX controls from Web pages on sites in the Trusted Sites zone. ActiveX controls are objects that are frequently used to add interactivity to Web pages.\n\nIf you enable this policy, ActiveX controls from sites that belong to other security zones are not loaded.\n\nIf you disable this policy or do not configure it, ActiveX controls from all zones can be loaded, if permitted by the settings for those zones.\n\nThis policy is intended to help manage the security of ActiveX controls. To be included in the Trusted Sites zone, Web sites must specifically be added by the administrator or the user on the Security tab of the Internet Options dialog box.\n\nThe "Disable the Security page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Security tab from the interface, takes precedence over this policy. If it is enabled, this policy is ignored.\n\nAlso, see the "Security zones: Use only machine settings" policy."
+
+ExplainNoJITSetup="Prevents Internet Explorer from automatically installing components.\n\nIf you enable this policy, it prevents Internet Explorer from downloading a component when users browse to a Web site that needs that component.\n\nIf you disable this policy or do not configure it, users will be prompted to download and install a component when visiting a Web site that uses that component.\n\nThis policy is intended to help the administrator control which components the user installs."
+
+ExplainNoUpdateCheck="Prevents Internet Explorer from checking whether a new version of the browser is available.\n\nIf you enable this policy, it prevents Internet Explorer from checking to see whether it is the latest available browser version and notifying users if a new version is available.\n\nIf you disable this policy or do not configure it, Internet Explorer checks every 30 days by default, and then notifies users if a new version is available.\n\nThis policy is intended to help the administrator maintain version control for Internet Explorer by preventing users from being notified about new versions of the browser."
+
+ExplainShellNotifications="Specifies that programs using the Microsoft Software Distribution Channel will not notify users when they install new components. The Software Distribution Channel is a means of updating software dynamically on users' computers by using Open Software Distribution (.osd) technologies.\n\nIf you enable this policy, users will not be notified if their programs are updated using Software Distribution Channels.\n\nIf you disable this policy or do not configure it, users will be notified before their programs are updated.\n\nThis policy is intended for administrators who want to use Software Distribution Channels to update their users' programs without user intervention."
+
+ExplainNoSplash="Prevents the Internet Explorer splash screen from appearing when users start the browser.\n\nIf you enable this policy, the splash screen, which displays the program name, licensing, and copyright information, is not displayed.\n\nIf you disable this policy or do not configure it, the splash screen will be displayed when users start their browsers."
+
+ExplainNoSearchCustomization="Makes the Customize button in the Search Assistant appear dimmed.\n\nThe Search Assistant is a tool that appears in the Search bar to help users search the Internet.\n\nIf you enable this policy, users cannot change their Search Assistant settings, such as setting default search engines for specific tasks.\n\nIf you disable this policy or do not configure it, users can change their settings for the Search Assistant.\n\nThis policy is designed to help administrators maintain consistent settings for searching across an organization."
+
+ExplainSearch_NoFindFiles="Disables using the F3 key to search in Internet Explorer and Windows Explorer.\n\nIf you enable this policy, the search functionality of the F3 key is disabled. Users cannot press F3 to search the Internet (from Internet Explorer) or to search the hard disk (from Windows Explorer). If the user presses F3, a prompt appears that informs the user that this feature has been disabled.\n\nIf you disable this policy or do not configure it, users can press F3 to search the Internet (from Internet Explorer) or the hard disk (from Windows Explorer).\n\nThis policy is intended for situations in which administrators do not want users to explore the Internet or the hard disk.\n\nThis policy can be used in coordination with the "File Menu: Disable Open menu option" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Browser Menus), which prevents users from opening files by using the browser."
+
+ExplainBranding_NoExternalBranding="Prevents branding of Internet programs, such as customization of Internet Explorer and Outlook Express logos and title bars, by a third party.\n\nIf you enable this policy, it prevents customization of the browser by a third party, such as an Internet service provider or Internet content provider.\n\nIf you disable this policy or do not configure it, users could install customizations from a third party—for example, when signing up for Internet services.\n\nThis policy is intended for administrators who want to maintain a consistent browser across an organization."
+
+ExplainFavImportExport="Prevents users from exporting or importing favorite links by using the Import/Export wizard.\n\nIf you enable this policy, the Import/Export wizard cannot import or export favorite links or cookies, which are small text files that contain settings for Web sites.\n\nIf you disable this policy or do not configure it, users can import and export favorites in Internet Explorer by clicking the File menu, clicking Import and Export, and then running the Import/Export wizard.\n\nNote: If you enable this policy, users can still view screens in the wizard, but when users click Finish, a prompt will appear that states that this feature has been disabled."
+
+ExplainControlPanel_RestrictGeneralTab="Removes the General tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, users are unable to see and change settings for the home page, the cache, history, Web page appearance, and accessibility.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the following Internet Explorer policies (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\), because this policy removes the General tab from the interface:\n\n"Disable changing home page settings"\n"Disable changing Temporary Internet files settings"\n"Disable changing history settings"\n"Disable changing color settings"\n"Disable changing link color settings"\n"Disable changing font settings"\n"Disable changing language settings"\n"Disable changing accessibility settings""
+
+
+ExplainControlPanel_RestrictSecurityTab="Removes the Security tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, it prevents users from seeing and changing settings for security zones, such as scripting, downloads, and user authentication.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the following Internet Explorer policies, because this policy removes the Security tab from the interface:\n\n"Security zones: Do not allow users to change policies"\n"Security zones: Do not allow users to add/delete sites"\n"Only allow controls from Trusted Publishers""
+
+ExplainControlPanel_RestrictContentTab="Removes the Content tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, users are prevented from seeing and changing ratings, certificates, AutoComplete, Wallet, and Profile Assistant settings.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the following policies for the Content tab, because this policy removes the Content tab from the interface:\n\n"Disable changing ratings settings"\n"Disable changing certificate settings"\n"Disable changing Profile Assistant settings"\n"Disable AutoComplete for forms"\n"Do not allow AutoComplete to save passwords""
+
+ExplainControlPanel_RestrictConnectionsTab="Removes the Connections tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, users are prevented from seeing and changing connection and proxy settings.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the following policies for the Content tab, because this policy removes the Connections tab from the interface:\n\n"Disable Internet Connection Wizard"\n"Disable changing connection settings"\n"Disable changing proxy settings"\n"Disable changing Automatic Configuration settings""
+
+ExplainControlPanel_RestrictProgramsTab="Removes the Programs tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, users are prevented from seeing and changing default settings for Internet programs.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the following policies for the Programs tab, because this policy removes the Programs tab from the interface:\n\n"Disable changing Messaging settings"\n"Disable changing Calendar and Contact settings"\n"Disable the Reset Web Settings feature"\n"Disable changing default browser check""
+
+ExplainControlPanel_RestrictAdvancedTab="Removes the Advanced tab from the interface in the Internet Options dialog box.\n\nIf you enable this policy, users are prevented from seeing and changing advanced Internet settings, such as security, multimedia, and printing.\n\nIf you disable this policy or do not configure it, users can see and change these settings.\n\nWhen you set this policy, you do not need to set the "Disable changing Advanced page settings" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\), because this policy removes the Advanced tab from the interface."
+
+ExplainControlPanel_RestrictAdvanced="Prevents users from changing settings on the Advanced tab in the Internet Options dialog box.\n\nIf you enable this policy, users are prevented from changing advanced Internet settings, such as security, multimedia, and printing. Users cannot select or clear the check boxes on the Advanced tab.\n\nIf you disable this policy or do not configure it, users can select or clear settings on the Advanced tab.\n\nIf you set the "Disable the Advanced page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the Advanced page" policy removes the Advanced tab from the interface."
+
+ExplainRestrictHomePage="Prevents users from changing the home page of the browser. The home page is the first page that appears when users start the browser.\n\nIf you enable this policy, the settings in the Home Page area on the General tab in the Internet Options dialog box appear dimmed.\n\nIf you disable this policy or do not configure it, users can change their home page.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface.\n\nThis policy is intended for administrators who want to maintain a consistent home page across their organization."
+
+ExplainDialupSettings="Specifies that Automatic Detection will be used to configure dial-up settings for users.\n\nAutomatic Detection uses a DHCP (Dynamic Host Configuration Protocol) or DNS (Domain Name System) server to customize the browser the first time it is started.\n\nIf you enable this policy, users' dial-up settings will be configured by Automatic Detection.\n\nIf you disable this policy or do not configure it, dial-up settings will not be configured by Automatic Detection, unless specified by the user."
+
+ExplainAutoProxyCache="Prevents automatic proxy scripts, which interact with a server to automatically configure users' proxy settings, from being stored in the users' cache.\n\nIf you enable this policy, automatic proxy scripts will not be stored temporarily on the users' computer.\n\nIf you disable this policy or do not configure it, automatic proxy scripts can be stored in the users' cache."
+
+ExplainDisplayScriptFailureUI="Specifies that error messages will be displayed to users if problems occur with proxy scripts.\n\nIf you enable this policy, error messages will be displayed when the browser does not download or run a script to set proxy settings.\n\nIf you disable this policy or do not configure it, error messages will not be displayed when problems occur with proxy scripts."
+
+ExplainRestrictCache="Prevents users from changing the browser cache settings, such as the location and amount of disk space to use for the Temporary Internet Files folder.\n\nIf you enable this policy, the browser cache settings appear dimmed. These settings are found in the dialog box that appears when users click the General tab and then click the Settings button in the Internet Options dialog box.\n\nIf you disable this policy or do not configure it, users can change their cache settings.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface."
+
+ExplainRestrictHistory="Prevents users from changing the history settings for the browser.\n\nIf you enable this policy, the settings in the History area on the General tab in the Internet Options dialog box appear dimmed.\n\nIf you disable this policy or do not configure it, users can change the number of days to store Web page information and clear Web page history.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface."
+
+ExplainRestrictColors="Prevents users from changing the default Web page colors.\n\nIf you enable this policy, the color settings for Web pages appear dimmed. The settings are located in the Colors area in the dialog box that appears when the user clicks the General tab and then clicks the Colors button in the Internet Options dialog box.n\nIf you disable this policy or do not configure it, users can change the default background and text color of Web pages.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface.\n\nNote: The default Web page colors are ignored on Web pages in which the author has specified the background and text colors."
+
+ExplainRestrictLinks="Prevents users from changing the colors of links on Web pages.\n\nIf you enable this policy, the color settings for links appear dimmed. The settings are located in the Links area of the dialog box that appears when users click the General tab and then click the Colors button in the Internet Options dialog box.\n\nIf you disable this policy or do not configure it, users can change the default color of links on Web pages.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface.\n\nNote: The default link colors are ignored on Web pages on which the author has specified link colors."
+
+ExplainRestrictFonts="Prevents users from changing font settings.\n\nIf you enable this policy, the Font button on the General tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can change the default fonts for viewing Web pages.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface.\n\nNote: The default font settings colors are ignored in cases in which the Web page author has specified the font attributes."
+
+ExplainRestrictLanguages="Prevents users from changing language settings.\n\nIf you enable this policy, the Languages button on the General tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can change the language settings for viewing Web sites for languages in which the character set has been installed.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface."
+
+ExplainRestrictAccessibility="Prevents users from changing accessibility settings.\n\nIf you enable this policy, the Accessibility button on the General tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can change accessibility settings, such as overriding fonts and colors on Web pages.\n\nIf you set the "Disable the General page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the General page" policy removes the General tab from the interface."
+
+ExplainRestrictConnectionWizard="Prevents users from running the Internet Connection wizard.\n\nIf you enable this policy, the Setup button on the Connections tab in the Internet Options dialog box appears dimmed.\n\nUsers will also be prevented from running the wizard by clicking the Connect to the Internet icon on the desktop or by clicking Start, pointing to Programs, pointing to Accessories, pointing to Communications, and then clicking Internet Connection wizard.\n\nIf you disable this policy or do not configure it, users can change their connection settings by running the Internet Connection wizard.\n\nNote: This policy overlaps with the "Disable the Connections page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Connections tab from the interface. Removing the Connections tab from the interface, however, does not prevent users from running the Internet Connection wizard from the desktop or the Start menu."
+
+ExplainRestrictConnectionSettings="Prevents users from changing dial-up settings.\n\nIf you enable this policy, the Settings button on the Connections tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can change their settings for dial-up connections.\n\nIf you set the "Disable the Connections page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the Connections page" policy removes the Connections tab from the interface."
+
+ExplainRestrictProxy="Prevents users from changing proxy settings.\n\nIf you enable this policy, the proxy settings appear dimmed. These settings are in the Proxy Server area of the Local Area Network (LAN) Settings dialog box, which appears when the user clicks the Connections tab and then clicks the LAN Settings button in the Internet Options dialog box.\n\nIf you set the "Disable the Connections page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), you do not need to set this policy, because the "Disable the Connections page" policy removes the Connections tab from the interface."
+
+ExplainRestrictAutoconfig="Prevents users from changing automatic configuration settings. Automatic configuration is a process that administrators can use to update browser settings periodically.\n\nIf you enable this policy, the automatic configuration settings appear dimmed. The settings are located in the Automatic Configuration area of the Local Area Network (LAN) Settings dialog box. To see the Local Area Network (LAN) Settings dialog box, users open the Internet Options dialog box, click the Connections tab, and then click the LAN Settings button.\n\nIf you disable this policy or do not configure it, the user can change automatic configuration settings.\n\nThis policy is intended to enable administrators to ensure that users' settings are updated uniformly through automatic configuration.\n\nThe "Disable the Connections page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Connections tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictRatings="Prevents users from changing ratings that help control the type of Internet content that can be viewed.\n\nIf you enable this policy, the settings in the Content Advisor area on the Content tab in the Internet Options dialog box appear dimmed.\n\nIf you disable this policy or do not configure it, users can change their ratings settings.\n\nThe "Disable the Ratings page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Ratings tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictCertificates="Prevents users from changing certificate settings in Internet Explorer. Certificates are used to verify the identity of software publishers.\n\nIf you enable this policy, the settings in the Certificates area on the Content tab in the Internet Options dialog box appear dimmed.\n\nIf you disable this policy or do not configure it, users can import new certificates, remove approved publishers, and change settings for certificates that have already been accepted.\n\nThe "Disable the Content page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Content tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored.\n\nCaution: If you enable this policy, users can still run the Certificate Manager Import wizard by double-clicking a software publishing certificate (.spc) file. This wizard enables users to import and configure settings for certificates from software publishers that haven't already been configured for Internet Explorer."
+
+ExplainRestrictProfiles="Prevents users from changing Profile Assistant settings.\n\nIf you enable this policy, the My Profile button appears dimmed in the Personal Information area on the Content tab in the Internet Options dialog box.\n\nIf you disable this policy or do not configure it, users can change their profile information, such as their street and e-mail addresses.\n\nThe "Disable the Connections page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Connections tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictFormSuggest="Prevents Internet Explorer from automatically completing forms, such as filling in a name or a password that the user has entered previously on a Web page.\n\nIf you enable this policy, the Forms check box appears dimmed. To display the Forms check box, users open the Internet Options dialog box, click the Content tab, and then click the AutoComplete button.\n\nIf you disable this policy or do not configure it, users can enable the automatic completion of forms.\n\nThe "Disable the Content page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Content tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored.\n\nCaution: If you enable this policy after users have used their browser with form automatic completion enabled, it will not clear the automatic completion history for forms that users have already filled out."
+
+ExplainRestrictFormSuggestPW="Disables automatic completion of user names and passwords in forms on Web pages, and prevents users from being prompted to save passwords.\n\nIf you enable this policy, the User Names and Passwords on Forms and Prompt Me to Save Passwords check boxes appear dimmed. To display these check boxes, users open the Internet Options dialog box, click the Content tab, and then click the AutoComplete button.\n\nIf you disable this policy or don't configure it, users can determine whether Internet Explorer automatically completes user names and passwords on forms and prompts them to save passwords.\n\nThe "Disable the Content page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Content tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictMessaging="Prevents users from changing the default programs for messaging tasks.\n\nIf you enable this policy, the E-mail, Newsgroups, and Internet Call options in the Internet Programs area appear dimmed. To display these options, users open the Internet Options dialog box, and then click the Programs tab.\n\nIf you disable this policy or do not configure it, users can determine which programs to use for sending mail, viewing newsgroups, and placing Internet calls, if programs that perform these tasks are installed.\n\nThe "Disable the Programs page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Programs tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictCalendarContact="Prevents users from changing the default programs for managing schedules and contacts.\n\nIf you enable this policy, the Calendar and Contact check boxes appear dimmed in the Internet Programs area. To display these options, users open the Internet Options dialog box, and then click the Programs tab.\n\nIf you disable this policy or do not configure it, users can determine which programs to use for managing schedules and contacts, if programs that perform these tasks are installed.\n\nThis "Disable the Programs Page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel) takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainRestrictResetWebSettings="Prevents users from restoring default settings for home and search pages.\n\nIf you enable this policy, the Reset Web Settings button on the Programs tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can restore the default settings for home and search pages.\n\nThe "Disable the Programs page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Programs tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+
+ExplainRestrictCheckBrowser="Prevents Internet Explorer from checking to see whether it is the default browser.\n\nIf you enable this policy, the Internet Explorer Should Check to See Whether It Is the Default Browser check box on the Programs tab in the Internet Options dialog box appears dimmed.\n\nIf you disable this policy or do not configure it, users can determine whether Internet Explorer will check to see if it is the default browser. When Internet Explorer performs this check, it prompts the user to specify which browser to use as the default.\n\nThis policy is intended for organizations that do not want users to determine which browser should be their default.\n\nThe "Disable the Programs page" policy (located in \User Configuration\Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel), which removes the Programs tab from Internet Explorer in Control Panel, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainIdentities="Prevents users from configuring unique identities by using Identity Manager.\n\nIdentity Manager enables users to create multiple accounts, such as e-mail accounts, on the same computer. Each user has a unique identity, with a different password and different program preferences.\n\nIf you enable this policy, users will not be able to create new identities, manage existing identities, or switch identities. The Switch Identity option will be removed from the File menu in Address Book.\n\nIf you disable this policy or do not configure it, users can set up and change identities."
+
+;channels
+ExplainNoAddingChannels="Prevents users from adding channels to Internet Explorer.\n\nChannels are Web sites that are updated automatically on your computer according to a schedule specified by the channel provider.\n\nIf you enable this policy, the Add Active Channel button, which appears on a channel that users haven't yet subscribed to, will be disabled. Users also cannot add content that is based on a channel, such as some of the Active Desktop items from Microsoft's Active Desktop Gallery, to their desktop.\n\nIf you disable this policy or do not configure it, users can add channels to the Channel bar or to their desktop.\n\nNote: Most channel providers use the words Add Active Channel for this option; however, a few use different words, such as Subscribe."
+
+ExplainNoRemovingChannels="Prevents users from disabling channel synchronization in Internet Explorer.\n\nChannels are Web sites that are automatically updated on your computer according to a schedule specified by the channel provider.\n\nIf you enable this policy, users cannot prevent channels from being synchronized.\n\nIf you disable this policy or do not configure it, users can disable the synchronization of channels.\n\nThis policy is intended to help administrators ensure that users' computers are being updated uniformly across their organization.\n\nNote: This policy does not prevent users from removing active content from the desktop interface."
+
+ExplainNoAddingSubscriptions="Prevents users from specifying that Web pages can be downloaded for viewing offline. When users make Web pages available for offline viewing, they can view the content when their computer is not connected to the Internet.\n\nIf you enable this policy, users cannot add new schedules for downloading offline content. The Make Available Offline check box will be dimmed in the Add Favorite dialog box.\n\nIf you disable this policy or do not configure it, users can add new offline content schedules.\n\nThis policy is intended for organizations that are concerned about server load for downloading content.\n\nThe "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainNoEditingSubscriptions="Prevents users from editing an existing schedule for downloading Web pages for offline viewing.\n\nWhen users make Web pages available for offline viewing, they can view content when their computer is not connected to the Internet.\n\nIf you enable this policy, users cannot display the schedule properties of pages that have been set up for offline viewing. If users click the Tools menu, click Synchronize, select a Web page, and then click the Properties button, no properties are displayed. Users do not receive an alert stating that the command is unavailable.\n\nIf you disable this policy or do not configure it, users can edit an existing schedule for downloading Web content for offline viewing.\n\nThis policy is intended for organizations that are concerned about server load for downloading content.\n\nThe "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainNoRemovingSubscriptions="Prevents users from clearing the preconfigured settings for Web pages to be downloaded for offline viewing.\n\nWhen users make Web pages available for offline viewing, they can view content when their computer is not connected to the Internet.\n\nIf you enable this policy, the Make Available Offline check box in the Organize Favorites Favorite dialog box and the Make This Page Available Offline check box will be selected but dimmed. To display the Make This Page Available Offline check box, users click the Tools menu, click Synchronize, and then click the Properties button.\n\nIf you disable this policy or do not configure it, users can remove the preconfigured settings for pages to be downloaded for offline viewing.\n\nThis policy is intended for organizations that are concerned about server load for downloading content.\n\nThe "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainNoChannelLogging="Prevents channel providers from recording information about when their channel pages are viewed by users who are working offline.\n\nIf you enable this policy, it disables any channel logging settings set by channel providers in the channel definition format (.cdf) file. The .cdf file determines the schedule and other settings for downloading Web content.\n\nIf you disable this policy or do not configure it, channel providers can record information about when their channel pages are viewed by users who are working offline."
+
+ExplainNoScheduledUpdates="Disables existing schedules for downloading Web pages for offline viewing.\n\nWhen users make Web pages available for offline viewing, they can view content when their computer is not connected to the Internet.\n\nIf you enable this policy, the check boxes for schedules on the Schedule tab of the Web page properties are cleared and users cannot select them. To display this tab, users click the Tools menu, click Synchronize, select a Web page, click the Properties button, and then click the Schedule tab.\n\nIf you disable this policy, then Web pages can be updated on the schedules specified on the Schedule tab.\n\nThis policy is intended for organizations that are concerned about server load for downloading content.\n\nThe "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainNoChannelUI="Prevents users from viewing the Channel bar interface. Channels are Web sites that are automatically updated on their computer according to a schedule specified by the channel provider.\n\nIf you enable this policy, the Channel bar interface will be disabled, and users cannot select the Internet Explorer Channel Bar check box on the Web tab in the Display Properties dialog box.\n\nIf you disable this policy or do not configure it, users can view and subscribe to channels from the Channel bar interface."
+
+ExplainNoSubscriptionContent="Prevents content from being downloaded from Web sites that users have subscribed to.\n\nWhen users make Web pages available for offline viewing, they can view content when their computer is not connected to the Internet.\n\nIf you enable this policy, content will not be downloaded from Web sites that users have subscribed to. However, synchronization with the Web pages will still occur to determine if any content has been updated since the last time the user synchronized with or visited the page.\n\nIf you disable this policy or do not configure it, content will not be prevented from being downloaded.\n\nThe "Disable downloading of site subscription content" policy and the "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) take precedence over this policy. If either policy is enabled, this policy is ignored."
+
+ExplainNoEditingScheduleGroups="Prevents users from adding, editing, or removing schedules for offline viewing of Web pages and groups of Web pages that users have subscribed to.\n\nA subscription group is a favorite Web page plus the Web pages it links to.\n\nIf you enable this policy, the Add, Remove, and Edit buttons on the Schedule tab in the Web page Properties dialog box are dimmed. To display this tab, users click the Tools menu, click Synchronize, select a Web page, click the Properties button, and then click the Schedule tab.\n\nIf you disable this policy or do not configure it, users can add, remove, and edit schedules for Web sites and groups of Web sites.\n\nThe "Disable editing schedules for offline pages" policy and the "Hide Favorites menu" policy (located in User Configuration\Administrative Templates\Windows Components\Internet Explorer) take precedence over this policy. If either policy is enabled, this policy is ignored."
+
+ExplainMaxSubscription="Restricts the amount of information downloaded for offline viewing.\n\nIf you enable this policy, you can set limits to the size and number of pages that users can download. If users attempt to exceed the number of subscriptions, a prompt will appear that states that they cannot set up more Web sites for offline viewing.\n\nIf you disable this policy or do not configure it, then users can determine the amount of content that is searched for new information and downloaded.\n\nCaution: Although the Maximum Number of Offline Pages option determines how many levels of a Web site are searched for new information, it does not change the user interface in the Offline Favorites wizard.\n\nNote: The begin and end times for downloading are measured in minutes after midnight. The Maximum Offline Page Crawl Depth setting specifies how many levels of a Web site are searched for new information."
+
+
+;toolbars
+ExplainNoToolbarCustomize="Prevents users from determining which buttons appear on the Internet Explorer and Windows Explorer standard toolbars.\n\nIf you enable this policy, the Customize command on the Toolbars submenu of the View menu will be removed.\n\nIf you disable this policy or do not configure it, users can customize which buttons appear on the Internet Explorer and Windows Explorer toolbars.\n\nThis policy can be used in coordination with the "Disable customizing browser toolbars" policy, which prevents users from determining which toolbars are displayed in Internet Explorer and Windows Explorer."
+
+ExplainNoBandCustomize="Prevents users from determining which toolbars are displayed in Internet Explorer and Windows Explorer.\n\nIf you enable this policy, the list of toolbars, which users can display by clicking the View menu and then pointing to the Toolbars command, will appear dimmed.\n\nIf you disable this policy or do not configure it, users can determine which toolbars are displayed in Windows Explorer and Internet Explorer.\n\nThis policy can be used in coordination with the "Disable customizing browser toolbar buttons" policy, which prevents users from adding or removing toolbars from Internet Explorer."
+
+
+ExplainToolbarButtons="Specifies which buttons will be displayed on the standard toolbar in Internet Explorer.\n\nIf you enable this policy, you can specify whether or not each button will be displayed by selecting or clearing the check boxes for each button.\n\nIf you disable this policy or do not configure it, the standard toolbar will be displayed with its default settings, unless users customize it."
+
+ExplainFile_NoBrowserSaveAs="Prevents users from saving Web pages from the browser File menu to their hard disk or to a network share.\n\nIf you enable this policy, the Save As command on the File menu will be removed.\n\nIf you disable this policy or do not configure it, users can save Web pages for later viewing.\n\nThis policy takes precedence over the "File Menu: Disable Save As Web Page Complete" policy, which prevents users from saving the entire contents that are displayed or run from a Web Page, such as graphics, scripts, and linked files, but does not prevent users from saving the text of a Web page.\n\nCaution: If you enable this policy, users are not prevented from saving Web content by pointing to a link on a Web page, clicking the right mouse button, and then clicking Save Target As."
+
+
+ExplainFile_NoFileNew="Prevents users from opening a new browser window from the File menu.\n\nIf this policy is enabled, users cannot open a new browser window by clicking the File menu, pointing to the New menu, and then clicking Window. The user interface is not changed, but a new window will not be opened, and users will be informed that the command is not available.\n\nIf you disable this policy or do not configure it, users can open a new browser window from the File menu.\n\nCaution: This policy does not prevent users from opening a new browser window by right clicking, and then clicking the Open in New Window command. To prevent users from using the shortcut menu to open new browser windows, you should also set the "Disable Open in New Window menu option" policy, which disables this command on the shortcut menu, or the "Disable context menu" policy, which disables the entire shortcut menu."
+
+ExplainFile_NoFileOpen="Prevents users from opening a file or Web page from the File menu in Internet Explorer.\n\nIf you enable this policy, the Open dialog box will not appear when users click the Open command on the File menu. If users click the Open command, they will be notified that the command is not available.\n\nIf you disable this policy or do not configure it, users can open a Web page from the browser File menu.\n\nCaution: This policy does not prevent users from right-clicking a link on a Web page, and then clicking the Open or Open in New Window command. To prevent users from opening Web pages by using the shortcut menu, set the "Disable Open in New Window menu option" policy, which disables this command on the shortcut menu, or the "Disable context menu" policy, which disables the entire shortcut menu."
+
+ExplainFile_NoBrowserSaveWebComplete="Prevents users from saving the complete contents that are displayed on or run from a Web page, including the graphics, scripts, linked files, and other elements. It does not prevent users from saving the text of a Web page.\n\nIf you enable this policy, the Web Page, Complete file type option will be removed from the Save as Type drop-down box in the Save Web Page dialog box. Users can still save Web pages as hypertext markup language (HTML) files or as text files, but graphics, scripts, and other elements are not saved. To display the Save Web Page dialog box, users click the File menu, and then click the Save As command.\n\nIf you disable this policy or do not configure it, users can save all elements on a Web page.\n\nThe "File menu: Disable Save As... menu option" policy, which removes the Save As command, takes precedence over this policy. If it is enabled, this policy is ignored."
+
+ExplainFile_NoBrowserClose="Prevents users from closing Internet Explorer and Windows Explorer.\n\nIf you enable this policy, the Close command on the File menu will appear dimmed.\n\nIf you disable this policy or do not configure it, users are not prevented from closing the browser or Windows Explorer.\n\nNote: The X button in the top right corner of the program will not work; if users click the X button, they will be informed that the command is not available."
+
+ExplainView_NoViewSource="Prevents users from viewing the HTML source of Web pages by clicking the Source command on the View menu.\n\nIf you enable this policy, the Source command on the View menu will appear dimmed.\n\nIf you disable this policy or do not configure it, then users can view the HTML source of Web pages from the browser View menu.\n\nCaution: This policy does not prevent users from viewing the HTML source of a Web page by right-clicking a Web page to open the shortcut menu, and then clicking View Source. To prevent users from viewing the HTML source of a Web page from the shortcut menu, set the "Disable context menu" policy, which disables the entire shortcut menu."
+
+ExplainView_NoTheaterMode="Prevents users from displaying the browser in full-screen (kiosk) mode, without the standard toolbar.\n\nIf you enable this policy, the Full Screen command on the View menu will appear dimmed, and pressing F11 will not display the browser in a full screen.\n\nIf you disable this policy or do not configure it, users can display the browser in a full screen.\n\nThis policy is intended to prevent users from displaying the browser without toolbars, which might be confusing for some beginning users."
+
+ExplainNoFavorites="Prevents users from adding, removing, or editing the list of Favorite links.\n\nThe Favorites list is a way to store popular links for future use.\n\nIf you enable this policy, the Favorites menu is removed from the interface, and the Favorites button on the browser toolbar appears dimmed. The Add to Favorites command on the shortcut menu is disabled; when users click it, they are informed that the command is unavailable.\n\nIf you disable this policy or do not configure it, users can manage their Favorites list.\n\nThis policy is intended to ensure that users maintain consistent lists of favorites across your organization.\n\nNote: If you enable this policy, users also cannot click Synchronize on the Tools menu to manage their favorite links that are set up for offline viewing."
+
+ExplainTools_Menu="Prevents users from opening the Internet Options dialog box from the Tools menu in Internet Explorer.\n\nIf you enable this policy, users cannot change their Internet options, such as default home page, cache size, and connection and proxy settings, from the browser Tools menu. When users click the Internet Options command on the Tools menu, they are informed that the command is unavailable.\n\nIf you disable this policy or do not configure it, users can change their Internet settings from the browser Tools menu.\n\nCaution: This policy does not prevent users from viewing and changing Internet settings by clicking the Internet Options icon in Windows Control Panel.\n\nAlso, see policies for Internet options in the \Administrative Templates\Windows Components\Internet Explorer and in \Administrative Templates\Windows Components\Internet Explorer\Internet Control Panel folders."
+
+ExplainHelp_NoTip="Prevents users from viewing or changing the Tip of the Day interface in Internet Explorer.\n\nIf you enable this policy, the Tip of the Day command is removed from the Help menu.\n\nIf you disable this policy or do not configure it, users can enable or disable the Tip of the Day, which appears at the bottom of the browser."
+
+ExplainHelp_NoNetscapeHelp="Prevents users from displaying tips for users who are switching from Netscape.\n\nIf you enable this policy, the For Netscape Users command is removed from the Help menu.\n\nIf you disable this policy or do not configure it, users can display content about switching from Netscape by clicking the For Netscape Users command on the Help menu.\n\nCaution: Enabling this policy does not remove the tips for Netscape users from the Internet Explorer Help file."
+
+ExplainHelp_NoTutorial="Prevents users from running the Internet Explorer Tour from the Help menu in Internet Explorer.\n\nIf you enable this policy, the Tour command is removed from the Help menu.\n\nIf you disable this policy or do not configure it, users can run the tour from the Help menu."
+
+ExplainHelp_NoFeedback="Prevents users from sending feedback to Microsoft by clicking the Send Feedback command on the Help menu.\n\nIf you enable this policy, the Send Feedback command is removed from the Help menu.\n\nIf you disable this policy or do not configure it, users can fill out an Internet form to provide feedback about Microsoft products."
+
+ExplainNoBrowserContextMenu="Prevents the shortcut menu from appearing when users click the right mouse button while using the browser.\n\nIf you enable this policy, the shortcut menu will not appear when users point to a Web page, and then click the right mouse button.\n\nIf you disable this policy or do not configure it, users can use the shortcut menu.\n\nThis policy can be used to ensure that the shortcut menu isn't used as an alternate method of running commands that have been removed from other parts of the interface."
+
+ExplainNoOpeninNewWnd="Prevents using the shortcut menu to open a link in a new browser window.\n\nIf you enable this policy, users cannot point to a link, click the right mouse button, and then click the Open in New Window command.\n\nIf you disable this policy or do not configure it, users can open a Web page in a new browser window by using the shortcut menu.\n\nThis policy can be used in coordination with the "File menu: Disable New menu option" policy, which prevents users from opening the browser in a new window by clicking the File menu, pointing to New, and then clicking Window.\n\nNote: When users click the Open in New Window command, the link will not open in a new window and they will be informed that the command is not available."
+
+ExplainNoSelectDownloadDir="Prevents users from saving a program or file that Internet Explorer has downloaded to the hard disk.\n\nIf you enable this policy, users cannot save a program to disk by clicking the Save This Program to Disk command while attempting to download a file. The file will not be downloaded and users will be informed that the command is not available.\n\nIf you disable this policy or do not configure it, users can download programs from their browsers."
+
+
+;persistence
+ExplainPersistence_FileLimits0="Limits the amount of storage that a page or site using the DHTML Persistence behavior can use for the Local Computer security zone.\n\nIf you enable this policy, you can specify the persistence storage amount per domain or per document for this security zone.\n\nIf you disable this policy or do not configure it, you cannot set this limit.\n\nNote: This setting does not appear in the user interface."
+
+ExplainPersistence_FileLimits1="Limits the amount of storage that a page or site using the DHTML Persistence behavior can use for the Local Intranet security zone.\n\nIf you enable this policy, you can specify the persistence storage amount per domain or per document for this security zone.\n\nIf you disable this policy or do not configure it, you cannot set this limit.\n\nNote: This setting does not appear in the user interface."
+
+ExplainPersistence_FileLimits2="Limits the amount of storage that a page or site using the DHTML Persistence behavior can use for the Trusted Sites security zone.\n\nIf you enable this policy, you can specify the persistence storage amount per domain or per document for this security zone.\n\nIf you disable this policy or do not configure it, you cannot set this limit.\n\nNote: This setting does not appear in the user interface."
+
+ExplainPersistence_FileLimits3="Limits the amount of storage that a page or site using the DHTML Persistence behavior can use for the Internet security zone.\n\nIf you enable this policy, you can specify the persistence storage amount per domain or per document for this security zone.\n\nIf you disable this policy or do not configure it, you cannot set this limit.\n\nNote: This setting does not appear in the user interface."
+
+ExplainPersistence_FileLimits4="Limits the amount of storage that a page or site using the DHTML Persistence behavior can use for the Restricted Sites security zone.\n\nIf you enable this policy, you can specify the persistence storage amount per domain or per document for this security zone.\n\nIf you disable this policy or do not configure it, you cannot set this limit.\n\nNote: This setting does not appear in the user interface."
+
+
+;axaa
+ExplainRDS="Designates the Remote Data Service (RDS) ActiveX control as administrator approved.\n\nThis control is used by Web developers to move data from a server to a client application or Web page, manipulate the data on the client, and return updates to the server in a single round trip.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainTDC="Designates the Tabular Data Control (TDC) as administrator approved.\n\nThis control enables data to be displayed in a delimited text file within tables or within a form. It also enables data to be sorted and filtered by the browser without interaction with the Web server.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainXML="Designates the Extensible Markup Language (XML) Data Source Object as administrator approved.\n\nThis control enables developers to connect to XML data and provide it to an HTML page by using data-binding functionality in Dynamic HTML.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainActive_Setup="Designates the Active Setup ActiveX control as administrator approved.\n\nThis control enables a form of setup in which a small number of files are initially downloaded from the Web to start the Setup process. Active Setup is designed to recover the setup process if a connection is interrupted.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainMedia_Player="Designates the Media Player ActiveX control as administrator approved.\n\nThis control is used for playing sounds, videos, and other media.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainExtras="Designates a group of Microsoft ActiveX controls used to extend browser functionality as administrator approved.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nTo specify a control as administrator approved, click Enabled, and then select the check box for the control:\n\n-- Animated Button - animates buttons in the browser\n-- Internet Explorer Label Control - displays text at an angle or along a curve\n-- Internet Explorer Menu Control - adds a drop-down menu or a menu item to a Web page\n-- Internet Explorer Preloader Control - preloads a Web page into the cache\n-- Internet Explorer Timer Control - causes events to happen periodically on a Web page.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainMenu_Controls="Designates a set of Microsoft ActiveX controls used to manipulate pop-up menus in the browser as administrator approved.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nTo specify a control as administrator approved, click Enabled, and then select the check box for the control:\n\n-- MCSiMenu - enables Web authors to control the placement and appearance of Windows pop-up menus on Web pages\n-- Popup Menu Object - enables Web authors to add pop-up menus to Web pages\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+Explain_Microsoft_Agent="Designates the Microsoft Agent ActiveX control as administrator approved.\n\nMicrosoft Agent is a set of software services that supports the presentation of software agents as interactive personalities within the Microsoft Windows interface.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainMicrosoft_Chat="Designates the Microsoft Chat ActiveX control as administrator approved.\n\nThis control is used by Web authors to build text- and graphical-based Chat communities for real-time conversations on the Web.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainWebpost="Designates the WebPost ActiveX control as administrator approved.\n\nThis control is based on the Web Publishing wizard. It enables administrators to post Web content to Web servers.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainCache_Preloader="Designates the Microsoft Network (MSN) Cache Preloader ActiveX control as administrator approved.\n\nThis control enables administrators to load a Web page into the user's cache before the user views it.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainCarpoint="Designates the Microsoft Network (MSN) Carpoint automatic pricing control as administrator approved.\n\nThis control enables enhanced pricing functionality on the Carpoint Web site, where users can shop for and obtain information about vehicles.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainInstall="Designates a set of Microsoft Network (MSN) Install controls as administrator approved.\n\nThese controls are used for installing and managing MSN services.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nSelect the check boxes for the controls that you want to designate as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainInvestor="Designates a set of Microsoft Network (MSN) Investor controls as administrator approved.\n\nThese controls enable users to view updated lists of stocks on their Web pages.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nSelect the check boxes for the controls that you want to designate as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainMSNBC="Designates a set of MSNBC controls as administrator approved.\n\nThese controls enable enhanced browsing of news reports on the MSNBC Web site.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nSelect the check boxes for the controls that you want to designate as administrator approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainMusic="Designates a set of Microsoft Network (MSN) music controls as administrator approved.\n\nThese controls enable enhanced music services on the MSN Web site.\n\nIf you enable this policy, these controls can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, these controls will not be designated as administrator approved.\n\nSelect the check boxes for the controls that you want to designate as administrator-approved.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."
+
+ExplainQuick_View_Access="Designates the Quick View Access control for the Microsoft Network (MSN) as administrator approved.\n\nQuick View Access is represented by an icon on the user's task bar that displays the number of e-mail messages a user has received and provides quick access to MSN sites.\n\nIf you enable this policy, this control can be run in security zones in which you specify that administrator-approved controls can be run.\n\nIf you disable this policy or do not configure it, this control will not be designated as administrator approved.\n\nThis policy helps manage security for ActiveX controls in an organization.\n\nTo specify how administrator-approved controls are handled for each security zone, carry out the following steps:\n\n1. In Group Policy, click User Configuration, click Internet Explorer Maintenance, and then click Security.\n2. Double-click Security Zones and Content Ratings, click Import the Current Security Zones Settings, and then click Modify Settings.\n3. Select the content zone in which you want to manage ActiveX controls, and then click Custom Level.\n4. In the Run ActiveX Controls and Plug-ins area, click Administrator Approved."

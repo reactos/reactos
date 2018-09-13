@@ -1,0 +1,125 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\browseui\browseui.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\browseui\browseui.inc
+
+NO_BROWSER_FILE = 1
+
+TARGETNAME      = srccpp
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+SOURCES         =  \
+                  ..\unixstuff.cpp \
+                  ..\msgband.cpp \
+                  ..\accdel.cpp \
+                  ..\aclhist.cpp \
+                  ..\aclisf.cpp \
+                  ..\aclmru.cpp \
+                  ..\aclmulti.cpp \
+                  ..\acthread.cpp \
+                  ..\address.cpp \
+                  ..\addrlist.cpp \
+                  ..\aeditbox.cpp\
+                  ..\augisf.cpp \
+                  ..\augmisf.cpp \
+                  ..\autocomp.cpp \
+                  ..\bandobj.cpp \
+                  ..\bandprxy.cpp \
+                  ..\bands.cpp \
+                  ..\bandsite.cpp \
+                  ..\basebar.cpp \
+                  ..\brand.cpp \
+                  ..\browband.cpp \
+                  ..\browbar.cpp \
+                  ..\browbs.cpp \
+                  ..\browmenu.cpp \
+                  ..\bsmenu.cpp \
+                  ..\cobjsafe.cpp \
+                  ..\commonsb.cpp \
+                  ..\cowsite.cpp \
+                  ..\chanbar.cpp \
+                  ..\channel.cpp \
+                  ..\comcatex.cpp \
+                  ..\cwndproc.cpp \
+                  ..\dbapp.cpp \
+                  ..\debdump.cpp \
+                  ..\deskbar.cpp \
+                  ..\dhuihand.cpp \
+                  ..\dllreg.cpp \
+                  ..\dockbar.cpp \
+                  ..\dpastuff.cpp \
+                  ..\droptgt.cpp \
+                  ..\explband.cpp \
+                  ..\explore2.cpp \
+                  ..\fadetsk.cpp \
+                  ..\gfldset.cpp \
+                  ..\htmlbm.cpp \
+                  ..\iaccess.cpp \
+                  ..\icotask.cpp \
+                  ..\identity.cpp \
+                  ..\iethread.cpp \
+                  ..\imgcache.cpp \
+                  ..\inpobj.cpp \
+                  ..\isfband.cpp \
+                  ..\isfmenu.cpp \
+                  ..\itbar.cpp \
+                  ..\itbdrop.cpp \
+                  ..\libx.cpp \
+                  ..\mbdrop.cpp \
+                  ..\menubar.cpp \
+                  ..\menuband.cpp \
+                  ..\menuisf.cpp \
+                  ..\menusite.cpp \
+                  ..\mnbase.cpp \
+                  ..\mnfolder.cpp \
+                  ..\mnstatic.cpp \
+                  ..\mrulist.cpp \
+                  ..\multimon.cpp \
+                  ..\olestuff.cpp \
+                  ..\progress.cpp \
+                  ..\proxy.cpp \
+                  ..\proxyisf.cpp \
+                  ..\qlink.cpp \
+                  ..\rgtreeop.cpp \
+                  ..\schedule.cpp \
+                  ..\sftbar.cpp \
+                  ..\shbrows2.cpp \
+                  ..\shellurl.cpp \
+                  ..\snslist.cpp \
+                  ..\stdenum.cpp \
+                  ..\stream.cpp \
+                  ..\tbmenu.cpp \
+                  ..\theater.cpp \
+                  ..\treedrop.cpp \
+                  ..\util.cpp   \
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = ..\priv.h
+

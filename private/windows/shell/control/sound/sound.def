@@ -1,0 +1,7 @@
+ LIBRARY Sound
+
+EXPORTS
+    SoundDlg
+    CPlApplet
+    DllInitialize
+

@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\dbind=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=dbind
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES) \
+    $(ROOT)\src\dlay\nile2std; \
+    $(ROOT)\src\dlay\include;
+
+!ifdef UNIX
+SOURCE_PLATFORM = \
+    unixposition.cxx
+
+!else
+SOURCE_PLATFORM =
+
+!endif
+
+SOURCES= \
+    $(SOURCE_PLATFORM) \
+    binder.cxx \
+    provider.cxx \
+    consumer.cxx \
+    dmembmgr.cxx \
+    currec.cxx \
+    dbtask.cxx \
+    convert.cxx \
+    dbinding.cxx \
+    detail.cxx \
+    drecgen.cxx \
+    ospmrshl.cxx \
+    bmkcoll.cxx \
+    simpdc.cxx \
+	trdntosp.cxx
+
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES) \
+    position.hxx \
+    icapexp.h
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

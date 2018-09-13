@@ -1,0 +1,530 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""res\\eudc.rc2""  // App Studio Ç≈ÇÕï“èWÇ≈Ç´Ç»Ç¢ÉäÉ[ÉX\r\n"
+    "\r\n"
+    "#include ""afxres.rc""\t\t\t// ÉäÉ[ÉXÇÃïWèÄìIÇ»ç¨óvëf\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "RES\\EUDC.ICO"
+IDI_ROTATE90            ICON    DISCARDABLE     "RES\\ROTATE90.ICO"
+IDI_ROTATE180           ICON    DISCARDABLE     "RES\\ROTATE18.ICO"
+IDI_ROTATE270           ICON    DISCARDABLE     "RES\\ROTATE27.ICO"
+IDI_FLIPHOR             ICON    DISCARDABLE     "RES\\FLIPHOR.ICO"
+IDI_FLIPVER             ICON    DISCARDABLE     "RES\\FLIPVER.ICO"
+IDI_TRUETYPE            ICON    DISCARDABLE     "RES\\ICON1.ICO"
+IDI_WIFEFONT            ICON    DISCARDABLE     "RES\\ICON2.ICO"
+IDI_UPRIGHT             ICON    DISCARDABLE     "res\\ico00001.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "RES\\TOOLBAR.BMP"
+IDB_CLOSEBMP            BITMAP  DISCARDABLE     "RES\\CLOSEBMP.BMP"
+IDB_CLOSEBMPP           BITMAP  DISCARDABLE     "RES\\BMP00001.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Font Links...",              ID_SELECTFAMILY
+        MENUITEM "&Import Bitmap Font...",      ID_IMPORT_FILE
+        MENUITEM "I&mport IME Table...",        ID_LINKBATCHMODE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_GAIJI_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Cut\tCtrl+X",                ID_GAIJI_CUT
+        MENUITEM "C&opy\tCtrl+C",               ID_GAIJI_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_GAIJI_PASTE
+        MENUITEM "&Delete\tDel",                ID_DELETE_EDIT
+        MENUITEM "Cop&y Character...",          ID_CALL_CHAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Code...\tCtrl+O",     ID_READ_CHAR
+        MENUITEM "Sa&ve Character\tCtrl+S",     ID_SAVECHAR
+        MENUITEM "Save Character &As...",       ID_SAVE_CHARAS
+        MENUITEM "IME &Link...",                ID_LINKIME
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Guidebar",                   IDW_STYLES
+        MENUITEM "&Toolbar",                    ID_TOOLBAR
+        MENUITEM "G&rid\tCtrl+G",               ID_SHOW_GRID
+        MENUITEM SEPARATOR
+        MENUITEM "&Next Code\tCtrl+N",          ID_NEXTCODE
+        MENUITEM "&Prev Code\tCtrl+P",          ID_PREVCODE
+        MENUITEM SEPARATOR
+        MENUITEM "&Show Outline",               ID_FIT_CURVE
+    END
+    POPUP "&Tools"
+    BEGIN
+        POPUP "&Item"
+        BEGIN
+            MENUITEM "&Pencil",                     ID_PALETTEPEN
+            MENUITEM "&Brush",                      ID_PALETTEBRUSH
+            MENUITEM "Straight &Line",              ID_PALETTESLOPE
+            MENUITEM "Hollow &Rectangle",           ID_PALETTERECT
+            MENUITEM "&Filled Rectangle",           ID_PALETTERECTFILL
+            MENUITEM "Hollow &Ellipse",             ID_PALETTECIRCLE
+            MENUITEM "F&illed Ellipse",             ID_PALETTECIRCLEFILL
+            MENUITEM "Rectangular &Selection",      ID_PALETTERECTBAND
+            MENUITEM "Freef&orm Selection",         ID_PALETTEFREEFORM
+            MENUITEM "Er&aser",                     ID_PALETTEERASER
+        END
+        MENUITEM "&Flip/Rotate...",             ID_ROTATE
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&Reference...",               ID_REFFERFILE_NEW
+        MENUITEM "&Close Reference",            ID_REFFER_CLOSE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About",                      ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "C",            ID_GAIJI_COPY,          VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_SHOW_GRID,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_NEXTCODE,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_READ_CHAR,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_PREVCODE,            VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_SAVECHAR,            VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_GAIJI_PASTE,         VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_DELETE_EDIT,         VIRTKEY, NOINVERT
+    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_GAIJI_CUT,           VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_GAIJI_UNDO,          VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REFERENCE DIALOG DISCARDABLE  0, 0, 310, 226
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Referrence of Character"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        ID_REFERCODE,11,20,288,106,ES_MULTILINE | ES_READONLY | 
+                    NOT WS_BORDER | WS_VSCROLL | WS_GROUP
+    LTEXT           "",IDC_COLUMNHEADINGR,11,9,280,8,NOT WS_GROUP
+    LTEXT           "&Code:",IDC_STATICC,42,135,39,8
+    EDITTEXT        IDC_EDITCODE,84,131,56,14,ES_CENTER | ES_MULTILINE | 
+                    ES_UPPERCASE
+    LTEXT           "&Shape:",IDC_STATICS,42,150,40,8
+    EDITTEXT        IDC_EDITCHAR,84,150,56,48,ES_CENTER | ES_MULTILINE
+    DEFPUSHBUTTON   "OK",IDOK,77,208,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,130,208,50,15
+    PUSHBUTTON      "&Font...",IDC_BUTTOMFONT,183,208,50,15
+    LTEXT           "",IDC_EDITFONT,201,135,81,9
+    LTEXT           "Font:",IDC_STATICF,165,135,30,8
+    GROUPBOX        "",IDC_STATIC,7,2,297,202
+    LTEXT           "",IDC_INFOFRAME,160,131,127,14
+END
+
+IDD_CUSTOMCODE DIALOG DISCARDABLE  0, 0, 310, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Private Character Editor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_CUSTOMEDIT,11,20,288,106,ES_MULTILINE | ES_READONLY | 
+                    NOT WS_BORDER | WS_VSCROLL
+    LTEXT           "",IDC_COLUMNHEADING,11,9,280,8,NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,103,196,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,156,196,50,15
+    LTEXT           "&Range:",IDC_STATICRANGE,163,168,30,8,NOT WS_VISIBLE | 
+                    NOT WS_GROUP
+    COMBOBOX        IDC_CHINARANGE,197,166,88,35,CBS_DROPDOWN | NOT 
+                    WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Font:",IDC_FONT_NAME,163,139,25,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETFONTNAME,191,139,91,8,NOT WS_GROUP
+    LTEXT           "File:",IDC_FILE_NAME,70,168,25,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETFILENAME,98,168,52,8,NOT WS_GROUP
+    LTEXT           "Code:",IDC_CODE_NAME,70,139,25,8,NOT WS_GROUP
+    LTEXT           "",IDC_CODECUST,98,139,52,8,NOT WS_GROUP
+    GROUPBOX        "",IDC_STATIC,6,2,297,189
+    LTEXT           "",IDC_CUSTOMFRAME,66,131,88,24,NOT WS_GROUP
+    LTEXT           "",IDC_CUSTOMFRAME2,66,160,88,24,NOT WS_GROUP
+    LTEXT           "",IDC_CUSTOMFRAME3,158,131,128,24,NOT WS_GROUP
+    EDITTEXT        IDC_CUSTOMCHR,12,131,47,53,ES_CENTER | ES_MULTILINE | 
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+END
+
+IDD_ASSOCIATION DIALOG DISCARDABLE  0, 0, 252, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Font Links"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Type of Private Character font",IDC_STATIC,7,7,184,46
+    CONTROL         "&Link with All Fonts",IDC_RADIO_SYSTEM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,16,21,165,8
+    CONTROL         "Link with &Selected Fonts",IDC_RADIO_DBCS,"Button",
+                    BS_AUTORADIOBUTTON,16,37,164,8
+    GROUPBOX        "Select Fonts",IDC_STATIC,7,58,184,91
+    LISTBOX         IDC_REGISTLIST,16,73,166,52,LBS_SORT | 
+                    LBS_OWNERDRAWVARIABLE | LBS_NOINTEGRALHEIGHT | 
+                    WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Save &As...",IDC_MODIFY,16,130,50,15,WS_DISABLED | 
+                    WS_GROUP
+    PUSHBUTTON      "&Remove",IDC_REMOVE,71,130,50,15,WS_DISABLED
+    DEFPUSHBUTTON   "OK",IDOK,198,11,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,198,29,50,16
+END
+
+IDD_IMPORT DIALOG DISCARDABLE  0, 0, 175, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Import Bitmap Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Private Character File:",IDC_STATICBMP,7,7,108,8
+    EDITTEXT        IDC_BMP_IMPUT,7,19,160,15,ES_UPPERCASE | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,9,46,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,62,46,50,15
+    PUSHBUTTON      "B&rowse...",IDC_FILE_BROWSE,115,46,50,15
+END
+
+IDD_ROTATECHAR DIALOG DISCARDABLE  0, 0, 178, 159
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Rotate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Flip/Rotate",IDC_STATIC,7,7,112,145,WS_GROUP
+    CONTROL         "Flip &horizontal",IDC_FLIPHOR,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,42,24,70,10
+    CONTROL         "Flip &Vertical",IDC_FLIPVER,"Button",BS_AUTORADIOBUTTON,
+                    42,50,70,10
+    CONTROL         "&Rotate 90",IDC_ROTATE90,"Button",BS_AUTORADIOBUTTON,42,
+                    77,70,10
+    CONTROL         "R&otate 180",IDC_ROTATE180,"Button",BS_AUTORADIOBUTTON,
+                    42,104,70,10
+    CONTROL         "Ro&tate 270",IDC_ROTATE270,"Button",BS_AUTORADIOBUTTON,
+                    42,131,70,10
+    DEFPUSHBUTTON   "OK",IDOK,124,119,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,124,137,50,15
+    ICON            IDI_FLIPHOR,IDC_ICON_HOR,14,19,18,20
+    ICON            IDI_FLIPVER,IDC_ICON_VER,14,45,18,20
+    ICON            IDI_ROTATE90,IDC_ICON_R90,14,72,18,20
+    ICON            IDI_ROTATE180,IDC_ICON_R180,14,99,18,20
+    ICON            IDI_ROTATE270,IDC_ICON_R270,14,126,18,20
+    ICON            IDI_UPRIGHT,IDC_UPRIGHT,137,20,21,20
+END
+
+1543 DIALOG DISCARDABLE  13, 54, 229, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Font",1088,6,3,40,9
+    COMBOBOX        1136,6,13,94,54,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | 
+                    CBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Font St&yle",1089,107,3,44,9
+    COMBOBOX        1137,106,13,64,54,CBS_SIMPLE | CBS_DISABLENOSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,175,13,50,15
+    PUSHBUTTON      "Cancel",IDCANCEL,175,31,50,15
+    GROUPBOX        "Sample",1073,6,68,164,55
+    CTEXT           "AaBbYyZz",1092,9,77,158,42,SS_NOPREFIX | NOT WS_VISIBLE
+    COMBOBOX        1138,177,73,37,49,CBS_SIMPLE | CBS_OWNERDRAWFIXED | 
+                    CBS_SORT | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | NOT 
+                    WS_VISIBLE | WS_DISABLED | WS_VSCROLL
+END
+
+IDD_GAGE DIALOG DISCARDABLE  0, 0, 195, 50
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "gage"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDOK,138,29,50,15,WS_GROUP
+    EDITTEXT        IDC_GAGE,6,8,182,15,ES_AUTOHSCROLL
+    LTEXT           "",IDC_IMPORT_STATIC,7,29,59,10
+END
+
+IDD_LINKBATCH DIALOG DISCARDABLE  0, 0, 175, 66
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Import IME Table"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Files:",IDC_STATICIMETBL,7,7,110,8
+    EDITTEXT        IDC_IMETABLE,7,19,160,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,9,46,50,15,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,62,46,50,15
+    PUSHBUTTON      "B&rowse...",IDC_BROWSETABLE,115,46,50,15
+END
+
+IMELINKDLG DIALOG DISCARDABLE  0, 0, 212, 102
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IME Link -"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "IME Radical",IDC_STATIC,7,4,195,71
+    CONTROL         "IME List",IDD_RADICAL,"Radical",WS_GROUP | WS_TABSTOP,
+                    13,14,186,56
+    PUSHBUTTON      "&Register",IDOK,59,79,50,15,WS_GROUP
+    DEFPUSHBUTTON   "&Cancel",IDCANCEL,115,78,50,15
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_PENCIL              CURSOR  DISCARDABLE     "RES\\PENCIL.CUR"
+IDC_BRUSH               CURSOR  DISCARDABLE     "RES\\BRUSH.CUR"
+IDC_COMPUS              CURSOR  DISCARDABLE     "RES\\COMPUS.CUR"
+IDC_ERASER              CURSOR  DISCARDABLE     "res\\cursor1.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_CUSTOMCODE DLGINIT
+BEGIN
+    IDC_CHINARANGE, 0x403, 1, 0
+"\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "About for Private Character EDITOR"
+    ID_APP_EXIT             "Exit for Private Character EDITOR"
+    ID_HELP_INDEX           "HELP INDEX"
+    ID_HELP_USING           "HELP USING"
+    ID_CONTEXT_HELP         "CONTEXT HELP"
+    ID_HELP                 "HELP"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "NEXT PANE"
+    ID_PREV_PANE            "PREV PANE"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SELECTCODE_DLGTITLE "Select Code"
+    IDS_REGISTAS_DLGTITLE   "Save Character As"
+    IDS_NOTSELCHARACTER_MSG "No character is selected."
+    IDS_REFERENCE_DLGTITLE  "Reference"
+    IDS_ILLEGALCODE_MSG     "The code point entered is not valid. "
+    IDS_ILLEGALCODE_TITLE   "Error"
+    IDS_LINK_DLGTITLE       "Link to IME"
+    IDS_ILLEGALFILE_MSG     "Invalid Private Character filename"
+    IDS_MODIFY_DLGTITLE     "Modify Private Character filename"
+    IDS_NOTEUDCFILE_MSG     "File is not Private Character Font"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOUSEEUDCFILE_MSG   """eudc.tte"" is used for link with all fonts. Please choose another file name."
+    IDS_NOTCREATEEUDC_MSG   "Private Character file is not created"
+    IDS_SAVEORNOT           "Do you want to save this character?"
+    IDS_ASSOCIATE_DLGTITLE  "Font Links"
+    IDS_NOTSELTYPEFACE_MSG  "Typeface is not selected"
+    IDS_NOTSELECT_STR       "Not Selected"
+    IDS_EDIT_STR            "Edit"
+    IDS_REFERENCE_STR       "Reference"
+    IDS_FONT_STR            "Font:"
+    IDS_FILE_STR            "File:"
+    IDS_MAINFRAMETITLE      "Private Character Editor"
+    IDS_INVALIDREAD_MSG     "Invalid Private Character reading"
+    IDS_CODE_STR            "Code:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MODIFYREAD_MSG      "Do you want to save this character?"
+    IDS_CALL_DLGTITLE       "Copy Character"
+    IDS_SYSTEMEUDCFONT_STR  "All"
+    IDS_WANSUNG_STR         "Wansung"
+    IDS_JOHAB_STR           "Johab"
+    IDS_BATCHIME_FILTER     "IME information file for Private Character(*.TBL)|*.tbl|"
+    IDS_FILEHEADER_MSGTITLE "File Header Size"
+    IDS_FILEHEADER_MSG      "Invalid file size.  Please check file header size."
+    IDS_FILESIZE_MSGTITLE   "File Size"
+    IDS_FILESIZE_MSG        "Invalid file size. Please check file size = ulTableCount*[4 + cMethodKeySize] + 256."
+    IDS_INMETHOD_MSGTITLE   "Input Method Information Size"
+    IDS_INMETHOD_MSG        "Invalid input method information size."
+    IDS_BANKID_MSGTITLE     "BankID"
+    IDS_BANKID_MSG          "Invalid BankID. Please check BankID"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_PALETTEPEN           "Palette pen for Edit\nPencil"
+    ID_PALETTESLOPE         "palette slope for edit\nStraight Line"
+    ID_PALETTERECT          "palette rectangle for edit\nHollow Rectangle"
+    ID_PALETTERECTFILL      "palette rectangle for edit\nFilled Rectangle"
+    ID_PALETTECIRCLE        "Palette ellipse for edit\nHollow Ellipse"
+    ID_PALETTECIRCLEFILL    "Palette ellipse fill for edit\nFilled Ellipse"
+    ID_PALETTERECTBAND      "palette rectangle for edit\nRectangular Selection"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_PALETTEBRUSH         "Palette brush for edit\nBrush"
+    ID_PALETTEFREEFORM      "palette freeform for edit\nFreeform Selection"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CODEPAGE_MSGTITLE   "Code Page"
+    IDS_CODEPAGE_MSG        "Invalid code page. Please check code page."
+    IDS_SIGN_MSGTITLE       "CWIN_TBL Sign"
+    IDS_SIGN_MSG            "Invalid Sign. Check Sign."
+    IDS_BATCHLNK_DLGTITLE   "Import IME Table"
+    IDS_NOTOPEN_MSG         "Can not open this file."
+    IDS_BROWSETTF_DLGTITLE  "Browse through Private Character Font"
+    IDS_NOTSELECTTTF_MSG    "Private Character Font is not selected"
+    IDS_IMPORT_DLGTITLE     "Import Old Private Character Font"
+    IDS_NOTUSERFONT_MSG     "Not UserFont"
+    IDS_BROWSEUSER_DLGTITLE "Browse through Userfont"
+    IDS_ROTATE_DLGTITLE     "Flip/Rotate"
+    IDS_BROWSETABLE_DLGTITLE "Browse through IME table"
+    IDS_DEFAULTFILENAME     "EUDC.TTE"
+    IDS_IMPORT_JAPAN_FILTER "UserFont (userfont.fon) |userfont.fon||"
+    IDS_NOTENOUGHMEMORY_ERROR 
+                            "Not enough Memory. Please retry after other processes finish."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNICODE             "Unicode"
+    IDS_SHIFTJIS            "ShiftJIS"
+    IDS_GB2312              "ChineseGBK"
+    IDS_HANGUL              "Wansung"
+    IDS_CHINESEBIG5         "ChineseBig5"
+    IDS_INVALID_CODE_MSG    "The Unicode code point selected does not exist in this local code page.  Please select another one."
+    IDS_IMPORTFONT_MSG      "A previous version Private Character font file will be imported."
+    IDS_OVERWRITEFAIL       "EUDC file is being used by another process. Unable to save character."
+    IDS_ACCESSDENIED        "Administrator privilege required to run this application."
+    IDS_NOTTE               "There is no EUDC file created yet. Please save a character before importing."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IMPORT_CHINA_FILTER "UserFont (*.*) |*.*||"
+    IDS_INTERNAL_TITLE      "Internal Message"
+    IDS_INTERNAL_MSG        "Internal Error"
+    IDS_NOTOPEN_TITLE       "Open"
+    IDS_UNMATCHED_TITLE     "Input Method"
+    IDS_UNMATCHED_MSG       "Invalid Input Method Name."
+    IDS_CHINESE_CHAR        "Ch"
+    IDS_QUERY_NOTFINISH     "Not complete composition, Do you want to complete  this word?"
+    IDS_QUERY_REGISTER      "Do you want to save this character?"
+    IDS_NOIME_TITLE         "Input Method"
+    IDS_NOIME_MSG           "No Input Method can generate IME end user created dictionary."
+    IDS_NOMEM_TITLE         "Memory"
+    IDS_NOMEM_MSG           "Memory resource is not enough."
+    IDS_EUDCTTF_FILTER      "Private Character Font (*.tte) |*.tte||"
+    IDS_SELECTFONT_ERROR    "Invalid font is selected. "
+    IDS_CHARSET_STR         "Character Set:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_PALETTEERASER        "Palette eraser for edit\nEraser"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\eudc.rc2"  // App Studio Ç≈ÇÕï“èWÇ≈Ç´Ç»Ç¢ÉäÉ[ÉX
+
+#include "afxres.rc"			// ÉäÉ[ÉXÇÃïWèÄìIÇ»ç¨óvëf
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

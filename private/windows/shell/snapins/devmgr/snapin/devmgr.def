@@ -1,0 +1,35 @@
+;//+-------------------------------------------------------------------------
+;//
+;//  Microsoft Windows
+;//
+;//  Copyright (C) Microsoft Corporation, 1997 - 1999
+;//
+;//  File:       devmgr.def
+;//
+;//--------------------------------------------------------------------------
+
+; devmgr.def : Declares the module parameters.
+
+LIBRARY      DEVMGR.DLL
+
+EXPORTS
+        DllCanUnloadNow     @1 PRIVATE
+        DllGetClassObject   @2 PRIVATE
+        DllRegisterServer   @3 PRIVATE
+        DllUnregisterServer     @4 PRIVATE
+        DeviceProperties_RunDLLA @5
+        DeviceProperties_RunDLLW @6
+        DevicePropertiesA          @7
+        DevicePropertiesW          @8
+        DeviceManager_ExecuteA     @9
+        DeviceManager_ExecuteW     @10
+        DeviceProblemTextA         @11
+        DeviceProblemTextW         @12
+        DeviceProblemWizardA       @13
+        DeviceProblemWizardW       @14
+        DeviceManagerPrintA        @15
+        DeviceManagerPrintW        @16
+        DeviceAdvancedPropertiesA  @17
+        DeviceAdvancedPropertiesW  @18
+        DeviceCreateHardwarePage   @19  ; does not need separate A/W versions
+        DeviceCreateHardwarePageEx @20  ; does not need separate A/W versions

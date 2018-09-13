@@ -1,0 +1,135 @@
+// WARNING
+// localizable resources only
+// non-localizable resources must go in shdoc401.rc
+
+#include <windows.h>
+#include "shdoc401.rcv"
+#include "shlobj.h"
+#include "ids.h"
+#include "unicpp\resource.h"
+#include "resource.h"
+
+#include "unicpp\shel32lc.rc"
+
+// Here is the file association ui as it shipped in IE4. Since it is moving back
+// into shell32.dll,  it needs to be here for IE5 browser mode only.
+DLG_FILETYPEOPTIONS DIALOG DISCARDABLE  0, 0, 240, 220
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "File Types"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Registered file &types:",IDC_STATIC,7,7,108,8
+    CONTROL         "",IDC_FT_PROP_LV_FILETYPES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER | WS_TABSTOP,7,16,145,97
+    DEFPUSHBUTTON   "&New Type...",IDC_FT_PROP_NEW,170,15,60,15
+    PUSHBUTTON      "&Remove",IDC_FT_PROP_REMOVE,170,35,60,15
+    PUSHBUTTON      "&Edit...",IDC_FT_PROP_EDIT,170,55,60,15
+    ICON            "",IDC_FT_PROP_DOCICON,14,135,20,20
+    LTEXT           "Extension:",IDC_FT_PROP_DOCEXTRO_TXT,45,142,34,8
+    EDITTEXT        IDC_FT_PROP_DOCEXTRO,120,142,93,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER
+    ICON            "",IDC_FT_PROP_OPENICON,14,177,20,20
+    LTEXT           "Content Type (MIME):",IDC_FT_PROP_CONTTYPERO_TXT,45,163,
+                    70,8
+    EDITTEXT        IDC_FT_PROP_CONTTYPERO,120,163,93,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER
+    LTEXT           "Opens with:",IDC_FT_PROP_OPENEXE_TXT,45,184,38,8
+    EDITTEXT        IDC_FT_PROP_OPENEXE,120,184,93,14,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER
+    GROUPBOX        "File type details",IDC_GROUPBOX,7,121,223,84
+END
+
+DLG_FILETYPEOPTIONSEDIT DIALOG DISCARDABLE  32, 20, 227, 246
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Edit File Type"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_FT_EDIT_DOCICON,7,11,21,20
+    PUSHBUTTON      "Change &Icon...",IDC_FT_EDIT_CHANGEICON,48,14,65,14
+    CONTROL         "",IDC_NO_HELP_1,"Static",SS_BLACKFRAME,6,41,213,1
+    LTEXT           "&Description of type:",IDC_FT_EDIT_DESCTEXT,7,49,62,8
+    EDITTEXT        IDC_FT_EDIT_DESC,83,47,136,14,ES_AUTOHSCROLL
+    LTEXT           "Asso&ciated extension:",IDC_FT_EDIT_EXTTEXT,7,68,70,8,
+    NOT WS_VISIBLE
+    EDITTEXT        IDC_FT_EDIT_EXT,83,66,136,14,ES_AUTOHSCROLL | NOT 
+    WS_VISIBLE
+    LTEXT           "Content &Type (MIME):",IDC_FT_COMBO_CONTTYPETEXT,7,87,
+    70,8
+    COMBOBOX        IDC_FT_COMBO_CONTTYPE,83,85,136,58,CBS_DROPDOWN | 
+    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Default E&xtension for Content Type:",
+    IDC_FT_COMBO_DEFEXTTEXT,7,106,113,8
+    COMBOBOX        IDC_FT_COMBO_DEFEXT,129,104,90,52,CBS_DROPDOWNLIST | 
+    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Actions:",IDC_FT_EDIT_LV_CMDSTEXT,7,118,52,8
+    CONTROL         "",IDC_FT_EDIT_LV_CMDS,"SysListView32",LVS_REPORT | 
+    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_OWNERDRAWFIXED | 
+    LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,7,128,212,46
+    PUSHBUTTON      "&New...",IDC_FT_EDIT_NEW,7,178,50,14
+    PUSHBUTTON      "&Edit...",IDC_FT_EDIT_EDIT,61,178,50,14
+    PUSHBUTTON      "&Remove",IDC_FT_EDIT_REMOVE,116,178,50,14,WS_DISABLED
+    PUSHBUTTON      "&Set Default",IDC_FT_EDIT_DEFAULT,170,178,50,14
+    CONTROL         " Enable &Quick View",IDC_FT_EDIT_QUICKVIEW,"Button",
+    BS_AUTOCHECKBOX | WS_TABSTOP,7,197,90,8
+    CONTROL         " Confirm &open after download",IDC_FT_EDIT_CONFIRM_OPEN,
+    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,197,110,8
+    CONTROL         " Al&ways show extension",IDC_FT_EDIT_SHOWEXT,"Button",
+    BS_AUTOCHECKBOX | WS_TABSTOP,7,210,90,8
+    CONTROL         " &Browse in same window",IDC_FT_EDIT_BROWSEINPLACE,"Button",
+    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED,108,210,92,10
+    DEFPUSHBUTTON   "OK",IDOK,116,228,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,228,50,14
+END
+
+DLG_FILETYPEOPTIONSCMD DIALOG DISCARDABLE  5, 0, 227, 207
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "New Action"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Action:",IDC_STATIC,7,7,63,8
+    EDITTEXT        IDC_FT_CMD_ACTION,7,16,155,14,ES_AUTOHSCROLL
+    LTEXT           "App&lication used to perform action:",
+    IDC_FT_CMD_EXETEXT,7,41,150,8
+    EDITTEXT        IDC_FT_CMD_EXE,7,50,155,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_FT_CMD_BROWSE,169,50,50,14
+    GROUPBOX        "                     ",IDC_FT_CMD_DDEGROUP,7,73,155,125
+    CONTROL         "&Use DDE",IDC_FT_CMD_USEDDE,"Button",BS_AUTOCHECKBOX |
+    WS_TABSTOP,14,73,45,8
+    LTEXT           "&DDE Message:",IDC_STATIC,13,88,67,8
+    EDITTEXT        IDC_FT_CMD_DDEMSG,13,97,143,14,ES_AUTOHSCROLL
+    LTEXT           "Appli&cation:",IDC_STATIC,13,115,40,8
+    EDITTEXT        IDC_FT_CMD_DDEAPP,13,124,143,14,ES_AUTOHSCROLL
+    LTEXT           "DDE Application &Not Running:",IDC_STATIC,13,142,104,8
+    EDITTEXT        IDC_FT_CMD_DDEAPPNOT,13,151,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Topic:",IDC_STATIC,13,169,39,8
+    EDITTEXT        IDC_FT_CMD_DDETOPIC,13,178,143,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,169,16,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,33,50,14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FT                  "File Types"
+    IDS_FT_MB_EXTTEXT       "The extension '%s' is already in use by file type '%s'. Choose another extension."
+    IDS_FT_MB_EXETEXT       "The specified program could not be found. Make sure the filename and path are correct."
+    IDS_FT_MB_NOACTION      "You must specify an action."
+    IDS_FT_MB_NOEXT         "You must specify an extension for the file type."
+    IDS_FT_MB_REMOVETYPE    "If you remove a registered file type, you will not be able to open\nfiles of that type by double-clicking their icons.\n\nAre you sure you want to remove the file type?"
+    IDS_FT_MB_REMOVEACTION  "Are you sure you would like to remove this action?"
+    IDS_FT_EDITTITLE        "Editing action for type: "
+    IDS_FT_EXEFILE          "[Executable]"
+    IDS_FT_CLOSE            "Close"
+    IDS_CAP_OPENAS          "Open With"
+    IDS_ADDNEWFILETYPE      "Add New File Type"
+    IDS_EXTTYPETEMPLATE     "%s File"
+    IDS_EXE                 "exe"
+    IDS_PROGRAMSFILTER_NT    "Programs#*.exe;*.pif;*.com;*.bat;*.cmd#All Files#*.*#"
+    IDS_PROGRAMSFILTER_WIN95 "Programs#*.exe;*.pif;*.com;*.bat#All Files#*.*#"
+
+    IDS_FOLDEROPTIONS       "Folder Options"
+    IDS_DESKTOP             "Desktop"
+END
+

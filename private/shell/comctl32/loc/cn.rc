@@ -1,0 +1,138 @@
+LANGUAGE 0x04, 0x02 //LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"\x81ea\x5b9a\x4e49\x5de5\x5177\x680f"
+FONT 9, L"\x5b8b\x4f53"
+BEGIN
+    DEFPUSHBUTTON   L"\x5173\x95ed(&C)",2,308,6,44,14
+    PUSHBUTTON      L"\x91cd\x7f6e(&E)",202,308,23,44,14
+    PUSHBUTTON      L"\x5e2e\x52a9(&H)",205,308,40,44,14
+    PUSHBUTTON      L"\x4e0a\x79fb(&U)",206,308,74,44,14
+    PUSHBUTTON      L"\x4e0b\x79fb(&D)",207,308,91,44,14
+    LTEXT           L"\x53ef\x7528\x5de5\x5177\x680f\x6309\x94ae(&V):",-1,4,5,84,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"\x6dfb\x52a0(&A) ->",1,131,42,45,14
+    PUSHBUTTON      L"<- \x5220\x9664(&R)",204,131,62,45,14
+    LTEXT           L"\x5f53\x524d\x5de5\x5177\x680f\x6309\x94ae(&T):",-1,182,5,78,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 9, L"\x5b8b\x4f53"
+BEGIN
+    DEFPUSHBUTTON   L"\x786e\x5b9a",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"\x53d6\x6d88",2,58,122,50,14
+    PUSHBUTTON      L"\x5e94\x7528(&A)",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"\x5e2e\x52a9",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 9, L"\x5b8b\x4f53"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< \x4e0a\x4e00\x6b65(&B)",12323,12,26,50,14
+    DEFPUSHBUTTON   L"\x4e0b\x4e00\x6b65(&N) >",12324,62,26,50,14
+    PUSHBUTTON      L"\x5b8c\x6210",12325,119,26,50,14
+    PUSHBUTTON      L"\x53d6\x6d88",2,176,26,50,14
+    PUSHBUTTON      L"\x5e2e\x52a9",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"\x5206\x9694\x7b26"
+    1025                    L" + "
+    1026                    L"\x65e0"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"\x5173\x95ed"
+    4161                    L"\x786e\x5b9a"
+    4162                    L"%s \x5c5e\x6027"
+    4163                    L"\x4eca\x5929:"
+    4164                    L"\x8f6c\x5230\x4eca\x5929(&G)"
+    4165                    L"/.,-:"
+    4166                    L"M \x6708"
+    4167                    L"yyyy \x5e74 M \x6708"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"\x5728\x6b64\x5904\x8f93\x5165\x6587\x5b57"
+    4177                    L"\x5c5e\x6027"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"\x91cd\x65b0\x8c03\x6574\x8be5\x7a97\x53e3\x7684\x5c3a\x5bf8\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"\x79fb\x52a8\x8be5\x7a97\x53e3\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"\x5c06\x8be5\x7a97\x53e3\x7f29\x5c0f\x4e3a\x56fe\x6807\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"\x5c06\x8be5\x7a97\x53e3\x6269\x5927\x4e3a\x5168\x5c4f\x5e55\x663e\x793a\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"\x8f6c\x5230\x4e0b\x4e00\x4e2a MDI \x7a97\x53e3\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"\x5173\x95ed\x8be5\x7a97\x53e3\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"\x5c06\x8be5\x7a97\x53e3\x6062\x590d\x4e3a\x6b63\x5e38\x5927\x5c0f\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"\x8f6c\x5230\x4e0b\x4e00\x4efb\x52a1\x3002"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"\x7528\x4e8e\x64cd\x4f5c\x7a97\x53e3\x7684\x81ea\x5236\x547d\x4ee4\x3002"
+    36849                   L"\x5411\x5de6\x6216\x5411\x53f3\x62d6\x52a8\x6307\x9488\x4ee5\x8c03\x6574\x680f\x7684\x5927\x5c0f\x3002"
+    36850                   L"\x4f7f\x7528\x7bad\x5934\x548c\x5236\x8868\x7b26\x8c03\x6574\x680f\x7684\x5927\x5c0f\x3002"
+    36851                   L"\x6dfb\x52a0\x3001\x79fb\x52a8\x6216\x5220\x9664\x5de5\x5177\x680f\x4e0a\x7684\x56fe\x6807\x3002"
+END
+

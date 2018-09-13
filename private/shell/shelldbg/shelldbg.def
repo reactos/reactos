@@ -1,0 +1,15 @@
+LIBRARY         SHELLDBG
+DESCRIPTION     'Shell Leak Detection DLL'
+
+EXPORTS
+        DllGetClassObject                   PRIVATE     ;internal
+        DllCanUnloadNow                     PRIVATE     ;internal
+
+        ShdbgMemLeakInit                    @2          NONAME      PRIVATE
+        ShdbgAddToMemList                   @3          NONAME      PRIVATE
+        ShdbgMemThreadMessage               @4          NONAME      PRIVATE
+        ShdbgReceivedForThreadMemList       @5          NONAME      PRIVATE
+        ShdbgRemoveFromMemList              @6          NONAME      PRIVATE
+        ShdbgRemoveFromThreadMemList        @7          NONAME      PRIVATE
+        ShdbgTransferToThreadMemList        @8          NONAME      PRIVATE
+        ShdbgRegisterIntelliLeakDump        @9          NONAME      PRIVATE

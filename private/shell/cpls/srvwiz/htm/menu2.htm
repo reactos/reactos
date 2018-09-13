@@ -1,0 +1,51 @@
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="win2000.css">
+  <title>leftmenu2</title>
+  <script language="javascript" src="util.js"></script>
+  <script language="javascript" src="menu.js"></script>
+</head>
+
+<body id="lm" topmargin="10" leftmargin="0">
+
+<table width="300" cellspacing="0">
+    <tr>
+        <td id="menu1">
+            <img src="mnu_hm2.gif" width=24 height=24 name="b1" border="0" hspace="5" align="middle">
+            <a href="javascript:menu2home()" oncontextmenu="return false;" onmouseover="b_on(1);return true;" onmouseout="b_off(1);return true;">Home</a>
+    <tr>
+        <td>
+            <div id=miReg style="display:none">
+               <p id="menu2"><img src="mnu_reg2.gif" width=24 height=24  name="b2"border="0" vspace="2" hspace="5" align="middle"><a href="javascript:menu2reg()" oncontextmenu="return false;" onmouseover="b_on(2);return true;" onmouseout="b_off(2);return true;">Register Now</a>
+               <script language="javascript">
+                    // show it only if it is not registered yet
+                    if (!srvwiz.ProductRegistered)
+                        document.all.miReg.style.display = '';
+               </script>
+            </div>
+        </tr>
+        <tr>
+            <td id="menu3"><img src="mnu_ad1.gif" width=24 height=24 name="b3" border="0" vspace="2" hspace="5" align="middle">Active Directory</td>
+        </tr>
+        <tr>
+            <td id="menu5"><img src="mnu_fl1.gif" width=24 height=24 name="b5" border="0" vspace="2" hspace="5" align="middle">File Server</td>
+        </tr>
+        <tr>
+            <td id="menu6"><img src="mnu_prt1.gif" width=24 height=24 name="b6" border="0" vspace="2" hspace="5" align="middle">Print Server</td>
+        </tr>
+        <tr>
+            <td id="menu7"><img src="mnu_web1.gif" width=24 height=24 name="b7" border="0" vspace="2" hspace="5" align="middle">Web/Media Server</td>
+        </tr>
+            <td id="menu4"><img src="mnu_net1.gif" width=24 height=24 name="b4" border="0" vspace="2" hspace="5" align="middle">Networking
+</td>
+        </tr>
+        <tr>
+            <td id="menu8"><img src="mnu_ap1.gif" width=24 height=24 name="b7" border="0" vspace="2" hspace="5" align="middle">Application Server</td>
+        </tr>
+        <tr>
+            <td id="menu9"><img src="mnu_adv1.gif" width=24 height=24 name="b9" border="0" vspace="2" hspace="5" align="middle">Advanced</td>
+    </tr>
+</table>     
+</body>
+</html>

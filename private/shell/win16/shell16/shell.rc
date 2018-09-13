@@ -1,0 +1,87 @@
+#include "shprv.h"
+
+#include "format.rc"
+
+#include "shell.rcv"
+
+#ifdef DEAD_CODE // or in this case dead dialogs
+
+FINDEXEDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 20, 20, 210, 82
+CAPTION "Program Not Found"
+FONT 8 "MS Sans Serif"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU | DS_3DLOOK
+BEGIN
+    CONTROL "Cannot find %s.\n\nThis program is needed to run files with extension '%s'.", IDD_TEXT1, "static", SS_LEFT | WS_GROUP | WS_CHILD, 5, 5, 134, 40
+    CONTROL "Location of %s:", IDD_TEXT2, "static", SS_LEFT | WS_GROUP | WS_CHILD, 5, 49, 134, 10
+    CONTROL "", IDD_PATH, "edit", ES_OEMCONVERT | ES_LEFT | ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | WS_CHILD, 3, 61, 134, 12
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_CHILD, 165, 6, 40, 14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 165, 23, 40, 14
+    CONTROL "&Locate...", IDD_BROWSE, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 165, 40, 40, 14
+    CONTROL "&Help", IDD_HELP, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 165, 61, 40, 14
+END
+
+
+DLG_BROWSE DIALOG 46, 21, 158, 165
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Locate"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Locate the directory where this program may be found:", -1, 5, 5, 147, 20
+    EDITTEXT        edt1, 5, 26, 60, 12, ES_LOWERCASE | ES_AUTOHSCROLL | ES_READONLY | NOT WS_TABSTOP
+    LTEXT           "", ctlLast+2, 67, 28, 87, 9, NOT WS_GROUP
+    LTEXT           "&Directories:", -1, 5, 40, 92, 9, NOT WS_GROUP
+    LTEXT           "", stc1, 5, 50, 92, 9, NOT WS_GROUP
+    LISTBOX         lst2, 5, 62, 92, 64, LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:", -1, 5, 135, 92, 9, NOT WS_GROUP
+    COMBOBOX        cmb2, 5, 145, 92, 68, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT |
+                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 104, 63, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 104, 81, 50, 14, WS_GROUP
+    PUSHBUTTON      "&Help", psh15, 104, 121, 50, 14, WS_GROUP
+    LISTBOX         lst1, -100, -100, 10, 10, LBS_EXTENDEDSEL
+    CONTROL         "", chx1, "Button", BS_AUTOCHECKBOX, -100, -100, 10, 10
+    LTEXT           "", stc2, -100, -100, 10, 10
+    COMBOBOX        cmb1, -100, -100, 10, 10, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+
+   IDS_PROGFOUND          "(found)"			/* 40 */
+   IDS_PROGNOTFOUND       "(not found)"			/* 40 */
+   IDS_NOCOMMDLG          "Cannot load COMMDLG.DLL"	/* 40 */
+   IDS_STILLNOTFOUND      "Cannot find file '%s'."
+END
+
+#endif // DEAD_CODE
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CLOSE		    "Close"
+END
+
+#ifdef DEAD_CODE
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EXITHELP            "Exit Help"
+    IDS_WINDOWS_HLP         "windows.hlp"
+END
+
+#endif // DEAD_CODE

@@ -1,0 +1,42 @@
+TARGETNAME=perfos
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+DLLBASE=0x61000000
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+	   $(BASEDIR)\public\sdk\lib\*\advapi32.lib         \
+        ..\common\obj\*\perfutil.obj
+
+INCLUDES=.;..\common
+
+GPSIZE=0        
+
+DLLENTRY=DllInit
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=perfosmc.mc \
+        datasys.c   \
+        datacpu.c   \
+        datamem.c   \
+        datacach.c  \
+        dataobj.c   \
+        datapage.c  \
+        perfos.c    \
+        perfsys.c   \
+        perfcpu.c   \
+        perfmem.c   \
+        perfcach.c  \
+        perfobj.c   \
+        perfpage.c  \
+        perfos.rc
+    
+
+PASS0_HEADERDIR=.
+PASS0_SOURCEDIR=.
+
+C_DEFINES= -DWIN32 -DSTRICT
+

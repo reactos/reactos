@@ -1,0 +1,156 @@
+#include "resource.h"
+#include "winver.h"
+#include "resource.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_WEBAPP              ICON    DISCARDABLE     "res\\welcome.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_BRHAND              CURSOR  DISCARDABLE     "res\\brhand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BKGND0              BITMAP  DISCARDABLE     "res\\register.bmp"
+IDB_BKGND1              BITMAP  DISCARDABLE     "res\\discover.bmp"
+IDB_BKGND2              BITMAP  DISCARDABLE     "res\\connect.bmp"
+IDB_BKGND3              BITMAP  DISCARDABLE     "res\\maintain.bmp"
+
+#ifdef WINNT
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\workstation.bmp"
+IDB_BANNER16            BITMAP  DISCARDABLE     "res\\workstation16.bmp"
+#else
+IDB_BANNER              BITMAP  DISCARDABLE     "res\\win9x.bmp"
+IDB_BANNER16            BITMAP  DISCARDABLE     "res\\win9x16.bmp"
+#endif
+
+IDB_256MENU             BITMAP  DISCARDABLE     "res\\256Menu.bmp"
+IDB_256BORDER           BITMAP  DISCARDABLE     "res\\256Border.bmp"
+
+IDB_16MENU              BITMAP  DISCARDABLE     "res\\16Menu.bmp"
+IDB_16BORDER            BITMAP  DISCARDABLE     "res\\16Border.bmp"
+
+#ifdef WINNT
+IDB_TIP0                BITMAP  DISCARDABLE     "res\\tip0.bmp"
+//IDB_TIP1                BITMAP  DISCARDABLE     "res\\tip1.bmp"   // no bitmap for tip #1
+IDB_TIP2                BITMAP  DISCARDABLE     "res\\tip2.bmp"
+IDB_TIP3                BITMAP  DISCARDABLE     "res\\tip3.bmp"
+IDB_TIP4                BITMAP  DISCARDABLE     "res\\tip4.bmp"
+IDB_TIP5                BITMAP  DISCARDABLE     "res\\tip5.bmp"
+#else
+IDB_TIP0                BITMAP  DISCARDABLE     "res\\tip0win9x.bmp"
+//IDB_TIP1                BITMAP  DISCARDABLE     "res\\tip1.bmp"   // no bitmap for tip #1
+IDB_TIP2                BITMAP  DISCARDABLE     "res\\tip2win9x.bmp"
+IDB_TIP3                BITMAP  DISCARDABLE     "res\\tip3win9x.bmp"
+IDB_TIP4                BITMAP  DISCARDABLE     "res\\tip4win9x.bmp"
+IDB_TIP5                BITMAP  DISCARDABLE     "res\\tip5win9x.bmp"
+#endif
+
+IDB_TIP0MASK            BITMAP  DISCARDABLE     "res\\tip0mask.bmp"
+//IDB_TIP1MASK            BITMAP  DISCARDABLE     "res\\tip1mask.bmp"   // no bitmap for tip #1
+IDB_TIP2MASK            BITMAP  DISCARDABLE     "res\\tip2mask.bmp"
+IDB_TIP3MASK            BITMAP  DISCARDABLE     "res\\tip3mask.bmp"
+IDB_TIP4MASK            BITMAP  DISCARDABLE     "res\\tip4mask.bmp"
+IDB_TIP5MASK            BITMAP  DISCARDABLE     "res\\tip5mask.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDA_MOUSECLICK          AVI     "res\\MouseClick.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifdef WINNT
+    IDS_TITLE               "Getting Started with Windows 2000"
+#else
+    IDS_TITLE               "Getting Started with Windows 98"
+    IDS_LOGOTEXT            "Second Edition"
+    IDS_LINKFILENAME        "Getting Started.lnk"
+#endif
+    IDS_CHECKTEXT           "&Show this screen at startup."
+    IDS_EXIT                "&Exit"
+
+    IDS_DEFTITLE            "Getting Started"
+    IDS_FONTFACE            "Tahoma"
+
+    IDS_CYMENUITEMFONT      "11"    // pixel height of font used on the left column of menu items
+    IDS_CYTITLEFONT         "16"    // pixel height of font used for the title along the top of the right panel
+    IDS_CYBODYFONT          "11"    // pixel height of font used for the body text of the right panel
+    IDS_CYCHECKTEST         "9"     // pixel height of font used for the checkbox text
+#ifndef WINNT
+    IDS_CYLOGOFONT          "18"    // pixel height of font used for "Second Edition" text in logo
+#endif
+
+#ifdef WINNT
+    IDS_TITLE0              "Register Windows 2000"
+    IDS_TITLE1              "Discover Windows 2000"
+    IDS_TITLE2              "Connect to the Internet"
+
+    IDS_MENU0               "&Register Now"
+    IDS_MENU1               "&Discover Windows"
+    IDS_MENU2               "&Connect to the Internet"
+
+    IDS_DESC0               "Register your copy of Windows 2000 Professional and help Microsoft give you:\n\n\x95 The best possible product support\n\x95 The right software upgrades\n\x95 The most relevant new product information"
+    IDS_DESC1               "Windows 2000 Professional is easier to use, easier to manage, more compatible, and more powerful. The Discover Windows 2000 Professional tour highlights all the newest and coolest features."
+    IDS_DESC2               "\x95 Read the latest news and financial information\n\x95 Visit Web sites around the world\n\x95 Get e-mail\n\nWe make it quick and simple for you to connect to the Internet."
+
+    IDS_CONFIG0             "Regwiz.exe"
+    IDS_CONFIG1             "discover.exe"
+    IDS_CONFIG2             "icwconn1.exe"
+
+    IDS_ARGS0               "/i ""SOFTWARE\Microsoft\Windows NT\CurrentVersion"""
+    IDS_ARGS1               ""
+    IDS_ARGS2               ""
+#else
+    IDS_TITLE0              "Register Now!"
+    IDS_TITLE1              "Connect to the Internet"
+    IDS_TITLE2              "Discover Windows 98"
+    IDS_TITLE3              "Maintain Your Computer"
+
+    IDS_MENU0               "&Register Now"
+    IDS_MENU1               "&Connect to the Internet"
+    IDS_MENU2               "&Discover Windows"
+    IDS_MENU3               "&Maintain Your Computer"
+
+    IDS_DESC0               "Registering your copy of Windows 98 opens the doors to full Internet support for your system.  Better product support, free product enhancements, free tips and tricks, and the coolest Windows add-ons are just a mouse-click away by registering."
+    IDS_DESC1               "On the Internet, you can correspond through electronic mail (e-mail), get the latest news and finanical information, and visit Web sites around the world.\n\nWindows 98 makes getting connected to the Internet quick and simple."
+    IDS_DESC2               """Computer Essentials"" introduces first-time users to basic computing.\n\n""Windows 98 Overview"" offers step-by-step lessons for new Windows users.\n\n""What's New"" highlights the features of Windows 98."
+    IDS_DESC3               "Speed up your computer! For top-notch performance, schedule regular maintenance that frees up hard disk space, makes your programs run faster, and optimizes the performance of your hard disk."
+
+    IDS_CONFIG0             "regwiz.exe"
+    IDS_CONFIG1             "icwconn1.exe"
+    IDS_CONFIG2             "tour98.exe"
+    IDS_CONFIG3             "tuneup.exe"
+
+    IDS_ARGS0               "/i ""SOFTWARE\Microsoft\Windows\CurrentVersion"""
+    IDS_ARGS1               ""
+    IDS_ARGS2               ""
+    IDS_ARGS3               ""
+#endif
+
+    IDS_TIPS0               "You can access all your documents, programs, and settings from the start button."
+    IDS_TIPS1               "Click an icon twice quickly (double-click) to open a file, folder, program, or drive."
+    IDS_TIPS2               "Use Internet Explorer to find and view information from all sources including the Internet.\n\nUse Outlook Express to send and receive e-mail messages."
+    IDS_TIPS3               "Click Start, then Help for assistance with Windows features."
+    IDS_TIPS4               "Use Control Panel to customize your desktop and configure your computer."
+    IDS_TIPS5               "Click ""X"" to close a window or program."
+    
+END

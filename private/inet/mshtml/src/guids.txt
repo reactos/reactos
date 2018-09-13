@@ -1,0 +1,39 @@
+
+Reserve 10000 GUID entries beginning at 3050f160-98b5-11cf-bb82-00aa00bdce0b
+                          and ending at 30c38c70-98b5-11cf-bb82-00aa00bdce0b.
+
+NOTE OF Mondo GUIDs in PDL files:
+-----------------------------------
+Addtionally the GUID entries beginning at 3050f500-98b5-11cf-bb82-00aa00bdce0b
+                            and ending at 3050f5a0-98b5-11cf-bb82-00aa00bdce0b
+are reserved by the PDLParser for dispinterfaces automatically generated for
+primary interfaces which are tearoffs.
+
+Next available mondo GUID  is 3050f588-98b5-11cf-bb82-00aa00bdce0b
+
+
+BE CAREFUL WHICH PART OF THE GUID YOU INCREMENT!!
+-------------------------------------------------
+
+The next available is 3050f637-98b5-11cf-bb82-00aa00bdce0b
+Increment this part:  ^^^^^^^^
+Does the end match this line?                 00aa00bdce0b
+
+//
+// Notes: Guids for intrinsic controls
+//
+60 IDs are reserved for intrinsic controls. They are
+3050f2a4-98b5-11cf-bb82-00aa00bdce0b to 3050f2df-98b5-11cf-bb82-00aa00bdce0b
+
+Here assume each control needs 3 guids (Clsid, interface and event),
+You can use more if need.
+
+Controls team has used (a4 to ce) so far. First free for controls is cf
+ 
+If you need ids for your controls, please use these reserved ones.
+
+
+@REM
+@REM Backup\Restore script for mshtml project
+@REM
+call ntstatxx.cmd mshtml F:\NT\PRIVATE\INET\MSHTML\SRC guids.txt 00000000

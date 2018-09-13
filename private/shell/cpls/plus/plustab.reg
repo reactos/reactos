@@ -1,0 +1,21 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{41E300E0-78B6-11ce-849B-444553540000}]
+
+[HKEY_CLASSES_ROOT\CLSID\{41E300E0-78B6-11ce-849B-444553540000}\InProcServer32]
+@="plustab.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Display]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Display\shellex]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Display\shellex\PropertySheetHandlers]
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Display\shellex\PropertySheetHandlers\PlusPack CPL Extension]
+@="{41E300E0-78B6-11ce-849B-444553540000}"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved]
+"{41E300E0-78B6-11ce-849B-444553540000}"="PlusPack CPL Extension"

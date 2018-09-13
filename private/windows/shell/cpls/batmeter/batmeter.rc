@@ -1,0 +1,214 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#include "commctrl.h"
+#include "batmeter.rcv"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "bmresid.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""batmeter.rcv""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""bmresid.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BATTS               BITMAP  DISCARDABLE     "batticos.bmp"
+IDB_BATTS16             BITMAP  DISCARDABLE     "batico16.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BATMETER DIALOGEX 0, 0, 226, 174
+STYLE DS_CONTROL | WS_CHILD | NOT WS_VISIBLE
+EXSTYLE WS_EX_CONTEXTHELP
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            "",IDC_POWERSTATUSICON,18,8,18,20
+    LTEXT           "Current power source:",IDC_CURRENTPOWERSOURCE,48,8,74,8
+    LTEXT           "Total battery power remaining:",IDC_TOTALBATPWRREMAINING,48,18,99,8
+    CONTROL         "",IDC_POWERSTATUSBAR,"msctls_progress32",0x0,3,51,218,14,NOT WS_VISIBLE
+    LTEXT           "Unknown",IDC_BARPERCENT,105,73,36,8,NOT WS_VISIBLE
+    LTEXT           "AC Power",IDC_BATTERYLEVEL,152,8,35,8,NOT WS_VISIBLE
+    LTEXT           "(charging)",IDC_CHARGING,185,18,32,8,NOT WS_VISIBLE
+    LTEXT           "Unknown",IDC_REMAINING,151,18,32,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON1,14,53,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS1,4,75,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING1,34,62,18,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON2,70,53,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS2,59,75,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING2,90,62,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON3,126,53,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS3,116,75,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING3,146,62,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON4,182,53,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS4,169,75,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING4,203,62,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON5,14,109,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS5,4,132,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING5,34,118,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON6,70,109,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS6,59,132,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING6,90,118,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON7,126,109,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS7,116,132,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING7,146,118,20,8,NOT WS_VISIBLE
+    PUSHBUTTON      "",IDC_POWERSTATUSICON8,182,109,18,20,BS_ICON | BS_FLAT | NOT WS_VISIBLE
+    CTEXT           "Not present",IDC_STATUS8,169,132,50,8,NOT WS_VISIBLE
+    LTEXT           "100%",IDC_REMAINING8,202,118,19,8,NOT WS_VISIBLE
+    LTEXT           "Click an individual battery icon for more information  ", IDC_MOREINFO,29,160,166,8,NOT WS_VISIBLE
+    LTEXT           "#1",IDC_BATNUM1,19,42,10,8,NOT WS_VISIBLE
+    LTEXT           "#2",IDC_BATNUM2,75,42,10,8,NOT WS_VISIBLE
+    LTEXT           "#3",IDC_BATNUM3,131,42,10,8,NOT WS_VISIBLE
+    LTEXT           "#4",IDC_BATNUM4,187,42,10,8,NOT WS_VISIBLE
+    LTEXT           "#5",IDC_BATNUM5,19,98,10,8,NOT WS_VISIBLE
+    LTEXT           "#6",IDC_BATNUM6,75,98,10,8,NOT WS_VISIBLE
+    LTEXT           "#7",IDC_BATNUM7,131,98,10,8,NOT WS_VISIBLE
+    LTEXT           "#8",IDC_BATNUM8,187,98,10,8,NOT WS_VISIBLE
+    LTEXT           "Total time remaining:",IDC_TOTALTIME,48,28,66,8,NOT WS_VISIBLE
+    LTEXT           "Unknown      ",IDC_TIMEREMAINING,151,28,51,8,NOT WS_VISIBLE
+END
+
+IDD_BATDETAIL DIALOGEX 0, 0, 263, 156
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Detailed Battery Information"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&OK",IDOK,206,134,50,14
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,16,104,50,14
+    LTEXT           "Chemistry:",IDC_CHEMISTRY,16,48,34,8
+    GROUPBOX        "Battery status",IDC_BATMETERGROUPBOX,7,7,249,120
+    LTEXT           "Power state:",IDC_POWERSTATE,16,61,42,8
+    LTEXT           "Unknown",IDC_STATE,59,61,190,8
+    LTEXT           "Unknown",IDC_CHEM,56,48,194,8
+    LTEXT           "Date manufactured:",IDC_DATEMANUFACTURED,16,87,66,8
+    LTEXT           "Manufacturer:",IDC_MANUFACTURE,16,74,47,8
+    LTEXT           "Unique ID:",IDC_UNIQUEID,16,35,35,8
+    LTEXT           "Battery name:",IDC_BATTERYNAME,16,22,48,8
+    LTEXT           "Unknown",IDC_DEVNAME,66,22,179,8
+    LTEXT           "Unknown",IDC_BATID,54,35,191,8
+    LTEXT           "Unknown",IDC_BATMANNAME,66,74,182,8
+    LTEXT           "Unknown",IDC_BATMANDATE,85,87,163,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_BATMETER, DIALOG
+    BEGIN
+        RIGHTMARGIN, 210
+        BOTTOMMARGIN, 74
+    END
+
+    IDD_BATDETAIL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 256
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 148
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACLINEONLINE        "AC power"
+    IDS_BATTERYLEVELFORMAT  "Battery level: %1"
+    IDS_UNKNOWN             "Unknown"
+    IDS_PERCENTREMAININGFORMAT "%1!u!%%"
+    IDS_TIMEREMFORMATHOUR   "%1!u!:%2!02u! hours"
+    IDS_TIMEREMFORMATMIN    "%1!u! min"
+    IDS_BATTERIES           "Batteries"
+    IDS_NOT_PRESENT         "Not Present"
+    IDS_BATTCHARGING        "Charging"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BATNUM              "#%1!u!"
+    IDS_BATTERYNUMDETAILS   "Detailed Information for Battery #%1!u! "
+    IDS_BATTERY_POWER_ON_LINE "On Line"
+    IDS_BATTERY_DISCHARGING "Discharging"
+    IDS_BATTERY_CHARGING    "Charging"
+    IDS_BATTERY_CRITICAL    "Critical"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

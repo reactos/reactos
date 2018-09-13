@@ -1,0 +1,24 @@
+HKCR
+{
+	favorite.favorite.1 = s 'persistfavorite Class'
+	{
+		CLSID = s '{3050f4c6-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	favorite.favorite = s 'persistfavorite Class'
+	{
+		CurVer = s 'favorite.favorite.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050f4c6-98b5-11cf-bb82-00aa00bdce0b} = s 'persistSnapshot Class'
+		{
+			ProgID = s 'favorite.favorite.1'
+			VersionIndependentProgID = s 'favorite.favorite'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

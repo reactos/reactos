@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdazel
+
+TARGETNAME=kbdazel
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdazel.c kbdazel.rc
+
+NTTARGETFILE0=kbdazel.h kbdazel.rc kbdazel.def

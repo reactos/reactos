@@ -1,0 +1,9 @@
+DIRS =  accwiz  \
+        cursors \
+        magnify \
+        narrator \
+        osk	\
+	utilman
+
+OPTIONAL_DIRS = 
+

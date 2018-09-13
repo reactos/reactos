@@ -1,0 +1,71 @@
+/*
+* 
+* Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+* EXEMPT: copyright change only, no build required
+* 
+*/
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#include <windows.h>
+#include <ntverp.h>
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "XML OM for Win32"
+#define VER_INTERNALNAME_STR        "MsXML.dll"
+#define VER_ORIGINALFILENAME_STR    "MsXML.dll"
+#define VER_OLESELFREGISTER
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg_msxml.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+1 TYPELIB "msxml.tlb"
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME            "MSXML"
+    IDS_MIMEXMLFILETYPES    "XML Files (*.xml)|*.xml|XSL Files (*.xsl)|*.xsl|All Files (*.*)|*.*|"
+    IDS_MIMEDEFEXTENSION    ".xml"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_HTML resources
+//
+IDR_DEFAULTSS       HTML     MOVEABLE PURE "mimedefault.xsl"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Message strings.
+//
+#include "messages.rc"
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Icons
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_XMLICON          ICON    DISCARDABLE     "XML.ico"
+IDI_XSLICON          ICON    DISCARDABLE     "XSL.ico"

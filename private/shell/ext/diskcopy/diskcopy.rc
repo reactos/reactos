@@ -1,0 +1,80 @@
+//Microsoft App Studio generated resource script.
+//
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "diskcopy.h"
+#else
+#include <winuser.h>
+#include <commctrl.h>
+#endif
+#include "ids.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+
+IDI_DISKCOPY    ICON DISKCOPY.ICO
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+DLG_DISKCOPYPROGRESS DIALOGEX DISCARDABLE  20, 20, 214, 98
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Copy Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Start",IDOK,122,77,40,14
+    PUSHBUTTON      "&Close",IDCANCEL,167,77,40,14
+    LTEXT           "Copy &from:",IDC_STATIC,7,6,66,8
+    CONTROL         "",IDD_FROM,WC_LISTVIEW,
+                    WS_TABSTOP | WS_BORDER | LVS_SHOWSELALWAYS | LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS,7,17,93,35
+    LTEXT           "Copy &to:",IDC_STATIC,113,6,66,8
+    CONTROL         "",IDD_TO,WC_LISTVIEW,
+                    WS_TABSTOP | WS_BORDER | LVS_SHOWSELALWAYS | LVS_REPORT | LVS_NOCOLUMNHEADER,113,17,94,35
+    CONTROL         "",IDD_STATUS,"Static",SS_SIMPLE | SS_NOPREFIX,7,76,102,
+                    10
+    CONTROL         "",IDD_PROBAR,"msctls_progress32",0x0,7,62,199,8
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISKCOPYMENU    "Cop&y Disk..."
+    IDS_INSERTDEST      "Insert the disk you want to copy to (destination disk), and then click OK."
+    IDS_INSERTSRC       "Insert the disk you want to copy from (source disk), and then click OK."
+    IDS_INSERTSRCDEST   "Insert the source and destination disks, and then click OK."
+    IDS_FORMATTINGDEST  "Formatting destination disk."
+    IDS_READING         "Reading source disk."
+    IDS_WRITING         "Writing to destination disk."
+
+    IDS_COPYSRCDESTINCOMPAT     "The source and destination disks are not the same type.\n\nMake sure the disks you choose are the same type, and then try again."
+
+    IDS_SRCDISKDMF      "Windows cannot copy this type of disk."
+#if defined(DBCS) && !defined(NEC_98)
+    IDS_SRCDISK1024     "We'll NEVER EVER deal with 1024 byte/sec disks!"
+#endif
+    IDS_SRCDISKBAD      "Windows cannot read the disk you are copying from.\n\nMake sure it is not damaged or already in use."
+    IDS_DSTDISKBAD      "Windows cannot write to the destination disk.\n\nMake sure it is not marked as read-only, damaged, or in use."
+
+    IDS_ERROR_READ      "Error: Unable to read from the source disk.\nCheck to make sure the disk is inserted properly in the drive, and the drive door is closed."
+    IDS_ERROR_WRITE     "Error: Unable to write to the destination disk.\nCheck to make sure the disk is inserted properly in the drive, the drive door is closed, and the disk is not write-protected."
+    IDS_ERROR_FORMAT    "Error: Unable to format the destination disk.\nCheck to make sure the disk is inserted properly in the drive, the drive door is closed, and the disk is not write-protected."
+    IDS_ERROR_GENERAL   "Error: Unable to copy disks on this drive."
+
+    IDS_COPYCOMPLETED   "Copy completed successfully."
+    IDS_COPYABORTED     "Copy was cancelled."
+    IDS_COPYFAILED      "Copy failed."
+
+    IDS_CANCEL          "Cancel"
+    IDS_CLOSE           "&Close"
+
+    IDS_HELPSTRING      "Copies entire disk to another disk"
+    IDS_VERBSTRING      "Copy Disk"
+END
+
+#include "diskcopy.rcv"

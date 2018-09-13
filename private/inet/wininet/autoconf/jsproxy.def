@@ -1,0 +1,8 @@
+LIBRARY        JSProxy
+
+EXPORTS
+
+    DllMain								@12
+	InternetInitializeAutoProxyDll		@101
+	InternetDeInitializeAutoProxyDll	@102
+	InternetGetProxyInfo				@103

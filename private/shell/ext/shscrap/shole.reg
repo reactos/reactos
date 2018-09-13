@@ -1,0 +1,22 @@
+REGEDIT4
+
+[HKEY_CLASSES_ROOT\CLSID\{C6EDCDC0-8F67-11CE-A9BA-00AA004AE837}]
+@="Shell Template Folder"
+
+[HKEY_CLASSES_ROOT\CLSID\{C6EDCDC0-8F67-11CE-A9BA-00AA004AE837}\InProcServer32]
+@="shscrap.dll"
+"ThreadingModel"="Apartment"
+
+[HKEY_CLASSES_ROOT\CLSID\{C6EDCDC0-8F67-11CE-A9BA-00AA004AE837}\ShellFolder]
+"Attributes"=hex:50,00,00,20
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\explorer\Desktop\NameSpace\{C6EDCDC0-8F67-11CE-A9BA-00AA004AE837}]
+@="Template"
+
+[HKEY_CLASSES_ROOT\ShellScrap\Defaulticon]
+@="%1"
+
+[HKEY_CLASSES_ROOT\ShellScrap\shellex\IconHandler]
+@="{56117100-C0CD-101B-81E2-00AA004AE837}"
+
+

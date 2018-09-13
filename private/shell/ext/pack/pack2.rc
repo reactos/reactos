@@ -1,0 +1,170 @@
+#include <windows.h>
+#include <prsht.h>
+#include "ids.h"
+
+#include "pack2.rcv"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+IDI_PACKAGER            ICON    DISCARDABLE     "PACK2.ICO"
+IDI_DOCUMENT            ICON    DISCARDABLE     "PACK2.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmaps
+//
+IDB_PACKWIZBMP		BITMAP	MOVEABLE PURE	"PACKWIZ.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_BROWSEEXT		"exe"
+	IDS_BROWSEFILTER	"All Files@*.*"
+	IDS_BROWSETITLE		"Browse"
+	IDS_APP_TITLE		"Packager Shell Object"
+	IDS_UPDATE_ERROR	"The object could not be updated."
+	IDS_OLD_FORMAT_ERROR "The object could not be loaded because this format is not supported."
+	IDS_CREATE_ERROR	"The package could not be created."
+	IDS_COPY_ERROR		"The package could not be copied to the clipboard."
+	IDS_COPY_COMPLETE	"The package has been copied to the clipboard."
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+//
+// Create New Package -- Dialog 1: Select File
+//
+IDD_SELECTFILE DIALOG DISCARDABLE  0, 0, WIZ_CXDLG, WIZ_CYDLG
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Package"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_PACKWIZBMP,IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "Please type in the name of the file you wish to package.  Or, search for the file by clicking Browse.",
+                    IDC_STATIC,WIZ_BODYX,0,WIZ_BODYCX,20
+    LTEXT           "&Filename:",IDC_STATIC,WIZ_BODYX,28,WIZ_BODYCX,8
+    EDITTEXT        IDC_COMMAND,WIZ_BODYX,38,WIZ_BODYCX,14,ES_AUTOHSCROLL
+    PUSHBUTTON	    "B&rowse...",IDC_BROWSE,WIZ_BODYX,56,50,14
+END
+
+//
+// Create New Package -- Dialog 2: Select Icon
+//
+IDD_SELECTICON DIALOG DISCARDABLE  0, 0, WIZ_CXDLG, WIZ_CYDLG
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Package"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_PACKWIZBMP,IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "Select an icon for your package.  You may change the icon, by clicking on the Change Icon button.",
+                    IDC_STATIC,WIZ_BODYX,0,WIZ_BODYCX,20
+    ICON            IDI_PACKAGER,IDC_PACKICON,WIZ_BODYX,28,18,20
+    PUSHBUTTON      "&Change Icon...",IDC_CHANGEICON,WIZ_BODYX,56,55,14
+END
+
+//
+// Create New Package -- Dialog 3: Select Label
+//
+IDD_SELECTLABEL DIALOG DISCARDABLE  0, 0, WIZ_CXDLG, WIZ_CYDLG
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Package"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_PACKWIZBMP,IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "Please type in a label for your package.",IDC_STATIC,WIZ_BODYX,0,WIZ_BODYCX,20
+    LTEXT           "&Label:",IDC_STATIC,WIZ_BODYX,28,WIZ_BODYCX,8
+    EDITTEXT	    IDC_COMMAND,WIZ_BODYX,38,WIZ_BODYCX,14,ES_AUTOHSCROLL
+END
+
+//
+// Edit Embeded Package Dialog
+//
+IDD_EDITEMBEDPACKAGE DIALOG DISCARDABLE  0, 0, 247, 131
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Package"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,134,110,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,190,110,50,14
+    ICON            IDI_PACKAGER,IDC_PACKICON,7,7,18,20
+    PUSHBUTTON      "Change Icon...",IDC_CHANGEICON,32,7,55,14
+    LTEXT           "Filename:",IDC_STATIC,7,33,31,8
+    LTEXT           "Label",IDC_STATIC,7,66,18,8
+    EDITTEXT        IDC_EDIT1,7,43,221,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,7,76,221,14,ES_AUTOHSCROLL
+END
+
+//
+// Edit Command line Package Dialog
+//
+IDD_EDITCMDPACKAGE DIALOG DISCARDABLE  0, 0, 247,  131
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Edit Package"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,134,110,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,190,110,50,14
+    ICON            IDI_PACKAGER,IDC_PACKICON,7,7,18,20
+    PUSHBUTTON      "Change Icon...",IDC_CHANGEICON,32,7,55,14
+    LTEXT           "Command Line:",IDC_STATIC,7,33,31,8
+    LTEXT           "Label",IDC_STATIC,7,66,18,8
+    EDITTEXT        IDC_EDIT1,7,43,221,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,7,76,221,14,ES_AUTOHSCROLL
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "pkwizid.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

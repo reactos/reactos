@@ -1,0 +1,7 @@
+LIBRARY PerfOS
+
+EXPORTS
+    OpenOSObject
+    QueryOSObjectData
+    CollectOSObjectData
+    CloseOSObject

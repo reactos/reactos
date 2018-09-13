@@ -1,0 +1,14 @@
+!include $(NTMAKEENV)\makefile.plt
+!include dirs
+
+DIR=$(DIRS) $(OPTIONAL_DIRS)
+
+all:
+!IF "$(BUILDMSG)" != ""
+    @ech ; $(BUILDMSG) ;
+!ENDIF
+
+clean: cleansrc all
+
+cleansrc:
+	for %%i in ($(DIR)) do cd %i & nmake -nologo  BUILDMSG= clean -f makefile.inc	& cd $(MAKEDIR)

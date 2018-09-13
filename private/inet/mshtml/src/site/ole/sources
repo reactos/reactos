@@ -1,0 +1,37 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\ole=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+TARGETNAME=ole
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+    olebindh.cxx \
+    clstab.cxx \
+    codeload.cxx \
+    eobject.cxx \
+    frame.cxx \
+    frmsite.cxx \
+    iframe.cxx \
+    oleclnt.cxx \
+    olecpc.cxx \
+    olesite.cxx \
+    olesitdb.cxx \
+    olexobj.cxx \
+    pluginst.cxx \
+    safety.cxx \
+    scrptlet.cxx \
+    scrpctrl.cxx \
+    scrsbobj.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

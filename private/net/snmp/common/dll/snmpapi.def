@@ -1,0 +1,55 @@
+LIBRARY snmpapi
+
+EXPORTS
+    SnmpTfxOpen
+    SnmpTfxClose
+    SnmpTfxQuery
+
+    SnmpUtilUnicodeToAnsi
+    SnmpUtilUnicodeToUTF8
+    SnmpUtilAnsiToUnicode
+    SnmpUtilUTF8ToUnicode
+
+    SnmpUtilOidAppend
+    SnmpUtilOidNCmp
+    SnmpUtilOidCmp
+    SnmpUtilOidCpy
+    SnmpUtilOidFree
+
+    SnmpUtilOctetsNCmp
+    SnmpUtilOctetsCmp
+    SnmpUtilOctetsCpy
+    SnmpUtilOctetsFree
+
+    SnmpUtilAsnAnyCpy
+    SnmpUtilAsnAnyFree
+
+    SnmpUtilVarBindCpy
+    SnmpUtilVarBindFree
+
+    SnmpUtilVarBindListCpy
+    SnmpUtilVarBindListFree
+
+    SnmpUtilMemFree
+    SnmpUtilMemAlloc
+    SnmpUtilMemReAlloc
+
+    SnmpUtilDbgPrint
+
+    SnmpUtilOidToA
+    SnmpUtilIdsToA
+
+    SnmpUtilPrintAsnAny
+    SnmpUtilPrintOid
+
+    SnmpSvcInitUptime
+    SnmpSvcGetUptime
+
+    SnmpSvcGetEnterpriseOID
+
+    SnmpSvcAddrIsIpx
+    SnmpSvcAddrToSocket
+
+    SnmpSvcSetLogLevel
+    SnmpSvcSetLogType
+

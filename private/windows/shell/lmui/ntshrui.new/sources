@@ -1,0 +1,76 @@
+MAJORCOMP=  shell
+MINORCOMP=  ntshrui
+
+UMTYPE=     windows
+
+TARGETNAME= ntshrui
+TARGETPATH= obj
+TARGETTYPE= DYNLINK
+
+DLLDEF=     obj\*\app.def
+DLLENTRY=   _DllMainCRTStartup
+DLLBASE=    @$(BASEDIR)\PUBLIC\SDK\LIB\coffbase.txt,ntshrui
+
+USE_CRTDLL=1
+
+C_DEFINES= $(C_DEFINES) -DUNICODE -D_UNICODE
+
+!IF "$(SHELLDBG)"=="1"
+C_DEFINES=$(C_DEFINES) -DDEBUG -DFULL_DEBUG
+!ENDIF
+
+# Make warnings equivalent to errors
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+CONDITIONAL_INCLUDES=\
+    afxres.h \
+    app.rc2
+
+INCLUDES=\
+    obj; \
+    ..\debug; \
+    $(BASEDIR)\private\inc; \
+    $(BASEDIR)\private\net\inc; \
+    $(BASEDIR)\private\windows\inc; \
+    $(BASEDIR)\private\windows\inc16
+
+TARGETLIBS=\
+    ..\debug\obj\*\debug.lib \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+    $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib \
+    $(BASEDIR)\public\sdk\lib\*\mpr.lib
+
+SOURCES=\
+    messages.mc \
+    acl.cxx \
+    api.cxx \
+    cache.cxx \
+    copyhook.cxx \
+    dlgbase.cxx \
+    dlgnew.cxx \
+    dllmain.cxx \
+    ole.cxx \
+    share.cxx \
+    shrinfo.cxx \
+    shrpage.cxx \
+    strhash.cxx \
+    util.cxx \
+    app.rc
+
+PASS0_HEADERDIR = obj
+PASS0_SOURCEDIR = obj
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1
+
+NTTARGETFILE1=  obj\*\app.res

@@ -1,0 +1,41 @@
+!IF 0
+
+Copyright (c) 1992  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    David J. Gilman (davegi) 24-Jan-1992
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=winreg
+MINORCOMP=crdel
+
+TARGETNAME=crdel
+TARGETPATH=obj
+TARGETTYPE=UMAPPL_NOLIB
+
+INCLUDES=..\lib\inc
+
+SOURCES=
+
+
+C_DEFINES=
+
+UMTYPE=console
+UMAPPL=crdel
+UMLIBS=..\lib\src\obj\*\crtools.lib $(BASEDIR)\public\sdk\lib\*\advapi32.lib

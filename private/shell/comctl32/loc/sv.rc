@@ -1,0 +1,139 @@
+LANGUAGE 0x1d, 0x00 // Really 0x1d, 0x01 - Swedish (Swedish)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Swedish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Anpassa verktygsfältet"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Stäng",2,307,6,46,14
+    PUSHBUTTON      "&Återställ",202,307,23,46,14
+    PUSHBUTTON      "&Hjälp",205,307,40,46,14
+    PUSHBUTTON      "Flytta &upp",206,307,74,46,14
+    PUSHBUTTON      "Flytta &ned",207,307,91,46,14
+    LTEXT           "T&illgängliga knappar:",-1,4,5,115,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Lägg till >>",1,130,42,46,14
+    PUSHBUTTON      "<< &Ta bort",204,130,62,46,14
+    LTEXT           "Knappar i v&erktygsfältet:",-1,182,5,116,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Avbryt",2,58,122,50,14
+    PUSHBUTTON      "&Verkställ",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Hjälp",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 292, 47
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    278,3
+    LTEXT           "",12326,7,17,278,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Föregående",12323,10,26,52,14
+    DEFPUSHBUTTON   "&Nästa >",12324,62,26,52,14
+    PUSHBUTTON      "Slutför",12325,119,26,52,14
+    PUSHBUTTON      "Avbryt",2,176,26,52,14
+    PUSHBUTTON      "Hjälp",9,233,26,52,14,WS_GROUP
+    LTEXT           "",12327,0,35,291,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Avgränsare"
+    1025                    " + "
+    1026                    "Ingen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Stäng"
+    4161                    "OK"
+    4162                    "Egenskaper för %s"
+    4163                    "Idag:"
+    4164                    "&Gå till idag"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Skriv texten här"
+    4177                    "Egenskaper"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Ändrar storlek på fönstret."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Flyttar fönstret."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Minimerar fönstret till en ikon."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Maximerar fönstret till full storlek."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Växlar till nästa MDI-fönster."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Stänger fönstret."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Återställer fönstret till normal storlek."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Växlar till annan aktivitet."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Innehåller kommandon för att ändra fönster."
+    36849                   "Ändra kolumnerna genom att dra till vänster eller höger."
+    36850                   "Ändrar storleken på kolumner med pil- och tabb-tangenterna."
+    36851                   "Lägger till, flyttar och tar bort knappar i verktygsfältet."
+END
+

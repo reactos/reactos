@@ -1,0 +1,31 @@
+// strings common to all screensavers...
+
+#include "sscommon.h"
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_WARNING             "Warning"
+    IDS_ERROR               "Error"
+    IDS_START_FAILED        "Screen saver failed to start."
+    IDS_BITMAP_SIZE         "The texture must not be larger than %ld by %ld pixels."
+    IDS_BITMAP_INVALID      "The texture you selected is not valid."
+    IDS_SELECT_ANOTHER_BITMAP  "Please select another texture for the screen saver.  %s is not valid."
+    IDS_TEXTUREFILTER       "Texture files (*.bmp)"
+    IDS_TEXTUREDIALOGTITLE  "Choose Texture File"
+    IDS_BMP                 "BMP"
+    IDS_DOTBMP              ".BMP"
+    IDS_STARDOTBMP          "*.BMP"
+    IDS_RGB                 "RGB"
+    IDS_DOTRGB              ".RGB"
+    IDS_STARDOTRGB          "*.RGB"
+
+    IDS_COPYRIGHT           "Copyright (c) 1994 Microsoft Corporation"
+    IDS_GENNAME             "ScreenSaver"
+    IDS_INIFILE             "control.ini"
+    IDS_TEXTURE             "Texture"
+    IDS_TEXTURE_FILE_OFFSET "TextureFileOffset"
+    IDS_SIZE                "Size"
+    IDS_TESSELATION         "Tesselation"
+END
+
+ID_APP      ICON        "ssopengl.ico"

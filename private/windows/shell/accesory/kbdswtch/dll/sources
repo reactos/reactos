@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name: Recorder.dll
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Diane K. Oh(a-dianeo) 23-Mar-1994
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=kbddll
+
+TARGETNAME=kbddll
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib      \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+DLLBASE=0x33000000
+DLLENTRY=LibMain
+
+C_DEFINES=-DUNICODE -D_UNICODE
+
+INCLUDES=.
+
+SOURCES=kbddll.c kbddll.rc
+
+UMTYPE=windows
+UMLIBS=obj\*\kbddll.lib
+

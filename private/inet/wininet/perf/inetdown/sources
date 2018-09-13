@@ -1,0 +1,39 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\perf\inetdown=)
+BINPLACE_PLACEFILE=$(MAKEDIR)\placefil.txt
+USE_MSHTML_INCREMENTAL_LINKING=0
+USE_PDB=0
+
+CHECKED_ALT_DIR=1
+TARGETNAME=inetdown
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+#INCLUDES=$(ROOT)\src\core\include
+
+!undef USE_NOLIBS
+!undef USE_NTDLL
+USE_LIBCMT=1
+
+SOURCES= \
+    inetdown.cpp \
+    inetdown.rc
+
+UMTYPE=console
+
+TARGETLIBS = \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\wininet.lib \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+
+CONDITIONAL_INCLUDES = \
+    macwin32.h \
+    winwlm.h
+

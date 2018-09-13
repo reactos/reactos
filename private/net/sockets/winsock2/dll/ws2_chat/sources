@@ -1,0 +1,54 @@
+!IF 0
+
+Copyright (c) 1989-91  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=sockets
+MINORCOMP=winsock2
+
+TARGETNAME=ws2_chat
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+USE_CRTDLL=1
+
+INCLUDES=..\include
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        chatdlg.c       \
+        chatsock.c      \
+        queue.c         \
+        ws2_chat.c      \
+        ws2_chat.rc     \
+
+UMTYPE=windows
+UMAPPL=ws2_chat
+UMENTRY=winmain
+
+UMLIBS=                                         \
+        obj\*\ws2_chat.lib                      \
+        obj\*\ws2_chat.res                      \
+        $(BASEDIR)\public\sdk\lib\*\ws2_32.lib  \
+

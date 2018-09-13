@@ -1,0 +1,12 @@
+// strings common to all screensavers...
+
+#define idsDefKeyword		1010
+
+STRINGTABLE PRELOAD
+BEGIN
+    idsIniFile      "control.ini"
+    idsScreenSaver  "ScreenSaver"
+    idsHelpFile     "display.hlp"
+    idsDefKeyword   "Screen Saver" // Should be in the help file's index
+    idsNoHelpMemory "Your computer does not have enough available memory to display Help. To increase available memory, quit one or more programs."
+END

@@ -1,0 +1,423 @@
+<html>
+
+<!-- TOUR.HTM  Copyright (c) 1997 by Microsoft, Inc.                 -->
+<!--                                                                 -->
+<!-- hash parameters for this page:                                  -->
+<!-- Section=[1|2|3]                                                 -->
+<!--    which of the 3 steps to show initially (default=2)           -->
+<!-- TopNav=[0|1]                                                    -->
+<!--    whether or not to show the top navigation bar (default=0)    -->
+<!-- BottomNav=[0|1]                                                 -->
+<!--    whether or not to show the bottom navigation bar (default=1) -->
+<!--                                                                 -->
+<!-- Example:                                                        -->
+<!--    http://host/tour.htm#Section=3#TopNav=0                      -->
+<!--    starts on section 3, top navigation bar is turned off        -->
+
+<head>
+    <title>Welcome to Internet Explorer 4.0</title>
+    <meta http-equiv="PICS-Label"   content='(PICS-1.1 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "inet@microsoft.com" for "res://ie4tour.dll/tour.htm" on "1997.06.30T14:21-0500" r (n 0 s 0 v 0 l 0))'></meta>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"></meta>
+    <base href="res://ie4tour.dll/tour.htm"></base>
+</head>
+
+
+<style>
+    body    { background : black; color : white; margin: 0 }
+    body    { font-family: Verdana, Arial, sans-serif; font-size: 8pt; font-weight: bold; }
+    table   { font-family: Verdana, Arial, sans-serif; font-size: 8pt; font-weight: bold;  }
+
+    td.TopNav        { vertical-align: middle; padding: 0px 8px; }
+    td.BottomNav     { vertical-align: middle; padding: 0px 11px; font-size: 10pt }
+    img.TopNav       { position:relative; top:-1px; width:16px; height:16px; vertical-align:top; border:0 }
+    img.BottomNav    { position:relative; top:-1px; width:4px;  height:7px;  margin: 0px 6px 0px 4px;    border:0 }
+    a.NavBar         { color: white;      text-decoration: none }
+    a.NavBar:hover   { color: #FF6633;    text-decoration: underline }
+
+    div.Offscreen     { display:none }
+    span.Offscreen    { display:none }
+</style>
+
+
+
+<body scroll=no>
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<!-- so we can grab the window size -->
+<div style="position:absolute; left:0; top:0; width:100%; height:100%; visibility:hidden" id=WindowSize></div>
+
+<!-- Top navigation bar -->
+<div style="position:absolute; left:0; top:0; width:100%; height:28; visibility:hidden" id=TopNavBar>
+<table cellpadding=0 cellspacing=0 style="height:100%">
+<tr>
+    <td style="width:12px">&nbsp</td>
+    <td class=TopNav>
+        <a class=NavBar href="" id=Butn1>
+        <img class=TopNav src="t-one.bmp"    id=Graphic1></img>
+        </a>
+        <a class=NavBar href="" id=Step1>
+        Take a Quick Tour
+        </a>
+    </td>
+    <td class=TopNav>
+        <a class=NavBar href="" id=Butn2>
+        <img class=TopNav src="t-two.bmp"   id=Graphic2></img>
+        </a>
+        <a class=NavBar href="" id=Step2>
+        Explore Channels
+        </a>
+    </td>
+    <td class=TopNav>
+        <a class=NavBar href="" id=Butn3>
+        <img class=TopNav src="t-three.bmp" id=Graphic3></img>
+        </a>
+        <a class=NavBar href="" id=Step3>
+        <span id=RegText>
+        Register Online
+        </span>
+        </a>
+    </td>
+</tr>
+</table>
+</div>
+
+<!-- the content window -->
+<div style="position:absolute; left:0; top:28; width:100%; height:90%" id=ContentWindow>
+<iframe frameborder=no src="about:blank" width=100% height=100% id=ContentFrame>
+</iframe>
+</div>
+
+<!-- Bottom navigation bar -->
+<div style="position:absolute; left:0; top:90%; width:100%; height:33; visibility:hidden" id=BottomNavBar>
+<table cellpadding=0 cellspacing=0 style="height:100%" align=left><tr>
+    <td style="width:8px">&nbsp</td>
+    <td class=TopNav>
+        <span style="font-weight: normal; visibility:hidden" id=PageNumberField>
+        <!-- this text field gets updated dynamically by SetActivePage() -->
+        &nbsp
+        <!----------------------------------------------------------------->
+        </span>
+    </td>
+</tr></table>
+<table cellpadding=0 cellspacing=0 style="height:100%" align=right><tr>
+    <td class=BottomNav id=HTMLBack>
+        <!-- back button html gets inserted here by SetBackNext() -->&nbsp
+    </td>
+    <td class=BottomNav id=HTMLNext>
+        <!-- next button html gets inserted here by SetBackNext() -->&nbsp
+    </td>
+    <td style="width:20px">&nbsp</td>
+</tr></table>
+</div>
+
+<!-- String table (not displayed) -->
+<div class=OffScreen>
+<span id=StrBackHTML   class=OffScreen><a class=NavBar href="" name=4 onclick="OnClickButtonBack();"><img class=BottomNav src="t-back.bmp"></img>Back</a></span>
+<span id=StrNoBackHTML class=OffScreen><img class=BottomNav src="t-noback.bmp"></img><span style="color:darkgray">Back</span></span>
+<span id=StrNextHTML   class=OffScreen><a class=NavBar href="" name=5 onclick="OnClickButtonNext();">Next&nbsp<img class=BottomNav src="t-next.bmp"></img></a></span>
+<span id=StrNoNextHTML class=OffScreen><span style="color:darkgray">Next&nbsp</span><img class=BottomNav src="t-nonext.bmp"></img></span>
+<span id=StrFinishHTML class=OffScreen><a class=NavBar href="" name=5 onclick="OnClickButtonNext();">Finish&nbsp<img class=BottomNav src="t-next.bmp"></img></a></span>
+<span id=StrOnUnload   class=OffScreen>To navigate to a web site or open an HTML document, you should close this window first.</span>
+<span id=StrPageNumber class=OffScreen>[ @ out of @ pages ]</span>
+<span id=StrContest    class=OffScreen>Subscribe to Win</span>
+<span id=OnlineURL     class=OffScreen>http://www.microsoft.com/ie/ie40/tour</span>
+</div>
+
+</body>
+
+
+<script language="JavaScript">
+function InitializeNoNavigation()
+{
+//    window.onbeforeunload = new Function("return '"+StrOnUnload.innerText+"';");
+}
+InitializeNoNavigation();
+
+function SetPageLayout()
+{
+    window.onresize = SetPageLayout;
+
+    if( document.ShowTopNav == 0 )
+    {
+        TopNavBar.style.pixelHeight = 0;
+        TopNavBar.style.visibility = "hidden";
+    }
+    else
+    {
+        TopNavBar.style.visibility = "visible";
+    }
+    if( document.ShowBottomNav == 0 )
+    {
+        BottomNavBar.style.pixelHeight = 0;
+        BottomNavBar.style.visibility = "hidden";
+    }
+    else
+    {
+        BottomNavBar.style.visibility = "visible";
+    }
+
+    ContentWindow.style.pixelTop = TopNavBar.style.pixelHeight;
+    ContentWindow.style.pixelHeight = WindowSize.style.pixelHeight 
+        - TopNavBar.style.pixelHeight - BottomNavBar.style.pixelHeight;
+
+    if( document.ShowBottomNav != 0 )
+        BottomNavBar.style.pixelTop = TopNavBar.style.pixelHeight + ContentWindow.style.pixelHeight;
+    else
+        BottomNavBar.style.pixelTop = 0;
+
+    // workaround to 'double scrollbars'
+    if( document.ShowBottomNav == 0 && document.ShowTopNav == 0 )
+        document.body.scroll = "no";
+}
+function SetActiveStep()
+{
+    Graphic1.src = "t-one.bmp";
+    Graphic2.src = "t-two.bmp";
+    Graphic3.src = "t-three.bmp";
+    Step1.style.color = "#ff6633";
+    Step2.style.color = "#ff6633";
+    Step3.style.color = "#ff6633";
+
+    var graphic = document.all.item( "Graphic" + document.StepNumber, 0 );
+    var anchor  = document.all.item( "Step" + document.StepNumber, 0 );
+
+    graphic.src  = "t-check.bmp";
+    anchor.style.color = "#66ccff";
+}
+function SetActivePage()
+{
+    var numPages = document.PageContent[document.StepNumber-1].length;
+    if( numPages < 2 )
+    {
+        PageNumberField.style.visibility = "hidden";
+    }
+    else
+    {
+        // format the string: '[ @ out of @ pages ]'
+        var oldtext = StrPageNumber.innerText;
+        var iPage   = oldtext.indexOf( '@' );
+        var iTotal  = oldtext.indexOf( '@', iPage+1 );
+        var newtext = oldtext.substring( 0, iPage ) + document.PageNumber + oldtext.substring( iPage+1, iTotal ) +
+                numPages + oldtext.substring( iTotal+1, oldtext.length );
+        
+        PageNumberField.style.visibility = 'visible';
+
+        // workaround...have to delay load this code
+        window.setTimeout( "PageNumberField.innerText = '"+newtext+"';", 0 );
+    }
+}
+function SetBackNext()
+{
+    // gray out Back button if appropriate
+    if( document.PageNumber==1 && (document.StepNumber==1 || document.DoOneStepOnly) )
+        HTMLBack.innerHTML = StrNoBackHTML.innerHTML;
+    else
+        HTMLBack.innerHTML = StrBackHTML.innerHTML;
+
+    // set finish text if appropriate
+    var numPages = document.PageContent[document.StepNumber-1].length;
+    if( document.DoOneStepOnly && document.PageNumber==numPages )
+        HTMLNext.innerHTML = StrNoNextHTML.innerHTML;
+    else if( !document.DoOneStepOnly && document.PageNumber==numPages && document.StepNumber==document.StepCount )
+        HTMLNext.innerHTML = StrFinishHTML.innerHTML;
+    else
+        HTMLNext.innerHTML = StrNextHTML.innerHTML;
+}
+function LoadChannelWindow(url)
+{
+    // we have to delay this code a bit so trident can let the UI update itself...
+    window.setTimeout( "window.open('"+url+"', '', 'channelmode=yes, scrollbars=no');", 0 );
+}
+function LoadStandardWindow(url)
+{
+    // parameters for how to open the child window
+    var options = "";
+
+    var screenHeight = window.screen.height - 28; // allow for std taskbar
+    var screenWidth  = window.screen.width;
+    var width  = (screenWidth  * 90 / 100) - 10;  // allow for window borders
+    var height = (screenHeight * 90 / 100) - 40;  // allow for caption + status bar
+    var left   = (screenWidth - width  - 10) / 2; 
+    var top    = (screenHeight- height - 40) / 2; 
+    options += "width = "+width+", height = "+height+", top = "+top+", left = "+left+", ";
+    options += "resizable=yes, status=yes";
+
+    // we have to delay this code a bit so trident can let the UI update itself...
+    window.setTimeout( "window.open('"+url+"', '', '"+options+"');", 0 );
+}
+function LoadContent(newstep, newpage)
+{
+    // if we're beyond the last step, we're done...close the window
+    if( newstep > document.StepCount )
+    {
+        window.close();
+        return;
+    }
+
+    // avoid race condition while we're waiting for child window to close us
+    // (see NOTE below)
+    if( document.WaitingForChild )
+    {
+        return;
+    }
+
+    // if we're switching between step 2 and any other step (or vice-versa), we need to change between
+    // browser window and full screen browser
+    if( (document.StepNumber==2 || newstep==2) && newstep != document.StepNumber )
+    {
+        document.WaitingForChild = true;
+
+        url = window.location.href;
+        url = url.substring( 0, window.location.href.indexOf( window.location.hash ) );  // strip off the params
+        // we don't pass on MinimalTour here, on purpose.  this makes sure that our child calls us back and we can close ourselves.
+        url = url + "#Section=" + newstep + "#Page=" + newpage + "#TopNav=" + document.ShowTopNav + "#BottomNav=" + document.ShowBottomNav + "#CallParent=" + document.CallParent + "#Contest=" + document.Contest;
+
+        if( newstep==2 )
+            LoadChannelWindow( url );
+        else
+            LoadStandardWindow( url );
+
+        return;
+    }
+
+    document.StepNumber = newstep;
+    document.PageNumber = newpage;
+
+    SetActiveStep();
+    SetActivePage();
+    // workaround, have to delay-load this code
+    window.setTimeout( "SetBackNext();", 0 );
+    
+    var url = "";
+    if( document.MinimalTour )
+        url = OnlineURL.innerText + "/";
+    url += (document.PageContent[document.StepNumber-1])[document.PageNumber-1];
+
+    if( document.Contest )
+        // workaround...have to delay load this code
+        window.setTimeout( "RegText.innerText = StrContest.innerText", 0 );        
+
+    ContentFrame.location.href = url;
+}
+function OnChildIsInitialized()
+{
+    // this is what the child window calls to close us
+    window.close();
+}
+function OnClickButtonStep()
+{
+    window.event.returnValue = false;  // cancel navigation
+
+    var index = this.id.substring(4,5);
+    LoadContent( index, 1 );
+}
+function OnClickButtonNext()
+{
+    window.event.returnValue = false;  // cancel navigation
+
+    var newstep = document.StepNumber;
+    var newpage = document.PageNumber + 1;
+    if( newpage > document.PageContent[newstep-1].length )
+    {
+        if( document.DoOneStepOnly )
+            newstep = 4;
+        else
+            ++newstep;
+        newpage=1;
+    }
+    LoadContent( newstep, newpage );
+}
+function OnClickButtonBack()
+{
+    window.event.returnValue = false;  // cancel navigation
+
+    var newstep = document.StepNumber;
+    var newpage = document.PageNumber - 1;
+    if( newpage < 1 && !document.DoOneStepOnly )
+    {
+        --newstep;
+        newpage = document.PageContent[newstep-1].length;
+    }
+    LoadContent( newstep, newpage );
+}
+function GetHashParameter( name )
+{
+    var hash = location.hash;
+    var key  = "#" + name + "=";
+    if( ( iLeft=hash.indexOf( key ) )>=0 )
+    {
+        if( ( iRight=hash.indexOf( "#", iLeft+1 ) )<0 )
+            iRight=hash.length;
+        value = parseInt( hash.substring( iLeft+key.length, iRight ) );
+        if( !isNaN( value ) )
+            return value;
+    }
+
+    return null;
+}
+function InitializeNavigation()
+{
+    // window defaults
+    document.StepNumber    = 1;
+    document.PageNumber    = 1;
+    document.ShowTopNav    = 0;
+    document.ShowBottomNav = 1;
+    document.Contest       = 0;
+    document.CallParent    = 0;
+    document.MinimalTour   = 0;
+
+    step        = GetHashParameter( "Section" );
+    page        = GetHashParameter( "Page" );
+    topnav      = GetHashParameter( "TopNav" );
+    bottomnav   = GetHashParameter( "BottomNav" );
+    contest     = GetHashParameter( "Contest" );
+    callparent  = GetHashParameter( "CallParent" );
+    minimaltour = GetHashParameter( "MinimalTour" );
+
+    if( step!=null )      document.StepNumber    = step;
+    if( page!=null )      document.PageNumber    = page;
+    if( topnav!=null )    document.ShowTopNav    = topnav;
+    if( bottomnav!=null ) document.ShowBottomNav = bottomnav;
+    if( contest!=null )   document.Contest       = contest;
+    if( callparent!=null )document.CallParent    = callparent;
+    if( minimaltour!=null )document.MinimalTour = minimaltour;
+
+    document.DoOneStepOnly = !document.ShowTopNav;
+ 
+    // page count constants
+    document.StepCount = 3;
+    document.PageContent = new Array(document.StepCount);
+    
+    var regpage1  = document.Contest ? "page3-1c.htm" : "page3-1.htm";
+    var tourpage7 = document.DoOneStepOnly ? "page2-1.htm#IsInsideTour=1" : "page1-7.htm";
+    document.PageContent[0] = new Array( "page1-1.htm","page1-3.htm","page1-4.htm","page1-6.htm","page1-2.htm","page1-5.htm", tourpage7 );
+    document.PageContent[1] = new Array( "page2-1.htm" );
+    document.PageContent[2] = new Array( regpage1 );
+   
+    // in this case bottom nav bar is superfluous & will just be confusing
+    if( document.DoOneStepOnly && document.PageContent[document.StepNumber-1].length==1 ) 
+        document.ShowBottomNav = 0;
+
+    SetPageLayout();
+    LoadContent( document.StepNumber, document.PageNumber );
+
+    // set anchors to the proper click events
+    var a = document.all.tags("a");
+    if( a )
+        for( i=0; i<a.length; i++ )
+            if( a(i).parentElement.className=="TopNav" )
+                a(i).onclick=OnClickButtonStep;
+
+    if( !document.MinimalTour && document.CallParent )
+        if( window.opener && !window.opener.closed )
+            window.opener.OnChildIsInitialized();
+}
+window.onload=InitializeNavigation;
+</script>
+
+
+</html> 

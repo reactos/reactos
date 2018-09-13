@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdgkl
+
+TARGETNAME=kbdgkl
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdgkl.c kbdgkl.rc
+
+NTTARGETFILE0=kbdgkl.h kbdgkl.rc kbdgkl.def

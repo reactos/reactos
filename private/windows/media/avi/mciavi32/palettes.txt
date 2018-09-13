@@ -1,0 +1,135 @@
+
+
+AVI and Palettes
+----------------
+
+
+This is an overview of AVI's use of palettes: there are some small
+complexities beyond this that are not generally significant.
+
+
+Palette Sources
+---------------
+
+When playing on a palettised display, AVI must use a palette for
+drawing the frames. It gets these palettes from one of these places:
+
+	- from the AVI file header. Attached to the DIB header at the
+start of an 8-bit file will be a colour table (an array of 4-byte
+RGBQUAD values). The frame DIBs  will consist of indices into this
+table. In addition, new palettes can appear throughout the movie
+to be used for frames from that point onwards.
+
+	- from the dither proc. If the movie is a higher colour
+resolution, drawdib will dither it to the display colour resolution.
+In the case of 8-bit displays, 16 and 24-bit videos will be dithered
+to a standard 256-colour palette created  in drawdib\dith775.c which
+has 7 levels of red and green and 5 levels of blue.
+
+	- from the codec. If the video is a higher colour resolution
+and being decompressed to 8-bit palettised, the codec will supply the
+palette. for example, the Video 1 codec will decompress 16-bit CRAM
+videos directly to 8-bit pal using the standard 7-7-5 palette (same
+as the dither code's palette).
+
+	- 4-bit displays will always use the 16-colour VGA palette.
+
+In all of the cases, once we have a frame fully decompressed/dithered
+and ready to draw, it is a DIB that consists of a series of indices
+into one of these palettes.  We may also have:
+
+	- A client palette: a palette handle can be sent us from the
+client. This represents the palette used by the window we are playing
+in. We need to draw using this palette to avoid redraws of the
+surrounding window when playing in place. In this case we need to
+deal with two palettes: the palette containing the colours actually
+used in the DIBs (from the avi file or supplied by dither/codec), and
+the palette we need to draw with, supplied by the client.
+
+Using The Palette
+-----------------
+
+	We draw the frame using SetDIBitsToDevice (or possibly
+StretchDIBits). This will interpret the DIB bits in one of two ways
+depending on the fuColorUse flag (in fact there are more than two,
+but we only use these)
+
+DIB_PAL_INDICES:	this means that the bytes in the DIB are
+indices directly into the system palette.
+
+DIB_PAL_COLORS	the bytes in the DIB are indices into a colour table
+supplied as the bmiColors field of the bitmapinfoheader supplied.
+This colour table must contain indices into the logical palette
+selected into the DC (the header including colour table, and the DC
+are supplied as arguments).
+
+The DIB_PAL_COLORS case is slower since GDI has to translate the DIB
+bytes once using the bmiColors table, and then once again from the
+logical palette of the DC to the system palette. However, since we
+can't realistically change the DIB data, we can only use
+DIB_PAL_INDICES if the system palette is the same as our palette,
+which depends on the RealizePalette behaviour:
+
+
+Realizing Palettes:
+-------------------
+
+Before drawing the DIB, we select the palette we want to draw with
+into the DC and then call RealizePalette. This has one of two
+behaviours:
+
+- if we are the foreground app, RealizePalette assigns entries in the
+system palette to contain the colours in our logical palette. The
+system keeps some entries in the palette with standard colours in
+(the first 10 and last 10 entries) - these are the 'static' colours;
+it will allow us to use the remaining entries.
+
+- if not, RealizePalette creates a mapping between our logical
+palette and the nearest colours in the current system palette.
+
+When a foreground app realizes a palette, it changes entries in the
+system palette, and all other apps need to re-Realize their palettes
+in order to get a mapping to the new system palette (unless they are
+only using the default, static colours). Thus when we start playing a
+video, all other palette-aware apps change colours (when the system
+palette changes) and then redraw with the mapping to the new system
+palette.
+
+
+Support for DIB_PAL_INDICES.
+---------------------------
+
+Using DIB_PAL_INDICES is only possible if the system palette not only
+contains all our colours, but in exactly the same order. To ensure
+that this is possible, AVI palettes are generally created containing
+the static colours as the first and last 10 colours, and
+movie-specific colours in between. Thus when we are foreground and
+realize the palette, the system palette will end up exactly the same
+as the movie palette, and we can use DIB_PAL_INDICES with its
+significant performance benefits.
+
+Whenever the system palette changes, we compare all the colours in
+the system palette with the colours in our DIBs. If the two colour
+tables are the same, we know it is safe to use DIB_PAL_INDICES. If
+not, then we use DIB_PAL_COLORS with a colour table. This colour
+table maps the contents of the DIB to the logical palette: this is a
+no-op, since the logical palette for our dc is the same as the DIB
+palette. The real translation is being done between the logical
+palette and the current system palette, and this is set up by GDI
+when we issue a 'realizepalette' call.
+
+Support for client Palettes
+---------------------------
+
+We are sometimes given a client palette to use (mplayer does this if
+playing in place, in an app that is using a non-default palette). The
+reason for this is to avoid the flash and re-draw of the client app
+that would be necessary if we realized our palette and changed the
+system palette. In this case, we select the client palette as our dc
+palette, and we build a colour table that maps entries in our palette
+to the nearest entry in the client palette. When we then draw - using
+DIB_PAL_COLORS - GDI will use this colour table to translate between
+the DIB palette and the DC's logical palette ( which is the client
+app's palette), and then will translate between the logical palette
+and the system palette (probably the same).
+

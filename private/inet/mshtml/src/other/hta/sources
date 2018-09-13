@@ -1,0 +1,33 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\other\hta=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=mshta
+TARGETPATH=..\..\..\$(_OBJ_DIR)
+TARGETTYPE=PROGRAM
+
+INCLUDES= \
+    $(BASEDIR)\private\windows\inc; \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\external\inc;
+
+SOURCES= \
+    mshta.rc \
+    main.cxx
+
+UMENTRY=winmain
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\kernel32.lib
+
+USE_LIBCMT      = 1
+
+

@@ -1,0 +1,5 @@
+Things to do with AVIView:
+	Make some way of selecting streams/frames
+	Need some way to edit
+
+	Make play work with no sound

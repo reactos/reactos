@@ -1,0 +1,130 @@
+#include "winver.h"
+#include "srvwiz.rcv"
+#include "resource.h"
+
+REGINST         REGINST MOVEABLE PURE   "selfreg.inf"
+
+1 TYPELIB "srvwiz.tlb"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_MAIN        ICON DISCARDABLE "srvwiz.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PSCTITLE    "Configure Your Server"
+    IDS_PSCDESC     "Use Configure Your Server to set up and configure services for your network"
+
+    IDS_INSTALL_DNS_COMMAND_LINE      "%1\\sysocmgr.exe /i:%2 /u:%3 /x"
+    IDS_INSTALL_DNS_INF_TEXT          "[Version]\r\nSignature = ""$Windows NT$""\r\n[Components]\r\nNetOC=netoc.dll,NetOcSetupProc,netoc.inf\r\n[Global]\r\nWindowTitle=Windows Server Setup -- Installing DNS Server\r\n[Strings]\r\n;(empty)\r\n"
+    IDS_INSTALL_DNS_UNATTEND_TEXT     "[NetOptionalComponents]\r\nDNS=1\r\n"
+
+    IDS_INSTALL_DHCP_COMMAND_LINE     "%1\\sysocmgr.exe /i:%2 /u:%3 /x"
+    IDS_INSTALL_DHCP_UNATTEND_TEXT    "[NetOptionalComponents]\r\nDHCPServer=1\r\n; Parameters go here\r\n;\r\n[dhcpserver]\r\nSubnets=10.0.0.0\r\nStartIp=10.0.0.3\r\nEndIp=10.0.0.254\r\nSubnetMask=255.0.0.0\r\nLeaseDuration=874800\r\nDnsServer=10.10.1.1\r\nDomainName=%1\r\n"
+
+    IDS_INSTALL_AD_COMMAND_LINE       "%1\\dcpromo.exe /answer:%2"
+    IDS_INSTALL_AD_ANSWER_TEXT        "[DCInstall]\r\nReplicaOrNewDomain=Domain\r\nTreeOrChild=Tree\r\nCreateOrJoin=Create\r\nDomainNetbiosName=%1\r\nNewDomainDNSName=%2\r\nDNSOnNetwork=No\r\nDatabasePath=%%systemroot%%\\ntds\r\nLogPath=%%systemroot%%\\NTDS\r\nSYSVOLPath=%%systemroot%%\\sysvol\r\nSiteName=Default-First-Site\r\nRebootOnSuccess=Yes\r\nAutoConfigDNS=Yes\r\nDoRASFixup=Yes\r\n"
+
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// html resources
+//
+ad.htm          html discardable "htm\\ad.htm"
+ad2.htm         html discardable "htm\\ad2.htm"
+adv.htm         html discardable "htm\\adv.htm"
+as.htm          html discardable "htm\\as.htm"
+com.htm         html discardable "htm\\com.htm"
+config.htm      html discardable "htm\\config.htm"
+cs.htm          html discardable "htm\\cs.htm"
+cs2.htm         html discardable "htm\\cs2.htm"
+db.htm          html discardable "htm\\db.htm"
+details.htm     html discardable "htm\\details.htm"
+dhcp.htm        html discardable "htm\\dhcp.htm"
+dhcp2.htm       html discardable "htm\\dhcp2.htm"
+dns.htm         html discardable "htm\\dns.htm"
+dns2.htm        html discardable "htm\\dns2.htm"
+email.htm       html discardable "htm\\email.htm"
+file.htm        html discardable "htm\\file.htm"
+finish.htm      html discardable "htm\\finish.htm"
+iis.htm         html discardable "htm\\iis.htm"
+iis2.htm        html discardable "htm\\iis2.htm"
+intro1.htm      html discardable "htm\\intro1.htm"
+intro2.htm      html discardable "htm\\intro2.htm"
+intro3.htm      html discardable "htm\\intro3.htm"
+menu.htm        html discardable "htm\\menu.htm"
+mq.htm          html discardable "htm\\mq.htm"
+mq2.htm         html discardable "htm\\mq2.htm"
+net.htm         html discardable "htm\\net.htm"
+next.htm        html discardable "htm\\next.htm"
+oth.htm         html discardable "htm\\oth.htm"
+print.htm       html discardable "htm\\print.htm"
+ras.htm         html discardable "htm\\ras.htm"
+ras2.htm        html discardable "htm\\ras2.htm"
+reg.htm         html discardable "htm\\reg.htm"
+reskit.htm      html discardable "htm\\reskit.htm"
+route.htm       html discardable "htm\\route.htm"
+route2.htm      html discardable "htm\\route2.htm"
+sms.htm         html discardable "htm\\sms.htm"
+sms2.htm        html discardable "htm\\sms2.htm"
+top.htm         html discardable "htm\\top.htm"
+ts.htm          html discardable "htm\\ts.htm"
+ts2.htm         html discardable "htm\\ts2.htm"
+web.htm         html discardable "htm\\web.htm"
+
+win2000.css     html discardable "htm\\win2000.css"
+
+menu.js         html discardable "htm\\menu.js"
+popups.js       html discardable "htm\\popups.js"
+util.js         html discardable "htm\\util.js"
+
+default.hta     html discardable "htm\\default.hta"
+
+srvwiz.ico      html discardable "srvwiz.ico"
+
+actvd_bg.gif    html discardable "htm\\actvd_bg.gif"
+adv_bg.gif      html discardable "htm\\adv_bg.gif"
+apsrv_bg.gif    html discardable "htm\\apsrv_bg.gif"
+arrow.gif       html discardable "htm\\arrow.gif"
+banner.gif      html discardable "htm\\banner.gif"
+flsrv_bg.gif    html discardable "htm\\flsrv_bg.gif"
+gcold.gif       html discardable "htm\\gcold.gif"
+ghot.gif        html discardable "htm\\ghot.gif"
+help.gif        html discardable "htm\\help.gif"
+home_bg.gif     html discardable "htm\\home_bg.gif"
+mmc.gif         html discardable "htm\\mmc.gif"
+mnu_ad1.gif     html discardable "htm\\mnu_ad1.gif"
+mnu_ad2.gif     html discardable "htm\\mnu_ad2.gif"
+mnu_adv1.gif    html discardable "htm\\mnu_adv1.gif"
+mnu_adv2.gif    html discardable "htm\\mnu_adv2.gif"
+mnu_ap1.gif     html discardable "htm\\mnu_ap1.gif"
+mnu_ap2.gif     html discardable "htm\\mnu_ap2.gif"
+mnu_fl1.gif     html discardable "htm\\mnu_fl1.gif"
+mnu_fl2.gif     html discardable "htm\\mnu_fl2.gif"
+mnu_hm1.gif     html discardable "htm\\mnu_hm1.gif"
+mnu_hm2.gif     html discardable "htm\\mnu_hm2.gif"
+mnu_net1.gif    html discardable "htm\\mnu_net1.gif"
+mnu_net2.gif    html discardable "htm\\mnu_net2.gif"
+mnu_prt1.gif    html discardable "htm\\mnu_prt1.gif"
+mnu_prt2.gif    html discardable "htm\\mnu_prt2.gif"
+mnu_reg1.gif    html discardable "htm\\mnu_reg1.gif"
+mnu_reg2.gif    html discardable "htm\\mnu_reg2.gif"
+mnu_web1.gif    html discardable "htm\\mnu_web1.gif"
+mnu_web2.gif    html discardable "htm\\mnu_web2.gif"
+shadow.gif      html discardable "htm\\shadow.gif"
+ntwrk_bg.gif    html discardable "htm\\ntwrk_bg.gif"
+prntr_bg.gif    html discardable "htm\\prntr_bg.gif"
+reg2.gif        html discardable "htm\\reg2.gif"
+rgstr_bg.gif    html discardable "htm\\rgstr_bg.gif"
+wbsrv_bg.gif    html discardable "htm\\wbsrv_bg.gif"
+win2kbg.gif     html discardable "htm\\win2kbg.gif"
+wiz.gif         html discardable "htm\\wiz.gif"

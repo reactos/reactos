@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\f3\htmlpad\exe=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=mshtmpad
+TARGETPATH=..\..\..\..\$(_OBJ_DIR)
+TARGETTYPE=PROGRAM
+
+INCLUDES= \
+    $(ROOT)\src\core\include; \
+    $(BASEDIR)\private\windows\inc; \
+
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES) \
+    stdole2.tlb
+
+SOURCES= \
+    padexe.rc \
+    padexe.cxx
+
+!undef USE_RTTI
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+
+!if "$(PROCESSOR_ARCHITECTURE)"=="ALPHA"
+TARGETLIBS= $(TARGETLIBS) \
+    $(SDK_LIB_PATH)\libcmt.lib
+!endif

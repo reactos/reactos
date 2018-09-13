@@ -1,0 +1,46 @@
+HKCR
+{
+    ADCCtl.ADCCtl.1 = s 'Application Data Control'
+    {
+        CLSID = s '{3964D9A0-AC96-11D1-9851-00C04FD91972}'
+    }
+    ADCCtl.ADCCtl = s 'Application Data Control'
+    {
+        CurVer = s 'ADCCtl.ADCCtl.1'
+        CLSID = s '{3964D9A0-AC96-11D1-9851-00C04FD91972}'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {3964D9A0-AC96-11D1-9851-00C04FD91972} = s 'Application Data Control'
+        {
+            ProgID = s 'ADCCtl.ADCCtl.1'
+            VersionIndependentProgID = s 'ADCCtl.ADCCtl'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+            ForceRemove 'Control'
+            ForceRemove 'Programmable'
+            ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+            'MiscStatus' = s '0'
+            {
+                '1' = s '132497'
+            }
+            'TypeLib' = s '{3964D990-AC96-11D1-9851-00C04FD91972}'
+            'Version' = s '1.0'
+            'Implemented Categories'
+            {
+                {7DD95801-9882-11CF-9FA9-00AA006C42C4}
+            }
+            'Implemented Categories'
+            {
+                {7DD95802-9882-11CF-9FA9-00AA006C42C4}
+            }
+            'Implemented Categories'
+            {
+                {40FC6ED4-2438-11cf-A3DB-080036F12502}
+            }
+        }
+    }
+}

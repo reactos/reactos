@@ -1,0 +1,47 @@
+PRODUCT = CORE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+ifeq (${MWOS},sunos5)
+VPATH = unix/sparc
+endif
+
+SOURCES =  \
+	debuglib.cxx
+
+WLIB	= debuglib
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.C=%.o}
+LIBOBJS := ${LIBOBJS:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.cxx=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+LIBOBJS := ${LIBOBJS:%.S=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+INCLUDES = \
+    $(ROOT)/src/core/include \
+    $(BASEDIR)/private/windows/inc \
+    $(ROOT)/external/inc \
+    $(ROOT)/types/$(O)
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

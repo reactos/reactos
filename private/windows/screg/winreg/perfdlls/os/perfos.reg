@@ -1,0 +1,13 @@
+REGEDIT4
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\PerfOS\Performance]
+"Library" = "perfos.dll"
+"Open" = "OpenOSObject"
+"Collect" = "CollectOSObjectData"
+"Close" = "CloseOSObject"
+"Object List" = "2 4 86 238 260 700"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\EventLog\Application\PerfOS]
+"EventMessageFile" = "%systemroot%\\system32\\perfos.dll"
+"TypesSupported" = dword:00000007
+
+

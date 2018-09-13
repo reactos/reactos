@@ -1,0 +1,17 @@
+ALPHA_SOURCES=..\alpha\byteswap.s \
+              ..\alpha\capture.s  \
+              ..\alpha\chkstk.s   \
+              ..\alpha\context.c  \
+              ..\alpha\debugstb.s \
+              ..\alpha\exdsptch.c \
+              ..\alpha\getcalr.c  \
+              ..\alpha\largeint.s \
+              ..\alpha\lzntaxp.s  \
+              ..\alpha\longjmp.s  \
+              ..\alpha\ntcurteb.s \
+              ..\alpha\mvmem.s    \
+              ..\alpha\setjmp.s   \
+              ..\alpha\slist.s    \
+              ..\alpha\trampoln.s \
+              ..\alpha\unwindr.c  \
+              ..\alpha\xcptmisc.s

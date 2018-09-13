@@ -1,0 +1,1331 @@
+/*++
+
+Copyright (c) 1991-1999,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    winnls.rc
+
+Abstract:
+
+    This file contains the resource constants.
+
+Revision History:
+
+    05-31-91    JulieB    Created.
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include "nls.h"
+
+
+
+
+//
+//  Language Group Name Strings.
+//  Values may not be 0x0000 or greater than or equal to 0x0400.
+//
+
+STRINGTABLE PRELOAD DISCARDABLE
+  BEGIN
+    0x0001, L"Western Europe and United States"
+    0x0002, L"Central Europe"
+    0x0003, L"Baltic"
+    0x0004, L"Greek"
+    0x0005, L"Cyrillic"
+    0x0006, L"Turkic"
+    0x0007, L"Japanese"
+    0x0008, L"Korean"
+    0x0009, L"Traditional Chinese"
+    0x000a, L"Simplified Chinese"
+    0x000b, L"Thai"
+    0x000c, L"Hebrew"
+    0x000d, L"Arabic"
+    0x000e, L"Vietnamese"
+    0x000f, L"Indic"
+    0x0010, L"Georgian"
+    0x0011, L"Armenian"
+  END
+
+
+
+
+//
+//  Language Name Strings.
+//  Values must be either 0x0000 or greater than or equal to 0x0400.
+//
+
+STRINGTABLE PRELOAD DISCARDABLE
+  BEGIN
+    0x0000, L"Language Neutral"
+    0x0400, L"Process Default Language"
+    0x0401, L"Arabic (Saudi Arabia)"
+    0x0801, L"Arabic (Iraq)"
+    0x0c01, L"Arabic (Egypt)"
+    0x1001, L"Arabic (Libya)"
+    0x1401, L"Arabic (Algeria)"
+    0x1801, L"Arabic (Morocco)"
+    0x1c01, L"Arabic (Tunisia)"
+    0x2001, L"Arabic (Oman)"
+    0x2401, L"Arabic (Yemen)"
+    0x2801, L"Arabic (Syria)"
+    0x2c01, L"Arabic (Jordan)"
+    0x3001, L"Arabic (Lebanon)"
+    0x3401, L"Arabic (Kuwait)"
+    0x3801, L"Arabic (U.A.E.)"
+    0x3c01, L"Arabic (Bahrain)"
+    0x4001, L"Arabic (Qatar)"
+    0x0402, L"Bulgarian"
+    0x0403, L"Catalan"
+    0x0404, L"Chinese (Taiwan)"
+    0x0804, L"Chinese (PRC)"
+    0x0c04, L"Chinese (Hong Kong)"
+    0x1004, L"Chinese (Singapore)"
+    0x1404, L"Chinese (Macau)"
+    0x0405, L"Czech"
+    0x0406, L"Danish"
+    0x0407, L"German (Germany)"
+    0x0807, L"German (Switzerland)"
+    0x0c07, L"German (Austria)"
+    0x1007, L"German (Luxembourg)"
+    0x1407, L"German (Liechtenstein)"
+    0x0408, L"Greek"
+    0x0409, L"English (United States)"
+    0x0809, L"English (United Kingdom)"
+    0x0c09, L"English (Australia)"
+    0x1009, L"English (Canada)"
+    0x1409, L"English (New Zealand)"
+    0x1809, L"English (Ireland)"
+    0x1c09, L"English (South Africa)"
+    0x2009, L"English (Jamaica)"
+    0x2409, L"English (Caribbean)"
+    0x2809, L"English (Belize)"
+    0x2c09, L"English (Trinidad)"
+    0x3009, L"English (Zimbabwe)"
+    0x3409, L"English (Philippines)"
+    0x040a, L"Spanish (Traditional Sort)"
+    0x080a, L"Spanish (Mexico)"
+    0x0c0a, L"Spanish (International Sort)"
+    0x100a, L"Spanish (Guatemala)"
+    0x140a, L"Spanish (Costa Rica)"
+    0x180a, L"Spanish (Panama)"
+    0x1c0a, L"Spanish (Dominican Republic)"
+    0x200a, L"Spanish (Venezuela)"
+    0x240a, L"Spanish (Colombia)"
+    0x280a, L"Spanish (Peru)"
+    0x2c0a, L"Spanish (Argentina)"
+    0x300a, L"Spanish (Ecuador)"
+    0x340a, L"Spanish (Chile)"
+    0x380a, L"Spanish (Uruguay)"
+    0x3c0a, L"Spanish (Paraguay)"
+    0x400a, L"Spanish (Bolivia)"
+    0x440a, L"Spanish (El Salvador)"
+    0x480a, L"Spanish (Honduras)"
+    0x4c0a, L"Spanish (Nicaragua)"
+    0x500a, L"Spanish (Puerto Rico)"
+    0x040b, L"Finnish"
+    0x040c, L"French (France)"
+    0x080c, L"French (Belgium)"
+    0x0c0c, L"French (Canada)"
+    0x100c, L"French (Switzerland)"
+    0x140c, L"French (Luxembourg)"
+    0x180c, L"French (Monaco)"
+    0x040d, L"Hebrew"
+    0x040e, L"Hungarian"
+    0x040f, L"Icelandic"
+    0x0410, L"Italian (Italy)"
+    0x0810, L"Italian (Switzerland)"
+    0x0411, L"Japanese"
+    0x0412, L"Korean"
+    0x0413, L"Dutch (Netherlands)"
+    0x0813, L"Dutch (Belgium)"
+    0x0414, L"Norwegian (Bokmal)"
+    0x0814, L"Norwegian (Nynorsk)"
+    0x0415, L"Polish"
+    0x0416, L"Portuguese (Brazil)"
+    0x0816, L"Portuguese (Portugal)"
+    0x0418, L"Romanian"
+    0x0419, L"Russian"
+    0x041a, L"Croatian"
+    0x081a, L"Serbian (Latin)"
+    0x0c1a, L"Serbian (Cyrillic)"
+    0x041b, L"Slovak"
+    0x041c, L"Albanian"
+    0x041d, L"Swedish"
+    0x081d, L"Swedish (Finland)"
+    0x041e, L"Thai"
+    0x041f, L"Turkish"
+    0x0420, L"Urdu"
+    0x0421, L"Indonesian"
+    0x0422, L"Ukrainian"
+    0x0423, L"Belarusian"
+    0x0424, L"Slovenian"
+    0x0425, L"Estonian"
+    0x0426, L"Latvian"
+    0x0427, L"Lithuanian"
+    0x0429, L"Farsi"
+    0x042a, L"Vietnamese"
+    0x042b, L"Armenian"
+    0x042c, L"Azeri (Latin)"
+    0x082c, L"Azeri (Cyrillic)"
+    0x042d, L"Basque"
+    0x042f, L"Macedonian (FYROM)"
+    0x0436, L"Afrikaans"
+    0x0437, L"Georgian"
+    0x0438, L"Faeroese"
+    0x0439, L"Hindi"
+    0x043e, L"Malay (Malaysia)"
+    0x083e, L"Malay (Brunei Darussalam)"
+    0x043f, L"Kazakh"
+    0x0441, L"Swahili"
+    0x0443, L"Uzbek (Latin)"
+    0x0843, L"Uzbek (Cyrillic)"
+    0x0444, L"Tatar"
+    0x0449, L"Tamil"
+    0x044e, L"Marathi"
+    0x044f, L"Sanskrit"
+    0x0457, L"Konkani"
+  END
+
+
+
+
+//
+//  Country Name Strings.
+//
+
+  0x0401 RCDATA
+    BEGIN
+      L"Saudi Arabia\0"
+    END
+  0x0801 RCDATA
+    BEGIN
+      L"Iraq\0"
+    END
+  0x0c01 RCDATA
+    BEGIN
+      L"Egypt\0"
+    END
+  0x1001 RCDATA
+    BEGIN
+      L"Libya\0"
+    END
+  0x1401 RCDATA
+    BEGIN
+      L"Algeria\0"
+    END
+  0x1801 RCDATA
+    BEGIN
+      L"Morocco\0"
+    END
+  0x1c01 RCDATA
+    BEGIN
+      L"Tunisia\0"
+    END
+  0x2001 RCDATA
+    BEGIN
+      L"Oman\0"
+    END
+  0x2401 RCDATA
+    BEGIN
+      L"Yemen\0"
+    END
+  0x2801 RCDATA
+    BEGIN
+      L"Syria\0"
+    END
+  0x2c01 RCDATA
+    BEGIN
+      L"Jordan\0"
+    END
+  0x3001 RCDATA
+    BEGIN
+      L"Lebanon\0"
+    END
+  0x3401 RCDATA
+    BEGIN
+      L"Kuwait\0"
+    END
+  0x3801 RCDATA
+    BEGIN
+      L"U.A.E.\0"
+    END
+  0x3c01 RCDATA
+    BEGIN
+      L"Bahrain\0"
+    END
+  0x4001 RCDATA
+    BEGIN
+      L"Qatar\0"
+    END
+  0x0402 RCDATA
+    BEGIN
+      L"Bulgaria\0"
+    END
+  0x0403 RCDATA
+    BEGIN
+      L"Spain\0"
+    END
+  0x0404 RCDATA
+    BEGIN
+      L"Taiwan\0"
+    END
+  0x0804 RCDATA
+    BEGIN
+      L"People's Republic of China\0"
+    END
+  0x0c04 RCDATA
+    BEGIN
+      L"Hong Kong\0"
+    END
+  0x1004 RCDATA
+    BEGIN
+      L"Singapore\0"
+    END
+  0x1404 RCDATA
+    BEGIN
+      L"Macau\0"
+    END
+  0x0405 RCDATA
+    BEGIN
+      L"Czech Republic\0"
+    END
+  0x0406 RCDATA
+    BEGIN
+      L"Denmark\0"
+    END
+  0x0407 RCDATA
+    BEGIN
+      L"Germany\0"
+    END
+  0x0807 RCDATA
+    BEGIN
+      L"Switzerland\0"
+    END
+  0x0c07 RCDATA
+    BEGIN
+      L"Austria\0"
+    END
+  0x1007 RCDATA
+    BEGIN
+      L"Luxembourg\0"
+    END
+  0x1407 RCDATA
+    BEGIN
+      L"Liechtenstein\0"
+    END
+  0x0408 RCDATA
+    BEGIN
+      L"Greece\0"
+    END
+  0x0409 RCDATA
+    BEGIN
+      L"United States\0"
+    END
+  0x0809 RCDATA
+    BEGIN
+      L"United Kingdom\0"
+    END
+  0x0c09 RCDATA
+    BEGIN
+      L"Australia\0"
+    END
+  0x1009 RCDATA
+    BEGIN
+      L"Canada\0"
+    END
+  0x1409 RCDATA
+    BEGIN
+      L"New Zealand\0"
+    END
+  0x1809 RCDATA
+    BEGIN
+      L"Ireland\0"
+    END
+  0x1c09 RCDATA
+    BEGIN
+      L"South Africa\0"
+    END
+  0x2009 RCDATA
+    BEGIN
+      L"Jamaica\0"
+    END
+  0x2409 RCDATA
+    BEGIN
+      L"Caribbean\0"
+    END
+  0x2809 RCDATA
+    BEGIN
+      L"Belize\0"
+    END
+  0x2c09 RCDATA
+    BEGIN
+      L"Trinidad y Tobago\0"
+    END
+  0x3009 RCDATA
+    BEGIN
+      L"Zimbabwe\0"
+    END
+  0x3409 RCDATA
+    BEGIN
+      L"Republic of the Philippines\0"
+    END
+  0x040a RCDATA
+    BEGIN
+      L"Spain\0"
+    END
+  0x080a RCDATA
+    BEGIN
+      L"Mexico\0"
+    END
+  0x0c0a RCDATA
+    BEGIN
+      L"Spain\0"
+    END
+  0x100a RCDATA
+    BEGIN
+      L"Guatemala\0"
+    END
+  0x140a RCDATA
+    BEGIN
+      L"Costa Rica\0"
+    END
+  0x180a RCDATA
+    BEGIN
+      L"Panama\0"
+    END
+  0x1c0a RCDATA
+    BEGIN
+      L"Dominican Republic\0"
+    END
+  0x200a RCDATA
+    BEGIN
+      L"Venezuela\0"
+    END
+  0x240a RCDATA
+    BEGIN
+      L"Colombia\0"
+    END
+  0x280a RCDATA
+    BEGIN
+      L"Peru\0"
+    END
+  0x2c0a RCDATA
+    BEGIN
+      L"Argentina\0"
+    END
+  0x300a RCDATA
+    BEGIN
+      L"Ecuador\0"
+    END
+  0x340a RCDATA
+    BEGIN
+      L"Chile\0"
+    END
+  0x380a RCDATA
+    BEGIN
+      L"Uruguay\0"
+    END
+  0x3c0a RCDATA
+    BEGIN
+      L"Paraguay\0"
+    END
+  0x400a RCDATA
+    BEGIN
+      L"Bolivia\0"
+    END
+  0x440a RCDATA
+    BEGIN
+      L"El Salvador\0"
+    END
+  0x480a RCDATA
+    BEGIN
+      L"Honduras\0"
+    END
+  0x4c0a RCDATA
+    BEGIN
+      L"Nicaragua\0"
+    END
+  0x500a RCDATA
+    BEGIN
+      L"Puerto Rico\0"
+    END
+  0x040b RCDATA
+    BEGIN
+      L"Finland\0"
+    END
+  0x040c RCDATA
+    BEGIN
+      L"France\0"
+    END
+  0x080c RCDATA
+    BEGIN
+      L"Belgium\0"
+    END
+  0x0c0c RCDATA
+    BEGIN
+      L"Canada\0"
+    END
+  0x100c RCDATA
+    BEGIN
+      L"Switzerland\0"
+    END
+  0x140c RCDATA
+    BEGIN
+      L"Luxembourg\0"
+    END
+  0x180c RCDATA
+    BEGIN
+      L"Principality of Monaco\0"
+    END
+  0x040d RCDATA
+    BEGIN
+      L"Israel\0"
+    END
+  0x040e RCDATA
+    BEGIN
+      L"Hungary\0"
+    END
+  0x040f RCDATA
+    BEGIN
+      L"Iceland\0"
+    END
+  0x0410 RCDATA
+    BEGIN
+      L"Italy\0"
+    END
+  0x0810 RCDATA
+    BEGIN
+      L"Switzerland\0"
+    END
+  0x0411 RCDATA
+    BEGIN
+      L"Japan\0"
+    END
+  0x0412 RCDATA
+    BEGIN
+      L"Korea\0"
+    END
+  0x0413 RCDATA
+    BEGIN
+      L"Netherlands\0"
+    END
+  0x0813 RCDATA
+    BEGIN
+      L"Belgium\0"
+    END
+  0x0414 RCDATA
+    BEGIN
+      L"Norway\0"
+    END
+  0x0814 RCDATA
+    BEGIN
+      L"Norway\0"
+    END
+  0x0415 RCDATA
+    BEGIN
+      L"Poland\0"
+    END
+  0x0416 RCDATA
+    BEGIN
+      L"Brazil\0"
+    END
+  0x0816 RCDATA
+    BEGIN
+      L"Portugal\0"
+    END
+  0x0418 RCDATA
+    BEGIN
+      L"Romania\0"
+    END
+  0x0419 RCDATA
+    BEGIN
+      L"Russia\0"
+    END
+  0x041a RCDATA
+    BEGIN
+      L"Croatia\0"
+    END
+  0x081a RCDATA
+    BEGIN
+      L"Serbia\0"
+    END
+  0x0c1a RCDATA
+    BEGIN
+      L"Serbia\0"
+    END
+  0x041b RCDATA
+    BEGIN
+      L"Slovak Republic\0"
+    END
+  0x041c RCDATA
+    BEGIN
+      L"Albania\0"
+    END
+  0x041d RCDATA
+    BEGIN
+      L"Sweden\0"
+    END
+  0x081d RCDATA
+    BEGIN
+      L"Finland\0"
+    END
+  0x041e RCDATA
+    BEGIN
+      L"Thailand\0"
+    END
+  0x041f RCDATA
+    BEGIN
+      L"Turkey\0"
+    END
+  0x0420 RCDATA
+    BEGIN
+      L"Islamic Republic of Pakistan\0"
+    END
+  0x0421 RCDATA
+    BEGIN
+      L"Indonesia\0"
+    END
+  0x0422 RCDATA
+    BEGIN
+      L"Ukraine\0"
+    END
+  0x0423 RCDATA
+    BEGIN
+      L"Belarus\0"
+    END
+  0x0424 RCDATA
+    BEGIN
+      L"Slovenia\0"
+    END
+  0x0425 RCDATA
+    BEGIN
+      L"Estonia\0"
+    END
+  0x0426 RCDATA
+    BEGIN
+      L"Latvia\0"
+    END
+  0x0427 RCDATA
+    BEGIN
+      L"Lithuania\0"
+    END
+  0x0429 RCDATA
+    BEGIN
+      L"Iran\0"
+    END
+  0x042a RCDATA
+    BEGIN
+      L"Viet Nam\0"
+    END
+  0x042b RCDATA
+    BEGIN
+      L"Armenia\0"
+    END
+  0x042c RCDATA
+    BEGIN
+      L"Azerbaijan\0"
+    END
+  0x082c RCDATA
+    BEGIN
+      L"Azerbaijan\0"
+    END
+  0x042d RCDATA
+    BEGIN
+      L"Spain\0"
+    END
+  0x042f RCDATA
+    BEGIN
+      L"Former Yugoslav Republic of Macedonia\0"
+    END
+  0x0436 RCDATA
+    BEGIN
+      L"South Africa\0"
+    END
+  0x0437 RCDATA
+    BEGIN
+      L"Georgia\0"
+    END
+  0x0438 RCDATA
+    BEGIN
+      L"Faeroe Islands\0"
+    END
+  0x0439 RCDATA
+    BEGIN
+      L"India\0"
+    END
+  0x043e RCDATA
+    BEGIN
+      L"Malaysia\0"
+    END
+  0x083e RCDATA
+    BEGIN
+      L"Brunei Darussalam\0"
+    END
+  0x043f RCDATA
+    BEGIN
+      L"Kazakhstan\0"
+    END
+  0x0441 RCDATA
+    BEGIN
+      L"Kenya\0"
+    END
+  0x0443 RCDATA
+    BEGIN
+      L"Uzbekistan\0"
+    END
+  0x0843 RCDATA
+    BEGIN
+      L"Uzbekistan\0"
+    END
+  0x0444 RCDATA
+    BEGIN
+      L"Tatarstan\0"
+    END
+  0x0449 RCDATA
+    BEGIN
+      L"India\0"
+    END
+  0x044e RCDATA
+    BEGIN
+      L"India\0"
+    END
+  0x044f RCDATA
+    BEGIN
+      L"India\0"
+    END
+  0x0457 RCDATA
+    BEGIN
+      L"India\0"
+    END
+
+//
+//  Alternate Sort Name Strings.
+//
+
+  SORT_00000000 RCDATA                           // Default
+    BEGIN
+      L"Default\0"
+    END
+
+  SORT_00000407 RCDATA                           // German
+    BEGIN
+      L"Dictionary\0"
+    END
+  SORT_00010407 RCDATA
+    BEGIN
+      L"Phone Book (DIN)\0"
+    END
+
+  SORT_0000040a RCDATA                           // Spanish (Spain)
+    BEGIN
+      L"Traditional\0"
+    END
+  SORT_00000c0a RCDATA
+    BEGIN
+      L"International\0"
+    END
+
+  SORT_0000040e RCDATA                           // Hungarian
+    BEGIN
+      L"Default\0"
+    END
+  SORT_0001040e RCDATA
+    BEGIN
+      L"Technical\0"
+    END
+
+  SORT_00000437 RCDATA                           // Georgian
+    BEGIN
+      L"Traditional\0"
+    END
+  SORT_00010437 RCDATA
+    BEGIN
+      L"Modern\0"
+    END
+
+  SORT_00000404 RCDATA                           // Chinese (Taiwan)
+    BEGIN
+      L"Stroke Count\0"
+    END
+  SORT_00010404 RCDATA
+    BEGIN
+      L"Unicode Order\0"
+    END
+  SORT_00030404 RCDATA
+    BEGIN
+      L"Bopomofo\0"
+    END
+
+  SORT_00000004 RCDATA                           // Chinese (all others)
+    BEGIN
+      L"Pronunciation\0"
+    END
+  SORT_00010004 RCDATA
+    BEGIN
+      L"Unicode Order\0"
+    END
+  SORT_00020004 RCDATA
+    BEGIN
+      L"Stroke Count\0"
+    END
+
+  SORT_00000411 RCDATA                           // Japanese
+    BEGIN
+      L"XJIS\0"
+    END
+  SORT_00010411 RCDATA
+    BEGIN
+      L"Unicode Order\0"
+    END
+
+  SORT_00000012 RCDATA                           // Korean (all)
+    BEGIN
+      L"Dictionary\0"
+    END
+  SORT_00010012 RCDATA
+    BEGIN
+      L"Unicode Order\0"
+    END
+
+
+
+
+//
+//  Code Page Name Strings.
+//
+
+  1250 CODEPAGE
+    BEGIN
+      L"1250  (ANSI - Central Europe)\0"
+    END
+  1251 CODEPAGE
+    BEGIN
+      L"1251  (ANSI - Cyrillic)\0"
+    END
+  1252 CODEPAGE
+    BEGIN
+      L"1252  (ANSI - Latin I)\0"
+    END
+  1253 CODEPAGE
+    BEGIN
+      L"1253  (ANSI - Greek)\0"
+    END
+  1254 CODEPAGE
+    BEGIN
+      L"1254  (ANSI - Turkish)\0"
+    END
+  1255 CODEPAGE
+    BEGIN
+      L"1255  (ANSI - Hebrew)\0"
+    END
+  1256 CODEPAGE
+    BEGIN
+      L"1256  (ANSI - Arabic)\0"
+    END
+  1257 CODEPAGE
+    BEGIN
+      L"1257  (ANSI - Baltic)\0"
+    END
+  1258 CODEPAGE
+    BEGIN
+      L"1258  (ANSI/OEM - Viet Nam)\0"
+    END
+  874 CODEPAGE
+    BEGIN
+      L"874   (ANSI/OEM - Thai)\0"
+    END
+  932 CODEPAGE
+    BEGIN
+      L"932   (ANSI/OEM - Japanese Shift-JIS)\0"
+    END
+  936 CODEPAGE
+    BEGIN
+      L"936   (ANSI/OEM - Simplified Chinese GBK)\0"
+    END
+  949 CODEPAGE
+    BEGIN
+      L"949   (ANSI/OEM - Korean)\0"
+    END
+  950 CODEPAGE
+    BEGIN
+      L"950   (ANSI/OEM - Traditional Chinese Big5)\0"
+    END
+
+  437 CODEPAGE
+    BEGIN
+      L"437   (OEM - United States)\0"
+    END
+  737 CODEPAGE
+    BEGIN
+      L"737   (OEM - Greek 437G)\0"
+    END
+  775 CODEPAGE
+    BEGIN
+      L"775   (OEM - Baltic)\0"
+    END
+  850 CODEPAGE
+    BEGIN
+      L"850   (OEM - Multilingual Latin I)\0"
+    END
+  852 CODEPAGE
+    BEGIN
+      L"852   (OEM - Latin II)\0"
+    END
+  855 CODEPAGE
+    BEGIN
+      L"855   (OEM - Cyrillic)\0"
+    END
+  857 CODEPAGE
+    BEGIN
+      L"857   (OEM - Turkish)\0"
+    END
+  858 CODEPAGE
+    BEGIN
+      L"858   (OEM - Multilingual Latin I + Euro)\0"
+    END
+  860 CODEPAGE
+    BEGIN
+      L"860   (OEM - Portuguese)\0"
+    END
+  861 CODEPAGE
+    BEGIN
+      L"861   (OEM - Icelandic)\0"
+    END
+  862 CODEPAGE
+    BEGIN
+      L"862   (OEM - Hebrew)\0"
+    END
+  863 CODEPAGE
+    BEGIN
+      L"863   (OEM - Canadian French)\0"
+    END
+  864 CODEPAGE
+    BEGIN
+      L"864   (OEM - Arabic)\0"
+    END
+  865 CODEPAGE
+    BEGIN
+      L"865   (OEM - Nordic)\0"
+    END
+  866 CODEPAGE
+    BEGIN
+      L"866   (OEM - Russian)\0"
+    END
+  869 CODEPAGE
+    BEGIN
+      L"869   (OEM - Modern Greek)\0"
+    END
+
+
+  10000 CODEPAGE
+    BEGIN
+      L"10000 (MAC - Roman)\0"
+    END
+  10001 CODEPAGE
+    BEGIN
+      L"10001 (MAC - Japanese)\0"
+    END
+  10002 CODEPAGE
+    BEGIN
+      L"10002 (MAC - Traditional Chinese Big5)\0"
+    END
+  10003 CODEPAGE
+    BEGIN
+      L"10003 (MAC - Korean)\0"
+    END
+  10004 CODEPAGE
+    BEGIN
+      L"10004 (MAC - Arabic)\0"
+    END
+  10005 CODEPAGE
+    BEGIN
+      L"10005 (MAC - Hebrew)\0"
+    END
+  10006 CODEPAGE
+    BEGIN
+      L"10006 (MAC - Greek I)\0"
+    END
+  10007 CODEPAGE
+    BEGIN
+      L"10007 (MAC - Cyrillic)\0"
+    END
+  10008 CODEPAGE
+    BEGIN
+      L"10008 (MAC - Simplified Chinese GB 2312)\0"
+    END
+  10010 CODEPAGE
+    BEGIN
+      L"10010 (MAC - Romania)\0"
+    END
+  10017 CODEPAGE
+    BEGIN
+      L"10017 (MAC - Ukraine)\0"
+    END
+  10021 CODEPAGE
+    BEGIN
+      L"10021 (MAC - Thai)\0"
+    END
+  10029 CODEPAGE
+    BEGIN
+      L"10029 (MAC - Latin II)\0"
+    END
+  10079 CODEPAGE
+    BEGIN
+      L"10079 (MAC - Icelandic)\0"
+    END
+  10081 CODEPAGE
+    BEGIN
+      L"10081 (MAC - Turkish)\0"
+    END
+  10082 CODEPAGE
+    BEGIN
+      L"10082 (MAC - Croatia)\0"
+    END
+
+  65000 CODEPAGE
+    BEGIN
+      L"65000 (UTF-7)\0"
+    END
+  65001 CODEPAGE
+    BEGIN
+      L"65001 (UTF-8)\0"
+    END
+
+  37 CODEPAGE
+    BEGIN
+      L"37    (IBM EBCDIC - U.S./Canada)\0"
+    END
+  1026 CODEPAGE
+    BEGIN
+      L"1026  (IBM EBCDIC - Turkish (Latin-5))\0"
+    END
+  1047 CODEPAGE
+    BEGIN
+      L"1047  (IBM EBCDIC - Latin-1/Open System)\0"
+    END
+  1140 CODEPAGE
+    BEGIN
+      L"1140  (IBM EBCDIC - U.S./Canada (37 + Euro))\0"
+    END
+  1141 CODEPAGE
+    BEGIN
+      L"1141  (IBM EBCDIC - Germany (20273 + Euro))\0"
+    END
+  1142 CODEPAGE
+    BEGIN
+      L"1142  (IBM EBCDIC - Denmark/Norway (20277 + Euro))\0"
+    END
+  1143 CODEPAGE
+    BEGIN
+      L"1143  (IBM EBCDIC - Finland/Sweden (20278 + Euro))\0"
+    END
+  1144 CODEPAGE
+    BEGIN
+      L"1144  (IBM EBCDIC - Italy (20280 + Euro))\0"
+    END
+  1145 CODEPAGE
+    BEGIN
+      L"1145  (IBM EBCDIC - Latin America/Spain (20284 + Euro))\0"
+    END
+  1146 CODEPAGE
+    BEGIN
+      L"1146  (IBM EBCDIC - United Kingdom (20285 + Euro))\0"
+    END
+  1147 CODEPAGE
+    BEGIN
+      L"1147  (IBM EBCDIC - France (20297 + Euro))\0"
+    END
+  1148 CODEPAGE
+    BEGIN
+      L"1148  (IBM EBCDIC - International (500 + Euro))\0"
+    END
+  1149 CODEPAGE
+    BEGIN
+      L"1149  (IBM EBCDIC - Icelandic (20871 + Euro))\0"
+    END
+  20273 CODEPAGE
+    BEGIN
+      L"20273 (IBM EBCDIC - Germany)\0"
+    END
+  20277 CODEPAGE
+    BEGIN
+      L"20277 (IBM EBCDIC - Denmark/Norway)\0"
+    END
+  20278 CODEPAGE
+    BEGIN
+      L"20278 (IBM EBCDIC - Finland/Sweden)\0"
+    END
+  20280 CODEPAGE
+    BEGIN
+      L"20280 (IBM EBCDIC - Italy)\0"
+    END
+  20284 CODEPAGE
+    BEGIN
+      L"20284 (IBM EBCDIC - Latin America/Spain)\0"
+    END
+  20285 CODEPAGE
+    BEGIN
+      L"20285 (IBM EBCDIC - United Kingdom)\0"
+    END
+  20290 CODEPAGE
+    BEGIN
+      L"20290 (IBM EBCDIC - Japanese Katakana Extended)\0"
+    END
+  20297 CODEPAGE
+    BEGIN
+      L"20297 (IBM EBCDIC - France)\0"
+    END
+  20420 CODEPAGE
+    BEGIN
+      L"20420 (IBM EBCDIC - Arabic)\0"
+    END
+  20423 CODEPAGE
+    BEGIN
+      L"20423 (IBM EBCDIC - Greek)\0"
+    END
+  20424 CODEPAGE
+    BEGIN
+      L"20424 (IBM EBCDIC - Hebrew)\0"
+    END
+  20833 CODEPAGE
+    BEGIN
+      L"20833 (IBM EBCDIC - Korean Extended)\0"
+    END
+  20838 CODEPAGE
+    BEGIN
+      L"20838 (IBM EBCDIC - Thai)\0"
+    END
+  20871 CODEPAGE
+    BEGIN
+      L"20871 (IBM EBCDIC - Icelandic)\0"
+    END
+  20880 CODEPAGE
+    BEGIN
+      L"20880 (IBM EBCDIC - Cyrillic (Russian))\0"
+    END
+  20905 CODEPAGE
+    BEGIN
+      L"20905 (IBM EBCDIC - Turkish)\0"
+    END
+  20924 CODEPAGE
+    BEGIN
+      L"20924 (IBM EBCDIC - Latin-1/Open System (1047 + Euro))\0"
+    END
+  21025 CODEPAGE
+    BEGIN
+      L"21025 (IBM EBCDIC - Cyrillic (Serbian, Bulgarian))\0"
+    END
+  500 CODEPAGE
+    BEGIN
+      L"500   (IBM EBCDIC - International)\0"
+    END
+  870 CODEPAGE
+    BEGIN
+      L"870   (IBM EBCDIC - Multilingual/ROECE (Latin-2))\0"
+    END
+  875 CODEPAGE
+    BEGIN
+      L"875   (IBM EBCDIC - Modern Greek)\0"
+    END
+
+  20269 CODEPAGE
+    BEGIN
+      L"20269 (ISO 6937 Non-Spacing Accent)\0"
+    END
+  28591 CODEPAGE
+    BEGIN
+      L"28591 (ISO 8859-1 Latin I)\0"
+    END
+  28592 CODEPAGE
+    BEGIN
+      L"28592 (ISO 8859-2 Central Europe)\0"
+    END
+  28593 CODEPAGE
+    BEGIN
+      L"28593 (ISO 8859-3 Latin 3)\0"
+    END
+  28594 CODEPAGE
+    BEGIN
+      L"28594 (ISO 8859-4 Baltic)\0"
+    END
+  28595 CODEPAGE
+    BEGIN
+      L"28595 (ISO 8859-5 Cyrillic)\0"
+    END
+  28596 CODEPAGE
+    BEGIN
+      L"28596 (ISO 8859-6 Arabic)\0"
+    END
+  28597 CODEPAGE
+    BEGIN
+      L"28597 (ISO 8859-7 Greek)\0"
+    END
+  28598 CODEPAGE
+    BEGIN
+      L"28598 (ISO 8859-8 Hebrew: Visual Ordering)\0"
+    END
+  28599 CODEPAGE
+    BEGIN
+      L"28599 (ISO 8859-9 Latin 5)\0"
+    END
+  28605 CODEPAGE
+    BEGIN
+      L"28605 (ISO 8859-15 Latin 9)\0"
+    END
+  38598 CODEPAGE
+    BEGIN
+      L"38598 (ISO 8859-8 Hebrew: Logical Ordering)\0"
+    END
+
+  20105 CODEPAGE
+    BEGIN
+      L"20105 (IA5 IRV International Alphabet No.5)\0"
+    END
+  20106 CODEPAGE
+    BEGIN
+      L"20106 (IA5 German)\0"
+    END
+  20107 CODEPAGE
+    BEGIN
+      L"20107 (IA5 Swedish)\0"
+    END
+  20108 CODEPAGE
+    BEGIN
+      L"20108 (IA5 Norwegian)\0"
+    END
+
+  1361 CODEPAGE
+    BEGIN
+      L"1361  (Korean - Johab)\0"
+    END
+  20000 CODEPAGE
+    BEGIN
+      L"20000 (CNS - Taiwan)\0"
+    END
+  20001 CODEPAGE
+    BEGIN
+      L"20001 (TCA - Taiwan)\0"
+    END
+  20002 CODEPAGE
+    BEGIN
+      L"20002 (Eten - Taiwan)\0"
+    END
+  20003 CODEPAGE
+    BEGIN
+      L"20003 (IBM5550 - Taiwan)\0"
+    END
+  20004 CODEPAGE
+    BEGIN
+      L"20004 (TeleText - Taiwan)\0"
+    END
+  20005 CODEPAGE
+    BEGIN
+      L"20005 (Wang - Taiwan)\0"
+    END
+  20127 CODEPAGE
+    BEGIN
+      L"20127 (US-ASCII)\0"
+    END
+  20261 CODEPAGE
+    BEGIN
+      L"20261 (T.61)\0"
+    END
+  20866 CODEPAGE
+    BEGIN
+      L"20866 (Russian - KOI8)\0"
+    END
+  21027 CODEPAGE
+    BEGIN
+      L"21027 (Ext Alpha Lowercase)\0"
+    END
+  21866 CODEPAGE
+    BEGIN
+      L"21866 (Ukrainian - KOI8-U)\0"
+    END
+
+  708 CODEPAGE
+    BEGIN
+      L"708   (Arabic - ASMO)\0"
+    END
+  720 CODEPAGE
+    BEGIN
+      L"720   (Arabic - Transparent ASMO)\0"
+    END
+
+  50220 CODEPAGE
+    BEGIN
+      L"50220 (ISO-2022 Japanese with no halfwidth Katakana)\0"
+    END
+  50221 CODEPAGE
+    BEGIN
+      L"50221 (ISO-2022 Japanese with halfwidth Katakana)\0"
+    END
+  50222 CODEPAGE
+    BEGIN
+      L"50222 (ISO-2022 Japanese JIS X 0201-1989)\0"
+    END
+  50225 CODEPAGE
+    BEGIN
+      L"50225 (ISO-2022 Korean)\0"
+    END
+  50227 CODEPAGE
+    BEGIN
+      L"50227 (ISO-2022 Simplified Chinese)\0"
+    END
+  50229 CODEPAGE
+    BEGIN
+      L"50229 (ISO-2022 Traditional Chinese)\0"
+    END
+  52936 CODEPAGE
+    BEGIN
+      L"52936 (HZ-GB2312 Simplified Chinese)\0"
+    END
+
+  51932 CODEPAGE
+    BEGIN
+      L"52936 (EUC-Japanese)\0"
+    END
+  51949 CODEPAGE
+    BEGIN
+      L"51949 (EUC-Korean)\0"
+    END
+  51936 CODEPAGE
+    BEGIN
+      L"51936 (EUC-Simplified Chinese)\0"
+    END
+  51950 CODEPAGE
+    BEGIN
+      L"51950 (EUC-Traditional Chinese)\0"
+    END
+
+  50930 CODEPAGE
+    BEGIN
+      L"50930 (IBM EBCDIC - Japanese (Katakana) Extended and Japanese)\0"
+    END
+  50931 CODEPAGE
+    BEGIN
+      L"50931 (IBM EBCDIC - US/Canada and Japanese)\0"
+    END
+  50933 CODEPAGE
+    BEGIN
+      L"50933 (IBM EBCDIC - Korean Extended and Korean)\0"
+    END
+  50935 CODEPAGE
+    BEGIN
+      L"50935 (IBM EBCDIC - Simplified Chinese)\0"
+    END
+  50937 CODEPAGE
+    BEGIN
+      L"50937 (IBM EBCDIC - US/Canada and Traditional Chinese)\0"
+    END
+  50939 CODEPAGE
+    BEGIN
+      L"50939 (IBM EBCDIC - Japanese (Latin) Extended and Japanese)\0"
+    END

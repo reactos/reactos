@@ -1,0 +1,11 @@
+# This makefile was generated automatically by mwgenmake.
+
+.NOTPARALLEL:
+
+world all clean install depend:
+	@enterdir util    	${MAKE}	${MFLAGS} $@
+	@enterdir hist    	${MAKE}	${MFLAGS} $@
+	@enterdir cdfview   ${MAKE}	${MFLAGS} $@
+	@enterdir srcc    	${MAKE}	${MFLAGS} $@
+	@enterdir dll     	${MAKE}	${MFLAGS} $@
+

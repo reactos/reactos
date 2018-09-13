@@ -1,0 +1,10 @@
+#include <ntverp.h>
+#include "ccver.h"              // App compat version hacks
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Common Controls Library"
+#define VER_INTERNALNAME_STR            "COMCTL32"
+#define VER_ORIGINALFILENAME_STR        "COMCTL32.DLL"
+
+#include <common.ver>

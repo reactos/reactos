@@ -1,0 +1,85 @@
+// This file contains directives for how to order the functions.
+#include "forms3.fmap"
+
+libmshtml.so
+{
+  global:
+
+    // LIBRARY         "MSHTML"
+    // DESCRIPTION     "Microsoft HTML Viewer"
+    
+    // EXPORTS
+
+    //
+    // COM Exports
+    //
+
+    DllGetClassObject;
+    DllCanUnloadNow;
+    DllRegisterServer;
+    DllUnregisterServer;
+    DllInstall;
+    
+    //
+    //  Shell callback for printing.
+    //
+
+    PrintHTML;
+
+    //
+    // Functions used by our own tools but not by external clients.
+    //
+
+    DllEnumClassObjects;
+
+    //
+    // Shell callback for modeless dialogs
+    //
+
+    TranslateModelessAccelerator;
+
+    //
+    // Function used by shdocvw to do a case sensitive compare of a type library.
+    //
+    MatchExactGetIDsOfNames;
+
+#if 0 // DBG ==1 
+    TestNileSTD;
+#endif
+
+#ifdef PRODUCT_PERFTEST
+
+    DllLoadAsync;
+    DllOffscreen;
+
+#endif
+
+#if 0 // DBG == 1 
+
+    DeinitDynamicLibrary;
+    IsDynamicLibraryLoaded;
+
+#endif
+
+  ShowModalDialog;
+  ShowHTMLDialog;
+  ShowModelessHTMLDialog;
+
+  //
+  // Functions used for osp custom java marshaling
+  //
+  RNIGetCompatibleVersion;
+  
+  com_ms_osp_ospmrshl_toJava;
+  com_ms_osp_ospmrshl_copyToExternal;
+  
+  com_ms_osp_ospmrshl_releaseByValExternal;
+  com_ms_osp_ospmrshl_classInit;
+
+#ifdef UNIX
+    _____mshtml_initDLL;
+#endif
+  
+  local:
+    *;
+};

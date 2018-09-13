@@ -1,0 +1,14 @@
+#include "resource.h"
+#include "msg.rc"
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ORDERBYTES          "bytes"
+    IDS_ORDERKB             "KB"
+    IDS_ORDERMB             "MB"
+    IDS_ORDERGB             "GB"
+    IDS_ORDERTB             "TB"
+    IDS_ORDERPB             "PB"
+    IDS_ORDEREB             "EB"
+    IDS_NO_LIMIT            "No Limit"
+END

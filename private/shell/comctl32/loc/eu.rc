@@ -1,0 +1,138 @@
+LANGUAGE 0x2D, 0x00 //Basque
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 358, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Pertsonalizatu tresna-barra"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"It&xi",2,303,6,53,14
+    PUSHBUTTON      L"&Berrezarri",202,303,26,53,14
+    PUSHBUTTON      L"&Laguntza",205,303,46,53,14
+    PUSHBUTTON      L"Era&man gora",206,303,76,53,14
+    PUSHBUTTON      L"Erama&n behera",207,303,97,53,14
+    LTEXT           L"Botoi &erabilgarriak:",-1,3,6,68,8
+    LISTBOX         201,3,18,124,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Gehitu ->",1,132,45,40,14
+    PUSHBUTTON      L"<- &Kendu",204,132,65,40,14
+    LTEXT           L"&Tresna-barrako botoiak:",-1,174,6,121,8
+    LISTBOX         203,175,18,124,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Ados",1,4,122,44,14,WS_GROUP
+    PUSHBUTTON      L"Utzi",2,59,122,44,14
+    PUSHBUTTON      L"&Aplikatu",12321,116,122,44,14,WS_DISABLED
+    PUSHBUTTON      L"Laguntza",9,172,122,44,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Atzera",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&Hurrengoa >",12324,62,26,50,14
+    PUSHBUTTON      L"Amaitu",12325,119,26,50,14
+    PUSHBUTTON      L"Utzi",2,176,26,50,14
+    PUSHBUTTON      L"Laguntza",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Bereizlea"
+    1025                    L" + "
+    1026                    L"Batere ez"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Itxi"
+    4161                    L"Ados"
+    4162                    L"%s - propietateak"
+    4163                    L"Gaur:"
+    4164                    L"&Joan 'Gaur'rera"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Idatzi testua hemen"
+    4177                    L"Propietateak"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Leihoaren tamaina aldatzen du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Leihoa lekuz aldatzen du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Leihoa ikono modura murrizten du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Leihoa pantaila bete arte zabaltzen du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Hurrengo MDI leihora aldatzen da."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Leihoa ixten du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Leihoa tamaina normalera leheneratzen du."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Beste ataza batera aldatzen da."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Leihoak manipulatzeko komandoak dauzka."
+    36849                   L"Arrastatu ezkerrera edo eskuinera zutabeen tamaina aldatzeko."
+    36850                   L"Zutabeen tamaina aldatzen du gezi-teklak eta tab tekla erabiliz."
+    36851                   L"Tresna-barrako botoiak gehitu, lekuz aldatu eta kentzen ditu."
+END
+

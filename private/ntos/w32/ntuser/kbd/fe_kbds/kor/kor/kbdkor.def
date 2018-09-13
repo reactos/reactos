@@ -1,0 +1,9 @@
+LIBRARY KBDKOR
+
+EXPORTS
+    KbdLayerDescriptor     @1
+    KbdNlsLayerDescriptor  @2
+    KbdLayerRealDllFileNT4 @3
+    ; for NT4 Hydra backward comptility -- @4 should be left empty.
+    KbdLayerRealDllFile @5
+

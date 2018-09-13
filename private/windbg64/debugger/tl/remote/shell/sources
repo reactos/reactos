@@ -1,0 +1,79 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+
+!ENDIF
+
+!if "$(NTDEBUG)" != "" && "$(NTDEBUG)" != "ntsdnodbg" && "$(NTDEBUG)" != "retail"
+USE_RTTI=1
+!endif
+
+USECXX_FLAG=/TP
+USE_CRTDLL=1
+
+!INCLUDE ..\..\..\sources.inc
+
+MAJORCOMP=dbg
+MINORCOMP=windbgrm
+
+TARGETNAME=windbgrm
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES=    windbgrm.rc \
+            status.c    \
+            init.c      \
+            gui.c       \
+            debugger.c  \
+            registry.c  \
+            dbgdll.c    \
+            kdopt.c
+
+UMTYPE=windows
+UMAPPL=windbgrm
+UMRES=obj\*\windbgrm.res
+UMLIBS=obj\*\windbgrm.lib \
+       $(DEBUG_LIB)\*\wslib.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib
+
+!IFDEF CALL_PROFILE
+MORE_LIBS=$(MORE_LIBS) $(BASEDIR)\public\sdk\lib\*\cap.lib
+MSC_OPTIMIZATION=$(MSC_OPTIMIZATION) /Od /Gh
+!ENDIF
+
+LINKER_FLAGS=-ignore:505 -opt:noref
+MSC_WARNING_LEVEL=/WX /W3
+PPC_WARNING_LEVEL=/W3
+
+INCLUDES=$(LANGAPI_ROOT)\debugger;\
+         $(DEBUGGER_ROOT)\include;\
+         $(DEBUGGER_ROOT)\od\include;\
+         $(DEBUGGER_ROOT)\wrkspc;\
+         $(DEBUG_INCLUDES)
+
+LINKLIBS=$(MORE_LIBS) \
+         $(BASEDIR)\public\sdk\lib\*\oldnames.lib    \
+         $(DEBUG_LIB)\*\memlist.lib
+
+NTKEEPRESOURCETMPFILES=1
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

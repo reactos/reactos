@@ -1,0 +1,1032 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992-1998.
+//
+//  File: mlang.idl
+//
+//  Contents: IMultiLanguage interface definition
+//
+//
+//--------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// MLang.h                                                                    ")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.       ")
+cpp_quote("//                                                                            ")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF        ")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO        ")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A             ")
+cpp_quote("// PARTICULAR PURPOSE.                                                        ")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("                                                                              ")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")                                             ")
+cpp_quote("                                                                              ")
+cpp_quote("//----------------------------------------------------------------------------")
+cpp_quote("// IMultiLanguage Interfaces.                                                 ")
+cpp_quote("                                                                              ")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+[
+    uuid(275c23e0-3747-11d0-9fea-00aa003f8646),
+    helpstring("MultiLanguage Object Model"),
+    lcid(0x0000),
+    version(0.2)
+]
+library MultiLanguage
+{
+    importlib("stdole2.tlb");
+
+	typedef WORD LANGID;
+
+    typedef enum tagMLSTR_FLAGS
+    {
+#ifdef NEWMLSTR
+        MLSTR_READ                  = 0x0001,
+        MLSTR_WRITE                 = 0x000A,
+        MLSTR_SHARE_DENYREAD        = 0x0004,
+        MLSTR_SHARE_DENYWRITE       = 0x0008,
+        MLSTR_MOVE                  = 0x0010,
+        MLSTR_NOWAIT                = 0x0020
+#else
+        MLSTR_READ                  = 1,
+        MLSTR_WRITE                 = 2
+#endif
+    } MLSTR_FLAGS;
+
+    [
+        uuid(D24ACD21-BA72-11D0-B188-00AA0038C969),
+        helpstring("IMLangStringBufW Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangStringBufW : IUnknown
+    {
+        [helpstring("method GetStatus")] HRESULT GetStatus([out] long* plFlags, [out] long* pcchBuf);
+        [helpstring("method LockBuf")] HRESULT LockBuf([in] long cchOffset, [in] long cchMaxLock, [out, size_is(,*pcchBuf)] WCHAR** ppszBuf, [out] long* pcchBuf);
+        [helpstring("method UnlockBuf")] HRESULT UnlockBuf([in, size_is(cchWrite - cchOffset)] const WCHAR* pszBuf, [in] long cchOffset, [in] long cchWrite);
+        [helpstring("method Insert")] HRESULT Insert([in] long cchOffset, [in] long cchMaxInsert, [out] long* pcchActual);
+        [helpstring("method Delete")] HRESULT Delete([in] long cchOffset, [in] long cchDelete);
+    };
+
+    [
+        uuid(D24ACD23-BA72-11D0-B188-00AA0038C969),
+        helpstring("IMLangStringBufA Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangStringBufA : IUnknown
+    {
+        [helpstring("method GetStatus")] HRESULT GetStatus([out] long* plFlags, [out] long* pcchBuf);
+        [helpstring("method LockBuf")] HRESULT LockBuf([in] long cchOffset, [in] long cchMaxLock, [out, size_is(,*pcchBuf)] CHAR** ppszBuf, [out] long* pcchBuf);
+        [helpstring("method UnlockBuf")] HRESULT UnlockBuf([in, size_is(cchWrite - cchOffset)] const CHAR* pszBuf, [in] long cchOffset, [in] long cchWrite);
+        [helpstring("method Insert")] HRESULT Insert([in] long cchOffset, [in] long cchMaxInsert, [out] long* pcchActual);
+        [helpstring("method Delete")] HRESULT Delete([in] long cchOffset, [in] long cchDelete);
+    };
+
+#ifdef NEWMLSTR
+    [
+        uuid(9c0782c0-5087-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttr Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttr : IUnknown
+    {
+        [helpstring("method SetClient")] HRESULT SetClient([in] IUnknown* pUnk);
+        [helpstring("method GetClient")] HRESULT GetClient([out] IUnknown** ppUnk);
+        [helpstring("method QueryAttr")] HRESULT QueryAttr([in] REFIID riid, [in] LPARAM lParam, [out] IUnknown** ppUnk, [out] long* lConf);
+        [helpstring("method GetAttrInterface")] HRESULT GetAttrInterface([out] IID* pIID, [out] LPARAM* plParam);
+        [helpstring("method SetMLStr")] HRESULT SetMLStr([in] long lDestPos, [in] long lDestLen, [in] IUnknown* pSrcMLStr, [in] long lSrcPos, [in] long lSrcLen);
+    };
+
+    [
+        uuid(39a623c0-5109-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttrWStr Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttrWStr : IMLStrAttr
+    {
+        [helpstring("method SetWStr")] HRESULT SetWStr([in] long lDestPos, [in] long lDestLen, [in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetStrBufW")] HRESULT SetStrBufW([in] long lDestPos, [in] long lDestLen, [in] IMLangStringBufW* pSrcBuf, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetWStr")] HRESULT GetWStr([in] long lSrcPos, [in] long lSrcLen, [out, size_is(cchDest)] WCHAR* pszDest, [in] long cchDest, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetStrBufW")] HRESULT GetStrBufW([in] long lSrcPos, [in] long lSrcMaxLen, [out] IMLangStringBufW** ppDestBuf, [out] long* plDestLen);
+        [helpstring("method LockWStr")] HRESULT LockWStr([in] long lSrcPos, [in] long lSrcLen, [in] long lFlags, [in] long cchRequest, [out, size_is(,*pcchDest)] WCHAR** ppszDest, [out] long* pcchDest, [out] long* plDestLen);
+        [helpstring("method UnlockWStr")] HRESULT UnlockWStr([in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+    };
+
+    [
+        uuid(39a623c1-5109-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttrAStr Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttrAStr : IMLStrAttr
+    {
+        [helpstring("method SetAStr")] HRESULT SetAStr([in] long lDestPos, [in] long lDestLen, [in] UINT uCodePage, [in, size_is(cchSrc)] const CHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetStrBufA")] HRESULT SetStrBufA([in] long lDestPos, [in] long lDestLen, [in] UINT uCodePage, [in] IMLangStringBufA* pSrcBuf, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetAStr")] HRESULT GetAStr([in] long lSrcPos, [in] long lSrcLen, [in] UINT uCodePageIn, [out] UINT* puCodePageOut, [out, size_is(cchDest)] CHAR* pszDest, [in] long cchDest, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetStrBufA")] HRESULT GetStrBufA([in] long lSrcPos, [in] long lSrcMaxLen, [out] UINT* puDestCodePage, [out] IMLangStringBufA** ppDestBuf, [out] long* plDestLen);
+        [helpstring("method LockAStr")] HRESULT LockAStr([in] long lSrcPos, [in] long lSrcLen, [in] long lFlags, [in] UINT uCodePageIn, [in] long cchRequest, [out] UINT* puCodePageOut, [out, size_is(,*pcchDest)] CHAR** ppszDest, [out] long* pcchDest, [out] long* plDestLen);
+        [helpstring("method UnlockAStr")] HRESULT UnlockAStr([in, size_is(cchSrc)] const CHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+    };
+
+    [
+        uuid(39a623c2-5109-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttrLong Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttrLong : IMLStrAttr
+    {
+        [helpstring("method SetLong")] HRESULT SetLong([in] long lDestPos, [in] long lDestLen, [in] long lValue);
+        [helpstring("method GetLong")] HRESULT GetLong([in] long lSrcPos, [in] long lSrcLen, [out] long* plValue, [out] long* plActualPos, [out] long* plActualLen);
+    };
+
+    [
+        uuid(39a623c3-5109-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttrLocale Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttrLocale : IMLStrAttrLong
+    {
+    };
+
+    [
+        uuid(8d0dcf40-520d-11d1-998c-00aa00601ea8),
+        helpstring("IMLStrAttrNotifySink Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLStrAttrNotifySink : IUnknown
+    {
+        [helpstring("method OnRequestEdit")] HRESULT OnRequestEdit([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+        [helpstring("method OnCanceledEdit")] HRESULT OnCanceledEdit([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+        [helpstring("method OnChanged")] HRESULT OnChanged([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+    };
+
+    [
+        uuid(c454b4e0-510f-11d1-998c-00aa00601ea8),
+        helpstring("CMLStrAttrWStr Class")
+    ]
+    coclass CMLStrAttrWStr
+    {
+        [default] interface IMLStrAttrWStr;
+        [source] interface IMLStrAttrNotifySink;
+    };
+
+    [
+        uuid(c454b4e1-510f-11d1-998c-00aa00601ea8),
+        helpstring("CMLStrAttrAStr Class")
+    ]
+    coclass CMLStrAttrAStr
+    {
+        [default] interface IMLStrAttrAStr;
+        [source] interface IMLStrAttrNotifySink;
+    };
+
+    [
+        uuid(c454b4e2-510f-11d1-998c-00aa00601ea8),
+        helpstring("CMLStrAttrLocale Class")
+    ]
+    coclass CMLStrAttrLocale
+    {
+        [default] interface IMLStrAttrLocale;
+        [source] interface IMLStrAttrNotifySink;
+    };
+#endif // NEWMLSTR
+
+    [
+        uuid(C04D65CE-B70D-11D0-B188-00AA0038C969),
+        helpstring("IMLangString Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangString : IUnknown
+    {
+#ifdef NEWMLSTR
+        [helpstring("method LockMLStr")] HRESULT LockMLStr([in] long lPos, [in] long lLen, [in] DWORD dwFlags, [out] DWORD* pdwCookie, [out] long* plActualPos, [out] long* plActualLen);
+        [helpstring("method UnlockMLStr")] HRESULT UnlockMLStr([in] DWORD dwCookie);
+#else
+        [helpstring("method Sync")] HRESULT Sync([in] BOOL fNoAccess);
+#endif
+        [helpstring("method GetLength")] HRESULT GetLength([out, retval] long* plLen);
+        [helpstring("method SetMLStr")] HRESULT SetMLStr([in] long lDestPos, [in] long lDestLen, [in] IUnknown* pSrcMLStr, [in] long lSrcPos, [in] long lSrcLen);
+#ifdef NEWMLSTR
+        [helpstring("method RegisterAttr")] HRESULT RegisterAttr([in] IUnknown* pUnk, [out] DWORD* pdwCookie);
+        [helpstring("method UnregisterAttr")] HRESULT UnregisterAttr([in] DWORD dwCookie);
+        [helpstring("method EnumAttr")] HRESULT EnumAttr([out] IEnumUnknown** ppEnumUnk);
+        [helpstring("method FindAttr")] HRESULT FindAttr([in] REFIID riid, [in] LPARAM lParam, [out] IUnknown** ppUnk);
+#else
+        [helpstring("method GetMLStr")] HRESULT GetMLStr([in] long lSrcPos, [in] long lSrcLen, [in] IUnknown* pUnkOuter, [in] DWORD dwClsContext, [in] const IID* piid, [out] IUnknown** ppDestMLStr, [out] long* plDestPos, [out] long* plDestLen);
+#endif
+    };
+
+    [
+        uuid(C04D65D0-B70D-11D0-B188-00AA0038C969),
+        helpstring("IMLangStringWStr Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangStringWStr : IMLangString
+    {
+        [helpstring("method SetWStr")] HRESULT SetWStr([in] long lDestPos, [in] long lDestLen, [in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetStrBufW")] HRESULT SetStrBufW([in] long lDestPos, [in] long lDestLen, [in] IMLangStringBufW* pSrcBuf, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetWStr")] HRESULT GetWStr([in] long lSrcPos, [in] long lSrcLen, [out, size_is(cchDest)] WCHAR* pszDest, [in] long cchDest, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetStrBufW")] HRESULT GetStrBufW([in] long lSrcPos, [in] long lSrcMaxLen, [out] IMLangStringBufW** ppDestBuf, [out] long* plDestLen);
+        [helpstring("method LockWStr")] HRESULT LockWStr([in] long lSrcPos, [in] long lSrcLen, [in] long lFlags, [in] long cchRequest, [out, size_is(,*pcchDest)] WCHAR** ppszDest, [out] long* pcchDest, [out] long* plDestLen);
+        [helpstring("method UnlockWStr")] HRESULT UnlockWStr([in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetLocale")] HRESULT SetLocale([in] long lDestPos, [in] long lDestLen, [in] LCID locale);
+        [helpstring("method GetLocale")] HRESULT GetLocale([in] long lSrcPos, [in] long lSrcMaxLen, [out] LCID* plocale, [out] long* plLocalePos, [out] long* plLocaleLen);
+    };
+
+    [
+        uuid(C04D65D2-B70D-11D0-B188-00AA0038C969),
+        helpstring("IMLangStringAStr Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangStringAStr : IMLangString
+    {
+        [helpstring("method SetAStr")] HRESULT SetAStr([in] long lDestPos, [in] long lDestLen, [in] UINT uCodePage, [in, size_is(cchSrc)] const CHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetStrBufA")] HRESULT SetStrBufA([in] long lDestPos, [in] long lDestLen, [in] UINT uCodePage, [in] IMLangStringBufA* pSrcBuf, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetAStr")] HRESULT GetAStr([in] long lSrcPos, [in] long lSrcLen, [in] UINT uCodePageIn, [out] UINT* puCodePageOut, [out, size_is(cchDest)] CHAR* pszDest, [in] long cchDest, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method GetStrBufA")] HRESULT GetStrBufA([in] long lSrcPos, [in] long lSrcMaxLen, [out] UINT* puDestCodePage, [out] IMLangStringBufA** ppDestBuf, [out] long* plDestLen);
+        [helpstring("method LockAStr")] HRESULT LockAStr([in] long lSrcPos, [in] long lSrcLen, [in] long lFlags, [in] UINT uCodePageIn, [in] long cchRequest, [out] UINT* puCodePageOut, [out, size_is(,*pcchDest)] CHAR** ppszDest, [out] long* pcchDest, [out] long* plDestLen);
+        [helpstring("method UnlockAStr")] HRESULT UnlockAStr([in, size_is(cchSrc)] const CHAR* pszSrc, [in] long cchSrc, [out] long* pcchActual, [out] long* plActualLen);
+        [helpstring("method SetLocale")] HRESULT SetLocale([in] long lDestPos, [in] long lDestLen, [in] LCID locale);
+        [helpstring("method GetLocale")] HRESULT GetLocale([in] long lSrcPos, [in] long lSrcMaxLen, [out] LCID* plocale, [out] long* plLocalePos, [out] long* plLocaleLen);
+    };
+
+#ifdef NEWMLSTR
+    [
+        uuid(4d94b420-5382-11d1-998c-00aa00601ea8),
+        helpstring("IMLangStringNotifySink Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangStringNotifySink : IUnknown
+    {
+        [helpstring("method OnRegisterAttr")] HRESULT OnRegisterAttr([in] IUnknown* pUnk);
+        [helpstring("method OnUnregisterAttr")] HRESULT OnUnregisterAttr([in] IUnknown* pUnk);
+        [helpstring("method OnRequestEdit")] HRESULT OnRequestEdit([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+        [helpstring("method OnCanceledEdit")] HRESULT OnCanceledEdit([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+        [helpstring("method OnChanged")] HRESULT OnChanged([in] long lDestPos, [in] long lDestLen, [in] long lNewLen, [in] REFIID riid, [in] LPARAM lParam, [in] IUnknown* pUnk);
+    };
+#endif
+
+    [
+        uuid(C04D65CF-B70D-11D0-B188-00AA0038C969),
+        helpstring("MLangString Class")
+    ]
+    coclass CMLangString
+    {
+        [default] interface IMLangString;
+        interface IMLangStringWStr;
+        interface IMLangStringAStr;
+#ifdef NEWMLSTR
+        [source] interface IMLangStringNotifySink;
+#endif
+    };
+
+    [
+        uuid(F5BE2EE1-BFD7-11D0-B188-00AA0038C969),
+        helpstring("IMLangLineBreakConsole Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangLineBreakConsole : IUnknown
+    {
+        [helpstring("method BreakLineML")] HRESULT BreakLineML([in] IMLangString* pSrcMLStr, [in] long lSrcPos, [in] long lSrcLen, [in] long cMinColumns, [in] long cMaxColumns, [out] long* plLineLen, [out] long* plSkipLen);
+        [helpstring("method BreakLineW")] HRESULT BreakLineW([in] LCID locale, [in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [in] long cMaxColumns, [out] long* pcchLine, [out] long* pcchSkip);
+        [helpstring("method BreakLineA")] HRESULT BreakLineA([in] LCID locale, [in] UINT uCodePage, [in, size_is(cchSrc)] const CHAR* pszSrc, [in] long cchSrc, [in] long cMaxColumns, [out] long* pcchLine, [out] long* pcchSkip);
+    };
+
+    [
+      object,
+      uuid(275c23e3-3747-11d0-9fea-00aa003f8646),
+      pointer_default(unique)
+    ]
+    interface IEnumCodePage : IUnknown
+    {
+        const USHORT MAX_MIMECP_NAME    = 64;
+        const USHORT MAX_MIMECSET_NAME  = 50;
+        const USHORT MAX_MIMEFACE_NAME  = 32;
+
+        typedef enum tagMIMECONTF
+        {
+            MIMECONTF_MAILNEWS          = 0x00000001,
+            MIMECONTF_BROWSER           = 0x00000002,
+            MIMECONTF_MINIMAL           = 0x00000004,
+            MIMECONTF_IMPORT            = 0x00000008,
+            MIMECONTF_SAVABLE_MAILNEWS  = 0x00000100,
+            MIMECONTF_SAVABLE_BROWSER   = 0x00000200,
+            MIMECONTF_EXPORT            = 0x00000400,
+            MIMECONTF_PRIVCONVERTER     = 0x00010000,
+            MIMECONTF_VALID             = 0x00020000,
+            MIMECONTF_VALID_NLS         = 0x00040000,
+            MIMECONTF_MIME_IE4          = 0x10000000,
+            MIMECONTF_MIME_LATEST       = 0x20000000,
+            MIMECONTF_MIME_REGISTRY     = 0x40000000
+        } MIMECONTF;
+
+        typedef struct tagMIMECPINFO
+        {
+            DWORD   dwFlags;
+            UINT    uiCodePage;
+            UINT    uiFamilyCodePage;
+            WCHAR   wszDescription[MAX_MIMECP_NAME];
+            WCHAR   wszWebCharset[MAX_MIMECSET_NAME];
+            WCHAR   wszHeaderCharset[MAX_MIMECSET_NAME];
+            WCHAR   wszBodyCharset[MAX_MIMECSET_NAME];
+            WCHAR   wszFixedWidthFont[MAX_MIMEFACE_NAME];
+            WCHAR   wszProportionalFont[MAX_MIMEFACE_NAME];
+            BYTE    bGDICharset;
+        } MIMECPINFO, *PMIMECPINFO;
+
+        typedef struct tagMIMECSETINFO
+        {
+            UINT    uiCodePage;
+            UINT    uiInternetEncoding;
+            WCHAR   wszCharset[MAX_MIMECSET_NAME];
+        } MIMECSETINFO, *PMIMECSETINFO;
+
+        typedef [unique] IEnumCodePage *LPENUMCODEPAGE;
+
+        HRESULT Clone
+        (
+            [out] IEnumCodePage **ppEnum
+        );
+
+        HRESULT Next
+        (
+            [in]  ULONG         celt,
+            [out] PMIMECPINFO   rgelt,
+            [out] ULONG         *pceltFetched
+        );
+
+        HRESULT Reset();
+
+        HRESULT Skip
+        (
+            [in]  ULONG         celt
+        );
+    };
+
+    [
+      object,
+      uuid(3dc39d1d-c030-11d0-b81b-00c04fc9b31f),
+      pointer_default(unique)
+    ]
+    interface IEnumRfc1766 : IUnknown
+    {
+        const USHORT MAX_RFC1766_NAME   = 6;
+        const USHORT MAX_LOCALE_NAME    = 32;
+
+        typedef struct tagRFC1766INFO
+        {
+            LCID    lcid;
+            WCHAR   wszRfc1766[MAX_RFC1766_NAME];
+            WCHAR   wszLocaleName[MAX_LOCALE_NAME];
+        } RFC1766INFO, *PRFC1766INFO;
+
+        typedef [unique] IEnumRfc1766 *LPENUMRFC1766;
+
+        HRESULT Clone
+        (
+            [out] IEnumRfc1766 **ppEnum
+        );
+
+        HRESULT Next
+        (
+            [in]  ULONG         celt,
+            [out] PRFC1766INFO  rgelt,
+            [out] ULONG         *pceltFetched
+        );
+
+        HRESULT Reset();
+
+        HRESULT Skip
+        (
+            [in]  ULONG         celt
+        );
+    };
+
+    [
+      object,
+      uuid(AE5F1430-388B-11d2-8380-00C04F8F5DA1),
+      pointer_default(unique)
+    ]
+    interface IEnumScript : IUnknown
+    {
+        const USHORT MAX_SCRIPT_NAME    = 48;
+        typedef BYTE    SCRIPT_ID;
+        typedef __int64 SCRIPT_IDS;
+
+
+        typedef enum tagSCRIPTCONTF
+        {
+            sidDefault,          // 0
+            sidMerge,            // 1
+            sidAsciiSym,         // 2
+            sidAsciiLatin,       // 3
+            sidLatin,            // 4
+            sidGreek,            // 5
+            sidCyrillic,         // 6
+            sidArmenian,         // 7
+            sidHebrew,           // 8
+            sidArabic,           // 9
+            sidDevanagari,       // 10
+            sidBengali,          // 11
+            sidGurmukhi,         // 12
+            sidGujarati,         // 13
+            sidOriya,            // 14
+            sidTamil,            // 15
+            sidTelugu,           // 16
+            sidKannada,          // 17
+            sidMalayalam,        // 18
+            sidThai,             // 19
+            sidLao,              // 20
+            sidTibetan,          // 21
+            sidGeorgian,         // 22
+            sidHangul,           // 23
+            sidKana,             // 24
+            sidBopomofo,         // 25
+            sidHan,              // 26
+            sidEthiopic,         // 27
+            sidCanSyllabic,      // 28
+            sidCherokee,         // 29
+            sidYi,               // 30
+            sidBraille,          // 31
+            sidRunic,            // 32
+            sidOgham,            // 33
+            sidSinhala,          // 34
+            sidSyriac,           // 35
+            sidBurmese,          // 36
+            sidKhmer,            // 37
+            sidThaana,           // 38
+            sidMongolian,        // 39
+            sidUserDefined,      // 40
+            sidLim,              // 41
+            sidFEFirst = sidHangul,
+            sidFELast = sidHan
+        } SCRIPTCONTF;
+
+        typedef struct tagSCRIPTINFO
+        {
+            SCRIPT_ID   ScriptId;
+            UINT        uiCodePage;                         
+            WCHAR       wszDescription[MAX_SCRIPT_NAME];    
+            WCHAR       wszFixedWidthFont[MAX_MIMEFACE_NAME];
+            WCHAR       wszProportionalFont[MAX_MIMEFACE_NAME];
+        } SCRIPTINFO, *PSCRIPTINFO;
+
+
+        typedef [unique] IEnumScript *LPENUMScript;
+
+        HRESULT Clone
+        (
+            [out] IEnumScript **ppEnum
+        );
+
+        HRESULT Next
+        (
+            [in]  ULONG         celt,
+            [out] PSCRIPTINFO   rgelt,
+            [out] ULONG         *pceltFetched
+        );
+
+        HRESULT Reset();
+
+        HRESULT Skip
+        (
+            [in]  ULONG         celt
+        );
+    };
+
+
+
+    [
+      object,
+      uuid(d66d6f98-cdaa-11d0-b822-00c04fc9b31f),
+      pointer_default(unique)
+    ]
+    interface IMLangConvertCharset : IUnknown
+    {
+        typedef enum tagMLCONVCHARF
+        {
+            MLCONVCHARF_AUTODETECT      = 1,
+            MLCONVCHARF_ENTITIZE        = 2,
+            MLCONVCHARF_NCR_ENTITIZE    = 2,
+            MLCONVCHARF_NAME_ENTITIZE   = 4,
+            MLCONVCHARF_USEDEFCHAR      = 8,
+            MLCONVCHARF_NOBESTFITCHARS  = 16
+        } MLCONVCHAR;
+
+        typedef [unique] IMLangConvertCharset *LPMLANGCONVERTCHARSET;
+
+        HRESULT Initialize
+        (
+            [in]  UINT  uiSrcCodePage,
+            [in]  UINT  uiDstCodePage,
+            [in]  DWORD dwProperty
+        );
+
+        HRESULT GetSourceCodePage
+        (
+            [out] UINT  *puiSrcCodePage
+        );
+
+        HRESULT GetDestinationCodePage
+        (
+            [out] UINT  *puiDstCodePage
+        );
+
+        HRESULT GetProperty
+        (
+            [out] DWORD *pdwProperty
+        );
+
+        HRESULT DoConversion
+        (
+            [in]  BYTE          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  BYTE          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT DoConversionToUnicode
+        (
+            [in]  CHAR          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  WCHAR         *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT DoConversionFromUnicode
+        (
+            [in]  WCHAR         *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  CHAR          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+    };
+
+    [
+      uuid(d66d6f99-cdaa-11d0-b822-00c04fc9b31f),
+    ]
+    coclass CMLangConvertCharset
+    {
+        [default] interface IMLangConvertCharset;
+    };
+
+    [
+      object,
+      uuid(275c23e1-3747-11d0-9fea-00aa003f8646),
+      pointer_default(unique)
+    ]
+    interface IMultiLanguage : IUnknown
+    {
+        typedef [unique] IMultiLanguage *LPMULTILANGUAGE;
+
+        HRESULT GetNumberOfCodePageInfo
+        (
+            [out] UINT          *pcCodePage
+        );
+
+        HRESULT GetCodePageInfo
+        (
+            [in]  UINT          uiCodePage,
+            [out] PMIMECPINFO   pCodePageInfo
+        );
+
+        HRESULT GetFamilyCodePage
+        (
+            [in]  UINT          uiCodePage,
+            [out] UINT          *puiFamilyCodePage
+        );
+
+        HRESULT EnumCodePages
+        (
+            [in]  DWORD         grfFlags,
+            [out] IEnumCodePage **ppEnumCodePage
+        );
+
+        HRESULT GetCharsetInfo
+        (
+            [in]  BSTR          Charset,
+            [out] PMIMECSETINFO pCharsetInfo
+        );
+
+        HRESULT IsConvertible
+        (
+            [in]  DWORD         dwSrcEncoding,
+            [in]  DWORD         dwDstEncoding
+        );
+
+        HRESULT ConvertString
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwSrcEncoding,
+            [in]  DWORD         dwDstEncoding,
+            [in]  BYTE          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  BYTE          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringToUnicode
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  CHAR          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  WCHAR         *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringFromUnicode
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  WCHAR         *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  CHAR          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringReset();
+
+        HRESULT GetRfc1766FromLcid
+        (
+            [in]  LCID          Locale,
+            [out] BSTR          *pbstrRfc1766
+        );
+
+        HRESULT GetLcidFromRfc1766
+        (
+            [out] LCID          *pLocale,
+            [in]  BSTR          bstrRfc1766
+        );
+
+        HRESULT EnumRfc1766
+        (
+            [out] IEnumRfc1766 **ppEnumRfc1766
+        );
+
+        HRESULT GetRfc1766Info
+        (
+            [in]  LCID          Locale,
+            [out] PRFC1766INFO  pRfc1766Info
+        );
+
+        HRESULT CreateConvertCharset
+        (
+            [in]  UINT          uiSrcCodePage,
+            [in]  UINT          uiDstCodePage,
+            [in]  DWORD         dwProperty,
+            [out] IMLangConvertCharset **ppMLangConvertCharset
+        );
+
+    };
+
+cpp_quote("// dwfIODControl definitions for ValidateCodePageEx()")
+cpp_quote("#define CPIOD_PEEK          0x40000000L")
+cpp_quote("#define CPIOD_FORCE_PROMPT  0x80000000L")
+
+    [
+      object,
+      uuid(DCCFC164-2B38-11d2-B7EC-00C04F8F5D9A),
+      pointer_default(unique)
+    ]
+    interface IMultiLanguage2 : IUnknown
+    {
+        typedef [unique] IMultiLanguage2 *LPMULTILANGUAGE2;
+
+        typedef enum tagMLDETECTCP
+        {
+            MLDETECTCP_NONE     = 0,
+            MLDETECTCP_7BIT     = 1,
+            MLDETECTCP_8BIT     = 2,
+            MLDETECTCP_DBCS     = 4,
+            MLDETECTCP_HTML     = 8,
+            MLDETECTCP_NUMBER   = 16
+        } MLDETECTCP ;
+
+        typedef struct tagDetectEncodingInfo
+        {
+            UINT     nLangID;            // Win32 primary language ID
+            UINT     nCodePage;          // Win32 code page (valid for SBCS and DBCS input only!)
+            INT     nDocPercent;        // % of doc in this language, 0-100
+            INT     nConfidence;        // Relative confidence measure, approx 0-100
+        } DetectEncodingInfo, *pDetectEncodingInfo;
+
+
+        typedef enum tagSCRIPTFONTCONTF
+        {
+            SCRIPTCONTF_FIXED_FONT          = 0x00000001,
+            SCRIPTCONTF_PROPORTIONAL_FONT   = 0x00000002,
+            SCRIPTCONTF_SCRIPT_USER	    = 0x00010000,
+            SCRIPTCONTF_SCRIPT_HIDE         = 0x00020000,
+            SCRIPTCONTF_SCRIPT_SYSTEM       = 0x00040000
+        } SCRIPTFONTCONTF;
+
+        typedef struct tagSCRIPFONTINFO
+        {
+            SCRIPT_IDS  scripts;
+            WCHAR       wszFont[MAX_MIMEFACE_NAME];
+        } SCRIPTFONTINFO, *PSCRIPTFONTINFO;
+
+
+        HRESULT GetNumberOfCodePageInfo
+        (
+            [out] UINT          *pcCodePage
+        );
+
+        HRESULT GetCodePageInfo
+        (
+            [in]  UINT          uiCodePage,
+            [in]  LANGID        LangId,
+            [out] PMIMECPINFO   pCodePageInfo
+        );
+
+        HRESULT GetFamilyCodePage
+        (
+            [in]  UINT          uiCodePage,
+            [out] UINT          *puiFamilyCodePage
+        );
+
+        HRESULT EnumCodePages
+        (
+            [in]  DWORD         grfFlags,
+            [in]  LANGID        LangId,
+            [out] IEnumCodePage **ppEnumCodePage
+        );
+
+        HRESULT GetCharsetInfo
+        (
+            [in]  BSTR          Charset,
+            [out] PMIMECSETINFO pCharsetInfo
+        );
+
+        HRESULT IsConvertible
+        (
+            [in]  DWORD         dwSrcEncoding,
+            [in]  DWORD         dwDstEncoding
+        );
+
+        HRESULT ConvertString
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwSrcEncoding,
+            [in]  DWORD         dwDstEncoding,
+            [in]  BYTE          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  BYTE          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringToUnicode
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  CHAR          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  WCHAR         *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringFromUnicode
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  WCHAR         *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  CHAR          *pDstStr,
+            [in,out]  UINT      *pcDstSize
+        );
+
+        HRESULT ConvertStringReset();
+
+        HRESULT GetRfc1766FromLcid
+        (
+            [in]  LCID          Locale,
+            [out] BSTR          *pbstrRfc1766
+        );
+
+        HRESULT GetLcidFromRfc1766
+        (
+            [out] LCID          *pLocale,
+            [in]  BSTR          bstrRfc1766
+        );
+
+        HRESULT EnumRfc1766
+        (
+            [in]  LANGID       LangId,
+            [out] IEnumRfc1766 **ppEnumRfc1766
+        );
+
+        HRESULT GetRfc1766Info
+        (
+            [in]  LCID          Locale,
+            [in]  LANGID        LangId,
+            [out] PRFC1766INFO  pRfc1766Info
+        );
+
+        HRESULT CreateConvertCharset
+        (
+            [in]  UINT          uiSrcCodePage,
+            [in]  UINT          uiDstCodePage,
+            [in]  DWORD         dwProperty,
+            [out] IMLangConvertCharset **ppMLangConvertCharset
+        );
+
+        HRESULT ConvertStringInIStream
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwFlag,
+            [in]  WCHAR         *lpFallBack,
+            [in]  DWORD         dwSrcEncoding,
+            [in]  DWORD         dwDstEncoding,
+            [in]  IStream       *pstmIn,
+            [in]  IStream       *pstmOut
+        );
+
+        HRESULT ConvertStringToUnicodeEx
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  CHAR          *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  WCHAR         *pDstStr,
+            [in,out]  UINT      *pcDstSize,
+            [in]  DWORD         dwFlag,
+            [in]  WCHAR         *lpFallBack
+        );
+
+        HRESULT ConvertStringFromUnicodeEx
+        (
+            [in,out]  DWORD     *pdwMode,
+            [in]  DWORD         dwEncoding,
+            [in]  WCHAR         *pSrcStr,
+            [in,out]  UINT      *pcSrcSize,
+            [in]  CHAR          *pDstStr,
+            [in,out]  UINT      *pcDstSize,
+            [in]  DWORD         dwFlag,
+            [in]  WCHAR         *lpFallBack
+        );
+
+        HRESULT DetectCodepageInIStream
+        (
+            [in]  DWORD     dwFlag,
+            [in]  DWORD     dwPrefWinCodePage,
+            [in]  IStream   *pstmIn,
+            [in,out] DetectEncodingInfo *lpEncoding,
+            [in,out] INT    *pnScores
+        );
+
+        HRESULT DetectInputCodepage
+        (
+            [in]  DWORD     dwFlag,
+            [in]  DWORD     dwPrefWinCodePage,
+            [in]  CHAR      *pSrcStr,
+            [in,out] INT    *pcSrcSize,
+            [in,out] DetectEncodingInfo *lpEncoding,
+            [in,out] INT    *pnScores
+        );
+
+        HRESULT ValidateCodePage
+        (
+            [in] UINT      uiCodePage,
+            [in] HWND      hwnd
+        );
+
+        HRESULT GetCodePageDescription
+        (
+            [in] UINT uiCodePage,
+            [in] LCID lcid, 
+            [in,out]LPWSTR lpWideCharStr,
+            [in]  int cchWideChar
+        );
+
+        HRESULT IsCodePageInstallable
+        (
+            [in] UINT      uiCodePage
+        );
+
+        HRESULT SetMimeDBSource
+        (
+            [in] MIMECONTF dwSource
+        );
+
+        HRESULT GetNumberOfScripts
+        (
+            [out] UINT          *pnScripts
+        );
+
+
+        HRESULT EnumScripts
+        (
+            [in]  DWORD         dwFlags,
+            [in]  LANGID        LangId,
+            [out] IEnumScript   **ppEnumScript
+        );
+
+        HRESULT ValidateCodePageEx
+        (
+            [in] UINT      uiCodePage,
+            [in] HWND      hwnd,
+            [in] DWORD     dwfIODControl
+        );
+
+    };
+
+    [
+        uuid(359F3443-BD4A-11D0-B188-00AA0038C969),
+        helpstring("IMLangCodePages Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangCodePages : IUnknown
+    {
+        typedef [unique] IMLangCodePages* PMLANGCODEPAGES;
+
+        [helpstring("method GetCharCodePages")] HRESULT GetCharCodePages([in] WCHAR chSrc, [out] DWORD* pdwCodePages);
+        [helpstring("method GetStrCodePages")] HRESULT GetStrCodePages([in, size_is(cchSrc)] const WCHAR* pszSrc, [in] long cchSrc, [in] DWORD dwPriorityCodePages, [out] DWORD* pdwCodePages, [out] long* pcchCodePages);
+        [helpstring("method CodePageToCodePages")] HRESULT CodePageToCodePages([in] UINT uCodePage, [out] DWORD* pdwCodePages);
+        [helpstring("method CodePagesToCodePage")] HRESULT CodePagesToCodePage([in] DWORD dwCodePages, [in] UINT uDefaultCodePage, [out] UINT* puCodePage);
+    };
+
+    [
+        uuid(359F3441-BD4A-11D0-B188-00AA0038C969),
+        helpstring("IMLangFontLink Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangFontLink : IMLangCodePages
+    {
+        typedef [unique] IMLangFontLink* PMLANGFONTLINK;
+
+        [helpstring("method GetFontCodePages")] HRESULT GetFontCodePages([in] HDC hDC, [in] HFONT hFont, [out] DWORD* pdwCodePages);
+        [helpstring("method MapFont")] HRESULT MapFont([in] HDC hDC, [in] DWORD dwCodePages, [in] HFONT hSrcFont, [out] HFONT* phDestFont);
+        [helpstring("method ReleaseFont")] HRESULT ReleaseFont([in] HFONT hFont);
+        [helpstring("method ResetFontMapping")] HRESULT ResetFontMapping();
+    };
+
+    [
+        uuid(DCCFC162-2B38-11d2-B7EC-00C04F8F5D9A),
+
+        helpstring("IMLangFontLink2 Interface"),
+        pointer_default(unique)
+    ]
+    interface IMLangFontLink2 : IMLangCodePages
+    {
+        typedef struct tagUNICODERANGE
+        {
+            WCHAR wcFrom;
+            WCHAR wcTo;
+        } UNICODERANGE;
+
+        typedef [unique] IMLangFontLink2* PMLANGFONTLINK2;
+
+        [helpstring("method GetFontCodePages")] HRESULT GetFontCodePages([in] HDC hDC, [in] HFONT hFont, [out] DWORD* pdwCodePages);
+        [helpstring("method ReleaseFont")] HRESULT ReleaseFont([in] HFONT hFont);
+        [helpstring("method ResetFontMapping")] HRESULT ResetFontMapping();
+        [helpstring("method MapFont")] HRESULT MapFont([in] HDC hDC, [in] DWORD dwCodePages,  [in] WCHAR chSrc, [out] HFONT* pFont );
+        [helpstring("method GetFontUnicodeRanges")] HRESULT GetFontUnicodeRanges([in] HDC hDC, [in,out] UINT *puiRanges, [out] UNICODERANGE* pUranges);
+        [helpstring("method GetScriptFontInfo")]HRESULT GetScriptFontInfo([in] SCRIPT_ID sid, [in] DWORD dwFlags, [in, out] UINT *puiFonts, [out] SCRIPTFONTINFO* pScriptFont);
+        [helpstring("method CodePageToScriptID")] HRESULT CodePageToScriptID([in] UINT uiCodePage, [out] SCRIPT_ID *pSid);
+    };
+
+    [
+      uuid(275c23e2-3747-11d0-9fea-00aa003f8646),
+    ]
+    coclass CMultiLanguage
+    {
+        [default] interface IMultiLanguage;
+        interface IMLangCodePages;
+        interface IMLangFontLink;
+        interface IMLangLineBreakConsole;
+        interface IMultiLanguage2;
+        interface IMLangFontLink2;
+    };
+}
+
+
+cpp_quote("#ifndef _MLANG_H_API_DEF_                                                     ")
+cpp_quote("#define _MLANG_H_API_DEF_                                                     ")
+cpp_quote("                                                                              ")
+cpp_quote("// APIs prototypes                                                            ")
+cpp_quote("STDAPI LcidToRfc1766A(LCID Locale, LPSTR pszRfc1766, int iMaxLength);         ")
+cpp_quote("STDAPI LcidToRfc1766W(LCID Locale, LPWSTR pszRfc1766, int nChar);             ")
+cpp_quote("#ifdef UNICODE                                                                ")
+cpp_quote("#define LcidToRfc1766        LcidToRfc1766W                                   ")
+cpp_quote("#else                                                                         ")
+cpp_quote("#define LcidToRfc1766        LcidToRfc1766A                                   ")
+cpp_quote("#endif                                                                        ")
+cpp_quote("STDAPI Rfc1766ToLcidA(LCID *pLocale, LPCSTR pszRfc1766);                      ")
+cpp_quote("STDAPI Rfc1766ToLcidW(LCID *pLocale, LPCWSTR pszRfc1766);                     ")
+cpp_quote("#ifdef UNICODE                                                                ")
+cpp_quote("#define Rfc1766ToLcid        Rfc1766ToLcidW                                   ")
+cpp_quote("#else                                                                         ")
+cpp_quote("#define Rfc1766ToLcid        Rfc1766ToLcidA                                   ")
+cpp_quote("#endif                                                                        ")
+cpp_quote("                                                                              ")
+cpp_quote("STDAPI IsConvertINetStringAvailable(DWORD dwSrcEncoding, DWORD dwDstEncoding);")
+cpp_quote("STDAPI ConvertINetString(LPDWORD lpdwMode, DWORD dwSrcEncoding, DWORD dwDstEncoding, LPCSTR lpSrcStr, LPINT lpnSrcSize, LPSTR lpDstStr, LPINT lpnDstSize);   ")
+cpp_quote("STDAPI ConvertINetMultiByteToUnicode(LPDWORD lpdwMode, DWORD dwEncoding, LPCSTR lpSrcStr, LPINT lpnMultiCharCount, LPWSTR lpDstStr, LPINT lpnWideCharCount); ")
+cpp_quote("STDAPI ConvertINetUnicodeToMultiByte(LPDWORD lpdwMode, DWORD dwEncoding, LPCWSTR lpSrcStr, LPINT lpnWideCharCount, LPSTR lpDstStr, LPINT lpnMultiCharCount); ")
+cpp_quote("                                                                              ")
+cpp_quote("#endif // _MLANG_H_API_DEF_                                                   ")

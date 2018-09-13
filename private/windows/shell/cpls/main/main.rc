@@ -1,0 +1,383 @@
+/*++
+
+Copyright (c) 1994-1998,  Microsoft Corporation  All rights reserved.
+
+Module Name:
+
+    main.rc
+
+Abstract:
+
+    This module contains the resources for this project.
+
+Revision History:
+
+--*/
+
+
+
+//
+//  Include Files.
+//
+
+#include <windows.h>
+#include <commctrl.h>
+#include "rc.h"
+#include "mousectl.h"
+
+
+
+
+//
+//  Constant Declarations.
+//
+
+#define IDC_STATIC -1
+
+
+
+
+//
+//  Icons.
+//
+
+//
+//  Applet Icons.
+//
+IDI_MOUSE               ICON   PRELOAD DISCARDABLE     "MOUSE.ICO"
+IDI_KEYBD               ICON   PRELOAD DISCARDABLE     "KEYBD.ICO"
+IDI_PRINT               ICON   PRELOAD DISCARDABLE     "PRTFLDSH.ICO"
+IDI_FONTS               ICON   PRELOAD DISCARDABLE     "FNTFLDSH.ICO"
+IDI_ADM                 ICON   PRELOAD DISCARDABLE     "ADMFLDSH.ICO"
+
+
+//
+//  Mouse Button Page Icons.
+//
+#ifndef WINNT
+IDI_PTTRAILS            ICON   PRELOAD DISCARDABLE     "pt02.ico"
+#else
+IDI_SNAPDEF             ICON   PRELOAD DISCARDABLE     "pt04.ico"
+#endif
+IDI_PTSPEED             ICON   PRELOAD DISCARDABLE     "pt03.ico"
+
+IDI_SGLCLICK            ICON   PRELOAD DISCARDABLE     "sglclk.ico"
+IDI_DBLCLICK            ICON   PRELOAD DISCARDABLE     "dblclk.ico"
+
+//
+//  Keyboard Pointer Page Icons.
+//
+IDI_DELAY               ICON   PRELOAD DISCARDABLE     "delay.ico"
+IDI_REPEAT              ICON   PRELOAD DISCARDABLE     "repeat.ico"
+
+
+
+
+//
+//  Bitmaps.
+//
+
+IDB_MOUSE               BITMAP PRELOAD DISCARDABLE     "MOUSE.BMP"
+
+
+
+
+//
+//  Animations.
+//
+
+IDA_JACKNBOX            AVI    PRELOAD DISCARDABLE     "JACKNBOX.AVI"
+
+
+
+
+//
+//  Strings.
+//
+
+//
+//  Applet Names and Descriptions.
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MOUSE_TITLE          "Mouse"
+    IDS_MOUSE_EXPLAIN        "Customizes your mouse settings"
+    IDS_KEYBD_TITLE          "Keyboard"
+    IDS_KEYBD_EXPLAIN        "Customizes your keyboard settings"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_KEYBD_NOSETSPEED     "You cannot change the speed for your keyboard because your keyboard driver does not support this feature."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNKNOWN              "(Unknown)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NONE,                "(None)"
+    IDS_SUFFIX,              " (system scheme)"
+    IDS_OVERWRITE_TITLE,     "Replace Scheme?"
+    IDS_OVERWRITE_MSG,       "The Cursor Scheme name you selected is already in use.  Do you want to replace the original scheme?"
+    IDS_NAME,                "Confirm Scheme Removal"
+    IDS_REMOVESCHEME,        "Are you sure you want to completely remove the scheme '%s' from your system?"
+    IDS_CUR_BADFILE,         "The %s file, which contains the '%s' cursor, is either missing or corrupt."
+    IDS_CUR_BROWSE,          "Browse"
+    IDS_CUR_FILTER,          "Cursors (*.cur)\1*.cur\1All Files\1*.*\1"
+    IDS_ANICUR_FILTER,       "Cursors (*.ani, *.cur)\1*.ani;*.cur\1Animated Cursors (*.ani)\1*.ani\1Static Cursors (*.cur)\1*.cur\1All Files\1*.*\1"
+    IDS_ARROW,               "Normal Select"
+    IDS_WAIT,                "Busy"
+    IDS_APPSTARTING,         "Working In Background"
+    IDS_NO,                  "Unavailable"
+    IDS_IBEAM,               "Text Select"
+    IDS_CROSS,               "Precision Select"
+    IDS_SIZENS,              "Vertical Resize"
+    IDS_SIZEWE,              "Horizontal Resize"
+    IDS_SIZENWSE,            "Diagonal Resize 1"
+    IDS_SIZENESW,            "Diagonal Resize 2"
+    IDS_SIZEALL,             "Move"
+    IDS_HANDCUR,             "Link Select"
+    IDS_HELPCUR,             "Help Select"
+    IDS_NWPEN,               "Handwriting"
+    IDS_UPARROW              "Alternate Select"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MOUSE_TSHOOT,       "hh.exe ms-its:tshoot.chm::/hdw_mouse.htm"
+    IDS_KEYBD_TSHOOT,       "hh.exe ms-its:tshoot.chm::/hdw_keyboard.htm"
+END
+
+
+//
+//  Dialog Boxes.
+//
+
+//
+//  Mouse Applet.
+//
+
+DLG_MOUSE_BUTTONS DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Buttons"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Button configuration",IDC_GROUPBOX_1,7,7,237,89
+    CONTROL         " &Right-handed",MOUSE_RIGHTHAND,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,22,66,9
+    CONTROL         " &Left-handed",MOUSE_LEFTHAND,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,80,22,66,9
+    CONTROL         "",MOUSE_MOUSEBMP,"PropertyMouseButtonControl",WS_GROUP,
+                    93,32,65,62
+    LTEXT           "Left Button:",IDC_GROUPBOX_2,13,37,45,9
+    LTEXT           " -  Normal Select\r\n -  Normal Drag",IDC_SELECTDRAG,17,
+                    47,54,17
+    LTEXT           "Right Button:",IDC_GROUPBOX_3,170,37,54,9
+    LTEXT           " -  Context Menu\r\n -  Special Drag",IDC_OBJECTMENU,
+                    174,47,54,17
+    GROUPBOX        "Files and Folders",IDC_GROUPBOX_6,7,100,237,38
+    ICON            "",MOUSE_CLICKICON,17,112,20,20
+    CONTROL         "&Single-click to open an item (point to select)",
+                    MOUSE_SGLCLICK,"Button",BS_AUTORADIOBUTTON,47,111,190,10
+    CONTROL         "&Double-click to open an item (single-click to select)",
+                    MOUSE_DBLCLICK,"Button",BS_AUTORADIOBUTTON,47,124,190,10
+    GROUPBOX        "Double-click s&peed",IDC_GROUPBOX_4,7,144,237,67
+    LTEXT           "Slow",IDC_STATIC,17,173,17,9
+    LTEXT           "Fast",IDC_STATIC,144,173,15,8
+    CONTROL         "",MOUSE_CLICKSCROLL,"msctls_trackbar32",WS_GROUP |
+                    WS_TABSTOP,38,173,102,16
+    RTEXT           "Test area:",IDC_GROUPBOX_5,120,154,59,9
+    CONTROL         "#100",MOUSE_DBLCLKBMP,"SysAnimate32",ACS_CENTER |
+                    ACS_TRANSPARENT | WS_BORDER,185,153,53,52
+END
+
+DLG_MOUSE_POINTER DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION | DS_3DLOOK
+CAPTION "Pointers"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Scheme",IDC_GROUPBOX_1,7,7,178,53
+    COMBOBOX        ID_SCHEMECOMBO,13,21,165,160,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Sa&ve As...",ID_SAVESCHEME,74,39,50,14
+    PUSHBUTTON      "&Delete",ID_REMOVESCHEME,128,39,50,14
+    ICON            "",ID_PREVIEW,191,11,53,48, SS_CENTERIMAGE | SS_SUNKEN
+
+    LTEXT           "&Customize:",-1,7,66,100,9
+    LISTBOX         ID_CURSORLIST,7,77,237,113,LBS_OWNERDRAWFIXED |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    
+    CONTROL         "&Enable pointer shadow",ID_CURSORSHADOW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,194,100,12
+
+    PUSHBUTTON      "Use De&fault",ID_DEFAULT,140,196,50,14
+    PUSHBUTTON      "&Browse...",ID_BROWSE,194,196,50,14
+
+
+END
+
+DLG_MOUSE_POINTER_SCHEMESAVE DIALOG DISCARDABLE  132, 64, 227, 60
+STYLE DS_3DLOOK | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Save Scheme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Save this cursor scheme as:",-1,7,7,144,9
+    EDITTEXT        ID_SCHEMEFILENAME,7,17,212,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,116,39,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,169,39,50,14,WS_GROUP
+END
+
+DLG_MOUSE_POINTER_BROWSE DIALOG DISCARDABLE  0, 0, 94, 44
+STYLE WS_CHILD | WS_CLIPSIBLINGS | DS_3DLOOK
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Preview:",IDC_GROUPBOX_1,4,4,36,9
+    ICON            "",ID_CURSORPREVIEW,44,0,45,42,SS_CENTERIMAGE | SS_SUNKEN
+END
+
+DLG_MOUSE_MOTION DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Motion"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Speed",IDC_GROUPBOX_1,5,5,237,55
+    ICON            IDI_PTSPEED,MOUSE_SPEEDBMP,13,18,16,16
+    LTEXT           "Adjust how fast your pointer moves",IDC_STATIC,39,20,
+                    120,8
+    RTEXT           "Slow",IDC_STATIC,60,45,20,9
+    LTEXT           "Fast",IDC_STATIC,170,45,16,9
+    CONTROL         "",MOUSE_SPEEDSCROLL,TRACKBAR_CLASS,WS_TABSTOP |
+                    TBS_AUTOTICKS,84,35,80,16
+
+    GROUPBOX        "Acceleration",IDC_GROUPBOX_2,5,65,237,55,
+                    WS_GROUP
+    ICON            IDI_PTSPEED,MOUSE_ACCELBMP,13,80,16,16
+    LTEXT           "Adjust how much your pointer accelerates as you move it faster",
+                    IDC_STATIC,39,80,145,20
+    CONTROL         "&None",MOUSE_ACCELNONE,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,35,105,33,10
+    CONTROL         "&Low",MOUSE_ACCELLOW,"Button",BS_AUTORADIOBUTTON,
+                    90,105,28,10
+    CONTROL         "&Medium",MOUSE_ACCELMEDIUM,"Button",BS_AUTORADIOBUTTON,
+                    137,105,40,10
+    CONTROL         "&High",MOUSE_ACCELHIGH,"Button",BS_AUTORADIOBUTTON,
+                    190,105,30,10
+
+#ifndef WINNT   // Mouse Trails are not implemented on NT.
+    GROUPBOX        "Pointer &trail",IDC_GROUPBOX_3,5,125,237,63
+    CONTROL         " Sh&ow pointer trails",MOUSE_TRAILS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,56,142,82,13
+    ICON            IDI_PTTRAILS,MOUSE_PTRTRAIL,14,142,18,20
+    LTEXT           "Short",MOUSE_TRAILSCROLLTXT1,56,160,17,9
+    LTEXT           "Long",MOUSE_TRAILSCROLLTXT2,210,160,20,8
+    CONTROL         "",MOUSE_TRAILSCROLL,TRACKBAR_CLASS,WS_GROUP |
+                    WS_TABSTOP | TBS_AUTOTICKS,75,160,134,16
+#else
+    // Eventually replace this with snap to default for NT.
+    GROUPBOX        "Snap to &default",IDC_GROUPBOX_4,5,125,237,49
+    CONTROL         "Move pointer to the default button in dialog boxes",MOUSE_SNAPDEF,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,50,143,182,13
+    ICON            IDI_SNAPDEF,MOUSE_PTRSNAPDEF,19,142,18,20
+#endif
+END
+
+
+
+//
+//  Keyboard Applet.
+//
+
+DLG_KEYBD_SPEED DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Speed"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Character repeat",KDELAY_GROUP,7,7,237,146
+    ICON            IDI_DELAY,IDC_STATIC,21,24,18,20
+    LTEXT           "Repeat &delay:",IDC_STATIC,56,24,46,9
+    LTEXT           "Long",IDC_STATIC,56,38,17,9
+    LTEXT           "Short",IDC_STATIC,210,38,17,9
+    CONTROL         "",KDELAY_SCROLL,TRACKBAR_CLASS,WS_TABSTOP | TBS_AUTOTICKS,
+                    75,38,134,18
+    ICON            IDI_REPEAT,IDC_STATIC,21,70,18,20
+    LTEXT           "&Repeat rate:",IDC_STATIC,56,70,41,9
+    LTEXT           "Slow",IDC_STATIC,56,84,18,9
+    LTEXT           "Fast",IDC_STATIC,210,84,16,8
+    CONTROL         "",KSPEED_SCROLL,TRACKBAR_CLASS,WS_TABSTOP | TBS_AUTOTICKS,
+                    75,84,134,18
+    LTEXT           "Click here and hold down a key to &test repeat rate:",
+                    IDC_STATIC,21,115,187,9
+    EDITTEXT        KREPEAT_EDIT,21,125,209,14,ES_AUTOHSCROLL
+    GROUPBOX        "Cursor &blink rate",KBLINK_GROUP,7,157,237,49
+    LTEXT           "Slow",IDC_STATIC,56,176,20,9
+    LTEXT           "Fast",IDC_STATIC,210,176,16,9
+    LTEXT           "",KBLINK_EDIT,21,174,18,20,NOT WS_GROUP
+    LTEXT           "",KCURSOR_BLINK,29,180,1,8,NOT WS_GROUP
+    CONTROL         "",KCURSOR_SCROLL,TRACKBAR_CLASS,WS_TABSTOP |
+                    TBS_AUTOTICKS,75,176,134,18
+END
+
+DLG_KEYBD_POINTER DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Pointer Keys"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Arrow key location",IDC_STATIC,7,25,237,81,WS_DISABLED
+    CONTROL         " &Use arrow keys to move mouse pointer",KCHK_ON,
+                    "Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,13,7,
+                    141,14
+    CONTROL         "",KNUM_BMP,"Static",0xe,76,57,35,37
+    CONTROL         " &Number pad",KBTN_NUMBER,"Button",BS_AUTORADIOBUTTON |
+                    WS_DISABLED | WS_TABSTOP,64,42,54,12
+    CONTROL         "",KARROW_BMP,"Static",0xe,142,57,35,37
+    CONTROL         " A&rrow keys",KBTN_ARROW,"Button",BS_AUTORADIOBUTTON |
+                    WS_DISABLED | WS_TABSTOP,129,42,58,12
+    GROUPBOX        "&Pointer speed",IDC_STATIC,7,110,237,67,WS_DISABLED |
+                    WS_GROUP
+    LTEXT           "&Top speed:",IDC_STATIC,13,127,38,10,WS_DISABLED
+    LTEXT           "Low",IDC_STATIC,64,127,15,9,WS_DISABLED
+    LTEXT           "High",IDC_STATIC,207,127,17,8,WS_DISABLED
+    CONTROL         "",KPSPEED_SCROLL,TRACKBAR_CLASS,WS_DISABLED |
+                    WS_TABSTOP | TBS_AUTOTICKS,84,127,123,16
+    LTEXT           "A&cceleration:",IDC_STATIC,13,151,45,9,WS_DISABLED
+    LTEXT           "Slow",IDC_STATIC,64,151,15,9,WS_DISABLED
+    LTEXT           "Fast",IDC_STATIC,207,151,16,8,WS_DISABLED
+    CONTROL         "",KPACC_SCROLL,TRACKBAR_CLASS,WS_DISABLED |
+                    WS_TABSTOP | TBS_AUTOTICKS,83,151,122,16
+END
+
+
+//
+//  Hardware tab template.
+//
+DLG_HARDWARE DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+//
+//  Version Resources.
+//
+
+#ifdef WINNT
+  #include <winver.h>
+  #include <ntverp.h>
+#else
+  #include <version.h>
+#endif
+
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Control Panel DLL"
+#define VER_INTERNALNAME_STR            "CONTROL"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1998"
+#define VER_ORIGINALFILENAME_STR        "MAIN.CPL"
+
+
+#include <common.ver>

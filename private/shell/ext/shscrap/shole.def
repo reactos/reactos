@@ -1,0 +1,17 @@
+LIBRARY         SHSCRAP
+
+EXPORTS
+    ;
+    ; RunDLL entry. Has to be named entries.
+    ;
+    OpenScrap_RunDLL
+    OpenScrap_RunDLLW
+    OpenScrap_RunDLLA = OpenScrap_RunDLL
+
+    DllCanUnloadNow			PRIVATE
+    DllGetClassObject			PRIVATE
+
+    ;
+    ; Special entry for shell32.dll
+    ;
+    Scrap_CreateFromDataObject

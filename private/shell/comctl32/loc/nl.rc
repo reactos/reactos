@@ -1,0 +1,139 @@
+LANGUAGE 0x13, 0x00 // Really 0x13, 0x01 - Dutch (Standard)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Dutch resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 363, 127
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Werkbalk aanpassen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Sluiten",2,308,6,51,14
+    PUSHBUTTON      "Begi&nwaarden",202,308,23,51,14
+    PUSHBUTTON      "&Help",205,308,40,51,14
+    PUSHBUTTON      "&Omhoog",206,308,74,51,14
+    PUSHBUTTON      "Om&laag",207,308,91,51,14
+    LTEXT           "&Beschikbare knoppen:",-1,4,5,115,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Toevoegen ->",1,127,42,52,14
+    PUSHBUTTON      "<- &Verwijderen",204,127,62,52,14
+    LTEXT           "&Werkbalkknoppen:",-1,182,5,115,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Annuleren",2,58,122,50,14
+    PUSHBUTTON      "&Toepassen",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Help",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,8,4,194,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Vorige",12323,69,26,50,14
+    DEFPUSHBUTTON   "Volgende >",12324,119,26,50,14
+    PUSHBUTTON      "Voltooien",12325,119,26,50,14
+    PUSHBUTTON      "Annuleren",2,176,26,50,14
+    PUSHBUTTON      "Help",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Scheidingsruimte"
+    1025                    " + "
+    1026                    "Geen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Sluiten"
+    4161                    "OK"
+    4162                    "Eigenschappen voor %s"
+    4163                    "Vandaag:"
+    4164                    "&Ga naar vandaag"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Geef hier tekst op"
+    4177                    "Eigenschappen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Het formaat van dit venster wijzigen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Dit venster verplaatsen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Dit venster tot pictogram verkleinen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Dit venster tot volledig scherm uitbreiden"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Het volgende MDI-venster activeren"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Dit venster sluiten"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Dit venster tot normaal formaat herstellen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Een andere taak activeren"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Opdrachten voor het bewerken van vensters"
+    36849                   "Het formaat van de kolommen wijzigen door deze naar links of rechts te slepen"
+    36850                   "Het formaat van de kolommen wijzigen met de pijltoetsen en TAB"
+    36851                   "Knoppen op de werkbalk toevoegen, verplaatsen of verwijderen"
+END
+

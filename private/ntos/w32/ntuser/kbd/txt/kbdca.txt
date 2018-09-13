@@ -1,0 +1,206 @@
+KBD	CA	"Canadian Multilingual"
+
+VERSION	1.0
+
+SHIFTSTATE
+
+ 0	;Column 4 : 
+ 1	;Column 5 : Shift
+ 6	;Column 6 :       Control Alt
+ 2	;Column 7 :       Control
+ 3	;Column 8 : Shift Control
+
+LAYOUT		;an extra '@' at the end is a dead key
+
+;SC  VK_         Cap	0	1	6	2	3
+
+ 29  OEM_7       0	#	|	\
+ 02  1           0	1	!	00b1
+ 03  2           0	2	"	@
+ 04  3           0	3	/	00a3
+ 05  4           0	4	$	00a2
+ 06  5           0	5	%	00a4
+ 07  6           0	6	?	00ac	-1	001e
+ 08  7           0	7	&	00a6
+ 09  8           0	8	*	00b2
+ 0a  9           0	9	(	00b3
+ 0b  0           0	0	)	00bc
+ 0c  OEM_MINUS   0	-	_	00bd	001f
+ 0d  OEM_PLUS    0	=	+	00be
+ 10  Q           1	q	Q
+ 11  W           1	w	W
+ 12  E           1	e	E
+ 13  R           1	r	R
+ 14  T           1	t	T
+ 15  Y           1	y	Y
+ 16  U           1	u	U
+ 17  I           1	i	I
+ 18  O           1	o	O	00a7
+ 19  P           1	p	P	00b6
+ 1a  OEM_4       0	^@	^@	[	001b
+ 1b  OEM_6       0	00b8@	00a8@	]	001d
+ 2b  OEM_5       0	<	>	}	001c
+ 1e  A           1	a	A
+ 1f  S           1	s	S
+ 20  D           1	d	D
+ 21  F           1	f	F
+ 22  G           1	g	G
+ 23  H           1	h	H
+ 24  J           1	j	J
+ 25  K           1	k	K
+ 26  L           1	l	L
+ 27  OEM_1       0	;	:	~
+ 28  OEM_3       0	`@	`@	{
+ 2c  Z           1	z	Z
+ 2d  X           1	x	X
+ 2e  C           1	c	C
+ 2f  V           1	v	V
+ 30  B           1	b	B
+ 31  N           1	n	N
+ 32  M           1	m	M	00b5
+ 33  OEM_COMMA   0	,	'	00af
+ 34  OEM_PERIOD  0	.	.	00ad
+ 35  OEM_2       0	00e9	00c9	00b4@
+ 56  OEM_102     0	00ab	00bb	00b0	001c
+ 53  DECIMAL     0	.	.
+
+DEADKEY	00b4	
+
+ 0061	00e1
+ 0065	00e9
+ 0069	00ed
+ 006f	00f3
+ 0075	00fa
+ 0079	00fd
+ 0041	00c1
+ 0045	00c9
+ 0049	00cd
+ 004f	00d3
+ 0055	00da
+ 0059	00dd
+ 0020	00b4
+
+DEADKEY	0060	
+
+ 0061	00e0
+ 0065	00e8
+ 0069	00ec
+ 006f	00f2
+ 0075	00f9
+ 0041	00c0
+ 0045	00c8
+ 0049	00cc
+ 004f	00d2
+ 0055	00d9
+ 0020	0060
+
+DEADKEY	005e	
+
+ 0061	00e2
+ 0065	00ea
+ 0069	00ee
+ 006f	00f4
+ 0075	00fb
+ 0041	00c2
+ 0045	00ca
+ 0049	00ce
+ 004f	00d4
+ 0055	00db
+ 0020	005e
+
+DEADKEY	00b8	
+
+ 0063	00e7
+ 0043	00c7
+ 0020	00b8
+
+DEADKEY	00a8	
+
+ 0061	00e4
+ 0065	00eb
+ 0069	00ef
+ 006f	00f6
+ 0075	00fc
+ 0079	00ff
+ 0041	00c4
+ 0045	00cb
+ 0049	00cf
+ 004f	00d6
+ 0055	00dc
+ 0020	00a8
+
+KEYNAME
+
+ 01	ECHAP
+ 0e	RET.ARR
+ 0f	TAB
+ 1c	ENTREE
+ 1d	CTRL
+ 2a	MAJ
+ 36	"MAJ DROITE"
+ 37	"* (PAVE NUM.)"
+ 38	ALT
+ 39	ESPACE
+ 3a	VERR.MAJ
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	DEFIL
+ 47	"7 (PAVE NUM.)"
+ 48	"8 (PAVE NUM.)"
+ 49	"9 (PAVE NUM.)"
+ 4a	"- (PAVE NUM.)"
+ 4b	"4 (PAVE NUM.)"
+ 4c	"5 (PAVE NUM.)"
+ 4d	"6 (PAVE NUM.)"
+ 4e	"+ (PAVE NUM.)"
+ 4f	"1 (PAVE NUM.)"
+ 50	"2 (PAVE NUM.)"
+ 51	"3 (PAVE NUM.)"
+ 52	"0 (PAVE NUM.)"
+ 53	". (PAVE NUM.)"
+ 57	F11
+ 58	F12
+
+KEYNAME_EXT
+
+ 1c	"ENTREE (PAVE NUM.)"
+ 1d	"CTRL DROITE"
+ 35	"/ (PAVE NUM.)"
+ 37	Impr.Ecran
+ 38	"ALT DROITE"
+ 45	Ver.Num
+ 46	ATTN
+ 47	ORIGINE
+ 48	HAUT
+ 49	PG.PREC
+ 4b	GAUCHE
+ 4d	DROITE
+ 4f	FIN
+ 50	BAS
+ 51	PG.SUIV
+ 52	INS
+ 53	SUPPR
+ 54	<00>
+ 56	AIDE
+ 5b	"WINDOWS GAUCHE"
+ 5c	"WINDOWS DROITE"
+ 5d	APPLICATION
+
+KEYNAME_DEAD
+
+ 00b4	"ACCENT AIGU"
+ 0060	"ACCENT GRAVE"
+ 005e	"ACCENT CIRCONFLEXE"
+ 00a8	TREMA
+ 00b8	CEDILLE
+
+ENDKBD

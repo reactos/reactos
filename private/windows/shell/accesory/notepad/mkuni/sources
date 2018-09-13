@@ -1,0 +1,19 @@
+MAJORCOMP=sdk
+MINORCOMP=samples
+
+TARGETNAME=mkuni
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+INCLUDES=.
+
+C_DEFINES= -DWIN32 -DUNICODE -D_UNICODE
+
+SOURCES=mkuni.c  \
+        mkuni.rc
+
+UMTYPE=console
+UMAPPL=mkuni
+UMENTRY=main
+UMLIBS= $(BASEDIR)\public\sdk\lib\*\user32.lib

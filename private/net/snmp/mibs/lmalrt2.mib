@@ -1,0 +1,373 @@
+LanMgr-Alerts-II-MIB DEFINITIONS ::= BEGIN
+
+          --
+          -- Notes:
+          --
+          --   This MIB is documented in "LAN Manager 2.0 Management 
+          --   Information Base - Alerts, LAN Manager MIB Working Group, 
+          --   Internet Draft: LanMgr-Alerts-II" by Microsoft.
+          --
+          --   This MIB module description file was derived from the OS/2 
+          --   LAN Manager SNMP MIB.  It has been seperated into its two 
+          --   distinct parts and some general corrections have been made.
+          --
+
+          IMPORTS
+                  enterprises, OBJECT-TYPE, Counter, Gauge
+                          FROM RFC1155-SMI
+                  lanmanager
+                          FROM LanMgr-Mib-II-MIB ;
+
+    alerts-2    OBJECT IDENTIFIER ::= { lanmanager 2 }
+
+-- Alert Tree
+
+    alerts           OBJECT IDENTIFIER ::= { alerts-2 1 }
+    alert-conditions OBJECT IDENTIFIER ::= { alerts-2 2 }
+    alert-mgmt       OBJECT IDENTIFIER ::= { alerts-2 3 }
+
+    bytesAvailData   OBJECT IDENTIFIER ::= { alert-conditions 1 }
+    netIOErrorsData  OBJECT IDENTIFIER ::= { alert-conditions 2 }
+    serverErrorsData OBJECT IDENTIFIER ::= { alert-conditions 3 }
+    pwViolationsData OBJECT IDENTIFIER ::= { alert-conditions 4 }
+    accessViolatData OBJECT IDENTIFIER ::= { alert-conditions 5 }
+    pdcFailData      OBJECT IDENTIFIER ::= { alert-conditions 6 }
+    rplFailData      OBJECT IDENTIFIER ::= { alert-conditions 7 }
+    diskData         OBJECT IDENTIFIER ::= { alert-conditions 8 }
+    auditLogData     OBJECT IDENTIFIER ::= { alert-conditions 9 }
+    powerData        OBJECT IDENTIFIER ::= { alert-conditions 10 }
+
+
+    -- Alert Data Group
+
+    primaryDCName OBJECT-TYPE 
+    SYNTAX  DisplayString (size (1..15))
+    ACCESS read-only
+    STATUS mandatory
+    ::= { pdcFailData 1 }
+
+    primaryDCFailed OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                pdc-Status-OK(1),
+                pdc-Status-Failed(2)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= { pdcFailData 2 }
+
+    replMasterName OBJECT-TYPE 
+    SYNTAX  DisplayString (size (1..15))
+    ACCESS read-only
+    STATUS mandatory
+    ::= { rplFailData 1 }
+
+    replMasterFailed OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                rpl-Status-OK(1),
+                rpl-Status-Failed(2),
+                rpl-Status-Unknown(3)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= { rplFailData 2 }
+
+    netIOAlertLevel OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { netIOErrorsData 1 }
+
+    numNetIOErrors OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { netIOErrorsData 2 }
+
+    networkId OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { netIOErrorsData 3 }
+
+    netIOErrorStatus OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                ioError-Status-OK(1),
+                ioError-Status-Alert(2)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= {  netIOErrorsData 4 }
+
+    serverErrorAlertLevel OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { serverErrorsData 1 }
+
+    numServerErrors OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { serverErrorsData 2 }
+
+    serverErrorStatus OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                svError-Status-OK(1),
+                svError-Status-Alert(2)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= {  serverErrorsData 3  }
+
+    pwLogonAlertLevel  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { pwViolationsData 1 }
+
+    numPWViolations OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { pwViolationsData 2 }
+
+    passwordErrorStatus OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                pwError-Status-OK(1),
+                pwError-Status-Alert(2)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= { pwViolationsData 3  }
+
+    accessAlertLevel  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { accessViolatData 1 }
+
+    numAccessViolations OBJECT-TYPE    
+    SYNTAX INTEGER
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { accessViolatData 2 }
+
+    accessErrorStatus OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                pwError-Status-OK(1),
+                pwError-Status-Alert(2)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= { accessViolatData 3 }
+
+    numDiskDrives  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-only
+    STATUS mandatory
+    ::= { bytesAvailData 1 }
+
+    bytesAvailTable  OBJECT-TYPE 
+    SYNTAX SEQUENCE OF BytesAvailEntry
+    ACCESS read-only
+    STATUS mandatory
+    ::= { bytesAvailData 2 }
+
+    bytesAvailEntry  OBJECT-TYPE 
+    SYNTAX BytesAvailEntry
+    ACCESS read-only
+    STATUS mandatory
+    INDEX  { diskDrive }
+    ::= { bytesAvailTable 1 }
+
+    BytesAvailEntry  ::= SEQUENCE {
+                         diskDrive        
+                             DisplayString,
+                         bytesAvail       
+                             Gauge
+                         }
+
+    diskDrive  OBJECT-TYPE
+--ERROR    SYNTAX  DisplayString (size (1..20)
+    SYNTAX  DisplayString (size (1..20))
+    ACCESS read-only
+    STATUS mandatory
+    ::= { bytesAvailEntry 1 }
+
+    bytesAvail  OBJECT-TYPE 
+    SYNTAX Gauge
+    ACCESS read-only
+    STATUS mandatory
+    ::= { bytesAvailEntry 2 }
+
+    diskAlertLevel  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { bytesAvailData 3 }
+
+    diskHotFixes  OBJECT-TYPE 
+    SYNTAX Counter
+    ACCESS read-write
+    STATUS mandatory
+    ::= { diskData 1 }
+
+    diskHardErrors  OBJECT-TYPE 
+    SYNTAX Counter
+    ACCESS read-write
+    STATUS mandatory
+    ::= { diskData 2 }
+
+    auditLogStatus  OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                audit-log-OK(1),
+                audit-log-80(2),
+                audit-log-Full(3)
+            }
+    ACCESS read-write
+    STATUS mandatory
+    ::= { auditLogData 1 }
+
+    powerStatus  OBJECT-TYPE 
+    SYNTAX 
+            INTEGER {
+                power-OK(1),
+                power-Battery(2),
+                power-Shutdown(3)
+            }
+    ACCESS read-only
+    STATUS mandatory
+    ::= { powerData 1 }
+
+
+    -- The Alert Management Group
+
+    alertNameNumber  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-only
+    STATUS mandatory
+    ::= { alert-mgmt 1 }
+
+    alertNameTable  OBJECT-TYPE 
+    SYNTAX SEQUENCE OF SvAlertNameEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    ::= { alert-mgmt 2 }
+
+    svAlertNameEntry OBJECT-TYPE 
+    SYNTAX SvAlertNameEntry
+    ACCESS not-accessible
+    STATUS mandatory
+    INDEX  { svAlertName }
+    ::= { alertNameTable 1 }
+
+    SvAlertNameEntry ::= SEQUENCE {
+                         svAlertName
+                           DisplayString
+
+                         }
+
+    svAlertName  OBJECT-TYPE 
+    SYNTAX  DisplayString (size (1..20))
+    ACCESS read-write 
+    STATUS mandatory
+    ::= { svAlertNameEntry 1 }
+
+    alertSchedule  OBJECT-TYPE 
+    SYNTAX INTEGER
+    ACCESS read-write
+    STATUS mandatory
+    ::= { alert-mgmt 3  }
+
+
+-- Trap Definitions 
+
+bytesAvailAlert             TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 1
+
+netIOErrorsAlert            TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       {   alert-conditions.NetIOErrorsData.networkID, 
+--ERROR                        alert-conditions.NetIOErrorsData.numNetIOErrors
+                        alert-conditions.NetIOErrorsData.numNetIOErrors }
+    ::= 2
+
+serverErrorsAlert           TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       { alert-conditions.serverErrorsData }
+    ::= 3
+
+pwViolationsAlert           TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       {   alert-conditions.pwViolationsData.numPWViolations }
+    ::= 4
+
+accessViolationsAlert       TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       {   
+    alert-conditions.accessViolationsData.numAccessViolations 
+    }
+    ::= 5
+
+auditLogFullAlert           TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 6
+
+auditLog80Alert             TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 7
+
+upsPowerOutWarnAlert        TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 8
+
+upsPowerOutShutdownAlert    TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 9
+
+upsPowerRestoredAlert       TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+--ERROR    VARIABLES       { }
+    ::= 10
+
+
+logonPrimaryDCFailureAlert  TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       { alert-conditions.pdcFailData.primaryDCName }
+    ::= 11
+
+--ERRORreplMasterFailure alert     TRAP-TYPE
+replMasterFailurealert     TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       { alert-conditions.rplFailData.replMasterName }
+    ::= 12
+
+--ERRORdiskHotFix alert            TRAP-TYPE
+diskHotFixAlert            TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       {
+    alert-conditions.bytesAvailData.bytesAvailTable.bytesAvailEntry.diskDrive
+    }
+    ::= 13
+
+diskHardErrorAlert          TRAP-TYPE
+    ENTERPRISE	    lanmanager.Alert-2.alerts
+    VARIABLES       {
+    alert-conditions.bytesAvailData.bytesAvailTable.bytesAvailEntry.diskDrive
+    }
+    ::= 14
+
+END

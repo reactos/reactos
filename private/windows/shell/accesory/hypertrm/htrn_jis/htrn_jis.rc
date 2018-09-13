@@ -1,0 +1,37 @@
+/*	File: D:\WACKER\htrn_his\htrn_jis.rc (Created: 28-Aug-1994)
+ *
+ *	Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+ *	All rights reserved
+ *
+ *      $Revision: 2 $
+ *      $Date: 2/05/99 3:20p $
+ */
+#include <windows.h>
+#include <term\res.h>
+#include <term\version.h>
+
+IDD_TRANSLATE DIALOG DISCARDABLE 20, 20, 171, 91
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Host System Encoding Method"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Select Host System Encoding Method", 101, "Button", 
+                    BS_GROUPBOX, 10, 10, 150, 51
+    CONTROL         "&Shift-JIS", 102, "Button", BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP, 20, 25, 134, 10
+    CONTROL         "Standard &JIS", 103, "Button", BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP, 20, 40, 83, 10
+    CONTROL         "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP, 10, 
+                    70, 40, 14
+    CONTROL         "Cancel", IDCANCEL, "Button", WS_TABSTOP, 65, 70, 40, 14
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+//mpt:08-22-97 added HTML help
+#if defined(INCL_USE_HTML_HELP)
+    IDS_GNRL_HELPFILE       "HYPERTRM.CHM"
+#endif
+	IDS_GNRL_HELPFILE		"HYPERTRM.HLP"
+END
+#include <term\ver_jis.rc>

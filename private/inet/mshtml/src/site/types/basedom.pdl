@@ -1,0 +1,7 @@
+// Common set of element interfaces shared by all elements which support DOM:
+    implements IHTMLElement
+    implements IHTMLElement2
+    implements IPerPropertyBrowing
+    implements IHTMLUniqueName
+    implements IHTMLDOMNode
+

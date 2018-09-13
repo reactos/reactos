@@ -1,0 +1,459 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1996 - 1999
+//
+//  File:       newdev.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "setupapi.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+//
+// Version information
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Add Hardware Device Library"
+#define VER_INTERNALNAME_STR            "newdev"
+#define VER_ORIGINALFILENAME_STR        "newdev.dll"
+
+#include "common.ver"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_NEWDEVWIZ_INTRO DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_INTRO_MSG1,115,8,190,24
+    LTEXT           "",IDC_INTRO_MSG2,115,40,182,25
+    LTEXT           "To continue, click Next.",-1,115,173,108,8
+END
+
+IDD_NEWDEVWIZ_SELECTCLASS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_NDW_TEXT,21,1,274,16
+    LTEXT           "&Hardware types:",IDC_NDW_PICKCLASS_HWTYPES,21,16,177,8
+    CONTROL         "",IDC_NDW_PICKCLASS_CLASSLIST,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | 
+                    LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_GROUP | WS_TABSTOP,21,26,274,99
+END
+
+IDD_NEWDEVWIZ_SELECTDEVICE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_NEWDEVWIZ_ANALYZEDEV DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_NDW_DESCRIPTION,52,16,244,28
+    ICON            "",IDC_CLASSICON,21,16,21,20
+    LTEXT           "",IDC_NDW_TEXT,21,46,275,40
+    LTEXT           "The wizard is ready to install the driver for the following hardware device:",
+                    IDC_STATIC,21,1,275,8
+END
+
+IDD_NEWDEVWIZ_INSTALLDEV DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_CLASSICON,21,1,20,20
+    LTEXT           "",IDC_NDW_DESCRIPTION,52,1,152,28
+    LTEXT           "Installing software necessary to support your hardware...",
+                    IDC_NDW_TEXT,21,31,274,60
+END
+
+IDD_NEWDEVWIZ_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_FINISH_MSG1,115,8,190,24
+    ICON            "",IDC_CLASSICON,115,39,21,20
+    LTEXT           "",IDC_NDW_DESCRIPTION,147,39,152,28
+    LTEXT           "",IDC_NDW_TEXT,115,74,189,85
+    PUSHBUTTON      "R&esources...",IDC_NDW_DISPLAYRESOURCE,257,172,50,14
+    LTEXT           "To close this wizard, click Finish.",-1,115,178,108,8
+END
+
+DLG_DEVINSTALL DIALOG DISCARDABLE  0, 0, 256, 50
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | DS_3DLOOK | WS_POPUP | 
+    WS_CLIPCHILDREN | WS_CAPTION
+CAPTION "Found New Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_NEWDEVICEICON,IDC_CLASSICON,7,7,18,20
+    LTEXT           "Searching For Drivers",IDC_NDW_DESCRIPTION,40,7,206,15,
+                    SS_NOPREFIX
+    LTEXT           "",IDC_NDW_INSTRUCTIONS,7,35,236,8
+    ICON            0,IDC_SEARCHICON,16,50,16,20
+    LTEXT           "",IDC_SEARCHNAME,40,56,200,24
+END
+
+IDD_DRVUPD_SEARCHING DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CLIPCHILDREN | 
+    WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please wait while the wizard searches for driver files for the following hardware device:",
+                    IDC_DRVUPD_DRVMSG1,21,1,274,16
+    ICON            "",IDC_CLASSICON,21,17,20,20
+    LTEXT           "",IDC_DRVUPD_DRVDESC,52,18,255,16
+    LTEXT           "",IDC_DRVUPD_DRVMSG2,21,47,274,24
+    ICON            0,IDC_SEARCHICON,21,72,20,20
+    LTEXT           "",IDC_SEARCHNAME,52,79,255,20
+    CONTROL         "&Disable the device. The Add/Remove Hardware Wizard in the control Panel can be used to complete the driver installation.",
+                    IDC_FINISHINSTALL,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE | WS_GROUP,31,72,279,18
+    CONTROL         "&Skip driver installation of this device. Windows will prompt again to perform the driver installation.",
+                    IDC_CANCELINSTALL,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,31,92,279,18
+    LTEXT           "The wizard also found other drivers that are suitable for this device. To view a list of these drivers or install one of these drivers, select the following check box, and then click Next.",
+                    IDC_LISTDRIVERS_TEXT,21,105,279,24
+    CONTROL         "&Install one of the other drivers",IDC_LISTDRIVERS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,21,132,279,10
+END
+
+IDD_DRVUPD DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_DRVUPD_DRVMSG1,21,1,274,16
+    ICON            "",IDC_CLASSICON,21,17,20,20
+    LTEXT           "",IDC_DRVUPD_DRVDESC,52,18,255,16
+    LTEXT           "",IDC_DRVUPD_DRVMSG2,21,47,274,24
+    LTEXT           "What do you want the wizard to do?",IDC_STATIC,21,81,274,9
+    CONTROL         "&Search for a suitable driver for my device (recommended)",
+                    IDC_DRVUPD_SEARCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    31,94,265,12
+    CONTROL         "&Display a list of the known drivers for this device so that I can choose a specific driver",
+                    IDC_DRVUPD_SELECTDRIVER,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE,31,110,265,18
+END
+
+IDD_DRVUPD_SEARCH DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Search for driver files for the following hardware device:",
+                    IDC_STATIC,21,1,274,16
+    ICON            "",IDC_CLASSICON,21,17,21,20
+    LTEXT           "",IDC_DRVUPD_DRVDESC,52,18,255,16
+    LTEXT           "The wizard searches for suitable drivers in its driver database on your computer and in any of the following optional search locations that you specify.",
+                    IDC_STATIC,21,43,274,16
+    LTEXT           "To start the search, click Next. If you are searching on a floppy disk or CD-ROM drive, insert the floppy disk or CD before clicking Next.",
+                    IDC_STATIC,21,62,281,16
+    LTEXT           "Optional search locations:",IDC_STATIC,23,84,174,10
+    CONTROL         "Floppy &disk drives",IDC_SEARCHOPTION_FLOPPY,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,31,94,174,12
+    CONTROL         "&CD-ROM drives",IDC_SEARCHOPTION_CDROM,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,31,106,174,12
+    CONTROL         "&Specify a location",IDC_SEARCHOPTION_OTHER,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,31,118,174,12
+    CONTROL         "&Microsoft Windows Update",IDC_SEARCHOPTION_INTERNET,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,31,130,174,12
+END
+
+IDD_LISTDRIVERS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_CLASSICON,21,1,20,20
+    LTEXT           "",IDC_DRVUPD_DRVDESC,52,1,255,16
+    LTEXT           "Windows found the following drivers which are suitable for this device. To install one of these drivers select it from the list and click Next.",
+                    IDC_STATIC,21,31,274,24
+    CONTROL         "",IDC_LISTDRIVERS_LISTVIEW,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | 
+                    LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | 
+                    WS_TABSTOP,21,62,274,60
+    LTEXT           "",IDC_NDW_TEXT,21,127,274,16
+END
+
+IDD_WIZARDEXT_PRESELECT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_SELECT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_PREANALYZE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_PREANALYZE_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_POSTANALYZE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_POSTANALYZE_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_FINISHINSTALL DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_FINISHINSTALL_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_NEWDEVICEICON       ICON    DISCARDABLE     "NEWDEV.ICO"
+IDI_FOLDER              ICON    DISCARDABLE     "FOLDER.ICO"
+IDI_INTERNET            ICON    DISCARDABLE     "INTERNET.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BANNERBMP           BITMAP  DISCARDABLE     "BANNER.BMP"
+IDB_WATERBMP            BITMAP  DISCARDABLE     "WATERMRK.BMP"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""setupapi.h""\r\n"
+    "#include ""resource.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_NEWDEVWIZ_ANALYZEDEV, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_DRVUPD_SEARCH, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 142
+        HORZGUIDE, 142
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNKNOWN             "Unknown"
+    IDS_NDW_NOTADMIN        "You do not have sufficient security privileges to install devices on this computer. Please contact your site administrator, or logout and log in again as an administrator and try again."
+    IDS_NEWDEVICENAME       "Add New Hardware"
+    IDS_NEEDREBOOT          "The hardware you installed will not work until you restart your computer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INTERNET_HOST       "Internet host: %s"
+    IDS_DEFAULT_INTERNET_HOST "Windows Update"
+    IDS_DRVUPD_WAIT         "Please wait ..."
+    IDS_DRVUPD_LOCATION     "Search location:"
+    IDS_DRVUPD_INSTALLING   "Installing ..."
+    IDS_DRVUPD_FOUND        "Windows found a driver that is a closer match for this device than your current driver. To install the driver Windows found, click Next."
+    IDS_DRVUPD_BETTER       "A suitable driver for this device is already installed. To keep the currently installed driver, click Cancel. To search another location for a different driver click Back, or to reinstall the current driver, click Next."
+    IDS_DRVUPD_CURRENT      "A suitable driver for this device is already installed. To keep the currently installed driver, click Next. To search another location for a different driver click Back."
+    IDS_DRVUPD_NOTFOUND     "Windows was unable to locate a driver for this device. To search another location click Back, or if you do not want to install a driver now click Finish."
+    IDS_FOUNDNEW_FOUND      "Windows found a driver for this device. To install the driver Windows found, click Next."
+    IDS_FOUNDNEW_NOTFOUND   "Windows was unable to locate a driver for this device. To search another location click Back, or select an option and click Finish."
+    IDS_DEFAULTINF          "Default Windows Inf location"
+    IDS_UNKNOWNDEVICE       "Unknown Device"
+    IDS_SEARCHING           "Searching for drivers for this device."
+    IDS_NEWSEARCH           "Searching For Drivers"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NDW_PICKCLASS1      "Select a hardware type, and then click Next."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NDW_ANALYZEERR1     "Windows was unable to register the device. You have two choices: You can continue or exit.\n"
+    IDS_NDW_ANALYZEERR2     "To continue installing the software, click Next. "
+    IDS_NDW_ANALYZEERR3     "To exit without installing the software, click Cancel."
+    IDS_UPDATEDEVICE        "Upgrade Device Driver Wizard"
+    IDS_FOUNDDEVICE         "Found New Hardware Wizard"
+    IDS_NDW_ERRORFIN1       "An error occurred during the installation of the device.\n"
+    IDS_NDW_ERRORFIN1_PNP   "An error occurred during the installation of the device "
+    IDS_NDW_NORMALFINISH2   "\n\nTo view or change resources this device uses, click Resources."
+    IDS_NDW_NORMALFINISH1   "Windows has finished installing the software for this device."
+    IDS_NDW_CURRENTFINISH   "Windows will continue using your current driver."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_PROBLEM     "The software for this device is now installed, but may not work correctly. To uninstall the device click Cancel."
+    IDS_INSTALL_PROBLEM_PNP "The software for this device is now installed, but may not work correctly."
+    IDS_NDW_STDCFG1         "Windows will use default settings to install the software for this hardware device. "
+    IDS_NDW_STDCFG2         "To install the software for your new hardware, click Next."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LISTDRIVERS         "Driver Files Found"
+    IDS_LISTDRIVERS_INFO    "Which driver do you want to install ?"
+    IDS_DRIVERDESC          "Description"
+    IDS_DRIVERPROVIDER      "Provider"
+    IDS_DRIVERMFG           "Manufacturer"
+    IDS_DRIVERINF           "Location"
+    IDS_DRIVER_BEST         "*Recommended driver."
+    IDS_DRIVER_CURR         "*Currently installed driver."
+    IDS_DRIVER_BESTCURR     "*Currently installed, and recommended driver."
+    IDS_NEWDRIVER_WELCOME1  "A device driver is a software program that makes a hardware device work. Windows needs driver files for your new device. To locate driver files and complete the installation click Next."
+    IDS_NEWDRIVER_WELCOME   "This wizard will complete the installation for this device:"
+    IDS_DRVUPD_WELCOME      "This wizard upgrades drivers for the following hardware device:"
+    IDS_DRVUPD_WELCOME1     "Upgrading to a newer version of a device driver may add functionality to or improve the performance of this device. "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DRVUPD              "Install Hardware Device Drivers"
+    IDS_DRVUPD_INFO         "A device driver is a software program that enables a hardware device to work with an operating system."
+    IDS_DRVUPD_SEARCH       "Locate Driver Files"
+    IDS_DRVUPD_SEARCH_INFO  "Where do you want Windows to search for driver files?"
+    IDS_DRVUPD_SEARCHING    "Driver Files Search Results"
+    IDS_DRVUPD_SEARCHING_INFO 
+                            "The wizard has finished searching for driver files for your hardware device."
+    IDS_NEWDEVWIZ_SELECTCLASS "Hardware Type"
+    IDS_NEWDEVWIZ_SELECTCLASS_INFO 
+                            "What type of hardware do you want to install?"
+    IDS_NEWDEVWIZ_SELECTDEVICE "Device Manufacturer and Model"
+    IDS_NEWDEVWIZ_SELECTDEVICE_INFO 
+                            "You can find the right device driver by selecting the manufacturer and model of your hardware device."
+    IDS_NEWDEVWIZ_ANALYZEDEV "Start Device Driver Installation"
+    IDS_NEWDEVWIZ_ANALYZEDEV_INFO 
+                            "The device driver will be installed with the default settings."
+    IDS_NEWDEVWIZ_INSTALLDEV "Hardware Install"
+    IDS_NEWDEVWIZ_INSTALLDEV_INFO 
+                            "Windows is installing drivers for your new hardware."
+    IDS_SEARCHING_WAIT      "Please wait while the wizard searches for driver files for the following hardware device:"
+    IDS_SEARCHING_RESULTS   "The wizard found a driver for the following device:"                         
+    IDS_INTRO_MSG1_UPGRADE  "Welcome to the Upgrade Device Driver Wizard"
+    IDS_INTRO_MSG1_NEW      "Welcome to the Found New Hardware Wizard"
+    IDS_INTRO_MSG2_UPGRADE  "This wizard helps you upgrade a device driver for a hardware device."
+    IDS_INTRO_MSG2_NEW      "This wizard helps you install a device driver for a hardware device."
+    IDS_FINISH_MSG1_UPGRADE "Completing the Upgrade Device Driver Wizard"
+    IDS_FINISH_MSG1_NEW     "Completing the Found New Hardware Wizard"
+
+    IDS_NEWDEVICE_REBOOT    "Windows 2000 has finished installing new devices. " 
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

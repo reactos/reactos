@@ -1,0 +1,558 @@
+KBD	HEPT	"Greek_Polytonic"
+
+		// ID : 00060408
+
+VERSION	1.0
+
+SHIFTSTATE
+
+ 0	// Column 4 :
+ 1	// Column 5 : Shift
+ 6	// Column 6 :       Control Alt
+ 7	// Column 7 : Shift Control Alt
+ 2	// Column 8 :       Control
+ 3	// Column 9 : Shift Control
+
+LAYOUT		// an extra '@' at the end is a dead key
+
+//SC  VK_         Cap	0	1	6	7	2	3
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+  29  OEM_3       0	~@	`@	1fc1@	-1	-1	0000	// DialytikaPerispomeni
+  02  1           0	1	!	03da				// Stigma
+  03  2           0	2	@	03de	00b2	-1	0000    // Koppa, Superscript2
+  04  3           0	3	#	03e0	00b3			// Sampi, Superscript3
+  05  4           0	4	$	00a3				// Pound
+  06  5           0	5	%	00a7				// Section
+  07  6           0	6	^	00b6	-1	-1	001e	// Pilcrow, RecordSeparator
+  08  7           0	7	&
+  09  8           0	8	*	00a4				// Currency
+  0a  9           0	9	(	00a6				// BrokenBar
+  0b  0           0	0	)	00b0				// Degree
+  0c  OEM_MINUS   0	-@	_@	00b1	-1	-1	001f	// PlusMinus, UnitSeparator
+  0d  OEM_PLUS    0	=@	+@	00bd@	1fdf@			// 1/2, DasiaPerispomeni
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+//SC  VK_         Cap	0	1	6	7	2	3
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+  10  Q           0	;@	:@	1ffd@				// Oxia
+  11  W           0	03c2	0385@					// SmallFinalSigma, DialytikaTonos
+  12  E           1	03b5	0395	20ac				// Epsilon
+  13  R           1	03c1	03a1	00ae				// Rho, Registered
+  14  T           1	03c4	03a4					// Tau
+  15  Y           1	03c5	03a5	00a5				// Upsilon, Yen
+  16  U           1	03b8	0398					// Theta
+  17  I           1	03b9	0399					// Iota
+  18  O           1	03bf	039f					// Omicron
+  19  P           1	03c0	03a0					// Pi
+  1a  OEM_4       0	[@	{@	00ab@	-1	001b		// <<, Escape
+  1b  OEM_6       0	]@	}@	00bb@	0387	001d		// >>, Ano Teleia, GroupSeparator
+  2b  OEM_5       0	\@	|@	00ac@	1fdd@	001c		// Not, DasiaVaria, FileSeparator
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+//SC  VK_         Cap	0	1	6	7	2	3
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+  1e  A           1	03b1	0391					// Alpha
+  1f  S           1	03c3	03a3					// Sigma
+  20  D           1	03b4	0394					// Delta
+  21  F           1	03c6	03a6					// Phi
+  22  G           1	03b3	0393					// Gamma
+  23  H           1	03b7	0397					// Eta
+  24  J           1	03be	039e					// Xi
+  25  K           1	03ba	039a					// Kappa
+  26  L           1	03bb	039b					// Lamda
+  27  OEM_1       0	0384@	00a8@	0385@				// Tonos, Diaeresis, DialytikaTonos
+  28  OEM_7       0	'@	"@	1fbf@	1ffe@	001c		// Psili, Dasia, FileSeparator
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+//SC  VK_         Cap	0	1	6	7	2	3
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+  2c  Z           1	03b6	0396					// Zeta
+  2d  X           1	03c7	03a7					// Chi
+  2e  C           1	03c8	03a8	00a9				// Psi, Copyright
+  2f  V           1	03c9	03a9					// Omega
+  30  B           1	03b2	0392					// Beta
+  31  N           1	03bd	039d					// Nu
+  32  M           1	03bc	039c					// Mu
+  33  OEM_COMMA   0	,	<
+  34  OEM_PERIOD  0	.	>
+  35  OEM_2       0	/@	?@	1fbe@	1fde@			// Prosgegrammeni, DasiaOxia
+  56  OEM_102     0	<	>	-1	-1	001c		// FileSeparator
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+//SC  VK_         Cap	0	1	6	7	2	3
+//--  ----------- ---	-----	-----	-----	-----	-----	-----
+  53  DECIMAL     0	,	,
+
+
+DEADKEY	0385	// Dialytika Tonos
+
+ 03b9	0390	// Small Iota    With Dialytika And Tonos
+ 03c5	03b0	// Small Upsilon With Dialytika And Tonos
+ 002e	0385
+ 0020	0385
+
+DEADKEY	0384	// Tonos
+
+ 03b1	03ac	// Small   Alpha   With Tonos
+ 03b5	03ad	// Small   Epsilon With Tonos
+ 03b9	03af	// Small   Iota    With Tonos
+ 03bf	03cc	// Small   Omicron With Tonos
+ 03c5	03cd	// Small   Upsilon With Tonos
+ 03c9	03ce	// Small   Omega   With Tonos
+ 03b7	03ae	// Small   Eta     With Tonos
+ 0391	0386	// Capital Alpha   With Tonos
+ 0395	0388	// Capital Epsilon With Tonos
+ 0399	038a	// Capital Iota    With Tonos
+ 039f	038c	// Capital Omicron With Tonos
+ 03a5	038e	// Capital Upsilon With Tonos
+ 03a9	038f	// Capital Omega   With Tonos
+ 0397	0389	// Capital Eta     With Tonos
+ 002e	0384
+ 0020	0384
+
+DEADKEY	00a8	// Diaeresis
+
+ 03b9	03ca	// Small   Iota    With Dialytika
+ 03c5	03cb	// Small   Upsilon With Dialytika
+ 0399	03aa	// Capital Iota    With Dialytika
+ 03a5	03ab	// Capital Upsilon With Dialytika
+ 002e	00a8
+ 0020	00a8
+
+DEADKEY	003a	// Dialytika = :Shift+<Q>
+
+ 03b9	03ca	// Small   Iota    With Dialytika
+ 03c5	03cb	// Small   Upsilon With Dialytika
+ 0399	03aa	// Capital Iota    With Dialytika
+ 03a5	03ab	// Capital Upsilon With Dialytika
+ 002e	00a8	// Diaeresis
+ 0020	003a	// Colon
+
+DEADKEY	005d	// Varia (U+1fef, U+0300 Grave) = ]<OEM_6>
+
+ 03b1	1f70	// Small Alpha With Varia
+ 03b5	1f72	// Small Epsilon With Varia
+ 03b7	1f74	// Small Eta With Varia
+ 03b9	1f76	// Small Iota With Varia
+ 03bf	1f78	// Small Omicron With Varia
+ 03c5	1f7a	// Small Upsilon With Varia
+ 03c9	1f7c	// Small Omega With Varia
+ 0391	1fba	// Capital Alpha With Varia
+ 0395	1fc8	// Capital Epsilon With Varia
+ 0397	1fca	// Capital Eta With Varia
+ 0399	1fda	// Capital Iota With Varia
+ 03a5	1fea	// Capital Upsilon With Varia
+ 039f	1ff8	// Capital Omicron With Varia
+ 03a9	1ffa	// Capital Omega With Varia
+ 002e	1fef	// Varia
+ 0020	005d	// Right Square Bracket
+
+DEADKEY	007d	// Ano Teleia (U+0387) = }<OEM_6>
+
+ 002e	0387	// Ano Teleia
+ 0020	007d	// Right Curly Bracket
+
+DEADKEY	00bb	// (Varia Ypogegrammeni) = 0300 + 0345 = AltGr+]<OEM_6>
+
+ 03b1	1fb2	// Small Alpha With Varia Ypogegrammeni
+ 03b7	1fc2	// Small Eta With Varia Ypogegrammeni
+ 03c9	1ff2	// Small Omega With Varia Ypogegrammeni
+ 0020	00bb	// Right-Pointing Double Angle Quotation Mark
+
+DEADKEY	003b	// Oxia (U+1ffd, U+0301 Acute) = ;<Q>
+
+ 03b1	1f71	// Small Alpha With Oxia
+ 03b5	1f73	// Small Epsilon With Oxia
+ 03b7	1f75	// Small Eta With Oxia
+ 03b9	1f77	// Small Iota With Oxia
+ 03bf	1f79	// Small Omicron With Oxia
+ 03c5	1f7b	// Small Upsilon With Oxia
+ 03c9	1f7d	// Small Omega With Oxia
+ 0391	1fbb	// Capital Alpha With Oxia
+ 0395	1fc9	// Capital Epsilon With Oxia
+ 0397	1fcb	// Capital Eta With Oxia
+ 0399	1fdb	// Capital Iota With Oxia
+ 03a5	1feb	// Capital Upsilon With Oxia
+ 039f	1ff9	// Capital Omicron With Oxia
+ 03a9	1ffb	// Capital Omega With Oxia
+ 002e	1ffd	// Oxia
+ 0020	003b	// Semicolon
+
+DEADKEY	1ffd	// (Oxia Ypogegrammeni) = 0301 + 0345 = AltGr+;<Q>
+
+ 03b1	1fb4	// Small Alpha With Oxia Ypogegrammeni
+ 03b7	1fc4	// Small Eta With Oxia Ypogegrammeni
+ 03c9	1ff4	// Small Omega With Oxia Ypogegrammeni
+
+DEADKEY	002d	// Macron (U+0304) = -<OEM_MINUS>
+
+ 03b1	1fb1	// Small Alpha With Macron
+ 0391	1fb9	// Capital Alpha With Macron
+ 03b9	1fd1	// Small Iota With Macron
+ 0399	1fd9	// Capital Iota With Macron
+ 03c5	1fe1	// Small Upsilon With Macron
+ 03a5	1fe9	// Capital Upsilon With Macron
+ 002e	00af	// Macron
+ 0020	002d	// Hyphen-Minus
+
+DEADKEY	005f	// Vrachy (U+0306) = _Shift+<OEM_MINUS>
+
+ 03b1	1fb0	// Small Alpha With Vrachy
+ 0391	1fb8	// Capital Alpha With Vrachy
+ 03b9	1fd0	// Small Iota With Vrachy
+ 0399	1fd8	// Capital Iota With Vrachy
+ 03c5	1fe0	// Small Upsilon With Vrachy
+ 03a5	1fe8	// Capital Upsilon With Vrachy
+ 002e	02d8	// Breve
+ 0020	005f	// Low Line
+
+DEADKEY	0060	// Dialytika Varia (U+1fed) = 0308 + 0300 = `<OEM_3>
+
+ 03b9	1fd2	// Small Iota With Dialytika Varia
+ 03c5	1fe2	// Small Upsilon With Dialytika Varia
+ 002e	1fed	// Dialytika Varia
+ 0020	0060	// Grave Accent
+
+DEADKEY	007e	// Dialytika Oxia (U+1fee) = 0308 + 0301 = ~Shift+<OEM_3>
+
+ 03b9	1fd3	// Small Iota With Dialytika Oxia
+ 03c5	1fe3	// Small Upsilon With Dialytika Oxia
+ 002e	1fee	// Dialytika Oxia
+ 0020	007e	// Tilde
+
+DEADKEY	1fc1	// Dialytika Perispomeni = 0308 + 0342 = AltGr+`<OEM_3>
+
+ 03b9	1fd7	// Small Iota With Dialytika Perispomeni
+ 03c5	1fe7	// Small Upsilon With Dialytika Perispomeni
+ 002e	1fc1	// Dialytika Perispomeni
+ 0020	1fc1	// Dialytika Perispomeni
+
+DEADKEY	0027	// Psili (U+1fbf, U+0313 Comma Above) = '<OEM_7>
+
+ 03b1	1f00	// Small Alpha With Psili
+ 0391	1f08	// Capital Alpha With Psili
+ 03b5	1f10	// Small Epsilon With Psili
+ 0395	1f18	// Capital Epsilon With Psili
+ 03b7	1f20	// Small Eta With Psili
+ 0397	1f28	// Capital Eta With Psili
+ 03b9	1f30	// Small Iota With Psili
+ 0399	1f38	// Capital Iota With Psili
+ 03bf	1f40	// Small Omicron With Psili
+ 039f	1f48	// Capital Omicron With Psili
+ 03c5	1f50	// Small Upsilon With Psili
+ 03c9	1f60	// Small Omega With Psili
+ 03a9	1f68	// Capital Omega With Psili
+ 03c1	1fe4	// Small Rho With Psili
+ 002e	1fbf	// Psili
+ 0020	0027	// Apostrophe
+
+DEADKEY	005c	// Psili Varia (U+1fcd) = 0313 + 0300 = \<OEM_5>
+
+ 03b1	1f02	// Small Alpha With Psili Varia
+ 0391	1f0a	// Capital Alpha With Psili Varia
+ 03b5	1f12	// Small Epsilon With Psili Varia
+ 0395	1f1a	// Capital Epsilon With Psili Varia
+ 03b7	1f22	// Small Eta With Psili Varia
+ 0397	1f2a	// Capital Eta With Psili Varia
+ 03b9	1f32	// Small Iota With Psili Varia
+ 0399	1f3a	// Capital Iota With Psili Varia
+ 03bf	1f42	// Small Omicron With Psili Varia
+ 039f	1f4a	// Capital Omicron With Psili Varia
+ 03c5	1f52	// Small Upsilon With Psili Varia
+ 03c9	1f62	// Small Omega With Psili Varia
+ 03a9	1f6a	// Capital Omega With Psili Varia
+ 002e	1fcd	// Psili Varia
+ 0020	005c	// Reverse Solidus
+
+DEADKEY	00ac	// (Psili Varia Ypogegrammeni) = 0313 + 0300 + 0345 = AltGr\<OEM_5>
+
+ 03b1	1f82	// Small Alpha With Psili Varia Ypogegrammeni
+ 0391	1f8a	// Capital Alpha With Psili Varia Prosgegrammeni
+ 03b7	1f92	// Small Eta With Psili Varia Ypogegrammeni
+ 0397	1f9a	// Capital Eta With Psili Varia Prosgegrammeni
+ 03c9	1fa2	// Small Omega With Psili Varia Ypogegrammeni
+ 03a9	1faa	// Capital Omega With Psili Varia Prosgegrammeni
+ 0020	00ac	// Not Sign
+
+DEADKEY	002f	// Psili Oxia (U+1fce) = 0313 + 0301 = /<OEM_2>
+
+ 03b1	1f04	// Small Alpha With Psili Oxia
+ 0391	1f0c	// Capital Alpha With Psili Oxia
+ 03b5	1f14	// Small Epsilon With Psili Oxia
+ 0395	1f1c	// Capital Epsilon With Psili Oxia
+ 03b7	1f24	// Small Eta With Psili Oxia
+ 0397	1f2c	// Capital Eta With Psili Oxia
+ 03b9	1f34	// Small Iota With Psili Oxia
+ 0399	1f3c	// Capital Iota With Psili Oxia
+ 03bf	1f44	// Small Omicron With Psili Oxia
+ 039f	1f4c	// Capital Omicron With Psili Oxia
+ 03c5	1f54	// Small Upsilon With Psili Oxia
+ 03c9	1f64	// Small Omega With Psili Oxia
+ 03a9	1f6c	// Capital Omega With Psili Oxia
+ 002e	1fce	// Psili Oxia
+ 0020	002f	// Solidus
+
+DEADKEY	1fbe	// (Psili Oxia Ypogegrammeni) = 0313 + 0301 + 0345 = AltGr+/<OEM_2>
+
+ 03b1	1f84	// Small Alpha With Psili Oxia Ypogegrammeni
+ 0391	1f8c	// Capital Alpha With Psili Oxia Prosgegrammeni
+ 03b7	1f94	// Small Eta With Psili Oxia Ypogegrammeni
+ 0397	1f9c	// Capital Eta With Psili Oxia Prosgegrammeni
+ 03c9	1fa4	// Small Omega With Psili Oxia Ypogegrammeni
+ 03a9	1fac	// Capital Omega With Psili Oxia Prosgegrammeni
+
+DEADKEY	003d	// Psili Perispomeni (U+1fcf) = 0313 + 0342 = =<OEM_PLUS>
+
+ 03b1	1f06	// Small Alpha With Psili Perispomeni
+ 0391	1f0e	// Capital Alpha With Psili Perispomeni
+ 03b7	1f26	// Small Eta With Psili Perispomeni
+ 0397	1f2e	// Capital Eta With Psili Perispomeni
+ 03b9	1f36	// Small Iota With Psili Perispomeni
+ 0399	1f3e	// Capital Iota With Psili Perispomeni
+ 03c5	1f56	// Small Upsilon With Psili Perispomeni
+ 03c9	1f66	// Small Omega With Psili Perispomeni
+ 03a9	1f6e	// Capital Omega With Psili Perispomeni
+ 002e	1fcf	// Psili Perispomeni
+ 0020	003d	// Equals Sign
+
+DEADKEY	00bd	// (Psili Perispomeni Ypogegrammeni) = 0313 + 0342 + 0345 = AltGr+=<OEM_PLUS>
+
+ 03b1	1f86	// Small Alpha With Psili Perispomeni Ypogegrammeni
+ 0391	1f8e	// Capital Alpha With Psili Perispomeni Prosgegrammeni
+ 03b7	1f96	// Small Eta With Psili Perispomeni Ypogegrammeni
+ 0397	1f9e	// Capital Eta With Psili Perispomeni Prosgegrammeni
+ 03c9	1fa6	// Small Omega With Psili Perispomeni Ypogegrammeni
+ 03a9	1fae	// Capital Omega With Psili Perispomeni Prosgegrammeni
+ 0020	00bd	// Vulgar Fraction One Half
+
+DEADKEY	1fbf	// (Psili Ypogegrammeni) = 0313 + 0345 = AltGr+'<OEM_7>
+
+ 03b1	1f80	// Small Alpha With Psili Ypogegrammeni
+ 0391	1f88	// Capital Alpha With Psili Prosgegrammeni
+ 03b7	1f90	// Small Eta With Psili Ypogegrammeni
+ 0397	1f98	// Capital Eta With Psili Prosgegrammeni
+ 03c9	1fa0	// Small Omega With Psili Ypogegrammeni
+ 03a9	1fa8	// Capital Omega With Psili Prosgegrammeni
+
+DEADKEY	0022	// Dasia (U+1ffe, U+0314) = "Shift+<OEM_7>
+
+ 03b1	1f01	// Small Alpha With Dasia
+ 0391	1f09	// Capital Alpha With Dasia
+ 03b5	1f11	// Small Epsilon With Dasia
+ 0395	1f19	// Capital Epsilon With Dasia
+ 03b7	1f21	// Small Eta With Dasia
+ 0397	1f29	// Capital Eta With Dasia
+ 03b9	1f31	// Small Iota With Dasia
+ 0399	1f39	// Capital Iota With Dasia
+ 03bf	1f41	// Small Omicron With Dasia
+ 039f	1f49	// Capital Omicron With Dasia
+ 03c5	1f51	// Small Upsilon With Dasia
+ 03a5	1f59	// Capital Upsilon With Dasia
+ 03c9	1f61	// Small Omega With Dasia
+ 03a9	1f69	// Capital Omega With Dasia
+ 03c1	1fe5	// Small Rho With Dasia
+ 03a1	1fec	// Capital Rho With Dasia
+ 002e	1ffe	// Dasia
+ 0020	0022	// Quotation Mark
+
+DEADKEY	007c	// Dasia Varia (U+1fdd) = 0314 + 0300 = |Shift+<OEM_5>
+
+ 03b1	1f03	// Small Alpha With Dasia Varia
+ 0391	1f0b	// Capital Alpha With Dasia Varia
+ 03b5	1f13	// Small Epsilon With Dasia Varia
+ 0395	1f1b	// Capital Epsilon With Dasia Varia
+ 03b7	1f23	// Small Eta With Dasia Varia
+ 0397	1f2b	// Capital Eta With Dasia Varia
+ 03b9	1f33	// Small Iota With Dasia Varia
+ 0399	1f3b	// Capital Iota With Dasia Varia
+ 03bf	1f43	// Small Omicron With Dasia Varia
+ 039f	1f4b	// Capital Omicron With Dasia Varia
+ 03c5	1f53	// Small Upsilon With Dasia Varia
+ 03a5	1f5b	// Capital Upsilon With Dasia Varia
+ 03c9	1f63	// Small Omega With Dasia Varia
+ 03a9	1f6b	// Capital Omega With Dasia Varia
+ 002e	1fdd	// Dasia Varia
+ 0020	007c	// Vertical Line
+
+DEADKEY	1fdd	// (Dasia Varia Ypogegrammeni) = 0314 + 0300 + 0345 = AltGr+|Shift+<OEM_5>
+
+ 03b1	1f83	// Small Alpha With Dasia Varia Ypogegrammeni
+ 0391	1f8b	// Capital Alpha With Dasia Varia Prosgegrammeni
+ 03b7	1f93	// Small Eta With Dasia Varia Ypogegrammeni
+ 0397	1f9b	// Capital Eta With Dasia Varia Prosgegrammeni
+ 03c9	1fa3	// Small Omega With Dasia Varia Ypogegrammeni
+ 03a9	1fab	// Capital Omega With Dasia Varia Prosgegrammeni
+
+DEADKEY	003f	// Dasia Oxia (U+1fde) = 0314 + 0301 = ?Shift+<OEM_2>
+
+ 03b1	1f05	// Small Alpha With Dasia Oxia
+ 0391	1f0d	// Capital Alpha With Dasia Oxia
+ 03b5	1f15	// Small Epsilon With Dasia Oxia
+ 0395	1f1d	// Capital Epsilon With Dasia Oxia
+ 03b7	1f25	// Small Eta With Dasia Oxia
+ 0397	1f2d	// Capital Eta With Dasia Oxia
+ 03b9	1f35	// Small Iota With Dasia Oxia
+ 0399	1f3d	// Capital Iota With Dasia Oxia
+ 03bf	1f45	// Small Omicron With Dasia Oxia
+ 039f	1f4d	// Capital Omicron With Dasia Oxia
+ 03c5	1f55	// Small Upsilon With Dasia Oxia
+ 03a5	1f5d	// Capital Upsilon With Dasia Oxia
+ 03c9	1f65	// Small Omega With Dasia Oxia
+ 03a9	1f6d	// Capital Omega With Dasia Oxia
+ 002e	1fde	// Dasia Oxia
+ 0020	003f	// Question Mark
+
+DEADKEY	1fde	// (Dasia Oxia Ypogegrammeni) = 0314 + 0301 + 0345 = AltGr+?Shift+<OEM_2>
+
+ 03b1	1f85	// Small Alpha With Dasia Oxia Ypogegrammeni
+ 0391	1f8d	// Capital Alpha With Dasia Oxia Prosgegrammeni
+ 03b7	1f95	// Small Eta With Dasia Oxia Ypogegrammeni
+ 0397	1f9d	// Capital Eta With Dasia Oxia Prosgegrammeni
+ 03c9	1fa5	// Small Omega With Dasia Oxia Ypogegrammeni
+ 03a9	1fad	// Capital Omega With Dasia Oxia Prosgegrammeni
+
+DEADKEY	002b	// Dasia Perispomeni (U+1fdf) = 0314 + 0342 = +Shift+<OEM_PLUS>
+
+ 03b1	1f07	// Small Alpha With Dasia Perispomeni
+ 0391	1f0f	// Capital Alpha With Dasia Perispomeni
+ 03b7	1f27	// Small Eta With Dasia Perispomeni
+ 0397	1f2f	// Capital Eta With Dasia Perispomeni
+ 03b9	1f37	// Small Iota With Dasia Perispomeni
+ 0399	1f3f	// Capital Iota With Dasia Perispomeni
+ 03c5	1f57	// Small Upsilon With Dasia Perispomeni
+ 03a5	1f5f	// Capital Upsilon With Dasia Perispomeni
+ 03c9	1f67	// Small Omega With Dasia Perispomeni
+ 03a9	1f6f	// Capital Omega With Dasia Perispomeni
+ 002e	1fdf	// Dasia Perispomeni
+ 0020	002b	// Plus Sign
+
+DEADKEY	1fdf	// (Dasia Perispomeni Ypogegrammeni) = 0314 + 0342 + 0345 = AltGR++Shift+<OEM_PLUS>
+
+ 03b1	1f87	// Small Alpha With Dasia Perispomeni Ypogegrammeni
+ 0391	1f8f	// Capital Alpha With Dasia Perispomeni Prosgegrammeni
+ 03b7	1f97	// Small Eta With Dasia Perispomeni Ypogegrammeni
+ 0397	1f9f	// Capital Eta With Dasia Perispomeni Prosgegrammeni
+ 03c9	1fa7	// Small Omega With Dasia Perispomeni Ypogegrammeni
+ 03a9	1faf	// Capital Omega With Dasia Perispomeni Prosgegrammeni
+
+DEADKEY	1ffe	// (Dasia Ypogegrammeni) = 0314 + 0345 = AltGr+"Shift+<OEM_7>
+
+ 03b1	1f81	// Small Alpha With Dasia Ypogegrammeni
+ 0391	1f89	// Capital Alpha With Dasia Prosgegrammeni
+ 03b7	1f91	// Small Eta With Dasia Ypogegrammeni
+ 0397	1f99	// Capital Eta With Dasia Prosgegrammeni
+ 03c9	1fa1	// Small Omega With Dasia Ypogegrammeni
+ 03a9	1fa9	// Capital Omega With Dasia Prosgegrammeni
+
+DEADKEY	005b	// Perispomeni (U+1fc0, U+0342) = [<OEM_4>
+
+ 03b1	1fb6	// Small Alpha With Perispomeni
+ 03b7	1fc6	// Small Eta With Perispomeni
+ 03b9	1fd6	// Small Iota With Perispomeni
+ 03c5	1fe6	// Small Upsilon With Perispomeni
+ 03c9	1ff6	// Small Omega With Perispomeni
+ 002e	1fc0	// Perispomeni
+ 0020	005b	// Left Square Bracket
+
+DEADKEY	00ab	// (Perispomeni Ypogegrammeni) = 0314 + 0345 = AltGr+[<OEM_4>
+
+ 03b1	1fb7	// Small Alpha With Perispomeni Ypogegrammeni
+ 03b7	1fc7	// Small Eta With Perispomeni Ypogegrammeni
+ 03c9	1ff7	// Small Omega With Perispomeni Ypogegrammeni
+ 0020	00ab	// Left-Pointing Double Angle Quotation Mark
+
+DEADKEY	007b	// Ypogegrammeni (U+0345, U+037a) = {Shift+<OEM_4>
+
+ 03b1	1fb3	// Small Alpha With Ypogegrammeni
+ 0391	1fbc	// Capital Alpha With Prosgegrammeni
+ 03b7	1fc3	// Small Eta With Ypogegrammeni
+ 0397	1fcc	// Capital Eta With Prosgegrammeni
+ 03c9	1ff3	// Small Omega With Ypogegrammeni
+ 03a9	1ffc	// Capital Omega With Prosgegrammeni
+ 002e	1fbe	// Prosgegrammeni
+ 0020	007b	// Left Curly Bracket
+
+
+KEYNAME
+
+ 01	Esc
+ 0e	Backspace
+ 0f	Tab
+ 1c	Enter
+ 1d	Ctrl
+ 2a	Shift
+ 36	"Right Shift"
+ 37	"Num *"
+ 38	Alt
+ 39	Space
+ 3a	"Caps Lock"
+ 3b	F1
+ 3c	F2
+ 3d	F3
+ 3e	F4
+ 3f	F5
+ 40	F6
+ 41	F7
+ 42	F8
+ 43	F9
+ 44	F10
+ 45	Pause
+ 46	"Scroll Lock"
+ 47	"Num 7"
+ 48	"Num 8"
+ 49	"Num 9"
+ 4a	"Num -"
+ 4b	"Num 4"
+ 4c	"Num 5"
+ 4d	"Num 6"
+ 4e	"Num +"
+ 4f	"Num 1"
+ 50	"Num 2"
+ 51	"Num 3"
+ 52	"Num 0"
+ 53	"Num Del"
+ 54	"Sys Req"
+ 57	F11
+ 58	F12
+ 7c	F13
+ 7d	F14
+ 7e	F15
+ 7f	F16
+ 80	F17
+ 81	F18
+ 82	F19
+ 83	F20
+ 84	F21
+ 85	F22
+ 86	F23
+ 87	F24
+
+KEYNAME_EXT
+
+ 1c	"Num Enter"
+ 1d	"Right Control"
+ 35	"Num /"
+ 37	"Prnt Scrn"
+ 38	"Right Alt"
+ 45	"Num Lock"
+ 46	Break
+ 47	Home
+ 48	Up
+ 49	"Page Up"
+ 4b	Left
+ 4d	Right
+ 4f	End
+ 50	Down
+ 51	"Page Down"
+ 52	Insert
+ 53	Delete
+ 54	<00>
+ 56	Help
+ 5b	"Left Windows"
+ 5c	"Right Windows"
+ 5d	Application
+
+KEYNAME_DEAD
+
+ 0384	TONOS
+ 00a8	DIALYTIKA
+ 0385	"DIALYTIKA TONOS"
+
+ENDKBD
+

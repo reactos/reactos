@@ -1,0 +1,91 @@
+Mac-specific changes to rcpp
+============================
+
+/mac
+	Preprocess resource script for Macintosh compatibility
+	Causes rcpp to translate \n as 0x0D and \r as 0x0A, which are the Macintosh
+	conventions.
+
+The preprocessor flag _MAC is automatically defined by rc when it is executing
+rcpp on a Macintosh-targetted resource script.
+
+
+Mac-specific changes to rc
+==========================
+
+/m
+	Generate Macintosh-compatible resources
+	Causes rc to generate a binary image of a Macintosh resource fork instead of
+	a Win32 resource file. Some resources are converted into their corresponding
+	Macintosh resource formats instead of being written using their Win32 formats:
+
+		group icons		=>	ICN#, icl4/8, ics4/8, icm4/8
+		group cursors	=>	CURS
+		string tables	=>	STR#
+
+	Other standard resources are given the following Macintosh resource types:
+
+		bitmap			=>	WBMP
+		menu			=>	WMNU
+		dialog			=>	WDLG
+		accelerator		=>	WACC
+		rcdata			=>	HEXA
+
+/brNNNN
+/br:NNNN
+/br NNNN
+	Set base resource ID for named resources
+	The Windows resource format supports resources that have a name but not an
+	ID. Macintosh resources always have an ID and may optionally have a name.
+	rc therefore picks an arbitrary ID when it encounters a resource that has
+	a name but not an ID. By default, the first resource ID used is 128, and
+	subsequent resources get successively greater resource IDs. /br is used
+	to change the base resource ID. This may be useful if you're building a 
+	resource file that will be released as part of a library, and you wish to
+	have your resources numbered in an unused part of the 128..32K space.
+	The value is assumed to be decimal and must be from 1 to 32767.
+
+
+New errors:
+RC1209: invalid option; missing resource base number after /br
+	The /br option requires an integer argument to follow it.
+RC1210: resource base number must be from 1 to 32767
+	The base resource number given to the /br option must fit into a
+	positive 16-bit integer.
+
+New warnings:
+RC4506: scaling cursor %3 down to 16 by 16
+	RC only supports creating Macintosh cursors that are 16x16 and monochrome.
+	A Windows cursor whose dimensions are a multiple of 16x16 will be scaled
+	down to 16x16, losing data in the process.
+RC4507: Macintosh cursor %3 must be 16 by 16 and monochrome; ignored
+	No Windows cursor was found whose dimensions were a multiple of 16x16 and
+	that was monochrome.
+RC4508: Ignoring icon %3 with invalid Macintosh size or color
+	RC supports creating mini, small, and standard Macintosh icons. These icons
+	have dimensions of 16x12, 16x16, and 32x32, respectively, and may have bit
+	depths of 1, 4, or 8 bits. This warning is generated if no icon matching
+	these requirements was found in an icon file.
+RC4509: Resource types '%3' and '%4' were both mapped to '%5'
+	A Windows resource type other than one of the standard types will be converted
+	into a Macintosh resource type by using the first four characters of the
+	Windows type name. This warning is generated if different Windows resource
+	types are identical in their first four characters, causing them to be mapped
+	to the same Macintosh resource type.
+
+
+The default extension for the output file is .rsc instead of .res when building
+a Mac resource file, to match the default extension used by mrc.
+
+The lexical analyzer converts \n to 0x0D and \r to 0x0A, which are the
+Macintosh conventions.
+
+The default styles for all button controls do not include WS_TABSTOP, unlike Win32.
+
+If the input codepage is Windows Latin 1, Greek, Cyrillic, Turkish, or Eastern
+European, the output text is translated into the corresponding Mac codepage before
+being written to the destination resource file. The translation performed by Win32
+is *not* the same as the translation that was performed by the WLM 1.0 rc.exe; Win32
+translates some characters differently and replaces characters that have no
+matches with question marks instead the non-breaking space that was used by the
+WLM 1.0 rc.exe.

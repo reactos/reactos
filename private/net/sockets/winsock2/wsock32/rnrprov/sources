@@ -1,0 +1,71 @@
+!IF 0
+
+Copyright (c) 1989-91  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=sockets
+MINORCOMP=winsock
+
+TARGETNAME=rnr20
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+TARGETLIBS= \
+    $(BASEDIR)\Public\Sdk\Lib\*\kernel32.lib \
+    $(BASEDIR)\Public\Sdk\Lib\*\User32.lib   \
+    $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib \
+    $(BASEDIR)\Public\Sdk\Lib\*\rpcrt4.lib   \
+    $(BASEDIR)\Public\Sdk\Lib\*\ws2_32.lib   \
+    $(BASEDIR)\Public\Sdk\Lib\*\dnsapi.lib   \
+    ..\..\..\sockreg\obj\*\sockreg.lib       \
+
+
+DLLENTRY=SockInitialize
+
+USE_CRTDLL=1
+
+INCLUDES=.;..;..\..\inc;..\..\..\..\inc;..\..\..\..\..\inc;..\..\..\sockreg;..\..\..\..\snmp\inetmib1
+
+C_DEFINES=
+
+#
+# Setup for application developer to set breakpoints with windbg
+#
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        ..\gethost.c  \
+        ..\getserv.c  \
+        ..\ghname.c   \
+        ..\hstcache.c \
+        ..\i_addr.c   \
+        ..\i_ntoa.c   \
+        ..\r_comp.c   \
+        ..\rnr2ops.c  \
+        ..\rnrutil.c  \
+        ..\logit.c    \
+        rnr20.rc      \
+        sockdata.c    \
+        sockproc.c    \
+        init.c

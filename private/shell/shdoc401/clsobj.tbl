@@ -1,0 +1,6 @@
+//
+// Table of CoCreateInstance()able objects that moved from IE4 SHDOCVW to IE5 SHELL32
+//    
+
+    { &c_CFVtbl, &CLSID_FileTypes,              CFileTypes_CreateInstance, 0},
+    { &c_CFVtbl, &CLSID_MIMEFileTypesHook,      CFileTypes_CreateInstance, 0},

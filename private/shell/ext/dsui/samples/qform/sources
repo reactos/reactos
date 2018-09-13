@@ -1,0 +1,43 @@
+MAJORCOMP=  ds
+MINORCOMP=  query
+
+TARGETNAME= qform
+TARGETTYPE= DYNLINK
+TARGETPATH= obj
+TARGETEXT=  dll
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=pch.h
+PRECOMPILED_PCH=pch.pch
+PRECOMPILED_OBJ=pch.obj
+
+DLLENTRY=   DllMain
+USE_CRTDLL= 1
+
+!IF 0
+    BUGBUG -- need a new coffbase.txt entry for this DLL!!!!
+!ENDIF
+DLLBASE=0x51c80000
+
+TARGETLIBS= $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+            $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+            $(BASEDIR)\public\sdk\lib\*\gdi32.lib       \
+            $(BASEDIR)\public\sdk\lib\*\shell32.lib     \
+            $(BASEDIR)\public\sdk\lib\*\ole32.lib       \
+            $(BASEDIR)\public\sdk\lib\*\uuid.lib
+
+INCLUDES=   \
+            ..\inc;                         \
+            $(BASEDIR)\private\windows\inc;
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES=  -DUNICODE
+
+SOURCES=    dll.cpp        \
+            unknown.cpp    \
+            query.cpp      \
+            resource.rc

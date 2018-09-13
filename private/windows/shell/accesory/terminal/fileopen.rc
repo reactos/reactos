@@ -1,0 +1,461 @@
+#include "fileopen.h"
+#include "dlgs.h"
+
+
+// sdj: changed recieve to receive to obey i before e except after c rule!
+
+FO_DBFILETYPE DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION "Open"
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+
+
+
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10  /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4, 110,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//  LTEXT "Directory:" -1,                            4,  20,  40,   10                              /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  20,  72,   10, SS_NOPREFIX /* jtf 3.20 */  /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Files:" -1,                               4,  36,  60,   10
+//   LISTBOX FO_IDFILELIST,                            4,  48,  60,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   LTEXT "&Directories:" -1,                        70,  36,  68,  10
+//   LISTBOX FO_IDDIRLIST,                            70,  48,  68,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        160,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   160,  20,  36,  14
+END
+
+FO_DBSNDTEXT DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION "Send Text File"
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+   LTEXT "Following CR:" -1,                       208,  82,  52,   8
+   CHECKBOX "&Append LF" FO_IDSNDLF,               208,  94,  54,  10, WS_GROUP
+   CHECKBOX "&Strip LF" FO_IDSNDNOLF,              208,  106,  44,  10
+
+
+
+
+//STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+//CAPTION "Send Text File"
+//FONT 8 "MS Shell Dlg"
+//BEGIN
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10 /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4, 110,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "Directory:" -1,                            4,  20,  40,   10                               /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  20,  72,   10, SS_NOPREFIX /* jtf 3.20 */   /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Files:" -1,                               4,  36,  60,   10
+//   LISTBOX FO_IDFILELIST,                            4,  48,  60,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   LTEXT "&Directories:" -1,                        70,  36,  68,  10
+//   LISTBOX FO_IDDIRLIST,                            70,  48,  68,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   LTEXT "Following CR:" -1,                       144,  70,  52,   8
+//   CHECKBOX "&Append LF" FO_IDSNDLF,               144,  80,  54,  10, WS_GROUP
+//   CHECKBOX "&Strip LF" FO_IDSNDNOLF,              144,  92,  44,  10
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        160,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   160,  20,  36,  14
+END
+
+
+FO_DBSNDFILE DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION "Send Binary File"
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+   LTEXT "H&OST File:" FO_IDPROMPT2,                   4,   22,  44,   10
+   EDITTEXT FO_IDFILENAME2,                          44,   18, 110,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+
+
+//STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+//CAPTION "Send Binary File"
+//FONT 8 "MS Shell Dlg"
+//BEGIN
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10  /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4, 110,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "H&OST File:" FO_IDPROMPT2,                   4,   22,  44,   10
+//   EDITTEXT FO_IDFILENAME2,                          44,   18, 110,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "Directory:" -1,                            4,  34,  40,   10                               /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  34,  72,   10, SS_NOPREFIX /* jtf 3.20 */   /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Files:" -1,                               4,  48,  60,   10
+//   LISTBOX FO_IDFILELIST,                            4,  60,  60,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   LTEXT "&Directories:" -1,                        70,  48,  68,  10
+//   LISTBOX FO_IDDIRLIST,                            70,  60,  68,  64, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        160,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   160,  20,  36,  14
+END
+
+
+/*---------------------------------------------------------------------------*/
+
+FO_DBFILESAVE DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION ""
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+
+
+
+//FO_DBFILESAVE DIALOG 20, 20, 172, 102
+//STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+//CAPTION ""
+//FONT 8 "MS Shell Dlg"
+//BEGIN
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10  /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4,  78,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "Directory:" -1,                            4,  20,  40,   10                               /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  20,  72,   10, SS_NOPREFIX /* jtf 3.20 */   /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Directories:" -1,                         4,  36,  68,  10
+//   LISTBOX FO_IDDIRLIST,                             4,  48,  60,  48, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        132,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   132,  20,  36,  14
+END
+
+
+
+FO_DBRCVTEXT DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION "Receive Text File"
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+
+   CHECKBOX "&Append File" FO_IDAPPEND,             208,  82,  64,  10, WS_GROUP
+   CHECKBOX "Save &Controls" FO_IDCTRL,             208,  94,  64,  10
+   CHECKBOX "&Table Format" FO_IDTABLE,             208,  106,  64,  10
+
+
+
+//FO_DBRCVTEXT DIALOG MOVEABLE DISCARDABLE 20, 20, 172, 108
+//STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+//CAPTION "Receive Text File"
+//FONT 8 "MS Shell Dlg"
+//BEGIN
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10  /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4,  78,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "Directory:" -1,                            4,  20,  40,   10                              /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  20,  72,   10, SS_NOPREFIX /* jtf 3.20 */  /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Directories:" -1,                         4,  36,  68,  10
+//   LISTBOX FO_IDDIRLIST,                             4,  48,  60,  48, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   CHECKBOX "&Append File" FO_IDAPPEND,             78,  60,  64,  10, WS_GROUP
+//   CHECKBOX "Save &Controls" FO_IDCTRL,             78,  72,  64,  10
+//   CHECKBOX "&Table Format" FO_IDTABLE,             78,  84,  64,  10
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        132,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   132,  20,  36,  14
+END
+
+
+FO_DBRCVFILE DIALOG LOADONCALL MOVEABLE DISCARDABLE
+36, 24,  264, 134
+CAPTION "Receive Binary File"
+STYLE WS_CAPTION | WS_SYSMENU | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "File &Name:", stc3, "static", SS_LEFT | WS_CHILD,
+            6,    6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD | ES_OEMCONVERT | ES_LOWERCASE,
+            6,    16,  90,  12
+   LTEXT "D&OS File:" FO_IDPROMPT2,                 4,   22,  44,   10
+   EDITTEXT FO_IDFILENAME2,                         44,  18,  78,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+
+    CONTROL "", lst1, "listbox", LBS_SORT | LBS_NOTIFY | LBS_DISABLENOSCROLL |
+             WS_VSCROLL | WS_BORDER | WS_TABSTOP,
+            12,   28,  84,  68
+
+    CONTROL "&Directories:", -1, "static", SS_LEFT | WS_CHILD,
+            110,   6,  92,   9
+    CONTROL "", stc1, "static", SS_LEFT | WS_CHILD,
+            110,  16,  92,   9
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_NOINTEGRALHEIGHT | LBS_OWNERDRAWFIXED,
+            110,  28,  92,  64
+
+    CONTROL "List Files of &Type:", stc2, "static", SS_LEFT | WS_CHILD,
+            6,  102,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  112,  90,  36
+
+    CONTROL "Dri&ves:", -1, "static", SS_LEFT | WS_CHILD,
+            110, 102,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 112,  92, 68
+
+    CONTROL "OK", IDOK, "button", BS_DEFPUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,   6,  50,  14
+    CONTROL "Cancel", IDCANCEL, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  24,  50,  14
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+            208,  46,  50,  14
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP,
+            208,  68,  50,  12
+
+
+
+//FO_DBRCVFILE DIALOG MOVEABLE DISCARDABLE 20, 20, 172, 120
+//STYLE WS_CAPTION | DS_MODALFRAME | WS_SYSMENU
+//CAPTION "Receive Binary File"
+//FONT 8 "MS Shell Dlg"
+//BEGIN
+//   LTEXT "File&name:" FO_IDPROMPT,                  4,    8,  34,   10   /* jtf 3.20 */
+//   EDITTEXT FO_IDFILENAME,                          44,   4,  78,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "D&OS File:" FO_IDPROMPT2,                 4,   22,  44,   10
+//   EDITTEXT FO_IDFILENAME2,                         44,  18,  78,  12, ES_AUTOHSCROLL | ES_OEMCONVERT /* jtf gold 025 */
+//
+//   LTEXT "Directory:" -1,                            4,  34,  40,   10                              /* rjs bugs 012 -> increase width from 30 to 40 */
+//   LTEXT "" FO_IDPATH,                              46,  34,  72,   10, SS_NOPREFIX /* jtf 3.20 */  /* rjs bugs 012 -> move starting x from 38 to 46 */
+//
+//   LTEXT "&Directories:" -1,                         4,  48,  68,  10
+//   LISTBOX FO_IDDIRLIST,                             4,  60,  60,  48, WS_TABSTOP | WS_VSCROLL | LBS_SORT
+//
+//   DEFPUSHBUTTON "OK" IDOK,                        132,   4,  36,  14, WS_GROUP
+//   PUSHBUTTON "Cancel" IDCANCEL,                   132,  20,  36,  14
+END

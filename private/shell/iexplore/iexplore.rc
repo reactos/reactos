@@ -1,0 +1,64 @@
+//Microsoft App Studio generated resource script.
+//
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <winuser.h>
+#include <commctrl.h>
+#include <shlobj.h>
+#include "rcids.h"
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+//1 typelib iedisp.tlb
+
+//
+// icons
+//
+// NOTE for IE 2.0 compatibility these icons MUST be in this order
+//
+RES_ICO_FRAME           ICON            "..\\shdocvw\\rc_frame.ico"
+RES_ICO_HTML            ICON            "rc_html.ico"
+IDI_APPEARANCE			ICON			"rc_o_app.ico"
+IDI_ADVANCED			ICON			"rc_o_adv.ico"
+IDI_GOTOURL				ICON			"rc_goto.ico"
+IDI_HOMEPAGE			ICON			"..\\shdocvw\\rc_home.ico"
+IDI_FINDTEXT			ICON			"rc_find.ico"
+IDI_UNKNOWN_FILETYPE    ICON			"rc_u_ft.ico"
+RES_ICO_GIF				ICON			"rc_gif.ico"
+RES_ICO_JPEG			ICON			"rc_jpeg.ico"
+RES_ICON_FOLDER_OPEN	ICON			"folder_o.ico"
+RES_ICON_FOLDER_CLOSED	ICON			"folder_c.ico"
+RES_ICON_URL_FILE		ICON			"urlfile.ico"
+RES_ICO_NOICON			ICON			"noicon.ico"
+RES_ICO_FINDING			ICON			"finding.ico"
+RES_ICO_CONNECTING		ICON			"connto.ico"
+RES_ICO_ACCESSING		ICON			"access.ico"
+RES_ICO_RECEIVING		ICON			"receive.ico"
+IDI_INTERNET			ICON			"internet.ico"
+IDI_SECURITY			ICON			"..\\shdocvw\\rc_sec.ico"
+IDI_NEWS				ICON			"news.ico"
+IDI_VRML				ICON			"vrml.ico"
+IDI_MHTMLFILE			ICON			"mhtml.ico"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COMPATMODEWARNINGTITLE "Internet Explorer Compatibility mode"
+    IDS_COMPATMODEWARNING      "This is being run in compatibility mode and not all features are enabled."
+END
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "iexplore.rcv"
+
+

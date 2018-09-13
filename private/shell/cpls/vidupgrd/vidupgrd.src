@@ -1,0 +1,8 @@
+LIBRARY vidupgrd.DLL
+
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION 'Video Migration Dll'
+
+EXPORTS
+        DllMain
+        VideoUpgradeCheck

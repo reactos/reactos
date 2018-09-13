@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhept
+
+TARGETNAME=kbdhept
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhept.c kbdhept.rc
+
+NTTARGETFILE0=kbdhept.h kbdhept.rc kbdhept.def

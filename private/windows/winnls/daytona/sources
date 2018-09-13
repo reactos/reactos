@@ -1,0 +1,4 @@
+ALT_PROJECT=DAYTONA
+ALT_PROJECT_TARGET=.
+
+!include ..\sources.inc

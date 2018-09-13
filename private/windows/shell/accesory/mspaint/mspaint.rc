@@ -1,0 +1,1042 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define NOWINSTYLES
+#define NOWINMESSAGES
+#include "afxres.h"
+#include "winuser.h"
+#undef DS_MODALFRAME
+#define DS_MODALFRAME 0x80L | DS_CONTEXTHELP
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define NOWINSTYLES\r\n"
+    "#define NOWINMESSAGES\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""winuser.h""\r\n"
+    "#undef DS_MODALFRAME\r\n"
+    "#define DS_MODALFRAME 0x80L | DS_CONTEXTHELP\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""res\\pbrush.rc2""   // non-App Studio edited resources\r\n"
+    "\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#include ""afxprint.rc""       // printing/print preview resources\r\n"
+    "#include ""afxolesv.rc""       // OLE server resources\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+ID_MAINFRAME            ICON    DISCARDABLE     "RES\\ICONS\\newpaint.ICO"
+IDI_PAINT_DOC           ICON    DISCARDABLE     "RES\\ICONS\\bitimage.ICO"
+IDI_STRETCH_HORZ        ICON    DISCARDABLE     "RES\\ICONS\\STCHHORZ.ICO"
+IDI_STRETCH_VERT        ICON    DISCARDABLE     "RES\\ICONS\\STCHVERT.ICO"
+IDI_SKEW_HORZ           ICON    DISCARDABLE     "RES\\ICONS\\SKEWHORZ.ICO"
+IDI_SKEW_VERT           ICON    DISCARDABLE     "RES\\ICONS\\SKEWVERT.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SBPOS               BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\SBORIGIN.BMP"
+IDB_SBSIZE              BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\SBSIZE.BMP"
+IDB_MAINTOOLS           BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\MAINTOOL.BMP"
+IDB_ELLIPSE1            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE1.BMP"
+IDB_ELLIPSE2            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE2.BMP"
+IDB_ELLIPSE3            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE3.BMP"
+IDB_ELLIPSE4            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE4.BMP"
+IDB_ELLIPSE5            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE5.BMP"
+IDB_ELLIPSE6            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE6.BMP"
+IDB_ELLIPSE7            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE7.BMP"
+IDB_ELLIPSE8            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ELLIPSE8.BMP"
+IDB_IMGTOOLS            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\IMGTOOLS.BMP"
+IDB_ZOOMOPT             BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\ZOOMOPT.BMP"
+IDB_SELOPT              BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\SELOPT.BMP"
+IDB_AIROPT              BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\AIROPT.BMP"
+IDBM_DRAGHANDLE         BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\HANDLE.BMP"
+IDBM_DRAGHANDLE2        BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\HANDLE2.BMP"
+IDBM_COMPWELL           BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\COMPWELL.BMP"
+
+IDB_TEXT_TBAR           BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\TEXT_TBV.BMP"
+FONT_TT_BMP             BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\FONT_TT.BMP"
+FONT_PRN_BMP            BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\FONT_PRN.BMP"
+TT_OPENTYPE_BMP         BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\FONT_TTOTF.BMP"
+PS_OPENTYPE_BMP         BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\FONT_PSOTF.BMP"
+TYPE1_BMP               BITMAP  MOVEABLE PURE   "RES\\BITMAPS\\FONT_TYPE1.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDCUR_MOVE              CURSOR  DISCARDABLE     "RES\\CURSORS\\MOVE.CUR"
+IDC_HSPLIT              CURSOR  DISCARDABLE     "RES\\CURSORS\\HSPLIT.CUR"
+IDC_BRUSH               CURSOR  DISCARDABLE     "RES\\CURSORS\\BRUSH.CUR"
+IDC_BULLSEYE            CURSOR  DISCARDABLE     "RES\\CURSORS\\BULLSEYE.CUR"
+IDC_CROSSHAIR           CURSOR  DISCARDABLE     "RES\\CURSORS\\CROSS.CUR"
+IDC_EYEDROP             CURSOR  DISCARDABLE     "RES\\CURSORS\\PICKUP.CUR"
+IDC_FLOOD               CURSOR  DISCARDABLE     "RES\\CURSORS\\FILL.CUR"
+IDC_PENCIL              CURSOR  DISCARDABLE     "RES\\CURSORS\\PENCIL.CUR"
+IDC_ZOOMIN              CURSOR  DISCARDABLE     "RES\\CURSORS\\ZOOM.CUR"
+IDCUR_SIZENWSE          CURSOR  DISCARDABLE     "RES\\CURSORS\\SIZENWSE.CUR"
+IDCUR_SIZENESW          CURSOR  DISCARDABLE     "RES\\CURSORS\\SIZENESW.CUR"
+IDCUR_SIZEWE            CURSOR  DISCARDABLE     "RES\\CURSORS\\SIZEWE.CUR"
+IDCUR_SIZENS            CURSOR  DISCARDABLE     "RES\\CURSORS\\SIZENS.CUR"
+IDCUR_AIRBRUSH          CURSOR  DISCARDABLE     "RES\\CURSORS\\AIR.CUR"
+IDC_DRAGTOOL            CURSOR  DISCARDABLE     "RES\\CURSORS\\DRAGTOOL.CUR"
+
+IDCUR_HIBEAM            CURSOR  DISCARDABLE     "RES\\CURSORS\\HIBEAM.CUR"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+ID_MAINFRAME MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New\tCtrl+N",                ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "Page Set&up...",              ID_FILE_PAGE_SETUP
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "S&end...",                    ID_FILE_SEND
+        MENUITEM SEPARATOR
+        MENUITEM "Set As &Wallpaper (Tiled)",   ID_FILE_SETASWALLPAPER_T
+        MENUITEM "Set As Wa&llpaper (Centered)", ID_FILE_SETASWALLPAPER_C
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4",               ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Repeat\tCtrl+Y",             ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "C&lear Selection\tDel",       ID_EDIT_CLEAR
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "C&opy To...",                 ID_EDIT_COPY_TO
+        MENUITEM "Paste &From...",              ID_EDIT_PASTE_FROM
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Tool Box\tCtrl+T",           ID_VIEW_TOOL_BOX
+        MENUITEM "&Color Box\tCtrl+L",          ID_VIEW_COLOR_BOX
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "T&ext Toolbar",               ID_VIEW_TEXT_TOOLBAR
+        MENUITEM SEPARATOR
+        POPUP "&Zoom"
+        BEGIN
+            MENUITEM "&Normal Size\tCtrl+PgUp",     ID_VIEW_ZOOM_100
+            MENUITEM "&Large Size\tCtrl+PgDn",      ID_VIEW_ZOOM_400
+            MENUITEM "C&ustom...",                  ID_VIEW_ZOOM
+            MENUITEM SEPARATOR
+            MENUITEM "Show &Grid\tCtrl+G",          ID_VIEW_GRID
+            MENUITEM "Show T&humbnail",             ID_VIEW_THUMBNAIL
+        END
+        MENUITEM "&View Bitmap\tCtrl+F",        ID_VIEW_VIEW_PICTURE
+    END
+    POPUP "&Image"
+    BEGIN
+        MENUITEM "&Flip/Rotate...\tCtrl+R",     ID_IMAGE_FLIP_ROTATE
+        MENUITEM "&Stretch/Skew...\tCtrl+W",    ID_IMAGE_STRETCH_SKEW
+        MENUITEM "&Invert Colors\tCtrl+I",      ID_IMAGE_INVERT_COLORS
+        MENUITEM "&Attributes...\tCtrl+E",      ID_IMAGE_ATTRIBUTES
+        MENUITEM "&Clear Image\tCtrl+Shft+N",   ID_IMAGE_CLEAR_IMAGE
+        MENUITEM "&Draw Opaque",                IDM_TGLOPAQUE
+    END
+    POPUP "&Colors"
+    BEGIN
+        MENUITEM "&Edit Colors...",             IDM_EDITCOLORS
+#if 0
+        MENUITEM "&Get Colors...",              IDM_LOADCOLORS
+        MENUITEM "&Save Colors...",             IDM_SAVECOLORS
+#endif
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Paint",                ID_APP_ABOUT
+    END
+END
+
+IDR_SRVR_INPLACE MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Repeat\tCtrl+Y",             ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Paste &From...",              ID_EDIT_PASTE_FROM
+        MENUITEM "C&lear Selection\tDel",       ID_EDIT_CLEAR
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECT_ALL
+    END
+    MENUITEM SEPARATOR
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Tool Box\tCtrl+T",           ID_VIEW_TOOL_BOX
+        MENUITEM "&Color Box\tCtrl+L",          ID_VIEW_COLOR_BOX
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "T&ext Toolbar",               ID_VIEW_TEXT_TOOLBAR
+        MENUITEM SEPARATOR
+        POPUP "&Zoom"
+        BEGIN
+            MENUITEM "&Normal Size\tCtrl+PgUp",     ID_VIEW_ZOOM_100
+            MENUITEM "&Large Size\tCtrl+PgDn",      ID_VIEW_ZOOM_400
+            MENUITEM "C&ustom...",                  ID_VIEW_ZOOM
+            MENUITEM SEPARATOR
+            MENUITEM "Show &Grid\tCtrl+G",          ID_VIEW_GRID
+            MENUITEM "Show T&humbnail",             ID_VIEW_THUMBNAIL
+        END
+        MENUITEM "&View Bitmap\tCtrl+F",        ID_VIEW_VIEW_PICTURE
+
+    END
+    POPUP "&Image"
+    BEGIN
+        MENUITEM "&Flip/Rotate...\tCtrl+R",     ID_IMAGE_FLIP_ROTATE
+        MENUITEM "&Stretch/Skew...\tCtrl+W",    ID_IMAGE_STRETCH_SKEW
+        MENUITEM "&Invert Colors\tCtrl+I",      ID_IMAGE_INVERT_COLORS
+        MENUITEM "&Attributes...\tCtrl+E",      ID_IMAGE_ATTRIBUTES
+        MENUITEM "&Clear Image\tCtrl+Shft+N",   ID_IMAGE_CLEAR_IMAGE
+        MENUITEM "&Draw Opaque",                IDM_TGLOPAQUE
+    END
+    POPUP "&Colors"
+    BEGIN
+        MENUITEM "&Edit Colors...",             IDM_EDITCOLORS
+    END
+    MENUITEM SEPARATOR
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM SEPARATOR
+        MENUITEM "&About Paint",                ID_APP_ABOUT
+    END
+END
+
+IDR_SRVR_EMBEDDED MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Update",                     ID_FILE_UPDATE
+        MENUITEM "Save Copy &As...",            ID_FILE_SAVE_COPY_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "Page Set&up...",              ID_FILE_PAGE_SETUP
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "S&end...",                    ID_FILE_SEND
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM "&Repeat\tCtrl+Y",             ID_EDIT_REDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Paste &From...",              ID_EDIT_PASTE_FROM
+        MENUITEM "C&lear Selection\tDel",       ID_EDIT_CLEAR
+        MENUITEM "Select &All\tCtrl+A",         ID_EDIT_SELECT_ALL
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Tool Box\tCtrl+T",           ID_VIEW_TOOL_BOX
+        MENUITEM "&Color Box\tCtrl+L",          ID_VIEW_COLOR_BOX
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM "T&ext Toolbar",               ID_VIEW_TEXT_TOOLBAR
+        MENUITEM SEPARATOR
+        POPUP "&Zoom"
+        BEGIN
+            MENUITEM "&Normal Size\tCtrl+PgUp",     ID_VIEW_ZOOM_100
+            MENUITEM "&Large Size\tCtrl+PgDn",      ID_VIEW_ZOOM_400
+            MENUITEM "C&ustom...",                  ID_VIEW_ZOOM
+            MENUITEM SEPARATOR
+            MENUITEM "Show &Grid\tCtrl+G",          ID_VIEW_GRID
+            MENUITEM "Show T&humbnail",             ID_VIEW_THUMBNAIL
+        END
+        MENUITEM "&View Bitmap\tCtrl+F",        ID_VIEW_VIEW_PICTURE
+
+    END
+    POPUP "&Image"
+    BEGIN
+        MENUITEM "&Flip/Rotate...\tCtrl+R",     ID_IMAGE_FLIP_ROTATE
+        MENUITEM "&Stretch/Skew...\tCtrl+W",    ID_IMAGE_STRETCH_SKEW
+        MENUITEM "&Invert Colors\tCtrl+I",      ID_IMAGE_INVERT_COLORS
+        MENUITEM "&Attributes...\tCtrl+E",      ID_IMAGE_ATTRIBUTES
+        MENUITEM "&Clear Image\tCtrl+Shft+N",   ID_IMAGE_CLEAR_IMAGE
+        MENUITEM "&Draw Opaque",                IDM_TGLOPAQUE
+    END
+    POPUP "&Colors"
+    BEGIN
+        MENUITEM "&Edit Colors...",             IDM_EDITCOLORS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About Paint",                ID_APP_ABOUT
+    END
+END
+
+IDR_TEXT_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP "Text"
+    BEGIN
+        MENUITEM "Undo",                        ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cut",                         ID_EDIT_CUT
+        MENUITEM "Copy",                        ID_EDIT_COPY
+        MENUITEM "Paste",                       ID_EDIT_PASTE
+        MENUITEM "Clear Selection",             ID_EDIT_CLEAR
+        MENUITEM "Select All",                  ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "Text Toolbar",                ID_VIEW_TEXT_TOOLBAR
+    END
+END
+
+IDR_SELECTION_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP "Selection"
+    BEGIN
+        MENUITEM "Cu&t",                        ID_EDIT_CUT
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM "C&lear Selection",            ID_EDIT_CLEAR
+        MENUITEM "Select &All",                 ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "C&opy To...",                 ID_EDIT_COPY_TO
+        MENUITEM "Paste &From...",              ID_EDIT_PASTE_FROM
+        MENUITEM SEPARATOR
+        MENUITEM "Flip/&Rotate...",             ID_IMAGE_FLIP_ROTATE
+        MENUITEM "&Stretch/Skew...",            ID_IMAGE_STRETCH_SKEW
+        MENUITEM "&Invert Colors",              ID_IMAGE_INVERT_COLORS
+    END
+END
+
+IDR_THUMBNAIL_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP "Thumbnail"
+    BEGIN
+        MENUITEM "Thumbnail",                   ID_THUMBNAIL_THUMBNAIL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ID_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_IMAGE_ATTRIBUTES,    VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_VIEW_VIEW_PICTURE,   VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_VIEW_GRID,           VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_IMAGE_INVERT_COLORS, VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_VIEW_COLOR_BOX,      VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_IMAGE_CLEAR_IMAGE,   VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_IMAGE_FLIP_ROTATE,   VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_VIEW_TOOL_BOX,       VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_ADD,         IDMX_LARGERBRUSH,       VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CLEAR,          VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_ESCAPE,              VIRTKEY, NOINVERT
+   // VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_NEXT,        ID_VIEW_ZOOM_400,       VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_VIEW_ZOOM_100,       VIRTKEY, CONTROL, NOINVERT
+    VK_SUBTRACT,    IDMX_SMALLERBRUSH,      VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_IMAGE_STRETCH_SKEW,  VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_SRVR_INPLACE ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_IMAGE_ATTRIBUTES,    VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_VIEW_VIEW_PICTURE,   VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_VIEW_GRID,           VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_IMAGE_INVERT_COLORS, VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_VIEW_COLOR_BOX,      VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_IMAGE_CLEAR_IMAGE,   VIRTKEY, SHIFT, CONTROL, NOINVERT
+    "R",            ID_IMAGE_FLIP_ROTATE,   VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_VIEW_TOOL_BOX,       VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_ADD,         IDMX_LARGERBRUSH,       VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CLEAR,          VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_ESCAPE_SERVER,       VIRTKEY, NOINVERT
+    VK_F1,          ID_HELP_INDEX,          VIRTKEY, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_NEXT,        ID_VIEW_ZOOM_400,       VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_VIEW_ZOOM_100,       VIRTKEY, CONTROL, NOINVERT
+    VK_SUBTRACT,    IDMX_SMALLERBRUSH,      VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_IMAGE_STRETCH_SKEW,  VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_SRVR_EMBEDDED ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_IMAGE_ATTRIBUTES,    VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_VIEW_VIEW_PICTURE,   VIRTKEY, CONTROL, NOINVERT
+    "G",            ID_VIEW_GRID,           VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_IMAGE_INVERT_COLORS, VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_VIEW_COLOR_BOX,      VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_IMAGE_FLIP_ROTATE,   VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_UPDATE,         VIRTKEY, CONTROL, NOINVERT
+    "T",            ID_VIEW_TOOL_BOX,       VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_ADD,         IDMX_LARGERBRUSH,       VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CLEAR,          VIRTKEY, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_ESCAPE,              VIRTKEY, NOINVERT
+    VK_F1,          ID_HELP,                VIRTKEY, NOINVERT
+    "Y",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_NEXT,        ID_VIEW_ZOOM_400,       VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_VIEW_ZOOM_100,       VIRTKEY, CONTROL, NOINVERT
+    VK_SUBTRACT,    IDMX_SMALLERBRUSH,      VIRTKEY, CONTROL, NOINVERT
+    "W",            ID_IMAGE_STRETCH_SKEW,  VIRTKEY, CONTROL, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_IMGGRIDOPT DIALOG DISCARDABLE  50, 40, 200, 85
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Grid Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "                  ",-1,7,20,127,58
+    CHECKBOX        "&Pixel Grid",IDC_PIXELGRID,13,7,44,10
+    CHECKBOX        "&Tile Grid",IDC_TILEGRID,13,20,41,10
+    LTEXT           "&Width:",-1,15,35,22,9
+    EDITTEXT        IDC_WIDTH,42,33,32,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "pixels",-1,80,35,20,9
+    LTEXT           "H&eight:",-1,14,57,25,9
+    EDITTEXT        IDC_HEIGHT,42,55,32,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "pixels",-1,80,57,20,9
+    DEFPUSHBUTTON   "OK",IDOK,142,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,142,24,50,14
+END
+
+IDD_IMAGE_ATTRIBUTES DIALOG DISCARDABLE  0, 0, 234, 166
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Attributes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_FILEDATE_STATIC,13,7,144,8
+    LTEXT           "",IDC_FILESIZE_STATIC,13,17,144,8
+    LTEXT           "&Width:",IDC_WIDTH_STATIC,13,34,22,10
+    EDITTEXT        IDC_WIDTH,42,32,32,12,ES_AUTOHSCROLL
+    LTEXT           "&Height:",IDC_HEIGHT_STATIC,92,34,22,10
+    EDITTEXT        IDC_HEIGHT,123,32,32,12,ES_AUTOHSCROLL
+    GROUPBOX        "Units",-1,7,48,154,28,WS_GROUP
+    CONTROL         "&Inches",IDC_INCHES,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,13,60,34,10
+    CONTROL         "C&m",IDC_CENTIMETERS,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,63,60,27,10
+    CONTROL         "&Pixels",IDC_PIXELS,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,105,60,30,10
+    GROUPBOX        "Colors",-1,7,80,154,28,WS_GROUP
+    CONTROL         "&Black and white",IDC_MONOCHROME,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,13,92,64,10
+    CONTROL         "Co&lors",IDC_COLORS,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,105,92,34,10
+    GROUPBOX        "Transparency",-1,7,112,154,48,WS_GROUP
+    CONTROL         "Use &Transparent background color",IDC_USE_TRANS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,124,126,10
+    PUSHBUTTON      "Select &Color...",IDC_SELECT_COLOR,33,138,73,14
+    CONTROL         "",IDC_TRANS_PAINT,"Static",SS_SIMPLE | SS_SUNKEN,119,
+                    138,16,14
+    DEFPUSHBUTTON   "OK",IDOK,176,7,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,176,24,50,14
+    PUSHBUTTON      "&Default",IDC_DEFAULT,176,41,50,14
+END
+
+IDD_VIEW_ZOOM DIALOG DISCARDABLE  16, 16, 200, 83
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Custom Zoom"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Current zoom:",IDC_CURRENT_ZOOM_STATIC,13,7,47,7
+    RTEXT           "",IDC_CURRENT_ZOOM,61,7,49,9
+    GROUPBOX        "Zoom to",-1,7,20,127,57,WS_GROUP
+    CONTROL         "&100%",IDC_ZOOM_100,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,13,38,33,10
+    CONTROL         "&200%",IDC_ZOOM_200,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,13,57,33,10
+    CONTROL         "&400%",IDC_ZOOM_400,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,56,38,33,10
+    CONTROL         "&600%",IDC_ZOOM_600,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,56,57,33,10
+    CONTROL         "&800%",IDC_ZOOM_800,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,94,38,33,10
+    DEFPUSHBUTTON   "OK",IDOK,142,7,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,142,24,50,14
+END
+
+IDD_TEXT_FONT_DLG DIALOG DISCARDABLE  0, 0, 236, 14
+STYLE WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDC_TYPEFACE,0,1,110,130,CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_SORT | CBS_HASSTRINGS |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_POINTSIZE,116,1,35,130,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CHARSET,157,1,80,130,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_FLIP_ROTATE DIALOG DISCARDABLE  32, 16, 200, 107
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Flip and Rotate"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Flip or rotate",-1,7,7,127,94,
+                    WS_GROUP
+    CONTROL         "&Flip horizontal",IDC_HORIZONTAL,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,13,20,77,9
+    CONTROL         "Flip &vertical",IDC_VERTICAL,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,13,33,72,9
+    CONTROL         "&Rotate by angle",IDC_BY_ANGLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,13,46,72,9
+    CONTROL         "&90°",IDC_90_DEG,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,49,60,30,10
+    CONTROL         "&180°",IDC_180_DEG,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,49,73,31,10
+    CONTROL         "&270°",IDC_270_DEG,"Button",BS_AUTORADIOBUTTON |
+                    WS_TABSTOP,49,86,33,10
+    DEFPUSHBUTTON   "OK",IDOK,142,7,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,142,24,50,14
+END
+
+IDD_STRETCH_SKEW DIALOG DISCARDABLE  18, 48, 232, 150
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Stretch and Skew"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Stretch",-1,7,7,160,67,WS_GROUP
+    ICON            IDI_STRETCH_HORZ,IDC_STRETCH_HORZ_ICON,15,20,18,20
+    LTEXT           "&Horizontal:",IDC_STRETCH_HORZ,53,27,40,8
+    EDITTEXT        IDC_STRETCH_HORZ_PERCENT,95,26,32,12,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STRETCH_HORZ_SUFFIX,130,28,8,8
+    ICON            IDI_STRETCH_VERT,IDC_STRETCH_VERT_ICON,15,45,18,20
+    LTEXT           "&Vertical:",IDC_STRETCH_VERT,53,51,40,8
+    EDITTEXT        IDC_STRETCH_VERT_PERCENT,95,50,32,12,ES_AUTOHSCROLL
+    LTEXT           "%",IDC_STRETCH_VERT_SUFFIX,130,52,8,8
+    GROUPBOX        "Skew",-1,7,77,160,67,WS_GROUP
+    ICON            IDI_SKEW_HORZ,IDC_SKEW_HORZ_ICON,15,90,18,20
+    LTEXT           "H&orizontal:",IDC_SKEW_HORZ,53,97,40,8
+    EDITTEXT        IDC_SKEW_HORZ_DEGREES,95,96,32,12,ES_AUTOHSCROLL
+    LTEXT           "Degrees",IDC_SKEW_HORZ_SUFFIX,130,98,28,8
+    ICON            IDI_SKEW_VERT,IDC_SKEW_VERT_ICON,15,115,18,20
+    LTEXT           "V&ertical:",IDC_SKEW_VERT,53,121,40,8
+    EDITTEXT        IDC_SKEW_VERT_DEGREES,95,120,32,12,ES_AUTOHSCROLL
+    LTEXT           "Degrees",IDC_SKEW_VERT_SUFFIX,130,122,28,8
+    DEFPUSHBUTTON   "OK",IDOK,175,7,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,175,24,50,14
+END
+
+IDD_COLORTABLE DIALOG DISCARDABLE  0, 0, 129, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Color Table"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,73,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,73,23,50,14
+    LISTBOX         IDC_COLORLIST,3,2,63,90,LBS_OWNERDRAWFIXED |
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BMP_TRUECOLOR       "24-bit Bitmap (*.bmp;*.dib)"
+    IDS_EXTENSION_DIB       ".dib"
+    IDS_EXTENSION_RLE       ".rle"
+    IDS_EXTENSION_PCD       ".pcd"
+    IDS_EXTENSION_PICT      ".pic"
+    IDS_TYPE_ALLPICTURES    "All Picture Files"
+    IDS_TYPE_ALLFILES       "All Files"
+    IDS_PAL_FILETYPES       "Palette|*.pal|"
+    IDS_EXTENSION_PNG       ".png"
+    IDS_EXTENSION_TGA       ".tga"
+    IDS_EXTENSION_TIFF      ".tif"
+    IDS_EXTENSION_PAL       ".pal"
+    IDS_PAL_UNTITLED        "untitled.pal"
+    IDP_OLE_INIT_FAILED     "OLE 2.0 was unable to start.\nMake sure that you are using the correct version of the OLE libraries."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    ID_MAINFRAME            "Paint\nuntitled\nBitmap Image\nBitmap Files (*.bmp)\n.bmp\nPaint.Picture\nBitmap Image"
+    IDS_EXTENSION_BMP       ".bmp"
+    IDS_EXTENSION_GIF       ".gif"
+    IDS_EXTENSION_JPEG      ".jpg"
+    IDS_EXTENSION_ICO       ".ico"
+    IDS_EXTENSION_PCX       ".pcx"
+    IDS_PCX_FILTER_NAME     "PCX Files"
+    IDS_ICO_FILTER_NAME     "Icon Files"
+    IDS_BMP_MONO            "Monochrome Bitmap (*.bmp;*.dib)"
+    IDS_BMP_16COLOR         "16 Color Bitmap (*.bmp;*.dib)"
+    IDS_BMP_256COLOR        "256 Color Bitmap (*.bmp;*.dib)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "Paint"
+    AFX_IDS_IDLEMESSAGE     "For Help, click Help Topics on the Help Menu."
+    AFX_IDS_HELPMODEMESSAGE "Select an area on which to get Help."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_NEW             "Creates a new document."
+    ID_FILE_OPEN            "Opens an existing document."
+    ID_FILE_CLOSE           "Closes the active document."
+    ID_FILE_SAVE            "Saves the active document."
+    ID_FILE_SAVE_AS         "Saves the active document with a new name."
+    ID_FILE_PAGE_SETUP      "Changes the page layout."
+    ID_FILE_PRINT_SETUP     "Specifies the default printer setup."
+    ID_FILE_PRINT           "Prints the active document and sets printing options."
+    ID_FILE_PRINT_PREVIEW   "Displays full pages."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_APP_ABOUT            "Displays program information, version number, and copyright."
+    ID_APP_EXIT             "Quits Paint."
+    ID_HELP_INDEX           "Opens Paint Help."
+    ID_HELP_USING           "Displays instructions about how to use Help."
+    ID_CONTEXT_HELP         "Displays Help for areas you click on."
+    ID_HELP                 "Displays Help for the current task or command."
+    ID_FILE_SETASWALLPAPER_C "Centers this bitmap as the desktop wallpaper."
+    ID_FILE_SETASWALLPAPER_T "Tiles this bitmap as the desktop wallpaper."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_SEND            "Sends a picture by using mail or fax."
+    ID_EDIT_COPY_TO         "Copies the selection to a file."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_MRU_FILE1       "Opens this document."
+    ID_FILE_MRU_FILE2       "Opens this document."
+    ID_FILE_MRU_FILE3       "Opens this document."
+    ID_FILE_MRU_FILE4       "Opens this document."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_CLEAR           "Deletes the selection."
+    ID_EDIT_CLEAR_ALL       "Erases everything."
+    ID_EDIT_COPY            "Copies the selection and puts it on the Clipboard."
+    ID_EDIT_CUT             "Cuts the selection and puts it on the Clipboard."
+    ID_EDIT_FIND            "Finds the specified text."
+    ID_EDIT_PASTE           "Inserts the contents of the Clipboard."
+    ID_EDIT_REPEAT          "Repeats the last action."
+    ID_EDIT_REPLACE         "Replaces specific text with different text."
+    ID_EDIT_SELECT_ALL      "Selects everything."
+    ID_EDIT_UNDO            "Undoes the last action."
+    ID_EDIT_REDO            "Redoes the previously undone action."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_PASTE_FROM      "Pastes a file into the selection."
+    ID_VIEW_ZOOM_100        "Zooms the picture to 100%."
+    ID_VIEW_ZOOM_400        "Zooms the picture to 400%."
+    ID_VIEW_ZOOM            "Zooms the picture."
+    ID_VIEW_VIEW_PICTURE    "Displays the entire picture."
+    ID_VIEW_THUMBNAIL       "Shows or hides the thumbnail view of the picture."
+    ID_VIEW_GRID            "Shows or hides the grid."
+    ID_VIEW_TEXT_TOOLBAR    "Shows or hides the text toolbar."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_VIEW_TOOL_BOX        "Shows or hides the tool box."
+    ID_VIEW_COLOR_BOX       "Shows or hides the color box."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_VIEW_STATUS_BAR      "Shows or hides the status bar."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_SCSIZE          "Changes the window size."
+    AFX_IDS_SCMOVE          "Changes the window position."
+    AFX_IDS_SCMINIMIZE      "Reduces the window to an icon."
+    AFX_IDS_SCMAXIMIZE      "Enlarges the window to full size."
+    AFX_IDS_SCNEXTWINDOW    "Switches to the next document window."
+    AFX_IDS_SCPREVWINDOW    "Switches to the previous document window."
+    AFX_IDS_SCCLOSE         "Closes the active window and asks if you want to save changes."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "Restores the window to normal size."
+    AFX_IDS_SCTASKLIST      "Activates the task list."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PerContractSoDontChange " "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLORS              "Colors"
+    IDS_FONT_TOOL           "Fonts"
+    IDS_VIEW                "Thumbnail"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PAINT_TOOL          "Tools"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_NOMEMORY      "There is not enough memory or resources to complete operation.\nClose some programs, and then try again."
+    IDS_ERROR_LOWMEMORY     "Low on memory or resources.\nClose some programs, and then try again."
+    IDS_ERROR_GROUP         "Group error."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_BOGUSFILE     "The file is not in the correct format."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_OPEN          "Paint cannot open this file."
+    IDS_ERROR_READLOAD      "Paint cannot read this file."
+    IDS_ERROR_SAVERO        "This file is read-only.\nTo save your changes, use a different filename."
+    IDS_ERROR_COMPEX        "This file is already open."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_NOTVALID_BMP  "This is not a valid bitmap file, or its format is not currently supported."
+    IDS_ERROR_NOTVALID_ICO  "This is not a valid icon."
+    IDS_ERROR_NOTVALID_CUR  "This is not a valid cursor."
+    IDS_ERROR_SAVE_ABORTED  "Save was interrupted, so your file has not been saved."
+    IDS_ERROR_CANT_SAVERO   "You cannot save to a read-only file.\nUse a different file name."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_WHAAAT        "This is not a valid .PCS file."
+    IDS_ERROR_SAVEOVEROPEN  "This file is open for editing and cannot be overwritten.\nUse a different filename to save your changes."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_EXE_INUSE     "This file is already in use.\nClose the program, and then try again."
+    IDS_ERROR_SAVE          "Paint cannot save this file."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_SAMENAME      "Paint cannot save to the same filename with a different file type.\nUse a different filename to save your changes."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_GRIDRANGE     "The grid spacing must be an integer between %d and %d."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WARNING_MONO        "Converting to black and white cannot be undone.  This action affects the current file and may cause some loss of color information.\nDo you want to continue?"
+    IDS_WARNING_COLORSAVE   "Saving into this format may cause some loss of color information.\nDo you want to continue?"
+    IDS_ERROR_BITMAPSIZE    "Bitmaps must be greater than one pixel on a side."
+    IDS_ERROR_FILE          "CFileException"
+    2301                    "Generic error."
+    2302                    "File not found."
+    2303                    "Bad path."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    2304                    "Too many open files."
+    2305                    "Access denied."
+    2306                    "Invalid file."
+    2307                    "Remove current folder."
+    2308                    "Folder full."
+    2309                    "Bad seek."
+    2310                    "Hard IO error."
+    2311                    "Sharing violation."
+    2312                    "Lock violation."
+    2313                    "Disk full."
+    2314                    "End of file."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDCS_BITMAP             "Bitmap"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ENLAGEBITMAPFORSTRETCH
+                            "The selection is now larger than the bitmap.\nWould you like the bitmap enlarged?"
+    IDS_ENLAGEBITMAPFORCLIP "The image in the clipboard is larger than the bitmap.\nWould you like the bitmap enlarged?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_EXPORT        "Cannot save file."
+    IDS_ERROR_CANTREMOVE    "Error removing temporary file."
+    IDS_LOAD_PALETTE_COLORS "Get Colors"
+    IDS_SAVE_PALETTE_COLORS "Save Colors"
+    IDS_EDIT_COLORS         "Edit Colors"
+    IDS_EDIT_COPY_TO        "Copy To"
+    IDS_EDIT_PASTE_FROM     "Paste From"
+    IDS_SELECT_COLOR        "Select Color"
+    IDS_FILEDATE_NA         "File last saved:\tNot Available"
+    IDS_FILESIZE_NA         "Size on disk:\tNot Available"
+    IDS_FILEDATE            "File last saved:\t%s"
+    IDS_FILESIZE            "Size on disk:\t%s bytes"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDMB_LINETOOL           "Draws a straight line with the selected line width.\nLine"
+    IDMB_AIRBSHTOOL         "Draws using an airbrush of the selected size.\nAirbrush"
+    IDMB_CURVETOOL          "Draws a curved line with the selected line width.\nCurve"
+    IDMB_POLYGONTOOL        "Draws a polygon with the selected fill style.\nPolygon"
+    IDMB_RNDRECTTOOL        "Draws a rounded rectangle with the selected fill style.\nRounded Rectangle"
+    IDMB_PENCILTOOL         "Draws a free-form line one pixel wide.\nPencil"
+    IDMB_ERASERTOOL         "Erases a portion of the picture, using the selected eraser shape.\nEraser/Color Eraser"
+    IDMB_ZOOMTOOL           "Changes the magnification.\nMagnifier"
+    IDMY_PICKCOLOR          "Picks up a color from the picture for drawing.\nPick Color"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MUST_SAVE_WALLPAPER "You must save the file before choosing it as Wallpaper."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_IMAGE_FLIP_ROTATE    "Flips or rotates the picture or a selection."
+    ID_IMAGE_STRETCH_SKEW   "Stretches or skews the picture or a selection."
+    ID_IMAGE_INVERT_COLORS  "Inverts the colors of the picture or a selection."
+    ID_IMAGE_ATTRIBUTES     "Changes the attributes of the picture."
+    ID_IMAGE_CLEAR_IMAGE    "Clears the picture or selection."
+    IDS_ERROR_FONTSIZENUMERIC "The font size must be a numeric value."
+    IDS_FILEMENUHELP        "Contains commands for working with the selected item(s)."
+    IDS_EDITMENUHELP        "Contains commands for selecting and transferring items."
+    IDS_VIEWMENUHELP        "Contains commands for customizing this window."
+    IDS_IMAGEMENUHELP       "Contains commands for manipulating pictures and setting attributes."
+    IDS_OPTIONSMENUHELP     "Contains commands for using custom colors and drawing options."
+    IDS_HELPMENUHELP        "Contains commands for displaying Help for and information about Paint."
+
+    IDS_ERROR_DBCSFONTONLY  "Only a Far East font can be used for vertical editing."
+
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDM_TGLOPAQUE           "Makes the current selection either opaque or transparent."
+    IDM_EDITCOLORS          "Creates a new color."
+    IDM_LOADCOLORS          "Uses a previously saved palette of colors."
+    IDM_SAVECOLORS          "Saves the current palette of colors to a file."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDMB_PICKTOOL           "Selects a rectangular part of the picture to move, copy, or edit.\nSelect"
+    IDMB_PICKRGNTOOL        "Selects a free-form part of the picture to move, copy, or edit.\nFree-Form Select"
+    IDMX_TEXTTOOL           "Inserts text into the picture.\nText"
+    IDMB_FILLTOOL           "Fills an area with the current drawing color.\nFill With Color"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDMB_CBRUSHTOOL         "Draws using a brush with the selected shape and size.\nBrush"
+    IDMB_RECTTOOL           "Draws a rectangle with the selected fill style.\nRectangle"
+    IDMB_FRECTTOOL          "Draws a filled rectangle."
+    IDMB_ELLIPSETOOL        "Draws an ellipse with the selected fill style.\nEllipse"
+    IDMB_FELLIPSETOOL       "Draws a filled ellipse."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNDO_PAINTING       "Painting"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SIZE_SEPARATOR      "x"
+    IDS_POS_SEPARATOR       ","
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDB_SBSIZE              "            "
+    IDB_SBPOS               "            "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_SELECTION_SENDTO     "Sends the selection using mail or fax."
+    ID_SELECTION_PRINTTO    "Prints the selection."
+    ID_THUMBNAIL_THUMBNAIL  "Shows or hides the thumbnail."
+    ID_THUMBNAIL_HELP       "Shows Paint Help."
+    IDS_REGISTRY_PATH       "Microsoft\\Windows\\CurrentVersion\\Applets"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNABLE_TO_PASTE     "Not enough room to paste text.\nEnlarge the text area and try again."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERROR_CLIPBOARD     "Error getting the Clipboard Data!"
+    IDS_ERROR_NOPRINTER     "No Printer Found @ page setup"
+    IDS_ERROR_PRINTING      "Paint was unable to print your document. Please make sure you have sufficient disk space and that your printer is working correctly."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_TEXT_PLAIN           "Resets the text be without any attributes."
+    ID_TEXT_BOLD            "Sets or clears the text bold attribute."
+    ID_TEXT_ITALIC          "Sets or clears the text italic attribute."
+    ID_TEXT_SELECTFONT      "Selects the font used by the text."
+    ID_TEXT_SELECTPOINTSIZE "Selects the point size of the text."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_TEXT_UNDERLINE       "Sets or clears the text underline attribute."
+    ID_TOOLBAR_SHOWTOOLTIPS "Shows or hides the tooltips."
+    ID_TOOLBAR_HELP         "Show Paint Help."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_TEXT_PLACE           "Places the text."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\pbrush.rc2"   // non-App Studio edited resources
+
+#include "afxres.rc"         // Standard components
+#include "afxprint.rc"       // printing/print preview resources
+#include "afxolesv.rc"       // OLE server resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

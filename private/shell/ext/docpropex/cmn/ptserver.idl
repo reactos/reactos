@@ -1,0 +1,444 @@
+//-------------------------------------------------------------------------//
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1996.
+//
+//  PTServer.idl : IDL source for advanced property server interface and 
+//	supporting type definitions.
+//
+//-------------------------------------------------------------------------//
+cpp_quote("//-------------------------------------------------------------------------//")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1992 - 1996.")
+cpp_quote("//")
+cpp_quote("//-------------------------------------------------------------------------//")
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "propidl.idl";
+
+//-------------------------------------------------------------------------//
+//  BUGBUG - all property identifiers should eventually be publicized 
+//           in propidl.idl
+cpp_quote("")
+cpp_quote("//  FMTID_ImageSummaryInfo - Property IDs")
+cpp_quote("")
+cpp_quote("#define PIDISI_FILETYPE                 0x00000002L  // VT_LPWSTR")
+cpp_quote("#define PIDISI_CX                       0x00000003L  // VT_UI4")
+cpp_quote("#define PIDISI_CY                       0x00000004L  // VT_UI4")
+cpp_quote("#define PIDISI_RESOLUTIONX              0x00000005L  // VT_UI4")
+cpp_quote("#define PIDISI_RESOLUTIONY              0x00000006L  // VT_UI4")
+cpp_quote("#define PIDISI_BITDEPTH                 0x00000007L  // VT_UI4")
+cpp_quote("#define PIDISI_COLORSPACE               0x00000008L  // VT_LPWSTR")
+cpp_quote("#define PIDISI_COMPRESSION              0x00000009L  // VT_LPWSTR")
+cpp_quote("#define PIDISI_TRANSPARENCY             0x0000000AL  // VT_UI4")
+cpp_quote("#define PIDISI_GAMMAVALUE               0x0000000BL  // VT_UI4") 
+cpp_quote("")
+
+cpp_quote("")
+cpp_quote("//  FMTID_FaxSummaryInfo - Property IDs")
+cpp_quote("")
+cpp_quote("#define PIDFSI_TIME		               0x00000002L  // VT_FILETIME")
+cpp_quote("#define PIDFSI_RECIPIENTNAME            0x00000003L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_RECIPIENTNUMBER          0x00000004L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_SENDERNAME               0x00000005L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_CALLERID                 0x00000006L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_TSID                     0x00000007L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_CSID                     0x00000008L  // VT_LPWSTR")
+cpp_quote("#define PIDFSI_ROUTING                  0x00000009L  // VT_LPWSTR")
+
+//-------------------------------------------------------------------------//
+cpp_quote( "//	Source descriptor bits" )
+cpp_quote( "#define PTSD_DISKFILE	0x00000001" )
+cpp_quote( "#define PTSD_STORAGE	0x00000002" )
+cpp_quote( "#define PTSD_NSS		0x00000004" )
+cpp_quote( "#define PTSD_DATAOBJ	0x00000008" )
+
+//-------------------------------------------------------------------------//
+typedef struct tagPROPSERVERINFO
+{
+	ULONG	cbStruct ;
+	ULONG	mask ;
+	ULONG	ver ;
+	ULONG	dwSupport ;	// source descriptor bits
+} PROPSERVERINFO, *PPROPSERVERINFO, *LPPROPSERVERINFO;
+
+//-------------------------------------------------------------------------//
+typedef struct tagPROPITEMHDR
+{
+	ULONG		cbStruct ;
+	ULONG		mask ;
+	BSTR		bstrName ;
+	BSTR		bstrDisplayName ;
+	BSTR		bstrQtip ;
+	ULONG		dwAccess ;
+	LONG		iOrder ;
+	LONG		lParam ;
+} PROPITEMHDR, *PPROPITEMHDR, *LPPROPITEMHDR ;
+
+cpp_quote( "//	'mask' member bit defs:" )
+cpp_quote( "#define PTI_NAME		0x00000001" )
+cpp_quote( "#define PTI_DISPLAYNAME	0x00000002" )
+cpp_quote( "#define PTI_QTIP		0x00000004" )
+cpp_quote( "#define PTI_ACCESS		0x00000008" )
+cpp_quote( "#define PTI_ORDER		0x00000010" )
+cpp_quote( "#define PTI_PARAM		0x00000020" )
+
+cpp_quote( "//	'dwAccess' bit defs" )
+cpp_quote( "#define PTIA_VISIBLE		0x00000001	// The property is displayed in the advanced property control" )
+cpp_quote( "#define PTIA_READ			0x00000010	// The property's value may be read" )
+cpp_quote( "#define PTIA_WRITE			0x00000020	// The property's value may be edited by the user" )
+cpp_quote( "#define PTIA_READWRITE		PTIA_VISIBLE|PTIA_READ|PTIA_WRITE" )
+cpp_quote( "#define PTIA_READONLY		PTIA_VISIBLE|PTIA_READ" )
+cpp_quote( "#define PTIA_WRITEONLY		PTIA_VISIBLE|PTIA_WRITE" )
+
+cpp_quote("" )
+cpp_quote("//  Property Folder ID" )
+typedef GUID	PFID ;
+typedef PFID	*LPPFID ;
+cpp_quote("#define PFID_NULL GUID_NULL" )
+cpp_quote("#define IsEqualPFID(rpfid1, rpfid2)	  IsEqualGUID((rpfid1), (rpfid2))" )
+cpp_quote("#if defined(__cplusplus)")
+cpp_quote("#ifndef _REFPFID_DEFINED")
+cpp_quote("#define _REFPFID_DEFINED")
+cpp_quote("#define REFPFID    const PFID&")
+cpp_quote("#endif // !_REFPFID_DEFINED")
+cpp_quote("#else // !__cplusplus")
+cpp_quote("#ifndef _REFPFID_DEFINED")
+cpp_quote("#define _REFPFID_DEFINED")
+cpp_quote("#define REFGUID             const PFID * const")
+cpp_quote("#endif // !_REFPFID_DEFINED")
+cpp_quote("#endif // !__cplusplus")
+
+
+cpp_quote("")
+cpp_quote("// Well-known Property Folder IDs")
+extern const PFID PFID_Description ;
+extern const PFID PFID_Origin ;
+extern const PFID PFID_ImageProperties ;
+extern const PFID PFID_AudioProperties ;
+extern const PFID PFID_VideoProperties ;
+extern const PFID PFID_MidiProperties ;
+extern const PFID PFID_FaxProperties ;
+
+//-------------------------------------------------------------------------//
+cpp_quote( "// PROPFOLDERITEM - advanced property folder item descriptor block." )
+typedef struct tagPROPFOLDERITEM
+{
+	//	(sync with PROPITEMHDR members)
+	ULONG		cbStruct ;
+	ULONG		mask ;
+	BSTR		bstrName ;
+	BSTR		bstrDisplayName ;
+	BSTR		bstrQtip ;
+	ULONG		dwAccess ;
+	LONG		iOrder ;
+	LPARAM		lParam ;
+	
+	//	Folder-specific attributes:
+	PFID		pfid ;	
+	ULONG		dwFlags ;
+} PROPFOLDERITEM, *PPROPFOLDERITEM, *LPPROPFOLDERITEM ;
+
+cpp_quote( "//	PROPFOLDERITEM 'mask' bit defs:" )
+cpp_quote( "#define PTFI_NAME			PTI_NAME" )
+cpp_quote( "#define PTFI_DISPLAYNAME	PTI_DISPLAYNAME" )
+cpp_quote( "#define PTFI_QTIP			PTI_QTIP" )
+cpp_quote( "#define PTFI_ACCESS			PTI_ACCESS" )
+cpp_quote( "#define	PTFI_ORDER			PTI_ORDER" )
+cpp_quote( "#define PTFI_PARAM			PTI_PARAM" )
+cpp_quote( "#define PTFI_FOLDERID		0x00000100" )
+cpp_quote( "#define PTFI_FLAGS			0x00000200" )
+cpp_quote( "#define PTFI_ALL			0xFFFFFFFF" )
+
+cpp_quote( "//	PROPFOLDERITEM 'dwFlags' bit defs" )
+cpp_quote( "#define PTFIF_USERDEFINED	0x10000000	// The property is a user-defined folder" )
+
+//-------------------------------------------------------------------------//
+cpp_quote( "// PUID - property unique identifier." )
+cpp_quote( "// (devnote: do not modify order of members!)" )
+typedef struct tagPUID
+{
+	FMTID		  fmtid ;
+	PROPID		  propid ;
+	VARTYPE		  vt ;
+} PUID, *PPUID, *LPPUID	;
+
+//-------------------------------------------------------------------------//
+cpp_quote( "// Basic Property descriptor block" )
+typedef struct tagBASICPROPITEM
+{
+	ULONG		cbStruct ;
+	ULONG		dwAccess ;
+	BOOL		bDirty ;
+	PUID		puid ;
+	PROPVARIANT val ;
+} BASICPROPITEM, *PBASICPROPITEM, *LPBASICPROPITEM ;
+
+//-------------------------------------------------------------------------//
+cpp_quote( "// PROPERTYITEM - advanced property item descriptor block." )
+typedef struct tagPROPERTYITEM
+{
+	//	(sync with PROPITEMHDR members)
+	ULONG		 cbStruct ;
+	ULONG		 mask ;
+	BSTR		 bstrName ;
+	BSTR		 bstrDisplayName ;
+	BSTR		 bstrQtip ;
+	ULONG		 dwAccess ;
+	LONG		 iOrder ;
+	LPARAM		 lParam ;
+
+	//	Property item-specific attributes:
+	PUID		 puid ;
+	PFID		 pfid ;
+	ULONG		 dwFlags ;
+	ULONG		 ctlID ;
+	BSTR		 bstrDisplayFmt ;
+	ULONG		 Reserved0 ;
+	PROPVARIANT	 val ;
+} PROPERTYITEM, *PPROPERTYITEM, *LPPROPERTYITEM ;
+
+cpp_quote( "//	PROPERTYITEM 'mask' bit defs:" )
+cpp_quote( "#define PTPI_NAME			PTI_NAME" )
+cpp_quote( "#define PTPI_DISPLAYNAME	PTI_DISPLAYNAME" )
+cpp_quote( "#define PTPI_QTIP			PTI_QTIP" )
+cpp_quote( "#define PTPI_ACCESS			PTI_ACCESS" )
+cpp_quote( "#define	PTPI_ORDER			PTI_ORDER" )
+cpp_quote( "#define PTPI_PARAM			PTI_PARAM" )
+cpp_quote( "#define PTPI_FMTID			0x00000100" )
+cpp_quote( "#define PTPI_PROPID			0x00000200" )
+cpp_quote( "#define PTPI_FOLDERID		0x00000400" )
+cpp_quote( "#define PTPI_FLAGS			0x00000800" )
+cpp_quote( "#define PTPI_VARTYPE		0x00001000" )
+cpp_quote( "#define PTPI_DISPLAYFMT		0x00002000" )
+cpp_quote( "#define PTPI_VALUE			0x00004000" )
+cpp_quote( "#define PTPI_ALL			0xFFFFFFFF" )
+
+cpp_quote( "//	PROPERTYITEM 'dwFlags' bit defs" )
+cpp_quote( "#define PTPIF_BASIC         0x00000000  // The property control exhibits fundamental characteristics." )
+cpp_quote( "#define PTPIF_MRU           0x00000001  // The property control maintains a list of MRU values for the property." )
+cpp_quote( "#define PTPIF_ENUM          0x00000002  // The property control maintains a defined list of possible values." )
+cpp_quote( "#define PTPIF_TYPEMASK		0x0000000F  // mask for mutually exclusive values in low byte" )
+cpp_quote( "#define PTPIF_RANGED		0x00000010  // The property control validates a new value against a range of valid values" )
+cpp_quote( "#define PTPIF_INNATE	    0x00000020	// The property's value is innate to its source, and cannot be modified." )
+cpp_quote( "#define PTPIF_USERDEFINED	0x10000000	// The property is a user-defined property (otherwise, the property is a 'stock' property." )
+
+cpp_quote( "//	PROPERTYITEM 'ctlID' edit control specifiers" )
+typedef enum tagPTCTLID
+{
+	PTCTLID_SINGLELINE_EDIT,
+	PTCTLID_MULTILINE_EDIT,
+	PTCTLID_DROPDOWN_COMBO,
+	PTCTLID_DROPLIST_COMBO,
+	PTCTLID_CALENDARTIME,
+	PTCTLID_CALENDAR,
+	PTCTLID_TIME,
+} PTCTLID, *PPTCTLID, *LPPTCTLID ;
+
+cpp_quote( "//	PROPVARIANT_DISPLAY type: PROPVARIANT value + display string" )
+typedef struct tagPROPVARIANT_DISPLAY
+{
+	PROPVARIANT val ;
+	BSTR		bstrDisplay ;
+} PROPVARIANT_DISPLAY, *PPROPVARIANT_DISPLAY, *LPPROPVARIANT_DISPLAY ;
+
+cpp_quote( "//	IAdvancedPropertyServer::ReleaseProperties() 'dwFlags' argument values" )
+cpp_quote( "#define PTREL_DONE_ENUMERATING		0x00000001	//	The control is finished enumerating property information for the source." )
+cpp_quote( "#define PTREL_CLOSE_SOURCE			0x00000002	//	The source should be closed, if applicable." )
+cpp_quote( "#define PTREL_SOURCE_REMOVED		0xFFFFFFFF	//	The source has been removed from the control.  The server should release source resources permanently." )
+
+//-------------------------------------------------------------------------//
+//	IBasicPropertyServer interface
+[
+	uuid(C63D658C-7451-11d2-BE75-00A0C9A83DA1),
+
+	helpstring("IBasicPropertyServer Interface"),
+	pointer_default(unique)
+]
+interface IBasicPropertyServer : IUnknown
+{
+	[helpstring( "method AcquireBasic" )] 
+	HRESULT AcquireBasic( [in] const VARIANT* pvarSrc, 
+						  [in,out,size_is(cItems)] BASICPROPITEM rgItems[], 
+						  [in]LONG cItems ) ;
+				  
+	[helpstring( "method PersistBasic" )] 
+	HRESULT PersistBasic( [in] const VARIANT* pvarSrc, 
+						  [in,out,size_is(cItems)] BASICPROPITEM rgItems[], 
+						  [in]LONG cItems ) ;
+} ;
+
+//-------------------------------------------------------------------------//
+//	IEnumPROPFOLDERITEM interface
+[
+	uuid(1F183F5B-5C4D-11D1-8B83-080036B11A03),
+
+	helpstring("IEnumPROPFOLDERITEM Interface"),
+	pointer_default(unique)
+]
+interface IEnumPROPFOLDERITEM : IUnknown
+{
+	[helpstring( "method Next" )] 
+	HRESULT Next( [in] ULONG cItems, 
+				  [out,size_is(cItems), length_is(*pcItemsFetched)] PROPFOLDERITEM* rgFolderItem, 
+				  [out] ULONG* pcItemsFetched ) ;
+	
+	[helpstring( "method Skip" )] 
+	HRESULT Skip( [in] ULONG cItems ) ;
+	
+	[helpstring("method Reset")] 
+	HRESULT Reset( ) ;
+	
+	[helpstring("method Clone")] 
+	HRESULT Clone( [out] IEnumPROPFOLDERITEM ** ppEnum ) ;
+};
+
+//-------------------------------------------------------------------------//
+//	IEnumPROPERTYITEM interface
+[
+	uuid(1F183F5D-5C4D-11D1-8B83-080036B11A03),
+
+	helpstring("IEnumPROPERTYITEM Interface"),
+	pointer_default(unique)
+]
+interface IEnumPROPERTYITEM : IUnknown
+{
+	[helpstring( "method Next" )] 
+	HRESULT Next( [in] ULONG cItems, 
+				  [out,size_is(cItems), length_is(*pcItemsFetched)] PROPERTYITEM* rgPropertyItem, 
+				  [out] ULONG* pcItemsFetched ) ;
+	
+	[helpstring( "method Skip" )] 
+	HRESULT Skip( [in] ULONG cItems ) ;
+	
+	[helpstring("method Reset")] 
+	HRESULT Reset( ) ;
+	
+	[helpstring("method Clone")] 
+	HRESULT Clone( [out] IEnumPROPERTYITEM ** ppEnum ) ;
+};
+
+//-------------------------------------------------------------------------//
+//	IEnumPROPVARIANT_DISPLAY interface
+[
+
+	uuid(1F183F5F-5C4D-11D1-8B83-080036B11A03),
+
+	helpstring("IEnumPROPVARIANT Interface"),
+	pointer_default(unique)
+]
+interface IEnumPROPVARIANT_DISPLAY : IUnknown
+{
+	[helpstring("method Next"), local] 
+	HRESULT Next( [in]  ULONG celt, 
+				  [out] PROPVARIANT_DISPLAY* rgVar, 
+				  [out] ULONG *pCeltFetched ) ;
+
+	[helpstring("method RemoteNext"), call_as(Next) ] 
+	HRESULT RemoteNext( [in] ULONG celt, 
+					    [out, size_is(celt), length_is(*pCeltFetched)] PROPVARIANT_DISPLAY* rgVar, 
+					    [out] ULONG *pCeltFetched ) ;
+
+	[helpstring("method Skip")] 
+	HRESULT Skip( [in] ULONG celt ) ;
+
+	[helpstring("method Reset")] 
+	HRESULT Reset() ;
+
+	[helpstring("method Clone")] 
+	HRESULT Clone( [out] IEnumPROPVARIANT_DISPLAY ** ppEnum ) ;
+};
+
+//-------------------------------------------------------------------------//
+//	IAdvancedPropertyServer interface
+[
+	uuid(1F183F59-5C4D-11D1-8B83-080036B11A03),
+
+	helpstring("IAdvancedPropertyServer Interface"),
+	pointer_default(unique)
+]
+interface IAdvancedPropertyServer : IUnknown
+{
+	[helpstring("method QueryServerInfo")] 
+	HRESULT QueryServerInfo( [in,out] PROPSERVERINFO* pInfo ) ;
+
+	[helpstring("method AcquireAdvanced")] 
+	HRESULT AcquireAdvanced( [in] const VARIANT* pvarSrc,
+								  [out]LPARAM * plParamSrc );
+
+	[helpstring("method EnumFolderItems")] 
+	HRESULT EnumFolderItems( [in]LPARAM lParamSrc, [out] IEnumPROPFOLDERITEM** ppEnum ) ;
+	
+	[helpstring("method EnumPropertyItems")] 
+	HRESULT EnumPropertyItems( [in] const PROPFOLDERITEM* pFolderItem, 
+								 [out] IEnumPROPERTYITEM ** ppEnum ) ;
+
+	[helpstring("method EnumValidValues")]
+	HRESULT EnumValidValues( [in] const PROPERTYITEM* pItem, 
+							   [out] IEnumPROPVARIANT_DISPLAY ** ppEnum ) ;
+	
+	[helpstring("method PersistAdvanced")] 
+	HRESULT PersistAdvanced( [in, out] PROPERTYITEM* pItem ) ;
+
+	[helpstring("method ReleaseAdvanced")] 
+	HRESULT ReleaseAdvanced( [in]LPARAM lParamSrc, [in] ULONG dwFlags ) ;
+
+} ;
+
+cpp_quote( "//	STGFMT_NONE flag" )
+cpp_quote( "#define STGFMT_NONE			0xFFFFFFFF" )
+cpp_quote( "#define STGFMT_ERROR		STGFMT_NONE" )
+
+cpp_quote( "//	IPropertyServer::AcquireMultiple aValFlags flags" )
+cpp_quote( "#define AMPF_COMPOSITE			0x00000001" )
+cpp_quote( "#define AMPF_COMPOSITE_MISMATCH 0x00000002" )
+
+//-------------------------------------------------------------------------//
+//	IPropertyServer interface - provides generic property services
+[
+	uuid(1F183F58-5C4D-11D1-8B83-080036B11A03),
+
+	helpstring("IPropertyServer Interface"),
+	pointer_default(unique)
+]
+interface IPropertyServer : IUnknown
+{
+	[helpstring("method AcquireMultiple")] 
+	HRESULT AcquireMultiple( [in]LONG cSrcs, 
+							 [in]VARIANT* aSrcs,
+							 [out]ULONG *aStgFmts,
+							 [out]HRESULT *aResults,
+							 [in]REFFMTID fmtid,
+							 [in]LONG cProps,
+							 [in]PROPSPEC* aSpecs, 
+							 [out]PROPVARIANT* aVals,
+							 [out]ULONG* aPropFlags ) ;
+	
+	[helpstring("method PersistMultiple")] 
+	HRESULT PersistMultiple( [in]LONG cSrcs, 
+							 [in]VARIANT* aSrcs,
+							 [out]HRESULT *aResults,
+							 [in]REFFMTID fmtid,
+							 [in]LONG cProps,
+							 [in]PROPSPEC* aSpecs, 
+							 [in]PROPVARIANT* aVals,
+							 [in]PROPID	propidNameFirst ) ;
+
+	HRESULT	GetDisplayText( [in]REFFMTID fmtid,
+							[in]LONG cProps,
+							[in]PROPSPEC* aSpecs,
+							[in]PROPVARIANT* aVals,
+							[in]BSTR*  abstrFmt,
+							[in]ULONG* adwFlags,
+							[out] BSTR* abstrDisplay ) ;
+
+	HRESULT	AssignFromDisplayText( [in]REFFMTID fmtid,
+								   [in]LONG cProps,
+								   [in]PROPSPEC* aSpecs,
+								   [in]BSTR* abstrDisplay,
+								   [in]BSTR*  abstrFmt,
+								   [in]ULONG* adwFlags,
+								   [out]PROPVARIANT* aVals ) ;
+} ;

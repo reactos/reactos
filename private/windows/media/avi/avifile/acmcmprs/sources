@@ -1,0 +1,52 @@
+#
+# build instructions for audio compression stream handler acmcps32.dll
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=acmcps32
+TARGETPATH=..\..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+
+
+BLDCRT=1
+
+C_DEFINES=-DWIN32 -DUNICODE -D__RPC_H__ -D_INC_OLE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib     \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib      \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib    \
+           $(_NTBINDIR)\public\sdk\lib\*\crtdll.lib     \
+	   $(_NTBINDIR)\public\sdk\lib\*\compob32.lib   \
+	   $(_NTBINDIR)\public\sdk\lib\*\msacm32.lib	\
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\msvfw32.lib \
+           $(_NTBINDIR)\private\windows\media\avi\lib\*\avifil32.lib
+
+
+INCLUDES=..\..\..\verinfo\usa;$(_NTBINDIR)\private\windows\media\inc;$(_NTBINDIR)\private\windows\media\avi\inc;$(_NTBINDIR)\private\windows\inc;res\usa;
+
+SOURCES=        	\
+	acmcmprs.cpp	\
+	factory.cpp	\
+        handler.rc
+
+
+
+
+# Set	\
+
+DLLENTRY=DLLEntryPoint
+DLLBASE=0x1c400000
+
+
+
+
+
+

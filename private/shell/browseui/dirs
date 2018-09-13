@@ -1,0 +1,5 @@
+dirs =  emclient \
+        srcc srccpp \
+        nt5api \
+        dll \
+        resdll

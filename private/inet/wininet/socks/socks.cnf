@@ -1,0 +1,44 @@
+# Each line is one of:
+#
+# DENY [*=userlist] dst_addr dst_mask [op dst_port]
+# DIRECT [*=userlist] dst_addr dst_mask [op dst_port]
+# SOCKD [@=serverlist] [*=userlist] dst_addr dst_mask [op dst_port]
+#
+# Where userlist is a comma separated list of users (optional)
+# dst_addr is a dotted quad IP address
+# dst_mask is a dotted quad IP address
+# op is one of EQ NEQ LT GT LE GE
+# dst_port is the number or name of a destination port
+# serverlist is a comma separated list of the name or IP address of 
+# SOCKS V4 servers (use IP address for speed)
+# 
+# On connect each line is processed in order and the first line that matches
+# is used. If no line matches the address is assumed to be Direct.
+#
+# Matching is done by taking the destination address and ANDing it with the
+# dst_mask. The result is then compared to the dst_addr. If they match, then 
+# if the userlist exists the current username is compared against this list.
+# Also if the [op dst_port] exists, the destination port is compared to 
+# dst_port and if the "op" is true, the line is used.
+#
+# DENY means to disallow the connect attemp.
+# DIRECT means to attempt the connection as normal.
+# SOCKD means to go the specified SOCKD server.
+#
+# If @=serverlist is not present the SOCKD server specified by the registry value:
+# LOCAL_MACHINE\SOFTWARE\HummingBird\SOCKS_SERVER is used.
+#
+# To install under Windows 95:
+#
+# Restart Windows 95 in DOS mode. Rename the file \Windows\System\WSOCK32.DLL 
+# to WSOCK32O.DLL and copy the new WSOCK32.DLL into \Windows\System. Place
+# this file (socks.cnf) in the \Windows\System directory. Restart Windows 95.
+#
+# To install under Windows NT:
+#
+# Rename the file \Winnt\System32\WSOCK32.DLL to WSOCK32O.DLL and copy the
+# new WSOCK32.DLL into the \Winnt\System32 directory. Place this file
+# (socks.cnf) in the \Winnt\System32 directory. It is now installed.
+#
+#SOCKD @=192.75.152.8 130.113.68.1 255.255.255.255
+#

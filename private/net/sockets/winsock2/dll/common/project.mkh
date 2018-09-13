@@ -1,0 +1,91 @@
+#
+# Module: PROJECT.MKH
+#
+# This module validates user definitions and includes modules
+# appropiate to the component type.
+#
+
+# Default to a debug build
+!if defined(RUNTIME)
+!	undef BUILD_DEBUG
+!else
+BUILD_DEBUG=1
+!endif
+
+# Defines specific to WinSock2 SDK
+!if !defined(RELEASE_ROOT)
+RELEASE_ROOT=..\..\release
+!endif
+
+#
+# Include the other global modules that contain needed definitions
+#
+!include <rules.mkh>      # inferencs rules
+
+# Define MACHINE_TYPE on the command line to build the DLL for MIPS
+# or Alpha
+!if !defined(MACHINE_TYPE)
+MACHINE_TYPE=I386
+!endif
+#
+# Include the type module based on user defined variable or output
+# error message
+
+# Is the componet type defined in the user makefile
+!if !defined(COMPONENT_TYPE) || "$(COMPONENT_TYPE)" == ""
+!	error COMPONENT_TYPE Must be defined in top level makefile
+!endif
+
+!if !defined(COMPONENT_NAME) || "$(COMPONENT_NAME)" == ""
+!	error COMPONENT_NAME Must be defined in top level makefile
+!endif
+
+!if !defined(COMPONENT_RELEASE_DIR) || "$(COMPONENT_RELEASE_DIR)" ==""
+!	error COMPONENT_RELEASE_DIR Must be defined
+!endif
+
+# Set the target directory for the generated component
+RELEASE_DIR=$(RELEASE_ROOT)\bin
+SOURCE_RELEASE_DIR=$(RELEASE_ROOT)\src
+
+!if defined(BUILD_TAG)
+RELEASE_DIR=$(RELEASE_ROOT)\$(BUILD_TAG)\bin
+SOURCE_RELEASE_DIR=$(RELEASE_ROOT)\$(BUILD_TAG)\src
+!endif
+
+RELEASE_TAG=DEVELOPER_RELEASE
+
+#
+# now include the module associated with the type name
+# shorten the name for readability
+TYPE= $(COMPONENT_TYPE)
+
+!if "$(TYPE)" == "EXE" || "$(TYPE)" == "exe"
+!	 include <exe.mkh>
+!else if "$(TYPE)" == "DLL" || "$(TYPE)" == "dll"
+!	      include <dll.mkh>
+!	  else if "$(TYPE)" == "DOC" || "$(TYPE)" == "doc"
+!		   		include <doc.mkh>
+!		   else if "$(TYPE)" == "SAMPLE_APP" ||"$(TYPE)" == "app"
+!			     include <sample.mkh>
+!                           else if "$(TYPE)" == "VXD" || "$(TYPE)" == "vxd"
+!                               include <vxd.mkh>
+!                                       else
+!                                               message Using default project type
+!                                               include <default.mkh>
+#!                                      endif
+#!                          endif
+#!		   endif
+#!	  endif
+!endif
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,31 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       frmsite.odl
+//
+//  Contents:   Object definitions for CFrameSite container
+//
+//
+//  History:    5-Jan-95   IstvanC      Created
+//
+//----------------------------------------------------------------------------
+
+CONTROL_EVENT_DISPINTERFACE(FrameSiteEvents, D2F295B1-46D8-11cf-8A73-00AA00C0180B)
+    STANDARD_BEFOREDRAG_DISPEVENT
+    STANDARD_BEFOREDROP_DISPEVENT
+    STANDARD_CLICK_DISPEVENT_UIDEFAULT
+    STANDARD_DBLCLICK_DISPEVENT
+    STANDARD_ERROR_DISPEVENT
+    STANDARD_MOUSEDOWN_DISPEVENT
+    STANDARD_MOUSEMOVE_DISPEVENT
+    STANDARD_MOUSEUP_DISPEVENT
+ENDEVENTSET
+
+[uuid(3050f162-98b5-11cf-bb82-00aa00bdce0b)] // siteguid.h CLSID_CFrameSite
+COCLASS_DUAL(FrameSite,
+             IFrameSite,
+             IFrameSiteEvents,
+             FrameSiteEvents)
+ENDCOCLASS

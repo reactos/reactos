@@ -1,0 +1,69 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+NOT_LEAN_AND_MEAN=1
+
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=plustab
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllMain
+INCLUDES=..\..\inc;$(BASEDIR)\private\windows\inc;$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\inc
+
+C_DEFINES=-DUNICODE -D_UNICODE -DUSESLINKCONTROL -DUSE_MIRRORING
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= plustab.rc     \
+         plustab.cpp    \
+         propsext.cpp   \
+         regutils.cpp   \
+         debug.cpp
+
+!if $(IA64) || $(AXP64)
+USE_LIBCMT      = 1
+!else
+USE_IERT        = 1
+!endif
+UMTYPE = windows
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\shlwapip.lib \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\UUID.LIB     \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\shlwapi.lib  \
+           $(BASEDIR)\private\shell\lib\$O\stock5.lib         \
+           $(BASEDIR)\private\shell\lib\$O\stocklib.lib
+
+!ifdef CCOVER
+TARGETLIBS = $(TARGETLIBS) $(BASEDIR)\public\sdk\lib\*\msvcrt.lib
+!endif
+
+!if !defined(WIN32_IE_VERSION)
+WIN32_IE_VERSION=0x0501
+!endif
+
+!IF $(ALPHA)
+USE_NTDLL=1
+!ELSE
+USE_NOLIBS=1
+!ENDIF
+
+DLLBASE=0x1000000
+
+PRECOMPILED_INCLUDE=precomp.hxx
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

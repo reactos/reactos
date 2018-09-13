@@ -1,0 +1,45 @@
+LIBRARY        URL
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION    'Internet Shortcut Shell Extension DLL'
+
+HEAPSIZE       0
+
+EXPORTS
+
+   TranslateURLA
+   TranslateURLW
+
+   MIMEAssociationDialogA
+   MIMEAssociationDialogW
+
+   URLAssociationDialogA
+   URLAssociationDialogW
+
+   InetIsOffline
+   SetInetOffline       @101                   NONAME  ;Internal , used in webcheck, shdocvw for beta 1
+   AutodialHookCallback PRIVATE
+
+
+   AddMIMEFileTypesPS
+
+   DllGetClassObject                   PRIVATE
+   DllCanUnloadNow                     PRIVATE
+
+   OpenURL                             PRIVATE
+
+   FileProtocolHandler                 PRIVATE
+   MailToProtocolHandler               PRIVATE
+   NewsProtocolHandler                 PRIVATE
+   TelnetProtocolHandler               PRIVATE
+
+   DummyEntryPoint                     PRIVATE
+
+
+
+   OpenURLA                = OpenURL                PRIVATE
+   FileProtocolHandlerA    = FileProtocolHandler    PRIVATE
+   MailToProtocolHandlerA  = MailToProtocolHandler  PRIVATE
+   NewsProtocolHandlerA    = NewsProtocolHandler    PRIVATE
+   TelnetProtocolHandlerA  = TelnetProtocolHandler  PRIVATE
+
+   DummyEntryPointA       = DummyEntryPoint        PRIVATE

@@ -1,0 +1,11 @@
+LIBRARY 	qform
+DESCRIPTION     'Example Query Form'
+
+HEAPSIZE        4096
+
+EXPORTS
+                DllMain                 @ 1
+                DllCanUnloadNow         @ 2   PRIVATE
+                DllGetClassObject       @ 3   PRIVATE
+                DllRegisterServer       @ 4   PRIVATE
+                DllUnregisterServer     @ 5   PRIVATE

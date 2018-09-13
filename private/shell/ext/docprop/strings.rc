@@ -1,0 +1,225 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "strings.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <winuser.h>
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "strings.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include <winuser.h>\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsISOoContext          "Sorry, but I don't know what you mean.  Please rephrase your question."
+    idsISLangRef            "Programming and Language Reference"
+    idsPEB                  "bytes"
+    idsPEKB                 "KB"
+    idsPEMB                 "MB"
+    idsPEGB                 "GB"
+    idsPETB                 "TB"
+    idsPEBytes              "Bytes:"
+    idsPEPages              "Pages:"
+    idsPEPara               "Paragraphs:"
+    idsPELines              "Lines:"
+    idsPEWords              "Words:"
+    idsPEChars              "Characters:"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsPESlides             "Slides:"
+    idsPENotes              "Notes:"
+    idsPEHiddenSlides       "Hidden Slides:"
+    idsPEMMClips            "Multimedia Clips:"
+    idsPEFormat             "Presentation Format:"
+    idsPEText               "Text"
+    idsPEDate               "Date"
+    idsPENumber             "Number"
+    idsPEBool               "Yes or No"
+    idsPEUnknown            "Unknown"
+    idsPEStatName           "Statistic Name"
+    idsPEValue              "Value"
+    idsPEPropName           "Name"
+    idsPEType               "Type"
+    idsPETrue               "Yes"
+    idsPEFalse              "No"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsPEAdd                "A&dd"
+    idsPEModify             "&Modify"
+    idsPEWarning            "Warning"
+    idsPEWarningText        "The value entered does not match with the specified type.  The value will be stored as text."
+    idsMsftOffice           "Microsoft Office"
+    idsISNoTable            "Online assistance is not available. Rerun Setup to make sure all necessary Help files are correctly installed."
+    idsISOom                "There is not enough memory to run the Answer Wizard. Quit any programs you don\222t need, delete any files you no longer need, or restart your computer"
+    idsPESource             "&Source:"
+    idsPEValueColon         "&Value:"
+    idsFNNoDirMsg           "The directory used for storing the templates for the ""%s"" category is missing! This directory used to contain a template, wizard or other templates related file, which some application requires to work properly.\n\n"
+    idsFNNoDirQuery         "Do you want to restore the missing directory, and the required template related files it used to contain?"
+    idsFNNoDirConfirm       "You may not be able to use an application unless you restore the template category and its files. You will have to reinstall the application associated to this directory in order to regain access to these templates.\n\nAre you sure you want to proceed?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsCustomWarning        "You have property changes that have not been applied.\n\nDo you want to apply these now?"
+    idsMinute               "Minute"
+    idsMinutes              "Minutes"
+    idsBadSharedPath        "Can not access your workgroup templates."
+    idsBadFileClass         """%s"" is not a valid template."
+    idsBadFileIO            "File I/O error."
+    idsNoLocalPath          "The path associated to the tab you are dragging a template to only exists on your current workgroup server. Do you want to create a matching path on local machine?"
+    idsFNNoTempCat          "No template categories found."
+    idsFNNoLocalTempDir     "The User Templates folder '%s' was not found.\nDo you want to create this folder now?"
+    idsFNNoPreview          "Preview not available."
+    idsFNMoreTab            "More..."
+    idsFNLeak               "Memory leak in FileNew: %s bytes."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsFNBadList            "Garbage input to FileNew dialog: The lpstrCategory and lpstrRegNFT string lists must be double NULL terminated!!!"
+    idsFNCreateError        "Failed to create the directory!"
+    idsFNFileExists         "The file ""%s"" exist already in the selected template category. Do you want to replace it?"
+    idsResolveShortcut      "The file ""%s"" which was referenced through a shortcut is no longer accessible at this location. Sorry!"
+    idsFNBadList2           "Garbage input to FileNew dialog: The lpstrCategory and lpstrRegNFT string lists must be double NULL terminated!!!"
+    idsISCantDisp           "Sorry, the Answer Wizard cannot display the requested Help topic. Rerun Setup to make sure all necessary Help files are correctly installed."
+    idsISAppMissing         "Sorry, but the application that displays Help topics is not currently running."
+    idsISTooManyTopics      "There are several Help topics that may be related to your request. If you don't see a topic that looks helpful, please rephrase your question."
+    idsRootTab              "General"
+    idsISNoTopicsFound      "<<No Topics Found>>"
+    idsACWeekday1           "Monday"
+    idsACWeekday2           "Tuesday"
+    idsACWeekday3           "Wednesday"
+    idsACWeekday4           "Thursday"
+    idsACWeekday5           "Friday"
+    idsACWeekday6           "Saturday"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsACWeekday7           "Sunday"
+    idsACAdd                "A&dd"
+    idsACReplace            "&Replace"
+    idsACRedefine           "An AutoCorrect entry for '%s' already exists.  Do you want to redefine it?"
+    idsFNList               "List"
+    idsFNLargeIcon          "Large Icons"
+    idsFNDetails            "Details"
+    idsFNUnknown            "Unknown"
+    idsFNEmpty              "0KB"
+    idsFNSize               "%dKB"
+    idsHelpFile             "QOFFICE.HLP"
+    idsNewVerb              "&New"
+    idsSoundFileName        "\\media\\The Microsoft Sound.wav"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsCustomName1          "Checked By"
+    idsCustomName2          "Client"
+    idsCustomName3          "Date Completed"
+    idsCustomName4          "Department"
+    idsCustomName5          "Destination"
+    idsCustomName6          "Disposition"
+    idsCustomName7          "Division"
+    idsCustomName8          "Document Number"
+    idsCustomName9          "Editor"
+    idsCustomName10         "Forward To"
+    idsCustomName11         "Group"
+    idsCustomName12         "Language"
+    idsCustomName13         "Mailstop"
+    idsCustomName14         "Matter"
+    idsCustomName15         "Office"
+    idsCustomName16         "Owner"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsCustomName17         "Project"
+    idsCustomName18         "Publisher"
+    idsCustomName19         "Purpose"
+    idsCustomName20         "Received From"
+    idsCustomName21         "Recorded By"
+    idsCustomName22         "Recorded Date"
+    idsCustomName23         "Reference"
+    idsCustomName24         "Source"
+    idsCustomName25         "Status"
+    idsCustomName26         "Telephone Number"
+    idsCustomName27         "Typist"
+    idsMSNNotInstalled      "Microsoft Network shortcuts for Microsoft Office are not installed correctly. Use Microsoft Office to install the shortcuts."
+    idsMSNCantStart         "The Microsoft Network cannot be started. Run Windows Setup and reinstall the Microsoft Network."
+    idsEMSNoFolders         "No shortcuts to public Microsoft Exchange folders were found."
+    idsAWTextFontName       "Times"
+    idsAWTextFontSize       "18"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    idsAWNumberFontName     "Times"
+    idsAWNumberFontSize     "22"
+    idsAWNoAW               "You must be running a Microsoft Office application in order to get online user assistance."
+    idsNormalDot            "Blank Document"
+    idsEMSNoStorage         "Cannot find the folder called 'Public Shortcuts Folder.'   Please connect to a Microsoft Exchange Server to create this folder."
+    idsEMSGeneralError      "General Microsoft Exchange failure.  Check your Exchange installation and try again."
+    idsOpenVerb             "&Open"
+    idsTemplate             "Template"
+    idsSize                 "Size"
+    idsType                 "Type"
+    idsModified             "Modified"
+    idsPreviewPrompt1       "Select an icon to"
+    idsPreviewPrompt2       "see a preview."
+    idsACVowels             "AEIOU"
+    idsWorking              "Working..."
+    idsAWStupidWinHelp      "Sorry, you must first close WinHelp/AnswerWizard that is already running from another Application."
+    idsErrorOnSave          "Changes to Custom properties could not be saved.\n\nThe file may be marked read-only or may be in use by another application."
+END
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

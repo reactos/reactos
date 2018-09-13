@@ -1,0 +1,205 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "scrnsave.h"
+#include "sspipes.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_SCRNSAVECONFIGURE DIALOG DISCARDABLE  28, 25, 332, 111
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "3D Pipes Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,275,5,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",2,275,25,50,14,WS_GROUP
+    GROUPBOX        "Pipes",IDC_STATIC,5,0,110,50
+    CONTROL         "&Single",IDC_RADIO_SINGLE_PIPE,"Button",
+                    BS_AUTORADIOBUTTON,15,15,35,10
+    CONTROL         "&Multiple",IDC_RADIO_MULTIPLE_PIPES,"Button",
+                    BS_AUTORADIOBUTTON,15,30,40,10
+    GROUPBOX        "Pipe Style",IDC_STATIC,120,0,150,50
+    CONTROL         "&Traditional",IDC_RADIO_NORMAL,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,130,15,55,10
+    LTEXT           "&Joint Type:",IDC_STATIC_JOINTTYPE,190,6,35,8
+    COMBOBOX        DLG_COMBO_JOINTTYPE,190,15,65,50,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    CONTROL         "&Flex",IDC_RADIO_FLEX,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,130,30,35,10
+    GROUPBOX        "&Resolution",IDC_STATIC_TESS_GRP,5,55,110,50
+    LTEXT           "Min",IDC_STATIC_TESS_MIN,15,70,30,7
+    RTEXT           "Max",IDC_STATIC_TESS_MAX,85,70,20,7
+    CONTROL         "Slider1",DLG_SETUP_TESSEL,"msctls_trackbar32",
+                    TBS_NOTICKS | WS_GROUP | WS_TABSTOP,15,80,90,15
+    GROUPBOX        "Surface Style",IDC_STATIC,120,55,150,50,WS_GROUP
+    CONTROL         "Soli&d",IDC_RADIO_SOLID,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,130,70,35,13
+    CONTROL         "Te&xtured",IDC_RADIO_TEX,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,130,85,48,14
+    PUSHBUTTON      "&Choose Texture...",DLG_SETUP_TEXTURE,184,85,66,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 100
+//
+
+IDB_DEFTEX              100     DISCARDABLE     "stripe.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""scrnsave.h""\r\n"
+    "#include ""sspipes.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OpenGL 3D Pipes Screen Saver"
+#define VER_INTERNALNAME_STR        "sspipes\0"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "3D Pipes (OpenGL)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_JOINTTYPE           "JointType"
+    IDS_SURFSTYLE           "SurfStyle"
+    IDS_TEXQUAL             "TextureQuality"
+    IDS_FLEX                "Flex"
+    IDS_MULTIPIPES          "MultiPipes"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TEXTURE_COUNT       "TextureCount"
+    IDS_TEXTURE0            "Texture0"
+    IDS_TEXTURE1            "Texture1"
+    IDS_TEXTURE2            "Texture2"
+    IDS_TEXTURE3            "Texture3"
+    IDS_TEXTURE4            "Texture4"
+    IDS_TEXTURE5            "Texture5"
+    IDS_TEXTURE6            "Texture6"
+    IDS_TEXTURE7            "Texture7"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TEXOFFSET0          "TexOffset0"
+    IDS_TEXOFFSET1          "TexOffset1"
+    IDS_TEXOFFSET2          "TexOffset2"
+    IDS_TEXOFFSET3          "TexOffset3"
+    IDS_TEXOFFSET4          "TexOffset4"
+    IDS_TEXOFFSET5          "TexOffset5"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_TEXOFFSET6          "TexOffset6"
+    IDS_TEXOFFSET7          "TexOffset7"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_JOINT_ELBOW         "Elbow"
+    IDS_JOINT_BALL          "Ball"
+    IDS_JOINT_MIXED         "Mixed"
+    IDS_JOINT_CYCLE         "Cycle"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SAVERNAME           "Screen Saver.3DPipes"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,51 @@
+!IF 0
+
+Copyright (c) 1992  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    David J. Gilman (davegi) 02-Jan-1992
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=winreg
+MINORCOMP=utils
+
+TARGETNAME=crtools
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=..\inc
+
+SOURCES=    allockey.c      \
+            assert.c        \
+            dispdata.c      \
+            dispkey.c       \
+            dispkeys.c      \
+            dispkeyi.c      \
+            dispmsg.c       \
+            dispval.c       \
+            fmtft.c         \
+            freekey.c       \
+            parsekey.c      \
+            pdkeys.c
+
+C_DEFINES=
+
+UMTYPE=console
+UMTEST=
+UMLIBS=obj\*\crtools.lib

@@ -1,0 +1,162 @@
+/*
+ *              This is the common Print Dialog, modified to include a checkbox (and related group box)
+ *              to allow the user to indicate if they want the "Shortcut Table" to be printed.
+ */
+#ifdef WIN16
+#define ES_NUMBER 0
+#endif
+#ifndef UNIX
+PRINTDLGORD DIALOG DISCARDABLE  32, 32, 288, 255
+#ifdef WIN16
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU | DS_3DLOOK
+CAPTION "Print"
+FONT 8, "MS Sans Serif"
+#else
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Print"
+FONT 8, "MS Shell Dlg"
+#endif
+BEGIN
+    GROUPBOX        "Printer",grp4,8,4,272,84,WS_GROUP
+    LTEXT           "&Name:",stc6,16,20,36,8
+    COMBOBOX        cmb4,52,18,152,152,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "&Properties",psh2,212,17,60,14,WS_GROUP
+    LTEXT           "Status:",stc8,16,36,36,10,SS_NOPREFIX
+    CONTROL         "",stc12,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX |
+                    WS_GROUP,52,36,224,10
+    LTEXT           "Type:",stc7,16,48,36,10,SS_NOPREFIX
+    CONTROL         "",stc11,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX |
+                    WS_GROUP,52,48,224,10
+    LTEXT           "Where:",stc10,16,60,36,10,SS_NOPREFIX
+    CONTROL         "",stc14,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX |
+                    WS_GROUP,52,60,224,10
+    LTEXT           "Comment:",stc9,16,72,36,10,SS_NOPREFIX
+    CONTROL         "",stc13,"Static",SS_LEFTNOWORDWRAP | SS_NOPREFIX |
+                    WS_GROUP,52,72,152,10
+    CONTROL         "Print to fi&le",chx1,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,212,70,64,8
+    GROUPBOX        "Print range",grp1,8,92,144,58,WS_GROUP
+    CONTROL         "&All",rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,16,106,64,8
+    CONTROL         "Pa&ges",rad3,"Button",BS_AUTORADIOBUTTON,16,118,36,8
+    CONTROL         "&Selection",rad2,"Button",BS_AUTORADIOBUTTON,16,129,64,
+                    12
+    RTEXT           "&from:",stc2,51,118,20,8
+    EDITTEXT        edt1,73,115,26,12,ES_NUMBER | WS_GROUP
+    RTEXT           "&to:",stc3,99,118,16,8
+    EDITTEXT        edt2,117,115,26,12,ES_NUMBER | WS_GROUP
+    GROUPBOX        "Copies",grp2,160,92,120,58,WS_GROUP
+    LTEXT           "Number of &copies:",stc5,168,108,68,8
+    EDITTEXT        edt3,240,106,32,12,ES_NUMBER | WS_GROUP
+    ICON            "",ico3,162,124,76,24,SS_CENTERIMAGE | WS_GROUP
+    CONTROL         "C&ollate",chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP |
+                    WS_TABSTOP,240,130,36,8
+    GROUPBOX        "Print frames",-1,7,153,273,59
+    CONTROL         "As la&id out on screen",rad4,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,126,167,150,8
+    CONTROL         "Onl&y the selected frame",rad5,"Button",
+                    BS_AUTORADIOBUTTON,126,180,150,8
+    CONTROL         "All f&rames individually",rad6,"Button",
+                    BS_AUTORADIOBUTTON,126,193,150,8
+    CONTROL         "",IDC_PREVIEW,"Static",SS_BITMAP | SS_SUNKEN,17,165,16,
+                    14
+    CONTROL         "Print all lin&ked documents",IDC_LINKED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,218,126,8
+    CONTROL         "Print ta&ble of links",IDC_SHORTCUTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,144,218,128,8
+    DEFPUSHBUTTON   "OK",IDOK,181,234,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,233,234,48,14
+    CONTROL         "", -1,"NativeFontCtl",NFS_ALL,0,0,0,0
+END
+
+#else
+/* ID_BOTH_P_HELP is from New common dialogs */
+#define ID_BOTH_P_HELP   pshHelp
+#define ID_PRINT_P_SETUP psh1
+PRINTDLGORD DIALOG DISCARDABLE  32, 32, 288, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Print"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Printer",grp4,10,4,270,59,WS_GROUP
+    LTEXT           "&Name",stc6,16,20,36,8
+    EDITTEXT        edt5, 53,19,128,12, ES_AUTOHSCROLL | WS_GROUP
+    LTEXT           "Print &Command Options", stc7, 16, 40, 78, 8
+    EDITTEXT        edt4, 100, 38, 158, 12, ES_AUTOHSCROLL | WS_GROUP
+    GROUPBOX        "Print range",grp1,10,68,144,58,WS_GROUP
+    CONTROL         "&All",rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,16,82,64,8
+    CONTROL         "Pa&ges",rad3,"Button",BS_AUTORADIOBUTTON,16,94,36,8
+    CONTROL         "&Selection",rad2,"Button",BS_AUTORADIOBUTTON,16,105,64,
+                    12
+    RTEXT           "&from:",stc2,51,94,20,8
+    EDITTEXT        edt1,73,91,26,12,ES_NUMBER | WS_GROUP
+    RTEXT           "&to:",stc3,99,94,16,8
+    EDITTEXT        edt2,117,91,26,12,ES_NUMBER | WS_GROUP
+    LTEXT           "&Copies",stc5,192,21,28,8
+    EDITTEXT        edt3,225,19,32,12, ES_AUTOHSCROLL | ES_NUMBER
+    GROUPBOX        "Print frames",-1,10,129,269,59
+    CONTROL         "As la&id out on screen",rad4,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,169,143,90,8
+    CONTROL         "Only the selected &frame",rad5,"Button",
+                    BS_AUTORADIOBUTTON,169,156,90,8
+    CONTROL         "All f&rames individually",rad6,"Button",
+                    BS_AUTORADIOBUTTON,169,169,90,8
+    CONTROL         "",IDC_PREVIEW,"Static",SS_BITMAP|SS_SUNKEN,50,143,16,14
+    CONTROL         "Print to fi&le",chx1,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,170,76,64,8
+    CONTROL         "Print all lin&ked documents",IDC_LINKED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,170,92,96,8
+    CONTROL         "Print ta&ble of links",IDC_SHORTCUTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,170,108,98,8
+    DEFPUSHBUTTON   "OK",IDOK,84,194,48,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,158,194,48,14
+    PUSHBUTTON      "Page Setup", ID_PRINT_P_SETUP, 232, 194, 48, 14
+END
+PRINTDLGORDMOTIF DIALOG DISCARDABLE  32, 32, 288, 182
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Print"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Printer",grp4,10,4,270,49,WS_GROUP
+    LTEXT           "Name",stc6,16,18,36,8
+    EDITTEXT        edt5, 53,18,128,12, ES_AUTOHSCROLL | WS_GROUP | NOT WS_TABSTOP
+    LTEXT           "&Copies",stc5,192,18,32,8
+    EDITTEXT        edt3,225,16,32,12, ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Print Co&mmand Line", stc7, 16, 36, 78, 8
+    EDITTEXT        edt4, 90, 34, 91, 12, ES_AUTOHSCROLL | WS_GROUP
+    CONTROL         "Print to fil&e",chx1,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,189,36,60,8
+
+    GROUPBOX        "Print range", grp1,10,57,144,53,WS_GROUP
+    CONTROL         "&All",rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |
+                    WS_TABSTOP,16,72,64,8
+    CONTROL         "&Pages",rad3,"Button",BS_AUTORADIOBUTTON,16,89,36,8
+    RTEXT           "&from:",stc2,51,89,20,8
+    EDITTEXT        edt1,73,87,26,12,ES_NUMBER | WS_GROUP
+    RTEXT           "&to:",stc3,100,88,16,8
+    EDITTEXT        edt2,117,87,26,12,ES_NUMBER | WS_GROUP
+
+    GROUPBOX        "Orientation", grp3, 162, 57, 118, 53, WS_GROUP	
+    CONTROL 	    "Portra&it", rad7, "Button", BS_AUTORADIOBUTTON | WS_GROUP
+			| WS_TABSTOP, 175, 72, 52, 12
+    CONTROL         "&Landscape", rad8, "Button", BS_AUTORADIOBUTTON, 175, 89, 52, 12
+
+    GROUPBOX        "Print frames",grp2,10,112,270,55
+    CONTROL         "As lai&d out on screen",rad4,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,175,125,90,8
+    CONTROL         "&Only the selected frame",rad5,"Button",
+                    BS_AUTORADIOBUTTON,175,137,90,8
+    CONTROL         "All f&rames individually",rad6,"Button",
+                    BS_AUTORADIOBUTTON,175,150,90,8
+    CONTROL         "",IDC_PREVIEW,"Static",SS_BITMAP|SS_SUNKEN,40,124,16,14
+
+    DEFPUSHBUTTON   "OK",IDOK,59,176,55,13,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,174,176,55,13
+END
+#endif /* unix */

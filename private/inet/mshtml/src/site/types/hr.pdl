@@ -1,0 +1,42 @@
+#ifndef _HR_PDL_
+#define _HR_PDL_ 1
+
+#include "csite.pdl"
+                         
+file hr.pdl
+
+import csite.pdl               
+
+interface IHTMLHRElement guid:3050f1f4-98b5-11cf-bb82-00aa00bdce0b
+    refprop CHRElement:align
+    refprop CHRElement:color
+    refprop CHRElement:noShade
+    refprop CHRElement:width
+    refprop CHRElement:size
+
+tearoff CHRElement interface:IHTMLHRElement
+
+class CHRElement name:HTMLHRElement \
+            primaryinterface:IHTMLHRElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            guid:3050f252-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f53d-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLHRElement
+
+    property align     atype:BSTR    dispid:STDPROPID_XOBJ_BLOCKALIGN  type:htmlBlockAlign  maxstrlen:pdlToken \
+	    get set caa bindable displaybind  default:htmlBlockAlignNotSet min:htmlBlockAlignNotSet max:htmlBlockAlignRight
+    property color     atype:VARIANT              dispid:DISPID_A_COLOR        type:CColorValue           \
+        get set caa bindable displaybind  default:0xFFFFFFFF maxstrlen:pdlColor
+    property noShade   atype:VARIANT_BOOL      dispid:DISPID_HR+1           type:BYTE  \ 
+		dwflags:ELEMCHNG_SITEREDRAW get set caa bindable clearcaches \
+		default:0 min:0 max:1 vt:VT_BOOL 
+    property size caa get set szAttribute:SIZE atype:VARIANT maxstrlen:pdlLength \
+        type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT default:NULL_UNITVALUE ppflags:PP_UV_LENGTH
+    property width caa get set atype:VARIANT type:CUnitValue maxstrlen:pdlLength \
+        dispid:STDPROPID_XOBJ_WIDTH  default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) ppflags:PP_UV_LENGTH_OR_PERCENT
+
+#endif _HR_PDL_

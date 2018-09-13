@@ -1,0 +1,184 @@
+/* New common dialogs */
+
+#include "dlgs.h"
+
+FileSave DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24,  264, 134
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "File &Name:", stc3,   6,   6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD,
+            6,  16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Directories:", -1, 110,   6,  92,   9
+    LTEXT "",            stc1, 110,  18,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            110,  32,  92,  68
+
+    LTEXT "Save File as &Type:", stc2, 6,  104,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  36
+
+    LTEXT "Dri&ves:", stc4,      110, 104,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 114,  92, 68
+
+    DEFPUSHBUTTON "OK", IDOK,       208,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "Cancel", IDCANCEL,  208, 24, 50, 14, WS_GROUP
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+#ifdef VISIBLE
+            208,  46,  50,  14
+#else
+            208, 46, 0, 0
+#endif
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP|WS_DISABLED,
+#ifdef VISIBLE
+            208,  46,  50,  12
+#else
+            208,  46,  0,   0
+#endif
+
+    CONTROL "&Info...", IDINFO, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD,
+#ifdef VISIBLE
+            208, 66, 50, 14
+#else
+            208, 46, 50, 14
+#endif
+#ifdef OLD
+    CONTROL "&Options >>", IDOPTIONS, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD, 184, 86, 50, 14
+
+    /* Options >> fold out */
+    CONTROL "Save As", IDSAVEASTEXT, "button", BS_GROUPBOX | WS_CHILD, 243, 6, 94, 112
+    CONTROL "&PCX", IDPCX, "button", BS_RADIOBUTTON | WS_CHILD, 248, 18, 27, 12
+    CONTROL "&Monochrome bitmap", IDBITMAP, "button", BS_RADIOBUTTON | WS_CHILD, 248, 37, 87, 12
+    CONTROL "&16 Color bitmap", IDBITMAP4, "button", BS_RADIOBUTTON | WS_CHILD, 248, 56, 71, 12
+    CONTROL "&256 Color bitmap", IDBITMAP8, "button", BS_RADIOBUTTON | WS_CHILD, 248, 75, 77, 12
+    CONTROL "2&4-bit bitmap", IDBITMAP24, "button", BS_RADIOBUTTON | WS_CHILD, 248, 94, 61, 12
+#endif
+
+    PUSHBUTTON "Net&work...", psh14,   208,  114, 50,  14, WS_GROUP
+
+END
+
+FileOpen DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24,  264, 134
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "File &Name:", stc3,   6,   6,  76,  10
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD,
+            6,  16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,    32,  90,  68
+
+    LTEXT "&Directories:", -1, 110,   6,  92,   9
+    LTEXT "",            stc1, 110,  18,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            110,  32,  92,  68
+
+    LTEXT "List Files of &Type:", stc2, 6,  104,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  36
+
+    LTEXT "Dri&ves:", stc4,      110, 104,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 114,  92, 68
+
+    DEFPUSHBUTTON "OK", IDOK,       208,  6, 50, 14, WS_GROUP
+    PUSHBUTTON "Cancel", IDCANCEL,  208, 24, 50, 14, WS_GROUP
+
+    CONTROL "Help", psh15, "button", BS_PUSHBUTTON|WS_TABSTOP|WS_CHILD|WS_GROUP,
+#ifdef VISIBLE
+            208,  46,  50,  14
+#else
+            208, 46, 0, 0
+#endif
+
+    CONTROL "&Read only", chx1, "button", BS_AUTOCHECKBOX|WS_CHILD|WS_TABSTOP|WS_GROUP|WS_DISABLED,
+#ifdef VISIBLE
+            208,  46,  50,  12
+#else
+            208,  46,  0,   0
+#endif
+
+    CONTROL "&Info...", IDINFO, "button", BS_PUSHBUTTON | WS_TABSTOP | WS_CHILD,
+#ifdef VISIBLE
+            208, 66, 50, 14
+#else
+            208, 46, 50, 14
+#endif
+
+    PUSHBUTTON "Net&work...", psh14,   208,  114, 50,  14, WS_GROUP
+
+END
+
+DLG_FONT DIALOG 13, 54, 264, 130 /* 147 */
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Font:", stc1, 6, 3, 40, 9
+    COMBOBOX        cmb1, 6, 13, 94, 54, CBS_SIMPLE | CBS_AUTOHSCROLL |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED
+    LTEXT           "Font St&yle:", stc2, 108, 3, 44, 9
+    COMBOBOX        cmb2, 108, 13, 64, 54, CBS_SIMPLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "&Size:", stc3, 179, 3, 30, 9
+    COMBOBOX        cmb3, 179, 13, 32, 54, CBS_SIMPLE | WS_VSCROLL | WS_TABSTOP | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_SORT
+
+    GROUPBOX        "Effects", grp1, 6, 72, 84, 49, WS_GROUP    /* 61 */
+    CONTROL         "Stri&keout", chx1, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 10, 82, 49, 10
+    CONTROL         "&Underline", chx2, "Button", BS_AUTOCHECKBOX, 10, 94, 51, 10
+
+/* Suppress the color choice */
+    LTEXT           "&Color:", stc4, 300, 300, 30, 9
+    COMBOBOX        cmb4, 300, 300, 75, 50, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL
+
+    DEFPUSHBUTTON   "OK", IDOK, 218, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 218, 23, 40, 14, WS_GROUP
+    PUSHBUTTON      "&Apply", psh3, 218, 40, 40, 14, WS_GROUP
+    PUSHBUTTON      "&Help", pshHelp, 218, 57, 40, 14, WS_GROUP
+    GROUPBOX        "Sample", grp2, 98, 72, 160, 49, WS_GROUP
+    CTEXT           "", stc6, 98, 124, 160, 20,
+                    SS_NOPREFIX | NOT WS_GROUP
+    CTEXT           "AaBbYyZz", stc5, 104, 81, 149, 37, SS_NOPREFIX | NOT
+                    WS_VISIBLE
+END
+
+
+DLG_OBJECTUPDATE DIALOG 6, 18, 251, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Object Update"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON      "&Continue Editing", IDD_CONTINUEEDIT, 77, 36, 68, 14, WS_TABSTOP|WS_GROUP
+    PUSHBUTTON      "Update && E&xit", IDD_UPDATEEXIT, 6, 36, 55, 14
+    LTEXT           "Text", IDD_TEXT, 9, 9, 233, 20
+END
+
+

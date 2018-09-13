@@ -1,0 +1,69 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995 - 1996 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   NetClip Interfaces
+// 
+//----------------------------------------------------------------------------
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright 1995 - 1996 Microsoft Corporation. All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("//  File: netclip.h")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "objidl.idl";
+#endif
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Classes (link with netclip.lib)")
+cpp_quote("")
+cpp_quote("// {F7565504-4B54-11CF-B63C-0080C792B782}")
+cpp_quote("EXTERN_C const CLSID CLSID_NetClip;")
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Types")
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Interface Definitions")
+
+cpp_quote("#ifndef _LPNETCLIP_DEFINED")
+cpp_quote("#define _LPNETCLIP_DEFINED")
+[
+    object, 
+    uuid(7502CA01-4ACA-11cf-B63C-0080C792B782),
+    pointer_default(unique)
+]
+interface IClipboard : IUnknown
+{
+	// Probably not needed
+	HRESULT GetClipboardFormatName([in]CLIPFORMAT cf, [out]LPOLESTR* ppsz);
+    HRESULT GetClipboard([out]IDataObject** ppDataObject);
+    HRESULT SetClipboard([in]IDataObject* pDataObject);
+    HRESULT IsCurrentClipboard([in]IDataObject *pDataObject);
+    HRESULT FlushClipboard();
+}
+cpp_quote("#endif")
+
+
+cpp_quote("#ifndef _LPNETCLIPNOTIFY_DEFINED")
+cpp_quote("#define _LPNETCLIPNOTIFY_DEFINED")
+[
+    object, 
+    uuid(7502CA02-4ACA-11cf-B63C-0080C792B782),
+    pointer_default(unique)
+]
+interface IClipboardNotify: IUnknown
+{
+	HRESULT OnClipboardChanged();
+}
+cpp_quote("#endif")
+

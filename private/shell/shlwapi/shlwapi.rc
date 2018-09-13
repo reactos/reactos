@@ -1,0 +1,24 @@
+#ifdef WIN32
+#include "winuser.h"
+#ifdef WINNT
+#include "winuserp.h"
+#include "winver.h"
+#endif
+#else
+#include "windows.h"
+#endif
+
+#include "ids.h"
+
+// WARNING
+// this file should contain only non-localizable resources
+// localizable resources should go in shlwaplc.rc
+
+#ifdef MLUI_SUPPORT
+#include "shlwapi.rcv"
+#else
+#include "shlwaplc.rc"
+#endif
+
+IDI_SECURITY    ICON    DISCARDABLE "security.ico"
+

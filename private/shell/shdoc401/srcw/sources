@@ -1,0 +1,48 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR=$(MAKEDIR:\shdoc401\srcw=)
+
+!include ..\shdoc401.inc
+
+#
+# in this directory (srcw) we compile stuff unicode
+# for shdoc401, so turn of the #error in priv.h
+#
+C_DEFINES       = $(C_DEFINES) -D_SHDOC401_UNICODE_
+
+NO_BROWSER_FILE = 1
+
+TARGETNAME      = srcw
+TARGETPATH      = obj
+TARGETTYPE      = LIBRARY
+
+SOURCES         = \
+                  ..\filetypw.c
+
+# Leave NTTARGETFILES defined but unassigned.  Having it defined will 
+# cause makefile.inc to be included.  This specifies how to make pathw.c.
+NTTARGETFILES   =
+

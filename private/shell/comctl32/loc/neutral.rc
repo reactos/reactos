@@ -1,0 +1,4 @@
+LANGUAGE 0x9, 0x0 // LANG_ENGLISH | SUBLANG_NEUTRAL
+
+// this is for unknown languages that we don't cover, such as Thai.
+#include "..\en.rc"

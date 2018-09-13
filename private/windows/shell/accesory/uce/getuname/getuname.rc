@@ -1,0 +1,31 @@
+//
+// Copyright (c) 1997-1999 Microsoft Corporation.
+//
+#include "getuname.h"
+
+#include "unames.str"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HANGULSYL           "Hangul Syllable "
+    IDS_CJKUNDEFIDEO        "CJK Unified Ideograph"
+    IDS_CJKCOMPIDEO         "CJK compatibility Ideograph"
+    IDS_PRIVATECHAR         "Private Use Character"
+    IDS_UNDEFINED           "Undefined"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_DLL
+#define VER_FILESUBTYPE           VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR   "Unicode name Dll for UCE"
+#define VER_INTERNALNAME_STR      "getuname"
+#define VER_ORIGINALFILENAME_STR  "getuname.dll"
+
+#include "common.ver"
+

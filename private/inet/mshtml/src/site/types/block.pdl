@@ -1,0 +1,28 @@
+#ifndef _BLOCK_PDL_
+#define _BLOCK_PDL_ 1
+
+#include "element.pdl"
+
+file block.pdl
+
+import element.pdl
+
+interface IHTMLBlockElement guid:3050f208-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBlockElement:clear
+
+tearoff CBlockElement interface:IHTMLBlockElement
+
+class CBlockElement name:HTMLBlockElement \
+            super:CElement  \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            primaryinterface:IHTMLBlockElement \
+            guid:3050f281-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f506-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLBlockElement
+
+    property clear        atype:BSTR      dispid:DISPID_A_CLEAR  type:htmlClear    dwflags:0    get set caa bindable displaybind maxstrlen:pdlLength
+
+#endif _BLOCK_PDL_

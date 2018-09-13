@@ -1,0 +1,27 @@
+[Version]
+signature = $Windows NT$
+
+[DefaultInstall.NT]
+AddReg=Registry
+
+[Registry]
+HKCR,CLSID\%CLSID_DsSecurity%\InProcServer32,,,dssec.dll
+HKCR,CLSID\%CLSID_DsSecurity%\InProcServer32,"ThreadingModel",,Apartment
+HKCR,CLSID\%CLSID_DsSecurity%,TraceMask,0x00010001,0x00000000
+;
+; Register the property sheet so it appears on all containers & leaf objects
+; 
+HKCR,CLSID\%CLSID_DsContainer%\%SHEXPS%\%CLSID_DsSecurity%,,,
+HKCR,CLSID\%CLSID_DsLeaf%\%SHEXPS%\%CLSID_DsSecurity%,,,
+;
+; Register the context verb so it appears on all containers & leaf objects
+; 
+HKCR,CLSID\%CLSID_DsContainer%\%SHEXCM%\%CLSID_DsSecurity%,,,
+HKCR,CLSID\%CLSID_DsLeaf%\%SHEXCM%\%CLSID_DsSecurity%,,,
+
+[Strings]
+SHEXCM="shellex\ContextMenuHandlers"
+SHEXPS="shellex\PropertySheetHandlers"
+CLSID_DsSecurity={4E40F770-369C-11d0-8922-00A024AB2DBB}
+CLSID_DsContainer={9856E1E1-F70D-11cf-B0CE-00004C7532B1}
+CLSID_DsLeaf={9856E1E5-F70D-11cf-B0CE-00004C7532B1}

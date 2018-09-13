@@ -1,0 +1,41 @@
+#include <windows.h>
+#include "messages.h"
+
+#include <ntverp.h>
+
+
+#define	VER_FILETYPE	VFT_APP
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "LZ Compression Utility"
+#define VER_INTERNALNAME_STR        "compress\0"
+
+#include "common.ver"
+
+STRINGTABLE
+BEGIN
+SID_INSUFF_MEM		"Insufficient memory for buffers.\n"
+SID_NOT_A_DIR		"Destination is not a directory: %s.\n"
+SID_BAD_SWITCH		"Unrecognized switch -%c.\n"
+SID_BAD_SWITCH2		"Unrecognized switch -%s.\n"
+SID_NO_FILE_SPECS	"No files specified.\n"
+SID_NO_OVERWRITE	"No destination specified for: %s.\n"
+SID_NO_OPEN_INPUT	"Can't open input file: %s.\n"
+SID_NO_READ_INPUT	"Can't read from input file: %s.\n"
+SID_NO_OPEN_OUTPUT	"Can't open output file: %s.\n"
+SID_OUT_OF_SPACE	"Out of disk space writing output file: %s.\n"
+SID_BANNER_TEXT		"Microsoft (R) File Compression Utility  Version " VER_PRODUCTVERSION_STR "\nCopyright (C) Microsoft Corp. 1990-1999.  All rights reserved.\n\n"
+
+SID_INSTRUCTIONS  "Compresses one or more files.\n\nCOMPRESS [-r] [-d] [-z] Source Destination\nCOMPRESS -r [-d] [-z] Source [Destination]\n\n  -r\t\tRename compressed files.\n  -d\t\tUpdate compressed files only if out of date.\n"
+SID_INSTRUCTIONS2 "  -zx\t\tLZX compression.\n  -z\t\tMS-ZIP compression.\n  -zq[n]\tQuantum compression and optional level\n\t\t(in range 1-7, default is 4).\n"
+SID_INSTRUCTIONS3 "  Source\tSource file specification.  Wildcards may be used.\n  Destination\tDestination file | path specification.\n\t\tDestination may be a directory.\n\t\tIf Source is multiple files and -r is not specified,\n\t\tDestination must be a directory.\n"
+
+SID_GEN_FAILURE		"Compressing %s to %s failed.\n"
+SID_COLLISION		"Cannot compress a file onto itself: %s.\n"
+SID_COMPRESSING		"Compressing %s to %s.\n"
+SID_COMPRESSING_MSZIP "Compressing %s to %s using MS-ZIP compression.\n"
+SID_COMPRESSING_QUANTUM "Compressing %s to %s using QUANTUM compression.\nCompression level : %u.\nMemory window size: %u.\n"
+SID_COMPRESSING_LZX     "Compressing %s to %s using LZX compression.\nMemory window size: %u.\n"
+SID_FILE_REPORT		"%s: %ld bytes compressed to %ld bytes, %d%% savings.\n"
+SID_EMPTY_FILE_REPORT	"%s: %ld bytes compressed to %ld bytes.\n"
+SID_TOTAL_REPORT	"Total savings: %d files, %ld bytes compressed to %ld bytes, %d%% savings.\n"
+END

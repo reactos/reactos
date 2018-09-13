@@ -1,0 +1,169 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE 4.0 Shell Toolbar Extension Mechanism</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h1>IE 4.0 Shell Toolbar Extension mechanism</h1>
+
+<h3>Overview: </h3>
+
+<p>IE 3.0 introduced the internet toolbar (or
+&quot;coolbar&quot;) which is suitable for browsing, which is
+quite different from the Win95 shell's explorer toolbar. This two
+different toolbar was not a problem until we integrates the
+browser functionality into the explorer in IE 4.0. First, we
+tried it with two separate toolbars (from which the user can
+choose), but we've received many negative feedback against it
+from users. It became clear for us that we need to merge two
+toolbar into one. This document describes a proposed toolbar
+extension mechanism which allows us to have a single toolbar
+which is suitable for both with shell type folders (directories,
+my computer, control panel) and web pages. </p>
+
+<p>Since we need to achieve this in a very short development time
+frame, it's very important to know exactly what are our goals:</p>
+
+<ul>
+    <li>We change buttons only on the first pane of the toolbar
+        depending on the shell view type.</li>
+    <li>Common buttons (Back and Forward) stays on left,
+        additional buttons will be placed on right. </li>
+    <li>We allow only buttons (including buttons with menu) to be
+        added. No other controls can be added.</li>
+    <li>Although we hide that fact from the folder side, the
+        merge will happen only with the default toolbar we
+        provide.</li>
+    <li>The only top-level shell view can participate in this
+        negotiation (a folder in a frame set can't).</li>
+    <li>Achieve smooth toolbar transitions between HTML Views and
+        Shell folder views.</li>
+    <li>We support Win95 type toolbar extension mechanism but it
+        can be limited.</li>
+</ul>
+
+<h3>Mechanism:</h3>
+
+<p>UI negotiation will be performed between a shell view
+(IShellView) and a shell browser (IShellBrowser). We introduce
+one new interface (IExplorerToolbar) to perform UI negotiation,
+one new service GUID (SID_SExplorerToolbar) to help finding the
+service, and use one existing interface (IOleCommandTarget from
+ActiveX document interfaces) to invoke commands.</p>
+
+<ol>
+    <li>When a shell view is being UIActivated, it gets the
+        IExplorerToolbar interface to the toolbar by calling
+        IServiceProvider::QueryService with SID_SExplorerToobar. </li>
+    <li>Then, when the shell browser gets created, it calls
+        IExplorerToolbar::<strong>SetCommandTarget</strong> with
+        the following parameters: <br>
+        <em>SetCommandTarget(IUnknown* </em><em><strong>punkCmdTarget</strong></em><em>,
+        const GUID* </em><em><strong>pguidButtonGroup</strong></em><em>,
+        DWORD </em><em><strong>dwFlags</strong></em><em>)</em>;<br>
+        punkCmdTarget is the IOleCommandTarget interface to it's
+        command target interface<br>
+        pguidButtonGroup is a unique GUID to identify the group
+        of buttons<br>
+        dwFlags specifies which bands in the coolbar should be
+        visible and how many lines of text the toolbar should
+        have.. <br>
+        Calling SetCommandTarget will establish a direct
+        connection from the toolbar to the shell view (or its
+        sub-component). </li>
+    <li>Then, it calls IExplorerToolbar::<strong>AddButtons</strong>
+        (typically) multiple times to add buttons to the toolbar.
+        It specifies its command ID (to be passed to
+        IOleCommandTarget along with pguidButtonGroup), glyphs
+        (normal and highlighted) and button text (to be displayed
+        right below the button). AddButton takes a GUID as an
+        argument (the same GUID to be passed to
+        SetCommandTarget), but it won't be used in this version
+        -- it's for future enhancement. </li>
+    <li>Above negotiation will give enough information for the
+        toolbar to display those additional buttons. Those
+        buttons will be enabled or disabled based on the return
+        value from IOleCmdTarget::QueryStatus.</li>
+    <li>When the user moves the mouse over to one of those
+        buttons, the toolbar calls IOleCmdTarget::QueryStatus to
+        get the tooltip text (which is longer than the button
+        text).</li>
+    <li>When the user clicks one of those buttons, the toolbar
+        calls IOleCmdTarget::Exec. To make it easy to implement a
+        pull-down menu effect, it passes the position of the
+        button's left-bottom corner in screen coordinate. </li>
+</ol>
+
+<p>&nbsp;</p>
+
+<h3>Interface:</h3>
+
+<p><font size="2" face="Courier New">DECLARE_INTERFACE_(IExplorerToolbar,
+IUnknown)<br>
+{</font></p>
+
+<blockquote>
+    <p><font size="2" face="Courier New">// *** IExplorerToolbar
+    methods ***<br>
+    HRESULT SetCommandTarget(IUnknown* punkCmdTarget, const GUID*
+    pguidCmdGrp, DWORD dwFlags);</font></p>
+    <p><font size="2" face="Courier New">// Std buttons are Stop,
+    Home, Refresh, ...<br>
+    HRESULT AddStdBrowserButtons();<br>
+    <br>
+    HRESULT AddButtons(const GUID * pguidButtonGroup, UINT
+    nButtons, LPTBBUTTON lpButtons);<br>
+    HRESULT AddString(const GUID * pguidButtonGroup, HINSTANCE
+    hInst, UINT uiResID, LRESULT * pOffset);<br>
+    HRESULT GetButton(const GUID * pguidButtonGroup, UINT
+    uiCommand, LPTBBUTTON lpButton);<br>
+    HRESULT GetState(const GUID * pguidButtonGroup, UINT
+    uiCommand, UINT * pfState);<br>
+    HRESULT SetState(const GUID * pguidButtonGroup, UINT
+    uiCommand, UINT fState);</font></p>
+    <p><font size="2" face="Courier New">// uiBMPType
+    (BITMAP_NORMAL, BITMAP_HOT, BITMAP_DISABLED </font></p>
+    <p><font size="2" face="Courier New">// Offset of the glyphs
+    in the toolbar are returned in pOffset.<br>
+    HRESULT AddBitmap(const GUID * pguidButtonGroup, UINT
+    uiBMPType, UINT uiCount, TBADDBITMAP * ptb, <br>
+    LRESULT * pOffset, COLORREF rgbMask);</font></p>
+    <p><font size="2" face="Courier New">// The size of Glyphs
+    Coolbar expects<br>
+    HRESULT GetBitmapSize(UINT * uiID);</font></p>
+    <p><font size="2" face="Courier New">// Not supported</font></p>
+    <p><font size="2" face="Courier New">HRESULT
+    SendToolbarMsg(GUID * pguidButtonGroup, UINT uMsg, WPARAM
+    wParam, LPARAM lParam, LRESULT * plRes);</font></p>
+</blockquote>
+
+<p><font size="2" face="Courier New">};</font></p>
+
+<h3>Cook book for new clients:</h3>
+
+<ol>
+    <li>Call SetCommandTarget () to register the it's
+        IOleCmdTarget and guidButtonGroup</li>
+    <li>Call GetBitmapSize() to find out the size coolbar expects
+        for the Bitmaps</li>
+    <li>Call AddBitmaps giving HINST of the DLL and the resource
+        ID or the Glyphs. This will return the Glyph offset</li>
+    <li>Call AddStrings giving HINST of the DLL and the resource
+        ID or the Strings. This will return the String offset</li>
+    <li>AddButtons() specifying appropriate Glyph and String
+        offsets</li>
+    <li>Use GetButton(), GetState(), SetState() to manipulate the
+        buttons</li>
+    <li>Ensure that IOleCmdTarget::QueryStatus is supported. It
+        will be called to get button states and tooltip strings</li>
+    <li>Ensure that IOleCmdTarget::Exec is supported. It will be
+        called when the user clicks on a button.</li>
+</ol>
+</body>
+</html>

@@ -1,0 +1,46 @@
+
+;				EVENTS.CNF
+
+;	This file is used with EVENTCMT.PDF and
+;	EVENTCM[i,a].EXE to configure multiple
+;	clients.
+
+;	Legal example configuration commands
+;	are shown below:
+
+;To add an event to be translated into a trap:
+;#pragma ADD EventlogFile EventSource EventID Count Period
+
+;If the Eventlog start-up event ever happens
+;#pragma ADD System "Eventlog" 2147489653
+
+;If the Eventlog start-up event ever happens twice in 3 minutes
+;#pragma ADD System "Eventlog" 2147489653 2 180
+
+#pragma ADD System "Application Popup" 1073741850
+
+;To stop an event being translated into a trap:
+;#pragma DELETE EventlogFile EventSource EventID
+
+;The Eventlog start-up event
+;#pragma DELETE System "Eventlog" 2147489653
+
+;To add a trap destination
+;#pragma ADD_TRAP_DEST Community Address
+
+;To add public 193.128.100.100
+;#pragma ADD_TRAP_DEST public 193.128.100.100
+
+;To add private hostname
+;#pragma ADD_TRAP_DEST private hostname
+
+#pragma ADD_TRAP_DEST public localhost
+
+;To remove a trap destination
+;#pragma DELETE_TRAP_DEST Community Address
+
+;To remove public 193.128.100.100
+;#pragma DELETE_TRAP_DEST public 193.128.100.100
+
+;To remove private hostname
+;#pragma DELETE_TRAP_DEST private hostname

@@ -1,0 +1,28 @@
+ When you hit an assert when shutting down IE, it means we have some
+memory leak. It does not necessarily mean YOU have introduced some
+new memory leak. In order to verify, please run following pre-check-in
+tests. If it does not hit the same Assert, it means you haven't introduced
+any memory leak in the following code path.
+
+Test I:
+1. Start Run "{c:\windows\system}\blank.htm"
+2. Select File->New Window
+3. Close Both
+
+Test II:
+1. Start Run "http://ohserv"
+2. Click a link to "Development BVT"
+3. Click the go back button
+
+-Satoshi
+
+
+
+
+there is an erroneous assertion for a CUrlHistory object.  it gets freed
+after the assertion on MSHTML process detach.  this will be fixed post IE3 ship
+
+
+t SHDOCVW  MAIN: D:\NT\PRIVATE\windows\shell\ccshell\shdocvw\basec\..\mainloop.c at 151: 1 blocks of C++ objects left in memory. Read shdocvw\memleak.txt for detail
+
+-ZekeL

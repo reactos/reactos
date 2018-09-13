@@ -1,0 +1,87 @@
+#include "windows.h"
+#include "generic.h"
+
+Generic ICON Generic.ICO
+Logo    BITMAP window.bmp
+
+Generic MENU
+BEGIN
+        POPUP "&Test"
+        {
+                MENUITEM "&Log On...",                IDM_LOGON
+                MENUITEM "Log &Off",                  IDM_LOGOFF
+                MENUITEM SEPARATOR
+                MENUITEM "LoadUser&Profile...",       IDM_LUP
+                MENUITEM "GetProfile&Type",           IDM_PFTYPE
+                MENUITEM "&UnloadUserProfile",        IDM_ULUP
+                MENUITEM SEPARATOR
+                MENUITEM "E&xit",                     IDM_EXIT
+        }
+
+        POPUP        "&Help"
+        {
+                MENUITEM "&About Generic...",         IDM_ABOUT
+        }
+END
+
+GENERIC ACCELERATORS
+BEGIN
+        "?", IDM_ABOUT, ALT
+        "/", IDM_ABOUT, ALT
+END
+
+
+ABOUTBOX DIALOG 22, 17, 167, 64
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK", IDOK, 70, 40, 32, 14, WS_GROUP
+    CTEXT           "LoadUserProfile Test App", -1, 10, 15, 150, 8
+END
+
+
+LUPDLG DIALOG 6, 18, 235, 237
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "LoadUserProfile"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Flags", 101, 5, 5, 160, 46
+    AUTOCHECKBOX    "PI_NOUI", IDD_NOUI, 15, 18, 75, 10
+    AUTOCHECKBOX    "PI_APPLYPOLICY", IDD_APPLYPOLICY, 15, 35, 75, 10
+    AUTOCHECKBOX    "PI_LITELOAD", IDD_LITELOAD, 95, 18, 65, 10
+    AUTOCHECKBOX    "Reserved", 106, 95, 35, 65, 10, WS_DISABLED
+    GROUPBOX        "Profile Path", 108, 5, 58, 221, 35
+    EDITTEXT        IDD_PROFILEPATH, 15, 73, 201, 12, ES_AUTOHSCROLL
+    GROUPBOX        "Reserved", 109, 5, 98, 221, 35
+    EDITTEXT        -1, 15, 113, 201, 12, ES_AUTOHSCROLL, WS_DISABLED
+    GROUPBOX        "Default Profile Path", 138, 5, 138, 221, 35
+    EDITTEXT        IDD_DEFAULTPATH, 15, 151, 201, 12, ES_AUTOHSCROLL
+    CONTROL         "", 113, "Static", SS_ETCHEDHORZ, 5, 180, 221, 1
+    GROUPBOX        "Results", 112, 5, 187, 221, 40
+    CTEXT           "Return Value:", 115, 15, 197, 50, 8
+    CTEXT           "Time:", IDD_TIME_TEXT, 88, 197, 50, 8
+    CTEXT           "hProfile:", IDD_PROFILE_TEXT, 170, 197, 50, 8
+    EDITTEXT        IDD_RETVAL, 15, 210, 49, 12, ES_AUTOHSCROLL
+    EDITTEXT        IDD_TIME, 90, 210, 49, 12, ES_AUTOHSCROLL
+    EDITTEXT        IDD_PROFILE, 170, 210, 49, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Execute", IDOK, 173, 8, 55, 14
+    PUSHBUTTON      "Close", IDCANCEL, 173, 27, 55, 14
+END
+
+
+LOGONDLG DIALOG 62, 44, 223, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Username:", 202, 53, 13, 40, 8
+    EDITTEXT        IDD_USERNAME, 95, 12, 122, 12, ES_AUTOHSCROLL
+    LTEXT           "&From:", 203, 53, 29, 40, 8, NOT WS_GROUP
+    EDITTEXT        IDD_DOMAIN, 95, 27, 122, 12, WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT           "&Password:", 204, 53, 46, 39, 8, NOT WS_GROUP
+    EDITTEXT        IDD_PASSWORD, 95, 44, 122, 12, ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 63, 70, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 119, 70, 40, 14
+    CONTROL         "", IDD_ICON, "Static", SS_BITMAP | WS_GROUP, 5, 11, 39, 45
+END

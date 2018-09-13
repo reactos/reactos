@@ -1,0 +1,69 @@
+#include "windows.h"
+#include "globals.h"
+
+
+
+//
+// first property sheet in the main dialog
+//
+
+WS2SPDlg DIALOG 30, 22, 350, 225
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Conversion Tables"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         DID_LISTCTL, 4, 15, 290, 210, WS_VSCROLL | WS_TABSTOP | LBS_USETABSTOPS | LBS_NOTIFY
+
+    PUSHBUTTON      "&Up",   DID_UP,   300, 40, 40, 14
+    PUSHBUTTON      "&Down", DID_DOWN, 300, 70, 40, 14
+    PUSHBUTTON      "&More...", DID_MORE, 300, 100, 40, 14
+END
+
+
+//
+// second property sheet in the main dialog
+//
+
+RNRSPDlg DIALOG 30, 22, 350, 225
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Conversion Tables"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         DID_LISTCTL, 4, 15, 290, 210, WS_VSCROLL | WS_TABSTOP | LBS_USETABSTOPS | LBS_NOTIFY
+END
+
+
+//
+// popup with "more info"
+//
+
+
+MoreInfoDlg DIALOG 30, 22, 350, 225
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Complete Information"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "OK",   IDOK,   300, 40, 40, 14
+    LISTBOX         DID_LISTCTL, 4, 15, 290, 210, WS_VSCROLL | WS_TABSTOP | LBS_USETABSTOPS | LBS_NOTIFY
+END
+
+
+
+//
+// Requires version header files from the NT build environment
+//  Puts the correct version resources in a DLL
+//
+
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "WinSock2 reorder service providers"
+#define VER_INTERNALNAME_STR        "sporder.exe"
+#define VER_ORIGINALFILENAME_STR    "sporder.exe"
+
+#include "common.ver"

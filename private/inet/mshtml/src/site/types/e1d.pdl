@@ -1,0 +1,78 @@
+#ifndef _E1D_PDL_
+#define _E1D_PDL_ 1
+
+#include "csite.pdl"
+#include "txtedit.pdl"
+
+file e1d.pdl
+
+import  txtedit.pdl
+import  csite.pdl
+
+interface IHTMLDivPosition super:IDispatch guid:3050f212-98b5-11cf-bb82-00aa00bdce0b
+    refprop C1DElement:align
+
+tearoff C1DElement interface:IHTMLDivPosition
+tearoff C1DElement interface:IHTMLTextContainer
+
+class C1DElement name:HTMLDivPosition \
+            primaryinterface:IHTMLDivPosition \
+            super:CTxtSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f249-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f50f-98b5-11cf-bb82-00aa00bdce0b
+ 
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLDivPosition
+
+    property    align   atype:BSTR  type:htmlControlAlign   dispid:STDPROPID_XOBJ_CONTROLALIGN  \
+                get set caa bindable displaybind  default:htmlControlAlignNotSet maxstrlen:pdlToken
+
+interface IHTMLFieldSetElement guid:3050f3e7-98b5-11cf-bb82-00aa00bdce0b
+    refprop CFieldSetElement:align
+
+tearoff CFieldSetElement interface:IHTMLFieldSetElement
+
+class CFieldSetElement name:HTMLFieldSetElement \
+            primaryinterface:IHTMLFieldSetElement \
+            super:CTxtSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f3e8-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f545-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLFieldSetElement
+
+    property align      atype:BSTR  type:htmlControlAlign  \
+        dispid:STDPROPID_XOBJ_CONTROLALIGN  \
+        get set caa bindable displaybind  default:htmlControlAlignNotSet maxstrlen:pdlToken
+
+interface IHTMLLegendElement guid:3050f3ea-98b5-11cf-bb82-00aa00bdce0b
+    refprop CLegendElement:align
+
+tearoff CLegendElement interface:IHTMLLegendElement
+
+class CLegendElement name:HTMLLegendElement \
+            primaryinterface:IHTMLLegendElement \
+            super:CTxtSite \
+            events:HTMLTextContainerEvents \
+            nonprimaryevents:HTMLTextContainerEvents2 \
+            guid:3050f3e9-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f546-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLLegendElement
+
+    property align atype:BSTR  type:htmlControlAlign \
+                get set caa dispid:STDPROPID_XOBJ_CONTROLALIGN \
+                default:htmlControlAlignNotSet maxstrlen:pdlToken
+
+#endif _E1D_PDL_

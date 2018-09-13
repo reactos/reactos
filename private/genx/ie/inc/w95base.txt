@@ -1,0 +1,119 @@
+// description of IE 4 binaries load addresses for Win 9X
+
+begin setupstuff 0x50000000
+ bindfile.dll
+ iernonce.dll
+ jobexec.dll
+ inseng.dll
+ mssetup.dll
+ ie4.dll
+ asctrls.ocx
+
+// Shell only components
+begin UIexplorer 0x01010000
+ cdfview.dll
+ thumbvw.dll
+ webvw.dll
+ occache.dll
+ plugin.ocx
+ cabinet.dll
+ plustab.dll
+ inetcpl.cpl
+ inetcfg.dll
+ cabinet.dll
+
+// Leave it at it's Win95 address 
+begin advapi32 bfed0000
+ advapi32.dll
+
+// Shared arena components
+// comctl32 must be based high so that CS_GLOBALCLASSES work in the context
+// of 16 bit apps which thunk to it on Win9x
+begin comctl32 bfc00000 down
+ comctl32.dll
+
+
+// The following get dropped to us - leave it alone
+begin dropped unchanged
+ RSABASE.DLL
+ OLEAUT32.DLL
+
+// Platform components
+// Added by pritobla on 6/16/98 -
+//   IF YOU WANT TO ADD NEW BINARIES TO THE ActivePlatform1 SECTION,
+//   MAKE SURE THAT AFTER REBASING, THE BASE ADDRESS + IMAGE SIZE OF THE LAST
+//   BINARY IN THIS SECTION DOES NOT EXCEED 0x70850000 (see comments below)
+begin ActivePlatform1 70200000
+ WININET.DLL
+ URLMON.DLL
+ WEBCHECK.DLL
+ HLINK.DLL
+ ACTXPRXY.DLL
+ MSRATING.DLL
+ MLANG.DLL
+ MSENCODE.DLL
+ IMGUTIL.DLL
+ PNGFILT.DLL
+
+// Added by pritobla on 6/16/98 -
+// Should leave a "hole" to avoid collision with the IE4.x shell32.dll.
+// The base address and the image size of shell32.dll in IE4.x are:
+//   IE40     : Image Base = 0x70850000, Image Size = 0x0014F000
+//   IE401    : Image Base = 0x70930000, Image Size = 0x00155000
+//   IE401SP1 : Image Base = 0x70970000, Image Size = 0x00156000
+// So, the "hole" should start at 0x70850000 for a size of
+// [0x00156000 + (0x70970000 - 0x70850000) + 0x00100000 /* 1MB buffer */] =
+// 0x70850000 + 0x00376000 = 0x70BC6000 = 0x70BD0000 (64K boundary)
+begin ActivePlatform2 70BD0000
+ SHLWAPI.DLL
+ MSHTML.DLL
+ MSHTMLER.DLL
+ MSHTMLED.DLL
+ IEPEERS.DLL
+ SHDOCVW.DLL
+ BROWSEUI.DLL
+ MSXML.DLL
+ MSIDLE.DLL
+ JSCRIPT.DLL
+ VBSCRIPT.DLL
+ CRYPT32.DLL
+ DIGSIG.DLL
+ VSREVOKE.DLL
+ SOFTPUB.DLL
+ LICMGR10.DLL
+ WINTRUST.DLL
+ SCHANNEL.DLL
+ ADVPACK.DLL
+ SETUPAPI.DLL
+ W95INF32.DLL
+ SENDMAIL.DLL
+ WSOCK32N.DLL
+ JSPROXY.DLL
+ IENPSTUB.DLL
+ ES.DLL
+ ESSHARED.DLL
+ ESTIER2.DLL
+ url.dll
+ msnsspc.dll
+ msapsspc.dll
+ shdoclc.dll
+ browselc.dll
+ msident.dll
+ shfolder.dll
+ inetcplc.dll
+
+// MS components
+// Reserve space for internal browser/shell components here. 
+// begin MSComponents 35000000 
+// IHammer components 35000000 to 350FFFFF 
+// Trident ADC user components     35100000 to 3515FFFF (Richard Rollman)
+// ADC components     35160000 to 3519FFFF (Wolfgang Manousek)
+// GAP                351A0000 to 351FFFFF
+
+// IMT                35200000 to 354FFFFF (Michael Van Kleeck)
+// Active Movie       35500000 to 35BFFFFF (David May)
+// Connection Manager 35C00000 to 35C3FFFF (Nick Ball / Henry Tam)
+// WAB32.DLL          35c40000 to 35c4FFFF (Vikram Madan)
+// DXTRANS            35C50000 to 35CAFFFF
+// DXTMSFT            35CB0000 to 35D0FFFF
+

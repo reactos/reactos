@@ -1,0 +1,481 @@
+LANGUAGE 0x1f,0x00
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+101 DIALOG FIXED IMPURE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION L"Dil paketi y\x00fcklemesi"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Y\x00fckle",1,68,74,50,14
+    PUSHBUTTON      L"\x0130ptal",2,126,74,50,14
+    LTEXT           L"Dile \x00f6zg\x00fc karakterleri do\x011fru olarak g\x00f6r\x00fcnt\x00fclemek i\x00e7in a\x015fa\x011f\x0131daki dil paketini y\x00fcklemeniz gerekir:",
+                    -1,10,7,167,22
+    LTEXT           L"",201,10,28,166,11
+    CONTROL         L"&Hi\x00e7bir zaman dil paketi y\x00fckleme.",1000,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,56,166,11
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4096                    L"Kod Sayfas\x0131 %d"
+    4097                    L"Dil paketi y\x00fcklemesi"
+    4098                    L"Bu bilgisayarda y\x00f6netici haklar\x0131na sahip de\x011filsiniz. \r\nBir y\x00f6netici taraf\x0131ndan ger\x00e7ekle\x015ftirilmedi\x011fi s\x00fcrece bu y\x00fckleme ba\x015far\x0131yla tamamlanamaz."
+    4099                    L"Internet Explorer taraf\x0131ndan y\x00fcklenmi\x015f dil paketi. \r\nT\x00fcm ayarlar\x0131n etkili olmas\x0131 i\x00e7in bilgisayar\x0131n\x0131z\x0131 yeniden ba\x015flatman\x0131z gerekebilir."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4352                    L"Afrikanca"
+    4353                    L"Arnavut\x00e7a"
+    4354                    L"Arap\x00e7a"
+    4355                    L"Arap\x00e7a (Suudi Arabistan)"
+    4356                    L"Arap\x00e7a (Irak)"
+    4357                    L"Arap\x00e7a (M\x0131s\x0131r)"
+    4358                    L"Arap\x00e7a (Libya)"
+    4359                    L"Arap\x00e7a (Cezayir)"
+    4360                    L"Arap\x00e7a (Fas)"
+    4361                    L"Arap\x00e7a (Tunus)"
+    4362                    L"Arap\x00e7a (Umman)"
+    4363                    L"Arap\x00e7a (Yemen)"
+    4364                    L"Arap\x00e7a (Suriye)"
+    4365                    L"Arap\x00e7a (\x00dcrd\x00fcn)"
+    4366                    L"Arap\x00e7a (L\x00fcbnan)"
+    4367                    L"Arap\x00e7a (Kuveyt)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4368                    L"Arap\x00e7a (B.A.E.)"
+    4369                    L"Arap\x00e7a (Bahreyn)"
+    4370                    L"Arap\x00e7a (Katar)"
+    4371                    L"Bask\x00e7a"
+    4372                    L"Bulgarca"
+    4373                    L"Beyaz Rus\x00e7a"
+    4374                    L"Katalanca"
+    4375                    L"\x00c7ince"
+    4376                    L"\x00c7ince (Tayvan)"
+    4377                    L"\x00c7ince (PRC)"
+    4378                    L"\x00c7ince (Hong Kong)"
+    4379                    L"\x00c7ince (Singapur)"
+    4380                    L"H\x0131rvat\x00e7a"
+    4381                    L"\x00c7ek\x00e7e"
+    4382                    L"Danca"
+    4383                    L"Felemenk\x00e7e (Standart)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4384                    L"Felemenk\x00e7e (Bel\x00e7ika)"
+    4385                    L"\x0130ngilizce"
+    4386                    L"\x0130ngilizce (A.B.D.)"
+    4387                    L"\x0130nglizce (\x0130ngiltere)"
+    4388                    L"\x0130ngilizce (Avustralya)"
+    4389                    L"\x0130ngilizce (Kanada)"
+    4390                    L"\x0130ngilizce (Yeni Zelanda)"
+    4391                    L"\x0130ngilizce (\x0130rlanda)"
+    4392                    L"\x0130ngilizce (G\x00fcney Afrika)"
+    4393                    L"\x0130ngilizce (Jamaika)"
+    4394                    L"\x0130ngilizce (Belize)"
+    4395                    L"\x0130ngilizce (Trinidad)"
+    4396                    L"Estonya Dili"
+    4397                    L"Faroe Dili"
+    4398                    L"Fars\x00e7a"
+    4399                    L"Fince"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4400                    L"Frans\x0131zca (Fransa)"
+    4401                    L"Frans\x0131zca (Bel\x00e7ika)"
+    4402                    L"Frans\x0131zca (Kanada)"
+    4403                    L"Frans\x0131zca (\x0130svi\x00e7re)"
+    4404                    L"Frans\x0131zca (L\x00fcksemburg)"
+    4405                    L"Galler Dili"
+    4406                    L"Almanca (Almanya)"
+    4407                    L"Almanca (\x0130svi\x00e7re)"
+    4408                    L"Almanca (Avusturya)"
+    4409                    L"Almanca (L\x00fcksemburg)"
+    4410                    L"Almanca (Liechtenstein)"
+    4411                    L"Yunanca"
+    4412                    L"\x0130branice"
+    4413                    L"Hindu Dili"
+    4414                    L"Macarca"
+    4415                    L"\x0130zlandaca"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4416                    L"Endonezya Dili"
+    4417                    L"\x0130talyanca (\x0130talya)"
+    4418                    L"\x0130talyanca (\x0130svi\x00e7re)"
+    4419                    L"Japonca"
+    4420                    L"Korece"
+    4421                    L"Leton Dili"
+    4422                    L"Litvanca"
+    4423                    L"Makedonca (FYROM)"
+    4424                    L"Malezyaca (Malezya)"
+    4425                    L"Malta Dili"
+    4426                    L"Norve\x00e7ce (Bokmal)"
+    4427                    L"Norve\x00e7\x00e7e (Nynorsk)"
+    4428                    L"Leh\x00e7e"
+    4429                    L"Portekizce (Brezilya)"
+    4430                    L"Portekizce (Portekiz)"
+    4431                    L"Rhaeto-Romanic"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4432                    L"Romence"
+    4433                    L"Romence (Moldova)"
+    4434                    L"Rus\x00e7a"
+    4435                    L"Rus\x00e7a (Moldova)"
+    4436                    L"S\x0131rp\x00e7a (Kiril)"
+    4437                    L"S\x0131rp\x00e7a (Latin)"
+    4438                    L"Slovak\x00e7a"
+    4439                    L"Slovence"
+    4440                    L"Sorb Dili"
+    4441                    L"\x0130spanyolca (Geleneksel)"
+    4442                    L"\x0130spanyolca (Meksika)"
+    4443                    L"\x0130spanyolca (Uluslararas\x0131)"
+    4444                    L"\x0130spanyolca (Guatemala)"
+    4445                    L"\x0130spanyolca (Kostarika)"
+    4446                    L"\x0130spanyolca (Panama)"
+    4447                    L"\x0130spanyolca (Dominik Cumhuriyeti)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4448                    L"\x0130spanyolca (Venezuela)"
+    4449                    L"\x0130spanyolca (Kolombiya)"
+    4450                    L"\x0130spanyolca (Peru)"
+    4451                    L"\x0130spanyolca (Arjantin)"
+    4452                    L"\x0130spanyolca (Ekvator)"
+    4453                    L"\x0130spanyolca (\x015eili)"
+    4454                    L"\x0130spanyolca (Uruguay)"
+    4455                    L"\x0130spanyolca (Paraguay)"
+    4456                    L"\x0130spanyolca (Bolivya)"
+    4457                    L"\x0130spanyolca (El Salvador)"
+    4458                    L"\x0130spanyolca (Honduras)"
+    4459                    L"\x0130spanyolca (Nikaragua)"
+    4460                    L"\x0130spanyolca (Portoriko)"
+    4461                    L"Sutu Dili"
+    4462                    L"\x0130sve\x00e7\x00e7e"
+    4463                    L"\x0130sve\x00e7\x00e7e (Finlandiya)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4464                    L"Tay Dili"
+    4465                    L"Tsonga"
+    4466                    L"Tswana"
+    4467                    L"T\x00fcrk\x00e7e"
+    4468                    L"Ukraynaca"
+    4469                    L"Urdu"
+    4470                    L"Vietnam Dili"
+    4471                    L"Xhosa"
+    4472                    L"Yid\x00e7e"
+    4473                    L"Zulu"
+    4474                    L"\x00c7ince (Makau)"
+    4475                    L"\x0130ngilizce (Karayip)"
+    4476                    L"\x0130ngilizce (Zimbabve)"
+    4477                    L"\x0130ngilizce (Filipinler)"
+    4478                    L"Frans\x0131zca (Monako)"
+    4479                    L"Azerice (Latin)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4480                    L"\x00d6zbek\x00e7e (Kiril)"
+    4481                    L"\x00d6zbek\x00e7e (Latin)"
+    4482                    L"Ermenice"
+    4483                    L"G\x00fcrc\x00fc Dili"
+    4484                    L"Kazak Dili"
+    4485                    L"Svahili Dili"
+    4486                    L"Tatarca"
+    4487                    L"Bengali Dili"
+    4488                    L"Pencap Dili"
+    4489                    L"Gucarati Dili"
+    4490                    L"Oriya Dili"
+    4491                    L"Tamil Dili"
+    4492                    L"Telugu Dili"
+    4493                    L"Kannada Dili"
+    4494                    L"Malayalam Dili"
+    4495                    L"Asamez Dili"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4497                    L"Marati Dili"
+    4498                    L"Malezyaca (Bruney Dar\x00fcsselam)"
+    4499                    L"Nepal Dili (Hindistan)"
+    4500                    L"Sanskrit"
+    4501                    L"Litvanca"
+    4502                    L"Konkanca"
+    4503                    L"Azerice (Kiril)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4608                    L"Unicode"
+    4609                    L"Unicode (Big-Endian)"
+    4610                    L"Orta Avrupa (Windows)"
+    4611                    L"Kiril (Windows)"
+    4612                    L"Bat\x0131 Avrupa (Windows)"
+    4613                    L"Yunanca (Windows)"
+    4614                    L"T\x00fcrk\x00e7e (Windows)"
+    4615                    L"\x0130branice (Windows)"
+    4616                    L"Arap\x00e7a (Windows)"
+    4617                    L"Balt\x0131k (Windows)"
+    4618                    L"Vietnamca (Windows)"
+    4619                    L"Bat\x0131 Avrupa Dilleri (IA5)"
+    4620                    L"Almanca (IA5)"
+    4621                    L"\x0130sve\x00e7\x00e7e (IA5)"
+    4622                    L"Norve\x00e7\x00e7e (IA5)"
+    4623                    L"Kiril (KOI8-R)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4624                    L"Kiril (KOI8-U)"
+    4625                    L"Orta Avrupa (ISO)"
+    4626                    L"Latin 3 (ISO)"
+    4627                    L"Balt\x0131k (ISO)"
+    4628                    L"Kiril (ISO)"
+    4629                    L"Arap\x00e7a (ISO)"
+    4630                    L"Yunanca (ISO)"
+    4631                    L"\x0130branice (ISO-Visual)"
+    4632                    L"Kullan\x0131c\x0131 Tan\x0131ml\x0131"
+    4633                    L"Japonca (JIS)"
+    4634                    L"Japonca (JIS-1 baytl\x0131k Kana Kulland\x0131r)"
+    4635                    L"Japonca (JIS-1 baytl\x0131k Kana Kulland\x0131r - SO/SI)"
+    4636                    L"Korece (ISO)"
+    4637                    L"Japonca (Otomatik Se\x00e7)"
+    4638                    L"Korece (Otomatik Se\x00e7)"
+    4639                    L"Japonca (EUC)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4640                    L"Korece (EUC)"
+    4641                    L"\x00c7ince Basitle\x015ftirilmi\x015f (HZ)"
+    4642                    L"Unicode (UTF-7)"
+    4643                    L"Unicode (UTF-8)"
+    4644                    L"Orta Avrupa (DOS)"
+    4645                    L"Kiril (DOS)"
+    4646                    L"Tay (Windows)"
+    4647                    L"Japonca (Kayd\x0131rma-JIS)"
+    4648                    L"\x00c7ince Basitle\x015ftirilmi\x015f (GB2312)"
+    4649                    L"Korece"
+    4650                    L"\x00c7ince Geleneksel (Big5)"
+    4651                    L"\x0130branice (ISO-Logical)"
+    4652                    L"Otomatik Se\x00e7"
+    4653                    L"Arap\x00e7a (ASMO 708)"
+    4654                    L"Arap\x00e7a (DOS)"
+    4655                    L"\x0130branice (DOS)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4656                    L"Bat\x0131 Avrupa (ISO)"
+    4657                    L"\x00c7ince Basitle\x015ftirilmi\x015f (Otomatik Se\x00e7)"
+    4658                    L"\x00c7ince Geleneksel (Otomatik Se\x00e7)"
+    4659                    L"Kiril (Otomatik Se\x00e7)"
+    4660                    L"Yunanca (Otomatik Se\x00e7)"
+    4661                    L"Arap\x00e7a (Otomatik Se\x00e7)"
+    4662                    L"T\x00fcrk\x00e7e (ISO)"
+    4663                    L"Latin 9 (ISO)"
+    4664                    L"ABD-ASCII"
+    4665                    L"\x00c7ince Basitle\x015ftirilmi\x015f (EUC)"
+    4666                    L"Korece (Johab)"
+    4667                    L"OEM Birle\x015fik Devletler"
+    4668                    L"Bat\x0131 Avrupa"
+    4669                    L"Europa"
+    4670                    L"\x00c7ince Geleneksel (CNS)"
+    4671                    L"\x00c7ince Geleneksel (Eten)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4672                    L"Estonya Dili (ISO)"
+    4673                    L"Bat\x0131 Avrupa (DOS)"
+    4674                    L"Yunanca (DOS)"
+    4675                    L"Yunanca, Modern (DOS)"
+    4676                    L"Balt\x0131k Dili (DOS)"
+    4677                    L"T\x00fcrk\x00e7e (DOS)"
+    4678                    L"\x0130slandaca (DOS)"
+    4679                    L"Bat\x0131 Avrupa (Mac)"
+    4680                    L"Japonca (Mac)"
+    4681                    L"\x00c7ince Geleneksel (Mac)"
+    4682                    L"Korece (Mac)"
+    4683                    L"Arap\x00e7a (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4700                    L"\x0130branice (Mac)"
+    4701                    L"Yunanca (Mac)"
+    4702                    L"Kiril (Mac)"
+    4703                    L"\x00c7ince Basitle\x015ftirilmi\x015f (Mac)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4704                    L"Orta Avrupa (Mac)"
+    4705                    L"\x0130slandaca (Mac)"
+    4706                    L"T\x00fcrk\x00e7e (Mac)"
+    4707                    L"IBM EBCDIC (ABD-Kanada)"
+    4708                    L"IBM EBCDIC (Uluslararas\x0131)"
+    4709                    L"IBM EBCDIC (\x00c7ok dilli Latin-2)"
+    4710                    L"IBM EBCDIC (Yunanca Modern)"
+    4711                    L"IBM EBCDIC (T\x00fcrk\x00e7e Latin-5)"
+    4712                    L"IBM EBCDIC (Almanya)"
+    4713                    L"IBM EBCDIC (Danimarka-Norve\x00e7)"
+    4714                    L"IBM EBCDIC (Finlandiya-\x0130sve\x00e7)"
+    4715                    L"IBM EBCDIC (\x0130talya)"
+    4716                    L"IBM EBCDIC (\x0130spanya)"
+    4717                    L"IBM EBCDIC (\x0130ngiltere)"
+    4718                    L"IBM EBCDIC (Japon katakana's\x0131)"
+    4719                    L"IBM EBCDIC (Fransa)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4720                    L"IBM EBCDIC (Arap\x00e7a)"
+    4721                    L"IBM EBCDIC (Yunanca)"
+    4722                    L"IBM EBCDIC (\x0130branice)"
+    4723                    L"IBM EBCDIC (Korece Geni\x015fletilmi\x015f)"
+    4724                    L"IBM EBCDIC (Tay Dili)"
+    4725                    L"IBM EBCDIC (\x0130slandaca)"
+    4726                    L"IBM EBCDIC (Kiril Rus\x00e7a)"
+    4727                    L"IBM EBCDIC (T\x00fcrk\x00e7e)"
+    4728                    L"IBM EBCDIC (Kiril S\x0131rp\x00e7a-Bulgarca)"
+    4729                    L"IBM EBCDIC (Japonca ve Japon Katakana's\x0131)"
+    4730                    L"IBM EBCDIC (Japonca ve ABD-Kanada)"
+    4731                    L"IBM EBCDIC (Japonca ve Japonca-Latin)"
+    4732                    L"IBM EBCDIC (Korece ve Korece Geni\x015fletilmi\x015f)"
+    4733                    L"IBM EBCDIC (Basitle\x015ftirilmi\x015f \x00c7ince)"
+    4734                    L"IBM EBCDIC (Geleneksel \x00c7ince)"
+    4735                    L"IBM EBCDIC (ABD-Kanada-Euro'su)"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4736                    L"IBM EBCDIC (Almanya-Euro'su)"
+    4737                    L"IBM EBCDIC (Danimarka-Norve\x00e7-Euro'su)"
+    4738                    L"IBM EBCDIC (Finlandiya-\x0130sve\x00e7-Euro'su)"
+    4739                    L"IBM EBCDIC (\x0130talya-Euro'su)"
+    4740                    L"IBM EBCDIC (\x0130spanya-Euro'su)"
+    4741                    L"IBM EBCDIC (\x0130ngiltere-Euro'su)"
+    4742                    L"IBM EBCDIC (Fransa-Euro'su)"
+    4743                    L"IBM EBCDIC (Uluslararas\x0131-Euro'su)"
+    4744                    L"IBM EBCDIC (\x0130slandaca-Euro'su)"
+    4745                    L"ISCII Assamese"
+    4746                    L"ISCII Bengali"
+    4747                    L"ISCII Devanagari"
+    4748                    L"ISCII Gujarathi"
+    4749                    L"ISCII Kannada"
+    4750                    L"ISCII Malayalam"
+    4751                    L"ISCII Oriya"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4752                    L"ISCII Panjabi"
+    4753                    L"ISCII Telugu"
+    4754                    L"ISCII Tamil"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4864                    L"MS Gothic"
+    4865                    L"MS PGothic"
+    4866                    L"Simsun"
+    4867                    L"Simsun"
+    4868                    L"GulimChe"
+    4869                    L"Gulim"
+    4870                    L"GulimChe"
+    4871                    L"GulimChe"
+    4872                    L"MingLiu"
+    4873                    L"New MingLiu"
+    4874                    L"Courier New"
+    4875                    L"Arial"
+    4876                    L"Lucida Sans Unicode"
+    4877                    L"Miriam Fixed"
+    4878                    L"David"
+    4879                    L"Cordia New"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4880                    L"Cordia New"
+    4881                    L"Simplified Arabic Fixed"
+    4882                    L"Simplified Arabic"
+    4883                    L"Mangal"
+    4884                    L"Mangal"
+    4885                    L"Latha"
+    4886                    L"Latha"
+    4887                    L"Times New Roman"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5120                    L"Latin tabanl\x0131"
+    5121                    L"Latince"
+    5122                    L"Yunanca"
+    5123                    L"Kiril"
+    5124                    L"Ermenice"
+    5125                    L"\x0130branice"
+    5126                    L"Arap\x00e7a"
+    5127                    L"Devanagari Dili"
+    5128                    L"Bengali Dili"
+    5129                    L"Gurmukhi Dili"
+    5130                    L"Gucarati Dili"
+    5131                    L"Oriya Dili"
+    5132                    L"Tamil Dili"
+    5133                    L"Telugu Dili"
+    5134                    L"Kannada Dili"
+    5135                    L"Malayalam Dili"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5136                    L"Tay Dili"
+    5137                    L"Lao Dili"
+    5138                    L"Tibet\x00e7e"
+    5139                    L"G\x00fcrc\x00fcce"
+    5140                    L"Korece"
+    5141                    L"Japonca"
+    5142                    L"\x00c7ince Geleneksel"
+    5143                    L"\x00c7ince Basitle\x015ftirilmi\x015f"
+    5144                    L"Etiyopyaca"
+    5145                    L"CanSyllabic"
+    5146                    L"\x00c7eroki Dili"
+    5147                    L"Yi Dili"
+    5148                    L"Braille Alfabesi"
+    5149                    L"Runik Alfabe"
+    5150                    L"Okkam (Gal Dilleri Runik Yaz\x0131s\x0131)"
+    5151                    L"Sinhala Dili"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    5152                    L"S\x00fcryanice"
+    5153                    L"Burma Dili"
+    5154                    L"Kmerce"
+    5155                    L"Thaana Dili"
+    5156                    L"Mo\x011folca"
+    5158                    L"Default"
+    5159                    L"Merge"
+    5160                    L"Asciisym"
+    5161                    L"Kullan\x0131c\x0131 Tan\x0131ml\x0131"
+END

@@ -1,0 +1,154 @@
+#ifdef BUILD_IMAGEHLP
+LIBRARY IMAGEHLP
+#else
+LIBRARY DBGHELP
+#endif
+
+EXPORTS
+#ifdef BUILD_IMAGEHLP
+// Imagehlp only api's
+    BindImage
+    BindImageEx
+    CheckSumMappedFile
+    GetImageConfigInformation
+    GetImageUnusedHeaderBytes
+    ImageAddCertificate
+    ImageEnumerateCertificates
+    ImageGetCertificateData
+    ImageGetCertificateHeader
+    ImageGetDigestStream
+    ImageLoad
+    ImageRemoveCertificate
+    ImageUnload
+    MapAndLoad
+    MapFileAndCheckSumA
+    MapFileAndCheckSumW
+#ifdef _WIN64
+    ReBaseImage = ReBaseImage64
+#else
+    ReBaseImage
+#endif
+    ReBaseImage64
+    RemoveRelocations              PRIVATE
+    RemovePrivateCvSymbolic        PRIVATE
+    RemovePrivateCvSymbolicEx      PRIVATE
+    SetImageConfigInformation
+    SplitSymbols
+    TouchFileTimes
+    UnMapAndLoad
+    UpdateDebugInfoFile
+    UpdateDebugInfoFileEx
+#else
+// Dbghelp only api's
+    WinDbgExtensionDllInit
+    ExtensionApiVersion
+    sym
+#endif
+
+// Api's exported from both.
+//
+// NOTE: If you change the api's in this section, MAKE SURE you update the
+//       failure tables in dload.c as appropriate.
+//
+
+    FindDebugInfoFile
+    FindDebugInfoFileEx
+    FindFileInSearchPath
+    FindExecutableImage
+    FindExecutableImageEx
+    GetTimestampForLoadedLibrary
+    ImageDirectoryEntryToData
+    ImageDirectoryEntryToDataEx
+    ImageNtHeader
+    ImageRvaToSection
+    ImageRvaToVa
+    ImagehlpApiVersion
+    ImagehlpApiVersionEx
+    MakeSureDirectoryPathExists
+    SearchTreeForFile
+    SymCleanup
+    SymGetOptions
+    SymGetSearchPath
+    SymInitialize
+    SymMatchFileName
+    SymSetOptions
+    SymSetSearchPath
+    UnDecorateSymbolName
+    EnumerateLoadedModules64
+    StackWalk64
+    SymEnumerateModules64
+    SymEnumerateSymbols64
+    SymEnumerateSymbolsW64
+    SymFunctionTableAccess64
+    SymGetLineFromAddr64
+    SymGetLineFromName64
+    SymGetLineNext64
+    SymGetLinePrev64
+    SymGetModuleBase64
+    SymGetModuleInfo64
+    SymGetModuleInfoEx64
+    SymGetModuleInfoW64
+    SymGetSymFromAddr64
+    SymGetSymFromName64
+    SymGetSymNext64
+    SymGetSymPrev64
+    SymGetSymbolInfo64
+    SymLoadModule64
+    SymRegisterCallback64
+    SymRegisterFunctionEntryCallback64
+    SymUnDName64
+    SymUnloadModule64
+
+#ifdef _WIN64
+    EnumerateLoadedModules=EnumerateLoadedModules64
+    StackWalk=StackWalk64
+    SymEnumerateModules=SymEnumerateModules64
+    SymEnumerateSymbols=SymEnumerateSymbols64
+    SymEnumerateSymbolsW=SymEnumerateSymbolsW64
+    SymFunctionTableAccess=SymFunctionTableAccess64
+    SymGetLineFromAddr=SymGetLineFromAddr64
+    SymGetLineFromName=SymGetLineFromName64
+    SymGetLineNext=SymGetLineNext64
+    SymGetLinePrev=SymGetLinePrev64
+    SymGetModuleBase=SymGetModuleBase64
+    SymGetModuleInfo=SymGetModuleInfo64
+    SymGetModuleInfoEx=SymGetModuleInfoEx64
+    SymGetModuleInfoW=SymGetModuleInfoW64
+    SymGetSymFromAddr=SymGetSymFromAddr64
+    SymGetSymFromName=SymGetSymFromName64
+    SymGetSymNext=SymGetSymNext64
+    SymGetSymPrev=SymGetSymPrev64
+    SymGetSymbolInfo=SymGetSymbolInfo64
+    SymLoadModule=SymLoadModule64
+    SymRegisterCallback=SymRegisterCallback64
+    SymRegisterFunctionEntryCallback=SymRegisterFunctionEntryCallback64
+    SymUnDName=SymUnDName64
+    SymUnloadModule=SymUnloadModule64
+#else
+    EnumerateLoadedModules
+    MapDebugInformation
+    StackWalk
+    SymEnumerateModules
+    SymEnumerateSymbols
+    SymEnumerateSymbolsW
+    SymFunctionTableAccess
+    SymGetLineFromAddr
+    SymGetLineFromName
+    SymGetLineNext
+    SymGetLinePrev
+    SymGetModuleBase
+    SymGetModuleInfo
+    SymGetModuleInfoEx
+    SymGetModuleInfoW
+    SymGetSymFromAddr
+    SymGetSymFromName
+    SymGetSymNext
+    SymGetSymPrev
+    SymGetSymbolInfo
+    SymLoadModule
+    SymRegisterCallback
+    SymRegisterFunctionEntryCallback
+    SymUnDName
+    SymUnloadModule
+    UnmapDebugInformation
+#endif

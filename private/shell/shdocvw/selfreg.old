@@ -1,0 +1,654 @@
+[Version]
+Signature="$CHICAGO$"
+
+[RegBrowser]
+AddReg=shdocvw_Base,shdocvw,FileTypesHook
+
+[RegShell]
+AddReg=shdocvw_BaseShell,shdocvw_Shell,WebView,WebTemplates
+DelReg=FileTypesHook
+
+[UnReg]
+DelReg=shdocvw_OldReg,shdocvw,shdocvw_Shell,WebView,WebTemplates,WebColor_DelReg,FileTypesHook
+
+
+;; RegItems with %11% or %25% are substituted on NT 
+;; with %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!
+;; The flag 131072 (0x20000) will make the item REG_EXPAND_SZ,
+;; Any entries that go into the registry that contain 
+;; %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+;=========================================================================
+
+
+[shdocvw_OldReg]
+; Shell.ItemReg
+HKCR,"CLSID\%CLSID_XShellItem%"
+HKCR,"Shell.Item"
+HKCR,"Shell.Item.1"
+
+; Shell.BrowserReg
+; Remove "control" from the old so people don't see it any more
+HKCR,"CLSID\%CLSID_XWebBrowser1%\Control",,,""
+; Insertable should never have been there, but it was
+; in this .inf file for a while -- remove it on upgrade
+HKCR,"CLSID\%CLSID_XWebBrowser1%\Insertable",,,""
+
+; Preproc HTML stuff
+HKCR,"Folder\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"Directory\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"Network\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"Microsoft_Network\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"NetDomain\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"Microsoft_Network\Domain\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"NetServer\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"Microsoft_Network\Server\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+
+HKCR,"CLSID\{2227A280-3AEA-1069-A2DE-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"CLSID\{208D2C60-3AEA-1069-A2D7-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+HKCR,"CLSID\{85BBD920-42A0-1069-A2E4-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%",,,""
+
+; Preproc Toplevel stuff
+HKCR,"CLSID\%CLSID_XPreProcTopLevel%"
+
+HKCR,"Folder\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Directory\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Network\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Microsoft_Network\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"NetDomain\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Microsoft_Network\Domain\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"NetServer\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Microsoft_Network\Server\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+
+HKCR,"Directory\Fixed\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Directory\Removeable\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Directory\Net\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Directory\CDRom\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"Directory\RAMDisk\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+
+HKCR,"CLSID\{2227A280-3AEA-1069-A2DE-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"CLSID\{208D2C60-3AEA-1069-A2D7-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"CLSID\{21EC2020-3AEA-1069-A2DD-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+HKCR,"CLSID\{85BBD920-42A0-1069-A2E4-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XPreProcTopLevel%",,,""
+
+; Bogus VID_WebView stuff
+HKCR,"CLSID\%VID_WebView%"
+
+HKCR,"Folder\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Network\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Microsoft_Network\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"NetDomain\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Microsoft_Network\Domain\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"NetServer\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Microsoft_Network\Server\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\Fixed\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\Removeable\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\Net\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\CDRom\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"Directory\RAMDisk\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{2227A280-3AEA-1069-A2DE-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{208D2C60-3AEA-1069-A2D7-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{21EC2020-3AEA-1069-A2DD-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+HKCR,"CLSID\{85BBD920-42A0-1069-A2E4-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",Attributes,1,01,00,00,00
+
+; No longer supported VID_WebView stuff (now use VID_FolderState)
+HKCR,"Folder\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"*"
+HKCR,"Directory\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"FolderVFAT"
+HKCR,"Network\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"EntireNetwork"
+HKCR,"Microsoft_Network\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"EntireNetworkMS"
+HKCR,"NetDomain\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"NetDomain"
+HKCR,"Microsoft_Network\Domain\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"NetDomainMS"
+HKCR,"NetServer\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"NetServer"
+HKCR,"Microsoft_Network\Server\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"NetServerMS"
+HKCR,"Directory\Fixed\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"DiskRoot"
+HKCR,"Directory\Removeable\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"DiskRoot"
+HKCR,"Directory\Net\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"DiskRoot"
+HKCR,"Directory\CDRom\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"DiskRoot"
+HKCR,"Directory\RAMDisk\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"DiskRoot"
+HKCR,"CLSID\{2227A280-3AEA-1069-A2DE-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"Printers"
+HKCR,"CLSID\{208D2C60-3AEA-1069-A2D7-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"NetHood"
+HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"RecycleBin"
+HKCR,"CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"MyComputer"
+HKCR,"CLSID\{21EC2020-3AEA-1069-A2DD-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"ControlPanel"
+HKCR,"CLSID\{85BBD920-42A0-1069-A2E4-08002B30309D}\shellex\ExtShellFolderViews\%VID_WebView%",PersistString,,"Briefcase"
+
+; No longer supported WebViewTemplate stuff
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\*",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\*",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\FolderVFAT",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\FolderVFAT",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\EntireNetwork",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\EntireNetwork",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\EntireNetworkMS",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\EntireNetworkMS",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetDomain",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetDomain",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetDomainMS",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetDomainMS",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetServer",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetServer",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetServerMS",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetServerMS",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\Printers",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\Printers",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetHood",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\NetHood",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\RecycleBin",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\RecycleBin",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\MyComputer",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\MyComputer",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\ControlPanel",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\ControlPanel",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\DiskRoot",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\DiskRoot",IconArea_StyleSheet,2,"%25%\web\icon.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\Favorites",Header_StyleSheet,2,"%25%\web\header.css"
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\Favorites",IconArea_StyleSheet,2,"%25%\web\icon.css"
+
+; Dead WebView Content
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View"
+
+
+;=========================================================================
+
+
+[shdocvw_Base]
+; (We don't remove this section on uninstall)
+; 
+HKCR,"CLSID\%CLSID_XCDocObjectFolder%",,,"Shell DocObject Viewer"
+HKCR,"CLSID\%CLSID_XCDocObjectFolder%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCDocObjectFolder%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XCDocObjectFolder%\ShellFolder","Attributes",1,50,00,00,A0
+
+; Shell.BrowserReg
+HKCR,"CLSID\%CLSID_XWebBrowser1%",,,"%DESC_WebBrowser%"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\ProgID",,,"Shell.Explorer.1"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\ToolboxBitmap32",,131072,"%_SYS_MOD_PATH%, 257"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\TypeLib",,,"%CLSID_XSHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_XWebBrowser1%\VersionIndependentProgID",,,"Shell.Explorer"
+
+HKCR,"CLSID\%CLSID_XWebBrowser2%",,,"%DESC_WebBrowser%"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\Control",,,""
+HKCR,"CLSID\%CLSID_XWebBrowser2%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\ProgID",,,"Shell.Explorer.2"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\ToolboxBitmap32",,,"%_MOD_PATH%, 257"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\TypeLib",,,"%CLSID_XSHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_XWebBrowser2%\VersionIndependentProgID",,,"Shell.Explorer"
+
+HKCR,"Shell.Explorer",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer\CLSID",,,"%CLSID_XWebBrowser2%"
+HKCR,"Shell.Explorer\CurVer",,,"Shell.Explorer.2"
+HKCR,"Shell.Explorer.1",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer.1\CLSID",,,"%CLSID_XWebBrowser1%"
+HKCR,"Shell.Explorer.2",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer.2\CLSID",,,"%CLSID_XWebBrowser2%"
+
+; Shell Automation classes
+HKCR,"CLSID\%CLSID_XShell%",,,"%DESC_ShellApp%"
+HKCR,"CLSID\%CLSID_XShell%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShell%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XShell%\ProgID",,,"Shell.Application.1"
+HKCR,"CLSID\%CLSID_XShell%\TypeLib",,,"%CLSID_XSHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_XShell%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_XShell%\VersionIndependentProgID",,,"Shell.Application"
+
+HKCR,"Shell.Application",,,"%DESC_ShellApp%"
+HKCR,"Shell.Application\CLSID",,,"%CLSID_XShell%"
+HKCR,"Shell.Application\CurVer",,,"Shell.Application.1"
+HKCR,"Shell.Application.1",,,"%DESC_ShellApp%"
+HKCR,"Shell.Application.1\CLSID",,,"%CLSID_XShell%"
+
+HKCR,"CLSID\%CLSID_XShellFolderView%",,,"%DESC_ShellFolderView%"
+HKCR,"CLSID\%CLSID_XShellFolderView%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShellFolderView%\InProcServer32","ThreadingModel",,"Apartment"
+
+HKCR,"CLSID\%CLSID_XShellInproc%",,,"%DESC_ShellInproc%"
+HKCR,"CLSID\%CLSID_XShellInproc%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShellInproc%\InProcServer32","ThreadingModel",,"Apartment"
+
+; Shdocvw.TypeLibReg
+;
+; this is registered by code (besides DESC_SHDOCVW looks wrong)
+;
+;HKCR,"TypeLib\%CLSID_XSHDocVwTypeLib%\1.0",,,"%DESC_SHDOCVW%"
+;HKCR,"TypeLib\%CLSID_XSHDocVwTypeLib%\1.0\0\win32",,131072,"%_SYS_MOD_PATH%"
+;HKCR,"TypeLib\%CLSID_XSHDocVwTypeLib%\1.0\FLAGS",,,"0"
+
+; Sound Events for Browser
+HKCU,"AppEvents\Schemes\Apps\Explorer\ActivatingDocument",,,
+HKCU,"AppEvents\Schemes\Apps\Explorer\Navigating",,,
+HKCU,"AppEvents\Schemes\Apps\Explorer\MoveMenuItem",,,
+
+HKCU,"AppEvents\EventLabels\ActivatingDocument",,,"%SND_NAVIGATEEND%"
+HKCU,"AppEvents\EventLabels\Navigating",,,"%SND_NAVIGATESTART%"
+HKCU,"AppEvents\EventLabels\MoveMenuItem",,,"%SND_MOVEMENUITEM%"
+
+; Sound Events for Comctl32
+HKCU,"AppEvents\Schemes\Apps\.Default\CCSelect",,,
+HKCU,"AppEvents\Schemes\Apps\.Default\ShowBand",,,
+
+HKCU,"AppEvents\EventLabels\CCSelect",,,"%SND_SELECT%"
+HKCU,"AppEvents\EventLabels\ShowBand",,,"%SND_SHOWBAND%"
+
+
+
+;=========================================================================
+
+[shdocvw_BaseShell]
+; (Only installed for IE4 shell mode)
+; (We don't remove this section on uninstall)
+; 
+
+; Standard shell namespace settings
+HKCR,"Folder\shell\open\ddeexec","NoActivateHandler",,""
+HKCR,"Folder\shell\explore\ddeexec","NoActivateHandler",,""
+HKCR,"Drive\shell\find\ddeexec","NoActivateHandler",,""
+HKCR,"Directory\shell\find\ddeexec","NoActivateHandler",,""
+
+
+
+;=========================================================================
+
+[shdocvw]
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\AutoComplete","Use AutoComplete",,"yes"
+HKCU,"Software\Microsoft\Internet Explorer\Advanced Options\Browsing","Use AutoComplete",,"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoComplete\Use AutoComplete=YES"
+
+; HKLM version is used for users that didn't install.
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Explorer\AutoComplete","Use AutoComplete",,"yes"
+HKLM,"Software\Microsoft\Internet Explorer\Advanced Options\Browsing","Use AutoComplete",,"HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoComplete\Use AutoComplete=YES"
+
+; BUGBUG jcordell: temp reg string added for beta 1
+HKCU,"Software\Microsoft\Internet Explorer\Main","Search Bar",,"http://home.microsoft.com/search/search.asp"
+HKLM,"Software\Microsoft\Internet Explorer\Main","Search Bar",,"http://home.microsoft.com/search/search.asp"
+
+; default toolbars (taskbar, deskbars, and any other toolbars)
+;
+; as of 970204 (ie4, beta-1):
+; - taskbar: has task band, and ISF band "ie 4.0" w/ no text
+; - toolbars: none
+; - (machine name is ie_400, disk name is ie_400_c)
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Explorer\Streams\Desktop","Default Taskbar",1,\
+  0c,00,00,00,01,00,00,00,02,00,00,00,00,00,00,00,aa,4f,28,\
+  68,48,6a,d0,11,8c,78,00,c0,4f,d9,18,b4,44,00,00,00,eb,fe,ff,ff,c0,00,00,00,\
+  00,00,00,00,c0,c0,c0,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff,00,00,00,00,02,\
+  00,00,00,16,00,00,00,02,02,00,00,00,00,00,00,00,00,00,00,16,00,00,00,ff,ff,\
+  ff,7f,19,00,00,00,01,00,00,00,b0,e2,2b,d8,64,57,d0,11,a9,6e,00,c0,4f,d7,05,\
+  a2,0a,00,00,00,4c,00,00,00,01,14,02,00,00,00,00,00,c0,00,00,00,00,00,00,46,\
+  03,08,00,00,10,00,00,00,40,3d,f0,14,5c,0e,bc,01,00,40,cd,6c,ba,0d,bc,01,00,\
+  ac,7f,15,5c,0e,bc,01,00,00,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,b0,00,14,00,1f,00,e0,4f,d0,20,ea,3a,69,10,a2,d8,08,00,2b,\
+  30,30,9d,19,00,23,43,3a,5c,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,31,dd,25,00,31,00,00,00,00,00,93,1f,cf,81,11,00,50,72,6f,67,72,61,6d,20,\
+  46,69,6c,65,73,00,50,52,4f,47,52,41,7e,31,00,15,00,31,00,00,00,00,00,93,1f,\
+  ee,81,10,80,50,6c,75,73,21,00,00,2a,00,31,00,00,00,00,00,93,1f,ee,81,10,00,\
+  4d,69,63,72,6f,73,6f,66,74,20,49,6e,74,65,72,6e,65,74,00,4d,49,43,52,4f,53,\
+  7e,31,00,1d,00,31,00,00,00,00,00,3e,22,26,1a,10,00,49,45,20,34,2e,30,00,49,\
+  45,34,7e,31,2e,30,00,00,00,87,00,00,00,1c,00,00,00,03,00,00,00,1c,00,00,00,\
+  35,00,00,00,39,00,00,00,59,00,00,00,19,00,00,00,03,00,00,00,d0,0f,63,23,10,\
+  00,00,00,49,45,5f,34,30,30,5f,43,00,43,3a,5c,00,20,00,00,00,02,00,00,00,14,\
+  00,00,00,00,00,00,00,00,00,02,00,5c,5c,49,45,5f,34,30,30,5c,43,24,00,50,72,\
+  6f,67,72,61,6d,20,46,69,6c,65,73,5c,50,4c,55,53,21,5c,4d,69,63,72,6f,73,6f,\
+  66,74,20,49,6e,74,65,72,6e,65,74,5c,49,45,20,34,2e,30,00,10,00,00,00,05,00,\
+  00,a0,1c,00,00,00,91,00,00,00,10,00,00,00,05,00,00,a0,1c,00,00,00,91,00,00,\
+  00,10,00,00,00,05,00,00,a0,1c,00,00,00,91,00,00,00,00,00,00,00,44,00,00,00,\
+  eb,fe,ff,ff,c0,00,00,00,00,00,00,00,c0,c0,c0,00,00,00,00,00,00,00,00,00,ff,\
+  ff,ff,ff,00,00,00,00,00,00,00,00,16,00,00,00,4f,00,00,00,00,00,00,00,00,00,\
+  00,00,16,00,00,00,00,7d,00,00,01,00,00,00
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Explorer\Streams\Desktop","Default Toolbars",1,\
+    11,00,00,00,00,00,00,00
+
+; Internet Toolbar
+HKCR,"CLSID\%CLSID_XInternetToolbar%",,,"%DESC_InternetToolbar%"
+HKCR,"CLSID\%CLSID_XInternetToolbar%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XInternetToolbar%\InProcServer32","ThreadingModel",,"Apartment"
+
+; SendTo Menu
+HKCR,"CLSID\%CLSID_XSendToMenu%",,,"%DESC_SendToMenu%"
+HKCR,"CLSID\%CLSID_XSendToMenu%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XSendToMenu%\InProcServer32","ThreadingModel",,"Apartment"
+
+; BrowserBand
+HKCR,"CLSID\%CLSID_XBrowserBand%",,,"%DESC_BrowserBand%"
+HKCR,"CLSID\%CLSID_XBrowserBand%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XBrowserBand%\InProcServer32","ThreadingModel",,"Apartment"
+
+; SearchBand
+HKCR,"CLSID\%CLSID_XSearchBand%",,,"%DESC_SearchBand%"
+HKCR,"CLSID\%CLSID_XSearchBand%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XSearchBand%\InProcServer32","ThreadingModel",,"Apartment"
+
+; QuickLinks
+HKCR,"CLSID\%CLSID_XQuickLinks%",,,"%DESC_QuickLinks%"
+HKCR,"CLSID\%CLSID_XQuickLinks%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XQuickLinks%\InProcServer32","ThreadingModel",,"Apartment"
+
+; AddressBand
+HKCR,"CLSID\%CLSID_XAddressBand%",,,"%DESC_AddressBand%"
+HKCR,"CLSID\%CLSID_XAddressBand%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XAddressBand%\InProcServer32","ThreadingModel",,"Apartment"
+
+; BandProxy
+HKCR,"CLSID\%CLSID_XBandProxy%",,,"%DESC_BandProxy%"
+HKCR,"CLSID\%CLSID_XBandProxy%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XBandProxy%\InProcServer32","ThreadingModel",,"Apartment"
+
+; BrandBand
+HKCR,"CLSID\%CLSID_XBrandBand%",,,"%DESC_BrandBand%"
+HKCR,"CLSID\%CLSID_XBrandBand%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XBrandBand%\InProcServer32","ThreadingModel",,"Apartment"
+
+; AutoComplete
+HKCR,"CLSID\%CLSID_XAutoComplete%",,,"%DESC_AutoComplete%"
+HKCR,"CLSID\%CLSID_XAutoComplete%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XAutoComplete%\InProcServer32","ThreadingModel",,"Apartment"
+
+; ACLHistory
+HKCR,"CLSID\%CLSID_XACLHistory%",,,"%DESC_ACLHistory%"
+HKCR,"CLSID\%CLSID_XACLHistory%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XACLHistory%\InProcServer32","ThreadingModel",,"Apartment"
+
+; ACLMulti
+HKCR,"CLSID\%CLSID_XACLMulti%",,,"%DESC_ACLMulti%"
+HKCR,"CLSID\%CLSID_XACLMulti%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XACLMulti%\InProcServer32","ThreadingModel",,"Apartment"
+
+; SiteMapEmbedding
+HKCR,"CLSID\%CLSID_XCSiteMapEmbedding%",,,"%DESC_CSiteMapEmbedding%"
+HKCR,"CLSID\%CLSID_XCSiteMapEmbedding%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCSiteMapEmbedding%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XCUrlHistory
+HKCR,"CLSID\%CLSID_XCUrlHistory%",,,"%DESC_CUrlHistory%"
+HKCR,"CLSID\%CLSID_XCUrlHistory%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCUrlHistory%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XCURLSearchHook
+HKCR,"CLSID\%CLSID_XCURLSearchHook%",,,"%DESC_CURLSearchHook%"
+HKCR,"CLSID\%CLSID_XCURLSearchHook%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCURLSearchHook%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XCStubBindStatusCallback
+HKCR,"CLSID\%CLSID_XCStubBindStatusCallback%",,,"%DESC_CStubBindStatusCallback%"
+HKCR,"CLSID\%CLSID_XCStubBindStatusCallback%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCStubBindStatusCallback%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XDeskBar
+HKCR,"CLSID\%CLSID_XDeskBar%",,,"%DESC_DeskBar%"
+HKCR,"CLSID\%CLSID_XDeskBar%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XDeskBar%\InProcServer32","ThreadingModel",,"Apartment"
+
+
+; CLSID_XDeskBarApp
+HKCR,"CLSID\%CLSID_XDeskBarApp%",,,"%DESC_DeskBarApp%"
+HKCR,"CLSID\%CLSID_XDeskBarApp%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XDeskBarApp%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XRebarBandSite
+HKCR,"CLSID\%CLSID_XRebarBandSite%",,,"%DESC_RebarBandSite%"
+HKCR,"CLSID\%CLSID_XRebarBandSite%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XRebarBandSite%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XBandSiteMenu
+HKCR,"CLSID\%CLSID_XBandSiteMenu%",,,"%DESC_BandSiteMenu%"
+HKCR,"CLSID\%CLSID_XBandSiteMenu%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XBandSiteMenu%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XISFBand
+HKCR,"CLSID\%CLSID_XISFBand%",,,"%DESC_ISFBand%"
+HKCR,"CLSID\%CLSID_XISFBand%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XISFBand%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XShellFolderViewOC
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%",,,"%DESC_ShellFolderViewOC%"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\Control",,,""
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\InProcServer32",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\MiscStatus\1",,,"17408"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\ProgID",,,"Shell.FolderView.1"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\ToolboxBitmap32",,,"%_MOD_PATH%, 260"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\TypeLib",,,"%CLSID_XSHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_XShellFolderViewOC%\VersionIndependentProgID",,,"Shell.FolderView"
+
+; The Internet Namespace
+HKCR,"CLSID\%CLSID_XCURLFolder%",,,"%THENET%"
+HKCR,"CLSID\%CLSID_XCURLFolder%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCURLFolder%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XCURLFolder%\ShellFolder","Attributes",1,50,00,00,A4
+HKCR,"CLSID\%CLSID_XCURLFolder%\DefaultIcon",,131072,"%11%\shdocvw.dll,1"
+HKCR,"CLSID\%CLSID_XCURLFolder%\ShellEx\PropertySheetHandlers\%CLSID_XDesktopIcon%",,,""
+
+
+;=========================================================================
+
+[FileTypesHook]
+; FileTypes Hook property page (browser-only)
+HKCR,"CLSID\%CLSID_XFTHook%",,,"%DESC_FileTypeHook%"
+HKCR,"CLSID\%CLSID_XFTHook%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XFTHook%\InProcServer32","ThreadingModel",,"Apartment"
+
+
+;=========================================================================
+
+[shdocvw_Shell]
+; (Only installed for IE4 shell mode)
+;
+; Basic WebView preproc used by CustomizeFolder wizard
+HKCR,"CLSID\%CLSID_XCHTMLPreProc%",,,"%DESC_CHTMLPreProc%"
+HKCR,"CLSID\%CLSID_XCHTMLPreProc%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCHTMLPreProc%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XCHTMLPreProc%\FilterView",,,"%CLSID_XMshtml%"
+
+; FileTypes property page (full-shell)
+HKCR,"CLSID\%CLSID_XFT%",,,"%DESC_FileType%"
+HKCR,"CLSID\%CLSID_XFT%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XFT%\InProcServer32","ThreadingModel",,"Apartment"
+
+; ShellDataSource
+HKCR,"CLSID\%CLSID_XShellDataSource%",,,"%DESC_ShellDataSource%"
+HKCR,"CLSID\%CLSID_XShellDataSource%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShellDataSource%\InProcServer32","ThreadingModel",,"Apartment"
+
+; ShellUIControl
+HKCR,"CLSID\%CLSID_XShellUIControl%",,,"%DESC_ShellUIControl%"
+HKCR,"CLSID\%CLSID_XShellUIControl%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XShellUIControl%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XShellUIControl%\Implemented Categories\%CATID_XSafeForInitializing%",,,""
+HKCR,"CLSID\%CLSID_XShellUIControl%\Implemented Categories\%CATID_XSafeForScripting%",,,""
+
+; CLSID_XCShellFrameAuto
+HKCR,"CLSID\%CLSID_XCShellFrameAuto%",,,"%DESC_CShellFrameAuto%"
+HKCR,"CLSID\%CLSID_XCShellFrameAuto%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XCShellFrameAuto%\InProcServer32","ThreadingModel",,"Apartment"
+
+; CLSID_XDefViewOC
+HKCR,"CLSID\%CLSID_XDefViewOC%",,,"%DESC_DefViewOC%"
+HKCR,"CLSID\%CLSID_XDefViewOC%\InProcServer32",,131072,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_XDefViewOC%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XDefViewOC%\TypeLib",,,"%CLSID_XSHDocVwTypeLib%"
+
+; NameSpaceRegNewsMail
+HKCR,"CLSID\%CLSID_XNewsMail%",,,"%THENET%"
+HKCR,"CLSID\%CLSID_XNewsMail%\InProcServer32",,,"shell32.dll"
+HKCR,"CLSID\%CLSID_XNewsMail%\InProcServer32","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_XNewsMail%\shellex\ExtShellFolderViews",,,""
+HKCR,"CLSID\%CLSID_XNewsMail%\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%","PersistFile",131072,"%25%\Web\Internet.htm"
+HKCR,"CLSID\%CLSID_XNewsMail%\shell",,,OpenHomePage
+HKCR,"CLSID\%CLSID_XNewsMail%\shell\OpenHomePage",,,%OpenHomePage%
+HKCR,"CLSID\%CLSID_XNewsMail%\shell\OpenHomePage\Command",,131072,"%25%\explorer.exe ::%CLSID_XCURLFolder%"
+
+
+;=========================================================================
+
+; this section points folder types to the templates defined
+; in the [WebTemplates] section below
+;
+[WebView]
+; give all folders the default folder state (background image etc)
+HKCR,"Folder\shellex\ExtShellFolderViews\%VID_FolderState%",PersistString,,"*"
+
+; This registers desktop.htm as a basic WebView preproc dude
+; which is pretty bogus since support for this has been removed
+; from the shell. I'm leaving this here 'cuz there's a registry
+; setting to turn that support back on, even though nobody uses it.
+HKCR,"CLSID\%CLSID_XShellDesktop%\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%","PersistFile",131072,"%25%\Web\Desktop.htm"
+
+HKCR,"CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%","PersistFile",131072,"%25%\Web\mycomp.htm"
+HKCR,"CLSID\{21EC2020-3AEA-1069-A2DD-08002B30309D}\shellex\ExtShellFolderViews\%CLSID_XCHTMLPreProc%","PersistFile",131072,"%25%\Web\controlp.htm"
+
+
+;=========================================================================
+
+
+[WebTemplates]
+
+; register .HTT and .CSS extensions so browser doesn't get confused
+HKCR,.htt,,2,"HTTfile"
+HKCR,.htt,"Content Type",2,"text/html"
+HKCR,.css,,2,"CSSfile"
+HKCR,.css,"Content Type",2,"text/html"
+HKCR,HTTfile,,2,%HYPERTEXT_TEM%
+HKCR,HTTfile,EditFlags,3,00,00,01,00
+HKCR,HTTfile\DefaultIcon,,131074,"%11%\shell32.dll,58"
+HKCR,CSSfile,,2,%HYPERTEXT_STYLE%
+HKCR,CSSfile,EditFlags,3,00,00,01,00
+HKCR,CSSfile\DefaultIcon,,131074,"%11%\shell32.dll,58"
+
+; where is the content?
+HKCU,"Software\Microsoft\Windows\CurrentVersion\Explorer\Web View\*",IconArea_Image,131072,"%25%\web\wmark.gif"
+
+
+;=========================================================================
+
+
+; We used to add a funky color scheme, delete it for now. Can be removed eventually.
+[WebColor_DelReg]
+
+HKCU,"Control Panel\Appearance\Schemes",%IEScheme%
+
+
+
+
+
+[Strings]
+CLSID_XCHTMLPreProc      = "{5984FFE0-28D4-11CF-AE66-08002B2E1262}"
+CLSID_XCDocObjectFolder  = "{E7E4BC40-E76A-11CE-A9BB-00AA004AE837}"
+CLSID_XCURLFolder        = "{3DC7A020-0ACD-11CF-A9BB-00AA004AE837}"
+CLSID_XInternetToolbar   = "{5E6AB780-7743-11CF-A12B-00AA004AE837}"
+CLSID_XSendToMenu        = "{7BA4C740-9E81-11CF-99D3-00AA004AE837}"
+CLSID_XQuickLinks        = "{7BA4C741-9E81-11CF-99D3-00AA004AE837}"
+CLSID_XBrowserBand       = "{7BA4C742-9E81-11CF-99D3-00AA004AE837}"
+CLSID_XSearchBand        = "{30D02401-6A81-11d0-8274-00C04FD5AE38}"
+CLSID_XBrandBand         = "{22BF0C20-6DA7-11D0-B373-00A0C9034938}"
+CLSID_XAddressBand       = "{01E04581-4EEE-11d0-BFE9-00AA005B4383}"
+CLSID_XBandProxy         = "{F61FFEC1-754F-11d0-80CA-00AA005B4383}"
+CLSID_XAutoComplete      = "{00BB2763-6A77-11D0-A535-00C04FD7D062}"
+CLSID_XACLHistory        = "{00BB2764-6A77-11D0-A535-00C04FD7D062}"
+CLSID_XACLMulti          = "{00BB2765-6A77-11D0-A535-00C04FD7D062}"
+CLSID_XShellDataSource   = "{D4903360-44DA-11D0-89E2-00A0C90A90AC}"
+CLSID_XShellUIControl    = "{11148320-7314-11d0-8a03-00a0c90a90ac}"
+CLSID_XCSiteMapEmbedding = "{438C0EA0-5731-11CF-9AF8-0020AF73AD51}"
+CLSID_XCUrlHistory       = "{3C374A40-BAE4-11CF-BF7D-00AA006946EE}"
+CLSID_XCURLSearchHook    = "{CFBFAE00-17A6-11D0-99CB-00C04FD64497}"
+CLSID_XCShellFrameAuto   = "{20C46560-8491-11CF-960C-0080C7F4EE85}"
+CLSID_XCStubBindStatusCallback   = "{2B4F54B1-3D6D-11d0-8258-00C04FD5AE38}"
+CLSID_XShellFolderViewOC = "{9BA05971-F6A8-11CF-A442-00A0C90A8F39}"
+CLSID_XDefViewOC         = "{1820FED0-473E-11D0-A96C-00C04FD705A2}"
+CLSID_XDeskBar           = "{ECD4FC4C-521C-11D0-B792-00A0C90312E1}"
+CLSID_XDeskBarApp        = "{3CCF8A41-5C85-11d0-9796-00AA00B90ADF}"
+CLSID_XRebarBandSite     = "{ECD4FC4D-521C-11D0-B792-00A0C90312E1}"
+CLSID_XBandSiteMenu      = "{ECD4FC4E-521C-11D0-B792-00A0C90312E1}"
+CLSID_XDesktopIcon       = "{FBF23B42-E3F0-101B-8488-00AA003E56F8}"
+CLSID_XMshtml            = "{25336920-03F9-11CF-8FD0-00AA00686F13}"
+CLSID_XNewsMail          = "{871C5380-42A0-1069-A2EA-08002B30309D}"
+CLSID_XPreProcTopLevel   = "{F88033E0-F78B-11CF-89A9-00A0C9054129}"
+CLSID_XSHDocVwTypeLib    = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}"
+CLSID_XWebBrowser1       = "{EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}"
+CLSID_XWebBrowser2       = "{8856F961-340A-11D0-A96B-00C04FD705A2}"
+CLSID_XShellDesktop      = "{00021400-0000-0000-C000-000000000046}"
+CLSID_XShellItem         = "{EAB22AC6-30C1-11CF-A7EB-0000C05BAE0B}"
+CLSID_XShell             = "{13709620-C279-11CE-A49E-444553540000}"
+CLSID_XShellFolderView   = "{62112AA1-EBE4-11cf-A5FB-0020AFE7292D}"
+CLSID_XShellInproc       = "{0A89A860-D7B1-11CE-8350-444553540000}"
+CLSID_XISFBand           = "{D82BE2B0-5764-11D0-A96E-00C04FD705A2}"
+CLSID_XFT                = "{B091E540-83E3-11CF-A713-0020AFD79762}"
+CLSID_XFTHook            = "{FBF23B41-E3F0-101B-8488-00AA003E56F8}"
+CATID_XSafeForInitializing = "{7DD95801-9882-11CF-9FA9-00AA006C42C4}"
+CATID_XSafeForScripting = "{7DD95802-9882-11CF-9FA9-00AA006C42C4}"
+
+VID_WebView             = "{FB7E5040-1F6D-11D0-89A9-00A0C9054129}"
+VID_FolderState         = "{00000000-0000-0000-0000-000000000000}"
+
+Content_Disk            = "Disk Tools"
+Content_Favs            = "Sites of the Day"
+Content_Help            = "Help and Tips"
+Content_PSS             = "Product Support"
+Content_Prod            = "Internet Products"
+
+; these should technically be localized...
+DESC_CHTMLPreProc       = "&Web"
+DESC_WebBrowser         = "Microsoft Web Browser"
+DESC_ShellFolderViewOC  = "Microsoft Shell Folder View Router"
+DESC_ShellApp           = "Shell Automation Service"
+DESC_ShellInproc        = "Shell Automation Inproc Service"
+DESC_ShellFolderView    = "Shell Automation Folder View"
+
+; i don't think anybody ever sees these
+DESC_InternetToolbar    = "Microsoft Internet Toolbar"
+DESC_SendToMenu         = "Microsoft SendTo Service"
+DESC_BrowserBand        = "Microsoft BrowserBand"
+DESC_SearchBand         = "Microsoft SearchBand"
+DESC_QuickLinks         = "&Links"
+DESC_AddressBand        = "&Address"
+DESC_BandProxy          = "BandProxy"
+DESC_BrandBand          = "Download Status"
+DESC_AutoComplete       = "Microsoft AutoComplete"
+DESC_ACLHistory         = "Microsoft History AutoComplete List"
+DESC_ACLMulti           = "Microsoft Multiple AutoComplete List Container"
+DESC_ShellDataSource    = "Microsoft Shell Data Source"
+DESC_ShellUIControl     = "Microsoft Shell UI Control"
+DESC_CSiteMapEmbedding  = "Microsoft Sitemap"
+DESC_CUrlHistory        = "Microsoft Url History Service"
+DESC_CURLSearchHook     = "Microsoft Url Search Hook"
+DESC_CShellFrameAuto    = "Shell Frame Automation Service"
+DESC_CStubBindStatusCallback    = "Shell BindStatusCallback Proxy"
+DESC_DeskBar             = "Shell DeskBar"
+DESC_DeskBarApp             = "Shell DeskBarApp"
+DESC_RebarBandSite             = "Shell Rebar BandSite"
+DESC_DefViewOC          = "Shell DefView"
+;DESC_SHDOCVW            = "Shell DocObject Control Library"
+DESC_ISFBand            = "IShellFolderBand"
+DESC_FileType           = "File Types Page"
+DESC_FileTypeHook       = "MIME File Types Hook"
+
+SND_NAVIGATESTART       = "Start Navigation"
+SND_NAVIGATEEND         = "Complete Navigation"
+SND_MOVEMENUITEM        = "Move Menu Item"
+SND_SELECT              = "Select"
+SND_SHOWBAND            = "Show Toolbar Band"
+
+ExtViews                = "shellex\ExtShellFolderViews\{5984FFE0-28D4-11CF-AE66-08002B2E1262}"
+
+IEScheme                = "Internet Explorer"
+
+PreProc_Menu            = "&Web"
+PreProc_Help            = "Displays items in Web view"
+PreProc_Tip             = "Web"
+
+THENET                  = "The Internet"
+HYPERTEXT_TEM           = "HyperText Template"
+HYPERTEXT_STYLE         = "HyperText Style Sheet"

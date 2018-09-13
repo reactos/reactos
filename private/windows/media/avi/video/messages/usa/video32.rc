@@ -1,0 +1,56 @@
+/* VIDEO.rc
+ *
+ * Capture DLL resource script.
+ *
+ * (C) Copyright Microsoft Corporation 1991. All rights reserved.
+ */
+
+#include <windows.h>
+#include <aviver.h>
+#include <vfw.h>
+
+#include "video.rcv"
+
+STRINGTABLE
+BEGIN
+    DV_IDS_PROFILING        L"Profiling Display"
+    DV_IDS_LISTBOX          L"ListBox"
+
+    DV_ERR_OK               L"No Error."
+    DV_ERR_NONSPECIFIC      L"Unspecified error."
+    DV_ERR_BADFORMAT        L"Unsupported video format."
+    			
+    DV_ERR_STILLPLAYING     L"Device is still playing."
+    			
+    DV_ERR_UNPREPARED       L"Unprepared header."
+    			
+    DV_ERR_SYNC             L"Sync error."
+    			
+    DV_ERR_TOOMANYCHANNELS  L"Device already in use."
+    			
+    DV_ERR_NOTDETECTED	    L"Capture device was not detected."
+    DV_ERR_BADINSTALL	    L"Capture driver is not installed properly."
+    DV_ERR_CREATEPALETTE    L"Palette creation error."	
+    DV_ERR_SIZEFIELD	    L"Structure size incorrect."
+    DV_ERR_PARAM1	    L"Param1 invalid."	
+    DV_ERR_PARAM2	    L"Param2 invalid."	
+    DV_ERR_CONFIG1	    L"Configuration parameter 1 invalid."
+    DV_ERR_CONFIG2	    L"Configuration parameter 2 invalid."	
+    DV_ERR_FLAGS	    L"Flags parameter invalid."
+    DV_ERR_13		    L"Error 13."
+
+    DV_ERR_NOTSUPPORTED     L"Unsupported function."
+    DV_ERR_NOMEM            L"Out of memory."
+    DV_ERR_ALLOCATED        L"Device is already in use."
+    DV_ERR_BADDEVICEID      L"Invalid device ID."
+    DV_ERR_INVALHANDLE      L"Invalid handle."
+    DV_ERR_BADERRNUM        L"Invalid error number."
+    DV_ERR_NO_BUFFERS       L"No buffers are available."
+
+    DV_ERR_MEM_CONFLICT     L"Memory conflict / problem detected."
+    DV_ERR_IO_CONFLICT      L"I/O address conflict detected."
+    DV_ERR_DMA_CONFLICT     L"DMA conflict detected."
+    DV_ERR_INT_CONFLICT     L"Interrupt conflict / problem detected."
+    DV_ERR_PROTECT_ONLY     L"Driver cannot run in Standard mode, requires Enhanced mode."
+
+END

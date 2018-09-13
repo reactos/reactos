@@ -1,0 +1,41 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+!ENDIF
+
+DIRS=\
+        clipbook  \
+        clock     \
+        notepad   \
+        packager  \
+        mspaint   \
+        ratpak    \
+        calc      \
+        winchat   \
+        sublocal  \
+        access    \
+        pbrush    \
+        wordpad   \
+        quickres  \
+        write     \
+        netclip   \
+        eudcedit  \
+        uce       \
+        hypertrm
+
+OPTIONAL_DIRS=\
+        common    \
+        calendar  \
+        kbdswtch  \
+        recorder  \
+        ucharmap

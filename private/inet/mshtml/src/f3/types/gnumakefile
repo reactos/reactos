@@ -1,0 +1,56 @@
+CUSTOM_RULES = ${MWROOT}/ie4/trident.template
+COMPILE_OPTION = debug
+
+include ${MWHOME}/make.rules.simple
+
+PROJECT_CFLAGS := \
+    -I${SRC_DIR}/ctrl/include \
+    -I${SRC_DIR}/core/types \
+    -I${SRC_DIR}/ctrl/types \
+    -I${SRC_DIR}/other/types \
+    -I${SRC_DIR}/site/types \
+    -I${SRC_DIR}/f3/types \
+    -I${TYPES_DIR} \
+    -I${MSHTML_DIR}/help
+#   -I${SRC_DIR}/..
+
+
+# -------------------------------------------------------------
+# Targets built by "nmake all"
+# -------------------------------------------------------------
+
+all: \
+    ${RUN.dir}/mshtml.tlb    \
+#   ${NTSDK_INCLUDE}/mshtml.h      \
+#   ${NTSDK_INCLUDE}/mshtmdid.h    \
+
+# -------------------------------------------------------------
+#  DISPID header file
+# -------------------------------------------------------------
+
+DISPIDS=../../core/include/stddisp.h \
+    ../../core/include/coredisp.h \
+    ../../ctrl/include/ctrldisp.h
+SED = sed
+TMPDIR = ${OBJ.dir}
+
+$(NTSDK_INCLUDE)/mshtmdid.h : $(DISPIDS) ${SRC_DIR}/f3/types/dispid.sed
+	$(SED) -f ${SRC_DIR}/f3/types/dispid.sed $(DISPIDS) >$(NTSDK_INCLUDE)/mshtmldid.h
+
+# -------------------------------------------------------------
+#  Type library
+# -------------------------------------------------------------
+
+## For later.
+# ${NTSDK_INCLUDE}/mshtml.h 
+${RUN.dir}/mshtml.tlb : forms3.odl
+	midl ${MAINWINMWCPPFLAGS} /new /ms_ext /c_ext /client none /server none \
+    -header $(TMPDIR)/mshtml.hh \
+    -iid ${OBJ.dir}/f3_i.c \
+    -tlb ${RUN.dir}/mshtml.tlb \
+    forms3.odl
+#   $(SED) -f ${SRC_DIR}/f3/types/mkhtml.sed $(TMPDIR)/mshtml.hh >$(TMPDIR)/mshtml.h
+#   comphtml $(TMPDIR)/mshtml.h $(SRCDIR)/mshtml.h
+
+forms3.pp : forms3.odl
+	$(CC) -E ${MAINWINCFLAGS} -DMIDL_COMPILER -D__MKTYPLIB__ forms3.odl > $@

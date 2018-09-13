@@ -1,0 +1,25 @@
+;  File: D:\WACKER\cnctstd\cnctstd.def (Created: 19-Jan-1994)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.3 $
+;  $Date: 1997/09/09 15:24:59 $
+;
+
+LIBRARY   CNCTSTD
+
+;CODE      PRELOAD MOVEABLE DISCARDABLE
+;DATA      MULTIPLE
+
+EXPORTS
+	; cnctdrvs.c
+	cnctdrvEntry@12
+	cnctdrvCreate@8
+	cnctdrvDestroy@4
+	cnctdrvQueryStatus@4
+	cnctdrvComEvent@4
+
+	; cncts.c
+	cnctdrvConnect@8
+	cnctdrvDisconnect@8

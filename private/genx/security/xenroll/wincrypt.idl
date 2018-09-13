@@ -1,0 +1,35 @@
+// BUGBUG: Should be in wtypes.idl
+#ifndef FARPROC
+typedef int (__stdcall FARPROC)();
+#endif
+
+// BUGBUG: Should be in wtypes.idl
+#ifndef PBYTE
+typedef BYTE *PBYTE;
+#endif
+
+// BUGBUG: Should be in wtypes.idl
+#ifndef PDWORD
+typedef DWORD *PDWORD;
+#endif
+
+// BUGBUG: Should be in wtypes.idl
+#ifndef size_t
+typedef unsigned int size_t;
+#endif
+
+// BUGBUG: Should be in wtypes.idl
+#ifndef VOID
+typedef void VOID;
+#endif
+
+// BUGBUG: Should be in wtypes.idl
+#ifndef ULONG_PTR
+#if defined(_WIN64)
+typedef unsigned __int64 ULONG_PTR;
+#else
+typedef unsigned long ULONG_PTR;
+#endif
+#endif
+
+#include "wincrypt.h"

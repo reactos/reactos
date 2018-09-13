@@ -1,0 +1,58 @@
+# This makefile was generated automatically by mwgenmake.
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+VPATH= ..
+
+SOURCES =  \
+	assoc.c \
+	comc.c \
+	filetype.c \
+	fsassoc.c \
+	inetcpl.c \
+	memmgr.c \
+	serial.c \
+	util.c \
+	valid.c \
+	hash.c \
+	debspew.c \
+	inifile.c \
+	olevalid.c \
+	shlvalid.c \
+	resstr.c\
+	init.cpp
+
+INCLUDES = \
+	-I${SHELL_DIR}/ext/url\
+	-I${SHELL_DIR}/inc \
+	-I${SHELL_DIR}/inc/stubs
+
+DEFINES = \
+	-DMIME
+
+WLIB	= srcc
+LIB	= lib${WLIB}.a # target static library
+
+CPP_OBJS := ${SOURCES:%.cpp=%.o}
+LIBOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir     : the directory where you want the executables to go
+## APP_CFLAGS  : additional compilation flags
+## APP_LDFLAGS : additional link flags (maybe specifying DLLs)
+## DLL         : name of the DLL to make
+## DLLOBJS     : list of .o of the DLL
+## DLL-EXPORTS : name of the .def file for the DLL
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+NO_UNICODE=1
+PROJECT_CFLAGS = -w ${INCLUDES} ${DEFINES}
+
+include $(MWHOME)/make.rules.simple

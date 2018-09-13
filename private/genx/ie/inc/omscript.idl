@@ -1,0 +1,20 @@
+// These definitions are to smooth out the transition from old interface names to the
+// new ones.
+cpp_quote("#define IOmDocument2           IHTMLDocument2" )
+cpp_quote("#define IOmFramesCollection2   IHTMLFramesCollection2" )
+cpp_quote("#define IOmWindow2             IHTMLWindow2" )
+cpp_quote("#define IOmWindowEvents        IHTMLWindowEvents" )
+cpp_quote("#define IOmImage               IHTMLImgElement ")
+cpp_quote("#define IOmImageEvents          HTMLImageEvents")
+cpp_quote("#define IOmImagesCollection    IHTMLElementCollection")
+cpp_quote("#define IOmLink                IHTMLAnchorElement")
+cpp_quote("#define IOmLinkEvents           HTMLAnchorEvents")
+cpp_quote("#define IOmAnchor              IHTMLAnchorElement")
+cpp_quote("#define IOmLinksCollection2    IHTMLElementCollection ")
+cpp_quote("#define IOmAnchorsCollection2  IHTMLElementCollection ")
+cpp_quote("#define IOmElementsCollection2 IHTMLElementCollection ")
+cpp_quote("#define IOmForm2               IHTMLFormElement") 
+cpp_quote("#define IOmFormsCollection2    IHTMLElementCollection ")
+cpp_quote("#define IOmWindowEvents        IHTMLWindowEvents")
+
+#include <mshtml.idl>

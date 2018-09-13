@@ -1,0 +1,55 @@
+!IF 0
+
+Copyright (c) 1989-91  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=sockets
+MINORCOMP=winsock2
+
+TARGETNAME=dt_dll
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib      \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\comdlg32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib    \
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib      \
+
+DLLENTRY=DllMain
+DLLBASE=0x54c00000
+
+USE_CRTDLL=1
+
+INCLUDES=..\include
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+        dt_dll.cpp      \
+        handlers.cpp    \
+        huerror.cpp     \
+        dt_dll.rc       \
+

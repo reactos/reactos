@@ -1,0 +1,36 @@
+TARGETNAME=perfnet
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+USE_CRTDLL=1
+
+DLLBASE=0x60800000
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+	   $(BASEDIR)\public\sdk\lib\*\advapi32.lib         \
+        ..\common\obj\*\perfutil.obj
+
+INCLUDES=.;..\common;..\..\..\..\..\inc
+
+GPSIZE=0        
+
+DLLENTRY=DllInit
+
+SOURCES=netsvcmc.mc \
+        datasrv.c   \
+        datasrvq.c  \
+        datardr.c   \
+        databrws.c  \
+        perfnet.c   \
+        perfSrv.c   \
+        perfRdr.c   \
+        perfbrws.c  \
+        PerfNet.rc
+    
+
+PASS0_HEADERDIR=.
+PASS0_SOURCEDIR=.
+
+C_DEFINES= -DWIN32 -DSTRICT
+
+

@@ -1,5 +1,0 @@
-#include <windef.h>
-
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
-1 ICON "1.ico"

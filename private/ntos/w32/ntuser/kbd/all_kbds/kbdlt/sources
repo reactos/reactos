@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdlt
+
+TARGETNAME=kbdlt
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdlt.c kbdlt.rc
+
+NTTARGETFILE0=kbdlt.h kbdlt.rc kbdlt.def

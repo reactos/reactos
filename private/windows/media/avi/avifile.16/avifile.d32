@@ -1,0 +1,76 @@
+LIBRARY		AVIFILE
+DESCRIPTION	'Microsoft AVI File Read/Write library'
+PROTMODE
+;EXETYPE         WINDOWS
+CODE		PRELOAD MOVEABLE DISCARDABLE
+DATA		PRELOAD MOVEABLE SINGLE
+HEAPSIZE	1024
+SEGMENTS	_TEXT MOVEABLE DISCARDABLE PRELOAD
+		_INIT MOVEABLE DISCARDABLE PRELOAD
+EXPORTS
+                DllGetClassObject
+
+                _DllGetClassObject@12
+                DllGetClassObject=_DllGetClassObject@12
+
+		DllCanUnloadNow			@3
+
+		AVIStreamInit			@100
+		AVIStreamExit			@101
+
+		AVIFileOpen			@102
+		AVIStreamOpenFromFile		@103
+		AVIStreamCreate			@104
+		
+		AVIMakeCompressedStream		@105
+		AVIMakeFileFromStreams		@106
+
+		AVIStreamGetFrame		@110
+		AVIStreamGetFrameClose		@111
+		AVIStreamGetFrameOpen		@112
+		
+                AVISave                         @120
+		AVISaveV			@121
+		AVISaveOptions			@122
+		AVIBuildFilter			@123
+		AVISaveOptionsFree		@124
+
+		AVIStreamStart			@130
+		AVIStreamLength			@131
+		AVIStreamTimeToSample		@132
+		AVIStreamSampleToTime		@133
+		
+		;; These just all call methods...
+		AVIFileAddRef			@140
+		AVIFileClose			@141	
+		AVIFileInfo			@142
+		AVIFileGetStream		@143
+		AVIFileCreateStream		@144
+;;		AVIFileAddStream		@145
+		AVIFileWriteData		@146
+		AVIFileReadData			@147
+		AVIFileEndRecord		@148
+
+		AVIStreamAddRef			@160
+		AVIStreamClose			@161
+		AVIStreamInfo			@162
+		AVIStreamFindSample		@163
+		AVIStreamReadFormat		@164
+		AVIStreamReadData		@165
+		AVIStreamWriteData		@166
+		AVIStreamRead			@167
+		AVIStreamWrite			@168
+		AVIStreamSetFormat		@169
+
+		EditStreamCopy			@180
+		EditStreamCut			@181
+		EditStreamPaste			@182
+
+		CreateEditableStream		@184
+		AVIPutFileOnClipboard		@185
+		AVIPutStreamOnClipboard		@186
+		AVIGetFromClipboard		@187
+		AVIClearClipboard		@188
+
+
+		

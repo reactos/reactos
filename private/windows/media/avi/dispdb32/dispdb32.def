@@ -1,0 +1,10 @@
+LIBRARY DISPDB32
+
+
+SECTIONS
+        .sdata  READ WRITE SHARED
+
+EXPORTS
+        DisplayDib
+        DisplayDibEx
+        KeyboardHookProc

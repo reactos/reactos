@@ -1,0 +1,78 @@
+/******************************************************************************
+
+  Source File:  Deskmon.rc
+
+  Display detailed information about the display monitor installed in the
+  machine
+
+  Copyright (c) 1997-1998 by Microsoft Corporation
+
+  Change History:
+
+  12-01-97 AndreVa - Created It
+
+******************************************************************************/
+
+#include    <windows.h>
+#include    "resource.h"
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Advanced display monitor properties"
+#define VER_INTERNALNAME_STR        "deskmon.dll"
+
+#include "common.ver"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+// 
+
+IDI_MONITOR             ICON    DISCARDABLE     "MONITOR.ICO"
+
+
+PROP_SHEET_DLG DIALOGEX 20, 20, 252, 175
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_NOIDLEMSG | DS_3DLOOK
+CAPTION "Monitor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Monitor Type",        IDC_MONITOR_GRP,     7,   3, 237, 52
+    ICON            IDI_MONITOR,           IDI_MONITOR,        13,  12,  18, 20
+    LISTBOX                                IDC_MONITORS_LIST,  40,  13, 196, 30, 
+                    WS_VSCROLL | WS_TABSTOP | LBS_NOTIFY
+    LTEXT           "",                    IDC_MONITORDESC,    40,  17, 190, 20, SS_NOPREFIX
+    PUSHBUTTON      "&Properties",         IDC_PROPERTIES,    161,  35,  75, 14
+    
+
+    GROUPBOX        "Monitor Settings",    IDC_MONSET_GRP,      7,  58, 237, 96
+    LTEXT           "&Refresh Frequency:", IDC_MONSET_FREQSTR, 13,  73, 200, 30
+    COMBOBOX                               IDC_MONSET_FREQ     21,  85, 215, 80,
+                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&Hide modes that this monitor cannot display.",
+                    IDC_MONSET_PRUNNING_MODE, "Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,              13, 106, 180, 10
+    LTEXT           "Unchecking this box will allow you to set your display to modes that this monitor cannot display correctly. This may lead to an unusable display and/or damaged hardware.",
+                    IDC_MONSET_PRUNNING_MODE_DESC,             13, 118, 222, 33
+
+    // GROUPBOX        "LCD Panel",           IDC_PANEL_GRP,       7, 114, 237, 50
+END
+
+
+STRINGTABLE DISCARDABLE PRELOAD
+BEGIN
+
+IDS_PAGE_TITLE      "Monitor"
+IDS_INTERLACED      "Hertz, Interlaced"
+IDS_FREQ            "Hertz"
+IDS_DEFFREQ         "Use hardware default setting"
+
+IDS_BAD_REFRESH     "Bad Refresh Rate - Current refresh rate is not in the available list"
+IDS_MODE_UNSETTABLE "Mode is not actually available - bad driver"
+
+IDS_DEFAULT_MONITOR "Default Monitor"
+
+
+END

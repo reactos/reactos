@@ -1,0 +1,76 @@
+#ifndef _FRAMESET_PDL
+#define _FRAMESET_PDL
+
+#include "csite.pdl"
+#include "olesite.pdl"
+
+file frameset.pdl
+
+import csite.pdl
+
+interface IHTMLFrameSetElement guid:3050f319-98b5-11cf-bb82-00aa00bdce0b
+        refprop CFrameSetSite:rows
+        refprop CFrameSetSite:cols
+        refprop CFrameSetSite:border
+        refprop CFrameSetSite:borderColor
+        refprop CFrameSetSite:frameBorder
+        refprop CFrameSetSite:frameSpacing
+        refprop CFrameSetSite:name
+        refprop CFrameSetSite:onload
+        refprop CFrameSetSite:onunload
+        refprop CFrameSetSite:onbeforeunload
+
+interface IHTMLFrameSetElement2 guid:3050f5c6-98b5-11cf-bb82-00aa00bdce0b super:IDispatch
+        refprop CFrameSetSite:onbeforeprint
+        refprop CFrameSetSite:onafterprint
+
+tearoff CFrameSetSite interface:IHTMLFrameSetElement
+tearoff CFrameSetSite interface:IHTMLFrameSetElement2
+class CFrameSetSite name:HTMLFrameSetSite \
+                primaryinterface:IHTMLFrameSetElement \
+                super:CSite \
+                events:HTMLControlElementEvents \
+                nonprimaryevents:HTMLControlElementEvents2 \
+                guid:3050f31A-98b5-11cf-bb82-00aa00bdce0b \
+                mondoguid:3050f514-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLControlElement
+    implements IHTMLFrameSetElement
+    implements IHTMLFrameSetElement2
+
+    property rows caa atype:BSTR type:CStr get set \
+        dispid:DISPID_FRAMESET   remeasure displaybind maxstrlen:pdlNoLimit
+
+    property cols caa atype:BSTR type:CStr get set \
+        dispid:DISPID_FRAMESET+1 remeasure displaybind maxstrlen:pdlNoLimit
+
+    property border dispid:DISPID_FRAMESET+2 atype:VARIANT  type:CUnitValue \
+        caa get set ppflags:PP_UV_LENGTH maxstrlen:pdlToken
+        
+
+    property borderColor dispid:DISPID_FRAMESET+3 atype:VARIANT type:CColorValue \
+        caa get set setaahr default:VALUE_UNDEF maxstrlen:pdlColor
+
+    property frameBorder dispid:DISPID_FRAMESET+4 atype:BSTR type:CStr caa get set maxstrlen:pdlToken
+
+    property frameSpacing dispid:DISPID_FRAMESET+5 atype:VARIANT  type:CUnitValue \
+        caa get set ppflags:PP_UV_LENGTH maxstrlen:pdlLength
+
+    property name        dispid:STDPROPID_XOBJ_NAME atype:BSTR    type:CStr   \
+        get set method:nameHelper baseimplementation bindable displaybind  maxstrlen:pdlNoLimit
+
+    property onload          atype:VARIANT               dispid:DISPID_EVPROP_ONLOAD     \
+        type:code scriptlet get set caa displaybind bindable baseimplementation maxstrlen:pdlEvent
+    property onunload        atype:VARIANT               dispid:DISPID_EVPROP_ONUNLOAD     \
+        type:code scriptlet get set caa displaybind bindable baseimplementation maxstrlen:pdlEvent
+    property onbeforeunload  atype:VARIANT      dispid:DISPID_EVPROP_ONBEFOREUNLOAD     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+    property onbeforeprint   atype:VARIANT      dispid:DISPID_EVPROP_ONBEFOREPRINT     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+    property onafterprint    atype:VARIANT      dispid:DISPID_EVPROP_ONAFTERPRINT     \
+        type:code scriptlet get set caa bindable displaybind baseimplementation maxstrlen:pdlEvent
+
+
+
+#endif

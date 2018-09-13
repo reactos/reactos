@@ -1,0 +1,14 @@
+[Version]
+Signature="$CHICAGO$"
+[Reg]
+AddReg=msident.Reg
+[UnReg]
+DelReg=msident.Reg
+[msident.Reg]
+HKCR,CLSID\%CLSID_MSIdent%,,,"%DESC_MSIdent%"
+HKCR,CLSID\%CLSID_MSIdent%\InProcServer32,,131072,%SYS_MOD_PATH%
+HKCR,"CLSID\%CLSID_MSIdent%\InprocServer32","ThreadingModel",,"Both"
+[Strings]
+CLSID_MSIdent="{a9ae6c91-1d1b-11d2-b21a-00c04fa357fa}"
+DESC_MSIdent="LW Identities"
+[End]

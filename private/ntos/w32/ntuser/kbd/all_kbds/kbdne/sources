@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdne
+
+TARGETNAME=kbdne
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdne.c kbdne.rc
+
+NTTARGETFILE0=kbdne.h kbdne.rc kbdne.def

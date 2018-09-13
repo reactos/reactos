@@ -1,0 +1,938 @@
+//Microsoft Developer Studio generated resource script.
+//
+
+#include <windows.h>
+#include <ntverp.h>
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""res\\wordpad.rc2""  // non-App Studio edited resources\r\n"
+    "\r\n"
+    "#include ""afxres.rc""  \011// Standard components\r\n"
+    "#include ""afxprint.rc""\011// printing/print preview resources\r\n"
+    "#include ""afxolecl.rc""\011// OLE container resources\r\n"
+    "#include ""afxolesv.rc""\011// OLE server resources\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "Page Set&up...",              ID_PAGE_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Sen&d...",                    ID_FILE_SEND_MAIL
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Paste &Special...",           ID_EDIT_PASTE_SPECIAL
+        MENUITEM "Cle&ar\tDel",                 ID_EDIT_CLEAR
+        MENUITEM "Select A&ll\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find &Next\tF3",              ID_EDIT_REPEAT
+        MENUITEM "R&eplace...\tCtrl+H",         ID_EDIT_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Lin&ks...",                   ID_OLE_EDIT_LINKS
+        MENUITEM "Object P&roperties\tAlt+Enter", ID_OLE_EDIT_PROPERTIES
+        MENUITEM "<<OLE VERBS GO HERE>>",       ID_OLE_VERB_FIRST
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Format Bar",                 ID_VIEW_FORMATBAR
+        MENUITEM "&Ruler",                      ID_VIEW_RULER
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                 ID_VIEW_OPTIONS
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "&Date and Time...",           ID_INSERT_DATE_TIME
+        MENUITEM "&Object...",                  ID_OLE_INSERT_NEW
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Font...",                    ID_FORMAT_FONT
+        MENUITEM "&Bullet Style",               ID_INSERT_BULLET
+        MENUITEM "&Paragraph...",               ID_FORMAT_PARAGRAPH
+        MENUITEM "&Tabs...",                    ID_FORMAT_TABS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM SEPARATOR
+        MENUITEM "&About WordPad",              ID_APP_ABOUT
+    END
+END
+
+IDR_CNTR_INPLACE MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&New...\tCtrl+N",             ID_FILE_NEW
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Save\tCtrl+S",               ID_FILE_SAVE
+        MENUITEM "Save &As...",                 ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "Page Set&up...",              ID_PAGE_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Sen&d...",                    ID_FILE_SEND_MAIL
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    MENUITEM SEPARATOR
+    MENUITEM SEPARATOR
+END
+
+IDR_SRVR_INPLACE MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Paste &Special...",           ID_EDIT_PASTE_SPECIAL
+        MENUITEM "Cle&ar\tDel",                 ID_EDIT_CLEAR
+        MENUITEM "Select A&ll\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find &Next\tF3",              ID_EDIT_REPEAT
+        MENUITEM "R&eplace...\tCtrl+H",         ID_EDIT_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Lin&ks...",                   ID_OLE_EDIT_LINKS
+        MENUITEM "Object P&roperties\tAlt+Enter", ID_OLE_EDIT_PROPERTIES
+        MENUITEM "<<OLE VERBS GO HERE>>",       ID_OLE_VERB_FIRST
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Format Bar",                 ID_VIEW_FORMATBAR
+        MENUITEM "&Ruler",                      ID_VIEW_RULER
+        MENUITEM SEPARATOR
+        MENUITEM "&Options...",                 ID_VIEW_OPTIONS
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "&Date and Time...",           ID_INSERT_DATE_TIME
+        MENUITEM "&Object...",                  ID_OLE_INSERT_NEW
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Font...",                    ID_FORMAT_FONT
+        MENUITEM "&Bullet Style",               ID_INSERT_BULLET
+        MENUITEM "&Paragraph...",               ID_FORMAT_PARAGRAPH
+        MENUITEM "&Tabs...",                    ID_FORMAT_TABS
+    END
+    MENUITEM SEPARATOR
+    MENUITEM SEPARATOR
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM SEPARATOR
+        MENUITEM "&About WordPad",              ID_APP_ABOUT
+    END
+END
+
+IDR_SRVR_EMBEDDED MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Update\tCtrl+S",             ID_FILE_UPDATE
+        MENUITEM "Save Copy &As...",            ID_FILE_SAVE_COPY_AS
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               ID_EDIT_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                ID_EDIT_CUT
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+        MENUITEM "&Paste\tCtrl+V",              ID_EDIT_PASTE
+        MENUITEM "Paste &Special...",           ID_EDIT_PASTE_SPECIAL
+        MENUITEM "Cle&ar\tDel",                 ID_EDIT_CLEAR
+        MENUITEM "Select A&ll\tCtrl+A",         ID_EDIT_SELECT_ALL
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            ID_EDIT_FIND
+        MENUITEM "Find &Next\tF3",              ID_EDIT_REPEAT
+        MENUITEM "R&eplace...\tCtrl+H",         ID_EDIT_REPLACE
+        MENUITEM SEPARATOR
+        MENUITEM "Lin&ks...",                   ID_OLE_EDIT_LINKS
+        MENUITEM "Object P&roperties\tAlt+Enter", ID_OLE_EDIT_PROPERTIES
+        MENUITEM "<<OLE VERBS GO HERE>>",       ID_OLE_VERB_FIRST
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Format Bar",                 ID_VIEW_FORMATBAR
+        MENUITEM "&Ruler",                      ID_VIEW_RULER
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Insert"
+    BEGIN
+        MENUITEM "&Date and Time...",           ID_INSERT_DATE_TIME
+        MENUITEM "&Object...",                  ID_OLE_INSERT_NEW
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "&Font...",                    ID_FORMAT_FONT
+        MENUITEM "&Bullet Style",               ID_INSERT_BULLET
+        MENUITEM "&Paragraph...",               ID_FORMAT_PARAGRAPH
+        MENUITEM "&Tabs...",                    ID_FORMAT_TABS
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                ID_HELP_INDEX
+        MENUITEM SEPARATOR
+        MENUITEM "&About WordPad",              ID_APP_ABOUT
+    END
+END
+
+IDR_COLOR_MENU MENU DISCARDABLE
+BEGIN
+    POPUP "COLOR_POPUP"
+    BEGIN
+        MENUITEM "Black",                       ID_COLOR0
+        MENUITEM "Maroon",                      ID_COLOR1
+        MENUITEM "Green",                       ID_COLOR2
+        MENUITEM "Olive",                       ID_COLOR3
+        MENUITEM "Navy",                        ID_COLOR4
+        MENUITEM "Purple",                      ID_COLOR5
+        MENUITEM "Teal",                        ID_COLOR6
+        MENUITEM "Gray",                        ID_COLOR7
+        MENUITEM "Silver",                      ID_COLOR8
+        MENUITEM "Red",                         ID_COLOR9
+        MENUITEM "Lime",                        ID_COLOR10
+        MENUITEM "Yellow",                      ID_COLOR11
+        MENUITEM "Blue",                        ID_COLOR12
+        MENUITEM "Fuchsia",                     ID_COLOR13
+        MENUITEM "Aqua",                        ID_COLOR14
+        MENUITEM "White",                       ID_COLOR15
+        MENUITEM "Automatic",                   ID_COLOR16
+    END
+END
+
+IDR_MENU1 MENU DISCARDABLE
+BEGIN
+    POPUP "MISC"
+    BEGIN
+        MENUITEM "Bold",                        ID_CHAR_BOLD
+        MENUITEM "Italic",                      ID_CHAR_ITALIC
+        MENUITEM "Color",                       ID_CHAR_COLOR
+        MENUITEM "Underline",                   ID_CHAR_UNDERLINE
+        MENUITEM "Left",                        ID_PARA_LEFT
+        MENUITEM "Right",                       ID_PARA_RIGHT
+        MENUITEM "Center",                      ID_PARA_CENTER
+        MENUITEM "Print Direct",                ID_FILE_PRINT_DIRECT
+        MENUITEM "Period",                      ID_PEN_PERIOD
+        MENUITEM "Space",                       ID_PEN_SPACE
+        MENUITEM "Backspace",                   ID_PEN_BACKSPACE
+        MENUITEM "New Line",                    ID_PEN_NEWLINE
+        MENUITEM "Pen",                         ID_PEN_TOGGLE
+        MENUITEM "Lens",                        ID_PEN_LENS
+    END
+END
+
+IDR_TEXT_POPUP MENU DISCARDABLE
+BEGIN
+    POPUP "TEXT_POPUP"
+    BEGIN
+        MENUITEM "Cu&t",                        ID_EDIT_CUT
+        MENUITEM "&Copy",                       ID_EDIT_COPY
+        MENUITEM "&Paste",                      ID_EDIT_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Font...",                    ID_FORMAT_FONT
+        MENUITEM "&Bullet Style",               ID_INSERT_BULLET
+        MENUITEM "P&aragraph...",               ID_FORMAT_PARAGRAPH
+        MENUITEM SEPARATOR
+        MENUITEM "Object P&roperties",          ID_OLE_EDIT_PROPERTIES
+        MENUITEM "<<OLE VERBS GO HERE>>",       ID_OLE_VERB_POPUP
+        MENUITEM SEPARATOR
+        POPUP "Insert &Keystrokes"
+        BEGIN
+            MENUITEM "Space",                       ID_PEN_SPACE
+            MENUITEM "Tab",                         ID_PEN_TAB
+            MENUITEM "New Line",                    ID_PEN_NEWLINE
+        END
+        MENUITEM "E&dit Text...",               ID_PEN_LENS
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_CHAR_BOLD,           VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_CHAR_BOLD,           VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_PARA_CENTER,         VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
+    "H",            ID_EDIT_REPLACE,        VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "L",            ID_PARA_LEFT,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_PARA_RIGHT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_CANCEL_EDIT_CNTR,    VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_EDIT_REPEAT,         VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_OLE_EDIT_PROPERTIES, VIRTKEY, ALT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_CNTR_INPLACE ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      ID_CANCEL_EDIT_CNTR,    VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+END
+
+IDR_SRVR_INPLACE ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "A",            ID_EDIT_SELECT_ALL,     VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_CHAR_BOLD,           VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_CHAR_BOLD,           VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_PARA_CENTER,         VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
+    "H",            ID_EDIT_REPLACE,        VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "L",            ID_PARA_LEFT,           VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_PARA_RIGHT,          VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_CANCEL_EDIT_SRVR,    VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_OLE_EDIT_PROPERTIES, VIRTKEY, ALT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+IDR_SRVR_EMBEDDED ACCELERATORS PRELOAD MOVEABLE PURE
+BEGIN
+    "B",            ID_CHAR_BOLD,           VIRTKEY, CONTROL, NOINVERT
+    "B",            ID_CHAR_BOLD,           VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "E",            ID_PARA_CENTER,         VIRTKEY, CONTROL, NOINVERT
+    "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
+    "H",            ID_EDIT_REPLACE,        VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, CONTROL, NOINVERT
+    "I",            ID_CHAR_ITALIC,         VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "L",            ID_PARA_LEFT,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_PARA_RIGHT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_UPDATE,         VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, CONTROL, NOINVERT
+    "U",            ID_CHAR_UNDERLINE,      VIRTKEY, SHIFT, CONTROL,
+                                                    NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    VK_ESCAPE,      ID_CANCEL_EDIT_CNTR,    VIRTKEY, NOINVERT
+    VK_F1,          ID_CONTEXT_HELP,        VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_EDIT_REPEAT,         VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_RETURN,      ID_OLE_EDIT_PROPERTIES, VIRTKEY, ALT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_FORMAT_PARA DIALOG DISCARDABLE  0, 0, 185, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Paragraph"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Indentation",IDC_BOX,7,7,114,75
+    LTEXT           "&Left:",IDC_STATIC,13,21,29,8
+    EDITTEXT        IDC_EDIT_LEFT,52,19,60,14,ES_AUTOHSCROLL
+    LTEXT           "&Right:",IDC_STATIC,13,42,29,8,NOT WS_GROUP
+    EDITTEXT        IDC_EDIT_RIGHT,52,40,60,14,ES_AUTOHSCROLL
+    LTEXT           "&First line:",IDC_STATIC,13,63,32,8,NOT WS_GROUP
+    EDITTEXT        IDC_EDIT_FIRST_LINE,52,60,60,14,ES_AUTOHSCROLL
+    LTEXT           "&Alignment:",IDC_TEXT_ALIGNMENT,13,91,37,8
+    COMBOBOX        IDC_COMBO_ALIGNMENT,52,89,60,45,CBS_DROPDOWNLIST |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,128,10,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,27,50,14
+END
+
+IDD_FORMAT_TAB DIALOG DISCARDABLE  0, 0, 186, 119
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Tabs"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Tab stop position",IDC_BOX,7,7,114,103
+    COMBOBOX        IDC_COMBO1,13,18,101,68,CBS_SIMPLE | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Set",IDC_BUTTON_SET,13,87,48,14
+    PUSHBUTTON      "Cl&ear",IDC_BUTTON_CLEAR,66,87,48,14
+    DEFPUSHBUTTON   "OK",IDOK,128,10,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,27,50,14
+    PUSHBUTTON      "Clear A&ll",IDC_BUTTON_CLEARALL,128,44,50,14
+END
+
+IDD_PAGE_SETUP_DIALOG DIALOG DISCARDABLE  0, 0, 185, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Page Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Page Margins",IDC_BOX,7,7,114,98
+    LTEXT           "&Top:",IDC_STATIC,13,21,31,8
+    EDITTEXT        IDC_EDIT_TM,52,19,60,14,ES_AUTOHSCROLL
+    LTEXT           "&Bottom:",IDC_STATIC,13,42,30,8
+    EDITTEXT        IDC_EDIT_BM,52,40,60,14,ES_AUTOHSCROLL
+    LTEXT           "&Left:",IDC_STATIC,13,63,30,8
+    EDITTEXT        IDC_EDIT_LM,52,61,60,14,ES_AUTOHSCROLL
+    LTEXT           "&Right:",IDC_STATIC,13,84,30,8
+    EDITTEXT        IDC_EDIT_RM,52,82,60,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,128,10,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,27,50,14
+END
+
+IDD_DATEDIALOG DIALOG DISCARDABLE  0, 0, 185, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Date and Time"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Available formats:",IDC_STATIC_HEADING,7,7,111,8,NOT
+                    WS_GROUP
+    LISTBOX         IDC_DATEDIALOG_LIST,7,17,113,87,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,127,17,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,127,34,50,14
+END
+
+IDD_OPTIONS_UNITS DIALOG DISCARDABLE  0, 0, 280, 86
+STYLE WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CAPTION
+CAPTION "Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Inches",IDC_UNITS_IN,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,13,21,54,10
+    CONTROL         "&Centimeters",IDC_UNITS_CM,"Button",BS_AUTORADIOBUTTON,
+                    74,21,68,10
+    CONTROL         "&Points",IDC_UNITS_PT,"Button",BS_AUTORADIOBUTTON,13,39,
+                    54,10
+    CONTROL         "Pica&s",IDC_UNITS_PI,"Button",BS_AUTORADIOBUTTON,74,39,
+                    68,10
+    GROUPBOX        "Measurement units",IDC_BOX,7,7,264,53
+    CONTROL         "Automatic &word selection",IDC_WORDSEL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,66,106,10
+END
+
+IDD_OPTIONS_WRAP DIALOG DISCARDABLE  0, 0, 280, 86
+STYLE WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Word wrap",IDC_BOX,7,7,128,72
+    CONTROL         "&No wrap",IDC_WRAP_NONE,"Button",BS_AUTORADIOBUTTON |
+                    WS_GROUP,13,21,81,10
+    CONTROL         "&Wrap to window",IDC_WRAP_WINDOW,"Button",
+                    BS_AUTORADIOBUTTON,13,39,81,10
+    CONTROL         "Wrap to r&uler",IDC_WRAP_RULER,"Button",
+                    BS_AUTORADIOBUTTON,13,57,81,10
+    GROUPBOX        "Toolbars",IDC_BOXT,144,7,128,72
+    CONTROL         "&Toolbar",IDC_CHECK_TOOLBAR,"Button",BS_AUTOCHECKBOX |
+                    WS_GROUP | WS_TABSTOP,153,21,68,10
+    CONTROL         "&Format bar",IDC_CHECK_FORMATBAR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,153,35,68,10
+    CONTROL         "&Ruler",IDC_CHECK_RULERBAR,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,153,49,68,10
+    CONTROL         "&Status bar",IDC_CHECK_STATUSBAR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,153,63,68,10
+END
+
+IDD_FILENEWDIALOG DIALOG DISCARDABLE  0, 0, 185, 112
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "New"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "New document type:",IDC_STATIC_HEADING,7,7,111,8,NOT
+                    WS_GROUP
+    LISTBOX         IDC_DATEDIALOG_LIST,7,17,114,87,LBS_NOINTEGRALHEIGHT |
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,127,17,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,127,34,50,14
+END
+
+DefaultFormatDialog DIALOG 0, 0, 200, 10
+STYLE WS_CHILD | DS_3DLOOK | WS_CLIPSIBLINGS | DS_CONTEXTHELP | DS_CONTROL
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Save in this format by &default", IDC_DEFAULT_FORMAT, "Button",
+            BS_AUTOCHECKBOX | WS_TABSTOP, 68,0,200,10
+END
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "WordPad MFC Application\0"
+#define VER_INTERNALNAME_STR        "wordpad\0"
+
+#include "common.ver"
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_RULER_BLOCK         BITMAP  DISCARDABLE     "res\\rulerbl.bmp"
+IDB_RULER_DOWN          BITMAP  DISCARDABLE     "res\\rulerdo.bmp"
+IDB_RULER_TAB           BITMAP  DISCARDABLE     "res\\rulerta.bmp"
+IDB_RULER_UP            BITMAP  DISCARDABLE     "res\\rulerup.bmp"
+IDB_FORMATBAR           BITMAP  DISCARDABLE     "res\\formatba.bmp"
+IDR_SRVR_INPLACE        BITMAP  DISCARDABLE     "res\\srvr.bmp"
+IDR_MAINFRAME1          BITMAP  DISCARDABLE     "RES\\main1.BMP"
+IDB_FORMATBAR_BIG       BITMAP  DISCARDABLE     "res\\formatbg.bmp"
+IDR_MAINFRAME1_BIG      BITMAP  DISCARDABLE     "res\\main1b.bmp"
+IDR_SRVR_INPLACE_BIG    BITMAP  DISCARDABLE     "res\\srvrbig.bmp"
+IDB_FONTTYPE            BITMAP  DISCARDABLE     "res\\font.bmp"
+IDB_RULER_BLOCKM        BITMAP  DISCARDABLE     "res\\rulerblm.bmp"
+IDB_RULER_DOWNM         BITMAP  DISCARDABLE     "res\\rulerdom.bmp"
+IDB_RULER_TABM          BITMAP  DISCARDABLE     "res\\rulertam.bmp"
+IDB_RULER_UPM           BITMAP  DISCARDABLE     "res\\rulerupm.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "RES\\WORDPAD.ICO"
+IDI_ICON_DOC            ICON    DISCARDABLE     "RES\\RTFDOC.ICO"
+IDI_ICON_WRITE          ICON    DISCARDABLE     "res\\write.ico"
+IDI_ICON_TEXT           ICON    DISCARDABLE     "res\\textdoc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDP_OLE_INIT_FAILED     "OLE initialization failed.  WordPad can not continue."
+    IDP_FAILED_TO_CREATE    "Failed to create object.  Make sure the object is entered in the system registry."
+    IDS_INVALID_MEASUREMENT "This is not a valid measurement."
+    IDS_PLEASE_WAIT         "%d%% complete  Formatting ... please wait"
+    IDS_COMPLETE            "%d%% complete"
+    IDS_SAVE_UNSUPPORTED    "Can not save this file in its current format.  Do you wish to save this file in a different format?"
+    IDS_CLOSE_TEXT          "Cl&ose"
+    IDS_RICHED_LOAD_FAIL    "Could not load the RichEdit control DLL.  The system may be low on memory or the file RICHED20.DLL may be missing or corrupt."
+    IDS_DEFAULTTEXTFONT     "Courier New"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDR_MAINFRAME           "WordPad\nDocument\nWordPad Document\nWord for Windows 6.0 (*.doc)\n.DOC\nWordPad.Document.1\nWordPad Document"
+    IDS_TEXT_DOC            "Text Document\nText Documents (*.txt)\n*.txt\nText Document"
+    IDS_RICHTEXT_DOC        "Rich Text Format (RTF)\nRich Text Format (*.rtf)\n*.rtf\nRich Text Document"
+    IDS_WRITE_DOC           "Windows Write\nWindows Write (*.wri)\n*.wri\nWrite Document"
+    IDS_ALL_DOC             "All\nAll Documents (*.*)\n*.*"
+    IDS_WINWORD6_DOC        "Word for Windows 6.0\nWord for Windows (*.doc)\n*.doc\nWord Document"
+    IDS_WORD97_DOC          "Word 97\nWord 97 (*.doc)\n*.doc\nWord Document"
+    IDS_WINWORD2_DOC        "Word for Windows 2.0\nWord for Windows 2.0 (*.doc)\n*.doc"
+    IDS_FILE_EXISTS         "%1 already exists.\nDo you want to replace it?"
+    IDS_OEMTEXT_DOC         "Text Document - MS-DOS Format\nText Documents - MS-DOS Format (*.txt)\n*.txt\nMS-DOS Text Document"
+    IDS_CLIP_TEXT           "Unformatted Text\ntext without any formatting"
+    IDS_UNICODETEXT_DOC     "Unicode Text Document\nUnicode Text Documents (*.txt)\n*.txt\nUnicode Text Document"
+    IDS_FEWINWORD5_DOC      "WordPad cannot read documents saved by Microsoft Word 5.0"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "WordPad"
+    AFX_IDS_IDLEMESSAGE     "For Help, press F1"
+    AFX_IDS_HELPMODEMESSAGE "Select an object you want to get Help on."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_NEW             "Creates a new document\nNew"
+    ID_FILE_OPEN            "Opens an existing document\nOpen"
+    ID_FILE_CLOSE           "Closes the active document\nClose"
+    ID_FILE_SAVE            "Saves the active document\nSave"
+    ID_FILE_SAVE_AS         "Saves the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Changes the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Changes the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Prints the active document\nPrint"
+    ID_FILE_PRINT_DIRECT    "Prints the active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Displays full pages\nPrint Preview"
+    ID_FILE_UPDATE          "Updates the container to show any changes\nUpdate"
+    ID_FILE_SAVE_COPY_AS    "Saves a copy of the active document with a new name\nSave Copy"
+    ID_FILE_SEND_MAIL       "Sends the document through electronic mail\nSend"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_APP_ABOUT            "Displays program information, version number, and copyright\nAbout"
+    ID_APP_EXIT             "Quits the application; prompts you to save documents\nExit"
+    ID_HELP_INDEX           "Lists Help topics\nHelp Index"
+    ID_HELP_USING           "Displays instructions about how to use help\nHelp"
+    ID_CONTEXT_HELP         "Displays Help for the button, menu, or window you click\nHelp"
+    ID_HELP                 "Displays Help for current task or command\nHelp"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FILE_MRU_FILE1       "Opens this document"
+    ID_FILE_MRU_FILE2       "Opens this document"
+    ID_FILE_MRU_FILE3       "Opens this document"
+    ID_FILE_MRU_FILE4       "Opens this document"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_NEXT_PANE            "Switches to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switches back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_WINDOW_SPLIT         "Splits the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_EDIT_CLEAR           "Erases the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erases everything\nErase All"
+    ID_EDIT_COPY            "Copies the selection and puts it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cuts the selection and puts it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Finds the specified text\nFind"
+    ID_EDIT_PASTE           "Inserts Clipboard contents\nPaste"
+    ID_EDIT_PASTE_LINK      "Inserts Clipboard contents and a link to its source\nPaste Link"
+    ID_EDIT_PASTE_SPECIAL   "Inserts Clipboard contents with options\nPaste Special"
+    ID_EDIT_REPEAT          "Repeats the last find\nFind Next"
+    ID_EDIT_REPLACE         "Replaces specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Selects the entire document\nSelect All"
+    ID_EDIT_UNDO            "Reverses the last action\nUndo"
+    ID_EDIT_REDO            "Carries out the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_VIEW_TOOLBAR         "Shows or hides the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Shows or hides the status bar\nToggle StatusBar"
+    ID_VIEW_FORMATBAR       "Shows or hides the format bar\nToggle Format Bar"
+    ID_VIEW_RULER           "Shows or hides the ruler\nToggle Ruler"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_OLE_INSERT_NEW       "Inserts new embedded object\nInsert Object"
+    ID_OLE_EDIT_LINKS       "Edits linked objects\nEdit Links"
+    ID_OLE_EDIT_CONVERT     "Converts object to different type\nConvert Object"
+    ID_OLE_EDIT_PROPERTIES  "Change selected object's properties\nProperties"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_OLE_VERB_FIRST       "Activates embedded or linked object"
+    57873                   "Activates embedded or linked object"
+    57874                   "Activates embedded or linked object"
+    57875                   "Activates embedded or linked object"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_SCSIZE          "Changes the window size"
+    AFX_IDS_SCMOVE          "Changes the window position"
+    AFX_IDS_SCMINIMIZE      "Reduces the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarges the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switches to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switches to the previous document window"
+    AFX_IDS_SCCLOSE         "Closes the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "Restores the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activates Task List"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Closes print preview mode\nCancel Preview"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_PAGE_SETUP           "Changes page layout settings\nPage Setup"
+    ID_VIEW_OPTIONS         "Sets Options\nOptions"
+    ID_INSERT_BULLET        "Inserts a bullet on this line\nBullets"
+    ID_INSERT_DATE_TIME     "Inserts today's date and/or time\nDate/Time"
+    ID_FORMAT_PARAGRAPH     "Formats current or selected paragraph(s)"
+    ID_FORMAT_TABS          "Sets Tabs"
+    ID_COLOR0               "Black"
+    ID_COLOR1               "Maroon"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_FORMAT_FONT          "Selects font for current selection\nFont"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_COLOR2               "Green"
+    ID_COLOR3               "Olive"
+    ID_COLOR4               "Navy"
+    ID_COLOR5               "Purple"
+    ID_COLOR6               "Teal"
+    ID_COLOR7               "Gray"
+    ID_COLOR8               "Silver"
+    ID_COLOR9               "Red"
+    ID_COLOR10              "Lime"
+    ID_COLOR11              "Yellow"
+    ID_COLOR12              "Blue"
+    ID_COLOR13              "Fuchsia"
+    ID_COLOR14              "Aqua"
+    ID_COLOR15              "White"
+    ID_COLOR16              "Automatic"
+    ID_CHAR_BOLD            "Makes the selection bold (toggle).\nBold"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ID_CHAR_ITALIC          "Makes the selection italic (toggle)\nItalic"
+    ID_CHAR_COLOR           "Formats the selection with a color\nColor"
+    ID_CHAR_UNDERLINE       "Formats the selection with a continuous underline (toggle)\nUnderline"
+    ID_PARA_LEFT            "Left-justifies paragraph\nAlign Left"
+    ID_PARA_CENTER          "Center-justifies paragraph\nCenter"
+    ID_PARA_RIGHT           "Right-justifies paragraph\nAlign Right"
+    ID_PEN_PERIOD           "Inserts a period\nPeriod"
+    ID_PEN_SPACE            "Inserts a space\nSpace"
+    ID_PEN_BACKSPACE        "Deletes the previous character\nBackspace"
+    ID_PEN_NEWLINE          "Inserts a new line\nNew Line"
+    ID_PEN_TOGGLE           "Pen\nPen"
+    ID_PEN_LENS             "Edit text\nEdit Text"
+    ID_PEN_TAB              "Inserts a tab\nTab"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SAVE_FORMAT_TEXT    "You are about to save the document in a Text-Only format, which will remove all formatting. Are you sure you want to do this?"
+    IDS_SAVING              "Saving File.  Please Wait."
+    IDS_CLIP_RTF            "Formatted Text (RTF)\ntext with formatting"
+    IDS_FORMATTING          "Formatting... Please Wait."
+    IDS_LEFT                "Left"
+    IDS_CENTER              "Center"
+    IDS_RIGHT               "Right"
+    IDS_MEASUREMENT_RANGE   "The measurement must be between %1 and %2."
+    IDS_INVALID_NUMBER      "This is not a valid number."
+    IDS_INVALID_FONTSIZE    "The number must be between 1 and 1638."
+    IDS_INCHES              "Inches"
+    IDS_CENTIMETERS         "Centimeters"
+    IDS_POINTS              "Points"
+    IDS_PICAS               "Picas"
+    IDS_WORD_WARNING        "This document was created by Microsoft Word. WordPad does not support all of the features provided by Word; therefore, you may lose information by saving this file as a Word file with the same name."
+    IDS_WORD_WARNING_BUTTONS "&Save\nSave &As...\nCancel"
+    IDS_WORD97_WARNING      "Wordpad cannot save documents created by Word 97.  Would you like to save in a different format?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FINISHED_SEARCH     "WordPad has finished searching the document."
+    IDC_FONTNAME            "Changes the font of the selection\nFont"
+    IDC_FONTSIZE            "Changes the font size of the selection\nFont Size"
+    IDC_SCRIPT              "Changes the font script of the selection\nFont Script"
+    IDS_TITLE_FORMATBAR     "Formatting"
+    IDS_TITLE_TOOLBAR       "Standard"
+    IDS_INCH1_ABBREV        """"
+    IDS_INCH2_ABBREV        "in"
+    IDS_INCH3_ABBREV        "inch"
+    IDS_INCH4_ABBREV        "inches"
+    IDS_CM_ABBREV           "cm"
+    IDS_POINT_ABBREV        "pt"
+    IDS_PICA_ABBREV         "pi"
+
+    IDS_INCH1_NOLOC         """"
+    IDS_INCH2_NOLOC         "in"
+    IDS_INCH3_NOLOC         "inch"
+    IDS_INCH4_NOLOC         "inches"
+    IDS_CM_NOLOC            "cm"
+    IDS_POINT_NOLOC         "pt"
+    IDS_PICA_NOLOC          "pi"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NOMORETABS          "There are too many tab stops set in this paragraph."
+    IDS_MAPI_FAIL           "An error occurred while sending the document."
+    IDS_ERRSPACE            "There is not enough memory. Quit one or more programs and then try again."
+    IDS_CANT_LOAD           "Can not load %1 files."
+    IDS_TOOMANYFILES        "Unable to open %1.  There are too many files already open."
+    IDS_DIRFULL             "Unable to create %1. This folder is full. Use another folder or delete some files from this folder."
+    IDS_SHAREVIOLATION      "The document %1 is in use by another application and cannot be accessed."
+    IDS_TEXT_OPTIONS        "Text"
+    IDS_RTF_OPTIONS         "Rich Text"
+    IDS_WORD6_OPTIONS       "Word"
+    IDS_OPTIONS             "Options"
+    IDS_WRITE_OPTIONS       "Write"
+    IDS_EMBEDDED_OPTIONS    "Embedded"
+    IDS_TEXT_DOCUMENT       "Text Document"
+    IDS_RTF_DOCUMENT        "Rich Text Document"
+    IDS_WORD6_DOCUMENT      "Word 6 Document"
+    IDS_UNICODETEXT_DOCUMENT "Unicode Text Document"
+    IDS_CONVERTER_ABORTED   "An unexpected error occurred while loading the document.  It may appear truncated."
+    IDS_FILENAME_TO_LONG    "%1\r\nThe above filename is too long."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WRITEPROTECT        "Unable to write to %1.\nThe disk is write-protected.\nA file cannot be saved on a write-protected disk."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\wordpad.rc2"  // non-App Studio edited resources
+
+#include "afxres.rc"    // Standard components
+#include "afxprint.rc"  // printing/print preview resources
+#include "afxolecl.rc"  // OLE container resources
+#include "afxolesv.rc"  // OLE server resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

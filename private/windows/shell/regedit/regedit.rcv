@@ -1,0 +1,41 @@
+/*******************************************************************************
+*
+*  (C) COPYRIGHT MICROSOFT CORP., 1993-1994
+*
+*  TITLE:       POWERCFG.RCV
+*
+*  VERSION:     2.0
+*
+*  AUTHOR:      Tracy Sharpe
+*
+*  DATE:        26 Dec 1993
+*
+*  Version information resource file.
+*
+********************************************************************************
+*
+*  CHANGE LOG:
+*
+*  DATE        REV DESCRIPTION
+*  ----------- --- -------------------------------------------------------------
+*  26 Dec 1993 TCS Original implementation.  Took information from old
+*                  Windows 3.1 POWER.RCV file and made it use the COMMON.VER
+*                  file.
+*
+*******************************************************************************/
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Registry Editor\0"
+#define VER_INTERNALNAME_STR        "REGEDIT\0"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS    "1993-1995"
+#endif
+#define VER_ORIGINALFILENAME_STR    "REGEDIT.EXE"
+
+#include <common.ver>

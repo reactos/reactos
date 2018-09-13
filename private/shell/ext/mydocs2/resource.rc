@@ -1,0 +1,162 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include "version.h"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#include ""folder.h""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_TARGET DIALOGEX 0, 0, 227, 210
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_CAPTION
+CAPTION "Target"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDD_ITEMICON,7,7,20,20
+    LTEXT           "",IDD_INSTRUCTIONS,48,11,171,44
+    GROUPBOX        "Target folder location",IDC_TARGET_GBOX,8,65,211,53
+    LTEXT           "&Target:",IDD_TARGET_TXT,14,79,34,9
+    EDITTEXT        IDD_TARGET,49,78,162,12,ES_AUTOHSCROLL,WS_EX_ACCEPTFILES
+    PUSHBUTTON      "&Restore Default",IDD_RESET,14,97,70,14
+    PUSHBUTTON      "&Move...",IDD_BROWSE,88,97,60,14
+    PUSHBUTTON      "&Find Target...",IDD_FIND,152,97,60,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MYDOCS              ICON    DISCARDABLE     "mydocs.ico"
+IDI_MYPICS              ICON    DISCARDABLE     "mypics.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BROWSE_TITLE        "Select the folder that you want to store your documents in."
+    IDS_CREATE_FOLDER_TITLE "Create Folder"
+    IDS_CREATE_FOLDER       "The folder ""%1!s!"" does not exist. \n\nWould you like to create it?\n\n"
+    IDS_INVALID_TITLE       "Invalid Target"
+    IDS_NONEXISTENT_FOLDER  "The target you specified could not be located. \n\nPlease specify a new target.\n\n"
+    IDS_NOT_DIRECTORY       "The target you specified is not a folder. \n\nPlease type the location of a folder. \n\n"
+    IDS_INFOTIP_VALUE       "Stores and manages documents"
+    IDS_MYPICS_INFOTIP	    "Stores your pictures"
+    IDS_UNPIN_OLD_TITLE		"Move Target"
+    IDS_UNPIN_OLDTARGET     "The old target ""%1!s!"" is currently available offline.\n\nDo you still want that folder to be available offline?\n\n"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MOVE_DOCUMENTS_TITLE "Move Documents"
+    IDS_MOVE_DOCUMENTS       "Would you like to move all of the documents in your old location\nto the new location you have chosen?    \n\nOld location: %1!s!    \nNew location: %2!s!    \n\n"
+    IDS_MOVE_ERROR_TITLE     "Error Moving Documents"
+    IDS_MOVE_ERROR           "Windows is unable to move all of the documents to %1!s!. You can still access the documents that were not moved at the location %2!s!."
+    IDS_CANT_MOVE_TO_SUBDIR  "Windows is unable to move your documents to the new location because it is a subfolder of the previous location. You can still access the documents in the previous location:\n\n%1!s!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NODESKTOP           "The Desktop is not allowed as a target."
+    IDS_NODESKTOP_FOLDERS   "Folders on the Desktop are not allowed as targets."
+    IDS_NOTALLOWED_FOLDERS  "The target you specified cannot be used as a documents folder."
+    IDS_NOSHELLEXT_FOLDERS  "The current selection is not an allowed target."
+    IDS_ON_DESKTOP          "The target you specified is on the desktop."
+    IDS_FIND_TITLE          "Find Target"
+    IDS_INIT_FAILED_TEXT    "The properties for this item could not be retrieved."
+    IDS_NODRAG_DESKTOP_NOT_HIDDEN
+                            "The %1!s! target folder cannot be %2!s! to the Desktop."
+    IDS_NODRAG_DESKTOP_HIDDEN
+                            "The %1!s! target folder cannot be %2!s! to the Desktop. \n\nWould you like to create a Desktop item that points to the %1!s! folder instead?"
+    IDS_COPY                "copied"
+    IDS_MOVE                "moved"
+    IDS_PROP_ERROR_TITLE    "%s Properties"
+    
+    IDS_CANT_FIND_MYDOCS    "The %2!s! folder could not be found. Right-click the %2!s! icon, click Properties, and then check that the path to your target folder location is correct."
+    IDS_CANT_FIND_MYDOCS_NET "The network folder, %1!s!, that contains %2!s! is not available.\n\nTry again later, or contact your system administrator for further assistance."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NOWINDIR_FOLDER     "The system directory is not allowed as a target."
+    IDS_NOPROFILEDIR_FOLDER "Your profile directory is not allowed as a target. \n\nTry choosing a folder inside the profile directory instead."
+    IDS_GENERAL_BADDIR      "The location you requested is not allowed as a target. \n\nPlease choose a new location."
+    IDS_PROP_INSTRUCTIONS   "The %s folder is a shortcut to the target folder location shown below."
+    IDS_DELETE_MESSAGE      "The contents of this folder will not be deleted. You can restore this icon to the desktop using the Folder Options control panel."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

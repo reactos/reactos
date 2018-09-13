@@ -1,0 +1,27 @@
+#
+#   Create an MCI handler DLL
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=ddtest
+TARGETPATH=..\..\lib
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+
+C_DEFINES=-DWIN32 -DUNICODE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\winmm.lib       \
+           $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib    \
+           ..\..\lib\*\msvfw32.lib
+
+INCLUDES=..\..\inc;..\..\..\inc
+
+SOURCES= ddtest.c  \
+         dib.c     \
+         ddsucks.c \
+         ddtest.rc

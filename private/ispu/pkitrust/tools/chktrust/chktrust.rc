@@ -1,0 +1,162 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       chktrust.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#ifndef APSTUDIO_INVOKED
+#include "version.rc"
+#endif
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""version.rc""\r\n"
+    "#endif\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAM_HELP          "?"
+    IDS_PARAM_VERBOSE       "v"
+    IDS_PARAMTEXT_HELP      "this screen"
+    IDS_PARAMTEXT_VERBOSE   "verbose output"
+    IDS_USAGETEXT_OPTIONS   "[options]"
+    IDS_USAGETEXT_CMDFILE   "[@commandfile]"
+    IDS_USAGETEXT_ADD       "filename"
+    IDS_USAGETEXT_USAGE     "usage"
+    IDS_USAGETEXT_OPTPARAM  "<param>"
+    IDS_PARAM_EXPERROR      "h"
+    IDS_PARAMTEXT_EXPERROR  "expected last error (<param> is the hex error. eg: -h 0x80090001)"
+    IDS_PARAM_CATFILE       "c"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EXPECTED_HRESULT    "Failed: Expected return: 0x%0x.  Returned: 0x%0x\n"
+    IDS_CAN_NOT_OPEN_FILE   "Failed: Can not open %s\n"
+    IDS_UNKNOWN_FILE_TYPE   "Failed: Unknown file type\n"
+    IDS_UNKNOWN_PROVIDER    "Failed: The specified trust provider is not known on this system\n"
+    IDS_UNKNOWN_ACTION      "Failed: The specified trust verification action is not supported by the trust provider\n"
+    IDS_SUBJECT_NOT_TRUSTED "Failed: The subject is not trusted for the specified action\n"
+    IDS_FILEREF             "%s: "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUCCEEDED           "Succeeded\n"
+    IDS_FAIL                "Failed\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAMTEXT_CATFILE   "catalog filename"
+    IDS_PARAM_CATMEMBER     "t"
+    IDS_PARAMTEXT_CATMEMBER "catalog member tag"
+    IDS_PARAM_TPROV         "g"
+    IDS_PARAMTEXT_TPROV     "use this action ID (<param> = text GUID)"
+    IDS_PARAM_IECALL        "p"
+    IDS_PARAMTEXT_IECALL    "call WinVerifyTrust similar to the way IE does"
+    IDS_PARAM_TESTDUMP      "d"
+    IDS_PARAMTEXT_TESTDUMP  "dump WVT internal structures to C:\\TRUSTPOL.TXT"
+    IDS_PARAM_QUIET         "q"
+    IDS_PARAMTEXT_QUIET     "do not display any UI"
+    IDS_PARAM_ALLCATMEM     "acm"
+    IDS_PARAMTEXT_ALLCATMEM "if Catalog file found, process all members too"
+    IDS_PARAM_TESTDRV       "wd"
+    IDS_PARAMTEXT_TESTDRV   "use driver signing provider"
+    IDS_PARAM_CATUSELIST    "ucl"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PARAMTEXT_CATUSELIST "verify using Catalog list (database), will verify against the default database if the -catdb options is NOT used"
+    IDS_PARAM_CATADDLIST     "acl"
+    IDS_PARAMTEXT_CATADDLIST "add Catalog to list (database), will add to the default database if the -catdb options is NOT used"
+    IDS_PARAM_CATROOT        "catdb"
+    IDS_PARAMTEXT_CATROOT    "specifies the catalog database to use for the -acl and -ucl options (<param> = text GUID)"
+    IDS_PARAM_REPLACECATFILE "r"
+    IDS_PARAMTEXT_REPLACECATFILE "may be used with the -acl option to replace a catalog file"
+    IDS_PARAM_NT5            "Win2K"
+    IDS_PARAMTEXT_NT5        "Uses Win2K policy and catalog database.  May only be used with -acl and -ucl options."
+    IDS_PARAM_TSWARN         "tswarn"
+    IDS_PARAMTEXT_TSWARN     "will output a warning if the file is not timestamped.  May not be used with -ucl option."
+    IDS_NO_TIMESTAMP_WARNING "warning: file not timestamped\n"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

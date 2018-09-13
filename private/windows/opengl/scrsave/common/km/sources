@@ -1,0 +1,36 @@
+MAJORCOMP=opengl
+MINORCOMP=sscommon
+TARGETNAME=sscommon
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(BASEDIR)\public\sdk\inc\gl; \
+         $(BASEDIR)\private\windows\opengl\toolkits\libaux
+
+C_DEFINES=$(C_DEFINES) -DUNICODE -D_UNICODE
+EXPECTED_WINVER=0x0400
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+USE_MSVCRT = 1
+
+SOURCES= \
+        ..\material.c \
+        ..\color.c \
+        ..\ssdib.c \
+        ..\texture.c \
+        ..\ssimage.c \
+        ..\ssa8.c \
+        ..\math.c \
+        ..\dialog.c \
+        ..\fastdib.c \
+        ..\scrnsave.cxx \
+        ..\ssinit.cxx \
+        ..\sswindow.cxx \
+        ..\sswproc.cxx \
+        ..\ssutil.cxx \
+        ..\dlgdraw.cxx \
+        ..\glscrnsv.cxx \
+        ..\clear.cxx \
+        ..\palette.cxx \
+        ..\util.cxx

@@ -1,0 +1,9 @@
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_DLL
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Control Panel Drivers applet"
+#define VER_INTERNALNAME_STR        "drivers\0"
+#define VER_ORIGINALFILENAME_STR    "DRIVERS.DLL"
+
+#include <common.ver>

@@ -1,0 +1,40 @@
+\Registry\MACHINE\SOFTWARE\Classes
+    CLSID
+        {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}
+            = Shell extensions for sharing
+            InProcServer32
+                = ntshrui.dll
+                ThreadingModel = Free
+        {40dd6e20-7c17-11ce-a804-00aa003ca9f6}
+            = Shell extensions for sharing
+            InProcServer32
+                = ntshrui.dll
+                ThreadingModel = Free
+    Directory
+        shellex
+            CopyHookHandlers
+                Sharing
+                    = {40dd6e20-7c17-11ce-a804-00aa003ca9f6}
+            PropertySheetHandlers
+                Sharing
+                    = {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}
+            ContextMenuHandlers
+                Sharing
+                    = {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}
+    Drive
+        shellex
+            PropertySheetHandlers
+                Sharing
+                    = {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}
+            ContextMenuHandlers
+                Sharing
+                    = {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6}
+    Network
+        SharingHandler
+            = ntshrui.dll
+
+\Registry\MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion
+    Shell Extensions
+        Approved
+            {f81e9010-6ea4-11ce-a7ff-00aa003ca9f6} = Shell extensions for sharing
+            {40dd6e20-7c17-11ce-a804-00aa003ca9f6} = Shell extensions for sharing

@@ -1,0 +1,364 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "ntverp.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""common.ver""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_CARETNAME           "Edit"
+    109                     "null"
+    STR_CURSORNAMEFIRST     "Unknown"
+    111                     "Normal"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    112                     "Edit"
+    113                     "Wait"
+    114                     "Graphic"
+    115                     "Up"
+    116                     "NWSE size"
+    117                     "NESW size"
+    118                     "Horizontal size"
+    119                     "Vertical size"
+    120                     "Move"
+    121                     "Forbidden"
+    122                     "App start"
+    123                     "Help"
+    124                     "Pen"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    141                     "IME"
+    142                     "Minimize"
+    143                     "Maximize"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    144                     "Context help"
+    145                     "Close"
+    146                     "Restore"
+    150                     "Displays the name of the window and contains controls to manipulate it"
+    151                     "Brings up the keyboard when pressed"
+    152                     "Moves the window out of the way"
+    153                     "Makes the window full screen"
+    154                     "Enters or leaves context sensitive help mode"
+    155                     "Closes the window"
+    156                     "Puts a minimized or maximized window back to normal"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    180                     "Vertical"
+    181                     "Line up"
+    182                     "Page up"
+    183                     "Position"
+    184                     "Page down"
+    185                     "Line down"
+    186                     "Horizontal"
+    187                     "Column left"
+    188                     "Page left"
+    189                     "Position"
+    190                     "Page right"
+    191                     "Column right"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    192                     "Size box"
+    STR_SCROLLBAR_DESCRIPTION "Used to change the vertical viewing area"
+    201                     "Moves the vertical position up one line"
+    202                     "Moves the vertical position up a couple of lines"
+    203                     "Indicates the current vertical position, and can be dragged to change it directly"
+    204                     "Moves the vertical position down a couple of lines"
+    205                     "Moves the vertical position down one line"
+    206                     "Used to change the horizontal viewing area"
+    207                     "Moves the horizontal position left one column"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    208                     "Moves the horizontal position left a couple of columns"
+    209                     "Indicates the current horizontal position, and can be dragged to change it directly"
+    210                     "Moves the horizontal position right a couple of columns"
+    211                     "Moves the horizontal position right one column"
+    212                     "Can be used to resize a window's width and height"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_MENUBAR_NAME        "Application"
+    STR_SYSMENU_NAME        "System"
+    STR_MENUBAR_DESCRIPTION "Contains commands to manipulate the current view or document"
+    STR_SYSMENUBAR_DESCRIPTION "Contains commands to manipulate the window"
+    STR_MENU_SHORTCUT       "Alt"
+    STR_MENU_SHORTCUT_FORMAT "Alt+%s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_SYSMENU_KEY         "Space"
+    STR_CHILDSYSMENU_KEY    "Hyphen"
+    STR_EXECUTE             "Execute"
+    STR_SHIFT               "Shift"
+    STR_CONTROL             "Ctrl"
+    STR_STARTBUTTON_SHORTCUT "Ctrl+Esc"
+    STR_CONTEXT_MENU        "Context"
+    STR_DOCMENU_NAME        "Document Window"
+    STR_DOUBLE_CLICK        "Double Click"
+    STR_CLICK               "Click"
+    STR_WINDOW_NAME         "Window"
+    STR_STARTBUTTON         "Start"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_SPIN_GREATER        "More"
+    STR_SPIN_LESSER         "Less"
+    STR_TRAY                "Tray"
+    STR_HOTKEY_NONE         "None"
+    STR_COMBOBOX_LIST_SHORTCUT "Down Arrow"
+    STR_DROPDOWN_SHOW       "Open"
+    STR_DROPDOWN_HIDE       "Close"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_ALTTAB_NAME         "Task Switching"
+    STR_ALTTAB_DESCRIPTION  "Lists the application windows so the user can pick the one to switch to"
+    STR_TAB_SWITCH          "Switch"
+    STR_MDICLI_NAME         "Workspace"
+    STR_DESKTOP_NAME        "Desktop"
+    STR_PERCENTAGE_FORMAT   "%d%%"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_TREE_EXPAND         "Expand"
+    STR_TREE_COLLAPSE       "Collapse"
+    STR_HTML_JUMP           "Jump"
+    STR_BUTTON_PUSH         "Press"
+    STR_BUTTON_CHECK        "Check"
+    STR_BUTTON_UNCHECK      "Uncheck"
+    STR_BUTTON_HALFCHECK    "Toggle"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_STATEFIRST          "normal"
+    1001                    "unavailable"
+    1002                    "selected"
+    1003                    "focused"
+    1004                    "pressed"
+    1005                    "checked"
+    1006                    "mixed"
+    1007                    "read only"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1008                    "hot tracked"
+    1009                    "default"
+    1010                    "expanded"
+    1011                    "collapsed"
+    1012                    "busy"
+    1013                    "floating"
+    1014                    "marqueed"
+    1015                    "animated"
+    1016                    "invisible"
+    1017                    "offscreen"
+    1018                    "sizeable"
+    1019                    "moveable"
+    1020                    "self voicing"
+    1021                    "focusable"
+    1022                    "selectable"
+    1023                    "linked"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1024                    "traversed"
+    1025                    "multiple selectable"
+    1026                    "extended selectable"
+    1027                    "alert low"
+    1028                    "alert medium"
+    1029                    "alert high"
+    1030                    "protected"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    STR_ROLEFIRST           "unknown object"
+    1101                    "title bar"
+    1102                    "menu bar"
+    1103                    "scroll bar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1104                    "grip"
+    1105                    "sound"
+    1106                    "cursor"
+    1107                    "caret"
+    1108                    "alert"
+    1109                    "window"
+    1110                    "client"
+    1111                    "popup menu"
+    1112                    "menu item"
+    1113                    "tool tip"
+    1114                    "application"
+    1115                    "document"
+    1116                    "pane"
+    1117                    "chart"
+    1118                    "dialog"
+    1119                    "border"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1120                    "grouping"
+    1121                    "separator"
+    1122                    "tool bar"
+    1123                    "status bar"
+    1124                    "table"
+    1125                    "column header"
+    1126                    "row header"
+    1127                    "column"
+    1128                    "row"
+    1129                    "cell"
+    1130                    "link"
+    1131                    "help balloon"
+    1132                    "character"
+    1133                    "list"
+    1134                    "list item"
+    1135                    "outline"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1136                    "outline item"
+    1137                    "page tab"
+    1138                    "property page"
+    1139                    "indicator"
+    1140                    "graphic"
+    1141                    "text"
+    1142                    "editable text"
+    1143                    "push button"
+    1144                    "check box"
+    1145                    "radio button"
+    1146                    "combo box"
+    1147                    "drop down"
+    1148                    "progress bar"
+    1149                    "dial"
+    1150                    "hot key field"
+    1151                    "slider"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    1152                    "spin box"
+    1153                    "diagram"
+    1154                    "animation"
+    1155                    "equation"
+    1156                    "drop down button"
+    1157                    "menu button"
+    1158                    "grid drop down button"
+    1159                    "white space"
+    1160                    "page tab list"
+    1161                    "clock"
+END
+
+// These string resources are not used in OLEACC itself, they have been added here
+// so that they will be picked up and localized by the localization team. They are
+// intended for use as error messages in MSAARDK.INF
+STRINGTABLE DISCARDABLE 
+BEGIN
+    3000 "This version of Active Accessibility installs English language versions of core components. Because your system is not an English language system, this installation cannot continue."
+    3001 "Active Accessibility requires Windows NT 4.0 Service Pack 4 or newer.  Please install Service Pack 4 and re-run this installation."
+    3002 "This Active Accessibility Redistribution Kit will install only on systems running Windows 95 or Windows NT 4.0 with Service Pack 4.  Users of Windows 98 and Windows 2000 should obtain an update that contains the latest Active Accessibility components."
+    3004 "This version of Active Accessibility does not work reliably on Windows NT4 without Service Pack 4 or newer. Please install Service Pack 4 and then restart this installation."
+
+    3005 "This package will install Microsoft(R) Active Accessibility(tm). Would you like to continue?"
+    3006 "Microsoft(R) Active Accessibility(tm) is now installed."
+    3007 "An old version of Internet Explorer is installed on this computer.  Internet Explorer 4.01 with Service Pack 2 (or newer) contains more robust Active Accessibility support for web pages and should be installed before installing Active Accessibility. Continue installing Active Accessibility now?"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

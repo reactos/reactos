@@ -1,0 +1,67 @@
+import "oaidl.idl";
+import "oleidl.idl";
+
+cpp_quote("#define SID_SRecalcEngine IID_IRecalcEngine")
+
+interface IRecalcEngine;
+interface IRecalcHost;
+
+[
+    object,
+    uuid(3050f496-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+    local,
+    version(1.0)
+]
+interface IRecalcEngine : IUnknown
+{
+    HRESULT RecalcAll([in] BOOL fForce);
+    HRESULT OnNameSpaceChange([in] IUnknown *pUnk);
+    HRESULT SetExpression([in] IUnknown *pUnk, [in] DISPID dispid, [in] LPOLESTR strExpression, LPOLESTR language);
+    HRESULT GetExpression([in] IUnknown *pUnk, [in] DISPID dispid, [out] BSTR *pstrExpression, [out] BSTR *pstrLanguage);
+    HRESULT ClearExpression([in] IUnknown *pUnk, [in] DISPID dispid);
+    HRESULT BeginStyle([in] IUnknown *pObject);
+    HRESULT EndStyle([in] IUnknown *pObject);
+};
+
+[
+    object,
+    uuid(3050f497-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+    local,
+    version(1.0)
+]
+interface IRecalcHost : IUnknown
+{
+    HRESULT CompileExpression([in] IUnknown *pUnk, [in] DISPID dispid, [in] LPOLESTR strExpression, [in] LPOLESTR strLanguage, [out] IDispatch **ppExpressionObject, [out] IDispatch **ppThis);
+    HRESULT EvalExpression([in] IUnknown *pUnk, [in] DISPID dispid, [in] LPOLESTR strExpression, [in] LPOLESTR strLanguage, [out] VARIANT *pvResult);
+    HRESULT ResolveNames([in] IUnknown *pUnk, [in] DISPID dispid, [in] unsigned cNames, [in] BSTR *pstrNames, [out] IDispatch **ppObjects, [out] DISPID *pDispids);
+	HRESULT RequestRecalc();
+    HRESULT SetValue([in] IUnknown *pUnk, [in] DISPID dispid, [in] VARIANT *pv, [in] BOOL fStyle);
+    HRESULT RemoveValue([in] IUnknown *pUnk, [in] DISPID dispid);
+    HRESULT GetScriptTextAttributes([in] LPCOLESTR szLanguage, [in] LPCOLESTR pchCode, [in] ULONG cchCode, [in] LPCOLESTR szDelim, [in] DWORD dwFlags, [out] WORD *pwAttr);
+};
+
+[
+    object,
+    uuid(3050f5d6-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+    local,
+    version(1.0)
+]
+interface IRecalcProperty : IUnknown
+{
+    HRESULT GetCanonicalProperty(DISPID dispid, IUnknown **ppUnk, DISPID *pdispid);
+};
+
+[
+    object,
+    uuid(3050f5f7-98b5-11cf-bb82-00aa00bdce0b),
+    pointer_default(unique),
+    local,
+    version(1.0)
+]
+interface IRecalcHostDebug : IUnknown
+{
+    HRESULT GetObjectInfo([in] IUnknown *pUnk, [in] DISPID dispid, [out] BSTR *pbstrID, [out] BSTR *pbstrMember, [out] BSTR *pbstrTag);
+}

@@ -1,0 +1,81 @@
+#include <windows.h>
+#include <ntverp.h>
+#include <commctrl.h>
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "PwrAdmin"
+#define VER_INTERNALNAME_STR        "pwradmin\0"
+#define VER_ORIGINALFILENAME_STR    "pwradmin.dll"
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_16x16               BITMAP  DISCARDABLE     "pwr16.bmp"
+IDB_32x32               BITMAP  DISCARDABLE     "pwr32.bmp"
+IDB_ENERGYSTAR_BMP      BITMAP  DISCARDABLE     "energyst.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+IDD_SYSTEM DIALOGEX 0, 0, 252, 119
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "System Power Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "System Power Policies",IDC_STATIC,9,10,221,57
+    CONTROL         "&Prevent computer from going into a powered off state.",
+                    IDC_PREVENTPOWEROFF,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    24,28,186,10
+    LTEXT           "This feature keeps the machine available for unattended software upgrades.",
+                    IDC_STATIC,33,41,172,19
+    DEFPUSHBUTTON   "OK",IDOK,139,97,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,97,50,14
+END
+
+IDD_MONITOR DIALOGEX 0, 0, 252, 119
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Monitor Power Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         132,IDC_STATIC,"Static",SS_BITMAP,15,30,47,26
+    GROUPBOX        "Energy saving features of monitor",IDC_STATIC,6,14,238,
+                    54
+    CONTROL         "Sh&ut off monitor",IDC_SHUTOFF,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,78,37,67,10
+    EDITTEXT        IDC_SHUTOFF_TIME,166,36,30,12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SHUTOFF_ARROWS,UPDOWN_CLASS,WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,196,36,11,12
+    LTEXT           "minutes",IDC_STATIC,196,39,29,7
+    DEFPUSHBUTTON   "OK",IDOK,139,97,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,193,97,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_SNAPIN_DESC,    "Power Management Snapin"
+    IDS_EXTENSION_DESC, "Power Management Extension"
+    IDS_NAME,           "Name"
+    IDS_DESCRIPTION,    "Power Settings"
+    IDS_SYSTEM,         "System"
+    IDS_MONITOR,        "Monitor"
+    IDS_ERR_REG,        "Unable to save configuration"
+    IDS_POWER_MGMT      "Power Management"
+END

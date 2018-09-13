@@ -1,0 +1,30 @@
+#ifndef _COMMENT_PDL_
+#define _COMMENT_PDL_ 1
+
+#include "element.pdl"
+
+file comment.pdl
+
+import element.pdl
+
+interface IHTMLCommentElement guid:3050f20c-98b5-11cf-bb82-00aa00bdce0b
+    refprop CCommentElement:text
+    refprop CCommentElement:atomic
+
+tearoff CCommentElement interface:IHTMLCommentElement
+
+class CCommentElement name:HTMLCommentElement \
+            super:CElement \
+            events:HTMLElementEvents \
+            nonprimaryevents:HTMLElementEvents2 \
+            primaryinterface:IHTMLCommentElement \
+            guid:3050f317-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f50a-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLCommentElement
+
+    property text     atype:BSTR    dispid:DISPID_COMMENTPDL+1  type:CStr   member:_cstrText   dwFlags:0 get set bindable displaybind nopersist maxstrlen:pdlNoLimit
+    property atomic   atype:long    dispid:DISPID_COMMENTPDL+2  type:long   member:_fAtomic    dwFlags:0 get set bindable displaybind nopersist
+
+#endif _COMMENT_PDL_

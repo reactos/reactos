@@ -1,0 +1,776 @@
+// WARNING
+// localizable resources only
+// non-localizable resources must go in webcheck.rc
+
+#include "resource.h"
+#include "winuser.h"
+#include "winnt.h"
+#include "commctrl.h"
+#include "rsrchdr.h"
+#include "shlobjp.h"
+#include "shellp.h"
+#include "shlobj.h"
+
+#include "webcheck.rcv"
+
+//
+// non-localizable resouces which are directly accessed by
+// localizable resources (bitmaps for HTML dialogs, etc)
+//
+
+IDB_SUBSCRIPTION_WIZARD BITMAP  FIXED IMPURE    "res/wizard.bmp"
+IDI_DISCONNECT          ICON    DISCARDABLE     "res/dialmon.ico"
+IDI_SCREENSAVER         ICON    DISCARDABLE     "res/ssaver.ico"
+IDI_OBJECTDELETED       ICON    DISCARDABLE     "res/off_del.ico"
+IDI_DESKTOPITEM         ICON    DISCARDABLE     "res/desktop.ico"
+#ifdef MLUI_SUPPORT
+IDI_WEBCHECK            ICON    DISCARDABLE     "res/webcheck.ico"
+#endif
+IDI_GLEAMED             ICON    DISCARDABLE     "res/gleamed.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+POPUP_OFFLINE_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",                       RSVIDM_OPEN
+        MENUITEM "&Synchronize",                RSVIDM_UPDATE
+        MENUITEM "&Copy",                       RSVIDM_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete",                     RSVIDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 RSVIDM_PROPERTIES
+    END
+END
+
+POPUP_RESTRICTED_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",                       RSVIDM_OPEN
+        MENUITEM "&Synchronize",                RSVIDM_UPDATE
+        MENUITEM "&Copy",                       RSVIDM_COPY
+    END
+END
+
+POPUP_CONTEXT_VERBSONLY MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",                       RSVIDM_OPEN
+        MENUITEM "&Synchronize",                RSVIDM_UPDATE
+    END
+END
+
+MENU_OFFLINE_BRONLY MENUEX DISCARDABLE 
+BEGIN
+    POPUP "",                               FCIDM_MENU_FILE,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Synchronize All",        RSVIDM_UPDATEALL,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Work Offline",           RSVIDM_WORKOFFLINE,MFT_STRING,MFS_ENABLED
+    END
+    POPUP "",                               SFVIDM_MENU_ARRANGE,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "By &Name",                RSVIDM_SORTBYNAME,MFT_STRING,MFS_ENABLED
+    END
+    POPUP "",                               FCIDM_MENU_HELP,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Contents and Index",     RSVIDM_HELP,MFT_STRING,MFS_ENABLED
+    END
+END
+
+MENU_OFFLINE_TOP MENUEX DISCARDABLE 
+BEGIN
+    POPUP "",                               SFVIDM_MENU_ARRANGE,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "By &Name",                RSVIDM_SORTBYNAME,MFT_STRING,MFS_ENABLED
+    END
+    POPUP "",                               FCIDM_MENU_HELP,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "&Contents and Index",     RSVIDM_HELP,MFT_STRING,MFS_ENABLED
+    END
+END
+
+CONTEXT_MENU_OFFLINE MENUEX DISCARDABLE 
+BEGIN
+    POPUP "",                               SFVIDM_MENU_ARRANGE,MFT_STRING,MFS_ENABLED
+    BEGIN
+        MENUITEM "By &Name",                RSVIDM_SORTBYNAME,MFT_STRING,MFS_ENABLED
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OBJECTDEL_WARNING DIALOG DISCARDABLE  0, 0, 240, 87
+STYLE DS_SYSMODAL | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | 
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Offline Item Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,70,66,48,14
+    PUSHBUTTON      "&No",IDNO,122,66,48,14
+    ICON            402,IDI_OBJECTDELETED,7,7,20,20
+    LTEXT           "Are you sure you no longer want this page available offline?",
+                    IDC_WARNING1,39,41,191,18,SS_NOPREFIX
+    LTEXT           "Name:",IDC_NAMESTATIC,37,8,25,8
+    LTEXT           "URL:",IDC_LOCSTATIC,37,24,25,8
+    CONTROL         "",IDC_NAME,"SysListView32",LVS_REPORT | LVS_NOSCROLL | 
+                    LVS_NOCOLUMNHEADER,65,7,165,10
+    CONTROL         "",IDC_LOCATION,"SysListView32",LVS_REPORT | 
+                    LVS_NOSCROLL | LVS_NOCOLUMNHEADER,65,24,165,10
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_LISTCOMBO | NFS_EDIT,0,0,0,0
+END
+
+IDD_DISCONNECT_PROMPT DIALOG DISCARDABLE  0, 0, 207, 94
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Auto Disconnect"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_DISCONNECT,IDC_STATIC,7,7,21,20
+    LTEXT           "",IDC_TX1,41,5,159,21
+    CONTROL         "Windows will disconnect it in",IDC_TX2,"Static",
+                    SS_LEFTNOWORDWRAP | WS_GROUP,40,33,96,10
+    GROUPBOX        "",IDC_GRP,136,27,18,17
+    CTEXT           "",IDC_TIME_REMAINING,138,33,14,8,NOT WS_GROUP
+    LTEXT           "seconds.",IDC_TX3,158,33,29,8
+    CONTROL         "Don't use &Auto Disconnect",IDC_DISABLE_AUTODISCONNECT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,41,47,97,10
+    DEFPUSHBUTTON   "Disconnect &Now",IDOK,111,73,70,14
+    PUSHBUTTON      "&Stay Connected",IDCANCEL,27,73,70,14
+END
+
+IDD_APP_EXIT_PROMPT DIALOG DISCARDABLE  0, 0, 203, 76
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Auto Disconnect"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_DISCONNECT,IDC_STATIC,7,7,21,20
+    LTEXT           "",IDC_TX1,41,7,155,21
+    CONTROL         "Don't use &Auto Disconnect",IDC_DISABLE_AUTODISCONNECT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,41,37,97,10
+    PUSHBUTTON      "&Stay Connected",IDCANCEL,25,55,70,14
+    DEFPUSHBUTTON   "Disconnect &Now",IDOK,112,55,70,14
+END
+
+IDD_DESKTOP_SUBSCRIPTION_SUMMARY DIALOG DISCARDABLE  0, 0, 291, 90
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add item to Active Desktop(TM)"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_DESKTOPITEM,IDC_STATIC,7,7,21,20
+    DEFPUSHBUTTON   "OK",IDOK,234,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,234,24,50,14
+    LTEXT           "You have chosen to make this site available offline and add it to your Active Desktop. If this site needs a password, please choose Customize and enter it.",
+                    IDC_DESKTOP_SUMMARY_TEXT,34,7,193,28
+    LTEXT           "Name:",IDC_STATIC,34,38,22,8
+    LTEXT           "URL:",IDC_STATIC,34,52,18,8
+    PUSHBUTTON      "&Customize...",IDC_SUBSCRIBE_CUSTOMIZE,234,69,50,14
+    CONTROL         "",IDC_SUBSCRIBE_ADI_NAME,"SysListView32",LVS_REPORT | 
+                    LVS_NOSCROLL | LVS_NOCOLUMNHEADER,60,38,155,10
+    CONTROL         "",IDC_SUBSCRIBE_ADI_URL,"SysListView32",LVS_REPORT | 
+                    LVS_NOSCROLL | LVS_NOCOLUMNHEADER,60,52,214,10
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_SUBSCRIPTION_ENABLECHANNELSAVER DIALOG FIXED IMPURE  0, 0, 261, 62
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Channel Screen Saver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SCREENSAVER,IDC_STATIC,7,7,20,20
+    LTEXT           "This channel includes content for display by the Channel Screen Saver. Would you like to replace your current screen saver with the Channel Screen Saver?",
+                    IDC_STATIC,37,7,217,29
+    CONTROL         "Do not &ask me again",IDC_DONTASKAGAIN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,43,100,10
+    DEFPUSHBUTTON   "&Yes",IDOK,149,41,50,14
+    PUSHBUTTON      "N&o",IDCANCEL,203,41,50,14
+END
+
+IDD_SUBSPROPS_ADVANCED DIALOGEX 0, 0, 181, 153
+STYLE WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Advanced Download Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Items to download on pages",IDC_ADVANCED_GROUPBOX,7,7,
+                    167,83
+    LTEXT           "Choosing fewer items decreases download time, but may omit content from your pages.",
+                    IDC_STATIC,13,18,160,18
+    CONTROL         "&Images",IDC_DOWNLOAD_IMAGES,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,43,152,11
+    CONTROL         "Sound and &video",IDC_DOWNLOAD_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,58,152,11
+    CONTROL         "&ActiveX Controls and Java applets",
+                    IDC_DOWNLOAD_APPLETS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,73,152,11
+    GROUPBOX        "Follow links",IDC_STATIC,7,97,167,28
+    CONTROL         "&Only to HTML pages",IDC_DOWNLOAD_ONLY_HTML_LINKS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,109,152,10
+    DEFPUSHBUTTON   "OK",IDOK,69,132,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,123,132,50,14
+END
+
+IDD_SUBSPROPS_LOGIN DIALOGEX 0, 0, 225, 108
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Login Options"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_GLEAMED,IDC_STATIC,7,7,20,20
+    LTEXT           "Type your user name and password for this site.",
+                    IDC_LOGIN_PROMPT,34,10,168,18
+    LTEXT           "&User name:",IDC_USERNAME_LABEL,33,35,64,10,NOT 
+                    WS_GROUP
+    EDITTEXT        IDC_USERNAME,100,34,118,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_PASSWORD_LABEL,33,50,64,10,NOT WS_GROUP
+    EDITTEXT        IDC_PASSWORD,100,49,118,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm Password:",IDC_PASSWORDCONFIRM_LABEL,33,69,64,
+                    10,NOT WS_GROUP
+    EDITTEXT        IDC_PASSWORDCONFIRM,100,68,118,12,ES_PASSWORD | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,113,87,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,168,87,50,14,WS_GROUP
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_EDIT,0,0,0,0
+END
+
+IDD_SUBSPROPS_SUMMARY DIALOG DISCARDABLE  20, 20, 227, 200
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | 
+    WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Web Document"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_ICONEX2,7,7,20,20
+    EDITTEXT        IDC_NAME,48,14,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,34,213,1
+    LTEXT           "&URL:",IDC_URL_TEXT,7,42,18,8
+    EDITTEXT        IDC_URL,57,42,163,8,ES_AUTOHSCROLL | ES_READONLY | NOT 
+                    WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Visits:",IDC_VISITS_TEXT,7,57,43,8
+    LTEXT           "",IDC_VISITS,57,57,163,8
+    CONTROL         "",-1,"Static",SS_ETCHEDHORZ | WS_GROUP,7,72,213,1
+    CONTROL         "Make this page available &offline",IDC_MAKE_OFFLINE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,80,213,10
+    GROUPBOX        "Summary",IDC_SUMMARY,7,97,213,88
+    LTEXT           "Last Synchronization:",IDC_LAST_SYNC_TEXT,12,111,68,8
+    LTEXT           "",IDC_LAST_SYNC,94,111,114,8
+    LTEXT           "Download Size:",IDC_DOWNLOAD_SIZE_TEXT,12,126,68,8
+    LTEXT           "",IDC_DOWNLOAD_SIZE,94,126,114,8
+    LTEXT           "Download Result:",IDC_DOWNLOAD_RESULT_TEXT,12,141,68,8
+    EDITTEXT        IDC_DOWNLOAD_RESULT,94,141,114,22, ES_MULTILINE | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP 
+    LTEXT           "To free hard disk space taken by this offline favorite, uncheck the box above.",
+                    IDC_FREESPACE_TEXT,12,161,203,21
+    CONTROL         "",-1,"NativeFontCtl",NFS_EDIT | NFS_STATIC,0,0,0,0
+END
+
+IDD_SUBSPROPS_SCHEDULE DIALOG FIXED IMPURE  0, 0, 225, 223
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION | WS_SYSMENU
+CAPTION "Schedule"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Synchronize this favorite:",IDC_SCHEDULE_TEXT,7,7,80,8
+    CONTROL         "&Only when I choose Synchronize from the Tools menu",
+                    IDC_MANUAL_SYNC,"Button",BS_AUTORADIOBUTTON,7,22,197,10
+    CONTROL         "&Using the following schedule(s):",IDC_SCHEDULED_SYNC,
+                    "Button",BS_AUTORADIOBUTTON,7,36,197,10
+    CONTROL         "Use the folling schedule(s)",IDC_SCHEDULE_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,14,
+                    53,197,69
+    PUSHBUTTON      "A&dd...",IDC_SCHEDULE_NEW,48,129,50,14
+    PUSHBUTTON      "&Remove",IDC_SCHEDULE_REMOVE,104,129,50,14
+    PUSHBUTTON      "&Edit...",IDC_SCHEDULE_EDIT,160,129,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_SUBSPROPS_DOWNLOAD_URL DIALOG FIXED IMPURE  0, 0, 225, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Content to download:",IDC_CONTENT_GROUPBOX,7,7,211,95
+    LTEXT           "Download &pages",IDC_DOWNLOAD_PAGES_LABEL1,13,20,54,8
+    EDITTEXT        IDC_LEVELS,69,18,22,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Spin2",IDC_LEVELS_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,82,23,9,14
+    LTEXT           "links deep from this page",IDC_DOWNLOAD_PAGES_LABEL2,93,
+                    20,79,8
+    CONTROL         "&Follow links outside of this page's Web site",
+                    IDC_FOLLOW_LINKS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    13,39,150,10
+    CONTROL         "&Limit hard-disk usage for this page to:",
+                    IDC_LIMIT_SPACE_CHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,53,135,10
+    LTEXT           "&Kilobytes",IDC_LIMIT_SPACE_TEXT,68,68,29,8
+    EDITTEXT        IDC_LIMIT_SPACE_EDIT,25,65,38,14,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Spin3",IDC_LIMIT_SPACE_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,47,70,9,14
+    PUSHBUTTON      "Ad&vanced...",IDC_ADVANCED,160,80,50,14
+    GROUPBOX        "",IDC_EMAIL_GROUPBOX,7,110,211,53
+    CONTROL         "When this page changes, send e-&mail to: ",
+                    IDC_EMAIL_NOTIFY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,109,145,11
+    LTEXT           "E-ma&il address:",IDC_EMAIL_ADDRESS_TEXT,13,125,75,8
+    EDITTEXT        IDC_EMAIL_ADDRESS,96,122,117,14,ES_AUTOHSCROLL
+    LTEXT           "Mail &Server (SMTP):",IDC_EMAIL_SERVER_TEXT,14,142,69,
+                    10
+    EDITTEXT        IDC_EMAIL_SERVER,95,139,117,14,ES_AUTOHSCROLL
+    LTEXT           "If the site requires a user name and password:",
+                    IDC_LOGIN_LABEL,7,173,148,8
+    PUSHBUTTON      "L&ogin...",IDC_LOGIN,168,170,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_EDIT,0,0,0,0
+END
+
+IDD_SUBSPROPS_DOWNLOAD_CHANNEL DIALOG FIXED IMPURE  0, 0, 225, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Download"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Content to download:",IDC_CONTENT_GROUPBOX,7,7,211,95
+    CONTROL         "&Download all content specified by the content provider",
+                    IDC_DOWNLOAD_ALL,"Button",BS_AUTORADIOBUTTON,13,20,200,
+                    10
+    CONTROL         "Just do&wnload the home page and table of contents",
+                    IDC_DOWNLOAD_MIN,"Button",BS_AUTORADIOBUTTON,13,34,200,
+                    10
+    CONTROL         "&Limit hard-disk usage for this page to:",
+                    IDC_LIMIT_SPACE_CHECK,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,13,51,200,10
+    LTEXT           "&Kilobytes",IDC_LIMIT_SPACE_TEXT,63,67,29,8
+    EDITTEXT        IDC_LIMIT_SPACE_EDIT,25,64,33,14,ES_RIGHT | 
+                    ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Spin3",IDC_LIMIT_SPACE_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,47,67,9,14
+    PUSHBUTTON      "Ad&vanced...",IDC_ADVANCED,160,80,50,14
+    GROUPBOX        "",IDC_EMAIL_GROUPBOX,7,110,211,53
+    CONTROL         "When this page changes, send e-&mail to: ",
+                    IDC_EMAIL_NOTIFY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,109,145,11
+    LTEXT           "E-ma&il address:",IDC_EMAIL_ADDRESS_TEXT,13,125,75,8
+    EDITTEXT        IDC_EMAIL_ADDRESS,96,122,117,14,ES_AUTOHSCROLL
+    LTEXT           "Mail &Server (SMTP):",IDC_EMAIL_SERVER_TEXT,14,142,69,
+                    10
+    EDITTEXT        IDC_EMAIL_SERVER,95,139,117,14,ES_AUTOHSCROLL
+    LTEXT           "If the site requires a user name and password:",
+                    IDC_LOGIN_LABEL,7,173,148,8
+    PUSHBUTTON      "L&ogin...",IDC_LOGIN,168,170,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_EDIT,0,0,0,0
+END
+
+IDD_WIZARD0 DIALOG FIXED IMPURE  0, 0, 276, 140
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION
+CAPTION "Offline Favorite Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_SUBSCRIPTION_WIZARD,-1,"Static",SS_BITMAP | SS_SUNKEN,0,0,81,140
+    LTEXT           "Use this wizard to determine how much content to make available offline. You can also set up a schedule to synchronize the offline page(s) with the most recent pages on the network.",IDC_WIZ_INTRO_DETAILS_TEXT,92,0,184,43,NOT WS_GROUP
+    CONTROL         "&In the future, do not show this introduction screen.",
+                    IDC_WIZ_DONT_SHOW_INTRO,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,92,129,184,10
+END
+
+IDD_WIZARD1 DIALOG FIXED IMPURE  0, 0, 276, 140
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION
+CAPTION "Offline Favorite Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_SUBSCRIPTION_WIZARD,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,0,0,81,140
+    LTEXT           "Set up the following page:",IDC_WIZ_MADE_OFFLINE_TEXT,92,0,183,12,NOT WS_GROUP
+    LTEXT           "Name:",IDC_STATIC,93,15,23,8
+    CONTROL         "",IDC_NAME,"SysListView32",LVS_REPORT | LVS_NOSCROLL | 
+                    LVS_NOCOLUMNHEADER,119,15,158,13
+    LTEXT           "URL:",IDC_STATIC,93,28,21,12
+    CONTROL         "",IDC_URL,"SysListView32",LVS_REPORT | LVS_NOSCROLL | 
+                    LVS_NOCOLUMNHEADER,117,28,158,10
+    LTEXT           "",IDC_WIZ_GET_LINKS_TEXT,92,46,183,20,NOT WS_GROUP
+
+    CONTROL         "N&o",IDC_WIZ_LINKS_NO,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,92,69,183,10
+    CONTROL         "&Yes",IDC_WIZ_LINKS_YES,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,92,81,183,10
+
+    LTEXT           "Download &pages",IDC_WIZ_LINKSDEEP_STATIC1,92,98,54,8
+    EDITTEXT        IDC_WIZ_LINKSDEEP_EDIT,149,95,17,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "",IDC_WIZ_LINKSDEEP_SPIN,"msctls_updown32",UDS_ARROWKEYS|UDS_AUTOBUDDY|UDS_SETBUDDYINT,166,95,
+                    11,14
+    LTEXT           "links deep from this page",IDC_WIZ_LINKSDEEP_STATIC2,180,98,79,8
+
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+    LTEXT           "Note: If you have limited hard disk space or you want to reduce synchronization time, it's a good idea to limit the number of linked pages you store.",
+                    IDC_STATIC,92,115,183,31
+END
+
+IDD_WIZARD2 DIALOG FIXED IMPURE  0, 0, 276, 140
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION
+CAPTION "Offline Favorite Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_SUBSCRIPTION_WIZARD,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,0,0,81,140
+    LTEXT           "You can synchronize this page any time you are connected by choosing Synchronize from the Tools menu. You can also set up a schedule to synchronize this page automatically.",
+                    IDC_WIZ_SCHED_DETAILS_TEXT,92,0,183,36,NOT WS_GROUP
+    LTEXT           "How would you like to synchronize this page?",IDC_WIZ_SCHED_QUESTION_TEXT,92,41,183,13,NOT WS_GROUP
+    CONTROL         "&Only when I choose Synchronize from the Tools menu",
+                    IDC_WIZ_SCHEDULE_NONE,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE,92,58,169,19
+    CONTROL         "&I would like to create a new schedule",
+                    IDC_WIZ_SCHEDULE_NEW,"Button",BS_AUTORADIOBUTTON,92,78,
+                    169,10
+    CONTROL         "&Using this existing schedule:",
+                    IDC_WIZ_SCHEDULE_EXISTING,"Button",BS_AUTORADIOBUTTON,92,
+                    94,169,10
+    CONTROL         "Existing Schedules", IDC_WIZ_SCHEDULE_LIST, "ComboBox", CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP, 103,107,172,69
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_LISTCOMBO,0,0,0,0
+END
+
+IDD_WIZARD3 DIALOG FIXED IMPURE  0, 0, 276, 140
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION
+CAPTION "Offline Favorite Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_SUBSCRIPTION_WIZARD,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,0,0,81,140
+    LTEXT           "When would you like to synchronize this page?",IDC_WIZ_WHEN_TO_SYNC_TEXT,92,0,183,14,NOT WS_GROUP
+    LTEXT           "&Every",IDC_STATIC,94,18,19,8
+    EDITTEXT        IDC_SCHEDULE_DAYS,123,14,26,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Spin1",IDC_SCHEDULE_DAYS_SPIN,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,143,14,9,
+                    14
+    LTEXT           "days a&t",IDC_STATIC,160,18,24,8
+    CONTROL         "",IDC_SCHEDULE_TIME,"SysDateTimePick32",
+                    WS_BORDER | WS_TABSTOP | DTS_TIMEFORMAT,191,14,57,14
+    LTEXT           "",IDC_SCHEDULE_LABEL3,249,18,27,8
+    LTEXT           "N&ame:",IDC_STATIC,94,39,22,8
+    EDITTEXT        IDC_SCHEDULE_NAME,123,36,147,14,ES_AUTOHSCROLL
+    CONTROL         "&If my computer is not connected when this scheduled synchronization begins, automatically connect for me",
+                    IDC_WIZ_SCHEDULE_AUTOCONNECT,"Button",BS_AUTOCHECKBOX|BS_MULTILINE|BS_TOP|WS_TABSTOP,94,60,176,24
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_EDIT,0,0,0,0
+END
+
+IDD_WIZARD4 DIALOG FIXED IMPURE  0, 0, 276, 140
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_CAPTION
+CAPTION "Offline Favorite Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_SUBSCRIPTION_WIZARD,IDC_STATIC,"Static",SS_BITMAP | SS_SUNKEN,0,0,12,12
+    LTEXT           "This channel requires a user name and password before you can download its content. You should have received this information from the content provider.",
+                    IDC_LOGIN_PROMPT_CHANNEL,93,7,183,30,NOT WS_GROUP
+    CONTROL         "N&o",IDC_PASSWORD_NO,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,93,11,155,15
+    CONTROL         "&Yes, my user name and password are:",IDC_PASSWORD_YES,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,93,27,183,10
+    LTEXT           "Does this site require a password?",IDC_LOGIN_PROMPT_URL,93,0,183,
+                    10,NOT WS_GROUP
+    LTEXT           "&User name:",IDC_USERNAME_LABEL,93,45,64,10,NOT WS_GROUP
+    EDITTEXT        IDC_USERNAME,157,43,118,12,ES_AUTOHSCROLL
+    LTEXT           "&Password:",IDC_PASSWORD_LABEL,93,64,64,10,NOT WS_GROUP
+    EDITTEXT        IDC_PASSWORD,157,62,118,12,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Confirm Password:",IDC_PASSWORDCONFIRM_LABEL,93,83,64,10,NOT WS_GROUP
+    EDITTEXT        IDC_PASSWORDCONFIRM,157,81,118,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_EDIT,0,0,0,0
+END
+
+IDD_NEW_SCHEDULE DIALOGEX 0, 0, 202, 121
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "New Schedule"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Please specify settings for your new schedule.",
+                    IDC_STATIC,7,7,188,8
+    LTEXT           "&Every",IDC_SCHEDULE_LABEL1,7,26,19,8
+    EDITTEXT        IDC_SCHEDULE_DAYS,37,22,26,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    CONTROL         "Spin1",IDC_SCHEDULE_DAYS_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,57,22,9,14
+    LTEXT           "days &at",IDC_SCHEDULE_LABEL2,73,26,24,8
+    CONTROL         "",IDC_SCHEDULE_TIME,"SysDateTimePick32",DTS_UPDOWN | 
+                    WS_BORDER | WS_TABSTOP | 0x8,105,22,57,14
+    LTEXT           "",IDC_SCHEDULE_LABEL3,166,26,27,8
+    LTEXT           "&Name:",IDC_SCHEDULE_NAME_TEXT,7,47,22,8
+    EDITTEXT        IDC_SCHEDULE_NAME,37,45,158,14,ES_AUTOHSCROLL
+    CONTROL         "&If my computer is not connected when this scheduled synchronization begins, automatically connect for me",
+                    IDC_WIZ_SCHEDULE_AUTOCONNECT,"Button",BS_AUTOCHECKBOX | 
+                    BS_TOP | BS_MULTILINE | WS_TABSTOP,37,65,158,28
+    DEFPUSHBUTTON   "OK",IDOK,90,100,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,145,100,50,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC | NFS_EDIT,1,0,6,6
+END
+
+IDD_DUPLICATE_SCHEDULE DIALOG DISCARDABLE  0, 0, 290, 108
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Duplicate Schedule Name"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_WEBCHECK,IDC_STATIC,7,7,21,20
+    LTEXT           "",IDC_SCHEDULE_MESSAGE,37,7,244,20
+    LTEXT           "",IDC_FRIENDLY_SCHEDULE_TEXT,53,35,211,20
+    LTEXT           "You can overwrite these settings with the schedule you just created or you can keep your existing settings.",
+                    IDC_STATIC,39,60,244,20
+    PUSHBUTTON      "Use &New Settings",IDC_NEW_SETTINGS,25,87,77,14
+    PUSHBUTTON      "Use &Existing Settings",IDC_OLD_SETTINGS,106,87,77,14
+    PUSHBUTTON      "Cancel",IDCANCEL,187,87,77,14
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",NFS_STATIC,0,0,6,6
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_RNADLL_FILENAME     "RASAPI32.DLL"
+    IDS_DISCONNECT_DLG_TEXT "The connection to %1!s! has been idle for %2!u! minutes."
+    IDS_BEEN_DISCONNECTED   "The connection to %1!s! was idle and was disconnected.\r\n\r\nIf you want to turn off or change Auto Disconnect, click the Internet icon in Control Panel."
+    IDS_APP_EXIT_TEXT       "Do you want to close the connection to %1!s!?"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SCREENSAVEREXE      "Channel Screen Saver.scr"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_SB_OPEN             "Opens the selected items."
+    IDS_SB_UPDATE           "Synchronizes the selected items."
+    IDS_SB_RENAME           "Renames the selected items."
+    IDS_SB_COPY             "Copies the selected items to the Clipboard."
+    IDS_SB_DELETE           "Deletes the selected items."
+    IDS_SB_PROPERTIES       "Displays the properties of the selected items."
+    IDS_SB_UPDATEALL        "Synchronizes all items."
+    IDS_SB_WORKOFFLINE      "Shows web pages without fetching them from net."
+    IDS_SB_HELP             "Opens help for Internet Explorer."
+    IDS_SB_SORTBYNAME       "Sorts items by name."
+END
+
+/*
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_CANCELDL            "&Cancel download"
+    IDS_SHOWPROG            "&Show download progress"
+END
+*/
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_NEEDEMAILINFO       "To receive e-mail notifications you need to provide your e-mail and SMTP server names."
+    IDS_NEEDUNATTENDEDINFO  "Automatic dial-up usually requires a user name and password.  Please enter this information in the Internet Control Panel."
+    IDS_SIZELIMIT           "The site size limit must be between 50 KB to 20,000 KB. To disable the size limit, clear this check box. The actual amount of disk usage is also constrained by the size of the Temporary Internet Files folder."
+    IDS_LEVELLIMIT          "A valid value is from 0 to 5 levels deep."
+    IDS_HTTPONLY            "Internet Explorer doesn't support synchronizing this type of URL."
+    IDS_DETAILS             "&Details>>"
+    IDS_NODETAILS           "&No details"
+    IDS_AGNT_HTMLMESSAGEWRAPPER 
+                            "To: %1\r\nSubject: Internet Explorer Notice: %2\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=""----_NextPart_0""\r\nContent-Transfer-Encoding: 7bit\r\n\r\nThis is a multi-part message in MIME format.\r\n\r\n------_NextPart_0\r\nContent-Type: text/plain; charset=us-ascii\r\nContent-Transfer-Encoding: 7bit\r\n\r\n%3\r\n------_NextPart_0\r\nContent-Type: text/html; charset=%4\r\nContent-Transfer-Encoding: 7bit\r\n\r\n<FRAMESET ROWS=""*"" FRAMEMARGIN=0 FRAMESPACING=0 FRAMEBORDER=0>\r\n<FRAME SRC=""%5"">\r\n%6</FRAMESET>\r\n------_NextPart_0--\r\n"
+    IDS_AGNT_HTMLMESSAGETEXT 
+                            "Your offline site '%s' has been updated.%sTo view this page, click here: %s%sThis message was sent by the Internet Explorer 5 Information Delivery Agent."
+    IDS_AGNT_HTMLMESSAGETEXT2 
+                            "Your offline site '%s' has been updated.%sTo view this page, click here: %s%sThis message was sent by the Internet Explorer 5 Information Delivery Agent."
+    IDS_AGNT_HTMLBREAK      "<br><br>"
+    IDS_AGNT_TEXTBREAK      "\r\n\r\n"
+    IDS_AGNT_HTMLBREAKSINGLE "<br>"
+    IDS_STATISTICS          "%d documents (%dK) transferred in %d:%02d"
+    IDS_TARGET_CHARSET_EMAIL "us-ascii"
+    IDS_DESKTOPCHANNEL_SUMMARY_TEXT "You have chosen to make this channel available offline and add it to your Active Desktop. This channel requires a password, please choose Customize and enter it."
+    IDS_DESKTOPCHANNEL_SUMMARY_NOPW "You have chosen to make this channel available offline and add it to your Active Desktop."
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_STATUS_OUTOFMEMORY  "Error: Low resources or memory"
+    IDS_STATUS_ABORTED      "Operation was stopped"
+    IDS_STATUS_OK           "Updated"
+    IDS_STATUS_NOT_OK       "Error while updating"
+    IDS_STATUS_UNCHANGED    "Updated: No changes detected"
+    IDS_STATUS_BAD_URL      "Error downloading URL"
+    IDS_STATUS_AUTHFAILED   "Error: Login failed (name/password refused)"
+    IDS_URL_STATUS_OK       "Site changed"
+    IDS_URL_STATUS_UNCHANGED "No changes found"
+    IDS_URL_STATUS_NOT_OK   "Error while updating"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_CRAWL_ROBOTS_TXT_WARNING "Robots.txt warning: Some pages not downloaded by site's request"
+    IDS_CRAWL_STATUS_OK     "Updated"
+    IDS_CRAWL_STATUS_UNCHANGED "Updated: No changes detected"
+    IDS_CRAWL_STATUS_NOT_OK "Error: Unrecoverable update error"
+    IDS_AGNT_STATUS_SIZELIMIT "Warning: Size limit for offline item reached"
+    IDS_CRAWL_STATUS_MOSTLYOK "Updated: Some download errors"
+    IDS_AGNT_STATUS_CACHELIMIT 
+                            "Error: Size limit for Temporary Internet Files reached"
+
+    IDS_SCHEDULED_UPDATES_DISABLED      "Warning: Scheduled updates are disabled"
+    IDS_SCHEDULED_UPDATES_RESTRICTED    "Warning: Scheduled updates are restricted"
+    IDS_SCHEDULED_UPDATE_INTERVAL       "Warning: Scheduled update occured before minimum update interval"
+    IDS_SCHEDULED_EXCLUDE_RANGE         "Warning: Scheduled update occurred during a restricted time"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CDLAGENT_ERROR_EMAIL 
+                            "\r\nThis site has been partially downloaded to your computer. The download wasn't completed because: %ws.\r\n\r\n"
+    IDS_CDLAGENT_TRUST_ERROR "Trust verification failure."
+    IDS_CDLAGENT_SUCCESS    "Successful"
+    IDS_CDLAGENT_FAILURE    "Failed"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CACHELIMIT_TITLE    "Temporary Internet Files limit reached"
+    IDS_CACHELIMIT_MESSAGE  "To help you manage hard disk space, Internet Explorer limits the space that offline pages can use. That space is now full. Would you like to increase the amount of space used for storing offline pages?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DETAIL_COL          "Detail"
+    IDS_UNKNOWN             "(unknown)"
+    IDS_NONE                "None"
+    IDS_NAME_COL            "Name"
+    IDS_LAST_COL            "Last Synchronization"
+    IDS_STATUS_COL          "Status"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SIZE_COL            "Size"
+    IDS_URL_COL             "Location"
+    IDS_NEXT_COL            "Next update"
+    IDS_GROUP_COL           "Schedule"
+    IDS_NONULLNAME          "You must type a filename."
+    IDS_RENAME              "Rename"
+    IDS_LOGINTEXT1          "If this site requires a username and password, click Login Options."
+    IDS_LOGINTEXT2          "You have specified the username and password for this site. To review or change these options, click:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SUMMARY_MANUAL      "On manual update"
+    IDS_AGNT_EMAILMESSAGE   "\r\n\r\nThis e-mail was sent to you by Internet Explorer 5\r\nTo stop this e-mail notification, edit the properties of this offline item.\r\nTo find this item, click the Favorites menu and then click Manage Offline Items.\r\nTo edit its properties, right-click the item, and then click Properties.\r\n"
+    IDS_AGNT_SMTPMESSAGE_OTHER 
+                            "Subject: Internet Explorer Notice: %1\r\n%2\r\n"
+    IDS_AGNT_MAPIMESSAGE_OTHER "%s\r\n"
+    IDS_AGNT_MAPISUBJECT_OTHER "Internet Explorer Notice: %s\r\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DEL_MULTIPLE_FMT    "Are you sure you want to delete these %d offline items?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DAILY_GRO           "Daily"
+    IDS_WEEKLY_GRO          "Weekly"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SYNCMGR_NAME        "Offline Web Pages"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_AGNT_SMTPMESSAGE    "Subject: Offline item updated: %1\r\nYour offline site '%2' has been updated.\r\n\r\nTo view the page, click here: %3\r\n\r\nThis message was sent by the Internet Explorer 5 Information Delivery Agent.\r\n"
+    IDS_AGNT_MAPIMESSAGE    "Your offline site '%s' has been updated.\r\n\r\nTo view the page, click here: %s\r\n\r\nThis message was sent by the Internet Explorer 5 Information Delivery Agent.\r\n"
+    IDS_AGNT_MAPISUBJECT    "Offline item updated: %s\r\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STRING_E_CONFIG     "Offline items were not updated because a connection to the Internet could not be made via the modem."
+    IDS_STRING_E_SECURITYCHECK "Offline items were not updated because a connection to the Internet could not be made because File Sharing for Microsoft Networks is turned on. To turn off File Sharing, please choose the Network Icon in the Control Panel."
+    IDS_STRING_E_FAILURE    "Unable to connect to the Internet."
+    IDS_CAPTION_ERROR_CONNECTING "Cannot connect"
+    IDS_STRING_NOTHING_TO_UPDATE 
+                            "Internet Explorer couldn't find any offline items to update at this time."
+    IDS_CAPTION_NOTHING_TO_UPDATE "No offline items"
+    IDS_RESTRICTED          "This action is restricted. For more information, please contact your system administrator."
+    IDS_SESSIONEND          "Update session concluded."
+    IDS_ABORTING            "Stopping all updates. Please wait."
+    IDS_UPDATE_PAUSED       "Waiting for idle system"
+    IDS_UPDATE_RESUMING     "Resuming update"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NEEDPASSWORD        "Please provide your password for this Web Site."
+    IDS_NEEDUSERNAME        "Please provide your user name for this Web Site."
+    IDS_NEEDCHANNELPASSWORD "Please provide your password for this channel."
+    IDS_NEEDCHANNELUSERNAME "Please provide your user name for this channel."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DIAL_SUCCESS        "Connected"
+    IDS_DIAL_FAILURE        "Unable to connect to the Internet"
+    IDS_DIAL_PROXY          "Using proxy server"
+    IDS_DIAL_ALREADY_CONNECTED "Already connected"
+    IDS_DIAL_DIRECT         "Using direct Internet connection"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CHANNEL_FOLDER         "Channels"
+    IDS_SOFTWAREUPDATE_FOLDER  "Software Updates"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_EMAIL_INCOMPLETE        "You must specify an e-mail address and server name."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WIZ_GET_LINKS_CHANNEL
+        "If the content provider specifies links to additional pages, would you like to make those pages available offline too?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WIZ_GET_LINKS_URL
+        "If this favorite contains links to other pages, would you like to make those pages available offline too?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RECOMMENDED_SCHEDULE_FORMAT "%ws Recommended Schedule"
+    IDS_EMPTY_SCHEDULE_NAME         "Please enter a schedule name!"
+    // Need to limit wchar strings to 1023 characters to avoid Win98 fault.
+    IDS_CONFIRM_SCHEDULE_DELETE     "Are you sure you want to delete '%1!.1023ws!'?"
+    IDS_MISMATCHED_PASSWORDS        "The passwords you entered do not match."
+    IDS_SCHED_FORMAT                "Every %1!.1023ws! days at %2!.1023ws!"
+    IDS_SCHED_FORMAT_DAILY          "Daily at %2!.1023ws!"
+    IDS_SCHED_CONFLICT_FORMAT       "You already have an existing schedule named '%.1023ws' with the following settings:"
+    IDS_NO_SCHEDULE_SELECTED        "No schedules are checked."
+    IDS_SCHEDULE_DELETE_CAPTION     "Confirm Schedule Delete"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DEFAULT_MSG_CAPTION                 "Offline"
+    IDS_VALUE_UNKNOWN                       "Unknown"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DELETE_CAPTION              "Confirm Offline Item Delete"
+END
+

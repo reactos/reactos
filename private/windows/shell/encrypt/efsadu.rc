@@ -1,0 +1,266 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""res\\EFSADU.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "EFSADU DLL\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "EFSADU\0"
+            VALUE "LegalCopyright", "Copyright (C) 1997\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "EFSADU.DLL\0"
+            VALUE "ProductName", "EFSADU Dynamic Link Library\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ENCRYPT_DETAILS DIALOG DISCARDABLE  0, 0, 243, 141
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Encryption Details for <filename>"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&File can be encrypted by the following:",IDC_STATIC,7,
+                    7,169,8
+    CONTROL         "List1",IDC_USERLIST,"SysListView32",LVS_REPORT |
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,18,173,85
+    PUSHBUTTON      "&Add...",IDC_ADD,186,18,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,186,36,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,111,
+                    229,1
+    DEFPUSHBUTTON   "OK",IDOK,131,120,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,186,120,50,14
+END
+
+IDD_COMPLETION DIALOG DISCARDABLE  0, 0, 331, 193
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the ",IDC_STATIC,15,11,129,8
+    LTEXT           "Encription File System Wizard",IDC_STATIC,30,20,94,8
+    LTEXT           "You have successfully completed the Encryption File System Wizard.",
+                    IDC_STATIC,30,39,217,8
+    LTEXT           "You are attempting to enable following users to decrypt ""filename"":",
+                    IDC_STATIC,30,54,210,8
+    CONTROL         "List1",IDC_ADDLIST,"SysListView32",LVS_REPORT |
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,30,65,190,67
+END
+
+IDD_LOCATING DIALOG DISCARDABLE  0, 0, 331, 193
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Browse in Directory...",IDC_BROWSE_DIR,223,70,80,14
+    PUSHBUTTON      "Browse for Files...",IDC_BROWSE_FILE,224,87,80,14
+    CONTROL         "List2",IDC_ADDLIST,"SysListView32",LVS_REPORT |
+                    LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,28,70,190,76
+    LTEXT           "Grant Decryption Ability",IDC_STATIC,14,7,129,8
+    LTEXT           "Users can be selected whose certificates will grant them access to the encrypted file.",
+                    IDC_STATIC,28,16,275,12
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,0,35,
+                    331,1
+    LTEXT           "Create a list of the users' certificates by either browsing in the directory or in files.",
+                    IDC_STATIC,28,44,275,13
+    LTEXT           "List of users:",IDC_STATIC,28,59,44,8
+END
+
+IDD_WELCOME DIALOG DISCARDABLE  0, 0, 331, 193
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Welcome to the ",IDC_STATIC,15,11,129,8
+    LTEXT           "Encryption File System Wizard",IDC_STATIC,30,20,96,8
+    LTEXT           "This wizard enables you to decrypt an encrypted file.",
+                    IDC_STATIC,30,39,166,8
+    LTEXT           "<Description of feature here.> It should cover the fact that users are allowed the ablility to decrypt an encrypted file using their ""data encryption"" certificates.",
+                    IDC_STATIC,30,54,271,28
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_ENCRYPT_DETAILS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 236
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 134
+    END
+
+    IDD_COMPLETION, DIALOG
+    BEGIN
+        LEFTMARGIN, 15
+        RIGHTMARGIN, 301
+        VERTGUIDE, 30
+        TOPMARGIN, 11
+        BOTTOMMARGIN, 186
+    END
+
+    IDD_LOCATING, DIALOG
+    BEGIN
+        VERTGUIDE, 14
+        VERTGUIDE, 28
+        VERTGUIDE, 204
+        VERTGUIDE, 303
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 185
+        HORZGUIDE, 130
+    END
+
+    IDD_WELCOME, DIALOG
+    BEGIN
+        LEFTMARGIN, 15
+        RIGHTMARGIN, 301
+        VERTGUIDE, 30
+        TOPMARGIN, 11
+        BOTTOMMARGIN, 186
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_USERCOLTITLE        "Users"
+    IDS_DETAILWINTITLE      "Encryption Details for %1"
+    IDS_ADDTITLE            "Adding Users to %1"
+    IDS_NOINFO              "Unable to find the user information for the file."
+    IDS_ERRORMEM            "Out of memory. Close some applications and try again."
+    IDS_ADDUSERERR          "Error in adding new user(s). Error code %1."
+    IDS_REMOVEUSERERR       "Error in removing user(s). Error code %1."
+    IDS_CERTFILEFILTER      "Certificate Files (*.cer)|*.cer||"
+    IDS_CERTFILEOPENERR     "Error in opening the cert file. Error code %1."
+    IDS_CERTFILEFORMATERR   "Invalid Certificate file."
+    IDS_UNKNOWNUSER         "USER_UNKNOWN"
+    IDS_DNCOLTITLE          "Certificate Name"
+    IDS_NOCERTNAME          "Certificate display name not available."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "res\EFSADU.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

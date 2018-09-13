@@ -1,0 +1,14 @@
+SendDocChangeMsg	AdviseDataChange
+SendDocSavedMsg		AdviseSaved / DoOleSave
+CutCopyObjectFormats	xxx
+UnfixMenus		FlagEmbeddedObject
+InitDoc			AdviseRename
+ChangeDocName		AdviseRename
+DeleteDoc		DoOleClose
+DeleteServer		TerminateServer
+
+vfIsLink		gfLinked
+fInvisible		gfInvisible
+fLoading		gfLoading
+iExitWithSaving
+fSendData

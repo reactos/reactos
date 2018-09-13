@@ -1,0 +1,17 @@
+LIBRARY   APPMGR
+
+CODE        MOVEABLE DISCARDABLE PRELOAD
+DATA        MOVEABLE PRELOAD SINGLE
+
+HEAPSIZE        512
+
+EXPORTS
+    CPlApplet
+    ; AppWizard
+
+    ; SingleMSDOSWizard
+    ; NewLinkHere
+    ; NewLinkHereW
+    ; NewLinkHereA = NewLinkHere
+
+    ; ConfigStartMenu

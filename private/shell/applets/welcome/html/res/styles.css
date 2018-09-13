@@ -1,0 +1,107 @@
+body
+{
+  font-family: Verdana;
+  font-weight: bold;
+}
+
+#DAControl
+{
+  position:absolute;
+  left:0;
+  top:0;
+  width:478;
+  height:322;
+  z-index:10;
+}
+
+#banner
+{
+  position: absolute;
+  top: 19;
+  left: 146;
+  z-index:30;
+}
+
+#contents
+{
+  position:absolute;
+  left:0;
+  top:113;
+  width:478;
+  height:209;
+  z-index:20;
+  padding: 0;
+}
+
+#fadebar
+{
+   position:absolute;
+   top:0;
+   left:0;
+}
+
+#leftpanel
+{
+  position: absolute;
+  left:0;
+  top:5;
+  width:179;
+  height:100%;
+  background-color: #CEDFEF;
+}
+
+#cmdlist
+{
+  background-color: #6699CC;
+  padding-left: 12;
+  margin-top:0;
+}
+
+#menuitem
+{
+  width: 167;
+  height: 22;
+  margin-bottom: 1;
+  padding-left: 6;
+  padding-top: 6;
+  background-color: #CEDFEF;
+  font-size: 10px;
+  cursor: hand;
+  border: 0;
+  text-align: left;
+}
+
+#rightpanel
+{
+  position: absolute;
+  left:179;
+  top:5;
+  width:299;
+  height:100%;
+  padding-top: 9;
+  padding-left: 17;
+  padding-right: 8;
+  background: #E6F0F9 URL("res://welcome.exe/computer.gif") no-repeat bottom right;
+}
+
+#header
+{
+  font-size: 18px;
+  color: #3875B3;
+}
+
+#description
+{
+  font-size: 11px;
+  position: relative;
+  top: 4;
+}
+
+#checkboxarea
+{
+  position: absolute;
+  left: 2;
+  top:  180;
+  font-size: 9px;
+  font-weight: normal;
+}

@@ -1,0 +1,396 @@
+# -*-makefile-*-  Makefile mode for Emacs
+
+# include $(NTMAKEENV)/makefile.plt
+#
+# If BUILDMSG is not defined, the define it as the empty string to make
+# the conditionals easier to write.
+#
+
+ifndef MAKE_VERBOSE
+MAKE_VERBOSE=false      # for make.noise
+endif
+ifndef FIRST_PASS
+ifndef SECOND_PASS
+FIRST_PASS = TRUE
+SECOND_PASS = TRUE
+endif
+endif
+
+include ${MWHOME}/make.noise
+include ${MWHOME}/mw.defines
+include ${MWHOME}/mw.defines-clearcase
+
+# Disable clearmake dependenc generation
+.NO_CMP_NON_MF_DEPS: all
+
+# Disable clearcase parallele makefiles.
+.NOTPARALLEL:
+
+ifndef BUILDMSG
+BUILDMSG=
+endif
+
+ifndef NO_STRICT
+STRICT=1
+endif
+
+#ifndef USERX_HOME
+#define USERX_HOME /vobs/build/userx
+#endif
+
+SDK_INC_PATH=${USERX_HOME}/public/sdk/inc
+SDK_LIB_PATH=${USERX_HOME}/public/sdk/lib/${MWARCH}
+SAG_INC_PATH=${USERX_HOME}/public/sag/inc
+
+###########################################################################
+#
+# The files lists in this section were adapted from (copied?) from the "sources" file
+# used by NT build.
+#
+
+ifeq "${COMPILE_OPTION}" ""
+COMPILE_OPTION=debug
+endif
+
+TARGETPATH  = obj
+O           = ${TARGETPATH}/unix/${MWOS}
+HERE_FROM_O = ../../..
+
+THIS = GNUmakefile
+
+CHECKED_ALT_DIR=1
+NO_BROWSER_FILE=1
+SYNCHRONIZE_BLOCK=1
+
+WIN_INC_PATH=${USERX_HOME}/private/windows/inc
+
+PASS0_SOURCEDIR = ../proxy/${O}
+MIDL_UUIDDIR    = ../uuid/${O}
+
+
+# needs to run on Win95 and NT 3.51
+MIDL_OPTIMIZATION=$(MIDL_OPTIMIZATION) -Oic
+
+C_DEFINES       = -DWIN32=300 -D_CAIRO_=300 -DREGISTER_PROXY_DLL
+
+#ifndef FREEBUILD
+#  MKTYPLIB_FLAGS  = $(MKTYPLIB_FLAGS) -DDEBUG
+#  C_DEFINES       = $(C_DEFINES) -DDEBUG
+#endif
+
+MKTYPLIB_FLAGS  = $(MKTYPLIB_FLAGS) /OLD -DWINNT -h $*.h
+
+# HOW TO ADD A FILE:
+#
+# You should simply add your files to the lists below according
+# to these instructions.  In most cases, you should not need to
+# add anything to makefile.inc.  The inference rules there cover
+# almost everything but the hole in the ozone layer.
+#
+# IDL FILES
+#
+#  To add foo.idl to the build (as an example):
+#
+#  1) add foo.idl to the SOURCES list.  This will create foo.tlb and obj\foo.h.
+#
+#  2) copy foo.idl, foo.tlb, and foo.h to their proper directories so external
+#     projects can use them.  Here's how:
+#
+#        a) foo.idl: add $(SDK_INC_PATH)\foo.idl to the NTTARGETFILE0 list.
+#           This will copy the idl file to \nt\public\sdk\inc before it is
+#           built.
+#
+#        b) foo.tlb: add $(SDK_LIB_PATH)\foo.tlb to the NTTARGETFILES list.
+#           This will copy the type library to \nt\public\sdk\lib\*.
+#
+#        a) foo.h: add $(SDK_INC_PATH)\foo.h or $(WIN_INC_PATH)\foo.h (depending
+#           on where you want the header file propagated) to the NTTARGETFILES
+#           list.  This will copy the header file to \nt\public\sdk\inc
+#           or \nt\private\windows\inc, so other projects can #include it.
+#
+#  3) Optional: to add your object library to ACTXPRXY.DLL, add entries
+#     to ..\proxy\sources and ..\proxy\dlldatax.c.
+#
+#  4) Optional: to add your GUIDs to UUID.LIB, add an entry to
+#     ..\uuid\makefile.inc.
+#
+#
+
+#
+# To build files inside iedev\inc, add them to the SOURCES list.
+# For example, given foo.idl, the results will be:
+#
+#       iedev\inc\foo.tlb
+#       iedev\inc\obj\foo.h
+#
+
+# (Notice this is in alphabetical order.  Hint. Hint.)
+
+# I don't know where this is done for win32 (davidd)
+ 
+SOURCES= \
+    shldisp.idl     
+
+
+#
+#  This happens AFTER the SOURCES list is built.
+#
+#  To propagate files from iedev\inc or iedev\inc\obj to public\sdk or
+#  windows\inc, add the destination file to NTTARGETFILES.  The inference
+#  rules in makefile.inc will copy them to the right location.
+#
+#  Because the del command (in the clean rule) cannot handle super-long
+#  lines, we have to split the list out into FILESa, FILESb, FILESc, etc.
+#  Pick your bucket, it really doesn't matter which one it goes in.
+#
+#  If you add an additional FILES? bucket, be sure to add a line to the
+#  clean rule in makefile.inc.
+#
+
+
+# (Notice this is in alphabetical order and by type.  Hint. Hint.)
+
+
+# .h files A-Z
+FILESa= \
+    $(SDK_INC_PATH)/shldisp.h   
+
+# .tlb files
+FILESb= \
+    $(SDK_LIB_PATH)/shldisp.tlb     
+
+#  Do not add files directly to NTTARGETFILES, but in one of the
+#  FILES? buckets.  Why?  See the comment block above.
+
+NTTARGETFILES=  \
+    $(FILESa) \
+    $(FILESb) 
+
+
+#
+#  This happens BEFORE the SOURCES list is built.
+#
+#  To propagate files from iedev\inc or iedev\inc\obj to public\sdk or
+#  windows\inc, add the destination file to NTTARGETFILES0.  The inference
+#  rules in makefile.inc will copy them to the right location.
+#
+#  Because the del command (in the clean rule) cannot handle super-long
+#  lines, we have to split the list out into FILES0a, FILES0b, FILES0c, etc.
+#  Pick your bucket, it really doesn't matter which one it goes in.
+#
+#  If you add an additional FILES0? bucket, be sure to add a line to the
+#  clean rule in makefile.inc.
+#
+
+
+# (Notice this is in alphabetical order and by type.  Hint. Hint.)
+
+# BUGBUG : GNUmake doesn't have a good way for testing for the existence of a file.
+# Since these files DON'T exist in our tree, I'm just going to comment this out for
+# now -- JayF
+#
+# !if exist($(BASEDIR)\private\admin\services\sched\types\idl\mstask.idl)
+#     $(SDK_INC_PATH)\mstask.h        \
+#     $(SDK_INC_PATH)\mstask.idl      \
+# !endif
+
+# .idl files A-M
+
+# .h files A-M
+FILES0a = \
+    $(SDK_INC_PATH)/shlobj.h        \
+    $(WIN_INC_PATH)/shlobjp.h       \
+
+#  Do not add files directly to NTTARGETFILE0, but in one of the
+#  FILES0? buckets.  See the comment block above.
+
+NTTARGETFILE0=  \
+    $(FILES0a) \
+
+# List any file that is relocated.  For instance, omscript at one time
+# was built in private\windows\inc.  It's now in public\sdk\inc.  Adding
+# the original name to the RELOCATED_FILES macro will ensure it's deleted
+# from the old location during a clean build (hopefully avoiding bogus build
+# errors.  (See the clean rule in makefile.inc.)
+
+RELOCATED_FILES = \
+    $(WIN_INC_PATH)/omscript.*
+
+TARGETSRCS += ${SOURCES:%=${O}/%}
+
+ifdef FIRST_PASS 
+TARGETSRCS += $(NTTARGETFILE0)
+endif
+ifdef SECOND_PASS
+TARGETSRCS += ${NTTARGETFILES}
+endif
+
+###########################################################################
+
+ifeq (${MW_CLEARCASE},yes)  # Why?
+WINERR_TARGETS =
+else
+WINERR_TARGETS = $(SDK_INC_PATH)/winerror.h nlsmsg/winerror.rc
+endif
+
+## Tools ##
+
+TOOLSDIR =     ${MWHOME}/lib-${MWCONFIG_NAME}
+SLASH =        ${TOOLSDIR}/Slash
+DEC_PROTECT =  ${TOOLSDIR}/dec_protect
+HSPLIT =       ${TOOLSDIR}/hsplit
+WCSHDR =       ${TOOLSDIR}/wcshdr
+HEXTRACT =     ${TOOLSDIR}/hextract
+LISTMUNG =     ${TOOLSDIR}/listmung
+WS2HDR =       ${TOOLSDIR}/ws2hdr
+MC =           ${MWHOME}/bin/mc
+MIDL :=        midl
+
+RM =           /bin/rm -f
+PROTECT =      chmod a-w 
+UNPROTECT =    chmod a+w
+CP =           /bin/cp
+
+.NO_CMP_SCRIPT: ${TARGETSRCS}
+.NO_CMP_NON_MF_DEPS: ${TARGETSRCS}
+
+all: ${SDK_LIB_PATH} ${O} ${SPECIALFILES} ${MIDL_UUIDDIR} ${PASS0_SOURCEDIR} ${TARGETSRCS}
+
+clean:
+	-${RM} $(FILES0a)
+	-${RM} $(FILES0b)
+	-${RM} $(FILESa)
+	-${RM} $(FILESb)
+	-${RM} $(RELOCATED_FILES)
+	-${RM} -r ${O}
+
+proxy: ${PROXY_FILES}
+iid: ${UUID_FILES}
+
+rebuild: clean all
+
+###########################################################################
+#
+# Implicit rules
+#
+
+X_TO_PUBLIC_H = \
+	${RM} $@ ; \
+	${WCSHDR} < $< | ${DOS2UNIX} > $@
+
+X_TO_PRIVATE_H = \
+	${RM} $@ ; \
+	${WCSHDR} < $< | ${DOS2UNIX} > $@
+
+COPY = \
+	${RM} $@ ; \
+	${DOS2UNIX} < $< > $@
+
+
+# This rule cannot take any actions, not even an ECHO!  Otherwise the config records
+# generated by midl will get trashed.
+
+ifdef SECOND_PASS
+${MIDL_UUIDDIR}/%_i.c ${PASS0_SOURCEDIR}/%_p.c ${SDK_INC_PATH}/%.h: $(O)/%.idl ${THIS}
+	${ECHOSOURCE}
+	${RM} ${SDK_INC_PATH}/$*.h ${MIDL_UUIDDIR}/$*_i.c ${PASS0_SOURCEDIR}/$*_p.c
+	cd ${O}; ${MIDL} -DUNIX -I${SDK_INC_PATH} -I${HERE_FROM_O} -I${SAG_INC_PATH} $(notdir $<) -dlldata /dev/null \
+				     -h ${SDK_INC_PATH}/$*.h \
+				     -iid ${HERE_FROM_O}/${MIDL_UUIDDIR}/$*_i.c \
+				     -proxy ${HERE_FROM_O}/${PASS0_SOURCEDIR}/$*_p.c \
+				     -tlb /dev/null
+	-${PROTECT} ${SDK_INC_PATH}/$*.h ${MIDL_UUIDDIR}/$*_i.c ${PASS0_SOURCEDIR}/$*_p.c
+
+${SDK_LIB_PATH}/%.tlb: $(O)/%.idl ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_LIB_PATH)/$(notdir $@) ]"
+	${RM} ${SDK_LIB_PATH}/$*.tlb
+	cd ${O}; ${MIDL} -DUNIX -I${SDK_INC_PATH} -I${HERE_FROM_O} -I${SAG_INC_PATH} $(notdir $<) -dlldata /dev/null \
+				     -h /dev/null \
+				     -iid /dev/null \
+				     -proxy /dev/null \
+				     -tlb ${SDK_LIB_PATH}/$*.tlb
+	-${PROTECT} ${SDK_LIB_PATH}/$*.tlb
+endif
+
+$(O)/%.idl: %.idl
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(SDK_INC_PATH)/%.h: $(O)/%.x ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_INC_PATH)/$(notdir $@) ]"
+	${X_TO_PUBLIC_H}
+	-${PROTECT} $@
+
+$(WIN_INC_PATH)/%.h: $(O)/%.x ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(WIN_INC_PATH)/$(notdir $@) ]"
+	${X_TO_PRIVATE_H}
+	-${PROTECT} $@
+
+$(WIN_INC_PATH)/%.h: %.h ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(WIN_INC_PATH)/$(notdir $@) ]"
+	${COPY}
+	-${PROTECT} $@
+
+$(SDK_INC_PATH)/%.h: %.h ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_INC_PATH)/$(notdir $@) ]"
+	${COPY}
+	-${PROTECT} $@
+
+$(SDK_INC_PATH)/%.hpp: %.hpp ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_INC_PATH)/$(notdir $@) ]"
+	${COPY}
+	-${PROTECT} $@
+
+$(SDK_INC_PATH)/%.idl: %.idl ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_INC_PATH)/$(notdir $@) ]"
+	${COPY}
+	-${PROTECT} $@
+
+$(SDK_INC_PATH)/%.dlg: %.dlg ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(SDK_INC_PATH)/$(notdir $@) ]"
+	${COPY}
+	-${PROTECT} $@
+
+# $(SDK_INC_PATH)/%.h: %.idl ${O}/%.h
+#       ksh -ec 'if [ $< -nt ${O}/$*.h ] ; then \
+#           echo +++ ;\
+#           echo +++ Regenerating ${O}/$*.h from $< ;\
+#           echo +++ ;\
+#           ${MIDL} $< /out ${O} ;\
+#       fi'
+
+$(O)/%.x $O/%p.x: %.w ${THIS}
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $*.x) $(O)/$(notdir $*p.x) ]"
+	${RM} $O/$*.x $O/$*p.x
+	${HSPLIT} -e -o $O/$*.x $O/$*p.x $<
+	-${PROTECT} $O/$*.x $O/$*p.x
+
+###########################################################################
+#
+# Explicit rules
+#
+
+#
+# Special rules for splitting out .w files
+#
+
+###########################################################################
+
+${SDK_LIB_PATH} ${O} ${MIDL_UUIDDIR} ${PASS0_SOURCEDIR}:
+	${ECHONOISE} "[ $@ ]"
+	mkdir -p $@
+
+.PHONY: all clean
+
+
+
+
+
+
+
+
+
+
+
+
+

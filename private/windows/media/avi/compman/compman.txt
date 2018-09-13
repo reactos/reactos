@@ -1,0 +1,216 @@
+DOC file for AVI Installable compressors
+ToddLa
+----------------------------------------------------------------------------
+
+This document covers what happens (from the drivers point of
+view) when AVI loads, saves, edits, and plays a AVI file.
+
+
+FORMAT OF A AVI FILE -------------------------------------------------------
+
+AVI files are RIFF files with the following structure:
+
+    RIFF('AVI'
+        LIST('hdrl'
+            avih(<MainAVIHeader>)
+            LIST ('strl'
+                strh(<Stream header>)
+                strf(<Stream format>)
+                strd(<Stream data>)
+            )
+        )
+        LIST('movi'
+	    00??(<driver Data>)
+            .
+            .
+            .
+	    00??(<driver Data>)
+        )
+        indx(<AVIIndex>)
+    )
+
+OPENING a file for decompression -------------------------------------------
+
+this is what the driver see's when a AVI file is opened for playback
+or editing.
+
+
+    1.	The AVI runtime driver gets the FOURCC driver name from the stream
+	header and tries to open the named driver.  drivers are
+	listed in SYSTEM.INI
+
+	    [Installable Compressors]
+		VIDC.SAMP = icsample.drv
+
+	This example lists a video driver ('VIDC') with the name 'SAMP'.
+
+	The first message a device driver receives is DRV_OPEN. Your 
+        device driver should allocate any instance data it uses when 
+        it processes this message. (Your driver will receive DRV_OPEN 
+        each time it is opened.)
+
+    2.	If a 'strd' chunk exists for this stream, the AVI runtime driver 
+        will send your driver an ICM_SETSTATE message. The <MI>lParam1<D> 
+        parameter will contain a pointer to the data from 
+	the file.
+
+    3.	Depending on how the AVI runtime driver will use the decompressed 
+        data, it will send either ICM_DECOMPRESS_GET_FORMAT
+	or ICM_DECOMPRESS_QUERY to determine the decompression format.
+
+	ICM_DECOMPRESS_GET_FORMAT:
+
+	    When your driver gets ICM_DECOMPRESS_GET_FORMAT, 
+	    <MI>lParam1<D> points to the 'strf' data, and <MI>lParam2<D> 
+            points to a <B>BITMAPINFOHEADER<D> structure.
+
+	    Your driver should fill in the <B>BITMAPINFOHEADER<D> with 
+            information about the format it will use for decompressing 
+            the data.
+
+	    If your device driver cannot handle the input format, or 
+            the input format 'strf' is incorrect, your driver 
+            should return ICMERR_BADFORMAT to fail the message.
+
+	ICM_DECOMPRESS_QUERY:
+
+	    When your driver gets ICM_DECOMPRESS_QUERY, 
+	    <MI>lParam1<D> points to the 'strf' data, and <MI>lParam2<D> 
+            points to a <B>BITMAPINFOHEADER<D> structure. For this message, 
+            the AVI runtime driver filled the structure with a 
+            description of the output format it wants to use.
+
+	    The sugested format will be the native or best format
+	    for the decompressed data.  For example, 
+            if playback is on an  8-bit device, the AVI runtime driver 
+            will suggest an 8-bit DIB.
+
+	    Your driver does not have to accept the suggested format. 
+            If you fail the message, the AVI runtime driver will 
+            suggest alternate formats until your driver accepts one. 
+            If your driver exhausts the list of formats normally used, 
+            the AVI runtime driver will request a format with 
+            ICM_DECOMPRESS_GET_FORMAT.
+
+    4.	When the AVI runtime driver is ready, it sends the 
+        ICM_DECOMPRESS_BEGIN message to the device driver. The AVI runtime 
+        driver sets <MI>lParam1<D> to the input format ('strf' data) 
+        and <MI>lParam2<D> to the decompressed format of the DIB.
+	If either of the formats is incorrect, your device driver 
+        should return ICERR_BADFORMAT.
+
+    5.	The AVI runtime driver sends ICM_DECOMPRESS each time 
+        it has an image to decompress. The <B>ICDECOMPRESS<D> 
+        structure specified in <MI>lParam1<D> contains the 
+        decompression parameters. The AVI runtime driver 
+        uses the flags in the AVI index to ensure decompression 
+        will start on key frame boundries, 
+
+    6.	Your device driver receives ICM_DECOMPRESS_END when 
+        the AVI runtime driver no longer needs data decompressed.
+        When the device driver is no longer needed the system will 
+        close it by sending DRV_CLOSE.
+
+
+COMPRESSING a file ------------------------------------------------------
+
+This is the sequence of messages that occur for compressing video data.
+
+NOTE: When an AVI file is recompressed, each frame is decompressed to 
+a full frame and passed to the decompressor.
+
+
+    1.  The first message a device driver receives is DRV_OPEN. Your 
+        device driver should allocate any instance data it uses when 
+        it processes this message. (Your driver will receive DRV_OPEN 
+        each time it is opened.)
+
+
+    2.	The AVI runtime driver restores the device driver state 
+        by sending ICM_SET_STATE. (The state is recalled from the 
+        strd data chunk of the AVI file. The state information was 
+        obtained with the ICM_GET_STATE message.)
+
+    3.	The AVI runtime driver determines the size of the buffer needed to 
+        hold the compressed data format by sending ICM_COMPRESS_GET_FORMAT. 
+        When requesting the buffer size, the AVI runtime driver uses 
+        <MI>lParam1<D> to point to a <B>BITMAPINFOHEADER<D> structure 
+        and sets <MI>lParam2<D> to NULL. Your device driver should 
+        return the size of the buffer in bytes.
+
+    4.	The AVI runtime driver requests the output format by sending 
+        ICM_COMPRESS_GET_FORMAT with valid pointers in 
+        both <MI>lParam1<D> and <MI>lParam2<D>. For this case, 
+        your device driver should return the output format in 
+        the buffer pointed to by <MI>lParam2<D>. 
+
+	This data becomes the <B>strf<D> chunk in the AVI file.
+	The data must start out like a <B>BITMAPINFOHEADER<D> data 
+        structure. A color table (if used) follows this information. 
+	The last part of the data is any additional information 
+	required to decompress the file.
+
+    5.	When the AVI runtime driver is ready to start compressing data 
+        it sends the ICM_COMPRESS_BEGIN message. 
+        The AVI runtime driver uses <MI>lParam1<D> to point to the 
+        format of the data being compressed, and uses <MI>lParam2<D> 
+        to point to format for the compressed data. If your device 
+        driver cannot handle the formats, or if they are incorrect, 
+        your driver should return ICERR_BADFORMAT to fail the message.
+
+    6.	Before the AVI runtime driver starts compressing data, it sends 
+        ICM_COMPRESS_GET_SIZE. For this message the AVI runtime driver 
+        uses <MI>lParam1<D> to point to the input format and uses 
+        <MI>lParam2<D> to point to the output format.
+
+	Your driver should return the worst case size (in bytes) that any
+	frame can compress to.  The AVI runtime driver uses this size 
+        value when it allocates buffers for the compression.
+
+    7.	The AVI runtime driver sends ICM_COMPRESS for each frame it 
+        wants compressed. It uses <MI>lParam1<D> to point 
+        to an <B>ICCOMPRESS<D> structure containing the parameters 
+        used for compression.
+
+	Your driver uses the buffers pointed to by the fields of 
+        <B>ICCOMPRESS<D> for returning information 
+        about the compressed data. 
+
+        Your driver returns the actual size of the compressed data in the
+	<B>biSizeImage<D> field in the <B>BITMAPINFO<D> data structure 
+        pointed to by the <B>lpbiOutput<D> field of <B>ICCOMPRESS<D>.
+
+        Your driver returns the chunk ID 
+        in the buffer specified in the <B>lpckid<D> that it 
+        assigns to the data.
+
+	Your driver also returns a DWORD of flags in the buffer pointed 
+        to by <B>lpdwFlags<D>. The flags will be placed	in the AVI 
+        index for this chunk. The following flags are defined:
+
+	    AVIIF_TWOCC 	Specifies ckid is a TWOCC.
+
+	    AVIIF_KEYFRAME	Specifies this frame is a key frame.
+
+	Your driver can define its own flags but they must be set in the high
+	word only.
+
+	If your driver handles temporal compression (that is, the compression 
+        is based on the difference between two frames), it needs to save the
+	previous frame(s) for temporal compresssion.
+
+    8.	Your device driver receives ICM_DECOMPRESS_END when 
+        the AVI runtime driver no longer needs data compressed, or when 
+        the AVI runtime driver is changing the format or palette.
+        If the AVI runtime driver will continue compressing data, it 
+        will start the sequence by sending ICM_COMPRESS_BEGIN.
+        When the device driver is no longer needed the system will 
+        close it by sending DRV_CLOSE.
+
+
+      The driver might also receive a ICM_COMPRESS_QUERY message 
+      to determine if it supports the input or output format.
+
+COMPRESSING A BUNCH OF FRAMES -------------------------------------------
+
+    TBD

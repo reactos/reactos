@@ -1,0 +1,114 @@
+#ifndef _HTMLDLG_PDL_
+#define _HTMLDLG_PDL_ 1
+
+// extra :  guid:3050f388-98b5-11cf-bb82-00aa00bdce0b
+
+#include "types.pdl"
+#include "style.pdl"
+
+file htmldlg.pdl
+
+import types.pdl
+import style.pdl
+
+enum HTMLDlgFlag   prefix:HTMLDlgFlag    guid:3050f384-98b5-11cf-bb82-00aa00bdce0b
+    eval No        string:no        value:0
+    eval Off       string:off       value:0
+    eval 0         string:0         value:0
+    eval Yes       string:yes       value:1
+    eval On        string:on        value:1
+    eval 1         string:1         value:1
+    eval NotSet    string:NotSet    value:-1
+
+enum HTMLDlgBorder    prefix:HTMLDlgBorder    guid:3050f385-98b5-11cf-bb82-00aa00bdce0b
+    eval Thin      string:thin      value:0
+    eval Thick     string:thick     value:0x00040000L // WS_THICKFRAME
+
+enum HTMLDlgEdge    prefix:HTMLDlgEdge   guid:3050f386-98b5-11cf-bb82-00aa00bdce0b
+    eval Sunken    string:sunken    value:0
+    eval Raised    string:raised    value:16  // FRAMEOPTIONS_NO3DBORDER
+
+enum HTMLDlgCenter   prefix:HTMLDlgCenter    guid:3050f387-98b5-11cf-bb82-00aa00bdce0b
+    eval No        string:no        value:0
+    eval Off       string:off       value:0
+    eval 0         string:0         value:0
+    eval Yes       string:yes       value:1
+    eval On        string:on        value:1
+    eval 1         string:1         value:1
+    eval Parent    string:parent    value:1
+    eval Desktop   string:desktop   value:2
+    
+
+interface IHTMLDialog super:IDispatch guid:3050f216-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CHTMLDlg:dialogTop
+    refprop     CHTMLDlg:dialogLeft
+    refprop     CHTMLDlg:dialogWidth
+    refprop     CHTMLDlg:dialogHeight
+    refprop     CHTMLDlg:dialogArguments
+    refprop     CHTMLDlg:menuArguments
+    refprop     CHTMLDlg:returnValue
+    refmethod   CHTMLDlg:close
+    refmethod   CHTMLDlg:toString
+
+interface IHTMLDialog2  super:IDispatch guid:3050f5e0-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CHTMLDlg:status
+    refprop     CHTMLDlg:resizable
+
+
+interface IHTMLModelessInit super:IDispatch guid:3050f5e4-98b5-11cf-bb82-00aa00bdce0b
+    refprop   CThreadDialogProcParam:parameters
+    refprop   CThreadDialogProcParam:optionString
+    refprop   CThreadDialogProcParam:moniker
+    refprop   CThreadDialogProcParam:document
+
+class CThreadDialogProcParam name:ThreadDialogProcParam primaryinterface:IHTMLModelessinit guid:3050f5eb-98b5-11cf-bb82-00aa00bdce0b
+    property  parameters    dispid:DISPID_HTMLDLG+0  atype:VARIANT    type:VARIANT   get  abstract 
+    property  optionString  dispid:DISPID_HTMLDLG+1  atype:VARIANT    type:VARIANT   get  abstract 
+    property  showFlag      dispid:DISPID_HTMLDLG+3  atype:long       type:long      get  abstract
+    property  flags         dispid:DISPID_HTMLDLG+4  atype:long       type:long      get  abstract
+    property  parentHwnd    dispid:DISPID_HTMLDLG+5  atype:long       type:long      get  abstract
+    property  moniker       dispid:DISPID_HTMLDLG+6  atype:IUnknown*  type:IUnknown* get  abstract 
+    property  document      dispid:DISPID_HTMLDLG+7  atype:IUnknown*  type:IUnknown* get  abstract 
+
+
+
+tearoff CHTMLDlg interface:IHTMLDialog2
+tearoff CHTMLDlg interface:IHTMLDialog
+tearoff CHTMLDlg interface:IDispatchEx BaseImpl:super::
+    tearmethod GetIDsOfNames    mapto:GetIDsOfNames
+    tearmethod Invoke           mapto:Invoke
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:InvokeEx
+    tearmethod GetNextDispID    mapto:GetNextDispID
+
+class CHTMLDlg name:HTMLDialog  guid:3050f28a-98b5-11cf-bb82-00aa00bdce0b primaryinterface:IHTMLDialog
+    property  dialogTop   atype:VARIANT    type:CUnitValue      dispid:STDPROPID_XOBJ_TOP    caa get set setaahr getaa bindable default:MAKE_PIXEL_UNITVALUE(30)  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property  dialogLeft  atype:VARIANT    type:CUnitValue      dispid:STDPROPID_XOBJ_LEFT   caa get set setaahr getaa bindable default:MAKE_PIXEL_UNITVALUE(30)  ppflags:PP_UV_SCALER_OR_PERCENT maxstrlen:pdlLength
+    property  dialogWidth atype:VARIANT    type:CUnitValue      dispid:STDPROPID_XOBJ_WIDTH  caa get set setaahr bindable default:MAKE_EM_UNITVALUE(31.5) ppflags:PP_UV_SCALER_OR_PERCENT   min:0 maxstrlen:pdlLength
+    property  dialogHeight atype:VARIANT    type:CUnitValue     dispid:STDPROPID_XOBJ_HEIGHT caa get set setaahr bindable default:MAKE_EM_UNITVALUE(32.5) ppflags:PP_UV_SCALER_OR_PERCENT   min:0 maxstrlen:pdlLength
+    property  dialogArguments atype:VARIANT                     dispid:DISPID_HTMLDLG+0      abstract get     
+    property  returnValue atype:VARIANT                         dispid:DISPID_HTMLDLG+1      abstract get set maxstrlen:pdlNoLimit
+    property  center      atype:BSTR      type:HTMLDlgCenter    dispid:DISPID_HTMLDLG+3      caa get set hidden  setaahr             noassigndefault:HTMLDlgCenterParent   default:HTMLDlgCenterDesktop maxstrlen:pdlToken
+    property  scroll      atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+4          get set hidden  member:_enumfScroll                                       default:HTMLDlgFlagYes       maxstrlen:pdlToken
+    property  border      atype:BSTR      type:HTMLDlgBorder    dispid:DISPID_HTMLDLG+5      caa get set hidden  setaahr                                                   default:HTMLDlgBorderThin    maxstrlen:pdlToken
+    property  edge        atype:BSTR      type:HTMLDlgEdge      dispid:DISPID_HTMLDLG+6          get set hidden  member:_enumEdge                                          default:HTMLDlgEdgeRaised    maxstrlen:pdlToken
+    property  minimize    atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+8          get set hidden  member:_enumfMin    noassigndefault:HTMLDlgFlagYes        default:HTMLDlgFlagNo        maxstrlen:pdlToken
+    property  maximize    atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+9          get set hidden  member:_enumfMax    noassigndefault:HTMLDlgFlagYes        default:HTMLDlgFlagNo        maxstrlen:pdlToken
+    property  help        atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+10         get set hidden  member:_enumfHelp   noassigndefault:HTMLDlgFlagYes        default:HTMLDlgFlagYes       maxstrlen:pdlToken
+    property  menuArguments atype:VARIANT                       dispid:DISPID_HTMLDLG+13     abstract get     
+    property  font        atype:BSTR      type:CStyleComponent  dispid:DISPID_A_FONT         caa get set         hidden  szattribute:font              ppflags:PROPPARAM_NOPERSIST                            maxstrlen:pdlNoLimit
+    property  fontSize    atype:VARIANT   type:CUnitValue       dispid:DISPID_A_FONTSIZE     caa get set setaahr hidden  szattribute:FONT-SIZE         ppflags:PP_UV_UNITFONT  default:NULL_UNITVALUE maxstrlen:pdlLength
+    property  fontWeight  atype:BSTR      type:styleFontWeight  dispid:DISPID_A_FONTWEIGHT   caa get set setaahr hidden  szattribute:FONT-WEIGHT   default:styleFontWeightNotSet                              maxstrlen:pdlToken
+    property  fontFamily  atype:BSTR      type:CStr             dispid:DISPID_A_FONTFACE     caa get set setaahr hidden  szattribute:FONT-FAMILY       ppflags:PROPPARAM_STYLESHEET_PROPERTY                  maxstrlen:pdlNoLimit
+    property  fontStyle   atype:BSTR      type:styleFontStyle   dispid:DISPID_A_FONTSTYLE    caa get set setaahr hidden  szattribute:FONT-STYLE    default:styleFontStyleNotSet                               maxstrlen:pdlToken
+    property  fontVariant atype:BSTR      type:styleFontVariant dispid:DISPID_A_FONTVARIANT  caa get set setaahr hidden  szattribute:FONT-VARIANT  default:styleFontVariantNotSet                             maxstrlen:pdlToken
+    property  status      atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+14         get set         hidden  member:_enumfStatus      default:HTMLDlgFlagNotSet    noassigndefault:HTMLDlgFlagYes   maxstrlen:pdlToken
+    property  resizable   atype:BSTR      type:HTMLDlgFlag      dispid:DISPID_HTMLDLG+15         get set         hidden  member:_enumfResizeable   default:HTMLDlgFlagNo     noassigndefault:HTMLDlgFlagYes   maxstrlen:pdlToken
+
+    method HRESULT close                                       dispid:DISPID_HTMLDLG+11 ()
+
+    method HRESULT toString   dispid:DISPID_HTMLDLG+12   (out retval type:BSTR* arg:String ) 
+
+
+#endif // _HTMLDLG_PDL_
+

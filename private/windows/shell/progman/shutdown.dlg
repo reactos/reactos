@@ -1,0 +1,39 @@
+//
+//  These dialogs are shared by Progman and are included in
+//  windows\shell\progman\progman.dlg. Therefore,  changes
+//  to them or the filename should not be made unless
+//  tested with Progman first.
+//
+//  11/10/92  johannec
+//
+
+IDD_SHUTDOWN_QUERY DIALOG 29, 47, 195, 100
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Shutdown Computer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    AUTORADIOBUTTON "&Shutdown", IDD_SHUTDOWN, 37, 40, 98, 10,
+                    WS_GROUP
+    AUTORADIOBUTTON "Shutdown and &Restart", IDD_RESTART, 37, 53, 139,
+                    10
+    AUTORADIOBUTTON "Shutdown and &Power off", IDD_POWEROFF, 37, 66,
+                    137, 10
+    LTEXT           "Shutting down will end your Windows NT session and prepare your computer to be turned off.",
+                    IDD_TEXT, 37, 10, 135, 26, WS_GROUP
+    PUSHBUTTON      "OK", IDOK, 49, 75, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "Cancel", IDCANCEL, 105, 75, 40, 14, WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK2, 49, 80, 40, 14, WS_TABSTOP
+    PUSHBUTTON      "Cancel", IDCANCEL2, 105, 80, 40, 14, WS_TABSTOP
+    ICON            32516, IDD_ICON, 9, 10, 18, 20
+END
+
+IDD_END_WINDOWS_SESSION DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 170, 50
+CAPTION "Logoff Windows NT"
+FONT 8 "MS Shell Dlg"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_DLGFRAME | WS_POPUP | WS_SYSMENU
+BEGIN
+    ICON            32516, IDD_ICON, 5, 5, 18, 16
+    LTEXT           "This will end your Windows NT session.", IDD_TEXT, 30, 10, 130, 8
+    DEFPUSHBUTTON   "OK", IDOK, 35, 30, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 95, 30, 40, 14
+END

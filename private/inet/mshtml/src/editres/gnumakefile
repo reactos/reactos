@@ -1,0 +1,64 @@
+PRODUCT = F3
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES_FILE = sources
+SOURCES_IMPORTS = TARGETNAME TARGETTYPE INCLUDES
+
+DLLDEF_EXPORTS = \
+    _____mshtmler_initDLL
+
+WRESOURCE = $(O)/mshtmler.rc
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+PROJECT_CFLAGS = ${INCLUDES:%=-I%}
+APP_RCFLAGS = -I${RUN.dir}
+
+ifeq (${COMPILE_OPTION},debug)
+DEBUG_LIBS = -lmshtmdbg
+endif
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+DLLMAIN = DllMain
+ 
+PROJECT_DLLFLAGS := \
+	-u ${DLLMAIN} \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS} -L/vobs/build/mw/lib-sunos5_debug
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+SILENT_CPP := gcc -P -E -DUNIX
+SILENT_CPP2 := ${APOGEEDIR}/apcc -P -DUNIX
+
+$(O)/mshtmler.rc: mshtmler.rc $(O)/edbook.dlx $(O)/edlink.dlx $(O)/forchar.dlx $(O)/insimage.dlx
+	cat $< | ${DOS2UNIX} >$@
+
+$(O)/dlg.sed: dlg.sed
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+
+$(O)/%.dh: %.dh
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+
+$(O)/%.C: %.dlg
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+
+${O}/%.dls: $(O)/%.C  $(O)/dialogs.dh
+	${ECHOOBJ}
+	-$(SILENT_CPP) $< > $@
+
+
+$(O)/%.dlx:  $(O)/%.dls $(O)/dlg.sed
+	${ECHOOBJ}
+	sed -f $(O)/dlg.sed < $< > $@
+
+

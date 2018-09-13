@@ -1,0 +1,116 @@
+###############################################################################
+# token.per
+#
+# Perl script for replacing a token in a text file.
+#
+# History:
+#   04/11/96 RossW	Created.
+#   07/03/96 t-jackie	Modified.
+#
+# Copyright(C) 1996.  Microsoft Corporation.  All rights reserved.
+###############################################################################
+
+
+if($ARGV[0] eq "") { &PRINTUSAGE; exit; }
+
+%Tokens;
+
+# Handling the switches.
+while($ARGV[0] =~ /^-/)
+{
+   $_ = shift;
+
+   /^-(v)/i && (eval "\$$1 = 1", next);
+   /^-t([^=]*)=([^\s]*)/i && (eval "\$Tokens{\$1} = \"\$2\"", next);
+   die "Unrecognized switch: $_\n";
+}
+
+$x1 = sprintf "%4.4lx", $Tokens{TOK_BUILDNUM};
+$Tokens{TOK_BLDNUMSTR} = sprintf "%2s,%2s", substr($x1, 0, 2), substr($x1, 2, 2);
+
+if($ARGV[0] eq "") { &PRINTUSAGE; die "No input file given!"; }
+
+# Not a switch, must be the input file.
+$file = $ARGV[0];
+
+if($v) { print STDERR "\n"; }
+
+# Handling the environment variable for external builds.
+$BuildType = $ENV{'BUILDTYPE'};
+
+# Setting flag if BUILDTYPE environment variable is not set.
+if($BuildType eq "")
+{
+   if($v) { print STDERR "BUILDTYPE environment variable not set!\n"; }
+}
+
+if($v) { print STDERR "Opening the input file: $file\n"; }
+open(INPUT, "<$file") || die "Could not open $file\n";
+
+
+if($v) { print STDERR "Replacing tokens.\n"; }
+
+$omit = 0;
+$linecount = 0;
+
+while(<INPUT>)
+{
+   if($v)
+   {
+      if((++$linecount % 100) == 0)
+      { print(STDERR "line:  $linecount\n"); }
+   }
+
+   if($omit && !(/^\s*<\/BUILDTYPE>\s*$/)) { next; }
+
+   foreach $key (sort keys(%Tokens))
+   {
+      s/$key/$Tokens{$key}/g;
+   }
+
+   if(/^\s*<BUILDTYPE=([^>]*)>\s*$/)
+   {
+      if($BuildType eq "") { $omit = 0; next; }
+
+      $keep = 0;
+      @Types = split(/,/, $1);
+      foreach $type (@Types)
+      {
+        if("\U$BuildType\E" eq "\U$type\E") { $keep = 1; last; }
+      }
+      if(!$keep) { $omit = 1; }
+      next;
+   }
+   elsif(/^\s*<\/BUILDTYPE>\s*$/)
+   {
+      $omit = 0;
+      next;
+   }
+
+   print;
+}
+
+if($omit && $v) { print STDERR "No end of INTERNAL flag!\n"; }
+
+close(INPUT);
+
+if($v) { print STDERR "Done!\n"; }
+
+
+sub PRINTUSAGE
+{
+    print STDERR "\ntoken.per v0.2 usage:\n";
+    print STDERR "\nperl token.per [-v] [-tsymbol1=value1 .. -tsymbolX=valueX] <TextFile>\n\n";
+    print STDERR "     <TextFile>      The file to replace tokens in.\n";
+    print STDERR "     -tsymbol=value  Define a new symbol value.\n";
+    print STDERR "     -v              verbose mode; default is quiet.\n";
+    print STDERR "\nOutput goes to STDOUT, errors to STDERR.\n";
+    print STDERR "\nInclusion of lines based on BUILDTYPE:\n";
+    print STDERR "\t1. Set the environment variable BUILDTYPE.\n";
+    print STDERR "\t2. In the input file put <BUILDTYPE=type1,type2,..typeN>\n";
+    print STDERR "\t   on the line before lines to be included\n";
+    print STDERR "\t   if BUILDTYPE == type1 | type2 | .. | typeN\n";
+    print STDERR "\t3. In the input file put </BUILDTYPE> on the line after\n";
+    print STDERR "\t   the inclusion lines.\n";
+    print STDERR "The BUILDTYPE lines in the input file will be removed by this program.\n\n";
+}

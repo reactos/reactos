@@ -1,0 +1,20 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Run a DLL as an App"
+#define VER_INTERNALNAME_STR            "rundll"
+#ifndef WINNT
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1995"
+#endif
+#define VER_ORIGINALFILENAME_STR        "RUNDLL.EXE"
+
+
+#include <common.ver>

@@ -1,0 +1,49 @@
+# This makefile was generated automatically by mwgenmake.
+COMPONENT = SHELL
+PRODUCT = SHDOCVW_SRCW
+
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+NO_BROWSER_FILE=1
+
+VPATH = ..
+
+SOURCES =  \
+	filetypw.cpp
+
+DEFINES = \
+	-DIN_SHDOCVW \
+	-DFEATURE_FRAMES \
+	-DMSOCT2=1 \
+	-DFEATURE_URLHIST \
+	-DFEATURE_PICS \
+	-DVSTF \
+	-DNO_FILETYPES
+
+# Removed from UNIX-RTW
+#	-DBETA1_DIALMON_HACK \
+
+WLIB	= shdocvwsrcw
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS = ${SOURCES:%.cpp=%.o}
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+PROJECT_CFLAGS = ${DEFINES}
+
+__cpluspluc = true
+
+include $(MWHOME)/make.rules.simple
+
+## filetypw.cpp is now being generated from filetype.cpp
+../filetypw.cpp:../filetype.cpp
+	echo "#ifndef UNICODE"               > ../filetypw.cpp
+	echo "#define UNICODE"              >> ../filetypw.cpp
+	echo "#endif\n"                     >> ../filetypw.cpp
+	echo "#define STATIC_HIMAGELISTS\n" >> ../filetypw.cpp
+	cat  ../filetype.cpp                >> ../filetypw.cpp

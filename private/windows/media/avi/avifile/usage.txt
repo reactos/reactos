@@ -1,0 +1,192 @@
+Using AVIFile.
+
+
+Initializing the AVIFile DLL:
+Before using any of the APIs in AVIFILE.DLL, be sure to 
+call AVIStreamInit.  After using them, call AVIStreamExit.
+If you don't, bad things will happen.
+
+
+Using AVIFile to read some kind of file: 
+
+First, call AVIFileOpen with the OF_READ flag to open the file.
+Then, you can call AVIFileInfo to find out how many streams are in
+the file, and AVIFileGetStream to retrieve the streams you want.
+
+Once you have a stream, you can can AVIStreamReadFormat to get the
+bitmap format or wave format, and then call AVIStreamRead to actually
+read the data you want.
+
+
+
+
+
+AVIFile and the Component Object model:
+
+The AVIFile APIs include two interfaces, IAVIFile and IAVIStream,
+which work with the Component Object model which is part of OLE 2.0.
+
+Class IDs
+Each server or DLL that handles these interfaces needs to have a
+Globally Unique ID (GUID), so that it can be distinguished from all
+other handlers.  OLE uses 16-byte identifiers for this purpose.  If
+you're making a new handler, you can run the UUIDGEN program to make
+yourself a unique ID.
+
+The Registration Database
+The registration database is essentially just a replacement for .INI
+files.  To look at what's going on in it, run "regedit -v".
+
+DLLs which implement the IAVIFile and IAVIStream interfaces all need
+to be listed in the registration database so that they can be found
+when necessary.
+
+Each DLL must be listed in the registration database by class ID,
+with entries of the form:
+
+
+HKEY_CLASSES_ROOT\Clsid\{00020003-0000-0000-C000-000000000046} = Wave File reader/writer
+HKEY_CLASSES_ROOT\Clsid\{00020003-0000-0000-C000-000000000046}\InprocServer = wavefile.dll
+
+where HKEY_CLASSES_ROOT is the root of the entire registration
+database.  The InProcServer entry indicates that wavefile.dll can be
+loaded within an application to implement the class in question.
+
+The AVIFile library uses additional entries in the registration
+database in order to know which handler to use by default to open a
+given file.  If the file is a RIFF file, 
+
+HKEY_CLASSES_ROOT\AVIFile\Extensions\WAV = {00020003-0000-0000-C000-000000000046}
+HKEY_CLASSES_ROOT\AVIFile\RIFFHandlers\WAVE = {00020003-0000-0000-C000-000000000046}
+
+You get a GUID by running the uuidgen.exe program that comes
+with the SDK; it will spit out a 16-byte hex number for you.  You then
+make a file with a .REG extension that looks like:
+REGEDIT
+HKEY_CLASSES_ROOT\Clsid\{5C2B8200-E2C8-1068-B1CA-6066188C6002} = JFIF (JPEG) Files 
+HKEY_CLASSES_ROOT\Clsid\{5C2B8200-E2C8-1068-B1CA-6066188C6002}\InprocServer =jfiffile.dll
+HKEY_CLASSES_ROOT\AVIFile\Extensions\JPG = {5C2B8200-E2C8-1068-B1CA-6066188C6002}
+
+(Of course, use your GUID here.)  Then, on a user's machine, they can run
+regedit -s whatever.reg and these definitions will get added to the 
+registration database, allowing the system to find your DLL and know what
+sorts of files it can load.
+
+
+
+What are IAVIFile and IAVIStream?
+(Note: you may just want to read the OLE 2 documentation here....)
+
+These are examples of "interfaces".  An interface is a collection of 
+"methods".
+
+
+
+
+
+Implementing a handler DLL
+
+
+
+IClassFactory
+Obviously, it isn't enough for OLE to know the name of your DLL; some
+standard entry point is required to establish communications.  The
+method through which COMPOBJ.DLL does this isn't exactly
+straightforward.  A handler DLL must export a DllGetClassObject
+function; COMPOBJ calls that function to ask the DLL to return an
+instance of the IClassFactory interface, which it then uses to
+actually acquire an instance of the IAVIFile interface that we
+actually care about.
+
+
+Single-stream vs. Multi-stream
+AVI files obviously support more than one stream of data in each
+file.  Wave files, for example, are much simpler, in that they only
+can have exactly one stream of audio.  This means that we only need
+one stream object around, and we can make things even simpler by
+having the same object support both the stream and file interfaces.
+
+If you know that your handler will support, say, exactly one audio
+and one video stream, things are also simpler than the completely
+general case, because when you create your file object, you know that 
+you will have to create exactly two stream objects.
+
+
+Read-only vs. Read-write
+
+A handler can be written which only supports reading or writing; you
+can always return an error code from any method.  (One suggestion:
+don't return unsupported from the FindSample function, but rather
+just return that every frame is a key frame, every frame is non-empty, and 
+that the only format change is frame 0)
+
+
+Using C++
+These handlers don't actually need to be implemented using C++; it
+was just easier that way.
+
+
+Installing your handler:
+For your handler to be found, it needs to have the appropriate
+entries in the registration database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Compression DLLs
+When you call AVIMakeCompressedStream, you pass in a PAVISTREAM and
+are returned another PAVISTREAM.  This new stream can be used in two
+ways: either you can read from the stream, in which case you will
+read data which is compressed from the original stream, or you can
+write to the new stream, in which case the data you write will be
+compressed and written to the original stream.
+
+To use the "read" method, you would use the following sequence of
+calls: (extra parameters left out because I can't remember them at
+the moment)
+AVIFileOpen(&pf, "foo.avi",...)
+AVIFileGetStream(pf, &ps, ...)  
+AVIMakeCompressedStream(ps, &psC, &options, ...)
+AVIStreamReadFormat(psC, lpFormatC, &cbFormatC) // get compressed format
+for (loop through frames)
+	AVIStreamRead(psC, frame, ....)  // read compressed frames
+
+To use the "write" method:
+AVIFileOpen(&pf, "foo.avi", OF_CREATE | OF_WRITE...)
+AVIFileCreateStream(pf, &ps, &strhdr, ....)
+AVIMakeCompressedStream(ps, &psU, &options, ...)
+AVIStreamSetFormat(psU, lpFormatU, cbFormatU) // set format of data
+					// to compress
+for (loop through frames)
+	AVIStreamWrite(psU, frame, ....)  // write uncompressed frames,
+					// which will be compressed and
+					// written to the file
+
+
+
+
+
+Using the Clipboard functions
+
+The clipboard functions are easy.  To copy a bunch of streams to
+the clipboard, call AVIMakeFileFromStreams to bundle them up into a
+single PAVIFILE, then call AVIPutFileOnClipboard.  To get data off of
+the clipboard, call AVIGetFromClipboard.  To see whether any data is
+present on the clipboard, for enabling menus or such, you can just
+call AVIGetFromClipboard to see if it returns anything, and release
+any file it returns.
+
+
+

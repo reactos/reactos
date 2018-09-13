@@ -1,0 +1,24 @@
+//
+// EVNTTRAP.RC2 - resources Microsoft Visual C++ does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+	#error this file is not editable by Microsoft Visual C++
+#endif //APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+// Add manually edited resources here...
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Event Translator Config Tool"
+#define VER_INTERNALNAME_STR        "eventcmt.exe"
+#define VER_ORIGINALFILENAME_STR    "eventcmt.exe"
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////

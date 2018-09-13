@@ -1,0 +1,622 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       ActX.idl
+//
+//  Contents:
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    11-17-1996   JohannP (Johann Posch)   Created
+//
+//----------------------------------------------------------------------------
+
+import "objidl.idl";
+import "oleidl.idl";
+import "ocidl.idl";
+//import "propbag2.idl";
+
+interface IPackage;
+interface IAcceptor;
+interface ICourier;
+interface IPackageFilter;
+
+typedef GUID        DESTID;
+typedef REFGUID     REFDESTID;
+
+typedef [unique] IAcceptor *LPACCEPTOR;
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   The package description and IPackage interface definition
+//
+//  Description:
+//
+//  Each package (IPackage) has an idendifier (ITEMID) which is a guid and
+//  itentifies the package type
+//
+//  An package is an object which can be send to a distination object via
+//  a particular interface. The delivery mechanism can be a
+//  scheduler or an advisor.
+//
+//  The sources of an package can be any any object or module.
+//
+//  An package can scheduled and delivered to the destination(s) according
+//  the trigger time.
+//
+//  An package might be as simple as an alert or notification. It can
+//  be a full object form the cache or the docfile. It can be an
+//  announcment and data might not be available yet.
+//
+//  Many packages will in fact arrive with all data.
+//
+//  The same object will expose I(Async)Moniker and the client
+//  can call BindToXXX to bind to the object of the data.
+//
+//----------------------------------------------------------------------------
+
+typedef GUID PACKAGEID, *PPACKAGEID;
+typedef REFGUID REFPACKAGEID;
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("// Standard Package IDs ")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_NULL                        ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_ANOUNCMENT                  ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASK                        ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_ALERT                       ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_NOTIFICATION_INET_IDLE      ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_NOTIFICATION_INET_OFFLINE   ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_NOTIFICATION_INET_ONLINE    ;")
+cpp_quote("")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASKS_SUSPEND    ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASKS_RESUME     ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASKS_ABORT      ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASKS_COMPLETED  ;")
+cpp_quote("EXTERN_C const PACKAGEID PACKAGEID_TASKS_PROGRESS   ;")
+cpp_quote("")
+
+
+cpp_quote("#ifndef _LPPACKAGEOBJ")
+cpp_quote("#define _LPPACKAGEOBJ")
+
+[
+        local,
+        object,
+        uuid(79eacbe1-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IPackageObj : IPropertyBag
+{
+        typedef [unique] IPackageObj *LPPACKAGEOBJ;
+
+        //
+        // information about the package itself
+        // passed on by the creator of the package to the scheduler
+        // and to the advisor
+        typedef enum _tagPACKAGE_FLAGS
+        {
+             // the package is very simple and has no object, eg. alert
+             PF_NO_OBJECT               = 0x00000001
+             // the package is not a simple object - is a derived object form Package
+            ,PF_NO_SIMPLE_OBJECT        = 0x00000002
+             // package can not be persisted
+            ,PF_NOT_PERSISTABLE         = 0x00000004
+             // the sender of the package wants to notified when done
+             // the the package task
+            ,PF_NEED_COMPLETIONREPORT   = 0x00000004
+             // the send wants progress report
+            ,PF_NEED_PROGRESSREPORT     = 0x00000008
+             // the sender provides cookie
+            ,PF_USE_COOKIE              = 0x00000010
+             // member of group - the packages
+             // are delivered sequentiall - meaning
+             // a completion report is send by each one
+            ,PF_GROUP_SEQUENTIAL        = 0x00000100
+             // member of group - the packages
+             // are delivered at the same time
+            ,PF_GROUP_PARALLEL          = 0x00000200
+
+        } PACKAGE_FLAGS;
+
+        //
+        // Package data specific information
+        //  an package may have the following data components
+        //
+        typedef enum _tagPACKAGEDATA_FLAGS
+        {
+            // the package has data via the storage medium
+             PD_DATA                    = 0x00000001
+            // package has a URL
+            ,PD_URL                     = 0x00000002
+            // package has a name
+            ,PD_NAME                    = 0x00000004
+            // mime of package data is known
+            ,PD_MIME                    = 0x00000008
+            // class if package data is know
+            ,PD_CLASSID                 = 0x00000010
+            // package has a group id - obtained with GetTickCount
+            ,PD_GRUPPID                 = 0x00000020
+            // package is coming from the cache
+            ,PD_FROMCACHE               = 0x00010000
+            // other flags
+            ,PD_VOLATILE                = 0x00020000
+
+        } PACKAGEDATA_FLAGS;
+
+
+        typedef struct _tagPackageData
+        {
+            ULONG               cbSize;
+            PACKAGE_FLAGS       packageF;
+            PACKAGEDATA_FLAGS   packagedataF;
+
+            // package specific information
+            // what does the basic package need?
+            LPOLESTR            wzName;
+            LPOLESTR            wzUrl;
+            LPOLESTR            wzMime;
+            CLSID               clsid;
+
+            // the prefered tymed the client wants the data
+            TYMED       tymedPrefered;
+            STGMEDIUM   stgmed;
+        } PACKAGEDATA, *LPPACKAGEDATA;
+
+
+
+        //
+        // the package cookie is the time the package was scheduled
+        // or created. the scheduler might map the cookie
+        // the package cookie can be NULL.
+        //
+        typedef SYSTEMTIME PACKAGECOOKIE, *PPACKAGECOOKIE;
+
+        //
+        // the adivse mode indicates how the adivse should be done
+        //
+        typedef enum _tagDELIVERMODE
+        {
+            // packages are advised async be default
+            //AM_ASYNCHRONOUS        = 0x00000000
+
+            // the package should be delivered sync
+             DM_SYNCHRONOUS         = 0x00000001
+            // the package should be delivered input-sync
+            ,DM_INPUTSYNCHRONOUS    = 0x00000001
+            // deliver package only if class is registered
+            ,DM_ONLY_IF_RUNNING     = 0x00000002
+            // advise and close/release the class
+            ,DM_RUN_AND_CLOSE       = 0x00000004
+            // send it delayed and compress
+            // meaning all the package is delayed for
+            // a certainrDestReports time - the last package of this kind
+            // gets send
+            ,DM_DELAY_AND_COMPRESS  = 0x00000008
+            // always deliver the package
+            // even on was transmited just imedialty before
+            ,DM_DELIVER_ALWAYS      = 0x00000010
+
+        } DELIVERMODE;
+
+
+        typedef struct _tagPackage_X
+        {
+            ULONG                   cbSize;
+            REFPACKAGEID            rpackageid;
+            LPPACKAGEOBJ            pPackageObj;
+            PACKAGE_FLAGS           packageFlags;
+            PACKAGEDATA_FLAGS       packagedataFlags;
+            PACKAGECOOKIE           packageCookie;
+            DELIVERMODE             deliverMode;
+            //REFDESTID               rPackageDest;
+
+            REFDESTID               rReportDest;
+            //LPACCEPTOR              pAcceptorDest;
+
+            DWORD                   dwReserved;
+
+        } PACKAGE_X;
+
+
+        typedef struct _tagDeliveryPackage
+        {
+            ULONG                   cbSize;
+            // info about the package
+            PPACKAGEID              pPackageid;
+            LPPACKAGEOBJ            pPackageObj;
+            PACKAGE_FLAGS           PackageFlags;
+            PACKAGECOOKIE           PackageCookie;
+            DWORD                   dwReserved;
+
+            // info about transmiter
+            // the acceptor can be NULL meaning
+            // the tranmiter does not want progress
+            LPACCEPTOR              pAcceptorDest;
+
+        } PACKAGE, *PPACKAGE;
+
+}
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IAcceptor interface definition
+//
+//  Description:
+//
+//  The Acceptor is the interface where an package gets delivered too.
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPACCEPTOR_DEFINED")
+cpp_quote("#define _LPACCEPTOR_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe2-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IAcceptor : IUnknown
+{
+//        typedef [unique] IAcceptor *LPACCEPTOR;
+
+        HRESULT OnPackage(
+            [in] PPACKAGE           pPackage,
+            [in] DWORD              dwReserved
+            );
+}
+cpp_quote("#endif")
+
+//
+// An acceptor can return the following scode, which means the sink support
+// the IAcceptor interface and it will send notifications on the task
+// progress
+//
+
+cpp_quote("#define AX_S_CAN_ADVISEON _HRESULT_TYPEDEF_(0x000401E9L)                  ")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IPackageObj destination definition
+//
+//  Description:
+//
+//  Each Package needs to be delivered to one or more destinations.
+//  A destination is indendified (DESTID) by a class id.
+//
+//  The interface of the destination is an IAcceptor interface which
+//  is described below.
+//
+//----------------------------------------------------------------------------
+
+//typedef GUID DESTID;
+//typedef REFGUID REFDESTID;
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("// Default Destinations ")
+cpp_quote("EXTERN_C const DESTID DESTID_GLOBAL_COURIER           ;")
+cpp_quote("EXTERN_C const DESTID DESTID_PROCESS_COURIER          ;")
+cpp_quote("EXTERN_C const DESTID DESTID_THREAD_COURIER           ;")
+cpp_quote("")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IEnumPackage interface definition
+//
+//  Description:
+//
+//  Enumerator overn Packages.
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPENUMPACKAGE_DEFINED")
+cpp_quote("#define _LPENUMPACKAGE_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eacbe4-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+interface IEnumPackage : IUnknown
+{
+    typedef [unique] IEnumPackage *LPENUMPACKAGE;
+
+    [local]
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        PACKAGE *rgelt,
+        [out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        PACKAGE *rgelt,
+        [out] ULONG *pceltFetched);
+
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] IEnumPackage **ppenum);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   ICourier interface definition
+//
+//  Description:
+//
+//  This is the object provide by webcheck will can start listening on
+//  different protocols (APP) by using the custom verb "listen".
+//
+//  The clien can also add an package to the agents scheduler or spooler which
+//  will the package deliver to a distination at a given "WHEN"
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPCOURIER_DEFINED")
+cpp_quote("#define _LPCOURIER_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe6-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface ICourier : IUnknown
+{
+        typedef [unique] ICourier *LPCOURIER;
+
+        typedef enum _tagACCEPTOR_MODE
+        {
+             //AM_All          = 0x00000001
+            // exclusive means deliver only
+            // package of the registered type
+             AM_Exclusive    = 0x00000001
+            // launch me if an package of
+            // registered types arrives
+            ,AM_Intantiate   = 0x00000002
+
+        } ACCEPTORMODE;
+
+        #define TASK_SUNDAY       (0x1)
+        #define TASK_MONDAY       (0x2)
+        #define TASK_TUESDAY      (0x4)
+        #define TASK_WEDNESDAY    (0x8)
+        #define TASK_THURSDAY     (0x10)
+        #define TASK_FRIDAY       (0x20)
+        #define TASK_SATURDAY     (0x40)
+        #define TASK_FIRST_WEEK   (1)
+        #define TASK_SECOND_WEEK  (2)
+        #define TASK_THIRD_WEEK   (3)
+        #define TASK_FOURTH_WEEK  (4)
+        #define TASK_LAST_WEEK    (5)
+        #define TASK_JANUARY      (0x1)
+        #define TASK_FEBRUARY     (0x2)
+        #define TASK_MARCH        (0x4)
+        #define TASK_APRIL        (0x8)
+        #define TASK_MAY          (0x10)
+        #define TASK_JUNE         (0x20)
+        #define TASK_JULY         (0x40)
+        #define TASK_AUGUST       (0x80)
+        #define TASK_SEPTEMBER    (0x100)
+        #define TASK_OCTOBER      (0x200)
+        #define TASK_NOVEMBER     (0x400)
+        #define TASK_DECEMBER     (0x800)
+        #define TASK_FLAG_INTERACTIVE                 (0x1)
+        #define TASK_FLAG_DELETE_WHEN_DONE            (0x2)
+        #define TASK_FLAG_DISABLED                    (0x4)
+        #define TASK_FLAG_HALT_ON_ERROR               (0x8)
+        #define TASK_FLAG_START_ONLY_IF_IDLE          (0x10)
+        #define TASK_FLAG_KILL_ON_IDLE_END            (0x20)
+        #define TASK_FLAG_DONT_START_IF_ON_BATTERIES  (0x40)
+        #define TASK_FLAG_KILL_IF_GOING_ON_BATTERIES  (0x80)
+        #define TASK_FLAG_RUN_ONLY_IF_DOCKED          (0x100)
+        #define TASK_FLAG_HIDDEN                      (0x200)
+        #define TASK_TRIGGER_FLAG_HAS_END_DATE            (0x1)
+        #define TASK_TRIGGER_FLAG_KILL_AT_DURATION_END    (0x2)
+        #define TASK_TRIGGER_FLAG_DISABLED                (0x4)
+        #define TASK_TRIGGER_FLAG_LAST_DAY_OF_MONTH       (0x8)
+        #define TASK_MAX_RUN_TIMES      ( 1440 )
+
+        typedef
+        enum _TASK_TRIGGER_TYPE
+            {   TASK_TIME_TRIGGER_ONCE  = 0,
+                TASK_TIME_TRIGGER_DAILY = 1,
+                TASK_TIME_TRIGGER_WEEKLY        = 2,
+                TASK_TIME_TRIGGER_MONTHLYDATE   = 3,
+                TASK_TIME_TRIGGER_MONTHLYDOW    = 4,
+                TASK_EVENT_TRIGGER_ON_IDLE      = 5,
+                TASK_EVENT_TRIGGER_AT_SYSTEMSTART       = 6,
+                TASK_EVENT_TRIGGER_AT_LOGON     = 7
+            }   TASK_TRIGGER_TYPE;
+
+        typedef enum _TASK_TRIGGER_TYPE *PTASK_TRIGGER_TYPE;
+
+        typedef struct  _DAILY
+            {
+            WORD DaysInterval;
+            }   DAILY;
+
+        typedef struct  _WEEKLY
+            {
+            WORD WeeksInterval;
+            WORD rgfDaysOfTheWeek;
+            }   WEEKLY;
+
+        typedef struct  _MONTHLYDATE
+            {
+            DWORD rgfDays;
+            WORD rgfMonths;
+            }   MONTHLYDATE;
+
+        typedef struct  _MONTHLYDOW
+            {
+            WORD wWhichWeek;
+            WORD rgfDaysOfTheWeek;
+            WORD rgfMonths;
+            }   MONTHLYDOW;
+
+        typedef union _TRIGGER_TYPE_UNION
+            {
+            DAILY Daily;
+            WEEKLY Weekly;
+            MONTHLYDATE MonthlyDate;
+            MONTHLYDOW MonthlyDOW;
+            }   TRIGGER_TYPE_UNION;
+
+        typedef struct  _TASK_TRIGGER
+            {
+            WORD cbTriggerSize;
+            WORD Reserved;
+            WORD wBeginYear;
+            WORD wBeginMonth;
+            WORD wBeginDay;
+            WORD wEndYear;
+            WORD wEndMonth;
+            WORD wEndDay;
+            WORD wStartHour;
+            WORD wStartMinute;
+            DWORD MinutesDuration;
+            DWORD MinutesInterval;
+            DWORD rgFlags;
+            TASK_TRIGGER_TYPE TriggerType;
+            TRIGGER_TYPE_UNION Type;
+            }   TASK_TRIGGER;
+
+        typedef struct _TASK_TRIGGER *PTASK_TRIGGER;
+
+
+        HRESULT Register(
+            [in] LPACCEPTOR         pAcceptor,      // can be null - see mode
+            [in] REFDESTID          rPackageDest,
+            [in] ACCEPTORMODE       asMode,
+            [in] ULONG              cPackages,
+            [in] PPACKAGEID         pPackageIDs,
+            [in] DWORD              dwReserved
+            );
+
+        HRESULT Unregister(
+            [in] REFDESTID          rPackageDest,
+            [in] ULONG              cPackages,
+            [in] PPACKAGEID         pPackageIDs
+            );
+
+        // deliver a package to a specific class object such as mail
+        // the class object will be instantiated
+        HRESULT DeliverPackage(
+                        // info about who the sender
+            [in]        REFCLSID            rclsidSender,   // class of sender
+            [in]        LPACCEPTOR          pAcceptor,      // can be null - see mode
+                        // the package
+            [in]        PPACKAGE            pPackage,
+                        // deliver and schedule data
+            [in]        DELIVERMODE         deliverMode,
+            [in]        PTASK_TRIGGER       pschdata,
+                        // destination
+            [in]        REFDESTID           rPackageDest,
+                        // return info - cookie of package
+            [in, out]   PPACKAGECOOKIE      ppackageCookie,
+            [in]        DWORD               dwReserved
+            );
+
+
+        HRESULT CreatePackage(
+            [in]        PPACKAGEID          pPackageid,
+            [in]        PACKAGE_FLAGS       PackageFlags,
+            [in]        PACKAGECOOKIE       packageCookie,
+                        // return info - the new package
+            [in]        ULONG               cPackages,
+            [out]       PPACKAGE            pPackage,
+            [in]        DWORD               dwReserved
+
+            );
+
+        HRESULT RevokePackage(
+            [in]   PPACKAGECOOKIE   ppackageCookie,
+            [in]   DWORD            dwMode
+            );
+
+        HRESULT GetEnumPackage(
+            [out]  LPENUMPACKAGE    pEnumPackage
+            );
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IPackageObjFilter interface definition
+//
+//  Description: Not done yet!
+//
+//  Used to filter anouncment of mc protocols.
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPPACKAGEOBJFILTER_DEFINED")
+cpp_quote("#define _LPPACKAGEOBJFILTER_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eacbe7-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IPackageObjFilter : IUnknown
+{
+        typedef [unique] IPackageObjFilter *LPPACKAGEOBJFILTER;
+
+        typedef struct _tagAnouncmentData
+        {
+            ULONG       cbSize;
+            // more info about category etc.
+            DWORD       dwCategory;
+            LPWSTR      pwzFriendlyName;
+            LPCWSTR     pwzUrl;
+
+        } ANOUNCMENTDATA, *LPANOUNCMENTDATA;
+
+
+        HRESULT Anouncment(
+            [in] ANOUNCMENTDATA *pAnouncementData,
+            [in] DWORD           dwReserved
+            );
+}
+cpp_quote("#endif")
+
+
+

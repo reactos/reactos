@@ -1,0 +1,13 @@
+LIBRARY HISTAPI
+
+DESCRIPTION 'Internet Global History library'
+
+EXPORTS
+
+    AddHistoryItem
+    IsHistorical
+    RemoveHistoryItem
+    GetHistoryItemInfo
+    FindFirstHistoryItem
+    FindNextHistoryItem
+    FindCloseHistory

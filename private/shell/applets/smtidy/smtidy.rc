@@ -1,0 +1,253 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDA_SEARCH              AVI     MOVEABLE PURE   "search.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SMTIDY              ICON    DISCARDABLE     "SMTIDY.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_SMTIDY              BITMAP  DISCARDABLE     "SMTIDY.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_LINK_SEARCH DIALOGEX DISCARDABLE  20, 20, 227, 69
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Missing Shortcut"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Fixing broken shortcuts on %s.",IDC_LINK_SEARCH_TITLE,
+                    70,7,152,23
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,169,47,50,14
+    CONTROL         "",IDC_STATUS,"SysAnimate32",ACS_CENTER | 
+                    ACS_TRANSPARENT,4,5,60,40
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_TABSTOP,10,45,150,
+                    8
+END
+
+DLG_GROUP_READMES DIALOGEX DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Start Menu Organizer Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "Some programs put shortcuts to Readme and Help files on the Start menu.",
+                    IDC_STATIC,85,40,190,15
+    CONTROL         "&Delete Readme and Help shortcuts.",IDC_REMOVE_READMES,
+                    "Button",BS_AUTORADIOBUTTON | BS_MULTILINE,90,103,185,10
+    CONTROL         "&Move Readme and Help shortcuts to ""Readme and Help Files"".",
+                    IDC_GROUP_READMES,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,90,116,185,19
+    CONTROL         "&Leave Readme and Help shortcuts where they are.",
+                    IDC_LEAVE_READMES_ALONE,"Button",BS_AUTORADIOBUTTON,90,
+                    90,185,10
+    LTEXT           "This wizard can delete these shortcuts or move them to a new folder on your Start menu called ""Readme and Help files"".  ",
+                    IDC_STATIC,85,60,190,25
+    LTEXT           "Shortcuts to Readme and Help Files",IDC_TITLE,85,0,190,
+                    35
+END
+
+DLG_SMINTRO DIALOGEX DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Start Menu Organizer Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "The purpose of the Start menu is to start programs, utilities, and other files that you use regularly. ",
+                    IDC_STATIC,85,40,185,16
+    CONTROL         "&Remove broken shortcuts",IDC_REMOVE_BROKEN_SHORTCUTS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,85,90,181,10
+    CONTROL         "Remove &empty folders from the Start Menu",
+                    IDC_REMOVE_EMPTY_FOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,85,105,181,10
+    CONTROL         "&If there is only one item in a menu, move it up a level",
+                    IDC_MOVE_SINGLE_ITEMS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,85,120,181,10
+    LTEXT           "Click the initial changes you would like made to your Start menu. ",
+                    IDC_STATIC,85,60,190,15
+    LTEXT           "Getting Started",IDC_TITLE,85,0,190,28
+END
+
+DLG_SMFINISH DIALOGEX DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Start Menu Organizer Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "If you would like to further customize your Start menu, you can add or remove other items before completing this wizard.  ",
+                    IDC_STATIC,85,35,180,30
+    PUSHBUTTON      "&Add",IDC_ADD_SHORTCUTS,85,70,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE_SHORTCUTS,140,70,50,14
+    LTEXT           "Further Customization",IDC_TITLE,85,0,190,28
+    LTEXT           "Click Finish to implement the changes you have chosen.  ",
+                    IDC_STATIC,85,105,185,20
+END
+
+DLG_UNUSED_SHORTCUTS DIALOGEX DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Start Menu Organizer Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_WIZBMP,"Static",SS_BITMAP | SS_CENTERIMAGE | 
+                    SS_SUNKEN,0,0,80,140
+    LTEXT           "You may have shortcuts on the Start Menu that you haven't used at all in the last 3 months.",
+                    IDC_STATIC,85,40,190,15
+    CONTROL         "&Move unused shortcuts to ""Old Shortcuts""",
+                    IDC_GROUP_UNUSED_SHORTCUTS,"Button",BS_AUTORADIOBUTTON,
+                    90,105,185,10
+    CONTROL         "&Delete unused shortcuts from the Start Menu",
+                    IDC_REMOVE_UNUSED_SHORTCUTS,"Button",BS_AUTORADIOBUTTON,
+                    90,90,185,10
+    CONTROL         "&Leave unused shortcuts where they are",
+                    IDC_LEAVE_UNUSED_SHORTCUTS_ALONE,"Button",
+                    BS_AUTORADIOBUTTON,90,120,185,10
+    LTEXT           "This wizard can either delete these shortcuts from your Start menu, or move them all to a single folder called ""Old Shortcuts,"" which you can delete later.",
+                    IDC_STATIC,85,60,190,25
+    LTEXT           "Old Shortcuts",IDC_TITLE,85,0,190,28
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""winnt.h""\r\n"
+    "#include ""winuser.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""smtidy.rcv""\r\n"
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DLG_UNUSED_SHORTCUTS, DIALOG
+    BEGIN
+        RIGHTMARGIN, 275
+        BOTTOMMARGIN, 110
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_DEFAULT_README_FOLDER "Readme and Help Files"
+    IDS_DEFAULT_LOST_TARGET_FOLDER "Broken Shortcuts"
+    IDS_DEFAULT_UNUSED_SHORTCUT_FOLDER "Old Shortcuts"
+    IDS_MAPPING             "%1 %2"
+    IDS_DRIVE_NAME_FMT      "%1 (%2:)"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_FIRST_GENERIC_NAME  "ReadMe"
+    IDS_LAST_GENERIC_NAME   "Release Notes"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_FIRST_ALLOW_SINGLE_ITEMS "StartUp"
+    2201                    "Games"
+    2202                    "Readme and Help Files"
+    2203                    "Broken Shortcuts"
+    IDS_LAST_ALLOW_SINGLE_ITEMS "Old Shortcuts"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_FIRST_ALLOW_EMPTY_FOLDER "StartUp"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "smtidy.rcv"
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,24 @@
+HKCR
+{
+	snapshot.snapshot.1 = s 'persistSnapshot Class'
+	{
+		CLSID = s '{3050f4c9-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	snapshot.snapshot = s 'persistSnapshot Class'
+	{
+		CurVer = s 'snapshot.snapshot.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050f4c9-98b5-11cf-bb82-00aa00bdce0b} = s 'persistSnapshot Class'
+		{
+			ProgID = s 'snapshot.snapshot.1'
+			VersionIndependentProgID = s 'snapshot.shapshot'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

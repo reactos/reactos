@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<BOOKS>
+	<ITEM>
+		<TITLE>Number, the Language of Science</TITLE>
+		<AUTHOR>Danzig</AUTHOR>
+		<PRICE>5.95</PRICE>
+		<QUANTITY>3</QUANTITY>
+	</ITEM>
+	<DSIG>192817265</DSIG>
+	<ITEM>
+		<TITLE>Tales of Grandpa Cat</TITLE>
+		<PUBLISHER>Associated Press</PUBLISHER>
+		<AUTHOR>Wardlaw, Lee</AUTHOR>
+		<PRICE>6.8</PRICE>
+		<QUANTITY>5</QUANTITY>
+	</ITEM>
+	<!-- The following are in the children's section -->
+	<ITEM>
+		<TITLE>Evolution of Complexity in Animal Culture</TITLE>
+		<AUTHOR>Bonner</AUTHOR>
+		<PRICE>5.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+	<ITEM TAX="7.5">
+		<TITLE>When We Were Very Young</TITLE>
+		<AUTHOR>Milne, A. A.</AUTHOR>
+		<PRICE>12.5</PRICE>
+		<QUANTITY>1</QUANTITY>
+	</ITEM>
+	<ITEM>
+		<TITLE>Learn Java Now</TITLE>
+		<AUTHOR>Stephen R. Davis</AUTHOR>
+		<PUBLISHER>Microsoft Corporation</PUBLISHER>
+		<PRICE>9.95</PRICE>
+		<QUANTITY>12</QUANTITY>
+	</ITEM>
+	<ITEM TAX="12.5">
+		<TITLE>Design Patterns</TITLE>
+		<AUTHOR>Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides</AUTHOR>
+		<PUBLISHER>Addison Wesley</PUBLISHER>
+		<PRICE>49.95</PRICE>
+		<QUANTITY>2</QUANTITY>
+	</ITEM>
+</BOOKS>

@@ -1,0 +1,156 @@
+//Microsoft App Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ERR_NONE                "no error condition"
+    ERR_FCNCALLERR          "error attempting to execute user function"
+    ERR_PTRACE              "error accessing user memory"
+    ERR_INTERNAL            "internal error in expression evaluator"
+    ERR_SYNTAX              "syntax error"
+    ERR_OPNOTSUPP           "operator not supported"
+    ERR_MISSINGLP           "missing left parenthesis"
+    ERR_MISSINGRP           "missing right parenthesis"
+    ERR_MISSINGDQ           "missing double quotation mark ("") at end of string"
+    ERR_MISSINGSQ           "missing single quotation mark (') after character constant"
+    ERR_MISSINGLB           "missing left bracket"
+    ERR_MISSINGRB           "missing right bracket"
+    ERR_MISSINGLC           "missing left curly brace"
+    ERR_NOOPERATOR          "missing operator"
+    ERR_NOOPERAND           "missing operand"
+    ERR_TOOCOMPLEX          "expression too complex (stack overflow)"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ERR_CONSTANT            "constant too big"
+    ERR_UNKNOWNSYMBOL       "symbol ""%Fs"" not found"
+    ERR_BADREGISTER         "bad register name"
+    ERR_TYPECAST            "bad type cast"
+    ERR_OPERANDTYPES        "operand types bad for this operation"
+    ERR_STRUCT              "struct or union used as scalar"
+    ERR_FCNCALL             "function call before _main"
+    ERR_RADIX               "bad radix"
+    ERR_NEEDLVALUE          "operation needs l-value"
+    ERR_NEEDSTRUCT          "operator needs class/struct/union"
+    ERR_FORMAT              "bad format string"
+    ERR_NOTLVALUE           "tp addr not lvalue"
+    ERR_NOTELEMENT          "not struct/union element"
+    ERR_NOTSTRUCTPTR        "not struct pointer"
+    ERR_NOTEVALUATABLE      "expression cannot be evaluated"
+    ERR_NOTEXPANDABLE       "expression cannot be evaluated"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ERR_DIVIDEBYZERO        "divide by 0"
+    ERR_BADOMF              "error in OMF type information"
+    ERR_TYPEINCOMPAT        "types incompatible with operator"
+    ERR_NOTRESIDENT         "overlay not resident"
+    ERR_BADCONTEXT          "bad context {...} specification"
+    ERR_NOMEMORY            "out of memory"
+    ERR_FCNERROR            "function argument count and/or type mismatch"
+    ERR_AMBIGUOUS           "symbol is ambiguous"
+    ERR_CANTCONVERT         "argument type not supported"
+    ERR_NOTSTATIC           "class element must be static member or member function"
+    ERR_BADLINE             "bad line number"
+    ERR_BADTHIS             "this pointer used outside of member function"
+    ERR_NEEDSBIRD           "use of _based(void) pointer requires :> operator"
+    ERR_NOTFCN              "not a function"
+    ERR_NOARGLIST           "argument list required for member function"
+    ERR_ARGLIST             "argument list does not match a function"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ERR_CALLSEQ             "calling sequence not supported"
+    ERR_OLDOMF              "obsolete OMF - please relink program"
+    ERR_BSCOPE              "left side of :: must be class/struct/union type"
+    ERR_BPAMBIGUOUS         "more than one overloaded symbol specified in breakpoint"
+    ERR_METHODNP            "member function not present"
+    ERR_SYMCONFLICT         "nonfunction symbol match while binding breakpoints"
+    ERR_REGINBP             "register in breakpoint expression illegal"
+    ERR_AMBCONTEXT          "ambiguous symbol in context operator"
+    ERR_LINENUMBER          "error in line number"
+    ERR_NOCODE              "no code at line number"
+    ERR_NOOVERLOAD          "overloaded operator not found"
+    ERR_CLASSNOTFCN         "left operand is class not a function name"
+    ERR_REGNOTAVAIL         "register is not available"
+    ERR_FCNTOODEEP          "function nesting depth exceeded"
+    ERR_CONSTRUCTOR         "constructor calls not supported"
+    ERR_OVLPOINTSTO         "overloaded operator -> not supported"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    ERR_NOVIRTUALBP         "can't set breakpoint on bound virtual member function"
+    ERR_NOCLASSASSIGN       "class assignment not supported"
+    ERR_NOMODIFIABLELV      "l-value is not modifiable"
+    ERR_INVENUMVAL          "Illegal Enum Value"
+    ERR_TYPESUPPORT         "type not supported"
+    ERR_NOSTACKFRAME        "variable needs stack frame"
+    ERR_STMEMBERNP          "static member not present"
+    ERR_NOFUNCEVAL          "function evaluation not supported"
+    ERR_UNKNOWNTYPE         "type information missing or unknown"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CANTDISPLAY         "? CANNOT DISPLAY"
+    IDS_CXXERR              "CXX0000: Error: "
+    IDS_CANERR              "CAN0000: Error: "
+END
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

@@ -1,0 +1,56 @@
+!IF 0
+
+Copyright (c) 1997  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Revision History:
+
+!ENDIF
+
+TARGETNAME=ws2_hlpr
+
+TARGETTYPE=LIBRARY
+TARGETPATH=..\..\lib
+
+# TARGETTYPE=DYNLINK
+# TARGETPATH=$(_NTDRIVE)\nt\public\sdk\lib
+# TARGETLIBS=$(_NTDRIVE)\nt\public\sdk\lib\*\ole32.lib     \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\oleaut32.lib  \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\rpcrt4.lib    \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\comdlg32.lib  \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\uuid.lib      \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\ws2_32.lib    \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\ws2help.lib   \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\advapi32.lib  \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\ntdll.lib     \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\kernel32.lib  \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\user32.lib    \
+#            $(_NTDRIVE)\nt\public\sdk\lib\*\gdi32.lib
+#
+# LINKLIBS=..\..\lib\*\ws2_if.lib
+
+INCLUDES=.;..\..\include;..\..\..\inc
+
+SOURCES=dll.cpp      \
+        rprocess.cpp \
+        dict.cpp     \
+        inst_lsp.cpp \
+        ws2_hlpr.rc
+
+C_DEFINES=$(RPCTARGETENV) -DNTENV
+
+DLLENTRY=DllMain
+
+# USE_NTDLL=1
+

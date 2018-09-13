@@ -1,0 +1,300 @@
+#ifndef _BASEFRM_PDL_
+#define _BASEFRM_PDL_ 1
+
+#include "csite.pdl"
+
+
+#include "return.pdl"
+
+file basefrm.pdl
+
+import types.pdl
+import csite.pdl
+
+enum fmListBoxStyles guid:F00164C2-B17B-11ce-A95D-00AA006CB389
+    eval None
+    eval ListBox
+    eval ComboBox
+
+enum fmRepeatDirection guid:C3689F20-C231-11ce-A30C-00AA004A3D3C
+    eval Horizontal
+    eval Vertical
+
+enum fmEnAutoSize guid:C3689F20-C231-11ce-A30C-00AA004A3D3D
+    eval None
+    eval Horizontal
+    eval Vertical
+    eval Both
+
+interface IDataFrame super:IControlElement guid:97F254E0-4874-11ce-921E-00AA004BB347
+    refprop CBaseFrame:BackColor
+    refprop CBaseFrame:Controls
+    refprop CBaseFrame:ForeColor
+    refprop CBaseFrame:MouseIcon
+    refprop CBaseFrame:MousePointer
+    refprop CBaseFrame:ScrollBars
+    refprop CBaseFrame:Show3D
+    refprop CBaseFrame:DeferedPropertyUpdate
+    refprop CBaseFrame:ShowHeaders
+    refprop CBaseFrame:ListBoxStyle
+    refprop CBaseFrame:MultiSelect
+    refprop CBaseFrame:ListStyle
+    refprop CBaseFrame:Enabled
+    refprop CBaseFrame:ListIndex
+    refprop CBaseFrame:ListItemSelected
+    refprop CBaseFrame:TopIndex
+    refprop CBaseFrame:VisibleCount
+    refprop CBaseFrame:MaxRows
+    refprop CBaseFrame:MinRows
+    refprop CBaseFrame:AutosizeStyle
+
+#ifdef PRODUCT_97
+    refprop CBaseFrame:RunTestcode
+    refprop CBaseFrame:Detail
+    refprop CBaseFrame:Database
+    refprop CBaseFrame:ActiveInstance
+    refprop CBaseFrame:AllowAdditions
+    refprop CBaseFrame:AllowDeletions
+    refprop CBaseFrame:AllowEditing
+    refprop CBaseFrame:AllowFilters
+    refprop CBaseFrame:AllowUpdating
+    refprop CBaseFrame:AlternateBackColor
+    refprop CBaseFrame:AlternateInterval
+    refprop CBaseFrame:AutoEject
+    refprop CBaseFrame:ColumnSpacing
+    refprop CBaseFrame:RowSpacing
+    refprop CBaseFrame:CommitSync
+    refprop CBaseFrame:CommitWhat
+    refprop CBaseFrame:CommitWhen
+    refprop CBaseFrame:ContinousForm
+    refprop CBaseFrame:DataOnly
+    refprop CBaseFrame:DateGrouping
+    refprop CBaseFrame:DefaultEditing
+    refprop CBaseFrame:Dirty
+    refprop CBaseFrame:DirtyDataColor
+    refprop CBaseFrame:DirtyPencil
+    refprop CBaseFrame:DisplayWhen
+    refprop CBaseFrame:FooterText
+    refprop CBaseFrame:ForceNewPage
+    refprop CBaseFrame:FormatCount
+    refprop CBaseFrame:FullIntervals
+    refprop CBaseFrame:GroupInterval
+    refprop CBaseFrame:GroupOn
+    refprop CBaseFrame:HeaderText
+    refprop CBaseFrame:HideDuplicates
+    refprop CBaseFrame:ItemsAcross
+    refprop CBaseFrame:KeepTogether
+    refprop CBaseFrame:LayoutForPrint
+    refprop CBaseFrame:LockRecord
+    refprop CBaseFrame:MoveLayout
+    refprop CBaseFrame:NavigationButtons
+    refprop CBaseFrame:NewRowOrCol
+    refprop CBaseFrame:NewStar
+    refprop CBaseFrame:NextRecord
+    refprop CBaseFrame:NormalDataColor
+    refprop CBaseFrame:OneFooterPerPage
+    refprop CBaseFrame:OneHeaderPerPage
+    refprop CBaseFrame:OpenArgs
+    refprop CBaseFrame:Outline
+    refprop CBaseFrame:OutlineCollapseIcon
+    refprop CBaseFrame:OutlineExpandIcon
+    refprop CBaseFrame:OutlineLeafIcon
+    refprop CBaseFrame:OutlinePrint
+    refprop CBaseFrame:OutlineShowWhen
+    refprop CBaseFrame:ParentPosition
+    refprop CBaseFrame:PrintCount
+    refprop CBaseFrame:PrintSection
+    refprop CBaseFrame:QBFAutoExecute
+    refprop CBaseFrame:QBFAvailable
+    refprop CBaseFrame:QBFMode
+    refprop CBaseFrame:QBFShowData
+    refprop CBaseFrame:ReadOnlyDataColor
+    refprop CBaseFrame:RecordCount
+    refprop CBaseFrame:RecordLocks
+    refprop CBaseFrame:RecordPosition
+    refprop CBaseFrame:RecordSelectors
+    refprop CBaseFrame:Recordset
+    refprop CBaseFrame:RecordsetClone
+    refprop CBaseFrame:RecordSourceSample
+    refprop CBaseFrame:RecordSourceSync
+    refprop CBaseFrame:RecordSourceType
+    refprop CBaseFrame:Repeat
+    refprop CBaseFrame:RequeryWhen
+    refprop CBaseFrame:ResetPages
+    refprop CBaseFrame:ScrollHeight
+    refprop CBaseFrame:ScrollLeft
+    refprop CBaseFrame:ScrollTop
+    refprop CBaseFrame:ScrollWidth
+    refprop CBaseFrame:SelectedControlBackCol
+    refprop CBaseFrame:ShowGridLines
+    refprop CBaseFrame:ShowNewRowAtBottom
+    refprop CBaseFrame:ShowWhen
+    refprop CBaseFrame:SnakingDirection
+    refprop CBaseFrame:SpecialEffect
+    refprop CBaseFrame:ViewMode
+    refprop CBaseFrame:LinkMasterFields
+    refprop CBaseFrame:LinkChildFields
+    refprop CBaseFrame:ArrowEnterFieldBehavior
+    refprop CBaseFrame:ArrowKeyBehavior
+    refprop CBaseFrame:ArrowKeys
+    refprop CBaseFrame:DynamicTabOrder
+    refprop CBaseFrame:MoveAfterEnter
+    refprop CBaseFrame:TabEnterFieldBehavior
+    refprop CBaseFrame:TabOut
+    refprop CBaseFrame:ShowFooters
+    refprop CBaseFrame:RecordSelector
+    refprop CBaseFrame:NewData
+    refprop CBaseFrame:DataDirty
+    refprop CBaseFrame:Direction
+
+    refprop CBaseFrame:Header
+    refprop CBaseFrame:Footer
+    refprop CBaseFrame:MinCols
+    refprop CBaseFrame:MaxCols
+    refprop CBaseFrame:NewRecordShow
+#endif
+
+event DataFrameEvents super:IDispatch guid:756FFC90-4DE2-11ce-921E-00AA004BB347
+    method void Change dispid:EVENTID_CommonCtrlEvent_Change ()
+    method void Click dispid:DISPID_CLICK ()
+    method void DblClick dispid:DISPID_DBLCLICK (in type:IDispatch* arg:Cancel)
+    method void KeyDown dispid:DISPID_KEYDOWN (in type:IDispatch* arg:KeyCode in type:short arg:Shift)
+    method void KeyPress dispid:DISPID_KEYPRESS (in type:IDispatch* typearg:KeyAscii)
+    method void KeyUp dispid:DISPID_KEYUP (in type:IDispatch* arg:KeyCode in type:short arg:Shift)
+    method void MouseDown dispid:DISPID_MOUSEDOWN (in type:short arg:Button in type:short arg:Shift in type:OLE_XPOS_CONTAINER arg:X in type:OLE_YPOS_CONTAINER arg:Y)
+    method void MouseMove dispid:DISPID_MOUSEMOVE (in type:short arg:Button in type:short arg:Shift in type:OLE_XPOS_CONTAINER arg:X in type:OLE_YPOS_CONTAINER arg:Y)
+    method void MouseUp dispid:DISPID_MOUSEUP (in type:short arg:Button in type:short arg:Shift in type:OLE_XPOS_CONTAINER arg:X in type:OLE_YPOS_CONTAINER arg:Y)
+    method void BeforeDragOver dispid:EVENTID_CommonCtrlEvent_BeforeDragOver (in type:IDispatch* arg:Cancel in type:IDispatch* arg:Data in type:OLE_XPOS_CONTAINER arg:X in type:OLE_YPOS_CONTAINER arg:Y in type:fmDragState arg:DragState in type:IDispatch* arg:Effect in type:short arg:Shift)
+    method void BeforeDropOrPaste dispid:EVENTID_CommonCtrlEvent_BeforeDropOrPaste (in type:IDispatch* arg:Cancel in type:fmAction arg:Action in type:IDispatch* arg:Data in type:OLE_XPOS_CONTAINER arg:X in type:OLE_YPOS_CONTAINER arg:Y in type:IDispatch* arg:Effect in type:short arg:Shift)
+    method void Error dispid:DISPID_ERROREVENT (in type:short arg:Number in type:IDispatch* arg:Description in type:long arg:SCode in type:BSTR arg:Source in type:BSTR arg:HelpFile in type:long arg:HelpContext in type:IDispatch* arg:CancelDisplay)
+    method void Scroll dispid:IDATAFRAMEEVENTS_SCROLL (in type:fmScrollAction arg:xAction in type:fmScrollAction arg:yAction in type:long arg:dxRequest in type:long arg:dyRequest in out type:long* arg:dxActual in out type:long* arg:dyActual)
+
+class CBaseFrame super:Csite interface:IDataFrame events:DataFrameEvents tearoff
+    property BackColor atype:DWORD type:CColorValue dispid:DISPID_BackColor get set abstract bindable displaybind help:f3proBackColor
+    property ForeColor atype:DWORD type:CColorValue dispid:DISPID_ForeColor get set abstract bindable displaybind help:f3proForeColor
+    property MouseIcon atype:IDispatch* type:IPicture* dispid:DISPID_MouseIcon get set abstract bindable displaybind help:f3proMouseIcon
+    property MousePointer atype:fmMousePointer type:fmMousePointer dispid:DISPID_MousePointer get set abstract bindable displaybind help:f3proMousePointer
+    property ScrollBars atype:fmScrollBars type:fmScrollBars dispid:DISPID_ScrollBars get set abstract bindable displaybind help:f3proScrollBars
+    property Show3D atype:int type:int dispid:DISPID_Show3D get set abstract bindable displaybind
+    property DeferedPropertyUpdate atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DeferedPropertyUpdate get set abstract bindable displaybind
+    property ShowHeaders atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_ShowHeaders get set abstract bindable displaybind
+    property ListBoxStyle atype:fmListBoxStyles type:fmListBoxStyles dispid:DISPID_ListBoxStyle get set abstract bindable displaybind
+    property MultiSelect atype:fmMultiSelect type:fmMultiSelect dispid:DISPID_MultiSelect get set abstract bindable displaybind help:f3proMultiSelect
+    property ListStyle atype:fmListStyle type:fmListStyle dispid:DISPID_ListStyle get set abstract bindable displaybind help:f3proListStyle
+    property Enabled atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_Enabled get set abstract bindable displaybind help:f3proEnabled
+    property ListIndex atype:long type:long dispid:DISPID_DATADOC_ListIndex get set abstract bindable displaybind help:f3proListIndex
+    property ListItemSelected atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DATADOC_ListItemSelected get set indextype:long index:lItemIndex bindable displaybind abstract
+    property TopIndex atype:long type:long dispid:DISPID_TopIndex get set abstract bindable displaybind help:f3proTopIndex
+    property VisibleCount atype:long type:long dispid:DISPID_VisibleCount get abstract bindable displaybind
+    property MaxRows atype:long type:long dispid:DISPID_MaxRows get set abstract bindable displaybind
+    property MinRows atype:long type:long dispid:DISPID_MinRows get set abstract bindable displaybind
+    property AutosizeStyle atype:fmEnAutoSize type:fmEnAutoSize dispid:DISPID_DATADOC_Autosize get set abstract bindable displaybind
+
+#ifdef PRODUCT_97
+    property RunTestcode atype:int type:int dispid:DISPID_DATADOC_RunTestcode get set abstract bindable displaybind
+    property Detail atype:IDispatch* type:IDataFrame* dispid:DISPID_Detail get abstract
+    property Database atype:BSTR type:BSTR dispid:DISPID_Database get abstract bindable displaybind
+    property ActiveInstance atype:IDispatch* type:IDispatch* dispid:DISPID_ActiveInstance get abstract bindable displaybind
+    property AllowAdditions atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AllowAdditions get set abstract bindable displaybind
+    property AllowDeletions atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AllowDeletions get set abstract bindable displaybind
+    property AllowEditing atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AllowEditing get set abstract bindable displaybind
+    property AllowFilters atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AllowFilters get set abstract bindable displaybind
+    property AllowUpdating atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AllowUpdating get set abstract bindable displaybind
+    property AlternateBackColor atype:DWORD type:CColorValue dispid:DISPID_AlternateBackColor get set abstract bindable displaybind
+    property AlternateInterval atype:int type:int dispid:DISPID_AlternateInterval get set abstract bindable displaybind
+    property AutoEject atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_AutoEject get set abstract bindable displaybind
+    property ColumnSpacing atype:int type:int dispid:DISPID_ColumnSpacing get set abstract bindable displaybind
+    property RowSpacing atype:int type:int dispid:DISPID_RowSpacing get set abstract bindable displaybind
+    property CommitSync atype:int type:int dispid:DISPID_CommitSync get set abstract bindable displaybind
+    property CommitWhat atype:int type:int dispid:DISPID_CommitWhat get set abstract bindable displaybind
+    property CommitWhen atype:int type:int dispid:DISPID_CommitWhen get set abstract bindable displaybind
+    property ContinousForm atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_ContinousForm get set abstract bindable displaybind
+    property DataOnly atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DataOnly get set abstract bindable displaybind
+    property DateGrouping atype:int type:int dispid:DISPID_DateGrouping get set abstract bindable displaybind
+    property DefaultEditing atype:int type:int dispid:DISPID_DefaultEditing get set abstract bindable displaybind
+    property Dirty atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_Dirty get set abstract bindable displaybind help:f3proDirty nonbrowsable
+    property DirtyDataColor atype:DWORD type:CColorValue dispid:DISPID_DirtyDataColor get set abstract bindable displaybind
+    property DirtyPencil atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DirtyPencil get set abstract bindable displaybind
+    property DisplayWhen atype:int type:int dispid:DISPID_DisplayWhen get set abstract bindable displaybind
+    property FooterText atype:BSTR type:BSTR dispid:DISPID_FooterText get abstract bindable displaybind
+    property ForceNewPage atype:int type:int dispid:DISPID_ForceNewPage get set abstract bindable displaybind
+    property FormatCount atype:long type:long dispid:DISPID_FormatCount get set abstract bindable displaybind
+    property FullIntervals atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_FullIntervals get set abstract bindable displaybind
+    property GroupInterval atype:int type:int dispid:DISPID_GroupInterval get set abstract bindable displaybind
+    property GroupOn atype:int type:int dispid:DISPID_GroupOn get set abstract bindable displaybind
+    property HeaderText atype:BSTR type:BSTR dispid:DISPID_HeaderText get abstract bindable displaybind
+    property HideDuplicates atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_HideDuplicates get set abstract bindable displaybind
+    property ItemsAcross atype:int type:int dispid:DISPID_ItemsAcross get set abstract bindable displaybind
+    property KeepTogether atype:int type:int dispid:DISPID_KeepTogether get set abstract bindable displaybind
+    property LayoutForPrint atype:int type:int dispid:DISPID_LayoutForPrint get set abstract bindable displaybind
+    property LockRecord atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_LockRecord get set abstract bindable displaybind
+    property MoveLayout atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_MoveLayout get set abstract bindable displaybind
+    property NavigationButtons atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_NavigationButtons get set abstract bindable displaybind
+    property NewRowOrCol atype:int type:int dispid:DISPID_NewRowOrCol get set abstract bindable displaybind
+    property NewStar atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_NewStar get set abstract bindable displaybind
+    property NextRecord atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_NextRecord get set abstract bindable displaybind
+    property NormalDataColor atype:DWORD type:CColorValue dispid:DISPID_NormalDataColor get set abstract bindable displaybind
+    property OneFooterPerPage atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_OneFooterPerPage get set abstract bindable displaybind
+    property OneHeaderPerPage atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_OneHeaderPerPage get set abstract bindable displaybind
+    property OpenArgs atype:BSTR type:BSTR dispid:DISPID_OpenArgs get abstract bindable displaybind
+    property Outline atype:int type:int dispid:DISPID_Outline get set abstract bindable displaybind
+    property OutlineCollapseIcon atype:IDispatch* type:IPicture* dispid:DISPID_OutlineCollapseIcon get abstract bindable displaybind
+    property OutlineExpandIcon atype:IDispatch* type:IPicture* dispid:DISPID_OutlineExpandIcon get abstract bindable displaybind
+    property OutlineLeafIcon atype:IDispatch* type:IPicture* dispid:DISPID_OutlineLeafIcon get abstract bindable displaybind
+    property OutlinePrint atype:int type:int dispid:DISPID_OutlinePrint get set abstract bindable displaybind
+    property OutlineShowWhen atype:int type:int dispid:DISPID_OutlineShowWhen get set abstract bindable displaybind
+    property ParentPosition atype:int type:int dispid:DISPID_ParentPosition get set abstract bindable displaybind
+    property PrintCount atype:long type:long dispid:DISPID_PrintCount get set abstract bindable displaybind
+    property PrintSection atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_PrintSection get set abstract bindable displaybind
+    property QBFAutoExecute atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_QBFAutoExecute get set abstract bindable displaybind
+    property QBFAvailable atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_QBFAvailable get set abstract bindable displaybind
+    property QBFMode atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_QBFMode get set abstract bindable displaybind
+    property QBFShowData atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_QBFShowData get set abstract bindable displaybind
+    property ReadOnlyDataColor atype:DWORD type:CColorValue dispid:DISPID_ReadOnlyDataColor get set abstract bindable displaybind
+    property RecordCount atype:long type:long dispid:DISPID_RecordCount get set abstract bindable displaybind
+    property RecordLocks atype:int type:int dispid:DISPID_RecordLocks get set abstract bindable displaybind
+    property RecordPosition atype:int type:int dispid:DISPID_RecordPosition get set abstract bindable displaybind
+    property RecordSelectors atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_RecordSelectors get set abstract bindable displaybind
+    property Recordset atype:IDispatch* type:IDispatch* dispid:DISPID_Recordset get abstract bindable displaybind
+    property RecordsetClone atype:IDispatch* type:IDispatch* dispid:DISPID_RecordsetClone get abstract bindable displaybind
+    property RecordSourceSample atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_RecordSourceSample get set abstract bindable displaybind
+    property RecordSourceSync atype:int type:int dispid:DISPID_RecordSourceSync get set abstract bindable displaybind
+    property RecordSourceType atype:int type:int dispid:DISPID_RecordSourceType get set abstract bindable displaybind
+    property Repeat atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_Repeat get set abstract bindable displaybind
+    property RequeryWhen atype:int type:int dispid:DISPID_RequeryWhen get set abstract bindable displaybind
+    property ResetPages atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_ResetPages get set abstract bindable displaybind
+    property ScrollHeight atype:long type:long dispid:DISPID_ScrollHeight get abstract bindable displaybind help:f3proScrollHeight
+    property ScrollLeft atype:long type:long dispid:DISPID_ScrollLeft get set abstract bindable displaybind help:f3proScrollLeft
+    property ScrollTop atype:long type:long dispid:DISPID_ScrollTop get set abstract bindable displaybind help:f3proScrollTop
+    property ScrollWidth atype:long type:long dispid:DISPID_ScrollWidth get abstract bindable displaybind help:f3proScrollWidth
+    property SelectedControlBackCol atype:DWORD type:CColorValue dispid:DISPID_SelectedControlBackCol get set abstract bindable displaybind
+    property ShowGridLines atype:int type:int dispid:DISPID_ShowGridLines get set abstract bindable displaybind
+    property ShowNewRowAtBottom atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_ShowNewRowAtBottom get set abstract bindable displaybind
+    property ShowWhen atype:int type:int dispid:DISPID_ShowWhen get set abstract bindable displaybind
+    property SnakingDirection atype:int type:int dispid:DISPID_SnakingDirection get set abstract bindable displaybind
+    property SpecialEffect atype:int type:int dispid:DISPID_SpecialEffect get set abstract bindable displaybind help:f3proSpecialEffect
+    property ViewMode atype:int type:int dispid:DISPID_ViewMode get set abstract bindable displaybind
+    property LinkMasterFields atype:BSTR type:BSTR dispid:DISPID_LinkMasterFields get abstract bindable displaybind
+    property LinkChildFields atype:BSTR type:BSTR dispid:DISPID_LinkChildFields get abstract bindable displaybind
+    property ArrowEnterFieldBehavior atype:int type:int dispid:DISPID_ArrowEnterFieldBehavior get set abstract bindable displaybind
+    property ArrowKeyBehavior atype:int type:int dispid:DISPID_ArrowKeyBehavior get set abstract bindable displaybind
+    property ArrowKeys atype:int type:int dispid:DISPID_ArrowKeys get set abstract bindable displaybind
+    property DynamicTabOrder atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DynamicTabOrder get set abstract bindable displaybind
+    property MoveAfterEnter atype:int type:int dispid:DISPID_MoveAfterEnter get set abstract bindable displaybind
+    property TabEnterFieldBehavior atype:int type:int dispid:DISPID_TabEnterFieldBehavior get set abstract bindable displaybind
+    property TabOut atype:int type:int dispid:DISPID_TabOut get set abstract bindable displaybind
+    property ShowFooters atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_ShowFooters get set abstract bindable displaybind
+    property RecordSelector atype:IDispatch* type:IControl* dispid:DISPID_RecordSelector
+    property NewData atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_NewData get set abstract bindable displaybind
+    property DataDirty atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_DataDirty get set abstract bindable displaybind
+    property Direction atype:fmRepeatDirection type:fmRepeatDirection dispid:DISPID_Direction get set abstract bindable displaybind
+
+    property Header atype:IDispatch* type:IDataFrame* dispid:DISPID_Header
+    property Footer atype:IDispatch* type:IDataFrame* dispid:DISPID_Footer
+    property MinCols atype:long type:long dispid:DISPID_MinCols get set abstract bindable displaybind
+    property MaxCols atype:long type:long dispid:DISPID_MaxCols get set abstract bindable displaybind
+    property NewRecordShow atype:VARIANT_BOOL type:VARIANT_BOOL dispid:DISPID_NewRecordShow get set abstract bindable displaybind
+#endif
+
+#endif // _BASEFRM_PDL_
+

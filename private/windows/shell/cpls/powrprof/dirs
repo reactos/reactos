@@ -1,0 +1,2 @@
+DIRS =  winnt \
+        win95{x86}

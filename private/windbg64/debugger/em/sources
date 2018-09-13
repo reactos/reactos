@@ -1,0 +1,71 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+!include ..\sources.inc
+
+386_STDCALL=1
+USE_NATIVE_EH=0
+USE_MSVCRT=1
+
+MAJORCOMP=dbg
+MINORCOMP=em
+
+TARGETNAME=em$D
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLDEF=$O\em.def
+COFFBASE=em
+UMTYPE=windows
+
+#
+# monolithic win32 em
+#
+
+INCLUDES =  ..\include;         \
+            .\obj\$(TARGET_DIRECTORY);  \
+            ..\od\include;      \
+            .\falcon;           \
+            $(DEBUG_INCLUDES)
+
+
+C_DEFINES = $(C_DEFINES) -DDOLPHIN -DADDR_MIXED -DOSDEBUG4 -DTARGET32 -DIMAGEHLP64 -DEM_SWCONV
+C_DEFINES = $(C_DEFINES) -DDM_TAIL=\"$(D).dll\"
+C_DEFINES = $(C_DEFINES) -DNT_BUILD_ONLY
+
+SOURCES =   \
+        emdp.cpp    \
+        emdp2.cpp   \
+        emdp3.cpp   \
+        emdp_axp.cpp    \
+        emdp_x86.cpp    \
+        emdp_i64.cpp    \
+        emdisasm.cpp    \
+        ia64dis.cpp     \
+        em.rc
+
+LINKLIBS=
+
+NTTARGETFILES=
+
+TARGETLIBS=\
+         $(SDK_LIB_PATH)\disasm$(D).lib     \
+         $(NONSHIP_LIB_PATH)\dbghelp.lib    \
+         $(SDK_LIB_PATH)\msvcirt.lib        \
+         $(SDK_LIB_PATH)\user32.lib         \
+         $(SDK_LIB_PATH)\kernel32.lib
+
+

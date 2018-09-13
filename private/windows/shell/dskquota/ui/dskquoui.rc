@@ -1,0 +1,688 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include "..\common\resource.h"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDR_AVI_TRAFFIC         AVI     MOVEABLE PURE   "traffic.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROPPAGE_VOLQUOTA DIALOGEX 0, 0, 227, 215
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Quota"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Animate1",IDC_TRAFFIC_LIGHT,"SysAnimate32",ACS_CENTER | 
+                    ACS_TRANSPARENT,4,5,24,24
+    LTEXT           "Status:",IDC_TXT_QUOTA_STATUS_LABEL,34,13,24,8
+    LTEXT           "<Status Text>",IDC_TXT_QUOTA_STATUS,60,13,160,8
+    CONTROL         "&Enable quota management",IDC_CBX_ENABLE_QUOTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,35,199,10
+    CONTROL         "&Deny disk space to users exceeding quota limit",
+                    IDC_CBX_DENY_LIMIT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    21,49,199,10
+    LTEXT           "Select the default quota limit for new users on this volume:",
+                    IDC_TXT_DEFAULTS,21,67,199,10
+    CONTROL         "D&o not limit disk usage",IDC_RBN_DEF_NOLIMIT,"Button",
+                    BS_AUTORADIOBUTTON,29,83,181,8
+    CONTROL         "&Limit disk space to",IDC_RBN_DEF_LIMIT,"Button",
+                    BS_AUTORADIOBUTTON,29,97,74,8
+    EDITTEXT        IDC_EDIT_DEF_LIMIT,105,95,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_DEF_LIMIT,154,95,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Set warning level to",IDC_TXT_WARN_LEVEL,37,113,65,8
+    EDITTEXT        IDC_EDIT_DEF_THRESHOLD,105,111,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_DEF_THRESHOLD,154,111,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Select the quota logging options for this volume:",
+                    IDC_TXT_LOGGING,21,133,199,10
+    CONTROL         "Lo&g event when a user exceeds their quota limit",
+                    IDC_CBX_LOG_OVERLIMIT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,149,192,10
+    CONTROL         "Log e&vent when a user exceeds their warning level",
+                    IDC_CBX_LOG_OVERWARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,28,163,192,10
+    PUSHBUTTON      "&Quota Entries...",IDC_BTN_DETAILS,154,194,66,14
+END
+
+IDD_PROPPAGE_USERQUOTA DIALOGEX 0, 0, 212, 188
+STYLE DS_CONTEXTHELP | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SINGLE_USER,IDC_ICON_USER,9,7,20,20
+    LTEXT           "User:",IDC_STATIC2,39,14,18,8,NOT WS_GROUP
+    EDITTEXT        IDC_TXT_USERNAME,61,15,144,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER,WS_EX_TRANSPARENT
+    LTEXT           "Quota used:",IDC_LBL_SPACEUSED,14,41,60,8,NOT WS_GROUP
+    LTEXT           "999 XB ( 99% )",IDC_TXT_SPACEUSED,79,41,75,8,NOT 
+                    WS_GROUP
+    LTEXT           "Quota remaining:",IDC_LBL_SPACEREMAINING,14,53,60,8,NOT 
+                    WS_GROUP
+    LTEXT           "999 XB",IDC_TXT_SPACEREMAINING,79,53,75,8,NOT WS_GROUP
+    ICON            124,IDC_ICON_USERSTATUS,164,39,20,20
+    CONTROL         "D&o not limit disk usage",IDC_RBN_USER_NOLIMIT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,14,73,83,8
+    CONTROL         "&Limit disk space to",IDC_RBN_USER_LIMIT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,14,87,74,8
+    EDITTEXT        IDC_EDIT_USER_LIMIT,94,84,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_USER_LIMIT,144,84,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Set warning level to",IDC_TXT_WARN_LEVEL,26,103,65,8
+    EDITTEXT        IDC_EDIT_USER_THRESHOLD,94,100,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_USER_THRESHOLD,144,100,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_FINDUSER DIALOGEX 0, 0, 208, 58
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Find Quota Entry"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Logon &Name:",IDC_TXT_FINDUSER,7,8,47,10,0,WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_FINDUSER,61,7,139,46,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,96,37,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,150,37,50,14
+END
+
+IDD_PROGRESS DIALOG DISCARDABLE  0, 0, 200, 71
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION
+CAPTION "Disk Quota"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,143,50,50,14
+    CONTROL         "Progress1",IDC_PROGRESS_BAR,"msctls_progress32",
+                    WS_BORDER,7,19,186,10
+    LTEXT           "Description goes here.",IDC_TXT_PROGRESS_DESCRIPTION,7,
+                    7,186,8
+    CTEXT           "File Name",IDC_TXT_PROGRESS_FILENAME,7,33,186,8
+END
+
+IDD_YNTOALL DIALOG DISCARDABLE  0, 0, 268, 85
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Your \ntext \ngoes here.",IDC_TXT_YNTOALL,39,11,219,26
+    CONTROL         "Do this for &all quota entries.",IDC_CBX_YNTOALL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,39,46,213,10
+    DEFPUSHBUTTON   "&Yes",IDYES,103,64,50,14
+    PUSHBUTTON      "&No",IDNO,157,64,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,211,64,50,14
+    ICON            32514,IDC_STATIC,7,7,20,20
+END
+
+IDD_PROPPAGE_POLICY DIALOGEX 0, 0, 227, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Policy"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_QUOTA,IDC_STATIC,8,10,20,20
+    LTEXT           "Disk Quota",IDC_STATIC,35,16,163,8
+    GROUPBOX        "",IDC_GRP_ACTIONS,7,38,213,95
+    CONTROL         "&Enable quota management:",IDC_CBX_ENABLE_QUOTA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,22,38,101,10
+    CONTROL         "&Deny disk space to users exceeding quota limit",
+                    IDC_CBX_DENY_LIMIT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    22,52,192,10
+    GROUPBOX        "Default settings for new users:",IDC_GRP_DEFAULTS,15,66,
+                    199,60
+    CONTROL         "D&o not limit disk usage",IDC_RBN_DEF_NOLIMIT,"Button",
+                    BS_AUTORADIOBUTTON,23,80,181,8
+    CONTROL         "&Limit disk space to",IDC_RBN_DEF_LIMIT,"Button",
+                    BS_AUTORADIOBUTTON,23,94,74,8
+    EDITTEXT        IDC_EDIT_DEF_LIMIT,99,92,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_DEF_LIMIT,148,92,31,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Set warning level to",IDC_TXT_WARN_LEVEL,31,110,65,8
+    EDITTEXT        IDC_EDIT_DEF_THRESHOLD,99,108,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_DEF_THRESHOLD,148,108,31,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Apply settings to:",IDC_STATIC,7,141,213,45
+    CONTROL         "&Fixed NTFS volumes only.",IDC_RBN_POLICY_FIXED,"Button",
+                    BS_AUTORADIOBUTTON,15,155,199,10
+    CONTROL         "&All NTFS volumes, including removable media.",
+                    IDC_RBN_POLICY_REMOVABLE,"Button",BS_AUTORADIOBUTTON,15,
+                    169,199,10
+END
+
+IDD_OWNERSANDFILES DIALOG DISCARDABLE  0, 0, 307, 257
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Disk Quota"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "< header text >",IDC_TXT_OWNERDLG_HEADER,36,7,264,24
+    LTEXT           "&List files owned by:",IDC_STATIC,9,38,61,8
+    COMBOBOX        IDC_CMB_OWNERDLG_OWNERS,72,36,228,30,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "List1",IDC_LV_OWNERDLG,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,54,293,101
+    GROUPBOX        "Select an option for the selected files: ",IDC_STATIC,7,
+                    160,293,69
+    LTEXT           "Permanently delete files.",IDC_STATIC,15,174,150,8
+    PUSHBUTTON      "&Delete",IDC_BTN_OWNERDLG_DELETE,228,171,65,14,
+                    WS_DISABLED
+    LTEXT           "Take ownership of files.",IDC_STATIC,15,192,150,8
+    PUSHBUTTON      "&Take Ownership",IDC_BTN_OWNERDLG_TAKE,228,189,65,14,
+                    WS_DISABLED
+    LTEXT           "Move &files to:",IDC_STATIC,15,210,46,8
+    EDITTEXT        IDC_EDIT_OWNERDLG_MOVETO,63,207,102,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Move",IDC_BTN_OWNERDLG_MOVETO,228,207,65,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Browse...",IDC_BTN_OWNERDLG_BROWSE,170,207,50,14
+    PUSHBUTTON      "&Close",IDCANCEL,250,236,50,14
+    ICON            IDI_QUOTA,IDC_STATIC,7,7,20,20
+END
+
+IDD_ADDUSER DIALOGEX 0, 0, 212, 128
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add New Quota Entry"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SINGLE_USER,IDC_ICON_USER,7,7,20,20
+    LTEXT           "User:",IDC_STATIC2,36,14,21,10
+    LTEXT           "Static",IDC_TXT_USERNAME,57,14,148,10
+    LTEXT           "Set the quota limit for the selected user(s):",
+                    IDC_TXT_DEFAULTS,14,32,191,10
+    CONTROL         "D&o not limit disk usage",IDC_RBN_USER_NOLIMIT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,21,50,111,10
+    CONTROL         "&Limit disk space to",IDC_RBN_USER_LIMIT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,21,64,74,10
+    EDITTEXT        IDC_EDIT_USER_LIMIT,101,64,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_USER_LIMIT,151,64,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Set warning level to",IDC_TXT_WARN_LEVEL,33,81,66,10
+    EDITTEXT        IDC_EDIT_USER_THRESHOLD,101,80,45,12,ES_AUTOHSCROLL,
+                    WS_EX_RIGHT
+    COMBOBOX        IDC_CMB_USER_THRESHOLD,151,80,45,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,100,107,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,155,107,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include ""..\\common\\resource.h""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""dskquoui.rcv""\r\n"
+    "#include ""..\\common\\common.rc""\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_PROPPAGE_VOLQUOTA, DIALOG
+    BEGIN
+        LEFTMARGIN, 4
+        RIGHTMARGIN, 220
+        VERTGUIDE, 14
+        VERTGUIDE, 21
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_PROPPAGE_USERQUOTA, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 181
+    END
+
+    IDD_FINDUSER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        VERTGUIDE, 104
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 51
+    END
+
+    IDD_PROGRESS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+
+    IDD_YNTOALL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 261
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 78
+    END
+
+    IDD_PROPPAGE_POLICY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 208
+    END
+
+    IDD_OWNERSANDFILES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 300
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 250
+    END
+
+    IDD_ADDUSER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 121
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_LISTVIEW_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&Quota"
+    BEGIN
+        MENUITEM "&New Quota Entry...",         IDM_QUOTA_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "&Import...",                  IDM_QUOTA_IMPORT
+        MENUITEM "&Export...",                  IDM_QUOTA_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "&Delete Quota Entry...",      IDM_QUOTA_DELETE
+        MENUITEM "P&roperties",                 IDM_QUOTA_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      IDM_QUOTA_CLOSE
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               IDM_EDIT_UNDO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy\tCtrl+C",               IDM_EDIT_COPY
+        MENUITEM SEPARATOR
+        MENUITEM "&Find...\tCtrl+F",            IDM_EDIT_FIND
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl+A",         IDM_EDIT_SELECTALL
+        MENUITEM "&Invert Selection",           IDM_EDIT_INVERTSELECTION
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    IDM_VIEW_TOOLBAR
+        MENUITEM "Status &Bar",                 IDM_VIEW_STATUSBAR
+        MENUITEM "Containing &Folder",          IDM_VIEW_SHOWFOLDER
+        MENUITEM SEPARATOR
+        POPUP "&Arrange Items"
+        BEGIN
+            MENUITEM "by &Folder",                  IDM_VIEW_ARRANGE_BYFOLDER
+
+            MENUITEM "by User &Name",               IDM_VIEW_ARRANGE_BYNAME
+            MENUITEM "by &Logon Name",              IDM_VIEW_ARRANGE_BYLOGONNAME
+
+            MENUITEM "by &Status",                  IDM_VIEW_ARRANGE_BYSTATUS
+
+            MENUITEM "by &Amount Used",             IDM_VIEW_ARRANGE_BYUSED
+            MENUITEM "by &Quota Limit",             IDM_VIEW_ARRANGE_BYLIMIT
+            MENUITEM "by &Warning Level",           IDM_VIEW_ARRANGE_BYTHRESHOLD
+
+            MENUITEM "by &Percent Used",            IDM_VIEW_ARRANGE_BYPERCENT
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Refresh",                    IDM_VIEW_REFRESH
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Help Topics",                IDM_HELP_TOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About Windows",              IDM_HELP_ABOUT
+    END
+END
+
+IDM_CONTEXT_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Delete",                     IDM_QUOTA_DELETE
+        MENUITEM "&Export",                     IDM_QUOTA_EXPORT
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 IDM_QUOTA_PROPERTIES
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_QUOTA               ICON    DISCARDABLE     "quota.ico"
+IDI_MULTI_USER          ICON    DISCARDABLE     "muser.ico"
+IDI_SINGLE_USER         ICON    DISCARDABLE     "user.ico"
+IDI_OKBUBBLE            ICON    DISCARDABLE     "okbubble.ico"
+IDI_WARNERR             ICON    DISCARDABLE     "warnerr.ico"
+IDI_QUOTA_OPEN          ICON    DISCARDABLE     "quota_op.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_KBDACCEL ACCELERATORS DISCARDABLE 
+BEGIN
+    "A",            IDM_EDIT_SELECTALL,     VIRTKEY, CONTROL, NOINVERT
+    "C",            IDM_EDIT_COPY,          VIRTKEY, CONTROL, NOINVERT
+    "D",            IDM_EDIT_FIND_LIST,     VIRTKEY, CONTROL, NOINVERT
+    "F",            IDM_EDIT_FIND,          VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      IDM_QUOTA_DELETE,       VIRTKEY, NOINVERT
+    VK_F1,          IDM_HELP_TOPICS,        VIRTKEY, NOINVERT
+    VK_F11,         IDM_CLEAR_CACHE,        VIRTKEY, ALT, NOINVERT
+    VK_F12,         IDM_DEBUG_DUMP,         VIRTKEY, ALT, NOINVERT
+    VK_F5,          IDM_VIEW_REFRESH,       VIRTKEY, NOINVERT
+    VK_RETURN,      IDM_QUOTA_PROPERTIES,   VIRTKEY, ALT, NOINVERT
+    "Z",            IDM_EDIT_UNDO,          VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_QUOTA_NEW           "Adds a new quota entry."
+    IDM_QUOTA_EDIT          "Deletes the selected quota entries."
+    IDM_VIEW_TOOLBAR        "Shows or hides the toolbar."
+    IDM_VIEW_STATUSBAR      "Shows or hides the status bar."
+    IDM_VIEW_ARRANGE_BYNAME "Arranges items by user's name."
+    IDM_VIEW_ARRANGE_BYUSED "Arranges items by amount of quota used."
+    IDM_VIEW_ARRANGE_BYLIMIT "Arranges items by maximum quota limit."
+    IDM_VIEW_ARRANGE_BYTHRESHOLD "Arranges items by quota warning level."
+    IDM_VIEW_ARRANGE_BYPERCENT 
+                            "Arranges items by percentage of quota limit used."
+    IDM_VIEW_REFRESH        "Refreshes item information."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_QUOTA_PROPERTIES    "Displays the properties of the selected quota entries."
+    IDM_QUOTA_CLOSE         "Closes the window."
+    IDM_HELP_TOPICS         "Opens help."
+    IDM_EDIT_SELECTALL      "Selects all quota entries."
+    IDM_EDIT_INVERTSELECTION 
+                            "Reverses which quota entries are selected and which are not."
+    IDM_VIEW_SHOWFOLDER     "Shows or hides the Folder column."
+    IDM_QUOTA_DELETE        "Removes entry from the volume's quota information."
+    IDM_HELP_ABOUTNT        "Displays program information, version number and copyright."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WINDOWS             "Windows"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOOLBAR_COMBO       "Find quota entry (Ctrl+D)"
+    IDS_PROGRESS_IMPORTING  "Importing quota settings."
+    IDS_PROGRESS_DELETING   "Deleting quota settings."
+    IDS_STATUS_OK           "OK"
+    IDS_STATUS_WARNING      "Warning"
+    IDS_STATUS_OVERLIMIT    "Above Limit"
+    IDS_STATUS_UNKNOWN      "State of quota system is unknown"
+    IDS_STATUS_DISABLED     "Disk quotas are disabled"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_VIEW_ARRANGE_BYFOLDER "Arranges items by folder."
+    IDM_VIEW_ARRANGE_BYSTATUS "Arranges items by quota status."
+    IDM_EDIT_UNDO           "Reverses the previous modification or deletion."
+    IDM_EDIT_COPY           "Copies selected items to clipboard."
+    IDM_EDIT_FIND           "Finds a quota entry in the list."
+    IDM_QUOTA_IMPORT        "Imports quota settings."
+    IDM_QUOTA_EXPORT        "Exports quota settings for selected entries."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STATUS_ACTIVE       "Disk quota system is active"
+    IDS_STATUS_REBUILDING   "Rebuilding disk quota information"
+    IDS_TITLE_DISK_QUOTA    "Disk Quota"
+    IDS_TITLE_COL_FOLDER    "In Folder"
+    IDS_TITLE_COL_USERNAME  "Name"
+    IDS_TITLE_COL_STATUS    "Status"
+    IDS_TITLE_COL_AMTUSED   "Amount Used"
+    IDS_TITLE_COL_PCTUSED   "Percent Used"
+    IDS_TITLE_COL_LIMIT     "Quota Limit"
+    IDS_TITLE_COL_THRESHOLD "Warning Level"
+    IDS_REPORT_HEADER_FOLDER "In Folder"
+    IDS_REPORT_HEADER_USERNAME "Name"
+    IDS_REPORT_HEADER_STATUS "Status"
+    IDS_REPORT_HEADER_AMTUSED "Amount Used (MB)"
+    IDS_REPORT_HEADER_LIMIT "Quota Limit (MB)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_REPORT_HEADER_THRESHOLD "Warning Level (MB)"
+    IDS_REPORT_HEADER_PCTUSED "Percent Used"
+    IDS_QUOTA_USED_SINGLEUSER "%1 ( %2!d!%% )"
+    IDS_TITLE_MULTIUSER     "Number of entries selected: %1!d!"
+    IDS_TITLE_EDIT_USER     "Quota Settings for %1"
+    IDS_TITLE_ADD_USER      "Quota Settings for New Entry"
+    IDS_NOADD_EXISTING_USER "Quota information cannot be added.  There is already a quota entry for this user."
+    IDS_NOADD_UNKNOWN_USER  "Quota information cannot be added.  The user is unknown."
+    IDS_STATUSBAR_ITEMCOUNT "%1!d! total item(s), %2!d! selected."
+    IDS_STATUSBAR_ITEMCOUNT_STALE 
+                            "%1!d! total item(s), %2!d! selected.  Quotas are disabled.  Information might be incorrect."
+    IDS_TITLE_MAINWINDOW    "Quota Entries for %1"
+    IDS_USER_ACCOUNT_UNAVAILABLE "[Account Information Unavailable]"
+    IDS_USER_ACCOUNT_UNRESOLVED "[Retrieving Name]"
+    IDS_USER_ACCOUNT_UNKNOWN "[Account Unknown]"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USER_ACCOUNT_INVALID "[Account Invalid]"
+    IDS_USER_ACCOUNT_DELETED "[Account Deleted]"
+    IDS_NOT_APPLICABLE      "N/A"
+    IDS_DISABLE_QUOTA_WARNING 
+                            "You should disable the quota system only if you do not intend to use quotas on this disk volume.  When you reenable the quota system, the volume will be rescanned to update disk usage statistics.\n\nPress OK to disable the quota system now."
+    IDS_ENABLE_QUOTA_WARNING 
+                            "You should enable the quota system only if you intend to use quotas on this disk volume.  When you enable the quota system, the volume will be rescanned to update disk usage statistics. This might take several minutes.\n\nPress OK to enable the quota system now."
+    IDS_OUTOFMEMORY         "There is not enough memory available to perform this task.\nQuit one or more programs, and then try again."
+    IDS_UNKNOWN_EXCEPTION   "An unknown error has occurred."
+    IDS_UNKNOWN_ERROR       "An unknown error has occurred."
+    IDS_NO_WRITE_ACCESS     "You do not have sufficient access rights to make the requested changes to this volume's quota information.\nSome or all of the settings were not changed."
+    IDS_WRITE_ERROR         "The new settings could not be saved."
+    IDS_CANNOT_DELETE_USER  "Disk space is charged to the account of a selected user.\nUsers charged with disk space cannot be deleted."
+    IDS_CANNOT_DELETE_USERS "Disk space is charged to the accounts of %1!d! selected users.\nUsers charged with disk space cannot be deleted."
+    IDS_ERROR_DELETE_USER   "An error occurred while deleting the selected entries.  One or more selected entries were not deleted."
+    IDS_ERROR_FILE_NOT_FOUND "The file %1 cannot be found."
+    IDS_ERROR_FILE_CORRUPT  "The file %1 is corrupted or invalid."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_DDE_EXECUTE   "A DDE error has occurred executing %1."
+    IDS_CONFIRM_DELETE_USER "Are you sure you want to delete these entries?"
+    IDS_APPLY_SETTINGS_ERROR "One or more settings were not changed."
+    IDS_CANT_SET_ADMIN_LIMIT 
+                            "A quota limit cannot be applied to the 'Administrators' account."
+    IDS_CANT_DELETE_ADMIN_RECORD 
+                            "Deletion of the quota entry for BUILTIN\\Administrators is not allowed."
+    IDS_USER_NOT_FOUND_IN_LISTVIEW "Cannot find the entry for  '%1'."
+    IDS_EXPORT_STREAM_FAILED 
+                            "An error occurred while saving the export quota information."
+    IDS_EXPORT_STREAM_NOACCESS 
+                            "Access denied.  The export quota information cannot be saved."
+    IDS_EXPORT_STREAM_OUTOFMEMORY 
+                            "Insufficient memory prevents saving the export quota information.  Close one or more applications and try again."
+    IDS_EXPORT_STREAM_INVALIDNAME 
+                            "The name supplied for the export file is invalid."
+    IDS_EXPORT_STREAM_TOOMANYFILES 
+                            "There are too many files open on the system.  The export quota information cannot be saved.  Close some files and try again."
+    IDS_EXPORT_STREAM_FILENAME_TEMPLATE "Disk Quota Settings for Volume '%1'"
+    IDS_IMPORT_STREAM_INVALID_STREAM 
+                            "The import quota information is corrupted or invalid."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IMPORT_STREAM_READ_ERROR 
+                            "An error occurred while reading the import quota information."
+    IDS_IMPORT_STREAM_NOACCESS 
+                            "Access denied.  The import quota information cannot be read."
+    IDS_IMPORT_STREAM_OUTOFMEMORY 
+                            "Insufficient memory prevents reading the export quota information.  Close one or more applications and try again."
+    IDS_IMPORT_STREAM_INVALIDNAME 
+                            "The name supplied for the import file is invalid."
+    IDS_IMPORT_STREAM_TOOMANYFILES 
+                            "There are too many files open on the system.  Close some files and try again."
+    IDS_IMPORT_STREAM_FILENOTFOUND "File not found."
+    IDS_IMPORT_REPLACE_RECORD 
+                            "A quota entry for '%1 (%2)' already exists on this volume.  Do you want to replace it?"
+    IDS_TT_QUOTA_NEW        "New quota entry"
+    IDS_TT_QUOTA_DELETE     "Delete quota entry"
+    IDS_TT_QUOTA_PROPERTIES "Properties"
+    IDS_TT_EDIT_UNDO        "Undo"
+    IDS_TT_EDIT_FIND        "Find quota entry"
+    IDS_TITLE_EDIT_MULTIUSER "Quota Settings for Selected Entries"
+    IDS_TITLE_GENERAL       "General"
+    IDS_TITLE_GETUSER_DIALOG "Find Quota User"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FMT_ERR_ADDUSER     "%1%n%nUser: %2"
+    IDS_MULTIPLE            "< Multiple >"
+    IDS_PROGRESS_ADDUSER    "Adding quota records."
+    IDS_SNAPIN_COLUMN       " "
+    IDS_SNAPIN_RESULTNAME   "Disk Quota Settings"
+    IDS_SNAPIN_SCOPENAME    "Disk Quota Settings"
+    IDS_SNAPIN_NAME         "Disk Quota Settings"
+    IDS_VERB_OPEN           "Open"
+    IDS_SNAPIN_POLICYDLG_TITLE "Disk Quota Policy Settings"
+    IDS_OWNERDLG_HDR_FILE   "File Name"
+    IDS_OWNERDLG_HDR_FOLDER "In Folder"
+    IDS_OWNERDLG_HDR_OWNER  "Owner"
+    IDS_FMT_ALLOWNERS       "All owners (%1!d! files)"
+    IDS_FMT_OWNER           "%1 (%2!d! files)"
+    IDS_FMT_OWNERDLG_HEADER "Files are consuming disk space for %1!d! of the selected quota entries.  These entries cannot be deleted until the disk space is freed up."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BROWSEFORFOLDER     "Select a destination folder for the selected files."
+    IDS_ERROR_MOVETO_SAMEVOL 
+                            "Files cannot be moved to a folder on the same volume.  Select a folder on another volume as the destination."
+    IDS_FMT_DISPLAY_LOGON_CONTAINER "%1 (%2) in %3"
+    IDS_FMT_LOGON_CONTAINER "%1 in %2"
+    IDS_FMT_DISPLAY_LOGON   "%1 (%2)"
+    IDS_TITLE_COL_LOGONNAME "Logon Name"
+    IDS_REPORT_HEADER_LOGONNAME "Logon Name"
+    IDM_VIEW_ARRANGE_BYLOGONNAME "Arranges items by user's logon name."
+    IDS_PROGRESS_SEARCHINGFORFILES 
+                            "Searching for files owned by selected users."
+    IDS_FMT_ERR_WARNOVERLIMIT 
+                            "Warning level (%1) exceeds quota limit (%2).  Set warning level to %3?"
+    IDS_FMT_MOUNTEDVOL_DISPLAYNAME "%1 (%2)"
+    IDS_EXPORT_STREAM_FILENAME_TEMPLATE_VOLSN 
+                            "Disk Quota Settings for Unlabeled Volume SN %1!04X!-%2!04X!"
+    IDS_DLGTITLE_IMPORT     "Import Quota Settings"
+    IDS_DLGTITLE_EXPORT     "Export Quota Settings"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "dskquoui.rcv"
+#include "..\common\common.rc"
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

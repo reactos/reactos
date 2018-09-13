@@ -1,0 +1,4 @@
+LIBRARY CONSRV
+
+EXPORTS
+    ServerDllInitialization

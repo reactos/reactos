@@ -1,0 +1,36 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\debug\include=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+TARGETNAME=debugpch
+
+!if "$(BUILD_XMLDBG_AS_LIB)" == "1"
+TARGETPATH=$(ROOT)\debug\$(_OBJ_DIR)
+!else
+TARGETPATH=obj
+!endif
+TARGETTYPE=LIBRARY
+
+SYNCHRONIZE_BLOCK=1
+
+SOURCES=\
+    headers.cxx
+
+INCLUDES= \
+	..\src; \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fh=$(O)\headers.pch
+!else
+PRECOMPILED_INCLUDE=headers.hxx
+!endif
+PRECOMPILED_CXX=1
+PRECOMPILED_OBJ=precomp.obj
+PRECOMPILED_SOURCEFILE=headers.cxx

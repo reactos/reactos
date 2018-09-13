@@ -1,0 +1,6 @@
+cvcomman.c(318) : warning C4013: 'EditAuditing' undefined; assuming extern returning int
+
+cvcomman.c(322) : warning C4013: 'EditOwner' undefined; assuming extern returning int
+
+obj\i386\CLIPBOOK.exe() : warning 0505: No modules extracted from C:\nt\public\sdk\lib\i386\ntdll.lib
+

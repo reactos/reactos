@@ -1,0 +1,65 @@
+!IF 0
+
+Copyright (c) 1991-1999 Microsoft Corporation.
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=uce
+
+TARGETNAME=CharMap
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+INCLUDES=.;..\getuname
+
+SOURCES=UCE.cxx       \
+        codepage.cxx  \
+        utils.cxx     \
+        kd.cxx        \
+        font.cxx      \
+        subset.cxx    \
+        display.cxx   \
+        ucefile.cxx   \
+        gridlist.cxx  \
+        cdataobj.cxx  \
+        cdropsrc.cxx  \
+        UCE.rc        \
+        Enumfetc.c    \
+	oleedit.cxx
+
+#C_DEFINES=-DWINNT -DWIN32 -DUNICODE -D_UNICODE -DDISABLE_RICHEDIT
+C_DEFINES=-DWINNT -DWIN32 -DUNICODE -D_UNICODE
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS= \
+       $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+       $(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+       $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+       $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib \
+       ..\getuname\obj\*\getuname.lib
+
+MISCFILES= \
+    data\bopomofo.UCE \
+    data\gb2312.UCE \
+    data\kanji_1.uce \
+    data\kanji_2.uce \
+    data\korean.UCE \
+    data\ShiftJIS.UCE \
+    data\SubRange.UCE \
+    data\ideograf.UCE

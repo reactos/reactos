@@ -1,0 +1,12 @@
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft (R) HTML Application host"
+#define VER_INTERNALNAME_STR        "HTA"
+#define VER_ORIGINALFILENAME_STR    "HTA.EXE"
+#include "common.ver"
+
+#include "apprc2.h"
+
+IDF_SMALL_ICON  FILERESOURCE appsmall.ico
+IDF_LARGE_ICON  FILERESOURCE appicon.ico

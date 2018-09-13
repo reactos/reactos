@@ -1,0 +1,71 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=osk
+
+TARGETNAME=osk
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+USE_CRTDLL=1
+
+INCLUDES=..\..\inc;..;..\res;$(BASEDIR)\public\sdk\inc\mfc42
+
+SOURCES=..\osk.rc     \
+        ..\about.c    \
+        ..\credits.c  \
+        ..\dgsett.c   \
+        ..\fileutil.c \
+        ..\kbfunc.c   \
+        ..\kbmain.c   \
+        ..\ms32dll.c  \
+        ..\PD32002.C  \
+        ..\SCAN.C     \
+        ..\SDGUTIL.C  \
+        ..\splash.c   \
+        ..\THANKS.C 
+
+
+TARGETLIBS=
+
+
+UMTYPE=windows
+UMENTRY=winmain
+
+UMAPPL=
+
+C_DEFINES=
+
+
+UMLIBS=obj\*\osk.res                            \
+       $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+       $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\winmm.lib
+
+#       $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+#       $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+  

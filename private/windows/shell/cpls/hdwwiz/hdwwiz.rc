@@ -1,0 +1,742 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       hdwwiz.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "setupapi.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+//
+// Version information
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Add/Remove Hardware Control Panel Applet"
+#define VER_INTERNALNAME_STR            "hdwwiz"
+#define VER_ORIGINALFILENAME_STR        "hdwwiz.cpl"
+
+#include "common.ver"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_HDWINTRO DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Welcome to the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,8,190,24
+    LTEXT           "This wizard helps you add, remove, unplug, and troubleshoot your hardware.",
+                    -1,114,40,182,19
+    LTEXT           "To continue, click Next.",-1,114,178,193,8
+END
+
+IDD_HDWTASKS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the hardware task you want to perform, and then click Next.",
+                    -1,21,8,275,10
+    CONTROL         "&Add/Troubleshoot a device \nChoose this option if you are adding a new device to your computer or are having problems getting a device working.",
+                    IDC_HWTASK_ADDNEW,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,21,25,275,28
+    CONTROL         "&Uninstall/Unplug a device \nChoose this option to uninstall a device or to prepare the computer to unplug a device.",
+                    IDC_HWTASK_REMOVE,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,21,60,275,24
+END
+
+IDD_HDWINVOKETASK DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    115,8,189,32
+    LTEXT           "Windows could not perform the following hardware task:",
+                    -1,115,41,188,16
+    LTEXT           "",IDC_HDWTASKDESC,125,56,178,32,SS_NOPREFIX
+    LTEXT           "",IDC_ERRORTEXT,125,89,178,32
+    LTEXT           "To select another task click Back. To close this wizard click Finish.",
+                    -1,115,113,188,24
+END
+
+IDD_HIDDENTASKSDLG DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "HiddenTasksDialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",-1,25,10,175,10
+END
+
+IDD_ADDDEVICE_PROBLIST DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "The following hardware is already installed on your computer. If you are having problems with one of these devices, select the device, and then click Next.",
+                    -1,21,8,275,16
+    CONTROL         "ProbList",IDC_HDWPROBLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | 
+                    LVS_ALIGNLEFT | LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | 
+                    WS_TABSTOP,21,54,275,84
+    LTEXT           "If you are attempting to add a device and it is not shown below, select Add a new device, and then click Next.",
+                    -1,21,31,275,16
+END
+
+IDD_ADDDEVICE_PROBLIST_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_PROBLEM_DESC,114,76,193,71,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT 
+                    WS_TABSTOP
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,8,193,24
+    LTEXT           "You have successfully completed the Add/Remove Hardware wizard.",
+                    IDC_STATIC,114,40,193,19
+    LTEXT           "Device status:",IDC_STATIC,114,66,93,8
+    LTEXT           "The troubleshooter starts when you close this wizard.",
+                    IDC_STATIC,114,158,193,16
+    LTEXT           "To close this wizard, click Finish.",IDC_HDW_TEXT,114,
+                    178,193,8
+END
+
+IDD_ADDDEVICE_PNPENUM DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_TEXT,21,8,275,32
+    LTEXT           "The following Plug and Play devices were installed:",
+                    IDC_FOUNDPNP_TEXT,21,47,275,9
+    CONTROL         "",IDC_FOUNDPNP_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,21,58,275,60
+END
+
+IDD_ADDDEVICE_PNPFINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,0,193,24
+    LTEXT           "You have successfully completed the Add/Remove Hardware wizard.",
+                    IDC_STATIC,114,32,193,19
+    LTEXT           "Windows has finished installing new Plug and Play hardware.",
+                    IDC_HDW_TEXT,114,70,193,96
+    LTEXT           "To close this wizard, click Finish.",IDC_STATIC,114,178,
+                    132,8
+END
+
+IDD_ADDDEVICE_ASKDETECT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "When Windows detects new hardware, it checks the current settings for the device and installs the correct driver.\n\n\nDo you want Windows to search for your new hardware?",
+                    -1,21,8,275,40
+    CONTROL         "&Yes, search for new hardware",
+                    IDC_ADDDEVICE_ASKDETECT_AUTO,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,30,55,170,8
+    CONTROL         "N&o, I want to select the hardware from a list",
+                    IDC_ADDDEVICE_ASKDETECT_SPECIFIC,"Button",
+                    BS_AUTORADIOBUTTON,30,67,170,8
+END
+
+IDD_ADDDEVICE_DETECTION DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This detection process may take several minutes.",-1,21,
+                    8,275,8
+    LTEXT           "",IDC_HDW_DETWARN_PROGRESSTEXT,21,25,275,8
+    CONTROL         "",IDC_HDW_DETWARN_PROGRESSBAR,"msctls_progress32",0x0,
+                    21,35,275,14
+    LTEXT           "Total detection progress:",
+                    IDC_HDW_DETWARN_TOTALPROGRESSTEXT,21,58,275,8
+    CONTROL         "",IDC_HDW_DETWARN_TOTALPROGRESSBAR,"msctls_progress32",
+                    0x0,21,68,275,14
+END
+
+IDD_ADDDEVICE_DETECTINSTALL DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_TEXT,21,9,275,40
+    LTEXT           "Detected hardware:",IDC_HDW_INSTALLDET_LISTTITLE,21,54,
+                    176,8
+    CONTROL         "Detection results:",IDC_HDW_INSTALLDET_LIST,
+                    "SysListView32",LVS_REPORT | LVS_SINGLESEL | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | 
+                    LVS_NOSORTHEADER | WS_BORDER | WS_GROUP | WS_TABSTOP,21,
+                    64,275,70
+END
+
+IDD_ADDDEVICE_DETECTREBOOT DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_TEXT,114,70,193,96
+    LTEXT           "To close this wizard, click Finish.",IDC_STATIC,114,178,
+                    132,8
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,0,193,24
+    LTEXT           "You have successfully completed the Add/Remove Hardware wizard.",
+                    IDC_STATIC,114,32,193,19
+END
+
+IDD_ADDDEVICE_SELECTCLASS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the type of hardware you want to install.",
+                    IDC_HDW_TEXT,21,9,275,16
+    LTEXT           "&Hardware types:",IDC_HDW_PICKCLASS_HWTYPES,21,31,177,8
+    CONTROL         "",IDC_HDW_PICKCLASS_CLASSLIST,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | 
+                    LVS_SORTASCENDING | LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | 
+                    LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | 
+                    WS_GROUP | WS_TABSTOP,21,42,275,92
+END
+
+IDD_ADDDEVICE_SELECTDEVICE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_INSTALLNEWDEVICE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_DESCRIPTION,21,1,274,28
+    LTEXT           "",IDC_HDW_TEXT,21,11,274,124
+END
+
+IDD_ADDDEVICE_ANALYZEDEV DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_DESCRIPTION,56,14,240,16,SS_NOPREFIX
+    ICON            "",IDC_CLASSICON,21,8,21,20
+    LTEXT           "",IDC_HDW_TEXT,21,35,275,40
+    //PUSHBUTTON      "R&esources...",IDC_HDW_DISPLAYRESOURCE,246,127,50,14
+END
+
+IDD_ADDDEVICE_INSTALLDEV DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_CLASSICON,20,8,20,20
+    LTEXT           "",IDC_HDW_DESCRIPTION,56,14,240,16,SS_NOPREFIX
+    LTEXT           "Installing software necessary to support your hardware...",
+                    IDC_HDW_TEXT,20,35,276,60
+END
+
+IDD_ADDDEVICE_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,8,193,24
+    LTEXT           "The following hardware was installed:",IDC_STATIC,114,
+                    39,193,8
+    LTEXT           "",IDC_HDW_DESCRIPTION,114,50,193,16,SS_NOPREFIX
+    LTEXT           "",IDC_HDW_TEXT,114,74,189,85
+    LTEXT           "To view or change the resources for this device, click Resources.",
+                    IDC_HDW_CHANGERESOURCE,114,157,136,16
+    PUSHBUTTON      "R&esources...",IDC_HDW_DISPLAYRESOURCE,257,157,50,14
+    LTEXT           "To close this wizard, click Finish.",IDC_STATIC,114,178,
+                    132,8
+END
+
+IDD_REMDEVICE_CHOICE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the removal task you want to perform, and then click Next.",-1,21,8,276,
+                    11
+    CONTROL         "&Uninstall a device \nChoose this option to permanently uninstall a device and its driver.",
+                    IDC_CHOICE_UNINSTALL,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE,30,23,266,16
+    CONTROL         "Unplug/&Eject a device \nChoose this option to temporarily unplug or eject a device.",
+                    IDC_CHOICE_UNPLUG,"Button",BS_AUTORADIOBUTTON | BS_TOP | 
+                    BS_MULTILINE,30,43,266,24
+END
+
+IDD_REMDEVICE_UNINSTALLLIST DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the device you want to uninstall.",-1,21,8,275,
+                    10
+    CONTROL         "ProbList",IDC_HDWUNINSTALLLIST,"SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | 
+                    LVS_SHAREIMAGELISTS | LVS_ALIGNLEFT | LVS_NOSORTHEADER | 
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,21,23,275,88
+    CONTROL         "&Show hidden devices",IDC_SHOW_HIDDEN,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,118,176,10
+END
+
+IDD_REMDEVICE_UNINSTALL_CONFIRM DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_DESCRIPTION,56,14,240,16,SS_NOPREFIX
+    ICON            "",IDC_CLASSICON,21,8,20,20
+    LTEXT           "Are you sure that you want to uninstall this device?",
+                    -1,21,35,275,10
+    CONTROL         "&Yes, I want to uninstall this device",
+                    IDC_UNINSTALL_CONFIRM_YES,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE,21,52,275,10
+    CONTROL         "N&o, I do not want to uninstall this device",
+                    IDC_UNINSTALL_CONFIRM_NO,"Button",BS_AUTORADIOBUTTON | 
+                    BS_TOP | BS_MULTILINE,21,66,275,10
+END
+
+IDD_REMDEVICE_UNINSTALL_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HDW_TEXT,114,79,193,78
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,8,193,24
+    LTEXT           "You have successfully completed the Add/Remove Hardware wizard.",
+                    IDC_STATIC,114,40,193,19
+    LTEXT           "To close this wizard, click Finish.",IDC_STATIC,114,178,
+                    193,8
+END
+
+IDD_WIZARDEXT_PRESELECT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_DYNAWIZ_SELECTCLASS_PAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_DYNAWIZ_ANALYZEDEV_PAGE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_PREANALYZE_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_POSTANALYZE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_POSTANALYZE_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_FINISHINSTALL DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_FINISHINSTALL_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_UNPLUG DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_WIZARDEXT_UNPLUG_END DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_HDWWIZICON          ICON    DISCARDABLE     "HdwWiz.ico"
+IDI_BLANK               ICON    DISCARDABLE     "blank.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WATERMARK           BITMAP  DISCARDABLE     "Watermrk.bmp"
+IDB_BANNER              BITMAP  DISCARDABLE     "Banner.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""setupapi.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_HDWINTRO, DIALOG
+    BEGIN
+        VERTGUIDE, 114
+    END
+
+    IDD_HDWTASKS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_PROBLIST, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_PROBLIST_FINISH, DIALOG
+    BEGIN
+        VERTGUIDE, 114
+        VERTGUIDE, 307
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_ADDDEVICE_PNPENUM, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_ASKDETECT, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 30
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_DETECTION, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_DETECTINSTALL, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_DETECTREBOOT, DIALOG
+    BEGIN
+        VERTGUIDE, 114
+        VERTGUIDE, 307
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_ADDDEVICE_SELECTCLASS, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_ANALYZEDEV, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_INSTALLDEV, DIALOG
+    BEGIN
+        VERTGUIDE, 20
+        VERTGUIDE, 296
+    END
+
+    IDD_ADDDEVICE_FINISH, DIALOG
+    BEGIN
+        RIGHTMARGIN, 316
+        VERTGUIDE, 114
+        VERTGUIDE, 307
+    END
+
+    IDD_REMDEVICE_CHOICE, DIALOG
+    BEGIN
+        VERTGUIDE, 20
+        VERTGUIDE, 30
+        VERTGUIDE, 296
+    END
+
+    IDD_REMDEVICE_UNINSTALLLIST, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_REMDEVICE_UNINSTALL_CONFIRM, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+    END
+
+    IDD_REMDEVICE_UNINSTALL_FINISH, DIALOG
+    BEGIN
+        VERTGUIDE, 114
+        VERTGUIDE, 307
+        BOTTOMMARGIN, 143
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HDWWIZ              "Add/Remove Hardware"
+    IDS_HDWWIZNAME          "Add/Remove Hardware Wizard"
+    IDS_HDWWIZINFO          "Installs, removes, and troubleshoots hardware"
+    IDS_HDWWIZTASKS         "Choose a Hardware Task"
+    IDS_HDWWIZTASKSINFO     "Which hardware task do you want to perform?"
+    IDS_ADDDEVICE_PROBLIST  "Choose a Hardware Device"
+    IDS_ADDDEVICE_PROBLIST_INFO "Which hardware device do you want to troubleshoot?"
+    IDS_HDWWIZ_SELDEVICE    "Choose a Hardware Device"
+    IDS_HDWWIZINFO_SELDEVICE "Select a hardware device"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNKNOWN             "Unknown"
+    IDS_DEVICES             "Devices"
+    IDS_DEVLOCATION         "Location"
+    IDS_STATUS              "Status"
+    IDS_UNKNOWNDEVICE       "Unknown Device"
+    IDS_HDWUNINSTALL_NOPRIVILEGE 
+                            "You do not have sufficient security privileges to install or uninstall devices on this computer. Please contact your site administrator, or log off and log on again as an administrator and try again."
+    IDS_HWTASK_TROUBLE      "Use troubleshooters and other tools that can help you evaluate and repair the installation for your hardware."
+    IDS_DEVINSTALLED        "Devices Installed"
+    IDS_ADDDEVICE_PNPENUMERATE 
+                            "Windows is searching for new Plug and Play hardware to install.\n\nSearching..."
+    IDS_ADDDEVICE_PNPENUMDONE 
+                            "Windows has finished searching for Plug and Play hardware."
+    IDS_ADDDEVICE_PNPENUMREBOOT 
+                            "The next time you restart your computer, Windows will continue searching for and installing new Plug and Play hardware."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_REMDEVICE_UNINSTALL_CONFIRM "Uninstall a Device"
+    IDS_REMDEVICE_UNINSTALL_CONFIRM_INFO 
+                            "Confirm that you want to uninstall this device."
+    IDS_DESCENDANTS_VETO    "Can not uninstall this device because its descendants refused the request. This can happen if the device's  descendants are required to boot up the computer. "
+    IDS_UNINSTALL_FAILED    "Failed to uninstall the device. The device may be required to boot up the computer."
+    IDS_UNINSTALL_SUCCESS   "Windows successfully uninstalled the selected device."
+    IDS_UNINSTALL_FAIL      "Windows was unable to uninstall this device."
+    IDS_ADDDEVICE_PNPENUMERROR 
+                            "Windows encountered an error while searching for Plug and Play hardware. To install hardware which is not Plug and Play compatible, click Next."
+    IDS_UNINSTALL_NEEDREBOOT 
+                            "You need to restart you computer to finish uninstalling this hardware."
+    IDS_INSTALLNEWDEVICE    "InstallNewDeviceEntry"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADDDEVICE_PNPENUM   "New Hardware Detection"
+    IDS_ADDDEVICE_PNPENUM_INFO 
+                            "The wizard automatically locates new Plug and Play hardware."
+    IDS_ADDDEVICE_ASKDETECT "Find New Hardware"
+    IDS_ADDDEVICE_ASKDETECT_INFO 
+                            "Windows can also detect hardware that is not Plug and Play compatible."
+    IDS_ADDDEVICE_DETECTION "New Hardware Detection"
+    IDS_ADDDEVICE_DETECTION_INFO 
+                            "Windows is searching for hardware that  is not Plug and Play compatible."
+    IDS_ADDDEVICE_DETECTINSTALL "Detected Hardware"
+    IDS_ADDDEVICE_DETECTINSTALL_INFO 
+                            "Windows detected the following hardware changes."
+    IDS_DETECTPROGRESS      "Detection progress:"
+    IDS_DETECTCLASS         "Searching for %s..."
+    IDS_HDW_REBOOTDET       "Some of the hardware you installed might not work until you restart your computer.\n\nThe next time you restart your computer, Windows will continue searching for and installing new hardware."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HDW_NOREBOOTDET     "Windows has finished detecting and installing new hardware."
+    IDS_INSTALL_LEGACY_DEVICE "Install %s"
+    IDS_UNINSTALL_LEGACY_DEVICE "Uninstall %s - Hardware is no longer present"
+    IDS_HDW_NONEDET1        "Windows did not find any new devices on your computer.\n\n"
+    IDS_HDW_NONEDET2        "To choose a specific device to install, click Next."
+    IDS_HDW_INSTALLDET1     "Select the devices you want to install or uninstall."
+    IDS_HDW_DUPLICATE1      "A duplicate of the device you selected to install has been detected.\n\n"
+    IDS_HDW_DUPLICATE2      "You have two choices: You can continue or exit.\n\nTo continue installing the software, click Next."
+    IDS_HDW_DUPLICATE3      "To exit without installing the software, click Cancel."
+    IDS_HDW_ANALYZEPNPDEV1  "The hardware you are installing is Plug and Play compatible.\n\n"
+    IDS_HDW_ANALYZEPNPDEV2  "Click Next now. Windows will install the software required by your hardware."
+    IDS_HDW_ANALYZEERR1     "Windows was unable to register the device. You have two choices: You can continue or exit.\n"
+    IDS_HDW_ANALYZEERR2     "To continue installing the software, click Next. "
+    IDS_HDW_ANALYZEERR3     "To exit without installing the software, click Cancel."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HDW_NORMALFINISH1   "Windows has finished installing the software for this device."
+    IDS_INSTALL_PROBLEM     "The software for this device is now installed, but may not work correctly."
+    IDS_INSTALL_PROBLEM_PNP "The software for this device is now installed, but may not work correctly. You can retry installing with the Hardware Wizard."
+    IDS_NEEDREBOOT          " For the hardware to work, you will have to restart the computer."
+    IDS_ADDDEVICE_INSTALLDEV "Hardware Install"
+    IDS_ADDDEVICE_INSTALLDEV_INFO 
+                            "Windows is installing drivers for your new hardware."
+    IDS_HDW_NONEDEVICES     "Add a new device"
+    IDS_REMDEVICE_CHOICE    "Choose a Removal Task"
+    IDS_REMDEVICE_CHOICE_INFO 
+                            "You can remove a device permanently or temporarily."
+    IDS_REMDEVICE_UNINSTALLLIST "Installed Devices on Your Computer"
+    IDS_REMDEVICE_UNINSTALLLIST_INFO 
+                            "The following hardware is installed on your computer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HDW_STDCFG1         "Windows will use default settings to install the software for this hardware device. "
+    IDS_HDW_STDCFG2         "To install the software for your new hardware, click Next."
+    IDS_ADDNEWDEVICE        "Add New Hardware Wizard"
+    IDS_HDW_ERRORFIN1       "An error occurred during the installation of the device.\n"
+    IDS_HDW_ERRORFIN2       "The incomplete installation will be removed and you can retry installing with the Hardware Wizard.\nWindows System error:"
+    IDS_ADDDEVICE_SELECTCLASS "Hardware Type"
+    IDS_ADDDEVICE_SELECTCLASS_INFO 
+                            "What type of hardware do you want to install?"
+    IDS_ADDDEVICE_ANALYZEDEV "Start Hardware Installation"
+    IDS_ADDDEVICE_ANALYZEDEV_INFO 
+                            "Windows is ready to install drivers for your new hardware."
+    IDS_HDW_RUNNING_TITLE   "Cannot Run Two Device Installations"
+    IDS_HDW_RUNNING_MSG     "You can install only one device at a time.\nAnother device installation is underway, when it is finished you can try this wizard again."
+    IDS_HDW_ERRORFIN1_PNP   "An error occurred during the installation of the device "
+    IDS_HDW_ERRORFIN2_PNP   "This installation can be completed with the Hardware Wizard.\nWindows System error:"
+    IDS_HDW_NORMAL_LEGACY_FINISH1 
+                            "Check your hardware documentation to see whether you have to manually configure your new hardware."
+                            
+    IDS_NEED_FORCED_CONFIG  "Windows could not detect the settings of the device.   To use this device, you must enter its hardware settings.  Consult the documentation that came with this device for information"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

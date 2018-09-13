@@ -1,0 +1,139 @@
+LANGUAGE 0x0a, 0x00 // Really 0x0a, 0x01 - Spanish (Traditional)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Spanish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 358, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Personalizar la barra de herramientas"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Cerrar",2,305,6,48,14
+    PUSHBUTTON      L"R&establecer",202,305,26,48,14
+    PUSHBUTTON      L"Ay&uda",205,305,46,48,14
+    PUSHBUTTON      L"&Subir",206,305,76,48,14
+    PUSHBUTTON      L"Baja&r",207,305,97,48,14
+    LTEXT           L"&Botones disponibles:",-1,3,6,68,8
+    LISTBOX         201,3,18,124,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&Agregar ->",1,130,45,40,14
+    PUSHBUTTON      L"<- &Quitar",204,130,65,40,14
+    LTEXT           L"Boto&nes de la barra de herramientas:",-1,174,6,121,8
+    LISTBOX         203,175,18,124,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"Aceptar",1,4,122,44,14,WS_GROUP
+    PUSHBUTTON      L"Cancelar",2,59,122,44,14
+    PUSHBUTTON      L"Apli&car",12321,116,122,44,14,WS_DISABLED
+    PUSHBUTTON      L"Ayuda",9,172,122,44,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Atr\x00e1s",12323,84,26,48,14
+    DEFPUSHBUTTON   L"Siguiente >",12324,132,26,48,14
+    PUSHBUTTON      L"Finalizar",12325,132,26,48,14
+    PUSHBUTTON      L"Cancelar",2,184,26,48,14
+    PUSHBUTTON      L"Ayuda",9,236,26,48,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Separador"
+    1025                    L" + "
+    1026                    L"Ninguno"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Cerrar"
+    4161                    L"Aceptar"
+    4162                    L"Propiedades de %s"
+    4163                    L"Hoy:"
+    4164                    L"&Ir a hoy"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Introducir texto aqu\x00ed"
+    4177                    L"Propiedades"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Cambia el tama\x00f1o de esta ventana."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Mueve esta ventana."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Reduce esta ventana a un icono."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Ampl\x00eda esta ventana para llenar la pantalla."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Cambia a la siguiente ventana MDI."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Cierra esta ventana."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Restaura esta ventana a su tama\x00f1o normal."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Cambia a otra tarea."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Contiene comandos para manipular ventanas."
+    36849                   L"Arrastre a la izquierda o a la derecha para cambiar el tama\x00f1o de columnas."
+    36850                   L"Cambia el tama\x00f1o de las columnas utilizando las teclas de direcci\x00f3n y la tecla TAB."
+    36851                   L"Agrega, mueve y elimina botones de la barra de herramientas."
+END
+

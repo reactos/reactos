@@ -1,0 +1,90 @@
+#include <windows.h>
+#include <mmsystem.h>
+#include <mmddk.h>
+#include "graphic.h"
+
+#include "mciavi.rcv"
+
+#include "cnfgdlg.h"
+#include "cnfgdlg.dlg"
+
+STRINGTABLE
+begin
+   MCIAVI_PRODUCTNAME,       	"Video for Windows"
+   MCIAVI_VERSION,	     	VERSIONSTR
+#ifdef WIN32
+   MCIAVI_BADMSVIDEOVERSION,    "MCIAVI requires a newer version of MSVFW32.DLL, please reinstall your video software."
+#else
+   MCIAVI_BADMSVIDEOVERSION,    "MCIAVI requires a newer version of MSVIDEO.DLL, please reinstall your video software."
+#endif
+
+   MCIAVI_MENU_CONFIG           "C&onfigure..."
+   MCIAVI_MENU_STRETCH          "S&tretch to Window"
+   MCIAVI_MENU_MUTE             "&Mute"
+
+   MCIAVI_CANT_DRAW_VIDEO       "Video not available, cannot find '%4.4s:%4.4s' decompressor."
+   MCIAVI_CANT_DRAW_STREAM      "Cannot draw stream, cannot find '%4.4s:%4.4s' decompressor."
+
+   MCIERR_AVI_OLDAVIFORMAT,  	"This AVI file is of an obsolete format."
+   MCIERR_AVI_NOTINTERLEAVED,	"This AVI file is not interleaved."
+   MCIERR_AVI_NODISPDIB,     	"Full-screen mode not available."
+   MCIERR_AVI_CANTPLAYFULLSCREEN, "This AVI file cannot be played in full screen mode."
+   MCIERR_AVI_TOOBIGFORVGA,    	"This AVI file is too big to be played in the selected VGA mode."
+   MCIERR_AVI_NOCOMPRESSOR      "Cannot locate installable compressor needed to play this file."
+   MCIERR_AVI_DISPLAYERROR      "Unknown error while attempting to display video."
+   MCIERR_AVI_AUDIOERROR	"Unknown error while attempting to play audio."
+   MCIERR_AVI_BADPALETTE	"Unable to switch to new palette."
+
+   INFO_STREAM                  "Stream: %4.4s:%4.4s\r\n"
+   INFO_VIDEOFORMAT             "Video: %4.4s %dx%dx%d (%4.4s) %d%c%03d fps\r\n"
+   INFO_MONOFORMAT              "Audio: Mono %d%c%03dKHz %dbit\r\n"
+   INFO_STEREOFORMAT            "Audio: Stereo %d%c%03dKHz %dbit\r\n"
+   INFO_LENGTH                  "Length: %d Frames, %d%c%03d sec\r\n"
+   INFO_FRAMERATE               "Frame Rate: %d%c%03d fps\r\n"
+   INFO_DATARATE                "Data Rate: %ldk/sec\r\n"
+   INFO_FILE                    "File: %s\r\n"
+   INFO_KEYFRAMES               "Keyframe: every %d frame(s)\r\n"
+   INFO_AUDIO                   "Audio every: %d frame(s)\r\n"
+   INFO_SKIP                    "Skipped %d of %d frames (%d%%)\r\n"
+   INFO_SKIPAUDIO               "Audio brokeup %d times\r\n"
+   INFO_ADPCM                   " (adpcm)\r\n"
+   INFO_FILETYPE                "Type: %s\r\n"
+   INFO_FILETYPE_AVI            "Type: AVI\r\n"
+   INFO_FILETYPE_INT            "Type: AVI (interleaved)\r\n"
+   INFO_FILETYPE_ALPHA          "Type: AVI (alpha format)\r\n"
+   INFO_DISABLED                " (Disabled)\r\n"
+
+#ifdef EXPIRE
+   MCIERR_AVI_EXPIRED		"Your pre-release copy of Microsoft Video for Windows has expired."
+#endif
+end
+
+#include "mciavi.mci"
+
+MMS MMSCR people.cry
+
+STRINGTABLE
+begin
+    MCIERR_DGV_IOERR,                 "An I/O error occurred."
+    MCIERR_DGV_WORKSPACE_EMPTY,       "The workspace is empty."
+    MCIERR_DGV_DISK_FULL,             "The disk is full."
+    MCIERR_DGV_DEVICE_MEMORY_FULL,    "The media device memory is full."
+    MCIERR_DGV_DEVICE_LIMIT,          "A device limit was reached."
+    MCIERR_DGV_BAD_CLIPBOARD_RANGE,   "Unusable clipboard range.  Set 'seek exactly off' or specify reference frames."
+    MCI_DGV_METHOD_PRE,               "pre"
+    MCI_DGV_METHOD_POST,              "post"
+    MCI_DGV_METHOD_DIRECT,            "direct"
+    MCI_DGV_FF_AVSS,                  "avss"
+    MCI_DGV_FF_AVI,                   "avi"
+    MCI_DGV_FF_DIB,                   "dib"
+    MCI_DGV_FF_RDIB,                  "rdib"
+    MCI_DGV_FF_JPEG,                  "jpeg"
+    MCI_DGV_FF_RJPEG,                 "rjpeg"
+    MCI_DGV_FF_JFIF,                  "jfif"
+    MCI_DGV_FF_MPEG,                  "mpeg"
+    MCI_ON_S,                         "on"
+    MCI_OFF_S,                        "off"
+    MCI_DGV_INPUT_S,                  "input"
+    MCI_DGV_FILE_S,                   "file"
+end
+

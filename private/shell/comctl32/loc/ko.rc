@@ -1,0 +1,140 @@
+LANGUAGE 0x12, 0x00 // Really 0x12, 0x01 - Korean (Korean)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Korean resource
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"\xb3c4\xad6c \xbaa8\xc74c \xc0ac\xc6a9\xc790 \xc815\xc758"
+FONT 9, L"\xad74\xb9bc"
+BEGIN
+    DEFPUSHBUTTON   L"\xb2eb\xae30(&C)",2,289,6,63,16
+    PUSHBUTTON      L"\xcd08\xae30 \xc124\xc815\xc73c\xb85c(&E)",202,289,23,63,16
+    PUSHBUTTON      L"\xb3c4\xc6c0\xb9d0(&H)",205,289,40,63,16
+    PUSHBUTTON      L"\xc704\xb85c \xc774\xb3d9(&U)",206,289,74,63,16
+    PUSHBUTTON      L"\xc544\xb798\xb85c \xc774\xb3d9(&D)",207,289,91,63,16
+    LTEXT           L"\xc0ac\xc6a9 \xac00\xb2a5\xd55c \xb3c4\xad6c \xbaa8\xc74c \xb2e8\xcd94(&V):",-1,4,5,110,8
+    LISTBOX         201,4,17,110,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"\xcd94\xac00(&A) ->",1,121,42,44,16
+    PUSHBUTTON      L"<- \xc81c\xac70(&R)",204,121,62,44,16
+    LTEXT           L"\xd604\xc7ac \xb3c4\xad6c \xbaa8\xc74c \xb2e8\xcd94(&T):",-1,172,5,110,8
+    LISTBOX         203,172,17,110,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 9, L"\xad74\xb9bc"
+BEGIN
+    DEFPUSHBUTTON   L"\xd655\xc778",1,4,122,50,16,WS_GROUP
+    PUSHBUTTON      L"\xcde8\xc18c",2,58,122,50,16
+    PUSHBUTTON      L"\xc801\xc6a9(&A)",12321,112,122,50,16,WS_DISABLED
+    PUSHBUTTON      L"\xb3c4\xc6c0\xb9d0",9,166,122,50,16,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 9, L"\xad74\xb9bc"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< \xb4a4\xb85c(&B)",12323,12,26,50,16
+    DEFPUSHBUTTON   L"\xb2e4\xc74c(&N) >",12324,62,26,50,16
+    PUSHBUTTON      L"\xb9c8\xce68",12325,119,26,50,16
+    PUSHBUTTON      L"\xcde8\xc18c",2,176,26,50,16
+    PUSHBUTTON      L"\xb3c4\xc6c0\xb9d0",9,233,26,50,16,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"\xad6c\xbd84 \xae30\xd638"
+    1025                    L" + "
+    1026                    L"\xc5c6\xc74c"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"\xb2eb\xae30"
+    4161                    L"\xd655\xc778"
+    4162                    L"%s \xb4f1\xb85d \xc815\xbcf4"
+    4163                    L"\xc624\xb298:"
+    4164                    L"\xc624\xb298\xb85c \xc774\xb3d9(&G)"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"\xc5ec\xae30\xc5d0 \xd14d\xc2a4\xd2b8\xb97c \xc785\xb825\xd558\xc2ed\xc2dc\xc624."
+    4177                    L"\xb4f1\xb85d \xc815\xbcf4"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"\xc774 \xcc3d \xd06c\xae30\xb97c \xbcc0\xacbd\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"\xc774 \xcc3d\xc744 \xb2e4\xb978 \xd654\xba74\xc73c\xb85c \xc774\xb3d9\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"\xc774 \xcc3d\xc744 \xcd5c\xc18c\xd654\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"\xc774 \xcc3d\xc744 \xcd5c\xb300\xd654\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"\xb2e4\xc74c MDI \xcc3d\xc73c\xb85c \xc804\xd658\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"\xc774 \xcc3d\xc744 \xb2eb\xc2b5\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"\xc774 \xcc3d\xc744 \xbcf4\xd1b5 \xd06c\xae30\xb85c \xbcf5\xc6d0\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"\xb2e4\xb978 \xc791\xc5c5\xc73c\xb85c \xc804\xd658\xd569\xb2c8\xb2e4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"\xcc3d\xc744 \xc870\xc791\xd558\xb294 \xba85\xb839\xc744 \xd3ec\xd568\xd569\xb2c8\xb2e4. "
+    36849                   L"\xc67c\xcabd\xc774\xb098 \xc624\xb978\xcabd\xc73c\xb85c \xb9c8\xc6b0\xc2a4\xb97c \xb04c\xc5b4\xc11c \xc5f4\xc758 \xd06c\xae30\xb97c  \xc870\xc815\xd569\xb2c8\xb2e4."
+    36850                   L"\xd654\xc0b4\xd45c\xc640 Tab\xd0a4\xb97c \xc0ac\xc6a9\xd558\xc5ec \xc5f4\xc758 \xd06c\xae30\xb97c \xc870\xc815\xd569\xb2c8\xb2e4."
+    36851                   L"\xb3c4\xad6c \xbaa8\xc74c\xc5d0\xc11c \xb2e8\xcd94\xb97c \xcd94\xac00, \xc774\xb3d9 \xbc0f \xc81c\xac70\xd569\xb2c8\xb2e4."
+END
+

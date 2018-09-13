@@ -1,0 +1,2 @@
+DIRS = w95cpp{x86} win95{x86} \
+       ntcpp winnt

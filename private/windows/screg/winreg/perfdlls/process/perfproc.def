@@ -1,0 +1,6 @@
+LIBRARY PerfProc
+
+EXPORTS
+    OpenSysProcessObject
+    CollectSysProcessObjectData
+    CloseSysProcessObject

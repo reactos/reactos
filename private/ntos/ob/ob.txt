@@ -1,0 +1,1897 @@
+Here is a breakdown of what each module exports
+
+    obinit.c    KMUTANT ObpInitKillMutant;
+                UNICODE_STRING ObpDosDevicesShortName;
+                ULARGE_INTEGER ObpDosDevicesShortNamePrefix;
+                ULARGE_INTEGER ObpDosDevicesShortNameRoot
+                PDEVICE_MAP ObSystemDeviceMap
+
+                ObInitSystem (
+                ObDupHandleProcedure (
+                ObAuditInheritedHandleProcedure (
+                ObInitProcess (
+                ObInitProcess2 (
+                ObDestroyHandleProcedure (
+                ObKillProcess (
+                ObFindHandleForObject (
+
+    obcreate.c  ObCreateObject (
+                ObDeleteCapturedInsertInfo (
+                ObFreeObjectCreateInfoBuffer (
+                ObpCaptureObjectCreateInformation (
+                ObpCaptureObjectName (
+                ObpFreeObjectNameBuffer (
+                ObpAllocateObject (
+                ObpFreeObject (
+
+    obhandle.c  NtDuplicateObject (
+                ObGetHandleInformation (
+                ObpIncrPointerCount (
+                ObpDecrPointerCountWithResult (
+                ObpIncrementHandleCount (
+                ObpDecrementHandleCount (
+                ObpCreateHandle (
+                ObpCreateUnnamedHandle (
+                ObpTranslateGrantedAccessIndex (
+
+    obinsert.c  ObInsertObject (
+
+    obref.c     ObGetObjectPointerCount (
+                ObOpenObjectByName (
+                ObOpenObjectByPointer (
+                ObReferenceObjectByHandle (
+                ObReferenceObjectByName (
+                ObReferenceObjectByPointer (
+                ObDereferenceObject (
+                ObfReferenceObject (
+                ObpDeleteNameCheck (
+
+    obse.c      NtSetSecurityObject (
+                NtQuerySecurityObject (
+                ObCheckObjectAccess (
+                ObCheckCreateObjectAccess (
+                ObAssignObjectSecurityDescriptor (
+                ObGetObjectSecurity (
+                ObReleaseObjectSecurity (
+                ObValidateSecurityQuota (
+                ObAssignSecurity (
+                ObSetSecurityDescriptorInfo (
+                ObpCheckObjectReference (
+                ObpCheckTraverseAccess (
+                ObpValidateAccessMask (
+
+    obtype.c    ObCreateObjectType (
+                ObEnumerateObjectsByType(
+                ObGetObjectInformation(
+
+    obdir.c     NtCreateDirectoryObject (
+                NtOpenDirectoryObject (
+                NtQueryDirectoryObject (
+                ObpLookupDirectoryEntry (
+                ObpInsertDirectoryEntry (
+                ObpDeleteDirectoryEntry (
+                ObpLookupObjectName (
+
+    obdevmap.c  ObSetDeviceMap (
+                ObQueryDeviceMapInformation (
+                ObInheritDeviceMap (
+                ObDereferenceDeviceMap (
+
+    oblink.c    NtCreateSymbolicLinkObject (
+                NtOpenSymbolicLinkObject (
+                NtQuerySymbolicLinkObject (
+                ObpParseSymbolicLink (
+                ObpDeleteSymbolicLinkName (
+                ObpCreateSymbolicLinkName (
+
+    obclose.c   NtClose (
+                NtMakeTemporaryObject (
+                ObMakeTemporaryObject (
+
+    obquery.c   NtQueryObject (
+                NtSetInformationObject (
+                ObGetObjectName (
+                ObQueryNameString (
+                ObQueryTypeName (
+                ObQueryTypeInfo (
+                ObQueryObjectAuditingByHandle (
+
+    obsdata.c   ObpInitSecurityDescriptorCache (
+                ObpLogSecurityDescriptor (
+                ObpReferenceSecurityDescriptor (
+                ObDeassignSecurity (
+                ObpDereferenceSecurityDescriptor (
+                ObpAcquireDescriptorCacheReadLock (
+                ObpReleaseDescriptorCacheLock (
+
+    obwait.c    NtSignalAndWaitForSingleObject (
+                NtWaitForSingleObject (
+                NtWaitForMultipleObjects (
+                ObWaitForSingleObject (
+
+Module Name:
+
+    obinit.c
+
+Global variables and who references them
+
+    GENERIC_MAPPING ObpTypeMapping = ...
+
+        obinit.c\ObInitSystem
+
+    GENERIC_MAPPING ObpDirectoryMapping = ...
+
+        obinit.c\ObInitSystem
+
+    GENERIC_MAPPING ObpSymbolicLinkMapping = ...
+
+        obinit.c\ObInitSystem
+
+    extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+
+        obinit.c\ObInitSystem
+
+    KMUTANT ObpInitKillMutant;
+
+        obhandle.c\NtDuplicateObject
+        obinit.c\ObInitSystem
+        obinit.c\ObInitProcess
+        obinit.c\ObKillProcess
+        obinit.c\ObFindHandleForObject
+
+    ULONG ObpProtectionMode;
+
+        obinit.c\ObpGetDosDevicesProtection
+
+    ULONG ObpAuditBaseDirectories;
+
+        obinit.c\ObInitSystem
+
+    ULONG ObpAuditBaseObjects
+
+        obinit.c\ObInitSystem
+
+    UNICODE_STRING ObpDosDevicesShortName;
+
+        obdir.c\ObpLookupObjectName
+        obinit.c\ObpCreateDosDevicesDirectory
+
+    ULARGE_INTEGER ObpDosDevicesShortNamePrefix;
+
+        obdir.c\ObpLookupObjectName
+        obinit.c\ObpCreateDosDevicesDirectory
+
+    ULARGE_INTEGER ObpDosDevicesShortNameRoot
+
+        obdir.c\ObpLookupObjectName
+        obinit.c\ObpCreateDosDevicesDirectory
+
+    PDEVICE_MAP ObSystemDeviceMap
+
+        obdevmap.c\ObSetDeviceMap
+        obdevmap.c\ObQueryDeviceMapInformation
+        obdevmap.c\ObInheritDeviceMap
+
+Procedures
+
+    BOOLEAN
+    ObInitSystem (
+        VOID
+        )
+
+        Called By:
+
+        It calls:   GENERIC_MAPPING ObpTypeMapping = ...
+                    GENERIC_MAPPING ObpDirectoryMapping = ...
+                    GENERIC_MAPPING ObpSymbolicLinkMapping = ...
+                    extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
+                    KMUTANT ObpInitKillMutant;
+                    ULONG ObpAuditBaseDirectories;
+                    ULONG ObpAuditBaseObjects;
+
+                    obinit.c\ObpCreateDosDevicesDirectory (
+                    obref.c\ObReferenceObjectByHandle (
+                    obtype.cObCreateObjectType (
+                    obdir.c\NtCreateDirectoryObject (
+                    obdir.c\ObpLookupDirectoryEntry (
+                    obdir.c\ObpInsertDirectoryEntry (
+                    oblink.c\ObpParseSymbolicLink (
+                    obclose.c\NtClose (
+                    obsdata.c\ObpInitSecurityDescriptorCache (
+
+    BOOLEAN
+    ObDupHandleProcedure (
+        PEPROCESS Process,
+        PVOID HandleTableEntry
+        )
+
+        Called By:  obinit.c\ObInitProcess
+
+        It calls:   obhandle.c\ObpIncrPointerCount (
+                    obhandle.c\ObpIncrementHandleCount (
+                    obhandle.c\ObpTranslateGrantedAccessIndex (
+
+    BOOLEAN
+    ObAuditInheritedHandleProcedure (
+        IN PVOID HandleTableEntry,
+        IN PVOID HandleId,
+        IN PVOID EnumParameter
+        )
+
+        Called By:  obinit.c\ObInitProcess
+
+        It Calls:
+
+    NTSTATUS
+    ObInitProcess (
+        PEPROCESS ParentProcess OPTIONAL,
+        PEPROCESS NewProcess
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\KMUTANT ObpInitKillMutant;
+
+                    obinit.c\ObDupHandleProcedure (
+                    obinit.c\ObAuditInheritedHandleProcedure (
+
+    VOID
+    ObInitProcess2 (
+        PEPROCESS NewProcess
+        )
+
+        Called By:
+
+        It Calls:
+
+    VOID
+    ObDestroyHandleProcedure (
+        IN HANDLE HandleIndex,
+        IN PVOID HandleTableEntry
+        )
+
+        Called By:  obinit.c\ObKillProcess
+
+        It Calls:
+
+    VOID
+    ObKillProcess (
+        BOOLEAN AcquireLock,
+        PEPROCESS Process
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\KMUTANT ObpInitKillMutant;
+
+                    obinit.c\ObDestroyHandleProcedure (
+
+    BOOLEAN
+    ObpEnumFindHandleProcedure (
+        PVOID HandleTableEntry,
+        PVOID HandleId,
+        PVOID EnumParameter
+        )
+
+        Called By:  obinit.c\ObFindHandleForObject
+
+        It Calls:   obhandle.c\ObpTranslateGrantedAccessIndex (
+
+    BOOLEAN
+    ObFindHandleForObject (
+        IN PEPROCESS Process,
+        IN PVOID Object OPTIONAL,
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL,
+        OUT PHANDLE Handle
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\KMUTANT ObpInitKillMutant;
+
+                    obinit.c\ObpEnumFindHandleProcedure (
+
+    NTSTATUS
+    ObpCreateDosDevicesDirectory (
+        VOID
+        )
+
+        Called By:  obinit.c\ObInitSystem
+
+        It Calls:   obinit.c\UNICODE_STRING ObpDosDevicesShortName;
+                    obinit.c\ULARGE_INTEGER ObpDosDevicesShortNamePrefix;
+                    obinit.c\ULARGE_INTEGER ObpDosDevicesShortNameRoot;
+
+                    obinit.c\ObpGetDosDevicesProtection (
+                    obinit.c\ObpFreeDosDevicesProtection (
+                    obdir.c\NtCreateDirectoryObject (
+                    obdevmap.c\ObSetDeviceMap (
+                    oblink.c\NtCreateSymbolicLinkObject (
+                    obclose.c\NtClose (
+
+    NTSTATUS
+    ObpGetDosDevicesProtection (
+        PSECURITY_DESCRIPTOR SecurityDescriptor
+        )
+
+        Called By:  obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:   ULONG ObpProtectionMode;
+
+    VOID
+    ObpFreeDosDevicesProtection (
+        PSECURITY_DESCRIPTOR SecurityDescriptor
+        )
+
+        Called By:  obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:
+
+Module Name:
+
+    obcreate.c
+
+Global variables and who references them
+
+    BOOLEAN ObpShowAllocAndFree;
+
+        obcreate.c\ObpAllocateObject
+        obcreate.c\ObpFreeObject
+
+    ULONG ObpObjectsCreated;
+
+        obcreate.c\ObpAllocateObject
+
+    ULONG ObpObjectsWithPoolQuota;
+
+        obcreate.c\ObpAllocateObject
+
+    ULONG ObpObjectsWithHandleDB;
+
+        obcreate.c\ObpAllocateObject
+
+    ULONG ObpObjectsWithName;
+
+        obcreate.c\ObpAllocateObject
+
+    ULONG ObpObjectsWithCreatorInfo;
+
+        obcreate.c\ObpAllocateObject
+
+Procedures
+
+    NTSTATUS
+    ObCreateObject (
+        IN KPROCESSOR_MODE ProbeMode,
+        IN POBJECT_TYPE ObjectType,
+        IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+        IN KPROCESSOR_MODE OwnershipMode,
+        IN OUT PVOID ParseContext OPTIONAL,
+        IN ULONG ObjectBodySize,
+        IN ULONG PagedPoolCharge,
+        IN ULONG NonPagedPoolCharge,
+        OUT PVOID *Object
+        )
+
+        Called By:  obdir.c\NtCreateDirectoryObject
+                    oblink.c\NtCreateSymbolicLinkObject
+
+        It Calls:   obcreate.c\ObpCaptureObjectCreateInformation (
+                    obcreate.c\ObpFreeObjectNameBuffer (
+                    obcreate.c\ObpAllocateObject (
+                    obcreate.c\ObpFreeObject (
+
+    NTSTATUS
+    ObpCaptureObjectCreateInformation (
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN KPROCESSOR_MODE ProbeMode,
+        IN POBJECT_ATTRIBUTES ObjectAttributes,
+        IN OUT PUNICODE_STRING CapturedObjectName,
+        IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+        IN LOGICAL UseLookaside
+        )
+
+        Called By:  obcreate.c\ObCreateObject
+                    obref.c\ObOpenObjectByName
+
+        It Calls:   obcreate.c\ObpCaptureObjectName (
+
+    NTSTATUS
+    ObpCaptureObjectName (
+        IN KPROCESSOR_MODE ProbeMode,
+        IN PUNICODE_STRING ObjectName,
+        IN OUT PUNICODE_STRING CapturedObjectName,
+        IN LOGICAL UseLookaside
+        )
+
+        Called By:  obcreate.c\ObpCaptureObjectCreateInformation
+                    obref.c\ObReferenceObjectByName
+
+        It Calls:   obcreate.c\ObpAllocateObjectNameBuffer (
+
+    PWCHAR
+    ObpAllocateObjectNameBuffer (
+        IN ULONG Length,
+        IN LOGICAL UseLookaside,
+        IN OUT PUNICODE_STRING ObjectName
+        )
+
+        Called By:  obcreate.c\ObpCaptureObjectName
+
+        It Calls:
+
+    VOID
+    FASTCALL
+    ObpFreeObjectNameBuffer (
+        OUT PUNICODE_STRING ObjectName
+        )
+
+        Called By:  obcreate.c\ObCreateObject
+                    obref.c\ObOpenObjectByName
+                    obref.c\ObReferenceObjectByName
+
+        It Calls:
+
+    NTKERNELAPI
+    VOID
+    ObDeleteCapturedInsertInfo (
+        IN PVOID Object
+        )
+
+        Called By:
+
+        It Calls:
+
+    NTSTATUS
+    ObpAllocateObject (
+        IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+        IN KPROCESSOR_MODE OwnershipMode,
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN PUNICODE_STRING ObjectName,
+        IN ULONG ObjectBodySize,
+        OUT POBJECT_HEADER *ReturnedObjectHeader
+        )
+
+        Called By:  obcreate.c\ObCreateObject
+                    obtype.c\ObCreateObjectType
+
+        It Calls:   obcreate.c\BOOLEAN ObpShowAllocAndFree;
+                    obcreate.c\ULONG ObpObjectsCreated;
+                    obcreate.c\ULONG ObpObjectsWithPoolQuota;
+                    obcreate.c\ULONG ObpObjectsWithHandleDB;
+                    obcreate.c\ULONG ObpObjectsWithName;
+                    obcreate.c\ULONG ObpObjectsWithCreatorInfo;
+
+    VOID
+    FASTCALL
+    ObpFreeObject (
+        IN PVOID Object
+        )
+
+        Called By:  obcreate.c\ObCreateObject
+                    obref.c\ObRemoveObjectRoutine
+
+        It Calls:   obcreate.c\BOOLEAN ObpShowAllocAndFree;
+
+    VOID
+    FASTCALL
+    ObFreeObjectCreateInfoBuffer (
+        IN POBJECT_CREATE_INFORMATION ObjectCreateInfo
+        )
+
+        Called By:
+
+        It Calls:
+
+
+Module Name:
+
+    obhandle.c
+
+Global variables and who references them
+
+    extern KMUTANT ObpInitKillMutant;
+
+Procedures
+
+    VOID
+    FASTCALL
+    ObpIncrPointerCount (
+        IN POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+                    obhandle.c\ObpCreateHandle
+                    obhandle.c\ObpCreateUnnamedHandle
+                    obinit.c\ObDupHandleProcedure
+                    obref.c\ObReferenceObjectByHandle
+                    obref.c\ObfReferenceObject
+                    obref.c\ObReferenceObjectByPointer
+                    obwait.c\NtWaitForMultipleObjects
+
+        It Calls:
+
+    VOID
+    FASTCALL
+    ObpDecrPointerCount (
+        IN POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obhandle.c\ObpCreateHandle
+                    obhandle.c\ObpCreateUnnamedHandle
+
+        It Calls:
+
+    BOOLEAN
+    FASTCALL
+    ObpDecrPointerCountWithResult (
+        IN POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obref.c\ObfDereferenceObject
+
+        It Calls:
+
+    VOID
+    FASTCALL
+    ObpIncrHandleCount (
+        IN POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obhandle.c\ObpIncrementHandleCount
+                    obhandle.c\ObpIncrementUnnamedHandleCount
+
+        It Calls:
+
+    BOOLEAN
+    FASTCALL
+    ObpDecrHandleCount (
+        IN POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obhandle.c\ObpDecrementHandleCount
+
+        It Calls:
+
+    POBJECT_HANDLE_COUNT_ENTRY
+    ObpInsertHandleCount (
+        POBJECT_HEADER ObjectHeader
+        )
+
+        Called By:  obhandle.c\ObpIncrementHandleDataBase
+
+        It Calls:
+
+    NTSTATUS
+    ObpIncrementHandleDataBase (
+        IN POBJECT_HEADER ObjectHeader,
+        IN PEPROCESS Process,
+        OUT PULONG NewProcessHandleCount
+        )
+
+        Called By:  obhandle.c\ObpIncrementHandleCount
+                    obhandle.c\ObpIncrementUnnamedHandleCount
+
+        It Calls:   obhandle.c\ObpInsertHandleCount (
+
+    NTSTATUS
+    ObpIncrementHandleCount (
+        OB_OPEN_REASON OpenReason,
+        PEPROCESS Process,
+        PVOID Object,
+        POBJECT_TYPE ObjectType,
+        PACCESS_STATE AccessState OPTIONAL,
+        KPROCESSOR_MODE AccessMode,
+        ULONG Attributes
+        )
+
+        Called By:  obhandle.c\ObpCreateHandle
+                    obhandle.c\NtDuplicateObject
+                    obinit.c\ObDupHandleProcedure
+
+        It Calls:   obhandle.c\ObpIncrHandleCount (
+                    obhandle.c\ObpIncrementHandleDataBase (
+                    obhandle.c\ObpChargeQuotaForObject (
+                    obse.c\ObCheckObjectAccess (
+
+    NTSTATUS
+    ObpIncrementUnnamedHandleCount (
+        PACCESS_MASK DesiredAccess,
+        PEPROCESS Process,
+        PVOID Object,
+        POBJECT_TYPE ObjectType,
+        KPROCESSOR_MODE AccessMode,
+        ULONG Attributes
+        )
+
+        Called By:  obhandle.c\ObpCreateUnnamedHandle
+
+        It Calls:   obhandle.c\ObpIncrHandleCount (
+                    obhandle.c\ObpIncrementHandleDataBase (
+                    obhandle.c\ObpChargeQuotaForObject (
+
+    NTSTATUS
+    ObpChargeQuotaForObject (
+        IN POBJECT_HEADER ObjectHeader,
+        IN POBJECT_TYPE ObjectType,
+        OUT PBOOLEAN NewObject
+        )
+
+        Called By:  obhandle.c\ObpIncrementHandleCount
+                    obhandle.c\ObpIncrementUnnamedHandleCount
+
+        It Calls:
+
+    VOID
+    ObpDecrementHandleCount (
+        PEPROCESS Process,
+        POBJECT_HEADER ObjectHeader,
+        POBJECT_TYPE ObjectType,
+        ACCESS_MASK GrantedAccess
+        )
+
+        Called By:  obclose.c\NtClose
+                    obhandle.c\ObpCreateHandle
+                    obhandle.c\ObpCreateUnnamedHandle
+                    obhandle.c\NtDuplicateObject
+
+        It Calls:   obhandle.c\ObpDecrHandleCount (
+                    obref.c\ObpDeleteNameCheck (
+
+    NTSTATUS
+    ObpCreateHandle (
+        IN OB_OPEN_REASON OpenReason,
+        IN PVOID Object,
+        IN POBJECT_TYPE ExpectedObjectType OPTIONAL,
+        IN PACCESS_STATE AccessState,
+        IN ULONG ObjectPointerBias OPTIONAL,
+        IN ULONG Attributes,
+        IN BOOLEAN DirectoryLocked,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PVOID *ReferencedNewObject OPTIONAL,
+        OUT PHANDLE Handle
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    obref.c\ObOpenObjectByName
+                    obref.c\ObOpenObjectByPointer
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+                    obhandle.c\ObpDecrPointerCount (
+                    obhandle.c\ObpIncrementHandleCount (
+                    obhandle.c\ObpDecrementHandleCount (
+                    obhandle.c\ObpComputeGrantedAccessIndex (
+
+    NTSTATUS
+    ObpCreateUnnamedHandle (
+        IN PVOID Object,
+        IN ACCESS_MASK DesiredAccess,
+        IN ULONG ObjectPointerBias OPTIONAL,
+        IN ULONG Attributes,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PVOID *ReferencedNewObject OPTIONAL,
+        OUT PHANDLE Handle
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+                    obhandle.c\ObpDecrPointerCount (
+                    obhandle.c\ObpIncrementUnnamedHandleCount (
+                    obhandle.c\ObpDecrementHandleCount (
+                    obhandle.c\ObpComputeGrantedAccessIndex (
+
+    NTSTATUS
+    NtDuplicateObject (
+        IN HANDLE SourceProcessHandle,
+        IN HANDLE SourceHandle,
+        IN HANDLE TargetProcessHandle OPTIONAL,
+        OUT PHANDLE TargetHandle OPTIONAL,
+        IN ACCESS_MASK DesiredAccess,
+        IN ULONG HandleAttributes,
+        IN ULONG Options
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\KMUTANT ObpInitKillMutant;
+
+                    obhandle.c\ObpIncrementHandleCount (
+                    obhandle.c\ObpDecrementHandleCount (
+                    obhandle.c\ObpValidateDesiredAccess (
+                    obhandle.c\ObpComputeGrantedAccessIndex (
+                    obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+                    obclose.c\NtClose (
+
+    NTSTATUS
+    ObpValidateDesiredAccess (
+        IN ACCESS_MASK DesiredAccess
+        )
+
+        Called By:  obhandle.c\NtDuplicateObject
+
+        It Calls:
+
+    NTSTATUS
+    ObpCaptureHandleInformation (
+        IN OUT PSYSTEM_HANDLE_TABLE_ENTRY_INFO *HandleEntryInfo,
+        IN HANDLE UniqueProcessId,
+        IN PVOID HandleTableEntry,
+        IN HANDLE HandleIndex,
+        IN ULONG Length,
+        IN OUT PULONG RequiredLength
+        )
+
+        Called By:  obhandle.c\ObGetHandleInformation
+
+        It Calls:   obhandle.c\ObpTranslateGrantedAccessIndex (
+
+    NTSTATUS
+    ObGetHandleInformation (
+        OUT PSYSTEM_HANDLE_INFORMATION HandleInformation,
+        IN ULONG Length,
+        OUT PULONG ReturnLength OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obhandle.c\ObpCaptureHandleInformation (
+
+Global variables and who references them
+
+    ULONG ObpXXX1;
+
+        obhandle.c\ObpComputeGrantedAccessIndex
+
+    ULONG ObpXXX2;
+
+        obhandle.c\ObpComputeGrantedAccessIndex
+
+    ULONG ObpXXX3;
+
+        obhandle.c\ObpTranslateGrantedAccessIndex
+
+Procedures
+
+    USHORT
+    ObpComputeGrantedAccessIndex (
+        ACCESS_MASK GrantedAccess
+        )
+
+        Called By:  obhandle.c\ObpCreateHandle
+                    obhandle.c\ObpCreateUnnamedHandle
+                    obhandle.c\NtDuplicateObject
+
+        It Calls:   obhandle.c\ULONG ObpXXX1;
+                    obhandle.c\ULONG ObpXXX2;
+
+    ACCESS_MASK
+    ObpTranslateGrantedAccessIndex (
+        USHORT GrantedAccessIndex
+        )
+
+        Called By:  obclose.c\NtClose
+                    obhandle.c\ObpCaptureHandleInformation
+                    obinit.c\ObDupHandleProcedure
+                    obinit.c\ObpEnumFindHandleProcedure
+                    obref.c\ObReferenceObjectByHandle
+                    obwait.c\NtWaitForMultipleObjects
+
+        It Calls:   obhandle.c\ULONG ObpXXX3;
+
+
+Module Name:
+
+    obinsert.c
+
+Procedures
+
+    NTSTATUS
+    ObInsertObject (
+        IN PVOID Object,
+        IN PACCESS_STATE AccessState OPTIONAL,
+        IN ACCESS_MASK DesiredAccess OPTIONAL,
+        IN ULONG ObjectPointerBias,
+        OUT PVOID *NewObject OPTIONAL,
+        OUT PHANDLE Handle
+        )
+
+        Called By:  obdir.c\NtCreateDirectoryObject
+                    oblink.c\NtCreateSymbolicLinkObject
+
+        It Calls:   obhandle.c\ObpCreateHandle (
+                    obhandle.c\ObpCreateUnnamedHandle (
+                    obref.c\ObpDeleteNameCheck (
+                    obref.c\ObDereferenceObject (
+                    obse.c\ObGetObjectSecurity (
+                    obse.c\ObReleaseObjectSecurity (
+                    obse.c\ObAssignSecurity (
+                    obse.c\ObpValidateAccessMask (
+                    obdir.c\ObpDeleteDirectoryEntry (
+                    obdir.c\ObpLookupObjectName (
+                    oblink.c\ObpCreateSymbolicLinkName (
+
+
+Module Name:
+
+    obref.c
+
+Global variables and who references them
+
+    BOOLEAN ObpRemoveQueueActive;
+
+        obref.c\ObfDereferenceObject
+        obref.c\ObpProcessRemoveObjectQueue
+
+Procedures
+
+    ULONG
+    ObGetObjectPointerCount (
+        IN PVOID Object
+        )
+
+        Called By:
+
+        It Calls:
+
+    NTSTATUS
+    ObOpenObjectByName (
+        IN POBJECT_ATTRIBUTES ObjectAttributes,
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN KPROCESSOR_MODE AccessMode,
+        IN OUT PACCESS_STATE AccessState OPTIONAL,
+        IN ACCESS_MASK DesiredAccess OPTIONAL,
+        IN OUT PVOID ParseContext OPTIONAL,
+        OUT PHANDLE Handle
+        )
+
+        Called By:  obdir.c\NtOpenDirectoryObject
+                    oblink.c\NtOpenSymbolicLinkObject
+
+        It Calls:   obcreate.c\ObpCaptureObjectCreateInformation (
+                    obcreate.c\ObpFreeObjectNameBuffer (
+                    obhandle.c\ObpCreateHandle (
+                    obref.c\ObDereferenceObject (
+                    obse.c\ObpValidateAccessMask (
+                    obdir.c\ObpLookupObjectName (
+
+    NTSTATUS
+    ObOpenObjectByPointer (
+        IN PVOID Object,
+        IN ULONG HandleAttributes,
+        IN PACCESS_STATE PassedAccessState OPTIONAL,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PHANDLE Handle
+        )
+
+        Called By:
+
+        It Calls:   obhandle.c\ObpCreateHandle (
+                    obref.c\ObReferenceObjectByPointer (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    ObReferenceObjectByHandle (
+        IN HANDLE Handle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_TYPE ObjectType OPTIONAL,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PVOID *Object,
+        OUT POBJECT_HANDLE_INFORMATION HandleInformation OPTIONAL
+        )
+
+        Called By:  obclose.c\NtMakeTemporaryObject
+                    obdevmap.c\ObSetDeviceMap
+                    obdir.c\ObpLookupObjectName
+                    obdir.c\NtQueryDirectoryObject
+                    obhandle.c\NtDuplicateObject
+                    obinit.c\ObInitSystem
+                    oblink.c\NtQuerySymbolicLinkObject
+                    obquery.c\NtQueryObject
+                    obse.c\NtSetSecurityObject
+                    obse.c\NtQuerySecurityObject
+                    obwait.c\NtSignalAndWaitForSingleObject
+                    obwait.c\NtWaitForSingleObject
+                    obwait.c\ObWaitForSingleObject
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+                    obhandle.c\ObpTranslateGrantedAccessIndex (
+
+    NTSTATUS
+    ObReferenceObjectByName (
+        IN PUNICODE_STRING ObjectName,
+        IN ULONG Attributes,
+        IN PACCESS_STATE AccessState OPTIONAL,
+        IN ACCESS_MASK DesiredAccess OPTIONAL,
+        IN POBJECT_TYPE ObjectType,
+        IN KPROCESSOR_MODE AccessMode,
+        IN OUT PVOID ParseContext OPTIONAL,
+        OUT PVOID *Object
+        )
+
+        Called By:
+
+        It Calls:   obcreate.c\ObpCaptureObjectName (
+                    obcreate.c\ObpFreeObjectNameBuffer (
+                    obse.c\ObpCheckObjectReference (
+                    obdir.c\ObpLookupObjectName (
+
+
+    VOID
+    FASTCALL
+    ObfReferenceObject (
+        IN PVOID Object
+        )
+
+        Called By:
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+
+    NTSTATUS
+    ObReferenceObjectByPointer (
+        IN PVOID Object,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_TYPE ObjectType,
+        IN KPROCESSOR_MODE AccessMode
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+                    oblink.c\ObpParseSymbolicLink
+                    obref.c\ObOpenObjectByPointer
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+
+    VOID
+    FASTCALL
+    ObfDereferenceObject (
+        IN PVOID Object
+        )
+
+        Called By:  obref.c\ObDereferenceObject
+
+        It Calls:   obref.c\BOOLEAN ObpRemoveQueueActive;
+
+                    obhandle.c\ObpDecrPointerCountWithResult (
+                    obref.c\ObpProcessRemoveObjectQueue (
+                    obref.c\ObpRemoveObjectRoutine (
+
+    VOID
+    ObpProcessRemoveObjectQueue (
+        PVOID Parameter
+        )
+
+        Called By:  obref.c\ObfDereferenceObject
+
+        It Calls:   obref.c\BOOLEAN ObpRemoveQueueActive;
+
+                    obref.c\ObpRemoveObjectRoutine (
+
+    VOID
+    ObpRemoveObjectRoutine (
+        PVOID Object
+        )
+
+        Called By:  obref.c\ObfDereferenceObject
+                    obref.c\ObpProcessRemoveObjectQueue
+
+        It Calls:
+
+    VOID
+    ObpDeleteNameCheck (
+        IN PVOID Object,
+        IN BOOLEAN TypeMutexHeld
+        )
+
+        Called By:  obclose.c\ObMakeTemporaryObject
+                    obhandle.c\ObpDecrementHandleCount
+                    obinsert.c\ObInsertObject
+
+        It Calls:   obref.c\ObDereferenceObject (
+                    obdir.c\ObpLookupDirectoryEntry (
+                    obdir.c\ObpDeleteDirectoryEntry (
+                    oblink.c\ObpDeleteSymbolicLinkName (
+
+    VOID
+    ObDereferenceObject (
+        IN PVOID Object
+        )
+
+        Called By:  obclose.c\NtClose
+                    obclose.c\NtMakeTemporaryObject
+                    obdevmap.c\ObSetDeviceMap
+                    obdevmap.c\ObDereferenceDeviceMap
+                    obdir.c\ObpLookupObjectName
+                    obdir.c\NtQueryDirectoryObject
+                    obhandle.c\NtDuplicateObject
+                    obinsert.c\ObInsertObject
+                    oblink.c\ObpProcessDosDeviceSymbolicLink
+                    oblink.c\NtCreateSymbolicLinkObject
+                    oblink.c\NtQuerySymbolicLinkObject
+                    obquery.c\NtQueryObject
+                    obref.c\ObOpenObjectByName
+                    obref.c\ObOpenObjectByPointer
+                    obref.c\ObpDeleteNameCheck
+                    obse.c\NtSetSecurityObject
+                    obse.c\NtQuerySecurityObject
+                    obwait.c\NtSignalAndForSingleObject
+                    obwait.c\NtWaitForSingleObject
+                    obwait.c\NtWaitForMultipleObjects
+                    obwait.c\ObWaitForSingleObject
+
+        It Calls:   obref.c\ObfDereferenceObject (
+
+
+Module Name:
+
+    obse.c
+
+Procedures
+
+    NTSTATUS
+    NtSetSecurityObject (
+        IN HANDLE Handle,
+        IN SECURITY_INFORMATION SecurityInformation,
+        IN PSECURITY_DESCRIPTOR SecurityDescriptor
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    NtQuerySecurityObject (
+        IN HANDLE Handle,
+        IN SECURITY_INFORMATION SecurityInformation,
+        OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+        IN ULONG Length,
+        OUT PULONG LengthNeeded
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+    BOOLEAN
+    ObCheckObjectAccess (
+        IN PVOID Object,
+        IN OUT PACCESS_STATE AccessState,
+        IN BOOLEAN TypeMutexLocked,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PNTSTATUS AccessStatus
+        )
+
+        Called By:  obhandle.c\ObpIncrementHandleCount
+
+        It Calls:   obse.c\ObGetObjectSecurity (
+                    obse.c\ObReleaseObjectSecurity (
+
+    BOOLEAN
+    ObpCheckObjectReference (
+        IN PVOID Object,
+        IN OUT PACCESS_STATE AccessState,
+        IN BOOLEAN TypeMutexLocked,
+        IN KPROCESSOR_MODE AccessMode,
+        OUT PNTSTATUS AccessStatus
+        )
+
+        Called By:  obref.c\ObReferenceObjectByName
+
+        It Calls:   obse.c\ObGetObjectSecurity (
+                    obse.c\ObReleaseObjectSecurity (
+
+    BOOLEAN
+    ObpCheckTraverseAccess (
+        IN PVOID DirectoryObject,
+        IN ACCESS_MASK TraverseAccess,
+        IN PACCESS_STATE AccessState OPTIONAL,
+        IN BOOLEAN TypeMutexLocked,
+        IN KPROCESSOR_MODE PreviousMode,
+        OUT PNTSTATUS AccessStatus
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+
+        It Calls:   obse.c\ObGetObjectSecurity (
+                    obse.c\ObReleaseObjectSecurity (
+
+    BOOLEAN
+    ObCheckCreateObjectAccess (
+        IN PVOID DirectoryObject,
+        IN ACCESS_MASK CreateAccess,
+        IN PACCESS_STATE AccessState,
+        IN PUNICODE_STRING ComponentName,
+        IN BOOLEAN TypeMutexLocked,
+        IN KPROCESSOR_MODE PreviousMode,
+        OUT PNTSTATUS AccessStatus
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+
+        It Calls:   obse.c\ObGetObjectSecurity (
+                    obse.c\ObReleaseObjectSecurity (
+
+    NTSTATUS
+    ObAssignObjectSecurityDescriptor (
+        IN PVOID Object,
+        IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
+        IN POOL_TYPE PoolType
+        )
+
+        Called By:
+
+        It Calls:   obsdata.c\ObpLogSecurityDescriptor (
+
+    NTSTATUS
+    ObGetObjectSecurity (
+        IN PVOID Object,
+        OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
+        OUT PBOOLEAN MemoryAllocated
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    oblink.c\ObpProcessDosDeviceSymbolicLink
+                    obse.c\ObCheckObjectAccess
+                    obse.c\ObpCheckObjectReference
+                    obse.c\ObpCheckTraverseAccess
+                    obse.c\ObCheckCreateObjectAccess
+
+        It Calls:   obsdata.c\ObpReferenceSecurityDescriptor (
+
+    VOID
+    ObReleaseObjectSecurity (
+        IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+        IN BOOLEAN MemoryAllocated
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    obse.c\ObCheckObjectAccess
+                    obse.c\ObpCheckObjectReference
+                    obse.c\ObpCheckTraverseAccess
+                    obse.c\ObCheckCreateObjectAccess
+
+        It Calls:   obsdata.c\ObpDereferenceSecurityDescriptor (
+
+    NTSTATUS
+    ObValidateSecurityQuota (
+        IN PVOID Object,
+        IN ULONG NewSize
+        )
+
+        Called By:
+
+        It Calls:
+
+    NTSTATUS
+    ObAssignSecurity (
+        IN PACCESS_STATE AccessState,
+        IN PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
+        IN PVOID Object,
+        IN POBJECT_TYPE ObjectType
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+
+        It Calls:
+
+    NTSTATUS
+    ObSetSecurityDescriptorInfo (
+        IN PVOID Object,
+        IN PSECURITY_INFORMATION SecurityInformation,
+        IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
+        IN OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+        IN POOL_TYPE PoolType,
+        IN PGENERIC_MAPPING GenericMapping
+        )
+
+        Called By:
+
+        It Calls:   obsdata.c\ObpLogSecurityDescriptor (
+                    obsdata.c\ObpDereferenceSecurityDescriptor (
+                    obsdata.c\ObpAcquireDescriptorCacheReadLock (
+                    obsdata.c\ObpReleaseDescriptorCacheLock (
+
+    NTSTATUS
+    ObpValidateAccessMask (
+        PACCESS_STATE AccessState
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    obref.c\ObOpenObjectByName
+
+        It Calls:
+
+
+Module Name:
+
+    obtype.c
+
+Procedures
+
+    NTSTATUS
+    ObCreateObjectType (
+        IN PUNICODE_STRING TypeName,
+        IN POBJECT_TYPE_INITIALIZER ObjectTypeInitializer,
+        IN PSECURITY_DESCRIPTOR SecurityDescriptor OPTIONAL,
+        OUT POBJECT_TYPE *ObjectType
+        )
+
+        Called By:  obinit.c\ObInitSystem
+
+        It Calls:   obcreate.c\ObpAllocateObject (
+                    obdir.c\ObpLookupDirectoryEntry (
+                    obdir.c\ObpInsertDirectoryEntry (
+
+    NTSTATUS
+    ObEnumerateObjectsByType(
+        IN POBJECT_TYPE ObjectType,
+        IN OB_ENUM_OBJECT_TYPE_ROUTINE EnumerationRoutine,
+        IN PVOID Parameter
+        )
+
+        Called By:
+
+        It Calls:
+
+    NTSTATUS
+    ObGetObjectInformation(
+        IN PCHAR UserModeBufferAddress,
+        OUT PSYSTEM_OBJECTTYPE_INFORMATION ObjectInformation,
+        IN ULONG Length,
+        OUT PULONG ReturnLength OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obquery.c\ObQueryNameString (
+
+
+Module Name:
+
+    obdir.c
+
+Procedures
+
+    NTSTATUS
+    NtCreateDirectoryObject (
+        OUT PHANDLE DirectoryHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_ATTRIBUTES ObjectAttributes
+        )
+
+        Called By:  obinit.c\ObInitSystem
+                    obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:   obcreate.c\ObCreateObject (
+                    obinsert.c\ObInsertObject (
+
+    NTSTATUS
+    NtOpenDirectoryObject (
+        OUT PHANDLE DirectoryHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_ATTRIBUTES ObjectAttributes
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObOpenObjectByName (
+
+    PVOID
+    ObpLookupDirectoryEntry (
+        IN POBJECT_DIRECTORY Directory,
+        IN PUNICODE_STRING Name,
+        IN ULONG Attributes
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+                    obinit.c\ObInitSystem
+                    oblink.c\ObpProcessDosDeviceSymbolicLink
+                    obref.c\ObpDeleteNameCheck
+                    obtype.c\ObCreateObjectType
+
+        It Calls:
+
+    BOOLEAN
+    ObpInsertDirectoryEntry (
+        IN POBJECT_DIRECTORY Directory,
+        IN PVOID Object
+        )
+
+        Called By:  obdir.c\ObpLookupObjectName
+                    obinit.c\ObInitSystem
+                    obtype.c\ObCreateObjectType
+
+        It Calls:   obinit.c\ObInitSystem (
+
+    BOOLEAN
+    ObpDeleteDirectoryEntry (
+        IN POBJECT_DIRECTORY Directory
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    obref.c\ObpDeleteNameCheck
+
+        It Calls:
+
+    NTSTATUS
+    ObpLookupObjectName (
+        IN HANDLE RootDirectoryHandle,
+        IN PUNICODE_STRING ObjectName,
+        IN ULONG Attributes,
+        IN POBJECT_TYPE ObjectType,
+        IN KPROCESSOR_MODE AccessMode,
+        IN PVOID ParseContext OPTIONAL,
+        IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+        IN PVOID InsertObject OPTIONAL,
+        IN OUT PACCESS_STATE AccessState,
+        OUT PBOOLEAN DirectoryLocked,
+        OUT PVOID *FoundObject
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+                    obref.c\ObOpenObjectByName
+                    obref.c\ObReferenceObjectByName
+
+        It Calls:   obinit.c\UNICODE_STRING ObpDosDevicesShortName;
+                    obinit.c\ULARGE_INTEGER ObpDosDevicesShortNamePrefix;
+                    obinit.c\ULARGE_INTEGER ObpDosDevicesShortNameRoot
+
+                    obhandle.c\ObpIncrPointerCount (
+                    obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObReferenceObjectByPointer (
+                    obref.c\ObDereferenceObject (
+                    obse.c\ObpCheckTraverseAccess (
+                    obse.c\ObCheckCreateObjectAccess (
+                    obdir.c\ObpLookupDirectoryEntry (
+                    obdir.c\ObpInsertDirectoryEntry (
+
+    NTSTATUS
+    NtQueryDirectoryObject (
+        IN HANDLE DirectoryHandle,
+        OUT PVOID Buffer,
+        IN ULONG Length,
+        IN BOOLEAN ReturnSingleEntry,
+        IN BOOLEAN RestartScan,
+        IN OUT PULONG Context,
+        OUT PULONG ReturnLength OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+
+Module Name:
+
+    obdevmap.c
+
+Procedures
+
+    NTSTATUS
+    ObSetDeviceMap (
+        IN PEPROCESS TargetProcess,
+        IN HANDLE DirectoryHandle
+        )
+
+        Called By:  obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:   obinit.c\PDEVICE_MAP ObSystemDeviceMap
+
+                    obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    ObQueryDeviceMapInformation (
+        IN PEPROCESS TargetProcess,
+        OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInformation
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\PDEVICE_MAP ObSystemDeviceMap
+
+    VOID
+    ObInheritDeviceMap (
+        IN PEPROCESS NewProcess,
+        IN PEPROCESS ParentProcess
+        )
+
+        Called By:
+
+        It Calls:   obinit.c\PDEVICE_MAP ObSystemDeviceMap
+
+    VOID
+    ObDereferenceDeviceMap (
+        IN PEPROCESS Process
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObDereferenceObject (
+
+
+Module Name:
+
+    oblink.c
+
+Global variables and who references them
+
+    extern POBJECT_TYPE IoDeviceObjectType;
+
+        oblink.c\ObpProcessDosDeviceSymbolicLink
+
+Procedures
+
+    NTSTATUS
+    ObpParseSymbolicLink (
+        IN PVOID ParseObject,
+        IN PVOID ObjectType,
+        IN PACCESS_STATE AccessState,
+        IN KPROCESSOR_MODE AccessMode,
+        IN ULONG Attributes,
+        IN OUT PUNICODE_STRING CompleteName,
+        IN OUT PUNICODE_STRING RemainingName,
+        IN OUT PVOID Context OPTIONAL,
+        IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+        OUT PVOID *Object
+        )
+
+        Called By:  obinit.c\ObInitSystem
+
+        It Calls:   obref.c\ObReferenceObjectByPointer (
+
+    VOID
+    ObpProcessDosDeviceSymbolicLink (
+        POBJECT_SYMBOLIC_LINK SymbolicLink,
+        ULONG Action
+        )
+
+        Called By:  oblink.c\ObpDeleteSymbolicLinkName
+                    oblink.c\ObpCreateSymbolicLinkName
+
+        It Calls:   oblink.c\extern POBJECT_TYPE IoDeviceObjectType;
+
+                    obref.c\ObDereferenceObject (
+                    obse.c\ObGetObjectSecurity (
+                    obdir.c\ObpLookupDirectoryEntry (
+
+    VOID
+    ObpDeleteSymbolicLinkName (
+        POBJECT_SYMBOLIC_LINK SymbolicLink
+        )
+
+        Called By:  obref.c\ObpDeleteNameCheck
+
+        It Calls:   oblink.c\ObpProcessDosDeviceSymbolicLink (
+
+    VOID
+    ObpCreateSymbolicLinkName (
+        POBJECT_SYMBOLIC_LINK SymbolicLink
+        )
+
+        Called By:  obinsert.c\ObInsertObject
+
+        It Calls:   oblink.c\ObpProcessDosDeviceSymbolicLink (
+
+    NTSTATUS
+    NtCreateSymbolicLinkObject (
+        OUT PHANDLE LinkHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_ATTRIBUTES ObjectAttributes,
+        IN PUNICODE_STRING LinkTarget
+        )
+
+        Called By:  obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:   obcreate.c\ObCreateObject (
+                    obinset.c\ObInsertObject (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    NtOpenSymbolicLinkObject (
+        OUT PHANDLE LinkHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_ATTRIBUTES ObjectAttributes
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObOpenObjectByName (
+
+    NTSTATUS
+    NtQuerySymbolicLinkObject (
+        IN HANDLE LinkHandle,
+        IN OUT PUNICODE_STRING LinkTarget,
+        OUT PULONG ReturnedLength OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+
+Module Name:
+
+    obclose.c
+
+Global variables and who references them
+
+    extern BOOLEAN SepAdtAuditingEnabled;
+
+        obclose.c\NtClose
+
+Procedures
+
+    NTSTATUS
+    NtClose (
+        IN HANDLE Handle
+        )
+
+        Called By:  obhandle.c\NtDuplicateObject
+                    obinit.c\ObInitSystem
+                    obinit.c\ObpCreateDosDevicesDirectory
+
+        It Calls:   obclose.c\extern BOOLEAN SepAdtAuditingEnabled;
+
+                    obhandle.c\ObpDecrementHandleCount (
+                    obhandle.c\ObpTranslateGrantedAccessIndex (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    NtMakeTemporaryObject (
+        IN HANDLE Handle
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+                    obclose.c\ObMakeTemporaryObject (
+
+    VOID
+    ObMakeTemporaryObject (
+        IN PVOID Object
+        )
+
+        Called By:  obclose.c\NtMakeTemporaryObject
+
+        It Calls:   obref.c\ObpDeleteNameCheck (
+
+
+Module Name:
+
+    obquery.c
+
+Procedures
+
+    NTSTATUS
+    NtQueryObject (
+        IN HANDLE Handle,
+        IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+        OUT PVOID ObjectInformation,
+        IN ULONG ObjectInformationLength,
+        OUT PULONG ReturnLength OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+                    obquery.c\ObQueryNameString (
+                    obquery.c\ObQueryTypeInfo (
+
+    PUNICODE_STRING
+    ObGetObjectName (
+        IN PVOID Object
+        )
+
+        Called By:
+
+        It Calls:
+
+    NTSTATUS
+    ObQueryNameString (
+        IN PVOID Object,
+        OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+        IN ULONG Length,
+        OUT PULONG ReturnLength
+        )
+
+        Called By:  obquery.c\NtQueryObject
+                    obtype.c\ObGetObjectInformation
+
+        It Calls:
+
+    NTSTATUS
+    ObQueryTypeName (
+        IN PVOID Object,
+        PUNICODE_STRING ObjectTypeName,
+        IN ULONG Length,
+        OUT PULONG ReturnLength
+        )
+
+        Called By:  obtype.c\ObGetObjectInformation
+
+        It Calls:
+
+    NTSTATUS
+    ObQueryTypeInfo (
+        IN POBJECT_TYPE ObjectType,
+        OUT POBJECT_TYPE_INFORMATION ObjectTypeInfo,
+        IN ULONG Length,
+        OUT PULONG ReturnLength
+        )
+
+        Called By:  obquery.c\NtQueryObject
+
+        It Calls:
+
+    NTSTATUS
+    ObQueryObjectAuditingByHandle (
+        IN HANDLE Handle,
+        OUT PBOOLEAN GenerateOnClose
+        )
+
+        Called By:
+
+        It Calls:
+
+    BOOLEAN
+    ObpSetHandleAttributes (
+        IN OUT PVOID TableEntry,
+        IN ULONG Parameter
+        )
+
+        Called By:  obquery.c\NtSetInformationObject
+
+        It Calls:
+
+    NTSTATUS
+    NTAPI
+    NtSetInformationObject (
+        IN HANDLE Handle,
+        IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
+        IN PVOID ObjectInformation,
+        IN ULONG ObjectInformationLength
+        )
+
+        Called By:  obquery.c\ObpSetHandleAttributes (
+
+        It Calls:
+
+
+Module Name:
+
+    obsdata.c
+
+Global variables and who references them
+
+    ULONG ObsDebugFlags = 0;
+
+    ULONG ObsTotalCacheEntries = 0;
+
+    PLIST_ENTRY *ObsSecurityDescriptorCache = NULL;
+
+    ERESOURCE ObsSecurityDescriptorCacheLock;
+
+Procedures
+
+    NTSTATUS
+    ObpInitSecurityDescriptorCache (
+        VOID
+        )
+
+        Called By:  obinit.c\ObInitSystem
+
+        It Calls:
+
+    ULONG
+    ObpHashSecurityDescriptor (
+        PSECURITY_DESCRIPTOR SecurityDescriptor
+        )
+
+        Called By:  obsdata.c\ObpLogSecurityDescriptor
+
+        It Calls:   obsdata.c\ObpHashBuffer (
+
+    ULONG
+    ObpHashBuffer (
+        PVOID Data,
+        ULONG Length
+        )
+
+        Called By:  obsdata.c\ObpHashSecurityDescriptor
+
+        It Calls:
+
+    NTSTATUS
+    ObpLogSecurityDescriptor (
+        IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+        OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor
+        )
+
+        Called By:  obse.c\ObAssignObjectSecurityDescriptor
+                    obse.c\ObSetSecurityDescriptorInfo
+
+        It Calls:   obsdata.c\ObpHashSecurityDescriptor (
+                    obsdata.c\ObpCreateCacheEntry (
+                    obsdata.c\ObpCompareSecurityDescriptors (
+                    obsdata.c\ObpAcquireDescriptorCacheWriteLock (
+                    obsdata.c\ObpReleaseDescriptorCacheLock (
+
+    PSECURITY_DESCRIPTOR_HEADER
+    ObpCreateCacheEntry (
+        PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+        ULONG FullHash
+        )
+
+        Called By:  obsdata.c\ObpLogSecurityDescriptor
+
+        It Calls:
+
+    PSECURITY_DESCRIPTOR
+    ObpReferenceSecurityDescriptor (
+        PVOID  Object
+        )
+
+        Called By:  obse.c\ObGetObjectSecurity
+
+        It Calls:   obsdata.c\ObpAcquireDescriptorCacheWriteLock (
+                    obsdata.c\ObpReleaseDescriptorCacheLock (
+
+    NTSTATUS
+    ObDeassignSecurity (
+        IN OUT PSECURITY_DESCRIPTOR *SecurityDescriptor
+        )
+
+        Called By:
+
+        It Calls:   obsdata.c\ObpDereferenceSecurityDescriptor (
+
+    VOID
+    ObpDereferenceSecurityDescriptor (
+        PSECURITY_DESCRIPTOR SecurityDescriptor
+        )
+
+        Called By:  obsdata.c\ObDeassignSecurity
+                    obse.c\ObReleaseObjectSecurity
+                    obse.c\ObSetSecurityDescriptorInfo
+
+        It Calls:   obsdata.c\ObpDestroySecurityDescriptorHeader (
+                    obsdata.c\ObpAcquireDescriptorCacheWriteLock (
+                    obsdata.c\ObpReleaseDescriptorCacheLock (
+
+    VOID
+    ObpDestroySecurityDescriptorHeader (
+        IN PSECURITY_DESCRIPTOR_HEADER Header
+        )
+
+        Called By:  obsdata.c\ObpDereferenceSecurityDescriptor
+
+        It Calls:
+
+    BOOLEAN
+    ObpCompareSecurityDescriptors (
+        IN PSECURITY_DESCRIPTOR SD1,
+        IN PSECURITY_DESCRIPTOR SD2
+        )
+
+        Called By:  obsdata.c\ObpLogSecurityDescriptor
+
+        It Calls:
+
+    VOID
+    ObpAcquireDescriptorCacheWriteLock (
+        VOID
+        )
+
+        Called By:  obsdata.c\ObpLogSecurityDescriptor
+                    obsdata.c\ObpReferenceSecurityDescriptor
+                    obsdata.c\ObpDereferenceSecurityDescriptor
+
+        It Calls:
+
+    VOID
+    ObpAcquireDescriptorCacheReadLock (
+        VOID
+        )
+
+        Called By:  obse.c\ObSetSecurityDescriptorInfo
+
+        It Calls:
+
+    VOID
+    ObpReleaseDescriptorCacheLock (
+        VOID
+        )
+
+        Called By:  obsdata.c\ObpLogSecurityDescriptor
+                    obsdata.c\ObpReferenceSecurityDescriptor
+                    obsdata.c\ObpDereferenceSecurityDescriptor
+                    obse.c\ObSetSecurityDescriptorInfo
+
+        It Calls:
+
+
+Module Name:
+
+    obwait.c
+
+Global variables and who references them
+
+    extern POBJECT_TYPE ExEventObjectType;
+
+        obwait.c\NtSignalAndWaitForSingleObject
+
+    extern POBJECT_TYPE ExMutantObjectType;
+
+        obwait.c\NtSignalAndWaitForSingleObject
+
+    extern POBJECT_TYPE ExSemaphoreObjectType;
+
+        obwait.c\NtSignalAndWaitForSingleObject
+
+Procedures
+
+    NTSTATUS
+    NtSignalAndWaitForSingleObject (
+        IN HANDLE SignalHandle,
+        IN HANDLE WaitHandle,
+        IN BOOLEAN Alertable,
+        IN PLARGE_INTEGER Timeout OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obwait.c\extern POBJECT_TYPE ExEventObjectType;
+                    obwait.c\extern POBJECT_TYPE ExSemaphoreObjectType;
+                    obwait.c\extern POBJECT_TYPE ExMutantObjectType;
+
+                    obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    NtWaitForSingleObject (
+        IN HANDLE Handle,
+        IN BOOLEAN Alertable,
+        IN PLARGE_INTEGER Timeout OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    NtWaitForMultipleObjects (
+        IN ULONG Count,
+        IN HANDLE Handles[],
+        IN WAIT_TYPE WaitType,
+        IN BOOLEAN Alertable,
+        IN PLARGE_INTEGER Timeout OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obhandle.c\ObpIncrPointerCount (
+                    obhandle.c\ObpTranslateGrantedAccessIndex (
+                    obref.c\ObDereferenceObject (
+
+    NTSTATUS
+    ObWaitForSingleObject (
+        IN HANDLE Handle,
+        IN BOOLEAN Alertable,
+        IN PLARGE_INTEGER Timeout OPTIONAL
+        )
+
+        Called By:
+
+        It Calls:   obref.c\ObReferenceObjectByHandle (
+                    obref.c\ObDereferenceObject (

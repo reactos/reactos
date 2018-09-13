@@ -1,0 +1,74 @@
+#ifndef _SCRIPTLET_PDL_
+#define _SCRIPTLET_PDL_ 1
+
+#include "types.pdl"
+#include "window.pdl"
+#include "document.pdl"
+
+file scrptlet.pdl
+
+import types.pdl
+import window.pdl
+import document.pdl
+
+interface IWebBridge super:IDispatch guid:AE24FDAD-03C6-11D1-8B76-0080C744F389
+    refprop   CScriptlet:URL
+    refprop   CScriptlet:Scrollbar
+    refprop   CScriptlet:embed
+    refprop   CScriptlet:event
+    refprop   CScriptlet:readyState
+    refmethod CScriptlet:AboutBox
+
+interface IWBScriptControl super:IDispatch guid:A5170870-0CF8-11D1-8B91-0080C744F389
+    refmethod   CScriptControl:raiseEvent
+    refmethod   CScriptControl:bubbleEvent
+    refmethod   CScriptControl:setContextMenu
+    refprop     CScriptControl:selectableContent
+    refprop     CScriptControl:frozen
+    refprop     CScriptControl:scrollbar
+    refprop     CScriptControl:version
+    refprop     CScriptControl:visibility
+    refprop     CScriptControl:onvisibilitychange
+
+event DWebBridgeEvents super:IDispatch guid:A6D897FF-0A95-11d1-B0BA-006008166E11
+	method void         onscriptletevent    abstract   dispid:1 ( arg:name type:BSTR in, arg:eventData type:VARIANT in)
+	method void         onreadystatechange  abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONREADYSTATECHANGE  ()
+	method VARIANT_BOOL onclick             abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONCLICK      ()
+	method VARIANT_BOOL ondblclick          abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONDBLCLICK   ()
+	method void         onkeydown           abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONKEYDOWN    ()
+	method void         onkeyup             abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONKEYUP      ()
+	method VARIANT_BOOL onkeypress          abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONKEYPRESS   ()
+	method void         onmousedown         abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONMOUSEDOWN  ()
+	method void         onmousemove         abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONMOUSEMOVE  ()
+	method void         onmouseup           abstract   dispid:DISPID_HTMLDOCUMENTEVENTS_ONMOUSEUP    ()
+
+class CScriptControl primaryinterface:IWBScriptControl
+    method      HRESULT raiseEvent      maxstrlen:pdlNoLimit  dispid:1 (in type:BSTR  arg:name, in type:VARIANT arg:eventData)
+    method      HRESULT bubbleEvent      dispid:2 ()
+    method      HRESULT setContextMenu  maxstrlen:pdlNoLimit  dispid:3 (in type:VARIANT arg:menuItemPairs)
+    property    selectableContent        dispid:4   atype:VARIANT_BOOL abstract get set 
+    property    frozen                   dispid:5   atype:VARIANT_BOOL abstract get 
+    property    scrollbar                dispid:7   atype:VARIANT_BOOL abstract get set 
+    property    version                  dispid:8   atype:BSTR         abstract get
+    property    visibility               dispid:9   atype:VARIANT_BOOL abstract get 
+    property    onvisibilitychange      maxstrlen:pdlNoLimit  dispid:10  atype:VARIANT      abstract get set
+
+
+tearoff CScriptlet interface:IWebBridge
+tearoff CScriptlet interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID                mapto:GetDispID
+    tearmethod InvokeEx                 mapto:InvokeEx
+
+class CScriptlet name:Scriptlet primaryinterface:IWebBridge \
+        events:DWebBridgeEvents \
+        guid:AE24FDAE-03C6-11D1-8B76-0080C744F389 \
+        noconnectionpoints \
+        control
+    property    URL         dispid:1                          atype:BSTR abstract get set maxstrlen:pdlUrlLen
+    property    Scrollbar   dispid:2                          atype:VARIANT_BOOL abstract get set 
+    property    embed       dispid:3                          atype:VARIANT_BOOL abstract get set 
+    property    event       dispid:DISPID_IHTMLWINDOW2_EVENT  atype:IDispatch* abstract get
+    property    readyState  dispid:DISPID_READYSTATE          atype:long abstract get 
+    method      HRESULT AboutBox   dispid:DISPID_ABOUTBOX ()
+
+#endif //_SCRIPTLET_PDL_

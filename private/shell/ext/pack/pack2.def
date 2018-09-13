@@ -1,0 +1,12 @@
+LIBRARY         PACKAGER
+DESCRIPTION     'Object Packager2'
+
+EXPORTS
+    DllRegisterServer       PRIVATE
+    DllUnregisterServer     PRIVATE
+    DllCanUnloadNow         PRIVATE
+    DllGetClassObject       PRIVATE
+
+    PackWizRunFromExe           @101 NONAME     ;Internal
+
+

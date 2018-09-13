@@ -1,0 +1,92 @@
+1 DLGINCLUDE "dialogs.h"
+
+DLG_CURSORS DIALOG 8, 17, 190, 168
+/* LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US <--this was not here, should it be?*/
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Cursors"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         ID_CURSORLIST, 2, 50, 134, 87, LBS_OWNERDRAWFIXED |
+                    WS_VSCROLL | WS_TABSTOP | WS_GROUP
+    GROUPBOX        "Cursor &Schemes", -1, 2, 1, 134, 45
+    COMBOBOX        ID_SCHEMECOMBO, 5, 13, 128, 76, CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "S&ave Scheme...", ID_SAVESCHEME, 5, 29, 61, 14
+    PUSHBUTTON      "Re&move Scheme", ID_REMOVESCHEME, 69, 29, 64, 14
+    DEFPUSHBUTTON   "OK", IDOK, 146, 5, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 146, 22, 40, 14
+    PUSHBUTTON      "&Help", DLG_FILEOPEN, 146, 40, 40, 14
+    PUSHBUTTON      "&Browse...", ID_BROWSE, 146, 95, 40, 14
+    PUSHBUTTON      "&Reset", ID_DEFAULT, 146, 112, 40, 14, WS_GROUP
+    CONTROL         "", -1, "Static", SS_BLACKFRAME, 152, 60, 28, 29
+    CONTROL         "", ID_PREVIEW, "PreviewWndClass", 0x0000, 156, 64, 20,
+                    21
+    LTEXT           "Title:", ID_TITLEH, 2, 140, 20, 8
+    LTEXT           "", ID_TITLE, 32, 140, 156, 8, SS_NOPREFIX
+    LTEXT           "Creator:", ID_CREATORH, 2, 148, 27, 8
+    LTEXT           "", ID_CREATOR, 32, 148, 154, 8, SS_NOPREFIX
+    LTEXT           "File:", ID_FILEH, 2, 156, 25, 8
+    LTEXT           "", ID_FILE, 32, 156, 156, 8, SS_NOPREFIX
+END
+
+DLG_FILEOPEN DIALOG 36, 24,  264, 134
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+CAPTION "Open"
+STYLE WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_MODALFRAME
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "File &Name:", stc3,    6,    6,  76,  9
+    CONTROL "", edt1, "edit", ES_LEFT | ES_AUTOHSCROLL | WS_BORDER |
+            WS_TABSTOP | WS_CHILD,
+            6,    16,  90,  12
+    CONTROL "", lst1, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            6,   32,  90,  68
+
+    LTEXT "&Directories:", -1, 110,   6,  92,   9
+    LTEXT "", stc1, 110,  18,  92,   9, SS_NOPREFIX
+    CONTROL "", lst2, "listbox",
+            LBS_SORT | LBS_HASSTRINGS | LBS_NOTIFY | LBS_DISABLENOSCROLL
+            | WS_VSCROLL | WS_CHILD | WS_BORDER | WS_TABSTOP
+            | LBS_OWNERDRAWFIXED,
+            110,  32,  92,  68
+
+    LTEXT "List Files of &Type:", stc2, 6,  104,  90,   9
+    CONTROL "", cmb1, "combobox", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+            WS_BORDER | WS_VSCROLL | WS_TABSTOP | WS_CHILD,
+            6,  114,  90,  36
+
+    LTEXT "Dri&ves:", stc4, 110, 104,  92,  9
+    CONTROL "", cmb2, "combobox",
+            CBS_SORT | CBS_HASSTRINGS | CBS_OWNERDRAWFIXED | CBS_DROPDOWNLIST
+            | WS_CHILD | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+            | WS_TABSTOP,
+            110, 114,  92, 68
+
+    DEFPUSHBUTTON "OK", IDOK,      208,   6,  50,  14, WS_GROUP
+    PUSHBUTTON "Cancel", IDCANCEL, 208,  24,  50,  14, WS_GROUP
+    PUSHBUTTON "&Help", pshHelp,   208,  46,  50,  14, WS_GROUP
+
+    CONTROL "", -1, "Static", SS_BLACKFRAME, 218, 72, 28, 29
+    CONTROL "", ID_PREVIEW, "PreviewWndClass", 0x0000, 222, 76, 20, 21
+
+    PUSHBUTTON "Net&work...", psh14,   208,  114, 50,  14, WS_GROUP
+
+    AUTOCHECKBOX "&Read Only", chx1, 208,  68,  50,  12,
+                       WS_TABSTOP | WS_GROUP
+
+END
+
+DLG_SCHEMESAVE DIALOG 132, 64, 144, 68
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Scheme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Save this cursor scheme as", 0xffff, 0, 5, 144, 9
+    EDITTEXT        ID_SCHEMEFILENAME, 12, 24, 120, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 30, 48, 32, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 78, 48, 32, 14, WS_GROUP
+END

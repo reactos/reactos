@@ -1,0 +1,11 @@
+NAME            BATMETER
+DESCRIPTION     'Power Management -- Battery Meter Tray Applet'
+EXETYPE		WINDOWS
+
+STUB            'WINSTUB.EXE'
+
+CODE            PRELOAD MOVEABLE DISCARDABLE
+DATA            PRELOAD MOVEABLE MULTIPLE
+
+STACKSIZE       8192
+HEAPSIZE        1024

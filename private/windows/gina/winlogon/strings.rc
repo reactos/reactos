@@ -1,0 +1,132 @@
+/****************************** Module Header ******************************\
+* Module Name: strings.rc
+*
+* Copyright (c) 1991, Microsoft Corporation
+*
+* Defines string resources
+*
+* History:
+* 12-09-91 Davidc       Created.
+\***************************************************************************/
+
+STRINGTABLE
+BEGIN
+
+IDS_RESTART_SYSTEM            "Restart system"
+IDS_WINDOWS_MESSAGE           "Windows Message"
+IDS_SAFE_TO_TURN_OFF          "It is now safe to turn off the computer."
+IDS_SHUTDOWN_MESSAGE          "Shutdown Message"
+IDS_NO_PAGING_FILE            "Your system has no paging file, or the paging file is too small.\n\n\
+1. Right-click My Computer, click Properties, and then click the Advanced tab.\n\
+2. Click on the Performance Options button, and then click on the Change button. Under Drive [Volume Label], select the drive you want.\n\
+3. To create a new paging file, click the Initial Size (MB) box, and then type a paging file size.\n    -Or-\n   \
+To increase the paging file size, click the Maximum Size (MB) box, and then type a larger paging file size.\n\n\
+When you have finished, click Set, and then click OK."
+IDS_LIMITED_RESOURCES         "Limited Virtual Memory"
+IDS_INVALID_TIME_MSG          "The time or date on your system is invalid. Please use the date/time applet in the Control Panel to properly set your system time and date."
+IDS_INVALID_TIME              "Invalid System Time"
+IDS_SETUP_INCOMPLETE          "The system is not fully installed.  Please run setup again."
+IDS_ACCOUNT_LOCKED            "Unable to log you on because your account has been locked out, please contact your administrator."
+IDS_SAME_ACCOUNT_WARNING      "Your account does not currently have Administrator privileges. Please specify a different account."
+
+IDS_BAD_GINA                  "The Logon User Interface DLL %s failed to load."
+IDS_KEYFILE_NOT_FOUND         "The Startup Key File was not found on the disk in drive A:.  Please insert the correct disk."
+IDS_KEYFILE_NOT_FOUND_CAP     "Key File Not Found"
+IDS_SYSTEM_PROCESS_DIED       "The system process '%s' terminated unexpectedly with status code %d.  The system will now shut down and restart."
+IDS_REMAP_PROFILE_RETRY       "The account specified does not have permission to move user profiles."
+IDS_REMAP_PROFILE_DONE        "Your settings have been transferred, and you need to log on again to use those settings."
+
+//
+// Screen saver strings
+//
+
+IDS_SYSTEM_SCREEN_SAVER_NAME  "system.scr"
+
+IDS_ADMIN_ACCOUNT_NAME        "Administrator"
+
+//
+// Define multimedia strings
+//
+
+IDS_SOUND_DLL                 "WINMM"
+IDS_WAVEOUTGETNUMDEVS         "waveOutGetNumDevs"
+IDS_PLAYSOUND                 "PlaySound"
+IDS_MIGRATESOUNDEVENTS        "MigrateSoundEvents"
+IDS_MIDI_DLL                  "WINMM"
+IDS_MIGRATEMIDIUSER           "MigrateMidiUser"
+
+//
+// netdde agent strings
+//
+
+IDS_NDDE_FAILED               "NetDDE Agent unable to initialize"
+IDS_NDDE_CANTSTART            "Could not start one or more of the NetDDE related services.\nConsult your system administrator for help."
+
+END
+
+STRINGTABLE
+BEGIN
+
+IDS_MULTIUSER_CONNECT_FAILED                "Logon Connect Failed"
+IDS_MULTIUSER_UNEXPECTED_CONNECT_FAILURE    "Error connecting to existing session for %s (Id %lu)\n\n%s\nA new session will be created."
+IDS_MULTIUSER_DISCONNECT_FAILED             "Logon Disconnect Failed"
+IDS_MULTIUSER_UNEXPECTED_DISCONNECT_FAILURE "Error disconnecting Id %lu\n\n%s\n"
+IDS_MULTIUSER_DISCONNECT_CAPTION            "Disconnect from Windows NT"
+IDS_MULTIUSER_DISCONNECT_TEXT               "This will disconnect your session.\nYou can reconnect to this session when you Logon again."
+IDS_MULTIUSER_CALLBACK_ROVING_CAPTION       "Callback Roving Session"
+IDS_MULTIUSER_CALLBACK_FIXED_CAPTION        "Callback Fixed Session"
+IDS_MULTIUSER_LOGON_DISABLED                "Your interactive logon privilege has been disabled.  Please contact your system administrator."
+IDS_MULTIUSER_NO_CALLBACK_NUMBER            "Invalid Phone Number"
+IDS_MULTIUSER_NO_CALLBACK_NUMBER_MESSAGE    "A callback phone number is not configured for this Session.  A callback phone number must be configured for Fixed Callback Sessions.  Please notify the system administrator."
+IDS_MULTIUSER_WINSTATION_ACCESS_DENIED      "You do not have access to logon to this Session."
+IDS_MULTIUSER_ENCRYPTION_LEVEL_REQUIRED     "You do not have the proper encryption level to access this Session"
+IDS_MULTIUSER_DISCONNECT_OPTION             "&Disconnect..."
+
+IDS_LOGON_MESSAGE                           "Logon Message"
+IDS_UNKNOWN_LOGON_FAILURE                   "The system can not log you on (%X).  Please try again or consult your system administrator."
+
+IDS_BATTERY_MSG                             "You should change your battery or switch to outlet power immediately to keep from losing your work."
+IDS_CRITBAT_TITLE                           "Critical Battery"
+IDS_LOWBAT_TITLE                            "Low Battery"
+
+//
+// Normal status messages
+//
+
+IDS_STATUS_NET_START                        "Preparing network connections..."
+IDS_STATUS_COMPUTER_SETTINGS                "Applying computer settings..."
+IDS_STATUS_STARTUP_SCRIPTS                  "Running startup scripts..."
+IDS_STATUS_SHUTDOWN_SCRIPTS                 "Running shutdown scripts..."
+IDS_STATUS_USER_SETTINGS                    "Applying your personal settings..."
+IDS_STATUS_LOGOFF_SCRIPTS                   "Running logoff scripts..."
+IDS_STATUS_LOGON_SCRIPTS                    "Running logon scripts..."
+IDS_STATUS_LOAD_PROFILE                     "Loading your personal settings..."
+IDS_STATUS_CLOSE_NET                        "Closing network connections..."
+IDS_STATUS_SAVING_DATA                      "Windows is shutting down..."
+IDS_STATUS_STANDBY                          "Preparing to Standby..."
+IDS_STATUS_HIBERNATE                        "Preparing to Hibernate..."
+IDS_STATUS_SAVE_PROFILE                     "Saving your settings..."
+IDS_STATUS_EJECTING                         "Preparing to Standby in order to complete eject..."
+IDS_STATUS_DS_REINDEX                       "The Active Directory is rebuilding indices.  Please wait..."
+IDS_STATUS_SYSTEM_STARTUP                   "Windows is starting up..."
+
+//
+// Verbose status messages
+//
+
+IDS_STATUS_RESTORE_NET                      "Restoring network connections..."
+IDS_STATUS_EXECUTING_NOTIFY                 "Executing:  %s..."
+IDS_STATUS_POWER_PROFILE                    "Loading power profile..."
+IDS_STATUS_PLAY_LOGON_SOUND                 "Playing logon sound..."
+IDS_STATUS_PLAY_LOGOFF_SOUND                "Playing logoff sound..."
+IDS_STATUS_RPCSS_START                      "RPCSS is starting..."
+IDS_STATUS_DS_START                         "Active Directory is starting..."
+IDS_STATUS_MUP_START                        "MUP is initializing..."
+IDS_STATUS_SHUTTING_DOWN                    "Shutting down your computer..."
+IDS_STATUS_WAIT_USER_GPO_FINISH             "Waiting for user group policies to finish..."
+IDS_STATUS_USER_GPO_FINISHED                "User group policies finished."
+IDS_STATUS_WAIT_MACHINE_GPO_FINISH          "Waiting for machine group policies to finish..."
+IDS_STATUS_MACHINE_GPO_FINISHED             "Machine group policies finished."
+IDS_STATUS_STOPPING_WFP                     "Stopping Windows File Protection..."
+
+END

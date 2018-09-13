@@ -1,0 +1,24 @@
+REGEDIT
+
+;  File: D:\WACKER\term.reg (Created: 14-Mar-1994)
+;
+;  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+;  All rights reserved
+;
+;  $Revision: 1.1 $
+;  $Date: 1995/06/06 14:52:19 $
+;
+
+
+HKEY_CLASSES_ROOT\.ht = htfile
+HKEY_CLASSES_ROOT\htfile = HyperTerminal File
+HKEY_CLASSES_ROOT\htfile\DefaultIcon = %1
+HKEY_CLASSES_ROOT\htfile\shell\dial\command = c:\chicago\hypertrm\hypertrm.exe /d %1
+HKEY_CLASSES_ROOT\htfile\shell\dial = &Dial
+HKEY_CLASSES_ROOT\htfile\shell\open\command = c:\chicago\hypertrm\hypertrm.exe %1
+HKEY_CLASSES_ROOT\htfile\shellex\PropertySheetHandlers\TermPage = {1B53F360-9A1B-1069-930C-00AA0030EBC8}
+HKEY_CLASSES_ROOT\htfile\shellex\IconHandler = {88895560-9AA2-1069-930E-00AA0030EBC8}
+HKEY_CLASSES_ROOT\CLSID\{1B53F360-9A1B-1069-930C-00AA0030EBC8} = HyperTerminal Page Ext
+HKEY_CLASSES_ROOT\CLSID\{1B53F360-9A1B-1069-930C-00AA0030EBC8}\InProcServer32 = c:\chicago\system\hypertrm.dll
+HKEY_CLASSES_ROOT\CLSID\{88895560-9AA2-1069-930E-00AA0030EBC8} = HyperTerminal Icon Ext
+HKEY_CLASSES_ROOT\CLSID\{88895560-9AA2-1069-930E-00AA0030EBC8}\InProcServer32 = c:\chicago\system\hticons.dll

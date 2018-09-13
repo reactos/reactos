@@ -1,0 +1,183 @@
+
+# Module TOOL.MKH
+#
+# Description:
+# This module contains the definitions for the tools to be used 
+# by other modules and the command line flags to be used with 
+# these tools depending on whether this is a DEBUG build or not
+#
+
+################################
+#
+# Defines for the "C"  compiler
+#
+################################
+CC=  cl
+DEBUG_CFLAGS=     $(TYPE_DEBUG_CFLAGS)  
+NO_DEBUG_CFLAGS=  $(TYPE_NO_DEBUG_CFLAGS)
+
+!if defined(BUILD_DEBUG)
+PROJ_CFLAGS= $(DEBUG_CFLAGS)
+!else
+PROJ_CFLAGS= $(NO_DEBUG_CFLAGS)
+!endif
+
+################################
+#
+# Defines for the "C++" compiler
+#
+################################
+
+CPP= cl
+
+!if defined(BUILD_DEBUG)
+PROJ_CPPFLAGS= $(TYPE_DEBUG_CPPFLAGS)
+!else
+PROJ_CPPFLAGS= $(TYPE_NO_DEBUG_CPPFLAGS=)
+!endif
+
+
+################################
+#
+# Defines for the linker
+#
+################################
+LINK= link
+
+DEBUG_LFLAGS= $(TYPE_DEBUG_LFLAGS)
+NO_DEBUG_LFLAGS= $(TYPE_NO_DEBUG_LFLAGS)
+
+!if defined(BUILD_DEBUG)
+PROJ_LFLAGS= $(DEBUG_LFLAGS)
+!else
+PROJ_LFLAGS= $(NO_DEBUG_LFLAGS)
+!endif
+
+################################
+#
+# Defines for the implib
+#
+################################
+IMPLIB=implib
+
+IMPFLAGS=
+
+################################
+#
+# Defines for the assembler
+#
+################################
+
+AS=  ml
+DEBUG_AFLAGS=     $(TYPE_DEBUG_AFLAGS)  
+NO_DEBUG_AFLAGS=  $(TYPE_NO_DEBUG_AFLAGS)
+
+!if defined(BUILD_DEBUG)
+PROJ_AFLAGS= $(DEBUG_AFLAGS)
+!else
+PROJ_AFLAGS= $(NO_DEBUG_AFLAGS)
+!endif
+
+################################
+#
+# Defines for the resource compiler
+#
+################################
+RC=  rc
+
+
+DEBUG_RCFLAGS= $(TYPE_DEBUG_RCFLAGS)
+NO_DEBUG_RCFLAGS= $(TYPE_NO_DEBUG_RCFLAGS)
+
+DEBUG_RESFLAGS= $(TYPE_DEBUG_RESFLAGS)
+NO_DEBUG_RESFLAGS= $(TYPE_NO_DEBUG_RESFLAGS)
+
+!if defined(BUILD_DEBUG)
+PROJ_RCFLAGS= $(DEBUG_RCFLAGS)
+PROJ_RESFLAGS= $(DEBUG_RESFLAGS)
+!else
+PROJ_RCFLAGS= $(NO_DEBUG_RCFLAGS)
+PROJ_RESFLAGS= $(NO_DEBUG_RESFLAGS)
+!endif
+
+
+################################
+#
+# Defines for the shell level tools
+#
+################################
+
+RM_CMD= rm 
+RM_FLAGS= -f
+
+TAG_CMD= vcs 
+TAG_FLAGS=  -qo -v
+
+GET_CMD= get
+GET_FLAGS=
+
+LOG_CMD=vlog
+LOG_FLAGS=
+
+COPY_CMD=cp
+
+#
+# Now that we went to all the trouble to build a rational set
+# of defaults let the user override them
+#
+
+#
+# Flags for the C compiler
+#
+!if defined(CFLAGS_OVERRIDE)
+CFLAGS=$(CFLAGS_OVERRIDE)
+!else
+CFLAGS= $(PROJ_CFLAGS)
+!endif
+
+#
+# Flags for the C++ compiler
+#
+
+!if defined(CPPFLAGS_OVERRIDE)
+CPPFLAGS= $(CPPFLAGS_OVERRIDE)
+!else
+CPPFLAGS= $(PROJ_CPPFLAGS)
+!endif
+CPPFLAGS= $(TYPE_DEBUG_CPPFLAGS)
+
+# 
+# Flags for linker
+#
+!if defined(LFLAGS_OVERRIDE)
+LFLAGS=$(LFLAGS_OVERRIDE)
+!else
+LFLAGS= $(PROJ_LFLAGS)
+!endif
+
+# 
+# Flags for assembler
+#
+!if defined(AFLAGS_OVERRIDE)
+AFLAGS=$(AFLAGS_OVERRIDE)
+!else
+AFLAGS= $(PROJ_AFLAGS)
+!endif
+
+#
+# Flags for the resource compiler
+#
+!if defined(RCFLAGS_OVERRIDE)
+RCFLAGS= $(RCFLAGS_OVERRIDE)
+!else
+RCFLAGS= $(PROJ_RCFLAGS)
+!endif
+
+!if defined(RESFLAGS_OVERRIDE)
+RESFLAGS= $(RESFLAGS_OVERRIDE)
+!else
+RESFLAGS= $(PROJ_RESFLAGS)
+!endif
+
+
+

@@ -1,0 +1,903 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1996.
+//
+//  File:       urlmon.idl
+//
+//  Contents:   async moniker interfaces
+//
+//  Classes:
+//
+//  Functions:
+//
+//  History:    11-02-95     Created
+//
+//----------------------------------------------------------------------------
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// UrlMon.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1996 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// URL Moniker Interfaces.")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+import "servprov.idl";
+
+interface IPersistMoniker;
+interface IBindProtocol;
+interface IBinding;
+interface IBindStatusCallback;
+interface IBindStatusCallbackMsg;
+interface IAuthenticate;
+interface IWindowForBindingUI;
+interface ICodeInstall;
+interface IHttpNegotiate;
+interface IServiceProvider;
+
+cpp_quote("// These are for backwards compatibility with previous URLMON versions")
+cpp_quote("#define BINDF_DONTUSECACHE BINDF_GETNEWESTVERSION")
+cpp_quote("#define BINDF_DONTPUTINCACHE BINDF_NOWRITECACHE")
+cpp_quote("#define BINDF_NOCOPYDATA BINDF_PULLDATA")
+
+cpp_quote("EXTERN_C const IID IID_IAsyncMoniker;    ")
+cpp_quote("EXTERN_C const IID CLSID_StdURLMoniker;  ")
+cpp_quote("EXTERN_C const IID CLSID_HttpProtocol;   ")
+cpp_quote("EXTERN_C const IID CLSID_FtpProtocol;    ")
+cpp_quote("EXTERN_C const IID CLSID_GopherProtocol; ")
+cpp_quote("EXTERN_C const IID CLSID_HttpSProtocol;  ")
+cpp_quote("EXTERN_C const IID CLSID_FileProtocol;   ")
+cpp_quote("EXTERN_C const IID CLSID_MkProtocol;     ")
+
+#pragma midl_echo(" ")
+#pragma midl_echo("#define SZ_URLCONTEXT           OLESTR(\"URL Context\")")
+#pragma midl_echo("#define SZ_ASYNC_CALLEE         OLESTR(\"AsyncCallee\")")
+
+#pragma midl_echo("#define MKSYS_URLMONIKER    6                 ")
+#pragma midl_echo(" ")
+#pragma midl_echo("STDAPI CreateURLMoniker(LPMONIKER pMkCtx, LPCWSTR szURL, LPMONIKER FAR * ppmk);             ")
+#pragma midl_echo("STDAPI GetClassURL(LPCWSTR szURL, CLSID *pClsID);                                           ")
+#pragma midl_echo("STDAPI CreateAsyncBindCtx(DWORD reserved, IBindStatusCallback *pBSCb,                       ")
+#pragma midl_echo("                                IEnumFORMATETC *pEFetc, IBindCtx **ppBC);                   ")
+#pragma midl_echo("STDAPI MkParseDisplayNameEx(IBindCtx *pbc, LPCWSTR szDisplayName, ULONG *pchEaten,          ")
+#pragma midl_echo("                                LPMONIKER *ppmk);                                           ")
+#pragma midl_echo("STDAPI RegisterBindStatusCallback(LPBC pBC, IBindStatusCallback *pBSCb,                     ")
+#pragma midl_echo("                                IBindStatusCallback**  ppBSCBPrev, DWORD dwReserved);       ")
+#pragma midl_echo("STDAPI RevokeBindStatusCallback(LPBC pBC, IBindStatusCallback *pBSCb);                      ")
+
+#pragma midl_echo("STDAPI GetClassFileOrMime(LPBC pBC, LPCWSTR szFilename, LPVOID pBuffer, DWORD cbSize, LPCWSTR szMime, DWORD dwReserved, CLSID *pclsid); ")
+#pragma midl_echo("STDAPI IsValidURL(LPBC pBC, LPCWSTR szURL, DWORD dwReserved);                               ")
+
+
+#pragma midl_echo("STDAPI CoGetClassObjectFromURL( REFCLSID rCLASSID,")
+#pragma midl_echo("            LPCWSTR szCODE, DWORD dwFileVersionMS, ")
+#pragma midl_echo("            DWORD dwFileVersionLS, LPCWSTR szTYPE,")
+#pragma midl_echo("            LPBINDCTX pBindCtx, DWORD dwClsContext,")
+#pragma midl_echo("            LPVOID pvReserved, REFIID riid, LPVOID * ppv);")
+
+
+#pragma midl_echo(" ")
+#pragma midl_echo("//helper apis                                                                               ")
+#pragma midl_echo("STDAPI IsAsyncMoniker(IMoniker* pmk);                                                       ")
+#pragma midl_echo("STDAPI CreateURLBinding(LPCWSTR lpszUrl, IBindCtx *pbc, IBinding **ppBdg);                  ")
+#pragma midl_echo(" ")
+#pragma midl_echo("STDAPI RegisterMediaTypesW(UINT ctypes, const LPCWSTR* rgszTypes, CLIPFORMAT* rgcfTypes);          ")
+#pragma midl_echo("STDAPI RegisterMediaTypes(UINT ctypes, const LPCSTR* rgszTypes, CLIPFORMAT* rgcfTypes);            ")
+#pragma midl_echo("STDAPI FindMediaType(LPCSTR rgszTypes, CLIPFORMAT* rgcfTypes);                                       ")
+#pragma midl_echo("STDAPI CreateFormatEnumerator( UINT cfmtetc, FORMATETC* rgfmtetc, IEnumFORMATETC** ppenumfmtetc); ")
+#pragma midl_echo("STDAPI RegisterFormatEnumerator(LPBC pBC, IEnumFORMATETC *pEFetc, DWORD reserved);          ")
+#pragma midl_echo("STDAPI RevokeFormatEnumerator(LPBC pBC, IEnumFORMATETC *pEFetc);                            ")
+#pragma midl_echo("STDAPI RegisterMediaTypeClass(LPBC pBC,UINT ctypes, const LPCSTR* rgszTypes, CLSID *rgclsID, DWORD reserved);    ")
+#pragma midl_echo("STDAPI FindMediaTypeClass(LPBC pBC, LPCSTR szType, CLSID *pclsID, DWORD reserved);                          ")
+#pragma midl_echo("STDAPI UrlMkSetSessionOption(DWORD dwOption, LPVOID pBuffer, DWORD dwBufferLength, DWORD dwReserved);       ")
+
+#pragma midl_echo(" ")
+#pragma midl_echo("// URLMON-specific defines for UrlMkSetSessionOption() above")
+#pragma midl_echo("#define URLMON_OPTION_USERAGENT  0x10000001")
+
+#pragma midl_echo(" ")
+#pragma midl_echo("#define CF_NULL                 0                                  ")
+#pragma midl_echo("#define CFSTR_MIME_NULL         NULL                               ")
+// 7 bit MIME Types
+#pragma midl_echo("#define CFSTR_MIME_TEXT         (TEXT(\"text/plain\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_RICHTEXT     (TEXT(\"text/richtext\"))          ")
+#pragma midl_echo("#define CFSTR_MIME_X_BITMAP     (TEXT(\"image/x-xbitmap\"))        ")
+#pragma midl_echo("#define CFSTR_MIME_POSTSCRIPT   (TEXT(\"application/postscript\")) ")
+// 8 bit MIME Types
+#pragma midl_echo("#define CFSTR_MIME_AIFF         (TEXT(\"audio/aiff\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_BASICAUDIO   (TEXT(\"audio/basic\"))            ")
+#pragma midl_echo("#define CFSTR_MIME_WAV          (TEXT(\"audio/wav\"))              ")
+#pragma midl_echo("#define CFSTR_MIME_X_WAV        (TEXT(\"audio/x-wav\"))            ")
+#pragma midl_echo("#define CFSTR_MIME_GIF          (TEXT(\"image/gif\"))              ")
+#pragma midl_echo("#define CFSTR_MIME_PJPEG        (TEXT(\"image/pjpeg\"))            ")
+#pragma midl_echo("#define CFSTR_MIME_JPEG         (TEXT(\"image/jpeg\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_TIFF         (TEXT(\"image/tiff\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_X_PNG        (TEXT(\"image/x-png\"))            ")
+#pragma midl_echo("#define CFSTR_MIME_BMP          (TEXT(\"image/bmp\"))              ")
+#pragma midl_echo("#define CFSTR_MIME_X_ART        (TEXT(\"image/x-jg\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_AVI          (TEXT(\"video/avi\"))              ")
+#pragma midl_echo("#define CFSTR_MIME_MPEG         (TEXT(\"video/mpeg\"))             ")
+#pragma midl_echo("#define CFSTR_MIME_FRACTALS     (TEXT(\"application/fractals\"))   ")
+#pragma midl_echo("#define CFSTR_MIME_RAWDATA      (TEXT(\"application/octet-stream\"))")
+#pragma midl_echo("#define CFSTR_MIME_RAWDATASTRM  (TEXT(\"application/octet-stream\"))")
+#pragma midl_echo("#define CFSTR_MIME_PDF          (TEXT(\"application/pdf\"))        ")
+#pragma midl_echo("#define CFSTR_MIME_X_AIFF       (TEXT(\"audio/x-aiff\"))           ")
+#pragma midl_echo("#define CFSTR_MIME_X_REALAUDIO  (TEXT(\"audio/x-pn-realaudio\"))   ")
+#pragma midl_echo("#define CFSTR_MIME_XBM          (TEXT(\"image/xbm\"))              ")
+#pragma midl_echo("#define CFSTR_MIME_QUICKTIME    (TEXT(\"video/quicktime\"))        ")
+#pragma midl_echo("#define CFSTR_MIME_X_MSVIDEO    (TEXT(\"video/x-msvideo\"))        ")
+#pragma midl_echo("#define CFSTR_MIME_X_SGI_MOVIE  (TEXT(\"video/x-sgi-movie\"))      ")
+// 7 or 8 bit MIME Types
+#pragma midl_echo("#define CFSTR_MIME_HTML         (TEXT(\"text/html\"))              ")
+#pragma midl_echo(" ")
+
+cpp_quote("// MessageId: MK_S_ASYNCHRONOUS                                              ")
+cpp_quote("// MessageText: Operation is successful, but will complete asynchronously.   ")
+cpp_quote("//                                                                           ")
+cpp_quote("#define MK_S_ASYNCHRONOUS    _HRESULT_TYPEDEF_(0x000401E8L)                  ")
+cpp_quote("#define S_ASYNCHRONOUS       MK_S_ASYNCHRONOUS                               ")
+cpp_quote("                                                                             ")
+cpp_quote("#ifndef E_PENDING                                                            ")
+cpp_quote("#define E_PENDING _HRESULT_TYPEDEF_(0x8000000AL)                             ")
+cpp_quote("#endif                                                                       ")
+cpp_quote("                                                                             ")
+cpp_quote("//                                                                           ")
+cpp_quote("//                                                                           ")
+cpp_quote("// WinINet and protocol specific errors are mapped to one of the following   ")
+cpp_quote("// error which are returned in IBSC::OnStopBinding                           ")
+cpp_quote("//                                                                           ")
+cpp_quote("//                                                                           ")
+
+//
+// url could not be parsed
+//
+cpp_quote("#define INET_E_INVALID_URL               _HRESULT_TYPEDEF_(0x800C0002L)      ")
+//
+// InternetOpen failed - no session was established
+//
+cpp_quote("#define INET_E_NO_SESSION                _HRESULT_TYPEDEF_(0x800C0003L)      ")
+//
+//  InternetConnect failed - no
+//
+cpp_quote("#define INET_E_CANNOT_CONNECT            _HRESULT_TYPEDEF_(0x800C0004L)      ")
+//
+// the server or proxy was not found
+//
+cpp_quote("#define INET_E_RESOURCE_NOT_FOUND        _HRESULT_TYPEDEF_(0x800C0005L)      ")
+//
+// the actual object was not found - e.g. http: 404
+//
+cpp_quote("#define INET_E_OBJECT_NOT_FOUND          _HRESULT_TYPEDEF_(0x800C0006L)      ")
+//
+//  connection was established but data can not be retrieved
+//  no filename from cache invalid etc.
+//
+cpp_quote("#define INET_E_DATA_NOT_AVAILABLE        _HRESULT_TYPEDEF_(0x800C0007L)      ")
+//
+//  generic download failure - connection broke
+//
+cpp_quote("#define INET_E_DOWNLOAD_FAILURE          _HRESULT_TYPEDEF_(0x800C0008L)      ")
+//
+//  to access to this object need authentication    e.g. http: 401
+//
+cpp_quote("#define INET_E_AUTHENTICATION_REQUIRED   _HRESULT_TYPEDEF_(0x800C0009L)      ")
+//
+// the object is not available of the required type             http: 403 no object
+//
+cpp_quote("#define INET_E_NO_VALID_MEDIA            _HRESULT_TYPEDEF_(0x800C000AL)      ")
+//
+// the internet connection timed out
+//
+cpp_quote("#define INET_E_CONNECTION_TIMEOUT        _HRESULT_TYPEDEF_(0x800C000BL)      ")
+//
+// the request was invalid
+//
+cpp_quote("#define INET_E_INVALID_REQUEST           _HRESULT_TYPEDEF_(0x800C000CL)      ")
+//
+// protocol is not know and no plugable protocol is registered
+//
+cpp_quote("#define INET_E_UNKNOWN_PROTOCOL          _HRESULT_TYPEDEF_(0x800C000DL)      ")
+//
+// security problem encountered
+//
+cpp_quote("#define INET_E_SECURITY_PROBLEM          _HRESULT_TYPEDEF_(0x800C000EL)      ")
+//
+// object could not be loaded; IPersistXXX::Load failed
+//
+cpp_quote("#define INET_E_CANNOT_LOAD_DATA          _HRESULT_TYPEDEF_(0x800C000FL)      ")
+//
+// CoCreateInstance failed.
+//
+cpp_quote("#define INET_E_CANNOT_INSTANTIATE_OBJECT _HRESULT_TYPEDEF_(0x800C0010L)      ")
+//
+// HResult range returned in OnStopBinding
+//
+cpp_quote("#define INET_E_ERROR_FIRST               _HRESULT_TYPEDEF_(0x800C0002L)      ")
+cpp_quote("#define INET_E_ERROR_LAST                INET_E_CANNOT_INSTANTIATE_OBJECT    ")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IPersistMoniker interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPPERSISTMONIKER_DEFINED")
+cpp_quote("#define _LPPERSISTMONIKER_DEFINED")
+
+[
+        object,
+        uuid(79eac9c9-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+//interface IPersistMoniker : IPersist
+interface IPersistMoniker : IUnknown
+{
+    typedef [unique] IPersistMoniker *LPPERSISTMONIKER;
+
+    HRESULT GetClassID(
+        [out] CLSID *pClassID
+        );
+
+    HRESULT IsDirty(void);
+
+    HRESULT Load(
+        [in] BOOL fFullyAvailable,
+        [in] IMoniker * pimkName,
+        [in] LPBC pibc,
+        [in] DWORD grfMode
+        );
+
+    HRESULT Save(
+        [in] IMoniker * pimkName,
+        [in] LPBC pbc,
+        [in] BOOL fRemember);
+
+    HRESULT SaveCompleted(
+        [in] IMoniker * pimkName,
+        [in] LPBC pibc);
+
+    HRESULT GetCurMoniker(
+        [out] IMoniker ** ppimkName);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:  IBindProtocol interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPBINDPROTOCOL_DEFINED")
+cpp_quote("#define _LPBINDPROTOCOL_DEFINED")
+
+[
+        local,
+        object,
+        uuid(79eac9cd-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+
+interface IBindProtocol : IUnknown
+{
+        typedef [unique] IBindProtocol *LPBINDPROTOCOL;
+
+        HRESULT CreateBinding(
+                [in] LPCWSTR szUrl,
+                [in] IBindCtx *pbc,
+                [out] IBinding ** ppb);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBinding interface definition
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#ifndef _LPBINDING_DEFINED")
+cpp_quote("#define _LPBINDING_DEFINED")
+
+[
+        object,
+        uuid(79eac9c0-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IBinding: IUnknown
+{
+        typedef [unique] IBinding *LPBINDING;
+
+        HRESULT Abort();
+
+        HRESULT Suspend();
+
+        HRESULT Resume();
+
+        HRESULT SetPriority(
+                [in] LONG nPriority);
+
+        HRESULT GetPriority(
+                [out] LONG * pnPriority);
+
+        [local]
+        HRESULT GetBindResult(
+                [out]       CLSID *pclsidProtocol,
+                [out]       DWORD *pdwResult,
+                [out]       LPOLESTR *pszResult,
+                [in, out]   DWORD   *pdwReserved);
+
+        [call_as(GetBindResult)]
+        HRESULT RemoteGetBindResult(
+                [out]   CLSID       *pclsidProtocol,
+                [out]   DWORD       *pdwResult,
+                [out]   LPOLESTR    *pszResult,
+                [in]    DWORD       dwReserved);
+
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBindStatusCallback interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPBINDSTATUSCALLBACK_DEFINED")
+cpp_quote("#define _LPBINDSTATUSCALLBACK_DEFINED")
+
+[
+        object,
+        uuid(79eac9c1-baf9-11ce-8c82-00aa004ba90b),
+        pointer_default(unique)
+]
+
+interface IBindStatusCallback: IUnknown
+{
+        typedef [unique] IBindStatusCallback *LPBINDSTATUSCALLBACK;
+
+        typedef enum
+        {
+            BINDVERB_GET       = 0x00000000,       // default action
+            BINDVERB_POST      = 0x00000001,       // post verb
+            BINDVERB_PUT       = 0x00000002,       // put verb
+            BINDVERB_CUSTOM    = 0x00000003,       // custom verb
+        } BINDVERB;
+
+        typedef enum
+        {
+            BINDINFOF_URLENCODESTGMEDDATA   = 0x00000001,       // url encode the stgmed data
+            BINDINFOF_URLENCODEDEXTRAINFO   = 0x00000002,       // url encode the extra info
+        } BINDINFOF;
+
+
+        // flags that describe the type of transaction that caller wants
+        typedef enum
+        {
+            BINDF_ASYNCHRONOUS              = 0x00000001,
+            BINDF_ASYNCSTORAGE              = 0x00000002,
+            BINDF_NOPROGRESSIVERENDERING    = 0x00000004,
+            BINDF_OFFLINEOPERATION          = 0x00000008,
+            BINDF_GETNEWESTVERSION          = 0x00000010,
+            BINDF_NOWRITECACHE              = 0x00000020,
+            BINDF_PULLDATA                  = 0x00000080,
+            BINDF_IGNORESECURITYPROBLEM     = 0x00000100,
+            BINDF_RESYNCHRONIZE             = 0x00000200,
+            BINDF_HYPERLINK                 = 0x00000400,
+            BINDF_INLINESGETNEWESTVERSION   = 0x10000000, //  need to remove from SDK
+            BINDF_INLINESRESYNCHRONIZE      = 0x20000000, // need to remove from SDK
+            BINDF_CONTAINER_NOWRITECACHE    = 0x40000000  // need to remove from SDK
+        } BINDF;
+
+        typedef struct _tagBINDINFO
+        {
+            ULONG       cbSize;
+            LPWSTR      szExtraInfo;        // e.g. string added to the URL string [range byte]
+            STGMEDIUM   stgmedData;         // e.g. put or post data
+            DWORD       grfBindInfoF;       // e.g. how meddata should be treaded
+            DWORD       dwBindVerb;         // e.g. put, post, ...
+            LPWSTR      szCustomVerb;       // e.g. custom verb
+            DWORD       cbstgmedData;       // size of data in stgmedData
+        } BINDINFO;
+
+        typedef struct _tagRemBINDINFO
+        {
+            ULONG       cbSize;
+            LPWSTR      szExtraInfo;        // e.g. string added to the URL string [range byte]
+            DWORD       grfBindInfoF;       // e.g. how meddata should be treaded
+            DWORD       dwBindVerb;         // e.g. put, post, ...
+            LPWSTR      szCustomVerb;       // e.g. custom verb
+            DWORD       cbstgmedData;       // size of data in stgmedData
+        } RemBINDINFO;
+
+        typedef struct tagRemFORMATETC {
+            DWORD cfFormat;
+            DWORD ptd;
+            DWORD dwAspect;
+            LONG lindex;
+            DWORD tymed;
+        } RemFORMATETC, *LPREMFORMATETC;
+
+        // Data notification flags
+        typedef enum
+        {
+            BSCF_FIRSTDATANOTIFICATION          = 0x00000001,
+            BSCF_INTERMEDIATEDATANOTIFICATION   = 0x00000002,
+            BSCF_LASTDATANOTIFICATION           = 0x00000004
+        } BSCF;
+
+        typedef enum tagBINDSTATUS
+        {
+             BINDSTATUS_FINDINGRESOURCE          = 1
+            ,BINDSTATUS_CONNECTING
+            ,BINDSTATUS_REDIRECTING
+            ,BINDSTATUS_BEGINDOWNLOADDATA
+            ,BINDSTATUS_DOWNLOADINGDATA
+            ,BINDSTATUS_ENDDOWNLOADDATA
+            ,BINDSTATUS_BEGINDOWNLOADCOMPONENTS
+            ,BINDSTATUS_INSTALLINGCOMPONENTS
+            ,BINDSTATUS_ENDDOWNLOADCOMPONENTS
+            ,BINDSTATUS_USINGCACHEDCOPY
+            ,BINDSTATUS_SENDINGREQUEST
+            ,BINDSTATUS_CLASSIDAVAILABLE
+            ,BINDSTATUS_MIMETYPEAVAILABLE
+            ,BINDSTATUS_CACHEFILENAMEAVAILABLE
+        } BINDSTATUS;
+
+
+        HRESULT OnStartBinding(
+                [in] DWORD dwReserved,
+                [in] IBinding * pib);
+
+        HRESULT GetPriority(
+                [out] LONG * pnPriority);
+
+        HRESULT OnLowResource(
+                [in] DWORD reserved);
+
+        HRESULT OnProgress(
+                [in] ULONG ulProgress,
+                [in] ULONG ulProgressMax,
+                [in] ULONG ulStatusCode,
+                [in] LPCWSTR szStatusText);
+
+        HRESULT OnStopBinding(
+                [in] HRESULT hresult,
+                [in, unique] LPCWSTR szError
+                );
+
+        [local]
+        HRESULT GetBindInfo(
+                [out] DWORD *grfBINDF,
+                [in, out, unique] BINDINFO * pbindinfo
+                );
+
+        [call_as(GetBindInfo)]
+        HRESULT RemoteGetBindInfo(
+                [out] DWORD *grfBINDF,
+                [in, out, unique] RemBINDINFO * pbindinfo,
+                [in, out, unique] RemSTGMEDIUM* pstgmed
+                );
+
+        [local]
+        HRESULT OnDataAvailable(
+                [in] DWORD grfBSCF,
+                [in] DWORD dwSize,
+                [in] FORMATETC* pformatetc,
+                [in] STGMEDIUM* pstgmed
+                );
+
+        [call_as(OnDataAvailable)]
+        HRESULT RemoteOnDataAvailable(
+                [in] DWORD grfBSCF,
+                [in] DWORD dwSize,
+                [in] RemFORMATETC *pformatetc,
+                [in] RemSTGMEDIUM* pstgmed
+                );
+
+        HRESULT OnObjectAvailable(
+                [in] REFIID riid,
+                [in, iid_is(riid)] IUnknown* punk
+                );
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IAuthenticate interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPAUTHENTICATION_DEFINED")
+cpp_quote("#define _LPAUTHENTICATION_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d0-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+
+interface IAuthenticate : IUnknown
+{
+    typedef [unique] IAuthenticate *LPAUTHENTICATION;
+
+    HRESULT Authenticate(
+                [out] HWND* phwnd,
+                [out] LPWSTR *pszUsername,
+                [out] LPWSTR *pszPassword
+                );
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHttpNegotiate interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPHTTPNEGOTIATE_DEFINED")
+cpp_quote("#define _LPHTTPNEGOTIATE_DEFINED")
+
+[
+    object,
+    uuid(79eac9d2-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+interface IHttpNegotiate : IUnknown
+{
+    typedef [unique] IHttpNegotiate *LPHTTPNEGOTIATE;
+
+    HRESULT BeginningTransaction(
+                [in]         LPCWSTR szURL,
+                [in, unique] LPCWSTR szHeaders,
+                [in]         DWORD dwReserved,
+                [out]        LPWSTR *pszAdditionalHeaders
+                );
+
+    HRESULT OnResponse(
+                [in]         DWORD dwResponseCode,
+                [in, unique] LPCWSTR szResponseHeaders,
+                [in, unique] LPCWSTR szRequestHeaders,
+                [out]        LPWSTR *pszAdditionalRequestHeaders
+                );
+}
+
+cpp_quote("#endif")
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IWindowForBindingUI interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWINDOWFORBINDINGUI_DEFINED")
+cpp_quote("#define _LPWINDOWFORBINDINGUI_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d5-bafa-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+interface IWindowForBindingUI : IUnknown
+{
+    typedef [unique] IWindowForBindingUI *LPWINDOWFORBINDINGUI;
+
+    HRESULT GetWindow(
+                [in]  REFGUID rguidReason,
+                [out] HWND* phwnd);
+}
+
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   ICodeDownloadClient interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPCODEINSTALL_DEFINED")
+cpp_quote("#define _LPCODEINSTALL_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d1-baf9-11ce-8c82-00aa004ba90b),
+    pointer_default(unique)
+]
+
+
+interface ICodeInstall : IWindowForBindingUI
+{
+    typedef [unique] ICodeInstall *LPCODEINSTALL;
+
+    typedef enum {
+        CIP_DISK_FULL,
+        CIP_ACCESS_DENIED,
+        CIP_NEWER_VERSION_EXISTS,
+        CIP_OLDER_VERSION_EXISTS,
+        CIP_NAME_CONFLICT,
+        CIP_TRUST_VERIFICATION_COMPONENT_MISSING,
+        CIP_EXE_SELF_REGISTERATION_TIMEOUT,
+        CIP_UNSAFE_TO_ABORT,
+        CIP_NEED_REBOOT
+    } CIP_STATUS;
+
+    HRESULT OnCodeInstallProblem(
+            [in] ULONG ulStatusCode,            // contingency status
+            [in, unique] LPCWSTR szDestination,         // file that needs to be updated
+            [in, unique] LPCWSTR szSource,              // new version from 'net (a temp file)
+            [in] DWORD dwReserved               // for future use
+            );
+
+}
+
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IWinInetInfo interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWININETINFO_DEFINED")
+cpp_quote("#define _LPWININETINFO_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d6-bafa-11ce-8c82-00aa004ba90b),
+
+    pointer_default(unique)
+]
+
+interface IWinInetInfo : IUnknown
+{
+
+    typedef [unique] IWinInetInfo *LPWININETINFO;
+
+    HRESULT QueryOption(
+            [in]      DWORD  dwOption,
+            [out]     LPVOID pBuffer,
+            [in, out] DWORD *pcbBuf);
+
+
+}
+cpp_quote("#endif")
+
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IHttpSecurity interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPHTTPSECURITY_DEFINED")
+cpp_quote("#define _LPHTTPSECURITY_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d7-bafa-11ce-8c82-00aa004ba90b),
+
+    pointer_default(unique)
+]
+
+
+interface IHttpSecurity : IWindowForBindingUI
+{
+    typedef [unique] IHttpSecurity *LPHTTPSECURITY;
+
+   HRESULT OnSecurityProblem(
+            [in] DWORD dwProblem);
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IWinInetHttpInfo interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPWININETHTTPINFO_DEFINED")
+cpp_quote("#define _LPWININETHTTPINFO_DEFINED")
+
+[
+    local,
+    object,
+    uuid(79eac9d8-bafa-11ce-8c82-00aa004ba90b),
+
+    pointer_default(unique)
+]
+
+interface IWinInetHttpInfo : IWinInetInfo
+{
+    typedef [unique] IWinInetHttpInfo *LPWININETHTTPINFO;
+
+    HRESULT QueryInfo(
+            [in]      DWORD  dwOption,
+            [out]     LPVOID pBuffer,
+            [in, out] DWORD *pcbBuf,
+            [in, out] DWORD *pdwFlags,
+            [in, out] DWORD *pdwReserved
+            );
+}
+cpp_quote("#endif")
+
+cpp_quote("#define SID_IBindHost IID_IBindHost")
+cpp_quote("#define SID_SBindHost IID_IBindHost")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995 - 1996.
+//
+//  Contents:   IBindHost definition
+//
+//---------------------------------------------------------------------------
+cpp_quote("#ifndef _LPBINDHOST_DEFINED")
+cpp_quote("#define _LPBINDHOST_DEFINED")
+
+cpp_quote("EXTERN_C const GUID SID_BindHost;")
+[
+        object,
+        uuid(fc4801a1-2ba9-11cf-a229-00aa003d7352),
+        pointer_default(unique)
+]
+interface IBindHost : IUnknown
+{
+        typedef [unique] IBindHost *LPBINDHOST;
+
+        HRESULT CreateMoniker(
+            [in]    LPOLESTR    szName,
+            [in]    IBindCtx   *pBC,
+            [out]   IMoniker**  ppmk,
+            [in]    DWORD       dwReserved);
+
+        [local]
+        HRESULT MonikerBindToStorage(
+            [in]    IMoniker            *pMk,
+            [in]    IBindCtx            *pBC,
+            [in]    IBindStatusCallback *pBSC,
+            [in]    REFIID              riid,
+            [out]   void                **ppvObj);
+
+        [call_as(MonikerBindToStorage)]
+        HRESULT RemoteMonikerBindToStorage(
+            [in, unique]    IMoniker            *pMk,
+            [in, unique]    IBindCtx            *pBC,
+            [in, unique]    IBindStatusCallback *pBSC,
+            [in]            REFIID riid,
+            [out, iid_is(riid)] IUnknown **ppvObj);
+
+        [local]
+        HRESULT MonikerBindToObject(
+            [in]    IMoniker            *pMk,
+            [in]    IBindCtx            *pBC,
+            [in]    IBindStatusCallback *pBSC,
+            [in]    REFIID              riid,
+            [out]   void                **ppvObj);
+
+        [call_as(MonikerBindToObject)]
+        HRESULT RemoteMonikerBindToObject(
+            [in, unique]    IMoniker            *pMk,
+            [in, unique]    IBindCtx            *pBC,
+            [in, unique]    IBindStatusCallback *pBSC,
+            [in]            REFIID riid,
+            [out, iid_is(riid)] IUnknown **ppvObj);
+}
+
+cpp_quote("#endif")
+
+// urlhlink stuff
+#pragma midl_echo("                                                                                                           ")
+cpp_quote("// These are for backwards compatibility with previous URLMON versions")
+#pragma midl_echo("// Flags for the UrlDownloadToCacheFile                                                                    ")
+#pragma midl_echo("#define URLOSTRM_USECACHEDCOPY_ONLY             0x1      // Only get from cache                            ")
+#pragma midl_echo("#define URLOSTRM_USECACHEDCOPY                  0x2      // Get from cache if available else download      ")
+#pragma midl_echo("#define URLOSTRM_GETNEWESTVERSION               0x3      // Get new version only. But put it in cache too  ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("struct IBindStatusCallback;                                                                                ")
+#pragma midl_echo("STDAPI HlinkSimpleNavigateToString(                                                                        ")
+#pragma midl_echo("    /* [in] */ LPCWSTR szTarget,         // required - target document - null if local jump w/in doc       ")
+#pragma midl_echo("    /* [in] */ LPCWSTR szLocation,       // optional, for navigation into middle of a doc                  ")
+#pragma midl_echo("    /* [in] */ LPCWSTR szTargetFrameName,// optional, for targeting frame-sets                             ")
+#pragma midl_echo("    /* [in] */ IUnknown *pUnk,           // required - we'll search this for other necessary interfaces    ")
+#pragma midl_echo("    /* [in] */ IBindCtx *pbc,            // optional. caller may register an IBSC in this                  ")
+#pragma midl_echo("    /* [in] */ IBindStatusCallback *,                                                                      ")
+#pragma midl_echo("    /* [in] */ DWORD grfHLNF,            // flags                                                          ")
+#pragma midl_echo("    /* [in] */ DWORD dwReserved          // for future use, must be NULL                                   ")
+#pragma midl_echo(");                                                                                                         ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("STDAPI HlinkSimpleNavigateToMoniker(                                                                       ")
+#pragma midl_echo("    /* [in] */ IMoniker *pmkTarget,      // required - target document - (may be null                      ")
+#pragma midl_echo("    /* [in] */ LPCWSTR szLocation,       // optional, for navigation into middle of a doc                  ")
+#pragma midl_echo("    /* [in] */ LPCWSTR szTargetFrameName,// optional, for targeting frame-sets                             ")
+#pragma midl_echo("    /* [in] */ IUnknown *pUnk,           // required - we'll search this for other necessary interfaces    ")
+#pragma midl_echo("    /* [in] */ IBindCtx *pbc,            // optional. caller may register an IBSC in this                  ")
+#pragma midl_echo("    /* [in] */ IBindStatusCallback *,                                                                      ")
+#pragma midl_echo("    /* [in] */ DWORD grfHLNF,            // flags                                                          ")
+#pragma midl_echo("    /* [in] */ DWORD dwReserved          // for future use, must be NULL                                   ")
+#pragma midl_echo(");                                                                                                         ")
+//#pragma midl_echo("typedef HRESULT (STDAPICALLTYPE *LPFNUOSCALLBACK)(LPBINDSTATUSCALLBACK);                                   ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("STDAPI URLOpenStreamA(LPUNKNOWN,LPCSTR,DWORD,LPBINDSTATUSCALLBACK);                                        ")
+#pragma midl_echo("STDAPI URLOpenStreamW(LPUNKNOWN,LPCWSTR,DWORD,LPBINDSTATUSCALLBACK);                                       ")
+#pragma midl_echo("STDAPI URLOpenPullStreamA(LPUNKNOWN,LPCSTR,DWORD,LPBINDSTATUSCALLBACK);                                    ")
+#pragma midl_echo("STDAPI URLOpenPullStreamW(LPUNKNOWN,LPCWSTR,DWORD,LPBINDSTATUSCALLBACK);                                   ")
+#pragma midl_echo("STDAPI URLDownloadToFileA(LPUNKNOWN,LPCSTR,LPCSTR,DWORD,LPBINDSTATUSCALLBACK);                             ")
+#pragma midl_echo("STDAPI URLDownloadToFileW(LPUNKNOWN,LPCWSTR,LPCWSTR,DWORD,LPBINDSTATUSCALLBACK);                           ")
+#pragma midl_echo("STDAPI URLDownloadToCacheFileA(LPUNKNOWN,LPCSTR,LPTSTR,DWORD,DWORD,LPBINDSTATUSCALLBACK);                  ")
+#pragma midl_echo("STDAPI URLDownloadToCacheFileW(LPUNKNOWN,LPCWSTR,LPWSTR,DWORD,DWORD,LPBINDSTATUSCALLBACK);                 ")
+#pragma midl_echo("STDAPI URLOpenBlockingStreamA(LPUNKNOWN,LPCSTR,LPSTREAM*,DWORD,LPBINDSTATUSCALLBACK);                      ")
+#pragma midl_echo("STDAPI URLOpenBlockingStreamW(LPUNKNOWN,LPCWSTR,LPSTREAM*,DWORD,LPBINDSTATUSCALLBACK);                     ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("#ifdef UNICODE                                                                                             ")
+#pragma midl_echo("#define URLOpenStream            URLOpenStreamW                                                            ")
+#pragma midl_echo("#define URLOpenPullStream        URLOpenPullStreamW                                                        ")
+#pragma midl_echo("#define URLDownloadToFile        URLDownloadToFileW                                                        ")
+#pragma midl_echo("#define URLDownloadToCacheFile   URLDownloadToCacheFileW                                                   ")
+#pragma midl_echo("#define URLOpenBlockingStream    URLOpenBlockingStreamW                                                    ")
+#pragma midl_echo("#else                                                                                                      ")
+#pragma midl_echo("#define URLOpenStream            URLOpenStreamA                                                            ")
+#pragma midl_echo("#define URLOpenPullStream        URLOpenPullStreamA                                                        ")
+#pragma midl_echo("#define URLDownloadToFile        URLDownloadToFileA                                                        ")
+#pragma midl_echo("#define URLDownloadToCacheFile   URLDownloadToCacheFileA                                                   ")
+#pragma midl_echo("#define URLOpenBlockingStream    URLOpenBlockingStreamA                                                    ")
+#pragma midl_echo("#endif // !UNICODE                                                                                         ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("                                                                                                           ")
+#pragma midl_echo("STDAPI HlinkGoBack(IUnknown *pUnk);                                                                        ")
+#pragma midl_echo("STDAPI HlinkGoForward(IUnknown *pUnk);                                                                     ")
+#pragma midl_echo("STDAPI HlinkNavigateString(IUnknown *pUnk, LPCWSTR szTarget);                                              ")
+#pragma midl_echo("STDAPI HlinkNavigateMoniker(IUnknown *pUnk, IMoniker *pmkTarget);                                          ")
+#pragma midl_echo("                                                                                                           ")
+// urlhlink end

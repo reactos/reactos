@@ -1,0 +1,14 @@
+BUILD: Computing Include file dependencies:
+BUILD: Examining d:\nt\private\shell\ext\anyfldr directory for files to compile.
+Compiling d:\nt\private\shell\ext\anyfldr directory ********************
+'nmake.exe /c BUILDMSG=Stop. -i NTTEST= UMTEST= NOLINK=1 NOPASS0=1 386=1'
+makefile(24) :  U1052: file '..\..\..\..\win\shell\common.mk' not found
+Stop.
+BUILD: nmake.exe failed - rc = 2
+Elapsed time [0:00:00.060] ********************
+Linking d:\nt\private\shell\ext\anyfldr directory ********************
+'nmake.exe /c BUILDMSG=Stop. -i LINKONLY=1 NOPASS0=1 NTTEST= UMTEST= MAKEDLL=1 386=1'
+makefile(24) :  U1052: file '..\..\..\..\win\shell\common.mk' not found
+Stop.
+BUILD: nmake.exe failed - rc = 2
+Elapsed time [0:00:00.120] ********************

@@ -1,0 +1,899 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MIXED_SECURITY DIALOG FIXED IMPURE  0, 0, 217, 77
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Security Information"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,48,57,50,14
+    PUSHBUTTON      "&No",IDNO,100,57,50,14
+    PUSHBUTTON      "&More Info",ID_TELL_ME_ABOUT_SECURITY,153,57,58,14
+    LTEXT           "This page contains both secure and nonsecure items. \n\nDo you want to display the nonsecure items?",
+                    -1,45,6,163,43,SS_NOPREFIX
+    ICON            IDI_SECURITY2,-1,15,6,20,20
+END
+
+IDD_SHOW_CERT DIALOG FIXED IMPURE  0, 0, 227, 212
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Security"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32546,1317,7,7,18,20
+    LTEXT           "If the page you are currently viewing is secure, information about its privacy certificate will be shown below.",
+                    1323,51,7,167,27
+    CONTROL         "",-1,"Static",SS_ETCHEDFRAME | WS_GROUP,7,45,213,2
+    LTEXT           "Certificate information:",1319,8,53,124,10
+    EDITTEXT        ID_CERT_EDIT,7,64,213,120,ES_MULTILINE | ES_READONLY | 
+                    ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,116,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,193,50,14
+END
+
+IDD_CERTPICKER DIALOGEX 0, 0, 249, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Client Authentication"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LISTBOX         IDC_CERTPICKLIST,39,46,192,85,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&View Certificate...",ID_SHOW_CERTIFICATE,170,135,61,14
+    DEFPUSHBUTTON   "OK",IDOK,138,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,192,165,50,14
+    ICON            32515,32515,14,20,20,20
+    LTEXT           "The Web site you want to view requests identification. Select the certificate to use when connecting.",
+                    -1,40,20,171,24,SS_NOPREFIX
+    GROUPBOX        "Identification",-1,7,7,235,150
+    PUSHBUTTON      "&More Info...",ID_CERT_MORE_INFO,104,135,61,14
+END
+
+IDD_VIEW_CERT DIALOG DISCARDABLE  0, 0, 301, 175
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Field:",IDC_STATIC,45,45,34,8
+    LISTBOX         IDC_FIELDLIST,45,56,94,84,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Details:",IDC_STATIC,146,44,46,8
+    EDITTEXT        IDC_DETAILSLIST,145,56,142,85,ES_MULTILINE | 
+                    ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Close",IDOK,245,155,50,14
+    GROUPBOX        "Certificate properties",IDC_STATIC,6,6,289,142
+    ICON            32546,1317,12,18,20,20
+    LTEXT           "\n",IDC_CERT_STATUS,45,20,240,20
+END
+
+IDD_HTTP_TO_HTTPS_ZONE_CROSSING DIALOG DISCARDABLE  0, 0, 226, 90
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,115,69,50,14
+    ICON            IDI_SECURITY1,IDC_STATIC,14,7,20,20
+    LTEXT           "You are about to view pages over a secure connection.",
+                    IDC_STATIC,42,7,177,16
+    CONTROL         "&In the future, do not show this warning",
+                    IDC_DONT_WANT_WARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,41,53,158,8
+    PUSHBUTTON      "&More Info",ID_TELL_ME_ABOUT_SECURITY,168,69,50,14
+    LTEXT           "Any information you exchange with this site cannot be viewed by anyone else on the Web.",
+                    IDC_STATIC,41,25,177,24
+END
+
+IDD_HTTPS_TO_HTTP_ZONE_CROSSING DIALOG DISCARDABLE  0, 0, 226, 89
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,56,69,50,14
+    PUSHBUTTON      "&No",IDCANCEL,112,69,50,14
+    ICON            IDI_SECURITY2,IDC_STATIC,14,7,20,20
+    LTEXT           "You are about to leave a secure Internet connection.  It will be possible for others to view information you send.",
+                    IDC_STATIC,42,7,177,25
+    LTEXT           "Do you want to continue?",IDC_STATIC,42,37,177,8
+    CONTROL         "&In the future, do not show this warning",
+                    IDC_DONT_WANT_WARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,42,52,158,8
+    PUSHBUTTON      "&More Info",ID_TELL_ME_ABOUT_SECURITY,168,69,50,14
+END
+
+IDD_INVALID_CA DIALOG DISCARDABLE  0, 0, 326, 92
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SECURITY2,IDC_STATIC,14,7,20,20
+    LTEXT           "This page requires a secure connection which includes server authentication.  ",
+                    IDC_STATIC,42,7,177,17
+    LTEXT           "The Certificate Issuer for this site is untrusted or unknown.  Do you wish to proceed?",
+                    IDC_STATIC,42,32,177,21
+    DEFPUSHBUTTON   "&Yes",IDOK,45,64,50,14
+    PUSHBUTTON      "&More Info",ID_TELL_ME_ABOUT_SECURITY,223,64,50,14
+    PUSHBUTTON      "&View Certificate",ID_SHOW_CERTIFICATE,151,64,69,14
+    PUSHBUTTON      "&No",IDCANCEL,98,64,50,14
+END
+
+IDD_SEC_CERT_ERRORS DIALOG DISCARDABLE  0, 0, 252, 170
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SECURITY2,IDC_STATIC,7,7,20,20
+    LTEXT           "Information you exchange with this site cannot be viewed or changed by others. However, there is a problem with the site's security certificate.",
+                    IDC_STATIC,36,7,209,37
+    LTEXT           "The security certificate was issued by a company you have not chosen to trust. View the certificate to determine whether you want to trust the certifying authority.",
+                    IDC_CERT_TRUST_TEXT,54,43,191,26
+    LTEXT           "The security certificate has expired or is not yet valid.",
+                    IDC_CERT_DATE_TEXT,54,79,191,12
+    LTEXT           "The name on the security certificate does not match the name of the site.",
+                    IDC_CERT_NAME_TEXT,54,100,191,20
+    ICON            "",IDC_CERT_TRUST_ICON,36,44,16,16
+    ICON            "",IDC_CERT_DATE_ICON,36,80,16,16
+    ICON            "",IDC_CERT_NAME_ICON,36,101,16,16
+    LTEXT           "Do you want to proceed?",IDC_STATIC,36,128,209,12
+    PUSHBUTTON      "&Yes",IDOK,32,149,60,14
+    DEFPUSHBUTTON   "&No",IDCANCEL,96,149,60,14
+    PUSHBUTTON      "&View Certificate",ID_SHOW_CERTIFICATE,160,149,60,14
+END
+
+IDD_CERTVIEWER DIALOGEX 0, 0, 249, 186
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Client Authentication"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Identification",-1,7,7,235,150
+    ICON            32515,32515,14,20,20,20
+    LTEXT           "Following is a list of certificates you can use for Client Authentication with servers.",
+                    -1,40,20,171,24,SS_NOPREFIX
+    LISTBOX         IDC_CERTPICKLIST,40,46,191,85,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Import...",IDC_BUTTON_IMPORT,40,136,61,14
+    PUSHBUTTON      "&Export...",IDC_BUTTON_EXPORT,105,136,61,14
+    PUSHBUTTON      "&View Certificate...",ID_SHOW_CERTIFICATE,170,136,61,14
+    DEFPUSHBUTTON   "Close",8,192,165,50,14
+END
+
+IDD_CONFIRM_COOKIE DIALOG DISCARDABLE  0, 0, 276, 230
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,101,93,50,14
+    PUSHBUTTON      "&No",IDNO,154,93,50,14
+    ICON            IDI_SECURITY3,IDC_STATIC,14,7,20,20
+    LTEXT           "_permanent/_session",IDC_COOKIE_TYPE,42,7,214,33
+    CONTROL         "&In the future, do not show this warning",
+                    IDC_COOKIE_ALLOW_ALL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,42,75,158,8
+    PUSHBUTTON      "&More Info",IDC_COOKIE_DETAILS,207,93,50,14
+    GROUPBOX        "Cookie Information",IDC_COOKIE_INFO,7,113,252,108
+    EDITTEXT        IDC_COOKIE_DATA,51,175,197,40,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT 
+                    WS_TABSTOP
+    LTEXT           "Name",IDC_STATIC,16,124,36,10
+    EDITTEXT        IDC_COOKIE_NAME,51,123,197,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    LTEXT           "Domain",IDC_STATIC,15,137,30,9
+    LTEXT           "Path",IDC_STATIC,15,150,35,11
+    LTEXT           "Data",IDC_STATIC,15,175,27,11
+    LTEXT           "Expires",IDC_STATIC,16,163,33,9
+    EDITTEXT        IDC_COOKIE_DOMAIN,51,136,197,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    EDITTEXT        IDC_COOKIE_PATH,51,148,197,13,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    EDITTEXT        IDC_COOKIE_EXPIRES,51,162,128,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+    LTEXT           "Secure",IDC_STATIC,190,163,31,8
+    EDITTEXT        IDC_COOKIE_SECURE,223,162,24,13,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_TABSTOP
+END
+
+IDD_FAILED_DOWNLOAD DIALOG DISCARDABLE  0, 0, 206, 119
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Explorer Auto-Proxy Script Download"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDYES,72,90,50,14
+    LTEXT           "Due to network or related problems, Internet Explorer could not download your Auto-Proxy Script. \n\nClick OK to continue with standard proxy settings.",
+                    -1,23,15,163,61,SS_NOPREFIX
+END
+
+IDD_SCRIPT_ERROR DIALOG DISCARDABLE  0, 0, 207, 132
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDYES,72,97,50,14
+    LTEXT           "Due to errors, Internet Explorer could not execute your Auto-Proxy Script. \n\nClick OK to continue with standard proxy settings.",
+                    -1,20,22,163,61,SS_NOPREFIX
+END
+
+IDD_CONNECT_TO DIALOG DISCARDABLE  0, 0, 172, 186
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Dial-up Connection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_CONNECT,IDC_STATIC,7,7,20,20
+    LTEXT           "Select the service you want to connect to, and then enter your user name and password.",
+                    IDC_STATIC,37,7,128,25
+    LTEXT           "Co&nnect to:",IDC_CONN_TXT,7,37,41,8
+    COMBOBOX        IDC_CONN_LIST,57,35,108,54,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&User name:",IDC_NAME_TXT,7,53,41,8
+    EDITTEXT        IDC_USER_NAME,57,51,108,12,ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT
+    LTEXT           "&Password:",IDC_PASSWORD_TXT,7,69,41,10
+    EDITTEXT        IDC_PASSWORD,57,67,108,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT
+    CONTROL         "&Save password",IDC_SAVE_PASSWORD,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,57,83,103,10
+    CONTROL         "Connect &automatically",IDC_AUTOCONNECT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,57,96,107,10
+    DEFPUSHBUTTON   "&Connect",ID_CONNECT,7,111,50,14
+    PUSHBUTTON      "Se&ttings...",IDC_SETTINGS,61,111,50,14
+    PUSHBUTTON      "Work &Offline",IDCANCEL,115,111,50,14
+    EDITTEXT        IDC_DETAILS_LIST,7,131,158,48,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN
+    CONTROL         "",IDC_STATIC,"NativeFontCtl",0x5,0,0,6,6
+END
+
+IDD_GOONLINE DIALOG DISCARDABLE  0, 0, 216, 55
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Web page unavailable while offline"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Connect",ID_CONNECT,106,37,50,14
+    PUSHBUTTON      "&Stay Offline",ID_STAYOFFLINE,160,37,50,14
+    LTEXT           "The Web page you requested is not available offline.",
+                    IDC_STATIC,39,8,171,10
+    LTEXT           "To view this page, click Connect.",IDC_STATIC,39,19,127,
+                    8
+    ICON            IDI_OFFLINE,IDC_STATIC,7,8,21,20
+END
+
+IDD_GOOFFLINE DIALOG DISCARDABLE  0, 0, 212, 78
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Work Offline"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Work Offline",IDS_WORK_OFFLINE,104,57,48,14
+    PUSHBUTTON      "&Try Again",IDS_TRY_AGAIN,157,57,48,14
+    LTEXT           "No connection to the Internet is currently available. To view Internet content that has been saved on your computer, click Work Offline.",
+                    IDC_STATIC,41,8,164,31
+    LTEXT           "Click Try Again to attempt to connect.",IDC_STATIC,41,
+                    43,164,8
+    ICON            IDI_CONNECT,IDC_STATIC,7,8,21,20
+END
+
+IDD_HTTP_POST_REDIRECT DIALOG DISCARDABLE  0, 0, 226, 94
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Redirection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,115,74,50,14
+    ICON            IDI_SECURITY1,IDC_STATIC,13,8,20,20
+    LTEXT           "You are about to be redirected to a new internet site.",
+                    IDC_STATIC,36,8,182,16
+    PUSHBUTTON      "&No",IDNO,168,74,50,14
+    LTEXT           "Any information you exchanged with the current site could be retransmitted to the new internet site you are about to connect with.  Do you wish to continue?",
+                    IDC_STATIC,36,27,182,24
+    CONTROL         "&In the future, do not show this warning",
+                    IDC_DONT_WANT_WARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,36,59,158,8
+END
+
+IDD_BAD_CN DIALOG DISCARDABLE  0, 0, 282, 106
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,45,86,50,14
+    ICON            IDI_SECURITY2,IDC_STATIC,14,7,20,20
+    LTEXT           "A secure connection with this site cannot be verified. Would you still like to proceed?",
+                    IDC_STATIC,45,6,228,18
+    LTEXT           "The certificate you are viewing does not match the name of the site you are trying to view.  ",
+                    IDC_STATIC,45,34,228,21
+    PUSHBUTTON      "&More Info",ID_TELL_ME_ABOUT_SECURITY,223,86,50,14
+    PUSHBUTTON      "&View Certificate",ID_SHOW_CERTIFICATE,151,86,69,14
+    CONTROL         "&Do not show this warning ",IDC_DONT_WANT_WARNING,
+                    "Button",BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | 
+                    WS_TABSTOP,45,63,136,10
+    PUSHBUTTON      "&No",IDCANCEL,98,86,50,14
+END
+
+IDD_WARN_ON_POST DIALOG DISCARDABLE  0, 0, 220, 74
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,111,54,50,14
+    PUSHBUTTON      "&No",IDNO,163,54,50,14
+    ICON            IDI_SECURITY3,-1,14,7,20,20
+    LTEXT           "You are about to send information over the Internet. It might be possible for other people to see what you are sending.",
+                    -1,42,7,162,28
+    CONTROL         "&In the future, do not show this warning",
+                    IDC_DONT_WANT_WARNING,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,45,39,158,8
+END
+
+IDD_CERT_EXPIRED DIALOG DISCARDABLE  0, 0, 275, 66
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,90,45,50,14
+    ICON            IDI_SECURITY2,IDC_STATIC,10,10,20,20
+    LTEXT           "The Internet site you are about to view uses a certificate that has expired or is not yet valid. Do you wish to proceed ?",
+                    IDC_STATIC,37,10,224,22
+    PUSHBUTTON      "&No",IDCANCEL,142,45,50,14
+    PUSHBUTTON      "&View Certificate",ID_SHOW_CERTIFICATE,194,45,69,14
+END
+
+IDD_HTTPS_TO_HTTP_SUBMIT_REDIRECT DIALOG DISCARDABLE  0, 0, 224, 88
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,113,68,50,14
+    ICON            IDI_SECURITY2,IDC_STATIC,13,8,20,20
+    LTEXT           "You are about to be redirected to a connection that is not secure.",
+                    IDC_STATIC,34,8,182,16
+    PUSHBUTTON      "&No",IDNO,166,68,50,14
+    LTEXT           "The information you are sending to the current site might be retransmitted to a nonsecure site. Do you wish to continue?",
+                    IDC_STATIC,34,27,182,34
+END
+
+IDD_INSERT_CDROM DIALOG DISCARDABLE  0, 0, 245, 126
+STYLE DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Please Insert CD-ROM"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Use CD-ROM",IDC_USE_CDROM,45,100,50,15
+    PUSHBUTTON      "Connect",IDC_CONNECT_TO_INTERNET,151,99,50,15
+    LTEXT           "The web page you requested is available on the CD-ROM titled:",
+                    IDC_STATIC,7,7,231,10
+    LTEXT           "If you have this CD-ROM, insert it into your CD-ROM drive and click the 'Use CD-ROM' button.",
+                    IDC_STATIC,7,41,231,16
+    LTEXT           "If you do not have this CD-ROM but have access to the Internet click on the 'Connect' button. Internet Explorer will attempt to connect to the Internet and download the most current version of this web page.",
+                    IDC_STATIC,7,63,231,25
+    CTEXT           "CD-ROM Title",IDC_CD_NAME,7,22,231,14
+END
+
+IDD_NTLM_AUTH DIALOGEX 0, 0, 264, 141
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Enter Network Password"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SECURITY4,IDC_STATIC,15,12,20,20
+    LTEXT           "Please type your user name and password.",IDC_STATIC,42,
+                    13,144,15
+    LTEXT           "Site/Firewall:",IDC_SITE_OR_FIREWALL,42,31,39,8
+    LTEXT           "__Server_Or_Proxy__",IDC_SERVER_OR_PROXY,92,30,136,8
+    LTEXT           "&User Name",IDC_USERNAME_TAG,43,49,46,8
+    EDITTEXT        IDC_USERNAME,89,44,140,14,ES_AUTOHSCROLL
+    LTEXT           "&Password",IDC_PASSWORD_TAG,43,67,42,9
+    EDITTEXT        IDC_PASSWORD,89,63,140,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "&Domain",IDC_DOMAIN_TAG,43,85,42,8
+    EDITTEXT        IDC_DOMAIN_FIELD,89,81,140,14,ES_AUTOHSCROLL
+    CONTROL         "&Save this password in your password list",
+                    IDC_SAVE_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    42,100,158,8
+    DEFPUSHBUTTON   "OK",IDOK,143,115,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,207,115,50,14
+END
+
+IDD_REALM_AUTH DIALOGEX 0, 0, 264, 141
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Enter Network Password"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    ICON            IDI_SECURITY4,IDC_STATIC,15,12,20,20
+    LTEXT           "Please type your user name and password.",IDC_STATIC,42,
+                    13,144,15
+    LTEXT           "Site/Firewall:",IDC_SITE_OR_FIREWALL,42,31,39,8
+    LTEXT           "__Server_Or_Proxy__",IDC_SERVER_OR_PROXY,91,30,136,8
+    LTEXT           "&Realm",IDC_REALM_TAG,43,48,42,8
+    LTEXT           "&User Name",IDC_USERNAME_TAG,42,65,46,8
+    EDITTEXT        IDC_USERNAME,88,63,140,14,ES_AUTOHSCROLL
+    LTEXT           "&Password",IDC_PASSWORD_TAG,42,83,42,9
+    EDITTEXT        IDC_PASSWORD,88,82,140,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "&Save this password in your password list",
+                    IDC_SAVE_PASSWORD,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    41,100,158,8
+    DEFPUSHBUTTON   "OK",IDOK,143,115,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,207,115,50,14
+    LTEXT           "__Realm__",IDC_REALM_FIELD,91,47,137,8
+END
+
+IDD_REVOCATION_PROBLEM DIALOG DISCARDABLE  0, 0, 282, 66
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDOK,90,45,50,14
+    ICON            IDI_SECURITY2,IDC_STATIC,10,10,20,20
+    LTEXT           "Revocation information for the security certificate for this site is not available. Do you want to proceed?",
+                    IDC_STATIC,37,10,224,22
+    PUSHBUTTON      "&No",IDCANCEL,142,45,50,14
+    PUSHBUTTON      "&View Certificate",ID_SHOW_CERTIFICATE,194,45,69,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_COOKIE_ICON         ICON    DISCARDABLE     "cookie_i.ico"
+32546                   ICON    DISCARDABLE     "ico32546.ico"
+IDI_SECURITY1           ICON    DISCARDABLE     "secure_i.ico"
+IDI_SECURITY2           ICON    DISCARDABLE     "secure_!.ico"
+IDI_SECURITY3           ICON    DISCARDABLE     "secure_q.ico"
+IDI_WARN                ICON    DISCARDABLE     "warning.ico"
+IDI_SUCCESS             ICON    DISCARDABLE     "success.ico"
+IDI_SECURITY4           ICON    DISCARDABLE     "key.ico"
+IDI_OFFLINE             ICON    DISCARDABLE     "offline.ico"
+IDI_CONNECT             ICON    DISCARDABLE     "connect.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_MIXED_SECURITY, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 211
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 71
+    END
+
+    IDD_CERTPICKER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        VERTGUIDE, 206
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_VIEW_CERT, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 295
+        VERTGUIDE, 45
+        VERTGUIDE, 295
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 169
+    END
+
+    IDD_HTTP_TO_HTTPS_ZONE_CROSSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 218
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_HTTPS_TO_HTTP_ZONE_CROSSING, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 219
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_INVALID_CA, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 226
+        VERTGUIDE, 45
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 86
+    END
+
+    IDD_CERTVIEWER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 242
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_CONFIRM_COOKIE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 259
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 224
+        HORZGUIDE, 110
+    END
+
+    IDD_FAILED_DOWNLOAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 199
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 112
+    END
+
+    IDD_SCRIPT_ERROR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 125
+    END
+
+    IDD_CONNECT_TO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 165
+        VERTGUIDE, 48
+        VERTGUIDE, 57
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_GOONLINE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        VERTGUIDE, 32
+        VERTGUIDE, 39
+        VERTGUIDE, 156
+        VERTGUIDE, 160
+        VERTGUIDE, 210
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 51
+        HORZGUIDE, 27
+        HORZGUIDE, 28
+        HORZGUIDE, 32
+        HORZGUIDE, 46
+        HORZGUIDE, 52
+    END
+
+    IDD_GOOFFLINE, DIALOG
+    BEGIN
+        VERTGUIDE, 7
+        VERTGUIDE, 205
+        HORZGUIDE, 7
+    END
+
+    IDD_HTTP_POST_REDIRECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_BAD_CN, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 273
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_WARN_ON_POST, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 212
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 68
+    END
+
+    IDD_CERT_EXPIRED, DIALOG
+    BEGIN
+        RIGHTMARGIN, 266
+        VERTGUIDE, 10
+        VERTGUIDE, 37
+        BOTTOMMARGIN, 59
+        HORZGUIDE, 10
+        HORZGUIDE, 59
+    END
+
+    IDD_HTTPS_TO_HTTP_SUBMIT_REDIRECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 216
+        TOPMARGIN, 8
+        BOTTOMMARGIN, 82
+    END
+
+    IDD_INSERT_CDROM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 238
+        VERTGUIDE, 40
+        VERTGUIDE, 90
+        VERTGUIDE, 95
+        VERTGUIDE, 147
+        VERTGUIDE, 156
+        VERTGUIDE, 206
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 119
+    END
+
+    IDD_NTLM_AUTH, DIALOG
+    BEGIN
+        RIGHTMARGIN, 257
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 134
+    END
+
+    IDD_REALM_AUTH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 257
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 134
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETTING_COOKIE      "You have received a ""cookie"" (Internet  information stored on your computer)   from %1\r\n\r\nThe contents are:\r\n\r\n%2\r\n\r\nIt expires on %3\r\n\r\nDo you want to accept it? If you click No, the page you are trying to view may not display correctly."
+    IDS_SETTING_COOKIE_TITLE "Security Alert"
+    IDS_YES                 "Yes"
+    IDS_NO                  "No"
+    IDS_COOKIE_EXPIRES_ENDSESSION "End of session"
+    IDS_PROTOCOL_UNKNOWN    "Unknown"
+    IDS_PROTOCOL_SSL2       "SSL 2.0"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_GOPHER_DIR          "Gopher directory at %s"
+    IDS_GOPHER_INDEX        "Gopher Index Search - %s"
+    IDS_GOPHER_CSO          "CSO searches are not supported by this browser."
+    IDS_TAG_DIRECTORY       "     Directory"
+    IDS_TAG_SEARCH          "    &lt;Search&gt;"
+    IDS_CACHE_DEFAULT_SUBDIR "Temporary Internet Files"
+    IDS_COOKIES_DEFAULT_SUBDIR "Cookies"
+    IDS_HISTORY_DEFAULT_SUBDIR "History"
+    IDS_COMMENT_REVOKED     "The certificate you are viewing has been revoked."
+    IDS_CERT_FINGERPRINT    "Fingerprint"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PERM_COOKIE         "To provide a more personalized browsing experience, will you allow this Web site to save a small file (called a cookie) on your computer?  The file can only be used by this Web site.\n"
+    IDS_SESS_COOKIE         "To provide a more personalized browsing experience, will you allow  this Web site to temporarily save a small file (called a cookie) on your computer?   When you exit the Web site, the file is removed.\n"
+    IDS_PROXY_TITLE         "Confirm use of Proxy Server"
+    IDS_PROXY_MSG           "Internet Explorer has automatically configured a proxy server for this connection.  Is a proxy server used on this connection?"
+    IDS_CACHE_DEFAULT_SUBDIR_UNIX "TempInternetFiles"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LW95_ENTERAUTHINFO  "Please enter your authentication information."
+    IDS_SECERT_CERTINFO     "Subject:\r\n%1\r\nIssuer:\r\n%2\r\nEffective Date:\t%3\r\nExpiration Date:\t%4\r\nSecurity Protocol:\t%5\r\nSignature Type:\t%6\r\nEncryption Type:\t%7\r\nPrivacy Strength:\t%9 (%8!u! bits)"
+    IDS_SECERT_STRENGTH_HIGH "High"
+    IDS_SECERT_STRENGTH_MEDIUM "Medium"
+    IDS_SECERT_STRENGTH_LOW "Low"
+    IDS_CERT_SUBJECT        "Subject"
+    IDS_CERT_ISSUER         "Issuer"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CERT_EFFECTIVE_DATE "Effective date"
+    IDS_CERT_EXPIRATION_DATE "Expiration date"
+    IDS_CERT_PROTOCOL       "Security protocol"
+    IDS_CERT_ENCRYPT_ALG    "Encryption type"
+    IDS_CERT_USAGE          "Certificate usage"
+    IDS_COMMENT_EXPIRES     "The certificate you are viewing has expired. "
+    IDS_COMMENT_NOT_VALID   "The certificate is not valid. Make sure the time on your computer is correct."
+    IDS_COMMENT_BAD_CN      "The certificate you are viewing does not match the name of the site you are trying to view.  "
+    IDS_COMMENT_BAD_CA      "This certificate was issued by an unknown security agency."
+    IDS_CERT_COMMENT        "Comment"
+    IDS_COMMENT_BAD_SIGNATURE 
+                            "This certificate is corrupted, and its authenticity cannot be verified."
+    IDS_FTP_ROOT            "FTP root at %s"
+    IDS_FTP_DIR             "FTP directory %s at %s"
+    IDS_FTP_UPLEVEL         "<A HREF="".."">Up to higher level directory</A><BR>"
+    IDS_GOPHER_ROOT         "Gopher root at %s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EXPORTCERT_ERRORTEXT 
+                            "Internet Explorer was unable to export this certificate"
+    IDS_EXPORTCERT_ERRORTITLE "Error exporting certificate"
+    IDS_IMPORTCERT_ERRORTEXT 
+                            "Internet Explorer was unable to import this certificate"
+    IDS_IMPORTCERT_ERRORTITLE "Error importing certificate"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RNADLL_FILENAME     "rasapi32.dll"
+    IDS_CONNECTED_TO        "Connected to %s."
+    IDS_INETCFG_FILENAME    "inetcfg.dll"
+    IDS_REDIAL_WAIT         "Redialing in %d seconds."
+    IDS_REDIAL_ATTEMPT      "Dialing attempt %d of %d."
+    IDS_DIALING             "Dialing..."
+    IDS_AUTHENTICATE        "Verifying user name and password..."
+    IDS_CANCEL              "Cancel"
+    IDS_WORK_OFFLINE        "Work &Offline"
+    IDS_CONNECTED           "Connected to remote computer."
+    IDS_DISCONNECTED        "Failed to connect to remote computer."
+    IDS_NOCERT_TITLE        "Certificate Information"
+    IDS_NOCERT              "This type of document does not have a security certificate"
+    IDS_CONNECT_TO          "Connect to "
+    IDS_PPPRANDOMFAILURE    "Unable to establish a connection."
+    IDS_MEDIAINIERROR       "Unable to establish a connection. Ensure dial-up networking is configured correctly."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LAN_CONNECTION      "LAN Connection"
+    IDS_RASPHONEBOOK        "\\ras\\rasphone.pbk"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_GOONLINE_REFRESH_CAPTION "Refresh in Offline Mode"
+    IDS_GOONLINE_REFRESH_TOPMESSAGE "Do you want to refresh by going online?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROTOCOL_SSL3       "SSL 3.0"
+    IDS_PROTOCOL_PCT1       "PCT 1.0"
+    IDS_PROTOCOL_TLS1       "TLS 1.0"
+    IDS_CIPHER_UNKNOWN      "Unknown Cipher"
+    IDS_ALG_MD2             "MD2"
+    IDS_ALG_MD4             "MD4"
+    IDS_ALG_MD5             "MD5"
+    IDS_ALG_SHA             "SHA"
+    IDS_ALG_MAC             "MAC"
+    IDS_ALG_HMAC            "HMAC"
+    IDS_ALG_RSA_SIGN        "RSA"
+    IDS_ALG_DSS_SIGN        "DSS"
+    IDS_ALG_RSA_KEYX        "RSA"
+    IDS_ALG_DES             "DES"
+    IDS_ALG_3DES_112        "2 KeyTriple DES"
+    IDS_ALG_3DES            "Triple DES"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ALG_RC2             "RC2"
+    IDS_ALG_RC4             "RC4"
+    IDS_ALG_RC5             "RC5"
+    IDS_ALG_SEAL            "SEAL"
+    IDS_ALG_DH_SF           "Diffie Hellman store and forward"
+    IDS_ALG_DH_EPHEM        "Diffie Hellman Ephemeral"
+    IDS_ALG_KEA_KEYX        "KEY (Fortezza)"
+    IDS_ALG_SKIPJACK        "SKIPJACK (Fortezza)"
+    IDS_ALG_TEK             "TEK (Fortezza)"
+    IDS_STRING_CIPHMSG      "%1!s! with %2!d! bit encryption (%3!s!)."
+    IDS_STRING_HASHMSG      "%1!s! with %2!d! bit hash key."
+    IDS_STRING_EXCHMSG      "%1!s! with %2!d! bit exchange (%3!s!)"
+    IDS_HASH_UNKNOWN        "Unknown Hash"
+    IDS_EXCH_UNKNOWN        "Unknown Key Exchange"
+    IDS_CERT_HASH_ALG       "Hash type"
+    IDS_CERT_EXCH_ALG       "Key Exchange"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PHONEBUSY           "The line is busy."
+    IDS_NOANSWER            "No answer."
+    IDS_NODIALTONE          "No dial tone. Make sure the modem is correctly connected to the computer and phone line."
+    IDS_NODEVICE            "Could not detect modem. It may be in use, turned off, or not installed properly."
+    IDS_TCPINSTALLERROR     "Unable to connect because of a configuration error."
+    IDS_AUTHFAILURE         "Invalid user name or password."
+    IDS_DOMAIN              "&Domain"
+    IDS_REALM               "Realm"
+    IDS_SITE                "Site:"
+    IDS_FIREWALL            "Firewall:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CERT_TRUST          "The security certificate is from a trusted certifying authority."
+    IDS_CERT_DATE           "The security certificate date is valid."
+    IDS_CERT_NAME           "The security certificate matches the name of the page you are trying to view."
+    IDS_SECURITY_CAPTION    "Security Alert"
+    IDS_CERT_REVOKED        "The security certificate for this site has been revoked.\n\nThis site should not be trusted."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

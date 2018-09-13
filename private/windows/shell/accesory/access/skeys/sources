@@ -1,0 +1,43 @@
+!ifdef DEBUG
+NTDEBUG=ntsd
+MTDEBUGTYPE=both
+MSC_OPTIMIZATION=/Od
+!endif
+
+WIN32_WINNT_VERSION=0x0400
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=skeys
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib     \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib	\
+           ..\skdll\obj\*\skdll.lib
+
+INCLUDES=.
+
+USE_LIBCMT=1
+
+C_DEFINES= -DUNICODE -D_UNICODE
+
+SOURCES= \
+        skeys.rc   \
+        debug.c    \
+        gide.c     \
+        initgide.c \
+        kbd.c      \
+        mou.c      \
+        sk_comm.c  \
+        sk_dll.c   \
+        sk_ex.c    \
+        sk_login.c \
+        sk_reg.c   \
+        skeys.c    \
+        tables.c   \
+        vars.c
+
+UMTYPE=windows
+UMENTRY=wwinmain

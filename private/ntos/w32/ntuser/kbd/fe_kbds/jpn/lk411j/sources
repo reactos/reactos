@@ -1,0 +1,10 @@
+!IF 0
+
+ SOURCES for DEC LK411-JJ keyboard layout driver
+
+!ENDIF
+
+MINORCOMP=kbdlk41j
+
+!include ../japan.inc
+

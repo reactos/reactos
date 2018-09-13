@@ -1,0 +1,436 @@
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "cabinet.h"
+#else
+#include <winuser.h>
+#include <commctrl.h>
+#endif
+
+#include "rcids.h"
+
+// Define this here because its NT5-only and we compile for NT4 (its safe to
+// use this flag anyway, it will be ignored)
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#ifdef FULL_DEBUG
+
+IDD_DEBUGURLDB DIALOGEX DISCARDABLE  0, 0, 246, 78
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS)|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug URL Database"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&URL:",IDC_STATIC,13,17,19,8
+    EDITTEXT        IDC_URL,35,14,204,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Splat Me",IDC_SPLATME,136,35,50,14
+    PUSHBUTTON      "&Clear Splat",IDC_CLEARSPLAT,189,35,50,14
+    PUSHBUTTON      "Close",IDOK,189,57,50,14
+END
+
+#endif
+
+DLG_TRAY_VIEW_OPTIONS DIALOGEX DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS)|(DS_SETFONT|DS_FIXEDSYS) | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+
+#define TRAYHEIGHT 20
+#define MENUHEIGHT 60
+    CONTROL         "",IDC_VOBASE,"Static", SS_BITMAP | SS_SUNKEN | WS_CLIPSIBLINGS,
+                    14,14,183,82
+    CONTROL         "",IDC_VOLARGEMENU,"Static", SS_BITMAP | WS_CLIPSIBLINGS,
+                    16,15,50,MENUHEIGHT
+    CONTROL         "",IDC_VOTRAY,"Static", SS_BITMAP | WS_CLIPSIBLINGS,
+                    16,16 + MENUHEIGHT,183,20
+    CONTROL         "",IDC_VOTRAYNOCLOCK,"Static", SS_BITMAP | WS_CLIPSIBLINGS,
+                    16,16 + MENUHEIGHT,183,20
+
+    CONTROL         "",IDC_VOWINDOW,"Static", SS_BITMAP | WS_CLIPSIBLINGS,
+                    156,16 + MENUHEIGHT,183+14-156,3
+
+    CONTROL         "Always on &top",IDC_TRAYOPTONTOP,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,107,122,10
+
+    CONTROL         "A&uto hide",IDC_TRAYOPTAUTOHIDE,"Button", 
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14,123,122,10
+
+    CONTROL         "Show &small icons in Start menu",IDC_SMSMALLICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,138,122,10
+
+    CONTROL         "Show &clock", IDC_TRAYOPTSHOWCLOCK, "Button", 
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14, 153, 122, 10
+
+    CONTROL         "Use &Personalized Menus", IDC_PERSONALIZEDMENUS, "Button", 
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14, 168, 180, 10
+
+END
+
+DLG_STARTMENU_CONFIG DIALOGEX DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS)|(DS_SETFONT|DS_FIXEDSYS) | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Customize Start menu",IDC_GROUPBOX,8,7,197,115
+
+// Start Menu portion
+    ICON            ICO_STARTMENU,IDC_NO_HELP_1,19,17,21,20
+    LTEXT           "You can customize your Start menu by adding or removing items from it.",
+                    IDC_NO_HELP_2,48,17,79,48
+    PUSHBUTTON      "A&dd...",IDC_ADDSHORTCUT,144,18,53,14
+    PUSHBUTTON      "&Remove...",IDC_DELSHORTCUT,144,33,53,14
+    PUSHBUTTON      "Ad&vanced...",IDC_EXPLOREMENUS,144,49,53,14
+    PUSHBUTTON      "Re-&sort",IDC_RESORT,144,65,53,14
+
+// Documents portion
+    ICON            ICO_DOCMENU,IDC_NO_HELP_3,20,83,21,20
+    LTEXT           "To remove records of recently accessed documents, programs, and Web sites,  click Clear.",
+                    IDC_NO_HELP_4,49,83,90,33
+    PUSHBUTTON      "&Clear",IDC_KILLDOCUMENTS,144,102,53,14
+
+// Advanced
+    LTEXT           "Start Menu Se&ttings",IDC_STARTMENUSETTINGSTEXT,7,126,81,8
+    CONTROL         "StartMenuSe&ttings",IDC_STARTMENUSETTINGS,"SysTreeView32",TVS_HASBUTTONS | 
+                    WS_BORDER | WS_TABSTOP,7,136,198,45,WS_EX_CLIENTEDGE
+END
+
+#ifdef DESKBTN
+DLG_CONFIGDESKTOP DIALOGEX DISCARDABLE  0, 0, 93, 14
+STYLE WS_BORDER | WS_POPUP | (DS_SETFONT|DS_FIXEDSYS) 
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "Customize My Desktop...",IDC_CONFIGDESKTOP,0,0,93,14
+END
+#endif
+
+DLG_PROGRAMFILECONFLICT DIALOGEX DISCARDABLE  0, 0, 272, 81
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU | (DS_SETFONT|DS_FIXEDSYS)
+CAPTION "File Name Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Ignore",IDIGNORE,215,60,50,14
+    PUSHBUTTON      "&Rename",IDC_RENAME,159,60,50,14
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,51,258,1
+    CONTROL         "&Don't perform this check at startup",IDC_MESSAGEBOXCHECKEX,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,62,139,10
+    ICON            ICO_WARNING,IDC_STATIC,7,7,21,20
+    LTEXT           "There is a file or folder on your computer called ""%s"" which could cause certain applications to not function correctly.  Renaming it to ""%s"" would solve this problem.  Would you like to rename it now?",
+                    IDC_MSG,34,7,224,37
+END
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+ICO_MYCOMPUTER          ICON "mycomp.ico"
+ICO_TREEUP              ICON "..\\shdocvw\\treeup.ico"
+ICO_PRINTER             ICON "printer.ico"
+ICO_DESKTOP             ICON "desktop.ico"
+ICO_PRINTER_ERROR       ICON "printerr.ico"
+ICO_STARTMENU           ICON "start.ico"
+ICO_DOCMENU             ICON "docs.ico"
+ICO_INFO                ICON "info.ico"
+ICO_WARNING             ICON "warning.ico"
+ICO_ERROR               ICON "error.ico"
+
+// Old icons
+ICO_OLD_MYCOMPUTER      ICON "mycomold.ico"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_START              BITMAP DISCARDABLE PURE "start.bmp"
+IDB_VOBASE             BITMAP DISCARDABLE PURE "vobase.bmp"
+IDB_VOTRAY             BITMAP DISCARDABLE PURE "votray.bmp"
+
+#ifdef WINNT
+IDB_VOLARGEMENU        BITMAP DISCARDABLE PURE "ntvomenu.bmp"
+#else
+IDB_VOLARGEMENU        BITMAP DISCARDABLE PURE "vomenu.bmp"
+#endif
+
+#ifdef WINNT
+IDB_STARTBKG           BITMAP DISCARDABLE PURE "ntstrtbk.bmp"
+IDB_SERVERSTARTBKG     BITMAP DISCARDABLE PURE "srvbkg.bmp"
+IDB_TERMINALSERVICESBKG BITMAP DISCARDABLE PURE "tsbanner.bmp"
+
+#if 0	// These are poorly sized
+IDB_DCSERVERSTARTBKG   BITMAP DISCARDABLE PURE "srvdc.bmp"
+IDB_ADVSERVERSTARTBKG  BITMAP DISCARDABLE PURE "srvadv.bmp"
+#else
+IDB_DCSERVERSTARTBKG   BITMAP DISCARDABLE PURE "srvdc2.bmp"
+IDB_ADVSERVERSTARTBKG  BITMAP DISCARDABLE PURE "srvadv2.bmp"
+#endif
+
+IDB_EMBEDDED           BITMAP DISCARDABLE PURE "startem.bmp"
+IDB_SRVAPPSTARTBKG     BITMAP DISCARDABLE PURE "srvapp.bmp"
+
+#else
+IDB_STARTBKG           BITMAP DISCARDABLE PURE "startbkg.bmp"
+IDB_START95BK          BITMAP DISCARDABLE PURE "95strtbk.bmp"
+#endif
+IDB_VOWINDOW           BITMAP DISCARDABLE PURE "vowindow.bmp"
+IDB_VONOCLOCK          BITMAP DISCARDABLE PURE "vonoclok.bmp"
+IDB_VOTRAYD            BITMAP DISCARDABLE PURE "votrayd.bmp"
+IDB_VONOCLOCKD         BITMAP DISCARDABLE PURE "vonoclod.bmp"
+
+#ifndef APSTUDIO_INVOKED
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_TRAY ACCELERATORS DISCARDABLE
+BEGIN
+    "s",            IDC_KBSTART,        ALT
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT,SHIFT
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT,CONTROL
+    VK_TAB,         FCIDM_NEXTCTL,      VIRTKEY,NOINVERT,CONTROL,SHIFT
+    VK_F5,          FCIDM_REFRESH,      VIRTKEY,NOINVERT
+    VK_F6,          FCIDM_NEXTCTL,      VIRTKEY,NOINVERT
+    VK_RETURN,      IDM_TRAYPROPERTIES, VIRTKEY,NOINVERT,ALT
+    "Z",            IDM_UNDO,           VIRTKEY,NOINVERT,CONTROL
+    VK_F3,          FCIDM_FINDFILES,    VIRTKEY,NOINVERT
+    "m",            IDM_MINIMIZEALLHOTKEY,  VIRTKEY,NOINVERT,ALT
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+MENU_TRAYCONTEXT MENU PRELOAD DISCARDABLE
+BEGIN
+        POPUP ""
+        BEGIN
+                MENUITEM "&Adjust Date/Time",           IDM_SETTIME
+                MENUITEM "Ca&scade Windows",            IDM_CASCADE
+                MENUITEM "Tile Windows &Horizontally",  IDM_HORIZTILE
+                MENUITEM "Tile Windows V&ertically",    IDM_VERTTILE
+                MENUITEM SEPARATOR
+                MENUITEM "&Minimize All Windows",       IDM_MINIMIZEALL
+                MENUITEM "&Undo",   IDM_UNDO
+                MENUITEM SEPARATOR
+#ifdef WINNT
+                MENUITEM "Tas&k Manager...",            IDM_SHOWTASKMAN
+                MENUITEM SEPARATOR
+#endif
+                MENUITEM "P&roperties",                 IDM_TRAYPROPERTIES
+        END
+END
+
+
+#ifdef FULL_DEBUG
+MENU_DEBUG MENU PRELOAD DISCARDABLE
+BEGIN
+        POPUP "&Debug"
+        BEGIN
+                MENUITEM "&URL Database...",            IDM_DEBUGURLDB
+        END
+END
+#endif
+
+MENU_COMBINEDTASKS MENUEX PRELOAD DISCARDABLE
+BEGIN
+        POPUP "",-1
+        BEGIN
+                MENUITEM "C&ascade",            IDM_CASCADE
+                MENUITEM "Tile &Horizontally",  IDM_HORIZTILE
+                MENUITEM "Tile &Vertically",    IDM_VERTTILE
+                MENUITEM "", -1,                MFT_SEPARATOR
+                MENUITEM "&Restore",            IDM_RESTORE,, MFS_GRAYED
+                MENUITEM "Mi&nimize",           IDM_MINIMIZE,, MFS_GRAYED
+                MENUITEM "Ma&ximize",           IDM_MAXIMIZE,, MFS_GRAYED
+                MENUITEM "", -1,                MFT_SEPARATOR
+                MENUITEM "&Close",              IDM_CLOSE,, MFS_GRAYED
+        END
+END
+
+MENU_PRINTNOTIFYCONTEXT MENU PRELOAD DISCARDABLE
+BEGIN
+        POPUP ""
+        BEGIN
+                MENUITEM "Open Active &Printers", IDM_PRINTNOTIFY_FOLDER
+        END
+END
+
+
+// NB - ToolbarMenu() relies on the order of these menu items.
+// REVIEW HACK Note the spaces after (Empty), these are intentional.
+
+// WARNING:  if you change the order of this, or add new items,
+//           you'll need to change the table in StartMenu_CatMenu
+//           too.
+
+MENU_START MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Programs",                      IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Empty)    ",                     IDM_PROGRAMSINIT,,MFS_GRAYED
+        END
+
+        POPUP "F&avorites",                      IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Empty)    ",                     -1,,MFS_GRAYED
+        END
+
+        POPUP "&Documents",                     IDM_RECENT
+        BEGIN
+            MENUITEM "(Empty)    ",                     IDM_RECENTINIT,,MFS_GRAYED
+        END
+        POPUP "&Settings",                      IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Control Panel",                  IDM_CONTROLS
+            MENUITEM "", -1, MFT_SEPARATOR
+#ifdef WINNT
+            MENUITEM "&Windows Security...",        IDM_MU_SECURITY
+#endif
+            MENUITEM "&Network and Dial-up Connections", IDM_NETCONNECT
+            // MENUITEM "&Start Menu",                  IDM_PROGRAMSFOLDER
+            MENUITEM "&Printers",                       IDM_PRINTERS
+            // MENUITEM "&Fonts",                       IDM_FONTS
+            // MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Taskbar && Start Menu...",       IDM_TRAYPROPERTIES
+
+        END
+        POPUP "Sear&ch",                          IDM_MENU_FIND
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+
+        MENUITEM "&Help",                       IDM_HELPSEARCH
+        MENUITEM "&Run...",                     IDM_FILERUN
+        MENUITEM "",                            IDM_SEP2,       MFT_SEPARATOR
+        MENUITEM "S&ynchronize",                 IDM_CSC
+        MENUITEM "&Log Off %s...",              IDM_LOGOFF
+        MENUITEM "&Eject PC",                   IDM_EJECTPC
+        MENUITEM "Sh&ut Down...",               IDM_EXITWIN
+    END
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+
+#ifdef WINNT
+
+// Neither of these two strings should exceed MAX_PATH in length
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OKTOKILLAPP1     "The application is either too busy or unable to respond to your request to close."
+    IDS_OKTOKILLAPP2     "Forcing it to close may cause that application to lose data.  Do you want to force it to close?"
+END
+
+#endif
+
+#ifdef DESKBTN
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TT_DESKTOPBUTTON        "Surface/Restore Desktop"
+
+END
+#endif
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STARTBUTTONTIP          "Click here to begin"
+
+    IDS_UNDOTEMPLATE            "&Undo %s"
+    IDS_CASCADE                 "Cascade"
+    IDS_TILE                    "Tile"
+    IDS_MINIMIZEALL             "Minimize All"
+    IDS_CLEANBOOTMSG1 "Windows is running in safe mode.\n\nThis special diagnostic mode of Windows enables you to fix the problem that is keeping you from starting Windows normally."
+    IDS_CLEANBOOTMSG2 " The problem could be caused by your network or hardware settings. Make sure these settings are correct in Control Panel, and then try starting Windows again."
+    IDS_CLEANBOOTMSG3 " For more information, see the Troubleshooting section in Help. While in safe mode, some of your devices may not be available."
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CABINET             "Windows Explorer"
+    IDS_WINDOWS             "Windows"
+#ifdef WINNT
+    IDS_WINININORUN         "Could not load or run '%1' specified in the registry. Make sure the file exists on your computer or remove the reference to it in the registry."
+#else
+    IDS_WINININORUN         "Could not load or run '%1' specified in the WIN.INI file. Make sure the file exists on your computer or remove the reference to it in the WIN.INI file."
+#endif
+    IDS_TASKBAR             "Taskbar"
+    IDS_DESKTOP             "Desktop"
+    IDS_CANTRUN             "Unable to run this command."
+    IDS_NUMPRINTJOBS        "%1!ld! document(s) pending for %2"
+    IDS_PRINTER_ERROR       "%s (error)"
+    IDS_CANTFINDSPECIALDIR  "Unable to run command.\nThe folder '%1' has been removed."
+    IDS_NOTINITED           "My Computer or Windows Explorer has not been properly initialized yet. Try again later."
+    IDS_OUTOFMEM            "There is not enough memory to complete this operation."
+#ifdef FULL_DEBUG
+  #ifdef UNICODE
+    IDS_START               "Unicode Debug"
+  #else
+    IDS_START               "ANSI Debug"
+  #endif
+#else
+    IDS_START               "Start"
+#endif
+
+    IDS_STARTMENUANDTASKBAR "Taskbar and Start Menu"
+
+    IDS_STARTMENUBALLOON_TIP "You can access all your programs, documents, and settings from the Start Menu. Click on the Start button to begin."
+    IDS_STARTMENUBALLOON_TITLE "Click on the Start Button"
+
+    IDS_EXCEPTIONMSG        "There was an internal error and one of the windows you were using has been closed."
+    IDS_RESTRICTIONSTITLE   "Restrictions"
+    IDS_RESTRICTIONS        "This operation has been cancelled due to restrictions in effect on this computer. Please contact your system administrator."
+    IDS_CANTFINDFILE        "The object that '%1'\nrefers to has been removed or is inaccessible."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_ERROR "Windows was unable to change the display settings for the new configuration.  Return the computer to the previous state, shut down Windows, and restart the computer in the desired configuration."
+    IDS_DISPLAY_WARN "There may be a problem with your display settings if you continue. To safely change to a new configuration, you should shut down Windows and restart the computer in the desired configuration. Do you want to continue anyway?"
+    IDS_TASKDROP_ERROR "You cannot drag an item onto a button on the taskbar.\n\nHowever, if you do this without releasing the mouse button, the window will open and you can then drag the item into the window."
+
+    IDS_ALREADYAUTOHIDEBAR "A toolbar is already hidden on this side of your screen.\nYou can have only one auto-hide toolbar per side."
+    IDS_COMMON      " (Common)"
+    IDS_BETAEXPIRED         "This pre-release version of ""Internet Explorer 4.0"" Desktop/Explorer has expired. Please update to the latest release of ""Internet Explorer 4.0"" from WWW.MICROSOFT.COM"
+    IDS_RUNDLGTITLE   "Run"
+
+    // This has to be in sync with IDM_LOGOFF
+    IDS_LOGOFFNOUSER  "&Log Off..."
+#ifdef WINNT
+   IDS_OPENCOMMON    "O&pen All Users"
+   IDS_EXPLORECOMMON "E&xplore All Users"
+#endif
+
+    IDS_HELP_CMD            "hh.exe>%systemroot%\\help\\windows.chm"
+    IDS_SHOWDESKTOP         "Show Desktop"
+    IDS_DESKTOPQUICKLAUNCH  "\\Microsoft\\Internet Explorer\\Quick Launch"
+    IDS_SHOWDESKSCF         "\\Show Desktop.scf"
+END
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "explorer.rcv"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

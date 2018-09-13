@@ -1,0 +1,161 @@
+KBD     TH2     "Thai Kedmanee (non-ShiftLock)"
+
+                // LCID     : 041e
+                // CodePage : 874
+
+                // Created  : 08/15/96 12:07:12
+
+                // Source   : kbdTH2.kbd
+                //   Date   : 11/27/95 14:49:56
+
+VERSION 1.0
+
+SHIFTSTATE
+
+  0             // Column 4 :
+  1             // Column 5 : Shft
+  2             // Column 6 :      Ctrl
+  3             // Column 7 : Shft Ctrl
+
+LAYOUT
+
+//SC  VK_        Cap    0       1       2       3
+//--  ---------- ---    ----    ----    ----    ----
+  29  OEM_3      0      _       %
+  02  1          0      0e45    +                       // å
+  03  2          0      /       0e51                    // ñ
+  04  3          0      -       0e52                    // ò
+  05  4          0      0e20    0e53                    // À ó
+  06  5          0      0e16    0e54                    // ¶ ô
+  07  6          0      0e38    0e39    -1      001e    // Ø Ù
+  08  7          0      0e36    0e3f                    // Ö ß
+  09  8          0      0e04    0e55                    // ¤ õ
+  0a  9          0      0e15    0e56                    // µ ö
+  0b  0          0      0e08    0e57                    // ¨ ÷
+  0c  OEM_MINUS  0      0e02    0e58    -1      001f    // ¢ ø
+  0d  OEM_PLUS   0      0e0a    0e59                    // ª ù
+//--  ---------- ---    ----    ----    ----    ----
+  10  Q          0      0e46    0e50                    // æ ð
+  11  W          0      0e44    "                       // ä
+  12  E          0      0e33    0e0e                    // Ó ®
+  13  R          0      0e1e    0e11                    // ¾ ±
+  14  T          0      0e30    0e18                    // Ð ¸
+  15  Y          0      0e31    0e4d                    // Ñ í
+  16  U          0      0e35    0e4a                    // Õ ê
+  17  I          0      0e23    0e13                    // Ã ³
+  18  O          0      0e19    0e2f                    // ¹ Ï
+  19  P          0      0e22    0e0d                    // Â ­
+  1a  OEM_4      0      0e1a    0e10    001b            // º °
+  1b  OEM_6      0      0e25    ,       001d            // Å
+  2b  OEM_5      0      0e03    0e05    001c            // £ ¥
+//--  ---------- ---    ----    ----    ----    ----
+  1e  A          0      0e1f    0e24                    // ¿ Ä
+  1f  S          0      0e2b    0e06                    // Ë ¦
+  20  D          0      0e01    0e0f                    // ¡ ¯
+  21  F          0      0e14    0e42                    // ´ â
+  22  G          0      0e40    0e0c                    // à ¬
+  23  H          0      0e49    0e47                    // é ç
+  24  J          0      0e48    0e4b                    // è ë
+  25  K          0      0e32    0e29                    // Ò É
+  26  L          0      0e2a    0e28                    // Ê È
+  27  OEM_1      0      0e27    0e0b                    // Ç «
+  28  OEM_7      0      0e07    .                       // §
+//--  ---------- ---    ----    ----    ----    ----
+  2c  Z          0      0e1c    (                       // ¼
+  2d  X          0      0e1b    )                       // »
+  2e  C          0      0e41    0e09                    // á ©
+  2f  V          0      0e2d    0e2e                    // Í Î
+  30  B          0      0e34    0e3a                    // Ô Ú
+  31  N          0      0e37    0e4c                    // × ì
+  32  M          0      0e17    ?                       // ·
+  33  OEM_COMMA  0      0e21    0e12                    // Á ²
+  34  OEM_PERIOD 0      0e43    0e2c                    // ã Ì
+  35  OEM_2      0      0e1d    0e26                    // ½ Æ
+  56  OEM_102    0      0e03    0e05    001c            // £ ¥
+//--  ---------- ---    ----    ----    ----    ----
+  53  DECIMAL    0      .       .
+//--  ---------- ---    ----    ----    ----    ----
+//SC  VK_        Cap    0       1       2       3
+
+KEYNAME
+
+ 01     Esc
+ 0e     Backspace
+ 0f     Tab
+ 1c     Enter
+ 1d     Ctrl
+ 2a     Shift
+ 36     "Right Shift"
+ 37     "Num *"
+ 38     Alt
+ 39     Space
+ 3a     "Caps Lock"
+ 3b     F1
+ 3c     F2
+ 3d     F3
+ 3e     F4
+ 3f     F5
+ 40     F6
+ 41     F7
+ 42     F8
+ 43     F9
+ 44     F10
+ 45     Pause
+ 46     "Scroll Lock"
+ 47     "Num 7"
+ 48     "Num 8"
+ 49     "Num 9"
+ 4a     "Num -"
+ 4b     "Num 4"
+ 4c     "Num 5"
+ 4d     "Num 6"
+ 4e     "Num +"
+ 4f     "Num 1"
+ 50     "Num 2"
+ 51     "Num 3"
+ 52     "Num 0"
+ 53     "Num Del"
+ 54     "Sys Req"
+ 57     F11
+ 58     F12
+ 7c     F13
+ 7d     F14
+ 7e     F15
+ 7f     F16
+ 80     F17
+ 81     F18
+ 82     F19
+ 83     F20
+ 84     F21
+ 85     F22
+ 86     F23
+ 87     F24
+
+KEYNAME_EXT
+
+ 1c     "Num Enter"
+ 1d     "Right Control"
+ 35     "Num /"
+ 37     "Prnt Scrn"
+ 38     "Right Alt"
+ 45     "Num Lock"
+ 46     Break
+ 47     Home
+ 48     Up
+ 49     "Page Up"
+ 4b     Left
+ 4d     Right
+ 4f     End
+ 50     Down
+ 51     "Page Down"
+ 52     Insert
+ 53     Delete
+ 54     <00>
+ 56     Help
+ 5b     "Left Windows"
+ 5c     "Right Windows"
+ 5d     Application
+
+ENDKBD
+
+

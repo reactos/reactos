@@ -1,0 +1,47 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  resource.rc
+//
+//      This file contains the resource script for the application.
+//
+//  (C) Copyright 1997 by Microsoft Corporation. All rights reserved.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "resource.h"
+
+IDI_WEBAPP     ICON    DISCARDABLE     "res\\welcome.ico"
+
+NODA.HTM       HTML    DISCARDABLE     "res\\noda.htm"
+WELCOME.HTM    HTML    DISCARDABLE     "res\\welcome.htm"
+STYLES.CSS     HTML    DISCARDABLE     "res\\styles.css"
+WELCOME.JS     HTML    DISCARDABLE     "res\\welcome.js"
+
+REGISTER.GIF   HTML    DISCARDABLE     "res\\register.gif"
+COMPUTER.GIF   HTML    DISCARDABLE     "res\\computer.gif"
+DISK.GIF       HTML    DISCARDABLE     "res\\disk.gif"
+INTERNET.GIF   HTML    DISCARDABLE     "res\\internet.gif"
+BAR.JPG        HTML    DISCARDABLE     "res\\bar.jpg"
+#if SERVER
+TITLE.GIF      HTML    DISCARDABLE     "res\\TitleSrv.gif"
+#else
+TITLE.GIF      HTML    DISCARDABLE     "res\\Title.gif"
+#endif
+FLAGBLK.GIF    HTML    DISCARDABLE     "res\\flagblk.gif"
+FLAGSM.GIF     HTML    DISCARDABLE     "res\\flagsm.gif"
+FLAG.GIF       HTML    DISCARDABLE     "res\\flag.gif"
+TOP.GIF        HTML    DISCARDABLE     "res\\top.gif"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TITLE       "Welcome to Windows NT"
+    IDS_PSCTITLE    "Finish Windows NT Setup"
+    IDS_PSCMENU     "Finish Setup"
+    IDS_PSCDESC     "Configure the components you installed during Windows NT Setup, to get them fully up and running.<p>You can also do this later on, through the &quot;Add\Remove Programs &quot; option in the Control Panel."
+    IDS_PSCCONFIG   "control.exe"       // do not localize
+    IDS_PSCARGS     "appwiz.cpl,@0,winupdate"   // do not localize
+END
+
+#include "winver.h"
+#include "resource.rcv"
+

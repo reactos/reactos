@@ -1,0 +1,32 @@
+ROOT=..\..\..\..
+RES_DIR=..
+WIN32=TRUE
+IS_DDK=TRUE
+#DEFENTRY = ModuleEntry@0
+DLLENTRY = LibMain
+BUILDDLL=TRUE
+
+!ifdef VERDIR
+ROOT=..\$(ROOT)
+!endif
+
+NAME=DiskCopy
+
+L32FLAGS=$(L32FLAGS) -entry:ModuleEntry@0 -heap:0x400000,0x1000
+
+CFLAGS=$(CFLAGS)-Gy
+
+MISCOBJ0=debug.obj 
+
+PCHOBJ0=main.obj diskcopy.obj shellext.obj
+
+LIB0=user32.lib gdi32.lib shell32.lib kernel32.lib comctl32.lib advapi32.lib libcmt.lib uuid.lib
+
+!include $(ROOT)\win\core\shell\common.mk
+
+
+!ifdef VERDIR
+
+$(NAME).res:	$(SRCDIR)\diskcopy.ico
+
+!endif

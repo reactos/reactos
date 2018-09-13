@@ -1,0 +1,293 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "rc_ids.h"
+
+//
+// Icon resources.
+//
+ICON_DISPLAY            ICON    DISCARDABLE     "resource\\DISPLAY.ICO"
+ICON_MOUSE              ICON    DISCARDABLE     "resource\\MOUSE.ICO"
+ICON_KEYBOARD           ICON    DISCARDABLE     "resource\\KEYBD.ICO"
+ICON_PRINTER            ICON    DISCARDABLE     "resource\\PRINTER.ICO"
+ICON_FLOPPY             ICON    DISCARDABLE     "resource\\DRIVEFLP.ICO"
+ICON_CD                 ICON    DISCARDABLE     "resource\\DRIVECD.ICO"
+ICON_NETWORK            ICON    DISCARDABLE     "resource\\DRIVENET.ICO"
+ICON_HARD               ICON    DISCARDABLE     "resource\\DRIVEHAR.ICO"
+ICON_SETUP              ICON    DISCARDABLE     "resource\\SETUP.ICO"
+ICON_NET                ICON    DISCARDABLE     "resource\\ADAPTER2.ICO"
+ICON_NETTRANS           ICON    DISCARDABLE     "resource\\PROTCL2.ICO"
+ICON_NETCLIENT          ICON    DISCARDABLE     "resource\\SERVER2.ICO"
+ICON_NETSERVICE         ICON    DISCARDABLE     "resource\\SERVER3.ICO"
+ICON_CONTROLLER         ICON    DISCARDABLE     "resource\\CONTRLLR.ICO"
+ICON_UNKNOWN            ICON    DISCARDABLE     "resource\\UNKNOWN.ICO"
+ICON_EBD                ICON    DISCARDABLE     "resource\\DISK.ICO"
+ICON_SCSI               ICON    DISCARDABLE     "resource\\SCSI-II.ICO"
+ICON_PCCARD             ICON    DISCARDABLE     "resource\\PCCARD.ICO"
+ICON_DEFAULT            ICON    DISCARDABLE     "resource\\DEFAULT.ICO"
+ICON_USB                ICON    DISCARDABLE     "resource\\USB.ICO"
+ICON_1394               ICON    DISCARDABLE     "resource\\1394.ICO"
+ICON_GPS                ICON    DISCARDABLE     "resource\\PNAPI.ICO"
+ICON_PORT               ICON    DISCARDABLE     "resource\\PORT.ICO"
+ICON_HID                ICON    DISCARDABLE     "resource\\HID.ICO"
+ICON_SMARTCARDREADER    ICON    DISCARDABLE     "resource\\SMARTCRD.ICO"
+ICON_MULTIPORTSERIAL    ICON    DISCARDABLE     "resource\\MULTIPRT.ICO"
+ICON_SYSTEM             ICON    DISCARDABLE     "resource\\SYSTEM.ICO"
+
+IDI_CONFLICT            ICON    DISCARDABLE     "resource\\CONFLICT.ICO"
+IDI_RESOURCE            ICON    DISCARDABLE     "resource\\RESOURCE.ICO"
+
+IDI_DISABLED_OVL        ICON    DISCARDABLE     "resource\\DISABDEV.ICO"
+IDI_FORCED_OVL          ICON    DISCARDABLE     "resource\\FORCED.ICO"
+IDI_PROBLEM_OVL         ICON    DISCARDABLE     "resource\\PROBLEM.ICO"
+
+
+//
+// Bitmap resources.
+//
+BMP_DRIVERTYPES  BITMAP "resource\\ilwinmsd.bmp"
+BMP_CRYPTO       BITMAP "resource\\crypto.bmp"
+
+//
+// AVIs
+//
+IDA_FILECOPY AVI "resource\\filecopy.avi"
+IDA_FILEDEL  AVI "resource\\filedel.avi"
+
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_MICROSOFT,          "Microsoft"
+    IDS_UNKNOWN_PARENS,     "(Unknown)"
+    IDS_LOCATEFILE,         "Locate File"
+    IDS_OUTOFMEMORY,        "Insufficient memory"
+    IDS_ADDITIONALMODELS    "(Additional models)"
+
+    //
+    // Strings in disk prompt/copy error dialog
+    //
+    IDS_FILESNEEDED,        "Files Needed"
+    IDS_FILESNEEDED2,       "%1 -- Files Needed"
+
+    IDS_PROMPTTITLE         "Insert Disk"
+
+    IDS_COPYFROM,           "&Copy files from:"
+    IDS_COPYFROMOEM,        "&Copy manufacturer's files from:"
+
+    IDS_DISKPROMPT1,        "Some files on %1 are needed."
+    IDS_DISKPROMPT2,        "The file '%1' on %2 is needed."
+    IDS_DISKPROMPTOEM,      "Insert the manufacturer's installation disk into the drive selected, and then click OK."
+
+    IDS_PROMPTACTION1,      "Insert %1 into the drive selected below, and then click OK."
+    IDS_PROMPTACTION2,      "Type the path where the file is located, and then click OK."
+
+    IDS_COPYERROR,          "Copy Error"
+    IDS_FILEERRCOPY,        "Setup cannot copy the file %1."
+    IDS_RETRY               "&Retry"
+
+    IDS_COPYERROROEM,       "Ensure that the manufacturer's disk is properly inserted in the drive selected below, or provide the location where the file can be found."
+    IDS_COPYERROR1,         "Ensure that the disk labeled '%1' is in the drive selected below, or provide the location where the file can be found."
+    IDS_COPYERROR2,         "Ensure that the location specified below is correct, or change it and insert '%1' in the drive you specify."
+    
+    IDS_ERRORDETAILS,       "Error Details"
+
+    IDS_WARNING,            "Warning"
+    IDS_ERROR,              "Error"
+
+    IDS_RENAMEERROR         "Rename Error"
+    IDS_DELETEERROR         "Delete Error"
+    IDS_BACKUPERROR         "Backup Error"
+
+    IDS_CANCELALL           "Do you want to continue Setup without copying this file?"
+    IDS_SURESKIP,           "If you cancel copying this file Windows might not work correctly. Are you sure you want to cancel this file?"
+    IDS_SURECANCEL,         "If you cancel now Windows might not work correctly. Are you sure you want to cancel?"
+
+    //
+    // Strings in default progress dialog.
+    //
+    IDS_FILEOP_FROM,        "From %1"
+    IDS_FILEOP_TO,          "To %1"
+    IDS_FILEOP_FILE,        "%1"
+    IDS_FILEOP_BACKUP,      "Backup %1"
+
+    IDS_COPY_CAPTION1,      "%1 -- Copying Files..."
+    IDS_COPY_CAPTION2,      "Copying Files..."
+    IDS_RENAME_CAPTION1,    "%1 -- Renaming Files..."
+    IDS_RENAME_CAPTION2,    "Renaming Files..."
+    IDS_DELETE_CAPTION1,    "%1 -- Deleting Files..."
+    IDS_DELETE_CAPTION2,    "Deleting Files..."
+    IDS_BACKUP_CAPTION1,    "%1 -- Backup Files..."
+    IDS_BACKUP_CAPTION2,    "Backup Files..."
+
+    IDS_CANCELFILEOPS,      "Installation is not yet completed. Are you sure you want to cancel?"
+
+    //
+    // Strings for Add New Device Wizard
+    //
+    IDS_OEMTITLE            "Install From Disk"
+    IDS_NDW_PICKDEV1        "Select the manufacturer and model of your hardware device and then click Next. If you have a disk that contains the driver you want to install, click Have Disk."
+    IDS_SELECT_DEVICE       "Select Device"
+    IDS_NDWSEL_MODELSLABEL  "Mo&dels:"
+
+    //
+    // Strings for Select Device dialog
+    //
+    IDS_INSTALLSTR0         "%s: The following models are compatible with your hardware. Click the one you want to set up, and then click OK."
+    IDS_INSTALLSTR1         "Click the %s that matches your hardware, and then click OK. If you don't know which model you have, click OK."
+    IDS_INSTALLCLASS        " If your model is not on the list, click Show All Devices."
+    IDS_INSTALLOEM          " If you have an installation disk for this device, click Have Disk."
+    IDS_INSTALLOEM1         " This list shows only what was found on the installation disk."
+
+    //
+    // Other device installer strings
+    //
+    IDS_DEVICEINSTALLER     "Device installer error"
+
+    //
+    // The following string should be localized to the language identifier used in legacy (script-based)
+    // NT INFs.  For example (this list is what was in windows\prsinf\prsinf.c):
+    //
+    //     English : "ENG"
+    //     German  : "GER"
+    //     French  : "FREN"
+    //     Spanish : "SPAN"
+    //
+    IDS_LEGACYINFLANG  "ENG"
+
+    IDS_RESOURCETYPE                "Resource type"
+    IDS_RESOURCESETTING             "Setting"
+    IDS_DEVRES_NO_CHANGE_MF         "You cannot modify the resources for this device directly. To change its resources, change the resources of its parent device."
+    IDS_BASICCONFIG                 "Basic configuration"
+    IDS_CURRENTCONFIG               "Current configuration"
+    IDS_IRQ_FULL                    "Interrupt Request"
+    IDS_DMA_FULL                    "Direct Memory Access"
+    IDS_MEMORY_FULL                 "Memory Range"
+    IDS_IO_FULL                     "Input/Output Range"
+    IDS_IRQ_FULL_LC                 "interrupt request"
+    IDS_DMA_FULL_LC                 "direct memory access"
+    IDS_MEMORY_FULL_LC              "memory range"
+    IDS_IO_FULL_LC                  "input/output range"
+
+    IDS_MEMORY                      "Memory Range"
+    IDS_IO                          "Input/Output Range (I/O)"
+    IDS_DMA                         "Direct Memory Access (DMA)"
+    IDS_IRQ                         "Interrupt Request (IRQ)"
+    IDS_OWNER                       "Owner"
+    IDS_UNKNOWN                     "Unknown"
+    
+    IDS_DEVRES_NO_RESOURCES     "This device does not require any resources."
+    IDS_DEVRES_NOALLOC_PROBLEM  "This device isn't using any resources because it has a problem."
+    IDS_DEVRES_NOALLOC_DISABLED "This device isn't using any resources because it is not currently enabled."
+    IDS_DEVRES_NORMAL_CONFLICT  "This device cannot find enough free resources that it can use.\n\nIf you want to use this device, you will need to disable one of the other devices on this system."
+    IDS_DEVRES_NOMATCHINGLC     "The resources this device is using do not match any of its known configurations. To assign resources manually for this device, click Set Configuration Manually."
+    IDS_DEVRES_NOMODIFYTITLE    "No Modifications Allowed"
+
+    IDS_EDITRES_RANGEINSTR1     "Enter the %s you would like to set for this device.\n\n"
+    IDS_EDITRES_RANGEINSTR2     "You may either enter a specific range and the nearest valid range will be automatically selected, or you may select a range using the up and down arrows."
+
+    IDS_EDITRES_ENTRYERROR      "Edit Resource Setting"
+    IDS_EDITRES_VALIDATEERROR1  "The setting you entered, %s, is not valid for this device.\n\n"
+    IDS_EDITRES_VALIDATEERROR2  "The next valid setting of %s has been chosen automatically.\n\n"
+    IDS_EDITRES_VALIDATEERROR3  "Would you like to continue using the new setting?"
+
+    IDS_ERROR_BADMEMTEXT    "Either the starting or ending value you entered is invalid.\n\nCheck that the starting and ending values are between 0x00000000 and 0xFFFFFFFF."
+    IDS_ERROR_BADIOTEXT     "Either the starting or ending value you entered is invalid.\n\nCheck that the starting and ending values are between 0x0000 and 0xFFFF."
+    IDS_ERROR_BADDMATEXT    "The direct memory access (DMA) value entered is invalid.\n\nCheck that the DMA value is between 0 and 7."
+    IDS_ERROR_BADIRQTEXT    "The interrupt request (IRQ) value entered is invalid.\n\nPlease check that the IRQ value is between 0 and 15."
+//BUGBUG - these values!
+
+    IDS_EDITRES_CONFLICTWARNMSG   "Warning: The setting you have chosen conflicts with another device.\n\nTo select a different resource setting, click No. To continue, click Yes."
+    IDS_EDITRES_CONFLICTWARNTITLE "Conflict Warning"
+    IDS_DEVRES_NOCONFLICTINFO     "No conflict information is currently available."
+
+    IDS_DEVRES_NOMODIFYSINGLE     "This resource setting cannot be modified in this configuration. Try choosing a different configuration in the 'Settings Based On' box."
+    IDS_DEVRES_NOMODIFYREMOTE     "Resources cannot be changed remotely."
+    IDS_DEVRES_NOMODIFYALL        "You cannot modify the resources in this configuration. Try choosing a different configuration in the 'Settings Based On' box."
+    IDS_DEVRES_NOMODIFYSELECT     "First select the resource you wish to edit."
+    
+    IDS_EDITRES_SINGLEINSTR1      "Enter the %s you would like to set for this device.\n\n"
+    IDS_EDITRES_SINGLEINSTR2      "You may either enter a specific value and the nearest valid value will be automatically selected, or you may select a value using the up and down arrows."
+    IDS_EDITRES_TITLE             "Edit %s"
+
+    IDS_EDITRES_UNKNOWNCONFLICT   "Windows cannot determine if the setting you have chosen conflicts with another device."
+    IDS_EDITRES_UNKNOWNCONFLICTINGDEVS "Unknown"
+    IDS_EDITRES_RESERVED          "Warning: The setting you have chosen may not work due to the following reason(s):"
+    IDS_EDITRES_RESERVEDRANGE     "The resource is unavailable"
+
+    IDS_EDITRES_NOCONFLICT        "The setting you have chosen does not conflict with any other devices."
+
+    IDS_EDITRES_NOCONFLICTINGDEVS "No devices are conflicting."
+
+    IDS_MAKE_FORCED_TITLE       "Creating a Forced Configuration"
+    IDS_FORCEDCONFIG_WARN1      "You adjusted one or more resource settings manually.\n\n"
+    IDS_FORCEDCONFIG_WARN2      "If you continue, these settings will be assigned to the device.\n\n"
+    IDS_FORCEDCONFIG_WARN3      "Do you want to continue?"
+    /*
+    IDS_FORCEDCONFIG_WARN2      "If you continue, these settings will be assigned, and Windows will be unable to change them automatically to make room for hardware you install in the future.\n\n"
+    IDS_FORCEDCONFIG_WARN3      "For example, if you install a Plug and Play device later,  Windows might be unable to set it up because these settings are unavailable. "
+    IDS_FORCEDCONFIG_WARN4      "If this happens, you can return to this Resources tab and check the Use Automatic Settings check box.\n\nDo you want to continue?"
+    */
+    IDS_FORCEDCONFIG_PARTIAL    "Before you can use this forced configuration, resources marked with '?' must be explicitly set"
+
+
+    IDS_EDITRES_DEVCONFLICT     "Warning: The setting you have chosen conflicts with the following device(s):"
+    IDS_DEVNAME_UNK             "Unknown Device"
+
+    IDS_CONFLICT_FMT            "%1!s! %2!s! used by:\r\n"
+    IDS_CONFLICT_UNAVAILABLE    "%1!s! %2!s! not available.\r\n"
+    IDS_CONFLICT_GENERALERROR   "Windows cannot determine if there are any resource conflicts for this device."
+    IDS_DEVRES_NOCONFLICTDEVS   "No conflicts."
+
+    IDS_LOGSEVINFORMATION       "Information"
+    IDS_LOGSEVWARNING           "Warning"
+    IDS_LOGSEVERROR             "Error"
+    IDS_LOGSEVFATALERROR        "Fatal Error"
+
+    IDS_GENERIC_DEVNAME         "model"
+    
+
+    IDS_CERTIFICATION_TITLE   "Microsoft Windows"
+    IDS_CERT_BAD_FILE         "The following file in the software package you want to install is not signed\n\n%s"
+    IDS_CERT_BAD_CATALOG      "The signature on the software package you want to install is invalid. The software package is not signed properly."
+    IDS_CERT_BAD_INF          "Windows did not find a Microsoft signature associated with the software package you want to install."
+    IDS_UNKNOWN_SOFTWARE      "Unknown software package"
+    IDS_UNKNOWN_DRIVER        "Unknown driver software package"
+
+    IDS_DRIVER_NOMATCH1       "Installing this device driver is not recommended because Windows cannot verify that it is compatible with your hardware.  "
+    IDS_DRIVER_NOMATCH2       "If the driver is not compatible, your hardware will not work correctly and your computer might become unstable or stop working completely.  "
+    IDS_DRIVER_NOMATCH3       "Do you want to continue installing this driver?"
+    
+    IDS_DRIVER_UPDATE_TITLE   "Update Driver Warning"
+    IDS_DRIVERCACHE_DESC      "Windows Driver Cabinet"
+    
+    IDS_NDW_NO_DRIVERS        "(Unable to find any drivers for this device)"
+    IDS_NDW_RETRIEVING_LIST   "(Retrieving a list of all devices)"
+    IDS_NDW_NODRIVERS_WARNING "Windows was unable to find any drivers for this device.\n\nIf you have a disk that contains the updated driver, or you wish to search in another location, click OK."
+
+    IDS_NDW_SELECTDEVICE      "Select a Device Driver"
+    IDS_NDW_SELECTDEVICE_INFO "Which driver do you want to install for this device?"               
+    
+    IDS_VERSION               " Version: %0d.%0d.%0d.%0d"
+}
+
+
+//
+// Version resources
+//
+#include <ntverp.h>
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Setup API"
+#define VER_INTERNALNAME_STR        "SETUPAPI.DLL"
+#define VER_ORIGINALFILENAME_STR    "SETUPAPI.DLL"
+#include <common.ver>
+
+
+//
+// Message resources
+//
+#include "msg.rc"
+
+//
+// Dialog resources
+//
+#include "prompt.dlg"

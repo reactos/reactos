@@ -1,0 +1,95 @@
+CUSTOM_RULES = /vobs/ie4/urlmon.template
+
+URLMON_INF_FILES = \
+                   $(O)/selfreg.inf
+
+DLLDEF_SRC = urlmon.def
+DLLDEF_EXPORTS = \
+        _____urlmon_initDLL
+
+SOURCES = \
+	dummy.cxx
+
+#	guids.c\
+#	urlmon_i.c\
+#	vrsscan_i.c
+
+#	strings_stubs.c\
+#	urlpars_stubs.c\
+#	reg_stubs.c
+
+
+INCLUDES += \
+          -I.\
+          -I${URLMON_DIR}/inc\
+	  -I../download\
+	  -I../zones \
+      -I${O}
+
+WDLL = urlmon
+DLL = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+DLLOBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+WRESOURCE = $(O)/urlmon.rc
+TRESOURCE = ${WDLL}.rxt
+
+DIP_CFLAGS += -DDLL_SPECIFIC_OPERATOR_NEW
+APP_CFLAGS += ${URLMON_CFLAGS} ${INCLUDES} ${DEFINES}
+
+#	-L${URLMON_DIR}/${MWOS}/${COMPILE_OPTION}/lib\
+#	-L/vobs/ie4/drop/${MWOS}/${COMPILE_OPTION}\
+
+ifeq (${MWOS},irix6)
+APP_DLLFLAGS += -all
+endif
+
+STATIC_LIBS = \
+	-lmon		\
+	-ltrans		\
+	-liapp		\
+	-lastg		\
+	-ldownload	\
+	-lurlhlink	\
+	-lurlproxy	\
+	-lurltrack	\
+	-lzones		\
+	-leapp		\
+	-lmon		\
+	-lgzip		\
+	-lutils
+
+APP_DLLFLAGS += \
+    -L${LIB.dir} \
+	${STATIC_LIBS} \
+	-lwininet\
+	-lshell32\
+	-lole32
+
+__cplusplus = true
+
+MESSAGES.file = $(O)/urlerrmsg.mc
+MESSAGES.hdir = $(O)
+MESSAGES.rdir = $(O)
+
+include ${MWHOME}/make.rules.simple
+
+$(O)/%.rc: %.rc $(O)/urlerrmsg.h ${URLMON_INF_FILES}
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.mc:unix/%.mc
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.inx:%.inx
+	${ECHONOISE} "[ $(notdir $<) --> $(O)/$(notdir $@) ]"
+	${COPY}
+
+$(O)/%.inf: $(O)/%.inx
+	cleaninf -w $< $@

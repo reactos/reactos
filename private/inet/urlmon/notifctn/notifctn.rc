@@ -1,0 +1,10 @@
+#include "Notfstr.h"
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_SCHEDULE_GROUP_DAILY     "Daily"
+    ID_SCHEDULE_GROUP_WEEKLY    "Weekly"
+    ID_SCHEDULE_GROUP_MONTHLY   "Monthly"
+	ID_SCHEDULE_GROUP_MANUAL    "Manual"
+    
+END

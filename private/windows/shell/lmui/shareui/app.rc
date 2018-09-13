@@ -1,0 +1,257 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifdef APSTUDIO_INVOKED
+#include "afxres.h"
+#else // APSTUDIO_INVOKED
+#include <windows.h>
+#include <commctrl.h>
+#define IDC_STATIC -1
+#endif // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#ifdef APSTUDIO_INVOKED\r\n"
+    "#include ""afxres.h""\r\n"
+    "#else // APSTUDIO_INVOKED\r\n"
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "#define IDC_STATIC -1\r\n"
+    "#endif // APSTUDIO_INVOKED\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""app.rc2""\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SHARE_PROPERTIES DIALOG DISCARDABLE  0, 0, 241, 170
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Sharing"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Share Name:",IDC_SHARE_SHARENAME_TEXT,14,12,46,8
+    EDITTEXT        IDC_SHARE_SHARENAME,64,10,108,12,ES_AUTOHSCROLL
+    LTEXT           "&Path:",IDC_SHARE_PATH_TEXT,14,30,46,8
+    EDITTEXT        IDC_SHARE_PATH,64,28,157,12,ES_AUTOHSCROLL
+    LTEXT           "&Comment:",IDC_SHARE_COMMENT_TEXT,14,47,46,8
+    EDITTEXT        IDC_SHARE_COMMENT,64,46,157,12,ES_AUTOHSCROLL
+    GROUPBOX        "User Limit:",IDC_SHARE_LIMIT,14,63,108,45,WS_GROUP
+    CONTROL         "&Maximum Allowed",IDC_SHARE_MAXIMUM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,20,76,87,10
+    CONTROL         "Allo&w",IDC_SHARE_ALLOW,"Button",
+                    BS_AUTORADIOBUTTON,20,90,32,10
+    EDITTEXT        IDC_SHARE_ALLOW_VALUE,52,90,43,12,ES_MULTILINE |
+                    WS_GROUP | NOT WS_TABSTOP
+    CONTROL         "",IDC_SHARE_ALLOW_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,86,90,11,12
+    LTEXT           "Users",IDC_SHARE_USERS_TEXT,98,92,20,8
+    PUSHBUTTON      "P&ermissions...",IDC_SHARE_PERMISSIONS,14,116,65,14
+END
+
+IDD_NEW_SHARE DIALOGEX 6, 18, 249, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "New Share"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Share Name:",IDC_SHARE_SHARENAME_TEXT,6,8,46,8
+    EDITTEXT        IDC_SHARE_SHARENAME,56,6,125,12,ES_AUTOHSCROLL
+    LTEXT           "&Path:",IDC_SHARE_PATH_TEXT,6,22,18,8
+    EDITTEXT        IDC_SHARE_PATH,56,20,125,12,ES_AUTOHSCROLL
+    LTEXT           "&Comment:",IDC_SHARE_COMMENT_TEXT,6,36,46,8
+    EDITTEXT        IDC_SHARE_COMMENT,56,34,125,12,ES_AUTOHSCROLL
+    GROUPBOX        "User Limit:",IDC_SHARE_LIMIT,6,50,108,42,WS_GROUP
+    CONTROL         "&Maximum Allowed",IDC_SHARE_MAXIMUM,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,12,63,87,10
+    CONTROL         "Allo&w",IDC_SHARE_ALLOW,"Button",
+                    BS_AUTORADIOBUTTON,12,76,32,10
+    EDITTEXT        IDC_SHARE_ALLOW_VALUE,44,74,43,12,ES_MULTILINE |
+                    WS_GROUP | NOT WS_TABSTOP
+    CONTROL         "",IDC_SHARE_ALLOW_SPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,78,74,11,12
+    LTEXT           "Users",IDC_SHARE_USERS_TEXT,90,76,20,8
+    DEFPUSHBUTTON   "OK",IDOK,189,6,54,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,189,23,54,14
+    PUSHBUTTON      "P&ermissions...",IDC_SHARE_PERMISSIONS,189,40,54,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_SHARE_PROPERTIES, DIALOG
+    BEGIN
+        RIGHTMARGIN, 240
+        BOTTOMMARGIN, 165
+    END
+
+    IDD_NEW_SHARE, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 83
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SHARESFLD           ICON    DISCARDABLE     "SHRFLD.ICO"
+IDI_SHARE               ICON    DISCARDABLE     "SHARE.ICO"
+IDI_IPC                 ICON    DISCARDABLE     "IPC.ICO"
+#ifdef WIZARDS
+IDI_NEWSHARE            ICON    DISCARDABLE     "NEWSHR.ICO"
+IDI_NWSHARE             ICON    DISCARDABLE     "NWSHARE.ICO"
+IDI_MACSHARE            ICON    DISCARDABLE     "MACSHARE.ICO"
+IDI_ALLSHARE            ICON    DISCARDABLE     "ALLSHARE.ICO"
+#endif // WIZARDS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu.
+//
+
+POPUP_SHARE MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Delete",             SHARED_FILE_DELETE
+        MENUITEM "Rena&me",             SHARED_FILE_RENAME
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "P&roperties",         SHARED_FILE_PROPERTIES
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APP_MSG_NOT_FOUND   "Could not find message 0x%08lx in the application message file."
+    IDS_NET_MSG_NOT_FOUND   "Could not find message 0x%08lx in the network message file."
+    IDS_NO_NET_MSG          "Could not find network error messages."
+    IDS_MSGTITLE            "Sharing"
+    IDS_SHARE_PROPTITLE     "Share Properties"
+    IDS_SHARE_MENUHELP      "Displays the properties for sharing the selected folder"
+    IDS_ACLEDIT_PERM_GEN_NO_ACCESS "No Access"
+    IDS_ACLEDIT_PERM_GEN_READ "Read"
+    IDS_ACLEDIT_PERM_GEN_MODIFY "Change"
+    IDS_ACLEDIT_PERM_GEN_ALL  "Full Control"
+    IDS_ACLEDIT_TITLE       "Access Through &Share"
+    IDS_HELPFILENAME        "shareui.hlp"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NAME                "Name"
+    IDS_COMMENT             "Comment"
+    IDS_PATH                "Path"
+    IDS_MAXUSES             "Maximum Uses"
+    IDS_UNLIMITED           "Unlimited"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MH_SORTBYNAME       "Sorts items alphabetically by name."
+    IDS_MH_SORTBYCOMMENT    "Sorts items alphabetically by comment."
+    IDS_MH_SORTBYMAXUSES    "Sorts items by max uses."
+    IDS_MH_SORTBYPATH       "Sorts items alphabetically by path."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MH_MENU_NEW         "Contains commands for creating new items."
+    IDS_MH_NEWSHARE         "Creates a new share."
+
+    IDS_MH_DELETE           "Deletes the selected items."
+    IDS_MH_PROPERTIES       "Displays the properties of the selected items."
+#ifdef WIZARDS
+    IDS_MH_OPENSPECIAL      "Open"
+#endif // WIZARDS
+    IDS_MH_FILE_LINK        "Creates shortcuts to the selected items."
+    IDS_MH_FILE_RENAME      "Renames the selected item."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+#ifdef WIZARDS
+    IDS_SHARE_NEW           "Add Share"
+    IDS_SHARE_NW            "View NetWare Shares"
+    IDS_SHARE_MAC           "View Macintosh Shares"
+    IDS_SHARE_ALL           "View All Shares"
+#endif // WIZARDS
+    IDS_SUREUNINST          "Are you sure you want to remove the Shared Directories folder from your computer?"
+    IDS_SHAREPERM_READ      "Read"
+    IDS_SHAREPERM_MODIFY    "Change"
+    IDS_SHAREPERM_ALL       "Full Control"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "app.rc2"
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

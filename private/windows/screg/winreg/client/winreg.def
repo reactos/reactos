@@ -1,0 +1,134 @@
+LIBRARY WINREG
+
+EXPORTS
+
+;
+; Init.c
+;
+
+    RegInitialize
+
+;
+; Regcnreg.c
+;
+
+    RegConnectRegistryA
+    RegConnectRegistryW
+
+;
+; Regdkey.c
+;
+
+    RegDeleteKeyA
+    RegDeleteKeyW
+
+;
+; Regdval.c
+;
+
+    RegDeleteValueA
+    RegDeleteValueW
+
+;
+; Regekey.c
+;
+
+    RegEnumKeyA
+    RegEnumKeyW
+    RegEnumKeyExA
+    RegEnumKeyExW
+
+;
+; Regeval.c
+;
+
+    RegEnumValueA
+    RegEnumValueW
+
+;
+; Regkey.c
+;
+
+    RegCloseKey
+
+    RegCreateKeyA
+    RegCreateKeyW
+    RegCreateKeyExA
+    RegCreateKeyExW
+
+    RegFlushKey
+
+    RegOpenKeyA
+    RegOpenKeyW
+    RegOpenKeyExA
+    RegOpenKeyExW
+
+    RegDisablePredefinedCache
+
+;
+; Reglukey.c
+;
+    RegLoadKeyA
+    RegLoadKeyW
+    RegUnLoadKeyA
+    RegUnLoadKeyW
+    RegReplaceKeyA
+    RegReplaceKeyW
+
+
+;
+; Regnckey.c
+;
+
+    RegNotifyChangeKeyValue
+
+;
+; Regqkey.c
+;
+
+    RegQueryInfoKeyA
+    RegQueryInfoKeyW
+
+;
+; Regqval.c
+;
+
+    RegQueryValueA
+    RegQueryValueW
+    RegQueryValueExA
+    RegQueryValueExW
+
+;
+; Regsckey.c
+;
+
+    RegGetKeySecurity
+    RegSetKeySecurity
+
+;
+; Regsrkey.c
+;
+
+    RegSaveKeyA
+    RegSaveKeyW
+    RegRestoreKeyA
+    RegRestoreKeyW
+
+;
+; Regsval.c
+;
+
+    RegSetValueA
+    RegSetValueW
+    RegSetValueExA
+    RegSetValueExW
+
+
+;
+; Shutdown.c
+;
+
+    InitiateSystemShutdownA
+    InitiateSystemShutdownW
+    AbortSystemShutdownA
+    AbortSystemShutdownW

@@ -1,0 +1,93 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+UMTYPE=console
+
+For UNICODE enabling use the following
+
+C_DEFINES=-DWIN32 -DW3 -DUNICODE -D_UNICODE -DRELATIVESTEMS
+           $(BASEDIR)\public\sdk\lib\*\libc.lib
+       $(BASEDIR)\public\sdk\lib\*\libc.lib     \
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+NTDEBUG=ntsd
+
+USE_CRTDLL=1
+
+DLLBASE=0x02000000
+DLLENTRY=DllMain
+TARGETNAME=t1instal
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\version.lib
+
+INCLUDES=
+
+
+
+C_DEFINES=-DWIN32 -DW3 -DRELATIVESTEMS
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+NTTARGETFILE0=t1msg.h msg00001.bin t1msg.rc
+
+SOURCES=atmpfm.c    \
+        builder.c   \
+        charstr.c   \
+        encoding.c  \
+        errors.c    \
+        freader.c   \
+        fwriter.c   \
+        hints.c     \
+        makepfm.c   \
+        mreader.c   \
+        pfb.c       \
+        pfm.c       \
+        t1instal.c  \
+        t1parser.c  \
+        titott.c    \
+        trans.c     \
+        trig.c      \
+        ttprog.c    \
+        winio.c     \
+        t1instal.rc
+
+
+UMTYPE=console
+UMTEST=testt1
+UMBASE=0x1000000
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\version.lib  \
+       obj\*\t1instal.lib

@@ -1,0 +1,38 @@
+MAJORCOMP=windows
+MINORCOMP=base
+
+TARGETNAME=ratpak
+
+TARGETPATH=obj
+
+TARGETTYPE=LIBRARY
+
+TARGETLIBS=
+
+LINKLIBS=
+
+INCLUDES=..
+
+ALT_PROJECT_TARGET=NT
+C_DEFINES=-DWIN32 -DW3 -DWINNT -DUNICODE -D_UNICODE -D_NTSDK
+
+SOURCES=..\rat.c   \
+        ..\num.c       \
+        ..\conv.c \
+        ..\debug.c \
+        ..\itrans.c   \
+        ..\trans.c    \
+        ..\transh.c  \
+        ..\itransh.c    \
+        ..\support.c    \
+        ..\logic.c  \
+        ..\fact.c  \
+        ..\basex.c  \
+        ..\exp.c  
+
+UMTYPE=console
+UMTEST=
+UMLIBS=
+USE_CRTDLL=1
+USE_NATIVE_EH=1
+USECXX_FLAG=/Tp

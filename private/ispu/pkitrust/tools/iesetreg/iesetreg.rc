@@ -1,0 +1,32 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       iesetreg.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "ECM IE SetReg"
+
+#define VER_INTERNALNAME_STR        "IESETREG.EXE"
+#define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+IDS_TRUE					"TRUE"
+IDS_FALSE					"FALSE"
+//IDS_KEY_STATE				"State"
+
+END
+
+#include <common.ver>

@@ -1,0 +1,309 @@
+
+#include <windows.h>
+#include "progman.h"
+#include "taskman.h"
+
+/* HACK!!!! The DOS application icon must be the second icon in the resource
+ * table in order for the default DOS app icon to be selected correctly in
+ * the icon chooser/new item thingy.
+ */
+
+PROGMANICON     ICON    PRELOAD progman.ico
+DOSAPPICON      ICON            winoldap.ico
+WORDICON        ICON    PRELOAD MOVEABLE pmword.ico     // not discardable!
+SHEETICON       ICON            pmsheet.ico
+DATAICON        ICON            pmdata.ico
+COMMICON        ICON            pmcomm.ico
+ITEMICON        ICON    PRELOAD pmitem.ico
+PERSGROUPICON   ICON    PRELOAD personal.ico
+COMMGROUPICON   ICON            common.ico
+WINDOWSICON     ICON            windows.ico
+MSDOSICON       ICON            msdos.ico
+
+/* the following icons are in the icon library contained in progman.  Their
+   id's will start with WINDOWSICON+10 to allow for addition of more 'real'
+   icons before the library starts... */
+
+110  ICON            icons\objects\arttools.ico
+111  ICON            icons\objects\barchart.ico
+112  ICON            icons\objects\camera.ico
+113  ICON            icons\objects\cd.ico
+114  ICON            icons\objects\charts.ico
+115  ICON            icons\objects\clapbrd.ico
+116  ICON            icons\objects\draft.ico
+117  ICON            icons\objects\fancydoc.ico
+118  ICON            icons\objects\filmstrp.ico
+119  ICON            icons\objects\graph.ico
+120  ICON            icons\objects\hndshake.ico
+121  ICON            icons\objects\knife.ico
+122  ICON            icons\objects\letters.ico
+123  ICON            icons\objects\mona.ico
+124  ICON            icons\objects\news.ico
+125  ICON            icons\objects\phone.ico
+126  ICON            icons\objects\plaindoc.ico
+127  ICON            icons\objects\spredsht.ico
+128  ICON            icons\objects\sticky.ico
+129  ICON            icons\objects\tape.ico
+130  ICON            icons\objects\typewrit.ico
+131  ICON            icons\contain\brfcase.ico
+132  ICON            icons\contain\door.ico
+133  ICON            icons\contain\lenvel.ico
+134  ICON            icons\contain\mailbox.ico
+135  ICON            icons\contain\safe.ico
+136  ICON            icons\hyper\help.ico
+137  ICON            icons\hyper\alert.ico
+138  ICON            icons\hyper\exit.ico
+139  ICON            icons\hyper\handl.ico
+140  ICON            icons\hyper\handr.ico
+141  ICON            icons\hyper\handstop.ico
+142  ICON            icons\hyper\darrow.ico
+143  ICON            icons\hyper\larrow.ico
+144  ICON            icons\hyper\rarrow.ico
+145  ICON            icons\hyper\uarrow.ico
+
+//
+// put these 2 icons at the end to not change the order of the icons in
+// progman, so items using progman's icons keeep the expected icon selection.
+//
+GROUPICON       ICON            pmgroup.ico
+147             ICON            console.ico
+
+PMACCELS    ACCELERATORS    PRELOAD
+BEGIN
+    VK_RETURN,  IDM_OPEN,       VIRTKEY, NOINVERT
+    VK_RETURN,  IDM_OPEN,       VIRTKEY, SHIFT
+    /* REVIEW Additions by IanEl. */
+    VK_RETURN,  IDM_PROPS,      VIRTKEY, ALT
+    VK_DELETE,  IDM_DELETE,     VIRTKEY
+    VK_F5,      IDM_CASCADE,    VIRTKEY, SHIFT
+    VK_F4,      IDM_TILE,       VIRTKEY, SHIFT
+    VK_F1,      IDM_HELPINDEX,  VIRTKEY
+    VK_F7,      IDM_MOVE,       VIRTKEY
+    VK_F8,      IDM_COPY,       VIRTKEY
+END
+
+PROGMANMENU MENU            PRELOAD
+BEGIN
+    POPUP           "&File"
+    BEGIN
+        MENUITEM    "&New...",                  IDM_NEW
+        MENUITEM    "&Open\tEnter",             IDM_OPEN
+        MENUITEM    "&Move...\tF7",             IDM_MOVE
+        MENUITEM    "&Copy...\tF8",             IDM_COPY
+        MENUITEM    "&Delete\tDel",             IDM_DELETE
+        MENUITEM    "&Properties...\tAlt+Enter",                IDM_PROPS
+        MENUITEM    SEPARATOR
+        MENUITEM    "&Run...",                  IDM_RUN
+        MENUITEM    SEPARATOR
+#ifdef DOSWIN32
+        MENUITEM    "E&xit Windows...",         IDM_EXIT
+#else
+        MENUITEM    "&Logoff...",               IDM_EXIT
+        MENUITEM    "&Shutdown...",             IDM_SHUTDOWN
+#endif
+    END
+    POPUP           "&Options"
+    BEGIN
+        MENUITEM    "&Auto Arrange",            IDM_AUTOARRANGE
+        MENUITEM    "&Minimize on Use",         IDM_MINONRUN
+        MENUITEM    "&Save Settings on Exit",   IDM_SAVESETTINGS
+        MENUITEM    SEPARATOR
+        MENUITEM    "Save Settings &Now",       IDM_SAVENOW
+#if 0
+        MENUITEM    SEPARATOR
+        MENUITEM    "&Shortcut Key...",         IDM_HOTKEY
+#endif
+    END
+    POPUP           "&Window"
+    BEGIN
+        MENUITEM    "&Cascade\tShift+F5",       IDM_CASCADE
+        MENUITEM    "&Tile\tShift+F4",          IDM_TILE
+        MENUITEM    "&Arrange Icons",           IDM_ARRANGEICONS
+    END
+    POPUP           "&Help"
+    BEGIN
+        MENUITEM    "&Contents",                IDM_HELPINDEX
+        MENUITEM    "&Search for Help on..."    IDM_HELPSEARCH
+        MENUITEM    "&How to Use Help",         IDM_HELPHELP
+#if 0
+        MENUITEM    "&Index",                   IDM_HELPINDEX
+        MENUITEM    "&Keyboard",                IDM_HELPKEYS
+        MENUITEM    "&Basic Skills",            IDM_HELPBASIC
+        MENUITEM    "&Commands",                IDM_HELPCOMMANDS
+        MENUITEM    "&Procedures",              IDM_HELPPROCS
+        MENUITEM    "&Glossary",                IDM_HELPGLOSSARY
+        MENUITEM    "&Using Help",              IDM_HELPHELP
+#endif
+        MENUITEM    SEPARATOR
+        MENUITEM    "&About Program Manager...",IDM_ABOUT
+    END
+END
+
+
+/*                          0....5....1....56...2....5....3.2..5....4....5....5....6...45....7....5....8....5....9....5....0....5....1....5....2....5..8 */
+
+STRINGTABLE PRELOAD
+BEGIN                                              /* Maximum # of chars: */
+    IDS_APPTITLE,           "Program Manager"               /* 32 */
+    IDS_PMCLASS,            "Progman"       /* 16 */
+    IDS_GROUPCLASS,         "PMGroup"       /* 16 */
+    IDS_ITEMCLASS,          "PMItem"        /* 16 */
+    IDS_SETTINGS,           "Settings"                      /* 32 */
+    IDS_STARTUP,            "Start Up"      /* Default name of startup group */
+
+    IDS_CONFIRMDELTITLE,    "Delete"                        /* 32 */
+    IDS_CONFIRMDELITEMMSG,  "Are you sure you want to delete item '%s'?"                                                                               /* 128 */
+    IDS_CONFIRMDELGROUPMSG, "Are you sure you want to delete group '%s'?"                                                                              /* 128 */
+
+    IDS_NOICONSTITLE,       "Change Icon"                   /* 32 */
+    IDS_NOICONSMSG1,        "There are no icons available for the file specified. \n\nYou can choose an icon from those available for Program Manager."                                                                                /* 128 */
+    IDS_NOICONSMSG,         "Cannot find any icons in this file"                                                                                       /* 128 */
+
+    IDS_BADPATHTITLE,       "Invalid Path"                  /* 32 */
+    IDS_BADPATHMSG,         "The path %s is invalid."                                                                                          /* 128 */
+    IDS_BADPATHMSG2,        "There is no association for %s."    /* 128 */
+    IDS_BADPATHMSG3,        "The working directory is invalid."    /* 128 */
+
+    IDS_NETPATHTITLE,       "Network Path Specified"        /* 32 */
+    IDS_REMOVEPATHTITLE,    "Removable Path Specified"      /* 32 */
+    IDS_PATHWARNING,        "The specified path points to a file that may not be available during later Windows sessions.  Do you want to continue?"   /* 128 */
+
+    IDS_EXECERRTITLE,       "Application Execution Error"   /* 32 */
+
+    IDS_UNKNOWNMSG,         "Unexpected DOS error: %d."                                                                                             /* 125!*/
+    IDS_NOMEMORYMSG,        "Insufficient memory to run this application; close one or more Windows applications and try again."                       /* 128 */
+    IDS_INSUFFICIENTQUOTA,  "Not enough quota is available to process this command."
+    IDS_FILENOTFOUNDMSG,    "Cannot find file %s (or one of its components); check to ensure the path and filename are correct and that all required libraries are available." /* 128 */
+    IDS_MANYOPENFILESMSG,   "Too many other files are currently in use."                                                                               /* 128 */
+    IDS_NOASSOCMSG,         "No association exists for the specified file."                                                                            /* 128 */
+    IDS_ASSOCINCOMPLETE,    "Cannot open file. Start the application used to create this file, and open it from there."
+    IDS_MULTIPLEDSMSG,      "Cannot start more than one copy of the specified program."                                                                /* 128 */
+    IDS_OS2APPMSG           "The specified application is not a Windows or DOS program."                                                               /* 128 */
+    IDS_NEWWINDOWSMSG,      "This application requires a newer version of Microsoft Windows."                                                          /* 128 */
+    IDS_PMODEONLYMSG,       "This application requires Standard or Enhanced Mode Windows."                                                             /* 128 */
+    IDS_ACCESSDENIED,       "Access to the specified device, path or file is denied."                                                                  /* 128 */
+    IDS_DDEFAIL,            "An error occurred sending the command to the application."                                                                /* 128 */
+    IDS_COMPRESSEDEXE       "This program or one of its components is compressed.\n\nPlease uncompress it and try again."
+    IDS_INVALIDDLL          "One of the library files needed to run this application is damaged. Please reinstall this application."
+    IDS_SHAREERROR          "This file is in use by some other application."
+
+    IDS_COPYDLGTITLE,       "Copy Program Item"             /* 32 */
+    IDS_COPYDLGTITLE1,      "Copy Program Item:"            /* 32 */
+
+    IDS_GROUPS,             "Groups"                        /* 32 */
+
+    // This is used when restrictions will stop progman from patching the
+    // ini file.
+    IDS_NOGRPFILE,          "Cannot open program group '%s'"                                                                                   /* 128 */
+    // This one is used when there are no restrictions. We give the user the
+    // option of patching the ini file.
+    IDS_NOGRPFILE2,         "Cannot open program group '%s'. Do you want the Program Manager to still try to load it in the future ?"                  /* 128 */
+    IDS_LOWMEM,             "Insufficient memory to perform this operation; close one or more Windows applications and try again."                     /* 128 */
+    IDS_BADFILE,            "Program group '%s' is invalid or damaged; recreate the group."                                                    /* 128 */
+    IDS_CANTWRITEGRP,       "Cannot save program group '%s' because of insufficient memory."                                                                                       /* 128 */
+    IDS_CANTWRITEGRPS,      "Cannot save program groups because conversion to original format failed."
+//    IDS_CANTWRITEGRPDISK,   "Cannot save program group '%s'; you may need to delete some files to free disk space"                                     /* 128 */
+    IDS_GRPISRO,            "Program group '%s' is write-protected.  Its contents will not be updated."                                        /* 128 */
+
+    IDS_GROUPFILEERR,       "Group Error"                   /* 32 */
+    IDS_EXTRACTERROR,       "Icon Extraction Error"         /* 32 */
+    IDS_EEGROUPRO,          "Program group '%s' is write-protected.  Its icons cannot be updated for the new display device."                  /* 128 */
+    IDS_GROUPRO,            "Program group '%s' is write-protected.  The program group cannot be modified."                                    /* 128 */
+
+    IDS_OOMEXITTITLE,       "Extremely Low on Memory"       /* 32 */
+    IDS_OOMEXITMSG,         "Close an application and try again."                      /* 64 */
+
+    IDS_DUPHOTKEYTTL,       "Duplicate Shortcut Key"        /* 32 */
+    IDS_DUPHOTKEYMSG,       "%s is using the same shortcut key: Press OK to accept this or Cancel to select a new key." /* MAXMESSAGE */
+
+    IDS_CANTRENAMETITLE,    "Group Properties Error"        /* 32 */
+    IDS_CANTRENAMEMSG,      "Cannot rename the program group information."        /* 64 */
+
+    IDS_TOOMANYITEMS        "This program group already contains the maximum number of items."
+    IDS_ALREADYLOADED       "This program group is already loaded."
+
+    IDS_PLUS                " + "       /* hot key separator */
+
+    IDS_GRPHASCHANGED       "The program group has been modified by another program or user and will be reloaded; try the operation again."
+
+    IDS_NONE                "None"      /* no hotkey */
+
+    IDS_EXIT                "E&xit"     /* if not shell replaces exit windows */
+
+    IDS_LOGOFF              "&Logoff..."
+
+    IDS_SHUTDOWN            "S&hutdown..."
+
+    IDS_PROPERTIESPROGS     "Programs#*.exe;*.pif;*.com;*.bat;*.cmd#All Files (*.*)#*.*#"
+
+    IDS_CHNGICONPROGS       "Icon Files#*.ico;*.exe;*.dll#Programs (*.exe)#*.exe#Libraries (*.dll)#*.dll#Icons (*.ico)#*.ico#All Files (*.*)#*.*#"
+
+    IDS_BROWSE              "Browse"
+
+    IDS_TOOMANYGROUPS       "You have created the maximum number of personal groups possible in Program Manager.\nTo create a new group you must first delete a personal group to make room."
+    IDS_TOOMANYCOMMONGROUPS "You have created the maximum number of common groups possible in Program Manager.\nTo create a new group you must first delete a common group to make room."
+
+    IDS_LOWMEMONINIT        "Extremely Low on Memory, unable to load group %s."
+
+    IDS_PIFINIFILE          "PIF.INF"   /*16*/
+    IDS_PIFSECTION          "pif"       /*32*/
+    IDS_EXECSETUP           "setup /@ "     /*MAXITEMPATHLEN+1*/
+
+    // These messages are inserted into some of the exec error messages above.
+    // For the first two we do a ' + filename + IDS_... and insert it as %s
+    // into IDS_FILENOTFOUND  (for example). The last one is just a simple
+    // insert and no mention is made of the file name. The list of messages
+    // that these things can be inserted into is in pmcomman.c/ExecProgram.
+    // To check these messages are OK you'll need something invalid on the
+    // command line, in the load= line in win.ini or in the startup group.
+    IDS_WININIERR           "' specified in win.ini"
+    IDS_STARTUPERR          "' specified in the startup group"
+    IDS_CMDLINEERR          "' specified on the command line"
+
+    IDS_WINHELPERR          "Unable to show help information."
+    IDS_ITEMINGROUP         "Item '%s' in group '%s' " /*64*/
+    /* Take care with this message, it is almost the maximum length */
+    IDS_LOWMEMONEXTRACT     "There is not enough memory to convert all the program icons.\nThe icons which are not converted will appear black.You can\nfix this by choosing FILE.PROPERTIES from the program manager\n(with the defective item highlighted)
+
+nd pressing OK."
+    IDS_DEFICONSFILE        "progman.exe"
+    IDS_COMMDLGLOADERR      "Unable to load a library required for this operation."
+    IDS_REGISTRYERROR       "An error has occurred in the registry.\nThe Program Manager's settings and groups cannot be accessed."
+    IDS_ERRORDELETEGROUP    "Could not delete the group %s."
+
+    IDS_COMMONGRPSUFFIX     " (Common)"
+    IDS_COMMONGROUPPROP     "Common Program Group Properties"
+    IDS_COMMONGROUPERR,     "Common Group Error"            /* 32 */
+    IDS_NOCOMMONGRPS,       "The Common Program Groups cannot be accessed. Do you want to create a Personal Program Group?"
+
+    IDS_DEFAULTSTARTUP          "startup"
+
+    IDS_NO_PERMISSION_SHUTDOWN  "You do not have permission to shutdown this computer."
+    IDS_SHUTDOWN_MESSAGE        "Shutdown Computer"
+
+    IDS_MSGBOXSTR1, "The application has chosen not to close.  It may be completing a lengthy task.  "
+    IDS_MSGBOXSTR2, "Forcing the application to close may lose data.  Do you wish to force the application to close?"
+
+    IDS_ANSIGROUPSMENU "&Update Program Groups"
+
+//#ifdef JAPAN
+//for Bad port name
+//    IDS_BADPORTPATHTITLE,   "無効なファイル名です。"              /* 32 */
+//    IDS_BADPORTPATHMSG,     "%s\n\rこのファイル名はデバイス名として予約されています。\nほかのファイル名を指定してください。"
+
+//#endif
+
+
+END
+
+#include "progman.dlg"
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Program Manager"
+#define VER_INTERNALNAME_STR        "progman\0"
+#define VER_ORIGINALFILENAME_STR    "PROGMAN.EXE"
+
+#include "common.ver"

@@ -1,0 +1,1429 @@
+
+NLSTRANS - NLS Translation Utility
+
+
+
+Starting the Translation Utility
+--------------------------------
+
+nlstrans [-v] <inputfile>
+
+    -v turns on the verbose mode.  This switch is optional.
+
+    <inputfile> is the name of the input file containing variations
+                of the commands listed below.
+
+
+
+
+Command Legend
+--------------
+
+<cpnum>       - The code page number (in decimal).
+<langstr>     - The language string identifying the language.
+<lcid>        - The locale id identifying the locale information.
+<num entries> - The number of entries to follow (in decimal).
+<mbchar>      - The multibyte character (in hexadecimal).
+<wchar>       - The wide character (in hexadecimal).
+<lowrange>    - The low end of the DBCS range (in hexidecimal).
+<highrange>   - The high end of the DBCS range (in hexidecimal).
+<maxcharlen>  - The maximum length, in bytes, of a character (in decimal).
+<defaultchar> - The default character (in hexadecimal).
+<dc_unitrans> - The unicode translation of the default character (in hex).
+<ctype1>      - The character type 1 information (in hexidecimal).
+<ctype2>      - The character type 2 information (in hexidecimal).
+<ctype3>      - The character type 3 information (in hexidecimal).
+<upper>       - The upper case wide character (in hexadecimal).
+<lower>       - The lower case wide character (in hexadecimal).
+<digit>       - The digit to translate to ascii (in hexadecimal).
+<ascii>       - The ascii translation (in hexadecimal).
+<czone>       - The compatibility zone character to translate (in hex).
+<katakana>    - The katakana character to translate (in hex).
+<hiragana>    - The hiragana character to translate (in hex).
+<half width>  - The half width character to translate (in hex).
+<full width>  - The full width character to translate (in hex).
+<precomp>     - The precomposed character (in hexidecimal).
+<base>        - The base character for the given precomposed form (in hex).
+<nonspace>    - The nonspace character for the given precomposed form (in hex).
+<code pt>     - The Unicode code point (in hexidecimal).
+<SM>          - The script member (in hex).
+<AW>          - The alphanumeric weight (in hex).
+<DW>          - The diacritic weight (in hex).
+<CW>          - The case weight (in hex).
+<COMP>        - The compression value - 0, 1, 2, or 3 (in hex).
+
+
+
+
+Commands
+--------
+
+(1) Code Page Specific Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    CODEPAGE <cpnum>
+
+      - Starts the code page specific section.
+
+      - Use the ENDCODEPAGE keyword to end the code page specific section.
+
+      - Only the following keywords may be used between this keyword and
+        the ENDCODEPAGE keyword:
+
+          - CPINFO
+          - MBTABLE
+          - GLYPHTABLE
+          - DBCSRANGE
+          - WCTABLE
+
+
+    ENDCODEPAGE
+
+      - Ends the code page specific section.
+
+      - Only used following the CODEPAGE keyword.
+
+
+    CPINFO <maxcharlen> <defaultchar> <dc_unitrans>
+
+      - The code page information.
+
+      - This table MUST appear FIRST in the data file.
+
+
+    MBTABLE <num entries>
+
+      - The multibyte translation table.
+
+      - The table to follow should be in the format:
+
+          <mbchar> <wchar>
+
+      - The maximum <num entries> should be 256.
+
+
+    GLYPHTABLE <num entries>
+
+      - The glyph character multibyte translation table.
+
+      - The table to follow should be in the format:
+
+          <mbchar> <wchar>
+
+      - The maximum <num entries> should be 256.
+
+      - This table MUST appear AFTER the MBTABLE in the data file.
+
+
+    DBCSRANGE <num entries>
+
+      - The DBCS ranges.
+
+      - The table to follow should be in the format:
+
+          <lowrange> <highrange>
+
+
+        DBCSTABLE <num entries>
+
+          - The DBCS translation table.
+
+          - The table to follow should be in the format:
+
+              <mbchar> <wchar>
+
+          - The maximum <num entries> should be 256.
+
+      - The DBCS tables MUST immediately follow their ranges and must
+        include the DBCSTABLE keyword.  The tables MUST also be in the
+        order in which they appear in the range (lowest first, highest last).
+
+
+    WCTABLE <num entries>
+
+      - The wide character translation table.
+
+      - The table to follow should be in the format:
+
+          <wchar> <mbchar>
+
+
+
+(2) Language Specific Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    LANGUAGE <langstr>
+
+      - Starts the language specific section.
+
+      - Use the ENDLANGUAGE keyword to end the language specific section.
+
+      - Only the following keywords may be used between this keyword and
+        the ENDLANGUAGE keyword:
+
+          - UPPERCASE
+          - LOWERCASE
+
+
+    ENDLANGUAGE
+
+      - Ends the language specific section.
+
+      - Only used following the LANGUAGE keyword.
+
+
+    UPPERCASE <num entries>
+
+      - The upper case translation table.
+
+      - The table to follow should be in the format:
+
+          <lower> <upper>
+
+
+    LOWERCASE <num entries>
+
+      - The lower case translation table.
+
+      - The table to follow should be in the format:
+
+          <upper> <lower>
+
+
+    EXCEPTION <num entries>
+
+      - The exception table for linguistic casing.
+
+      - This table contains all exceptions to the default table on
+        a per locale id basis in order to get proper linguistic
+        casing.
+
+      - The 0x00000000 locale id is used to make changes to the default
+        table for *all* locales.  These exceptions will become part of the
+        default linguistic casing table.
+
+      - All entries in the exception table must exist in some form
+        in the default table.  If there is no translation desired in
+        the default table, then enter the code point as upper/lower
+        casing to itself.
+
+      - The table to follow should be in the format (for each lcid):
+
+          LCID <lcid> <num upcase entries> <num locase entries>
+
+            UPPERCASE
+
+              <lower> <upper>
+
+            LOWERCASE
+
+              <upper> <lower>
+
+
+
+(3) Locale Specific Translation Tables
+
+    - NO COMMENTS will be accepted at anytime between the LOCALE and
+      ENDLOCALE keywords and the CALENDAR and ENDCALENDAR keywords.
+      A semicolon on a line will be used as part of the locale or
+      calendar information, as well as any characters after the
+      semicolon on the same line.
+
+
+    LOCALE <num entries>
+
+      - Starts the locale specific section.
+
+      - Use the ENDLOCALE keyword to end the entire locale specific section.
+
+      - Each set of locale information to follow should be in the format:
+
+
+        BEGINLOCALE <lcid>
+
+          - The locale information.  The order of the information is
+            given below.
+
+          - The table to follow should be in the format:
+
+              <keyword> <info>
+
+            or in some cases:
+
+              <keyword> <num> <info>
+                              <info>
+                              ...
+
+            where
+
+            <keyword> is the keyword for the given information.
+                      This string is ignored.
+
+            <num>     is the number of entries for the keyword.  This means
+                      there will be 'num' number of entries, where each
+                      entry MUST BE on a separate line.  The keywords that
+                      require the 'num' field are noted in the list of items
+                      below.
+
+            <info>    is the information to store in the data file.  All
+                      information will be stored as a Unicode string.
+
+                      The escape sequence "\x" may be used to designate hex
+                      values above 0x00ff, but ALL 4 digits of the Unicode
+                      character MUST exist for this to work properly.
+
+                      If the backslash character is to appear in the given
+                      string (it's not part of an escape sequence), then
+                      two backslashes must be used in succession.
+
+                      White space (space and tab) is stripped from both the
+                      front and the back of the string unless specifically
+                      noted with the escape sequence.  All other white space
+                      is preserved.
+
+                      To include TWO separate null-terminated strings for
+                      one LCTYPE, the strings must be separated by \xffff.
+                      This will be changed to 0x0000 in the binary file.
+                      Currently, the second string will only be used by
+                      the SMONTHNAME LCType information in the
+                      GetDateFormatW api (Russian month names have different
+                      grammar).
+
+        This section must have the following information (IN THE GIVEN
+        ORDER) following the BEGINLOCALE keyword.
+
+
+           ILANGUAGE
+           SENGLANGUAGE
+           SABBREVLANGNAME
+           SISO639LANGNAME
+           SNATIVELANGNAME
+
+           ICOUNTRY
+           SENGCOUNTRY
+           SABBREVCTRYNAME
+           SISO3166CTRYNAME
+           SNATIVECTRYNAME
+
+           IDEFAULTLANGUAGE
+           IDEFAULTCOUNTRY
+           IDEFAULTANSICODEPAGE
+           IDEFAULTOEMCODEPAGE
+
+           SLIST
+           IMEASURE
+
+           SDECIMAL
+           STHOUSAND
+           SGROUPING
+           IDIGITS
+           ILZERO
+           INEGNUMBER
+           SNATIVEDIGITS
+           IDIGITSUBSTITUTION
+
+           SCURRENCY
+           SINTLSYMBOL
+           SMONDECIMALSEP
+           SMONTHOUSANDSEP
+           SMONGROUPING
+           ICURRDIGITS
+           IINTLCURRDIGITS
+           ICURRENCY
+           INEGCURR
+           SPOSITIVESIGN
+           SNEGATIVESIGN
+
+           STIMEFORMAT         <num>
+           STIME
+           ITIME
+           ITLZERO
+           ITIMEMARKPOSN
+           S1159
+           S2359
+
+           SSHORTDATE          <num>
+           SDATE
+           IDATE
+           ICENTURY
+           IDAYLZERO
+           IMONLZERO
+
+           SLONGDATE           <num>
+           ILDATE
+
+           ICALENDARTYPE
+           IOPTIONALCALENDAR   <num>  (use \xffff for localized calendar name)
+
+           IFIRSTDAYOFWEEK
+           IFIRSTWEEKOFYEAR
+
+           SDAYNAME1
+           SDAYNAME2
+           SDAYNAME3
+           SDAYNAME4
+           SDAYNAME5
+           SDAYNAME6
+           SDAYNAME7
+
+           SABBREVDAYNAME1
+           SABBREVDAYNAME2
+           SABBREVDAYNAME3
+           SABBREVDAYNAME4
+           SABBREVDAYNAME5
+           SABBREVDAYNAME6
+           SABBREVDAYNAME7
+
+           SMONTHNAME1
+           SMONTHNAME2
+           SMONTHNAME3
+           SMONTHNAME4
+           SMONTHNAME5
+           SMONTHNAME6
+           SMONTHNAME7
+           SMONTHNAME8
+           SMONTHNAME9
+           SMONTHNAME10
+           SMONTHNAME11
+           SMONTHNAME12
+           SMONTHNAME13
+
+           SABBREVMONTHNAME1
+           SABBREVMONTHNAME2
+           SABBREVMONTHNAME3
+           SABBREVMONTHNAME4
+           SABBREVMONTHNAME5
+           SABBREVMONTHNAME6
+           SABBREVMONTHNAME7
+           SABBREVMONTHNAME8
+           SABBREVMONTHNAME9
+           SABBREVMONTHNAME10
+           SABBREVMONTHNAME11
+           SABBREVMONTHNAME12
+           SABBREVMONTHNAME13
+
+           FONTSIGNATURE
+
+
+
+    ENDLOCALE
+
+      - Ends the locale specific section.
+
+      - Only used following the LOCALE keyword.
+
+
+
+    CALENDAR <num entries>
+
+      - Starts the calendar specific section.
+
+      - Use the ENDCALENDAR keyword to end the entire calendar specific section.
+
+      - Each set of calendar information to follow should be in the format:
+
+
+        BEGINCALENDAR <calendarid>
+
+          - The calendar information.  The order of the information is
+            given below.
+
+          - The table to follow should be in the format:
+
+              <keyword> <info>
+
+            or in some cases:
+
+              <keyword> <num> <info>
+                              <info>
+                              ...
+
+            where
+
+            <keyword> is the keyword for the given information.
+                      This string is ignored.
+
+            <num>     is the number of entries for the keyword.  This means
+                      there will be 'num' number of entries, where each
+                      entry MUST BE on a separate line.  The keywords that
+                      require the 'num' field are noted in the list of items
+                      below.
+
+            <info>    is the information to store in the data file.  All
+                      information will be stored as a Unicode string.
+
+                      The escape sequence "\x" may be used to designate hex
+                      values above 0x00ff, but ALL 4 digits of the Unicode
+                      character MUST exist for this to work properly.
+
+                      If the backslash character is to appear in the given
+                      string (it's not part of an escape sequence), then
+                      two backslashes must be used in succession.
+
+                      White space (space and tab) is stripped from both the
+                      front and the back of the string unless specifically
+                      noted with the escape sequence.  All other white space
+                      is preserved.
+
+                      To include TWO separate null-terminated strings for
+                      one LCTYPE, the strings must be separated by \xffff.
+                      This will be changed to 0x0000 in the binary file.
+                      Currently, the second string will only be used by
+                      the SMONTHNAME LCType information in the
+                      GetDateFormatW api (Russian month names have different
+                      grammar).
+
+        This section must have the following information (IN THE GIVEN
+        ORDER) following the BEGINCALENDAR keyword.
+
+           SCALENDAR
+
+           ITWODIGITYEARMAX
+
+           SERARANGES        <num>   (use \xffff for era string)
+
+           SSHORTDATE
+           SLONGDATE
+
+           IF_NAMES
+
+           SDAYNAME1
+           SDAYNAME2
+           SDAYNAME3
+           SDAYNAME4
+           SDAYNAME5
+           SDAYNAME6
+           SDAYNAME7
+
+           SABBREVDAYNAME1
+           SABBREVDAYNAME2
+           SABBREVDAYNAME3
+           SABBREVDAYNAME4
+           SABBREVDAYNAME5
+           SABBREVDAYNAME6
+           SABBREVDAYNAME7
+
+           SMONTHNAME1
+           SMONTHNAME2
+           SMONTHNAME3
+           SMONTHNAME4
+           SMONTHNAME5
+           SMONTHNAME6
+           SMONTHNAME7
+           SMONTHNAME8
+           SMONTHNAME9
+           SMONTHNAME10
+           SMONTHNAME11
+           SMONTHNAME12
+           SMONTHNAME13
+
+           SABBREVMONTHNAME1
+           SABBREVMONTHNAME2
+           SABBREVMONTHNAME3
+           SABBREVMONTHNAME4
+           SABBREVMONTHNAME5
+           SABBREVMONTHNAME6
+           SABBREVMONTHNAME7
+           SABBREVMONTHNAME8
+           SABBREVMONTHNAME9
+           SABBREVMONTHNAME10
+           SABBREVMONTHNAME11
+           SABBREVMONTHNAME12
+           SABBREVMONTHNAME13
+
+
+
+    ENDCALENDAR
+
+      - Ends the calendar specific section.
+
+      - Only used following the CALENDAR keyword.
+
+
+
+(4) Locale Independent (Unicode) Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    UNICODE
+
+      - Starts the unicode section.
+
+      - Use the ENDUNICODE keyword to end the unicode section.
+
+      - Only the following keywords may be used between this keyword and
+        the ENDUNICODE keyword:
+
+          - ASCIIDIGITS
+          - FOLDCZONE
+          - COMP
+          - HIRAGANA
+          - KATAKANA
+          - HALFWIDTH
+          - FULLWIDTH
+
+
+    ENDUNICODE
+
+      - Ends the unicode section.
+
+      - Only used following the UNICODE keyword.
+
+
+    ASCIIDIGITS <num entries>
+
+      - The ascii digits translation table.
+
+      - The table to follow should be in the format:
+
+          <digit> <ascii>
+
+
+    FOLDCZONE <num entries>
+
+      - The fold compatibility zone translation table.
+
+      - The table to follow should be in the format:
+
+          <czone> <ascii>
+
+
+    HIRAGANA <num entries>
+
+      - The Katakana to Hiragana translation table.
+
+      - The table to follow should be in the format:
+
+          <katakana> <hiragana>
+
+
+    KATAKANA <num entries>
+
+      - The Hiragana to Katakana translation table.
+
+      - The table to follow should be in the format:
+
+          <hiragana> <katakana>
+
+
+    HALFWIDTH <num entries>
+
+      - The Full Width to Half Width translation table.
+
+      - The table to follow should be in the format:
+
+          <full width> <half width>
+
+
+    FULLWIDTH <num entries>
+
+      - The Half Width to Full Width translation table.
+
+      - The table to follow should be in the format:
+
+          <half width> <full width>
+
+
+    COMP <num entries>
+
+      - The precomposed and composite translation tables.  Both versions
+        of the table will be built from this data.
+
+      - The table to follow should be in the format:
+
+          <precomp> <base> <nonspace>
+
+
+
+(5) Character Type Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    CTYPE <num entries>
+
+      - The character type translation table.
+
+      - The table to follow should be in the format:
+
+          <wchar> <ctype1> <ctype2> <ctype3>
+
+
+
+(6) SortKey Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    SORTKEY
+
+      - Starts the sortkey section.  This is the default sortkey table.
+
+
+    ENDSORTKEY
+
+      - Ends the sortkey section.
+
+      - Only used following the SORTKEY keyword.
+
+
+    DEFAULT <num entries>
+
+      - The default sortkey translation table.
+
+      - Contains the weights on a per code point basis.
+
+      - The table to follow should be in the format:
+
+          <code pt>  <SM> <AW> <DW> <CW> <COMP>
+
+
+
+(7) Sort Tables Translation Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    SORTTABLES
+
+      - Starts the sorttables section.  This section contains all
+        sorting tables except the default sortkey table.
+
+      - Use the ENDSORTTABLES keyword to end the sort tables section.
+
+      - Only the following keywords may be used between this keyword and
+        the ENDSORTTABLES keyword:
+
+          - REVERSEDIACRITICS
+          - DOUBLECOMPRESSION
+          - IDEOGRAPH_LCID_EXCEPTION
+          - MULTIPLEWEIGHTS
+          - EXPANSION
+          - EXCEPTION
+          - COMPRESSION
+
+
+    ENDSORTTABLES
+
+      - Ends the sorttables section.
+
+      - Only used following the SORTTABLES keyword.
+
+
+    REVERSEDIACRITICS <num entries>
+
+      - The reverse diacritics table.
+
+      - This table contains all locale ids that require diacritics
+        to be sorted from right to left (instead of left to right).
+
+      - The table to follow should be in the format:
+
+          <lcid>
+
+
+    DOUBLECOMPRESSION <num entries>
+
+      - The double compression table.
+
+      - This table contains all locale ids that require special handling
+        of the compression characters (eg. Hungarian).
+
+      - The table to follow should be in the format:
+
+          <lcid>
+
+
+    IDEOGRAPH_LCID_EXCEPTION <num entries>
+
+      - The ideograph lcid exception table.
+
+      - This table contains all locale ids that require ideographs to be
+        sorted other than in their Unicode ordering.  The name of the file
+        containing the ideograph exceptions is also given here.
+
+      - The file name may be no more than 8 characters in length.  The
+        extension ".nls" will be added to the file name.
+
+      - The table to follow should be in the format:
+
+          <lcid>  <file name>
+
+
+    MULTIPLEWEIGHTS <num entries>
+
+      - The multiple weights table.
+
+      - This table contains a list of all scripts that need multiple
+        script members to represent the entire script (256 alphanumeric
+        weights is not enough).
+
+      - The table to follow should be in the format:
+
+          <first script member> <number of script members in range>
+
+
+    EXPANSION <num entries>
+
+      - The expansion (ligature) table.
+
+      - This table contains all possible expansion options for every
+        locale, so there is no need to distinguish between the
+        different locales.
+
+      - The sortkey table will contain the index into this table in
+        the AW field.  For that reason, this table MUST be in the
+        correct order used by the sortkey default table and the
+        exception table.
+
+      - The maximum number of entries allowed in this table is 256.
+
+      - The table to follow should be in the format:
+
+          <expansion code pt> <code pt 1> <code pt 2>
+
+
+    EXCEPTION <num entries>
+
+      - The exception table.
+
+      - This table contains all exceptions to the default table on
+        a per locale id basis.
+
+      - The table to follow should be in the format:
+
+          LCID <lcid> <num entries>
+
+            <code pt>  <SM> <AW> <DW> <CW> <COMP>
+
+
+    COMPRESSION <num entries>
+
+      - The compression table.
+
+      - This table contains all compressions, both three to one and
+        two to one, on a per locale id basis.
+
+      - The table to follow should be in the format:
+
+          LCID <lcid>
+
+            TWO <num entries>
+
+              <code pt 1>  <code pt 2>  <SM> <AW> <DW  <CW>
+
+            THREE <num entries>
+
+              <code pt 1>  <code pt 2>  <code pt 3> <SM> <AW> <DW> <CW>
+
+
+
+(8) Ideograph Exception Tables
+
+    - A semicolon may be used to denote a comment.  The comment will be
+      read until the end of the current line.  So, once a semicolon is
+      used, the rest of the current line is ignored.
+
+
+    IDEOGRAPH_EXCEPTION  <num entries>  <file name>
+
+      - The ideograph exception table.
+
+      - The table to follow should be in the format:
+
+          <code pt>  <SM> <AW>
+
+
+
+
+
+Sample Files
+------------
+
+All sample files shown below are not real files.  They are simply meant
+to show the syntax of the different data files.
+
+
+(1) Sample Code Page File
+
+
+    CODEPAGE 12
+
+      CPINFO  1  0x7F  0x2302
+
+      MBTABLE 11
+
+        0x00    0x0000
+        0x01    0x0001
+        0x02    0x0002
+        0x7F    0x2302
+        0xB0    0x2591
+        0xB1    0x2592
+        0xB2    0x2593
+        0xB3    0x2502
+        0xB4    0x2524
+        0xB5    0x2561
+        0xB6    0x2562
+
+      GLYPHTABLE 2
+
+        0x01    0x263A
+        0x02    0x263B
+
+      DBCSRANGE 2
+
+        0x51  0x51
+
+          DBCSTABLE 1
+
+            0x71  0x0025
+
+        0x80  0x81
+
+          DBCSTABLE 1
+
+            0x3e  0x003e
+
+          DBCSTABLE 2
+
+            0x3f  0x003f
+            0x40  0x0040
+
+      WCTABLE 11
+
+        0x0000  0x00
+        0x0001  0x01
+        0x0002  0x02
+        0x2302  0x7F
+        0x2502  0xB3
+        0x2524  0xB4
+        0x2561  0xB5
+        0x2562  0xB6
+        0x2591  0xB0
+        0x2592  0xB1
+        0x2593  0xB2
+
+    ENDCODEPAGE
+
+
+
+(2) Sample Language File
+
+
+    LANGUAGE INTL
+
+      UPPERCASE 9
+
+        0x0061	0x0041
+        0x0062	0x0042
+        0x0063	0x0043
+        0x0064	0x0044
+        0x0065	0x0045
+        0x0066	0x0046
+        0x0067	0x0047
+        0x0068	0x0048
+        0x0069	0x0049
+        0xff41  0xff41            ; placeholder for exception
+        0xff42  0xff22            ; placeholder for exception
+
+      LOWERCASE 9
+
+        0x0041	0x0061
+        0x0042	0x0062
+        0x0043	0x0063
+        0x0044	0x0064
+        0x0045	0x0065
+        0x0046	0x0066
+        0x0047	0x0067
+        0x0048	0x0068
+        0x0049	0x0069
+        0xff21  0xff21            ; placeholder for exception
+
+    ENDLANGUAGE
+
+
+    EXCEPTION 2
+
+      LCID 0x00000000 2 1         ; default linguistic table
+
+        UPPERCASE
+
+          0xff41  0xff21
+          0xff42  0xff22
+
+        LOWERCASE
+
+          0xff21  0xff41
+
+      LCID 0x0000041f 2 2         ; Turkish
+
+        UPPERCASE
+
+          0x0069  0x0130
+          0x0131  0x0049
+
+        LOWERCASE
+
+          0x0049  0x0131
+          0x0130  0x0069
+
+
+
+(3) Sample Locale File
+
+
+    LOCALE 1
+
+      BEGINLOCALE 0409           ; English - United States
+
+        ILANGUAGE              0409
+        SENGLANGUAGE           English
+        SABBREVLANGNAME        ENU
+        SISO639LANGNAME        EN
+        SNATIVELANGNAME        English
+
+        ICOUNTRY               1
+        SENGCOUNTRY            United States
+        SABBREVCTRYNAME        USA
+        SISO3166CTRYNAME       US
+        SNATIVECTRYNAME        United States
+
+        IDEFAULTLANGUAGE       0409
+        IDEFAULTCOUNTRY        1
+        IDEFAULTANSICODEPAGE   1252
+        IDEFAULTOEMCODEPAGE    437
+
+        SLIST                  ,
+        IMEASURE               1
+
+        SDECIMAL               .
+        STHOUSAND              ,
+        SGROUPING              3;0
+        IDIGITS                2
+        ILZERO                 1
+        INEGNUMBER             1
+        SNATIVEDIGITS          0123456789
+        IDIGITSUBSTITUTION     1
+
+        SCURRENCY              $
+        SINTLSYMBOL            USD
+        SMONDECIMALSEP         .
+        SMONTHOUSANDSEP        ,
+        SMONGROUPING           3;0
+        ICURRDIGITS            2
+        IINTLCURRDIGITS        2
+        ICURRENCY              0
+        INEGCURR               0
+        SPOSITIVESIGN          \x0000
+        SNEGATIVESIGN          -
+
+        STIMEFORMAT        4   h:mm:ss tt
+                               hh:mm:ss tt
+                               H:mm:ss
+                               HH:mm:ss
+        STIME                  :
+        ITIME                  0
+        ITLZERO                0
+        ITIMEMARKPOSN          0
+        S1159                  AM
+        S2359                  PM
+
+        SSHORTDATE         6   M/d/yy
+                               M/d/yyyy
+                               MM/dd/yy
+                               MM/dd/yyyy
+                               yy/MM/dd
+                               dd-MMM-yy
+        SDATE                  /
+        IDATE                  0
+        ICENTURY               0
+        IDAYLZERO              0
+        IMONLZERO              0
+
+        SLONGDATE          4   dddd, MMMM dd, yyyy
+                               MMMM dd, yyyy
+                               dddd, dd MMMM, yyyy
+                               dd MMMM, yyyy
+        ILDATE                 0
+
+        ICALENDARTYPE          1
+        IOPTIONALCALENDAR  2   0\xffff
+                               1\xffffGregorian Calendar
+
+        IFIRSTDAYOFWEEK        6
+        IFIRSTWEEKOFYEAR       0
+
+        SDAYNAME1              Monday
+        SDAYNAME2              Tuesday
+        SDAYNAME3              Wednesday
+        SDAYNAME4              Thursday
+        SDAYNAME5              Friday
+        SDAYNAME6              Saturday
+        SDAYNAME7              Sunday
+
+        SABBREVDAYNAME1        Mon
+        SABBREVDAYNAME2        Tue
+        SABBREVDAYNAME3        Wed
+        SABBREVDAYNAME4        Thu
+        SABBREVDAYNAME5        Fri
+        SABBREVDAYNAME6        Sat
+        SABBREVDAYNAME7        Sun
+
+        SMONTHNAME1            January
+        SMONTHNAME2            February
+        SMONTHNAME3            March
+        SMONTHNAME4            April
+        SMONTHNAME5            May
+        SMONTHNAME6            June
+        SMONTHNAME7            July
+        SMONTHNAME8            August
+        SMONTHNAME9            September
+        SMONTHNAME10           October
+        SMONTHNAME11           November
+        SMONTHNAME12           December
+        SMONTHNAME13           \x0000
+
+        SABBREVMONTHNAME1      Jan
+        SABBREVMONTHNAME2      Feb
+        SABBREVMONTHNAME3      Mar
+        SABBREVMONTHNAME4      Apr
+        SABBREVMONTHNAME5      May
+        SABBREVMONTHNAME6      Jun
+        SABBREVMONTHNAME7      Jul
+        SABBREVMONTHNAME8      Aug
+        SABBREVMONTHNAME9      Sep
+        SABBREVMONTHNAME10     Oct
+        SABBREVMONTHNAME11     Nov
+        SABBREVMONTHNAME12     Dec
+        SABBREVMONTHNAME13     \x0000
+
+        FONTSIGNATURE          \x00af\x8000\x38cb\x0000\x0000\x0000\x0000\x0000\x0001\x0000\x0000\x8000\x00ff\x003f\x0000\xffff
+
+    ENDLOCALE
+
+
+    CALENDAR   5
+
+
+      BEGINCALENDAR  0
+
+        SCALENDAR              0
+
+        ITWODIGITYEARMAX       2029
+
+        SERARANGES             0
+
+        SSHORTDATE             \x0000
+        SLONGDATE              \x0000
+
+        IF_NAMES               0
+
+
+      BEGINCALENDAR  1
+
+        SCALENDAR              1
+
+        ITWODIGITYEARMAX       2029
+
+        SERARANGES             0
+
+        SSHORTDATE             MM/dd/yy
+        SLONGDATE              dddd, MMMM dd, yyyy
+
+        IF_NAMES               1
+
+        SDAYNAME1              Monday
+        SDAYNAME2              Tuesday
+        SDAYNAME3              Wednesday
+        SDAYNAME4              Thursday
+        SDAYNAME5              Friday
+        SDAYNAME6              Saturday
+        SDAYNAME7              Sunday
+
+        SABBREVDAYNAME1        Mon
+        SABBREVDAYNAME2        Tue
+        SABBREVDAYNAME3        Wed
+        SABBREVDAYNAME4        Thu
+        SABBREVDAYNAME5        Fri
+        SABBREVDAYNAME6        Sat
+        SABBREVDAYNAME7        Sun
+
+        SMONTHNAME1            January
+        SMONTHNAME2            February
+        SMONTHNAME3            March
+        SMONTHNAME4            April
+        SMONTHNAME5            May
+        SMONTHNAME6            June
+        SMONTHNAME7            July
+        SMONTHNAME8            August
+        SMONTHNAME9            September
+        SMONTHNAME10           October
+        SMONTHNAME11           November
+        SMONTHNAME12           December
+        SMONTHNAME13           \x0000
+
+        SABBREVMONTHNAME1      Jan
+        SABBREVMONTHNAME2      Feb
+        SABBREVMONTHNAME3      Mar
+        SABBREVMONTHNAME4      Apr
+        SABBREVMONTHNAME5      May
+        SABBREVMONTHNAME6      Jun
+        SABBREVMONTHNAME7      Jul
+        SABBREVMONTHNAME8      Aug
+        SABBREVMONTHNAME9      Sep
+        SABBREVMONTHNAME10     Oct
+        SABBREVMONTHNAME11     Nov
+        SABBREVMONTHNAME12     Dec
+        SABBREVMONTHNAME13     \x0000
+
+
+      BEGINCALENDAR  2
+
+        SCALENDAR              2
+
+        ITWODIGITYEARMAX       2029
+
+        SERARANGES          4  1989\xffff\x337b
+                               1926\xffff\x337c
+                               1912\xffff\x337d
+                               1868\xffff\x337e
+
+        SSHORTDATE             yy/MM/dd
+        SLONGDATE              gg yyyy'\x5e74'M'\x6708'd'\x65e5'
+
+        IF_NAMES               0
+
+
+      BEGINCALENDAR  3
+
+        SCALENDAR              3
+
+        ITWODIGITYEARMAX       2029
+
+        SERARANGES          2  1911\xffffA.D.
+                               0\xffffB.C.
+
+        SSHORTDATE             yy/MM/dd
+        SLONGDATE              gg yyyy'\x5e74'M'\x6708'd'\x65e5'
+
+        IF_NAMES               0
+
+
+      BEGINCALENDAR  4
+
+        SCALENDAR              4
+
+        ITWODIGITYEARMAX       2029
+
+        SERARANGES          2  1911\xffffA.D.
+                               0\xffffB.C.
+
+        SSHORTDATE             yy/MM/dd
+        SLONGDATE              gg yyyy'\x5e74'M'\x6708'd'\x65e5'
+
+        IF_NAMES               0
+
+
+    ENDCALENDAR
+
+
+
+(4) Sample Unicode File
+
+
+    UNICODE
+
+      ASCIIDIGITS 3	
+
+        0x00B2  0x0032
+        0x00B3  0x0033
+        0x00B9  0x0031
+
+      FOLDCZONE 4
+
+        0xff01  0x0021
+        0xff02  0x0022
+        0xff03  0x0023
+        0xff04  0x0024
+
+      COMP 5
+
+        0x00C0  0x0041  0x0300
+        0x00C8  0x0045  0x0300
+        0x00CC  0x0049  0x0300
+        0x00D1  0x004E  0x0303
+        0x00D2  0x004F  0x0300
+
+      HIRAGANA 3
+
+        0x30a1  0x3041
+        0xff67  0x3041
+        0x30a2  0x3042
+
+      KATAKANA 4
+
+        0x3041  0x30a1
+        0x3042  0x30a2
+        0x3043  0x30a3
+        0x3044  0x30a4
+
+      HALFWIDTH 3
+
+        0x30d2  0xff8b
+        0x30d5  0xff8c
+        0x30d8  0xff8d
+
+      FULLWIDTH 4
+
+        0xff61  0x3002
+        0xff62  0x300c
+        0xff63  0x300d
+        0xff64  0x3001
+
+    ENDUNICODE
+
+
+
+(5) Sample Character Type File
+
+
+    CTYPES 12
+
+      0x0000  0x0020  0x0000  0x0000
+      0x0009  0x0068  0x0009  0x0000
+      0x0020  0x0048  0x000A  0x0000
+      0x0021  0x0010  0x000B  0x0008
+      0x002F  0x0010  0x0003  0x0008
+      0x0030  0x0084  0x0003  0x0000
+      0x0041  0x0181  0x0001  0x0000
+      0x0048  0x0101  0x0001  0x0000
+      0x0061  0x0182  0x0001  0x0000
+      0x0067  0x0102  0x0001  0x0000
+      0x00BF  0x0010  0x000B  0x0008
+      0x00C0  0x0101  0x0001  0x0003
+
+
+
+(6) Sample Sortkey File
+
+
+    SORTKEY
+
+      DEFAULT 4
+
+        0x0030  2  4  2  2  0
+        0x0031  2  5  2  2  0
+        0x0065  2  7  2  3  2
+        0x0066  2  8  2  3  3
+
+    ENDSORTKEY
+
+
+
+(7) Sample Sort Tables File
+
+
+    SORTTABLES
+
+      REVERSEDIACRITICS  4
+
+        0x0000040c
+        0x0000080c
+        0x00000c0c
+        0x0000100c
+
+
+      DOUBLECOMPRESSION  1
+
+        0x0000040e
+
+
+      IDEOGRAPH_LCID_EXCEPTION  4
+
+        0x00010404  big5
+        0x00010804  big5
+        0x00010411  xjis
+        0x00010412  ksc
+
+
+      MULTIPLEWEIGHTS  1
+
+        36  10
+
+
+      EXPANSION  2
+
+        0x00c6  0x0041  0x0045
+        0x00e6  0x0061  0x0065
+
+
+      EXCEPTION  2
+
+        LCID  0x0000040a  2
+
+          0x0065  2  7  2  3  2
+          0x0066  2  8  2  3  3
+
+
+        LCID  0x0000040c  2
+        LCID  0x0000080c
+
+          0x0030  2  4  2  2  0
+          0x0031  2  5  2  2  0
+
+
+      COMPRESSION  2
+
+        LCID 0x0000040a
+        LCID 0x0000080a
+
+          TWO  2
+
+            0x0043  0x0048  2  4  2  3
+            0x0063  0x0068  2  4  2  2
+
+          THREE  1
+
+            0x0043  0x0048  0x0049  2  4  2  3
+
+
+        LCID 0x0000080c
+
+          TWO  1
+
+            0x0063  0x0068  2  4  2  2
+
+          THREE  0
+
+
+    ENDSORTTABLES
+
+
+
+(8) Sample Ideograph Exceptions File
+
+
+    IDEOGRAPH_EXCEPTION  4  xjis
+
+      0xfa22  185  243
+      0xfa23  185  244
+      0xfa24  185  245
+      0xfa25  185  246
+

@@ -1,0 +1,82 @@
+!IF 0
+
+Copyright (c) 1989-1997 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+History:
+    Created cdfview version of this fie 16-Mar-97 Ed Praitis (edwardp)
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+#
+# Get the path of the shell project
+#
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+#
+# name of inf file used
+#
+SELFREGNAME = ..\res\selfreg_cdfview.inf
+
+#
+# TARGET_BOTH is used by $(CCSHELL_DIR)\common.inc to build components that run
+# on both W95 and NT.
+#
+
+TARGET_BOTH     = 1
+
+#
+# This is so it will be indexed by the browser info
+#
+NO_BROWSER_FILE = 1
+
+#
+# Include the common shell sources file and update the list of sources used.
+#
+
+!include $(CCSHELL_DIR)\common.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\common.inc
+
+#
+# "NTTARGETFILE0 =" cause makefile.def to include .\makefile.inc.  Here 
+# makefile.inc defines the dependency between .inf and .inx files.
+#
+
+NTTARGETFILE0= $(SELFREGNAME)
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) $(SELFREGNAME)
+!endif
+
+TARGETNAME      = cdfvwlc
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+
+RESOURCE_ONLY_DLL=1
+
+# NOTE!! We deliberately link to an NT4 compatible shell32.lib
+#        so cdfview can be loaded in the browser-only installations.
+#        We use the NT version because it contains lego info.
+#        The debug version of shdocvw links to the Win95 version
+#        of shell32.lib simply so we can verify that we load in the
+#        browser-only installations on Win95.
+
+SOURCES         = \
+          ..\cdfvwlc.rc

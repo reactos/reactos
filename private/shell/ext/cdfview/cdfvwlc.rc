@@ -1,0 +1,43 @@
+// WARNING
+// only localizable resources may go in this file
+// non-localizable resources must go in cdfview.rc
+
+
+//
+// Includes
+//
+
+#include <windows.h>
+#include <resource.h>
+
+//
+// Version information.
+//
+
+#include "res\version.rcv"
+
+//
+// Menus
+//
+
+#include "res\menus.rcm"
+
+//
+// String tables.
+//
+
+#include "res\strings.rcs"
+
+//
+// Dialogs
+//
+
+#include "res\cdfview.dlg"
+
+//
+// HTML pages used for error reporting
+//
+
+IDH_XMLERRORPAGE    HTML    DISCARDABLE "res\\xmlerror.htm"
+IDH_HRERRORPAGE     HTML    DISCARDABLE "res\\hrerror.htm"
+IDH_CACHEERRORPAGE  HTML    DISCARDABLE "res\\cacheerr.htm"

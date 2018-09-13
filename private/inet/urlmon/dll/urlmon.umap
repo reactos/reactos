@@ -1,0 +1,129 @@
+// This file contains directives for how to order the functions.
+#include "urlmon.fmap"
+
+liburlmon.so.1
+{
+    global:
+ 
+        DllRegisterServer;
+        DllUnregisterServer;
+        DllRegisterServerEx;
+        DllInstall;
+
+//        ; Standard Dll server/handler stuff
+        UrlMkBuildVersion;
+        DllGetClassObject;
+        DllCanUnloadNow;
+
+        CreateURLMoniker;
+        GetClassURL;
+        MkParseDisplayNameEx;
+        BindAsyncMoniker;
+        RegisterBindStatusCallback;
+        RevokeBindStatusCallback;
+        CreateFormatEnumerator;
+        RegisterFormatEnumerator;
+        RevokeFormatEnumerator;
+        RegisterMediaTypes;
+        FindMediaType;
+        RegisterMediaTypeClass;
+        FindMediaTypeClass;
+        CreateAsyncBindCtx;
+        IsAsyncMoniker;
+        GetClassFileOrMime;
+        IsValidURL;
+        UrlMkSetSessionOption;
+        UrlMkGetSessionOption;
+        CoGetClassObjectFromURL;
+        CreateAsyncBindCtxEx;
+        FindMimeFromData;
+        ObtainUserAgentString;
+
+        CoInternetGetSession;
+        CoInternetParseUrl;
+        CoInternetCombineUrl;
+	CoInternetCompareUrl;
+        CoInternetGetSecurityUrl;
+	CoInternetQueryInfo;
+	CoInternetCreateSecurityManager;
+	CoInternetCreateZoneManager;
+	CoInternetGetProtocolFlags;
+
+//        ; security zones private helper exposed for the IEAK. was PRIVATE
+        ZonesReInit;
+		 		
+//        ; added for setup guys
+         Extract;
+        
+//		; helper API for webcheck
+//        ; GetRunTimes;
+
+//	; urlmon "easy" api
+        URLDownloadW;
+        URLDownloadA;
+        URLOpenPullStreamA;
+        URLOpenPullStreamW;
+        URLDownloadToFileA;
+        URLDownloadToFileW;
+        URLDownloadToCacheFileA;
+        URLDownloadToCacheFileW;
+        URLOpenBlockingStreamA;
+        URLOpenBlockingStreamW;
+        URLOpenStreamA;
+        URLOpenStreamW;
+        HlinkSimpleNavigateToString;
+        HlinkSimpleNavigateToMoniker;
+        HlinkGoBack;
+        HlinkGoForward;
+        HlinkNavigateString;
+        HlinkNavigateMoniker;
+
+        IsLoggingEnabledA;
+        IsLoggingEnabledW;
+        WriteHitLogging;
+
+
+//        ; private exported functions for testing
+//        ; - will be removed
+         CreateBindProtocol;
+//        ;StgOpenAsyncDocfileOnIFillLockBytes
+//        ;StgGetIFillLockBytesOnILockBytes
+//        ;StgGetIFillLockBytesOnFile
+#if DBG==1
+//        RegisterDebugOut
+//        ;StgGetDebugFileLockBytes
+#endif // DBG == 1
+
+
+//        ; helper function for delivering notifications
+//        ; NotfDeliverNotification;
+
+//        ; private exported functions for DCOM
+        AsyncGetClassBits;
+        AsyncInstallDistributionUnit;
+
+        FaultInIEFeature;
+
+//        ; private exported for NT5 class store PRIVATE
+        PrivateCoInstall;
+ 
+//        ; Public export that parallel's NT's class store API
+        CoInstall;
+ 
+//        ; Public export to provide software update info
+        GetSoftwareUpdateInfo;
+        SetSoftwareUpdateAdvertisementState;
+
+//		; private exported function for occache and regcanon
+	CDLGetLongPathNameA;
+	CDLGetLongPathNameW;
+
+        CopyBindInfo;
+        CopyStgMedium;
+        ReleaseBindInfo;
+	_____urlmon_initDLL;
+    local:
+        *;
+};
+
+

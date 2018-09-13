@@ -1,0 +1,101 @@
+<html>  
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 1</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+
+<script src=DOMformatter.js></script>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+</OBJECT>
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("books.xml");
+    if (doc.documentElement == null)
+    {
+        error.innerText = doc.parseError.reason;
+    }
+    total.innerText = CalcTotal()
+</SCRIPT>
+<SCRIPT>
+function CalcTotal()
+{
+    var rs = xmldso.recordset;
+    rs.MoveFirst();
+    var total = 0;
+    while (! rs.eof)
+    {
+        total += rs("QUANTITY") * rs("PRICE");
+        rs.MoveNext();
+    }
+    return parseInt(total*100)/100;
+}
+</SCRIPT>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR="#ffffff" LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+<table align=right>
+<tr>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+
+    <td bgcolor=black><a href="Example2.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 1</h3>
+<P>
+This example shows how the XML DSO can be used to bind XML data to
+an HTML table using the Internet Explorer 4.0 data binding
+architecture. 
+<table id=table border=2 width=100% datasrc=#xmldso cellpadding=5>
+<thead align=left style="background-color:yellow">
+	<th>Author
+	<th>Title
+	<th>Publisher
+	<th>Qty
+	<th>Price
+</thead>
+<tr>
+  <td valign=top><span datafld=AUTHOR dataformatas=HTML></span></td>
+  <td valign=top><span datafld=TITLE dataformatas=HTML></span></td>
+  <td valign=top><span datafld=PUBLISHER dataformatas=HTML></span></td>
+  <td valign=top align=right><span datafld=QUANTITY></span></td>
+  <td valign=top align=right><span datafld=PRICE></span></td>
+</tr>
+<tfoot style="background-color:yellow">
+	<th>
+	<th>
+	<th>
+	<th align=right>Total
+	<th><span id=total></span>
+</tfoot>
+</table>
+
+<xmp id=error></xmp>
+<P>
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+
+  </body>
+</html>

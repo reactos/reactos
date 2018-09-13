@@ -1,0 +1,33 @@
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <winuser.h>
+#include <shlobj.h>
+#include "rcids.h"
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+IDI_WELCOME_LIGHTBULB   ICON    DISCARDABLE     "Res\\welcome.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDS_RESOURCE_URL        "res://ie4tour.dll/welcome.htm"
+    IDS_LIST_TEXT           "Show welcome message each time I log on"
+END
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "welcome.rcv"

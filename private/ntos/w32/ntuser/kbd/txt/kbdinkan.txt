@@ -1,0 +1,168 @@
+KBD	INKAN	"Kannada"
+
+	//LCID	044b
+
+Version	1.0
+
+SHIFTSTATE
+
+	0	//Column 4:
+	1	//Column 5:	Shft
+	6	//Column 6:		Control	Alt
+	3	//Column 7:	Shft	Control
+	7	//Column 8: 	Shft 	Control	Alt
+	2	//Column 9:		Control
+
+LAYOUT
+
+//SC	VK_       Cap	0	1	6	3	7	2
+//--	--------- ---	----	----	----	----	----	----
+  29	OEM_3      0	0CCA	0C92				//Kannada Vowel Sign O, Kannada Letter O
+  02	1          0	1	-1	0CE7	200d		//Kannada Digit One, ZWJ
+  03	2          0	2	-1	0CE8	200c		//Kannada Digit Two, ZWNJ
+  04	3          0	3	%%	0CE9			//0CCD+0CB0, Kannada Digit Three
+  05	4          0	4	-1	0CEA			//Kannada Digit Four
+  06	5          0	5	%%	0CEB			//0C9C+0CCD+0C9E, Kannada Digit Five
+  07	6          0	6	%%	0CEC			//0CA4+0CCD+0CB0, Kannada Digit Six
+  08	7          0	7	%%	0CED			//0C95+0CCD+0CB7, Kannada Digit Seven
+  09	8          0	8	%%	0CEE			//0CB6+0CCD+0CB0, Kannada Digit Eight
+  0a	9          0	9	(	0CEF			//Kannada Digit Nine
+  0b	0          0	0	)	0CE6			//Kannada Digit Zero
+  0c	OEM_MINUS  0	-	0C83
+  0d	OEM_PLUS   0	0CC3	0C8B	0CC4	-1	0CE0	//Kannada Vowel Sign Vocalic R , Kannada Letter Vocalic R
+//--	--------- ---	----	----	----	----	----	----
+  10	Q          0	0CCC	0C94				//Kannada Vowel Sign Au , Kannada Letter Au
+  11	W          0	0CC8	0C90	0CD6			//Kannada Vowel Sign Ai , Kannada Letter Ai
+  12	E          0	0CBE	0C86				//Kannada Vowel Sign Aa , Kannada Letter Aa
+  13	R          0	0CC0	0C88	-1	-1	0CE1	//Kannada Vowel Sign Ii , Kannada Letter Ii
+  14	T          0	0CC2	0C8A				//Kannada Vowel Sign Uu , Kannada Letter Uu
+  15	Y          0 	0CAC	0CAD				//Kannada Letter Ba , Kannada Letter Bha
+  16	U          0	0CB9	0C99				//Kannada Letter Ha , Kannada Letter Nga
+  17	I          0	0C97	0C98				//Kannada Letter Ga , Kannada Letter Gha
+  18	O          0	0CA6	0CA7				//Kannada Letter Da , Kannada Letter Dha
+  19	P          0	0C9C	0C9D				//Kannada Letter Ja , Kannada Letter Jha
+  1a	OEM_4      0	0CA1	0CA2				//Kannada Letter Ddha
+  1b	OEM_6      0	-1	0C9E				//Kannada Letter Nya
+  2b	OEM_5      0	-1	-1
+//--	--------- ---	----	----	----	----	----	----
+  1e	A          0	0CCB	0C93				//Kannada Vowel Sign Oo , Kannada Letter Oo
+  1f	S          0	0CC7	0C8F	0CD5			//Kannada Vowel Sign Ee , Kannada Letter Ee
+  20	D          0	0CCD	0C85				//Kannada Sign Virama , Kannada Letter A
+  21	F          0	0CBF	0C87	-1	-1	0C8C	//Kannada Vowel Sign I , Kannada Letter I
+  22	G          0	0CC1	0C89				//Kannada Vowel Sign U , Kannada Letter U
+  23	H          0	0CAA	0CAB	-1	-1	0CDE	//Kannada Letter Pa , Kannada Letter Pha
+  24	J          0	0CB0	0CB1				//Kannada Letter Ra , Kannada Letter Rra
+  25	K          0	0C95	0C96				//Kannada Letter Ka , Kannada Letter Kha
+  26	L          0	0CA4	0CA5				//Kannada Letter Ta , Kannada Letter Tha
+  27	OEM_1      0	0C9A	0C9B				//Kannada Letter Ca , Kannada Letter Cha
+  28	OEM_7      0	0C9F	0CA0				//Kannada Letter Tta , Kannada Letter Ttha
+//--	--------- ---	----	----	----	----	----	----
+  2c	Z          0	0CC6	0C8F				//Kannada Vowel Sign E , Kannada Letter Ee
+  2d	X          0	0C82	-1				//Kannada Sign Anusvara
+  2e	C          0	0CAE	0CA3				//Kannada Letter Ma , Kannada Letter Nna
+  2f	V          0	0CA8	-1				//Kannada Letter Na
+  30	B          0	0CB5	-1				//Kannada Letter Va
+  31	N          0	0CB2	0CB3				//Kannada Letter La , Kannada Letter Lla
+  32	M          0	0CB8	0CB6				//Kannada Letter Sa , Kannada Letter Sha
+  33	OEM_COMMA  0	,	0CB7				//Kannada Letter Ssa
+  34	OEM_PERIOD 0	.	|
+  35	OEM_2      0	0CAF	-1
+  56	OEM_102    0	-1	-1
+//--	--------- ---	----	----	----	----	----	----
+  53	DECIMAL    0	.	.
+//--	--------- ---	----	----	----	----	----	----
+//SC	VK_       Cap	0	1	6	3	7	2
+
+
+LIGATURE
+
+//VK_	Mod#	Char0	Char1	Char2
+//---	----	-----	-----	-----
+  3	1	0CCD	0CB0		//Virama+Ra
+  5	1	0C9C 	0CCD	0C9E	//Ja+Virama+Nya
+  6	1	0CA4	0CCD	0CB0	//Ta+Virama+Ra
+  7	1	0C95	0CCD	0CB7	//Ka+Virama+Ssa
+  8	1	0CB6	0CCD	0CB0	//Sha+Virama+Ra
+
+
+KEYNAME
+
+  01    Esc
+  0e    Backspace
+  0f    Tab
+  1c    Enter
+  1d    Ctrl
+  2a    Shift
+  36    "Right Shift"
+  37    "Num *"
+  38    Alt
+  39    Space
+  3a    "Caps Lock"
+  3b    F1
+  3c    F2
+  3d    F3
+  3e    F4
+  3f    F5
+  40    F6
+  41    F7
+  42    F8
+  43    F9
+  44    F10
+  45    Pause
+  46    "Scroll Lock"
+  47    "Num 7"
+  48    "Num 8"
+  49    "Num 9"
+  4a    "Num -"
+  4b    "Num 4"
+  4c    "Num 5"
+  4d    "Num 6"
+  4e    "Num +"
+  4f    "Num 1"
+  50    "Num 2"
+  51    "Num 3"
+  52    "Num 0"
+  53    "Num Del"
+  54    "Sys Req"
+  57    F11
+  58    F12
+  7c    F13
+  7d    F14
+  7e    F15
+  7f    F16
+  80    F17
+  81    F18
+  82    F19
+  83    F20
+  84    F21
+  85    F22
+  86    F23
+  87    F24
+
+KEYNAME_EXT
+
+  1c    "Num Enter"
+  1d    "Right Control"
+  35    "Num /"
+  37    "Prnt Scrn"
+  38    "Right Alt"
+  45    "Num Lock"
+  46    Break
+  47    Home
+  48    Up
+  49    "Page Up"
+  4b    Left
+  4d    Right
+  4f    End
+  50    Down
+  51    "Page Down"
+  52    Insert
+  53    Delete
+  54    <00>
+  56    Help
+  5b    "Left Windows"
+  5c    "Right Windows"
+  5d    Application
+
+ENDKBD
+

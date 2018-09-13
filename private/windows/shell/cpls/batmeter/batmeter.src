@@ -1,0 +1,8 @@
+LIBRARY         BatMeter
+EXPORTS
+    DllInitialize
+    PowerCapabilities
+    BatMeterCapabilities
+    UpdateBatMeter
+    CreateBatMeter
+    DestroyBatMeter

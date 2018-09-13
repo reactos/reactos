@@ -1,0 +1,20 @@
+; --------------------------------------------------------------------------
+; IeTimer.Def - Module definition file for IeTimer.Ocx (win32)
+; --------------------------------------------------------------------------
+; Copyright  1995  Microsoft Corporation.  All Rights Reserved.
+;
+; THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+; ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+; THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+; PARTICULAR PURPOSE.
+;=--------------------------------------------------------------------------=
+;
+
+LIBRARY 	LICMGR
+
+EXPORTS
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllGetClassObject   PRIVATE
+

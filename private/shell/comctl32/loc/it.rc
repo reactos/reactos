@@ -1,0 +1,139 @@
+LANGUAGE 0x10, 0x00 // Really 0x10, 0x01 - Italian (Standard)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Italian resource
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Personalizza barra degli strumenti"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Chiudi",2,308,6,44,14
+    PUSHBUTTON      "R&eimposta",202,308,23,44,14
+    PUSHBUTTON      "&?",205,308,40,44,14
+    PUSHBUTTON      "Sposta s&u",206,308,74,44,14
+    PUSHBUTTON      "&Sposta giù",207,308,91,44,14
+    LTEXT           "Pulsanti &disponibili:",-1,4,5,84,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Aggiungi ->",1,131,42,44,14
+    PUSHBUTTON      "<- &Rimuovi",204,131,62,44,14
+    LTEXT           "&Pulsanti barra strumenti:",-1,182,5,78,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Annulla",2,58,122,50,14
+    PUSHBUTTON      "&Applica",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "?",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Indietro",12323,12,26,50,14
+    DEFPUSHBUTTON   "&Avanti >",12324,62,26,50,14
+    PUSHBUTTON      "Fine",12325,119,26,50,14
+    PUSHBUTTON      "Annulla",2,176,26,50,14
+    PUSHBUTTON      "?",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Separatore"
+    1025                    " + "
+    1026                    "Nessuno"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Chiudi"
+    4161                    "OK"
+    4162                    "Proprietà - %s"
+    4163                    "Oggi:"
+    4164                    "&Vai a oggi"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Immettere il testo qui"
+    4177                    "Proprietà"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Ridimensiona la finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Sposta la finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Riduce la finestra ad icona."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Ingrandisce la finestra a tutto schermo."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Passa alla finestra MDI successiva."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Chiude la finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Ripristina le dimensioni normali della finestra."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Passa ad un'altra applicazione."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Comandi per la gestione delle finestre."
+    36849                   "Trascinare a destra o a sinistra per ridimensionare le colonne."
+    36850                   "Ridimensiona le colonne utilizzando il tasto TAB e i tasti di direzione."
+    36851                   "Aggiunge, sposta e rimuove pulsanti sulla barra degli strumenti."
+END

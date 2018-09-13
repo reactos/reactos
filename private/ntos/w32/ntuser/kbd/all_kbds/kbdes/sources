@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdes
+
+TARGETNAME=kbdes
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdes.c kbdes.rc
+
+NTTARGETFILE0=kbdes.h kbdes.rc kbdes.def

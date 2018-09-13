@@ -1,0 +1,139 @@
+LANGUAGE 0x14, 0x00 // Really 0x14, 0x01 - Norwegian (Bokmal)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Norwegian resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Tilpasse verktøylinje"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "L&ukk",2,308,6,44,14
+    PUSHBUTTON      "&Tilbakestill",202,308,23,44,14
+    PUSHBUTTON      "&Hjelp",205,308,40,44,14
+    PUSHBUTTON      "Flytt &opp",206,308,74,44,14
+    PUSHBUTTON      "Flytt &ned",207,308,91,44,14
+    LTEXT           "Tilgj&engelige knapper:",-1,4,5,116,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Legg til ->",1,131,42,44,14
+    PUSHBUTTON      "<- &Fjern",204,131,62,44,14
+    LTEXT           "&Verktøylinjeknapper:",-1,182,5,117,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Avbryt",2,58,122,50,14
+    PUSHBUTTON      "&Bruk",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Hjelp",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Tilbake",12323,12,26,50,14
+    DEFPUSHBUTTON   "&Neste >",12324,62,26,50,14
+    PUSHBUTTON      "Fullfør",12325,119,26,50,14
+    PUSHBUTTON      "Avbryt",2,176,26,50,14
+    PUSHBUTTON      "Hjelp",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Skilletegn"
+    1025                    " + "
+    1026                    "Ingen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Lukk"
+    4161                    "OK"
+    4162                    "Egenskaper for %s"
+    4163                    "I dag:"
+    4164                    "&Gå til i dag"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Skriv inn tekst her"
+    4177                    "Egenskaper"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Endrer størrelsen på vinduet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Flytter vinduet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Minimerer vinduet til et ikon"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Utvider vinduet slik at det fyller skjermen"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Bytter til neste MDI-vindu"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Lukker vinduet"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Gjenoppretter vinduet til normal størrelse"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Bytter til en annen oppgave"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Inneholder kommandoer for å endre vinduer"
+    36849                   "Dra til høyre eller venstre for å endre størrelsen på kolonnene"
+    36850                   "Endrer størrelsen på kolonnene ved hjelp av tabulator- og piltastene"
+    36851                   "Legger til, flytter og fjerner knapper på verktøylinjen"
+END
+

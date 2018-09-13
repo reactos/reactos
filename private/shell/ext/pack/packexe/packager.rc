@@ -1,0 +1,12 @@
+#include <windows.h>
+#include "ids.h"
+
+#include "packager.rcv"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+IDI_DOCUMENT            ICON    DISCARDABLE     "PACK2.ICO"
+

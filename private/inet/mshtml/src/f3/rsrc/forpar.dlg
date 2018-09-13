@@ -1,0 +1,465 @@
+<HTML STYLE="font-family: ms sans serif; font-size: 8pt; width: 30.4em;
+height: 15em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Paragraph
+</TITLE>
+
+<SCRIPT>
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code to be moved into a GLOBAL MODULE outside
+//  of this particular dialog.
+//
+//--------------------------------------------------------------------------
+
+    //+----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sets the state of a radio button based on a range and a
+    //              command id. The command ID comes from the VALUE of the
+    //              radio button. (It's prefixed by "_cmd".)
+    //
+    //  Arguments:  radio   The radio button we're partying on
+    //              range   The range we're querying the status of
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function getRadioStateCmd(radio, range)
+    {
+        if (range.queryCommandEnabled(radio.value.substring(4)))
+        {
+            if(!range.queryCommandIndeterm(radio.value.substring(4)))
+            {
+                radio.checked
+                    = range.queryCommandState(radio.value.substring(4));
+            }
+            //
+            //  Add code for indeterminate state
+            //
+        }
+    }   //  getRadioStateCmd
+
+
+    //+-----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sets the state of a select box based on a range and a
+    //              command id. The command ID comes from the ID of the
+    //              select box. (It's prefixed by "cmd".) NOTE: The VALUEs
+    //              of OPTIONs of the SELECT box must be set to the possible
+    //              return values of the queryCommandValue method.
+    //
+    //  Arguments:  radio   The select box we're partying on
+    //              range   The range we're querying the status of
+    //
+    //  Returns:    nothing
+    //
+    //------------------------------------------------------------------------
+
+    function getSelectStateCmd(select, range)
+    {
+        var index;
+        var globalDoc = window.dialogArguments.document;
+
+        if (globalDoc.queryCommandSupported(select.id.substring(3)))
+        {
+            for (index = 0; index < select.options.length; index++)
+            {
+                if ((select.options[index].text)
+                    == (range.queryCommandValue(select.id.substring(3))))
+                {
+                    select.selectedIndex = index;
+                    break;
+                }
+            }
+        }
+    }   //  getSelectStateCmd
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Loops through all the elements in the dialog and sets the
+    //              appropriate elements based on the type and properties of
+    //              the element.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function initDialogCmd()
+    {
+        var index;
+        var globalDoc = window.dialogArguments.document;
+
+        for (index = 0; index < document.all("radJustify").length; index++)
+        {
+            getRadioStateCmd(document.all("radJustify")[index],
+                globalDoc.selection.createRange());
+        }
+
+        getSelectStateCmd(cmdFormatBlock, globalDoc.selection.createRange());
+
+    }   //  initDialogCmd
+
+
+    //+-----------------------------------------------------------------------
+    //
+    //  Synopsis:   Sets the state of a range based on the state of a radio
+    //              button and a command id. The command id comes from the
+    //              VALUE of the radio button. (It's prefixed by "_cmd".)
+    //
+    //  Arguments:  radio   The radio button we're querying the state of
+    //              range   The range we're partying on
+    //
+    //  Returns:    nothing
+    //
+    //------------------------------------------------------------------------
+
+    function setRadioStateCmd(radio, range)
+    {
+        if (radio.checked != range.queryCommandState(radio.value.substring(4)))
+        {
+            if (range.queryCommandEnabled(radio.value.substring(4)))
+            {
+                range.execCommand(radio.value.substring(4));
+            }
+        }
+    }   //  setRadioStateCmd
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Sets the state of a range based on the selection in a
+    //              SELECT box and a command id. The command id comes from
+    //              the ID of the SELECT box (minus the "cmd" prefix).
+    //              NOTE: The VALUEs of the OPTIONs of the SELECT box must
+    //              be set to the possible values for the execCommand
+    //              method.
+    //
+    //  Arguments:  select  The select box we're querying the value of.
+    //              range   The range we're partying on.
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function setSelectStateCmd(select, range)
+    {
+        var globalDoc = window.dialogArguments.document;
+
+        if (select.changed && (select.value != ""))
+        {
+            if (globalDoc.queryCommandSupported(select.id.substring(3)))
+            {
+                range.execCommand(select.id.substring(3), false,
+                    select.options[select.selectedIndex].value);
+            }
+        }
+    }   //  setSelectStateCmd
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Loops through all the elements in the dialog and sets the
+    //              properties of the document based on the type and properties
+    //              of the element.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function closeDialogCmd()
+    {
+        var index;
+        var globalDoc = window.dialogArguments.document;
+
+        for (index = 0; index < document.all("radJustify").length; index++)
+        {
+            setRadioStateCmd(document.all("radJustify")[index],
+                globalDoc.selection.createRange());
+        }
+
+        setSelectStateCmd(cmdFormatBlock, globalDoc.selection.createRange());
+    }   //  closeDialogCmd
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Given a string, returns the number the string represents.
+    //              This is needed because current localization tools can
+    //              only find strings.
+    //
+    //  Arguments:  string  The string we're changing into a number.
+    //
+    //  Returns:    a number
+    //
+    //----------------------------------------------------------------------
+
+    function number(string)
+    {
+        return parseFloat(string);
+    }   //  number
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   If the current selection is not text or none, walk up
+    //              the tree until we select something that is
+    //
+    //  Argument:   doc   The document we're partying on
+    //
+    //  Returns:    nothing
+    //
+    //----------------------------------------------------------------------
+
+    function walkToText(doc)
+    {
+        var currentRange;
+        var element;
+
+        while (("None" != doc.selection.type) && ("Text" != doc.selection.type))
+        {
+            currentRange = doc.selection.createRange();
+            element = currentRange.parentElement();
+            currentRange = getTextRange(element);
+            currentRange.select();
+        }
+    }   //  walkToText
+
+//+-------------------------------------------------------------------------
+//
+//  This section contains code LOCAL to this particular dialog.
+//
+//--------------------------------------------------------------------------
+
+    //+----------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks at the currently selected text and fills the dialog
+    //              options appropriately
+    //
+    //  Arguments:  None
+    //
+    //  Returns:    Nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function loadBdy()
+    {
+        var globalDoc = window.dialogArguments.document;
+        //
+        //  bind events
+        //
+        document.onkeypress = new Function("defaultActions()");
+        document.onhelp     = new Function("callHelp()");
+        cmdFormatBlock.onchange    = new Function("cmdFormatBlock.changed = true");
+
+        btnOK.onclick       = new Function("btnOKClick()");
+        btnCancel.onclick   = new Function("btnCancelClick()");
+
+        walkToText(globalDoc);
+        initDialogCmd();
+    }   //loadBdy
+
+
+    //-----------------------------------------------------------------------
+    //
+    //  Synopsis:   Closes the dialog without doing anything.
+    //
+    //  Arguments:  none.
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function btnCancelClick()
+    {
+        window.close();
+    }   //  btnCancelClick
+
+
+    //+----------------------------------------------------------------------
+    //
+    //  Synopsis:   Closes the dialog after applying the user's selections
+    //              to the document
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function btnOKClick()
+    {
+        closeDialogCmd();
+        window.close();
+    }   //  btnOKClick
+
+
+    //+---------------------------------------------------------------------
+    //
+    //  Synopsis:   Looks for the ENTER and ESC keypresses and runs the
+    //              appropriate action.
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //-----------------------------------------------------------------------
+
+    function defaultActions()
+    {
+        var htmlKeyReturn = 13;
+        var htmlKeyEscape = 27;
+
+        if ((event.keyCode) == htmlKeyReturn)       //  Enter
+        {
+                btnOKClick();
+        }
+        else if ((event.keyCode) == htmlKeyEscape)  //  Esc
+        {
+            btnCancelClick();
+        }
+    }   //  defaultActions
+
+
+    //+--------------------------------------------------------------------
+    //
+    //  Synopsis:   Opens the help file with the appropriate helpid
+    //
+    //  Arguments:  none
+    //
+    //  Returns:    nothing
+    //
+    //---------------------------------------------------------------------
+
+    function callHelp()
+    {
+        var L_NoHelp_Text = "No help topic available.";
+        var elm = window.event.srcElement;
+        if (null != elm.helpid)
+        {
+            if ("btnCancel" != elm.id)
+            {
+                alert(L_NoHelp_Text);
+            }
+            else
+            {
+                window.showHelp("windows.hlp", parseInt(elm.helpid));
+            }
+        }
+    }   //  callHelp
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY style="font-family: ms sans serif; font-size: 8pt;
+background: buttonface;" onLoad="loadBdy()">
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+LEFT: 1em; TOP: 1em; WIDTH: 8em; HEIGHT: 1em">
+<LABEL For=cmdFormatBlock id=lblParaStyle tabIndex=-1>
+<U>P</U>aragraph Style
+</LABEL>
+</DIV>
+
+<SELECT id=cmdFormatBlock ACCESSKEY=p NAME="setCmdID" tabIndex=10
+style="font-family: ms sans serif; font-size: 8pt; LEFT: 1em; TOP: 2.5em;
+WIDTH: 27.7em; HEIGHT: 2.1em; position: absolute;">
+    <OPTION id=none         VALUE="" selected>                  </OPTION>
+    <OPTION id=optNormal    VALUE="<P>">        Normal          </OPTION>
+    <OPTION id=optFormatted VALUE="<PRE>">      Formatted       </OPTION>
+    <OPTION id=optAddress   VALUE="<ADDRESS>">  Address         </OPTION>
+    <OPTION id=optH1        VALUE="<H1>">       Heading 1       </OPTION>
+    <OPTION id=optH2        VALUE="<H2>">       Heading 2       </OPTION>
+    <OPTION id=optH3        VALUE="<H3>">       Heading 3       </OPTION>
+    <OPTION id=optH4        VALUE="<H4>">       Heading 4       </OPTION>
+    <OPTION id=optH5        VALUE="<H5>">       Heading 5       </OPTION>
+    <OPTION id=optH6        VALUE="<H6>">       Heading 6       </OPTION>
+    <OPTION id=optNumList   VALUE="<OL>">       Numbered List   </OPTION>
+    <OPTION id=optBullet    VALUE="<UL>">       Bulleted List   </OPTION>
+    <OPTION id=optDirList   VALUE="<DIR>">      Directory List  </OPTION>
+    <OPTION id=optMenuList  VALUE="<MENU>">     Menu List       </OPTION>
+    <OPTION id=optDefTerm   VALUE="<DT>">       Definition Term </OPTION>
+    <OPTION id=optDef       VALUE="<DD>">       Definition      </OPTION>
+</SELECT>
+
+<TABLE cellspacing cellPadding=7 borderColorDark=buttonhighlight
+borderColorLight=buttonshadow border=1 noshade="yes"
+style="position:absolute;font-family: ms sans serif; font-size: 8pt;
+LEFT: 1em; TOP: 5.5em; WIDTH: 28em; HEIGHT: 3em">
+    <TR>
+        <TD style="font-family: ms sans serif; font-size: 8pt;
+                   LEFT: 0; TOP: 0; WIDTH: 19em; HEIGHT: 2em">
+        <DIV style="color: buttonface">a</DIV>
+        </TD>
+    </TR>
+</TABLE>
+
+            <INPUT name=radJustify id=radJustifyLeft type=radio CHECKED
+            ACCESSKEY=l VALUE=_cmdJustifyLeft tabIndex=15
+            style="font-family: ms sans serif; font-size: 8pt; LEFT: 6.6em;
+            TOP: 6.5em; position: absolute; WIDTH: 1em; HEIGHT: 1em;">
+            <DIV style="font-family: ms sans serif; font-size: 8pt; position:
+            absolute;LEFT: 8.3em; TOP: 6.5em; WIDTH: 3em; HEIGHT: 1em">
+            <LABEL style="font-family: ms sans serif; font-size: 8pt"
+            For=radJustifyLeft id=lblJustifyLeft tabIndex="-1">
+            <U>L</U>eft
+            </LABEL>
+            </DIV>
+            <INPUT name=radJustify id=radJustifyCenter type=radio ACCESSKEY=c
+            VALUE=_cmdJustifyCenter tabIndex=20
+            style="font-family: ms sans serif; font-size: 8pt; LEFT: 12.1em;
+            TOP: 6.5em; position: absolute; WIDTH: 1em; HEIGHT: 1em">
+            <DIV style="font-family: ms sans serif; font-size: 8pt;
+            position: absolute;LEFT: 13.8em; TOP: 6.5em; WIDTH: 4em;
+            HEIGHT: 1em">
+            <LABEL style="font-family: ms sans serif; font-size: 8pt"
+            For=radJustifyCenter id=lblJustifyCenter tabIndex="-1">
+            <U>C</U>enter
+            </LABEL>
+            </DIV>
+            <INPUT name=radJustify id=radJustifyRight type=radio ACCESSKEY=r
+            VALUE=_cmdJustifyRight tabIndex=25
+            style="font-family: ms sans serif; font-size: 8pt; LEFT: 18.6em;
+            TOP: 6.5em; position: absolute; WIDTH: 1em; HEIGHT: 1em">
+            <DIV style="font-family: ms sans serif; font-size: 8pt;
+            position: absolute;LEFT: 20.3em; TOP: 6.5em; WIDTH: 3em;
+            HEIGHT: 1.3em">
+            <LABEL style="font-family: ms sans serif; font-size: 8pt"
+            For=radJustifyRight lblJustifyRight tabIndex="-1">
+            <U>R</U>ight
+            </LABEL>
+            </DIV>
+
+<DIV style="font-family: ms sans serif; font-size: 8pt; position: absolute;
+background: buttonface; HEIGHT: 1em; LEFT: 1.5em; TOP: 5em; WIDTH: 5em">
+<LABEL id=lblAlign tabIndex="-1">&nbsp;Align Text</LABEL>
+</DIV>
+
+
+<BUTTON id=btnOK tabIndex=30
+style="font-family: ms sans serif; font-size: 8pt; LEFT: 14.4em; TOP: 9.5em;
+WIDTH: 6.8em; HEIGHT: 2.1em; position: absolute">
+OK</BUTTON>
+
+<!--
+<BUTTON id=btnClear onclick="btnClearClick()" tabIndex=35
+style="font-family: ms sans serif; font-size: 8pt; LEFT: 14.4em; TOP: 9.5em;
+WIDTH: 6.8em; HEIGHT: 2.1em; position: absolute">
+Clear All</BUTTON>
+-->
+
+<BUTTON id=btnCancel tabIndex=40
+style="font-family: ms sans serif; font-size: 8pt; LEFT: 22em; TOP: 9.5em;
+position: absolute; WIDTH: 6.8em; HEIGHT: 2.1em">
+Cancel</BUTTON>
+
+</BODY></HTML>

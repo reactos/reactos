@@ -1,0 +1,94 @@
+<HTML>
+<HEAD>
+	<TITLE>Communicate and Collaborate with Others Using NetMeeting</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Communicate and Collaborate with Others Using NetMeeting
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)" onFilterChange="doRule(textarea);">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/netmtg.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+With NetMeeting, you can use data, audio, and video to communicate and collaborate with others in real-time over the Internet.
+Work together with multiple people by sharing applications for real-time collaboration, draw diagrams and exchange pictures
+using an electronic whiteboard, send messages with a text-based chat program, and exchange files during a conference. You can
+also communicate using voice over the Internet, and even let others see you using a video camera attached to your PC.
+<br><br>
+
+<DIV ID="textarea" CLASS="bubble" STYLE="display: block">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText" STYLE="display: block">
+To use NetMeeting, click the <B>Start</B> menu, point to <B>Programs</B>, point to <B>Internet Explorer</B>, and then click <B>NetMeeting</B> (if you
+don't see it listed, you can install it from the Internet Explorer 4.0 website).
+</SPAN>
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+</DIV>
+
+</BODY>
+</HTML>

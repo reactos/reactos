@@ -1,0 +1,10 @@
+LIBRARY         MSIEFTP
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Microsoft Internet Explorer FTP Folder Shell Extension'
+
+EXPORTS
+        DllGetClassObject                   PRIVATE     ;internal
+        DllCanUnloadNow                     PRIVATE     ;internal
+        DllRegisterServer                   PRIVATE     ;internal
+        DllUnregisterServer                 PRIVATE     ;internal
+        DllInstall                          PRIVATE     ;internal

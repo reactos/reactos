@@ -1,0 +1,102 @@
+typedef unsigned short USHORT;
+typedef          short  SHORT;
+typedef unsigned long  ULONG;
+typedef          long   LONG;
+typedef unsigned int   UINT;
+typedef          int    INT;
+typedef unsigned char  UCHAR;
+
+typedef void    VOID;
+typedef void   *PVOID;
+typedef void   *LPVOID;
+typedef UCHAR   BYTE;
+typedef USHORT  WORD;
+typedef ULONG   DWORD;
+typedef UINT    HANDLE;
+typedef WORD    HANDLE16;
+typedef DWORD   HANDLE32;
+typedef int     BOOL;
+typedef char   *LPSTR;
+typedef BYTE   *PBYTE;
+typedef BYTE   *LPBYTE;
+typedef USHORT  SEL;
+typedef INT    *LPINT;
+typedef UINT   *LPUINT;
+typedef DWORD  *LPDWORD;
+typedef LONG   *LPLONG;
+typedef WORD   *LPWORD;
+
+typedef HANDLE  HWND;
+typedef HANDLE  HDC;
+typedef HANDLE  HBRUSH;
+typedef HANDLE  HBITMAP;
+typedef HANDLE  HRGN;
+typedef HANDLE  HFONT;
+typedef HANDLE  HCURSOR;
+typedef HANDLE  HMENU;
+typedef HANDLE  HPEN;
+typedef HANDLE  HICON;
+typedef HANDLE  HUSER;      /* vanilla user handle */
+typedef HANDLE  HPALETTE;
+typedef HANDLE  HMF;
+typedef HANDLE  HEMF;
+typedef HANDLE	HCOLORSPACE;
+typedef HANDLE  HMEM;
+typedef HANDLE  HGDI;       /* vanilla gdi handle */
+typedef HANDLE  HGLOBAL;
+typedef HANDLE  HRSRC;
+typedef HANDLE  HACCEL;
+
+
+typedef WORD    ATOM;
+
+typedef DWORD   WNDPROC;    /* handled inside USER */
+
+/* HACK! have it as a pointer to type which differes between 16 and 32
+ * so InLine translation of pointers handle it correctly
+ */
+typedef int *   FARPROC;    /* thunk layer handles this one */
+
+
+/**********************************************/
+typedef struct tagRECT {
+    INT         left;
+    INT         top;
+    INT         right;
+    INT         bottom;
+} RECT;
+typedef RECT   *LPRECT;
+
+
+typedef struct tagPOINT {
+    INT         x;
+    INT         y;
+} POINT;
+typedef POINT  *LPPOINT;
+
+
+typedef struct tagPOINTL {
+    LONG        x;
+    LONG        y;
+} POINTL;
+typedef POINTL  *LPPOINTL;
+
+
+typedef struct tagOFSTRUCT {
+    BYTE        cBytes;
+    BYTE        fFixedDisk;
+    WORD        nErrorCode;
+    WORD        reserved1;
+    WORD        reserved2;
+    BYTE        szPathName[128];
+} OFSTRUCT;
+typedef OFSTRUCT *LPOFSTRUCT;
+
+
+typedef struct tagCHARSETINFO {
+    UINT ciCharset;
+    UINT ciACP;
+    DWORD ciSigCP[2];
+    DWORD ciSigU[4];
+} CHARSETINFO;
+typedef CHARSETINFO *LPCHARSETINFO;

@@ -1,0 +1,577 @@
+/*
+** oeminf.c - Functions for manipulating OEMxxxxx.INF files.  This module is
+**            shared by Windows Setup and Control Panel.  The constant
+**            WINSETUP is defined when compiling for Windows Setup.
+*/
+
+
+// Headers
+///////////
+
+#include "priv.h"
+#include "globals.h"
+
+#include "dbutl.h"
+
+#define USE_OEMINF_DEFS
+#include "oeminf.h"
+
+
+/* BOOL RunningFromNet(void);
+ *
+ * Checks to see if the user is running on a network Windows installation.
+ *
+ * ENTRY: void
+ *
+ * EXIT: BOOL - TRUE if the user is running on a network Windows
+ *              installation.  FALSE if not or if one of the
+ *              Get...Directory() calls fails.
+ *
+ */
+BOOL FAR PASCAL RunningFromNet(void)
+{
+   char pszWindowsDir[MAX_NET_PATH], pszSystemDir[MAX_NET_PATH];
+   LPSTR pszWindowsTemp, pszSystemTemp;
+
+   // Check the results from GetWindowsDirectory() and GetSystemDirectory().
+   // If the System directory is a direct subdirectory of the Windows
+   // directory, this is not a network installation.  Otherwise it is a
+   // network installation.
+
+   if (GetWindowsDirectory(pszWindowsDir, sizeof(pszWindowsDir)) == 0)
+      return(FALSE);
+   if (GetSystemDirectory(pszSystemDir, sizeof(pszSystemDir)) == 0)
+      return(FALSE);
+
+   pszWindowsTemp = pszWindowsDir;
+   pszSystemTemp = pszSystemDir;
+
+   AnsiUpper(pszWindowsTemp);
+   AnsiUpper(pszSystemTemp);
+
+   while ((*pszWindowsTemp != '\0') && (*pszWindowsTemp++ == *pszSystemTemp++))
+      ;
+
+   // Did the path specifications match?
+   if (*pszWindowsTemp == '\0')
+      return(FALSE);
+   else
+      return(TRUE);
+}
+
+
+/* HANDLE ReadFileIntoBuffer(int doshSource);
+ *
+ * Reads up to first (64K - 1) bytes of an input file into a buffer.
+ *
+ * ENTRY: doshSource - DOS file handle of file open for reading
+ *
+ * EXIT: HANDLE - Global handle to the file buffer filled from the input
+ *                file.  NULL if an error occurs.
+ *
+ */
+HANDLE FAR PASCAL ReadFileIntoBuffer(int doshSource)
+{
+   LONG lLength;
+   HANDLE hBuffer;
+   LPSTR lpszBuffer, lpszTemp;
+   int nBytesToRead;
+
+   // How long is the file?
+   if ((lLength = _llseek(doshSource, 0L, 2)) < 0L)
+      // Return NULL on error.
+      return(NULL);
+
+   // Return to the beginning of the file.
+   if (_llseek(doshSource, 0L, 0) != 0L)
+      return(NULL);
+
+   // Don't overrun the .inf buffer bound.
+   if (lLength > MAX_INF_COMP_LEN)
+      lLength = MAX_INF_COMP_LEN;
+
+   // Allocate storage for the file.
+   if ((hBuffer = GlobalAlloc(GHND, (DWORD)lLength)) == NULL)
+      return(NULL);
+
+   // Lock the buffer in place.
+   if ((lpszTemp = lpszBuffer = (LPSTR)GlobalLock(hBuffer)) == NULL)
+      return(NULL);
+
+   // Fill the buffer from the file.
+   while (lLength > 0)
+   {
+      nBytesToRead = (int)min(lLength, MAX_INF_READ_SIZE);
+
+      if (_lread(doshSource, lpszTemp, nBytesToRead) != (WORD)nBytesToRead)
+      {
+         GlobalUnlock(hBuffer);
+         GlobalFree(hBuffer);
+         return(NULL);
+      }
+
+      lLength -= (LONG)nBytesToRead;
+      lpszTemp += (LONG)nBytesToRead;
+   }
+
+   // Unlock the buffer.
+   GlobalUnlock(hBuffer);
+
+   // File read in successfully.
+   return(hBuffer);
+}
+
+
+/* int FilesMatch(int dosh1, int dosh2, unsigned int uLength);
+ *
+ * Compares two files.
+ *
+ * ENTRY: dosh1   - DOS file handle of first file open for reading
+ *        dosh2   - DOS file handle of second file open for reading
+ *        uLength - number of bytes to compare
+ *
+ * EXIT: int - TRUE if first (64K - 1) bytes of the files match exactly.
+ *             FALSE if not.  (-1) if an error occurs.
+ *
+ * The buffers need not be null-terminated.  '\0's are treated as just
+ * another byte to compare.
+ *
+ */
+int FAR PASCAL FilesMatch(HANDLE h1, HANDLE h2, unsigned uLength)
+{
+   int nReturnCode = -1;
+   LPSTR lpsz1, lpsz2;
+
+   if ((lpsz1 = (LPSTR)GlobalLock(h1)) == NULL)
+   {
+      GlobalUnlock(h1);
+      return(nReturnCode);
+   }
+
+   if ((lpsz2 = (LPSTR)GlobalLock(h2)) != NULL)
+   {
+      // See if the files match.
+#if 1
+      nReturnCode = !memcmp(lpsz1, lpsz2, uLength);
+#else
+      _asm
+      {
+         pushf                      ; Save work registers.
+         push  ds
+         push  si
+         push  es
+         push  di
+
+         lds   si, lpsz1            ; Initialize string pointers.
+         les   di, lpsz2
+
+         mov   cx, uLength          ; Length of buffers to compare.
+         cld                        ; Scan forward.
+         repz  cmpsb                ; Look for the first non-match.
+
+         mov   nReturnCode, TRUE    ; Return TRUE if no non-matches found.
+         jz    Done
+
+         mov   nReturnCode, FALSE   ; Return FALSE if any non-match found.
+
+Done:
+         pop   di                   ; Restore work registers.
+         pop   es
+         pop   si
+         pop   ds
+         popf
+      }
+#endif
+   }
+
+   GlobalUnlock(h1);
+   GlobalUnlock(h2);
+   return(nReturnCode);
+}
+
+
+/* LPSTR TruncateFileName(LPSTR pszPathSpec);
+ *
+ * Finds the file name portion of a path specification.
+ *
+ * ENTRY: lpszPathSpec - path specification
+ *
+ * EXIT: LPSTR - Pointer to file name portion of string.
+ *
+ */
+LPSTR FAR PASCAL TruncateFileName(LPSTR lpszPathSpec)
+{
+   LPSTR lpszStart = lpszPathSpec;
+
+   // Find end of string.
+   while (*lpszPathSpec != '\0')
+      lpszPathSpec = AnsiNext(lpszPathSpec);
+
+   // Seek back until we find a path separator or the begining of the string.
+
+   while (! IS_PATH_SEPARATOR(*lpszPathSpec) && lpszPathSpec != lpszStart)
+      lpszPathSpec = AnsiPrev(lpszStart, lpszPathSpec);
+
+   if (lpszPathSpec != lpszStart)
+      lpszPathSpec = AnsiNext(lpszPathSpec);
+
+   // Return pointer to file name.
+   return(lpszPathSpec);
+}
+
+
+/* int OpenFileAndGetLength(LPSTR lpszSourceFile, PLONG plFileLength);
+ *
+ * Opens a file into a global buffer.  Returns a handle to the buffer and the
+ * actual length of the file.
+ *
+ * ENTRY: lpszSourceFile - source file name
+ *        plFileLength   - pointer to LONG to be filled with length of source
+ *                         file
+ *
+ * EXIT: int           - Open DOS file handle if successful.  (-1) if
+ *                       unsuccessful.
+ *       *plFileLength - Filled in with length of source file if successful.
+ *                       Undefined if unsuccessful.
+ */
+int FAR PASCAL OpenFileAndGetLength(LPSTR lpszSourceFile, LPLONG plFileLength)
+{
+   int doshSource;
+   OFSTRUCT of;
+
+   doshSource = OpenFile(lpszSourceFile, &of, OF_READ);
+   if (doshSource == -1)
+      return doshSource;
+
+   // Keep track of the length of the new file.
+
+   if ((*plFileLength = _llseek(doshSource, 0L, 2)) < 0L)
+   {
+      _lclose(doshSource);
+      return(-1);
+   }
+
+   return(doshSource);
+}
+
+
+#define INF_YES (1)
+#define INF_NO  (0)
+#define INF_ERR (-1)
+
+/* int IsNewFile(LPSTR lpszSourceFile, LPSTR lpszDestDir);
+ *
+ * Checks to see if a given file already exists as a file matching a given
+ * file specification.
+ *
+ * ENTRY: pszSourceFile - path name of the new file
+ *        pszSearchSpec - target directory and file specification (may
+ *                        include wildcards) to use to search for duplicates
+ *                        (e.g., "c:\win\system\*.inf")
+ *
+ * EXIT: int - TRUE if the new file doesn't already exist as a file matching
+ *             the given file specification.  FALSE if it does.  (-1) if an
+ *             error occurs.
+ *
+ */
+int FAR PASCAL IsNewFile(LPSTR lpszSourceFile, LPSTR lpszSearchSpec)
+{
+   int nReturnCode = INF_ERR;
+   int nTargetLen, nMatchRet;
+   // BOOL bFound;
+   // FCB fcbSearch;
+   HANDLE   hFind;
+   WIN32_FIND_DATA   sFind;
+   LPSTR lpszReplace;
+   char pszTargetFileName[MAX_NET_PATH + FILEMAX];
+   int doshSource, doshTarget;
+   HANDLE hSourceBuf, hTargetBuf;
+   LONG lSourceLength, lTargetLength;
+
+   // How much storage do we need for the destination file name?
+
+   lpszReplace = TruncateFileName(lpszSearchSpec);
+   nTargetLen = lpszReplace - lpszSearchSpec + FILEMAX;
+
+   // Don't overflow the buffer.
+   if (nTargetLen > sizeof(pszTargetFileName))
+      return(INF_ERR);
+
+   // Keep track of the start of the file name in the destination path
+   // specification.
+
+   lstrcpy(pszTargetFileName, lpszSearchSpec);
+   lpszReplace = (LPSTR)pszTargetFileName + (lpszReplace - lpszSearchSpec);
+
+   // Are there any files to process?
+   //
+   hFind = FindFirstFile(lpszSearchSpec, &sFind);
+
+   // bFound = OEMInfDosFindFirst(& fcbSearch, lpszSearchSpec, ATTR_ALL_FILES);
+
+   // Only open the source file if there are any existing files to compare
+   // against.
+   if (hFind == INVALID_HANDLE_VALUE)
+      return(INF_YES);
+
+   if ((doshSource = OpenFileAndGetLength(lpszSourceFile, & lSourceLength)) == NULL)
+   {
+      FindClose(hFind);
+      return(INF_ERR);
+   }
+
+   hSourceBuf = ReadFileIntoBuffer(doshSource);
+
+   _lclose(doshSource);
+
+   if (hSourceBuf == NULL) 
+   {
+      FindClose(hFind);
+      return(INF_ERR);
+   }
+
+   // Check all the matching files.
+
+   while (hFind != INVALID_HANDLE_VALUE)
+   {
+      // Replace the wildcard file specification with the file name of the
+      // target file.
+      // lstrcpy(lpszReplace, fcbSearch.szName);
+      lstrcpy(lpszReplace, sFind.cAlternateFileName);
+
+      // Open the target file.
+
+      if ((doshTarget = OpenFileAndGetLength(pszTargetFileName,
+                                             & lTargetLength)) == NULL)
+         goto IsNewFileExit;
+
+      // Is the target file the same size as the new file?
+
+      if (lTargetLength == lSourceLength)
+      {
+         // Yes.  Read in the target file.
+
+         hTargetBuf = ReadFileIntoBuffer(doshTarget);
+
+         _lclose(doshTarget);
+
+         if (hTargetBuf == NULL)
+            goto IsNewFileExit;
+
+         // ReadFileIntoBuffer() has already checked to make sure the files
+         // aren't longer than (64K - 1) bytes long.
+         // Assert: lSourceLength fits in an unsigned int.
+         nMatchRet = FilesMatch(hSourceBuf, hTargetBuf,
+                                (unsigned int)lSourceLength);
+
+         GlobalFree(hTargetBuf);
+
+         if (nMatchRet == -1)
+            goto IsNewFileExit;
+         else if (nMatchRet == TRUE)
+         {
+            lstrcpy(lpszSourceFile, pszTargetFileName);
+            nReturnCode = INF_NO;
+            goto IsNewFileExit;
+         }
+      }
+
+      // Look for the next matching file.
+      // bFound = OEMInfDosFindNext(& fcbSearch);
+      if( ! FindNextFile(hFind, &sFind) )
+      {
+         FindClose(hFind);
+         hFind = INVALID_HANDLE_VALUE;
+      }
+   }
+
+   nReturnCode = INF_YES;
+
+IsNewFileExit:
+
+   if( hFind != INVALID_HANDLE_VALUE )
+      FindClose(hFind);
+
+
+   GlobalFree(hSourceBuf);
+
+   return(nReturnCode);
+}
+
+
+/* PSTR MakeUniqueFilename(PSTR pszDirName, PSTR pszPrefix,
+ *                                 PSTR pszExtension);
+ *
+ * Creates a unique filename in a directory given a prefix for the base of
+ * the filename and an extension.  The prefix must be three characters long.
+ * The extension may be zero to three characters long.  The extension should
+ * not include a period.  E.g., prefix "oem" and extension "inf".
+ *
+ * pszDirName's buffer must have space for up to 13 extra characters to be
+ * appended (a slash plus 8.3).
+ *
+ *
+ * ENTRY: pszDirName   - buffer holding target directory, unique filename
+ *                       will be appended
+ *        pszPrefix    - three-character base filename prefix to use
+ *        pszExtension - filename extension to use
+ *
+ * EXIT: PSTR - Pointer to modified path specification if successful.  NULL
+ *              if unsuccessful.
+ *
+ */
+LPSTR FAR PASCAL MakeUniqueFilename(LPSTR lpszDirName, LPSTR lpszPrefix, LPSTR lpszExtension)
+{
+   char szOriginalDir[MAX_NET_PATH];
+   char szUniqueName[FILEMAX];
+   unsigned long ulUnique = 0UL;
+   LPSTR lpszTemp;
+   BOOL bFoundUniqueName = FALSE;
+   // FCB fcbSearch;
+
+   DEBUGMSG((DM_TRACE1, "MakeUniqueFilename() "));
+   DEBUGBREAK;
+
+   // Check form of arguments.
+   if (lstrlen(lpszPrefix) != 3 || lstrlen(lpszExtension) > 3)
+      return(NULL);
+
+   // Save current directory.
+   // if (OEMInfDosCwd(szOriginalDir) != 0)
+   if( ! GetCurrentDirectory(sizeof(szOriginalDir), szOriginalDir) )
+      return(NULL);
+
+   // Move to target directory.
+   // if (OEMInfDosChDir(lpszDirName) != 0)
+   if( ! SetCurrentDirectory(lpszDirName) )
+      return(NULL);
+
+   // Make file specification.
+   lstrcpy(szUniqueName, lpszPrefix);
+   lpszTemp = szUniqueName + 3;
+
+   // Try to create a unique filename.
+   while (! bFoundUniqueName && ulUnique <= MAX_5_DEC_DIGITS)
+   {
+      // Hack together next filename to try.
+      wsprintf(lpszTemp, "%lu.%s", ulUnique, lpszExtension);
+
+      // Is this name being used?
+      // if (OEMInfDosFindFirst(& fcbSearch, szUniqueName, ATTR_ALL_FD) == 0)
+      if( GetFileAttributes(szUniqueName) == 0xffffffff )
+      {
+         // Nope.
+         bFoundUniqueName = TRUE;
+         break;
+      }
+      else
+         // Yes.  Keep trying.
+         ulUnique++;
+   }
+
+   // Have all 100,000 possibilties been exhausted?
+   if (! bFoundUniqueName)
+      return(FALSE);
+
+   // Add new unique filename on to end of path specification buffer.
+
+   // Check for ending slash.
+   lpszTemp = lpszDirName + lstrlen(lpszDirName);
+   if (! IS_SLASH(*(lpszTemp - 1)) && *(lpszTemp - 1) != ':')
+      *lpszTemp++ = '\\';
+
+   // Append unique filename.
+   lstrcpy(lpszTemp, szUniqueName);
+
+   // Return pointer to modified buffer.
+
+   DEBUGMSG((DM_TRACE1,"MakeUniqueFilename returning: %s %s", lpszDirName, lpszTemp));
+   return(lpszDirName);
+}
+
+
+/* BOOL CopyNewOEMInfFile(PSTR pszOEMInfPath);
+ *
+ * Copies a new OEMSetup.inf file into the user's Windows (network) or System
+ * (non-network) directory.  Gives the new .inf file a unique name of the
+ * form 'OEMxxxxx.INF'.  Only copies it in if it is really a new .inf file.
+ *
+ * ENTRY: pszOEMInfPath - path name of the new .inf file to be copied
+ *
+ * EXIT: BOOL - TRUE if the new .inf file was copied successfully or had
+ *              already been added.  0 if the copy failed.
+ *
+ */
+BOOL FAR PASCAL CopyNewOEMInfFile(LPSTR lpszOEMInfPath)
+{
+   BOOL bRunningFromNet;
+   char pszDest[MAX_NET_PATH + FILEMAX];
+   LPSTR pszTemp;
+   int doshSource, doshDest;
+
+   // Where should we put the new .inf file?
+   if (bRunningFromNet = RunningFromNet())
+   {
+      // Put new .inf file in Windows directory.
+      if (GetWindowsDirectory(pszDest, MAX_NET_PATH) == 0)
+         return(FALSE);
+   }
+   else
+   {
+      // Put new .inf file in System directory.
+      if (GetSystemDirectory(pszDest, MAX_NET_PATH) == 0)
+         return(FALSE);
+   }
+
+   // Make file specification for IsNewFile().
+   pszTemp = pszDest + lstrlen(pszDest);
+
+   // N.b., we depend on pszDest not ending in a slash here.
+   lstrcpy(pszTemp, OEM_STAR_DOT_INF);
+
+   // Has this .inf file already been copied to the user's Windows or System
+   // directory?
+   switch (IsNewFile(lpszOEMInfPath, pszDest))
+   {
+   case INF_ERR:
+      return(FALSE);
+
+   case INF_YES:
+      // Trim "\*.inf" off end of pszDest.
+      *pszTemp = '\0';
+
+      // Create a unique name for the new .inf file.
+      if (MakeUniqueFilename(pszDest, INF_PREFIX, INF_EXTENSION) == NULL)
+         return(FALSE);
+
+      // Copy .inf file.
+
+      if ((doshSource = FOPEN(lpszOEMInfPath)) == -1)
+         return(FALSE);
+      if ((doshDest = FCREATE(pszDest)) == -1)
+      {
+         FCLOSE(doshSource);
+         return(FALSE);
+      }
+
+      // All LZERROR_ return codes are < 0.
+      if (LZCopy(doshSource, doshDest) < 0L)
+         return(FALSE);
+
+      // Close the files.
+      FCLOSE(doshSource);
+      FCLOSE(doshDest);
+
+      // Copy the new file name back, so the calling function can use it
+      lstrcpy(lpszOEMInfPath, pszDest);
+
+   default:
+      break;
+   }
+
+   // New .inf file already existed or copied successfully.
+   return(TRUE);
+}
+
+
+

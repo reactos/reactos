@@ -1,0 +1,71 @@
+/*----------------------------------------------------------------------------*\
+|   Include this file in your .RC file.                                        |
+|                                                                              |
+|   The information here is described more fully in the SDK online help.       |
+|   Search on topics "VS_FIXEDFILEINFO" and "Version-Information Resource".    |
+\*----------------------------------------------------------------------------*/
+#ifdef   RC_INVOKED
+
+#ifdef WINNT
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+/*----------------------------------------------------------------------------*\
+|   The following VER_ and VSTR_ #defines should be changed to suit a          |
+|   particular application, DLL, driver, font or device.                       |
+|                                                                              |
+|   Pay particular attention to:                                               |
+|       VER_FILETYPE                                                           |
+|       VER_FILEVERSION, VSTR_FILEVERSION                                      |
+|       VER_PRODUCTVERSION, VSTR_PRODUCTVERSION                                |
+|                                                                              |
+|       VSTR_INTERNALNAME                                                      |
+|       VSTR_ORIGINALFILENAME                                                  |
+\*----------------------------------------------------------------------------*/
+
+/* VFT_APP:  for an application.
+ * VFT_DLL:  for a dynamic-link library.
+ * VFT_FONT: for a font.
+ * VFT_DRV:  for a device driver.
+ * VFT_VXD:  for a virtual device.
+ **********/
+
+#define VER_FILETYPE            VFT_APP
+#define VER_FILESUBTYPE            VFT_UNKNOWN
+
+/* Binary and string version numbers for this file, and for the product
+ * with which the file is distributed.
+ *
+ * The binary version number is defined by two DWORDS.  They appear
+ * here as HIWORD(dw1), LOWORD(dw1), HIWORD(dw2), LOWORD(dw2).
+ *
+ * The version strings can be whatever you want.
+ **********/
+
+/* Change these to suit your needs.
+ **********/
+#define VSTR_FILEDESCRIPTION    "PANOSE(tm) Font Mapper"
+
+#define VER_FILEDESCRIPTION_STR        VSTR_FILEDESCRIPTION
+
+
+/* Module name if this is a DLL - for example, "USER".  Otherwise, this
+ * should be the original filename, without extension.
+ **********/
+#define VER_INTERNALNAME_STR       "PANMAP"
+
+
+/* Original filename of the file, -not- including the path.
+ **********/
+#define VER_ORIGINALFILENAME_STR   "PANMAP.DLL"
+
+
+/* Full text of all copyright notices.
+ **********/
+#define VER_LEGALCOPYRIGHT_YEARS  "1991-1995"
+
+#include <common.ver>
+
+#endif  /* RC_INVOKED */

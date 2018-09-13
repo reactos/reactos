@@ -1,0 +1,106 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\msaahtml=)
+!include $(ROOT)\common.inc
+
+!ifndef WIN16
+!undef NO_BROWSER_FILE
+!endif
+
+
+# do NOT compile Unicode
+
+C_DEFINES=\
+        $(C_DEFINES) \
+        /UUNICODE \
+        /U_UNICODE \
+        /D_DEBUG
+
+USE_NATIVE_EH=1
+CHECKED_ALT_DIR=1
+
+TARGETNAME=msaahtml
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLENTRY=_DllMainCRTStartup
+
+DLLDEF=msaahtml.def
+# BUG: we definitely need to check that this BASE address is OK... -jkl
+DLLBASE=0x50000000
+
+MSC_WARNING_LEVEL=/W3
+
+INCLUDES= \
+        .; \
+        $(SDK_INC_PATH)\mfc42; \
+        $(SDK_INC_PATH)\crt; \
+        \nt\private\windows\oleacc; \
+    $(O); \
+
+
+SOURCES= \
+        msaahtml.idl \
+        msaahtml.rc \
+        anchor.cpp \
+        aommgr.cpp \
+        Area.cpp \
+        button.cpp \
+        checkbox.cpp \
+        document.cpp \
+        editfld.cpp \
+        Enumvar.cpp \
+        event.cpp \
+        frame.cpp \
+        image.cpp \
+        map.cpp \
+        marquee.cpp \
+        MSAAHTML.cpp \
+        optnbtn.cpp \
+        plugin.cpp \
+        prxymgr.cpp \
+        radiobtn.cpp \
+        select.cpp \
+        sound.cpp \
+        StdAfx.cpp \
+        str.cpp \
+        table.cpp \
+        tablcell.cpp \
+        text.cpp \
+        trid_ae.cpp \
+        trid_ao.cpp \
+        window.cpp \
+
+
+NTTARGETFILES=
+
+USE_MIDL_FOR_MKTYPLIB=1
+
+MIDL_FLAGS = \
+        /h $O\msaahtml.h \
+    /tlb $O\msaahtml.tlb \
+        /iid $O\msaahtml_i.c \
+    /proxy $O\msaahtml_p.c \
+    /dlldata $O\dlldata.c
+
+# PRECOMPILED_INCLUDE=headers.h
+# PRECOMPILED_CXX=1
+
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+!if "_DEBUG"=="1"
+        $(SDK_LIB_PATH)\libcd.lib
+!else
+        $(SDK_LIB_PATH)\libc.lib
+!endif
+
+NTTARGETFILE0=$O\msaahtml.tlb

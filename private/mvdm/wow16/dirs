@@ -1,0 +1,27 @@
+DIRS =	kernel31\
+	lib	\
+	user	\
+	gdi	\
+	system	\
+	shell	\
+	drivers	\
+	winspool\
+	test	\
+	mmsystem\
+	mciole	\
+	winsock	\
+	toolhelp\
+	timer	\
+	wowdeb	\
+	commdlg	\
+	sherlock\
+	rasapi16\
+	wfwnet	\
+	ddeml	\
+	winoldap\
+	ole	\
+	regedit	\
+	killwow	\
+	wifeman	\
+	winnls	
+	

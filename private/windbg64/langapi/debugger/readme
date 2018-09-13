@@ -1,0 +1,52 @@
+This project contains any header files which need to be shared
+by the following projects (where "xxx" represents a version
+number, such as 410 or 420):
+
+	CVxxx
+	CEXPR.xxx
+	SAPI.xxx
+	STUMP.xxx
+	CVPACK.xxx
+	CVDUMP.xxx
+
+Since these projects always go together and need to be in sync
+with each other, they share common header files in this project.
+
+----
+
+To use CVINC in conjunction with the above projects, set the
+CVINC environment variable to point to your CVINC project,
+e.g. CVINC=d:\cvinc.420.  If you enlisted in CVINC in the
+\cvinc directory of the same drive as the other projects,
+you don't need to set the environment variable.
+
+----
+
+Files which belong in CVINC:
+	Header files which are considered public, are used in
+	at least two of the above projects, and are supposed to
+	be consistent between the projects.
+
+Files which do not belong in CVINC:
+	Any header files which are considered private.
+	Any C runtime or operating system header files.
+
+----
+
+CVINC is the owner (as opposed to a client) of the following
+files:
+
+	TYPES.H    - Generic types like USHORT etc.
+	CVTYPES.H  - Types commonly used across CV projects
+	CVEXEFMT.H - Structures for reading CV info from EXE
+	EEAPI.H    - Expression Evaluator public API
+	OD.H       - OSDebug public API
+	SHAPI.H    - Symbol Handler public API
+	ORPC_DBG.H - OLE Remote Procedure Call debugging header
+	ORPC_DBG.C - OLE Remote Procedure Call debugging source
+
+When you change any of the files which are owned by CVINC,
+you should also update CHANGES.TXT to describe your changes.
+
+CVINFO.H is owned by the LANGAPI project on \\SLUG\CMERGE.
+I don't know who owns CVEXEFMT.H.

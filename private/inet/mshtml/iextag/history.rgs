@@ -1,0 +1,24 @@
+HKCR
+{
+	history.history.1 = s 'persisthistory Class'
+	{
+		CLSID = s '{3050f4c8-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	history.history = s 'persisthistory Class'
+	{
+		CurVer = s 'history.history.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3050f4c8-98b5-11cf-bb82-00aa00bdce0b} = s 'persistSnapshot Class'
+		{
+			ProgID = s 'history.history.1'
+			VersionIndependentProgID = s 'history.history'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

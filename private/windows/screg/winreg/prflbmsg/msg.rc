@@ -1,0 +1,40 @@
+#include <windows.h>
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ * The strings don't need a '\0', since common.ver has them.
+ */
+#define	VER_FILETYPE	VFT_DLL
+/* possible values:		VFT_UNKNOWN
+				VFT_APP
+				VFT_DLL
+				VFT_DRV
+				VFT_FONT
+				VFT_VXD
+				VFT_STATIC_LIB
+*/
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+/* possible values		VFT2_UNKNOWN
+				VFT2_DRV_PRINTER
+				VFT2_DRV_KEYBOARD
+				VFT2_DRV_LANGUAGE
+				VFT2_DRV_DISPLAY
+				VFT2_DRV_MOUSE
+				VFT2_DRV_NETWORK
+				VFT2_DRV_SYSTEM
+				VFT2_DRV_INSTALLABLE
+				VFT2_DRV_SOUND
+				VFT2_DRV_COMM
+*/
+#define VER_FILEDESCRIPTION_STR     "Perflib Event Messages"
+#define VER_INTERNALNAME_STR        "PRFLBMSG.DLL"
+#define VER_ORIGINALFILENAME_STR    "PRFLBMSG.DLL"
+
+#include "common.ver"
+#include "prflbmsg.rc"
+

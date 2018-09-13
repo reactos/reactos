@@ -1,0 +1,66 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css"/>
+<TITLE>Cluster service</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("adv_bg.gif");
+        background-repeat:no-repeat;
+        background-position:165 35;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="ffffff">Cluster Service</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Cluster service enables you to access and manage <A HREF="javascript:nothing()" onclick="popup(1)">cluster</A> 
+                nodes as a single system rather than as separate computers; it provides two key benefits: 
+            <UL>
+                <LI ID="para2">
+                    <B>High availability</B>&nbsp;&#151;&nbsp; If one of the nodes in the cluster fails, 
+                        another node continues to provide service, picking up where the failed node left off 
+                        (a process known as <A HREF="javascript:nothing()" onclick="popup(2)">failover</A>). 
+                        Critical applications and resources remain available to clients. 
+                </LI>
+                <LI ID="para3">
+                    <B>Manageability</B>&nbsp;&#151;&nbsp;All the nodes in a cluster are managed as a single system 
+                        rather than as separate computers. This makes performing administrative tasks easier and more efficient.
+                </LI>
+            </UL>
+            <P ID="para4"><B>Important</B>
+            <BR>Installing Cluster service affects the functionality of other Windows components. 
+                Before you install Cluster service on this server, 
+                read the <A HREF="javascript:help('mscsconcepts.chm::/sag_MSCScheck_16.htm')">Cluster service installation checklist</A> 
+                to ensure you have the proper hardware and understand Clustering concepts.
+            <P ID="para5"><A HREF="javascript:exec('sysocmgr.exe','/x /i:%windir%/inf/clusoc.inf /u:%windir%/system32/clusoc.txt')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 BORDER="0" ALIGN="middle" HSPACE="5">Set up</A> Cluster service.
+            <P ID="para6"><A HREF="javascript:help('cluster.chm::/win_cluster.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24  BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Cluster service.
+        </TD>
+    </TR>
+</TABLE>
+
+<!--Definition for cluster-->
+<DIV class="defdiv" ID="popup1">
+    <span class="defspan" onblur="popOff(1)" ID="def1"><b>cluster</b>
+	<br>A group of computers that cooperate to achieve a common task. A cluster must meet the following criteria: first, the cluster must be composed of whole computers, called nodes. Second, no two nodes of a cluster should have incompatible versions of the same data; this is called consistency. Finally, a cluster must be named and used as a single computing resource.
+    </span>
+</DIV>
+
+<!--Definition for failover-->
+<DIV class="defdiv" ID="popup2">
+    <span class="defspan" onblur="popOff(2)" ID="def2"><b>failover</b>
+	<br>Process of moving a group to another node in response to a node or resource failure.
+    </span>
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

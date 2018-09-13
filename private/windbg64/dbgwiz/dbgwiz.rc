@@ -1,0 +1,915 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include <commctrl.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows NT Wizard for Debuggers"
+#define VER_INTERNALNAME_STR        "dbgwiz.exe\0"
+#define VER_ORIGINALFILENAME_STR    "dbgwiz.exe\0"
+
+#include <common.ver>
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_STD_COPY_SYMS DIALOGEX 0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+    LTEXT           "",IDC_STATIC_COPY_STATUS,69,51,178,91
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,50
+END
+
+IDD_COPYING DIALOGEX 0, 0, 355, 114
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Symbol File Copy Status"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Currently copying:",IDC_STATIC,7,7,341,10
+    LTEXT           "File copy progess:",IDC_STATIC,7,48,341,10
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,7,
+                    63,341,18
+    LTEXT           "",IDC_STATIC_CURRENT_FILE,7,21,341,18,SS_NOPREFIX,
+                    WS_EX_STATICEDGE
+    PUSHBUTTON      "&Cancel",IDCANCEL,152,93,50,14
+END
+
+IDD_WELCOME DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WATERMARK,IDC_STATIC,"Static",SS_BITMAP,0,0,66,125
+    LTEXT           "This Wizard prepares your system for debugging with a Microsoft debugger. The Wizard can optionally start the debugger when it is finished with the configuration process.\n\nThere are several ways to use the debugger.",
+                    IDC_WELCOME2,115,12,202,54
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO2,99,129,6,6,NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+    LTEXT           "The following are typical debugging scenarios:\n\n* Users determining the cause of a stop message, blue screen, or hang\n* Users determining the cause of an application failure\n* Developers debugging their application or device driver ",
+                    IDC_WELCOME3,115,68,182,66
+END
+
+IDD_TWO_OPT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,64
+    CONTROL         "&Yes",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,76,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,102,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_BROWSE_PATH DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,91
+    EDITTEXT        IDC_EDIT_PATH,7,104,245,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE,260,104,50,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_TEXT_ONLY DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_STXT_MAIN,7,0,303,115,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | NOT WS_BORDER,
+                    WS_EX_TRANSPARENT
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_SUMMARY DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_EDIT_MAIN,7,0,303,115,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | WS_VSCROLL,
+                    WS_EX_TRANSPARENT | WS_EX_STATICEDGE
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_THREE_OPT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,52
+    CONTROL         "&Yes",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,61,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,83,303,15
+    CONTROL         "M&aybe",IDC_RADIO_OPT_3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,105,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_TWO_OPT_BROWSE_PATH DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,44
+    CONTROL         "Radio1",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,55,303,15
+    CONTROL         "Radio2",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,110,303,15
+    EDITTEXT        IDC_EDIT_PATH,30,79,222,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE,260,79,50,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_SELECT_PORT_BAUD_PIPE_COMPNAME DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,32
+    CONTROL         "N&etwork Connection",IDC_RADIO_NETWORK,"Button",
+                    BS_AUTORADIOBUTTON,7,36,303,10
+    CONTROL         "&Serial Connection",IDC_RADIO_SERIAL,"Button",
+                    BS_AUTORADIOBUTTON,7,93,303,10
+    LTEXT           "M&achine Name:",IDC_STXT_MACHINE_NAME,18,51,88,14
+    EDITTEXT        IDC_EDIT_MACHINE_NAME,111,51,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Pipe Name:",IDC_STXT_PIPE_NAME,18,69,88,14
+    EDITTEXT        IDC_EDIT_PIPE_NAME,111,69,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,105,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,105,139,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_SELECT_PORT_BAUD_PIPE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,32
+    CONTROL         "N&etwork Connection",IDC_RADIO_NETWORK,"Button",
+                    BS_AUTORADIOBUTTON,7,36,303,10
+    CONTROL         "&Serial Connection",IDC_RADIO_SERIAL,"Button",
+                    BS_AUTORADIOBUTTON,7,93,303,10
+    LTEXT           "&Pipe Name:",IDC_STXT_PIPE_NAME,18,53,88,14
+    EDITTEXT        IDC_EDIT_PIPE_NAME,111,53,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,105,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,105,139,57,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_SELECT_PORT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,32
+    LTEXT           "&Comm Port:",IDC_STXT_COMM_PORT,18,75,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,75,139,68,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_SELECT_PORT_BAUD DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,32
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,83,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,83,139,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_FOUR_OPT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,0,303,37
+    CONTROL         "&Yes\nno",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,45,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,66,303,15
+    CONTROL         "M&aybe",IDC_RADIO_OPT_3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,87,303,15
+    CONTROL         "&Definite Maybe",IDC_RADIO_OPT_4,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,7,108,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_ADV_COPY_SYMS DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This method of installing symbols assumes you understand the various sets of symbol files you need, and how to best copy the files or add the path to the debuggers sympath.",
+                    IDC_STATIC,7,0,303,19
+    LTEXT           "Repeat this dialog box for each set of symbols installed (operating system, service pack, hotfix, application, and driver). If you have difficulty during this process, click 'Back' and request step-by-step assistance."
+                    IDC_STATIC,7,22,303,26
+    LTEXT           "&Source Path:",IDC_STXT_SOURCE,7,49,58,8
+    EDITTEXT        IDC_EDIT_SRC,94,49,158,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Bro&wse...",IDC_BUT_BROWSE_SRC,260,49,50,14
+    CONTROL         "&Add path of fixed media to symbol path",
+                    IDC_RADIO_LINK_SYMBOLS,"Button",BS_AUTORADIOBUTTON,20,69,
+                    290,10
+    CONTROL         "&Copy locally (from removable media)",
+                    IDC_RADIO_COPY_SYMBOLS,"Button",BS_AUTORADIOBUTTON,20,81,
+                    290,10
+    LTEXT           "&Target Path:",IDC_STXT_DEST,31,95,58,8,WS_DISABLED
+    EDITTEXT        IDC_EDIT_DEST,94,95,158,14,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE_DEST,260,95,50,14,
+                    WS_DISABLED
+    PUSHBUTTON      "Copy or Add to &Path...",IDC_BUT_COPY,103,129,110,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,129,50,14
+END
+
+IDD_H_ADV_COPY_SYMS DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This method of installing symbols assumes you understand the various sets of symbol files you need, and how to best copy the files or add the path to the debuggers sympath.",
+                    IDC_STATIC,7,41,303,19
+    LTEXT           "Loop through this dialog for the operating system, service pack, hotfix(es), and other application/driver symbols installed. (If  you are unsure of how to do this, go back and use the friendlier standard interface.)",
+                    IDC_STATIC,7,63,303,26
+    LTEXT           "&Source Path:",IDC_STXT_SOURCE,7,90,58,8
+    EDITTEXT        IDC_EDIT_SRC,94,90,158,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Bro&wse...",IDC_BUT_BROWSE_SRC,260,90,50,14
+    CONTROL         "&Add Path of Fixed Media to Symbol Path",
+                    IDC_RADIO_LINK_SYMBOLS,"Button",BS_AUTORADIOBUTTON,20,
+                    110,290,10
+    CONTROL         "&Copy Locally (from removable media)",
+                    IDC_RADIO_COPY_SYMBOLS,"Button",BS_AUTORADIOBUTTON,20,
+                    122,290,10
+    LTEXT           "&Target Path:",IDC_STXT_DEST,31,136,58,8,WS_DISABLED
+    EDITTEXT        IDC_EDIT_DEST,94,136,158,14,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE_DEST,260,136,50,14,
+                    WS_DISABLED
+    PUSHBUTTON      "Copy or Add to &Path...",IDC_BUT_COPY,103,158,110,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_BROWSE_PATH DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,37,303,91
+    EDITTEXT        IDC_EDIT_PATH,7,136,245,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE,260,136,50,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_FOUR_OPT DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,41,303,30
+    CONTROL         "&Yes\nno",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,75,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,96,303,15
+    CONTROL         "M&aybe",IDC_RADIO_OPT_3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,117,303,15
+    CONTROL         "&Definite Maybe",IDC_RADIO_OPT_4,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,7,138,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_SELECT_PORT DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,38,303,32
+    LTEXT           "&Comm Port:",IDC_STXT_COMM_PORT,18,113,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,113,139,68,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_SELECT_PORT_BAUD DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,42,303,32
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,120,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,120,139,60,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_SELECT_PORT_BAUD_PIPE DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,34,303,32
+    CONTROL         "N&etwork Connection",IDC_RADIO_NETWORK,"Button",
+                    BS_AUTORADIOBUTTON,7,70,303,10
+    CONTROL         "&Serial Connection",IDC_RADIO_SERIAL,"Button",
+                    BS_AUTORADIOBUTTON,7,125,303,10
+    LTEXT           "&Pipe Name:",IDC_STXT_PIPE_NAME,18,87,88,14
+    EDITTEXT        IDC_EDIT_PIPE_NAME,111,87,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,137,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,137,139,57,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_SELECT_PORT_BAUD_PIPE_COMPNAME DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,34,303,32
+    CONTROL         "N&etwork Connection",IDC_RADIO_NETWORK,"Button",
+                    BS_AUTORADIOBUTTON,7,70,303,10
+    CONTROL         "&Serial Connection",IDC_RADIO_SERIAL,"Button",
+                    BS_AUTORADIOBUTTON,7,127,303,10
+    LTEXT           "M&achine Name:",IDC_STXT_MACHINE_NAME,18,85,88,14
+    EDITTEXT        IDC_EDIT_MACHINE_NAME,111,85,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Pipe Name:",IDC_STXT_PIPE_NAME,18,103,88,14
+    EDITTEXT        IDC_EDIT_PIPE_NAME,111,103,139,14,ES_AUTOHSCROLL
+    LTEXT           "&Comm Port/Baud Rate (bps):",IDC_STXT_COMM_PORT,18,139,88,14
+    COMBOBOX        IDC_COMBO_COMM_PORT,111,139,139,59,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_STD_COPY_SYMS DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "",IDC_STATIC_COPY_STATUS,69,88,178,83
+    LTEXT           "Static text",IDC_STXT_MAIN,7,39,303,40
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_SUMMARY DIALOGEX 0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_EDIT_MAIN,7,37,303,115,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | NOT WS_BORDER | WS_VSCROLL,
+                    WS_EX_TRANSPARENT | WS_EX_STATICEDGE
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_TEXT_ONLY DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,36,303,115
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_THREE_OPT DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,38,303,46
+    CONTROL         "&Yes",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,93,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,115,303,15
+    CONTROL         "M&aybe",IDC_RADIO_OPT_3,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,137,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_TWO_OPT DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,34,303,64
+    CONTROL         "&Yes",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,110,303,15
+    CONTROL         "N&o",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,136,303,15
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_TWO_OPT_BROWSE_PATH DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Static text",IDC_STXT_MAIN,7,35,303,46
+    CONTROL         "Radio1",IDC_RADIO_OPT_1,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,92,303,15
+    CONTROL         "Radio2",IDC_RADIO_OPT_2,"Button",BS_AUTORADIOBUTTON | 
+                    BS_MULTILINE,7,147,303,15
+    EDITTEXT        IDC_EDIT_PATH,30,116,222,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_BUT_BROWSE,260,116,50,14
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "sub hdr",IDC_STXT_SUB_HDR,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,7,29,
+                    303,1
+END
+
+IDD_H_WELCOME DIALOG DISCARDABLE  0, 0, 317, 172
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debugger Configuration Wizard"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         508,IDC_STATIC,"Static",SS_BITMAP | SS_CENTERIMAGE,0,0,
+                    66,172
+    LTEXT           "This Wizard prepares your system for debugging with a Microsoft debugger. The Wizard can optionally start the debugger when it is finished with the configuration process.\n\nThere are several ways to use the debugger.",
+                    IDC_WELCOME2,115,12,202,54
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO2,99,150,6,6,NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "&More Info...",IDC_BUT_MORE_INFO,260,158,50,14
+    LTEXT           "The following are typical debugging scenarios:\n\n* Users determining the cause of a blue screen\n* Users determining the cause of an application failure\n* Developers debugging their application or device driver ",
+                    IDC_WELCOME3,115,68,182,66
+END
+
+IDD_H DIALOG DISCARDABLE  0, 0, 317, 37
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "hdr",IDC_STXT_HDR,9,0,299,8
+    LTEXT           "Static",IDC_STATIC,25,9,283,18
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME | SS_SUNKEN,9,29,
+                    299,1
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_TWO_OPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_BROWSE_PATH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_TEXT_ONLY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_STD_COPY_SYMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_THREE_OPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_TWO_OPT_BROWSE_PATH, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_FOUR_OPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+
+    IDD_ADV_COPY_SYMS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include <commctrl.h>\r\n"
+    "\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DBGWIZ                ICON    DISCARDABLE     "dbgwiz.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WATERMARK           BITMAP  DISCARDABLE     "WATER.BMP"
+IDB_BANNER              BITMAP  DISCARDABLE     "BANNER.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADV_OR_STD_SYMCPY_HDR "Symbol Copying Method"
+    IDS_ADV_OR_STD_SYMCPY_HDR_SUB "Select the Wizard interface for copying symbol files."
+    IDS_OPT_01_ADV_OR_STD_SYMCPY "Use the standard interface for copying symbol files (Recommended)."
+    IDS_OPT_02_ADV_OR_STD_SYMCPY "Use the advanced interface for copying symbol files."
+    IDS_OS_SYM_LOC_SYMCPY_HDR "Copy Operating System Symbol Files"
+    IDS_OS_SYM_LOC_SYMCPY_HDR_SUB "Locate the operating system symbol files."
+    IDS_OS_SYM_LOC_SYMCPY   "Enter the location of the Windows NT installation files. Please specify the complete path."
+    IDS_SP_SYM_LOC_SYMCPY_HDR "Copy Service Pack Symbol Files"
+    IDS_SP_SYM_LOC_SYMCPY_HDR_SUB "Locate the service pack symbol files."
+    IDS_SP_SYM_LOC_SYMCPY   "Enter the location of the symbol files for service pack <%s>. Please specify the complete path."
+    IDS_OPT_01_SP_SYM_LOC_SYMCPY "I want to copy the service pack symbol files located at:"
+    IDS_OPT_02_SP_SYM_LOC_SYMCPY "I do not want to copy any service pack symbol files or do not have service pack symbol files"
+    IDS_HOTFIX_SYM_LOC_SYMCPY_HDR "Copy HotFix Symbol Files"
+    IDS_HOTFIX_SYM_LOC_SYMCPY_HDR_SUB "Locate the hotfix symbol files"
+    IDS_HOTFIX_SYM_LOC_SYMCPY "Hotfixes <%s> have been installed on the computer.\n\nEnter the location to the next set of hotfix symbol files. Please specify the complete path."
+    IDS_OPT_01_HOTFIX_SYM_LOC_SYMCPY "I want to copy the hotfix symbol files located at:"
+    IDS_OPT_02_HOTFIX_SYM_LOC_SYMCPY "I do not want to copy any hotfix symbol files or do not have hotfix symbol files"
+    IDS_OPT_01_OS_SYM_LOC_SYMCPY "I want to copy the operating system symbol files located at:"
+    IDS_OPT_02_OS_SYM_LOC_SYMCPY "I do not want to copy any operating system symbol files or do not have operating system symbol files"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_DELETE_SHORTCUT "The following error occurred trying to delete the shortcut on the desktop:\n\n%s"
+    IDS_CONFIRM_CANCEL      "Are you sure you want to cancel?"
+    IDS_GEN_ERROR_HDR       "ERROR"
+    IDS_GEN_WARNING_HDR     "WARNING"
+    IDS_SYMBOL_FILE_COPY_HDR "Copy Symbol Files"
+    IDS_SYMBOL_FILE_COPY_HDR_SUB "Prepare to locate debugging information."
+    IDS_SYMBOL_FILE_COPY    "The next few instructions will help you locate debugging information (symbol files) needed by the debugger."
+    IDS_OPT_1_SYMBOL_FILE_COPY "Step-by-step symbol file copying assistance (recommended)"
+    IDS_OPT_2_SYMBOL_FILE_COPY "Advanced symbol file copying"
+    IDS_ASK_ADDITIONAL_SYM_LOC_SYMCPY_HDR "Additional Symbol Files"
+    IDS_ASK_ADDITIONAL_SYM_LOC_SYMCPY_HDR_SUB "Locate additional symbol files."
+    IDS_ASK_ADDITIONAL_SYM_LOC_SYMCPY "You may have symbol files from additional sources, such as OEM updates, applications, and drivers. If so, the Wizard needs to locate them."
+    IDS_ADV_OR_STD_SYMCPY   "The standard interface will guide you through the copying, while the advanced interface will require more knowledge and offer less guidance."
+    IDS_OPT_1_ASK_ADDITIONAL_SYM_LOC_SYMCPY "&Yes, there are additional symbol files."
+    IDS_OPT_2_ASK_ADDITIONAL_SYM_LOC_SYMCPY "N&o, there are no additional symbol files."
+    IDS_ADDITIONAL_SYM_LOC_SYMCPY_HDR "Additional Symbol Files Location"
+    IDS_ADDITIONAL_SYM_LOC_SYMCPY_HDR_SUB "Locate the additional symbol files."
+    IDS_ADDITIONAL_SYM_LOC_SYMCPY "Enter the location to the next set of additional symbol files. Please specify the complete path."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LARGEFONTNAME       "Verdana Bold"
+    IDS_LARGEFONTSIZE       "12"
+    IDS_YES                 "&Yes"
+    IDS_NO                  "N&o"
+    IDS_SAVE_INI_FILE_HDR   "Save Configuration Information"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SAVE_INI_FILE_HDR_SUB "Optionally specify a configuration file."
+    IDS_SAVE_INI_FILE       "Choose whether or not to create a file for transferring the Target Computer's configuration to the Host Computer."
+    IDS_MI_01_SYMBOL_FILE_COPY "Applications, drivers, and the operating system are built such that their debugging information resides in separate files called ""symbol files"". The debugger must be able to find these symbol files locally or on the network."
+    IDS_MI_01_SYMBOL_FILE_COPY_HDR "Symbol Files"
+    IDS_MI_01_SYMBOL_FILE_COPY_HDR_SUB "Information about symbol files."
+    IDS_RUN_WIZARD_ON_TARGET_HDR "Run the Wizard on the Target Computer"
+    IDS_RUN_WIZARD_ON_TARGET_HDR_SUB "It is recommend that you run the Wizard on the Target Computer."
+    IDS_RUN_WIZARD_ON_TARGET "If you have not run the Wizard on the Target Computer, please do so now.  You will be prompted for the Target Computer configuration information on the next page."
+    IDS_SPECIFY_INI_FILE_HDR "Target Computer Configuration Information"
+    IDS_SPECIFY_INI_FILE_HDR_SUB "Please specify the method you will use to enter the Target Computer’s configuration information."
+    IDS_SPECIFY_INI_FILE "Specify the location of the configuration file you created on the target Computer. If you were unable to create a configuration file on the Target Computer, you can enter the configuration information manually."
+    IDS_CONNECTION_SELECTION_HDR "Connect Selection"
+    IDS_CONNECTION_SELECTION_HDR_SUB "Choose the type of connection you will use for debugging."
+    IDS_CONNECTION_SELECTION "The host and Target Computers can communicate over the network or over a null modem cable."
+    IDS_TARGET_CONFIG_FILE_LOCATION_HDR "Target Configuration Information File"
+    IDS_TARGET_CONFIG_FILE_LOCATION_HDR_SUB "Specify the location of the Target Computer’s configuration information file."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CRASHDUMP_HDR       "Crash Dump File"
+    IDS_CRASHDUMP_HDR_SUB   "Specify the location of the crash dump file to debug."
+    IDS_CRASHDUMP           "You can configure the system to write debugging information to a crash dump file. The file contains information the debugger can use to analyze the problem."
+    IDS_REMOTE_TARGET_APP_HDR "IDS_REMOTE_TARGET_APP_HDR"
+    IDS_REMOTE_TARGET_APP_HDR_SUB "IDS_REMOTE_TARGET_APP_HDR_SUB"
+    IDS_REMOTE_TARGET_APP   "IDS_REMOTE_TARGET_APP"
+    IDS_OPT_01_SPECIFY_INI_FILE "&Load Target Computer information from a configuration file."
+    IDS_OPT_02_SPECIFY_INI_FILE "&Enter Target Computer information manually."
+    IDS_REMOTE_CONNECTION_TYPE_HDR "Remote Connection Type"
+    IDS_REMOTE_CONNECTION_TYPE_HDR_SUB "Select the type of remote connection."
+    IDS_REMOTE_CONNECTION_TYPE "The target and Host Computers can communicate over the network or over a null modem cable."
+    IDS_WELCOME_HDR         "Welcome to the debugger configuration Wizard"
+    IDS_WELCOME_HDR_SUB     "This Wizard is for use with the Microsoft(R) Windows(R) System Debuggers (WinDbg/NTSD/KD). "
+    IDS_WELCOME             "IDS_WELCOME"
+    IDS_OPT_01_SELECT_HANDDOLD_INI "Provide &step-by-step assistance in making choices. (Recommended)"
+    IDS_OPT_02_SELECT_HANDDOLD_INI "Provide a &list of common debugging options. (More advanced)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TARGET_CONFIG_FILE_LOCATION "Please specify the location of the configuration file that was created on the Target Computer. The information in this file will allow the Wizard to determine settings so you will not need to enter them now."
+    IDS_SELECT_COM_PORT_HDR "Comm Port Selection"
+    IDS_SELECT_COM_PORT_HDR_SUB "Choose the comm port you will be using for debugging."
+    IDS_SELECT_COM_PORT     "You must specify the comm port when debugging using a serial connection. "
+    IDS_SHORTCUT_NAME_HDR   "Debugger Shortcut Name"
+    IDS_SHORTCUT_NAME_HDR_SUB "The Wizard will place a shortcut on your desktop."
+    IDS_SHORTCUT_NAME       "Specify the name of the shortcut the Wizard will place on your desktop. To start the debugger using these configuration settings, double-click on the shortcut."
+    IDS_IS_THIS_KERNEL_MODE_HDR "Debug Operating System"
+    IDS_IS_THIS_KERNEL_MODE_HDR_SUB "Configure the environment to debug a stop message, operating system crash (blue screen) or hang."
+    IDS_IS_THIS_KERNEL_MODE "Are you going to debug either an unrecoverable system crash (blue screen, hang, or stop message) or debug a device driver?"
+    IDS_KERNEL_MACHINE_ROLE_HDR "Determine Computer's Role"
+    IDS_KERNEL_MACHINE_ROLE_HDR_SUB "Is this the computer that is experiencing the operating system crash?"
+    IDS_KERNEL_MACHINE_ROLE "Select the best description of this computer's role."
+    IDS_OPT_1_KERNEL_MACHINE_ROLE "This is the computer that is experiencing a system crash (blue screen, hang, or stop message)."
+    IDS_OPT_2_KERNEL_MACHINE_ROLE "This is the computer that will run the debugger."
+    IDS_IS_TARGET_RESPONSIVE_HDR "Target Computer Status"
+    IDS_IS_TARGET_RESPONSIVE_HDR_SUB "Can you run the Debugger Wizard on the Target Computer?"
+    IDS_IS_TARGET_RESPONSIVE "Running the Debugger Configuration Wizard on the Target Computer will generate a configuration file.  This file will minimize the number of questions the Wizard will ask when run on the Host Computer.\n\nSelect the option that best represents the status of the Target Computer."
+    IDS_OPT_1_IS_TARGET_RESPONSIVE "I am able to run the debugger Wizard on the Target Computer."
+    IDS_OPT_2_IS_TARGET_RESPONSIVE "I am unable to log on, run the debugger Wizard on to the Target Computer, and then reboot the Target Computer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TOAST_MESSAGE_HDR   "Debugger Wizard Status"
+    IDS_TOAST_MESSAGE_HDR_SUB "Configuration process stopped."   
+    IDS_TOAST_MESSAGE       "The Wizard is unable to continue. Please investigate other methods to try to recover the computer: emergency repair disk, booting an alternate OS, installing a new copy of the OS, etc."
+    IDS_IS_THIS_AN_APPLICATION_HDR "Debug an Application."
+    IDS_IS_THIS_AN_APPLICATION_HDR_SUB "Are you trying to debug an application?"
+    IDS_IS_THIS_AN_APPLICATION "An application is a user mode process that includes windowed applications and console applications."    
+    IDS_IS_THIS_A_DUMP_HDR "Debug a Dump File"
+    IDS_IS_THIS_A_DUMP_HDR_SUB "Specify if you want to load a crash dump file."
+    IDS_IS_THIS_A_DUMP "A crash dump file contains information the debugger can use to analyze system or application failure. It is generated by the system."    
+    IDS_UNKNOWN_DEBUGGEE_HDR "Unknown Debuggee"
+    IDS_UNKNOWN_DEBUGGEE_HDR_SUB "It could not be determined what you are trying to debug."
+    IDS_UNKNOWN_DEBUGGEE "You have not selected any of the typical debugging scenarios. If none of these options meet your needs, please click the Back button and then select the most appropriate option.\n\nPressing next will take you to the advanced debugging scenario page.\n\nIf you are trying to simultaneously debug a user mode process and a driver, please read the documentation in the Windows Platform SDK and Windows NT DDK. Windbg cannot currently debug this scenario and we recommend using KD and NTSD."
+    IDS_DEBUG_APP_HDR       "Choose Computer Scenario."
+    IDS_DEBUG_APP_HDR_SUB   "Choose the method you will use to initiate the debug session."
+    IDS_DEBUG_APP           "For local debugging, the debugger is run on the computer that executes the application that needs to be debugged. For remote debugging, the debugger is run on a different computer."
+    IDS_OPT_01_DEBUG_APP    "Remote - Two computer scenario (Recommended)"
+    IDS_OPT_02_DEBUG_APP    "Local - One computer scenario"
+    IDS_HOST_OR_TARGET_HDR  "Choose Connection Type."
+    IDS_HOST_OR_TARGET_HDR_SUB "Specify the appropriate connection type."
+    IDS_HOST_OR_TARGET      "You have selected to set your environment for a remote debug. This setup requires two computer. Select the connection type you will use communicate with the other computer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPT_03_SELECT_HANDDOLD_INI "Use the settings from a &configuration file created during a previous Wizard session."
+    IDS_SELECT_HANDDOLD_INI_HDR_SUB "Select the level of assistance to be provided by the Wizard."
+    IDS_SELECT_HANDDOLD_INI_HDR "Debugger Wizard Mode Selection"
+    IDS_SELECT_HANDDOLD_INI "If you are not very familiar with debugging, the Wizard can provide step-by-step assistance. Otherwise, you can select from a list of common debugging scenarios."
+    IDS_EXPERT_DEBUGGING_CHOICE_HDR_SUB "Determine the debugging environment."
+    IDS_EXPERT_DEBUGGING_CHOICE_HDR "Debugging Mode"
+    IDS_EXPERT_DEBUGGING_CHOICE "Select the appropriate debugging mode."
+    IDS_HOST                "&Host computer (debugger)"
+    IDS_TARGET              "&Target computer (debugee)"
+    IDS_KERNEL_HOST_TARGET_CHOICE_HDR_SUB "This debugging scenario requires two computers. Choose the role this computer will play."
+    IDS_KERNEL_HOST_TARGET_CHOICE_HDR "Computer Role"
+    IDS_KERNEL_HOST_TARGET_CHOICE "The Host Computer runs the debugger to analyze the problem. The Target Computer runs the application to debug."
+    IDS_KERNEL_SELECT_PORT_BAUD_HDR_SUB "Specify how the host and target computers will communicate."
+    IDS_KERNEL_SELECT_PORT_BAUD_HDR "Communication Method"
+    IDS_KERNEL_SELECT_PORT_BAUD "Select the comm port and baud rate (bps) for this system (target)."
+    IDS_OPT_01_SAVE_INI_FILE "&Save the information to a file. (Recommended)"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPT_02_SAVE_INI_FILE "&Do not use a file; the user will re-enter this data on the host system using the Wizard."
+    IDS_DISPLAY_SUMMARY_INFO_HDR_SUB "Please record this information for use when configuring the computer running the debugger."
+    IDS_DISPLAY_SUMMARY_INFO_HDR "Debug Configuration Summary For This Computer"
+    IDS_DISPLAY_SUMMARY_INFO "%s\r\n\r\n%s"
+    IDS_FINISH_HDR_SUB      "You have successfully prepared your computer to run the debugger."
+    IDS_FINISH_HDR          "Debugger Wizard Completed"
+    IDS_FINISH              "If you are setting up your system to be remotely debugged by support personnel, you must enable AutoAnswer on your modem and disable hardware flow control and hardware compression. Refer to your modem manual for additional details."
+    IDS_OPT_01_EXPERT_DEBUGGING_CHOICE "&Local-user mode"
+    IDS_OPT_02_EXPERT_DEBUGGING_CHOICE "&Remote-user mode"
+    IDS_OPT_03_EXPERT_DEBUGGING_CHOICE "&Kernel mode"
+    IDS_OPT_04_EXPERT_DEBUGGING_CHOICE "&Crash dump file"
+    IDS_SELECT_PORT_BAUD_HDR "Communication Method"
+    IDS_SELECT_PORT_BAUD_HDR_SUB "Specify how the host and target computers will communicate."
+    IDS_SELECT_PORT_BAUD    "Select the comm port and baud rate (bps)."
+    IDS_RM_USER_HOST_TARGET_CHOICE_HDR "Computer Role"
+    IDS_RM_USER_HOST_TARGET_CHOICE_HDR_SUB "This debugging scenario requires two computers. Choose the this computer will play."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_RM_USER_HOST_TARGET_CHOICE "The Host Computer runs the debugger to analyze the problem. The Target Computer is running the application to debug."
+    IDS_OPT_01_USER_EXE_PROCESS_CHOICE "&Select the application the debugger will debug."
+    IDS_OPT_02_USER_EXE_PROCESS_CHOICE "&Attach the debugger to a running application."
+    IDS_USER_EXE_PROCESS_CHOICE_HDR "Application to Debug"
+    IDS_USER_EXE_PROCESS_CHOICE_HDR_SUB "Select the application that the debugger will debug."
+    IDS_USER_EXE_PROCESS_CHOICE "The debugger can start the application to be debugged, or it can debug an application that is already running."
+    IDS_ADV_SYMBOL_FILE_COPY_HDR "Advanced Symbol Copying"
+    IDS_ADV_SYMBOL_FILE_COPY_HDR_SUB "Install symbol files for the system, service packs, hotfixes, and additional sources."
+    IDS_ADV_SYMBOL_FILE_COPY "This method of installing symbol files requires knowledge of what symbol files you need and how best to copy them or add their path to the debugger's sympath. If you are unsure how to do this, go back and use the standard interface.\n\nThis process will be repeated for the operating system, service pack, hotfix(es), and related applications and drivers installed."
+    IDS_OPT_01_HOST_OR_TARGET "&Host computer (debugger)"
+    IDS_OPT_02_HOST_OR_TARGET "&Target computer (debugee)"
+    IDS_FILE_MASK_EXE       "Executable (*.exe;*.com)\0*.exe;*.com\0All files (*.*)\0*.*\0"
+    IDS_FILE_MASK_DMP       "Crash dump (*.dmp)\0*.dmp\0All files (*.*)\0*.*\0"
+    IDS_FILE_MASK_INF       "Wizard info (*.inf)\0*.inf\0All files (*.*)\0*.*\0"
+    IDS_ERROR_NEED_PIPE_NAME "The debugger requires a pipe name in order to complete remote connections."
+    IDS_ERROR_NEED_PATH     "You cannot leave this field blank."
+    IDS_ERROR_NEED_SRC_PATH "You need to specify the source path."
+    IDS_ERROR_NEED_DEST_PATH "You need to specify the destination path."
+    IDS_RETRY_CREATING_SHORTCUT "Could not create a shortcut on the desktop due to the following error:\n\n%s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OS_DESC_FREE        "Retail (Free)"
+    IDS_OS_DESC_CHECKED     "Debug (Checked)"
+    IDS_OS_DESC_WORKSTATION "Workstation"
+    IDS_OS_DESC_SERVER      "Server"
+    IDS_OS_DESC_ENTERPRISE  "Enterprise"
+    IDS_UNKNOWN             "Unknown"
+    IDS_NONE                "None"
+    IDS_WINDBG_NEEDS_TO_BE_LOCATED "%s must be located before a shortcut on the desktop can be created. Do you wish to continue searching for %s."
+    IDS_ERROR_COULDNT_EXEC_MUNGER "An error occurred trying to execute DBGCONFIG.EXE. You will have to configure your boot options manually. Please add /DEBUGPORT=%s /BAUDRATE=%s to your boot options."
+    IDS_ERROR_COULD_NOT_OPEN_CFG_FILE "Could not open the config file: <%s>"
+    IDS_ERROR_COULD_NOT_CREATE_CFG_FILE "Could not create the config file: <%s>"
+    IDS_FINISH_LAUNCH_DEBUGGER          "Launch the debugger"
+    IDS_FINISH_DO_NOT_LAUNCH_DEBUGGER   "Do not launch the debugger"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WARN_NOT_A_SYMBOL   "The file [%s] is not a recognized symbol file.\n\nPress Yes to continue copying and warn of any other unrecognized files.\n\nPress No to continue copying but never display this warning again.\n\nPress Cancel to select a different symbol directory."
+    IDS_WARNING             "Warning"
+    IDS_ERR_COPYING_SYMBOL  "Unable to copy the file [%s]->[%s]. Check for free space on the destination drive.\n\nABORT - Stop copying symbol files.\nRETRY - Retry copying the file.\nCANCEL - Skip this file, but continue copying other symbol files."
+    IDS_ERROR_CANT_CREATE_DIR "The Wizard was unable to create the directory [%s].\n\nABORT - Abort symbol copying.\nRETRY - Try creating the direcory again.\nIGNORE - Skip this directory, but try to copy the remaining directories."
+    IDS_ERROR_NO_FILES_FOUND "No files were found to copy.\n\nPlease check the source path."
+    IDS_ERROR_RETRYCANCEL_CANT_CREATE_DIR "The Wizard was unable to create the directory [%s].\n\nRETRY - Try creating the direcory again.\nCANCEL - Skip this directory, but try to copy the remaining directories."
+    IDS_ERROR_LAUNCHING_DEBUGGER "The following error occurred while trying to launch the debugger:\n\n%s"
+    IDS_KERNEL_SUMMARY      "%s"
+    IDS_REMOTE_USER_SUMMARY "%s"
+    IDS_OS_SUMMARY          "\r\nOperating System Version: %lu.%lu\r\n * Build: %lu\r\n * Architecture: %s\r\n * Type: %s\r\n * Debug Level: %s\r\n * Service Pack: %s\r\n * Hotfix(es): %s\r\n"
+    IDS_SERIAL_CONNECTION   "Connection: Serial\r\nBaud Rate (bps): %s"
+    IDS_NETWORK_CONNECTION  "Connection: Network\r\n * Computer Name: %s\r\n * Pipe Name: %s"
+    IDS_USER_DEFINED_BAUD_RATE "User defined baud rate (bps)"
+    IDS_OS_DESC_INTEL       "x86"
+    IDS_OS_DESC_ALPHA       "Alpha"
+    IDS_OS_DESC_MIPS        "MIPS"
+    IDS_OS_DESC_PPC         "PPC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_GET_DEST_DIR_SYMCPY_HDR "Specify Destination Directory for Symbol Files"
+    IDS_GET_DEST_DIR_SYMCPY_HDR_SUB "This directory is where all the symbol files will be placed"
+    IDS_GET_DEST_DIR_SYMCPY "Specify the location where you want to copy the symbol files."
+    IDS_ERROR_GETTING_DRIVE_INFO "Please check to make sure that the path is correct, because the following error occurred when trying to obtain the volume label, serial number, and drive type for <%s>:\n\n%s\n\nYes to ignore the error and go onto the next page. No to stay on this page and correct the path."
+    IDS_COPYING_OS  "Operating System symbol files"
+    IDS_COPYING_SP  "Service Pack symbol files"
+    IDS_COPYING_HOTFIXES "Hotfix symbol files"
+    IDS_COPYING_ADDITIONAL_SYMBOLS "Additional symbol files"
+    IDS_ERROR_INCORRECT_PATH "The following path <%s> is incorrect. If it is a network path make sure it is accessible, or verify that the correct disk or CDROM is located at the path."
+    IDS_INFORMATIONAL "Informational"
+    IDS_WARN_NON_REMOVABLE_MEDIA_ADD_PATH "Since the symbol files at <%s> are located on non-removable media and uncompressed, the symbol files will not be copied. Instead the path to this location will be added to the symbols path."
+    IDS_WARN_WILL_NETWORK_CONNECTION_BE_AVAILABLE "<%s> is a network location. Will it be available during the debugging session?"
+    IDS_WARN_FILES_LINKED_INSTEAD_OF_COPIED "The symbol files will not be copied. Instead the path to this location will be added to the symbols path."
+    IDS_WARN_THAT_COPYING_IS_ABOUT_TO_BEGIN_HDR     "Symbol Copying is About to Begin"
+    IDS_WARN_THAT_COPYING_IS_ABOUT_TO_BEGIN_HDR_SUB "Moving to the next page initiates symbol copying"
+    IDS_WARN_THAT_COPYING_IS_ABOUT_TO_BEGIN         "By pressing Next, symbol copying will begin."
+    IDS_ERROR_YOU_MUST_COPY_SOME_SYMBOLS_HDR_SUB    "You have not specified any symbol files"
+    IDS_ERROR_YOU_MUST_COPY_SOME_SYMBOLS            "You will not be able to debug anything unless you specify the location of the symbol files. Please backup and specify the location of the symbol files you will be using."
+    IDS_WARN_CHECK_IF_DECOMPRESSION_OF_SYMBOLS_REQUIRED "The disk will be searched to determine if it contains any compressed symbol files. This could take a while."
+    IDS_ERROR_SYM_COPY_IS_RECURSIVE "The source directory <%s> is a parent of the destination directory <%s>. Such a situation will cause the Wizard to loop endlessly. Please go back and correct ths."
+    IDS_WARN_ADV_NO_SYMBOLS_SPECIFIED               "Do you wish to continue without having copied any symbol files?"
+    IDS_ERROR_UNSUPPORTED_OS        "You are attempting to run Wizard and the debugger on an unsupported OS."
+    IDS_STOPPING                    "Stopping"
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MORE_INFO_HDR                       "More Information"
+    IDS_MI_01_IS_TARGET_RESPONSIVE          "This page is used by the Wizard to determine if the Target Computer is runnable or not. If so then the Wizard can be run on the system, and the target configuration info can be saved to a file. If not, then the Wizard will not able to configure the target system."
+    IDS_MI_01_BLUE_SCREEN                   "Blue Screen\r\nAn operating system message signaling that a fatal error has occurred. Fatal errors cause the system to halt or to present a blue screen with white text displaying information about the system.\r\n\r\nDevice Driver\r\nA software component that permits a computer system to communicate with a device. In most cases, the driver also interacts directly with the hardware to transmit data to the device. However, device drivers associated with application packages typically perform only the data translation; these higher-level drivers then rely on lower-level drivers to actually send the data to the device. Many devices, especially video adapters on PC-compatible computers, will not work properly if at all without the correct device drivers installed in the system."
+    IDS_MI_01_HOST_TARGET                   "Two computers are needed to for this debugging scenario. The computer experiencing the crash (target or debugee), and another computer that runs the debugger to help troubleshoot/fix the problem (host/debugger). The Wizard needs to set up both systems."
+    IDS_MI_01_NULL_MODEM_CABLE              "The debugger requires the host and target computers to be connected by a 'null modem cable', sometimes referred to as a 'debug cable'.\r\n\r\nThe host's and target's comm port speeds (baud rate/bps) must be the same.\r\n\r\nNull Modem\r\nA way of connecting two computers through a cable that enables them to communicate without the use of modems. A null modem cable accomplishes this by crossing the sending and receiving wires so that the wire used for transmitting by one device is used for receiving by the other and vice versa."
+    IDS_MI_01_SAVE_LOAD_INI                 "If you transfer the information file to the host system, the Wizard can read the information file so you do not have to retype the information needed to complete the configuration.\r\nThe floppy drive A: is only the default location. For networked environments, a network server can be used, and a different filename can also be used. For example \\debugsrv\incidents\dbg2300.inf; but remember this non-default location for later retrieval by the Wizard."
+    IDS_MI_01_WHY_RUN_ON_TARGET_FIRST       "The Target Computer must be configured for debugging. By default, the system is not configured to be debugged.\r\nConfiguration information is shared between the Wizard on the host and target systems. Configuring the target first is the method, which allows this information to be gathered and then read by the Wizard on the host. This will save you time by not requiring you to retype the information."
+    IDS_MI_01_SYMBOLS                       "Symbol Files\r\nSymbol files provide the debugger with sufficient information about the object code so that it can correlate the object code to the source code. Without symbol files, the task of debugging a system is almost impossible. Symbol files are often provided with for applications and drivers. Symbol files have the filename extensions of .PDB and .DBG. symbol files for the Windows operating system are included on the CD.\r\n\r\nSource Code\r\nSource Code is a collection of human-readable program statements written in a high-level or assembly language that are not directly readable by a computer.\r\n\r\nObject Code\r\nThe code, generated by a compiler or an assembler, that is translated from the source code of a program. The term most commonly refers to machine code that can be directly executed by the computer."
+    IDS_MI_01_SYMBOL_COPY_METHOD            "The advanced method should only be used if you have done this many times, and are very comfortable with the operation of copying the various kinds of symbol files."
+    IDS_MI_01_APPLICATION                   "Application\r\nA program designed to assist in the performance of a specific task, such as word processing, accounting, or inventory management."
+    IDS_MI_01_SERVICE_PACK                  "A Service Pack is a collection updates to an operating system release. These Service Packs are available on the internet at ftp://ftp.microsoft.com/winnt/winnt-public/fixes/. When downloading the Service Pack, you should also download the associated symbol files, so the wizard can have access to them."
+    IDS_MI_01_ADDITIONAL_SYMBOLS            "This page is for optional additional symbol files available for the system. If you have any custom software or additional updates from other vendors, this page should be used to gather them. run this page multiple time for each collection of symbol files, or don't run it at all if you have no additional symbol files."
+    IDS_MI_01_OEM                           "In order for the debugger to produce correct output, symbol files for OEM components must also be provided.\r\n\r\nOriginal Equipment Manufacturer\r\nAcronym OEM\r\nThe maker of a piece of equipmnt. In making computers and related equipment, manufacturers of original equipment typically purchase components from other manufacturers of original equipment, integrate them into their own products, and then sell the products to the public."
+    IDS_MI_01_LAUNCH_ATTACH                 "If the application is already running and the problem is occurring sometime after startup, attach the debugger to the running process.\r\n\r\nIf the application is not currently running or the problem is only experienced when the application loads, start the debugger to launch a new copy of the process."
+    IDS_MI_01_DUMP_FILE                     "The default location of a system dump is %systemroot%\memory.dmp. The default location of a process dump is %systemroot%\user.dmp."
+END
+
+ 

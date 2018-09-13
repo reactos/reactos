@@ -1,0 +1,109 @@
+//{{NO_DEPENDENCIES}}
+//Microsoft App Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+#include "winver.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Data
+//
+
+DLGINCLUDE RCDATA DISCARDABLE
+BEGIN
+    "resource.H\0"
+END
+
+#include "runonce.rcv"
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "#include ""winver.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_RUNONCE DIALOG DISCARDABLE  0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Windows Setup"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Windows is now setting up the following items:",
+                    IDC_STATIC,36,13,163,11
+    LISTBOX         IDC_LIST2,36,32,163,127,LBS_OWNERDRAWVARIABLE |
+                    LBS_NOINTEGRALHEIGHT | WS_DISABLED | NOT WS_BORDER |
+                    WS_VSCROLL | WS_TABSTOP
+    ICON            IDI_SETUP,IDC_STATIC,7,7,18,20
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_SETUP               ICON    DISCARDABLE     "SETUP.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PAMPER  "Setup has finished configuring your system.\n\nYou must restart your computer before the new settings will take effect.\n\nClick OK to restart your computer now."
+END
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

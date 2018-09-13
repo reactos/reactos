@@ -1,0 +1,6 @@
+PPC_SOURCES=..\ppc\fmutex.s   \
+            ..\ppc\gettick.s  \
+            ..\ppc\hifreqlk.s \
+            ..\ppc\intrlock.s \
+            ..\ppc\raisests.c \
+            ..\ppc\splocks.c

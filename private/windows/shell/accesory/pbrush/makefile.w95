@@ -1,0 +1,26 @@
+#----------------------------------------------------------------------------
+# Build the progman group converter
+#----------------------------------------------------------------------------
+
+NAME=pbrush
+ROOT=..\..\..\..\..
+RES_DIR=..
+WIN32=TRUE
+DEFENTRY = ModuleEntry@0
+
+
+!ifdef VERDIR
+ROOT=..\$(ROOT)
+!endif
+
+PCHOBJ0=pbrush.obj
+LIB0=kernel32.lib shell32.lib
+
+!include $(ROOT)\win\core\shell\common.mk
+
+!ifdef VERDIR
+$(PRIVINC).pch pch.obj:	
+
+$(NAME).res:	$(SRCDIR)\$(NAME).ico
+
+!endif

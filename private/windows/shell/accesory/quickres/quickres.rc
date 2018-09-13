@@ -1,0 +1,218 @@
+//
+// QuickRes.rc
+//
+
+
+//
+// string constants
+//
+
+#define IDS_HELPTEXT        100
+#define IDS_TITLE           101
+#define IDS_CANTSETMODE     102
+#define IDS_ABOUT           103
+#define IDS_RESTART         104
+#define IDS_HERTZ           105
+#define IDS_DEFHERTZ        106
+#define IDS_REFRESHRATE     107
+#define IDS_INVALIDMODE     108
+#define IDS_NOTEXT          109
+#define IDS_DONTPANIC       110
+#define IDS_CLEARREG        111
+#define IDS_CHANGEDBPP      112
+#define IDS_AT              113
+#define IDS_MONITOR         114
+#define IDS_CRES            200
+
+
+//
+// menu id's
+//
+
+#define MENU_CLOSE          300
+#define MENU_PROPERTIES     301
+#define MENU_ABOUT          302
+#define MENU_OPTIONS        303
+#define MENU_RES            1000    // Menu item IDs start at MENU_RES
+
+//
+// Dlg box id's
+//
+
+#define IDTEXT1             400
+#define IDTEXT2             401
+#define IDTEXT3             402
+
+#define IDD_COUNTDOWN       100
+#define IDD_SORT_RES        101
+#define IDD_SORT_BPP        102
+#define IDD_SUBMENUS        103
+#define IDD_ONEMENUMOBILE   104
+#define IDD_ONEMENUBOTTOM   105
+#define IDD_ALLMODEMENU     106
+#define IDD_UPDATEREG       107
+#define IDD_REMMODES        108
+#define IDD_CLEARREG        109
+#define IDD_RESTARTREQ      110
+#define IDD_SHOWTESTED      111
+
+
+//
+//  Dlg box names
+//
+
+#define KeepNewRes          500
+#define NTOptions           501
+#define W95Options          502
+
+
+
+#ifdef RC_INVOKED
+
+
+#include "QuickRes.rcv"
+#include "winuser.h"
+
+QuickRes ICON "QuickRes.ico"
+
+
+//
+//  Main menu - Properties, About, Exit
+//
+
+QuickRes MENU
+begin
+    popup "!"
+    begin
+        MENUITEM "&Options...",                   MENU_OPTIONS
+        MENUITEM "&Properties for Display",       MENU_PROPERTIES
+        MENUITEM "&About QuickRes",               MENU_ABOUT
+        MENUITEM "E&xit QuickRes",                MENU_CLOSE
+    end
+end
+
+
+
+//
+//  Safety Dialog Box so we can change back from an 'invisible' mode
+//
+
+KeepNewRes DIALOG 200, 150, 270, 80
+STYLE DS_MODALFRAME | DS_CENTER | DS_SYSMODAL | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Monitor Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT          "You resized your desktop. Do you want to keep this setting?",  IDTEXT1, 40, 10, 200, 8
+    CTEXT          "(No to return to old res)", IDTEXT2, 50, 25, 170, 8
+    LTEXT          "Press Abort if you CAN read this, but wish to return to the last resolution", IDTEXT3, 18, 40, 250, 8
+    DEFPUSHBUTTON  "NO",    IDNO,    108, 55, 40, 15
+    PUSHBUTTON     "YES",   IDYES,    43, 55, 40, 15
+    PUSHBUTTON     "ABORT", IDABORT, 173, 55, 40, 15
+END
+
+
+
+//
+//  NT Options Dialog Box
+//
+
+NTOptions DIALOG 200, 150, 330, 170
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Options - QuickRes for Windows"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Sort By...",       -1,                                     10, 10, 90, 43
+    CONTROL         "Resolutions",      IDD_SORT_RES, "Button", BS_RADIOBUTTON, 15, 23, 75, 10
+    CONTROL         "Number of colors", IDD_SORT_BPP, "Button", BS_RADIOBUTTON, 15, 35, 75, 10
+
+    GROUPBOX        "Show Refresh Rates",                         -1,                                          150, 10, 170, 70
+    CONTROL         "A Submenu for each resolution",              IDD_SUBMENUS,      "Button", BS_RADIOBUTTON, 160, 23, 150, 10
+    CONTROL         "A Submenu for current resolution only",      IDD_ONEMENUMOBILE, "Button", BS_RADIOBUTTON, 160, 35, 150, 10
+    CONTROL         "A Submenu for current resolution at bottom", IDD_ONEMENUBOTTOM, "Button", BS_RADIOBUTTON, 160, 47, 150, 10
+    CONTROL         "All frequencies on the main menu",           IDD_ALLMODEMENU,   "Button", BS_RADIOBUTTON, 160, 59, 150, 10
+
+    GROUPBOX        "Save Settings",                         -1,                                                     150,  90, 170, 70
+    CONTROL         "Save display settings for next reboot", IDD_UPDATEREG,  "button", WS_TABSTOP | BS_AUTOCHECKBOX, 160, 102, 150, 10
+    CONTROL         "Remember which modes pass and fail",    IDD_REMMODES,   "button", WS_TABSTOP | BS_AUTOCHECKBOX, 160, 120, 140, 10
+    PUSHBUTTON      "Clear pass/fail settings",              IDD_CLEARREG,                                           175, 135, 100, 17
+
+    GROUPBOX        "Filters",                         -1,                                                     10,  65, 130, 45
+    CONTROL         "Show only tested, valid modes",   IDD_SHOWTESTED, "button", WS_TABSTOP | BS_AUTOCHECKBOX, 15,  80, 120, 10
+    CONTROL         "Show modes that require restart", IDD_RESTARTREQ, "button", WS_TABSTOP | BS_AUTOCHECKBOX, 15,  92, 120, 10
+
+    PUSHBUTTON      "OK"             , IDOK        ,                            20, 130, 40, 12
+    PUSHBUTTON      "Cancel"         , IDCANCEL    ,                            75, 130, 40, 12
+
+END
+
+
+//
+//  Win95 Options Dialog Box
+//
+
+W95Options DIALOG 200, 150, 315, 120
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_3DLOOK
+CAPTION "Options - QuickRes for Windows"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Sort By...",       -1,                                     10, 10, 90, 43
+    CONTROL         "Resolutions",      IDD_SORT_RES, "Button", BS_RADIOBUTTON, 15, 23, 75, 10
+    CONTROL         "Number of colors", IDD_SORT_BPP, "Button", BS_RADIOBUTTON, 15, 35, 75, 10
+
+    GROUPBOX        "Save Settings",                         -1,                                                     150, 10, 155, 70
+    CONTROL         "Save display settings for next reboot", IDD_UPDATEREG,  "button", WS_TABSTOP | BS_AUTOCHECKBOX, 160, 22, 125, 10
+    CONTROL         "Remember which modes pass and fail",    IDD_REMMODES,   "button", WS_TABSTOP | BS_AUTOCHECKBOX, 160, 40, 135, 10
+    PUSHBUTTON      "Clear pass/fail settings",              IDD_CLEARREG,                                           175, 55, 100, 17
+
+    GROUPBOX        "Filters",                         -1,                                                     10,  65, 130, 45
+    CONTROL         "Show only tested, valid modes",   IDD_SHOWTESTED, "button", WS_TABSTOP | BS_AUTOCHECKBOX, 15,  80, 120, 10
+    CONTROL         "Show modes that require restart", IDD_RESTARTREQ, "button", WS_TABSTOP | BS_AUTOCHECKBOX, 15,  92, 120, 10
+
+    PUSHBUTTON      "OK"             , IDOK        ,                            180, 95, 40, 12
+    PUSHBUTTON      "Cancel"         , IDCANCEL    ,                            235, 95, 40, 12
+
+END
+
+
+//
+// StringTable for all QuickRes strings
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TITLE          "QuickRes"
+    IDS_CANTSETMODE    "Unable to change display mode"
+    IDS_ABOUT          "QuickRes for Windows\r\nVersion 2.1"
+    IDS_RESTART        "This mode requires a restart of windows.\r\nRestart now?"
+    IDS_HERTZ          " %d Hz"
+    IDS_DEFHERTZ       " (Default)"
+    IDS_REFRESHRATE    "Refresh Rate"
+    IDS_INVALIDMODE    "This mode failed the last time it was tested.  Try again?"
+    IDS_NOTEXT         "NO: %d"
+    IDS_DONTPANIC      "If after changing resolutions the screen is not visible,\n\
+                        please wait %d seconds or press ESC and the screen will be restored.\n\n\
+                        Anytime you change your monitor, your saved settings will be invalid\n\
+                        and you will need to click on 'Clear Saved Settings'."
+    IDS_CLEARREG       "Are you sure want to clear these settings?"
+    IDS_CHANGEDBPP     "The color depth has changed from %d BPP since QuickRes was last run.\n\
+                        All previous resolution tests are invalid."
+    IDS_AT             ", at "
+    IDS_MONITOR        "%sMonitor %s(%s)"
+
+
+    //
+    // The table is indexed by the bpp value.  The system 
+    // does the table lookup for us.
+    //
+
+    IDS_CRES+1      "%dx%d  2 colors"
+    IDS_CRES+4      "%dx%d  16 colors"
+    IDS_CRES+8      "%dx%d  256 colors"
+    IDS_CRES+15     "%dx%d  HiColor (15 bit)"
+    IDS_CRES+16     "%dx%d  HiColor (16 bit)"
+    IDS_CRES+24     "%dx%d  TrueColor (24 bit)"
+    IDS_CRES+32     "%dx%d  TrueColor (32 bit)"
+END
+
+
+#endif

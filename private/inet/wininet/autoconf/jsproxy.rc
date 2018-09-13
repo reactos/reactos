@@ -1,0 +1,27 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  jsproxy.rc
+//
+//      Resource file for the proxy auto-configuration dll.
+//
+//  (C) Copyright 1996 by Microsoft Corporation. All rights reserved.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "JScript Proxy Auto-Configuration"
+
+#ifdef VER_PRODUCTNAME_STR
+#undef VER_PRODUCTNAME_STR
+#endif
+#define VER_PRODUCTNAME_STR			"JScript Proxy Auto-Configuration"
+
+#define VER_INTERNALNAME_STR        "jsproxy.dll"
+#define VER_ORIGINALFILENAME_STR    "jsproxy.dll"
+
+#include "common.ver"
+

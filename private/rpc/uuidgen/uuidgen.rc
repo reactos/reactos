@@ -1,0 +1,22 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1993 - 1999
+//
+//  File:       uuidgen.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	VFT_APP
+#define	VER_FILESUBTYPE	VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "UUID Generator Executable"
+#define VER_INTERNALNAME_STR        "uuidgen.exe"
+#define VER_ORIGINALFILENAME_STR    "uuidgen.exe"
+
+#include "common.ver"
+
+

@@ -1,0 +1,94 @@
+/****************************************************************************************************
+ * WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING  *
+ *                                   DANGER WILL ROBINSON                                           *
+ *                                                                                                  *
+ *                                                                                                  *
+ * NON LOCALISABLE RESOURCES ONLY - NON LOCALISABLE RESOURCES ONLY - NON LOCALISABLE RESOURCES ONLY *
+ *                                                                                                  *
+ * This file must ONLY contain resources that DO NOT need LOCALISATION. Any localised resources     *
+ * should go into BrowseLC.rc. Abuse of this rule will be on pain of death.                         *
+ *                                                                                                  *
+ * 02/27/98 - CDturner                                                                              *
+ *                                                                                                  *
+ ****************************************************************************************************/
+
+#include <windows.h>
+#include <shlobj.h>     // for FCIDM_SHVIEWFIRST
+
+#include <mshtmcid.h>
+
+#include <platform.h>
+#include <shellp.h>
+#include "resource.h"
+#include "itbar.h"
+
+REGINST                 REGINST "selfreg_browseui.inf"
+
+//--------------------------------------------------------------
+// I C O N S
+//--------------------------------------------------------------
+IDI_NEW_FOLDER          ICON "newfld.ico"
+
+//--------------------------------------------------------------
+// C U R S O R S
+//--------------------------------------------------------------
+IDC_OFFLINE_HAND        CURSOR "..\lib\handoffl.cur"
+
+//--------------------------------------------------------------
+// B I T M A P S
+//--------------------------------------------------------------
+// default branding bitmaps
+
+// ** IMPORTANT NOTE ** 
+// If you change any of the animated bitmaps below so that they have a different
+// height, you must also update the constants in BRAND.CPP. These constants are
+// often used to calculate the size of the explorer branding animation.
+//  - dsheldon -
+
+#ifndef UNIX
+IDB_IEBRAND             BITMAP "brand.bmp"
+IDB_IESMBRAND           BITMAP "smbrand.bmp"
+IDB_IEMICROBRAND        BITMAP "micbrand.bmp"
+#else
+IDB_IEBRAND             BITMAP "uxbrand.bmp"
+IDB_IESMBRAND           BITMAP "uxsmbrand.bmp"
+IDB_IEMICROBRAND        BITMAP "uxmicbrand.bmp"
+#endif
+
+IDB_IETOOLBAR           BITMAP "tbdef.bmp"
+IDB_IETOOLBARHOT        BITMAP "tbhot.bmp"
+IDB_IETOOLBAR16         BITMAP "tbdef16.bmp"
+IDB_IETOOLBARHOT16      BITMAP "tbhot16.bmp"
+IDB_IETOOLBARHICOLOR    BITMAP "tbdefhi.bmp"
+IDB_IETOOLBARHOTHICOLOR BITMAP "tbhothi.bmp"
+IDB_IETOOLBARHICOLOR16  BITMAP "tbdef16h.bmp"
+IDB_IETOOLBARHOTHICOLOR16 BITMAP "tbhot16h.bmp"
+
+IDB_SHSTD               BITMAP "shdef.bmp"
+IDB_SHSTDHOT            BITMAP "shhot.bmp"
+IDB_SHSTD16             BITMAP "shdef16.bmp"
+IDB_SHSTDHOT16          BITMAP "shhot16.bmp"
+IDB_SHSTDHICOLOR        BITMAP "shdefhi.bmp"
+IDB_SHSTDHOTHICOLOR     BITMAP "shhothi.bmp"
+IDB_SHSTDHICOLOR16      BITMAP "shdef16h.bmp"
+IDB_SHSTDHOTHICOLOR16   BITMAP "shhot16h.bmp"
+
+// Address bar
+IDB_GO                  BITMAP "godef.bmp"
+IDB_GOHOT               BITMAP "gohot.bmp"
+
+// bitmaps used by advanced options dialog
+IDB_BUTTONS             BITMAP "buttons.bmp"
+
+
+IDB_THEATERCLOSE        BITMAP "close.bmp"
+IDB_BROWSERTOOLBAR      BITMAP "browtb.bmp"
+
+IDB_SEARCHBANDDEF       BITMAP "srchdef.bmp"
+IDB_SEARCHBANDHOT       BITMAP "srchhot.bmp"
+
+#ifdef MLUI_SUPPORT
+#include "browseui.rcv"
+#else
+#include "browselc.rc"
+#endif

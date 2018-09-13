@@ -1,0 +1,9 @@
+To build the NT version of HyperTerminal (ie., all features except telnet), 
+use the compiler switch "/DNT_EDITION"
+
+To build the Hilgraeve Private Edition of HyperTerminal (ie., all features
+including telnet and Hilgraeve info.), use the compiler switch "/DEXTENDED_FEATURES"
+
+The pre-defined connectiods are zipped in \setup\sessions\htpesess.zip. Use a 
+long-filename compatible unzipping program to preserve session names.
+

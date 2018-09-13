@@ -1,0 +1,251 @@
+<HTML>
+<HEAD>
+    <LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+    <TITLE>My First Server</TITLE>
+    <STYLE>
+        .userData {BEHAVIOR: url(#default#userdata)}
+    </STYLE>
+    <SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+    <SCRIPT LANGUAGE="javascript">
+        function saveForm()
+        {
+            var oPersist1=form.txtName1;
+            var oPersist2=form.txtName2;
+            var oPersist3=form.txtDNSName;
+            var oPersist4=form.txtNetBiosName;
+            
+            oPersistData.setAttribute("stxtName1",oPersist1.value);
+            oPersistData.setAttribute("stxtName2",oPersist2.value);
+            oPersistData.setAttribute("stxtDNSName",oPersist3.value);
+            oPersistData.setAttribute("stxtNetBiosName",oPersist4.value);
+            
+            oPersistData.save("oXMLTree");
+        }
+    
+        function loadForm()
+        {
+            var oPersistTxt1=form.txtName1;
+            var oPersistTxt2=form.txtName2;
+            var oPersistTxt3=form.txtDNSName;
+            var oPersistTxt4=form.txtNetBiosName;
+            
+            oPersistData.load("oXMLTree");
+            
+            var a=oPersistData.getAttribute("stxtName1");
+            var b=oPersistData.getAttribute("stxtName2");
+            var c=oPersistData.getAttribute("stxtDNSName");
+            var d=oPersistData.getAttribute("stxtNetBiosName");
+            
+            if (a==null)
+            { 
+                a=""
+            }
+            if (b==null)
+            {
+                b=""
+            }
+            if (c==null)
+            {
+                c=""
+            }
+            if (d==null)
+            {
+                d=""
+            }
+            
+            oPersistTxt1.value=a
+            oPersistTxt2.value=b
+            oPersistTxt3.value=c
+            oPersistTxt4.value=d
+        }
+  
+        // following vars are defined for localization
+        var L_DomainName_ErrorMessage = "Invalid domain name.";
+        var L_DNSName_ErrorMessage = "Invalid domain DNS name.";
+        var L_NetBiosName_ErrorMessage = "Invalid NetBIOS name.";
+
+        function CheckName1()
+        {
+            var name1 = document.form.txtName1.value;
+            var re = /[\s\.]/;
+
+            // check syntax: no . or space
+
+            if ((name1 == "") || (name1.search(re) != -1))
+            {
+                alert(L_DomainName_ErrorMessage);
+
+                // prevent focus change
+                document.form.txtName1.focus();
+
+                return false;
+            }
+
+            // set domain net bios name to domain name1
+            document.form.txtNetBiosName.value = name1;
+
+            // set domain dns name if domain name2 is specified
+
+            var name2 = document.form.txtName2.value;
+            if (name2 != "")
+            {
+                var DNSName = name1.concat(".");
+                DNSName = DNSName.concat(name2);
+
+                if (DNSName != document.form.txtDNSName.value)
+                {
+                    // this is a new name
+
+                    if (srvwiz.ValidateName("DNS", DNSName))
+                    {
+                        document.form.txtDNSName.value = DNSName;
+                    }
+                    else
+                    {
+                        alert(L_DNSName_ErrorMessage);
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
+        function CheckName2()
+        {
+            var name2 = document.form.txtName2.value;
+
+            // check syntax
+            if (name2 == "")
+            {
+                alert(L_DomainName_ErrorMessage);
+
+                // prevent focus change
+                document.form.txtName2.focus();
+
+                return false;
+            }
+
+            // set domain dns name if domain name1 is given
+            var name1 = document.form.txtName1.value;
+            if (name1 != "")
+            {
+                var DNSName = name1.concat(".");
+                DNSName = DNSName.concat(name2);
+
+                if (DNSName != document.form.txtDNSName.value)
+                {
+                    // this is a new name
+
+                    if (srvwiz.ValidateName("DNS", DNSName))
+                    {
+                        document.form.txtDNSName.value = DNSName;
+                    }
+                    else
+                    {
+                        alert(L_DNSName_ErrorMessage);
+
+                        // prevent focus change
+                        document.form.txtName2.focus();
+
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function CheckNetBiosName()
+        {
+            var name = document.form.txtNetBiosName.value;
+            var re = /[\s\.]/;
+
+            // check syntax: no . or space
+
+            if ((name == "") || (name.search(re) != -1) || !srvwiz.ValidateName("NetBios", name))
+            {
+                alert(L_NetBiosName_ErrorMessage); 
+
+                // prevent focus change
+                document.form.txtName1.focus();
+
+                return false;
+            }
+
+            // store it in registry for later use
+            srvwiz.DomainNetBiosName = name;
+
+            return true;
+        }
+
+        function CheckDNSName()
+        {
+            var name = document.form.txtDNSName.value;
+
+            if ((name == "") || !srvwiz.ValidateName("DNS", name))
+            {
+                 alert(L_DNSName_ErrorMessage);
+                 return false;
+            }
+
+            // store it in registry for later use
+            srvwiz.DomainDNSName = name;
+
+            return true;
+        }
+
+        function docontinue(btnContinue)
+        {
+            if (!CheckDNSName() || !CheckNetBiosName())
+            {
+                return false;
+            }
+            else
+            {
+                saveForm();
+                self.location.href = "next.htm";
+                srvwiz.Home = 5;
+            }
+        }
+
+        function backup()
+        {
+            saveForm();
+            self.location.href = "intro2.htm";
+            srvwiz.Home = 2;
+        }
+    </SCRIPT>
+</HEAD>
+
+<BODY ondragover="return false" BGCOLOR="#cccccc" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" onload="loadForm()">
+<DIV ID="oPersistData" CLASS="userData">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">To set up Active Directory and set this server up as a domain controller, 
+                Windows needs the following information:
+            <form NAME="form" style="display:inline">
+                <P ID="para2" style="margin-top:8px">What do you want to name your domain? 
+                    For example, use your group name&nbsp;&#151;&nbsp;such as "headquarters" or "marketing":
+                <BR><INPUT TYPE="text" ID="txtName1" SIZE="32" onchange="CheckName1()" style="margin-top:2px">
+                <P ID="para3" style="margin-top:8px">Type in the domain name you have registered on the Internet&nbsp;&#151;&nbsp;
+                    for example, microsoft.com. Type <B>local</B> if you don't have a public domain name:
+                <BR><INPUT TYPE="text" ID="txtName2" SIZE="32" onchange="CheckName2()" style="margin-top:2px">
+                <P ID="para4" style="margin-top:8px">Preview of Active Directory domain name:
+                <BR><INPUT TYPE="text" readonly ID="txtDNSName" SIZE="32" onchange="CheckDNSName()" STYLE="background-color:#cccccc; margin-top:2px">
+                <P ID="para5" style="margin-top:8px">Preview of down-level (Windows 95/98, NetBIOS) domain name:
+                <BR><INPUT TYPE="text" readonly ID="txtNetBiosName" SIZE="32" onchange="CheckNetBiosName()" STYLE="background-color:#cccccc; margin-top:2px">
+            </form>
+            <P ALIGN="right" style="position:relative; top:-6px"><BUTTON TYPE="button" ACCESSKEY="b" ID="back" ONCLICK="backup()"><U>B</U>ack</BUTTON>&nbsp;<BUTTON TYPE="button" ACCESSKEY="n" ID="next" ONCLICK="docontinue()"><U>N</U>ext</BUTTON>
+            <BR>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+</DIV>
+</BODY>
+</HTML>

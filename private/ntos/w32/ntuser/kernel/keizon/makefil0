@@ -1,0 +1,11 @@
+#****************************** File Header ******************************\
+# File Name: makefil0
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# This file is used by BUILD.EXE in it's first pass.
+#
+# History:
+# Oct-15-1996 IanJa Created
+#***************************************************************************/
+!include ..\makefil0.inc

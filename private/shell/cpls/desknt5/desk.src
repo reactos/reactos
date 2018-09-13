@@ -1,0 +1,26 @@
+LIBRARY Display
+
+EXPORTS
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+    UpdateCharsetChanges  PRIVATE
+    UpdateUIfontsDueToDPIchange	PRIVATE
+
+    CPlApplet
+    DllInitialize
+    InstallScreenSaverA
+    InstallScreenSaverW
+    InstallScreenSaver = InstallScreenSaverA
+    DeskSetCurrentSchemeA
+    DeskSetCurrentSchemeW
+    DeskSetCurrentScheme = DeskSetCurrentSchemeA
+
+#ifdef WINNT
+    DisplayOcSetupProc
+    DisplayClassInstaller
+    DisplaySaveSettings
+    DisplayTestSettingsW
+    MonitorClassInstaller
+#endif

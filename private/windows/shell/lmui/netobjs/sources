@@ -1,0 +1,84 @@
+!IF 0
+
+Copyright (c) 1995-1995 Microsoft Corporation
+
+Module Name:
+
+    sources
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+History:
+    Created 25-Apr-95 by Bruce Forstall (brucefo)
+    from template of 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=  shell
+MINORCOMP=  ntlanui2
+
+UMTYPE=     windows
+
+TARGETNAME= ntlanui2
+TARGETPATH= obj
+TARGETTYPE= DYNLINK
+
+DLLDEF=     obj\*\app.def
+DLLENTRY=   _DllMainCRTStartup
+DLLBASE=    @$(BASEDIR)\PUBLIC\SDK\LIB\coffbase.txt,ntlanui2
+
+USE_CRTDLL=1
+
+C_DEFINES= $(C_DEFINES) -DINC_OLE2 -DUNICODE -D_UNICODE
+
+# Make warnings equivalent to errors
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+INCLUDES=\
+    obj; \
+    ..\debug; \
+    $(BASEDIR)\private\shell\inc
+
+TARGETLIBS=\
+    ..\debug\obj\*\debug.lib \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib \
+    $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+    $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+    $(BASEDIR)\public\sdk\lib\*\netapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib
+
+CONDITIONAL_INCLUDES=\
+    app.rc2 \
+    afxres.h
+
+SOURCES=\
+    messages.mc \
+    dllmain.cxx \
+    pages.cxx \
+    ext.cxx \
+    ole.cxx \
+    util.cxx \
+    app.rc
+
+PASS0_SOURCEDIR=obj
+PASS0_HEADERDIR=obj
+
+PRECOMPILED_INCLUDE=headers.hxx
+PRECOMPILED_CXX=1
+
+NTTARGETFILES=  obj\$(TARGET_DIRECTORY)\app.res

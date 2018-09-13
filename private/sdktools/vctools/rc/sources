@@ -1,0 +1,16 @@
+MAJORCOMP=sdk
+MINORCOMP=rc
+
+TARGETNAME=rc
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.\;..\rcdll
+
+SOURCES=rc.c	\
+        rc.rc
+
+UMTYPE=console
+SUBSYSTEM_VERSION=4.0
+LINKLIBS=..\rcdll\obj\*\rcdll.lib
+USE_CRTDLL=1

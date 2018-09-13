@@ -1,3 +1,0 @@
-#define MSTSCLIB_REDIST_
-#include "./mstsclib.idl"
-// EOF

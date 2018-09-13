@@ -1,0 +1,34 @@
+#This makefile has been generated automatically by mwgenmakeC for
+# compiling C++ application.
+COMPONENT = SHELL
+PRODUCT = STOCKLIB5
+
+NO_BROWSER_FILE=1
+
+# This supplemental library uses NT 5 definitions
+WIN32_WINNT_VERSION=0x0500
+WIN32_WIN95_VERSION=0x0500
+
+CUSTOM_RULES = ${MWROOT}/ie4/shell.template
+
+SOURCES =  \
+           util.cpp     \
+           rtlmir.cpp   \
+
+
+WLIB	= stocklib5
+LIB	= lib${WLIB}.a # target static library
+
+LIBOBJS := ${SOURCES:%.cpp=%.o}
+LIBOBJS := ${LIBOBJS:%.c=%.o}
+SRCS=${SOURCES}
+
+## you may define variables specific to this sub-directory/target using PROJECT_XXX
+##
+PROJECT_CFLAGS = -DWINDOWS_ME -DWINNT -DFE_IME -DDBCS \
+		 -DULTRAPRIVATE  -DUSE_PRIVATE_VERSION_NUMBER -DWINVER=0x0500
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+

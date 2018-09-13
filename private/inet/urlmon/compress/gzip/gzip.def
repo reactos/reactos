@@ -1,0 +1,16 @@
+EXPORTS
+
+    InitCompression
+    InitDecompression
+    DeInitCompression
+    DeInitDecompression
+    CreateCompression
+    ResetCompression
+    Compress
+    DestroyCompression
+    CreateDecompression
+    ResetDecompression
+    Decompress
+    DestroyDecompression
+
+

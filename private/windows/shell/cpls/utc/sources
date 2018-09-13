@@ -1,0 +1,37 @@
+MAJORCOMP = shell
+MINORCOMP = cpls
+
+TARGETNAME = timedate
+TARGETPATH = obj
+TARGETTYPE = DYNLINK
+TARGETEXT  = cpl
+TARGETLIBS = $(BASEDIR)\public\sdk\lib\*\kernel32.lib             \
+             $(BASEDIR)\public\sdk\lib\*\user32.lib               \
+             $(BASEDIR)\public\sdk\lib\*\comctl32.lib             \
+             $(BASEDIR)\public\sdk\lib\*\comctlp.lib              \
+             $(BASEDIR)\public\sdk\lib\*\shell32.lib              \
+             $(BASEDIR)\public\sdk\lib\*\gdi32.lib                \
+             $(BASEDIR)\public\sdk\lib\*\advapi32.lib             \
+             $(BASEDIR)\public\sdk\lib\*\imm32.lib
+
+DLLENTRY = LibMain
+
+INCLUDES = ..\..\inc;..\..\..\inc;$(BASEDIR)\private\inc;..\..\..\..\iedev\inc
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL = /W3
+!ENDIF
+MSC_WARNING_LEVEL = $(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES = -DNT -DWINNT -DUNICODE -D_UNICODE
+
+UMTYPE = windows
+EXPECTED_WINVER = 4.0
+
+SOURCES = timedate.rc \
+          calendar.c  \
+          clock.c     \
+          date.c      \
+          main.c      \
+          mapctl.c    \
+          worldmap.c

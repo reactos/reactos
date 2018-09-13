@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdintam
+
+TARGETNAME=kbdintam
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdintam.c kbdintam.rc
+
+NTTARGETFILE0=kbdintam.h kbdintam.rc kbdintam.def

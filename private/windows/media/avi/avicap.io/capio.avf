@@ -1,0 +1,427 @@
+
+VOID WINAPI AVIPreloadFat (LPCAPSTREAM lpcs)
+{
+    return;
+}
+
+// Add an index entry for an audio buffer
+// dwSize is the size of data ONLY, not including the chunk or junk
+// Returns: TRUE if index space is not exhausted
+//
+__inline STATICFN BOOL IndexAudio (LPCAPSTREAM lpcs, DWORD dwSize)
+{
+    ++lpcs->dwWaveChunkCount;
+    return TRUE;
+}
+
+// Add an index entry for a video frame
+// dwSize is the size of data ONLY, not including the chunk or junk
+// Returns: TRUE if index space is not exhausted
+//
+__inline STATICFN BOOL IndexVideo (LPCAPSTREAM lpcs, DWORD dwSize, BOOL bKeyFrame)
+{
+    ++lpcs->dwVideoChunkCount;
+    return TRUE;
+}
+
+STATICFN void AVIFileCleanup(LPCAPSTREAM lpcs)
+{
+    if (lpcs->paudio)
+        AVIStreamClose(lpcs->paudio), lpcs->paudio = NULL;
+    if (lpcs->pvideo)
+        AVIStreamClose(lpcs->pvideo), lpcs->pvideo = NULL;
+    if (lpcs->pavifile)
+        AVIFileClose(lpcs->pavifile), lpcs->pavifile = NULL;
+
+    if (hmodKernel) {
+        FreeLibrary(hmodKernel);
+        pfnCreateIoCompletionPort = NULL;
+        pfnGetQueuedCompletionStatus = NULL;
+        hmodKernel = NULL;
+    }
+}
+
+/*
+ * CapFileInit
+ *
+ *       Perform all initialization required to write a capture file.
+ *
+ *       We take a slightly strange approach: We don't write
+ *       out the header until we're done capturing.  For now,
+ *       we just seek 2K into the file, which is where all of
+ *       the real data will go.
+ *
+ *       When we're done, we'll come back and write out the header,
+ *       because then we'll know all of the values we need.
+ *
+ *      Also allocate and init the index.
+ */
+
+BOOL CapFileInit (
+    LPCAPSTREAM lpcs)
+{
+    AVISTREAMINFOW si;
+    LPBYTE ptr = NULL;
+    UINT   cksize;
+    RGBQUAD FAR * prgb;
+    PALETTEENTRY aPalEntry[256];
+    LPBITMAPINFO lpBitsInfoOut;    // Possibly compressed output format
+    LONG lRet;
+    UINT ii;
+
+    // No special video format given -- use the default
+    //
+    lpBitsInfoOut = lpcs->CompVars.lpbiOut;
+    if (lpcs->CompVars.hic == NULL)
+        lpBitsInfoOut = lpcs->lpBitsInfo;
+
+    // use avifile to access the data
+
+    // create the avifile object, create a video and audio stream and
+    // set the format for each stream.
+
+
+    assert(lpcs->pavifile == NULL);
+
+    /* if the capture file has not been set then error */
+    if (!(*lpcs->achFile))
+        goto error_exit;
+
+    // !!! how to avoid truncating the file if already created ?
+
+    lRet = AVIFileOpen(&lpcs->pavifile,
+                    lpcs->achFile,
+                    OF_WRITE | OF_CREATE,
+                    NULL);
+    if (lRet || !lpcs->pavifile)
+        goto error_exit;
+
+    // create video stream
+    ZeroMemory (&si, sizeof(si));
+    si.fccType = streamtypeVIDEO;
+
+    if (lpcs->CompVars.hic)
+        si.fccHandler = lpcs->CompVars.fccHandler;
+    else
+        si.fccHandler = lpBitsInfoOut->bmiHeader.biCompression;
+
+    // A bit of history...
+    // In VFW 1.0, we set fccHandler to 0 for BI_RLE8 formats
+    // as a kludge to make Mplayer and Videdit play the files.
+    // Just prior to 1.1 release, we found this broke Premiere,
+    // so now (after AVICAP beta is on Compuserve), we change the
+    // fccHandler to "MRLE".  Just ask Todd...
+    // And now, at RC1, we change it again to "RLE ", Just ask Todd...
+    if (si.fccHandler == BI_RLE8)
+        si.fccHandler = mmioFOURCC('R', 'L', 'E', ' ');
+
+    // !!!need to change this after capture
+    si.dwScale = lpcs->sCapParms.dwRequestMicroSecPerFrame;
+
+
+
+    si.dwRate = 1000000L;
+    si.dwStart = 0L;
+    si.dwQuality = (DWORD) -1L;         /* !!! ICQUALITY_DEFAULT */
+    si.dwSampleSize = 0L;
+
+    lRet = AVIFileCreateStream(lpcs->pavifile, &lpcs->pvideo, &si);
+    if (lRet || !lpcs->pvideo)
+        goto error_exit;
+
+    // set format of video stream
+    //  !!! dont write palette for full color?
+    if (lpBitsInfoOut->bmiHeader.biBitCount > 8)
+        lpBitsInfoOut->bmiHeader.biClrUsed = 0;
+
+    // need to alloc a single block that we can fill with hdr + palette
+    cksize = lpBitsInfoOut->bmiHeader.biSize
+             + lpBitsInfoOut->bmiHeader.biClrUsed * sizeof(RGBQUAD);
+    ptr = GlobalAllocPtr(GPTR, cksize);
+    if (!ptr)
+        goto error_exit;
+
+    CopyMemory (ptr, (LPBYTE)&lpBitsInfoOut->bmiHeader,
+                lpBitsInfoOut->bmiHeader.biSize);
+    prgb = (RGBQUAD FAR *) &ptr[lpBitsInfoOut->bmiHeader.biSize];
+
+    if (lpBitsInfoOut->bmiHeader.biClrUsed > 0) {
+        // Get Palette info
+        UINT nPalEntries = GetPaletteEntries(lpcs->hPalCurrent, 0,
+                                             lpBitsInfoOut->bmiHeader.biClrUsed,
+                                             aPalEntry);
+
+        if (nPalEntries != lpBitsInfoOut->bmiHeader.biClrUsed)
+            goto error_exit;
+
+        for (ii = 0; ii < lpBitsInfoOut->bmiHeader.biClrUsed; ++ii)  {
+            prgb[ii].rgbRed = aPalEntry[ii].peRed;
+            prgb[ii].rgbGreen = aPalEntry[ii].peGreen;
+            prgb[ii].rgbBlue = aPalEntry[ii].peBlue;
+        }
+    }
+    if (AVIStreamSetFormat(lpcs->pvideo, 0, ptr, cksize))
+        goto error_exit;
+
+    GlobalFreePtr(ptr), ptr = NULL;
+
+
+    // create audio stream if sound capture enabled
+    if (lpcs->sCapParms.fCaptureAudio) {
+
+         ZeroMemory (&si, sizeof(si));
+         si.fccType = streamtypeAUDIO;
+         si.fccHandler = 0L;
+         si.dwScale = lpcs->lpWaveFormat->nBlockAlign;
+         si.dwRate = lpcs->lpWaveFormat->nAvgBytesPerSec;
+         si.dwStart = 0L;
+         si.dwLength =  lpcs->dwWaveBytes / lpcs->lpWaveFormat->nBlockAlign;
+         si.dwQuality = (DWORD)-1L;    /* !!! ICQUALITY_DEFAULT */
+         si.dwSampleSize = lpcs->lpWaveFormat->nBlockAlign;
+
+        lRet = AVIFileCreateStream(lpcs->pavifile, &lpcs->paudio, &si);
+        if (lRet || !lpcs->paudio)
+            goto error_exit;
+
+        // write wave stream format
+
+        cksize = GetSizeOfWaveFormat (lpcs->lpWaveFormat);
+
+        if (AVIStreamSetFormat(lpcs->paudio, 0, lpcs->lpWaveFormat, cksize))
+            goto error_exit;
+    }
+
+    // start streaming
+    //
+    // parameters are random for now, and are not used at all by current impl.
+    // probably covered by above call but you never know
+    //
+    AVIStreamBeginStreaming(lpcs->pvideo, 0, 32000, 1000);
+    if (lpcs->sCapParms.fCaptureAudio)
+        AVIStreamBeginStreaming(lpcs->paudio, 0, 32000, 1000);
+
+    // this is used for timing calcs, not just indexing
+    //
+    lpcs->dwVideoChunkCount = 0;
+    lpcs->dwWaveChunkCount  = 0;
+
+    // !!! write info chunks here
+
+    return TRUE;
+
+error_exit:
+    if (ptr) {
+        GlobalFreePtr(ptr); ptr = NULL;
+    }
+    AVIFileCleanup (lpcs);
+    return FALSE;
+}
+
+/*
+ * AVIFileFini
+ *
+ *       Write out the index, deallocate the index, and close the file.
+ *
+ */
+
+BOOL AVIFileFini (LPCAPSTREAM lpcs, BOOL fWroteJunkChunks, BOOL fAbort)
+{
+    AVISTREAMINFOW si;
+
+    DPF("AVICap32:    Start of AVIFileFini\n");
+
+    AVIStreamEndStreaming(lpcs->pvideo);
+    if (lpcs->sCapParms.fCaptureAudio)
+        AVIStreamEndStreaming(lpcs->paudio);
+
+    // if we got a good file, allow editing of it
+    lpcs->fFileCaptured = !fAbort;
+
+    // -----------------------------------------------------------
+    // adjust audio & video streams to be the same length
+    // -----------------------------------------------------------
+
+   #if 0 // old technique - match video to audio unconditionally
+    // share the captured frames out evenly over the captured audio
+
+    if (lpcs->sCapParms.fCaptureAudio && lpcs->dwVideoChunkCount &&
+            (lpcs->dwWaveBytes > 0)) {
+
+         /* HACK HACK */
+         /* Set rate that was captured based on length of audio data */
+
+        lpcs->dwActualMicroSecPerFrame = (DWORD)
+            MulDiv((LONG)lpcs->dwWaveBytes,
+                     1000000,
+                     (LONG)(lpcs->lpWaveFormat->nAvgBytesPerSec * lpcs->dwVideoChunkCount));
+    } else {
+        lpcs->dwActualMicroSecPerFrame = lpcs->sCapParms.dwRequestMicroSecPerFrame;
+    }
+   #else // new technique for stream length munging
+    //
+    // Init a value in case we're not capturing audio
+    //
+    lpcs->dwActualMicroSecPerFrame = lpcs->sCapParms.dwRequestMicroSecPerFrame;
+
+    switch (lpcs->sCapParms.AVStreamMaster) {
+        case AVSTREAMMASTER_NONE:
+            lpcs->dwActualMicroSecPerFrame = lpcs->sCapParms.dwRequestMicroSecPerFrame;
+            break;
+
+        case AVSTREAMMASTER_AUDIO:
+        default:
+            // VFW 1.0 and 1.1 ALWAYS munged frame rate to match audio
+            // duration.
+            if (lpcs->sCapParms.fCaptureAudio && lpcs->dwVideoChunkCount) {
+                // Modify the video framerate based on audio duration
+                lpcs->dwActualMicroSecPerFrame = (DWORD)
+                    ((double)lpcs->dwWaveBytes * 1000000. /
+                    ((double)lpcs->lpWaveFormat->nAvgBytesPerSec *
+                    lpcs->dwVideoChunkCount + 0.5));
+            }
+            break;
+    }
+   #endif
+
+    // ------------------------------------------------------------
+    // write corrected stream timing back to the file
+    // ------------------------------------------------------------
+
+   #ifdef CHICAGO
+    AVIStreamInfo (lpcs->pvideo, (LPAVISTREAMINFOA) &si, sizeof(si));
+   #else
+    AVIStreamInfo (lpcs->pvideo, &si, sizeof(si));
+   #endif
+
+    si.dwRate = 1000000L;
+    si.dwScale = lpcs->dwActualMicroSecPerFrame;
+
+    // no api for this- have to call the member directly!
+    //
+    lpcs->pvideo->lpVtbl->SetInfo(lpcs->pvideo, &si, sizeof(si));
+
+    // Add the info chunks
+    // This includes the capture card driver name, client app, date and time
+
+    if (lpcs->lpInfoChunks) {
+        LPBYTE  lpInfo;
+        DWORD   cbData;
+
+        lpInfo = lpcs->lpInfoChunks;
+        while (lpInfo < (LPBYTE) lpcs->lpInfoChunks + lpcs->cbInfoChunks) {
+            cbData = * (LPDWORD) (lpInfo + sizeof(DWORD));
+            AVIFileWriteData (lpcs->pavifile,
+                        (DWORD) * (LPDWORD) lpInfo,        // FOURCC
+                        lpInfo + sizeof (DWORD) * 2,       // lpData
+                        cbData);                           // cbData
+            lpInfo += cbData + sizeof (DWORD) * 2;
+        }
+    }
+
+
+    AVIFileCleanup(lpcs);
+
+    return lpcs->fFileCaptured;
+}
+
+//
+// Prepends dummy frame entries to the current valid video frame.
+// Bumps the index, but does not actually trigger a write operation.
+// nCount is a count of the number of frames to write
+// Returns: TRUE on a successful write
+
+BOOL WINAPI AVIWriteDummyFrames (
+    LPCAPSTREAM lpcs,
+    UINT        nCount,
+    LPUINT      lpuError,
+    LPBOOL      lpbPending)
+{
+    LONG lRet;
+
+    lpcs->dwVideoChunkCount += nCount;
+
+    lRet = AVIStreamWrite(lpcs->pvideo,
+                    -1,             // current position
+                    nCount,         // this many samples
+                    NULL,           // no actual data
+                    0,              // no data
+                    0,              // not keyframe
+                    NULL, NULL);    // no return of samples or bytes
+    *lpbPending = FALSE;
+    *lpuError = 0;
+    if (lRet)
+        *lpuError = IDS_CAP_FILE_WRITE_ERROR;
+    return !(*lpuError);
+}
+
+// Writes compressed or uncompressed frames to the AVI file
+// returns TRUE if no error, FALSE if end of file.
+
+BOOL WINAPI AVIWriteVideoFrame (
+    LPCAPSTREAM lpcs,
+    LPBYTE      lpData,
+    DWORD       dwBytesUsed,
+    BOOL        fKeyFrame,
+    UINT        uIndex,
+    UINT        nDropped,
+    LPUINT      lpuError,
+    LPBOOL      lpbPending)
+{
+    LONG   lRet;
+
+    lRet = AVIStreamWrite(lpcs->pvideo,     // write to video stream
+                    -1,                     // next sample
+                    1,                      // 1 sample only
+                    lpData,                 // video buffer (no riff header)
+                    dwBytesUsed,            // length of data
+                    fKeyFrame ? AVIIF_KEYFRAME : 0,
+                    NULL, NULL);    // no return of sample or byte count
+
+    *lpbPending = FALSE;
+    *lpuError = 0;
+    if (lRet)
+    {
+        dprintf("AVIStreamWrite returned 0x%x", lRet);
+        *lpuError = IDS_CAP_FILE_WRITE_ERROR;
+    }
+    else
+    {
+        ++lpcs->dwVideoChunkCount;
+        if (nDropped)
+            AVIWriteDummyFrames (lpcs, nDropped, lpuError, lpbPending);
+    }
+    return !(*lpuError);
+}
+
+BOOL WINAPI AVIWriteAudio (
+    LPCAPSTREAM lpcs,
+    LPWAVEHDR   lpWaveHdr,
+    UINT        uIndex,
+    LPUINT      lpuError,
+    LPBOOL      lpbPending)
+{
+    LONG lRet;
+
+    lRet = AVIStreamWrite(lpcs->paudio,
+                -1,                 // next sample
+                lpWaveHdr->dwBytesRecorded /
+                    lpcs->lpWaveFormat->nBlockAlign,    // nr samples
+                lpWaveHdr->lpData,
+                lpWaveHdr->dwBytesRecorded,
+                0,
+                NULL,
+                NULL);
+
+    *lpbPending = FALSE;
+    *lpuError = 0;
+    if (lRet)
+    {
+        dprintf("AVIStreamWrite returned 0x%x", lRet);
+        *lpuError = IDS_CAP_FILE_WRITE_ERROR;
+    }
+    else
+        ++lpcs->dwWaveChunkCount;
+
+    return !(*lpuError);
+}
+

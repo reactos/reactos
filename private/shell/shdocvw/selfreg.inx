@@ -1,0 +1,853 @@
+;
+;  SHDOCVW Registry for:
+;  1. Control: COM Objects provided for 3rd party redistribution use.
+;  2. Browser: Base IE40 functionality.
+;  3. ShellIntegration: IE40 functionality available only with Shell Integration.
+;
+;  Section Names: (Names beginning with '!' AREN'T BACKED
+;    !RegRollback<SectionName> - Used by installer to restore during uninstall. Weird Advpack.dll requirement.
+;    Reg<SectionName>
+;           Install: Backup IE3 values and add IE4 values.
+;           UnInstall: Delete IE4 values and restore IE3 values.
+;    DelReg<SectionName>
+;           Install: Backup IE3 values and leave them blank because IE4 doesn't use these values.
+;           UnInstall: Restore the IE3 values.
+;    !Reg<SectionName>IE4B2
+;           Install: Delete permenately because we don't need them in this new version of IE4
+;                    and uninstall gets us back to IE3 where they aren't needed either.
+;           UnInstall: nothing.
+;
+;  WARNINGS:
+;  Note the AddReg and DelReg keys have a maximum length of 255 characters.
+;  Only one AddReg and DelReg key per header section.
+;
+;  RegItems with %11% or %25% are substituted on NT with
+;  %SystemRoot%\whatever. But this needs to be REG_EXPAND_SZ!  Use the
+;  token %RES% (0x20000).
+;
+;  Any entries that go into the registry that contain
+;  %_SYS_MOD_PATH%, %11%, %25% MUST have this flag set. (w95 ignores it).
+
+[Version]
+Signature="$CHICAGO$"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Control Registration (For 3rd Parties)
+;
+;  RegControls and UnregControls are processed for DllRegisterServer
+;  and DllUnregisterServer.  These are for OCXs only (that the OS
+;  doesn't rely on).
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[InstallControls]
+ComponentName=IE40.Controls
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegControls
+DelReg=!RegRollbackControls
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+[UnInstallControls]
+ComponentName=IE40.Controls
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Common Browser Registration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[InstallBrowser]
+ComponentName=IE40.Browser
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegBrowser
+DelReg=DelRegBrowser,!RegRollbackBrowser
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnInstallBrowser]
+ComponentName=IE40.Browser
+AdvOptions=260
+RequireEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Browser Registration when no shell Integration features are present
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[InstallOnlyBrowser]
+ComponentName=IE40.OnlyBrowser
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegOnlyBrowser
+DelReg=!RegRollbackOnlyBrowser,!RegRollbackShell
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnInstallOnlyBrowser]
+ComponentName=IE40.OnlyBrowser
+AdvOptions=260
+RequireEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Browser Registration when Integrated Shell is available
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[InstallOnlyShell]
+ComponentName=IE40.Shell
+ComponentVersion=5.0
+AdvOptions=36
+AddReg=RegShell
+DelReg=DelRegShell,!RegRollbackShell,!RegRollbackOnlyBrowser
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnInstallOnlyShell]
+ComponentName=IE40.Shell
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  IE File Association Registration
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[InstallAssociations]
+ComponentName=IE40.Assoc
+ComponentVersion=5.0
+AdvOptions=36
+DelReg=!RegRollbackAssociations
+BackupReg=RegAssociations
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[UnInstallAssociations]
+ComponentName=IE40.Assoc
+AdvOptions=260
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[InstallPreWin2KShell]
+AddReg=AddRegPreWin2KShell
+
+[InstallWin2KShell]
+DelReg=DelRegPreWin2KShell
+
+[AddRegPreWin2KShell]
+HKCR,".DOC\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,".DOT\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,".XLS\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,".XLT\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,".PPT\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,".POT\ShellEx\%IID_IQueryInfo%",,,"%CLSID_DocFileInfoTip%"
+HKCR,CLSID\%CLSID_DocFileInfoTip%,,,"%DESC_DocFileInfoTip%"
+HKCR,CLSID\%CLSID_DocFileInfoTip%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_DocFileInfoTip%\InprocServer32,ThreadingModel,,"Apartment"
+
+[DelRegPreWin2KShell]
+HKCR,".DOC\ShellEx\%IID_IQueryInfo%"
+HKCR,".DOT\ShellEx\%IID_IQueryInfo%"
+HKCR,".XLS\ShellEx\%IID_IQueryInfo%"
+HKCR,".XLT\ShellEx\%IID_IQueryInfo%"
+HKCR,".PPT\ShellEx\%IID_IQueryInfo%"
+HKCR,".POT\ShellEx\%IID_IQueryInfo%"
+HKCR,CLSID\%CLSID_DocFileInfoTip%
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Rollback Registration
+;
+;  These registry keys will kick off the RollBack during uninstall.
+;    clean up!! we DelReg those in Install<SectionName> section since
+;    there are no HKCU data in those INF section anymore.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+[!RegRollbackControls]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Controls",0,""
+
+[!RegRollbackBrowser]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Browser",0,""
+
+[!RegRollbackOnlyBrowser]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.OnlyBrowser",0,""
+
+[!RegRollbackShell]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Shell",0,""
+
+[!RegRollbackAssociations]
+HKLM,"Software\Microsoft\Advanced INF Setup\IE CompList","IE40.Assoc",0,""
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Control Registration (For 3rd Parties)
+;
+;  This section exists so we can give shdocvw.dll to 3rd parties and they
+;  can install it and use some of the Controls we provide.  This section
+;  will get installed by them (regsvr32.exe shdocvw.dll) or by the IE40
+;  product (regsvr32.exe /i shdocvw.dll).
+;
+;  WARNING: This should only contain controls 3rd parties can use WITHOUT IE.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[RegControls]
+; Currently Empty
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Browser Registration
+;
+;  This section will be installed with the IE4 product (Both Browser Only
+;  and Integrated Shell)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;................................................................................
+; These registry entries are valid in the previous version of the product (IE3)
+; but they need to be removed while this version of the product (IE4) is installed.
+; They will be restore when this products (IE4) is uninstalled.
+;................................................................................
+[DelRegBrowser]
+; Valid for IE3 but not for IE4.
+HKCR,"CLSID\%CLSID_WebBrowser1%\Control"
+HKCR,"CLSID\%CLSID_HostProxyISF%"
+HKLM,"%SMWCVSEA%","%CLSID_HostProxyISF%"
+
+; Remove old Template strings for auto search
+HKLM,"%SMIE%\Main\UrlTemplate"
+
+;................................................................................
+; This section will get Installed with IE4 and uninstalled by IE4.
+; Any values that exist here before will be backed up during install
+; and restored during uninstall.
+;................................................................................
+[RegBrowser]
+; CLSID_FavBand
+; In: IE4
+HKCR,"CLSID\%CLSID_FavBand%",,,"%DESC_FavBand%"
+HKCR,"CLSID\%CLSID_FavBand%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,7"
+HKCR,"CLSID\%CLSID_FavBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_FavBand%\%IPS%","ThreadingModel",,"Apartment"
+HKLM,"%SMWCVSEA%","%CLSID_FavBand%",,"%DESC_FavBand%"
+
+; CLSID_HistBand
+; In: IE4
+HKCR,"CLSID\%CLSID_HistBand%",,,"%DESC_HistBand%"
+HKCR,"CLSID\%CLSID_HistBand%\DefaultIcon",,%RES%,"%_SYS_MOD_PATH%,9"
+HKCR,"CLSID\%CLSID_HistBand%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_HistBand%\%IPS%","ThreadingModel",,"Apartment"
+
+; In: IE4
+HKCR,"CLSID\%CLSID_ShellDispatchInproc%",,,"%DESC_ShellDispatchInproc%"
+HKCR,"CLSID\%CLSID_ShellDispatchInproc%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellDispatchInproc%\%IPS%",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_ShellDispatchInproc%",,"%DESC_ShellDispatchInproc%"
+
+; In: IE4
+HKCR,"CLSID\%CLSID_WinListShellProc%",,,"%DESC_WinListShellProc%"
+HKCR,"CLSID\%CLSID_WinListShellProc%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_WinListShellProc%\%IPS%",ThreadingModel,,Apartment
+
+; make "Inbox" deletable
+HKCR,"CLSID\{00020D75-0000-0000-C000-000000000046}\ShellFolder",Attributes,%REGDW%,0x00000072
+
+; In: IE3, IE4
+HKCR,"CLSID\%CLSID_CDocObjectFolder%",,,"%DESC_ShellDocObjViewer%"
+HKCR,"CLSID\%CLSID_CDocObjectFolder%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CDocObjectFolder%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_CDocObjectFolder%\ShellFolder",Attributes,%REGDW%,0xA0000050
+HKLM,"%SMWCVSEA%","%CLSID_CDocObjectFolder%",,"%DESC_ShellDocObjViewer%"
+
+; In: IE5
+HKCR,"CLSID\%CLSID_CBaseBrowser%",,,"%DESC_CBaseBrowser%"
+HKCR,"CLSID\%CLSID_CBaseBrowser%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CBaseBrowser%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_CBaseBrowser%\ShellFolder",Attributes,%REGDW%,0xA0000050
+
+HKCR,"CLSID\%CLSID_DocHostUIHandler%",,,"%DESC_DocHostUIHandler%"
+HKCR,"CLSID\%CLSID_DocHostUIHandler%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_DocHostUIHandler%\%IPS%",ThreadingModel,,Apartment
+
+; Shell.BrowserReg.
+; In: IE4
+HKCR,"CLSID\%CLSID_WebBrowser1%",,,"%DESC_WebBrowserV1%"
+HKCR,"CLSID\%CLSID_WebBrowser1%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_WebBrowser1%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_WebBrowser1%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_WebBrowser1%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_WebBrowser1%\ProgID",,,"Shell.Explorer.1"
+HKCR,"CLSID\%CLSID_WebBrowser1%\ToolboxBitmap32",,,"%_MOD_PATH%, 257"
+HKCR,"CLSID\%CLSID_WebBrowser1%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_WebBrowser1%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_WebBrowser1%\VersionIndependentProgID",,,"Shell.Explorer"
+
+; In: IE4
+HKCR,"CLSID\%CLSID_WebBrowser2%",,,"%DESC_WebBrowser%"
+HKCR,"CLSID\%CLSID_WebBrowser2%\Control",,,""
+HKCR,"CLSID\%CLSID_WebBrowser2%\%IPS%",,,"%_MOD_PATH%"
+HKCR,"CLSID\%CLSID_WebBrowser2%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_WebBrowser2%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_WebBrowser2%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_WebBrowser2%\ProgID",,,"Shell.Explorer.2"
+HKCR,"CLSID\%CLSID_WebBrowser2%\ToolboxBitmap32",,,"%_MOD_PATH%, 257"
+HKCR,"CLSID\%CLSID_WebBrowser2%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_WebBrowser2%\Version",,,"1.1"
+HKCR,"CLSID\%CLSID_WebBrowser2%\VersionIndependentProgID",,,"Shell.Explorer"
+
+; In: IE4
+HKCR,"Shell.Explorer",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer\CLSID",,,"%CLSID_WebBrowser2%"
+HKCR,"Shell.Explorer\CurVer",,,"Shell.Explorer.2"
+HKCR,"Shell.Explorer.1",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer.1\CLSID",,,"%CLSID_WebBrowser1%"
+HKCR,"Shell.Explorer.2",,,"%DESC_WebBrowser%"
+HKCR,"Shell.Explorer.2\CLSID",,,"%CLSID_WebBrowser2%"
+
+; Note: this object is probably misnamed, as it's not specifically
+;       a shell object.  It's more of a grab bag of shortcut
+;       related stuff.
+; ShellUIHelper
+; In: IE4
+HKCR,"CLSID\%CLSID_ShellUIHelper%",,,"%DESC_ShellUIHelper%"
+HKCR,"CLSID\%CLSID_ShellUIHelper%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ShellUIHelper%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_ShellUIHelper%\ProgID",,,"Shell.UIHelper.1"
+HKCR,"CLSID\%CLSID_ShellUIHelper%\Implemented Categories\%CATID_SafeForInitializing%",,,""
+HKCR,"CLSID\%CLSID_ShellUIHelper%\Implemented Categories\%CATID_SafeForScripting%",,,""
+HKCR,"Shell.UIHelper",,,"%DESC_ShellUIHelper%"
+HKCR,"Shell.UIHelper\CLSID",,,"%CLSID_ShellUIHelper%"
+HKCR,"Shell.UIHelper\CurVer",,,"Shell.UIHelper.1"
+HKCR,"Shell.UIHelper.1",,,"%DESC_ShellUIHelper%"
+HKCR,"Shell.UIHelper.1\CLSID",,,"%CLSID_ShellUIHelper%"
+
+; Internet Shortcut
+; In: IE4
+HKCR,"CLSID\%CLSID_InternetShortcut%\ProgID",,,"InternetShortcut"
+HKCR,".URL\ShellEx\%IID_IShellLinkA%",,,"%CLSID_InternetShortcut%"
+HKCR,".URL\ShellEx\%IID_IShellLinkW%",,,"%CLSID_InternetShortcut%"
+HKCR,".URL\ShellEx\%IID_IUniformResourceLocatorA%",,,"%CLSID_InternetShortcut%"
+HKCR,".URL\ShellEx\%IID_IUniformResourceLocatorW%",,,"%CLSID_InternetShortcut%"
+HKCR,".URL\ShellEx\%IID_IQueryInfo%",,,"%CLSID_InternetShortcut%"
+HKLM,"%SMWCVSEA%","%CLSID_InternetShortcut%",,"InternetShortcut"
+
+
+; Classic Shortcut
+;  (need this for security in case a web page refers to a malicious
+;   shortcut)
+;
+HKCR,"CLSID\%CLSID_ShellLink%\ProgID",,,"lnkfile"
+HKCR,"lnkfile\CLSID",,,"%CLSID_ShellLink%"
+
+; WebTemplates
+; register .CSS extensions so browser doesn't get confused
+; In: IE4 (B1?, B2)
+HKCR,.css,,2,"CSSfile"
+HKCR,.css,"Content Type",2,"text/css"
+HKCR,CSSfile,,2,%HYPERTEXT_STYLE%
+HKCR,CSSfile,EditFlags,%REGDW%,0x00010000
+HKCR,CSSfile\DefaultIcon,,0x20002,"%11%\shell32.dll,-151"
+
+; SECURITY - SECURITY - SECURITY - SECURITY - SECURITY - SECURITY
+; Mark these types "unsafe" for security reasons
+; The second byte from the end being 00 means to ask.
+;
+; .ins and .isp files
+HKCR,"x-internet-signup",EditFlags,%REGDW%,0x00000000
+; .crt files
+HKCR,"certificatefile",EditFlags,%REGDW%,0x00000000
+HKCR,"lnkfile",EditFlags,%REGDW%,0x00000001
+HKCR,"InternetShortcut",EditFlags,%REGDW%,0x00000002
+
+; Profile Assistant
+; In: IE4
+HKLM,"%SMIE%\P3\Write","Registration",,".microsoft.com"
+
+
+HKLM,"%SMIE%\Main","Start Page",,"http://www.microsoft.com/isapi/redir.dll?prd={SUB_PRD}&clcid={SUB_CLSID}&pver={SUB_PVER}&ar=home"
+
+; IE4 key -- don't whack it so side-by-side works
+; HKLM,"%SMIE%\Main","Search Bar",,"http://ie.search.msn.com/{SUB_RFC1766}/srchasst/srchasst.htm"
+
+HKLM,"%SMIE%\Search","SearchAssistant",,"http://ie.search.msn.com/{SUB_RFC1766}/srchasst/srchasst.htm"
+HKLM,"%SMIE%\Search","CustomizeSearch",,"http://ie.search.msn.com/{SUB_RFC1766}/srchasst/srchcust.htm"
+
+;
+; ==== Template strings for auto search ====
+;
+HKLM,"%SMIE%\Main\UrlTemplate","1",,"www.%%s.com"
+HKLM,"%SMIE%\Main\UrlTemplate","2",,"www.%%s.org"
+HKLM,"%SMIE%\Main\UrlTemplate","3",,"www.%%s.net"
+HKLM,"%SMIE%\Main\UrlTemplate","4",,"www.%%s.edu"
+
+;
+; ==== Add Related Sites page to tools menu ====
+;
+
+HKLM, "%SMIEERS%","MenuText",,"@shdoclc.dll,-864"
+HKLM, "%SMIEERS%","MenuStatusBar",,"@shdoclc.dll,-865"
+HKLM, "%SMIEERS%","Script",%RES%,"%25%\web\related.htm"
+HKLM, "%SMIEERS%","clsid",,"{1FBA04EE-3024-11D2-8F1F-0000F87ABD16}"
+HKLM, "%SMIEERS%","Icon",,",4"
+HKLM, "%SMIEERS%","HotIcon",,",4"
+HKLM, "%SMIEERS%","ButtonText",,"@shdoclc.dll,-866"
+
+;
+; ==== Threshold length for dispalying server error page
+;
+HKLM,"%SMIE%\Main\ErrorThresholds","400",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","403",%REGDW%,256
+HKLM,"%SMIE%\Main\ErrorThresholds","404",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","405",%REGDW%,256
+HKLM,"%SMIE%\Main\ErrorThresholds","406",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","408",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","409",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","410",%REGDW%,256
+HKLM,"%SMIE%\Main\ErrorThresholds","500",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","501",%REGDW%,512
+HKLM,"%SMIE%\Main\ErrorThresholds","505",%REGDW%,512
+
+; TaskbarList
+; In: IE4 (RTM)
+HKCR,"CLSID\%CLSID_TaskbarList%",,,"%DESC_TaskbarList%"
+HKCR,"CLSID\%CLSID_TaskbarList%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_TaskbarList%\%IPS%",ThreadingModel,,Apartment
+
+; CLSID_CUrlHistory
+; In: IE4
+HKCR,"CLSID\%CLSID_CUrlHistory%",,,"%DESC_CUrlHistory%"
+HKCR,"CLSID\%CLSID_CUrlHistory%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CUrlHistory%\%IPS%",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_CUrlHistory%",,"%DESC_CUrlHistory%"
+
+; CLSID_HIST
+; In: IE4
+HKCR,CLSID\%CLSID_HIST%,,,"%DESC_Hist_Folder%"
+HKCR,CLSID\%CLSID_HIST%\%IPS%,,%RES%,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_HIST%\%IPS%,ThreadingModel,,Apartment
+HKCR,CLSID\%CLSID_HIST%\DefaultIcon,,%RES%,"%_SYS_MOD_PATH%,-20785"
+HKCR,CLSID\%CLSID_HIST%\ShellFolder,Attributes,%REGDW%,0xA0000004
+HKLM,"%SMWCVSEA%","%CLSID_HIST%",,"%DESC_Hist_Folder%"
+
+; CLSID_CACHE
+; In: IE4
+HKCR,CLSID\%CLSID_CACHE%,,,"%DESC_Cache_Folder%"
+HKCR,CLSID\%CLSID_CACHE%\%IPS%,,%RES%,%_SYS_MOD_PATH%
+HKCR,CLSID\%CLSID_CACHE%\%IPS%,ThreadingModel,,Apartment
+HKCR,CLSID\%CLSID_CACHE%\DefaultIcon,,%RES%,"%_SYS_MOD_PATH%,-20780"
+HKCR,CLSID\%CLSID_CACHE%\ShellFolder,Attributes,%REGDW%,0x20000004
+HKLM,"%SMWCVSEA%","%CLSID_CACHE%",,"%DESC_Cache_Folder%"
+
+; CLSID_CURLSearchHook
+; In: IE4
+HKCR,"CLSID\%CLSID_CURLSearchHook%",,,"%DESC_CURLSearchHook%"
+HKCR,"CLSID\%CLSID_CURLSearchHook%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CURLSearchHook%\%IPS%",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_CURLSearchHook%",,"%DESC_CURLSearchHook%"
+
+; CLSID_CStubBindStatusCallback
+; In: IE4
+HKCR,"CLSID\%CLSID_CStubBindStatusCallback%",,,"%DESC_CStubBindStatusCallback%"
+HKCR,"CLSID\%CLSID_CStubBindStatusCallback%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CStubBindStatusCallback%\%IPS%",ThreadingModel,,Apartment
+
+
+; CLSID_NSCTree
+; In: IE5 b2 and later
+HKCR,"CLSID\%CLSID_NSCTree%",,,"%DESC_NSCTree%"
+HKCR,"CLSID\%CLSID_NSCTree%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_NSCTree%\%IPS%",ThreadingModel,,Apartment
+
+
+; CLSID_SplashScreen
+; In: IE4
+HKCR,"CLSID\%CLSID_SplashScreen%",,,"%DESC_SplashScreen%"
+HKCR,"CLSID\%CLSID_SplashScreen%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SplashScreen%\%IPS%",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_SplashScreen%",,"%DESC_SplashScreen%"
+
+; CLSID_CDFCopyHook
+HKCR,"CLSID\%CLSID_CDFCopyHook%",,,"%DESC_CDFCopyHook%"
+HKCR,"CLSID\%CLSID_CDFCopyHook%\InProcServer32",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CDFCopyHook%\InProcServer32",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_CDFCopyHook%",,"%DESC_CDFCopyHook%"
+
+HKCR,"Directory\shellex\CopyHookHandlers\CDF",,,"%CLSID_CDFCopyHook%"
+
+; CLSID_NSCOC
+; In: IE5
+HKCR,"CLSID\%CLSID_NSCOC%",,,"%DESC_NSCOC%"
+HKCR,"CLSID\%CLSID_NSCOC%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_NSCOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_NSCOC%\ProgID",,,"ShellFavoritesNameSpace.ShellFavoritesNameSpace.1"
+HKCR,"CLSID\%CLSID_NSCOC%\VersionIndependentProgID",,,"ShellFavoritesNameSpace.ShellFavoritesNameSpace"
+HKCR,"CLSID\%CLSID_NSCOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_NSCOC%\MiscStatus\1",,,"131473"
+HKCR,"CLSID\%CLSID_NSCOC%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKCR,"ShellFavoritesNameSpace.ShellFavoritesNameSpace",,,"%DESC_NSCOC%"
+HKCR,"ShellFavoritesNameSpace.ShellFavoritesNameSpace\CLSID",,,"%CLSID_NSCOC%"
+HKCR,"ShellFavoritesNameSpace.ShellFavoritesNameSpace\CurVer",,,"ShellFavoritesNameSpace.ShellFavoritesNameSpace.1"
+HKCR,"ShellFavoritesNameSpace.ShellFavoritesNameSpace.1",,,"%DESC_NSCOC%"
+HKCR,"ShellFavoritesNameSpace.ShellFavoritesNameSpace.1\CLSID",,,"%CLSID_NSCOC%"
+
+; CLSID_SearchAssistantOC
+; In: IE5
+HKCR,"CLSID\%CLSID_SearchAssistantOC%",,,"%DESC_SearchAssistantOC%"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\%IPS%","ThreadingModel",,"Apartment"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\MiscStatus",,,"0"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\MiscStatus\1",,,"132497"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\ProgID",,,"SearchAssistantOC.SearchAssistantOC.1"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\Programmable",,,""
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\Version",,,"1.0"
+HKCR,"CLSID\%CLSID_SearchAssistantOC%\VersionIndependentProgID",,,"SearchAssistantOC.SearchAssistantOC"
+HKCR,"SearchAssistantOC.SearchAssistantOC",,,"%DESC_SearchAssistantOC%"
+HKCR,"SearchAssistantOC.SearchAssistantOC\CLSID",,,"%CLSID_SearchAssistantOC%"
+HKCR,"SearchAssistantOC.SearchAssistantOC\CurVer",,,"SearchAssistantOC.SearchAssistantOC.1"
+HKCR,"SearchAssistantOC.SearchAssistantOC.1",,,"%DESC_SearchAssistantOC%"
+HKCR,"SearchAssistantOC.SearchAssistantOC.1\CLSID",,,"%CLSID_SearchAssistantOC%"
+
+; In: IE5
+HKLM,"%SMWCV%\Internet Settings\SafeSites","ie.search.msn.com",,"http://ie.search.msn.com/*"
+HKLM,"%SMWCV%\Internet Settings\SafeSites","winweb",,"%windir%\Web\*"
+
+;#ifdef ENABLE_CHANNELS
+; CLSID_ISFBandOC
+; In: IE4
+HKCR,"CLSID\%CLSID_ISFBandOC%",,,"%DESC_ISFBandOC%"
+HKCR,"CLSID\%CLSID_ISFBandOC%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_ISFBandOC%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_ISFBandOC%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKLM,"%SMWCVSEA%","%CLSID_ISFBandOC%",,"%DESC_ISFBandOC%"
+;#endif
+
+; CLSID_SearchAssistant
+; In: IE5
+HKCR,"CLSID\%CLSID_SearchAssistant%",,,"%DESK_SearchAssistant%"
+HKCR,"CLSID\%CLSID_SearchAssistant%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_SearchAssistant%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_SearchAssistant%\TypeLib",,,"%CLSID_SHDocVwTypeLib%"
+HKLM,"%SMWCVSEA%","%CLSID_SearchAssistant%",,"%DESC_SearchAssistant%"
+
+; internet name space object, used on browser only and integrated
+; In: IE3, IE4 (B1, B2)
+HKCR,"CLSID\%CLSID_CURLFolder%",,2,"%SELFREG_TOO_LONG%"
+HKCR,"CLSID\%CLSID_CURLFolder%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_CURLFolder%\%IPS%",ThreadingModel,,Apartment
+HKLM,"%SMWCVSEA%","%CLSID_CURLFolder%",,"%SELFREG_TOO_LONG%"
+
+; Stuff we screwed up before that we need to try to recover from...
+; In: IE4
+HKCR,CLSID\%CLSID_PanMap%,,,"%DESC_PanMapFixup%"
+HKCR,CLSID\%CLSID_PanMap%\InprocServer32,,,"panmap.dll"
+HKCR,CLSID\%CLSID_PanMap%\InprocServer32,ThreadingModel,,"Apartment"
+
+; HTTP/HTTPS/FTP/GOPHER associations (see htregmng.c)
+
+; htmlfile association (see htregmng.c too)
+HKCR,"htmlfile",,,"%DESC_HTMFile%"
+HKCR,"htmlfile\BrowseInPlace",,,""
+;  BUGBUG (scotth): shouldn't mshtml.dll own the following?
+HKCR,"htmlfile\CLSID",,,"%CLSID_Mshtml%"
+HKCR,"CLSID\%CLSID_Mshtml%\ProgID",,,"htmlfile"
+
+; Temporary Internet Files Cleaner
+; In: IE4
+HKCR,CLSID\%CLSID_CacheCleaner%,,,"%DESC_CacheCleaner%"
+HKCR,CLSID\%CLSID_CacheCleaner%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_CacheCleaner%\InprocServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%CLSID_CacheCleaner%\DefaultIcon,,%RES%,"%11%\inetcpl.cpl,15"
+HKLM,%SMWCVE%\VolumeCaches\Internet Cache Files,,,%CLSID_CacheCleaner%
+HKLM,%SMWCVE%\VolumeCaches\Internet Cache Files,Display,,%DESC_CacheFiles%
+HKLM,%SMWCVE%\VolumeCaches\Internet Cache Files,Description,,%DESC_RemoveCacheFiles%
+HKLM,%SMWCVE%\VolumeCaches\Internet Cache Files,AdvancedButtonText,,%DESC_AdvButtonText%
+HKLM,%SMWCVE%\VolumeCaches\Internet Cache Files,Priority,0x00010001,100
+
+; Offline Pages Cleaner
+HKCR,CLSID\%CLSID_OfflineCleaner%,,,"%DESC_OCacheCleaner%"
+HKCR,CLSID\%CLSID_OfflineCleaner%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_OfflineCleaner%\InprocServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%CLSID_OfflineCleaner%\DefaultIcon,,%RES%,"%11%\webcheck.dll,0"
+HKLM,%SMWCVE%\VolumeCaches\Offline Pages Files,,,%CLSID_OfflineCleaner%
+HKLM,%SMWCVE%\VolumeCaches\Offline Pages Files,Display,,%DESC_OCacheFiles%
+HKLM,%SMWCVE%\VolumeCaches\Offline Pages Files,Description,,%DESC_ORemoveCacheFiles%
+HKLM,%SMWCVE%\VolumeCaches\Offline Pages Files,AdvancedButtonText,,%DESC_OAdvButtonText%
+HKLM,%SMWCVE%\VolumeCaches\Offline Pages Files,Priority,0x00010001,100
+
+; Toolbar Button Extension for Bands and Executables
+HKCR,CLSID\%CLSID_ToolbarExtBand%,,,"%DESC_ToolbarExtBand%"
+HKCR,CLSID\%CLSID_ToolbarExtBand%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_ToolbarExtBand%\InprocServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%CLSID_ToolbarExtExec%,,,"%DESC_ToolbarExtExec%"
+HKCR,CLSID\%CLSID_ToolbarExtExec%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_ToolbarExtExec%\InprocServer32,ThreadingModel,,"Apartment"
+
+// Edit button
+;HKLM,"%SMIE%\Default HTML Editor","Stubs",%REGMULSZ%,"msohtmed.exe"
+
+; Add shdocvw "About:" URLs here
+;
+HKLM,"%SMIE%\AboutURLs","NavigationFailure",,"res://shdoclc.dll/navcancl.htm"
+HKLM,"%SMIE%\AboutURLs","DesktopItemNavigationFailure",,"res://shdoclc.dll/navcancl.htm"
+HKLM,"%SMIE%\AboutURLs","NavigationCanceled",,"res://shdoclc.dll/navcancl.htm"
+HKLM,"%SMIE%\AboutURLs","OfflineInformation",,"res://shdoclc.dll/offcancl.htm"
+; Implement special URLs by passing the DVIDM_ id that is passed to GetStdLocation
+HKLM,"%SMIE%\AboutURLs","Home",65537,0x0000010e
+
+//Tip of the day
+HKCR,CLSID\%CLSID_TipOfTheDay%,,,"%DESC_TipOfTheDay%"
+HKCR,CLSID\%CLSID_TipOfTheDay%,"MenuText",,"@shdoclc.dll,-867"
+HKCR,CLSID\%CLSID_TipOfTheDay%,"HelpText",,"@shdoclc.dll,-868"
+HKCR,CLSID\%CLSID_TipOfTheDay%\InprocServer32,,%RES%,"%_SYS_MOD_PATH%"
+HKCR,CLSID\%CLSID_TipOfTheDay%\InprocServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\%CLSID_TipOfTheDay%\Implemented Categories\{00021494-0000-0000-C000-000000000046},,,""
+HKCR,CLSID\%CLSID_TipOfTheDay%\Instance,CLSID,,"{4D5C8C2A-D075-11d0-B416-00C04FB90376}"
+HKCR,CLSID\%CLSID_TipOfTheDay%\Instance\InitPropertyBag,Url,%RES%,"%25%\Web\tip.htm"
+HKCR,CLSID\%CLSID_TipOfTheDay%\Instance\InitPropertyBag,Pluggable,,"yes"
+HKLM,%SMIE%\Explorer Bars\%CLSID_TipOfTheDay%,BarSize,1,41,00,00,00,00,00,00,00
+
+;................................................................................
+; Browser Only Registry Entries
+;
+; These registry entries will only be available when in Browser Only mode.
+; They will not be registered if the user has Shell Integration, even
+; if he/she switches from BrowserOnly->ShellIntegration.
+;
+; The IE3 values will be backed up and restored.
+;................................................................................
+[RegOnlyBrowser]
+
+; This allows the link to be used the old way.
+HKCR,".lnk\ShellNew","Command",,"RunDLL32 AppWiz.Cpl,NewLinkHere %1"
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;  Integrated Shell Registration
+;  (Only installed for IE4 Shell Integration)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;................................................................................
+; Shell Integration Only Registry Entries
+;
+; These registry entries will only be available only when in Shell Integration mode.
+; They will not be registered on Win95 Browser Only install scenarios.
+;
+; The IE3 values will be backed up and restored.
+;................................................................................
+[RegShell]
+
+; Shdocvw implements the internet namespace, but can only hook it in
+; on IE4 Integrated shell32 and beyond...
+;
+; Internet Namespace for Full-Shell
+; In: IE4
+; CLSID_Internet is the desktop icon
+; CLSID_CURLFolder and CLSID_Internet are the same object for compat with IE4
+HKCR,"CLSID\%CLSID_Internet%\%IPS%",,%RES%,"%_SYS_MOD_PATH%"
+HKCR,"CLSID\%CLSID_Internet%\%IPS%",ThreadingModel,,Apartment
+HKCR,"CLSID\%CLSID_Internet%","InfoTip",,"%THEINTERNET_IT%"
+HKCR,"CLSID\%CLSID_Internet%\shell",,,OpenHomePage
+HKCR,"CLSID\%CLSID_Internet%\shell\OpenHomePage",,,%MENU_OpenHomePage%
+HKCR,"CLSID\%CLSID_Internet%\shell\OpenHomePage\Command",,%RES%,"""%MSIEXPLORE%"""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder",Attributes,%REGDW%,0x00000024
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder",HideAsDeletePerUser,,""
+HKCR,"CLSID\%CLSID_Internet%\ShellFolder",HideFolderVerbs,,""
+HKLM,"%SMWCVSEA%","%CLSID_Internet%",,"Internet Name Space"
+
+
+;
+; For stuff that [RegShell] used to register but it now
+; wants to delete, put that here:
+;
+[DelRegShell]
+HKCR,"CLSID\%CLSID_CShellFrameAuto%"
+HKCR,"CLSID\%CLSID_CShellDataSource%"
+
+
+// IE3 registered this, which confuses us on upgrade.  Remove it.
+HKCR,"CLSID\%CLSID_Internet%\DefaultIcon",,,""
+
+
+;................................................................................
+; Associations to Backup/Restore
+;
+; These will be backed up and restored.
+;................................................................................
+[RegAssociations]
+HKCR,"http"
+HKCR,"https"
+HKCR,"ftp"
+HKCR,"gopher"
+HKCR,"mailto",,,
+HKCR,"mailto",EditFlags,,
+HKCR,"mailto","URL Protocol",,
+HKCR,"telnet"
+HKCR,"rlogin"
+HKCR,"tn3270"
+HKCR,"news",,,
+HKCR,"news",EditFlags,,
+HKCR,"news","URL Protocol",,
+HKCR,"file"
+HKCR,"htmlfile"
+HKCR,"mhtmlfile"
+HKCR,"InternetShortcut"
+HKCR,"SHCmdFile"
+HKCR,".url"
+HKCR,".scf"
+HKCR,".htm"
+HKCR,".html"
+HKCR,".mht"
+HKCR,".mhtml"
+
+
+[Strings]
+REGMULSZ=0x00010000
+
+; These lines compress the file.
+SMWCV="Software\Microsoft\Windows\CurrentVersion"
+SMWCVE="Software\Microsoft\Windows\CurrentVersion\Explorer"
+SMWCVSEA="SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved"
+SMIE="SOFTWARE\Microsoft\Internet Explorer"
+SMIEERS="SOFTWARE\Microsoft\Internet Explorer\Extensions\{c95fe080-8f5d-11d2-a20b-00aa003c157a}"
+IPS="InProcServer32"
+ERR_NOSETUPAPI="Can not register shdocvw.dll because setupapi.dll is missing."
+
+;REG_EXPAND_SZ
+RES= 0x00020000
+
+;REG_DWORD
+REGDW=0x00010001
+
+IID_IShellLinkA                 = "{000214EE-0000-0000-C000-000000000046}"
+IID_IShellLinkW                 = "{000214F9-0000-0000-C000-000000000046}"
+IID_IUniformResourceLocatorA    = "{FBF23B80-E3F0-101B-8488-00AA003E56F8}"
+IID_IUniformResourceLocatorW    = "{CABB0DA0-DA57-11CF-9974-0020AFD79762}"
+IID_IQueryInfo                  = "{00021500-0000-0000-C000-000000000046}"
+IID_IExtractImage               = "{BB2E617C-0920-11d1-9A0B-00C04FC2D6C1}"
+
+CLSID_CDocObjectFolder  = "{E7E4BC40-E76A-11CE-A9BB-00AA004AE837}"
+CLSID_CBaseBrowser      = "{A5E46E3A-8849-11D1-9D8C-00C04FC99D61}"
+CLSID_CURLFolder        = "{3DC7A020-0ACD-11CF-A9BB-00AA004AE837}"
+CLSID_TaskbarList       = "{56FDF344-FD6D-11d0-958A-006097C9A090}" ; BUGBUG REVIEW: is this shell?
+
+CLSID_ShellUIHelper     = "{64AB4BB7-111E-11d1-8F79-00C04FC2FBE1}"
+CLSID_CUrlHistory       = "{3C374A40-BAE4-11CF-BF7D-00AA006946EE}"
+CLSID_CURLSearchHook    = "{CFBFAE00-17A6-11D0-99CB-00C04FD64497}"
+CLSID_CStubBindStatusCallback   = "{2B4F54B1-3D6D-11d0-8258-00C04FD5AE38}"
+CLSID_NSCTree           = "{43A8F463-4222-11d2-B641-006097DF5BD4}"
+
+CLSID_Mshtml            = "{25336920-03F9-11CF-8FD0-00AA00686F13}"
+CLSID_Internet          = "{871C5380-42A0-1069-A2EA-08002B30309D}"
+CLSID_SHDocVwTypeLib    = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}"
+CLSID_WebBrowser1       = "{EAB22AC3-30C1-11CF-A7EB-0000C05BAE0B}"
+CLSID_WebBrowser2       = "{8856F961-340A-11D0-A96B-00C04FD705A2}"
+
+CLSID_ShellDispatchInproc = "{0A89A860-D7B1-11CE-8350-444553540000}" ; BUGBUG REVIEW: is this shell?
+
+CLSID_InternetShortcut  = "{FBF23B40-E3F0-101B-8488-00AA003E56F8}"
+CLSID_ShellLink         = "{00021401-0000-0000-C000-000000000046}"
+
+CLSID_SplashScreen      = "{A2B0DD40-CC59-11d0-A3A5-00C04FD706EC}"
+CLSID_HIST              = "{FF393560-C2A7-11CF-BFF4-444553540000}"
+CLSID_CACHE             = "{7BD29E00-76C1-11CF-9DD0-00A0C9034933}"
+CLSID_WinListShellProc  = "{ffdc1a80-d527-11d0-a32c-34af06c10000}" ; BUGBUG REVIEW: is this shell?
+CLSID_PanMap            = "{BD84B381-8CA2-1069-AB1D-08000948F534}"
+CLSID_CDFCopyHook       = "{67EA19A0-CCEF-11d0-8024-00C04FD75D13}"
+CLSID_CacheCleaner      = "{9B0EFD60-F7B0-11D0-BAEF-00C04FC308C9}"
+CLSID_OfflineCleaner    = "{8E6E6079-0CB7-11d2-8F10-0000F87ABD16}"
+CLSID_DocFileInfoTip    = "{83799FE0-1F5A-11d1-95C7-00609797EA4F}"
+CLSID_HostProxyISF      = "{4F748358-CD6B-11d0-9816-00C04FD91972}"
+CLSID_DocHostUIHandler  = "{7057e952-bd1b-11d1-8919-00c04fc2c836}"
+CLSID_ToolbarExtBand    = "{E0DD6CAB-2D10-11d2-8F1A-0000F87ABD16}"
+CLSID_ToolbarExtExec    = "{1FBA04EE-3024-11d2-8F1F-0000F87ABD16}"
+
+CLSID_HistBand          = "{EFA24E62-B078-11d0-89E4-00C04FC9E26E}"
+CLSID_FavBand           = "{EFA24E61-B078-11d0-89E4-00C04FC9E26E}"
+CLSID_NSCOC             = "{55136805-B2DE-11D1-B9F2-00A0C98BC547}"
+CLSID_SearchAssistantOC = "{B45FF030-4447-11D2-85DE-00C04FA35C89}"
+
+CLSID_TipOfTheDay       = "{4D5C8C25-D075-11d0-B416-00C04FB90376}"
+
+;#ifdef ENABLE_CHANNELS
+CLSID_ISFBandOC         = "{131A6951-7F78-11D0-A979-00C04FD705A2}"
+;#endif
+
+CLSID_SearchAssistant   = "{9461b922-3c5a-11d2-bf8b-00c04fb93661}"
+
+CLSID_CShellFrameAuto   = "{20C46560-8491-11CF-960C-0080C7F4EE85}"   ; we delete this one from IE4 install
+CLSID_CShellDataSource  = "{D4903360-44DA-11D0-89E2-00A0C90A90AC}"   ; we delete this one from IE4 install
+
+
+CATID_SafeForInitializing = "{7DD95801-9882-11CF-9FA9-00AA006C42C4}"
+CATID_SafeForScripting = "{7DD95802-9882-11CF-9FA9-00AA006C42C4}"
+
+; InfoTip Strings
+THEINTERNET_IT         = "Finds and displays information and Web sites on the Internet"
+
+; these should technically be localized...
+DESC_WebBrowserV1       = "Microsoft Web Browser Version 1"
+DESC_WebBrowser         = "Microsoft Web Browser"
+DESC_ShellDispatchInproc = "Shell Automation Inproc Service"
+DESC_ShellDocObjViewer  = "Shell DocObject Viewer"
+DESC_CBaseBrowser       = "Microsoft Browser Architecture"
+DESC_DocHostUIHandler   = "Microsoft DocHost User Interface Handler"
+
+DESC_WinListShellProc   = "Window List in Shell Process"
+
+; i don't think anybody ever sees these
+DESC_InternetToolbar    = "Microsoft Internet Toolbar"
+DESC_TaskbarList        = "Task Bar Communication"
+
+DESC_ShellUIHelper      = "Microsoft Shell UI Helper"
+DESC_CUrlHistory        = "Microsoft Url History Service"
+DESC_CURLSearchHook     = "Microsoft Url Search Hook"
+DESC_CStubBindStatusCallback    = "Shell BindStatusCallback Proxy"
+DESC_NSCTree            = "Shell Name Space ListView"
+DESC_HTMFile            = "HTML Document"
+DESC_SplashScreen       = "IE4 Suite Splash Screen"
+DESC_Hist_Folder        = "History"
+DESC_Cache_Folder       = "Temporary Internet Files"
+DESC_PanMapFixup        = "PANOSE Core Mapper"
+DESC_CDFCopyHook        = "CDF Extension Copy Hook"
+DESC_DocFileInfoTip     = "DocFile InfoTip Handler"
+DESC_ToolbarExtBand     = "Toolbar Extension for Bands"
+DESC_ToolbarExtExec     = "Toolbar Extension for Executable"
+
+DESC_HistBand           = "History Band"
+DESC_FavBand            = "Favorites Band"
+DESC_NSCOC              = "ShellFavoritesNameSpace"
+DESC_SearchAssistantOC  = "SearchAssistantOC"
+
+;#ifdef ENABLE_CHANNELS
+DESC_ISFBandOC          = "ISFBand OC"
+;#endif
+
+DESC_SearchAssistant    = "Search Assistant OC"
+HYPERTEXT_STYLE         = "Cascading Style Sheet Document"
+
+; Temporary Internet Files cleaner
+DESC_CacheCleaner       = "Temporary Internet Files Cleaner"
+DESC_CacheFiles         = "Temporary Internet Files"
+DESC_RemoveCacheFiles   = "The Temporary Internet Files folder contains Web pages stored on your hard disk for quick viewing. Your personalized settings for Web pages will be left intact."
+DESC_AdvButtonText      = "&View Files"
+
+; Offline Pages Cleaner
+DESC_OCacheCleaner      = "Offline Pages Cleaner"
+DESC_OCacheFiles        = "Offline Web Pages"
+DESC_ORemoveCacheFiles  = "Offline pages are Web pages that are stored on your computer so you can view them without being connected to the Internet.  If you delete these pages now, you can still view your favorites offline later by synchronizing them.  Your personalized settings for Web pages will be left intact."
+DESC_OAdvButtonText     = "&View Pages"
+
+DESC_TipOfTheDay        = "&Tip of the Day"
+
+MENU_OpenHomePage       = "Open &Home Page"
+
+; WARNING - WARNING - WARNING - WARNING - WARNING
+; WARNING - WARNING - WARNING - WARNING - WARNING
+; WARNING - WARNING - WARNING - WARNING - WARNING
+; WARNING: DO NOT ADD ANYTHING BELOW THIS....
+; Win95's SetupX.DLL has a 64k limit on .INF files and
+; this last line will not be processed if that limit is
+; exceeded.  If it is, the "The Internet" icon on the desktop
+; will say "%SELFREG_TOO_LONG%" because of this.
+SELFREG_TOO_LONG                  = "The Internet"

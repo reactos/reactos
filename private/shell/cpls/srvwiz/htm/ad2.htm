@@ -1,0 +1,69 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">    
+<TITLE>Active Directory</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    BODY
+    {
+        background-image:url("actvd_bg.gif");
+        background-repeat:no-repeat;
+        background-position:147 42;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title">
+            <B><FONT SIZE="+2" COLOR="ffffff">Active Directory</FONT></B>
+        </TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Active Directory is already installed on this server. 
+                You can now set up and manage user accounts and group settings.
+            <P ID="para2"><A HREF="javascript:exec('dsa.msc')"><IMG SRC="mmc.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Manage</A> user accounts and group settings.
+            <P ID="para3"><A HREF="javascript:help('adconcepts.chm::/sag_addeploy.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Active Directory.</P>
+            <P ID="para4"><B>Caution</B>
+            <BR>Running the Active Directory Installation wizard will demote this server to be 
+              a <A HREF="javascript:nothing()" onclick="popup(1)">member server</A> or 
+              <A HREF="javascript:nothing()" onclick="popup(2)">stand-alone server</A> 
+              depending on what type of domain controller this is. 
+              Before you proceed, be sure there are no dependent servers connected to this server.</P>
+
+            <!--definition for member server-->
+            <DIV class="defdiv" ID="popup1">
+                <span class="defspan" onblur="popOff(1)" ID="def1"><b>member server</b>
+				<br>A computer that runs Windows 2000 Server but is not a domain controller of a Windows 2000 domain. Member servers participate in a domain, but do not store a copy of the directory database. Permissions can be set on a member server's resources that allow users to connect to the server and use its resources. Resource permissions can be granted for domain global groups and users as well as for local groups and users.
+				</span>            
+            </DIV>
+
+            <!--definition for stand-alone server-->
+            <DIV class="defdiv" ID="popup2">
+                <span class="defspan" onblur="popOff(2)" ID="def2"><b>stand-alone server</b>
+				<br>A computer that runs Windows 2000 Server but does not participate in a domain. A stand-alone server has only its own database of users, and it processes logon requests by itself. It does not share account information with any other computer and cannot provide access to domain accounts.
+                </span>            
+            </DIV>
+            
+            <P ID="para5"><B>To demote this server</B>
+            <TABLE BORDER="0">
+                <TR>
+                    <TD ID="num1">1. </TD>
+                    <TD ID="para6">Click <B>Start</B> and then click <B>Run</B>.</TD>
+                </TR>
+                <TR>
+                    <TD VALIGN="top" ID="num2">2. </TD>
+                    <TD ID="para7">In <B>Open</B>, type <B>dcpromo</B>.</TD>
+                </TR>
+            </TABLE>
+        </TD>
+    </TR>
+</TABLE>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

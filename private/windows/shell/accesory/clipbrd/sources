@@ -1,0 +1,27 @@
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=clipbrd
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+INCLUDES=.
+
+386_STDCALL=1
+
+SOURCES=clipfile.c \
+        clipinit.c \
+        wndproc.c  \
+        dib.c      \
+        clipbrd.rc \
+        clipbrd.c
+
+C_DEFINES=-DWIN32
+
+USE_CRTDLL=1
+
+UMTYPE=windows
+UMENTRY=winmain
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib  \

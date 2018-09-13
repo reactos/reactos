@@ -1,0 +1,243 @@
+// WARNING
+// localizable resources only
+// non-localizable resources must go in occache.rc
+
+#include <windows.h>
+#include "resource.h"
+#include "occache.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_POPUP_CONTROLCONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Update",                     IDM_CTRL_UPDATE
+        MENUITEM SEPARATOR
+        MENUITEM "Re&move",                     IDM_CTRL_REMOVECONTROL
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 IDM_CTRL_PROPERTIES
+    END
+END
+
+IDR_POPUP_CONTROLCONTEXT_NO_UPDATE MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Re&move",                     IDM_CTRL_REMOVECONTROL
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 IDM_CTRL_PROPERTIES
+    END
+END
+
+IDR_CONTROLFOLDER MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "by &Name",                    IDM_SORTBYNAME
+        MENUITEM "by &Status",                  IDM_SORTBYSTATUS
+        MENUITEM "by &Total Size",              IDM_SORTBYTOTALSIZE
+        MENUITEM "by &Creation",                IDM_SORTBYCREATION
+        MENUITEM "by &Last Access",             IDM_SORTBYLASTACCESS
+        MENUITEM "by &Version",                 IDM_SORTBYVERSION
+    END
+END
+
+IDR_FILE_MERGE MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Re&move Program File",        IDM_CTRL_REMOVECONTROL
+        MENUITEM "Show All Files",              IDM_CTRL_SHOWALL
+    END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PROP_DEPENDENCY DIALOG DISCARDABLE  0, 0, 282, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Dependency"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "List2",IDC_DEPENDENCYLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | 
+                    WS_BORDER | WS_TABSTOP,15,57,250,58
+    LTEXT           "",IDC_STATIC_DESCRIPTION,66,18,184,22
+    CONTROL         "",IDC_STATIC_SEPARATOR,"Static",SS_ETCHEDHORZ,15,49,250,
+                    1
+    ICON            102,IDC_STATIC_ICON,30,18,20,20
+    CONTROL         "List2",IDC_PACKAGELIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | 
+                    WS_BORDER | WS_TABSTOP,15,120,250,58
+END
+
+IDD_PROP_GENERAL DIALOG DISCARDABLE  0, 0, 282, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            102,IDC_STATIC_ICON,30,18,20,20
+    LTEXT           "<unknown>",IDC_STATIC_CONTROL,90,21,165,10
+    CONTROL         "",IDC_STATIC_CONTROLNAME,"Static",SS_ETCHEDHORZ,25,42,
+                    230,1
+    LTEXT           "Created:",IDC_STATIC_LABEL_CREATION,30,66,48,8
+    LTEXT           "Last Accessed:",IDC_STATIC_LABEL_LASTACCESS,30,81,50,8
+    LTEXT           "Total Size:",IDC_STATIC_LABEL_TOTALSIZE,30,96,48,8
+    LTEXT           "ID:",IDC_STATIC_LABEL_CLSID,30,111,39,8
+    LTEXT           "Status:",IDC_STATIC_LABEL_STATUS,30,126,32,8
+    LTEXT           "CodeBase:",IDC_STATIC_LABEL_CODEBASE,30,141,39,8
+    LTEXT           "<unknown>",IDC_STATIC_TYPE,90,50,155,8
+    LTEXT           "<unknown>",IDC_STATIC_LASTACCESS,90,81,155,8
+    LTEXT           "<unknown>",IDC_STATIC_STATUS,90,126,155,8
+    LTEXT           "<unknown>",IDC_STATIC_TOTALSIZE,90,96,155,8
+    EDITTEXT        IDC_STATIC_CLSID,90,111,155,12,ES_AUTOHSCROLL | 
+                    ES_READONLY | NOT WS_BORDER
+    LTEXT           "<unknown>",IDC_STATIC_CREATION,90,66,155,8
+    LTEXT           "Type:",IDC_STATIC_LABEL_TYPE,30,50,48,8
+    CONTROL         "",IDC_STATIC_CONTROLNAME,"Static",SS_ETCHEDHORZ,25,161,
+                    230,1
+    EDITTEXT        IDC_STATIC_CODEBASE,90,141,155,12,ES_MULTILINE | 
+                    ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+END
+
+IDD_PROP_UPDATE DIALOG DISCARDABLE  0, 0, 282, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Scheduling"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "&Never update program file",IDC_CHECK_NEVERUPDATE,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,30,59,101,15
+    CONTROL         "&Update program file periodically every ",
+                    IDC_CHECK_UPDATEPERIODICALLY,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,30,80,119,15
+    EDITTEXT        IDC_EDIT_UPDATEINTERVAL,150,81,29,13,ES_NUMBER
+    LTEXT           "minutes",IDC_STATIC_TIMELABEL,182,83,30,11
+    LTEXT           "",IDC_STATIC_DESCRIPTION,66,18,179,22
+    ICON            102,IDC_STATIC_ICON,30,18,20,20
+    CONTROL         "",IDC_STATIC_SEPARATOR,"Static",SS_ETCHEDHORZ,15,49,245,
+                    1
+    PUSHBUTTON      "Update Now",IDC_BUTTON_UPDATENOW,200,105,57,15
+END
+
+IDD_PROP_VERSION DIALOG DISCARDABLE  0, 0, 282, 183
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Version"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Version:",IDC_STATIC_VER_LABEL_VERSION,30,60,28,8
+    LTEXT           "<unknown>",IDC_STATIC_VER_VERSION,84,60,171,8
+    LTEXT           "Description:",IDC_STATIC_VER_LABEL_DESCRIPTION,30,78,48,
+                    8
+    LTEXT           "Company :",IDC_STATIC_VER_LABEL_COMPANY,30,96,48,8
+    LTEXT           "Language:",IDC_STATIC_VER_LABEL_LANGUAGE,30,114,48,8
+    LTEXT           "Copyright:",IDC_STATIC_VER_LABEL_COPYRIGHT,30,132,48,8
+    ICON            102,IDC_STATIC_ICON,30,18,20,20
+    LTEXT           "<unknown>",IDC_STATIC_VER_DESCRIPTION,84,78,171,8
+    LTEXT           "<unknown>",IDC_STATIC_VER_COMPANY,84,96,171,8
+    LTEXT           "<unknown>",IDC_STATIC_VER_LANGUAGE,84,114,171,8
+    LTEXT           "<unknown>",IDC_STATIC_VER_COPYRIGHT,84,132,171,27
+    LTEXT           "<unknown>",IDC_STATIC_VER_HEADING,66,18,153,22
+    CONTROL         "",IDC_STATIC_SEPARATOR,"Static",SS_ETCHEDHORZ,24,49,236,
+                    1
+END
+/*
+IDD_PROP_EXPIRE DIALOG DISCARDABLE  0, 0, 177, 49
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Downloaded controls expire in: ",IDC_STATIC_EXPIRE,7,10,100,8
+    EDITTEXT        IDC_EDIT_EXPIRE,110,7,40,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER | WS_GROUP
+    CONTROL         "Spin1",IDC_SPIN_EXPIRE,"msctls_updown32",UDS_SETBUDDYINT | 
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    WS_GROUP,140,7,10,14
+    LTEXT           "days",IDC_STATIC_EXPIRE_DAYS,154,10,16,8
+    DEFPUSHBUTTON   "OK",IDOK,36,28,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,90,28,50,14
+END
+*/
+#include ".\res\ocupdate.dlg"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HELP_SORTBYTOTALSIZE "Sorts items by total size of dependent files."
+    IDS_HELP_SORTBYCREATION "Sorts items by creation time."
+    IDS_HELP_SORTBYLASTACCESS "Sorts items by last accessed time."
+    IDS_HELP_SORTBYVERSION  "Sorts items by version."
+    IDS_MSG_SCHEDULING      "Select how often you would like %s to be updated."
+    IDS_VERSION_PAGE_HEADER "This page lists the version information about %s."
+    IDS_HELP_UPDATE         "Updates the program files"
+    IDS_CONTROL_INUSE       "These program files are currently being used by one or more programs.\nPlease close some programs, and try again.\n You may need to restart Windows."
+    IDS_LISTTITLE_PACKAGENAME "Package name"
+    IDS_ERROR_NOUNINSTALLACTION 
+                            "There is not enough information available to completely remove %s.\nPlease check the Add/Remove Programs Control Panel for more removal options."
+    IDS_MBTITLE_NOUNINSTALLACTION "Incomplete Removal"
+    IDS_STATUS_UNPLUGGED    "Unplugged"
+    IDS_UPDATE_CAPTION      "Updating "
+    IDS_WARNING_USERNOACCESS "The current user account is not authorized to remove items from this folder.\nPlease consult this computer's administrator."
+    IDS_LISTTITLE_NAMESPACE "Namespace"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COL_CONTROL         "Program File"
+    IDS_COL_STATUS          "Status"
+    IDS_COL_TOTALSIZE       "Total Size"
+    IDS_COL_CREATION        "Creation Date"
+    IDS_COL_LASTACCESS      "Last Accessed"
+    IDS_COL_VERSION         "Version"
+    IDS_UNKNOWNDATA         "None"
+    IDS_STATUS_INSTALLED    "Installed"
+    IDS_STATUS_SHARED       "Shared"
+    IDS_STATUS_DAMAGED      "Damaged"
+    IDS_STATUS_UNKNOWN      "Unknown"
+    IDS_MBTITLE_REMOVECONTROL "Remove Program File"
+    IDS_MBTITLE_SHARED      "Not Safe For Removal"
+    IDS_MBTITLE_SHAREVIOLATION "Share Violation"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MBTITLE_REMOVEFAIL  "Error"
+    IDS_WARNING_SINGLEREMOVAL "%s will be removed permanently.\nAre you sure?"
+    IDS_WARNING_MULTIPLEREMOVAL 
+                            "All selected program files will be removed permanently.\nAre you sure?"
+    IDS_WARNING_SHARED      "%s is potentially shared by other applications.\nProceed?"
+    IDS_ERROR_REMOVEFAIL    "Fail to remove %s."
+    IDS_MSG_DEPENDENCY      "This page lists the %1!i! file(s) and %2!i! Java packages upon which %3!s! depends."
+    IDS_LISTTITLE_FILENAME  "File name"
+    IDS_LISTTITLE_FILESIZE  "Size  (bytes)"
+    IDS_EXTENSION_INF       "INF"
+    IDS_HELP_VIEWCONTROL    "Opens the selected items."
+    IDS_HELP_REMOVECONTROL  "Deletes the selected items."
+    IDS_HELP_PROPERTIES     "Displays the properties of the selected items."
+    IDS_HELP_SORTBYNAME     "Sorts items alphabetically by name."
+    IDS_HELP_SORTBYSTATUS   "Sorts items by status."
+    IDS_PROPERTY_TYPE_ACTX  "ActiveX Control"
+    IDS_PROPERTY_TYPE_JAVA  "Java"
+    IDS_PROPERTY_TYPE_MIXED "Mixed ActiveX and Java"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OCCACHE_WARNING_DEPENDENCY_REMOVAL        "The program file %s is dependent on this control. Continue anyway?"
+    IDS_OCCACHE_WARNING_DEP_REMOVAL_NAME_UNKNOWN  "The program file is dependent on another control. Continue anyway?"
+    IDS_OCCACHE_WARNING_JAVA_SYSTEM_CLASS         "This component contains a Java system class. Continue anyway?"
+    IDS_REMOVAL_WARNING                           "Removal Warning"
+    IDS_PROPERTY_BYTES                            "bytes"
+    IDS_KILOBYTE_ABBREV                           " KB"
+END
+
+

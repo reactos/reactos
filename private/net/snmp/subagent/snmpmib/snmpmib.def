@@ -1,0 +1,6 @@
+NAME        SNMPMIB
+EXPORTS
+            SnmpExtensionInit
+            SnmpExtensionMonitor
+            SnmpExtensionQuery
+            SnmpExtensionTrap

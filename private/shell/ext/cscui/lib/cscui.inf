@@ -1,0 +1,136 @@
+[Version]
+signature="$CHICAGO$"
+
+[DefaultInstall]
+AddReg=RegistryAdd
+DelReg=RegDeleteOnInstall
+
+[DefaultUninstall]
+DelReg=RegistryDelete
+
+[RegistryAdd]
+; Context menu handler
+HKCR,CLSID\%CLSID_SHEX%,,,%MENU_DESC%
+HKCR,CLSID\%CLSID_SHEX%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_SHEX%\InProcServer32,"ThreadingModel",,Apartment
+HKLM,%SMWCV%\%APPROVED%,%CLSID_SHEX%,,%MENU_DESC%
+; Context menu locations
+HKCR,*\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+HKCR,Drive\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+HKCR,Directory\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+HKCR,lnkfile\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+HKCR,piffile\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+HKCR,CLSID\%CLSID_MYDOCS%\%SHEXCM%\%KEY%,,,%CLSID_SHEX%
+; Icon overlay handler
+HKLM,%SMWCV%\%ICONOVERLAY%\%KEY%,,,%CLSID_SHEX%
+; Options proppage
+HKCR,CLSID\%CLSID_OfflineFilesOptions%,,,%OPTIONS_DESC%
+HKCR,CLSID\%CLSID_OfflineFilesOptions%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_OfflineFilesOptions%\InProcServer32,"ThreadingModel",,Apartment
+HKLM,%SMWCV%\%APPROVED%,%CLSID_OfflineFilesOptions%,,%OPTIONS_DESC%
+; Autocached files disk cleaner
+HKCR,CLSID\%CLSID_TempOfflineFilesCleaner%,,,%TEMPCLEANER_DESC%
+HKCR,CLSID\%CLSID_TempOfflineFilesCleaner%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_TempOfflineFilesCleaner%\InProcServer32,"ThreadingModel",,Apartment
+HKCR,CLSID\%CLSID_TempOfflineFilesCleaner%\DefaultIcon,,,%DLL%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY_TEMP%,,,%CLSID_TempOfflineFilesCleaner%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY_TEMP%,Priority,%REGDW%,201
+; Pinned files disk cleaner
+HKCR,CLSID\%CLSID_OfflineFilesCleaner%,,,%CLEANER_DESC%
+HKCR,CLSID\%CLSID_OfflineFilesCleaner%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_OfflineFilesCleaner%\InProcServer32,"ThreadingModel",,Apartment
+HKCR,CLSID\%CLSID_OfflineFilesCleaner%\DefaultIcon,,,%DLL%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY%,,,%CLSID_OfflineFilesCleaner%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY%,Priority,%REGDW%,202
+; SyncMgr (a.k.a. OneStop) handler
+HKCR,CLSID\%CLSID_SyncMgrHandler%,,,%SYNCMGR_DESC%
+HKCR,CLSID\%CLSID_SyncMgrHandler%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_SyncMgrHandler%\InProcServer32,"ThreadingModel",,Apartment
+HKLM,%SMWCV%\%SYNCMGR%\%CLSID_SyncMgrHandler%,,,%SYNCMGR_DESC%
+; NameSpace
+HKCR,CLSID\%CLSID_OfflineFilesFolder%,,2,%NSE_DESC%
+HKCR,CLSID\%CLSID_OfflineFilesFolder%\InProcServer32,,,%DLL%
+HKCR,CLSID\%CLSID_OfflineFilesFolder%\InProcServer32,ThreadingModel,,Apartment
+HKCR,CLSID\%CLSID_OfflineFilesFolder%\ShellFolder,Attributes,%REGDW%,0x20000022
+HKCR,CLSID\%CLSID_OfflineFilesFolder%\DefaultIcon,,,%DLL%
+HKLM,%SMWCV%\%APPROVED%,%CLSID_OfflineFilesFolder%,,%NSE_DESC%
+;
+; NT event log event source registration
+;
+HKLM,System\CurrentControlSet\Services\EventLog\Application\%EVENTLOG_SRC%,"EventMessageFile",,"%SystemRoot%\System32\%DLL%"
+HKLM,System\CurrentControlSet\Services\EventLog\Application\%EVENTLOG_SRC%,"TypesSupported",,0x00000007
+
+
+; BUGBUG Remove the RegDeleteOnInstall section after beta 3
+[RegDeleteOnInstall]
+; Delete these keys to avoid duplicate registrations
+; (this is how we used to register)
+HKCR,*\%SHEXCM%\%CLSID_SHEX%
+HKCR,Drive\%SHEXCM%\%CLSID_SHEX%
+HKCR,Directory\%SHEXCM%\%CLSID_SHEX%
+HKCR,lnkfile\%SHEXCM%\%CLSID_SHEX%
+HKCR,piffile\%SHEXCM%\%CLSID_SHEX%
+HKCR,CLSID\%CLSID_MYDOCS%\%SHEXCM%\%CLSID_SHEX%
+HKLM,%SMWCV%\%ICONOVERLAY%\CSC Icon Overlay
+HKLM,%SMWCV%\%DISKCLEANER%\NetCacheTemp
+HKLM,%SMWCV%\%DISKCLEANER%\NetCache
+
+[RegistryDelete]
+; Context menu handler
+HKCR,CLSID\%CLSID_SHEX%
+HKLM,%SMWCV%\%APPROVED%,%CLSID_SHEX%
+; Context menu locations
+HKCR,*\%SHEXCM%\%KEY%
+HKCR,Drive\%SHEXCM%\%KEY%
+HKCR,Directory\%SHEXCM%\%KEY%
+HKCR,lnkfile\%SHEXCM%\%KEY%
+HKCR,piffile\%SHEXCM%\%KEY%
+HKCR,CLSID\%CLSID_MYDOCS%\%SHEXCM%\%KEY%
+; Icon overlay handler
+HKLM,%SMWCV%\%ICONOVERLAY%\%KEY%
+; Options proppage
+HKCR,CLSID\%CLSID_OfflineFilesOptions%
+; Autocached files disk cleaner
+HKCR,CLSID\%CLSID_TempOfflineFilesCleaner%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY_TEMP%
+; Pinned files disk cleaner
+HKCR,CLSID\%CLSID_OfflineFilesCleaner%
+HKLM,%SMWCV%\%DISKCLEANER%\%KEY%
+; SyncMgr (a.k.a. OneStop) handler
+HKCR,CLSID\%CLSID_SyncMgrHandler%
+HKLM,%SMWCV%\%SYNCMGR%\%CLSID_SyncMgrHandler%
+; NameSpace
+HKCR,CLSID\%CLSID_OfflineFilesFolder%
+;HKLM,%SMWCV%\Explorer\Desktop\NameSpace\%CLSID_OfflineFilesFolder%
+;
+; NT event log event source
+;
+HKLM,System\CurrentControlSet\Services\EventLog\Application\%EVENTLOG_SRC%
+
+[Strings]
+; Localized strings
+MENU_DESC=Offline Files Menu
+OPTIONS_DESC=Offline Files Folder Options
+TEMPCLEANER_DESC=Temporary Offline Files Cleaner
+CLEANER_DESC=Offline Files Cleaner
+SYNCMGR_DESC=Offline Files Synchronization Handler
+NSE_DESC=Offline Files Folder
+EVENTLOG_SRC=Offline Files
+; Non-localized strings
+REGDW=0x00010001
+DLL=cscui.dll
+CLSID_SHEX={750fdf0e-2a26-11d1-a3ea-080036587f03}
+CLSID_MYDOCS={450D8FBA-AD25-11D0-98A8-0800361B1103}
+CLSID_TempOfflineFilesCleaner={750fdf0f-2a26-11d1-a3ea-080036587f03}
+CLSID_OfflineFilesCleaner={effc2928-37b1-11d2-a3c1-00c04fb1782a}
+CLSID_SyncMgrHandler={750fdf10-2a26-11d1-a3ea-080036587f03}
+CLSID_OfflineFilesFolder={AFDB1F70-2A4C-11d2-9039-00C04F8EEB3E}
+CLSID_OfflineFilesOptions={10CFC467-4392-11d2-8DB4-00C04FA31A66}
+KEY=Offline Files
+KEY_TEMP=Temporary Offline Files
+SMWCV=Software\Microsoft\Windows\CurrentVersion
+APPROVED=Shell Extensions\Approved
+SHEXCM=shellex\ContextMenuHandlers
+ICONOVERLAY=Explorer\ShellIconOverlayIdentifiers
+DISKCLEANER=Explorer\VolumeCaches
+SYNCMGR=SyncMgr\Handlers

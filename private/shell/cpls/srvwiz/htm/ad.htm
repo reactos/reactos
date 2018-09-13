@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css">
+<TITLE>Active Directory</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<STYLE>
+    body    {background-image:url("actvd_bg.gif"); background-repeat:no-repeat; background-position:134 43;}
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+        <TD VALIGN="top" HEIGHT="10" ID="title"><B><FONT SIZE="+2" COLOR="#ffffff">Active Directory</FONT></B></TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">Active Directory stores information about network objects&nbsp;&#151;&nbsp;such as user accounts and shared printers&nbsp;&#151;&nbsp;and provides access to that information. To make this server a <A HREF="javascript:nothing()" onclick="popup(0)">domain controller</A>, you must install Active Directory.
+
+            <!--definition for domain controller-->
+            <DIV class="defdiv" ID="popup0">
+                <span class="defspan" onblur="popOff(0)" ID="def0"><b>domain controller</b>
+				<br>In a Windows 2000 Server domain, a computer running Windows 2000 Server that manages user access to a network, which includes logging on, authentication, and access to the directory and shared resources.
+                </span>            
+            </DIV>
+
+            <P ID="para2">The Active Directory Installation wizard configures this server as a 
+                domain controller and sets up DNS if it is not already available on the network. 
+                Use this wizard for the following scenarios:
+            <UL>
+                <LI ID="para3">
+                    <B>No existing domain controller</B>&nbsp;&#151;&nbsp;
+                    sets up your server as the first domain controller on the network.
+                </LI>
+                <LI ID="para4">
+                    <B>Domain controller already on network</B>&nbsp;&#151;&nbsp;
+                    sets up your server as an <A HREF="javascript:nothing()" onclick="popup(1)">additional domain controller</A>, 
+                    new <A HREF="javascript:nothing()" onclick="popup(2)">child domain</A>, new <A HREF="javascript:nothing()" onclick="popup(3)">domain tree</A>, 
+                    or new <A HREF="javascript:nothing()" onclick="popup(4)">forest</A>.
+                </LI>
+            </UL>
+            
+            <!--definition for additional domain controller-->
+            <DIV ID="popup1" class="defdiv">
+                <span class="defspan" ID="def1" onblur="popOff(1)"><b>additional domain controller</b>
+				<br>Any Windows 2000 domain controller installed into an existing domain. All domain controllers participate equally in Active Directory replication but, by default, the first domain controller installed in a domain is assigned ownership of at least three floating single master operations. Additional domain controllers installed into an existing domain do not assume ownership of these operations by default. See also floating single-master operation (FSMO).
+                </span>            
+            </DIV>
+            
+            <!--definition for child domain-->
+            <DIV ID="popup2" class="defdiv">
+                <span class="defspan" ID="def2" onblur="popOff(2)"><b>child domain</b>
+				<br>A domain located in the namespace tree directly beneath another domain name (the parent domain). For example, "example.microsoft.com" would be a child domain of the parent domain, "microsoft.com." Also known as subdomain.
+                </span>            
+            </DIV>
+
+            <!--definition for domain tree-->
+            <DIV ID="popup3" class="defdiv">
+                <span class="defspan" ID="def3" onblur="popOff(3)"><b>domain tree</b>
+				<br>The hierarchical tree structure that is used to index domain names. Domain trees are similar in purpose and concept to directory trees, which are used by computer filing systems for disk storage. For example, when numerous files are stored on disk, directories can be used to organize the files into logical collections. When a domain tree has one or more branches, each branch can organize domain names used in the namespace into logical collections.
+                </span>            
+            </DIV>
+            
+            <!--definition for forest-->
+            <DIV ID="popup4" class="defdiv">
+                <span class="defspan" ID="def4" onblur="popOff(4)"><b>forest</b>
+				<br>A set of one or more trees that do not form a contiguous namespace. All trees in a forest share a common schema, configuration, and global catalog. The trees must trust each other through transitive, bidirectional trust relationships. Unlike a tree, a forest does not need a distinct name. A forest exists as a set of cross-reference objects and trust relationships known to the member trees. Trees in a forest form a hierarchy for the purposes of trust.
+                </span>
+            </DIV>
+            <!--end definitions-->
+            
+            <P ID="para5"><B>Important</B>
+            <BR>You need a partition formatted with the version of NTFS used in Windows 2000 to host Active Directory.
+            <P ID="para6"><B>Caution</B>
+            <BR>Be sure you are familiar with Active Directory and how it will affect this server before you proceed.
+            <p><TABLE cellpadding="0" cellspacing="0">
+                <TR>
+                    <TD VALIGN="top">
+                        <A HREF="javascript:help('adconcepts.chm::/sag_adintro.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5"></A>
+                    </TD>
+                    <TD ID="para7">
+                        <A HREF="javascript:help('adconcepts.chm::/sag_adintro.htm')">Learn more</A> about Active Directory and domain controllers to determine whether you need to set up Active Directory.
+                    </TD>
+                </TR>
+            </TABLE>
+            <P ID="para8"><A HREF="javascript:exec('dcpromo.exe')"><IMG SRC="wiz.gif" WIDTH=24 HEIGHT=24 BORDER="0" ALIGN="middle" HSPACE="5">Start</A> the Active Directory wizard</P>
+            <P ID="para9">After you finish with the wizard, your server will restart and the Configure Server screen will appear. Return to the Active Directory screen to manage your computer and user accounts.
+            <P>&nbsp;
+        </TD>
+    </TR>
+</TABLE>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+</BODY>
+</HTML>

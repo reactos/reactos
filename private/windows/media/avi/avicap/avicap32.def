@@ -1,0 +1,10 @@
+; Win 95 version of the def file
+
+LIBRARY	     AVICAP32
+
+EXPORTS
+;;;          capCreateCaptureWindowW     @2
+;;;          capGetDriverDescriptionW    @3
+             capCreateCaptureWindowA     ;
+             capGetDriverDescriptionA    ;
+             avicapf_ThunkData32         ;Internal

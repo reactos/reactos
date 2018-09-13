@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=advapi
+MINORCOMP=feclient
+
+TARGETNAME=feclient
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETPATHLIB=$(BASEDIR)\public\sdk\lib
+
+DLLENTRY=EfsClientInit
+DLLDEF=obj\*\FeClient.def
+
+INCLUDES=\nt\private\inc;
+USE_NTDLL=1
+
+SOURCES=feclient.cpp  \
+        feclient.rc
+
+C_DEFINES=-DUNICODE
+
+TARGETLIBS=                                         \
+         $(BASEDIR)\public\sdk\lib\*\kernel32.lib   \
+         $(BASEDIR)\public\sdk\lib\*\advapi32.lib   \
+         $(BASEDIR)\public\sdk\lib\*\ntdll.lib      \
+         $(BASEDIR)\public\sdk\lib\*\secur32.lib \
+         $(BASEDIR)\private\security\lsa\uclient\obj\*\lsaudll.lib \
+         $(BASEDIR)\public\sdk\lib\*\rpcrt4.lib   \
+         $(BASEDIR)\public\sdk\lib\*\rpcutil.lib \
+         $(BASEDIR)\public\sdk\lib\*\mpr.lib     \
+         $(BASEDIR)\public\sdk\lib\*\userenv.lib
+
+UMTYPE=console
+

@@ -1,0 +1,5 @@
+LIBRARY SHCV initinstance
+
+EXPORTS
+        OSDebug4VersionCheck
+        SHInit

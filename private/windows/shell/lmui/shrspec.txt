@@ -1,0 +1,431 @@
+This is a minimal description of this code, ntshrui.dll.
+
+
+What it is
+----------
+
+This is a port/rewrite of the Win95 msshrui.dll (Win95 SLM source found in
+\\flipper\chinet\src\wnet\msshrui, Win96+ on \\trango\slm\...). It provides a
+"Sharing" property page for directories to allow local LanMan (SMB) shares
+to be created for the selected directory. It provides a "Sharing..."
+context menu to provide quick access to the "Sharing" property page.
+It also provides a "Sharing" copy hook to handle directory renames and
+move/deletes properly by warning the user about the shares that may
+be need to be deleted in the process (shares aren't recreated based
+on the directory's new name). Finally, there are a few API entrypoints
+for programs to perform Share operations.
+
+All of this functionality is dependent on being able to execute a NetShareEnum
+at level 502, which requires Administrators local group or comm, print,
+or server operator group membership. The APIs will fail and there will be no
+Sharing UI in the explorer if this is not true.
+
+One goal of the Win95 shell, carried forward to the NT shell, is to
+be completely independent of network-specific code. The shell will
+call WNet apis, which are network-independent. However, there are
+no network-independent share creation APIs. Thus, the shell consults
+the HKEY_CLASSES_ROOT\Network\SharingHandler key to determine the
+network-specific sharing handler DLL. Note that under Windows 95,
+only one server at a time was allowed to run. Under NT, multiple
+servers may run (SFM -- Macintosh, FPNW -- NetWare, SMB -- Windows
+Networking). However, the shell hasn't been expanded to handle this.
+
+The exported APIs are:
+
+    DllGetClassObject
+    DllCanUnloadNow
+    IsPathSharedA
+    IsPathSharedW
+    IsPathShared = IsPathSharedA
+    SharingDialogA
+    SharingDialogW
+    SharingDialog = SharingDialogA
+    GetNetResourceFromLocalPathA
+    GetNetResourceFromLocalPathW
+    GetNetResourceFromLocalPath = GetNetResourceFromLocalPathA
+    GetLocalPathFromNetResourceA
+    GetLocalPathFromNetResourceW
+    GetLocalPathFromNetResource = GetLocalPathFromNetResourceA
+
+There are A and W versions for all of these, even though there aren't
+clients for all versions of the API. Namely, the shell uses the W
+versions. However, the SharingDialog API is used only in its A version
+by the FAX group (they are the only known client). However, to avoid
+problems later, both A and W versions are implemented.
+
+There are two Windows 95 APIs not implmented:
+
+    PrintShareProperties
+    ShareShutdownNotify
+
+The implemented, exported APIs do the following:
+
+    DllGetClassObject, DllCanUnloadNow -- standard OLE entrypoints. Used
+        for the shell extensions (context-menu, property sheet, copy hook).
+    IsPathShared -- returns TRUE if a path is shared. Used by the shell to
+        determine when to put a "sharing" hand on a folder. Must be fast, as
+        the shell calls it for every folder it displays.
+    SharingDialog -- Displays the same dialog as the property sheet page, but
+        in a modal dialog form. used by the FAX group.
+    GetNetResourceFromLocalPath -- Given a local path on a machine, returns
+        a UNC form of that path, if the path is shared. This is used to store
+        a network-aware form of the path in a shortcut for use if the shortcut
+        is copied to another machine, such that the local path stored in the
+        shortcut isn't available.
+    GetLocalPathFromNetResource -- The opposite of the above, it determines
+        the local path of an object given a UNC path.
+
+
+The Sharing page
+----------------
+
+The Sharing property page and context-menu shortcut should appear when the
+user right-clicks on anything that corresponds to a file system directory.
+This is basically a folder or a disk icon. The drive can be either a hard
+drive, a floppy, or a CD-ROM. We only support the page when the folder or
+drive is local: the page is not available when looking at remote folders
+either via a UNC path in the network neighborhood or via a mapped drive
+letter path.
+
+The Sharing page behaves as follows. If there are no shares, the "Not Shared"
+radio button is checked and everything inside the "Shared As" radio button box
+is grayed. Clicking "Shared As" ungrays the controls within its box.
+
+There are two "modes" when the "Shared As" button is checked: initial mode and
+already-shared mode. Initial mode is when the folder has not yet been shared.
+In this case, the "Share name" control is a single-line edit control. All the
+controls can be used to enter information for one new share. In
+"already-shared" mode, the folder already is shared with one or more names.
+In this case, the "Share name" control is a drop-down list box with a list of
+shares for this directory. The other controls are filled with the data
+associated with the share currently selected in the drop-down control. Changing
+the comment, user limit, or permissions at this point causes the selected
+share to be modified accordingly, but does not add a new share.
+
+Note that standard property sheet semantics hold with all the changes made to
+the sharing characteristics of the selected folder, namely, that no changes
+are actually made to the machine state until "OK" or "Apply" is chosen.
+
+In initial mode, only a single share can be created (unless you hit "apply"
+and subsequently change to "already-shared" mode). In already-shared mode,
+there are one or two additional buttons to control creating/deleting shares.
+The "New Share..." button will always be visible in this mode. Pressing it
+pops up a "New Share" modal dialog that allows you to create another share
+name for the same directory. This other share might have a different comment,
+different user limit, and most importantly, different permissions. The
+operation of the controls in this dialog are identical to the operation of
+the controls on the property sheet in "initial" mode. If there are two or
+more shares for the directory, then the "Remove Share" button is visible.
+Pressing this removes the currently selected share (pending "OK" or
+"Apply" of course).
+
+To delete the final share, or to delete all the shares at once, you must
+choose the "Not shared" radio button. If there is currently more than one
+share for the directory, this confirmation message is displayed:
+
+    This folder is shared more than once. Are you sure you wish
+    to remove all these shares?
+
+    yes/no
+
+Hitting "no" causes the "Shared As" button to be clicked again. Hitting "yes"
+causes all shares to be marked for removal. However, the shares are still
+left in the property sheet, but grayed. If the "Shared As" button is pressed
+again, then it will be as if the "Not Shared" button was never pressed: all
+share properties are retained, and hitting "Apply" or "OK" will make all
+previously requested changes.
+
+A default share name is put in the "Share Name" SLE in "initial" mode, as
+follows. If the directory is not the root of the volume, for example,
+C:\foo\bar, then the default share name is the last component of the path,
+in this case, bar.  If the directory is a root, then the default is the drive
+letter, in the previous example, C. However, if the default name is already
+used as a share name on the system, then there is no default given.
+
+The user limit controls work as follows. The "Allow" text box allows
+the user to enter a specific number of users. Only numbers are allowed to
+be typed: no letters or other characters. If the number is out of range,
+the number reverts to the default user limit (10) when the edit control loses
+focus. Note that no error message is given: we do this silently. Up and down
+arrows increase and decrease the number. Since we are using the Win95
+up/down control, the range for the number is 1 to 32767. The number doesn't
+wrap. If the user chooses "Maximum allowed" after having typed a number in
+the "allow" edit box, the edit box is cleared but the number is remembered.
+If the user subsequently clicks the "allow" radio button, the remembered
+number is reinserted into the edit control as the default.
+
+The Permissions button brings up the standard security (ACL) editor with
+the permissions of the share. The default permissions for a share are World
+access, Full control. As with everything else, the permissions aren't
+committed until the property page "OK" or "Apply" button is pressed.
+
+Note that hitting the escape key should cancel the property page no matter
+what the current keyboard focus is. I mention this because I've had problems
+getting this to work with the focus on the (subclassed) "Allow" edit control.
+
+If the user types a share name that is the same as another share for this same
+directory (in the "New Share" dialog), then the following warning message
+is displayed:
+
+    The share name %1 already exists for this resource. Please
+    choose another share name.
+
+If the user types a share name in the "New Share" dialog or on the property
+sheet (initial mode, and then hits "Apply" or "OK"), and that name is the same
+as another share on the machine for another path, then this message is
+displayed:
+
+    You are already sharing %1 using the name %2. Do you want
+    to share %3 using the name %2 instead?
+
+If the user hits "yes", then we use the new name as a new share, and put the
+other share on a list of "shares of the same name but different directories"
+to delete when the user hits "OK" or "Apply".
+
+The share names are validated as follows. If no share name is typed in you
+get this error:
+
+    You must type a share name for this resource.
+
+If you use illegal characters in the share name (particularly *, but there may
+be others), you get this error:
+
+    The share name contains invalid characters.
+
+If the name is not accessible from DOS, because it isn't 8.3 or for some other
+reason, you get this warning:
+
+    The share name %1 is not accessible from some MS-DOS
+    workstations. Are you sure you want to use the share name?
+
+Note that there is special handling code to allow users to create and delete
+the default disk shares, namely <drive>$ for each hard drive, and admin$. Only
+configuration of IPC$ is not supported, as it has no associated storage.
+These are handled specially as follows. Selecting one of them, getting the
+sharing property page, and pressing "Permissions" will pop up the message:
+
+    This has been shared for administrative purposes.
+    The permissions cannot be set.
+
+When the share name is being validated in the property page or "New Share"
+dialog, a check is made against "IPC$". If it matches, this message is
+displayed:
+
+    The share names ADMIN$ and IPC$ are reserved and may not be used.
+
+Note that we mention ADMIN$ as a restricted share name, even though we allow
+its creation in one particular case. If they use the name "ADMIN$", we
+disallow it for all cases except if the selected directory is the Windows
+directory, since that is the only place ADMIN$ can share.
+
+We do allow the creation of <drive>$ shares at places besides the proper
+drive. I.e., we allow you to share D:\ as C$. If, however, you share C:\ as
+C$, it gains special "default" status, any permissions you may have edited are
+discarded (silently) and the default permissions are instantiated.
+
+
+
+Applying changes
+----------------
+
+When the user hits "OK" or "Apply" the following things occur. First, the
+list of shares with the same name as new shares but with different directories
+is deleted. Second, all share changes for the current directory are applied:
+either added, deleted, or modified. The following error messages may occur
+if we get a network error. For add:
+
+    An error occurred while trying to share %1. %2
+
+    The shared resource was not created at this time.
+
+For delete:
+
+    An error occurred while trying to delete share %1. %2
+
+For modify:
+
+    An error occurred while trying to modify share %1. %2
+
+After the changes are applied, the page is refreshed. This is unnecessary
+if the user hit "OK", but essential if they pressed "Apply". The Apply button
+is grayed out, indicating there are no pending changes. Note that the act of
+applying changes might convert the page from "already-shared" mode to initial
+mode or vice-versa.
+
+When a share to be deleted that is currently being accessed by a user, one of
+the following error messages will be displayed (the same error messages are
+used in the copy hook handler):
+
+    There are %1!d! user(s) connected to %2. If you stop sharing %2,
+    they will be disconnected. Do you want to continue?
+
+    There are %1!d! file(s) open by %2!d! user(s) connected to %3.
+    If you stop sharing %3, the files will close, which may cause
+    these users to lose data. Do you want to continue?
+
+One bug to beware of: when adding a second or greater share, or when deleting
+shares but leaving at least one, the combo box of shares should be re-filled
+correctly with the new set of shares for the directory.
+
+
+Copy hook
+---------
+
+A copy hook in the tool monitors shell rename/move/delete operations on
+directories. If the directory or a subdirectory is shared, then an appropriate
+error message is displayed and the user is forced to verify the operation.
+In particular, one of the following messages will be displayed:
+
+    There are %1!d! user(s) connected to %2. If you stop sharing %2,
+    they will be disconnected. Do you want to continue?
+
+    There are %1!d! file(s) open by %2!d! user(s) connected to %3.
+    If you stop sharing %3, the files will close, which may cause
+    these users to lose data. Do you want to continue?
+
+    You are sharing %1 as %2. Others may be using files in this
+    folder. If you delete the folder, it will no longer be shared.
+    Are you sure you want to delete it?
+
+
+Security editor
+---------------
+
+If the security editor DLL (acledit.dll) can't be loaded, this message is
+reported:
+
+Error invoking the security editor.
+
+
+Initialization
+--------------
+
+All of the above discussion assumes that the LanMan server service is
+running. This section describes how we determine the server is running,
+how we initialize our cache of shares (subsequently used by the Explorer
+to use for annotating folders with "hand" icons), what we do if the server
+is started manually after boot time, and what we do if the server is stopped
+sometime after boot time.
+
+Windows 95 initializes during DLL initialization by doing a NetServerGetInfo
+to determine if the server is running. We can't do this because it is bad
+to do net operations in DLL initialization code, for reasons having to do
+with the process mutant. In addition, because the server is a service
+controlled by the service controller that can be started manually and stopped
+at will, we would like to update the display of visible shares in the
+Explorer whenever the server starts or stops. For instance, if the server
+stops, we would like to remove all the "hand" icons from visible shared
+folders.
+
+Ideally, we would receive a notification from either the service controller
+or the server service whenever the server starts or stops. Since there is no
+support for this in the system, and none is likely to appear soon, we do two
+things. One, during initialization we wait as appropriate for the server to
+start. Note that the server starts asynchronously from the shell at boot time,
+so it is more than conceivable that the shell will start before the server
+does. In this case, if we can detect that the server is configured to start
+and is in fact starting, then we wait for it. We have certain timeouts to
+ensure that we don't wait too long. Secondly, if the server starts or stops
+after the shell has started, the user only needs to hit "refresh" in one
+Explorer window. If at this point we notice that the server has changed state,
+then we cause *all* explorer windows to refresh.
+
+
+Test scenarios
+--------------
+
+The following are a list of ad-hoc test scenarios to pursue on this component.
+In all cases, assume there are two machines: A and B, and the user is sitting
+at machine A.
+
+For the next few scenarios, log on as a normal user (not power user or
+administrator, etc).
+
+-- Be sure there is no sharing UI, even for things known to be shared.
+Exercise copy hook functionality by renaming/moving/deleting a directory.
+
+-- Rename a directory known to be shared. Log off, Log on as administrator.
+NOTE: There is no UI (save for winfile / server manager) to get rid of the
+orphaned share! Rename the directory back to the name that was shared.
+See if the explorer paints the "sharing" hand on it.
+
+-- Invoke all the APIs programmatically, and be sure they return appropriate
+errors.
+
+For the rest of these, log on as a member of the Administrators group.
+
+-- Open My Computer. Be sure the "Sharing..." context-menu item appears on
+all local drive objects, on floppy drives, and on CD-ROMs. Be sure it doesn't
+appear on network-mapped drive letters. Share each of them.
+
+-- Notice that hard drive roots (c:\, d:\, etc) should be shared by default, as
+should the windows directory via ADMIN$. On the sharing property page for
+these, press "Permissions" and notice you get a warning message disallowing
+permissions changes.
+
+-- Remove and recreate the default shares, including ADMIN$. Create a share
+C$ on D:\, and note that it isn't a default share at that point (you can edit
+its permissions).
+
+-- Share a directory. Hit apply. Add a number of shares. Hit apply. Make sure
+the combo box is correct. Delete a bunch of shares, hit apply. Make sure the
+combo is once again correct.
+
+-- Make sure the "New Share" and "Remove Share" appear and disappear at the
+proper times.
+
+-- Make sure the tab order doesn't include the "allow x users" edit control
+or spin button unless the "Allow" radio button is selected.
+
+-- Make sure the comment is limited to 256 characters, and the share name to
+80 characters, in both the "initial mode" property page and the "New Share"
+dialog.
+
+-- Make sure context-sensitive help appears on all relevant controls of both
+the property page and New Share dialog. Make sure the Help buttons are active
+on all five ACL editor dialogs. (When we have a help file).
+
+-- Make sure all keyboard mnemonics are unique, and that all controls have
+appropriate mnemonics.
+
+-- Make sure that choosing a share in the combo box, changing a parameter,
+choosing another share in the combo box, changing one of its parameters works.
+That is, switching between shares in the combo box should show the selected
+share's data. Hit apply after these changes. Make sure the data got applied
+correctly (use "net share" at the command line, or a separate API tool), and
+that further switching between shares in the combo box still displays the
+correct data.
+
+-- In "New Share", type a share name that already exists. Get a pop-up and
+choose "yes" to reuse the share name. Hit apply and be sure the old one went
+away and the new one got created. Be sure the explorer "sharing hands" also
+changed appropriately. Do the same test when creating a share directly on the
+sharing page in "initial mode".
+
+-- In the property page, delete a share that a user has a connection to.
+Delete a share that a user has a connection to *and* a file open on. These are
+two different scenarios that should pop up warnings when the user hits "apply".
+
+-- In the explorer, delete, rename, and move (by drag/drop), a shared
+directory. Make sure the sharing warning comes up. Do the same thing when
+a user has a connection to the share. Do the same thing when a user has a
+file open on the connection. These should bring up three different warning
+scenarios. Do the same thing for a parent of a shared directory. Do the same
+thing for a directory that has more than one shared child directory, each with
+connections and open files.
+
+-- Test the APIs
+
+-- Stop the server (via "net stop server") between any two operations.
+For instance, after bringing up the property sheet, and editing some items,
+stop the server before hitting Apply.
+
+-- Stop the server, then try to rename/delete/move a shared folder in the
+explorer.
+
+-- Bring up properties on a shared directory, stop the server, *hit F5 in the
+explorer to refresh it, then try to apply share changes.
+
+-- Stop the server, hit "F5" (refresh) in an explorer window to clear the
+"sharing" hands, then start the server and hit F5 again to see the sharing
+hands reappear.

@@ -1,0 +1,37 @@
+The following File type:
+	Extension: $$Extension$$
+	Class type: $$ClassType$$
+	Class Description: $$ClassDescription$$
+
+Will have the following shell extensions created:
+$$IF(IContextMenu)
+    + Context Menu handler
+$$IF(IContextMenu3)
+      + Implementing IContextMenu3
+$$ENDIF
+$$IF(DragAndDrop)
+      + Registered as a Drag and Drop Handler
+$$ENDIF
+$$ENDIF
+$$IF(Icon)
+    + Icon Handler
+$$ENDIF
+$$IF(PropertySheet)
+    + Property Sheet Handler
+$$ENDIF
+$$IF(InfoTip)
+    + InfoTip Handler
+$$ENDIF
+
+You must manually set up these IDL files in the Project|Settings menu:
+$$ClassType$$.idl: midl /Oicf /h "$$ClassType$$.h" /iid "$$ClassType$$_i.c"  "$$ClassType$$.idl"
+	Generates: $$ClassType$$.h
+			   $$ClassType$$_i.c
+
+shlobj.idl: midl /Oicf /Zp1 /h "shlobj.h" /iid "shlobj.c" "shlobj.idl"
+	Generates: shlobj.h
+			   shlobj.c
+
+Change shlobj.c properties so that it does not use a Precompiled Header.
+
+

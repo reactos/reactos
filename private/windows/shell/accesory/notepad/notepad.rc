@@ -1,0 +1,181 @@
+/*                                            */
+/*       Notepad application                  */
+/*                                            */
+/*   Copyright (C) 1984-1995  Microsoft Inc.  */
+/*                                            */
+
+#include "notepad.h"
+#define GRP      WS_GROUP
+#define TAB      WS_TABSTOP
+#define TABGRP   WS_TABSTOP | WS_GROUP
+#define DLGMODAL WS_POPUP | WS_DLGFRAME
+
+/* Version Stamping */
+#include "notepad.rcv"
+
+ID_APPICON ICON PRELOAD DISCARDABLE     npapp.ico
+ID_ICON    ICON PRELOAD DISCARDABLE     notepad.ico
+
+ID_MENUBAR  MENU PRELOAD DISCARDABLE
+BEGIN
+    POPUP   "&File"
+        BEGIN
+            MENUITEM    "&New\tCtrl+N",          M_NEW
+            MENUITEM    "&Open...\tCtrl+O",      M_OPEN
+            MENUITEM    "&Save\tCtrl+S",         M_SAVE
+            MENUITEM    "Save &As...",           M_SAVEAS
+            MENUITEM    SEPARATOR
+            MENUITEM    "Page Set&up...",        M_PAGESETUP
+            MENUITEM    "&Print...\tCtrl+P",     M_PRINT
+            MENUITEM    SEPARATOR
+            MENUITEM    "E&xit",                 M_EXIT
+        END
+
+    POPUP   "&Edit"
+        BEGIN
+            MENUITEM    "&Undo\tCtrl+Z",        M_UNDO
+            MENUITEM    SEPARATOR
+            MENUITEM    "Cu&t\tCtrl+X",         M_CUT ,  GRAYED
+            MENUITEM    "&Copy\tCtrl+C",        M_COPY,  GRAYED
+            MENUITEM    "&Paste\tCtrl+V",       M_PASTE, GRAYED
+            MENUITEM    "De&lete\tDel",         M_CLEAR, GRAYED
+            MENUITEM    SEPARATOR
+            MENUITEM    "&Find...\tCtrl+F",     M_FIND
+            MENUITEM    "Find &Next\tF3",       M_FINDNEXT
+            MENUITEM    "&Replace...\tCtrl+H",  M_REPLACE
+/*
+            The hotkey used for replace is CTRL-H in most of the editors, and hence though 
+            this key may conflict with backspace key in IMEs, this key is used here to be compatible
+            with all the editors. Please contact ChrisW/RajeshM for more details.
+*/
+            MENUITEM    "&Go To...\tCtrl+G",    M_GOTO
+            MENUITEM    SEPARATOR
+            MENUITEM    "Select &All\tCtrl+A",  M_SELECTALL
+            MENUITEM    "Time/&Date\tF5",       M_DATETIME
+        END
+
+    POPUP   "F&ormat"
+        BEGIN
+            MENUITEM    "&Word Wrap"      M_WW
+            MENUITEM    "&Font...",       M_SETFONT
+        END
+
+    POPUP "&Help"
+        BEGIN
+            MENUITEM     "&Help Topics",  M_HELP
+            MENUITEM     SEPARATOR
+            MENUITEM     "&About Notepad",M_ABOUT
+        END
+
+END
+
+MainAcc ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "^N",      M_NEW
+    "^O",      M_OPEN
+    "^S",      M_SAVE
+    "^P",      M_PRINT
+    VK_INSERT, M_COPY,     VIRTKEY, CONTROL
+    VK_F1,     M_HELP,     VIRTKEY
+    VK_F3,     M_FINDNEXT, VIRTKEY
+    VK_F5,     M_DATETIME, VIRTKEY
+    "^G",      M_GOTO
+    "F",       M_FIND    , VIRTKEY, CONTROL, NOINVERT
+    "H",       M_REPLACE,  VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,   M_UNDO,     VIRTKEY, ALT
+    "^Z",      M_UNDO
+    "^X",      M_CUT
+    "^C",      M_COPY
+    "^V",      M_PASTE
+    "^A",      M_SELECTALL
+END
+
+/* Allow exit using ^C, ^D or ^Z during Setup */
+SlipUpAcc ACCELERATORS PRELOAD DISCARDABLE
+BEGIN
+    "^N",      M_NEW
+    "^O",      M_OPEN
+    "^S",      M_SAVE
+    "^P",      M_PRINT
+    VK_INSERT, M_COPY,     VIRTKEY, CONTROL
+    VK_F1,     M_HELP,     VIRTKEY
+    VK_F3,     M_FINDNEXT, VIRTKEY
+    VK_F5,     M_DATETIME, VIRTKEY
+    "^G",      M_GOTO
+    "F",       M_FIND,     VIRTKEY, CONTROL, NOINVERT
+    "H",       M_REPLACE,  VIRTKEY, CONTROL, NOINVERT
+    VK_BACK,   M_UNDO,     VIRTKEY, ALT
+    "^Z",      M_UNDO
+    "^X",      M_CUT
+    "^C",      M_COPY
+    "^V",      M_PASTE
+    "^A",      M_SELECTALL
+    VK_ESCAPE, M_EXIT,     VIRTKEY
+    0x43,      M_EXIT,     VIRTKEY, CONTROL
+    0x44,      M_EXIT,     VIRTKEY, CONTROL
+    0x5A,      M_EXIT,     VIRTKEY, CONTROL
+END
+
+STRINGTABLE PRELOAD DISCARDABLE
+BEGIN
+    IDS_MERGE1       "%%"
+    IDS_FILEOPENFAIL "Cannot open the %% file.\n\nCannot print the file because it can't be found or is currently being used by another application.  Be sure that the path and filename are correct, or wait until the application is finished, and then try again"
+    IDS_DISKERROR   "Cannot open the %% file.\n\nMake sure a disk is in the drive you specified."
+    IDS_FNF         "Cannot find the %% file.\n\nDo you want to create a new file?"
+    IDS_FAE         "The %% file already exists.\n\nDo you want to overwrite it?"
+    IDS_SCBC        "The text in the %% file has changed.\n\nDo you want to save the changes?"
+    IDS_UNTITLED    "Untitled"
+    IDS_NOTEPAD     " - Notepad"
+    IDS_CFS         "Cannot find ""%%"""
+    /* The following is a generic out of memory message which can also be
+       system modal so no /n can appear in it. */
+    IDS_ERRSPACE    "Not enough memory available to complete this operation. Quit one or more applications to increase available memory, and then try again."
+    IDS_FTL         "The %% file is too large for Notepad.\n\nUse another editor to edit the file."
+    IDS_NN          "Notepad"
+    IDS_COMMDLGINIT "Failed to Initialize File Dialogs. Change the Filename and try again."
+    IDS_PRINTDLGINIT "Failed to Initialize Print Dialogs. Make sure that your printer is connected properly and use Control Panel to verify that the printer is configured properly."
+    IDS_CANTPRINT   "Cannot print the %% file. Be sure that your printer is connected properly and use Control Panel to verify that the printer is configured properly."
+    IDS_NVF         "Not a valid file name."
+    IDS_CREATEERR   "Cannot create the %% file.\n\nMake sure that the path and filename are correct."
+    IDS_NOWW        "Cannot carry out the Word Wrap command because there is too much text in the file."
+    IDS_ANSI_EXT    "\\*.txt"
+    IDS_HELPFILE    "notepad.hlp"
+    IDS_BADMARG     "The Margin values are not correct. Either they are not numeric characters or they don't fit the dimensions of the page. Try either entering a number or decreasing the margins."
+    IDS_HEADER      "&f"
+    IDS_FOOTER      "Page &p"
+
+    IDS_ACCESSDENY  "%%\nYou do not have permission to open this file.  See the owner of the file or an administrator to obtain permission."
+
+
+/*  IDS_LETTERS     "fFpPtTdDcCrRlL"   Original US values. DO NOT TRANSLATE   */
+/*                  The order is: File, Page, Time, Date, Center, Right, Left */
+
+    IDS_LETTERS     "fFpPtTdDcCrRlL"    /* Localizers:  This will change the  */
+                                        /* letters used in Page Setup         */
+
+    IDS_ANSITEXT    "Text Documents (*.txt)" /* filter text for File/Open */
+    IDS_ALLFILES    "All Files "   /* filter text for File/Open  */
+    IDS_OPENCAPTION "Open"      /* title for file/open dialog */
+    IDS_SAVECAPTION "Save As"   /* title for file/save dialog */
+    IDS_CANNOTQUIT  "You cannot quit Windows because the Save As dialog\nbox in Notepad is open.  Switch to Notepad, close this\ndialog box, and then try quitting Windows again."
+    IDS_LOADDRVFAIL "Cannot access your printer.\nBe sure that your printer is connected properly and use Control Panel to verify that the printer is configured properly."
+    IDS_ERRUNICODE  "%%\nThis file contains characters in Unicode format which will be lost if you save this file as a text document. To keep the Unicode information, select the Unicode encoding in the Save As dialog box. Continue?
+"
+    IDS_FONTTOOBIG  "Page too small to print one line.\nTry printing using smaller font."
+    IDS_COMMDLGERR  "Common Dialog error (0x%04x)"
+
+    IDS_LINEERROR    "Notepad - Goto Line"
+    IDS_LINETOOLARGE "Line number out of range"
+
+    IDS_FT_ANSI      "ANSI"
+    IDS_FT_UNICODE   "Unicode"
+    IDS_FT_UNICODEBE "Unicode big endian"
+    IDS_FT_UTF8      "UTF-8"
+END
+
+/* Include other dialogs. */
+rcinclude notepad.dlg
+
+#include <ntverp.h>
+
+#include "common.ver"

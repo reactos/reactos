@@ -1,0 +1,23 @@
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc
+
+SOURCES = $(SOURCES) \
+         ..\ctxlogon.c \
+         ..\audit.c    \
+         ..\ctxmon.c   \
+         ..\execsrv.c  \
+         ..\ctxlogof.c \
+         ..\callback.c \
+         ..\connect.c  \
+         ..\ctxutil.c
+
+TARGETLIBS= $(TARGETLIBS) \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\kernel32.lib 
+
+LINKLIBS=$(LINKLIBS)    \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\winsta.lib \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\regapi.lib \
+         $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)\*\syslib.lib
+

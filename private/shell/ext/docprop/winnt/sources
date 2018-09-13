@@ -1,0 +1,7 @@
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+!include $(CCSHELL_DIR)\ext\docprop\sources.inc
+C_DEFINES=$(C_DEFINES) -D_WIN2000_DOCPROP_ -DWINNT -DUNICODE -DIPROPERTY -DSHELL
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\ext\docprop\sources.inc 
+

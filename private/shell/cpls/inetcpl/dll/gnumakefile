@@ -1,0 +1,81 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+COMPONENT = SHELL
+PRODUCT   = INETCPL
+
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/shell.template
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+
+SOURCES_FILE    = sources
+SOURCES_IMPORTS = TARGETTYPE TARGETNAME DLLENTRY PRECOMPILED_INCLUDE
+
+# Change default lib*.so name for inetcpl to .cpl
+WDLL = inetcpl
+DLL  = ${WDLL}.cpl
+
+DLLDEF_SRC = inetcpl.def 
+DLLDEF_EXPORTS = \
+    _____inetcpl_initDLL
+
+WRESOURCE = ${O}/inetcpl.rc
+
+#NO_UNICODE = 1
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+PROJECT_CCPPFLAGS = -Ii386 -I. -I.. -I${SHELL_DIR}/ext/rnaui/inc
+
+PROJECT_DLLFLAGS = -lcomctl32 -lcomdlg32 -lshlwapi -luuid -lstocklib -lshell32 -lshdocvw -lole32 -loleaut32 -ladvapi32 -ladvpack
+
+# Use DLL specific new and delete operator
+DIP_CFLAGS += -DDLL_SPECIFIC_OPERATOR_NEW
+
+__cplusplus = true
+
+include $(MWHOME)/make.rules.simple
+
+${O}/inetcpl.rc : ../inetcpl.rc ${O}/inetcpld.rc ${O}/inetcplc.rc ${O}/inetcpl.rcv ${O}/inetcver.h ICON ${O}/resource.h ${O}/selfreg_${WDLL}.inf
+	${ECHOOBJ}
+	cp -f $< $@
+
+${O}/selfreg_${WDLL}.inf: selfreg.inx
+	${ECHOOBJ}
+	cleaninf -w $< $@
+
+${O}/inetcpld.rc : ../inetcpld.rc 
+	${ECHOOBJ}
+	cp -f $< $@
+
+${O}/resource.h : ../resource.h 
+	${ECHOOBJ}
+	cp -f $< $@
+
+${O}/inetcplc.rc : ../inetcplc.rc 
+	${ECHOOBJ}
+	cp -f $< $@
+
+${O}/inetcpl.rcv : ../inetcpl.rcv 
+	${ECHOOBJ}
+	cp -f $< $@
+
+${O}/inetcver.h : ../inetcver.h 
+	${ECHOOBJ}
+	cp -f $< $@
+
+ICON : ../*.ico ../*.bmp
+	${ECHOOBJ}
+	cp -f ../*.ico ${O}/
+	cp -f ../*.bmp ${O}/

@@ -1,0 +1,406 @@
+//
+// Copyright (c) 1997-1999 Microsoft Corporation.
+//
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "cmdlg.h"
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Japanese resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_JPN)
+#ifdef _WIN32
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+#pragma code_page(932)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""cmdlg.h""\r\n"
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""ntverp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Japanese resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDBM_TT                 BITMAP  MOVEABLE PURE   "font.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDIC_UCE                ICON    DISCARDABLE     "UCE.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+UCE DIALOG PRELOAD MOVEABLE IMPURE  10, 40, 294, 294
+STYLE WS_MINIMIZEBOX | WS_POPUP | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+CAPTION "Character Map"
+CLASS "MyDlgClass"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Ch&aracters to copy :",ID_TOPLEFT,7,193,63,8,NOT
+                    WS_GROUP
+#ifdef DISABLE_RICHEDIT
+    EDITTEXT        IDC_EDIT,75,189,105,15,ES_AUTOHSCROLL
+#else
+    CONTROL         "",ID_STRING,"RICHEDIT20W",WS_BORDER | WS_TABSTOP | 0x80,
+                    76,190,103,16
+#endif
+    DEFPUSHBUTTON   "&Select",ID_SELECT,183,190,50,14
+    PUSHBUTTON      "&Copy",ID_COPY,237,190,50,14
+    CHECKBOX        "Ad&vanced view",ID_ADVANCED,7,207,64,12
+    LTEXT           "Charac&ter set :",ID_VIEWLB,7,228,63,8,NOT WS_GROUP
+    COMBOBOX        ID_VIEW,76,225,103,76,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Go to &Unicode :",ID_URANGE,183,229,50,8
+    EDITTEXT        ID_FROM,237,225,25,14,ES_AUTOHSCROLL
+    LTEXT           "&Group by :",ID_SUBSETLB,7,246,63,8,NOT WS_GROUP
+    COMBOBOX        ID_UNICODESUBSET,76,243,103,76,CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "S&earch for :",ID_SEARCHNAME,7,265,63,8,NOT WS_GROUP
+    EDITTEXT        ID_SEARCHINPUT,76,261,103,14,ES_MULTILINE |
+                    ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "Sea&rch",ID_SEARCH,183,261,50,14
+    LTEXT           "&Font :",ID_FONTLB,7,9,20,8,NOT WS_GROUP
+    COMBOBOX        ID_FONT,31,7,202,76,CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_SORT | CBS_HASSTRINGS |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Help",ID_HELP,237,7,50,14
+END
+
+IDD_FONTCHANGEMSG DIALOG DISCARDABLE  0, 0, 234, 71
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Message"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,51,52,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,117,52,50,14
+    LTEXT           "Previously selected characters may not be displayed correctly when font is changed. Do you want to change font?",
+                    IDC_STATIC,9,5,215,23
+    CONTROL         "Do not display this message any more.",IDC_CHECKNOMSG,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,32,150,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+UCE ACCELERATORS MOVEABLE PURE
+BEGIN
+    VK_HOME,        ID_CTLHOME,             VIRTKEY, CONTROL, NOINVERT
+    VK_END,         ID_CTLEND,              VIRTKEY, CONTROL, NOINVERT
+    VK_LEFT,        ID_CTLLEFT,             VIRTKEY, CONTROL, NOINVERT
+    VK_RIGHT,       ID_CTLRIGHT,            VIRTKEY, CONTROL, NOINVERT
+    VK_UP,          ID_CTLUP,               VIRTKEY, CONTROL, NOINVERT
+    VK_DOWN,        ID_CTLDOWN,             VIRTKEY, CONTROL, NOINVERT
+    VK_PRIOR,       ID_CTLPRIOR,            VIRTKEY, CONTROL, NOINVERT
+    VK_NEXT,        ID_CTLNEXT,             VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE    VFT_APP
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Character Map"
+#define VER_INTERNALNAME_STR        "charmap.exe"
+#define VER_ORIGINALFILENAME_STR    "charmap.exe"
+
+#include "common.ver"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_FONTCHANGEMSG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 64
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ALL                 "All"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_UNICODE             "Unicode"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NOCHARFOUND         "No Character Available"
+    IDS_SEARCH              "Sea&rch"
+    IDS_RESET               "&Reset"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_RTF                 "Rich Text Format"
+    IDS_GROUPBY             "Group By"
+    IDS_SYMBOLSET           "Character Code"
+    IDS_EUDC                " (Private Characters)"
+    IDS_ALT                 "Keystroke"
+    IDS_ALLFONTS            "All Fonts"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    1250                    "Windows: Central Europe"
+    1251                    "Windows: Cyrillic"
+    1252                    "Windows: Western"
+    1253                    "Windows: Greek"
+    1254                    "Windows: Turkish"
+    1255                    "Windows: Hebrew"
+    1256                    "Windows: Arabic"
+    1257                    "Windows: Baltic"
+    1258                    "Windows: Viet Nam"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    866                     "DOS: Cyrillic II"
+    874                     "Windows: Thai"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    932                     "Windows: Japanese"
+    936                     "Windows: Simplified Chinese"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    949                     "Windows: Korean"
+    950                     "Windows: Traditional Chinese"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    437                     "DOS: United States"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    720                     "DOS: Arabic"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    737                     "DOS: Greek"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    775                     "DOS: Baltic"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    850                     "DOS: Western Europe"
+    852                     "DOS: Central Europe"
+    855                     "DOS: Cyrillic"
+    857                     "DOS: Turkish"
+    862                     "DOS: Hebrew"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10100                   "Unicode Subrange"
+    10101                   "Latin"
+    10102                   "General Punctuation"
+    10103                   "Currency"
+    10104                   "Super/Subscript"
+    10105                   "Letterlike Symbols"
+    10106                   "Number Forms"
+    10107                   "Arrows"
+    10108                   "Mathematical Operators"
+    10109                   "Miscellaneous Technical"
+    10110                   "Control Pictures & OCR"
+    10111                   "Enclosed Alphanumerics"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10112                   "Box Drawings"
+    10113                   "Block Elements & Geometric Shapes"
+    10114                   "Symbols & Dingbats"
+    10115                   "Spacing Modifier Letters"
+    10116                   "Combining Diacritical Marks"
+    10117                   "Greek"
+    10118                   "Cyrillic"
+    10119                   "Armenian"
+    10120                   "Hebrew"
+    10121                   "Arabic"
+    10122                   "Devanagari"
+    10123                   "Bengali"
+    10124                   "Gurmukhi"
+    10125                   "Gujarati"
+    10126                   "Oriya"
+    10127                   "Tamil"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10128                   "Telugu"
+    10129                   "Kannada"
+    10130                   "Malayalam"
+    10131                   "Thai"
+    10132                   "Lao"
+    10133                   "Tibetan"
+    10134                   "Georgian"
+    10135                   "Korean Hangul"
+    10136                   "Japanese Hiragana/Katakana"
+    10137                   "Chinese Bopomofo"
+    10138                   "CJK Ideographs"
+    10139                   "CJK Symbols & Punctuation"
+    10140                   "Ideographic Symbols"
+    10141                   "CJK Compatibility Form"
+    10142                   "Small Form Variants"
+    10143                   "Fullwidth Forms"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10144                   "Halfwidth Forms"
+    10145                   "Private Use Characters"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10200                   "Ideographs by Radicals"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10300                   "Traditional Chinese By Bopomofo"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10400                   "Simplified Chinese by PinYin"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10500                   "Korean Hanja by Hangul"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10600                   "Japanese KanJi by Hiragana"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10700                   "Japanese KanJi by Radical"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    10800                   "Japanese Shift-JIS Subrange"
+    10801                   "Halfwidth Character"
+    10802                   "Symbol, Digit & Latin"
+    10803                   "Hiragana & Katakana"
+    10804                   "Greek Letter"
+    10805                   "Cyrillic Letter"
+    10806                   "Special Character"
+    10807                   "Level One KanJi"
+    10808                   "Level Two KanJi"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

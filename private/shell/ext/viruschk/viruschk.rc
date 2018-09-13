@@ -1,0 +1,177 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+//#include "afxres.h"
+#include "windows.h"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "//#include ""afxres.h""\r\n"
+    "#include ""windows.h""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REGISTER_VSCANNER DIALOG DISCARDABLE  0, 0, 199, 110
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Register Virus Scanner"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Yes",IDYES,50,85,50,14
+    PUSHBUTTON      "No",IDNO,125,85,50,14
+    LTEXT           "Someone try to register virus scanner described below on your system.",
+                    IDC_STATIC,35,10,150,20
+    ICON            IDI_DEFAULT_VENDOR,IDC_STATIC,5,10,18,20
+    LTEXT           "Do you want to continue registering the virus scanner?",
+                    IDC_STATIC,15,65,170,15
+    LTEXT           "Virus Scanner\nDescription",IDC_STATIC,15,35,50,20
+    EDITTEXT        IDC_SCANNER_DESC,65,35,115,20,ES_AUTOHSCROLL | NOT 
+                    WS_BORDER
+END
+
+IDD_FOUNDVIRUS DIALOG DISCARDABLE  0, 0, 251, 193
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Virus Found!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Yes",IDYES,195,5,50,14
+    PUSHBUTTON      "No",IDNO,195,24,50,14
+    PUSHBUTTON      "&Details >>",IDC_DETAILS,195,43,50,14
+    ICON            IDI_DEFAULT_VENDOR,IDC_VENDORICON,5,5,18,20
+    LTEXT           "Viruses can cause serious damage and may affect your computer's performance.",
+                    IDC_TEXT_FOUNDVIRUS,35,5,150,30
+    LTEXT           "Do you want to cancel this operation and avoid potentially infecting your computer?",
+                    IDC_STATIC,10,40,175,20
+    PUSHBUTTON      "&Vendor Info",IDC_VENDORINFO,195,70,50,14
+    EDITTEXT        IDC_DETAIL_GROUP,10,65,170,115,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_NOHIDESEL | ES_READONLY | 
+                    ES_WANTRETURN
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_DEFAULT_VENDOR      ICON    DISCARDABLE     "vir1a4.ico"
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 5,0,1432,1
+ PRODUCTVERSION 5,0,1432,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "Microsoft Corporation\0"
+            VALUE "FileDescription", "Master VirusScanner Object\0"
+            VALUE "FileVersion", "5.00.1432.1\0"
+            VALUE "InternalName", "viruschk\0"
+            VALUE "LegalCopyright", "Copyright (C) Microsoft Corp. 1981-1996\0"
+            VALUE "OriginalFilename", "VIRUSCHK.DLL\0"
+            VALUE "ProductName", "Microsoft(R) Windows NT(R) Operating System\0"
+            VALUE "ProductVersion", "5.00.1432.1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_VIRUSCHECK          "Virus Check Object"
+    IDS_VIRUSFOUND_NODESC   "A virus has been detected on the item you are operating on."
+    IDS_ERR_NOVENDORINFO    "Virus Scanner Vendor's information is incomplete.  Please check with the Vendor."
+    IDS_ERR_NOVENDOR        "Sorry!  The virus scanner vendor cannot be found."
+    IDS_ERR_CODESIGN        "The virus scanner to be registerred has not be signed by Microsoft authorized party."
+    IDS_ERR_OUTMEM          "There is not enough memory to load the detailed information."
+    IDS_VIRUSFOUND          "A virus was detected in %s."
+    IDS_IGNOREWARNCONFIRM   "Virus can cause serious damage and may affect your computer's performance.\n\nAre you sure you want to continue?"
+    IDS_WARNING             "Warning !"
+    IDS_VIRUSNAME           "Virus Name:\t%s\r\n\r\nDetected by:\t%s\r\n\r\nPhone #:\t<Not Available>\r\n\r\nClick on Vendor Info to purchase or get more information about their entire line of anti-virus products.\r\n\r\n%s"
+    IDS_VIRUSDESC           "Virus Description:\r\n%s"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

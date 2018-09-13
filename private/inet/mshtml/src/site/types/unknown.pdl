@@ -1,0 +1,27 @@
+#ifndef _UNKNOWN_PDL_
+#define _UNKNOWN_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+
+file unknown.pdl
+
+import types.pdl
+import element.pdl
+
+interface IHTMLUnknownElement guid:3050f209-98b5-11cf-bb82-00aa00bdce0b
+
+tearoff CUnknownElement interface:IHTMLUnknownElement
+
+class CUnknownElement name:HTMLUnknownElement \
+        primaryinterface:IHTMLUnknownElement \
+        super:CElement \
+        events:HTMLElementEvents \
+        nonprimaryevents:HTMLElementEvents2 \
+        guid:3050f268-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f539-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedom.pdl"
+    implements IHTMLUnknownElement
+
+#endif _UNKNOWN_PDL_

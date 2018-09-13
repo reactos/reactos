@@ -1,0 +1,6 @@
+MIPS_DLLLIBOBJECTS=..\..\rtl\user\obj\mips\chkstk.obj
+
+MIPS_SOURCES=..\mips\critsect.s \
+             ..\mips\evpair.s \
+             mips\usrstubs.s \
+             ..\mips\ldrthunk.s

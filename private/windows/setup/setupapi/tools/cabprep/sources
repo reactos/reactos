@@ -1,0 +1,26 @@
+TARGETNAME=cabprep
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+
+C_DEFINES=-DUNICODE -D_UNICODE
+
+SOURCES=cabprep.c
+
+TARGETLIBS=\
+        $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+        $(BASEDIR)\public\sdk\lib\*\libc.lib \
+        $(BASEDIR)\public\sdk\lib\*\user32.lib \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+        $(BASEDIR)\public\sdk\lib\*\msvcrt.lib \
+        $(BASEDIR)\public\sdk\lib\*\libcmt.lib
+        
+        
+        
+MSC_WARNING_LEVEL=/W3 /WX
+
+
+UMRES=obj\*\cabprep.res
+UMTYPE=console
+UMAPPL=cabprep
+UMENTRY=main

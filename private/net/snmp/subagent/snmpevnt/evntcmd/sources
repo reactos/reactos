@@ -1,0 +1,39 @@
+MAJORCOMP=snmp
+MINORCOMP=evntcmd
+
+TARGETNAME=evntcmd
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+UMENTRY=_MainCRTStartup
+
+USE_CRTDLL=1
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_CXX=1
+MSC_WARNING_LEVEL=/W3 /WX
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+USE_MFC=1
+
+#USER_C_FLAGS=-DEVENTCMT_OLD_LOG
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc;
+
+SOURCES=\
+    eventcmd.rc         \
+    eventcmd.cpp        \
+    errors.cpp          \
+    operation.cpp       \
+    parser.cpp          \
+    registry.cpp        \
+    snmpctrl.cpp
+
+TARGETLIBS=\
+    $(BASEDIR)\Public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib
+

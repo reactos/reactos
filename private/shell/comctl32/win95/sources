@@ -1,0 +1,45 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(MAKEDIR:\comctl32\win95=)
+TARGET_WIN95    = 1
+
+!include $(CCSHELL_DIR)\comctl32\srcc.inc
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\comctl32\srcc.inc
+
+INCLUDES        = $(CCSHELL_DIR)\thunk;$(INCLUDES)
+
+ASM_DEFINES     = -DIS_32
+i386_SOURCES    = i386\cctl1632.asm
+
+LINKER_FLAGS    = $(LINKER_FLAGS) -ignore:4092
+
+!IF 0
+        Override the base address in the winnt COFFBASE.TXT so that we use the
+            old Win95 base of bfc00000 (COMCTL32 *must* be shared on Win95)
+!ENDIF
+DLLBASE         = 0xbfc00000
+

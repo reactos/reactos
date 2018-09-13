@@ -1,0 +1,138 @@
+LANGUAGE 0x0c, 0x00 // Really 0x0c, 0x01 - French (Standard)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default French resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Personnalisation de la barre d'outils"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Fermer",2,308,6,44,14
+    PUSHBUTTON      "Réi&nitialiser",202,308,23,44,14
+    PUSHBUTTON      "A&ide",205,308,40,44,14
+    PUSHBUTTON      "&Monter",206,308,74,44,14
+    PUSHBUTTON      "&Descendre",207,308,91,44,14
+    LTEXT           "&Boutons disponibles :",-1,4,5,71,8
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Aj&outer ->",1,131,42,45,14
+    PUSHBUTTON      "<- &Supprimer",204,131,62,45,14
+    LTEXT           "Boutons de la ba&rre d'outils :",-1,182,5,94,8
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Annuler",2,58,122,50,14
+    PUSHBUTTON      "&Appliquer",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Aide",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Précédent",12323,12,26,50,14
+    DEFPUSHBUTTON   "&Suivant >",12324,62,26,50,14
+    PUSHBUTTON      "Terminer",12325,119,26,50,14
+    PUSHBUTTON      "Annuler",2,176,26,50,14
+    PUSHBUTTON      "Aide",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Séparateur"
+    1025                    " + "
+    1026                    "Aucun"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Fermer"
+    4161                    "OK"
+    4162                    "Propriétés de %s"
+    4163                    "Aujourd'hui :"
+    4164                    "Aller aux lie&ns du jour"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Taper le texte ici"
+    4177                    "Propriétés"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Redimensionne cette fenêtre."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Déplace cette fenêtre."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Réduit cette fenêtre en une icône."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Agrandit cette fenêtre en plein écran."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Bascule vers la fenêtre MDI suivante."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Ferme cette fenêtre."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Rétablit la taille normale de cette fenêtre."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Bascule vers une autre tâche."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Contient les commandes de gestion des fenêtres."
+    36849                   "Déplace vers la gauche ou la droite pour redimensionner les colonnes."
+    36850                   "Redimensionne les colonnes en utilisant les touches de direction et de tabulation."
+    36851                   "Ajoute, déplace et supprime des boutons dans la barre d'outils."
+END

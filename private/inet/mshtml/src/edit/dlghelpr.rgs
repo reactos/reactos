@@ -1,0 +1,33 @@
+HKCR
+{
+	HtmlDlgHelper.HtmlDlgHelper.1 = s 'HtmlDlgHelper Class'
+	{
+		CLSID = s '{3050f4e1-98b5-11cf-bb82-00aa00bdce0b}'
+	}
+	HtmlDlgHelper.HtmlDlgHelper = s 'HtmlDlgHelper Class'
+	{
+		CurVer = s 'HtmlDlgHelper.HtmlDlgHelper.1'
+	}
+	CLSID
+	{
+		ForceRemove {3050f4e1-98b5-11cf-bb82-00aa00bdce0b} = s 'HtmlDlgHelper Class'
+		{
+			ProgID = s 'HtmlDlgHelper.HtmlDlgHelper.1'
+			VersionIndependentProgID = s 'HtmlDlgHelper.HtmlDlgHelper'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Programmable'
+			ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{3050f4e0-98b5-11cf-bb82-00aa00bdce0b}'
+			'Version' = s '1.0'
+		}
+	}
+}

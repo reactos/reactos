@@ -1,0 +1,40 @@
+//*
+//* 
+//* Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+//* EXEMPT: copyright change only, no build required
+//* 
+//*
+//Microsoft Developer Studio generated resource script.
+//
+#include <windows.h>
+#include <ntverp.h>
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft XML Parser for Win32"
+#define VER_INTERNALNAME_STR        "XMLPSR.DLL"
+#define VER_ORIGINALFILENAME_STR    "XMLPSR.DLL"
+#define VER_OLESELFREGISTER
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//  No point in including type library.
+//  1 TYPELIB "..\\parser\\xmlparser.tlb"
+
+
+#include "common.ver"
+
+#include "messages.rc"
+
+

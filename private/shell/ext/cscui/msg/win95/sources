@@ -1,0 +1,15 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1997 - 1999
+
+Module Name:
+
+    sources.
+
+!ENDIF
+
+TARGET_WIN95 = 1
+ALT_PROJECT_TARGET=Win95
+!include ..\..\common.inc
+!include ..\sources.inc
+SOURCES_USED = $(SOURCES_USED) $(CSCUI_DIR)\msg\sources.inc

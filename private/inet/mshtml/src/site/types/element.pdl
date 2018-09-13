@@ -1,0 +1,788 @@
+#ifndef _ELEMENT_PDL_
+#define _ELEMENT_PDL_   1
+
+
+#include "types.pdl"
+#include "omrect.pdl"
+#include "style.pdl"
+#include "curstyle.pdl"
+#include "filter.pdl"
+#include "dom.pdl"
+
+file element.pdl
+
+import types.pdl
+import omrect.pdl
+import style.pdl
+import curstyle.pdl
+import filter.pdl
+import dom.pdl
+
+// Forward declares due to X-reference issues
+interface IHTMLEventObj
+interface IHTMLElementCollection
+
+enum htmlListType prefix:htmlListType        guid:3050f1dc-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet      string:  
+    eval LargeAlpha  string:A
+    eval SmallAlpha  string:a
+    eval LargeRoman  string:I 
+    eval SmallRoman  string:i
+    eval Numbers     string:1
+    eval Disc        string:disc
+    eval Circle      string:circle
+    eval Square      string:square
+
+enum htmlMethod prefix:htmlMethod            guid:3050f1f8-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet string: 
+    eval Get    string:get
+    eval Post   string:post
+
+enum htmlWrap prefix:htmlWrap                guid:3050f1fb-98b5-11cf-bb82-00aa00bdce0b
+    eval Off    string:off      value:1
+    eval Soft   string:soft
+    eval Hard   string:hard
+
+enum htmlDir prefix:htmlDir                  guid:3050f1d6-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet       string:
+    eval LeftToRight  string:ltr
+    eval RightToLeft  string:rtl
+
+enum htmlInput prefix:htmlInput              guid:3050f1fe-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet         string:   
+    eval Button         string:button   value:1
+    eval Checkbox       string:checkbox 
+    eval File           string:file
+    eval Hidden         string:hidden
+    eval Image          string:image
+    eval Password       string:password
+    eval Radio          string:radio
+    eval Reset          string:reset
+    eval SelectOne      string:select-one
+    eval SelectMultiple string:select-multiple
+    eval Submit         string:submit
+    eval Text           string:text
+    eval Textarea       string:textarea
+    eval Richtext       string:htmlarea
+
+enum htmlEncoding   prefix:htmlEncoding guid:3050f3e1-98b5-11cf-bb82-00aa00bdce0b
+    eval URL            string:application/x-www-form-urlencoded
+    eval Multipart      string:multipart/form-data
+    eval Text           string:text/plain
+
+enum htmlAdjacency prefix:htmlAdjacency guid:3050f3eb-98b5-11cf-bb82-00aa00bdce0b
+    eval BeforeBegin    value:1
+    eval AfterBegin     value:2
+    eval BeforeEnd      value:3
+    eval AfterEnd       value:4
+
+enum htmlTabIndex prefix:htmlTabIndex guid:3050f626-98b5-11cf-bb82-00aa00bdce0b
+    eval NotSet         value:-32768
+
+enum htmlComponent prefix:htmlComponent           guid:3050f488-98b5-11cf-bb82-00aa00bdce0b
+    eval Client         string:                   value:0
+    eval SbLeft         string:scrollbarLeft   
+    eval SbPageLeft     string:scrollbarPageLeft
+    eval SbHThumb       string:scrollbarHThumb
+    eval SbPageRight    string:scrollbarPageRight
+    eval SbRight        string:scrollbarRight
+    eval SbUp           string:scrollbarUp
+    eval SbPageUp       string:scrollbarPageUp
+    eval SbVThumb       string:scrollbarVThumb
+    eval SbPageDown     string:scrollbarPageDown
+    eval SbDown         string:scrollbarDown
+    eval SbLeft2        string:left
+    eval SbPageLeft2    string:pageLeft
+    eval SbRight2       string:right
+    eval SbPageRight2   string:pageRight
+    eval SbUp2          string:up
+    eval SbPageUp2      string:pageUp
+    eval SbDown2        string:down
+    eval SbPageDown2    string:pageDown
+    eval SbTop          string:top
+    eval SbBottom       string:bottom
+    eval Outside        string:outside
+    eval GHTopLeft      string:handleTopLeft
+    eval GHLeft         string:handleLeft
+    eval GHTop          string:handleTop
+    eval GHBottomLeft   string:handleBottomLeft
+    eval GHTopRight     string:handleTopRight
+    eval GHBottom       string:handleBottom
+    eval GHRight        string:handleRight
+    eval GHBottomRight  string:handleBottomRight
+
+
+
+
+enum htmlApplyLocation prefix:htmlApplyLocation      guid:3050f5a8-98b5-11cf-bb82-00aa00bdce0b
+    eval Inside         string:inside                value:0
+    eval Outside        string:outside  
+
+interface IHTMLElement super:IDispatch guid:3050f1ff-98b5-11cf-bb82-00aa00bdce0b
+    refmethod   CBase:setAttribute
+    refmethod   CBase:getAttribute
+    refmethod   CBase:removeAttribute
+    refprop CElement:className
+    refprop CElement:id
+    refprop CElement:tagName
+    refprop CElement:parentElement
+    refprop CElement:style
+    refprop CElement:onhelp
+    refprop CElement:onclick
+    refprop CElement:ondblclick
+    refprop CElement:onkeydown
+    refprop CElement:onkeyup
+    refprop CElement:onkeypress
+    refprop CElement:onmouseout
+    refprop CElement:onmouseover
+    refprop CElement:onmousemove
+    refprop CElement:onmousedown
+    refprop CElement:onmouseup
+    refprop CElement:document
+    refprop CElement:title
+    refprop CElement:language
+    refprop CElement:onselectstart
+    refmethod   CElement:scrollIntoView
+    refmethod   CElement:contains
+    refprop CElement:sourceIndex
+    refprop CElement:recordNumber
+    refprop CElement:lang
+    refprop CElement:offsetLeft
+    refprop CElement:offsetTop
+    refprop CElement:offsetWidth
+    refprop CElement:offsetHeight
+    refprop CElement:offsetParent
+    refprop CElement:innerHTML
+    refprop CElement:innerText
+    refprop CElement:outerHTML
+    refprop CElement:outerText
+    refmethod CElement:insertAdjacentHTML
+    refmethod CElement:insertAdjacentText
+    refprop CElement:parentTextEdit
+    refprop CElement:isTextEdit
+    refmethod CElement:click
+    refprop CElement:filters
+    refprop CElement:ondragstart
+    refmethod CElement:toString
+    refprop CElement:onbeforeupdate
+    refprop CElement:onafterupdate
+    refprop CElement:onerrorupdate
+    refprop CElement:onrowexit
+    refprop CElement:onrowenter
+    refprop CElement:ondatasetchanged
+    refprop CElement:ondataavailable
+    refprop CElement:ondatasetcomplete
+    refprop CElement:onfilterchange
+    refprop CElement:children
+    refprop CElement:all
+//
+//  DO NOT ADD ANY MORE PROPERTIES OR METHODS HERE.  
+//
+//  IHTMLElement is immutable, add new stuff to IHTMLElement2
+//
+    
+interface IHTMLElement2 guid:3050f434-98b5-11cf-bb82-00aa00bdce0b super:IDispatch
+    refprop     CElement:scopeName
+    refmethod   CElement:setCapture
+    refmethod   CElement:releaseCapture
+    refprop     CElement:onlosecapture
+    refmethod   CElement:componentFromPoint
+    refmethod   CElement:doScroll
+    refprop     CElement:onscroll
+    refprop     CElement:ondrag
+    refprop     CElement:ondragend
+    refprop     CElement:ondragenter
+    refprop     CElement:ondragover
+    refprop     CElement:ondragleave
+    refprop     CElement:ondrop
+    refprop     CElement:onbeforecut
+    refprop     CElement:oncut
+    refprop     CElement:onbeforecopy
+    refprop     CElement:oncopy
+    refprop     CElement:onbeforepaste
+    refprop     CElement:onpaste
+    refprop     CElement:currentStyle
+    refprop     CElement:onpropertychange
+
+    refmethod   CElement:getClientRects
+    refmethod   CElement:getBoundingClientRect
+    refmethod   CBase:setExpression
+    refmethod   CBase:getExpression
+    refmethod   CBase:removeExpression
+
+    refprop     CElement:tabIndex
+    refmethod   CElement:focus
+    refprop     CElement:accessKey
+    refprop     CElement:onblur
+    refprop     CElement:onfocus
+    refprop     CElement:onresize
+    refmethod   CElement:blur
+    refmethod   CElement:addFilter
+    refmethod   CElement:removeFilter
+    refprop     CElement:clientHeight
+    refprop     CElement:clientWidth
+    refprop     CElement:clientTop
+    refprop     CElement:clientLeft
+
+    refmethod   CBase:attachEvent
+    refmethod   CBase:detachEvent
+
+    refprop     CElement:readyState
+    refprop     CElement:onreadystatechange
+
+    refprop     CElement:onrowsdelete
+    refprop     CElement:onrowsinserted
+    refprop     CElement:oncellchange
+
+    refprop     CElement:dir    
+
+    refmethod   CElement:createControlRange
+    refprop     CElement:scrollHeight
+    refprop     CElement:scrollWidth
+    refprop     CElement:scrollTop
+    refprop     CElement:scrollLeft
+
+    refmethod   CElement:clearAttributes
+    refmethod   CElement:mergeAttributes
+
+    refprop     CElement:oncontextmenu
+
+	/* IE5 XOM */
+    refmethod   CElement:insertAdjacentElement
+    refmethod   CElement:applyElement
+    refmethod   CElement:getAdjacentText
+    refmethod   CElement:replaceAdjacentText
+    refprop     CElement:canHaveChildren
+
+    refmethod   CElement:addBehavior
+    refmethod   CElement:removeBehavior
+
+    refprop     CElement:runtimeStyle
+    refprop     CElement:behaviorUrns
+    refprop     CElement:tagUrn
+    refprop     CElement:onbeforeeditfocus
+    refprop     CElement:readyStateValue
+    refmethod   CElement:getElementsByTagName
+   
+#ifdef VSTUDIO7
+    refprop     CElement:baseStyle
+    refprop     CElement:baseCurrentStyle
+    refprop     CElement:baseRuntimeStyle
+    refprop     CElement:onmousehover
+#endif //VSTUDIO7                   
+
+interface IHTMLUniqueName super:IDispatch guid:3050f4d0-98b5-11cf-bb82-00aa00bdce0b
+    refprop     CElement:uniqueNumber
+    refProp     CElement:uniqueID
+
+/* New style element events w/ eventObject parameter: */
+event HTMLElementEvents2 super:IDispatch guid:3050f60f-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onhelp (in type:IHTMLEventObj* arg:pEvtObj)            bubbling cancelable \
+           dispid:DISPID_EVMETH_ONHELP
+    method VARIANT_BOOL onclick (in type:IHTMLEventObj* arg:pEvtObj)           bubbling cancelable \
+           dispid:DISPID_EVMETH_ONCLICK
+    method VARIANT_BOOL ondblclick (in type:IHTMLEventObj* arg:pEvtObj)        bubbling cancelable \
+           dispid:DISPID_EVMETH_ONDBLCLICK
+    method VARIANT_BOOL onkeypress (in type:IHTMLEventObj* arg:pEvtObj)        abstract \
+           dispid:DISPID_EVMETH_ONKEYPRESS
+    method void         onkeydown (in type:IHTMLEventObj* arg:pEvtObj)         abstract \
+           dispid:DISPID_EVMETH_ONKEYDOWN
+    method void         onkeyup (in type:IHTMLEventObj* arg:pEvtObj)           abstract \
+           dispid:DISPID_EVMETH_ONKEYUP
+    method void         onmouseout (in type:IHTMLEventObj* arg:pEvtObj)        abstract \
+           dispid:DISPID_EVMETH_ONMOUSEOUT
+    method void         onmouseover (in type:IHTMLEventObj* arg:pEvtObj)       abstract \
+           dispid:DISPID_EVMETH_ONMOUSEOVER
+    method void         onmousemove (in type:IHTMLEventObj* arg:pEvtObj)       abstract \
+           dispid:DISPID_EVMETH_ONMOUSEMOVE
+    method void         onmousedown (in type:IHTMLEventObj* arg:pEvtObj)       abstract \
+           dispid:DISPID_EVMETH_ONMOUSEDOWN
+    method void         onmouseup (in type:IHTMLEventObj* arg:pEvtObj)         abstract \
+           dispid:DISPID_EVMETH_ONMOUSEUP 
+    method VARIANT_BOOL onselectstart (in type:IHTMLEventObj* arg:pEvtObj)     bubbling cancelable \
+           dispid:DISPID_EVMETH_ONSELECTSTART
+    method void         onfilterchange (in type:IHTMLEventObj* arg:pEvtObj)    abstract \
+           dispid:DISPID_EVMETH_ONFILTER
+    method VARIANT_BOOL ondragstart (in type:IHTMLEventObj* arg:pEvtObj)       bubbling cancelable \
+           dispid:DISPID_EVMETH_ONDRAGSTART
+    method VARIANT_BOOL onbeforeupdate (in type:IHTMLEventObj* arg:pEvtObj)    bubbling cancelable \
+           dispid:DISPID_EVMETH_ONBEFOREUPDATE
+    method void         onafterupdate (in type:IHTMLEventObj* arg:pEvtObj)     bubbling \
+           dispid:DISPID_EVMETH_ONAFTERUPDATE
+    method VARIANT_BOOL onerrorupdate (in type:IHTMLEventObj* arg:pEvtObj)     bubbling cancelable \
+           dispid:DISPID_EVMETH_ONERRORUPDATE
+    method VARIANT_BOOL onrowexit (in type:IHTMLEventObj* arg:pEvtObj)         bubbling cancelable abstract \
+           dispid:DISPID_EVMETH_ONROWEXIT
+    method void         onrowenter (in type:IHTMLEventObj* arg:pEvtObj)        bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWENTER
+    method void         ondatasetchanged (in type:IHTMLEventObj* arg:pEvtObj)  bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATASETCHANGED
+    method void         ondataavailable (in type:IHTMLEventObj* arg:pEvtObj)   bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATAAVAILABLE
+    method void         ondatasetcomplete (in type:IHTMLEventObj* arg:pEvtObj) bubbling abstract \
+           dispid:DISPID_EVMETH_ONDATASETCOMPLETE
+    method void         onlosecapture (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONLOSECAPTURE
+    method void         onpropertychange (in type:IHTMLEventObj* arg:pEvtObj)  abstract \
+           dispid:DISPID_EVMETH_ONPROPERTYCHANGE
+    method void         onscroll (in type:IHTMLEventObj* arg:pEvtObj)          abstract \
+           dispid:DISPID_EVMETH_ONSCROLL
+    method void         onfocus (in type:IHTMLEventObj* arg:pEvtObj)           abstract \
+           dispid:DISPID_EVMETH_ONFOCUS
+    method void         onblur (in type:IHTMLEventObj* arg:pEvtObj)            abstract \
+           dispid:DISPID_EVMETH_ONBLUR
+    method void         onresize (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONRESIZE
+    method VARIANT_BOOL ondrag (in type:IHTMLEventObj* arg:pEvtObj)            bubbling cancelable \
+           dispid:DISPID_EVMETH_ONDRAG
+    method void         ondragend (in type:IHTMLEventObj* arg:pEvtObj)         abstract \
+           dispid:DISPID_EVMETH_ONDRAGEND
+    method VARIANT_BOOL ondragenter (in type:IHTMLEventObj* arg:pEvtObj)       abstract \
+           dispid:DISPID_EVMETH_ONDRAGENTER
+    method VARIANT_BOOL ondragover (in type:IHTMLEventObj* arg:pEvtObj)        abstract \
+           dispid:DISPID_EVMETH_ONDRAGOVER
+    method void         ondragleave (in type:IHTMLEventObj* arg:pEvtObj)       bubbling \
+           dispid:DISPID_EVMETH_ONDRAGLEAVE
+    method VARIANT_BOOL ondrop (in type:IHTMLEventObj* arg:pEvtObj)            abstract \
+           dispid:DISPID_EVMETH_ONDROP
+    method VARIANT_BOOL onbeforecut (in type:IHTMLEventObj* arg:pEvtObj)       bubbling cancelable \
+           dispid:DISPID_EVMETH_ONBEFORECUT
+    method VARIANT_BOOL oncut (in type:IHTMLEventObj* arg:pEvtObj)             bubbling cancelable \
+           dispid:DISPID_EVMETH_ONCUT
+    method VARIANT_BOOL onbeforecopy (in type:IHTMLEventObj* arg:pEvtObj)      bubbling cancelable \
+           dispid:DISPID_EVMETH_ONBEFORECOPY
+    method VARIANT_BOOL oncopy (in type:IHTMLEventObj* arg:pEvtObj)            bubbling cancelable \
+           dispid:DISPID_EVMETH_ONCOPY
+    method VARIANT_BOOL onbeforepaste (in type:IHTMLEventObj* arg:pEvtObj)     bubbling cancelable \
+           dispid:DISPID_EVMETH_ONBEFOREPASTE
+    method VARIANT_BOOL onpaste (in type:IHTMLEventObj* arg:pEvtObj)           bubbling cancelable \
+           dispid:DISPID_EVMETH_ONPASTE
+    method VARIANT_BOOL oncontextmenu (in type:IHTMLEventObj* arg:pEvtObj)     bubbling cancelable \
+           dispid:DISPID_EVMETH_ONCONTEXTMENU   
+    method void         onrowsdelete (in type:IHTMLEventObj* arg:pEvtObj)      bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWSDELETE
+    method void         onrowsinserted (in type:IHTMLEventObj* arg:pEvtObj)    bubbling abstract \
+           dispid:DISPID_EVMETH_ONROWSINSERTED
+    method void         oncellchange (in type:IHTMLEventObj* arg:pEvtObj)      bubbling abstract \
+           dispid:DISPID_EVMETH_ONCELLCHANGE
+    method void         onreadystatechange (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONREADYSTATECHANGE
+#ifdef VSTUDIO7
+    method VARIANT_BOOL onmousehover (in type:IHTMLEventObj* arg:pEvtObj)      bubbling cancelable \
+           dispid:DISPID_EVMETH_ONMOUSEHOVER
+#endif //VSTUDIO7  
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLElementEvents super:IDispatch guid:3050f33c-98b5-11cf-bb82-00aa00bdce0b
+    method VARIANT_BOOL onhelp              cancelable bubbling             dispid:DISPID_EVMETH_ONHELP ()
+    method VARIANT_BOOL onclick             cancelable bubbling             dispid:DISPID_EVMETH_ONCLICK ()
+    method VARIANT_BOOL ondblclick          cancelable bubbling             dispid:DISPID_EVMETH_ONDBLCLICK ()
+    method VARIANT_BOOL onkeypress          abstract                        dispid:DISPID_EVMETH_ONKEYPRESS ()
+    method void         onkeydown           abstract                        dispid:DISPID_EVMETH_ONKEYDOWN ()
+    method void         onkeyup             abstract                        dispid:DISPID_EVMETH_ONKEYUP ()
+    method void         onmouseout          abstract                        dispid:DISPID_EVMETH_ONMOUSEOUT ()
+    method void         onmouseover         abstract                        dispid:DISPID_EVMETH_ONMOUSEOVER ()
+    method void         onmousemove         abstract                        dispid:DISPID_EVMETH_ONMOUSEMOVE ()
+    method void         onmousedown         abstract                        dispid:DISPID_EVMETH_ONMOUSEDOWN ()
+    method void         onmouseup           abstract                        dispid:DISPID_EVMETH_ONMOUSEUP () 
+    method VARIANT_BOOL onselectstart       cancelable bubbling             dispid:DISPID_EVMETH_ONSELECTSTART ()
+    method void         onfilterchange      abstract                        dispid:DISPID_EVMETH_ONFILTER ()
+    method VARIANT_BOOL ondragstart         cancelable bubbling             dispid:DISPID_EVMETH_ONDRAGSTART ()
+    method VARIANT_BOOL onbeforeupdate      bubbling cancelable             dispid:DISPID_EVMETH_ONBEFOREUPDATE ()
+    method void         onafterupdate       bubbling                        dispid:DISPID_EVMETH_ONAFTERUPDATE ()
+    method VARIANT_BOOL onerrorupdate       bubbling cancelable             dispid:DISPID_EVMETH_ONERRORUPDATE ()
+    method VARIANT_BOOL onrowexit           bubbling cancelable abstract    dispid:DISPID_EVMETH_ONROWEXIT ()
+    method void         onrowenter          bubbling abstract               dispid:DISPID_EVMETH_ONROWENTER ()
+    method void         ondatasetchanged    bubbling abstract               dispid:DISPID_EVMETH_ONDATASETCHANGED ()
+    method void         ondataavailable     bubbling abstract               dispid:DISPID_EVMETH_ONDATAAVAILABLE ()
+    method void         ondatasetcomplete   bubbling abstract               dispid:DISPID_EVMETH_ONDATASETCOMPLETE ()
+    method void         onlosecapture                                       dispid:DISPID_EVMETH_ONLOSECAPTURE ()
+    method void         onpropertychange    abstract                        dispid:DISPID_EVMETH_ONPROPERTYCHANGE ()
+    method void         onscroll            abstract                        dispid:DISPID_EVMETH_ONSCROLL ()
+    method void         onfocus             abstract                        dispid:DISPID_EVMETH_ONFOCUS ()
+    method void         onblur              abstract                        dispid:DISPID_EVMETH_ONBLUR ()
+    method void         onresize                                            dispid:DISPID_EVMETH_ONRESIZE ()
+    method VARIANT_BOOL ondrag              bubbling cancelable             dispid:DISPID_EVMETH_ONDRAG ()
+    method void         ondragend           abstract                        dispid:DISPID_EVMETH_ONDRAGEND ()
+    method VARIANT_BOOL ondragenter         abstract                        dispid:DISPID_EVMETH_ONDRAGENTER ()
+    method VARIANT_BOOL ondragover          abstract                        dispid:DISPID_EVMETH_ONDRAGOVER ()
+    method void         ondragleave         bubbling                        dispid:DISPID_EVMETH_ONDRAGLEAVE ()
+    method VARIANT_BOOL ondrop              abstract                        dispid:DISPID_EVMETH_ONDROP ()
+    method VARIANT_BOOL onbeforecut         bubbling cancelable             dispid:DISPID_EVMETH_ONBEFORECUT ()
+    method VARIANT_BOOL oncut               bubbling cancelable             dispid:DISPID_EVMETH_ONCUT ()
+    method VARIANT_BOOL onbeforecopy        bubbling cancelable             dispid:DISPID_EVMETH_ONBEFORECOPY ()
+    method VARIANT_BOOL oncopy              bubbling cancelable             dispid:DISPID_EVMETH_ONCOPY ()
+    method VARIANT_BOOL onbeforepaste       bubbling cancelable             dispid:DISPID_EVMETH_ONBEFOREPASTE ()
+    method VARIANT_BOOL onpaste             bubbling cancelable             dispid:DISPID_EVMETH_ONPASTE ()
+    method VARIANT_BOOL oncontextmenu       bubbling cancelable             dispid:DISPID_EVMETH_ONCONTEXTMENU ()   
+    method void         onrowsdelete        bubbling abstract               dispid:DISPID_EVMETH_ONROWSDELETE ()
+    method void         onrowsinserted      bubbling abstract               dispid:DISPID_EVMETH_ONROWSINSERTED ()
+    method void         oncellchange        bubbling abstract               dispid:DISPID_EVMETH_ONCELLCHANGE ()
+    method void         onreadystatechange                                  dispid:DISPID_EVMETH_ONREADYSTATECHANGE ()
+    method void         onbeforeeditfocus   bubbling cancelable abstract    dispid:DISPID_EVMETH_ONBEFOREEDITFOCUS ()
+#ifdef VSTUDIO7
+    method VARIANT_BOOL onmousehover        bubbling cancelable             dispid:DISPID_EVMETH_ONMOUSEHOVER ()
+#endif //VSTUDIO7    
+
+tearoff CElement interface:IHTMLElement
+#ifdef VSTUDIO7
+    tearmethod get_tagName            mapto:GettagName
+#endif //VSTUDIO7
+
+tearoff CElement interface:IHTMLElement2
+    tearmethod get_tabIndex           mapto:get_tabIndex
+    tearmethod attachEvent            mapto:CBase::attachEvent
+    tearmethod detachEvent            mapto:CBase::detachEvent
+#ifdef VSTUDIO7
+    tearmethod get_scopeName          mapto:GetscopeName
+#endif //VSTUDIO7
+
+tearoff CElement interface:IHTMLDatabinding 
+
+tearoff CElement interface:IObjectIdentity  
+    tearmethod IsEqualObject            mapto:IsEqualObject
+
+tearoff CElement interface:IPerPropertyBrowsing BaseImpl:super::
+
+tearoff CElement interface:IHTMLDOMNode
+
+tearoff CElement interface:IHTMLUniqueName
+
+tearoff CElement interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID                mapto:GetDispID
+    tearmethod Invoke                   mapto:ContextThunk_Invoke
+    tearmethod InvokeEx                 mapto:ContextThunk_InvokeEx
+    tearmethod GetNameSpaceParent       mapto:GetNameSpaceParent
+    tearmethod GetNextDispID            mapto:GetNextDispID
+    tearmethod GetMemberName            mapto:GetMemberName
+
+class CElement \
+        primaryinterface:IHTMLElement \
+        super:CBase \
+        events:HTMLElementEvents \
+        nonprimaryevents:HTMLElementEvents2 \
+        abstract
+
+// Need to have resize flag becase changing the className may change the style completely
+    property className  szAttribute:class atype:BSTR          dispid:DISPID_ELEMENT+1        type:CStr \
+    get set caa bindable dwFlags:ELEMCHNG_REMEASUREINPARENT updatecollection clearcaches remeasureall maxstrlen:pdlNoLimit
+// Note ID is read/only at runtime
+// Need to have resize flag becase changing the ID may change the style completely
+    property id            atype:BSTR          dispid:DISPID_ELEMENT+2        type:CStr \
+       get set setaahr method:IDHelper bindable clearcaches remeasure   maxstrlen:pdlNoLimit
+// member: can be any valid member - but must be present
+    property style_Str   szAttribute:style atype:BSTR          dispid:DISPID_ELEMENT+3          type:CStyle  \
+        member:__pNodeFirstBranch clearcaches maxstrlen:pdlNoLimit // BUGBUG: (anandra) RGardner will cleanup this up
+#ifdef VSTUDIO7
+    property tagName                         atype:BSTR          dispid:DISPID_ELEMENT+4        type:CStr  \
+		caa     get setaahr nopersist maxstrlen:pdlNoLimit 
+#else    
+    property tagName                         atype:BSTR          dispid:DISPID_ELEMENT+4        type:CStr  \
+		abstract     get
+#endif //VSTUDIO7
+    property parentElement  atype:IHTMLElement*     dispid:STDPROPID_XOBJ_PARENT type:IHTMLElement* \
+    abstract     help:f3proParent   get nodecontextual
+
+    property style  szAttribute:styleobj atype:IHTMLStyle*       dispid:STDPROPID_XOBJ_STYLE  type:IHTMLStyle*  \
+        abstract get   nonbrowsable
+
+    // uniqueName that is not available on IHTMLElement, internal only
+    property uniqueName                      atype:BSTR          dispid:DISPID_ELEMENT+5        type:CStr \
+    get setaahr caa nopersist internal
+    // submitName that is not available on IHTMLElement, internal only
+    // AT browse time, if you write to the name property, you actualy write to the submitName
+    property submitName                      atype:BSTR          dispid:DISPID_ELEMENT+6        type:CStr \
+    get setaahr caa nopersist internal
+    // I need this propdesc internaly to handle abstract name properties, but I don't want to
+    // parse/save the HTML
+    property propdescname                      atype:BSTR          dispid:STDPROPID_XOBJ_NAME   type:CStr \
+        caa nopersist internal
+
+    //scriplet event properties
+    property onhelp         caa atype:VARIANT    dispid:DISPID_EVPROP_ONHELP       type:code \
+    scriptlet   get set bindable displaybind baseimplementation maxstrlen:pdlEvent
+    property onclick        caa atype:VARIANT    dispid:DISPID_EVPROP_ONCLICK      type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondblclick     caa atype:VARIANT    dispid:DISPID_EVPROP_ONDBLCLICK   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onmouseout     caa atype:VARIANT    dispid:DISPID_EVPROP_ONMOUSEOUT   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onmouseover    caa atype:VARIANT    dispid:DISPID_EVPROP_ONMOUSEOVER  type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onmouseup      caa atype:VARIANT    dispid:DISPID_EVPROP_ONMOUSEUP    type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onmousedown    caa atype:VARIANT    dispid:DISPID_EVPROP_ONMOUSEDOWN  type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onmousemove    caa atype:VARIANT    dispid:DISPID_EVPROP_ONMOUSEMOVE  type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onkeyup        caa atype:VARIANT    dispid:DISPID_EVPROP_ONKEYUP      type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onkeydown      caa atype:VARIANT    dispid:DISPID_EVPROP_ONKEYDOWN    type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onkeypress     caa atype:VARIANT    dispid:DISPID_EVPROP_ONKEYPRESS   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onselectstart      caa atype:VARIANT       dispid:DISPID_EVPROP_ONSELECTSTART      type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onfilterchange     caa atype:VARIANT   dispid:DISPID_EVPROP_ONFILTER    type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondragstart    caa atype:VARIANT   dispid:DISPID_EVPROP_ONDRAGSTART    type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onlosecapture  caa atype:VARIANT dispid:DISPID_EVPROP_ONLOSECAPTURE type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onscroll  atype:VARIANT type:code dispid:DISPID_EVPROP_ONSCROLL   caa scriptlet \
+    get set bindable displaybind baseimplementation maxstrlen:pdlEvent
+
+    property ondrag         caa atype:VARIANT dispid:DISPID_EVPROP_ONDRAG        type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondragend      caa atype:VARIANT dispid:DISPID_EVPROP_ONDRAGEND     type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondragenter    caa atype:VARIANT dispid:DISPID_EVPROP_ONDRAGENTER   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondragover     caa atype:VARIANT dispid:DISPID_EVPROP_ONDRAGOVER    type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondragleave    caa atype:VARIANT dispid:DISPID_EVPROP_ONDRAGLEAVE   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property ondrop         caa atype:VARIANT dispid:DISPID_EVPROP_ONDROP        type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onbeforecut    caa atype:VARIANT dispid:DISPID_EVPROP_ONBEFORECUT   type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property oncut          caa atype:VARIANT dispid:DISPID_EVPROP_ONCUT         type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onbeforecopy   caa atype:VARIANT dispid:DISPID_EVPROP_ONBEFORECOPY  type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property oncopy         caa atype:VARIANT dispid:DISPID_EVPROP_ONCOPY        type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onbeforepaste  caa atype:VARIANT dispid:DISPID_EVPROP_ONBEFOREPASTE type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+    property onpaste        caa atype:VARIANT dispid:DISPID_EVPROP_ONPASTE       type:code \
+    scriptlet   get set bindable displaybind    maxstrlen:pdlEvent
+
+    property document   atype:IDispatch*    dispid:DISPID_ELEMENT+18         type:IDispatch* \
+    abstract get virtual
+    property language   atype:BSTR          dispid:DISPID_A_LANGUAGE         type:CStr       \
+    get set caa bindable displaybind maxstrlen:pdlToken
+
+    property currentStyle atype:IHTMLCurrentStyle* dispid:DISPID_ELEMENT+7 type:IHTMLCurrentStyle* \
+        abstract get nonbrowsable nodecontextual
+    property offsetLeft   atype:long           dispid:DISPID_ELEMENT+8    type:long           \
+    abstract get
+    property offsetTop    atype:long           dispid:DISPID_ELEMENT+9    type:long           \
+    abstract get
+    property offsetWidth  atype:long           dispid:DISPID_ELEMENT+10   type:long           \
+    abstract get
+    property offsetHeight atype:long           dispid:DISPID_ELEMENT+11   type:long           \
+    abstract get
+    property offsetParent atype:IHTMLElement*  dispid:DISPID_ELEMENT+12   type:IHTMLElement*  \
+    abstract get
+
+    method    HRESULT     scrollIntoView    maxstrlen:pdlToken   dispid:DISPID_ELEMENT+19 \
+                            (in optional type:VARIANT arg:varargStart)
+    method    HRESULT       contains          dispid:DISPID_ELEMENT+20 \
+    (in type:IHTMLElement* arg:pChild, out retval type:VARIANT_BOOL* arg:pfResult)
+
+
+//  we use baseimplementation to allow us to have our own hand-coded
+//  implementation of get_ and put_methods.  In fact, the methods are actually
+//  declared for CElement by hand in element.hxx.
+
+    property   dataFld  atype:BSTR  dispid:DISPID_ELEMENT+21 type:CStr \
+    get set caa baseimplementation  maxstrlen:pdlNoLimit
+    property   dataSrc  atype:BSTR  dispid:DISPID_ELEMENT+22 type:CStr  \
+    get set caa baseimplementation  maxstrlen:pdlNoLimit
+    property   dataFormatAs  atype:BSTR  dispid:DISPID_ELEMENT+23 type:CStr \
+    get set caa baseimplementation  maxstrlen:pdlToken
+
+    property dir atype:BSTR dispid:DISPID_A_DIR type:htmlDir dwFlags:0 \
+    caa get set bindable displaybind baseimplementation maxstrlen:pdlToken
+
+    property title          atype:BSTR   dispid:STDPROPID_XOBJ_CONTROLTIPTEXT       type:CStr \
+        dwFlags:0   caa get set bindable displaybind help:f3proControlTipText   maxstrlen:pdlNoLimit
+    property sourceIndex    atype:long    dispid:DISPID_ELEMENT+24    type:long  \
+    abstract     get bindable
+
+    property recordNumber dispid:DISPID_ELEMENT+25 atype:VARIANT type:long abstract get
+    
+    property lang dispid:DISPID_A_LANG atype:BSTR type:CStr get set caa maxstrlen:pdlLength
+
+    //
+    // Element pasting properties/methods
+    //
+
+    property innerHTML atype:BSTR dispid:DISPID_ELEMENT+26 type:CStr abstract get set dwFlags:ELEMCHNG_REMEASUREINPARENT clearcaches maxstrlen:pdlNoLimit
+    property innerText atype:BSTR dispid:DISPID_ELEMENT+27 type:CStr abstract get set dwFlags:ELEMCHNG_REMEASUREINPARENT clearcaches maxstrlen:pdlNoLimit
+    property outerHTML atype:BSTR dispid:DISPID_ELEMENT+28 type:CStr abstract get set dwFlags:ELEMCHNG_REMEASUREINPARENT clearcaches maxstrlen:pdlNoLimit
+    property outerText atype:BSTR dispid:DISPID_ELEMENT+29 type:CStr abstract get set dwFlags:ELEMCHNG_REMEASUREINPARENT clearcaches maxstrlen:pdlNoLimit
+
+    method   HRESULT insertAdjacentHTML maxstrlen:pdlNoLimit dispid:DISPID_ELEMENT+30 (in type:BSTR arg:where   in type:BSTR arg:html)
+    method   HRESULT insertAdjacentText maxstrlen:pdlNoLimit dispid:DISPID_ELEMENT+31 (in type:BSTR arg:where   in type:BSTR arg:text)
+
+    property parentTextEdit atype:IHTMLElement* dispid:DISPID_ELEMENT+32 type:IHTMLElement* abstract help:f3proParentStory abstract get
+
+    property isTextEdit atype:VARIANT_BOOL dispid:DISPID_ELEMENT+34 type:VARIANT_BOOL abstract get
+
+    method   HRESULT click              dispid:DISPID_ELEMENT+33 () nodecontextual
+
+    property filters    aType:IHTMLFiltersCollection*   dispid:DISPID_ELEMENT+35    \
+    get abstract
+
+    method HRESULT   toString   dispid:DISPID_ELEMENT+36  \ 
+    (out retval type:BSTR* arg:String ) 
+
+    property onpropertychange    atype:VARIANT  dispid:DISPID_EVPROP_ONPROPERTYCHANGE  type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onbeforeupdate      atype:VARIANT  dispid:DISPID_EVPROP_ONBEFOREUPDATE    type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onafterupdate       atype:VARIANT  dispid:DISPID_EVPROP_ONAFTERUPDATE     type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent  
+    property onerrorupdate       atype:VARIANT  dispid:DISPID_EVPROP_ONERRORUPDATE     type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+
+    property onrowexit           atype:VARIANT  dispid:DISPID_EVPROP_ONROWEXIT         type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property onrowenter          atype:VARIANT  dispid:DISPID_EVPROP_ONROWENTER        type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property ondatasetchanged    atype:VARIANT  dispid:DISPID_EVPROP_ONDATASETCHANGED  type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property ondataavailable     atype:VARIANT  dispid:DISPID_EVPROP_ONDATAAVAILABLE   type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property ondatasetcomplete   atype:VARIANT  dispid:DISPID_EVPROP_ONDATASETCOMPLETE type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property onrowsdelete        atype:VARIANT  dispid:DISPID_EVPROP_ONROWSDELETE      type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property onrowsinserted      atype:VARIANT  dispid:DISPID_EVPROP_ONROWSINSERTED    type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property oncellchange        atype:VARIANT  dispid:DISPID_EVPROP_ONCELLCHANGE      type:code  get set caa bindable displaybind scriptlet dataevent maxstrlen:pdlEvent
+    property oncontextmenu       atype:VARIANT  dispid:DISPID_EVPROP_ONCONTEXTMENU     type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onbeforeeditfocus   atype:VARIANT  dispid:DISPID_EVPROP_ONBEFOREEDITFOCUS type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+
+    property children  atype:IDispatch*  get abstract dispid:DISPID_ELEMENT+37
+    property all atype:IDispatch* get abstract dispid:DISPID_ELEMENT+38
+    
+#ifdef VSTUDIO7
+    property scopeName                         atype:BSTR   dispid:DISPID_ELEMENT+39   type:CStr \
+	caa     get setaahr nopersist maxstrlen:pdlNoLimit
+#else
+    property scopeName                         atype:BSTR   dispid:DISPID_ELEMENT+39   type:CStr  abstract    get
+#endif //VSTUDIO7
+
+    method HRESULT setCapture                   dispid:DISPID_ELEMENT+40 (in type:VARIANT_BOOL defaultvalue:-1 arg:containerCapture)
+    method HRESULT releaseCapture               dispid:DISPID_ELEMENT+41 ()
+    method HRESULT componentFromPoint           dispid:DISPID_ELEMENT+42 (in type:long arg:x \
+                                                        in type:long arg:y \
+                                                        out retval type:BSTR* arg:component)
+    method HRESULT doScroll maxstrlen:pdlToken dispid:DISPID_ELEMENT+43  (in optional type:VARIANT arg:component)
+    method HRESULT getClientRects        dispid:DISPID_ELEMENT+44 (out retval type:IHTMLRectCollection** arg:pRectCol)
+    method HRESULT getBoundingClientRect dispid:DISPID_ELEMENT+45 (out retval type:IHTMLRect** arg:pRect)
+
+    //
+    // CSite properties and methods moved from IHTMLControlElement
+    //
+
+    property tabIndex  atype:short  type:short default:htmlTabIndexNotSet  dispid:STDPROPID_XOBJ_TABINDEX \
+        dwFlags:0  caa get set bindable displaybind help:f3proTabIndex
+    property disabled      atype:VARIANT_BOOL dispid:STDPROPID_XOBJ_DISABLED \
+        type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0 accessibilitystate getaa
+
+    method HRESULT focus dispid:DISPID_SITE+0
+    method HRESULT blur dispid:DISPID_SITE+2
+
+    property onblur        atype:VARIANT       dispid:DISPID_EVPROP_ONBLUR   \
+        type:code  get set caa bindable displaybind scriptlet baseimplementation    maxstrlen:pdlEvent
+    property onfocus       atype:VARIANT       dispid:DISPID_EVPROP_ONFOCUS  \
+        type:code  get set caa bindable displaybind scriptlet baseimplementation    maxstrlen:pdlEvent
+    property accessKey  caa atype:BSTR      dispid:DISPID_SITE+5    type:CStr   \
+        clearcaches     updatecollection    get set bindable displaybind    maxstrlen:pdlToken
+
+    property onresize      atype:VARIANT      dispid:DISPID_EVPROP_ONRESIZE  type:code   \
+        get set caa bindable displaybind scriptlet baseimplementation   maxstrlen:pdlEvent
+
+    method HRESULT addFilter  (in type:IUnknown* arg:pUnk) restricted dispid:DISPID_SITE+17
+    method HRESULT removeFilter (in type:IUnknown* arg:pUnk) restricted dispid:DISPID_SITE+18
+
+    property clientHeight        abstract atype:long dispid:DISPID_SITE+19  \
+           type:long get     displaybind 
+    property clientWidth         abstract atype:long dispid:DISPID_SITE+20  \
+           type:long get     displaybind 
+    property clientTop           abstract atype:long dispid:DISPID_SITE+21  \
+           type:long get     displaybind 
+    property clientLeft          abstract atype:long dispid:DISPID_SITE+22  \
+           type:long get     displaybind 
+
+    property nodeType       atype:long          get abstract dispid:DISPID_ELEMENT+46
+    property parentNode     atype:IHTMLDOMNode* get abstract dispid:DISPID_ELEMENT+47
+    method HRESULT hasChildNodes  dispid:DISPID_ELEMENT+48 (out retval type:VARIANT_BOOL* arg:fChildren) 
+    property childNodes     atype:IDispatch*    get abstract dispid:DISPID_ELEMENT+49
+    property attributes     atype:IDispatch*    get abstract dispid:DISPID_ELEMENT+50
+
+    method HRESULT insertBefore maxstrlen:pdlNoLimit dispid:DISPID_ELEMENT+51 (in type:IHTMLDOMNode* arg:newChild, in optional type:VARIANT arg:refChild, out retval type:IHTMLDOMNode** arg:node)
+    method HRESULT removeChild dispid:DISPID_ELEMENT+52 (in type:IHTMLDOMNode* arg:oldChild, out retval type:IHTMLDOMNode** arg:node)
+    method HRESULT replaceChild dispid:DISPID_ELEMENT+53 (in type:IHTMLDOMNode* arg:newChild, in type:IHTMLDOMNode* arg:oldChild, out retval type:IHTMLDOMNode** arg:node)
+
+    property    uniqueNumber    atype:long get abstract dispid:DISPID_ELEMENT+54 hidden
+    property    uniqueID        atype:BSTR get abstract dispid:DISPID_ELEMENT+55 hidden
+
+    property readyState atype:VARIANT dispid:DISPID_A_READYSTATE abstract get
+    property onreadystatechange atype:VARIANT type:code dispid:DISPID_EVPROP_ONREADYSTATECHANGE  caa scriptlet get set bindable displaybind maxstrlen:pdlEvent
+
+    method   HRESULT  createControlRange dispid:DISPID_ELEMENT+56  (out retval type:IDispatch** arg:range)
+    property scrollHeight        abstract atype:long dispid:DISPID_ELEMENT+57 internal \
+             type:long get     displaybind default:NULL_UNITVALUE
+    property scrollWidth         abstract atype:long dispid:DISPID_ELEMENT+58 internal \
+             type:long get     displaybind default:NULL_UNITVALUE
+    property scrollTop           abstract atype:long dispid:DISPID_ELEMENT+59 internal \
+             type:long get set displaybind default:NULL_UNITVALUE
+    property scrollLeft          abstract atype:long dispid:DISPID_ELEMENT+60 internal \
+             type:long get set displaybind default:NULL_UNITVALUE
+
+    method   HRESULT  cloneNode dispid:DISPID_ELEMENT+61  (in type:VARIANT_BOOL arg:fDeep, out retval type:IHTMLDOMNode** arg:clonedNode) 
+    method   HRESULT  clearAttributes dispid:DISPID_ELEMENT+62
+    method   HRESULT  mergeAttributes dispid:DISPID_ELEMENT+63 (in type:IHTMLElement* arg:mergeThis)
+    method   HRESULT appendChild dispid:DISPID_ELEMENT+73 (in type:IHTMLDOMNode* arg:newChild, out retval type:IHTMLDOMNode** arg:node)
+	property nodeName atype:BSTR get abstract dispid:DISPID_ELEMENT+74
+	property nodeValue atype:VARIANT get set abstract dispid:DISPID_ELEMENT+75 maxstrlen:pdlNoLimit
+	property firstChild atype:IHTMLDOMNode* get abstract dispid:DISPID_ELEMENT+76
+	property lastChild 	atype:IHTMLDOMNode* get abstract dispid:DISPID_ELEMENT+77
+	property previousSibling atype:IHTMLDOMNode* get abstract dispid:DISPID_ELEMENT+78
+	property nextSibling atype:IHTMLDOMNode* get abstract dispid:DISPID_ELEMENT+79
+
+    // IE5 XOM extensions  
+    method HRESULT applyElement maxstrlen:pdlToken dispid:DISPID_ELEMENT+65 (in type:IHTMLElement* arg:apply, in type:BSTR arg:where, out retval type:IHTMLElement** arg:applied)
+    method HRESULT removeNode dispid:DISPID_ELEMENT+66 (in type:VARIANT_BOOL defaultvalue:0 arg:fDeep, out retval type:IHTMLDOMNode** arg:removed)
+    method HRESULT replaceNode dispid:DISPID_ELEMENT+67 (in type:IHTMLDOMNode* arg:replacement, out retval type:IHTMLDOMNode** arg:replaced)
+    method HRESULT swapNode dispid:DISPID_ELEMENT+68 (in type:IHTMLDOMNode* arg:otherNode, out retval type:IHTMLDOMNode** arg:swappedNode)
+    method HRESULT insertAdjacentElement maxstrlen:pdlToken dispid:DISPID_ELEMENT+69 (in type:BSTR arg:where, in type:IHTMLElement* arg:insertedElement, out retval type:IHTMLElement** arg:inserted)
+    method HRESULT getAdjacentText maxstrlen:pdlToken dispid:DISPID_ELEMENT+70 (in type:BSTR arg:where, out retval type:BSTR* arg:text)
+    method HRESULT replaceAdjacentText maxstrlen:pdlNoLimit dispid:DISPID_ELEMENT+71 (in type:BSTR arg:where, in type:BSTR arg:newText, out retval type:BSTR* arg:oldText)
+    property canHaveChildren atype:VARIANT_BOOL dispid:DISPID_ELEMENT+72 type:VARIANT_BOOL abstract get
+
+    method HRESULT addBehavior dispid:DISPID_ELEMENT+80  maxstrlen:pdlNoLimit   \
+        (in          type:BSTR                      arg:bstrUrl,                \
+         in optional type:VARIANT*                  arg:pvarFactory,            \
+         out retval  type:long*                     arg:pCookie)
+
+    method HRESULT removeBehavior dispid:DISPID_ELEMENT+81                      \
+        (in         type:long                       arg:cookie                  \
+         out retval type:VARIANT_BOOL*              arg:pfResult)
+
+    property runtimeStyle  atype:IHTMLStyle*       dispid:DISPID_ELEMENT+64  type:IHTMLStyle*  \
+        abstract get   nonbrowsable
+
+    property behaviorUrns atype:IDispatch* get     abstract dispid:DISPID_ELEMENT+82
+    property tagUrn       atype:BSTR       get set abstract dispid:DISPID_ELEMENT+83 maxstrlen:pdlUrlLen
+
+    property readyStateValue atype:long dispid:DISPID_ELEMENT+84 abstract get hidden restricted
+
+    method HRESULT getElementsByTagName dispid:DISPID_ELEMENT+85    \
+        (in type:BSTR arg:v,                                           \
+         out retval type:IHTMLElementCollection** arg:pelColl)         \
+         maxstrlen:pdlNoLimit
+
+#ifdef VSTUDIO7
+    property baseStyle  atype:IHTMLStyle*       dispid:DISPID_ELEMENT+86  type:IHTMLStyle*  \
+        abstract get   nonbrowsable
+        
+    property baseCurrentStyle atype:IHTMLCurrentStyle* dispid:DISPID_ELEMENT+87 type:IHTMLCurrentStyle* \
+        abstract get nonbrowsable nodecontextual
+        
+    property baseRuntimeStyle  atype:IHTMLStyle*       dispid:DISPID_ELEMENT+88  type:IHTMLStyle*  \
+        abstract get   nonbrowsable
+
+    property onmousehover atype:VARIANT dispid:DISPID_EVPROP_ONMOUSEHOVER type:code  \
+        get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+#endif //VSTUDIO7
+
+interface IHTMLDatabinding guid:3050f3f2-98b5-11cf-bb82-00aa00bdce0b super:IDispatch 
+    refprop CElement:dataFld
+    refprop CElement:dataSrc
+    refprop CElement:dataFormatAs
+
+#endif //_ELEMENT_PDL_

@@ -1,0 +1,33 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=profile
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib
+
+INCLUDES=
+
+C_DEFINES=-DWIN32 -DUNICODE -D_UNICODE
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+SOURCES=init.c \
+        profile.c\
+        names.c\
+        profile.rc

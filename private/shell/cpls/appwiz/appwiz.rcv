@@ -1,0 +1,13 @@
+/********************************************************************/
+/*        CONTROL.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#include <ntverp.h>
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Shell Application Manager"
+#define VER_INTERNALNAME_STR		"APPWIZ"
+#define VER_ORIGINALFILENAME_STR	"APPWIZ.CPL"
+
+#include <common.ver>

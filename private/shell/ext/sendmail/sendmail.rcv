@@ -1,0 +1,12 @@
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEVERSION				VER_PRODUCTVERSION
+#define VER_FILEVERSION_STR			VER_PRODUCTVERSION_STR
+#define VER_FILEDESCRIPTION_STR     "Send Mail"
+#define VER_INTERNALNAME_STR        "sendmail"
+#define VER_ORIGINALFILENAME_STR    "SENDMAIL.DLL"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>

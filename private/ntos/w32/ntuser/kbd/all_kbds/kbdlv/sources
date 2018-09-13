@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdlv
+
+TARGETNAME=kbdlv
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdlv.c kbdlv.rc
+
+NTTARGETFILE0=kbdlv.h kbdlv.rc kbdlv.def

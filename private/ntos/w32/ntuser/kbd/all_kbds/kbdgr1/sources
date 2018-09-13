@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdgr1
+
+TARGETNAME=kbdgr1
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdgr1.c kbdgr1.rc
+
+NTTARGETFILE0=kbdgr1.h kbdgr1.rc kbdgr1.def

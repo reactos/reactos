@@ -1,0 +1,31 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    dirs.
+
+Abstract:
+
+    This file specifies the subdirectories of the current directory that
+    contain component makefiles.
+
+
+Author:
+
+    Steve Wood (stevewo) 17-Apr-1990
+
+
+Revision History:
+
+    William Hsieh(williamh) 5-March-1997
+        Created from template.
+
+!ENDIF
+
+
+DIRS=devmgr
+
+
+OPTIONAL_DIRS=

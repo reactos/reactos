@@ -1,0 +1,85 @@
+#include "windows.h"
+#include "poltest.h"
+
+Poltest ICON Poltest.ICO
+
+Poltest MENU
+BEGIN
+        POPUP "&File"
+        {
+                MENUITEM "&Clear Window",                IDM_CLEARWINDOW
+                MENUITEM "&Save As...",                  IDM_SAVEAS
+                MENUITEM SEPARATOR
+                MENUITEM "E&xit",                        IDM_EXIT
+        }
+
+        POPUP "&Policy"
+        {
+                MENUITEM "Update &Machine Policy Now",   IDM_UPDATE_MACHINE
+                MENUITEM "Update &User Policy Now",      IDM_UPDATE_USER
+                MENUITEM SEPARATOR
+                MENUITEM "Pause Machine Policy",         IDM_PAUSE_MACHINE
+                MENUITEM "Resume Machine Policy",        IDM_RESUME_MACHINE
+                MENUITEM SEPARATOR
+                MENUITEM "Pause User Policy",            IDM_PAUSE_USER
+                MENUITEM "Resume User Policy",           IDM_RESUME_USER
+                MENUITEM SEPARATOR
+                MENUITEM "Apply Policy Synchronously",   IDM_SYNCPOLICY
+        }
+
+        POPUP "&Options"
+        {
+                MENUITEM "&Verbose output to Event Log", IDM_VERBOSE
+                MENUITEM "Start &Event Viewer",          IDM_EVENTVWR
+                MENUITEM SEPARATOR
+                MENUITEM "Get &User Name...",            IDM_USERNAME
+                MENUITEM "Get &Computer Name...",        IDM_COMPUTERNAME
+                MENUITEM "Get &Site Name...",            IDM_SITENAME
+                MENUITEM "Get &PDC Name...",             IDM_PDCNAME
+        }
+
+        POPUP "&GPO Information"
+        {
+                MENUITEM "&Set Domain Controller List...",   IDM_DCLIST
+                MENUITEM SEPARATOR
+                MENUITEM "Show one &GPO's Info...",      IDM_CHECKGPO
+        }
+END
+
+
+DOMAIN_INFO DIALOG 73, 83, 251, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Domain Information"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Domain Name  (eg:  mydomain.microsoft.com):", -1, 7, 12,
+                    157, 8
+    EDITTEXT        IDC_NAME, 7, 26, 167, 12, ES_AUTOHSCROLL
+    LTEXT           "Domain Controllers (eg:  dc1;dc2;dc3):",
+                    -1, 7, 57, 180, 8
+    EDITTEXT        IDC_DCLIST, 7, 68, 167, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK", IDOK, 193, 11, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 193, 28, 50, 14
+END
+
+GPO_NAME DIALOG 73, 83, 251, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Show one GPO's information from all domain controllers"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "GPO Name  (eg:  {GUID}):", -1, 7, 12,
+                    157, 8
+    EDITTEXT        IDC_NAME, 7, 26, 167, 12, ES_AUTOHSCROLL
+
+    CONTROL         "&Show version information"
+                    IDC_VERSION,"Button",BS_AUTOCHECKBOX | BS_LEFT | BS_TOP |
+                    WS_TABSTOP,7,47,100,16
+
+    CONTROL         "&Show registry information"
+                    IDC_REGISTRY,"Button",BS_AUTOCHECKBOX | BS_LEFT | BS_TOP |
+                    WS_TABSTOP,7,62,100,16
+
+    DEFPUSHBUTTON   "OK", IDOK, 193, 11, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 193, 28, 50, 14
+    PUSHBUTTON      "&Browse...", IDC_BROWSE, 193, 45, 50, 14
+END

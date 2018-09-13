@@ -1,0 +1,256 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+//Versioning definition
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Event Translator Config Tool"
+#define VER_INTERNALNAME_STR        "eventcmt.exe"
+#define VER_ORIGINALFILENAME_STR    "eventcmt.exe"
+
+#include "common.ver"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "#include ""afxres.rc""  // Standard components\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+    IDS_LOG_FILE            "eventcmt.log"
+    IDS_KEYNAME             "SYSTEM\\CurrentControlSet\\Services\\EventLog\\"
+    IDS_VALUENAME           "EventMessageFile"
+    IDS_SNMP_AGENT          "SOFTWARE\\Microsoft\\SNMP_EVENTS\\EventLog\\Sources"
+    IDS_SNMP                "SYSTEM\\CurrentControlSet\\Services\\SNMP"
+    IDS_APPEND              "Append"
+    IDS_ENTOID              "EnterpriseOID"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About config..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COUNT               "Count"
+    IDS_FULLID              "FullID"
+    IDS_TIME                "Time"
+    IDS_TRAP_CONF           "SYSTEM\\CurrentControlSet\\Services\\SNMP\\Parameters\\TrapConfiguration"
+    IDS_SMS_INSTALL         "SOFTWARE\\Microsoft\\SMS\\Identification"
+    IDS_SMS_TRACE           "SOFTWARE\\Microsoft\\SMS\\TRACING\\SMS_USER_INTERFACE"
+    IDS_TEMP                "Environment"
+    IDS_FILENAME            "eventcmt"
+    IDS_MANUFAC             "Microsoft"
+    IDS_VER                 "1.2"
+    IDS_LOC                 "ENU"
+    IDS_SERNO               "XXX-XXX"
+    IDS_PROD                "SMS"
+    IDS_IFILE               "Could not open the input file."
+    IDS_INSTALL             "The tool cannot be run unless the Eventrap software is installed."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOLOGFILE           "Could not create/open log file."
+    IDS_SYNTAX_ERROR        "At least one command line failed. If a logfile was generated it will contain further information. SYNTAX ERROR"
+    IDS_REGREAD             "Error reading the registry. For more information see the logfile."
+    IDS_STARTSTOPSNMP       "Failed to Stop and Start the SNMP service after changing trap destination settings."
+    IDS_STARTSNMP           "The SNMP service was Stopped but failed to Re-start after changing trap destination settings."
+    IDS_REGWRITE            "Error writing to the registry. For more information see the logfile."
+    IDS_REGERROR            "An error occurred processing the command. For more information see the logfile."
+    IDS_ARG_NOMIF           "/NOMIF"
+    IDS_ARG_NOLOG           "/NOLOG"
+    IDS_INVALIDARGS         "Invalid Command Line Arguments"
+    IDS_SPACE               "\t "
+    IDS_DIRSEP              "\\"
+    IDS_PRAGMA              "#pragma"
+    IDS_ADD                 "ADD"
+    IDS_DEL                 "DELETE"
+    IDS_ADDTRAP             "ADD_TRAP_DEST"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DELTRAP             "DELETE_TRAP_DEST"
+    IDS_TAB                 "\t"
+    IDS_NL                  "\n"
+    IDS_MSG1                "Duplicate entry not added"
+    IDS_MSG2                "Address will be added to the Community Name"
+    IDS_MSG3                "Community Name will be added with address"
+    IDS_MSG4                "Address will be removed from Community Name"
+    IDS_MSG5                "Address not found for this community name. This command failed"
+    IDS_MSG6                "Removing the last Address from the community name, community name will also be removed"
+    IDS_MSG7                "Community name has no addresses it will be removed"
+    IDS_MSG8                "Community name not found. This command failed"
+    IDS_MSG9                "Error, key could not be opened for deletion"
+    IDS_MSG10               "Error, line could not deleted"
+    IDS_MSG11               "Line deleted"
+    IDS_MSG12               "Error deleting subkeys"
+    IDS_MSG13               "Error, subkey could not be opened"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG14               "Error, subkey could not deleted"
+    IDS_MSG15               "Unable to create registry entry"
+    IDS_MSG16               "Line added"
+    IDS_COMMENT             ";"
+    IDS_MSG17               " ###Comment line ignored"
+    IDS_MSG18               " ###Missing #pragma"
+    IDS_MSG19               " ###Missing or invalid command type"
+    IDS_MSG20               "*** FILE READ IN ***"
+    IDS_MSG21               " command lines ignored."
+    IDS_MSG22               " command lines will be processed."
+    IDS_MSG23               " ###Invalid or missing community name"
+    IDS_MSG24               "*** READING IN FILE ***"
+    IDS_MSG25               " ###Invalid or missing network address"
+    IDS_MSG26               " ###Too many arguments within command"
+    IDS_MSG27               " *** Valid line found"
+    IDS_MSG28               " ###Invalid or missing event log"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG29               " ###Invalid or missing event source"
+    IDS_MSG30               " ###Invalid event id"
+    IDS_MSG31               " ###Count not a valid positive integer"
+    IDS_MSG32               " ###Time must be a positive integer and count > 1"
+    IDS_MSG33               "*** Write MIF file failed ***"
+    IDS_MSG34               "*** Failed to get procedure address from DLL ***"
+    IDS_MSG35               "*** Failed to load status mif dll ***  ...   "
+    IDS_STATMIFDLL          "ismif32.dll"
+    IDS_QUOTE               """"
+    IDS_ASPACE              " "
+    IDS_MSG36               "*** Error reading current trap configuration from the registry. Trap Destinations unchanged ***"
+    IDS_MSG37               "*** Error contacting the SNMP service. ***"
+    IDS_MSG38               "*** Please stop and start the SNMP service for trap destination changes to take effect. ***"
+    IDS_MSG39               "*** Error re-starting the SNMP service. ***"
+    IDS_MSG40               "*** Please re-start the SNMP service, it was stopped for trap destination changes to take effect. ***"
+    IDS_MSG41               "*** Error deleting trap destinations from the registry. ***"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG42               "*** Please check the SNMP service configuration via the Control Panel. ***"
+    IDS_MSG43               "*** Trap destinations have been written to the registry. ***"
+    IDS_MSG44               "*** Existing trap destinations have been deleted from the registry. ***"
+    IDS_MSG45               "*** Error opening the registry. Trap Destinations unchanged ***"
+    IDS_MSG46               "*** Registry error, could not create the key for the Community Name *** ... "
+    IDS_MSG47               "*** Addresses for this community name will not be added. ***"
+    IDS_MSG48               "*** Registry error, could not create the address value *** ... "
+    IDS_MSG49               "*** under the following community name *** ... "
+    IDS_LOCK_REG            "SOFTWARE\\Microsoft\\SNMP_EVENTS\\EventLog\\CurrentlyOpen"
+    IDS_REG_LOCKED          "Somebody else has locked the registry for ...SNMP_EVENTS\\EventLog."
+    IDS_NOT_LOCKED          "Failed to create the Registry key to lock ...SNMP_EVENTS\\EventLog"
+    IDS_LINEFEED            "\r"
+    IDS_SUCCESS             "All Commands completed successfully."
+    IDS_ARG_MODE            "/DEFAULT"
+    IDS_BASE_KEY            "SOFTWARE\\Microsoft\\SNMP_EVENTS\\EventLog"
+    IDS_CONF_TYPE           "ConfigurationType"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ARG_CUSTOM          "/SETCUSTOM"
+    IDS_MSG50               " ###SNMP service not installed correctly, destinations cannot be modified"
+    IDS_ARG_SNMP            "/NOSTOPSTART"
+    IDS_INVALID_SNMP        "The SNMP service is not installed so trap destinations may not be modified"
+    IDS_DEL_MISS_ENTRY      "Delete command failed. ENTRY NOT FOUND."
+    IDS_SOURCE_ERROR        "At least one command line failed. If a logfile was generated it will contain further information. INVALID EVENTLOG OR SOURCE NAME"
+    IDS_EVENTID_ERROR       "At least one command line failed. If a logfile was generated it will contain further information. INVALID EVENTID"
+    IDS_NO_SNMP_INSTALLED   "The SNMP service is not correctly installed."
+    IDS_LFCR                "\r\n"
+    IDS_MSG51               "*** Trap destinations unaffected, will not attempt Stopping of SNMP service ***"
+    IDS_MSG52               "*** Successfully started the SNMP service. ***"
+    IDS_MSG53               "*** Status MIF Written ***"
+    IDS_NO_REG_CNT          "The attempt to connect to the target machine's registry failed. Configuration remained unchanged."
+    IDS_ARG_HELP            "/?"
+    IDS_ARG_HELPH           "/H"
+    IDS_HELP_MSG            "Usage:\n\n   eventcmt  <filename>  <options>\n\n\nwhere:\n\n   filename:\n      the name of the configuration file\n\n   options:\n      /nomif\t- Do not create a Status  MIF\n      /nolog\t- Do not add to the log for this process\n      /default\t- Only run if the current configuration is not CUSTOM\n      /setcustom\t- Set the current configuration to be CUSTOM\n      /nostopstart\t- Do not stop and start the SNMP service"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HELP_BOX            "Event Configuration Modification Tool"
+    IDS_DFLT_CONFLICT       "The tool cannot be run if /default is specified and the current mode is CUSTOM"
+    IDS_MODE_FAIL           "Failed to change the mode"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+#include "afxres.rc"  // Standard components
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

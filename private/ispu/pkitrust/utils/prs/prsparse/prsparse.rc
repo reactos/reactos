@@ -1,0 +1,22 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       prsparse.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "PRS Parser"
+
+#define VER_INTERNALNAME_STR        "PRSPARSE.EXE"
+#define VER_ORIGINALFILENAME_STR    VER_INTERNALNAME_STR
+
+#include <common.ver>

@@ -1,0 +1,28 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Feb-14-1996 GerardoB Created
+#***************************************************************************/
+
+W32_SB=1
+
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\sources.inc
+
+
+SOURCES=$(SOURCES) ..\ntimm.c \
+                   ..\imehotky.c \
+                   ..\fekbd.c  \
+                   ..\misc.c
+
+INCLUDES=$(INCLUDES); ..\..\..\ntcon\inc; \
+                      ..\..\..\..\ke;    \
+                      $(BASEDIR)\public\sdk\inc\hydra;
+

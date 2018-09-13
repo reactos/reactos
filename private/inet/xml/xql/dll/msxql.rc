@@ -1,0 +1,47 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#include <windows.h>
+#include <ntverp.h>
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "XQL for Win32"
+#define VER_INTERNALNAME_STR        "MsXQL.dll"
+#define VER_ORIGINALFILENAME_STR    "MsXQL.dll"
+#define VER_OLESELFREGISTER
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+ID_MSXQL_TLB TYPELIB "msxql.tlb"
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME            "MSXQL"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Message strings.
+//
+#include "messages.rc"
+

@@ -1,0 +1,89 @@
+New Userbench Benchmark Application
+
+Summary
+
+The new Userbench has a user interface similar to GDIbench. 
+Enhancements over the previous version of Userbench include the use of Pentium Cycle counters when applicable, a statistical tool that improves the reliability of the data and reduces noise, as well as the ability to run in a batch mode for regression tests.
+The new Userbench has some provisions to help add new tests with minimal effort.
+
+User Interface
+
+There are four items in the menu:
+1. File
+	(a) Show results - opens a dialog with a list of the accumulated 	    	    test results.
+	    The dialog will open automatically at the end of the tests if 	    	    the user selects to run all or groups of tests. Results can be 	    saved into a file from this dialog.
+
+	(b) Exit 
+
+2. Run - presents a menu of tests to choose from. Groups of tests are in 	 	 the first three selections. Individual tests can also be selected 	 from the list. Once the selection is made, the test(s) will 	 immediately start.
+
+3. Text String - the options under this menu item are for possible future 		 		 additions to the test suite and are not in use currently. 		 		 All related dialogs/sub-menus are active and related 		 variables are defined and initialized.
+
+	(a) String Length  - allows to test with text strings of different 			     length.
+	(b) Font and Color - opens a font selection dialog.
+	(c) Transparent Background - allows to select a transparent 				     background for text. 
+
+4. Help - displays a help list dialog that includes command line 	  	  parameters. Some of these command line parameters can only be 	  used in batch mode.  
+
+Running Tests
+
+1. Interactive mode:
+
+	(a) Select the test(s) to run from the "Run" menu list.
+	    Note: "Run All" will run all tests in the list.
+		  "Run Group 1" will currently run the first 10 tests in 		  the list.
+		  "Run Group 2" will currently run the next 10 tests in 		  the list.
+		  Selecting a single test from the list will run this 		  particular test.
+		  During the test the mouse cursor will disappear. It will 		  		  appear automatically when the test is finished. Do not 		  		  move the mouse during the test and disconnect from the 		  network to minimize sampling noise.
+
+	(b) The results dialog will appear automatically after running 	    groups of tests.
+	    If running single tests, the results will accumulate into a 	    	    list and can be viewed by selecting "File" and then "Show 	    	    Results". results can be saved into a file from the Results 	    Dialog.
+
+	(c) If applicable, the measurement will use Pentium Cycle Counts 	    by default. To force using time measurements on Pentium 	    machines, use /t on the command line when invoking Userbench.
+
+2. Batch mode: Invoke "Help" or run the application with /? or /h to get 	       instructions.
+
+Results
+
+The results dialog will include the following:
+
+1. Test Name.
+2. Average Cycle Counts or Time for a single call.
+3. Actual standard deviation achieved after filtering out of outstanding       long results (so as to meet at least a standard deviation of 3%).
+4. Best (minimum) and worst (maximum) call times before filtering.
+5. Number of valid samples left after filtering, out of ... (a       predetermined number, currently 10).
+6. Number of iterations (calls) performed to get the average of every    sample (predetermined).
+
+The saved results file includes additional information on the Operating System and other preselected parameters.
+
+Adding New Tests
+
+In most cases this will involve the file "bench.c" only.
+
+1. Add the test itself anywhere among the other tests, following their    format convention.
+2. Add the new test to the array list at the end of the file, following          the same format as the other tests in the list -  Don't forget to    select the number of iterations per sample for your test. The number    depends on how long a single test takes and how patient the tester    is...
+3. Update the total number of tests at the end of the file (gNumTests).
+
+Consider using global variables already built in to help in adding new tests.
+Examples: ghinst, ghwndMDIClient, hdc, etc.
+
+TIMER calls: Use the existing examples. The following are available Macros:
+
+INIT_TIMER; - initialize timer variables - put before any executable 	      statement in your test.
+
+START_TIMER; - start timing.
+
+END_TIMER; - stop timing, return the time count - DON'T put any statements 	     after this one, because END_TIMER also exits the test! 
+Alternatively, the following can be used:
+
+END_TIMER_NO_RETURN; - stop the timer, take the time but don't exit.
+	.
+	.
+(Do some cleanup)
+	.
+	.
+RETURN_STOP_TIME;          - return the measured time and exit.
+
+Questions
+
+Call Dan Almosnino (danalm)     

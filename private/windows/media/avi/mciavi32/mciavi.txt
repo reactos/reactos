@@ -1,0 +1,102 @@
+CHANGES TO MCIAVI FOR 1.X:
+
+    "other" streams are handled correctly, rectangle's will be
+    mapped correctly and draw handlers will be called.
+
+    draw handlers:
+
+        DIB draw handler, there can now be a draw device for uncomressed
+        frames, for example hardware can stretch frames, but does not
+        need to decomptress.
+
+        the full screen draw handler (DIB draw handler...) can be replaced.
+
+        custom draw handlers can be installed per stream. (a app can
+        override the default).  This is done with a new MCI command
+        to set the draw procedure.
+
+    formats:
+
+        32 bit DIBs are supported, a decompressor can decompress to
+        a 32 bit DIB if wants to.
+
+    decompression to special DIB formats:
+
+        upside down DIB
+
+        MCIAVI will ask the decompressor in decompress to a "upside down"
+        DIB.  a "upside down" is a DIB with the scans stored in memory
+        top scan to bottom scan, (normal DIBs are stored bottom to top)
+
+        a "upside down" DIB will have a negative biHeight, the height
+        of the DIB is abs(biHeight).  the bits pointer passed points
+        to the top scan, ie the first one.
+
+        special DIB formats:
+
+        to handle decompression to internal bitmaps in memory, a "new"
+        DIB format is used, when biCompression == 'BITM' the DIB memory
+        is in HUGE BITMAP format:
+
+            biCompression       'BITM'
+            biHeight            will be <0 for a top to bottom bitmap.
+            biXPelsPerMeter     will be the width bytes of the bitmap.
+            biYPelsPerMeter     will be the fill bytes of the bitmap.
+
+
+    key frame info:
+
+    a new structure is passed to ICM_DECOMPRESS:
+
+        struct {
+            DWORD               dwFlags;    // flags (from AVI index...)
+            LPBITMAPINFOHEADER  lpbiInput;  // BITMAPINFO of compressed data
+            LPVOID              lpInput;    // compressed data
+            LPBITMAPINFOHEADER  lpbiOutput; // DIB to decompress to
+            LPVOID              lpOutput;
+            DWORD               ckid;       // ckid from AVI file
+            int                 iFrame;     // frame info.
+            int                 iNextKey;
+            int                 iPrevKey;
+        }   ICDECOMPRESSX;
+
+    NOTE before using any of the extra info in this structure the
+    deompressor should check the size field.
+
+    example:
+
+    case ICM_DECOMPRESS:
+
+        //
+        // make sure we have a ICDECOMPRESSX structure
+        //
+        if ((DWORD)lParam2 >= sizeof(ICDEOMPRESSX))
+            return DecompressX(pi,
+                 (ICDECOMPRESSX FAR *)lParam1, (DWORD)lParam2);
+        else
+            return Decompress(pi,
+                 (ICDECOMPRESS FAR *)lParam1, (DWORD)lParam2);
+
+    NEW MESSAGE ICM_SET
+
+        #define ICM_SET (ICM_RESERVED+40)
+        #define ICM_FRAMERATE       mmioFOURCC('F','r','m','R')
+        #define ICM_KEYFRAMERATE    mmioFOURCC('K','e','y','R')
+
+        before playing starts two params get sent down to the decompressor:
+
+            ICM_SET
+                lParam1 = 'FrmR'                    (set the frame rate)
+                lParam2 = microseconds per frame
+
+            ICM_SET
+                lParam1 = 'KeyR'                    (set the key frame "rate")
+                lParam2 = average key frame rate    (ie key frame every 15)
+
+        NOTE the key frame rate is a average.
+
+
+TO DO:
+    named streams.
+    multiple video streams.
+    linked streams (data in another file...)

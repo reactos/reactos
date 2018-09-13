@@ -1,0 +1,246 @@
+#
+# Input file describing files the cryptscn.exe utility watches.
+# Comment lines begin with a '#'.  Files to scan are specified by a single
+# File Path entry per line.  New files will have there filepath added on
+# a new line, with no trailing characters.
+# The section at the end of this file contains a mapping of expected hash
+# value to file path.  This section must not be edited manually.  This section
+# is updated by running the command line "cryptscn.exe -u", which causes an
+# update to the expected hash section.
+# Note that when updating the expected hash section, the caller must have
+# write access to this input file, which includes not having the Read only
+# attribute set on the file, as it is when the file is not checked out in a
+# SLM enlistment.
+#
+# For questions on the utility, contact SField or TerenceS
+#
+
+###notes: cannot locate source server
+###\nt\private\admin\services\sched.ie4\service\daytona\sources
+###\nt\private\admin\services\sched.w98\service\daytona\sources
+###\nt\private\admin\services\sched\service\daytona\sources
+
+#rc4, md5, sha
+#notes: remove reference to rc4c.obj
+#\nt\private\ds\src\dsamain\boot\sources
+#\nt\private\ds\src\dsamain\dll\sources
+
+\nt\private\ds\src\dsamain\pek\pek.c
+
+
+#rc4, md5, deslm
+#notes: server\ remove reference to custom rng and use randlib
+#notes: server\dsupgrad appears to have un-necessary reference
+#notes: server\exe appears to hanve un-necessary reference
+#\nt\private\ds\src\newsam2\client\sources
+#\nt\private\ds\src\newsam2\client\um\sources
+#\nt\private\ds\src\newsam2\server\dll\sources
+#\nt\private\ds\src\newsam2\server\dsupgrad\sources
+#\nt\private\ds\src\newsam2\server\exe\sources
+
+\nt\private\ds\src\newsam2\client\password.c
+\nt\private\ds\src\newsam2\server\enckey.c
+\nt\private\ds\src\newsam2\server\pek.c
+\nt\private\ds\src\newsam2\server\user.c
+
+###project removed from \\trango
+###\nt\private\inet\wallet\set\setcomps\sources
+###\nt\private\inet\wallet\set\setpib\sources
+
+###rc4, deslm
+###notes: appears to be obsolete project
+###\nt\private\newsam\client\sources
+###\nt\private\newsam\server\sources
+
+
+
+#rc4, md4, md5, deslm
+#notes: appears to be related to remote boot
+#\nt\private\ntos\boot\bldr\_nec_98\ilinkldr.rsp
+#\nt\private\ntos\boot\bldr\daytona\ilinkldr.rsp
+#\nt\private\ntos\boot\oschoice\ilinkldr.rsp
+#\nt\private\ntos\boot\setup\_nec_98\ilinkldr.rsp
+#\nt\private\ntos\boot\setup\daytona\ilinkldr.rsp
+
+\nt\private\ntos\boot\bootssp\ntlmssp.c
+\nt\private\ntos\boot\bootssp\response.c
+\nt\private\ntos\boot\bootssp\owf.c
+
+#des, desx
+#\nt\private\ntos\dd\efs\sources
+
+\nt\private\ntos\dd\efs\control.c
+\nt\private\ntos\dd\efs\create.c
+\nt\private\ntos\dd\efs\efsrtl.c
+\nt\private\ntos\dd\efs\efsrtlsp.c
+\nt\private\ntos\dd\efs\encrypt.c
+
+
+#md5
+#notes: remove private md5 implementation
+#\nt\private\ntos\rdr2\rdbss\smb.mrx\sources.inc
+
+\nt\private\ntos\rdr2\rdbss\smb.mrx\smbsecur.c
+
+#md5, des, sha
+#\nt\private\ntos\tdi\tcpip\ipsec\sources.inc
+#\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\sources.inc
+
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ah.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ahxforms.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\esp.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\hughes.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ipsec.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\offload.c
+\nt\private\ntos\tdi\tcpipmerge\ipsec\driver\saapi.c
+
+
+#md2, rc2
+#\nt\private\nw\rdr\sources
+
+\nt\private\nw\rdr\ndslogin.c
+
+###md5
+### note: BBN box signing utility
+###\nt\private\sdktools\rpcsign\client\sources
+
+#md2, md4, md5, sha, rc4, deslm
+#\nt\private\security\cryptdll\chicago\sources
+#\nt\private\security\cryptdll\winnt\sources
+
+\nt\private\security\cryptdll\mdwrap.c
+\nt\private\security\cryptdll\rc4cwrap.c
+\nt\private\security\cryptdll\deswrap.c
+\nt\private\security\cryptdll\lmwrap.c
+
+
+#same as above
+#\nt\private\security\lsa\security\driver\sources
+#\nt\private\security\lsa\server\dll\sources
+#\nt\private\security\lsa\server\sources.inc
+
+\nt\private\security\lsa\server\efssrv.cxx
+
+#rc4, md5, sha, deslm
+#\nt\private\security\msv_sspi\dll\sources
+
+\nt\private\security\msv_sspi\context.cxx
+\nt\private\security\msv_sspi\userapi.cxx
+\nt\private\security\msv_sspi\credderi.c
+\nt\private\security\msv_sspi\msvpaswd.c
+\nt\private\security\msv_sspi\msvsam.c
+
+###appears to have un-necessary reference to rsa32.lib
+###\nt\private\security\schannel\lsa\sspi.mk
+
+###md5, sha, rc4
+###\nt\private\security\schnlc\instsch\addres\sources
+###\nt\private\security\schnlc\instsch\install\sources
+###\nt\private\security\schnlc\instsch\test\sources
+
+###appears to have un-necessary reference to rsa32.lib
+###\nt\private\security\schnlc\sspi\sspi.mk
+
+#md4, sha
+#notes: implements private RNG, reference randlib instead
+#\nt\private\security\tools\syskey\sources
+
+\nt\private\security\tools\syskey\samlock.c
+
+###appears to have un-necessary reference to rsa32.lib
+###\nt\private\utils\cipher\sources
+
+#md5, rc4, RSA
+#\nt\private\windows\base\advapi\cairo\sources
+#\nt\private\windows\base\advapi\daytona\sources
+
+\nt\private\windows\base\advapi\cryptapi.c
+
+#RSA, md5, sha, rc4, des, 3des, bignum
+#\nt\private\windows\base\ntcrypto\dsscsp\dssbase\sources
+#\nt\private\windows\base\ntcrypto\dsscsp\dssenh\sources
+
+\nt\private\windows\base\ntcrypto\dsscsp\cpcontxt.c
+\nt\private\windows\base\ntcrypto\dsscsp\csp.c
+\nt\private\windows\base\ntcrypto\dsscsp\des_key.c
+\nt\private\windows\base\ntcrypto\dsscsp\key.c
+\nt\private\windows\base\ntcrypto\dsscsp\schderiv.c
+\nt\private\windows\base\ntcrypto\dsscsp\context.c
+\nt\private\windows\base\ntcrypto\dsscsp\cp_key.c
+\nt\private\windows\base\ntcrypto\dsscsp\cp_sign.c
+\nt\private\windows\base\ntcrypto\dsscsp\dss_key.c
+\nt\private\windows\base\ntcrypto\dsscsp\hash.c
+
+
+###md5, rc4, RSA
+###note: crypt, not built
+###\nt\private\windows\base\ntcrypto\programs\crypt\sources
+###\nt\private\windows\base\ntcrypto\programs\sign\sources
+###\nt\private\windows\base\ntcrypto\programs\signcsp\sources
+
+#RSA, md2,md4, sha, rc4, rc2, des, 3des
+#\nt\private\windows\base\ntcrypto\scp\rsabase\sources
+#\nt\private\windows\base\ntcrypto\scp\rsaenh\sources
+
+\nt\private\windows\base\ntcrypto\scp\nt_key.c
+\nt\private\windows\base\ntcrypto\scp\nt_hash.c
+\nt\private\windows\base\ntcrypto\scp\nt_sign.c
+\nt\private\windows\base\ntcrypto\scp\nt_crypt.c
+
+
+###md5
+###note: implements private RNG, should use randlib.lib
+###\nt\private\windows\gina\winlogon\sources.inc
+
+#
+# expected hash values follow:
+#
+
+0242013964240372686c159a3b1cef223c465e7b \nt\private\ds\src\dsamain\pek\pek.c
+b314725108b87dfe3288051d70479b34099a09f2 \nt\private\ds\src\newsam2\client\password.c
+d3137a2a12565b0988777c326275a97ddecafc12 \nt\private\ds\src\newsam2\server\enckey.c
+6434766f1effc0d5bab2f9106e6be311e5c758d3 \nt\private\ds\src\newsam2\server\pek.c
+5821eb85943f3dbd80c4398618d955bcf02691a8 \nt\private\ds\src\newsam2\server\user.c
+6c52d78b358f9be970a5f857ef1ebc5d43ab8ddc \nt\private\ntos\boot\bootssp\ntlmssp.c
+ba2ac2481a11b2a168c539702d8e25a36b65ffd6 \nt\private\ntos\boot\bootssp\response.c
+e20193be77a5ab30c3f8d19830761f0ec6267bb9 \nt\private\ntos\boot\bootssp\owf.c
+5defa319d38d1b082b65a50fa4bca43726c6d4a4 \nt\private\ntos\dd\efs\control.c
+2d591d4a3e5b7b3e7ca969393abd05913f56fb78 \nt\private\ntos\dd\efs\create.c
+8cb2d3a65b34aa3eff21ff098df2381a4a262496 \nt\private\ntos\dd\efs\efsrtl.c
+fe8c751831dacce5f9287c481d9c80f6de3e4d84 \nt\private\ntos\dd\efs\efsrtlsp.c
+ed6ea51c9b8f2a0e8eceaea6220dbe51cbec15a5 \nt\private\ntos\dd\efs\encrypt.c
+06d5acf08406b485bff42272c8acbb05bef2516c \nt\private\ntos\rdr2\rdbss\smb.mrx\smbsecur.c
+a5dd29e9058b5732f32b1b361eced521190cdd39 \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ah.c
+67e4b0db39c104ae14ee22caa846033418101022 \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ahxforms.c
+5e7a94158fba7e53a98b562f89f209fbead72a35 \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\esp.c
+216d631934a9b3513c785f9061568efc9337c712 \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\hughes.c
+de19046c904981b8c8ffda349e55b0cb9e0a04ac \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\ipsec.c
+557847a715d8ef5829cde05420446fb9127185c9 \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\offload.c
+90e7906ff412329c272d47c9cb9dcd15c81d875e \nt\private\ntos\tdi\tcpipmerge\ipsec\driver\saapi.c
+055f88458678200c8b38f7580a56ebebe219fda8 \nt\private\nw\rdr\ndslogin.c
+0bfad1853915602124017e273367d3b647af2f2b \nt\private\security\cryptdll\mdwrap.c
+f2b308b0da111c4daf4b7c6347b8d94d5347641f \nt\private\security\cryptdll\rc4cwrap.c
+1163a5968a250ebafb2d394d20d141c224e6f4ce \nt\private\security\cryptdll\deswrap.c
+d7242e0a391791bb198c7188377d55898aab0042 \nt\private\security\cryptdll\lmwrap.c
+ec9212cb2b73f71488a591253c22c6becd1dc5a5 \nt\private\security\lsa\server\efssrv.cxx
+10d9c75cbcb72272fe7c9686dc9157396b2ab84f \nt\private\security\msv_sspi\context.cxx
+a7f3aac9492941b7d260098574fde17b2f05f129 \nt\private\security\msv_sspi\userapi.cxx
+79c5be311c6e58da9173dcaae7180c25dde43324 \nt\private\security\msv_sspi\credderi.c
+08711487a8582ba87ba9504608f1b9fd3763fede \nt\private\security\msv_sspi\msvpaswd.c
+8ac068f8e27a1049eb77839fb828d07f6f92a3cb \nt\private\security\msv_sspi\msvsam.c
+65deff41a357a460f586ed535a9dccf810faf4c4 \nt\private\security\tools\syskey\samlock.c
+61d4fb09e9eb10a1d40217028e0b2058c2932c08 \nt\private\windows\base\advapi\cryptapi.c
+b898303278a651ccad0c948dd61f592ca7dab16d \nt\private\windows\base\ntcrypto\dsscsp\cpcontxt.c
+a9f326c48cd7346852593dc44ff905cdee247525 \nt\private\windows\base\ntcrypto\dsscsp\csp.c
+025edb84ff0bc9fd54ed0ade0e2384120f07cb41 \nt\private\windows\base\ntcrypto\dsscsp\des_key.c
+6a5b7c8dda73afae98521fce94db8439dbd87349 \nt\private\windows\base\ntcrypto\dsscsp\key.c
+82075bed9313051b5a08455b8ec51ac4e4ab2999 \nt\private\windows\base\ntcrypto\dsscsp\schderiv.c
+4f7f173165887bebcca115d84b91752f1a6a60fe \nt\private\windows\base\ntcrypto\dsscsp\context.c
+bae5945133cd7d83bd2212990e4795338cc5a5bf \nt\private\windows\base\ntcrypto\dsscsp\cp_key.c
+a8865d5d00071ecc5f738204d706a476a642646d \nt\private\windows\base\ntcrypto\dsscsp\cp_sign.c
+ed192806bfcde325bf5f1d5eb43afb90c541dc74 \nt\private\windows\base\ntcrypto\dsscsp\dss_key.c
+ccf56336e2346d2ae2cb6329d8cc4ae78c1999d5 \nt\private\windows\base\ntcrypto\dsscsp\hash.c
+1adf2855c0149c0414d13a3514a7cffec93777ff \nt\private\windows\base\ntcrypto\scp\nt_key.c
+5738921da09f8f767d42bc0accfba551f281691f \nt\private\windows\base\ntcrypto\scp\nt_hash.c
+f2333a10f6c6e8dffd4da97b1a1d7eba685fc90c \nt\private\windows\base\ntcrypto\scp\nt_sign.c
+81b85121da5d1351659d1c92bbd964d66bbdfeaf \nt\private\windows\base\ntcrypto\scp\nt_crypt.c

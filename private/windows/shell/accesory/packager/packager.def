@@ -1,0 +1,85 @@
+;************************************************************/
+;* Windows Packager, Copyright 1992 Microsoft Corporation   */
+;************************************************************/
+
+NAME         Packager WINDOWAPI
+
+EXETYPE      WINDOWS
+PROTMODE
+STUB         'WINSTUB.EXE'
+
+CODE         LOADONCALL MOVEABLE DISCARDABLE
+DATA         MOVEABLE MULTIPLE
+
+HEAPSIZE     16000
+STACKSIZE    32000
+
+SEGMENTS
+        PACKAGER_TEXT           PRELOAD MOVEABLE DISCARDABLE
+
+EXPORTS
+; Window procedures
+;
+        FrameWndProc            @1
+        SubtitleWndProc         @2
+        PaneWndProc             @3
+        IconDlgProc             @4
+        THCallBack              @5
+
+; Dialog procedures
+;
+        fnProperties            @10
+        fnInvalidLink           @11
+        fnChangeText            @12
+        fnChangeCmdText         @13
+        fnFailedUpdate          @14
+
+; OLE functions
+;
+; Client callback
+;
+        CallBack                @20
+        EmbCallBack             @21
+
+; Object I/O routines
+;
+        PosStream               @30
+        ReadStream              @31
+        WriteStream             @32
+
+; Server routines
+;
+        SrvrCreate              @40
+        SrvrCreateFromTemplate  @41
+        SrvrEdit                @42
+        SrvrExit                @43
+        SrvrOpen                @44
+        SrvrRelease             @45
+
+; Document routines
+;
+         DocClose               @50
+         DocGetObject           @51
+         DocRelease             @52
+         DocSave                @53
+         DocSetColorScheme      @54
+         DocSetDocDimensions    @55
+         DocSetHostNames        @56
+
+; Item routines
+;
+         ItemDelete             @60
+         ItemDoVerb             @61
+         ItemEnumFormats        @62
+         ItemGetData            @63
+         ItemQueryProtocol      @64
+         ItemSetBounds          @65
+         ItemSetColorScheme     @66
+         ItemSetData            @67
+         ItemSetTargetDevice    @68
+         ItemShow               @69
+
+
+; Enumeration routines
+
+         GetTaskWndProc         @80

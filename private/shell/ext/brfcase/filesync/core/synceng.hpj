@@ -1,0 +1,9 @@
+[options]
+Title=Synchronization Engine API
+
+[config]
+BrowseButtons()
+
+[files]
+docs\synceng.rtf
+

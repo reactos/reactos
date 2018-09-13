@@ -1,0 +1,82 @@
+#include "windows.h"
+#include "tchar.h"
+#include "resource.h"
+//#include "SysInv.rcv"
+
+/////////////////////////////////////////////////////////////////////////
+//
+//	String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_OEM_INIFILE             "OEMINFO.INI"
+	IDS_OEM_INISECTION          "General"
+	IDS_OEM_INIKEY              "Manufacturer"
+	IDS_PROCESSOR_ENTRY         "Hardware\\Description\\System\\CentralProcessor\\0"
+	IDS_CPU_VENDOR_ENTRY        "VendorIdentifier"
+	IDS_CPU_ENTRY               "Identifier"
+	IDS_PROCESSOR_386           "80386"
+    IDS_PROCESSOR_486           "80486"
+    IDS_PROCESSOR_PENTIUM       "Pentium"
+    IDS_PROCESSOR_MIPS_R4000    "MIPS R4000"
+    IDS_PROCESSOR_ALPHA_21064   "Alpha 21064"
+	IDS_SIZE_SUFFIX1            "KB"
+	IDS_SIZE_SUFFIX2            "K"
+    IDS_PLATFORM_WIN            "Microsoft Windows %li.%li"
+    IDS_PLATFORM_WINNT          "%s, Build No. %li"
+    IDS_PLATFORM_WIN95          "Microsoft Windows 98 , Build No. %s"
+    IDS_PRODUCT_NAME            "ProductName"
+    IDS_PRODUCT_VERSION         "VersionNumber"
+    IDS_PRODUCT_VERSION_DISPLAY ", Ver."
+    IDS_DRV525_0360             "5.25"" - 360K"
+    IDS_DRV525_1200             "5.25"" - 1.2M"
+    IDS_DRV350_0720             "3.5"" - 720K"
+    IDS_DRV350_1440             "3.5"" - 1.4M"
+    IDS_DRV350_2880             "3.5"" - 2.8M"
+    IDS_REMOVABLE_MEDIA_ENTRY   "ENUM"
+    IDS_REMOVABLE_MEDIA_VALUE   "DiskDrive"
+    IDS_MASS_STRORAGE_ENTRY     ",Mass Storage"
+    IDS_OEM_INIKEY2              "Model"
+    IDS_ALPHA_PROCESSOR     "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"
+    IDS_ALPHA_ARCHITECTURE  "PROCESSOR_ARCHITECTURE"
+    IDS_ALPHA_IDENTIFIER    "PROCESSOR_IDENTIFIER"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,10,0,2016
+ PRODUCTVERSION 4,10,0,2016
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Microsoft Corporation\0"
+            VALUE "FileDescription", "Windows System Inventory\0"
+            VALUE "FileVersion", "4.10.2016\0"
+            VALUE "InternalName", "SysInv\0"
+            VALUE "LegalCopyright", "Copyright (C) Microsoft Corp. 1993-1998\0"
+            VALUE "OriginalFilename", "SysInv.dll\0"
+            VALUE "ProductName", "Microsoft(R) Windows 98 (R) Image Preparation Tool\0"
+            VALUE "ProductVersion", "4.10.2016\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

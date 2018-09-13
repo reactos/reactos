@@ -1,0 +1,77 @@
+*****Where it's at.
+The reduced-fat deskmovr that is part of shdocvw implements the Beta-1 functionality.
+There are two ActiveX controls which work together to provide a move and a size handle
+for components on the active desktop. These controls are added to the desktop html file
+as OBJECT tags by the deskhtml code via the deskmovr.htx template file. There are a dozen
+bugs RAIDed against these controls which are divided between drag perf/flicker bugs and
+miscellaneous quiet failures and work items.
+
+*****Where it's going.
+The new UI under design by ChristoB and MarkEn involves substantial changes to the
+appearance and operation of the deskmovr. The two handles are replaced by a frame
+and caption bar, which in turn has buttons to 'close' the component and provide a menu.
+
+The basics of the new UI are checked-in under #ifdef NEWVO_UI. The frame-like affordances appear
+and allow the components, both windowed and not, to be moved and resized. The #ifdef code
+reads a bunch of PARAMs that tell it what system metrics to use for size and color of the
+frame and caption.
+
+
+*****What needs to happen for it to get the rest of the way there.
+Resolve painting/flickering bugs. These may be tied to Trident. GaryBu and DinarteM could help.
+Resolve z-ordering bugs. The zIndex style attribute isn't working as expected. LyleC could help.
+	Once this is under control, the click-on-caption==bring-to-front can be implemented. Need deskhtml
+	support for this. The code formerly known as DeskHTML.dll will need to add zIndex
+	style attributes to the desktop components.
+Add close box. Need help from deskhtml.dll to make this work.
+Add menu. Work here is a function of how much ChristoB puts in the menu. Restore to original size
+	will require help from deskhtml.dll.
+Porting to CShellOcx, or whatever.
+Remove DeskSizr.cpp/.h from build. With the new UI, it is no longer necessary. It can be dropped from the build
+	and removed from the class factory table in sccls.c
+With the NEWVO_UI, the notion of a "partner" control is obsolete. The m_pidmPartner and 
+    m_pidsPartner members, the get_Engaged and GrabYourPartner methods, and the SizrID
+    PARAM are unnecessary.
+Multi-monitor stuff. Unknown at this point, but the window-frame UI should behave consistently with real
+	windows in a multi-monitor environment.
+Need deskhtml to name= components by whether they are windowed ( IFRAMEs ) or windowless ( IMG, DIV ).
+	The TargetName params of the OBJECTs below should match the names deskhtml assigns.
+This will allow the windowed and windowless instances of the control to target appropriately. 
+	deskmovr.htx update. The object tags below replace the ones in shell\ext\html\construc\deskmovr.htx.
+	After the coloring and metrics are nailed down, most of the new params can go away
+
+<OBJECT
+	classid="clsid:72267F6A-A6F9-11D0-BC94-00C04FB67863"
+	id=ActiveDesktopMover
+    STYLE="position:absolute; container:positioned; LEFT: 0;TOP: 0; WIDTH: 0; HEIGHT: 0;zIndex: 5"
+>
+<param name="Interval" value=500>
+<param name="SizerID" value="ActiveDesktopMoverW">
+<param name="Enabled" value="True">
+<param name="TargetName" value="DeskMovr">
+<param name="BorderXMetric" value=45>
+<param name="BorderYMetric" value=46>
+<param name="CaptionShow" value=20>
+<param name="CaptionColorIndex" value=10>
+<param name="BorderColorIndex" value=10>
+<param name="3D" value="False">
+<param name="WindowOnly" value="True">
+</OBJECT>
+
+<OBJECT
+	classid="clsid:72267F6A-A6F9-11D0-BC94-00C04FB67863"
+	id=ActiveDesktopMoverW
+    STYLE="position:absolute; container:positioned; LEFT: 0;TOP: 0; WIDTH: 0; HEIGHT: 0;zIndex 19"
+>
+<param name="Interval" value=500>
+<param name="SizerID" value="ActiveDesktopMover">
+<param name="Enabled" value="True">
+<param name="TargetName" value="DeskMovrW">
+<param name="BorderXMetric" value=45>
+<param name="BorderYMetric" value=46>
+<param name="CaptionShow" value=20>
+<param name="CaptionColorIndex" value=10>
+<param name="BorderColorIndex" value=10>
+<param name="3D" value="False">
+<param name="WindowOnly" value="False">
+</OBJECT>

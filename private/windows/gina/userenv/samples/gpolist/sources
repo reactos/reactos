@@ -1,0 +1,22 @@
+MAJORCOMP=cairoshl
+MINORCOMP=test
+
+TARGETNAME=test
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+C_DEFINES=-DNT -DWINNT -DUNICODE -D_UNICODE
+
+INCLUDES=\nt\private\windows\inc
+
+SOURCES= test.c
+
+
+LINKLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib            \
+         $(BASEDIR)\public\sdk\lib\*\secur32.lib            \
+         $(BASEDIR)\public\sdk\lib\*\netapi32.lib          \
+         $(BASEDIR)\public\sdk\lib\*\userenv.lib
+
+UMTYPE=console
+UMAPPL=
+UMRES=

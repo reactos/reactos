@@ -1,0 +1,67 @@
+/*	File: D:\WACKER\term\ver_exe.rc (Created: 5-May-1994)
+ *
+ *  Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+ *  All rights reserved
+ *
+ *	$Revision: 1.5 $
+ *	$Date: 1995/11/10 11:45:43 $
+ */
+
+// This file is run through the C-preprocessor so that we can
+// automatically replace flags that depend on the build type for example.
+//
+
+
+#include    <ntverp.h>
+
+
+
+
+VS_VERSION_INFO	VERSIONINFO
+FILEVERSION             VER_PRODUCTVERSION
+PRODUCTVERSION          VER_PRODUCTVERSION
+FILEFLAGSMASK   	VS_FFI_FILEFLAGSMASK		// 0x3fL
+
+
+
+#if defined(WIN_DEBUG)
+FILEFLAGS       	VS_FF_DEBUG | VS_FF_PRERELEASE	// 0x3L
+#else
+FILEFLAGS               VER_FILEFLAGS
+#endif
+
+
+FILEOS                  VER_FILEOS
+FILETYPE                VFT_APP                 // 0x1L/0x2L : or VFT_DLL
+FILESUBTYPE             VFT2_UNKNOWN            // 0x0L : not used with DLLs, EXEs.
+{
+	BLOCK "StringFileInfo"
+   	{
+   	// This block describes the language and the character set used.
+   	// For example in "04090000" 0409 represents the U.S. English and
+   	//							 0000 represents 7-bit ASCII char set.
+   	//
+	BLOCK "04090000"
+    	{
+      	VALUE "CompanyName",     	IDV_COMPANYNAME_STR
+      	VALUE "FileDescription", 	"HyperTerminal Applet\0"
+        VALUE "FileVersion",            VER_PRODUCTVERSION_STR
+      	VALUE "InternalName",    	"HyperTrm\0"
+      	VALUE "LegalCopyright",  	IDV_LEGALCOPYRIGHT_STR
+      	VALUE "LegalTrademarks", 	IDV_LEGALTRADEMARKS_STR
+		VALUE "OriginalFilename",	"HYPERTRM.EXE\0"
+        VALUE "ProductName",            VER_PRODUCTNAME_STR
+        VALUE "ProductVersion",         VER_PRODUCTVERSION_STR
+                VALUE "Comments",               IDV_COMMENTS_STR
+	  	//
+	  	// For special builds include this, also add VS_FF_SPECIALBUILD to
+	  	// FILEFLAGS.
+	  	//
+//	  	VALUE "SpecialBuild", 	"Reason for special build\0"
+      	}
+	}
+	BLOCK "VarFileInfo"
+	{
+		VALUE "Translation",	0x0409, 0
+	}
+}

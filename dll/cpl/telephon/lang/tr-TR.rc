@@ -1,9 +1,0 @@
-/* TRANSLATOR: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
-
-LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
-
-STRINGTABLE 
-BEGIN
-    IDS_CPLSYSTEMNAME "Telefon ve Çevirge Seçenekleri"
-    IDS_CPLSYSTEMDESCRIPTION "Telefon Arama Kâidelerinizi ve Çevirge Ayarlarınızı Yapılandırır."
-END

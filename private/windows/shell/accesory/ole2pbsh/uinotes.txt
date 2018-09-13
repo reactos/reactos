@@ -1,0 +1,52 @@
+borders
+
+tools
+
+menus
+    Group		Menu		Comments
+    ----------------------------------------------------
+     none		File		Container-owned
+     [1](edit)		Edit
+     [2](object)	View		removed when InPlace
+     [2](object)	Text
+     [2](object)	Pick
+     [2](object)	Options
+     [5](help)		Help
+
+    0x0000, 0x0000,     // File
+    0x0001, 0x0000,     // Edit         Edit
+    0x0000, 0x0000,     // Container
+    0x0003, 0x0000,     // Object       Text, Pick, Options
+    0x0000, 0x0000,     // Window
+    0x0001, 0x0000,     // Help         Help
+
+popup menus?
+
+undo functionality
+
+CSH
+  do we do it at all? (probably not)
+
+
+==== Meeting with Randy Kerr 4/20 =======
+
+float the tools!
+   tools starting position near object
+   remember tool positions between UIActive/Deactive
+
+while InPlace, Shift-Resize == crop? (punt)
+
+Issue: zoom inplace -- deny access (via menu) when inplace
+
+Feature: select-all would be nice, but UI re. border may be tricky
+
+Paste-special is the one std dialog needed for server-only
+
+Drag-Drop == Rasterize recognized formats
+
+Note: be sure to send advises while Open (usability concerns)
+
+
+
+
+

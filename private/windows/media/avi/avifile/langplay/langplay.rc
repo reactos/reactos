@@ -1,0 +1,37 @@
+
+/*---------------------------------------------------------------------
+|
+| LangPlay.rc - movie player resources
+|
++-------------------------------------------------------------------*/
+/**************************************************************************
+ *
+ *  THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *  KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR
+ *  PURPOSE.
+ *
+ *  Copyright (c) 1992, 1993  Microsoft Corporation.  All Rights Reserved.
+ * 
+ **************************************************************************/
+#include <windows.h>
+#include "langplay.h"
+
+AppIcon     ICON   "langplay.ico"
+
+/* menu bar */
+LANGPLAY MENU
+  {
+  POPUP "&File"
+    {
+    MENUITEM "&Open...", IDM_OPEN
+    MENUITEM "&Close",   IDM_CLOSE
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit", 	 IDM_EXIT
+    }
+  POPUP "&Audio Stream"
+    {
+       	MENUITEM "&None", IDM_NONE
+    }
+  }
+

@@ -1,0 +1,35 @@
+//  resource.rc - resource file (I can't believe I just wrote that)
+
+
+#include "priv.h"
+#include "resource.h"
+#include "resource.rcv"
+
+REGINST                 REGINST MOVEABLE PURE   "selfreg.inf"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_EXCOL_CompanyName       	"Company Name"
+	IDS_EXCOL_FileDescription	"Module Description"
+	IDS_EXCOL_FileVersion		"Module Version"
+	IDS_EXCOL_InternalName		"Internal Module Name"
+	IDS_EXCOL_OriginalFileName	"Original Module Name"
+	IDS_EXCOL_ProductName		"Product Name"
+	IDS_EXCOL_ProductVersion	"Product Version"
+	
+	IDS_FStoSF  			"Convert To Shortcut"
+	IDS_SFtoFS  			"Convert To Folder Shortcut"
+	
+	IDS_Error     			"Error In Explorer"
+	IDS_ProblemSF			"Encountered problems while creating Shortcut"
+	IDS_ProblemFS			"Encountered problems while creating FolderShortcut"
+
+	IDS_FIT_Delimeter		", "
+	IDS_FIT_ExtraItems		"..."
+	IDS_FIT_TipFormat		"%1!s! %2!s! %3!s!"
+	IDS_FIT_Size			"Size: %1!s!"
+	IDS_FIT_Size_LT			"Size: larger than %1!s!"
+	IDS_FIT_Size_Empty		"Folder is Empty"
+	IDS_FIT_Files			"\nFiles: %1!s!"
+	IDS_FIT_Folders			"\nFolders: %1!s!"
+END

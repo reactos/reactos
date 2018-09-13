@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdblr
+
+TARGETNAME=kbdblr
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdblr.c kbdblr.rc
+
+NTTARGETFILE0=kbdblr.h kbdblr.rc kbdblr.def

@@ -1,0 +1,245 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""res\\ListDev.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\ListDev.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_LISTDEV_DIALOG DIALOGEX 0, 0, 409, 303
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Device Information"
+FONT 8, "MS Sans Serif"
+BEGIN
+    GROUPBOX        "Device Tree",IDC_STATIC,1,65,165,228
+    CONTROL         "Tree3",IDC_DEVTREE,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | 
+                    WS_BORDER | WS_TABSTOP,7,81,153,202
+    GROUPBOX        "Device Data",IDC_STATIC,175,66,225,228
+    GROUPBOX        "Selected Computer",IDC_STATIC,6,5,391,42
+    PUSHBUTTON      "Change...",IDC_CHANGE_COMPUTERNAME,331,21,50,14
+    EDITTEXT        IDC_COMPUTERNAME,13,23,163,14,ES_UPPERCASE | 
+                    ES_AUTOHSCROLL | ES_READONLY
+    LISTBOX         IDC_DEVDATA,181,79,207,205,NOT LBS_NOTIFY | LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+IDD_NEW_COMPUTER DIALOG DISCARDABLE  0, 0, 186, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "New Computer Name"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Computer Name:",IDC_STATIC,5,10,54,8
+    EDITTEXT        IDC_EDIT_COMPUTERNAME,67,8,111,14,ES_UPPERCASE | 
+                    ES_AUTOHSCROLL
+    PUSHBUTTON      "&OK",ID_OK,32,37,50,14
+    PUSHBUTTON      "&Cancel",IDC_CANCEL,108,36,50,14
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "LISTDEV MFC Application\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "LISTDEV\0"
+            VALUE "LegalCopyright", "Copyright © 1997\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "LISTDEV.EXE\0"
+            VALUE "ProductName", "LISTDEV Application\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_LISTDEV_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 400
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 296
+    END
+
+    IDD_NEW_COMPUTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DATA_TYPE           "Data type"
+    IDS_VALUE               "Value"
+    IDS_UNKNOWN             "**Unknown**"
+    IDS_DEVICEID            "Device ID:"
+    IDS_STATUS              "Status:"
+    IDS_PROBLEM             "Problem:"
+    IDS_SERVICE             "Service:"
+    IDS_CAPABILITIES        "Capabilities:"
+    IDS_CONFIGFLAGS         "Config Flags:"
+    IDS_DEVNODE             "DevNode:"
+    IDS_COMPATIBELID        "Compatible IDs:"
+    IDS_CLASS               "Class:"
+    IDS_INFOFILE            "Inf file:"
+    IDS_MFG                 "Manufacturer:"
+    IDS_HARDWAREID          "Hardware IDs:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_COMPATIBLEID        "Compatible IDs:"
+    IDS_CLASSGUID           "Class Guid:"
+    IDS_LOCATION            "Location: "
+    IDS_BUSNUMBER           "Bus number: "
+    IDS_ENUMERATOR_NAME     "Enumerator name: "
+    IDS_DEVICEDESC          "Description: "
+    IDS_FRIENDLYNAME        "Friendly name: "
+    IDS_DRIVER              "Driver: "
+    IDS_PHYSICAL_DEVPATH    "Physical Object Name: "
+    IDS_UI_NUMBER           "UI number: "
+    IDS_UPPERFILTERS        "Upper filters: "
+    IDS_LOWERFILTERS        "Lower filters: "
+    IDS_BUSTYPEGUID         "Bustype GUID: "
+    IDS_LEGACYBUSTYPE       "Legacy bus type: "
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "res\ListDev.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

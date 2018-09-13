@@ -1,0 +1,639 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="am.css">
+
+<STYLE TYPE="text/css">
+    .CAppBtnGroup {
+        }
+</STYLE>
+
+<STYLE ID="styleLegacy" TYPE="text/css">
+    .CBtnLegacy {
+        font-size: 8pt; 
+        font-family: Verdana, Arial, sans-serif;
+        display: block;
+        }
+
+    .CBtnLogo3 {
+        font-size: 8pt; 
+        font-family: Verdana, Arial, sans-serif; 
+        display: none;
+        }
+</STYLE>
+
+<STYLE ID="styleLogo3" TYPE="text/css" DISABLED>
+    .CBtnLegacy {
+        font-size: 8pt; 
+        font-family: Verdana, Arial, sans-serif; 
+        display: none;
+        }
+
+    .CBtnLogo3 {
+        font-size: 8pt; 
+        font-family: Verdana, Arial, sans-serif;
+        display: block;
+        }
+</STYLE>
+
+<STYLE ID="styleSortByTimesUsed" TYPE="text/css" DISABLED>
+    .CSortBySize {
+        display: none;
+    }
+    .CSortByTimesUsed {
+    }
+    .CSortByLastUsed {
+        display: none;
+    }
+</STYLE>
+ 
+<STYLE ID="styleSortByLastUsed" TYPE="text/css" DISABLED>
+    .CSortBySize {
+        display: none;
+    }
+    .CSortByTimesUsed {
+        display: none;
+    }
+    .CSortByLastUsed {
+    }
+</STYLE>
+
+<STYLE ID="styleSortBySize" TYPE="text/css">
+    .CSortBySize {
+    }
+    .CSortByTimesUsed {
+        display: none;
+    }
+    .CSortByLastUsed {
+        display: none;
+    }
+</STYLE>
+    
+<SCRIPT LANGUAGE="JavaScript" SRC="util.js">
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JScript" FOR=ctlARP EVENT="OnSyncDataReady()">
+    Binder(tblApps, ctlARP);
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JScript" FOR=ctlARP EVENT="OnAsyncDataReady(rowFired)">
+    ctlARP.MoveTo(rowFired);
+    BindRow(tblApps, ctlARP, tblApps.rows[rowFired]);
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JScript">
+
+//--------------------------------------------------------------------
+// New script
+
+// Globals
+    var g_rowOpen;
+    var g_htmlPanel;
+    g_rowOpen = null;
+    
+// Set up event handlers
+    document.onselectstart = CancelEvent;
+    
+//  Binder
+//      Simulates databinding by dynamically creating table rows for each
+//      item returned from the control
+
+function Binder(boundTable, ctl)
+{
+    BuildTemplate(boundTable, ctl);
+    BindData(boundTable, ctl);
+    GetPanel();
+}
+
+function BuildTemplate(bndTable, ctl)
+{
+    var tbc, tb, tr, td, i;
+    
+    // Get the TBODY element (supports just one TBODY)
+    tbc = bndTable.children.tags("tbody");
+    tb = tbc[0];
+    
+    // Create an expando array to store the template in
+    tb.template = new Array();
+    tb.templateCount = 0;
+    
+    // Walk through each TD in the TR and save it away.
+    // Note that this just handles one TR in the TBODY
+    tr = tb.children[0];
+    for (i = 0 ; i < tr.children.length ; i++)
+    {
+        td = tr.children[i];
+        tb.template[tb.templateCount++] = td.innerHTML;
+    }
+    
+    // Delete the template TR
+    bndTable.deleteRow(tr.rowIndex);
+}
+
+
+function BindData(bndTable, ctl)
+{
+    var i, e;
+    var tbc, tb, newRow, newCell;
+    var maxRows;
+    var row, col;
+    
+    // Find the body so we can add rows
+    tbc = bndTable.children.tags("tbody");
+    tb = tbc[0];
+    
+    // Add a new row for each item in the database
+    maxRows = ctl.ItemCount;
+    for (row = 0 ; row < maxRows ; row++)
+    {
+        newRow = tb.insertRow();
+        for (col = 0 ; col < tb.templateCount ; col++)
+        {
+            newCell = newRow.insertCell();
+            newCell.innerHTML = tb.template[col];
+        }
+
+        // Bind in the data for the row
+        BindRow(bndTable, ctl, newRow);
+        
+        // Move the control to the next data row
+        ctl.MoveNext();
+    }
+}
+
+
+function BindRow(bndTable, ctl, row)
+{
+    var e;
+    var i;
+    var col;
+    
+    // Loop through the row binding in the data
+    for (i = 0 ; i < row.all.length ; i++)
+    {
+        // Get the element
+        e = row.all[i];
+        
+        // If it's bound, do something useful...
+        if (e.getAttribute("datafield") != null)
+        {
+            col = ctl.getAttribute(e.getAttribute("datafield"));
+            
+            // If it's a databound style, we get the style name
+            // to bind from the DATASTYLE attribute. Otherwise, just
+            // dump in the text
+            if (e.getAttribute("bindstyle") != null)
+                e.style.setAttribute(e.getAttribute("datastyle"), col);
+            else
+                e.innerHTML = col;
+        }
+    }
+}
+
+
+function BindPanel(ctl, panel)
+{
+    var e;
+    var i;
+    var col;
+    
+    for (i = 0 ; i < panel.all.length ; i++)
+    {
+        // Get the element
+        e = panel.all[i];
+        
+        // If it's bound, do something useful...
+        if (e.getAttribute("datafield") != null)
+        {
+            col = ctl.getAttribute(e.getAttribute("datafield"));
+            e.innerHTML = col;
+        }
+    }
+}
+
+    
+//  window_onload
+//      Called when page is loaded
+
+function window_onload()
+{
+    // if running on Alpha, show the forcex86 checkbox
+    if (window.clientInformation.cpuClass == "Alpha")
+        ForceX86Pane.style.display="";
+        
+    // Tell the control to prepare the data
+    ctlARP.InitData("installed", 0);
+}
+
+//  CancelEvent
+//      Cancels any event this function is pointed to
+
+function CancelEvent()
+{
+    return false;
+}
+
+
+//  GetPanel
+//      Extracts the panel from the HTML stream and saves it away for
+//      when we need to plop it back in
+
+function GetPanel()
+{
+    if (g_htmlPanel != null)
+        return;
+        
+    g_htmlPanel = document.all("spnPanelTemplate").innerHTML;
+    document.all("spnPanelTemplate").innerHTML = "";
+}
+
+
+//  OpenRow
+//      Closes any open row and opens the current row as the selected
+//      item.  Tells the control to move to the respective record.
+
+function OpenRow(row, ctl)
+{
+    var newPanel;
+
+    // Close the current item if any
+    if (g_rowOpen != null)
+    {
+        // Disable the buttons
+        btnModRemove.disabled = true;
+        btnModify.disabled = true;
+        btnRemove.disabled = true;
+        
+        // Set row style back to non-selected
+        g_rowOpen.all("topRow").className = "CAppItem";
+        
+        // Nuke the panel
+        g_rowOpen.all("spnPanelHolder").innerHTML = "";
+    }
+    
+    // If this was the current item, we're done because we just wanted to
+    // close it in this case
+    if (row == g_rowOpen)
+    {
+        g_rowOpen = null;
+        return;
+    }
+    
+    ctl.MoveTo(row.rowIndex);
+    
+    // Open the new item
+    row.all("topRow").className = "CAppItemSel";
+    newPanel = row.all("spnPanelHolder")
+    newPanel.innerHTML = g_htmlPanel;
+    BindPanel(ctl, newPanel);
+    
+    // Remember it as the currently open item
+    g_rowOpen = row;
+
+    // Now update what buttons to show and enable, based upon the Winlogo.
+
+    // Does this support separate modify/remove buttons?
+    if (ctl.Capability & 0x04)
+    {
+        // Yes
+        document.styleSheets['styleLegacy'].disabled = true;
+        document.styleSheets['styleLogo3'].disabled = false;
+        btnModify.disabled = false;
+        btnRemove.disabled = false;
+    }
+    else
+    {
+        // No
+        document.styleSheets['styleLogo3'].disabled = true;
+        document.styleSheets['styleLegacy'].disabled = false;
+        btnModRemove.disabled = false;
+    }
+}
+
+//  HoverOn
+//      Begin a hover by changing the style
+
+function HoverOn(me)
+{
+    me.className = "CAppItemActive";
+    
+    event.cancelBubble = true;
+}
+
+
+//  HoverOff
+//      If we've really moved off the item, stop highlighting
+
+function HoverOff(me)
+{
+    if (!me.contains(event.toElement))
+        me.className = "CAppItem";
+        
+    event.cancelBubble = true;
+}
+
+
+//  BtnOnClick
+//      'onclick' handler for buttons
+
+function BtnOnClick(ctl)
+{
+    // Even though the button may be disabled, we still
+    // receive the event.  So check the disabled property
+    // ourselves before acting on it.
+    if (false == event.srcElement.disabled)
+    {
+        switch(event.srcElement.id)
+        {
+        case "btnModRemove":
+            ctl.Exec("uninstall");
+            break;
+
+        case "btnModify":
+            ctl.Exec("modify");
+            break;
+
+        case "btnRemove":
+            ctl.Exec("uninstall");
+            break;
+        }
+    }
+}
+
+    
+
+//    window.onerror = EatErrors;     // Catch onerror events
+    
+    var g_oRowCur = null;
+    
+    
+    // Resort the given data source object according to the 
+    // current selection in oSelect.
+    // 
+    //  oSelectList - the select object key
+    //  oDSO - the data source object to sort
+    // TODO - this is not hooked up right now, don't call it!
+    
+    function SortDataSource(oSelectList, oDSO)
+    {
+        var oCurSel = oSelectList.options(oSelectList.selectedIndex);
+
+        oDSO.Sort = oCurSel.value;
+        oDSO.Reset();
+
+        if (oCurSel.value == "size" || oCurSel.value == "displayname")
+        {
+            document.styleSheets['styleSortBySize'].disabled = false;
+            document.styleSheets['styleSortByTimesUsed'].disabled = true;
+            document.styleSheets['styleSortByLastUsed'].disabled = true;
+        }
+        else if (oCurSel.value == "timesused")
+        {
+            document.styleSheets['styleSortBySize'].disabled = true;
+            document.styleSheets['styleSortByTimesUsed'].disabled = false;
+            document.styleSheets['styleSortByLastUsed'].disabled = true;
+        }
+        else if (oCurSel.value == "lastused")
+        {
+            document.styleSheets['styleSortBySize'].disabled = true;
+            document.styleSheets['styleSortByTimesUsed'].disabled = true;
+            document.styleSheets['styleSortByLastUsed'].disabled = false;
+        }
+    }
+
+    // onclick handler for Forcex86 check box
+    function Forcex86OnClick(oDSO)
+    {
+        oDSO.Forcex86 = chkForcex86.checked;
+    }
+
+    function NOOP ()
+    {
+        window.event.cancelBubble = true;
+    }
+
+    function showSupport ()
+    {
+        // current row is oRowCur
+
+        var szDefaultWindowState =  "width=320,height=320,status=no,toolbar=no,resizable=yes,scrollbars=no,location=no,directories=no"
+        var winSupport = window.open("", "translate", szDefaultWindowState);
+        var docSupport = winSupport.document;
+
+        // create the new document
+
+        docSupport.open();
+
+        // now put as contents of the document a single HTML
+
+        docSupport.writeln("<HTML><TITLE>Support Information</TITLE><FRAMESET FRAMEBORDER=0 BORDER=0 FRAMESPACING=0><FRAME NAME=\"support_main\" SRC=\"am_suppt.htm\" SCROLLING=NO MARGINHEIGHT=0 MARGINWIDTH=0 NORESIZE FRAMEBORDER=0></FRAMESET></HTML>");
+    }
+</SCRIPT>
+
+    <!-- TODO: initialize selection -->
+    
+</HEAD>
+
+
+<BODY CLASS="CBody" LANGUAGE=javascript onload="window_onload()">
+
+    <!-- layout: 
+
+        +--------------------+----------------+
+   ROW1 | header             |    sort        |
+        +--------------------+----------------+
+   ROW2 |         gray separator line         |
+        +-------------------------------------+
+        |                                    ^|
+        |                                     |
+   ROW3 |             main contents           |
+        |                                     |
+        |                                    v|
+        +-------------------------------------+
+   ROW4 |         gray separator line         |
+        +--------------------+----------------+
+        | Helper text        |                |
+   ROW5 |                    | modify/remove  |
+        |                    |    buttons     |
+        +--------------------+----------------+
+
+    -->
+
+    <!-- App Data Control -->
+    
+    <OBJECT ID=ctlARP CLASSID="clsid:0CB57B2C-D652-11D1-B1DE-00C04FC2A118"
+        style="display:none">
+    </OBJECT>
+    
+    <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 style="height:100%; width:100%;">
+
+    <!-- ROW1 -->
+
+    <TR style="height:25px">
+
+        <!-- HEADER -->
+
+        <TD VALIGN=TOP>
+            <DIV CLASS="CHeader" style="LEFT: 0px; POSITION: relative">
+                Currently installed programs:
+            </DIV>
+        </TD>
+        
+        <!-- SORT -->
+
+        <TD VALIGN=TOP ALIGN=RIGHT WIDTH="30%">
+            <DIV CLASS="CNormalText">
+                <LABEL FOR="selSortBy" ACCESSKEY="s"><SPAN CLASS="CAccessKey">S</SPAN>ort by:</LABEL>
+                <SELECT ID="selSortBy" CLASS="CSelectList" STYLE="position: relative; top: 1px"
+                        SIZE="1"
+                        ONCHANGE="alert("Not implemented. Sorry!">
+                    <OPTION VALUE="displayname" SELECTED>Name</OPTION>
+                    <OPTION VALUE="size">Size</OPTION>
+                    <OPTION VALUE="timesused">Times Used</OPTION>
+                    <OPTION VALUE="lastused">Last Used</OPTION>
+                </SELECT>
+            </DIV>
+        </TD>
+    </TR>
+        
+    <!-- ROW2 -->
+
+    <TR style="height:2px" BGCOLOR="buttonface"><TD COLSPAN=2></TD></TR>
+
+    <!-- ROW3 -->
+
+    <TR>
+        <TD VALIGN=TOP COLSPAN=2>
+            <DIV CLASS="CListView">
+                <TABLE ID="tblApps" CLASS="CAppTable" CELLPADDING=0 CELLSPACING=0 WIDTH=100%>
+                    <TBODY>
+                        <TR ID="trAppTemplate" style="display:none">
+                            <TD WIDTH=100%>
+                                <TABLE ID="topRow" WIDTH=99% CELLPADDING=0 CELLSPACING=0 BORDER=0 TITLE="Click here to select this program" class="CAppItem"
+                                    onmousedown="OpenRow(this.parentElement.parentElement, ctlARP);"
+                                    ondblclick="OpenRow(this.parentElement.parentElement, ctlARP);">
+                                    <TR class="CAppItem">
+                                        <TD WIDTH=65%>
+                                            <img src="remove_icon.gif" VSPACE=3 HSPACE=3 align=absmiddle>
+                                            <SPAN DATAFIELD="displayname" class="CAppItem"
+                                                onmouseover="HoverOn(this);" onmouseout="HoverOff(this);">
+                                            </SPAN>
+                                        </TD>
+                                        <TD align=right>
+                                            size
+                                        </TD>
+                                        <TD align=left style="width:104px">
+                                            &nbsp;&nbsp;&nbsp;<SPAN DATAFIELD="size"></SPAN>
+                                        </TD>
+                                    </TR>
+                                </TABLE>
+                                <SPAN ID="spnPanelHolder"></SPAN>
+                            </TD>
+                        </TR>
+                    </TBODY>
+                </TABLE>
+            </DIV>
+        </TD>
+    </TR>
+    
+    <!-- ROW4 -->
+
+    <TR style="height:2px" BGCOLOR="buttonface"><TD COLSPAN=2></TD></TR>
+
+    <!-- ROW5 -->
+
+    <TR style="height:50px">
+        <TD CLASS="CNormalText" VALIGN=MIDDLE>
+            To remove a program from your computer, select it from the list above then click Modify or Remove.
+            <SPAN ID="ForceX86Pane" STYLE="display:none">
+                <BR><BR>
+                <INPUT TYPE="checkbox" ID="chkForcex86" ONCLICK=Forcex86OnClick(document.all.adcInstalled) ACCESSKEY=x STYLE="position:relative;top:2px" name="forcex86">
+                <LABEL FOR="FORCEX86">Force <SPAN class=CAccessKey>x</SPAN>86 Uninstall</LABEL>
+            </SPAN>
+        </TD>
+        
+        <TD VALIGN=MIDDLE WIDTH="50%" ALIGN=RIGHT>
+
+            <!--- BUTTON REGION --->
+
+            <DIV CLASS="CAppBtnGroup" ONCLICK="BtnOnClick(ctlARP)">
+                <BUTTON ID="btnModify" CLASS="CBtnLogo3"
+                        STYLE="left: 0"
+                        TITLE="Click here to modify the selected component"
+                        DISABLED>
+                    Modify
+                </BUTTON>&nbsp;
+                <BUTTON ID="btnRemove" CLASS="CBtnLogo3" 
+                        STYLE="left: 10"
+                        TITLE="Click here to remove the selected component"
+                        DISABLED>
+                    Remove
+                </BUTTON>
+                <BUTTON ID="btnModRemove" CLASS="CBtnLegacy"
+                        TITLE="Click here to modify or remove the selected component"
+                        DISABLED>
+                    Modify/Remove
+                </BUTTON>
+            </DIV>
+        </TD>
+    </TR>
+    </TABLE>
+    
+    <!-- Template for 'panel' that opens when an item is selected -->
+    <!-- Note that this template is never shown here, but is sucked up and deleted -->
+    <SPAN ID="spnPanelTemplate" style="display:none;">
+        <TABLE ID="tblPanel" WIDTH=99% CLASS="CAppItemPanel" CELLPADDING=0 CELLSPACING=0 BORDER=0">
+            <TR>
+                <TD ROWSPAN=10 STYLE="width:26px">
+                </TD>           
+                <TD valign=top ROWSPAN=10>
+                    <A href="javascript:showSupport();" onclick="NOOP()">support information</a>
+                </TD>
+                <TD valign=top STYLE="width: 40%">
+                    <TR style="height:18px">
+                        <TD align=right valign=top>
+                            size
+                        </TD>
+                        <TD style="width:104px"  valign=top>
+                            &nbsp;&nbsp;&nbsp;<SPAN DATAFIELD="size"></SPAN>
+                        </TD>
+                    </TR>
+                    <TR style="height:18px">
+                        <TD align=right valign=top>
+                            times used
+                        </TD>
+                        <TD style="width:104px" valign=top>
+                            &nbsp;&nbsp;&nbsp;<SPAN DATAFIELD="timesused"></SPAN>
+                        </TD>
+                    </TR>
+                    <TR style="height:18px">
+                        <TD align=right valign=top>
+                            last used
+                        </TD>
+                        <TD style="width:104px" valign=top>
+                            &nbsp;&nbsp;&nbsp;<SPAN DATAFIELD="lastused"></SPAN>
+                        </TD>
+                    </TR>
+                    <TR style="height:18px">
+                        <TD align=right valign=top>
+                            installed on
+                        </TD>
+                        <TD style="width:104px" valign=top>
+                            &nbsp;&nbsp;&nbsp;<SPAN DATAFIELD="InstallDate"></SPAN>
+                        </TD>
+                    </TR>
+                    <TR style="height:18px">
+                        <TD align=right valign=top>
+                            status
+                        </TD>
+                        <TD style="width:104px" valign=top>
+                            &nbsp;&nbsp;&nbsp;
+                        </TD>
+                    </TR>               
+                </TD>
+            </TR>
+        </TABLE>
+    </SPAN>
+    
+</BODY>
+</HTML>
+

@@ -1,0 +1,15 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\mslocusr]
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\mslocusr\NetworkProvider]
+"Name"="Family Logon"
+"ProviderPath"="mslocusr.dll"
+"Description"="Family Logon"
+"CallOrder"=hex:ff,ff,ff,ff
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\NetworkProvider\Order]
+"mslocusr"=""
+
+[HKEY_LOCAL_MACHINE\Network\Logon]
+"PrimaryProvider"="Family Logon"

@@ -1,0 +1,204 @@
+
+drop target registration at window-creation time
+drop target revoke at window-destruction time
+
+
+=================================
+call sequences:
+=================================
+
+DoVerb(OLEIVERB_SHOW | OLEIVERB_UIACTIVATE)
+  SrvrCtrl::RunningToInPlace
+    _pInPlace->ActivateInPlace
+	CreateUI
+        SetObjectRects
+        ShowWindow
+  SrvrCtrl::InPlaceToUIActive [object is locked]
+    _pInPlace->ActivateUI
+        _pInPlaceSite->OnUIActivate
+        InstallUI
+	  InstallFrameUI
+          InstallDocUI
+          SetFocus
+
+Click outside UIActive object window and:
+  it's site transitions from OS_UIACTIVE to OS_INPLACE
+  (this forces any non-InSideOut object to OS_RUNNING):
+    _pInPlaceObject->InPlaceDeactivate()
+    [on the object side, in sctrl]
+    _pCtrl->TransitionTo(OS_LOADED)
+      UIActiveToInPlace()  [object is unlocked]
+        _pInPlace->DeactivateUI()
+	  RemoveUI()
+            ClearSelection();
+            RemoveDocUI();
+	      _pDoc->SetActiveObject(NULL, NULL)
+            RemoveFrameUI();
+	      hides tool windows
+             _pFrame->SetMenu(NULL, NULL, _hwnd);
+             _pFrame->SetActiveObject(NULL, NULL);
+          _pInPlaceSite->OnUIDeactivate(FALSE)
+      InPlaceToRunning()
+        _pInPlace->DeactivateInPlace()
+          DestroyUI();
+	    reparents windows and destroys toolbar-trays
+	    removes and destroys the menus
+          DetachWin();
+	    destroys the IP window
+          _pInPlaceSite->OnInPlaceDeactivate();
+            _pInPlaceObject->Release();
+  >> object should now be "loaded" at it's site
+
+
+=================================
+PBrush surgery notes:
+=================================
+
+What are the windows?
+
+pbrushWnd[i] ==
+	PARENTid 0   "pbParent"	  ParentWP  -- the frame window
+	PAINTid  1   "pbPaint"	  PaintWP   -- the drawing surface
+	TOOLid   2   "pbTool"	  ToolWP    -- the tool tray
+	SIZEid   3   "pbSize"	  SizeWP    -- the line thickness tool
+	COLORid  4   "pbColor"	  ColorWP   -- the color tray
+	xxxxxxxxxx   "pbFull"     FullWP    -- the preview (full-screen) window
+	xxxxxxxxxx   "pbZoomOut"  ZoomOtWP  -- the zoomed-view window
+
+
+Where are the windows?
+    procs:
+        Parent	-- PARENTWP.C
+        Paint	-- PAINTWP.C
+        Tool	-- TOOLWP.C
+        Size	-- SIZEWP.C
+        Color	-- COLORWP.C
+
+    created:
+        Parent	-- WndInitGlob
+        Paint	-- WndInitGlob
+        Tool	-- WndInitGlob
+        Size	-- WndInitGlob
+        Color	-- WndInitGlob
+	Full	-- MenuCmd
+        ZoomOut	-- MenuCmd
+
+    moved/sized:
+	ParentWP WM_SIZE procesing moves the children
+
+    shown/hidden:
+
+    destroyed:
+        Parent	-- killed in TerminateServer
+	Full	-- kills itself
+	ZoomOut	-- kills itself
+
+What communication paths exist between the windows?
+
+        Parent	      -- talks to all child windows (below)
+		Paint -- talks to "Parent", Paint; uses ZoomIn wndproc
+		Tool  -- talks to "Parent", Paint
+		Size  -- talks to Paint
+		Color -- talks to "Parent", Paint
+	Full	      -- talks to Paint
+	ZoomOut	      -- talks to "Parent"
+
+
+=================================
+Steps to InPlace:
+=================================
+
+1) build a server menu
+
+2) build the InPace window
+
+3) implement reparenting functions
+
+4) additions to tool windows for use in floating-palette mode
+
+5) take it out for a spin, do basic debug, show it off...
+
+6) fix problems uncovered, review changes, incorporate sugestions...
+
+7) build a drop target
+
+8) implement the transfer object, take a stab at drag scrolling
+
+9) set up conversion plumbing for OLE1 PBrush objects
+
+10) debug, debug, debug!
+
+
+=================================
+Problems:
+=================================
+
+(1) The Window-positioning problem
+
+There are a number of places in the old PBrush code that cause
+a recalc of the size/position of the Paint, Tool, Size and Color
+windows.
+
+When InPlace, the new PBrush floats the Tool, Size and Color windows,
+and gives the Paint window the full extent of the InPlace window. The
+old recalc code hardcoded the positioning relationships between these
+windows.
+
+The solution implemented by the new PBrush code is to create simple
+tool-tray windows to house the Tool, Size and Color windows and to
+cause the old calculation/positioning code to leave these windows alone.
+While InPlace (signaled via the global gfInPlace), the trays own
+responsibility for setting the positions of the Tool, Size and Color windows.
+
+In addition, the InPlace code causes the Paint, Tool, Size and Color
+windows to be reparented to a window owned by the InPlace code. This
+reparenting is reversed when the new PBrush UIDeactivates. The InPlace
+window also forwards appropriate messages through to the Paint
+window and the MenuCmd function so that commands, etc., get processed
+as intended.
+
+
+
+(2) The Menu-state problem
+
+There are a number of places sprinkled through the old PBrush C code
+where menus and sub-items are enabled/disabled. Access to these menus
+is inconsistent, often MF_BYPOSITION: somtimes via hard-coded constants,
+sometimes via defined constants, and sometimes through static index arrays.
+
+When InPlace, the new PBrush uses a copy of the menu resource which
+has had the File and View popups removed (at runtime). File was
+removed because it is defined as a container menu. View was removed
+because zoom is fundementally problematic for InPlace objects (see RandyKe,
+TonyW, or NatBr for a review of the issues).
+
+So, the old PBrush code attempts to access menu positions that are
+wrong for the InPlace menus. The solution is to rationalize access
+to the menus via shared (global) indexes and functions.
+
+
+(3) The Mouse-capture problem
+
+Paintbush uses mouse capture extensively. The mouse is captured whenever
+a click hits the Paint window, and this capture is released when a mouse-move
+event happens for a point outside the Paint window AND a drawing operation
+is not being tracked. On Win32 mouse capture is thread-specific, so as long as
+mouse moves are happening over a window owned by the same thread as PBrush,
+there is a good chance a move message will be seen as the user sweeps out of
+the Paint window. Unfortunately, in the LocalServer-InPlace scenario this is
+not the case. The result is that the Paint window has no good (early)
+opportunity to give up it's capture.
+
+One possible "solution" would be to use the UIActive border as a buffer zone.
+What if this zone isn't big enough (and reasonable movements get the cursor
+across the zone before capture is released)? One HACK would be to create another,
+transparent window under the border and Paint windows. The problem with this
+(aside from it's gross overhead) is that a document could be scrolled such
+that the PBrush object extends over the clipping boundary, loosing the border
+altogether! An even grosser possibility would be to create a top-level
+transparent window underneath the PBrush object.
+
+The solution adopted is to NOT capture the cursor (except during tool tracking)
+as long as PBrush is InPlace.
+
+

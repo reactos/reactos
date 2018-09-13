@@ -1,0 +1,34 @@
+HKCR
+{
+	IeLogControl.IeLogControl.1 = s 'IeLogControl Class'
+	{
+		CLSID = s '{A145F827-6114-11D1-ADE3-00C04FB66F63}'
+	}
+	IeLogControl.IeLogControl = s 'IeLogControl Class'
+	{
+		CurVer = s 'IeLogControl.IeLogControl.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {A145F827-6114-11D1-ADE3-00C04FB66F63} = s 'IeLogControl Class'
+		{
+			ProgID = s 'IeLogControl.IeLogControl.1'
+			VersionIndependentProgID = s 'IeLogControl.IeLogControl'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Programmable'
+			ForceRemove 'Insertable'
+			ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{A145F819-6114-11D1-ADE3-00C04FB66F63}'
+			'Version' = s '1.0'
+		}
+	}
+}

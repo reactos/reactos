@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdpo
+
+TARGETNAME=kbdpo
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdpo.c kbdpo.rc
+
+NTTARGETFILE0=kbdpo.h kbdpo.rc kbdpo.def

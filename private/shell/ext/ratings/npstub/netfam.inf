@@ -1,0 +1,95 @@
+; NETCLI.INF
+;
+; Network Clients
+;
+; Copyright 1993-1996, Microsoft Corporation
+
+[version]
+LayoutFile=layout.inf
+signature="$CHICAGO$"
+Class=NetClient
+provider=%V_MS%
+
+[ClassInstall]
+AddReg=NetClientReg
+
+[NetClientReg]
+HKR,,,,%V_CLASSNAME%
+HKR,,Installer,,"netdi.dll"
+HKR,,Icon,,-7
+HKR,,NoUseClass,,1
+
+[Manufacturer]
+%V_MS%=MS
+
+[MS]
+%FAMILY.DeviceDesc%=  FAMILY.ndi,  FAMILY
+
+;*********************************************
+;    FAMILY section
+;*********************************************
+[FAMILY.ndi]
+AddReg=FAMILY.ndi.reg
+DeviceID=FAMILY
+
+[FAMILY.ndi.reg]
+HKR,Ndi,DeviceID,,FAMILY
+;;HKR,Ndi,NdiInstaller,,"netdi.dll,MSClientNdiProc"
+; Interfaces
+HKR,Ndi\Interfaces,DefLower,,"netbios,ipxDHost"
+HKR,Ndi\Interfaces,LowerRange,,"netbios,ipxDHost"
+
+; Install-Remove Section
+HKR,Ndi\Install,,,"FAMILY.Install"
+HKR,Ndi\Remove,,,"FAMILY.Remove"
+
+; Network provider
+; should be the same as HKLM\system\ccs\NPSTUB\networkprovider\name
+HKR,Ndi,NetworkProvider,,%FAMILY.DeviceDesc%
+
+; Context help
+HKR,Ndi,HelpText,,%FAMILY_HELP%
+
+[FAMILY.Install]
+AddReg=NPSTUB.AddReg
+CopyFiles=NPSTUB.Files
+
+[NPSTUB.AddReg]
+;Net provider info
+HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order",NPSTUB,,
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",Name,,%FAMILY.DeviceDesc%
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",ProviderPath,,"ienpstub.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",RealDLL,,"mslocusr.dll"
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",Description,,%FAMILY.DeviceDesc%
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",NetID,1,00,00,01,00
+HKLM,"SYSTEM\CurrentControlSet\Services\NPSTUB\NetworkProvider",CallOrder,1,00,00,00,40
+
+[NPSTUB.Files]
+IENPSTUB.dll
+MSLOCUSR.dll
+
+[FAMILY.Remove]
+DelReg=NPSTUB.AddReg
+
+;****************************************************************************
+; Destinations
+;****************************************************************************
+
+[DestinationDirs]
+NPSTUB.Files            = 11    ;LDID_SYS
+
+;****************************************************************************
+; Localizable Strings
+;****************************************************************************
+
+[strings]
+V_MS="Microsoft"
+V_CLASSNAME="Network Client"
+
+;Devices
+FAMILY.DeviceDesc= "Microsoft Family Logon"
+
+; Context help
+; NOTE: must be 199 bytes or less, otherwise the network CPL will refuse to
+; display it.
+FAMILY_HELP="When Windows starts, Microsoft Family Logon displays a list of users with access to this computer. To log on to Windows, click a user, and then type the correct password."

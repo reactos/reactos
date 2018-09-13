@@ -1,0 +1,479 @@
+//****************************************************************************
+//
+//  Module:     RNAUI.DLL
+//  File:       rnaui.rc
+//  Content:    This file contains all the resources for RNAUI
+//  History:
+//      Mon 29-Nov-1993 17:49:00  -by-  Viroon  Touranachun [viroont]
+//
+//****************************************************************************
+
+#ifndef APSTUDIO_INVOKED
+#include <windows.h>
+#include <commctrl.h>
+#include "rnaui.rcv"
+#endif  //APSTUDIO_INVOKED
+
+#include "rcids.h"
+
+//
+// *** It is important that these icons are listed in numerical order ***
+//
+IDI_REMOTEFLD   ICON    "..\\resource\\rmtfld.ico"
+IDI_REMOTE      ICON    "..\\resource\\rna.ico"
+IDI_NEWREMOTE   ICON    "..\\resource\\newrna.ico"
+IDI_REMOTE_FILE ICON    "..\\resource\\rnafile.ico"
+IDI_DEL_CONN    ICON    "..\\resource\\delconn.ico"
+IDI_DEL_MCONN   ICON    "..\\resource\\delmconn.ico"
+IDI_WELCOME_LIGHTBULB   ICON    "..\\resource\\tips.ico"
+
+IDB_REM_TB_SMALL    BITMAP  "..\\resource\\remtb.bmp"
+IDB_WELCOME_MON     BITMAP  "..\\resource\\confirm.bmp"
+
+//****************************************************************************
+// Error String
+//****************************************************************************
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ERR_INVALID_PHONE       "Complete the phone number by\n1 Typing a local phone number with any extension.\n2 Selecting a country code."
+    IDS_ERR_INVALID_RENAME      "A connection name cannot contain any of the following characters:\n\t \\ / :  * ? "" < > | \n\nType another name."
+    IDS_ERR_INVALID_CONN        "The selected connection does not exist.\nDouble-click the Make New Connection icon, and then try connecting again."
+    IDS_ERR_UNKNOWN_FORMAT      "The information about your modem is invalid.\nDouble-click the Make New Connection icon, and then try connecting again."
+    IDS_ERR_BAD_PORT            "There was a problem initializing your modem.\nDouble-click the Modem icon in the Control Panel and check that the modem is installed."
+    IDS_ERR_DEVICE_NOT_FOUND    "You cannot configure an uninstalled modem.\nInstall the modem by double-clicking the Modem icon in the Control Panel."
+    IDS_ERR_DEVICE_INUSE        "You cannot configure a modem while it is in use.\nDisconnect the modem, and then try again."
+    IDS_ERR_NO_DEVICE           "Dial-Up Networking cannot find the specified modem.\nInstall the modem or select a new modem before you dial."
+    IDS_ERR_NAME_EXIST          "The name you entered already exists.\nType another name."
+    IDS_ERR_NAME_TOO_LONG       "The connection name must be less than 256 characters long.\nType another name."
+    IDS_ERR_RESERVE_NAME        "The new name is reserved.\nType another name."
+    IDS_ERR_BAD_INSTALL         "Dial-Up Networking cannot start. Reboot your system, and try again.\nIf the problem persists, reinstall Dial-Up Networking."
+    IDS_ERR_INV_RDCNT           "The number of redial attempts is invalid or exceeds the limit.\nRe-enter a new number."
+    IDS_ERR_INV_RDWMIN          "The redial interval is invalid or exceeds the limit.\nRe-enter a new number."
+    IDS_ERR_INV_RDWSEC          "The redial interval is invalid.\nRe-enter a new number."
+    IDS_ERR_FILE_NOT_EXIST      "The specified file does not exist.\nDo you still want to use this filename?"
+    IDS_ERR_CORRUPT_IMPORT      "The imported file is corrupted.\nTry other imported files."
+    IDS_ERR_NO_DEVICE_INSTALLED "The file cannot be imported because no modem is installed.\nInstall the modem by double-clicking the Modem icon in the Control Panel."
+END
+
+//****************************************************************************
+// Out of memory strings
+//****************************************************************************
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OOM_FILLSPACE           "There is not enough memory for all of your Dial-Up Networking connections.\nClose some files or programs, and then try again."
+END
+
+
+//****************************************************************************
+// Captions
+//****************************************************************************
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CAP_REMOTE             "Dial-Up Networking"
+END
+
+//****************************************************************************
+// Template for the connection information
+//****************************************************************************
+
+IDD_ABENTRY DIALOG DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_REMOTE,IDC_AB_ICON,14,7,18,20
+    EDITTEXT        IDC_AB_ENTRY,44,10,148,14,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER
+    GROUPBOX        "Phone number:",IDC_AB_PHNGRP,7,34,197,86
+    LTEXT           "A&rea code:",IDC_AB_AREATXT,22,45,48,8
+    COMBOBOX        IDC_AB_AREA,22,55,48,48,CBS_DROPDOWN | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "-",IDC_STATIC,70,57,8,8
+    LTEXT           "Tele&phone number:",IDC_AB_PHONETXT,79,45,109,8
+    EDITTEXT        IDC_AB_PHONE,79,55,113,13,ES_AUTOHSCROLL
+    LTEXT           "Co&untry code:",IDC_AB_COUNTRYTXT,22,74,55,8
+    COMBOBOX        IDC_AB_COUNTRY,22,84,170,48,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "U&se country code and area code",IDC_AB_FULLPHONE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,22,104,170,10
+    GROUPBOX        "Co&nnect using:",IDC_AB_DEVICETXT,7,124,197,57,WS_GROUP
+    ICON            "",IDC_AB_DEVICO,22,140,18,20
+    COMBOBOX        IDC_AB_DEVICE,50,140,142,48,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Configure...",IDC_AB_DEVICESET,124,158,68,14
+END
+
+#ifdef MULTILINK_ENABLED
+#ifdef MULTILINK_PROP_PAGE
+#else
+IDD_ABMLENTRY DIALOG DISCARDABLE  0, 0, 212, 212
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        IDC_AB_ENTRY,14,10,190,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+
+    GROUPBOX        "",IDC_AB_PHNGRP,7,28,197,44
+    CONTROL         "U&se country code and area code (for all devices)",
+                    IDC_AB_FULLPHONE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    12,27,170,10
+    LTEXT           "Co&untry code:",IDC_AB_COUNTRYTXT,18,40,55,8
+    COMBOBOX        IDC_AB_COUNTRY,18,50,117,48,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "A&rea code:",IDC_AB_AREATXT,144,40,48,8
+    COMBOBOX        IDC_AB_AREA,144,50,48,48,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+
+    GROUPBOX        "Primary Device:",IDC_AB_DEVICETXT,7,76,197,77,
+                    WS_GROUP
+    LTEXT           "&Phone number:",IDC_AB_PHONETXT,17,94,48,8
+    EDITTEXT        IDC_AB_PHONE,71,92,120,13,ES_AUTOHSCROLL
+    LTEXT           "Usi&ng:",IDC_STATIC,18,113,27,8
+    COMBOBOX        IDC_AB_DEVICE,50,113,142,48,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    ICON            "",IDC_AB_DEVICO,18,126,18,20
+    PUSHBUTTON      "&Configure...",IDC_AB_DEVICESET,124,131,68,14
+
+    GROUPBOX        "Set additional devices:",IDC_AB_MLGRP,7,157,197,48
+    LTEXT           "Number of additional devices available:",
+                    IDC_AB_MLCNTTXT,20,169,130,10
+    LTEXT           "0",IDC_AB_MLCNT,150,169,39,10
+    PUSHBUTTON      "S&ettings...",IDC_AB_MLSET,124,183,68,14
+END
+#endif //MULTILINK_PROP_PAGE
+#endif //MULTILINK_ENABLED
+
+IDD_SCRIPT DIALOG DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "Scripting"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Script file",IDC_SCRIPT_GRP,8,8,197,62
+    LTEXT           "File &name:",IDC_STATIC,16,19,66,8
+    EDITTEXT        IDC_SCRIPT_NAME,16,31,181,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Edit",IDC_EDIT,95,50,50,14
+    PUSHBUTTON      "&Browse",IDC_SCRIPT_BROWSE,147,50,50,14
+
+    CONTROL         "&Step through script",IDC_DEBUG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,8,76,197,10
+    CONTROL         "Start terminal screen &minimized",IDC_MINIMIZED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,8,91,197,10
+
+#ifdef SCRPT_HELP_ENABLED
+    PUSHBUTTON      "&Help",IDC_SCRIPT_HELP,155,115,50,14, WS_DISABLED
+#endif // SCRPT_HELP_ENABLED
+END
+
+#ifdef MULTILINK_ENABLED
+#ifdef MULTILINK_PROP_PAGE
+IDD_ML DIALOG DISCARDABLE  0, 0, 212, 188
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "Multilink"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_ML_GRP,8,24,197,157
+    CONTROL         "Do &not use additional devices",IDC_ML_DISABLE,
+                    "Button",BS_AUTORADIOBUTTON,12,8,110,10
+    CONTROL         "&Use additional devices",IDC_ML_ENABLE,"Button",
+                    BS_AUTORADIOBUTTON,12,23,88,10
+    EDITTEXT        IDC_ML_FRAME,12,37,187,104,WS_DISABLED
+
+    LTEXT           "Se&lected device:",IDC_ML_SEL_TXT,12,146,60,8
+    LTEXT           "",IDC_ML_SEL,74,146,125,8,SS_NOPREFIX
+
+    PUSHBUTTON      "A&dd...",IDC_ML_ADD,12,159,58,14
+    PUSHBUTTON      "&Remove",IDC_ML_DEL,77,159,58,14
+    PUSHBUTTON      "&Edit...",IDC_ML_EDIT,141,159,58,14
+END
+#else
+IDD_ML DIALOG DISCARDABLE  0, 0, 212, 170
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "Set Additional Devices"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_ML_GRP,8,24,197,117
+    CONTROL         "Do &not use additional devices",IDC_ML_DISABLE,
+                    "Button",BS_AUTORADIOBUTTON,12,8,110,10
+    CONTROL         "&Use additional devices",IDC_ML_ENABLE,"Button",
+                    BS_AUTORADIOBUTTON,12,23,88,10
+    EDITTEXT        IDC_ML_FRAME,12,37,187,64,WS_DISABLED
+    LTEXT           "Se&lected device:",IDC_ML_SEL_TXT,12,106,60,8
+    LTEXT           "",IDC_ML_SEL,74,106,125,8,SS_NOPREFIX
+    PUSHBUTTON      "A&dd...",IDC_ML_ADD,12,119,58,14
+    PUSHBUTTON      "&Remove",IDC_ML_DEL,77,119,58,14
+    PUSHBUTTON      "&Edit...",IDC_ML_EDIT,141,119,58,14
+
+    DEFPUSHBUTTON   "OK",IDOK,83,148,58,14
+    PUSHBUTTON      "Cancel",IDCANCEL,147,148,58,14
+END
+#endif //MULTILINK_PROP_PAGE
+#endif //MULTILINK_ENABLED
+
+IDD_EDIT_MLI DIALOG DISCARDABLE  0, 0, 256, 58
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP
+CAPTION "Edit Extra Device"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Device name:",IDC_STATIC,8,8,49,8
+    COMBOBOX        IDC_ML_DEVICE,8,18,180,48,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Phone number:",IDC_STATIC,8,37,49,8
+    EDITTEXT        IDC_ML_PHONE,60,36,128,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "&OK",IDOK,196,17,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,196,35,50,14
+END
+
+IDD_DELETE_CONN DIALOG DISCARDABLE  0, 0, 218, 70
+STYLE DS_MODALFRAME | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Connection Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,104,46,50,14
+    PUSHBUTTON      "&No",IDNO,158,46,50,14
+    ICON            IDI_DEL_CONN,-1,10,10,18,20
+    LTEXT           "Are you sure you want to remove '%1!s!'?",IDC_DEL_TEXT,
+                    40,10,165,30,SS_NOPREFIX
+END
+
+IDD_DELETE_MULTIPLE DIALOG DISCARDABLE  0, 0, 218, 70
+STYLE DS_MODALFRAME | DS_CENTER | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm Multiple Connection Delete"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Yes",IDYES,104,46,50,14
+    PUSHBUTTON      "&No",IDNO,158,46,50,14
+    ICON            IDI_DEL_MCONN,-1,10,10,18,20
+    LTEXT           "Are you sure you want to remove these %1!d! connections?",
+                    IDC_DEL_TEXT,40,10,165,31
+END
+
+IDD_RNA_SETTING DIALOG DISCARDABLE  0, 0, 212, 217
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+      WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "When establishing a Dial-Up connection:",
+                    IDC_SET_DIAL_LABEL,10,10,192,69
+    CONTROL         "Show an ico&n on taskbar after connected",
+                    IDC_SET_TRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,28,
+                    168,10
+    CONTROL         "Prompt for &information before dialing",IDC_SET_PROMPT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,45,168,10
+    CONTROL         "Show a &confirmation dialog after connected",
+                    IDC_SET_CONFIRM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,22,
+                    62,168,10
+
+    GROUPBOX        "",IDC_SET_REDIAL_LABEL,10,88,192,60
+    CONTROL         "&Redial",IDC_SET_REDIAL,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,15,87,33,10
+
+    LTEXT           "Before giving up re&try:",IDC_SET_RDCNTLABEL,22,105,83,
+                    9
+    EDITTEXT        IDC_SET_RDCNT,137,102,32,14,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SET_RDCNT_ARRW,
+                    UPDOWN_CLASS,WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,156,102,12,14
+    LTEXT           "times",IDC_SET_RDC_UNIT,172,105,18,10
+
+    LTEXT           "Between tries &wait:",IDC_SET_RDW_LABEL,22,125,64,9
+    EDITTEXT        IDC_SET_RDWMIN,86,122,32,14,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SET_RDWMIN_ARRW,
+                    UPDOWN_CLASS,WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,105,122,12,14
+    LTEXT           "mins.",IDC_SET_RDW_UNIT1,120,125,17,10
+    EDITTEXT        IDC_SET_RDWSEC,137,122,32,14,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SET_RDWSEC_ARRW,
+                    UPDOWN_CLASS,WS_BORDER | WS_GROUP |
+                    UDS_AUTOBUDDY | UDS_ALIGNRIGHT | UDS_ARROWKEYS |
+                    UDS_SETBUDDYINT,156,122,12,14
+    LTEXT           "secs.",IDC_SET_RDW_UNIT2,172,125,18,10
+
+    GROUPBOX        "When establishing a network connection:",
+                    IDC_SET_IMPLICIT_LABEL,10,156,192,52
+    CONTROL         "&Prompt to use Dial-Up Networking",IDC_SET_ENIMPLICIT,
+                    "Button",BS_AUTORADIOBUTTON,22,173,168,10
+    CONTROL         "&Don't prompt to use Dial-Up Networking",
+                    IDC_SET_DISIMPLICIT,"Button",BS_AUTORADIOBUTTON,22,190,
+                    168,10
+END
+
+IDD_CONFIRMCONNECT DIALOG DISCARDABLE  0, 0, 289, 144
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Connection Established"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Close",IDOK,134,122,60,14
+    PUSHBUTTON      "&More Information...",IDC_CC_WHATSNEXT,199,122,84,14
+
+    CONTROL         "&Do not show this dialog box in the future.",
+                    IDC_CC_NO_CONFIRM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    8,102,149,10
+
+    LTEXT           "You are connected to %s.",IDC_CC_NAME,8,10,273,14
+
+    LTEXT           "To disconnect or to view status information, double-click the dial-up icon in the status area of the taskbar.",
+                    IDC_WELCOME_TIPS,8,29,150,31
+    CONTROL         "",IDC_WELCOME_MON,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    166,29,118,31
+
+    LTEXT           "You can also double-click the connection icon in the Dial-Up Networking folder.",
+                    IDC_WELCOME_TIPS2,8,70,150,28
+    ICON            IDI_REMOTE,IDC_WELCOME_BITMAP,166,70,18,20
+END
+
+//****************************************************************************
+// Remote folder resources
+//****************************************************************************
+
+#ifndef APSTUDIO_INVOKED
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_REMOTE MENUEX DISCARDABLE
+BEGIN
+    POPUP "&Connections",     RSVIDM_REMOTE
+    BEGIN
+        MENUITEM "C&onnect...",                 RSVIDM_CONNECT,,MFS_GRAYED
+        MENUITEM "Make &New Connection...",     RSVIDM_CREATE
+        MENUITEM "", -1, MFT_SEPARATOR
+        MENUITEM "&Settings...",                RSVIDM_SETTING
+    END
+END
+
+MENU_SERVER MENUEX DISCARDABLE
+BEGIN
+    MENUITEM "&Dial-Up Server...",              RSVIDM_DIALIN
+END
+
+POPUP_CONTEXT MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Cr&eate",                     RSVIDM_CREATE
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "C&onnect",                    RSVIDM_CONNECT
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Create &Shortcut",            RSVIDM_LINK
+        MENUITEM "&Delete",                     RSVIDM_DELETE
+        MENUITEM "Rena&me",                     RSVIDM_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 RSVIDM_PROPERTIES
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "&Status",                     RSVIDM_STATUS
+        MENUITEM "D&isconnect",                 RSVIDM_DISCONNECT
+    END
+END
+
+
+POPUP_DROP MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Copy Here",                  IDM_DROP_COPY
+        MENUITEM "&Move Here",                  IDM_DROP_MOVE
+        MENUITEM SEPARATOR
+        MENUITEM "Cancel...",                   IDM_DROP_CANCEL
+    END
+END
+
+#endif //APSTUDIO_INVOKED
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_NEWREMOTE           "Make New Connection"
+    IDS_UNKNOWNERROR        "An unknown error occurred."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_MH_REMOTE           "Contains commands for Dial-Up Networking"
+    IDS_MH_CONNECT          "Dials this connection."
+    IDS_MH_CREATE           "Makes a new connection."
+    IDS_MH_STATUS           "Shows the detailed status of this connection."
+    IDS_MH_DISCONNECT       "Hangs up this connection."
+    IDS_MH_DIALIN           "Sets options for dialing in to this computer."
+    IDS_MH_LINK             "Creates shortcut(s) to selected items."
+    IDS_MH_DELETE           "Deletes selected items."
+    IDS_MH_RENAME           "Renames selected items."
+    IDS_MH_PROPERTIES       "Opens the property sheet of selected items."
+    IDS_MH_SETTING          "Sets options for dialing out to other computers."
+    IDS_TT_CONNECT          "Dial"
+    IDS_TT_CREATE           "Create"
+    IDS_TT_STATUS           "Connection status"
+    IDS_TT_DISCONNECT       "Hang up"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ICOL_NAME           "Entry name"
+    IDS_ICOL_PHONE          "Phone #"
+    IDS_ICOL_DEVICE         "Device name"
+    IDS_ICOL_STATUS         "Status"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPENPORT                 "Initializing"
+    IDS_PORTOPENED               "Accessing the modem"
+    IDS_CONNECTDEVICE            "Dialing"
+    IDS_DEVICECONNECTED          "Device Connected"
+    IDS_STARTAUTHENTICATION      "Verifying user name and password"
+    IDS_AUTHENTICATE             "Verifying user name and password"
+    IDS_CALLBACKPREP             "Preparing for callback"
+    IDS_WAITRESPOND              "Waiting for callback"
+    IDS_AUTHENTICATED            "Logging on to network"
+    IDS_CONNECTED                "Connected"
+    IDS_DISCONNECTED             "Disconnecting"
+    IDS_NETLOGON                 "User name and password verified"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SHORT_NAME          "%s..."
+
+    IDS_COUNTRY_FMT         "%s (%d)"
+
+    IDS_DISP_PHONE_FMT      "%1!d!-(%2!s!)-%3!s!"  // country code-(area code)-local
+    IDS_DISP_NA_PHONE_FMT   "%1!d!-%3!s!"          // country code-local
+
+    IDS_INI_SCRIPT_DIR      "\\Program Files\\Accessories"
+    IDS_INI_SCRIPT_SHORTDIR "\\Progra~1\\Access~1"
+    IDS_FILE_FILTER         "All files (*.*)\0*.*\0Dial-Up Script (*.SCP)\0*.SCP\0Text files (*.TXT)\0*.TXT"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ML_COL_DEVICE       "Device name"
+    IDS_ML_COL_PHONE        "Phone #"
+END
+
+#include "rnawiz.rc"

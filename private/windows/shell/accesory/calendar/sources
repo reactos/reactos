@@ -1,0 +1,46 @@
+MAJORCOMP=shell
+MINORCOMP=accesories
+
+TARGETNAME=calendar
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.;..\..\comdlg
+
+C_DEFINES=-DWIN32
+
+SOURCES=calrc.rc \
+	cal.c	\
+	cal2.c	\
+	calalarm.c	\
+	calcmd.c	\
+	calcmd2.c	\
+	calcolor.c	\
+	caldata.c	\
+	caldata2.c	\
+	calday.c	\
+	calday2.c	\
+	caldos.c	\
+	calendar.c	\
+	calfile.c	\
+	calfile2.c	\
+	calinit.c	\
+	calmark.c	\
+	calmon2.c	\
+	calmonth.c	\
+	calprint.c	\
+	calrem.c	\
+	calspecl.c	\
+	caltdd.c	\
+	caltqr.c	\
+	cdlgopen.c
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=calendar
+UMLIBS=obj\*\calendar.lib obj\*\calrc.res \
+	\nt\public\sdk\lib\*\shell32.lib \
+	\nt\public\sdk\lib\*\pwin32.lib \
+	\nt\public\sdk\lib\*\comdlg32.lib \
+	..\common\obj\*\common.lib

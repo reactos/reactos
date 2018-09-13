@@ -1,0 +1,139 @@
+!IF 0
+
+Copyright (c) 1989-1996 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Common ccshell makefile and cleanup 15-Apr-96 Scott Hysom (scotth)
+    Created 27-Sep-94 by Bob Day (bobday)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+ROOT                = $(BASEDIR)\private
+CCSHELL_DIR         = $(ROOT)\shell
+IFACE_DIR           = .\if
+
+# Cross-compiler macros for unique naming
+MAJORCOMP           = adesktop
+MINORCOMP           = actsaver
+
+# Defines for common.inc
+TARGET_BOTH         = 1
+NOT_UNICODE         = 1
+PRECOMPILED_CXX     = 1
+
+# Include our common makefile
+!include $(CCSHELL_DIR)\common.inc
+
+!if !$(386)
+LINKLIBS = $(SDK_LIB_PATH)\ntdll.lib $(MACHINE_TARGETLIBS)
+!endif
+
+# Other directives
+SOURCES_USED        = $(CCSHELL_DIR)\common.inc $(SOURCES_USED)
+INCLUDES            = $(IFACE_DIR);$(SDK_LIB_PATH);$(INCLUDES)
+
+DELAYLOAD       = ADVAPI32.DLL; OLE32.DLL; OLEAUT32.DLL; WININET.DLL; HLINK.DLL; URLMON.DLL; SHELL32.DLL; WINMM.DLL
+
+# Common settings required by build.exe and makefile.def
+TARGETNAME          = actsaver
+TARGETPATH          = obj
+TARGETTYPE          = UMAPPL_NOLIB
+TARGETLIBS          =
+
+UMTYPE              = windows
+UMAPPL              = actsaver
+UMAPPLEXT           = .scr
+UMLIBS              = \
+                    $(_OBJ_DIR)\*\actsaver.res  \
+                    $(_OBJ_DIR)\*\atlimpl.obj   \
+                    $(_OBJ_DIR)\*\bsc.obj       \
+                    $(_OBJ_DIR)\*\cfgdlg.obj    \
+                    $(_OBJ_DIR)\*\debug.obj     \
+                    $(_OBJ_DIR)\*\dib.obj       \
+                    $(_OBJ_DIR)\*\pidllist.obj  \
+                    $(_OBJ_DIR)\*\preview.obj   \
+                    $(_OBJ_DIR)\*\regini.obj    \
+                    $(_OBJ_DIR)\*\saver.obj     \
+                    $(_OBJ_DIR)\*\sswnd.obj     \
+                    $(_OBJ_DIR)\*\statreg.obj   \
+                    $(_OBJ_DIR)\*\strclass.obj  \
+                    $(_OBJ_DIR)\*\toolbar.obj   \
+                    $(_OBJ_DIR)\*\wnd.obj
+
+
+LINKLIBS            = \
+                    $(LINKLIBS)                         \
+                    $(LIBRARY_PATH)\gdi32.lib           \
+                    $(LIBRARY_PATH)\kernel32.lib        \
+                    $(LIBRARY_PATH)\user32.lib          \
+                    $(LIBRARY_PATH)\advapi32.lib        \
+                    $(LIBRARY_PATH)\shlwapip.lib        \
+                    $(LIBRARY_PATH)\comctlp.lib         \
+                    $(LIBRARY_PATH)\shell32p.lib        \
+                    $(CCSHELL_DIR)\lib\$(O)\shguid.lib  \
+                    $(CCSHELL_DIR)\lib\$(O)\shguidp.lib \
+                    $(LIBRARY_PATH)\uuid.lib            \
+                    $(LIBRARY_PATH)\wininet.lib         \
+                    $(LIBRARY_PATH)\urlmon.lib          \
+                    $(LIBRARY_PATH)\hlink.lib           \
+                    $(LIBRARY_PATH)\mpr.lib             \
+                    $(LIBRARY_PATH)\ole32.lib           \
+                    $(LIBRARY_PATH)\winmm.lib           \
+                    $(LIBRARY_PATH)\version.lib         \
+                    $(SDK_LIB_PATH)\oleaut32.lib
+
+!if $(386)
+UMENTRYABS          = ModuleEntry@0
+!else
+UMENTRYABS          = ModuleEntry
+!endif
+
+# Turn on DEBUG setting when appropriate
+!IF !$(FREEBUILD)
+C_DEFINES           = $(C_DEFINES) -DDEBUG -D_DEBUG
+!ENDIF
+
+PASS0_HEADERDIR     = $(IFACE_DIR)
+PASS0_SOURCEDIR     = .
+MIDL_UUIDDIR        = .
+MIDL_FLAGS=/tlb $(O)\actsaver.tlb
+INCLUDES=$(INCLUDES);$(O)
+
+# List of sources
+SOURCES             = \
+    actsaver.idl \
+                    actsaver.rc     \
+                    actsaver.cpp    \
+                    atlimpl.cpp     \
+                    bsc.cpp         \
+                    cfgdlg.cpp      \
+                    debug.cpp       \
+                    dib.cpp         \
+                    pidllist.cpp    \
+                    preview.cpp     \
+                    regini.cpp      \
+                    saver.cpp       \
+                    sswnd.cpp       \
+                    statreg.cpp     \
+                    strclass.cpp    \
+                    toolbar.cpp     \
+                    wnd.cpp
+
+PRECOMPILED_INCLUDE = precomp.h
+
+CONDITIONAL_INCLUDES=macocidl.h

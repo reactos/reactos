@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage 2.0">
+<title>IE4.0</title>
+</head>
+
+<body bgcolor="#80FFFF">
+
+<h2>IE 4.0 : Browser Bar Extension Mechanism</h2>
+
+<p>This document describes one of new features of IE 4.0, which
+is called &quot;BrowserBar Extension&quot;, which allows
+programmers to &quot;add&quot; a UI component to either the
+explorer/communication bar of each browser window or one of
+DeskBars of the desktop. </p>
+
+<p>In order to add a pane to one of toolbars in the browser, you
+need to register a CLSID of the pane which supports an
+appropriate component category (CATID_InfoBand for a pane in
+communication bar, CATID_CommBand for one in the communication
+bar ir CATUD_DeskBand for one in DeskBars).</p>
+
+<p>When the browser window is created, it enumerates all the
+CLSIDs in each component category and add them to the menu (in
+View-&gt;ExplorerBar submenu for the browser and Toolbar submenu
+for the desktop). The creation of the instance is delayed until
+the user select it (or programmatically opened). The instances of
+those CLSIDs are called <em>band objects</em>. </p>
+
+<p>Each band object must implement IDeskBand (for layout
+negotiation) and IInPutObject (for input/focus management) which
+are essential to become a pane in a browser window. Optionally,
+it may support IPersistStream (for persistence) and
+IOleCommandTarget (to handle Edit menu). </p>
+
+<p>To help non-progammers (or web-programmers) to add HTML-based
+pane, IE 4 has an implementation of a band object, a browser
+band, which hosts arbitrary web-pages specified by an URL. To add
+such a band, you need to (1) generate a unique CLSID and (2)
+register that CLSID with following registry keys:</p>
+
+<pre>HKEY_CLASSES</pre>
+
+<pre>    CLSID</pre>
+
+<pre>        {<em>generated clsid</em>}</pre>
+
+<pre>            Implemented Categories</pre>
+
+<pre>                (default) = &quot;<em>{CATID_CommBand}</em>&quot;</pre>
+
+<pre>            InProcServer32 </pre>
+
+<pre>                (default) = &quot;shdocvw.dll&quot;</pre>
+
+<pre>            Instance</pre>
+
+<pre>                CLSID = &quot;{<em>CLSID_BrowserBand</em>}&quot;</pre>
+
+<pre>                PropertyBag</pre>
+
+<pre>                    (URL) = &quot;<em>initializing url</em>&quot;</pre>
+
+<hr>
+
+<p>Go back to <a href="ie4ext.htm">IE 4.0 : Browser Extension
+Mechanism</a>. </p>
+
+<p>&nbsp;</p>
+</body>
+</html>

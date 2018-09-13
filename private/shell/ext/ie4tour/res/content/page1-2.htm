@@ -1,0 +1,167 @@
+<HTML>
+<HEAD>
+	<TITLE>Explore from Anywhere</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+function doSwap(num, img){
+	if (num == CurBull){
+	
+	} else {
+		if (CurBull == 1){
+			list1.style.color = "#0099FF";
+			B1.style.display = "none";
+		}
+		else if (CurBull == 2){
+			list2.style.color = "#0099FF";
+			B2.style.display = "none";
+		}
+		else if (CurBull == 3){
+			list3.style.color = "#0099FF";
+			B3.style.display = "none";
+		}
+		else if (CurBull == 4){
+			list4.style.color = "#0099FF";
+			B4.style.display = "none";
+		}
+		else if (CurBull == 0){
+			textarea.style.display = "block";
+		}
+		
+		if (num == 1) {
+			list1.style.color = "#000000";
+			B1.style.display = "block";
+		}
+		else if (num == 2){
+			list2.style.color = "#000000";
+			B2.style.display = "block";
+		}
+		else if (num == 3){
+			list3.style.color = "#000000";
+			B3.style.display = "block";
+		}
+		else if (num == 4){
+			list4.style.color = "#000000";
+			B4.style.display = "block";
+		}
+
+		document.images("GIF1").setAttribute("src", img);
+		CurBull = num;
+		doRule(textarea);
+	}
+
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<!--tokens for www.microsoft.com site maintenance -->
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Explore from Anywhere with the Windows Desktop Update
+</DIV>
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/edefault.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+With the Windows Desktop Update, you can use all your favorite methods of exploring the Web, whether you are actually surfing or just finding files or programs on your own computer. And you can easily move between working on your own computer and Web sites without having to change windows.
+<br><br>
+Click a feature to learn more about it.
+<BR><BR>
+<SPAN ID="list1" CLASS="listitem" onClick="doSwap(1, 'res://ie4tour.dll/2/single.bmp')">
+Single-clicking</SPAN><BR>
+<SPAN ID="list2" CLASS="listitem" onClick="doSwap(2, 'res://ie4tour.dll/2/backforw.bmp')">
+Forward and Back buttons</SPAN><BR>
+<SPAN ID="list3" CLASS="listitem" onClick="doSwap(3, 'res://ie4tour.dll/2/fav.bmp')">
+Favorites menu</SPAN><BR>
+<SPAN ID="list4" CLASS="listitem" onClick="doSwap(4, 'res://ie4tour.dll/2/address.bmp')">
+Address bar</SPAN><BR>
+
+
+<BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText">
+Just like on the Web, you can just click an icon on the desktop or in a folder once to open any file or folder or start a program. To select an icon, just point to it! (To use single-click, click the Start button, point to Settings, click Folders & Icons, and then click Web style.)
+</SPAN>
+
+<SPAN ID="B2" CLASS="CalloutText">
+Click the new <B>Forward</B> and <B>Back</B> buttons on the toolbar to move easily between previously viewed Web pages, files, or folders. You can click the small down arrow next to <B>Back</B> and <B>Forward</B> to view the entire list of items instead of having to cycle back or forward to find what you are looking for.
+</SPAN>
+
+<SPAN ID="B3" CLASS="CalloutText">
+Now you can get to favorite items from My Computer, Windows Explorer, the <B>Start</B> menu, or even Control Panel. And, for quick viewing, you can add folders to the <B>Favorites</B> menu in these windows.
+</SPAN>
+
+<SPAN ID="B4" CLASS="CalloutText">
+You can connect to a Web site by typing a Web address (URL) right in My Computer, without having to open the browser.
+</SPAN>
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<DIV CLASS="CalloutArt">
+<IMG SRC="res://ie4tour.dll/2/backforw.bmp" WIDTH=160 HEIGHT=188 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/fav.bmp" WIDTH=160 HEIGHT=369 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/single.bmp" WIDTH=160 HEIGHT=195 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/address.bmp" WIDTH=160 HEIGHT=177 BORDER=0 ALT="">
+</DIV>
+
+</BODY>
+</HTML>

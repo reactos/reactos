@@ -1,0 +1,12 @@
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "User Stub"
+#define VER_INTERNALNAME_STR            "userstub"
+#define VER_ORIGINALFILENAME_STR        "USERSTUB.EXE"
+
+#include <common.ver>

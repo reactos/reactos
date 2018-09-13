@@ -1,0 +1,27 @@
+#****************************** File Header ******************************\
+# File Name: Sources
+#
+# Copyright (c) 1985-96, Microsoft Corporation
+#
+# Project specific SOURCES file.
+#
+# History:
+# Apr-16-1996 KazuM Created for NTJ
+# 09-Dec-96 BradG           Created for NT-US
+# Mar.17.1997 v-HirShi Merged for NT 5.0
+#***************************************************************************/
+W32_SB=1
+
+ALT_PROJECT=FE
+ALT_PROJECT_TARGET=FE
+
+!include ..\sources.inc
+
+SOURCES=$(SOURCES) \
+        ..\dispatch.c \
+        ..\private2.c \
+        ..\dbcs.c     \
+        ..\convarea.c \
+        ..\eudc.c     \
+        ..\foncache.c \
+        ..\hard.c

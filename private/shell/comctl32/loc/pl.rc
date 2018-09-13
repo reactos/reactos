@@ -1,0 +1,139 @@
+LANGUAGE 0x15, 0x00 // Really 0x15, 0x01 - Polish (Polish)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Polish resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 371, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"Dostosowywanie paska narz\x0119dzi"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&Zamknij",2,308,6,59,14
+    PUSHBUTTON      L"Z&resetuj",202,308,23,59,14
+    PUSHBUTTON      L"Pomo&c",205,308,40,59,14
+    PUSHBUTTON      L"Przenie\x015b &w g\x00f3r\x0119",206,308,74,59,14
+    PUSHBUTTON      L"Przenie\x015b w &d\x00f3\x0142",207,308,91,59,14
+    LTEXT           L"Do&st\x0119pne przyciski:",-1,4,5,114,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"D&odaj ->",1,131,42,44,14
+    PUSHBUTTON      L"<- &Usu\x0144",204,131,62,44,14
+    LTEXT           L"&Przyciski paska narz\x0119dzi:",-1,182,5,115,8
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"Anuluj",2,58,122,50,14
+    PUSHBUTTON      L"&Zastosuj",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"Pomoc",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &Wstecz",12323,12,26,50,14
+    DEFPUSHBUTTON   L"&Dalej >",12324,62,26,50,14
+    PUSHBUTTON      L"Zako\x0144cz",12325,119,26,50,14
+    PUSHBUTTON      L"Anuluj",2,176,26,50,14
+    PUSHBUTTON      L"Pomoc",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"Separator"
+    1025                    L" + "
+    1026                    L"Brak"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"Zamknij"
+    4161                    L"OK"
+    4162                    L"W\x0142a\x015bciwo\x015bci: %s"
+    4163                    L"Dzi\x015b:"
+    4164                    L"&Przejd\x017a do dnia dzisiejszego"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"Wpisz tutaj tekst"
+    4177                    L"W\x0142a\x015bciwo\x015bci"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"Zmienia rozmiar tego okna."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"Przenosi to okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"Zmniejsza to okno do ikony."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"Rozwija okno do pe\x0142nego ekranu."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"Prze\x0142\x0105cza do nast\x0119pnego okna MDI."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"Zamyka to okno."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"Przywraca normalny rozmiar okna."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"Prze\x0142\x0105cza do innego zadania."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"Zawiera polecenia do manipulowania oknami."
+    36849                   L"Przeci\x0105gaj w lewo lub w prawo, aby zmieni\x0107 rozmiar kolumn."
+    36850                   L"Zmienia rozmiar kolumn za pomoc\x0105 klawiszy strza\x0142ek i tabulatora."
+    36851                   L"Dodaje, przenosi i usuwa przyciski z paska narz\x0119dzi."
+END
+

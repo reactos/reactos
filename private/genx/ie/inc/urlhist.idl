@@ -1,0 +1,191 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1995-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   Url History interfaces
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// UrlHist.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Url History Interfaces.")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+import "docobj.idl";
+
+import "servprov.idl";
+
+interface IEnumSTATURL;
+interface IUrlHistoryStg;
+
+#pragma midl_echo("#define STATURL_QUERYFLAG_ISCACHED		0x00010000")
+#pragma midl_echo("#define STATURL_QUERYFLAG_NOURL              0x00020000")
+#pragma midl_echo("#define STATURL_QUERYFLAG_NOTITLE            0x00040000")
+#pragma midl_echo("#define STATURL_QUERYFLAG_TOPLEVEL           0x00080000")
+#pragma midl_echo("#define STATURLFLAG_ISCACHED		0x00000001")
+#pragma midl_echo("#define STATURLFLAG_ISTOPLEVEL       0x00000002")
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("//  Interface Definitions")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:    IEnumSTATURL interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPENUMSTATURL_DEFINED")
+cpp_quote("#define _LPENUMSTATURL_DEFINED")
+[
+	object,
+	uuid(3C374A42-BAE4-11CF-BF7D-00AA006946EE),
+	pointer_default(unique)
+]
+interface IEnumSTATURL : IUnknown
+{
+	typedef [unique] IEnumSTATURL *LPENUMSTATURL;
+	
+    typedef struct _STATURL
+    {
+        DWORD cbSize;
+	    LPWSTR pwcsUrl;
+        LPWSTR pwcsTitle;
+	    FILETIME ftLastVisited;
+	    FILETIME ftLastUpdated;
+	    FILETIME ftExpires;
+	    DWORD dwFlags;
+    } STATURL, *LPSTATURL;
+
+
+    HRESULT Next (
+        [in] ULONG celt,
+        [in, out] LPSTATURL rgelt,
+        [in, out] ULONG * pceltFetched);
+
+    HRESULT Skip (
+        [in] ULONG celt) ;
+
+    HRESULT Reset (void) ;
+
+    HRESULT Clone(
+        [out] IEnumSTATURL ** ppenum) ;
+
+
+    HRESULT SetFilter (
+        [in] LPCOLESTR poszFilter,
+        [in] DWORD dwFlags);
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:    IUrlHistoryStg interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPURLHISTORYSTG_DEFINED")
+cpp_quote("#define _LPURLHISTORYSTG_DEFINED")
+[
+	object,
+	uuid(3C374A41-BAE4-11CF-BF7D-00AA006946EE),
+	pointer_default(unique)
+]
+interface IUrlHistoryStg : IUnknown
+{
+	typedef [unique] IUrlHistoryStg *LPURLHISTORYSTG;
+	
+    HRESULT AddUrl (
+        [in] LPCOLESTR pocsUrl,
+        [in, unique] LPCOLESTR pocsTitle,
+        [in] DWORD dwFlags);
+
+    HRESULT DeleteUrl(
+        [in] LPCOLESTR pocsUrl,
+        [in] DWORD dwFlags) ;
+
+    HRESULT QueryUrl (
+        [in] LPCOLESTR pocsUrl,
+        [in] DWORD dwFlags,
+        [in, out, unique] LPSTATURL lpSTATURL) ;
+	
+    HRESULT BindToObject (
+        [in] LPCOLESTR pocsUrl,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppvOut) ;
+
+    HRESULT EnumUrls (
+        [out] IEnumSTATURL **ppEnum) ;
+	
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:    IUrlHistoryStg2 interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPURLHISTORYSTG2_DEFINED")
+cpp_quote("#define _LPURLHISTORYSTG2_DEFINED")
+[
+	object,
+	uuid(AFA0DC11-C313-11d0-831A-00C04FD5AE38),
+	pointer_default(unique)
+]
+interface IUrlHistoryStg2 : IUrlHistoryStg
+{
+	typedef [unique] IUrlHistoryStg2 *LPURLHISTORYSTG2;
+
+	
+    HRESULT AddUrlAndNotify (
+        [in] LPCOLESTR pocsUrl,
+        [in,unique] LPCOLESTR pocsTitle,
+        [in] DWORD dwFlags,
+		[in] BOOL fWriteHistory,
+		[in] IOleCommandTarget *poctNotify,
+		[in, unique] IUnknown *punkISFolder );
+
+	HRESULT ClearHistory();
+
+}
+cpp_quote("#endif")
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:    IUrlHistoryNotify interface definition
+//
+//----------------------------------------------------------------------------
+cpp_quote("#ifndef _LPURLHISTORYNOTIFY_DEFINED")
+cpp_quote("#define _LPURLHISTORYNOTIFY_DEFINED")
+[
+	object,
+	uuid(BC40BEC1-C493-11d0-831B-00C04FD5AE38),
+	pointer_default(unique)
+]
+interface IUrlHistoryNotify : IOleCommandTarget
+{
+	typedef [unique] IUrlHistoryNotify *LPURLHISTORYNOTIFY;
+}
+cpp_quote("#endif")

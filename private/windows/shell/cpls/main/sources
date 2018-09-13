@@ -1,0 +1,47 @@
+MAJORCOMP = shell
+MINORCOMP = cpls
+
+TARGETNAME = main
+TARGETPATH = obj
+TARGETTYPE = DYNLINK
+TARGETEXT  = cpl
+TARGETLIBS = $(BASEDIR)\public\sdk\lib\*\kernel32.lib           \
+             $(BASEDIR)\public\sdk\lib\*\user32.lib             \
+             $(BASEDIR)\public\sdk\lib\*\comctl32.lib           \
+             $(BASEDIR)\public\sdk\lib\*\shell32.lib            \
+             $(BASEDIR)\public\sdk\lib\*\shell32p.lib           \
+             $(BASEDIR)\public\sdk\lib\*\comdlg32.lib           \
+             $(BASEDIR)\public\sdk\lib\*\devmgr.lib             \
+             $(BASEDIR)\public\sdk\lib\*\shlwapip.lib           \
+             $(BASEDIR)\public\sdk\lib\*\gdi32.lib              \
+             $(BASEDIR)\public\sdk\lib\*\uuid.lib               \
+             $(BASEDIR)\public\sdk\lib\*\mpr.lib                \
+             $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+DLLENTRY = LibMain
+
+NOT_LEAN_AND_MEAN = 1
+
+INCLUDES = .\;..\..\inc;..\..\..\inc;$(BASEDIR)\private\inc;..\..\..\..\shell\inc
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL = /W3
+!ENDIF
+MSC_WARNING_LEVEL = $(MSC_WARNING_LEVEL) /WX
+
+C_DEFINES = -DWIN32 -DWINNT -D_WIN32 -DUNICODE -D_UNICODE
+
+UMTYPE = windows
+EXPECTED_WINVER = 4.0
+
+SOURCES= main.rc        \
+         drvaplet.c     \
+         keybd.c        \
+         keybdspd.c     \
+         main.c         \
+         mouse.c        \
+         mousebut.c     \
+         mousectl.c     \
+         mousemov.c     \
+         mouseptr.c     \
+         util.c

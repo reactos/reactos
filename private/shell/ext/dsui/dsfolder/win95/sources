@@ -1,0 +1,16 @@
+PLATFORM=   WIN9x
+!INCLUDE    ..\sources.inc
+
+#
+# We are building for a downlevel client, so lets fix the flags and then
+# include some extra files that allow us to run
+#
+
+C_DEFINES=  $(C_DEFINES) -DDECLARE_ONCE=1
+
+SOURCES=    $(SOURCES)              \
+            menu.cpp                \
+            datautil.cpp            \
+            dka.cpp                 \
+            shprsht.cpp             \
+            dlshell.cpp

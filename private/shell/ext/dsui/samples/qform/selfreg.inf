@@ -1,0 +1,45 @@
+[Version]
+Signature="$CHICAGO$"
+
+[RegDll]
+AddReg=RegisterForm
+                                                                           
+[UnregDll]
+DelReg=RegisterForm
+
+[RegisterForm]
+;
+; register the inproc server for the query form object
+;
+HKCR,"CLSID\%CLSID_MyForm%\InProcServer32",,,qform.dll
+HKCR,"CLSID\%CLSID_MyForm%\InProcServer32","ThreadingModel",,Apartment
+;
+; now list it for dsquery to pick up when it initializes, the CLSID is CoCreated
+; when the find dialog is being constructed.
+;
+; to ensure uniquness each entry is specified using its CLSID, for each entry
+; there are the following values:
+;
+; CLSID   "{CLSID of form object}"
+;   this is read and used to CoCreate the object, which inturn we will query
+;   for its IQueryForm interface.
+;
+; Flags     DWORD value
+;   this is used to filter out form objects which extend the UI, and to
+;   avoid loading form objects which we do not require, the flags
+;   can be one or more of the following:
+;
+;       0x00000001 = changes the form list
+;         this flag is set if form object adds a new form to the shell UI
+;
+;       0x00000002 = changes the optional form list
+;         this flag is set if the form object extends the forms listed
+;         in the admin UI (eg. when the query UI is invoked with
+;         show optional forms).
+;
+HKCR,"CLSID\%CLSID_DsQuery%\Forms\%CLSID_MyForm%",CLSID,,%CLSID_MyForm%
+HKCR,"CLSID\%CLSID_DsQuery%\Forms\%CLSID_MyForm%",Flags,0x00010001,0x00000002
+
+[Strings]
+CLSID_MyForm={956FD432-9F05-11d0-B60C-00A0C906AF45}
+CLSID_DsQuery={8A23E65E-31C2-11d0-891C-00A024AB2DBB}

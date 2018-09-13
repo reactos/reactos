@@ -1,0 +1,38 @@
+#include <windows.h>
+#include "rshx32.h"
+
+IDI_PERMS ICON DISCARDABLE "perms.ico"
+IDI_AUDIT ICON DISCARDABLE "audit.ico"
+IDI_OWNER ICON DISCARDABLE "owner.ico"
+
+IDD_SECURITY DIALOG 6, 18, 227, 195
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX   "Permissions",    IDC_STATIC,   5,   5, 216, 55
+    ICON       IDI_PERMS,        IDC_STATIC,  15,  20,  20, 16
+    LTEXT      "View or set permission information on the selected item(s).",
+                                 IDS_PERMS,   40,  20, 130, 20
+    PUSHBUTTON "&Permissions",   IDC_PERMS,  166,  41,  50, 14
+
+    GROUPBOX   "Auditing",       IDC_STATIC,   5,  65, 216, 55
+    ICON       IDI_AUDIT,        IDC_STATIC,  15,  80,  20, 16
+    LTEXT      "View or set auditing information on the selected item(s).",
+                                 IDS_AUDIT,   40,  80, 130, 20
+    PUSHBUTTON "&Auditing",      IDC_AUDIT,  166, 101,  50, 14
+
+    GROUPBOX   "Ownership",      IDC_STATIC,   5, 125, 216, 55
+    ICON       IDI_OWNER,        IDC_STATIC,  15, 140,  20, 16
+    LTEXT      "View or take ownership of the selected item(s).",
+                                 IDS_OWNER,   40, 140, 130, 20
+    PUSHBUTTON "&Ownership",     IDC_OWNER,  166, 161,  50, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SECURITY        "Security"
+    IDS_PERMS_DEFAULT   "View or set permission information on the selected item(s)."
+    IDS_AUDIT_DEFAULT   "View or set auditing information on the selected item(s)."
+    IDS_OWNER_DEFAULT   "View or take ownership of the selected item(s)."
+END

@@ -1,0 +1,50 @@
+#
+#   Create MSVFW32.DLL
+#
+# This contains the output from COMPMAN, DRAWDIB, and MCIWND as well as
+# the VIDEO subdirectories
+#
+# Note: vfw32.lib is built in the avi\vfwlib directory
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=msvfw32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+LINKLIBS=..\lib\*\compman.lib ..\lib\*\drawdib.lib ..\lib\*\mciwnd.lib
+DLLDEF=msvfw32.def
+EXPECTED_WINVER=4.00
+
+NTPROFILEINPUT=yes
+
+SYNCHRONIZE_DRAIN=1
+
+C_DEFINES=-DUNICODE -DVFW
+WINVER_VERSION=0x0400
+
+# Define libs we need and where to find them
+
+USE_NTDLL=1
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib \
+           $(BASEDIR)\public\sdk\lib\*\winmm.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\shell32.lib \
+	   $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+           $(BASEDIR)\public\sdk\lib\*\mpr.lib
+
+##         $(BASEDIR)\public\sdk\lib\*\dciman32.lib
+
+INCLUDES=..\inc;..\..\verinfo\usa;..\..\inc;..\compman
+
+SOURCES=init.c \
+        profile.c \
+	debug.c \
+        msvideo.rc
+
+DLLENTRY=DLLEntryPoint
+DLLBASE=0x1c100000

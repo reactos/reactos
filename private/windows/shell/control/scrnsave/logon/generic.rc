@@ -1,0 +1,45 @@
+#include <windows.h>
+#include <scrnsave.h>
+#include <logon.h>
+
+1 ICON "logon.ico"
+2 ANIICON "welcome.ico"
+
+IDB_SERVER      BITMAP  "server.bmp"
+IDB_WORKSTA     BITMAP  "worksta.bmp"
+IDB_ADVANCED    BITMAP  "advanced.bmp"
+IDB_DATACENTER  BITMAP  "dtcenter.bmp"
+IDB_SERVERAPP   BITMAP  "srvapp.bmp"
+
+
+DLG_SCRNSAVECONFIGURE DIALOG 0, 0, 0, 0
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Logon Screen Saver"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+
+STRINGTABLE PRELOAD
+BEGIN
+    IDS_DESCRIPTION     "Logon Screen Saver"
+    2,                  "This screen saver has no options that you can set."
+END
+
+
+
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Logon Screen Saver"
+#define VER_INTERNALNAME_STR        "logon\0"
+
+#include "common.ver"

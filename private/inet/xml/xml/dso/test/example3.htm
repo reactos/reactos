@@ -1,0 +1,83 @@
+<html>
+
+<!--TOOLBAR_START-->
+<!--TOOLBAR_EXEMPT-->
+<!--TOOLBAR_END-->
+  <head>
+    <title>XML DSO Control: Example 3</title>
+    <style>
+      td    {font-size:80%;}
+      xmp   {font-size:120%; background:yellow}
+    </style>
+  </head>
+  
+<script src=DOMformatter.js></script>
+<OBJECT width=0 height=0
+    classid="clsid:550dda30-0541-11d2-9ca9-0060b0ec3d39"
+    id="xmldso">
+</OBJECT>
+<SCRIPT for=window event=onload>
+    var doc = xmldso.XMLDocument;
+    doc.load("cust1.xml");
+    if (doc.documentElement == null)
+    {
+        error.innerText = doc.parseError.reason;
+    }
+</SCRIPT>
+
+<BODY TOPMARGIN=0 LEFTMARGIN=40 BGCOLOR=#ffffff LINK="#000066" VLINK="#666666" TEXT="#000000">
+<FONT FACE="verdana,arial,helvetica" SIZE=2>
+
+
+<table align=right>
+<tr><td bgcolor=black><a href="Example2.htm">
+    <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Previous<b></font></a>
+    <td bgcolor=black><a href="xmldso.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Home<b></font></a>
+    <td bgcolor=black><a href="Example4.htm">
+        <font color=white onmouseover="this.style.color='gold'" 
+        onmouseout="this.style.color='white'" ><b>Next<b></font></a>
+</table>
+
+<h2>XML DSO Control</h2>
+<h3>Example 3</h3>
+<P>
+This example shows how the XML DSO can be used to bind nested tables
+to hierarchical XML data.  Click the
+Show XML Data button below to see this data.
+The XML data contains a list of CUSTOMERS,
+each of which contains a list of ORDERS, each of which contains a list of ITEMS.
+In all, three levels of repetition bound to three nested tables.
+<p>
+<p>
+<table id=table datasrc=#xmldso width=100% bgcolor="#60FFE0" cellpadding=3>
+<tr><td valign=top>
+        <div datafld=NAME></div>
+	<td valign=top>
+		<table  bgcolor=#FFC0B0 width=100% cellpadding=3 
+				datasrc=#xmldso datafld=ORDER>
+		<tr><td valign=top><div datafld=DATE dataformatas=HTML>
+			<td valign=top><table  border=2 width=100% cellpadding=3
+							datasrc=#xmldso datafld=ORDER.ITEM>
+		 		<tr><td valign=top><div datafld=TITLE dataformatas=HTML>
+					<td valign=top><div datafld=AUTHOR dataformatas=HTML>
+					<td valign=top><div datafld=PRICE dataformatas=HTML>
+			</table>
+		</table>
+</table>
+<xmp id=error></xmp>
+<P>
+<input type=button value="Show XML Data" 
+    onclick='ShowXML(xmldso.XMLDocument);'>
+
+<!--DocFooterStart-->
+<P>
+</FONT>
+<FONT FACE="MS SANS SERIF" SIZE="1" COLOR="BLACK">
+&copy;  <A HREF="http://www.microsoft.com/misc/cpyright.htm" TARGET="_top">1997 Microsoft Corporation. All rights reserved. Terms of use</A>.<P>
+</FONT>
+
+  </body>
+</html>

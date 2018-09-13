@@ -1,0 +1,293 @@
+// iextag.idl : IDL source for iextag.dll
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (iextag.tlb) and marshalling code.
+//
+// If you make changes to this that need to be picked up by trident
+// make sure to update \external\inc\iepeers.lib and iepeers.h
+//
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+    [
+    
+        uuid(6663F9D3-B482-11d1-89C6-00C04FB6BFC4),
+        helpstring("IPeerFactory Interface"),
+        pointer_default(unique)
+    ]
+    interface IPeerFactory : IUnknown
+    {
+    };
+
+    [
+        object,
+        uuid(766BF2AF-D650-11d1-9811-00C04FC31D2E),
+        dual,
+        helpstring("IHomePage Interface"),
+        pointer_default(unique)
+    ]
+    interface IHomePage : IDispatch
+    {
+        [id(1)] HRESULT navigateHomePage();
+        [id(2)] HRESULT setHomePage([in] BSTR bstrURL);
+        [id(3)] HRESULT isHomePage([in] BSTR bstrURL, [out, retval] VARIANT_BOOL* p);
+        
+    };
+    [
+        object,
+        uuid(7E8BC44D-AEFF-11D1-89C2-00C04FB6BFC4),
+        dual,
+        helpstring("IClientCaps Interface"),
+        pointer_default(unique)
+    ]
+    interface IClientCaps : IDispatch
+    {
+        [propget, id(1)]  HRESULT javaEnabled([out, retval] VARIANT_BOOL *pVal);
+        [propget, id(2)]  HRESULT cookieEnabled([out, retval] VARIANT_BOOL *pVal);
+        [propget, id(3)]  HRESULT cpuClass([retval, out] BSTR * p);
+        [propget, id(4)]  HRESULT systemLanguage([retval, out] BSTR * p);
+        [propget, id(6)]  HRESULT userLanguage([retval, out] BSTR * p);
+        [propget, id(7)]  HRESULT platform([retval, out] BSTR * p);
+        [propget, id(9)]  HRESULT connectionSpeed([retval, out] long * p);
+        [propget, id(10)] HRESULT onLine([retval, out] VARIANT_BOOL * p);
+        [propget, id(11)] HRESULT colorDepth([retval, out] long * p);
+        [propget, id(12)] HRESULT bufferDepth([retval, out] long * p);
+        [propget, id(13)] HRESULT width([retval, out] long * p);
+        [propget, id(14)] HRESULT height([retval, out] long * p);
+        [propget, id(15)] HRESULT availHeight([retval, out] long * p);
+        [propget, id(16)] HRESULT availWidth([retval, out] long * p);
+        [propget, id(17)] HRESULT connectionType([retval, out] BSTR * p);
+        [id(18)] HRESULT isComponentInstalled([in] BSTR bstrName, [in]BSTR bstrType, [defaultvalue(""),in]BSTR bStrVer, [out, retval] VARIANT_BOOL* p);
+        [id(19)] HRESULT getComponentVersion([in] BSTR bstrName, [in] BSTR bstrType, [out,retval] BSTR* pbstrVer);
+        [id(20)] HRESULT compareVersions([in] BSTR bstrVer1, [in] BSTR bstrVer2, [out, retval] long *p);
+        [id(21)] HRESULT addComponentRequest([in]BSTR bstrName, [in]BSTR bstrType, [defaultvalue(""),in]BSTR bstrVer);
+        [id(22)] HRESULT doComponentRequest([out, retval] VARIANT_BOOL* p);
+        [id(23)] HRESULT clearComponentRequest();
+    };
+    [
+        object,
+        uuid(9B9F68E6-1AAA-11d2-BCA5-00C04FD929DB),
+        dual,
+        pointer_default(unique)
+    ]
+    interface IIntelliForms : IDispatch
+    {
+        [propget, id(1)]  HRESULT enabled([out, retval] VARIANT_BOOL *pVal);
+        [propput, id(1)]  HRESULT enabled([in] VARIANT_BOOL bVal);
+    }
+
+    [
+        object,
+        uuid(BAE31F98-1B81-11D2-A97A-00C04F8ECB02),
+        dual,
+        helpstring("Iwfolders Interface"),
+        pointer_default(unique)
+    ]
+    interface Iwfolders : IDispatch
+    {
+        [id(1), helpstring("method navigate")] 
+                HRESULT navigate([in] BSTR bstrUrl,[retval, out] BSTR * pbstrRetVal);
+        [id(2), helpstring("method navigateFrame")] 
+                HRESULT navigateFrame([in] BSTR bstrUrl, 
+                                      [in] BSTR bstrTargetFrame,
+                                      //bug#50463 [in] BSTR bstrProtocol,
+                                      [retval, out] BSTR * pbstrRetVal);
+        [id(3)] HRESULT navigateNoSite ([in] BSTR bstrUrl,
+                                        [in] BSTR bstrTargetFrame,
+                                        //bug#50463 [in] BSTR bstrProtocol,
+                                        [in] DWORD dwhwnd,
+                                        [in] IUnknown * pwb);
+    };      
+
+
+    [
+        object,
+        uuid(13D5413B-33B9-11D2-95A7-00C04F8ECB02),
+        dual,
+        helpstring("IAnchorClick Interface"),
+        pointer_default(unique)
+    ]
+    interface IAnchorClick : IDispatch
+    {
+        [id(1), helpstring("ProcOnClick navigate")] 
+                HRESULT ProcOnClick();
+    };
+
+    [
+        hidden,
+        uuid(3050f4c7-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    dispinterface HTMLPersistEvents
+    {
+    properties:
+    methods:
+        [id(1)] void onsave();
+        [id(2)] void onload();
+    };
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3050f48f-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    interface IHTMLUserDataOM : IDispatch
+    {
+        [propget, id(1)] HRESULT XMLDocument([retval, out] IDispatch* * p);
+        [id(2)] HRESULT save([in] BSTR strName);
+        [id(3)] HRESULT load([in] BSTR strName);
+        [id(4)] HRESULT getAttribute([in] BSTR name,[retval, out] VARIANT* pValue);
+        [id(5)] HRESULT setAttribute([in] BSTR name,[in] VARIANT value);
+        [id(6)] HRESULT removeAttribute([in] BSTR name);
+        [propput, id(7)] HRESULT expires([in] BSTR bstr);
+        [propget, id(7)] HRESULT expires([retval, out] BSTR * pbstr);
+    };
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3050f4c0-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    interface IHTMLPersistDataOM : IDispatch
+    {
+        [propget, id(3)] HRESULT XMLDocument([retval, out] IDispatch* * p);
+        [id(4)] HRESULT getAttribute([in] BSTR name,[retval, out] VARIANT* pValue);
+        [id(5)] HRESULT setAttribute([in] BSTR name,[in] VARIANT value);
+        [id(6)] HRESULT removeAttribute([in] BSTR name);
+    };
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3050f4c5-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    interface IHTMLPersistData : IUnknown
+    {
+        [id(1)] HRESULT save([in] IUnknown* pUnk,[in] long lType,[retval, out] VARIANT_BOOL* fContinueBroacast);
+        [id(2)] HRESULT load([in] IUnknown* pUnk,[in] long lType,[retval, out] VARIANT_BOOL* fDoDefault);
+        [id(3)] HRESULT queryType([in] long lType,[retval, out] VARIANT_BOOL* pfSupportsType);
+    };
+
+
+    [
+        odl,
+        oleautomation,
+        dual,
+        uuid(3050f5bd-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    interface IDownloadBehavior : IDispatch
+    {
+        [id(1)] HRESULT startDownload([in] BSTR bstrUrl, [in] IDispatch* pdispCallback);
+    };
+
+[
+    uuid(7E8BC440-AEFF-11D1-89C2-00C04FB6BFC4),
+    version(1.0),
+    helpstring("iextag 1.0 Type Library")
+]
+library IEXTagLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        uuid(3050F4CF-98B5-11CF-BB82-00AA00BDCE0B),
+        helpstring("PeerFactory Class")
+    ]
+    coclass PeerFactory
+    {
+        [default] interface IPeerFactory;
+    };
+
+    [
+        uuid(7E8BC44E-AEFF-11D1-89C2-00C04FB6BFC4),
+        helpstring("ClientCaps Class")
+    ]
+    coclass ClientCaps
+    {
+        [default] interface IClientCaps;
+    };
+    [
+        uuid(613AB92E-16BF-11d2-BCA5-00C04FD929DB)
+    ]
+    coclass IntelliForms
+    {
+        [default] interface IIntelliForms;
+    }
+    [
+        uuid(766BF2AE-D650-11d1-9811-00C04FC31D2E)
+    ]
+    coclass HomePage
+    {
+        [default] interface IHomePage;
+    };
+    [
+        uuid(3050f48e-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CPersistUserData
+    {
+        [default]           interface IHTMLUserDataOM;
+        [source, default]   dispinterface HTMLPersistEvents;
+    };
+    [
+        uuid(3050f487-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CPersistDataPeer
+    {
+        [default]           interface IHTMLPersistDataOM;
+        [source, default]   dispinterface HTMLPersistEvents;
+                            interface IHTMLPersistData;
+    };
+    [
+        uuid(3050f4c6-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CPersistShortcut
+    {
+        [default]           interface IHTMLPersistDataOM;
+        [source, default]   dispinterface HTMLPersistEvents;
+                            interface IHTMLPersistData;
+    };
+
+    [
+        uuid(3050f4c8-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CPersistHistory
+    {
+        [default]           interface IHTMLPersistDataOM;
+        [source, default]   dispinterface HTMLPersistEvents;
+                            interface IHTMLPersistData;
+    };
+    [
+        uuid(3050f4c9-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CPersistSnapshot
+    {
+        [default]           interface IHTMLPersistDataOM;
+        [source, default]   dispinterface HTMLPersistEvents;
+                            interface IHTMLPersistData;
+    };
+    [
+        uuid(3050f5be-98b5-11cf-bb82-00aa00bdce0b)
+    ]
+    coclass CDownloadBehavior
+    {
+        [default]           interface IDownloadBehavior;
+    };
+    [
+        uuid(BAE31F9A-1B81-11D2-A97A-00C04F8ECB02),
+        helpstring("Web Folders Class")
+    ]
+    coclass wfolders
+    {
+        [default] interface Iwfolders;
+    };
+    [
+        uuid(13D5413C-33B9-11D2-95A7-00C04F8ECB02),
+        helpstring("AnchorClick Class")
+    ]
+    coclass AnchorClick
+    {
+        [default] interface IAnchorClick;
+    };
+
+};

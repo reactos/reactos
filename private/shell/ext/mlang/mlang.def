@@ -1,0 +1,27 @@
+LIBRARY     MLANG
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION 'MultiLanguage Support'
+
+EXPORTS
+        DllGetClassObject               PRIVATE
+        DllCanUnloadNow                 PRIVATE
+
+        DllRegisterServer               PRIVATE
+        DllUnregisterServer             PRIVATE
+
+        ; Font Linking stuff
+        GetGlobalFontLinkObject         PRIVATE
+
+        ; Character conversion stuff
+        IsConvertINetStringAvailable    @110
+        ConvertINetString               @111
+        ConvertINetUnicodeToMultiByte   @112
+        ConvertINetMultiByteToUnicode   @113
+        ConvertINetReset                @114
+
+        ; Rfc1766 and LCID mapping stuff
+        LcidToRfc1766A                  @120
+        LcidToRfc1766W                  @121
+        Rfc1766ToLcidA                  @122
+        Rfc1766ToLcidW                  @123
+

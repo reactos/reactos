@@ -1,0 +1,19 @@
+TARGETNAME=testdll
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+DLLENTRY=DLLEntry
+
+USE_CRTDLL=1
+
+
+TARGETLIBS= \
+            $(BASEDIR)\public\sdk\lib\*\snmp.lib \
+            $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib \
+            $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+SOURCES= \
+         testdll.rc testdll.c testmib.c
+
+INCLUDES= \
+    $(BASEDIR)\private\net\inc

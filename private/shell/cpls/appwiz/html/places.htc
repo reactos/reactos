@@ -1,0 +1,1038 @@
+<PUBLIC:HTC URN="shellctls">
+
+
+//------------------------------------------------------------------------
+// Public methods
+//------------------------------------------------------------------------
+
+<METHOD name="SetExecButton" />
+<METHOD name="ShowButton" />
+<METHOD name="focus" />
+<METHOD name="blur" />
+
+
+//------------------------------------------------------------------------
+// Events
+//------------------------------------------------------------------------
+
+// The onSelectItem event has the following attributes:
+//      srcID       - the ID of the button passed in from the span
+//
+<EVENT id=onSelectItem name="onSelectItem" />
+
+
+// The onExecItem event has the following attributes:
+//      srcID       - the ID of the button passed in from the span
+//
+<EVENT id=onExecItem name="onExecItem" />
+
+
+<EVENT id=onComplete name="onComplete" />
+
+
+//------------------------------------------------------------------------
+// Attach to element events
+//------------------------------------------------------------------------
+
+<ATTACH event="oncontentready" handler=_OnContentReady />
+<ATTACH event="ondragstart" handler=_CancelDragStart />
+
+
+
+//------------------------------------------------------------------------
+// The code...
+//------------------------------------------------------------------------
+
+<SCRIPT language="javascript">
+
+
+var _bLoading           = true;         // true if the behavior is still loading
+
+var _iBtnPressed        = -1;           // currently pressed (selected) button
+var _iBtnHot            = -1;           // current hot button (button the mouse is over)
+var _iBtnTabIndex       = -1;           // button to receive the focus
+var _iBtnCapture        = -1;           // current button that has the capture
+
+var _cButtons           = 0;            // count of buttons in places bar
+var _rgbtn              = new Array();  // array of button objects
+var _rgdivButtons       = new Array();  // array of div references that represent buttons
+var _styleinfo          = null;         // style sheet with rules for this bar
+var _mpStyle            = new Object(); // a hash of style sheet rules that apply to this bar
+
+var _bHasFocus          = false;        // true if the element has focus
+var _bInternalFocusChange = false;      // true if the focus is changed by an internal function
+
+// Button states
+var BS_PRESSED          = 0x01;
+var BS_HOT              = 0x02;
+
+
+var c_szStyle_ButtonNormal = 
+        ' style="'                      +
+        'position:relative; '           +
+        'padding:2px; '                 +
+        'border-style:solid; '          +
+        'border-width:1px; '            +
+        'border-top-color:threedshadow; '    +
+        'border-left-color:threedshadow; '   +
+        'border-right-color:threedshadow; '  +
+        'border-bottom-color:threedshadow; ' +
+        '"';
+
+var c_szStyle_ButtonText = 
+        ' style="'                      +
+        'position:relative; '           +
+        'color:white; '                 +
+        'cursor:default; '              +
+        '"';
+
+var c_szStyle_Background = 
+        ' style="'                      +
+        'position:relative; '           +
+        'width:87px; '                  +
+        'height:100%; '                 +
+        'padding:2px; '                 +
+        'background-color:threedshadow; ' +
+        '"';
+
+element.attachEvent("onerror", _OnError);
+
+_GetPropertyDefaults();
+
+
+// **********************************************************************
+//                       PROPERTY GET/SET FUNCTIONS
+// **********************************************************************
+
+
+// Property:  button = iBtn
+//
+// Sets the pushed button to the i'th button in the bar.
+//
+function get_button()                 { return _iBtnPressed; }
+function put_button(iBtn)          
+{ 
+    if (_bLoading)
+        return;
+
+    _PushButton(parseInt(iBtn), 0);
+}
+
+
+
+
+
+// **********************************************************************
+//                            EVENT HANDLERS
+// **********************************************************************
+
+
+/*-------------------------------------------------------------------------
+Purpose: When the behavior is completely loaded, set the loading flag to false.
+         To improve load time, we don't want the put methods on the properties
+         to be called.  We also need to keep events from getting fired while
+         the behavior is loading.
+         Also build the HTML for the button elements.
+*/
+function _OnContentReady()
+{
+    _bLoading = false;
+    _ScanSpecialElements();
+    _CreateHTML();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fired when the document is loaded.  We must refrain from sending
+         events to the page until it is loaded.
+*/
+function _OnDocumentLoad()
+{
+    _Initialize();
+}
+
+
+
+// **********************************************************************
+//                            HELPER FUNCTIONS
+// **********************************************************************
+
+
+/*-------------------------------------------------------------------------
+Purpose: Called when the behavior is instantiated.  Sets up the internal
+         property values.
+*/
+function _GetPropertyDefaults()
+{
+    if (element.currentButton)
+        _iBtnPressed = parseInt(element.currentButton);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Return a canonical ID name
+*/
+function _IDName(szID, idx)
+{
+    return szID + idx + '_' + uniqueID;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Take the span and store it in the button store at iStore
+*/
+function _StoreButton(elem, ibtn)
+{
+    var btn = new Object;
+    var szBtnIndex = ' _ibtn=' + ibtn;
+    var L_PlacesGraphic_Text = 'Graphic';
+    
+    btn.id = elem.id;
+    btn._idBtn = _IDName('idBtn', ibtn);
+    btn._ibtn = ibtn;
+    btn._idBR = _IDName('idBtnBR', ibtn);
+    btn._bHidden = false;
+
+    if ("undefined" != typeof elem.execItem)
+        btn._bExecButton = true;
+    else
+        btn._bExecButton = false;
+
+    // If you change this HTML, be sure to update _GetCaptionElem 
+    btn.innerHTML = 
+    '<DIV id=' + btn._idBtn + c_szStyle_ButtonNormal + szBtnIndex + ' _btnState=0> ' +
+    '   <CENTER id=' + _IDName('idCtr', ibtn) + szBtnIndex + '> '                               +
+    '       <IMG id=' + _IDName('idImg', ibtn) + ' style="position:relative" src=' + elem.img + szBtnIndex + ' title="" alt="' + L_PlacesGraphic_Text + '" >' +
+    '       <BR>'           +
+    /* use the private nofocusrect so we don't see the focus rect */
+    '       <SPAN id=' + _IDName('idSpan', ibtn) + c_szStyle_ButtonText + szBtnIndex + ' nofocusrect>' + 
+            elem.innerHTML      + 
+    '       </SPAN>'            +
+    '   </CENTER> '             + 
+    '</DIV>';
+
+    // Save this button
+    _rgbtn[ibtn] = btn;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Walk thru the element's html and find the specially-tagged spans.
+         Each span in this element is considered a separate button.  
+
+         The span may have the following special attributes:
+
+            img             -  The image to show for the particular button
+            execItem        -  This button will be skipped when ctrl-tabbing
+
+         The contents of the span is the button's display text.
+         
+*/
+function _ScanSpecialElements()
+{
+    var i;
+    
+    // Scan the element for spans
+    
+    var rgspan = element.all.tags("SPAN");
+    var cspan = rgspan.length;
+
+    for (i = 0; i < cspan; i++)
+    {
+        var span = rgspan[i];
+
+        _StoreButton(span, _cButtons++);
+
+        span.innerHTML = "";
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Adds the HTML code to the main document to display the places bar.  
+
+*/
+function _CreateHTML()
+{
+    var i;
+    var szButtons = '';
+
+    // Hide the control while we build it
+    element.style.visibility = 'hidden';
+
+    // Construct the html
+    
+    for (i = 0; i < _cButtons; i++)
+    {
+        szButtons = szButtons + _rgbtn[i].innerHTML + '<BR id=' + _rgbtn[i]._idBR + '>';
+    }
+    
+    element.innerHTML = 
+    '<DIV ' + c_szStyle_Background + ' _ibtn=-1> ' + 
+    szButtons + 
+    '</DIV>';
+
+    // Attach events to the button divs 
+    var rgdivs = element.all.tags("DIV");
+
+    for (i = 0; i < _cButtons; i++)
+    {
+        var elem = rgdivs[_rgbtn[i]._idBtn];
+
+        _rgdivButtons[i] = elem;
+        
+        elem.attachEvent('onmouseover', _OnMouseOver);
+        elem.attachEvent('onmouseout', _OnMouseOut);
+        elem.attachEvent('onmousedown', _OnMouseDown);
+        elem.attachEvent('onmouseup', _OnMouseUp);
+
+        var spanCaption = _GetCaptionElem(i);
+        
+        spanCaption.attachEvent('onblur', _OnBlurDiv);
+        spanCaption.attachEvent('onfocus', _OnFocusDiv);
+        spanCaption.attachEvent('onkeydown', _OnKeyDownDiv);
+
+        // Cancel the image's default dragstart behavior
+        elem.all(_IDName('idCtr', i)).attachEvent('ondragstart', _CancelDragStart);
+    }
+
+    // Now wait until the document is loaded before pushing the
+    // initial button
+    window.attachEvent("onload", _OnDocumentLoad);
+
+    // Say we're finished in case the page cares
+    _FireComplete();
+
+    // Now show the control
+    element.style.visibility = 'visible';
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Final initialization of the bar
+*/
+function _Initialize()
+{
+    if (-1 != _iBtnPressed)
+    {
+        var ibtn = _iBtnPressed;
+
+        // Avoid wasting time unpressing a button that isn't pressed yet
+        _iBtnPressed = -1;
+        _PushButton(ibtn, 0);
+    }
+
+    window.document.attachEvent("onkeydown", _OnKeyDownDocument);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the button index given the elem.  Returns -1 if the given 
+         elem is not within a button.
+
+         All of the button's elements that were created by this behavior have 
+         an _ibtn property that points to the array of button divs.  If there
+         is no _ibtn property, walk up until we find one.  If we don't find 
+         one, then the elem is not within this behavior's region.
+*/
+function _BtnFromElement(elem)
+{
+    var ibtn = -1;
+    
+    if (elem && null == elem._ibtn)
+    {
+        // Walk up the tree to find the next element with the internal
+        // '_ibtn'
+        while (elem)
+        {
+            if (elem._ibtn)
+                break;
+            elem = elem.parentElement;
+        }
+    }
+
+    if (elem)
+        ibtn = elem._ibtn;
+        
+    return ibtn;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the button index given the id.  Returns -1 if the given id
+         is not in the array of buttons.
+*/
+function _BtnFromID(idBtn)
+{
+    var ibtn;
+
+    for (ibtn = 0; ibtn < _rgbtn.length; ibtn++)
+    {
+        if (idBtn == _rgbtn[ibtn].id)
+            return ibtn;
+    }
+    return -1;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Draws the frame around the button div according to the given state
+*/
+function _DrawButtonFrame(elem, szState)
+{
+    switch (szState)
+    {
+    case 'normal':
+        elem.style.borderTopColor = 'threedshadow';
+        elem.style.borderLeftColor = 'threedshadow';
+        elem.style.borderRightColor = 'threedshadow';
+        elem.style.borderBottomColor = 'threedshadow';
+        break;
+
+    case 'hotitem':
+        elem.style.borderTopColor = 'threedhighlight';
+        elem.style.borderLeftColor = 'threedhighlight';
+        elem.style.borderRightColor = 'threeddarkshadow';
+        elem.style.borderBottomColor = 'threeddarkshadow';
+        break;
+
+    case 'pushed':
+        elem.style.borderTopColor = 'threeddarkshadow';
+        elem.style.borderLeftColor = 'threeddarkshadow';
+        elem.style.borderRightColor = 'threedhighlight';
+        elem.style.borderBottomColor = 'threedhighlight';
+        break;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Draws the button.  Assumes ibtn is valid.
+*/
+function _DrawButton(ibtn, bDown)
+{
+    var div = _rgdivButtons[ibtn];
+    var bDownCur = (div._btnState & BS_PRESSED) ? true : false;
+    var elemImg = div.all(_IDName('idImg', div._ibtn));
+    var elemText = div.all(_IDName('idSpan', div._ibtn));
+
+    if (bDownCur == bDown)
+        return;     // no change
+        
+    if (bDown)
+    {
+        _DrawButtonFrame(div, 'pushed');
+
+        // Offset the button contents
+        elemImg.style.pixelLeft = elemImg.style.pixelLeft + 1;
+        elemImg.style.pixelTop = elemImg.style.pixelTop + 1;
+        
+        elemText.style.pixelLeft = elemText.style.pixelLeft + 1;
+        elemText.style.pixelTop = elemText.style.pixelTop + 1;
+
+        div._btnState |= BS_PRESSED;
+    }
+    else
+    {
+        if (ibtn == _iBtnHot)
+            _DrawButtonFrame(div, 'hotitem');
+        else
+            _DrawButtonFrame(div, 'normal');
+
+        // De-Offset the button contents
+        elemImg.style.pixelLeft = elemImg.style.pixelLeft - 1;
+        elemImg.style.pixelTop = elemImg.style.pixelTop - 1;
+        
+        elemText.style.pixelLeft = elemText.style.pixelLeft - 1;
+        elemText.style.pixelTop = elemText.style.pixelTop - 1;
+
+        div._btnState &= ~ BS_PRESSED;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Returns the element that is the button caption.
+*/
+function _GetCaptionElem(ibtn)
+{
+    var spanCaption = null;
+    var div = _rgdivButtons[ibtn];
+    
+    if (div)
+        spanCaption = div.children[0].children[2];
+        
+    return spanCaption;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Sets the tabIndex property on the given button, and removes it
+         from the button the had the property prior to this call.  (This
+         control only allows one button to have the tabIndex at any given
+         time.)
+
+         The tabIndex is set so MSAA can receive notifications of 'focus'
+         change.
+*/
+function _SetTabIndex(ibtn, bSetFocus)
+{
+    if (ibtn == _iBtnTabIndex)
+        return;
+
+    var elem = _GetCaptionElem(_iBtnTabIndex);
+    if (elem)
+        elem.tabIndex = -1;      // Remove this DIV from the taborder list
+
+    elem = _GetCaptionElem(ibtn);
+    if (elem)
+    {
+        elem.tabIndex = 0;       // Make this DIV be in the taborder list
+
+        if (bSetFocus)
+        {
+            // Set the focus so the MSAA event is fired
+            _bInternalFocusChange = true;
+            elem.focus();
+        }
+    }
+
+    _iBtnTabIndex = ibtn;
+}
+
+
+// Flags for _PushButton
+var PBF_SETFOCUS    = 0x01;
+var PBF_MOUSE       = 0x02;
+
+/*-------------------------------------------------------------------------
+Purpose: Pushes the given button.  Any other button loses its push state.
+*/
+function _PushButton(ibtn, dwFlags)
+{
+    var btn = _rgbtn[ibtn];
+    
+    // Is this button hidden?
+    if (btn && btn._bHidden)
+    {
+        // Yes; skip it
+        return;
+    }
+    
+    // Is this button an ExecButton?
+    if (btn && btn._bExecButton)
+    {
+        // Yes; execute it and leave all other button states as they are
+        _DrawButton(ibtn, false);
+        _FireExecItem(btn);
+    }
+    else
+    {
+        // No; push the button down and toggle any other button up
+        if ((dwFlags & PBF_MOUSE) && ibtn == _iBtnPressed)
+            return;
+            
+        // Is there a button already pressed?
+        if (-1 != _iBtnPressed && ibtn != _iBtnPressed)
+        {
+            // Yes; reset it
+            _DrawButton(_iBtnPressed, false);
+        }
+
+        // Make this button the currently pressed button.  
+        _iBtnPressed = ibtn;
+
+        // This button now gets the focus
+        _SetTabIndex(ibtn, dwFlags & PBF_SETFOCUS);
+        
+        if (0 <= _iBtnPressed && _iBtnPressed < _cButtons)
+        {
+            _DrawButton(_iBtnPressed, true);
+            
+            _FireSelectItem(btn);
+        }
+    }
+}
+
+
+// Flags for _SetHotItem
+var SHIF_SETTABINDEX    = 0x01;
+var SHIF_RESETTABSTOP   = 0x02;
+var SHIF_MOUSE          = 0x04;
+
+
+/*-------------------------------------------------------------------------
+Purpose: Sets the hot button to track.  Clears the hot button if ibtn == -1.
+*/
+function _SetHotItem(ibtn, dwFlags)
+{
+    var div;
+    
+    if (ibtn == _iBtnHot)
+        return;
+
+    // Reset the current hot button first
+    if (-1 != _iBtnHot && _iBtnHot != ibtn)
+    {
+        div = _rgdivButtons[_iBtnHot];
+
+        if (_iBtnHot == _iBtnPressed)
+            _DrawButtonFrame(div, 'pushed');
+        else
+            _DrawButtonFrame(div, 'normal');
+    }
+
+    // Set the hot button
+    if (-1 != ibtn)
+    {
+        div = _rgdivButtons[ibtn];
+
+        // The currently pressed button never hottracks when the mouse is hovering 
+        // over it.
+        //
+        // However, we do allow the keyboard to navigate to the pushed button.  We
+        // do this so the accessibility aides have the ability to survey all the
+        // available options...including the currently pushed button.
+        
+        if ( !(dwFlags & SHIF_MOUSE) || ibtn != _iBtnPressed)
+            _DrawButtonFrame(div, 'hotitem');
+    }
+        
+    _iBtnHot = ibtn;
+
+    if (dwFlags & SHIF_SETTABINDEX)
+    {
+        // Reset the tabstop back to the pressed button?
+        if (dwFlags & SHIF_RESETTABSTOP)
+        {
+            // Yes
+            _SetTabIndex(_iBtnPressed, false);
+        }
+        else
+        {
+            // No; set it to the current button
+            _SetTabIndex(ibtn, true);
+        }
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onSelectItem' to the document
+*/
+function _FireSelectItem(btn)
+{
+    var evt = createEventObject();
+    evt.srcID = btn.id;
+    onSelectItem.fire(evt);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onExecItem' to the document
+*/
+function _FireExecItem(btn)
+{
+    var evt = createEventObject();
+    evt.srcID = btn.id;
+    onExecItem.fire(evt);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Fires 'onComplete' to the document
+*/
+function _FireComplete()
+{
+    var evt = createEventObject();
+    onComplete.fire(evt);
+}
+
+
+
+var LMOUSE_BUTTON = 1
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handles mousedown events.  Depress the button.
+*/
+function _OnMouseDown()
+{
+    var ibtn = _BtnFromElement(window.event.srcElement);
+    var div;
+    
+    // Only concerned with the left mouse button
+    if (LMOUSE_BUTTON != window.event.button)
+        return;
+
+    _DrawButton(ibtn, true);
+
+    // Take the capture so we can correctly pop the button up if the
+    // mouse moves out of the places bar.
+    _iBtnCapture = ibtn;
+    
+    div = _rgdivButtons[ibtn];
+    div.setCapture(false);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handles mouseup events.
+*/
+function _OnMouseUp()
+{
+    var ibtn = _BtnFromElement(window.event.srcElement);
+    
+    // Only concerned with the left mouse button
+    if (LMOUSE_BUTTON != window.event.button)
+        return;
+
+    // Double-click will result in a "mouse-down, mouse-up, mouse-up" sequence.
+    // So _iBtnCapture can be -1.
+
+    if (-1 != _iBtnCapture)
+    {
+        var div = _rgdivButtons[_iBtnCapture];
+        div.releaseCapture();
+        
+        if (_iBtnCapture != ibtn)
+            _DrawButton(_iBtnCapture, (_iBtnPressed == _iBtnCapture));
+
+        if (-1 != ibtn && ibtn == _iBtnCapture)
+            _PushButton(ibtn, PBF_SETFOCUS | PBF_MOUSE);
+
+        _iBtnCapture = -1;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onMouseOver event.  
+*/
+function _OnMouseOver()
+{
+    var ibtnTo = _BtnFromElement(window.event.toElement);
+    var ibtnFrom = _BtnFromElement(window.event.fromElement);
+
+    // if (ibtnTo == ibtnFrom)
+    //     return;
+        
+    // Is a button pressed down right now?
+    if (-1 != _iBtnCapture)
+    {
+        // Yes; only pay attention to when we reenter that button
+        if (ibtnTo == _iBtnCapture && ibtnFrom != _iBtnCapture)
+        {
+            _DrawButton(_iBtnCapture, true);
+        }
+    }
+    else
+    {
+        // No; standard behavior
+        _SetHotItem(ibtnTo, SHIF_MOUSE);
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onMouseOut event.  
+*/
+function _OnMouseOut()
+{
+    var event = window.event;
+    var ibtnTo = _BtnFromElement(event.toElement);
+    var ibtnFrom = _BtnFromElement(event.fromElement);
+
+    // Is the mouse moving to an outside element?
+    if (ibtnTo != ibtnFrom)
+    {
+        // Yes
+        _SetHotItem(-1, SHIF_MOUSE);
+
+        if (ibtnFrom == _iBtnCapture && _iBtnCapture != _iBtnPressed)
+            _DrawButton(_iBtnCapture, false);
+    }
+}
+
+
+var CYCLE_PUSHED = 1;
+var CYCLE_HOT    = 2;
+
+
+/*-------------------------------------------------------------------------
+Purpose: Cycles to the next available button.  This skips the currently
+         pressed button, and cycles around on boundary conditions.  Returns
+         the next button.
+*/
+function _CycleButton(bDown, ibtnStart, cycle)
+{
+    var ibtn = ibtnStart;
+    var n = bDown ? 1 : -1;
+    var btn;
+    var cbtns = 0;
+
+    while (true)
+    {
+        if (++cbtns > _cButtons)
+            break;              // We've completed a full cycle
+            
+        if (bDown)
+            ibtn = (ibtn + 1) % _cButtons;
+        else
+            ibtn = ((ibtn - 1) + _cButtons) % _cButtons;
+
+        btn = _rgbtn[ibtn];
+
+        if (CYCLE_PUSHED == cycle)
+        {
+            if (ibtn == _iBtnPressed || btn._bExecButton || btn._bHidden)
+                continue;       // Try again
+            else
+                break;
+        }
+        else // CYCLE_HOT == cycle
+        {
+            if (btn._bHidden)
+                continue;       // Try again
+            else
+                break;
+        }
+    }
+    return ibtn;
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Cycles to the next available button.  
+
+         In earlier designs, this used to skip the currently pressed button.
+         But accessibility aides require the ability to cycle thru all the 
+         buttons to allow a blind person to survey all the options.  Makes sense.
+         
+         This function cycles around boundary conditions.
+*/
+function _CycleHotItem(bDown)
+{
+    _SetHotItem(_CycleButton(bDown, _iBtnHot, CYCLE_HOT), SHIF_SETTABINDEX);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Cycles to the next button and pushes it.
+*/
+function _CyclePushedButton(bDown)
+{
+    _PushButton(_CycleButton(bDown, _iBtnPressed, CYCLE_PUSHED), 0);
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Tells the places bar to skip this button when ctrl-tabbing.
+*/
+function SetExecButton(idBtn, bVal)
+{
+    var ibtn = _BtnFromID(idBtn);
+
+    if (-1 != ibtn)
+    {
+        _rgbtn[ibtn]._bExecButton = bVal;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Tell the places bar to remove a button
+*/
+function ShowButton(idBtn, bShow)
+{
+    var ibtn = _BtnFromID(idBtn);
+
+    if (-1 != ibtn)
+    {
+        var btn = _rgbtn[ibtn];
+        if (btn)
+        {
+            var idBtnUnique = btn._idBtn;
+            var elemBtn = element.all[idBtnUnique];
+
+            if (bShow)
+            {
+                elemBtn.style.display = 'block';
+                element.all[btn._idBR].style.display = 'block';
+            }
+            else
+            {
+                elemBtn.style.display = 'none';
+                element.all[btn._idBR].style.display = 'none';
+            }
+                
+            btn._bHidden = !bShow;
+        }
+    }
+
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Overridden method so we handle focus properly
+*/
+function focus()
+{
+    var div = _rgdivButtons[_iBtnTabIndex];
+    
+    if (div)
+        div.focus();
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Overridden method so we handle blur properly
+*/
+function blur()
+{
+    var div = _rgdivButtons[_iBtnTabIndex];
+    
+    if (div)
+        div.blur();
+}
+
+
+// Key codes
+var KC_LEFT     = 37;
+var KC_UP       = 38;
+var KC_RIGHT    = 39;
+var KC_DOWN     = 40;
+var KC_SPACE    = 32;
+var KC_RETURN   = 13;
+var KC_TAB      = 9;
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onKeyDown event of the document.  We have this to catch
+         the ctrl-tab events when the places bar doesn't have the focus.
+*/
+function _OnKeyDownDocument()
+{
+    var evt = window.event;
+
+    // Control-tab?
+    if (KC_TAB == evt.keyCode && evt.ctrlKey)
+    {
+        // Yes
+        var bDir = evt.shiftKey ? false : true;
+        
+        _CyclePushedButton(bDir);
+        
+        // Cancel event so no one else gets it
+        evt.returnValue = false;
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onKeyDown event
+*/
+function _OnKeyDownDiv()
+{
+    var keyCode = window.event.keyCode;
+    
+    // Pay attention to up and down arrows
+    if (KC_UP == keyCode || KC_LEFT == keyCode)
+    {
+        _CycleHotItem(false);
+        
+        // Cancel event so div doesn't scroll independently
+        window.event.returnValue = false;
+    }
+    else if (KC_DOWN == keyCode || KC_RIGHT == keyCode)
+    {
+        _CycleHotItem(true);
+
+        // Cancel event so div doesn't scroll independently
+        window.event.returnValue = false;
+    }
+    else if (KC_SPACE == keyCode || KC_RETURN == keyCode)
+    {
+        _PushButton(_iBtnHot, PBF_SETFOCUS);
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onBlur event.  Change the selection color so it is clear
+         the list no longer has the focus.
+*/
+function _OnBlurDiv()
+{
+    // Don't bother if this was caused by the control itself, or it doesn't
+    // have the focus.
+    if (false == _bInternalFocusChange && true == _bHasFocus)
+    {
+        _bHasFocus = false;
+
+        _SetHotItem(-1, SHIF_SETTABINDEX | SHIF_RESETTABSTOP);
+    }
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onFocus event.  Change the selection color.
+
+         We use an invisible anchor (placed before the div) so we can 
+         receive focus events.  When this anchor receives focus, we treat 
+         that as if the bar is getting the focus.  This handles the 
+         case when the user tabs around the page.
+
+         The second case is if the user uses the mouse to select one
+         of the items.  In this case, the anchor will not receive focus, 
+         but we have to pretend as if it did.  This is why _bHasFocus keeps 
+         track of this.
+*/
+function _OnFocusDiv()
+{
+    // Don't bother doing this if the document isn't ready, or if the
+    // control already has the focus, or if the focus change is caused
+    // by the control itself.
+    if (false == _bInternalFocusChange && false == _bHasFocus && 
+        "complete" == window.document.readyState)
+    {
+        _bHasFocus = true;
+
+        _CycleHotItem(true);
+    }
+
+    _bInternalFocusChange = false;      // Reset
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Handle the onerror event
+*/
+function _OnError(szMsg, szUrl, iLine)
+{
+    // Prevent scripting errors from displaying ugly messages
+    alert("An unexpected error occurred.\n\n" + szMsg + "\n" + szUrl + "\nLine: " + iLine);
+    return true;    // Suppress IE error messaging
+}
+
+
+/*-------------------------------------------------------------------------
+Purpose: Cancel any drag operation
+*/
+function _CancelDragStart()
+{
+    window.event.returnValue = false;
+}
+
+
+
+</SCRIPT>
+
+
+//------------------------------------------------------------------------
+// Properties
+//------------------------------------------------------------------------
+
+<PROPERTY name="currentButton"      get=get_button              put=put_button />
+
+</PUBLIC:HTC>

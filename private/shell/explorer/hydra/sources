@@ -1,0 +1,11 @@
+ALT_PROJECT=HYDRA
+ALT_PROJECT_TARGET=$(ALT_PROJECT)
+
+!include ..\winnt\sources
+
+SOURCES = $(SOURCES)   \
+          ..\muext.c
+
+INCLUDES=$(INCLUDES);$(BASEDIR)\public\sdk\inc\hydra
+TARGETPATHLIB= $(BASEDIR)\public\sdk\lib\$(ALT_PROJECT_TARGET)
+

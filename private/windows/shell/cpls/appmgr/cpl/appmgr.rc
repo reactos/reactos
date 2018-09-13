@@ -1,0 +1,789 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <windows.h>
+#include "appmgr.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include <windows.h>\r\n"
+    "#include ""appmgr.rcv""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON    DISCARDABLE     "icon1.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_REPAIR_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    163,8
+    LTEXT           "You have repaired the following programs:",IDC_STATIC,
+                    115,40,189,8
+    LTEXT           "Application Name goes here",IDC_APPLICATION_NAME,115,55,
+                    202,8
+    LTEXT           "Click Finish to exit the wizard.",IDC_STATIC,115,161,93,
+                    8
+END
+
+IDD_ADD_MEDIASELECT DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "I want to install the program from my:",IDC_STATIC,21,1,
+                    207,8
+    LTEXT           "Insert the <compact disc, floppy disk> in the <CD-ROM,floppy disk drive> and then click Next.",
+                    IDC_MEDIA_TEXT,21,72,271,17,NOT WS_VISIBLE
+    CONTROL         "&CD-ROM drive",IDC_BUTTON_CDROM,"Button",
+                    BS_AUTORADIOBUTTON,58,19,110,15
+    CONTROL         "&Floppy disk drive",IDC_BUTTON_FLOPPY,"Button",
+                    BS_AUTORADIOBUTTON,58,47,110,15
+    CONTROL         119,IDC_STATIC,"Static",SS_BITMAP,31,16,17,16
+    CONTROL         120,IDC_STATIC,"Static",SS_BITMAP,31,44,16,14
+END
+
+IDD_ADD_FINISH_CORP DIALOG DISCARDABLE  0, 0, 318, 194
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    190,18
+    LTEXT           "Source text goes here",IDC_TEXT_SOURCE,115,98,190,8
+    LTEXT           "Click Finish to exit the wizard.",IDC_STATIC,115,135,93,
+                    8
+    LTEXT           "You have installed the following programs:",IDC_STATIC,
+                    115,40,190,9
+END
+
+IDD_WELCOME DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "Tahoma"
+BEGIN
+    CONTROL         "&Add a new program",IDC_ADDRADIO,"Button",
+                    BS_AUTORADIOBUTTON,130,78,110,8
+    CONTROL         "Re&pair an existing program",IDC_RADIO_REPAIR,"Button",
+                    BS_AUTORADIOBUTTON,130,93,131,8
+    CONTROL         "&Remove or modify an existing program",IDC_REMOVERADIO,
+                    "Button",BS_AUTORADIOBUTTON,130,108,135,8
+    LTEXT           "Choose one of the following options:",IDC_STATIC,115,63,
+                    189,8
+    LTEXT           "Welcome to the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,16
+    LTEXT           "This wizard helps you add or remove, modify, or repair a program.",
+                    IDC_STATIC,115,41,189,21
+    LTEXT           "Click Next to begin the wizard.",IDC_STATIC,115,123,189,
+                    8
+END
+
+IDD_ADD_PROGRAM DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_APPLICATION_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,21,26,275,64
+    PUSHBUTTON      "&Add",IDC_BUTTON_ADD,84,97,50,14
+    PUSHBUTTON      "About",IDC_BUTTON1,138,97,50,14,WS_DISABLED
+    PUSHBUTTON      "&Find...",IDC_BUTTON_FIND,192,97,50,14
+    PUSHBUTTON      "Browse...",IDC_BUTTON_BROWSE,246,97,50,14
+    LTEXT           "Click the program you want, and then click Add.",
+                    IDC_STATIC,21,1,217,10
+    LTEXT           "Programs available:",IDC_STATIC,21,16,62,8
+END
+
+IDD_ADD_SOURCE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "The program is on:",IDC_STATIC,21,1,228,8
+    CONTROL         "A compact disc or &floppy disk",IDC_RADIO_LOCALMEDIA,
+                    "Button",BS_AUTORADIOBUTTON,31,16,108,10
+    CONTROL         "A &corporate network",IDC_RADIO_CORPNET,"Button",
+                    BS_AUTORADIOBUTTON,31,31,80,10
+    CONTROL         "The &Internet",IDC_RADIO_INTERNET,"Button",
+                    BS_AUTORADIOBUTTON,31,46,55,10
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",NOT 
+                    WS_VISIBLE | WS_BORDER,21,71,191,13
+    LTEXT           "Please wait while a list of available programs is generated...",
+                    IDC_OPERATION_TEXT,21,61,195,9,NOT WS_VISIBLE
+    CONTROL         "Animate1",IDC_ANIMATE1,"SysAnimate32",NOT WS_VISIBLE | 
+                    WS_BORDER,224,64,20,20
+END
+
+IDD_REPAIR_PROGRAM DIALOGEX 0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+EXSTYLE WS_EX_CONTROLPARENT
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "List1",IDC_APPLICATION_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,21,26,275,64
+    LTEXT           "Programs on your computer:",IDC_STATIC,21,16,118,10
+    PUSHBUTTON      "Properties",IDC_BUTTON2,246,97,50,14,WS_DISABLED
+    PUSHBUTTON      "&Repair",IDC_BUTTON_REPAIR,192,97,50,14,WS_DISABLED
+    LTEXT           "Click the program you want, and then click Repair.",
+                    IDC_STATIC,21,1,160,8
+END
+
+IDD_MODIFY_FINISH DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,8
+    LTEXT           "You have modified or removed the following programs:",
+                    IDC_STATIC,115,40,171,8
+    LTEXT           "Application Name goes here",IDC_APPLICATION_NAME,115,55,
+                    131,8
+    LTEXT           "Click Finish to exit the wizard.",IDC_STATIC,115,137,93,
+                    8
+END
+
+IDD_MODIFY_PROGRAM DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_APPLICATION_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | 
+                    WS_BORDER | WS_TABSTOP,21,26,275,64
+    LTEXT           "Programs on your computer:",IDC_STATIC,21,16,118,10
+    PUSHBUTTON      "Modify",IDC_BUTTON_MODIFY,192,97,50,14,WS_DISABLED
+    PUSHBUTTON      "Properties",IDC_BUTTON_PROPERTIES,246,97,50,14,
+                    WS_DISABLED
+    PUSHBUTTON      "&Remove",IDC_MODIFY_REMOVE,138,97,50,14,WS_DISABLED
+    LTEXT           "Click the program you want, and then click Remove or Modify.",
+                    IDC_STATIC,21,1,275,8
+END
+
+IDD_ADD_FINISH_INTERNET DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,9
+    LTEXT           "To install a program from the Internet, click Finish to go to the Web site you selected, then follow the instructions on the Web site.",
+                    IDC_STATIC,115,55,189,26
+    LTEXT           "Click Finish to launch your Web Browser and exit the wizard.",
+                    IDC_STATIC,115,86,189,8
+    LTEXT           "You have successfully completed the Programs wizard.",
+                    IDC_STATIC,115,40,174,8
+END
+
+IDD_ADD_NOMEDIA DIALOG DISCARDABLE  0, 0, 317, 142
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Make sure you have inserted the correct <floppy disk, compact disc>. To view the contents of the <disk/disc>, click Browse.",
+                    IDC_NOMEDIA_TEXT,21,1,275,17
+    LTEXT           "If you locate the Setup program, click Next.",
+                    IDC_STATIC,21,61,275,8
+    PUSHBUTTON      "&Browse...",IDC_MEDIA_BROWSE,246,23,50,13
+    LTEXT           "You have located the file:  <Setup.exe>",IDC_STATIC,21,
+                    46,193,8,NOT WS_VISIBLE
+END
+
+IDD_REPAIRDLG1 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Click OK to ",IDC_REPAIR_ACTION,20,51,205,11,NOT 
+                    WS_VISIBLE
+    CONTROL         "&Repair the Program",IDC_RADIO_REPAIR,"Button",
+                    BS_AUTORADIOBUTTON,20,8,110,15
+    CONTROL         "&Reinstall the Program.",IDC_RADIO_REINSTALL,"Button",
+                    BS_AUTORADIOBUTTON,20,24,110,15
+    PUSHBUTTON      "OK",IDOK,64,95,62,13,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,187,95,62,13
+END
+
+IDD_REPAIR_DLG2 DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
+CAPTION "Repair Program"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,
+                    69,61,178,13
+    LTEXT           "<Repairing the Program, Reinstalling the Program>...",
+                    IDC_STATIC,69,46,175,10
+END
+
+IDD_UPGRADE_PROGRAM DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
+CAPTION "Programs Wizard"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "List1",IDC_APPLICATION_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,20,19,285,64
+    LTEXT           "Select a program from the list below:",IDC_STATIC,20,8,
+                    118,10
+    LTEXT           "Click Next to continue.",IDC_STATIC,20,117,78,11
+    PUSHBUTTON      "Properties",IDC_BUTTON2,243,90,61,14,WS_DISABLED
+    PUSHBUTTON      "Upgrade",IDC_BUTTONUPGRADE,172,90,61,14,WS_DISABLED
+END
+
+IDD_ADD_BROWSE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Location:",IDC_STATIC,21,27,41,10
+    PUSHBUTTON      "Browse...",IDC_ADDBROWSE_BROWSE,246,42,50,14
+    EDITTEXT        IDC_SETUPPATH,83,24,213,14,ES_AUTOHSCROLL
+    LTEXT           "You have located the file:  ",IDC_SETUPPATH_DISPLAY,21,
+                    66,275,8,NOT WS_VISIBLE
+    LTEXT           "The Programs Wizard could not find any published programs on your corporate network.\r\nYou will have to locate the program you want to install.",
+                    IDC_STATIC,21,1,275,21
+END
+
+IDD_UPGRADE_FINISH DIALOG DISCARDABLE  0, 0, 317, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Programs Wizard"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the",IDC_STATIC,15,12,48,8
+    LTEXT           "Programs Wizard",IDC_STATIC,30,20,54,8
+    LTEXT           "You have successfully completed the Programs Wizard.",
+                    IDC_STATIC,30,39,176,8
+    LTEXT           "Application Name goes here",IDC_TEXT_SOURCE,31,61,281,8
+    LTEXT           "Click Finish to exit the wizard.",IDC_STATIC,30,162,93,
+                    8
+    LTEXT           "You have upgraded the following program(s):",IDC_STATIC,
+                    30,50,226,9
+END
+
+IDD_FINISH_MEDIA_ERROR DIALOG DISCARDABLE  0, 0, 316, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    188,9
+    LTEXT           "The Programs Wizard was unable to locate the setup program. Please consult the program's documentation.",
+                    -1,115,40,188,23
+    LTEXT           "Click Finish to exit the wizard.",-1,115,73,93,8
+END
+
+IDD_FINISH_MEDIA DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    196,10
+    LTEXT           "The Programs Wizard has found the setup program for the software you want to install.",
+                    -1,115,40,189,23
+    LTEXT           "Click Finish to install the program you selected and exit the wizard",
+                    -1,115,63,189,18
+END
+
+IDD_ADD_CANCEL_INTERNET DIALOG DISCARDABLE  0, 0, 317, 192
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard ",IDC_TITLE_SMALL,115,8,
+                    189,8
+    LTEXT           "You did not choose to add any programs from the Internet.",
+                    -1,115,40,189,9
+    LTEXT           "To complete this wizard, click Finish.",-1,115,63,189,8
+END
+
+IDD_ADD_CANCEL_CORPNET DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,16
+    LTEXT           "You did not choose to add any programs from the corporate network.",
+                    -1,115,40,170,19
+    LTEXT           "To complete this wizard, click Finish.",-1,115,63,189,8
+END
+
+IDD_REPAIR_FINISH_CANCEL DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,10
+    LTEXT           "You did not choose to repair any programs.",-1,115,40,
+                    189,8
+    LTEXT           ".",-1,115,55,120,8
+END
+
+IDD_MODIFY_CANCEL DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    181,16
+    LTEXT           "You did not choose to modify or remove any programs.",
+                    -1,115,40,181,8
+    LTEXT           "Click Finish to exit the wizard.",-1,115,56,145,8
+END
+
+IDD_ADD_FINISH_BROWSE DIALOG DISCARDABLE  0, 0, 318, 194
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    190,17
+    LTEXT           "You have successfully completed the Programs Wizard.",
+                    IDC_STATIC,115,40,176,8
+    LTEXT           "Source text goes here",IDC_TEXT_SOURCE,115,78,190,8
+    LTEXT           "Click Finish to install the program and exit the wizard.",
+                    IDC_STATIC,115,118,166,8
+    LTEXT           "You have chosen to add  the following application:",
+                    IDC_STATIC,115,55,190,9
+END
+
+IDD_UPGRADE_CANCEL DIALOG DISCARDABLE  0, 0, 317, 194
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Programs Wizard"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the",-1,15,12,48,8
+    LTEXT           "Programs Wizard",-1,30,20,54,8
+    LTEXT           "You did not choose to upgrade any programs.",-1,30,39,
+                    144,8
+    LTEXT           "Click Finish to exit the wizard.",-1,30,162,93,8
+END
+
+IDD_INTERNETSITE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Install a program from the following location:",-1,21,1,
+                    138,8
+    CONTROL         "&The Microsoft Web site",IDC_RADIOMICROSOFT,"Button",
+                    BS_AUTORADIOBUTTON | WS_TABSTOP,31,16,173,8
+    CONTROL         "This &HTTP address:",IDC_RADIOOTHER,"Button",
+                    BS_AUTORADIOBUTTON,31,34,101,8
+    EDITTEXT        IDC_EDIT_INTERNETADDRESS,136,31,159,14,ES_AUTOHSCROLL | 
+                    NOT WS_TABSTOP
+END
+
+IDD_ADD_CANCEL DIALOG DISCARDABLE  0, 0, 317, 186
+STYLE WS_CHILD | WS_DISABLED | WS_BORDER
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Completing the Programs Wizard",IDC_TITLE_LARGE,115,8,
+                    189,9
+    LTEXT           "You did not choose to add any programs.",-1,115,40,189,
+                    8
+    LTEXT           "To complete this wizard, click Finish.",-1,115,55,145,8
+END
+
+IDD_GENERAL_PROPERTIES DIALOG DISCARDABLE  0, 0, 210, 186
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Product Name",IDC_STATIC,19,17,94,8
+    LTEXT           "Version",IDC_STATIC,19,33,94,8
+    LTEXT           "Publisher",IDC_STATIC,19,49,94,8
+    LTEXT           "Product ID",IDC_STATIC,19,65,94,8
+    LTEXT           "Registered Owner",IDC_STATIC,19,81,94,8
+    LTEXT           "Registered Company",IDC_STATIC,19,97,94,8
+    LTEXT           "Language",IDC_STATIC,19,113,94,8
+    LTEXT           "Support URL",IDC_STATIC,19,129,94,8
+    LTEXT           "Support Telephone",IDC_STATIC,19,145,94,8
+    LTEXT           "Help File",IDC_STATIC,19,161,94,8
+    LTEXT           "Static",IDC_PRODUCT_NAME,123,17,72,8
+    LTEXT           "Product Name",IDC_STATIC,19,17,94,8
+    LTEXT           "Static",IDC_VERSION,123,31,72,8
+    LTEXT           "Static",IDC_PUBLISHER,123,47,72,8
+    LTEXT           "Static",IDC_PRODUCT_ID,123,63,72,8
+    LTEXT           "Static",IDC_REGISTERED_OWNER,123,79,72,8
+    LTEXT           "Static",IDC_REGISTERED_COMPANY,123,95,72,8
+    LTEXT           "Static",IDC_LANGUAGE,123,111,72,8
+    LTEXT           "Static",IDC_SUPPORT_URL,123,127,72,8
+    LTEXT           "Static",IDC_SUPPORT_TELEPHONE,123,143,72,8
+    LTEXT           "Static",IDC_HELP_FILE,123,159,72,8
+END
+
+IDD_INSTALL_PROPERTIES DIALOG DISCARDABLE  0, 0, 210, 154
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Install"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Install Location",IDC_STATIC,15,17,82,10
+    LTEXT           "Install Source",IDC_STATIC,16,42,82,10
+    LTEXT           "Required by Policy",IDC_STATIC,15,67,82,10
+    LTEXT           "Administrative Contact",IDC_STATIC,16,92,82,10
+    LTEXT           "Static",IDC_INSTALL_LOCATION,101,19,88,10
+    LTEXT           "Static",IDC_INSTALL_SOURCE,101,42,88,10
+    LTEXT           "Static",IDC_REQUIRED_POLICY,101,66,88,10
+    LTEXT           "Static",IDC_ADMINISTRATIVE_CONTACT,101,90,88,10
+END
+
+IDD_OFFLINE_PROPERTIES DIALOG DISCARDABLE  0, 0, 185, 80
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION | WS_SYSMENU
+CAPTION "Availability"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "O&nly when online",IDC_RADIO_ONLINE,"Button",
+                    BS_AUTORADIOBUTTON,17,22,101,11
+    CONTROL         "When o&ffline or online",IDC_RADIO_OFFLINE,"Button",
+                    BS_AUTORADIOBUTTON | WS_DISABLED,17,37,107,8
+    LTEXT           "This application is available:",IDC_STATIC,7,7,89,8
+    PUSHBUTTON      "OK",IDC_BUTTON1,128,59,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_PROGRAMS            BITMAP  DISCARDABLE     "program.bmp"
+IDB_BITMAP1             BITMAP  DISCARDABLE     "bitmap1.bmp"
+IDB_CD                  BITMAP  DISCARDABLE     "bitmap3.bmp"
+IDB_FLOPPY              BITMAP  DISCARDABLE     "bmp00001.bmp"
+IDB_WATERMARK_EXTERIOR  BITMAP  DISCARDABLE     "Ext.BMP"
+IDB_WATERMARK_INTERIOR  BITMAP  DISCARDABLE     "Int.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AVI
+//
+
+IDA_FINDCOMP            AVI     MOVEABLE PURE   "findcomp.avi"
+IDA_FINDFILE            AVI     MOVEABLE PURE   "findfile.avi"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_REPAIR_FINISH, DIALOG
+    BEGIN
+        VERTGUIDE, 115
+        VERTGUIDE, 304
+    END
+
+    IDD_ADD_MEDIASELECT, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 31
+        VERTGUIDE, 48
+        VERTGUIDE, 58
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 136
+        HORZGUIDE, 34
+        HORZGUIDE, 44
+        HORZGUIDE, 62
+    END
+
+    IDD_ADD_FINISH_CORP, DIALOG
+    BEGIN
+        RIGHTMARGIN, 305
+        VERTGUIDE, 115
+    END
+
+    IDD_WELCOME, DIALOG
+    BEGIN
+        RIGHTMARGIN, 304
+        VERTGUIDE, 115
+        VERTGUIDE, 130
+    END
+
+    IDD_ADD_PROGRAM, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 138
+        VERTGUIDE, 192
+        VERTGUIDE, 246
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 135
+        HORZGUIDE, 90
+        HORZGUIDE, 97
+    END
+
+    IDD_ADD_SOURCE, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 31
+        VERTGUIDE, 212
+        VERTGUIDE, 224
+        VERTGUIDE, 295
+        BOTTOMMARGIN, 135
+        HORZGUIDE, 84
+    END
+
+    IDD_REPAIR_PROGRAM, DIALOG
+    BEGIN
+        RIGHTMARGIN, 315
+        VERTGUIDE, 21
+        VERTGUIDE, 246
+        VERTGUIDE, 296
+        BOTTOMMARGIN, 134
+        HORZGUIDE, 90
+    END
+
+    IDD_MODIFY_FINISH, DIALOG
+    BEGIN
+        VERTGUIDE, 115
+        VERTGUIDE, 304
+    END
+
+    IDD_MODIFY_PROGRAM, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 192
+        VERTGUIDE, 246
+        VERTGUIDE, 296
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 134
+        HORZGUIDE, 90
+        HORZGUIDE, 97
+    END
+
+    IDD_ADD_FINISH_INTERNET, DIALOG
+    BEGIN
+        RIGHTMARGIN, 304
+        VERTGUIDE, 115
+    END
+
+    IDD_ADD_NOMEDIA, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 134
+        HORZGUIDE, 36
+    END
+
+    IDD_ADD_BROWSE, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 296
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 136
+        HORZGUIDE, 38
+        HORZGUIDE, 56
+    END
+
+    IDD_FINISH_MEDIA_ERROR, DIALOG
+    BEGIN
+        VERTGUIDE, 115
+        VERTGUIDE, 303
+    END
+
+    IDD_FINISH_MEDIA, DIALOG
+    BEGIN
+        VERTGUIDE, 115
+        VERTGUIDE, 304
+    END
+
+    IDD_ADD_CANCEL_INTERNET, DIALOG
+    BEGIN
+        RIGHTMARGIN, 304
+        VERTGUIDE, 115
+        BOTTOMMARGIN, 191
+    END
+
+    IDD_ADD_CANCEL_CORPNET, DIALOG
+    BEGIN
+        RIGHTMARGIN, 304
+        VERTGUIDE, 115
+    END
+
+    IDD_REPAIR_FINISH_CANCEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 316
+        VERTGUIDE, 115
+        VERTGUIDE, 304
+    END
+
+    IDD_MODIFY_CANCEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
+        VERTGUIDE, 115
+    END
+
+    IDD_ADD_FINISH_BROWSE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 305
+        VERTGUIDE, 115
+    END
+
+    IDD_INTERNETSITE, DIALOG
+    BEGIN
+        VERTGUIDE, 21
+        VERTGUIDE, 31
+        VERTGUIDE, 43
+        VERTGUIDE, 295
+    END
+
+    IDD_ADD_CANCEL, DIALOG
+    BEGIN
+        RIGHTMARGIN, 304
+        VERTGUIDE, 115
+    END
+
+    IDD_GENERAL_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+
+    IDD_INSTALL_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_OFFLINE_PROPERTIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 178
+        VERTGUIDE, 17
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 73
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NAME                "Add/Remove Programs -- v2"
+    IDS_INFO                "Installs and manages programs."
+    IDS_REMOVE1             "Remove a Program"
+    IDS_REMOVE2             "Select an existing program to Remove"
+    IDS_ADD1                "Locate the program"
+    IDS_ADD2                "Where is the program you want to install?"
+    IDS_ADD3                "Select a Local Disk Drive"
+    IDS_ADD4                "Which local disk drive do you wish to install from?"
+    IDS_COLUMN_NAME         "Application Name"
+    IDS_COLUMN_VERSION      "Version"
+    IDS_UNKNOWN_VERSION     "Unknown"
+    IDS_ADD_START1          "Locate the program"
+    IDS_ADD_START2          "Where is the program you want to install?"
+    IDS_MEDIASELECT1        "Select a Disk Drive"
+    IDS_MEDIASELECT2        "Which drive contains the program you want to install?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALL_NAMES       "Install@Setup@*Instal*@*Setup*"
+    IDS_INSTALL_EXTENSIONS  "Bat@Com@Exe@Cmd"
+    IDS_MEDIATEXT_CDROM     "Insert the CD Rom in the correct drive and Click Next."
+    IDS_MEDIATEXT_FLOPPY    "Insert the floppy disk in the correct drive and Click Next."
+    IDS_PLACEHOLDER         "Placeholder text"
+    IDS_OPERATION_APPLIST   "Please wait while a list of available programs is generated..."
+    IDS_OPERATION_DS        "Please wait while your DS is located..."
+    IDS_NOT_IMPLEMENTED     "This functionality has not yet been implemented."
+    IDS_BROWSE_INVALIDNAME  "The file selected is not a valid application setup program."
+    IDS_REPAIR_REPAIR       "repair the application."
+    IDS_REPAIR_REINSTALL    "reinstall the application."
+    IDS_BROWSE_STILLNOMEDIA "Windows NT cannot find the Setup program for the program you want to install."
+    IDS_LARGEFONTNAME       "Times New Roman"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LARGEFONTSIZE       "14"
+    IDS_MODIFYPROGRAM1      "Remove or Modify a Program"
+    IDS_MODIFYPROGRAM2      "You can remove an entire program.  You can also modify components of some programs."
+    IDS_ADDSOURCE1          "Locate the Program"
+    IDS_ADDSOURCE2          "Where is the program you want to install?"
+    IDS_ADDNOMEDIA1         "Search Report"
+    IDS_ADDNOMEDIA2         "Windows NT cannot find the Setup program for the program you want to install."
+    IDS_INTERNETSITE1       "Provide an Internet Address"
+    IDS_INTERNETSITE2       "From where on the Internet do you want to install the program?"
+    IDS_REPAIRPROGRAM1      "Repair a Program"
+    IDS_REPAIRPROGRAM2      "You can repair some programs that are not functioning properly."
+    IDS_ADDPROGRAM1         "Add a Program"
+    IDS_ADDPROGRAM2         "You can install a program from the corporate network."
+    IDS_ADDBROWSE1          "Add a Program"
+    IDS_ADDBROWSE2          "From where on the corporate network do you want to install the program?"
+    IDS_INSTALLSUCCESS      "You have successfully installed %s\n"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INSTALLFAIL         "%s did not successfully install\n"
+    IDS_MEDIADETECT1        "Find a program to install"
+    IDS_MEDIADETECT2        "Insert the disk containing the program"
+    IDS_MEDIAERROR_CD       "Make sure you have inserted the correct  compact disc.  To view the contents of the disc, click Browse."
+    IDS_MEDIAERROR_FLOPPY   "Make sure you have inserted the correct floppy disk.  To view the contents of the disk, click Browse."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

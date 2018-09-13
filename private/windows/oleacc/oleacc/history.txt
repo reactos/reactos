@@ -1,0 +1,59 @@
+--------------------------------------------------------------------------
+OLEACC.DLL
+Version History
+--------------------------------------------------------------------------
+
+Ver 4.02.1909.0 Date 7/8/1998
+
+brendanm
+  Added history.txt to project (hurrah!)
+brendanm 875
+  Fixed bug getting name/shortcutkey from tab controls
+brendanm
+  Split oleacc.dll into stringtable-free oleacc.dll and resource-only
+  oleaccrc.dll.
+  Also merged window class tables back into oleacc (default.cpp) from
+  stringtable resources.
+
+Ver 4.02.1915.0 Date 7/14/1998
+
+brendanm 865
+  Removed STATE_SYSTEM_REDUNDANT and STATE_SYSTEM_ONLY_REDUNDANT defines.
+brendanm 752
+  Fixed WindowFromAccessibleObject infinite looping bug
+
+Ver 4.02.1917.0 Date 7/16/1998
+
+brendanm
+  Added GetOleaccVersionInfo() API
+
+Ver 4.02.1919.0 Date 7/18/1998
+
+brendanm 891
+  Added MyGetAncestor(GA_ROOT) workaround for win98/winable.c GetAncestor
+  bug. (Would occasionally cause crashin user after accessing alt-tab or
+  popup menu windows.)
+
+Ver 4.02.1921.0 Date 7/20/1998
+
+brendanm 874
+  Fixed MyGetWindowInfo for NT4 - now returns a screen-based client-rect,
+  instead of a client-based one.
+
+
+Ver 4.02.2025 Date 8/25/1998
+
+brendanm 
+  Fixed DBCS issue (and potential buffer overrun) in StripMnemonic (client.cpp)
+  Also fixed DBCS-related issue in edit/combo put_accValue()
+
+  Removed put_accValue for Outline control
+
+  Added trailing "(Debug)" to version string on debug builds (verdefs.h)
+
+Ver 4.02..2027 Date 8/27/1998
+
+stevedon
+  Changed edit behavior for passwords - now returns null pointer for get_accValue
+  if the password style is used, and return value is E_ACCESSDENIED
+  Also added new state bit to oleacc.h STATE_SYSTEM_PROTECTED and corresponding string

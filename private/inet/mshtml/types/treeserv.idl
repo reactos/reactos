@@ -1,0 +1,419 @@
+
+interface IMarkupPointer;
+interface IMarkupContainer;
+interface IHTMLDocument2;
+
+
+typedef enum
+{
+    POINTER_GRAVITY_Left     = 0x00000000,       // pointer moves left of insertions
+    POINTER_GRAVITY_Right    = 0x00000001,       // pointer moves right of insertions
+}
+POINTER_GRAVITY;
+
+typedef enum
+{
+    ELEM_ADJ_BeforeBegin,
+    ELEM_ADJ_AfterBegin,
+    ELEM_ADJ_BeforeEnd,
+    ELEM_ADJ_AfterEnd,
+}
+ELEMENT_ADJACENCY;
+
+typedef enum
+{
+    CONTEXT_TYPE_None,
+    CONTEXT_TYPE_Text,
+    CONTEXT_TYPE_EnterScope,
+    CONTEXT_TYPE_ExitScope,
+    CONTEXT_TYPE_NoScope,
+}
+MARKUP_CONTEXT_TYPE;
+
+typedef enum
+{
+    FINDTEXT_BACKWARDS      = 0x00000001,
+    FINDTEXT_WHOLEWORD      = 0x00000002,
+    FINDTEXT_MATCHCASE      = 0x00000004,
+    FINDTEXT_RAW            = 0x00020000,
+    FINDTEXT_MATCHDIAC      = 0x20000000,
+    FINDTEXT_MATCHKASHIDA   = 0x40000000,
+    FINDTEXT_MATCHALEFHAMZA = 0x80000000,
+}
+FINDTEXT_FLAGS;
+
+typedef enum
+{
+    MOVEUNIT_PREVCHAR,
+    MOVEUNIT_NEXTCHAR,
+    MOVEUNIT_PREVCLUSTER,
+    MOVEUNIT_NEXTCLUSTER,
+    MOVEUNIT_PREVWORDBEGIN,
+    MOVEUNIT_NEXTWORDBEGIN,
+    MOVEUNIT_PREVWORDEND,
+    MOVEUNIT_NEXTWORDEND,
+    MOVEUNIT_PREVPROOFWORD,
+    MOVEUNIT_NEXTPROOFWORD,
+    MOVEUNIT_NEXTURLBEGIN,
+    MOVEUNIT_PREVURLBEGIN,
+    MOVEUNIT_NEXTURLEND,
+    MOVEUNIT_PREVURLEND,    
+    MOVEUNIT_PREVSENTENCE,
+    MOVEUNIT_NEXTSENTENCE,
+    MOVEUNIT_PREVBLOCK,
+    MOVEUNIT_NEXTBLOCK,
+} MOVEUNIT_ACTION;
+
+
+typedef enum
+{
+    PARSE_ABSOLUTIFYIE40URLS = 0x00000001,  // Absolutify <img src=...> and <a href=...>
+}
+PARSE_FLAGS;
+
+typedef enum
+{
+    //
+    // TAGID_NULL is the non-ID
+    //
+    
+    TAGID_NULL = 0,
+
+    //
+    // Known tag ID's to date
+    //
+
+    TAGID_UNKNOWN, TAGID_A, TAGID_ACRONYM, TAGID_ADDRESS, TAGID_APPLET, TAGID_AREA,
+    TAGID_B, TAGID_BASE, TAGID_BASEFONT, TAGID_BDO, TAGID_BGSOUND, TAGID_BIG, TAGID_BLINK,
+    TAGID_BLOCKQUOTE, TAGID_BODY, TAGID_BR, TAGID_BUTTON, TAGID_CAPTION, TAGID_CENTER,
+    TAGID_CITE, TAGID_CODE, TAGID_COL, TAGID_COLGROUP, TAGID_COMMENT, TAGID_DD, TAGID_DEL,
+    TAGID_DFN, TAGID_DIR, TAGID_DIV, TAGID_DL, TAGID_DT, TAGID_EM, TAGID_EMBED, TAGID_EVENT,
+    TAGID_FIELDSET, TAGID_FONT, TAGID_FORM, TAGID_FRAME, TAGID_FRAMESET, TAGID_H1, TAGID_H2,
+    TAGID_H3, TAGID_H4, TAGID_H5, TAGID_H6, TAGID_HEAD, TAGID_HR, TAGID_HTML, TAGID_I,
+    TAGID_IFRAME, TAGID_IMG, TAGID_INPUT, TAGID_INS, TAGID_ISINDEX, TAGID_KBD, TAGID_LABEL,
+    TAGID_LEGEND, TAGID_LI, TAGID_LINK, TAGID_LISTING, TAGID_MAP, TAGID_MARQUEE, TAGID_MENU,
+    TAGID_META, TAGID_NEXTID, TAGID_NOBR, TAGID_NOEMBED, TAGID_NOFRAMES, TAGID_NOSCRIPT,
+    TAGID_OBJECT, TAGID_OL, TAGID_OPTION, TAGID_P, TAGID_PARAM, TAGID_PLAINTEXT, TAGID_PRE,
+    TAGID_Q, TAGID_HTMLAREA, TAGID_S, TAGID_SAMP, TAGID_SCRIPT, TAGID_SELECT, TAGID_SMALL,
+    TAGID_SPAN, TAGID_STRIKE, TAGID_STRONG, TAGID_STYLE, TAGID_SUB, TAGID_SUP, TAGID_TABLE,
+    TAGID_TBODY, TAGID_TD, TAGID_TEXTAREA, TAGID_TFOOT, TAGID_TH, TAGID_THEAD, TAGID_TITLE,
+    TAGID_TR, TAGID_TT, TAGID_U, TAGID_UL, TAGID_VAR, TAGID_WBR, TAGID_XMP,
+    
+    //
+    // ID's after TAGID_LAST_PREDEFINED are generated on the fly.
+    //
+
+    TAGID_LAST_PREDEFINED = 10000,
+}
+ELEMENT_TAG_ID;
+
+/////////////////////////////////////////////////////////////////
+//  IMarkupServices
+[
+        object,
+        uuid(3050f4a0-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+interface IMarkupServices : IUnknown
+{
+    typedef [unique] IMarkupServices * LPMARKUPSERVICES;
+
+    //
+    // Members to create things
+    //
+
+    HRESULT CreateMarkupPointer (
+        [out] IMarkupPointer * * ppPointer
+    );
+
+    HRESULT CreateMarkupContainer (
+        [out] IMarkupContainer * * ppMarkupContainer
+    );
+
+    HRESULT CreateElement (
+        [in]  ELEMENT_TAG_ID   tagID,
+        [in]  OLECHAR *        pchAttributes,
+        [out] IHTMLElement * * ppElement
+    );
+
+    HRESULT CloneElement (
+        [in]  IHTMLElement *   pElemCloneThis,
+        [out] IHTMLElement * * ppElementTheClone
+    );
+
+    //
+    // Fundamental ways to modify content
+    //
+
+    HRESULT InsertElement (
+        [in] IHTMLElement *   pElementInsert,
+        [in] IMarkupPointer * pPointerStart,
+        [in] IMarkupPointer * pPointerFinish
+    );
+
+    HRESULT RemoveElement (
+        [in] IHTMLElement * pElementRemove
+    );
+
+    HRESULT Remove (
+        [in] IMarkupPointer * pPointerStart,
+        [in] IMarkupPointer * pPointerFinish
+    );
+
+    HRESULT Copy (
+        [in] IMarkupPointer * pPointerSourceStart,
+        [in] IMarkupPointer * pPointerSourceFinish,
+        [in] IMarkupPointer * pPointerTarget
+    );
+
+    HRESULT Move (
+        [in] IMarkupPointer * pPointerSourceStart,
+        [in] IMarkupPointer * pPointerSourceFinish,
+        [in] IMarkupPointer * pPointerTarget
+    );
+
+    HRESULT InsertText(
+        [in] OLECHAR *        pchText,
+        [in] long             cch,
+        [in] IMarkupPointer * pPointerTarget
+    );
+
+    //
+    // Ways to create and fill containers with parsed HTML
+    //
+
+    HRESULT ParseString (
+        [in]  OLECHAR *            pchHTML,
+        [in]  DWORD                dwFlags,
+        [out] IMarkupContainer * * ppContainerResult,
+        [out] IMarkupPointer * *   ppPointerStart,
+        [out] IMarkupPointer * *   ppPointerFinish
+    );
+
+    HRESULT ParseGlobal (
+        [in]  HGLOBAL              hglobalHTML,
+        [in]  DWORD                dwFlags,
+        [out] IMarkupContainer * * ppContainerResult,
+        [out] IMarkupPointer * *   ppPointerStart,
+        [out] IMarkupPointer * *   ppPointerFinish
+    );
+
+    //
+    // HTML DTD validation
+    //
+
+    HRESULT ValidateElements (
+        [in]     IMarkupPointer *   pPointerStart,
+        [in]     IMarkupPointer *   pPointerFinish,
+        [in]     IMarkupPointer *   pPointerTarget,
+        [in,out] IMarkupPointer * * pPointerStatus,
+        [out]    IHTMLElement * *   ppElementFailBottom,
+        [out]    IHTMLElement * *   ppElementFailTop
+    );
+
+    //
+    // Element tag ID members
+    //
+
+    HRESULT GetElementTagId (
+        [in]  IHTMLElement *   pElement,
+        [out] ELEMENT_TAG_ID * ptagId
+    );
+
+    HRESULT GetTagIDForName (
+        [in]  BSTR             bstrName,
+        [out] ELEMENT_TAG_ID * ptagId
+    );
+
+    HRESULT GetNameForTagID (
+        [in]  ELEMENT_TAG_ID tagId,
+        [out] BSTR *         pbstrName
+    );
+
+    //
+    // OM range helpers
+    //
+
+    HRESULT MovePointersToRange (
+        [in] IHTMLTxtRange *   pIRange,
+        [in] IMarkupPointer *  pPointerStart,
+        [in] IMarkupPointer *  pPointerFinish
+    );
+
+    HRESULT MoveRangeToPointers (
+        [in] IMarkupPointer *  pPointerStart,
+        [in] IMarkupPointer *  pPointerFinish,
+        [in] IHTMLTxtRange *   pIRange
+    );
+
+    //
+    // Undo support
+    //
+
+    HRESULT BeginUndoUnit ( [in] OLECHAR * pchTitle );
+
+    HRESULT EndUndoUnit   ( );
+}
+
+/////////////////////////////////////////////////////////////////
+//  IMarkupContainer
+[
+        object,
+        uuid(3050f56e-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+interface IMarkupContainer : IUnknown
+{
+    typedef [unique] IMarkupContainer *LPMARKUPCONTAINER;
+
+    HRESULT OwningDoc ( [out] IHTMLDocument2 * * ppDoc );
+}
+
+/////////////////////////////////////////////////////////////////
+//  IMarkupPointer
+[
+        object,
+        uuid(3050f49f-98b5-11cf-bb82-00aa00bdce0b),
+        pointer_default(unique)
+]
+interface IMarkupPointer : IUnknown
+{
+    typedef [unique] IMarkupPointer *LPMARKUPPOINTER;
+
+    HRESULT OwningDoc ( [out] IHTMLDocument2 * * ppDoc );
+
+    //
+    // Set and Get gravity
+    //
+    
+    HRESULT Gravity    ( [out] POINTER_GRAVITY * pGravity );
+    
+    HRESULT SetGravity ( [in]  POINTER_GRAVITY   Gravity );
+
+    //
+    // Positionion helpers
+    //
+
+    HRESULT Unposition ( );
+
+    HRESULT IsPositioned (
+        [out] BOOL *               pfPositioned,
+        [out] IMarkupContainer * * ppContainer
+    );
+
+    //
+    // "Warp" pointer to various places
+    //
+    
+    HRESULT MoveAdjacentToElement (
+        [in] IHTMLElement *    pElement,
+        [in] ELEMENT_ADJACENCY eAdj
+    );
+    
+    HRESULT MoveToPointer (
+        [in] IMarkupPointer * pPointer
+    );
+
+    HRESULT MoveToContainer (
+        [in] IMarkupContainer * pContainer,
+        [in] BOOL               fAtStart
+    );
+
+    //
+    // Inspect surroundings and relative movement operations
+    //
+
+    HRESULT Left (
+        [in]     BOOL                  fMove,
+        [out]    MARKUP_CONTEXT_TYPE * pContext,
+        [out]    IHTMLElement * *      ppElement,
+        [in,out] long *                pcch,
+        [out]    OLECHAR *             pchText
+    );
+        
+    HRESULT Right (
+        [in]     BOOL                  fMove,
+        [out]    MARKUP_CONTEXT_TYPE * pContext,
+        [out]    IHTMLElement * *      ppElement,
+        [in,out] long *                pcch,
+        [out]    OLECHAR *             pchText
+    );
+
+    HRESULT CurrentScope ( [out] IHTMLElement * * ppElemCurrent );
+
+    //
+    // Compare
+    //
+
+    HRESULT Compare (
+        [in]  IMarkupPointer * pPointerThat,
+        [out] int *            piResult
+    );
+
+    //
+    // Equal
+    //
+
+    HRESULT Equal (
+        [in]  IMarkupPointer * pPointerThat,
+        [out] BOOL *           pfAreEqual
+    );
+
+    //
+    // Low-fidelity text movement operations
+    //
+    
+    //
+    // MoveUnit is for moving the pointer in logical text increments
+    //
+
+    HRESULT MoveUnit (
+        [in]    MOVEUNIT_ACTION muAction
+    );
+
+    //
+    // Position the pointer at a match (and optionally give end of match)
+    //
+
+    HRESULT FindText ( 
+        [in]    OLECHAR *        pchFindText, 
+        [in]    DWORD            dwFlags,
+        [in]    IMarkupPointer * pIEndMatch,
+        [in]    IMarkupPointer * pIEndSearch
+    );
+
+    //
+    // Text identity
+    //
+    // GetTextIdentity returns the identity id of the text to the right
+    // SetTextIdentity assigns new identity to all text between ptrs.
+    // FindTextIdentity moves pointer before text with identity.
+    //
+
+    HRESULT GetTextIdentity  ( [out] long * ptextID );
+
+    HRESULT SetTextIdentity  ( [in] IMarkupPointer * pPointerOtherEnd );
+
+    HRESULT FindTextIdentity ( [in] long textID, [in] IMarkupPointer * pPointerOtherEnd );
+
+    //
+    // Bookmarks
+    //
+    // MoveToBookmark moves this to the beginning of the bookmark, and
+    //  moves pIEndBookmark to the end of the bookmark.
+    // GetBookmark returns a Bookmark beginning at this, and ending at
+    //  pIEndBookmark, if given.
+    //
+    HRESULT MoveToBookmark(
+        [in]    BSTR                bstrBookmark,
+        [in]    IMarkupPointer *    pEndBookmark );
+
+    HRESULT GetBookmark(
+        [out]   BSTR *              pbstrBookmark,
+        [in]    IMarkupPointer *    pEndBookmark );
+
+
+    HRESULT IsInsideURL(
+        [in]    IMarkupPointer *    pRight,
+        [out]   BOOL *              pfResult );
+}

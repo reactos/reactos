@@ -1,0 +1,58 @@
+!ifdef DEBUG
+
+CC  = cl -c -W3 -AS -Gsw -Zip -DWIN16 -Oas
+ASM = masm -Mx -Zi
+LINK= link /NOE/CO/LI/MAP/NOD
+
+!else
+
+CC  = cl -c -W3 -AS -Gsw -Zp -DWIN16 -Oas
+ASM = masm -Mx
+LINK= link /NOE/LI/MAP/NOD
+
+!endif
+
+NAME=winver
+
+OBJ = $(NAME).obj
+
+.c.obj:
+	$(CC) $*.c
+
+.asm.obj:
+	$(ASM) $*;
+
+goal: $(NAME).exe
+
+$(NAME).exe $(NAME).map: $(OBJ) res.res $(NAME).def verstub.exe
+	$(LINK) $(OBJ), $(NAME), $(NAME), libw snocrt pwin16, $(NAME).def
+	rc res.res $(NAME).exe
+!ifdef DEBUG
+	cvpack -p $(NAME).exe
+!endif
+	mapsym $(NAME).map
+
+verstub.exe: verstub.asm
+	masm -Mx verstub.asm;
+	link verstub;
+
+res.res: res.rc $(NAME).ico
+	rc -r res.rc 
+
+clean:
+	del *.exe
+	del *.res
+	del *.obj
+	del *.map
+	del *.sym
+
+depend:
+	mv makefile makefile.old
+	sed "/^# START Dependencies/,/^# END Dependencies/D" makefile.old > makefile
+	del makefile.old
+	echo # START Dependencies >> makefile
+	includes -l *.c *.asm >> makefile
+	echo # END Dependencies >> makefile
+
+# START Dependencies
+# END Dependencies

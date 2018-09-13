@@ -1,0 +1,13 @@
+
+all:
+!IF "$(BUILDMSG)" != ""
+        @ech ; $(BUILDMSG) ;
+!ENDIF
+
+
+clean: cleansrc all
+
+cleansrc:
+        cd ws2_idl
+        nmake clean
+        

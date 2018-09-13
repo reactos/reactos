@@ -1,0 +1,226 @@
+//+------------------------------------------------------------------------
+//
+//  OLEDBSimpleProvider interface
+//
+//  Copyright (C) Microsoft Corporation, 1993-1998.
+//
+//  File:       simpdata.idl
+//
+//-------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// simpdata.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//--------------------------------------------------------------------------")
+cpp_quote("// Simple Tabular Data.")
+cpp_quote("")
+cpp_quote("#ifndef SIMPDATA_H")
+cpp_quote("#define SIMPDATA_H")
+
+//import "ocidl.idl";
+import "objidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+
+// We use signed integers for row and column numbers, starting with the value 1.
+// The value 0 refers to any "label" or "header" information, distinct from the
+// data.  The value -1 refers to any an unknown value, or all values, so, for
+// example, iRow = -1, iCol = 2 refers to all of column 2
+
+cpp_quote("#define OSP_IndexLabel      (0)")
+cpp_quote("#define OSP_IndexAll        (~0ul)")
+cpp_quote("#define OSP_IndexUnknown    (~0ul)")
+cpp_quote("")
+
+[
+        uuid(E0E270C2-C0BE-11d0-8FE4-00A0C90A6341),
+        helpstring("OLE-DB Simple Provider Type Library"),
+        lcid(0x409),
+        version(1.4)
+]
+
+library std
+{
+
+//
+// Java users should compile this file with -DFORJAVA.  This enables the Set/GetVariant
+// function to take/return "Objects" instead of Variants.
+//
+#ifdef FORJAVA
+typedef struct
+{
+   VARIANT;
+} CustomMarshalableVariant;
+#else
+#define CustomMarshalableVariant VARIANT
+#endif
+
+typedef enum OSPFORMAT
+{
+    OSPFORMAT_RAW = 0,     // set/get variant as is
+    OSPFORMAT_DEFAULT = 0, // default is RAW
+    OSPFORMAT_FORMATTED = 1,   // all variants converted to string representation
+    OSPFORMAT_HTML = 2      // variant converted to HTML string representation
+                            // (providers not required to implement this).
+} OSPFORMAT;
+
+typedef enum OSPRW
+{
+    // All cells are presumed to be readable.
+    OSPRW_DEFAULT = 1,
+    OSPRW_READONLY = 0,     // readonly
+    OSPRW_READWRITE = 1,    // readwrite
+    OSPRW_MIXED = 2         // mixed or unknown; most callers will treat
+                                     // as READWRITE "Lazy" provider should just
+                                     // return OSPRW_MIXED
+} OSPRW;
+
+typedef enum OSPFIND
+{
+    OSPFIND_DEFAULT = 0,
+    OSPFIND_UP = 1,             // scan backwards(decreasing row #s)
+    OSPFIND_CASESENSITIVE = 2
+} OSPFIND;
+
+typedef enum OSPCOMP
+{
+                            // These values derived from bitmasks
+                            // i.e.       GT  LT  EQ
+    OSPCOMP_EQ = 1,         // OSPCOMP_EQ          1 Equal
+    OSPCOMP_DEFAULT = 1,    // OSPCOMP_EQ is the default
+    OSPCOMP_LT = 2,         // OSPCOMP_LT      1   0 Less than
+    OSPCOMP_LE = 3,         // OSPCOMP_LE      1   1 Less than or equal
+    OSPCOMP_GE = 4,         // OSPCOMP_GT  1   0   0 Greater than or equal
+    OSPCOMP_GT = 5,         // OSPCOMP_GE  1   0   1 Greater than
+    OSPCOMP_NE = 6,         // OSPCOMP_NE  1   1   0 Not equal
+} OSPCOMP;
+
+typedef enum OSPXFER
+{
+    OSPXFER_COMPLETE = 0,
+    OSPXFER_ABORT = 1,
+    OSPXFER_ERROR = 2
+} OSPXFER;
+
+[
+        object,
+        uuid(E0E270C1-C0BE-11d0-8FE4-00A0C90A6341),
+        pointer_default(unique),
+        oleautomation,
+        local,
+        version(1.4)
+]
+interface OLEDBSimpleProviderListener : IUnknown
+{
+      // As noted above; a -1 (STD_IndexAll) can be used in the row or column
+      // (or both).  For example, CellChanged(STD_IndexAll, OSP_IndexAll)
+      // implies that all rows and columns changed shape.
+
+      HRESULT aboutToChangeCell([in] long iRow, [in] long iColumn);
+      HRESULT cellChanged([in] long iRow, [in] long iColumn);
+      HRESULT aboutToDeleteRows([in] long iRow, [in] long cRows);
+      HRESULT deletedRows([in] long iRow, [in] long cRows);
+      HRESULT aboutToInsertRows([in] long iRow, [in] long cRows);
+      HRESULT insertedRows([in] long iRow, [in] long cRows);
+      HRESULT rowsAvailable([in] long iRow, [in] long cRows);
+      HRESULT transferComplete([in] OSPXFER xfer);
+}
+
+[
+        object,
+        uuid(E0E270C0-C0BE-11d0-8FE4-00A0C90A6341),
+        pointer_default(unique),
+        local,
+        version(1.4)
+]
+interface OLEDBSimpleProvider : IUnknown
+{
+      // Info-retrieving functions:
+	  // ==========================
+	  //
+	  // Note that column names are retrieved using GetString or GetVariant
+	  // with iRow == OSP_IndexLabel.  RWStatus for a whole row or column
+          // can be made with iRow or iColumn == OSP_IndexAll.
+
+      HRESULT getRowCount([out,retval] long *pcRows);
+      HRESULT getColumnCount([out,retval] long *pcColumns);
+
+
+      HRESULT getRWStatus([in] long iRow, [in] long iColumn,
+			  [out, retval] OSPRW *prwStatus);
+
+      // Variant-oriented Get/Set:
+	  // =========================
+	  //
+	  // Note that use of VARIANT precludes references.
+
+      HRESULT getVariant([in] long iRow, [in] long iColumn,
+                         [in] OSPFORMAT format, [out, retval] CustomMarshalableVariant *pVar );
+      HRESULT setVariant([in] long iRow, [in] long iColumn,
+                         [in] OSPFORMAT format, [in] CustomMarshalableVariant Var );
+
+      // Locale information:
+	  // ===================
+	  //
+
+	  HRESULT getLocale([out,retval] BSTR *pbstrLocale);
+
+      // Deletion and Insertion:
+	  // =======================
+	  //
+      // For insertion, iRow or iColumn is index *before* which to insert; the
+      // first inserted row or column will end up with that index.
+      //
+      // In case of error, provider may choose to insert or delete only the
+      // first m of n rows or columns which client requested.  OUT parameter
+      // indicates how many rows or columns actually inserted or deleted.  In
+      // case of success, OUT parameter should be filled in with cRows.
+
+      HRESULT deleteRows([in] long iRow, [in] long cRows,
+			 [out, retval] long *pcRowsDeleted );
+      HRESULT insertRows([in] long iRow, [in] long cRows,
+			 [out, retval] long *pcRowsInserted );
+
+      // Find
+      // Find the first row in column iColumn that contains a value which
+      // matches val according to the compType.
+      // To continue searching past the found row, the caller should pass
+      // *piRowFound+1 as the next iRowStart, or *piRowFound-1 for backward
+      // searches (STDFIND_UP).
+
+      HRESULT find([in] long iRowStart, [in] long iColumn,
+                   [in] CustomMarshalableVariant val,
+			       [in] OSPFIND findFlags,
+                   [in] OSPCOMP compType,
+			       [out, retval] long *piRowFound );
+
+      // Establish or detach single event sink.
+
+      HRESULT addOLEDBSimpleProviderListener([in] OLEDBSimpleProviderListener *pospIListener);
+      HRESULT removeOLEDBSimpleProviderListener([in] OLEDBSimpleProviderListener *pospIListener);
+
+      // Asynch support
+
+      HRESULT isAsync([out, retval] bool *pbAsynch);
+
+      HRESULT getEstimatedRows([out, retval] long *piRows);
+
+      // Stops any asynchronous download that may be in progress.
+      HRESULT stopTransfer();
+}
+
+cpp_quote("typedef OLEDBSimpleProvider *LPOLEDBSimpleProvider;")
+
+}
+
+cpp_quote("#endif")

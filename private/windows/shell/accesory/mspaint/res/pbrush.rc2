@@ -1,0 +1,28 @@
+//
+// PBRUSH.RC2 - resources App Studio does not edit directly
+//
+
+#ifdef APSTUDIO_INVOKED
+    #error this file is not editable by App Studio
+#endif //APSTUDIO_INVOKED
+
+/////////////////////////////////////////////////////////////////////////////
+// Version stamp for this .EXE
+
+//---------------------------------------------------------------------------
+// Version info.
+//---------------------------------------------------------------------------
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Microsoft Paint"
+#define VER_INTERNALNAME_STR            "MSPAINT"
+#define VER_ORIGINALFILENAME_STR        "MSPAINT.EXE"
+
+#include <common.ver>
+
+/////////////////////////////////////////////////////////////////////////////
+// Add additional manually edited resources here...
+

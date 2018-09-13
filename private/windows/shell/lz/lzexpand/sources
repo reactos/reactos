@@ -1,0 +1,42 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=lz
+MINORCOMP=lzexpand
+
+TARGETNAME=lz32
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+TARGETLIBS= $(BASEDIR)\public\sdk\lib\*\user32.lib \
+            $(BASEDIR)\public\sdk\lib\*\kernel32.lib  \
+            $(BASEDIR)\public\sdk\lib\*\winlza.lib
+	
+USE_NTDLL=1
+
+DLLBASE=0x1c000000
+DLLENTRY=LibMain
+
+INCLUDES=..\libs
+
+C_DEFINES= -DWIN32 -DLZA_DLL
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= COPYLZ.C \
+        winlzexp.c \
+        lzexpand.rc
+

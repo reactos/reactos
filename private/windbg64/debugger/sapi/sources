@@ -1,0 +1,71 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=debugger
+MINORCOMP=sapi
+
+!include ..\sources.inc
+
+TARGETNAME=shcv$(D)
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+DLLDEF=sapi.def
+COFFBASE=shcv
+
+SOURCES= \
+    hash.cpp     \
+    loadomf.cpp  \
+    ph.cpp       \
+    sh.cpp       \
+    shinit.cpp   \
+    shsymbol.cpp \
+    shsymlb0.cpp \
+    shsymlb1.cpp \
+    sl.cpp       \
+    stab.cpp     \
+    th.cpp       \
+    sapi.rc
+
+UMTYPE=windows
+
+TI32=1
+
+!if "$(TI32)" == "1"
+C_DEFINES = $(C_DEFINES) -DBUILD_SAPI -DNT_BUILD -DCC_CVTYPE32
+!else
+C_DEFINES = $(C_DEFINES) -DBUILD_SAPI -DNT_BUILD
+!endif
+
+INCLUDES=.;                     \
+         inc;                   \
+         $(DEBUG_INCLUDES);     \
+         $(NONSHIP_INC_PATH);   \
+         ..\include
+
+NTTARGETFILES =
+
+LINKLIBS = $(BASEDIR)\private\sdktools\imagehlp\$(TARGET_DIRECTORY)\msdbi60l.lib
+TARGETLIBS= \
+    $(BASEDIR)\private\windbg64\lib\obj\*\mathlib.lib  \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\user32.lib
+
+PRECOMPILED_INCLUDE=shinc.hpp
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

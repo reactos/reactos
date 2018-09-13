@@ -1,0 +1,20 @@
+i386_SOURCES=..\i386\byteswap.asm \
+             ..\i386\context.c    \
+             ..\i386\debug3.c     \
+             ..\i386\debug2.asm   \
+             ..\i386\divlarge.c   \
+             ..\i386\exdsptch.c   \
+             ..\i386\stringsp.asm \
+             ..\i386\ioaccess.asm \
+             ..\i386\largeint.asm \
+             ..\i386\lzntx86.asm  \
+             ..\i386\movemem.asm  \
+             ..\i386\ntcurteb.asm \
+             ..\i386\raise.asm    \
+             ..\i386\raisests.c   \
+             ..\i386\rtldump.c    \
+             ..\i386\slist.asm    \
+             ..\i386\stkwalk.asm  \
+             ..\i386\userdisp.asm \
+             ..\i386\xcptmisc.asm \
+             ..\i386\halvprnt.c

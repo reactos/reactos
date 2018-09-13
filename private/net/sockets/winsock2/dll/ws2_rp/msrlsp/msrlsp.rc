@@ -1,0 +1,23 @@
+//----------------------------------------------------------------------
+// Copyright (c)1997 Microsoft Corporation, All Rights Reserved
+//
+// msrlsp.rc
+//
+//----------------------------------------------------------------------
+
+#ifdef NTENV
+#include <windows.h>
+#include <ntverp.h>
+#else
+#include <version.h>
+#define VER_LEGALCOPYRIGHT_YEARS    "1997"
+#endif
+
+#define VER_FILETYPE                 VFT_APP
+#define VER_FILESUBTYPE              VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "MS Restricted Network LSP V1.0"
+#define VER_INTERNALNAME_STR        "msrlsp.dll"
+#define VER_ORIGINALFILENAME_STR    "msrlsp.dll"
+
+#include "common.ver"
+

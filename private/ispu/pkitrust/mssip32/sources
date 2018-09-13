@@ -1,0 +1,37 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1989 - 1999
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CRYPT_ROOT=..\..
+!include $(CRYPT_ROOT)\crypt.mk
+
+MINORCOMP=mssip32l
+!include $(CRYPT_ROOT)\cryptlib.mk
+
+!include $(CRYPT_ROOT)\pkitrust\pkitrust.mk
+
+INCLUDES=$(PKITRUST_ROOT)\common;$(INCLUDES)
+INCLUDES=$(INCLUDES);$(BASEDIR)\private\inc\crypto
+
+
+PRECOMPILED_INCLUDE = global.hxx
+PRECOMPILED_PCH =     global.pch
+PRECOMPILED_OBJ =     global.obj
+
+C_DEFINES=$(C_DEFINES) -D_WINDOWS
+
+SOURCES= \
+    mssip32.cpp \
+    sipobj.cpp \
+    sipobjpe.cpp \
+    sipobjcb.cpp \
+    sipobjfl.cpp \
+    sipobjct.cpp \
+    sipobjjv.cpp \
+    sipobjss.cpp \
+    jvimage.cpp \
+    peimage2.cpp

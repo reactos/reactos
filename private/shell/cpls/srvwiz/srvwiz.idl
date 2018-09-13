@@ -1,0 +1,70 @@
+import "oaidl.idl";
+import "ocidl.idl";
+    [
+        object,
+        uuid(D857B811-5F40-11D2-B002-00C04FC30936),
+        dual,
+        helpstring("ISrvWiz Interface"),
+        pointer_default(unique)
+    ]
+    interface ISrvWiz : IDispatch
+    {
+        [propget, id(1), helpstring("the first page to show at startup")] 
+        HRESULT Home([out, retval] DWORD *pdwHome);
+
+        [propput, id(1), helpstring("the first page to show at startup")] 
+        HRESULT Home([in] DWORD dwHome);
+
+        [propget, id(2), helpstring("whether to show Configure Your Server at startup")] 
+        HRESULT ShowAtStartup([out, retval] BOOL *pbShow);
+
+        [propput, id(2), helpstring("whether to show Configure Your Server at startup")] 
+        HRESULT ShowAtStartup([in] BOOL bShow);
+
+        [propput, id(3), helpstring("Domain DNS Name")] 
+        HRESULT DomainDNSName([in] BSTR bstrName);
+
+        [propput, id(4), helpstring("Domain NetBios Name")] 
+        HRESULT DomainNetBiosName([in] BSTR bstrName);
+
+        [propget, id(5), helpstring("whether the product has been registered")] 
+        HRESULT ProductRegistered([out, retval] BOOL *pbRet);
+
+        [id(6), helpstring("machine's role in a domain")] 
+        HRESULT DsRole([in] DWORD dwInfoLevel, [out, retval] DWORD *pdwRole);
+
+        [id(7), helpstring("state of the specified service")] 
+        HRESULT ServiceState([in] BSTR bstrService, [out, retval] DWORD *pdwState);
+
+        [id(8), helpstring("auto install specified service")] 
+        HRESULT InstallService([in] BSTR bstrService, [out, retval] BOOL *pbRet);
+
+        [id(9), helpstring("validate domain DNS name")] 
+        HRESULT ValidateName([in] BSTR bstrType, [in] BSTR bstrName, [out, retval] BOOL *pbRet);
+
+        [id(10), helpstring("Set up first server")] 
+        HRESULT SetupFirstServer([out, retval] BOOL *pbRet);
+
+        [id(11), helpstring("Set up first server")] 
+        HRESULT CheckDHCPServer([out, retval] BOOL *pbRet);
+    };
+
+[
+    uuid(D857B805-5F40-11D2-B002-00C04FC30936),
+    version(1.0),
+    helpstring("SrvWiz 1.0 Type Library")
+]
+library SrvWizLib
+{
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+        uuid(D857B813-5F40-11D2-B002-00C04FC30936),
+        helpstring("SrvWiz Class")
+    ]
+    coclass SrvWiz
+    {
+        [default] interface ISrvWiz;
+    };
+};

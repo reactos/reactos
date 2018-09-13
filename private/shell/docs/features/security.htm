@@ -1,0 +1,76 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF="http://ie/CSS/master.css" TYPE="text/css">
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on "1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META DATE="Oct 24, 97"> 
+<META AUTHOR="Bryan Starbuck"> 
+<TITLE>Shell Security</TITLE> 
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H1>Shell Security</H1>
+<BR>
+
+<B> PM: </B> <A HREF="mailto:lorenk@microsoft.com"> Loren Kohnfelder (LorenK) </A> <BR>
+<B> Dev: </B> <A HREF="mailto:bryanst@microsoft.com"> Bryan Starbuck (Bryanst) </A> <BR>
+<B> Test: </B> <A HREF="mailto:dougdob@microsoft.com"> Doug Dobbins (DougDob) </A> <BR>
+<BR>
+<BR>
+
+<H3>1. CIFS Security Checks</H3>
+<BR>
+CIFs is a standard Microsoft supports to expand UNC support across the internet by using DNS
+names.  It's possible to open a Shell Folder to \\www.mycompany.com\share\subdir1\.  The Zones
+Status Bar is the primary way the user is informed about where they are and whether they should
+trust the contents of this folder.  We do zone checks on actions if the list of files is hosted
+by HTML because the host HTML can mislead the user into launching items.
+<BR>
+<BR>
+<BR>
+
+<B>DefView (the window containing the list of File System items) can be hosted in the following situations:</B>
+<UL>
+<LI> <B> Directly in a Shell Folder: </B> We do no checking because the user knows where they are because of the Zones Status Bar Pane and the Address Bar. </LI>
+<LI> <B> In WebView: </B> We zone check the URL where the WebView template came from because we are suspicious that the author may be misrepresenting the DefView. </LI>
+<LI> <B> In a WebPage (Using IFRAME file URL): </B> We zone check the URL of the html because we are suspicious that the author may be misrepresenting the DefView. </LI>
+<LI> <B> Other container: </B> We QueryService up to see if they support IInternetSecurityManager (or one of those interfaces) to see if they can tell us where they are from.  Otherwise, we fall back to being considered unsafe. </LI>
+</UL>
+
+<BR>
+<BR>
+
+<B> What if the zone check fails? </B>
+<UL>
+<LI> <B> Exec: </B> we ask the user if they really want to launch the selected file. </LI>
+<LI> <B> Drag & Drop: </B> we always allow this in the DefView case but not the HTML hosted case.  We just turn this off if the zone check fails. </LI>
+<LI> <B> Content Menu: </B> We ask the user if they really want this to appear.  (I think someone else added this)
+</UL>
+
+<BR>
+<BR>
+<BR>
+
+<H3>CIFS Specs</H3>
+<UL>
+    <LI> <A HREF="http://www.cifs.com/"> CIFS Info </A> </LI>
+    <LI> <A HREF="http://www.cifs.com/2ndcifsconf/Microsoft-Leach3/"> Microsoft CIFS Info </A> </LI>
+</UL>
+<BR>
+<BR>
+
+<H2>FTP Tests</H2>
+<UL>
+    <LI> <A HREF="sectest1.htm"> CIFs Intranet Tests </A> (NOT Finished) </LI>
+    <LI> <A HREF="sectest2.htm"> CIFS Internet Tests </A> (NOT Finished) </LI>
+    <LI> <A HREF="http://www.starbucks.org/starbuck/test/security/default.htm"> Other </A> </LI>
+
+</UL>
+<BR>
+<BR>
+
+<BR>
+<BR>
+</BODY>
+</HTML>

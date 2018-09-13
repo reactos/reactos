@@ -1,0 +1,139 @@
+LANGUAGE 0x16, 0x00 // Really, 0x16, 0x02 - Portuguese (Standard)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Portuguese resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 375, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Personalizar Barra de Ferramentas"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "&Fechar",2,308,6,63,14
+    PUSHBUTTON      "&Repor",202,308,23,63,14
+    PUSHBUTTON      "&Ajuda",205,308,40,63,14
+    PUSHBUTTON      "Mo&ver para Cima",206,308,74,63,14
+    PUSHBUTTON      "Mover para Bai&xo",207,308,91,63,14
+    LTEXT           "&Botões disponíveis:",-1,4,5,116,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      "A&dicionar ->",1,131,42,47,14
+    PUSHBUTTON      "<- Re&mover",204,131,62,47,14
+    LTEXT           "Bo&tões da barra de ferramentas:",-1,182,5,119,10
+    LISTBOX         203,182,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      "Cancelar",2,58,122,50,14
+    PUSHBUTTON      "&Aplicar",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      "Ajuda",9,166,122,50,14,WS_GROUP
+    CONTROL         "",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           "",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "< &Retroceder",12323,12,26,50,14
+    DEFPUSHBUTTON   "&Seguinte >",12324,62,26,50,14
+    PUSHBUTTON      "Concluir",12325,119,26,50,14
+    PUSHBUTTON      "Cancelar",2,176,26,50,14
+    PUSHBUTTON      "Ajuda",9,233,26,50,14,WS_GROUP
+    LTEXT           "",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    "Separador"
+    1025                    " + "
+    1026                    "Nenhum"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    "Fechar"
+    4161                    "OK"
+    4162                    "Propriedades de %s"
+    4163                    "Hoje:"
+    4164                    "&Ir para hoje"
+    4165                    "/.,-:"
+    4166                    "MMMM"
+    4167                    "MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    "Introduza o texto aqui"
+    4177                    "Propriedades"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   "Redimensiona esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   "Move esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   "Reduz esta janela a um ícone."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   "Expande esta janela para o ecrã completo."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   "Muda para a janela MDI seguinte."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   "Fecha esta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   "Restaura o tamanho normal desta janela."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   "Muda para outra tarefa."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   "Contém comandos para manipular janelas."
+    36849                   "Arrastar para a esquerda ou para a direita para redimensionar colunas."
+    36850                   "Redimensiona colunas utilizando as teclas com setas e de tabulação."
+    36851                   "Adiciona, move e remove botões na barra de ferramentas."
+END
+

@@ -1,0 +1,481 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       hotplug.rc
+//
+//--------------------------------------------------------------------------
+
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "setupapi.h"
+#include "resource.h"
+#include "ntverp.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+//
+// Version information
+//
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Unplug/Eject device applet"
+#define VER_INTERNALNAME_STR            "hotplug"
+#define VER_ORIGINALFILENAME_STR        "hotplug.dll"
+
+#include "common.ver"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_DEVTREE DIALOG DISCARDABLE  0, 0, 278, 245
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Unplug or Eject Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_MACHINENAME,7,0,248,8
+    ICON            IDI_HOTPLUGICON,IDC_NOHELP1,7,10,20,20
+    LTEXT           "Select the device you want to unplug or eject, and then click Stop. When Windows notifies you that it is safe to do so unplug the device from your computer.",
+                    IDC_NOHELP2,36,12,234,24
+    LTEXT           "&Hardware devices:",IDC_HDWDEVICES,7,42,248,8
+    CONTROL         "",IDC_DEVICETREE,"SysTreeView32",TVS_HASBUTTONS |
+                    TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,7,52,264,102
+    LTEXT           "",IDC_DEVICEDESC,7,156,264,16
+    PUSHBUTTON      "&Properties",IDC_PROPERTIES,158,178,55,14
+    PUSHBUTTON      "&Stop",IDC_STOPDEVICE,216,178,55,14
+    CTEXT           "",IDC_NOHELP3,7,200,264,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      "&Close",IDCLOSE,216,224,55,14
+    CONTROL         "&Display device components",IDC_VIEWOPTION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,208,110,12
+    CONTROL         "Show Unplug/Eject &icon on the taskbar",
+                    IDC_SYSTRAYOPTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,223,164,12
+END
+
+DLG_CONFIRMREMOVE DIALOG DISCARDABLE  32, 10, 256, 148
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Stop a Hardware device"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Confirm devices to be stopped, Choose OK to continue.",
+                    IDC_NOHELP1,7,8,241,14
+    LTEXT           "Windows will attempt to stop the following devices. After the devices are stopped they may be removed safely.",
+                    IDC_NOHELP2,7,22,240,18
+    PUSHBUTTON      "OK",IDOK,144,127,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,198,127,50,14
+    CONTROL         "",IDC_REMOVELIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+                    LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER |
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,8,45,240,78
+END
+
+DLG_SURPRISEWARN DIALOGEX 32, 10, 256, 250
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CONTEXTHELP |
+    WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CENTER
+CAPTION "Unsafe Removal of Device"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515,IDC_NOHELP1,7,10,20,20
+    LTEXT           "You have unplugged or ejected a device without stopping it. Unplugging or ejecting devices without first stopping them can often cause your computer to crash and lose valuable data.",
+                    IDC_NOHELP2,37,12,211,24
+    LTEXT           "To safely unplug or eject any of the following devices, first use the Hardware wizard in the Control Panel to stop the device.",
+                    IDC_NOHELP3,7,43,241,16
+    DEFPUSHBUTTON   "OK",IDOK,197,232,50,14,WS_GROUP
+    CONTROL         "",IDC_REMOVELIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+                    LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER |
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,7,62,241,60
+    CONTROL         "Show Unplug/Eject &icon on the taskbar.",
+                    IDC_SYSTRAYOPTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    7,170,241,8
+    CONTROL         103,IDC_TASKBAR,"Static",SS_BITMAP,24,185,206,35,
+                    WS_EX_TRANSPARENT
+    LTEXT           "If you frequently need to unplug this device, Windows can give you an icon on the taskbar to quickly unplug or eject your device. If you would like to use this option, check the following:",
+                    IDC_NOHELP4,7,139,241,24
+    CTEXT           "",IDC_NOHELP5,7,131,241,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+IDD_DYNAWIZ_DEVTREE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_DEVICETREE,"SysTreeView32",TVS_HASBUTTONS |
+                    TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS |
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,21,45,275,53
+    PUSHBUTTON      "&Properties",IDC_PROPERTIES,241,127,55,14
+    CONTROL         "&Show related devices",IDC_VIEWOPTION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,21,128,110,10
+    LTEXT           "&Hardware devices:",IDC_HDWDEVICES,21,35,248,8
+    ICON            IDI_HOTPLUGICON,IDC_NOHELP1,21,8,21,20
+    LTEXT           "Select the device you want to unplug or eject, and then click Next. When Windows notifies you that it is safe to do so unplug the device from your computer.",
+                    IDC_NOHELP2,55,8,241,25
+    LTEXT           "",IDC_DEVICEDESC,21,105,275,16
+END
+
+IDD_DYNAWIZ_CONFIRMREMOVE DIALOG DISCARDABLE  0, 0, 317, 143
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Windows will attempt to stop the following devices.  Click Next to stop these devices.",
+                    IDC_NOHELP2,55,8,241,21
+    CONTROL         "",IDC_REMOVELIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS |
+                    LVS_ALIGNLEFT | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER |
+                    WS_BORDER | WS_GROUP | WS_TABSTOP,21,45,275,53
+    ICON            IDI_HOTPLUGICON,IDC_NOHELP3,21,8,21,20
+END
+
+IDD_DYNAWIZ_FINISH DIALOGEX 0, 0, 317, 186
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_DEVICE_DESCRIPTION,114,72,203,16
+    LTEXT           "You may safely remove the following device:",
+                    IDC_HOTPLUG_TEXT,114,61,202,8
+    CONTROL         "Show Unplug/Eject &icon on the taskbar.",
+                    IDC_SYSTRAYOPTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
+                    114,125,202,8
+    CONTROL         103,IDC_TASKBAR,"Static",SS_BITMAP,111,135,206,35,
+                    WS_EX_TRANSPARENT
+    LTEXT           "If you frequently need to unplug this device, Windows can give you an icon on the taskbar to quickly unplug or eject your device. If you would like to use this option, check the following:",
+                    IDC_STATIC,114,96,203,24
+    LTEXT           "Completing the Add/Remove Hardware Wizard",IDC_HDWNAME,
+                    114,8,193,24
+    LTEXT           "You have successfully completed the Add/Remove Hardware wizard.",
+                    IDC_STATIC,114,40,193,16
+    LTEXT           "To close the wizard, click Finish.",IDC_STATIC,114,178,
+                    145,8
+END
+
+DLG_REMOVAL_VETOED DIALOG DISCARDABLE  0, 0, 264, 65
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER |
+    DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,106,45,50,14
+    LTEXT           "Veto Message",IDC_VETOTEXT,35,9,211,27
+    ICON            32513,IDC_STATIC,6,8,20,20
+END
+
+DLG_REMOVAL_COMPLETE DIALOG DISCARDABLE  0, 0, 264, 65
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER |
+    DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Safe To Remove Hardware"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,106,45,50,14
+    LTEXT           "Removal Message",IDC_REMOVALTEXT,35,9,211,27
+    ICON            32516,IDC_STATIC,6,8,20,20
+END
+
+DLG_SURPRISEUNDOCK DIALOGEX 32, 10, 256, 218
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER |
+    DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Unsafe Undock"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            32515,IDC_NOHELP1,7,10,20,20
+    LTEXT           "You have disconnected your computer from its docking station without using the Eject PC command.  Disconnecting your computer without using the Eject PC command can cause your system to crash and lose data.",
+                    IDC_UNDOCK_MESSAGE,37,9,211,37
+    DEFPUSHBUTTON   "OK",IDOK,197,199,50,14,WS_GROUP
+    CONTROL         105,IDC_UNDOCK,"Static",SS_BITMAP,8,75,161,81,
+                    WS_EX_TRANSPARENT
+    CTEXT           "",IDC_NOHELP5,7,164,241,1,SS_SUNKEN | NOT WS_GROUP
+    LTEXT           "Note: If your computer is in standby or hibernate mode, you may need to turn on the computer and choose Eject PC before removing the computer.",
+                    IDC_STATIC,7,171,240,27
+    LTEXT           "To remove your computer from its docking station, choose the Eject PC option on the start menu:",
+                    IDC_STATIC,7,54,241,16
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_HOTPLUGICON         ICON    DISCARDABLE     "HotPlug.ico"
+IDI_UNDOCKICON          ICON    DISCARDABLE     "ejectpc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_HOTPLUGBMP          BITMAP  DISCARDABLE     "HotPlug.bmp"
+IDB_TASKBARBMP          BITMAP  DISCARDABLE     "TaskBar.bmp"
+IDB_UNDOCKBMP           BITMAP  DISCARDABLE     "EjectPc.bmp"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""setupapi.h""\r\n"
+    "#include ""resource.h""\r\n"
+    "#include ""ntverp.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    DLG_SURPRISEWARN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 248
+        BOTTOMMARGIN, 219
+    END
+
+    IDD_DYNAWIZ_DEVTREE, DIALOG
+    BEGIN
+        RIGHTMARGIN, 316
+    END
+
+    DLG_REMOVAL_COMPLETE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 297
+        BOTTOMMARGIN, 59
+    END
+
+    DLG_REMOVAL_VETOED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 247
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 50
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HOTPLUGNAME         "Hot Pluggable Devices"
+    IDS_HOTPLUGINFO         "Hot Pluggable Devices Control"
+    IDS_UNKNOWN             "Unknown Device"
+    IDS_PROB_NONE           "This device is working properly."
+    IDS_PROB_UNKNOWN        "Device status is unknown."
+    
+    IDS_LOCATION            "at %s"
+    IDS_LOCATION_NOUINUMBER "on %s"    
+    
+    IDS_AT                  "at "
+    IDS_UI_NUMBER_DESC_FORMAT
+                            "Location %1!u!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_HOTPLUGWIZ_DEVTREE  "Select Device to Unplug"
+    IDS_HOTPLUGWIZ_DEVTREE_INFO "Select the device that you want to unplug."
+    IDS_HOTPLUGWIZ_CONFIRMSTOP "Confirm Device"
+    IDS_HOTPLUGWIZ_CONFIRMSTOP_INFO
+                            "Are you sure you want to unplug this device?"
+    IDS_VETOED_EJECT_TITLE  "Problem Ejecting %s"
+    IDS_VETOED_REMOVAL_TITLE "Problem Stopping %s"
+    IDS_VETOED_UNDOCK_TITLE "Problem Undocking From %s"
+    IDS_VETOED_STANDBY_TITLE "System Standby Failed"
+    IDS_VETOED_HIBERNATION_TITLE "System Hibernation Failed"
+
+    IDS_REMOVAL_COMPLETE_TITLE
+                            "Safe To Remove Hardware"
+    IDS_UNDOCK_COMPLETE_TITLE
+                            "Undock Complete"
+    IDS_UNSAFE_UNDOCK       "You have disconnected your computer from the %s without using the Eject PC command.  Disconnecting your computer without using the Eject PC command can cause your system to crash and lose data."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STOP                "&Stop"
+    IDS_PROPERTIES          "&Properties"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // The folowing string is an example time that is overlayed in the
+    // taskbar bitmat.  This example time should be localized.
+    IDS_TASKBARTEXT         "2:01 PM"
+    IDS_CONFIRM_STOP        "Windows will stop the following devices. After the devices are stopped they may be removed safely."
+    IDS_UNDOCK_COMPLETE_TEXT
+                            "Windows 2000 has finished undocking the system. If you need to remove the system from the %s, please do so now."
+    IDS_REMOVAL_COMPLETE_TEXT
+                            "The '%s' device can now be safely removed from the system."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_VETO_UNKNOWN        "The device '%s' cannot be stopped because of an unknown error. Since this device is still being used, do not remove it."
+    IDS_VETO_LEGACYDEVICE   "The device '%s' cannot be stopped because it is using a driver that does not support Plug and Play. Since this device is still being used, do not remove it."
+    IDS_VETO_PENDINGCLOSE   "This device cannot be stopped because one of its components (%s) was unplugged when a program was still using it. Close that program and then attempt to stop this device again."
+    IDS_VETO_WINDOWSAPP     "The application '%s' is preventing this device from being stopped. Close the application and then try to stop the device again."
+    IDS_VETO_WINDOWSSERVICE "The service '%s' is preventing this device from being stopped. Try stopping this service and then try to stop the device again."
+    IDS_VETO_OUTSTANDINGOPEN
+                            "The device '%s' cannot be stopped because a program is still accessing it."
+    IDS_VETO_DEVICE         "The device '%s' cannot be stopped right now.  Try stopping the device again later."
+    IDS_VETO_DRIVER         "The driver '%s' is preventing this device from being stopped right now.  Try stopping the device again later."
+    IDS_VETO_ILLEGALDEVICEREQUEST
+                            "The '%s' device is not removable and cannot be ejected or unplugged."
+    IDS_VETO_INSUFFICIENTPOWER
+                            "This device can not eject at this time as there will be no remaining power sources (batteries) to keep the computer running after the %s has been ejected.  Please shut down the computer and then eject it."
+    IDS_VETO_NONDISABLEABLE "The %s device is critical to the operation of the computer and cannot be disabled."
+    IDS_VETO_LEGACYDRIVER   "The service '%s' is does not support Plug and Play and cannot be stopped. Contact the manufacturer of the driver for an update."
+    IDS_VETO_INSUFFICIENT_RIGHTS
+                            "You cannot eject the %s because you do not have sufficient security privileges to do so.  Please contact your administrator to obtain these privileges."
+    IDS_VETO_UNKNOWNWINDOWSAPP
+                            "An application is preventing this device from being stopped. Close all applications and then try to stop the device again."
+
+    IDS_DOCKVETO_UNKNOWN    "You cannot eject your computer because one of the devices in the docking station, '%s', cannot be stopped because of an unknown error. Since this device is still being used, do not remove the computer."
+    IDS_DOCKVETO_LEGACYDEVICE
+                            "You cannot eject your computer because one of the devices in the docking station, '%s', cannot be stopped because it is using a driver that does not support Plug and Play. Since this device is still being used, do not remove the computer."
+    IDS_DOCKVETO_PENDINGCLOSE
+                            "You cannot eject your computer because one of the devices in the docking station, '%s', was unplugged when a program was still using it. Close that program and then attempt to eject the computer."
+    IDS_DOCKVETO_WINDOWSAPP "The application '%s' is preventing your computer from ejecting because it is using a device in the docking station. Close the application and then try again."
+    IDS_DOCKVETO_WINDOWSSERVICE
+                            "The service '%s' is preventing your computer from ejecting. Try stopping this service and then try to eject the computer again."
+    IDS_DOCKVETO_OUTSTANDINGOPEN
+                            "You cannot eject your computer because one of the devices in the docking station, '%s', cannot be stopped because a program is still accessing it."
+    IDS_DOCKVETO_DEVICE     "You cannot eject your computer because one of the devices in the docking station, '%s', cannot be stopped right now.  Try closing all applications and ejecting the computer again later."
+
+    IDS_DOCKVETO_DRIVER     "You cannot eject your computer because one of the devices in the docking station, '%s' is preventing this device from being stopped right now.  Try closing all applications and ejecting the computer later."
+    IDS_DOCKVETO_ILLEGALDEVICEREQUEST
+                            "You cannot eject your computer because one of the devices in the docking station, '%s', device is not removable and cannot be ejected or unplugged."
+    IDS_DOCKVETO_INSUFFICIENTPOWER
+                            "Your computer can not eject at this time as there will be no remaining power sources (batteries) to keep the computer running after the %s has been ejected.  Please shut down the computer and then eject it."
+    IDS_DOCKVETO_NONDISABLEABLE
+                            "You cannot eject your computer because one of the devices in the docking station, %s, is critical to the operation of the computer and cannot be disabled."
+    IDS_DOCKVETO_LEGACYDRIVER
+                            "You cannot eject your computer because the service '%s', which controls one of the devices in the docking station, does not support Plug and Play and cannot be stopped. Contact the manufacturer of the driver for an update."
+    IDS_DOCKVETO_INSUFFICIENT_RIGHTS
+                            "You cannot eject your computer because you do not have sufficient security privileges to do so.  Please contact your administrator to obtain these privileges"
+    IDS_DOCKVETO_WARM_EJECT "Your computer failed to eject. Please close all applications and try again. You may need to enable hibernate support in the Power Options control panel."
+    IDS_DOCKVETO_UNKNOWNWINDOWSAPP
+                            "An application is preventing your computer from ejecting because it is using a device in the docking station. Close all applications and then try again."
+
+    IDS_SLEEPVETO_UNKNOWN   "%s"
+    IDS_SLEEPVETO_LEGACYDEVICE
+                            "%s"
+    IDS_SLEEPVETO_PENDINGCLOSE
+                            "%s"
+    IDS_SLEEPVETO_WINDOWSAPP "%s"
+    IDS_SLEEPVETO_WINDOWSSERVICE
+                            "%s"
+    IDS_SLEEPVETO_OUTSTANDINGOPEN
+                            "%s"
+    IDS_SLEEPVETO_DEVICE    "The device driver for the '%s' device is preventing the machine from entering standby. Please close all applications and try again. If the problem persists, you may need to update this driver."
+    IDS_SLEEPVETO_DRIVER    "%s"
+    IDS_SLEEPVETO_ILLEGALDEVICEREQUEST
+                            "%s"
+    IDS_SLEEPVETO_INSUFFICIENTPOWER
+                            "%s"
+    IDS_SLEEPVETO_NONDISABLEABLE
+                            "%s"
+    IDS_SLEEPVETO_LEGACYDRIVER
+                            "%s"
+    IDS_SLEEPVETO_INSUFFICIENT_RIGHTS
+                            ""
+    IDS_SLEEPVETO_UNKNOWNWINDOWSAPP
+                            ""
+
+    IDS_HIBERNATEVETO_UNKNOWN
+                            "%s"
+    IDS_HIBERNATEVETO_LEGACYDEVICE
+                            "%s"
+    IDS_HIBERNATEVETO_PENDINGCLOSE
+                            "%s"
+    IDS_HIBERNATEVETO_WINDOWSAPP
+                            "%s"
+    IDS_HIBERNATEVETO_WINDOWSSERVICE
+                            "%s"
+    IDS_HIBERNATEVETO_OUTSTANDINGOPEN
+                            "%s"
+    IDS_HIBERNATEVETO_DEVICE
+                            "The device driver for the '%s' device is preventing the machine from entering hibernation. Please close all applications and try again. If the problem persists, you may need to update this driver."
+    IDS_HIBERNATEVETO_DRIVER
+                            "%s"
+    IDS_HIBERNATEVETO_ILLEGALDEVICEREQUEST
+                            "%s"
+    IDS_HIBERNATEVETO_INSUFFICIENTPOWER
+                            "%s"
+    IDS_HIBERNATEVETO_NONDISABLEABLE
+                            "%s"
+    IDS_HIBERNATEVETO_LEGACYDRIVER
+                            "%s"
+    IDS_HIBERNATEVETO_INSUFFICIENT_RIGHTS
+                            ""
+    IDS_HIBERNATEVETO_UNKNOWNWINDOWSAPP
+                            ""
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

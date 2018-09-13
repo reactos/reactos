@@ -1,0 +1,11 @@
+all:
+
+clean:
+   attrib -r scf.lst
+   touch scf.lst
+   attrib +r scf.lst
+   attrib -r cb.lst
+   touch cb.lst
+   attrib +r cb.lst
+
+cleanall:

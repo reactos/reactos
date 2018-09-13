@@ -1,0 +1,256 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+#include "dsclient.h"
+#include "version.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#include ""dsclient.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DSBROWSEFORCONTAINER DIALOGEX 46, 21, 212, 182
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_CAPTION | WS_SYSMENU
+CAPTION "Browse for Container"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",DSBID_BANNER,7,7,198,20
+    CONTROL         "",DSBID_CONTAINERLIST,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | 
+                    TVS_SHOWSELALWAYS | WS_TABSTOP,7,30,198,124,
+                    WS_EX_CLIENTEDGE
+    DEFPUSHBUTTON   "OK",IDOK,101,161,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,155,161,50,14
+END
+
+IDD_PROPPAGE DIALOG DISCARDABLE  0, 0, 252, 218
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Property Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "",IDC_HTMLSITE,7,7,221,142
+    EDITTEXT        IDC_EDIT,0,0,0,0
+END
+
+IDD_DOMAINBROWSER DIALOGEX 46, 21, 211, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Browse for Domain"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,100,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,154,165,50,14
+    CONTROL         "Tree1",IDC_DOMAIN_TREE,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | WS_BORDER | 
+                    WS_TABSTOP,7,7,197,149
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DSBROWSEFORCONTAINER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 205
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
+
+    IDD_PROPPAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+    END
+
+    IDD_DOMAINBROWSER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 204
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_BUILTINDOMAIN       ICON    DISCARDABLE     "res\\domain.ico"
+IDI_COMPUTER            ICON    DISCARDABLE     "res\\computer.ico"
+IDI_CONFIGURATION       ICON    DISCARDABLE     "res\\config.ico"
+IDI_CONTACT             ICON    DISCARDABLE     "res\\contact.ico"
+IDI_CONTAINER           ICON    DISCARDABLE     "res\\container.ico"
+IDI_DOMAINDNS           ICON    DISCARDABLE     "res\\domainDNS.ico"
+IDI_DOMAINPOLICY        ICON    DISCARDABLE     "res\\domainPol.ico"
+IDI_GROUP               ICON    DISCARDABLE     "res\\group.ico"
+IDI_LOCALPOLICY         ICON    DISCARDABLE     "res\\localpol.ico"
+IDI_NTDSDSA             ICON    DISCARDABLE     "res\\mSFTDSA.ico"
+IDI_NTDSCONNECTION      ICON    DISCARDABLE     "res\\ntdscon.ico"
+IDI_NTDSSETTINGS        ICON    DISCARDABLE     "res\\ntdsset.ico"
+IDI_ORGANIZATIONALPERSON ICON    DISCARDABLE     "res\\orgperson.ico"
+IDI_ORGANIZATIONALUNIT  ICON    DISCARDABLE     "res\\orgunit.ico"
+IDI_PERSON              ICON    DISCARDABLE     "res\\person.ico"
+IDI_PRINTQUEUE          ICON    DISCARDABLE     "res\\printqueue.ico"
+IDI_REMOTEMAILRECIPIENT ICON    DISCARDABLE     "res\\remoteMail.ico"
+IDI_SERVER              ICON    DISCARDABLE     "res\\server.ico"
+IDI_SERVERCONNECTION    ICON    DISCARDABLE     "res\\serverCon.ico"
+IDI_SITE                ICON    DISCARDABLE     "res\\site.ico"
+IDI_SITESCONTAINER      ICON    DISCARDABLE     "res\\sites.ico"
+IDI_STORAGE             ICON    DISCARDABLE     "res\\storage.ico"
+IDI_SUBNET              ICON    DISCARDABLE     "res\\subnet.ico"
+IDI_SUBNETCONTAINER     ICON    DISCARDABLE     "res\\subnets.ico"
+IDI_USER                ICON    DISCARDABLE     "res\\user.ico"
+IDI_VOLUME              ICON    DISCARDABLE     "res\\volume.ico"
+IDI_WORKSTATIONACCOUNT  ICON    DISCARDABLE     "res\\wksacct.ico"
+IDI_USER_DISABLED       ICON    DISCARDABLE     "res\\usrdsbl.ico"
+IDI_CONTAINER_OPEN      ICON    DISCARDABLE     "res\\contopen.ico"
+IDI_LICENSING           ICON    DISCARDABLE     "res\\licensing.ico"
+IDI_NTDSSITESETTINGS    ICON    DISCARDABLE     "res\\SSettngs.ico"
+IDI_SITELINK            ICON    DISCARDABLE     "res\\slink.ico"
+IDI_NTFRS               ICON    DISCARDABLE     "res\\FRrepSet.ico"
+IDI_COMPUTER_DISABLED   ICON    DISCARDABLE     "res\\discomp.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_LOCATION_CAPTION    "Browse for Location"
+    IDS_TITLE               "Microsoft Directory Service"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_USER_OPENHOMEPAGE   "Open &home page"
+    IDC_USER_MAILTO         "Send &mail"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_VOLUME_OPEN         "&Open"
+    IDC_VOLUME_EXPLORE      "&Explore"
+    IDC_VOLUME_MAPNETDRIVE  "&Map Network Drive..."
+    IDC_VOLUME_FIND         "&Find..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_PRINTER_OPEN        "&Open"
+    IDC_PRINTER_INSTALL     "Co&nnect"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDC_COMPUTER_MANAGE     "&Manage"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_USER_OPENHOMEPAGE   "Opens the home page for the object(s)"
+    IDS_VOLUME_OPEN         "Opens the published Network Share"
+    IDS_VOLUME_EXPLORE      "Explores the published Network Share"
+    IDS_VOLUME_MAPNETDRIVE  "Connect to the published Network Share"
+    IDS_PRINTER_INSTALL     "Install printer on this machine"
+    IDS_PRINTER_OPEN        "Opens printer queue"
+    IDS_COMPUTER_MANAGE     "Invoke the Computer Management console"
+    IDS_COMPUTER_MANAGECMD  "/s /computer=""%1!s!"" %%windir%%\\system32\\compmgmt.msc"
+    IDS_VOLUME_FIND         "Search the published Network Share"
+    IDS_USER_MAILTO         "Sends mail to the selection"
+    IDS_RESTRICTIONS        "This operation has been cancelled due to restrictions in effect on this computer. Please contact your system administrator."
+    IDS_RESTRICTIONSTITLE   "Restrictions"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERR_NOUNC           "The selected objects do not have network paths defined"
+    IDS_ERR_NOMAILADDR      "The selected objects do not have email addresses defined"
+    IDS_ERR_NOHOMEPAGE      "The selected objects do not have home pages defined"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

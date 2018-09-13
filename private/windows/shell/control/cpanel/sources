@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+           \nt\private\windows\spooler\printman\ntspl.lib
+           \nt\public\sdk\lib\*\ntspl.lib
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=control
+TARGETPATH=obj
+TARGETTYPE=UMAPPL_NOLIB
+
+INCLUDES=..\..\userpri
+
+!IFNDEF MSC_WARNING_LEVEL
+MSC_WARNING_LEVEL=/W3
+!ENDIF
+
+MSC_WARNING_LEVEL=$(MSC_WARNING_LEVEL) /WX
+
+SOURCES=lb.c cache.c control.rc
+
+C_DEFINES=-DW3 -DUNICODE -D_UNICODE
+
+COFFBASE=control
+UMTYPE=windows
+UMAPPL=control
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\shell32.lib  \
+       ..\..\userpri\lib\*\userpri.lib   \
+       obj\*\cache.obj               	 \
+       obj\*\lb.obj               	 \
+       obj\*\control.res
+
+
+

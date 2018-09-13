@@ -1,0 +1,9 @@
+LIBRARY         fontext
+HEAPSIZE  1024
+
+EXPORTS
+;        DllMain             @1
+	DllGetClassObject   @2 PRIVATE
+	DllCanUnloadNow     @3 PRIVATE
+    DllRegisterServer   @4 PRIVATE
+    DllUnregisterServer @5 PRIVATE

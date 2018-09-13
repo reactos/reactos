@@ -1,0 +1,30 @@
+Richedit2 & MFC
+
+At the time of this writting, MFC (v4.2) has no support for richedit2.  The MFC guys do not know when or how they will be adding support.
+
+To workaround this and get richedit2 support into Wordpad today, I have snapshotted all the MFC richedit1 code and code the it is dependent on that can't be used as-is.  The changes to get this code to use richedit2 instead of richedit1 were minor - change the name of the richedit dll from riched32.dll to riched20.dll and recompile to get Unicode based data structures.
+
+The snapshotted files are:
+
+	afxcmn2.h
+	afxcmn2.inl
+	afxdlgs2.h
+	afxdlgs2.inl
+	afximpl2.h
+	afxrich2.h
+	afxrich2.inl
+	dlgcomm.cpp
+	dlgfnt.cpp
+	oleimpl3.h
+	oleinit.cpp
+	stdafx2.h
+	viewrich.cpp
+	winctrl2.cpp
+	winctrl4.cpp
+
+These files can be removed one MFC gets native richedit support.  Note that until then the sources files defines _AFX_NO_RICHEDIT_SUPPORT to prevent MFC from using any of it's native richedit support - and maybe conflicting with the wordpad version.
+
+One more change that will probably have to be made after MFC gets up to speed is the name of the base classes that wordpad uses.  I chose to simply add a "2" after the word "RichEdit" in all the native MFC classes - e.g. CRichEdit2View instead of CRichEditView.  If MFC uses a different naming scheme then the code will have to be revised.
+
+Mike Warning
+22-Oct-96

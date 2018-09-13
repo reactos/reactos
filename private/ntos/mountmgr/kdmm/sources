@@ -1,0 +1,21 @@
+!INCLUDE $(BASEDIR)\private\cluster\sources.inc
+MINORCOMP=kdmm
+
+TARGETNAME=kdmm
+TARGETPATH=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+
+DLLENTRY=DllInit
+USE_CRTDLL=1
+
+DLLBASE=0x46900000
+
+C_DEFINES=$(C_DEFINES) -DMEMLOGGING
+
+SOURCES=kdmm.c      \
+        kdmm.rc
+
+INCLUDES =..;\
+          $(BASEDIR)\private\ntos\inc; \
+
+UMTYPE=console

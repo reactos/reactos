@@ -1,0 +1,347 @@
+#include <olectl.h>
+// DHTMLEd.idl : IDL source for DHTMLEd.dll
+// Copyright 1998-1999 Microsoft Corporation.  All rights reserved.
+
+// This file will be processed by the MIDL tool to
+// produce the type library (DHTMLEd.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "docobj.idl";
+#include "triedtctlid.h"
+
+
+cpp_quote("")
+cpp_quote("#define DE_E_INVALIDARG                E_INVALIDARG")
+cpp_quote("#define DE_E_PATH_NOT_FOUND            HRESULT_FROM_WIN32(ERROR_PATH_NOT_FOUND)")
+cpp_quote("#define DE_E_FILE_NOT_FOUND            HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)")
+cpp_quote("#define DE_E_UNEXPECTED                E_UNEXPECTED")
+cpp_quote("#define DE_E_DISK_FULL                 HRESULT_FROM_WIN32(ERROR_HANDLE_DISK_FULL)")
+cpp_quote("#define DE_E_NOTSUPPORTED              OLECMDERR_E_NOTSUPPORTED")
+cpp_quote("#define DE_E_ACCESS_DENIED             HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED)")
+cpp_quote("")
+cpp_quote("#define DE_E_URL_SYNTAX                MK_E_SYNTAX")
+cpp_quote("#define DE_E_INVALID_URL               0x800C0002")
+cpp_quote("#define DE_E_NO_SESSION                0x800C0003")
+cpp_quote("#define DE_E_CANNOT_CONNECT            0x800C0004")
+cpp_quote("#define DE_E_RESOURCE_NOT_FOUND        0x800C0005")
+cpp_quote("#define DE_E_OBJECT_NOT_FOUND          0x800C0006")
+cpp_quote("#define DE_E_DATA_NOT_AVAILABLE        0x800C0007")
+cpp_quote("#define DE_E_DOWNLOAD_FAILURE          0x800C0008")
+cpp_quote("#define DE_E_AUTHENTICATION_REQUIRED   0x800C0009")
+cpp_quote("#define DE_E_NO_VALID_MEDIA            0x800C000A")
+cpp_quote("#define DE_E_CONNECTION_TIMEOUT        0x800C000B")
+cpp_quote("#define DE_E_INVALID_REQUEST           0x800C000C")
+cpp_quote("#define DE_E_UNKNOWN_PROTOCOL          0x800C000D")
+cpp_quote("#define DE_E_SECURITY_PROBLEM          0x800C000E")
+cpp_quote("#define DE_E_CANNOT_LOAD_DATA          0x800C000F")
+cpp_quote("#define DE_E_CANNOT_INSTANTIATE_OBJECT 0x800C0010")
+cpp_quote("#define DE_E_REDIRECT_FAILED           0x800C0014")
+cpp_quote("#define DE_E_REDIRECT_TO_DIR           0x800C0015")
+cpp_quote("#define DE_E_CANNOT_LOCK_REQUEST       0x800C0016")
+cpp_quote("")
+cpp_quote("#define DE_E_FILTER_FRAMESET           0x80100001")
+cpp_quote("#define DE_E_FILTER_SERVERSCRIPT       0x80100002")
+cpp_quote("#define DE_E_FILTER_MULTIPLETAGS       0x80100004")
+cpp_quote("#define DE_E_FILTER_SCRIPTLISTING      0x80100008")
+cpp_quote("#define DE_E_FILTER_SCRIPTLABEL        0x80100010")
+cpp_quote("#define DE_E_FILTER_SCRIPTTEXTAREA     0x80100020")
+cpp_quote("#define DE_E_FILTER_SCRIPTSELECT       0x80100040")
+
+
+[
+	uuid(683364A1-B37D-11D1-ADC5-006008A5848C),
+	version(1.0),
+	helpstring("DHTML Edit Control for IE5")
+]
+library DHTMLEDLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+	importlib("mshtml.tlb");
+
+    typedef
+    [
+        uuid(B23B8AA2-A8B4-11d1-ADC2-006008A5848C),
+        helpstring("Constants for DHTMLEdit commands")
+    ]
+	
+	enum DHTMLEDITCMDID {
+			DECMD_BOLD=5000,
+			DECMD_COPY=5002,
+			DECMD_CUT,
+			DECMD_DELETE,
+			DECMD_DELETECELLS,
+			DECMD_DELETECOLS,
+			DECMD_DELETEROWS,
+			DECMD_FINDTEXT,
+			DECMD_FONT,
+			DECMD_GETBACKCOLOR,
+			DECMD_GETBLOCKFMT,
+			DECMD_GETBLOCKFMTNAMES,
+			DECMD_GETFONTNAME,
+			DECMD_GETFONTSIZE,
+			DECMD_GETFORECOLOR,
+			DECMD_HYPERLINK,
+			DECMD_IMAGE,
+			DECMD_INDENT,
+			DECMD_INSERTCELL,
+			DECMD_INSERTCOL,
+			DECMD_INSERTROW,
+			DECMD_INSERTTABLE,
+			DECMD_ITALIC,
+			DECMD_JUSTIFYCENTER,
+			DECMD_JUSTIFYLEFT,
+			DECMD_JUSTIFYRIGHT,
+			DECMD_LOCK_ELEMENT,
+			DECMD_MAKE_ABSOLUTE,
+			DECMD_MERGECELLS,
+			DECMD_ORDERLIST,
+			DECMD_OUTDENT,
+			DECMD_PASTE,
+			DECMD_REDO,
+			DECMD_REMOVEFORMAT,
+			DECMD_SELECTALL,
+			DECMD_SEND_BACKWARD,
+			DECMD_BRING_FORWARD,
+			DECMD_SEND_BELOW_TEXT,
+			DECMD_BRING_ABOVE_TEXT,
+			DECMD_SEND_TO_BACK,
+			DECMD_BRING_TO_FRONT,
+			DECMD_SETBACKCOLOR,
+			DECMD_SETBLOCKFMT,
+			DECMD_SETFONTNAME,
+			DECMD_SETFONTSIZE,
+			DECMD_SETFORECOLOR,
+			DECMD_SPLITCELL,
+			DECMD_UNDERLINE,
+			DECMD_UNDO,
+			DECMD_UNLINK,
+			DECMD_UNORDERLIST,
+			DECMD_PROPERTIES,
+		} DHTMLEDITCMDID;
+
+
+    typedef
+    [
+        uuid(BF82426A-B961-11d1-ADC5-006008A5848C),
+        helpstring("Constants for DHTMLEdit QueryStatus")
+    ]
+    enum DHTMLEDITCMDF {
+        [helpstring("Command is not supported by this object")]		DECMDF_NOTSUPPORTED	= 0x00000000,
+        [helpstring("Command is available but disabled")]		DECMDF_DISABLED		= 0x00000001,
+        [helpstring("Command is available and enabled")]		DECMDF_ENABLED		= 0x00000003,
+        [helpstring("Command is an on-off toggle and is currently on")]	DECMDF_LATCHED		= 0x00000007,
+        [helpstring("Command is enabled and command state is indeterminate")]	DECMDF_NINCHED	= 0x0000000B,
+    } DHTMLEDITCMDF;
+
+
+    typedef
+    [
+        uuid(7179FC44-B2E4-11d1-ADC5-006008A5848C),
+        helpstring("Constants for DHTMLEdit appearance")
+    ]
+    enum DHTMLEDITAPPEARANCE {
+        [helpstring("Flat")]			DEAPPEARANCE_FLAT	= 0x00000000,
+        [helpstring("3D")]				DEAPPEARANCE_3D		= 0x00000001,
+    } DHTMLEDITAPPEARANCE;
+
+
+	[
+		object,
+		uuid(8D91090D-B955-11D1-ADC5-006008A5848C),
+		dual,
+		helpstring("IDEGetBlockFmtNamesParam Interface"),
+		pointer_default(unique)
+	]
+	interface IDEGetBlockFmtNamesParam : IDispatch
+	{
+		[propget, id(DISPID_NAMESPARAM_NAMES), helpstring("property Names")] HRESULT Names([out, retval] VARIANT *pVal);
+		[propput, id(DISPID_NAMESPARAM_NAMES), helpstring("property Names")] [hidden] HRESULT Names([in] VARIANT* newVal);
+	};
+
+	[
+		object,
+		uuid(CE04B590-2B1F-11d2-8D1E-00A0C959BC0A),
+		dual,
+		helpstring("IDHTMLEdit Safe for Scripting Interface"),
+		pointer_default(unique)
+	]
+	interface IDHTMLSafe : IDispatch
+	{
+		[id(DISPID_EXECCOMMAND), helpstring("method ExecCommand")] HRESULT ExecCommand([in]DHTMLEDITCMDID cmdID, [in, defaultvalue(OLECMDEXECOPT_DODEFAULT)] OLECMDEXECOPT cmdexecopt, [in, optional] VARIANT* pInVar, [out, retval] VARIANT* pOutVar);
+		[id(DISPID_QUERYSTATUS), helpstring("method QueryStatus")] HRESULT QueryStatus([in]DHTMLEDITCMDID cmdID, [out, retval] DHTMLEDITCMDF* retval);
+		[id(DISPID_SETCONTEXTMENU), helpstring("method SetContextMenu")] HRESULT SetContextMenu([in] VARIANT* menuStrings, [in] VARIANT* menuStates);
+		[id(DISPID_NEWDOCUMENT), helpstring("method NewDocument")] HRESULT NewDocument();
+		[id(DISPID_LOADURL), helpstring("method LoadURL")] HRESULT LoadURL([in] BSTR url);
+		[id(DISPID_FILTERSRCCODE), helpstring("method FilterSourceCode")] HRESULT FilterSourceCode([in] BSTR sourceCodeIn, [out, retval] BSTR* sourceCodeOut);
+		[id(DISPID_REFRESHDOC), helpstring("method Refresh")] HRESULT Refresh();
+
+		[propget, id(DISPID_DOCUMENT), helpstring("property Document Object Model")] HRESULT DOM([out, retval] IHTMLDocument2 **pVal);
+		[propget, id(DISPID_DOCUMENTHTML), helpstring("property DocumentHTML")] HRESULT DocumentHTML([out, retval] BSTR *docHTML);
+		[propput, id(DISPID_DOCUMENTHTML), helpstring("property DocumentHTML")] HRESULT DocumentHTML([in] BSTR docHTML);
+		[propget, id(DISPID_ACTIVATEAPPLETS), helpstring("property ActivateApplets")] HRESULT ActivateApplets([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_ACTIVATEAPPLETS), helpstring("property ActivateApplets")] HRESULT ActivateApplets([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_ACTIVATEACTIVEXCONTROLS), helpstring("property ActivateActiveXControls")] HRESULT ActivateActiveXControls([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_ACTIVATEACTIVEXCONTROLS), helpstring("property ActivateActiveXControls")] HRESULT ActivateActiveXControls([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_ACTIVATEDTCS), helpstring("property ActivateDTCs")] HRESULT ActivateDTCs([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_ACTIVATEDTCS), helpstring("property ActivateDTCs")] HRESULT ActivateDTCs([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_SHOWDETAILS), helpstring("property ShowDetails")] HRESULT ShowDetails([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_SHOWDETAILS), helpstring("property ShowDetails")] HRESULT ShowDetails([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_SHOWBORDERS), helpstring("property ShowBorders")] HRESULT ShowBorders([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_SHOWBORDERS), helpstring("property ShowBorders")] HRESULT ShowBorders([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_DHTMLEDITAPPEARANCE), helpstring("property Appearance")] HRESULT Appearance([out, retval] DHTMLEDITAPPEARANCE *pVal);
+		[propput, id(DISPID_DHTMLEDITAPPEARANCE), helpstring("property Appearance")] HRESULT Appearance([in] DHTMLEDITAPPEARANCE newVal);
+		[propget, id(DISPID_DHTMLEDITSCROLLBARS), helpstring("property Scrollbars")] HRESULT Scrollbars([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_DHTMLEDITSCROLLBARS), helpstring("property Scrollbars")] HRESULT Scrollbars([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_SCROLLBARAPPEARANCE), helpstring("property ScrollbarAppearance")] HRESULT ScrollbarAppearance([out, retval] DHTMLEDITAPPEARANCE *pVal);
+		[propput, id(DISPID_SCROLLBARAPPEARANCE), helpstring("property ScrollbarAppearance")] HRESULT ScrollbarAppearance([in] DHTMLEDITAPPEARANCE newVal);
+		[propget, id(DISPID_SOURCECODEPRESERVATION), helpstring("property SourceCodePreservation")] HRESULT SourceCodePreservation([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_SOURCECODEPRESERVATION), helpstring("property SourceCodePreservation")] HRESULT SourceCodePreservation([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_ABSOLUTEDROPMODE), helpstring("property AbsoluteDropMode")] HRESULT AbsoluteDropMode([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_ABSOLUTEDROPMODE), helpstring("property AbsoluteDropMode")] HRESULT AbsoluteDropMode([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_SNAPTOGRIDX), helpstring("property SnapToGridX")] HRESULT SnapToGridX([out, retval] long *pVal);
+		[propput, id(DISPID_SNAPTOGRIDX), helpstring("property SnapToGridX")] HRESULT SnapToGridX([in] long newVal);
+		[propget, id(DISPID_SNAPTOGRIDY), helpstring("property SnapToGridY")] HRESULT SnapToGridY([out, retval] long *pVal);
+		[propput, id(DISPID_SNAPTOGRIDY), helpstring("property SnapToGridY")] HRESULT SnapToGridY([in] long newVal);
+		[propget, id(DISPID_SNAPTOGRID), helpstring("property SnapToGrid")] HRESULT SnapToGrid([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_SNAPTOGRID), helpstring("property SnapToGrid")] HRESULT SnapToGrid([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_ISDIRTY), helpstring("property IsDirty")] HRESULT IsDirty([out, retval] VARIANT_BOOL *pVal);
+		[propget, id(DISPID_CURRENTDOCUMENTPATH), helpstring("property CurrentDocumentPath")] HRESULT CurrentDocumentPath([out, retval] BSTR *docPath);
+		[propget, id(DISPID_BASEURL), helpstring("property BaseURL")] HRESULT BaseURL([out, retval] BSTR *baseURL);
+		[propput, id(DISPID_BASEURL), helpstring("property BaseURL")] HRESULT BaseURL([in] BSTR baseURL);
+		[propget, id(DISPID_DOCUMENTTITLE), helpstring("property DocumentTitle")] HRESULT DocumentTitle([out, retval] BSTR *docTitle);
+		[propget, id(DISPID_USEDIVONCR), helpstring("property UseDivOnCarriageReturn")] HRESULT UseDivOnCarriageReturn([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_USEDIVONCR), helpstring("property UseDivOnCarriageReturn")] HRESULT UseDivOnCarriageReturn([in] VARIANT_BOOL newVal);
+		[propget, id(DISPID_BUSY), helpstring("property Busy")] HRESULT Busy([out, retval] VARIANT_BOOL *pVal);
+	};
+
+	[
+		uuid(CE04B591-2B1F-11d2-8D1E-00A0C959BC0A),
+		dual,
+		helpstring("IDHTMLEdit Interface"),
+		pointer_default(unique)
+	]
+	interface IDHTMLEdit : IDHTMLSafe
+	{
+		[id(DISPID_LOADDOCUMENT), helpstring("method LoadDocument")] HRESULT LoadDocument([in] VARIANT* pathIn, [in, optional] VARIANT* promptUser);
+		[id(DISPID_SAVEDOCUMENT), helpstring("method SaveDocument")] HRESULT SaveDocument([in] VARIANT* pathIn, [in, optional] VARIANT* promptUser);
+		[id(DISPID_PRINT), helpstring("method PrintDocument")] HRESULT PrintDocument([in, optional] VARIANT* withUI );
+		[propget, id(DISPID_BROWSEMODE), helpstring("property BrowseMode")] HRESULT BrowseMode([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(DISPID_BROWSEMODE), helpstring("property BrowseMode")] HRESULT BrowseMode([in] VARIANT_BOOL newVal);
+	};
+
+	[
+		object,
+		uuid(47B0DFC6-B7A3-11D1-ADC5-006008A5848C),
+		dual,
+		helpstring("IDEInsertTableParam Interface"),
+		pointer_default(unique)
+	]
+	interface IDEInsertTableParam : IDispatch
+	{
+		[propget, id(DISPID_TABLEPARAMS_NUMROWS), helpstring("property NumRows")] HRESULT NumRows([out, retval] long* pVal);
+		[propput, id(DISPID_TABLEPARAMS_NUMROWS), helpstring("property NumRows")] HRESULT NumRows([in] long newVal);
+		[propget, id(DISPID_TABLEPARAMS_NUMCOLS), helpstring("property NumCols")] HRESULT NumCols([out, retval] long *pVal);
+		[propput, id(DISPID_TABLEPARAMS_NUMCOLS), helpstring("property NumCols")] HRESULT NumCols([in] long newVal);
+		[propget, id(DISPID_TABLEPARAMS_TABLEATTRS), helpstring("property TableAttrs")] HRESULT TableAttrs([out, retval] BSTR *pVal);
+		[propput, id(DISPID_TABLEPARAMS_TABLEATTRS), helpstring("property TableAttrs")] HRESULT TableAttrs([in] BSTR newVal);
+		[propget, id(DISPID_TABLEPARAMS_CELLATTRS), helpstring("property CellAttrs")] HRESULT CellAttrs([out, retval] BSTR *pVal);
+		[propput, id(DISPID_TABLEPARAMS_CELLATTRS), helpstring("property CellAttrs")] HRESULT CellAttrs([in] BSTR newVal);
+		[propget, id(DISPID_TABLEPARAMS_CAPTION), helpstring("property Caption")] HRESULT Caption([out, retval] BSTR *pVal);
+		[propput, id(DISPID_TABLEPARAMS_CAPTION), helpstring("property Caption")] HRESULT Caption([in] BSTR newVal);
+	};
+
+	[ uuid(D1FC78E8-B380-11d1-ADC5-006008A5848C),
+	  helpstring("Event interface for DHTMLSafe control")
+	]
+	dispinterface _DHTMLSafeEvents
+	{
+		properties:
+		//  Event interface has no properties
+		methods:
+		[id(DISPID_DOCUMENTCOMPLETE)] void DocumentComplete();
+		[id(DISPID_DISPLAYCHANGED)] void DisplayChanged();
+		[id(DISPID_SHOWCONTEXTMENU)] void ShowContextMenu([in] long xPos, [in] long yPos);
+		[id(DISPID_CONTEXTMENUACTION)] void ContextMenuAction([in] long itemIndex);
+		[id(DISPID_ONMOUSEDOWN)] void onmousedown();
+		[id(DISPID_ONMOUSEMOVE)] void onmousemove();
+		[id(DISPID_ONMOUSEUP)] void onmouseup();
+		[id(DISPID_ONMOUSEOUT)] void onmouseout();
+		[id(DISPID_ONMOUSEOVER)] void onmouseover();
+		[id(DISPID_ONCLICK)] void onclick();
+		[id(DISPID_ONDBLCLICK)] void ondblclick();
+		[id(DISPID_ONKEYDOWN)] void onkeydown();
+		[id(DISPID_ONKEYPRESS)] void onkeypress();
+		[id(DISPID_ONKEYUP)] void onkeyup();
+		[id(DISPID_ONBLUR)] void onblur();
+		[id(DISPID_ONREADYSTATECHANGE)] void onreadystatechange();
+
+	};
+
+	[
+		uuid(588D5040-CF28-11d1-8CD3-00A0C959BC0A),
+		helpstring("Event interface for DHTMLEdit control")
+	]
+	dispinterface _DHTMLEditEvents
+	{
+		properties:
+		//  Event interface has no properties
+		methods:
+		[id(DISPID_DOCUMENTCOMPLETE)] void DocumentComplete();
+		[id(DISPID_DISPLAYCHANGED)] void DisplayChanged();
+		[id(DISPID_SHOWCONTEXTMENU)] void ShowContextMenu([in] long xPos, [in] long yPos);
+		[id(DISPID_CONTEXTMENUACTION)] void ContextMenuAction([in] long itemIndex);
+		[id(DISPID_ONMOUSEDOWN)] void onmousedown();
+		[id(DISPID_ONMOUSEMOVE)] void onmousemove();
+		[id(DISPID_ONMOUSEUP)] void onmouseup();
+		[id(DISPID_ONMOUSEOUT)] void onmouseout();
+		[id(DISPID_ONMOUSEOVER)] void onmouseover();
+		[id(DISPID_ONCLICK)] void onclick();
+		[id(DISPID_ONDBLCLICK)] void ondblclick();
+		[id(DISPID_ONKEYDOWN)] void onkeydown();
+		[id(DISPID_ONKEYPRESS)] void onkeypress();
+		[id(DISPID_ONKEYUP)] void onkeyup();
+		[id(DISPID_ONBLUR)] void onblur();
+		[id(DISPID_ONREADYSTATECHANGE)] void onreadystatechange();
+	};
+
+
+	[
+		uuid(2D360200-FFF5-11d1-8D03-00A0C959BC0A),
+		helpstring("DHTML Edit Control for IE5")
+	]
+	coclass DHTMLEdit
+	{
+		[default] interface IDHTMLEdit;
+		[default, source] interface _DHTMLEditEvents;
+	};
+
+	[
+		uuid(2D360201-FFF5-11d1-8D03-00A0C959BC0A),
+		helpstring("DHTML Safe for Scripting Control for IE5")
+	]
+	coclass DHTMLSafe
+	{
+		[default] interface IDHTMLSafe;
+		[default, source] interface _DHTMLSafeEvents;
+	};
+
+	[
+		uuid(47B0DFC7-B7A3-11D1-ADC5-006008A5848C),
+		helpstring("DEInsertTableParam Class")
+	]
+	coclass DEInsertTableParam
+	{
+		[default] interface IDEInsertTableParam;
+	};
+
+	[
+		uuid(8D91090E-B955-11D1-ADC5-006008A5848C),
+		helpstring("DEGetBlockFmtNamesParam Class")
+	]
+	coclass DEGetBlockFmtNamesParam
+	{
+		[default] interface IDEGetBlockFmtNamesParam;
+	};
+};

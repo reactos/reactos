@@ -1,0 +1,31 @@
+#
+#   Create ProfDisp.exe
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+
+TARGETNAME=profdisp
+TARGETPATH=..\..\lib
+TARGETTYPE=PROGRAM
+UMTYPE=windows
+UMENTRY=winmain
+
+C_DEFINES=-DWIN32 -DUNICODE
+
+# Define libs we need and where to find them
+
+TARGETLIBS=\nt\public\sdk\lib\*\user32.lib    \
+           \nt\public\sdk\lib\*\libc.lib \
+           \nt\public\sdk\lib\*\kernel32.lib    \
+           \nt\public\sdk\lib\*\gdi32.lib    \
+           \nt\public\sdk\lib\*\winmm.lib	\
+           \nt\public\sdk\lib\*\comdlg32.lib	\
+	   ..\..\lib\*\msvideo.lib
+
+INCLUDES=..\..\inc;\nt\public\sdk\inc
+
+SOURCES= profdisp.c  \
+         profdisp.rc
+

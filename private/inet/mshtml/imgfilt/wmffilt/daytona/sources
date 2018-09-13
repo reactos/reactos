@@ -1,0 +1,92 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Ramesh G    06-07-96
+
+!ENDIF
+
+
+ROOT=$(MAKEDIR:\imgfilt\wmffilt\daytona=)
+!include $(ROOT)\common.inc
+
+TARGETPATH= obj
+TARGETTYPE= DYNLINK
+TARGETNAME= WMFFilt
+TARGETTEXT= dll
+
+DLLDEF= ..\WMFFilt.def
+!IF $(FREEBUILD)
+DLLENTRY= DllMain
+!ELSE
+DLLENTRY= _DllMainCRTStartup
+!ENDIF
+
+DLLBASE= @..\..\base.txt,wmffilt
+
+PRECOMPILED_INCLUDE=..\StdAfx.H
+PRECOMPILED_PCH=StdAfx.pch
+PRECOMPILED_OBJ=StdAfx.obj
+PRECOMPILED_CXX=1
+
+NTTARGETFILES =
+
+PASS0_HEADERDIR=$(SDK_INC_PATH)
+
+ACTVEXINC=..\..\..\inc
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+UMTYPE=windows
+
+INCLUDES=$(ACTVEXINC);..\include;..;..\..
+
+C_DEFINES= \
+   /D_ATL_NO_CONNECTION_POINTS \
+   /D_ATL_NO_SECURITY \
+   /D_ATL_NO_OLEAUT \
+   /D_ATL_NO_FORCE_LIBS \
+   /D_ATL_DLL_SERVER \
+   /DNASHVILLE
+
+
+SOURCES= \
+   ..\WMFFilt.Cpp     \
+   ..\CWMFFilt.Cpp    \
+   ..\WMFFilt.rc
+
+TARGETLIBS=     \
+   $(BASEDIR)\public\sdk\lib\*\advapi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\uuid.lib           \
+    $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+#    $(BASEDIR)\public\sdk\lib\*\oleaut32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+    $(BASEDIR)\public\sdk\lib\*\version.lib        \
+    $(BASEDIR)\public\sdk\lib\*\ole32.lib          \
+
+!IF $(FREEBUILD)
+LINKLIBS= $(LINKLIBS) $(BASEDIR)\public\sdk\lib\*\libcmt.lib
+!ELSE
+LINKLIBS= $(LINKLIBS) $(BASEDIR)\public\sdk\lib\*\libcmtd.lib
+!ENDIF
+
+# include files that are inside ifdef blocks - prevents build warnings
+
+CONDITIONAL_INCLUDES=   \
+   $(CONDITIONAL_INCLUDES) \
+   alloc.h  \
+   macocidl.h  \
+   Include\WMFFilt.ic

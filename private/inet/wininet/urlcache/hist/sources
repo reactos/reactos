@@ -1,0 +1,57 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+
+Revision History:
+
+!ENDIF
+
+!include ..\..\..\place.inc
+
+MAJORCOMP=internet
+MINORCOMP=histapi
+
+TARGETNAME=histapi
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+DLLENTRY=DLLHistoryEntry
+SUBSYSTEM_VERSION=3.50
+
+
+INCLUDES=.;..;..\..\inc;..\..\..\inc;..\..\..\..\inc;..\..\..\..\..\inc
+
+TARGETLIBS= \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\wininet.lib \
+    $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+SOURCES=        \
+        histapi.c       \
+        generic.c
+
+C_DEFINES=  $(C_DEFINES) -DWIN32 -D_URLCACHEAPI_
+USE_CRTDLL=1
+WARNING_LEVEL=-W4
+
+UMTYPE=console
+UMAPPL=
+UMLIBS=

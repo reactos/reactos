@@ -1,0 +1,46 @@
+!IF 0
+
+Module Name:  draw sample application
+
+    sources.
+
+Abstract:
+
+Author:
+
+
+!ENDIF
+
+TARGETNAME=usrbench
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+UMTYPE=windows
+UMENTRY=winmain
+C_DEFINES=-DWIN32
+
+INCLUDES=..\..\inc
+
+SOURCES=usrbench.c   \
+        bench.c      \
+		stats.c		\
+        usrbench.rc
+
+
+UMTYPE=windows
+UMAPPL=usrbench
+
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\pwin32.lib   \
+       $(BASEDIR)\public\sdk\lib\*\libc.lib     \
+       $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+       $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+       $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+

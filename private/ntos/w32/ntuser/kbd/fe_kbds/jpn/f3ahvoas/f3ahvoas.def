@@ -1,0 +1,7 @@
+LIBRARY F3AHVOAS
+
+EXPORTS
+    KbdLayerDescriptor @1
+    KbdNlsLayerDescriptor @2
+
+    FujitsuOyayubiControl @16

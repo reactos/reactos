@@ -1,0 +1,40 @@
+// -*- c++ -*-
+// This file is automagically generated.  Do not mess with it!
+
+#ifdef sparc_sunos5
+text = LOAD ?RXO;
+#define OUTPUT_FUNCTION(name,fullobj,obj)      text: .text%name: fullobj;
+#define OUTPUT_LIBFUNCTION(name,lib,obj)       text: .text%name: lib(obj);
+#endif
+
+// Undef common things that may be in paths.
+#undef unix
+#undef obj
+#undef objd
+#undef sparc
+#undef sunos5
+
+#ifdef USE_FUNCTION_MAP
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,mmhelper.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,runtask.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,caggunk.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,util.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,isos.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,crst.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,security.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,dkaa.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,dkaw.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,shstra.o)
+OUTPUT_LIBFUNCTION(__0CH_STCON_v,/vobs/ie4/slm/nt/private/shell/obj/unix/sunos5/lib/libstocklib.a,shstrw.o)
+OUTPUT_FUNCTION(shfolder_DllMain,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(SHGetFolderPathA,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(_SHGetFolderPath,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(DownLevelGetFolderPath,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(FindFolderInfo,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(GetPathFromRegOrDefault,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(PathIsFullyQualified,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(EnsureExistsOrCreate,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(UnExpandEnvironmentString,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(RegSetExpandStr,obj/unix/sunos5/folder.o,folder.o)
+OUTPUT_FUNCTION(FlushShellFolderCache,obj/unix/sunos5/folder.o,folder.o)
+#endif // USE_FUNCTION_MAP

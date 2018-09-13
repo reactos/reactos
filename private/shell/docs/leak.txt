@@ -1,0 +1,426 @@
+intelli-leak: memory leaks and QI stubs
+971202
+andyp, et. al.
+
+- abstract
+this memo describes our leak detection code: what it does, how to use it,
+and (a little) how it works.
+
+- contents
+    - overview
+    - framework
+    - annotations
+    - stubs
+    - analysis
+    - dumps
+    - debug hooks
+    - cookbook
+    - example
+    - miscellany
+    - FAQs
+    - credits
+
+- overview
+... blah blah blah ...
+
+you might want to read the 'cookbook' and 'examples' section 1st to make
+stuff a bit more concrete.
+
+- framework: leaks, annotations, and analysis
+a leak is simply memory that has been alloc'ed and never free'ed.  our
+debug allocator keeps a list of all alloc's.  on exit anything left in
+the list is considered a leak.
+
+all of our mechanisms piggy-back off of this leak-tracking framework.
+    an event (such as an allocation or a QI) is hooked.
+    we put extra annotations about the event into some alloc'ed memory
+    on exit, annotations are recognized as 'special' leaks
+    we analyze the annotations and dump them out
+
+this is the basic framework.  it, together w/ the per-object annotations
+and the analysis we do when we dump the leak list, comprises intelli-leak.
+
+- annotations
+for a memory leak the annotation is simply a ptr, size, and location.
+
+for an iface leak the annotation is a 'QIStub'.  a QIStub is a proxy
+object which is created for a QI call.  when QIStubs are on, our (utility)
+QISearch helper creates a proxy object for every non-IUnknown iface it
+returns.  the proxy forwards all calls to the real object but has some
+annotations.  any such proxy object which is not eventually Release'ed
+will show up in the leak list.
+
+[caveat: since every QI for a non-IUnknown gets a new proxy object, ptrs
+can only be compared using IsSameObject.  often when turning on qistubs
+for the 1st time in a while one will hit bugs due to illegal ptr compares]
+
+this is the basic framework.  that, together w/ the annotation and the
+analysis we do when we dump the leak list, comprises intelli-leak.
+
+- stubs
+the annotation info in a stub includes:
+    cRef -- ref count
+    iSeq -- sequence #
+    iid -- the IID of the QI
+    caller -- the caller of QI
+
+cRef is usually 1, since we create a new stub per QI call.  (an explicit
+AddRef will increment it in place rather than create a new stub).
+
+iSeq is the sequence # for the iface.  this tells exactly which QI for an
+iface failed, which in turn permits brkpt'ing on that call in a 2nd run
+of the same scenario (assuming it's repro'able).
+
+iid is the iface we've QI'ed for.
+
+caller is the 'interesting' caller (or as close as we can come).  a
+typical call graph looks like:
+    foo -> thisclass::QI -> super::QI -> ... -> super::QI
+we skip over all of the (known) QI's and give 'foo'.  sometimes even
+this isn't enough, e.g. when 'foo' is a 'create instance' or a
+'constructor' call.  in that case use iSeq and a debugger to get
+more info.
+
+- analysis
+on exit we analyze the set of leaks and annotate things further.
+
+usually you just have one 'real' root leak but it references some friends
+and each of them reference some friends and so on and so on and so on and
+pretty soon you have a page full of leaks to wade thru.
+
+we build a graph of inter-leak dependencies (using a fairly reliable
+heuristic) and use that to identify the root leak and all the links.
+
+the heuristic is to look at every DWORD in a given leak and see if it
+points to (the base of) any other leak.  if so, it's assumed to be a
+link.
+
+To avoid debugger breaks during the heuristic phase, type "sxd av"
+before hitting "g".
+
+- dumps
+the generic object dumper is a 'dword dumper', which is quite painful
+to read.
+
+we identify each object (using a fairly reliable heuristic), label it
+symbolically (e.g. w/ a type name or iface name), and dump it w/ a
+custom dumper if one exists.
+
+currently the only custom dumper is for ifaces.  we dump the IID in
+symbolic form (e.g. IID_FooBar) and dump the other fields.
+
+[since we dump the ptr and the type, the ntsd dumper extensions can be
+used to fully dump any known struct]
+
+the current heuristics are as follows:
+    for QIStubs, we see if the size matches and if the 2nd vtbl entry
+    is CQIStub::AddRef; if so, it's a QIstub.  this is quite reliable.
+
+    for other classes, we have a table of SIZEOF's.  if the size matches,
+    we assume it's the class.  this is a bit crude and will sometimes
+    give false hits.  if that turns out to be a pblm we can improve it.
+
+- debug hooks
+QISearch (etc.) hook various interesting events.  by patching magic debug
+variables and putting brkpts on magic debug funcs, you can drop into the
+debugger at key interesting points.
+
+the most interesting of these is:
+    brk on the 'seq'th QI for iface 'iid'
+
+other events include:
+    brk on successful (failed) QI for iface 'iid'
+    TODO: various other less interesting events
+
+- cookbook
+    steps 3 thru the end are tagged in the 'example' section below.  look
+    for 'step-3' etc. to find them.
+
+    step-1. realize you have a leak
+    - debug explorer
+    - start IE
+    - leak shown on exit
+
+    step-2. turn on stubs
+    - turn on QIStubs
+        [SHDOCVW]
+            DumpFlags=0x04
+    - shutdown/restart explorer under debugger
+
+    step-3. reset and get iid/seq
+    - 'F12' into debugger
+    - patch some things:
+        ed dbqifreset 1         // this will reset seq#'s to 0
+    - start IE
+    - (same) leak shown on exit
+        e.g.:
+            leak=0xc2548,44(IID_IDeskBand)
+                created from 0x71574ed3
+                qistub(c2548): cRef=0x1 iSeq=a iid=IID_IDeskBand
+                ref=root ***
+       (items marked as "ref=root ***" are roots)
+    - find root leak IID and seq#
+        if you just caused the leak possibly this alone will tell you 
+        enough.  if not, read on...
+    - 'g'
+
+    step-4. reset and brkpt on iid/seq
+    - 'F12' into debugger
+    - patch some things
+        ed dbqifreset 1         // reset again
+        u IID_FooBar l 1        // find &-of IID_FooBar
+        ed dbqiiid <&iid>       // iid we want to track
+        ed dbqiiseq <seq#>      // seq#
+        bp DBBrkpt              // this is what we call
+
+    - 'g'
+
+    step-5. hit the brkpt
+    - start IE
+    - you'll hit your brkpt on DBBrkpt
+        - figure out what's going on
+        in this case we see that the leak is from _GetInfoBandBS calling
+        IECreateInst.  there must be a missing Release (indeed there is,
+        i commented it out for my test)
+
+- example
+see 'appendix: example'
+
+- miscellany
+much of the above is x86 only.  while it could be ported (but probably
+not written portably), it isn't currently deemed worth the effort.  most
+leaks will be 'portable' and will manifest everywhere and thus can be
+debugged on x86.
+
+currently intelli-leak is only in shdocvw.  probably the most interesting
+(and highly leveraged!) next step would be to move the code to shlwapi so
+other components can use it too.  the code was written w/ the intent to
+make it a shared service so it should be pretty easy to do so.
+    the data-gathering, stub, and breakpointing code has minimal external
+    dependencies (see qistub.cpp).
+
+    the client-side hooks (e.g. 'operator new') also are fairly stand-
+    alone (see olestuff.cpp).
+
+    the analysis code drives off of the leak list and thus is dependent on
+    it (see olestuff.cpp).
+
+- FAQs
+q: i turn on QIStubs and i fault.
+a: since every QI for a non-IUnknown gets a new proxy object, ptrs can only
+be compared using IsSameObject.  often when turning on qistubs for the 1st
+time in a while one will hit bugs due to illegal ptr compares
+
+q: why are there '// IID_IFooBar' comments next to every QITABENT in my QI?
+a: these are the only way a 'grep' for IID_IFooBar will show you the
+implementor.
+
+q: i get "?debdump.c!DBGetClassSymbolic" rather than a symbolic name
+a: add your class to the table in shell/xxx/debdump.cpp!DBClassInfoTab
+
+q: i get "{guid}" rather than a symbolic name
+a: add your GUID to the table in lib/dump.c!c_mpriid
+
+q: intelli-dump gives exceptions when i'm in the debugger
+a: do "sxd av" to skip 1st-chance exceptions before hitting 'g'
+
+q: sometimes leaks show up on the 'base' object rather than on the 'real'
+leaked iface.
+a: various things can cause this, including: 
+    x->SetAdvise(..., this);
+    // which is equivalent to this:
+    p = SAFECAST(this, Ifoo *);     // callER
+    p->AddRef();                    // callEE
+note that this is bogus code if you have tearoff ifaces...
+
+- credits
+satona invented the original custom client-side QIStubs.
+
+andyp invented QISearch, automatic server-side QIStubs, automatic
+sequence #'ing, intelli-leak dumps, and brkpt'ing.
+
+mikesh worked out a bunch of details and implemented server-side stubs.
+
+cheechew consulted on interesting scenarios for dumps and debugging, esp.
+dependencies and brkpt'ing.
+
+kurte is currently moving stuff into shell32.  one pblm he has run into
+is that we need single 'global' leak and known-QI tables rather than
+per-DLL ones, while we need separate 'local' custom dump tables.  he's
+making those changes.
+
+ole chose the AddRef/Release architecture, and all of us use it to create
+leaks, thus motivating leak detection. :-)
+
+apologies to anyone i've forgotten...
+
+- appendix: example
+=== step-3 ===
+0:000> ed dbqifreset 1
+0:000> g
+t SHDOCVW  ****************************************************
+t SHDOCVW  *    !!!!! WARNING : MEMORY LEAK DETECTED !!!!!    *
+t SHDOCVW  ****************************************************
+t SHDOCVW  * For Object: address: Vtbl, ...Vtbl, _cRef        *
+t SHDOCVW  * For StrDup: address: 'text'                      *
+t SHDOCVW  * For Traced: address:                             *
+t SHDOCVW  * For Memory: address:                             *
+t SHDOCVW  ****************************************************
+t SHDOCVW  Object:    aacd8: 7153f0c8 7153f040 7153f030 7153f018
+t SHDOCVW        size=1304  (shbrowse.cpp, line 299)
+t SHDOCVW  Object:    ab940: 715259b4 715710a8        0        0
+t SHDOCVW        size=1064  (iedisp.cpp, line 303)
+t SHDOCVW  Object:    b7c10: 7153b4c0        1    ab950    ab940
+t SHDOCVW        size=68, created from 71579498 (return address)
+t SHDOCVW  Object:    9d850: 7153b4c0        1    ab958    ab940
+t SHDOCVW        size=68, created from 7157950a (return address)
+t SHDOCVW  Object:    c8248: 7153b4c0        1    ab960    ab940
+t SHDOCVW        size=68, created from 7157957c (return address)
+t SHDOCVW  Object:    97798: 7153b4c0        1    ab970    ab940
+t SHDOCVW        size=68, created from 715795ee (return address)
+t SHDOCVW  Object:    81f40: 7153b4c0        1    ab964    ab940
+t SHDOCVW        size=68, created from 7157965e (return address)
+t SHDOCVW  Object:    b7fd0: 715700f0 715700e0 715700c8 715700b0
+t SHDOCVW        size=80, created from 715dfe13 (return address)
+t SHDOCVW  Object:    b6618: 71537c18 71537c00        0 71537be8
+t SHDOCVW        size=156, created from 71685660 (return address)
+t SHDOCVW  Object:    c23d8: 715385e8 715385b8   47028a   47028a
+t SHDOCVW        size=344, created from 7168569e (return address)
+t SHDOCVW  Object:    c2548: 7153b4c0        1    b6618    b6618
+t SHDOCVW        size=68, created from 71574ed3 (return address)
+t SHDOCVW  Object:    b0bd8: 7153b4c0        1    aacdc    aacd8
+t SHDOCVW        size=68, created from 715764b6 (return address)
+t SHDOCVW  *************************************************
+SHDOCVW  Assert: *** ALL MEMORY LEAK MUST BE FIXED BEFORE WE RELEASE (continue f
+or intelli-leak on x86) ***
+eax=01d2fea0 ebx=000a89e0 ecx=ffffffff edx=00000001 esi=006f006c edi=00700078
+eip=71716c3e esp=01d2fa5c ebp=01d2feb0 iopl=0         nv up ei pl zr na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00000246
+SHDOCVW!_AssertMsgA+0xae:
+71716c3e cc               int     3
+0:004> g
+t SHDOCVW  intelli-leak heuristics...
+t SHDOCVW  leak=0xaacd8,518(CShellBrowser)
+t SHDOCVW       created from shbrowse.cpp:299
+t SHDOCVW       ref=aacd8,518+49c(CShellBrowser)
+t SHDOCVW       ref=self
+t SHDOCVW       ref=b0bd8,44+c(IID_IBrowserService)
+t SHDOCVW  leak=0xab940,428(CIEFrameAuto)
+t SHDOCVW       created from iedisp.cpp:303
+t SHDOCVW       ref=ab940,428+11c(CIEFrameAuto)
+t SHDOCVW       ref=self
+t SHDOCVW       ref=b7c10,44+c(IID_IWebBrowser2)
+t SHDOCVW       ref=9d850,44+c(IID_IExpDispSupport)
+t SHDOCVW       ref=c8248,44+c(IID_IShellService)
+t SHDOCVW       ref=97798,44+c(IID_ITargetFrame2)
+t SHDOCVW       ref=81f40,44+c(IID_IHlinkFrame)
+t SHDOCVW  leak=0xb7c10,44(IID_IWebBrowser2)
+t SHDOCVW       created from 0x71579498
+t SHDOCVW       qistub(b7c10): cRef=0x1 iSeq=0 iid=IID_IWebBrowser2
+t SHDOCVW       ref=aacd8,518+14c(CShellBrowser)
+t SHDOCVW  leak=0x9d850,44(IID_IExpDispSupport)
+t SHDOCVW       created from 0x7157950a
+t SHDOCVW       qistub(9d850): cRef=0x1 iSeq=0 iid=IID_IExpDispSupport
+t SHDOCVW       ref=aacd8,518+150(CShellBrowser)
+t SHDOCVW  leak=0xc8248,44(IID_IShellService)
+t SHDOCVW       created from 0x7157957c
+t SHDOCVW       qistub(c8248): cRef=0x1 iSeq=0 iid=IID_IShellService
+t SHDOCVW       ref=aacd8,518+154(CShellBrowser)
+t SHDOCVW  leak=0x97798,44(IID_ITargetFrame2)
+t SHDOCVW       created from 0x715795ee
+t SHDOCVW       qistub(97798): cRef=0x1 iSeq=0 iid=IID_ITargetFrame2
+t SHDOCVW       ref=aacd8,518+164(CShellBrowser)
+t SHDOCVW  leak=0x81f40,44(IID_IHlinkFrame)
+t SHDOCVW       created from 0x7157965e
+t SHDOCVW       qistub(81f40): cRef=0x1 iSeq=0 iid=IID_IHlinkFrame
+t SHDOCVW       ref=aacd8,518+54(CShellBrowser)
+t SHDOCVW  leak=0xb7fd0,50(?debdump!DBGetClassSymbolic)
+t SHDOCVW       created from 0x715dfe13
+t SHDOCVW       ref=aacd8,518+16c(CShellBrowser)
+t SHDOCVW  leak=0xb6618,9c(CNSCBand)
+t SHDOCVW       created from 0x71685660
+t SHDOCVW       ref=c23d8,158+154(?debdump!DBGetClassSymbolic)
+t SHDOCVW       ref=c2548,44+8(IID_IDeskBand)
+t SHDOCVW  leak=0xc23d8,158(?debdump!DBGetClassSymbolic)
+t SHDOCVW       created from 0x7168569e
+t SHDOCVW       ref=b6618,9c+90(CNSCBand)
+t SHDOCVW  leak=0xc2548,44(IID_IDeskBand)
+t SHDOCVW       created from 0x71574ed3
+t SHDOCVW       qistub(c2548): cRef=0x1 iSeq=a iid=IID_IDeskBand
+t SHDOCVW       ref=root ***
+t SHDOCVW  leak=0xb0bd8,44(IID_IBrowserService)
+t SHDOCVW       created from 0x715764b6
+t SHDOCVW       qistub(b0bd8): cRef=0x1 iSeq=9 iid=IID_IBrowserService
+t SHDOCVW       ref=c23d8,158+110(?debdump!DBGetClassSymbolic)
+SHDOCVW  Assert olestuff.cpp, line 342: (0)
+eax=00000001 ebx=000a89e0 ecx=01d2fee8 edx=01d2fd28 esi=006f006c edi=00700078
+eip=716918e7 esp=01d2feb0 ebp=01d2fef8 iopl=0         nv up ei pl nz na pe nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00000202
+SHDOCVW!_DoDumpMemLeakIntelli+0x2c7:
+716918e7 cc               int     3
+0:004> g
+eax=00000000 ebx=00000001 ecx=00003201 edx=ffffffff esi=00000000 edi=000800d8
+eip=77f76148 esp=0006fbb0 ebp=0006fbbc iopl=0         nv up ei ng nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00000286
+ntdll!LdrpSearchResourceSection_U+0x6:
+77f76148 cc               int     3
+=== step-4 ===
+0:000> ed dbqifreset 1
+0:000> u iid_ideskband l 1
+SHDOCVW!IID_IDeskBand:
+71571118 72e1             jb      SHDOCVW!IID_IInputObject+0x3 (715710fb)
+0:000> ed dbqiiid 71571118
+0:000> ed dbqiiseq a
+0:000> ed dbqiutrace 10
+0:000> bp shdocvw!dbbrkpt
+0:000> g
+t SHDOCVW  CreateMRUListLazy found it. Copying 
+t SHDOCVW  CreateMRUListLazy. End of loop. 
+t SHDOCVW  idb: ret fDesktop=0
+wn SHDOCVW  Calling baseclass CISFBand::_GetTitleW
+wn SHDOCVW  Calling baseclass CISFBand::_GetTitleW
+wn SHDOCVW  cbs._gbi: patch band ~DBIM_TITLE
+t SHDOCVW  idb: ret fDesktop=0
+t SHDOCVW  CInternetToolbar: Loading Background Bitmap
+wn SHDOCVW  DOH::_CheckForCodePage CoCreateInst failed (0)
+wn SHDOCVW  Performing expensive registry query for default browser!
+wn SHDOCVW  Performing expensive registry query for default browser!
+t SHDOCVW  CShellBrowser::_OnCreate() Checking for invalid rect. <572, -2, 602,
+802> =? <30, 89, 445, 679>
+wn SHDOCVW  cbs._gbi: patch band ~DBIM_TITLE
+wn SHDOCVW  Calling baseclass CISFBand::_GetTitleW
+t SHDOCVW  CSB::_ToggleBrowserBar FindToolbar returned 1
+t SHDOCVW  _gib: create band
+=== step-5 ===
+t SHDOCVW  util: DBBreakGUID brkCmd=10 clsid={EB0FE172-1A3A-11D0-89B3-00A0C90A90
+AC} (IID_IDeskBand)
+eax=00000000 ebx=005e0146 ecx=01d3e728 edx=01d3e1a8 esi=00449b78 edi=00000111
+eip=71699df0 esp=01d3e658 ebp=01d3e660 iopl=0         nv up ei pl nz na po nc
+cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00000206
+SHDOCVW!DBBrkpt:
+71699df0 55               push    ebp
+0:004> k
+*** WARNING: symbols checksum is wrong 0x0005c8e6 0x00058ed8 for user32.dll
+ChildEBP RetAddr
+01d3e654 71699e66 SHDOCVW!DBBrkpt
+01d3e660 7169a2cb SHDOCVW!DBBreakGUID+0x66
+01d3e680 71574c50 SHDOCVW!QIStub_CreateInstance+0x6b
+01d3e6c0 7157f689 SHDOCVW!QISearch+0x1d0
+01d3e6d8 71685624 SHDOCVW!CToolBand__QueryInterface+0x19
+01d3e6f0 71574ed3 SHDOCVW!CNSCBand__QueryInterface+0x34
+01d3e738 71575730 SHDOCVW!CClassFactory_CreateInstance+0xb3
+01d3e758 715faa39 SHDOCVW!IECreateInstance+0x50
+01d3e7b4 715fa2ee SHDOCVW!_GetInfoBandBS+0x99
+01d3e86c 715f9ccb SHDOCVW!CShellBrowser___InfoShowClsid+0x34e
+01d3e8b4 715b49f0 SHDOCVW!CShellBrowser___InfoOnCommand+0x30b
+01d3e98c 715e2238 SHDOCVW!CShellBrowser__Exec+0x760
+01d3fc1c 715b176d SHDOCVW!CInternetToolbar___OnCommand+0x538
+01d3fc74 77e71e3b SHDOCVW!CInternetToolbar__SizableWndProc+0x48d
+01d3fca0 77e73097 USER32!GetWindowData+0x13f
+01d3fcc0 5bfb6614 USER32!WCSToMBEx+0x49
+01d3fd20 77e71e3b COMCTL32!ReBarWndProc+0x410
+01d3fd4c 77e73097 USER32!GetWindowData+0x13f
+01d3fd6c 5bfaffce USER32!WCSToMBEx+0x49
+01d3fdb0 5bf8906a COMCTL32!TBOnLButtonUp+0x116
+0:004> g
+...

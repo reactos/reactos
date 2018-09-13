@@ -1,0 +1,434 @@
+LIBRARY         COMCTL32
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'Common Controls Library'
+
+#ifndef WINNT
+
+SECTIONS                                                        
+    .bss        READ WRITE SHARED       ; initialized data
+    .data       READ WRITE SHARED       ; these sections are merged
+
+#endif
+
+EXPORTS
+;;
+;; !!!  READ THIS  !!!
+;;
+;; Private exports listed by ordinal.  Use this list to determine 
+;; what ordinals are available.  The fewer the gaps, the smaller
+;; the table.  Keep this list up to date.
+;;
+;;
+;;      MenuHelp                        2
+;;      ShowHideMenuCtl                 3
+;;      GetEffectiveClientRect          4
+;;      DrawStatusTextA                 5
+;;      CreateStatusWindowA             6
+;;      CreateToolbar                   7
+;;      CreateMappedBitmap              8
+;;      DPA_LoadStream                  9
+;;      DPA_SaveStream                  10
+;;      DPA_Merge                       11
+;;                      <gap>
+;;      MakeDragList                    13
+;;      LBItemFromPt                    14
+;;      DrawInsert                      15
+;;      CreateUpDownControl             16
+;;      InitCommonControls              17
+;;                      <gap>
+;;      Alloc                           71
+;;      ReAlloc                         72
+;;      Free                            73
+;;      GetSize                         74
+;;                      <gap>
+;;      CreateMRUListA                  151
+;;      FreeMRUList                     152
+;;      AddMRUStringA                   153
+;;      EnumMRUListA                    154
+;;      FindMRUStringA                  155
+;;      DelMRUString                    156
+;;      CreateMRUListLazyA              157
+;;                      <gap>
+;;      CreatePage                      163
+;;      CreateProxyPage                 164
+;;                      <gap>
+;;      AddMRUData                      167
+;;                      <gap>
+;;      FindMRUData                     169
+;;                      <gap>
+;;      Str_GetPtrA                     233
+;;      Str_SetPtrA                     234
+;;      Str_GetPtrW                     235
+;;      Str_SetPtrW                     236
+;;                      <gap>
+;;      DSA_Create                      320
+;;      DSA_Destroy                     321
+;;      DSA_GetItem                     322
+;;      DSA_GetItemPtr                  323
+;;      DSA_InsertItem                  324
+;;      DSA_SetItem                     325
+;;      DSA_DeleteItem                  326
+;;      DSA_DeleteAllItems              327
+;;      DPA_Create                      328
+;;      DPA_Destroy                     329
+;;      DPA_Grow                        330
+;;      DPA_Clone                       331
+;;      DPA_GetPtr                      332
+;;      DPA_GetPtrIndex                 333
+;;      DPA_InsertPtr                   334
+;;      DPA_SetPtr                      335
+;;      DPA_DeletePtr                   336
+;;      DPA_DeleteAllPtrs               337
+;;      DPA_Sort                        338
+;;      DPA_Search                      339
+;;      DPA_CreateEx                    340
+;;      SendNotify                      341
+;;      SendNotifyEx                    342
+;;                      <gap>
+;;      StrChrA                         350
+;;      StrRChrA                        351
+;;      StrCmpNA                        352
+;;      StrCmpNIA                       353
+;;      StrStrA                         354
+;;      StrStrIA                        355
+;;      StrCSpnA                        356
+;;      StrToIntA                       357
+;;      StrChrW                         358
+;;      StrRChrW                        359
+;;      StrCmpNW                        360
+;;      StrCmpNIW                       361
+;;      StrStrW                         362
+;;      StrStrIW                        363
+;;      StrCSpnW                        364
+;;      StrToIntW                       365
+;;      StrChrIA                        366
+;;      StrChrIW                        367
+;;      StrRChrIA                       368
+;;      StrRChrIW                       369
+;;                      <gap>
+;;      StrRStrIA                       372
+;;      StrRStrIW                       373
+;;      StrCSpnIA                       374
+;;      StrCSpnIW                       375
+;;      IntlStrEqWorkerA                376
+;;      IntlStrEqWorkerW                377
+;;                      <gap>
+;;      SmoothScrollWindow              382
+;;      DoReaderMode                    383
+;;      SetPathWordBreakProc            384
+;;      DPA_EnumCallback                385
+;;      DPA_DestroyCallback             386
+;;      DSA_EnumCallback                387
+;;      DSA_DestroyCallback             388
+;;      SHGetProcessDword               389
+;;      ImageList_SetColorTable         390
+;;                      <gap>
+;;      CreateMRUListW                  400
+;;      AddMRUStringW                   401
+;;      FindMRUStringW                  402
+;;      EnumMRUListW                    403
+;;      CreateMRUListLazyW              404
+;;      SetWindowSubclass               410    
+;;      GetWindowSubclass               411    
+;;      RemoveWindowSubclass            412    
+;;      DefSubclassProc                 413    
+;;      MirrorIcon                      414
+;;      DrawTextWrap                    415
+;;      DrawTextExPrivWrap              416
+;;      ExtTextOutWrap                  417
+;;      GetCharWidthWrap                418
+;;      GetTextExtentPointWrap          419
+;;      GetTextExtentPoint32Wrap        420
+;;      TextOutWrap                     421
+
+
+;;=========================================================================
+;; Win31 and NT 3.1 compatible APIs exported by ordinal
+;;=========================================================================
+
+        MenuHelp                        @2
+        ShowHideMenuCtl                 @3
+        GetEffectiveClientRect          @4
+        DrawStatusTextA                 @5
+        CreateStatusWindowA             @6
+        CreateToolbar                   @7
+        CreateMappedBitmap              @8
+
+        MakeDragList                    @13
+        LBItemFromPt                    @14
+        DrawInsert                      @15
+        CreateUpDownControl             @16
+        InitCommonControls              @17
+
+;;=========================================================================
+;; these are public APIs that are exported by name
+;;=========================================================================
+
+        InitCommonControlsEx
+        CreateToolbarEx
+        PropertySheetA
+        CreatePropertySheetPageA
+        DestroyPropertySheetPage
+        DllGetVersion = CCDllGetVersion                 ULTRAPRIVATE
+        DllInstall                                      ULTRAPRIVATE
+        _TrackMouseEvent
+
+;;=========================================================================
+;; Flat Window Scroll Bar APIs
+;;=========================================================================
+
+        FlatSB_SetScrollInfo
+        FlatSB_SetScrollPos
+        FlatSB_SetScrollRange
+        FlatSB_SetScrollProp
+
+        FlatSB_GetScrollInfo
+        FlatSB_GetScrollPos
+        FlatSB_GetScrollRange
+        FlatSB_GetScrollProp
+#ifdef _WIN64
+        FlatSB_GetScrollPropPtr
+#endif
+
+        FlatSB_EnableScrollBar
+        FlatSB_ShowScrollBar
+
+        InitializeFlatSB
+        UninitializeFlatSB
+
+;;=========================================================================
+;;  ImageList APIs, so many they get a custom comment!
+;;=========================================================================
+
+        ImageList_LoadImageA
+        ImageList_Create
+        ImageList_SetFilter
+        ImageList_Destroy
+        ImageList_GetImageCount
+        ImageList_SetImageCount
+        ImageList_SetBkColor
+        ImageList_GetBkColor
+        ImageList_Add
+        ImageList_AddIcon
+        ImageList_Replace
+        ImageList_ReplaceIcon
+        ImageList_Remove
+        ImageList_Copy
+        ImageList_Draw
+        ImageList_DrawEx
+        ImageList_GetImageInfo
+        ImageList_GetImageRect
+        ImageList_Merge
+        ImageList_Write
+        ImageList_Read
+        ImageList_GetIcon
+        ImageList_AddMasked
+        ImageList_GetIconSize
+        ImageList_SetIconSize
+        ImageList_SetOverlayImage
+
+;;;;;;;;ImageList_StartDrag             PRIVATE
+        ImageList_DragShowNolock
+        ImageList_BeginDrag
+        ImageList_EndDrag
+        ImageList_DragEnter
+        ImageList_DragMove
+        ImageList_DragLeave
+        ImageList_GetDragImage
+        ImageList_SetDragCursorImage
+        ImageList_Duplicate
+        ImageList_DrawIndirect
+
+;;      Even though these two are internal APIs, they must be exported
+;;      by name so Shell32 can detect whether or not they exist.  If you
+;;      export them by ordinal, then the GetProcAddress will always succeed
+;;      and just return the wrong function (!) on downlevel.
+
+        ImageList_SetFlags
+        ImageList_GetFlags                            PRIVATE
+
+;;=========================================================================
+;;  ANSI/UNICODE stuff
+;;=========================================================================
+
+        DrawStatusText           = DrawStatusTextA
+        CreateStatusWindow       = CreateStatusWindowA
+        PropertySheet            = PropertySheetA
+        CreatePropertySheetPage  = CreatePropertySheetPageA
+        ImageList_LoadImage      = ImageList_LoadImageA
+
+        DrawStatusTextW
+        CreateStatusWindowW
+        PropertySheetW
+        CreatePropertySheetPageW
+        ImageList_LoadImageW
+
+;;=========================================================================
+;;  MUI functions
+;;=========================================================================
+
+        InitMUILanguage
+        GetMUILanguage
+
+;;=========================================================================
+;; these are internal APIs
+;; NOTE if you change these ordinals, you must change the ordinal defines
+;; in commctrl.h, because COMDLG32 does GetProcAddress() on a few of these
+;;=========================================================================
+
+#ifndef WINNT
+        Cctl1632_ThunkData32                               PRIVATE
+#ifdef EXPORT_BY_FORWARDERS_BY_NAME
+        CreateMRUList = CreateMRUListA   @151    NONAME PRIVATE
+        AddMRUString = AddMRUStringA     @153    NONAME PRIVATE
+        EnumMRUList = EnumMRUListA       @154    NONAME PRIVATE
+        FindMRUString = FindMRUStringA   @155    NONAME PRIVATE
+
+        StrToInt = StrToIntA            @357    NONAME PRIVATE
+        StrChr = StrChrA                @350    NONAME PRIVATE
+        StrRChr = StrRChrA              @351    NONAME PRIVATE
+        StrStr = StrStrA                @354    NONAME PRIVATE
+        StrStrI = StrStrIA              @355    NONAME PRIVATE
+        Str_SetPtr = Str_SetPtrA        @234    NONAME PRIVATE
+        Str_GetPtr = Str_GetPtrA        @233    NONAME PRIVATE
+        StrCmpN = StrCmpNA              @352    NONAME PRIVATE
+        StrCmpNI = StrCmpNIA            @353    NONAME PRIVATE
+        StrCSpn = StrCSpnA              @356    NONAME PRIVATE
+#endif
+#endif
+
+        Alloc                           @71     NONAME PRIVATE
+        ReAlloc                         @72     NONAME PRIVATE
+        Free                            @73     NONAME PRIVATE
+        GetSize                         @74     NONAME PRIVATE
+        Str_GetPtrA                     @233    NONAME PRIVATE
+        Str_SetPtrA                     @234    NONAME PRIVATE
+        Str_GetPtrW                     @235    NONAME PRIVATE
+        Str_SetPtrW                     @236    NONAME PRIVATE
+
+
+        CreateMRUListA                  @151    NONAME PRIVATE
+        FreeMRUList                     @152    NONAME PRIVATE
+        AddMRUStringA                   @153    NONAME PRIVATE
+        EnumMRUListA                    @154    NONAME PRIVATE
+        FindMRUStringA                  @155    NONAME PRIVATE
+        DelMRUString                    @156    NONAME PRIVATE
+        CreateMRUListLazyA              @157    NONAME PRIVATE
+
+        CreateMRUListW                  @400    NONAME PRIVATE
+        AddMRUStringW                   @401    NONAME PRIVATE
+        FindMRUStringW                  @402    NONAME PRIVATE
+        EnumMRUListW                    @403    NONAME PRIVATE
+        CreateMRUListLazyW              @404    NONAME PRIVATE
+
+#ifndef UNIX
+        CreatePage                      @163    NONAME PRIVATE
+        CreateProxyPage                 @164    NONAME PRIVATE
+#endif
+
+        AddMRUData                      @167    NONAME PRIVATE
+        FindMRUData                     @169    NONAME PRIVATE
+
+        DSA_Create                      @320    NONAME PRIVATE
+        DSA_Destroy                     @321    NONAME PRIVATE
+        DSA_GetItem                     @322    NONAME PRIVATE
+        DSA_GetItemPtr                  @323    NONAME PRIVATE
+        DSA_InsertItem                  @324    NONAME PRIVATE
+        DSA_SetItem                     @325    NONAME PRIVATE
+        DSA_DeleteItem                  @326    NONAME PRIVATE
+        DSA_DeleteAllItems              @327    NONAME PRIVATE
+
+        DPA_Create                      @328    NONAME PRIVATE
+        DPA_Destroy                     @329    NONAME PRIVATE
+        DPA_Grow                        @330    NONAME PRIVATE
+        DPA_Clone                       @331    NONAME PRIVATE
+        DPA_GetPtr                      @332    NONAME PRIVATE
+        DPA_GetPtrIndex                 @333    NONAME PRIVATE
+        DPA_InsertPtr                   @334    NONAME PRIVATE
+        DPA_SetPtr                      @335    NONAME PRIVATE
+        DPA_DeletePtr                   @336    NONAME PRIVATE
+        DPA_DeleteAllPtrs               @337    NONAME PRIVATE
+        DPA_Sort                        @338    NONAME PRIVATE
+        DPA_Search                      @339    NONAME PRIVATE
+        DPA_CreateEx                    @340    NONAME PRIVATE
+        DPA_LoadStream                  @9      NONAME PRIVATE
+        DPA_SaveStream                  @10     NONAME PRIVATE
+        DPA_Merge                       @11     NONAME PRIVATE
+
+        SendNotify                      @341    NONAME PRIVATE
+        SendNotifyEx                    @342    NONAME PRIVATE
+
+        ; those string things
+        StrChrA                         @350    NONAME PRIVATE
+        StrRChrA                        @351    NONAME PRIVATE
+        StrCmpNA                        @352    NONAME PRIVATE
+        StrCmpNIA                       @353    NONAME PRIVATE
+        StrStrA                         @354    NONAME PRIVATE
+        StrStrIA                        @355    NONAME PRIVATE
+        StrCSpnA                        @356    NONAME PRIVATE
+        StrToIntA                       @357    NONAME PRIVATE
+
+        ; Unicode version of string functions
+        StrChrW                         @358    NONAME PRIVATE
+        StrRChrW                        @359    NONAME PRIVATE
+        StrCmpNW                        @360    NONAME PRIVATE
+        StrCmpNIW                       @361    NONAME PRIVATE
+        StrStrW                         @362    NONAME PRIVATE
+        StrStrIW                        @363    NONAME PRIVATE
+        StrCSpnW                        @364    NONAME PRIVATE
+        StrToIntW                       @365    NONAME PRIVATE
+
+        StrChrIA                        @366    NONAME PRIVATE
+        StrChrIW                        @367    NONAME PRIVATE
+        StrRChrIA                       @368    NONAME PRIVATE
+        StrRChrIW                       @369    NONAME PRIVATE
+
+        StrRStrIA                       @372    NONAME PRIVATE
+        StrRStrIW                       @373    NONAME PRIVATE
+
+        StrCSpnIA                       @374    NONAME PRIVATE
+        StrCSpnIW                       @375    NONAME PRIVATE
+
+        IntlStrEqWorkerA                @376    NONAME PRIVATE
+        IntlStrEqWorkerW                @377    NONAME PRIVATE
+
+        ; APIs added after Win95
+        SmoothScrollWindow              @382    NONAME PRIVATE
+        DoReaderMode                    @383    NONAME PRIVATE
+        SetPathWordBreakProc            @384    NONAME PRIVATE
+        
+        DPA_EnumCallback                @385    NONAME PRIVATE
+        DPA_DestroyCallback             @386    NONAME PRIVATE
+        DSA_EnumCallback                @387    NONAME PRIVATE
+        DSA_DestroyCallback             @388    NONAME PRIVATE
+
+        ; For shdocvw to call Win95's private GetProcessDword
+        SHGetProcessDword               @389    NONAME PRIVATE
+        ImageList_SetColorTable         @390    NONAME PRIVATE
+
+        ; Window subclassing functions 
+ 
+        SetWindowSubclass               @410    NONAME PRIVATE
+        GetWindowSubclass               @411    NONAME PRIVATE
+        RemoveWindowSubclass            @412    NONAME PRIVATE
+        DefSubclassProc                 @413    NONAME PRIVATE
+        
+        ;
+        ; This API is only used by BiDi Win98 platform
+        ;
+        MirrorIcon                      @414    NONAME PRIVATE
+
+#ifdef FONT_LINK
+        ;
+        ; Don't change these ordinal because it's used by SHLWAPI
+        ;
+        ; W version API wrappers with font link
+        ;
+        DrawTextWrap                    @415    NONAME PRIVATE
+        DrawTextExPrivWrap              @416    NONAME PRIVATE
+        ExtTextOutWrap                  @417    NONAME PRIVATE
+        GetCharWidthWrap                @418    NONAME PRIVATE
+        GetTextExtentPointWrap          @419    NONAME PRIVATE
+        GetTextExtentPoint32Wrap        @420    NONAME PRIVATE
+        TextOutWrap                     @421    NONAME PRIVATE
+#endif

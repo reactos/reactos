@@ -1,0 +1,28 @@
+LIBRARY          OLEACC
+
+EXPORTS
+    DllRegisterServer           PRIVATE
+    DllUnregisterServer         PRIVATE
+
+    LresultFromObject
+    ObjectFromLresult
+
+    WindowFromAccessibleObject
+    AccessibleObjectFromWindow
+    AccessibleObjectFromEvent
+    AccessibleObjectFromPoint
+    CreateStdAccessibleObject
+	AccessibleChildren
+
+    GetRoleTextA
+    GetRoleTextW
+    GetStateTextA
+    GetStateTextW
+
+	GetOleaccVersionInfo
+   	CreateStdAccessibleProxyA
+	CreateStdAccessibleProxyW
+
+	IID_IAccessible         PRIVATE
+	IID_IAccessibleHandler  PRIVATE
+	LIBID_Accessibility     PRIVATE

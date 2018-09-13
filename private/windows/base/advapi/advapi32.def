@@ -1,0 +1,784 @@
+#ifdef WMIDEF
+LIBRARY WMI
+#else
+LIBRARY ADVAPI32
+#endif
+
+EXPORTS
+
+#ifndef WMIDEF
+;
+; Eventlog functions
+;
+
+    CloseEventLog
+    DeregisterEventSource
+    NotifyChangeEventLog
+    GetNumberOfEventLogRecords
+    GetOldestEventLogRecord
+    GetEventLogInformation
+    ClearEventLogW
+    BackupEventLogW
+    OpenEventLogW
+    RegisterEventSourceW
+    OpenBackupEventLogW
+    ReadEventLogW
+    ReportEventW
+    ClearEventLogA
+    BackupEventLogA
+    OpenEventLogA
+    RegisterEventSourceA
+    OpenBackupEventLogA
+    ReadEventLogA
+    ReportEventA
+;
+; Security functions
+;
+
+    AccessCheck
+    AccessCheckByType
+    AccessCheckByTypeResultList
+    OpenProcessToken
+    OpenThreadToken
+    GetTokenInformation
+    SetTokenInformation
+    AdjustTokenPrivileges
+    AdjustTokenGroups
+    PrivilegeCheck
+    IsValidSid
+    EqualSid
+    GetLengthSid
+    CopySid
+    AreAllAccessesGranted
+    AreAnyAccessesGranted
+    MapGenericMask
+    IsValidAcl
+    InitializeAcl
+    GetAclInformation
+    SetAclInformation
+    AddAce
+    DeleteAce
+    GetAce
+    AddAccessAllowedAce
+    AddAccessAllowedAceEx
+    AddAccessAllowedObjectAce
+    InitializeSecurityDescriptor
+    IsValidSecurityDescriptor
+    GetSecurityDescriptorLength
+    SetSecurityDescriptorControl
+    GetSecurityDescriptorControl
+    SetSecurityDescriptorDacl
+    GetSecurityDescriptorDacl
+    SetSecurityDescriptorSacl
+    GetSecurityDescriptorSacl
+    SetSecurityDescriptorOwner
+    GetSecurityDescriptorOwner
+    SetSecurityDescriptorGroup
+    GetSecurityDescriptorGroup
+    SetSecurityDescriptorRMControl
+    GetSecurityDescriptorRMControl
+
+    CreatePrivateObjectSecurity
+    CreatePrivateObjectSecurityEx
+    SetPrivateObjectSecurity
+    SetPrivateObjectSecurityEx
+    GetPrivateObjectSecurity
+    DestroyPrivateObjectSecurity
+
+    ConvertToAutoInheritPrivateObjectSecurity
+
+    MakeSelfRelativeSD
+    MakeAbsoluteSD
+
+    MakeAbsoluteSD2
+
+    GetSidIdentifierAuthority
+    GetSidSubAuthority
+    GetSidSubAuthorityCount
+
+    GetKernelObjectSecurity
+    SetKernelObjectSecurity
+
+    GetFileSecurityA
+    GetFileSecurityW
+
+    SetFileSecurityA
+    SetFileSecurityW
+
+    ImpersonateNamedPipeClient
+    ImpersonateSelf
+    RevertToSelf
+    SetThreadToken
+
+    AccessCheckAndAuditAlarmA
+    AccessCheckAndAuditAlarmW
+    AccessCheckByTypeAndAuditAlarmA
+    AccessCheckByTypeAndAuditAlarmW
+    AccessCheckByTypeResultListAndAuditAlarmA
+    AccessCheckByTypeResultListAndAuditAlarmW
+    AccessCheckByTypeResultListAndAuditAlarmByHandleA
+    AccessCheckByTypeResultListAndAuditAlarmByHandleW
+
+    ObjectCloseAuditAlarmA
+    ObjectCloseAuditAlarmW
+
+    ObjectDeleteAuditAlarmA
+    ObjectDeleteAuditAlarmW
+
+    ObjectOpenAuditAlarmA
+    ObjectOpenAuditAlarmW
+
+    ObjectPrivilegeAuditAlarmA
+    ObjectPrivilegeAuditAlarmW
+
+    PrivilegedServiceAuditAlarmA
+    PrivilegedServiceAuditAlarmW
+
+    AddAccessDeniedAce
+    AddAccessDeniedAceEx
+    AddAccessDeniedObjectAce
+    AddAuditAccessAce
+    AddAuditAccessAceEx
+    AddAuditAccessObjectAce
+
+    EqualPrefixSid
+    FindFirstFreeAce
+    GetSidLengthRequired
+    InitializeSid
+    AllocateAndInitializeSid
+    FreeSid
+
+    LookupAccountNameA
+    LookupAccountNameW
+
+    LookupAccountSidA
+    LookupAccountSidW
+
+    LookupPrivilegeValueA
+    LookupPrivilegeValueW
+    LookupPrivilegeNameA
+    LookupPrivilegeNameW
+    LookupPrivilegeDisplayNameA
+    LookupPrivilegeDisplayNameW
+
+    AllocateLocallyUniqueId
+    DuplicateToken
+    DuplicateTokenEx
+    CreateRestrictedToken
+    IsProcessRestricted
+    IsTokenRestricted
+    CheckTokenMembership
+    IsInSandbox
+
+    GetSiteDirectoryA
+    GetSiteDirectoryW
+    GetSiteNameFromSid
+    GetSiteSidFromToken
+    GetSiteSidFromUrl
+    GetMangledSiteSid
+
+    GetUserNameW
+    GetUserNameA
+
+    ConvertSidToStringSidA
+    ConvertSidToStringSidW
+    ConvertStringSidToSidA
+    ConvertStringSidToSidW
+    ConvertStringSecurityDescriptorToSecurityDescriptorA
+    ConvertStringSecurityDescriptorToSecurityDescriptorW
+    ConvertSecurityDescriptorToStringSecurityDescriptorA
+    ConvertSecurityDescriptorToStringSecurityDescriptorW
+    ConvertStringSDToSDRootDomainW
+    ConvertSDToStringSDRootDomainW
+    ConvertStringSDToSDRootDomainA
+    ConvertSDToStringSDRootDomainA
+
+    ImpersonateAnonymousToken
+
+;
+; Logon functions
+;
+
+    LogonUserA
+    LogonUserW
+    ImpersonateLoggedOnUser
+    CreateProcessAsUserA
+    CreateProcessAsUserW
+
+;
+; NT Eventlog functions
+;
+
+    ElfCloseEventLog
+    ElfDeregisterEventSource
+    ElfNumberOfRecords
+    ElfOldestRecord
+    ElfChangeNotify
+    ElfClearEventLogFileW
+    ElfClearEventLogFileA
+    ElfBackupEventLogFileW
+    ElfBackupEventLogFileA
+    ElfOpenEventLogW
+    ElfOpenEventLogA
+    ElfRegisterEventSourceW
+    ElfRegisterEventSourceA
+    ElfOpenBackupEventLogW
+    ElfOpenBackupEventLogA
+    ElfReadEventLogW
+    ElfReadEventLogA
+    ElfReportEventW
+    ElfReportEventA
+
+;
+; Service controller functions
+;
+
+    I_ScIsSecurityProcess                PRIVATE
+    I_ScPnPGetServiceName                PRIVATE
+    I_ScSetServiceBitsA
+    I_ScSetServiceBitsW
+    I_ScGetCurrentGroupStateW
+    SetServiceBits
+    ChangeServiceConfigA
+    ChangeServiceConfigW
+    ChangeServiceConfig2A
+    ChangeServiceConfig2W
+    CloseServiceHandle
+    ControlService
+    CreateServiceA
+    CreateServiceW
+    DeleteService
+    EnumDependentServicesA
+    EnumDependentServicesW
+    EnumServiceGroupW
+    EnumServicesStatusA
+    EnumServicesStatusW
+    EnumServicesStatusExA
+    EnumServicesStatusExW
+    GetServiceDisplayNameA
+    GetServiceDisplayNameW
+    GetServiceKeyNameA
+    GetServiceKeyNameW
+    LockServiceDatabase
+    NotifyBootConfigStatus
+    OpenSCManagerA
+    OpenSCManagerW
+    OpenServiceA
+    OpenServiceW
+    QueryServiceConfigA
+    QueryServiceConfigW
+    QueryServiceConfig2A
+    QueryServiceConfig2W
+    QueryServiceLockStatusA
+    QueryServiceLockStatusW
+    QueryServiceObjectSecurity
+    QueryServiceStatus
+    QueryServiceStatusEx
+    RegisterServiceCtrlHandlerA
+    RegisterServiceCtrlHandlerW
+    RegisterServiceCtrlHandlerExA
+    RegisterServiceCtrlHandlerExW
+    SetServiceObjectSecurity
+    SetServiceStatus
+    StartServiceA
+    StartServiceW
+    StartServiceCtrlDispatcherA
+    StartServiceCtrlDispatcherW
+    UnlockServiceDatabase
+
+;
+;   Lsa functions
+;
+;
+; Exported Public RPC Services
+;
+    LsaLookupNames
+    LsaLookupSids
+    LsaClose
+    LsaDelete
+    LsaFreeMemory
+    LsaClearAuditLog
+    LsaOpenPolicy
+    LsaQueryInformationPolicy
+    LsaSetInformationPolicy
+
+    LsaEnumeratePrivileges
+    LsaLookupPrivilegeValue
+    LsaLookupPrivilegeName
+    LsaLookupPrivilegeDisplayName
+
+    LsaCreateAccount
+    LsaOpenAccount
+    LsaEnumerateAccounts
+    LsaEnumeratePrivilegesOfAccount
+    LsaAddPrivilegesToAccount
+    LsaRemovePrivilegesFromAccount
+    LsaGetQuotasForAccount
+    LsaSetQuotasForAccount
+    LsaGetSystemAccessAccount
+    LsaSetSystemAccessAccount
+
+    LsaCreateTrustedDomain
+    LsaOpenTrustedDomain
+    LsaQueryInfoTrustedDomain
+    LsaSetInformationTrustedDomain
+    LsaEnumerateTrustedDomains
+    LsaOpenTrustedDomainByName
+
+    LsaCreateSecret
+    LsaOpenSecret
+    LsaSetSecret
+    LsaQuerySecret
+
+    LsaQuerySecurityObject
+    LsaSetSecurityObject
+
+    LsaEnumerateAccountsWithUserRight
+    LsaEnumerateAccountRights
+    LsaAddAccountRights
+    LsaRemoveAccountRights
+    LsaQueryTrustedDomainInfo
+    LsaSetTrustedDomainInformation
+    LsaDeleteTrustedDomain
+    LsaStorePrivateData
+    LsaRetrievePrivateData
+    LsaNtStatusToWinError
+    LsaGetUserName
+    LsaGetRemoteUserName
+
+    LsaSetTrustedDomainInfoByName
+    LsaQueryTrustedDomainInfoByName
+    LsaSetTrustedDomainInfoByName
+    LsaEnumerateTrustedDomainsEx
+    LsaCreateTrustedDomainEx
+
+    LsaQueryDomainInformationPolicy
+    LsaSetDomainInformationPolicy
+
+
+;
+;   Exported Internal RPC Services (used by LSA server acting as client)
+;
+
+    LsaICLookupNames
+    LsaICLookupSids
+
+;
+;   The remaining internal LSA RPC clients are now defined in
+;   $(BASEDIR)\\private\\security\\lsa\\uclient\\private
+;
+
+
+;
+;   Encryption functions
+;
+
+    SystemFunction001
+    SystemFunction002
+    SystemFunction003
+    SystemFunction004
+    SystemFunction005
+    SystemFunction006
+    SystemFunction007
+    SystemFunction008
+    SystemFunction009
+    SystemFunction010
+    SystemFunction011
+    SystemFunction012
+    SystemFunction013
+    SystemFunction016
+    SystemFunction017
+    SystemFunction020
+    SystemFunction021
+    SystemFunction024
+    SystemFunction025
+    SystemFunction014
+    SystemFunction015
+    SystemFunction018
+    SystemFunction019
+    SystemFunction022
+    SystemFunction023
+    SystemFunction026
+    SystemFunction027
+    SystemFunction028
+    SystemFunction029
+    SystemFunction030
+    SystemFunction031
+    SystemFunction032
+    SystemFunction033
+    SystemFunction034
+    SystemFunction035=CheckSignatureInFile   PRIVATE
+
+;
+;   Registry functions
+;
+
+    RegConnectRegistryA
+    RegConnectRegistryW
+    RegDeleteKeyA
+    RegDeleteKeyW
+    RegDeleteValueA
+    RegDeleteValueW
+    RegEnumKeyA
+    RegEnumKeyW
+    RegEnumKeyExA
+    RegEnumKeyExW
+    RegEnumValueA
+    RegEnumValueW
+    RegCreateKeyA
+    RegCreateKeyW
+    RegCreateKeyExA
+    RegCreateKeyExW
+    RegOverridePredefKey
+    RegCloseKey
+    RegFlushKey
+    RegOpenCurrentUser
+    RegOpenKeyA
+    RegOpenKeyW
+    RegOpenKeyExA
+    RegOpenKeyExW
+    RegDisablePredefinedCache
+    RegOpenUserClassesRoot
+    RegNotifyChangeKeyValue
+    RegQueryInfoKeyA
+    RegQueryInfoKeyW
+    RegQueryMultipleValuesA
+    RegQueryMultipleValuesW
+    RegQueryValueA
+    RegQueryValueW
+    RegQueryValueExA
+    RegQueryValueExW
+    RegGetKeySecurity
+    RegSetKeySecurity
+    RegSaveKeyA
+    RegSaveKeyW
+    RegRestoreKeyA
+    RegRestoreKeyW
+    RegSetValueA
+    RegSetValueW
+    RegSetValueExA
+    RegSetValueExW
+    RegLoadKeyA
+    RegLoadKeyW
+    RegUnLoadKeyA
+    RegUnLoadKeyW
+    RegReplaceKeyA
+    RegReplaceKeyW
+    InitiateSystemShutdownA
+    InitiateSystemShutdownW
+    InitiateSystemShutdownExA
+    InitiateSystemShutdownExW
+    AbortSystemShutdownA
+    AbortSystemShutdownW
+
+;
+; Windows 3.1 Migration support functions
+;
+
+    QueryWindows31FilesMigration
+    SynchronizeWindows31FilesAndWindowsNTRegistry
+
+    IsTextUnicode
+
+;
+; Plug-and-Play functions
+;
+    GetCurrentHwProfileA
+    GetCurrentHwProfileW
+
+
+;
+; Cryptography APIs
+;
+    CryptAcquireContextW
+    CryptAcquireContextA
+    CryptReleaseContext
+    CryptGenKey
+    CryptDeriveKey
+    CryptDestroyKey
+    CryptSetKeyParam
+    CryptGetKeyParam
+    CryptExportKey
+    CryptImportKey
+    CryptEncrypt
+    CryptDecrypt
+    CryptCreateHash
+    CryptHashSessionKey
+    CryptHashData
+    CryptDestroyHash
+    CryptSignHashA
+    CryptSignHashW
+    CryptVerifySignatureA
+    CryptVerifySignatureW
+    CryptGenRandom
+    CryptGetUserKey
+    CryptSetProviderA
+    CryptSetProviderW
+    CryptGetHashParam
+    CryptSetHashParam
+    CryptGetProvParam
+    CryptSetProvParam
+    CryptSetProviderExA
+    CryptSetProviderExW
+    CryptGetDefaultProviderA
+    CryptGetDefaultProviderW
+    CryptEnumProviderTypesA
+    CryptEnumProviderTypesW
+    CryptEnumProvidersA
+    CryptEnumProvidersW
+    CryptContextAddRef
+    CryptDuplicateKey
+    CryptDuplicateHash
+    
+
+;
+; Access Control APIs
+;
+
+    GetNamedSecurityInfoW
+    GetNamedSecurityInfoA
+    GetSecurityInfo
+    SetNamedSecurityInfoW
+    SetNamedSecurityInfoA
+    SetSecurityInfo
+
+    SetEntriesInAclW
+    SetEntriesInAclA
+    GetExplicitEntriesFromAclW
+    GetExplicitEntriesFromAclA
+    GetEffectiveRightsFromAclW
+    GetEffectiveRightsFromAclA
+    GetAuditedPermissionsFromAclW
+    GetAuditedPermissionsFromAclA
+
+    BuildSecurityDescriptorW
+    BuildSecurityDescriptorA
+    LookupSecurityDescriptorPartsW
+    LookupSecurityDescriptorPartsA
+
+    BuildExplicitAccessWithNameW
+    BuildExplicitAccessWithNameA
+    BuildImpersonateExplicitAccessWithNameW
+    BuildImpersonateExplicitAccessWithNameA
+    BuildTrusteeWithNameW
+    BuildTrusteeWithNameA
+    BuildTrusteeWithObjectsAndNameW
+    BuildTrusteeWithObjectsAndNameA
+    BuildImpersonateTrusteeW
+    BuildImpersonateTrusteeA
+    BuildTrusteeWithObjectsAndSidW
+    BuildTrusteeWithObjectsAndSidA
+    BuildTrusteeWithSidW
+    BuildTrusteeWithSidA
+    GetMultipleTrusteeOperationW
+    GetMultipleTrusteeOperationA
+    GetMultipleTrusteeW
+    GetMultipleTrusteeA
+    GetTrusteeNameW
+    GetTrusteeNameA
+    GetTrusteeTypeW
+    GetTrusteeTypeA
+    GetTrusteeFormA
+    GetTrusteeFormW
+
+    GetNamedSecurityInfoExA
+    GetNamedSecurityInfoExW
+    SetNamedSecurityInfoExA
+    SetNamedSecurityInfoExW
+    GetSecurityInfoExA
+    GetSecurityInfoExW
+    SetSecurityInfoExA
+    SetSecurityInfoExW
+    ConvertAccessToSecurityDescriptorA
+    ConvertAccessToSecurityDescriptorW
+    ConvertSecurityDescriptorToAccessA
+    ConvertSecurityDescriptorToAccessW
+    ConvertSecurityDescriptorToAccessNamedA
+    ConvertSecurityDescriptorToAccessNamedW
+    SetEntriesInAccessListA
+    SetEntriesInAccessListW
+    SetEntriesInAuditListA
+    SetEntriesInAuditListW
+    TrusteeAccessToObjectA
+    TrusteeAccessToObjectW
+    GetOverlappedAccessResults
+    CancelOverlappedAccess
+    GetAccessPermissionsForObjectA
+    GetAccessPermissionsForObjectW
+
+;
+; Encryption Functions
+;
+
+    EncryptFileA
+    EncryptFileW
+
+    DecryptFileA
+    DecryptFileW
+
+    FileEncryptionStatusA
+    FileEncryptionStatusW
+
+    OpenEncryptedFileRawA
+    OpenEncryptedFileRawW
+
+    ReadEncryptedFileRaw
+    WriteEncryptedFileRaw
+    CloseEncryptedFileRaw
+
+;
+;   EFS Beta 2 API
+;
+
+    QueryUsersOnEncryptedFile
+    QueryRecoveryAgentsOnEncryptedFile
+    RemoveUsersFromEncryptedFile
+    AddUsersToEncryptedFile
+    SetUserFileEncryptionKey
+    FreeEncryptionCertificateHashList
+    DuplicateEncryptionInfoFile
+    EncryptionDisable
+
+;
+;   Secondary Logon Service entrypoint
+;
+
+    CreateProcessWithLogonW
+
+;
+; IntelliMirror software management
+;
+
+    InstallApplication
+    UninstallApplication
+    GetLocalManagedApplications
+    GetManagedApplications
+    CommandLineFromMsiDescriptor
+
+;
+; WMI functions
+;
+    WmiOpenBlock                    PRIVATE
+    WmiCloseBlock                   PRIVATE
+    WmiQueryAllDataA                PRIVATE
+    WmiQueryAllDataW                PRIVATE
+    WmiQuerySingleInstanceW         PRIVATE
+    WmiQuerySingleInstanceA         PRIVATE
+    WmiSetSingleInstanceW           PRIVATE
+    WmiSetSingleInstanceA           PRIVATE
+    WmiSetSingleItemW               PRIVATE
+    WmiSetSingleItemA               PRIVATE
+    WmiExecuteMethodA               PRIVATE
+    WmiExecuteMethodW               PRIVATE
+    WmiNotificationRegistrationA    PRIVATE
+    WmiNotificationRegistrationW    PRIVATE
+    WmiEnumerateGuids               PRIVATE
+
+    WmiFreeBuffer                   PRIVATE
+
+    WmiMofEnumerateResourcesW       PRIVATE
+    WmiMofEnumerateResourcesA       PRIVATE
+
+    WmiFileHandleToInstanceNameW    PRIVATE
+    WmiFileHandleToInstanceNameA    PRIVATE
+
+    WmiDevInstToInstanceNameW       PRIVATE
+    WmiDevInstToInstanceNameA       PRIVATE
+
+    WmiQueryGuidInformation         PRIVATE
+
+;
+; Tracelog functions
+;
+    StartTraceA
+    StartTraceW
+    ControlTraceA
+    ControlTraceW
+    EnableTrace
+    CreateTraceInstanceId
+    TraceEvent
+    TraceEventInstance
+    RegisterTraceGuidsA
+    RegisterTraceGuidsW
+    UnregisterTraceGuids
+    OpenTraceA
+    OpenTraceW
+    ProcessTrace
+    CloseTrace
+    SetTraceCallback
+    RemoveTraceCallback
+    QueryAllTracesA
+    QueryAllTracesW
+    GetTraceLoggerHandle
+    GetTraceEnableLevel
+    GetTraceEnableFlags
+#else
+;
+; WMI functions, but defined as forwarders to advapi32
+;
+    WmiOpenBlock = AdvApi32.WmiOpenBlock                        PRIVATE
+    WmiCloseBlock = AdvApi32.WmiCloseBlock                      PRIVATE
+    WmiQueryAllDataA = AdvApi32.WmiQueryAllDataA                PRIVATE
+    WmiQueryAllDataW = AdvApi32.WmiQueryAllDataW                PRIVATE
+    WmiQuerySingleInstanceW = AdvApi32.WmiQuerySingleInstanceW  PRIVATE
+    WmiQuerySingleInstanceA = AdvApi32.WmiQuerySingleInstanceA  PRIVATE
+    WmiSetSingleInstanceW = AdvApi32.WmiSetSingleInstanceW      PRIVATE
+    WmiSetSingleInstanceA = AdvApi32.WmiSetSingleInstanceA      PRIVATE
+    WmiSetSingleItemW = AdvApi32.WmiSetSingleItemW              PRIVATE
+    WmiSetSingleItemA = AdvApi32.WmiSetSingleItemA              PRIVATE
+    WmiExecuteMethodA = AdvApi32.WmiExecuteMethodA              PRIVATE
+    WmiExecuteMethodW = AdvApi32.WmiExecuteMethodW              PRIVATE
+    WmiNotificationRegistrationA = AdvApi32.WmiNotificationRegistrationA PRIVATE
+    WmiNotificationRegistrationW = AdvApi32.WmiNotificationRegistrationW PRIVATE
+    WmiEnumerateGuids = AdvApi32.WmiEnumerateGuids              PRIVATE
+
+    WmiFreeBuffer = AdvApi32.WmiFreeBuffer                      PRIVATE
+
+    WmiMofEnumerateResourcesW = AdvApi32.WmiMofEnumerateResourcesW PRIVATE
+    WmiMofEnumerateResourcesA = AdvApi32.WmiMofEnumerateResourcesA PRIVATE
+
+    WmiFileHandleToInstanceNameW = AdvApi32.WmiFileHandleToInstanceNameW PRIVATE
+    WmiFileHandleToInstanceNameA = AdvApi32.WmiFileHandleToInstanceNameA PRIVATE
+
+    WmiDevInstToInstanceNameW = AdvApi32.WmiDevInstToInstanceNameW PRIVATE
+    WmiDevInstToInstanceNameA = AdvApi32.WmiDevInstToInstanceNameA PRIVATE
+
+    WmiQueryGuidInformation = AdvApi32.WmiQueryGuidInformation     PRIVATE
+
+;
+; Tracelog functions
+;
+    StartTraceA = AdvApi32.StartTraceA
+    StartTraceW = AdvApi32.StartTraceW
+    ControlTraceA = AdvApi32.ControlTraceA
+    ControlTraceW = AdvApi32.ControlTraceW
+    EnableTrace = AdvApi32.EnableTrace
+    CreateTraceInstanceId = AdvApi32.CreateTraceInstanceId
+    TraceEvent = AdvApi32.TraceEvent
+    TraceEventInstance = AdvApi32.TraceEventInstance
+    RegisterTraceGuidsA = AdvApi32.RegisterTraceGuidsA
+    RegisterTraceGuidsW = AdvApi32.RegisterTraceGuidsW
+    UnregisterTraceGuids = AdvApi32.UnregisterTraceGuids
+    OpenTraceA = AdvApi32.OpenTraceA
+    OpenTraceW = AdvApi32.OpenTraceW
+    ProcessTrace = AdvApi32.ProcessTrace
+    CloseTrace = AdvApi32.CloseTrace
+    SetTraceCallback = AdvApi32.SetTraceCallback
+    RemoveTraceCallback = AdvApi32.RemoveTraceCallback
+    QueryAllTracesA = AdvApi32.QueryAllTracesA
+    QueryAllTracesW = AdvApi32.QueryAllTracesW
+    GetTraceLoggerHandle = AdvApi32.GetTraceLoggerHandle
+    GetTraceEnableLevel = AdvApi32.GetTraceEnableLevel
+    GetTraceEnableFlags = AdvApi32.GetTraceEnableFlags
+
+#endif
+
+#ifdef _CAIRO_
+
+;
+; New Cairo functions go here
+;
+
+#endif
+
+

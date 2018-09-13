@@ -1,0 +1,54 @@
+LIBRARY snmpapi
+
+EXPORTS
+    SnmpUtilOidCpy
+    SnmpUtilOidAppend
+    SnmpUtilOidNCmp
+    SnmpUtilOidCmp
+    SnmpUtilOidFree
+
+    SnmpUtilVarBindListCpy
+    SnmpUtilVarBindListFree
+    SnmpUtilVarBindCpy
+    SnmpUtilVarBindFree
+
+    SnmpUtilPrintAsnAny
+    SnmpUtilPrintOid
+
+    SnmpUtilMemFree
+    SnmpUtilMemAlloc
+    SnmpUtilMemReAlloc
+
+    SnmpUtilDbgPrint
+    SnmpUtilOidToA
+    SnmpUtilIdsToA
+
+    SnmpUtilUnicodeToAnsi
+    SnmpUtilAnsiToUnicode
+    SnmpUtilStrlenW
+
+    SnmpSvcSetLogLevel
+    SnmpSvcSetLogType
+
+    SnmpSvcInitUptime
+    SnmpSvcGetUptime
+
+    SnmpSvcReportEvent
+
+    SnmpSvcEncodeMessage
+    SnmpSvcDecodeMessage
+    SnmpSvcReleaseMessage
+
+    SnmpSvcGenerateTrap
+    SnmpSvcGenerateColdStartTrap
+    SnmpSvcGenerateWarmStartTrap
+    SnmpSvcGenerateLinkUpTrap
+    SnmpSvcGenerateLinkDownTrap
+    SnmpSvcGenerateAuthFailTrap
+
+    SnmpSvcBufRevAndCpy
+    SnmpSvcBufRevInPlace
+    SnmpSvcAddrIsIpx
+    SnmpSvcAddrToSocket
+    SnmpSvcGetEnterpriseOID
+

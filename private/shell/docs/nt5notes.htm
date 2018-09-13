@@ -1,0 +1,62 @@
+<HTML>
+<HEAD>
+<LINK REL=STYLESHEET HREF="http://ie/CSS/master.css" TYPE="text/css">
+<META http-equiv="PICS-Label" content='(PICS-1.0 "http://www.rsac.org/ratingsv01.html" l gen true comment "RSACi North America Server" by "ratings@microsoft.com" on "1996.04.04T08:15-0500" r (n 0 s 0 v 0 l 0))'>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META DATE="Oct 24, 97"> 
+<META AUTHOR="Arul Kumaravel"> 
+<TITLE>IE Shell Team Home Page</TITLE> 
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H1>NT 5 Notes From ReinerF</H1>
+<HR>
+<TEXT>
+<BR>
+	First, delete any extranous copies of the following files off your test machine:<BR>
+(you will be copying the "good" ones to the system32 dir) <BR>
+<BR>
+ntsd.exe <BR>
+imagehlp.dll (the one that lives in \nt\idw\path1st and \nt\idw are the same, and they can stay but nuke the rest) <BR>
+msdbi.dll <BR>
+mspdb50.dll <BR>
+nddeexts.dll <BR>
+ntsdexts.dll <BR>
+splexts.dll <BR>
+userexts.dll <BR>
+vdmexts.dll<BR>
+<BR>
+<BR>
+	You will need the following files that match the ones you used to build the binaries:<BR>
+You can copy these off your build machine to your test machine. <BR>
+<BR>
+imagehlp.dll (on your build machine the imagehlp.dll in nt\idw should be the same as in \nt\idw\path1st. BTW, you should copy this binary over the one in the system32 on your build machine anyway!) <BR>
+mspdb50.dll (in \nt\mstools)<BR>
+<BR>
+<BR>
+	You will need the following files that are from the NT4sp1 share:<BR>
+The files havent changed between sp1 and sp3 so that is why we copy them from the sp1 share. The share is \\ntbuilds\release\usa\1381sp1\<platform>\fre.wks\system32\*exts*.dll<BR>
+<BR>
+nddeexts.dll <BR>
+ntsdexts.dll <BR>
+splexts.dll <BR>
+userexts.dll <BR>
+vdmexts.dll<BR>
+<BR>
+<BR>
+	You will need the following files that are from the NT5 current build share:<BR>
+These files are available on \\ntbuilds\release\usa\latest.tst\<platform>\fre.wks\ <BR>
+<BR>
+ntsd.exe <BR>
+msdbi.dll<BR>
+<BR>
+<BR>
+Copy all the files in red from the correct locations as outlined above to the winnt\system32 directory on your test machine. You will heceforth have no problems debugging on NT4. All of the debugger extensions will work properly and you will be able to redirect your symbol path so you dont even need to copy the symbols locally (the !sympath command will let you do this). You will also be able to use pdb's or dbg's, either one will work properly.<BR>
+<BR>
+Its just that easy. <BR>
+<BR>
+ -reiner <BR>
+</TEXT>
+</BODY>
+</HTML>

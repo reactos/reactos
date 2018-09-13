@@ -1,0 +1,41 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=generic
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=$(BASEDIR)\private\windows\inc
+
+C_DEFINES= -DWIN32 -DWINVER=0x0400
+
+SOURCES=generic.c \
+	generic.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=generic
+
+UMLIBS=\
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\userenv.lib  \
+       obj\*\generic.lib \
+       obj\*\generic.res

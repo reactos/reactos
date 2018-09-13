@@ -1,0 +1,573 @@
+//Microsoft Visual C++ generated resource script.
+//
+
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_ICON    ICON    DISCARDABLE     "FNTFLDER.ICO"
+IDI_TTF     ICON    DISCARDABLE     "TTFONT.ICO"
+IDI_FON     ICON    DISCARDABLE     "FONFONT.ICO"
+IDI_TTC     ICON    DISCARDABLE     "TTCFONT.ICO"
+TYPE1ICON   ICON    PRELOAD         "TYPE1.ICO"
+IDI_OTFp    ICON    DISCARDABLE     "OTFPFILE.ICO"
+IDI_OTFt    ICON    DISCARDABLE     "OTFTFILE.ICO"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+ACCEL_DEF ACCELERATORS MOVEABLE PURE 
+BEGIN
+    "A",           IDM_EDIT_SELECTALL,      VIRTKEY,  NOINVERT, CONTROL
+    "C",           IDM_EDIT_COPY,           VIRTKEY,  NOINVERT, CONTROL
+    "V",           IDM_EDIT_PASTE,          VIRTKEY,  NOINVERT, CONTROL
+    "X",           IDM_EDIT_CUT,            VIRTKEY,  NOINVERT, CONTROL
+    "Z",           IDM_EDIT_UNDO,           VIRTKEY,  NOINVERT, CONTROL
+    VK_INSERT,     IDM_EDIT_COPY,           VIRTKEY,  NOINVERT, CONTROL
+    VK_DELETE,     IDM_FILE_DEL,            VIRTKEY,  NOINVERT
+    VK_DELETE,     IDM_FILE_DEL,            VIRTKEY,  NOINVERT, SHIFT
+    VK_RETURN,     IDM_FILE_SAMPLE,         VIRTKEY,  NOINVERT
+    VK_RETURN,     IDM_FILE_PROPERTIES,     VIRTKEY,  NOINVERT, ALT
+//    VK_ESCAPE,      IDM_FILE_CLOSE,         VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+MENU_DEFSHELLVIEW MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Open",                       IDM_FILE_SAMPLE
+        MENUITEM "&Print",                      IDM_FILE_PRINT
+        MENUITEM "&Install New Font...",        IDM_FILE_INSTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Create &Shortcut",            IDM_FILE_LINK, GRAYED
+        MENUITEM "&Delete",                     IDM_FILE_DEL
+        MENUITEM "Rena&me",                     IDM_FILE_RENAME, GRAYED
+        MENUITEM "P&roperties",                 IDM_FILE_PROPERTIES
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "&Undo\tCtrl+Z",               IDM_EDIT_UNDO, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",                IDM_EDIT_CUT, GRAYED
+        MENUITEM "&Copy\tCtrl+C",               IDM_EDIT_COPY, GRAYED
+        MENUITEM "&Paste\tCtrl+V",              IDM_EDIT_PASTE, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All\tCtrl+A",         IDM_EDIT_SELECTALL
+        MENUITEM "&Invert Selection",           IDM_EDIT_SELECTINVERT
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "Lar&ge Icons",                IDM_VIEW_ICON
+        MENUITEM "&List",                       IDM_VIEW_LIST
+        MENUITEM "List Fonts By &Similarity",   IDM_VIEW_PANOSE
+        MENUITEM "&Details",                    IDM_VIEW_DETAILS
+        MENUITEM SEPARATOR
+        MENUITEM "&Hide Variations (Bold, Italic, etc.)", 
+                                                IDM_VIEW_VARIATIONS
+        MENUITEM "&Preview",                    IDM_VIEW_PREVIEW
+    END
+    POPUP ""
+    BEGIN
+        MENUITEM "&Help Topics",                IDM_HELP_TOPIC
+    END
+END
+
+IDM_POPUPS MENU DISCARDABLE
+BEGIN
+    POPUP "Context menu"
+    BEGIN
+        MENUITEM "&Open",                       IDM_FILE_SAMPLE
+        MENUITEM "&Print",                      IDM_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "Create &Shortcut",            IDM_FILE_LINK, GRAYED
+        MENUITEM "&Delete",                     IDM_FILE_DEL
+        MENUITEM "Rena&me",                     IDM_FILE_RENAME, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "P&roperties",                 IDM_FILE_PROPERTIES
+    END
+END
+
+IDM_POPUP_NOITEM MENU DISCARDABLE 
+BEGIN
+    POPUP "Context menu/nothing selected"
+    BEGIN
+        POPUP "&View"
+        BEGIN
+            MENUITEM "Lar&ge Icons",                IDM_VIEW_ICON
+            MENUITEM "&List",                       IDM_VIEW_LIST
+            MENUITEM "List Fonts By &Similarity",   IDM_VIEW_PANOSE
+            MENUITEM "&Details",                    IDM_VIEW_DETAILS
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Paste",                      IDM_EDIT_PASTE, GRAYED
+    END
+END
+
+IDM_POPUP_DRAGDROP MENU DISCARDABLE 
+BEGIN
+    POPUP "Right context popup"
+    BEGIN
+        MENUITEM "&Move Here",                      IDM_POPUP_MOVE
+        MENUITEM "&Copy Here",                      IDM_POPUP_COPY
+        MENUITEM "Create &Shortcut(s) Here",        IDM_POPUP_LINK
+        MENUITEM SEPARATOR
+        MENUITEM "Cancel",                          IDCANCEL
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_TOOLICONS           BITMAP  MOVEABLE PURE   "TOOLICON.BMP"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+ID_DLG_MAIN DIALOG DISCARDABLE  0, 0, 300, 180
+STYLE WS_CHILD | WS_CLIPSIBLINGS 
+CLASS "FONTEXT_View"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&List fonts by similarity to:",ID_TXT_SIM,1,4,90,8
+    COMBOBOX        ID_CB_PANOSE,92,2,136,150,CBS_DROPDOWNLIST | CBS_SORT | 
+                    CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+END
+
+ID_DLG_FONT2 DIALOG DISCARDABLE  36, 24, 264, 178
+STYLE WS_CAPTION | WS_SYSMENU | DS_SETFOREGROUND
+CAPTION "Add Fonts"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "List of &fonts:", IDC_LIST_OF_FONTS,6,6,76,10,NOT WS_GROUP
+    LISTBOX         ctlLast+1,6,16,191,68,LBS_SORT | LBS_EXTENDEDSEL | 
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         lst1,-100,-100,10,10,LBS_EXTENDEDSEL
+    LTEXT           "Fol&ders:",-1,6,87,92,9,NOT WS_GROUP
+    LTEXT           "",stc1,6,97,92,9,NOT WS_GROUP
+    LISTBOX         lst2,6,109,92,64,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | 
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:",-1,105,98,92,9,NOT WS_GROUP
+    COMBOBOX        cmb2,105,108,92,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,208,6,50,14,WS_GROUP
+    PUSHBUTTON      "Close",IDCANCEL,208,24,50,14,WS_GROUP
+    PUSHBUTTON      "&Select All",psh16,208,46,50,14,WS_GROUP
+    PUSHBUTTON      "&Help",pshHelp,208,64,50,14,WS_GROUP
+    CONTROL         "&Copy fonts to Fonts folder",chx2,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,105,161,130,12
+    CONTROL         "",ctlLast+2,"Static",SS_SIMPLE | SS_NOPREFIX | WS_GROUP,105,
+                    87,92,9
+    EDITTEXT        edt1,508,97,51,12,ES_LOWERCASE | ES_AUTOHSCROLL | NOT 
+                    WS_TABSTOP
+    CONTROL         "",chx1,"Button",BS_AUTOCHECKBOX,526,137,16,12
+    LTEXT           "",stc2,522,132,17,9
+    COMBOBOX        cmb1,517,111,37,26,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    WS_BORDER | WS_VSCROLL
+END
+
+
+ID_DLG_OPTIONS DIALOG DISCARDABLE  0, 0, 227, 200
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "TrueType Fonts"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_TTF,1088,7,7,18,20
+    LTEXT           "If you only use true type fonts while working with the programs on your computer you can choose to display only these fonts, checking the box below.",
+                    1089,40,7,180,33
+    CONTROL         "Show only &TrueType fonts in the programs on my computer",
+                    IDC_TTONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,50,
+                    213,10
+END
+
+
+ID_DLG_PROPPAGE DIALOG DISCARDABLE  0, 0, 187, 151
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION | DS_SETFOREGROUND
+CAPTION "Font Info"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    EDITTEXT        1152,9,32,166,110,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_READONLY | WS_DISABLED | NOT WS_TABSTOP
+    LTEXT           "Font description/name",1088,10,8,171,8
+    LTEXT           "Font information",1089,10,22,171,8
+END
+
+DLG_BROWSE DIALOG 46, 21, 158, 165
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_SETFOREGROUND
+CAPTION "Browse"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", ctlLast+1, 5, 5, 147, 30, SS_NOPREFIX
+    LTEXT           "Fol&ders:", -1, 5, 40, 92, 9, NOT WS_GROUP
+    LTEXT           "", stc1, 5, 50, 92, 9, NOT WS_GROUP
+    LISTBOX         lst2, 5, 62, 92, 64, LBS_SORT | LBS_OWNERDRAWFIXED |
+                    LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT |
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:", -1, 5, 135, 92, 9, NOT WS_GROUP
+    COMBOBOX        cmb2, 5, 145, 92, 68, CBS_DROPDOWNLIST |
+                    CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT |
+                    CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK", IDOK, 104, 63, 50, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 104, 81, 50, 14, WS_GROUP
+    PUSHBUTTON      "&Help", psh15, 104, 121, 50, 14, WS_GROUP
+    EDITTEXT        edt1, -100, -100, 10, 10, ES_LOWERCASE | ES_AUTOHSCROLL |
+                    NOT WS_TABSTOP
+    LISTBOX         lst1, -100, -100, 10, 10, LBS_EXTENDEDSEL
+    CONTROL         "", chx1, "Button", BS_AUTOCHECKBOX, -100, -100, 10, 10
+    LTEXT           "", stc2, -100, -100, 10, 10
+    COMBOBOX        cmb1, -100, -100, 10, 10, CBS_DROPDOWNLIST |
+                    CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL
+END
+
+DLG_INSTALL DIALOG 54, 36, 186, 81
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SETFOREGROUND
+CAPTION "Install Font"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "", IDRETRY, 10, 5, 124, 24, SS_NOPREFIX
+    EDITTEXT        COLOR_SAVE, 10, 34, 124, 14, ES_AUTOHSCROLL |
+                    ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK", IDOK, 140, 6, 40, 14, WS_GROUP
+    PUSHBUTTON      "Cancel", IDCANCEL, 140, 23, 40, 14, WS_GROUP
+    PUSHBUTTON      "&Browse...", IDD_BROWSE, 140, 44, 40, 14, WS_GROUP
+//    PUSHBUTTON      "&Help", IDD_HELP, 140, 61, 40, 14, WS_GROUP
+END
+
+
+DLG_PROGRESS DIALOG 132, 64, 250, 102
+CAPTION "Install Font Progress"
+STYLE WS_BORDER | DS_MODALFRAME | WS_CAPTION | WS_POPUP | WS_VISIBLE
+FONT 8 "MS Shell Dlg"
+BEGIN
+    CTEXT ""   ID_INSTALLMSG,  4, 10, 242, 9
+    CONTROL "", ID_OVERALL, "cpProgress", WS_CHILD | SS_BLACKFRAME, 35, 22, 180, 13
+    CTEXT ""   ID_PROGRESSMSG,  4, 40, 242, 9
+    CONTROL "", ID_BAR, "cpProgress", WS_CHILD | SS_BLACKFRAME, 35, 55, 180, 13
+    PUSHBUTTON  "Cancel", IDCANCEL, 104, 80, 42, 14
+END
+
+
+DLG_INSTALL_PS DIALOG LOADONCALL MOVEABLE DISCARDABLE 11, 28, 245, 166
+CAPTION "Install Type 1 Font"
+FONT 8, "MS Shell Dlg"
+STYLE WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME | WS_POPUP
+BEGIN
+//    ICON TYPE1ICON -1, 8, 8, 0, 0
+//    ICON IDI_HAND -1, 8, 8, 0, 0
+    ICON 32516 -1, 8, 8, 0, 0
+    LTEXT "", FONT_INSTALLMSG, 35, 6, 195, 28
+
+    AUTOCHECKBOX "Con&vert Type 1 Font to TrueType", FONT_CONVERT_PS, 8, 35, 230, 12, WS_TABSTOP | WS_CHILD | WS_GROUP
+    LTEXT "This selection allows the font to be used by all applications on the screen and on all printers.  The TrueType conversion is covered by the Type 1 user license agreement.", -1, 20, 50, 218, 30
+
+    AUTOCHECKBOX "&Install Type 1 Font Files for use on a PostScript printer", FONT_INSTALL_PS, 8, 82, 230, 12, WS_TABSTOP | WS_CHILD | WS_GROUP
+    LTEXT "This selection allows the font to be used on PostScript printers in its original format.", -1, 20, 97, 218, 22
+
+    AUTOCHECKBOX "&Copy Type 1 Font Files to Fonts Folder", FONT_COPY_PS, 8, 122, 230, 12, WS_TABSTOP | WS_CHILD | WS_GROUP
+
+    DEFPUSHBUTTON "&Yes", IDYES, 33, 146, 40, 14, WS_TABSTOP | WS_CHILD | WS_GROUP
+    PUSHBUTTON "Yes to &All", IDD_YESALL, 79, 146, 40, 14, WS_TABSTOP | WS_CHILD
+    PUSHBUTTON "&No", IDNO, 125, 146, 40, 14, WS_TABSTOP | WS_CHILD
+    PUSHBUTTON "Cancel", IDCANCEL, 171, 146, 40, 14, WS_TABSTOP | WS_CHILD
+END
+
+
+DLG_COPYRIGHT_NOTIFY DIALOG 6, 18, 237, 121
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Windows Fonts Folder"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "This Type1 font can be installed but you may not have the right to convert it to TrueType.  Check your license agreement with", 
+                    101, 9, 22, 224, 19
+    DEFPUSHBUTTON   "&No", IDNO, 126, 101, 40, 14
+    PUSHBUTTON      "&Yes", IDYES, 70, 101, 40, 14
+    CTEXT           "< FONT NAME >", IDC_COPYRIGHT_FONTNAME, 10, 9, 224, 8
+    LTEXT           "and, if necessary, contact them for permission to convert this font.", 
+                    106, 9, 59, 216, 10
+    CTEXT           "< FONT VENDOR >", IDC_COPYRIGHT_VENDORNAME, 10, 45, 224, 
+                    8
+    LTEXT           "Do you want to convert this font to TrueType during installation?", 
+                    112, 9, 76, 224, 8
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resrc1.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FONTS_FOLDER        "fonts"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG_CAPTION         "Windows Fonts Folder"
+    IDS_MSG_NOVERSION       "Version information not available."
+    IDS_MSG_NSFMEM          "Insufficient memory for this operation;\r\rclose one or more programs to increase available memory."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MSG_PANOSE          "PANOSE"
+    IDS_MSG_ALLFILTER       "A#*.otf;*.ttf;*.tt_;*.fon;*.fo_;*.inf;*.ttc;*.pfm#"
+    IDS_MSG_NORMALFILTER    "A#*.fon;*.fo_#"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PAN_COL1            "Name"
+    IDS_PAN_COL2            "Similarity to %s"
+    IDS_FILE_COL1           "Font Name"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILE_COL2           "Filename"
+    IDS_FILE_COL3           "Size"
+    IDS_FILE_COL4           "Modified"
+    IDS_FILE_COL5           "Attributes"
+    IDS_VIEW_ICON           "Large Icons"
+    IDS_VIEW_LIST           "List"
+    IDS_VIEW_PANOSE         "Similarity"
+    IDS_VIEW_DETAILS        "Details"
+    IDS_ATTRIB_CHARS        "RHSAC"
+    IDS_FONTSAMPLE_TEXT     "The Quick Brown Fox Jumps"
+    IDS_FONTSAMPLE_SYMBOLS  "abcdefghijkl"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDST_FILE_PROPERTIES    "Displays the properties of selected items."
+    IDST_EDIT_SELECTALL     "Selects all items."
+    IDST_EDIT_SELECTINVERT  "Reverses which items are selected and which ones are not."
+    IDST_EDIT_UNDO          "Undoes the previous file operation."
+    IDST_EDIT_CUT           "Cuts selected items."
+    IDST_EDIT_COPY          "Copies selected items."
+    IDST_EDIT_PASTE         "Pastes copied or cut items here."
+    IDST_VIEW_ICON          "Displays objects using large icons."
+    IDST_VIEW_LIST          "Displays objects using small icons."
+    IDST_VIEW_PANOSE        "Displays object by similarity."
+    IDST_VIEW_DETAILS       "Displays objects in detail."
+    IDST_VIEW_VARIATIONS    "Hides the font variations within font families."
+    IDST_VIEW_PREVIEW       "Enables font sample previews."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FONT_FILE           "Font file"
+    IDS_TT_FILE             "TrueType file"
+    IDS_NO_PAN_INFO         "No Panose information available"
+    IDS_PAN_VERY_SIMILAR    "Very similar"
+    IDS_PAN_SIMILAR         "Fairly similar"
+    IDS_PAN_NOT_SIMILAR     "Not similar"
+    IDS_FMT_FILEK           "%dK"
+    IDS_TTC_CONCAT          " & "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FMT_VERSION         "Version: %s"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    INSTALL0                "The %1 file is read-only.\n\nDo you want to replace it?"
+    INSTALL1                "The %1 file is currently being used and cannot be replaced.\n\nWait until Windows is finished using the file, and then try again."
+    INSTALL2                "Not enough disk space to install the %1 file.\n\nDelete any unwanted files, and then try again."
+    INSTALL3                "Not enough memory available to complete the installation.\n\nQuit one or more programs to increase available memory, and then try again."
+    INSTALL4                "The destination disk or drive may be full, or files may be locked by SHARE.\n\nDelete unwanted files, or wait until the files are unlocked, and then try again."
+    INSTALL5                "is newer ...\n\n"
+    INSTALL6                "supports different languages ...\n\n"
+    INSTALL7                "is a different type ...\n\n"
+    INSTALL8                "The currently installed %1\n\n%2%3%4than the one you are attempting to install. Do you still want to install the file?"
+    INSTALL9                "An unknown error has occurred."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INSTALL_MUTEX_WAIT_FAILED "The font folder is busy and cannot install the selected fonts at this time.\n\nYou may retry now or cancel and retry later."
+END
+
+//
+// Strings for font file validation errors.
+// FVS = Font Validation Status.
+//
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_FMT_FVS_PREFIX      "Unable to install the ""%1"" font"
+    IDS_FMT_FVS_FILEOPEN    "%1.%n%nFile ""%2"" was not found or could not be opened."
+    IDS_FMT_FVS_FILECREATE  "%1.%n%nFile ""%2"" could not be created."
+    IDS_FMT_FVS_FILEEXISTS  "%1.%n%nFile ""%2"" already exists."
+    IDS_FMT_FVS_BADVERSION  "%1.%n%nFile ""%2"" is either damaged or a version that is not supported."
+    IDS_FMT_FVS_INVFONTFILE "%1.%n%nFile ""%2"" is either invalid or damaged."
+    IDS_FMT_FVS_FILEIO      "%1.%n%nAn error has occured while reading the font files."
+    IDS_FMT_FVS_INTERNAL    "%1.%n%nAn unknown error has occurred."
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDSI_CAP_NOINSTALL      "Unable to install the font"
+    IDSI_CAP_NOCREATE       "Unable to create file"
+    IDSE_CAP_CREATERR       "Cannot create %1"
+    IDSI_MSG_TTDISABLED     "TrueType fonts are disabled.\n\nTo use TrueType fonts, select the Enable TrueType Fonts check box in the TrueType dialog box, and then restart Windows before installing TrueType fonts."
+    IDSI_MSG_NOFONTS        "No fonts found."
+    IDSI_MSG_COPYCONFIRM    "The specified path points to a font file that may not be available during later Windows sessions.\n\nDo you want to continue?"
+    IDSI_MSG_DEFDIR         "A:\\"
+    IDSI_FMT_BADINSTALL     "Unable to install the %1 font. The font file may be damaged.\n\nCheck with your font vendor about obtaining a new file."
+    IDSI_FMT_ISINSTALLED    "The %1 font is already installed.\n\nTo install a new version, first remove the old version."
+    IDSI_UNKNOWN_VENDOR     "[ Vendor name not found in font file ]"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDSI_FMT_RETRIEVE       "Retrieving font names: %02d%%"
+    IDSI_FMT_COMPRFILE      "The %1 font is compressed and cannot be installed, unless you copy it to your Windows folder.\n\nDo you want to copy it to your Windows folder?"
+    IDSI_FMT_FILEFNF        "The file '%1' does not exist in this folder."
+    IDSI_FMT_DELETECONFIRM  "Are you sure you want to delete these fonts?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EXT_INSTALL         "&Install"
+    IDS_EXT_INSTALL_HELP    "Install the font"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDST_FILE_SAMPLE        "Opens a sample page for the selected font(s)."
+    IDST_FILE_PRINT         "Prints a sample page for the selected font(s)."
+    IDST_FILE_INSTALL       "Installs fonts on your computer."
+    IDST_FILE_LINK          "Creates shortcut(s) to selected items."
+    IDST_FILE_DEL           "Deletes selected items."
+    IDST_FILE_RENAME        "Renames the selected item."
+    IDST_HELP_TOPICS        "Opens Help."
+
+    IDS_SELECTED_FONT_COUNT "%d font(s) selected"
+    IDS_TOTAL_FONT_COUNT    "%d font(s)"
+    IDS_TOTAL_AND_HIDDEN_FONT_COUNT  "%d font(s) (plus %d hidden)"
+
+    IDS_NEXTREBOOT          "You must restart your computer before the new settings will take effect.\n\nDo you want to restart your computer now?"
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  INSTALLIT,                "Insert %1 or a disk with the updated %2 file in:"
+  INSTALLIT + 1,            "Insert the disk with the %s file in:"
+END
+
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+  MYFONT + 1,    "Unable to remove %1"
+  MYFONT + 2,    "The copyright holder ""%1"" of the ""%2"" font will not allow their font to be converted to TrueType.  Please contact the font vendor for more information."
+  MYFONT + 3,    "The Type 1 version of the ""%1"" font is already installed.  Continue installation of this font?"
+  MYFONT + 4,    "The TrueType version of the ""%1"" font is already installed.  Continue installation of this font?"
+  MYFONT + 5,    "%1 is already installed.  Remove this font and re-install."
+  MYFONT + 6,    "Converting %1 to TrueType."
+  MYFONT + 7,    "The ""%1"" font will be installed on your system for use as a screen font, printer font or both."
+  MYFONT + 8,    "The %1 font is already installed as a PostScript printer font and cannot be converted to TrueType."
+  MYFONT + 9,    "The %1 font cannot be installed to the %2 registry location.  This is usually because you do not have the correct security permissions."
+  MYFONT + 10,   "Installing font %d of %d..."
+  MYFONT + 11,   "Installing %1"
+
+//
+// This message was replaced by the dialog box DLG_COPYRIGHT_NOTIFY [brianau]
+// The length exceeded the max of 255 characters.
+//
+//MYFONT + 12,   "The ""%1"" Type 1 font can be installed but you might not have the right to convert it to TrueType. Check your license agreement from ""%2"" and if necessary, contact them for permission to convert this font.\n
+//To continue installing the font, with or without converting it, choose Yes. To install the font without converting it to TrueType, choose No.\n
+//Do you want to install and convert the font at this time?"
+
+  MYFONT + 13,   "Could not create ""%1"" file.  The ""%2"" file format is not supported."
+  MYFONT + 14,   "Could not create ""%1"" file.  The ""%2"" file is probably corrupt."
+  MYFONT + 15,   "Could not create ""%1"" file.  Error reading input file ""%2"" or ""%3"""
+  MYFONT + 16,   "Could not create ""%1"" file.  Check the disk space or your write privileges for the target directory."
+  MYFONT + 17,   "Could not create ""%1"" file.  Conversion of the ""%2"" font failed."
+  MYFONT + 18,   "Cannot initialize Fonts Applet because Windows Fonts directory name is too long."
+
+END
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+#ifdef WINNT
+
+#include <ntverp.h>
+
+#endif
+
+#include "fontext.rcv"  // non-App Studio edited resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

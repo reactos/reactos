@@ -1,0 +1,120 @@
+!IF 0
+
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+!ENDIF
+
+CCSHELL_DIR     = $(BASEDIR)\private\shell
+
+TARGET_BOTH     = 1
+#NOT_UNICODE     = 1
+PRECOMPILED_CXX = 1
+
+!include $(CCSHELL_DIR)\cpls\inetcpl\inetcpl.inc
+
+NO_BROWSER_FILE = 1
+
+SOURCES_USED    = $(SOURCES_USED) $(CCSHELL_DIR)\cpls\inetcpl\inetcpl.inc
+
+TARGETNAME      = inetcpl
+TARGETPATH      = obj
+TARGETTYPE      = DYNLINK
+TARGETEXT       = cpl
+
+TARGETLIBS = \
+                  $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+                  $(BASEDIR)\public\sdk\lib\*\user32.lib   \
+                  $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+                  $(BASEDIR)\public\sdk\lib\*\shlwapi.lib  \
+                  $(BASEDIR)\public\sdk\lib\*\shlwapip.lib \
+                  $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+                  $(BASEDIR)\public\sdk\lib\*\comctlp.lib \
+                  $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+                  $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+                  $(BASEDIR)\public\sdk\lib\*\shell32p.lib \
+                  $(BASEDIR)\public\sdk\lib\*\uuid.lib     \
+                  $(BASEDIR)\public\sdk\lib\*\ole32.lib    \
+                  $(BASEDIR)\public\sdk\lib\*\oleaut32.lib \
+                  $(BASEDIR)\public\sdk\lib\*\permdlg.lib  \
+                  $(BASEDIR)\public\sdk\lib\*\shdocvwp.lib \
+                  $(BASEDIR)\public\sdk\lib\*\advpack.lib  \
+                  $(CCSHELL_DIR)\lib\$O\stocklib.lib       \
+                  $(CCSHELL_DIR)\lib\$O\stock5.lib         \
+                  $(CCSHELL_DIR)\lib\$O\shguidp.lib        \
+                  $(SDK_LIB_PATH)\htmlhelp.lib             \
+
+USE_LIBCMT      = 1
+
+INCLUDES        = $(INCLUDES); \
+                  $(CCSHELL_DIR)\ext\rnaui\inc
+
+DELAYLOAD       = COMDLG32.DLL;SHDOCVW.DLL;OLE32.DLL;ADVPACK.DLL;OLEAUT32.DLL
+DLLDEF          = ..\inetcpl.def
+
+DLLENTRY        = DllMain
+
+NTTARGETFILES   = 
+NTTARGETFILE0= \
+               ..\selfreg_inetcpl.inf
+
+!if "$(BUILD_PRODUCT)" == "NT"
+MISCFILES = $(MISCFILES) ..\selfreg_inetcpl.inf
+!endif
+
+!ifdef UNIX
+
+SOURCES_PLATFORM = \
+                  shassoc.cpp \
+                  shalias.cpp \
+                  aliases.cpp \
+                  unixstuff.cpp \
+
+!else
+
+SOURCES_PLATFORM = \
+
+!endif
+
+SOURCES         = \
+                  $(SOURCES_PLATFORM) \
+                  ..\inetcpl.rc \
+                  ..\advanced.cpp \
+                  ..\cachecpl.cpp \
+                  ..\clsutil.cpp  \
+                  ..\connectn.cpp \
+                  ..\content.cpp  \
+                  ..\debug.cpp    \
+                  ..\dlylddll.cpp \
+                  ..\fonts.cpp    \
+                  ..\general.cpp  \
+                  ..\inethelp.cpp \
+                  ..\init.cpp     \
+                  ..\lang.cpp     \
+                  ..\mainwnd.cpp  \
+                  ..\process.cpp  \
+                  ..\programs.cpp \
+                  ..\proxysup.cpp \
+                  ..\regutil.cpp  \
+                  ..\security.cpp \
+                  ..\util.cpp     \
+
+PRECOMPILED_INCLUDE=..\inetcplp.h

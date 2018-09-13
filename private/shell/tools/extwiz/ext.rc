@@ -1,0 +1,266 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "#include ""afxres.rc""  // Standard components\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "EXTENSIONS AppWizard\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "EXTENSIONS\0"
+            VALUE "LegalCopyright", "Copyright © 1994\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "EXTENSIONS.DLL\0"
+            VALUE "ProductName", "Shell Extensions AppWizard\0"
+            VALUE "ProductVersion", "1, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEMPLATE
+//
+
+NEWPROJ.INF             TEMPLATE DISCARDABLE    "template\\newproj.inf"
+CONFIRM.INF             TEMPLATE DISCARDABLE    "template\\confirm.inf"
+CM.CPP                  TEMPLATE DISCARDABLE    "template\\CM.cpp"
+CM.H                    TEMPLATE DISCARDABLE    "template\\CM.h"
+DLLDATA.C               TEMPLATE DISCARDABLE    "template\\dlldata.c"
+EI.CPP                  TEMPLATE DISCARDABLE    "template\\EI.cpp"
+EI.H                    TEMPLATE DISCARDABLE    "template\\EI.h"
+ICON1.ICO               TEMPLATE DISCARDABLE    "template\\icon1.ico"
+PS.CPP                  TEMPLATE DISCARDABLE    "template\\PS.cpp"
+PS.H                    TEMPLATE DISCARDABLE    "template\\PS.h"
+RESOURCE.H              TEMPLATE DISCARDABLE    "template\\resource.h"
+ROOT.CLW                TEMPLATE DISCARDABLE    "template\\root.clw"
+ROOT.CPP                TEMPLATE DISCARDABLE    "template\\root.cpp"
+ROOT.DEF                TEMPLATE DISCARDABLE    "template\\root.def"
+ROOT.H                  TEMPLATE DISCARDABLE    "template\\root.h"
+SHELLEXT.IDL            TEMPLATE DISCARDABLE    "template\\ShellExt.idl"
+ROOT.RC                 TEMPLATE DISCARDABLE    "template\\root.rc"
+ROOT.RGS                TEMPLATE DISCARDABLE    "template\\root.rgs"
+ROOT.TLB                TEMPLATE DISCARDABLE    "template\\root.tlb"
+SHELLEXTENSIONSPS.DEF   TEMPLATE DISCARDABLE    "template\\Shellps.def"
+SHELLEXTENSIONSPS.MK    TEMPLATE DISCARDABLE    "template\\Shellps.mk"
+SHLOBJ.IDL              TEMPLATE DISCARDABLE    "template\\Shlobj.idl"
+STDAFX.CPP              TEMPLATE DISCARDABLE    "template\\StdAfx.cpp"
+STDAFX.H                TEMPLATE DISCARDABLE    "template\\StdAfx.h"
+IT.CPP                  TEMPLATE DISCARDABLE    "template\\it.cpp"
+IT.H                    TEMPLATE DISCARDABLE    "template\\it.h"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_EXTENSIONS          ICON    DISCARDABLE     "res\\Ext.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EXTENSION DIALOG DISCARDABLE  0, 0, 301, 156
+STYLE DS_CONTROL | WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EXT_EDIT,160,26,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CLASSTYPE_EDIT,160,44,133,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CLASSDESC_EDIT,160,62,133,14,ES_AUTOHSCROLL
+    LTEXT           "Choose File or Document type:",IDC_STATIC,90,7,98,8
+    RTEXT           "File Extension:",IDC_STATIC,90,26,64,8
+    RTEXT           "Class Type:",IDC_STATIC,90,44,64,8
+    RTEXT           "Class Description",IDC_STATIC,90,62,64,8
+    CONTROL         "",IDC_STATIC,"Static",SS_ENHMETAFILE,7,7,78,142
+END
+
+IDD_SHELLOPTIONS DIALOG DISCARDABLE  0, 0, 300, 157
+STYLE DS_CONTROL | WS_CHILD | WS_DISABLED
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Context Menu Handler",IDC_CONTEXTMENU,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,20,87,10
+    CONTROL         "Implement IContextMenu3",IDC_CONTEXTMENU3,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,120,32,98,10
+    CONTROL         "Register as a Drag and Drop Handler",IDC_DND,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,120,44,133,10
+    CONTROL         "Icon Handler",IDC_ICONHANDLER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,100,57,57,10
+    CONTROL         "Property Sheet Handler",IDC_PROPERTYSHEET,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,100,69,89,10
+    CONTROL         "Data Object Handler",IDC_DATAOBJECT,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,100,92,81,10
+    CONTROL         "Drop Target Handler",IDC_DROPTARGET,"Button",
+                    BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,100,104,81,10
+    CONTROL         "InfoTip Handler",IDC_INFOTIP,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,100,80,65,10
+    LTEXT           "Choose the Shell Extension types:",IDC_STATIC,90,7,108,
+                    8
+    CONTROL         "",IDC_STATIC,"Static",SS_ENHMETAFILE,7,7,78,143
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_EXTENSION, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        VERTGUIDE, 85
+        VERTGUIDE, 90
+        VERTGUIDE, 154
+        VERTGUIDE, 160
+        VERTGUIDE, 300
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+        HORZGUIDE, 26
+        HORZGUIDE, 40
+        HORZGUIDE, 44
+        HORZGUIDE, 58
+        HORZGUIDE, 62
+        HORZGUIDE, 76
+        HORZGUIDE, 80
+        HORZGUIDE, 94
+        HORZGUIDE, 98
+    END
+
+    IDD_SHELLOPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        VERTGUIDE, 85
+        VERTGUIDE, 90
+        VERTGUIDE, 100
+        VERTGUIDE, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 150
+        HORZGUIDE, 20
+        HORZGUIDE, 32
+        HORZGUIDE, 44
+        HORZGUIDE, 56
+        HORZGUIDE, 68
+        HORZGUIDE, 80
+        HORZGUIDE, 92
+        HORZGUIDE, 104
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROGRAM             "Shell Extension AppWizard"
+    IDS_FILEWARN            "The Extension should not include an initial period."
+    IDS_BLANKWARN           "Neither the Extension or Class type should be NULL."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+#include "afxres.rc"  // Standard components
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

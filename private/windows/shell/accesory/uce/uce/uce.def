@@ -1,0 +1,25 @@
+;
+; Copyright (c) 1997-1999 Microsoft Corporation.
+;
+NAME         UCE
+
+
+;CODE can be moved in memory and discarded/reloaded
+CODE  PRELOAD MOVEABLE DISCARDABLE
+
+;DATA must be MULTIPLE if program can be invoked more than once
+DATA  PRELOAD MOVEABLE MULTIPLE
+
+
+HEAPSIZE     1024
+STACKSIZE    5120	   ; recommended minimum for Windows applications
+
+
+; All functions that will be called by any Windows routine
+; MUST be exported.
+
+EXPORTS
+	UCEWndProc       @1
+        CharGridWndProc  @2
+        ListWndProc      @3
+        GridWndProc      @4

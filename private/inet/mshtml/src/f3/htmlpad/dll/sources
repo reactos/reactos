@@ -1,0 +1,98 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\f3\htmlpad\dll=)
+USE_DEBUGLIB=1
+!include $(ROOT)\common.inc
+
+TARGETNAME=htmlpad
+TARGETPATH=..\..\..\..\$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLDEF=$(O)\htmlpad.def
+DLLENTRY=$(CRTMAIN)
+
+SYNCHRONIZE_DRAIN=1
+
+INCLUDES= \
+    ..; \
+    $(O); \
+    $(ROOT)\src\core\include; \
+    $(ROOT)\src\site\include; \
+    $(ROOT)\external\inc; \
+    $(ROOT)\types\$(O); \
+    $(BASEDIR)\private\windows\inc;
+
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES) \
+    stdole2.tlb
+
+SOURCES= \
+    ..\pad.odl \
+    ..\pad.rc \
+    ..\cenum.cxx \
+    ..\pad_wrap.c \
+    ..\padauto.cxx \
+    ..\padbsc.cxx \
+    ..\paddebug.cxx \
+    ..\paddoc.cxx \
+    ..\padfact.cxx \
+    ..\padframe.cxx \
+    ..\padguid.cxx \
+    ..\padmain.cxx \
+    ..\padole.cxx \
+    ..\padreg.cxx \
+    ..\padscrub.cxx \
+    ..\padsend.cxx \
+    ..\padsite.cxx \
+    ..\padssite.cxx \
+    ..\padurl.cxx \
+    ..\padws.cxx \
+    ..\stdenum.cxx \
+
+PASS0_HEADERDIR=..
+PASS0_SOURCEDIR=..
+USE_MIDL_FOR_MKTYPLIB=1
+
+MIDL_FLAGS = \
+    /h $(O)\f3pad.h \
+    /iid $(O)\pad_i.c
+
+UMENTRY=winmain
+
+PRECOMPILED_INCLUDE=..\padhead.hxx
+PRECOMPILED_CXX=1
+
+#USE_LIBCMT=1
+!undef USE_NOLIBS=1
+!undef USE_NTDLL
+
+UMLIBS=
+TARGETLIBS= \
+    $(ROOT)\src\site\misc\$(O)\misc.lib \
+    $(ROOT)\src\site\util\$(O)\util.lib \
+    $(ROOT)\src\core\misc\$(O)\coremisc.lib \
+    $(ROOT)\src\core\cdutil\$(O)\cdutil.lib \
+    $(ROOT)\src\core\debuglib\$(O)\debuglib.lib \
+    $(ROOT)\src\core\include\$(O)\corepch.lib \
+    $(ROOT)\src\site\include\$(O)\sitepch.lib \
+    $(ROOT)\src\f3\crt\$(O)\crt.lib \
+    $(ROOT)\src\core\wrappers\$(O)\unicwrap.obj \
+    $(ROOT)\src\core\wrappers\$(O)\dynwrap.obj \
+    $(ROOT)\src\core\wrappers\$(O)\wininet.obj \
+    $(ROOT)\src\core\wrappers\$(O)\urlmon.obj \
+    $(ROOT)\src\core\wrappers\$(O)\precomp.obj \
+    $(ROOT)\src\core\wrappers\$(O)\imm32.obj \
+    $(SDK_LIB_PATH)\ole32.lib \
+    $(SDK_LIB_PATH)\oleaut32.lib \
+    $(SDK_LIB_PATH)\gdi32.lib \
+    $(SDK_LIB_PATH)\kernel32.lib \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\advapi32.lib \
+    $(SDK_LIB_PATH)\uuid.lib \
+    $(SDK_LIB_PATH)\shlwapip.lib \
+    $(SDK_LIB_PATH)\comdlg32.lib \
+    $(SDK_LIB_PATH)\comctl32.lib \
+    $(SDK_LIB_PATH)\shell32.lib

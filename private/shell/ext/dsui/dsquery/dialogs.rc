@@ -1,0 +1,220 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "dialogs.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_FINDUSINGLDAP DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Enter LDAP query:",IDC_STATIC,7,9,60,8
+    EDITTEXT        IDC_LDAP,7,29,245,67,ES_MULTILINE
+END
+
+IDD_FINDPRINT1 DIALOGEX 0, 0, 260, 103
+STYLE DS_CONTROL | DS_CONTEXTHELP | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+EXSTYLE WS_EX_TOOLWINDOW
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "N&ame:",IDC_STATIC,7,9,22,8
+    EDITTEXT        IDC_PRINTNAME,44,7,209,13,ES_AUTOHSCROLL
+    LTEXT           "L&ocation:",IDC_STATIC,7,27,30,8
+    EDITTEXT        IDC_PRINTLOCATION,44,25,153,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_PRINTBROWSE,203,24,50,14
+    LTEXT           "&Model:",IDC_STATIC,7,45,22,8
+    EDITTEXT        IDC_PRINTMODEL,44,44,209,13,ES_AUTOHSCROLL
+END
+
+IDD_FINDPRINT2 DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | DS_CONTEXTHELP | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Can print d&ouble-sided",IDC_PRINTDUPLEX,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,7,101,10
+    CONTROL         "Can st&aple",IDC_PRINTSTAPLE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,117,7,109,10
+    CONTROL         "Can print co&lor",IDC_PRINTCOLOR,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,21,101,10
+    CONTROL         "",IDC_SEPLINE,"Static",SS_ENHMETAFILE | SS_SUNKEN,7,36,
+                    246,1
+    LTEXT           "Has paper si&ze:",IDC_STATIC,7,46,69,8
+    COMBOBOX        IDC_PRINTPAGESIZE,83,44,140,76,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Resolution at least:",IDC_STATIC,7,64,69,8
+    COMBOBOX        IDC_PRINTRES,83,62,57,48,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "dpi",IDC_PRINTRES_POSTFIX,144,64,10,8
+    LTEXT           "&Speed at least:",IDC_STATIC,7,82,69,8
+    EDITTEXT        IDC_PRINTSPEED,83,80,57,13,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Spin3",IDC_PRINTSPEED_UPDN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,126,78,11,14
+    LTEXT           "ppm",IDC_PRINTSPEED_POSTFIX,144,82,19,8
+END
+
+IDD_FINDCOMPUTER DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Computer n&ame:",IDC_STATIC,7,9,56,8
+    EDITTEXT        IDC_COMPNAME,72,7,181,13,ES_AUTOHSCROLL
+    LTEXT           "&Owner:",IDC_STATIC,7,27,56,8
+    EDITTEXT        IDC_COMPOWNER,72,25,181,13,ES_AUTOHSCROLL
+    LTEXT           "&Role:",IDC_STATIC,7,45,56,8
+    COMBOBOX        IDC_COMPROLE,72,44,181,50,CBS_DROPDOWNLIST | 
+                    CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_FINDDOMCTL DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select a domain controller from the list below by either name or site.\n\n(You can refresh the list by either clicking ""Find Now"", or choosing ""Refresh"" from the View menu.)",
+                    IDC_STATIC,7,9,246,60
+END
+
+IDD_FINDFRSMEMBER DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Name:",IDC_STATIC,7,9,22,8
+    EDITTEXT        IDC_DOMNAME,57,7,196,13,ES_AUTOHSCROLL
+    LTEXT           "Description:",IDC_STATIC,7,27,38,8
+    EDITTEXT        IDC_DOMDESC,57,25,196,13,ES_AUTOHSCROLL
+END
+
+IDD_FINDVOLUME DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "N&amed:",IDC_STATIC,7,9,26,8
+    EDITTEXT        IDC_VOLNAME,57,7,196,13,ES_AUTOHSCROLL
+    LTEXT           "&Keywords:",IDC_STATIC,7,27,36,8
+    EDITTEXT        IDC_VOLKEYWORDS,57,25,196,13,ES_AUTOHSCROLL
+END
+
+IDD_FINDCONTAINER DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "N&amed:",IDC_STATIC,7,9,26,8
+    EDITTEXT        IDC_OUNAME,57,7,196,13,ES_AUTOHSCROLL
+END
+
+IDD_PROPERTYWELL DIALOGEX 0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "Fie&ld",IDC_PROPERTYLABEL,"Button",BS_OWNERDRAW | 
+                    BS_LEFT | WS_TABSTOP,7,7,41,14
+    LTEXT           "Condi&tion:",IDC_CONDITIONLABEL,103,9,34,8
+    LTEXT           "",IDC_PROPERTY,7,23,94,13, 0, WS_EX_CLIENTEDGE
+    COMBOBOX        IDC_CONDITION,103,23,56,68,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "Val&ue:",IDC_VALUELABEL,160,9,21,8
+    EDITTEXT        IDC_VALUE,160,23,93,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Add",IDC_ADD,149,40,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,203,40,50,14
+    CONTROL         "Condition Lis&t",IDC_CONDITIONLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | 
+                    WS_BORDER,7,58,246,38,WS_EX_TRANSPARENT | 
+                    WS_EX_CLIENTEDGE
+END
+
+IDD_FINDUSER DIALOGEX DISCARDABLE  0, 0, 260, 103
+STYLE DS_CONTROL | WS_CHILD | (DS_SETFONT|DS_FIXEDSYS)
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "N&ame:",IDC_STATIC,7,9,22,8
+    EDITTEXT        IDC_USERNAME,57,7,196,13,ES_AUTOHSCROLL
+    LTEXT           "De&scription:",IDC_STATIC,7,27,38,8
+    EDITTEXT        IDC_USERDESC,57,25,196,13,ES_AUTOHSCROLL
+END
+
+IDD_PICKCOLUMNS DIALOGEX DISCARDABLE  46, 21, 244, 135
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Choose columns"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Columns available:",IDC_STATIC,7,7,60,8
+    LISTBOX         IDC_LBPROPERTIES,7,19,86,90,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Add >>",IDC_ADD,100,19,45,14
+    LTEXT           "Columns &shown:",IDC_STATIC,151,7,52,8
+    LISTBOX         IDC_LBCOLUMNS,151,19,86,90,LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "<< &Remove",IDC_REMOVE,100,36,45,14
+    DEFPUSHBUTTON   "OK",IDOK,133,114,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,187,114,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "dialogs.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

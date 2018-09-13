@@ -1,0 +1,20 @@
+December 1st, 1995
+
+This functionality has been updated to Win95.
+The new code has been split into 2 parts.
+
+The driver code is now found in
+
+%_ntdrive%%_ntroot%\private\windows\media\midimap
+
+The GUI code is now found in
+
+%_ntdriver%%_ntroot%\private\windows\shell\control\mmsys
+
+This code should be removed in a couple of months
+but keep it around for now, just to be safe.
+
+
+Contact ShawnB (x31266) if you have any questions.
+ 
+

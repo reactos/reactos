@@ -1,0 +1,83 @@
+<HTML>
+<HEAD>
+<LINK REL="stylesheet" TYPE="text/css" HREF="win2000.css" />
+<TITLE>My First Server</TITLE>
+<SCRIPT LANGUAGE="javascript" SRC="util.js"></SCRIPT>
+<SCRIPT LANGUAGE="javascript" SRC="popups.js"></SCRIPT>
+<SCRIPT LANGUAGE=javascript>
+    function next()
+    {
+        self.location.href="intro3.htm";
+        srvwiz.Home = 4;
+    }
+
+    function back()
+    {
+        self.location.href="intro1.htm";
+        srvwiz.Home = 1;
+    }
+
+    function details()
+    {
+        self.location.href="details.htm";
+        srvwiz.Home = 3;
+    }
+</SCRIPT>
+<STYLE>
+    Body
+    {
+        background-image:url("foo.gif");
+        background-repeat:no-repeat;
+        background-position:bottom right;
+    }
+	.defdiv {background-color:ffffff; visibility:hidden; position:absolute; top:1px; border:1px solid black;}
+	.defspan {font-size:8pt; border:1px solid #cccccc; padding:10px}
+</STYLE>
+</HEAD>
+<BODY ondragover="return false" BGCOLOR="#CCCCCC" LEFTMARGIN="0" TOPMARGIN="0" BGPROPERTIES="fixed" id="body">
+<TABLE WIDTH="425" BORDER="0" BORDERCOLOR="#000000">
+    <TR>
+        <TD ROWSPAN="6" WIDTH="10">&nbsp;</TD>
+    </TR>
+    <TR>
+        <TD VALIGN="top" colspan="3">
+            <P ID="para1">If you proceed, Windows will automatically configure this server as a domain controller 
+            and set up <A HREF="javascript:nothing()" onclick="popup(1)">Active Directory</A>, <A HREF="javascript:nothing()" onclick="popup(2)">DHCP</A>, 
+            and <A HREF="javascript:nothing()" onclick="popup(3)">DNS</A> on your network. 
+            These are core services that enable you to set up and manage network objects, 
+            such as printers and user accounts, and many other advanced features.
+            <P ID="para2"><B>Caution</B>
+            <BR>Do not proceed if another server on your network is already running any of these services.
+            <P ID="para3"><A HREF="javascript:details()">Show more details.</A>
+            <P ID="para4"><A HREF="javascript:help('adconcepts.chm::/sag_adintro.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about Active Directory.
+            <P ID="para5" style="margin-top:8px"><A HREF="javascript:help('DHCPconcepts.chm::/sag_DHCPtopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about DHCP.
+            <P ID="para6" style="margin-top:8px"><A HREF="javascript:help('DNSconcepts.chm::/sag_DNStopnode.htm')"><IMG SRC="help.gif" WIDTH=24 HEIGHT=24 ALT="" BORDER="0" ALIGN="middle" HSPACE="5">Learn more</A> about DNS.
+			<p id=idFoo style="position:absolute; bottom:21px; right:37px"><BUTTON TYPE="button" ACCESSKEY="b" ID="back" ONCLICK="back()"><U>B</U>ack</BUTTON>&nbsp;<BUTTON TYPE="button" ACCESSKEY="n" ID="next" ONCLICK="next()"><U>N</U>ext</BUTTON>
+        </TD>
+    </TR>
+</TABLE>
+
+<!--definition for Active Directory-->
+<DIV class="defdiv" ID="popup1">
+    <span class="defspan" onblur="popOff(1)" ID="def1"><b>Active Directory</b>
+	<br>The directory service included with Windows 2000 Server. It stores information about objects on a network and makes this information available to users and network administrators. Active Directory gives network users access to permitted resources anywhere on the network using a single logon process. It provides network administrators with an intuitive hierarchical view of the network and a single point of administration for all network objects.
+    </span>            
+</DIV>
+
+<!--definition for DHCP-->
+<DIV class="defdiv" ID="popup2">
+    <span class="defspan" onblur="popOff(2)" ID="def2"><b>DHCP</b>
+	<br>A TCP/IP service protocol that offers dynamic leased configuration of host IP addresses and distributes other configuration parameters to eligible network clients. DHCP provides safe, reliable, and simple TCP/IP network configuration, prevents address conflicts, and helps conserve the use of client IP addresses on the network. DHCP uses a client/server model where the DHCP server maintains centralized management of IP addresses that are used on the network. DHCP-supporting clients can then request and obtain lease of an IP address from a DHCP server as part of their network boot process. DHCP is also called Dynamic Host Configuration Protocol.
+    </span>            
+</DIV>
+
+<!--definition for DNS-->
+<DIV class="defdiv" ID="popup3">
+    <span class="defspan" onblur="popOff(3)" ID="def3"><b>DNS</b>
+	<br>A static, hierarchical name service for TCP/IP hosts. The network administrator configures the DNS with a list of host names and IP addresses, allowing users of workstations configured to query the DNS to specify remote systems by host names rather than IP addresses. For example, a workstation configured to use DNS name resolution could use the command <b>ping remotehost</B> rather than <b>ping 1.2.3.4</B> if the mapping for the system named remotehost was contained in the DNS database. DNS domains should not be confused with Windows 2000 networking domains.
+    </span>            
+</DIV>
+<div id="shadow" style="background:url(shadow.gif); filter:alpha(opacity=50); height:1px; width:1px; position:absolute; top:1px; visibility:hidden"></div>
+
+</BODY>
+</HTML>

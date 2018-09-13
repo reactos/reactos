@@ -1,0 +1,104 @@
+/*	File: D:\WACKER\cncttapi\cncttapi.rc (Created: 10-Feb-1994)
+ *
+ *	Copyright 1994 by Hilgraeve Inc. -- Monroe, MI
+ *	All rights reserved
+ *
+ *      $Revision: 3 $
+ *      $Date: 3/26/99 8:05a $
+ */
+
+#include    "..\term\res.h"
+#include    <windows.h> // JohnFu, added 16-Oct-1995
+
+IDD_CNCT_CONFIRM DIALOG DISCARDABLE  0, 12, 225, 134
+STYLE DS_CONTEXTHELP  | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU   // JohnFu, removed DS_NONBOLD
+CAPTION "Connect"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON	"Dial",117,115,112,49,14
+	PUSHBUTTON		"Cancel",IDCANCEL,168,112,50,14
+    ICON            102,101,7,7,18,20
+    LTEXT           "",103,33,13,155,8,SS_NOPREFIX
+    LTEXT           "Phone number:",104,7,43,51,8
+	EDITTEXT		105,60,43,80,8,ES_AUTOHSCROLL | ES_READONLY |
+					NOT WS_BORDER
+	PUSHBUTTON		"&Modify...",106,148,40,70,14
+    LTEXT           "Your &location:",107,7,69,49,8
+    COMBOBOX        108,60,67,84,59,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+	PUSHBUTTON		"&Dialing Properties...",109,148,66,70,14
+    LTEXT           "",110,60,86,137,8,SS_NOPREFIX
+    LTEXT           "Calling card:",111,7,86,42,8
+	CONTROL 		"",114,"Static",SS_ETCHEDHORZ,7,59,211,2
+	CONTROL 		"",116,"Static",SS_ETCHEDHORZ,7,103,211,2
+END
+
+IDD_CNCT_NEWPHONE DIALOG DISCARDABLE  1, 12, 193, 165
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION | WS_SYSMENU         // JohnFu, removed DS_NONBOLD
+CAPTION "Connect To"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON			"",101,7,7,18,20
+    LTEXT           "",103,32,15,155,8,SS_NOPREFIX
+    LTEXT           "",104,7,135,179,2,NOT WS_GROUP
+    LTEXT           "Enter details for the phone number that you want to dial:",
+                    105,7,41,184,8
+    LTEXT           "Enter details for the host that you want to call:",
+                    205,7,41,184,8,NOT WS_VISIBLE
+    LTEXT           "&Country/region:",113,7,63,50,8
+    LTEXT           "&Host address:",213,7,61,47,8,NOT WS_VISIBLE | WS_DISABLED
+    COMBOBOX        114,60,59,126,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        214,60,59,126,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "Ar&ea code:",106,7,80,37,8
+    LTEXT           "Port nu&mber:",206,7,80,48,8,NOT WS_VISIBLE | WS_DISABLED
+    EDITTEXT        107,60,78,46,12,ES_AUTOHSCROLL
+    EDITTEXT        207,60,78,126,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "&Phone number:",108,7,99,50,8
+    EDITTEXT        109,60,97,126,12,ES_AUTOHSCROLL
+    LTEXT           "Co&nnect using:",110,7,118,50,8
+    COMBOBOX        111,60,116,126,72,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+	DEFPUSHBUTTON	"OK",IDOK,83,144,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,136,144,50,14
+END
+
+IDD_DIALING DIALOG DISCARDABLE  0, 10, 187, 124
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | WS_POPUP | WS_VISIBLE |
+        WS_CAPTION                      // JohnFu, removed DS_NONBOLD
+CAPTION "Connect"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            102,101,7,10,18,20
+	EDITTEXT		103,32,13,143,8,ES_AUTOHSCROLL | ES_READONLY |
+					NOT WS_BORDER | NOT WS_TABSTOP
+	EDITTEXT		104,32,25,143,8,ES_AUTOHSCROLL | ES_READONLY |
+					NOT WS_BORDER | NOT WS_TABSTOP
+	EDITTEXT		105,32,37,143,8,ES_AUTOHSCROLL | ES_READONLY |
+					NOT WS_BORDER | NOT WS_TABSTOP
+	//LTEXT 		  "",103,32,13,143,8,SS_NOPREFIX
+	//LTEXT 		  "",104,32,25,143,8,SS_NOPREFIX
+	//LTEXT 		  "",105,32,37,143,8,SS_NOPREFIX
+	GROUPBOX		" Status ",107,7,51,173,44
+	PUSHBUTTON		"Dial Now",IDOK,76,103,50,14
+	DEFPUSHBUTTON	"Cancel",IDCANCEL,130,103,50,14
+    CTEXT           "Connecting",110,10,72,166,8,SS_NOPREFIX
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    /* --- Winsock strings --- */
+    IDS_WINSOCK_SETTINGS_STR    "TCP/IP (Winsock)"
+	IDS_ER_TCPIP_FAILURE        "Winsock initialization failure"
+	IDS_ER_TCPIP_BADADDR		"Unable to connect to %s port %d"
+    IDS_ER_TCPIP_MISSING_ADDR   "Missing or bad host address"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OPEN_FAILED             "Failed to open file.  Check to make\nsure you have a modem installed."
+END
+
+//#endif

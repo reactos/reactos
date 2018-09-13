@@ -1,0 +1,410 @@
+#include "pbrush.h"
+#include <windows.h>
+
+#include "pbrush.rcv"
+
+
+
+#include <o2base.hxx>
+#include "pbs.hxx"
+
+//
+// begin CLASSDESCRIPTOR data CG
+//
+
+IDR_MGW RCDATA
+BEGIN
+    // LSW, MSW
+    0x0000, 0x0000,     // File         **not ours - must be 0**
+    0x0001, 0x0000,     // Edit         "Edit"
+    0x0000, 0x0000,     // Container    **not ours - must be 0**
+    0x0003, 0x0000,     // Object       "Text", "Pick", "Options"
+    0x0000, 0x0000,     // Window       **not ours - must be 0**
+    0x0001, 0x0000,     // Help         "Help"
+END
+
+IDR_ICON ICON pbrush.ico  // for minimized window
+
+IDR_MISCSTATUS RCDATA
+BEGIN
+    0x0000, 0x0000      // OLEMISC_: 0x0010, 0x0000
+END
+
+//
+// end CLASSDESCRIPTOR data (but also see the string table) CG
+//
+
+pbrush ICON pbrush.ico
+
+flood CURSOR flood.cur
+crossh CURSOR crossh.cur
+dummy CURSOR dummy.cur
+xdummy CURSOR xdummy.cur
+sidearow CURSOR side2.cur
+pick CURSOR pick.cur
+text CURSOR ibeam.cur
+#ifdef JAPAN    //  added by Hiraisi  09 Apr. 1992
+ibeam2 CURSOR ibeam2.cur
+#endif
+boxx1 CURSOR boxx1.cur
+boxx2 CURSOR boxx2.cur
+boxx3 CURSOR boxx3.cur
+boxx4 CURSOR boxx4.cur
+boxx5 CURSOR boxx5.cur
+boxx7 CURSOR boxx7.cur
+box1 CURSOR box1.cur
+box2 CURSOR box2.cur
+box3 CURSOR box3.cur
+box4 CURSOR box4.cur
+box5 CURSOR box5.cur
+box7 CURSOR box7.cur
+rect1 CURSOR rect1.cur
+rect2 CURSOR rect2.cur
+rect3 CURSOR rect3.cur
+rect4 CURSOR rect4.cur
+rect5 CURSOR rect5.cur
+rect7 CURSOR rect7.cur
+rect9 CURSOR rect9.cur
+rect11 CURSOR rect11.cur
+oval1 CURSOR oval1.cur
+oval2 CURSOR oval2.cur
+oval3 CURSOR oval3.cur
+oval4 CURSOR oval4.cur
+oval5 CURSOR oval5.cur
+oval7 CURSOR oval7.cur
+oval9 CURSOR oval9.cur
+oval11 CURSOR oval11.cur
+vert1 CURSOR vert1.cur
+vert2 CURSOR vert2.cur
+vert3 CURSOR vert3.cur
+vert4 CURSOR vert4.cur
+vert5 CURSOR vert5.cur
+vert7 CURSOR vert7.cur
+vert9 CURSOR vert9.cur
+vert11 CURSOR vert11.cur
+horz1 CURSOR horz1.cur
+horz2 CURSOR horz2.cur
+horz3 CURSOR horz3.cur
+horz4 CURSOR horz4.cur
+horz5 CURSOR horz5.cur
+horz7 CURSOR horz7.cur
+horz9 CURSOR horz9.cur
+horz11 CURSOR horz11.cur
+slantl1 CURSOR slantl1.cur
+slantl2 CURSOR slantl2.cur
+slantl3 CURSOR slantl3.cur
+slantl4 CURSOR slantl4.cur
+slantl5 CURSOR slantl5.cur
+slantl7 CURSOR slantl7.cur
+slantl9 CURSOR slantl9.cur
+slantl11 CURSOR slantl11.cur
+slantr1 CURSOR slantr1.cur
+slantr2 CURSOR slantr2.cur
+slantr3 CURSOR slantr3.cur
+slantr4 CURSOR slantr4.cur
+slantr5 CURSOR slantr5.cur
+slantr7 CURSOR slantr7.cur
+slantr9 CURSOR slantr9.cur
+slantr11 CURSOR slantr11.cur
+
+pToolbox BITMAP ctools.bmp
+pBWToolbox BITMAP bwtools.bmp
+pArrow BITMAP arrow.bmp
+
+STRINGTABLE
+  begin
+//
+// begin CLASSDESCRIPTOR data CG
+//
+    IDS_CLASSID,        "{00020C00-0000-0000-C000-000000000046}"
+    IDS_USERTYPEFULL,   "Paintbrush 3.5 Picture"
+    IDS_USERTYPESHORT,  "Paintbrush Picture"
+    IDS_USERTYPEAPP,    "Microsoft Paintbrush"
+    IDS_DOCFEXT,        ".bmp"
+//
+// end CLASSDESCRIPTOR data CG
+//
+
+/*
+    IDSname,  "pbrush"
+*/
+    IDSname, "PBrush"
+    IDSuntitled,  "(Untitled)"
+    IDStitle, "Paintbrush"
+    IDSpicture, "Paintbrush Picture"
+    IDSEdit, "Edit"
+#ifdef JAPAN    /* 17-Aug-93 #1836 v-katsuy */
+    IDSxiny, "picture of %s"
+#else
+    IDSxiny, "%s in %s"
+#endif
+
+   IDSSaveAs, "Save As"
+   IDSFileOpen, "Open"
+   IDSPasteFrom, "Paste From"
+   IDSCopyTo, "Copy To"
+   IDSGetColors, "Get Colors"
+   IDSSaveColors, "Save Colors As"
+   IDSNotEnufMem, "Not enough memory for this operation."
+   IDSCantOpen, "%s\nNot able to open this file.\n\
+                 Make sure that the path and file name are correct."
+   IDSUnknownFmt, "The format of this file is not supported."
+   IDSUnableHdr, "%s\nNot able to open this file because the format is not recognized.\n\
+                  Create a new file or open a valid bitmap image file."
+   IDSBadHeader, "%s\nNot able to open this file because the format is not recognized.\n\
+                  Create a new file or open a valid bitmap image file."
+   IDSBadData, "%s\nNot able to open this file because the format is not recognized.\n\
+                Create a new file or open a valid bitmap image file."
+   IDSCantAlloc, "Not enough memory for this operation.\n\
+                  Quit one or more applications to increase available memory, and then try again."
+   IDSNotExist, "%s\nCannot find this file.\n\
+                 Make sure that the correct path and file name are given."
+   IDSReadOnly, "A read-only file cannot be changed and saved.\n\
+                 If you want to save this version of the file, use the Save As command to save the file to a different file name or use the Properties command in File Manager to change the file attributes."
+   IDSNameConflict, "%s\nAnother file already exists by this name.\n\
+                     Use a different file name."
+   IDSNotMemAvail, "Not enough memory to edit image.\n\
+                    Quit one or more applications to increase available memory, and then try again."
+   IDSNotDiskAvail, "Not enough disk space on drive %s to edit image.\n\
+                     Delete one or more files from this drive, or save to a different disk."
+   IDSSaveTo, "%s\nThe image has changed.\n\nDo you want to save current changes?"
+   IDSInvalidMargins, "The 'Margin' settings leave no room for the image.\n\
+                       Please adjust the margins to increase available space."
+   IDSInvalidWidth, "You can only type a positive number in the Width box."
+   IDSInvalidHeight, "You can only type a positive number in the Height box."
+   IDSInvalidCopy, "The 'Copies' number is not in the expected range.\n\
+                    Make sure that the entry is a positive number."
+   IDSInvalidScale, "The Scale can only be a number between %d and %d percent."
+   IDSInvalidNumb, "You can only type a positive number."
+   IDSCantCreate, "%s\nNot able to save this file.\n\
+                   Close one or more files in other applications, and then try again."
+   IDSUnableSave, "%s\nNot enough disk space to save this file.\n\
+                   Delete one or more files to increase available disk space, or save to a different disk."
+   IDSPaste, "The current image will be replaced by the contents of the Clipboard.\n\nDo you want to continue?"
+   IDSNoMSPPaste, "Pasting from MSP files is not supported.\n\
+                   Open the MSP file, use the Save As command to save it as a bitmap file, and then paste it into your image."
+   IDSNoDC, "Not enough memory to perform this operation.\n\
+             Quit one or more applications to increase available memory, and then try again."
+   IDSNoBrush, "Not enough memory to perform this operation.\n\
+                Quit one or more applications to increase available memory, and then try again."
+   IDSNoMemAvail, "Not enough memory to perform this operation.\n\
+                   Quit one or more applications to increase available memory, and then try again."
+   IDSXlat, "This image was saved in an old format.\n\
+             Do you want to convert it into the standard bitmap format?"
+                /* Note, the spaces at the ends of the following string are
+                                important.
+                        Further a Maximum of 19 characters*/
+   IDSOnPort, " on "
+   IDSNoVirtInit, "Not enough memory to run program.\n\
+                   Quit one or more applications to increase available memory, and then try again."
+   IDSNoCopy, "Cannot copy image.\n\
+               Copy a smaller image onto the Clipboard, or quit one or more applications to increase available memory, and then try again."
+   IDSNoCut, "Not enough memory to complete operation.\n\
+              Quit one or more applications to increase available memory, and then try again."
+   IDSNoClipboardFormat, "Not able to paste as a bitmap.\n\
+                          Use the Clipboard Viewer to make sure the Clipboard contains a bitmap."
+   IDSNoClipboard, "Cannot copy to or paste from the Clipboard because another application is using the Clipboard.\n\
+                    Try again when the Clipboard is not busy."
+   IDSNoPasteFrom, "%s\nThis file is not in the correct format for use with Paintbrush.\n\
+                    Create a new file or open a valid bitmap image file."
+   IDSUnablePalette, "%s\nNot able to open this file.\n\
+                      Make sure that the correct path and file name are given."
+   IDSUnableData, "%s\nNot able to open this file.\n\
+                   Make sure that the correct path and file name are given."
+// IDSImageLarge, "Image requested is too large.\n\
+//   Paintbrush is now reducing the image height."
+   IDS3PlaneFile, "%s\nPaintbrush cannot load this file because it was created using a version of Windows earlier than 3.0."
+   IDSPrintSpool,   "%s - %s" /* Program_name, File_name */
+   IDSPrintFile,    "Printing '%s' on the" /* File_name */
+   IDSPrintDevice,  "%s on %s" /* Device_name, Port */
+   IDSPrintPercent, "Page %d of %d; %d%% done"
+   IDSPrintDCErr, "Not enough memory to print.\n\
+                   Quit one or more applications to increase available memory, and then try again."
+   IDSPrintInitErr, "Unable to print.\n\
+                     There is not enough memory, or the printer is not installed properly. Quit one or more applications to increase available memory, or check Control Panel to make sure that the printer is installed correctly. Then try again."
+   IDSPrinterChange, "The printer that was selected for printing in Paintbrush has been changed or deleted.\n\
+                      The current default printer will be selected."
+    IDSCANTPRINTGRAPHICS "The currently selected printer cannot print graphics."
+   IDSInvFilename, "%s\nThis file name is not valid."
+   IDSNoPrinters, "No printers are installed, or there is not enough memory available.\n\
+                   Quit one or more applications to increase available memory, or use Control Panel to set up a printer. Then try again."
+   IDSPrintDlgErr,"Cannot set up printer.\n\
+                   Use Control Panel to make sure that the printer is installed correctly."
+
+/* IDSLetters      "fFpPtTdDlLcCrR"  Original US values. DO NOT TRANSLATE  */
+                 /* The order is: File, Page, Time, Date, Left, Center, Right */
+   IDSLetters      "fFpPtTdDlLcCrR"    /* Localizers:  This will change the  */
+                                       /* letters used in Page Setup         */
+
+#ifdef JAPAN //KKBUGFIX #1389: Change group-box caption by international settings
+   IDS_SPACEISINCH "余白(インチ単位)"
+   IDS_SPACEISCENTI "余白(センチ単位)"
+#endif
+
+   IDS_MAYBEUPDATE  "The command you have chosen will close the connection between this open embedded object and %s.\n\
+                     Do you want to update the open embedded object before proceeding?"
+    IDSTextPasteMsg "Only Text is available on the Clipboard.\n\
+                     To paste text, first select the position for pasting text and then use the Paste command."
+    IDSTextPasteMsgZoomed "Only Text is available on the Clipboard.\n\
+                           To paste text, use the Zoom Out command, select the Text tool and the position for pasting, and then select the Paste command."
+/* OLE:  Changed menu items */
+   IDS_UPDATE       "&Update"
+   IDS_EXIT         "E&xit"
+   IDS_EXITANDRETURN    "E&xit && Return to %s"
+   IDS_SAVE         "&Save\t&Ctrl+S"
+
+/* Common dialog support */
+   IDS_ALLFILTER                        "All files"
+   IDS_BMPFILTER                        "Bitmap files"
+   IDS_MSPFILTER                        "MSP files"
+   IDS_PCXFILTER                        "PCX files"
+   IDS_MONOBMPFILTER                    "Monochrome bitmap"
+   IDS_16COLORFILTER                    "16 Color bitmap"
+   IDS_256COLORFILTER                   "256 Color bitmap"
+   IDS_24BITFILTER                      "24-bit bitmap"
+   IDS_COLORFILTER                      "Color Palette"
+
+/* Error messages */
+   W_SAVING_LOWER_RESOLUTION1     "The picture you want to save was previously saved as a %s.  Your monitor does not support this format.  If you save the picture using the current file name, the colors in the original "
+   W_SAVING_LOWER_RESOLUTION2     "picture will be reduced to the number allowed by your monitor.  To preserve the original colors, you can save this picture using a different file name.\n\nTo give the picture a different "
+   W_SAVING_LOWER_RESOLUTION3     "file name, choose Cancel. Then use the Save As command from the File menu.\n\nTo save the picture without preserving its original colors, choose OK."
+   IDS_RESETIMAGE               "Resetting image attributes will clear the current image and start a new editing session.\n\
+                                 Do you want to start a new session with the new image attributes?"
+    IDS_OBJECTUPDATE            "This %s document can only be updated when you exit %s."
+#ifdef JAPAN   //KKBUGFIX     // added by Hiraisi  (BUG#2219/WIN31)
+    IDSCantCreateObj     "メモリが足りないかフォントサイズが大きすぎてこの操作はできません。"
+#endif
+end
+
+
+/* -------  win 2.0 menus ------ */
+
+pbrush2 MENU PRELOAD
+  begin
+    POPUP "&File"
+      begin
+        MENUITEM "&New", FILEnew
+        MENUITEM "&Open...", FILEopen
+        MENUITEM "&Save\tCtrl+S", FILEsave
+        MENUITEM "Save &As...", FILEsaveas
+        MENUITEM SEPARATOR
+        MENUITEM "Page Se&tup...", FILEpage
+        MENUITEM "&Print...", FILEprint,            GRAYED
+        MENUITEM "P&rint Setup...", FILEprinter
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", FILEexit
+      end
+
+    POPUP "&Edit"
+      begin
+        MENUITEM "&Undo\tCtrl+Z", EDITundo, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t\tCtrl+X",    EDITcutpict, GRAYED
+        MENUITEM "&Copy\tCtrl+C",   EDITcopypict, GRAYED
+        MENUITEM "&Paste\tCtrl+V",  EDITpaste, GRAYED
+        MENUITEM "Copy &Document",  EDITcopydoc
+        MENUITEM SEPARATOR
+        MENUITEM "C&opy To...", EDITcopyTo, GRAYED
+        MENUITEM "Paste &From...", EDITpasteFrom
+      end
+
+    POPUP "&View"
+       begin
+        MENUITEM "Zoom &In\tCtrl+N", MISCzoomIn
+        MENUITEM "Zoom &Out\tCtrl+O", MISCzoomOut
+        MENUITEM "&View Picture\tCtrl+P", FILEshow
+                MENUITEM SEPARATOR
+                MENUITEM "&Tools and Line Size", WINDOWtool, CHECKED
+                MENUITEM "&Palette", WINDOWpalette, CHECKED
+                MENUITEM SEPARATOR
+                MENUITEM "&Cursor Position", MISCmousePos
+          end
+
+    POPUP "&Text"
+     begin
+        MENUITEM "&Regular\t", STYLEplain, CHECKED
+            MENUITEM SEPARATOR
+        MENUITEM "&Bold\tCtrl+B", STYLEbold
+            MENUITEM "&Italic\tCtrl+I", STYLEitalic
+        MENUITEM "&Underline\tCtrl+U", STYLEunderline
+            MENUITEM SEPARATOR
+            MENUITEM "&Outline", STYLEoutline
+        MENUITEM "&Shadow", STYLEshadow
+#ifdef JAPAN
+        MENUITEM "縦書き(\036V\037ﾀ)", STYLEvertical, GRAYED
+#endif
+            MENUITEM SEPARATOR
+        MENUITEM "&Fonts..."   FONTS
+    end
+
+    POPUP "&Pick", GRAYED
+      begin
+        MENUITEM "Flip &Horizontal", PICKflipH
+        MENUITEM "Flip &Vertical", PICKflipV
+        MENUITEM "&Inverse", PICKinverse
+        MENUITEM SEPARATOR
+        MENUITEM "&Shrink + Grow", PICKsg
+        MENUITEM "&Tilt", PICKtilt
+        MENUITEM SEPARATOR
+        MENUITEM "&Clear", PICKclear
+      end
+
+    POPUP "&Options"
+      begin
+        MENUITEM "&Image Attributes...",        FILEclear
+        MENUITEM "&Brush Shapes...", MISCbrush
+        MENUITEM "&Edit Colors...", MISCeditColor
+        MENUITEM "&Get Colors...", MISCgetColor
+        MENUITEM "&Save Colors...", MISCsaveColor
+/*    MENUITEM "&Omit Picture Format"  MISCOmitPictureFormat */
+      end
+
+#ifndef NOHELP
+        POPUP "&Help"
+        BEGIN
+                MENUITEM  "&Contents",                  MENU_INDEX
+                MENUITEM  "&Search for Help On...",     MENU_SEARCH
+                MENUITEM  "&How to Use Help",           MENU_USINGHELP
+                MENUITEM SEPARATOR
+                MENUITEM "&About Paintbrush...",        MENUabout
+        END
+#else
+        POPUP "&Info"
+        BEGIN
+                MENUITEM "&About Paintbrush...", MENUabout
+        END
+#endif /*NOHELP*/
+
+  end
+
+pbrush ACCELERATORS
+  begin
+    "^X", EDITcutpict
+    "^C", EDITcopypict
+    "^V", EDITpaste
+    "^Z", EDITundo
+
+    "^S", FILEsave
+    "^N", MISCzoomIn
+    "^O", MISCzoomOut
+    "^P", FILEshow
+/*    "^D", MENU_INDEX  (who stuck this in here?) */
+
+    "^B", STYLEbold
+    "^b", STYLEbold
+    "^I", STYLEitalic
+    "^i", STYLEitalic
+    "^U", STYLEunderline
+    "^u", STYLEunderline
+
+    VK_BACK, EDITundo, VIRTKEY, ALT
+    VK_DELETE, EDITcutpict, VIRTKEY, SHIFT
+    VK_INSERT, EDITcopypict, VIRTKEY, CONTROL
+    VK_INSERT, EDITpaste, VIRTKEY, SHIFT
+#ifndef NOHELP
+    VK_F1, MENU_INDEX, VIRTKEY
+#endif
+  end
+#include "dlgs.h"
+rcinclude pbrush.dlg
+rcinclude newdlg.dlg

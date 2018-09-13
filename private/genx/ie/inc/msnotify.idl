@@ -1,0 +1,904 @@
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// MSNotify.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+
+import "objidl.idl";
+import "oleidl.idl";
+import "ocidl.idl";
+import "mstask.idl";
+
+interface INotification;
+interface INotificationMgr;
+interface INotificationSink;
+interface IEnumScheduleGroup;
+interface IEnumNotification;
+interface IScheduleGroup;
+interface INotificationReport;
+
+typedef [unique] INotification          *LPNOTIFICATION;
+typedef [unique] INotificationMgr       *LPNOTIFICATIONMGR;
+typedef [unique] INotificationSink      *LPNOTIFICATIONSINK;
+typedef [unique] IEnumNotification      *LPENUMNOTIFICATION;
+typedef [unique] IEnumScheduleGroup     *LPENUMSCHEDULEGROUP;
+typedef [unique] IScheduleGroup         *LPSCHEDULEGROUP;
+typedef [unique] INotificationReport    *LPNOTIFICATIONREPORT;
+
+
+typedef REFGUID REFNOTIFICATIONTYPE;
+typedef GUID  NOTIFICATIONTYPE, *PNOTIFICATIONTYPE;
+
+// NOTIFICATIONCOOKIE:
+// The notification cookie is a GUID which is used to identify
+// a notification uniquely during the lifetime of a notification.
+// A notification can be persisted.
+typedef GUID NOTIFICATIONCOOKIE, *PNOTIFICATIONCOOKIE;
+
+typedef struct _tagTASKDATA
+{
+        ULONG   cbSize;
+        DWORD   dwReserved;
+        DWORD   dwTaskFlags;
+        DWORD   dwPriority;
+        DWORD   dwDuration;
+        DWORD   nParallelTasks;
+        // ...
+} TASK_DATA, *PTASK_DATA;
+
+
+cpp_quote("")
+cpp_quote("////////////////////////////////////////////////////////////////////////////")
+cpp_quote("// Broadcast Destinations ")
+cpp_quote("EXTERN_C const CLSID CLSID_GLOBAL_BROADCAST           ;")
+cpp_quote("EXTERN_C const CLSID CLSID_PROCESS_BROADCAST          ;")
+cpp_quote("EXTERN_C const CLSID CLSID_THREAD_BROADCAST           ;")
+cpp_quote("")
+cpp_quote("EXTERN_C const GUID CLSID_StdNotificationMgr          ;")
+cpp_quote("")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_NULL             ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_ANOUNCMENT       ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASK             ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_ALERT            ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_INET_IDLE        ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_INET_OFFLINE     ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_INET_ONLINE      ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_SUSPEND    ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_RESUME     ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_ABORT      ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_COMPLETED  ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_PROGRESS   ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_AGENT_INIT       ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_AGENT_START      ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_BEGIN_REPORT     ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_END_REPORT       ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_CONNECT_TO_INTERNET;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_DISCONNECT_FROM_INTERNET;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_CONFIG_CHANGED   ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_PROGRESS_REPORT  ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_USER_IDLE_BEGIN  ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_USER_IDLE_END    ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_STARTED    ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_TASKS_ERROR      ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_d                ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_e                ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_f                ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_11               ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_12               ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_13               ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_14               ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_ITEM_START       ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_ITEM_RESTART     ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_ITEM_DONE        ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_GROUP_START      ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_GROUP_RESTART    ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_GROUP_DONE       ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_0          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_1          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_2          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_3          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_4          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_5          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_6          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_7          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_8          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_9          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_A          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_B          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_C          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_D          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_E          ;")
+cpp_quote("EXTERN_C const GUID NOTIFICATIONTYPE_START_F          ;")
+
+cpp_quote("#define NOTIFICATIONTYPE_ALL NOTIFICATIONTYPE_NULL     ")
+
+cpp_quote("EXTERN_C const GUID NOTFCOOKIE_SCHEDULE_GROUP_DAILY              ;")
+cpp_quote("EXTERN_C const GUID NOTFCOOKIE_SCHEDULE_GROUP_WEEKLY             ;")
+cpp_quote("EXTERN_C const GUID NOTFCOOKIE_SCHEDULE_GROUP_MONTHLY            ;")
+cpp_quote("EXTERN_C const GUID NOTFCOOKIE_SCHEDULE_GROUP_MANUAL             ;")
+
+cpp_quote("#ifndef _LPENUMPROPERTYMAP_DEFINED")
+cpp_quote("#define _LPENUMPROPERTYMAP_DEFINED")
+
+[
+    local,
+    object,
+    uuid(c733e4a1-576e-11d0-b28c-00c04fd7cd22),
+    pointer_default(unique)
+]
+
+interface IEnumPropertyMap : IUnknown
+{
+    typedef [unique] IEnumPropertyMap *LPENUMPROPERTYMAP;
+
+    typedef struct _tagSTATPROPMAP
+    {
+        // extent this to use a variant
+        LPOLESTR        pstrName;       // name
+        DWORD           dwFlags;        // null for now
+        VARIANT         variantValue;   // the variant value
+
+    } STATPROPMAP, *LPSTATPROPMAP;
+
+
+    [local]
+    HRESULT Next(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        STATPROPMAP *rgelt,
+        [out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched)]
+        STATPROPMAP *rgelt,
+        [out] ULONG *pceltFetched);
+
+
+    HRESULT Skip(
+        [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+        [out] IEnumPropertyMap **ppenum);
+}
+
+cpp_quote("#endif")
+
+
+
+cpp_quote("#ifndef _LPPROPERTYMAP")
+cpp_quote("#define _LPPROPERTYMAP")
+
+[
+        local,
+        object,
+        uuid(c733e4a2-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IPropertyMap : IUnknown
+{
+        typedef [unique] IPropertyMap *LPPROPERTYMAP;
+
+
+        HRESULT Write(
+                        [in]    LPCWSTR         pstrName,         // name
+                        [in]    VARIANT         variantValue,     // the variant value
+                        [in]    DWORD           dwFlags           // null for now
+                        );
+
+        HRESULT Read(
+                        [in]    LPCWSTR        pstrName,       // name
+                        [out]   VARIANT        *pVariantValue   // the variant value
+                        );
+
+        HRESULT GetCount(
+                        [out]   ULONG          *pCount
+                        );
+
+
+        HRESULT GetEnumMAP(
+                        [out]   LPENUMPROPERTYMAP    *ppEnumMap
+                        );
+
+}
+cpp_quote("#endif")
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   The notification description and INotification interface definition
+//
+//  Description:
+//
+//  Each notification (INotification) has an idendifier (ITEMID) which is a guid and
+//  itentifies the notification type
+//
+//  An notification is an object which can be send to a distination object via
+//  a particular interface. The delivery mechanism can be a
+//  scheduler or an advisor.
+//
+//  The sources of an notification can be any any object or module.
+//
+//  An notification can scheduled and delivered to the destination(s) according
+//  the trigger time.
+//
+//  An notification might be as simple as an alert or notification. It can
+//  be a full object form the cache or the docfile. It can be an
+//  announcment and data might not be available yet.
+//
+//  Many notifications will in fact arrive with all data.
+//
+//  The same object will expose I(Async)Moniker and the client
+//  can call BindToXXX to bind to the object of the data.
+//
+//----------------------------------------------------------------------------
+
+
+//+---------------------------------------------------------------------------
+//
+//  Copyright (C) Microsoft Corporation, 1995-1998.
+//
+//  Contents:   IEnumNotification interface definition
+//
+//  Description:
+//
+//  Enumerator overn Notifications.
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("#define NOTF_E_NOTIFICATION_NOT_DELIVERED               _HRESULT_TYPEDEF_(0x800C0F00L)      ")
+
+
+cpp_quote("#ifndef _LPNOTIFICATION")
+cpp_quote("#define _LPNOTIFICATION")
+
+[
+        local,
+        object,
+        uuid(c733e4a3-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotification : IPropertyMap
+{
+        //typedef [unique] INotification *LPNOTIFICATION;
+
+        typedef enum _tagNOTFSINKMODE
+        {
+            // exclusive means deliver only
+            // notification of the registered type
+            // NM_Exclusive                       = 0x00000001
+            // launch me if an notification of
+            // registered types arrives
+            //,NM_Instantiate                     = 0x00000002
+            // the sink wants to get completion reports
+            //,NM_CompletionReport                = 0x00000004
+            // register permanently
+            //
+            NM_PERMANENT                        = 0x00000008
+            //
+            // also accept directed notifications
+            ,NM_ACCEPT_DIRECTED_NOTIFICATION    = 0x00000010
+
+        } _NOTFSINKMODE;
+
+        typedef DWORD NOTFSINKMODE;
+
+
+        //
+        // information about the notification itself
+        // passed on by the creator of the notification to the scheduler
+        // and to the advisor
+
+        typedef DWORD NOTIFICATIONFLAGS;
+
+        //
+        // the adivse mode indicates how the adivse should be done
+        //
+        typedef enum _tagDELIVERMODE
+        {
+            // **** FLAGS HOW IT SHOULD BE DELIVERED ***
+            //
+            // the normal mode is to deliver imedialty
+            // and async (postmessage to enter thread
+            // of destination
+
+             // deliver with high priority
+             // (thread entered with SendNotifyMessage
+             DM_DELIVER_PREFERED        = 0x00000001
+
+             // deliver delayed
+            ,DM_DELIVER_DELAYED         = 0x00000002
+
+             // always deliver the notification
+             // even on was transmited just imedialty before
+            ,DM_DELIVER_LAST_DELAYED    = 0x00000004
+
+             // the notification should be delivered
+             // imedialty and synchronouse
+             //,DM_SYNCHRONOUS             = 0x00000010
+
+             // deliver notification only if class is registered
+            ,DM_ONLY_IF_RUNNING         = 0x00000020
+
+
+             // notification is send input sync - meaning the
+             // notification is dispatched before the call returns
+             //,DM_INPUT_SYNCHRONOUS    = 0x00000040
+
+             // the notification might be suspended
+             //
+            ,DM_THROTTLE_MODE           = 0x00000080
+
+             // **** FLAGS ABOUT PROGRESS FROM THE NOTIFICATIONMGR ***
+
+             // the sender want a completion report (notification)
+            ,DM_NEED_COMPLETIONREPORT   = 0x00000100
+             // the send wants progress report
+             // which means should be called the notification arrives
+             // at the destination or gets triggered
+            ,DM_NEED_PROGRESSREPORT     = 0x00000200
+
+             // deliver the notification if there is
+             // no update notification pending from
+             // the sender or receiver
+             //,DM_ONLY_IF_NOT_PENDING     = 0x00001000
+
+             //
+             // deliver to the default thread in this process
+             // if not registered
+            ,DM_DELIVER_DEFAULT_THREAD  = 0x00000400
+
+             // deliver to the default process if
+             // registered
+            ,DM_DELIVER_DEFAULT_PROCESS = 0x00000800
+
+             // **** GROUP FLAGS ***
+             // member of group - the notifications
+             // are delivered sequentiall - meaning
+             // a completion report is send by each one
+             //,DM_GROUP_SEQUENTIAL        = 0x00001000
+             // member of group - the notifications
+             // are delivered at the same time - DEFAULT
+             //,DM_GROUP_PARALLEL          = 0x00000040
+
+        } _DELIVERMODE;
+
+        typedef DWORD DELIVERMODE;
+
+
+        // get the notification flags
+        HRESULT GetNotificationInfo(
+            [out]       PNOTIFICATIONTYPE   pNotificationType,
+            [out]       PNOTIFICATIONCOOKIE pNotificationCookie,
+            [out]       NOTIFICATIONFLAGS  *pNotificationFlags,
+            [out]       DELIVERMODE        *pDeliverMode,
+            [in]        DWORD               dwReserved
+            );
+
+
+        HRESULT Clone(
+            //clones a notification with a new type; the cloned notification has a new cookie
+            [in]        REFNOTIFICATIONTYPE rNotificationType,
+            // the new object just created
+            [out]       LPNOTIFICATION     *ppNotification,
+            [in]        DWORD               dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+
+
+cpp_quote("#ifndef _LPNOTIFICATIONMGR_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONMGR_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4a4-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationMgr : IUnknown
+{
+        //typedef [unique] INotificationMgr *LPNOTIFICATIONMGR;
+
+        typedef enum _tagGROUPMODE
+        {
+            // member of group - the notifications
+            // are delivered sequentiall - meaning
+            // a completion report is send by each one
+            GM_GROUP_SEQUENTIAL        = 0x00000001
+
+        } _GROUPMODE;
+
+        typedef DWORD GROUPMODE;
+
+        typedef enum _tagENUM_FLAGS
+        {
+            //
+            // HOW TO USES THIS FLAGS
+            //
+            // these flags allow to specify which items
+            // and what should be in the item when
+            // enumerating notification items
+            //
+            // default is all items with notification
+            // object
+
+            //
+            // no notification object is returned
+            EF_NOT_NOTIFICATION         = 0x00000001
+            // not item of scheduled groups
+           ,EF_NOT_SCHEDULEGROUPITEM    = 0x00000002
+            //
+            //
+           ,EF_NOTIFICATION_INPROGRESS  = 0x00000004
+            //
+            // get items which are throttled
+            //
+           ,EF_NOTIFICATION_THROTTLED   = 0x00000008
+            //
+           ,EF_NOTIFICATION_SUSPENDED   = 0x00000010
+
+        } _ENUM_FLAGS;
+
+        typedef DWORD ENUM_FLAGS;
+
+        typedef struct _tagNotificationItem
+        {
+            ULONG                   cbSize;
+            // the notification itself
+            LPNOTIFICATION          pNotification;
+            // the notification type
+            NOTIFICATIONTYPE        NotificationType;
+            // flags which go with the notification
+            NOTIFICATIONFLAGS       NotificationFlags;
+            // flags passed on deliver/schedule
+            DELIVERMODE             DeliverMode;
+            // the cookie of the notification
+            NOTIFICATIONCOOKIE      NotificationCookie;
+            // the task trigger
+            TASK_TRIGGER            TaskTrigger;
+            // the task data
+            TASK_DATA               TaskData;
+
+            // group cookie if part of a group
+            NOTIFICATIONCOOKIE      groupCookie;
+            // clsid of sender
+            CLSID                   clsidSender;
+            // clsid of destination
+            CLSID                   clsidDest;
+            // last run date
+            FILETIME                dateLastRun;
+            // the next run date
+            FILETIME                dateNextRun;
+            // state of the notification
+            DWORD                   dwNotificationState;
+
+        } NOTIFICATIONITEM, *PNOTIFICATIONITEM;
+
+
+        HRESULT RegisterNotificationSink(
+            [in]        LPNOTIFICATIONSINK  pNotfctnSink,          // can be null - see mode
+            [in]        LPCLSID             pNotificationDest,
+            [in]        NOTFSINKMODE        NotfctnSinkMode,
+            [in]        ULONG               cNotifications,
+            [in]        PNOTIFICATIONTYPE   pNotificationIDs,
+            [out]       PNOTIFICATIONCOOKIE pRegisterCookie,
+            [in]        DWORD               dwReserved
+            );
+
+        HRESULT UnregisterNotificationSink(
+            [in]        PNOTIFICATIONCOOKIE pRegisterCookie
+            );
+
+
+        HRESULT CreateNotification(
+            // the type of notification
+            [in]        REFNOTIFICATIONTYPE rNotificationType,
+            // creation flags
+            [in]        NOTIFICATIONFLAGS   NotificationFlags,
+            // the pUnkOuter for aggregation
+            [in]        LPUNKNOWN           pUnkOuter,
+            // the new object just created
+            [out]       LPNOTIFICATION     *ppNotification,
+            [in]        DWORD               dwReserved
+            );
+
+            // find a scheduled  notification
+        HRESULT FindNotification(
+            // the notification cookie
+            [in]        PNOTIFICATIONCOOKIE pNotificatioCookie,
+            // the new object just created
+            [out]       PNOTIFICATIONITEM   pNotificationItem,
+            [in]        DWORD               grfEnumMode
+            );
+
+        // deliver a notification
+        HRESULT DeliverNotification(
+                        // the notificationid and object
+            [in]        LPNOTIFICATION      pNotification,
+                        // destination
+            [in]        REFCLSID            rNotificationDest,
+                        // deliver mode - group and schedule data
+            [in]        DELIVERMODE         deliverMode,
+                        // info about who the sender
+            [in]        LPNOTIFICATIONSINK  pReportNotfctnSink,     // can be null - see mode
+                        // the notification update interface
+            [out]       LPNOTIFICATIONREPORT *ppNotfctnReport,
+                        // task data for notification
+            [in]        PTASK_DATA          pTaskData
+            );
+
+        // add notification to scheduler
+        HRESULT ScheduleNotification(
+                        // the notificationid and object
+            [in]        LPNOTIFICATION      pNotification,
+                        // destination
+            [in]        REFCLSID            rNotificationDest,
+                        // deliver mode - group and schedule data
+            [in]        PTASK_TRIGGER       pTaskTrigger,
+                        // flags which go with the TaskTrigger
+            [in]        PTASK_DATA          pTaskData,
+                        // the mode how it should be delivered
+            [in]        DELIVERMODE         deliverMode,
+                        // info about who the sender
+            [in]        LPCLSID             pClsidSender,           // class of sender can be NULL
+                        // sink to which updates from the receiver should arrive
+            [in]        LPNOTIFICATIONSINK  pReportNotfctnSink,     // can be null - see mode
+                        // the notification update object - only if completion report was requested
+            [out]       LPNOTIFICATIONREPORT *ppNotfctnReport,
+                        //the cookie of the new notification
+            [out]       PNOTIFICATIONCOOKIE pNotificationCookie,
+                        // reserved dword
+            [in]        DWORD               dwReserved
+            );
+
+        // add notification to scheduler
+        HRESULT UpdateNotification(
+                        //the cookie of the new notification
+            [in]        PNOTIFICATIONCOOKIE pNotificationCookie,
+                        // deliver mode - group and schedule data
+            [in]        PTASK_TRIGGER       pTaskTrigger,
+                        // flags which go with the TaskTrigger
+            [in]        PTASK_DATA          pTaskData,
+                        // the mode how it should be delivered
+            [in]        DELIVERMODE         deliverMode,
+                        // reserved dword
+            [in]        DWORD               dwReserved
+            );
+
+
+        HRESULT RevokeNotification(
+            [in]        PNOTIFICATIONCOOKIE pnotificationCookie,
+            [out]       PNOTIFICATIONITEM   pNotificationItem,
+            [in]        DWORD               grfEnumMode
+            );
+
+        HRESULT GetEnumNotification(
+            [in]   DWORD                    grfEnumFlags,
+            [out]  LPENUMNOTIFICATION       *ppEnumNotification
+            );
+
+
+        // creates a new  group
+        HRESULT CreateScheduleGroup(
+            // the group creation flags
+            [in]        DWORD               grfGroupCreateFlags,
+            // the new group
+            [out]       LPSCHEDULEGROUP    *ppSchGroup,
+            // the cookie of the group
+            [out]       PNOTIFICATIONCOOKIE pGroupCookie,
+            [in]        DWORD               dwReserved
+            );
+
+        // finds an existing group
+        HRESULT FindScheduleGroup(
+            [in]        PNOTIFICATIONCOOKIE pGroupCookie,
+            [out]       LPSCHEDULEGROUP    *ppSchGroup,
+            // the cookie of the group
+            [in]        DWORD               dwReserved
+            );
+
+        // revokes an entire group from the scheduler
+        HRESULT RevokeScheduleGroup(
+            // cookie of group to be revoked
+            [in]        PNOTIFICATIONCOOKIE pGroupCookie,
+            [out]       LPSCHEDULEGROUP    *ppSchGroup,
+            [in]        DWORD               dwReserved
+            );
+
+        // an enumerator over the groups in the scheduler
+        HRESULT GetEnumScheduleGroup(
+            [in]        DWORD               grfEnumFlags,
+            [out]       LPENUMSCHEDULEGROUP *ppEnumScheduleGroup
+            );
+
+        HRESULT DeliverReport(
+            // the notification object itself
+            [in]        LPNOTIFICATION      pNotification,
+            // the cookie of the object the notification is targeted too
+            [in]        PNOTIFICATIONCOOKIE pRunningNotfCookie,
+            [in]        DWORD               dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+cpp_quote("#ifndef _LPNOTIFICATIONSINK_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONSINK_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4a5-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationSink : IUnknown
+{
+        //typedef [unique] INotificationSink *LPNOTIFICATIONSINK;
+
+        HRESULT OnNotification(
+            // the notification object itself
+            [in]    LPNOTIFICATION          pNotification,
+            // the report sink if - can be NULL
+            [in]    LPNOTIFICATIONREPORT    pNotfctnReport,
+            [in]    DWORD                   dwReserved
+            );
+}
+cpp_quote("#endif")
+
+cpp_quote("#ifndef _LPGROUPMGR_DEFINED")
+cpp_quote("#define _LPGROUPMGR_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4a6-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IScheduleGroup : IUnknown
+{
+        //typedef [unique] IScheduleGroup *LPSCHEDULEGROUP;
+
+        typedef struct _tagGroupInfo
+        {
+            ULONG           cbSize;
+            LPWSTR          pwzGroupname;
+
+        } GROUPINFO, *PGROUPINFO;
+
+        // change the group attributes such as task trigger
+        // name and mode - see mode for parallel and sequential
+        HRESULT SetAttributes(
+            // new  task trigger
+            [in]        PTASK_TRIGGER       pTaskTrigger,
+            // the flags which go with the TaskTrigger
+            [in]        PTASK_DATA          pTaskData,
+            // new group cookie if sequential
+            [in]        PNOTIFICATIONCOOKIE pGroupCookie,
+            // group data
+            [in]        PGROUPINFO          pGroupInfo,
+            // sequential or parallel
+            [in]        GROUPMODE           grfGroupMode
+            );
+
+        HRESULT GetAttributes(
+            // new  task trigger
+            [out]        PTASK_TRIGGER       pTaskTrigger,
+            // the flags which go with the TaskTrigger
+            [out]        PTASK_DATA          pTaskData,
+            // new group cookie if sequential
+            [out]        PNOTIFICATIONCOOKIE pGroupCookie,
+            //group data info
+            [out]        PGROUPINFO          pGroupInfo,
+            // sequential or parallel
+            [out]        GROUPMODE          *pgrfGroupMode,
+            // number of elements in group
+            [out]        LONG               *pElements
+            );
+
+        // add notification to this group
+        HRESULT AddNotification(
+                        // the notificationid and object
+            [in]        LPNOTIFICATION      pNotification,
+                        // destination
+            [in]        REFCLSID            rNotificationDest,
+                        // deliver mode - group and schedule data
+            [in]        DELIVERMODE         deliverMode,
+                        // info about who the sender
+            [in]        LPCLSID             pClsidSender,           // class of sender can be NULL
+                        // sink to which updates from the receiver should arrive
+            [in]        LPNOTIFICATIONSINK pReportNotfctnSink,     // can be null - see mode
+                        // the notification update object - only if completion report was requested
+            [out]       LPNOTIFICATIONREPORT *ppNotfctnReport,
+                        //the cookie of the new notification
+            [out]       PNOTIFICATIONCOOKIE pNotificationCookie,
+                        // task data for notification
+            [in]        PTASK_DATA          pTaskData
+            );
+
+        // find a notification in the group
+        HRESULT FindNotification(
+            // the notification cookie
+            [in]        PNOTIFICATIONCOOKIE pNotificatioCookie,
+            // the new object just created
+            [out]       PNOTIFICATIONITEM   pNotificationItem,
+            [in]        DWORD               dwReserved
+            );
+
+
+        // only for completness
+        HRESULT RevokeNotification(
+            [in]        PNOTIFICATIONCOOKIE      pnotificationCookie,
+            [out]       PNOTIFICATIONITEM        pschedulNotification,
+            [in]        DWORD                    dwReserved
+            );
+
+        // an enumerator over the items in this group
+        HRESULT GetEnumNotification(
+            // flags which items to enumerate
+            [in]   DWORD                    grfFlags,
+            [out]  LPENUMNOTIFICATION     *ppEnumNotification
+            );
+}
+cpp_quote("#endif")
+
+
+cpp_quote("#ifndef _LPENUMSCHEDULEGROUP_DEFINED")
+cpp_quote("#define _LPENUMSCHEDULEGROUP_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4a9-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface IEnumScheduleGroup : IUnknown
+{
+        //typedef [unique] IEnumScheduleGroup *LPENUMSCHEDULEGROUP;
+
+    [local]
+    HRESULT Next(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            LPSCHEDULEGROUP *rgelt,
+            [out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT RemoteNext(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            LPSCHEDULEGROUP *rgelt,
+            [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+            [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+            [out] IEnumScheduleGroup **ppenum);
+
+
+}
+cpp_quote("#endif")
+
+
+cpp_quote("#ifndef _LPENUMNOTIFICATION_DEFINED")
+cpp_quote("#define _LPENUMNOTIFICATION_DEFINED")
+
+[
+    local,
+    object,
+    uuid(c733e4a8-576e-11d0-b28c-00c04fd7cd22),
+    pointer_default(unique)
+]
+
+interface IEnumNotification : IUnknown
+{
+    //typedef [unique] IEnumNotification *LPENUMNOTIFICATION;
+
+    [local]
+    HRESULT Next(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            NOTIFICATIONITEM *rgelt,
+            [out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT RemoteNext(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)]
+            NOTIFICATIONITEM *rgelt,
+            [out] ULONG *pceltFetched);
+
+    HRESULT Skip(
+            [in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone(
+            [out] IEnumNotification **ppenum);
+}
+
+cpp_quote("#endif")
+
+
+///
+cpp_quote("#ifndef _LPNOTIFICATIONREPORT_DEFINED")
+cpp_quote("#define _LPNOTIFICATIONREPORT_DEFINED")
+
+[
+        local,
+        object,
+        uuid(c733e4a7-576e-11d0-b28c-00c04fd7cd22),
+        pointer_default(unique)
+]
+
+interface INotificationReport : IUnknown
+{
+        //typedef [unique] INotificationReport *LPNOTIFICATIONREPORT;
+
+        HRESULT DeliverUpdate(
+            // the reply notification object itself
+            [in]    LPNOTIFICATION          pNotification,
+            // not completion report allowed here
+            [in]    DELIVERMODE             deliverMode,
+            // the cookie of the object the notification is targeted too
+            [in]    DWORD                   dwReserved
+            );
+
+        // get the original notification this report objet belongs too
+        HRESULT GetOriginalNotification(
+            [out]   LPNOTIFICATION          *ppNotification
+            );
+
+        // get the status of the the notification in progress
+        // such as pending notification etc.
+        HRESULT GetNotificationStatus(
+            // what kind of status
+            [in]    DWORD                   dwStatusIn,
+            // flags if update notification is pending etc.
+            [out]   DWORD                  *pdwStatusOut,
+            [in]    DWORD                   dwReserved
+            );
+
+}
+cpp_quote("#endif")
+
+
+///
+cpp_quote("#ifndef _NOTIFICAITON_HELPER_APIS_")
+cpp_quote("#define _NOTIFICAITON_HELPER_APIS_")
+cpp_quote("//                                                                   ")
+cpp_quote("// HELPER APIS                                                       ")
+cpp_quote("//                                                                   ")
+cpp_quote("STDAPI NotfDeliverNotification(REFNOTIFICATIONTYPE rNotificationType ")
+cpp_quote("                          ,REFCLSID            rClsidDest            ")
+cpp_quote("                          ,DELIVERMODE         deliverMode           ")
+cpp_quote("                          ,DWORD               dwReserved            ")
+cpp_quote("                          );                                         ")
+cpp_quote("                                                                     ")
+cpp_quote("                                                                     ")
+cpp_quote("#endif")
+
+
+

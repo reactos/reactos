@@ -1,0 +1,25 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       version.rc
+//
+//--------------------------------------------------------------------------
+
+#include <windows.h>
+#include <ntverp.h>
+#include "cryptver.h"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+
+#define VER_FILEDESCRIPTION_STR     VER_FILEDESCRIPTION_STR_TRUST "Installation and Setup"
+
+#define VER_INTERNALNAME_STR        "INITPKI.DLL"
+#define VER_ORIGINALFILENAME_STR    "INITPKI.DLL"
+
+#define VER_OLESELFREGISTER         1
+
+#include <common.ver>

@@ -1,0 +1,17 @@
+; srvwiz.def : Declares the module parameters.
+
+LIBRARY      "srvwiz.DLL"
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION  'Server Solution'
+
+EXPORTS
+
+    DllGetVersion = CCDllGetVersion PRIVATE
+    DllGetClassObject       PRIVATE
+    DllCanUnloadNow         PRIVATE
+    DllInstall              PRIVATE
+    DllRegisterServer       PRIVATE
+    DllUnregisterServer     PRIVATE
+
+    DllMain
+    AuthorizeDHCPServer

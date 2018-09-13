@@ -1,0 +1,171 @@
+KBD	INORI	"Oriya"
+
+	//LCID	0448
+
+Version	1.0
+
+SHIFTSTATE
+
+	0	//Column 4:
+	1	//Column 5:	Shift
+	6	//Column 6:		Control	Alt
+	3	//Column 7:	Shift	Control
+	7	//Column 8:	Shift 	Control	Alt
+	2	//Column 9:		Control
+			
+LAYOUT
+
+//SC	VK_       Cap	0	1	6	3	7	2
+//--	--------- ---	----	----	----	----	----	----
+  29	OEM_3      0	-1	-1
+  02	1          0	1	-1	0B67	200d		//1, Oriya Digit One, ZWJ
+  03	2          0	2	-1	0B68	200c		//2, Oriya Digit Two, ZWNJ
+  04	3          0	3	%%	0B69			//3, 0B4D+0B30, Oriya Digit Three
+  05	4          0	4	%%	0B6A			//4, 0B30+0B4D, Oriya Digit Four
+  06	5          0	5	%%	0B6B			//5, 0B1C+0B4D+0B1E, Oriya Digit Five
+  07	6          0	6	%%	0B6C			//6, 0B24+0B4D+0B30, Oriya Digit Six
+  08	7          0	7	%%	0B6D			//7, 0B15+0B4D+0B37, Oriya Digit Seven		
+  09	8          0	8	%%	0B6E			//8, 0B36+0B4D+0B30, Oriya Digit Eight
+  0a	9          0	9	0028	0B6F			//9, (, Oriya Digit Nine
+  0b	0          0	0	0029	0B66			//0, ), Oriya Digit Zero
+  0c	OEM_MINUS  0	0	0b03				//Oriya Sign Visarga
+  0d	OEM_PLUS   0	0B43	0b0b	-1	-1	0b60	//Oriya Vowel Sign Vocalic R, Oriya Letter Vocalic R, Vocalic RR
+//--	--------- ---	----	----	----	----	----	----
+  10	Q          0	0B4C	0B14				//Oriya Vowel Sign Au, Oriya Letter Au
+  11	W          0	0B48	0B10				//Oriya Vowel Sign Ai, Oriya Letter Ai
+  12	E          0	0B3e	0B06				//Oriya Vowel Sign Aa, Oriya Letter Aa
+  13	R          0	0B40	0B08	-1	-1	0b61	//Oriya Vowel Sign Ii, Oriya Letter Ii, Vocalic LL
+  14	T          0	0B42	0B0A				//Oriya Vowel Sign Uu, Oriya Letter Uu
+  15	Y          0	0B2C	0B2D				//Oriya Letter Ba, Oriya Letter Bha
+  16	U          0	0B39	0B19				//Oriya Letter Ha, Oriya Letter Nga
+  17	I          0	0B17	0B18				//Oriya Letter Ga, Oriya Letter Gha
+  18	O          0	0B26	0B27				//Oriya Letter Da, Oriya Letter Dha
+  19	P          0	0B1C	0B1D				//Oriya Letter Ja, Oriya Letter Jha
+  1a	OEM_4      0	0B21	0B22	0b5c	-1	0b5d	//Oriya Letter Dda, Oriya Letter Ddha, Dda+nukta, DDha+nukta
+  1b	OEM_6      0	0B3C	0B1E				//Oriya Sign Nukta, Oriya Letter Nya
+  2b	OEM_5      0	-1	-1			
+//--	--------- ---	----	----	----	----	----	----
+  1e	A          0	0B4b	0B13				//Oriya Vowel Sign O, Oriya Letter O
+  1f	S          0	0B47	0B0F				//Oriya Vowel Sign E, Oriya Letter E
+  20	D          0	0B4D	0B05				//Oriya Sign Virama, Oriya Letter A
+  21	F          0	0B3F	0B07	-1	-1	0b0c	//Oriya Vowel Sign I, Oriya Letter I, Vocalic L
+  22	G          0	0B41	0B09				//Oriya Vowel Sign U, Oriya Letter U
+  23	H          0	0B2A	0B2B				//Oriya Letter Pa, Oriya Letter Pha
+  24	J          0	0B30	-1				//Oriya Letter Ra
+  25	K          0	0B15	0B16				//Oriya Letter Ka, Oriya Letter Kha
+  26	L          0	0B24	0B25				//Oriya Letter Ta, Oriya Letter Tha
+  27	OEM_1      0	0B1A	0B1B				//Oriya Letter Ca, Oriya Letter Cha
+  28	OEM_7      0	0B1F	0B20				//Oriya Letter Tta, Oriya Letter Ttha
+//--	--------- ---	----	----	----	----	----	----
+  2c	Z          0	-1	-1
+  2d	X          0	0B02	0B01				//Oriya Sign Anusvara, Oriya Sign Candrabindu
+  2e	C          0	0B2E	0B23				//Oriya Letter Ma, Oriya Letter Nna
+  2f	V          0	0B28	-1				//Oriya Letter Na
+  30	B          0	0b2c	-1				//Oriya Letter Ba
+  31	N          0	0B32	0B33				//Oriya Letter La, Oriya Letter LLa
+  32	M          0	0B38	0B36				//Oriya Letter Sa, Oriya Letter Sha
+  33	OEM_COMMA  0	,	0b37				//Oriya Letter Ssa
+  34	OEM_PERIOD 0	002E	-1	-1	-1	0b3d	//full stop, Oriya Sign Avagraha
+  35	OEM_2      0	0b2f	%%	-1	-1	0b5f	//Oriya Letter Ya, 0b2f+0b3c (see ligature table), Oriya Letter Yya (could be potentially swapped)
+  56	OEM_102    0	-1	-1
+//--	--------- ---	----	----	----	----	----	----
+  53	DECIMAL          0	.	.
+//--	--------- ---	----	----	----	----	----	----
+//SC	VK_		Cap	0	1	6	3	7
+
+
+LIGATURE
+
+//VK_	Mod#	Char0	Char1	Char2
+//---	----	-----	-----	-----
+  3	1	0B4D	0B30		//Oriya Sign Virama+Oriya Letter Ra
+  4	1	0B30	0B4D		//Oriya Letter Ra+Oriya Sign Virama
+  5	1	0B1C	0B4D	0B1E	//Oriya Letter Ja+Oriya Sign Virama+Oriya Letter Nya
+  6	1	0B24	0B4D	0B30	//Oriya Letter Ta+Oriya Sign Virama+Oriya Letter Ra
+  7	1	0B15	0B4D	0B37	//Oriya Letter Ka+Oriya Sign Virama+Oriya Letter Ssa
+  8	1	0B36	0B4D	0B30	//Oriya Letter Sha+Oriya Sign Virama+Oriya Letter Ra
+  OEM_2	1	0b2f	0b3c		//Oriya Letter Ya+Oriya Sign Nukta
+
+
+KEYNAME
+
+  01    Esc
+  0e    Backspace
+  0f    Tab
+  1c    Enter
+  1d    Ctrl
+  2a    Shift
+  36    "Right Shift"
+  37    "Num *"
+  38    Alt
+  39    Space
+  3a    "Caps Lock"
+  3b    F1
+  3c    F2
+  3d    F3
+  3e    F4
+  3f    F5
+  40    F6
+  41    F7
+  42    F8
+  43    F9
+  44    F10
+  45    Pause
+  46    "Scroll Lock"
+  47    "Num 7"
+  48    "Num 8"
+  49    "Num 9"
+  4a    "Num -"
+  4b    "Num 4"
+  4c    "Num 5"
+  4d    "Num 6"
+  4e    "Num +"
+  4f    "Num 1"
+  50    "Num 2"
+  51    "Num 3"
+  52    "Num 0"
+  53    "Num Del"
+  54    "Sys Req"
+  57    F11
+  58    F12
+  7c    F13
+  7d    F14
+  7e    F15
+  7f    F16
+  80    F17
+  81    F18
+  82    F19
+  83    F20
+  84    F21
+  85    F22
+  86    F23
+  87    F24
+
+KEYNAME_EXT
+
+  1c    "Num Enter"
+  1d    "Right Control"
+  35    "Num /"
+  37    "Prnt Scrn"
+  38    "Right Alt"
+  45    "Num Lock"
+  46    Break
+  47    Home
+  48    Up
+  49    "Page Up"
+  4b    Left
+  4d    Right
+  4f    End
+  50    Down
+  51    "Page Down"
+  52    Insert
+  53    Delete
+  54    <00>
+  56    Help
+  5b    "Left Windows"
+  5c    "Right Windows"
+  5d    Application
+
+ENDKBD
+
+

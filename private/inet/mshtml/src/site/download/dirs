@@ -1,0 +1,4 @@
+# site\download
+DIRS = \
+    lib \
+    jpglib6a

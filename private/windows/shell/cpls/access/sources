@@ -1,0 +1,80 @@
+!IF 0
+
+Copyright (c) 1994  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Cathcart (stevecat) 15-Nov-1994
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+Use the following line when this is UNICODE ported
+
+NOT_UNICODE=1
+
+
+           $(BASEDIR)\public\sdk\lib\*\mpr.lib     \
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=cpls
+
+TARGETNAME=access
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\kernel32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\user32.lib         \
+           $(BASEDIR)\public\sdk\lib\*\comctl32.lib       \
+           $(BASEDIR)\public\sdk\lib\*\shell32.lib        \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib          \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib
+
+
+DLLENTRY= DllMain
+
+USE_CRTDLL=1
+
+NOT_LEAN_AND_MEAN=1
+
+INCLUDES=.;.\res;..\..\inc;$(BASEDIR)\private\windows\inc
+
+C_DEFINES=-DWIN32 -DWINNT -D_WIN32 -DWINVER=0x0500 -DUNICODE
+
+!IF "$(SHELLDBG)"=="1"
+C_DEFINES=$(C_DEFINES) -DDEBUG -DFULL_DEBUG
+!ENDIF
+
+UMTYPE=windows
+EXPECTED_WINVER=5.0
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES=  access.rc     \
+          access.c      \
+          accrare.c     \
+          display.c     \
+          fltrkeys.c    \
+          general.c     \
+          keybd.c       \
+          main.c        \
+          mouse.c       \
+          reg.c         \
+          serlkey.c     \
+          sound.c       \
+          stkykey.c     \
+          tgglkeys.c
+

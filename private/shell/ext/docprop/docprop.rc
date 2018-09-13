@@ -1,0 +1,37 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define	VER_FILETYPE	            VFT_DLL
+#define	VER_FILESUBTYPE	            VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "OLE DocFile Property Page"
+#define VER_INTERNALNAME_STR        "docprop.dll"
+#define VER_ORIGINALFILENAME_STR    "docprop.dll"
+
+#include "common.ver"
+
+#include <winuser.h>
+#include "resource.h"
+
+//#include "propdlg.dlg"
+#include "propdlg.rc"
+#include "strings.rc"
+
+#if 0
+STRINGTABLE {
+        SZ_NOINFO,      "No summary information is available."
+        SZ_PASSWORD,    "This document is password-protected."
+        SZ_READONLY,    "This document is read-only."
+        iszBYTES,       "Bytes: "
+        iszPAGES,       "Pages: "
+        iszPARA,        "Paragraphs: "
+        iszLINES,       "Lines: "
+        iszWORDS,       "Words: "
+        iszCHARS,       "Characters: "
+        iszSLIDES,      "Slides: "
+        iszNOTES,       "Notes: "
+        iszHIDDENSLIDES,"Hidden Slides: "
+        iszMMCLIPS,     "Multimedia Clips: "
+        iszFORMAT,      "Presentation Format: "
+}
+
+#endif

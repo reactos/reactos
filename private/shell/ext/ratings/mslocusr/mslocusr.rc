@@ -1,0 +1,98 @@
+/*****************************************************************/
+/**				  Microsoft Windows for Workgroups				**/
+/**		      Copyright (C) Microsoft Corp., 1991-1992			**/
+/*****************************************************************/ 
+
+/* MSLOCUSR.RC -- Resources for user database management DLL.
+ *
+ * History:
+ *	01/02/96	gregj	Snarfed from mprcli.
+ */
+#include <nowindep.h>
+#include <windows.h>
+
+#include <npmsg.h>
+
+#include "logonui.rc"
+
+#include "mslocusr.rcv"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_LOGONTITLE                  "Welcome to Windows"
+    IDS_BADPASSWORD                 "That password is incorrect."
+    IDS_YOURNEWPASSWORD             "Type the password you want to use into both boxes below. This will be your password to log on to Windows."
+    IDS_RATINGS_PW_COMMENT          "This password will also be used to control the Content Advisor feature in Internet Explorer."
+    IDS_PROFILES_ALREADY_ENABLED    "Support for multiple users is already available. To manage user profiles, click the Users icon in Control Panel."
+    IDS_ENTER_FIRST_USERNAME        "Type your name."
+    IDS_BLANK_USERNAME              "Please type a user name."
+    IDS_NO_MATCH                    "The passwords you typed don't match. Please type and confirm the password again."
+    IDS_GO_MULTI_RESTART            "You must restart Windows to start using your new user account. Do you want to restart Windows now?"
+	IDS_CLONE_USER_MESSAGE			"In addition, the initial desktop settings for this user will be an exact copy of those already in use by %1."
+    IDS_GUEST_USERNAME              "Guest"
+    IDS_PICK_USERNAME               "Please select a user whose settings you want to copy."
+    IDS_USER_EXISTS                 "%1 is already set up to use this computer. If you still want to create a new user, type a different name. Otherwise, click Cancel."
+    IDS_SELECTED_USER               "Settings for selected user"
+    IDS_SETTINGS_FOR                "Settings for %1"
+    IDS_CONFIRM_DELETE_USER         "This will also delete all %1's desktop, favorites, and other personal files. Are you sure you want to delete %1?"
+    IDS_PASSWORD_CHANGED            "The password was successfully changed."
+    IDS_NP_NAME                     "Microsoft Family Logon"
+    IDS_CACHE_PASSWORD              "%1 is always a &supervisor"
+
+    // Note: The following string must be 199 bytes or less, otherwise the
+    // Network control panel will refuse to display it.
+
+    IDS_NETFAM_HELP_TEXT            "When Windows starts, Microsoft Family Logon displays a list of users with access to this computer. To log on to Windows, click a user, and then type the correct password."
+
+    IDS_PROFILE_POLICY              "Access to this feature has been disabled by a restriction set by your system administrator."
+
+    IDS_MSGTITLE                    "User Settings"
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+// Note to localizers:  it is desirable (though not absolutely necessary)
+// to keep the following directory names synchronized with their counterparts
+// in shell\shell32\shell32.rc.
+
+    IDS_CSIDL_PERSONAL_L        "My Documents"
+    IDS_CSIDL_FAVORITES_L       "Favorites"
+    IDS_CSIDL_APPDATA_L         "Application Data"
+    IDS_CSIDL_CACHE_L           "Temporary Internet Files"
+    IDS_CSIDL_DESKTOP_L         "Desktop"
+    IDS_CSIDL_RECENT_L          "Recent"
+    IDS_CSIDL_NETHOOD_L         "NetHood"
+    IDS_CSIDL_STARTMENU_L       "Start Menu"
+    IDS_CSIDL_PROGRAMS_L        "Start Menu\\Programs"
+    IDS_CSIDL_STARTUP_L         "Start Menu\\Programs\\Startup"
+
+    IDS_CSIDL_CHANNELS_L        "Favorites\\Channels"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_UNKNOWN_ERROR               "An unknown error has occurred: %1"
+
+IDS_ERROR_NOT_AUTHENTICATED     "You do not have permission to perform this action."
+IDS_ERROR_NO_SUCH_USER          "That user does not exist."
+IDS_ERROR_USER_EXISTS           "There is already a user with that name. Choose another name."
+IDS_ERROR_OUT_OF_MEMORY         "There is not enough memory is available to complete this task. Close one or more programs, and then try again."
+IDS_ERROR_BUSY                  "You cannot delete the settings for the user currently logged on to this computer."
+IDS_ERROR_PATH_NOT_FOUND        "The user's profile directory does not exist."
+IDS_ERROR_BUFFER_OVERFLOW       "A username must be no longer than 128 characters."
+
+IDS_IERR_CachingDisabled	    "Password caching has been disabled. Please log on as a valid user, or see your network administrator."
+IDS_IERR_BadSig			        "Your password list file has been damaged."
+IDS_IERR_CacheReadOnly		    "This operation cannot be completed because your password list file is read-only."
+IDS_IERR_IncorrectUsername	    "That logon password is incorrect."
+IDS_IERR_CacheCorrupt		    "Your password list file has been damaged."
+IDS_IERR_UsernameNotFound	    "This user does not have a password list file."
+IDS_IERR_CacheFull			    "This operation cannot be copmleted because your password list file is full."
+IDS_IERR_CacheAlreadyOpen	    "This operation cannot be completed because another program is using your password list file."
+
+IDS_E_ACCESSDENIED              "You do not have permission to perform this task."
+
+END

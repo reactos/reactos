@@ -1,0 +1,22 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\core\misc=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+TARGETNAME=coremisc
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(COREINCLUDES)
+
+SOURCES= \
+    coreid.c \
+    coreidpr.c \
+    multimon.c \
+    objextid.c \
+    dbuuid.c

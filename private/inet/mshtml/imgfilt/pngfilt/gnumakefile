@@ -1,0 +1,6 @@
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir include ${MAKE} ${MFLAGS} $@
+	@enterdir zlib    ${MAKE} ${MFLAGS} $@
+	@enterdir daytona ${MAKE} ${MFLAGS} $@

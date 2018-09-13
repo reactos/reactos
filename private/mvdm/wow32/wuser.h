@@ -1,0 +1,69 @@
+/*++ BUILD Version: 0001
+ *
+ *  WOW v1.0
+ *
+ *  Copyright (c) 1991, Microsoft Corporation
+ *
+ *  WUSER.H
+ *  WOW32 16-bit User API support
+ *
+ *  History:
+ *  Created 07-Mar-1991 by Jeff Parsons (jeffpar)
+--*/
+
+typedef struct _GRAYSTRINGDATA {    /* graystringdata */
+    VPPROC  vpfnGrayStringProc;  // 16-bit  function
+    DWORD   dwUserParam;    // user param
+    HDC16   hdc;
+    BOOL    fResetLengthToZero;
+} GRAYSTRINGDATA, *PGRAYSTRINGDATA;
+
+
+
+ULONG FASTCALL   WU32BeginPaint(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32CreateIcon(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32DestroyIcon(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32DragDetect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32DrawFocusRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32DrawText(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32EndPaint(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32EnumProps(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32FillWindow(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32FillRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32FrameRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GetCapture(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GetDC(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GetScrollRange(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GetTimerResolution(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GetUpdateRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GlobalAddAtom(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GlobalDeleteAtom(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GlobalGetAtomName(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32GrayString(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32InvalidateRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32InvalidateRgn(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32InvertRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32IsCharAlpha(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32IsCharAlphaNumeric(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32IsCharLower(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32IsCharUpper(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32LoadBitmap(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32LoadString(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32OffsetRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32ReleaseDC(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32ScrollDC(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32SetCapture(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32SetEventHook(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32SetKeyboardState(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32SetSysColors(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32ValidateRect(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32ValidateRgn(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32WinHelp(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32lstrcmp(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32lstrcmpi(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32wvsprintf(PVDMFRAME pFrame);
+ULONG FASTCALL   WU32SignalProc(PVDMFRAME pFrame);
+
+void    W32FixPaintRect (VPVOID vpPaint, LPPAINTSTRUCT ps);
+SHORT   ConvertInt16 (LONG x);
+WORD FASTCALL WOWGetProcModule16(DWORD vpfn);

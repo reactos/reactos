@@ -1,0 +1,17 @@
+The ShareUI shell extension introduces a "Shared Folders" item into the
+My Computer view. Opening this folder displays a list of all the
+Microsoft Windows Network shares on the machine. That is, all the folders
+on the machine shared on the Microsoft Windows Network.
+
+Users with basic permission can view the names and comments of the
+shares, but can't view other more detailed information such as the
+path that is shared and the maximum number of users allowed
+concurrently on the share. These users also can't make any
+alterations to the share properties.
+
+Users with administrative privilege can view and change the share name,
+path, comment, user limit, and permissions. A context-menu on share objects
+gives "Delete" and "Properties" commands (these are also available from
+the toolbar). You can select multiple shares and delete them all at once.
+Getting a context-menu on the background and choosing "New->Share" displays
+a dialog from which you can create new shares.

@@ -1,0 +1,173 @@
+LANGUAGE 0xD, 0x0 // Really 0x0D, 0x01 - Hebrew (Hebrew)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Hebrew resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 357, 125
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION L"\x05d4\x05ea\x05d0\x05de\x05d4 \x05d0\x05d9\x05e9\x05d9\x05ea \x05e9\x05dc \x05e1\x05e8\x05d2\x05dc \x05db\x05dc\x05d9\x05dd"
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x05e1&\x05d2\x05d5\x05e8", 2, 308, 6, 44, 14
+    PUSHBUTTON      L"&\x05d0\x05e4\x05e1", 202, 308, 23, 44, 14
+    PUSHBUTTON      L"\x05e2&\x05d6\x05e8\x05d4",205, 308, 40, 44, 14
+    PUSHBUTTON      L"\x05d4\x05d6\x05d6 \x05dc\x05de&\x05e2\x05dc\x05d4", 206, 308, 74, 44, 14
+    PUSHBUTTON      L"\x05d4\x05d6\x05d6 \x05dc\x05de&\x05d8\x05d4", 207, 308, 91, 44, 14
+    LTEXT           L"&\x05dc\x05d7\x05e6\x05e0\x05d9\x05dd \x05d6\x05de\x05d9\x05e0\x05d9\x05dd:", -1, 4, 5, 84, 10
+
+    LISTBOX         201, 4, 17, 120, 100, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"&\x05d4\x05d5\x05e1\x05e3 ->", 1, 131, 42, 44, 14
+    PUSHBUTTON      L"<- \x05d4&\x05e1\x05e8", 204, 131, 62, 44, 14
+    LTEXT           L"\x05dc&\x05d7\x05e6\x05e0\x05d9 \x05e1\x05e8\x05d2\x05dc \x05db\x05dc\x05d9\x05dd:", -1, 182, 5, 78, 10
+
+    LISTBOX         203, 182, 17, 120, 100, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT 
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x05d0\x05d9\x05e9\x05d5\x05e8",1,4,122,50,14,WS_GROUP, WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x05d1\x05d9\x05d8\x05d5\x05dc",2,58,122,50,14,, WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"&\x05d4\x05d7\x05dc",12321,112,122,50,14,WS_DISABLED, WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x05e2\x05d6\x05e8\x05d4",9,166,122,50,14,WS_GROUP, WS_EX_LAYOUTRTL 
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT 
+END
+
+1008 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x05d0\x05d9\x05e9\x05d5\x05e8",1,166,122,50,14,WS_GROUP
+    PUSHBUTTON      L"\x05d1\x05d9\x05d8\x05d5\x05dc",2,112,122,50,14
+    PUSHBUTTON      L"&\x05d4\x05d7\x05dc",12321,58,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"\x05e2\x05d6\x05e8\x05d4",9,4,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT 
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT 
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP, WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x200f< \x05d4&\x05e7\x05d5\x05d3\x05dd",12323,12,26,50,14,,WS_EX_LAYOUTRTL 
+    DEFPUSHBUTTON   L"\x05d4\x05d1\x05d0 >\x200f",12324,62,26,50,14,,WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x05e1\x05d9\x05d5\x05dd",12325,119,26,50,14,,WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x05d1\x05d9\x05d8\x05d5\x05dc",2,176,26,50,14,,WS_EX_LAYOUTRTL 
+    PUSHBUTTON      L"\x05e2\x05d6\x05e8\x05d4",9,233,26,50,14,WS_GROUP,WS_EX_LAYOUTRTL 
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP,WS_EX_LAYOUTRTL 
+END
+
+1021 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"\x200f< \x05d4&\x05e7\x05d5\x05d3\x05dd",12323,171,26,50,14
+    DEFPUSHBUTTON   L"\x05d4\x05d1\x05d0 >\x200f",12324,121,26,50,14
+    PUSHBUTTON      L"\x05e1\x05d9\x05d5\x05dd",12325,121,26,50,14
+    PUSHBUTTON      L"\x05d1\x05d9\x05d8\x05d5\x05dc",2,64,26,50,14
+    PUSHBUTTON      L"\x05e2\x05d6\x05e8\x05d4",9,7,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"\x05de\x05e4\x05e8\x05d9\x05d3"
+    1025                    L" + "
+    1026                    L"\x05dc\x05dc\x05d0"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"\x05e1\x05d2\x05d5\x05e8"
+    4161                    L"\x05d0\x05d9\x05e9\x05d5\x05e8"
+    4162                    L"\x05de\x05d0\x05e4\x05d9\x05d9\x05e0\x05d9 %s"
+    4163                    L"\x05d4\x05d9\x05d5\x05dd:"
+    4164                    L"&\x05dc\x05da \x05dc\x05d4\x05d9\x05d5\x05dd"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"\x05d4\x05db\x05e0\x05e1 \x05d8\x05e7\x05e1\x05d8 \x05e4\x05d4"
+    4177                    L"\x05de\x05d0\x05e4\x05d9\x05d9\x05e0\x05d9"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"\t\t\x05e9\x05d9\x05e0\x05d5\x05d9 \x05d2\x05d5\x05d3\x05dc \x05e9\x05dc \x05d7\x05dc\x05d5\x05df \x05d6\x05d4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"\t\t\x05d4\x05d6\x05d6\x05ea \x05d7\x05dc\x05d5\x05df \x05d6\x05d4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"\t\t\x05db\x05d9\x05d5\x05d5\x05e5 \x05d7\x05dc\x05d5\x05df \x05d6\x05d4 \x05dc\x05e1\x05de\x05dc."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"\t\t\x05d4\x05e8\x05d7\x05d1\x05ea \x05d7\x05dc\x05d5\x05df \x05d6\x05d4 \x05e2\x05dc \x05de\x05dc\x05d5\x05d0 \x05d4\x05de\x05e1\x05da."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"\x05de\x05e2\x05d1\x05e8 \x05d0\x05dc \x05d7\x05dc\x05d5\x05df MDI \x05d4\x05d1\x05d0."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"\t\t\x05e1\x05d2\x05d9\x05e8\x05ea \x05d7\x05dc\x05d5\x05df \x05d6\x05d4."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"\t\t\x05d4\x05d7\x05d6\x05e8\x05ea \x05d7\x05dc\x05d5\x05df \x05d6\x05d4 \x05dc\x05d2\x05d5\x05d3\x05dc\x05d5 \x05d4\x05e8\x05d2\x05d9\x05dc."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"\t\t\x05de\x05e2\x05d1\x05e8 \x05d0\x05dc \x05de\x05e9\x05d9\x05de\x05d4 \x05d0\x05d7\x05e8\x05ea."
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"\t\t\x05e4\x05e7\x05d5\x05d3\x05d5\x05ea \x05dc\x05ea\x05e4\x05e2\x05d5\x05dc \x05d7\x05dc\x05d5\x05e0\x05d5\x05ea."
+    36849                   L"\x05d2\x05e8\x05d5\x05e8 \x05e9\x05de\x05d0\x05dc\x05d4 \x05d0\x05d5 \x05d9\x05de\x05d9\x05e0\x05d4 \x05db\x05d3\x05d9 \x05dc\x05e9\x05e0\x05d5\x05ea \x05d2\x05d5\x05d3\x05dc \x05e2\x05de\x05d5\x05d3\x05d5\x05ea."
+    36850                   L"\x05e9\x05d9\x05e0\x05d5\x05d9 \x05d2\x05d5\x05d3\x05dc \x05e2\x05de\x05d5\x05d3\x05d5\x05ea \x05d1\x05d0\x05de\x05e6\x05e2\x05d5\x05ea \x05de\x05e7\x05e9\x05d9 \x05d4\x05d7\x05d9\x05e6\x05d9\x05dd \x05d5\x05de\x05e7\x05e9 tab."
+    36851                   L"\x05d4\x05d5\x05e1\x05e4\x05d4, \x05d4\x05d6\x05d6\x05d4 \x05d5\x05d4\x05e1\x05e8\x05d4 \x05e9\x05dc \x05dc\x05d7\x05e6\x05e0\x05d9\x05dd \x05d1\x05e1\x05e8\x05d2\x05dc \x05d4\x05db\x05dc\x05d9\x05dd."
+END
+

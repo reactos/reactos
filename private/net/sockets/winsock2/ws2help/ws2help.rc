@@ -1,0 +1,17 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows Socket 2.0 Helper for Windows NT"
+#define VER_INTERNALNAME_STR        "ws2help.dll"
+#define VER_ORIGINALFILENAME_STR    "ws2help.dll"
+
+#include "common.ver"
+
+#include "resource.h"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    WS2IFSL_SERVICE_DISPLAY_NAME_STR "Windows Socket 2.0 Non-IFS Service Provider Support Environment"
+END

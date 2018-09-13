@@ -1,0 +1,9 @@
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME               "msvideo.dll\0"
+#define VERSIONDESCRIPTION        "Microsoft Video for Windows DLL\0"
+#define VERSIONTYPE               VFT_DLL
+#define VERSIONSUBTYPE            VFT2_UNKNOWN
+
+#include <verinfo.ver>

@@ -1,0 +1,44 @@
+
+; Microsoft Internet Explorer FTP Folder
+;
+; Copyright 1995-98 Microsoft Corporation.  All Rights Reserved.
+;
+
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[DestinationDirs]
+AllIntern_DllFiles=11          ; to Win95=X:\Windows\System
+
+
+;; Uninstall will be done through selfreg.inf.
+[DefaultInstall]
+CopyFiles=AllIntern_DllFiles
+RegisterOCXs=RegisterOCXSection
+RequiredEngine=SETUPAPI,%ERR_NOSETUPAPI%
+
+[RegisterOCXSection]
+%11%\intern.dll
+
+
+[AllIntern_DllFiles]
+%11\intern.dll=objd\i386\intern.dll
+
+[AllIntern_InfFiles]
+intern.inf
+
+[SourceDisksNames]
+1=%SetupFileCab%,,1
+
+[SourceDisksFiles]
+intern.dll=1
+intern.inf=1
+
+
+[Strings]
+ThisDll             = "intern.dll"
+SetupFileCab        = "all intern stuff:exe and Dll column handling, and a context menu to convert between folder shortcuts and shorcuts to folders"
+ERR_NOSETUPAPI      = "This inf file was probably done poorly"
+DESC                = "the colhndlr for dll and exe versioning, and folder shorcut conversion"
+

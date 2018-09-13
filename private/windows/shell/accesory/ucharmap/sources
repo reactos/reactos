@@ -1,0 +1,38 @@
+!IF 0
+
+Copyright (c) 1991  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=charmap
+
+TARGETNAME=charmap
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.
+
+SOURCES=charmap.c charmap.rc
+
+C_DEFINES=-DWIN32 -DUNICODE -D_UNICODE
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=charmap
+UMLIBS= \
+       $(BASEDIR)\public\sdk\lib\*\comctl32.lib \
+       obj\*\charmap.res
+

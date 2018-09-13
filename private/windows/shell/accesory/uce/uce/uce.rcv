@@ -1,0 +1,19 @@
+/********************************************************************/
+/*        CONTROL.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/*                                                                  */
+/* Copyright (c) 1997-1999 Microsoft Corporation.                   */
+/********************************************************************/
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_APP
+#define VER_FILESUBTYPE           VFT2_UNKNOWN
+//#define VER_FILEDESCRIPTION_STR   "Universal Character Explorer"
+#define VER_FILEDESCRIPTION_STR   "Character Map"
+#define VER_INTERNALNAME_STR      "CharMap"
+#define VER_ORIGINALFILENAME_STR  "CharMap.exe"
+#include "common.ver"

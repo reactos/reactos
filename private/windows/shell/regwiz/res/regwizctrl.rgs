@@ -1,0 +1,35 @@
+HKCR
+{
+	RegWizCtrl.RegWizCtrl.1 = s 'RegWizCtrl '
+	{
+		CLSID = s '{50E5E3D1-C07E-11D0-B9FD-00A0249F6B00}'
+		'Insertable'
+	}
+	RegWizCtrl.RegWizCtrl = s 'RegWizCtrl '
+	{
+		CurVer = s 'RegWizCtrl.RegWizCtrl.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {50E5E3D1-C07E-11D0-B9FD-00A0249F6B00} = s 'RegWizCtrl '
+		{
+			ProgID = s 'RegWizCtrl.RegWizCtrl.1'
+			VersionIndependentProgID = s 'RegWizCtrl.RegWizCtrl'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			ForceRemove 'Control'
+			ForceRemove 'Programmable'
+			ForceRemove 'Insertable'
+			ForceRemove 'ToolboxBitmap32' = s '%MODULE%, 1'
+			'MiscStatus' = s '0'
+			{
+			    '1' = s '131473'
+			}
+			'TypeLib' = s '{50E5E3C0-C07E-11D0-B9FD-00A0249F6B00}'
+			'Version' = s '1.0'
+		}
+	}
+}

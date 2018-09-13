@@ -1,0 +1,27 @@
+#####################
+# 
+# Module DLL.MKH
+#
+# Descrition:
+# This module contains the targets required and macro definitions
+# required to build a windows DLL
+#
+#####################
+
+#TYPE_MAIN_TARGET= $(COMPONENT_NAME).$(COMPONENT_TYPE)
+
+!include <tools.mkh>
+!include <targets.mkh>
+
+$(COMPONENT_NAME).$(COMPONENT_TYPE)::
+	@echo Building $(COMPONENT_NAME)
+	@echo Done
+
+
+
+
+
+
+
+
+

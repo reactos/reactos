@@ -1,0 +1,103 @@
+#ifndef _MARQUEE_PDL_
+#define _MARQUEE_PDL_ 1
+
+
+#include "csite.pdl"
+#include "txtedit.pdl"
+
+file marquee.pdl
+    
+import inputtxt.pdl
+                      
+interface IHTMLMarqueeElement guid:3050f2b5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CMarquee:bgColor
+    refprop CMarquee:scrollDelay
+    refprop CMarquee:direction   
+    refprop CMarquee:behavior            
+    refprop CMarquee:scrollAmount               
+    refprop CMarquee:loop
+    refprop CMarquee:vspace
+    refprop CMarquee:hspace               
+    refprop CMarquee:onfinish
+    refprop CMarquee:onstart
+    refprop CMarquee:onbounce
+    refprop CMarquee:width
+    refprop CMarquee:height
+    refprop CMarquee:trueSpeed
+    
+    refmethod CMarquee:start
+    refmethod CMarquee:stop
+
+enum htmlMarqueeBehavior prefix:htmlMarqueeBehavior guid:3050f2b6-98b5-11cf-bb82-00aa00bdce0b
+    eval scroll value:1
+    eval slide value:2
+    eval alternate value:3
+                   
+enum htmlMarqueeDirection prefix:htmlMarqueeDirection guid:3050f2b7-98b5-11cf-bb82-00aa00bdce0b
+    eval left value:1
+    eval right value:3
+    eval up value:5
+    eval down value:7
+                   
+
+/* New style element events w/ eventObject parameter: */
+event HTMLMarqueeElementEvents2 super:HTMLTextContainerEvents2 guid:3050f61f-98b5-11cf-bb82-00aa00bdce0b
+    method void     onbounce (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONBOUNCE
+    method void     onfinish (in type:IHTMLEventObj* arg:pEvtObj)   cancelable \
+           dispid:DISPID_EVMETH_ONFINISH
+    method void     onstart (in type:IHTMLEventObj* arg:pEvtObj) \
+           dispid:DISPID_EVMETH_ONSTART
+
+/* Old style element events w/o eventObject parameter: */
+event HTMLMarqueeElementEvents super:HTMLTextContainerEvents guid:3050f2b8-98b5-11cf-bb82-00aa00bdce0b
+    method void     onbounce                    dispid:DISPID_EVMETH_ONBOUNCE ()
+    method void     onfinish    cancelable      dispid:DISPID_EVMETH_ONFINISH ()
+    method void     onstart                     dispid:DISPID_EVMETH_ONSTART ()
+
+tearoff CMarquee Interface:IHTMLMarqueeElement
+
+class CMarquee name:HTMLMarqueeElement \
+            primaryinterface:IHTMLMarqueeElement \
+            super:CTxtSite   \
+            events:HTMLMarqueeElementEvents \
+            nonprimaryevents:HTMLMarqueeElementEvents2 \
+            guid:3050f2b9-98b5-11cf-bb82-00aa00bdce0b \
+            mondoguid:3050f527-98b5-11cf-bb82-00aa00bdce0b
+
+#include "basedb.pdl"
+    implements IHTMLControlElement
+    implements IHTMLTextContainer
+    implements IHTMLMarqueeElement
+
+    property bgColor atype:VARIANT type:CColorValue default:VALUE_UNDEF dispid:DISPID_BACKCOLOR get set caa maxstrlen:pdlColor
+
+    property height caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_HEIGHT \
+        default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+
+    property width caa get set atype:VARIANT type:CUnitValue dispid:STDPROPID_XOBJ_WIDTH  \
+		default:NULL_UNITVALUE noassigndefault:MAKE_PIXEL_UNITVALUE(1) min:MAKE_PIXEL_UNITVALUE(1) invalid=noassigndefault \
+        ppflags:PP_UV_LENGTH_OR_PERCENT maxstrlen:pdlLength
+    property scrollDelay atype:long type:long default:85 min:1 \
+        dispid:DISPID_MARQUEE get set caa  clearcaches remeasure
+
+    property direction atype:BSTR type:htmlMarqueeDirection default:htmlMarqueeDirectionleft \
+        dispid:DISPID_MARQUEE+1 get set caa clearcaches remeasure maxstrlen:pdlToken
+
+    property behavior atype:BSTR type:htmlMarqueeBehavior default:htmlMarqueeBehaviorscroll \
+        dispid:DISPID_MARQUEE+2 get set caa clearcaches remeasure maxstrlen:pdlToken
+
+    property scrollAmount atype:long type:long default:6 min:0 dispid:DISPID_MARQUEE+3 get set caa clearcaches remeasure
+    property loop atype:long type:long default:-1 dispid:DISPID_MARQUEE+4 get set caa clearcaches remeasure min:1
+    property vspace atype:long type:long default:0 min:0 dispid:DISPID_MARQUEE+5 get set caa clearcaches remeasure
+    property hspace atype:long type:long default:0 min:0 dispid:DISPID_MARQUEE+6 get set caa clearcaches remeasure
+    property onfinish       atype:VARIANT       dispid:DISPID_EVPROP_ONFINISH   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onstart        atype:VARIANT       dispid:DISPID_EVPROP_ONSTART    type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property onbounce       atype:VARIANT       dispid:DISPID_EVPROP_ONBOUNCE   type:code  get set caa bindable displaybind scriptlet maxstrlen:pdlEvent
+    property trueSpeed      atype:VARIANT_BOOL  dispid:DISPID_MARQUEE+7         type:VARIANT_BOOL vt:VT_BOOL get set caa bindable displaybind clearcaches remeasure default:0
+
+    method HRESULT start                    dispid:DISPID_MARQUEE+10    ()
+    method HRESULT stop                     dispid:DISPID_MARQUEE+11    ()
+
+#endif //_MARQUEE_PDL_

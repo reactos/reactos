@@ -1,0 +1,152 @@
+GENERAL
+-------
+
+    o Any code that needs to create a worker thread must first issue
+      a "protective" LoadLibrary() on the mapper's DLL.
+
+    o All worker threads must exit via the FreeLibraryAndExitThread()
+      API.
+
+
+QOS
+---
+
+    o Always return default (best-effort) QOS parameters.
+
+    o If application tries to set a non-default QOS, accept it
+      and immediately issue an FD_QOS network event.
+
+    TIME ESTIMATE:  0.5 day
+
+
+GROUPS
+------
+
+    o Cannot fully implement constrained groups without some totally
+      nasty IPC mechanism (groups are cross-process).
+
+    o Can implement global group IDs via shared memory.
+
+    TIME ESTIMATE:  0.5 day
+
+
+SCATTER/GATHER IO
+-----------------
+
+    o Send() needs to gather data into one giant buffer, then send
+      from that buffer.
+
+    o Recv() has several possible strategies:
+
+
+        o Allocate a giant buffer (total size of s/g buffers),
+           recv() into that buffer, then copy out to user's
+           buffer(s).
+
+        o Perform recv() on first buffer only.
+
+        o Use FIONREAD to determine if additional buffers can be
+          read.
+
+    TIME ESTIMATE:  2.0 days
+
+
+OVERLAPPED IO
+-------------
+
+    o Each socket has two queues: one for recv(), one for send().
+
+    o Each socket may have up to two events: one per queue.
+
+    o Each socket may have up to two worker theads: one per queue.
+
+    o The initiator of an overlapped operation (WSPSend(), WSPRecv(),
+      etc) must perform the following steps:
+
+        o Capture the input parameters (including the scatter/gather
+          buffer array) into an overlapped IO context block.
+
+        o Enqueue the context block on the appropriate queue.
+
+        o If the socket doesn't have the appropriate event object,
+          create that event object.
+
+        o If the socket doesn't have the appropriate worker thread,
+          create that thread.
+
+        o Signal the event object.
+
+        o Return WSA_IO_PENDING.
+
+    o The worker threads will perform the following steps:
+
+        o Wait for either the queue event OR the the per-socket shutdown
+          event OR global shutdown event.
+
+        o If it's the per-socket shutdown event OR the global shutdown
+          event, bail.
+
+        o Pull the next item off the queue, issue the send/recv, post
+          the results.
+
+        o Go back to the top.
+
+    TIME ESTIMATE:  3.0 days
+
+
+EVENT SELECT
+------------
+
+    o Tie in with our private WSAAsyncSelect() window. This will require
+      a worker thread dedicated to running the window's message pump.
+
+    o Store enough data (probably just the event handle) in the socket
+      so that messages posted to the window can be "redirected" and
+      set the corresponding event object.
+
+    TIME ESTIMATE:  2.0 days
+
+
+IOCTLS and SOCKOPTS
+-------------------
+
+    o Need to implement the following:
+
+        o SO_GROUP_ID
+
+        o SO_GROUP_PRIORITY
+
+        o SO_MAX_MSG_SIZE (steal from WSAData?)
+
+        o SO_PROTOCOL_INFOW
+
+        o SIO_GET_BROADCAST_ADDRESS
+
+        o SIO_GET_EXTENSION_FUNCTION_POINTER (?)
+
+        o SIO_GET_QOS
+
+        o SIO_GET_GROUP_QOS
+
+        o SIO_SET_QOS
+
+        o SIO_SET_GROUP_QOS
+
+    TIME ESTIMATE:  1.0 days
+
+
+DEFERRED ACCEPT
+---------------
+
+    o Each socket will need storage for the previously accept()ed socket
+      handle and source address.
+
+    o CF_DEFER will cause this state to get allocated (if necessary) and
+      updated.
+
+    o Future accept()s will check this state and use that information
+      if available instead of calling through to the hooker's accept()
+      entrypoint.
+
+    TIME ESTIMATE:  1.0 day
+

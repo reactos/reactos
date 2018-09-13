@@ -1,0 +1,50 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1990
+
+NOTE:   Commented description of this file is in \nt\bak\bin\sources.tpl
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=games
+
+TARGETNAME=reversi
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=.
+
+C_DEFINES=-DWIN32
+
+USE_CRTDLL=1
+
+SOURCES=reversi.c rev.c res.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=reversi
+UMLIBS=\nt\public\sdk\lib\*\user32.lib                 \
+       \nt\public\sdk\lib\*\ntdll.lib                  \
+       \nt\public\sdk\lib\*\gdi32.lib                  \
+       \nt\public\sdk\lib\*\pwin32.lib               \
+       obj\*\rev.obj                                 \
+       obj\*\res.res

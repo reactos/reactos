@@ -1,0 +1,26 @@
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=quickres
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+INCLUDES=($INCLUDE);.
+
+USE_CRTDLL=1
+
+SOURCES=quickres.rc   \
+        registry.c    \
+        quickres.c
+
+
+C_DEFINES=-DNT -DDONTPANIC -DMAINWITHMODE -DSAVEFLAGS
+#C_DEFINES=-DNT -DDONTPANIC -DMAINWITHMODE -DSAVEFLAGS -DUNICODE -D_UNICODE  // not for win9x!
+#C_DEFINES=-DNT -DDONTPANIC -DMAINWITHMODE -DSAVEFLAGS -DDEBUG
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=quickres
+UMLIBS=$(BASEDIR)\public\sdk\lib\*\comdlg32.lib  \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib

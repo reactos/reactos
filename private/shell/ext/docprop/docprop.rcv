@@ -1,0 +1,11 @@
+#include <version.h>
+
+
+#define VER_FILETYPE                    VFT_APP
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR			"OLE Docfile properties page"
+#define VER_INTERNALNAME_STR			"OLEPROP"
+#define VER_LEGALCOPYRIGHT_YEARS        "1991-1999"
+#define VER_ORIGINALFILENAME_STR		"OLEPROP.DLL"
+
+#include <common.ver>

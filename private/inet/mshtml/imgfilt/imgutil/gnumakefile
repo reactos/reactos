@@ -1,0 +1,76 @@
+PRODUCT = IMGUTIL
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+SOURCES= \
+   imgutil.cpp    \
+   cmapmime.cpp   \
+   cmimeid.cpp    \
+   csnfstrm.cpp   \
+   apis.cpp       \
+   dlldatax.c	  \
+   cddsurf.cpp    \
+   cdith8.cpp     \
+   cdithtbl.cpp   \
+   dithers.cpp
+
+
+# Windows DLL name:
+
+WDLL = imgutil
+DLL  = lib${WDLL}.${MW_SHARED_LIBRARY_SUFFIX}
+WRESOURCE = imgutil.rc    # Windows resource
+TRESOURCE = ${WDLL}.rxt   # Target X resource (must match DLL name)
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o} 
+CPP_OBJS := ${CPP_OBJS:%.c=%.o}
+DLLOBJS = ${CPP_OBJS}
+
+DLL-EXPORTS = imgutil.def
+SRCS=${SOURCES}
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+##
+
+PROJECT_CFLAGS = \
+	-I${SDK_DIR} \
+	-Iinclude \
+	-I. \
+	-I.. \
+	-D_ATL_NO_CONNECTION_POINTS \
+        -D_ATL_NO_SECURITY \
+        -D_ATL_DLL_SERVER \
+        -DNASHVILLE
+
+
+PROJECT_LIBS = \
+	-luuid \
+	-lurlmon \
+	-lwininet \
+	-loleaut32
+
+# 
+# Easy way to resolve circular interlibrary dependencies
+#
+
+PROJECT_DLLFLAGS := \
+	${PROJECT_LIBS} ${PROJECT_LIBS} ${PROJECT_LIBS}
+
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple
+

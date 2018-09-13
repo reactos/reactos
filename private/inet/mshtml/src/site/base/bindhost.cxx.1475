@@ -1,0 +1,566 @@
+//+------------------------------------------------------------------------
+//
+//  File:       bindhost.cxx
+//
+//  Contents:   COleSite::CBindHost implementation.
+//
+//-------------------------------------------------------------------------
+
+#include "headers.hxx"
+#include "formkrnl.hxx"
+#include "geturl.hxx"
+#include "hedelems.hxx"
+#define _WINX32_
+#include "uwininet.h"
+
+IMPLEMENT_FORMS_SUBOBJECT_IUNKNOWN(CDoc::CBindHost, CDoc, _BindHost)
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::CBindHost::QueryInterface, IUnknown
+//
+//  Synopsis:   As per IUnknown
+//
+//----------------------------------------------------------------------------
+
+STDMETHODIMP
+CDoc::CBindHost::QueryInterface(REFIID iid, void **ppv)
+{
+    if (iid == IID_IBindHost || iid == IID_IUnknown)
+    {
+        *ppv = (IBindHost *)this;
+    }
+    else
+    {
+        *ppv = 0;
+        return E_NOINTERFACE;
+    }
+
+    ((IUnknown *)*ppv)->AddRef();
+    return S_OK;
+}
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::CBindHost::CreateMoniker, IBindHost
+//
+//  Synopsis:   Parses display name and returns a URL moniker
+//
+//----------------------------------------------------------------------------
+
+STDMETHODIMP
+CDoc::CBindHost::CreateMoniker(LPOLESTR szName, IBindCtx * pbc, IMoniker ** ppmk, DWORD dwReserved)
+{
+    TCHAR *pchUrl;
+    HRESULT hr;
+
+    hr = THR(MyCDoc()->ExpandUrl(szName, &pchUrl, NULL));
+    if (hr)
+        RRETURN(hr);
+
+    hr = CreateURLMoniker(NULL, pchUrl, ppmk);
+
+    MemFreeString(pchUrl);
+
+    RRETURN(hr);
+}
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::CBindHost::MonikerBindToStorage, IBindHost
+//
+//  Synopsis:   Calls BindToStorage on the moniker
+//
+//----------------------------------------------------------------------------
+
+STDMETHODIMP
+CDoc::CBindHost::MonikerBindToStorage(IMoniker * pmk, IBindCtx * pbc,
+    IBindStatusCallback * pbsc, REFIID riid, void ** ppvObj)
+{
+    IBindCtx *  pbcNew = NULL;
+    HRESULT     hr;
+
+    if (pbc == NULL)
+    {
+        hr = CreateBindCtx(0, &pbcNew);
+        if (hr)
+            goto Cleanup;
+
+        pbc = pbcNew;
+    }
+
+    hr = RegisterBindStatusCallback(pbc, pbsc, 0, 0);
+    if (!OK(hr))
+        goto Cleanup;
+
+    DbgMemoryTrackDisable(TRUE);
+    hr = pmk->BindToStorage(pbc, NULL, riid, ppvObj);
+    DbgMemoryTrackDisable(FALSE);
+
+    if (FAILED(hr))
+    {
+        IGNORE_HR(RevokeBindStatusCallback(pbc, pbsc));
+        goto Cleanup;
+    }
+
+Cleanup:
+    ReleaseInterface(pbcNew);
+    RRETURN1(hr, S_ASYNCHRONOUS);
+}
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::CBindHost::MonikerBindToObject, IBindHost
+//
+//  Synopsis:   Calls BindToObject on the moniker
+//
+//----------------------------------------------------------------------------
+
+STDMETHODIMP
+CDoc::CBindHost::MonikerBindToObject(IMoniker * pmk, IBindCtx * pbc,
+    IBindStatusCallback * pbsc, REFIID riid, void ** ppvObj)
+{
+    IBindCtx *  pbcNew = NULL;
+    HRESULT     hr;
+
+    if (pbc == NULL)
+    {
+        hr = CreateBindCtx(0, &pbcNew);
+        if (hr)
+            goto Cleanup;
+
+        pbc = pbcNew;
+    }
+
+    hr = RegisterBindStatusCallback(pbc, pbsc, 0, 0);
+    if (hr)
+        goto Cleanup;
+
+    hr = pmk->BindToObject(pbc, NULL, riid, ppvObj);
+
+    if (FAILED(hr))
+    {
+        IGNORE_HR(RevokeBindStatusCallback(pbc, pbsc));
+        goto Cleanup;
+    }
+
+Cleanup:
+    ReleaseInterface(pbcNew);
+    RRETURN1(hr, S_ASYNCHRONOUS);
+}
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::SetBaseUrl
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CDoc::SetBaseUrl(const TCHAR *pchUrl)
+{
+    IBindCtx * pbc = NULL;
+    TCHAR * pchTask = NULL;
+    HRESULT hr;
+
+    if (pchUrl)
+    {
+        hr = THR(_cstrUrl.Set(pchUrl));
+        RRETURN(hr);
+    }
+    
+    if (_pmkName)
+    {
+        hr = THR(CreateBindCtx(0, &pbc));
+        if (hr)
+            goto Cleanup;
+
+        hr = THR(_pmkName->GetDisplayName(pbc, NULL, &pchTask));
+        if (hr)
+            goto Cleanup;
+        
+        // chop of #location part, if any
+        TCHAR *pchLoc = PchUrlLocationPart(pchTask);
+        if (pchLoc)
+            *pchLoc = _T('\0');
+
+        hr = THR(_cstrUrl.Set(pchTask));
+        if (hr)
+            goto Cleanup;
+    }
+    else
+    {
+        TCHAR ach[INTERNET_MAX_URL_LENGTH];
+
+        _tcscpy(ach, _T("file://"));
+
+        if (_cstrFileName)
+        {
+            TCHAR * pchFilePart;
+            GetFullPathName(_cstrFileName, INTERNET_MAX_URL_LENGTH - 7, &ach[7], &pchFilePart);
+        }
+        else
+        {
+            UINT ich;
+            GetCurrentDirectory(INTERNET_MAX_URL_LENGTH - 7 - 1, &ach[7]);
+            ich = _tcslen(ach) - 1;
+
+            if (ach[ich] != '\\')
+            {
+                ach[++ich] = '\\';
+                ach[++ich] = 0;
+            }
+        }
+
+        hr = THR(_cstrUrl.Set(ach));
+        if (hr)
+            goto Cleanup;
+    }
+
+Cleanup:
+    CoTaskMemFree(pchTask);
+    ReleaseInterface(pbc);
+
+    RRETURN(hr);
+}
+
+
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::GetBaseTarget
+//
+//              Get the base URL for the document.
+//
+//              If supplied with an element, gets the base TARGET in effect
+//              at that element, based on the position of <BASE> tags.
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CDoc::GetBaseTarget(TCHAR **ppchTarget, CElement *pElementContext)
+{
+    TCHAR       *pchTarget = NULL;
+    TCHAR       *pchTargetTemp;
+    HRESULT      hr = S_OK;
+    CElement *pel;
+
+    if (pElementContext)
+    {
+        //  Search the body upwards for first Base tag with target attribute
+        for (pel = pElementContext->EParent(); pel; pel=pel->EParent())
+        {
+            if (pel->Tag() == ETAG_BASE)
+            {
+                pchTargetTemp = (LPTSTR) DYNCAST(CBaseElement, pel->Scope())->GetAAtarget();
+                if (pchTargetTemp && *pchTargetTemp)
+                {
+                    pchTarget = pchTargetTemp;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (pchTarget == NULL  && _pSiteRoot->_paryHeadElements)
+    {
+        //  None found in body ... try the header
+        int          i;
+        CElement   **ppElement;
+
+        i = _pSiteRoot->_paryHeadElements->Size();
+        ppElement = (*_pSiteRoot->_paryHeadElements) + i;
+        while (i)
+        {
+            pel = *(--ppElement);
+            i--;
+            if (pel->Tag() == ETAG_BASE)
+            {
+                pchTargetTemp = (LPTSTR) DYNCAST(CBaseElement, pel->Scope())->GetAAtarget();
+                if (pchTargetTemp && *pchTargetTemp)
+                {
+                    pchTarget = pchTargetTemp;
+                    break;
+                }
+            }
+        }
+    }
+
+    *ppchTarget = NULL;
+    if (pchTarget)
+    {
+        hr = THR(MemAllocString(pchTarget, ppchTarget));
+    }
+
+    RRETURN(hr);
+}
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::GetBaseUrl
+//
+//              Get the base URL for the document.
+//
+//              If supplied with an element, gets the base URL in effect
+//              at that element, based on the position of <BASE> tags.
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CDoc::GetBaseUrl(TCHAR **ppchHref, CElement *pElementContext)
+{
+    TCHAR       *pchHref = NULL;
+    TCHAR       *pchHrefTemp;
+    HRESULT      hr;
+    CElement *pel;
+    
+    if (!_cstrUrl)
+    {
+        hr = THR(SetBaseUrl());
+        if (hr)
+            goto Cleanup;
+    }
+
+    if (pElementContext)
+    {
+        //  Search the body upwards for first Base tag with href attribute
+        for (pel = pElementContext->EParent(); pel; pel=pel->EParent())
+        {
+            if (pel->Tag() == ETAG_BASE)
+            {
+                pchHrefTemp = (LPTSTR) DYNCAST(CBaseElement, pel->Scope())->GetAAhref();
+                if (pchHrefTemp && *pchHrefTemp)
+                {
+                    pchHref = pchHrefTemp;
+                    break;
+                }
+            }
+        }
+    }
+
+    //  None found in body ... try the header
+    if (pchHref == NULL && _pSiteRoot->_paryHeadElements)
+    {
+        int          i;
+        CElement   **ppElement;
+
+        i = _pSiteRoot->_paryHeadElements->Size();
+        ppElement = (*_pSiteRoot->_paryHeadElements) + i;
+        while (i)
+        {
+            pel = *(--ppElement);
+            i--;
+            if (pel->Tag() == ETAG_BASE)
+            {
+                pchHrefTemp = (LPTSTR) DYNCAST(CBaseElement, pel->Scope())->GetAAhref();
+                if (pchHrefTemp && *pchHrefTemp)
+                {
+                    pchHref = pchHrefTemp;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (pchHref == NULL)
+    {
+        //  None found anywhere...use default
+        hr = THR(MemReplaceString(_cstrUrl, ppchHref));
+    }
+    else
+    {
+        hr = THR(MemAllocString(pchHref, ppchHref));
+    }
+
+Cleanup:
+    RRETURN(hr);
+}
+
+
+
+//+---------------------------------------------------------------------------
+//
+//  Member:     CDoc::ExpandUrl
+//
+//----------------------------------------------------------------------------
+
+HRESULT
+CDoc::ExpandUrl(LPCTSTR pchRel, TCHAR **ppchUrl, CElement *pElementContext)
+{
+    TCHAR achBuf[INTERNET_MAX_URL_LENGTH];
+    ULONG cchBuf = INTERNET_MAX_URL_LENGTH;
+    HRESULT hr = S_OK;
+    TCHAR *pchBaseUrl = NULL;
+
+    if (pchRel == NULL || pchRel[0]==_T('\0'))
+    {
+        *ppchUrl = NULL;
+        return(S_OK);
+    }
+
+    hr = GetBaseUrl(&pchBaseUrl, pElementContext);
+    if (!hr)
+    {
+        if (!GetCombinedUrl(pchBaseUrl, pchRel, achBuf, &cchBuf, ICU_ENCODE_SPACES_ONLY | ICU_BROWSER_MODE))
+        {
+            *ppchUrl = NULL;
+            hr = GetLastWin32Error();
+        }
+        else
+        {
+            hr = THR(MemAllocString(achBuf, ppchUrl));
+        }
+    }
+
+    MemFreeString(pchBaseUrl);
+    RRETURN(hr);
+}
+
+// Implementation of the global GetFriendlyUrl
+
+#define MAX_SUFFIX_LEN 256
+
+#define PROTOCOL_FILE       _T("file")
+#define PROTOCOL_MAILTO     _T("mailto")
+#define PROTOCOL_GOPHER     _T("gopher")
+#define PROTOCOL_FTP        _T("ftp")
+#define PROTOCOL_HTTP       _T("http")
+#define PROTOCOL_HTTPS      _T("https")
+#define PROTOCOL_NEWS       _T("news")
+
+static void Concat(TCHAR *pchDst, int sizeDst, const TCHAR *pchSrc, LONG x, LONG y)
+{
+    if (x >= 0)
+    {
+        TCHAR achTemp[INTERNET_MAX_URL_LENGTH + 1 + MAX_SUFFIX_LEN + 20];
+
+        _tcscpy(achTemp, pchDst);
+        Format(0, pchDst, sizeDst, _T("<0s><1s>?<2d>,<3d>"), achTemp, pchSrc, x, y);
+    }
+    else
+        _tcscat(pchDst, pchSrc);
+}
+
+TCHAR *
+GetFriendlyUrl(const TCHAR *pchUrl, const TCHAR *pchBaseUrl, BOOL fShowFriendlyUrl,
+               BOOL fPreface, LONG x, LONG y)
+{
+    URL_COMPONENTS uc;
+    TCHAR achScheme[INTERNET_MAX_SCHEME_LENGTH];
+    TCHAR achHostName[INTERNET_MAX_HOST_NAME_LENGTH];
+    TCHAR achPath[INTERNET_MAX_URL_LENGTH];
+    TCHAR achFriendlyUrl[INTERNET_MAX_URL_LENGTH + 1 + MAX_SUFFIX_LEN + 20]; // 20 is ample extra space
+    TCHAR *pchFriendlyUrl;
+
+    memset(&uc, 0, sizeof(uc));
+
+    uc.dwStructSize = sizeof(uc);
+    uc.lpszScheme = achScheme;
+    uc.dwSchemeLength = ARRAY_SIZE(achScheme);
+    uc.lpszHostName = achHostName;
+    uc.dwHostNameLength = ARRAY_SIZE(achHostName);
+    uc.lpszUrlPath = achPath;
+    uc.dwUrlPathLength = ARRAY_SIZE(achPath);
+
+    if (InternetCrackUrl(pchUrl, _tcslen(pchUrl), 0, &uc))
+    {
+        BOOL fMail = !_tcsicmp(achScheme, PROTOCOL_MAILTO);
+
+        achFriendlyUrl[0] = _T('\0');
+
+        if (fMail)
+        {
+            if (fShowFriendlyUrl)
+            {
+                Format(0, achFriendlyUrl, ARRAY_SIZE(achFriendlyUrl), MAKEINTRESOURCE(IDS_FRIENDLYURL_SENDSMAILTO),
+                       &pchUrl[1 + _tcslen(PROTOCOL_MAILTO)]);
+            }
+            else
+                _tcscat(achFriendlyUrl, pchUrl);
+        }
+        else if (fShowFriendlyUrl)
+        {
+            TCHAR achSuffix[MAX_SUFFIX_LEN];
+            BOOL fFriendlyString = TRUE;
+
+            achSuffix[0] = _T('\0');
+
+            if (!_tcsicmp(achScheme, PROTOCOL_FILE))
+            {
+                Format(0, achSuffix, ARRAY_SIZE(achSuffix), MAKEINTRESOURCE(IDS_FRIENDLYURL_LOCAL));
+                fFriendlyString = FALSE;
+            }
+            else if (!_tcsicmp(achScheme, PROTOCOL_GOPHER))
+                Format(0, achSuffix, ARRAY_SIZE(achSuffix), MAKEINTRESOURCE(IDS_FRIENDLYURL_GOPHER));
+            else if (!_tcsicmp(achScheme, PROTOCOL_FTP))
+                Format(0, achSuffix, ARRAY_SIZE(achSuffix), MAKEINTRESOURCE(IDS_FRIENDLYURL_FTP));
+            else if (!_tcsicmp(achScheme, PROTOCOL_HTTPS))
+                Format(0, achSuffix, ARRAY_SIZE(achSuffix), MAKEINTRESOURCE(IDS_FRIENDLYURL_SECUREWEBSITE));
+            else if (_tcsicmp(achScheme, PROTOCOL_HTTP) && _tcsicmp(achScheme, PROTOCOL_NEWS))
+                fFriendlyString = FALSE;
+                    
+            if (fFriendlyString)
+            {
+                // "http://sitename/path/filename.gif" -> "filename.gif at sitename"
+                int length = _tcslen(achPath);
+                TCHAR *pchShortName;
+                BOOL fShowHostName = FALSE;
+
+                if (length && (achPath[length - 1] == _T('/')))
+                    achPath[length - 1] = _T('\0');
+
+                if (*achHostName)
+                {
+                    URL_COMPONENTS ucBase;
+                    TCHAR achHostNameBase[INTERNET_MAX_HOST_NAME_LENGTH];
+
+                    memset(&ucBase, 0, sizeof(ucBase));
+
+                    ucBase.dwStructSize = sizeof(ucBase);
+                    ucBase.lpszHostName = achHostNameBase;
+                    ucBase.dwHostNameLength = ARRAY_SIZE(achHostNameBase);
+
+                    if (!InternetCrackUrl(pchBaseUrl, _tcslen(pchBaseUrl), 0, &ucBase) ||
+                        _tcsicmp(achHostName, achHostNameBase))
+                        fShowHostName = TRUE;
+                }
+
+                pchShortName = _tcsrchr(achPath, _T('/'));
+                if (fShowHostName && pchShortName && *(pchShortName + 1))
+                {
+                    TCHAR achShortName[INTERNET_MAX_URL_LENGTH];
+
+                    achShortName[0] = _T('\0');
+                    Concat(achShortName, ARRAY_SIZE(achShortName), pchShortName + 1, x, y);
+                    Format(0, achFriendlyUrl, ARRAY_SIZE(achFriendlyUrl),
+                           MAKEINTRESOURCE(IDS_FRIENDLYURL_AT), achShortName, achHostName);
+                }
+                else if (pchShortName && *(pchShortName + 1))
+                    Concat(achFriendlyUrl, ARRAY_SIZE(achFriendlyUrl), pchShortName + 1, x, y);
+                else if (*achHostName)
+                    _tcscat(achFriendlyUrl, achHostName);
+            }
+            else
+                Concat(achFriendlyUrl, ARRAY_SIZE(achFriendlyUrl), pchUrl, x, y);
+
+            if (fPreface && !fMail)
+                Format(FMT_OUT_ALLOC, &pchFriendlyUrl, 0, MAKEINTRESOURCE(IDS_FRIENDLYURL_SHORTCUTTO),
+                       achFriendlyUrl, achSuffix);
+            else
+                Format(FMT_OUT_ALLOC, &pchFriendlyUrl, 0, _T("<0s> <1s>"),
+                       achFriendlyUrl, achSuffix);
+
+            return pchFriendlyUrl;
+        }
+        else
+            Concat(achFriendlyUrl, ARRAY_SIZE(achFriendlyUrl), pchUrl, x, y);
+
+        MemAllocString(achFriendlyUrl, &pchFriendlyUrl);
+    }
+    else
+        MemAllocString(pchUrl, &pchFriendlyUrl);
+
+    return pchFriendlyUrl;
+}

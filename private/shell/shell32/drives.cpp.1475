@@ -1,0 +1,487 @@
+#include "shellprv.h"
+
+extern "C" {
+#include <shellp.h>
+#include "idlcomm.h"
+#include "fstreex.h"
+#include "views.h"
+#include "ids.h"
+#include "shitemid.h"
+
+#include "control.h"
+#include "printer.h"
+} ;
+
+#include "drives.h"
+
+#include "sfviewp.h"
+#include "shguidp.h"
+
+
+#define DRIVES_EVENTS \
+    SHCNE_DRIVEADD | \
+    SHCNE_DRIVEREMOVED | \
+    SHCNE_MEDIAINSERTED | \
+    SHCNE_MEDIAREMOVED | \
+    SHCNE_NETSHARE | \
+    SHCNE_NETUNSHARE | \
+    SHCNE_RENAMEFOLDER | \
+    SHCNE_UPDATEITEM
+
+class CDrivesSFVCB : public CDefSFVCB
+{
+public:
+    CDrivesSFVCB(IShellFolder* psf)
+        : CDefSFVCB(psf, (LPCITEMIDLIST)&c_idlDrives, DRIVES_EVENTS)
+        { }
+
+    STDMETHODIMP RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+    HRESULT OnMergeMenu(DWORD pv, QCMINFO*lP)
+    {
+        CDefFolderMenu_MergeMenu(HINST_THISDLL, 0, POPUP_DRIVES_POPUPMERGE, lP);
+        return(NOERROR);
+    }
+
+    HRESULT OnInvokeCommand(DWORD pv, UINT wP)
+    {
+        INSTRUMENT_INVOKECOMMAND(SHCNFI_DRIVES_FNV_INVOKE, m_hwndMain, wP);
+        return(CDrives_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_INVOKECOMMAND, wP, 0));
+    }
+
+    HRESULT OnGetHelpText(DWORD pv, UINT wPl, UINT wPh, LPTSTR lP)
+    {
+#ifdef UNICODE
+        return(CDrives_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXTW,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#else
+        return(CDrives_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXT,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#endif
+    }
+
+    HRESULT OnWindowCreated(DWORD pv, HWND wP)
+    {
+#ifdef DEBUG
+        // Get any new debug flags when My Computer is opened 
+        CcshellGetDebugFlags();
+#endif
+
+        return(S_OK);
+    }
+
+    HRESULT OnInsertItem(DWORD pv, LPCITEMIDLIST wP)
+    {
+        LPIDDRIVE pidd = (LPIDDRIVE)wP;
+        if (pidd && !Drives_IsReg(pidd) && ShowDriveInfo(DRIVEID(pidd->cName)))
+        {
+            // clear the size info
+            pidd->qwSize = pidd->qwFree = 0;
+        }
+        return(NOERROR);
+    }
+
+    HRESULT OnUpdateStatusBar(DWORD pv, BOOL wP)
+    {
+        HRESULT hres = NOERROR;
+        if (wP)
+        {
+            // are we initializing?
+            FSInitializeStatus(m_hwndMain, -1, NULL);
+            Drives_OnRefresh(m_pshf, m_hwndMain);
+        }
+        else
+        {
+            hres = E_FAIL; // if we're not initializing, we want def view to add it's selected count
+        }
+        Drives_OnSelChange(m_pshf, m_hwndMain);
+        return(hres);
+    }
+
+    HRESULT OnSelChange(DWORD pv, UINT wPl, UINT wPh, SFVM_SELCHANGE_DATA*lP)
+    {
+        Drives_OnSelChange(m_pshf, m_hwndMain);
+        return(E_FAIL); // we want defview to do status stuff
+    }
+
+    HRESULT OnFSNotify(DWORD pv, LPCITEMIDLIST*wP, LONG lP)
+    {
+        return(DrivesHandleFSNotify(m_pshf, lP, wP));
+    }
+
+    HRESULT OnBACKGROUNDENUM(DWORD pv)
+    {
+        return(S_OK);
+    }
+
+    HRESULT OnDEFITEMCOUNT(DWORD pv, UINT*lP)
+    {
+        //
+        // If DefView times out enumerating items, let it know we probably only
+        // have about 20 items
+        //
+
+        *lP = 20;
+        return(S_OK);
+    }
+
+    HRESULT OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj);
+} ;
+
+
+HRESULT CDrivesSFVCB::OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj)
+{
+    *ppObj = NULL;
+
+    CViewsList cViews;
+
+    // Add base class stuff
+    cViews.AddReg(HKEY_CLASSES_ROOT, TEXT("folder"));
+
+    // Add this class stuff
+    cViews.AddCLSID(&CLSID_ShellDrives);
+    cViews.GetDef(pvid);
+
+    return(CreateEnumCViewList(&cViews, ppObj));
+
+    // Note the automatic destructor will free any views still left
+}
+
+STDMETHODIMP CDrivesSFVCB::RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    HANDLE_MSG(0, SFVM_MERGEMENU, OnMergeMenu);
+    HANDLE_MSG(0, SFVM_INVOKECOMMAND, OnInvokeCommand);
+    HANDLE_MSG(0, SFVM_GETHELPTEXT, OnGetHelpText);
+    HANDLE_MSG(0, SFVM_INSERTITEM, OnInsertItem);
+    HANDLE_MSG(0, SFVM_UPDATESTATUSBAR, OnUpdateStatusBar);
+    HANDLE_MSG(0, SFVM_SELCHANGE, OnSelChange);
+    HANDLE_MSG(0, SFVM_FSNOTIFY, OnFSNotify);
+    HANDLE_MSG(0, SFVM_BACKGROUNDENUM, OnBACKGROUNDENUM);
+    HANDLE_MSG(0, SFVM_DEFITEMCOUNT, OnDEFITEMCOUNT);
+    HANDLE_MSG(0, SFVM_GETVIEWS, OnGetViews);
+    HANDLE_MSG(0, SFVM_ADDPROPERTYPAGES, SFVCB_OnAddPropertyPages);
+    HANDLE_MSG(0, SFVM_WINDOWCREATED, OnWindowCreated);
+
+    default:
+        return(E_FAIL);
+    }
+
+    return(NOERROR);
+}
+
+
+IShellFolderViewCB* Drives_CreateSFVCB(IShellFolder* psf)
+{
+    return(new CDrivesSFVCB(psf));
+}
+
+
+//
+// Control Panel stuff
+//
+
+void Control_OnSelChange(HWND hwndOwner)
+{
+    int i;
+    LPTSTR lpsz = (LPTSTR)c_szNULL;
+
+    i = ShellFolderView_GetSelectedCount(hwndOwner);
+    if (i == 1)
+    {
+        LPITEMIDLIST *apidl = NULL;
+        LPIDCONTROL pidc;
+
+        ShellFolderView_GetSelectedObjects(hwndOwner, &apidl);
+        if(apidl)
+        {
+            pidc = (LPIDCONTROL)apidl[0];
+#ifdef UNICODE
+            WCHAR szInfo[MAX_CCH_CPLINFO];
+
+            if (IsUnicodeCPL(pidc))
+            {
+#ifdef ALIGNMENT_SCENARIO
+                ualstrcpyn(szInfo, &pidc->cBufW[pidc->oInfoW], ARRAYSIZE(szInfo));
+                lpsz = szInfo;
+#else
+                lpsz = &pidc->cBufW[pidc->oInfoW];
+#endif
+            }
+            else
+            {
+                MultiByteToWideChar(CP_ACP, 0,
+                        &pidc->cBuf[pidc->oInfo], -1,
+                        szInfo, ARRAYSIZE(szInfo));
+                lpsz = szInfo;
+            }
+#else
+            lpsz = &pidc->cBuf[pidc->oInfo];
+#endif
+	    FSSetStatusText(hwndOwner, &lpsz, 1, 1);
+            LocalFree(apidl);
+        }
+    }
+    else
+        FSSetStatusText(hwndOwner, &lpsz, 1, 1);
+}
+
+class CControlSFVCB : public CDefSFVCB
+{
+public:
+    CControlSFVCB(IShellFolder* psf, LPCITEMIDLIST pidl)
+        : CDefSFVCB(psf, pidl, SHCNE_UPDATEITEM)
+        { }
+
+    STDMETHODIMP RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+    HRESULT OnMERGEMENU(DWORD pv, QCMINFO*lP)
+    {
+        CDefFolderMenu_MergeMenu(HINST_THISDLL, 0, POPUP_CONTROLS_POPUPMERGE, lP);
+        return(S_OK);
+    }
+
+    HRESULT OnINVOKECOMMAND(DWORD pv, UINT wP)
+    {
+        INSTRUMENT_INVOKECOMMAND(SHCNFI_CONTROLS_FNV_INVOKE, m_hwndMain, wP);
+        return(CControls_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_INVOKECOMMAND,
+            wP, 0));
+    }
+
+    HRESULT OnGETHELPTEXT(DWORD pv, UINT wPl, UINT wPh, LPTSTR lP)
+    {
+#ifdef UNICODE
+        return(CControls_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXTW,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#else
+        return(CControls_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXT,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#endif
+    }
+
+    HRESULT OnUPDATESTATUSBAR(DWORD pv, BOOL wP)
+    {
+        HRESULT hres = NOERROR;
+        if (wP)
+        {
+            // are we initializing?
+            FSInitializeStatus(m_hwndMain, -1, NULL);
+            Drives_OnRefresh(m_pshf, m_hwndMain);
+        }
+        else
+        {
+            hres = E_FAIL; // if we're not initializing, we want def view to add it's selected count
+        }
+        Control_OnSelChange(m_hwndMain);
+        return(hres);
+    }
+
+    HRESULT OnDEFITEMCOUNT(DWORD pv, UINT*lP)
+    {
+        //
+        // If DefView times out enumerating items, let it know we probably only
+        // have about 20 items
+        //
+
+        *lP = 20;
+        return(S_OK);
+    }
+
+    HRESULT OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj);
+} ;
+
+
+HRESULT CControlSFVCB::OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj)
+{
+    *ppObj = NULL;
+
+    CViewsList cViews;
+
+    // Add base class stuff
+    cViews.AddReg(HKEY_CLASSES_ROOT, TEXT("folder"));
+
+    // Add this class stuff
+    cViews.AddCLSID(&CLSID_CControls);
+    cViews.GetDef(pvid);
+
+    return(CreateEnumCViewList(&cViews, ppObj));
+
+    // Note the automatic destructor will free any views still left
+}
+
+
+STDMETHODIMP CControlSFVCB::RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    HANDLE_MSG(0, SFVM_MERGEMENU, OnMERGEMENU);
+    HANDLE_MSG(0, SFVM_INVOKECOMMAND, OnINVOKECOMMAND);
+    HANDLE_MSG(0, SFVM_GETHELPTEXT, OnGETHELPTEXT);
+    HANDLE_MSG(0, SFVM_UPDATESTATUSBAR, OnUPDATESTATUSBAR);
+    HANDLE_MSG(0, SFVM_DEFITEMCOUNT, OnDEFITEMCOUNT);
+    HANDLE_MSG(0, SFVM_GETVIEWS, OnGetViews);
+
+    default:
+        return(E_FAIL);
+    }
+
+    return(NOERROR);
+}
+
+
+IShellFolderViewCB* Controls_CreateSFVCB(IShellFolder* psf, LPCITEMIDLIST pidl)
+{
+    return(new CControlSFVCB(psf, pidl));
+}
+
+
+//
+// Printers stuff
+//
+
+
+#define PRINTERS_EVENTS \
+    SHCNE_UPDATEITEM | \
+    SHCNE_DELETE | \
+    SHCNE_RENAMEITEM | \
+    SHCNE_ATTRIBUTES | \
+    SHCNE_CREATE
+
+
+class CPrinterSFVCB : public CDefSFVCB
+{
+public:
+    CPrinterSFVCB(IShellFolder* psf, PPrintersShellFolder pPrinterFolder, LPCITEMIDLIST pidl)
+        : CDefSFVCB(psf, pidl, PRINTERS_EVENTS), m_uRegister(0), m_pPrinterFolder(pPrinterFolder)
+        { }
+
+    STDMETHODIMP RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+private:
+    HRESULT OnMERGEMENU(DWORD pv, QCMINFO*lP)
+    {
+        CDefFolderMenu_MergeMenu(HINST_THISDLL, 0, POPUP_PRINTERS_POPUPMERGE, lP);
+        return(S_OK);
+    }
+
+    HRESULT OnINVOKECOMMAND(DWORD pv, UINT wP)
+    {
+        INSTRUMENT_INVOKECOMMAND(SHCNFI_CONTROLS_FNV_INVOKE, m_hwndMain, wP);
+        return(CPrinters_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_INVOKECOMMAND,
+            wP, 0));
+    }
+
+    HRESULT OnGETHELPTEXT(DWORD pv, UINT wPl, UINT wPh, LPTSTR lP)
+    {
+#ifdef UNICODE
+        return(CPrinters_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXTW,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#else
+        return(CPrinters_DFMCallBackBG(m_pshf, m_hwndMain, NULL, DFM_GETHELPTEXT,
+            MAKEWPARAM(wPl, wPh), (LPARAM)lP));
+#endif
+    }
+
+    HRESULT OnFolderIsParent(DWORD pv, LPITEMIDLIST pidlChild)
+    {
+        if (FALSE == ILIsParent(CPrintRoot_GetPIDL(NULL), pidlChild, TRUE) &&
+            FALSE == ILIsParent(m_pPrinterFolder->lpcinfo->pidl, pidlChild, TRUE))
+        {
+            return S_FALSE;
+        }
+
+        return S_OK;
+    }
+
+    HRESULT OnWindowCreated(DWORD pv, HWND hwndView)
+    {
+        if (hwndView)
+        {
+            SHChangeNotifyEntry fsne;
+            fsne.pidl       = CPrintRoot_GetPIDL(NULL);
+            fsne.fRecursive = FALSE;
+
+            m_uRegister = SHChangeNotifyRegister(hwndView,
+                                                     SHCNRF_NewDelivery | SHCNRF_ShellLevel | SHCNRF_InterruptLevel,
+                                                     SHCNE_DISKEVENTS,
+                                                     WM_DSV_FSNOTIFY,
+                                                     1,
+                                                     &fsne);
+        }
+        return NOERROR;
+    }
+
+    HRESULT OnWindowDestroyed(DWORD pv, HWND hwnd)
+    {
+        if (m_uRegister)
+        {
+            SHChangeNotifyDeregister(m_uRegister);
+        }
+        return NOERROR;
+    }
+
+#ifdef WINNT
+    HRESULT OnBACKGROUNDENUM(DWORD pv)
+    {
+        return(m_pPrinterFolder->szServer? S_OK : E_FAIL);
+    }
+#endif
+
+    HRESULT OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj);
+
+    // Variables
+    DWORD       m_uRegister;
+    PPrintersShellFolder m_pPrinterFolder;
+} ;
+
+
+HRESULT CPrinterSFVCB::OnGetViews(DWORD pv, SHELLVIEWID *pvid, IEnumSFVViews **ppObj)
+{
+    *ppObj = NULL;
+
+    CViewsList cViews;
+
+    // Add base class stuff
+    cViews.AddReg(HKEY_CLASSES_ROOT, TEXT("folder"));
+
+    // Add this class stuff
+    cViews.AddCLSID(&CLSID_CPrinters);
+    cViews.GetDef(pvid);
+
+    return(CreateEnumCViewList(&cViews, ppObj));
+
+    // Note the automatic destructor will free any views still left
+}
+
+
+STDMETHODIMP CPrinterSFVCB::RealMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    HANDLE_MSG(0, SFVM_MERGEMENU, OnMERGEMENU);
+    HANDLE_MSG(0, SFVM_INVOKECOMMAND, OnINVOKECOMMAND);
+    HANDLE_MSG(0, SFVM_GETHELPTEXT, OnGETHELPTEXT);
+    HANDLE_MSG(0, SFVM_GETVIEWS, OnGetViews);
+    HANDLE_MSG(0, SFVM_FOLDERISPARENT, OnFolderIsParent);
+    HANDLE_MSG(0, SFVM_WINDOWCREATED, OnWindowCreated);
+    HANDLE_MSG(0, SFVM_WINDOWDESTROY, OnWindowDestroyed);
+#ifdef WINNT
+    HANDLE_MSG(0, SFVM_BACKGROUNDENUM, OnBACKGROUNDENUM);
+#endif
+
+    default:
+        return(E_FAIL);
+    }
+
+    return(NOERROR);
+}
+
+
+IShellFolderViewCB* Printer_CreateSFVCB(IShellFolder* psf, PPrintersShellFolder pPrinterFolder, 
+        LPCITEMIDLIST pidl)
+{
+    return(new CPrinterSFVCB(psf, pPrinterFolder, pidl));
+}

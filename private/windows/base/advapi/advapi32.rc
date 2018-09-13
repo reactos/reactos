@@ -1,0 +1,17 @@
+#include <windows.h>
+
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Advanced Windows 32 Base API"
+#define VER_INTERNALNAME_STR        "advapi32.dll"
+
+#include "common.ver"
+
+RCINCLUDE win31evt.rc
+
+#define IDR_PUBKEY1                     102
+
+IDR_PUBKEY1             RCDATA  DISCARDABLE     "pubkey.bin"
+

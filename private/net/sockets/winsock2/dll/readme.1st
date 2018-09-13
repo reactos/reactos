@@ -1,0 +1,6 @@
+This directory contains the unaltered WinSock 2.0 files as received from
+Intel. The only addition/modification made to these files was the addition
+of this file (README.1ST) describing the nature of these files.
+
+Latest update from Intel: October 7, 1995
+

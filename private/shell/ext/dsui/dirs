@@ -1,0 +1,2 @@
+DIRS=common dsfolder dsquery cmnquery dsuiext
+OPTIONAL_DIRS=

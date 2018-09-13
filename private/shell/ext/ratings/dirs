@@ -1,0 +1,8 @@
+DIRS= \
+    common   \
+    msrating
+
+OPTIONAL_DIRS = \
+    mslocusr \
+    npstub
+

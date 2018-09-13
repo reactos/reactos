@@ -1,0 +1,61 @@
+/********************************************************************/
+/*        CONTROL.RCV                                               */
+/*        Version control data generated from layouts.dat           */
+/********************************************************************/
+#include <ntverp.h>
+
+
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Control Panel DLL"
+#define VER_INTERNALNAME_STR		"CONTROL"
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1999"
+#define VER_ORIGINALFILENAME_STR	"DESK.CPL"
+
+//
+// Deskw95.cpl is a strange puppy, because it is a Windows 95-specific file.
+//
+// We need to make sure our version number is...
+//
+// Greater than IE 4.01 (4.72.2106.x)
+// Less than Memphis    (4.72.3110.x)
+// Somehow related to the IE build number
+//
+// So our version number is this:
+//
+// 4.72.2xyy.zzzz
+//
+// where xyy is the IE version (IE5 = 500, IE5.01 = 501, IE5.10 = 510, etc.)
+//      zzzz is the IE build number relative to version x.yy
+//
+//  In other words,
+//
+//      IE x.yy.zzzz.0  =  deskw95.cpl 4.72.2xyy.zzzz
+//
+
+#define VER_FAKEBUILD2(x,y) 2##x##y
+#define VER_FAKEBUILD1(x,y) VER_FAKEBUILD2(x,y)
+#define VER_FAKEBUILD       VER_FAKEBUILD1(VER_MAJOR_PRODUCTVER, VER_MINOR_PRODUCTVER)
+
+#undef VER_PRODUCTVERSION
+#undef VER_PRODUCTVERSION_W
+#undef VER_PRODUCTVERSION_DW
+#undef VER_PRODUCTVERSION_STRING
+#undef VER_PRODUCTVERSION_STRING
+#undef VER_PRODUCTVERSION_STR2
+#undef VER_PRODUCTVERSION_STR1
+#undef VER_PRODUCTVERSION_STR
+
+#define VER_PRODUCTVERSION              4,72,VER_FAKEBUILD,VER_PRODUCTBUILD
+#define VER_PRODUCTVERSION_W            0x0448 // 0x048 = 72
+#define VER_PRODUCTVERSION_DW           0x04480000 + VER_FAKEBUILD
+#define VER_PRODUCTVERSION_STRING       "4.72"
+
+#define VER_PRODUCTVERSION_STR2(x,y,z) VER_PRODUCTVERSION_STRING ".2" #x #y "." #z
+#define VER_PRODUCTVERSION_STR1(x,y,z) VER_PRODUCTVERSION_STR2(x, y, z)
+#define VER_PRODUCTVERSION_STR          \
+        VER_PRODUCTVERSION_STR1(VER_MAJOR_PRODUCTVER, \
+                                VER_MINOR_PRODUCTVER, \
+                                VER_PRODUCTBUILD)
+
+#include <common.ver>

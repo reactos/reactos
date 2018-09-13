@@ -1,0 +1,236 @@
+// WARNING
+// localizable resources only
+// non-localizable resources must go in url.rc
+
+#include "winver.h"
+#include "resource.h"
+#include <commctrl.h>
+#include <winuser.h>
+
+#include "url.rcv"
+
+// nonlocalizable resources used by localizable resources (dialogs, etc)
+// BUGBUG if pluggable UI gets turned on for this dll IDI_WEB_DOCUMENT
+// needs to live in urllc.rc as well as url.rc
+//IDI_WEB_DOCUMENT        ICON    DISCARDABLE     "WEBDOC.ICO"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_INTERNET_SHORTCUT_PROP_SHEET DIALOG DISCARDABLE  20, 20, 227, 200
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Internet Shortcut"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_WEB_DOCUMENT,IDD_ICON,7,7,18,20
+    EDITTEXT        IDD_NAME,48,11,172,14,ES_AUTOHSCROLL | ES_READONLY | NOT
+                    WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "",IDD_LINE_1,7,32,213,1,SS_ETCHEDHORZ
+    LTEXT           "&Target URL:",IDD_URL_TEXT,7,43,40,8
+    EDITTEXT        IDD_URL,57,40,163,14,ES_AUTOHSCROLL
+    LTEXT           "",IDD_LINE_2,7,62,213,1,SS_ETCHEDHORZ
+    LTEXT           "&Start in:",-1,7,73,25,8
+    EDITTEXT        IDD_START_IN,57,70,163,14,ES_AUTOHSCROLL
+    LTEXT           "Shortcut &key:",IDD_START_IN_TEXT,7,93,43,8
+    CONTROL         "",IDD_HOTKEY,"msctls_hotkey32",WS_BORDER | WS_TABSTOP,
+                    57,90,163,14
+    LTEXT           "&Run:",-1,7,113,16,8
+    COMBOBOX        IDD_SHOW_CMD,57,110,163,40,CBS_DROPDOWNLIST | WS_VSCROLL |
+                    WS_TABSTOP
+    PUSHBUTTON      "&Change Icon...",IDD_CHANGE_ICON,160,179,60,14
+END
+
+DLG_OPENAS DIALOG DISCARDABLE  0, 0, 212, 179
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Open With"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Choose the program you want to use:",-1,7,36,169,8
+    CONTROL         "",IDD_APPLIST,WC_LISTVIEW,WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS,7,46,197,78
+    LTEXT           "Click the program you want to use to open the file '%s'.\nIf the program you want is not in the list, click Other.",IDD_TEXT,7,7,198,24
+    CONTROL         "Always &use this program to open this type of file",IDD_MAKEASSOC, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,131,198,10
+    DEFPUSHBUTTON   "OK",IDOK,47,157,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,101,157,50,14
+    PUSHBUTTON      "O&ther...",IDD_OTHER,155,157,50,14
+END
+
+DLG_OPENAS_NOTYPE DIALOG DISCARDABLE  0, 0, 212, 209
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Open With"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Click the program you want to use to open the file '%s'.\nIf the program you want is not in the list, click Other.",IDD_TEXT,7,7,199,24
+    LTEXT           "&Description of '%s' files:",IDD_DESCRIPTIONTEXT,7,32,169,8
+    EDITTEXT        IDD_DESCRIPTION,7,45,197,14,ES_AUTOHSCROLL
+    LTEXT           "&Choose the program you want to use:",IDC_STATIC,7,66,169,8
+    CONTROL         "",IDD_APPLIST,WC_LISTVIEW,WS_TABSTOP | LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS,7,76,197,78
+    CONTROL         "Always &use this program to open this file",IDD_MAKEASSOC, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,161,198,10
+    DEFPUSHBUTTON   "OK",IDOK,47,187,50,14,WS_DISABLED
+    PUSHBUTTON      "Cancel",IDCANCEL,101,187,49,14
+    PUSHBUTTON      "O&ther...",IDD_OTHER,155,187,50,14
+END
+
+DLG_FILETYPEOPTIONS DIALOG DISCARDABLE  0, 0, 227, 212
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "File Types"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Registered file &types:",IDC_STATIC,7,7,108,8
+    CONTROL         "",IDC_FT_PROP_LV_FILETYPES,WC_LISTVIEW, WS_BORDER | WS_TABSTOP | LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_SINGLESEL | LVS_SHOWSELALWAYS,7,16,145,100
+    DEFPUSHBUTTON   "&New Type...",IDC_FT_PROP_NEW,164,16,55,14
+    PUSHBUTTON      "&Remove",IDC_FT_PROP_REMOVE,164,33,55,14
+    PUSHBUTTON      "&Edit...",IDC_FT_PROP_EDIT,164,51,55,14
+    ICON            "",IDC_FT_PROP_DOCICON,14,135,18,20
+    LTEXT           "Extension:",IDC_FT_PROP_DOCEXTRO_TXT,45,142,34,8
+    EDITTEXT        IDC_FT_PROP_DOCEXTRO,120,142,93,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    ICON            "",IDC_FT_PROP_OPENICON,14,177,18,20
+    LTEXT           "Opens with:",IDC_FT_PROP_OPENEXE_TXT,45,184,38,8
+    EDITTEXT        IDC_FT_PROP_OPENEXE,120,184,93,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    LTEXT           "Content type (MIME):",IDC_FT_PROP_CONTTYPERO_TXT,45,163,70,8
+    EDITTEXT        IDC_FT_PROP_CONTTYPERO,120,163,93,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    GROUPBOX        "File type details",IDC_GROUPBOX,7,121,213,84
+END
+
+DLG_FILETYPEOPTIONSEDIT DIALOG DISCARDABLE  32, 20, 227, 246
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Edit File Type"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDC_FT_EDIT_DOCICON,7,11,21,20
+    PUSHBUTTON      "Change &Icon...",IDC_FT_EDIT_CHANGEICON,48,14,65,14
+    CONTROL         "",IDC_NO_HELP_1,"Static",SS_BLACKFRAME,6,41,213,1
+    LTEXT           "&Description of type:",IDC_FT_EDIT_DESCTEXT,7,49,62,8
+    EDITTEXT        IDC_FT_EDIT_DESC,83,47,136,14,ES_AUTOHSCROLL
+    LTEXT           "Asso&ciated extension:",IDC_FT_EDIT_EXTTEXT,7,68,70,8,
+                    NOT WS_VISIBLE
+    EDITTEXT        IDC_FT_EDIT_EXT,83,66,136,14,ES_AUTOHSCROLL | NOT 
+                    WS_VISIBLE
+    LTEXT           "Content &type (MIME):",IDC_FT_COMBO_CONTTYPETEXT,7,87,
+                    70,8
+    COMBOBOX        IDC_FT_COMBO_CONTTYPE,83,85,136,58,CBS_DROPDOWN | 
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Default e&xtension for content type:",
+                    IDC_FT_COMBO_DEFEXTTEXT,7,106,113,8
+    COMBOBOX        IDC_FT_COMBO_DEFEXT,129,104,90,52,CBS_DROPDOWNLIST | 
+                    CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Actions:",IDC_FT_EDIT_LV_CMDSTEXT,7,118,52,8
+    CONTROL         "",IDC_FT_EDIT_LV_CMDS,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_SORTASCENDING | LVS_OWNERDRAWFIXED | 
+                    LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,7,128,212,46
+    PUSHBUTTON      "&New...",IDC_FT_EDIT_NEW,7,178,50,14
+    PUSHBUTTON      "&Edit...",IDC_FT_EDIT_EDIT,61,178,50,14
+    PUSHBUTTON      "&Remove",IDC_FT_EDIT_REMOVE,116,178,50,14,WS_DISABLED
+    PUSHBUTTON      "&Set Default",IDC_FT_EDIT_DEFAULT,170,178,50,14
+    CONTROL         " Confirm &open after download",IDC_FT_EDIT_CONFIRM_OPEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,108,197,110,8
+    CONTROL         " Al&ways show extension",IDC_FT_EDIT_SHOWEXT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,210,90,8
+    CONTROL         " &Browse in same window",IDC_BROWSEINPLACE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED,108,210,92,10
+    DEFPUSHBUTTON   "OK",IDOK,116,228,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,228,50,14
+END
+
+DLG_FILETYPEOPTIONSCMD DIALOG DISCARDABLE  5, 0, 227, 207
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "New Action"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Action:",IDC_STATIC,7,7,63,8
+    EDITTEXT        IDC_FT_CMD_ACTION,7,16,155,14,ES_AUTOHSCROLL
+    LTEXT           "App&lication used to perform action:",
+                    IDC_FT_CMD_EXETEXT,7,41,150,8
+    EDITTEXT        IDC_FT_CMD_EXE,7,50,155,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "B&rowse...",IDC_FT_CMD_BROWSE,169,50,50,14
+    GROUPBOX        "                     ",IDC_FT_CMD_DDEGROUP,7,73,155,125
+    CONTROL         "&Use DDE",IDC_FT_CMD_USEDDE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,14,73,45,8
+    LTEXT           "&DDE message:",IDC_STATIC,13,88,67,8
+    EDITTEXT        IDC_FT_CMD_DDEMSG,13,97,143,14,ES_AUTOHSCROLL
+    LTEXT           "Appli&cation:",IDC_STATIC,13,115,40,8
+    EDITTEXT        IDC_FT_CMD_DDEAPP,13,124,143,14,ES_AUTOHSCROLL
+    LTEXT           "DDE application &not running:",IDC_STATIC,13,142,104,8
+    EDITTEXT        IDC_FT_CMD_DDEAPPNOT,13,151,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Topic:",IDC_STATIC,13,169,39,8
+    EDITTEXT        IDC_FT_CMD_DDETOPIC,13,178,143,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,169,16,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,33,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SHOW_NORMAL         "Normal window"
+    IDS_SHOW_MINIMIZED      "Minimized"
+    IDS_SHOW_MAXIMIZED      "Maximized"
+    IDS_INVALID_URL_SYNTAX  "The name ""%1"" specified in the Target URL box is not valid. Make sure the name is correct."
+    IDS_UNREGISTERED_PROTOCOL
+                            "The protocol ""%1"" does not have a registered program. Do you want to keep this target anyway?"
+    IDS_SHORTCUT_ERROR_TITLE "Problem with Shortcut"
+    IDS_WORKING_DIR_NOT_FOUND
+                            "The folder ""%1"" specified in the Start In box is not valid. Make sure that the folder exists and that the path is correct."
+    IDS_EXEC_FAILED         "This Internet shortcut cannot be opened because %1 failed to run."
+    IDS_EXEC_OUT_OF_MEMORY  "There is not enough free memory to open this Internet shortcut. Quit one or more programs, and then try again."
+    IDS_EXEC_INVALID_SYNTAX "The target ""%1"" of this Internet shortcut is not valid. Go to the Internet shortcut's property sheet and make sure the target is correct."
+    IDS_EXEC_UNREGISTERED_PROTOCOL
+                            "Unable to open this Internet shortcut. The protocol ""%1"" does not have a registered program."
+    IDS_OPEN_INTSHCUT_OUT_OF_MEMORY "There is not enough free memory to open this Internet shortcut. Quit one or more programs, and then try again."
+    IDS_NO_MAPI_PROVIDER    "Cannot send mail. No mail program is set up to send mail using Internet shortcuts."
+    IDS_MAPI_LOADLIBRARY_FAILED "Cannot send mail. Unable to load %1. Try setting up your mail program again."
+    IDS_MAPI_GETPROCADDRESS_FAILED
+                            "Cannot send mail. %1 is missing entry point %2. You may have an incorrect version of %1. Try setting up your mail program again."
+    IDS_MAPI_MAPISENDMAIL_FAILED "The mail program was unable to send mail."
+    IDS_NEWS_LOADLIBRARY_FAILED "To read Internet newsgroups, you must install news reading software and make sure it is set up correctly."
+    IDS_NEWS_GETPROCADDRESS_FAILED "To read Internet newsgroups, you must install news reading software and make sure it is set up correctly. Microsoft Network users can read newsgroups by upgrading their accounts to support Internet access."
+    IDS_TELNET_APP_NOT_FOUND  "Unable to open this Internet shortcut. %1 cannot be found. Try installing %1 by double-clicking the Add/Remove Programs icon in Control Panel."
+    IDS_TELNET_EXEC_FAILED    "This Internet shortcut cannot be opened because %1 failed to run."
+    IDS_LOADFROMFILE_FAILED "Unable to open Internet shortcut ""%1""."
+    IDS_SHELLEXECUTE_FAILED "Unable to open ""%1""."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_SHORT_NEW_INTERNET_SHORTCUT "ishortct.url"
+    IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut.url"
+    IDS_INTERNET_SHORTCUT   "Internet Shortcut"
+    IDS_URL_DESC_FORMAT     "URL:%s Protocol"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ADDNEWFILETYPE      "Add New File Type"
+    IDS_EXTTYPETEMPLATE     "%s File"
+    IDS_FT                  "File Types"
+    IDS_FT_CLOSE            "Close"
+    IDS_FT_EDITTITLE        "Editing action for type: "
+    IDS_FT_EXEFILE          "[Executable]"
+    IDS_FT_MB_EXETEXT       "The specified program could not be found. Make sure the filename and path are correct."
+    IDS_FT_MB_EXTTEXT       "The extension %s is already in use by file type %s. Choose another extension."
+    IDS_FT_MB_NOACTION      "You must specify an action."
+    IDS_FT_MB_NOEXT         "You must specify an extension for the file type."
+    IDS_FT_MB_REMOVEACTION  "Are you sure you would like to remove this action?"
+    IDS_FT_MB_REMOVETYPE    "If you remove a registered file type, you will not be able to open\nfiles of that type by double-clicking their icons.\n\nAre you sure you want to remove the file type?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_OPENAS              "Open With"
+    IDS_EXE                 "exe"
+    IDS_PROGRAMSFILTER      "Programs#*.exe;*.pif;*.com;*.bat#All Files (*.*)#*.*#"
+    IDS_FILETYPENAME        "File"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_IE3_INSTALL_BLOCK_TEXT    "The installation of Internet Explorer 3.02 cannot proceed because you already have a newer version of Internet Explorer installed. Internet Explorer 3.02 setup will now quit."
+    IDS_IE3_INSTALL_BLOCK_TITLE   "Newer version of Internet Explorer detected"
+END
+

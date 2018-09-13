@@ -1,0 +1,13 @@
+
+MAJORCOMP=user
+MINORCOMP=kbdhe319
+
+TARGETNAME=kbdhe319
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+
+!INCLUDE ..\..\sources.inc
+
+SOURCES=kbdhe319.c kbdhe319.rc
+
+NTTARGETFILE0=kbdhe319.h kbdhe319.rc kbdhe319.def

@@ -1,0 +1,19 @@
+
+//+------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       frmsite.idl
+//
+//  Contents:   IFrameSite interface
+//
+//  History:    5-Jan-96   IstvanC Created
+//
+//-------------------------------------------------------------------------
+
+CONTROL_DEFAULT_DERIVED(IFrameSite, IControl, 114805C0-46D7-11cf-8A73-00AA00C0180B)
+{
+    PROPERTY_SETANDGET3 ( BackColor,       OLE_COLOR,            BackColor,      DISPID_BACKCOLOR,                  bindable, displaybind, helpcontext(f3proBackColor) )
+}
+

@@ -1,0 +1,75 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1999
+//
+//  File:       dmocx.idl
+//
+//--------------------------------------------------------------------------
+
+// ctv.odl : type library source for OLE Control project.
+
+// This file will be processed by the Make Type Library (mktyplib) tool to
+// produce the type library (ctv.tlb) that will become a resource in
+// ctv.ocx.
+
+#include <olectl.h>
+#include <idispids.h>
+
+[ uuid(CD6C7865-5864-11D0-ABF0-0020AF6B0B7A), version(1.0),
+  helpstring("ctv OLE Control module"), control ]
+library CTVLib
+{
+        importlib(STDOLE_TLB);
+        importlib(STDTYPE_TLB);
+
+        //  Primary dispatch interface for CTVCtrl
+
+        [ uuid(CD6C7866-5864-11D0-ABF0-0020AF6B0B7A),
+          helpstring("Dispatch interface for CTreeView Control"), hidden ]
+        dispinterface _DTV
+        {
+                properties:
+                        // NOTE - ClassWizard will maintain property information here.
+                        //    Use extreme caution when editing this section.
+                        //{{AFX_ODL_PROP(CTVCtrl)
+                        //}}AFX_ODL_PROP
+
+                methods:
+                        // NOTE - ClassWizard will maintain method information here.
+                        //    Use extreme caution when editing this section.
+                        //{{AFX_ODL_METHOD(CTVCtrl)
+                        //}}AFX_ODL_METHOD
+
+        };
+
+        //  Event dispatch interface for CTVCtrl
+
+        [ uuid(CD6C7867-5864-11D0-ABF0-0020AF6B0B7A),
+          helpstring("Event interface for CTreeView Control") ]
+        dispinterface _DTVEvents
+        {
+                properties:
+                        //  Event interface has no properties
+
+                methods:
+                        // NOTE - ClassWizard will maintain event information here.
+                        //    Use extreme caution when editing this section.
+                        //{{AFX_ODL_EVENT(CTVCtrl)
+                        //}}AFX_ODL_EVENT
+        };
+
+        //  Class information for CTVCtrl
+
+        [ uuid(CD6C7868-5864-11D0-ABF0-0020AF6B0B7A),
+          helpstring("CTreeView Control"), control ]
+        coclass TV
+        {
+                [default] dispinterface _DTV;
+                [default, source] dispinterface _DTVEvents;
+        };
+
+
+        //{{AFX_APPEND_ODL}}
+};

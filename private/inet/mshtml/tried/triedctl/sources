@@ -1,0 +1,88 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\tried\triedctl=)
+!include $(ROOT)\common.inc
+
+CHECKED_ALT_DIR=1
+
+TARGETNAME=dhtmled
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETPATH=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+TARGETEXT=ocx
+DLLENTRY=_DllMainCRTStartup
+
+COFFBASE=dhtmled
+DLLDEF=$O\dhtmled.def
+UMDEF=
+
+MSC_WARNING_LEVEL=/W4
+
+CONDITIONAL_INCLUDES=triedit.rcs
+
+INCLUDES= .; ..\inc;$(BASEDIR)\public\sdk\inc\atl21;$(SDK_LIB_PATH); ..\triedit
+
+C_DEFINES = $(C_DEFINES) -D_ATL_STATIC_REGISTRY
+
+
+# list all cpp files below in alphabetical order
+SOURCES=\
+	DHTMLEd.idl	\
+	Ambients.cpp	\
+	DEInsTab.cpp	\
+	DENames.cpp	\
+	DHSHWUI.CPP	\
+	DHTMLEd.cpp	\
+	DHTMLEdit.cpp	\
+	DHUIHNDL.CPP	\
+	dispexa.cpp	\
+	IADVSINK.CPP	\
+	ICLISITE.CPP	\
+	IDOCSITE.CPP	\
+	IIPSITE.CPP	\
+	Inc.cpp		\
+	IOleObj.cpp	\
+	IPROPSINK.CPP	\
+	plgprot.cpp	\
+	proxyframe.cpp	\
+	SITE.CPP	\
+	trifilter.cpp	\
+	win95wrp.cpp	\
+	DHTMLEd.rc
+
+	
+USE_MIDL_FOR_MKTYPLIB=1
+
+PRECOMPILED_INCLUDE=stdafx.h
+PRECOMPILED_PCH=stdafx.pch
+PRECOMPILED_OBJ=stdafx.obj
+PRECOMPILED_CXX=1
+
+TARGETLIBS= \
+	$(SDK_LIB_PATH)\urlmon.lib      \
+	$(SDK_LIB_PATH)\wininet.lib     \
+	$(SDK_LIB_PATH)\uuid.lib	\
+	$(SDK_LIB_PATH)\msvcirt.lib	\
+	$(SDK_LIB_PATH)\msvcrt.lib	\
+	$(SDK_LIB_PATH)\oleaut32.lib	\
+	$(SDK_LIB_PATH)\ole32.lib	\
+	$(SDK_LIB_PATH)\kernel32.lib	\
+	$(SDK_LIB_PATH)\gdi32.lib	\
+	$(SDK_LIB_PATH)\user32.lib	\
+	$(SDK_LIB_PATH)\shell32.lib	\
+	$(SDK_LIB_PATH)\comctl32.lib	\
+	$(SDK_LIB_PATH)\comdlg32.lib	\
+	$(SDK_LIB_PATH)\advapi32.lib	\
+	$(SDK_LIB_PATH)\atl.lib 	\
+	$(SDK_LIB_PATH)\imm32.lib \
+!IF $(IA64)
+    $(SDK_LIB_PATH)\atl21asm.lib
+!ENDIF
+
+
+
+

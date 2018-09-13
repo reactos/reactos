@@ -1,0 +1,44 @@
+#ifndef _MARKUP_PDL_
+#define _MARKUP_PDL_   1
+
+#include "document.pdl"
+
+file markup.pdl
+
+import document.pdl
+
+interface IHTMLDocumentFragment guid:3050f5e5-98b5-11cf-bb82-00aa00bdce0b
+    refprop CDocFrag:document
+
+tearoff CMarkup interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID                mapto:GetDispID
+    tearmethod InvokeEx                 mapto:InvokeEx
+    tearmethod GetNameSpaceParent       mapto:GetNameSpaceParent
+    tearmethod GetNextDispID            mapto:GetNextDispID
+    tearmethod GetMemberName            mapto:GetMemberName
+
+tearoff CMarkup interface:IHTMLDocument2
+
+tearoff CMarkup interface:IHTMLDocument3
+
+class CMarkup abstract
+    implements IHTMLDocument2
+    implements IHTMLDocument3
+
+
+tearoff CDocFrag interface:IHTMLDocumentFragment
+
+tearoff CDocFrag interface:IDispatchEx BaseImpl:super::
+    tearmethod GetNameSpaceParent       mapto:GetNameSpaceParent
+
+class CDocFrag name:HTMLDocumentFragment \
+        primaryinterface:IHTMLDocumentFragment \
+        super:CBase \
+        guid:3050f5e6-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f581-98b5-11cf-bb82-00aa00bdce0b
+    
+    implements IHTMLDocumentFragment
+    
+    property document atype:IDispatch* dispid:DISPID_A_DOCFRAGMENT abstract get
+
+#endif //_MARKUP_PDL_

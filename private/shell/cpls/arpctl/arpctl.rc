@@ -1,0 +1,31 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#ifdef WINNT
+#include <nt.h>
+#endif
+#include "winuser.h"
+#include "commctrl.h"
+#include "prsht.h"
+#ifdef WINNT
+#include "winuserp.h"
+#include "winver.h"
+#endif
+#include "arpctl.rcv"
+#include "resource.h"
+
+// ATL self-reg stuff
+IDR_CARPCTL REGISTRY DISCARDABLE    "CARPCtl.rgs"
+
+// Type library
+1           TYPELIB     "arpctl.tlb"
+
+
+// String Table
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_PROJNAME    "ARPCtl"
+    IDS_UNKNOWN     "Unknown"
+END
+

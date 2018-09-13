@@ -1,0 +1,75 @@
+// triedit.idl : IDL source for triedit.dll
+// Copyright 1998-1999 Microsoft Corporation.  All rights reserved.
+
+// This file will be processed by the MIDL tool to
+// produce the type library (triedit.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+cpp_quote("// dwFlags to indicate what needs to be filtered")
+cpp_quote("#define dwFilterDefaults		0x00000000")
+cpp_quote("#define dwFilterNone			0x00000001")
+cpp_quote("#define dwFilterDTCs			0x00000002")
+cpp_quote("#define dwFilterDTCsWithoutMetaTags	0x00000004")
+cpp_quote("#define dwFilterServerSideScripts	0x00000008")
+cpp_quote("#define dwPreserveSourceCode		0x00000010 // whitespace & attrib order")
+cpp_quote("#define dwFilterSourceCode		0x00000020 // set by control for FilterSourceCode Method")
+cpp_quote("#define dwFilterMultiByteStream	0x10000000")
+cpp_quote("#define dwFilterUsePstmNew           0x20000000")
+
+cpp_quote("")
+cpp_quote("#define E_FILTER_FRAMESET		0x80100001")
+cpp_quote("#define E_FILTER_SERVERSCRIPT	0x80100002")
+cpp_quote("#define E_FILTER_MULTIPLETAGS	0x80100004")
+cpp_quote("#define E_FILTER_SCRIPTLISTING	0x80100008")
+cpp_quote("#define E_FILTER_SCRIPTLABEL		0x80100010")
+cpp_quote("#define E_FILTER_SCRIPTTEXTAREA	0x80100020")
+cpp_quote("#define E_FILTER_SCRIPTSELECT	0x80100040")
+
+	[
+		object,
+		uuid(438DA5DF-F171-11D0-984E-0000F80270F8),
+		dual,
+		helpstring("ITriEditDocument Interface"),
+		pointer_default(unique)
+	]
+	interface ITriEditDocument : IDispatch
+	{
+		HRESULT FilterIn([in] IUnknown *pStmOld, [out] IUnknown **ppStmNew, [in] DWORD dwFlags, [in] BSTR bstrBaseURL);
+		HRESULT FilterOut([in] IUnknown *pStmOld, [out] IUnknown **ppStmNew, [in] DWORD dwFlags, [in] BSTR bstrBaseURL);
+	};
+
+[
+	uuid(438DA5D1-F171-11D0-984E-0000F80270F8),
+	version(1.0),
+	helpstring("triedit 1.0 Type Library")
+]
+
+library TRIEDITLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+	[
+		uuid(438DA5E0-F171-11D0-984E-0000F80270F8),
+		helpstring("TriEditDocument Class")
+	]
+	coclass TriEditDocument
+	{
+		[default] interface ITriEditDocument;
+	};
+
+};
+
+	[
+		object,
+		uuid(25188F40-D959-11d1-989F-0000F80270F8),
+		helpstring("IDocHostDragDropHandler Interface"),
+		pointer_default(unique),
+		local
+	]
+	interface IDocHostDragDropHandler : IUnknown
+	{
+		HRESULT DrawDragFeedback([in, out] RECT *pRect);
+	};

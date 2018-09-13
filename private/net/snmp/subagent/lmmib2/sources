@@ -1,0 +1,39 @@
+
+TARGETNAME=lmmib2
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+DLLENTRY=DllEntryPoint
+
+USE_CRTDLL=1
+USER_C_FLAGS=-DUNICODE -D_UNICODE
+
+TARGETLIBS= \
+            $(BASEDIR)\public\sdk\lib\*\snmpapi.lib \
+            $(BASEDIR)\public\sdk\lib\*\winspool.lib \
+            $(BASEDIR)\public\sdk\lib\*\netapi32.lib   \
+            $(BASEDIR)\Public\Sdk\Lib\*\advapi32.lib \
+            $(BASEDIR)\Public\Sdk\Lib\*\wsock32.lib \
+            $(BASEDIR)\public\sdk\lib\*\kernel32.lib
+
+INCLUDES=\
+    $(BASEDIR)\private\net\inc
+
+C_DEFINES=$(C_DEFINES) -DWIN32
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= \
+         testdll.c \
+         mib.c resolve.c mibfuncs.c hash.c \
+         sess_tbl.c sess_lm.c \
+         srvc_tbl.c srvc_lm.c \
+         user_tbl.c user_lm.c \
+         shar_tbl.c shar_lm.c \
+         prnt_tbl.c prnt_lm.c \
+         dlog_tbl.c dlog_lm.c \
+         odom_tbl.c odom_lm.c \
+         srvr_tbl.c srvr_lm.c \
+         uses_tbl.c uses_lm.c \
+         lmcache.c \
+         lmmib2.rc

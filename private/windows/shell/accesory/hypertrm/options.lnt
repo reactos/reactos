@@ -1,0 +1,94 @@
+/*	File: options.lnt
+ *
+ *	$Revision: 1.1 $
+ *	$Date: 1995/06/06 14:52:20 $
+ */
+
+lib-w32.lnt
+
+-si4			// size of int is 4
+-sp4			// size of all pointers is 4
+
+-d_MSC_VER=900
+-d_M_IX86=300
+-d_INTEGRAL_MAX_BITS=64
+-d_MT
+-d__inline=
+-d__int64=long
+-d__declspec()=
+-d_WIN32
+
+-t4
+-limit(50)
+-format=%(%f(%l)\s:\s%)%t\s%n:\s%m
+        // error format expected by Microsoft editor
+
++fan    // allow anonymous unions
++fdi    // Use directory of the including file
++fcd	// makes cdecl significant -- needed for MSC option -Gr
+
++rw(__cdecl,__stdcall,__inline)
+-esym(123,min,max)  // allows users to use as variables
+
+// Suppress these errors in library files
+-elib(46)	// bitfields can be non-int
+-elib(514)  // allow #if <boolean> | <boolean>
+			// while processing compiler (library) header files ...
+-elib(537)	// repeated include file
+-elib(602)	// suppress message about comment within comment (w32)
+-elib(620)	// using lower case 'l' instead of 'L'
+-elib(652)	// suppress message about #define of earlier declared symbols
+-elib(726)	// extranous commas in \mstools\h\shlobj.h
+-elib(762)  // suppress message about multiple identical declarations and
+-elib(760)	// suppress message about multiple identical macro defs
+
+-esym(123,FD_SET)	// FD_SET defined as both macro and type in winsock.h!
+-esym(553,DBG)		// DBG not defined in \mstools\h\objbase.h
+-esym(43,_MIDL_FORMAT_STRING::Format)  // mstools\h\rpcndr.h
+
++libclass(all) // during unit checkout, consider all .h files as lib headers
+
+//  The following functions exhibit variable return modes.
+//  That is, they may equally-usefully be called for a value
+//  as called just for their effects.  Accordingly we inhibit
+//  Warning 534 for these functions.
+//  Feel free to add to or subtract from this list.
+
+-esym(534,close,creat,fclose,fflush,_flsbuf,fprintf,fputc)
+-esym(534,fputs,fscanf,fseek,fwrite,lseek,memcpy,memmove,memset)
+-esym(534,printf,puts,scanf,sprintf,sscanf,strcat,strcpy)
+-esym(534,strncat,strncpy,unlink,write)
+
+// These are defined in the Wacker compile line
+-d_X86_
+-d_WINDOWS
+-d_MT
+-dWIN32
+-dSTRICT
+//-dUSA
+-dJAPANESE
++fcu	  // char is unsigned
+
+-e506	  // Constant value Boolean -- we use assert(FALSE) quite a bit
+-e534	  // Return mode inconsistent -- we often call a function that
+		  //  has a return value without using the return value
+-e740	  // Unusual pointer cast -- we do this routinely because of our
+		  //  use of pointers to incomplete types for handles
+-e766	  // Header file not referenced. Including windows.h produces a lot
+		  //  of these. May want to reenable to check use of locals .h files
+
+// Chicago header file blow these limits out of the water big time.
+-"esym(793,conditional inclusion levels,macros in module)"
+
+// Defined in MSVC to be undefined if you don't conform to ANSI C
+-esym(553,__STDC__)
+
+// Nonportable use of anonymouse structs in windows header file.
+// <winnt.h>, <mmsystem.h>
+-elib(657)
+
+// typedef superseeded by typedef in <prsht.h>
+-elib(761)
+
+// Nothing follows '}' on line within struct/union/enum declaration
+-elib(659)

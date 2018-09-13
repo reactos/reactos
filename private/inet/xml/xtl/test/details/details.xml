@@ -1,0 +1,32 @@
+<xml>
+	<row>
+		<ID> 1 </ID>
+		<name> Microsoft Corporation </name>
+		<symbol> MSFT </symbol>
+		<last> 85 </last>
+		<change> 1 </change>
+		<volume> 1000000 </volume>
+		<dayhigh> 86 </dayhigh>
+		<daylow> 83 </daylow>
+		<percentchange> -2 </percentchange>
+		<open> 84 </open>
+		<previousclose> 86 </previousclose>
+		<bid> 85 </bid>
+		<ask> 84 </ask>
+		<yearhigh> 95 </yearhigh>
+		<yearlow> 65 </yearlow>
+		<pe> 55 </pe>
+		<earnings> 3 </earnings>
+		<dividend> 0 </dividend>
+		<yield> 0 </yield>
+		<marketcap> 200000 </marketcap>
+		<sharesout> 200000 </sharesout>
+		<exchange> NASDAQ </exchange>
+		<sector> tech </sector>
+	</row>
+	<adrotator>
+		<url>http://foo3.com</url>
+		<img>img/mbn038.gif</img>
+	</adrotator>
+
+</xml>

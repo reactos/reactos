@@ -1,0 +1,9 @@
+#ifdef DEBUG
+LIBRARY EMD
+#else
+LIBRARY EM
+#endif
+
+EXPORTS
+  OSDebug4VersionCheck @1
+  EMFunc             @2

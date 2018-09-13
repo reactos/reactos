@@ -1,0 +1,25 @@
+// WMFFilter.idl : IDL source for WMFFilter.dll
+//
+// This file will be processed by the MIDL tool to
+// produce the type library (WMFFilter.tlb) and marshalling code.
+
+import "ocmm.idl";
+
+[
+	uuid( EC3DB3C0-333E-11D0-B724-00AA006C1A01 ),
+	version( 1.0 ),
+	helpstring( "WMFFilter 1.0 Type Library" )
+]
+library WMFFilterLib
+{
+	importlib( "stdole2.tlb" );
+
+	[
+		uuid( EC3DB3C6-333E-11D0-B724-00AA006C1A01 ),
+		helpstring( "CoWMFFilter Class" )
+	]
+	coclass CoWMFFilter
+	{
+		[default] interface IImageDecodeFilter;
+	};
+};

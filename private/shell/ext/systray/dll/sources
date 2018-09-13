@@ -1,0 +1,74 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 19-Oct-95 by Shawn Brown (shawnb)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=systray
+
+TARGETNAME=stobject
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+DLLENTRY=DllMain
+
+PRECOMPILED_CXX = 1
+PRECOMPILED_INCLUDE = stdafx.h
+PRECOMPILED_OBJ = stdafx.obj
+
+INCLUDES=$(BASEDIR)\private\inc; \
+         $(BASEDIR)\private\windows\inc; \
+         $(BASEDIR)\public\sdk\inc; \
+
+C_DEFINES=-DWIN32 -DUNICODE -DWINNT
+
+TARGETLIBS= $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib    \
+            $(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+            $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\comctl32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\comdlg32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\shell32.lib  \
+            $(_NTBINDIR)\public\sdk\lib\*\shell32p.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\batmeter.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\powrprof.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\winmm.lib    \
+            $(_NTBINDIR)\public\sdk\lib\*\setupapi.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\ole32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\uuid.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\shlwapi.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\advapip.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\ksguid.lib \
+
+
+SOURCES= power.c    \
+         systray.c  \
+         volume.c   \
+         access.c   \
+         hplug.c    \
+         fax.cpp    \
+         csc.c      \
+         systray.rc \
+         cfact.cpp  \
+         stobject.cpp \
+         dll.cpp    \
+         usbui.cpp
+         

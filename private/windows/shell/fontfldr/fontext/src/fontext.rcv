@@ -1,0 +1,9 @@
+#define VER_FILETYPE			VFT_DLL
+#define VER_FILESUBTYPE			VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR		"Windows Font Folder"
+#define VER_INTERNALNAME_STR		"FontExt"
+#define VER_LEGALCOPYRIGHT_YEARS	"1991-1995"
+#define VER_ORIGINALFILENAME_STR	"FontExt.dll"
+
+
+#include <common.ver>

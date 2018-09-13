@@ -1,0 +1,44 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Thumbnail View Extension"
+#define VER_INTERNALNAME_STR        "THUMBVW.DLL"
+#define VER_ORIGINALFILENAME_STR    "THUMBVW.DLL"
+#define VER_OLESELFREGISTER
+
+#include <common.ver>
+
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#include "thext.rc"
+
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_THUMBNAILVIEW_DESC     "Thumbnails"
+    IDS_CREATETHUMBNAIL        "Re&fresh Thumbnail"
+    IDS_CREATETHUMBNAILHELP    "Refresh the thumbnails for the current selection."
+    IDS_HTMLTHUMBEXTRACT_DESC  "HTML Thumbnail Extractor"
+    IDS_BMPTHUMBEXTRACT_DESC   "BMP Thumbnail Extractor"
+    IDS_OFCTHUMBEXTRACT_DESC   "Office Graphics Filters Thumbnail Extractor"
+    IDS_DOCTHUMBEXTRACT_DESC   "Summary Info Thumbnail handler (DOCFILES)"
+    IDS_TASKSCHEDULER_DESC     "Background Task Scheduler"
+    IDS_LNKTHUMBEXTRACT_DESC   "LNK file thumbnail interface delegator"
+    IDS_EXTRACTING             "Extracting %s"
+    IDS_THUMBNAILGEN_DESC      "Thumbnail Generator"
+END
+

@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<TITLE>ATL 2.0 test page for Adlog ActiveX Control</TITLE>
+</HEAD>
+<BODY>
+
+<h2 align="center">This is a test page practicing Image Logging OCX<br>
+</h2>
+<h3>
+ <p> Steps:
+  <li>click and subscribe to <a href="track.cdf">Tracking channel</a>
+  <li>mouseover or click on image(s) shown below
+  <li>navigate to <a href="ielog2.htm">navigate away</a>
+
+ <p> Here is a <a href = "file://peihwal6/public/advertising%20control.doc">link </a>to
+a raw specification of this control
+
+</h3>
+<p> if you have trouble to install the control, just manually install and register it:<br>
+  <li>copy \\ohserv\users\peihwal\adocx\adlog.dll to your local window system direcotry
+  <li>run "regsvr32 adlog.dll" from your windows system directory
+<br>
+<br>
+<A href="http://msw">
+<IMG SRC="http://msw/advert/amex-ad.gif" width=234 height=56 border=0 onclick='IeLogControl.msclick=1' onmouseover='IeLogControl.msover=1'>
+</A>
+<br>
+<br>
+<A href="http://msw/address.htm">
+<IMG SRC="http://msw/images/address.gif" width=148 height=103 border=0 onclick='IeLogControl.msclick=2' onmouseover='IeLogControl.msover=2'>
+</A>
+<br>
+
+
+<OBJECT ID="IeLogControl" width=0 height=0 
+ CLASSID="CLSID:A145F827-6114-11D1-ADE3-00C04FB66F63"
+ CODEBASE="http://ohserv/users/peihwal/adocx/adlog.dll#version=1,0,0,1"
+>
+ <param name=images value=2>
+ <param name=1 value="Toyota-ad">
+ <param name=2 value="MB-ad">
+</OBJECT>
+
+</BODY>
+</HTML>

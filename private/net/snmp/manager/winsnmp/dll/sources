@@ -1,0 +1,55 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=snmp
+MINORCOMP=winsnmp
+
+TARGETNAME=wsnmp32
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=DYNLINK
+
+MSC_WARNING_LEVEL=/W3 /WX
+USE_CRTDLL=1
+
+TARGETLIBS=\
+    $(BASEDIR)\public\sdk\lib\*\user32.lib \
+    $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+    $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+    $(BASEDIR)\public\sdk\lib\*\ws2_32.lib
+
+!IFDEF USE_CALLTREE
+LINKER_FLAGS=$(LINKER_FLAGS) -calltree
+!ENDIF
+
+SOURCES=\
+    wsnmp32.rc \
+    wsnmp_bn.c \
+    wsnmp_cf.c \
+    wsnmp_db.c \
+    wsnmp_ec.c \
+    wsnmp_ma.c \
+    wsnmp_no.c \
+    wsnmp_pd.c \
+    wsnmp_ut.c \
+    wsnmp_vb.c \
+    wsnmp_sp.c
+
+INCLUDES=\
+    ..\inc;
+
+DLLDEF=winsnmp.def
+DLLENTRY=DllMain

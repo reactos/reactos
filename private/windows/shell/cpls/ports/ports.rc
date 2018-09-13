@@ -1,0 +1,229 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+PORTS_ICON              ICON    PRELOAD DISCARDABLE "ports.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+DLG_PP_ADVPORTS DIALOG DISCARDABLE  0, 0, 420, 160
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Advanced Communications Port Properties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,12,15,342,110
+    CONTROL         "&Use FIFO buffers (requires 16550 compatible UART)",
+                    IDC_FIFO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,30,15,177,
+                    10
+    LTEXT           "&Receive Buffer:",IDC_RECEIVE_TEXT,23,70,50,10
+    LTEXT           "Low (%d)",IDC_RECEIVE_LOW,78,70,30,10
+    CONTROL         "",IDC_RECEIVE_SLIDER,"msctls_trackbar32",TBS_AUTOTICKS | 
+                    WS_GROUP | WS_TABSTOP,113,66,169,18
+    LTEXT           "High (%d)",IDC_RECEIVE_HIGH,288,71,31,10
+    LTEXT           "",IDC_RXVALUE,329,71,21,10,SS_NOPREFIX
+    LTEXT           "&Transmit Buffer:",IDC_TRANSMIT_TEXT,23,97,53,10
+    LTEXT           "Low (%d)",IDC_TRANSMIT_LOW,78,97,30,10
+    CONTROL         "",IDC_TRANSMIT_SLIDER,"msctls_trackbar32",WS_TABSTOP,
+                    113,93,169,20
+    LTEXT           "High (%d)",IDC_TRANSMIT_HIGH,288,98,35,10
+    LTEXT           "",IDC_TXVALUE,329,98,21,10,SS_NOPREFIX
+    LTEXT           "COM &Port Number:",IDC_COMNUMTEXT,13,138,65,8
+    COMBOBOX        PP_PORT_NUMBER,82,136,62,54,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Find Devices Attached to Port:",IDC_POLL_DESC,161,138,
+                    98,8,NOT WS_VISIBLE
+    COMBOBOX        IDC_POLL_PERIOD,268,136,85,58,CBS_DROPDOWNLIST | NOT 
+                    WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,362,19,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,362,38,50,14,WS_GROUP
+    PUSHBUTTON      "&Defaults",IDC_RESTORE,362,57,50,14,WS_GROUP
+    LTEXT           "Select lower settings to correct connection problems.",
+                    IDC_DESC_1,40,35,200,10
+    LTEXT           "Select higher settings for faster performance.",
+                    IDC_DESC_2,40,50,200,10
+END
+
+DLG_PP_PORTSETTINGS DIALOG DISCARDABLE  0, 0, 257, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Port Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,4,243,119
+    RTEXT           "&Bits per second:",IDC_STATIC,84,19,54,8
+    COMBOBOX        PP_PORT_BAUDRATE,142,17,99,90,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "&Data bits:",IDC_STATIC,84,40,54,8
+    COMBOBOX        PP_PORT_DATABITS,142,38,99,54,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "&Parity:",IDC_STATIC,84,61,54,8
+    COMBOBOX        PP_PORT_PARITY,142,59,99,62,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "&Stop bits:",IDC_STATIC,84,82,54,8
+    COMBOBOX        PP_PORT_STOPBITS,142,80,99,54,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    RTEXT           "&Flow control:",IDC_STATIC,84,102,54,8
+    COMBOBOX        PP_PORT_FLOWCTL,142,100,99,54,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&Advanced...",IDC_ADVANCED,116,130,65,14,WS_GROUP
+    PUSHBUTTON      "&Restore Defaults",IDC_RESTORE_PORT,185,130,65,14,
+                    WS_GROUP
+END
+
+DLG_PP_LPT_PORTSETTINGS DIALOG DISCARDABLE  0, 0, 257, 215
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Port Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Filter Resource Method",IDC_STATIC,7,4,243,80
+    CONTROL         "&Try not to use an interrupt",IDC_FILTERMETHOD_TRYNOT,
+                    "Button",BS_AUTORADIOBUTTON | WS_GROUP,15,20,99,17
+    CONTROL         "&Never use an interrupt",IDC_FILTERMETHOD_NEVER,"Button",
+                    BS_AUTORADIOBUTTON,15,40,89,17
+    CONTROL         "&Use any interrupt assigned to the port",
+                    IDC_FILTERMETHOD_ACCEPTANY,"Button",BS_AUTORADIOBUTTON,
+                    15,60,136,17
+    CONTROL         "&Enable legacy Plug and Play detection",
+                    IDC_LPT_ENABLE_LEGACY,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,95,177,10
+    LTEXT           "LPT &Port Number:",IDC_LPTNUMTEXT,7,111,65,8
+    COMBOBOX        PP_LPT_PORT_NUMBER,90,111,62,54,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#ifdef PORT_INC_VERINFO\r\n"
+    "#include ""ports.rc2""\r\n"
+    "#endif // PORT_INC_VERINFO\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    DLG_PP_LPT_PORTSETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 250
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 123
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    INITS                   "Insufficient memory for this operation;\r\rclose one or more Windows applications to increase available memory."
+    IDS_INIT_NAME           "Communications Port"
+    IDS_INIT_CLOSE          "Close"
+    IDS_PORT_IN_USE         "This COM name is being used by another device (such as another com port or modem).  Using duplicate names can lead to inaccessible devices and changed settings.  Do you want to continue?"
+    IDS_LPT_PORT_INUSE      "This LPT port name is being used by another device (such as another LPT port).  Using duplicate names can lead to inaccessible devices.  Do you want to continue?"
+    ERRORS                  "Invalid baud rate;\r\rthe baud rate must be a positive value."
+    MYPORT                  "Default"
+    IDS_PARITY              ",Even,Odd,None,Mark,Space"
+    IDS_BITS                ",1,1.5,2"
+    IDS_FLOWCONTROL         ",Xon / Xoff,Hardware,None"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ADVANCED_SETTINGS_FOR "Advanced Settings for %s"
+    IDS_FRIENDLY_FORMAT     "%s (%s)"
+    IDS_ADVANCED_SETTINGS   "Advanced Port Settings"
+    IDS_LOW                 "Low ("
+    IDS_HIGH                "High ("
+    IDS_NO_WRITE_PRVILEGE   "You must have write privileges in the registry for this device\nin order to modify the device's advanced settings."
+    IDS_NAME_PROPERTIES     "Communications Port Properties"
+    IDS_LPT_PROPERTIES      "Parallel Port Properties"
+    IDS_PORT_OPEN           "The port has been opened by another application.  Renaming the port may have an unpredictable effect on the other application.  Do you wish to continue?"
+    IDS_PORT_RENAME_ERROR   "There was an error renaming the COM port."
+    IDS_IN_USE              " (in use)"
+    IDS_LPT_NUM_ERROR       "The system cannot support an LPT port number greater than 256."
+    IDS_LPT_LEGACY_FAILED   "An error occurred while attempting to set the enable legacy parallel device detection."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#ifdef PORT_INC_VERINFO
+#include "ports.rc2"
+#endif // PORT_INC_VERINFO
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

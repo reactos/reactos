@@ -1,0 +1,31 @@
+#ifndef _BMKCOLL_PDL_
+#define _BMKCOLL_PDL_
+
+#include "types.pdl"
+#include "collect.pdl"
+
+file bmkcoll.pdl
+
+import types.pdl
+import collect.pdl
+
+
+//
+// ============== IHTMLBookmarkCollection ===========================
+//
+
+interface IHTMLBookmarkCollection super:IDispatch guid:3050f4ce-98b5-11cf-bb82-00aa00bdce0b
+    refprop CBookmarkCollection:length
+    refprop CBookmarkCollection:_newEnum
+    refmethod CBookmarkCollection:item
+
+class CBookmarkCollection  primaryinterface:IHTMLBookmarkCollection 
+    property  length   atype:long        dispid:DISPID_OPTIONS_COL+1    type:long   \
+         dwFlags:0   abstract get    hidden 
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM     type:IUnknown* \
+         dwFlags:0   abstract get     hidden restricted 
+    method HRESULT item      dispid:DISPID_VALUE  (in type:long arg:index, \
+                                                   out retval type:VARIANT* arg:pVarBookmark)
+
+#endif _BMKCOLL_PDL_
+

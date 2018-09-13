@@ -1,0 +1,11 @@
+!IF 0
+
+Copyright (C) Microsoft Corporation, 1996 - 1999
+
+Module Name:
+
+    dirs.
+
+!ENDIF
+
+dirs = winnt

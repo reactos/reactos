@@ -1,0 +1,35 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\editres=)
+!include $(ROOT)\common.inc
+
+NO_BROWSER_FILE=
+
+# binplace selfreg_mshtml.inf
+
+RESOURCE_ONLY_DLL = 1
+TARGETNAME=mshtmler
+TARGETPATH=..\..\$(_OBJ_DIR)
+TARGETPATHLIB=$(_OBJ_DIR)
+TARGETTYPE=DYNLINK
+DLLDEF=mshtmled.def
+DLLENTRY=DllMain
+
+ROOTDIR=..\..
+SRCDIR=\..
+
+INCLUDES= \
+    $O; 
+
+SOURCES= \
+    mshtmler.rc \
+    libmain.cxx
+
+NTTARGETFILES=$(O)\mshtmler.res
+
+
+

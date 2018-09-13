@@ -1,0 +1,1110 @@
+WinSNMP v2.0 Addendum
+
+Document version information:
+
+	November 1, 1997 - Initial Release Version
+	December 5, 1997 - Typos wrt SnmpListen() params fixed
+
+Document contents information:
+
+       I - Introduction
+
+      II - Clarifications for WinSNMP v2.0:
+
+          1.  Version 2.0
+          2.  Level definitions
+          3.  Operating system dependencies
+          4.  Retransmission support
+          5.  Timeout notification methods
+          6.  SNMPv1 Trap-PDU generation
+          7.  Notification port usage
+          8.  Request-ID/SnmpCreatePdu()/SnmpSetPdu()
+          9.  SnmpGetPduData() and hVbl
+         10.  GetBulk -> GetNext mapping
+         11.  IPX support in SnmpStrToEntity()
+         12.  SnmpDecodeMsg() outputs
+         13.  Inform processing
+         14.  Thread-safeness
+         15.  WinSNMP++ -> SNMP++ change
+         16.  SnmpRegister()
+
+     III - New functions for WinSNMP v2.0:
+
+          1.  SnmpCreateSession()
+          2.  SnmpCreateEntity()
+          3.  SnmpCreateContext()
+          4.  SnmpCancelMsg()
+          5.  SnmpSetPort()
+          6.  SnmpListen()
+          7.  SnmpGetVendorInfo()
+          8.  SnmpOpen() [Re-written for v2.0]
+
+I - Introduction
+
+This document is an update Addendum to the WinSNMP/Manager
+API Specification, v1.1a, dated August 9, 1995).  In some
+places (Section II below, especially) it modifies (via
+clarifying text) that earlier document; in other places
+(Section III below, especially) it adds completely new
+functionality.  Users of the WinSNMP API--implementors
+and application developers must be familiar with both
+documents until such time as the new WinSNMP API v2.0
+specification document is published.  Said document will
+incorporate all of the text in the final version of this
+update Addendum.
+
+Like the WinSNMP API specification document itself, this
+document is intended to be freely available for use by
+all interested parties.  It is the product of an open,
+collaborative effort via the ad hoc WinSNMP Industry Forum
+e-mail discussion list (winsnmp@mailbag.intel.com).
+Numerous individuals have contributed to the WinSNMP API
+since this work was started in the 1992/93 time frame.
+
+II - Clarifications
+
+1.  Version 2.0
+
+The collection of clarifications to v1.1a of the
+WinSNMP/Manager API specification described herein defines
+v2.0 of the WinSNMP API specification.
+
+A compliant v2.0 implementation MUST support ALL of the
+functions and operations defined in both the WinSNMP v1.1a
+specification and is this WinSNMP v2.0 Addendum.
+
+Where this WinSNMP v2.0 Addendum differs from the WinSNMP
+v1.1a specification, this Addendum has precedence.
+
+Note that for v2.0, the SnmpStartup() function must return a
+value of 2 for the lMajor parameter and a value of 0 for the
+lMinor parameter.
+
+Note also that the "/Manager" qualifier is dropped for v2.0.
+This version explicitly supports agent-side SNMP operations,
+in addition to the manager-side SNMP operations.
+
+2.  Level definitions
+
+The concept of "levels of support" is deprecated for v2.0.
+Implementations must report a value of 2 for the lLevel
+parameter of SnmpStartup().
+
+Level 2 equates to full support for the IETF standard SNMPv2
+protocol as defined in RFCs 1902-1908 with the community-
+based message wrapper as defined in RFC 1901 (SNMPv2c).
+
+Levels 0 and 1 are fully subsumed under Level 2.  That is,
+in addition to full SNMPv2 support (as defined in the
+previous paragraph), all WinSNMP v2.0 implementations must
+implement the SnmpEncodeMsg() and SnmpDecodeMsg() functions
+(since no WinSNMP functions are optional in any case) and
+must also support all SNMPv1 protocol operations (except
+that, as always, all received SNMPv1 traps are converted
+to SNMPv2 Trap-PDU format for delivery to registered WinSNMP
+applications).
+
+Level 3, as originally defined, is no longer germane since the
+"Manager-to-Manager" MIB of "SNMPv2-Classic" was deprecated to
+"Historic" status by the IESG and, on the positive side, the
+combination of SNMPv2 support (especially, InformRequest-PDUs
+and their associated Response-PDUs) and the new functions to
+support agent applications under WinSNMP v2.0 (especially, the
+SnmpListen() function) now provide the basis for building
+Mid-Level Manager (MLM) solutions using WinSNMP.  Additionally,
+it is envisioned that the next major revision of WinSNMP (v3)
+will correspond to adding support for the eventual IETF SNMPv3.
+
+(You will note that the proposed SnmpCreateEntity() and
+SnmpCreateContext() functions which were included in the
+earlier drafts of this Addendum have been dropped.  It is
+anticipated that they will be added in WinSNMP v3 to support
+the corresponding constructs which will (almost surely!) be
+included in SNMPv3.)
+
+"SNMPAPI_UNTRANSLATED_V2" mode now means "SNMPv2c"; all
+the party stuff is gone (deprecated to "Historic" RFCs)
+and this mode uses community names in a manner identical
+to "SNMPAPI_UNTRANSLATED_V1" in terms of entity and context
+definitions.  The only difference is that messages built
+for SNMPv2 destination entities will use the SNMPv2 value
+[1] in the "version" member of the SNMP message in the
+PDUs on the wire.
+
+3.  Operating system dependencies
+
+WinSNMP v1 was targeted at the Microsoft Windows family of
+operating systems.
+
+WinSNMP v2 is not targeted at any particular operating
+systems or environments; however, to ensure backward
+compatibility with fielded WinSNMP v1 applications, the
+fundamental design objectives and architectural constructs
+of WinSNMP v1 are retained.
+
+The degree of operating system independence targeted in
+WinSNMP v2 is realized via the new SnmpCreateSession()
+function (specified in Section III.1 of this document).
+
+The original session creation function--SnmpOpen()--is
+retained and comprises a proper subset of the possible forms
+of using SnmpCreateSession().  Some minor clarifying text
+has been added to SnmpOpen() for WinSNMP v2 (specified in
+Section III.8 of this document).
+
+4.  Retransmission support
+
+Execution of the retransmission policy was optional for
+implementations in WinSNMP v1.  It is mandatory capability
+for implementations in WinSNMP v2.
+
+Implementations may still announce their "default" mode of
+operation at each call to SnmpStartup().  The default mode
+is whatever the implementation says it is in response to
+the given call to SnmpStartup().
+
+Applications may elect to operate with the RetransmitMode
+set to SNMPAPI_ON or SNMPAPI_OFF at any given point in time.
+
+The RetransmitMode setting is evaluated by the implementation
+at SnmpSendMsg() time.
+
+Unless and until a response is received, a message sent when
+the RetransmitMode is "on" will result in retries (if a non-
+zero retry count is specified for the dstEntity at the time
+SnmpSendMsg() is called) and issuance of a timeout notification
+to the associated session (when no response is received within
+the timeout interval and the retry count is exhausted).
+
+A message sent when RetransmitMode is "off" does not result
+in retries and no timeout notification is sent to the
+associated session.
+
+See the "Timeout notification methods" clarification for
+related information.
+
+See the new SnmpCancelMsg() function for associated
+functionality.
+
+5.  Timeout notification methods
+
+The method for notifying a session of a timed out request
+message was not specified for WinSNMP v1.
+
+It is specified for WinSNMP v2.
+
+The implementation must return the SNMPAPI_TL_TIMEOUT error
+value in wParam and the RequestID of the timed out PDU in
+lParam (this is true regardless of the notification mode of
+the session...i.e., message-based or callback-based).
+
+Note that for normal request, response, or trap delivery,
+the implementation must set wParam to zero and lParam to the
+RequestID of the PDU to be retrieved.
+
+Applications should check wParam on all notifications,
+regardless of notification mode (message or callback).
+If it is non-zero, then its value is one of the "transport
+layer" (SNMPAPI_TL_<n>) error codes and the application
+does not need to (and should not) call SnmpRecvMsg() in
+response to this notification.
+
+However, if the application elects to make the SnmpRecvMsg()
+call, then one of three results may occur:
+
+          1.  If there is a pending message for this
+              session, the DLL may deliver it at this
+              time; or,
+
+          2.  If there is no pending message for this
+              session, then SnmpRecvMsg() must return
+              SNMPAPI_FAILURE, with SnmpGetLastError()
+              set to:
+
+               a.  SNMPAPI_NOOP [8], or
+
+               b.  SNMPAPI_TL_TIMEOUT [108].
+
+Note that if Result 1 obtains, the session may eventually
+receive a notification that will yield Result 2a, since
+that notification may have happened asynchronously to the
+early retrieval of the message.
+
+Note to implementors:  If there is no message pending for the
+calling application, then Result 2a is the preferred error
+setting.  Result 2b is allowed for backward compatibility
+with certain fielded applications.
+
+6.  SNMPv1 Trap-PDU generation
+
+The WinSNMP API is oriented towards SNMPv2.  No standard
+function is provided to accommodate the unique fields of an
+SNMPv1 Trap-PDU (SNMP_PDU_V1TRAP).  All SNMPv1 and SNMPv2
+Trap-PDUs which are received by a WinSNMP implementation
+and delivered to applications who requested them via
+SnmpRegister(), are delivered as SNMPv2 traps (SNMP_PDU_TRAP).
+Furthermore, only SNMPv2 Trap-PDUs can be assembled directly
+via SnmpCreatePdu() and/or SnmpSetPduData().
+
+However, WinSNMP entities operating in an agent role may
+need to emit traps to non-WinSNMP SNMPv1 targets.  To
+accommodate this requirement, the SnmpSendMsg() must
+evaluate the SNMP-version level of the dstEntity parameter
+of any out-going SNMP_PDU_TRAP message.  If the dstEntity is
+an SNMPv1 entity, then the message must be automatically and
+transparently converted to an SNMP_PDU_V1TRAP message via
+the following procedure:
+
+The WinSNMP API is intended to be a common interface that
+provides bilingual protocol support as transparently as
+possible.  To this end, the API takes on a "v2-style
+interface" in all other areas, and "downgrades" a request
+appropriate to communicate with either v1 or v2 agents using
+the *SAME* interface.
+
+For example, WinSNMP v1.1a specified that all implementations
+(level 1 or 2) must support the GetBulk operator.  However,
+if the request is sent to a v1 entity, then the WinSNMP
+implementation transparently "downgrades" the GetBulk to a
+GetNext request per RFC 1908.  This enables an application
+to be coded to always use GetBulk and not care whether the
+dstEntity is a v1 or a v2 entity, especially in "translated
+mode".
+
+While RFC 1908 does not specify how to "downgrade" an
+SNMP_PDU_TRAP message into an SNMP_PDU_V1TRAP message, the
+translation is straight forward.  As such, the WinSNMP
+interface for sending traps--whether to a v1 or a v2
+destination-is stipulated hereby as an SNMPv2 Trap-PDU
+(SNMP_PDU_TRAP).
+
+If the dstEntity of an SNMP_TRAP_PDU submitted to
+SnmpSendMessage() or SnmpEncodeMsg() is a v1 entity, then
+the WinSNMP implementation must "downgrade" (translate)
+the trap into an SNMP_PDU_V1TRAP during assembly of the
+corresponding SNMP message.
+
+This action taken on out-going SNMP trap messages has no
+bearing on SNMP traps received by an implementation.  As
+with v1 of the WinSNMP API specification, in all cases,
+received traps are presented to WinSNMP applications as
+SNMPv2 traps (SNMP_PDU_TRAP).
+
+The translation procedure (e.g., during serialization) is
+simply the converse of the v1-to-v2 trap translation that
+is already done by WinSNMP implementations when v1traps
+are received and presented to the application.  The steps
+are defined in Section 3.3 of RFC 2089, "V2ToV1 Mapping
+SNMPv2 onto SNMPv1 within a bi-lingual SNMP agent" by Bert
+Wijnen and David Levi.
+
+From an implementation perspective, it is straight-forward
+and rather easy to implement.  From an application developer
+perspective, eliminating the need for the application to
+know/care about differences in v1 vs v2 traps enormously
+simplifies the application.
+
+The bottom line is that this approach preserves the "single
+interface / bilingual protocol" value proposition that
+WinSNMP was founded on.  It also eliminates the need for a
+new / additional function in the WinSNMP API.
+
+7.  Notification port usage
+
+The term "notification" as used here applies to both traps
+(SNMPv1 and SNMPv2c) and informs (SNMPv2c only).  Trap
+mapping between entities of different SNMP versions is
+described above.  Important details wrt Inform requests are
+given in Section II.13, "Inform Processing", below.
+
+InformRequest-PDUs may only be sent to a destination entity
+that supports SNMPv2c.  An attempt by an application to send
+an InformRequest-PDU to an SNMPv1 destination entity using
+SnmpSendMsg() results in SNMPAPI_FAILURE, with SnmpGetLastError()
+set to return SNMPAPI_OPERATION_INVALID.
+
+The well-known notification port for any protocol supported
+by an implementation (e.g., 162 for UDP and 36880 for IPX)
+should be held by an implementation of this WinSNMP API, if
+at all, only when there are active SnmpRegister() entries
+that might accept an incoming notification message.
+
+Where possible, an implementation should use some de facto or
+de jure standard "system service" for receiving notification
+messages to be dispatched to registered WinSNMP applications,
+such that other (non-WinSNMP) notification targets may operate
+concurrently with it.  For Microsoft Windows NT, this standard
+mechanism is the "SNMPTRAP" system service.
+
+8.  Request-ID/SnmpCreatePdu()/SnmpSetPdu()
+
+Applications should specify "meaningful" Request-ID values
+via SnmpCreatePdu() and/or SnmpSetPduData().
+
+Implementations will automatically assign an arbitrary
+Request-ID value when SnmpCreatePdu() is called without a
+specified Request-ID value (i.e., the value is zero).  The
+SnmpSetPduData() function may be used by an application to
+assign any Request-ID value it wants, including a value of
+zero.
+
+Implementations must use the resulting Request-ID value at
+SnmpSendMsg() time to return the eventual Response-PDU or
+timeout notification (if a corresponding Response-PDU is
+not received) to the application.
+
+Note that the Request-ID used in the "on-the-wire" messages
+is assigned by the implementation independently and may or
+may not be the same as the Request-ID used at the application
+level for any given message.
+
+9.  SnmpGetPduData() and hVbl
+
+If an hVbl output parameter is specified on a call to
+SnmpGetPduData() it will return a new instance of the
+VarBindList associated with the corresponding hPdu.
+
+This behavior is consistent with both the basic purpose of
+SnmpGetPduData()--which is to de-reference the components of
+a received PDU--and a basic characteristic of all WinSNMP
+functions which return WinSNMP resource objects (sessions,
+entities, contexts, PDUs, and VarBindLists) as outputs...
+namely, each output represents a new "instance" (used loosely)
+of the object.  Such a new "instance" may be either a new
+unique value for that object type or may correspond to some
+internal, implementation-specific mechanism (such as a
+"reference count").
+
+The key underlying principle is that actual value of a
+WinSNMP resource object is not meaningful to the
+application, but is meaningful to the implementation.
+Applications need only be certain to match up each WinSNMP
+resource object creation operation with a corresponding
+"free" operation or, as may be appropriate, to free them via
+calls to SnmpClose() or SnmpCleanup().
+
+10.  GetBulk -> GetNext mapping
+
+When the dstEntity used in an SnmpSendMsg() operation is an
+SNMPv1 entity and the PDU type is SNMP_PDU_GETBULK, the
+implementation must automatically and transparently modify
+the PDU type to SNMP_PDU_GETNEXT, per RFC 1908.  Note that
+this "translation" occurs during serialization of the
+WinSNMP components (hContext, hPdu, and hVbl, in this case)
+into the SNMP message that will be transmitted.  It does
+NOT alter the submitted components themselves.
+
+11.  IPX support in SnmpStrToEntity()
+
+WinSNMP v1 was highly oriented toward IP/UDP, but was not
+meant to exclude the compatible, symmetrical use of other
+transport protocols by specific implementations.  As a
+result, some implementations accepted alternative string
+formats as arguments to SnmpStrToEntity()--when called by
+an application operating in "untranslated" mode--to signal
+the use of protocols other than UDP.
+
+In particular, the use of "<netnum><sep><nodenum>" for the
+IPX protocol found a significant degree of usage.  Hence, it
+is considered helpful to the community to specify a standard
+format for this purpose and to explicitly allow its use in
+SnmpStrToEntity().  This standard format consists of three
+collated parts:
+
+     1.  A "network number" <netnum>, consisting of eight
+         hexadecimal digits (zero-filled, if necessary).
+
+     2.  A separator (i.e., either ":" or "-").
+
+     3.  A "node number" <nodenum>, consisting of twelve
+         hexadecimal digits (zero-filled, if necessary).
+
+For example:  "00000001:00080A0D01C2"
+         or:  "00000001-00008A0D01C2"
+
+Note that SnmpEntityToStr() is also modified to return a
+properly formatted IPX address string, per above, for any
+IPX entity--when called by an application operating in
+"untranslated" mode at the time, or in "translated" mode
+but with no "friendlyName" value available.
+
+The ":" separator is the recommended default for use in
+the output string.
+
+12.  SnmpDecodeMsg() outputs
+
+This clarification has to do with return values for the hSrc
+and hDst output parameters.  The key point is that an
+implementation cannot be required to supply information that
+is not unambiguously available to it.  When WinSNMP v1 was
+designed, party-based SNMPv2 (since deprecated to "Historic"
+status) was being actively considered by the IETF.  That
+form of the protocol might have included more address-type
+information in the encoded SNMP messages.  If it had, then
+this information could have been used by the implementation
+of the SnmpDecodeMsg() function to instantiate hSrc and hDst
+entity values.
+
+However, the IETF adopted a different form of SNMPv2 (SNMPv2c,
+as defined in RFCs 1901-1908) and this form retains the same
+message format as SNMPv1 and that message format does not
+include the addressing information needed to properly create
+WinSNMP entity resources.
+
+Therefore, SnmpDecodeMsg() cannot return meaningful values
+for the hSrc or hDst parameter for SNMPv1 or SNMPv2 messages
+submitted to it and must return a value of zero in these
+output parameters.
+
+13.  Inform processing
+
+SNMPv2 Inform requests are only supported to a destination
+entity that supports SNMPv2.  An attempt to send an Inform
+request to an SNMPv1 destination using SnmpSendMsg() must
+return SNMPAPI_FAILURE, with SnmpGetLastError() set to
+return SNMPAPI_OPERATION_INVALID.
+
+The implementation is responsible for generating and
+transmitting the (single) Response-PDU for any received
+InformRequest-PDU.
+
+Applications that receive an InformRequest-PDU via a WinSNMP
+session must not issue a corresponding Response-PDU.
+
+14.  Thread-safeness
+
+A multi-threaded application must ensure the thread-safeness
+of its own WinSNMP operations.
+
+The implementation must ensure "thread-safeness" at the
+application (process) level.  That is, the implementation
+must ensure that the WinSNMP operations of one process do
+not unilaterally modify the WinSNMP settings of any other
+process.
+
+The WinSNMP operations that might merit attention on the
+part of a multi-threaded application are those which set
+application-level parameters.  At this time, there are
+only two such settings:
+
+	- SnmpSetTranslateMode()
+	- SnmpSetRetransmitMode()
+
+It is often, not always, the case that an application--
+multi-threaded or not--will operate with a single constant
+value for each of these settings, with this value normally
+being either the default supplied by the SnmpStartup() call
+or an application-specified value (via SnmpSetTranslateMode()
+and/or SnmpSetRetransmitMode()) before any calls to the
+WinSNMP entity or context creation functions (for "translate"
+mode) or calls to SnmpSendMsg() (for "retransmit" mode).
+
+Nonetheless, implementors providing WinSNMP for operating
+environments which support multi-threaded applications
+are encouraged to include guidance on this issue in their
+developer-oriented documentation.
+
+15.  WinSNMP++ -> SNMP++ change
+
+The embryonic WinSNMP++ appendix to the WinSNMP v1
+specification has been deprecated and deleted from the
+WinSNMP v2 specification.
+
+Implementors are now directed to the open SNMP++
+specification (and reference code) published by Hewlett-
+Packard (http://rosegarden.external.hp.com/snmp++).
+
+16.  SnmpRegister()
+
+The primary purpose of SnmpRegister() is to enable an
+application to indicate that it wants to receive traps
+that arrive at the default SNMP trap port(s) (UDP 162
+and/or IPX 36880) on the local machine.  This can be
+accomplished by passing the following parameter values
+in the call to SnmpRegister():
+
+     session      - a valid session handle
+     srcEntity    - NULL
+     dstEntity    - NULL
+     context      - NULL
+     notification - NULL
+     status       - SNMPAPI_ON
+
+This sequence of parameter values, assuming the call is
+otherwise successful, will result in all notifications
+(traps and informs) received by the WinSNMP implementation
+being delivered to the session.  We will refer to the
+above setting as an "unfiltered" registration.
+
+A secondary purpose of SnmpRegister() is to function as
+a minimal "trap filter" on notifications received by the
+WinSNMP implementation.  In this mode, non-NULL values
+for any combination of one or more of the srcEntity,
+dstEntity, context, or notification parameters, will be
+used to form a filter to be applied to traps received by
+the WinSNMP implementation for the indicated session.
+We will refer to any such operation as a "filtered"
+registration.
+
+Note that while an "unfiltered" registration is in
+effect for a session, it makes no sense to issue any
+"filtered" registration requests for that same session.
+They would be totally superfluous--since all notifications
+would already be delivered to the session anyway due to
+the "unfiltered" registration.  This is one of three types
+of "redundant" registrations.  Another type of "redundant"
+registration is a duplicate call to SnmpRegister()--that
+is, one in which the parameter list is identical to the
+parameter list used to instantiate an active registration
+for the same session.  The third type of "redundant"
+registration is one in which the notification parameter
+(when dereferenced) fully contains (as a prefix) a
+notification parameter used on an active registration
+for the same session.  This is redundant due to the
+wildcard interpretation of the notification parameter
+specified in the WinSNMP v1.1a spec.
+
+In all cases of "redundant" registrations, SnmpRegister()
+should return SNMPAPI_SUCCESS, since the action requested
+by the application--namely, to deliver the specified
+notifications to the indicated session--will be carried
+out.  [Yes, we could have gone with SNMPAPI_FAILURE in
+these cases and setting SnmpGetLastError() to return
+SNMPAPI_NOOP, but the incidence of problems resulting
+form such "redundant" calls has proven to be close to
+zero in practice and, therefore, we are taking a more
+streamlined approach.]
+
+Also, note that such redundant "register" requests are
+idempotent, meaning that only a single corresponding
+"unregister" call is required.  To "unregister" means
+to call SnmpRegister() with a status parameter value of
+SNMPAPI_OFF and with the first five parameters having
+the same effective values as some previously successful
+call with a status parameter of SNMPAPI_ON.
+
+Implementations do not maintain a "count" of redundant
+registrations that must be matched with an equal number
+of corresponding unregistrations.
+
+Of course, each unique (non-redundant) register must
+be matched with an unregister call to remove it, if
+desired by the application.
+
+III - New Functions:
+
+1.  SnmpCreateSession()
+
+The SnmpCreateSession() function is used to create a WinSNMP
+"session" and to specify the notification mode-either a
+"window/message" pair or callback function--that will be
+used for the session.
+
+With this function, Windows programmers now have the option
+of having the implementation use either the standard Windows
+message notification method (as in SnmpOpen()) or a direct
+callback into a session-specific function.  As a by-product
+of this enhanced flexibility for Windows programmers, the
+WinSNMP API can now also be used in some non-Windows
+operating environments (some examples are given below).
+
+This function is a superset of the SnmpOpen() function.
+That is, when used to create a session with window/message
+notification, it provides the exact same functionality as
+SnmpOpen().  (Refer to the descriptive text for SnmpOpen()
+elsewhere in this alphabetical "Function Reference" chapter
+for more information.)
+
+Developers writing new applications for WinSNMP v2.0 are
+encouraged to use SnmpCreateSession() for all session
+creation, even when selecting the window/message
+notification mode (i.e., instead of using SnmpOpen()).
+Developers upgrading applications written for earlier
+versions of WinSNMP to take advantage of other WinSNMP v2.0
+features are encouraged to change all SnmpOpen() calls to
+the equivalent form of SnmpCreateSession().
+
+HSNMP_SESSION SnmpCreateSession (IN HWND hWnd,
+                                 IN UINT wMsg,
+                                 IN SNMPAPI_CALLBACK fCallBack,
+                                 IN LPVOID lpClientData);
+
+WINSNMP.DEF category = Communications Functions;
+ordinal value = 220.
+
+Parameter     Description
+hWnd          Identifies a notification window.
+wMsg          Identifies a notification message.
+fCallBack     Identifies a notification callback function;
+              may be NULL.
+lpClientData  Identifies a pointer to optional application
+              data to pass to the fCallBack function; may be
+              NULL.
+
+Returns:
+
+If the SnmpCreateSession() function is successful, the return
+value is an HSNMP_SESSION handle which identifies the WinSNMP
+session opened by the implementation on behalf of the calling
+application.
+
+If the function fails, the return value is SNMPAPI_FAILURE
+and SnmpGetLastError() will be set to return extended error
+information as follows:
+
+SnmpGetLastError()        Description
+"Common Error Codes"      See Section 2.10.1. Common Error
+                          Codes.
+SNMPAPI_HWND_INVALID      hWnd is not a valid window value.
+SNMPAPI_MSG_INVALID       wMsg is not a valid message value.
+SNMPAPI_MODE_INVALID      The combination of values passed
+                          is mutually incompatible or
+                          incomplete.
+SNMPAPI_OPERATION_INVALID The combination of values passed
+                          does not identify a valid
+                          notification mode for this
+                          implementation.
+
+As will be explained below, the conditions leading to any of
+the three specific error codes listed above are somewhat
+environment-specific.
+
+Comments:
+
+If fCallBack is NULL, SnmpCreateSession() is equivalent to
+the SnmpOpen() function.  In this window/notification mode,
+the values of hWnd and wMsg must both be valid in the
+implementation's operating environment.
+
+If the value of hWnd is invalid, then the function returns
+SNMPAPI_FAILURE, and SnmpGetLastError() is set to return
+SNMPAPI_HWND_INVALID.
+
+Else, if the value of wMsg is invalid, then the function
+returns SNMPAPI_FAILURE, and SnmpGetLastError() is set to
+return SNMPAPI_WMSG_INVALID.
+
+Else, if both values are individually valid but are mutually
+incompatible in a given windowing environment, then the
+function returns SNMPAPI_FAILURE, and SnmpGetLastError() is
+set to return SNMPAPI_MODE_INVALID.
+
+If fCallBack is non-NULL, it represents the address of a
+function to be called whenever the implementation has a
+notification to deliver to the session.  The notification
+may signal the presence of an SNMP message for the session
+or it may signal the existence of an asynchronous error
+condition (for example, a transport layer timeout error).
+(Refer to the discussion of "Retransmission and Timeout
+Notification" in the "Programming with WinSNMP" chapter
+and the descriptive text for SnmpRecvMsg() elsewhere in
+this alphabetical "Function Reference" chapter for more
+information.)  When fCallBack is non-NULL, a given operating
+environment may require valid values for any or all of hWnd,
+wMsg, and/or lpClientData and should return one of the three
+function-specific error codes in a manner consistent with
+that outlined above.
+
+The callback function prototype must be:
+
+typedef SNMPAPI_STATUS (CALLBACK *SNMPAPI_CALLBACK)(
+                        IN HSNMP_SESSION session,
+                        IN HWND hWnd,
+                        IN UINT wMsg,
+                        IN WPARAM wParam,
+                        IN LPARAM lParam,
+                        IN LPVOID lpClientData);
+
+Parameter     Description
+session       Identifies the session being notified.
+hWnd          Identifies the session's notification window.
+wMsg          Identifies the session's notification message.
+wParam        Identifies the purpose of the notification.
+lParam        Identifies the RequestID of the subject PDU.
+lpClientData  Identifies a pointer to optional application
+              data, if such a pointer was specified in the
+              session's SnmpCreateSession() call.
+
+Note:  If fCallBack is non-NULL on a successful call to the
+SnmpCreateSession() function, then the session operates in
+callback notification mode and the values of hWnd and wMsg
+passed to the SnmpCreateSession() function may or may not be
+significant depending upon the operating environment, but
+are always passed to the callback function for its possible
+use.
+
+Note:  If a callback function has been assigned to a session
+in this manner, then upon receipt of an SNMP message for the
+session the implementation will call the callback function--
+instead of sending the wMsg notification message to the hWnd
+as it would in the window/message notification mode--and
+pass it the session identifier and two values representing
+the wParam and lParam values that would have been used if
+operating in the window/message notification mode.  (See the
+descriptive text for the SnmpOpen() function elsewhere in
+the alphabetical "Function Reference" chapter for additional
+background information.)
+
+Note:  The fCallBack function must return SNMPAPI_SUCCESS to
+indicate continued viability.  Any other returned value will
+be interpreted as SNMPAPI_FAILURE and will result in the
+implementation doing an implicit SnmpClose() operation on
+the session.
+
+Note:  If the fCallBack parameter to SnmpCreateSession() is
+NULL, any non-NULL value of lpClientData is meaningless and,
+therefore, will be ignored by the implementation.
+
+Note:  When the callback function is called for the purpose
+of notifying the session of the presence of an SNMP message
+for it, the value passed for wParam must be 0.  Otherwise,
+any non-zero value of wParam will signal an asynchronous
+error notification for the session.  The most common example
+of such an error notification is a "no response from agent"
+timeout when the implementation is executing retransmission
+policy for the application; in which case, the value of
+wParam will be SNMPAPI_TL_TIMEOUT [108].  The value passed
+in the lParam parameter will always indicate the RequestID
+of the affected PDU.  (See the descriptive text for the
+SnmpRecvMsg() function elsewhere in the alphabetical
+"Function Reference" chapter for more information about the
+general use of these two parameters.)
+
+Following are some sample calling modes for different
+operating environments:
+
+MS-Windows, Window/Message notification mode:
+hSession = SnmpCreateSession (myWnd, myMsg, NULL, NULL);
+
+MS-Windows, Callback notification mode:
+hSession = SnmpCreateSession (0, 0, myFunc, <NULL|myData>);
+
+UNIX X-Windows, Callback notification mode:
+hSession = SnmpCreateSession (myWnd, 0, myFunc, <NULL|myData>);
+
+Any non-window Command Line Environment, Callback mode:
+hSession = SnmpCreateSession (0, 0, myFunc, <NULL|myData>);
+
+Note:  The first example above is equivalent to a standard
+WinSNMP SnmpOpen() call.
+
+Note:  For non-MS-Windows operating environments,
+implementors may (and will likely have to) supply
+definitions for the Windows-specific data types used in the
+standard WinSNMP.h file, which originate from <windows.h>
+(which is #include'd in WinSNMP.h).
+
+A possible example of a "windows.h" file for a generic
+X-Windows operating environment follows:
+
+// windows.h
+// #include'd in WinSNMP.h
+// typedef's for the SnmpCreateSession function
+typedef XtAppContext  HWND;     // X-Window id
+typedef unsigned int  UINT;     // Not used
+typedef void         *CALLBACK; // Callback function
+typedef void         *LPVOID;   // Callback user data
+// additional typedef's for the fCallBack prototype
+typedef unsigned int  WPARAM;   // Notification code
+typedef unsigned int  LPARAM;   // RequestID
+
+See also:  SnmpOpen() and SnmpRecvMsg() in the alphabetical
+function reference section, and "Retransmission and Timeout
+Notification" in the "Programming with WinSNMP" section.
+
+2.  SnmpCreateEntity()
+
+Due to the on-going work in the IETF SNMPv3 WG, this function
+will be deferred to the WinSNMP v3 time frame.
+
+This "placeholder" is being retained here as a signal to
+interested parties to monitor the SNMPv3 output for future
+incorporation in WinSNMP v3.
+
+3.  SnmpCreateContext()
+
+Due to the on-going work in the IETF SNMPv3 WG, this function
+will be deferred to the WinSNMP v3 time frame.
+
+This "placeholder" is being retained here as a signal to
+interested parties to monitor the SNMPv3 output for future
+incorporation in WinSNMP v3.
+
+4.  SnmpCancelMsg()
+
+The SnmpCancelMsg() function requests cancellation of any
+further retransmissions or timeout notification for the PDU
+identified by the requestId parameter for the specified
+session.
+
+SNMPAPI_STATUS SnmpCancelMsg (IN HSNMP_SESSION session,
+                              IN smiINT32 requestId);
+
+WINSNMP.DEF category = Communications Functions;
+ordinal value = @222.
+
+Parameter     Description
+session       Identifies the session which submitted the
+              message to be canceled.
+requestId     Identifies the Request-ID value of the
+              hPdu used in the corresponding call to
+              SnmpSendMsg().
+
+Returns:
+
+If the function executes successfully, the return value is
+SNMPAPI_SUCCESS.
+
+If the function fails, the return value is SNMPAPI_FAILURE.
+Use SnmpGetLastError() to obtain extended error information.
+
+SnmpGetLastError()       Description
+SNMPAPI_SESSION_INVALID  The session parameter is invalid.
+SNMPAPI_PDU_INVALID      The requestId parameter does not
+                         identify a message with outstanding
+                         retransmissions for the specified
+                         session.
+
+Comments:
+
+Successful execution of this function is analogous to
+setting RetransmitMode to SNMPAPI_OFF for the affected
+message.
+
+Note:  Applications must be aware that--due to transaction
+queuing at various levels--it is possible that the subject
+destination entity may still receive and/or respond to a
+corresponding SNMP message even following successful
+execution of SnmpCancelMsg().  But the implementation must
+not transmit any retries or submit a Response-PDU or timeout
+notification to the application for the subject message
+following successful execution of this function.
+
+Note:  Successful execution of this function applies to a
+single message instance.  This point illustrates another
+reason why applications should use "meaningful" Request-ID
+values for their respective PDUs.
+
+Note:  Implementations must effectively execute
+SnmpCancelMsg() on any outstanding messages for a session
+when SnmpClose() is called, whether directly or indirectly
+via SnmpCleanup().
+
+5.  SnmpSetPort()
+
+The SnmpSetPort() function permits an application to change
+the port assignment of a given destination entity.
+
+SNMPAPI_STATUS SNMPAPI_CALL SnmpSetPort
+				(IN HSNMP_ENTITY hEntity,
+                            	IN UINT nPort);
+
+WINSNMP.DEF category = Entity/Context Functions;
+ordinal value = @320.
+
+Note:  "Destination entity" includes entities used as
+agent applications via the local WinSNMP implementation
+(see Section III.6, "SnmpListen()", below).
+
+Note:  If the hEntity parameter identifies an entity which
+is already operating in an agent mode for this application
+(via the new SnmpListen() function outlined below), then
+this function will return SNMPAPI_FAILURE, with SnmpGetLastError()
+set to return SNMPAPI_ENTITY_INVALID, since such an entity is
+already bound to a port.  The proper sequence of events for
+such an entity is:
+
+	hAgent = SnmpStrToEntity (hSession, <addrString>);
+	lStatus = SnmpSetPort (hAgent, <nPort>);
+	lStatus = SnmpListen (hAgent, SNMPAPI_ON);
+
+The implementation will have "assigned" a port value to the
+entity as part of the SnmpStrToEntity() operation.  This will
+normally be the standard SNMP request port for the respective
+protocol family (e.g., UDP 161 or IPX 36879) for an entity
+created in "untranslated" mode or whatever may be specified in
+the local database for an entity created in "translated" mode.
+So, if the agent is to listen on a different port, or just to
+be safe, the app can use SnmpSetPort() to arrange that.
+
+6.  SnmpListen()
+
+This new function permits the "attachment" of an agent
+application using the [local] address and port settings
+in effect for the hEntity parameter.
+
+SNMPAPI_STATUS SNMPAPI_CALL SnmpListen
+				(IN HSNMP_ENTITY hEntity,
+                           	IN SNMPAPI_STATUS lStatus);
+
+WINSNMP.DEF category = Communications Functions;
+ordinal value = @221.
+
+"hEntity" will indicate the session to be notified (via
+callback or window/message) when an in-coming request
+is received for this agent application, and the address
+family, interface address, and port to use for this
+"agent".  Note that all of these attributes already exist
+as aspects of a WinSNMP "entity".
+
+"lStatus" will take either of two values: SNMPAPI_ON
+or SNMPAPI_OFF.  If it is SNMPAPI_ON, all else passing,
+the "agent" will then bind to its af:addr:port and
+listen for incoming requests, which will be transferred
+to it via the normal WinSNMP mechanisms.  It will then
+"do its thing" with the request, form the response,
+reverse the srcEntity and dstEntity parameters it
+received on the SnmpRecvMsg() call, and transmit the
+response back to the requester via SnmpSendMsg().
+
+If the entity's port is already in use, the call to
+SnmpListen() will fail with an appropriate error
+via SnmpGetLastError().  When an entity no longer
+wants to function as an agent, it should call
+SnmpListen() with an "lStatus" value of SNMPAPI_OFF
+to release the port (and other resources).  Both
+SnmpClose() for the session and SnmpCleanup() for
+the app must release all affected agent ports.
+
+7.  SnmpGetVendorInfo()
+
+This new function returns vendor identification information
+to the application using a new structure defined in winsnmp.h:
+
+#define MAXVENDORINFO 32
+typedef struct
+	{
+	char vendorName[MAXVENDORINFO*2];
+	char vendorContact[MAXVENDORINFO*2];
+	char vendorVersionId[MAXVENDORINFO];
+	char vendorVersionDate[MAXVENDORINFO];
+	smiUINT32 vendorEnterprise;
+	} smiVENDORINFO, FAR *smiLPVENDORINFO;
+
+SNMPAPI_STATUS SNMPAPI_CALL SnmpGetVendorInfo
+				(OUT smiLPVENDORINFO vendorInfo);
+
+WINSNMP.DEF category = Local Database Functions;
+ordinal value = @120.
+
+If vendorInfo is NULL, the return value is SNMPAPI_FAILURE with
+SnmpGetLastError() set to return SNMPAPI_NOOP.
+
+Upon successful return from this function, the four "char"
+fields should contain NULL-terminated text strings suitable
+for output on a display device.  The content of these fields
+is vendor-determined, but should provide information helpful
+to end-users in the event of a problem, if displayed by an
+application.  For example, "vendorContact" could include a
+physical or postal address, telephone and/or fax numbers,
+an e-mail address or a URL.  If a vendor has an IANA-issue
+enterprise number, then it should be returned as the value
+of vendorEnterprise; otherwise, its value must be zero.
+
+8.  SnmpOpen()
+
+[Note:  Modified for clarity wrt SnmpCreateSession(), which
+is new for WinSNMP v2.]
+
+[Do_Box]
+Important:  WinSNMP v2.0 added the SnmpCreateSession()
+function which provides a superset of the SnmpOpen()
+functionality.  Developers are encouraged to use
+SnmpCreateSession() instead of SnmpOpen().
+
+SnmpOpen() is maintained for backwards compatibility with
+pre-v2.0 WinSNMP applications, but some (non-Windows)
+implementations may return SNMPAPI_OPERATION_INVALID in
+response to any SnmpOpen() call, as described below.
+[End_Box]
+
+The SnmpOpen() function enables the implementation to
+allocate and initialize memory, resources, and/or
+communications mechanisms and data structures for the
+application.  The application will continue to use the
+"session identifier" returned by the implementation in
+subsequent WinSNMP function calls to facilitate resource
+accounting on a per session basis.  This mechanism enables
+the implementation to perform an orderly release of
+resources in response to a subsequent SnmpClose() function
+call for a given session (or in response to a subsequent
+SnmpCleanup() call for the application).
+
+Syntax:
+HSNMP_SESSION     SnmpOpen (
+IN HWND           hWnd,
+IN UINT           wMsg);
+
+Parameter     Description
+hWnd     Identifies the application's notification window.
+wMsg     Identifies the application's notification message.
+
+Returns:
+
+If the function is successful, the return value is a non-
+zero HSNMP_SESSION value which identifies the WinSNMP
+session opened by the implementation on behalf of the
+calling application.
+
+If the function fails, the return value is SNMPAPI_FAILURE.
+Use the SnmpGetLastError() function to obtain extended error
+information.
+
+SnmpGetLastError()        Description
+"Common Error Codes"      See Section 2.10.1. Common Error
+                          Codes.
+SNMPAPI_HWND_INVALID      The hWnd parameter is not a valid
+                          window handle.
+SNMPAPI_OPERATION_INVALID This implementation does not
+                          support the Windows/Message
+                          notification scheme (see
+                          SnmpCreateSession()).
+
+Comments:
+
+See Section 2.5. Sessions and Section <new> SnmpCreateSession().
+
+An application can open multiple sessions.  Each such
+session for the same hWnd should provide a different wMsg,
+but this is not required.
+
+A successful SnmpOpen() call always returns a unique
+HSNMP_SESSION value (with respect to all other currently
+open sessions for the calling application).
+
+The hWnd parameter specifies the window to be notified when
+an asynchronous request completes or trap/notification
+occurs and the wMsg parameter specifies the message number
+that the implementation will send to the window.  Upon
+receipt of this message,
+
+     - If the wParam component of the notification message
+       is zero (0),  the application should call
+       SnmpRecvMsg() to retrieve the subject PDU for
+       immediate or subsequent processing.
+
+     - If the wParam component of the notification message
+       is non-zero, it will represent a WinSNMP API error
+       code (e.g., SNMPAPI_TL_TIMEOUT) referring to the
+       PDU identified by the Request_Id value in the lParam
+       component.  In this case, the application should
+       react to the error condition and should not call
+       SnmpRecvMsg().
+
+In other programming models (e.g., synchronous, CLI-driven,
+or "curtained" applications), the WinSNMP implementation may
+interpret hWnd and hMsg differently.  Likewise, the session
+model may be used to facilitate multi-threaded programming
+in supporting environments.  The SnmpCreateSession()
+function has been added to WinSNMP v2.0 to formalize such
+usage.
+
+Note:  A well-behaved WinSNMP application will call
+SnmpClose() for each session opened with SnmpOpen().  When
+an emergency exit is required by the application, it must at
+least call SnmpCleanup().
+
+A well-behaved WinSNMP implementation must react to an
+SnmpCleanup() call as though it were a series of SnmpClose()
+calls for each open session allocated to the calling
+application.

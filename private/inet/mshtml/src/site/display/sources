@@ -1,0 +1,40 @@
+!IF 0
+
+Copyright (c) 1997  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\display=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=display
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES = \
+    rect.cxx \
+    region.cxx \
+    regionstack.cxx \
+    dispflags.cxx \
+    dispextras.cxx \
+    dispcontext.cxx \
+    savedispcontext.cxx \
+    dispnode.cxx \
+    displeaf.cxx \
+    dispitemplus.cxx \
+    dispinterior.cxx \
+    dispbalance.cxx \
+    dispcontent.cxx \
+    dispcontainer.cxx \
+    dispcontainerplus.cxx \
+    dispscroller.cxx \
+    dispscrollerplus.cxx \
+    dispsurface.cxx \
+    disproot.cxx \
+    dispgrp.cxx \
+    debugpaint.cxx
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

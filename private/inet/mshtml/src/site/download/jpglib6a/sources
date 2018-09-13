@@ -1,0 +1,81 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+Author:   Ramesh G    06-07-96
+
+!ENDIF
+
+
+ROOT=$(MAKEDIR:\src\site\download\jpglib6a=)
+WARNING_LEVEL=W3
+!include $(ROOT)\common.inc
+
+TARGETPATH=   obj
+TARGETTYPE=   LIBRARY
+TARGETNAME=   JPGLib
+
+ACTIVEXINC=..\..\..\inc
+
+PASS0_HEADERDIR=$(SDK_INC_PATH)
+
+# needs to run on Win95 and NT 3.51
+MIDL_OPTIMIZATION=$(MIDL_OPTIMIZATION) -Oi1
+
+WIN32_WINNT_VERSION=0x0400
+WIN32_WIN95_VERSION=0x0400
+
+INCLUDES=$(ACTIVEXINC);..
+
+SOURCES= \
+    jcomapi.c     \
+    jdapimin.c    \
+    jdapistd.c    \
+    jdcoefct.c    \
+    jdcolor.c     \
+    jddctmgr.c    \
+    jdhuff.c      \
+    jdinput.c     \
+    jdmainct.c    \
+    jdmarker.c    \
+    jdmaster.c    \
+    jdmerge.c     \
+    jdphuff.c     \
+    jdpostct.c    \
+    jdsample.c    \
+    jdtrans.c     \
+    jidctflt.c    \
+    jidctfst.c    \
+    jidctint.c    \
+    jidctred.c    \
+    jmemmgr.c     \
+    jmemnobs.c    \
+    jquant1.c     \
+    jquant2.c     \
+    jutils.c      \
+    miint.c       \
+    mifst.c       \
+    mfint.c       \
+    mffst.c       \
+    piint.c       \
+    pifst.c       \
+    pfint.c       \
+    pffst.c
+
+# include files that are inside ifdef blocks - prevents build warnings
+
+CONDITIONAL_INCLUDES=\
+    $(CONDITIONAL_INCLUDES) \
+   alloc.h \
+   strings.h

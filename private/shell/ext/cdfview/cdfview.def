@@ -1,0 +1,18 @@
+LIBRARY         CdfView
+; DESCRIPTION is obsolete and gives the IA64 linker the heebie-jeebies
+;DESCRIPTION     'CDF File Viewer'
+
+SECTIONS
+SharedData      READ WRITE SHARED
+
+EXPORTS
+
+    DllGetClassObject   PRIVATE
+    DllCanUnloadNow     PRIVATE
+    DllRegisterServer   PRIVATE
+    DllUnregisterServer PRIVATE
+
+    OpenChannel
+    Subscribe
+    ParseDesktopComponent
+    SubscribeToCDF

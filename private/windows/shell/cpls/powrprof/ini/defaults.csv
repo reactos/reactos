@@ -1,0 +1,97 @@
+Name,,,,Home/Office Desk,,Portable/Laptop,,Presentation,,Always On,,Minimal Power Management,,Max Battery,
+Description,,,,This scheme is suited to most home or desktop computers that are left plugged in all the time.,,This scheme is designed for extended battery life for portable computers on the road.,,This scheme keeps the monitor on for doing presentations.,,This scheme keeps the computer running so that it can be accessed from the network.  Use this scheme if you do not have network wakeup hardware.,,This scheme keeps the computer on and optimizes it for high performance.,,This scheme is extremely aggressive for saving power. ,
+Platform,,,,Win95 NT,,Win95 NT,,NT,,Win95 NT,,NT,,Win95 NT,
+Install On,,,,TypicalInstall CompactInstall CustomInstall,,PortableInstall,,TypicalInstall PortableInstall CompactInstall CustomInstall,,ServerInstall,,ServerInstall,,PortableInstall,
+Scheme Policy Parameters,,,,AC,DC,AC,DC,AC,DC,AC,DC,AC,DC,AC,DC
+System idleness,,,,,,,,,,,,,,,
+,Idle action,,,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep
+,Idle timeout,,,0 min,5 min,20 min,5 min,0 min,15 min,0 min,0 min,0 min,5 min,20 min,2 min
+,Sleep action flags,,,,,,,,,,,,,,
+,,Query apps,,Yes,No,Yes,Yes,Yes,Yes,Yes,No,Yes,No,Yes,Yes
+,,Allow UI,,No,No,No,No,No,No,No,No,No,No,No,No
+,,Ignore non-responsive apps,,No,No,No,No,No,No,No,No,No,No,No,Yes
+,,Ignore wakeup events,,No,No,No,No,No,No,No,No,No,No,No,No
+,,Critical (go to sleep immediately),,No,No,No,No,No,No,No,No,No,No,No,No
+,Idle sensitivity,,,50%,50%,50%,50%,50%,50%,50%,50%,50%,50%,50%,50%
+Sleep state,,,,,,,,,,,,,,,
+,Minimum sleep,,,S1,S3,S1,S2,S1,S2,S1,S3,S1,S3,S1,S3
+,Max sleep,,,S3,S3,S3,S3,S3,S3,S3,S3,S3,S3,S3,S3
+,Reduced latency sleep,,,S1,S1,S2,S2,S1,S1,S1,S1,S1,S1,S2,S2
+,Doze timeout,,,0 min,15 min,40 min,5 min,0 min,15 min,0 min,0 min,0 min,10 min,25 min,3 min
+,DozeS4Timeout,,,0 min,15 min,40 min,5 min,0 min,15 min,0 min,0 min,0 min,10 min,25 min,3 min
+Device PM,,,,,,,,,,,,,,,
+,Video timeout,,,20 min,5 min,15 min,5 min,0 min,0 min,20 min,15 min,15 min,5 min,15 min,1 min
+,Spindown timeout,,,0 min,10 min,30 min,5 min,0 min,5 min,0 min,30 min,0 min,15 min,0 min,3 min
+CPU PM,,,,,,,,,,,,,,,
+,Optimize for power,,,Yes,Yes,Yes,Yes,Yes,Yes,No,Yes,No,Yes,Yes,Yes
+,Fan throttle Tolerance,,,100%,80%,100%,80%,80%,80%,100%,100%,100%,100%,100%,50%
+,Forced throttle,,,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,100%,50%
+,Min throttle,,,50%,50%,50%,50%,50%,50%,90%,90%,90%,90%,50%,10%
+,Overthrottled,,,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep,Sleep
+,,Sleep action flags,,,,,,,,,,,,,
+,,,Query apps,No,No,No,No,No,No,No,No,No,No,No,No
+,,,Allow UI,No,No,No,No,No,No,No,No,No,No,No,No
+,,,Ignore non-responsive apps,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+,,,Ignore wakeup events,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+,,,Critical (go to sleep immediately),Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+Global Policy Parameters,,,,AC,DC,,,,,,,,,,
+Advanced,,,,,,,,,,,,,,,
+,Lock Workstation,,,Yes,Yes,,,,,,,,,,
+,Wake on Ring,,,No,No,,,,,,,,,,
+,Video Dim Display On DC,,,n/a,Yes,,,,,,,,,,
+Power buttons,,,,,,,,,,,,,,,
+,Power button,,,ShutdownOff,ShutdownOff,,,,,,,,,,
+,,Sleep action flags,,,,,,,,,,,,,
+,,,Query apps,Yes,Yes,,,,,,,,,,
+,,,Allow UI,Yes,Yes,,,,,,,,,,
+,,,Ignore non-responsive apps,No,No,,,,,,,,,,
+,,,Ignore wakeup events,No,No,,,,,,,,,,
+,,,Critical (go to sleep immediately),No,No
+,Sleep button,,,Sleep,Sleep
+,,Sleep action flags,,,
+,,,Query apps,Yes,Yes
+,,,Allow UI,Yes,Yes
+,,,Ignore non-responsive apps,No,No
+,,,Ignore wakeup events,No,No
+,,,Critical (go to sleep immediately),No,No
+,Lid close,,,None,None
+,,Sleep action flags,,,
+,,,Query apps,Yes,Yes
+,,,Allow UI,No,No
+,,,Ignore non-responsive apps,No,No
+,,,Ignore wakeup events,No,No
+,,,Critical (go to sleep immediately),No,No
+,Lid open wake,,,S0,S0
+Batteries,,,,,
+,Broadcast capacity resolution,,,n/a,3%
+,Battery meter flags,,,,
+,,Force SysTray Battery Meter,,No,n/a
+,,Enable Multi-Battery Display,,n/a,Yes
+,Discharge Policy 1,,,,
+,,Enable,,n/a,Yes
+,,Battery Level ,,n/a,10%
+,,Power Policy,,n/a,None
+,,Min system sleep state,,n/a,S0
+,,Event Code,,,
+,,,Text Notify,n/a,Yes
+,,,Sound Notify,n/a,No
+,,Sleep action flags,,,
+,,,Query apps,n/a,Yes
+,,,Allow UI,n/a,Yes
+,,,Ignore non-responsive apps,n/a,No
+,,,Ignore wakeup events,n/a,No
+,,,Critical (go to sleep immediately),n/a,No
+,Discharge Policy 2,,,,
+,,Enable,,n/a,Yes
+,,Battery Level ,,n/a,3%
+,,Power Policy,,n/a,Sleep
+,,Min system sleep state,,n/a,S4
+,,Event Code,,,
+,,,Text Notify,n/a,Yes
+,,,Sound Notify,n/a,No
+,,Sleep action flags,,,
+,,,Query apps,n/a,No
+,,,Allow UI,n/a,No
+,,,Ignore non-responsive apps,n/a,No
+,,,Ignore wakeup events,n/a,Yes
+,,,Critical (go to sleep immediately),n/a,Yes

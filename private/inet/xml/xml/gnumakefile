@@ -1,0 +1,29 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir tokenizer ${MAKE} ${MFLAGS} $@
+	@enterdir om ${MAKE} ${MFLAGS} $@
+	@enterdir util  ${MAKE} ${MFLAGS} $@ 
+	@enterdir dtd  ${MAKE} ${MFLAGS} $@ 
+	@enterdir schema  ${MAKE} ${MFLAGS} $@ 
+	@enterdir islands  ${MAKE} ${MFLAGS} $@
+	@enterdir dso  ${MAKE} ${MFLAGS} $@ 
+	@enterdir dll  ${MAKE} ${MFLAGS} $@ 
+
+
+
+#	@enterdir omtest  ${MAKE} ${MFLAGS} $@ 
+#	@enterdir exe  ${MAKE} ${MFLAGS} $@
+
+
+
+
+
+
+
+
+
+
+

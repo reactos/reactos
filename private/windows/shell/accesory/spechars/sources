@@ -1,0 +1,18 @@
+MAJORCOMP=shell
+MINORCOMP=charmap
+
+TARGETNAME=charmap
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+
+INCLUDES=.
+
+SOURCES=charmap.c charmap.rc
+
+C_DEFINES=-DWIN32 -DUNICODE -D_UNICODE -DUSE_MIRRORING
+
+UMTYPE=windows
+UMENTRY=winmain
+TARGETLIBS= \
+    $(SDK_LIB_PATH)\htmlhelp.lib \
+    $(SDK_LIB_PATH)\comctl32.lib

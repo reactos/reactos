@@ -1,0 +1,1007 @@
+// xenroll.idl : IDL source for xenroll.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (xenroll.tlb) and marshalling code.
+
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+import "wincrypt.idl";
+
+
+    [
+        object,
+        uuid(43F8F288-7A20-11D0-8F06-00C04FC295E1),
+        dual,
+        helpstring("ICEnroll Interface"),
+        pointer_default(unique)
+    ]
+    interface ICEnroll : IDispatch
+    {
+
+    //
+    // Walk the end user through the process of generating a key
+    // pair, which either will or will not be required to use some form
+    // of hardware private key management, per the fRequireHardware
+    // parameter. Return to the caller a PKCS#10 of the resulting
+    // generated key, where in the subject name
+    //
+    HRESULT createFilePKCS10
+        (
+  
+        [in]            BSTR        DNName,
+        [in]            BSTR        Usage,
+        [in]            BSTR        wszPKCS10FileName
+        );
+
+    //
+    // Accept delivery of the credentials that correspond to a previous
+    // call to GenerateKeyPair. This method puts the credentials
+    // whereever they are supposed to go for easy subsequent access
+    // by the user.
+    //
+    HRESULT acceptFilePKCS7
+        (
+        [in]            BSTR   wszPKCS7FileName
+        );
+
+    HRESULT createPKCS10
+        (
+  
+        // This is the DN name for the certificate in X500 name syntax. 
+        // For example CN=KeithV
+        [in]            BSTR        DNName,
+
+ 
+        // This is the usage string, it will end up in the certificate
+        // enumerating what the certificate is used for. For example
+        // ClientAuth, Or CodeSigning. It can be any string.
+        [in]            BSTR        Usage,
+         
+        // The return value is a Base64 encoded 
+        // PKCS10 Cert Request
+        [out,retval]    BSTR*  pPKCS10
+
+        );
+
+    //
+    // Accept delivery of the credentials that correspond to a previous
+    // call to GenerateKeyPair. This method puts the credentials
+    // whereever they are supposed to go for easy subsequent access
+    // by the user.
+    //
+    HRESULT acceptPKCS7
+        (
+        //
+        // The credentials that are to be stored. Credentials
+        // are a PKCS#7 SignedData that is used simply as a bucket
+        // to convey a bunch of certificates. There must be precisely
+        // one certificate with no child in the bucket.
+        //
+        [in]            BSTR   PKCS7
+        );
+
+    HRESULT getCertFromPKCS7( 
+            [in]            BSTR    wszPKCS7,
+            [retval][out]   BSTR*   pbstrCert
+        );
+
+    HRESULT enumProviders(
+       [in]                 DWORD dwIndex,
+       [in]                 DWORD dwFlags,
+       [retval][out]        BSTR* pbstrProvName
+       );
+
+    HRESULT enumContainers(
+       [in]                 DWORD dwIndex,
+       [retval][out]        BSTR* pbstr
+       );
+
+    //
+    // Session Id's must be appropriately clean up
+    //
+    HRESULT freeRequestInfo
+        (
+
+        //
+        // The session Id that represents the data
+        //
+        [in]            BSTR   PKCS7OrPKCS10
+
+        );
+
+    [propget]
+    HRESULT MyStoreName(
+        [out, retval] BSTR * pbstrName
+        );
+
+    [propput]
+    HRESULT	MyStoreName(
+        [in]    BSTR    bstrName
+        );
+
+    [propget]
+    HRESULT MyStoreType(
+        [out, retval] BSTR * pbstrType
+        );
+
+    [propput]
+    HRESULT	MyStoreType(
+        [in]    BSTR    bstrType
+        );
+
+    [propget]
+    HRESULT MyStoreFlags(
+        [out, retval] DWORD * pdwFlags
+        );
+
+    [propput]
+    HRESULT	MyStoreFlags(
+        [in]    DWORD   dwFlags
+        );
+
+    [propget]
+    HRESULT CAStoreName(
+        [out, retval] BSTR * pbstrName
+        );
+
+    [propput]
+    HRESULT	CAStoreName(
+        [in]    BSTR    bstrName
+        );
+
+    [propget]
+    HRESULT CAStoreType(
+        [out, retval] BSTR * pbstrType
+        );
+
+    [propput]
+    HRESULT	CAStoreType(
+        [in]    BSTR    bstrType
+        );
+
+    [propget]
+    HRESULT CAStoreFlags(
+        [out, retval] DWORD * pdwFlags
+        );
+
+    [propput]
+    HRESULT	CAStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT RootStoreName(
+    		[out, retval] BSTR * pbstrName
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreName(
+    	[in] 	BSTR	bstrName
+    	);
+    	
+    	[propget]
+    	HRESULT RootStoreType(
+    		[out, retval] BSTR * pbstrType
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreType(
+    	[in] 	BSTR	bstrType
+    	);
+
+    	[propget]
+    	HRESULT RootStoreFlags(
+    		[out, retval] DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT RequestStoreName(
+    		[out, retval] BSTR * pbstrName
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreName(
+    	[in] 	BSTR	bstrName
+    	);
+    	
+    	[propget]
+    	HRESULT RequestStoreType(
+    		[out, retval] BSTR * pbstrType
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreType(
+    	[in] 	BSTR	bstrType
+    	);
+
+    	[propget]
+    	HRESULT RequestStoreFlags(
+    		[out, retval] DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+    	
+    	[propget]
+    	HRESULT ContainerName(
+    		[out, retval] BSTR * pbstrContainer
+    		);
+    		
+    	[propput]
+    HRESULT	ContainerName(
+    	[in] 	BSTR	bstrContainer
+    	);
+
+    	[propget]
+    	HRESULT ProviderName(
+    		[out, retval] BSTR * pbstrProvider
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderName(
+    	[in] 	BSTR	bstrProvider
+    	);
+
+    	[propget]
+    	HRESULT ProviderType(
+    		[out, retval] DWORD * pdwType
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderType(
+    	[in] 	DWORD	dwType
+    	);
+
+    	[propget]
+    	HRESULT KeySpec(
+    		[out, retval] DWORD * pdw
+    		);
+    		
+    	[propput]
+    HRESULT	KeySpec(
+    	[in] 	DWORD	dw
+    	);
+
+    	[propget]
+    	HRESULT ProviderFlags(
+    		[out, retval] DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT UseExistingKeySet(
+    		[out, retval] BOOL * fUseExistingKeys
+    		);
+    		
+    	[propput]
+    HRESULT	UseExistingKeySet(
+    	[in] 	BOOL	fUseExistingKeys
+    	);
+
+    	[propget]
+    	HRESULT GenKeyFlags(
+    		[out, retval] DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	GenKeyFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT DeleteRequestCert(
+    		[out, retval] BOOL * fDelete
+    		);
+    		
+    	[propput]
+    HRESULT	DeleteRequestCert(
+    	[in] 	BOOL	fDelete
+    	);
+    	
+    	[propget]
+    	HRESULT WriteCertToCSP(
+    		[out, retval] BOOL * fBool
+    		);
+    		
+    	[propput]
+    HRESULT	WriteCertToCSP(
+    	[in] 	BOOL	fBool
+    	);
+    	
+    	[propget]
+    	HRESULT SPCFileName(
+    		[out, retval] BSTR * pbstr
+    		);
+    		
+    	[propput]
+    HRESULT	SPCFileName(
+    	[in] 	BSTR	bstr
+    	);
+
+    	[propget]
+    	HRESULT PVKFileName(
+    		[out, retval] BSTR * pbstr
+    		);
+    		
+    	[propput]
+    HRESULT	PVKFileName(
+    	[in] 	BSTR	bstr
+    	);
+
+    	[propget]
+    	HRESULT HashAlgorithm(
+    		[out, retval] BSTR * pbstr
+    		);
+    		
+    	[propput]
+    HRESULT	HashAlgorithm(
+    	[in] 	BSTR	bstr
+    	);
+    };
+
+    [
+        object,
+        uuid(704ca730-c90b-11d1-9bec-00c04fc295e1),
+        dual,
+        helpstring("ICEnroll2 Interface"),
+        pointer_default(unique)
+    ]
+    interface ICEnroll2 : ICEnroll
+    {
+
+    HRESULT addCertTypeToRequest(
+        [in]            BSTR        CertType
+        );
+
+    HRESULT addNameValuePairToSignature(
+        [in]            BSTR        Name,
+        [in]            BSTR        Value
+        );
+
+    [propget]
+    HRESULT WriteCertToUserDS(
+        [out, retval] BOOL * fBool
+        );
+
+    [propput]
+    HRESULT	WriteCertToUserDS(
+        [in]    BOOL    fBool
+        );
+
+    [propget]
+    HRESULT EnableT61DNEncoding(
+        [out, retval] BOOL * fBool
+            );
+
+    [propput]
+    HRESULT	EnableT61DNEncoding(
+        [in]    BOOL    fBool
+        );
+    };
+
+    [
+        object,
+        uuid(c28c2d95-b7de-11d2-a421-00c04f79fe8e),
+        dual,
+        helpstring("ICEnroll3 Interface"),
+        pointer_default(unique)
+    ]
+    interface ICEnroll3 : ICEnroll2
+    {
+
+   HRESULT InstallPKCS7
+        (
+        [in]            BSTR        PKCS7
+        );
+
+    HRESULT Reset(
+        void
+        );
+
+    HRESULT GetSupportedKeySpec(
+        [out, retval]   DWORD *     pdwKeySpec
+        );
+
+    HRESULT GetKeyLen(
+        [in]            BOOL        fMin,
+        [in]            BOOL        fExchange,
+        [out, retval]   DWORD *     pdwKeySize
+        );
+
+    HRESULT EnumAlgs(
+        [in]            DWORD       dwIndex,
+        [in]            DWORD       algClass,
+        [out, retval]   DWORD *     pdwAlgID
+        );
+
+    HRESULT GetAlgName(
+        [in]            DWORD   algID,
+        [out, retval]   BSTR *  pbstr
+        );
+
+    [propput]
+    HRESULT ReuseHardwareKeyIfUnableToGenNew(
+        [in]    BOOL    fReuseHardwareKeyIfUnableToGenNew
+        );
+
+    [propget]
+    HRESULT ReuseHardwareKeyIfUnableToGenNew(
+        [out, retval]   BOOL * fReuseHardwareKeyIfUnableToGenNew
+        );
+        
+    [propput]
+    HRESULT HashAlgID(
+        [in]    DWORD    hashAlgID
+        );
+
+    [propget]
+    HRESULT HashAlgID(
+        [out, retval]   DWORD *   hashAlgID
+        );
+
+    [propput]
+    HRESULT LimitExchangeKeyToEncipherment(
+    [in]    BOOL    fLimitExchangeKeyToEncipherment
+        );
+
+    [propget]
+    HRESULT LimitExchangeKeyToEncipherment(
+    [out, retval]   BOOL * fLimitExchangeKeyToEncipherment
+    );
+
+    [propput]
+    HRESULT EnableSMIMECapabilities(
+    [in]    BOOL    fEnableSMIMECapabilities
+        );
+
+    [propget]
+    HRESULT EnableSMIMECapabilities(
+    [out, retval]   BOOL * fEnableSMIMECapabilities
+        );
+    };
+
+    [
+        object,
+        uuid(acaa7838-4585-11d1-ab57-00c04fc295e1),
+        local,
+        helpstring("IEnroll Interface"),
+        pointer_default(unique)
+    ]
+    interface IEnroll : IUnknown
+    {
+
+    //
+    // Walk the end user through the process of generating a key
+    // pair, which either will or will not be required to use some form
+    // of hardware private key management, per the fRequireHardware
+    // parameter. Return to the caller a PKCS#10 of the resulting
+    // generated key, where in the subject name
+    //
+    HRESULT createFilePKCS10WStr
+        (
+  
+    [in]        LPCWSTR     DNName,
+    [in]        LPCWSTR     Usage,
+    [in]        LPCWSTR     wszPKCS10FileName
+        );
+
+    //
+    // Accept delivery of the credentials that correspond to a previous
+    // call to GenerateKeyPair. This method puts the credentials
+    // whereever they are supposed to go for easy subsequent access
+    // by the user.
+    //
+    HRESULT acceptFilePKCS7WStr
+        (
+        [in]    LPCWSTR wszPKCS7FileName
+        );
+
+    HRESULT createPKCS10WStr
+        (
+  
+        // This is the DN name for the certificate in X500 name syntax. 
+        // For example CN=KeithV
+        [in]            LPCWSTR      DNName,
+
+ 
+        // This is the usage string, it will end up in the certificate
+        // enumerating what the certificate is used for. For example
+        // ClientAuth, Or CodeSigning. It can be any string.
+        [in]            LPCWSTR      Usage,
+         
+        // The return value is a Base64 encoded 
+        // PKCS10 Cert Request
+        [out]           PCRYPT_DATA_BLOB    pPkcs10Blob
+
+        );
+
+    //
+    // Accept delivery of the credentials that correspond to a previous
+    // call to GenerateKeyPair. This method puts the credentials
+    // whereever they are supposed to go for easy subsequent access
+    // by the user.
+    //
+    HRESULT acceptPKCS7Blob
+        (
+        //
+        // The credentials that are to be stored. Credentials
+        // are a PKCS#7 SignedData that is used simply as a bucket
+        // to convey a bunch of certificates. There must be precisely
+        // one certificate with no child in the bucket.
+        //
+        [in]            PCRYPT_DATA_BLOB pBlobPKCS7
+        );
+
+    PCCERT_CONTEXT  getCertContextFromPKCS7( 
+        [in]        PCRYPT_DATA_BLOB pBlobPKCS7
+        );
+
+    HCERTSTORE      getMyStore
+        (
+        void
+        );
+
+    HCERTSTORE      getCAStore
+        (
+        void
+        );
+
+    HCERTSTORE      getROOTHStore
+        (
+        void
+        );
+
+    HRESULT enumProvidersWStr(
+       [in]         DWORD dwIndex,
+       [in]         DWORD dwFlags,
+       [out]        LPWSTR * pbstrProvName
+       );
+
+    HRESULT enumContainersWStr(
+       [in]         DWORD dwIndex,
+       [out]        LPWSTR * pbstr
+       );
+    
+    //
+    // Session Id's must be appropriately clean up
+    //
+    HRESULT freeRequestInfoBlob
+        (
+
+        //
+        // The session Id that represents the data
+        //
+        [in]            CRYPT_DATA_BLOB pkcs7OrPkcs10
+
+        );
+
+    	[propget]
+    	HRESULT MyStoreNameWStr(
+    		[out] 	LPWSTR * szwName
+    		);
+    		
+    	[propput]
+    HRESULT	MyStoreNameWStr(
+    	[in] 	LPWSTR	szwName
+    	);
+    	
+    	[propget]
+    	HRESULT MyStoreTypeWStr(
+    		[out] 	LPWSTR * szwType
+    		);
+    		
+    	[propput]
+    HRESULT	MyStoreTypeWStr(
+    	[in] 	LPWSTR	szwType
+    	);
+
+    	[propget]
+    	HRESULT MyStoreFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	MyStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT CAStoreNameWStr(
+    		[out] 	LPWSTR * szwName
+    		);
+    		
+    	[propput]
+    HRESULT	CAStoreNameWStr(
+    	[in] 	LPWSTR	szwName
+    	);
+    	
+    	[propget]
+    	HRESULT CAStoreTypeWStr(
+    		[out] 	LPWSTR * szwType
+    		);
+    		
+    	[propput]
+    HRESULT	CAStoreTypeWStr(
+    	[in] 	LPWSTR		szwType
+    	);
+
+    	[propget]
+    	HRESULT CAStoreFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	CAStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT RootStoreNameWStr(
+    		[out] 	LPWSTR * szwName
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreNameWStr(
+    	[in] 	LPWSTR	szwName
+    	);
+    	
+    	[propget]
+    	HRESULT RootStoreTypeWStr(
+    		[out] 	LPWSTR * szwType
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreTypeWStr(
+    	[in] 	LPWSTR	szwType
+    	);
+
+    	[propget]
+    	HRESULT RootStoreFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	RootStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT RequestStoreNameWStr(
+    		[out] 	LPWSTR * szwName
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreNameWStr(
+    	[in] 	LPWSTR	szwName
+    	);
+    	
+    	[propget]
+    	HRESULT RequestStoreTypeWStr(
+    		[out] 	LPWSTR * szwType
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreTypeWStr(
+    	[in] 	LPWSTR	szwType
+    	);
+
+    	[propget]
+    	HRESULT RequestStoreFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	RequestStoreFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+    	
+    	[propget]
+    	HRESULT ContainerNameWStr(
+    		[out] 	LPWSTR * szwContainer
+    		);
+    		
+    	[propput]
+    HRESULT	ContainerNameWStr(
+    	[in] 	LPWSTR	szwContainer
+    	);
+
+    	[propget]
+    	HRESULT ProviderNameWStr(
+    		[out] 	LPWSTR * szwProvider
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderNameWStr(
+    	[in] 	LPWSTR	szwProvider
+    	);
+
+    	[propget]
+    	HRESULT ProviderType(
+    		[out] 	DWORD * pdwType
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderType(
+    	[in] 	DWORD	dwType
+    	);
+
+    	[propget]
+    	HRESULT KeySpec(
+    		[out] 	DWORD * pdw
+    		);
+    		
+    	[propput]
+    HRESULT	KeySpec(
+    	[in] 	DWORD	dw
+    	);
+
+    	[propget]
+    	HRESULT ProviderFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	ProviderFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT UseExistingKeySet(
+    		[out] 	BOOL * fUseExistingKeys
+    		);
+    		
+    	[propput]
+    HRESULT	UseExistingKeySet(
+    	[in] 	BOOL	fUseExistingKeys
+    	);
+
+    	[propget]
+    	HRESULT GenKeyFlags(
+    		[out] 	DWORD * pdwFlags
+    		);
+    		
+    	[propput]
+    HRESULT	GenKeyFlags(
+    	[in] 	DWORD	dwFlags
+    	);
+
+    	[propget]
+    	HRESULT DeleteRequestCert(
+    		[out] 	BOOL * fDelete
+    		);
+    		
+    	[propput]
+    HRESULT	DeleteRequestCert(
+    	[in] 	BOOL	fDelete
+    	);
+    	
+    	[propget]
+    	HRESULT WriteCertToUserDS(
+    		[out] 	BOOL * fBool
+    		);
+    		
+    	[propput]
+    HRESULT	WriteCertToUserDS(
+    	[in] 	BOOL	fBool
+    	);
+    	
+    	[propget]
+    	HRESULT EnableT61DNEncoding(
+    		[out] 	BOOL * fBool
+    		);
+    		
+    	[propput]
+    HRESULT	EnableT61DNEncoding(
+    	[in] 	BOOL	fBool
+    	);
+    	
+    	[propget]
+    	HRESULT WriteCertToCSP(
+    		[out] 	BOOL * fBool
+    		);
+    		
+    	[propput]
+    HRESULT	WriteCertToCSP(
+    	[in] 	BOOL	fBool
+    	);
+    	
+    	[propget]
+    	HRESULT SPCFileNameWStr(
+    		[out] 	LPWSTR * szw
+    		);
+    		
+    	[propput]
+    HRESULT	SPCFileNameWStr(
+    	[in] 	LPWSTR	szw
+    	);
+
+    	[propget]
+    	HRESULT PVKFileNameWStr(
+    		[out] 	LPWSTR * szw
+    		);
+    		
+    	[propput]
+    HRESULT	PVKFileNameWStr(
+        [in]    LPWSTR  szw
+        );
+
+    [propget]
+    HRESULT HashAlgorithmWStr(
+        [out]   LPWSTR * szw
+        );
+
+    [propput]
+    HRESULT HashAlgorithmWStr(
+        [in]    LPWSTR  szw
+        );
+
+    [propget]
+    HRESULT RenewalCertificate(
+        [out]   PCCERT_CONTEXT *    ppCertContext
+        );
+
+    [propput]
+    HRESULT RenewalCertificate(
+        [in]    PCCERT_CONTEXT pCertContext
+        );
+
+    HRESULT AddCertTypeToRequestWStr(
+        [in]    LPWSTR      szw
+        );
+
+    HRESULT AddNameValuePairToSignatureWStr(
+        [in]    LPWSTR      Name,
+        [in]    LPWSTR      Value
+        );
+
+    HRESULT	AddExtensionsToRequest(
+        [in]    PCERT_EXTENSIONS    pCertExtensions
+        );
+
+    HRESULT AddAuthenticatedAttributesToPKCS7Request(
+        [in]    PCRYPT_ATTRIBUTES   pAttributes
+        );
+
+    HRESULT CreatePKCS7RequestFromRequest(
+        [in]    PCRYPT_DATA_BLOB    pRequest,
+        [in]    PCCERT_CONTEXT      pSigningCertContext,
+        [out]   PCRYPT_DATA_BLOB    pPkcs7Blob
+        );
+
+    };
+
+    [
+        object,
+        uuid(c080e199-b7df-11d2-a421-00c04f79fe8e),
+        local,
+        helpstring("IEnroll2 Interface"),
+        pointer_default(unique)
+    ]
+    interface IEnroll2 : IEnroll
+    {
+    
+    HRESULT InstallPKCS7Blob
+        (
+        [in]    PCRYPT_DATA_BLOB    pBlobPKCS7
+        );
+
+    HRESULT Reset(
+        void
+        );
+
+    HRESULT GetSupportedKeySpec(
+        [out]   DWORD *     pdwKeySpec
+        );
+
+    HRESULT GetKeyLen(
+        [in]    BOOL        fMin,
+        [in]    BOOL        fExchange,
+        [out]   DWORD *     pdwKeySize
+        );
+
+    HRESULT EnumAlgs(
+        [in]    DWORD       dwIndex,
+        [in]    DWORD       algClass,
+        [out]   DWORD *     pdwAlgID
+        );
+
+    HRESULT GetAlgNameWStr(
+        [in]    DWORD       algID,
+        [out]   LPWSTR *    ppwsz
+        );
+
+    [propput]
+    HRESULT ReuseHardwareKeyIfUnableToGenNew(
+        [in]    BOOL    fReuseHardwareKeyIfUnableToGenNew
+        );
+
+    [propget]
+    HRESULT ReuseHardwareKeyIfUnableToGenNew(
+        [out]   BOOL * fReuseHardwareKeyIfUnableToGenNew
+        );
+
+    [propput]
+    HRESULT HashAlgID(
+        [in]    DWORD    hashAlgID
+        );
+
+    [propget]
+    HRESULT HashAlgID(
+        [out, retval]   DWORD *   hashAlgID
+        );
+
+    HRESULT SetHStoreMy(
+        [in]   HCERTSTORE   hStore
+        );
+   
+    HRESULT SetHStoreCA(
+        [in]   HCERTSTORE   hStore
+        );
+   
+    HRESULT SetHStoreROOT(
+        [in]   HCERTSTORE   hStore
+        );
+   
+    HRESULT SetHStoreRequest(
+        [in]   HCERTSTORE   hStore
+        );
+    
+    [propput]
+    HRESULT LimitExchangeKeyToEncipherment(
+    [in]    BOOL    fLimitExchangeKeyToEncipherment
+        );
+
+    [propget]
+    HRESULT LimitExchangeKeyToEncipherment(
+    [out, retval]   BOOL * fLimitExchangeKeyToEncipherment
+    );
+
+    [propput]
+    HRESULT EnableSMIMECapabilities(
+    [in]    BOOL    fEnableSMIMECapabilities
+        );
+
+    [propget]
+    HRESULT EnableSMIMECapabilities(
+    [out, retval]   BOOL * fEnableSMIMECapabilities
+        );
+     };
+
+
+    [
+    uuid(43F8F27B-7A20-11D0-8F06-00C04FC295E1),
+    version(1.0),
+    helpstring("xenroll 1.0 Type Library")
+    ]
+    library XENROLLLib
+    {
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
+
+    [
+    	uuid(43F8F289-7A20-11D0-8F06-00C04FC295E1),
+    	helpstring("CEnroll Class")
+    ]
+    coclass CEnroll
+    {
+    	[default] interface ICEnroll3;
+    };
+};
+
+cpp_quote("extern \"C\" IEnroll * WINAPI PIEnrollGetNoCOM(void);")
+cpp_quote("extern \"C\" IEnroll2 * WINAPI PIEnroll2GetNoCOM(void);")
+cpp_quote("#define CRYPT_ENUM_ALL_PROVIDERS  0x1")

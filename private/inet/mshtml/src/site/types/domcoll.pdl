@@ -1,0 +1,65 @@
+#ifndef _DOMCOLL_PDL_
+#define _DOMCOLL_PDL_   1
+
+#include "types.pdl"
+
+file domcoll.pdl
+
+import types.pdl
+
+interface IHTMLAttributeCollection  super:IDispatch  guid:3050f4c3-98b5-11cf-bb82-00aa00bdce0b
+    refprop    CAttrCollectionator:length 
+    refprop    CAttrCollectionator:_newEnum 
+    refmethod  CAttrCollectionator:item
+
+
+tearoff CAttrCollectionator interface:IDispatchEx
+tearoff CAttrCollectionator interface:IHTMLAttributeCollection
+
+class CAttrCollectionator \
+        name:HTMLAttributeCollection \
+        primaryinterface:IHTMLAttributeCollection \
+        guid:3050f4cc-98b5-11cf-bb82-00aa00bdce0b \
+        mondoguid:3050f56c-98b5-11cf-bb82-00aa00bdce0b
+
+    implements IHTMLAttributeCollection
+
+    property  length   atype:long        dispid:DISPID_COLLECTION   type:long    \
+                       dwFlags:0   abstract get
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM       type:IUnknown* \
+                       dwFlags:0   abstract get hidden restricted 
+    method HRESULT item   maxstrlen:pdlNoLimit  dispid:DISPID_VALUE  (in optional type:VARIANT* arg:name, \
+                                                      out retval type:IDispatch** arg:pdisp)
+
+
+interface IHTMLDOMChildrenCollection super:IDispatch guid:3050f5ab-98b5-11cf-bb82-00aa00bdce0b  
+    refprop    CDOMChildrenCollection:length 
+    refprop    CDOMChildrenCollection:_newEnum 
+    refmethod  CDOMChildrenCollection:item   
+
+class CDOMChildrenCollection \
+	name:DOMChildrenCollection \
+    primaryinterface:IHTMLDOMChildrenCollection \
+    guid:3050f5aa-98b5-11cf-bb82-00aa00bdce0b \
+    mondoguid:3050f577-98b5-11cf-bb82-00aa00bdce0b
+
+	implements IHTMLDOMChildrenCollection
+
+    property  length   atype:long        dispid:DISPID_COLLECTION    type:long      \
+                       dwFlags:0   abstract get 
+    property  _newEnum atype:IUnknown*   dispid:DISPID_NEWENUM       type:IUnknown* \
+                       dwFlags:0   abstract get     hidden restricted 
+
+    method HRESULT item      dispid:DISPID_VALUE  (in type:long arg:index, \
+                                                   out retval type:IDispatch** arg:ppItem)                                                  
+
+
+tearoff CDOMChildrenCollection interface:IHTMLDOMChildrenCollection
+tearoff CDOMChildrenCollection interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:InvokeEx
+    tearmethod GetNextDispID    mapto:GetNextDispID
+    tearmethod GetMemberName    mapto:GetMemberName
+
+
+#endif //_DOMCOLL_PDL_

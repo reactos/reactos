@@ -1,0 +1,503 @@
+//****************************************************************************
+//
+//  Copyright (C) Microsoft Corporation, 1997.
+//
+//  File:       syncmgrp.idl
+//
+//  Contents:   Private Interfaces for SyncMgr Manager
+//
+//****************************************************************************
+
+
+#ifndef DO_NO_IMPORTS
+import "objidl.idl";
+import "oleidl.idl";
+import "mstask.idl";
+import "mobsync.idl";
+#endif
+
+interface IPrivSyncMgrSynchronizeInvoke;
+interface ISyncScheduleMgr;
+interface IEnumSyncSchedules;
+interface ISyncSchedule;
+interface IEnumSyncItems;
+
+typedef GUID SYNCSCHEDULECOOKIE;
+
+// declare proxy value so can define when building proxy/stub so don't have
+// to worry about midl picking the wrong value. This value is same as 
+// IPrivSyncMgrSynchronizeInvoke since this was the only 
+// interface originally not local
+
+// {6295DF2E-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(CLSID_SyncMgrProxy,0x6295df2e, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+
+// {6295DF2D-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(CLSID_SyncMgrp,0x6295df2d, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+
+// {6295DF2E-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_IPrivSyncMgrSynchronizeInvoke,0x6295df2e, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {F0E15897-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_ISyncScheduleMgr,0xf0e15897, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E15898-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_IEnumSyncSchedules,0xf0e15898, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E15899-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_ISyncSchedule,0xf0e15899, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E1589A-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_IEnumSyncItems,0xf0e1589a, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {F0E1589B-A700-11d1-9831-00C04FD910DD}
+cpp_quote("DEFINE_GUID(IID_ISyncSchedulep,0xf0e1589b, 0xa700, 0x11d1, 0x98, 0x31, 0x0, 0xc0, 0x4f, 0xd9, 0x10, 0xdd);")
+
+// {6295DF2F-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(GUID_SENSSUBSCRIBER_SYNCMGRP,0x6295df2f, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF30-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(GUID_SENSLOGONSUBSCRIPTION_SYNCMGRP,0x6295df30, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF31-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(GUID_SENSLOGOFFSUBSCRIPTION_SYNCMGRP,0x6295df31, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+cpp_quote("")
+
+
+// Internal SyncMgr guids
+// define guids we use internally
+
+// Progress Idle dialog ID
+// {F897AA23-BDC3-11d1-B85B-00C04FB93981}
+cpp_quote("DEFINE_GUID(GUID_PROGRESSDLGIDLE,0xf897aa23, 0xbdc3, 0x11d1, 0xb8, 0x5b, 0x0, 0xc0, 0x4f, 0xb9, 0x39, 0x81);")
+cpp_quote("")
+
+// guid for creating an Idle schedule.
+// {F897AA24-BDC3-11d1-B85B-00C04FB93981}
+cpp_quote("#define   SZGUID_IDLESCHEDULE    TEXT(\"{F897AA24-BDC3-11d1-B85B-00C04FB93981}\")")
+cpp_quote("#define   WSZGUID_IDLESCHEDULE   L\"{F897AA24-BDC3-11d1-B85B-00C04FB93981}\"")
+cpp_quote("DEFINE_GUID(GUID_IDLESCHEDULE,0xf897aa24, 0xbdc3, 0x11d1, 0xb8, 0x5b, 0x0, 0xc0, 0x4f, 0xb9, 0x39, 0x81);")
+cpp_quote("")
+
+// Error codes specific to SyncMgr interfaces
+cpp_quote("#define SYNCMGR_E_NAME_IN_USE	MAKE_SCODE(SEVERITY_ERROR,FACILITY_ITF,0x0201)")
+cpp_quote("#define SYNCMGR_E_ITEM_UNREGISTERED	MAKE_SCODE(SEVERITY_ERROR,FACILITY_ITF,0x0202)")
+cpp_quote("#define SYNCMGR_E_HANDLER_NOT_LOADED MAKE_SCODE(SEVERITY_ERROR,FACILITY_ITF,0x0203)")
+
+cpp_quote("//Autosync reg entry values")
+cpp_quote("#define   AUTOSYNC_WAN_LOGON                    0x0001")
+cpp_quote("#define   AUTOSYNC_WAN_LOGOFF                   0x0002")
+cpp_quote("#define   AUTOSYNC_LAN_LOGON                    0x0004")
+cpp_quote("#define   AUTOSYNC_LAN_LOGOFF                   0x0008")
+cpp_quote("#define   AUTOSYNC_SCHEDULED                    0x0010")
+cpp_quote("#define   AUTOSYNC_IDLE    	    	           0x0020")
+cpp_quote("#define   AUTOSYNC_LOGONWITHRUNKEY    	   0x0040")
+
+cpp_quote("#define   AUTOSYNC_LOGON         (AUTOSYNC_WAN_LOGON | AUTOSYNC_LAN_LOGON) ")
+cpp_quote("#define   AUTOSYNC_LOGOFF        (AUTOSYNC_WAN_LOGOFF | AUTOSYNC_LAN_LOGOFF) ")
+cpp_quote("")
+
+
+[
+    object,
+    uuid(6295DF2E-35EE-11d1-8707-00C04FD93327), // IID_IPrivSyncMgrSynchronizeInvoke
+    pointer_default(unique)
+]
+interface IPrivSyncMgrSynchronizeInvoke : IUnknown
+{
+
+    typedef [unique] IPrivSyncMgrSynchronizeInvoke *LPPRIVSYNCMGRSYNCHRONIZEINVOKE;
+
+    HRESULT UpdateItems(
+		[in] DWORD dwInvokeFlags,
+		[in] REFCLSID rclsid,
+		[in] DWORD cbCookie,
+		[in, unique, size_is(cbCookie)] const BYTE *lpCookie);
+
+    HRESULT UpdateAll(); // same al calling update all with 0 set for the invoke flags.
+    HRESULT Logon();
+    HRESULT Logoff();
+    HRESULT Schedule([in,unique,string] WCHAR *pszTaskName);
+    HRESULT RasPendingDisconnect(
+		[in] DWORD cbConnectionName,
+		[in, unique, size_is(cbConnectionName)] const BYTE *lpConnectionName
+		);
+    HRESULT Idle();
+}	
+
+
+// Scheduling interfaces
+
+
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_MASK		 0x0FFF")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_READONLY	 0x0001")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_AUTOCONNECT	 0x0002")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_HIDDEN		 0x0004")
+
+cpp_quote("#define   SYNCSCHEDWIZARD_SHOWALLHANDLERITEMS 0x1000")
+cpp_quote("")
+
+
+[
+    local,
+    object,
+    uuid(F0E15897-A700-11d1-9831-00C04FD910DD), // IID_ISyncScheduleMgr
+    pointer_default(unique)
+]
+interface ISyncScheduleMgr : IUnknown
+{
+    typedef [unique] ISyncScheduleMgr *LPSYNCSCHEDULEMGR;
+
+	HRESULT CreateSchedule(
+		[in]	 LPCWSTR pwszScheduleName,
+		[in]	 DWORD dwFlags,
+		[in,out] SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[out]	 ISyncSchedule **ppSyncSchedule);
+
+	HRESULT LaunchScheduleWizard(
+		[in]	  HWND hParent,
+		[in]	  DWORD dwFlags,
+		[in, out] SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[out]	  ISyncSchedule   ** ppSyncSchedule);
+
+	HRESULT OpenSchedule(
+		[in]	SYNCSCHEDULECOOKIE *pSyncSchedCookie,		
+		[in]	DWORD dwFlags,
+		[out]	ISyncSchedule **ppSyncSchedule);
+
+	HRESULT RemoveSchedule( 
+		[in]	SYNCSCHEDULECOOKIE *pSyncSchedCookie);
+
+	HRESULT EnumSyncSchedules(
+		[out]	IEnumSyncSchedules **ppEnumSyncSchedules);
+
+}
+
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_CONNECTION_LAN  0x0000")
+cpp_quote("#define   SYNCSCHEDINFO_FLAGS_CONNECTION_WAN  0x0001")
+
+[
+    local,
+    object,
+    uuid(F0E15898-A700-11d1-9831-00C04FD910DD), // IID_IEnumSyncSchedules
+    pointer_default(unique)
+]
+interface IEnumSyncSchedules : IUnknown
+{
+	HRESULT Next(
+		[in]	ULONG celt, 
+		[out, size_is(celt), length_is(*pceltFetched)]
+		SYNCSCHEDULECOOKIE *pSyncSchedCookie,
+		[out]	ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in]	ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out]	IEnumSyncSchedules **ppEnumSyncSchedules);
+
+}
+typedef struct _tagSYNC_HANDLER_ITEM_INFO
+{
+	GUID 		handlerID;
+	SYNCMGRITEMID 	itemID;
+   	HICON	    	hIcon;
+	WCHAR	    	wszItemName[MAX_SYNCMGRITEMNAME];
+	DWORD 		dwCheckState;
+} SYNC_HANDLER_ITEM_INFO, *LPSYNC_HANDLER_ITEM_INFO;
+
+[
+    local,
+    object,
+    uuid(F0E15899-A700-11d1-9831-00C04FD910DD), // IID_ISyncSchedule
+    pointer_default(unique)
+]
+interface ISyncSchedule : IUnknown
+{
+
+	HRESULT GetFlags(
+		[out] DWORD *pdwFlags);
+
+	HRESULT SetFlags(
+		[in] DWORD dwFlags);
+
+	HRESULT GetConnection(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszConnectionName,
+		[out] DWORD *pdwConnType);
+
+	HRESULT SetConnection(
+ 		[in] LPCWSTR pwszConnectionName,
+		[in] DWORD dwConnType);
+
+	HRESULT GetScheduleName(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszScheduleName);
+
+	HRESULT SetScheduleName(
+ 		[in] LPCWSTR pwszScheduleName);
+
+	HRESULT GetScheduleCookie(
+		[out] SYNCSCHEDULECOOKIE *pSyncSchedCookie);
+
+	HRESULT SetAccountInformation(
+		[in] LPCWSTR pwszAccountName,
+		[in] LPCWSTR pwszPassword);
+
+	HRESULT GetAccountInformation(
+		[in, out] DWORD *pcbSize,
+		[out] LPWSTR pwszAccountName);
+
+	HRESULT GetTrigger(
+ 		[out] ITaskTrigger ** ppTrigger);
+
+	HRESULT GetNextRunTime(
+		[out] SYSTEMTIME * pstNextRun);
+
+	HRESULT GetMostRecentRunTime(
+		[out] SYSTEMTIME * pstRecentRun);
+
+	HRESULT EditSyncSchedule(
+	    [in] HWND  hParent,
+		[in] DWORD dwReserved);
+
+	HRESULT AddItem(
+        	[in] LPSYNC_HANDLER_ITEM_INFO pHandlerItemInfo);
+
+	HRESULT RegisterItems(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID);
+
+	HRESULT UnregisterItems(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID);
+
+	HRESULT SetItemCheck(
+		[in] 	REFCLSID pHandlerID,
+		[in]    SYNCMGRITEMID *pItemID, 
+		[in] 	DWORD dwCheckState);
+
+	HRESULT GetItemCheck(
+		[in]	REFCLSID pHandlerID,
+		[in]	SYNCMGRITEMID *pItemID, 
+		[out] 	DWORD *pdwCheckState);
+
+	HRESULT EnumItems(
+		[in] REFCLSID pHandlerID,
+		[in] IEnumSyncItems  **ppEnumItems);
+
+	HRESULT Save();
+
+	HRESULT GetITask(
+ 		[out] ITask ** ppITask);
+}
+
+
+[
+    local,
+    object,
+    uuid(F0E1589B-A700-11d1-9831-00C04FD910DD), // IID_ISyncSchedulep
+    pointer_default(unique)
+]
+interface ISyncSchedulep : ISyncSchedule
+{
+    typedef [unique] ISyncSchedulep *LPSYNCSCHEDULEP;
+
+    HRESULT GetHandlerInfo([in] REFCLSID pHandlerID,
+	    [out] LPSYNCMGRHANDLERINFO *ppSyncMgrHandlerInfo);
+}
+
+
+[
+    local,
+    object,
+    uuid(F0E1589A-A700-11d1-9831-00C04FD910DD), // IID_IEnumSyncItems
+    pointer_default(unique)
+]
+interface IEnumSyncItems : IUnknown
+{
+
+	HRESULT Next(
+		[in]	ULONG celt,
+        	[out, size_is(celt), length_is(*pceltFetched)]
+		LPSYNC_HANDLER_ITEM_INFO rgelt,
+		[out]	ULONG * pceltFetched);
+
+	HRESULT Skip(
+		[in]	ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+	    [out]	IEnumSyncItems ** ppEnumSyncItems);
+
+}
+
+
+// temporary definitions of interfaces before changed (6/10/98) so existing clients don't break.
+// should be able to remove before IE 5 beta2.
+
+cpp_quote("#define SYNCMGRITEM_ITEMFLAGMASKNT5B2 0x07")
+const USHORT MAX_SYNCMGRITEMSTATUS = 128;
+
+typedef struct _tagSYNCMGRITEMNT5B2 {
+    DWORD       cbSize;
+    DWORD       dwFlags;
+    SYNCMGRITEMID  ItemID;
+    DWORD       dwItemState;
+    HICON       hIcon;
+    WCHAR       wszItemName[MAX_SYNCMGRITEMNAME];
+    WCHAR       wszStatus[MAX_SYNCMGRITEMSTATUS]; 
+} SYNCMGRITEMNT5B2, *LPSYNCMGRITEMNT5B2;
+
+
+interface IOldSyncMgrSynchronize;
+interface IOldSyncMgrSynchronizeCallback;
+interface IOldSyncMgrRegister;
+
+// {6295DF29-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_IOldSyncMgrSynchronize,0x6295df28, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {6295DF28-35EE-11d1-8707-00C04FD93327}
+cpp_quote("DEFINE_GUID(IID_IOldSyncMgrSynchronizeCallback,0x6295df29, 0x35ee, 0x11d1, 0x87, 0x7, 0x0, 0xc0, 0x4f, 0xd9, 0x33, 0x27);")
+
+// {894D8C55-BDDF-11d1-B85D-00C04FB93981}
+cpp_quote("DEFINE_GUID(IID_IOldSyncMgrRegister,0x894d8c55, 0xbddf, 0x11d1, 0xb8, 0x5d, 0x0, 0xc0, 0x4f, 0xb9, 0x39, 0x81);")
+
+
+[
+    local,
+    object,
+    uuid(6295DF28-35EE-11d1-8707-00C04FD93327)  // IID_IOldSyncMgrSynchronize
+]
+interface IOldSyncMgrSynchronize: IUnknown
+{
+    typedef [unique] IOldSyncMgrSynchronize *LPOLDSYNCMGRSYNCHRONIZE;
+
+	HRESULT Initialize(
+		[in] DWORD dwReserved,
+		[in] DWORD dwSyncMgrFlags,
+		[in] DWORD cbCookie,
+		[in] BYTE const*lpCookie);
+
+	HRESULT GetHandlerInfo(
+		[out] LPSYNCMGRHANDLERINFO *ppSyncMgrHandlerInfo);
+
+	HRESULT EnumSyncMgrItems(
+		[out] ISyncMgrEnumItems **ppSyncMgrEnumItems);
+
+
+	HRESULT GetItemObject(
+		[in] REFSYNCMGRITEMID ItemID,
+		[in] REFIID riid,
+		[out] void** ppv);
+
+	HRESULT ShowProperties(
+		[in] HWND hWndParent,
+		[in] REFSYNCMGRITEMID ItemID);
+
+	HRESULT SetProgressCallback(
+		[in] IOldSyncMgrSynchronizeCallback *lpCallBack);
+
+	HRESULT PrepareForSync(
+		[in] ULONG cbNumItems,
+		[in] SYNCMGRITEMID* pItemIDs,
+		[in] HWND hWndParent,
+		[in] DWORD dwReserved);
+
+	HRESULT Synchronize(
+		[in] HWND hWndParent);
+
+	HRESULT SetItemStatus(
+		[in] REFSYNCMGRITEMID pItemID,
+		[in] DWORD dwSyncMgrStatus);
+		 
+	HRESULT ShowError(
+		[in] HWND hWndParent,
+		[in] REFSYNCMGRERRORID ErrorID,
+		[out] ULONG *pcbNumItems,
+		[out] SYNCMGRITEMID **ppItemIDs);
+
+}
+
+[
+    local,
+    object,
+    uuid(6295DF29-35EE-11d1-8707-00C04FD93327)  // IID_IOldSyncMgrSynchronizeCallback
+]
+interface IOldSyncMgrSynchronizeCallback: IUnknown
+{
+    typedef [unique] IOldSyncMgrSynchronizeCallback *LPOLDSYNCMGRSYNCHRONIZECALLBACK;
+
+    HRESULT Progress(
+	    [in] REFSYNCMGRITEMID pItemID,
+	    [in] LPSYNCMGRPROGRESSITEM lpSyncProgressItem);
+
+    HRESULT PrepareForSyncCompleted(HRESULT hr);
+
+    HRESULT SynchronizeCompleted(HRESULT hr);
+
+    HRESULT  EnableModeless( 
+	    [in] BOOL fEnable); 
+
+    HRESULT  LogError( 
+	    [in] DWORD dwErrorLevel,
+	    [in] const WCHAR *lpcErrorText,
+	    [in] LPSYNCMGRLOGERRORINFO lpSyncLogError);
+
+    HRESULT DeleteLogError(
+	    [in] REFSYNCMGRERRORID ErrorID,
+	    [in] DWORD dwReserved);
+
+}
+
+
+[
+    local,
+    object,
+    uuid(894D8C55-BDDF-11d1-B85D-00C04FB93981), // IID_IOldSyncMgrSynchronizeRegister
+    pointer_default(unique)
+]
+interface IOldSyncMgrRegister : IUnknown
+{
+
+    typedef [unique] IOldSyncMgrRegister *LPOLDSYNCMGRREGISTER;
+
+
+    HRESULT RegisterSyncMgrHandler(
+		[in] REFCLSID rclsidHandler,
+		[in] DWORD dwReserved);
+
+    HRESULT UnregisterSyncMgrHandler(
+		[in] REFCLSID rclsidHandler,
+		[in] DWORD dwReserved);
+}	
+
+interface ISyncMgrRegisterCSC;
+
+// {47681A61-BC74-11d2-B5C5-00C04FB93981}
+cpp_quote("DEFINE_GUID(IID_ISyncMgrRegisterCSC,0x47681a61, 0xbc74, 0x11d2, 0xb5, 0xc5, 0x0, 0xc0, 0x4f, 0xb9, 0x39, 0x81);")
+
+[
+    local,
+    object,
+    uuid(47681A61-BC74-11d2-B5C5-00C04FB93981), // IID_ISyncMgrRegisterCSC
+    pointer_default(unique)
+]
+interface ISyncMgrRegisterCSC : ISyncMgrRegister
+{
+
+    typedef [unique] ISyncMgrRegisterCSC *LPSYNCMGRREGISTERCSC;
+
+    HRESULT GetUserRegisterFlags(
+        [out] LPDWORD pdwSyncMgrRegisterFlags);
+
+   HRESULT SetUserRegisterFlags(
+	[in] DWORD dwSyncMgrRegisterMask,
+	[in] DWORD dwSyncMgrRegisterFlags);
+
+}

@@ -1,0 +1,32 @@
+
+PPC_SOURCES=..\ppc\alignem.c    \
+            ..\ppc\allproc.c    \
+            ..\ppc\apcuser.c    \
+            ..\ppc\callback.c   \
+            ..\ppc\callout.s    \
+            ..\ppc\clock.s      \
+            ..\ppc\ctxswap.s    \
+            ..\ppc\dmpstate.c   \
+            ..\ppc\exceptn.c    \
+            ..\ppc\flush.c      \
+            ..\ppc\flushtb.c    \
+            ..\ppc\getsetrg.c   \
+            ..\ppc\initkr.c     \
+            ..\ppc\intobj.c     \
+            ..\ppc\intsup.s     \
+            ..\ppc\ipi.c        \
+            ..\ppc\irql.s       \
+            ..\ppc\miscasm.s    \
+            ..\ppc\mpipi.s      \
+            ..\ppc\pcr.s        \
+            ..\ppc\procstat.s   \
+            ..\ppc\real0.s      \
+            ..\ppc\spinlock.s   \
+               ppc\sysstubs.s   \
+               ppc\systable.s   \
+            ..\ppc\threadbg.s   \
+            ..\ppc\thredini.c   \
+            ..\ppc\timindex.s   \
+            ..\ppc\vdm.c
+
+

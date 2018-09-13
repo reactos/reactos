@@ -1,0 +1,21 @@
+REGEDIT
+
+HKEY_CLASSES_ROOT\CLSID\{79eac9f1-baf9-11ce-8c82-00aa004ba90b} = UrlMon ProxyStub Factory
+HKEY_CLASSES_ROOT\CLSID\{79eac9f1-baf9-11ce-8c82-00aa004ba90b}\InprocServer32 = URLMON.dll
+
+HKEY_CLASSES_ROOT\Interface\{79eac9c9-baf9-11ce-8c82-00aa004ba90b} = IPersistMoniker
+HKEY_CLASSES_ROOT\Interface\{79eac9c9-baf9-11ce-8c82-00aa004ba90b}\ProxyStubClsid32 = {79eac9f1-baf9-11ce-8c82-00aa004ba90b}
+
+HKEY_CLASSES_ROOT\Interface\{fc4801a1-2ba9-11cf-a229-00aa003d7352} = IBindHost
+HKEY_CLASSES_ROOT\Interface\{fc4801a1-2ba9-11cf-a229-00aa003d7352}\ProxyStubClsid32 = {79eac9f1-baf9-11ce-8c82-00aa004ba90b}
+
+HKEY_CLASSES_ROOT\Interface\{79eac9c0-baf9-11ce-8c82-00aa004ba90b} = IBinding
+HKEY_CLASSES_ROOT\Interface\{79eac9c0-baf9-11ce-8c82-00aa004ba90b}\ProxyStubClsid32 = {79eac9f1-baf9-11ce-8c82-00aa004ba90b}
+
+HKEY_CLASSES_ROOT\Interface\{79eac9c1-baf9-11ce-8c82-00aa004ba90b} = IBindStatusCallback
+HKEY_CLASSES_ROOT\Interface\{79eac9c1-baf9-11ce-8c82-00aa004ba90b}\ProxyStubClsid32 = {79eac9f1-baf9-11ce-8c82-00aa004ba90b}
+
+
+
+
+

@@ -1,0 +1,60 @@
+// This file contains directives for how to order the functions.
+libbrowseui.so.1
+{
+    global:
+
+    DllCanUnloadNow;
+    DllGetClassObject;
+    DllRegisterServer;
+    DllUnregisterServer;
+    DllGetVersion;
+    DllInstall;
+//;
+    InitOCHostClass;
+    SHOpenFolderWindow;
+    SHOpenNewFrame;
+    SHUseDefaultAutoComplete;
+    SHCreateSavedWindows;
+    SHCreateFromDesktop;
+    SHExplorerParseCmdLine;
+//;
+    UEMTrace;
+    UEMEvalMsg;
+    UEMGetInfo;
+//;
+    // FILL IN THIS RANGE;
+    DropTargetWrap_CreateInstance;
+    SHCreateBandForPidl;
+    SHPidlFromDataObject;
+    IDataObject_GetDeskBandState;
+//;
+    // since we export SHOpenFolderWindow which takes an IETHREADPARAM,;
+    // we need to export these to create the things:;
+    SHCreateIETHREADPARAM;
+    SHCloneIETHREADPARAM;
+    SHParseIECommandLine;
+    SHDestroyIETHREADPARAM;
+    SHOnCWMCommandLine;
+    SHGetNavigateTarget;
+    GetInfoTip;
+//;
+    // Exported for use by the channel OC (shdocvw).  If the channel OC;
+    // gets moved back to browseui these can be removed.;
+    Channel_GetFolderPidl;
+    ChannelBand_Create;
+    Channels_SetBandInfoSFB;
+    IUnknown_SetBandInfoSFB;
+//;
+    DoOrganizeFavDlgEx;
+//;
+    // Exported for IE4 channel quick launch button.;
+    Channel_QuickLaunch;
+    IEFrameNewWindowSameThread;
+
+
+    _____browseui_initDLL;
+    
+    local :
+    *;
+};
+

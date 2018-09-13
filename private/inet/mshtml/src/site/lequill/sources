@@ -1,0 +1,26 @@
+!IF 0
+
+Copyright (c) 1996  Microsoft Corporation
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\src\site\lequill=)
+!include $(ROOT)\common.inc
+
+TARGETNAME=lequill
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+INCLUDES=$(SITEINCLUDES)
+
+SOURCES= \
+	qbase.cxx \
+    qdocglue.cxx \
+	qtreeserv.cxx \
+    syncbuf.cxx \
+    syncsend.cxx \
+    synchelp.cxx \
+    logtool.cxx \
+
+PRECOMPILED_OPTION=/Yuheaders.hxx /Fp..\include\$(O)\headers.pch
+PRECOMPILED_CXX=1

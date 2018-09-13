@@ -1,0 +1,4 @@
+DIRS=\
+    prf \
+    inc \
+    uuid

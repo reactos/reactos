@@ -1,0 +1,4 @@
+
+DIRS=
+
+OPTIONAL_DIRS=cairo

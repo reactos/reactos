@@ -1,0 +1,43 @@
+[version]
+signature="$CHICAGO$"
+AdvancedINF=2.0
+
+[SourceDisksNames]
+1="NetClip Files",,1
+
+[SourceDisksFiles]
+NetClip.exe=1
+nclipps.dll=1
+
+[DefaultInstall]
+Copyfiles=NetClipFiles
+AddReg=InstallNetClip
+;UpdateInis=NetClip.Group 
+CustomDestination=MyCustomDestination
+
+[NetClipFiles]
+NetClip.exe
+nclipps.dll
+
+[NetClip.Group]
+;setup.ini,progman.groups,,"group1=Startup"
+;setup.ini,group1,,"""%App_DESC%"""                      ;deletes previous link
+;setup.ini,group1,,"""%App_DESC%"", ""%49000%NetClip.EXE"", %49000%NetClip.exe, 0,,%49000%"
+
+[InstallNetClip]
+;HKCU,Software\Microsoft\Remote Clipboard Viewer,InstallDir,,%49000%
+
+[DestinationDirs]
+NetClipFiles=49000
+
+[MyCustomDestination]
+49000=PackageDestination49000,1
+
+[PackageDestination49000]
+"HKCU","","","Where would you like to copy the Remote Clipboard Viewer files?",""
+
+[Strings]
+PROGRAMF          = "Program Files"
+App_DESC          = "Windows NT\Accessories"
+NETCLIP_LINK	  = "Remote Clipboard Viewer"
+NETCLIP_DOC       = "Remote Clipboard Object"

@@ -1,0 +1,152 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "commctrl.h"
+#include "prsht.h"
+
+#ifndef UNIX
+#define FONTNAME "MS Shell Dlg", 0, 0, 0x1
+#else
+#define FONTNAME "MS Shell Dlg"
+#endif /* UNIX */
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""prsht.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+// BUGBUG these are localizable resources which currently can't be put
+// in the localizable resource dll for one reason or another. please refer
+// to their usage context to see why. however, this should be dealt with.
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_INTERNET            "Internet Options"
+    IDS_DESCRIPTION         "Configures your Internet display and connections settings"
+    IDS_USERS               "Users"
+    IDS_USERS_DESCRIPTION   "Sets up and manages multiple users on your computer."
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ACTIVECONTENT       ICON    DISCARDABLE     "activex.ico"
+IDI_DIALUP              ICON    DISCARDABLE     "phone.ico"
+IDI_INTERNET            ICON    DISCARDABLE     "inetcpl.ico"
+IDI_MAILANDNEWS         ICON    DISCARDABLE     "mailnews.ico"
+IDI_MULTIMEDIA          ICON    DISCARDABLE     "multimed.ico"
+IDI_PRIVACY             ICON    DISCARDABLE     "privacy.ico"
+IDI_SAFECONTENT         ICON    DISCARDABLE     "safecont.ico"
+IDI_TOOLBAR             ICON    DISCARDABLE     "toolbar.ico"
+IDI_VIEWERS             ICON    DISCARDABLE     "viewers.ico"
+IDI_OTHER               ICON    DISCARDABLE     "other.ico"
+IDI_FONTS               ICON    DISCARDABLE     "fonts.ico"
+IDI_USERS               ICON    DISCARDABLE     "user.ico"
+IDI_ICON1_PLACEHOLDER   ICON    DISCARDABLE     "foldsep.ico"
+IDI_INTERNETCALL        ICON    DISCARDABLE     "call.ico"
+IDI_AUTOCFG             ICON    DISCARDABLE     "autocfg.ico"
+IDI_WARNINGS            ICON    DISCARDABLE     "security.ico"
+IDI_HTMLDOC             ICON    DISCARDABLE     "htmldoc.ico"
+IDI_IMAGE               ICON    DISCARDABLE     "image.ico"
+IDI_JAVA                ICON    DISCARDABLE     "java.ico"
+IDI_SECURITY            ICON    DISCARDABLE     "exclam.ico"
+IDI_PRINTER             ICON    DISCARDABLE     "printer.ico"
+IDI_ZONE                ICON    DISCARDABLE     "zone.ico"
+IDI_TRUSTED             ICON    DISCARDABLE     "trusted.ico"
+IDI_UNTRUSTED           ICON    DISCARDABLE     "nottrust.ico"
+IDI_BROWSE              ICON    DISCARDABLE     "browse.ico"
+IDI_SEARCH              ICON    DISCARDABLE     "search.ico"
+IDI_SCRIPT              ICON    DISCARDABLE     "script.ico"
+IDI_DOWNLOAD            ICON    DISCARDABLE     "download.ico"
+IDI_ZONE_INTERNET       ICON    DISCARDABLE     "zone_int.ico"
+IDI_PERSINFO            ICON    DISCARDABLE     "prs_info.ico"
+IDI_YELLOW              ICON    DISCARDABLE     "yellow.ico"
+IDI_ACCESS              ICON    DISCARDABLE     "access.ico"
+IDI_LAN                 ICON    DISCARDABLE     "lanncon.ico"
+IDI_PHONE               ICON    DISCARDABLE     "rascon.ico"
+#ifdef UNIX
+IDI_FONT                ICON    DISCARDABLE     "xfont.ico"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BUTTONS             BITMAP  DISCARDABLE     "buttons.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 2110
+//
+
+//EDITPROF.HTM            2110    DISCARDABLE     "editprof.htm"
+//BLANK.HTM               2110    DISCARDABLE     "blank.htm"
+
+#endif    // English (U.S.) resources
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
+#ifdef MLUI_SUPPORT
+#include "inetcpl.rcv"
+#else
+#include "inetcplc.rc"
+#endif
+
+

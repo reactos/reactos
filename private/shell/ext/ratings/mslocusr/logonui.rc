@@ -1,0 +1,566 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifdef APSTUDIO_INVOKED
+#include "afxres.h"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_LOGON DIALOG DISCARDABLE  0, 0, 178, 151
+STYLE DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUP | 
+    WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select user &name:",IDC_STATIC,7,42,164,8
+    LISTBOX         IDC_USERNAME,7,52,164,42,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "&Password:",IDC_STATIC,7,101,164,8
+    EDITTEXT        IDC_PASSWORD,7,111,164,12,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK",IDOK,67,130,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,121,130,50,14
+    CONTROL         -1,IDC_MAIN_CAPTION,"Static",SS_BITMAP,0,0,178,34
+END
+
+IDD_Users DIALOGEX 0, 0, 230, 199
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "User List"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "&Users",IDC_STATIC,7,38,153,8
+    LISTBOX         IDC_USERNAME,7,48,152,80,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "&New User...",IDC_Add,166,48,57,14
+    PUSHBUTTON      "&Delete",IDC_Delete,166,66,57,14
+    PUSHBUTTON      "&Make a Copy",IDC_Clone,166,84,57,14
+    PUSHBUTTON      "&Set Password...",IDC_SetPassword,42,172,71,14
+    PUSHBUTTON      "&Change Settings...",IDC_OpenProfileFolder,117,172,71,
+                    14
+    LTEXT           "The list below shows all the users set up for this computer. Each user can set up an individual desktop appearance, icons, and other settings.",
+                    IDC_STATIC,35,7,188,24
+    ICON            103,IDC_STATIC,7,7,20,20
+    GROUPBOX        "",IDC_MAIN_CAPTION,7,135,216,58
+    ICON            104,IDC_STATIC,14,149,20,20
+    LTEXT           "Use these buttons to specify a password or to set up a user's desktop, Start menu, or other individual files.",
+                    IDC_STATIC,42,149,174,16
+END
+
+IDD_AddUserIntro DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add User"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "Create a new user",IDC_MAIN_CAPTION,95,0,180,8
+    LTEXT           "This wizard sets up a new username and password for someone to use with this computer, so that his or her desktop settings will be automatically preserved.",
+                    IDC_STATIC,95,15,180,33
+END
+
+IDD_PickUser DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add User"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "The settings for the new user can be copied from an existing user on your computer.  Or, select ""Guest"" to copy the default user profile.",
+                    IDC_MAIN_CAPTION,95,0,180,24
+    LTEXT           "Select a &user whose settings you want to copy:",
+                    IDC_STATIC,95,31,180,8
+    LISTBOX         IDC_USERNAME,95,41,180,64,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_EnterUsername DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add User"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,22
+    LTEXT           "Enter the new user's name. It can be up to 128 characters long.",
+                    IDC_MAIN_CAPTION,95,15,165,16
+    LTEXT           "&User name:",IDC_STATIC,95,40,37,8
+    EDITTEXT        IDC_USERNAME,134,38,142,14,ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "Create a new user",IDC_STATIC,95,0,180,8
+END
+
+IDD_NewUserPassword DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter New Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "Type a password for %1 in the first box, and confirm it by typing it again in the second box. ",
+                    IDC_MAIN_CAPTION,95,15,180,32
+    LTEXT           "&Password:",IDC_STATIC,95,56,34,8
+    EDITTEXT        IDC_PASSWORD,155,54,121,14,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT
+    LTEXT           "&Confirm password:",IDC_STATIC,95,77,58,8
+    EDITTEXT        IDC_CONFIRM_PASSWORD,155,75,121,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "",IDC_RATINGS_PW_COMMENT,95,96,180,16
+    LTEXT           "Type a password (optional)",IDC_STATIC,95,0,180,8
+END
+
+IDD_EnableProfilesIntro DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enable Multi-user Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "Windows enables you to set up your computer to be used by more than one person.",
+                    IDC_MAIN_CAPTION,95,0,180,16
+    LTEXT           "This wizard sets up a username and password for you, so that your desktop settings will automatically be available when you log on.",
+                    IDC_STATIC,95,23,180,24
+    LTEXT           "Whenever you log on to Windows, you'll see your own desktop icons, background picture, and other settings.",
+                    IDC_STATIC,95,54,180,16
+    LTEXT           "If you'd like to enable your computer to be used by more than one person, click Next.",
+                    IDC_STATIC,95,77,180,16
+END
+
+IDD_EnterCAPassword DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,81,140
+    LTEXT           "The Content Advisor feature of Internet Explorer has been enabled on your computer to protect users from viewing certain content.",
+                    IDC_STATIC,95,0,180,24
+    LTEXT           "&Password:",IDC_STATIC,95,56,34,8
+    EDITTEXT        IDC_PASSWORD,131,54,145,14,ES_PASSWORD | ES_AUTOHSCROLL
+    LTEXT           "To create a new user, you must enter the Content Advisor password below.",
+                    IDC_STATIC,95,31,180,16
+END
+
+IDD_FinishGoMulti DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enable Multi-user Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "That's it! Now click the Finish button and Windows will restart. Use your new username and password to log on after your computer restarts, and your desktop settings will automatically be saved for you.",
+                    IDC_MAIN_CAPTION,95,0,180,32
+    LTEXT           "If you have family members or co-workers who should also have their own individual settings, click the Users icon in Control Panel at any time to set them up.",
+                    IDC_MAIN_CAPTION2,95,39,180,24
+END
+
+IDD_FinishAddUser DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ready to Finish"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "That's it. Now click Finish to add %1 to the list of users on this computer. It may take a few seconds to create all of the new user's files.",
+                    IDC_MAIN_CAPTION,95,0,180,48
+    LTEXT           "Whenever %1 uses this username and password to log on to Windows, his or her individual settings, such as desktop icons and background picture, will appear.",
+                    IDC_MAIN_CAPTION2,95,55,180,64
+END
+
+IDD_EnterUserPassword DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,16,14
+    LTEXT           "You've logged on to this computer before. Please type your Windows password below.",
+                    IDC_MAIN_CAPTION,95,0,180,24
+    LTEXT           "&Password:",IDC_STATIC,95,56,34,8
+    EDITTEXT        IDC_PASSWORD,131,54,145,14,ES_PASSWORD | ES_AUTOHSCROLL | 
+                    ES_OEMCONVERT
+    LTEXT           "",IDC_RATINGS_PW_COMMENT,95,31,180,16
+END
+
+IDD_CHANGE_PASSWORD DIALOG DISCARDABLE  0, 0, 230, 63
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Change Windows Password"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Old password:",IDC_STATIC1,7,9,54,8
+    EDITTEXT        IDC_OLD_PASSWORD,85,7,80,14,ES_PASSWORD | ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "&New password:",IDC_STATIC2,7,27,54,8
+    EDITTEXT        IDC_PASSWORD,85,25,80,14,ES_PASSWORD | ES_AUTOHSCROLL | ES_OEMCONVERT
+    LTEXT           "&Confirm new password:",IDC_STATIC3,7,45,74,8
+    EDITTEXT        IDC_CONFIRM_PASSWORD,85,43,80,14,ES_PASSWORD | 
+                    ES_AUTOHSCROLL | ES_OEMCONVERT
+    DEFPUSHBUTTON   "OK",IDOK,173,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,173,24,50,14
+END
+
+IDD_PASSWORD DIALOG DISCARDABLE  0, 0, 209, 76
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Supervisor Password Required"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Password:",IDC_STATIC1,7,33,33,8
+    EDITTEXT        IDC_PASSWORD,43,31,102,14,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "",IDC_CACHE_PASSWORD,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,53,138,16
+    DEFPUSHBUTTON   "OK",IDOK,152,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,152,25,50,14
+    LTEXT           "You must type the supervisor password before you can continue.",
+                    IDC_STATIC2,7,7,138,16
+END
+
+IDD_ChooseFoldersWiz DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Personalized Items Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         101,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE | 
+                    SS_SUNKEN,0,0,81,140
+    LTEXT           "Select the items you want to personalize, then choose how you want the new items created.",
+                    IDC_MAIN_CAPTION,96,0,180,16
+    CONTROL         "&Desktop folder and Documents menu",IDC_CHECK_DESKTOP,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,103,35,
+                    166,8
+    CONTROL         "&Start Menu",IDC_CHECK_STARTMENU,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,103,49,166,8
+    CONTROL         "&Favorites folder",IDC_CHECK_FAVORITES,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,103,63,166,8
+    CONTROL         "Downloaded &Web pages",IDC_CHECK_CACHE,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,103,77,166,8
+    CONTROL         "&My Documents folder",IDC_CHECK_MYDOCS,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,103,91,166,8
+    CONTROL         "&Create copies of the current items and their contents.",
+                    IDC_RADIO_COPY,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,
+                    96,112,173,8
+    CONTROL         "C&reate new items to save disk space.",IDC_RADIO_EMPTY,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,96,126,173,8
+    GROUPBOX        "Items",IDC_STATIC,96,21,179,84
+END
+
+IDD_ChooseFolders DIALOG DISCARDABLE  0, 0, 200, 175
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Personalized Items Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Select the items you want to personalize, then choose how you want the new items created.",
+                    IDC_MAIN_CAPTION,7,7,186,16
+    CONTROL         "&Desktop folder and Documents menu",IDC_CHECK_DESKTOP,
+                    "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,42,
+                    172,8
+    CONTROL         "&Start Menu",IDC_CHECK_STARTMENU,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,56,172,8
+    CONTROL         "&Favorites folder",IDC_CHECK_FAVORITES,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,70,172,8
+    CONTROL         "Downloaded &Web pages",IDC_CHECK_CACHE,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,84,172,8
+    CONTROL         "&My Documents folder",IDC_CHECK_MYDOCS,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,14,98,172,8
+    CONTROL         "&Create copies of the current items and their contents.",
+                    IDC_RADIO_COPY,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,
+                    7,119,186,8
+    CONTROL         "C&reate new items to save disk space.",IDC_RADIO_EMPTY,
+                    "Button",BS_AUTORADIOBUTTON | WS_TABSTOP,7,133,186,8
+    DEFPUSHBUTTON   "OK",IDOK,90,154,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,143,154,50,14
+    GROUPBOX        "Items",IDC_STATIC,7,28,186,84
+END
+
+IDD_CreateProgress DIALOG DISCARDABLE  0, 0, 171, 52
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Creating Personalized Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Please wait while the user's personalized settings are being created.",
+                    IDC_MAIN_CAPTION,7,15,157,21
+END
+
+IDD_DeleteProgress DIALOG DISCARDABLE  0, 0, 171, 53
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Removing Personalized Settings"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CTEXT           "Please wait while the user's personalized settings are being removed.",
+                    IDC_MAIN_CAPTION,7,15,157,21
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+101                     BITMAP  MOVEABLE PURE   "101.bmp"
+IDB_IMAGE_LOGON         BITMAP  DISCARDABLE     "106.bmp"
+IDB_STATIC_LOGON        BITMAP  DISCARDABLE     "107.bmp"
+IDB_IMAGE_WIN98_LOGON   BITMAP  DISCARDABLE     "106win98.bmp"
+IDB_STATIC_WIN98_LOGON  BITMAP  DISCARDABLE     "107win98.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+103                     ICON    DISCARDABLE     "103.ico"
+104                     ICON    DISCARDABLE     "104.ico"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_LOGON, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 171
+        VERTGUIDE, 46
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 144
+        HORZGUIDE, 42
+        HORZGUIDE, 52
+        HORZGUIDE, 101
+        HORZGUIDE, 111
+        HORZGUIDE, 130
+    END
+
+    IDD_Users, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 223
+        VERTGUIDE, 14
+        VERTGUIDE, 35
+        VERTGUIDE, 42
+        VERTGUIDE, 117
+        VERTGUIDE, 216
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+        HORZGUIDE, 38
+        HORZGUIDE, 48
+        HORZGUIDE, 66
+        HORZGUIDE, 84
+        HORZGUIDE, 135
+        HORZGUIDE, 149
+        HORZGUIDE, 172
+    END
+
+    IDD_AddUserIntro, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 22
+    END
+
+    IDD_PickUser, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 38
+        HORZGUIDE, 48
+    END
+
+    IDD_EnterUsername, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 22
+        HORZGUIDE, 45
+    END
+
+    IDD_NewUserPassword, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 22
+        HORZGUIDE, 45
+        HORZGUIDE, 63
+        HORZGUIDE, 84
+    END
+
+    IDD_EnableProfilesIntro, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 30
+        HORZGUIDE, 61
+        HORZGUIDE, 84
+    END
+
+    IDD_EnterCAPassword, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        TOPMARGIN, 7
+        HORZGUIDE, 39
+        HORZGUIDE, 62
+    END
+
+    IDD_FinishGoMulti, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 133
+        HORZGUIDE, 46
+    END
+
+    IDD_FinishAddUser, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 38
+    END
+
+    IDD_EnterUserPassword, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        VERTGUIDE, 102
+        TOPMARGIN, 7
+        HORZGUIDE, 38
+        HORZGUIDE, 61
+    END
+
+    IDD_CHANGE_PASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 223
+        VERTGUIDE, 85
+        VERTGUIDE, 172
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+        HORZGUIDE, 25
+        HORZGUIDE, 43
+    END
+
+    IDD_PASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 202
+        VERTGUIDE, 145
+        VERTGUIDE, 152
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 45
+        HORZGUIDE, 25
+        HORZGUIDE, 30
+    END
+
+    IDD_ChooseFoldersWiz, DIALOG
+    BEGIN
+        VERTGUIDE, 96
+        VERTGUIDE, 103
+        VERTGUIDE, 269
+        HORZGUIDE, 21
+        HORZGUIDE, 35
+        HORZGUIDE, 49
+        HORZGUIDE, 63
+        HORZGUIDE, 77
+        HORZGUIDE, 91
+        HORZGUIDE, 105
+        HORZGUIDE, 112
+        HORZGUIDE, 126
+    END
+
+    IDD_ChooseFolders, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 193
+        VERTGUIDE, 14
+        VERTGUIDE, 186
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 168
+        HORZGUIDE, 28
+        HORZGUIDE, 42
+        HORZGUIDE, 56
+        HORZGUIDE, 70
+        HORZGUIDE, 84
+        HORZGUIDE, 98
+        HORZGUIDE, 112
+        HORZGUIDE, 119
+        HORZGUIDE, 133
+        HORZGUIDE, 154
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

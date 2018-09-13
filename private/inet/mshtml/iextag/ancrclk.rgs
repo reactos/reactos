@@ -1,0 +1,24 @@
+HKCR
+{
+    AnchorClick.AnchorClick.1 = s 'AnchorClick Class'
+    {
+        CLSID = s '(13D5413C-33B9-11D2-95A7-00C04F8ECB02)'
+    }
+    AnchorClick.AnchorClick = s 'AnchorClick Class'
+    {
+        CurVer = s 'AnchorClick.AnchorClick.1'
+    }
+    NoRemove CLSID
+    {
+        ForceRemove {13D5413C-33B9-11D2-95A7-00C04F8ECB02} = s 'AnchorClick Class'
+        {
+            ProgID = s 'AnchorClick.AnchorClick.1'
+            VersionIndependentProgID = s 'AnchorClick.AnchorClick'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%'
+            {
+                val ThreadingModel = s 'Apartment'
+            }
+        }
+    }
+}

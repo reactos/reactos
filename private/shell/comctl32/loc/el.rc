@@ -1,0 +1,139 @@
+LANGUAGE 0x08, 0x00 // Really 0x08, 0x01 - Greek (Greek)
+// Changed to sublang=0 (SUBLANG_NEUTRAL) so this is the default Greek resource
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+200 DIALOG FIXED IMPURE  10, 20, 377, 126
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION L"\x03a0\x03c1\x03bf\x03c3\x03b1\x03c1\x03bc\x03bf\x03b3\x03ae \x03b3\x03c1\x03b1\x03bc\x03bc\x03ae\x03c2 \x03b5\x03c1\x03b3\x03b1\x03bb\x03b5\x03af\x03c9\x03bd"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"&\x039a\x03bb\x03b5\x03af\x03c3\x03b9\x03bc\x03bf",2,318,6,55,14
+    PUSHBUTTON      L"&\x0395\x03c0\x03b1\x03bd\x03b1\x03c6\x03bf\x03c1\x03ac",202,318,23,55,14
+    PUSHBUTTON      L"&\x0392\x03bf\x03ae\x03b8\x03b5\x03b9\x03b1",205,318,40,55,14
+    PUSHBUTTON      L"\x0395&\x03c0\x03ac\x03bd\x03c9",206,318,74,55,14
+    PUSHBUTTON      L"\x039a\x03ac\x03c4&\x03c9",207,318,91,55,14
+    LTEXT           L"&\x0394\x03b9\x03b1\x03b8\x03ad\x03c3\x03b9\x03bc\x03b1 \x03ba\x03bf\x03c5\x03bc\x03c0\x03b9\x03ac:",-1,4,5,115,10
+    LISTBOX         201,4,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+    PUSHBUTTON      L"\x03a0\x03c1\x03bf\x03c3&\x03b8\x03ae\x03ba\x03b7 ->",1,131,42,55,14
+    PUSHBUTTON      L"<- \x039a\x03b1\x03c4\x03ac&\x03c1\x03b3\x03b7\x03c3\x03b7",204,131,62,55,14
+    LTEXT           L"\x039a\x03bf\x03c5\x03bc\x03c0\x03b9\x03ac \x03c3\x03c4\x03b7 &\x03b3\x03c1\x03b1\x03bc\x03bc\x03ae \x03b5\x03c1\x03b3\x03b1\x03bb\x03b5\x03af\x03c9\x03bd:",-1,192,5,117,8
+    LISTBOX         203,192,17,120,100,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | 
+                    LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_HSCROLL | WS_TABSTOP
+END
+
+1006 DIALOG FIXED IMPURE  20, 20, 220, 140
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   L"\x039f\x039a",1,4,122,50,14,WS_GROUP
+    PUSHBUTTON      L"\x0386\x03ba\x03c5\x03c1\x03bf",2,58,122,50,14
+    PUSHBUTTON      L"\x0395&\x03c6\x03b1\x03c1\x03bc\x03bf\x03b3\x03ae",12321,112,122,50,14,WS_DISABLED
+    PUSHBUTTON      L"\x0392\x03bf\x03ae\x03b8\x03b5\x03b9\x03b1",9,166,122,50,14,WS_GROUP
+    CONTROL         L"",12320,"SysTabControl32",TCS_MULTILINE | WS_GROUP | 
+                    WS_TABSTOP,4,4,212,114
+END
+
+1020 DIALOG FIXED IMPURE  20, 20, 290, 46
+STYLE DS_MODALFRAME | DS_3DLOOK | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, L"MS Shell Dlg"
+BEGIN
+    CONTROL         L"",12320,"SysTabControl32",WS_DISABLED | WS_GROUP,7,7,
+                    276,3
+    LTEXT           L"",12326,7,17,276,1,SS_SUNKEN | NOT WS_GROUP
+    PUSHBUTTON      L"< &\x03a0\x03c1\x03bf\x03b7\x03b3\x03bf\x03cd\x03bc\x03b5\x03bd\x03bf",12323,6,26,58,14
+    DEFPUSHBUTTON   L"&\x0395\x03c0\x03cc\x03bc\x03b5\x03bd\x03bf >",12324,64,26,56,14
+    PUSHBUTTON      L"\x03a4\x03ad\x03bb\x03bf\x03c2",12325,123,26,50,14
+    PUSHBUTTON      L"\x0386\x03ba\x03c5\x03c1\x03bf",2,178,26,50,14
+    PUSHBUTTON      L"\x0392\x03bf\x03ae\x03b8\x03b5\x03b9\x03b1",9,233,26,50,14,WS_GROUP
+    LTEXT           L"",12327,0,35,290,1,SS_SUNKEN | NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    1024                    L"\x0394\x03b9\x03b1\x03c7\x03c9\x03c1\x03b9\x03c3\x03c4\x03b9\x03ba\x03cc"
+    1025                    L" + "
+    1026                    L"\x039a\x03b1\x03bd\x03ad\x03bd\x03b1"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4160                    L"\x039a\x03bb\x03b5\x03af\x03c3\x03b9\x03bc\x03bf"
+    4161                    L"\x039f\x039a"
+    4162                    L"\x0399\x03b4\x03b9\x03cc\x03c4\x03b7\x03c4\x03b5\x03c2: %s"
+    4163                    L"\x03a3\x03b7\x03bc\x03b5\x03c1\x03b9\x03bd\x03ad\x03c2 \x03c3\x03c5\x03bd\x03b4\x03ad\x03c3\x03b5\x03b9\x03c2:"
+    4164                    L"&\x039c\x03b5\x03c4\x03ac\x03b2\x03b1\x03c3\x03b7 \x03c3\x03c4\x03b9\x03c2 \x03c3\x03b7\x03bc\x03b5\x03c1\x03b9\x03bd\x03ad\x03c2 \x03c3\x03c5\x03bd\x03b4\x03ad\x03c3\x03b5\x03b9\x03c2"
+    4165                    L"/.,-:"
+    4166                    L"MMMM"
+    4167                    L"MMMM yyyy"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    4176                    L"\x03a0\x03bb\x03b7\x03ba\x03c4\x03c1\x03bf\x03bb\x03cc\x03b3\x03b7\x03c3\x03b7 \x03ba\x03b5\x03b9\x03bc\x03ad\x03bd\x03bf\x03c5 \x03b5\x03b4\x03ce"
+    4177                    L"\x0399\x03b4\x03b9\x03cc\x03c4\x03b7\x03c4\x03b5\x03c2"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32768                   L"\x0391\x03bb\x03bb\x03b1\x03b3\x03ae \x03bc\x03b5\x03b3\x03ad\x03b8\x03bf\x03c5\x03c2 \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32784                   L"\x039c\x03b5\x03c4\x03b1\x03ba\x03af\x03bd\x03b7\x03c3\x03b7 \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32800                   L"\x03a3\x03c5\x03c1\x03c1\x03af\x03ba\x03bd\x03c9\x03c3\x03b7 \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5 \x03c3\x03b5 \x03b5\x03b9\x03ba\x03bf\x03bd\x03af\x03b4\x03b9\x03bf"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32816                   L"\x039c\x03b5\x03b3\x03ad\x03b8\x03c5\x03bd\x03c3\x03b7 \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5 \x03c3\x03b5 \x03c0\x03bb\x03ae\x03c1\x03b7 \x03bf\x03b8\x03cc\x03bd\x03b7"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32832                   L"\x03a0\x03ad\x03c1\x03b1\x03c3\x03bc\x03b1 \x03c3\x03c4\x03bf \x03b5\x03c0\x03cc\x03bc\x03b5\x03bd\x03bf \x03c0\x03b1\x03c1\x03ac\x03b8\x03c5\x03c1\x03bf MDI"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    32864                   L"\x039a\x03bb\x03b5\x03af\x03c3\x03b9\x03bc\x03bf \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33056                   L"\x0395\x03c0\x03b1\x03bd\x03b1\x03c6\x03bf\x03c1\x03ac \x03c4\x03bf\x03c5 \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03bf\x03c5 \x03c3\x03c4\x03bf \x03ba\x03b1\x03bd\x03bf\x03bd\x03b9\x03ba\x03cc \x03c4\x03bf\x03c5 \x03bc\x03ad\x03b3\x03b5\x03b8\x03bf\x03c2"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    33072                   L"\x03a0\x03ad\x03c1\x03b1\x03c3\x03bc\x03b1 \x03c3\x03b5 \x03ac\x03bb\x03bb\x03b7 \x03b5\x03c1\x03b3\x03b1\x03c3\x03af\x03b1"
+END
+
+STRINGTABLE FIXED IMPURE 
+BEGIN
+    36848                   L"\x0395\x03bd\x03c4\x03bf\x03bb\x03ad\x03c2 \x03b3\x03b9\x03b1 \x03c7\x03b5\x03b9\x03c1\x03b9\x03c3\x03bc\x03cc \x03c0\x03b1\x03c1\x03b1\x03b8\x03cd\x03c1\x03c9\x03bd"
+    36849                   L"\x03a3\x03cd\x03c1\x03b5\x03c4\x03b5 \x03c0\x03c1\x03bf\x03c2 \x03c4\x03b1 \x03b1\x03c1\x03b9\x03c3\x03c4\x03b5\x03c1\x03ac \x03ae \x03b4\x03b5\x03be\x03b9\x03ac \x03b3\x03b9\x03b1 \x03bd\x03b1 \x03b1\x03bb\x03bb\x03ac\x03be\x03b5\x03c4\x03b5 \x03c4\x03bf \x03bc\x03ad\x03b3\x03b5\x03b8\x03bf\x03c2 \x03c4\x03c9\x03bd \x03c3\x03c4\x03b7\x03bb\x03ce\x03bd"
+    36850                   L"\x0391\x03bb\x03bb\x03b1\x03b3\x03ae \x03bc\x03b5\x03b3\x03ad\x03b8\x03bf\x03c5\x03c2 \x03c3\x03c4\x03b7\x03bb\x03ce\x03bd \x03bc\x03b5 \x03c4\x03b1 \x03c0\x03bb\x03ae\x03ba\x03c4\x03c1\x03b1 \x03b2\x03ad\x03bb\x03bf\x03c5\x03c2 \x03ba\x03b1\x03b9 tab"
+    36851                   L"\x03a0\x03c1\x03bf\x03c3\x03b8\x03ae\x03ba\x03b7, \x03bc\x03b5\x03c4\x03b1\x03ba\x03af\x03bd\x03b7\x03c3\x03b7 \x03ba\x03b1\x03b9 \x03ba\x03b1\x03c4\x03ac\x03c1\x03b3\x03b7\x03c3\x03b7 \x03ba\x03bf\x03c5\x03bc\x03c0\x03b9\x03ce\x03bd \x03b1\x03c0\x03cc \x03c4\x03b7 \x03b3\x03c1\x03b1\x03bc\x03bc\x03ae \x03b5\x03c1\x03b3\x03b1\x03bb\x03b5\x03af\x03c9\x03bd"
+END
+

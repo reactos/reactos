@@ -1,0 +1,2443 @@
+/* Overview
+Active Debugging is a set of interfaces that allow language-neutral, host-neutral debugging,
+with support for a wide variety of development environments.
+
+<INSERT SRC="..\..\doc\figures.doc!Architecture">
+
+By <I> language neutral </I>, we mean that a debugging environment can support essentially any
+programming language, without having to have specific knowledge of that language
+built into the environment.  (Today, the interfaces focus primarily on support
+scripting  languages such as VBScript and JScript, as well as Java, but in the
+future we intended  evolve them to support native code in languages such as C++.)
+Furthermore, the debugger automatically has the ability to debug applications
+written in a mixture of  multiple languages, with cross-language stepping and
+breakpoints.
+
+By <I> host neutral </I>, we mean that the debugger can be automatically be used with any Active
+Scripting host, such as Internet Explorer, Spruuids,  or any any other host written in
+the future.  We also mean that the host has control over the structure of the document
+tree presented to the user and the contents and syntax coloring of the documents being
+debugged.   This allows the host to present the source code being debugged in the context
+ of the host document (for example, scripts can be show on an HTML page.)
+In the subsections below, we consider each of the key components in Active Debugging and
+their associated interfaces.
+
+Before proceeding further, we should define several key Active Debugging concepts:
+
+<I> host application: </I> The application that hosts the script engines and provides
+a scriptable set of objects (or "object model").
+
+<I> language engine: </I>  A component that provides parsing, execution, and debugging
+abstractions for a particular languages.
+
+<I> debugger IDE: </I>  The application that provides debugging UI by communicating with
+the host application and language engines.
+
+<I> machine debug manager: </I> A component that maintains a registry of debuggable
+application processes.
+
+<I> process debug manager: </I> A component that maintains the tree of debuggable documents
+a particular application, tracks the running threads, etc.
+
+<I> document context: </I> :  A document context is an abstraction representing
+a specific range in the source code of a host document.
+
+<I> code context: </I> A code context represents a particular location in the running
+code of a language engine (a "virtual instruction pointer".)
+
+<I> expression context: </I>  A particular context (for example, a stack frame) in which
+expressions may be evaluated by a language engine.
+
+<I> object browsing: </I>  A structured, language-independent representation of an objects
+name, type, value, and subobjects, suitable for implementating a "watch window" UI.
+
+Below, we provide an overview of each of the key Active Debugging components
+and their associated interfaces, followed by the details of those interfaces.
+*/
+// <HIDE>
+
+// Note to the reader: This IDL can be automatically transferred into a nicely
+// formatted Word document using a set of Word macros.  Please contact philbo@microsoft.com
+// for details on the macros that do this.  The section you are now ready is excluded from the
+// Word doc because it's just boilerplate goop.
+
+cpp_quote(     "//=--------------------------------------------------------------------------=")
+cpp_quote(     "// ActivDbg.h")
+cpp_quote(     "//=--------------------------------------------------------------------------=")
+cpp_quote(     "// (C) Copyright 1996-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote(     "//")
+cpp_quote(     "// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote(     "// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote(     "// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote(     "// PARTICULAR PURPOSE.")
+cpp_quote(     "//=--------------------------------------------------------------------------=")
+cpp_quote(     "//")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote(     "//")
+cpp_quote(     "// Declarations for ActiveX Script authoring/Debugging.")
+cpp_quote(     "//")
+
+cpp_quote(     "")
+cpp_quote(     "#ifndef __ActivDbg_h")
+cpp_quote(     "#define __ActivDbg_h")
+cpp_quote(     "")
+
+#ifndef DO_NO_IMPORTS
+import "ocidl.idl";
+import "oleidl.idl";
+import "oaidl.idl";
+import "activscp.idl";
+import "dbgprop.idl";
+#endif
+
+//	uuid(51973C31-CB0C-11d0-B5C9-00A0244A0E7A),
+
+// </HIDE>
+
+/* <H2> Language Engine  </H2>
+The language engine provides:
+
+- Language parsing and execution
+- Debugging support (breakpoints,etc..).
+- Expression evaluation.
+- Syntax coloring.
+- Object browsing.
+- Stack enumeration and parsing.
+
+Below is a list of the key interfaces implemented by a language engine.  These interfaces
+are used by the host application to map between its document context and the engine's
+code contexts, and also by the debugger UI to do expression evaluation, stack enumeration,
+and object browsing.
+
+*/
+interface IActiveScriptDebug;			// provides syntax coloring and code context enumeration
+interface IActiveScriptErrorDebug;		// returns document contexts and stack frames for errors
+interface IActiveScriptSiteDebug;		// host provided link from script engine to debugger
+interface IActiveScriptTextInfo;
+
+// Language engine debugging abstractions
+interface IDebugCodeContext;			// a virtual "instruction pointer" in a thread
+interface IEnumDebugCodeContexts;
+interface IDebugStackFrame;				// logical stack frame on the stack of a thread
+interface IDebugExpressionContext;		// a context in which expressions can be evaluated.
+interface IDebugStackFrameSniffer;		// enumerator for stack frames known by an engine
+
+// Asynchronous Expression Evaluation
+interface IDebugExpressionContext;		// context for expression evaluation
+interface IDebugExpression;			// an asynchronously evaluated expression
+interface IDebugSyncOperation;			
+interface IDebugAsyncOperation;
+interface IDebugAsyncOperationCallBack;
+interface IDebugExpressionCallBack;		// status events for IDebugExpression evaluation progress
+
+interface IEnumDebugExpressionContexts;
+interface IProvideExpressionContexts;
+
+// Object browsing
+interface IDebugFormatter;
+
+/* <H2> Hosts </H2>
+The host:
+- Hosts the language engines.
+- Provides an object model (set of objects that can be scripted)
+- defines a tree of documents that can be debugged and their contents
+- Organizes scripts into virtual applications.
+
+There are two kinds of hosts:
+1.	A dumb host supports just the basic ActiveScripting interfaces.
+It has no control over document structure or organizations; this is determined
+entirely by the scripts provided to the language engines.
+
+2.	A smart host supports a larger set of interface that allow it to define
+the document tree, document contents, and syntax coloring.  There are a set of
+helper interfaces, described in the next subsection, which make it much easier for
+a host to be a smart host.
+
+<H3> Smart host Helper Interfaces  </H3>
+The IDebugDocumentHelper are a greatly simplified set of interfaces that a host
+can use to gain the benefits of smart-hosting without having to handle the full
+complexity (and power) of the full host interfaces.
+
+A host is not required to use these interfaces, of course, but by using these
+can avoid having to implement or use a number of more complicated interfaces.*/
+
+interface IDebugDocumentHelper;  // implemented by PDM
+interface IDebugDocumentHost;    // implemented (optionally) by the host
+
+/* <H3> Full smart-host interfaces. </H3>
+
+Below is the full set of interfaces that a smart-host needs to implement or use if
+it's not using the helper interfaces.
+
+*/
+
+// implemented by host
+interface IDebugDocumentInfo;		// provides info on (possibily uninstantiated) doc
+interface IDebugDocumentProvider;   // allows doc to be instantiated on demand
+interface IDebugDocument;			// base document interface
+interface IDebugDocumentText;		// provides access to source text of document
+interface IDebugDocumentTextEvents; // events fired when source text changes
+interface IDebugDocumentTextAuthor;
+interface IDebugDocumentContext;	// represents a range within the document
+
+// implemented by PDM on behalf of the host
+interface IDebugApplicationNode;		  // represents the position of a doc in the hierarchy
+interface IDebugApplicationNodeEvents;    // events fired by PDM when document hierarchy changes
+
+
+/* <H2> Debugger IDE </H2>
+The IDE is a fully language independent debugging UI.  It provides:
+
+- Document viewers/editors.
+- Breakpoint management.
+- Expression evaluation and watch windows.
+- Stack frame browsing.
+- Object/Class browsing.
+- Browsing the virtual application structure.
+
+*/
+// Debugger implementation
+interface IDebugSessionProvider;     // establishes a debug session for a running application.
+interface IApplicationDebugger;      // primary interface exposed by a debugger IDE session
+
+
+/* <H2> Machine Debug Manager </H2>
+The machine debug manager provides the hookup point between virtual applications and debuggers
+by maintaining and enumerating a list of active virtual applications.
+<INSERT SRC="..\..\doc\figures.doc!IMachineDebugManager">
+*/
+interface IMachineDebugManager;
+interface IMachineDebugManagerCookie;
+interface IMachineDebugManagerEvents;
+interface IEnumRemoteDebugApplications;
+
+/* <H2> Process Debug Manager </H2>
+
+The PDM does the following:
+
+- Synchronizes the debugging of multiple language engines.
+- Maintains a tree of debuggable documents
+- Merges stack frames.
+- Coordinates breakpoints and stepping across language engines.
+- Tracks threads.
+- Maintains a debugger thread for asynchronous processing.
+- Communicates with the machine debug manager and the debugger IDE.
+
+<Issue>
+ We need a way for native to run a thread into the PDM.  This way the thread can be used for expression evaluation on higher frames. Likewise native needs a way to retrieve this thread from the PDM.  Both teams are in agreement on this
+
+*Action item*
+SamMck and JimSa to define these methods and how to expose them.  ShonK should comment on feasibility as well.
+</Issue>
+
+The following are the interfaces provided by the process debug manager.
+
+*/
+interface IProcessDebugManager;				// creates, adds and removes virtual applications, etc.
+interface IRemoteDebugApplication;			// virtual application abstraction
+interface IDebugApplication;				
+interface IRemoteDebugApplicationThread;    // virtual thread abstraction
+interface IDebugApplicationThread;      	
+interface IEnumRemoteDebugApplicationThreads;
+interface IDebugThreadCall;					// dispatches marshalled calls
+interface IDebugApplicationNode;			// maintains a position for a document in the hierarchy
+interface IEnumDebugApplicationNodes;
+interface IEnumDebugStackFrames;			// merged enumeration of stack frames from engines
+// <HIDE>
+// Don't include this stuff in the printed docs because its either
+// not interesting enough or not ready enough
+interface IEnumActiveScriptDebugs;
+interface IEnumDebugDocumentContexts;
+interface IEnumDebugObjectBrowsers;
+
+// </HIDE>
+/* Structures and Enumerations
+
+These structures and enumerations are used in a number of the interfaces below.
+
+<H2> BREAKPOINT_STATE </H2>
+Indicates the state of a breakpoint.
+*/
+
+typedef enum tagBREAKPOINT_STATE {
+	BREAKPOINT_DELETED = 0,		// The breakpoint no longer exists but there are still references
+	BREAKPOINT_DISABLED = 1,	// The breakpoint exists but is disabled
+	BREAKPOINT_ENABLED = 2		// The breakpoint exists and is enabled
+} BREAKPOINT_STATE;
+
+/* <H2> APPBREAKFLAGS  </H2>
+Application break flags. Indicates the current debug state for the application
+and the current thread.
+
+When certain of these bits are set  (some are per-thread and some are for all threads),
+language engines should break at the next opportunity
+*/
+typedef DWORD APPBREAKFLAGS;
+
+// DEBUGGER_BLOCK
+// languages should break immediately with BREAKREASON_DEBUGGER_BLOCK
+
+	const APPBREAKFLAGS	APPBREAKFLAG_DEBUGGER_BLOCK	= 0x00000001;
+
+// DEBUGGER_HALT
+// languages should break immediately with BREAKREASON_DEBUGGER_HALT
+
+	const APPBREAKFLAGS	APPBREAKFLAG_DEBUGGER_HALT	= 0x00000002;
+
+// STEP
+// languages should break immediately in the stepping thread with BREAKREASON_STEP
+
+	const APPBREAKFLAGS	APPBREAKFLAG_STEP			= 0x00010000;
+
+// NESTED - the application is in nested execution on a breakpoint
+
+	const APPBREAKFLAGS	APPBREAKFLAG_NESTED			= 0x00020000;
+
+// STEP TYPES - defines whether we are stepping at
+// source, bytecode, or machine level.
+
+	const APPBREAKFLAGS	APPBREAKFLAG_STEPTYPE_SOURCE	= 0x00000000;
+	const APPBREAKFLAGS	APPBREAKFLAG_STEPTYPE_BYTECODE	= 0x00100000;
+	const APPBREAKFLAGS	APPBREAKFLAG_STEPTYPE_MACHINE	= 0x00200000;
+	const APPBREAKFLAGS	APPBREAKFLAG_STEPTYPE_MASK		= 0x00F00000;
+
+// BREAKPOINT IN_PROGRESS
+	const APPBREAKFLAGS	APPBREAKFLAG_IN_BREAKPOINT	= 0x80000000;
+
+/* <H2> BREAKREASON <H2>
+Indicates the cause of hitting a breakpoint.
+*/
+
+typedef enum tagBREAKREASON{
+	BREAKREASON_STEP,				// Caused by the stepping mode
+	BREAKREASON_BREAKPOINT,			// Caused by an explicit breakpoint
+	BREAKREASON_DEBUGGER_BLOCK,		// Caused by another thread breaking
+	BREAKREASON_HOST_INITIATED,		// Caused by host requested break
+	BREAKREASON_LANGUAGE_INITIATED,	// Caused by a scripted break
+	BREAKREASON_DEBUGGER_HALT,		// Caused by debugger IDE requested break
+	BREAKREASON_ERROR				// Caused by an execution error
+} BREAKREASON;
+
+/* <H2> BREAKRESUME_ACTION  </H2>
+
+Describes how to continue from a breakpoint  */
+
+typedef enum tagBREAKRESUME_ACTION{
+	BREAKRESUMEACTION_ABORT,		// Abort the application
+	BREAKRESUMEACTION_CONTINUE,		// Continue running
+	BREAKRESUMEACTION_STEP_INTO,	// Step into a procedure
+	BREAKRESUMEACTION_STEP_OVER,	// Step over a procedure
+	BREAKRESUMEACTION_STEP_OUT,		// Step out of the current procedure
+} BREAKRESUMEACTION;
+
+/* <H2> DOCUMENTNAMETYPE  </H2>
+Describes what type of name you'd like to get for a document:  */
+
+typedef enum tagDOCUMENTNAMETYPE {
+	DOCUMENTNAMETYPE_APPNODE,		// Gets the name ass it appears in the app tree
+	DOCUMENTNAMETYPE_TITLE,			// Gets the name as it appears on the doc viewer title bar
+	DOCUMENTNAMETYPE_FILE_TAIL,		// Gets the filename without a path (for save as...)
+	DOCUMENTNAMETYPE_URL,			// Gets the URL of the document, if any
+} DOCUMENTNAMETYPE;
+
+/*  <H2> SOURCE_TEXT_ATTR  </H2>
+Describes the attributes of a single character of source text.  */
+
+typedef WORD SOURCE_TEXT_ATTR;
+// The character is a part of a language keyword. Example: while
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_KEYWORD		= 0x0001;
+// The character is a part of a comment block.
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_COMMENT		= 0x0002;
+// The character is not part of compiled language source text. Example:
+// the HTML surrounding script blocks.
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NONSOURCE	= 0x0004;
+// The character is a part of a language operator. Example: *
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_OPERATOR		= 0x0008;
+// The character is a part of a language numeric constant. Example: 1234
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NUMBER		= 0x0010;
+// The character is a part of a language string constant. Example: "Hello World"
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_STRING		= 0x0020;
+// The character indicates the start of a function block
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_FUNCTION_START = 0x0040;
+
+/* <H2> TEXT_DOC_ATTR  </H2>
+Describes the attributes of the document  */
+
+typedef DWORD TEXT_DOC_ATTR;
+// Indicates that the document is read-only.
+const TEXT_DOC_ATTR TEXT_DOC_ATTR_READONLY    		= 0x00000001;
+
+/* <H2> Parse Flags </H2>
+
+Option flags used during IDebugExpressionContext::ParseLanguageText  */
+
+// Indicates that the text is an expression as opposed to a statement. This
+// flag may affect the way in which the text is parsed by some languages.
+const DWORD DEBUG_TEXT_ISEXPRESSION		= 0x00000001;
+// If a return value is available, it will be used by the caller.
+const DWORD DEBUG_TEXT_RETURNVALUE		= 0x00000002;
+// Don't allow side effects. If this flag is set, the evaluation of the
+// expression should change no runtime state.
+const DWORD DEBUG_TEXT_NOSIDEEFFECTS	= 0x00000004;
+// Allow breakpoints during the evaluation of the text. If this flag is not
+// set then breakpoints will be ignored during the evaluation of the text.
+const DWORD DEBUG_TEXT_ALLOWBREAKPOINTS	= 0x00000008;
+// Allow error reports during the evaluation of the text. If this flag is not
+// set then errors will not be reported to the host during the evaluation.
+const DWORD DEBUG_TEXT_ALLOWERRORREPORT	= 0x00000010;
+
+typedef enum tagERRORRESUMEACTION {
+	ERRORRESUMEACTION_ReexecuteErrorStatement,
+	ERRORRESUMEACTION_AbortCallAndReturnErrorToCaller,
+	ERRORRESUMEACTION_SkipErrorStatement
+} ERRORRESUMEACTION;
+
+/* <I> Script Engine Debugging Interfaces </I>
+Below are the interfaces that a script engine needs to support to provide
+debugging, expression evaluation, and object browsing.
+
+<H1> IActiveScriptDebug </H1>
+This interface is implemented by script engines that support debugging, and is QI-able from IActiveScript. It provides the means for:
+1.	Smart hosts to take over document management.
+2.	Process debug manager to synchronize debugging of multiple script engines.
+*/
+[
+	object,
+	uuid(51973C10-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IActiveScriptDebug : IUnknown
+{
+
+	// Returns the text attributes for an arbitrary block of script text. Smart hosts
+	// use this call to delegate GetText calls made on their IDebugDocumentText.
+	HRESULT GetScriptTextAttributes(
+		// The script block text. This string need not be null terminated.
+		[in, size_is(uNumCodeChars)]		LPCOLESTR		pstrCode,
+		// The number of characters in the script block text.
+		[in]								ULONG			uNumCodeChars,
+		// See IActiveScriptParse::ParseScriptText for a description of this argument.
+		[in]								LPCOLESTR		pstrDelimiter,
+		// See IActiveScriptParse::ParseScriptText for a description of this argument.
+		[in]								DWORD			dwFlags,
+		// Buffer to contain the returned attributes.
+		[in, out, size_is(uNumCodeChars)]	SOURCE_TEXT_ATTR *pattr);
+
+	// Returns the text attributes for an arbitrary scriptlet. Smart hosts
+	// use this call to delegate GetText calls made on their IDebugDocumentText.
+	// Note: this call is provided because scriptlets tend to be expressions and
+	// may have a different syntax than a script block. For many languages the implementation
+	// will be identical to GetScriptTextAttributes.
+	HRESULT GetScriptletTextAttributes(
+		// The script block text. This string need not be null terminated.
+		[in, size_is(uNumCodeChars)]		LPCOLESTR		pstrCode,
+		// The number of characters in the script block text.
+		[in]								ULONG			uNumCodeChars,
+		// See IActiveScriptParse::AddScriptlet for a description of this argument.
+		[in]								LPCOLESTR		pstrDelimiter,
+		// See IActiveScriptParse::AddScriptlet for a description of this argument.
+		[in]								DWORD			dwFlags,
+		// Buffer to contain the returned attributes.
+		[in, out, size_is(uNumCodeChars)]	SOURCE_TEXT_ATTR *pattr);
+
+	// Used by the smart host to delegate IDebugDocumentContext::EnumDebugCodeContexts.
+	HRESULT EnumCodeContextsOfPosition(
+		[in]	DWORD dwSourceContext,	// As provided to IActiveScriptParse::ParseScriptText
+										// or IActiveScriptParse::AddScriptlet
+		[in]	ULONG uCharacterOffset,	// character offset relative
+										// to start of script text
+		[in]	ULONG uNumChars,		// Number of characters in context
+		// Returns a enumerator of code contexts.
+		[out]	IEnumDebugCodeContexts **ppescc);
+}
+
+/* IActiveScriptSiteDebug
+Implemented by smart hosts and is QI-able from IActiveScriptSite. It provides the means by which a smart host takes over document management and participates in debugging.
+*/
+[
+	object,
+	uuid(51973C11-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IActiveScriptSiteDebug : IUnknown
+{
+
+	// Used by the language engine to delegate IDebugCodeContext::GetSourceContext.
+	HRESULT GetDocumentContextFromPosition(
+		[in]	DWORD dwSourceContext,	// As provided to ParseScriptText
+										// or AddScriptlet
+		[in]	ULONG uCharacterOffset,	// character offset relative
+										// to start of script block or scriptlet
+		[in]	ULONG uNumChars,		// Number of characters in context
+		// Returns the document context corresponding to this character-position range.
+		[out]	IDebugDocumentContext **ppsc);
+
+	// Returns the debug application object associated with this script site. Provides
+	// a means for a smart host to define what application object each script belongs to.
+	// Script engines should attempt to call this method to get their containing application
+	// and resort to IProcessDebugManager::GetDefaultApplication if this fails.
+	HRESULT GetApplication(
+		[out]	IDebugApplication **ppda);
+
+	// Gets the application node under which script documents should be added
+	// can return NULL if script documents should be top-level.
+	HRESULT GetRootApplicationNode(
+		[out]	IDebugApplicationNode **ppdanRoot);
+
+	HRESULT OnScriptErrorDebug(
+		// error info
+		[in]	IActiveScriptErrorDebug *pErrorDebug,
+		// whether to pass the error to the debugger to do JIT debugging
+		[out]	BOOL	*pfEnterDebugger,
+		// whether to call IActiveScriptSite::OnScriptError() when the user
+		// decides to continue by returning the error
+		// (with ERRORRESUMEACTION_AbortCallAndReturnErrorToCaller)
+		[out]	BOOL *pfCallOnScriptErrorWhenContinuing);
+}
+
+/* IActiveScriptErrorDebug
+Provides document context information for compile and runtime errors. QI-able from IActiveScriptError.
+*/
+[
+	object,
+	uuid(51973C12-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IActiveScriptErrorDebug : IActiveScriptError
+{
+	// Provides the document context for the associated error. The character-position range
+	// should include the entire offending text.
+	HRESULT GetDocumentContext(
+		[out] IDebugDocumentContext **ppssc);
+
+	// For runtime errors, provides the stack frame that is in effect.
+	HRESULT GetStackFrame(
+		[out] IDebugStackFrame **ppdsf);
+}
+
+
+/* IDebugCodeContext
+Abstraction reresenting a position in executable code. It can be thought of as a "virtual program counter".
+*/
+[
+	object,
+	uuid(51973C13-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugCodeContext : IUnknown
+{
+
+	// Returns the document context associated with this code context.
+	//
+	// Note: For text documents, the character-position
+	// range should include the text for the entire statement. This allows the debugger IDE
+	// to hilight the current source statement.
+	HRESULT GetDocumentContext(
+		[out] IDebugDocumentContext **ppsc);
+
+	// Sets or clears a breakpoint at this code context.
+	HRESULT SetBreakPoint(
+		[in] BREAKPOINT_STATE bps);
+}
+
+/* IDebugExpression
+Abstract representation of an asynchronously evaluated expression. Normally used
+by the debugger IDE to implement an immediate execution window or watch window.
+Normally provided by language engines.
+Note: Currently, IDebugExpression is only available from a stack frame.
+In the future it will be possible to retrieve these from other contexts
+ (such as debug documents).
+
+
+<Issue>
+ We would like to enumerate the language engine namespaces.
+ We clearly need something to get the global expression context from.
+ Sam and Bob pointed out many cases where there could possibly be many many namespaces.
+ We need to consider how to expose something like this a bit further.
+ Currently there is a namespace but the namespace is IE really since it will persist globals across LE's.  Perhaps the namespace we are looking for is HTML, but quite possibly only a smart host could provide this.
+ We continued to talk about having IDebugProperty be the general containment scheme for processes, namespaces, threads etc...  I tending to agree that this is the right approach.  We need more investigation in this  area.
+
+*Action Item*
+BrianCr, BillJoy, SamMck, Philip, etc.. to continue to discuss.
+</Issue>
+*/
+[
+	object,
+	uuid(51973C14-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugExpression : IUnknown
+{
+
+	// Begins the evaluation of the expression.
+	HRESULT Start(
+		// Provides an event driven means for indicating that the expression evaluation
+		// is complete. If NULL, no events will be fired and the client will need to
+		// poll the expression state using QueryIsComplete.
+		[in] IDebugExpressionCallBack *pdecb);
+
+	// Aborts the expression. Evaluation of an expression in progress will be stopped
+	// at the earliest opportunity. If the expression is actually aborted, GetResultAsString
+	// will return E_ABORT as phrResult.
+	HRESULT Abort(void);
+
+	// Returns S_FALSE if the operation is still pending.
+	// Returns S_OK if the operation is complete.
+	HRESULT QueryIsComplete(void);
+
+	// Returns the result of the expression evaluation as a string and an HRESULT. Returns
+	// E_PENDING if the operation is still pending. Returns S_OK and E_ABORT in phrResult
+	// when the operation was aborted with Abort.
+	HRESULT GetResultAsString(
+		[out] HRESULT *phrResult,
+		[out] BSTR *pbstrResult);
+
+
+	// Returns the result of the expression evaluation as an
+	// IDebugProperty and an HRESULT. Returns
+	// E_PENDING if the operation is still pending. Returns S_OK and E_ABORT in phrResult
+	// when the operation was aborted with Abort.
+
+	HRESULT GetResultAsDebugProperty(
+		[out] HRESULT *phrResult,
+		[out] IDebugProperty **ppdp);
+
+}
+
+
+/* IDebugExpressionContext
+Abstract representation of a context in which expressions can be evaluated.
+Currently, this interface is only implemented by the stack frame object. In the
+future, other objects, such as the document context, may provide this interface.
+*/
+[
+	object,
+	uuid(51973C15-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugExpressionContext Interface"),
+	pointer_default(unique)
+]
+interface IDebugExpressionContext : IUnknown
+{
+	// Creates an IDebugExpression for the specified text.
+	HRESULT ParseLanguageText(
+		// Provides the text of the expression or statement(s).
+		[in]	LPCOLESTR			pstrCode,
+		// Radix to use
+		[in]	UINT				nRadix,
+		// See IActiveScriptParse::ParseScriptText
+		[in]	LPCOLESTR			pstrDelimiter,
+		// See above flags.
+		[in]	DWORD				dwFlags,
+		// Returns the IDebugExpression for the given text.
+		[out]	IDebugExpression	**ppe
+	);
+
+	// Returns a name and GUID for the langauge owning this context
+	HRESULT GetLanguageInfo (
+		[out]	BSTR	*pbstrLanguageName,
+		[out]	GUID	*pLanguageID
+	);
+}
+
+/* IDebugExpressionCallback
+Provides status events related to progress of an IDebugExpression evaluation.
+*/
+[
+	object,
+	uuid(51973C16-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugExpressionCallBack : IUnknown
+{
+
+	// Indicates that the expression evaluation is complete. Note that
+	// IDebugExpression::GetResultAsString can be called from within this event
+	// handler.
+	HRESULT onComplete(void);
+}
+
+/* IDebugStackFrame
+Abstraction representing a logical stack frame on the stack of a thread.
+Note that it derives from IDebugExpressionContext. This allows the debugger to
+evaluate expressions in the context of a particular stack frame.
+Note: In general, you can QI a stack frame for IDebugExpressionContext to allow
+		expression evaluation and watch windows
+
+<Issue>
+Callstacks run on the breaking thread - We would like for the callstack to be run on the PDM's thread but it isn't 100% imperative.  If we solve the previous issue, we don't have to have this.  However it would be nice to not have to require native to run a thread into the PDM just to get a callstack.
+
+<B> Action Item </B>
+*ShonK* to list any issues or problems in doing this.  This issue maybe tied to a design resolution on how we accomplish cross process or cross thread callstacks.
+</Issue>
+
+
+*/
+[
+	object,
+	uuid(51973C17-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugStackFrame : IUnknown
+{
+	// Returns the current code context associated with the stack frame.
+	HRESULT GetCodeContext(
+		[out] IDebugCodeContext **ppcc);
+	// Returns a short or long textual description of the stack frame.
+	// Normally, when fLong if false, this will provide only the name of the
+	// function associated with the stack frame. When fLong is true it may
+	// also provide the parameter(s) to the function or whatever else is
+	// relevant.
+	HRESULT GetDescriptionString(
+		[in] BOOL fLong,
+		[out] BSTR *pbstrDescription);
+	// Returns a short or long textual description of the language. When fLong
+	// is false, just the language name should be provided, eg, "Pascal". When
+	// fLong is true a full product description may be provided, eg,
+	// "Gnat Software's Flaming Pascal v3.72".
+	HRESULT GetLanguageString(
+		[in] BOOL fLong,
+		[out] BSTR *pbstrLanguage);
+	// Returns the thread associated with this stack frame.
+	HRESULT GetThread(
+		[out] IDebugApplicationThread **ppat);
+
+	// Returns a property browser for the current frame (locals, etc.)
+	HRESULT GetDebugProperty(
+		[out] IDebugProperty **ppDebugProp);
+}
+
+/* IDebugStackFrameSniffer
+Provides a means for enumerating logical stack frames known by a certain component.
+ Generally implemented by each script engine. Used by the process debug manager to
+ find all stack frames associated with a given thread.
+Note: This interface is called from within the thread of interest. It is up to
+the implementor to identify the current thread and return an appropriate enumerator.
+*/
+[
+	object,
+	uuid(51973C18-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugStackFrameSniffer : IUnknown
+{
+	// Returns a enumerator of stack frames for the current thread. Top of stack should
+	// be returned first (the most recently pushed frame).
+	HRESULT EnumStackFrames(
+		[out] IEnumDebugStackFrames **ppedsf);
+}
+
+
+/* IDebugStackFrameSnifferEx
+Provides a means for enumerating logical stack frames known by a certain component.
+Generally implemented by each script engine. Used by the process debug manager to
+find all stack frames associated with a given thread.
+
+This alternate of the interface will replace IDebugStackFrameSniffer before Caesar's
+Beta 1 comes out.  It's renamed separately as a placeholder.
+
+Note: This interface is called from within the thread of interest. It is up to
+the implementor to identify the current thread and return an appropriate enumerator.
+*/
+[
+	object,
+	uuid(51973C19-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugStackFrameSnifferEx : IDebugStackFrameSniffer
+{
+	// Returns a enumerator of stack frames for the current thread.
+
+	// dwSpMin is the minimum address to begin enumerating stack frames
+	// Stack frames before this address will be omitted from the enumeration.
+	// Top of stack should be returned first (the most recently pushed frame).
+	HRESULT EnumStackFramesEx( [in] DWORD dwSpMin, [out] IEnumDebugStackFrames **ppedsf);
+};
+
+
+/* IDebugSyncOperation
+IDebugSyncOperation is generally implemented by a language engine to expose
+ expression evaluation, etc. It allows the implementor to abstract an operation
+ that needs to be performed nested in a particular blocked thread, and it
+ provides a mechanism for cancelling hung operations.
+*/
+[
+	object,
+	uuid(51973C1a-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IDebugSyncOperation : IUnknown
+{
+	// Get TargetThread is called by PDM to determine what thread
+	// to call Evaluate() in
+	HRESULT GetTargetThread(
+		[out]	IDebugApplicationThread **ppatTarget);
+
+	// Execute is called synchronously by the PDM in the target thread. It
+	// synchronously peforms the operation and returns. It returns E_ABORT if
+	// the operation was aborted with InProgressAbort();
+	HRESULT Execute(
+		[out]	IUnknown **ppunkResult);
+
+	// InProgressAbort() is called by the PDM, from within the debugger thread,
+	// to cancel an operation which is in progress in another thread. The
+	// operation should be completed or error out with E_ABORT as soon as
+	// possible. E_NOTIMPL can be returned if the operation cannot be cancelled.
+	HRESULT InProgressAbort(void);
+}
+
+/* IDebugAsyncOperation
+IDebugAsyncOperation is generally implemented by the PDM, and is obtained by a
+language engine through IDebugApplication::CreateAsyncDebugOperation().
+The language engine can use it to provide asynchronous access to a SyncDebugOperation.
+*/
+[
+	object,
+	uuid(51973C1b-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IDebugAsyncOperation : IUnknown
+{
+	HRESULT GetSyncDebugOperation(
+		[out] IDebugSyncOperation **ppsdo);
+
+	// Start() causes the asynchronous operation to begin. It asynchronously
+	// causes IDebugSyncOperation::Execute() to be called in the thread obtained
+	// from IDebugSyncOperation::GetTargetThread(). It should only
+	// be called from within the debugger thread, or it will not return until
+	// the operation is complete (it degenerates to synchronous).
+	// Returns E_UNEXPECTED if an operation is already pending.
+	HRESULT Start(IDebugAsyncOperationCallBack *padocb);
+
+	// Abort() causes InProgressAbort() to be called on the IDebugSyncOperation
+	// object. It is normally called from within the debugger thread to cancel
+	// a hung operation. If the abort happens before the request completes,
+	// GetResult() will return E_ABORT. E_NOTIMPL may be returned from this
+	// function if the operation is not cancellable.
+	HRESULT Abort(void);
+
+	// QueryIsComplete() returns S_OK if the operation is complete; otherwise it
+	// returns S_FALSE;
+	HRESULT QueryIsComplete(void);
+
+	// If the request is complete, returns the HRESULT and object parameter
+	// returned from IDebugSyncOperation::Execute(). Otherwise, returns
+	// E_PENDING.
+	HRESULT GetResult(
+		[out] HRESULT *phrResult,
+		[out] IUnknown **ppunkResult);
+}
+
+/* IDebugAsyncOperationCallBack
+This interface is used to signal events from an IDebugAsyncOperation.
+*/
+[
+	object,
+	uuid(51973C1c-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IDebugAsyncOperationCallBack : IUnknown
+{
+	// onComplete() is fired by the AsyncDebugOperation when a result is available.
+	// The event is fired in the debugger thread.
+	HRESULT onComplete(void);
+}
+
+/* IEnumDebugCodeContexts
+Enumerates code contexts. Generally used to enumerate the code
+contexts corresponding to a document context.
+
+*/
+ [
+	object,
+	uuid(51973C1d-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumDebugCodeContexts Interface"),
+	pointer_default(unique)
+]
+interface IEnumDebugCodeContexts : IUnknown {
+
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] IDebugCodeContext **pscc,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			IDebugCodeContext **pscc,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumDebugCodeContexts **ppescc);
+}
+
+/* DebugStackFrameDescriptor
+Used to enumerate stack frames and merge output from several enumerators (on the same thread).
+dwMin and dwLim provide a machine dependent representation of the range
+of physical addresses associated with this stack frame. This is used by
+the process debug manager to sort the stack frames from multiple script engines.
+By convention, stacks grow down and, as such, on architectures where stacks grow
+up the addresses should be twos-complemented.
+
+
+The punkFinal is used during enumerator merging. If punkFinal is non-null,
+It indicates that the that the current enumerator merging should stop and
+a new one should be started. The object indicates how the new enumeration is to be started.
+*/
+typedef struct tagDebugStackFrameDescriptor
+	{
+	IDebugStackFrame *pdsf;
+	DWORD dwMin;
+	DWORD dwLim;
+	BOOL fFinal;
+	IUnknown *punkFinal;
+	} DebugStackFrameDescriptor;
+
+
+/* IEnumDebugStackFrames
+Enumerates stack frames. Generally used to enumerate the stack frames corresponding to a thread.
+*/
+
+[
+	object,
+	uuid(51973C1e-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumDebugStackFrames Interface"),
+	pointer_default(unique)
+]
+interface IEnumDebugStackFrames : IUnknown
+{
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] DebugStackFrameDescriptor *prgdsfd,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			DebugStackFrameDescriptor *prgdsfd,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumDebugStackFrames **ppedsf);
+}
+
+
+/* <I> Smart Host Interfaces </I>
+
+Below are the details of the interfaces implemented by a smart host.
+As mentioned earlier, it is possible to avoid implementing these interfaces by
+using the smart host helper interfaces.
+
+<H1> IDebugDocumentInfo </H1>
+Provides information on a document, which may or may not be instantiated. */
+[
+	object,
+	uuid(51973C1f-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugDocumentInfo Interface"),
+	pointer_default(unique)
+]
+interface IDebugDocumentInfo : IUnknown {
+	// Returns the specified name for the document. If the indicated name is
+	// not known, E_FAIL is returned.
+	HRESULT GetName(
+		[in]  DOCUMENTNAMETYPE dnt,
+		[out] BSTR *pbstrName);
+	// Returns a CLSID describing the document type. This allows the debugger IDE
+	// to host custom viewers for this document. returns CLSID_NULL if this document
+	// does not have viewable data.
+	HRESULT GetDocumentClassId(
+		[out] CLSID *pclsidDocument);
+}
+
+/* IDebugDocumentProvider
+Provides the means for instantiating a document on demand. This indirect means for instanciating a document:
+1.	Allows lazy loading of the document.
+2.	Allows the document object to live at the debugger IDE.
+3.	Allows more then one way of getting to the identical document object.
+This effectively  segregates the document from its provider; this allows the
+provider to carry additional runtime context information.
+
+<INSERT SRC="..\..\doc\figures.doc!IDebugDocument">
+*/
+[
+	object,
+	uuid(51973C20-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugDocumentProvider Interface"),
+	pointer_default(unique)
+]
+interface IDebugDocumentProvider : IDebugDocumentInfo {
+
+	// Causes the document to be instantiated if it does not already exist.
+	HRESULT GetDocument(
+		[out] IDebugDocument **ppssd);
+
+}
+
+/* IDebugDocument
+The base interface to all debug documents.
+*/
+[
+	object,
+	uuid(51973C21-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocument : IDebugDocumentInfo {
+}
+
+/* IDebugDocumentText
+The interface to a text only debug document.
+Conventions:
+1.	Both character positions and line numbers are zero based.
+2.	Character-positions represent character offsets; they do not represent
+byte or word offsets. For Win32, a character-position is a Unicode offset.
+
+Note: the use of line-number based text management is not recommended; instead it
+is recommended that character-position based management be used. The line to  character-position mapping functions described in this interface may be removed.
+*/
+[
+	object,
+	uuid(51973C22-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocumentText : IDebugDocument {
+
+	// Returns the attributes of the document.
+	HRESULT GetDocumentAttributes(
+		[out]	TEXT_DOC_ATTR *ptextdocattr);
+
+	// Returns the size of the document.
+	HRESULT GetSize(
+		[out]   ULONG *pcNumLines,		// NULL means do not return the number of lines.
+		[out]   ULONG *pcNumChars);		// NULL means do not return the number of characters.
+
+	// Returns character-position corresponding to the first character of a line.
+	HRESULT GetPositionOfLine(
+		[in]    ULONG cLineNumber,
+		[out]   ULONG *pcCharacterPosition);
+
+	// Returns the line-number and, optionally, the character offset within the line
+	// that corresponds to the given character-position.
+	HRESULT GetLineOfPosition(
+		[in]    ULONG cCharacterPosition,
+		[out]   ULONG *pcLineNumber,
+		[out]   ULONG *pcCharacterOffsetInLine); // NULL means do not return a value.
+
+	// Retrieves the characters and/or the character attributes associated with
+	// a character-position range; where a character position range is specified by
+	// a character-position and a number of characters.
+	HRESULT GetText(
+		[in] ULONG cCharacterPosition,
+		// Specifies a character text buffer. NULL means do not return characters.
+		[in, out, length_is(*pcNumChars), size_is(cMaxChars)]  WCHAR *pcharText,
+		// Specifies a character attribute buffer. NULL means do not return attributes.
+		[in, out, length_is(*pcNumChars), size_is(cMaxChars), ptr]  SOURCE_TEXT_ATTR *pstaTextAttr,
+		// Indicates the actual number of characters/attributes returned. Must be set to zero
+		// before the call.
+		[in, out] ULONG *pcNumChars,
+		// Specifies the number maximum number of character desired.
+		[in] ULONG cMaxChars);
+
+	// Returns the character-position range corresponding to a document context. The document
+	// context provided must be associated with this document.
+	HRESULT GetPositionOfContext(
+		[in]    IDebugDocumentContext *psc,
+		[out]   ULONG *pcCharacterPosition,
+		[out]	ULONG *cNumChars);
+
+	// Creates a document context object corresponding to the provided character position range.
+	HRESULT GetContextOfPosition(
+		[in]    ULONG cCharacterPosition,
+		[in]    ULONG cNumChars,
+		[out]   IDebugDocumentContext **ppsc);
+}
+
+/* IDebugDocumentTextEvents
+Provides events indicating changes to the associated text document.
+Note: The text alterations are reflected in the document at the time the
+events on this interface are fired. Event handlers may retrieve the new text
+using IDebugDocumentText.
+*/
+[
+	object,
+	uuid(51973C23-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocumentTextEvents : IUnknown
+{
+
+	// Indicates that the underlying document has been destroyed and is no longer valid.
+	HRESULT onDestroy(void);
+
+	// Indicates that new text has been added to the document. Example: progressive loading
+	// of HTML.
+	//
+	HRESULT onInsertText(
+		// The position where the new text is inserted.
+		[in]  ULONG cCharacterPosition,
+		// The number of characters that have been inserted.
+		[in]  ULONG cNumToInsert);
+
+	// Indicates that text has been removed from the document.
+	HRESULT onRemoveText(
+		// The character-position of the first character removed.
+		[in]  ULONG cCharacterPosition,
+		// The number of characters removed.
+		[in]  ULONG cNumToRemove);
+
+	// Indicates that text has been replaced.
+	HRESULT onReplaceText(
+		// The starting character-position of the character-position range
+		// that is being replaced.
+		[in]  ULONG cCharacterPosition,
+		// The number of characters replaced.
+		[in]  ULONG cNumToReplace);
+
+	// Indicates that the text attributes associated with the underlying character-position
+	// range has changed.
+	HRESULT onUpdateTextAttributes(
+		// The character-position of the first character whose attributes have changed.
+		[in]  ULONG cCharacterPosition,
+		// The number of characters in the range.
+		[in]  ULONG cNumToUpdate);
+
+	// Indicates that the document attributes have changed.
+	HRESULT onUpdateDocumentAttributes(
+		// The new document attributes.
+		[in]  TEXT_DOC_ATTR textdocattr);
+}
+
+// <HIDE>
+/* IDebugDocumentTextAuthor
+This preliminary interface is provided by text documents that support editing.
+Notes:
+1.	In the future transactioning and undo support will be added to this interface.
+2.	The events on IDebugDocumentTextEvents will fire as a result of calls to
+this  interface. The caller should use this interface to modify the document but rely
+on the events to update the display.
+*/
+[
+	object,
+	uuid(51973C24-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocumentTextAuthor : IDebugDocumentText {
+
+	// Insert new text into the document.
+	HRESULT InsertText(
+		[in]	ULONG cCharacterPosition,
+		[in]	ULONG cNumToInsert,
+		// A buffer containing the characters to insert.
+		[in, size_is(cNumToInsert)]
+				OLECHAR pcharText[]);
+
+	// Remove text from the document.
+	HRESULT RemoveText(
+		[in]	ULONG cCharacterPosition,
+		[in]	ULONG cNumToRemove);
+
+	// Replace text in the document.
+	HRESULT ReplaceText(
+		[in]	ULONG cCharacterPosition,
+		[in]	ULONG cNumToReplace,
+		// A buffer containing the characters with which to replace the old characters.
+		[in, size_is(cNumToReplace)]
+				OLECHAR pcharText[]);
+}
+
+
+/* IDebugDocumentTextExternalAuthor
+An extremely preliminary interface to allow external editors to edit file-based
+debugger documents, and to notify the document when the source file has been changed.
+*/
+[
+	object,
+	uuid(51973C25-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocumentTextExternalAuthor : IUnknown{
+
+	// Return the full path (including file name) to the document's source file.
+	//	*pfIsOriginalPath is TRUE if the path refers to the original file for the document.
+	//	*pfIsOriginalPath is FALSE if the path refers to a newly created temporary file
+	//	Returns E_FAIL if no source file can be created/determined.
+	HRESULT GetPathName(
+		[out] BSTR *pbstrLongName,
+		[out] BOOL *pfIsOriginalFile);
+
+	// Return just the name of the document, with no path information.
+	// (Used for "Save As...")
+	HRESULT GetFileName(
+		[out] BSTR *pbstrShortName);
+
+	// Notify the host that the document's source file has been saved and
+	// that its contents should be refreshed.
+	HRESULT NotifyChanged();
+}
+// </HIDE>
+
+/* IDebugDocumentHelper
+
+IDebugDocumentHelper greatly simplifies the task of creating a smart host
+for ActiveDebugging.
+
+IDebugDocumentHelper automatically provides implementations for IDebugDocumentProvider,
+IDdebugDocument, IDebugDocumentText, IDebugDocumentContext, IDebugDocumentTextEvents,
+and many of the other interfaces necessary for smart hosting.
+
+To be a smart host using IDebugDocumentHelper, a host application only to do only
+three two things:
+
+(1) CoCreate a IProcessDebugManager and use it to add your application to the list
+of debuggable applications.
+
+(2) create an IDebugDocumentHelper for each host document and make the appropriate
+calls to define the document name, parent document, text, and script blocks.
+
+(3) Implement IActiveScriptSiteDebug on your IActiveScriptSite object (implemented
+already for Active Scripting.  The only non-trivial method on IActiveScriptSiteDebug
+simply delegates to the helper.
+
+Additionally, the host can optionally implement IDebugDocumentHost if it needs additional
+control over syntax color, document context creation, and other extended functionality.
+
+The main limitation on the smart host helper is that can only handle documents whose contents
+change or shrink after they have been added  (though documents can expand, of course.)  For
+many smart hosts, however, the functionality it provides is exactly what is needed.
+
+Below we go into each of the steps in more detail.
+
+<H2> Create an Application Object </H2>
+
+Before the smart host helper can be used, it is necessary to create an IDebugApplication
+object to represent your application in the debugger.
+The steps for creating an application object are as follows:
+
+(1) Create an instance of the process debug manager using CoCreateInstance.
+(2) Call IProcessDebugManager::CreateApplication().
+(3) Set the name on the application using SetName().
+(4) Add the application object to the list of debuggable applications using
+AddApplication().
+
+Below is code to do this, minus error-check and other niceties.
+
+
+	CoCreateInstance(CLSID_ProcessDebugManager, NULL,
+					CLSCTX_INPROC_SERVER | CLSCTX_INPROC_HANDLER | CLSCTX_LOCAL_SERVER,
+					IID_IProcessDebugManager, (void **)&g_ppdm);
+
+	g_ppdm->CreateApplication(&g_pda);
+	g_pda->SetName(L"My cool application");
+	g_ppdm->AddApplication(g_pda, &g_dwAppCookie);
+
+
+<H2> Using IDebugDocumentHelper </H2>
+
+The minimal sequence of steps for using the helper is as follows:
+
+(1) For each host document, create a helper using
+IProcessDebugManager::CreateDebugDocumentHelper.
+
+(2) Call Init on the helper, giving the name, document attributes, etc.
+
+(3) Call Attach with parent helper for the document (or NULL if the document is
+the root) to define the position of the document in the tree and make it visible
+to the debugger
+
+(4) Call AddDBCSText() or AddUnicodeText() to define the text of the document.
+(These can be called multiple times if document is downloaded incrementally,
+as in the case of a browser.)
+
+(5) Call DefineScriptBlock to define the ranges for each script block and the
+associated script engines.
+
+<H2> Implementing IActiveScriptSiteDebug </H2>
+
+To implement <I> GetDocumentContextFromPosition </I>, get the helper corresponding to
+the given site, then get the starting document offset for the given source context, as
+follows:
+
+	pddh->GetScriptBlockInfo(dwSourceContext, NULL, &ulStartPos, NULL);
+
+Next, use the helper to create a new document context for the given character offset:
+
+	pddh->CreateDebugDocumentContext(ulStartPos + uCharacterOffset, cChars, &pddcNew);
+
+To implement <I> GetRootApplicationNode </I>, simply call IDebugApplication::GetRootNode.
+
+To implement <I> GetDebugApplication </I>, simply return the IDebugApplication you initially
+created using the process debug manager.
+
+<H2> The optional IDebugDocumentHost interface <H2>
+
+The host can provide an implementation of IDebugDocumentHost using IDebugDocumentHelper::SetHost
+that gives it additional control over the helper.  Here are some of the key things the host
+interface allows you to do:
+
+(1) Add text using AddDeferredText so that the host doesn't have to provide the actual
+characters immediately.  When the characters are really needed, the helper will call
+IDebugDocumentHost::GetDeferredCharacters on the host.
+
+(2) Override the default syntax coloring provided by the helper.  The helper will call
+IDebugDocumentHost::GetScriptTextAttributes when it needs to know the coloring for a range
+of characters, falling back on its default implementation if the host return E_NOTIMPL.
+
+(3) Providing a controlling unknown for document contexts created by the helper my implementing
+IDebugDocumentHost::OnCreateDocumentContext.  This allows the host to override the functionality
+of the default document context implementation.
+
+(4) Provide a path name in the file system for the document.  Some debugging UIs will use this
+to permit the user to edit and save changes to the document.  IDebugDocumentHost::NotifyChanged
+will be called to notify the host after the document has been saved.
+*/
+[
+	object,
+	uuid(51973C26-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugDocumentHelper Interface"),
+	pointer_default(unique)
+]
+interface IDebugDocumentHelper : IUnknown
+{
+	// Initialize a debug doc helper with the given name and
+	// initial attributes.
+	//
+	// Note: The document will not actually appear in the tree
+	// until Attach is called.
+	HRESULT Init(
+		[in]			IDebugApplication *pda,
+		[in, string]	LPCOLESTR pszShortName,
+		[in, string]	LPCOLESTR pszLongName,
+		[in]			TEXT_DOC_ATTR docAttr
+		);
+
+	// Add the document to the doc tree, using pddhParent as the parent.
+	// If the ppdhParent is NULL, the document will be top-level.
+	HRESULT Attach([in] IDebugDocumentHelper *pddhParent);
+
+	// Remove the document from the doc tree.
+	HRESULT Detach();
+
+	// Add the given set of unicode characters to end of the document.
+	// (This will generate IDebugDocumentTextEvent notifications.)
+	//
+	// If this method is called after AddDeferredText has been called,
+	// E_FAIL will be returned.
+	HRESULT AddUnicodeText(
+		[in, string] LPCOLESTR pszText
+		);
+
+	// Add the given set of DBCS characters to end of the document.
+	// (This will generate IDebugDocumentTextEvent notifications.)
+	//
+	// If this method is called after AddDeferredText has been called,
+	// E_FAIL will be returned.
+	HRESULT AddDBCSText(
+		[in, string] LPCSTR pszText
+		);
+
+	// Set the DebugDocumentHost interface.
+	// If provided, this interface will be used for
+	// smart-host syntax coloring, fetching deferred text, and returning
+	// controlling unknowns for newly created document contexts.
+	HRESULT SetDebugDocumentHost(
+		[in] IDebugDocumentHost* pddh
+		);
+
+	// Notify the helper that the given text is available, but don't actually
+	// provide the characters.
+	
+	// This allows the host to defer providing the characters unless they
+	// are actually needed, while still allowing the helper to generate
+	// accurate notifications and size information.
+	//
+	// dwTextStartCookie is a cookie, defined by the host, that represents
+	// the starting position of the text.  (For example, in a host that
+	// represents text in DBCS, the cookie could be a byte offset.)
+	// This cookie will be provided in subsequent calls to GetText.
+	//
+	// NB: It is assumed that a single call to
+	// GetText can get characters from multiple calls to AddDeferredText.
+	// The helper classes may also ask for the same range of deferred
+	// characters more than once.
+	//
+	// It is an error to mix calls to AddDeferredText with calls to
+	// AddUnicodeText or AddDBCSText-- Doing so will cause E_FAIL to be
+	// returned.
+	HRESULT AddDeferredText(
+		[in] ULONG cChars,				// number of (Unicode) characters to add
+		[in] DWORD dwTextStartCookie	
+			// host-defined cookie representing the starting position of the text.
+		);
+
+	// Notify the helper that a particular range of
+	// characters is a script block handled by the given script engine.
+	// All syntax coloring and code context lookups for that range will be
+	// delegated to that script engine.
+	//
+	// This method would be used by a smart host whose documents contained
+	// embedded script blocks, or by a language engine containing embedded
+	// scripts for other languages.
+	//
+	// DefineScriptBlock should be called <I> after </I> the text has been
+	// added (via AddDBCSText, etc) but before the script script block
+	// has been parsed (via IActiveScriptParse).
+
+	HRESULT DefineScriptBlock(
+		[in] ULONG ulCharOffset,
+		[in] ULONG cChars,
+		[in] IActiveScript* pas,
+		[in] BOOL fScriptlet,
+		[out] DWORD* pdwSourceContext
+		);
+
+	// Set the default attribute to use for text that is not in a
+	// script block.  (If not explicitly set, the default attributes for
+	// text outside of a script block is SOURCETEXT_ATTR_NONSOURCE.)
+	//
+	// This would allow, for example, for text outside of script blocks
+	// to be colored grey and marked read-only.
+	HRESULT SetDefaultTextAttr(SOURCE_TEXT_ATTR staTextAttr);
+
+	// Explicilty set the attributes on a range of text, overriding any
+	// other attributes on that text.
+	//
+	// It is an error to set the attributes on a text range that has not
+	// yet been added using AddText.
+	HRESULT SetTextAttributes(
+		[in] ULONG ulCharOffset,
+		[in] ULONG cChars,
+		[in, length_is(cChars), size_is(cChars)]
+			SOURCE_TEXT_ATTR* pstaTextAttr);
+
+	// Set a new long name for the document
+	HRESULT SetLongName(
+		[in, string]  LPCOLESTR pszLongName);
+
+	// Set a new short name for the document
+	HRESULT SetShortName(
+		[in, string]  LPCOLESTR pszShortName);
+
+	// Define a new set of document attributes
+	HRESULT SetDocumentAttr(
+		[in] TEXT_DOC_ATTR pszAttributes
+		);
+
+	// Return the debug application node corresponding to this document
+	HRESULT GetDebugApplicationNode(
+		[out] IDebugApplicationNode **ppdan);
+
+	// Once a script block has been defined, this method allows the
+	// associate range and script engine to be retrieved.
+	HRESULT GetScriptBlockInfo(
+		[in]    DWORD dwSourceContext,
+		[out]	IActiveScript** ppasd,
+		[out]   ULONG *piCharPos,
+		[out]	ULONG *pcChars);
+
+	// Allows the host to create a new debug document context
+	HRESULT CreateDebugDocumentContext(
+		[in]	ULONG iCharPos,
+		[in]	ULONG cChars,
+		[out]	IDebugDocumentContext** ppddc);
+
+
+	// Bring this document to the top in the debugger UI.
+	// If the debugger isn't started already, start it now.
+	HRESULT BringDocumentToTop();
+
+	// Bring the given context in this document to the top
+	// in the debugger UI.
+	HRESULT BringDocumentContextToTop( [in] IDebugDocumentContext *pddc);
+};
+/* IDebugDocumentHost
+The interface from the IDebugDocumentHelper back to
+the smart host or language engine.  This interface
+exposes host specific functionality such as syntax coloring,
+*/
+[
+	object,
+	uuid(51973C27-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugDocumentHost Interface"),
+	pointer_default(unique)
+]
+interface IDebugDocumentHost : IUnknown
+{
+
+	// Return a particular range of characters in the original host document,
+	// added using AddDeferredText.
+	//
+	// It is acceptable for a host to return E_NOTIMPL for this method,
+	// as long as the host doesn't call AddDeferredText.
+	//
+	// (Note that this is text from the _original_ document.  The host
+	// does not need to be responsible for keeping track of edits, etc.)
+	HRESULT GetDeferredText(
+		[in] DWORD dwTextStartCookie,
+		// Specifies a character text buffer. NULL means do not return characters.
+		[in, out, length_is(*pcNumChars), size_is(cMaxChars)]  WCHAR *pcharText,
+		// Specifies a character attribute buffer. NULL means do not return attributes.
+		[in, out, length_is(*pcNumChars), size_is(cMaxChars)]  SOURCE_TEXT_ATTR *pstaTextAttr,
+		// Indicates the actual number of characters/attributes returned. Must be set to zero
+		// before the call.
+		[in, out] ULONG *pcNumChars,
+		// Specifies the number maximum number of character desired.
+		[in] ULONG cMaxChars);
+
+	// Return the text attributes for an arbitrary block of document text.
+	// It is acceptable for hosts to return E_NOTIMPL, in which case the
+	// default attributes are used.
+	HRESULT GetScriptTextAttributes(
+		// The script block text. This string need not be null terminated.
+		[in, size_is(uNumCodeChars)]		LPCOLESTR		pstrCode,
+		// The number of characters in the script block text.
+		[in]								ULONG			uNumCodeChars,
+		// See IActiveScriptParse::ParseScriptText for a description of this argument.
+		[in]								LPCOLESTR		pstrDelimiter,
+		// See IActiveScriptParse::ParseScriptText for a description of this argument.
+		[in]								DWORD			dwFlags,
+		// Buffer to contain the returned attributes.
+		[in, out, size_is(uNumCodeChars)]	SOURCE_TEXT_ATTR *pattr);
+
+	// Notify the host that a new document context is being created
+	// and allow the host to optionally return a controlling unknown
+	// for the new context.
+	//
+	// This allows the host to add new functionality to the helper-provided
+	// document contexts.   It is acceptable for the host to return E_NOTIMPL
+	// or a null outer unknown for this method, in which case the context is
+	// used "as is".
+	HRESULT OnCreateDocumentContext(
+		[out] IUnknown** ppunkOuter);
+
+	// Return the full path (including file name) to the document's source file.
+	//	*pfIsOriginalPath is TRUE if the path refers to the original file for the document.
+	//	*pfIsOriginalPath is FALSE if the path refers to a newly created temporary file
+	//	Returns E_FAIL if no source file can be created/determined.
+	HRESULT GetPathName(
+		[out] BSTR *pbstrLongName,
+		[out] BOOL *pfIsOriginalFile);
+
+	// Return just the name of the document, with no path information.
+	// (Used for "Save As...")
+	HRESULT GetFileName(
+		[out] BSTR *pbstrShortName);
+
+	// Notify the host that the document's source file has been saved and
+	// that its contents should be refreshed.
+	HRESULT NotifyChanged();
+};
+/* IDebugDocumentContext
+Abstract representation of a portion of the debug document. For text documents
+this consists of a character-position range.
+*/
+[
+	object,
+	uuid(51973C28-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugDocumentContext : IUnknown
+{
+	// Returns the document that contains this context.
+	HRESULT GetDocument(
+		[out] IDebugDocument **ppsd);
+
+	// Enumerates the code contexts associated with this document context. Generally there will
+	// only be one code context but there are important exceptions, such as include file
+	// or templates (in C++).
+	HRESULT EnumCodeContexts(
+		[out] IEnumDebugCodeContexts **ppescc);
+}
+
+/* <I> Debugger UI interfaces </I>
+
+Below are the interfaces that allow other components to launch
+and interfact with the debugger UI.
+
+<H1> IDebugSessionProvider </H1>
+The primary interface provided by a debugger IDE to enable host and
+language initiated debugging.  Its sole purpose is to establish a debug
+session for a running application.
+*/
+cpp_quote(     "EXTERN_C const CLSID CLSID_DefaultDebugSessionProvider;")
+[
+	object,
+	uuid(51973C29-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugSessionProvider Interface"),
+	pointer_default(unique)
+]
+interface IDebugSessionProvider : IUnknown
+{
+	// Initiates a debug session with the specified application. The debugger should
+	// call IRemoteDebugApplication::ConnectDebugger before returning from this call.
+	HRESULT StartDebugSession(
+		[in]	IRemoteDebugApplication *pda);
+};
+
+/* IApplicationDebugger
+This is the primary interface exposed by a debugger IDE.
+*/
+[
+	object,
+	uuid(51973C2a-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IApplicationDebugger Interface"),
+	pointer_default(unique)
+]
+interface IApplicationDebugger : IUnknown
+{
+	// Indicates if the debugger is alive. Should always return S_OK. If the debugger
+	// has rudely shut down COM will return an error from the marshalling proxy.
+	HRESULT QueryAlive(void);
+	// Provides a mechanism for hosts and language engines running out-of-process to the
+	// debugger to create objects in the debugger process. This can be used for any purpose,
+	// including extending the debugger UI.  This method simply delegates to CoCreateInstance.
+	HRESULT CreateInstanceAtDebugger(
+		[in]	REFCLSID rclsid,		// Class identifier (CLSID) of the object
+		[in]	IUnknown *pUnkOuter,	// Object is or isn't part of an aggregate
+		[in]	DWORD dwClsContext,		// Context for running executable code
+		[in]	REFIID riid,			// Interface identifier
+		[out, iid_is(riid)]	IUnknown **ppvObject);
+										// Points to requested interface pointer
+	// This method is called when IDebugApplication::DebugOutput is called. The debugger
+	// can use this to display the string in an output window.
+	HRESULT onDebugOutput(
+		[in] LPCOLESTR pstr);
+	// This method is called when a breakpoint is hit. The application will remain
+	// suspended until the debugger IDE calls IDebugApplication::ResumeFromBreakPoint.
+	HRESULT onHandleBreakPoint(
+		// Indicates the thread in which the breakpoint occured.
+		[in]	IRemoteDebugApplicationThread *prpt,
+		// Indicates the reason for the breakpoint.
+		[in]	BREAKREASON br,
+		// optional error info
+		[in]	IActiveScriptErrorDebug *pError);
+
+	// This method is called when IDebugApplication::Close is called.
+	HRESULT onClose(void);
+
+	// Handle a custom event.
+	// The semantics of the GUID and IUnknown are entirely application/debugger defined
+	// This method may return E_NOTIMPL.
+	HRESULT onDebuggerEvent(
+		[in]	REFIID riid,
+		[in]	IUnknown *punk);
+};
+
+/* IApplicationDebuggerUI
+This is a secondary interface exposed by some debugger IDE
+that allows an external component to have additional control
+over the debuggers UI.    <preliminary>
+*/
+[
+	object,
+	uuid(51973C2b-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IApplicationDebuggerUI Interface"),
+	pointer_default(unique)
+]
+interface IApplicationDebuggerUI : IUnknown
+{
+	// Bring the window corresponding to the given debug document to the front.
+	// Returns E_INVALIDARG if the document is not known.
+	HRESULT BringDocumentToTop([in] IDebugDocumentText* pddt);
+
+	// Bring the window containing the given doc context to the front,
+	// and scroll it to the correct location.
+	// Returns E_INVALIDARG if the context is not known.
+	HRESULT BringDocumentContextToTop([in] IDebugDocumentContext* pddc);
+};
+
+
+
+
+/* IMachineDebugManager
+The primary interface to the Machine Debug Manager.
+*/
+cpp_quote(     "EXTERN_C const CLSID CLSID_MachineDebugManager;")
+[
+	object,
+	uuid(51973C2c-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IMachineDebugManager Interface"),
+	pointer_default(unique)
+]
+interface IMachineDebugManager : IUnknown
+{
+	// Adds an application to the running application list. This method is called by the
+	// process debug manager whenever IProcessDebugManager::AddApplication is called.
+	HRESULT AddApplication(
+		[in] IRemoteDebugApplication *pda,
+		[out] DWORD *pdwAppCookie);
+	// Removes an application from the running application list. This method is called by the
+	// process debug manager whenever IProcessDebugManager::RemoveApplication is called.
+	HRESULT RemoveApplication(
+		[in] DWORD dwAppCookie);
+	// Returns an enumerator of the current list of running applications. Used by the debugger
+	// IDE to display and attach applications for debugging purposes.
+	HRESULT EnumApplications(
+		[out] IEnumRemoteDebugApplications **ppeda);
+};
+
+/* IMachineDebugManagerCookie - As IMachineDebugManager with Debug Cookie support
+*/
+[
+	object,
+	uuid(51973C2d-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IMachineDebugManagerCookie Interface"),
+	pointer_default(unique)
+]
+interface IMachineDebugManagerCookie : IUnknown
+{
+	// Adds an application to the running application list. This method is called by the
+	// process debug manager whenever IProcessDebugManager::AddApplication is called.
+	HRESULT AddApplication(
+		[in] IRemoteDebugApplication *pda,
+		[in] DWORD dwDebugAppCookie,
+		[out] DWORD *pdwAppCookie);
+	// Removes an application from the running application list. This method is called by the
+	// process debug manager whenever IProcessDebugManager::RemoveApplication is called.
+	HRESULT RemoveApplication(
+		[in] DWORD dwDebugAppCookie,
+		[in] DWORD dwAppCookie);
+	// Returns an enumerator of the current list of running applications. Used by the debugger
+	// IDE to display and attach applications for debugging purposes.
+	HRESULT EnumApplications(
+		[out] IEnumRemoteDebugApplications **ppeda);
+};
+
+
+/* IMachineDebugManagerEvents
+This event interface is used to signal changes in the running application
+list maintained by the machine debug manager. It can be used by the debugger
+IDE to display a dynamic list of applications.
+*/
+[
+	object,
+	uuid(51973C2e-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IMachineDebugManagerEvents Interface"),
+	pointer_default(unique)
+]
+interface IMachineDebugManagerEvents : IUnknown
+{
+	// Indicates that a new application has appeared on the running application list.
+	HRESULT onAddApplication(
+		[in] IRemoteDebugApplication *pda,
+		[in] DWORD dwAppCookie);
+	// Indicates that an application has been removed from the running application list.
+	HRESULT onRemoveApplication(
+		[in] IRemoteDebugApplication *pda,
+		[in] DWORD dwAppCookie);
+};
+
+
+/* <I> Process Debug Manager Interfaces </I>
+
+Below are the details of the interfaces for the process debug manager.
+
+<H1> IProcessDebugManager </H1>
+The primary interface to the process debug manager.
+*/
+cpp_quote(     "EXTERN_C const CLSID CLSID_ProcessDebugManager;")
+[
+	object,
+	uuid(51973C2f-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IProcessDebugManager Interface"),
+	pointer_default(unique),
+	local
+]
+interface IProcessDebugManager : IUnknown
+{
+	// Creates a new debug application object. The new object is not added to the
+	// running application list and has no name.
+	HRESULT CreateApplication(
+		[out] IDebugApplication **ppda);
+	// Returns a default application object for the current process, creating one and adding
+	// it to the running application list if necessary. Language engines should use this
+	// application if they are running on a host that does not provide an application.
+	HRESULT GetDefaultApplication(
+		[out] IDebugApplication **ppda);
+	// Adds an application to the running application list in the machine debug manager.
+	HRESULT AddApplication(
+		[in] IDebugApplication *pda,
+		// Returns a cookie used to remove the application from the machine debug manager.
+		[out] DWORD *pdwAppCookie);
+	// Removes an application from the running application list.
+	HRESULT RemoveApplication(
+		// The cookie provided by AddApplication.
+		[in] DWORD dwAppCookie);
+
+	HRESULT CreateDebugDocumentHelper(
+		[in]  IUnknown *punkOuter,
+		[out] IDebugDocumentHelper** pddh);
+};
+
+
+
+/* IRemoteDebugApplication
+An abstraction representing a running application. It need not correspond to an OS process.  Applications are the smallest debuggable unit; that is, the debugger IDE normally targets an application for debugging.
+The application object is normally implemented by the Process Debug Manager.
+
+<Issue>
+ Stepping from interpreted code to native code needs additional help from the LE's. The LE's need to source an event that they are leaving the namespace.  Additionally the LE's will need to provide some PC info of either where they are going to at least where they are (assuming some thin thunk prior to calling out from the namespace).  Both teams are in agreement on this.
+
+*Action Item*
+PiersH and SamMck to investigate and come up with events and PC's.  Additionally ShonK may need be involved to explain what info JS and VBS can give.
+</Issue>
+
+*/
+[
+	object,
+	uuid(51973C30-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IRemoteDebugApplication Interface"),
+	pointer_default(unique)
+]
+interface IRemoteDebugApplication : IUnknown
+{
+	// Continue an application which is currently in a breakpoint.
+	HRESULT ResumeFromBreakPoint(
+		// For stepping modes, the thread which is to be affected by the stepping mode.
+		[in] IRemoteDebugApplicationThread *prptFocus,
+		// The action to take (step mode, etc.) upon resuming the application
+		[in] BREAKRESUMEACTION bra,
+		// only relevant in the case that we stopped because of an error
+		[in] ERRORRESUMEACTION era);
+
+	// Causes the application to break into the debugger at the earliest opportunity. Note
+	// that a long time may elapse before the application actually breaks, particularly if
+	// the application is not currently executing script code.
+	HRESULT CauseBreak(void);
+	// Connects a debugger to the application. Only one debugger may be connected at a
+	// time; this method fails if there is already a debugger connected
+	HRESULT ConnectDebugger(
+		[in]	IApplicationDebugger *pad);
+	// Disconnects the current debugger from the application.
+	HRESULT DisconnectDebugger(void);
+	// Returns the current debugger connected to the application.
+	HRESULT GetDebugger(
+		[out]	IApplicationDebugger **pad);
+	// Provides a mechanism for the debugger IDE, running out-of-process to the
+	// application, to create objects in the application process.
+	// This method simply delegates to CoCreateInstance.
+	HRESULT CreateInstanceAtApplication(
+		[in]	REFCLSID rclsid,		// Class identifier (CLSID) of the object
+		// Note: This parameter may have to be removed.
+		[in]	IUnknown *pUnkOuter,	// Object is or isn't part of an aggregate
+		[in]	DWORD dwClsContext,		// Context for running executable code
+		[in]	REFIID riid,			// Interface identifier
+		[out, iid_is(riid)]	IUnknown **ppvObject);
+										// Points to requested interface pointer
+	// Indicates if the application is alive. Should always return S_OK. If the application
+	// process has rudely shut down COM will return an error from the marshalling proxy.
+	HRESULT QueryAlive(
+		void);
+	// Enumerates all threads known to be associated with the application.
+	// New threads may be added at any time.
+	HRESULT EnumThreads(
+		[out]	IEnumRemoteDebugApplicationThreads **pperdat);
+	// Returns the application node under which all nodes associated with the
+	// application are added.
+	HRESULT GetName(
+		[out]	BSTR *pbstrName);
+	HRESULT GetRootNode(
+		[out]	IDebugApplicationNode **ppdanRoot);
+
+	HRESULT EnumGlobalExpressionContexts (
+		[out]	IEnumDebugExpressionContexts **ppedec);
+};
+
+/* IDebugApplication
+This interface is an extension of IRemoteDebugApplication, exposing
+non-remotable methods for use by language engines and hosts.
+
+*/
+[
+	object,
+	uuid(51973C32-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugApplication Interface"),
+	pointer_default(unique),
+	local
+]
+interface IDebugApplication : IRemoteDebugApplication
+{
+	// Sets the name of the application. The provided name will be returned in subsequent calls
+	// to IRemoteDebugApplication::GetName.
+	HRESULT SetName(
+		[in]	LPCOLESTR pstrName);
+	// This method is called by language engines, in single step mode, just before they
+	// return to their caller. The process debug manager uses this opportunity to notify all
+	// other script engines that they should break at the first opportunity. This is how
+	// cross language step modes are implemented.
+	HRESULT StepOutComplete(void);
+	// Causes the given string to be displayed by the debugger IDE, normally in an output
+	// window. This mechanism provides the means for a language engine to implement language
+	// specific debugging output support. Example: Debug.writeln("Help") in JavaScript.
+	HRESULT DebugOutput(
+		[in]	LPCOLESTR pstr);
+	// Causes a default debugger IDE to be started and a debug session to be attached to
+	// this application if one does not already exist. This is used to implement just-in-time
+	// debugging.
+	HRESULT StartDebugSession(void);
+	// Called by the language engine in the context of a thread that has hit a breakpoint.
+	// This method causes the current thread to block and a notification of the breakpoint
+	// to be sent to the debugger IDE. When the debugger IDE resumes the application this
+	// method returns with the action to be taken.
+	//
+	// Note: While in the breakpoint the language engine may be called in this thread to do
+	// various things such as enumerating stack frames or evaluating expressions.
+	HRESULT HandleBreakPoint(
+		[in]	BREAKREASON br,
+		[out]	BREAKRESUMEACTION *pbra);
+	// Causes this application to release all references and enter a zombie state. Called
+	// by the owner of the application generally on shut down.
+	HRESULT Close(void);
+	// Returns the current break flags for the application.
+	HRESULT GetBreakFlags(
+		[out]	APPBREAKFLAGS *pabf,
+		[out]	IRemoteDebugApplicationThread **pprdatSteppingThread);
+	// Returns the application thread object associated with the currently running thread.
+	HRESULT GetCurrentThread(
+		[out]	IDebugApplicationThread **pat);
+	// Creates an IDebugAsyncOperation object to wrap a provided IDebugSyncOperation object.
+	// This provides a mechanism for language engines to implement asynchronous expression and
+	// evaluation, etc. without having to know the details of synchronization with the
+	// debugger thread. See the descriptions for IDebugSyncOperation and IDebugAsyncOperation
+	// for more details.
+	HRESULT CreateAsyncDebugOperation(
+		[in]	IDebugSyncOperation *psdo,
+		[out]	IDebugAsyncOperation **ppado);
+	// Adds a stack frame sniffer to this application. Generally called by a language engine
+	// to expose its stack frames to the debugger. It is possible for other entities to
+	// expose stack frames.
+	HRESULT AddStackFrameSniffer(
+		[in]	IDebugStackFrameSniffer *pdsfs,
+		// Returns a cookie that is used to remove this stack frame sniffer
+		// from the application.
+		[out]	DWORD *pdwCookie);
+	// Removes a stack frame sniffer from this application.
+	HRESULT RemoveStackFrameSniffer(
+		// The cookie returned by AddStackFrameSniffer.
+		[in]	DWORD dwCookie);
+	// Returns S_OK if the current running thread is the debugger thread.
+	// Otherwise, returns S_FALSE.
+	HRESULT QueryCurrentThreadIsDebuggerThread(
+		void);
+	// Provides a mechanism for the caller to run code in the debugger thread. This is generally
+	// used so that language engines and hosts can implement free threaded objects on top
+	// of their single threaded implementations.
+	HRESULT SynchronousCallInDebuggerThread(
+		[in]	IDebugThreadCall *pptc,
+		[in]	DWORD dwParam1,
+		[in]	DWORD dwParam2,
+		[in]	DWORD dwParam3);
+	// Creates a new application node which is associated with a specific
+	// document provider.  Before it is visible, the new node must be
+	// attached to a parent node.
+	HRESULT CreateApplicationNode(
+		[out]	IDebugApplicationNode **ppdanNew);
+
+	// Fire a generic event to the IApplicationDebugger (if any)
+	// The semantics of the GUID and IUnknown are entirely application/debugger defined
+	//
+	// This method is currently unimplemented but is here to allow for future extensions.
+	HRESULT FireDebuggerEvent(
+		[in]	REFGUID riid,
+		[in]	IUnknown *punk);
+
+	HRESULT HandleRuntimeError(
+		[in]	IActiveScriptErrorDebug *pErrorDebug,
+		[in]	IActiveScriptSite *pScriptSite,
+		[out]	BREAKRESUMEACTION *pbra,
+		[out]	ERRORRESUMEACTION *perra,
+		[out]	BOOL *pfCallOnScriptError); // if TRUE then engine should call IActiveScriptSite::OnScriptError()
+
+	// return TRUE if there is a JIT debugger registered
+	BOOL FCanJitDebug ();
+
+	// returns TRUE if a JIT debugger is registered and it is registered to auto-JIT debug dumb hosts
+	BOOL FIsAutoJitDebugEnabled ();
+
+	// Adds a global expression context provider to this application
+	HRESULT AddGlobalExpressionContextProvider(
+		[in]	IProvideExpressionContexts *pdsfs,
+		// Returns a cookie that is used to remove this global expression context provider
+		// from the application.
+		[out]	DWORD *pdwCookie);
+
+	// Removes a global expression context provider from this application.
+	HRESULT RemoveGlobalExpressionContextProvider(
+		// The cookie returned by AddGlobalExpressionContextProvider.
+		[in]	DWORD dwCookie);
+};
+
+/* IRemoteDebugApplicationEvents:
+This is the event interface supplied by a debug application: It is
+always called from within the debugger thread.
+
+<Issue>
+ The current PDM event model isn't very extensible.  We explained our current event model to Sam, Bob, Philip.  It was received well.
+
+*Action Item*
+SamMck to examine the current Vegas scheme to consider adding it to current ASD.
+</Issue>
+*/
+[
+	object,
+	uuid(51973C33-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IRemoteDebugApplicationEvents Interface"),
+	pointer_default(unique)
+]
+interface IRemoteDebugApplicationEvents : IUnknown
+{
+	HRESULT OnConnectDebugger(
+		[in]	IApplicationDebugger *pad);
+	HRESULT OnDisconnectDebugger(void);
+	HRESULT OnSetName(
+		[in]	LPCOLESTR pstrName);
+	HRESULT OnDebugOutput(
+		[in]	LPCOLESTR pstr);
+	HRESULT OnClose(void);
+	HRESULT OnEnterBreakPoint(
+		[in]	IRemoteDebugApplicationThread *prdat);
+	HRESULT OnLeaveBreakPoint(
+		[in]	IRemoteDebugApplicationThread *prdat);
+	HRESULT OnCreateThread(
+		[in]	IRemoteDebugApplicationThread *prdat);
+	HRESULT OnDestroyThread(
+		[in]	IRemoteDebugApplicationThread *prdat);
+	HRESULT OnBreakFlagChange(
+		[in]	APPBREAKFLAGS abf,
+		[in]	IRemoteDebugApplicationThread *prdatSteppingThread);
+};
+
+
+/* IDebugApplicationNode
+Provides the functionality of IDebugDocumentProvider, plus a context within a project tree.
+*/
+[
+	object,
+	uuid(51973C34-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugApplicationNode : IDebugDocumentProvider {
+	HRESULT EnumChildren(
+		[out]	IEnumDebugApplicationNodes **pperddp);
+	HRESULT GetParent(
+		[out]	IDebugApplicationNode **pprddp);
+	HRESULT SetDocumentProvider(
+		[in]	IDebugDocumentProvider *pddp);
+	HRESULT Close(void);
+	HRESULT Attach(
+		[in]	IDebugApplicationNode *pdanParent);
+	HRESULT Detach(void);
+}
+
+/* IDebugApplicationNodeEvents
+Event interface for DebugApplicationNode object.
+*/
+[
+	object,
+	uuid(51973C35-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IDebugApplicationNodeEvents : IUnknown {
+	HRESULT onAddChild(
+		[in]	IDebugApplicationNode *prddpChild);
+	HRESULT onRemoveChild(
+		[in]	IDebugApplicationNode *prddpChild);
+	HRESULT onDetach(void);
+	HRESULT	onAttach(
+		[in]	IDebugApplicationNode *prddpParent);
+}
+
+/* IDebugThreadCall
+IDebugThreadCall is implemented by a component making a cross-thread call
+using the IDebugThread marshalling implementation in the PDM.  It is called
+by the PDM in the desired thread and should dispatches the call to the desired
+implementation, casting the parameter information passed in the dwParam's to
+the appropriate top. It is, of course, a free-threaded object.
+*/
+[
+	object,
+	uuid(51973C36-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IDebugThreadCall : IUnknown
+{
+	HRESULT ThreadCallHandler(
+		[in] DWORD dwParam1,
+		[in] DWORD dwParam2,
+		[in] DWORD dwParam3);
+}
+
+
+/* IRemoteDebugApplicationThread
+An abstraction representing a thread of execution within a particular application.
+*/
+[
+	object,
+	uuid(51973C37-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IRemoteDebugApplicationThread : IUnknown
+{
+	// Returns a operating system dependent identifier associated with the thread.
+	//
+	// Note: The returned value does not need to be unique across machines.
+	HRESULT GetSystemThreadId(
+		[out]	DWORD *dwThreadId);
+	// Returns the application object associated with the thread.
+	HRESULT GetApplication(
+		[out]	IRemoteDebugApplication **pprda);
+	// Returns an enumerator for the stack frames associated with the thread. Can only
+	// be called when in a breakpoint. The stack frame enumerator enumerates stack frames
+	// in the most recently called order.
+	HRESULT EnumStackFrames(
+		[out]	IEnumDebugStackFrames **ppedsf);
+
+	HRESULT GetDescription(
+		[out]	BSTR *pbstrDescription,
+		[out]	BSTR *pbstrState);
+
+	// Forces execution to continue as close as possible to the
+	// given code context, in the context of the given frame.
+	// Either of these arguments may be NULL, representing the
+	// current frame or context.
+	HRESULT SetNextStatement (
+		[in] IDebugStackFrame *pStackFrame,
+		[in] IDebugCodeContext *pCodeContext);
+
+	// Thread State flags
+	typedef DWORD THREAD_STATE;
+	const THREAD_STATE THREAD_STATE_RUNNING		=	0x00000001;
+	const THREAD_STATE THREAD_STATE_SUSPENDED	=	0x00000002;
+	const THREAD_STATE THREAD_BLOCKED			=	0x00000004;
+	const THREAD_STATE THREAD_OUT_OF_CONTEXT	=	0x00000008;
+
+	// returns the current state of the thread
+	HRESULT GetState (
+		[out] DWORD *pState);
+
+	// suspends the thread (increments the suspend count)
+	HRESULT Suspend (
+		[out] DWORD *pdwCount);
+
+	// resumes the thread (decrements the suspend count)
+	HRESULT Resume (
+		[out] DWORD *pdwCount);
+
+	// returns the current suspend count of the thread
+	HRESULT GetSuspendCount (
+		[out] DWORD *pdwCount);
+}
+
+/* IDebugApplicationThread
+An extension of IRemoteDebugApplicationThread that provides non-remotable
+access to the thread. This interface is used by language engines and hosts
+to provide thread synchronization and to maintain thread specific debug state information.
+*/
+[
+	object,
+	uuid(51973C38-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique),
+	local
+]
+interface IDebugApplicationThread : IRemoteDebugApplicationThread
+{
+	// Provides a mechanism for the caller to run code in another thread. This is generally
+	// used so that language engines and hosts can implement free threaded objects on top
+	// of their single threaded implementations.
+	HRESULT SynchronousCallIntoThread(
+		// The interface to be called back in the target thread.
+		[in]	IDebugThreadCall *pstcb,
+		// Three arguments passed to the IDebugThreadCall.
+		[in]	DWORD dwParam1,
+		[in]	DWORD dwParam2,
+		[in]	DWORD dwParam3);
+	// Returns S_OK when this is the currently running thread. Otherwise S_FALSE is returned.
+	HRESULT QueryIsCurrentThread(
+				void);
+	// Returns S_OK when this is the debugger thread. Otherwise, returns S_FALSE.
+	HRESULT QueryIsDebuggerThread(
+				void);
+	HRESULT SetDescription(
+		[in]	LPCOLESTR pstrDescription);
+	HRESULT SetStateString(
+		[in]	LPCOLESTR pstrState);
+}
+
+
+[
+	object, local,
+	uuid(51973C39-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugCookie Interface"),
+	pointer_default(unique)
+]
+interface IDebugCookie : IUnknown
+{
+	HRESULT SetDebugCookie([in]DWORD dwDebugAppCookie);
+};
+
+
+/* IEnumDebugApplicationNodes
+Enumerates Application nodes. Generally used to enumerate child nodes of a node associated with an application. Example: a project window.
+*/
+[
+	object,
+	uuid(51973C3a-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumDebugApplicationNodes Interface"),
+	pointer_default(unique)
+]
+
+
+interface IEnumDebugApplicationNodes : IUnknown {
+
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] IDebugApplicationNode **pprddp,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			IDebugApplicationNode **pprddp,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumDebugApplicationNodes **pperddp);
+};
+
+/* IEnumRemoteDebugApplications
+Enumerates application objects. Generally used to enumerate the running applications on a machine. Example: the "attach to application" dialog.
+*/
+[
+	object,
+	uuid(51973C3b-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumRemoteDebugApplications Interface"),
+	pointer_default(unique)
+]
+interface IEnumRemoteDebugApplications : IUnknown {
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] IRemoteDebugApplication **ppda,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			IRemoteDebugApplication **ppda,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumRemoteDebugApplications **ppessd);
+}
+
+/* IEnumRemoteDebugApplicationThreads
+Enumerates thread objects. Generally used to enumerate the running threads in an application.
+*/
+[
+	object,
+	uuid(51973C3c-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumRemoteDebugApplicationThreads Interface"),
+	pointer_default(unique)
+]
+interface IEnumRemoteDebugApplicationThreads : IUnknown {
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] IRemoteDebugApplicationThread **pprdat,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			IRemoteDebugApplicationThread **ppdat,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumRemoteDebugApplicationThreads **pperdat);
+}
+
+/* IDebugFormatter
+IDebugFormatter allows a language or IDE to customize the conversion
+between variants or VARTYPES and strings.  This interface is used by the
+ITypeInfo->IDebugProperty mapping implementation.
+*/
+[
+	object,
+	uuid(51973C3d-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugFormatter Interface"),
+	pointer_default(unique),
+	local
+]
+interface IDebugFormatter : IUnknown
+{
+	HRESULT  GetStringForVariant([in] VARIANT *pvar, [out] BSTR *pbstrValue);
+	HRESULT  GetVariantForString([in] LPCOLESTR pwstrValue, [out] VARIANT *pvar);
+	HRESULT	 GetStringForVarType([in] VARTYPE vt, [in] TYPEDESC *ptdescArrayType, [out] BSTR *pbstr);
+}
+
+/* ISimpleConnectionPoint
+
+This interface is the "IDispatchEx" of event interfaces.
+It provides a simple way for describing and enumerating the events fired on a particular connection pointan also for hooking up an IDispatch to those events.
+This interface will be available as extended info via the IDebugProperty
+interface on objects which support events.   For simplicity, this interface only
+works with dispinterfaces.
+*/
+[
+	object,
+	uuid(51973C3e-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("ISimpleConnectionPoint Interface"),
+	pointer_default(unique),
+	local
+]
+interface ISimpleConnectionPoint : IUnknown
+{
+	// Return the number of events exposed on this interface
+	HRESULT  GetEventCount([out] ULONG *pulCount);
+
+	// Return the DISPID and NAME for "cEvents" events, starting at "iEvent".
+	// The number of
+	//		- Returns S_OK if all of the requested elements were returned.
+	//		- Returns S_FALSE if the enumeration finished and the
+	//			requested number of elements was not available.
+	//			(Unavailable elements will be returned as DISPID_NULL and a null bstr.)
+	//		- Returns E_INVALIDARG (or other error status) if no elements could be fetched
+
+	HRESULT DescribeEvents(
+		[in] ULONG iEvent,		// starting event index
+		[in] ULONG cEvents,		// number of events to fetch info for
+		[out, size_is(cEvents), length_is(*pcEventsFetched)]
+			DISPID *prgid,	// DISPIDs of the events
+		[out, size_is(cEvents), length_is(*pcEventsFetched)]
+			BSTR *prgbstr,
+		[out] ULONG *pcEventsFetched
+		);	// names of the events
+
+    HRESULT Advise([in] IDispatch *pdisp, [out] DWORD* pdwCookie);
+    HRESULT Unadvise([in] DWORD dwCookie);
+};
+
+/* IDebugHelper
+
+IDebugHelper serves as a factory for object browsers and simple connection points.
+*/
+
+cpp_quote(     "EXTERN_C const CLSID CLSID_DebugHelper;")
+
+[
+	object,
+	uuid(51973C3f-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IDebugHelper Interface"),
+	pointer_default(unique),
+	local
+]
+interface IDebugHelper : IUnknown
+{
+	HRESULT CreatePropertyBrowser(
+		[in] VARIANT *pvar,					// root variant to browse
+		[in] LPCOLESTR bstrName,			// name to give the root
+		[in] IDebugApplicationThread *pdat, // thread to request properties on
+											// (or NULL for no marshalling)
+		[out] IDebugProperty**ppdob);
+	
+	HRESULT CreatePropertyBrowserEx(
+		[in] VARIANT *pvar,
+		[in] LPCOLESTR bstrName,
+		[in] IDebugApplicationThread *pdat,
+		[in] IDebugFormatter*pdf,
+		[out] IDebugProperty**ppdob);
+
+	HRESULT CreateSimpleConnectionPoint(
+		[in] IDispatch *pdisp,
+		[out] ISimpleConnectionPoint **ppscp);
+};
+
+/* IEnumDebugExpressionContexts
+*/
+
+[
+	object,
+	uuid(51973C40-CB0C-11d0-B5C9-00A0244A0E7A),
+	helpstring("IEnumDebugExpressionContexts Interface"),
+	pointer_default(unique)
+]
+interface IEnumDebugExpressionContexts : IUnknown
+{
+	[local]
+	HRESULT __stdcall Next(
+		[in] ULONG celt,
+		[out] IDebugExpressionContext **ppdec,
+		[out] ULONG *pceltFetched);
+
+    [call_as(Next)]
+    HRESULT __stdcall RemoteNext(
+        [in] ULONG celt,
+        [out, size_is(celt), length_is(*pceltFetched )]
+			IDebugExpressionContext **pprgdec,
+        [out] ULONG *pceltFetched);
+
+	HRESULT Skip(
+		[in] ULONG celt);
+
+	HRESULT Reset(void);
+
+	HRESULT Clone(
+		[out] IEnumDebugExpressionContexts **ppedec);
+}
+
+/* IProvideExpressionContexts
+*/
+[
+	object,
+	uuid(51973C41-CB0C-11d0-B5C9-00A0244A0E7A),
+	pointer_default(unique)
+]
+interface IProvideExpressionContexts : IUnknown
+{
+	HRESULT EnumExpressionContexts(
+		[out] IEnumDebugExpressionContexts **ppedec);
+}
+
+
+#include "ad1ex.idl"
+
+cpp_quote(     "")
+cpp_quote(     "#endif  // __ActivDbg_h")
+cpp_quote(     "")
+
+

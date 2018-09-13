@@ -1,0 +1,32 @@
+#include "windows.h"
+#include "qa.h"
+
+AppIcon  ICON   qa.ico
+
+ABOUTBOX DIALOG 22, 17, 144, 75
+STYLE WS_POPUP | WS_DLGFRAME
+BEGIN
+    CTEXT "Microsoft Windows"                   -1, 37,  5, 60, 8
+    CTEXT "Template Application"                -1,  0, 14, 144, 8
+    CTEXT "Version 1.00"                        -1, 38, 34, 64, 8
+    CTEXT "Copyright ) 1986, Microsoft Corp."   -1,  5, 47,132, 9
+    ICON  "AppIcon"                             -1,  9, 23,  0, 0
+    DEFPUSHBUTTON "Ok"                        IDOK, 53, 59, 32, 14, WS_GROUP
+END
+
+AppMenu menu
+begin
+    POPUP "&File"
+        begin
+            MENUITEM "&About..."        , MENU_ABOUT
+            MENUITEM "E&xit"            , MENU_EXIT
+        end
+
+    POPUP "&Test"
+        begin
+            MENUITEM "Align"            , MENU_ALIGN
+            MENUITEM "~Align"           , MENU_XALIGN
+            MENUITEM "Fill (one begin/end)"         , MENU_TEST
+            MENUITEM "Fill (many begin/end)"        , MENU_TEST1
+        end
+end

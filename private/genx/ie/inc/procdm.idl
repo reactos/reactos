@@ -1,0 +1,81 @@
+// procdm.idl : IDL source for procdm.dll
+//
+
+import "activdbg.idl";
+
+// This file will be processed by the MIDL tool to
+// produce the type library (procdm.tlb) and marshalling code.
+
+[
+	object,
+	uuid(78a51820-51f4-11d0-8f20-00805f2cd064),
+	helpstring("IProcessDebugManager2 Interface"),
+	pointer_default(unique)
+]
+interface IProcessDebugManager2 : IUnknown
+{
+};
+
+[
+	uuid(78a51821-51f4-11d0-8f20-00805f2cd064),
+	version(1.0),
+	helpstring("procdm 1.0 Type Library")
+]
+library PROCDMLib
+{
+	importlib("stdole2.tlb");
+
+	[
+		uuid(78a51822-51f4-11d0-8f20-00805f2cd064),
+		helpstring("ProcDm Class")
+	]
+	coclass ProcessDebugManager
+	{
+		[default] interface IProcessDebugManager;
+	};
+
+
+	[
+		uuid(0BFCC060-8C1D-11d0-ACCD-00AA0060275C),
+		helpstring("DebugHelper Class")
+	]
+	coclass DebugHelper
+	{
+		[default] interface IDebugHelper;
+	};
+
+
+	// CDebugDocumentHelper
+	//
+	// The CDebugDocumentHelper makes it much easier for a ActiveScripting
+	// host or scripting engine to implement the IDebugDocument interfaces.
+	//
+	// Given the source text and (optionally) script blocks for a host's
+	// document, CDebugDocumentHelper provides implementations for
+	// the debug document interfaces, including:
+	//
+	//		- IDebugDocumentText
+	//		- IDebugDocumentTextAuthor (for authoring)
+	//		- IDebugDocumentContext
+	//
+	// This class supports aggregation, so the host may provide a controlling
+	// unknown to CoCreateInstance for extensibility.
+	//
+	// This class fires events on IDebugDocumentTextEvents, so the host
+	// can monitor all changes to the document via that interface.
+	cpp_quote(     "EXTERN_C const CLSID CLSID_CDebugDocumentHelper;")
+	[
+		uuid(83B8BCA6-687C-11D0-A405-00AA0060275C),
+		helpstring("DebugDocumentHelper Class")
+	]
+	coclass CDebugDocumentHelper
+	{
+		[default] interface IDebugDocumentHelper;
+		interface IDebugDocumentProvider;
+		interface IDebugDocument;
+		interface IDebugDocumentText;
+		interface IDebugDocumentTextAuthor;
+		interface IConnectionPointContainer;
+		[default, source] interface IDebugDocumentTextEvents;
+	};
+};

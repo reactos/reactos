@@ -1,0 +1,42 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Wesley Witt (wesw)
+
+!ENDIF
+
+!INCLUDE ..\..\..\sources.inc
+
+MAJORCOMP=dbg
+MINORCOMP=xport
+
+TARGETNAME=xport
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+
+SOURCES=xport.c
+
+UMTYPE=windows
+
+C_DEFINES=$(C_DEFINES) -DWIN32 -DTARGET32 -DHOST32 -DADDR_MIXED
+
+INCLUDES=$(LANGAPI_ROOT)\debugger;\
+        $(DEBUGGER_ROOT)\include;\
+        $(DEBUGGER_ROOT)\od\include;\
+        $(DEBUG_INCLUDES)
+

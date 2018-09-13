@@ -1,0 +1,212 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "propdlg.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include <commctrl.h>
+#include <winuser.h>
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SUMMARY DIALOGEX DISCARDABLE  0, 0, 227, 226
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Summary"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Title:",IDD_SUMMARY_TITLE_LABEL,6,5,40,10
+    EDITTEXT        IDD_SUMMARY_TITLE,46,5,174,12,ES_AUTOHSCROLL
+    LTEXT           "&Subject:",IDD_SUMMARY_SUBJECT_LABEL,6,22,40,10
+    EDITTEXT        IDD_SUMMARY_SUBJECT,46,22,174,12,ES_AUTOHSCROLL
+    LTEXT           "A&uthor:",IDD_SUMMARY_AUTHOR_LABEL,6,39,40,10
+    EDITTEXT        IDD_SUMMARY_AUTHOR,46,39,174,12,ES_AUTOHSCROLL
+    LTEXT           "&Manager:",IDD_SUMMARY_MANAGER_LABEL,6,56,40,10
+    EDITTEXT        IDD_SUMMARY_MANAGER,46,56,174,12,ES_AUTOHSCROLL
+    LTEXT           "C&ompany:",IDD_SUMMARY_COMPANY_LABEL,6,74,40,10
+    EDITTEXT        IDD_SUMMARY_COMPANY,46,74,174,12,ES_AUTOHSCROLL
+    CONTROL         "",IDD_LINE_1,"Static", SS_ETCHEDHORZ,6,94,215,1
+    LTEXT           "Cat&egory:",IDD_SUMMARY_CATEGORY_LABEL,6,105,40,10
+    EDITTEXT        IDD_SUMMARY_CATEGORY,46,105,174,12,ES_AUTOHSCROLL
+    LTEXT           "&Keywords:",IDD_SUMMARY_KEYWORDS_LABEL,6,122,40,10
+    EDITTEXT        IDD_SUMMARY_KEYWORDS,46,122,174,12,ES_AUTOHSCROLL
+    LTEXT           "&Comments:",IDD_SUMMARY_COMMENTS_LABEL,6,139,40,10
+    EDITTEXT        IDD_SUMMARY_COMMENTS,46,139,174,51,ES_MULTILINE |
+                    WS_VSCROLL | 0x1000
+    LTEXT           "Template:",IDD_SUMMARY_TEMPLATETEXT,6,197,40,10
+    EDITTEXT        IDD_SUMMARY_TEMPLATE,46,197,174,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "Sa&ve Preview Picture",IDD_SUMMARY_SAVEPREVIEW,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,214,84,10
+END
+
+IDD_STATISTICS DIALOGEX DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Statistics"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Created:",IDD_STATISTICS_CREATED_LABEL,8,8,55,10
+    EDITTEXT        IDD_STATISTICS_CREATED,64,7,156,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Modified:",IDD_STATISTICS_CHANGED_LABEL,8,20,55,10
+    EDITTEXT        IDD_STATISTICS_CHANGED,64,19,156,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Accessed:",IDD_STATISTICS_ACCESSED_LABEL,8,32,55,10
+    EDITTEXT        IDD_STATISTICS_ACCESSED,64,31,156,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Printed:",IDD_STATISTICS_LASTPRINT_LABEL,8,44,55,10
+    EDITTEXT        IDD_STATISTICS_LASTPRINT,64,43,156,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",IDD_LINE_1,"Static", SS_ETCHEDHORZ,6,65,215,1
+    LTEXT           "Last Saved By:",IDD_STATISTICS_LASTSAVEBY_LABEL,8,77,75,10
+    EDITTEXT        IDD_STATISTICS_LASTSAVEBY,84,77,136,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Revision Number:",IDD_STATISTICS_REVISION_LABEL,8,89,75,10
+    EDITTEXT        IDD_STATISTICS_REVISION,84,89,136,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Total Editing Time:",IDD_STATISTICS_TOTALEDIT_LABEL,8,102,75,10
+    EDITTEXT        IDD_STATISTICS_TOTALEDIT,84,101,136,12,ES_AUTOHSCROLL |
+                    ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",IDD_LINE_2,"Static", SS_ETCHEDHORZ,6,124,215,1
+    LTEXT           "&Statistics:",IDD_STATISTICS_LVLABEL,8,138,35,10
+    CONTROL         "",IDD_STATISTICS_LISTVIEW,"SysListView32",WS_BORDER |
+                    WS_TABSTOP | 0x8105,48,137,172,70
+END
+
+IDD_CUSTOM DIALOGEX DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Custom"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Name:",IDD_CUSTOM_NAME_LABEL,6,7,30,10
+    COMBOBOX        IDD_CUSTOM_NAME,46,6,103,63,CBS_DROPDOWN | CBS_SORT |
+                        CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP | CBS_AUTOHSCROLL
+    LTEXT           "&Type:",IDD_CUSTOM_TYPE_LABEL,6,25,30,10
+    COMBOBOX        IDD_CUSTOM_TYPE,46,24,103,48,CBS_DROPDOWNLIST |
+                    CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "",IDD_CUSTOM_VALUETEXT,6,44,30,10
+    EDITTEXT        IDD_CUSTOM_VALUE,46,44,103,12,ES_AUTOHSCROLL
+    COMBOBOX        IDD_CUSTOM_LINKVALUE,46,44,103,48,CBS_DROPDOWNLIST |
+                    CBS_HASSTRINGS | NOT WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    CONTROL         "&Yes",IDD_CUSTOM_BOOLTRUE,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,54,45,25,10
+    CONTROL         "N&o",IDD_CUSTOM_BOOLFALSE,"Button",BS_AUTORADIOBUTTON |
+                    NOT WS_VISIBLE,88,45,25,10
+    GROUPBOX        "",IDD_CUSTOM_GBOX,46,38,98,18,NOT WS_VISIBLE
+    PUSHBUTTON      "A&dd",IDD_CUSTOM_ADD,160,7,60,13
+    PUSHBUTTON      "&Remove",IDD_CUSTOM_DELETE,160,24,60,13
+    CONTROL         "&Link to Content",IDD_CUSTOM_LINK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,160,45,60,10
+    LTEXT           "&Properties:",IDD_CUSTOM_LISTVIEW_LABEL,6,68,34,10
+    CONTROL         "",IDD_CUSTOM_LISTVIEW,"SysListView32",WS_BORDER |
+                    WS_TABSTOP | 0x8145,46,68,174,139
+END
+
+IDD_CONTENTS DIALOGEX DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "Contents"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "&Document Contents:",IDD_CONTENTS_LISTBOX_LABEL,7,7,35,18
+    LISTBOX         IDD_CONTENTS_LISTBOX,47,7,173,200,NOT LBS_NOTIFY |
+                    LBS_USETABSTOPS | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
+END
+
+DLG_FILEPROP DIALOGEX DISCARDABLE  0, 0, 227, 215
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | DS_NOIDLEMSG | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            "",IDD_ITEMICON,6,4,18,20
+    EDITTEXT        IDD_NAME,48,10,172,12,ES_AUTOHSCROLL | ES_READONLY | NOT
+                    WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",IDD_LINE_1,"Static", SS_ETCHEDHORZ,6,36,215,1
+    LTEXT           "Type:",IDD_FILETYPE_LABEL,6,51,40,8
+    EDITTEXT        IDD_FILETYPE,48,51,172,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Size:",IDD_FILESIZE_LABEL,6,75,24,8
+    EDITTEXT        IDD_FILESIZE,48,75,172,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Location:",IDD_LOCATION_LABEL,6,63,40,8
+    EDITTEXT        IDD_LOCATION,48,63,172,12,ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP
+    CONTROL         "",IDD_LINE_2,"Static", SS_ETCHEDHORZ,6,98,215,1
+    LTEXT           "MS-DOS Name:",IDD_FILENAME_LABEL,6,108,55,8
+    LTEXT           "",IDD_FILENAME,64,108,156,12,SS_NOPREFIX
+    LTEXT           "Created:",IDD_CREATED_LABEL,6,120,50,8
+    CONTROL         "(unknown)",IDD_CREATED,"edit",ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP,64,120,156,12
+    LTEXT           "Modified:",IDD_LASTMODIFIED_LABEL,6,132,50,8
+    CONTROL         "(unknown)",IDD_LASTMODIFIED,"edit",ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP,64,132,156,12
+    LTEXT           "Accessed:",IDD_LASTACCESSED_LABEL,6,144,50,8
+    CONTROL         "(unknown)",IDD_LASTACCESSED,"edit",ES_AUTOHSCROLL | ES_READONLY |
+                    NOT WS_BORDER | NOT WS_TABSTOP,64,144,156,12
+    CONTROL         "",IDD_LINE_3,"Static", SS_ETCHEDHORZ,6,169,215,1
+    LTEXT           "Attributes:",IDD_ATTRIBUTES_LABEL,6,184,38,11
+    CONTROL         "&Read Only",IDD_READONLY,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,64,185,58,10
+    CONTROL         "Hi&dden",IDD_HIDDEN,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,130,185,58,10
+    CONTROL         "Ar&chive",IDD_ARCHIVE,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,64,197,58,10
+    CONTROL         "System",IDD_SYSTEM,"Button",BS_AUTOCHECKBOX |
+                    WS_DISABLED | WS_TABSTOP,130,197,58,10
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "propdlg.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include <commctrl.h>\r\n"
+    "#include <winuser.h>\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDD_BLANK_ICON          ICON    DISCARDABLE     "blank.ico"
+IDD_INVLINK_ICON        ICON    DISCARDABLE     "invlink.ico"
+IDD_LINK_ICON           ICON    DISCARDABLE     "link.ico"
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

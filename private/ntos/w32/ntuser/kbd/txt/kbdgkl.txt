@@ -1,0 +1,244 @@
+KBD	GKL	"Greek_Latin"
+
+		// LCID     : 0409
+		// CodePage : 1252
+
+		// Created  : 04/29/96 13:04:10
+
+		// Source   : kbdGKL.kbd
+		//   Date   : 11/27/95 14:49:38
+
+
+VERSION	1.0
+
+
+SHIFTSTATE
+
+  0		// Column 4 :
+  1		// Column 5 : Shft
+  6		// Column 6 :      Ctrl Alt
+  7		// Column 7 : Shft Ctrl Alt
+  2		// Column 8 :      Ctrl
+  3		// Column 9 : Shft Ctrl
+
+LAYOUT		// extra @ indicates a dead key
+
+//SC  VK_        Cap	0	1	6	7	2	3
+//--  ---------- ---	----	----	----	----	----	----
+  29  OEM_3      0	`@	~@
+  02  1          0	1	!	00a1	00b9			// ¡ ¹
+  03  2          0	2	@	00b2				// ²
+  04  3          0	3	#	00b3				// ³
+  05  4          0	4	$	00a4	00a3			// ¤ £
+  06  5          0	5	%	20ac
+  07  6          0	6	^@	00bc	-1	-1	001e	// ¼
+  08  7          0	7	&	00bd				// ½
+  09  8          0	8	*	00be				// ¾
+  0a  9          0	9	(	2018				// ‘
+  0b  0          0	0	)	2019				// ’
+  0c  OEM_MINUS  0	-	_	00a5	-1	-1	001f	// ¥
+  0d  OEM_PLUS   0	=	+	00d7	00f7			// × ÷
+//--  ---------- ---	----	----	----	----	----	----
+  10  Q          1	q	Q	00e4	00c4			// ä Ä
+  11  W          1	w	W	00e5	00c5			// å Å
+  12  E          1	e	E	00e9	00c9			// é É
+  13  R          1	r	R	00ae				// ®
+  14  T          1	t	T	00fe	00de			// þ Þ
+  15  Y          1	y	Y	00fc	00dc			// ü Ü
+  16  U          1	u	U	00fa	00da			// ú Ú
+  17  I          1	i	I	00ed	00cd			// í Í
+  18  O          1	o	O	00f3	00d3			// ó Ó
+  19  P          1	p	P	00f6	00d6			// ö Ö
+  1a  OEM_4      0	[	{	00ab	-1	001b		// «
+  1b  OEM_6      0	]	}	00bb	-1	001d		// »
+  2b  OEM_5      0	\	|	00ac	00a6	001c		// ¬ ¦
+//--  ---------- ---	----	----	----	----	----	----
+  1e  A          1	a	A	00e1	00c1			// á Á
+  1f  S          1	s	S	00df	00a7			// ß §
+  20  D          1	d	D	00f0	00d0			// ð Ð
+  21  F          1	f	F
+  22  G          1	g	G
+  23  H          1	h	H
+  24  J          1	j	J
+  25  K          1	k	K
+  26  L          1	l	L	00f8	00d8			// ø Ø
+  27  OEM_1      0	;	:	00b6	00b0			// ¶ °
+  28  OEM_7      0	'	"	00b4@	00a8@			// ´ ¨
+//--  ---------- ---	----	----	----	----	----	----
+  2c  Z          1	z	Z	00e6	00c6			// æ Æ
+  2d  X          1	x	X
+  2e  C          1	c	C	00a9	00a2			// © ¢
+  2f  V          1	v	V
+  30  B          1	b	B
+  31  N          1	n	N	00f1	00d1			// ñ Ñ
+  32  M          1	m	M	00b5				// µ
+  33  OEM_COMMA  0	,	<	00e7	00c7			// ç Ç
+  34  OEM_PERIOD 0	.	>
+  35  OEM_2      0	/	?	00bf				// ¿
+  56  OEM_102    0	\	|	-1	-1	001c
+//--  ---------- ---	----	----	----	----	----	----
+  53  DECIMAL    0	,	.
+//--  ---------- ---	----	----	----	----	----	----
+//SC  VK_        Cap	0	1	6	7	2	3
+
+DEADKEY	0060	// `
+
+  0061	00e0	// a -> à
+  0065	00e8	// e -> è
+  0069	00ec	// i -> ì
+  006f	00f2	// o -> ò
+  0075	00f9	// u -> ù
+  0041	00c0	// A -> À
+  0045	00c8	// E -> È
+  0049	00cc	// I -> Ì
+  004f	00d2	// O -> Ò
+  0055	00d9	// U -> Ù
+  0020	0060	//   -> `
+
+DEADKEY	00b4	// ´
+
+  0061	00e1	// a -> á
+  0065	00e9	// e -> é
+  0069	00ed	// i -> í
+  006f	00f3	// o -> ó
+  0075	00fa	// u -> ú
+  0079	00fd	// y -> ý
+  0041	00c1	// A -> Á
+  0045	00c9	// E -> É
+  0049	00cd	// I -> Í
+  004f	00d3	// O -> Ó
+  0055	00da	// U -> Ú
+  0059	00dd	// Y -> Ý
+  0063	00e7	// c -> ç
+  0043	00c7	// C -> Ç
+  0020	00b4	//   -> ´
+
+DEADKEY	005e	// ^
+
+  0061	00e2	// a -> â
+  0065	00ea	// e -> ê
+  0069	00ee	// i -> î
+  006f	00f4	// o -> ô
+  0075	00fb	// u -> û
+  0041	00c2	// A -> Â
+  0045	00ca	// E -> Ê
+  0049	00ce	// I -> Î
+  004f	00d4	// O -> Ô
+  0055	00db	// U -> Û
+  0020	005e	//   -> ^
+
+DEADKEY	00a8	// ¨
+
+  0061	00e4	// a -> ä
+  0065	00eb	// e -> ë
+  0069	00ef	// i -> ï
+  006f	00f6	// o -> ö
+  0075	00fc	// u -> ü
+  0079	00ff	// y -> ÿ
+  0041	00c4	// A -> Ä
+  0045	00cb	// E -> Ë
+  0049	00cf	// I -> Ï
+  004f	00d6	// O -> Ö
+  0055	00dc	// U -> Ü
+  0059	009f	// Y -> ?
+  0020	00a8	//   -> ¨
+
+DEADKEY	007e	// ~
+
+  0061	00e3	// a -> ã
+  006f	00f5	// o -> õ
+  006e	00f1	// n -> ñ
+  0041	00c3	// A -> Ã
+  004f	00d5	// O -> Õ
+  004e	00d1	// N -> Ñ
+  0020	007e	//   -> ~
+
+KEYNAME
+
+  01	Esc
+  0e	Backspace
+  0f	Tab
+  1c	Enter
+  1d	Ctrl
+  2a	Shift
+  36	"Right Shift"
+  37	"Num *"
+  38	Alt
+  39	Space
+  3a	"Caps Lock"
+  3b	F1
+  3c	F2
+  3d	F3
+  3e	F4
+  3f	F5
+  40	F6
+  41	F7
+  42	F8
+  43	F9
+  44	F10
+  45	Pause
+  46	"Scroll Lock"
+  47	"Num 7"
+  48	"Num 8"
+  49	"Num 9"
+  4a	"Num -"
+  4b	"Num 4"
+  4c	"Num 5"
+  4d	"Num 6"
+  4e	"Num +"
+  4f	"Num 1"
+  50	"Num 2"
+  51	"Num 3"
+  52	"Num 0"
+  53	"Num Del"
+  54	"Sys Req"
+  57	F11
+  58	F12
+  7c	F13
+  7d	F14
+  7e	F15
+  7f	F16
+  80	F17
+  81	F18
+  82	F19
+  83	F20
+  84	F21
+  85	F22
+  86	F23
+  87	F24
+
+KEYNAME_EXT
+
+  1c	"Num Enter"
+  1d	"Right Control"
+  35	"Num /"
+  37	"Prnt Scrn"
+  38	"Right Alt"
+  45	"Num Lock"
+  46	Break
+  47	Home
+  48	Up
+  49	"Page Up"
+  4b	Left
+  4d	Right
+  4f	End
+  50	Down
+  51	"Page Down"
+  52	Insert
+  53	Delete
+  54	<00>
+  56	Help
+  5b	"Left Windows"
+  5c	"Right Windows"
+  5d	Application
+
+KEYNAME_DEAD
+
+  0060	GRAVE
+  00b4	ACUTE
+  005e	CIRCUMFLEX
+  00a8	DIAERESIS
+  007e	TILDE
+
+ENDKBD
+

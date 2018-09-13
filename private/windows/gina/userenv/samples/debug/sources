@@ -1,0 +1,38 @@
+!IF 0
+
+Copyright (c) 1990  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+MAJORCOMP=windows
+MINORCOMP=shell
+
+TARGETNAME=debug
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=
+
+C_DEFINES= -DWIN32 -DUNICODE -D_UNICODE
+
+SOURCES=debug.c \
+	debug.rc
+
+UMTYPE=windows
+UMENTRY=winmain
+UMAPPL=debug
+UMLIBS=\
+       obj\*\debug.lib \
+       obj\*\debug.res

@@ -1,0 +1,84 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1996-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents:   Object Safety Interfaces (should come from ObjSafe.idl)
+//
+//----------------------------------------------------------------------------
+
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// ObjSafe.h")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("// (C) Copyright 1995-1998 Microsoft Corporation.  All Rights Reserved.")
+cpp_quote("//")
+cpp_quote("// THIS CODE AND INFORMATION IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF")
+cpp_quote("// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO")
+cpp_quote("// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A")
+cpp_quote("// PARTICULAR PURPOSE.")
+cpp_quote("//=--------------------------------------------------------------------------=")
+cpp_quote("")
+cpp_quote("#pragma comment(lib,\"uuid.lib\")")
+cpp_quote("")
+cpp_quote("//---------------------------------------------------------------------------=")
+cpp_quote("// Object Safety Interfaces.")
+cpp_quote("")
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+cpp_quote("//+--------------------------------------------------------------------------=")
+cpp_quote("//")
+cpp_quote("//  Contents:   IObjectSafety definition")
+cpp_quote("//")
+cpp_quote("//")
+cpp_quote("//  IObjectSafety should be implemented by objects that have interfaces which")
+cpp_quote("//      support \"untrusted\" clients (for example, scripts). It allows the owner of")
+cpp_quote("//      the object to specify which interfaces need to be protected from untrusted")
+cpp_quote("//      use. Examples of interfaces that might be protected in this way are:")
+cpp_quote("//")
+cpp_quote("//      IID_IDispatch           - \"Safe for automating with untrusted automation client or script\"")
+cpp_quote("//      IID_IPersist*           - \"Safe for initializing with untrusted data\"")
+cpp_quote("//      IID_IActiveScript       - \"Safe for running untrusted scripts\"")
+cpp_quote("//")
+cpp_quote("//---------------------------------------------------------------------------=")
+
+cpp_quote("#ifndef _LPSAFEOBJECT_DEFINED")
+cpp_quote("#define _LPSAFEOBJECT_DEFINED")
+cpp_quote("")
+
+cpp_quote("// Option bit definitions for IObjectSafety:")
+cpp_quote("#define	INTERFACESAFE_FOR_UNTRUSTED_CALLER	0x00000001	// Caller of interface may be untrusted")
+cpp_quote("#define	INTERFACESAFE_FOR_UNTRUSTED_DATA	0x00000002	// Data passed into interface may be untrusted")
+cpp_quote("#define	INTERFACE_USES_DISPEX	            0x00000004	// Object knows to use IDispatchEx")
+cpp_quote("#define	INTERFACE_USES_SECURITY_MANAGER	    0x00000008	// Object knows to use IInternetHostSecurityManager")
+cpp_quote("")
+
+cpp_quote("// {CB5BDC81-93C1-11cf-8F20-00805F2CD064}")
+cpp_quote("DEFINE_GUID(IID_IObjectSafety, 0xcb5bdc81, 0x93c1, 0x11cf, 0x8f, 0x20, 0x0, 0x80, 0x5f, 0x2c, 0xd0, 0x64);")
+
+cpp_quote("EXTERN_C GUID CATID_SafeForScripting;")
+cpp_quote("EXTERN_C GUID CATID_SafeForInitializing;")
+
+cpp_quote("")
+[
+	object,
+	uuid(CB5BDC81-93C1-11cf-8F20-00805F2CD064),
+	pointer_default(unique)
+]
+interface IObjectSafety : IUnknown
+{
+	HRESULT GetInterfaceSafetyOptions(
+		[in]  REFIID	riid,					// Interface that we want options for
+		[out] DWORD	*	pdwSupportedOptions,	// Options meaningful on this interface
+		[out] DWORD *	pdwEnabledOptions);		// current option values on this interface
+
+	HRESULT SetInterfaceSafetyOptions(
+		[in]  REFIID	riid,					// Interface to set options for
+		[in]  DWORD		dwOptionSetMask,		// Options to change
+		[in]  DWORD		dwEnabledOptions);		// New option values
+}
+
+typedef [unique] IObjectSafety *LPOBJECTSAFETY;
+
+cpp_quote("#endif")

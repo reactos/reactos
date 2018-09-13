@@ -1,0 +1,26 @@
+#include <windows.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE             VFT_DLL
+#define VER_FILESUBTYPE          VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR  "Print Queue Administration"
+#define VER_INTERNALNAME_STR     "prtq32.dll"
+#define VER_ORIGINALFILENAME_STR "prtq32.dll"
+
+#include "common.ver"
+#include "prtq32.h"
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PRINTER                 "Printer"        
+    IDS_NOACCESS                "No Access"        
+    IDS_PRINT                   "Print"        
+    IDS_ADMINISTERDOCUMENTS     "Manage Documents"            
+    IDS_ADMINISTER              "Full Control"        
+    IDS_AUDIT_PRINT             "&Print"              
+    IDS_AUDIT_ADMINISTER        "&Full Control"        
+    IDS_AUDIT_DELETE            "&Delete"        
+    IDS_CHANGE_PERMISSIONS      "&Change Permissions"        
+    IDS_TAKE_OWNERSHIP          "&Take Ownership"        
+END
+

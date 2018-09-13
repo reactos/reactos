@@ -1,0 +1,17 @@
+ALT_PROJECT=WOW6432
+ALT_PROJECT_TARGET=WOW6432
+
+!include ..\sources.inc
+
+SOURCES=..\cmdline.c  \
+        ..\ctrlc.c    \
+        ..\dllinit.c  \
+        ..\iostubs.c  \
+        ..\private.c  \
+        ..\stream.c   \
+        ..\getset.c   \
+        ..\dbcs.c     \
+        ..\convdm.c
+
+
+C_DEFINES=$(C_DEFINES) -DBUILD_WOW6432

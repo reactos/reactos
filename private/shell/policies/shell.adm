@@ -1,0 +1,342 @@
+; shell.adm
+;
+;;;;;;;;;;;;;;;;;;
+CLASS USER ;;;;;;;
+;;;;;;;;;;;;;;;;;;
+
+CATEGORY !!Comdlg
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Comdlg32
+    POLICY !!ComdlgSub
+        PART !!NoBackButton CHECKBOX
+        VALUENAME NoBackButton
+        END PART
+
+        PART !!NoFileMRU CHECKBOX
+        VALUENAME NoFileMru 
+        END PART
+    END POLICY
+END CATEGORY
+
+CATEGORY !!Desktop
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    POLICY !!DesktopSub
+        PART !!NoActiveDesktop CHECKBOX
+        VALUENAME NoActiveDesktop
+        END PART
+
+        PART !!NoActiveDesktopChanges CHECKBOX
+        VALUENAME NoActiveDesktopChanges
+        END PART
+
+        PART !!NoInternetIcon CHECKBOX
+        VALUENAME NoInternetIcon
+        END PART
+
+        PART !!NoNetHood CHECKBOX
+        VALUENAME NoNetHood
+        END PART
+
+        PART !!NoDesktop CHECKBOX
+        VALUENAME NoDesktop
+        END PART
+    END POLICY
+
+    POLICY !!sz_ActiveDesktop_Title
+    KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"
+        PART !!sz_ATC_NoComponents CHECKBOX
+            VALUENAME "NoComponents"
+        END PART
+        PART !!sz_ATC_DisableAdd CHECKBOX
+            VALUENAME "NoAddingComponents"
+        END PART
+        PART !!sz_ATC_DisableDel CHECKBOX
+            VALUENAME "NoDeletingComponents"
+        END PART
+            
+        PART !!sz_ATC_DisableEdit CHECKBOX
+                VALUENAME "NoEditingComponents"
+        END PART
+        PART !!sz_ATC_DisableClose CHECKBOX
+            VALUENAME "NoClosingComponents"
+        END PART
+    END POLICY
+
+    POLICY !!sz_WallPaper_Title
+    KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"
+        PART !!sz_DWP_NoHTMLPaper CHECKBOX
+            VALUENAME "NoHTMLWallPaper"
+        END PART
+        PART !!sz_DWP_DisableChanges CHECKBOX
+            VALUENAME "NoChangingWallPaper"
+        END PART
+    END POLICY
+
+    POLICY !!sz_DeskBands_Title
+    KEYNAME "Software\Microsoft\Windows\CurrentVersion\Policies\ActiveDesktop"
+        PART !!sz_DB_DragDropClose CHECKBOX
+            VALUENAME "NoCloseDragDropBands"
+        END PART
+        PART !!sz_DB_Moving CHECKBOX
+            VALUENAME "NoMovingBands"
+        END PART
+    END POLICY
+END CATEGORY
+
+
+CATEGORY !!StartMenu
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    POLICY !!StartMenu
+        PART !!NoFavoritesMenu CHECKBOX
+        VALUENAME NoFavoritesMenu
+        END PART
+
+        PART !!NoFind CHECKBOX
+        VALUENAME NoFind
+        END PART
+
+        PART !!NoRun CHECKBOX
+        VALUENAME NoRun
+        END PART
+
+        PART !!NoSetActiveDesktop CHECKBOX
+        VALUENAME NoSetActiveDesktop
+        END PART
+
+        PART !!NoWindowsUpdate CHECKBOX
+        VALUENAME NoWindowsUpdate
+        END PART
+
+        PART !!NoChangeStartMenu CHECKBOX
+        VALUENAME NoChangeStartMenu
+        END PART
+
+        PART !!NoFolderOptions CHECKBOX
+        VALUENAME NoFolderOptions
+        END PART
+
+        PART !!NoRecentDocsMenu CHECKBOX
+        VALUENAME NoRecentDocsMenu
+        END PART
+
+        PART !!NoRecentDocsHistory CHECKBOX
+        VALUENAME NoRecentDocsHistory
+        END PART
+
+        PART !!ClearRecentDocsOnExit CHECKBOX
+        VALUENAME ClearRecentDocsOnExit
+        END PART
+
+        PART !!NoLogoff CHECKBOX
+        VALUENAME NoLogoff
+        END PART
+
+        PART !!StartMenuLogoff CHECKBOX
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+        VALUENAME StartMenuLogoff
+        END PART
+
+        PART !!NoClose CHECKBOX
+        VALUENAME NoClose
+        END PART
+
+        PART !!NoSetFolders CHECKBOX
+        VALUENAME NoSetFolders
+        END PART
+
+        PART !!NoControlPanel CHECKBOX
+        VALUENAME NoControlPanel
+        END PART
+
+        PART !!NoSetTaskbar CHECKBOX
+        VALUENAME NoSetTaskbar
+        END PART
+
+        PART !!NoTrayContextMenu CHECKBOX
+        VALUENAME NoTrayContextMenu
+        END PART
+
+        PART !!NoStartMenuSubFolders CHECKBOX
+        VALUENAME NoStartMenuSubFolders
+        END PART
+
+        PART !!WindowsNTOnly TEXT END PART
+
+        PART !!NoCommonGroups CHECKBOX
+        VALUENAME NoCommonGroups
+        END PART
+
+        PART !!MemCheckBoxInRunDlg CHECKBOX
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies
+        VALUENAME MemCheckBoxInRunDlg
+        END PART
+    END POLICY
+END CATEGORY
+
+CATEGORY !!Shell
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    POLICY !!Shell
+        PART !!ClassicShell CHECKBOX
+        VALUENAME ClassicShell
+        END PART
+
+        PART !!NoFileMenu CHECKBOX
+        VALUENAME NoFileMenu
+        END PART
+
+        PART !!NoViewContextMenu CHECKBOX
+        VALUENAME NoViewContextMenu
+        END PART
+
+        PART !!EnforceShellExtensionSecurity CHECKBOX
+        VALUENAME EnforceShellExtensionSecurity
+        END PART
+
+        PART !!LinkResolveIgnoreLinkInfo CHECKBOX
+        VALUENAME LinkResolveIgnoreLinkInfo
+        END PART
+
+        PART !!NoDrives CHECKBOX
+        VALUENAME NoDrives
+        VALUEON NUMERIC 67108863    ; low 26 bits on (1 bit per drive)
+        END PART
+
+        PART !!NoNetConnectDisconnect CHECKBOX
+        VALUENAME NoNetConnectDisconnect
+        END PART
+
+        PART !!MaxRecentDocs          NUMERIC REQUIRED
+        VALUENAME MaxRecentDocs
+        DEFAULT 15
+        END PART
+
+        PART !!NoChangeAnimation CHECKBOX
+        VALUENAME NoChangeAnimation
+        END PART
+
+        PART !!NoChangeKeyboardNavigationIndicators CHECKBOX
+        VALUENAME NoChangeKeyboardNavigationIndicators
+        END PART
+
+        PART !!NoWebView CHECKBOX
+        VALUENAME NoWebView
+        END PART
+
+        PART !!NoCustomizeThisFolder CHECKBOX
+        VALUENAME NoCustomizeThisFolder
+        END PART
+    END POLICY
+END CATEGORY
+
+CATEGORY !!Printers
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    POLICY !!Printers
+        PART !!NoDeletePrinter CHECKBOX
+        VALUENAME NoDeletePrinter
+        END PART
+
+        PART !!NoAddPrinter CHECKBOX
+        VALUENAME NoAddPrinter
+        END PART
+    END POLICY
+END CATEGORY
+
+CATEGORY !!System
+KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+    POLICY !!System
+      KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer
+      VALUENAME RestrictRun
+        PART !!RestrictApps LISTBOX
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\Explorer\RestrictRun
+        END PART
+
+        PART !!Windows95Only TEXT 
+        END PART
+
+        PART !!NoRealMode CHECKBOX
+        KEYNAME Software\Microsoft\Windows\CurrentVersion\Policies\WinOldApp
+        VALUENAME NoRealMode
+        END PART
+    END POLICY
+END CATEGORY
+
+
+[strings]
+Explorer="Explorer"
+Desktop="Desktop"
+DesktopSub="Desktop Restrictions"
+Comdlg="Common Dialog"
+ComdlgSub="Common Dialog Restrictions"
+StartMenu="Start Menu"
+Shell="Shell"
+Printers="Printers"
+System="System"
+Windows95Only="-------- Windows 95 Only --------"
+WindowsNTOnly="-------- Windows NT Only --------"
+NoChangeAnimation="Disable UI to change menu animation setting"
+NoChangeKeyboardNavigationIndicators="Disable UI to change keyboard navigation indicator setting"
+NoBackButton="Hide the common dialog back button"
+NoFileMRU="Remove the common dialog MRU dropdown"
+NoActiveDesktop="Disable Active Desktop"
+NoActiveDesktopChanges="Do not allow changes to Active Desktop"
+NoInternetIcon="Hide Internet Explorer icon"
+NoNetHood="Hide Network Neighborhood icon"
+NoDesktop="Hide all items on Desktop"
+NoFavoritesMenu="Remove Favorites menu from Start Menu"
+NoFind="Remove Find menu from Start Menu"
+NoRun="Remove Run menu from Start Menu"
+NoSetActiveDesktop="Remove the Active Desktop item from the Settings menu"
+NoWindowsUpdate="Remove the Windows Update item from the Settings menu"
+NoChangeStartMenu="Disable drag and drop context menus on the Start Menu"
+NoFolderOptions="Remove the Folder Options menu item from the Settings menu"
+NoRecentDocsMenu="Remove Documents menu from Start Menu"
+NoRecentDocsHistory="Do not keep history of recently opened documents"
+ClearRecentDocsOnExit="Clear history of recent opened documents"
+NoLogoff="Disable Logoff"
+StartMenuLogoff="Move Logoff to the Start Menu"
+NoClose="Disable Shut Down command"
+NoSetFolders="Disable changes to Printers and Control Panel Settings"
+NoControlPanel="Disable changes to Control Panel Settings"
+NoSetTaskbar="Disable changes to Taskbar and Start Menu Settings"
+NoTrayContextMenu="Disable context menu for Taskbar"
+NoStartMenuSubFolders="Hide custom Programs folders"
+NoCommonGroups="Hide common program groups in Start Menu"
+MemCheckBoxInRunDlg="Add Run Dlg CheckBox for New Memory Space."
+ClassicShell="Enable Classic Shell"
+NoFileMenu="Disable File menu in Shell folders"
+NoViewContextMenu="Disable context menu in Shell folders"
+EnforceShellExtensionSecurity="Only allow approved Shell extensions"
+LinkResolveIgnoreLinkInfo="Do not track Shell shortcuts during roaming"
+NoDrives="Hide Floppy Drives in My Computer"
+NoNetConnectDisconnect="Disable net connections/disconnections"
+NoDeletePrinter="Disable Deletion of Printers"
+NoAddPrinter="Disable Addition of Printers"
+RestrictApps="Run only specified Windows applications"
+RestrictAppsList="List of allowed Windows application:"
+RestrictApps_Tip1="     "
+RestrictApps_Tip2="To create a list of allowed applications, click Show,"
+RestrictApps_Tip3="then Add, and enter the application executable name"
+RestrictApps_Tip4="(e.g., Winword.exe, Poledit.exe, Notepad.exe)."
+NoRealMode="Do not allow computer to restart in MS-DOS mode"
+MaxRecentDocs="Maximum number of Recent documents"
+NoWebView="Disable Web content in folders"
+NoCustomizeThisFolder="Remove the Customize This Folder item from the View menu"
+
+sz_Desktop_Title="Desktop Settings"
+
+;;;;;; Active Desktop Items
+sz_ActiveDesktop_Title="Active Desktop Items"
+sz_ATC_NoComponents="Disable ALL desktop items"
+sz_ATC_DisableAdd="Disable adding ANY desktop items"
+sz_ATC_DisableDel="Disable deleting ANY desktop items"
+sz_ATC_DisableEdit="Disable editing ANY desktop items"
+sz_ATC_DisableClose="Disable closing ANY desktop items"
+
+;;;;;; Desktop Wall Paper
+sz_WallPaper_Title="Desktop WallPaper Settings"
+sz_DWP_NoHTMLPaper="No HTML wallpaper"
+sz_DWP_DisableChanges="Disable changing wallpaper"
+
+;;;;;; Desktop Bands
+sz_DeskBands_Title="Desktop Toolbars Settings"
+sz_DB_DragDropClose="Disable adding, dragging, dropping and closing ALL toolbars"
+sz_DB_Moving="Disable resizing ALL toolbars"

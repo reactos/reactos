@@ -1,0 +1,20 @@
+; ICMINST.INF
+;
+; This is the Setup information file to install default color profile
+; for Image Color Management 2.0
+;
+; Copyright (c) 1999 Microsoft Corporation
+
+[version]
+signature  = "$Windows NT$"
+
+[DefaultInstall]
+AddReg     = ColorProfile_AddReg
+DelReg     = ColorProfile_DelReg
+
+[ColorProfile_AddReg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ICM\mntr",,0x10
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\ICM\mntr","sRGB Color Space Profile.icm",0x03,00,00,00,00,49,45,43,20,73,52,47,42
+[ColorProfile_DelReg]
+HKLM,"SoFTWARE\Microsoft\Windows NT\CurrentVersion\ICM\ICMMonitorData"
+

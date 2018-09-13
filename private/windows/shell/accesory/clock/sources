@@ -1,0 +1,22 @@
+
+MAJORCOMP=shell
+MINORCOMP=accesory
+
+TARGETNAME=clock
+TARGETPATH=obj
+TARGETTYPE=LIBRARY
+TARGETLIBS=
+
+INCLUDES=..\..\inc;$(BASEDIR)\public\sdk\inc\port1632
+
+SOURCES=clock.c \
+        clockres.rc
+
+C_DEFINES= -DWIN32 -DUNICODE -DW3 -DUNICODE -D_UNICODE
+
+UMENTRY=winmain
+UMTYPE=windows
+UMAPPL=clock
+UMLIBS=obj\*\clockres.res \
+       $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+       $(BASEDIR)\public\sdk\lib\*\shell32.lib

@@ -1,0 +1,32 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=control
+
+TARGETNAME=cursors
+TARGETPATH=obj
+TARGETTYPE=DYNLINK
+TARGETEXT=cpl
+DLLENTRY=DllInitialize
+
+INCLUDES=..\..\inc;..\h;..\..\..\inc;..\..\userpri;
+
+C_DEFINES=-DWIN32 -DW3 -DUNICODE -D_UNICODE
+
+SOURCES=init.c      \
+        cursors.c   \
+        cursors.rc
+
+UMTYPE = windows
+
+TARGETLIBS=$(BASEDIR)\public\sdk\lib\*\user32p.lib   \
+           $(BASEDIR)\public\sdk\lib\*\kernel32.lib \
+           $(BASEDIR)\public\sdk\lib\*\gdi32.lib    \
+           $(BASEDIR)\public\sdk\lib\*\comdlg32.lib \
+           $(BASEDIR)\public\sdk\lib\*\advapi32.lib \
+           ..\..\userpri\lib\*\userpri.lib

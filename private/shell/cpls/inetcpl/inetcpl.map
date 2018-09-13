@@ -1,0 +1,24 @@
+// This file contains directives for how to order the functions.
+#include "inetcpl.fmap"
+
+libinetcpl.so.1
+{
+   global:
+
+      CPlApplet;
+      DllInstall;
+
+      AddInternetPropertySheets;
+      LaunchInternetControlPanel;
+      AddInternetPropertySheetsEx;
+      SiteCert_RunFromCmdLine;
+      OpenFontsDialog;
+
+      LaunchSecurityDialog;
+      LaunchSiteCertDialog;
+   
+      _____inetcpl_initDLL;
+
+   local:
+      *;
+};

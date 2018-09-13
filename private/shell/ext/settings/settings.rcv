@@ -1,0 +1,18 @@
+/********************************************************************/
+/*        SETTINGS.RCV                                              */
+/********************************************************************/
+#ifdef WIN32
+#include <ntverp.h>
+#else
+#include <version.h>
+#endif
+
+
+#define VER_FILETYPE                    VFT_DLL
+#define VER_FILESUBTYPE                 VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR         "Windows Settings Assistant"
+#define VER_INTERNALNAME_STR            "SETTINGS"
+#define VER_ORIGINALFILENAME_STR        "SETTINGS.EXE"
+
+#include <common.ver>
+

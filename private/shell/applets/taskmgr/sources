@@ -1,0 +1,93 @@
+!IF 0
+
+Copyright (c) 1989-1991 Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+History:
+    Created 12-Dec-95 by Dave Plummer (davepl)
+    from template created 12-Apr-1990 by Steve Wood (stevewo)
+
+NOTE:   Commented description of this file is in \nt\public\oak\bin\sources.tpl
+
+!ENDIF
+
+NTLEANANDMEAN=
+
+
+
+MAJORCOMP=shell
+MINORCOMP=taskmgr
+
+TARGETNAME=taskmgr
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+TARGETLIBS=
+
+NOT_LEAN_AND_MEAN=1
+
+USE_NOLIBS=1
+
+C_DEFINES=-DWINNT -DUNICODE -D_UNICODE -DUSE_MIRRORING
+
+INCLUDES=.;..\inc;..\..\inc;$(BASEDIR)\private\shell\inc;$(BASEDIR)\private\inc
+
+LINKER_FLAGS=-merge:.CRT=.data
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+SOURCES= main.cpp       \
+         perfpage.cpp   \
+         procpage.cpp   \
+         ptrarray.cpp   \
+         taskpage.cpp   \
+         debug.cpp \
+         trayicon.cpp
+
+UMTYPE=windows
+UMENTRYABS=ModuleEntry
+EXPECTED_WINVER=4.0
+UMRES=$(O)\taskmgr.res
+
+VDMLIBS= \
+        $(BASEDIR)\public\sdk\lib\*\vdmdbg.lib
+
+
+UMLIBS= \
+        $(BASEDIR)\public\sdk\lib\*\gdi32.lib         \
+        $(BASEDIR)\public\sdk\lib\*\advapi32.lib      \
+        $(BASEDIR)\public\sdk\lib\*\comctl32.lib      \
+        $(BASEDIR)\public\sdk\lib\*\htmlhelp.lib      \
+        $(BASEDIR)\public\sdk\lib\*\mpr.lib           \
+        $(BASEDIR)\public\sdk\lib\*\user32p.lib       \
+        $(BASEDIR)\public\sdk\lib\*\uuid.lib          \
+        $(BASEDIR)\public\sdk\lib\*\version.lib       \
+        $(BASEDIR)\public\sdk\lib\*\shell32p.lib      \
+        $(BASEDIR)\private\shell\\lib\$O\stocklib.lib \
+        $(BASEDIR)\private\shell\lib\$O\stock5.lib  \
+        $(BASEDIR)\public\sdk\lib\*\ntdll.lib
+
+!if $(386)
+UMLIBS =             \
+    $(UMLIBS)        \
+    $(VDMLIBS)
+!elseif $(ALPHA)  && !$(AXP64)
+UMLIBS =             \
+    $(UMLIBS)        \
+    $(VDMLIBS)
+!endif
+
+PRECOMPILED_CXX=1
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj

@@ -1,0 +1,285 @@
+//****************************************************************************
+//
+//  File:       joystick.rc
+//  Content:    Joystick cpl resources
+//  History:
+//   Date	By	Reason
+//   ====	==	======
+//   29-nov-94	craige	split from mmse
+//   15-dec-94	craige	allow N joysticks
+//   05-jan-95	craige	new centering confirmation messages
+//   04-mar-95	craige	bug 10761 - separate strings for pluralization;
+//			capitalization changes; misc other issues
+//
+//  Copyright (c) Microsoft Corporation 1994, 1995
+//
+//****************************************************************************
+#include "joycpl.h"                          
+#include "joy.rcv"                                 
+
+IDI_JOYSTICK	ICON    DISCARDABLE "joystick.ico"
+IDI_JOYBTN      ICON    DISCARDABLE "joybtn.ico"
+IDI_JOYPOV_NONE ICON    DISCARDABLE "joypov_n.ico"
+IDI_JOYPOV_UP   ICON    DISCARDABLE "joypov_u.ico"
+IDI_JOYPOV_DOWN ICON    DISCARDABLE "joypov_d.ico"
+IDI_JOYPOV_LEFT ICON    DISCARDABLE "joypov_l.ico"
+IDI_JOYPOV_RIGHT ICON   DISCARDABLE "joypov_r.ico"
+IDI_JOYPOV_GRAYED ICON  DISCARDABLE "joypov_g.ico"
+
+IDD_JOYSTICK DIALOG DISCARDABLE  0, 0, 227, 200
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Joystick"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    COMBOBOX        IDC_JOYCURRENTID,45,30,168,48,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_JOYSELECT,45,74,168,48,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "&Rudder",IDC_JOY1HASRUDDER,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,45,93,57,10
+    PUSHBUTTON      "&Calibrate ...",IDC_JOYCALIBRATE,109,91,50,14
+    PUSHBUTTON      "&Test ...",IDC_JOYTEST,163,91,50,14
+    PUSHBUTTON      "R&eset",IDC_JOYRESET,13,150,50,14
+    GROUPBOX        "Joystick configuration",IDC_JOYSTICK1_FRAME,7,52,212,60
+    LTEXT           "",IDC_JOYMSG,13,7,212,9
+    ICON            IDI_JOYSTICK,IDC_ICON_1,13,22,18,20
+    LTEXT           "Current joystick:",IDC_JOYCURRENTIDMSG,45,20,62,9
+    LTEXT           "Joystick selection:",IDC_JOYSELECTMSG,45,64,62,9
+    ICON            IDI_JOYSTICK,IDC_ICON_2,13,66,18,20
+    GROUPBOX        "Joystick troubleshooter",IDC_JOYTROUBLESHOOT_FRAME,7,
+                    115,212,56
+    LTEXT           "If your joystick no longer works correctly with a game, click Reset.",
+                    IDC_JOYTROUBLESHOOT_TEXT,13,127,197,18
+END
+
+IDD_JOYTEST DIALOG DISCARDABLE  0, 0, 205, 187
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Joystick Test"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,147,166,50,14
+    GROUPBOX        "Position",IDC_GROUPBOX,7,7,190,89
+    LISTBOX         IDC_JOYLIST1,14,37,45,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LTEXT           "To test your joystick's calibration, move the joystick.",
+                    IDC_TEXT_1,13,21,176,9
+    GROUPBOX        "Buttons",IDC_GROUPBOX_2,7,100,190,59
+    LTEXT           "Press one of your joystick's buttons.",IDC_TEXT_2,45,
+                    114,141,8
+    ICON            IDI_JOYBTN,IDC_ICON_1,13,114,18,20
+    LTEXT           "Button 1",IDC_JOYB1_LABEL,45,130,30,7
+    LTEXT           "Button 2",IDC_JOYB2_LABEL,81,130,30,7
+    LTEXT           "Button 3",IDC_JOYB3_LABEL,117,130,30,7
+    LTEXT           "Button 4",IDC_JOYB4_LABEL,153,130,30,7
+    LISTBOX         IDC_JOYB1,45,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB2,81,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB3,117,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB4,153,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Throttle",IDC_JOYLIST2_LABEL,73,80,36,9
+    CTEXT           "Joystick",IDC_JOYLIST1_LABEL,11,80,51,8
+    LISTBOX         IDC_JOYLIST2,86,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    ICON            IDI_JOYPOV_NONE,IDC_JOYPOV,161,37,18,20
+    CTEXT           "Point of view hat",IDC_JOYPOV_LABEL,155,64,28,24
+    CTEXT           "Rudder",IDC_JOYLIST3_LABEL,111,80,36,9
+    LISTBOX         IDC_JOYLIST3,124,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+END
+
+IDD_JOYTEST1 DIALOG DISCARDABLE  0, 0, 282, 187
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Joystick Test"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,224,166,50,14
+    GROUPBOX        "Position",IDC_GROUPBOX,7,7,266,89
+    LISTBOX         IDC_JOYLIST1,14,37,45,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LTEXT           "To test your joystick's calibration, move the joystick.",
+                    IDC_TEXT_1,13,21,176,9
+    GROUPBOX        "Buttons",IDC_GROUPBOX_2,7,100,190,59
+    LTEXT           "Press one of your joystick's buttons.",IDC_TEXT_2,45,
+                    114,141,8
+    ICON            IDI_JOYBTN,IDC_ICON_1,13,114,18,20
+    LTEXT           "Button 1",IDC_JOYB1_LABEL,45,130,30,7
+    LTEXT           "Button 2",IDC_JOYB2_LABEL,81,130,30,7
+    LTEXT           "Button 3",IDC_JOYB3_LABEL,117,130,30,7
+    LTEXT           "Button 4",IDC_JOYB4_LABEL,153,130,30,7
+    LISTBOX         IDC_JOYB1,45,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB2,81,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB3,117,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    LISTBOX         IDC_JOYB4,153,141,30,9,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Throttle",IDC_JOYLIST2_LABEL,73,80,36,9
+    CTEXT           "Joystick",IDC_JOYLIST1_LABEL,11,80,48,8
+    LISTBOX         IDC_JOYLIST2,86,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    ICON            IDI_JOYPOV_NONE,IDC_JOYPOV,237,37,18,20
+    CTEXT           "Point of view hat",IDC_JOYPOV_LABEL,231,64,28,24
+    CTEXT           "Rudder",IDC_JOYLIST3_LABEL,111,80,36,9
+    LISTBOX         IDC_JOYLIST3,124,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "U axis",IDC_JOYLIST4_LABEL,149,80,36,9
+    LISTBOX         IDC_JOYLIST4,162,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "V axis",IDC_JOYLIST5_LABEL,187,80,36,9
+    LISTBOX         IDC_JOYLIST5,200,37,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+END
+
+IDD_JOYCALIBRATE DIALOG DISCARDABLE  0, 0, 240, 163
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Joystick Calibration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&Test ...",IDC_JOYTEST,25,142,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Capture &POV",IDC_JOYPICKPOV,25,142,50,14,NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "< &Back",IDC_JOYCALBACK,79,142,50,14
+    PUSHBUTTON      "&Next >",IDC_JOYCALNEXT,129,142,50,14
+    PUSHBUTTON      "&Finish",IDC_JOYCALDONE,129,142,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Cancel",IDCANCEL,183,142,50,14
+    LTEXT           "",IDC_JOYCALMSG,14,21,211,35
+    GROUPBOX        "Calibration information",IDC_GROUPBOX,6,7,228,128
+    LISTBOX         IDC_JOYLIST1,35,66,45,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Throttle",IDC_JOYLIST2_LABEL,95,109,34,18
+    CTEXT           "Joystick",IDC_JOYLIST1_LABEL,25,109,65,18
+    LISTBOX         IDC_JOYLIST2,107,66,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Rudder",IDC_JOYLIST3_LABEL,133,109,34,18
+    LISTBOX         IDC_JOYLIST3,145,66,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    ICON            IDI_JOYPOV_NONE,IDC_JOYPOV,182,65,18,20
+    CTEXT           "Point of view hat",IDC_JOYPOV_LABEL,176,92,31,34
+END
+
+IDD_JOYCALIBRATE1 DIALOG DISCARDABLE  0, 0, 316, 163
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Joystick Calibration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&Test ...",IDC_JOYTEST,95,142,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Capture &POV",IDC_JOYPICKPOV,95,142,50,14,NOT 
+                    WS_VISIBLE
+    PUSHBUTTON      "< &Back",IDC_JOYCALBACK,149,142,50,14
+    PUSHBUTTON      "&Next >",IDC_JOYCALNEXT,199,142,50,14
+    PUSHBUTTON      "&Finish",IDC_JOYCALDONE,199,142,50,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Cancel",IDCANCEL,253,142,50,14
+    LTEXT           "",IDC_JOYCALMSG,14,21,272,35
+    GROUPBOX        "Calibration information",IDC_GROUPBOX,6,7,304,128
+    LISTBOX         IDC_JOYLIST1,35,66,45,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Throttle",IDC_JOYLIST2_LABEL,95,109,34,18
+    CTEXT           "Joystick",IDC_JOYLIST1_LABEL,25,109,65,18
+    LISTBOX         IDC_JOYLIST2,107,66,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "Rudder",IDC_JOYLIST3_LABEL,133,109,34,18
+    LISTBOX         IDC_JOYLIST3,145,66,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    ICON            IDI_JOYPOV_NONE,IDC_JOYPOV,258,65,18,20
+    CTEXT           "Point of view hat",IDC_JOYPOV_LABEL,253,92,31,25
+    CTEXT           "U axis",IDC_JOYLIST4_LABEL,171,110,34,18
+    LISTBOX         IDC_JOYLIST4,183,67,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+    CTEXT           "V axis",IDC_JOYLIST5_LABEL,209,110,34,18
+    LISTBOX         IDC_JOYLIST5,221,67,10,40,NOT LBS_NOTIFY | LBS_NOREDRAW | 
+                    LBS_NOINTEGRALHEIGHT
+END
+
+IDD_JOYCUSTOM DIALOG DISCARDABLE  0, 0, 240, 177
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "Custom Joystick"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,156,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,183,156,50,14
+    RADIOBUTTON     "2 &axes",IDC_JOY2AXIS,13,20,40,10
+    RADIOBUTTON     "3 a&xes",IDC_JOY3AXIS,70,20,40,10
+    RADIOBUTTON     "4 ax&es",IDC_JOY4AXIS,127,20,40,10
+    RADIOBUTTON     "2 &buttons",IDC_JOY2BUTTON,13,53,45,10
+    RADIOBUTTON     "4 b&uttons",IDC_JOY4BUTTON,70,53,45,10
+    GROUPBOX        "",IDC_GROUPBOX_3,7,74,226,54
+    CONTROL         "&Special features",IDC_JOYUSESPECIAL,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,73,65,10
+    RADIOBUTTON     "Is a &flight yoke",IDC_JOYISYOKE,13,87,107,10
+    RADIOBUTTON     "Is a &game pad",IDC_JOYISGAMEPAD,13,99,107,10
+    RADIOBUTTON     "Is a &race car controller",IDC_JOYISCARCTRL,13,111,107,
+                    10
+    CONTROL         "Has &point of view hat",IDC_JOYHASPOV,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,133,110,10
+    GROUPBOX        "Axes",IDC_GROUPBOX,7,7,226,30
+    GROUPBOX        "Buttons",IDC_GROUPBOX_2,7,40,226,30
+END
+
+STRINGTABLE PRELOAD DISCARDABLE   
+BEGIN
+    IDS_JOY                 "Joystick"
+    IDS_JOY2                "joystick"
+    IDS_JOY2S               "joystick's"
+    IDS_JOYINFO             "Changes settings for joystick devices."
+    IDS_JOYCALXY_CENTER     "To set your joystick's center position, leave its handle centered, and then press one of your joystick's buttons."
+    IDS_JOYCALXY_CENTER2    "To confirm your joystick's center position, leave its handle centered, and then press one of your joystick's buttons."
+    IDS_JOYCALXY_CENTERGAMEPAD "To set the center position of your game pad's thumb control, press a button on your game pad without pressing the thumb control."
+    IDS_JOYCALXY_CENTERGAMEPAD2 "To confirm the thumb control's center position, press a button on your game pad without pressing the thumb control."
+    IDS_JOYCALXY_CENTERYOKE "To set the center position for your flight yoke, leave the yoke centered, and then press one of its buttons."
+    IDS_JOYCALXY_CENTERYOKE2 "To confirm your flight yoke's center position, leave the yoke centered, and then press one of its buttons."
+    IDS_JOYCALXY_CENTERCAR  "To set the center position for your race car controller's steering wheel and pedals, keep the wheel centered, keep your feet off the brake and gas pedals, and then press one of the car controller's buttons."
+    IDS_JOYCALXY_CENTERCAR2  "To confirm the center position for your race car controller's steering wheel and pedals, leave the wheel centered, keep your feet off the brake and gas pedals, and then press one of the car controller's buttons."
+    IDS_JOYCALXY_MOVE       "To set your joystick's range of motion, move its handle in complete circles several times, and then press one of your joystick's buttons."
+    IDS_JOYCALXY_MOVEGAMEPAD "To calibrate the range of motion for your game pad's thumb control, press all eight of the thumb control's corners, and then press one of the game pad's buttons."
+    IDS_JOYCALXY_MOVEYOKE   "To calibrate your flight yoke's range of motion, move the yoke all the way in and out several times. Then move it all the way to the left and right several times. Finally, press one of the flight yoke's buttons."
+    IDS_JOYCALXY_MOVECAR    "To calibrate your race car controller's range of motion, move the  steering wheel all the way to the left and right several times. Then press the brake and gas pedals fully several times. Finally, press one of the race car controller's buttons."
+    IDS_JOYCALZ_MOVE        "To set the range of motion for your throttle, move it all the way up and all the way down several times, and then press one of your %s buttons."
+    IDS_JOYCALPOV_MOVE      "To set the %1 position for your %2 point of view (POV) hat, move the POV hat to the %3 position, and then press ENTER."
+    IDS_JOYCALRUDDER_MOVE   "To set the range of motion for your rudder control, move it all the way from one side to the other several times, and then press one of your %s buttons."
+    IDS_JOYCALU_MOVE        "To set the range of motion for your U-axis, move it all the way up and all the way down several times, and then press one of your %s buttons."
+    IDS_JOYCALV_MOVE        "To set the range of motion for your V-axis, move it all the way up and all the way down several times, and then press one of your %s buttons."
+    IDS_JOYCAL_DONE	    "You have successfully calibrated your %s. To test your %s calibration, click Test. To save your calibration settings, click Finish."
+    IDS_JOYCAL_NOTDONE	    "You have not finished calibrating your %s. To finish calibrating it, click Back."
+    IDS_JOYCAL_CAR	"car controller"
+    IDS_JOYCAL_GAMEPAD	"game pad"
+    IDS_JOYCAL_YOKE	"flight yoke"
+    IDS_JOYCAL_CARS	"car controller's"
+    IDS_JOYCAL_GAMEPADS	"game pad's"
+    IDS_JOYCAL_YOKES	"flight yoke's"
+    IDS_JOYCAL_UP	"up"
+    IDS_JOYCAL_DOWN	"down"
+    IDS_JOYCAL_LEFT	"left"
+    IDS_JOYCAL_RIGHT	"right"
+    IDS_JOYTESTCAPN	"Joystick %d Test"
+    IDS_JOYCALCAPN	"Joystick %d Calibration"
+    IDS_JOYBUTTON1	"Button 1"
+    IDS_JOYBUTTON2	"Button 2"
+    IDS_JOYUNPLUGGED	"Your joystick is not connected correctly."
+    IDS_JOYNOTPRESENT	"Your computer does not have a joystick port."
+    IDS_JOYREADERROR	"Error Reading the Joystick"
+    IDS_JOYRESTARTMSG1	"You must restart your computer before the new settings will take effect.\n\nDo you want to restart your computer now?" //craig, if this is unused, please delete from file
+    IDS_JOYRESTARTMSG2	"Joystick Settings Change" //craig, i think this, too, may be unused
+    IDS_JOYCALINDICATOR	"\n(done)"
+    IDS_VAXIS_LABEL     "V axis"
+    IDS_UAXIS_LABEL     "U axis"
+    IDS_POVAXIS_LABEL   "Point of view hat"
+    IDS_ZAXIS_LABEL     "Throttle"
+    IDS_XYAXIS_LABEL    "Joystick"
+    IDS_RAXIS_LABEL     "Rudder"
+    IDS_JOYHW0		"(none)"
+    IDS_JOYHW1		"(Custom ...)"
+    IDS_JOYHW2		"2-axis, 2-button joystick"
+    IDS_JOYHW3		"2-axis, 4-button joystick"
+    IDS_JOYHW4		"2-button gamepad"
+    IDS_JOYHW5		"2-button flight yoke"
+    IDS_JOYHW6		"2-button flight yoke w/throttle"
+    IDS_JOYHW7		"3-axis, 2-button joystick"
+    IDS_JOYHW8		"3-axis, 4-button joystick"
+    IDS_JOYHW9		"4-button gamepad"
+    IDS_JOYHW10		"4-button flight yoke"
+    IDS_JOYHW11		"4-button flight yoke w/throttle"
+END

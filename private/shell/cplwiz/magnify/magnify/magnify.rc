@@ -1,0 +1,271 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#endif\r\n"
+    "#include ""res\\Magnify.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_STATIONARY, DIALOGEX
+    BEGIN
+        RIGHTMARGIN, 56
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_MAGNIFY_DIALOG, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 106
+    END
+
+    IDD_ABOUTBOX, DIALOGEX
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 210
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\Magnify.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_STATIONARY DIALOGEX 0, 0, 58, 52
+STYLE DS_ABSALIGN | DS_3DLOOK | DS_CONTROL | WS_POPUP | WS_VISIBLE | 
+    WS_CLIPCHILDREN | WS_CAPTION | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Magnifier: Stationary Window"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+END
+
+IDD_MAGNIFY_DIALOG DIALOGEX 0, 0, 186, 113
+STYLE DS_SETFOREGROUND | DS_3DLOOK | DS_CENTER | DS_CENTERMOUSE | 
+    WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_NOPARENTNOTIFY | WS_EX_APPWINDOW
+CAPTION "Microsoft Magnifier"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Stationary Window",IDC_STATIC,7,4,110,101
+    LTEXT           "Magnification &level:",IDC_STATIC,14,18,62,8
+    EDITTEXT        IDC_STATIONARYMAGLEVEL,82,14,28,14,ES_AUTOHSCROLL
+    CONTROL         "Spin1",IDC_STATIONARYMAGSPIN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS,110,14,11,14
+    CONTROL         "Follow &mouse cursor",IDC_STATIONARYTRACKMOUSECURSOR,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,32,80,10
+    CONTROL         "Follow &keyboard focus",IDC_STATIONARYTRACKKYBDFOCUS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,44,87,10
+    CONTROL         "Follow &text editing",IDC_STATIONARYTRACKTEXT,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,56,72,10
+    CONTROL         "&Invert colors",IDC_STATIONARYINVERTCOLORS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,14,68,55,10
+    CONTROL         "Use High &Contrast scheme",IDC_STATIONARYHIGHCONTRAST,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,80,100,10
+    CONTROL         "Follow secondary &focus",
+                    IDC_STATIONARYTRACKSECONDARYFOCUS,"Button",
+                    BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,14,92,90,
+                    10
+    DEFPUSHBUTTON   "&OK",IDOK,129,10,50,14
+    PUSHBUTTON      "E&xit",IDCANCEL,129,28,50,14
+    PUSHBUTTON      "&Help",IDC_BUTTON1,129,46,50,14
+END
+
+IDD_ABOUTBOX DIALOGEX DISCARDABLE  0, 0, 217, 55
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Magnifier"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_STATIC,11,17,20,20
+    LTEXT           "Microsoft Magnifier Version 1.0",IDC_STATIC,40,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright © 1997 Microsoft Corporation",IDC_STATIC,40,
+                    25,128,8
+    DEFPUSHBUTTON   "OK",IDOK,178,7,32,14,WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_STATIONARY MENU DISCARDABLE 
+BEGIN
+    POPUP "PlaceHolder"
+    BEGIN
+        MENUITEM "&Options",                    ID_PLACEHOLDER_OPTIONS
+        MENUITEM "&Copy to clipboard",          ID_APPBAR_COPYTOCLIPBOARD
+        MENUITEM "E&xit",                       ID_PLACEHOLDER_EXIT
+    END
+END
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 4,1,970,0
+ PRODUCTVERSION 4,1,970,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Microsoft Corporation\0"
+            VALUE "FileDescription", "Microsoft Magnifier application file\0"
+            VALUE "FileVersion", "04, 01, 970, 00\0"
+            VALUE "InternalName", "Magnify\0"
+            VALUE "LegalCopyright", "Copyright (C) 1997 by Microsoft Corporation\0"
+            VALUE "OriginalFilename", "Magnify.EXE\0"
+            VALUE "ProductName", "Microsoft Windows Magnifier Application\0"
+            VALUE "ProductVersion", "04, 01, 970, 00\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_POINTER             CURSOR  DISCARDABLE     "res\\arrow.cur"
+IDC_CUSTOM_HAND         CURSOR  DISCARDABLE     "res\\hand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP  DISCARDABLE     "res\\bitmap1.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ABOUTBOX            "&About Magnify..."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#endif
+#include "res\Magnify.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

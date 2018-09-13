@@ -1,0 +1,410 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""res\\eventrap.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "\r\n"
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "#include ""afxres.rc""  // Standard components\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_EVNTTRAPDLG DIALOG DISCARDABLE  0, 0, 346, 326
+STYLE DS_CONTEXTHELP | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
+    WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Event to Trap Translator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Configuration type",IDC_STAT_GRP_CONFIG_TYPE,9,7,264,31
+    RADIOBUTTON     "&Custom",IDC_RADIO_CUSTOM,27,19,58,12
+    RADIOBUTTON     "&Default",IDC_RADIO_DEFAULT,142,19,50,13
+    LTEXT           "Events to be &translated to traps:",IDC_STAT_LABEL0,7,
+                    45,110,9
+    CONTROL         "Generic4",IDC_EVENTLIST,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_ALIGNLEFT | 
+                    WS_BORDER | WS_TABSTOP,7,61,264,129
+    PUSHBUTTON      "OK",IDOK,289,6,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,289,27,50,14
+    PUSHBUTTON      "App&ly",IDC_APPLY,289,49,50,14
+    PUSHBUTTON      "&Settings...",ID_SETTINGS,289,91,50,14
+    PUSHBUTTON      "&Properties...",ID_PROPERTIES,289,112,50,14
+    PUSHBUTTON      "E&xport...",ID_BUTTON_EXPORT,289,133,50,14
+    PUSHBUTTON      "&View",ID_VIEW,289,154,50,14
+    PUSHBUTTON      "&Add",ID_ADD,93,202,50,14
+    PUSHBUTTON      "&Remove",ID_REMOVE,145,202,50,14
+    PUSHBUTTON      "&Find",ID_FIND,289,202,50,14
+    LTEXT           "Event s&ources:",IDC_STAT_LABEL1,9,223,50,11
+    CONTROL         "Generic1",IDC_TV_SOURCES,"SysTreeView32",TVS_HASBUTTONS | 
+                    TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,9,235,134,82
+    LTEXT           "Eve&nts:",IDC_STAT_LABEL2,115,223,28,11
+    CONTROL         "Generic2",IDC_LV_SOURCES,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,145,235,195,
+                    82
+    DEFPUSHBUTTON   "Default",IDC_DEFAULT,9,200,39,15,NOT WS_VISIBLE
+END
+
+IDD_PROPERTIESDLG DIALOG DISCARDABLE  0, 0, 333, 274
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Properties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Generate trap",IDD_NULL,15,102,240,49
+    LTEXT           "if event &count reaches",ID_THRESHOLD_LABEL,23,115,79,8,
+                    SS_NOTIFY
+    EDITTEXT        IDC_EVENTCOUNT,108,114,28,13,ES_AUTOHSCROLL
+    CONTROL         "Generic1",IDC_EVENTCOUNTSPN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,136,114,10,14
+    CONTROL         "within &time interval",IDC_WITHINTIME,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,23,131,75,10
+    EDITTEXT        IDC_TIMEINTERVAL,108,130,28,13,ES_AUTOHSCROLL
+    CONTROL         "Generic5",IDC_TIMEINTRVLSPN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | 
+                    UDS_NOTHOUSANDS,136,130,10,14
+    LTEXT           "seconds",IDD_NULL,151,131,28,8
+    LTEXT           "&Description:",IDD_NULL,15,167,38,8
+    EDITTEXT        IDC_DESCRIPTION,15,180,240,70,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,275,10,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,275,30,50,14
+    RTEXT           "Source:",ID_SOURCE_LABEL,15,18,56,8,SS_NOTIFY
+    LTEXT           "Source Name",ID_STAT_SOURCE,81,18,174,8,SS_NOTIFY
+    RTEXT           "Enterprise OID:",ID_OID_LABEL,15,34,56,8,SS_NOTIFY
+    EDITTEXT        IDC_EDIT_ENTERPRISEOID,81,34,174,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    RTEXT           "Log:",ID_LOG_LABEL,15,50,56,8,SS_NOTIFY
+    LTEXT           "Source Log",ID_STAT_LOG,81,50,174,8,SS_NOTIFY
+    RTEXT           "Event:",ID_EVENTID_LABEL,15,66,56,8,SS_NOTIFY
+    LTEXT           "Event Number",ID_STAT_EVENTID,81,66,174,8,SS_NOTIFY
+    RTEXT           "Trap specific ID:",ID_TRAPID_LABEL,15,82,56,8,SS_NOTIFY
+    EDITTEXT        IDC_EDIT_FULL_EVENT_ID,81,79,174,12,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "",IDD_NULL,"Static",SS_WHITEFRAME,6,7,259,259
+END
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  0, 0, 217, 81
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,161,13,50,14
+    ICON            IDR_MAINICON,IDC_STATIC,10,18,20,20
+    LTEXT           "EvntWin Version 05.00.00.xxxx.1",IDC_STATIC,37,14,109,
+                    11
+    LTEXT           "Copyright (C) 1999",IDC_STATIC,37,36,109,11
+END
+
+IDD_EVENTFINDDLG DIALOG DISCARDABLE  0, 0, 235, 120
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Find"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Fi&nd what:",IDC_STATIC,6,10,38,11,SS_NOTIFY
+    EDITTEXT        IDC_EDIT_FIND_WHAT,48,10,117,13,ES_AUTOHSCROLL
+    CONTROL         "Event &sources",IDC_RADIO_SEARCH_SOURCES,"Button",
+                    BS_AUTORADIOBUTTON,14,47,62,9
+    CONTROL         "&Event descriptions",IDC_RADIO_SEARCH_DESCRIPTIONS,
+                    "Button",BS_AUTORADIOBUTTON,79,47,74,10
+    PUSHBUTTON      "&Find next",IDC_FIND_OK,178,10,50,14
+    PUSHBUTTON      "Cancel",IDC_FIND_CANCEL,178,29,50,14
+    CONTROL         "Match &whole word only.",IDC_CHECK_MATCH_WHOLEWORD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,80,90,11
+    CONTROL         "Match &case",IDC_CHECK_MATCH_CASE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,6,95,90,11
+    GROUPBOX        "Search in",IDC_STATIC,6,31,159,35
+END
+
+IDD_SAVE_PROGRESS DIALOG DISCARDABLE  0, 0, 161, 30
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Saving Trap Configuration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Generic1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,4,
+                    9,153,13
+END
+
+IDD_SETTINGSDLG DIALOGEX 0, 0, 237, 234
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Trap length limit",IDD_NULL,7,9,164,101
+    CONTROL         "&Limit trap length",IDC_LIMITMSGLNGTH,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,24,92,12
+    LTEXT           "&Trap length: ",IDC_STAT_TRAP_LENGTH,14,47,41,10,
+                    SS_NOTIFY
+    EDITTEXT        IDC_EDIT_MESSAGELENGTH,57,45,43,14
+    CONTROL         "Generic1",IDC_MSGLENGTHSPN,"msctls_updown32",
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,88,45,12,14
+    CONTROL         "Trim insertion &strings first",IDC_RADIO1,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,31,76,114,11
+    CONTROL         "Trim formatted &message first",IDC_RADIO2,"Button",
+                    BS_AUTORADIOBUTTON,31,90,114,11
+    GROUPBOX        "Trap throttle",IDD_NULL,8,115,164,112
+    CONTROL         "&Apply throttle",IDC_RADIO_ENABLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP,14,127,61,12
+    CONTROL         "&Don't apply throttle",IDC_RADIO_DISABLE,"Button",
+                    BS_AUTORADIOBUTTON,14,145,78,9
+    PUSHBUTTON      "&Reset",IDC_BUTTON_RESET,110,129,50,14
+    LTEXT           "Stop translation if a specific number of traps are sent in a certain interval of time.",
+                    IDC_STATIC_MSG,14,161,152,17
+    LTEXT           "&Number of traps: ",IDC_STATIC_NTRAPS,19,187,92,11,
+                    SS_NOTIFY,WS_EX_RIGHT
+    EDITTEXT        IDC_EDIT_TRAP_COUNT,115,186,33,14
+    LTEXT           "&Interval of time (seconds): ",IDC_STATIC_INTERVAL,19,
+                    204,92,9,SS_NOTIFY,WS_EX_RIGHT
+    EDITTEXT        IDC_EDIT_TRAP_SECONDS,115,203,33,14
+    DEFPUSHBUTTON   "OK",IDOK,178,13,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,178,31,50,14
+    LTEXT           "bytes",IDC_STATIC_BYTES,106,47,21,10
+END
+
+IDD_LOAD_PROGRESS DIALOG DISCARDABLE  0, 0, 161, 55
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Loading Trap Configuration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Generic1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,4,
+                    9,153,13
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,55,32,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+CTL3D_CHECK             BITMAP  MOVEABLE PURE   "res\\3dcheck.bmp"
+IDB_FOLDERCLOSE         BITMAP  DISCARDABLE     "res\\foldercl.bmp"
+IDB_FOLDEROPEN          BITMAP  DISCARDABLE     "res\\folderop.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursor
+//
+
+IDC_CURSOR1             CURSOR  DISCARDABLE     "res\\cursor1.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINICON            ICON    DISCARDABLE     "res\\eventrap.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_EVNTTRAPDLG, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 317
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_CTXMENUS MENU DISCARDABLE 
+BEGIN
+    POPUP "LcEventPopup"
+    BEGIN
+        MENUITEM "&Remove Events",              ID_REMOVE
+        MENUITEM SEPARATOR
+        MENUITEM "&Settings",                   ID_SETTINGS
+        MENUITEM "&Properties",                 ID_PROPERTIES
+        MENUITEM SEPARATOR
+        MENUITEM "E&xport Events",              ID_BUTTON_EXPORT
+    END
+    POPUP "LcSourcePopup"
+    BEGIN
+        MENUITEM "&Add Events",                 ID_ADD
+        MENUITEM "&Find Events",                ID_FIND
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NOT_TRAPPING        "no"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_IS_TRAPPING         "yes"
+    IDS_MULTIPLE_SEL        "<Multiple>"
+    IDS_MSG_TEXTNOTFOUND    "Text was not found."
+    IDS_MSG_SELECTEVENT     "Please select an event."
+    IDS_MSG_DELETEEVENT     "Delete the selected events?"
+    IDS_COLHDR_TYPE         "Log"
+    IDS_CANTCONNECT         "Unable to connect to the requested machine "
+    IDS_ALREADYTRAPPING     "The selected events are already trapping.  You may modify their properties or remove them from the list in the main window."
+    IDS_SOMETRAPPING        "One or more of the selected events are already trapping.  Only the non-trapping selections will be added."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EVENT_SEV_SUCCESS   "Success"
+    IDS_EVENT_SEV_INFORMATIONAL "Informational"
+    IDS_EVENT_SEV_WARNING   "Warning"
+    IDS_EVENT_SEV_ERROR     "Error"
+    IDS_LcSource_TITLE_EVENT_ID "Event ID"
+    IDS_LcSource_TITLE_TRAPPING "Trapping"
+    IDS_LcSource_TITLE_DESCRIPTION "Description"
+    IDS_LcSource_TITLE_SEVERITY "Severity"
+    IDS_LcEvents_TITLE_LOG  "Event Log"
+    IDS_LcEvents_TITLE_SOURCE "Source"
+    IDS_LcEvents_TITLE_ID   "Event ID"
+    IDS_LcEvents_TITLE_SEVERITY "Severity"
+    IDS_LcEvents_TITLE_COUNT "Count"
+    IDS_LcEvents_TITLE_TIME "Time"
+    IDS_LcEvents_TITLE_DESCRIPTION "Description"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_TITLE_EDIT_BUTTON   "&Edit >>"
+    IDS_TITLE_VIEW_BUTTON   "<< Vi&ew"
+    IDS_ERR_REGISTRY_CORRUPTED 
+                            "EvntWin's configuration information may have been corrupted.  Expected configuration information could not be found in the registry."
+    IDS_ERR_NOT_INSTALLED   "EvntWin has not been installed yet.  You must first install the SNMP service on this computer before running EvntWin."
+    IDS_WARNING_CANT_READ_CONFIG 
+                            "An error occurred when EvntWin tried to read its configuration information from the registry."
+    IDS_WARNING_NO_MESSAGE_SELECTED 
+                            "No messages selected.  To add messages to the event list, you must first select one or more messages."
+    IDS_ERR_INVALID_ARGUMENT 
+                            "EvntWin was started with the wrong number of arguments.  "
+    IDS_EXPORT_DIALOG_TITLE "Export Events"
+    IDS_EXPORT_DEFAULT_FILENAME "events.cnf"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_EXPORT_CNF_FILTER   "Configuration Files (*.*)"
+    IDS_ERR_CANT_CREATE_FILE "Can't create file: "
+    IDS_WARNING_CANT_WRITE_CONFIG 
+                            "An error occurred while attempting to write configuration information to the registry."
+    IDS_ERR_PROP_TIME1      "Event count must be at least two when a time interval is specified."
+    IDS_ERR_PROP_TIME2      "Time interval must be at least one."
+    IDS_ERR_PROP_TIME_LESS_THAN_TWO "Event count must be at least one."
+    IDS_RANGE_MESSAGE_PREFIX "Please enter an integer value between"
+    IDS_RANGE_VALUE_SEPARATOR "and"
+    IDS_SENTENCE_TERMINATOR "."
+    IDS_ERR_SETTINGS_MESSAGELENGTH_NOT_INT 
+                            "The trap length must be an integer."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SETTINGS_MESSAGE_LENGTH_RANGE "The trap length is out of range.  "
+    IDS_ERR_SETTINGS_TRAPSECONDS_NOT_INT 
+                            "The number of seconds must be an integer."
+    IDS_SETTINGS_TRAPSECONDS_RANGE "The number of seconds is out of range.  "
+    IDS_ERR_SETTINGS_TRAPCOUNT_NOT_INT 
+                            "The number of traps must be an integer."
+    IDS_ERR_SETTINGS_TRAPCOUNT_RANGE "The number of traps is out of range.  "
+    IDS_ERR_REGISTRY_BUSY   "The event-to-trap settings are locked.\nThis usually happens when another application either terminated unexpectedly \nor it is currently busy editing the event-to-trap settings. Resetting the lock in the\nlatter case might lead to an inconsistent event-to-trap configuration.\n\nDo you want to reset the existing lock and continue?"
+    IDS_CONFIGTYPE_DEFAULT  "Default Settings"
+    IDS_CONFIGTYPE_CUSTOM   "Custom Settings"
+    IDS_CONFIGTYPE_DEFAULT_PENDING "Default Settings Pending"
+    IDS_ERR_REG_NO_ACCESS   "You do not have sufficient access rights.  To edit the event-to-trap configuration, you must have administrator priviledges on the target machine."
+    IDS_ERR_REG_NO_READ_ACCESS 
+                            "You do not have sufficient access rights to read the configuration from the registry.  To edit the event-to-trap configuration, you must have administrator priviledges on the target machine."
+    IDS_ERR_RANGE           "Invalid value. Please enter an integer between %d and %d."
+    IDS_ERROR_NOT_RESPONDING "The remote system is not responding."
+    IDS_ERR_LOAD_MESSAGE_FILE_FAILED "Can't load message file: %s"
+    IDS_ERR_MESSAGE_NOT_FOUND 
+                            "The current trap configuration contains at least one event description that is not valid.  The corresponding event(s) will not be loaded."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\eventrap.rc2"  // non-Microsoft Visual C++ edited resources
+
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+#include "afxres.rc"  // Standard components
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

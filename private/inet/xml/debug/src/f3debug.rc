@@ -1,0 +1,77 @@
+/*
+* 
+* Copyright (c) 1998,1999 Microsoft Corporation. All rights reserved.
+* EXEMPT: copyright change only, no build required
+* 
+*/
+/*
+ *	DEBUG.RC
+ *
+ *	This file includes all of the resources for the library subsystem.
+ */
+
+#include <windows.h>
+#include "resource.h"
+#include "corerc.h"
+#include "f3debug.dlg"
+
+#include "ntverp.h"
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft HTML Debug Library"
+#define VER_INTERNALNAME_STR        "MSHTMDBG"
+#define VER_ORIGINALFILENAME_STR    "MSHTMDBG.DLL"
+#include "common.ver"
+
+IIC_ICONIC	ICON	"heapmon.ico"
+
+ViewerMenu MENU 
+BEGIN 
+  POPUP "" 
+    BEGIN
+        // These menu items correspond to the elements
+        // of s_aModeInfo[] in view.cxx 
+        MENUITEM "View/Content/Text",       1
+        MENUITEM "View/Content/Anistropic", 2
+        MENUITEM "View/Icon/Text",          3
+        MENUITEM "View/Icon/Anisotropic",   4
+        MENUITEM "Data/Content/Metafile",   5
+        MENUITEM "Data/Icon/Metafile",      6
+        MENUITEM "Data/Content/EnhMetafile",7
+        MENUITEM "Data/Icon/EnhMetafile",   8
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                 20
+    END 
+END
+
+IDD_PERFTAGS DIALOG 10, 19, 364, 191
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Performance Tags"
+FONT 8, "Courier New"
+BEGIN
+    LISTBOX         IDC_TAGLIST, 6, 8, 279, 177, LBS_SORT | 
+                    LBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Start",        IDC_STARTSTOP,   296,  69, 60, 14
+    PUSHBUTTON      "Enable &All",  IDC_ENABLEALL,   296,  91, 60, 14
+    PUSHBUTTON      "D&isable All", IDC_DISABLEALL,  296, 109, 60, 14
+    PUSHBUTTON      "&Clear Log",   IDC_CLEARLOG,    296, 131, 60, 14
+    PUSHBUTTON      "Del&ete Log",  IDC_DELETELOG,   296, 149, 60, 14
+    DEFPUSHBUTTON   "&Dump Log",    IDC_DUMPLOG,     296, 171, 60, 14
+END
+
+IDD_PERFMETER DIALOG 10, 19, 464, 391
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "PerfMeter"
+FONT 8, "Courier New"
+BEGIN
+    LISTBOX         IDC_TAGLIST, 6, 8, 379, 377,
+                    LBS_OWNERDRAWFIXED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Clear &Meter", IDC_CLEARMETER,  396, 311, 60, 14
+    PUSHBUTTON      "&Start Log",   IDC_STARTSTOP,   396, 331, 60, 14
+    PUSHBUTTON      "&Clear Log",   IDC_CLEARLOG,    396, 351, 60, 14
+    DEFPUSHBUTTON   "&Dump Log",    IDC_DUMPLOG,     396, 371, 60, 14
+END

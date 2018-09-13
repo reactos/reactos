@@ -1,0 +1,3 @@
+i386_SOURCES=..\i386\psctx386.c \
+             ..\i386\psldt.c    \
+             ..\i386\psvdm.c

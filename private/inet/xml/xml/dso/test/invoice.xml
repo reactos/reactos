@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<XML>
+	<CUSTOMER>
+		<NAME>HILARIÓN-Abastos</NAME>
+		<ORDER>
+		  <OrderID>10976</OrderID>
+		  <Salesperson>Nancy Davolio</Salesperson>
+		  <OrderDate>4/24/96</OrderDate>
+		  <RequiredDate>6/5/96</RequiredDate>
+		  <ShippedDate>5/3/96</ShippedDate>
+		  <Shippers.CompanyName>Speedy Express</Shippers.CompanyName>
+		  <Freight>37.97</Freight>
+		  <ITEM>
+			  <ProductID>28</ProductID>
+			  <ProductName>Rössle Sauerkraut</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">45.6</UnitPrice>  
+			  <Quantity>20</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		</ORDER>
+	</CUSTOMER>
+	<CUSTOMER>
+		<NAME>Königlich Essen</NAME>
+		<ORDER>
+		  <OrderID>10325</OrderID>
+		  <Salesperson>Nancy Davolio</Salesperson>
+		  <OrderDate>11/9/94</OrderDate>
+		  <RequiredDate>11/23/94</RequiredDate>
+		  <ShippedDate>11/14/94</ShippedDate>
+		  <Shippers.CompanyName>Federal Shipping</Shippers.CompanyName>
+		  <Freight>64.86</Freight>
+
+		  <ITEM>
+			  <ProductID>6</ProductID>
+			  <ProductName>Grandma's Boysenberry Spread</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">20</UnitPrice>  
+			  <Quantity>6</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>13</ProductID>
+			  <ProductName>Konbu</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">4.8</UnitPrice>  
+			  <Quantity>12</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>14</ProductID>
+			  <ProductName>Tofu</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">18.6</UnitPrice>  
+			  <Quantity>9</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>31</ProductID>
+			  <ProductName>Gorgonzola Telino</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">10</UnitPrice>  
+			  <Quantity>4</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>72</ProductID>
+			  <ProductName>Mozzarella di Giovanni</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">27.8</UnitPrice>  
+			  <Quantity>40</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		</ORDER>
+		<ORDER>
+		  <OrderID>10357</OrderID>
+		  <Salesperson>Nancy Davolio</Salesperson>
+		  <OrderDate>12/20/94</OrderDate>
+		  <RequiredDate>1/17/95</RequiredDate>
+		  <ShippedDate>1/2/95</ShippedDate>
+		  <Shippers.CompanyName>Federal Shipping</Shippers.CompanyName>
+		  <Freight>34.88</Freight>
+
+		  <ITEM>
+			  <ProductID>10</ProductID>
+			  <ProductName>Ikura</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">24.8</UnitPrice> 
+			  <Quantity>30</Quantity>
+			  <Discount>0.2</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>26</ProductID>
+			  <ProductName>Gumbär Gummibärchen</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">24.9</UnitPrice>  
+			  <Quantity>16</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>60</ProductID>
+			  <ProductName>Camembert Pierrot</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">27.2</UnitPrice>  
+			  <Quantity>8</Quantity>
+			  <Discount>0.2</Discount>
+		  </ITEM>
+		</ORDER>
+	</CUSTOMER>
+	<CUSTOMER>
+		<NAME>Bottom-Dollar Markets</NAME>
+		<ORDER>
+		  <OrderID>10975</OrderID>
+		  <Salesperson>Nancy Davolio</Salesperson>
+		  <OrderDate>4/24/96</OrderDate>
+		  <RequiredDate>5/22/96</RequiredDate>
+		  <ShippedDate>4/26/96</ShippedDate>
+		  <Shippers.CompanyName>Federal Shipping</Shippers.CompanyName>
+		  <Freight>32.27</Freight>
+
+		  <ITEM>
+			  <ProductID>8</ProductID>
+			  <ProductName>Northwoods Cranberry Sauce</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">40</UnitPrice>  
+			  <Quantity>16</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>75</ProductID>
+			  <ProductName>Rhönbräu Klosterbier</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">7.75</UnitPrice>  
+			  <Quantity>10</Quantity>
+			  <Discount>0</Discount>
+		  </ITEM>
+		</ORDER>
+	</CUSTOMER>
+	<CUSTOMER>
+		<NAME>Ernst Handel</NAME>
+		<ORDER>
+		  <OrderID>10258</OrderID>
+		  <Salesperson>Nancy Davolio</Salesperson>
+		  <OrderDate>8/17/94</OrderDate>
+		  <RequiredDate>9/14/94</RequiredDate>
+		  <ShippedDate>8/23/94</ShippedDate>
+		  <Shippers.CompanyName>Speedy Express</Shippers.CompanyName>
+		  <Freight>140.51</Freight>
+
+		  <ITEM>
+			  <ProductID>2</ProductID>
+			  <ProductName>Chang</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">15.2</UnitPrice>  
+			  <Quantity>50</Quantity>
+			  <Discount>0.2</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>5</ProductID>
+			  <ProductName>Chef Anton's Gumbo Mix</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">17</UnitPrice>  
+			  <Quantity>65</Quantity>
+			  <Discount>0.2</Discount>
+		  </ITEM>
+		  <ITEM>
+			  <ProductID>32</ProductID>
+			  <ProductName>Mascarpone Fabioli</ProductName>
+			  <UnitPrice dt:dt="fixed.14.4">25.6</UnitPrice>  
+			  <Quantity>6</Quantity>
+			  <Discount>0.2</Discount>
+		  </ITEM>
+		</ORDER>
+	</CUSTOMER>
+</XML>

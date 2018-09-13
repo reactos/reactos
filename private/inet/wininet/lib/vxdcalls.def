@@ -1,0 +1,13 @@
+LIBRARY KERNEL32
+
+EXPORTS
+    VxDCall0            @1    NONAME ;Internal
+    VxDCall1            @2    NONAME ;Internal
+    VxDCall2@12         @3    NONAME ;Internal
+    VxDCall3@16         @4    NONAME ;Internal
+    VxDCall4@20         @5    NONAME ;Internal
+    VxDCall5@24         @6    NONAME ;Internal
+    VxDCall6            @7    NONAME ;Internal
+    VxDCall7            @8    NONAME ;Internal
+    VxDCall8            @9    NONAME ;Internal
+

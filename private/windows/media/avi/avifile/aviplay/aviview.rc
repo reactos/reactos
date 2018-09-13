@@ -1,0 +1,68 @@
+#include <windows.h>
+#include "aviview.h"
+
+ID_APP  ICON   aviview.ico
+AppIcon ICON   aviview.ico
+
+ID_APP menu
+begin
+    POPUP "&File"
+	begin
+            MENUITEM "&Open..."         , MENU_OPEN
+	    MENUITEM "Open &Ball"	, MENU_BALL
+	    MENUITEM "&Close"		, MENU_CLOSE
+	    MENUITEM "&Merge..."	, MENU_MERGE
+            MENUITEM "Save &As..."      , MENU_SAVEAS
+            MENUITEM "Save &Raw..."     , MENU_SAVERAW
+            MENUITEM SEPARATOR
+	    MENUITEM "Save O&ptions..." , MENU_OPTIONS
+            MENUITEM "E&xit"            , MENU_EXIT
+        end
+    POPUP "&Edit"
+	begin
+            MENUITEM "Cu&t\t^X"		, MENU_CUT
+            MENUITEM "&Copy\t^C"        , MENU_COPY
+            MENUITEM "&Paste\t^V"       , MENU_PASTE
+	    MENUITEM "&Delete\tDel",	, MENU_DELETE
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Mark\tEnter",	, MENU_MARK
+        end
+    POPUP "&Action"
+	begin
+	    MENUITEM "&Play\t^P"	, MENU_PLAY
+	    MENUITEM "&Stop\t^S"	, MENU_STOP
+	end
+    POPUP "&Zoom"
+	begin
+	    MENUITEM "/&4"		, MENU_ZOOMQUARTER
+	    MENUITEM "/&2"		, MENU_ZOOMHALF
+	    MENUITEM "x&1"		, MENU_ZOOM1
+	    MENUITEM "x2"		, MENU_ZOOM2
+	    MENUITEM "x4"		, MENU_ZOOM4
+        end
+    POPUP "&Playback"
+	begin
+	    MENUITEM "&Decompress"	, MENU_PLAY_DECOMPRESS
+	    MENUITEM "&Cheat"		, MENU_PLAY_CHEAT
+	    MENUITEM "&Yield Bound"	, MENU_PLAY_YIELD_BOUND
+	    MENUITEM "&Read Bound"	, MENU_PLAY_READ_BOUND
+	    MENUITEM "&Decompress Bound", MENU_PLAY_DECOMPRESS_BOUND
+	    MENUITEM "&Draw Bound"	, MENU_PLAY_DRAW_BOUND
+	end
+end
+
+/*
+ * ACCELERATORS 
+ */
+ID_APP ACCELERATORS PRELOAD
+BEGIN
+	/* New Accelerators */
+	"^Z",		MENU_UNDO
+        "^X",           MENU_CUT
+	"^C",		MENU_COPY
+	"^V",		MENU_PASTE
+	"^P",		MENU_PLAY
+	"^S",		MENU_STOP
+        VK_DELETE,      MENU_DELETE,    VIRTKEY
+	VK_RETURN,	MENU_MARK,	VIRTKEY
+END

@@ -1,0 +1,35 @@
+#include            <windows.h>
+#include            <commctrl.h>
+#include            <scrnsave.h>
+#include            "strings.h"
+#include            "mystify.dlg"
+
+ID_APP              ICON        mystify.ico
+
+STRINGTABLE PRELOAD
+BEGIN
+// strings unique to Mystify...
+    idsDescription  "Mystify"
+    idsPolygon      "Polygon %d"
+    idsAppName      "Screen Saver.Mystify"
+    idsName         "Mystify"
+END
+
+#include            "..\common\strings.rc"
+
+#include <ntverp.h>
+
+/*-----------------------------------------------*/
+/* the following lines are specific to this file */
+/*-----------------------------------------------*/
+
+/* VER_FILETYPE, VER_FILESUBTYPE, VER_FILEDESCRIPTION_STR
+ * and VER_INTERNALNAME_STR must be defined before including COMMON.VER
+ */
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Mystify Screen Saver"
+#define VER_INTERNALNAME_STR        "ssmyst\0"
+
+#include "common.ver"
+

@@ -1,0 +1,113 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992-1998. 
+//
+//  File: msxql.idl
+//
+//--------------------------------------------------------------------------
+
+
+cpp_quote("//+-------------------------------------------------------------------------")
+cpp_quote("//")
+cpp_quote("//  Microsoft Windows")
+cpp_quote("//  Copyright (C) Microsoft Corporation, 1997-1998.")
+cpp_quote("//")
+cpp_quote("//--------------------------------------------------------------------------")
+
+
+#include "msxqldid.h"
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+import "wtypes.idl";
+import "objidl.idl";
+import "oaidl.idl";
+#endif
+
+[
+    uuid(135A1550-E45C-11d1-9712-0000F87A390A),     // LIBID_MSXQL
+    helpstring("Microsoft XQL, version 1.0"),
+    lcid(0x0000),
+    version(1.0)
+]
+
+library MSXQL
+{
+
+importlib("stdole32.tlb");
+importlib("stdole2.tlb");
+
+#ifdef UNIX
+importlib("msxml.tlb");
+#else
+// There is no typelib here under Unix
+importlib("../../../../iedev/inc/msxml.tlb");
+// Let's try this instead...
+#endif
+
+
+interface IXQLParser;
+interface IXQLQuery;
+
+ // IXQLParser
+
+[
+    local, object,
+    uuid(135A1551-E45C-11d1-9712-0000F87A390A), // IID_IXQLParser
+    odl, 
+	dual,
+	oleautomation,
+    nonextensible,
+    hidden,		
+	pointer_default(unique),
+	helpstring("XQL parser interface.")
+]
+interface IXQLParser : IDispatch
+{
+    [id(DISPID_XQLPARSER_QUERY), helpstring("parses an XQL query string and returns a query object.")] HRESULT getQuery([in] BSTR bstrQuery, [retval, out] IXQLQuery ** p);
+    [id(DISPID_XQLPARSER_SORTEDQUERY), helpstring("parses an XQL query string and returns a sorted query object.")] HRESULT getSortedQuery([in] BSTR bstrQuery, [in] BSTR bstrOrderBy, [retval, out] IXQLQuery ** p);
+};
+
+
+ // IXQLQuery
+
+[
+    local, object,
+    uuid(135A1552-E45C-11d1-9712-0000F87A390A), // IID_IXQLQuery
+    odl, 
+	dual,
+	oleautomation,
+    nonextensible,
+	helpstring("XQL query interface.")
+]
+interface IXQLQuery : IDispatch
+{
+    [propget, id(DISPID_XQLQUERY_DATASRC), helpstring("gets query's data source.")] HRESULT dataSrc([retval, out] IXMLElement2 ** p);
+    [propput, id(DISPID_XQLQUERY_DATASRC), helpstring("sets query's data source.")] HRESULT dataSrc([in] IXMLElement2 * p);
+    [id(DISPID_XQLQUERY_RESET), helpstring("resets the query")] HRESULT reset();
+    [propget, id(DISPID_XQLQUERY_PEEK), helpstring("peek the next node")] HRESULT peek([retval, out] IXMLElement2 ** p);
+    [propget, id(DISPID_XQLQUERY_NEXT), helpstring("gets the next node")] HRESULT next([retval, out] IXMLElement2 ** p);
+    [propget, id(DISPID_XQLQUERY_INDEX), helpstring("gets the index of the last node returned")] HRESULT index([retval, out] long * p);
+    [id(DISPID_XQLQUERY_CONTAINS), helpstring("tests whether a node is in the query's result")] HRESULT contains([in] IXMLElement2 * p, [retval, out] VARIANT_BOOL *pb);
+
+    [propget, id(DISPID_XQLQUERY_DATASRC_DOM), helpstring("gets query's data source.")] HRESULT dataSrcDOM([retval, out] IDOMNode ** p);
+    [propput, id(DISPID_XQLQUERY_DATASRC_DOM), helpstring("sets query's data source.")] HRESULT dataSrcDOM([in] IDOMNode * p);
+    [propget, id(DISPID_XQLQUERY_PEEK_DOM), helpstring("peek the next node")] HRESULT peekDOM([retval, out] IDOMNode ** p);
+    [propget, id(DISPID_XQLQUERY_NEXT_DOM), helpstring("gets the next node")] HRESULT nextDOM([retval, out] IDOMNode ** p);
+    [id(DISPID_XQLQUERY_CONTAINS_DOM), helpstring("tests whether a node is in the query's result")] HRESULT containsDOM([in] IDOMNode * p, [retval, out] VARIANT_BOOL *pb);
+
+}
+
+
+ // XQL Parser Class
+[
+    uuid(135A1553-E45C-11d1-9712-0000F87A390A), // CLSID_XQLParser
+    helpstring("XQL parser object.")
+]
+coclass XQLParser
+{
+    [default] interface IXQLParser;
+}
+
+}

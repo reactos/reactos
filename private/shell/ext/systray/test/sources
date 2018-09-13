@@ -1,0 +1,73 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources
+
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+
+Author:
+
+    Steve Wood (stevewo) 12-Apr-1989
+
+
+Revision History:
+
+    Dave Sheldon (dsheldon)
+	12-Mar-1998 copied from \private\nt\ui\mpr\mpr\sources and modified
+
+!ENDIF
+
+MAJORCOMP=shell
+MINORCOMP=systraytest
+
+TARGETNAME=test
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+BACKGROUND_USE=1
+
+#
+# Retail only
+#
+
+C_DEFINES=-DWIN32 -DUNICODE -DWINNT
+
+#
+# Debug only
+#
+
+#C_DEFINES=-DWIN32 -DUNICODE -DDEBUG -DWINNT
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+TARGETLIBS= $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib    \
+            $(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+            $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\shell32.lib  \
+            $(_NTBINDIR)\public\sdk\lib\*\shell32p.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\ole32.lib \
+            $(_NTBINDIR)\public\sdk\lib\*\uuid.lib \
+            
+
+INCLUDES=\
+            $(BASEDIR)\private\INC; \
+            $(BASEDIR)\private\windows\inc; \
+            $(BASEDIR)\private\shell\inc; \
+            $(BASEDIR)\public\sdk\inc; \
+            $(BASEDIR)\private\shell\ext\systray\dll; \
+                       
+
+SOURCES=\
+      main.cpp 

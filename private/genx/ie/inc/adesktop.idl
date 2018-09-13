@@ -1,0 +1,868 @@
+//=--------------------------------------------------------------------------=
+// common.IDL
+//=--------------------------------------------------------------------------=
+// Copyright  1995-1998  Microsoft Corporation.  All Rights Reserved.
+//
+// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
+// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
+// PARTICULAR PURPOSE.
+//=--------------------------------------------------------------------------=
+//
+// ODL file for the control(s) and automation object(s) in this inproc server
+//
+#include <olectl.h>
+
+// can't include oaidl.h, so this will have to do
+//
+#define DISPID_NEWENUM -4
+
+#include "addisp.h"
+
+typedef enum ProviderChangedConstant {
+    ProviderAdded   = 0,
+    ProviderRemoved = 1,
+    ProviderChanged = 2,
+} ProviderChangedConstant;
+
+//=--------------------------------------------------------------------------=
+// the libid for this type libray
+//
+[
+//    uuid(37051b80-d35b-11cf-bb82-00a0c908dbaa),
+//    helpstring("InfoHelp Control Library"),
+// totally new guid for common.idl
+    uuid(7EC6CA70-2BA3-11d0-85CF-00AA00B92C4D),
+    helpstring("Active Desktop Library"),
+
+    lcid(0x0000),
+    version(1.0)
+]
+library ActiveDesktopObjects
+{
+
+    // standard imports
+    //
+    importlib(STDOLE_TLB);
+    importlib(STDTYPE_TLB);
+
+    // Forward references
+    interface IInfoHelpProvider;
+    interface IInfoHelpProviders;
+    interface IInfoHelpURL;
+    interface IInfoHelpURLs;
+    interface IInfoHelpProperty;
+    interface IInfoHelpProperties;
+
+    // forward parsetbl refs
+    interface IArticle;
+    interface IArticles;
+
+    // This is the main object that everything else hangs off of.
+    // Any page or program that uses infohelp should create exactly one of these objects.
+    // primary dispatch interface for CInfoHelp control
+    //
+    [
+        uuid(37df4ee0-d35b-11cf-bb82-00a0c908dbaa),
+        helpstring("InfoHelp Control"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelp : IDispatch
+    {
+        // properties
+        //
+        [propget]
+        HRESULT InfoviewName([out,retval] BSTR * pInfoviewName);
+        [propput]
+        HRESULT InfoviewName([in] BSTR InfoviewName);
+
+        [propget]
+        HRESULT OutputArray([out,retval] VARIANT* pvOutputArray);
+        [propput]
+        HRESULT OutputArray([in] VARIANT vOutputArray);
+
+        [propget]
+        HRESULT Providers([out, retval] IInfoHelpProviders ** retval);
+
+        [propget]
+        HRESULT Properties( [out, retval] IInfoHelpProperties ** retval );
+
+        [propget] HRESULT Connected( [out, retval] BOOL * bHaveConnection );
+
+        // methods
+        //
+
+        HRESULT GetWebViewInfo([in] BSTR bsKey,[out,retval] LONG* plKeyValuePresent);
+        HRESULT GetSystemColor([in] DWORD dwColorIndex,[out,retval] BSTR * pbColor );
+        HRESULT ConnectToInternet( void );
+        HRESULT Trace( [in] BSTR Message );
+        HRESULT SendNotification( [in] BSTR Message );
+    };
+
+    // event interface for CInfoHelp controls ...
+    //
+    [
+        uuid(39b54760-d35b-11cf-bb82-00a0c908dbaa),
+        helpstring("Event interface for InfoHelp control"),
+        hidden
+    ]
+    dispinterface DInfoHelpEvents
+    {
+        properties:
+
+        methods:
+            [id(DISPID_IH_PROVIDER_CHANGED), helpstring("ChangeTypes 0=Add, 1=Remove, 2=Modify")]
+                void ProviderChanged( [in] BSTR ProviderName, [in] DWORD ChangeType );
+
+            [id(DISPID_IH_NOTIFICATION)] void ReceiveNotification( [in] BSTR Message );
+
+            [id(DISPID_IH_BEGIN_UPDATE),
+                helpstring("URLIndex 0=DesktopURL, 1=ScreenSaverURL, 2=ImageURL, 3=TickerURL, 4=LogoURL")]
+                void BeginUpdateURL( [in] BSTR ProviderName, [in] DWORD URLIndex );
+
+            [id(DISPID_IH_END_UPDATE),
+                helpstring("URLIndex 0=DesktopURL, 1=ScreenSaverURL, 2=ImageURL, 3=TickerURL, 4=LogoURL; Result 0=Complete, 1=Incomplete")]
+                void EndUpdateURL( [in] BSTR ProviderName, [in] DWORD URLIndex, [in] DWORD Result );
+    };
+
+    // coclass for CInfoHelp controls
+    //
+    [
+        uuid(3a53f860-d35b-11cf-bb82-00a0c908dbaa),
+        helpstring("InfoHelp control")
+    ]
+    coclass InfoHelp
+    {
+        [default]         interface IInfoHelp;
+        [default, source] dispinterface DInfoHelpEvents;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpProvider
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(616BAEC1-1631-11d0-86C1-0080C769058A),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpProvider : IDispatch
+    {
+        // Properties
+        [propget, id(DISPID_VALUE)]
+        HRESULT Name( [out, retval] BSTR * retval );
+
+        [propget]
+        HRESULT DesktopURL( [out, retval] IInfoHelpURL ** retval );
+
+        [propget]
+        HRESULT ScreenSaverURL( [out, retval] IInfoHelpURL ** retval );
+
+        [propget]
+        HRESULT ImageURL( [out, retval] IInfoHelpURL ** retval );
+
+        [propget]
+        HRESULT TickerURL( [out, retval] IInfoHelpURL ** retval );
+
+        [propget]
+        HRESULT LogoURL( [out, retval] IInfoHelpURL ** retval );
+
+        HRESULT Lock();
+        HRESULT UnLock( [in] BOOL bKeepChanges );
+    };
+
+    //  Class information for InfoHelpProvider
+    [
+        uuid(73249EA1-1632-11d0-86C1-0080C769058A)
+    ]
+    coclass InfoHelpProvider
+    {
+        [default] interface IInfoHelpProvider;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpProviders
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(73249EA2-1632-11d0-86C1-0080C769058A),
+        helpstring("InfoHelpProvider collection."),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpProviders : IDispatch
+    {
+        // Methods
+        [id(DISPID_VALUE), helpstring("Given an identifier, returns a IInfoHelpProvider in the collection.")]
+        HRESULT Item([in] VARIANT * pvID, [out, retval] IInfoHelpProvider ** retval);
+
+        [propget, helpstring("Returns the number of IInfoHelpProviders in the collection.")]
+        HRESULT Count([out, retval] long * retval);
+
+        HRESULT CreateProvider( [in] BSTR ProviderName, [out, retval] IInfoHelpProvider ** retval);
+
+        [helpstring("Given an identifier, removes a IInfoHelpProvider from the collection.")]
+        HRESULT Remove([in] VARIANT * pvID);
+    }
+
+    //  Class information for InfoHelpProviders
+    [
+        uuid(73249EA3-1632-11d0-86C1-0080C769058A)
+    ]
+    coclass InfoHelpProviders
+    {
+        [default] interface IInfoHelpProviders;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpURL
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(A8599221-187F-11d0-A61E-0080C769058A),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpURL : IDispatch
+    {
+        // Properties
+        [propget, id(DISPID_VALUE)]
+        HRESULT URL([out, retval] BSTR * retval);
+        [propput, id(DISPID_VALUE)]
+        HRESULT URL([in] BSTR Name);
+
+        [propget] HRESULT Name([out, retval] BSTR * retval);
+
+        [propget] HRESULT Properties( [out, retval] IInfoHelpProperties ** retval );
+
+        [propget] HRESULT LevelsDeep( [out, retval] DWORD * pdwLevelsDeep );
+        [propput] HRESULT LevelsDeep( [in] DWORD dwLevelsDeep );
+
+        [propget] HRESULT UpdateInterval( [out, retval] DWORD * pdwLevelsDeep );
+        [propput] HRESULT UpdateInterval( [in] DWORD dwMinutes );
+
+        [propget] HRESULT LastUpdateTime( [out, retval] DATE * pLastUpdate );
+
+        HRESULT UpdateNow();
+        };
+
+    //  Class information for InfoHelpProvider
+    [
+        uuid(A8599222-187F-11d0-A61E-0080C769058A)
+    ]
+    coclass InfoHelpURL
+    {
+        [default] interface IInfoHelpURL;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpURLs
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(5B293B01-1CED-11d0-A61E-0080C769058A),
+        helpstring("InfoHelpURL collection."),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpURLs : IDispatch
+    {
+        // Methods
+        [id(DISPID_VALUE), helpstring("Given an identifier, returns a IInfoHelpURL in the collection.")]
+        HRESULT Item([in] VARIANT * pvID, [out, retval] IInfoHelpURL ** retval);
+
+        [propget, helpstring("Returns the number of IInfoHelpURLs in the collection.")]
+        HRESULT Count([out, retval] long * retval);
+
+        HRESULT CreateURL( [in] BSTR URLName, [out, retval] IInfoHelpURL ** retval);
+
+        [helpstring("Given an identifier, removes a IInfoHelpURL from the collection.")]
+        HRESULT Remove([in] VARIANT * pvID);
+    }
+
+    //  Class information for InfoHelpURLs
+    [
+        uuid(5B293B02-1CED-11d0-A61E-0080C769058A)
+    ]
+    coclass InfoHelpURLs
+    {
+        [default] interface IInfoHelpURLs;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpProperty
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(14D07DA1-1D0E-11d0-A61E-0080C769058A),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpProperty : IDispatch
+    {
+        // Properties
+        [propget, id(DISPID_VALUE)]
+        HRESULT Value([out, retval] VARIANT * retval);
+        [propput, id(DISPID_VALUE)]
+        HRESULT Value([in] VARIANT Name);
+
+        [propget]
+        HRESULT Name([out, retval] BSTR * retval);
+
+        // Methods
+        HRESULT Refresh();
+
+        HRESULT Flush();
+    };
+
+    //  Class information for InfoHelpProvider
+    [
+        uuid(14D07DA2-1D0E-11d0-A61E-0080C769058A)
+    ]
+    coclass InfoHelpProperty
+    {
+        [default] interface IInfoHelpProperty;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    // IInfoHelpProperties
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(14D07DA3-1D0E-11d0-A61E-0080C769058A),
+        helpstring("InfoHelpProperty collection."),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IInfoHelpProperties : IDispatch
+    {
+        // Methods
+        [id(DISPID_VALUE), helpstring("Given an identifier, returns a IInfoHelpProperty in the collection.")]
+        HRESULT Item([in] VARIANT * pvID, [out, retval] IInfoHelpProperty ** retval);
+
+        [propget, helpstring("Returns the number of IInfoHelpProperties in the collection.")]
+        HRESULT Count([out, retval] long * retval);
+
+        HRESULT Create( [in] BSTR PropertyName, [out, retval] IInfoHelpProperty ** retval);
+
+        [helpstring("Given an identifier, removes a IInfoHelpProperty from the collection.")]
+        HRESULT Remove([in] VARIANT * pvID);
+
+        HRESULT Refresh();
+
+        HRESULT Flush();
+    }
+
+    //  Class information for InfoHelpProperties
+    [
+        uuid(14D07DA4-1D0E-11d0-A61E-0080C769058A)
+    ]
+    coclass InfoHelpProperties
+    {
+        [default] interface IInfoHelpProperties;
+    };
+
+/* Removed channel bar.
+/////////////////////////////////////////////////////////////////////////////
+//  Channel Bar
+/////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+    //  IChannelBar
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(CADEDF12-22CA-11D0-B68D-00C04FD64433),
+        helpstring("Unknown interface for Microsoft Channel Bar"),
+        hidden,
+        odl
+    ]
+    interface IChannelBar : IUnknown
+    {
+        // Properties
+        [propget, id(DISPID_CB_ALWAYSONTOP)]
+        HRESULT AlwaysOnTop([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_ALWAYSONTOP)]
+        HRESULT AlwaysOnTop([in] boolean bAlwaysOnTop);
+
+        [propget, id(DISPID_CB_DOCKED)]
+        HRESULT Docked([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_DOCKED)]
+        HRESULT Docked([in] boolean bDocked);
+
+        [propget, id(DISPID_CB_AUTOHIDENEWS)]
+        HRESULT AutoHideNews([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_AUTOHIDENEWS)]
+        HRESULT AutoHideNews([in] boolean bAutoHideNews);
+
+        [propget, id(DISPID_CB_TEXTLABELS)]
+        HRESULT TextLabels([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_TEXTLABELS)]
+        HRESULT TextLabels([in] boolean bTextLabels);
+
+        [propget, id(DISPID_CB_TOOLTIPS)]
+        HRESULT Tooltips([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_TOOLTIPS)]
+        HRESULT Tooltips([in] boolean bTooltips);
+
+        [propget, id(DISPID_CB_AUTOHIDECHANGER)]
+        HRESULT AutoHideChanger([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_AUTOHIDECHANGER)]
+        HRESULT AutoHideChanger([in] boolean bAutoHideChanger);
+
+        [propget, id(DISPID_CB_AUTOPLAY)]
+        HRESULT AutoPlay([out, retval] boolean * retval);
+        [propput, id(DISPID_CB_AUTOPLAY)]
+        HRESULT AutoPlay([in] boolean bAutoPlay);
+
+        [propget, id(DISPID_CB_CHANNELTIME)]
+        HRESULT ChannelTime([out, retval] int * retval);
+        [propput, id(DISPID_CB_CHANNELTIME)]
+        HRESULT ChannelTime([in] int nChannelTime);
+
+        // Methods
+    };
+
+    //  Class information for ChannelBar
+    [
+        uuid(CADEDF11-22CA-11D0-B68D-00C04FD64433)
+    ]
+    coclass ChannelBar
+    {
+        [default] interface IChannelBar;
+    };
+*/
+
+/////////////////
+//
+// Begin ParseTbl
+//
+/////////////////
+
+
+        ///////////////////////////////////////////////////////////
+        // primary dispatch interface for CParseTbl control
+        ///////////////////////////////////////////////////////////
+    [
+        uuid(76d71b60-164f-11d0-85bd-00aa00b92c4d),
+        helpstring("ParseTbl Control"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IParseTbl : IDispatch {
+
+        // properties
+    //
+
+        // methods
+    //
+        [id(DISPID_ABOUTBOX)]
+            void AboutBox(void);
+
+        [id(1), helpstring("Returns an Articles collection object")]
+            HRESULT GetArticles([in] BSTR bstrURL, [out, retval] IArticles** retval);
+        [id(2), helpstring("Retrieves an element of a tag")]
+            HRESULT SplitTag([in] BSTR bstrAnchor, [in] BSTR bstrPart, [out, retval] BSTR *pbstrRetval);
+        [id(3), propput, helpstring("Prevents us from using the net")]
+            HRESULT OfflineOnly([in] BOOL bOffline);
+        [id(3), propget, helpstring("Prevents us from using the net")]
+            HRESULT OfflineOnly([out, retval] BOOL * pbOffline);
+    };
+
+    // event interface for CParseTbl controls ...
+    //
+    [
+        uuid(780a4010-164f-11d0-85bd-00aa00b92c4d),
+    helpstring("Event interface for ParseTbl control"),
+    hidden
+    ]
+    dispinterface DParseTblEvents {
+        properties:
+
+    methods:
+    };
+
+    // coclass for CParseTbl controls
+    //
+    [
+        uuid(793eebf0-164f-11d0-85bd-00aa00b92c4d),
+    helpstring("ParseTbl control")
+    ]
+    coclass ParseTbl {
+        [default]         interface IParseTbl;
+    [default, source] dispinterface DParseTblEvents;
+    };
+
+        ////////////////////////////////////////////////////////
+        //Article
+        ////////////////////////////////////////////////////////
+    [   uuid(64EF5B31-17D4-11d0-85BD-00AA00B92C4D),
+        helpstring("Article object"),
+//      oleautomation,
+        dual,
+        odl
+    ]
+    interface IArticle : IDispatch
+    {
+
+        [id(1), helpstring("Retrieves an arbitrary elemtent")]
+        HRESULT Data([in] BSTR bstrName, [out, retval] BSTR * pbstrValue);
+        [id(2), hidden, helpstring("INTERNAL:Sets an arbitrary elemtent")]
+        HRESULT Add([in] char *lpszName, [in] char *lpszValue);
+
+    };
+
+    // Article CoClass
+    [
+        uuid(D137D2B0-18C9-11d0-85BF-00AA00B92C4D),
+        helpstring("Article CoClass")
+    ]
+    coclass Article
+    {
+        [default] interface IArticle;
+    };
+
+
+        ////////////////////////////////////////////////////
+        //Articles Collection
+        ///////////////////////////////////////////////////
+    [   uuid(64EF5B32-17D4-11d0-85BD-00AA00B92C4D),
+        helpstring("Articles Collection"),
+//      oleautomation,
+        dual,
+        odl
+    ]
+    interface IArticles : IDispatch
+    {
+        [propget, helpstring("Retrieves number of Articles")]
+        HRESULT Count([out, retval] long* retval);
+
+        [propget, id(DISPID_VALUE), helpstring("Retrieves a URL")]
+        HRESULT Item([in] LONG lIndex, [out, retval] IArticle ** retval);
+
+        [id(DISPID_NEWENUM), helpstring("Enables 'For Each'")]
+        HRESULT _NewEnum([out, retval] IUnknown ** retval);
+
+        [id(1), helpstring("Adds an article")]
+        HRESULT Add([in] IArticle * pArticle);
+    };
+    // Articles CoClass
+    [
+        uuid(D137D2B1-18C9-11d0-85BF-00AA00B92C4D),
+        helpstring("Articles CoClass")
+    ]
+    coclass Articles
+    {
+        [default] interface IArticles;
+    };
+
+/* Removed Ticker 12/16/96 [jm]
+/////////////////
+//
+// Begin Ticker
+//
+/////////////////
+
+    interface IDIB;
+
+    typedef unsigned char BYTE;
+
+    /////////////////////////////////////////////////////////////////////////
+    // TickStyle
+    /////////////////////////////////////////////////////////////////////////
+    typedef enum
+    {
+        [helpstring("Top-Down Flash")]              tsTopDownFlash  = 0x0001,
+        [helpstring("Top-Down Scroll")]             tsTopDownScroll,
+        [helpstring("Bottom-Up Flash")]             tsBottomUpFlash,
+        [helpstring("Bottom-Up Scroll")]            tsBottomUpScroll,
+        [helpstring("Left-Right Flash")]            tsLeftRightFlash,
+        [helpstring("Left-Right Scroll")]           tsLeftRightScroll,
+        [helpstring("Right-Left Flash")]            tsRightLeftFlash,
+        [helpstring("Right-Left Scroll")]           tsRightLeftScroll,
+
+        [helpstring("Default Transition Effect")]   tsTransition    = 0x007F,
+
+        [helpstring("User Defined Transitions")]    tsUser          = 0x0080
+    } TickStyle;
+
+    typedef enum
+    {
+        pt8BPP      = 8,
+        pt16BPP     = 16,
+        pt24BPP     = 24,
+        pt32BPP     = 32
+    } PixelType;
+
+    typedef struct
+    {
+        PixelType   ptType;
+        BYTE        argbPixel[4];
+    } DIBPIXEL;
+
+    /////////////////////////////////////////////////////////////////////////
+    //  MSTicker
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(54E02AC3-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Dispatch interface for Microsoft Ticker Control"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IMSTicker : IDispatch
+    {
+        // Properties
+        [propget, helpstring("Amount of time (in seconds) each ICPs data is displayed.")]
+        HRESULT ProviderTime([out, retval] short * retval);
+        [propput]
+        HRESULT ProviderTime([in] short cProviderTime);
+
+        [propget, helpstring("Current URL for ICP customizations.")]
+        HRESULT CustomizeURL([out, retval] BSTR * retval);
+        [propput]
+        HRESULT CustomizeURL([in] BSTR bstrCustomizeURL);
+
+        // Methods
+        HRESULT Start([out, retval] boolean * retval);
+    };
+
+    //  Event dispatch interface for MSTicker
+    [
+        uuid(54E02AC4-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Event interface for Microsoft Ticker Control"),
+        hidden
+    ]
+    dispinterface _DMSTickerEvents
+    {
+        properties:
+
+        methods:
+
+    };
+
+    /////////////////////////////////////////////////////////////////////////////
+    // ITickerUIObject
+    /////////////////////////////////////////////////////////////////////////////
+    [
+        uuid(746C0BF2-E002-11CF-9D12-00A0C9034938),
+        helpstring("UI interface for the Microsoft Ticker Control"),
+        hidden,
+        odl
+    ]
+    interface ITickerUIObject : IUnknown
+    {
+        // Properties
+        [propget]
+        HRESULT DIB([out] IDIB ** retval);
+
+        [propget]
+        HRESULT TickRect([out, retval] RECT * retval);
+
+        // Methods
+        HRESULT GetDC([out, retval] HDC * retval);
+        HRESULT ReleaseDC([in] HDC hDC);
+        HRESULT RedrawWindow([in] RECT rectUpdate);
+    }
+
+    //  Class information for MSTicker
+    [
+        uuid(746C0BD4-E002-11CF-9D12-00A0C9034938),
+        helpstring("Microsoft Ticker Control")
+    ]
+    coclass MSTicker
+    {
+        [default] interface IMSTicker;
+        [default, source] dispinterface _DMSTickerEvents;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    //  TickerProvider
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(54E02ACB-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Dispatch interface for TickerProvider"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface ITickerProvider : IUnknown
+    {
+        // Properties
+        [propget]
+        HRESULT Width([out, retval] long * retval);
+        [propput]
+        HRESULT Width([in] long cxWidth);
+
+        [propget]
+        HRESULT Height([out, retval] long * retval);
+        [propput]
+        HRESULT Height([in] long cyHeight);
+
+        [propget]
+        HRESULT DataURL([out, retval] BSTR * retval);
+        [propput]
+        HRESULT DataURL([in] BSTR bstrDataURL);
+
+        [propget]
+        HRESULT LogoURL([out, retval] BSTR * retval);
+        [propput]
+        HRESULT LogoURL([in] BSTR bstrLogoURL);
+
+        [propget]
+        HRESULT TickStyle([out, retval] TickStyle * retval);
+        [propput]
+        HRESULT TickStyle([in] TickStyle tsTickStyle);
+
+        [propget]
+        HRESULT TickFrequency([out, retval] long * retval);
+
+        [propget]
+        HRESULT IsReady([out, retval] boolean * retval);
+
+        // Methods
+        HRESULT Load();
+        HRESULT Pause();
+        HRESULT Tick([in] ITickerUIObject * pTickerUIObject);
+    };
+
+    //  Class information for TickerProvider
+    [
+        uuid(640B7006-E187-11CF-9D13-00A0C9034938)
+    ]
+    coclass TickerProvider
+    {
+        [default] interface ITickerProvider;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    //  DIB
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(54E02AC9-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Dispatch interface for DIB"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IDIB : IUnknown
+    {
+        // Properties
+        [propget]
+        HRESULT Bitmap([out, retval] HBITMAP * retval);
+
+        [propget]
+        HRESULT Width([out, retval] long * retval);
+        [propput]
+        HRESULT Width([in] long cxWidth);
+
+        [propget]
+        HRESULT Height([out, retval] long * retval);
+        [propput]
+        HRESULT Height([in] long cyHeight);
+
+        [propget]
+        HRESULT NumColors([out, retval] int * retval);
+
+        [propget]
+        HRESULT Pixel([in] long x, [in] long y, [out, retval] DIBPIXEL * retval);
+        [propput]
+        HRESULT Pixel([in] long x, [in] long y, [in] DIBPIXEL dpPixel);
+
+        [propget]
+        HRESULT ScanlineAddress([in] long lScanline, [out, retval] BYTE ** retval);
+
+        // Methods
+        HRESULT Erase([in] DIBPIXEL dpPixelColor);
+        HRESULT EraseRect([in] RECT * pRectErase, [in] DIBPIXEL dbPixelColor);
+    };
+
+    //  Class information for CDIB
+    [
+        uuid(54E02ACA-E6EC-11CF-9D19-00A0C9034938)
+    ]
+    coclass DIB
+    {
+        [default] interface IDIB;
+    };
+
+
+    /////////////////////////////////////////////////////////////////////////
+    //  HTMLImage
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(54E02ACC-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Dispatch interface for HTMLImage"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IHTMLImage : IUnknown
+    {
+        // Properties
+        [propget]
+        HRESULT Width([out, retval] long * retval);
+        [propput]
+        HRESULT Width([in] long cxWidth);
+
+        [propget]
+        HRESULT Height([out, retval] long * retval);
+        [propput]
+        HRESULT Height([in] long cyHeight);
+
+        [propget]
+        HRESULT URL([out, retval] BSTR * retval);
+        [propput]
+        HRESULT URL([in] BSTR bstrURL);
+
+        [propget]
+        HRESULT DIB([out, retval] IDIB ** retval);
+
+        // Methods
+        HRESULT Load();
+        HRESULT Draw([in] HDC hDC, [in] long xSrc, [in] long ySrc, [in] long xDest, [in] long yDest, [in] long nWidth, [in] long nHeight);
+        HRESULT IsLoaded([out, retval] boolean * retval);
+    };
+
+    //  Class information for HTMLImage
+    [
+        uuid(54E02ACD-E6EC-11CF-9D19-00A0C9034938)
+    ]
+    coclass HTMLImage
+    {
+        [default] interface IHTMLImage;
+    };
+
+    /////////////////////////////////////////////////////////////////////////
+    //  ACFImage
+    /////////////////////////////////////////////////////////////////////////
+    [
+        uuid(54E03AC0-E6EC-11CF-9D19-00A0C9034938),
+        helpstring("Dispatch interface for ACFImage"),
+        hidden,
+        dual,
+        odl
+    ]
+    interface IACFImage : IHTMLImage
+    {
+    }
+
+    //  Class information for ACFImage
+    [
+        uuid(54E03AC1-E6EC-11CF-9D19-00A0C9034938)
+    ]
+    coclass ACFImage
+    {
+        [default] interface IACFImage;
+    };
+*/
+};

@@ -1,0 +1,26 @@
+!if 0
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//  Copyright (C) Microsoft Corporation, 1992 - 1993.
+//
+//  File:       dirs
+//
+//  Contents:   dirs files for NT types project.
+//
+//
+//  Functions:
+//
+//  History:    12-20-93   terryru   Created
+//
+//----------------------------------------------------------------------------
+
+!endif
+
+DIRS=
+
+OPTIONAL_DIRS=    \
+     chicago      \
+     daytona      \
+     cairo
+

@@ -1,0 +1,30 @@
+//+---------------------------------------------------------------------------
+//
+//  Copyright 1996-1998 Microsoft Corporation. All Rights Reserved.
+//
+//  Contents: Synchronized Callback object
+//
+//    This object is intended to provide a mechanism to make a synchronized
+//  call under the Apartment model from a secondary thread.  Simply marshal
+//  from the main thread to the secondary thread and call the CallBack method
+//  on the marshalled interface to get a synchronous call.
+//
+//----------------------------------------------------------------------------
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+cpp_quote("#ifndef _SYNCHRONIZED_CALLBACK_H_")
+cpp_quote("#define _SYNCHRONIZED_CALLBACK_H_")
+
+[
+	object,
+	uuid(74C26041-70D1-11d1-B75A-00A0C90564FE),
+	pointer_default(unique)
+]
+interface ISynchronizedCallBack : IUnknown {
+	HRESULT CallBack([in, size_is(uSize)] BYTE *pParams, [in] ULONG uSize);
+};
+
+cpp_quote("#endif")

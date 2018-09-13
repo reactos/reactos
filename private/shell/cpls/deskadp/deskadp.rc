@@ -1,0 +1,121 @@
+/******************************************************************************
+
+  Source File:  Deskadp.rc
+
+  Display detailed information about the display adapter installed in the
+  machine
+
+  Copyright (c) 1997-1998 by Microsoft Corporation
+
+  Change History:
+
+  12-01-97 AndreVa - Created It
+
+******************************************************************************/
+
+#include    <windows.h>
+#include    "resource.h"
+
+
+#include <ntverp.h>
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Advanced display adapter properties"
+#define VER_INTERNALNAME_STR        "deskadp.dll"
+
+#include "common.ver"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_ADAPTER             ICON    DISCARDABLE     "ADAPTER.ICO"
+
+
+PROP_SHEET_DLG DIALOGEX 20, 20, 252, 175
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP | DS_NOIDLEMSG | DS_3DLOOK
+CAPTION "Adapter"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Adapter Type",        ID_ADP_ADPGRP,      7,   3, 237, 50
+    ICON            IDI_ADAPTER,           IDI_ADAPTER,       12,  11,  18, 20
+    LTEXT           "",                    ID_ADP_ADAPTOR,    40,  17, 190, 20
+    PUSHBUTTON      "&Properties",         IDC_PROPERTIES,   161,  33,  75, 14
+
+    GROUPBOX        "Adapter Information", ID_ADP_ADPINFGRP,   7,  56, 237, 75
+    LTEXT           "Chip Type:",          ID_ADP_AI1,        13,  68,  58, 8
+    LTEXT           "DAC Type:",           ID_ADP_AI2,        13,  80,  58, 8
+    LTEXT           "Memory Size:",        ID_ADP_AI3,        13,  92,  58, 8
+    LTEXT           "Adapter String:",     ID_ADP_AI4,        13, 104,  58, 8
+    LTEXT           "Bios Information:",   ID_ADP_AI5,        13, 116,  58, 8
+    LTEXT           "",                    ID_ADP_CHIP,       71,  68, 160, 8
+    LTEXT           "",                    ID_ADP_DAC,        71,  80, 160, 8
+    LTEXT           "",                    ID_ADP_MEM,        71,  92, 160, 8
+    LTEXT           "",                    ID_ADP_ADP_STRING, 71, 104, 160, 8
+    LTEXT           "",                    ID_ADP_BIOS_INFO,  71, 116, 160, 8
+
+    PUSHBUTTON      "&List All Modes...", IDC_LIST_ALL,       7, 192, 75, 14
+#ifdef TEST_MODE
+    PUSHBUTTON      "T&est",               IDC_TEST_MODE,     88, 192, 75, 14
+#endif
+END
+
+
+
+DLG_SET_MODE_LIST DIALOGEX 6, 18, 225, 135
+STYLE DS_MODALFRAME|(DS_SETFONT|DS_FIXEDSYS) | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | DS_CONTEXTHELP
+CAPTION "List All Modes"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",                    IDOK,           112, 115, 50, 15
+    PUSHBUTTON      "Cancel",                IDCANCEL,       167, 115, 50, 15
+    GROUPBOX        "&List of valid modes",  ID_MODE_LISTGRP,  6, 7, 212, 98,
+                    WS_GROUP
+    LISTBOX                                  ID_MODE_LIST,     10, 20, 204, 87,
+                    WS_VSCROLL | WS_GROUP | WS_TABSTOP
+END
+
+
+
+
+
+
+STRINGTABLE DISCARDABLE PRELOAD
+BEGIN
+IDS_PAGE_TITLE,         "Adapter"
+IDS_TEST_BITMAP,        "Test bitmap for the new screen resolution"
+IDS_COLOR_RED,          " Red "
+IDS_COLOR_GREEN,        " Green "
+IDS_COLOR_BLUE,         " Blue "
+IDS_COLOR_YELLOW,       " Yellow "
+IDS_COLOR_MAGENTA,      " Magenta "
+IDS_COLOR_CYAN,         " Cyan "
+IDS_COLOR_WHITE,        " White "
+IDS_PATTERN_HORZ,       " Thin horizontal lines "
+IDS_PATTERN_VERT,       " Thin vertical lines "
+IDS_RED_SHADES,         " Red Gradient "
+IDS_GREEN_SHADES,       " Green Gradient "
+IDS_BLUE_SHADES,        " Blue Gradient "
+IDS_GRAY_SHADES,        " Gray Gradient "
+IDS_RESOLUTION_FMT,     " %d by %d "   /* X in english is 'by' */
+IDS_TEST_WARNING,       "The new mode will be tested.  Your graphics adapter will be set to the new mode temporarily so you can determine whether it works properly.  Please press OK and then wait 5 seconds."
+IDS_TEST_MODE,          "Testing Mode"
+IDS_TEST_RESULT,        "Did you see the test bitmap properly?"
+IDS_TEST_FAILED,        "The screen was not visible due to a limitation of your video card or display monitor.  Please try different settings for your display."
+
+IDS_MODE_4BIT_COLOR,    "%d by %d, 16 Colors, %s"
+IDS_MODE_8BIT_COLOR,    "%d by %d, 256 Colors, %s"
+IDS_MODE_15BIT_COLOR,   "%d by %d, High Color (15 bit), %s"
+IDS_MODE_16BIT_COLOR,   "%d by %d, High Color (16 bit), %s"
+IDS_MODE_TRUECOLOR24,   "%d by %d, True Color (24 bit), %s"
+IDS_MODE_TRUECOLOR32,   "%d by %d, True Color (32 bit), %s"
+IDS_MODE_REFRESH_DEF,   "Default Refresh"
+IDS_MODE_REFRESH_INT,   "%d Hertz (Interlaced)"
+IDS_MODE_REFRESH_HZ,    "%d Hertz"
+IDS_BAD_COLOR,          "Bad Color Depth - driver returning bad data"
+IDS_BAD_REFRESH,        "Bad Refresh Rate - driver returning bad data"
+IDS_MODE_UNSETTABLE,    "Mode is not actually available - bad driver"
+
+END

@@ -1,0 +1,77 @@
+#include "rnawiz.h"
+
+IDB_WIZ_LOGO    BITMAP  "..\\resource\\rnawiz.bmp"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZ_INTRO DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Welcome to Dial-Up Networking"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZ_LOGO,IDC_WZBMP,"Static",SS_SUNKEN | SS_BITMAP,0,0,80,140
+    LTEXT           "Dial-Up Networking enables you to connect one computer to another computer and to the network by using a modem.",
+                    IDC_STATIC,92,0,182,27
+END
+
+IDD_WIZ_CLIENT_1 DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Make New Connection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZ_LOGO,IDC_WZBMP,"Static",SS_SUNKEN | SS_BITMAP,0,0,80,140
+    LTEXT           "&Type a name for the computer you are dialing:",IDC_STATIC,92,0,
+                    145,8
+    EDITTEXT        IDC_AB_ENTRY,92,12,183,14,ES_AUTOHSCROLL
+    LTEXT           "Select a &modem:",IDC_STATIC,92,41,58,8
+    COMBOBOX        IDC_AB_DEVICE,120,57,155,48,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    ICON            "",IDC_AB_DEVICO,92,53,18,20
+    PUSHBUTTON      "&Install Modem...",IDC_WC_INST,120,75,75,14
+    PUSHBUTTON      "&Configure...",IDC_AB_DEVICESET,200,75,75,14
+END
+
+IDD_WIZ_CLIENT_2 DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Make New Connection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZ_LOGO,IDC_WZBMP,"Static",SS_SUNKEN | SS_BITMAP,0,0,80,140
+    LTEXT           "Type the phone number for the computer you want to call:",
+                    IDC_STATIC,92,0,183,8
+    LTEXT           "A&rea code:",IDC_AB_AREATXT,92,18,48,8
+    COMBOBOX        IDC_AB_AREA,92,29,48,48,CBS_DROPDOWN |  CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    CTEXT           "-",IDC_STATIC,141,31,10,8
+    LTEXT           "&Telephone number:",IDC_AB_PHONETXT,152,18,109,8
+    EDITTEXT        IDC_AB_PHONE,152,29,123,14,ES_AUTOHSCROLL
+    LTEXT           "Co&untry code:",IDC_AB_COUNTRYTXT,92,52,106,8
+    COMBOBOX        IDC_AB_COUNTRY,92,63,183,48,CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_WIZ_CLIENT_3 DIALOG DISCARDABLE  0, 0, 276, 140
+STYLE DS_MODALFRAME | 4L | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Make New Connection"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_WIZ_LOGO,IDC_WZBMP,"Static",SS_SUNKEN | SS_BITMAP,0,0,80,140
+    LTEXT           "You have successfully created a new Dial-Up Networking connection called:",
+                    IDC_STATIC,92,0,181,17
+    EDITTEXT        IDC_AB_ENTRY,92,20,183,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Click Finish to save it in your Dial-Up Networking folder.\nDouble-click it to connect.",
+                    IDC_STATIC,92,46,183,19
+    LTEXT           "To edit this connection later, click it, click the File menu and then click Properties.",
+                    IDC_STATIC,92,70,183,19
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_WIZ_INST_MODEM      "Dial-Up Networking cannot create a new icon without a modem.\nTo install a modem, click Install Modem."
+
+    IDS_WIZ_NOCONN_NODRV    "Dial-Up Networking needs to install the Microsoft Dial-Up Adapter.\nClick OK to start installation."
+    IDS_WIZ_NO_INSTALL      "Dial-Up Networking cannot install the dial-up network adapter for the specificed device.\nTo install a network driver, double-click the Network icon in Control Panel."
+END

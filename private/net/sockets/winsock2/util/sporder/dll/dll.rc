@@ -1,0 +1,15 @@
+//
+// Requires version header files from the NT build environment
+//  Puts the correct version resources in a DLL
+//
+
+#include <winver.h>
+#include <ntverp.h>
+
+#define VER_FILETYPE    VFT_DLL
+#define VER_FILESUBTYPE VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "WinSock2 reorder service providers"
+#define VER_INTERNALNAME_STR        "sporder.dll"
+#define VER_ORIGINALFILENAME_STR    "sporder.dll"
+
+#include "common.ver"

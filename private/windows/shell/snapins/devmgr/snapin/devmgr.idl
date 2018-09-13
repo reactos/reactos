@@ -1,0 +1,56 @@
+//+-------------------------------------------------------------------------
+//
+//  Microsoft Windows
+//
+//  Copyright (C) Microsoft Corporation, 1997 - 1997
+//
+//  File:       devmgr.idl
+//
+//--------------------------------------------------------------------------
+
+// devmgr.idl : IDL source for devmgr.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (devmgr.tlb) and marshalling code.
+
+	[
+		object,
+		uuid(74246BF8-4C96-11D0-ABEF-0020AF6B0B7A),
+		helpstring("IDevMgr Interface"),
+		pointer_default(unique)
+	]
+	interface IDevMgrSnapin : IUnknown
+	{
+		import "oaidl.idl";
+	};
+
+
+
+[
+	uuid(74246BF6-4C96-11D0-ABEF-0020AF6B0B7A),
+	version(1.0),
+	helpstring("devive manager snapin 1.0 Type Library")
+]
+library DEVMGRLib
+{
+	importlib("stdole32.tlb");
+
+	[
+		uuid(74246BFC-4C96-11D0-ABEF-0020AF6B0B7A),
+		helpstring("DevMgrSnapin Class")
+	]
+	coclass CDevMgrSnapin
+	{
+		[default] interface IDevMgrSnapin;
+	};
+	[
+		uuid(90087284-d6d6-11d0-8353-00a0c90640bf),
+		helpstring("DevMgr Extension class")
+	]
+	coclass CDevMgrExtension
+	{
+		[default] interface IDevMgrSnapin;
+	};
+
+};

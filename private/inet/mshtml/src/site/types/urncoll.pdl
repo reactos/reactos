@@ -1,0 +1,34 @@
+#ifndef _URNCOLL_PDL_
+#define _URNCOLL_PDL_ 1
+
+#include "types.pdl"
+#include "element.pdl"
+
+file urncoll.pdl
+
+import types.pdl
+import element.pdl
+
+interface IHTMLUrnCollection super:IDispatch guid:3050f5e2-98b5-11cf-bb82-00aa00bdce0b
+    refprop CPeerUrnCollection:length
+    refmethod CPeerUrnCollection:item
+
+tearoff CPeerUrnCollection interface:IHTMLUrnCollection
+tearoff CPeerUrnCollection interface:IDispatchEx BaseImpl:super::
+    tearmethod GetDispID        mapto:GetDispID
+    tearmethod InvokeEx         mapto:InvokeEx
+    tearmethod GetNextDispID    mapto:GetNextDispID
+    tearmethod GetMemberName    mapto:GetMemberName
+
+class CPeerUrnCollection \
+    name:HTMLUrnCollection \
+    super:CBase \
+    primaryinterface:IHTMLUrnCollection \
+    guid:3050f580-98b5-11cf-bb82-00aa00bdce0b
+
+    property  length   atype:long        dispid:DISPID_URN_COLL+1    type:long   \
+         abstract get
+    method HRESULT item      dispid:DISPID_VALUE   (in type:long arg:index, \
+                                                   out retval type:BSTR* arg:ppUrn)                                                  
+
+#endif _URNCOLL_PDL_

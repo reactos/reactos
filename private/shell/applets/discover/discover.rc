@@ -1,0 +1,44 @@
+#include "resource.h"
+#include "winres.h"
+#include "resource.rcv"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TOUR DIALOG DISCARDABLE  0, 0, 252, 76
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Discover Tour Not Found"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,195,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,24,50,14
+    ICON            IDI_TOUR,IDC_STATIC,7,7,21,20
+    LTEXT           "The Discover Tour could not be located.  Please indicate the location of the required files below:",
+                    IDC_STATIC,34,7,155,36
+    EDITTEXT        IDC_PATH,34,55,155,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Browse...",IDC_BROWSE,195,55,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_TOUR                ICON    DISCARDABLE     "res\\Tour.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TITLE       "Discover Windows 2000"
+    IDS_BROWSETEXT  "Select the location of the Discover Tour files:"
+    IDS_NOCDTEXT    "Please insert your Windows 2000 CD, and then click OK. To run the Discover 2000 tour from a different location, click Cancel."
+    IDS_NOCDTITLE   "Windows 2000 CD Not Found"
+END

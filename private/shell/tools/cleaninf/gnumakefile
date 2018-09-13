@@ -1,0 +1,44 @@
+# This makefile has been generated automatically by mwgenmakeC for
+# compiling MFC application.
+
+CUSTOM_RULES = /vobs/ie4/shell.template
+
+SOURCES =  \
+    app.cpp \
+    debug.c
+
+# Warning: DLL based on MFC (compiled with _USRDLL flag) is not supported yet.
+# This makefile is just for demo purpose.
+## Original Windows DLL name:
+PROG = cleaninf
+
+CPP_OBJS := ${SOURCES:%.C=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cpp=%.o}
+CPP_OBJS := ${CPP_OBJS:%.cxx=%.o}
+OBJS = ${CPP_OBJS:%.c=%.o}
+SRCS=${SOURCES}
+WRESOURCE = app.rc    # Windows resource
+TRESOURCE = ${PROG}.rxt   # Target X resource (must match DLL name)
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## APP_CFLAGS   : additional compilation flags for C compiler
+## APP_CCPPFLAGS: additional compilation flags for C++ compiler
+## APP_DLLFLAGS : additional link flags
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+NO_UNICODE = 1
+MWINIT_DEFINES = -DMWINIT_LITE -DMWHAS_APP_MAIN
+OWN_MAINPROG = TRUE
+PRODUCT_LDFLAGS += -lstocklib -lcomctl32 -lmw32
+__cplusplus = true
+
+
+include $(MWHOME)/make.rules.simple

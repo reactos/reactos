@@ -1,0 +1,38 @@
+LANGUAGE 0x0a, 0x01
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Note to localizers:  it is desirable (though not absolutely necessary)
+    // to keep the following directory names synchronized with their counterparts
+    // in shell\shell32\shell32.rc.
+
+    IDS_CSIDL_PERSONAL        L"Mis documentos"
+    IDS_CSIDL_MYPICTURES      L"Mis im\x00e1genes"
+    IDS_CSIDL_APPDATA         L"Datos de programa"
+    IDS_CSIDL_LOCAL_APPDATA   L"Configuraci\x00f3n local\\Datos de programa"
+    IDS_CSIDL_CACHE           L"Configuraci\x00f3n local\\Temporary Internet Files"
+    IDS_CSIDL_COOKIES         L"Cookies"
+    IDS_CSIDL_HISTORY         L"Historial"
+    IDS_CSIDL_COMMON_DOCUMENTS L"Documentos"
+    IDS_CSIDL_ADMINTOOLS       L"Herramientas administrativas"
+
+END
+
+LANGUAGE 0x0a, 0x03
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    // Including this resource is apparently needed for Spanish Win98
+
+    IDS_CSIDL_PERSONAL        L"Mis documentos"
+    IDS_CSIDL_MYPICTURES      L"Mis im\x00e1genes"
+    IDS_CSIDL_APPDATA         L"Datos de programa"
+    IDS_CSIDL_LOCAL_APPDATA   L"Configuraci\x00f3n local\\Datos de programa"
+    IDS_CSIDL_CACHE           L"Configuraci\x00f3n local\\Temporary Internet Files"
+    IDS_CSIDL_COOKIES         L"Cookies"
+    IDS_CSIDL_HISTORY         L"Historial"
+    IDS_CSIDL_COMMON_DOCUMENTS L"Documentos"
+    IDS_CSIDL_ADMINTOOLS       L"Herramientas administrativas"
+
+END
+

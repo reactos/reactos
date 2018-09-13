@@ -1,0 +1,75 @@
+
+Note from Babakj for BabakJ:
+
+- Take a close look at Alloc calls (also PAlloc) for segmented code
+- Do the same  for MAKELONG and MAKEWORD, etc.
+- The file port.txt in \\brillig\ntct\babakj\solit has the list of
+  changes proposed by Preport utility. SetBitmapBits() and CreateBitmaps() 
+  seem to be the only dev-dependent APIs used. They are only used if building
+  for Win 2.x (if WINVER_2 defined). 
+- LoadBitmap() is crucial for Solitair. Make sure it's included in Win32 APIs.
+
+Babak
+
+-------------------------------------------------------------------
+
+
+**** Time Estimates for converting Windows Applications from
+**** 16 bit (with asm code) to 32 bit portable code.
+
+Application	 Files	       LOC	    Difficulty	 *ConTime
+	      C        ASM		     (L,M,H)
+
+
+Write	      84       4       42063	  H	       24.0 MW
+Paintbrush    90       3       15923	  H		9.0 MW
+Scicalc       12       0       2005	  L		1.0 MW
+Calender      23       2       6181	  L		3.5 MW
+Cardfile      16       2       4665	  L		2.0 MW
+Clipbrd       3        2       2379	  L		1.5 MW
+Clock	      1        4       818	  L		0.5 MW
+Notepad       7        1       2069	  L		1.0 MW
+Recorder      10       2       4868	  M		3.0 MW
+Reversi       1        2       1694	  M		1.0 MW
+Solitair      12       2       5048	  M		3.0 MW
+Terminal      34       4       13084	  M		7.5 MW
+Pifedit       "sources temporarily not available"	1.0 MW ?
+common	      13       2       2064	  M		1.0 MW
+   sources used by some of the above applications
+
+						 TOTAL 57.5 MW
+						       13.0+MM
+						 @ 3M	4.0+MM
+Major Conversion Items ...
+
+    - Setting up makefile for building multiple platforms
+
+    - Rewriting ASM files into C
+
+    - Rewriting machine dependant code -> portable C.  This will
+      includes code that uses shifts for arithmetic and
+      ++psz, --psz for location of characters in a string.
+
+    - Removing Segment usage, I antisipate this including some
+      api changes removing selector or segment references.
+
+    - Add usage for System Macros (INT, BOOL, CHAR, ... as apposed
+      to int, bool, char, ... ).
+
+    - Warning Removal for compiles
+
+
+*ConTime
+
+ Conversion times are calculated in the following way ...
+
+ ConTime/ManWeeks = ((LOC/1000)/1.78KLOC)
+
+		    Conversion speed metric (1.78KLOC/MW) was
+		    gotten from [jonma:patt] and is from pmct group
+		    statistics kept for converting relatively clean
+		    Presentation Manager code from 16 -> 32 bit.
+
+
+  LOC: Line count achieved using the CONE utility by kengr.  The
+       -l option was used.

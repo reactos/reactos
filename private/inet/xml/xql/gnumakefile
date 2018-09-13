@@ -1,0 +1,16 @@
+# This makefile was generated automatically by mwgenmakeC.
+
+.NOTPARALLEL: world all clean install depend
+
+world all clean install depend:
+	@enterdir query ${MAKE} ${MFLAGS} $@
+	@enterdir parser  ${MAKE} ${MFLAGS} $@ 
+
+
+
+
+
+
+
+
+

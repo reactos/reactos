@@ -1,0 +1,172 @@
+//-------------------------------------------------------------------------
+//
+// This is an alternate implementation of moniker binding
+//
+//-------------------------------------------------------------------------
+HRESULT CDocObjectView::_JumpTo(LPCWSTR pwszPath)
+{
+    HRESULT hres;
+    // Deactivate & Delete the previous object
+    _DeactivateObject();
+    _DeleteOleObject();
+    Assert(_pole==NULL);
+    Assert(_pstg==NULL);
+    hres = StgCreateDocfile(NULL,
+		STGM_DIRECT | STGM_CREATE | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+		0, &_pstg);
+    if (SUCCEEDED(hres))
+    {
+	// BUGBUG: Do it right later.
+	hres = CreateFileMoniker(pwszPath, &_pmkCur);
+	if (SUCCEEDED(hres))
+	{
+//
+// BUGBUG: For some reason, this technique does not work. Word
+//  opens the document in separate window.
+//
+#if 0
+	    CLSID clsid;
+	    hres = GetClassFile(pwszPath, &clsid);
+	    if (SUCCEEDED(hres))
+	    {
+		hres = OleCreate(clsid, IID_IOleObject, OLERENDER_NONE,
+				 NULL, this, _pstg, (LPVOID*)&_pole);
+		if (SUCCEEDED(hres))
+		{
+		    // OleRun it.
+		    OleRun(_pole);
+
+		    // Call IPersistFile::Load
+		    IPersistFile* ppfile;
+		    hres = _pole->QueryInterface(IID_IPersistFile, (LPVOID*)&ppfile);
+		    if (SUCCEEDED(hres))
+		    {
+			hres = ppfile->Load(pwszPath, 0 /* default STG_ */);
+			ppfile->Release();
+		    }
+		}
+	    }
+#else
+	    IBindCtx* pbc = NULL;
+	    hres = CreateBindCtx(0, &pbc);
+	    if (SUCCEEDED(hres))
+	    {
+		IPersistStorage* ppstg = NULL;
+		hres = _pmkCur->BindToObject(pbc, NULL, IID_IPersistStorage, (LPVOID*)&ppstg);
+		if (SUCCEEDED(hres))
+		{
+		    // Emulating OleCreateFromData
+		    CLSID clsid;
+		    hres = ppstg->GetClassID(&clsid);
+		    if (SUCCEEDED(hres))
+		    {
+			hres = WriteClassStg(_pstg, clsid);
+			if (SUCCEEDED(hres))
+			{
+			    hres = ppstg->Save(_pstg, FALSE);
+			    if (SUCCEEDED(hres)) {
+				hres = CMyHlinkSrc_OleLoad(_pstg, IID_IOleObject, this, (LPVOID*)&_pole);
+				if (FAILED(hres)) {
+				    DebugMsg(DM_TRACE, "sdv ER _Browse OleLoad failed (%x)", hres);
+				}
+			    }
+			    else
+			    {
+				DebugMsg(DM_TRACE, "sdv ER _Browse ppstg->Save failed (%x)", hres);
+			    }
+			}
+		    }
+		    ppstg->Release();
+		}
+		else
+		{
+		    DebugMsg(DM_TRACE, "sdv ER _Browse BindToObject(IID_IPersistStorage) failed (%x)", hres);
+		}
+
+	    }
+#endif
+	} // SUCCEEDED(CreateFileMoniker..)
+	else
+	{
+	    DebugMsg(DM_TRACE, "sdv ER _Browse CreateFileMoniker failed (%x)", hres);
+	}
+    }
+
+    if (SUCCEEDED(hres))
+    {
+	hres = _BrowseIt();
+    }
+    else
+    {
+	_DeactivateObject();
+	_DeleteOleObject();
+    }
+    return hres;
+}
+
+
+//-------------------------------------------------------------------------
+// This is a piece of code which will enumerate the browse context history
+//-------------------------------------------------------------------------
+#if 0
+#ifdef DEBUG
+		IEnumHLITEM* penum = NULL;
+		hres = _pihlbc->EnumNavigationStack(&penum);
+		DebugMsg(DM_TRACE, "sdv TR : _BrowseIt pihlbc->Enum returned %x", hres);
+		if (SUCCEEDED(hres))
+		{
+		    HLITEM hlitem;
+		    ULONG elt;
+		    while(penum->Next(1, &hlitem, &elt) == S_OK) {
+			DebugMsg(DM_TRACE, "sdv TR : _Browse penum->Next returned %d", hlitem.uHLID);
+		    }
+		    penum->Release();
+		}
+#endif
+#endif
+
+//-------------------------------------------------------------------------
+// This is a piece of code I had in CDocObjectView::_OnMenuSelect with
+// "#if 0". I don't remember why I did that.
+//-------------------------------------------------------------------------
+#if 0
+    UINT idMso = _MapToMso(id);
+    if (idMso != (UINT)-1) {
+	if (_pmsot) {
+	    MSOCMD msoc = { idMso,0 };
+	    struct MSOCMDTEXTEX {
+                MSOCMDTEXT cmdt;
+		WCHAR _wszT[MAX_PATH];
+	    } cmdex;
+	    cmdex.cmdt.cmdtextf = MSOCMDTEXTF_STATUS;
+	    cmdex.cmdt.cwActual = MAX_PATH;
+	    cmdex.cmdt.cwBuf = MAX_PATH;
+	    if (SUCCEEDED(_pmsot->QueryStatus(NULL, 1, &msoc, &cmdex.cmdt))) {
+		_psb->SetStatusTextSB(cmdex.cmdt.rgwz);
+		return;
+	    }
+	}
+    }
+#endif
+
+
+void CDocObjectView::_OnCmdNavigate(UINT hlid, UINT grfHLNF)
+{
+    IHlink* pihl = NULL;
+    HRESULT hres = _pihlbc->GetHlink(hlid, &pihl);
+    DebugMsg(DM_TRACE, "sdv TR _OnCmdNavigate _pihlbc->GetHlink(%d) returned %x", hlid, hres);
+    if (SUCCEEDED(hres))
+    {
+	IMoniker* pmk = NULL;
+	hres = pihl->GetMonikerReference(&pmk, NULL);
+	if (SUCCEEDED(hres))
+	{
+	    hres = _JumpTo(pmk);
+	    pmk->Release();
+	}
+
+	pihl->Release();
+    }
+}
+
+

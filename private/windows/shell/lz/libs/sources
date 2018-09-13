@@ -1,0 +1,23 @@
+MAJORCOMP=lz
+MINORCOMP=libs
+
+TARGETNAME=winlza
+TARGETPATH=$(BASEDIR)\public\sdk\lib
+TARGETTYPE=LIBRARY
+
+USE_MSVCRT=1
+
+INCLUDES=.;..
+
+C_DEFINES=-DWIN32 -DLZA_DLL
+
+SOURCES=buffers.c \
+        compress.c \
+        expand.c  \
+        header.c \
+        init.c \
+        lzcommon.c \
+        lzcomp.c \
+        lzexp.c \
+        utils.c   \
+        shstart.c

@@ -1,0 +1,231 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WARN_ON_POST DIALOG DISCARDABLE  0, 0, 232, 82
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+#ifdef UNIX
+    DEFPUSHBUTTON   "&Yes",IDYES,108,62,50,14
+#else
+    DEFPUSHBUTTON   "&Yes",IDYES,111,62,50,14
+#endif /* UNIX */
+    PUSHBUTTON      "&No",IDNO,163,62,50,14
+    ICON            IDI_SECURITY3,-1,14,7,20,20
+    LTEXT           "It might be possible for other people to see what you are sending over the Internet. Do you want to continue ?",
+                    IDC_ZONEALERTTEXT,42,7,175,30
+    CONTROL         "&In the future, do not show this message.",
+                    IDC_DONT_WANT_WARNING,"Button",BS_AUTOCHECKBOX | 
+#ifndef UNIX
+                    WS_TABSTOP,45,44,172,8
+#else
+                    WS_TABSTOP,40,44,177,8
+#endif
+END
+
+IDD_ZONE_ALERT DIALOG DISCARDABLE  0, 0, 226, 68
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Internet Explorer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    PUSHBUTTON      "&No",IDCANCEL,169,48,50,14
+    ICON            IDI_SECURITY3,IDC_STATIC,14,7,20,20
+    LTEXT           "Alert Text",IDC_ZONEALERTTEXT,42,7,177,32
+    DEFPUSHBUTTON   "&Yes",IDOK,115,48,50,14
+END
+
+IDD_WARN_ALERT DIALOG DISCARDABLE  0, 0, 225, 70
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Security Alert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_SECURITY2,IDC_STATIC,14,7,20,20
+    LTEXT           "Alert Text",IDC_ZONEALERTTEXT,42,7,177,32
+    DEFPUSHBUTTON   "&OK",IDOK,87,49,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_WARN_ON_POST, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 224
+        VERTGUIDE, 45
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 76
+    END
+
+    IDD_WARN_ALERT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 218
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_SECURITY1           ICON    DISCARDABLE     "secure_i.ico"
+IDI_SECURITY2           ICON    DISCARDABLE     "secure_!.ico"
+IDI_SECURITY3           ICON    DISCARDABLE     "secure_q.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WARN_SHELL_FILE_DL  "Your current security settings do not allow you to download files from this location."
+    IDS_ACTION_FORMS_POST   "When you send information to the %s, it might be possible for others to see that information. Do you want to continue?"
+    IDS_ACTION_POST_FROM    "When you send information from the %s, it might be possible for others to see that information. Do you want to continue?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_AX_OVERRIDE_SAFETY 
+                            "Some software (ActiveX controls) on this page might be unsafe. It is recommended that you not run it. Do you want to allow it to run?"
+    IDS_ACTION_AX_CONFIRM_NOSAFETY 
+                            "Some software (ActiveX controls) on this page might be unsafe. It is recommended that you not run it. Do you want to allow it to run? "
+    IDS_ACTION_SCRIPT_RUN   "Scripts are usually safe. Do you want to allow scripts to run? "
+    IDS_ACTION_SCRIPT_JAVA  "Do you want to allow scripts to access Java applets? "
+    IDS_ACTION_HTML_FORMS   "Sending HTML forms is as safe as sending e-mail. Do you want to able to send HTML forms?"
+    IDS_ACTION_HTML_FONT_DL "This page uses fonts that need to be temporarily installed. This is usually safe. Do you want to allow these fonts to be downloaded?"
+    IDS_ACTION_HTML_JAVA    "Do you want to allow Java applets to run? "
+    IDS_ACTION_SHELL_INSTALL_DTITEMS 
+                            "Do you want to add an Active Desktop item to your desktop?"
+    IDS_ACTION_SHELL_MOVE_OR_COPY 
+                            "Do you want to move or copy files from this zone?"
+    IDS_ACTION_SHELL_FILE_DL "Do you want to allow a file to be downloaded? "
+    IDS_ACTION_SHELL_VERB   "Running a system command on this item might be unsafe. Do you wish to continue?"
+    IDS_ACTION_NW_CREDENTIALS 
+                            "This site is requesting a password or a personal certificate. Do you want to connect to this site using your personal credentials?"
+    IDS_ACTION_NW_AUTH_CLIENT 
+                            "Do you want to connect to this site even though the client authentication is not possible? "
+    IDS_ACTION_DL_SIGNED_ACTIVEX 
+                            "When software (an ActiveX control) is signed, it is possible to tell who published it. Do you want to allow signed software to be downloaded?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ACTION_AX_RUN       "Do you want to allow software such as ActiveX controls and plug-ins to run?"
+    IDS_ACTION_UNKNOWN      "This page has an unspecified potential security flaw. Would you like to continue?"
+    IDS_ACTION_AX_OVERRIDE_DATA_SAFETY 
+                            "Some software (an ActiveX control) on this page might be unsafe. Do you want to allow it to run?"
+    IDS_ACTION_AX_OVERRIDE_SCRIPT_SAFETY 
+                            "Some software (an ActiveX control) on this page might be unsafe. Do you want to allow it to run?"
+    IDS_ACTION_SCRIPT_OVERRIDE_SAFETY 
+                            "Some software (a script) on this page might be unsafe. Do you want to allow it to run?"
+    IDS_ACTION_DL_ACTIVEX   "Do you want to allow software such as ActiveX controls to be downloaded?"
+    IDS_WARN_SHELL_INSTALL_DTITEMS 
+                            "Your current security settings prohibit creating Active Desktop items."
+    IDS_ACTION_SHELL_DRAG   "Do you want to be able to drag items from the desktop or a folder onto this page?"
+    IDS_WARN_SHELL_MOVE_OR_COPY 
+                            "Your current security settings prohibit copying or moving files from this zone."
+    IDS_WARN_SHELL_VERB     "Your current security settings do not allow you to perform system commands on this item."
+    IDS_WARN_HTML_FORMS     "Your current security settings do not allow you to send HTML forms."
+    IDS_WARN_UNKNOWN        "Your current security settings do not allow this action. "
+    IDS_ACTION_SCRIPT_SAFE_ACTIVEX 
+                            "A script is accessing some software (an ActiveX control) on this page which has been marked safe for scripting. Do you want to allow this?"
+    IDS_ACTION_SHELL_WEBVIEW_VERB 
+                            "Are you sure you want to open a file from this location?"
+    IDS_WARN_SHELL_WEBVIEW_VERB 
+                            "Opening a file from this location may not be safe and is not allowed with your current security settings."
+    IDS_ACTION_CROSS_DOMAIN_DATA
+                            "This page is accessing information that is not under its control. This poses a security risk. Do you want to continue?"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ACTION_NW_COOKIES   "To allow this Web site to provide information pesonalized for you, will you allow it to put a small file (called a cookie) on your computer?"
+    IDS_ACTION_NW_COOKIES_SESSION 
+                            "Will you allow this Web site to put a small file (called a cookie) on your computer for this session only?"
+    IDS_ACTION_HTML_USERDATA 
+                            "Will you allow this web-site to save a file on your computer?"
+    IDS_ACTION_SCRIPT_PASTE  "Do you want to allow this page to paste information from your clipboard?"
+    IDS_ACTION_HTML_SUBFRAME_NAVIGATE
+                             "Allow sub-frames to navigate across different domains?"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

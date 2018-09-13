@@ -1,0 +1,330 @@
+<HTML id=dlgFind STYLE="font-family: MS Shell Dlg; font-size: 8pt;
+width: 33.5em; height: 16.2em">
+<HEAD>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<TITLE id=dialogTitle>
+Find
+</TITLE>
+
+<SCRIPT LANGUAGE="JavaScript" defer src="findinc.dlg">
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JavaScript" defer>
+
+//Find Text dialog box
+#define IDH_FIND_WHOLE                  50022 // was 0x3063
+#define IDH_FIND_CASE                   50023 // was 0x3064
+#define IDH_FIND_UP                     50025 // was 0x3065
+#define IDH_FIND_DOWN                   50024 // was 0x3066
+#define IDH_FIND_NEXT                   50026 // was 0x3067
+#define IDH_FIND_WHAT                   50027 // was 0x3068
+#define IDH_FIND_DIACRITIC              50401
+#define IDH_FIND_KASHIDA                50402
+#define IDH_FIND_ALEF_HAMZA             50403
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Checks the status of the appropriate checkboxes and
+//              sets the flags for the findText method.
+//
+//  Arguments:  none
+//
+//  returns:    a number representing the flags for the findText
+//              method. (See OM spec for more info.)
+//
+//----------------------------------------------------------------------
+
+function findFlags()
+{
+    var htmlMatchWord = 2;
+    var htmlMatchCase = 4;
+    var htmlMatchDiacritic =  536870912; // 0x20000000 FR_MATCHDIAC
+    var htmlMatchKashida =   1073741824; // 0x40000000 FR_MATCHKASHIDA
+    var htmlMatchAlefHamza = 2147483648; // 0x80000000 FR_MATCHALEFHAMZA
+
+    return (htmlMatchWord * document.all.chkWholeWord.checked)
+        | (htmlMatchCase * document.all.chkMatchCase.checked)
+        | (htmlMatchDiacritic * document.all.chkMatchDiacritic.checked)
+        | (htmlMatchKashida * document.all.chkMatchKashida.checked)
+        | (htmlMatchAlefHamza * document.all.chkMatchAlefHamza.checked)
+
+} // findFlags
+
+
+//+---------------------------------------------------------------------
+//
+//  Synopsis:   Sets the focus to the find button. Also determines
+//              whether something is selected in the document.
+//
+//  Arguments:  none
+//
+//  Returns:    nothing
+//
+//-----------------------------------------------------------------------
+
+function loadBdy()
+{
+    //
+    //  Bind events to controls. This is done here to load the dialog
+    //  quicker.
+    //
+    btnFind.onclick     = new 
+        Function("btnFindClick()");
+    btnFind.ondblclick  = new
+        Function("btnFindClick()");
+    btnCancel.onclick   = new Function("btnCancelClick2()");
+
+    document.onhelp     = new Function("callHelp(window.event.srcElement)");
+    document.onmouseup  = new Function("mouseClick()");
+
+    txtFindText.onpropertychange = new Function("setFindState(true)");
+    txtFindText.onfocus = new Function("txtFindText.select()");
+    txtFindText.onkeypress = new Function("txtDefaultESC()");
+
+    g_fFindStartPoint = true;
+
+    //
+    // enable RTL search items if document supports RTL charset - default is disabled=1
+    //
+    var docCharset = window.dialogArguments.document.charset;
+    if(docCharset == "" ||                  // plain text/unknown
+       docCharset == "utf-8" || // unicode
+       docCharset == "unicode-1-1-utf-8" ||
+       docCharset == "unicode-2-0-utf-8" || 
+       docCharset == "windows-1255" ||      // hebrew
+       docCharset == "dos-862" ||
+       docCharset == "iso-8859-8" ||
+       docCharset == "iso-8859-8-i" ||
+       docCharset == "windows-1256" ||      // arabic
+       docCharset == "asmo-708" || 
+       docCharset == "asmo-720" || 
+       docCharset == "dos-720" || 
+       docCharset == "iso-8859-6")
+    {
+        chkMatchDiacritic.disabled = 0;
+
+        if(docCharset == "windows-1255" ||  // hebrew does not have kashida or alef hamza
+           docCharset == "dos-862" ||
+           docCharset == "iso-8859-8" ||
+           docCharset == "iso-8859-8-i")
+       {
+            chkMatchKashida.checked = 1;
+            chkMatchKashida.disabled = 1;
+            chkMatchAlefHamza.checked = 1;
+            chkMatchAlefHamza.disabled = 1;
+        }
+    }
+
+    if ("" != window.dialogArguments.findText)
+    {
+        txtFindText.value = window.dialogArguments.findText;
+    }
+    txtFindText.focus();
+    txtFindText.select();
+}   //  loadBdy
+
+function findStartPoint()
+{
+    if (g_fFindStartPoint)
+    {
+        g_fFindStartPoint = false;
+
+    	var win = window.dialogArguments.unsecuredWindowOfDocument;
+    	var doc = window.dialogArguments.document;
+
+        //
+        //  Are we in a frameset?
+        //
+        if (!g_fError && win.frames.length)
+        {
+            var win2;
+
+            g_fFrameset = true;
+            g_arrFrames[0] = 0;
+            g_arrFrames[1] = -1;
+
+            //
+            //  Search through the frameset for a selection
+            //
+            win2 = CrawlPath();
+   
+            // the find dialog gets it's own error handler
+            // until while we're not sure if the iframe
+            // is hosting trident. (It could host Word, 
+            // explorer, etc.)
+            window.onerror = FindHandleError;
+            doc2 = win2.document;
+            window.onerror = HandleError;
+
+            while (doc2.selection.type == "None")
+            {
+                if (MoveDoc(true))
+                {
+                    win2 = CrawlPath();
+                    doc2 = win2.document;
+                }
+                else    // no selection. reset search
+                {
+                    g_arrFrames[0] = 0;
+                    g_arrFrames[1] = -1;
+                    break;
+                }
+            }
+            doc = GetFirstDoc();
+            g_docLastFound = doc;
+        }
+
+        //
+        //  if a control is selected, select it as a text range
+        //
+        if (doc.selection.type == "Control")
+        {
+            var r = doc.selection.createRange();
+            r = getTextRange(r(0));
+            r.select();
+        }
+    }
+} //  findStartPoint
+
+</SCRIPT>
+
+</HEAD>
+<BODY ID=bdy onLoad="loadBdy()" style="color: windowtext;
+font-family: 'MS Shell Dlg';
+font-size: 8pt; background: threedface;" topmargin=0 scroll=no>
+
+<BUTTON id=btnFind ACCESSKEY=f DISABLED=1 tabIndex=55 helpid=IDH_FIND_NEXT
+helpfile="iexplore.hlp"
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 24.78em; top: 1.0647em; width: 7em; height: 2.2em; " type=submit>
+<U>F</U>ind Next
+</BUTTON>
+
+<DIV align=absMiddle id=divFindText
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 0.98em; top: 1.2168em; width: 4.8em; height: 1.2168em; ">
+<LABEL FOR=txtFindText ID=lblFindText tabIndex=-1 helpid=IDH_FIND_WHAT
+helpfile="iexplore.hlp">
+Fi<U>n</U>d what:
+</LABEL>
+</DIV>
+
+<INPUT type=text id=txtFindText ACCESSKEY=n tabIndex=15 helpid=IDH_FIND_WHAT
+helpfile="iexplore.hlp"
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 6.16em; top: 1.0647em; width: 17.36em; height: 2.1294em; ">
+
+<BUTTON id=btnCancel tabIndex=60 helpid="0x6F1C" helpfile="windows.hlp"
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 24.78em; top: 3.6504em; width: 7em; height: 2.2em; " type=reset>
+Cancel
+</BUTTON>
+
+<INPUT id=chkWholeWord ACCESSKEY=w type=checkbox tabIndex=25 
+helpfile="iexplore.hlp" helpid=IDH_FIND_WHOLE
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1em; top: 4.2em; width: 1.2em; height: 1.2em; ">
+
+<INPUT ACCESSKEY=c type=checkbox tabIndex=35 helpid=IDH_FIND_CASE
+helpfile="iexplore.hlp"
+id=chkMatchCase style="font-family: MS Shell Dlg; font-size: 8pt;
+position: absolute; left: 1em; top: 6em; width: 1.2em;
+height: 1.2em; ">
+
+<INPUT id=chkMatchDiacritic ACCESSKEY=i type=checkbox tabIndex=36 
+helpfile="iexplore.hlp" helpid=IDH_FIND_DIACRITIC
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1em; top: 7.9em; width: 1.2em; height: 1.2em">
+
+<INPUT id=chkMatchKashida ACCESSKEY=k type=checkbox tabIndex=37 
+helpfile="iexplore.hlp" helpid=IDH_FIND_KASHIDA
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1em; top: 9.7em; width: 1.2em; height: 1.2em">
+
+<INPUT id=chkMatchAlefHamza ACCESSKEY=a type=checkbox tabIndex=38 
+helpfile="iexplore.hlp" helpid=IDH_FIND_ALEF_HAMZA
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 1em; top: 11.5em; width: 1.2em; height: 1.2em">
+
+<DIV id=divWholeWord
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 2.6em; top: 4.2588em; width: 12.46em; height: 1.521em; ">
+<LABEL FOR=chkWholeWord ID=lblWholeWord tabIndex=-1 helpid=IDH_FIND_WHOLE
+helpfile="iexplore.hlp">
+Match <U>w</U>hole word only
+</LABEL>
+</DIV>
+
+<DIV id=divMatchCase style="font-family: MS Shell Dlg; font-size: 8pt;
+position: absolute; left: 2.6em; top: 6.084em; width: 7.42em; 
+height: 1.521em; ">
+<LABEL FOR=chkMatchCase ID=lblMatchCase tabIndex=-1 helpid=IDH_FIND_CASE
+helpfile="iexplore.hlp">
+Match <U>c</U>ase
+</LABEL>
+</DIV>
+
+<DIV id=divMatchDiacritic
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 2.6em; top: 7.9092em; width: 12.46em; height: 1.521em">
+<LABEL FOR=chkMatchDiacritic ID=lblMatchDiacritic tabIndex=-1 
+helpid=IDH_FIND_DIACRITIC
+helpfile="iexplore.hlp">
+Match d<U>i</U>acritic
+</LABEL>
+</DIV>
+
+<DIV id=divMatchKashida
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 2.6em; top: 9.7344em; width: 12.46em; height: 1.521em">
+<LABEL FOR=chkMatchKashida ID=lblMatchKashida tabIndex=-1 
+helpid=IDH_FIND_KASHIDA
+helpfile="iexplore.hlp">
+Match <U>k</U>ashida
+</LABEL>
+</DIV>
+
+<DIV id=divMatchAlefHamza
+style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+left: 2.6em; top: 11.5596em; width: 12.46em; height: 1.521em">
+<LABEL FOR=chkMatchAlefHamza ID=lblMatchAlefHamza tabIndex=-1 
+helpid=IDH_FIND_ALEF_HAMZA
+helpfile="iexplore.hlp">
+Match <U>a</U>lef hamza
+</LABEL>
+</DIV>
+
+<FIELDSET id=fldDirection style="font-family: MS Shell Dlg; font-size: 8pt; 
+position: absolute; left: 13.7em; top: 3.5em; width: 9.7em; 
+height: 6.3em;">
+<LEGEND id=lgdDirection>
+Direction
+</LEGEND>
+</FIELDSET>
+
+        <INPUT id=radDirectionUp type=radio name=radDirection ACCESSKEY=u
+        tabIndex=42 helpid=IDH_FIND_UP helpfile="iexplore.hlp"
+        style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+        left: 14.6em; top: 5.4em; width: 1.1em; height: 1.1em; ">
+        <DIV id=divDirectionUp style="font-family: MS Shell Dlg; 
+        font-size: 8pt; position: absolute; left: 16.2em; top: 5.3235em; 
+        width: 3.5em; height: 1.521em; ">
+        <LABEL ID=lblDirectionUp style="font-family: 'MS Shell Dlg'; font-size: 8pt"
+        FOR=radDirectionUp
+        helpid=IDH_FIND_UP
+        helpfile="iexplore.hlp"> <U>U</U>p </LABEL>
+        </DIV>
+        <INPUT id=radDirectionDown type=radio CHECKED name=radDirection
+        ACCESSKEY=d tabIndex=47 helpid=IDH_FIND_DOWN helpfile="iexplore.hlp"
+        style="font-family: MS Shell Dlg; font-size: 8pt; position: absolute;
+        left: 14.6em; top: 7.4em; width: 1.1em; height: 1.1em; ">
+        <DIV id=divDirectionDown style="font-family: MS Shell Dlg; 
+        font-size: 8pt; position: absolute; left: 16.2em; top: 7.3em; 
+        width: 4.9em; height: 1.521em; ">
+        <LABEL ID=lblDirectionDown style="font-family: 'MS Shell Dlg'; font-size: 8pt"
+        FOR=radDirectionDown helpid=IDH_FIND_DOWN helpfile="iexplore.hlp"> 
+        <U>D</U>own </LABEL>
+        </DIV>
+</BODY>
+</HTML>

@@ -1,0 +1,24 @@
+#ifdef _WIN32
+
+#include <ntverp.h>
+
+#define VER_FILETYPE              VFT_DRV
+#define VER_FILESUBTYPE           VFT2_DRV_INSTALLABLE
+#define VER_FILEDESCRIPTION_STR   "Microsoft RLE Compressor"
+#define VER_INTERNALNAME_STR      "msrle32.dll"
+#define VER_ORIGINALFILENAME_STR  "msrle32.dll"
+
+#include <common.ver>
+
+#else
+#include <ver.h>
+#include <verinfo.h>
+
+#define VERSIONNAME             "msrle.drv\0"
+#define VERSIONDESCRIPTION      "Microsoft RLE Compressor\0"
+#define VERSIONTYPE             VFT_DRV
+#define VERSIONSUBTYPE          VFT2_DRV_INSTALLABLE
+
+#include <verinfo.ver>
+#endif
+

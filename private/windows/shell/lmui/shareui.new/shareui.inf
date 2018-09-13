@@ -1,0 +1,47 @@
+; |SHAREUI.INF entries
+;
+; Sample ShellView/ShellFolder
+; Copyright 1992-96 Microsoft Corporation.  All Rights Reserved.
+;
+
+[version]
+signature="$CHICAGO$"
+SetupClass=BASE
+
+[DefaultInstall]
+CopyFiles=ThisDll.sys.install
+AddReg=ThisDll.Add.Reg,ThisDll.Uninst.Reg
+
+[DefaultUninstall]
+DelFiles=ThisDll.sys.install
+DelReg=ThisDll.Add.Reg,ThisDll.Uninst.Reg
+
+[ThisDll.Add.Reg]
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\DefaultIcon,,,"%11%\%ThisDll%"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\InProcServer32,,,"%11%\%ThisDll%"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\InProcServer32,ThreadingModel,,"Apartment"
+HKCR,CLSID\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6}\ShellFolder,Attributes,1,04,00,00,20
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RemoteComputer\NameSpace\{02a36f10-2f6f-11cf-8ce4-00aa003ca9f6},,,"Shared Directories"
+
+[ThisDll.Uninst.Reg]
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder,,,
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder,"DisplayName",,"Shared Directories Folder"
+HKLM,SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\MSSharedDirectoriesFolder,"UninstallString",,"rundll32.exe %11%\%ThisDll%,Uninstall %11%\shareui.inf"
+
+[ThisDll.sys.install]
+ShareUI.dll
+ShareUI.inf
+
+[DestinationDirs]
+ThisDll.sys.install=11 ; to System32
+
+[SourceDisksNames]
+55="ShareUI 1.0.","",1
+
+[SourceDisksFiles]
+%ThisDll%=55
+
+[Strings]
+ThisDll = "ShareUI.dll"

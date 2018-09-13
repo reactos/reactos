@@ -1,0 +1,235 @@
+/**************************************************************************
+ *
+ *  THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY
+ *  KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ *  IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR
+ *  PURPOSE.
+ *
+ *  Copyright (c) 1992 - 1995  Microsoft Corporation.  All Rights Reserved.
+ *
+ **************************************************************************/
+/****************************************************************************
+ *
+ *   vidcap.rc: Resource definitions
+ *
+ *   Vidcap32 Source code
+ *
+ ***************************************************************************/
+
+
+#include <windows.h>
+#include "vidcap.h"
+
+#include <ntverp.h>
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Microsoft\256 Video Capture Utility"
+
+#define VER_INTERNALNAME_STR        "vidcap32.exe"
+#define VER_ORIGINALFILENAME_STR    "vidcap32.exe"
+#include <common.ver>
+
+// Dialog definitions...
+#include "vidcap.dlg"
+
+// Icon specified...
+vidcapIcon ICON "vidcap.ico"
+
+IDBMP_TOOLBAR BitMap    "buttons.bmp"
+
+// Now comes the menu...
+vidcapMenu MENU
+  BEGIN
+    POPUP  "&File"
+      BEGIN
+        MENUITEM "&Load Palette...", IDM_F_LOADPALETTE
+	MENUITEM "&Set Capture File...", IDM_F_SETCAPTUREFILE
+	MENUITEM "&Allocate File Space...", IDM_F_ALLOCATESPACE
+        MENUITEM SEPARATOR
+	MENUITEM "Save &Captured Video As...", IDM_F_SAVEVIDEOAS
+        MENUITEM "Save &Palette...", IDM_F_SAVEPALETTE
+        MENUITEM "Save Single &Frame..." IDM_F_SAVEFRAME
+	MENUITEM SEPARATOR
+        MENUITEM "Pla&y Captured Video...", IDM_F_EDITVIDEO
+        MENUITEM SEPARATOR
+	MENUITEM "E&xit\tAlt+F4", IDM_F_EXIT
+      END
+    POPUP  "&Edit"
+      BEGIN
+	MENUITEM "&Copy\tCtrl+C", IDM_E_COPY
+	MENUITEM "Paste &Palette", IDM_E_PASTEPALETTE
+        MENUITEM SEPARATOR
+        MENUITEM "Pre&ferences...", IDM_E_PREFS
+      END
+    POPUP  "&Options"
+      BEGIN
+	MENUITEM "&Audio Format...", IDM_O_AUDIOFORMAT
+	MENUITEM SEPARATOR
+	MENUITEM "Video &Format...", IDM_O_VIDEOFORMAT
+	MENUITEM "Video &Source...", IDM_O_VIDEOSOURCE
+	MENUITEM "Video &Display...", IDM_O_VIDEODISPLAY
+	MENUITEM SEPARATOR
+	MENUITEM "&Compression...", IDM_O_CHOOSECOMPRESSOR
+	MENUITEM SEPARATOR
+	MENUITEM "&Preview", IDM_O_PREVIEW, CHECKED
+	MENUITEM "&Overlay", IDM_O_OVERLAY
+        MENUITEM SEPARATOR
+      END
+    POPUP  "&Capture"
+      BEGIN
+	MENUITEM "&Single Frame", IDM_C_CAPTUREFRAME
+	MENUITEM "&Frames...", IDM_C_CAPSEL
+	MENUITEM "&Video...", IDM_C_CAPTUREVIDEO
+	MENUITEM "&Palette...", IDM_C_PALETTE
+#ifdef DEBUG
+	MENUITEM "&Capture Test Loop!", IDM_C_TEST
+#endif
+      END   
+    POPUP  "&Help"
+      BEGIN
+        MENUITEM "&Contents\tF1", IDM_H_CONTENTS
+	MENUITEM "&About...", IDM_H_ABOUT
+      END
+  END
+
+// Here are the Accelerators...
+vidcapApp ACCELERATORS
+  BEGIN
+    "^C", IDM_E_COPY
+  END
+
+// And string table at last...
+STRINGTABLE
+BEGIN
+
+// menu help strings
+/* File Menu */
+//
+	IDM_FILE		"Set capture file, save files or exit application"
+	IDM_F_EXIT		"Quit VidCap"
+	IDM_F_LOADPALETTE	"Load a previously saved palette for use in capture"
+	IDM_F_SETCAPTUREFILE	"Select or create a file to capture the video to"
+        IDM_F_ALLOCATESPACE     "Adjust the amount of disk space allocated to the capture file"
+	IDM_F_EDITVIDEO		"Play the last capture file"
+	IDM_F_SAVEVIDEOAS  	"Save captured video under a new name"
+	IDM_F_SAVEPALETTE	"Save the current palette"
+	IDM_F_SAVEFRAME		"Save a single frame as a bitmap"
+
+
+/* Edit Menu */
+	IDM_EDIT		"Copy to clipboard or paste palette"
+	IDM_E_COPY              "Copy the displayed frame to the clipboard"
+	IDM_E_PASTEPALETTE      "Paste palette from the clipboard"
+	IDM_E_PREFS		"Customize the VidCap window"
+
+/* Options Menu */
+	IDM_OPTIONS		"Setup audio and video for capture"
+	IDM_O_AUDIOFORMAT       "Set the audio characteristics"
+	IDM_O_VIDEOSOURCE	"Select the video source"
+	IDM_O_VIDEOFORMAT	"Set the image dimensions and format"
+	IDM_O_VIDEODISPLAY	"Select image to display on external monitor"
+	IDM_O_PREVIEW		"Toggle preview video"
+	IDM_O_OVERLAY   	"Toggle overlay video"
+
+/* Capture Menu */
+	IDM_CAPTURE		"Capture frames, palette or video sequence"
+	IDM_C_CAPTUREFRAME      "Capture a single frame"
+	IDM_C_CAPSEL            "Capture selected frames"
+	IDM_C_CAPTUREVIDEO	"Capture a video sequence"
+	IDM_C_PALETTE           "Capture a palette"
+
+/* Help Menu */
+	IDM_HELP		"Get help"
+	IDM_H_CONTENTS		"Display Help Index"
+	IDM_H_ABOUT		"Displays program information"
+
+	IDM_SYSMENU		"Move, size, or close the application window"
+
+/* System menus */
+	SC_RESTORE		"Restore window to previous size"
+	SC_SIZE			"Change the window size"
+	SC_MOVE			"Move the window"
+	SC_MINIMIZE		"Reduce the window to an icon"
+	SC_MAXIMIZE		"Enlarge the window to full size"
+	SC_CLOSE		"Exit VidCap"
+	SC_TASKLIST		"Switch to a new task"
+
+
+  IDS_APP_TITLE,             "VidCap"
+
+  IDS_ERR_CREATE_WINDOW,    "Window creation failed!"
+  IDS_ERR_REGISTER_CLASS,   "Error registering window class"
+  IDS_ERR_FIND_HARDWARE,    "No capture device found."
+  IDS_ERR_CANT_PREALLOC,    "Failed to pre-allocate capture file space"
+  IDS_ERR_MEASUREFREEDISK,  "Could not measure free disk space"
+  IDS_ERR_SIZECAPFILE,      "Could not measure size of capture file"
+  IDS_ERR_RECONNECTDRIVER,  "Could not reconnect to driver"
+  IDS_ERR_CMDLINE,          "Command line error: usage: vidcap {-d<DeviceIndex>}"
+  IDS_WARN_DEFAULT_PALETTE, "Warning: Using default palette."
+  IDS_MCI_CONTROL_ERROR,    "Error: Unable to access MCI device."
+  IDS_ERR_ACCESS_SOUNDDRIVER, "Error accessing sound device"
+  IDS_ERR_VIDEDIT,          "Unable to play this file"
+
+  IDS_TITLE_SETCAPTUREFILE, "Set Capture File"
+  IDS_TITLE_SAVEAS,         "Save Captured Video As"
+  IDS_TITLE_LOADPALETTE,    "Load Palette"
+  IDS_TITLE_SAVEPALETTE,    "Save Palette"
+  IDS_TITLE_SAVEDIB,        "Save Single Frame"
+  IDS_PROMPT_CAPFRAMES,     "Select Capture to capture an image to %s"
+  IDS_STATUS_NUMFRAMES,     "%d Frames"
+  IDS_CAP_CLOSE,            "C&lose"
+
+
+  IDC_toolbarSETFILE    "Set the capture file"
+  IDC_toolbarEDITCAP	"Edit the captured video file"
+  IDC_toolbarLIVE	"Toggle preview video"
+  IDC_toolbarCAPFRAME	"Capture a single frame"
+  IDC_toolbarCAPSEL	"Capture selected frames"
+  IDC_toolbarCAPAVI	"Capture a video sequence"
+  IDC_toolbarCAPPAL	"Capture a palette"
+  IDC_toolbarOVERLAY	"Toggle overlay video"
+
+  IDS_CAPPAL_CLOSE      "&Close"
+  IDS_CAPPAL_STATUS     "%d frames"
+  IDS_CAPPAL_STOP       "&Stop"
+  IDS_CAPPAL_START      "&Start"
+
+  IDS_CAP_RTL           "0=rtl"
+
+END
+
+ID_FILTER_AVI RCDATA
+BEGIN
+        "Microsoft AVI\0"
+        "*.avi\0"
+        "\0"
+END
+
+ID_FILTER_PALETTE RCDATA
+BEGIN
+        "Microsoft Palette\0"
+        "*.pal\0"
+        "\0"
+END
+
+ID_FILTER_DIB RCDATA
+BEGIN
+        "Microsoft Windows DIB\0"
+        "*.dib;*.bmp\0"
+        "\0"
+END
+
+/*
+ * ACCELERATORS
+ */
+VIDCAP ACCELERATORS PRELOAD
+BEGIN
+	/* New Accelerator */	
+	"^C",   	IDM_E_COPY	
+
+	/* Old Accelerator for compatability */
+	VK_INSERT,	IDM_E_COPY,	VIRTKEY, CONTROL
+
+	VK_F1,		IDM_H_CONTENTS, VIRTKEY
+END
+

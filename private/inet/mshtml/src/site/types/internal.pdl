@@ -1,0 +1,682 @@
+#ifndef _INTERNAL_PDL_
+#define _INTERNAL_PDL_ 1
+
+#include "element.pdl"
+
+file internal.pdl
+
+import element.pdl
+import document.pdl
+import mshtmext.pdl
+import behavior.pdl
+
+
+interface IElementBehavior
+interface IElementBehaviorFactory
+
+//-------------------------------------------------------------------------
+//
+//  Identity Behavior interfaces, internal until we decide to publish them
+//
+//-------------------------------------------------------------------------
+
+//+------------------------------------------------------------------------
+//
+//  IIdentityBehavior, IIdentityBehaviorFactory
+//
+//-------------------------------------------------------------------------
+    
+interface IIdentityBehavior super:IElementBehavior custom guid:3050f60c-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetHTMLElement                      (out type:IHTMLElement**        arg:ppNewElement)
+    method      HRESULT DocumentEnter                       (in  type:IHTMLDocument2*       arg:pDocument)
+    method      HRESULT DocumentLeave                       (in  type:IHTMLDocument2*       arg:pDocument)
+    method      HRESULT GetStyle                            (out type:IHTMLStyle**          arg:ppStyle)
+    method      HRESULT FlushPersistentProperties           ()
+    method      HRESULT GetCurrentStyle                     (out type:IHTMLCurrentStyle**   arg:ppStyle)
+    method      HRESULT GetRuntimeStyle                     (out type:IHTMLStyle**          arg:ppStyle)
+
+interface IIdentityBehaviorFactory super:IElementBehaviorFactory custom guid:3050f60d-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetBaseTags                         (out type:INT*                  arg:pTagNames, \
+                                                             out type:INT*                  arg:pTagId, \
+                                                             out type:INT*                  arg:pcTags)
+
+//+------------------------------------------------------------------------
+//
+//  ISubDivisionProvider
+//
+//-------------------------------------------------------------------------
+
+interface ISubDivisionProvider super:IUnknown custom guid:3050f4d2-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetSubDivisionCount                 (out retval type:LONG*                 arg:pcSubDivision)
+    method      HRESULT GetSubDivisionTabs                  (in         type:LONG                  arg:cTabs, \
+                                                             out retval type:LONG*                 arg:pSubDivisionTabs)
+    method      HRESULT SubDivisionFromPt                   (in         type:POINT                 arg:pt, \
+                                                             out retval type:LONG*                 arg:piSubDivision)
+    
+//+------------------------------------------------------------------------
+//
+//  IElementBehaviorUI
+//
+//-------------------------------------------------------------------------
+
+interface IElementBehaviorUI super:IUnknown custom guid:3050f4bf-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT OnReceiveFocus                      (in         type:BOOL                  arg:fFocus, \
+                                                             in         type:LONG                  arg:lSubDivision)
+    method      HRESULT GetSubDivisionProvider              (out retval type:ISubDivisionProvider** arg:ppProvider)
+    method      HRESULT CanTakeFocus                        ()
+
+
+//-------------------------------------------------------------------------
+//
+//  View services, internal until we decide to publish them
+//
+//-------------------------------------------------------------------------
+
+interface IMarkupPointer
+interface IHTMLElement
+interface ISegmentList
+interface IHTMLCaret
+interface IElementAdorner
+interface ISelectionRenderingServices
+
+
+struct SelectionMessage
+    member message          type:UINT
+    member time             type:DWORD
+    member pt               type:POINT
+    member ptContent        type:POINT
+    member wParam           type:WPARAM
+    member lParam           type:LPARAM
+    member characterCookie  type:int
+    member elementCookie    type:DWORD_PTR
+    member fShift           type:BOOL
+    member fCtrl            type:BOOL
+    member fAlt             type:BOOL
+    member fFromCapture     type:BOOL
+    member fStopForward     type:BOOL
+    member fEmptySpace      type:BOOL
+    member hwnd             type:HWND
+    member lResult          type:LPARAM
+
+struct HTMLPtrDispInfoRec
+    member dwSize               type:DWORD
+    member lBaseline            type:LONG 
+    member lXPosition           type:LONG 
+    member lLineHeight          type:LONG 
+    member lTextHeight          type:LONG
+    member lDescent             type:LONG 
+    member lTextDescent         type:LONG
+    member fRTLLine             type:BOOL  // The line flows right to left
+    member fRTLFlow             type:BOOL  // The text at this position flows right to left
+    member fAligned             type:BOOL   // the line contains an aligned object on it.
+    member fHasNestedRunOwner   type:BOOL  // Has Nested Run Owner ( DIV, TABLE etc)
+    
+enum CHAR_FORMAT_FAMILY prefix:CHAR_FORMAT_ guid:3050f5fd-98b5-11cf-bb82-00aa00bdce0b
+    eval None       value:0
+    eval FontStyle  value:1
+    eval FontInfo   value:2
+    eval FontName   value:4
+    eval ColorInfo  value:8
+    eval ParaFormat value:16
+
+
+struct HTMLCharFormatData
+    member dwSize       type:DWORD
+    member wFamilyFlags type:WORD
+    // FontStyle
+    member fBold        type:BOOL
+    member fItalic      type:BOOL
+    member fUnderline   type:BOOL
+    member fOverline    type:BOOL
+    member fStrike      type:BOOL
+    member fSubScript   type:BOOL
+    member fSuperScript type:BOOL
+    // FontColor (a)
+    member fHasBgColor  type:BOOL
+    // FontInfo
+    member fExplicitFace type:BOOL
+    member wWeight      type:WORD
+    member wFontSize    type:WORD
+    // FontName
+    member szFont[32]   type:TCHAR
+    // FontColor (b)
+    member dwTextColor  type:DWORD
+    member dwBackColor  type:DWORD
+    // ParaFormat
+    member fPre         type:BOOL
+    member fRTL         type:BOOL    
+
+
+enum LAYOUT_MOVE_UNIT prefix:LAYOUT_MOVE_UNIT_ guid:3050f5fe-98b5-11cf-bb82-00aa00bdce0b
+    eval PreviousLine     value:1
+    eval NextLine         value:2
+    eval CurrentLineStart value:3
+    eval CurrentLineEnd   value:4
+    eval NextLineStart    value:5
+    eval PreviousLineEnd  value:6
+    eval TopOfWindow      value:7
+    eval BottomOfWindow   value:8
+    eval OuterLineStart   value:9
+    eval OuterLineEnd     value:10
+
+enum HIGHLIGHT_TYPE prefix:HIGHLIGHT_TYPE_ guid:3050f5ff-98b5-11cf-bb82-00aa00bdce0b
+    eval None                   value:0x00000000
+    eval Selected               value:0x00000001
+    eval Squiggle               value:0x00000002
+    eval ImeInput               value:0x00000010  // IME highlight types are mutually exclusive (bits 4-6)
+    eval ImeTargetConverted     value:0x00000020
+    eval ImeConverted           value:0x00000030
+    eval ImeTargetNotConverted  value:0x00000040
+    eval ImeInputError          value:0x00000050
+    eval ImeHangul              value:0x00000060
+
+enum CARET_GRAVITY prefix:CARET_GRAVITY_ guid:3050f600-98b5-11cf-bb82-00aa00bdce0b
+    eval NoChange
+    eval BeginningOfLine
+    eval EndOfLine
+
+enum CARET_VISIBILITY prefix:CARET_TYPE_ guid:3050f601-98b5-11cf-bb82-00aa00bdce0b
+    eval Hide       value:0
+    eval Show       value:1     
+
+// must agree with FR_xxx (commdlg.h)
+enum FOLLOW_UP_ACTION_FLAGS prefix:FOLLOW_UP_ACTION_ guid:3050f602-98b5-11cf-bb82-00aa00bdce0b 
+    eval None           value:0x00000000
+    eval ReBubbleEvent  value:0x00000001
+    eval OnClick        value:0x00000020
+    eval DragElement    value:0x00000100
+    
+enum SELECTION_NOTIFICATION prefix:SELECT_NOTIFY_
+    eval TIMER_TICK
+    eval EMPTY_SELECTION
+    eval DOC_ENDED
+    eval DOC_CHANGED
+    eval DESTROY_SELECTION
+    eval CARET_IN_CONTEXT
+    eval EXIT_TREE
+    eval LOSE_FOCUS_FRAME
+    eval LOSE_FOCUS
+    eval DESTROY_ALL_SELECTION
+    eval DISABLE_IME
+
+enum SELECTION_TYPE prefix:SELECTION_TYPE_
+    eval None
+    eval Caret
+    eval Selection
+    eval Control
+    eval Auto
+    eval IME
+
+enum POINTER_SCROLLPIN prefix:POINTER_SCROLLPIN_
+    eval TopLeft
+    eval BottomRight
+    eval Minimal
+
+enum COORD_SYSTEM prefix:COORD_SYSTEM_
+    eval GLOBAL     
+    eval PARENT     
+    eval CONTAINER  
+    eval CONTENT    
+
+enum ADORNER_HTI prefix:ADORNER_HTI_
+    eval NONE
+    eval TOPBORDER
+    eval LEFTBORDER 
+    eval BOTTOMBORDER 
+    eval RIGHTBORDER 
+    eval TOPLEFTHANDLE   
+    eval LEFTHANDLE
+    eval TOPHANDLE         
+    eval BOTTOMLEFTHANDLE  
+    eval TOPRIGHTHANDLE    
+    eval BOTTOMHANDLE      
+    eval RIGHTHANDLE       
+    eval BOTTOMRIGHTHANDLE 
+    
+enum CARET_DIRECTION prefix:CARET_DIRECTION_
+    eval INDETERMINATE
+    eval SAME
+    eval BACKWARD
+    eval FORWARD
+    
+//-------------------------------------------------------------------------
+//
+//  IHTMLViewServices, IHTMLCaret, ISegmentList, ISelectionRenderingServices
+//  IElementAdorner, IHTMLEditor, IHTMLEditingServices
+//
+//-------------------------------------------------------------------------
+
+interface IHTMLViewServices super:IUnknown custom guid:3050f603-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT MoveMarkupPointerToPoint (in type:POINT arg:pt, \
+                                                 in type:IMarkupPointer* arg:pPointer, \
+                                                 in out type:BOOL* arg:pfNotAtBOL, \
+                                                 in out type:BOOL* arg:pfAtLogicalBOL, \
+                                                 in out type:BOOL* arg:pfRightOfCp, \
+                                                 in type:BOOL arg:fScrollIntoView)
+    method      HRESULT MoveMarkupPointerToPointEx (in type:POINT arg:pt, \
+                                                 in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fGlobalCoordinates, \
+                                                 in out type:BOOL* arg:pfNotAtBOL, \
+                                                 in out type:BOOL* arg:pfAtLogicalBOL, \
+                                                 in out type:BOOL* arg:pfRightOfCp, \
+                                                 in type:BOOL arg:fScrollIntoView)
+    method      HRESULT MoveMarkupPointerToMessage (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:SelectionMessage* arg:pMessage, \
+                                                 in out type:BOOL* arg:pfNotAtBOL, \
+                                                 in out type:BOOL* arg:pfAtLogicalBOL, \
+                                                 in out type:BOOL* arg:pfRightOfCp, \
+                                                 in out type:BOOL* arg:fValidTree, \
+                                                 in type:BOOL arg:fScrollIntoView, \
+                                                 in type:IHTMLElement* arg:pIContainerElement, \
+                                                 in out type:BOOL* arg:pfSameLayout, \
+                                                 in type:BOOL arg:fHitTestEOL )
+    method      HRESULT GetCharFormatInfo       (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:WORD arg:wFamilyFlags, \
+                                                 in out type:HTMLCharFormatData* arg:pInfo)
+    method      HRESULT GetLineInfo             (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fAtEndOfLine, \
+                                                 in out type:HTMLPtrDispInfoRec* arg:pInfo)
+    method      HRESULT IsPointerBetweenLines   (in type:IMarkupPointer* arg:pPointer, \
+                                                 in out type:BOOL* arg:pfBetweenLines)
+    method      HRESULT GetElementsInZOrder     (in type:POINT arg:pt, \
+                                                 in out type:IHTMLElement** arg:rgElements, \
+                                                 in out type:DWORD* arg:pCount)
+    method      HRESULT GetTopElement           (in type:POINT arg:pt, \
+                                                 out type:IHTMLElement** arg:ppElement)
+    method      HRESULT MoveMarkupPointer       (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:LAYOUT_MOVE_UNIT arg:eUnit, \
+                                                 in type:LONG arg:lXCurReally, \
+                                                 out type:BOOL* arg:fAtEOL, \
+                                                 in out type:BOOL* arg:pfAtLogicalBOL)
+    method      HRESULT RegionFromMarkupPointers (in type:IMarkupPointer* arg:pPointerStart, \
+                                                  in type:IMarkupPointer* arg:pPointerEnd, \
+                                                  out type:DWORD_PTR* arg:phrgn)
+    method      HRESULT GetCurrentSelectionRenderingServices ( \
+                                                 in out type:ISelectionRenderingServices** arg:ppSelRenSvc)
+    method      HRESULT GetCurrentSelectionSegmentList ( \
+                                                 in out type:ISegmentList** arg:ppSegment)
+    method      HRESULT FireOnSelectStart       (in type:IHTMLElement* arg:pIElement)
+    method      HRESULT FireCancelableEvent     (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:LONG arg:dispidMethod, \
+                                                 in type:LONG arg:dispidProp, \  
+                                                 in type:BSTR arg:bstrEventType, \
+                                                 out type:BOOL* arg:pfResult)
+    method      HRESULT GetCaret                (out type:IHTMLCaret** arg:ppCaret)
+    method      HRESULT ConvertVariantFromHTMLToTwips (in out type:VARIANT* arg:pvarargInOut)
+    method      HRESULT ConvertVariantFromTwipsToHTML (in out type:VARIANT* arg:pvarargInOut)
+    method      HRESULT IsBlockElement          (in type:IHTMLElement* arg:pIElement, \
+                                                 out type:BOOL* arg:fResult)
+    method      HRESULT IsLayoutElement         (in type:IHTMLElement* arg:pIElement, \
+                                                 out type:BOOL* arg:fResult)
+    method      HRESULT IsContainerElement      (in type:IHTMLElement* arg:pIElement, \
+                                                 out type:BOOL* arg:fContainer, \
+                                                 out type:BOOL* arg:fHTML)
+    method      HRESULT GetFlowElement          (in type:IMarkupPointer* arg:pMarkup, \
+                                                 out type:IHTMLElement** arg:ppElem)
+    method      HRESULT GetElementFromCookie    (in type:DWORD_PTR arg:dwCookie, \
+                                                 out type:IHTMLElement** arg:ppElem )
+    method      HRESULT AddElementAdorner       (in type:IHTMLElement* arg:pElem, \
+                                                 in type:IElementAdorner* arg:pAdorn, \
+                                                 in out type:DWORD_PTR* arg:ppCookie)
+    method      HRESULT RemoveElementAdorner    (in type:DWORD_PTR arg:cookie)
+    method      HRESULT GetElementAdornerBounds (in type:DWORD_PTR arg:cookie, \
+                                                 in out type:RECT* arg:prcBounds)
+    method      HRESULT InflateBlockElement     (in type:IHTMLElement* arg:pElem)
+    method      HRESULT IsInflatedBlockElement  (in type:IHTMLElement* arg:pElem, \
+                                                 in out type:BOOL* arg:pfInflated)
+    method      HRESULT IsMultiLineFlowElement  (in type:IHTMLElement* arg:pElem, \
+                                                 out type:BOOL* arg:pfMulti)
+    method      HRESULT GetElementAttributeCount (in type:IHTMLElement* arg:pElem, \
+                                                 out type:UINT* arg:pCount)
+    method      HRESULT IsEditableElement       (in type:IHTMLElement* arg:pElement, \
+                                                 out type:BOOL* arg:pfEditable)
+    method      HRESULT GetOuterContainer       (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:IHTMLElement** arg:ppIOuterElement, \
+                                                 in type:BOOL arg:fIgnoreOutermostContainer, \ 
+                                                 in type:BOOL* arg:pfHitContainer )
+    method      HRESULT IsNoScopeElement        (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:BOOL* arg:pfNoScope)  
+    method      HRESULT ShouldObjectHaveBorder  (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:BOOL* arg:pfDrawBorder )                                                  
+    method      HRESULT DoTheDarnPasteHTML      (in type:IMarkupPointer* arg:pIPointerStart, \
+                                                 in type:IMarkupPointer* arg:pIPointerFinish, \
+                                                 in type:HGLOBAL arg:hGlobalHTML )
+    method      HRESULT ConvertRTFToHTML        (in type:LPOLESTR arg:pszRtf, \
+                                                 in type:HGLOBAL* arg:phGlobalHTML )
+    method      HRESULT GetViewHWND             (in out type:HWND* arg:pHWND) 
+    method      HRESULT GetActiveIMM            (out type:IActiveIMMApp** arg:ppActiveIMM)
+    method      HRESULT IsRtfConverterEnabled   (out type:BOOL* arg:pfEnabled)
+    method      HRESULT ScrollElement           (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:LONG arg:lPercentToScroll, \
+                                                 out type:POINT* arg:ScrollDelta)
+    method      HRESULT GetScrollingElement     (in type:IMarkupPointer* arg:pPosition, \
+                                                 in type:IHTMLElement* arg:pBoundary, \
+                                                 out type:IHTMLElement** arg:ppElement)
+    method      HRESULT StartHTMLEditorDblClickTimer      ()
+    method      HRESULT StopHTMLEditorDblClickTimer       ()
+    method      HRESULT HTMLEditorTakeCapture    ()
+    method      HRESULT HTMLEditorReleaseCapture ()         
+    method      HRESULT SetHTMLEditorMouseMoveTimer       ()
+
+    method      HRESULT GetEditContext        (in type:IHTMLElement* arg:pIStartElement, \
+                                               in type:IHTMLElement** arg:ppIEditThisElement, \
+                                               in type:IMarkupPointer* arg:pIStart, \
+                                               in type:IMarkupPointer* arg:pIEnd, \
+                                               in type:BOOL arg:fDrillingIn, \
+                                               in type:BOOL* arg:pfEditThisEditable ,\
+                                               in type:BOOL* arg:pfEditParentEditable,\
+                                               in type:BOOL* arg:pfNoScopeElement)
+                                               
+    method      HRESULT EnsureEditContext     (in type:IMarkupPointer* arg:pIMarkupPointer )                                               
+                                                                            
+    method      HRESULT ScrollPointerIntoView   (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fNotAtBOL, \
+                                                 in type:POINTER_SCROLLPIN arg:eScrollAmount)
+    method      HRESULT ScrollPointIntoView     (in type:IHTMLElement* arg:pIElement,\
+                                                 in type:POINT* arg:ptGlobal )                                                 
+    method      HRESULT ArePointersInSameMarkup (in type:IMarkupPointer* arg:pP1, \
+                                                 in type:IMarkupPointer* arg:pP2, \
+                                                 out type:BOOL* arg:pfSameMarkup)
+    method      HRESULT DragElement             (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:DWORD arg:dwKeyState)                                                  
+    method      HRESULT BecomeCurrent           (in type:IHTMLElement* arg:pIElement, \
+                                                 in type:SelectionMessage* arg:pMessage)
+    method      HRESULT TransformPoint          (in out type:POINT* arg:pPoint, \
+                                                 in type:COORD_SYSTEM arg:eSource, \
+                                                 in type:COORD_SYSTEM arg:eDestination, \
+                                                 in type:IHTMLElement* arg:pIElement)    
+    method      HRESULT GetElementDragBounds    (in type:IHTMLElement* arg:pIElement, \
+                                                 in out type:RECT* arg:pIElementDragBounds )
+    method      HRESULT UpdateAdorner           (in type:DWORD_PTR arg:cookie)   
+    method      HRESULT InvalidateAdorner       (in type:DWORD_PTR arg:cookie) 
+    method      HRESULT ScrollIntoView          (in type:DWORD_PTR arg:cookie)
+    method      HRESULT IsElementLocked         (in type:IHTMLElement* arg:pIElement, \
+                                                 in out type:BOOL* arg:pfLocked )    
+    method      HRESULT MakeParentCurrent       (in type:IHTMLElement* arg:pIElement)                                                 
+
+    method      HRESULT FireOnBeforeEditFocus   (in type:IHTMLElement* arg:pINextActiveElement, \
+                                                 in out type:BOOL* arg:pfRet)
+
+    method      HRESULT IsEqualElement          (in type:IHTMLElement* arg:pIElement1, \
+                                                 in type:IHTMLElement* arg:pIElement2 )                                                 
+    method      HRESULT GetOuterMostEditableElement ( in type:IHTMLElement* arg:pIEditableElement, \
+                                                      in out type:IHTMLElement** arg:ppIOuterEditableElement)        
+    method      HRESULT IsSite                  (in type:IHTMLElement* arg:pElement, \
+                                                 out type:BOOL* arg:pfSite, \
+                                                 out type:BOOL* arg:pfText, \ 
+                                                 out type:BOOL* arg:pfMultiLine, \ 
+                                                 out type:BOOL* arg:pfScrollable )
+
+    method      HRESULT QueryBreaks             (in type:IMarkupPointer* arg:pPointer,  \
+                                                 out type:DWORD* arg:pdwBreaks, \
+                                                 in type:BOOL arg:fWantPendingBreak)
+    method      HRESULT MergeDeletion           (in type:IMarkupPointer* arg:pPointer)
+    method      HRESULT GetElementForSelection (in type:IHTMLElement* arg:pIElement, \
+                                                 out type:IHTMLElement** arg:ppIAdjustedElement )
+    method      HRESULT IsContainedBy              (in type:IMarkupContainer* arg:pIOuterContainer, \
+                                                    in type:IMarkupContainer* arg:pIInnerContainer )
+    method      HRESULT CurrentScopeOrSlave     (in type:IMarkupPointer* arg:pPointer, \
+                                                 out type:IHTMLElement** arg:ppElemCurrent)
+    method      HRESULT LeftOrSlave             (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fMove, \
+                                                 out type:MARKUP_CONTEXT_TYPE* arg:pContext, \
+                                                 out type:IHTMLElement** arg:ppElement, \
+                                                 in out type:long* arg:pcch, \
+                                                 out type:OLECHAR* arg:pchText)
+    method      HRESULT RightOrSlave            (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fMove, \
+                                                 out type:MARKUP_CONTEXT_TYPE* arg:pContext, \
+                                                 out type:IHTMLElement** arg:ppElement, \
+                                                 in out type:long* arg:pcch, \
+                                                 out type:OLECHAR* arg:pchText)
+    method      HRESULT MoveToContainerOrSlave  (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:IMarkupContainer* arg:pContainer, \
+                                                 in type:BOOL arg:fAtStart )
+    method      HRESULT MergeAttributes (in type:IHTMLElement* arg:pIHTMLElementMergeSrc, \
+                                         in type:IHTMLElement* arg:pIHTMLElementMergeTarget, \
+                                         in type:BOOL arg:fCopyId )
+    method      HRESULT FindUrl (in type:IMarkupPointer* arg:pStart, \
+                                 in type:IMarkupPointer* arg:pEnd,   \
+                                 in type:IMarkupPointer* arg:pUrlStart, \
+                                 in type:IMarkupPointer* arg:pUrlEnd)
+    method      HRESULT IsEnabled       (in type:IHTMLElement* arg:pIElement, \
+                                         in out type:BOOL* arg:pfEnabled)
+
+    method      HRESULT GetElementBlockDirection (in type:IHTMLElement* arg:pElement, \
+                                                 out type:BSTR* arg:pbstrDir)
+
+    method      HRESULT SetElementBlockDirection (in type:IHTMLElement* arg:pElement, \
+                                                  in type:LONG arg:eHTMLDir)
+
+    method      HRESULT IsBidiEnabled   (in out type:BOOL* arg:pfEnabled)
+
+    method      HRESULT SetDocDirection (in type:LONG arg:eHTMLDir)
+
+    method      HRESULT AllowSelection (in type:IHTMLElement* arg:pIElement, \
+                                        in type:SelectionMessage* arg:peMessage )                                          
+
+    method      HRESULT MoveWord (in type:IMarkupPointer* arg:pPointerToMove,\
+                                  in type:MOVEUNIT_ACTION arg:muAction,\
+                                  in type:IMarkupPointer* arg:pLeftBoundary,\
+                                  in type:IMarkupPointer* arg:pRightBoundary)
+
+    method      HRESULT GetAdjacencyForPoint ( in type:IHTMLElement* arg:pIElement, \
+                                               in type:POINT arg:ptGlobal, \
+                                               in out type:ELEMENT_ADJACENCY arg:*peAdjacent  )
+
+#ifndef UNIX                                              
+    method      HRESULT SaveSegmentsToClipboard (in type:ISegmentList* arg:pSegmentList)
+#else
+    method      HRESULT SaveSegmentsToClipboard (in type:ISegmentList* arg:pSegmentList, \
+                                                 out type:VARIANTARG* arg:pvarantarg )
+#endif
+
+    method      HRESULT InsertMaximumText       (in type:OLECHAR* arg:pText, \
+                                                 in type:LONG arg:lLen, \
+                                                 in type:IMarkupPointer* arg:pIMarkupPointer )
+
+    method      HRESULT IsInsideURL             (in type:IMarkupPointer* arg:Start, \
+                                                 in type:IMarkupPointer* arg:pRight, \
+                                                 out type:BOOL* arg:pfResult)
+
+    method      HRESULT GetDocHostUIHandler     (out type:IDocHostUIHandler** arg:ppIHandler)
+
+    method      HRESULT GetClientRect           (in type:IHTMLElement* arg:pIElement,\
+                                                 in type:COORD_SYSTEM arg:eSource,\
+                                                 in out type:RECT* arg:pRect  ) 
+
+    method      HRESULT GetContentRect           (in type:IHTMLElement* arg:pIElement,\
+                                                 in type:COORD_SYSTEM arg:eSource,\
+                                                 in out type:RECT* arg:pRect  ) 
+                                                 
+    method      HRESULT IsElementSized          (in type:IHTMLElement* arg:pIElement,\
+                                                 in out type:BOOL* arg:pfSized )                                                   
+    method      HRESULT GetLineDirection        (in type:IMarkupPointer* arg:pPointer, \
+                                                 in type:BOOL arg:fAtEndOfLine, \
+                                                 in out type:LONG* arg:peHTMLDir)
+interface IHTMLCaret super:IUnknown custom guid:3050f604-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT MoveCaretToPointer      (in type:IMarkupPointer* arg:pIMarkupPointerCaret, \
+                                                 in type:BOOL arg:fNotAtBOL, \
+                                                 in type:BOOL arg:fScrollIntoView \
+                                                 in type:CARET_DIRECTION arg:eDir)
+    method      HRESULT MoveCaretToPointerEx    (in type:IMarkupPointer* arg:pIMarkupPointerCaret, \
+                                                 in type:BOOL arg:fAtEOL, \
+                                                 in type:BOOL arg:fVisible, \
+                                                 in type:BOOL arg:fScrollIntoView, \
+                                                 in type:CARET_DIRECTION arg:eDir)
+    method      HRESULT MovePointerToCaret      (in type:IMarkupPointer* arg:pIMarkupPointerCaret)
+    method      HRESULT IsVisible               (in out type:BOOL* arg:pIsVisible)
+    method      HRESULT Show                    (in type:BOOL arg:fScrollIntoView)
+    method      HRESULT Hide                    ()
+    method      HRESULT InsertText              (in type:OLECHAR* arg:pText, \
+                                                 in type:LONG arg:lLen)
+    method      HRESULT InsertMarkup            (in type:OLECHAR* arg:pMarkup)
+    method      HRESULT ScrollIntoView          ()
+    method      HRESULT GetElementContainer     (out type:IHTMLElement** arg:ppElement)
+    method      HRESULT GetLocation             (in out type:POINT* arg:pPoint, \
+                                                 in type:BOOL arg:fTranslate)
+    method      HRESULT UpdateCaret             ()
+    method      HRESULT SetOffset               (in type:LONG arg:lXDelta, \
+                                                 in type:LONG arg:lYDelta, \
+                                                 in type:LONG arg:lHDelta)
+    method      HRESULT GetOffset               (in out type:LONG* arg:plXDelta, \
+                                                 in out type:LONG* arg:plYDelta, \
+                                                 in out type:LONG* arg:plHDelta)
+    method      HRESULT GetNotAtBOL             (in out type:BOOL* arg:pfNotAtBOL)
+    method      HRESULT SetNotAtBOL             (in type:BOOL arg:fNotAtBOL)
+    method      HRESULT LoseFocus               ()
+    
+interface ISegmentList super:IUnknown custom guid:3050f605-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT MovePointersToSegment   (in type:int arg:iSegmentIndex, \
+                                                 in type:IMarkupPointer* arg:pIPointerStart, \
+                                                 in type:IMarkupPointer* arg:pIPointerEnd)
+    method      HRESULT GetSegmentCount         (in out type:int* arg:piSegmentCount, \
+                                                 in out type:SELECTION_TYPE* arg:eType)
+
+interface ISelectionRenderingServices super:ISegmentList custom guid:3050f606-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT AddSegment              (in type:IMarkupPointer* arg:pIMarkupPointerStart, \
+                                                 in type:IMarkupPointer* arg:pIMarkupPointerEnd, \
+                                                 in type:HIGHLIGHT_TYPE arg:HighlightType \
+                                                 in out type:int* arg:piSegmentIndex)
+    method      HRESULT AddElementSegment       (in type:IHTMLElement* arg:pIElement, \
+                                                 in out type:int* arg:piSegmentIndex)
+    method      HRESULT MoveSegmentToPointers   (in type:int arg:iSegmentIndex, \
+                                                 in type:IMarkupPointer* arg:pIMarkupPointerStart, \
+                                                 in type:IMarkupPointer* arg:pIMarkupPointerEnd, \
+                                                 in type:HIGHLIGHT_TYPE arg:HighlightType)
+    method      HRESULT GetElementSegment       (in type:int arg:iSegmentIndex, \
+                                                 in out type:IHTMLElement** arg:ppIElement)
+    method      HRESULT SetElementSegment       (in type:int arg:iSegmentIndex, \
+                                                 in type:IHTMLElement* arg:pIElement)
+    method      HRESULT ClearSegment            (in type:int arg:iSegmentIndex, \
+                                                 in type:BOOL arg:fInvalidate)
+    method      HRESULT ClearSegments           (in type:BOOL arg:fInvalidate)
+    method      HRESULT ClearElementSegments    ()
+    
+interface IElementAdorner super:IUnknown custom guid:3050f607-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT Draw                    (in type:HDC arg:hdc, \
+                                                 in type:LPRECT arg:prc)
+    method      HRESULT HitTestPoint            (in type:POINT* arg:pt, \
+                                                 in type:LPRECT arg:prc, \
+                                                 in out type:BOOL* arg:fResult, \
+                                                 in out type:ADORNER_HTI* arg:peAdornerHTI)
+    method      HRESULT GetSize                 (in type:SIZE* arg:pSizeElem, \
+                                                 in type:SIZE* arg:pSizeAdorn)
+    method      HRESULT GetPosition             (in type:POINT* arg:pPosElem, \
+                                                 in type:POINT* arg:pPosAdorn)                                              
+    method      HRESULT OnPositionSet           ()
+    
+interface IHTMLEditor super:IUnknown custom guid:3050f608-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT HandleMessage           (in out type:SelectionMessage* arg:pSelectionMessage, \
+                                                 in out type:DWORD* arg:pdwFollowUpActionFlag)
+
+    method      HRESULT Initialize              (in type:IUnknown* arg:pIDocument,\
+                                                 in type:IUnknown* arg:pIView )
+
+    method      HRESULT SetEditContext          (in type:BOOL arg:fEditable, \
+                                                 in type:BOOL arg:fSetSelection, \
+                                                 in type:BOOL arg:fParentEditable, \
+                                                 in type:IMarkupPointer* arg:pStartPointer, \                                                        
+                                                 in type:IMarkupPointer* arg:pEndPointer , \
+                                                 in type:BOOL arg:fNoScopeElement)        
+    method      HRESULT GetSelectionType        (in out type:SELECTION_TYPE* arg:eSelectionType)
+    method      HRESULT Notify                  (in type:SELECTION_NOTIFICATION arg:eSelectionNotification, \
+                                                 in type:IUnknown* arg:pUnknown, \
+                                                 in out type:DWORD* arg:pdwFollowUpActionFlag, \
+                                                 in type:DWORD arg:dword)                                                 
+    method      HRESULT IsPointerInSelection     (in type:IMarkupPointer* arg:pIPointer , \
+                                                  in out type:BOOL* arg:pfPointerInSelection, \
+                                                  in type:POINT* arg:pptGlobal, \
+                                                  in type:IHTMLElement* arg:pIElementOver)    
+    method      HRESULT GetRangeCommandTarget   (in type:IUnknown* arg:pContext, \
+                                                 in out type:IUnknown** arg:ppUnkTarget)
+    method      HRESULT GetElementToTabFrom     (in     type:BOOL           arg:fForward, \
+                                                 in out type:IHTMLElement** arg:ppElement \
+                                                 in out type:BOOL*          arg:pfFindNext)
+    method      HRESULT IsElementSiteSelected   (in type:IHTMLElement* arg:pIElement)
+    method      HRESULT IsEditContextUIActive   ()
+    
+interface IHTMLEditingServices super:IUnknown custom guid:3050f609-98b5-11cf-bb82-00aa00bdce0b
+
+    method      HRESULT Delete                  (in type:IMarkupPointer* arg:pStart,  \
+                                                 in type:IMarkupPointer* arg:pEnd,  \
+                                                 in type:BOOL arg:fAdjustPointers )
+
+    method        HRESULT Paste                    (in type:IMarkupPointer* arg:pStart,  \
+                                                    in type:IMarkupPointer* arg:pEnd,  \
+                                                    in type:BSTR arg:bstrText )   
+                                                    
+    method        HRESULT PasteFromClipboard       (in type:IMarkupPointer* arg:pStart,  \
+                                                    in type:IMarkupPointer* arg:pEnd, \
+                                                    in type:IDataObject* arg:pDO )
+                                                    
+    method        HRESULT Select                    (in type:IMarkupPointer* arg:pStart,  \
+                                                     in type:IMarkupPointer* arg:pEnd, \
+                                                     in type:SELECTION_TYPE  arg:eType, \
+                                                     in type:DWORD* arg:pdwFollowUpActionFlag)   
+                                                    
+    method        HRESULT LaunderSpaces             (in type:IMarkupPointer* arg:pStart,  \
+                                                     in type:IMarkupPointer* arg:pEnd)
+
+    method        HRESULT InsertSanitizedText   (in type:IMarkupPointer* arg:InsertHere,  \
+                                                 in type:OLECHAR* arg:pstrText, \
+                                                 in type:BOOL arg:fDataBinding)   
+
+    method      HRESULT UrlAutoDetectCurrentWord    (in type:IMarkupPointer* arg:pWord )
+
+    method      HRESULT UrlAutoDetectRange          (in type:IMarkupPointer* arg:pStart, \
+                                                     in type:IMarkupPointer* arg:pEnd )
+
+    method      HRESULT ShouldUpdateAnchorText  (in type:OLECHAR* arg:pstrHref, \
+                                                 in type:OLECHAR* arg:pstrAnchorText, \
+                                                 out type:BOOL* arg:pfResult)   
+                                                     
+    method      HRESULT AdjustPointerForInsert     (in type:IMarkupPointer* arg:pWhereIThinkIAm, \
+                                                    in type:BOOL arg:fFurtherInDocument, \
+                                                    in type:BOOL arg:fNotAtBol,\
+                                                    in type:IMarkupPointer* arg:pConstraintStart,\
+                                                    in type:IMarkupPointer* arg:pConstraintEnd )    
+    method      HRESULT FindSiteSelectableElement  (in type:IMarkupPointer* arg:pPointerStart, \
+                                                    in type:IMarkupPointer* arg:pPointerEnd, \
+                                                    in type:IHTMLElement** arg:ppIHTMLElement)
+    method      HRESULT IsElementSiteSelectable    (in type:IHTMLElement* arg:pIHTMLElement)   
+    method      HRESULT IsElementUIActivatable      (in type:IHTMLElement* arg:pIHTMLElement)
+
+//-------------------------------------------------------------------------
+//
+//  IEditDebugServices - allows some extra debug services. 
+//  QI'ing Trident for this interface on a non-retail build will fail.
+//
+//-------------------------------------------------------------------------
+
+interface IEditDebugServices super:IUnknown custom guid:3050f60b-98b5-11cf-bb82-00aa00bdce0b
+    method      HRESULT GetCp                   (in type:IMarkupPointer* arg:pIPointer,\
+                                                 out type:long* arg:pcp)
+    method      HRESULT SetDebugName            (in type:IMarkupPointer* arg:pIPointer,\
+                                                 in type:LPCTSTR arg:strDbgName )
+    method      HRESULT DumpTree                (in type:IMarkupPointer* arg:pIPointer)
+
+
+
+
+//-------------------------------------------------------------------------
+//
+// IHTMLOMWindowServices - used for tthe COMWindow/shdocvw split.  Trident should have 
+//      no explicit knowledge about its host. part of this is fro the window properties
+//      to be implemented as a service that our host provides.  In ie5 this interface is used
+//      by HTA's for this prupose, in IE^ we should do the same for shdocvw.
+//
+//-------------------------------------------------------------------------
+
+interface IHTMLOMWindowServices super:IUnknown custom guid:3050f5fc-98b5-11cf-bb82-00aa00bdce0b
+    method HRESULT moveTo (in type:LONG arg:x, \
+                           in type:LONG arg:y )
+    method HRESULT moveBy (in type:LONG arg:x, \
+                           in type:LONG arg:y )
+    method HRESULT resizeTo (in type:LONG arg:x, \
+                           in type:LONG arg:y )
+    method HRESULT resizeBy (in type:LONG arg:x, \
+                           in type:LONG arg:y )
+
+
+#endif //_INTERNAL_PDL_

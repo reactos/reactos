@@ -1,0 +1,58 @@
+#
+#   Create avicap.dll
+#
+
+MAJORCOMP=windows
+MINORCOMP=avi
+
+TARGETNAME=avicap32
+TARGETPATH=..\lib
+TARGETTYPE=DYNLINK
+UMTYPE=windows
+DLLDEF=avicap.d32
+
+
+##C_DEFINES=-DWIN32 -DUNICODE -DUSE_AVIFILE
+C_DEFINES=-DWIN32 -DUNICODE -DALLOW_HW_BUFFERS
+
+# Define libs we need and where to find them
+
+TARGETLIBS=$(_NTBINDIR)\public\sdk\lib\*\user32.lib   \
+           $(_NTBINDIR)\public\sdk\lib\*\kernel32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\gdi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\winmm.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\advapi32.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\version.lib \
+           $(_NTBINDIR)\public\sdk\lib\*\uuid.lib    \
+           ..\lib\*\avifil32.lib \
+           ..\lib\*\msvfw32.lib
+
+SYNCHRONIZE_BLOCK=1		# The next dir needs this output lib.
+INCLUDES=..\inc;..\..\inc;..\video
+
+USE_NTDLL=1
+
+SOURCES=        	\
+        capinit.c       \
+        capavi.c        \
+        capdib.c        \
+        cappal.c        \
+        capio.c         \
+        capmisc.c       \
+        capwin.c        \
+        capmci.c        \
+        capframe.c      \
+        capfile.c       \
+        dibmap.c        \
+        iaverage.c      \
+        video.c         \
+        thunk32.c       \
+        profile.c       \
+        avicap32.rc
+
+
+
+# Set	\
+
+DLLENTRY=DllInstanceInit
+DLLBASE=0x1c300000

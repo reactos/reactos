@@ -1,0 +1,141 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#include "shlobjp.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "windows.h"
+#include "commctrl.h"
+#include "version.h"
+#include "shellp.h"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""windows.h""\r\n"
+    "#include ""commctrl.h""\r\n"
+    "#include ""version.h""\r\n"
+    "#include ""shellp.h""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+#if !DOWNLEVEL_SHELL
+IDI_DSFOLDER		ICON	DISCARDABLE	"..\\..\\res\\directory.ico"
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_ARRANGE MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "by &Name",                    DSVMID_ARRANGEBYNAME
+        MENUITEM "by &Type",                    DSVMID_ARRANGEBYCLASS
+        MENUITEM SEPARATOR
+    END
+END
+
+#if DOWNLEVEL_SHELL
+
+IDR_SELECTION_MENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", FSIDM_FOLDER_SEP, MFT_SEPARATOR
+        MENUITEM "P&roperties",         SHARED_FILE_PROPERTIES          // DO NOT CHANGE THIS ACCEL from r
+    END
+END
+
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// REGINST
+//
+
+REGINST                 REGINST DISCARDABLE     "selfreg.inf"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_OBJECTNAME          "Name"
+    IDS_TYPE                "Type"
+    IDS_NOVALUEDEFINED      "-"
+    IDS_ALLOBJECTS          "All objects"
+    IDS_SINGLESEL           "%1!s!"
+    IDS_LARGESEL            "%1!s!, ..."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_BYOBJECTNAME        "Sorts items alphabetically by name."
+    IDS_BYTYPE              "Sorts items by type."
+    IDS_DESKTOP             "Desktop"
+#if DOWNLEVEL_SHELL
+    IDS_NOPAGE              "The properties for this item are not available."
+    IDS_PROPERTIES          "Displays the properties of the selected items."
+    IDS_LINK                "Creates shortcuts to the selected items."
+#endif
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

@@ -1,0 +1,24 @@
+LIBRARY OCCACHE
+
+EXPORTS
+
+    DllGetClassObject	    PRIVATE
+    DllCanUnloadNow	        PRIVATE
+    DllRegisterServer	    PRIVATE
+    DllUnregisterServer     PRIVATE
+	DllInstall			    PRIVATE
+    RemoveExpiredControls   PRIVATE
+
+    DllMain
+    FindFirstControl
+    FindNextControl
+    FindControlClose
+    GetControlDependentFile
+    IsModuleRemovable
+    ReleaseControlHandle
+    GetControlInfo
+    RemoveControlByHandle
+    RemoveControlByName
+    SweepControlsByLastAccessDate
+    
+

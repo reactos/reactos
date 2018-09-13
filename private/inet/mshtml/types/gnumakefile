@@ -1,0 +1,365 @@
+# READ: idl files generated to $(O) need to be copied to iedev/inc and checked in
+
+# We can not build this in parallel as pdlparse creates and rereads
+# funcsig.dat on each invocation
+
+.NOTPARALLEL:
+.DEPENDENCY_IGNORED_FOR_REUSE: $(O)/funcsig.dat %.so
+
+PRODUCT = NONE
+VOBS=/vobs
+CUSTOM_RULES = ${VOBS}/ie4/trident.template
+
+PDLPARSE = ${RUN.dir}/pdlparse
+ASCPARSE = ${RUN.dir}/ascparse
+NFPARSE  = ${RUN.dir}/nfparse
+
+CPP = ${CC} -E
+CPP_2 = egrep -v "^\# |^\#line "
+
+## COMPILE_OPTION can have the values: debug, optimized
+COMPILE_OPTION = debug
+
+## you may define the following variables
+## RUN.dir      : the directory where you want the executables to go
+## PROJECT_CFLAGS   : additional compilation flags for C compiler
+## PROJECT_CCPPFLAGS: additional compilation flags for C++ compiler
+## PROJECT_LDFLAGS  : additional link flags (maybe specifying DLLs)
+## MWINIT_DEFINES : list of -D<symbols> used to initialize
+##        Mainwin in certain specific ways 
+## MWLOCALES: list of country codes corresponding to the
+##        resources you have prepared in the res subdirectory
+## 
+
+PROJECT_DEFINES = -DMIDL_COMPILER -D__MKTYPLIB__ -DIID_IHTMLDocument=IID_IFoobar
+
+INCLUDES = \
+    $(O) \
+    $(ROOT)/src/core/include \
+    $(ROOT)/src/dlay/include \
+    $(ROOT)/src/core/types \
+    $(ROOT)/src/ctrl/types
+
+PROJECT_CFLAGS = \
+	${PROJECT_DEFINES} \
+	${INCLUDES:%=-I%}
+
+# Please note that the order of these files is now important - don't re-order them
+# unless you grok the dependency order!
+SITE_PDL_FILES =    \
+    $(O)/style.pdl    \
+    $(O)/curstyle.pdl \
+    $(O)/filter.pdl   \
+    $(O)/omrect.pdl   \
+    $(O)/dom.pdl      \
+    $(O)/domcoll.pdl  \
+    $(O)/element.pdl  \
+    $(O)/htc.pdl  \
+    $(O)/urncoll.pdl  \
+    $(O)/scrptlet.pdl \
+    $(O)/generic.pdl  \
+    $(O)/rulescol.pdl \
+    $(O)/sheet.pdl    \
+    $(O)/sheetcol.pdl \
+    $(O)/link.pdl     \
+    $(O)/range.pdl    \
+    $(O)/eform.pdl    \
+    $(O)/csite.pdl    \
+    $(O)/textelem.pdl \
+    $(O)/txtedit.pdl  \
+    $(O)/siterang.pdl \
+    $(O)/img.pdl      \
+    $(O)/body.pdl     \
+    $(O)/font.pdl     \
+    $(O)/anchor.pdl   \
+    $(O)/label.pdl    \
+    $(O)/list.pdl     \
+    $(O)/ulist.pdl    \
+    $(O)/olist.pdl    \
+    $(O)/li.pdl       \
+    $(O)/block.pdl    \
+    $(O)/div.pdl      \
+    $(O)/dd.pdl       \
+    $(O)/dt.pdl       \
+    $(O)/br.pdl       \
+    $(O)/dlist.pdl    \
+    $(O)/hr.pdl       \
+    $(O)/para.pdl     \
+    $(O)/collect.pdl  \
+    $(O)/header.pdl   \
+    $(O)/select.pdl   \
+    $(O)/selecobj.pdl \
+    $(O)/option.pdl   \
+    $(O)/inputtxt.pdl \
+    $(O)/textarea.pdl \
+    $(O)/inputbtn.pdl \
+    $(O)/marquee.pdl  \
+    $(O)/hedelems.pdl \
+    $(O)/basefont.pdl \
+    $(O)/unknown.pdl  \
+    $(O)/history.pdl  \
+    $(O)/bmkcoll.pdl  \
+    $(O)/eventobj.pdl \
+    $(O)/window.pdl   \
+    $(O)/document.pdl \
+    $(O)/markup.pdl   \
+    $(O)/pluginst.pdl \
+    $(O)/map.pdl      \
+    $(O)/area.pdl     \
+    $(O)/caption.pdl  \
+    $(O)/comment.pdl  \
+    $(O)/phrase.pdl   \
+    $(O)/table.pdl    \
+    $(O)/script.pdl   \
+    $(O)/noshow.pdl   \
+    $(O)/olesite.pdl  \
+    $(O)/object.pdl   \
+    $(O)/frmsite.pdl  \
+    $(O)/frame.pdl    \
+    $(O)/iframe.pdl   \
+    $(O)/e1d.pdl      \
+    $(O)/espan.pdl    \
+    $(O)/frameset.pdl \
+    $(O)/bgsound.pdl  \
+    $(O)/optshold.pdl \
+    $(O)/estyle.pdl   \
+    $(O)/fontface.pdl \
+    $(O)/mshtmext.pdl
+
+OTHER_PDL_FILES = \
+    $(O)/htmldlg.pdl  \
+    $(O)/htmlapp.pdl
+
+CORE_PDL_FILES = \
+    $(O)/types.pdl
+
+BUILT_PDL_FILES = \
+    $(CORE_PDL_FILES) \
+    $(SITE_PDL_FILES) \
+    $(OTHER_PDL_FILES) \
+    $(O)/internal.pdl
+
+APPENDED_IDL_FILES = \
+    $(CORE_PDL_FILES) \
+    $(SITE_PDL_FILES) \
+    $(OTHER_PDL_FILES)
+
+ALL_PDL_FILES = \
+    $(BUILT_PDL_FILES) \
+    $(O)/basecoll.pdl  \
+    $(O)/basedom.pdl     \
+    $(O)/basedb.pdl      \
+
+HDL_FILES = \
+    $(BUILT_PDL_FILES:.pdl=.hdl)
+
+DISPIDS= \
+    $(O)/coredisp.h
+
+DISPID_FILES = \
+    $(DISPIDS) $(BUILT_PDL_FILES:.pdl=.dsp)
+
+IDL_FILES = \
+    $(APPENDED_IDL_FILES:.pdl=.idl) \
+    $(O)/ie4.idl
+
+EXTRA_FILES = \
+    $(O)/f3ctx.h \
+    $(O)/ie4.idl
+
+ASC_FILES = \
+    $(O)/entity.asc   \
+    $(O)/tags.asc     
+
+HSC_FILES = \
+	$(ASC_FILES:.asc=.h)
+
+NF_FILES = \
+	$(O)/notifytype.nf
+
+HNF_FILES = \
+	$(NF_FILES:.nf=.h)
+
+# Note we need to get the did & idl files across to the iedev/inc directory on pass Zero
+# so they're available in the first pass when we do an IEBUILD - if you don't do
+# this the UUID's file won't be built correctly
+SOURCES = \
+        $(ALL_PDL_FILES) \
+        $(DISPIDS) \
+        $(EXTRA_FILES) \
+        $(HDL_FILES)  \
+        $(ASC_FILES) \
+        $(HSC_FILES) \
+	$(O)/funcsig.cxx \
+        $(O)/mshtmdid.h \
+        ${IEDEV_DIR}/inc/mshtmdid.h \
+        $(O)/mshtml.idl \
+        ${IEDEV_DIR}/inc/mshtml.idl \
+	$(O)/interned.idl \
+	${IEDEV_DIR}/inc/interned.idl \
+        ${RUN.dir}/mshtml.tlb \
+	$(NF_FILES) \
+	$(HNF_FILES)
+
+
+MAINWIN_LIBS_ONLY = 
+
+__cplusplus = true
+
+ALL: world
+
+include $(MWHOME)/make.rules.simple
+
+####################
+# Rules
+
+OBJS  := ${SOURCES}
+
+PASS0TOOLS = \
+	${RUN.dir}/pdlparse \
+	${RUN.dir}/ascparse \
+	${RUN.dir}/nfparse
+
+all world: ${PASS0TOOLS} ${OBJS}
+
+${RUN.dir}/pdlparse:
+	@enterdir ../btools/pdlparse  ${MAKE} ${MFLAGS}
+
+${RUN.dir}/ascparse:
+	@enterdir ../btools/ascparse ${MAKE} ${MFLAGS}
+
+${RUN.dir}/nfparse:
+	@enterdir ../btools/nfparse ${MAKE} ${MFLAGS}
+
+.SUFFIXES: .pdl .hdl .asc .nf
+
+PWD = $(shell pwd)
+MAKEDIR = ${PWD}
+
+.pdl.hdl:
+	${ECHOOBJ}
+	$(CPP) -DUNIX ${COMPONENT_CFLAGS} $< | ${PDLPARSE} $(notdir $<) ${MAKEDIR}/$* $(notdir $<) ${MAKEDIR}/${O}
+#	/ms/apogee/bin/apCC -E -w $< | ${PDLPARSE} $(notdir $<) ${MAKEDIR}/$* $(notdir $<) ${MAKEDIR}/${O}
+
+$(O)/ie4.idl: ${F3_DIR}/types/ie4.idl
+	${ECHOOBJ}
+	cat ${F3_DIR}/types/ie4.idl | ${DOS2UNIX} > $@
+#	cp -f ${F3_DIR}/types/ie4.idl $@
+
+$(O)/%.pdl: ${SITE_DIR}/types/%.pdl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+#	cp -f $< $@
+
+$(O)/%.pdl: ${CORE_DIR}/types/%.pdl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+#	cp -f $< $@
+
+$(O)/%.pdl: ${OTHER_DIR}/types/%.pdl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+#	cp -f $< $@
+
+$(O)/%.pdl: ${OTHER_DIR}/htmldlg/%.pdl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+#	cp -f $< $@
+
+
+
+# Headers we need.
+
+$(O)/versstr.h: ${F3_DIR}/include/versstr.h
+	${ECHOOBJ}
+	cp -f $< $@
+
+$(O)/f3ctx.h: ${EXTERNAL_DIR}/inc/f3ctx.h
+	${ECHOOBJ}
+	cp -f $< $@
+
+$(O)/coredisp.h: ${CORE_DIR}/include/coredisp.h
+	${ECHOOBJ}
+	cp -f $< $@
+
+$(O)/mshtmdid.h : $(DISPID_FILES)
+	${ECHOOBJ}
+	cat $(DISPID_FILES) >$@
+
+$(O)/funcsig.cxx : $(O)/funcsig.dat
+	${ECHOOBJ}
+	echo Processing funcsig.dat...
+	${PDLPARSE} /G $(O)
+
+$(O)/treeserv.idl : treeserv.idl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+
+$(O)/viewserv.idl : viewserv.idl
+	${ECHOOBJ}
+	cat $< | ${DOS2UNIX} > $@
+
+$(O)/interned.idl : interpre.idl $(O)/internal.idl interpst.idl
+	${ECHOOBJ}
+	cat interpre.idl | ${DOS2UNIX} > $@
+	cat $(O)/internal.idl | ${DOS2UNIX} >> $@
+	cat interpst.idl | ${DOS2UNIX} >> $@
+
+$(O)/mshtml.idl : mshtmpre.idl $(IDL_FILES)
+	${ECHOOBJ}
+	cat mshtmpre.idl > $@
+	cat $(IDL_FILES) >> $@
+	echo } >> $@
+
+${IEDEV_DIR}/inc/mshtml.idl : $(O)/mshtml.idl
+	@echo "GNUmakefile(1) : warning W1000: Please copy $< to $@ and check it in"
+
+${IEDEV_DIR}/inc/mshtmdid.h : $(O)/mshtmdid.h
+	@echo "GNUmakefile(1) : warning W1000: Please copy $< to $@ and check it in"
+
+${O}/mshtml.h ${RUN.dir}/mshtml.tlb : $(O)/mshtml.idl
+	${ECHOOBJ}
+	midl \
+	-savepp \
+	-Zp8 \
+	-char unsigned \
+	-wchar 4bytes \
+	-ms_ext -c_ext \
+	-proxy $(O)/mshtml_p.c \
+	-iid $(O)/mshtml_i.c \
+	-dlldata $(O)/dlldata.c \
+	-header $(O)/mshtml.h \
+	-tlb ${RUN.dir}/mshtml.tlb \
+	-env unix \
+	${PROJECT_DEFINES} \
+	-I${O} \
+	-I${SDK_DIR} \
+	-I${SDK_DIR}/crt \
+	-I${PUBLIC_DIR}/oak/inc \
+	-I${PUBLIC_DIR}/mainwin/inc \
+	-I${PUBLIC_DIR}/mainwin/inc/${MWOS} \
+	-I${PUBLIC_DIR}/sag/inc \
+	-I${PRIVATE_DIR}/inc \
+	-I${PRIVATE_DIR}/iedev/inc \
+	-I${PRIVATE_DIR}/windows/inc \
+	$(O)/mshtml.idl
+
+$(O)%.asc: ${SITE_DIR}/types/%.asc 
+	${ECHOOBJ}
+	$(CPP) $< -DUNICODE | $(CPP_2) > $@
+#	cp -f $< $@
+
+
+
+.asc.h:
+	${ECHOOBJ}
+	${ASCPARSE} $< $@
+
+$(O)%.nf: ${SITE_DIR}/types/%.nf
+	${ECHOOBJ}
+	$(CPP) $< | $(CPP_2) | ${DOS2UNIX} > $@
+
+.nf.h:
+	${ECHOOBJ}
+	${NFPARSE} $< $@
+

@@ -1,0 +1,77 @@
+!IF 0
+
+Copyright (c) 1989  Microsoft Corporation
+
+Module Name:
+
+    sources.
+
+Abstract:
+
+    This file specifies the target component being built and the list of
+    sources files needed to build that component.  Also specifies optional
+    compiler switches and libraries that are unique for the component being
+    built.
+
+!ENDIF
+
+ROOT=$(MAKEDIR:\gentable=)
+
+!include $(ROOT)\common.inc
+
+NO_NTDLL	= 1
+
+TARGETNAME=gentable
+TARGETPATH=obj
+TARGETTYPE=PROGRAM
+UMTYPE=console
+
+SOURCES = \
+   gentable.cxx
+
+!if $(FREEBUILD)
+CLIB=libcmt.lib
+!else
+CLIB=libcmtd.lib
+!endif
+
+SYNCHRONIZE_BLOCK=1
+
+LINKLIBS=\
+    $(ROOT)\include\$O\xmltokpch.lib \
+    $(SDK_LIB_PATH)\ole32.lib  \
+    $(SDK_LIB_PATH)\oleaut32.lib  \
+    $(SDK_LIB_PATH)\shlwapip.lib  \
+    $(SDK_LIB_PATH)\user32.lib \
+    $(SDK_LIB_PATH)\version.lib \
+    $(SDK_LIB_PATH)\$(CLIB)
+
+INCLUDES= \
+	$(ROOT); \
+	$(ROOT)\base; \
+	$(MSXML)\include; \
+    $(MSXML)\debug\include;\
+	$(ROOT)\core\crt; \
+    $(WINDOWS_INC_PATH)\
+
+!ifdef WIN16
+PRECOMPILED_OPTION=/fhr /fh=$(MSXML)\include\$(O)core.pch
+!else
+PRECOMPILED_OPTION=/Yucore.hxx /Fp$(MSXML)\include\$(O)\core.pch
+!endif
+PRECOMPILED_CXX=1
+
+
+CONDITIONAL_INCLUDES=\
+	macwin32.h\
+	macocidl.h\
+	winwlm.h\
+	rpcerr.h\
+	macname1.h\
+	macname2.h\
+	macpub.h\
+	macapi.h\
+	shlwapip.h\
+	rpcmac.h\
+	pure.h\
+	codepage.h

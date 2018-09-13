@@ -1,0 +1,171 @@
+//+---------------------------------------------------------------------------
+//
+//  Microsoft Forms
+//  Copyright (C) Microsoft Corporation, 1992 - 1995.
+//
+//  File:       forms3.odl
+//
+//  Contents:   Includes everything that needs to go into the forms TLB file.
+//
+//----------------------------------------------------------------------------
+
+
+cpp_quote("#include <olectl.h>")
+cpp_quote("EXTERN_C const GUID CMDSETID_Forms3;")
+
+// these definitions are to smooth out the transition from old interface names to the
+// new ones.
+cpp_quote("#define IOmDocument2           IHTMLDocument2" )
+cpp_quote("#define IOmFramesCollection2   IHTMLFramesCollection2" )
+cpp_quote("#define IOmWindow2             IHTMLWindow2" )
+cpp_quote("#define IOmWindowEvents        IHTMLWindowEvents" )
+cpp_quote("#define IOmImage               IHTMLImgElement ")
+cpp_quote("#define IOmImageEvents          HTMLImageEvents")
+cpp_quote("#define IOmImagesCollection    IHTMLElementCollection")
+cpp_quote("#define IOmLink                IHTMLAnchorElement")
+cpp_quote("#define IOmLinkEvents           HTMLAnchorEvents")
+cpp_quote("#define IOmAnchor              IHTMLAnchorElement")
+cpp_quote("#define IOmLinksCollection2    IHTMLElementCollection ")
+cpp_quote("#define IOmAnchorsCollection2  IHTMLElementCollection ")
+cpp_quote("#define IOmElementsCollection2 IHTMLElementCollection ")
+cpp_quote("#define IOmForm2               IHTMLFormElement") 
+// cpp_quote("#define IOmFormEvents        HTMLFormEvents")       // bugbug we do not have form events yet
+cpp_quote("#define IOmFormsCollection2    IHTMLElementCollection ")
+cpp_quote("#define IOmWindowEvents        IHTMLWindowEvents")
+
+cpp_quote("#define IAnchorElement       IHTMLAnchorElement " )
+cpp_quote("#define IAreaElement         IHTMLAreaElement " )
+cpp_quote("#define IAuto2DSiteRange     IHTMLAuto2DSiteRange" )
+cpp_quote("#define IAutoTxtSiteRange    IHTMLAutoTxtSiteRange  " ) 
+cpp_quote("#define IApplet              IHTMLApplet" )
+cpp_quote("#define IBaseElement         IHTMLBaseElement " )
+cpp_quote("#define IBaseFontElement     IHTMLBaseFontElement" ) 
+cpp_quote("#define IBlockElement        IHTMLBlockElement " )
+cpp_quote("#define IBRElement           IHTMLBRElement " )
+cpp_quote("#define IBodyElement         IHTMLBodyElement" )
+cpp_quote("#define ICheckboxElement     IHTMLCheckboxElement " )
+cpp_quote("#define ICommentElement      IHTMLCommentElement " )
+cpp_quote("#define IControlElement      IHTMLControlElement" )
+cpp_quote("#define IDDElement           IHTMLDDElement " )
+cpp_quote("#define IDivElement          IHTMLDivElement " )
+cpp_quote("#define IDivFixed            IHTMLDivFixed " )
+cpp_quote("#define IDivPosition         IHTMLDivPosition " )
+cpp_quote("#define IDListElement        IHTMLDListElement" ) 
+cpp_quote("#define IDocument            IHTMLDocument " )
+cpp_quote("#define IDTElement           IHTMLDTElement " )
+cpp_quote("#define IElement             IHTMLElement " )
+cpp_quote("#define IElementCollection   IHTMLElementCollection " )
+cpp_quote("#define IEnumControl         IHTMLEnumControl " )
+cpp_quote("#define IEventObj            IHTMLEventObj " )
+cpp_quote("#define IFontElement         IHTMLFontElement " )
+cpp_quote("#define IFormElement         IHTMLFormElement" )
+cpp_quote("#define IFrameElement        IHTMLFrameElement " )
+cpp_quote("#define IFrameSetElement     IHTMLFrameSetElement " )
+cpp_quote("#define IFrameSite           IHTMLFrameSite " )
+cpp_quote("#define IHeaderElement       IHTMLHeaderElement" ) 
+cpp_quote("#define IHRElement           IHTMLHRElement " )
+cpp_quote("#define IIFrameElement       IHTMLIFrameElement " )
+cpp_quote("#define IImgBase             IHTMLImgBase " )
+cpp_quote("#define IImgElement          IHTMLImgElement " )
+cpp_quote("#define IInputButton         IHTMLInputButton  " )
+cpp_quote("#define IInputElement        IHTMLInputElement " )
+cpp_quote("#define IInputHidden         IHTMLInputHidden  " )
+cpp_quote("#define IInputImage          IHTMLInputImage " )
+cpp_quote("#define IInputPassword       IHTMLInputPassword " )
+cpp_quote("#define IInputReset          IHTMLInputReset " )
+cpp_quote("#define IInputSubmit         IHTMLInputSubmit  " )
+cpp_quote("#define IInputText           IHTMLInputText " )
+cpp_quote("#define IIsIndexElement      IHTMLIsIndexElement " )
+cpp_quote("#define ILinkElement         IHTMLLinkElement " )
+cpp_quote("#define IListElement         IHTMLListElement " )
+cpp_quote("#define ILabelElement        IHTMLLabelElement " )
+cpp_quote("#define ILIElement           IHTMLLIElement " )
+cpp_quote("#define IListElement         IHTMLListElement" ) 
+cpp_quote("#define ILocation            IHTMLLocation" )
+cpp_quote("#define IMapElement          IHTMLMapElement " )
+cpp_quote("#define IMarquee             IHTMLMarquee     " )
+cpp_quote("#define IMetaElement         IHTMLMetaElement " )
+cpp_quote("#define INextIdElement       IHTMLNextIdElement " )
+cpp_quote("#define IObjectElement       IHTMLObjectElement " )
+cpp_quote("#define IOListElement        IHTMLOListElement " )
+cpp_quote("#define IOptionElement       IHTMLOptionElement " )
+cpp_quote("#define IParaElement         IHTMLParaElement " )
+cpp_quote("#define IParam               IHTMLParam " )
+cpp_quote("#define IPhraseElement       IHTMLPhraseElement " )
+cpp_quote("#define IPluginSite          IHTMLPluginSite " )
+cpp_quote("#define IRadioElement        IHTMLRadioElement " )
+cpp_quote("#define IScriptElement       IHTMLScriptElement " )
+cpp_quote("#define ISelectElement       IHTMLSelectElement " )
+cpp_quote("#define ISelectionObject     IHTMLSelectionObject " )
+cpp_quote("#define IStyle               IHTMLStyle" )
+cpp_quote("#define ITable               IHTMLTable " )
+cpp_quote("#define ITableCaption        IHTMLTableCaption" ) 
+cpp_quote("#define ITableCol            IHTMLTableCol " )
+cpp_quote("#define ITableCell           IHTMLTableCell " )
+cpp_quote("#define ITableRow            IHTMLTableRow " )
+cpp_quote("#define ITableSection        IHTMLTableSection" ) 
+cpp_quote("#define ITextArea            IHTMLTextArea " )
+cpp_quote("#define ITextElement         IHTMLTextElement " )
+cpp_quote("#define ITitleElement        IHTMLTitleElement " )
+cpp_quote("#define ITxtEdit             IHTMLTxtEdit " )
+cpp_quote("#define ITxtRange            IHTMLTxtRange" )
+cpp_quote("#define IUListElement        IHTMLUListElement " )
+cpp_quote("#define IUnknownElement      IHTMLUnknownElement " )
+cpp_quote("#define IVisual              IHTMLVisual  " )
+
+// event re-names:
+cpp_quote("#define AnchorEvents            HTMLAnchorEvents " )
+cpp_quote("#define AreaEvents              HTMLAreaEvents " )
+cpp_quote("#define CheckboxElementEvents   HTMLCheckboxElementEvents " )
+cpp_quote("#define ControlElementEvents    HTMLControlElementEvents " )
+cpp_quote("#define DivFixedElementEvents   HTMLDivFixedElementEvents" )
+cpp_quote("#define DocumentEvents          HTMLDocumentEvents " )
+cpp_quote("#define ElementEvents           HTMLElementEvents " )
+cpp_quote("#define IBodyElementEvents      IHTMLBodyElementEvents " )
+cpp_quote("#define ImgEvents               HTMLImgEvents " )
+cpp_quote("#define ImgBaseEvents           HTMLImgBaseEvents " )
+cpp_quote("#define InputButtonEvents       HTMLInputButtonEvents " )
+cpp_quote("#define InputImageEvents        HTMLInputImageEvents " )
+cpp_quote("#define InputTextEvents         HTMLInputTextEvents " )
+cpp_quote("#define InputTxtBaseEvents      HTMLInputTxtBaseEvents " )
+cpp_quote("#define IWindowEvents           IHTMLWindowEvents " )
+cpp_quote("#define LabelEvents             HTMLLabelEvents " )
+cpp_quote("#define MarqueeEvents           HTMLMarqueeEvents " )
+cpp_quote("#define RadioElementEvents      HTMLRadioElementEvents " )
+cpp_quote("#define SelectElementEvents     HTMLSelectElementEvents " )
+cpp_quote("#define TextAreaEvents          HTMLTextAreaEvents" ) 
+cpp_quote("#define TextEditEvents          HTMLTextEditEvents" )
+
+
+
+
+[
+    control,
+    lcid(0x0000),    // lcid =0; locale independent.
+    helpstring("Microsoft HTML Object Library"),
+    helpfile("mshtml.hlp"),
+    version(4.00),  //  WARNING: This version must match VERSION in dllreg.cxx.
+    uuid(3050f1c5-98b5-11cf-bb82-00aa00bdce0b)
+]
+
+library MSHTML
+{
+    #ifndef _MAC
+    importlib("stdole2.tlb");
+    #else
+    importlib("mstdole.tlb");
+    #endif
+
+    import "ocidl.idl";
+	#include <olectl.h>
+
+	#include <core.idl>
+
+    #include <site.idl> 
+    #include <other.idl>
+
+// This declares typelib info for stubs which IE4 needs but we don't
+// really have around:
+    #include "ie4.idl"
+}
+

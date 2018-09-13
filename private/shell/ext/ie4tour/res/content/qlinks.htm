@@ -1,0 +1,177 @@
+<HTML>
+<HEAD>
+        <TITLE>Customizing Internet Explorer</TITLE>
+<LINK REL=STYLESHEET TYPE="text/css" 
+      HREF="tour.css" TITLE="Test">
+<SCRIPT LANGUAGE="Javascript">
+CurBull = 0;
+
+function doHead(){
+	if(headline.filters.item(0).status != 2){
+		headline.filters.item(0).Apply();
+		headline.style.visibility="visible";
+		headline.filters.item(0).Play();
+	}
+}
+
+function doBody(){
+	if(bodytext.filters.item(0).status != 2){
+		bodytext.filters.item(0).Apply();
+		bodytext.style.visibility="visible";
+		bodytext.filters.item(0).Play();
+	}
+}
+
+function doArt(){
+	if(art.filters.item(0).status != 2){
+		art.filters.item(0).Apply();
+		art.style.visibility="visible";
+		art.filters.item(0).Play();
+	}
+}
+
+function doSwap(num, img){
+	if (num == CurBull){
+	
+	} else {
+		if (CurBull == 1){
+			list1.style.color = "#0099FF";
+			B1.style.display = "none";
+		}
+		else if (CurBull == 2){
+			list2.style.color = "#0099FF";
+			B2.style.display = "none";
+		}
+		else if (CurBull == 3){
+			list3.style.color = "#0099FF";
+			B3.style.display = "none";
+		}
+		else if (CurBull == 4){
+			list4.style.color = "#0099FF";
+			B4.style.display = "none";
+		}
+		else if (CurBull == 0){
+			textarea.style.display = "block";
+		}
+		
+		if (num == 1) {
+			list1.style.color = "#000000";
+			B1.style.display = "block";
+		}
+		else if (num == 2){
+			list2.style.color = "#000000";
+			B2.style.display = "block";
+		}
+		else if (num == 3){
+			list3.style.color = "#000000";
+			B3.style.display = "block";
+		}
+		else if (num == 4){
+			list4.style.color = "#000000";
+			B4.style.display = "block";
+		}
+
+		document.images("GIF1").setAttribute("src", img);
+		CurBull = num;
+		doRule(textarea);
+	}
+
+}
+
+function doRule(src){
+	line.style.top=(src.offsetHeight / 2) + src.offsetTop + src.offsetParent.offsetTop;
+}
+</SCRIPT>
+
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" LEFTMARGIN=0 RIGHTMARGIN=0 TOPMARGIN=0 BOTTOMMARGIN=0 onLoad="doHead();">
+
+<DIV ID="headline" CLASS="head2" STYLE="filter: revealTrans(Duration=0.8, Transition=6)" onFilterChange="doBody();">
+Customizing Internet Explorer
+</DIV>
+
+<!-- image art -->
+
+<DIV ID="art" CLASS="PageArt" STYLE="filter: revealTrans(Duration=0.8, Transition=1)">
+<IMG ID="GIF1" SRC="res://ie4tour.dll/2/qlexplor.bmp" BORDER=0 ALT="" ALIGN="LEFT">
+</DIV>
+
+<!-- body text -->
+
+<DIV ID="bodytext" CLASS="body" STYLE="filter: revealTrans(Duration=0.8, Transition=12)" onFilterChange="doArt();">
+With Internet Explorer 4.0, you can easily customize the way you browse.
+<br><br>
+Click a feature to learn more about it.
+<BR><BR>
+<SPAN ID="list1" CLASS="listitem" onClick="doSwap(1, 'res://ie4tour.dll/2/qldrgdrp.bmp')">  <!--???-->
+Drag and drop to add Web pages to your Links</SPAN><BR>
+<SPAN ID="list2" CLASS="listitem" onClick="doSwap(2, 'res://ie4tour.dll/2/qlreordr.bmp')">   <!--???-->
+Arrange the Links in any order</SPAN><BR>
+<SPAN ID="list3" CLASS="listitem" onClick="doSwap(3, 'res://ie4tour.dll/2/qlcontxt.bmp')">   <!--???-->
+Customize the Links bar with a right-click</SPAN><BR>
+<SPAN ID="list4" CLASS="listitem">	<!--???-->
+<a href="http://www.microsoft.com/ie/ie40/tour/tour.htm" target="_self" 
+	style="
+	font:			8pt Verdana, Arial, Helvetica, Sans-serif;
+	line-height:    18pt;
+	color:			#FF6633;
+	text-decoration:underline;
+	cursor: hand;">Tell me more...</a></SPAN><BR>
+<BR><BR>
+
+<DIV ID="textarea" CLASS="bubble">
+<table cellspacing=0 cellpadding=0>
+<tr>
+    <td style="height: 100%; border:solid 1 #FF6633; border-right:none;" ROWSPAN=3>&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="line-height: 10px">&nbsp</td>
+    <td style="width: 10px" ROWSPAN=3>&nbsp</td>
+    <td style="height: 100%; border:solid 1 #FF6633; border-left:none;" ROWSPAN=3>&nbsp</td>
+</tr>
+<tr>
+    <td>
+<SPAN ID="B1" CLASS="CalloutText">
+You can drag items directly onto your Links bar by dragging the icon from the Address bar to your Links bar or to your Favorites Explorer bar.
+</SPAN>
+
+<SPAN ID="B2" CLASS="CalloutText">
+You can rearrange the items by dragging them around in the bar.
+</SPAN>
+
+<SPAN ID="B3" CLASS="CalloutText">
+To delete or access properties of an item in the quick launch bar, right click on the item.
+</SPAN>
+
+</td>
+</tr>
+<tr>
+    <td style="line-height: 10px">&nbsp</td>
+</tr>
+</table>
+</DIV>
+</DIV>
+
+<!-- Art -->
+
+<DIV ID="line" CLASS="rule">
+</DIV>
+
+<!--???-->
+
+<DIV CLASS="CalloutArt">
+<!--
+<IMG SRC="res://ie4tour.dll/2/qldrgdrp.bmp" WIDTH=160 HEIGHT=188 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/fav.bmp" WIDTH=160 HEIGHT=369 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/single.bmp" WIDTH=160 HEIGHT=195 BORDER=0 ALT="">
+<IMG SRC="res://ie4tour.dll/2/qldrgdrp.bmp" WIDTH=160 HEIGHT=177 BORDER=0 ALT="">
+-->
+</DIV>
+
+</BODY>
+</HTML>
+
+
+</body>
+</html>
