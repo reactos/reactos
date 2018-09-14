@@ -1,6 +1,6 @@
 /*
  * Translators: Petru Dimitriu (petrimetri at gmail dot com)
- *              Ștefan Fulea (stefan dot fulea at mail dot md)
+ *              Ștefan Fulea (stefan dot fulea at mail dot com)
  */
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
@@ -30,10 +30,10 @@ BEGIN
     END
     POPUP "&Opțiuni"
     BEGIN
-        MENUITEM "Event details &view", IDM_EVENT_DETAILS_VIEW
-        MENUITEM "&Grid lines", IDM_LIST_GRID_LINES
+        MENUITEM "Afișează detalii de e&venimente", IDM_EVENT_DETAILS_VIEW
+        MENUITEM "Afișează linii de g&rilaj", IDM_LIST_GRID_LINES
         MENUITEM SEPARATOR
-        MENUITEM "&Save settings on exit", IDM_SAVE_SETTINGS
+        MENUITEM "&Păstrează configurația la ieșire", IDM_SAVE_SETTINGS
     END
     POPUP "Aj&utor"
     BEGIN
@@ -153,20 +153,20 @@ END
 STRINGTABLE
 BEGIN
 /* Please note that explicit TAB characters '\t' are used to fix the alignment of the message in the MessageBox */
-    IDS_USAGE "ReactOS Event Viewer\n\
+    IDS_USAGE "Inspector de Evenimente ReactOS\n\
 \n\
-EventVwr [computer name] [/l:<event log file>] [/?]\n\
+EventVwr [nume calculator] [/l:<fișier jurnal de evenimente>] [/?]\n\
 \n\
-""computer name"" : Specifies the remote computer where to connect\n\
-\tto retrieve the events to display. If no name is specified, the\n\
-\tlocal computer is used.\n\
+""nume calculator"" : Specifică calculatorul la distanță de la care\n\
+\tvor fi preluate evenimentele afișate. Dacă nu e furnizat un\n\
+\tnume de calculator, va fi utilizat calculatorul local.\n\
 \n\
-/l:<event log file> : Specifies which event log file to open.\n\
-\tOnly files in the .evt format (NT ≤ 5.2) are supported.\n\
+/l:<fișier jurnal de evenimente> : Specifică deschiderea unui fișier.\n\
+\tSunt acceptate doar fișierele în format .evt (NT ≤ 5.2)\n\
 \n\
-/? : Displays this help message.\n\
+/? : Afișează acest mesaj cu informații de utilizare.\n\
 "
-    IDS_EVENTLOGFILE "Event Log File"
+    IDS_EVENTLOGFILE "Fișier jurnal de evenimente"
 END
 
 STRINGTABLE
