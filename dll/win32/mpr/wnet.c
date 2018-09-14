@@ -2778,14 +2778,16 @@ DWORD WINAPI WNetConnectionDialog1W( LPCONNECTDLGSTRUCTW lpConnDlgStruct )
  */
 DWORD WINAPI WNetDisconnectDialog( HWND hwnd, DWORD dwType )
 {
+#ifdef __REACTOS__
     DISCDLGSTRUCTW disconn_dlg;
 
     ZeroMemory(&disconn_dlg, sizeof(disconn_dlg));
 	
     disconn_dlg.cbStructure = sizeof(disconn_dlg);
-	disconn_dlg.hwndOwner = hwnd;
+    disconn_dlg.hwndOwner = hwnd;
 	
-	return WNetDisconnectDialog1W(&disconn_dlg);
+    return WNetDisconnectDialog1W(&disconn_dlg);
+#endif
 }
 
 /*********************************************************************
@@ -2804,28 +2806,11 @@ DWORD WINAPI WNetDisconnectDialog1A( LPDISCDLGSTRUCTA lpConnDlgStruct )
  */
 DWORD WINAPI WNetDisconnectDialog1W( LPDISCDLGSTRUCTW lpConnDlgStruct )
 {
-    DWORD ret;
-	HRESULT hr;
+#ifdef __REACTOS__
     HRESULT WINAPI SHDisconnectNetDrives(PVOID Unused);
 	
-    hr = SHDisconnectNetDrives(NULL);
-	
-	if (hr == S_OK)
-		ret = NO_ERROR;
-	else if (hr == -1)
-		ret = ERROR_CANCELLED;
-	else if (hr == ERROR_OPEN_FILES)
-		ret = ERROR_OPEN_FILES;
-	else if (hr ==  ERROR_BUSY)
-		ret = ERROR_BUSY;
-	else if (hr ==  ERROR_NO_NETWORK)
-		ret = ERROR_NO_NETWORK;
-	else if (hr ==  ERROR_NOT_ENOUGH_MEMORY)
-		ret = ERROR_NOT_ENOUGH_MEMORY;
-	else
-		ret = ERROR_EXTENDED_ERROR;
-	TRACE("WNetDisconnectDialog1W Returned %d\n", ret);
-	return ret;
+    return SHDisconnectNetDrives(NULL);
+ #endif
 }
 
 /*********************************************************************
