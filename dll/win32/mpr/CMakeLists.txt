@@ -23,6 +23,6 @@ add_library(mpr SHARED
 
 set_module_type(mpr win32dll)
 target_link_libraries(mpr wine)
-add_importlibs(mpr advapi32 user32 msvcrt kernel32 ntdll)
+add_importlibs(mpr advapi32 netplwiz user32 msvcrt kernel32 ntdll)
 add_pch(mpr precomp.h SOURCE)
 add_cd_file(TARGET mpr DESTINATION reactos/system32 FOR all)
