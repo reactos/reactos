@@ -3544,9 +3544,7 @@ LRESULT CShellBrowser::OnMapNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCt
 
 LRESULT CShellBrowser::OnDisconnectNetworkDrive(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
-#ifndef __REACTOS__
     WNetDisconnectDialog(m_hWnd, RESOURCETYPE_DISK);
-#endif /* __REACTOS__ */
     return 0;
 }
 
