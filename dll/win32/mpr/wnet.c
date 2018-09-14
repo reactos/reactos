@@ -2652,6 +2652,7 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
 DWORD WINAPI WNetClearConnections ( HWND owner )
 {
     HANDLE connected;
+    PWSTR connection;
     DWORD ret, size, count;
     NETRESOURCEW * resources, * iter;
 
@@ -2685,7 +2686,14 @@ DWORD WINAPI WNetClearConnections ( HWND owner )
         if (ret == WN_SUCCESS || ret == WN_MORE_DATA)
         {
             for (iter = resources; count; count--, iter++)
-                WNetCancelConnection2W(iter->lpLocalName, 0, TRUE);
+            {
+                if (iter->lpLocalName && iter->lpLocalName[0])
+                    connection = iter->lpLocalName;
+                else
+                    connection = iter->lpRemoteName;
+
+                WNetCancelConnection2W(connection, 0, TRUE);
+            }
         }
         else
             break;
