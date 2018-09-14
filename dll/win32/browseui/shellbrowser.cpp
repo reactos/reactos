@@ -3486,7 +3486,7 @@ LRESULT CShellBrowser::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     {
         // FIXME: Remove once implemented
         SHEnableMenuItem(theMenu, IDM_TOOLS_MAPNETWORKDRIVE, FALSE);
-        SHEnableMenuItem(theMenu, IDM_TOOLS_DISCONNECTNETWORKDRIVE, FALSE);
+        //SHEnableMenuItem(theMenu, IDM_TOOLS_DISCONNECTNETWORKDRIVE, FALSE);
         SHEnableMenuItem(theMenu, IDM_TOOLS_SYNCHRONIZE, FALSE);
         menuIndex = 4;
     }
