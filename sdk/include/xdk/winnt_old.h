@@ -3882,15 +3882,6 @@ typedef enum _POWER_INFORMATION_LEVEL {
   PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
-#if 1 /* (_WIN32_WINNT >= 0x0500) */
-typedef struct _SYSTEM_POWER_INFORMATION {
-    ULONG  MaxIdlenessAllowed;
-    ULONG  Idleness;
-    ULONG  TimeRemaining;
-    UCHAR  CoolingMode;
-} SYSTEM_POWER_INFORMATION,*PSYSTEM_POWER_INFORMATION;
-#endif
-
 #if (_WIN32_WINNT >= 0x0501)
 
 typedef enum _ACTIVATION_CONTEXT_INFO_CLASS {
