@@ -2646,11 +2646,10 @@ DWORD WINAPI WNetGetUniversalNameW ( LPCWSTR lpLocalPath, DWORD dwInfoLevel,
     return err;
 }
 
-#ifdef __REACTOS__
 /*****************************************************************
  * WNetClearConnections [MPR.@]
  */
-DWORD WINAPI WNetClearConnections ( DWORD unknown )
+DWORD WINAPI WNetClearConnections ( HWND owner )
 {
     HANDLE connected;
     DWORD ret, size, count;
@@ -2676,7 +2675,7 @@ DWORD WINAPI WNetClearConnections ( DWORD unknown )
         return WN_OUT_OF_MEMORY;
     }
 
-    do
+    for (;;)
     {
         size = 0x1000;
         count = -1;
@@ -2685,25 +2684,18 @@ DWORD WINAPI WNetClearConnections ( DWORD unknown )
         ret = WNetEnumResourceW(connected, &count, resources, &size);
         if (ret == WN_SUCCESS || ret == WN_MORE_DATA)
         {
-            iter = resources;
-            for (; count; count--)
-            {
+            for (iter = resources; count; count--, iter++)
                 WNetCancelConnection2W(iter->lpLocalName, 0, TRUE);
-
-                iter++;
-            }
         }
         else
             break;
-    } while (ret != WN_NO_MORE_ENTRIES);
+    }
 
     HeapFree(GetProcessHeap(), 0, resources);
     WNetCloseEnum(connected);
 
     return ret;
 }
-#endif
-
 
 
 /*
