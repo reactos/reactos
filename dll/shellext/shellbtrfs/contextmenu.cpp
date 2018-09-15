@@ -1718,6 +1718,10 @@ end:
     CloseHandle(source);
 }
 
+#ifdef __REACTOS__
+extern "C" {
+#endif
+
 void CALLBACK ReflinkCopyW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int nCmdShow) {
     LPWSTR* args;
     int num_args;
@@ -1796,3 +1800,7 @@ void CALLBACK ReflinkCopyW(HWND hwnd, HINSTANCE hinst, LPWSTR lpszCmdLine, int n
 end:
     LocalFree(args);
 }
+
+#ifdef __REACTOS__
+} /* extern "C" */
+#endif
