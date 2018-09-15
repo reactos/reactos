@@ -1,23 +1,33 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Disconnect Network Drive
- * FILE:            dll/shellext/netplwiz/netplwiz.c
- * PURPOSE:
- *
- * PROGRAMMERS:     Jared Smudde
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Implements the Connect/Disconnect Network places dialogs
+ * COPYRIGHT:   Copyright 2018 Jared Smudde (computerwhiz02@hotmail.com)
  */
 
 #include "netplwiz.h"
 
 HRESULT WINAPI DllCanUnloadNow(VOID)
 {
-    return S_OK;
+    return S_FALSE;
 }
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
-    return E_NOTIMPL;
+    return E_NOINTERFACE;
+}
+
+HRESULT WINAPI
+DllRegisterServer(VOID)
+{
+    return S_OK;
+}
+
+HRESULT WINAPI
+DllUnregisterServer(VOID)
+{
+    return S_OK;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)

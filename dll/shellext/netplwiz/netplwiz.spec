@@ -7,8 +7,8 @@
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 8 stub -private DllInstall
 9 stdcall DllMain(ptr long ptr)
-@ stub -private DllRegisterServer
-@ stub -private DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 12 stub NetAccessWizard
 13 stub NetPlacesWizardDoModal
 14 stdcall SHDisconnectNetDrives(ptr)

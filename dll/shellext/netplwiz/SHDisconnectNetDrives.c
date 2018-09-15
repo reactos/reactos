@@ -1,15 +1,14 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS Disconnect Network Drive
- * FILE:            dll/shellext/netplwiz/SHDisconnectNetDrives.c
- * PURPOSE:         Disconnects mapped network drives.
- * PROGRAMMERS:     Jared Smudde
+ * PROJECT:     ReactOS Shell
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Implements the Disconnct Network Drive dialog
+ * COPYRIGHT:   Copyright 2018 Jared Smudde (computerwhiz02@hotmail.com)
  */
 
 #include "netplwiz.h"
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+WINE_DEFAULT_DEBUG_CHANNEL(netplwiz);
 
 HINSTANCE hInstance;
 
@@ -36,7 +35,7 @@ VOID EnumerateConnectedDrives(HWND hDlg)
 {
     LV_ITEM item;
     HIMAGELIST hImgList;
-    HICON hIconDrive = NULL;
+    HICON hIconDrive;
     HMODULE hShell32;
     HWND hListView = GetDlgItem(hDlg, IDC_CONNECTEDDRIVELIST);
 
@@ -129,7 +128,7 @@ VOID EnumerateConnectedDrives(HWND hDlg)
         }
         else
         {
-            ERR("WNetEnumResource failed with error: 0x%08x\n", dRet);
+            TRACE("WNetEnumResource failed with error: 0x%08x\n", dRet);
             break;
         }
     }
@@ -142,7 +141,8 @@ VOID EnumerateConnectedDrives(HWND hDlg)
 VOID UpdateButtonStatus(WPARAM wParam, LPARAM lParam, HWND hDlg)
 {
     LPNMHDR pnmh;
-    HWND hListView = GetDlgItem(hDlg, IDC_CONNECTEDDRIVELIST), hOkbutton = GetDlgItem(hDlg, ID_OK);
+    HWND hListView = GetDlgItem(hDlg, IDC_CONNECTEDDRIVELIST);
+    HWND hOkbutton = GetDlgItem(hDlg, ID_OK);
 
     pnmh = (LPNMHDR)lParam;
 
@@ -183,7 +183,7 @@ DWORD DisconnectDriveExit(HWND hDlg)
 
 static INT_PTR CALLBACK DisconnectDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HICON hIcon = NULL, hIconSm = NULL;
+    HICON hIcon, hIconSm;
     HWND hOkbutton = GetDlgItem(hDlg, ID_OK);
 
     switch (uMsg)

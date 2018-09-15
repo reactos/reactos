@@ -1,6 +1,8 @@
 #pragma once
 
+#ifndef IDC_STATIC
 #define IDC_STATIC -1
+#endif
 
 /* Controls */
 #define IDC_CONNECTEDDRIVELIST 1071
