@@ -11,7 +11,6 @@
 /* INCLUDES **************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntintsafe.h>
 #define NDEBUG
 #include <debug.h>
 

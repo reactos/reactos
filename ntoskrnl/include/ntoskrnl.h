@@ -62,6 +62,7 @@
 #include <regstr.h>
 #include <ntstrsafe.h>
 #include <ntpoapi.h>
+#include <ntintsafe.h>
 
 /* C Headers */
 #include <stdlib.h>

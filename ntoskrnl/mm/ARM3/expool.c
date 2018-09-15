@@ -37,6 +37,7 @@ PPOOL_DESCRIPTOR PoolVector[2];
 PKGUARDED_MUTEX ExpPagedPoolMutex;
 SIZE_T PoolTrackTableSize, PoolTrackTableMask;
 SIZE_T PoolBigPageTableSize, PoolBigPageTableHash;
+ULONG ExpBigTableExpansionFailed;
 PPOOL_TRACKER_TABLE PoolTrackTable;
 PPOOL_TRACKER_BIG_PAGES PoolBigPageTable;
 KSPIN_LOCK ExpTaggedPoolLock;
@@ -1174,7 +1175,10 @@ InitializePool(IN POOL_TYPE PoolType,
         PoolBigPageTableHash = PoolBigPageTableSize - 1;
         RtlZeroMemory(PoolBigPageTable,
                       PoolBigPageTableSize * sizeof(POOL_TRACKER_BIG_PAGES));
-        for (i = 0; i < PoolBigPageTableSize; i++) PoolBigPageTable[i].Va = (PVOID)1;
+        for (i = 0; i < PoolBigPageTableSize; i++)
+        {
+            PoolBigPageTable[i].Va = (PVOID)POOL_BIG_TABLE_ENTRY_FREE;
+        }
 
         //
         // During development, print this out so we can see what's happening
@@ -1448,6 +1452,95 @@ ExGetPoolTagInfo(IN PSYSTEM_POOLTAG_INFORMATION SystemInformation,
     return Status;
 }
 
+_IRQL_requires_(DISPATCH_LEVEL)
+BOOLEAN
+NTAPI
+ExpExpandBigPageTable(
+    _In_ _IRQL_restores_ KIRQL OldIrql)
+{
+    ULONG OldSize = PoolBigPageTableSize;
+    ULONG NewSize = 2 * OldSize;
+    ULONG NewSizeInBytes;
+    PPOOL_TRACKER_BIG_PAGES NewTable;
+    PPOOL_TRACKER_BIG_PAGES OldTable;
+    ULONG i;
+    ULONG PagesFreed;
+    ULONG Hash;
+    ULONG HashMask;
+
+    /* Must be holding ExpLargePoolTableLock */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Make sure we don't overflow */
+    if (!NT_SUCCESS(RtlULongMult(2,
+                                 OldSize * sizeof(POOL_TRACKER_BIG_PAGES),
+                                 &NewSizeInBytes)))
+    {
+        DPRINT1("Overflow expanding big page table. Size=%lu\n", OldSize);
+        KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+        return FALSE;
+    }
+
+    NewTable = MiAllocatePoolPages(NonPagedPool, NewSizeInBytes);
+    if (NewTable == NULL)
+    {
+        DPRINT1("Could not allocate %lu bytes for new big page table\n", NewSizeInBytes);
+        KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+        return FALSE;
+    }
+
+    DPRINT("Expanding big pool tracker table to %lu entries\n", NewSize);
+
+    /* Initialize the new table */
+    RtlZeroMemory(NewTable, NewSizeInBytes);
+    for (i = 0; i < NewSize; i++)
+    {
+        NewTable[i].Va = (PVOID)POOL_BIG_TABLE_ENTRY_FREE;
+    }
+
+    /* Copy over all items */
+    OldTable = PoolBigPageTable;
+    HashMask = NewSize - 1;
+    for (i = 0; i < OldSize; i++)
+    {
+        /* Skip over empty items */
+        if ((ULONG_PTR)OldTable[i].Va & POOL_BIG_TABLE_ENTRY_FREE)
+        {
+            continue;
+        }
+
+        /* Recalculate the hash due to the new table size */
+        Hash = ExpComputePartialHashForAddress(OldTable[i].Va) & HashMask;
+
+        /* Find the location in the new table */
+        while (!((ULONG_PTR)NewTable[Hash].Va & POOL_BIG_TABLE_ENTRY_FREE))
+        {
+            Hash = (Hash + 1) & HashMask;
+        }
+
+        /* We just enlarged the table, so we must have space */
+        ASSERT((ULONG_PTR)NewTable[Hash].Va & POOL_BIG_TABLE_ENTRY_FREE);
+
+        /* Finally, copy the item */
+        NewTable[Hash] = OldTable[i];
+    }
+
+    /* Activate the new table */
+    PoolBigPageTable = NewTable;
+    PoolBigPageTableSize = NewSize;
+    PoolBigPageTableHash = PoolBigPageTableSize - 1;
+
+    /* Release the lock, we're done changing global state */
+    KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+
+    /* Free the old table and update our tracker */
+    PagesFreed = MiFreePoolPages(OldTable);
+    ExpRemovePoolTracker('looP', PagesFreed << PAGE_SHIFT, 0);
+    ExpInsertPoolTracker('looP', ALIGN_UP_BY(NewSizeInBytes, PAGE_SIZE), 0);
+
+    return TRUE;
+}
+
 BOOLEAN
 NTAPI
 ExpAddTagForBigPages(IN PVOID Va,
@@ -1466,7 +1559,10 @@ ExpAddTagForBigPages(IN PVOID Va,
     //
     // As the table is expandable, these values must only be read after acquiring
     // the lock to avoid a teared access during an expansion
+    // NOTE: Windows uses a special reader/writer SpinLock to improve
+    // performance in the common case (add/remove a tracker entry)
     //
+Retry:
     Hash = ExpComputePartialHashForAddress(Va);
     KeAcquireSpinLock(&ExpLargePoolTableLock, &OldIrql);
     Hash &= PoolBigPageTableHash;
@@ -1484,10 +1580,11 @@ ExpAddTagForBigPages(IN PVOID Va,
         //
         // Make sure that this is a free entry and attempt to atomically make the
         // entry busy now
+        // NOTE: the Interlocked operation cannot fail with an exclusive SpinLock
         //
         OldVa = Entry->Va;
         if (((ULONG_PTR)OldVa & POOL_BIG_TABLE_ENTRY_FREE) &&
-            (InterlockedCompareExchangePointer(&Entry->Va, Va, OldVa) == OldVa))
+            (NT_VERIFY(InterlockedCompareExchangePointer(&Entry->Va, Va, OldVa) == OldVa)))
         {
             //
             // We now own this entry, write down the size and the pool tag
@@ -1507,8 +1604,11 @@ ExpAddTagForBigPages(IN PVOID Va,
             InterlockedIncrementUL(&ExpPoolBigEntriesInUse);
             if ((i >= 16) && (ExpPoolBigEntriesInUse > (TableSize / 4)))
             {
-                DPRINT("Should attempt expansion since we now have %lu entries\n",
+                DPRINT("Attempting expansion since we now have %lu entries\n",
                         ExpPoolBigEntriesInUse);
+                ASSERT(TableSize == PoolBigPageTableSize);
+                ExpExpandBigPageTable(OldIrql);
+                return TRUE;
             }
 
             //
@@ -1529,11 +1629,16 @@ ExpAddTagForBigPages(IN PVOID Va,
     } while (Entry != EntryStart);
 
     //
-    // This means there's no free hash buckets whatsoever, so we would now have
+    // This means there's no free hash buckets whatsoever, so we now have
     // to attempt expanding the table
     //
-    DPRINT1("Big pool expansion needed, not implemented!\n");
-    KeReleaseSpinLock(&ExpLargePoolTableLock, OldIrql);
+    ASSERT(TableSize == PoolBigPageTableSize);
+    if (ExpExpandBigPageTable(OldIrql))
+    {
+        goto Retry;
+    }
+    ExpBigTableExpansionFailed++;
+    DPRINT1("Big pool table expansion failed\n");
     return FALSE;
 }
 
