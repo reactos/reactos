@@ -96,7 +96,7 @@
 #define IDS_HUNGARIAN_101_KEY_LAYOUT                   5034
 #define IDS_POLISH_LAYOUT                              5035
 #define IDS_POLISH_214_LAYOUT                          5036
-#define IDS_ROMANIAN_LAYOUT                            5037
+#define IDS_ROMANIAN_LEGACY_LAYOUT                     5037
 #define IDS_SERBIAN_LATIN_LAYOUT                       5038
 #define IDS_SLOVAK_LAYOUT                              5039
 #define IDS_SLOVAK_QWERTY_LAYOUT                       5040
@@ -199,3 +199,4 @@
 #define IDS_BURMESE_LAYOUT                             5140
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                   5141
 #define IDS_ESPERANTO_LAYOUT                           5142
+#define IDS_ROMANIAN_STANDARD_LAYOUT                   5175
