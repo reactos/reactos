@@ -3,3 +3,4 @@
 @ stdcall DisplaySaveSettings(ptr ptr)
 @ stdcall InstallScreenSaverW(long long ptr long)
 @ stdcall InstallScreenSaverA(long long ptr long)
+@ stdcall MonitorClassInstaller(long ptr ptr)
