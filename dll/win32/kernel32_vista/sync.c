@@ -124,7 +124,7 @@ SleepConditionVariableSRW(PCONDITION_VARIABLE ConditionVariable, PSRWLOCK Lock, 
     LARGE_INTEGER Time;
 
     Status = RtlSleepConditionVariableSRW(ConditionVariable, Lock, GetNtTimeout(&Time, Timeout), Flags);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) || Status == STATUS_TIMEOUT)
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
