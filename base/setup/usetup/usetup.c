@@ -595,15 +595,18 @@ UpdateKBLayout(VOID)
 {
     PGENERIC_LIST_ENTRY ListEntry;
     LPCWSTR pszNewLayout;
+    NTSTATUS Status;
 
     pszNewLayout = MUIDefaultKeyboardLayout();
 
     if (LayoutList == NULL)
     {
-        LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
-        if (LayoutList == NULL)
+        Status = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
+            DPRINT1("CreateKeyboardLayoutList() failed. Status = 0x%08lx\n", Status);
             return;
         }
     }
@@ -3412,6 +3415,7 @@ AddSectionToCopyQueueCab(HINF InfFile,
     PWCHAR FileKeyValue;
     PWCHAR DirKeyValue;
     PWCHAR TargetFileName;
+    NTSTATUS Status;
 
     /* Search for the SectionName section */
     if (!SetupFindFirstLineW(InfFile, SectionName, NULL, &FilesContext))
@@ -3429,10 +3433,12 @@ AddSectionToCopyQueueCab(HINF InfFile,
     do
     {
         /* Get source file name and target directory id */
-        if (!INF_GetData(&FilesContext, &FileKeyName, &FileKeyValue))
+        Status = INF_GetData(&FilesContext, &FileKeyName, &FileKeyValue);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("INF_GetData() failed\n");
+            DPRINT1("INF_GetData() failed. Status = 0x%08lx\n", Status);
             break;
         }
 
@@ -3443,30 +3449,36 @@ AddSectionToCopyQueueCab(HINF InfFile,
         DPRINT("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
         /* Lookup target directory */
-        if (!SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext))
+        Status = SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("SetupFindFirstLine() failed\n");
+            DPRINT1("SetupFindFirstLine() failed. Status = 0x%08lx\n", Status);
             break;
         }
 
-        if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
+        Status = INF_GetData(&DirContext, NULL, &DirKeyValue);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("INF_GetData() failed\n");
+            DPRINT1("INF_GetData() failed. Status = 0x%08lx\n", Status);
             break;
         }
 
-        if (!SetupQueueCopy(SetupFileQueue,
-                            SourceCabinet,
-                            SourceRootPath.Buffer,
-                            SourceRootDir.Buffer,
-                            FileKeyName,
-                            DirKeyValue,
-                            TargetFileName))
+        Status = SetupQueueCopy(SetupFileQueue,
+                                SourceCabinet,
+                                SourceRootPath.Buffer,
+                                SourceRootDir.Buffer,
+                                FileKeyName,
+                                DirKeyValue,
+                                TargetFileName);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("SetupQueueCopy() failed\n");
+            DPRINT1("SetupQueueCopy() failed. Status = 0x%08lx\n", Status);
         }
     } while (SetupFindNextLine(&FilesContext, &FilesContext));
 
@@ -3489,6 +3501,7 @@ AddSectionToCopyQueue(HINF InfFile,
     PWCHAR TargetFileName;
     ULONG Length;
     WCHAR CompleteOrigDirName[512];
+    NTSTATUS Status;
 
     if (SourceCabinet)
         return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
@@ -3509,18 +3522,22 @@ AddSectionToCopyQueue(HINF InfFile,
     do
     {
         /* Get source file name and target directory id */
-        if (!INF_GetData(&FilesContext, &FileKeyName, &FileKeyValue))
+        Status = INF_GetData(&FilesContext, &FileKeyName, &FileKeyValue);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("INF_GetData() failed\n");
+            DPRINT1("INF_GetData() failed. Status = 0x%08lx\n", Status);
             break;
         }
 
         /* Get target directory id */
-        if (!INF_GetDataField(&FilesContext, 13, &FileKeyValue))
+        Status = INF_GetDataField(&FilesContext, 13, &FileKeyValue);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("INF_GetData() failed\n");
+            DPRINT1("INF_GetData() failed. Status = 0x%08lx\n", Status);
             break;
         }
 
@@ -3533,17 +3550,21 @@ AddSectionToCopyQueue(HINF InfFile,
         DPRINT("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
 
         /* Lookup target directory */
-        if (!SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext))
+        Status = SetupFindFirstLineW(InfFile, L"Directories", FileKeyValue, &DirContext);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("SetupFindFirstLine() failed\n");
+            DPRINT1("SetupFindFirstLine() failed. Status = 0x%08l\n", Status);
             break;
         }
 
-        if (!INF_GetData(&DirContext, NULL, &DirKeyValue))
+        Status = INF_GetData(&DirContext, NULL, &DirKeyValue);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("INF_GetData() failed\n");
+            DPRINT1("INF_GetData() failed. Status = 0x%08l\n", Status);
             break;
         }
 
@@ -3571,16 +3592,18 @@ AddSectionToCopyQueue(HINF InfFile,
             CompleteOrigDirName[Length - 1] = UNICODE_NULL;
         }
 
-        if (!SetupQueueCopy(SetupFileQueue,
-                            SourceCabinet,
-                            SourceRootPath.Buffer,
-                            CompleteOrigDirName,
-                            FileKeyName,
-                            DirKeyValue,
-                            TargetFileName))
+        Status = SetupQueueCopy(SetupFileQueue,
+                                SourceCabinet,
+                                SourceRootPath.Buffer,
+                                CompleteOrigDirName,
+                                FileKeyName,
+                                DirKeyValue,
+                                TargetFileName);
+
+        /* Check if the operation has failed */
+        if (!NT_SUCCESS(Status))
         {
-            /* FIXME: Handle error! */
-            DPRINT1("SetupQueueCopy() failed\n");
+            DPRINT1("SetupQueueCopy() failed. Status = 0x%08l\n", Status);
         }
     } while (SetupFindNextLine(&FilesContext, &FilesContext));
 
