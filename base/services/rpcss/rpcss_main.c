@@ -118,6 +118,10 @@ static DWORD WINAPI service_handler( DWORD ctrl, DWORD event_type, LPVOID event_
     }
 }
 
+#ifdef __REACTOS__
+extern VOID DoRpcSsSetupConfiguration(VOID);
+#endif
+
 static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
 {
     SERVICE_STATUS status;
@@ -139,6 +143,10 @@ static void WINAPI ServiceMain( DWORD argc, LPWSTR *argv )
     status.dwCheckPoint              = 0;
     status.dwWaitHint                = 10000;
     SetServiceStatus( service_handle, &status );
+
+#ifdef __REACTOS__
+    DoRpcSsSetupConfiguration();
+#endif
 
     WaitForSingleObject( exit_event, INFINITE );
 
