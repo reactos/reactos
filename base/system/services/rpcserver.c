@@ -2179,28 +2179,45 @@ RChangeServiceConfigW(
             goto done;
     }
 
-    if (lpPassword != NULL)
+    /* Start name and password are only used by Win32 services */
+    if (lpService->Status.dwServiceType & SERVICE_WIN32)
     {
-        if (*(LPWSTR)lpPassword != 0)
+        /* Write service start name */
+        if (lpServiceStartName != NULL && *lpServiceStartName != 0)
         {
-            /* FIXME: Decrypt the password */
-
-            /* Write the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            (LPCWSTR)lpPassword);
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"ObjectName",
+                                     0,
+                                     REG_SZ,
+                                     (LPBYTE)lpServiceStartName,
+                                     (DWORD)((wcslen(lpServiceStartName) + 1) * sizeof(WCHAR)));
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
-        else
-        {
-            /* Delete the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            NULL);
-            if (dwError == ERROR_FILE_NOT_FOUND)
-                dwError = ERROR_SUCCESS;
 
-            if (dwError != ERROR_SUCCESS)
-                goto done;
+        if (lpPassword != NULL)
+        {
+            if (*(LPWSTR)lpPassword != 0)
+            {
+                /* FIXME: Decrypt the password */
+
+                /* Write the password */
+                dwError = ScmSetServicePassword(lpService->szServiceName,
+                                                (LPCWSTR)lpPassword);
+                if (dwError != ERROR_SUCCESS)
+                    goto done;
+            }
+            else
+            {
+                /* Delete the password */
+                dwError = ScmSetServicePassword(lpService->szServiceName,
+                                                NULL);
+                if (dwError == ERROR_FILE_NOT_FOUND)
+                    dwError = ERROR_SUCCESS;
+
+                if (dwError != ERROR_SUCCESS)
+                    goto done;
+            }
         }
     }
 
