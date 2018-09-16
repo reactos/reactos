@@ -50,11 +50,10 @@ if [ "$REACTOS_SOURCE_DIR" = "$PWD" ]; then
 	cd "$REACTOS_OUTPUT_PATH"
 fi
 
-mkdir -p reactos
-
 #EXTRA_ARGS=""
 if [ $USE_NEW_STYLE -eq 0 ]; then
 	mkdir -p host-tools
+	mkdir -p reactos
 	echo Preparing host tools...
 	cd host-tools
 	rm -f CMakeCache.txt
@@ -68,7 +67,11 @@ if [ $USE_NEW_STYLE -eq 0 ]; then
 fi
 
 echo Preparing reactos...
-cd reactos
+
+if [ $USE_NEW_STYLE -eq 0 ]; then
+	cd reactos
+fi
+
 rm -f CMakeCache.txt host-tools/CMakeCache.txt
 
 cmake -G "$CMAKE_GENERATOR" -DENABLE_CCACHE:BOOL=0 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-gcc.cmake -DARCH:STRING=$ARCH -DNEW_STYLE_BUILD:BOOL=$USE_NEW_STYLE $EXTRA_ARGS $ROS_CMAKEOPTS "$REACTOS_SOURCE_DIR"
