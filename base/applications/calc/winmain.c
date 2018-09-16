@@ -1654,6 +1654,7 @@ static INT_PTR CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                 {
                     PostMessage(hWnd, WM_COMMAND, IdcSim, 0);
                     CheckDlgButton(hWnd, IDC_CHECK_INV, BST_UNCHECKED);
+                    break;
                 }
             }
 
