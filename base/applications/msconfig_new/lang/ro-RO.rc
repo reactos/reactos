@@ -4,7 +4,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 229, 98
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About the System Configuration Program"
+CAPTION "Despre programul de configurare al sistemului"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_APPICON, IDC_STATIC, 14, 14, 20, 20
@@ -40,7 +40,7 @@ END
 
 IDD_SYSTEM_PAGE DIALOGEX 0, 0, 366, 175
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CAPTION
-CAPTION "System"
+CAPTION "Sistem"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_SYSTEM_TREE, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP, 5, 5, 285, 146
@@ -84,7 +84,7 @@ BEGIN
     LTEXT           "secunde", IDC_STATIC, 330, 104, 31, 10
     CONTROL         "&Permanenizează configurația de inițializare", 292,
                     "Button", BS_AUTOCHECKBOX | BS_TOP | BS_MULTILINE | WS_TABSTOP, 295, 121, 66, 49
-    PUSHBUTTON      "&Delete", IDC_BTN_DELETE, 295, 68, 66, 14
+    PUSHBUTTON      "&Șterge", IDC_BTN_DELETE, 295, 68, 66, 14
 END
 
 IDD_SERVICES_PAGE DIALOGEX 0, 0, 366, 175
@@ -124,7 +124,7 @@ END
 
 IDD_FILE_EXTRACT_DIALOG DIALOGEX 0, 0, 353, 117
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Expand Files from an Installation Source"
+CAPTION "Extragere fișiere de la o instalație sursă"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Specificați fișierele pe care doriți să le extrageți, locația sursei cu fișierele de instalare, și locația destinației.", IDC_STATIC, 7, 7, 339, 17
