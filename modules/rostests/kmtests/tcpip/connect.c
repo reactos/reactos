@@ -166,6 +166,7 @@ TestTcpConnect(void)
             FALSE,
             NULL);
         Status = Irp->IoStatus.Status;
+        trace("Associate address IRP completed.\n");
     }
     ok_eq_hex(Status, STATUS_SUCCESS);
     IoFreeIrp(Irp);
