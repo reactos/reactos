@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/advapi32/misc/sysfun.c
+ * FILE:            dll/win32/advapi32/misc/sysfunc.c
  * PURPOSE:         advapi32.dll system functions (undocumented)
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
@@ -130,7 +130,10 @@ WINAPI SystemFunction004(const struct ustring *in,
 
     crypt_len = ((in->Length+7)&~7);
     if (out->MaximumLength < (crypt_len+8))
+    {
+        out->Length = crypt_len + 8;
         return STATUS_BUFFER_TOO_SMALL;
+    }
 
     data.ui[0] = in->Length;
     data.ui[1] = 1;
@@ -203,7 +206,10 @@ WINAPI SystemFunction005(const struct ustring *in,
 
     crypt_len = data.ui[0];
     if (crypt_len > out->MaximumLength)
+    {
+        out->Length = crypt_len;
         return STATUS_BUFFER_TOO_SMALL;
+    }
 
     for (ofs=0; (ofs+8)<crypt_len; ofs+=8)
         CRYPT_DESunhash(out->Buffer+ofs, deskey, in->Buffer+ofs+8);
