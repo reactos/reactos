@@ -1672,14 +1672,6 @@ ScmStartUserModeService(PSERVICE Service,
     StartupInfo.cb = sizeof(StartupInfo);
     ZeroMemory(&ProcessInformation, sizeof(ProcessInformation));
 
-    /* Use the interactive desktop if the service is interactive */
-    if ((NoInteractiveServices == 0) &&
-        (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
-    {
-        StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
-        StartupInfo.lpDesktop = L"WinSta0\\Default";
-    }
-
     if (Service->lpImage->hToken)
     {
         /* User token: Run the service under the user account */
@@ -1730,6 +1722,14 @@ ScmStartUserModeService(PSERVICE Service,
             DPRINT1("CreateEnvironmentBlock() failed with error %d; service '%S' will run with the current environment.\n",
                     GetLastError(), Service->lpServiceName);
             lpEnvironment = NULL;
+        }
+
+        /* Use the interactive desktop if the service is interactive */
+        if ((NoInteractiveServices == 0) &&
+            (Service->Status.dwServiceType & SERVICE_INTERACTIVE_PROCESS))
+        {
+            StartupInfo.dwFlags |= STARTF_INHERITDESKTOP;
+            StartupInfo.lpDesktop = L"WinSta0\\Default";
         }
 
         Result = CreateProcessW(NULL,

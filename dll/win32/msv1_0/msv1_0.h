@@ -94,6 +94,18 @@ typedef struct _SAMPR_LOGON_HOURS
     unsigned char *LogonHours;
 } SAMPR_LOGON_HOURS, *PSAMPR_LOGON_HOURS;
 
+#define USER_LOGON_BAD_PASSWORD    0x08000000
+#define USER_LOGON_SUCCESS         0x10000000
+
+typedef struct _SAMPR_USER_INTERNAL2_INFORMATION
+{
+    unsigned long Flags;
+    OLD_LARGE_INTEGER LastLogon;
+    OLD_LARGE_INTEGER LastLogoff;
+    unsigned short BadPasswordCount;
+    unsigned short LogonCount;
+} SAMPR_USER_INTERNAL2_INFORMATION, *PSAMPR_USER_INTERNAL2_INFORMATION;
+
 typedef struct _SAMPR_USER_ALL_INFORMATION
 {
     OLD_LARGE_INTEGER LastLogon;
@@ -152,6 +164,9 @@ typedef union _SAMPR_USER_INFO_BUFFER
     USER_CONTROL_INFORMATION Control;
     USER_EXPIRES_INFORMATION Expires;
     SAMPR_USER_INTERNAL1_INFORMATION Internal1;
+#endif
+    SAMPR_USER_INTERNAL2_INFORMATION Internal2;
+#if 0
     SAMPR_USER_PARAMETERS_INFORMATION Parameters;
 #endif
     SAMPR_USER_ALL_INFORMATION All;
@@ -236,6 +251,11 @@ SamrQueryInformationUser(IN SAMPR_HANDLE UserHandle,
                          IN USER_INFORMATION_CLASS UserInformationClass,
                          OUT PSAMPR_USER_INFO_BUFFER *Buffer);
 
+NTSTATUS
+NTAPI
+SamrSetInformationUser(IN SAMPR_HANDLE UserHandle,
+                       IN USER_INFORMATION_CLASS UserInformationClass,
+                       IN PSAMPR_USER_INFO_BUFFER Buffer);
 
 typedef PVOID LSAPR_HANDLE;
 

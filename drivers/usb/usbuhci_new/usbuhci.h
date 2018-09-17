@@ -1,3 +1,10 @@
+/*
+ * PROJECT:     ReactOS USB UHCI Miniport Driver
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     USBUHCI declarations
+ * COPYRIGHT:   Copyright 2017-2018 Vadim Galyant <vgal@rambler.ru>
+ */
+
 #ifndef USBUHCI_H__
 #define USBUHCI_H__
 
@@ -13,7 +20,6 @@
 extern USBPORT_REGISTRATION_PACKET RegPacket;
 
 #define UHCI_MAX_HC_SCHEDULE_ERRORS        16
-#define UHCI_RH_STATUS_SUCCESS             1
 
 #define UHCI_MAX_ISO_TRANSFER_SIZE         0x10000
 #define UHCI_MAX_BULK_TRANSFER_SIZE        0x1000

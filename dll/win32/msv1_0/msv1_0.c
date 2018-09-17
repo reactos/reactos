@@ -143,11 +143,11 @@ BuildInteractiveProfileBuffer(IN PLSA_CLIENT_REQUEST ClientRequest,
     LocalBuffer->LogonTime.LowPart = UserInfo->All.LastLogon.LowPart;
     LocalBuffer->LogonTime.HighPart = UserInfo->All.LastLogon.HighPart;
 
-//    LocalBuffer->LogoffTime.LowPart =
-//    LocalBuffer->LogoffTime.HighPart =
+    LocalBuffer->LogoffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->LogoffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
 
-//    LocalBuffer->KickOffTime.LowPart =
-//    LocalBuffer->KickOffTime.HighPart =
+    LocalBuffer->KickOffTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    LocalBuffer->KickOffTime.HighPart = UserInfo->All.AccountExpires.HighPart;
 
     LocalBuffer->PasswordLastSet.LowPart = UserInfo->All.PasswordLastSet.LowPart;
     LocalBuffer->PasswordLastSet.HighPart = UserInfo->All.PasswordLastSet.HighPart;
@@ -266,6 +266,7 @@ AppendRidToSid(PSID SrcSid,
 
     return DstSid;
 }
+
 
 static
 NTSTATUS
@@ -415,32 +416,41 @@ BuildTokenInformationBuffer(PLSA_TOKEN_INFORMATION_V1 *TokenInformation,
     Buffer = DispatchTable.AllocateLsaHeap(sizeof(LSA_TOKEN_INFORMATION_V1));
     if (Buffer == NULL)
     {
-        TRACE("Failed to allocate the local buffer!\n");
+        WARN("Failed to allocate the local buffer!\n");
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto done;
     }
 
-    /* FIXME: */
-    Buffer->ExpirationTime.QuadPart = -1;
+    Buffer->ExpirationTime.LowPart = UserInfo->All.AccountExpires.LowPart;
+    Buffer->ExpirationTime.HighPart = UserInfo->All.AccountExpires.HighPart;
 
     Status = BuildTokenUser(&Buffer->User,
                             (PSID)AccountDomainSid,
                             UserInfo->All.UserId);
     if (!NT_SUCCESS(Status))
+    {
+        WARN("BuildTokenUser() failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
 
     Status = BuildTokenPrimaryGroup(&Buffer->PrimaryGroup,
                                     (PSID)AccountDomainSid,
                                     UserInfo->All.PrimaryGroupId);
     if (!NT_SUCCESS(Status))
+    {
+        WARN("BuildTokenPrimaryGroup() failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
 
     Status = BuildTokenGroups(&Buffer->Groups,
                               (PSID)AccountDomainSid,
                               UserInfo->All.UserId,
                               SpecialAccount);
     if (!NT_SUCCESS(Status))
+    {
+        WARN("BuildTokenGroups() failed (Status 0x%08lx)\n", Status);
         goto done;
+    }
 
     *TokenInformation = Buffer;
 
@@ -1029,7 +1039,7 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     UNICODE_STRING LogonServer;
     BOOLEAN SessionCreated = FALSE;
     LARGE_INTEGER LogonTime;
-//    LARGE_INTEGER AccountExpires;
+    LARGE_INTEGER AccountExpires;
     LARGE_INTEGER PasswordMustChange;
     LARGE_INTEGER PasswordLastSet;
     BOOL SpecialAccount = FALSE;
@@ -1247,20 +1257,16 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
                 goto done;
             }
 
-#if 0
             /* Check if the account expired */
             AccountExpires.LowPart = UserInfo->All.AccountExpires.LowPart;
             AccountExpires.HighPart = UserInfo->All.AccountExpires.HighPart;
-
-            if (AccountExpires.QuadPart != 0 &&
-                LogonTime.QuadPart >= AccountExpires.QuadPart)
+            if (LogonTime.QuadPart >= AccountExpires.QuadPart)
             {
                 ERR("Account expired!\n");
                 *SubStatus = STATUS_ACCOUNT_EXPIRED;
                 Status = STATUS_ACCOUNT_RESTRICTION;
                 goto done;
             }
-#endif
 
             /* Check if the password expired */
             PasswordMustChange.LowPart = UserInfo->All.PasswordMustChange.LowPart;
@@ -1333,6 +1339,24 @@ LsaApLogonUser(IN PLSA_CLIENT_REQUEST ClientRequest,
     }
 
 done:
+    /* Update the logon time/count or the bad password time/count */
+    if ((UserHandle != NULL) &&
+        (Status == STATUS_SUCCESS || Status == STATUS_WRONG_PASSWORD))
+    {
+        SAMPR_USER_INFO_BUFFER InternalInfo;
+
+        RtlZeroMemory(&InternalInfo, sizeof(InternalInfo));
+
+        if (Status == STATUS_SUCCESS)
+            InternalInfo.Internal2.Flags = USER_LOGON_SUCCESS;
+        else
+            InternalInfo.Internal2.Flags = USER_LOGON_BAD_PASSWORD;
+
+        SamrSetInformationUser(UserHandle,
+                               UserInternal2Information,
+                               &InternalInfo);
+    }
+
     /* Return the account name */
     *AccountName = DispatchTable.AllocateLsaHeap(sizeof(UNICODE_STRING));
     if (*AccountName != NULL)

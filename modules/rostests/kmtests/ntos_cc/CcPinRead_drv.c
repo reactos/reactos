@@ -486,8 +486,9 @@ PerformTest(
                     KmtStartSeh();
                     Ret = CcPinRead(TestFileObject, &Offset, 0x1000, 0, &Bcb, (PVOID *)&Buffer);
                     KmtEndSeh(STATUS_SUCCESS);
+                    ok(Ret == FALSE, "CcMapData succeed\n");
 
-                    if (!skip(Ret == TRUE, "CcPinRead failed\n"))
+                    if (Ret)
                     {
                         CcUnpinData(Bcb);
                     }

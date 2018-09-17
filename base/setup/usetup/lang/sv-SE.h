@@ -1787,6 +1787,8 @@ MUI_STRING svSEStrings[] =
     "   F„rdigt..."},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Starta om datorn"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Your computer will reboot in %li second(s)... "},
     {STRING_CONSOLEFAIL1,
     "Det g†r inte ”ppna Konsollen\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

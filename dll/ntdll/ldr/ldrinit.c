@@ -1207,8 +1207,29 @@ LdrShutdownThread(VOID)
     /* Check for FLS Data */
     if (Teb->FlsData)
     {
-        /* FIXME */
-        DPRINT1("We don't support FLS Data yet\n");
+        /* Mimic BaseRundownFls */
+        ULONG n, FlsHighIndex;
+        PRTL_FLS_DATA pFlsData;
+        PFLS_CALLBACK_FUNCTION lpCallback;
+
+        pFlsData = Teb->FlsData;
+
+        RtlAcquirePebLock();
+        FlsHighIndex = NtCurrentPeb()->FlsHighIndex;
+        RemoveEntryList(&pFlsData->ListEntry);
+        RtlReleasePebLock();
+
+        for (n = 1; n <= FlsHighIndex; ++n)
+        {
+            lpCallback = NtCurrentPeb()->FlsCallback[n];
+            if (lpCallback && pFlsData->Data[n])
+            {
+                lpCallback(pFlsData->Data[n]);
+            }
+        }
+
+        RtlFreeHeap(RtlGetProcessHeap(), 0, pFlsData);
+        Teb->FlsData = NULL;
     }
 
     /* Check for Fiber data */
@@ -1786,6 +1807,7 @@ LdrpInitializeProcess(IN PCONTEXT Context,
                         Peb->FlsBitmapBits,
                         FLS_MAXIMUM_AVAILABLE);
     RtlSetBit(&FlsBitMap, 0);
+    InitializeListHead(&Peb->FlsListHead);
 
     /* Initialize TLS Bitmap */
     RtlInitializeBitMap(&TlsBitMap,

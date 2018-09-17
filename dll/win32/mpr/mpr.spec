@@ -55,6 +55,7 @@
 @ stdcall WNetCancelConnection2W(wstr long long)
 @ stdcall WNetCancelConnectionA(str long)
 @ stdcall WNetCancelConnectionW(wstr long)
+@ stdcall WNetClearConnections(long)
 @ stdcall WNetCloseEnum(long)
 @ stdcall WNetConnectionDialog1A(ptr)
 @ stdcall WNetConnectionDialog1W(ptr)

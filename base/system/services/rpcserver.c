@@ -463,7 +463,6 @@ ScmConvertToBootPathName(wchar_t *CanonName, wchar_t **RelativeName)
 
     /* Get buffer size needed for expanding env strings */
     BufferSize = ExpandEnvironmentStringsW(L"%SystemRoot%\\", &Dest, 1);
-
     if (BufferSize <= 1)
     {
         DPRINT("Error during a call to ExpandEnvironmentStringsW()\n");
@@ -1018,7 +1017,7 @@ RCloseServiceHandle(
                                            &pcbBytesNeeded,
                                            &dwServicesReturned);
 
-                /* if pcbBytesNeeded returned a value then there are services running that are dependent on this service */
+                /* If pcbBytesNeeded returned a value then there are services running that are dependent on this service */
                 if (pcbBytesNeeded)
                 {
                     DPRINT("Deletion failed due to running dependencies.\n");
@@ -1497,7 +1496,9 @@ RSetServiceObjectSecurity(
     if (dwSecurityInformation == 0 ||
         dwSecurityInformation & ~(OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION
         | DACL_SECURITY_INFORMATION | SACL_SECURITY_INFORMATION))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     if (!RtlValidSecurityDescriptor((PSECURITY_DESCRIPTOR)lpSecurityDescriptor))
         return ERROR_INVALID_PARAMETER;
@@ -1513,11 +1514,15 @@ RSetServiceObjectSecurity(
 
     if ((dwSecurityInformation & OWNER_SECURITY_INFORMATION) &&
         (((PISECURITY_DESCRIPTOR)lpSecurityDescriptor)->Owner == NULL))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     if ((dwSecurityInformation & GROUP_SECURITY_INFORMATION) &&
         (((PISECURITY_DESCRIPTOR)lpSecurityDescriptor)->Group == NULL))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DesiredAccess))
@@ -1961,7 +1966,9 @@ RChangeServiceConfigW(
         (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER) &&
         ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
         ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS))
-            return ERROR_INVALID_PARAMETER;
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     /* Check for invalid start type value */
     if ((dwStartType != SERVICE_NO_CHANGE) &&
@@ -1970,7 +1977,9 @@ RChangeServiceConfigW(
         (dwStartType != SERVICE_AUTO_START) &&
         (dwStartType != SERVICE_DEMAND_START) &&
         (dwStartType != SERVICE_DISABLED))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     /* Only drivers can be boot start or system start services */
     if ((dwStartType == SERVICE_BOOT_START) ||
@@ -1987,7 +1996,14 @@ RChangeServiceConfigW(
         (dwErrorControl != SERVICE_ERROR_NORMAL) &&
         (dwErrorControl != SERVICE_ERROR_SEVERE) &&
         (dwErrorControl != SERVICE_ERROR_CRITICAL))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
+
+    if (lpdwTagId && (!lpLoadOrderGroup || !*lpLoadOrderGroup))
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
@@ -2014,6 +2030,7 @@ RChangeServiceConfigW(
         goto done;
 
     /* Write service data to the registry */
+
     /* Set the display name */
     if (lpDisplayName != NULL && *lpDisplayName != 0)
     {
@@ -2162,28 +2179,45 @@ RChangeServiceConfigW(
             goto done;
     }
 
-    if (lpPassword != NULL)
+    /* Start name and password are only used by Win32 services */
+    if (lpService->Status.dwServiceType & SERVICE_WIN32)
     {
-        if (wcslen((LPWSTR)lpPassword) != 0)
+        /* Write service start name */
+        if (lpServiceStartName != NULL && *lpServiceStartName != 0)
         {
-            /* FIXME: Decrypt the password */
-
-            /* Write the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            (LPCWSTR)lpPassword);
+            dwError = RegSetValueExW(hServiceKey,
+                                     L"ObjectName",
+                                     0,
+                                     REG_SZ,
+                                     (LPBYTE)lpServiceStartName,
+                                     (DWORD)((wcslen(lpServiceStartName) + 1) * sizeof(WCHAR)));
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
-        else
-        {
-            /* Delete the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            NULL);
-            if (dwError == ERROR_FILE_NOT_FOUND)
-                dwError = ERROR_SUCCESS;
 
-            if (dwError != ERROR_SUCCESS)
-                goto done;
+        if (lpPassword != NULL)
+        {
+            if (*(LPWSTR)lpPassword != 0)
+            {
+                /* FIXME: Decrypt the password */
+
+                /* Write the password */
+                dwError = ScmSetServicePassword(lpService->szServiceName,
+                                                (LPCWSTR)lpPassword);
+                if (dwError != ERROR_SUCCESS)
+                    goto done;
+            }
+            else
+            {
+                /* Delete the password */
+                dwError = ScmSetServicePassword(lpService->szServiceName,
+                                                NULL);
+                if (dwError == ERROR_FILE_NOT_FOUND)
+                    dwError = ERROR_SUCCESS;
+
+                if (dwError != ERROR_SUCCESS)
+                    goto done;
+            }
         }
     }
 
@@ -2259,22 +2293,20 @@ RCreateServiceW(
         return ERROR_ACCESS_DENIED;
     }
 
-    if (wcslen(lpServiceName) == 0)
-    {
+    if (*lpServiceName == 0)
         return ERROR_INVALID_NAME;
-    }
 
-    if (wcslen(lpBinaryPathName) == 0)
-    {
+    if (*lpBinaryPathName == 0)
         return ERROR_INVALID_PARAMETER;
-    }
 
     /* Check for invalid service type value */
     if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
         (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER) &&
         ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_OWN_PROCESS) &&
         ((dwServiceType & ~SERVICE_INTERACTIVE_PROCESS) != SERVICE_WIN32_SHARE_PROCESS))
-            return ERROR_INVALID_PARAMETER;
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
 
     /* Check for invalid start type value */
     if ((dwStartType != SERVICE_BOOT_START) &&
@@ -2282,7 +2314,9 @@ RCreateServiceW(
         (dwStartType != SERVICE_AUTO_START) &&
         (dwStartType != SERVICE_DEMAND_START) &&
         (dwStartType != SERVICE_DISABLED))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     /* Only drivers can be boot start or system start services */
     if ((dwStartType == SERVICE_BOOT_START) ||
@@ -2290,7 +2324,9 @@ RCreateServiceW(
     {
         if ((dwServiceType != SERVICE_KERNEL_DRIVER) &&
             (dwServiceType != SERVICE_FILE_SYSTEM_DRIVER))
+        {
             return ERROR_INVALID_PARAMETER;
+        }
     }
 
     /* Check for invalid error control value */
@@ -2298,7 +2334,9 @@ RCreateServiceW(
         (dwErrorControl != SERVICE_ERROR_NORMAL) &&
         (dwErrorControl != SERVICE_ERROR_SEVERE) &&
         (dwErrorControl != SERVICE_ERROR_CRITICAL))
+    {
         return ERROR_INVALID_PARAMETER;
+    }
 
     if ((dwServiceType == (SERVICE_WIN32_OWN_PROCESS | SERVICE_INTERACTIVE_PROCESS)) &&
         (lpServiceStartName))
@@ -2328,7 +2366,7 @@ RCreateServiceW(
         if (lpService->bDeleted)
             return ERROR_SERVICE_MARKED_FOR_DELETE;
 
-        /* Return Error exist */
+        /* Return service-exists error */
         return ERROR_SERVICE_EXISTS;
     }
 
@@ -2536,7 +2574,7 @@ RCreateServiceW(
         if (dwError != ERROR_SUCCESS)
             goto done;
 
-        if (lpPassword != NULL && wcslen((LPWSTR)lpPassword) != 0)
+        if (lpPassword != NULL && *(LPWSTR)lpPassword != 0)
         {
             /* FIXME: Decrypt the password */
 
@@ -2927,7 +2965,6 @@ RQueryServiceConfigW(
     LPWSTR lpDependencies = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
-    WCHAR lpEmptyString[] = {0,0};
     LPWSTR lpStr;
 
     DPRINT("RQueryServiceConfigW() called\n");
@@ -3029,7 +3066,7 @@ RQueryServiceConfigW(
         }
         else
         {
-            wcscpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpBinaryPathName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -3042,7 +3079,7 @@ RQueryServiceConfigW(
         }
         else
         {
-            wcscpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpLoadOrderGroup = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -3057,7 +3094,7 @@ RQueryServiceConfigW(
         }
         else
         {
-            wcscpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpDependencies = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -3073,7 +3110,7 @@ RQueryServiceConfigW(
         }
         else
         {
-            wcscpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpServiceStartName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -3086,7 +3123,7 @@ RQueryServiceConfigW(
         }
         else
         {
-            wcscpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpDisplayName = (LPWSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -3258,9 +3295,9 @@ RGetServiceDisplayNameW(
 
         /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer < 2)
+        if (*lpcchBuffer < sizeof(WCHAR))
         {
-            *lpcchBuffer = 2;
+            *lpcchBuffer = sizeof(WCHAR);
             if (lpDisplayName != NULL)
             {
                 *lpDisplayName = 0;
@@ -3334,9 +3371,9 @@ RGetServiceKeyNameW(
 
         /* If the service could not be found and lpcchBuffer is less than 2, windows
            puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer < 2)
+        if (*lpcchBuffer < sizeof(WCHAR))
         {
-            *lpcchBuffer = 2;
+            *lpcchBuffer = sizeof(WCHAR);
             if (lpServiceName != NULL)
             {
                 *lpServiceName = 0;
@@ -3407,310 +3444,113 @@ RChangeServiceConfigA(
     LPSTR lpDisplayName)
 {
     DWORD dwError = ERROR_SUCCESS;
-    PSERVICE_HANDLE hSvc;
-    PSERVICE lpService = NULL;
-    HKEY hServiceKey = NULL;
-    LPWSTR lpDisplayNameW = NULL;
     LPWSTR lpBinaryPathNameW = NULL;
-    LPWSTR lpCanonicalImagePathW = NULL;
     LPWSTR lpLoadOrderGroupW = NULL;
     LPWSTR lpDependenciesW = NULL;
+    LPWSTR lpServiceStartNameW = NULL;
+    LPWSTR lpDisplayNameW = NULL;
+    DWORD dwDependenciesLength = 0;
+    SIZE_T cchLength;
+    int len;
+    LPCSTR lpStr;
 
-    DPRINT("RChangeServiceConfigA() called\n");
-    DPRINT("dwServiceType = %lu\n", dwServiceType);
-    DPRINT("dwStartType = %lu\n", dwStartType);
-    DPRINT("dwErrorControl = %lu\n", dwErrorControl);
-    DPRINT("lpBinaryPathName = %s\n", lpBinaryPathName);
-    DPRINT("lpLoadOrderGroup = %s\n", lpLoadOrderGroup);
-    DPRINT("lpDisplayName = %s\n", lpDisplayName);
-
-    if (ScmShutdown)
-        return ERROR_SHUTDOWN_IN_PROGRESS;
-
-    hSvc = ScmGetServiceFromHandle(hService);
-    if (hSvc == NULL)
+    if (lpBinaryPathName)
     {
-        DPRINT1("Invalid service handle!\n");
-        return ERROR_INVALID_HANDLE;
-    }
-
-    if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
-                                  SERVICE_CHANGE_CONFIG))
-    {
-        DPRINT("Insufficient access rights! 0x%lx\n", hSvc->Handle.DesiredAccess);
-        return ERROR_ACCESS_DENIED;
-    }
-
-    lpService = hSvc->ServiceEntry;
-    if (lpService == NULL)
-    {
-        DPRINT("lpService == NULL!\n");
-        return ERROR_INVALID_HANDLE;
-    }
-
-    /* Lock the service database exclusively */
-    ScmLockDatabaseExclusive();
-
-    if (lpService->bDeleted)
-    {
-        DPRINT("The service has already been marked for delete!\n");
-        dwError = ERROR_SERVICE_MARKED_FOR_DELETE;
-        goto done;
-    }
-
-    /* Open the service key */
-    dwError = ScmOpenServiceKey(lpService->szServiceName,
-                                KEY_SET_VALUE,
-                                &hServiceKey);
-    if (dwError != ERROR_SUCCESS)
-        goto done;
-
-    /* Write service data to the registry */
-
-    if (lpDisplayName != NULL && *lpDisplayName != 0)
-    {
-        /* Set the display name */
-        lpDisplayNameW = HeapAlloc(GetProcessHeap(),
-                                   HEAP_ZERO_MEMORY,
-                                   (strlen(lpDisplayName) + 1) * sizeof(WCHAR));
-        if (lpDisplayNameW == NULL)
+        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
+        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (!lpBinaryPathNameW)
         {
-            dwError = ERROR_NOT_ENOUGH_MEMORY;
-            goto done;
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
         }
-
-        MultiByteToWideChar(CP_ACP,
-                            0,
-                            lpDisplayName,
-                            -1,
-                            lpDisplayNameW,
-                            (int)(strlen(lpDisplayName) + 1));
-
-        RegSetValueExW(hServiceKey,
-                       L"DisplayName",
-                       0,
-                       REG_SZ,
-                       (LPBYTE)lpDisplayNameW,
-                       (DWORD)((wcslen(lpDisplayNameW) + 1) * sizeof(WCHAR)));
-
-        /* Update lpService->lpDisplayName */
-        if (lpService->lpDisplayName)
-            HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
-
-        lpService->lpDisplayName = lpDisplayNameW;
+        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
     }
 
-    if (dwServiceType != SERVICE_NO_CHANGE)
+    if (lpLoadOrderGroup)
     {
-        /* Set the service type */
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"Type",
-                                 0,
-                                 REG_DWORD,
-                                 (LPBYTE)&dwServiceType,
-                                 sizeof(DWORD));
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        lpService->Status.dwServiceType = dwServiceType;
-    }
-
-    if (dwStartType != SERVICE_NO_CHANGE)
-    {
-        /* Set the start value */
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"Start",
-                                 0,
-                                 REG_DWORD,
-                                 (LPBYTE)&dwStartType,
-                                 sizeof(DWORD));
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        lpService->dwStartType = dwStartType;
-    }
-
-    if (dwErrorControl != SERVICE_NO_CHANGE)
-    {
-        /* Set the error control value */
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"ErrorControl",
-                                 0,
-                                 REG_DWORD,
-                                 (LPBYTE)&dwErrorControl,
-                                 sizeof(DWORD));
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        lpService->dwErrorControl = dwErrorControl;
-    }
-
-    if (lpBinaryPathName != NULL && *lpBinaryPathName != 0)
-    {
-        /* Set the image path */
-        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      (strlen(lpBinaryPathName) + 1) * sizeof(WCHAR));
-        if (lpBinaryPathNameW == NULL)
+        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
+        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (!lpLoadOrderGroupW)
         {
-            dwError = ERROR_NOT_ENOUGH_MEMORY;
-            goto done;
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
         }
+        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
+    }
 
-        MultiByteToWideChar(CP_ACP,
-                            0,
-                            lpBinaryPathName,
-                            -1,
-                            lpBinaryPathNameW,
-                            (int)(strlen(lpBinaryPathName) + 1));
-
-        if (lpService->Status.dwServiceType & SERVICE_DRIVER)
+    if (lpDependencies)
+    {
+        lpStr = (LPCSTR)lpDependencies;
+        while (*lpStr)
         {
-            dwError = ScmCanonDriverImagePath(lpService->dwStartType,
-                                              lpBinaryPathNameW,
-                                              &lpCanonicalImagePathW);
-
-            HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-
-            lpBinaryPathNameW = lpCanonicalImagePathW;
+            cchLength = strlen(lpStr) + 1;
+            dwDependenciesLength += (DWORD)cchLength;
+            lpStr = lpStr + cchLength;
         }
+        dwDependenciesLength++;
 
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"ImagePath",
-                                 0,
-                                 REG_EXPAND_SZ,
-                                 (LPBYTE)lpBinaryPathNameW,
-                                 (DWORD)((wcslen(lpBinaryPathNameW) + 1) * sizeof(WCHAR)));
+        lpDependenciesW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwDependenciesLength * sizeof(WCHAR));
+        if (!lpDependenciesW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, (LPCSTR)lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
+    }
 
+    if (lpServiceStartName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
+        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (!lpServiceStartNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+    }
+
+    if (lpDisplayName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
+        lpDisplayNameW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR));
+        if (!lpDisplayNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
+    }
+
+    dwError = RChangeServiceConfigW(hService,
+                                    dwServiceType,
+                                    dwStartType,
+                                    dwErrorControl,
+                                    lpBinaryPathNameW,
+                                    lpLoadOrderGroupW,
+                                    lpdwTagId,
+                                    (LPBYTE)lpDependenciesW,
+                                    dwDependenciesLength,
+                                    lpServiceStartNameW,
+                                    lpPassword,
+                                    dwPwSize,
+                                    lpDisplayNameW);
+
+cleanup:
+    if (lpBinaryPathNameW != NULL)
         HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
 
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-    }
-
-    /* Set the group name */
-    if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
-    {
-        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(),
-                                      HEAP_ZERO_MEMORY,
-                                      (strlen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
-        if (lpLoadOrderGroupW == NULL)
-        {
-            dwError = ERROR_NOT_ENOUGH_MEMORY;
-            goto done;
-        }
-
-        MultiByteToWideChar(CP_ACP,
-                            0,
-                            lpLoadOrderGroup,
-                            -1,
-                            lpLoadOrderGroupW,
-                            (int)(strlen(lpLoadOrderGroup) + 1));
-
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"Group",
-                                 0,
-                                 REG_SZ,
-                                 (LPBYTE)lpLoadOrderGroupW,
-                                 (DWORD)((wcslen(lpLoadOrderGroupW) + 1) * sizeof(WCHAR)));
-        if (dwError != ERROR_SUCCESS)
-        {
-            HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-            goto done;
-        }
-
-        dwError = ScmSetServiceGroup(lpService,
-                                     lpLoadOrderGroupW);
-
+    if (lpLoadOrderGroupW != NULL)
         HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
 
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-    }
-
-    if (lpdwTagId != NULL)
-    {
-        dwError = ScmAssignNewTag(lpService);
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        dwError = RegSetValueExW(hServiceKey,
-                                 L"Tag",
-                                 0,
-                                 REG_DWORD,
-                                 (LPBYTE)&lpService->dwTag,
-                                 sizeof(DWORD));
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-
-        *lpdwTagId = lpService->dwTag;
-    }
-
-    /* Write dependencies */
-    if (lpDependencies != NULL && *lpDependencies != 0)
-    {
-        lpDependenciesW = HeapAlloc(GetProcessHeap(),
-                                    HEAP_ZERO_MEMORY,
-                                    (strlen((LPSTR)lpDependencies) + 1) * sizeof(WCHAR));
-        if (lpDependenciesW == NULL)
-        {
-            dwError = ERROR_NOT_ENOUGH_MEMORY;
-            goto done;
-        }
-
-        MultiByteToWideChar(CP_ACP,
-                            0,
-                            (LPSTR)lpDependencies,
-                            dwDependSize,
-                            lpDependenciesW,
-                            (int)(strlen((LPSTR)lpDependencies) + 1));
-
-        dwError = ScmWriteDependencies(hServiceKey,
-                                       (LPWSTR)lpDependenciesW,
-                                       dwDependSize);
-
+    if (lpDependenciesW != NULL)
         HeapFree(GetProcessHeap(), 0, lpDependenciesW);
 
-        if (dwError != ERROR_SUCCESS)
-            goto done;
-    }
+    if (lpServiceStartNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
 
-    if (lpPassword != NULL)
-    {
-        if (wcslen((LPWSTR)lpPassword) != 0)
-        {
-            /* FIXME: Decrypt the password */
-
-            /* Write the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            (LPCWSTR)lpPassword);
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-        else
-        {
-            /* Delete the password */
-            dwError = ScmSetServicePassword(lpService->szServiceName,
-                                            NULL);
-            if (dwError == ERROR_FILE_NOT_FOUND)
-                dwError = ERROR_SUCCESS;
-
-            if (dwError != ERROR_SUCCESS)
-                goto done;
-        }
-    }
-
-done:
-    /* Unlock the service database */
-    ScmUnlockDatabase();
-
-    if (hServiceKey != NULL)
-        RegCloseKey(hServiceKey);
-
-    DPRINT("RChangeServiceConfigA() done (Error %lu)\n", dwError);
+    if (lpDisplayNameW != NULL)
+        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
 
     return dwError;
 }
@@ -4217,7 +4057,6 @@ RQueryServiceConfigA(
     LPWSTR lpDependencies = NULL;
     DWORD dwDependenciesLength = 0;
     DWORD dwRequiredSize;
-    CHAR lpEmptyString[]={0,0};
     LPSTR lpStr;
 
     DPRINT("RQueryServiceConfigA() called\n");
@@ -4277,28 +4116,28 @@ RQueryServiceConfigA(
     if (lpImagePath != NULL)
         dwRequiredSize += (DWORD)(wcslen(lpImagePath) + 1);
     else
-        dwRequiredSize += 2;
+        dwRequiredSize += 2 * sizeof(CHAR);
 
     if ((lpService->lpGroup != NULL) && (lpService->lpGroup->lpGroupName != NULL))
         dwRequiredSize += (DWORD)(wcslen(lpService->lpGroup->lpGroupName) + 1);
     else
-        dwRequiredSize += 2;
+        dwRequiredSize += 2 * sizeof(CHAR);
 
     /* Add Dependencies length */
     if (lpDependencies != NULL)
         dwRequiredSize += dwDependenciesLength;
     else
-        dwRequiredSize += 2;
+        dwRequiredSize += 2 * sizeof(CHAR);
 
     if (lpServiceStartName != NULL)
         dwRequiredSize += (DWORD)(wcslen(lpServiceStartName) + 1);
     else
-        dwRequiredSize += 2;
+        dwRequiredSize += 2 * sizeof(CHAR);
 
     if (lpService->lpDisplayName != NULL)
         dwRequiredSize += (DWORD)(wcslen(lpService->lpDisplayName) + 1);
     else
-        dwRequiredSize += 2;
+        dwRequiredSize += 2 * sizeof(CHAR);
 
     if (lpServiceConfig == NULL || cbBufSize < dwRequiredSize)
     {
@@ -4329,7 +4168,7 @@ RQueryServiceConfigA(
         }
         else
         {
-            strcpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpBinaryPathName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -4348,7 +4187,7 @@ RQueryServiceConfigA(
         }
         else
         {
-            strcpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpLoadOrderGroup = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -4368,7 +4207,7 @@ RQueryServiceConfigA(
         }
         else
         {
-            strcpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpDependencies = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -4390,7 +4229,7 @@ RQueryServiceConfigA(
         }
         else
         {
-            strcpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpServiceStartName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -4409,7 +4248,7 @@ RQueryServiceConfigA(
         }
         else
         {
-            strcpy(lpStr, lpEmptyString);
+            *lpStr = 0;
         }
 
         lpServiceConfig->lpDisplayName = (LPSTR)((ULONG_PTR)lpStr - (ULONG_PTR)lpServiceConfig);
@@ -4642,7 +4481,7 @@ RGetServiceDisplayNameA(
            puts null in lpDisplayName and puts 1 in lpcchBuffer */
         if (*lpcchBuffer == 0)
         {
-            *lpcchBuffer = 1;
+            *lpcchBuffer = sizeof(CHAR);
             if (lpDisplayName != NULL)
             {
                 *lpDisplayName = 0;
@@ -4740,7 +4579,7 @@ RGetServiceKeyNameA(
            put null in lpDisplayName and puts 1 in lpcchBuffer, verified WINXP. */
         if (*lpcchBuffer == 0)
         {
-            *lpcchBuffer = 1;
+            *lpcchBuffer = sizeof(CHAR);
             if (lpServiceName != NULL)
             {
                 *lpServiceName = 0;
@@ -5112,7 +4951,9 @@ RChangeServiceConfig2A(
 
     if ((Info.dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
         (Info.dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+    {
         return ERROR_INVALID_LEVEL;
+    }
 
     InfoW.dwInfoLevel = Info.dwInfoLevel;
 
@@ -5297,11 +5138,13 @@ ScmSetFailureActions(HKEY hServiceKey,
                                NULL,
                                &dwType,
                                NULL,
-                              &dwRequiredSize);
+                               &dwRequiredSize);
     if (dwError != ERROR_SUCCESS &&
         dwError != ERROR_MORE_DATA &&
         dwError != ERROR_FILE_NOT_FOUND)
+    {
         return dwError;
+    }
 
     dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize)
                                             : sizeof(SERVICE_FAILURE_ACTIONSW);
@@ -5514,7 +5357,9 @@ RChangeServiceConfig2W(
 
     if ((Info.dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
         (Info.dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+    {
         return ERROR_INVALID_LEVEL;
+    }
 
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
@@ -5654,7 +5499,9 @@ RQueryServiceConfig2A(
 
     if ((dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
         (dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+    {
         return ERROR_INVALID_LEVEL;
+    }
 
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
@@ -5742,7 +5589,9 @@ RQueryServiceConfig2A(
         if (dwError != ERROR_SUCCESS &&
             dwError != ERROR_MORE_DATA &&
             dwError != ERROR_FILE_NOT_FOUND)
+        {
             goto done;
+        }
 
         dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSA), dwRequiredSize)
                                                 : sizeof(SERVICE_FAILURE_ACTIONSA);
@@ -5896,7 +5745,9 @@ RQueryServiceConfig2W(
 
     if ((dwInfoLevel < SERVICE_CONFIG_DESCRIPTION) ||
         (dwInfoLevel > SERVICE_CONFIG_FAILURE_ACTIONS))
+    {
         return ERROR_INVALID_LEVEL;
+    }
 
     hSvc = ScmGetServiceFromHandle(hService);
     if (hSvc == NULL)
@@ -5976,7 +5827,9 @@ RQueryServiceConfig2W(
         if (dwError != ERROR_SUCCESS &&
             dwError != ERROR_MORE_DATA &&
             dwError != ERROR_FILE_NOT_FOUND)
+        {
             goto done;
+        }
 
         dwRequiredSize = (dwType == REG_BINARY) ? max(sizeof(SERVICE_FAILURE_ACTIONSW), dwRequiredSize)
                                                 : sizeof(SERVICE_FAILURE_ACTIONSW);
@@ -6150,7 +6003,7 @@ RQueryServiceStatusEx(
     else
         lpStatus->dwProcessId = lpService->lpImage->dwProcessId;
 
-    lpStatus->dwServiceFlags = 0;			/* FIXME */
+    lpStatus->dwServiceFlags = 0;   /* FIXME */
 
     /* Unlock the service database */
     ScmUnlockDatabase();

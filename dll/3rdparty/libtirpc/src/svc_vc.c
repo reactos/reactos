@@ -340,6 +340,10 @@ again:
 	 */
 
 	newxprt = makefd_xprt(sock, r->sendsize, r->recvsize);
+#ifdef __REACTOS__ // CVE-2018-14622
+	if (!newxprt)
+		return (FALSE);
+#endif
 
 	if (!__rpc_set_netbuf(&newxprt->xp_rtaddr, &addr, len))
 		return (FALSE);

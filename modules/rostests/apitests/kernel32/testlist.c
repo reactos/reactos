@@ -10,6 +10,7 @@ extern void func_DeviceIoControl(void);
 extern void func_dosdev(void);
 extern void func_FindActCtxSectionStringW(void);
 extern void func_FindFiles(void);
+extern void func_FLS(void);
 extern void func_FormatMessage(void);
 extern void func_GetComputerNameEx(void);
 extern void func_GetCurrentDirectory(void);
@@ -41,6 +42,7 @@ const struct test winetest_testlist[] =
     { "dosdev",                      func_dosdev },
     { "FindActCtxSectionStringW",    func_FindActCtxSectionStringW },
     { "FindFiles",                   func_FindFiles },
+    { "FLS",                         func_FLS },
     { "FormatMessage",               func_FormatMessage },
     { "GetComputerNameEx",           func_GetComputerNameEx },
     { "GetCurrentDirectory",         func_GetCurrentDirectory },

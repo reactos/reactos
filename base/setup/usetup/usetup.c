@@ -4502,6 +4502,201 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 }
 
 
+/**
+ * @name ProgressTimeOutStringHandler
+ *
+ * Handles the generation (displaying) of the timeout
+ * countdown to the screen dynamically.
+ *
+ * @param   Bar
+ *     A pointer to a progress bar.
+ *
+ * @param   AlwaysUpdate
+ *     Constantly update the progress bar (boolean type).
+ *
+ * @param   Buffer
+ *     A pointer to a string buffer.
+ *
+ * @param   cchBufferSize
+ *     The buffer's size in number of characters.
+ *
+ * @return
+ *     TRUE or FALSE on function termination.
+ *
+ */
+static
+BOOLEAN NTAPI
+ProgressTimeOutStringHandler(
+    IN PPROGRESSBAR Bar,
+    IN BOOLEAN AlwaysUpdate,
+    OUT PSTR Buffer,
+    IN SIZE_T cchBufferSize)
+{
+    ULONG OldProgress = Bar->Progress;
+
+    if (Bar->StepCount == 0)
+    {
+        Bar->Progress = 0;
+    }
+    else
+    {
+        Bar->Progress = Bar->StepCount - Bar->CurrentStep;
+    }
+
+    /* Build the progress string if it has changed */
+    if (Bar->ProgressFormatText &&
+        (AlwaysUpdate || (Bar->Progress != OldProgress)))
+    {
+        RtlStringCchPrintfA(Buffer, cchBufferSize,
+                            Bar->ProgressFormatText, Bar->Progress / max(1, Bar->Width) + 1);
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/**
+ * @name ProgressCountdown
+ *
+ * Displays and draws a red-coloured progress bar with a countdown.
+ * When the timeout is reached, the flush page is displayed for reboot.
+ *
+ * @param   Ir
+ *     A pointer to an input keyboard record.
+ *
+ * @param   TimeOut
+ *     Initial countdown value in seconds.
+ *
+ * @return
+ *     Nothing.
+ *
+ */
+static VOID
+ProgressCountdown(
+    IN PINPUT_RECORD Ir,
+    IN LONG TimeOut)
+{
+    NTSTATUS Status;
+    ULONG StartTime, BarWidth, TimerDiv;
+    LONG TimeElapsed;
+    LONG TimerValue, OldTimerValue;
+    LARGE_INTEGER Timeout;
+    PPROGRESSBAR ProgressBar;
+    BOOLEAN RefreshProgress = TRUE;
+
+    /* Bail out if the timeout is already zero */
+    if (TimeOut <= 0)
+        return;
+
+    /* Create the timeout progress bar and set it up */
+    ProgressBar = CreateProgressBarEx(13,
+                                      26,
+                                      xScreen - 13,
+                                      yScreen - 20,
+                                      10,
+                                      24,
+                                      TRUE,
+                                      FOREGROUND_RED | BACKGROUND_BLUE,
+                                      0,
+                                      NULL,
+                                      MUIGetString(STRING_REBOOTPROGRESSBAR),
+                                      ProgressTimeOutStringHandler);
+
+    BarWidth = max(1, ProgressBar->Width);
+    TimerValue = TimeOut * BarWidth;
+    ProgressSetStepCount(ProgressBar, TimerValue);
+
+    StartTime = NtGetTickCount();
+    CONSOLE_Flush();
+
+    TimerDiv = 1000 / BarWidth;
+    TimerDiv = max(1, TimerDiv);
+    OldTimerValue = TimerValue;
+    while (TRUE)
+    {
+        /* Decrease the timer */
+
+        /*
+         * Compute how much time the previous operations took.
+         * This allows us in particular to take account for any time
+         * elapsed if something slowed down.
+         */
+        TimeElapsed = NtGetTickCount() - StartTime;
+        if (TimeElapsed >= TimerDiv)
+        {
+            /* Increase StartTime by steps of 1 / ProgressBar->Width seconds */
+            TimeElapsed /= TimerDiv;
+            StartTime += (TimerDiv * TimeElapsed);
+
+            if (TimeElapsed <= TimerValue)
+                TimerValue -= TimeElapsed;
+            else
+                TimerValue = 0;
+
+            RefreshProgress = TRUE;
+        }
+
+        if (RefreshProgress)
+        {
+            ProgressSetStep(ProgressBar, OldTimerValue - TimerValue);
+            RefreshProgress = FALSE;
+        }
+
+        /* Stop when the timer reaches zero */
+        if (TimerValue <= 0)
+            break;
+
+        /* Check for user key presses */
+
+        /*
+         * If the timer is used, use a passive wait of maximum 1 second
+         * while monitoring for incoming console input events, so that
+         * we are still able to display the timing count.
+         */
+
+        /* Wait a maximum of 1 second for input events */
+        TimeElapsed = NtGetTickCount() - StartTime;
+        if (TimeElapsed < TimerDiv)
+        {
+            /* Convert the time to NT Format */
+            Timeout.QuadPart = (TimerDiv - TimeElapsed) * -10000LL;
+            Status = NtWaitForSingleObject(StdInput, FALSE, &Timeout);
+        }
+        else
+        {
+            Status = STATUS_TIMEOUT;
+        }
+
+        /* Check whether the input event has been signaled, or a timeout happened */
+        if (Status == STATUS_TIMEOUT)
+        {
+            continue;
+        }
+        if (Status != STATUS_WAIT_0)
+        {
+            /* An error happened, bail out */
+            DPRINT1("NtWaitForSingleObject() failed, Status 0x%08lx\n", Status);
+            break;
+        }
+
+        /* Check for an ENTER key press */
+        while (CONSOLE_ConInKeyPeek(Ir))
+        {
+            if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+            {
+                /* Found it, stop waiting */
+                goto Exit;
+            }
+        }
+    }
+
+Exit:
+    /* Destroy the progress bar and quit */
+    DestroyProgressBar(ProgressBar);
+}
+
+
 /*
  * Displays the QuitPage.
  *
@@ -4572,15 +4767,9 @@ QuitPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetStatusText(MUIGetString(STRING_REBOOTCOMPUTER2));
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return FLUSH_PAGE;
-        }
-    }
+    /* Wait for maximum 15 seconds or an ENTER key before quitting */
+    ProgressCountdown(Ir, 15);
+    return FLUSH_PAGE;
 }
 
 
@@ -4602,19 +4791,11 @@ SuccessPage(PINPUT_RECORD Ir)
     MUIDisplayPage(SUCCESS_PAGE);
 
     if (IsUnattendedSetup)
-    {
         return FLUSH_PAGE;
-    }
 
-    while (TRUE)
-    {
-        CONSOLE_ConInKey(Ir);
-
-        if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
-        {
-            return FLUSH_PAGE;
-        }
-    }
+    /* Wait for maximum 15 seconds or an ENTER key before quitting */
+    ProgressCountdown(Ir, 15);
+    return FLUSH_PAGE;
 }
 
 

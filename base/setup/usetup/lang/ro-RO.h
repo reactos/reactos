@@ -1,4 +1,4 @@
-/* ªtefan Fulea (stefan dot fulea at mail dot md) */
+/* ªtefan Fulea (stefan dot fulea at mail dot com) */
 #pragma once
 
 MUI_LAYOUTS roROLayouts[] =
@@ -147,61 +147,61 @@ static MUI_ENTRY roROIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instalare ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Version Status",
+        "Starea versiunii curente a ReactOS",
         TEXT_STYLE_HIGHLIGHT
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS este în stadiu alfa de dezvoltare, adicã nu are prezintã",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "funcþionalitãþi complete ºi încã nu este recomandatã utilizarea sa",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "ca sistem de operare de zi cu zi. Asiguraþi-vã copii ale datelor",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "în cazul în care încercaþi ReactOS în mod neemulat.",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Apãsaþi ENTER pentru a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Apãsaþi F3 pentru a ieºi fãrã a instala ReactOS.",
         TEXT_STYLE_NORMAL
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Continuare   F3 = Ieºire",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1831,6 +1831,8 @@ MUI_STRING roROStrings[] =
     "   Terminat!"},
     {STRING_REBOOTCOMPUTER2,
     "   ENTER = Repornire calculator"},
+    {STRING_REBOOTPROGRESSBAR,
+    " Calculatorul va reporni în %li secunde... "},
     {STRING_CONSOLEFAIL1,
     "Eºec la deschiderea consolei\r\n\r\n"},
     {STRING_CONSOLEFAIL2,

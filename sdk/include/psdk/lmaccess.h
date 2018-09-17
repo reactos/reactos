@@ -482,7 +482,13 @@ typedef struct _GROUP_INFO_2 {
 	LPWSTR grpi2_comment;
 	DWORD grpi2_group_id;
 	DWORD grpi2_attributes;
-}GROUP_INFO_2,*PGROUP_INFO_2;
+}GROUP_INFO_2,*PGROUP_INFO_2,*LPGROUP_INFO_2;
+typedef struct _GROUP_INFO_3 {
+	LPWSTR grpi3_name;
+	LPWSTR grpi3_comment;
+	PSID grpi3_group_sid;
+	DWORD  grpi3_attributes;
+}GROUP_INFO_3,*PGROUP_INFO_3,*LPGROUP_INFO_3;
 typedef struct _GROUP_INFO_1002 {
 	LPWSTR grpi1002_comment;
 } GROUP_INFO_1002,*PGROUP_INFO_1002,*LPGROUP_INFO_1002;

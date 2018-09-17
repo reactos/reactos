@@ -8,6 +8,7 @@ list(APPEND SOURCE
     epmp.c
     irotp.c
     rpcss_main.c
+    setup.c
     precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/epm_s.c
     ${CMAKE_CURRENT_BINARY_DIR}/irot_s.c)
