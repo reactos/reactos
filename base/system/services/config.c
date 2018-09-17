@@ -677,4 +677,28 @@ done:
     return dwError;
 }
 
+
+DWORD
+ScmDecryptPassword(
+    _In_ PBYTE pPassword,
+    _In_ DWORD dwPasswordSize,
+    _Out_ PWSTR *pClearTextPassword)
+{
+    PWSTR pBuffer;
+
+    /* Allocate a buffer for the decrypted password */
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, dwPasswordSize);
+    if (pBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    /* Decrypt the password */
+    CopyMemory(pBuffer,
+               pPassword,
+               dwPasswordSize);
+
+    *pClearTextPassword = pBuffer;
+
+    return ERROR_SUCCESS;
+}
+
 /* EOF */

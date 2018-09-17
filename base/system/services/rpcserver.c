@@ -1934,6 +1934,7 @@ RChangeServiceConfigW(
     HKEY hServiceKey = NULL;
     LPWSTR lpDisplayNameW = NULL;
     LPWSTR lpImagePathW = NULL;
+    LPWSTR lpClearTextPassword = NULL;
 
     DPRINT("RChangeServiceConfigW() called\n");
     DPRINT("dwServiceType = 0x%lx\n", dwServiceType);
@@ -1941,6 +1942,9 @@ RChangeServiceConfigW(
     DPRINT("dwErrorControl = %lu\n", dwErrorControl);
     DPRINT("lpBinaryPathName = %S\n", lpBinaryPathName);
     DPRINT("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT("lpServiceStartName = %S\n", lpServiceStartName);
+    DPRINT("lpPassword = %p\n", lpPassword);
+    DPRINT("dwPwSite = %lu\n", dwPwSize);
     DPRINT("lpDisplayName = %S\n", lpDisplayName);
 
     if (ScmShutdown)
@@ -2199,13 +2203,25 @@ RChangeServiceConfigW(
         {
             if (*(LPWSTR)lpPassword != 0)
             {
-                /* FIXME: Decrypt the password */
+                /* Decrypt the password */
+                dwError = ScmDecryptPassword(lpPassword,
+                                             dwPwSize,
+                                             &lpClearTextPassword);
+                if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("ScmDecryptPassword failed (Error %lu)\n", dwError);
+                    goto done;
+                }
+                DPRINT1("Clear text password: %S\n", lpClearTextPassword);
 
                 /* Write the password */
                 dwError = ScmSetServicePassword(lpService->szServiceName,
-                                                (LPCWSTR)lpPassword);
+                                                lpClearTextPassword);
                 if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
+                }
             }
             else
             {
@@ -2216,12 +2232,23 @@ RChangeServiceConfigW(
                     dwError = ERROR_SUCCESS;
 
                 if (dwError != ERROR_SUCCESS)
+                {
+                    DPRINT1("ScmSetServicePassword failed (Error %lu)\n", dwError);
                     goto done;
+                }
             }
         }
     }
 
 done:
+    if (lpClearTextPassword != NULL)
+    {
+        /* Wipe and release the password buffer */
+        ZeroMemory(lpClearTextPassword,
+                   (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
+        HeapFree(GetProcessHeap(), 0, lpClearTextPassword);
+    }
+
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
@@ -2260,6 +2287,7 @@ RCreateServiceW(
     PSERVICE lpService = NULL;
     SC_HANDLE hServiceHandle = NULL;
     LPWSTR lpImagePath = NULL;
+    LPWSTR lpClearTextPassword = NULL;
     HKEY hServiceKey = NULL;
     LPWSTR lpObjectName;
 
@@ -2576,11 +2604,16 @@ RCreateServiceW(
 
         if (lpPassword != NULL && *(LPWSTR)lpPassword != 0)
         {
-            /* FIXME: Decrypt the password */
+            /* Decrypt the password */
+            dwError = ScmDecryptPassword(lpPassword,
+                                         dwPwSize,
+                                         &lpClearTextPassword);
+            if (dwError != ERROR_SUCCESS)
+                goto done;
 
             /* Write the password */
             dwError = ScmSetServicePassword(lpServiceName,
-                                            (LPCWSTR)lpPassword);
+                                            lpClearTextPassword);
             if (dwError != ERROR_SUCCESS)
                 goto done;
         }
@@ -2611,6 +2644,14 @@ done:
 
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
+
+    if (lpClearTextPassword != NULL)
+    {
+        /* Wipe and release the password buffer */
+        ZeroMemory(lpClearTextPassword,
+                   (wcslen(lpClearTextPassword) + 1) * sizeof(WCHAR));
+        HeapFree(GetProcessHeap(), 0, lpClearTextPassword);
+    }
 
     if (dwError == ERROR_SUCCESS)
     {
