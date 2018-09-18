@@ -149,7 +149,7 @@ static MSVCRT_size_t msvcrt_heap_size(void *ptr)
 /*********************************************************************
  *		??2@YAPAXI@Z (MSVCRT.@)
  */
-void* CDECL MSVCRT_operator_new(MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH MSVCRT_operator_new(MSVCRT_size_t size)
 {
   void *retval;
   int freed;
@@ -193,7 +193,7 @@ void* CDECL MSVCRT_operator_new_dbg(MSVCRT_size_t size, int type, const char *fi
 /*********************************************************************
  *		??3@YAXPAX@Z (MSVCRT.@)
  */
-void CDECL MSVCRT_operator_delete(void *mem)
+void CDECL DECLSPEC_HOTPATCH MSVCRT_operator_delete(void *mem)
 {
   TRACE("(%p)\n", mem);
   msvcrt_heap_free(mem);
@@ -418,7 +418,7 @@ size_t CDECL _aligned_msize(void *p, MSVCRT_size_t alignment, MSVCRT_size_t offs
 /*********************************************************************
  *		calloc (MSVCRT.@)
  */
-void* CDECL MSVCRT_calloc(MSVCRT_size_t count, MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH MSVCRT_calloc(MSVCRT_size_t count, MSVCRT_size_t size)
 {
   MSVCRT_size_t bytes = count*size;
 
@@ -444,7 +444,7 @@ void* CDECL _calloc_base(MSVCRT_size_t count, MSVCRT_size_t size)
 /*********************************************************************
  *		free (MSVCRT.@)
  */
-void CDECL MSVCRT_free(void* ptr)
+void CDECL DECLSPEC_HOTPATCH MSVCRT_free(void* ptr)
 {
   msvcrt_heap_free(ptr);
 }
@@ -483,7 +483,7 @@ void* CDECL _malloc_base(MSVCRT_size_t size)
 /*********************************************************************
  *		realloc (MSVCRT.@)
  */
-void* CDECL MSVCRT_realloc(void* ptr, MSVCRT_size_t size)
+void* CDECL DECLSPEC_HOTPATCH MSVCRT_realloc(void* ptr, MSVCRT_size_t size)
 {
   if (!ptr) return MSVCRT_malloc(size);
   if (size) return msvcrt_heap_realloc(0, ptr, size);
