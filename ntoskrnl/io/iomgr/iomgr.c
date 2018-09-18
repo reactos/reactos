@@ -651,4 +651,12 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+IoInitializeCrashDump(IN HANDLE PageFileHandle)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */

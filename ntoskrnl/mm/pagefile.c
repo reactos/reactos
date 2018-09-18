@@ -89,6 +89,8 @@ C_ASSERT(FILE_FROM_ENTRY(0xffffffff) < MAX_PAGING_FILES);
 
 static BOOLEAN MmSwapSpaceMessage = FALSE;
 
+static BOOLEAN MmSystemPageFileLocated = FALSE;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -803,6 +805,11 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
 
     MmSwapSpaceMessage = FALSE;
+
+    if (!MmSystemPageFileLocated && BooleanFlagOn(FileObject->DeviceObject->Flags, DO_SYSTEM_BOOT_PARTITION))
+    {
+        MmSystemPageFileLocated = IoInitializeCrashDump(FileHandle);
+    }
 
     return STATUS_SUCCESS;
 }
