@@ -19,6 +19,8 @@
 
 static const unsigned char CRYPT_LMhash_Magic[8] =
     { 'K', 'G', 'S', '!', '@', '#', '$', '%' };
+static const unsigned char DefaultSessionKey[16] =
+    {'D', 'e', 'f', 'S', 'e', 's', 's', 'i', 'o', 'n', 'K', 'e', 'y', '!', '@', '#'};
 
 /******************************************************************************
  * SystemFunction001  [ADVAPI32.@]
@@ -446,17 +448,35 @@ WINAPI SystemFunction025(const BYTE *in, const BYTE *key, LPBYTE out)
 }
 
 /**********************************************************************
+ * SystemFunction028  [ADVAPI32.@]
+ *
+ * Retrieves an encryption session key...
+ *
+ * PARAMS
+ *   ContextHandle [I] RPC context handle
+ *   SessionKey    [O] buffer to receive the session key (16 bytes)
+ *
+ * RETURNS
+ *  Success: STATUS_LOCAL_USER_SESSION_KEY
  *
  * @unimplemented
  */
-INT
+NTSTATUS
 WINAPI
-SystemFunction028(INT a, INT b)
+SystemFunction028(
+    _In_ PVOID ContextHandle,
+    _Out_ LPBYTE SessionKey)
 {
-    //NDRCContextBinding()
+    /* HACK: Always return the default key */
+    memcpy(SessionKey, DefaultSessionKey, sizeof(DefaultSessionKey));
+    return STATUS_LOCAL_USER_SESSION_KEY;
+
+#if 0
+    //NDRCContextBinding();
     //SystemFunction034()
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 28;
+#endif
 }
 
 
