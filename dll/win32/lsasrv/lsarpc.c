@@ -1409,7 +1409,7 @@ LsarpOpenAccount(
                               AccountObject);
     if (!NT_SUCCESS(Status))
     {
-        ERR("LsapOpenDbObject failed (Status 0x%08lx)\n", Status);
+        ERR("LsapOpenDbObject(Accounts/%S) failed (Status 0x%08lx)\n", SidString, Status);
     }
 
     if (SidString != NULL)
@@ -3918,8 +3918,13 @@ NTSTATUS WINAPI CredrReadDomainCredentials(
 
 
 /* Function 65 */
-NTSTATUS WINAPI CredrDelete(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrDelete(
+    handle_t hBinding,
+    LPWSTR TargetName,
+    DWORD Type,
+    DWORD Flags)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3927,8 +3932,13 @@ NTSTATUS WINAPI CredrDelete(
 
 
 /* Function 66 */
-NTSTATUS WINAPI CredrGetTargetInfo(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrGetTargetInfo(
+    handle_t hBinding,
+    LPWSTR TargetName,
+    DWORD Flags,
+    CREDPR_TARGET_INFORMATION *TargetInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -3936,7 +3946,9 @@ NTSTATUS WINAPI CredrGetTargetInfo(
 
 
 /* Function 67 */
-NTSTATUS WINAPI CredrProfileLoaded(
+NTSTATUS
+WINAPI
+CredrProfileLoaded(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -3983,8 +3995,12 @@ NTSTATUS WINAPI LsarLookupNames3(
 
 
 /* Function 69 */
-NTSTATUS WINAPI CredrGetSessionTypes(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrGetSessionTypes(
+    handle_t hBinding,
+    DWORD MaximumPersistCount,
+    DWORD *MaximumPersist)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -4045,8 +4061,14 @@ NTSTATUS WINAPI LsarSetForestTrustInformation(
 
 
 /* Function 75 */
-NTSTATUS WINAPI CredrRename(
-    handle_t hBinding)
+NTSTATUS
+WINAPI
+CredrRename(
+    handle_t hBinding,
+    LPWSTR OldTargetName,
+    LPWSTR NewTargetName,
+    DWORD Type,
+    DWORD Flags)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
