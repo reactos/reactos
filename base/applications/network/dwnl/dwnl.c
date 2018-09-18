@@ -424,7 +424,7 @@ download_file(IN LPCWSTR pszUrl,
 
     GetLocalTime(&sysTime);
 
-    ConPrintf(StdOut, L"--%d-%d-%d %d:%d:%d-- %s\n\t=> %s\n",
+    ConPrintf(StdOut, L"--%d-%02d-%02d %02d:%02d:%02d-- %s\n\t=> %s\n",
           sysTime.wYear, sysTime.wMonth, sysTime.wDay,
           sysTime.wHour, sysTime.wMinute, sysTime.wSecond,
           szUrl, pszFile);
