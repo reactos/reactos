@@ -1,8 +1,11 @@
 #define COBJMACROS
 #include <urlmon.h>
 #include <wininet.h>
-#include <tchar.h>
+#include <wchar.h>
 #include <strsafe.h>
+#include <conutils.h>
+
+#include "resource.h"
 
 /* FIXME: add correct definitions to urlmon.idl */
 #ifdef UNICODE
@@ -19,8 +22,8 @@ typedef struct
 {
     const IBindStatusCallbackVtbl* lpIBindStatusCallbackVtbl;
     LONG ref;
-    TCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1];
-    TCHAR szMimeType[128];
+    WCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1];
+    WCHAR szMimeType[128];
     UINT64 Size;
     UINT64 Progress;
     UINT bResolving : 1;
@@ -39,10 +42,10 @@ CBindStatusCallback_Destroy(CBindStatusCallback *This)
 }
 
 static void
-write_status(LPCTSTR lpFmt, ...)
+write_status(LPCWSTR lpFmt, ...)
 {
     va_list args;
-    TCHAR szTxt[128];
+    WCHAR szTxt[128];
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
     va_start(args, lpFmt);
@@ -51,17 +54,19 @@ write_status(LPCTSTR lpFmt, ...)
 
     if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
     {
-        _tprintf(_T("\r%*.*s"), -(csbi.dwSize.X - 1), csbi.dwSize.X - 1, szTxt);
+        ConPrintf(StdOut, L"\r%*.*s", -(csbi.dwSize.X - 1), csbi.dwSize.X - 1, szTxt);
     }
     else
     {
-        _putts(szTxt);
+        ConPuts(StdOut, szTxt);
     }
 }
 
 static void
 CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
 {
+    WCHAR szMessage[MAX_PATH];
+
     /* FIXME: better output */
     if (This->Size != 0)
     {
@@ -71,12 +76,16 @@ CBindStatusCallback_UpdateProgress(CBindStatusCallback *This)
         if (Percentage > 99)
             Percentage = 99;
 
-        write_status(_T("%2d%% (%I64u bytes downloaded)"), Percentage, This->Progress);
+        LoadStringW(NULL, IDS_BYTES_DOWNLOADED_FULL, szMessage, ARRAYSIZE(szMessage));
+
+        write_status(szMessage, Percentage, This->Progress);
     }
     else
     {
+        LoadStringW(NULL, IDS_BYTES_DOWNLOADED, szMessage, ARRAYSIZE(szMessage));
+
         /* Unknown size */
-        write_status(_T("%I64u bytes downloaded"), This->Progress);
+        write_status(szMessage, This->Progress);
     }
 }
 
@@ -168,10 +177,10 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
         case BINDSTATUS_FINDINGRESOURCE:
             if (!This->bResolving)
             {
-                _tcscpy(This->szHostName, szStatusText);
+                wcscpy(This->szHostName, szStatusText);
                 This->bResolving = TRUE;
 
-                _tprintf(_T("Resolving %s... "), This->szHostName);
+                ConResPrintf(StdOut, IDS_RESOLVING, This->szHostName);
             }
             break;
 
@@ -179,14 +188,16 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
             This->bConnecting = TRUE;
             This->bSendingReq = FALSE;
             This->bBeginTransfer = FALSE;
-            This->szMimeType[0] = _T('\0');
+            This->szMimeType[0] = L'\0';
             if (This->bResolving)
             {
-                _tprintf(_T("done.\n"));
-                _tprintf(_T("Connecting to %s[%s]... "), This->szHostName, szStatusText);
+                ConResPrintf(StdOut, IDS_DONE);
+                ConResPrintf(StdOut, IDS_CONNECTING_TO_FULL, This->szHostName, szStatusText);
             }
             else
-                _tprintf(_T("Connecting to %s... "), szStatusText);
+            {
+                ConResPrintf(StdOut, IDS_CONNECTING_TO, szStatusText);
+            }
             break;
 
         case BINDSTATUS_REDIRECTING:
@@ -194,24 +205,24 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
             This->bConnecting = FALSE;
             This->bSendingReq = FALSE;
             This->bBeginTransfer = FALSE;
-            This->szMimeType[0] = _T('\0');
-            _tprintf(_T("Redirecting to %s... "), szStatusText);
+            This->szMimeType[0] = L'\0';
+            ConResPrintf(StdOut, IDS_REDIRECTING_TO, szStatusText);
             break;
 
         case BINDSTATUS_SENDINGREQUEST:
             This->bBeginTransfer = FALSE;
-            This->szMimeType[0] = _T('\0');
+            This->szMimeType[0] = L'\0';
             if (This->bResolving || This->bConnecting)
-                _tprintf(_T("done.\n"));
+                ConResPrintf(StdOut, IDS_DONE);
 
             if (!This->bSendingReq)
-                _tprintf(_T("Sending request... "));
+                ConResPrintf(StdOut, IDS_SEND_REQUEST);
 
             This->bSendingReq = TRUE;
             break;
 
         case BINDSTATUS_MIMETYPEAVAILABLE:
-            _tcscpy(This->szMimeType, szStatusText);
+            wcscpy(This->szMimeType, szStatusText);
             break;
 
         case BINDSTATUS_BEGINDOWNLOADDATA:
@@ -219,24 +230,23 @@ CBindStatusCallback_OnProgress(IBindStatusCallback *iface,
             This->Size = (UINT64)ulProgressMax;
 
             if (This->bSendingReq)
-                _tprintf(_T("done.\n"));
+                ConResPrintf(StdOut, IDS_DONE);
 
             if (!This->bBeginTransfer && This->Size != 0)
             {
-                if (This->szMimeType[0] != _T('\0'))
-                    _tprintf(_T("Length: %I64u [%s]\n"), This->Size, This->szMimeType);
+                if (This->szMimeType[0] != L'\0')
+                    ConResPrintf(StdOut, IDS_LENGTH_FULL, This->Size, This->szMimeType);
                 else
-                    _tprintf(_T("Length: %I64u\n"), This->Size);
+                    ConResPrintf(StdOut, IDS_LENGTH, This->Size);
             }
 
-            _tprintf(_T("\n"));
+            ConPuts(StdOut, L"\n");
 
             This->bBeginTransfer = TRUE;
             break;
 
         case BINDSTATUS_ENDDOWNLOADDATA:
-            write_status(_T("File saved."));
-            _tprintf(_T("\n"));
+            ConResPrintf(StdOut, IDS_FILE_SAVED);
             break;
 
         case BINDSTATUS_DOWNLOADINGDATA:
@@ -319,7 +329,7 @@ CreateBindStatusCallback(void)
 
 static int
 get_display_url(IN LPURL_COMPONENTS purl,
-                OUT TCHAR *szBuffer,
+                OUT LPWSTR szBuffer,
                 IN PDWORD pdwBufferSize)
 {
     URL_COMPONENTS urlc;
@@ -336,23 +346,24 @@ get_display_url(IN LPURL_COMPONENTS purl,
 }
 
 static int
-download_file(IN LPCTSTR pszUrl,
-              IN LPCTSTR pszFile  OPTIONAL)
+download_file(IN LPCWSTR pszUrl,
+              IN LPCWSTR pszFile OPTIONAL)
 {
-    TCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH + 1];
-    TCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1];
-    TCHAR szUserName[INTERNET_MAX_USER_NAME_LENGTH + 1];
-    TCHAR szPassWord[INTERNET_MAX_PASSWORD_LENGTH + 1];
-    TCHAR szUrlPath[INTERNET_MAX_PATH_LENGTH + 1];
-    TCHAR szExtraInfo[INTERNET_MAX_PATH_LENGTH + 1];
-    TCHAR szUrl[INTERNET_MAX_URL_LENGTH + 1];
+    WCHAR szScheme[INTERNET_MAX_SCHEME_LENGTH + 1];
+    WCHAR szHostName[INTERNET_MAX_HOST_NAME_LENGTH + 1];
+    WCHAR szUserName[INTERNET_MAX_USER_NAME_LENGTH + 1];
+    WCHAR szPassWord[INTERNET_MAX_PASSWORD_LENGTH + 1];
+    WCHAR szUrlPath[INTERNET_MAX_PATH_LENGTH + 1];
+    WCHAR szExtraInfo[INTERNET_MAX_PATH_LENGTH + 1];
+    WCHAR szUrl[INTERNET_MAX_URL_LENGTH + 1];
     DWORD dwUrlLen;
     LPTSTR pszFilePart;
     URL_COMPONENTS urlc;
     IBindStatusCallback *pbsc;
     int iRet;
+    SYSTEMTIME sysTime;
 
-    if (pszFile != NULL && pszFile[0] == _T('\0'))
+    if (pszFile != NULL && pszFile[0] == L'\0')
         pszFile = NULL;
 
     urlc.dwStructSize = sizeof(urlc);
@@ -368,7 +379,7 @@ download_file(IN LPCTSTR pszUrl,
     urlc.dwUrlPathLength = sizeof(szUrlPath) / sizeof(szUrlPath[0]);
     urlc.lpszExtraInfo = szExtraInfo;
     urlc.dwExtraInfoLength = sizeof(szExtraInfo) / sizeof(szExtraInfo[0]);
-    if (!InternetCrackUrl(pszUrl, _tcslen(pszUrl), ICU_ESCAPE, &urlc))
+    if (!InternetCrackUrl(pszUrl, wcslen(pszUrl), ICU_ESCAPE, &urlc))
         return DWNL_E_LASTERROR;
 
     if (urlc.nScheme != INTERNET_SCHEME_FTP &&
@@ -381,15 +392,15 @@ download_file(IN LPCTSTR pszUrl,
 
     if (urlc.nScheme == INTERNET_SCHEME_FTP && urlc.dwUserNameLength == 0 && urlc.dwPasswordLength == 0)
     {
-        _tcscpy(szUserName, _T("anonymous"));
-        urlc.dwUserNameLength = _tcslen(szUserName);
+        wcscpy(szUserName, L"anonymous");
+        urlc.dwUserNameLength = wcslen(szUserName);
     }
 
     /* FIXME: Get file name from server */
     if (urlc.dwUrlPathLength == 0 && pszFile == NULL)
         return DWNL_E_NEEDTARGETFILENAME;
 
-    pszFilePart = _tcsrchr(szUrlPath, _T('/'));
+    pszFilePart = wcsrchr(szUrlPath, L'/');
     if (pszFilePart != NULL)
         pszFilePart++;
 
@@ -411,7 +422,12 @@ download_file(IN LPCTSTR pszUrl,
     if (iRet <= 0)
         return iRet;
 
-    _tprintf(_T("Download `%s\'\n\t=> `%s\'\n"), szUrl, pszFile);
+    GetLocalTime(&sysTime);
+
+    ConPrintf(StdOut, L"--%d-%d-%d %d:%d:%d-- %s\n\t=> %s\n",
+          sysTime.wYear, sysTime.wMonth, sysTime.wDay,
+          sysTime.wHour, sysTime.wMinute, sysTime.wSecond,
+          szUrl, pszFile);
 
     /* Generate the URL to download */
     dwUrlLen = sizeof(szUrl) / sizeof(szUrl[0]);
@@ -435,19 +451,19 @@ download_file(IN LPCTSTR pszUrl,
 static int
 print_err(int iErr)
 {
-    write_status(_T(""));
+    write_status(L"");
 
     if (iErr == DWNL_E_LASTERROR)
     {
         if (GetLastError() == ERROR_SUCCESS)
         {
             /* File not found */
-            _ftprintf(stderr, _T("\nERROR: Download failed.\n"));
+            ConResPrintf(StdErr, IDS_ERROR_DOWNLOAD);
         }
         else
         {
             /* Display last error code */
-            _ftprintf(stderr, _T("\nERROR: %u\n"), GetLastError());
+            ConResPrintf(StdErr, IDS_ERROR_CODE, GetLastError());
         }
     }
     else
@@ -455,11 +471,11 @@ print_err(int iErr)
         switch (iErr)
         {
             case DWNL_E_NEEDTARGETFILENAME:
-                _ftprintf(stderr, _T("\nERROR: Cannot determine filename, please specify a destination file name.\n"));
+                ConResPrintf(StdErr, IDS_ERROR_FILENAME);
                 break;
 
             case DWNL_E_UNSUPPORTEDSCHEME:
-                _ftprintf(stderr, _T("\nERROR: Unsupported protocol.\n"));
+                ConResPrintf(StdErr, IDS_ERROR_PROTOCOL);
                 break;
         }
     }
@@ -467,13 +483,16 @@ print_err(int iErr)
     return 1;
 }
 
-int _tmain(int argc, TCHAR **argv)
+int wmain(int argc, WCHAR **argv)
 {
     int iErr, iRet = 0;
 
+    /* Initialize the Console Standard Streams */
+    ConInitStdStreams();
+
     if(argc != 2 && argc != 3)
     {
-        _tprintf(_T("Usage: dwnl URL [DESTINATION]"));
+        ConResPrintf(StdOut, IDS_USAGE);
         return 2;
     }
 
