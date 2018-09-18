@@ -12,6 +12,12 @@
 #include <advapi32.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
+NTSTATUS
+WINAPI
+SystemFunction004(
+    const struct ustring *in,
+    const struct ustring *key,
+    struct ustring *out);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -162,21 +168,54 @@ ScmEncryptPassword(
     _Out_ PBYTE *pEncryptedPassword,
     _Out_ PDWORD pEncryptedPasswordSize)
 {
-    DWORD dwSize;
+    struct ustring inData, keyData, outData;
+    PCHAR pszKey = "TestEncryptionKey";
     PBYTE pBuffer;
+    NTSTATUS Status;
 
-    dwSize = (wcslen(pClearTextPassword) + 1) * sizeof(WCHAR);
+    inData.Length = (wcslen(pClearTextPassword) + 1) * sizeof(WCHAR);
+    inData.MaximumLength = inData.Length;
+    inData.Buffer = (unsigned char *)pClearTextPassword;
 
-    pBuffer = HeapAlloc(GetProcessHeap(), 0, dwSize);
+    keyData.Length = strlen(pszKey);
+    keyData.MaximumLength = keyData.Length;
+    keyData.Buffer = (unsigned char *)pszKey;
+
+    outData.Length = 0;
+    outData.MaximumLength = 0;
+    outData.Buffer = NULL;
+
+    /* Get the required buffer size */
+    Status = SystemFunction004(&inData,
+                               &keyData,
+                               &outData);
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        ERR("SystemFunction004 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Allocate a buffer for the encrypted password */
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, outData.Length);
     if (pBuffer == NULL)
         return ERROR_OUTOFMEMORY;
 
-    CopyMemory(pBuffer,
-               pClearTextPassword,
-               dwSize);
+    outData.MaximumLength = outData.Length;
+    outData.Buffer = pBuffer;
 
-    *pEncryptedPassword = pBuffer;
-    *pEncryptedPasswordSize = dwSize;
+    /* Encrypt the password */
+    Status = SystemFunction004(&inData,
+                               &keyData,
+                               &outData);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SystemFunction004 failed (Status 0x%08lx)\n", Status);
+        HeapFree(GetProcessHeap(), 0, pBuffer);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    *pEncryptedPassword = outData.Buffer;
+    *pEncryptedPasswordSize = outData.Length;
 
     return ERROR_SUCCESS;
 }
@@ -395,12 +434,12 @@ done:
     if (lpPasswordW != NULL)
     {
         /* Wipe and release the password buffers */
-        ZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
+        SecureZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpPasswordW);
 
         if (lpEncryptedPassword != NULL)
         {
-            ZeroMemory(lpEncryptedPassword, dwPasswordSize);
+            SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
             HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
         }
     }
@@ -498,7 +537,7 @@ done:
     if (lpEncryptedPassword != NULL)
     {
         /* Wipe and release the password buffer */
-        ZeroMemory(lpEncryptedPassword, dwPasswordSize);
+        SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
         HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
     }
 
@@ -723,12 +762,12 @@ done:
     if (lpPasswordW != NULL)
     {
         /* Wipe and release the password buffers */
-        ZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
+        SecureZeroMemory(lpPasswordW, (wcslen(lpPasswordW) + 1) * sizeof(WCHAR));
         HeapFree(GetProcessHeap(), 0, lpPasswordW);
 
         if (lpEncryptedPassword != NULL)
         {
-            ZeroMemory(lpEncryptedPassword, dwPasswordSize);
+            SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
             HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
         }
     }
@@ -837,7 +876,7 @@ done:
     if (lpEncryptedPassword != NULL)
     {
         /* Wipe and release the password buffers */
-        ZeroMemory(lpEncryptedPassword, dwPasswordSize);
+        SecureZeroMemory(lpEncryptedPassword, dwPasswordSize);
         HeapFree(GetProcessHeap(), 0, lpEncryptedPassword);
     }
 
