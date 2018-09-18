@@ -14,3 +14,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_RU_RU
+    #include "lang/ru-RU.rc"
+#endif
