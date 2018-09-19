@@ -19,6 +19,12 @@ SystemFunction004(
     const struct ustring *key,
     struct ustring *out);
 
+NTSTATUS
+WINAPI
+SystemFunction028(
+    IN PVOID ContextHandle,
+    OUT LPBYTE SessionKey);
+
 /* FUNCTIONS *****************************************************************/
 
 handle_t __RPC_USER
@@ -169,17 +175,26 @@ ScmEncryptPassword(
     _Out_ PDWORD pEncryptedPasswordSize)
 {
     struct ustring inData, keyData, outData;
-    PCHAR pszKey = "TestEncryptionKey";
+    BYTE SessionKey[16];
     PBYTE pBuffer;
     NTSTATUS Status;
+
+    /* Get the session key */
+    Status = SystemFunction028(NULL,
+                               SessionKey);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("SystemFunction028 failed (Status 0x%08lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
 
     inData.Length = (wcslen(pClearTextPassword) + 1) * sizeof(WCHAR);
     inData.MaximumLength = inData.Length;
     inData.Buffer = (unsigned char *)pClearTextPassword;
 
-    keyData.Length = strlen(pszKey);
+    keyData.Length = sizeof(SessionKey);
     keyData.MaximumLength = keyData.Length;
-    keyData.Buffer = (unsigned char *)pszKey;
+    keyData.Buffer = SessionKey;
 
     outData.Length = 0;
     outData.MaximumLength = 0;
