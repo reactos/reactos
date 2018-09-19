@@ -17,9 +17,11 @@ WINAPI
 SchedEventLogoff(
     PWLX_NOTIFICATION_INFO pInfo)
 {
+#if 0
     SC_HANDLE hManager = NULL;
     SC_HANDLE hService = NULL;
     SERVICE_STATUS ServiceStatus;
+#endif
 
     TRACE("SchedEventLogoff\n");
     TRACE("Size: %lu\n", pInfo->Size);
@@ -31,6 +33,7 @@ SchedEventLogoff(
     TRACE("hDesktop: %p\n", pInfo->hDesktop);
     TRACE("pStatusCallback: %p\n", pInfo->pStatusCallback);
 
+#if 0
     hManager = OpenSCManagerW(NULL, NULL, SC_MANAGER_CONNECT);
     if (hManager == NULL)
     {
@@ -56,6 +59,7 @@ done:
 
     if (hManager != NULL)
         CloseServiceHandle(hManager);
+#endif
 }
 
 
