@@ -335,6 +335,127 @@ SharedFace_Release(PSHARED_FACE Ptr)
     IntUnLockFreeType();
 }
 
+#if DBG
+VOID DumpFontGDI(PFONTGDI FontGDI)
+{
+    const char *family_name;
+    const char *style_name;
+    FT_Face Face;
+
+    if (!FontGDI)
+    {
+        DPRINT("FontGDI NULL\n");
+        return;
+    }
+
+    Face = (FontGDI->SharedFace ? FontGDI->SharedFace->Face : NULL);
+    if (Face)
+    {
+        family_name = Face->family_name;
+        if (!family_name)
+            family_name = "<NULL>";
+
+        style_name = Face->style_name;
+        if (!style_name)
+            style_name = "<NULL>";
+    }
+    else
+    {
+        family_name = "<invalid>";
+        style_name = "<invalid>";
+    }
+
+    DPRINT("family_name '%s', style_name '%s', FontGDI %p, FontObj %p, iUnique %lu, SharedFace %p, Face %p, CharSet %u, Filename '%S'\n",
+        family_name,
+        style_name,
+        FontGDI,
+        FontGDI->FontObj,
+        FontGDI->iUnique,
+        FontGDI->SharedFace,
+        Face,
+        FontGDI->CharSet,
+        FontGDI->Filename);
+}
+
+VOID DumpFontList(PLIST_ENTRY Head)
+{
+    PLIST_ENTRY Entry;
+    PFONT_ENTRY CurrentEntry;
+    PFONTGDI FontGDI;
+
+    DPRINT("## DumpFontList(%p)\n", Head);
+
+    for (Entry = Head->Flink; Entry != Head; Entry = Entry->Flink)
+    {
+        CurrentEntry = CONTAINING_RECORD(Entry, FONT_ENTRY, ListEntry);
+        FontGDI = CurrentEntry->Font;
+
+        DumpFontGDI(FontGDI);
+    }
+}
+
+VOID DumpFontSubstEntry(PFONTSUBST_ENTRY pSubstEntry)
+{
+    DPRINT("%wZ,%u -> %wZ,%u\n",
+        &pSubstEntry->FontNames[FONTSUBST_FROM],
+        pSubstEntry->CharSets[FONTSUBST_FROM],
+        &pSubstEntry->FontNames[FONTSUBST_TO],
+        pSubstEntry->CharSets[FONTSUBST_TO]);
+}
+
+VOID DumpFontSubstList(VOID)
+{
+    PLIST_ENTRY         pHead = &g_FontSubstListHead;
+    PLIST_ENTRY         pListEntry;
+    PFONTSUBST_ENTRY    pSubstEntry;
+
+    DPRINT("## DumpFontSubstList\n");
+
+    for (pListEntry = pHead->Flink;
+         pListEntry != pHead;
+         pListEntry = pListEntry->Flink)
+    {
+        pSubstEntry =
+            (PFONTSUBST_ENTRY)CONTAINING_RECORD(pListEntry, FONT_ENTRY, ListEntry);
+
+        DumpFontSubstEntry(pSubstEntry);
+    }
+}
+
+VOID DumpPrivateFontList(BOOL bDoLock)
+{
+    PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
+
+    if (!Win32Process)
+        return;
+
+    if (bDoLock)
+        IntLockProcessPrivateFonts(Win32Process);
+
+    DumpFontList(&Win32Process->PrivateFontListHead);
+
+    if (bDoLock)
+        IntUnLockProcessPrivateFonts(Win32Process);
+}
+
+VOID DumpGlobalFontList(BOOL bDoLock)
+{
+    if (bDoLock)
+        IntLockGlobalFonts();
+
+    DumpFontList(&g_FontListHead);
+
+    if (bDoLock)
+        IntUnLockGlobalFonts();
+}
+
+VOID DumpFontInfo(BOOL bDoLock)
+{
+    DumpGlobalFontList(bDoLock);
+    DumpPrivateFontList(bDoLock);
+    DumpFontSubstList();
+}
+#endif
 
 /*
  * IntLoadFontSubstList --- loads the list of font substitutes
@@ -521,6 +642,10 @@ InitFontSupport(VOID)
 
     IntLoadSystemFonts();
     IntLoadFontSubstList(&g_FontSubstListHead);
+
+#if DBG
+    DumpFontInfo(TRUE);
+#endif
 
     return TRUE;
 }
@@ -1524,6 +1649,9 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
             Index++;
         }
         break;
+    case TCI_SRCLOCALE:
+        UNIMPLEMENTED;
+        return FALSE;
     default:
         return FALSE;
     }
@@ -4274,7 +4402,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0x0F);
     if (Byte == DEFAULT_PITCH)
         Byte = VARIABLE_PITCH;
-    if ((Byte & FIXED_PITCH) || (Byte & MONO_FONT))
+    if (Byte == FIXED_PITCH)
     {
         if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
         {
@@ -4284,7 +4412,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             Penalty += 15000;
         }
     }
-    if (Byte & VARIABLE_PITCH)
+    if (Byte == VARIABLE_PITCH)
     {
         if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
         {
@@ -4335,37 +4463,12 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     Byte = (LogFont->lfPitchAndFamily & 0xF0);
     if (Byte != FF_DONTCARE)
     {
-        if (Byte & FF_MODERN)
-        {
-            if (TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH)
-            {
-                /* FixedPitch Penalty 15000 */
-                /* Requested a fixed pitch font, but the candidate is a
-                   variable pitch font. */
-                Penalty += 15000;
-            }
-        }
-
-        if ((Byte & FF_ROMAN) || (Byte & FF_SWISS))
-        {
-            if (!(TM->tmPitchAndFamily & _TMPF_VARIABLE_PITCH))
-            {
-                /* PitchVariable Penalty 350 */
-                /* Requested a variable pitch font, but the candidate is not a
-                   variable pitch font. */
-                Penalty += 350;
-            }
-        }
-
-#define FF_MASK  (FF_DECORATIVE | FF_SCRIPT | FF_SWISS)
-        if ((Byte & FF_MASK) != (TM->tmPitchAndFamily & FF_MASK))
+        if (Byte != (TM->tmPitchAndFamily & 0xF0))
         {
             /* Family Penalty 9000 */
             /* Requested a family, but the candidate's family is different. */
             Penalty += 9000;
         }
-#undef FF_MASK
-
         if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
         {
             /* FamilyUnknown Penalty 8000 */

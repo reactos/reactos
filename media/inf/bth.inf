@@ -60,6 +60,10 @@ BluetoothClassName="Bluetooth Radios"
 BTUSB.DeviceDesc="Obecný USB Bluetooth vysílač"
 BluetoothClassName="Bluetooth vysílače"
 
+[Strings.0407]
+BTUSB.DeviceDesc="USB-Treiber für Bluetooth-Funkgerät"
+BluetoothClassName="Bluetooth Funkgeräte"
+
 [Strings.0a]
 ReactOS = "Equipo de ReactOS"
 BTUSB.DeviceDesc="Radio Bluetooth USB genérica"

@@ -42,6 +42,7 @@
 #include <strsafe.h>
 
 #include <reactos/undocuser.h>
+#include <reactos/undocmpr.h>
 
 BOOL
 WINAPI

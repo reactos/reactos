@@ -797,6 +797,12 @@ IopVerifyDiskSignature(
     OUT PULONG Signature
 );
 
+BOOLEAN
+NTAPI
+IoInitializeCrashDump(
+    IN HANDLE PageFileHandle
+);
+
 //
 // Device/Volume Routines
 //

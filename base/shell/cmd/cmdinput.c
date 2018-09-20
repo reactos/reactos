@@ -458,6 +458,13 @@ BOOL ReadCommand(LPTSTR str, INT maxlen)
                         break;
 
                     /*
+                     * Fully print the entered string
+                     * so the command prompt would not overwrite it.
+                     */
+                    SetCursorXY(orgx, orgy);
+                    ConOutPrintf(_T("%s"), str);
+
+                    /*
                      * A Ctrl-C. Do not clear the command line,
                      * but return an empty string in str.
                      */

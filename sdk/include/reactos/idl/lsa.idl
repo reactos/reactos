@@ -581,6 +581,22 @@ typedef struct _LSA_FOREST_TRUST_COLLISION_INFORMATION {
 } LSA_FOREST_TRUST_COLLISION_INFORMATION, *PLSA_FOREST_TRUST_COLLISION_INFORMATION;
 cpp_quote("#endif")
 
+
+/* Credentials */
+
+typedef struct _CREDPR_TARGET_INFORMATION
+{
+    LPWSTR TargetName;
+    LPWSTR NetbiosServerName;
+    LPWSTR DnsServerName;
+    LPWSTR NetbiosDomainName;
+    LPWSTR DnsDomainName;
+    LPWSTR DnsTreeName;
+    LPWSTR PackageName;
+    ULONG Flags;
+} CREDPR_TARGET_INFORMATION, *PCREDPR_TARGET_INFORMATION;
+
+
 [
     uuid(12345778-1234-abcd-ef00-0123456789ab),
     version(0.0),
@@ -1007,15 +1023,27 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [in] handle_t hBinding); /* FIXME */
 
     /* Function 65 */
-    NTSTATUS __stdcall CredrDelete(
-        [in] handle_t hBinding); /* FIXME */
+    NTSTATUS
+    __stdcall
+    CredrDelete(
+        [in] handle_t hBinding,
+        [in, unique, string] LPWSTR TargetName,
+        [in] DWORD Type,
+        [in] DWORD Flags); /* FIXME */
 
     /* Function 66 */
-    NTSTATUS __stdcall CredrGetTargetInfo(
-        [in] handle_t hBinding); /* FIXME */
+    NTSTATUS
+    __stdcall
+    CredrGetTargetInfo(
+        [in] handle_t hBinding,
+        [in, unique, string] LPWSTR TargetName,
+        [in] DWORD Flags,
+        [out] CREDPR_TARGET_INFORMATION *TargetInformation); /* FIXME */
 
     /* Function 67 */
-    NTSTATUS __stdcall CredrProfileLoaded(
+    NTSTATUS
+    __stdcall
+    CredrProfileLoaded(
         [in] handle_t hBinding); /* FIXME */
 
     /* Function 68 */
@@ -1031,8 +1059,12 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [in] DWORD ClientRevision);
 
     /* Function 69 */
-    NTSTATUS __stdcall CredrGetSessionTypes(
-        [in] handle_t hBinding); /* FIXME */
+    NTSTATUS
+    __stdcall
+    CredrGetSessionTypes(
+        [in] handle_t hBinding,
+        [in] DWORD MaximumPersistCount,
+        [out, size_is(MaximumPersistCount)] DWORD *MaximumPersist); /* FIXME */
 
     /* Function 70 */
     NTSTATUS __stdcall LsarRegisterAuditEvent(
@@ -1063,8 +1095,14 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
         [out] PLSA_FOREST_TRUST_COLLISION_INFORMATION *CollisionInfo);
 
     /* Function 75 */
-    NTSTATUS __stdcall CredrRename(
-        [in] handle_t hBinding); /* FIXME */
+    NTSTATUS
+    __stdcall
+    CredrRename(
+        [in] handle_t hBinding,
+        [in, unique, string] LPWSTR OldTargetName,
+        [in, unique, string] LPWSTR NewTargetName,
+        [in] DWORD Type,
+        [in] DWORD Flags); /* FIXME */
 
     /* Function 76 */
     NTSTATUS __stdcall LsarLookupSids3(

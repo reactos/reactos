@@ -107,7 +107,7 @@ ServiceControlHandler(DWORD dwControl,
             return ERROR_SUCCESS;
 
         case 128:
-            TRACE("  Start Shell contol received\n");
+            TRACE("  Start Shell control received\n");
             return ERROR_SUCCESS;
 
         case 129:
