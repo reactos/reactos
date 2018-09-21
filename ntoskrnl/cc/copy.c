@@ -86,12 +86,14 @@ CcReadVirtualAddress (
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
+    ULARGE_INTEGER LargeSize;
 
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
-    if (Size > VACB_MAPPING_GRANULARITY)
+    LargeSize.QuadPart = Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
+    if (LargeSize.QuadPart > VACB_MAPPING_GRANULARITY)
     {
-        Size = VACB_MAPPING_GRANULARITY;
+        LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
+    Size = LargeSize.LowPart;
 
     Pages = BYTES_TO_PAGES(Size);
     ASSERT(Pages * PAGE_SIZE <= VACB_MAPPING_GRANULARITY);
@@ -155,12 +157,14 @@ CcWriteVirtualAddress (
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
+    ULARGE_INTEGER LargeSize;
 
-    Size = (ULONG)(Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
-    if (Size > VACB_MAPPING_GRANULARITY)
+    LargeSize.QuadPart = Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
+    if (LargeSize.QuadPart > VACB_MAPPING_GRANULARITY)
     {
-        Size = VACB_MAPPING_GRANULARITY;
+        LargeSize.QuadPart = VACB_MAPPING_GRANULARITY;
     }
+    Size = LargeSize.LowPart;
     //
     // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
     // MmGlobalPageDirectory and the real system PDE directory. What a mess...
