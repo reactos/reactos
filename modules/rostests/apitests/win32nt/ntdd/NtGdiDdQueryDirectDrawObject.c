@@ -15,7 +15,7 @@
  */
 START_TEST(NtGdiDdQueryDirectDrawObject)
 {
-    HANDLE  hDirectDraw = NULL;
+    HANDLE hDirectDraw = NULL;
     DD_HALINFO *pHalInfo = NULL;
     DWORD *pCallBackFlags = NULL;
     LPD3DNTHAL_CALLBACKS puD3dCallbacks = NULL;
@@ -64,7 +64,7 @@ START_TEST(NtGdiDdQueryDirectDrawObject)
     EnumDisplaySettingsA(NULL, ENUM_CURRENT_SETTINGS, &devmode);
 
     /* Create hdc that we can use */
-    hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
+    hdc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     ASSERT(hdc != NULL);
 
 
