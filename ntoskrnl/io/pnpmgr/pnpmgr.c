@@ -1536,11 +1536,10 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
-    HANDLE LogConfKey;
+    HANDLE LogConfKey, ControlKey, DeviceParamsKey;
     ULONG ResCount;
     ULONG ResultLength;
     NTSTATUS Status;
-    HANDLE ControlHandle;
 
     DPRINT("IopSetDeviceInstanceData() called\n");
 
@@ -1619,10 +1618,46 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                InstanceKey,
                                NULL);
-    Status = ZwCreateKey(&ControlHandle, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
-
+    Status = ZwCreateKey(&ControlKey,
+                         0,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
     if (NT_SUCCESS(Status))
-        ZwClose(ControlHandle);
+        ZwClose(ControlKey);
+
+    /* Create the 'Device Parameters' key and set the 'FirmwareIdentified' value for all ACPI-enumerated devices */
+    if (_wcsnicmp(DeviceNode->InstancePath.Buffer, L"ACPI\\", 5) == 0)
+    {
+        RtlInitUnicodeString(&KeyName, L"Device Parameters");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   InstanceKey,
+                                   NULL);
+        Status = ZwCreateKey(&DeviceParamsKey,
+                             0,
+                             &ObjectAttributes,
+                             0,
+                             NULL,
+                             REG_OPTION_NON_VOLATILE,
+                             NULL);
+        if (NT_SUCCESS(Status))
+        {
+            ULONG FirmwareIdentified = 1;
+            RtlInitUnicodeString(&KeyName, L"FirmwareIdentified");
+            Status = ZwSetValueKey(DeviceParamsKey,
+                                   &KeyName,
+                                   0,
+                                   REG_DWORD,
+                                   &FirmwareIdentified,
+                                   sizeof(FirmwareIdentified));
+
+            ZwClose(DeviceParamsKey);
+        }
+    }
 
     DPRINT("IopSetDeviceInstanceData() done\n");
 
