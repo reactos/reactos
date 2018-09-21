@@ -5181,7 +5181,7 @@ IntGetSystemMenu(PWND Window, BOOL bRevert)
    else
    {
       Menu = Window->SystemMenu ? UserGetMenuObject(Window->SystemMenu) : NULL;
-      if ((!Window->SystemMenu || Menu->fFlags & MNF_SYSDESKMN) && Window->style & WS_SYSMENU)
+      if ((!Menu || Menu->fFlags & MNF_SYSDESKMN) && Window->style & WS_SYSMENU)
       {
          Menu = MENU_GetSystemMenu(Window, NULL);
          Window->SystemMenu = Menu ? UserHMGetHandle(Menu) : NULL;
