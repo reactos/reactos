@@ -9,8 +9,8 @@
 
 START_TEST(NtGdiDdDeleteDirectDrawObject)
 {
-    HANDLE  hDirectDraw;
-    HDC hdc = CreateDCW(L"DISPLAY",NULL,NULL,NULL);
+    HANDLE hDirectDraw;
+    HDC hdc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     ok(hdc != NULL, "\n");
 
     /* Test ReactX */
