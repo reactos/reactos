@@ -18,7 +18,7 @@ CopyFiles=BluetoothClass.NT.Files
 HKR, , , 0, %BluetoothClassName%
 HKR, , NoInstallClass, 0, 1
 HKR, , Installer32, , "bthci.dll,BluetoothClassInstaller"
-;HKR, , Icon, 0, "201"
+HKR, , Icon, 0, "201"
 
 [BluetoothClass.NT.Files]
 bthci.dll
