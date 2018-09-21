@@ -15,6 +15,7 @@ typedef struct _TEST_FCB
     FSRTL_ADVANCED_FCB_HEADER Header;
     SECTION_OBJECT_POINTERS SectionObjectPointers;
     FAST_MUTEX HeaderMutex;
+    BOOLEAN BigFile;
 } TEST_FCB, *PTEST_FCB;
 
 static PFILE_OBJECT TestFileObject;
@@ -184,6 +185,7 @@ TestIrpHandler(
         RtlZeroMemory(Fcb, sizeof(*Fcb));
         ExInitializeFastMutex(&Fcb->HeaderMutex);
         FsRtlSetupAdvancedHeader(&Fcb->Header, &Fcb->HeaderMutex);
+        Fcb->BigFile = FALSE;
         if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
             IoStack->FileObject->FileName.Buffer[1] == 'B')
         {
@@ -204,6 +206,14 @@ TestIrpHandler(
             Fcb->Header.AllocationSize.QuadPart = 62;
             Fcb->Header.FileSize.QuadPart = 62;
             Fcb->Header.ValidDataLength.QuadPart = 62;
+        }
+        else if (IoStack->FileObject->FileName.Length >= 2 * sizeof(WCHAR) &&
+                 IoStack->FileObject->FileName.Buffer[1] == 'F')
+        {
+            Fcb->Header.AllocationSize.QuadPart = 4294967296;
+            Fcb->Header.FileSize.QuadPart = 4294967296;
+            Fcb->Header.ValidDataLength.QuadPart = 4294967296;
+            Fcb->BigFile = TRUE;
         }
         else
         {
@@ -239,8 +249,13 @@ TestIrpHandler(
         if (!FlagOn(Irp->Flags, IRP_NOCACHE))
         {
             ok_irql(PASSIVE_LEVEL);
-            ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
-            ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
+
+            /* We don't want to test alignement for big files (not the purpose of the test) */
+            if (!Fcb->BigFile)
+            {
+                ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
+                ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
+            }
 
             Buffer = Irp->AssociatedIrp.SystemBuffer;
             ok(Buffer != NULL, "Null pointer!\n");
