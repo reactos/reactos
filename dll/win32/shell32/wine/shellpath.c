@@ -1986,7 +1986,7 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
 #else
             DWORD cchSize = cchDest;
             if (!GetAllUsersProfileDirectoryW(szDest, &cchSize))
-                return HRESULT_FROM_WIN32(GetLastError());
+                goto fallback_expand;
 #endif
             PathAppendW(szDest, szTemp + strlenW(AllUsersProfileW));
         }
@@ -2015,7 +2015,7 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
 #else
             DWORD cchSize = cchDest;
             if (!_SHGetUserProfileDirectoryW(hToken, szDest, &cchSize))
-                return HRESULT_FROM_WIN32(GetLastError());
+                goto fallback_expand;
 #endif
             PathAppendW(szDest, szTemp + strlenW(UserProfileW));
         }
@@ -2025,16 +2025,19 @@ static HRESULT _SHExpandEnvironmentStrings(HANDLE hToken, LPCWSTR szSrc, LPWSTR 
             GetSystemDirectoryW(szDest, MAX_PATH);
 #else
             if (!GetSystemDirectoryW(szDest, cchDest))
-                return HRESULT_FROM_WIN32(GetLastError());
+                goto fallback_expand;
 #endif
             strcpyW(szDest + 3, szTemp + strlenW(SystemDriveW) + 1);
         }
         else
+#ifdef __REACTOS__
+fallback_expand:
+#endif
         {
 #ifndef __REACTOS__
             DWORD ret = ExpandEnvironmentStringsW(szTemp, szDest, MAX_PATH);
 #else
-            DWORD ret = SHExpandEnvironmentStringsForUserW(hToken, szSrc, szDest, cchDest);
+            DWORD ret = SHExpandEnvironmentStringsForUserW(hToken, szTemp, szDest, cchDest);
 #endif
 
 #ifndef __REACTOS__
