@@ -1,0 +1,25 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "Użycie: dwnl URL [CEL]\n"
+    IDS_RESOLVING "Rozwiązywanie %s... "
+    IDS_DONE "ukończone.\n"
+    IDS_LENGTH_FULL "Długość: %I64u [%s]\n"
+    IDS_LENGTH "Długość: %I64u\n"
+    IDS_FILE_SAVED "\nPlik zapisany.\n"
+    IDS_CONNECTING_TO_FULL "Nawiązywanie połączenia z %s [%s]... "
+    IDS_CONNECTING_TO "Nawiązywanie połączenia z %s... "
+    IDS_REDIRECTING_TO "Przekierowywanie do %s... "
+    IDS_SEND_REQUEST "Wysyłanie zapytania... "
+    IDS_BYTES_DOWNLOADED "Pobrano %I64u bajt(ów)."
+    IDS_BYTES_DOWNLOADED_FULL "%2d%% (pobrano %I64u bajt(ów))"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ERROR_DOWNLOAD "\nBŁĄD: Pobieranie nieudane.\n"
+    IDS_ERROR_CODE "\nBŁĄD: %u\n"
+    IDS_ERROR_FILENAME "\nBŁĄD: Nie można ustalić nazwy pliku, podaj docelową nazwę pliku.\n"
+    IDS_ERROR_PROTOCOL "\nBŁĄD: Niewspierany protokół.\n"
+END
