@@ -1480,7 +1480,9 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, HANDLE hToken, LPCWSTR us
 #ifndef __REACTOS__
             _SHExpandEnvironmentStrings(path, szTemp);
 #else
-            _SHExpandEnvironmentStrings(hToken, path, szTemp, _countof(szTemp));
+            hr = _SHExpandEnvironmentStrings(hToken, path, szTemp, _countof(szTemp));
+            if (FAILED(hr))
+                goto end;
 #endif
             lstrcpynW(path, szTemp, MAX_PATH);
         }
@@ -1493,6 +1495,9 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, HANDLE hToken, LPCWSTR us
     }
     else
         hr = E_FAIL;
+#ifdef __REACTOS__
+end:
+#endif
     RegCloseKey(shellFolderKey);
     RegCloseKey(userShellFolderKey);
     TRACE("returning 0x%08x\n", hr);
