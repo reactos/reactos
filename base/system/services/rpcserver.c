@@ -2947,7 +2947,7 @@ ROpenServiceW(
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService == NULL)
     {
-        DPRINT("Could not find a service!\n");
+        DPRINT("Could not find the service!\n");
         dwError = ERROR_SERVICE_DOES_NOT_EXIST;
         goto Done;
     }
@@ -3310,8 +3310,9 @@ RGetServiceDisplayNameW(
     LPWSTR lpDisplayName,
     DWORD *lpcchBuffer)
 {
-//    PMANAGER_HANDLE hManager;
+    // PMANAGER_HANDLE hManager;
     PSERVICE lpService;
+    LPCWSTR lpSvcDisplayName;
     DWORD dwLength;
     DWORD dwError;
 
@@ -3321,55 +3322,41 @@ RGetServiceDisplayNameW(
     DPRINT("lpDisplayName: %p\n", lpDisplayName);
     DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
 
-//    hManager = (PMANAGER_HANDLE)hSCManager;
-//    if (hManager->Handle.Tag != MANAGER_TAG)
-//    {
-//        DPRINT("Invalid manager handle!\n");
-//        return ERROR_INVALID_HANDLE;
-//    }
+#if 0
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+#endif
 
     /* Get service database entry */
     lpService = ScmGetServiceEntryByName(lpServiceName);
     if (lpService == NULL)
     {
-        DPRINT("Could not find a service!\n");
-
-        /* If the service could not be found and lpcchBuffer is less than 2, windows
-           puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer < sizeof(WCHAR))
-        {
-            *lpcchBuffer = sizeof(WCHAR);
-            if (lpDisplayName != NULL)
-            {
-                *lpDisplayName = 0;
-            }
-        }
-
+        DPRINT("Could not find the service!\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    if (!lpService->lpDisplayName)
-    {
-        dwLength = (DWORD)wcslen(lpService->lpServiceName);
+    if (lpService->lpDisplayName)
+        lpSvcDisplayName = lpService->lpDisplayName;
+    else
+        lpSvcDisplayName = lpService->lpServiceName;
 
-        if (lpDisplayName != NULL &&
-            *lpcchBuffer > dwLength)
-        {
-            wcscpy(lpDisplayName, lpService->lpServiceName);
-        }
+    dwLength = (DWORD)wcslen(lpSvcDisplayName);
+
+    if (*lpcchBuffer > dwLength)
+    {
+        if (lpDisplayName != NULL)
+            wcscpy(lpDisplayName, lpSvcDisplayName);
+
+        dwError = ERROR_SUCCESS;
     }
     else
     {
-        dwLength = (DWORD)wcslen(lpService->lpDisplayName);
-
-        if (lpDisplayName != NULL &&
-            *lpcchBuffer > dwLength)
-        {
-            wcscpy(lpDisplayName, lpService->lpDisplayName);
-        }
+        dwError = ERROR_INSUFFICIENT_BUFFER;
     }
-
-    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
 
     *lpcchBuffer = dwLength;
 
@@ -3386,7 +3373,7 @@ RGetServiceKeyNameW(
     LPWSTR lpServiceName,
     DWORD *lpcchBuffer)
 {
-//    PMANAGER_HANDLE hManager;
+    // PMANAGER_HANDLE hManager;
     PSERVICE lpService;
     DWORD dwLength;
     DWORD dwError;
@@ -3397,44 +3384,36 @@ RGetServiceKeyNameW(
     DPRINT("lpServiceName: %p\n", lpServiceName);
     DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
 
-//    hManager = (PMANAGER_HANDLE)hSCManager;
-//    if (hManager->Handle.Tag != MANAGER_TAG)
-//    {
-//        DPRINT("Invalid manager handle!\n");
-//        return ERROR_INVALID_HANDLE;
-//    }
+#if 0
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+#endif
 
     /* Get service database entry */
     lpService = ScmGetServiceEntryByDisplayName(lpDisplayName);
     if (lpService == NULL)
     {
-        DPRINT("Could not find a service!\n");
-
-        /* If the service could not be found and lpcchBuffer is less than 2, windows
-           puts null in lpDisplayName and puts 2 in lpcchBuffer */
-        if (*lpcchBuffer < sizeof(WCHAR))
-        {
-            *lpcchBuffer = sizeof(WCHAR);
-            if (lpServiceName != NULL)
-            {
-                *lpServiceName = 0;
-            }
-        }
-
+        DPRINT("Could not find the service!\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
     dwLength = (DWORD)wcslen(lpService->lpServiceName);
 
-    if (lpServiceName != NULL &&
-        *lpcchBuffer > dwLength)
+    if (*lpcchBuffer > dwLength)
     {
-        wcscpy(lpServiceName, lpService->lpServiceName);
-        *lpcchBuffer = dwLength;
-        return ERROR_SUCCESS;
-    }
+        if (lpServiceName != NULL)
+            wcscpy(lpServiceName, lpService->lpServiceName);
 
-    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
+        dwError = ERROR_SUCCESS;
+    }
+    else
+    {
+        dwError = ERROR_INSUFFICIENT_BUFFER;
+    }
 
     *lpcchBuffer = dwLength;
 
@@ -4474,11 +4453,11 @@ RGetServiceDisplayNameA(
     LPSTR lpDisplayName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
-//    PMANAGER_HANDLE hManager;
+    // PMANAGER_HANDLE hManager;
     PSERVICE lpService = NULL;
-    DWORD dwLength;
-    DWORD dwError;
+    LPCWSTR lpSvcDisplayName;
     LPWSTR lpServiceNameW;
+    DWORD dwLength;
 
     DPRINT("RGetServiceDisplayNameA() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
@@ -4486,13 +4465,16 @@ RGetServiceDisplayNameA(
     DPRINT("lpDisplayName: %p\n", lpDisplayName);
     DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
 
-//    hManager = (PMANAGER_HANDLE)hSCManager;
-//    if (hManager->Handle.Tag != MANAGER_TAG)
-//    {
-//        DPRINT("Invalid manager handle!\n");
-//        return ERROR_INVALID_HANDLE;
-//    }
+#if 0
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+#endif
 
+    /* Get service database entry */
     if (lpServiceName != NULL)
     {
         dwLength = (DWORD)(strlen(lpServiceName) + 1);
@@ -4516,61 +4498,71 @@ RGetServiceDisplayNameA(
 
     if (lpService == NULL)
     {
-        DPRINT("Could not find a service!\n");
-
-        /* If the service could not be found and lpcchBuffer is 0, windows
-           puts null in lpDisplayName and puts 1 in lpcchBuffer */
-        if (*lpcchBuffer == 0)
-        {
-            *lpcchBuffer = sizeof(CHAR);
-            if (lpDisplayName != NULL)
-            {
-                *lpDisplayName = 0;
-            }
-        }
+        DPRINT("Could not find the service!\n");
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
-    if (!lpService->lpDisplayName)
+    if (lpService->lpDisplayName)
+        lpSvcDisplayName = lpService->lpDisplayName;
+    else
+        lpSvcDisplayName = lpService->lpServiceName;
+
+    /*
+     * NOTE: On Windows the comparison on *lpcchBuffer is made against
+     * the number of (wide) characters of the UNICODE display name, and
+     * not against the number of bytes needed to store the ANSI string.
+     */
+    dwLength = (DWORD)wcslen(lpSvcDisplayName);
+
+    if (*lpcchBuffer > dwLength)
     {
-        dwLength = (DWORD)wcslen(lpService->lpServiceName);
         if (lpDisplayName != NULL &&
-            *lpcchBuffer > dwLength)
-        {
             WideCharToMultiByte(CP_ACP,
                                 0,
-                                lpService->lpServiceName,
-                                (int)wcslen(lpService->lpServiceName),
+                                lpSvcDisplayName,
+                                -1,
                                 lpDisplayName,
-                                dwLength + 1,
+                                (int)*lpcchBuffer,
                                 NULL,
-                                NULL);
-            return ERROR_SUCCESS;
+                                NULL) == 0)
+        {
+            /*
+             * But then, if *lpcchBuffer was greater than the number of
+             * (wide) characters of the UNICODE display name, yet smaller
+             * than the number of bytes needed due to the possible presence
+             * of DBCS characters, the *exact* number of bytes is returned
+             * (without the NULL terminator).
+             */
+            dwLength = (DWORD)WideCharToMultiByte(CP_ACP,
+                                                  0,
+                                                  lpSvcDisplayName,
+                                                  (int)dwLength,
+                                                  NULL,
+                                                  0,
+                                                  NULL,
+                                                  NULL);
+            *lpDisplayName = 0;
+            *lpcchBuffer = dwLength;
+            return ERROR_INSUFFICIENT_BUFFER;
         }
+
+        /*
+         * NOTE: On Windows, RGetServiceDisplayNameA() does not update
+         * *lpcchBuffer on success, contrary to RGetServiceDisplayNameW().
+         */
+        return ERROR_SUCCESS;
     }
     else
     {
-        dwLength = (DWORD)wcslen(lpService->lpDisplayName);
-        if (lpDisplayName != NULL &&
-            *lpcchBuffer > dwLength)
-        {
-            WideCharToMultiByte(CP_ACP,
-                                0,
-                                lpService->lpDisplayName,
-                                (int)wcslen(lpService->lpDisplayName),
-                                lpDisplayName,
-                                dwLength + 1,
-                                NULL,
-                                NULL);
-            return ERROR_SUCCESS;
-        }
+        /*
+         * NOTE: On Windows, if *lpcchBuffer is smaller than the number of
+         * (wide) characters of the UNICODE display name, only an upper
+         * estimation is returned by doubling the string length, to account
+         * for the presence of any possible DBCS characters.
+         */
+        *lpcchBuffer = dwLength * sizeof(WCHAR);
+        return ERROR_INSUFFICIENT_BUFFER;
     }
-
-    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
-
-    *lpcchBuffer = dwLength * 2;
-
-    return dwError;
 }
 
 
@@ -4583,16 +4575,27 @@ RGetServiceKeyNameA(
     LPSTR lpServiceName,
     LPBOUNDED_DWORD_4K lpcchBuffer)
 {
+    // PMANAGER_HANDLE hManager;
     PSERVICE lpService;
-    DWORD dwLength;
-    DWORD dwError;
     LPWSTR lpDisplayNameW;
+    DWORD dwLength;
 
     DPRINT("RGetServiceKeyNameA() called\n");
     DPRINT("hSCManager = %p\n", hSCManager);
     DPRINT("lpDisplayName: %s\n", lpDisplayName);
     DPRINT("lpServiceName: %p\n", lpServiceName);
     DPRINT("*lpcchBuffer: %lu\n", *lpcchBuffer);
+
+#if 0
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+#endif
+
+    /* Get service database entry */
 
     dwLength = (DWORD)(strlen(lpDisplayName) + 1);
     lpDisplayNameW = HeapAlloc(GetProcessHeap(),
@@ -4615,41 +4618,65 @@ RGetServiceKeyNameA(
     if (lpService == NULL)
     {
         DPRINT("Could not find the service!\n");
-
-        /* If the service could not be found and lpcchBuffer is 0,
-           put null in lpDisplayName and puts 1 in lpcchBuffer, verified WINXP. */
-        if (*lpcchBuffer == 0)
-        {
-            *lpcchBuffer = sizeof(CHAR);
-            if (lpServiceName != NULL)
-            {
-                *lpServiceName = 0;
-            }
-        }
-
         return ERROR_SERVICE_DOES_NOT_EXIST;
     }
 
+    /*
+     * NOTE: On Windows the comparison on *lpcchBuffer is made against
+     * the number of (wide) characters of the UNICODE service name, and
+     * not against the number of bytes needed to store the ANSI string.
+     */
     dwLength = (DWORD)wcslen(lpService->lpServiceName);
-    if (lpServiceName != NULL &&
-        *lpcchBuffer > dwLength)
+
+    if (*lpcchBuffer > dwLength)
     {
-        WideCharToMultiByte(CP_ACP,
-                            0,
-                            lpService->lpServiceName,
-                            (int)wcslen(lpService->lpServiceName),
-                            lpServiceName,
-                            dwLength + 1,
-                            NULL,
-                            NULL);
+        if (lpServiceName != NULL &&
+            WideCharToMultiByte(CP_ACP,
+                                0,
+                                lpService->lpServiceName,
+                                -1,
+                                lpServiceName,
+                                (int)*lpcchBuffer,
+                                NULL,
+                                NULL) == 0)
+        {
+            /*
+             * But then, if *lpcchBuffer was greater than the number of
+             * (wide) characters of the UNICODE service name, yet smaller
+             * than the number of bytes needed due to the possible presence
+             * of DBCS characters, the *exact* number of bytes is returned
+             * (without the NULL terminator).
+             */
+            dwLength = (DWORD)WideCharToMultiByte(CP_ACP,
+                                                  0,
+                                                  lpService->lpServiceName,
+                                                  (int)dwLength,
+                                                  NULL,
+                                                  0,
+                                                  NULL,
+                                                  NULL);
+            *lpServiceName = 0;
+            *lpcchBuffer = dwLength;
+            return ERROR_INSUFFICIENT_BUFFER;
+        }
+
+        /*
+         * NOTE: On Windows, RGetServiceKeyNameA() does not update
+         * *lpcchBuffer on success, contrary to RGetServiceKeyNameW().
+         */
         return ERROR_SUCCESS;
     }
-
-    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
-
-    *lpcchBuffer = dwLength * 2;
-
-    return dwError;
+    else
+    {
+        /*
+         * NOTE: On Windows, if *lpcchBuffer is smaller than the number of
+         * (wide) characters of the UNICODE service name, only an upper
+         * estimation is returned by doubling the string length, to account
+         * for the presence of any possible DBCS characters.
+         */
+        *lpcchBuffer = dwLength * sizeof(WCHAR);
+        return ERROR_INSUFFICIENT_BUFFER;
+    }
 }
 
 
