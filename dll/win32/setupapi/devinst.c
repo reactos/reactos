@@ -1515,6 +1515,27 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
                 SetLastError(rc);
                 goto cleanup;
             }
+
+            if (Scope == DICS_FLAG_GLOBAL)
+            {
+                HKEY hTempKey = hKey;
+
+                rc = RegCreateKeyExW(hTempKey,
+                                     L"Device Parameters",
+                                     0,
+                                     NULL,
+                                     REG_OPTION_NON_VOLATILE,
+#if _WIN32_WINNT >= 0x502
+                                     KEY_READ | KEY_WRITE,
+#else
+                                     KEY_ALL_ACCESS,
+#endif
+                                     NULL,
+                                     &hKey,
+                                     NULL);
+                if (rc == ERROR_SUCCESS)
+                    RegCloseKey(hTempKey);
+            }
         }
         else /* KeyType == DIREG_DRV */
         {
@@ -5905,6 +5926,18 @@ HKEY WINAPI SetupDiOpenDevRegKey(
     {
         case DIREG_DEV:
             key = SETUPDI_OpenDevKey(RootKey, devInfo, samDesired);
+            if (Scope == DICS_FLAG_GLOBAL)
+            {
+                LONG rc;
+                HKEY hTempKey = key;
+                rc = RegOpenKeyExW(hTempKey,
+                                   L"Device Parameters",
+                                   0,
+                                   samDesired,
+                                   &key);
+                if (rc == ERROR_SUCCESS)
+                    RegCloseKey(hTempKey);
+            }
             break;
         case DIREG_DRV:
             key = SETUPDI_OpenDrvKey(RootKey, devInfo, samDesired);
