@@ -4180,6 +4180,9 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             *ResultLength -= sizeof(OBJECT_NAME_INFORMATION);
             break;
 
+        case DevicePropertyRemovalPolicy:
+            PIP_RETURN_DATA(sizeof(UCHAR), &DeviceNode->RemovalPolicy);
+
         /* Handle the registry-based properties */
         case DevicePropertyUINumber:
             PIP_REGISTRY_DATA(REGSTR_VAL_UI_NUMBER, REG_DWORD);
@@ -4205,8 +4208,6 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             PIP_REGISTRY_DATA(REGSTR_VAL_FRIENDLYNAME, REG_SZ);
         case DevicePropertyContainerID:
             //PIP_REGISTRY_DATA(REGSTR_VAL_CONTAINERID, REG_SZ); // Win7
-            PIP_UNIMPLEMENTED();
-        case DevicePropertyRemovalPolicy:
             PIP_UNIMPLEMENTED();
             break;
         case DevicePropertyInstallState:
