@@ -467,17 +467,30 @@ IntToUnicodeEx(UINT wVirtKey,
         WCHAR wchFirst, wchSecond;
         TRACE("Previous dead char: %lc (%x)\n", wchDead, wchDead);
 
-        for (i = 0; pKbdTbl->pDeadKey[i].dwBoth; i++)
+        if (pKbdTbl->pDeadKey)
         {
-            wchFirst = pKbdTbl->pDeadKey[i].dwBoth >> 16;
-            wchSecond = pKbdTbl->pDeadKey[i].dwBoth & 0xFFFF;
-            if (wchFirst == wchDead && wchSecond == wchTranslatedChar)
+            for (i = 0; pKbdTbl->pDeadKey[i].dwBoth; i++)
             {
-                wchTranslatedChar = pKbdTbl->pDeadKey[i].wchComposed;
-                wchDead = 0;
-                bDead = FALSE;
-                break;
+                wchFirst = pKbdTbl->pDeadKey[i].dwBoth >> 16;
+                wchSecond = pKbdTbl->pDeadKey[i].dwBoth & 0xFFFF;
+                if (wchFirst == wchDead && wchSecond == wchTranslatedChar)
+                {
+                    wchTranslatedChar = pKbdTbl->pDeadKey[i].wchComposed;
+                    wchDead = 0;
+                    bDead = FALSE;
+                    break;
+                }
             }
+        }
+        else
+        {
+#if defined(__GNUC__)
+            if (wchDead == 0x8000)
+            {
+                ERR("GCC is inventing bits, ignoring fake dead key\n");
+                wchDead = 0;
+            }
+#endif
         }
 
         TRACE("Final char: %lc (%x)\n", wchTranslatedChar, wchTranslatedChar);
