@@ -239,7 +239,7 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
     HKEY hKey;
     LPOLESTR pStr;
     WCHAR szName[140];
-    DWORD dwShowIcon, dwType, dwSize;
+    DWORD dwShowIcon, dwNotifyDisconnect, dwType, dwSize;
     NETCON_PROPERTIES * pProperties;
     HRESULT hr;
 
@@ -288,6 +288,16 @@ CNetConnection::GetProperties(NETCON_PROPERTIES **ppProps)
                 else
                     pProperties->dwCharacter &= ~NCCF_SHOW_ICON;
             }
+
+            dwSize = sizeof(dwNotifyDisconnect);
+            if (RegQueryValueExW(hKey, L"IpCheckingEnabled", NULL, &dwType, (LPBYTE)&dwNotifyDisconnect, &dwSize) == ERROR_SUCCESS && dwType == REG_DWORD)
+            {
+                if (dwNotifyDisconnect)
+                    pProperties->dwCharacter |= NCCF_NOTIFY_DISCONNECTED;
+                else
+                    pProperties->dwCharacter &= ~NCCF_NOTIFY_DISCONNECTED;
+            }
+
             dwSize = sizeof(szName);
             if (RegQueryValueExW(hKey, L"Name", NULL, &dwType, (LPBYTE)szName, &dwSize) == ERROR_SUCCESS)
             {
@@ -503,7 +513,7 @@ NormalizeOperStatus(
 BOOL
 CNetConnectionManager::EnumerateINetConnections()
 {
-    DWORD dwSize, dwResult, dwIndex, dwAdapterIndex, dwShowIcon;
+    DWORD dwSize, dwResult, dwIndex, dwAdapterIndex, dwShowIcon, dwNotifyDisconnect;
     MIB_IFTABLE *pIfTable;
     MIB_IFROW IfEntry;
     IP_ADAPTER_INFO * pAdapterInfo;
@@ -640,6 +650,12 @@ CNetConnectionManager::EnumerateINetConnections()
             {
                 if (dwShowIcon)
                     pNew->Props.dwCharacter |= NCCF_SHOW_ICON;
+            }
+            dwSize = sizeof(dwNotifyDisconnect);
+            if (RegQueryValueExW(hSubKey, L"IpCheckingEnabled", NULL, NULL, (LPBYTE)&dwNotifyDisconnect, &dwSize) == ERROR_SUCCESS)
+            {
+                if (dwNotifyDisconnect)
+                    pNew->Props.dwCharacter |= NCCF_NOTIFY_DISCONNECTED;
             }
             RegCloseKey(hSubKey);
         }
