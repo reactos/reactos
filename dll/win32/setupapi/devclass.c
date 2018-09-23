@@ -1279,7 +1279,7 @@ SetupDiGetClassDevPropertySheetsW(
         DWORD rc;
 
         if (DeviceInfoData)
-            hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
+            hKey = SETUPDI_OpenDrvKey(list->HKLM, (struct DeviceInfo *)DeviceInfoData->Reserved, KEY_QUERY_VALUE);
         else
         {
             hKey = SetupDiOpenClassRegKeyExW(&list->ClassGuid, KEY_QUERY_VALUE,
