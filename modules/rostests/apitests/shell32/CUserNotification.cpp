@@ -200,8 +200,8 @@ START_TEST(CUserNotification)
         return;
     }
 
-    /* Wait a maximum of 1:30 for the thread to finish (the timeout tests take some time) */
-    dwWait = WaitForSingleObject(hThread, 90 * 1000);
+    /* Wait a maximum of 60 seconds for the thread to finish (the timeout tests take some time) */
+    dwWait = WaitForSingleObject(hThread, 60 * 1000);
     ok(dwWait == WAIT_OBJECT_0, "WaitForSingleObject returned %lu, expected WAIT_OBJECT_0\n", dwWait);
 
     /* Cleanup and return */
