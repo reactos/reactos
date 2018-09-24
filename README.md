@@ -62,6 +62,8 @@ build directory. This will create a CD image with a filename `bootcd.iso`.
 
 See ["Building ReactOS"](http://www.reactos.org/wiki/Building_ReactOS) for more details.
 
+You can always download fresh binary builds of bootable images from the ["special page"](https://www.reactos.org/getbuilds/)
+
 ## Installing
 
 By default, ReactOS currently can only be installed on a machine that has a FAT16 or FAT32 partition as the active (bootable) partition. 
