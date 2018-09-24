@@ -75,9 +75,9 @@ static void test_wndproc(void)
     cls.lpfnWndProc = (WNDPROC)redraw_window_procA;
     cls.cbClsExtra = 0;
     cls.cbWndExtra = 0;
-    cls.hInstance = GetModuleHandleA(0);
-    cls.hIcon = 0;
-    cls.hCursor = LoadCursorA(0, IDC_ARROW);
+    cls.hInstance = GetModuleHandleA(NULL);
+    cls.hIcon = NULL;
+    cls.hCursor = LoadCursorA(NULL, IDC_ARROW);
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "RedrawWindowClass";
@@ -89,7 +89,7 @@ static void test_wndproc(void)
     }
 
     hwndMain = CreateWindowA("RedrawWindowClass", "Main Window", WS_OVERLAPPEDWINDOW,
-                             CW_USEDEFAULT, 0, 100, 100, NULL, NULL, 0, NULL);
+                             CW_USEDEFAULT, 0, 100, 100, NULL, NULL, NULL, NULL);
 
     ok(WMPAINT_count == 0, "Multiple unexpected WM_PAINT calls %d\n", WMPAINT_count);
     ShowWindow(hwndMain, SW_SHOW);
