@@ -717,25 +717,67 @@ SeIsTokenChild(IN PTOKEN Token,
                OUT PBOOLEAN IsChild)
 {
     PTOKEN ProcessToken;
-    LUID ProcessLuid, CallerLuid;
+    LUID ProcessTokenId, CallerParentId;
 
     /* Assume failure */
     *IsChild = FALSE;
 
     /* Reference the process token */
     ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
+    if (!ProcessToken)
+        return STATUS_UNSUCCESSFUL;
 
-    /* Get the ID */
-    ProcessLuid = ProcessToken->AuthenticationId;
+    /* Get its token ID */
+    ProcessTokenId = ProcessToken->TokenId;
 
     /* Dereference the token */
     ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
 
-    /* Get our LUID */
-    CallerLuid = Token->AuthenticationId;
+    /* Get our parent token ID */
+    CallerParentId = Token->ParentTokenId;
 
-    /* Compare the LUIDs */
-    if (RtlEqualLuid(&CallerLuid, &ProcessLuid)) *IsChild = TRUE;
+    /* Compare the token IDs */
+    if (RtlEqualLuid(&CallerParentId, &ProcessTokenId))
+        *IsChild = TRUE;
+
+    /* Return success */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+SeIsTokenSibling(IN PTOKEN Token,
+                 OUT PBOOLEAN IsSibling)
+{
+    PTOKEN ProcessToken;
+    LUID ProcessParentId, ProcessAuthId;
+    LUID CallerParentId, CallerAuthId;
+
+    /* Assume failure */
+    *IsSibling = FALSE;
+
+    /* Reference the process token */
+    ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
+    if (!ProcessToken)
+        return STATUS_UNSUCCESSFUL;
+
+    /* Get its parent and authentication IDs */
+    ProcessParentId = ProcessToken->ParentTokenId;
+    ProcessAuthId = ProcessToken->AuthenticationId;
+
+    /* Dereference the token */
+    ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
+
+    /* Get our parent and authentication IDs */
+    CallerParentId = Token->ParentTokenId;
+    CallerAuthId = Token->AuthenticationId;
+
+    /* Compare the token IDs */
+    if (RtlEqualLuid(&CallerParentId, &ProcessParentId) &&
+        RtlEqualLuid(&CallerAuthId, &ProcessAuthId))
+    {
+        *IsSibling = TRUE;
+    }
 
     /* Return success */
     return STATUS_SUCCESS;
