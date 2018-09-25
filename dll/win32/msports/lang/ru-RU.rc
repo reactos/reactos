@@ -1,4 +1,8 @@
-/* Russian translation by Kudratov Olimjon (olim98@bk.ru) */
+/*
+  Translators:
+  Kudratov Olimjon (olim98@bk.ru)
+  Stanislav Motylkov (binarymaster@mail.ru)
+*/
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
@@ -11,7 +15,7 @@ BEGIN
     COMBOBOX IDC_SERIAL_BITSPERSECOND, 139, 17, 106, 90, CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
     RTEXT "Б&иты данных:", -1, 6, 40, 130, 8, WS_GROUP
     COMBOBOX IDC_SERIAL_DATABITS, 139, 38, 106, 54, CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
-    RTEXT "&Четность:", -1, 6, 61, 130, 8, WS_GROUP
+    RTEXT "&Чётность:", -1, 6, 61, 130, 8, WS_GROUP
     COMBOBOX IDC_SERIAL_PARITY, 139, 59, 106, 62, CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
     RTEXT "С&топовые биты:", -1, 6, 82, 130, 8, WS_GROUP
     COMBOBOX IDC_SERIAL_STOPBITS, 139, 80, 106, 54, CBS_DROPDOWNLIST | WS_TABSTOP | WS_VSCROLL
@@ -37,7 +41,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARITY "Even,Odd,None,Mark,Space"
+    IDS_PARITY "Чёт,Нечёт,Нет,Маркер,Пробел"
     IDS_STOPBITS "1,1.5,2"
-    IDS_FLOWCONTROL "Xon / Xoff,Hardware,None"
+    IDS_FLOWCONTROL "Xon / Xoff,Аппаратное,Нет"
 END
