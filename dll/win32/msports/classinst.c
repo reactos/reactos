@@ -603,7 +603,7 @@ InstallDeviceData(IN HDEVINFO DeviceInfoSet,
 
     TRACE("Done\n");
 
-done:;
+done:
     if (hKey != NULL)
         RegCloseKey(hKey);
 
@@ -660,7 +660,7 @@ GetPortType(IN HDEVINFO DeviceInfoSet,
             PortType = SerialPort;
     }
 
-done:;
+done:
     if (hKey != NULL)
         RegCloseKey(hKey);
 
