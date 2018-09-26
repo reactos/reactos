@@ -6,3 +6,5 @@
 #define IDC_MODEL     302
 #define IDC_STEPPING  303
 #define IDC_CORESPEED 304
+
+#define IDS_MEGAHERTZ 400
