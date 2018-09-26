@@ -12,6 +12,7 @@
 #define IDD_TCPIPDNS_DLG     108
 #define IDD_TCPIPSUFFIX_DLG  109
 #define IDD_TCPIP_PORT_DLG   110
+#define IDD_NET_PROPERTY_DLG 111
 
 
 /* controls */

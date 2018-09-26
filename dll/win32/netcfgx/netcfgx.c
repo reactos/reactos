@@ -15,8 +15,6 @@
 #include <ndk/iofuncs.h>
 #include <ndk/rtlfuncs.h>
 
-#define NDEBUG
-#include <debug.h>
 
 HINSTANCE netcfgx_hInstance;
 const GUID CLSID_TcpipConfigNotifyObject      = {0xA907657F, 0x6FDF, 0x11D0, {0x8E, 0xFB, 0x00, 0xC0, 0x4F, 0xD9, 0x12, 0xB2}};
@@ -244,7 +242,7 @@ InstallNetDevice(
     /* Get Instance ID */
     if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
     {
-        DPRINT("SetupDiGetDeviceInstanceIdW() returned TRUE. FALSE expected\n");
+        ERR("SetupDiGetDeviceInstanceIdW() returned TRUE. FALSE expected\n");
         rc = ERROR_GEN_FAILURE;
         goto cleanup;
     }
@@ -252,7 +250,7 @@ InstallNetDevice(
     InstanceId = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
     if (!InstanceId)
     {
-        DPRINT("HeapAlloc() failed\n");
+        ERR("HeapAlloc() failed\n");
         rc = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -260,7 +258,7 @@ InstallNetDevice(
     if (!SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, InstanceId, dwLength, NULL))
     {
         rc = GetLastError();
-        DPRINT("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
+        ERR("SetupDiGetDeviceInstanceIdW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -268,7 +266,7 @@ InstallNetDevice(
     DeviceName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
     if (!DeviceName)
     {
-        DPRINT("HeapAlloc() failed\n");
+        ERR("HeapAlloc() failed\n");
         rc = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -279,7 +277,7 @@ InstallNetDevice(
     ExportName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\Tcpip_") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
     if (!ExportName)
     {
-        DPRINT("HeapAlloc() failed\n");
+        ERR("HeapAlloc() failed\n");
         rc = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -290,14 +288,14 @@ InstallNetDevice(
     rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegCreateKeyExW(hKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     RegCloseKey(hKey);
@@ -306,7 +304,7 @@ InstallNetDevice(
     rc = RegCreateKeyExW(hNetworkKey, L"Parameters\\Tcpip", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     RegCloseKey(hNetworkKey);
@@ -315,21 +313,21 @@ InstallNetDevice(
     rc = RegSetValueExW(hKey, L"DefaultGateway", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hKey, L"IPAddress", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hKey, L"SubnetMask", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -337,7 +335,7 @@ InstallNetDevice(
     rc = RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     RegCloseKey(hKey);
@@ -355,21 +353,21 @@ InstallNetDevice(
     {
         hKey = NULL;
         rc = GetLastError();
-        DPRINT1("SetupDiCreateDevRegKeyW() failed with error 0x%lx\n", rc);
+        ERR("SetupDiCreateDevRegKeyW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hKey, L"NetCfgInstanceId", 0, REG_SZ, (const BYTE*)UuidString, (wcslen(UuidString) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hKey, L"Characteristics", 0, REG_DWORD, (const BYTE*)&Characteristics, sizeof(DWORD));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -378,7 +376,7 @@ InstallNetDevice(
         rc = RegSetValueExW(hKey, L"BusType", 0, REG_SZ, (const BYTE*)BusType, (wcslen(BusType) + 1) * sizeof(WCHAR));
         if (rc != ERROR_SUCCESS)
         {
-            DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+            ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
             goto cleanup;
         }
     }
@@ -386,28 +384,28 @@ InstallNetDevice(
     rc = RegCreateKeyExW(hKey, L"Linkage", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hLinkageKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hLinkageKey, L"Export", 0, REG_SZ, (const BYTE*)DeviceName, (wcslen(DeviceName) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hLinkageKey, L"RootDevice", 0, REG_SZ, (const BYTE*)UuidString, (wcslen(UuidString) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hLinkageKey, L"UpperBind", 0, REG_SZ, (const BYTE*)L"Tcpip", (wcslen(L"Tcpip") + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     RegCloseKey(hKey);
@@ -417,14 +415,14 @@ InstallNetDevice(
     rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hNetworkKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegCreateKeyExW(hNetworkKey, UuidString, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_CREATE_SUB_KEY, NULL, &hKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -433,7 +431,7 @@ InstallNetDevice(
     hKey = NULL;
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -445,14 +443,14 @@ InstallNetDevice(
     rc = RegSetValueExW(hConnectionKey, L"Name", 0, REG_SZ, (const BYTE*)szBuffer, (wcslen(szBuffer) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     rc = RegSetValueExW(hConnectionKey, L"PnpInstanceId", 0, REG_SZ, (const BYTE*)InstanceId, (wcslen(InstanceId) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -460,7 +458,7 @@ InstallNetDevice(
     rc = RegSetValueExW(hConnectionKey, L"ShowIcon", 0, REG_DWORD, (const BYTE*)&dwShowIcon, sizeof(dwShowIcon));
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegSetValueExW() failed with error 0x%lx\n", rc);
+        ERR("RegSetValueExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -468,25 +466,25 @@ InstallNetDevice(
     rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Linkage", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_QUERY_VALUE | KEY_SET_VALUE, NULL, &hKey, NULL);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("RegCreateKeyExW() failed with error 0x%lx\n", rc);
+        ERR("RegCreateKeyExW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     rc = AppendStringToMultiSZ(hKey, L"Bind", DeviceName);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
+        ERR("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     rc = AppendStringToMultiSZ(hKey, L"Export", ExportName);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
+        ERR("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
     rc = AppendStringToMultiSZ(hKey, L"Route", UuidString);
     if (rc != ERROR_SUCCESS)
     {
-        DPRINT1("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
+        ERR("AppendStringToMultiSZ() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -511,7 +509,7 @@ static
 DWORD
 InstallNetClient(VOID)
 {
-    DPRINT1("Installation of network clients is not yet supported\n");
+    FIXME("Installation of network clients is not yet supported\n");
     return ERROR_GEN_FAILURE;
 }
 
@@ -519,7 +517,7 @@ static
 DWORD
 InstallNetService(VOID)
 {
-    DPRINT1("Installation of network services is not yet supported\n");
+    FIXME("Installation of network services is not yet supported\n");
     return ERROR_GEN_FAILURE;
 }
 
@@ -527,7 +525,7 @@ static
 DWORD
 InstallNetTransport(VOID)
 {
-    DPRINT1("Installation of network protocols is not yet supported\n");
+    FIXME("Installation of network protocols is not yet supported\n");
     return ERROR_GEN_FAILURE;
 }
 
@@ -557,14 +555,14 @@ NetClassInstaller(
     if (InstallFunction != DIF_INSTALLDEVICE)
         return ERROR_DI_DO_DEFAULT;
 
-    DPRINT("%lu %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+    TRACE("%lu %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
 
     /* Get driver info details */
     DriverInfoData.cbSize = sizeof(SP_DRVINFO_DATA_W);
     if (!SetupDiGetSelectedDriverW(DeviceInfoSet, DeviceInfoData, &DriverInfoData))
     {
         rc = GetLastError();
-        DPRINT("SetupDiGetSelectedDriverW() failed with error 0x%lx\n", rc);
+        ERR("SetupDiGetSelectedDriverW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -573,7 +571,7 @@ NetClassInstaller(
      && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         rc = GetLastError();
-        DPRINT("SetupDiGetDriverInfoDetailW() failed with error 0x%lx\n", rc);
+        ERR("SetupDiGetDriverInfoDetailW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -581,14 +579,14 @@ NetClassInstaller(
     if (hInf == INVALID_HANDLE_VALUE)
     {
         rc = GetLastError();
-        DPRINT("SetupOpenInfFileW() failed with error 0x%lx\n", rc);
+        ERR("SetupOpenInfFileW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
     if (!SetupDiGetActualSectionToInstallW(hInf, DriverInfoDetail.SectionName, SectionName, LINE_LEN, NULL, NULL))
     {
         rc = GetLastError();
-        DPRINT("SetupDiGetActualSectionToInstallW() failed with error 0x%lx\n", rc);
+        ERR("SetupDiGetActualSectionToInstallW() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -596,7 +594,7 @@ NetClassInstaller(
     if (!SetupFindFirstLineW(hInf, SectionName, L"Characteristics", &InfContext))
     {
         rc = GetLastError();
-        DPRINT("Unable to find key %S in section %S of file %S (error 0x%lx)\n",
+        ERR("Unable to find key %S in section %S of file %S (error 0x%lx)\n",
             L"Characteristics", SectionName, DriverInfoDetail.InfFileName, rc);
         goto cleanup;
     }
@@ -604,7 +602,7 @@ NetClassInstaller(
     if (!SetupGetIntField(&InfContext, 1, &CharacteristicsInt))
     {
         rc = GetLastError();
-        DPRINT("SetupGetIntField() failed with error 0x%lx\n", rc);
+        ERR("SetupGetIntField() failed with error 0x%lx\n", rc);
         goto cleanup;
     }
 
@@ -616,14 +614,14 @@ NetClassInstaller(
             if (!SetupGetStringFieldW(&InfContext, 1, NULL, 0, &dwLength))
             {
                 rc = GetLastError();
-                DPRINT("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
+                ERR("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
                 goto cleanup;
             }
 
             BusType = HeapAlloc(GetProcessHeap(), 0, dwLength * sizeof(WCHAR));
             if (!BusType)
             {
-                DPRINT("HeapAlloc() failed\n");
+                ERR("HeapAlloc() failed\n");
                 rc = ERROR_NOT_ENOUGH_MEMORY;
                 goto cleanup;
             }
@@ -631,7 +629,7 @@ NetClassInstaller(
             if (!SetupGetStringFieldW(&InfContext, 1, BusType, dwLength, NULL))
             {
                 rc = GetLastError();
-                DPRINT("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
+                ERR("SetupGetStringFieldW() failed with error 0x%lx\n", rc);
                 goto cleanup;
             }
         }
@@ -641,7 +639,7 @@ NetClassInstaller(
     RpcStatus = UuidCreate(&Uuid);
     if (RpcStatus != RPC_S_OK && RpcStatus != RPC_S_UUID_LOCAL_ONLY)
     {
-        DPRINT("UuidCreate() failed with RPC status 0x%lx\n", RpcStatus);
+        ERR("UuidCreate() failed with RPC status 0x%lx\n", RpcStatus);
         rc = ERROR_GEN_FAILURE;
         goto cleanup;
     }
@@ -649,7 +647,7 @@ NetClassInstaller(
     RpcStatus = UuidToStringW(&Uuid, &UuidRpcString);
     if (RpcStatus != RPC_S_OK)
     {
-        DPRINT("UuidToStringW() failed with RPC status 0x%lx\n", RpcStatus);
+        ERR("UuidToStringW() failed with RPC status 0x%lx\n", RpcStatus);
         rc = ERROR_GEN_FAILURE;
         goto cleanup;
     }
@@ -658,7 +656,7 @@ NetClassInstaller(
     UuidString = HeapAlloc(GetProcessHeap(), 0, (2 + wcslen(UuidRpcString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
     if (!UuidString)
     {
-        DPRINT("HeapAlloc() failed\n");
+        ERR("HeapAlloc() failed\n");
         rc = ERROR_NOT_ENOUGH_MEMORY;
         goto cleanup;
     }
@@ -677,7 +675,7 @@ NetClassInstaller(
         rc = InstallNetTransport();
     else
     {
-        DPRINT("Invalid class guid\n");
+        ERR("Invalid class guid\n");
         rc = ERROR_GEN_FAILURE;
     }
 
@@ -691,6 +689,6 @@ cleanup:
 
     if (rc == ERROR_SUCCESS)
         rc = ERROR_DI_DO_DEFAULT;
-    DPRINT("Returning 0x%lx\n", rc);
+    TRACE("Returning 0x%lx\n", rc);
     return rc;
 }
