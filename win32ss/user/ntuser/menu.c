@@ -2140,7 +2140,7 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
 	start = i; /* This works! */
     }
 
-    lprect->bottom = maxY;
+    lprect->bottom = maxY + 1;
     lppop->cyMenu = lprect->bottom - lprect->top;
 
     /* Flush right all items between the MF_RIGHTJUSTIFY and */
