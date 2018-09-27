@@ -51,15 +51,6 @@ DWORD WINAPI LpkGetTextExtentExPoint(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x
 /*
  * @unimplemented
  */
-DWORD WINAPI LpkPSMTextOut(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5,DWORD x6)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 DWORD WINAPI LpkUseGDIWidthCache(DWORD x1,DWORD x2,DWORD x3,DWORD x4,DWORD x5)
 {
     UNIMPLEMENTED

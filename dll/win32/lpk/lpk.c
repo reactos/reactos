@@ -14,6 +14,97 @@ LPK_LPEDITCONTROL_LIST LpkEditControl = {EditCreate,       EditIchToXY,  EditMou
                                          EditVerifyText,   EditNextWord, EditSetMenu,    EditProcessMenu,
                                          EditCreateCaret, EditAdjustCaret};
 
+#define PREFIX 38
+#define ALPHA_PREFIX 30 /* Win16: Alphabet prefix */
+#define KANA_PREFIX  31 /* Win16: Katakana prefix */
+
+static int PSM_FindLastPrefix(LPCWSTR str, int count)
+{
+    int i, prefix_count = 0, index = -1;
+
+    for (i = 0; i < count - 1; i++)
+    {
+        if (str[i] == PREFIX && str[i + 1] != PREFIX)
+        {
+            index = i - prefix_count;
+            prefix_count++;
+        }
+        else if (str[i] == PREFIX && str[i + 1] == PREFIX)
+        {
+            i++;
+        }
+    }
+    return index;
+}
+
+static void PSM_PrepareToDraw(LPCWSTR str, INT count, LPWSTR new_str, LPINT new_count)
+{
+    int len, i = 0, j = 0;
+
+    while (i < count)
+    {
+        if (str[i] == PREFIX || (iswspace(str[i]) && str[i] != L' '))
+        {
+            if(i < count - 1 && str[i + 1] == PREFIX)
+                new_str[j++] = str[i++];
+            else
+                i++;
+        }
+        else
+        {
+            new_str[j++] = str[i++];
+        }
+    }
+
+    new_str[j] = L'\0';   
+    len = wcslen(new_str);
+    *new_count = len;
+}
+
+/* Can be used with also LpkDrawTextEx if it will be implemented */
+static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, int offset)
+{
+    SCRIPT_STRING_ANALYSIS ssa;
+    int prefix_x;
+    int prefix_end;
+    int pos;
+    SIZE size;
+    HPEN hpen;
+    HPEN oldPen;
+    HRESULT hr = S_FALSE;
+
+    if (offset == -1)
+        return;
+
+    if (ScriptIsComplex(str, count, SIC_COMPLEX) == S_OK)
+    {
+        hr = ScriptStringAnalyse(hdc, str, count, (3 * count / 2 + 16),
+                                -1, SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &ssa);
+    }
+
+    if (hr == S_OK)
+    {
+        ScriptStringCPtoX(ssa, offset, FALSE, &pos);
+        prefix_x = x + pos;
+        ScriptStringCPtoX(ssa, offset, TRUE, &pos);
+        prefix_end = x + pos;
+        ScriptStringFree(&ssa);
+    }
+    else
+    {
+        GetTextExtentPointW(hdc, str, offset, &size);
+        prefix_x = x + size.cx;
+        GetTextExtentPointW(hdc, str, offset + 1, &size);
+        prefix_end = x + size.cx - 1;
+    }
+    hpen = CreatePen(PS_SOLID, 1, GetTextColor(hdc));
+    oldPen = SelectObject(hdc, hpen);
+    MoveToEx(hdc, prefix_x, y, NULL);
+    LineTo(hdc, prefix_end, y);
+    SelectObject(hdc, oldPen);
+    DeleteObject(hpen);
+}
+
 BOOL
 WINAPI
 DllMain(
@@ -196,14 +287,7 @@ LpkGetCharacterPlacement(
     {
         int pos = 0;
 
-        hr = ScriptStringAnalyse(hdc, lpString, nSet,
-#ifdef __REACTOS__
-                                 /* ReactOS r57677 and r57679 */
-                                 (3 * nSet / 2 + 16),
-#else
-                                 (1.5 * nSet + 16),
-#endif
-                                 -1, SSA_GLYPHS, -1,
+        hr = ScriptStringAnalyse(hdc, lpString, nSet, (3 * nSet / 2 + 16), -1, SSA_GLYPHS, -1,
                                  NULL, NULL, NULL, NULL, NULL, &ssa);
         if (hr == S_OK)
         {
@@ -231,4 +315,56 @@ LpkGetCharacterPlacement(
     HeapFree(GetProcessHeap(), 0, lpGlyphs);
 
     return ret;
+}
+
+/* Stripped down version of DrawText, can only draw single line text and Prefix underscore
+ * (only on the last found amperstand)
+ * only flags to be found to be of use in testing:
+ * 
+ * DT_NOPREFIX   - Draw the string as is without removal of the amperstands and without underscore
+ * DT_HIDEPREFIX - Draw the string without underscore
+ * DT_PREFIXONLY - Draw only the underscore
+ * 
+ * without any of these flags the behavior is the string being drawn without the amperstands and
+ * with the underscore.
+ * user32 has an equivalent function - UserLpkPSMTextOut
+ */
+INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags)
+{
+    SIZE size;
+    TEXTMETRICW tm;
+    int prefix_offset, len;
+    LPWSTR display_str = NULL;
+
+    if (!lpString || cString <= 0)
+        return 0;
+
+    if (dwFlags & DT_NOPREFIX)
+    {
+        LpkExtTextOut(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, lpString, cString - 1, NULL, 0);
+        GetTextExtentPointW(hdc, lpString, cString, &size);
+        return size.cx;
+    }
+
+    display_str = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(WCHAR));
+
+    if (!display_str)
+        return 0;
+
+    PSM_PrepareToDraw(lpString, cString, display_str, &len);
+
+    if (!(dwFlags & DT_PREFIXONLY))
+        LpkExtTextOut(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, display_str, len, NULL, 0);
+
+    if (!(dwFlags & DT_HIDEPREFIX))
+    {
+        prefix_offset = PSM_FindLastPrefix(lpString, cString);
+        GetTextMetricsW(hdc, &tm);
+        LPK_DrawUnderscore(hdc, x, y + tm.tmAscent + 1, display_str, len, prefix_offset);
+    }
+
+    GetTextExtentPointW(hdc, display_str, len + 1, &size);
+    HeapFree(GetProcessHeap(), 0, display_str);
+
+    return size.cx;
 }
