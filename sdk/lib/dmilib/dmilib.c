@@ -73,6 +73,8 @@ ParseSMBiosTables(
             Strings[SYS_PRODUCT] = GetDmiString(Header, DMI_SYS_PRODUCT);
             Strings[SYS_VERSION] = GetDmiString(Header, DMI_SYS_VERSION);
             Strings[SYS_SERIAL] = GetDmiString(Header, DMI_SYS_SERIAL);
+            Strings[SYS_SKU] = GetDmiString(Header, DMI_SYS_SKU);
+            Strings[SYS_FAMILY] = GetDmiString(Header, DMI_SYS_FAMILY);
             break;
 
         case DMI_ENTRY_BASEBOARD:
