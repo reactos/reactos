@@ -178,10 +178,11 @@ wWinMain(HINSTANCE hInstance,
 
     /* FIXME: more initialization */
 
-    /* Update the control sets */
-    if (!ScmUpdateControlSets())
+    /* Create the 'Last Known Good' control set */
+    dwError = ScmCreateLastKnownGoodControlSet();
+    if (dwError != ERROR_SUCCESS)
     {
-        DPRINT1("SERVICES: Failed to update the control sets\n");
+        DPRINT1("SERVICES: Failed to create the 'Last Known Good' control set (Error %lu)\n", dwError);
         goto done;
     }
 

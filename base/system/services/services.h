@@ -159,8 +159,8 @@ ScmDecryptPassword(
 
 /* controlset.c */
 
-BOOL
-ScmUpdateControlSets(VOID);
+DWORD
+ScmCreateLastKnownGoodControlSet(VOID);
 
 
 /* database.c */

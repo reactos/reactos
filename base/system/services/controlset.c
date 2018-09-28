@@ -17,24 +17,16 @@
 
 /* GLOBALS *******************************************************************/
 
-static DWORD dwCurrentControlSet;
-static DWORD dwDefaultControlSet;
-static DWORD dwFailedControlSet;
-static DWORD dwLastKnownGoodControlSet;
-
 
 /* FUNCTIONS *****************************************************************/
 
+#if (_WIN32_WINNT < 0x0600)
 static
 DWORD
-ScmCopyKey(HKEY hDstKey,
-           HKEY hSrcKey)
+ScmCopyTree(
+    HKEY hSrcKey,
+    HKEY hDstKey)
 {
-#if (_WIN32_WINNT >= 0x0600)
-    return RegCopyTreeW(hSrcKey,
-                        NULL,
-                        hDstKey);
-#else
     FILETIME LastWrite;
     DWORD dwSubKeys;
     DWORD dwValues;
@@ -53,7 +45,7 @@ ScmCopyKey(HKEY hDstKey,
     HKEY hSrcSubKey;
     DWORD dwError;
 
-    DPRINT("ScmCopyKey()\n");
+    DPRINT("ScmCopyTree()\n");
 
     dwError = RegQueryInfoKey(hSrcKey,
                               NULL,
@@ -147,8 +139,8 @@ ScmCopyKey(HKEY hDstKey,
                 return dwError;
             }
 
-            dwError = ScmCopyKey(hDstSubKey,
-                                hSrcSubKey);
+            dwError = ScmCopyTree(hSrcSubKey,
+                                  hDstSubKey);
             if (dwError != ERROR_SUCCESS)
             {
                 DPRINT1("Error: %lu\n", dwError);
@@ -245,89 +237,93 @@ ScmCopyKey(HKEY hDstKey,
                  lpNameBuffer);
     }
 
-    DPRINT("ScmCopyKey() done \n");
+    DPRINT("ScmCopyTree() done \n");
 
     return ERROR_SUCCESS;
-#endif
 }
+#endif
 
 
 static
-BOOL
-ScmGetControlSetValues(VOID)
+DWORD
+ScmGetControlSetValues(
+    PDWORD pdwCurrentControlSet,
+    PDWORD pdwDefaultControlSet,
+    PDWORD pdwFailedControlSet,
+    PDWORD pdwLastKnownGoodControlSet)
 {
     HKEY hSelectKey;
     DWORD dwType;
     DWORD dwSize;
-    LONG lError;
+    DWORD dwError;
 
     DPRINT("ScmGetControlSetValues() called\n");
 
-    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                           L"System\\Select",
-                           0,
-                           KEY_READ,
-                           &hSelectKey);
-    if (lError != ERROR_SUCCESS)
-        return FALSE;
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\Select",
+                            0,
+                            KEY_READ,
+                            &hSelectKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
 
     dwSize = sizeof(DWORD);
-    lError = RegQueryValueExW(hSelectKey,
-                              L"Current",
-                              0,
-                              &dwType,
-                              (LPBYTE)&dwCurrentControlSet,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
+    dwError = RegQueryValueExW(hSelectKey,
+                               L"Current",
+                               0,
+                               &dwType,
+                               (LPBYTE)pdwCurrentControlSet,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
     {
-        dwCurrentControlSet = 0;
+        *pdwCurrentControlSet = 0;
     }
 
     dwSize = sizeof(DWORD);
-    lError = RegQueryValueExW(hSelectKey,
-                              L"Default",
-                              0,
-                              &dwType,
-                              (LPBYTE)&dwDefaultControlSet,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
+    dwError = RegQueryValueExW(hSelectKey,
+                               L"Default",
+                               0,
+                               &dwType,
+                               (LPBYTE)pdwDefaultControlSet,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
     {
-        dwDefaultControlSet = 0;
+        *pdwDefaultControlSet = 0;
     }
 
     dwSize = sizeof(DWORD);
-    lError = RegQueryValueExW(hSelectKey,
-                              L"Failed",
-                              0,
-                              &dwType,
-                              (LPBYTE)&dwFailedControlSet,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
+    dwError = RegQueryValueExW(hSelectKey,
+                               L"Failed",
+                               0,
+                               &dwType,
+                               (LPBYTE)pdwFailedControlSet,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
     {
-        dwFailedControlSet = 0;
+        *pdwFailedControlSet = 0;
     }
 
     dwSize = sizeof(DWORD);
-    lError = RegQueryValueExW(hSelectKey,
-                              L"LastKnownGood",
-                              0,
-                              &dwType,
-                              (LPBYTE)&dwLastKnownGoodControlSet,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
+    dwError = RegQueryValueExW(hSelectKey,
+                               L"LastKnownGood",
+                               0,
+                               &dwType,
+                               (LPBYTE)pdwLastKnownGoodControlSet,
+                               &dwSize);
+    if (dwError != ERROR_SUCCESS)
     {
-        dwLastKnownGoodControlSet = 0;
+        *pdwLastKnownGoodControlSet = 0;
     }
 
     RegCloseKey(hSelectKey);
 
     DPRINT("ControlSets:\n");
-    DPRINT("Current: %lu\n", dwCurrentControlSet);
-    DPRINT("Default: %lu\n", dwDefaultControlSet);
-    DPRINT("Failed: %lu\n", dwFailedControlSet);
-    DPRINT("LastKnownGood: %lu\n", dwLastKnownGoodControlSet);
+    DPRINT("Current: %lu\n", *pdwCurrentControlSet);
+    DPRINT("Default: %lu\n", *pdwDefaultControlSet);
+    DPRINT("Failed: %lu\n", *pdwFailedControlSet);
+    DPRINT("LastKnownGood: %lu\n", *pdwLastKnownGoodControlSet);
 
-    return TRUE;
+    return dwError;
 }
 
 
@@ -354,6 +350,7 @@ ScmSetLastKnownGoodControlSet(
                              (LPBYTE)&dwControlSet,
                              sizeof(dwControlSet));
 
+    RegFlushKey(hSelectKey);
     RegCloseKey(hSelectKey);
 
     return dwError;
@@ -396,91 +393,124 @@ ScmGetSetupInProgress(VOID)
 }
 
 
-BOOL
-ScmUpdateControlSets(VOID)
+static
+DWORD
+ScmCopyControlSet(
+    DWORD dwSourceControlSet,
+    DWORD dwDestinationControlSet)
 {
-    WCHAR szCurrentControlSetName[32];
-    WCHAR szNewControlSetName[32];
-    HKEY hCurrentControlSetKey = NULL;
-    HKEY hNewControlSetKey = NULL;
-    DWORD dwNewControlSet, dwDisposition;
+    WCHAR szSourceControlSetName[32];
+    WCHAR szDestinationControlSetName[32];
+    HKEY hSourceControlSetKey = NULL;
+    HKEY hDestinationControlSetKey = NULL;
+    DWORD dwDisposition;
     DWORD dwError;
 
-    /* Do not create a new control set when the system setup is running */
-    if (ScmGetSetupInProgress() != 0)
-    {
-        DPRINT1("No new control set because we are in setup mode!\n");
-        return TRUE;
-    }
+    /* Create the source control set name */
+    swprintf(szSourceControlSetName, L"SYSTEM\\ControlSet%03lu", dwSourceControlSet);
+    DPRINT("Source control set: %S\n", szSourceControlSetName);
 
-    /* Get the control set values */
-    if (!ScmGetControlSetValues())
-        return FALSE;
+    /* Create the destination control set name */
+    swprintf(szDestinationControlSetName, L"SYSTEM\\ControlSet%03lu", dwDestinationControlSet);
+    DPRINT("Destination control set: %S\n", szDestinationControlSetName);
 
-    /* Search for a new control set number */
-    for (dwNewControlSet = 1; dwNewControlSet < 1000; dwNewControlSet++)
-    {
-         if ((dwNewControlSet != dwCurrentControlSet) &&
-             (dwNewControlSet != dwDefaultControlSet) &&
-             (dwNewControlSet != dwFailedControlSet) &&
-             (dwNewControlSet != dwLastKnownGoodControlSet))
-            break;
-    }
-
-    /* Fail if we did not find an unused control set!*/
-    if (dwNewControlSet >= 1000)
-    {
-        DPRINT1("Too many control sets!\n");
-        return FALSE;
-    }
-
-    /* Create the current control set name */
-    swprintf(szCurrentControlSetName, L"SYSTEM\\ControlSet%03lu", dwCurrentControlSet);
-    DPRINT("Current control set: %S\n", szCurrentControlSetName);
-
-    /* Create the new control set name */
-    swprintf(szNewControlSetName, L"SYSTEM\\ControlSet%03lu", dwNewControlSet);
-    DPRINT("New control set: %S\n", szNewControlSetName);
-
-    /* Open the current control set key */
+    /* Open the source control set key */
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                            szCurrentControlSetName,
+                            szSourceControlSetName,
                             0,
                             KEY_READ,
-                            &hCurrentControlSetKey);
+                            &hSourceControlSetKey);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    /* Create the new control set key */
+    /* Create the destination control set key */
     dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
-                              szNewControlSetName,
+                              szDestinationControlSetName,
                               0,
                               NULL,
                               REG_OPTION_NON_VOLATILE,
                               KEY_WRITE,
                               NULL,
-                              &hNewControlSetKey,
+                              &hDestinationControlSetKey,
                               &dwDisposition);
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    /* Copy the current control set to the new control set */
-    dwError = ScmCopyKey(hNewControlSetKey,
-                         hCurrentControlSetKey);
+    /* Copy the source control set to the destination control set */
+#if (_WIN32_WINNT >= 0x0600)
+    dwError = RegCopyTreeW(hSourceControlSetKey,
+                           NULL,
+                           hDestinationControlSetKey);
+#else
+    dwError = ScmCopyTree(hSourceControlSetKey,
+                          hDestinationControlSetKey);
+#endif
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    /* Set the new 'LastKnownGood' control set */
-    dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
+    RegFlushKey(hDestinationControlSetKey);
 
 done:
-    if (hNewControlSetKey != NULL)
-        RegCloseKey(hNewControlSetKey);
+    if (hDestinationControlSetKey != NULL)
+        RegCloseKey(hDestinationControlSetKey);
 
-    if (hCurrentControlSetKey != NULL)
-        RegCloseKey(hCurrentControlSetKey);
+    if (hSourceControlSetKey != NULL)
+        RegCloseKey(hSourceControlSetKey);
 
-    return (dwError == ERROR_SUCCESS);
+    return dwError;
+}
+
+
+DWORD
+ScmCreateLastKnownGoodControlSet(VOID)
+{
+    DWORD dwCurrentControlSet, dwDefaultControlSet;
+    DWORD dwFailedControlSet, dwLastKnownGoodControlSet;
+    DWORD dwNewControlSet;
+    DWORD dwError;
+
+    /* Get the control set values */
+    dwError = ScmGetControlSetValues(&dwCurrentControlSet,
+                                     &dwDefaultControlSet,
+                                     &dwFailedControlSet,
+                                     &dwLastKnownGoodControlSet);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    /* First boot after setup? */
+    if ((ScmGetSetupInProgress() == 0) &&
+        (dwCurrentControlSet == dwLastKnownGoodControlSet))
+    {
+        DPRINT("First boot after setup!\n");
+
+        /* Search for a new control set number */
+        for (dwNewControlSet = 1; dwNewControlSet < 1000; dwNewControlSet++)
+        {
+            if ((dwNewControlSet != dwCurrentControlSet) &&
+                (dwNewControlSet != dwDefaultControlSet) &&
+                (dwNewControlSet != dwFailedControlSet) &&
+                (dwNewControlSet != dwLastKnownGoodControlSet))
+                break;
+        }
+
+        /* Fail if we did not find an unused control set!*/
+        if (dwNewControlSet >= 1000)
+        {
+            DPRINT1("Too many control sets!\n");
+            return ERROR_NO_MORE_ITEMS;
+        }
+
+        /* Copy the current control set */
+        dwError = ScmCopyControlSet(dwCurrentControlSet,
+                                    dwNewControlSet);
+        if (dwError != ERROR_SUCCESS)
+            return dwError;
+
+        /* Set the new 'LastKnownGood' control set */
+        dwError = ScmSetLastKnownGoodControlSet(dwNewControlSet);
+    }
+
+    return dwError;
 }
 
 /* EOF */
