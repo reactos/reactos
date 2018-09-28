@@ -1938,6 +1938,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     KIRQL OldIrql;
+    IO_STATUS_BLOCK IoStatusBlock;
     IOTRACE(IO_FILE_DEBUG, "ObjectBody: %p\n", ObjectBody);
 
     /* If this isn't the last handle for the current process, quit */
@@ -1946,8 +1947,70 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     /* Check if the file is locked and has more then one handle opened */
     if ((FileObject->LockOperation) && (SystemHandleCount != 1))
     {
-        DPRINT1("We need to unlock this file!\n");
-        ASSERT(FALSE);
+        /* Check if this is a direct open or not */
+        if (BooleanFlagOn(FileObject->Flags, FO_DIRECT_DEVICE_OPEN))
+        {
+            /* Get the attached device */
+            DeviceObject = IoGetAttachedDevice(FileObject->DeviceObject);
+        }
+        else
+        {
+            /* Get the FO's device */
+            DeviceObject = IoGetRelatedDeviceObject(FileObject);
+        }
+
+        /* Check if this is a sync FO and lock it */
+        if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            IopLockFileObject(FileObject);
+        }
+
+        /* Go the FastIO path if possible, otherwise fall back to IRP */
+        if (DeviceObject->DriverObject->FastIoDispatch == NULL ||
+            DeviceObject->DriverObject->FastIoDispatch->FastIoUnlockAll == NULL ||
+            !DeviceObject->DriverObject->FastIoDispatch->FastIoUnlockAll(FileObject, PsGetCurrentProcess(), &IoStatusBlock, DeviceObject))
+        {
+            /* Clear and set up Events */
+            KeClearEvent(&FileObject->Event);
+            KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+            /* Allocate an IRP */
+            Irp = IopAllocateIrpMustSucceed(DeviceObject->StackSize);
+
+            /* Set it up */
+            Irp->UserEvent = &Event;
+            Irp->UserIosb = &Irp->IoStatus;
+            Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+            Irp->Tail.Overlay.OriginalFileObject = FileObject;
+            Irp->RequestorMode = KernelMode;
+            Irp->Flags = IRP_SYNCHRONOUS_API;
+            Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+
+            /* Set up Stack Pointer Data */
+            StackPtr = IoGetNextIrpStackLocation(Irp);
+            StackPtr->MajorFunction = IRP_MJ_LOCK_CONTROL;
+            StackPtr->MinorFunction = IRP_MN_UNLOCK_ALL;
+            StackPtr->FileObject = FileObject;
+
+            /* Queue the IRP */
+            IopQueueIrpToThread(Irp);
+
+            /* Call the FS Driver */
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait for completion */
+                KeWaitForSingleObject(&Event, UserRequest, KernelMode, FALSE, NULL);
+            }
+
+            /* IO will unqueue & free for us */
+        }
+
+        /* Release the lock if we were holding it */
+        if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            IopUnlockFileObject(FileObject);
+        }
     }
 
     /* Make sure this is the last handle */
