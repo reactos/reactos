@@ -159,7 +159,8 @@ ScmDecryptPassword(
 
 /* controlset.c */
 
-BOOL ScmGetControlSetValues(VOID);
+BOOL
+ScmUpdateControlSets(VOID)
 
 
 /* database.c */

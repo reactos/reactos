@@ -178,10 +178,10 @@ wWinMain(HINSTANCE hInstance,
 
     /* FIXME: more initialization */
 
-    /* Read the control set values */
-    if (!ScmGetControlSetValues())
+    /* Update the control sets */
+    if (!ScmUpdateControlSets())
     {
-        DPRINT1("SERVICES: Failed to read the control set values\n");
+        DPRINT1("SERVICES: Failed to update the control sets\n");
         goto done;
     }
 
