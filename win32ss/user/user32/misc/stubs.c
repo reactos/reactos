@@ -548,14 +548,6 @@ RecordShutdownReason(DWORD dw0)
 
 BOOL
 WINAPI
-UserLpkPSMTextOut(DWORD dw1, DWORD dw2, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-WINAPI
 UserLpkTabbedTextOut(
     DWORD dw1,
     DWORD dw2,
