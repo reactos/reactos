@@ -65,6 +65,7 @@ static void PSM_PrepareToDraw(LPCWSTR str, INT count, LPWSTR new_str, LPINT new_
 static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, int offset)
 {
     SCRIPT_STRING_ANALYSIS ssa;
+    DWORD dwSSAFlags = SSA_GLYPHS;
     int prefix_x;
     int prefix_end;
     int pos;
@@ -78,8 +79,11 @@ static void LPK_DrawUnderscore(HDC hdc, int x, int y, LPCWSTR str, int count, in
 
     if (ScriptIsComplex(str, count, SIC_COMPLEX) == S_OK)
     {
+        if (GetLayout(hdc) & LAYOUT_RTL || GetTextAlign(hdc) & TA_RTLREADING)
+            dwSSAFlags |= SSA_RTL;
+        
         hr = ScriptStringAnalyse(hdc, str, count, (3 * count / 2 + 16),
-                                -1, SSA_GLYPHS, -1, NULL, NULL, NULL, NULL, NULL, &ssa);
+                                 -1, dwSSAFlags, -1, NULL, NULL, NULL, NULL, NULL, &ssa);
     }
 
     if (hr == S_OK)
@@ -328,6 +332,8 @@ LpkGetCharacterPlacement(
  * without any of these flags the behavior is the string being drawn without the amperstands and
  * with the underscore.
  * user32 has an equivalent function - UserLpkPSMTextOut
+ * 
+ * Note: lpString does not need to be null terminated
  */
 INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, DWORD dwFlags)
 {
@@ -341,7 +347,7 @@ INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, D
 
     if (dwFlags & DT_NOPREFIX)
     {
-        LpkExtTextOut(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, lpString, cString - 1, NULL, 0);
+        LpkExtTextOut(hdc, x, y, 0, NULL, lpString, cString, NULL, 0);
         GetTextExtentPointW(hdc, lpString, cString, &size);
         return size.cx;
     }
@@ -354,7 +360,7 @@ INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, D
     PSM_PrepareToDraw(lpString, cString, display_str, &len);
 
     if (!(dwFlags & DT_PREFIXONLY))
-        LpkExtTextOut(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, display_str, len, NULL, 0);
+        LpkExtTextOut(hdc, x, y, 0, NULL, display_str, len, NULL, 0);
 
     if (!(dwFlags & DT_HIDEPREFIX))
     {
