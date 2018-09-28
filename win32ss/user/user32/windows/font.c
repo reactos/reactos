@@ -414,7 +414,7 @@ INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cStrin
 {
     SIZE size;
     TEXTMETRICW tm;
-    int len, i = 0, j = 0;;
+    int len, i = 0, j = 0;
     int prefix_count = 0, prefix_offset = -1;
     LPWSTR display_str = NULL;
     int prefix_x, prefix_end;
@@ -426,7 +426,7 @@ INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cStrin
 
     if (dwFlags & DT_NOPREFIX) /* Windows ignores this */
     {
-        ExtTextOutW(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, lpString, cString, NULL);
+        TextOutW(hdc, x, y, lpString, cString);
         GetTextExtentPointW(hdc, lpString, cString, &size);
         return size.cx;
     }
@@ -455,7 +455,7 @@ INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cStrin
     len = wcslen(display_str);
 
     if (!(dwFlags & DT_PREFIXONLY))
-        ExtTextOutW(hdc, x, y, (dwFlags & DT_RTLREADING) ? ETO_RTLREADING : 0, NULL, display_str, len, NULL);
+        TextOutW(hdc, x, y, display_str, len);
 
     if (!(dwFlags & DT_HIDEPREFIX))
     {
