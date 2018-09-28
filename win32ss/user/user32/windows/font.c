@@ -431,7 +431,7 @@ INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cStrin
         return size.cx;
     }
 
-    display_str = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(WCHAR));
+    display_str = HeapAlloc(GetProcessHeap(), 0, (cString + 1) * sizeof(WCHAR));
 
     if (!display_str)
         return 0;
@@ -440,7 +440,7 @@ INT WINAPI UserLpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cStrin
     {
         if (lpString[i] == PREFIX || (iswspace(lpString[i]) && lpString[i] != L' '))
         {
-            if(i < cString - 1 && lpString[i + 1] == PREFIX)
+            if (i < cString - 1 && lpString[i + 1] == PREFIX)
                 display_str[j++] = lpString[i++];
             else
                 i++;

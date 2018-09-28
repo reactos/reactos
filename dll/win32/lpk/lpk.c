@@ -352,7 +352,7 @@ INT WINAPI LpkPSMTextOut(HDC hdc, int x, int y, LPCWSTR lpString, int cString, D
         return size.cx;
     }
 
-    display_str = HeapAlloc(GetProcessHeap(), 0, cString * sizeof(WCHAR));
+    display_str = HeapAlloc(GetProcessHeap(), 0, (cString + 1) * sizeof(WCHAR));
 
     if (!display_str)
         return 0;
