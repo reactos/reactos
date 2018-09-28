@@ -160,7 +160,7 @@ ScmDecryptPassword(
 /* controlset.c */
 
 BOOL
-ScmUpdateControlSets(VOID)
+ScmUpdateControlSets(VOID);
 
 
 /* database.c */
