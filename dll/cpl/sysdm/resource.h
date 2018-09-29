@@ -52,6 +52,8 @@
 #define IDS_MEGAHERTZ 90
 #define IDS_GIGAHERTZ 91
 
+#define IDS_UPTIME_FORMAT 92
+
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
 #define IDC_MACHINELINE1     101
@@ -64,6 +66,7 @@
 #define IDC_ROSIMG           108
 #define IDC_ROSHOMEPAGE_LINK 109
 #define IDC_ROSVERSION       110
+#define IDC_UPTIME           111
 
 /* Propsheet - hardware */
 #define IDD_PROPPAGEHARDWARE        300
