@@ -6,6 +6,7 @@
  * PROGRAMMER:      Copyright 1997, 1998 Martin Boehme
  *                            1999 Huw D M Davies
  *                            2005 Dmitry Timoshkov
+ *                            2018 Katayama Hirofumi MZ
  */
 
 #include <win32k.h>
