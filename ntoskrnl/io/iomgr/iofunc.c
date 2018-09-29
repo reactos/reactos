@@ -334,7 +334,13 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Remember to unlock later */
         LockedForSynch = TRUE;
@@ -666,7 +672,7 @@ IopQueryDeviceInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        (void)IopLockFileObject(FileObject, KernelMode);
 
         /* Use File Object event */
         KeClearEvent(&FileObject->Event);
@@ -1221,7 +1227,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        (void)IopLockFileObject(FileObject, KernelMode);
 
         /* Use File Object event */
         KeClearEvent(&FileObject->Event);
@@ -1431,7 +1437,12 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -1579,7 +1590,13 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         LockedForSync = TRUE;
     }
 
@@ -1779,7 +1796,13 @@ NtLockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
         LockedForSync = TRUE;
     }
 
@@ -1972,7 +1995,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (Event) ObDereferenceObject(Event);
+            ObDereferenceObject(FileObject);
+            if (AuxBuffer) ExFreePoolWithTag(AuxBuffer, TAG_SYSB);
+            return Status;
+        }
 
         /* Remember to unlock later */
         LockedForSynch = TRUE;
@@ -2207,7 +2237,12 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if the caller just wants the position */
         if (FileInformationClass == FilePositionInformation)
@@ -2619,7 +2654,13 @@ NtReadFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
@@ -2961,7 +3002,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if the caller just wants the position */
         if (FileInformationClass == FilePositionInformation)
@@ -3411,7 +3457,12 @@ NtUnlockFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -3616,7 +3667,13 @@ NtWriteFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            if (EventObject) ObDereferenceObject(EventObject);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
 
         /* Check if we don't have a byte offset available */
         if (!(ByteOffset) ||
@@ -3897,7 +3954,12 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -4068,7 +4130,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock it */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, PreviousMode);
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            if (TargetDeviceObject) ObDereferenceObject(TargetDeviceObject);
+            return Status;
+        }
     }
     else
     {
