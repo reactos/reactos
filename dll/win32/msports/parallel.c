@@ -15,6 +15,8 @@ typedef struct _PORT_DATA
 
     WCHAR szPortName[16];
     DWORD dwFilterResourceMethod;
+    DWORD dwLegacy;
+
 } PORT_DATA, *PPORT_DATA;
 
 
@@ -25,11 +27,12 @@ ReadPortSettings(
 {
     DWORD dwSize;
     HKEY hKey;
-    LONG lError;
+    DWORD dwError;
 
     TRACE("ReadPortSettings(%p)\n", pPortData);
 
     pPortData->dwFilterResourceMethod = 1; /* Never use an interrupt */
+    pPortData->dwLegacy = 0;               /* Disabled */
 
     hKey = SetupDiOpenDevRegKey(pPortData->DeviceInfoSet,
                                 pPortData->DeviceInfoData,
@@ -37,37 +40,56 @@ ReadPortSettings(
                                 0,
                                 DIREG_DEV,
                                 KEY_READ);
-    if (hKey == INVALID_HANDLE_VALUE)
+    if (hKey != INVALID_HANDLE_VALUE)
     {
-        ERR("SetupDiOpenDevRegKey() failed\n");
-        return;
+        dwSize = sizeof(pPortData->szPortName);
+        dwError = RegQueryValueExW(hKey,
+                                   L"PortName",
+                                   NULL,
+                                   NULL,
+                                  (PBYTE)pPortData->szPortName,
+                                  &dwSize);
+        if (dwError != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueExW failed (Error %lu)\n", dwError);
+        }
+
+        dwSize = sizeof(pPortData->dwFilterResourceMethod);
+        dwError = RegQueryValueExW(hKey,
+                                   L"FilterResourceMethod",
+                                   NULL,
+                                   NULL,
+                                   (PBYTE)&pPortData->dwFilterResourceMethod,
+                                   &dwSize);
+        if (dwError != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueExW failed (Error %lu)\n", dwError);
+        }
+
+        RegCloseKey(hKey);
     }
 
-    dwSize = sizeof(pPortData->szPortName);
-    lError = RegQueryValueExW(hKey,
-                              L"PortName",
-                              NULL,
-                              NULL,
-                              (PBYTE)pPortData->szPortName,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Services\\Parport\\Parameters",
+                            0,
+                            KEY_READ,
+                            &hKey);
+    if (dwError == ERROR_SUCCESS)
     {
-        ERR("RegQueryValueExW failed (Error %lu)\n", lError);
-    }
+        dwSize = sizeof(pPortData->dwLegacy);
+        dwError = RegQueryValueExW(hKey,
+                                   L"ParEnableLegacyZip",
+                                   NULL,
+                                   NULL,
+                                   (PBYTE)&pPortData->dwLegacy,
+                                   &dwSize);
+        if (dwError != ERROR_SUCCESS)
+        {
+            ERR("RegQueryValueExW failed (Error %lu)\n", dwError);
+        }
 
-    dwSize = sizeof(pPortData->dwFilterResourceMethod);
-    lError = RegQueryValueExW(hKey,
-                              L"FilterResourceMethod",
-                              NULL,
-                              NULL,
-                              (PBYTE)&pPortData->dwFilterResourceMethod,
-                              &dwSize);
-    if (lError != ERROR_SUCCESS)
-    {
-        ERR("RegQueryValueExW failed (Error %lu)\n", lError);
+        RegCloseKey(hKey);
     }
-
-    RegCloseKey(hKey);
 }
 
 
@@ -77,9 +99,11 @@ WritePortSettings(
     HWND hwnd,
     PPORT_DATA pPortData)
 {
+    DWORD dwDisposition;
     DWORD dwFilterResourceMethod;
+    DWORD dwLegacy;
     HKEY hKey;
-    LONG lError;
+    DWORD dwError;
 
     TRACE("WritePortSettings(%p)\n", pPortData);
 
@@ -99,28 +123,55 @@ WritePortSettings(
                                     0,
                                     DIREG_DEV,
                                     KEY_WRITE);
-        if (hKey == INVALID_HANDLE_VALUE)
+        if (hKey != INVALID_HANDLE_VALUE)
         {
-            ERR("SetupDiOpenDevRegKey() failed\n");
-            return;
+            dwError = RegSetValueExW(hKey,
+                                     L"FilterResourceMethod",
+                                     0,
+                                     REG_DWORD,
+                                     (PBYTE)&dwFilterResourceMethod,
+                                     sizeof(dwFilterResourceMethod));
+            if (dwError != ERROR_SUCCESS)
+            {
+                ERR("RegSetValueExW failed (Error %lu)\n", dwError);
+            }
+
+            RegCloseKey(hKey);
+            pPortData->dwFilterResourceMethod = dwFilterResourceMethod;
         }
-
-        lError = RegSetValueExW(hKey,
-                                L"FilterResourceMethod",
-                                0,
-                                REG_DWORD,
-                                (PBYTE)&dwFilterResourceMethod,
-                                sizeof(dwFilterResourceMethod));
-        if (lError != ERROR_SUCCESS)
-        {
-            ERR("RegSetValueExW failed (Error %lu)\n", lError);
-        }
-
-        RegCloseKey(hKey);
-
-        pPortData->dwFilterResourceMethod = dwFilterResourceMethod;
     }
 
+    dwLegacy = 0;
+    if (Button_GetCheck(GetDlgItem(hwnd, IDC_PARALLEL_LEGACY)) == BST_CHECKED)
+        dwLegacy = 1;
+
+    if (dwLegacy != pPortData->dwLegacy)
+    {
+        dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                                  L"SYSTEM\\CurrentControlSet\\Services\\Parport\\Parameters",
+                                  0,
+                                  NULL,
+                                  REG_OPTION_NON_VOLATILE,
+                                  KEY_WRITE,
+                                  NULL,
+                                  &hKey,
+                                  &dwDisposition);
+        if (dwError == ERROR_SUCCESS)
+        {
+            dwError = RegSetValueExW(hKey,
+                                     L"ParEnableLegacyZip",
+                                     0,
+                                     REG_DWORD,
+                                     (LPBYTE)&dwLegacy,
+                                     sizeof(dwLegacy));
+            RegCloseKey(hKey);
+
+            if (dwError == ERROR_SUCCESS)
+            {
+                FIXME("Notify the driver!\n");
+            }
+        }
+    }
 }
 
 
@@ -157,7 +208,11 @@ OnInitDialog(HWND hwnd,
 
     /* Disable the 'Enable legacy PNP detection' checkbox */
     hwndControl = GetDlgItem(hwnd, IDC_PARALLEL_LEGACY);
-    EnableWindow(hwndControl, FALSE);
+    if (hwndControl)
+    {
+        Button_SetCheck(GetDlgItem(hwnd, IDC_PARALLEL_LEGACY),
+                        pPortData->dwLegacy ? BST_CHECKED : BST_UNCHECKED);
+    }
 
     /* Fill the 'LPT Port Number' combobox */
     hwndControl = GetDlgItem(hwnd, IDC_PARALLEL_NAME);
