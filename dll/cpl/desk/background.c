@@ -41,10 +41,10 @@ typedef enum
  * layout of the monitor image and they must be adjusted
  * if that image will be changed.
  */
-#define MONITOR_LEFT        18
-#define MONITOR_TOP         18
-#define MONITOR_RIGHT       168
-#define MONITOR_BOTTOM      128
+#define MONITOR_LEFT        20
+#define MONITOR_TOP         8
+#define MONITOR_RIGHT       140
+#define MONITOR_BOTTOM      92
 
 #define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
 #define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
