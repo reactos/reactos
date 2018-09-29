@@ -281,6 +281,8 @@ BEGIN
     IDS_GIGABYTE "GB Bellek"
     IDS_TERABYTE "TB Bellek"
     IDS_PETABYTE "PB Bellek"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Değişken"
     IDS_VALUE "Değer"
     IDS_NO_DUMP "(Yok)"

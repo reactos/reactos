@@ -281,6 +281,8 @@ BEGIN
     IDS_GIGABYTE "GB de RAM"
     IDS_TERABYTE "TB de RAM"
     IDS_PETABYTE "PB de RAM"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Variable"
     IDS_VALUE "Valor"
     IDS_NO_DUMP "(Ninguno)"

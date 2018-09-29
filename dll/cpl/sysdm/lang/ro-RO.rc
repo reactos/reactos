@@ -288,6 +288,8 @@ BEGIN
     IDS_GIGABYTE "Go de memorie"
     IDS_TERABYTE "To de memorie"
     IDS_PETABYTE "Po de memorie"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Variabilă"
     IDS_VALUE "Valoare"
     IDS_NO_DUMP "(Fără fișier de depanare)"

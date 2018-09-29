@@ -49,6 +49,9 @@
 #define IDS_HWPROFILE_PROFILE              88
 #define IDS_HWPROFILE_WARNING              89
 
+#define IDS_MEGAHERTZ 90
+#define IDS_GIGAHERTZ 91
+
 /* Propsheet - general */
 #define IDD_PROPPAGEGENERAL  100
 #define IDC_MACHINELINE1     101

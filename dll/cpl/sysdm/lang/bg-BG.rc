@@ -279,6 +279,8 @@ BEGIN
     IDS_GIGABYTE "ГБ памет"
     IDS_TERABYTE "ТБ памет"
     IDS_PETABYTE "ПБ памет"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Променлива"
     IDS_VALUE "Стойност"
     IDS_NO_DUMP "(Няма)"

@@ -389,7 +389,7 @@ static VOID MakeFloatValueString(DOUBLE* dFloatValue, LPTSTR szOutput, LPTSTR sz
 
 static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 {
-    TCHAR szBuf[64];
+    TCHAR szBuf[64], szHz[16];
     DWORD BufSize = sizeof(DWORD);
     DWORD Type = REG_SZ;
     PROCESSOR_POWER_INFORMATION ppi;
@@ -405,12 +405,20 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
     {
         if (ppi.CurrentMhz < 1000)
         {
-            wsprintf(szBuf, _T("%lu MHz"), ppi.CurrentMhz);
+            if (!LoadString(hApplet, IDS_MEGAHERTZ, szHz, _countof(szHz)))
+            {
+                return;
+            }
+            StringCchPrintf(szBuf, _countof(szBuf), _T("%lu %s"), ppi.CurrentMhz, szHz);
         }
         else
         {
             double flt = ppi.CurrentMhz / 1000.0;
-            MakeFloatValueString(&flt, szBuf, _T("GHz"));
+            if (!LoadString(hApplet, IDS_GIGAHERTZ, szHz, _countof(szHz)))
+            {
+                return;
+            }
+            MakeFloatValueString(&flt, szBuf, szHz);
         }
 
         SetDlgItemText(hwnd, uID, szBuf);
