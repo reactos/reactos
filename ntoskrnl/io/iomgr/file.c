@@ -1985,6 +1985,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
             Irp->RequestorMode = KernelMode;
             Irp->Flags = IRP_SYNCHRONOUS_API;
             Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+            ObReferenceObject(FileObject);
 
             /* Set up Stack Pointer Data */
             StackPtr = IoGetNextIrpStackLocation(Irp);
