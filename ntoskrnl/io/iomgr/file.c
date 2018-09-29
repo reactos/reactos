@@ -2033,7 +2033,11 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     FileObject->Flags |= FO_HANDLE_CREATED;
 
     /* Check if this is a sync FO and lock it */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopLockFileObject(FileObject);
+    if (Process != NULL &&
+        BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+    {
+        IopLockFileObject(FileObject);
+    }
 
     /* Clear and set up Events */
     KeClearEvent(&FileObject->Event);
@@ -2078,7 +2082,11 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     IoFreeIrp(Irp);
 
     /* Release the lock if we were holding it */
-    if (FileObject->Flags & FO_SYNCHRONOUS_IO) IopUnlockFileObject(FileObject);
+    if (Process != NULL &&
+        BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+    {
+        IopUnlockFileObject(FileObject);
+    }
 }
 
 NTSTATUS
