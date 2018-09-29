@@ -1732,6 +1732,7 @@ IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit)
     joint = (PS_JOIN_MASK & penStyle);
     penType = (PS_TYPE_MASK & penStyle);
 
+    /* The function cannot apply to cosmetic pens */
     if (penType == PS_COSMETIC)
     {
         DPRINT1("PS_COSMETIC\n");
@@ -2119,15 +2120,6 @@ PATH_WidenPath(DC *dc)
 
     penWidth = elp->elpWidth;
     ExFreePoolWithTag(elp, TAG_PATH);
-
-    /* The function cannot apply to cosmetic pens */
-    if ((PS_TYPE_MASK & penStyle) == PS_COSMETIC)
-    {
-        DPRINT("PWP 5\n");
-        PATH_UnlockPath(pPath);
-        EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        return NULL;
-    }
 
     pNewPath = IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
     PATH_UnlockPath(pPath);
