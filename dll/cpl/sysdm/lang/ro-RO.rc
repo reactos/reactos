@@ -19,6 +19,8 @@ BEGIN
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "Versiune", IDC_STATIC, 10, 153, 30, 9
     LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "Timp de operare:", IDC_STATIC, 4, 158, 86, 9
+    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
     LTEXT "Calculator:", IDC_STATIC, 124, 116, 34, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
@@ -290,6 +292,7 @@ BEGIN
     IDS_PETABYTE "Po de memorie"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
+    IDS_UPTIME_FORMAT "%u zile, %02u:%02u:%02u"
     IDS_VARIABLE "Variabilă"
     IDS_VALUE "Valoare"
     IDS_NO_DUMP "(Fără fișier de depanare)"

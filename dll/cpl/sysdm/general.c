@@ -551,6 +551,75 @@ static VOID GetSystemVersion(HWND hwnd)
     HeapFree(GetProcessHeap(), 0, pwszStr);
 }
 
+ULONGLONG GetSecondsQPC(VOID)
+{
+    LARGE_INTEGER Counter, Frequency;
+
+    QueryPerformanceCounter(&Counter);
+    QueryPerformanceFrequency(&Frequency);
+
+    return Counter.QuadPart / Frequency.QuadPart;
+}
+
+ULONGLONG GetSeconds(VOID)
+{
+    ULONGLONG (WINAPI * pGetTickCount64)(VOID);
+    ULONGLONG Ticks64;
+    HMODULE hModule = GetModuleHandleW(L"kernel32.dll");
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+    if (pGetTickCount64)
+    {
+        return pGetTickCount64() / 1000;
+    }
+
+    hModule = LoadLibraryW(L"kernel32_vista.dll");
+
+    if (!hModule)
+    {
+        return GetSecondsQPC();
+    }
+
+    pGetTickCount64 = (PVOID)GetProcAddress(hModule, "GetTickCount64");
+
+    if (pGetTickCount64)
+    {
+        Ticks64 = pGetTickCount64() / 1000;
+    }
+    else
+    {
+        Ticks64 = GetSecondsQPC();
+    }
+
+    FreeLibrary(hModule);
+    return Ticks64;
+}
+
+VOID GetSystemUptime(HWND hwnd)
+{
+    HWND hRosUptime;
+    WCHAR szBuf[64], szStr[64];
+    ULONG cSeconds;
+
+    hRosUptime = GetDlgItem(hwnd, IDC_UPTIME);
+    if (!hRosUptime)
+    {
+        return;
+    }
+    if (!LoadStringW(hApplet, IDS_UPTIME_FORMAT, szStr, _countof(szStr)))
+    {
+        return;
+    }
+    cSeconds = GetSeconds();
+    StringCchPrintfW(szBuf, _countof(szBuf), szStr,
+                     cSeconds / (60*60*24),
+                     (cSeconds / (60*60)) % 24,
+                     (cSeconds / 60) % 60,
+                     cSeconds % 60);
+
+    SetWindowTextW(hRosUptime, szBuf);
+}
+
 /* Property page dialog callback */
 INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -571,6 +640,7 @@ INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_ROSIMG), GWLP_WNDPROC, (LONG_PTR)RosImageProc);
             GetSystemInformation(hwndDlg);
             GetSystemVersion(hwndDlg);
+            GetSystemUptime(hwndDlg);
             break;
 
         case WM_DESTROY:
