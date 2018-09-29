@@ -281,6 +281,8 @@ BEGIN
     IDS_GIGABYTE "GB內存"
     IDS_TERABYTE "TB內存"
     IDS_PETABYTE "PB內存"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "變量"
     IDS_VALUE "值"
     IDS_NO_DUMP "(無)"

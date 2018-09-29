@@ -279,6 +279,8 @@ BEGIN
     IDS_GIGABYTE "Гб ОЗУ"
     IDS_TERABYTE "Тб ОЗУ"
     IDS_PETABYTE "Пб ОЗУ"
+    IDS_MEGAHERTZ "МГц"
+    IDS_GIGAHERTZ "ГГц"
     IDS_VARIABLE "Переменная"
     IDS_VALUE "Значение"
     IDS_NO_DUMP "(Нет)"

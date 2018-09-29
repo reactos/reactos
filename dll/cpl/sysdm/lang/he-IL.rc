@@ -281,6 +281,8 @@ BEGIN
     IDS_GIGABYTE "GB זיכרון פיזי"
     IDS_TERABYTE "TB זיכרון פיזי"
     IDS_PETABYTE "PB זיכרון פיזי"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "משתנה"
     IDS_VALUE "ערך"
     IDS_NO_DUMP "(ללא)"

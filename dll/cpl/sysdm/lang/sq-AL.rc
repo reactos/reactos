@@ -279,6 +279,8 @@ BEGIN
     IDS_GIGABYTE "GB e RAM"
     IDS_TERABYTE "TB e RAM"
     IDS_PETABYTE "PB e RAM"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Variablë"
     IDS_VALUE "Vlera"
     IDS_NO_DUMP "(Asnjë)"

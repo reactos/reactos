@@ -287,6 +287,8 @@ BEGIN
     IDS_GIGABYTE "GB pamäte RAM"
     IDS_TERABYTE "TB pamäte RAM"
     IDS_PETABYTE "PB pamäte RAM"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Premenná"
     IDS_VALUE "Hodnota"
     IDS_NO_DUMP "(Žiadne)"

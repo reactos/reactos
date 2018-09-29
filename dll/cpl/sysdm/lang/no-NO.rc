@@ -279,6 +279,8 @@ BEGIN
     IDS_GIGABYTE "GB Systemminne"
     IDS_TERABYTE "TB Systemminne"
     IDS_PETABYTE "PB Systemminne"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Variabel"
     IDS_VALUE "Verdi"
     IDS_NO_DUMP "(Ingen)"

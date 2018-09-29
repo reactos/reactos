@@ -287,6 +287,8 @@ BEGIN
     IDS_GIGABYTE "Гб ОЗП"
     IDS_TERABYTE "Тб ОЗП"
     IDS_PETABYTE "Пб ОЗП"
+    IDS_MEGAHERTZ "МГц"
+    IDS_GIGAHERTZ "ГГц"
     IDS_VARIABLE "Змінна"
     IDS_VALUE "Значення"
     IDS_NO_DUMP "(Немає)"

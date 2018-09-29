@@ -279,6 +279,8 @@ BEGIN
     IDS_GIGABYTE "GB μνήμης RAM"
     IDS_TERABYTE "TB μνήμης RAM"
     IDS_PETABYTE "PB μνήμης RAM"
+    IDS_MEGAHERTZ "MHz"
+    IDS_GIGAHERTZ "GHz"
     IDS_VARIABLE "Μεταβλητή"
     IDS_VALUE "Τιμή"
     IDS_NO_DUMP "(Κανένα)"
