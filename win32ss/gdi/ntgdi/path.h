@@ -109,3 +109,5 @@ VOID FASTCALL IntGetCurrentPositionEx(PDC dc, LPPOINT pt);
 BOOL PATH_RestorePath( DC *, DC *);
 BOOL PATH_SavePath( DC *, DC *);
 BOOL IntGdiFillRgn(PDC pdc, PREGION prgn, PBRUSH pbrFill);
+PPATH FASTCALL
+IntGdiWidenPath(PPATH pPath, UINT penWidth, UINT penStyle, FLOAT eMiterLimit);
