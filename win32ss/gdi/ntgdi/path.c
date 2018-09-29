@@ -2085,7 +2085,7 @@ PATH_WidenPath(DC *dc)
         DPRINT("PWP 2\n");
         PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        return FALSE;
+        return NULL;
     }
 
     elp = ExAllocatePoolWithTag(PagedPool, size, TAG_PATH);
@@ -2094,7 +2094,7 @@ PATH_WidenPath(DC *dc)
         DPRINT("PWP 3\n");
         PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_OUTOFMEMORY);
-        return FALSE;
+        return NULL;
     }
 
     GreGetObject(pdcattr->hpen, size, elp);
@@ -2114,7 +2114,7 @@ PATH_WidenPath(DC *dc)
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
         ExFreePoolWithTag(elp, TAG_PATH);
         PATH_UnlockPath(pPath);
-        return FALSE;
+        return NULL;
     }
 
     penWidth = elp->elpWidth;
@@ -2126,7 +2126,7 @@ PATH_WidenPath(DC *dc)
         DPRINT("PWP 5\n");
         PATH_UnlockPath(pPath);
         EngSetLastError(ERROR_CAN_NOT_COMPLETE);
-        return FALSE;
+        return NULL;
     }
 
     pNewPath = IntGdiWidenPath(pPath, penWidth, penStyle, dc->dclevel.laPath.eMiterLimit);
