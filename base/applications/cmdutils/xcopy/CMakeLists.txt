@@ -1,4 +1,5 @@
 
+add_definitions(-D__WINESRC__)
 add_executable(xcopy xcopy.c xcopy.rc)
 target_link_libraries(xcopy wine)
 set_module_type(xcopy win32cui UNICODE)

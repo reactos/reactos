@@ -50,6 +50,7 @@ Where:\n\
 [/A]  Kopiraj samo datoteke, ki imajo atribut arhiva\n\
 [/M]  Kopiraj samo datoteke, ki imajo atribut arhiva ter odstrani atribut\n\
 \tarhiva\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Kopiraj datoteke, ustvarjene ali spremenjene po navedenem datumu.\n\
 \t\tČe datum ni podan, gre za kopiranje datotek, katerih obstoječi cilj je\n\
 \t\tod izvora\n\n"

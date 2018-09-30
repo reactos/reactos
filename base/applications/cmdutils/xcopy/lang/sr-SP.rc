@@ -50,6 +50,7 @@ XCOPY извор [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 [/A]  Умножи само архивиране датотеке\n\
 [/M]  Умножи само архивиране датотеке и уклони\n\
 \tособине архиве\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Умножи нове или измењене датотеке након одређеног датума.\n\
 \t\tАко датум није унесен, умножи само ако је одредиште старије\n\
 \t\tод извора\n\n"
@@ -108,6 +109,7 @@ Gde:\n\
 [/A]  Umnoži samo arhivirane datoteke\n\
 [/M]  Umnoži samo arhivirane datoteke i ukloni\n\
 \tosobine arhive\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Umnoži nove ili izmenjene datoteke nakon određenog datuma.\n\
 \t\tAko datum nije unesen, umnoži samo ako je odredište starije\n\
 \t\tod izvora\n\n"

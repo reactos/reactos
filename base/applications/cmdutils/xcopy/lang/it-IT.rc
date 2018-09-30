@@ -50,6 +50,7 @@ Dove:\n\
 [/A]  Copia solo i file che abbiano l'attributo Archivio\n\
 [/M]  Copia solo i file che abbiano l'attributo Archivio, rimuovendo\n\
 \tl'attributo\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-g-a] Copia i nuovi file o quelli modificati dopo la data fornita.\n\
 \t\tSe nessuna data è stata fornita, copia solo se la destinazione è più vecchia\n\
 \t\tdella sorgente\n\n"

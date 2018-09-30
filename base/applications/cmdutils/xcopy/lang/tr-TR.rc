@@ -52,6 +52,7 @@ Nereye:\n\
 [/A]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt.\n\
 [/M]  Yalnızca belgelik öz niteliği ayarlı kütükleri çoğalt,\n\
 \tbelgelik öz niteliğini siler.\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:m-d-y] Yeni kütükleri veyâ onların verilen târihten sonra değiştirilmişlerini çoğalt.\n\
 \t\tBir târih verilmemişse yalnızca varış kaynaktan eskiyse çoğalt.\n\n"
 

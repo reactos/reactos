@@ -49,6 +49,7 @@ Mit:\n\
 [/C]  Nach Fehlern den Kopiervorgang fortsetzen\n\
 [/A]  Nur Dateien mit Archivbit kopieren\n\
 [/M]  Nur Dateien mit Archivbit kopieren, danach Archivbit löschen\n\
+[/K]  Copy file attributes, without this attributes are not preserved.\n\
 [/D | /D:M-T-J] Kopiere neue Dateien und Dateien, die neuer als das\n\
 \t\tangegebene Datum sind. Wird kein Datum angegegebn, werden nur\n\
 \t\tQuelldateien kopiert, die neuer sind als die Zieldatei\n\n"
