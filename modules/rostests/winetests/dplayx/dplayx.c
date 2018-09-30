@@ -767,7 +767,7 @@ static BOOL CALLBACK callback_providersA(GUID* guid, char *name, DWORD major, DW
 
     if (!prov) return TRUE;
 
-    if (prov->call_count < sizeof(prov->guid_data) / sizeof(prov->guid_data[0]))
+    if (prov->call_count < ARRAY_SIZE(prov->guid_data))
     {
         prov->guid_ptr[prov->call_count] = guid;
         prov->guid_data[prov->call_count] = *guid;
@@ -786,7 +786,7 @@ static BOOL CALLBACK callback_providersW(GUID* guid, WCHAR *name, DWORD major, D
 
     if (!prov) return TRUE;
 
-    if (prov->call_count < sizeof(prov->guid_data) / sizeof(prov->guid_data[0]))
+    if (prov->call_count < ARRAY_SIZE(prov->guid_data))
     {
         prov->guid_ptr[prov->call_count] = guid;
         prov->guid_data[prov->call_count] = *guid;
@@ -896,7 +896,7 @@ static BOOL CALLBACK EnumAddress_cb2( REFGUID guidDataType,
     {
         BOOL found = FALSE;
         int i;
-        for( i=0; i < sizeof(sps) / sizeof(sps[0]) && !found; i++ )
+        for( i=0; i < ARRAY_SIZE(sps) && !found; i++ )
             found = IsEqualGUID( sps[i], lpData );
         ok( found, "Unknown Address type found %s\n", wine_dbgstr_guid(lpData) );
     }
