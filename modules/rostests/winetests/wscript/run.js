@@ -27,7 +27,7 @@ ok(typeof(WSH) === "object", "typeof(WSH) = " + typeof(WSH));
 ok(WScript === WSH, "WScript !== WSH");
 ok(WScript.Name === "Windows Script Host", "WScript.Name = " + WScript.Name);
 ok(typeof(WScript.Version) === "string", "typeof(WScript.Version) = " + typeof(WScript.Version));
-ok(typeof(WScript.BuildVersion) === "number", "typeof(WScript.BuldVersion) = " + typeof(WScript.BuldVersion));
+ok(typeof(WScript.BuildVersion) === "number", "typeof(WScript.BuildVersion) = " + typeof(WScript.BuildVersion));
 ok(WScript.FullName.toUpperCase() === winetest.wscriptFullName.toUpperCase(), "WScript.FullName = " + WScript.FullName);
 ok(WScript.Path.toUpperCase() === winetest.wscriptPath.toUpperCase(), "WScript.Path = " + WScript.Path);
 ok(WScript.ScriptName === winetest.wscriptScriptName, "WScript.ScriptName = " + WScript.ScriptName);
