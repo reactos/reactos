@@ -7,6 +7,7 @@
  *                  Gunnar Dalsnes
  *                  Eric Kohl
  *                  Filip Navara (navaraf@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *****************************************************************/
@@ -431,7 +432,7 @@ IopParseDevice(IN PVOID ParseObject,
                 {
                     /* Update access state */
                     AccessState->PreviouslyGrantedAccess |= GrantedAccess;
-                    AccessState->RemainingDesiredAccess &= ~(GrantedAccess &
+                    AccessState->RemainingDesiredAccess &= ~(GrantedAccess |
                                                              MAXIMUM_ALLOWED);
                     OpenPacket->Override= TRUE;
                 }
