@@ -23,8 +23,6 @@
 
 #include "wine/heap.h"
 
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof((array)[0]))
-
 static inline void *m_alloc(IMalloc *imalloc, size_t len)
 {
     if (imalloc)

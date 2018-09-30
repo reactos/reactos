@@ -32,8 +32,6 @@
 
 #define ULONG64_MAX (~(ULONG64)0)
 
-#define ARRAY_SIZE(array) (sizeof(array)/sizeof(*array))
-
 struct vec4
 {
     float x, y, z, w;

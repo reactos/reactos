@@ -23,8 +23,6 @@
 
 #include "dlgs.h"
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
-
 /* Common dialogs implementation globals */
 #define COMDLG32_Atom   MAKEINTATOM(0xa000)     /* MS uses this one to identify props */
 
