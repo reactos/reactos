@@ -562,7 +562,7 @@ NpCreateExistingNamedPipe(IN PNP_FCB Fcb,
     if (AccessGranted)
     {
         AccessState->PreviouslyGrantedAccess |= GrantedAccess;
-        AccessState->RemainingDesiredAccess &= ~(GrantedAccess | 0x2000000);
+        AccessState->RemainingDesiredAccess &= ~(GrantedAccess | MAXIMUM_ALLOWED);
     }
 
     ObjectTypeName.Buffer = L"NamedPipe";
