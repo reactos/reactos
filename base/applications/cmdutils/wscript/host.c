@@ -84,7 +84,7 @@ static void print_string(const WCHAR *string)
     ret = WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), string, len, &count, NULL);
     if(ret) {
         static const WCHAR crnlW[] = {'\r','\n'};
-        WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), crnlW, sizeof(crnlW)/sizeof(*crnlW), &count, NULL);
+        WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), crnlW, ARRAY_SIZE(crnlW), &count, NULL);
         return;
     }
 
@@ -183,7 +183,7 @@ static HRESULT WINAPI Host_get_FullName(IHost *iface, BSTR *out_Path)
 
     WINE_TRACE("(%p)\n", out_Path);
 
-    if(GetModuleFileNameW(NULL, fullPath, sizeof(fullPath)/sizeof(WCHAR)) == 0)
+    if(GetModuleFileNameW(NULL, fullPath, ARRAY_SIZE(fullPath)) == 0)
         return E_FAIL;
     if(!(*out_Path = SysAllocString(fullPath)))
         return E_OUTOFMEMORY;
@@ -198,7 +198,7 @@ static HRESULT WINAPI Host_get_Path(IHost *iface, BSTR *out_Path)
 
     WINE_TRACE("(%p)\n", out_Path);
 
-    if(GetModuleFileNameW(NULL, path, sizeof(path)/sizeof(WCHAR)) == 0)
+    if(GetModuleFileNameW(NULL, path, ARRAY_SIZE(path)) == 0)
         return E_FAIL;
     pos = strrchrW(path, '\\');
     howMany = pos - path;

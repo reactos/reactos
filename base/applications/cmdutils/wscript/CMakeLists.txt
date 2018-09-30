@@ -1,4 +1,6 @@
 
+add_definitions(-D__WINESRC__)
+
 list(APPEND SOURCE
     arguments.c
     host.c
