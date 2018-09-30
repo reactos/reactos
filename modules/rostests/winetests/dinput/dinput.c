@@ -106,7 +106,7 @@ static void test_preinitialization(void)
         return;
     }
 
-    for (i = 0; i < sizeof(create_device_tests)/sizeof(create_device_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(create_device_tests); i++)
     {
         if (create_device_tests[i].pdev) pDID = (void *)0xdeadbeef;
         hr = IDirectInput_CreateDevice(pDI, create_device_tests[i].rguid,
@@ -117,7 +117,7 @@ static void test_preinitialization(void)
             ok(pDID == NULL, "[%d] Output interface pointer is %p\n", i, pDID);
     }
 
-    for (i = 0; i < sizeof(enum_devices_tests)/sizeof(enum_devices_tests[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(enum_devices_tests); i++)
     {
         hr = IDirectInput_EnumDevices(pDI, enum_devices_tests[i].dwDevType,
                                            enum_devices_tests[i].lpCallback,
@@ -217,7 +217,7 @@ static void test_DirectInputCreateEx(void)
         return;
     }
 
-    for (i = 0; i < sizeof(invalid_param_list)/sizeof(invalid_param_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(invalid_param_list); i++)
     {
         if (invalid_param_list[i].ppdi) pUnk = (void *)0xdeadbeef;
         hr = pDirectInputCreateEx(invalid_param_list[i].hinst ? hInstance : NULL,
@@ -230,7 +230,7 @@ static void test_DirectInputCreateEx(void)
             ok(pUnk == invalid_param_list[i].expected_ppdi, "[%d] Output interface pointer is %p\n", i, pUnk);
     }
 
-    for (i = 0; i < sizeof(no_interface_list)/sizeof(no_interface_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(no_interface_list); i++)
     {
         pUnk = (void *)0xdeadbeef;
         hr = pDirectInputCreateEx(hInstance, DIRECTINPUT_VERSION, no_interface_list[i], (void **)&pUnk, NULL);
@@ -238,7 +238,7 @@ static void test_DirectInputCreateEx(void)
         ok(pUnk == (void *)0xdeadbeef, "[%d] Output interface pointer is %p\n", i, pUnk);
     }
 
-    for (i = 0; i < sizeof(iid_list)/sizeof(iid_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(iid_list); i++)
     {
         pUnk = NULL;
         hr = pDirectInputCreateEx(hInstance, DIRECTINPUT_VERSION, iid_list[i], (void **)&pUnk, NULL);
@@ -249,9 +249,9 @@ static void test_DirectInputCreateEx(void)
     }
 
     /* Examine combinations of requested interfaces and version numbers. */
-    for (i = 0; i < sizeof(directinput_version_list)/sizeof(directinput_version_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(directinput_version_list); i++)
     {
-        for (j = 0; j < sizeof(iid_list)/sizeof(iid_list[0]); j++)
+        for (j = 0; j < ARRAY_SIZE(iid_list); j++)
         {
             pUnk = NULL;
             hr = pDirectInputCreateEx(hInstance, directinput_version_list[i], iid_list[j], (void **)&pUnk, NULL);
@@ -311,7 +311,7 @@ static void test_QueryInterface(void)
     hr = IDirectInput_QueryInterface(pDI, &IID_IUnknown, NULL);
     ok(hr == E_POINTER, "IDirectInput_QueryInterface returned 0x%08x\n", hr);
 
-    for (i = 0; i < sizeof(iid_list)/sizeof(iid_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(iid_list); i++)
     {
         pUnk = NULL;
         hr = IDirectInput_QueryInterface(pDI, iid_list[i], (void **)&pUnk);
@@ -320,7 +320,7 @@ static void test_QueryInterface(void)
         if (pUnk) IUnknown_Release(pUnk);
     }
 
-    for (i = 0; i < sizeof(no_interface_list)/sizeof(no_interface_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(no_interface_list); i++)
     {
         pUnk = (void *)0xdeadbeef;
         hr = IDirectInput_QueryInterface(pDI, no_interface_list[i].riid, (void **)&pUnk);
@@ -512,7 +512,7 @@ static void test_Initialize(void)
     hr = IDirectInput_Initialize(pDI, hInstance, 0xcafe);
     ok(hr == DIERR_OLDDIRECTINPUTVERSION, "IDirectInput_Initialize returned 0x%08x\n", hr);
 
-    for (i = 0; i < sizeof(directinput_version_list)/sizeof(directinput_version_list[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(directinput_version_list); i++)
     {
         hr = IDirectInput_Initialize(pDI, hInstance, directinput_version_list[i]);
         ok(hr == DI_OK, "IDirectInput_Initialize returned 0x%08x\n", hr);

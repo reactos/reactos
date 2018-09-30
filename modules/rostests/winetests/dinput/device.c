@@ -51,7 +51,7 @@ static const DIDATAFORMAT data_format = {
     sizeof(DIOBJECTDATAFORMAT),
     DIDF_ABSAXIS,
     32,
-    sizeof(obj_data_format) / sizeof(obj_data_format[0]),
+    ARRAY_SIZE(obj_data_format),
     (LPDIOBJECTDATAFORMAT)obj_data_format
 };
 
@@ -94,7 +94,7 @@ static void test_object_info(IDirectInputDeviceA *device, HWND hwnd)
     ok(cnt == cnt1, "Enum count changed from %d to %d\n", cnt, cnt1);
 
     /* Testing EnumObjects with different types of device objects */
-    for (type_index=0; type_index < sizeof(obj_types)/sizeof(obj_types[0]); type_index++)
+    for (type_index=0; type_index < ARRAY_SIZE(obj_types); type_index++)
     {
         hr = IDirectInputDevice_EnumObjects(device, enum_type_callback, &obj_types[type_index], obj_types[type_index]);
         ok(SUCCEEDED(hr), "EnumObjects() failed: %08x\n", hr);
