@@ -5169,7 +5169,7 @@ HRESULT WINAPI D3DXCreateCylinder(struct IDirect3DDevice9 *device, float radius1
 HRESULT WINAPI D3DXCreateTeapot(struct IDirect3DDevice9 *device,
         struct ID3DXMesh **mesh, struct ID3DXBuffer **adjacency)
 {
-    FIXME("(%p, %p, %p): stub\n", device, mesh, adjacency);
+    FIXME("device %p, mesh %p, adjacency %p semi-stub.\n", device, mesh, adjacency);
 
     return D3DXCreateSphere(device, 1.0f, 4, 4, mesh, adjacency);
 }
