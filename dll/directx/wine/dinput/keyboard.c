@@ -48,6 +48,7 @@ struct SysKeyboardImpl
 {
     struct IDirectInputDeviceImpl base;
     BYTE DInputKeyState[WINE_DINPUT_KEYBOARD_MAX_KEYS];
+    DWORD subtype;
 };
 
 static inline SysKeyboardImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
@@ -67,11 +68,38 @@ static inline IDirectInputDevice8W *IDirectInputDevice8W_from_impl(SysKeyboardIm
     return &This->base.IDirectInputDevice8W_iface;
 }
 
-static BYTE map_dik_code(DWORD scanCode, DWORD vkCode)
+static BYTE map_dik_code(DWORD scanCode, DWORD vkCode, DWORD subType)
 {
     if (!scanCode)
         scanCode = MapVirtualKeyW(vkCode, MAPVK_VK_TO_VSC);
 
+    if (subType == DIDEVTYPEKEYBOARD_JAPAN106)
+    {
+        switch (scanCode)
+        {
+        case 0x0d: /* ^ */
+            scanCode = DIK_CIRCUMFLEX;
+            break;
+        case 0x1a: /* @ */
+            scanCode = DIK_AT;
+            break;
+        case 0x1b: /* [ */
+            scanCode = DIK_LBRACKET;
+            break;
+        case 0x28: /* : */
+            scanCode = DIK_COLON;
+            break;
+        case 0x29: /* Hankaku/Zenkaku */
+            scanCode = DIK_KANJI;
+            break;
+        case 0x2b: /* ] */
+            scanCode = DIK_RBRACKET;
+            break;
+        case 0x73: /* \ */
+            scanCode = DIK_BACKSLASH;
+            break;
+        }
+    }
     return scanCode;
 }
 
@@ -97,7 +125,7 @@ static int KeyboardCallback( LPDIRECTINPUTDEVICE8A iface, WPARAM wparam, LPARAM 
         case VK_NUMLOCK : dik_code = DIK_NUMLOCK; break;
         case VK_SUBTRACT: dik_code = DIK_SUBTRACT; break;
         default:
-            dik_code = map_dik_code(hook->scanCode & 0xff, hook->vkCode);
+            dik_code = map_dik_code(hook->scanCode & 0xff, hook->vkCode, This->subtype);
             if (hook->flags & LLKHF_EXTENDED) dik_code |= 0x80;
     }
     new_diks = hook->flags & LLKHF_UP ? 0 : 0x80;
@@ -121,7 +149,24 @@ const GUID DInput_Wine_Keyboard_GUID = { /* 0ab8648a-7735-11d2-8c73-71df54a96441
     0x0ab8648a, 0x7735, 0x11d2, {0x8c, 0x73, 0x71, 0xdf, 0x54, 0xa9, 0x64, 0x41}
 };
 
-static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version) {
+static DWORD get_keyboard_subtype(void)
+{
+    DWORD kbd_type, kbd_subtype, dev_subtype;
+    kbd_type = GetKeyboardType(0);
+    kbd_subtype = GetKeyboardType(1);
+
+    if (kbd_type == 4 || (kbd_type == 7 && kbd_subtype == 0))
+        dev_subtype = DIDEVTYPEKEYBOARD_PCENH;
+    else if (kbd_type == 7 && kbd_subtype == 2)
+        dev_subtype = DIDEVTYPEKEYBOARD_JAPAN106;
+    else {
+        FIXME("Unknown keyboard type=%u, subtype=%u\n", kbd_type, kbd_subtype);
+        dev_subtype = DIDEVTYPEKEYBOARD_PCENH;
+    }
+    return dev_subtype;
+}
+
+static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version, DWORD subtype) {
     DWORD dwSize;
     DIDEVICEINSTANCEA ddi;
     
@@ -136,16 +181,16 @@ static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD ver
     ddi.guidInstance = GUID_SysKeyboard;/* DInput's GUID */
     ddi.guidProduct = DInput_Wine_Keyboard_GUID; /* Vendor's GUID */
     if (version >= 0x0800)
-        ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_UNKNOWN << 8);
+        ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (subtype << 8);
     else
-        ddi.dwDevType = DIDEVTYPE_KEYBOARD | (DIDEVTYPEKEYBOARD_UNKNOWN << 8);
+        ddi.dwDevType = DIDEVTYPE_KEYBOARD | (subtype << 8);
     strcpy(ddi.tszInstanceName, "Keyboard");
     strcpy(ddi.tszProductName, "Wine Keyboard");
 
     memcpy(lpddi, &ddi, (dwSize < sizeof(ddi) ? dwSize : sizeof(ddi)));
 }
 
-static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version) {
+static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version, DWORD subtype) {
     DWORD dwSize;
     DIDEVICEINSTANCEW ddi;
     
@@ -160,9 +205,9 @@ static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
     ddi.guidInstance = GUID_SysKeyboard;/* DInput's GUID */
     ddi.guidProduct = DInput_Wine_Keyboard_GUID; /* Vendor's GUID */
     if (version >= 0x0800)
-        ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_UNKNOWN << 8);
+        ddi.dwDevType = DI8DEVTYPE_KEYBOARD | (subtype << 8);
     else
-        ddi.dwDevType = DIDEVTYPE_KEYBOARD | (DIDEVTYPEKEYBOARD_UNKNOWN << 8);
+        ddi.dwDevType = DIDEVTYPE_KEYBOARD | (subtype << 8);
     MultiByteToWideChar(CP_ACP, 0, "Keyboard", -1, ddi.tszInstanceName, MAX_PATH);
     MultiByteToWideChar(CP_ACP, 0, "Wine Keyboard", -1, ddi.tszProductName, MAX_PATH);
 
@@ -179,7 +224,7 @@ static HRESULT keyboarddev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVI
       (((dwDevType == DI8DEVCLASS_KEYBOARD) || (dwDevType == DI8DEVTYPE_KEYBOARD)) && (version >= 0x0800))) {
     TRACE("Enumerating the Keyboard device\n");
  
-    fill_keyboard_dideviceinstanceA(lpddi, version);
+    fill_keyboard_dideviceinstanceA(lpddi, version, get_keyboard_subtype());
     
     return S_OK;
   }
@@ -197,7 +242,7 @@ static HRESULT keyboarddev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVI
       (((dwDevType == DI8DEVCLASS_KEYBOARD) || (dwDevType == DI8DEVTYPE_KEYBOARD)) && (version >= 0x0800))) {
     TRACE("Enumerating the Keyboard device\n");
 
-    fill_keyboard_dideviceinstanceW(lpddi, version);
+    fill_keyboard_dideviceinstanceW(lpddi, version, get_keyboard_subtype());
     
     return S_OK;
   }
@@ -220,6 +265,7 @@ static SysKeyboardImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput)
     newDevice->base.event_proc = KeyboardCallback;
     InitializeCriticalSection(&newDevice->base.crit);
     newDevice->base.crit.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": SysKeyboardImpl*->base.crit");
+    newDevice->subtype = get_keyboard_subtype();
 
     /* Create copy of default data format */
     if (!(df = HeapAlloc(GetProcessHeap(), 0, c_dfDIKeyboard.dwSize))) goto failed;
@@ -229,12 +275,14 @@ static SysKeyboardImpl *alloc_device(REFGUID rguid, IDirectInputImpl *dinput)
     for (i = 0; i < df->dwNumObjs; i++)
     {
         char buf[MAX_PATH];
+        BYTE dik_code;
 
         if (!GetKeyNameTextA(((i & 0x7f) << 16) | ((i & 0x80) << 17), buf, sizeof(buf)))
             continue;
 
-        memcpy(&df->rgodf[idx], &c_dfDIKeyboard.rgodf[i], df->dwObjSize);
-        df->rgodf[idx++].dwType = DIDFT_MAKEINSTANCE(i) | DIDFT_PSHBUTTON;
+        dik_code = map_dik_code(i, 0, newDevice->subtype);
+        memcpy(&df->rgodf[idx], &c_dfDIKeyboard.rgodf[dik_code], df->dwObjSize);
+        df->rgodf[idx++].dwType = DIDFT_MAKEINSTANCE(dik_code) | DIDFT_PSHBUTTON;
     }
     df->dwNumObjs = idx;
 
@@ -362,9 +410,9 @@ static HRESULT WINAPI SysKeyboardWImpl_GetCapabilities(LPDIRECTINPUTDEVICE8W ifa
     devcaps.dwSize = lpDIDevCaps->dwSize;
     devcaps.dwFlags = DIDC_ATTACHED | DIDC_EMULATED;
     if (This->base.dinput->dwVersion >= 0x0800)
-        devcaps.dwDevType = DI8DEVTYPE_KEYBOARD | (DI8DEVTYPEKEYBOARD_PCENH << 8);
+        devcaps.dwDevType = DI8DEVTYPE_KEYBOARD | (This->subtype << 8);
     else
-        devcaps.dwDevType = DIDEVTYPE_KEYBOARD | (DIDEVTYPEKEYBOARD_PCENH << 8);
+        devcaps.dwDevType = DIDEVTYPE_KEYBOARD | (This->subtype << 8);
     devcaps.dwAxes = 0;
     devcaps.dwButtons = This->base.data_format.wine_df->dwNumObjs;
     devcaps.dwPOVs = 0;
@@ -385,6 +433,40 @@ static HRESULT WINAPI SysKeyboardAImpl_GetCapabilities(LPDIRECTINPUTDEVICE8A ifa
     return SysKeyboardWImpl_GetCapabilities(IDirectInputDevice8W_from_impl(This), lpDIDevCaps);
 }
 
+static DWORD map_dik_to_scan(DWORD dik_code, DWORD subtype)
+{
+    if (dik_code == DIK_PAUSE || dik_code == DIK_NUMLOCK) dik_code ^= 0x80;
+    if (subtype == DIDEVTYPEKEYBOARD_JAPAN106)
+    {
+        switch (dik_code)
+        {
+        case DIK_CIRCUMFLEX:
+            dik_code = 0x0d;
+            break;
+        case DIK_AT:
+            dik_code = 0x1a;
+            break;
+        case DIK_LBRACKET:
+            dik_code = 0x1b;
+            break;
+        case DIK_COLON:
+            dik_code = 0x28;
+            break;
+        case DIK_KANJI:
+            dik_code = 0x29;
+            break;
+        case DIK_RBRACKET:
+            dik_code = 0x2b;
+            break;
+        case DIK_BACKSLASH:
+            dik_code = 0x73;
+            break;
+        }
+    }
+
+    return dik_code;
+}
+
 /******************************************************************************
   *     GetObjectInfo : get information about a device object such as a button
   *                     or axis
@@ -396,14 +478,14 @@ SysKeyboardAImpl_GetObjectInfo(
 	DWORD dwObj,
 	DWORD dwHow)
 {
+    SysKeyboardImpl *This = impl_from_IDirectInputDevice8A(iface);
     HRESULT res;
     LONG scan;
 
     res = IDirectInputDevice2AImpl_GetObjectInfo(iface, pdidoi, dwObj, dwHow);
     if (res != DI_OK) return res;
 
-    scan = DIDFT_GETINSTANCE(pdidoi->dwType);
-    if (scan == DIK_PAUSE || scan == DIK_NUMLOCK) scan ^= 0x80;
+    scan = map_dik_to_scan(DIDFT_GETINSTANCE(pdidoi->dwType), This->subtype);
     if (!GetKeyNameTextA((scan & 0x80) << 17 | (scan & 0x7f) << 16,
                          pdidoi->tszName, sizeof(pdidoi->tszName)))
         return DIERR_OBJECTNOTFOUND;
@@ -417,14 +499,14 @@ static HRESULT WINAPI SysKeyboardWImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface
 						     DWORD dwObj,
 						     DWORD dwHow)
 {
+    SysKeyboardImpl *This = impl_from_IDirectInputDevice8W(iface);
     HRESULT res;
     LONG scan;
 
     res = IDirectInputDevice2WImpl_GetObjectInfo(iface, pdidoi, dwObj, dwHow);
     if (res != DI_OK) return res;
 
-    scan = DIDFT_GETINSTANCE(pdidoi->dwType);
-    if (scan == DIK_PAUSE || scan == DIK_NUMLOCK) scan ^= 0x80;
+    scan = map_dik_to_scan(DIDFT_GETINSTANCE(pdidoi->dwType), This->subtype);
     if (!GetKeyNameTextW((scan & 0x80) << 17 | (scan & 0x7f) << 16,
                          pdidoi->tszName, sizeof(pdidoi->tszName)/sizeof(pdidoi->tszName[0])))
         return DIERR_OBJECTNOTFOUND;
@@ -448,7 +530,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetDeviceInfo(
 	return DI_OK;
     }
 
-    fill_keyboard_dideviceinstanceA(pdidi, This->base.dinput->dwVersion);
+    fill_keyboard_dideviceinstanceA(pdidi, This->base.dinput->dwVersion, This->subtype);
     
     return DI_OK;
 }
@@ -463,7 +545,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface
 	return DI_OK;
     }
 
-    fill_keyboard_dideviceinstanceW(pdidi, This->base.dinput->dwVersion);
+    fill_keyboard_dideviceinstanceW(pdidi, This->base.dinput->dwVersion, This->subtype);
     
     return DI_OK;
 }

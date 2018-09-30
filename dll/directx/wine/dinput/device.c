@@ -39,6 +39,8 @@
 #include "device_private.h"
 #include "dinput_private.h"
 
+#define WM_WINE_NOTIFY_ACTIVITY WM_USER
+
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 static inline IDirectInputDeviceImpl *impl_from_IDirectInputDevice8A(IDirectInputDevice8A *iface)
@@ -934,6 +936,8 @@ void queue_event(LPDIRECTINPUTDEVICE8A iface, int inst_id, DWORD data, DWORD tim
 
     /* Event is being set regardless of the queue state */
     if (This->hEvent) SetEvent(This->hEvent);
+
+    PostMessageW(GetDesktopWindow(), WM_WINE_NOTIFY_ACTIVITY, 0, 0);
 
     if (!This->queue_len || This->overflow || ofs < 0) return;
 
