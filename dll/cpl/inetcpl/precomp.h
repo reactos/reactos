@@ -21,6 +21,7 @@
 #include <shlwapi.h>
 
 #include <wine/debug.h>
+#include <wine/heap.h>
 
 #include "inetcpl.h"
 

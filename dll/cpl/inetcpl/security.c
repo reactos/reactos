@@ -73,7 +73,7 @@ static DWORD url_templates[] = {URLTEMPLATE_CUSTOM,
 static DWORD index_from_urltemplate(URLTEMPLATE value)
 {
 
-    DWORD index = sizeof(url_templates) / sizeof(url_templates[0]);
+    DWORD index = ARRAY_SIZE(url_templates);
 
     while((index > 0) && (url_templates[index-1] != value))
         index--;
@@ -105,12 +105,12 @@ static void update_security_level(secdlg_data *sd, DWORD lv_index, DWORD tb_inde
         current_index = (tb_index > 0) ? tb_index : index_from_urltemplate(sd->levels[lv_index]);
 
         name[0] = 0;
-        LoadStringW(hcpl, IDS_SEC_LEVEL0 + current_index, name, sizeof(name)/sizeof(name[0]));
+        LoadStringW(hcpl, IDS_SEC_LEVEL0 + current_index, name, ARRAY_SIZE(name));
         TRACE("new level #%d: %s\n", current_index, debugstr_w(name));
         SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_LEVEL), name);
 
         name[0] = 0;
-        LoadStringW(hcpl, IDS_SEC_LEVEL0_INFO + (current_index * 0x10), name, sizeof(name)/sizeof(name[0]));
+        LoadStringW(hcpl, IDS_SEC_LEVEL0_INFO + (current_index * 0x10), name, ARRAY_SIZE(name));
         TRACE("new level info: %s\n", debugstr_w(name));
         SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_LEVEL_INFO), name);
 
@@ -134,8 +134,8 @@ static void update_zone_info(secdlg_data *sd, DWORD lv_index)
 
     SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_ZONE_INFO), za->szDescription);
 
-    len = LoadStringW(hcpl, IDS_SEC_SETTINGS, name, sizeof(name)/sizeof(*name));
-    lstrcpynW(&name[len], za->szDisplayName, sizeof(name)/sizeof(*name) - len - 1);
+    len = LoadStringW(hcpl, IDS_SEC_SETTINGS, name, ARRAY_SIZE(name));
+    lstrcpynW(&name[len], za->szDisplayName, ARRAY_SIZE(name) - len - 1);
 
     TRACE("new title: %s\n", debugstr_w(name));
     SetWindowTextW(GetDlgItem(sd->hsec, IDC_SEC_GROUP), name);
