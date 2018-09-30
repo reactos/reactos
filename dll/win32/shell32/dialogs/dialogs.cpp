@@ -92,17 +92,16 @@ DestroyIconList(HWND hDlgCtrl, PPICK_ICON_CONTEXT pIconContext)
 static BOOL
 DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
 {
-    // destroy previous
+    // Destroy previous icons
     DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
     SendMessageW(pIconContext->hDlgCtrl, LB_RESETCONTENT, 0, 0);
     delete[] pIconContext->phIcons;
 
-    // store paths
-    if (pIconContext->szPath != pszFile)
-        StringCchCopyW(pIconContext->szPath, _countof(pIconContext->szPath), pszFile);
+    // Store the paths
+    StringCchCopyW(pIconContext->szPath, _countof(pIconContext->szPath), pszFile);
     ExpandEnvironmentStringsW(pszFile, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
 
-    // load DLL if possible
+    // Load the module if possible
     HMODULE hLibrary = LoadLibraryExW(pIconContext->szExpandedPath, NULL, LOAD_LIBRARY_AS_DATAFILE);
     if (pIconContext->hLibrary)
         FreeLibrary(pIconContext->hLibrary);
@@ -110,7 +109,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
 
     if (pIconContext->hLibrary)
     {
-        // load icons from DLL
+        // Load the icons from the module
         pIconContext->nIcons = ExtractIconExW(pIconContext->szExpandedPath, -1, NULL, NULL, 0);
         pIconContext->phIcons = new HICON[pIconContext->nIcons];
 
@@ -125,7 +124,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
     }
     else
     {
-        // *.ico
+        // .ico file
         pIconContext->nIcons = 1;
         pIconContext->phIcons = new HICON[1];
 
@@ -139,7 +138,7 @@ DoLoadIcons(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext, LPCWSTR pszFile)
         }
     }
 
-    // set text
+    // Set the text
     SetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath);
 
     if (pIconContext->nIcons == 0)
@@ -155,28 +154,28 @@ static const LPCWSTR s_pszDefaultPath = L"%SystemRoot%\\system32\\shell32.dll";
 
 static void NoIconsInFile(HWND hwndDlg, PICK_ICON_CONTEXT *pIconContext)
 {
-    // show message
+    // Show an error message
     CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
     strText.Format(IDS_NO_ICONS, pIconContext->szPath);
     MessageBoxW(hwndDlg, strText, strTitle, MB_ICONWARNING);
 
-    // load default icons
+    // Load the default icons
     DoLoadIcons(hwndDlg, pIconContext, s_pszDefaultPath);
 }
 
-// icon size
+// Icon size
 #define CX_ICON     GetSystemMetrics(SM_CXICON)
 #define CY_ICON     GetSystemMetrics(SM_CYICON)
 
-// item size
+// Item size
 #define CX_ITEM     (CX_ICON + 4)
 #define CY_ITEM     (CY_ICON + 12)
 
-INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
+INT_PTR CALLBACK PickIconProc(
+    HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam
-)
+    LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmis;
     LPDRAWITEMSTRUCT lpdis;
@@ -190,105 +189,109 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
 
     switch(uMsg)
     {
-    case WM_INITDIALOG:
-        pIconContext = (PPICK_ICON_CONTEXT)lParam;
-        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pIconContext);
-        pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
-
-        SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, CX_ITEM, 0);
-
-        // load icons
-        if (!DoLoadIcons(hwndDlg, pIconContext, pIconContext->szPath))
+        case WM_INITDIALOG:
         {
-            NoIconsInFile(hwndDlg, pIconContext);
+            pIconContext = (PPICK_ICON_CONTEXT)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pIconContext);
+            pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
+
+            SendMessageW(pIconContext->hDlgCtrl, LB_SETCOLUMNWIDTH, CX_ITEM, 0);
+
+            // Load the icons
+            if (!DoLoadIcons(hwndDlg, pIconContext, pIconContext->szPath))
+                NoIconsInFile(hwndDlg, pIconContext);
+
+            // Set the selection
+            count = SendMessageW(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
+            if (count != LB_ERR)
+            {
+                if (pIconContext->Index < 0)
+                {
+                    // A negative value will be interpreted as a negated resource ID.
+                    LPARAM lParam = -pIconContext->Index;
+                    pIconContext->Index = (INT)SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRINGEXACT, -1, lParam);
+                }
+
+                if (pIconContext->Index < 0 || count <= pIconContext->Index)
+                    pIconContext->Index = 0;
+
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETTOPINDEX, pIconContext->Index, 0);
+            }
+            return TRUE;
         }
 
-        // set selection
-        count = SendMessageW(pIconContext->hDlgCtrl, LB_GETCOUNT, 0, 0);
-        if (count != LB_ERR)
-        {
-            if (pIconContext->Index < 0)
+        case WM_COMMAND:
+            switch(LOWORD(wParam))
             {
-                // A negative value will be interpreted as a negated resource ID.
-                LPARAM lParam = -pIconContext->Index;
-                pIconContext->Index = (INT)SendMessageW(pIconContext->hDlgCtrl, LB_FINDSTRINGEXACT, -1, lParam);
-            }
-
-            if (pIconContext->Index < 0 || count <= pIconContext->Index)
-                pIconContext->Index = 0;
-
-            SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, pIconContext->Index, 0);
-            SendMessageW(pIconContext->hDlgCtrl, LB_SETTOPINDEX, pIconContext->Index, 0);
-        }
-        return TRUE;
-
-    case WM_COMMAND:
-        switch(LOWORD(wParam))
-        {
-        case IDOK:
-            index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
-            pIconContext->Index = index;
-            GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath, MAX_PATH);
-            ExpandEnvironmentStringsW(pIconContext->szPath, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
-            DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
-            delete[] pIconContext->phIcons;
-            EndDialog(hwndDlg, 1);
-            break;
-
-        case IDCANCEL:
-            DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
-            delete[] pIconContext->phIcons;
-            EndDialog(hwndDlg, 0);
-            break;
-
-        case IDC_PICKICON_LIST:
-            switch (HIWORD(wParam))
-            {
-                case LBN_SELCHANGE:
-                    InvalidateRect((HWND)lParam, NULL, TRUE);
-                    break;
-
-                case LBN_DBLCLK:
-                    SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, 0), 0);
-                    break;
-            }
-            break;
-
-        case IDC_BUTTON_PATH:
-            // choose DLL path
-            szText[0] = 0;
-            szFilter[0] = 0;
-            ZeroMemory(&ofn, sizeof(ofn));
-            ofn.lStructSize = sizeof(ofn);
-            ofn.hwndOwner = hwndDlg;
-            ofn.lpstrFile = szText;
-            ofn.nMaxFile = MAX_PATH;
-            strTitle.LoadString(IDS_PICK_ICON_TITLE);
-            ofn.lpstrTitle = strTitle;
-            LoadStringW(shell32_hInstance, IDS_PICK_ICON_FILTER, szFilter, _countof(szFilter));
-            ofn.lpstrFilter = szFilter;
-            if (!GetOpenFileNameW(&ofn))
+            case IDOK:
+                index = SendMessageW(pIconContext->hDlgCtrl, LB_GETCURSEL, 0, 0);
+                pIconContext->Index = index;
+                GetDlgItemTextW(hwndDlg, IDC_EDIT_PATH, pIconContext->szPath, _countof(pIconContext->szPath));
+                ExpandEnvironmentStringsW(pIconContext->szPath, pIconContext->szExpandedPath, _countof(pIconContext->szExpandedPath));
+                DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
+                delete[] pIconContext->phIcons;
+                EndDialog(hwndDlg, 1);
                 break;
 
-            // load icons
-            if (!DoLoadIcons(hwndDlg, pIconContext, szText))
+            case IDCANCEL:
+                DestroyIconList(pIconContext->hDlgCtrl, pIconContext);
+                delete[] pIconContext->phIcons;
+                EndDialog(hwndDlg, 0);
+                break;
+
+            case IDC_PICKICON_LIST:
+                switch (HIWORD(wParam))
+                {
+                    case LBN_SELCHANGE:
+                        InvalidateRect((HWND)lParam, NULL, TRUE);
+                        break;
+
+                    case LBN_DBLCLK:
+                        SendMessage(hwndDlg, WM_COMMAND, MAKEWPARAM(IDOK, 0), 0);
+                        break;
+                }
+                break;
+
+            case IDC_BUTTON_PATH:
             {
-                NoIconsInFile(hwndDlg, pIconContext);
+                // Choose the module path
+                szText[0] = 0;
+                szFilter[0] = 0;
+                ZeroMemory(&ofn, sizeof(ofn));
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwndDlg;
+                ofn.lpstrFile = szText;
+                ofn.nMaxFile = _countof(szText);
+                strTitle.LoadString(IDS_PICK_ICON_TITLE);
+                ofn.lpstrTitle = strTitle;
+                LoadStringW(shell32_hInstance, IDS_PICK_ICON_FILTER, szFilter, _countof(szFilter));
+                ofn.lpstrFilter = szFilter;
+                if (!GetOpenFileNameW(&ofn))
+                    break;
+
+                // Load the icons
+                if (!DoLoadIcons(hwndDlg, pIconContext, szText))
+                    NoIconsInFile(hwndDlg, pIconContext);
+
+                // Set the selection
+                SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
+                break;
             }
 
-            // set selection
-            SendMessageW(pIconContext->hDlgCtrl, LB_SETCURSEL, 0, 0);
+            default:
+                break;
+            }
             break;
-        }
-        break;
 
         case WM_MEASUREITEM:
-            lpmis = (LPMEASUREITEMSTRUCT) lParam;
+            lpmis = (LPMEASUREITEMSTRUCT)lParam;
             lpmis->itemHeight = CY_ITEM;
             return TRUE;
 
         case WM_DRAWITEM:
-            lpdis = (LPDRAWITEMSTRUCT) lParam;
+        {
+            lpdis = (LPDRAWITEMSTRUCT)lParam;
             if (lpdis->itemID == (UINT)-1)
             {
                 break;
@@ -306,7 +309,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                     else
                         FillRect(lpdis->hDC, &lpdis->rcItem, (HBRUSH)(COLOR_WINDOW + 1));
 
-                    // centering
+                    // Centering
                     INT x = lpdis->rcItem.left + (CX_ITEM - CX_ICON) / 2;
                     INT y = lpdis->rcItem.top + (CY_ITEM - CY_ICON) / 2;
 
@@ -315,6 +318,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 }
             }
             return TRUE;
+        }
     }
 
     return FALSE;
@@ -328,7 +332,7 @@ BOOL WINAPI PickIconDlg(
 {
     int res;
 
-    // initialize
+    // Initialize the dialog
     PICK_ICON_CONTEXT IconContext = { NULL };
     IconContext.Index = *lpdwIconIndex;
     StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), lpstrFile);
@@ -339,22 +343,22 @@ BOOL WINAPI PickIconDlg(
     {
         if (IconContext.szExpandedPath[0])
         {
-            // no such file
+            // No such file
             CStringW strText, strTitle(MAKEINTRESOURCEW(IDS_PICK_ICON_TITLE));
             strText.Format(IDS_FILE_NOT_FOUND, lpstrFile);
             MessageBoxW(hWndOwner, strText, strTitle, MB_ICONWARNING);
         }
 
-        // set default value
+        // Set the default value
         StringCchCopyW(IconContext.szPath, _countof(IconContext.szPath), s_pszDefaultPath);
         ExpandEnvironmentStringsW(s_pszDefaultPath, IconContext.szPath, _countof(IconContext.szPath));
     }
 
-    // show dialog
+    // Show the dialog
     res = DialogBoxParamW(shell32_hInstance, MAKEINTRESOURCEW(IDD_PICK_ICON), hWndOwner, PickIconProc, (LPARAM)&IconContext);
     if (res)
     {
-        // store
+        // Store the selected icon
         StringCchCopyW(lpstrFile, nMaxFile, IconContext.szExpandedPath);
         *lpdwIconIndex = IconContext.Index;
     }
@@ -628,8 +632,8 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     WCHAR filter[MAX_PATH], szCaption[MAX_PATH];
                     OPENFILENAMEW ofn;
 
-                    LoadStringW(shell32_hInstance, IDS_RUNDLG_BROWSE_FILTER, filter, MAX_PATH);
-                    LoadStringW(shell32_hInstance, IDS_RUNDLG_BROWSE_CAPTION, szCaption, MAX_PATH);
+                    LoadStringW(shell32_hInstance, IDS_RUNDLG_BROWSE_FILTER, filter, _countof(filter));
+                    LoadStringW(shell32_hInstance, IDS_RUNDLG_BROWSE_CAPTION, szCaption, _countof(szCaption));
 
                     ZeroMemory(&ofn, sizeof(ofn));
                     ofn.lStructSize = sizeof(ofn);

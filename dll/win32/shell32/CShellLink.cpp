@@ -1200,7 +1200,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCSTR pszArgs)
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1399,7 +1398,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::Resolve(HWND hwnd, DWORD fFlags)
 
         /* Clear the cached path */
         HeapFree(GetProcessHeap(), 0, m_sPath);
-        m_sPath = NULL;
         m_sPath = shelllink_get_msi_component_path(component);
         if (!m_sPath)
             return E_FAIL;
@@ -1553,15 +1551,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetDescription(LPCWSTR pszName)
     TRACE("(%p)->(desc=%s)\n", this, debugstr_w(pszName));
 
     HeapFree(GetProcessHeap(), 0, m_sDescription);
+    m_sDescription = NULL;
+
     if (pszName)
     {
         m_sDescription = strdupW(pszName);
         if (!m_sDescription)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sDescription = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1585,15 +1582,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetWorkingDirectory(LPCWSTR pszDir)
     TRACE("(%p)->(dir=%s)\n", this, debugstr_w(pszDir));
 
     HeapFree(GetProcessHeap(), 0, m_sWorkDir);
+    m_sWorkDir = NULL;
+
     if (pszDir)
     {
         m_sWorkDir = strdupW(pszDir);
         if (!m_sWorkDir)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sWorkDir = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1617,15 +1613,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetArguments(LPCWSTR pszArgs)
     TRACE("(%p)->(args=%s)\n", this, debugstr_w(pszArgs));
 
     HeapFree(GetProcessHeap(), 0, m_sArgs);
+    m_sArgs = NULL;
+
     if (pszArgs)
     {
         m_sArgs = strdupW(pszArgs);
         if (!m_sArgs)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sArgs = NULL;
-
     m_bDirty = TRUE;
 
     return S_OK;
@@ -1650,11 +1645,10 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(LPWSTR pszIconPath, INT cc
         pInfo = (LPEXP_SZ_LINK)SHFindDataBlock(m_pDBList, EXP_SZ_ICON_SIG);
         if (pInfo && (pInfo->cbSize == sizeof(*pInfo)))
         {
+            SHExpandEnvironmentStringsW(pInfo->szwTarget, szPath, _countof(szPath));
+
             m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
             HeapFree(GetProcessHeap(), 0, m_sIcoPath);
-            m_sIcoPath = NULL;
-
-            SHExpandEnvironmentStringsW(pInfo->szwTarget, szPath, _countof(szPath));
 
             m_sIcoPath = strdupW(szPath);
             if (!m_sIcoPath)
@@ -1931,7 +1925,6 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetIconLocation(LPCWSTR pszIconPath, INT i
     {
         m_Header.dwFlags &= ~SLDF_HAS_ICONLOCATION;
         HeapFree(GetProcessHeap(), 0, m_sIcoPath);
-        m_sIcoPath = NULL;
 
         m_sIcoPath = strdupW(pszIconPath);
         if (!m_sIcoPath)
@@ -1953,15 +1946,14 @@ HRESULT STDMETHODCALLTYPE CShellLink::SetRelativePath(LPCWSTR pszPathRel, DWORD 
     TRACE("(%p)->(path=%s %x)\n", this, debugstr_w(pszPathRel), dwReserved);
 
     HeapFree(GetProcessHeap(), 0, m_sPathRel);
+    m_sPathRel = NULL;
+
     if (pszPathRel)
     {
         m_sPathRel = strdupW(pszPathRel);
         if (!m_sPathRel)
             return E_OUTOFMEMORY;
     }
-    else
-        m_sPathRel = NULL;
-
     m_bDirty = TRUE;
 
     return ShellLink_UpdatePath(m_sPathRel, m_sPath, m_sWorkDir, &m_sPath);
