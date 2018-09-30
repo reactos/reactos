@@ -21,6 +21,51 @@
 
 #pragma once
 
+#include "wine/debug.h"
+
+/* RIFF stream parsing */
+struct chunk_entry;
+struct chunk_entry {
+    FOURCC id;
+    DWORD size;
+    FOURCC type;                        /* valid only for LIST and RIFF chunks */
+    ULARGE_INTEGER offset;              /* chunk offset from start of stream */
+    const struct chunk_entry *parent;   /* enclosing RIFF or LIST chunk */
+};
+
+HRESULT stream_get_chunk(IStream *stream, struct chunk_entry *chunk) DECLSPEC_HIDDEN;
+HRESULT stream_next_chunk(IStream *stream, struct chunk_entry *chunk) DECLSPEC_HIDDEN;
+HRESULT stream_skip_chunk(IStream *stream, struct chunk_entry *chunk) DECLSPEC_HIDDEN;
+
+HRESULT stream_chunk_get_data(IStream *stream, const struct chunk_entry *chunk, void *data,
+        ULONG size) DECLSPEC_HIDDEN;
+HRESULT stream_chunk_get_wstr(IStream *stream, const struct chunk_entry *chunk, WCHAR *str,
+        ULONG size) DECLSPEC_HIDDEN;
+
+static inline HRESULT stream_reset_chunk_data(IStream *stream, const struct chunk_entry *chunk)
+{
+    LARGE_INTEGER offset;
+
+    offset.QuadPart = chunk->offset.QuadPart + sizeof(FOURCC) + sizeof(DWORD);
+    if (chunk->id == FOURCC_RIFF || chunk->id == FOURCC_LIST)
+        offset.QuadPart += sizeof(FOURCC);
+
+    return IStream_Seek(stream, offset, STREAM_SEEK_SET, NULL);
+}
+
+static inline HRESULT stream_reset_chunk_start(IStream *stream, const struct chunk_entry *chunk)
+{
+    LARGE_INTEGER offset;
+
+    offset.QuadPart = chunk->offset.QuadPart;
+
+    return IStream_Seek(stream, offset, STREAM_SEEK_SET, NULL);
+}
+
+const char *debugstr_chunk(const struct chunk_entry *chunk) DECLSPEC_HIDDEN;
+
+
+/* IDirectMusicObject base object */
 struct dmobject {
     IDirectMusicObject IDirectMusicObject_iface;
     IPersistStream IPersistStream_iface;
@@ -39,6 +84,14 @@ HRESULT WINAPI dmobj_IDirectMusicObject_GetDescriptor(IDirectMusicObject *iface,
         DMUS_OBJECTDESC *desc) DECLSPEC_HIDDEN;
 HRESULT WINAPI dmobj_IDirectMusicObject_SetDescriptor(IDirectMusicObject *iface,
         DMUS_OBJECTDESC *desc) DECLSPEC_HIDDEN;
+
+/* Helper for IDirectMusicObject::ParseDescriptor */
+HRESULT dmobj_parsedescriptor(IStream *stream, const struct chunk_entry *riff,
+        DMUS_OBJECTDESC *desc, DWORD supported) DECLSPEC_HIDDEN;
+/* Additional supported flags for dmobj_parsedescriptor.
+   DMUS_OBJ_NAME is 'UNAM' chunk in UNFO list */
+#define DMUS_OBJ_NAME_INAM   0x1000     /* 'INAM' chunk in UNFO list */
+#define DMUS_OBJ_NAME_INFO   0x2000     /* 'INAM' chunk in INFO list */
 
 /* Generic IPersistStream methods */
 HRESULT WINAPI dmobj_IPersistStream_QueryInterface(IPersistStream *iface, REFIID riid,
