@@ -115,28 +115,22 @@ static HRESULT per_user_install_callback(HINF hinf, PCWSTR field, const void *ar
     per_user.bRollback = FALSE;
     per_user.dwIsInstalled = 0;
 
-    SetupGetLineTextW(NULL, hinf, field, disp_name, per_user.szDispName,
-                     sizeof(per_user.szDispName) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, disp_name, per_user.szDispName, ARRAY_SIZE(per_user.szDispName), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, version, per_user.szVersion,
-                     sizeof(per_user.szVersion) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, version, per_user.szVersion, ARRAY_SIZE(per_user.szVersion), &size);
 
     if (SetupFindFirstLineW(hinf, field, is_installed, &context))
     {
         SetupGetIntField(&context, 1, (PINT)&per_user.dwIsInstalled);
     }
 
-    SetupGetLineTextW(NULL, hinf, field, comp_id, per_user.szCompID,
-                     sizeof(per_user.szCompID) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, comp_id, per_user.szCompID, ARRAY_SIZE(per_user.szCompID), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, guid, per_user.szGUID,
-                     sizeof(per_user.szGUID) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, guid, per_user.szGUID, ARRAY_SIZE(per_user.szGUID), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, locale, per_user.szLocale,
-                     sizeof(per_user.szLocale) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, locale, per_user.szLocale, ARRAY_SIZE(per_user.szLocale), &size);
 
-    SetupGetLineTextW(NULL, hinf, field, stub_path, per_user.szStub,
-                     sizeof(per_user.szStub) / sizeof(WCHAR), &size);
+    SetupGetLineTextW(NULL, hinf, field, stub_path, per_user.szStub, ARRAY_SIZE(per_user.szStub), &size);
 
     return SetPerUserSecValuesW(&per_user);
 }
@@ -154,8 +148,7 @@ static HRESULT register_ocxs_callback(HINF hinf, PCWSTR field, const void *arg)
         WCHAR buffer[MAX_INF_STRING_LENGTH];
 
         /* get OCX filename */
-        if (!SetupGetStringFieldW(&context, 1, buffer,
-                                  sizeof(buffer) / sizeof(WCHAR), NULL))
+        if (!SetupGetStringFieldW(&context, 1, buffer, ARRAY_SIZE(buffer), NULL))
             continue;
 
         hm = LoadLibraryExW(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
@@ -273,7 +266,7 @@ static HRESULT iterate_section_fields(HINF hinf, PCWSTR section, PCWSTR key,
 {
     WCHAR static_buffer[200];
     WCHAR *buffer = static_buffer;
-    DWORD size = sizeof(static_buffer) / sizeof(WCHAR);
+    DWORD size = ARRAY_SIZE(static_buffer);
     INFCONTEXT context;
     HRESULT hr = E_FAIL;
 
@@ -645,8 +638,7 @@ HRESULT WINAPI ExecuteCabA(HWND hwnd, CABINFOA* pCab, LPVOID pReserved)
     RtlCreateUnicodeStringFromAsciiz(&inf, pCab->pszInf);
     RtlCreateUnicodeStringFromAsciiz(&section, pCab->pszSection);
     
-    MultiByteToWideChar(CP_ACP, 0, pCab->szSrcPath, -1, cabinfo.szSrcPath,
-                        sizeof(cabinfo.szSrcPath) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pCab->szSrcPath, -1, cabinfo.szSrcPath, ARRAY_SIZE(cabinfo.szSrcPath));
 
     cabinfo.pszInf = inf.Buffer;
     cabinfo.pszSection = section.Buffer;

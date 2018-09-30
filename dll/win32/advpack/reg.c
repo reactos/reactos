@@ -44,7 +44,7 @@ static BOOL get_temp_ini_path(LPWSTR name)
     WCHAR tmp_dir[MAX_PATH];
     WCHAR prefix[] = {'a','v','p',0};
 
-    if(!GetTempPathW(sizeof(tmp_dir)/sizeof(WCHAR), tmp_dir))
+    if(!GetTempPathW(ARRAY_SIZE(tmp_dir), tmp_dir))
        return FALSE;
 
     if(!GetTempFileNameW(tmp_dir, prefix, 0, name))
@@ -177,14 +177,14 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
     WCHAR sys_root[MAX_PATH];
 
     *mod_path = '\"';
-    if (!GetModuleFileNameW(hm, mod_path + 1, sizeof(mod_path) / sizeof(WCHAR) - 2))
+    if (!GetModuleFileNameW(hm, mod_path + 1, ARRAY_SIZE(mod_path) - 2))
         return E_FAIL;
 
     lstrcatW(mod_path, quote);
     WritePrivateProfileStringW(Strings, MOD_PATH, mod_path, ini_path);
 
     *sys_root = '\0';
-    GetEnvironmentVariableW(SystemRoot, sys_root, sizeof(sys_root) / sizeof(WCHAR));
+    GetEnvironmentVariableW(SystemRoot, sys_root, ARRAY_SIZE(sys_root));
 
     if(!strncmpiW(sys_root, mod_path + 1, strlenW(sys_root)))
     {
