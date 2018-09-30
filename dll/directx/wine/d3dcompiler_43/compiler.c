@@ -570,7 +570,7 @@ static const struct target_info targets_info[] = {
 static const struct target_info * get_target_info(const char *target)
 {
     LONG min = 0;
-    LONG max = sizeof(targets_info) / sizeof(targets_info[0]) - 1;
+    LONG max = ARRAY_SIZE(targets_info) - 1;
     LONG cur;
     int res;
 

@@ -24,7 +24,7 @@ The following libraries are shared with Wine.
 reactos/dll/directx/wine/amstream       # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3d8           # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3d9           # Synced to WineStaging-3.9
-reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-3.3
+reactos/dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-3.17
 reactos/dll/directx/wine/d3drm          # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-3.9
 reactos/dll/directx/wine/d3dxof         # Synced to WineStaging-3.3
