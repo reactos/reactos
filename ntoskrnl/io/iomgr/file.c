@@ -641,7 +641,70 @@ IopParseDevice(IN PVOID ParseObject,
             ((OpenPacket->RelatedFileObject) || (RemainingName->Length)) &&
             (!VolumeOpen))
         {
-            DPRINT("Fix Secure FSD support!!!\n");
+            Privileges = NULL;
+            GrantedAccess = 0;
+
+            KeEnterCriticalRegion();
+            ExAcquireResourceSharedLite(&IopSecurityResource, TRUE);
+
+            /* Lock the subject context */
+            SeLockSubjectContext(&AccessState->SubjectSecurityContext);
+
+            /* Do access check */
+            AccessGranted = SeAccessCheck(OriginalDeviceObject->SecurityDescriptor,
+                                          &AccessState->SubjectSecurityContext,
+                                          TRUE,
+                                          DesiredAccess,
+                                          0,
+                                          &Privileges,
+                                          &IoFileObjectType->TypeInfo.GenericMapping,
+                                          UserMode,
+                                          &GrantedAccess,
+                                          &Status);
+            if (Privileges != NULL)
+            {
+                /* Append and free the privileges */
+                SeAppendPrivileges(AccessState, Privileges);
+                SeFreePrivileges(Privileges);
+            }
+
+            /* Check if we got access */
+            if (GrantedAccess)
+            {
+                AccessState->PreviouslyGrantedAccess |= GrantedAccess;
+                AccessState->RemainingDesiredAccess &= ~(GrantedAccess | MAXIMUM_ALLOWED);
+            }
+
+            FileString.Length = 8;
+            FileString.MaximumLength = 8;
+            FileString.Buffer = L"File";
+
+            /* Do Audit/Alarm for open operation
+             * NOTA: we audit target device object
+             */
+            SeOpenObjectAuditAlarm(&FileString,
+                                   DeviceObject,
+                                   CompleteName,
+                                   OriginalDeviceObject->SecurityDescriptor,
+                                   AccessState,
+                                   FALSE,
+                                   AccessGranted,
+                                   UserMode,
+                                   &AccessState->GenerateOnClose);
+
+            SeUnlockSubjectContext(&AccessState->SubjectSecurityContext);
+
+            ExReleaseResourceLite(&IopSecurityResource);
+            KeLeaveCriticalRegion();
+
+            /* Check if access failed */
+            if (!AccessGranted)
+            {
+                /* Dereference the device and fail */
+                IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+                if (Vpb) IopDereferenceVpbAndFree(Vpb);
+                return STATUS_ACCESS_DENIED;
+            }
         }
 
         /* Allocate the IRP */
