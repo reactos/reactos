@@ -1,4 +1,5 @@
 
+add_definitions(-D__WINESRC__)
 add_executable(wmic main.c wmic.rc)
 target_link_libraries(wmic wine)
 set_module_type(wmic win32cui UNICODE)
