@@ -28,6 +28,8 @@
 #include "dmobject.h"
 #include "wine/debug.h"
 
+#include "dmusic_private.h"
+
 WINE_DEFAULT_DEBUG_CHANNEL(dmobj);
 WINE_DECLARE_DEBUG_CHANNEL(dmfile);
 
