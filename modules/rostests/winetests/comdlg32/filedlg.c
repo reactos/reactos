@@ -1120,9 +1120,6 @@ static void test_extension(void)
     test_extension_helper(&ofn, "TestFilter (*.*.def)\0*.*.def\0", "deadbeef.xyz");
 }
 
-#undef ARRAY_SIZE
-
-
 static BOOL WINAPI test_null_enum(HWND hwnd, LPARAM lParam)
 {
     /* Find the textbox and send a filename so IDOK will work.
