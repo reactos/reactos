@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <winbase.h>
 #include <winreg.h>
+#include <windowsx.h>
 #include <objbase.h>
 #include <netcfgx.h>
 #include <setupapi.h>
