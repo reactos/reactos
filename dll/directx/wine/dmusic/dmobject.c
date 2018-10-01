@@ -258,7 +258,11 @@ HRESULT WINAPI dmobj_IDirectMusicObject_SetDescriptor(IDirectMusicObject *iface,
 static inline void info_get_name(IStream *stream, const struct chunk_entry *info,
         DMUS_OBJECTDESC *desc)
 {
+#ifndef __REACTOS__
     struct chunk_entry chunk = {.parent = info};
+#else
+    struct chunk_entry chunk = { 0, 0, 0, {{0}}, info };
+#endif
     char name[DMUS_MAX_NAME];
     ULONG len;
     HRESULT hr = E_FAIL;
@@ -277,7 +281,11 @@ static inline void info_get_name(IStream *stream, const struct chunk_entry *info
 static inline void unfo_get_name(IStream *stream, const struct chunk_entry *unfo,
         DMUS_OBJECTDESC *desc, BOOL inam)
 {
+#ifndef __REACTOS__
     struct chunk_entry chunk = {.parent = unfo};
+#else
+    struct chunk_entry chunk = { 0, 0, 0, {{0}}, unfo };
+#endif
 
     while (stream_next_chunk(stream, &chunk) == S_OK)
         if (chunk.id == DMUS_FOURCC_UNAM_CHUNK || (inam && chunk.id == mmioFOURCC('I','N','A','M')))
@@ -288,7 +296,11 @@ static inline void unfo_get_name(IStream *stream, const struct chunk_entry *unfo
 HRESULT dmobj_parsedescriptor(IStream *stream, const struct chunk_entry *riff,
         DMUS_OBJECTDESC *desc, DWORD supported)
 {
+#ifndef __REACTOS__
     struct chunk_entry chunk = {.parent = riff};
+#else
+    struct chunk_entry chunk = { 0, 0, 0, {{0}}, riff };
+#endif
     HRESULT hr;
 
     TRACE("Looking for %#x in %p: %s\n", supported, stream, debugstr_chunk(riff));
