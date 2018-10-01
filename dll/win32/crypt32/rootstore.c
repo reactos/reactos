@@ -931,7 +931,7 @@ static void add_ms_root_certs(HCERTSTORE to)
 
     TRACE("\n");
 
-    for (i = 0; i < sizeof(msRootCerts) / sizeof(msRootCerts[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(msRootCerts); i++)
         if (!CertAddEncodedCertificateToStore(to, X509_ASN_ENCODING,
          msRootCerts[i].pb, msRootCerts[i].cb, CERT_STORE_ADD_NEW, NULL))
             WARN("adding root cert %d failed: %08x\n", i, GetLastError());
@@ -981,9 +981,7 @@ static void read_trusted_roots_from_known_locations(HCERTSTORE store)
         }
 #endif
 
-        for (i = 0; !ret &&
-         i < sizeof(CRYPT_knownLocations) / sizeof(CRYPT_knownLocations[0]);
-         i++)
+        for (i = 0; !ret && i < ARRAY_SIZE(CRYPT_knownLocations); i++)
             ret = import_certs_from_path(CRYPT_knownLocations[i], from, TRUE);
         check_and_store_certs(from, store);
     }

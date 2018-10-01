@@ -175,7 +175,7 @@ static BOOL CRYPT_EncodeDataContentInfoHeader(const CDataEncodeMsg *msg,
         };
 
         ret = CRYPT_AsnEncodeSequence(X509_ASN_ENCODING, items,
-         sizeof(items) / sizeof(items[0]), CRYPT_ENCODE_ALLOC_FLAG, NULL,
+         ARRAY_SIZE(items), CRYPT_ENCODE_ALLOC_FLAG, NULL,
          (LPBYTE)&header->pbData, &header->cbData);
         if (ret)
         {
