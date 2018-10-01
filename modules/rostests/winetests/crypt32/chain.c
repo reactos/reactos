@@ -2889,59 +2889,6 @@ static const BYTE chain31_1[] = {
 0x43,0x08,0xe5,0x78,0x2b,0x95,0xf3,0x75,0xb6,0x88,0xf0,0x6b,0x5c,0x5b,0x50,
 0x04,0x91,0x3b,0x89,0x5a,0x60,0x1f,0xfc,0x36,0x53,0x32,0x36,0x0a,0x4d,0x03,
 0x2c,0xd7 };
-static const BYTE ecc_crt[] = {
-0x30,0x82,0x01,0x46,0x30,0x81,0xec,0x02,0x09,0x00,0xe7,0x6b,0x26,0x86,0x0a,
-0x82,0xff,0xe9,0x30,0x0a,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x02,
-0x30,0x2b,0x31,0x0b,0x30,0x09,0x06,0x03,0x55,0x04,0x06,0x13,0x02,0x44,0x45,
-0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x0a,0x0c,0x04,0x57,0x69,0x6e,0x65,
-0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x03,0x0c,0x04,0x57,0x69,0x6e,0x65,
-0x30,0x1e,0x17,0x0d,0x31,0x37,0x30,0x39,0x32,0x37,0x31,0x33,0x34,0x31,0x30,
-0x34,0x5a,0x17,0x0d,0x32,0x37,0x30,0x39,0x32,0x35,0x31,0x33,0x34,0x31,0x30,
-0x34,0x5a,0x30,0x2b,0x31,0x0b,0x30,0x09,0x06,0x03,0x55,0x04,0x06,0x13,0x02,
-0x44,0x45,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x0a,0x0c,0x04,0x54,0x65,
-0x73,0x74,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x03,0x0c,0x04,0x54,0x65,
-0x73,0x74,0x30,0x59,0x30,0x13,0x06,0x07,0x2a,0x86,0x48,0xce,0x3d,0x02,0x01,
-0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,0x07,0x03,0x42,0x00,0x04,0xed,
-0xfc,0x77,0xd8,0xb9,0xe7,0xf3,0xf8,0xce,0x13,0xb8,0x7f,0x0f,0x78,0xea,0x73,
-0x87,0x29,0x10,0xe1,0x6d,0x10,0xce,0x57,0x60,0x3b,0x3e,0xb4,0x5f,0x0d,0x20,
-0xc1,0xeb,0x6d,0x74,0xe9,0x7b,0x11,0x51,0x9a,0x00,0xe8,0xe9,0x12,0x84,0xb9,
-0x07,0x7e,0x7b,0x62,0x67,0x12,0x67,0x08,0xe5,0x2e,0x27,0xce,0xa2,0x57,0x15,
-0xad,0xc5,0x1f,0x30,0x0a,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,0x02,
-0x03,0x49,0x00,0x30,0x46,0x02,0x21,0x00,0xd7,0x29,0xce,0x5a,0xef,0x74,0x85,
-0xd1,0x18,0x5f,0x6e,0xf1,0xba,0x53,0xd4,0xcd,0xdd,0xe0,0x5d,0xf1,0x5e,0x48,
-0x51,0xea,0x63,0xc0,0xe8,0xe2,0xf6,0xfa,0x4c,0xaf,0x02,0x21,0x00,0xe3,0x94,
-0x15,0x3b,0x6c,0x71,0x6e,0x44,0x22,0xcb,0xa0,0x88,0xcd,0x0a,0x5a,0x50,0x29,
-0x7c,0x5c,0xd6,0x6c,0xd2,0xe0,0x7f,0xcd,0x02,0x92,0x21,0x4c,0x2c,0x92,0xee };
-static const BYTE ecc_ca[] = {
-0x30,0x82,0x01,0x9f,0x30,0x82,0x01,0x46,0xa0,0x03,0x02,0x01,0x02,0x02,0x09,
-0x00,0xf1,0x54,0xae,0x21,0x2e,0x4d,0x31,0x9f,0x30,0x0a,0x06,0x08,0x2a,0x86,
-0x48,0xce,0x3d,0x04,0x03,0x02,0x30,0x2b,0x31,0x0b,0x30,0x09,0x06,0x03,0x55,
-0x04,0x06,0x13,0x02,0x44,0x45,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x0a,
-0x0c,0x04,0x57,0x69,0x6e,0x65,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,0x04,0x03,
-0x0c,0x04,0x57,0x69,0x6e,0x65,0x30,0x1e,0x17,0x0d,0x31,0x37,0x30,0x39,0x32,
-0x37,0x31,0x33,0x33,0x39,0x31,0x35,0x5a,0x17,0x0d,0x32,0x37,0x30,0x39,0x32,
-0x35,0x31,0x33,0x33,0x39,0x31,0x35,0x5a,0x30,0x2b,0x31,0x0b,0x30,0x09,0x06,
-0x03,0x55,0x04,0x06,0x13,0x02,0x44,0x45,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,
-0x04,0x0a,0x0c,0x04,0x57,0x69,0x6e,0x65,0x31,0x0d,0x30,0x0b,0x06,0x03,0x55,
-0x04,0x03,0x0c,0x04,0x57,0x69,0x6e,0x65,0x30,0x59,0x30,0x13,0x06,0x07,0x2a,
-0x86,0x48,0xce,0x3d,0x02,0x01,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x03,0x01,
-0x07,0x03,0x42,0x00,0x04,0x3b,0x3c,0x34,0xc8,0x3f,0x15,0xea,0x02,0x68,0x46,
-0x69,0xdf,0x0c,0xa6,0xee,0x7a,0xd9,0x82,0x08,0x9b,0x37,0x53,0x42,0xf3,0x13,
-0x63,0xda,0x65,0x79,0xe8,0x04,0x9e,0x8c,0x77,0xc4,0x33,0x77,0xd9,0x5a,0x7f,
-0x60,0x7b,0x98,0xce,0xf3,0x96,0x56,0xd6,0xb5,0x8d,0x87,0x7a,0x00,0x2b,0xf3,
-0x70,0xb3,0x90,0x73,0xa0,0x56,0x06,0x3b,0x22,0xa3,0x53,0x30,0x51,0x30,0x1d,
-0x06,0x03,0x55,0x1d,0x0e,0x04,0x16,0x04,0x14,0x26,0xef,0x6f,0xe4,0xb5,0x24,
-0x2f,0x68,0x49,0x84,0xd9,0x89,0xa6,0xab,0x0c,0xf8,0x6d,0xf5,0xe5,0x0c,0x30,
-0x1f,0x06,0x03,0x55,0x1d,0x23,0x04,0x18,0x30,0x16,0x80,0x14,0x26,0xef,0x6f,
-0xe4,0xb5,0x24,0x2f,0x68,0x49,0x84,0xd9,0x89,0xa6,0xab,0x0c,0xf8,0x6d,0xf5,
-0xe5,0x0c,0x30,0x0f,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,0x05,0x30,
-0x03,0x01,0x01,0xff,0x30,0x0a,0x06,0x08,0x2a,0x86,0x48,0xce,0x3d,0x04,0x03,
-0x02,0x03,0x47,0x00,0x30,0x44,0x02,0x20,0x2b,0x6b,0x23,0x42,0x32,0xf2,0xcb,
-0x71,0xd7,0x5c,0xfa,0x5e,0x6c,0x19,0x31,0xd6,0x74,0xf7,0xc0,0xf8,0xc6,0x39,
-0x38,0xe9,0x79,0x4d,0x84,0x44,0x40,0x13,0x8e,0x43,0x02,0x20,0x34,0xc7,0x61,
-0xbb,0x18,0x1c,0x85,0x34,0xe3,0x4c,0x30,0x28,0x42,0x0e,0x06,0x65,0x68,0x1d,
-0x76,0x53,0x24,0xa0,0x27,0xa5,0x84,0x3b,0x2d,0xf3,0xec,0x27,0x60,0xb2 };
-
 
 typedef struct _CONST_DATA_BLOB
 {
@@ -3139,8 +3086,6 @@ static SYSTEMTIME jun2013 = { 2013, 6, 5, 6, 0, 0, 0, 0 };
 static SYSTEMTIME oct2016 = { 2016, 10, 6, 1, 0, 0, 0, 0 };
 /* Wednesday, Nov 17, 2016 */
 static SYSTEMTIME nov2016 = { 2016, 11, 3, 17, 0, 0, 0, 0 };
-/* Wednesday, Nov 17, 2017 */
-static SYSTEMTIME nov2017 = { 2017, 11, 3, 17, 0, 0, 0, 0 };
 
 typedef struct _ChainCheck
 {
@@ -3160,7 +3105,7 @@ static const CERT_TRUST_STATUS elementStatus0[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus0[] = {
- { sizeof(elementStatus0) / sizeof(elementStatus0[0]), elementStatus0 },
+ { ARRAY_SIZE(elementStatus0), elementStatus0 },
 };
 static CONST_DATA_BLOB chain1[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3173,7 +3118,7 @@ static const CERT_TRUST_STATUS elementStatus1[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus1[] = {
- { sizeof(elementStatus1) / sizeof(elementStatus1[0]), elementStatus1 },
+ { ARRAY_SIZE(elementStatus1), elementStatus1 },
 };
 static CONST_DATA_BLOB chain2[] = {
  { sizeof(chain2_0), chain2_0 },
@@ -3185,7 +3130,7 @@ static const CERT_TRUST_STATUS elementStatus2[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus2[] = {
- { sizeof(elementStatus2) / sizeof(elementStatus2[0]), elementStatus2 },
+ { ARRAY_SIZE(elementStatus2), elementStatus2 },
 };
 static CONST_DATA_BLOB chain3[] = {
  { sizeof(chain3_0), chain3_0 },
@@ -3197,7 +3142,7 @@ static const CERT_TRUST_STATUS elementStatus3[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus3[] = {
- { sizeof(elementStatus3) / sizeof(elementStatus3[0]), elementStatus3 },
+ { ARRAY_SIZE(elementStatus3), elementStatus3 },
 };
 static CONST_DATA_BLOB chain4[] = {
  { sizeof(chain4_0), chain4_0 },
@@ -3211,7 +3156,7 @@ static const CERT_TRUST_STATUS elementStatus4[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus4[] = {
- { sizeof(elementStatus4) / sizeof(elementStatus4[0]), elementStatus4 },
+ { ARRAY_SIZE(elementStatus4), elementStatus4 },
 };
 static CONST_DATA_BLOB chain5[] = {
  { sizeof(chain5_0), chain5_0 },
@@ -3224,7 +3169,7 @@ static const CERT_TRUST_STATUS elementStatus5[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus5[] = {
- { sizeof(elementStatus5) / sizeof(elementStatus5[0]), elementStatus5 },
+ { ARRAY_SIZE(elementStatus5), elementStatus5 },
 };
 static CONST_DATA_BLOB chain6[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3236,7 +3181,7 @@ static const CERT_TRUST_STATUS elementStatus6[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus6[] = {
- { sizeof(elementStatus6) / sizeof(elementStatus6[0]), elementStatus6 },
+ { ARRAY_SIZE(elementStatus6), elementStatus6 },
 };
 static CONST_DATA_BLOB chain7[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3248,7 +3193,7 @@ static const CERT_TRUST_STATUS elementStatus7[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus7[] = {
- { sizeof(elementStatus7) / sizeof(elementStatus7[0]), elementStatus7 },
+ { ARRAY_SIZE(elementStatus7), elementStatus7 },
 };
 static CONST_DATA_BLOB chain8[] = {
  { sizeof(chain8_0), chain8_0 },
@@ -3262,7 +3207,7 @@ static const CERT_TRUST_STATUS elementStatus8[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck simpleStatus8[] = {
- { sizeof(elementStatus8) / sizeof(elementStatus8[0]), elementStatus8 },
+ { ARRAY_SIZE(elementStatus8), elementStatus8 },
 };
 static CONST_DATA_BLOB chain9[] = {
  { sizeof(chain9_0), chain9_0 },
@@ -3275,7 +3220,7 @@ static const CERT_TRUST_STATUS elementStatus9[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus9[] = {
- { sizeof(elementStatus9) / sizeof(elementStatus9[0]), elementStatus9 },
+ { ARRAY_SIZE(elementStatus9), elementStatus9 },
 };
 static CONST_DATA_BLOB chain10[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3288,7 +3233,7 @@ static const CERT_TRUST_STATUS elementStatus10[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus10[] = {
- { sizeof(elementStatus10) / sizeof(elementStatus10[0]), elementStatus10 },
+ { ARRAY_SIZE(elementStatus10), elementStatus10 },
 };
 static CONST_DATA_BLOB chain11[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3305,7 +3250,7 @@ static const CERT_TRUST_STATUS elementStatus12[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus12[] = {
- { sizeof(elementStatus12) / sizeof(elementStatus12[0]), elementStatus12 },
+ { ARRAY_SIZE(elementStatus12), elementStatus12 },
 };
 static CONST_DATA_BLOB chain13[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3317,7 +3262,7 @@ static const CERT_TRUST_STATUS elementStatus13[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus13[] = {
- { sizeof(elementStatus13) / sizeof(elementStatus13[0]), elementStatus13 },
+ { ARRAY_SIZE(elementStatus13), elementStatus13 },
 };
 static CONST_DATA_BLOB chain14[] = {
  { sizeof(chain14_0), chain14_0 },
@@ -3329,7 +3274,7 @@ static const CERT_TRUST_STATUS elementStatus14[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus14[] = {
- { sizeof(elementStatus14) / sizeof(elementStatus14[0]), elementStatus14 },
+ { ARRAY_SIZE(elementStatus14), elementStatus14 },
 };
 static CONST_DATA_BLOB chain15[] = {
  { sizeof(chain15_0), chain15_0 },
@@ -3341,7 +3286,7 @@ static const CERT_TRUST_STATUS elementStatus15[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus15[] = {
- { sizeof(elementStatus15) / sizeof(elementStatus15[0]), elementStatus15 },
+ { ARRAY_SIZE(elementStatus15), elementStatus15 },
 };
 static CONST_DATA_BLOB chain16[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3354,7 +3299,7 @@ static const CERT_TRUST_STATUS elementStatus16[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus16[] = {
- { sizeof(elementStatus16) / sizeof(elementStatus16[0]), elementStatus16 },
+ { ARRAY_SIZE(elementStatus16), elementStatus16 },
 };
 static CONST_DATA_BLOB chain17[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3368,7 +3313,7 @@ static const CERT_TRUST_STATUS elementStatus17[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus17[] = {
- { sizeof(elementStatus17) / sizeof(elementStatus17[0]), elementStatus17 },
+ { ARRAY_SIZE(elementStatus17), elementStatus17 },
 };
 static CONST_DATA_BLOB chain18[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3382,7 +3327,7 @@ static const CERT_TRUST_STATUS elementStatus18[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus18[] = {
- { sizeof(elementStatus18) / sizeof(elementStatus18[0]), elementStatus18 },
+ { ARRAY_SIZE(elementStatus18), elementStatus18 },
 };
 static CONST_DATA_BLOB chain19[] = {
  { sizeof(chain19_0), chain19_0 },
@@ -3395,7 +3340,7 @@ static const CERT_TRUST_STATUS elementStatus19[] = {
    CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
 };
 static const SimpleChainStatusCheck simpleStatus19[] = {
- { sizeof(elementStatus19) / sizeof(elementStatus19[0]), elementStatus19 },
+ { ARRAY_SIZE(elementStatus19), elementStatus19 },
 };
 static CONST_DATA_BLOB chain20[] = {
  { sizeof(chain20_0), chain20_0 },
@@ -3407,7 +3352,7 @@ static const CERT_TRUST_STATUS elementStatus20[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus20[] = {
- { sizeof(elementStatus20) / sizeof(elementStatus20[0]), elementStatus20 },
+ { ARRAY_SIZE(elementStatus20), elementStatus20 },
 };
 static CONST_DATA_BLOB chain21[] = {
  { sizeof(chain21_0), chain21_0 },
@@ -3420,7 +3365,7 @@ static const CERT_TRUST_STATUS elementStatus21[] = {
    CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
 };
 static const SimpleChainStatusCheck simpleStatus21[] = {
- { sizeof(elementStatus21) / sizeof(elementStatus21[0]), elementStatus21 },
+ { ARRAY_SIZE(elementStatus21), elementStatus21 },
 };
 static CONST_DATA_BLOB chain22[] = {
  { sizeof(chain22_0), chain22_0 },
@@ -3432,7 +3377,7 @@ static const CERT_TRUST_STATUS elementStatus22[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus22[] = {
- { sizeof(elementStatus22) / sizeof(elementStatus22[0]), elementStatus22 },
+ { ARRAY_SIZE(elementStatus22), elementStatus22 },
 };
 static CONST_DATA_BLOB chain23[] = {
  { sizeof(chain23_0), chain23_0 },
@@ -3444,7 +3389,7 @@ static const CERT_TRUST_STATUS elementStatus23[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus23[] = {
- { sizeof(elementStatus23) / sizeof(elementStatus23[0]), elementStatus23 },
+ { ARRAY_SIZE(elementStatus23), elementStatus23 },
 };
 static CONST_DATA_BLOB chain24[] = {
  { sizeof(chain24_0), chain24_0 },
@@ -3456,7 +3401,7 @@ static const CERT_TRUST_STATUS elementStatus24[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus24[] = {
- { sizeof(elementStatus24) / sizeof(elementStatus24[0]), elementStatus24 },
+ { ARRAY_SIZE(elementStatus24), elementStatus24 },
 };
 static CONST_DATA_BLOB chain25[] = {
  { sizeof(chain25_0), chain25_0 },
@@ -3468,7 +3413,7 @@ static const CERT_TRUST_STATUS elementStatus25[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus25[] = {
- { sizeof(elementStatus25) / sizeof(elementStatus25[0]), elementStatus25 },
+ { ARRAY_SIZE(elementStatus25), elementStatus25 },
 };
 static CONST_DATA_BLOB chain26[] = {
  { sizeof(chain26_0), chain26_0 },
@@ -3480,7 +3425,7 @@ static const CERT_TRUST_STATUS elementStatus26[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus26[] = {
- { sizeof(elementStatus26) / sizeof(elementStatus26[0]), elementStatus26 },
+ { ARRAY_SIZE(elementStatus26), elementStatus26 },
 };
 static CONST_DATA_BLOB chain27[] = {
  { sizeof(chain27_0), chain27_0 },
@@ -3493,7 +3438,7 @@ static const CERT_TRUST_STATUS elementStatus27[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus27[] = {
- { sizeof(elementStatus27) / sizeof(elementStatus27[0]), elementStatus27 },
+ { ARRAY_SIZE(elementStatus27), elementStatus27 },
 };
 static const CERT_TRUST_STATUS elementStatus27Broken[] = {
  { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
@@ -3502,7 +3447,7 @@ static const CERT_TRUST_STATUS elementStatus27Broken[] = {
    CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
 };
 static const SimpleChainStatusCheck simpleStatus27Broken[] = {
- { sizeof(elementStatus27Broken) / sizeof(elementStatus27Broken[0]),
+ { ARRAY_SIZE(elementStatus27Broken),
    elementStatus27Broken },
 };
 static CONST_DATA_BLOB chain28[] = {
@@ -3515,7 +3460,7 @@ static const CERT_TRUST_STATUS elementStatus28[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus28[] = {
- { sizeof(elementStatus28) / sizeof(elementStatus28[0]), elementStatus28 },
+ { ARRAY_SIZE(elementStatus28), elementStatus28 },
 };
 static CONST_DATA_BLOB chain29[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3534,7 +3479,7 @@ static const CERT_TRUST_STATUS elementStatus30[] = {
    CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus30[] = {
- { sizeof(elementStatus30) / sizeof(elementStatus30[0]), elementStatus30 },
+ { ARRAY_SIZE(elementStatus30), elementStatus30 },
 };
 static CONST_DATA_BLOB chain31[] = {
  { sizeof(chain0_0), chain0_0 },
@@ -3548,7 +3493,7 @@ static const CERT_TRUST_STATUS selfSignedElementStatus[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
 };
 static const SimpleChainStatusCheck selfSignedSimpleStatus[] = {
- { sizeof(selfSignedElementStatus) / sizeof(selfSignedElementStatus[0]),
+ { ARRAY_SIZE(selfSignedElementStatus),
    selfSignedElementStatus },
 };
 static CONST_DATA_BLOB googleChain[] = {
@@ -3567,7 +3512,7 @@ static const CERT_TRUST_STATUS googleElementStatus[] = {
    CERT_TRUST_HAS_KEY_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_PREFERRED_ISSUER},
 };
 static const SimpleChainStatusCheck googleSimpleStatus[] = {
- { sizeof(googleElementStatus) / sizeof(googleElementStatus[0]),
+ { ARRAY_SIZE(googleElementStatus),
    googleElementStatus },
 };
 static CONST_DATA_BLOB battlenetChain[] = {
@@ -3590,7 +3535,7 @@ static const CERT_TRUST_STATUS opensslElementStatus[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED},
 };
 static const SimpleChainStatusCheck opensslSimpleStatus[] = {
- { sizeof(opensslElementStatus) / sizeof(opensslElementStatus[0]),
+ { ARRAY_SIZE(opensslElementStatus),
    opensslElementStatus },
 };
 /* The OpenSSL chain may not have its root trusted, in which case the chain
@@ -3605,7 +3550,7 @@ static const CERT_TRUST_STATUS incompleteOpensslElementStatus[] = {
  { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_KEY_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck incompleteOpensslSimpleStatus[] = {
- { sizeof(incompleteOpensslElementStatus) / sizeof(incompleteOpensslElementStatus[0]),
+ { ARRAY_SIZE(incompleteOpensslElementStatus),
    incompleteOpensslElementStatus },
 };
 /*
@@ -3625,7 +3570,7 @@ static const CERT_TRUST_STATUS stanfordElementStatus[] = {
    CERT_TRUST_HAS_NAME_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED},
 };
 static const SimpleChainStatusCheck stanfordSimpleStatus[] = {
- { sizeof(stanfordElementStatus) / sizeof(stanfordElementStatus[0]),
+ { ARRAY_SIZE(stanfordElementStatus),
    stanfordElementStatus },
 };
 static ChainCheck chainCheck[] = {
@@ -3634,23 +3579,23 @@ static ChainCheck chainCheck[] = {
   * Windows 98/NT4 also set CERT_TRUST_IS_NOT_TIME_NESTED on chains they
   * shouldn't, so ignore those too.
   */
- { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { { ARRAY_SIZE(chain0), chain0 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus0 }, 0, &oct2007 },
- { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
+ { { ARRAY_SIZE(chain1), chain1 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_SIGNATURE_VALID |
        CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus1 }, 0, &oct2007 },
- { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { { ARRAY_SIZE(chain2), chain2 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_TIME_VALID, 0 },
      1, simpleStatus2 }, 0, &oct2007 },
  /* Earlier versions of Windows incorrectly don't set
   * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
   */
- { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
+ { { ARRAY_SIZE(chain3), chain3 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
@@ -3659,7 +3604,7 @@ static ChainCheck chainCheck[] = {
  /* Earlier versions of Windows incorrectly don't set
   * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
   */
- { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
+ { { ARRAY_SIZE(chain4), chain4 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
@@ -3670,22 +3615,22 @@ static ChainCheck chainCheck[] = {
   * Similarly, some older versions of Windows incorrectly set
   * CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, ignore that too.
   */
- { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
+ { { ARRAY_SIZE(chain5), chain5 },
    { { CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT |
        CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus5 }, 0, &oct2007 },
- { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
+ { { ARRAY_SIZE(chain6), chain6 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus6 }, 0, &oct2007 },
- { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
+ { { ARRAY_SIZE(chain7), chain7 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus7 }, 0, &oct2007 },
  /* Earlier versions of Windows incorrectly don't set
   * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
   */
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_UNTRUSTED_ROOT |
@@ -3694,50 +3639,50 @@ static ChainCheck chainCheck[] = {
  /* Earlier versions of Windows incorrectly don't set
   * CERT_TRUST_INVALID_BASIC_CONSTRAINTS on this chain.
   */
- { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
+ { { ARRAY_SIZE(chain9), chain9 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_INVALID_BASIC_CONSTRAINTS,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_PARTIAL_CHAIN |
        CERT_TRUST_INVALID_BASIC_CONSTRAINTS | CERT_TRUST_IS_CYCLIC, 0 },
      1, simpleStatus9 }, 0, &oct2007 },
- { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
+ { { ARRAY_SIZE(chain10), chain10 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus10 }, 0, &oct2007 },
- { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
+ { { ARRAY_SIZE(chain11), chain11 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus10 }, 0, &oct2007 },
- { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
+ { { ARRAY_SIZE(chain12), chain12 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_SIGNATURE_VALID, 0 },
      1, simpleStatus12 }, 0, &oct2007 },
- { { sizeof(chain13) / sizeof(chain13[0]), chain13 },
+ { { ARRAY_SIZE(chain13), chain13 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus13 },
    0, &oct2007 },
- { { sizeof(chain14) / sizeof(chain14[0]), chain14 },
+ { { ARRAY_SIZE(chain14), chain14 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus14 },
    0, &oct2007 },
  /* Earlier versions of crypt32 incorrectly do not complain that the end cert's
   * key usage is invalid, so ignore that error.
   */
- { { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { { ARRAY_SIZE(chain15), chain15 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_VALID_FOR_USAGE, 0 },
      1, simpleStatus15 },
    0, &oct2007 },
- { { sizeof(chain16) / sizeof(chain16[0]), chain16 },
+ { { ARRAY_SIZE(chain16), chain16 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_VALID_FOR_USAGE, 0 },
      1, simpleStatus16 },
    0, &oct2007 },
- { { sizeof(chain17) / sizeof(chain17[0]), chain17 },
+ { { ARRAY_SIZE(chain17), chain17 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 }, 1, simpleStatus17 },
    0, &oct2007 },
- { { sizeof(chain18) / sizeof(chain18[0]), chain18 },
+ { { ARRAY_SIZE(chain18), chain18 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_VALID_FOR_USAGE, 0 },
@@ -3748,7 +3693,7 @@ static ChainCheck chainCheck[] = {
   * They also do not set CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS, since they
   * incorrectly find a name constraint error.
   */
- { { sizeof(chain19) / sizeof(chain19[0]), chain19 },
+ { { ARRAY_SIZE(chain19), chain19 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER | CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS
@@ -3760,7 +3705,7 @@ static ChainCheck chainCheck[] = {
   * CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, though they should.  So
   * ignore it (on Windows) but require it (on Wine.)
   */
- { { sizeof(chain20) / sizeof(chain20[0]), chain20 },
+ { { ARRAY_SIZE(chain20), chain20 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3769,7 +3714,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus20 },
    0, &oct2007 },
- { { sizeof(chain21) / sizeof(chain21[0]), chain21 },
+ { { ARRAY_SIZE(chain21), chain21 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
        CERT_TRUST_HAS_PREFERRED_ISSUER | CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS
@@ -3777,7 +3722,7 @@ static ChainCheck chainCheck[] = {
      { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
      1, simpleStatus21 },
    0, &oct2007 },
- { { sizeof(chain22) / sizeof(chain22[0]), chain22 },
+ { { ARRAY_SIZE(chain22), chain22 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3786,7 +3731,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus22 },
    0, &oct2007 },
- { { sizeof(chain23) / sizeof(chain23[0]), chain23 },
+ { { ARRAY_SIZE(chain23), chain23 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3795,7 +3740,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus23 },
    0, &oct2007 },
- { { sizeof(chain24) / sizeof(chain24[0]), chain24 },
+ { { ARRAY_SIZE(chain24), chain24 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3804,7 +3749,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus24 },
    0, &oct2007 },
- { { sizeof(chain25) / sizeof(chain25[0]), chain25 },
+ { { ARRAY_SIZE(chain25), chain25 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3813,7 +3758,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus25 },
    0, &oct2007 },
- { { sizeof(chain26) / sizeof(chain26[0]), chain26 },
+ { { ARRAY_SIZE(chain26), chain26 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3823,7 +3768,7 @@ static ChainCheck chainCheck[] = {
      1, simpleStatus26 },
    0, &oct2007 },
  /* chain27 is handled separately elsewhere */
- { { sizeof(chain28) / sizeof(chain28[0]), chain28 },
+ { { ARRAY_SIZE(chain28), chain28 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
@@ -3836,7 +3781,7 @@ static ChainCheck chainCheck[] = {
  /* Microsoft incorrectly ignores unknown/unsupported critical extensions on
   * older Windows versions, so ignore the error on Windows.
   */
- { { sizeof(chain30) / sizeof(chain30[0]), chain30 },
+ { { ARRAY_SIZE(chain30), chain30 },
    { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
        CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT |
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT |
@@ -3847,7 +3792,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_SUPPORTED_CRITICAL_EXT, 0 },
      1, simpleStatus30 },
    0, &oct2007 },
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
      1, selfSignedSimpleStatus }, 0, &oct2007 },
@@ -3858,14 +3803,14 @@ static ChainCheck chainCheck[] = {
   * e.g. has always CERT_TRUST_HAS_NAME_MATCH_ISSUER flag
   * @see CRYPT_CheckSimpleChain
   */
- { { sizeof(googleChain) / sizeof(googleChain[0]), googleChain },
+ { { ARRAY_SIZE(googleChain), googleChain },
    { { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_IS_NOT_TIME_NESTED,
        CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID, 0 },
        1, googleSimpleStatus }, TODO_INFO, &oct2016 },
  /* The stanford chain may or may not have its root trusted, so ignore the error
   */
- { { sizeof(stanfordChain) / sizeof(stanfordChain[0]), stanfordChain },
+ { { ARRAY_SIZE(stanfordChain), stanfordChain },
    { { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID, 0 },
        1, stanfordSimpleStatus }, 0, &oct2016 },
@@ -3875,16 +3820,16 @@ static const CERT_TRUST_STATUS elementStatus8NoStore[] = {
  { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
 };
 static const SimpleChainStatusCheck simpleStatus8NoStore[] = {
- { sizeof(elementStatus8NoStore) / sizeof(elementStatus8NoStore[0]),
+ { ARRAY_SIZE(elementStatus8NoStore),
    elementStatus8NoStore },
 };
 static ChainCheck chainCheckNoStore[] = {
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
      1, selfSignedSimpleStatus },
    0 },
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_PARTIAL_CHAIN, 0 },
      1, simpleStatus8NoStore },
@@ -3894,12 +3839,12 @@ static ChainCheck chainCheckNoStore[] = {
  /* The openssl chain may or may not have its root trusted, so ignore the error
   */
 static ChainCheck opensslChainCheck =
- { { sizeof(opensslChain) / sizeof(opensslChain[0]), opensslChain },
+ { { ARRAY_SIZE(opensslChain), opensslChain },
    { { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID, 0 },
        1, opensslSimpleStatus }, 0 };
 static ChainCheck incompleteOpensslChainCheck =
- { { sizeof(incompleteOpensslChain) / sizeof(incompleteOpensslChain[0]),
+ { { ARRAY_SIZE(incompleteOpensslChain),
      incompleteOpensslChain },
    { { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_PARTIAL_CHAIN, 0 },
@@ -3912,7 +3857,7 @@ static ChainCheck incompleteOpensslChainCheck =
  * on the chain's error status.
  */
 static ChainCheck chainCheckEmbeddedNull = {
- { sizeof(chain27) / sizeof(chain27[0]), chain27 },
+ { ARRAY_SIZE(chain27), chain27 },
  { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE,
      CERT_TRUST_HAS_PREFERRED_ISSUER },
    { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_INVALID_NAME_CONSTRAINTS |
@@ -3920,7 +3865,7 @@ static ChainCheck chainCheckEmbeddedNull = {
    1, simpleStatus27 },
  0 };
 static ChainCheck chainCheckEmbeddedNullBroken = {
- { sizeof(chain27) / sizeof(chain27[0]), chain27 },
+ { ARRAY_SIZE(chain27), chain27 },
  { { CERT_TRUST_IS_NOT_TIME_NESTED | CERT_TRUST_IS_NOT_VALID_FOR_USAGE |
      CERT_TRUST_HAS_NOT_DEFINED_NAME_CONSTRAINT,
      CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS | CERT_TRUST_HAS_PREFERRED_ISSUER },
@@ -3928,25 +3873,6 @@ static ChainCheck chainCheckEmbeddedNullBroken = {
      CERT_TRUST_HAS_VALID_NAME_CONSTRAINTS },
    1, simpleStatus27Broken },
  0 };
-static CONST_DATA_BLOB chainECDSA[] = {
- { sizeof(ecc_ca), ecc_ca },
- { sizeof(ecc_crt), ecc_crt },
-};
-static const CERT_TRUST_STATUS elementStatusECDSA[] = {
- { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
- { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_KEY_MATCH_ISSUER | CERT_TRUST_IS_SELF_SIGNED },
-};
-static const SimpleChainStatusCheck simpleStatusECDSA[] = {
- { sizeof(elementStatusECDSA) / sizeof(elementStatusECDSA[0]), elementStatusECDSA },
-};
-static ChainCheck chainCheckECDSA = {
- { sizeof(chainECDSA) / sizeof(chainECDSA[0]), chainECDSA },
- {
-   { CERT_TRUST_IS_UNTRUSTED_ROOT, CERT_TRUST_HAS_PREFERRED_ISSUER },
-   { CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
-   1, simpleStatusECDSA
- }, 0
-};
 
 #define test_name_blob(a,b) _test_name_blob(__LINE__,a,b)
 static void _test_name_blob(unsigned line, CERT_NAME_BLOB *blob, const char *exdata)
@@ -4091,7 +4017,7 @@ static void testGetCertChain(void)
     CertCloseStore(store, 0);
     CertFreeCertificateContext(cert);
 
-    for (i = 0; i < sizeof(chainCheck) / sizeof(chainCheck[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(chainCheck); i++)
     {
         chain = getChain(NULL, &chainCheck[i].certs, 0, TRUE, chainCheck[i].validfor,
          chainCheck[i].todo, i);
@@ -4124,8 +4050,7 @@ static void testGetCertChain(void)
              0);
         pCertFreeCertificateChain(chain);
     }
-    for (i = 0; i < sizeof(chainCheckNoStore) / sizeof(chainCheckNoStore[0]);
-     i++)
+    for (i = 0; i < ARRAY_SIZE(chainCheckNoStore); i++)
     {
         chain = getChain(NULL, &chainCheckNoStore[i].certs, 0, FALSE, &oct2007,
          chainCheckNoStore[i].todo, i);
@@ -4222,15 +4147,25 @@ static void testGetCertChain(void)
 
     pCertFreeCertificateChain(chain);
 
-    /* Test with ECDSA certificate */
-    chain = getChain(NULL, &chainCheckECDSA.certs, 0, TRUE, &nov2017, FALSE, 0);
-    if (chain)
-    {
-        ok(chain->TrustStatus.dwErrorStatus == CERT_TRUST_IS_UNTRUSTED_ROOT,
-           "unexpected chain error status %08x\n", chain->TrustStatus.dwErrorStatus);
-        checkChainStatus(chain, &chainCheckECDSA.status, chainCheckECDSA.todo, "chainCheckECDSA", 0);
-        pCertFreeCertificateChain(chain);
-    }
+    /* Test revocation flags */
+    ret = CertGetCertificateChain(NULL, cert, &fileTime, store, &para, CERT_CHAIN_REVOCATION_CHECK_END_CERT, NULL,
+                                  &chain);
+    ok(ret, "CertGetCertificateChain failed: %u\n", GetLastError());
+    ok(!chain->TrustStatus.dwErrorStatus, "chain->TrustStatus.dwErrorStatus = %x\n", chain->TrustStatus.dwErrorStatus);
+    pCertFreeCertificateChain(chain);
+
+    ret = CertGetCertificateChain(NULL, cert, &fileTime, store, &para, CERT_CHAIN_REVOCATION_CHECK_CHAIN, NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %u\n", GetLastError());
+    ok(!chain->TrustStatus.dwErrorStatus
+           || broken(chain->TrustStatus.dwErrorStatus == CERT_TRUST_REVOCATION_STATUS_UNKNOWN), /* XP */
+       "chain->TrustStatus.dwErrorStatus = %x\n", chain->TrustStatus.dwErrorStatus);
+    pCertFreeCertificateChain(chain);
+
+    ret = CertGetCertificateChain(NULL, cert, &fileTime, store, &para, CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT,
+                                  NULL, &chain);
+    ok(ret, "CertGetCertificateChain failed: %u\n", GetLastError());
+    ok(!chain->TrustStatus.dwErrorStatus, "chain->TrustStatus.dwErrorStatus = %x\n", chain->TrustStatus.dwErrorStatus);
+    pCertFreeCertificateChain(chain);
 
     /* Test HCCE_LOCAL_MACHINE */
     ret = CertGetCertificateChain(HCCE_LOCAL_MACHINE, cert, &fileTime, store, &para, 0, NULL, &chain);
@@ -4288,45 +4223,45 @@ typedef struct _ChainPolicyCheck
 } ChainPolicyCheck;
 
 static const ChainPolicyCheck basePolicyCheck[] = {
- { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { { ARRAY_SIZE(chain0), chain0 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
+ { { ARRAY_SIZE(chain1), chain1 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, NULL, 0 },
- { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { { ARRAY_SIZE(chain2), chain2 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
+ { { ARRAY_SIZE(chain3), chain3 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
+ { { ARRAY_SIZE(chain4), chain4 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
+ { { ARRAY_SIZE(chain5), chain5 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
+ { { ARRAY_SIZE(chain6), chain6 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
+ { { ARRAY_SIZE(chain7), chain7 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
+ { { ARRAY_SIZE(chain9), chain9 },
    { 0, CERT_E_CHAINING, 0, -1, NULL }, NULL, 0 },
- { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
+ { { ARRAY_SIZE(chain10), chain10 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
+ { { ARRAY_SIZE(chain11), chain11 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
+ { { ARRAY_SIZE(chain12), chain12 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain13) / sizeof(chain13[0]), chain13 },
+ { { ARRAY_SIZE(chain13), chain13 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain14) / sizeof(chain14[0]), chain14 },
+ { { ARRAY_SIZE(chain14), chain14 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { { ARRAY_SIZE(chain15), chain15 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain16) / sizeof(chain16[0]), chain16 },
+ { { ARRAY_SIZE(chain16), chain16 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain17) / sizeof(chain17[0]), chain17 },
+ { { ARRAY_SIZE(chain17), chain17 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain18) / sizeof(chain18[0]), chain18 },
+ { { ARRAY_SIZE(chain18), chain18 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, NULL, 0 },
 };
 
@@ -4338,75 +4273,75 @@ static const CERT_CHAIN_POLICY_STATUS badDateNestingStatus =
  { 0, CERT_E_VALIDITYPERIODNESTING, 0, 0, NULL };
 
 static const ChainPolicyCheck ignoredBadDateNestingBasePolicyCheck = {
- { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { ARRAY_SIZE(chain2), chain2 },
  { 0, CERT_E_EXPIRED, 0, 1, NULL}, &badDateNestingStatus, TODO_ELEMENTS
 };
 
 static const ChainPolicyCheck ignoredInvalidDateBasePolicyCheck = {
- { sizeof(googleChain) / sizeof(googleChain[0]), googleChain },
+ { ARRAY_SIZE(googleChain), googleChain },
  { 0, CERT_E_EXPIRED, 0, 1, NULL}, &badDateNestingStatus, TODO_ELEMENTS
 };
 
 static const ChainPolicyCheck ignoredInvalidUsageBasePolicyCheck = {
- { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { ARRAY_SIZE(chain15), chain15 },
  { 0, CERT_E_EXPIRED, 0, 1, NULL}, NULL, TODO_ERROR
 };
 
 static const ChainPolicyCheck invalidUsageBasePolicyCheck = {
- { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { ARRAY_SIZE(chain15), chain15 },
  { 0, CERT_E_WRONG_USAGE, 0, 1, NULL}, NULL, 0
 };
 
 static const ChainPolicyCheck sslPolicyCheck[] = {
- { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { { ARRAY_SIZE(chain0), chain0 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
+ { { ARRAY_SIZE(chain1), chain1 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, NULL, 0 },
- { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { { ARRAY_SIZE(chain2), chain2 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
+ { { ARRAY_SIZE(chain3), chain3 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
+ { { ARRAY_SIZE(chain4), chain4 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
+ { { ARRAY_SIZE(chain5), chain5 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
+ { { ARRAY_SIZE(chain6), chain6 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
+ { { ARRAY_SIZE(chain7), chain7 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
+ { { ARRAY_SIZE(chain9), chain9 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, -1, NULL }, NULL, 0 },
- { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
+ { { ARRAY_SIZE(chain10), chain10 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
+ { { ARRAY_SIZE(chain11), chain11 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
+ { { ARRAY_SIZE(chain12), chain12 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain13) / sizeof(chain13[0]), chain13 },
+ { { ARRAY_SIZE(chain13), chain13 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain14) / sizeof(chain14[0]), chain14 },
+ { { ARRAY_SIZE(chain14), chain14 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { { ARRAY_SIZE(chain15), chain15 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain16) / sizeof(chain16[0]), chain16 },
+ { { ARRAY_SIZE(chain16), chain16 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain17) / sizeof(chain17[0]), chain17 },
+ { { ARRAY_SIZE(chain17), chain17 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain18) / sizeof(chain18[0]), chain18 },
+ { { ARRAY_SIZE(chain18), chain18 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, NULL, 0 },
 };
 
 static const ChainPolicyCheck ignoredUnknownCAPolicyCheck = {
- { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { ARRAY_SIZE(chain0), chain0 },
  { 0, CERT_E_EXPIRED, 0, 0, NULL }, NULL, 0
 };
 
 static const ChainPolicyCheck googlePolicyCheckWithMatchingNameExpired = {
- { sizeof(googleChain) / sizeof(googleChain[0]), googleChain },
+ { ARRAY_SIZE(googleChain), googleChain },
  { 0, CERT_E_EXPIRED, 0, 0, NULL}, NULL, 0
 };
 
@@ -4415,7 +4350,7 @@ static const CERT_CHAIN_POLICY_STATUS expiredStatus =
  { 0, CERT_E_EXPIRED, 0, 0, NULL };
 
 static const ChainPolicyCheck googlePolicyCheckWithMatchingName = {
- { sizeof(googleChain) / sizeof(googleChain[0]), googleChain },
+ { ARRAY_SIZE(googleChain), googleChain },
  { 0, 0, -1, -1, NULL}, &expiredStatus, 0
 };
 
@@ -4424,95 +4359,95 @@ static const CERT_CHAIN_POLICY_STATUS untrustedRootStatus =
  { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL };
 
 static const ChainPolicyCheck opensslPolicyCheckWithMatchingName = {
- { sizeof(opensslChain) / sizeof(opensslChain[0]), opensslChain },
+ { ARRAY_SIZE(opensslChain), opensslChain },
  { 0, 0, -1, -1, NULL}, &untrustedRootStatus, 0
 };
 
 static const ChainPolicyCheck opensslPolicyCheckWithoutMatchingName = {
- { sizeof(opensslChain) / sizeof(opensslChain[0]), opensslChain },
+ { ARRAY_SIZE(opensslChain), opensslChain },
  { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, &untrustedRootStatus, 0
 };
 
 static const ChainPolicyCheck winehqPolicyCheckWithMatchingName = {
- { sizeof(chain29) / sizeof(chain29[0]), chain29 },
+ { ARRAY_SIZE(chain29), chain29 },
  { 0, 0, -1, -1, NULL}, NULL, 0
 };
 
 static const ChainPolicyCheck winehqPolicyCheckWithoutMatchingName = {
- { sizeof(chain29) / sizeof(chain29[0]), chain29 },
+ { ARRAY_SIZE(chain29), chain29 },
  { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, NULL, 0
 };
 
 static const ChainPolicyCheck stanfordPolicyCheckWithMatchingName = {
- { sizeof(stanfordChain) / sizeof(stanfordChain[0]), stanfordChain },
+ { ARRAY_SIZE(stanfordChain), stanfordChain },
  { 0, 0, -1, -1, NULL}, &untrustedRootStatus, 0
 };
 
 static const ChainPolicyCheck stanfordPolicyCheckWithoutMatchingName = {
- { sizeof(stanfordChain) / sizeof(stanfordChain[0]), stanfordChain },
+ { ARRAY_SIZE(stanfordChain), stanfordChain },
  { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, &untrustedRootStatus, 0
 };
 
 static const ChainPolicyCheck nullTerminatedDomainComponentPolicyCheck = {
- { sizeof(battlenetChain) / sizeof(battlenetChain[0]), battlenetChain },
+ { ARRAY_SIZE(battlenetChain), battlenetChain },
  { 0, 0, -1, -1, NULL}, &untrustedRootStatus, 0
 };
 
 static const ChainPolicyCheck invalidExtensionPolicyCheck = {
- { sizeof(chain30) / sizeof(chain30[0]), chain30 },
+ { ARRAY_SIZE(chain30), chain30 },
  { 0, CERT_E_CRITICAL, 0, 1, NULL}, &badDateNestingStatus, 0
 };
 
 static const ChainPolicyCheck fooPolicyCheckWithMatchingName = {
- { sizeof(chain31) / sizeof(chain31[0]), chain31 },
+ { ARRAY_SIZE(chain31), chain31 },
  { 0, 0, -1, -1, NULL}, NULL, 0
 };
 
 static const ChainPolicyCheck fooPolicyCheckWithoutMatchingName = {
- { sizeof(chain31) / sizeof(chain31[0]), chain31 },
+ { ARRAY_SIZE(chain31), chain31 },
  { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, NULL, 0
 };
 
 static const ChainPolicyCheck authenticodePolicyCheck[] = {
- { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { { ARRAY_SIZE(chain0), chain0 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
+ { { ARRAY_SIZE(chain1), chain1 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 0, NULL }, NULL, 0 },
- { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { { ARRAY_SIZE(chain2), chain2 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
+ { { ARRAY_SIZE(chain3), chain3 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
+ { { ARRAY_SIZE(chain4), chain4 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
+ { { ARRAY_SIZE(chain5), chain5 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
+ { { ARRAY_SIZE(chain6), chain6 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
+ { { ARRAY_SIZE(chain7), chain7 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
+ { { ARRAY_SIZE(chain9), chain9 },
    { 0, CERT_E_CHAINING, 0, -1, NULL }, NULL, 0 },
- { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
+ { { ARRAY_SIZE(chain10), chain10 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
+ { { ARRAY_SIZE(chain11), chain11 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
+ { { ARRAY_SIZE(chain12), chain12 },
    { 0, TRUST_E_CERT_SIGNATURE, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain13) / sizeof(chain13[0]), chain13 },
+ { { ARRAY_SIZE(chain13), chain13 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain14) / sizeof(chain14[0]), chain14 },
+ { { ARRAY_SIZE(chain14), chain14 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { { ARRAY_SIZE(chain15), chain15 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain16) / sizeof(chain16[0]), chain16 },
+ { { ARRAY_SIZE(chain16), chain16 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain17) / sizeof(chain17[0]), chain17 },
+ { { ARRAY_SIZE(chain17), chain17 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(chain18) / sizeof(chain18[0]), chain18 },
+ { { ARRAY_SIZE(chain18), chain18 },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 2, NULL }, NULL, 0 },
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { 0, CERT_E_UNTRUSTEDROOT, 0, 0, NULL }, NULL, 0 },
 };
 
@@ -4524,45 +4459,45 @@ static const CERT_CHAIN_POLICY_STATUS chain4BrokenStatus =
  { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 2, NULL };
 
 static const ChainPolicyCheck basicConstraintsPolicyCheck[] = {
- { { sizeof(chain0) / sizeof(chain0[0]), chain0 },
+ { { ARRAY_SIZE(chain0), chain0 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain1) / sizeof(chain1[0]), chain1 },
+ { { ARRAY_SIZE(chain1), chain1 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain2) / sizeof(chain2[0]), chain2 },
+ { { ARRAY_SIZE(chain2), chain2 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain3) / sizeof(chain3[0]), chain3 },
+ { { ARRAY_SIZE(chain3), chain3 },
    { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain4) / sizeof(chain4[0]), chain4 },
+ { { ARRAY_SIZE(chain4), chain4 },
    { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, &chain4BrokenStatus, 0 },
- { { sizeof(chain5) / sizeof(chain5[0]), chain5 },
+ { { ARRAY_SIZE(chain5), chain5 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain6) / sizeof(chain6[0]), chain6 },
+ { { ARRAY_SIZE(chain6), chain6 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain7) / sizeof(chain7[0]), chain7 },
+ { { ARRAY_SIZE(chain7), chain7 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain8) / sizeof(chain8[0]), chain8 },
+ { { ARRAY_SIZE(chain8), chain8 },
    { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain9) / sizeof(chain9[0]), chain9 },
+ { { ARRAY_SIZE(chain9), chain9 },
    { 0, TRUST_E_BASIC_CONSTRAINTS, 0, 1, NULL }, NULL, 0 },
- { { sizeof(chain10) / sizeof(chain10[0]), chain10 },
+ { { ARRAY_SIZE(chain10), chain10 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain11) / sizeof(chain11[0]), chain11 },
+ { { ARRAY_SIZE(chain11), chain11 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain12) / sizeof(chain12[0]), chain12 },
+ { { ARRAY_SIZE(chain12), chain12 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain13) / sizeof(chain13[0]), chain13 },
+ { { ARRAY_SIZE(chain13), chain13 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain14) / sizeof(chain14[0]), chain14 },
+ { { ARRAY_SIZE(chain14), chain14 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain15) / sizeof(chain15[0]), chain15 },
+ { { ARRAY_SIZE(chain15), chain15 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain16) / sizeof(chain16[0]), chain16 },
+ { { ARRAY_SIZE(chain16), chain16 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain17) / sizeof(chain17[0]), chain17 },
+ { { ARRAY_SIZE(chain17), chain17 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(chain18) / sizeof(chain18[0]), chain18 },
+ { { ARRAY_SIZE(chain18), chain18 },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
- { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
+ { { ARRAY_SIZE(selfSignedChain), selfSignedChain },
    { 0, 0, -1, -1, NULL }, NULL, 0 },
 };
 
@@ -4652,7 +4587,7 @@ static void checkChainPolicyStatus(LPCSTR policy, HCERTCHAINENGINE engine,
 #define CHECK_CHAIN_POLICY_STATUS_ARRAY(policy, engine, array, date, para) \
     do { \
         DWORD i; \
-        for (i = 0; i < sizeof(array) / sizeof(array)[0]; i++) \
+        for (i = 0; i < ARRAY_SIZE(array); i++) \
             checkChainPolicyStatus((policy), (engine), &(array)[i], \
              #array, i, (date), (para)); \
     } while(0)

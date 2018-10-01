@@ -250,7 +250,7 @@ static void test_CertRDNValueToStrA(void)
     ok(ret == 1 && GetLastError() == 0xdeadbeef, "Expected empty string\n");
     ok(!buffer[0], "Expected empty string\n");
 
-    for (i = 0; i < sizeof(attrs) / sizeof(attrs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(attrs); i++)
     {
         ret = pCertRDNValueToStrA(attrs[i].dwValueType, &attrs[i].Value,
          buffer, sizeof(buffer));
@@ -341,15 +341,13 @@ static void test_CertRDNValueToStrW(void)
     SetLastError(0xdeadbeef);
     ret = pCertRDNValueToStrW(0, &blob, NULL, 0);
     ok(ret == 1 && GetLastError() == 0xdeadbeef, "Expected empty string\n");
-    ret = pCertRDNValueToStrW(0, &blob, buffer,
-     sizeof(buffer) / sizeof(buffer[0]));
+    ret = pCertRDNValueToStrW(0, &blob, buffer, ARRAY_SIZE(buffer));
     ok(ret == 1 && GetLastError() == 0xdeadbeef, "Expected empty string\n");
     ok(!buffer[0], "Expected empty string\n");
 
-    for (i = 0; i < sizeof(attrs) / sizeof(attrs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(attrs); i++)
     {
-        ret = pCertRDNValueToStrW(attrs[i].dwValueType, &attrs[i].Value,
-         buffer, sizeof(buffer) / sizeof(buffer[0]));
+        ret = pCertRDNValueToStrW(attrs[i].dwValueType, &attrs[i].Value, buffer, ARRAY_SIZE(buffer));
         todo_wine_if (attrs[i].todo)
         {
             ok(ret == lstrlenW(attrs[i].str) + 1,
@@ -550,8 +548,7 @@ static void test_NameToStrConversionW(PCERT_NAME_BLOB pName, DWORD dwStrType,
     todo_wine_if (todo)
         ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenW(expected) + 1, i);
-    i = pCertNameToStrW(X509_ASN_ENCODING,pName, dwStrType, buffer,
-     sizeof(buffer) / sizeof(buffer[0]));
+    i = pCertNameToStrW(X509_ASN_ENCODING,pName, dwStrType, buffer, ARRAY_SIZE(buffer));
     todo_wine_if (todo)
         ok(i == lstrlenW(expected) + 1, "Expected %d chars, got %d\n",
          lstrlenW(expected) + 1, i);
@@ -795,7 +792,7 @@ static void test_CertStrToNameA(void)
                           &size, NULL);
     ok(!ret && GetLastError() == ERROR_MORE_DATA,
                  "Expected ERROR_MORE_DATA, got %08x\n", GetLastError());
-    for (i = 0; i < sizeof(namesA) / sizeof(namesA[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(namesA); i++)
     {
         size = sizeof(buf);
         ret = pCertStrToNameA(X509_ASN_ENCODING, namesA[i].x500, 0, NULL, buf,
@@ -889,7 +886,7 @@ static void test_CertStrToNameW(void)
     ok(!ret && GetLastError() == CRYPT_E_INVALID_X500_STRING,
      "Expected CRYPT_E_INVALID_X500_STRING, got %08x\n", GetLastError());
     ok(errorPtr && *errorPtr == '1', "Expected first error character was 1\n");
-    for (i = 0; i < sizeof(namesW) / sizeof(namesW[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(namesW); i++)
     {
         size = sizeof(buf);
         ret = pCertStrToNameW(X509_ASN_ENCODING, namesW[i].x500, 0, NULL, buf,

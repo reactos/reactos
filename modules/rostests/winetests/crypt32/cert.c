@@ -3177,7 +3177,7 @@ static void testCompareIntegerBlob(void)
     DWORD i;
     BOOL ret;
 
-    for (i = 0; i < sizeof(intBlobs) / sizeof(intBlobs[0]); i++)
+    for (i = 0; i < ARRAY_SIZE(intBlobs); i++)
     {
         ret = CertCompareIntegerBlob(&intBlobs[i].blob1, &intBlobs[i].blob2);
         ok(ret == intBlobs[i].areEqual,
