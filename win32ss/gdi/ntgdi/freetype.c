@@ -953,7 +953,7 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FONTGDI *           FontGDI;
     NTSTATUS            Status;
     FT_Face             Face;
-    ANSI_STRING         AnsiFaceName;
+    ANSI_STRING         AnsiString;
     FT_WinFNT_HeaderRec WinFNT;
     INT                 FaceCount = 0, CharSetCount = 0;
     PUNICODE_STRING     pFileName       = pLoadFont->pFileName;
@@ -1075,8 +1075,24 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     FontGDI->OriginalWeight = WeightFromStyle(Face->style_name);
     FontGDI->RequestWeight = FW_NORMAL;
 
-    RtlInitAnsiString(&AnsiFaceName, Face->family_name);
-    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiFaceName, TRUE);
+    RtlInitAnsiString(&AnsiString, Face->family_name);
+    Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiString, TRUE);
+    if (NT_SUCCESS(Status))
+    {
+        if (Face->style_name[0] && strcmp(Face->style_name, "Regular"))
+        {
+            RtlInitAnsiString(&AnsiString, Face->style_name);
+            Status = RtlAnsiStringToUnicodeString(&Entry->StyleName, &AnsiString, TRUE);
+            if (!NT_SUCCESS(Status))
+            {
+                RtlFreeUnicodeString(&Entry->FaceName);
+            }
+        }
+        else
+        {
+            RtlInitUnicodeString(&Entry->StyleName, NULL);
+        }
+    }
     if (!NT_SUCCESS(Status))
     {
         if (PrivateEntry)
@@ -1206,15 +1222,25 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     if (CharSetIndex == -1)
     {
         INT i;
+        USHORT NameLength = Entry->FaceName.Length;
+
+        if (Entry->StyleName.Length)
+            NameLength += Entry->StyleName.Length + sizeof(WCHAR);
 
         if (pLoadFont->RegValueName.Length == 0)
         {
-            RtlCreateUnicodeString(pValueName, Entry->FaceName.Buffer);
+            pValueName->Length = 0;
+            pValueName->MaximumLength = NameLength + sizeof(WCHAR);
+            pValueName->Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                       pValueName->MaximumLength,
+                                                       TAG_USTR);
+            pValueName->Buffer[0] = UNICODE_NULL;
+            RtlAppendUnicodeStringToString(pValueName, &Entry->FaceName);
         }
         else
         {
             UNICODE_STRING NewString;
-            USHORT Length = pValueName->Length + 3 * sizeof(WCHAR) + Entry->FaceName.Length;
+            USHORT Length = pValueName->Length + 3 * sizeof(WCHAR) + NameLength;
             NewString.Length = 0;
             NewString.MaximumLength = Length + sizeof(WCHAR);
             NewString.Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -1228,6 +1254,11 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
 
             RtlFreeUnicodeString(pValueName);
             *pValueName = NewString;
+        }
+        if (Entry->StyleName.Length)
+        {
+            RtlAppendUnicodeToString(pValueName, L" ");
+            RtlAppendUnicodeStringToString(pValueName, &Entry->StyleName);
         }
 
         for (i = 1; i < CharSetCount; ++i)
@@ -5148,15 +5179,10 @@ IntGdiGetFontResourceInfo(
     case 1: /* copy the font title */
         /* calculate the required size */
         Size = 0;
-        Size += wcslen(FamInfo[0].EnumLogFontEx.elfLogFont.lfFaceName);
-        if (FamInfo[0].EnumLogFontEx.elfStyle[0] &&
-            _wcsicmp(FamInfo[0].EnumLogFontEx.elfStyle, L"Regular") != 0)
+        for (i = 0; i < Count; ++i)
         {
-            Size += 1 + wcslen(FamInfo[0].EnumLogFontEx.elfStyle);
-        }
-        for (i = 1; i < Count; ++i)
-        {
-            Size += 3;  /* " & " */
+            if (i > 0)
+                Size += 3;  /* " & " */
             Size += wcslen(FamInfo[i].EnumLogFontEx.elfLogFont.lfFaceName);
             if (FamInfo[i].EnumLogFontEx.elfStyle[0] &&
                 _wcsicmp(FamInfo[i].EnumLogFontEx.elfStyle, L"Regular") != 0)
@@ -5179,10 +5205,10 @@ IntGdiGetFontResourceInfo(
                 /* store font title to buffer */
                 WCHAR *psz = pBuffer;
                 *psz = 0;
-                IntAddNameFromFamInfo(psz, &FamInfo[0]);
-                for (i = 1; i < Count; ++i)
+                for (i = 0; i < Count; ++i)
                 {
-                    wcscat(psz, L" & ");
+                    if (i > 0)
+                        wcscat(psz, L" & ");
                     IntAddNameFromFamInfo(psz, &FamInfo[i]);
                 }
                 psz[wcslen(psz) + 1] = UNICODE_NULL;

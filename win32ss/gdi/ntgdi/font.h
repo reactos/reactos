@@ -6,6 +6,7 @@ typedef struct _FONT_ENTRY
     LIST_ENTRY ListEntry;
     FONTGDI *Font;
     UNICODE_STRING FaceName;
+    UNICODE_STRING StyleName;
     BYTE NotEnum;
 } FONT_ENTRY, *PFONT_ENTRY;
 
