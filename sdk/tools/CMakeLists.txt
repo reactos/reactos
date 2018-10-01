@@ -1,9 +1,7 @@
 
 function(add_host_tool _tool)
     add_executable(${_tool} ${ARGN})
-    if(NEW_STYLE_BUILD)
-        set_target_properties(${_tool} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TOOLS_FOLDER})
-    endif()
+    set_target_properties(${_tool} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TOOLS_FOLDER})
 endfunction()
 
 #add_executable(pefixup pefixup.c)

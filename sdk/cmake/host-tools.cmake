@@ -1,42 +1,45 @@
 
-if(CMAKE_HOST_WIN32)
-    set(native_suffix ".exe")
-endif()
+function(setup_host_tools)
+    file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/host-tools)
 
-string(TOUPPER ${CMAKE_BUILD_TYPE} _build_type)
+    message(STATUS "Configuring host tools...")
+    # cmake sets CC and CXX when those languages are enabled
+    # so we need to clear them here
+    execute_process(COMMAND
+        ${CMAKE_COMMAND}
+            -E env --unset=CC --unset=CXX
+        ${CMAKE_COMMAND}
+            -G "${CMAKE_GENERATOR}"
+            -DARCH:STRING=${ARCH}
+            ${USE_CLANG_CL_ARG}
+            ${REACTOS_SOURCE_DIR}
+        WORKING_DIRECTORY ${REACTOS_BINARY_DIR}/host-tools
+        RESULT_VARIABLE _host_config_result
+        OUTPUT_VARIABLE _host_config_log
+        ERROR_VARIABLE  _host_config_log)
 
-# List of host tools
-list(APPEND host_tools_list bin2c hpp widl gendib cabman fatten isohybrid mkhive mkisofs obj2bin spec2def geninc mkshelllink utf16le xml2sdb)
-if(NOT MSVC)
-    list(APPEND host_tools_list rsym)
-endif()
-
-foreach(_host_tool ${host_tools_list})
-    if(MSVC_IDE)
-        get_filename_component(_tool_location "${CMAKE_CURRENT_BINARY_DIR}/host-tools/${CMAKE_BUILD_TYPE}/${_host_tool}${native_suffix}" ABSOLUTE)
-    else()
-        get_filename_component(_tool_location "${CMAKE_CURRENT_BINARY_DIR}/host-tools/${_host_tool}${native_suffix}" ABSOLUTE)
+    # Show cmake output only if host-tools breaks
+    if(NOT _host_config_result EQUAL 0)
+        message("\nHost tools log:")
+        message("${_host_config_log}")
+        message(FATAL_ERROR "Failed to configure host tools")
     endif()
-    list(APPEND tools_binaries ${_tool_location})
-    add_executable(native-${_host_tool} IMPORTED)
-    set_property(TARGET native-${_host_tool} PROPERTY IMPORTED_LOCATION_${_build_type} ${_tool_location})
-    add_dependencies(native-${_host_tool} host-tools)
-endforeach()
 
-if(USE_CLANG_CL)
-    # FIXME: Fix host tools build with clang
-    #set(USE_CLANG_CL_ARG "-DCMAKE_C_COMPILER=clang-cl;-DCMAKE_CXX_COMPILER=clang-cl")
-endif()
+    set_property(SOURCE host_tools PROPERTY SYMBOLIC 1)
 
-include(ExternalProject)
+    # Make a host-tools target so it'll be built when needed
+    # custom target + symbolic output prevents cmake from running
+    # the command multiple times per build
+    add_custom_command(
+        COMMAND ${CMAKE_COMMAND} --build ${REACTOS_BINARY_DIR}/host-tools
+        OUTPUT host_tools)
+    add_custom_target(build-host-tools ALL DEPENDS host_tools)
 
-ExternalProject_Add(host-tools
-    SOURCE_DIR ${REACTOS_SOURCE_DIR}
-    BINARY_DIR ${REACTOS_BINARY_DIR}/host-tools
-    STAMP_DIR ${REACTOS_BINARY_DIR}/host-tools/stamps
-    BUILD_ALWAYS 1
-    PREFIX host-tools
-    EXCLUDE_FROM_ALL 1
-    CMAKE_ARGS "-DNEW_STYLE_BUILD=1;-DARCH:STRING=${ARCH};${USE_CLANG_CL_ARG}"
-    INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${tools_binaries})
+    include(${REACTOS_BINARY_DIR}/host-tools/ImportExecutables.cmake)
+    include(${REACTOS_BINARY_DIR}/host-tools/TargetList.cmake)
+
+    foreach(_target ${NATIVE_TARGETS})
+        add_dependencies(native-${_target} build-host-tools)
+    endforeach()
+
+endfunction()
