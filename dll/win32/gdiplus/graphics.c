@@ -1156,8 +1156,9 @@ static BOOL brush_can_fill_path(GpBrush *brush, BOOL is_fill)
     }
 }
 
-static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
+static GpStatus brush_fill_path(GpGraphics *graphics, GpBrush *brush)
 {
+    GpStatus status = Ok;
     switch (brush->bt)
     {
     case BrushTypeSolidColor:
@@ -1170,12 +1171,22 @@ static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
             RECT rc;
             /* partially transparent fill */
 
-            SelectClipPath(graphics->hdc, RGN_AND);
+            if (!SelectClipPath(graphics->hdc, RGN_AND))
+            {
+                status = GenericError;
+                DeleteObject(bmp);
+                break;
+            }
             if (GetClipBox(graphics->hdc, &rc) != NULLREGION)
             {
                 HDC hdc = CreateCompatibleDC(NULL);
 
-                if (!hdc) break;
+                if (!hdc)
+                {
+                    status = OutOfMemory;
+                    DeleteObject(bmp);
+                    break;
+                }
 
                 SelectObject(hdc, bmp);
                 gdi_alpha_blend(graphics, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
@@ -1193,7 +1204,11 @@ static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
         HBRUSH gdibrush, old_brush;
 
         gdibrush = create_gdi_brush(brush);
-        if (!gdibrush) return;
+        if (!gdibrush)
+        {
+            status = OutOfMemory;
+            break;
+        }
 
         old_brush = SelectObject(graphics->hdc, gdibrush);
         FillPath(graphics->hdc);
@@ -1202,6 +1217,8 @@ static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
         break;
     }
     }
+
+    return status;
 }
 
 static BOOL brush_can_fill_pixels(GpBrush *brush)
@@ -4337,7 +4354,7 @@ static GpStatus GDI32_GdipFillPath(GpGraphics *graphics, GpBrush *brush, GpPath 
     if(retval == Ok)
     {
         EndPath(graphics->hdc);
-        brush_fill_path(graphics, brush);
+        retval = brush_fill_path(graphics, brush);
     }
 
     gdi_transform_release(graphics);
@@ -4382,6 +4399,9 @@ GpStatus WINGDIPAPI GdipFillPath(GpGraphics *graphics, GpBrush *brush, GpPath *p
 
     if(graphics->busy)
         return ObjectBusy;
+
+    if (!path->pathdata.Count)
+        return Ok;
 
     if (graphics->image && graphics->image->type == ImageTypeMetafile)
         return METAFILE_FillPath((GpMetafile*)graphics->image, brush, path);
@@ -4643,13 +4663,13 @@ static GpStatus GDI32_GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
         Rectangle(graphics->hdc, rc.left, rc.top, rc.right, rc.bottom);
         EndPath(graphics->hdc);
 
-        brush_fill_path(graphics, brush);
+        status = brush_fill_path(graphics, brush);
     }
 
     RestoreDC(graphics->hdc, save_state);
 
 
-    return Ok;
+    return status;
 }
 
 static GpStatus SOFTWARE_GdipFillRegion(GpGraphics *graphics, GpBrush *brush,
