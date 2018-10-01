@@ -40,7 +40,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(imm);
 #define IMM_INIT_MAGIC 0x19650412
 BOOL WINAPI User32InitializeImmEntryTable(DWORD);
 
-#define MAKE_FUNCPTR(f) typeof(f) * p##f
 typedef struct _tagImmHkl{
     struct list entry;
     HKL         hkl;
@@ -51,24 +50,23 @@ typedef struct _tagImmHkl{
     HWND        UIWnd;
 
     /* Function Pointers */
-    MAKE_FUNCPTR(ImeInquire);
-    MAKE_FUNCPTR(ImeConfigure);
-    MAKE_FUNCPTR(ImeDestroy);
-    MAKE_FUNCPTR(ImeEscape);
-    MAKE_FUNCPTR(ImeSelect);
-    MAKE_FUNCPTR(ImeSetActiveContext);
-    MAKE_FUNCPTR(ImeToAsciiEx);
-    MAKE_FUNCPTR(NotifyIME);
-    MAKE_FUNCPTR(ImeRegisterWord);
-    MAKE_FUNCPTR(ImeUnregisterWord);
-    MAKE_FUNCPTR(ImeEnumRegisterWord);
-    MAKE_FUNCPTR(ImeSetCompositionString);
-    MAKE_FUNCPTR(ImeConversionList);
-    MAKE_FUNCPTR(ImeProcessKey);
-    MAKE_FUNCPTR(ImeGetRegisterWordStyle);
-    MAKE_FUNCPTR(ImeGetImeMenuItems);
+    BOOL (WINAPI *pImeInquire)(IMEINFO *, WCHAR *, const WCHAR *);
+    BOOL (WINAPI *pImeConfigure)(HKL, HWND, DWORD, void *);
+    BOOL (WINAPI *pImeDestroy)(UINT);
+    LRESULT (WINAPI *pImeEscape)(HIMC, UINT, void *);
+    BOOL (WINAPI *pImeSelect)(HIMC, BOOL);
+    BOOL (WINAPI *pImeSetActiveContext)(HIMC, BOOL);
+    UINT (WINAPI *pImeToAsciiEx)(UINT, UINT, const BYTE *, DWORD *, UINT, HIMC);
+    BOOL (WINAPI *pNotifyIME)(HIMC, DWORD, DWORD, DWORD);
+    BOOL (WINAPI *pImeRegisterWord)(const WCHAR *, DWORD, const WCHAR *);
+    BOOL (WINAPI *pImeUnregisterWord)(const WCHAR *, DWORD, const WCHAR *);
+    UINT (WINAPI *pImeEnumRegisterWord)(REGISTERWORDENUMPROCW, const WCHAR *, DWORD, const WCHAR *, void *);
+    BOOL (WINAPI *pImeSetCompositionString)(HIMC, DWORD, const void *, DWORD, const void *, DWORD);
+    DWORD (WINAPI *pImeConversionList)(HIMC, const WCHAR *, CANDIDATELIST *, DWORD, UINT);
+    BOOL (WINAPI *pImeProcessKey)(HIMC, UINT, LPARAM, const BYTE *);
+    UINT (WINAPI *pImeGetRegisterWordStyle)(UINT, STYLEBUFW *);
+    DWORD (WINAPI *pImeGetImeMenuItems)(HIMC, DWORD, DWORD, IMEMENUITEMINFOW *, IMEMENUITEMINFOW *, DWORD);
 } ImmHkl;
-#undef MAKE_FUNCPTR
 
 typedef struct tagInputContextData
 {
@@ -308,7 +306,7 @@ static HMODULE load_graphics_driver(void)
     HKEY hkey;
     DWORD size;
     WCHAR path[MAX_PATH];
-    WCHAR key[(sizeof(key_pathW) + sizeof(displayW)) / sizeof(WCHAR) + 40];
+    WCHAR key[ARRAY_SIZE( key_pathW ) + ARRAY_SIZE( displayW ) + 40];
     UINT guid_atom = HandleToULong( GetPropW( GetDesktopWindow(), display_device_guid_propW ));
 
     if (!guid_atom) return 0;
@@ -769,7 +767,7 @@ HIMC WINAPI ImmCreateContext(void)
     gl->dwSize = sizeof(GUIDELINE);
     ImmUnlockIMCC(new_context->IMC.hGuideLine);
 
-    for (i = 0; i < sizeof(new_context->IMC.cfCandForm) / sizeof(CANDIDATEFORM); i++)
+    for (i = 0; i < ARRAY_SIZE(new_context->IMC.cfCandForm); i++)
         new_context->IMC.cfCandForm[i].dwIndex = ~0u;
 
     /* Initialize the IME Private */
@@ -1013,8 +1011,7 @@ DWORD WINAPI ImmGetCandidateListA(
        return 0;
 
     candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-    if ( dwIndex >= candinfo->dwCount ||
-         dwIndex >= (sizeof(candinfo->dwOffset) / sizeof(DWORD)) )
+    if (dwIndex >= candinfo->dwCount || dwIndex >= ARRAY_SIZE(candinfo->dwOffset))
         goto done;
 
     candlist = (LPCANDIDATELIST)((LPBYTE)candinfo + candinfo->dwOffset[dwIndex]);
@@ -1117,8 +1114,7 @@ DWORD WINAPI ImmGetCandidateListW(
        return 0;
 
     candinfo = ImmLockIMCC(data->IMC.hCandInfo);
-    if ( dwIndex >= candinfo->dwCount ||
-         dwIndex >= (sizeof(candinfo->dwOffset) / sizeof(DWORD)) )
+    if (dwIndex >= candinfo->dwCount || dwIndex >= ARRAY_SIZE(candinfo->dwOffset))
         goto done;
 
     candlist = (LPCANDIDATELIST)((LPBYTE)candinfo + candinfo->dwOffset[dwIndex]);
@@ -1152,7 +1148,7 @@ BOOL WINAPI ImmGetCandidateWindow(
     if (!data || !lpCandidate)
         return FALSE;
 
-    if ( dwIndex >= (sizeof(data->IMC.cfCandForm) / sizeof(CANDIDATEFORM)) )
+    if (dwIndex >= ARRAY_SIZE(data->IMC.cfCandForm))
         return FALSE;
 
     if (data->IMC.cfCandForm[dwIndex].dwIndex != dwIndex)
@@ -1624,8 +1620,7 @@ static BOOL needs_ime_window(HWND hwnd)
 {
     WCHAR classW[8];
 
-    if (GetClassNameW(hwnd, classW, sizeof(classW)/sizeof(classW[0])) &&
-        !strcmpW(classW, szwIME))
+    if (GetClassNameW(hwnd, classW, ARRAY_SIZE(classW)) && !strcmpW(classW, szwIME))
         return FALSE;
     if (GetClassLongPtrW(hwnd, GCL_STYLE) & CS_IME) return FALSE;
 
@@ -1844,7 +1839,7 @@ UINT WINAPI ImmGetIMEFileNameW(HKL hKL, LPWSTR lpszFileName, UINT uBufLen)
     HKEY hkey;
     DWORD length;
     DWORD rc;
-    WCHAR regKey[sizeof(szImeRegFmt)/sizeof(WCHAR)+8];
+    WCHAR regKey[ARRAY_SIZE(szImeRegFmt)+8];
 
     wsprintfW( regKey, szImeRegFmt, (ULONG_PTR)hKL );
     rc = RegOpenKeyW( HKEY_LOCAL_MACHINE, regKey, &hkey);
@@ -2062,7 +2057,7 @@ HKL WINAPI ImmInstallIMEW(
     HKL hkl;
     DWORD rc;
     HKEY hkey;
-    WCHAR regKey[sizeof(szImeRegFmt)/sizeof(WCHAR)+8];
+    WCHAR regKey[ARRAY_SIZE(szImeRegFmt)+8];
 
     TRACE ("(%s, %s):\n", debugstr_w(lpszIMEFileName),
                           debugstr_w(lpszLayoutText));
@@ -2314,7 +2309,7 @@ BOOL WINAPI ImmSetCandidateWindow(
           wine_dbgstr_point(&lpCandidate->ptCurrentPos),
           wine_dbgstr_rect(&lpCandidate->rcArea));
 
-    if ( lpCandidate->dwIndex >= (sizeof(data->IMC.cfCandForm) / sizeof(CANDIDATEFORM)) )
+    if (lpCandidate->dwIndex >= ARRAY_SIZE(data->IMC.cfCandForm))
         return FALSE;
 
     data->IMC.cfCandForm[lpCandidate->dwIndex] = *lpCandidate;
