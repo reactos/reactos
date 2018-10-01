@@ -58,20 +58,20 @@ static void test_CredUIPromptForCredentials(void)
     username[0] = '\0';
     password[0] = '\0';
     ret = CredUIPromptForCredentialsW(NULL, NULL, NULL, 0, username,
-                                      sizeof(username)/sizeof(username[0]),
-                                      password, sizeof(password)/sizeof(password[0]),
+                                      ARRAY_SIZE(username),
+                                      password, ARRAY_SIZE(password),
                                       NULL, CREDUI_FLAGS_ALWAYS_SHOW_UI);
     ok(ret == ERROR_INVALID_FLAGS, "CredUIPromptForCredentials should have returned ERROR_INVALID_FLAGS instead of %d\n", ret);
 
     ret = CredUIPromptForCredentialsW(NULL, NULL, NULL, 0, username,
-                                      sizeof(username)/sizeof(username[0]),
-                                      password, sizeof(password)/sizeof(password[0]),
+                                      ARRAY_SIZE(username),
+                                      password, ARRAY_SIZE(password),
                                       NULL, CREDUI_FLAGS_ALWAYS_SHOW_UI | CREDUI_FLAGS_GENERIC_CREDENTIALS);
     ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
     ret = CredUIPromptForCredentialsW(NULL, wszServerName, NULL, 0, username,
-                                      sizeof(username)/sizeof(username[0]),
-                                      password, sizeof(password)/sizeof(password[0]),
+                                      ARRAY_SIZE(username),
+                                      password, ARRAY_SIZE(password),
                                       NULL, CREDUI_FLAGS_SHOW_SAVE_CHECK_BOX);
     ok(ret == ERROR_INVALID_PARAMETER, "CredUIPromptForCredentials should have returned ERROR_INVALID_PARAMETER instead of %d\n", ret);
 
@@ -86,8 +86,8 @@ static void test_CredUIPromptForCredentials(void)
             'C','R','E','D','U','I','_','F','L','A','G','S','_','E','X','P','E','C','T','_','C','O','N','F','I','R','M','A','T','I','O','N',0};
 
         ret = CredUIPromptForCredentialsW(NULL, wszServerName, NULL, 0, username,
-                                          sizeof(username)/sizeof(username[0]),
-                                          password, sizeof(password)/sizeof(password[0]),
+                                          ARRAY_SIZE(username),
+                                          password, ARRAY_SIZE(password),
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
@@ -97,10 +97,9 @@ static void test_CredUIPromptForCredentials(void)
         }
 
         credui_info.pszCaptionText = wszCaption1;
-        ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL,
-                                          ERROR_ACCESS_DENIED,
-                                          username, sizeof(username)/sizeof(username[0]),
-                                          password, sizeof(password)/sizeof(password[0]),
+        ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, ERROR_ACCESS_DENIED,
+                                          username, ARRAY_SIZE(username),
+                                          password, ARRAY_SIZE(password),
                                           &save, CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
@@ -111,8 +110,8 @@ static void test_CredUIPromptForCredentials(void)
 
         credui_info.pszCaptionText = wszCaption2;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, 0,
-                                          username, sizeof(username)/sizeof(username[0]),
-                                          password, sizeof(password)/sizeof(password[0]),
+                                          username, ARRAY_SIZE(username),
+                                          password, ARRAY_SIZE(password),
                                           NULL, CREDUI_FLAGS_INCORRECT_PASSWORD|CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         if (ret == ERROR_SUCCESS)
@@ -125,8 +124,8 @@ static void test_CredUIPromptForCredentials(void)
         save = TRUE;
         credui_info.pszCaptionText = wszCaption3;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, 0,
-                                          username, sizeof(username)/sizeof(username[0]),
-                                          password, sizeof(password)/sizeof(password[0]),
+                                          username, ARRAY_SIZE(username),
+                                          password, ARRAY_SIZE(password),
                                           &save, CREDUI_FLAGS_DO_NOT_PERSIST|CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         ok(save, "save flag should have been untouched\n");
@@ -134,8 +133,8 @@ static void test_CredUIPromptForCredentials(void)
         save = FALSE;
         credui_info.pszCaptionText = wszCaption4;
         ret = CredUIPromptForCredentialsW(&credui_info, wszServerName, NULL, 0,
-                                          username, sizeof(username)/sizeof(username[0]),
-                                          password, sizeof(password)/sizeof(password[0]),
+                                          username, ARRAY_SIZE(username),
+                                          password, ARRAY_SIZE(password),
                                           &save, CREDUI_FLAGS_PERSIST|CREDUI_FLAGS_EXPECT_CONFIRMATION);
         ok(ret == ERROR_SUCCESS || ret == ERROR_CANCELLED, "CredUIPromptForCredentials failed with error %d\n", ret);
         ok(!save, "save flag should have been untouched\n");
