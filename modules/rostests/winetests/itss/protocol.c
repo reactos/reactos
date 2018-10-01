@@ -504,18 +504,18 @@ static void test_its_protocol_info(IInternetProtocol *protocol)
     for(i = PARSE_CANONICALIZE; i <= PARSE_UNESCAPE; i++) {
         if(i != PARSE_CANONICALIZE && i != PARSE_SECURITY_URL) {
             hres = IInternetProtocolInfo_ParseUrl(info, blank_url1, i, 0, buf,
-                    sizeof(buf)/sizeof(buf[0]), &size, 0);
+                    ARRAY_SIZE(buf), &size, 0);
             ok(hres == INET_E_DEFAULT_ACTION,
                "[%d] failed: %08x, expected INET_E_DEFAULT_ACTION\n", i, hres);
         }
     }
 
-    for(i=0; i < sizeof(combine_tests)/sizeof(combine_tests[0]); i++) {
+    for(i=0; i < ARRAY_SIZE(combine_tests); i++) {
         size = 0xdeadbeef;
         memset(buf, 0xfe, sizeof(buf));
         hres = IInternetProtocolInfo_CombineUrl(info, a2w(combine_tests[i].base_url),
                 a2w(combine_tests[i].rel_url), combine_tests[i].flags, buf,
-                sizeof(buf)/sizeof(WCHAR), &size, 0);
+                ARRAY_SIZE(buf), &size, 0);
         ok(hres == combine_tests[i].hres, "[%d] CombineUrl returned %08x, expected %08x\n",
            i, hres, combine_tests[i].hres);
         ok(size == (combine_tests[i].combined_url ? strlen(combine_tests[i].combined_url)+1
