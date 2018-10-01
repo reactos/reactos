@@ -1584,9 +1584,8 @@ static HRESULT decode_base64(IStream *input, IStream **ret_stream)
 
         while(1) {
             /* skip invalid chars */
-            while(ptr < end &&
-                  (*ptr >= sizeof(base64_decode_table)/sizeof(*base64_decode_table)
-                   || base64_decode_table[*ptr] == -1))
+            while(ptr < end && (*ptr >= ARRAY_SIZE(base64_decode_table)
+                                || base64_decode_table[*ptr] == -1))
                 ptr++;
             if(ptr == end)
                 break;
@@ -3718,7 +3717,7 @@ HRESULT WINAPI MimeOleObjectFromMoniker(BINDF bindf, IMoniker *moniker, IBindCtx
         return E_OUTOFMEMORY;
 
     memcpy(mhtml_url, mhtml_prefixW, sizeof(mhtml_prefixW));
-    strcpyW(mhtml_url + sizeof(mhtml_prefixW)/sizeof(WCHAR), display_name);
+    strcpyW(mhtml_url + ARRAY_SIZE(mhtml_prefixW), display_name);
     HeapFree(GetProcessHeap(), 0, display_name);
 
     hres = CreateURLMoniker(NULL, mhtml_url, moniker_new);
