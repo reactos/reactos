@@ -71,6 +71,7 @@ list(APPEND FONT_FILES
     LibreFranklin-Thin.ttf
     LibreFranklin-ThinItalic.ttf
     Marlett.ttf
+    micross.ttf     # original filename is ms_sans_serif.ttf
     OpenSans-Bold.ttf
     OpenSans-BoldItalic.ttf
     OpenSans-CondBold.ttf
