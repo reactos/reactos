@@ -1729,7 +1729,12 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
         /* Lock the file object */
-        IopLockFileObject(FileObject);
+        Status = IopLockFileObject(FileObject, ExGetPreviousMode());
+        if (Status != STATUS_SUCCESS)
+        {
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
     }
     else
     {
@@ -2026,7 +2031,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
         /* Check if this is a sync FO and lock it */
         if (BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
         {
-            IopLockFileObject(FileObject);
+            (VOID)IopLockFileObject(FileObject, KernelMode);
         }
 
         /* Go the FastIO path if possible, otherwise fall back to IRP */
@@ -2100,7 +2105,7 @@ IopCloseFile(IN PEPROCESS Process OPTIONAL,
     if (Process != NULL &&
         BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
     {
-        IopLockFileObject(FileObject);
+        (VOID)IopLockFileObject(FileObject, KernelMode);
     }
 
     /* Clear and set up Events */
@@ -2256,6 +2261,52 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     }
 
     /* Return status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IopAcquireFileObjectLock(
+    _In_ PFILE_OBJECT FileObject,
+    _In_ KPROCESSOR_MODE WaitMode,
+    _In_ BOOLEAN Alertable,
+    _Out_ PBOOLEAN LockFailed)
+{
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    InterlockedIncrement((PLONG)&FileObject->Waiters);
+
+    Status = STATUS_SUCCESS;
+    do
+    {
+        if (!InterlockedExchange((PLONG)&FileObject->Busy, TRUE))
+        {
+            break;
+        }
+        Status = KeWaitForSingleObject(&FileObject->Lock,
+                                       Executive,
+                                       WaitMode,
+                                       Alertable,
+                                       NULL);
+    } while (Status == STATUS_SUCCESS);
+
+    InterlockedDecrement((PLONG)&FileObject->Waiters);
+    if (Status == STATUS_SUCCESS)
+    {
+        ObReferenceObject(FileObject);
+        *LockFailed = FALSE;
+    }
+    else
+    {
+        if (!FileObject->Busy && FileObject->Waiters)
+        {
+            KeSetEvent(&FileObject->Lock, IO_NO_INCREMENT, FALSE);
+        }
+        *LockFailed = TRUE;
+    }
+
     return Status;
 }
 
