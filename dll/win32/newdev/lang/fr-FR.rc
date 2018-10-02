@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Bienvenue", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Cet assistant installe un nouveau pilote pour :", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Cliquer sur Suivant pour continuer.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !", IDC_STATIC, 120, 59, 200, 16
     CONTROL "Installer le pilote automatiquement", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Installer le pilote depuis un endroit spécifié", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "L'installation a échoué", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Le matériel n'a pu etre installé en raison d'une erreur inattendue.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -72,7 +72,7 @@ BEGIN
     LTEXT "Installation terminée", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Vous devez redémarrer l'ordinateur avant d'utiliser :", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Cliquer sur Terminer pour fermer l'assistant.", IDC_STATIC, 120, 174, 179, 12
-    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -83,7 +83,7 @@ BEGIN
     LTEXT "Installation terminée", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "L'assistant a fini d'installer le pilote pour :", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Cliquer sur Terminer pour fermer l'assistant.", IDC_STATIC, 120, 174, 179, 12
-    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "MATÉRIEL INCONNU", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

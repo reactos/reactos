@@ -13,7 +13,7 @@ BEGIN
     LTEXT "Vitajte", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Tento sprievodca nainštaluje nový ovládač zariadenia pre:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Kliknite na tlačidlo Ďalej pre pokračovanie.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "UPOZORNENIE! NAINŠTALOVANIE VLASTNÉHO ZARIADENIA MÔŽE SPÔSOBIŤ ZAMŔZANIE VÁŠHO POČÍTAČA ALEBO ZNEFUNKČNIŤ ZAVÁDZANIE OPERAČNÉHO SYSTÉMU!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Nainštalovať ovládač automaticky", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Nainštalovať ovládač zo zadaného umiestnenia", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -37,7 +37,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Inštalácia zlyhala", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Zariadenie sa nepodarilo nainštalovať, lebo sa vyskytla nepredvídaná chyba.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -77,7 +77,7 @@ BEGIN
     LTEXT "Inštalácia dokončená", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Musíte reštartovať počítač pre dokončenie inštalácie:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na tlačidlo Dokončiť zavriete sprievodcu", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -88,7 +88,7 @@ BEGIN
     LTEXT "Inštalácia dokončená", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Sprievodca dokončil inštaláciu ovládača pre:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Kliknutím na tlačidlo Dokončiť zavriete sprievodcu.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NEZNÁME ZARIADENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE
