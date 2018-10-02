@@ -18,16 +18,26 @@ typedef enum _PARAM_TYPE
     ENUM_TYPE,
 } PARAM_TYPE, *PPARAM_TYPE;
 
+typedef struct _ENUM_OPTION
+{
+    PWSTR pszValue;
+    PWSTR pszName;
+} ENUM_OPTION, *PENUM_OPTION;
+
 typedef struct _PARAMETER
 {
     PWSTR pszName;
     PWSTR pszDescription;
     PWSTR pszValue;
     PWSTR pszDefault;
-    PARAM_TYPE Type;
-    BOOL bUpperCase;
     BOOL bOptional;
-    INT iLimitText;
+    PARAM_TYPE Type;
+
+    DWORD dwEnumOptions;
+    PENUM_OPTION pEnumOptions;
+
+    BOOL bUpperCase;
+    INT iTextLimit;
 
 } PARAMETER, *PPARAMETER;
 
@@ -43,7 +53,7 @@ VOID
 FreeParameterArray(
     _In_ PPARAMETER_ARRAY ParamArray)
 {
-    INT i;
+    INT i, j;
 
     if (ParamArray == NULL)
         return;
@@ -59,6 +69,20 @@ FreeParameterArray(
         if (ParamArray->Array[i].pszDefault != NULL)
             HeapFree(GetProcessHeap(), 0, ParamArray->Array[i].pszDefault);
 
+
+        if (ParamArray->Array[i].pEnumOptions != NULL)
+        {
+            for (j = 0; j < ParamArray->Array[i].dwEnumOptions; j++)
+            {
+                if (ParamArray->Array[i].pEnumOptions[j].pszValue != NULL)
+                    HeapFree(GetProcessHeap(), 0, ParamArray->Array[i].pEnumOptions[j].pszValue);
+
+                if (ParamArray->Array[i].pEnumOptions[j].pszName != NULL)
+                    HeapFree(GetProcessHeap(), 0, ParamArray->Array[i].pEnumOptions[j].pszName);
+            }
+
+            HeapFree(GetProcessHeap(), 0, ParamArray->Array[i].pEnumOptions);
+        }
     }
 
     HeapFree(GetProcessHeap(), 0, ParamArray);
@@ -66,39 +90,239 @@ FreeParameterArray(
 
 
 static DWORD
-GetValueString(
+GetStringValue(
     IN HKEY hKey,
-    IN LPWSTR lpValueName,
-    OUT LPWSTR *lpString)
+    IN PWSTR pValueName,
+    OUT PWSTR *pString)
 {
-    LPWSTR lpBuffer;
+    PWSTR pBuffer;
     DWORD dwLength = 0;
     DWORD dwRegType;
-    DWORD rc;
+    DWORD dwError;
 
-    *lpString = NULL;
+    *pString = NULL;
 
-    RegQueryValueExW(hKey, lpValueName, NULL, &dwRegType, NULL, &dwLength);
+    RegQueryValueExW(hKey, pValueName, NULL, &dwRegType, NULL, &dwLength);
 
     if (dwLength == 0 || dwRegType != REG_SZ)
         return ERROR_FILE_NOT_FOUND;
 
-    lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
-    if (lpBuffer == NULL)
+    pBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength + sizeof(WCHAR));
+    if (pBuffer == NULL)
         return ERROR_NOT_ENOUGH_MEMORY;
 
-    rc = RegQueryValueExW(hKey, lpValueName, NULL, NULL, (LPBYTE)lpBuffer, &dwLength);
-    if (rc != ERROR_SUCCESS)
+    dwError = RegQueryValueExW(hKey, pValueName, NULL, NULL, (LPBYTE)pBuffer, &dwLength);
+    if (dwError != ERROR_SUCCESS)
     {
-        HeapFree(GetProcessHeap(), 0, lpBuffer);
-        return rc;
+        HeapFree(GetProcessHeap(), 0, pBuffer);
+        return dwError;
     }
 
-    lpBuffer[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
+    pBuffer[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
 
-    *lpString = lpBuffer;
+    *pString = pBuffer;
 
     return ERROR_SUCCESS;
+}
+
+
+static DWORD
+GetBooleanValue(
+    _In_ HKEY hKey,
+    _In_ PWSTR pValueName,
+    _In_ BOOL bDefault,
+    _Out_ PBOOL pValue)
+{
+    WCHAR szBuffer[16];
+    DWORD dwLength = 0;
+    DWORD dwRegType;
+
+    *pValue = bDefault;
+
+    dwLength = sizeof(szBuffer);
+    RegQueryValueExW(hKey,
+                     pValueName,
+                     NULL,
+                     &dwRegType,
+                     (LPBYTE)szBuffer,
+                     &dwLength);
+
+    if (dwRegType == REG_SZ && dwLength >= sizeof(WCHAR))
+    {
+        if (szBuffer[0] == L'0')
+            *pValue = FALSE;
+        else
+            *pValue = TRUE;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static DWORD
+GetIntValue(
+    _In_ HKEY hKey,
+    _In_ PWSTR pValueName,
+    _In_ INT iDefault,
+    _Out_ PINT pValue)
+{
+    WCHAR szBuffer[24];
+    DWORD dwLength = 0;
+    DWORD dwRegType;
+
+    *pValue = iDefault;
+
+    dwLength = sizeof(szBuffer);
+    RegQueryValueExW(hKey,
+                     pValueName,
+                     NULL,
+                     &dwRegType,
+                     (LPBYTE)szBuffer,
+                     &dwLength);
+
+    if (dwRegType == REG_SZ && dwLength >= sizeof(WCHAR))
+    {
+        *pValue = _wtoi(szBuffer);
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+static
+DWORD
+GetEnumOptions(
+    _In_ HKEY hKey,
+    _In_ PPARAMETER pParameter)
+{
+    HKEY hEnumKey = NULL;
+    PENUM_OPTION pOptions = NULL;
+    DWORD dwValues, dwMaxValueNameLen, dwMaxValueLen;
+    DWORD dwValueNameLength, dwValueLength;
+    DWORD i;
+    DWORD dwError;
+
+    dwError = RegOpenKeyExW(hKey,
+                            L"enum",
+                            0,
+                            KEY_READ,
+                            &hEnumKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegQueryInfoKeyW(hEnumKey,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL,
+                               &dwValues,
+                               &dwMaxValueNameLen,
+                               &dwMaxValueLen,
+                               NULL,
+                               NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        ERR("RegQueryInfoKeyW failed (Error %lu)\n", dwError);
+        goto done;
+    }
+
+    pOptions = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         dwValues * sizeof(ENUM_OPTION));
+    if (pOptions == NULL)
+    {
+        dwError = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    for (i = 0; i < dwValues; i++)
+    {
+        dwValueNameLength = dwMaxValueNameLen + sizeof(WCHAR);
+        pOptions[i].pszValue = HeapAlloc(GetProcessHeap(),
+                                        0,
+                                        dwValueNameLength * sizeof(WCHAR));
+        if (pOptions[i].pszValue == NULL)
+        {
+            dwError = ERROR_OUTOFMEMORY;
+            goto done;
+        }
+
+        dwValueLength = dwMaxValueLen;
+        pOptions[i].pszName = HeapAlloc(GetProcessHeap(),
+                                        0,
+                                        dwValueLength);
+        if (pOptions[i].pszName == NULL)
+        {
+            dwError = ERROR_OUTOFMEMORY;
+            goto done;
+        }
+
+        dwError = RegEnumValueW(hEnumKey,
+                                i,
+                                pOptions[i].pszValue,
+                                &dwValueNameLength,
+                                NULL,
+                                NULL,
+                                (PBYTE)pOptions[i].pszName,
+                                &dwValueLength);
+        if (dwError == ERROR_NO_MORE_ITEMS)
+        {
+            dwError == ERROR_SUCCESS;
+            goto done;
+        }
+        else if (dwError != ERROR_SUCCESS)
+        {
+            goto done;
+        }
+    }
+
+    pParameter->pEnumOptions = pOptions;
+    pParameter->dwEnumOptions = dwValues;
+    pOptions = NULL;
+
+done:
+    if (pOptions != NULL)
+    {
+        for (i = 0; i < dwValues; i++)
+        {
+            if (pOptions[i].pszValue != NULL)
+                HeapFree(GetProcessHeap(), 0, pOptions[i].pszValue);
+
+            if (pOptions[i].pszName != NULL)
+                HeapFree(GetProcessHeap(), 0, pOptions[i].pszName);
+        }
+
+        HeapFree(GetProcessHeap(), 0, pOptions);
+    }
+
+    if (hEnumKey != NULL)
+        RegCloseKey(hEnumKey);
+
+    return dwError;
+}
+
+
+static
+INT
+FindEnumOption(
+    _In_ PPARAMETER pParameter,
+    _In_ PWSTR pszValue)
+{
+    INT i;
+
+    if ((pParameter->pEnumOptions == NULL) ||
+        (pParameter->dwEnumOptions == 0))
+        return -1;
+
+    for (i = 0; i < pParameter->dwEnumOptions; i++)
+    {
+        if (_wcsicmp(pParameter->pEnumOptions[i].pszValue, pszValue) == 0)
+            return i;
+    }
+
+    return -1;
 }
 
 
@@ -212,11 +436,11 @@ BuildParameterArray(
                                &hParamKey);
         if (lError == ERROR_SUCCESS)
         {
-            GetValueString(hParamKey,
+            GetStringValue(hParamKey,
                            L"ParamDesc",
                            &ParamArray->Array[dwIndex].pszDescription);
 
-            GetValueString(hParamKey,
+            GetStringValue(hParamKey,
                            L"Type",
                            &pszType);
             if (pszType != NULL)
@@ -240,18 +464,44 @@ BuildParameterArray(
                 pszType = NULL;
             }
 
-            GetValueString(hParamKey,
+            GetStringValue(hParamKey,
                            L"Default",
                            &ParamArray->Array[dwIndex].pszDefault);
 
-            ParamArray->Array[dwIndex].bUpperCase = FALSE;
-            ParamArray->Array[dwIndex].bOptional = FALSE;
-            ParamArray->Array[dwIndex].iLimitText = 0;
+            GetBooleanValue(hParamKey,
+                            L"Optional",
+                            FALSE,
+                            &ParamArray->Array[dwIndex].bOptional);
+
+            if (ParamArray->Array[dwIndex].Type == INT_TYPE ||
+                ParamArray->Array[dwIndex].Type == LONG_TYPE ||
+                ParamArray->Array[dwIndex].Type == WORD_TYPE ||
+                ParamArray->Array[dwIndex].Type == DWORD_TYPE)
+            {
+                /* FIXME: Read Base, Min, Max and Step values */
+            }
+            else if (ParamArray->Array[dwIndex].Type == EDIT_TYPE)
+            {
+                GetBooleanValue(hParamKey,
+                                L"UpperCase",
+                                FALSE,
+                                &ParamArray->Array[dwIndex].bUpperCase);
+
+                GetIntValue(hParamKey,
+                            L"TextLimit",
+                            0,
+                            &ParamArray->Array[dwIndex].iTextLimit);
+            }
+            else if (ParamArray->Array[dwIndex].Type == ENUM_TYPE)
+            {
+                GetEnumOptions(hParamKey,
+                               &ParamArray->Array[dwIndex]);
+            }
 
             RegCloseKey(hParamKey);
         }
 
-        GetValueString(hDriverKey,
+        GetStringValue(hDriverKey,
                        ParamArray->Array[dwIndex].pszName,
                        &ParamArray->Array[dwIndex].pszValue);
     }
@@ -279,10 +529,18 @@ DisplayParameter(
     HWND hwnd,
     PPARAMETER Parameter)
 {
+    HWND hwndControl;
     LONG_PTR Style;
+    INT idx;
+    DWORD i;
 
     ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_PRESENT), (Parameter->bOptional) ? SW_SHOW : SW_HIDE);
     ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_NOT_PRESENT), (Parameter->bOptional) ? SW_SHOW : SW_HIDE);
+    if (Parameter->bOptional)
+    {
+        Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_PRESENT), (Parameter->pszValue) ? BST_UNCHECKED : BST_CHECKED);
+        Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_NOT_PRESENT), (Parameter->pszValue) ? BST_CHECKED : BST_UNCHECKED);
+    }
 
     switch (Parameter->Type)
     {
@@ -290,52 +548,76 @@ DisplayParameter(
         case LONG_TYPE:
         case WORD_TYPE:
         case DWORD_TYPE:
-            ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), SW_SHOW);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), SW_SHOW);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_HIDE);
 
-            Style = GetWindowLongPtr(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), GWL_STYLE);
-            Style |= ES_NUMBER;
-            SetWindowLongPtr(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), GWL_STYLE, Style);
+            hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
+            ShowWindow(hwndControl, SW_SHOW);
 
-            Edit_LimitText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), 0);
+            Style = GetWindowLongPtr(hwndControl, GWL_STYLE);
+            Style |= ES_NUMBER;
+            SetWindowLongPtr(hwndControl, GWL_STYLE, Style);
+
+            Edit_LimitText(hwndControl, 0);
 
             if (Parameter->pszValue)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszValue);
+                Edit_SetText(hwndControl, Parameter->pszValue);
             else if (Parameter->pszDefault)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszDefault);
+                Edit_SetText(hwndControl, Parameter->pszDefault);
             break;
 
         case EDIT_TYPE:
-            ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), SW_SHOW);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), SW_HIDE);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_HIDE);
 
-            Style = GetWindowLongPtr(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), GWL_STYLE);
+            hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
+            ShowWindow(hwndControl, SW_SHOW);
+
+            Style = GetWindowLongPtr(hwndControl, GWL_STYLE);
             Style &= ~ES_NUMBER;
             if (Parameter->bUpperCase)
                 Style |= ES_UPPERCASE;
             else
                 Style &= ~ES_UPPERCASE;
-            SetWindowLongPtr(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), GWL_STYLE, Style);
+            SetWindowLongPtr(hwndControl, GWL_STYLE, Style);
 
-            Edit_LimitText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->iLimitText);
+            Edit_LimitText(hwndControl, Parameter->iTextLimit);
 
             if (Parameter->pszValue)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszValue);
+                Edit_SetText(hwndControl, Parameter->pszValue);
             else if (Parameter->pszDefault)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszDefault);
+                Edit_SetText(hwndControl, Parameter->pszDefault);
             break;
 
         case ENUM_TYPE:
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), SW_HIDE);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), SW_HIDE);
-            ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_SHOW);
+
+            hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST);
+            ShowWindow(hwndControl, SW_SHOW);
+
+            ComboBox_ResetContent(hwndControl);
+
+            if (Parameter->pEnumOptions != NULL && Parameter->dwEnumOptions != 0)
+            {
+                for (i = 0; i < Parameter->dwEnumOptions; i++)
+                {
+                    ComboBox_AddString(hwndControl, Parameter->pEnumOptions[i].pszName);
+                }
+            }
 
             if (Parameter->pszValue)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszValue);
+            {
+                idx = FindEnumOption(Parameter, Parameter->pszValue);
+                if (idx != CB_ERR)
+                    ComboBox_SetCurSel(hwndControl, idx);
+            }
             else if (Parameter->pszDefault)
-                Edit_SetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), Parameter->pszDefault);
+            {
+                idx = FindEnumOption(Parameter, Parameter->pszDefault);
+                if (idx != CB_ERR)
+                    ComboBox_SetCurSel(hwndControl, idx);
+            }
             break;
 
         default:
