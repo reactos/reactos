@@ -16,7 +16,7 @@ BEGIN
     LTEXT "Witamy", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Ten kreator zainstaluje nowe sterowniki dla urządzenia:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Naciśnij Dalej, aby kontynuować.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "UWAGA! NIEODPOWIEDNI STEROWNIK MOŻE ZDESTABILIZOWAĆ LUB NAWET ZAWIESIĆ SYSTEM!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Zainstaluj sterownik automatycznie", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Zainstaluj sterownik z określonej lokalizacji", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -40,7 +40,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalacja nieudana", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Instalacja zakończona niepowodzeniem, z powodu wystąpienia nieoczekiwanego błędu.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -80,7 +80,7 @@ BEGIN
     LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Należy zrestartować komputer, zakańczanie instalacji:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -91,7 +91,7 @@ BEGIN
     LTEXT "Instalacja zakończona", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Kreator zakończył instalację sterownika dla:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Naciśnij Zakończ, aby zamknąć kreator.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "NIEZNANE URZĄDZENIE", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

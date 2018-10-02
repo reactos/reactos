@@ -8,7 +8,7 @@ BEGIN
     LTEXT "Selamat datang", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Bimbingan ini menginstalasi device driver baru untuk:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Klik Lanjut untuk melanjutkan.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "PERINGATAN! MENGINSTALASI KUSTOM DEVICE BISA MENDIAMKAN KOMPUTER ANDA ATAU MENGAKIBATKAN TIDAK BISA DI-BOOT!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Instalasi driver secara otomatis", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Instalasi driver dari lokasi spesifik", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -32,7 +32,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Instalasi gagal", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Device tidak bisa diinstalasi karena kesalahan tidak diharapkan telah terjadi.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -72,7 +72,7 @@ BEGIN
     LTEXT "Instalasi selesai", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Anda perlu mem-boot ulang untuk menyelesaikan instalasi:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Klik Selesai untuk menutup bimbingan.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -83,7 +83,7 @@ BEGIN
     LTEXT "Instalasi selesai", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Bimbingan telah selesai menginstalasi driver untuk:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Klik Selesai untuk menutup bimbingan.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "DEVICE TIDAK DIKENAL", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE

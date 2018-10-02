@@ -10,7 +10,7 @@ BEGIN
     LTEXT "Velkommen", IDC_WELCOMETITLE, 120, 8, 195, 16
     LTEXT "Denne veiviseren installerer driver for ny enhet:", IDC_STATIC, 120, 21, 195, 16
     LTEXT "Klikk Neste for å fortsette.", IDC_STATIC, 120, 169, 195, 16
-    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 36, 147, 12
+    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 36, 147, 17
     LTEXT "ADVARSEL! INSTALLASJON AV EN DRIVER KAN FRYSE DIN MASKIN, ELLER GJØRE AT DEN IKKE STARTER OPP!", IDC_STATIC, 120, 59, 195, 16
     CONTROL "Installer driver automatisk", IDC_RADIO_AUTO, "Button", BS_AUTORADIOBUTTON, 120, 112, 195, 12
     CONTROL "Installer driver fra spesifikk lokasjon", IDC_RADIO_MANUAL, "Button", BS_AUTORADIOBUTTON, 120, 133, 195, 12
@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Installasjonen feilet", IDC_FINISHTITLE, 120, 8, 195, 16
     LTEXT "Enheten kunne ikke installeres fordi en ukjent feil oppstod.", IDC_STATIC, 120, 32, 195, 16
-    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_CHSOURCE DIALOGEX 0, 0, 317, 143
@@ -74,7 +74,7 @@ BEGIN
     LTEXT "Installasjonen er ferdig", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Du må starte maskinen på nytt for å fullføre installasjonen av:", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Trykk Fullfør for å avslutte veiviseren.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 17
 END
 
 IDD_FINISHPAGE DIALOGEX 0, 0, 317, 193
@@ -85,7 +85,7 @@ BEGIN
     LTEXT "Installasjonen er ferdig", IDC_FINISHTITLE, 120, 8, 195, 12
     LTEXT "Veiviseren har installert driveren for: ", IDC_STATIC, 120, 32, 195, 16
     LTEXT "Trykk Fullfør for å avslutte veiviseren.", IDC_STATIC, 120, 174, 195, 12
-    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 12
+    LTEXT "UKJENT ENHET", IDC_DEVICE, 148, 53, 147, 17
 END
 
 STRINGTABLE
