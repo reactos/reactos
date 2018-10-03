@@ -2579,6 +2579,18 @@ NtReadFile(IN HANDLE FileHandle,
     CapturedByteOffset.QuadPart = 0;
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
+    /* Get File Object */
+    Status = ObReferenceObjectByHandle(FileHandle,
+                                       FILE_READ_DATA,
+                                       IoFileObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&FileObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Validate User-Mode Buffers */
     if (PreviousMode != KernelMode)
     {
@@ -2597,12 +2609,38 @@ NtReadFile(IN HANDLE FileHandle,
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
             }
 
+            /* Perform additional checks for non-cached file access */
+            if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+            {
+                /* Fail if Length is not sector size aligned */
+                if ((DeviceObject->SectorSize != 0) &&
+                    (Length % DeviceObject->SectorSize != 0))
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                if (ByteOffset)
+                {
+                    /* Fail if ByteOffset is not sector size aligned */
+                    if ((DeviceObject->SectorSize != 0) &&
+                        (ByteOffset->QuadPart % DeviceObject->SectorSize != 0))
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
+                }
+            }
+
             /* Capture and probe the key */
             if (Key) CapturedKey = ProbeForReadUlong(Key);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Return the exception code */
+            /* Release the file object and return the exception code */
+            ObDereferenceObject(FileObject);
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
@@ -2613,15 +2651,6 @@ NtReadFile(IN HANDLE FileHandle,
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
     }
-
-    /* Get File Object */
-    Status = ObReferenceObjectByHandle(FileHandle,
-                                       FILE_READ_DATA,
-                                       IoFileObjectType,
-                                       PreviousMode,
-                                       (PVOID*)&FileObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check for event */
     if (Event)
@@ -2643,9 +2672,6 @@ NtReadFile(IN HANDLE FileHandle,
         /* Otherwise reset the event */
         KeClearEvent(EventObject);
     }
-
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
@@ -3591,6 +3617,9 @@ NtWriteFile(IN HANDLE FileHandle,
                                            &ObjectHandleInfo);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get the device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
     /* Validate User-Mode Buffers */
     if (PreviousMode != KernelMode)
     {
@@ -3607,6 +3636,31 @@ NtWriteFile(IN HANDLE FileHandle,
             {
                 /* Capture and probe it */
                 CapturedByteOffset = ProbeForReadLargeInteger(ByteOffset);
+            }
+
+            /* Perform additional checks for non-cached file access */
+            if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
+            {
+                /* Fail if Length is not sector size aligned */
+                if ((DeviceObject->SectorSize != 0) &&
+                    (Length % DeviceObject->SectorSize != 0))
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                if (ByteOffset)
+                {
+                    /* Fail if ByteOffset is not sector size aligned */
+                    if ((DeviceObject->SectorSize != 0) &&
+                        (ByteOffset->QuadPart % DeviceObject->SectorSize != 0))
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
+                }
             }
 
             /* Capture and probe the key */
@@ -3656,9 +3710,6 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Otherwise reset the event */
         KeClearEvent(EventObject);
     }
-
-    /* Get the device object */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
 
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
