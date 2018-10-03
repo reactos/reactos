@@ -1941,11 +1941,23 @@ IopQueryNameInternal(IN PVOID ObjectBody,
                  FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
 
     /* Query the File name */
-    Status = IoQueryFileInformation(FileObject,
-                                    FileNameInformation,
-                                    LengthMismatch ? Length : FileLength,
-                                    LocalFileInfo,
-                                    &LocalReturnLength);
+    if (PreviousMode == KernelMode &&
+        BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+    {
+        Status = IopGetFileInformation(FileObject,
+                                       LengthMismatch ? Length : FileLength,
+                                       FileNameInformation,
+                                       LocalFileInfo,
+                                       &LocalReturnLength);
+    }
+    else
+    {
+        Status = IoQueryFileInformation(FileObject,
+                                        FileNameInformation,
+                                        LengthMismatch ? Length : FileLength,
+                                        LocalFileInfo,
+                                        &LocalReturnLength);
+    }
     if (NT_ERROR(Status))
     {
         /* Fail on errors only, allow warnings */

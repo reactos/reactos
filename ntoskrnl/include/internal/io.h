@@ -1276,6 +1276,16 @@ IoComputeDesiredAccessFileObject(
     IN PACCESS_MASK DesiredAccess
 );
 
+NTSTATUS
+NTAPI
+IopGetFileInformation(
+    IN PFILE_OBJECT FileObject,
+    IN ULONG Length,
+    IN FILE_INFORMATION_CLASS FileInfoClass,
+    OUT PVOID Buffer,
+    OUT PULONG ReturnedLength
+);
+
 //
 // I/O Timer Routines
 //
