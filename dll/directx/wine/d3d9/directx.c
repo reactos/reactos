@@ -355,7 +355,7 @@ static HRESULT WINAPI d3d9_CheckDeviceFormatConversion(IDirect3D9Ex *iface, UINT
 static HRESULT WINAPI d3d9_GetDeviceCaps(IDirect3D9Ex *iface, UINT adapter, D3DDEVTYPE device_type, D3DCAPS9 *caps)
 {
     struct d3d9 *d3d9 = impl_from_IDirect3D9Ex(iface);
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_caps wined3d_caps;
     HRESULT hr;
 
     TRACE("iface %p, adapter %u, device_type %#x, caps %p.\n", iface, adapter, device_type, caps);

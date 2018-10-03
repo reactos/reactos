@@ -527,7 +527,16 @@ static void ddraw_surface_cleanup(struct ddraw_surface *surface)
         surf = surface->complex_array[i];
         surface->complex_array[i] = NULL;
         if (!surf->is_complex_root)
+        {
+            struct ddraw_texture *texture = wined3d_texture_get_parent(surf->wined3d_texture);
+            struct wined3d_device *wined3d_device = texture->wined3d_device;
+            struct ddraw_surface *root = texture->root;
+
             ddraw_surface_cleanup(surf);
+
+            if (surf == root)
+                wined3d_device_decref(wined3d_device);
+        }
     }
 
     if (surface->device1)
@@ -1449,24 +1458,32 @@ static HRESULT ddraw_surface_blt(struct ddraw_surface *dst_surface, const RECT *
 
     if (flags & DDBLT_COLORFILL)
     {
+        wined3d_flags = WINED3DCLEAR_TARGET;
+        if (!(flags & DDBLT_ASYNC))
+            wined3d_flags |= WINED3DCLEAR_SYNCHRONOUS;
+
         if (!wined3d_colour_from_ddraw_colour(&dst_surface->surface_desc.u4.ddpfPixelFormat,
                 dst_surface->palette, fill_colour, &colour))
             return DDERR_INVALIDPARAMS;
 
         return wined3d_device_clear_rendertarget_view(wined3d_device,
                 ddraw_surface_get_rendertarget_view(dst_surface),
-                dst_rect, WINED3DCLEAR_TARGET, &colour, 0.0f, 0);
+                dst_rect, wined3d_flags, &colour, 0.0f, 0);
     }
 
     if (flags & DDBLT_DEPTHFILL)
     {
+        wined3d_flags = WINED3DCLEAR_ZBUFFER;
+        if (!(flags & DDBLT_ASYNC))
+            wined3d_flags |= WINED3DCLEAR_SYNCHRONOUS;
+
         if (!wined3d_colour_from_ddraw_colour(&dst_surface->surface_desc.u4.ddpfPixelFormat,
                 dst_surface->palette, fill_colour, &colour))
             return DDERR_INVALIDPARAMS;
 
         return wined3d_device_clear_rendertarget_view(wined3d_device,
                 ddraw_surface_get_rendertarget_view(dst_surface),
-                dst_rect, WINED3DCLEAR_ZBUFFER, NULL, colour.r, 0);
+                dst_rect, wined3d_flags, NULL, colour.r, 0);
     }
 
     wined3d_flags = flags & ~DDBLT_ASYNC;
@@ -6122,8 +6139,9 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
             else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
                 usage = WINED3DUSAGE_RENDERTARGET;
 
-            if (SUCCEEDED(hr = wined3d_check_device_format(ddraw->wined3d, WINED3DADAPTER_DEFAULT,
-                    WINED3D_DEVICE_TYPE_HAL, mode.format_id, usage, WINED3D_RTYPE_TEXTURE_2D, wined3d_desc.format)))
+            if (!(ddraw->flags & DDRAW_NO3D) && SUCCEEDED(hr = wined3d_check_device_format(ddraw->wined3d,
+                    WINED3DADAPTER_DEFAULT, WINED3D_DEVICE_TYPE_HAL, mode.format_id,
+                    usage, WINED3D_RTYPE_TEXTURE_2D, wined3d_desc.format)))
                 desc->ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY;
             else
                 desc->ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
@@ -6168,12 +6186,15 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
     }
     else
     {
-        if (desc->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
-            wined3d_desc.usage |= WINED3DUSAGE_TEXTURE;
-        if (desc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
-            wined3d_desc.usage |= WINED3DUSAGE_DEPTHSTENCIL;
-        else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
-            wined3d_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        if (!(ddraw->flags & DDRAW_NO3D))
+        {
+            if (desc->ddsCaps.dwCaps & DDSCAPS_TEXTURE)
+                wined3d_desc.usage |= WINED3DUSAGE_TEXTURE;
+            if (desc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER)
+                wined3d_desc.usage |= WINED3DUSAGE_DEPTHSTENCIL;
+            else if (desc->ddsCaps.dwCaps & DDSCAPS_3DDEVICE)
+                wined3d_desc.usage |= WINED3DUSAGE_RENDERTARGET;
+        }
 
         if (desc->ddsCaps.dwCaps2 & (DDSCAPS2_TEXTUREMANAGE | DDSCAPS2_D3DTEXTUREMANAGE))
         {
@@ -6272,6 +6293,13 @@ HRESULT ddraw_surface_create(struct ddraw *ddraw, const DDSURFACEDESC2 *surface_
         WARN("Range color keys not supported, returning DDERR_NOCOLORKEYHW.\n");
         heap_free(texture);
         return DDERR_NOCOLORKEYHW;
+    }
+
+    if ((ddraw->flags & DDRAW_NO3D) && (desc->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
+    {
+        WARN("Video memory surfaces not supported without 3D support.\n");
+        heap_free(texture);
+        return DDERR_NODIRECTDRAWHW;
     }
 
     if (desc->ddsCaps.dwCaps & (DDSCAPS_OVERLAY))

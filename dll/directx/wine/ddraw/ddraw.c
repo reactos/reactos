@@ -25,6 +25,8 @@
 #include "wine/port.h"
 
 #include "ddraw_private.h"
+#include "ddrawi.h"
+#include "d3dhal.h"
 
 #include "wine/exception.h"
 
@@ -1248,7 +1250,7 @@ void ddraw_d3dcaps1_from_7(D3DDEVICEDESC *caps1, D3DDEVICEDESC7 *caps7)
 
 HRESULT ddraw_get_d3dcaps(const struct ddraw *ddraw, D3DDEVICEDESC7 *caps)
 {
-    WINED3DCAPS wined3d_caps;
+    struct wined3d_caps wined3d_caps;
     HRESULT hr;
 
     TRACE("ddraw %p, caps %p.\n", ddraw, caps);
@@ -1480,10 +1482,10 @@ HRESULT CALLBACK enum_zbuffer(DDPIXELFORMAT *format, void *ctx)
 static HRESULT WINAPI ddraw7_GetCaps(IDirectDraw7 *iface, DDCAPS *DriverCaps, DDCAPS *HELCaps)
 {
     struct ddraw *ddraw = impl_from_IDirectDraw7(iface);
-    DDCAPS caps;
-    WINED3DCAPS winecaps;
-    HRESULT hr;
     DDSCAPS2 ddscaps = {0, 0, 0, {0}};
+    struct wined3d_caps winecaps;
+    DDCAPS caps;
+    HRESULT hr;
 
     TRACE("iface %p, driver_caps %p, hel_caps %p.\n", iface, DriverCaps, HELCaps);
 
@@ -4111,52 +4113,73 @@ static HRESULT WINAPI d3d1_CreateViewport(IDirect3D *iface, IDirect3DViewport **
             outer_unknown);
 }
 
-/*****************************************************************************
- * IDirect3D3::FindDevice
- *
- * This method finds a device with the requested properties and returns a
- * device description
- *
- * Versions 1, 2 and 3
- * Params:
- *  fds: Describes the requested device characteristics
- *  fdr: Returns the device description
- *
- * Returns:
- *  D3D_OK on success
- *  DDERR_INVALIDPARAMS if no device was found
- *
- *****************************************************************************/
-static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+static HRESULT ddraw_find_device(struct ddraw *ddraw, const D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr,
+        unsigned int guid_count, const GUID * const *guids, DWORD device_desc_size)
 {
-    struct ddraw *ddraw = impl_from_IDirect3D3(iface);
+    struct ddraw_find_device_result_v1
+    {
+        DWORD size;
+        GUID guid;
+        D3DDEVICEDESC_V1 hw_desc;
+        D3DDEVICEDESC_V1 sw_desc;
+    } *fdr1;
+    struct ddraw_find_device_result_v2
+    {
+        DWORD size;
+        GUID guid;
+        D3DDEVICEDESC_V2 hw_desc;
+        D3DDEVICEDESC_V2 sw_desc;
+    } *fdr2;
     D3DDEVICEDESC7 desc7;
     D3DDEVICEDESC desc1;
+    unsigned int i;
     HRESULT hr;
 
-    TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
+    TRACE("ddraw %p, fds %p, fdr %p, guid_count %u, guids %p, device_desc_size %u.\n",
+            ddraw, fds, fdr, guid_count, guids, device_desc_size);
 
-    if (!fds || !fdr) return DDERR_INVALIDPARAMS;
-
-    if (fds->dwSize != sizeof(D3DFINDDEVICESEARCH) || (fdr->dwSize != sizeof(D3DFINDDEVICERESULT1) &&
-        fdr->dwSize != sizeof(D3DFINDDEVICERESULT2) && fdr->dwSize != sizeof(D3DFINDDEVICERESULT)))
+    if (!fds || !fdr)
         return DDERR_INVALIDPARAMS;
 
-    if ((fds->dwFlags & D3DFDS_COLORMODEL)
-            && fds->dcmColorModel != D3DCOLOR_RGB)
+    if (fds->dwSize != sizeof(*fds))
     {
-        WARN("Trying to request a non-RGB D3D color model. Not supported.\n");
-        return DDERR_INVALIDPARAMS; /* No real idea what to return here :-) */
+        WARN("Got invalid search structure size %u.\n", fds->dwSize);
+        return DDERR_INVALIDPARAMS;
     }
+
+    if (fdr->dwSize != sizeof(*fdr) && fdr->dwSize != sizeof(*fdr2) && fdr->dwSize != sizeof(*fdr1))
+    {
+        WARN("Got invalid result structure size %u.\n", fdr->dwSize);
+        return DDERR_INVALIDPARAMS;
+    }
+
+    if (fds->dwFlags & D3DFDS_COLORMODEL)
+        WARN("Ignoring colour model %#x.\n", fds->dcmColorModel);
 
     if (fds->dwFlags & D3DFDS_GUID)
     {
-        TRACE("Trying to match guid %s.\n", debugstr_guid(&(fds->guid)));
-        if (!IsEqualGUID(&IID_D3DDEVICE_WineD3D, &fds->guid)
-                && !IsEqualGUID(&IID_IDirect3DHALDevice, &fds->guid)
-                && !IsEqualGUID(&IID_IDirect3DRGBDevice, &fds->guid))
+        BOOL found = FALSE;
+
+        TRACE("Trying to match GUID %s.\n", debugstr_guid(&fds->guid));
+
+        if ((ddraw->flags & DDRAW_NO3D) && IsEqualGUID(&fds->guid, &IID_IDirect3DHALDevice))
         {
-            WARN("No match for this GUID.\n");
+            WARN("HAL device not available without 3D support.\n");
+            return DDERR_NOTFOUND;
+        }
+
+        for (i = 0; i < guid_count; ++i)
+        {
+            if (IsEqualGUID(guids[i], &fds->guid))
+            {
+                found = TRUE;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            WARN("Failed to match GUID %s.\n", debugstr_guid(&fds->guid));
             return DDERR_NOTFOUND;
         }
     }
@@ -4169,22 +4192,31 @@ static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fd
     ddraw_d3dcaps1_from_7(&desc1, &desc7);
     fdr->guid = IID_D3DDEVICE_WineD3D;
 
-    if (fdr->dwSize == sizeof(D3DFINDDEVICERESULT1))
+    /* Note that "device_desc_size" doesn't necessarily have any relation to
+     * the actual structure size. However, this matches the behaviour of
+     * Windows since at least Windows 2000. */
+    if (fdr->dwSize == sizeof(*fdr1))
     {
-        D3DFINDDEVICERESULT1 *fdr1 = (D3DFINDDEVICERESULT1 *)fdr;
-        memcpy(&fdr1->ddHwDesc, &desc1, sizeof(fdr1->ddHwDesc));
-        memcpy(&fdr1->ddSwDesc, &desc1, sizeof(fdr1->ddSwDesc));
+        fdr1 = (struct ddraw_find_device_result_v1 *)fdr;
+        memcpy(&fdr1->hw_desc, &desc1, sizeof(fdr1->hw_desc));
+        fdr1->hw_desc.dwSize = device_desc_size;
+        memcpy(&fdr1->sw_desc, &desc1, sizeof(fdr1->sw_desc));
+        fdr1->sw_desc.dwSize = device_desc_size;
     }
-    else if (fdr->dwSize == sizeof(D3DFINDDEVICERESULT2))
+    else if (fdr->dwSize == sizeof(*fdr2))
     {
-        D3DFINDDEVICERESULT2 *fdr2 = (D3DFINDDEVICERESULT2 *)fdr;
-        memcpy(&fdr2->ddHwDesc, &desc1, sizeof(fdr2->ddHwDesc));
-        memcpy(&fdr2->ddSwDesc, &desc1, sizeof(fdr2->ddSwDesc));
+        fdr2 = (struct ddraw_find_device_result_v2 *)fdr;
+        memcpy(&fdr2->hw_desc, &desc1, sizeof(fdr2->hw_desc));
+        fdr2->hw_desc.dwSize = device_desc_size;
+        memcpy(&fdr2->sw_desc, &desc1, sizeof(fdr2->sw_desc));
+        fdr2->sw_desc.dwSize = device_desc_size;
     }
     else
     {
         fdr->ddHwDesc = desc1;
+        fdr->ddHwDesc.dwSize = device_desc_size;
         fdr->ddSwDesc = desc1;
+        fdr->ddSwDesc.dwSize = device_desc_size;
     }
 
     TRACE("Returning Wine's wined3d device with (undumped) capabilities.\n");
@@ -4192,22 +4224,52 @@ static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fd
     return D3D_OK;
 }
 
-static HRESULT WINAPI d3d2_FindDevice(IDirect3D2 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+static HRESULT WINAPI d3d3_FindDevice(IDirect3D3 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
 {
-    struct ddraw *ddraw = impl_from_IDirect3D2(iface);
+    struct ddraw *ddraw = impl_from_IDirect3D3(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DRGBDevice,
+    };
 
     TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
 
-    return d3d3_FindDevice(&ddraw->IDirect3D3_iface, fds, fdr);
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids, sizeof(D3DDEVICEDESC_V3));
+}
+
+static HRESULT WINAPI d3d2_FindDevice(IDirect3D2 *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
+{
+    struct ddraw *ddraw = impl_from_IDirect3D2(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DMMXDevice,
+        &IID_IDirect3DRGBDevice,
+        &IID_IDirect3DRampDevice,
+    };
+
+    TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
+
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids, sizeof(D3DDEVICEDESC_V2));
 }
 
 static HRESULT WINAPI d3d1_FindDevice(IDirect3D *iface, D3DFINDDEVICESEARCH *fds, D3DFINDDEVICERESULT *fdr)
 {
     struct ddraw *ddraw = impl_from_IDirect3D(iface);
+    static const GUID * const guids[] =
+    {
+        &IID_D3DDEVICE_WineD3D,
+        &IID_IDirect3DHALDevice,
+        &IID_IDirect3DRGBDevice,
+        &IID_IDirect3DRampDevice,
+    };
 
     TRACE("iface %p, fds %p, fdr %p.\n", iface, fds, fdr);
 
-    return d3d3_FindDevice(&ddraw->IDirect3D3_iface, fds, fdr);
+    return ddraw_find_device(ddraw, fds, fdr, ARRAY_SIZE(guids), guids, sizeof(D3DDEVICEDESC_V1));
 }
 
 /*****************************************************************************
@@ -5020,8 +5082,15 @@ static const struct wined3d_device_parent_ops ddraw_wined3d_device_parent_ops =
 
 HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type device_type)
 {
-    WINED3DCAPS caps;
+    struct wined3d_caps caps;
     HRESULT hr;
+
+    static const enum wined3d_feature_level feature_levels[] =
+    {
+        WINED3D_FEATURE_LEVEL_7,
+        WINED3D_FEATURE_LEVEL_6,
+        WINED3D_FEATURE_LEVEL_5,
+    };
 
     ddraw->IDirectDraw7_iface.lpVtbl = &ddraw7_vtbl;
     ddraw->IDirectDraw_iface.lpVtbl = &ddraw1_vtbl;
@@ -5060,7 +5129,8 @@ HRESULT ddraw_init(struct ddraw *ddraw, DWORD flags, enum wined3d_device_type de
     }
 
     if (FAILED(hr = wined3d_device_create(ddraw->wined3d, WINED3DADAPTER_DEFAULT, device_type,
-            NULL, 0, DDRAW_STRIDE_ALIGNMENT, &ddraw->device_parent, &ddraw->wined3d_device)))
+            NULL, 0, DDRAW_STRIDE_ALIGNMENT, feature_levels, ARRAY_SIZE(feature_levels),
+            &ddraw->device_parent, &ddraw->wined3d_device)))
     {
         WARN("Failed to create a wined3d device, hr %#x.\n", hr);
         wined3d_decref(ddraw->wined3d);
