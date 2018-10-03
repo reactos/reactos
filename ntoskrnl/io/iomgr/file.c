@@ -3480,15 +3480,63 @@ IoCancelFileOpen(IN PDEVICE_OBJECT DeviceObject,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoQueryFileDosDeviceName(IN PFILE_OBJECT FileObject,
                          OUT POBJECT_NAME_INFORMATION *ObjectNameInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    ULONG Length, ReturnLength;
+    POBJECT_NAME_INFORMATION LocalInfo;
+
+    /* Start with a buffer length of 200 */
+    ReturnLength = 200;
+    /*
+     * We'll loop until query works.
+     * We will use returned length for next loop
+     * iteration, trying to have a big enough buffer.
+     */
+    for (Length = 200; ; Length = ReturnLength)
+    {
+        /* Allocate our work buffer */
+        LocalInfo = ExAllocatePoolWithTag(PagedPool, Length, 'nDoI');
+        if (LocalInfo == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Query the DOS name */
+        Status = IopQueryNameInternal(FileObject,
+                                      TRUE,
+                                      TRUE,
+                                      LocalInfo,
+                                      Length,
+                                      &ReturnLength,
+                                      KernelMode);
+        /* If it succeed, nothing more to do */
+        if (Status == STATUS_SUCCESS)
+        {
+            break;
+        }
+
+        /* Otherwise, prepare for re-allocation */
+        ExFreePoolWithTag(LocalInfo, 'nDoI');
+
+        /*
+         * If we failed because of something else
+         * than memory, simply stop and fail here
+         */
+        if (Status != STATUS_BUFFER_OVERFLOW)
+        {
+            return STATUS_BUFFER_OVERFLOW;
+        }
+    }
+
+    /* Success case here: return our buffer */
+    *ObjectNameInformation = LocalInfo;
+    return STATUS_SUCCESS;
 }
 
 /*
