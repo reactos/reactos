@@ -1975,142 +1975,147 @@ IopQueryNameInternal(IN PVOID ObjectBody,
     /* Get buffer pointer */
     p = (PWCHAR)(ObjectNameInfo + 1);
 
-    /* Copy the information */
-    if (QueryDosName && NoObCall)
+    _SEH2_TRY
     {
-        ASSERT(PreviousMode == KernelMode);
-
-        /* Copy structure first */
-        RtlCopyMemory(ObjectNameInfo,
-                      LocalInfo,
-                      (Length >= LocalReturnLength ? sizeof(OBJECT_NAME_INFORMATION) : Length));
-        /* Name then */
-        RtlCopyMemory(p, LocalInfo->Name.Buffer,
-                      (Length >= LocalReturnLength ? LocalInfo->Name.Length : Length - sizeof(OBJECT_NAME_INFORMATION)));
-
-        if (FileObject->DeviceObject->DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM)
+        /* Copy the information */
+        if (QueryDosName && NoObCall)
         {
-            ExFreePool(LocalInfo->Name.Buffer);
+            ASSERT(PreviousMode == KernelMode);
+
+            /* Copy structure first */
+            RtlCopyMemory(ObjectNameInfo,
+                          LocalInfo,
+                          (Length >= LocalReturnLength ? sizeof(OBJECT_NAME_INFORMATION) : Length));
+            /* Name then */
+            RtlCopyMemory(p, LocalInfo->Name.Buffer,
+                          (Length >= LocalReturnLength ? LocalInfo->Name.Length : Length - sizeof(OBJECT_NAME_INFORMATION)));
+
+            if (FileObject->DeviceObject->DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM)
+            {
+                ExFreePool(LocalInfo->Name.Buffer);
+            }
         }
-    }
-    else
-    {
-        RtlCopyMemory(ObjectNameInfo,
-                      LocalInfo,
-                      (LocalReturnLength > Length) ?
-                      Length : LocalReturnLength);
-    }
-
-    /* Set buffer pointer */
-    ObjectNameInfo->Name.Buffer = p;
-
-    /* Advance in buffer */
-    p += (LocalInfo->Name.Length / sizeof(WCHAR));
-
-    /* Check if this already filled our buffer */
-    if (LocalReturnLength > Length)
-    {
-        /* Set the length mismatch to true, so that we can return
-         * the proper buffer size to the caller later
-         */
-        LengthMismatch = TRUE;
-
-        /* Save the initial buffer length value */
-        *ReturnLength = LocalReturnLength;
-    }
-
-    /* Now get the file name buffer and check the length needed */
-    LocalFileInfo = (PFILE_NAME_INFORMATION)LocalInfo;
-    FileLength = Length -
-                 LocalReturnLength +
-                 FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
-
-    /* Query the File name */
-    if (PreviousMode == KernelMode &&
-        BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
-    {
-        Status = IopGetFileInformation(FileObject,
-                                       LengthMismatch ? Length : FileLength,
-                                       FileNameInformation,
-                                       LocalFileInfo,
-                                       &LocalReturnLength);
-    }
-    else
-    {
-        Status = IoQueryFileInformation(FileObject,
-                                        FileNameInformation,
-                                        LengthMismatch ? Length : FileLength,
-                                        LocalFileInfo,
-                                        &LocalReturnLength);
-    }
-    if (NT_ERROR(Status))
-    {
-        /* Allow status that would mean it's not implemented in the storage stack */
-        if (Status != STATUS_INVALID_PARAMETER && Status != STATUS_INVALID_DEVICE_REQUEST &&
-            Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_INFO_CLASS)
+        else
         {
-            ExFreePoolWithTag(LocalInfo, TAG_IO);
-            return Status;
+            RtlCopyMemory(ObjectNameInfo,
+                          LocalInfo,
+                          (LocalReturnLength > Length) ?
+                          Length : LocalReturnLength);
         }
 
-        /* In such case, zero output */
-        LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
-        LocalFileInfo->FileNameLength = 0;
-        LocalFileInfo->FileName[0] = OBJ_NAME_PATH_SEPARATOR;
-    }
-    else
-    {
-        /* We'll at least return the name length */
-        if (LocalReturnLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
+        /* Set buffer pointer */
+        ObjectNameInfo->Name.Buffer = p;
+
+        /* Advance in buffer */
+        p += (LocalInfo->Name.Length / sizeof(WCHAR));
+
+        /* Check if this already filled our buffer */
+        if (LocalReturnLength > Length)
         {
+            /* Set the length mismatch to true, so that we can return
+             * the proper buffer size to the caller later
+             */
+            LengthMismatch = TRUE;
+
+            /* Save the initial buffer length value */
+            *ReturnLength = LocalReturnLength;
+        }
+
+        /* Now get the file name buffer and check the length needed */
+        LocalFileInfo = (PFILE_NAME_INFORMATION)LocalInfo;
+        FileLength = Length -
+                     LocalReturnLength +
+                     FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+
+        /* Query the File name */
+        if (PreviousMode == KernelMode &&
+            BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO))
+        {
+            Status = IopGetFileInformation(FileObject,
+                                           LengthMismatch ? Length : FileLength,
+                                           FileNameInformation,
+                                           LocalFileInfo,
+                                           &LocalReturnLength);
+        }
+        else
+        {
+            Status = IoQueryFileInformation(FileObject,
+                                            FileNameInformation,
+                                            LengthMismatch ? Length : FileLength,
+                                            LocalFileInfo,
+                                            &LocalReturnLength);
+        }
+        if (NT_ERROR(Status))
+        {
+            /* Allow status that would mean it's not implemented in the storage stack */
+            if (Status != STATUS_INVALID_PARAMETER && Status != STATUS_INVALID_DEVICE_REQUEST &&
+                Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_INFO_CLASS)
+            {
+                _SEH2_LEAVE;
+            }
+
+            /* In such case, zero output */
             LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+            LocalFileInfo->FileNameLength = 0;
+            LocalFileInfo->FileName[0] = OBJ_NAME_PATH_SEPARATOR;
         }
-    }
+        else
+        {
+            /* We'll at least return the name length */
+            if (LocalReturnLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
+            {
+                LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+            }
+        }
 
-    /* If the provided buffer is too small, return the required size */
-    if (LengthMismatch)
+        /* If the provided buffer is too small, return the required size */
+        if (LengthMismatch)
+        {
+            /* Add the required length */
+            *ReturnLength += LocalFileInfo->FileNameLength;
+
+            /* Free the allocated buffer and return failure */
+            Status = STATUS_BUFFER_OVERFLOW;
+            _SEH2_LEAVE;
+        }
+
+        /* Now calculate the new lengths left */
+        FileLength = LocalReturnLength -
+                     FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+        LocalReturnLength = (ULONG)((ULONG_PTR)p -
+                                    (ULONG_PTR)ObjectNameInfo +
+                                    LocalFileInfo->FileNameLength);
+
+        /* Don't copy the name if it's not valid */
+        if (LocalFileInfo->FileName[0] != OBJ_NAME_PATH_SEPARATOR)
+        {
+            /* Free the allocated buffer and return failure */
+            Status = STATUS_OBJECT_PATH_INVALID;
+            _SEH2_LEAVE;
+        }
+
+        /* Write the Name and null-terminate it */
+        RtlCopyMemory(p, LocalFileInfo->FileName, FileLength);
+        p += (FileLength / sizeof(WCHAR));
+        *p = UNICODE_NULL;
+        LocalReturnLength += sizeof(UNICODE_NULL);
+
+        /* Return the length needed */
+        *ReturnLength = LocalReturnLength;
+
+        /* Setup the length and maximum length */
+        FileLength = (ULONG)((ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo);
+        ObjectNameInfo->Name.Length = (USHORT)FileLength -
+                                              sizeof(OBJECT_NAME_INFORMATION);
+        ObjectNameInfo->Name.MaximumLength = (USHORT)ObjectNameInfo->Name.Length +
+                                                     sizeof(UNICODE_NULL);
+    }
+    _SEH2_FINALLY
     {
-        /* Add the required length */
-        *ReturnLength += LocalFileInfo->FileNameLength;
-
-        /* Free the allocated buffer and return failure */
+        /* Free buffer and return */
         ExFreePoolWithTag(LocalInfo, TAG_IO);
-        return STATUS_BUFFER_OVERFLOW;
-    }
+    } _SEH2_END;
 
-    /* Now calculate the new lengths left */
-    FileLength = LocalReturnLength -
-                 FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
-    LocalReturnLength = (ULONG)((ULONG_PTR)p -
-                                (ULONG_PTR)ObjectNameInfo +
-                                LocalFileInfo->FileNameLength);
-
-    /* Don't copy the name if it's not valid */
-    if (LocalFileInfo->FileName[0] != OBJ_NAME_PATH_SEPARATOR)
-    {
-        /* Free the allocated buffer and return failure */
-        ExFreePoolWithTag(LocalInfo, TAG_IO);
-        return STATUS_OBJECT_PATH_INVALID;
-    }
-
-    /* Write the Name and null-terminate it */
-    RtlCopyMemory(p, LocalFileInfo->FileName, FileLength);
-    p += (FileLength / sizeof(WCHAR));
-    *p = UNICODE_NULL;
-    LocalReturnLength += sizeof(UNICODE_NULL);
-
-    /* Return the length needed */
-    *ReturnLength = LocalReturnLength;
-
-    /* Setup the length and maximum length */
-    FileLength = (ULONG)((ULONG_PTR)p - (ULONG_PTR)ObjectNameInfo);
-    ObjectNameInfo->Name.Length = (USHORT)FileLength -
-                                          sizeof(OBJECT_NAME_INFORMATION);
-    ObjectNameInfo->Name.MaximumLength = (USHORT)ObjectNameInfo->Name.Length +
-                                                 sizeof(UNICODE_NULL);
-
-    /* Free buffer and return */
-    ExFreePoolWithTag(LocalInfo, TAG_IO);
     return Status;
 }
 
