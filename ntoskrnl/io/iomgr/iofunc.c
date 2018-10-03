@@ -905,14 +905,16 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
                                RenameInfo->RootDirectory,
                                NULL);
 
-    /* And open its parent directory */
+    /* And open its parent directory
+     * Use hint if specified
+     */
     if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
     {
+        PFILE_OBJECT_EXTENSION FileObjectExtension;
+
         ASSERT(!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN));
-#if 0
-        /* Commented out - we don't support FO extension yet
-         * FIXME: Corrected last arg when it's supported
-         */
+
+        FileObjectExtension = FileObject->FileObjectExtension;
         Status = IoCreateFileSpecifyDeviceObjectHint(&TargetHandle,
                                                      DesiredAccess | SYNCHRONIZE,
                                                      &ObjectAttributes,
@@ -927,12 +929,7 @@ IopOpenLinkOrRenameTarget(OUT PHANDLE Handle,
                                                      CreateFileTypeNone,
                                                      NULL,
                                                      IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY | IO_NO_PARAMETER_CHECKING,
-                                                     FileObject->DeviceObject);
-#else
-        ASSERT(FALSE);
-        UNIMPLEMENTED;
-        return STATUS_NOT_IMPLEMENTED;
-#endif
+                                                     FileObjectExtension->TopDeviceObjectHint);
     }
     else
     {
