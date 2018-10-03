@@ -317,7 +317,7 @@ IopCreateObjectTypes(VOID)
     ObjectTypeInitializer.CloseProcedure = IopCloseFile;
     ObjectTypeInitializer.DeleteProcedure = IopDeleteFile;
     ObjectTypeInitializer.SecurityProcedure = IopGetSetSecurityObject;
-    ObjectTypeInitializer.QueryNameProcedure = IopQueryNameInternal;
+    ObjectTypeInitializer.QueryNameProcedure = IopQueryName;
     ObjectTypeInitializer.ParseProcedure = IopParseFile;
     ObjectTypeInitializer.UseDefaultObject = FALSE;
     if (!NT_SUCCESS(ObCreateObjectType(&Name,

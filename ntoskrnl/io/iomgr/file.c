@@ -1869,8 +1869,27 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
 
 NTSTATUS
 NTAPI
+IopQueryName(IN PVOID ObjectBody,
+             IN BOOLEAN HasName,
+             OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+             IN ULONG Length,
+             OUT PULONG ReturnLength,
+             IN KPROCESSOR_MODE PreviousMode)
+{
+    return IopQueryNameInternal(ObjectBody,
+                                HasName,
+                                FALSE,
+                                ObjectNameInfo,
+                                Length,
+                                ReturnLength,
+                                PreviousMode);
+}
+
+NTSTATUS
+NTAPI
 IopQueryNameInternal(IN PVOID ObjectBody,
                      IN BOOLEAN HasName,
+                     IN BOOLEAN QueryDosName,
                      OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
                      IN ULONG Length,
                      OUT PULONG ReturnLength,
@@ -1892,6 +1911,8 @@ IopQueryNameInternal(IN PVOID ObjectBody,
         *ReturnLength = sizeof(OBJECT_NAME_INFORMATION);
         return STATUS_INFO_LENGTH_MISMATCH;
     }
+
+    if (QueryDosName) return STATUS_NOT_IMPLEMENTED;
 
     /* Allocate Buffer */
     LocalInfo = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);

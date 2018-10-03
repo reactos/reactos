@@ -1219,9 +1219,21 @@ IopGetSetSecurityObject(
 
 NTSTATUS
 NTAPI
+IopQueryName(
+    IN PVOID ObjectBody,
+    IN BOOLEAN HasName,
+    OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+    IN ULONG Length,
+    OUT PULONG ReturnLength,
+    IN KPROCESSOR_MODE PreviousMode
+);
+
+NTSTATUS
+NTAPI
 IopQueryNameInternal(
     IN PVOID ObjectBody,
     IN BOOLEAN HasName,
+    IN BOOLEAN QueryDosName,
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
     IN ULONG Length,
     OUT PULONG ReturnLength,
