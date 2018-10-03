@@ -3619,7 +3619,7 @@ IoQueryFileDosDeviceName(IN PFILE_OBJECT FileObject,
          */
         if (Status != STATUS_BUFFER_OVERFLOW)
         {
-            return STATUS_BUFFER_OVERFLOW;
+            return Status;
         }
     }
 
