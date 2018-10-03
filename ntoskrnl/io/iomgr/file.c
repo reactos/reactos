@@ -1869,12 +1869,12 @@ IopGetSetSecurityObject(IN PVOID ObjectBody,
 
 NTSTATUS
 NTAPI
-IopQueryNameFile(IN PVOID ObjectBody,
-                 IN BOOLEAN HasName,
-                 OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
-                 IN ULONG Length,
-                 OUT PULONG ReturnLength,
-                 IN KPROCESSOR_MODE PreviousMode)
+IopQueryNameInternal(IN PVOID ObjectBody,
+                     IN BOOLEAN HasName,
+                     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+                     IN ULONG Length,
+                     OUT PULONG ReturnLength,
+                     IN KPROCESSOR_MODE PreviousMode)
 {
     POBJECT_NAME_INFORMATION LocalInfo;
     PFILE_NAME_INFORMATION LocalFileInfo;

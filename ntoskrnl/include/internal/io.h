@@ -1219,7 +1219,7 @@ IopGetSetSecurityObject(
 
 NTSTATUS
 NTAPI
-IopQueryNameFile(
+IopQueryNameInternal(
     IN PVOID ObjectBody,
     IN BOOLEAN HasName,
     OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
