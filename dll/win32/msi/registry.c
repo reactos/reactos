@@ -1297,12 +1297,12 @@ static UINT fetch_machine_component( DWORD ctx, DWORD index, DWORD *idx, WCHAR g
     if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, componentsW, 0, access, &key_components ))
         return ERROR_NO_MORE_ITEMS;
 
-    len_component = sizeof(component)/sizeof(component[0]);
+    len_component = ARRAY_SIZE( component );
     while (!RegEnumKeyExW( key_components, i, component, &len_component, NULL, NULL, NULL, NULL ))
     {
         if (*idx == index) goto found;
         (*idx)++;
-        len_component = sizeof(component)/sizeof(component[0]);
+        len_component = ARRAY_SIZE( component );
         i++;
     }
     RegCloseKey( key_components );
@@ -1349,14 +1349,14 @@ static UINT fetch_user_component( const WCHAR *usersid, DWORD ctx, DWORD index, 
     if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, userdataW, 0, access, &key_users ))
         return ERROR_NO_MORE_ITEMS;
 
-    len_user = sizeof(user)/sizeof(user[0]);
+    len_user = ARRAY_SIZE( user );
     while (!RegEnumKeyExW( key_users, i, user, &len_user, NULL, NULL, NULL, NULL ))
     {
         if ((strcmpW( usersid, szAllSid ) && strcmpW( usersid, user )) ||
             !strcmpW( szLocalSid, user ))
         {
             i++;
-            len_user = sizeof(user)/sizeof(user[0]);
+            len_user = ARRAY_SIZE( user );
             continue;
         }
         strcpyW( path, user );
@@ -1364,19 +1364,19 @@ static UINT fetch_user_component( const WCHAR *usersid, DWORD ctx, DWORD index, 
         if (RegOpenKeyExW( key_users, path, 0, access, &key_components ))
         {
             i++;
-            len_user = sizeof(user)/sizeof(user[0]);
+            len_user = ARRAY_SIZE( user );
             continue;
         }
-        len_component = sizeof(component)/sizeof(component[0]);
+        len_component = ARRAY_SIZE( component );
         while (!RegEnumKeyExW( key_components, j, component, &len_component, NULL, NULL, NULL, NULL ))
         {
             if (*idx == index) goto found;
             (*idx)++;
-            len_component = sizeof(component)/sizeof(component[0]);
+            len_component = ARRAY_SIZE( component );
             j++;
         }
         RegCloseKey( key_components );
-        len_user = sizeof(user)/sizeof(user[0]);
+        len_user = ARRAY_SIZE( user );
         i++;
     }
     RegCloseKey( key_users );
@@ -1709,7 +1709,7 @@ UINT WINAPI MsiEnumRelatedProductsW(LPCWSTR szUpgradeCode, DWORD dwReserved,
     UINT r;
     HKEY hkey;
     WCHAR szKeyName[SQUASHED_GUID_SIZE];
-    DWORD dwSize = sizeof(szKeyName)/sizeof(szKeyName[0]);
+    DWORD dwSize = ARRAY_SIZE(szKeyName);
 
     TRACE("%s %u %u %p\n", debugstr_w(szUpgradeCode), dwReserved,
           iProductIndex, lpProductBuf);
@@ -2324,18 +2324,18 @@ static UINT fetch_machine_product( const WCHAR *match, DWORD index, DWORD *idx,
     if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, productsW, 0, access, &key ))
         return ERROR_NO_MORE_ITEMS;
 
-    len = sizeof(product)/sizeof(product[0]);
+    len = ARRAY_SIZE( product );
     while (!RegEnumKeyExW( key, i, product, &len, NULL, NULL, NULL, NULL ))
     {
         if (match && strcmpW( match, product ))
         {
             i++;
-            len = sizeof(product)/sizeof(product[0]);
+            len = ARRAY_SIZE( product );
             continue;
         }
         if (*idx == index) goto found;
         (*idx)++;
-        len = sizeof(product)/sizeof(product[0]);
+        len = ARRAY_SIZE( product );
         i++;
     }
     RegCloseKey( key );
@@ -2396,13 +2396,13 @@ static UINT fetch_user_product( const WCHAR *match, const WCHAR *usersid, DWORD 
     }
     else return ERROR_INVALID_PARAMETER;
 
-    len_user = sizeof(user)/sizeof(user[0]);
+    len_user = ARRAY_SIZE( user );
     while (!RegEnumKeyExW( key_users, i, user, &len_user, NULL, NULL, NULL, NULL ))
     {
         if (strcmpW( usersid, user ) && strcmpW( usersid, szAllSid ))
         {
             i++;
-            len_user = sizeof(user)/sizeof(user[0]);
+            len_user = ARRAY_SIZE( user );
             continue;
         }
         strcpyW( path, user );
@@ -2410,25 +2410,25 @@ static UINT fetch_user_product( const WCHAR *match, const WCHAR *usersid, DWORD 
         if (RegOpenKeyExW( key_users, path, 0, access, &key_products ))
         {
             i++;
-            len_user = sizeof(user)/sizeof(user[0]);
+            len_user = ARRAY_SIZE( user );
             continue;
         }
-        len_product = sizeof(product)/sizeof(product[0]);
+        len_product = ARRAY_SIZE( product );
         while (!RegEnumKeyExW( key_products, j, product, &len_product, NULL, NULL, NULL, NULL ))
         {
             if (match && strcmpW( match, product ))
             {
                 j++;
-                len_product = sizeof(product)/sizeof(product[0]);
+                len_product = ARRAY_SIZE( product );
                 continue;
             }
             if (*idx == index) goto found;
             (*idx)++;
-            len_product = sizeof(product)/sizeof(product[0]);
+            len_product = ARRAY_SIZE( product );
             j++;
         }
         RegCloseKey( key_products );
-        len_user = sizeof(user)/sizeof(user[0]);
+        len_user = ARRAY_SIZE( user );
         i++;
     }
     RegCloseKey( key_users );

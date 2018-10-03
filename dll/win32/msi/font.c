@@ -294,6 +294,9 @@ UINT ACTION_RegisterFonts(MSIPACKAGE *package)
     MSIQUERY *view;
     UINT rc;
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szRegisterFonts);
+
     rc = MSI_DatabaseOpenViewW(package->db, query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -373,6 +376,9 @@ UINT ACTION_UnregisterFonts( MSIPACKAGE *package )
         'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ','`','F','o','n','t','`',0};
     MSIQUERY *view;
     UINT r;
+
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szUnregisterFonts);
 
     r = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (r != ERROR_SUCCESS)

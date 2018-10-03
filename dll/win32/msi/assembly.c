@@ -344,7 +344,7 @@ static const WCHAR *clr_version[] =
 
 static const WCHAR *get_clr_version_str( enum clr_version version )
 {
-    if (version >= sizeof(clr_version)/sizeof(clr_version[0])) return clr_version_unknown;
+    if (version >= ARRAY_SIZE( clr_version )) return clr_version_unknown;
     return clr_version[version];
 }
 
@@ -652,6 +652,9 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
 {
     MSICOMPONENT *comp;
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szMsiPublishAssemblies);
+
     LIST_FOR_EACH_ENTRY(comp, &package->components, MSICOMPONENT, entry)
     {
         LONG res;
@@ -684,6 +687,11 @@ UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
         if (assembly->application)
         {
             MSIFILE *file = msi_get_loaded_file( package, assembly->application );
+            if (!file)
+            {
+                WARN("no matching file %s for local assembly\n", debugstr_w(assembly->application));
+                continue;
+            }
             if ((res = open_local_assembly_key( package->Context, win32, file->TargetPath, &hkey )))
             {
                 WARN("failed to open local assembly key %d\n", res);
@@ -717,6 +725,9 @@ UINT ACTION_MsiUnpublishAssemblies( MSIPACKAGE *package )
 {
     MSICOMPONENT *comp;
 
+    if (package->script == SCRIPT_NONE)
+        return msi_schedule_action(package, SCRIPT_INSTALL, szMsiUnpublishAssemblies);
+
     LIST_FOR_EACH_ENTRY(comp, &package->components, MSICOMPONENT, entry)
     {
         LONG res;
@@ -738,6 +749,11 @@ UINT ACTION_MsiUnpublishAssemblies( MSIPACKAGE *package )
         if (assembly->application)
         {
             MSIFILE *file = msi_get_loaded_file( package, assembly->application );
+            if (!file)
+            {
+                WARN("no matching file %s for local assembly\n", debugstr_w(assembly->application));
+                continue;
+            }
             if ((res = delete_local_assembly_key( package->Context, win32, file->TargetPath )))
                 WARN("failed to delete local assembly key %d\n", res);
         }

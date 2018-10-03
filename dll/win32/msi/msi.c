@@ -31,8 +31,6 @@
 #include "msi.h"
 #include "msidefs.h"
 #include "msiquery.h"
-#include "msipriv.h"
-#include "msiserver.h"
 #include "wincrypt.h"
 #include "winver.h"
 #include "winuser.h"
@@ -42,10 +40,14 @@
 #include "wintrust.h"
 #include "softpub.h"
 
+#include "msipriv.h"
+#include "winemsi.h"
+
 #include "initguid.h"
 #include "msxml2.h"
 
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
@@ -136,7 +138,7 @@ static UINT MSI_OpenProductW(LPCWSTR szProduct, MSIPACKAGE **package)
         goto done;
     }
 
-    r = MSI_OpenPackageW(path, package);
+    r = MSI_OpenPackageW(path, 0, package);
 
 done:
     RegCloseKey(props);
@@ -235,7 +237,9 @@ end:
 UINT WINAPI MsiInstallProductW(LPCWSTR szPackagePath, LPCWSTR szCommandLine)
 {
     MSIPACKAGE *package = NULL;
-    UINT r;
+    const WCHAR *reinstallmode;
+    DWORD options = 0;
+    UINT r, len;
 
     TRACE("%s %s\n",debugstr_w(szPackagePath), debugstr_w(szCommandLine));
 
@@ -245,7 +249,20 @@ UINT WINAPI MsiInstallProductW(LPCWSTR szPackagePath, LPCWSTR szCommandLine)
     if (!*szPackagePath)
         return ERROR_PATH_NOT_FOUND;
 
-    r = MSI_OpenPackageW( szPackagePath, &package );
+    reinstallmode = msi_get_command_line_option(szCommandLine, szReinstallMode, &len);
+    if (reinstallmode)
+    {
+        while (len > 0)
+        {
+            if (reinstallmode[--len] == 'v' || reinstallmode[len] == 'V')
+            {
+                options |= WINE_OPENPACKAGEFLAGS_RECACHE;
+                break;
+            }
+        }
+    }
+
+    r = MSI_OpenPackageW( szPackagePath, options, &package );
     if (r == ERROR_SUCCESS)
     {
         r = MSI_InstallPackage( package, szPackagePath, szCommandLine );
@@ -731,7 +748,7 @@ UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR szProductPackagePath,
 
     TRACE("%s, %u, %p\n", debugstr_w(szProductPackagePath), cPatchInfo, pPatchInfo);
 
-    r = MSI_OpenPackageW( szProductPackagePath, &package );
+    r = MSI_OpenPackageW( szProductPackagePath, 0, &package );
     if (r != ERROR_SUCCESS)
     {
         ERR("failed to open package %u\n", r);
@@ -809,7 +826,7 @@ static UINT open_package( const WCHAR *product, const WCHAR *usersid,
     if (GetFileAttributesW( sourcepath ) == INVALID_FILE_ATTRIBUTES)
         return ERROR_INSTALL_SOURCE_ABSENT;
 
-    return MSI_OpenPackageW( sourcepath, package );
+    return MSI_OpenPackageW( sourcepath, 0, package );
 }
 
 UINT WINAPI MsiDeterminePatchSequenceW( LPCWSTR product, LPCWSTR usersid,
@@ -1012,7 +1029,7 @@ UINT WINAPI MsiGetProductCodeW(LPCWSTR szComponent, LPWSTR szBuffer)
     UINT rc, index;
     HKEY compkey, prodkey;
     WCHAR squashed_comp[SQUASHED_GUID_SIZE], squashed_prod[SQUASHED_GUID_SIZE];
-    DWORD sz = sizeof(squashed_prod)/sizeof(squashed_prod[0]);
+    DWORD sz = ARRAY_SIZE(squashed_prod);
 
     TRACE("%s %p\n", debugstr_w(szComponent), szBuffer);
 
@@ -2004,27 +2021,30 @@ UINT WINAPI MsiEnumComponentCostsW( MSIHANDLE handle, LPCWSTR component, DWORD i
     if (!drive || !buflen || !cost || !temp) return ERROR_INVALID_PARAMETER;
     if (!(package = msihandle2msiinfo( handle, MSIHANDLETYPE_PACKAGE )))
     {
-        HRESULT hr;
-        IWineMsiRemotePackage *remote_package;
-        BSTR bname = NULL;
+        WCHAR buffer[3];
+        MSIHANDLE remote;
 
-        if (!(remote_package = (IWineMsiRemotePackage *)msi_get_remote( handle )))
+        if (!(remote = msi_get_remote(handle)))
             return ERROR_INVALID_HANDLE;
 
-        if (component && !(bname = SysAllocString( component )))
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            r = remote_EnumComponentCosts(remote, component, index, state, buffer, cost, temp);
         }
-        hr = IWineMsiRemotePackage_EnumComponentCosts( remote_package, bname, index, state, drive, buflen, cost, temp );
-        IWineMsiRemotePackage_Release( remote_package );
-        SysFreeString( bname );
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32) return HRESULT_CODE(hr);
-            return ERROR_FUNCTION_FAILED;
+            r = GetExceptionCode();
         }
-        return ERROR_SUCCESS;
+        __ENDTRY
+
+        if (r == ERROR_SUCCESS)
+        {
+            lstrcpynW(drive, buffer, *buflen);
+            if (*buflen < 3)
+                r = ERROR_MORE_DATA;
+            *buflen = 2;
+        }
+        return r;
     }
 
     if (!msi_get_property_int( package->db, szCostingComplete, 0 ))
@@ -3472,7 +3492,7 @@ static UINT MSI_ProvideQualifiedComponentEx(LPCWSTR szComponent,
             return ERROR_FILE_NOT_FOUND;
         }
         msi_free( components );
-        StringFromGUID2( &guid, comp, sizeof(comp)/sizeof(comp[0]) );
+        StringFromGUID2( &guid, comp, ARRAY_SIZE( comp ));
     }
 
     state = MSI_GetComponentPath( szProduct, comp, szAllSid, MSIINSTALLCONTEXT_ALL, lpPathBuf, pcchPathBuf );
@@ -3747,7 +3767,7 @@ UINT WINAPI MsiCollectUserInfoW(LPCWSTR szProduct)
     if (!package)
         return ERROR_CALL_NOT_IMPLEMENTED;
 
-    rc = ACTION_PerformAction(package, szFirstRun, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, szFirstRun);
     msiobj_release( &package->hdr );
 
     MsiCloseHandle(handle);
@@ -3773,7 +3793,7 @@ UINT WINAPI MsiCollectUserInfoA(LPCSTR szProduct)
     if (!package)
         return ERROR_CALL_NOT_IMPLEMENTED;
 
-    rc = ACTION_PerformAction(package, szFirstRun, SCRIPT_NONE);
+    rc = ACTION_PerformAction(package, szFirstRun);
     msiobj_release( &package->hdr );
 
     MsiCloseHandle(handle);
@@ -3854,7 +3874,7 @@ UINT WINAPI MsiConfigureFeatureW(LPCWSTR szProduct, LPCWSTR szFeature, INSTALLST
 
     MsiSetInternalUI( INSTALLUILEVEL_BASIC, NULL );
 
-    r = ACTION_PerformAction( package, szCostInitialize, SCRIPT_NONE );
+    r = ACTION_PerformAction(package, szCostInitialize);
     if (r != ERROR_SUCCESS)
         goto end;
 
@@ -4032,7 +4052,7 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature, DWORD dw
     strcatW( sourcepath, filename );
 
     if (dwReinstallMode & REINSTALLMODE_PACKAGE)
-        r = MSI_OpenPackageW( sourcepath, &package );
+        r = MSI_OpenPackageW( sourcepath, 0, &package );
     else
         r = MSI_OpenProductW( szProduct, &package );
 

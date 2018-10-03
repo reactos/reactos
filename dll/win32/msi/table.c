@@ -1279,9 +1279,7 @@ static UINT get_table_value_from_record( MSITABLEVIEW *tv, MSIRECORD *rec, UINT 
     UINT r;
     int ival;
 
-    if ( (iField <= 0) ||
-         (iField > tv->num_cols) ||
-          MSI_RecordIsNull( rec, iField ) )
+    if (!iField || iField > tv->num_cols || MSI_RecordIsNull( rec, iField ))
         return ERROR_FUNCTION_FAILED;
 
     columninfo = tv->columns[ iField - 1 ];

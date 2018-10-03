@@ -3377,7 +3377,7 @@ static UINT msi_dialog_hyperlink_handler( msi_dialog *dialog, msi_control *contr
 {
     static const WCHAR hrefW[] = {'h','r','e','f'};
     static const WCHAR openW[] = {'o','p','e','n',0};
-    int len, len_href = sizeof(hrefW) / sizeof(hrefW[0]);
+    int len, len_href = ARRAY_SIZE( hrefW );
     const WCHAR *p, *q;
     WCHAR quote = 0;
     LITEM item;
@@ -3472,8 +3472,6 @@ static const struct control_handler msi_dialog_handler[] =
     { szHyperLink, msi_dialog_hyperlink }
 };
 
-#define NUM_CONTROL_TYPES (sizeof msi_dialog_handler/sizeof msi_dialog_handler[0])
-
 static UINT msi_dialog_create_controls( MSIRECORD *rec, LPVOID param )
 {
     msi_dialog *dialog = param;
@@ -3482,10 +3480,10 @@ static UINT msi_dialog_create_controls( MSIRECORD *rec, LPVOID param )
 
     /* find and call the function that can create this type of control */
     control_type = MSI_RecordGetString( rec, 3 );
-    for( i=0; i<NUM_CONTROL_TYPES; i++ )
+    for( i = 0; i < ARRAY_SIZE( msi_dialog_handler ); i++ )
         if (!strcmpiW( msi_dialog_handler[i].control_type, control_type ))
             break;
-    if( i != NUM_CONTROL_TYPES )
+    if( i != ARRAY_SIZE( msi_dialog_handler  ))
         msi_dialog_handler[i].func( dialog, rec );
     else
         ERR("no handler for element type %s\n", debugstr_w(control_type));
@@ -4113,7 +4111,7 @@ static MSIPREVIEW *MSI_EnableUIPreview( MSIDATABASE *db )
     MSIPREVIEW *preview = NULL;
     MSIPACKAGE *package;
 
-    package = MSI_CreatePackage( db, NULL );
+    package = MSI_CreatePackage( db );
     if (package)
     {
         preview = alloc_msiobject( MSIHANDLETYPE_PREVIEW, sizeof(MSIPREVIEW), MSI_ClosePreview );
@@ -4138,15 +4136,12 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE *phPreview )
     db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
     if (!db)
     {
-        IWineMsiRemoteDatabase *remote_database;
-
-        remote_database = (IWineMsiRemoteDatabase *)msi_get_remote( hdb );
+        MSIHANDLE remote_database = msi_get_remote( hdb );
         if (!remote_database)
             return ERROR_INVALID_HANDLE;
 
         *phPreview = 0;
 
-        IWineMsiRemoteDatabase_Release( remote_database );
         WARN("MsiEnableUIPreview not allowed during a custom action!\n");
 
         return ERROR_FUNCTION_FAILED;
@@ -4366,7 +4361,7 @@ static UINT event_spawn_wait_dialog( msi_dialog *dialog, const WCHAR *argument )
 
 static UINT event_do_action( msi_dialog *dialog, const WCHAR *argument )
 {
-    ACTION_PerformAction( dialog->package, argument, SCRIPT_NONE );
+    ACTION_PerformAction(dialog->package, argument);
     return ERROR_SUCCESS;
 }
 

@@ -108,8 +108,9 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
 
@@ -184,7 +185,7 @@ static void value_free( struct value val )
 }
 
 
-#line 188 "cond.tab.c" /* yacc.c:339  */
+#line 189 "cond.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -265,7 +266,7 @@ extern int cond_debug;
 typedef union YYSTYPE YYSTYPE;
 union YYSTYPE
 {
-#line 122 "cond.y" /* yacc.c:355  */
+#line 123 "cond.y" /* yacc.c:355  */
 
     struct cond_str str;
     struct value value;
@@ -273,7 +274,7 @@ union YYSTYPE
     INT operator;
     BOOL bool;
 
-#line 277 "cond.tab.c" /* yacc.c:355  */
+#line 278 "cond.tab.c" /* yacc.c:355  */
 };
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -287,7 +288,7 @@ int cond_parse (COND_input *info);
 
 /* Copy the second part of user declarations.  */
 
-#line 291 "cond.tab.c" /* yacc.c:358  */
+#line 292 "cond.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -569,11 +570,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   149,   149,   155,   162,   166,   170,   174,   178,   185,
-     189,   196,   200,   208,   243,   251,   252,   253,   254,   255,
-     256,   257,   258,   259,   260,   261,   262,   263,   264,   265,
-     266,   267,   268,   272,   286,   301,   309,   319,   336,   353,
-     370,   390
+       0,   150,   150,   156,   163,   167,   171,   175,   179,   186,
+     190,   197,   201,   209,   244,   252,   253,   254,   255,   256,
+     257,   258,   259,   260,   261,   262,   263,   264,   265,   266,
+     267,   268,   269,   273,   287,   302,   310,   320,   337,   354,
+     371,   391
 };
 #endif
 
@@ -1392,89 +1393,89 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 150 "cond.y" /* yacc.c:1646  */
+#line 151 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             cond->result = (yyvsp[0].bool);
         }
-#line 1401 "cond.tab.c" /* yacc.c:1646  */
+#line 1402 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 155 "cond.y" /* yacc.c:1646  */
+#line 156 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             cond->result = MSICONDITION_NONE;
         }
-#line 1410 "cond.tab.c" /* yacc.c:1646  */
+#line 1411 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 163 "cond.y" /* yacc.c:1646  */
+#line 164 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1418 "cond.tab.c" /* yacc.c:1646  */
+#line 1419 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 167 "cond.y" /* yacc.c:1646  */
+#line 168 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1426 "cond.tab.c" /* yacc.c:1646  */
+#line 1427 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 171 "cond.y" /* yacc.c:1646  */
+#line 172 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = !(yyvsp[-2].bool) || (yyvsp[0].bool);
         }
-#line 1434 "cond.tab.c" /* yacc.c:1646  */
+#line 1435 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 175 "cond.y" /* yacc.c:1646  */
+#line 176 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = ( (yyvsp[-2].bool) || (yyvsp[0].bool) ) && !( (yyvsp[-2].bool) && (yyvsp[0].bool) );
         }
-#line 1442 "cond.tab.c" /* yacc.c:1646  */
+#line 1443 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 179 "cond.y" /* yacc.c:1646  */
+#line 180 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = ( (yyvsp[-2].bool) && (yyvsp[0].bool) ) || ( !(yyvsp[-2].bool) && !(yyvsp[0].bool) );
         }
-#line 1450 "cond.tab.c" /* yacc.c:1646  */
+#line 1451 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 186 "cond.y" /* yacc.c:1646  */
+#line 187 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[0].bool);
         }
-#line 1458 "cond.tab.c" /* yacc.c:1646  */
+#line 1459 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 190 "cond.y" /* yacc.c:1646  */
+#line 191 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-2].bool) && (yyvsp[0].bool);
         }
-#line 1466 "cond.tab.c" /* yacc.c:1646  */
+#line 1467 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 197 "cond.y" /* yacc.c:1646  */
+#line 198 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = !(yyvsp[0].bool);
         }
-#line 1474 "cond.tab.c" /* yacc.c:1646  */
+#line 1475 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 201 "cond.y" /* yacc.c:1646  */
+#line 202 "cond.y" /* yacc.c:1646  */
     {
             if ((yyvsp[0].value).type == VALUE_INTEGER)
                 (yyval.bool) = (yyvsp[0].value).u.integer ? 1 : 0;
@@ -1482,11 +1483,11 @@ yyreduce:
                 (yyval.bool) = (yyvsp[0].value).u.string && (yyvsp[0].value).u.string[0];
             value_free( (yyvsp[0].value) );
         }
-#line 1486 "cond.tab.c" /* yacc.c:1646  */
+#line 1487 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 209 "cond.y" /* yacc.c:1646  */
+#line 210 "cond.y" /* yacc.c:1646  */
     {
             if ((yyvsp[-2].value).type == VALUE_INTEGER && (yyvsp[0].value).type == VALUE_INTEGER)
             {
@@ -1499,7 +1500,7 @@ yyreduce:
             }
             else if ((yyvsp[-2].value).type == VALUE_LITERAL || (yyvsp[0].value).type == VALUE_LITERAL)
             {
-                (yyval.bool) = FALSE;
+                (yyval.bool) = ((yyvsp[-1].operator) == COND_NE || (yyvsp[-1].operator) == COND_INE );
             }
             else if ((yyvsp[-2].value).type == VALUE_SYMBOL) /* symbol operator integer */
             {
@@ -1521,127 +1522,127 @@ yyreduce:
             value_free( (yyvsp[-2].value) );
             value_free( (yyvsp[0].value) );
         }
-#line 1525 "cond.tab.c" /* yacc.c:1646  */
+#line 1526 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 244 "cond.y" /* yacc.c:1646  */
+#line 245 "cond.y" /* yacc.c:1646  */
     {
             (yyval.bool) = (yyvsp[-1].bool);
         }
-#line 1533 "cond.tab.c" /* yacc.c:1646  */
+#line 1534 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 251 "cond.y" /* yacc.c:1646  */
+#line 252 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_EQ; }
-#line 1539 "cond.tab.c" /* yacc.c:1646  */
+#line 1540 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 252 "cond.y" /* yacc.c:1646  */
+#line 253 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_NE; }
-#line 1545 "cond.tab.c" /* yacc.c:1646  */
+#line 1546 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 253 "cond.y" /* yacc.c:1646  */
+#line 254 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LT; }
-#line 1551 "cond.tab.c" /* yacc.c:1646  */
+#line 1552 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 254 "cond.y" /* yacc.c:1646  */
+#line 255 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_GT; }
-#line 1557 "cond.tab.c" /* yacc.c:1646  */
+#line 1558 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 255 "cond.y" /* yacc.c:1646  */
+#line 256 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LE; }
-#line 1563 "cond.tab.c" /* yacc.c:1646  */
+#line 1564 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 256 "cond.y" /* yacc.c:1646  */
+#line 257 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_GE; }
-#line 1569 "cond.tab.c" /* yacc.c:1646  */
+#line 1570 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 257 "cond.y" /* yacc.c:1646  */
+#line 258 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_SS; }
-#line 1575 "cond.tab.c" /* yacc.c:1646  */
+#line 1576 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 258 "cond.y" /* yacc.c:1646  */
+#line 259 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IEQ; }
-#line 1581 "cond.tab.c" /* yacc.c:1646  */
+#line 1582 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 259 "cond.y" /* yacc.c:1646  */
+#line 260 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_INE; }
-#line 1587 "cond.tab.c" /* yacc.c:1646  */
+#line 1588 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 260 "cond.y" /* yacc.c:1646  */
+#line 261 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILT; }
-#line 1593 "cond.tab.c" /* yacc.c:1646  */
+#line 1594 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 261 "cond.y" /* yacc.c:1646  */
+#line 262 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IGT; }
-#line 1599 "cond.tab.c" /* yacc.c:1646  */
+#line 1600 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 262 "cond.y" /* yacc.c:1646  */
+#line 263 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILE; }
-#line 1605 "cond.tab.c" /* yacc.c:1646  */
+#line 1606 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 263 "cond.y" /* yacc.c:1646  */
+#line 264 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IGE; }
-#line 1611 "cond.tab.c" /* yacc.c:1646  */
+#line 1612 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 264 "cond.y" /* yacc.c:1646  */
+#line 265 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ISS; }
-#line 1617 "cond.tab.c" /* yacc.c:1646  */
+#line 1618 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 265 "cond.y" /* yacc.c:1646  */
+#line 266 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_LHS; }
-#line 1623 "cond.tab.c" /* yacc.c:1646  */
+#line 1624 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 266 "cond.y" /* yacc.c:1646  */
+#line 267 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_RHS; }
-#line 1629 "cond.tab.c" /* yacc.c:1646  */
+#line 1630 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 267 "cond.y" /* yacc.c:1646  */
+#line 268 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_ILHS; }
-#line 1635 "cond.tab.c" /* yacc.c:1646  */
+#line 1636 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 268 "cond.y" /* yacc.c:1646  */
+#line 269 "cond.y" /* yacc.c:1646  */
     { (yyval.operator) = COND_IRHS; }
-#line 1641 "cond.tab.c" /* yacc.c:1646  */
+#line 1642 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 273 "cond.y" /* yacc.c:1646  */
+#line 274 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             UINT len;
@@ -1655,11 +1656,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1659 "cond.tab.c" /* yacc.c:1646  */
+#line 1660 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 287 "cond.y" /* yacc.c:1646  */
+#line 288 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             UINT len = GetEnvironmentVariableW( (yyvsp[0].identifier), NULL, 0 );
@@ -1674,11 +1675,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1678 "cond.tab.c" /* yacc.c:1646  */
+#line 1679 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 302 "cond.y" /* yacc.c:1646  */
+#line 303 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             (yyval.value).type = VALUE_LITERAL;
@@ -1686,11 +1687,11 @@ yyreduce:
             if( !(yyval.value).u.string )
                 YYABORT;
         }
-#line 1690 "cond.tab.c" /* yacc.c:1646  */
+#line 1691 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 310 "cond.y" /* yacc.c:1646  */
+#line 311 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             LPWSTR szNum = COND_GetString( cond, &(yyvsp[0].str) );
@@ -1700,11 +1701,11 @@ yyreduce:
             (yyval.value).u.integer = atoiW( szNum );
             cond_free( szNum );
         }
-#line 1704 "cond.tab.c" /* yacc.c:1646  */
+#line 1705 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 320 "cond.y" /* yacc.c:1646  */
+#line 321 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1721,11 +1722,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1725 "cond.tab.c" /* yacc.c:1646  */
+#line 1726 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 337 "cond.y" /* yacc.c:1646  */
+#line 338 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1742,11 +1743,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1746 "cond.tab.c" /* yacc.c:1646  */
+#line 1747 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 354 "cond.y" /* yacc.c:1646  */
+#line 355 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install, action;
@@ -1763,11 +1764,11 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1767 "cond.tab.c" /* yacc.c:1646  */
+#line 1768 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 371 "cond.y" /* yacc.c:1646  */
+#line 372 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
@@ -1784,22 +1785,22 @@ yyreduce:
             }
             cond_free( (yyvsp[0].identifier) );
         }
-#line 1788 "cond.tab.c" /* yacc.c:1646  */
+#line 1789 "cond.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 391 "cond.y" /* yacc.c:1646  */
+#line 392 "cond.y" /* yacc.c:1646  */
     {
             COND_input* cond = (COND_input*) info;
             (yyval.identifier) = COND_GetString( cond, &(yyvsp[0].str) );
             if( !(yyval.identifier) )
                 YYABORT;
         }
-#line 1799 "cond.tab.c" /* yacc.c:1646  */
+#line 1800 "cond.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1803 "cond.tab.c" /* yacc.c:1646  */
+#line 1804 "cond.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2027,7 +2028,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 399 "cond.y" /* yacc.c:1906  */
+#line 400 "cond.y" /* yacc.c:1906  */
 
 
 
@@ -2482,35 +2483,25 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
     {
-        HRESULT hr;
-        BSTR condition;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
-        condition = SysAllocString( szCondition );
-        if (!condition)
+        if (!szCondition)
+            return MSICONDITION_NONE;
+
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_EvaluateCondition(remote, szCondition);
         }
-
-        hr = IWineMsiRemotePackage_EvaluateCondition( remote_package, condition );
-
-        SysFreeString( condition );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

@@ -1006,7 +1006,7 @@ static UINT fill_source_list(struct list *sourcelist, HKEY sourcekey, DWORD *cou
 
     while (r == ERROR_SUCCESS)
     {
-        size = sizeof(name) / sizeof(name[0]);
+        size = ARRAY_SIZE(name);
         r = RegEnumValueW(sourcekey, index, name, &size, NULL, NULL, NULL, &val_size);
         if (r != ERROR_SUCCESS)
             return r;

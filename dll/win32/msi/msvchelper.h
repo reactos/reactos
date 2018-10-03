@@ -8,7 +8,7 @@ static
 __declspec(naked)
 unsigned int
 __cdecl
-CUSTOMPROC_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
+custom_proc_wrapper(__MSVC__MsiCustomActionEntryPoint proc, unsigned int handle)
 {
     __asm
     {

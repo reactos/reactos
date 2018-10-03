@@ -37,8 +37,9 @@
 #include "oleauto.h"
 
 #include "msipriv.h"
-#include "msiserver.h"
+#include "winemsi.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
 
@@ -218,7 +219,7 @@ boolean_factor:
             }
             else if ($1.type == VALUE_LITERAL || $3.type == VALUE_LITERAL)
             {
-                $$ = FALSE;
+                $$ = ($2 == COND_NE || $2 == COND_INE );
             }
             else if ($1.type == VALUE_SYMBOL) /* symbol operator integer */
             {
@@ -850,35 +851,25 @@ MSICONDITION WINAPI MsiEvaluateConditionW( MSIHANDLE hInstall, LPCWSTR szConditi
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE);
     if( !package )
     {
-        HRESULT hr;
-        BSTR condition;
-        IWineMsiRemotePackage *remote_package;
+        MSIHANDLE remote;
 
-        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
-        if (!remote_package)
+        if (!(remote = msi_get_remote(hInstall)))
             return MSICONDITION_ERROR;
 
-        condition = SysAllocString( szCondition );
-        if (!condition)
+        if (!szCondition)
+            return MSICONDITION_NONE;
+
+        __TRY
         {
-            IWineMsiRemotePackage_Release( remote_package );
-            return ERROR_OUTOFMEMORY;
+            ret = remote_EvaluateCondition(remote, szCondition);
         }
-
-        hr = IWineMsiRemotePackage_EvaluateCondition( remote_package, condition );
-
-        SysFreeString( condition );
-        IWineMsiRemotePackage_Release( remote_package );
-
-        if (FAILED(hr))
+        __EXCEPT(rpc_filter)
         {
-            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
-                return HRESULT_CODE(hr);
-
-            return ERROR_FUNCTION_FAILED;
+            ret = GetExceptionCode();
         }
+        __ENDTRY
 
-        return ERROR_SUCCESS;
+        return ret;
     }
 
     ret = MSI_EvaluateConditionW( package, szCondition );

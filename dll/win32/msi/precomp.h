@@ -18,11 +18,11 @@
 
 #include <winreg.h>
 #include <wincon.h>
-#include <msiserver.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 #include <sddl.h>
 
+#include <wine/heap.h>
 #include <wine/unicode.h>
 
 #include "resource.h"
