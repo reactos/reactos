@@ -71,7 +71,7 @@ reactos/dll/win32/fusion              # Synced to WineStaging-3.17
 reactos/dll/win32/gdiplus             # Synced to WineStaging-3.17
 reactos/dll/win32/hhctrl.ocx          # Synced to WineStaging-3.17
 reactos/dll/win32/hlink               # Synced to WineStaging-3.3
-reactos/dll/win32/hnetcfg             # Synced to WineStaging-3.9
+reactos/dll/win32/hnetcfg             # Synced to WineStaging-3.17
 reactos/dll/win32/httpapi             # Synced to WineStaging-3.3
 reactos/dll/win32/iccvid              # Synced to WineStaging-3.3
 reactos/dll/win32/ieframe             # Synced to WineStaging-3.17

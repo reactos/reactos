@@ -25,7 +25,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
-#include "initguid.h"
 #include "ole2.h"
 #include "netfw.h"
 
