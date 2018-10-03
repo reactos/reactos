@@ -1981,9 +1981,26 @@ IopQueryNameInternal(IN PVOID ObjectBody,
     }
     if (NT_ERROR(Status))
     {
-        /* Fail on errors only, allow warnings */
-        ExFreePoolWithTag(LocalInfo, TAG_IO);
-        return Status;
+        /* Allow status that would mean it's not implemented in the storage stack */
+        if (Status != STATUS_INVALID_PARAMETER && Status != STATUS_INVALID_DEVICE_REQUEST &&
+            Status != STATUS_NOT_IMPLEMENTED && Status != STATUS_INVALID_INFO_CLASS)
+        {
+            ExFreePoolWithTag(LocalInfo, TAG_IO);
+            return Status;
+        }
+
+        /* In such case, zero output */
+        LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+        LocalFileInfo->FileNameLength = 0;
+        LocalFileInfo->FileName[0] = OBJ_NAME_PATH_SEPARATOR;
+    }
+    else
+    {
+        /* We'll at least return the name length */
+        if (LocalReturnLength < FIELD_OFFSET(FILE_NAME_INFORMATION, FileName))
+        {
+            LocalReturnLength = FIELD_OFFSET(FILE_NAME_INFORMATION, FileName);
+        }
     }
 
     /* If the provided buffer is too small, return the required size */
