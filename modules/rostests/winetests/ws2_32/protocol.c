@@ -113,7 +113,7 @@ static void test_WSAEnumProtocolsA(void)
         ok( ret >= 2, "Expected at least 2 items, received %d\n", ret);
 
         for (i = found = 0; i < ret; i++)
-            for (j = 0; j < sizeof(ptest) / sizeof(ptest[0]); j++)
+            for (j = 0; j < ARRAY_SIZE(ptest); j++)
                 if (buffer[i].iProtocol == ptest[j])
                 {
                     found |= 1 << j;
@@ -180,7 +180,7 @@ static void test_WSAEnumProtocolsW(void)
         ok( ret >= 2, "Expected at least 2 items, received %d\n", ret);
 
         for (i = found = 0; i < ret; i++)
-            for (j = 0; j < sizeof(ptest) / sizeof(ptest[0]); j++)
+            for (j = 0; j < ARRAY_SIZE(ptest); j++)
                 if (buffer[i].iProtocol == ptest[j])
                 {
                     found |= 1 << j;
