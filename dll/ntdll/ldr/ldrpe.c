@@ -1028,14 +1028,14 @@ FailurePath:
         /* Is this a static snap? */
         if (Static)
         {
+            RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
             /* Inform the debug log */
             if (IsOrdinal)
-                DPRINT1("Failed to snap ordinal 0x%x\n", OriginalOrdinal);
+                DPRINT1("Failed to snap ordinal %Z!0x%x\n", &TempString, OriginalOrdinal);
             else
-                DPRINT1("Failed to snap %s\n", ImportName);
+                DPRINT1("Failed to snap %Z!%s\n", &TempString, ImportName);
 
             /* These are critical errors. Setup a string for the DLL name */
-            RtlInitAnsiString(&TempString, DllName ? DllName : "Unknown");
             RtlAnsiStringToUnicodeString(&HardErrorDllName, &TempString, TRUE);
 
             /* Set it as the parameter */
