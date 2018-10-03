@@ -36,7 +36,6 @@ static UINT (WINAPI *pMsiGetPatchInfoExA)( LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCON
                                            LPCSTR, LPSTR, DWORD * );
 static UINT (WINAPI *pMsiEnumPatchesExA)( LPCSTR, LPCSTR, DWORD, DWORD, DWORD, LPSTR,
                                           LPSTR, MSIINSTALLCONTEXT *, LPSTR, LPDWORD );
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 
 static const char *msifile = "winetest-patch.msi";
 static const char *mspfile = "winetest-patch.msp";
@@ -145,7 +144,6 @@ static const struct msi_table tables[] =
 static void init_function_pointers( void )
 {
     HMODULE hmsi = GetModuleHandleA( "msi.dll" );
-    HMODULE hadvapi32 = GetModuleHandleA( "advapi32.dll" );
 
 #define GET_PROC( mod, func ) \
     p ## func = (void *)GetProcAddress( mod, #func ); \
@@ -156,7 +154,6 @@ static void init_function_pointers( void )
     GET_PROC( hmsi, MsiGetPatchInfoExA );
     GET_PROC( hmsi, MsiEnumPatchesExA );
 
-    GET_PROC( hadvapi32, OpenProcessToken );
 #undef GET_PROC
 }
 
@@ -164,9 +161,7 @@ static BOOL is_process_limited(void)
 {
     HANDLE token;
 
-    if (!pOpenProcessToken) return FALSE;
-
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -446,8 +441,6 @@ static const struct table_data table_patch_data[] = {
     { p_name6, p_data6, sizeof p_data6 }
 };
 
-#define NUM_PATCH_TABLES (sizeof table_patch_data/sizeof table_patch_data[0])
-
 static const WCHAR t1_name0[] = { 0x4840, 0x430f, 0x422f, 0 }; /* File */
 static const WCHAR t1_name1[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3b6a, 0x45e4, 0x4824, 0 }; /* _StringData */
 static const WCHAR t1_name2[] = { 0x4840, 0x3f3f, 0x4577, 0x446c, 0x3e6a, 0x44b2, 0x482f, 0 }; /* _StringPool */
@@ -518,8 +511,6 @@ static const struct table_data table_transform1_data[] = {
     { t1_name2, t1_data2, sizeof t1_data2 },
     { t1_name3, t1_data3, sizeof t1_data3 }
 };
-
-#define NUM_TRANSFORM1_TABLES (sizeof table_transform1_data/sizeof table_transform1_data[0])
 
 static const WCHAR t2_name0[] = { 0x4840, 0x430f, 0x422f, 0 }; /* File */
 static const WCHAR t2_name1[] = { 0x4840, 0x4216, 0x4327, 0x4824, 0 }; /* Media */
@@ -644,8 +635,6 @@ static const struct table_data table_transform2_data[] = {
     { t2_name9, t2_data9, sizeof t2_data9 }
 };
 
-#define NUM_TRANSFORM2_TABLES (sizeof table_transform2_data/sizeof table_transform2_data[0])
-
 static void write_tables( IStorage *stg, const struct table_data *tables, UINT num_tables )
 {
     IStream *stm;
@@ -692,7 +681,7 @@ static void create_patch( const char *filename )
     r = IStorage_SetClass( stg, &CLSID_MsiPatch );
     ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
 
-    write_tables( stg, table_patch_data, NUM_PATCH_TABLES );
+    write_tables( stg, table_patch_data, ARRAY_SIZE( table_patch_data ));
 
     r = IStorage_CreateStorage( stg, p_name7, mode, 0, 0, &stg1 );
     ok( r == S_OK, "failed to create substorage 0x%08x\n", r );
@@ -700,7 +689,7 @@ static void create_patch( const char *filename )
     r = IStorage_SetClass( stg1, &CLSID_MsiTransform );
     ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
 
-    write_tables( stg1, table_transform1_data, NUM_TRANSFORM1_TABLES );
+    write_tables( stg1, table_transform1_data, ARRAY_SIZE( table_transform1_data ));
     IStorage_Release( stg1 );
 
     r = IStorage_CreateStorage( stg, p_name8, mode, 0, 0, &stg2 );
@@ -709,7 +698,7 @@ static void create_patch( const char *filename )
     r = IStorage_SetClass( stg2, &CLSID_MsiTransform );
     ok( r == S_OK, "failed to set storage type 0x%08x\n", r );
 
-    write_tables( stg2, table_transform2_data, NUM_TRANSFORM2_TABLES );
+    write_tables( stg2, table_transform2_data, ARRAY_SIZE( table_transform2_data ));
     IStorage_Release( stg2 );
     IStorage_Release( stg );
 }
@@ -737,7 +726,7 @@ static void test_simple_patch( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -935,7 +924,7 @@ static void test_MsiOpenDatabase( void )
     MsiCloseHandle( hdb );
     DeleteFileA( mspfile );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     r = MsiOpenDatabaseW( msifileW, MSIDBOPEN_READONLY + MSIDBOPEN_PATCHFILE, &hdb );
@@ -1078,7 +1067,7 @@ static void test_system_tables( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );
@@ -1267,7 +1256,7 @@ static void test_patch_registration( void )
     CreateDirectoryA( "msitest", NULL );
     create_file( "msitest\\patch.txt", 1000 );
 
-    create_database( msifile, tables, sizeof(tables) / sizeof(struct msi_table) );
+    create_database( msifile, tables, ARRAY_SIZE(tables) );
     create_patch( mspfile );
 
     MsiSetInternalUI( INSTALLUILEVEL_NONE, NULL );

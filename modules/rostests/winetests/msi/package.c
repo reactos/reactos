@@ -29,6 +29,7 @@
 #include <msiquery.h>
 #include <srrestoreptapi.h>
 #include <shlobj.h>
+#include <sddl.h>
 
 #include "wine/test.h"
 
@@ -39,18 +40,10 @@ static const WCHAR msifileW[] =
 static char CURR_DIR[MAX_PATH];
 
 static INSTALLSTATE (WINAPI *pMsiGetComponentPathExA)(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPSTR, LPDWORD);
-static HRESULT (WINAPI *pSHGetFolderPathA)(HWND, int, HANDLE, DWORD, LPSTR);
 
-static BOOL (WINAPI *pCheckTokenMembership)(HANDLE,PSID,PBOOL);
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
-static BOOL (WINAPI *pOpenProcessToken)( HANDLE, DWORD, PHANDLE );
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
 static LONG (WINAPI *pRegDeleteKeyExW)(HKEY, LPCWSTR, REGSAM, DWORD);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
-static void (WINAPI *pGetSystemInfo)(LPSYSTEM_INFO);
-static void (WINAPI *pGetNativeSystemInfo)(LPSYSTEM_INFO);
-static UINT (WINAPI *pGetSystemWow64DirectoryA)(LPSTR, UINT);
-
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
 static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
 
@@ -59,28 +52,20 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hshell32 = GetModuleHandleA("shell32.dll");
-    HMODULE hsrclient;
+    HMODULE hsrclient = LoadLibraryA("srclient.dll");
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func);
 
     GET_PROC(hmsi, MsiGetComponentPathExA);
-    GET_PROC(hshell32, SHGetFolderPathA);
 
-    GET_PROC(hadvapi32, CheckTokenMembership);
-    GET_PROC(hadvapi32, ConvertSidToStringSidA);
-    GET_PROC(hadvapi32, OpenProcessToken);
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hadvapi32, RegDeleteKeyExW)
     GET_PROC(hkernel32, IsWow64Process)
-    GET_PROC(hkernel32, GetNativeSystemInfo)
-    GET_PROC(hkernel32, GetSystemInfo)
-    GET_PROC(hkernel32, GetSystemWow64DirectoryA)
 
-    hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
     GET_PROC(hsrclient, SRSetRestorePointA);
+
 #undef GET_PROC
 }
 
@@ -91,11 +76,9 @@ static BOOL is_process_limited(void)
     BOOL IsInGroup;
     HANDLE token;
 
-    if (!pCheckTokenMembership || !pOpenProcessToken) return FALSE;
-
     if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
                                   DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &Group) ||
-        !pCheckTokenMembership(NULL, Group, &IsInGroup))
+        !CheckTokenMembership(NULL, Group, &IsInGroup))
     {
         trace("Could not check if the current user is an administrator\n");
         FreeSid(Group);
@@ -109,7 +92,7 @@ static BOOL is_process_limited(void)
                                       SECURITY_BUILTIN_DOMAIN_RID,
                                       DOMAIN_ALIAS_RID_POWER_USERS,
                                       0, 0, 0, 0, 0, 0, &Group) ||
-            !pCheckTokenMembership(NULL, Group, &IsInGroup))
+            !CheckTokenMembership(NULL, Group, &IsInGroup))
         {
             trace("Could not check if the current user is a power user\n");
             return FALSE;
@@ -121,7 +104,7 @@ static BOOL is_process_limited(void)
         }
     }
 
-    if (pOpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
     {
         BOOL ret;
         TOKEN_ELEVATION_TYPE type = TokenElevationTypeDefault;
@@ -148,17 +131,12 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -187,7 +165,7 @@ static LSTATUS package_RegDeleteTreeW(HKEY hKey, LPCWSTR lpszSubKey, REGSAM acce
     dwMaxSubkeyLen++;
     dwMaxValueLen++;
     dwMaxLen = max(dwMaxSubkeyLen, dwMaxValueLen);
-    if (dwMaxLen > sizeof(szNameBuf)/sizeof(WCHAR))
+    if (dwMaxLen > ARRAY_SIZE(szNameBuf))
     {
         /* Name too big: alloc a buffer for it */
         if (!(lpszName = HeapAlloc( GetProcessHeap(), 0, dwMaxLen*sizeof(WCHAR))))
@@ -751,6 +729,22 @@ static UINT create_actiontext_table( MSIHANDLE hdb )
     return r;
 }
 
+static UINT create_upgrade_table( MSIHANDLE hdb )
+{
+    UINT r = run_query( hdb,
+            "CREATE TABLE `Upgrade` ("
+            "`UpgradeCode` CHAR(38) NOT NULL, "
+            "`VersionMin` CHAR(20), "
+            "`VersionMax` CHAR(20), "
+            "`Language` CHAR(255), "
+            "`Attributes` SHORT, "
+            "`Remove` CHAR(255), "
+            "`ActionProperty` CHAR(72) NOT NULL "
+            "PRIMARY KEY `UpgradeCode`, `VersionMin`, `VersionMax`, `Language`)" );
+    ok(r == ERROR_SUCCESS, "Failed to create Upgrade table: %u\n", r);
+    return r;
+}
+
 static inline UINT add_entry(const char *file, int line, const char *type, MSIHANDLE hdb, const char *values, const char *insert)
 {
     char *query;
@@ -805,6 +799,12 @@ static inline UINT add_entry(const char *file, int line, const char *type, MSIHA
 #define add_property_entry(hdb, values) add_entry(__FILE__, __LINE__, "Property", hdb, values, \
                "INSERT INTO `Property` (`Property`, `Value`) VALUES( %s )")
 
+#define update_ProductVersion_property(hdb, value) add_entry(__FILE__, __LINE__, "Property", hdb, value, \
+               "UPDATE `Property` SET `Value` = '%s' WHERE `Property` = 'ProductVersion'")
+
+#define update_ProductCode_property(hdb, value) add_entry(__FILE__, __LINE__, "Property", hdb, value, \
+               "UPDATE `Property` SET `Value` = '%s' WHERE `Property` = 'ProductCode'")
+
 #define add_install_execute_sequence_entry(hdb, values) add_entry(__FILE__, __LINE__, "InstallExecuteSequence", hdb, values, \
                "INSERT INTO `InstallExecuteSequence` " \
                "(`Action`, `Condition`, `Sequence`) VALUES( %s )")
@@ -853,6 +853,10 @@ static inline UINT add_entry(const char *file, int line, const char *type, MSIHA
 #define add_actiontext_entry(hdb, values) add_entry(__FILE__, __LINE__, "ActionText", hdb, values, \
                "INSERT INTO `ActionText` " \
                "(`Action`, `Description`, `Template`) VALUES( %s )");
+
+#define add_upgrade_entry(hdb, values) add_entry(__FILE__, __LINE__, "Upgrade", hdb, values, \
+               "INSERT INTO `Upgrade` " \
+               "(`UpgradeCode`, `VersionMin`, `VersionMax`, `Language`, `Attributes`, `Remove`, `ActionProperty`) VALUES( %s )");
 
 static UINT add_reglocator_entry( MSIHANDLE hdb, const char *sig, UINT root, const char *path,
                                   const char *name, UINT type )
@@ -2071,6 +2075,10 @@ static void test_condition(void)
     ok( r == MSICONDITION_FALSE, "wrong return val (%d)\n", r);
     r = MsiEvaluateConditionA(hpkg, "&nofeature=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
+    r = MsiEvaluateConditionA(hpkg, "&nofeature<>3");
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
+    r = MsiEvaluateConditionA(hpkg, "\"\"<>3");
+    ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
     r = MsiEvaluateConditionA(hpkg, "!nofeature=\"\"");
     ok( r == MSICONDITION_TRUE, "wrong return val (%d)\n", r);
     MsiEvaluateConditionA(hpkg, "$nocomponent=\"\"");
@@ -2138,24 +2146,26 @@ static void test_condition(void)
     DeleteFileA(msifile);
 }
 
-static BOOL check_prop_empty( MSIHANDLE hpkg, const char * prop)
+static void check_prop(MSIHANDLE hpkg, const char *prop, const char *expect)
 {
-    UINT r;
-    DWORD sz;
-    char buffer[2];
-
-    sz = sizeof buffer;
-    strcpy(buffer,"x");
-    r = MsiGetPropertyA( hpkg, prop, buffer, &sz );
-    return r == ERROR_SUCCESS && buffer[0] == 0 && sz == 0;
+    char buffer[MAX_PATH] = "x";
+    DWORD sz = sizeof(buffer);
+    UINT r = MsiGetPropertyA(hpkg, prop, buffer, &sz);
+    ok(!r, "'%s': got %u\n", prop, r);
+    ok(sz == lstrlenA(buffer), "'%s': expected %u, got %u\n", prop, lstrlenA(buffer), sz);
+    ok(!strcmp(buffer, expect), "'%s': expected '%s', got '%s'\n", prop, expect, buffer);
 }
 
 static void test_props(void)
 {
+    static const WCHAR booW[] = {'b','o','o',0};
+    static const WCHAR xyzW[] = {'x','y','z',0};
+    static const WCHAR xyW[] = {'x','y',0};
     MSIHANDLE hpkg, hdb;
     UINT r;
     DWORD sz;
     char buffer[0x100];
+    WCHAR bufferW[10];
 
     hdb = create_package_db();
 
@@ -2173,150 +2183,153 @@ static void test_props(void)
 
     /* test invalid values */
     r = MsiGetPropertyA( 0, NULL, NULL, NULL );
-    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     r = MsiGetPropertyA( hpkg, NULL, NULL, NULL );
-    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     r = MsiGetPropertyA( hpkg, "boo", NULL, NULL );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(!r, "got %u\n", r);
 
     r = MsiGetPropertyA( hpkg, "boo", buffer, NULL );
-    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     /* test retrieving an empty/nonexistent property */
     sz = sizeof buffer;
     r = MsiGetPropertyA( hpkg, "boo", NULL, &sz );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( sz == 0, "wrong size returned\n");
+    ok(!r, "got %u\n", r);
+    ok(sz == 0, "got size %d\n", sz);
 
-    check_prop_empty( hpkg, "boo");
     sz = 0;
     strcpy(buffer,"x");
     r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
-    ok( r == ERROR_MORE_DATA, "wrong return val\n");
-    ok( !strcmp(buffer,"x"), "buffer was changed\n");
-    ok( sz == 0, "wrong size returned\n");
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!strcmp(buffer,"x"), "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( buffer[0] == 0, "buffer was not changed\n");
-    ok( sz == 0, "wrong size returned\n");
+    ok(!r, "got %u\n", r);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 0, "got size %u\n", sz);
 
     /* set the property to something */
     r = MsiSetPropertyA( 0, NULL, NULL );
-    ok( r == ERROR_INVALID_HANDLE, "wrong return val\n");
+    ok(r == ERROR_INVALID_HANDLE, "got %u\n", r);
 
     r = MsiSetPropertyA( hpkg, NULL, NULL );
-    ok( r == ERROR_INVALID_PARAMETER, "wrong return val\n");
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
 
     r = MsiSetPropertyA( hpkg, "", NULL );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(!r, "got %u\n", r);
 
-    /* try set and get some illegal property identifiers */
     r = MsiSetPropertyA( hpkg, "", "asdf" );
-    ok( r == ERROR_FUNCTION_FAILED, "wrong return val\n");
+    ok(r == ERROR_FUNCTION_FAILED, "got %u\n", r);
 
     r = MsiSetPropertyA( hpkg, "=", "asdf" );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, "=", "asdf");
 
     r = MsiSetPropertyA( hpkg, " ", "asdf" );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, " ", "asdf");
 
     r = MsiSetPropertyA( hpkg, "'", "asdf" );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-
-    sz = sizeof buffer;
-    buffer[0]=0;
-    r = MsiGetPropertyA( hpkg, "'", buffer, &sz );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( !strcmp(buffer,"asdf"), "buffer was not changed\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, "'", "asdf");
 
     /* set empty values */
     r = MsiSetPropertyA( hpkg, "boo", NULL );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( check_prop_empty( hpkg, "boo"), "prop wasn't empty\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, "boo", "");
 
     r = MsiSetPropertyA( hpkg, "boo", "" );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( check_prop_empty( hpkg, "boo"), "prop wasn't empty\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, "boo", "");
 
     /* set a non-empty value */
     r = MsiSetPropertyA( hpkg, "boo", "xyz" );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(!r, "got %u\n", r);
+    check_prop(hpkg, "boo", "xyz");
+
+    r = MsiGetPropertyA(hpkg, "boo", NULL, NULL);
+    ok(!r, "got %u\n", r);
+
+    r = MsiGetPropertyA(hpkg, "boo", buffer, NULL);
+    ok(r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    sz = 0;
+    r = MsiGetPropertyA(hpkg, "boo", NULL, &sz);
+    ok(!r, "got %u\n", r);
+    ok(sz == 3, "got size %u\n", sz);
+
+    sz = 0;
+    strcpy(buffer, "q");
+    r = MsiGetPropertyA(hpkg, "boo", buffer, &sz);
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!strcmp(buffer, "q"), "got \"%s\"", buffer);
+    ok(sz == 3, "got size %u\n", sz);
 
     sz = 1;
     strcpy(buffer,"x");
     r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
-    ok( r == ERROR_MORE_DATA, "wrong return val\n");
-    ok( buffer[0] == 0, "buffer was not changed\n");
-    ok( sz == 3, "wrong size returned\n");
-
-    sz = 4;
-    strcpy(buffer,"x");
-    r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( !strcmp(buffer,"xyz"), "buffer was not changed\n");
-    ok( sz == 3, "wrong size returned\n");
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!buffer[0], "got \"%s\"\n", buffer);
+    ok(sz == 3, "got size %u\n", sz);
 
     sz = 3;
     strcpy(buffer,"x");
     r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
-    ok( r == ERROR_MORE_DATA, "wrong return val\n");
-    ok( !strcmp(buffer,"xy"), "buffer was not changed\n");
-    ok( sz == 3, "wrong size returned\n");
-
-    r = MsiSetPropertyA(hpkg, "SourceDir", "foo");
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!strcmp(buffer,"xy"), "got \"%s\"\n", buffer);
+    ok(sz == 3, "got size %u\n", sz);
 
     sz = 4;
-    r = MsiGetPropertyA(hpkg, "SOURCEDIR", buffer, &sz);
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( !strcmp(buffer,""), "buffer wrong\n");
-    ok( sz == 0, "wrong size returned\n");
-
-    sz = 4;
-    r = MsiGetPropertyA(hpkg, "SOMERANDOMNAME", buffer, &sz);
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( !strcmp(buffer,""), "buffer wrong\n");
-    ok( sz == 0, "wrong size returned\n");
-
-    sz = 4;
-    r = MsiGetPropertyA(hpkg, "SourceDir", buffer, &sz);
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
-    ok( !strcmp(buffer,"foo"), "buffer wrong\n");
-    ok( sz == 3, "wrong size returned\n");
-
-    r = MsiSetPropertyA(hpkg, "MetadataCompName", "Photoshop.dll");
-    ok( r == ERROR_SUCCESS, "wrong return val\n");
+    strcpy(buffer,"x");
+    r = MsiGetPropertyA( hpkg, "boo", buffer, &sz );
+    ok(!r, "got %u\n", r);
+    ok(!strcmp(buffer,"xyz"), "got \"%s\"\n", buffer);
+    ok(sz == 3, "got size %u\n", sz);
 
     sz = 0;
-    r = MsiGetPropertyA(hpkg, "MetadataCompName", NULL, &sz );
-    ok( r == ERROR_SUCCESS, "return wrong\n");
-    ok( sz == 13, "size wrong (%d)\n", sz);
+    r = MsiGetPropertyW(hpkg, booW, NULL, &sz);
+    ok(!r, "got %u\n", r);
+    ok(sz == 3, "got size %u\n", sz);
 
-    sz = 13;
-    r = MsiGetPropertyA(hpkg, "MetadataCompName", buffer, &sz );
-    ok( r == ERROR_MORE_DATA, "return wrong\n");
-    ok( !strcmp(buffer,"Photoshop.dl"), "buffer wrong\n");
+    sz = 0;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz);
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, booW), "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
 
-    r = MsiSetPropertyA(hpkg, "property", "value");
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    sz = 1;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!bufferW[0], "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
 
-    sz = 6;
-    r = MsiGetPropertyA(hpkg, "property", buffer, &sz);
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok( !strcmp(buffer, "value"), "Expected value, got %s\n", buffer);
+    sz = 3;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(r == ERROR_MORE_DATA, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, xyW), "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
 
-    r = MsiSetPropertyA(hpkg, "property", NULL);
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    sz = 4;
+    lstrcpyW(bufferW, booW);
+    r = MsiGetPropertyW(hpkg, booW, bufferW, &sz );
+    ok(!r, "got %u\n", r);
+    ok(!lstrcmpW(bufferW, xyzW), "got %s\n", wine_dbgstr_w(bufferW));
+    ok(sz == 3, "got size %u\n", sz);
 
-    sz = 6;
-    r = MsiGetPropertyA(hpkg, "property", buffer, &sz);
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok(!buffer[0], "Expected empty string, got %s\n", buffer);
+    /* properties are case-sensitive */
+    check_prop(hpkg, "BOO", "");
+
+    /* properties set in Property table should work */
+    check_prop(hpkg, "MetadataCompName", "Photoshop.dll");
 
     MsiCloseHandle( hpkg );
     DeleteFileA(msifile);
@@ -3067,10 +3080,12 @@ static void test_states(void)
     char msi_cache_file[MAX_PATH];
     DWORD cache_file_name_len;
     INSTALLSTATE state;
-    MSIHANDLE hpkg;
+    MSIHANDLE hpkg, hprod;
     UINT r;
     MSIHANDLE hdb;
     BOOL is_broken;
+    char value[MAX_PATH];
+    DWORD size;
 
     if (is_process_limited())
     {
@@ -3089,6 +3104,7 @@ static void test_states(void)
     add_property_entry( hdb, "'ProductName', 'MSITEST'" );
     add_property_entry( hdb, "'ProductVersion', '1.1.1'" );
     add_property_entry( hdb, "'MSIFASTINSTALL', '1'" );
+    add_property_entry( hdb, "'UpgradeCode', '{3494EEEA-4221-4A66-802E-DED8916BC5C5}'" );
 
     create_install_execute_sequence_table( hdb );
     add_install_execute_sequence_entry( hdb, "'CostInitialize', '', '800'" );
@@ -3293,6 +3309,12 @@ static void test_states(void)
     CopyFileA(msifile, msifile3, FALSE);
     CopyFileA(msifile, msifile4, FALSE);
 
+    size = sizeof(value);
+    memset(value, 0, sizeof(value));
+    r = MsiGetPropertyA(hpkg, "ProductToBeRegistered", value, &size);
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok(!value[0], "ProductToBeRegistered = %s\n", value);
+
     test_feature_states( __LINE__, hpkg, "one", ERROR_UNKNOWN_FEATURE, 0, 0, FALSE );
     test_component_states( __LINE__, hpkg, "alpha", ERROR_UNKNOWN_COMPONENT, 0, 0, FALSE );
 
@@ -3372,6 +3394,12 @@ static void test_states(void)
     ok( r == ERROR_SUCCESS, "failed to create package %u\n", r );
 
     MsiCloseHandle(hdb);
+
+    size = sizeof(value);
+    memset(value, 0, sizeof(value));
+    r = MsiGetPropertyA(hpkg, "ProductToBeRegistered", value, &size);
+    ok( r == ERROR_SUCCESS, "get property failed: %d\n", r);
+    ok(value[0]=='1' && !value[1], "ProductToBeRegistered = %s\n", value);
 
     test_feature_states( __LINE__, hpkg, "one", ERROR_UNKNOWN_FEATURE, 0, 0, FALSE );
     test_component_states( __LINE__, hpkg, "alpha", ERROR_UNKNOWN_COMPONENT, 0, 0, FALSE );
@@ -3699,9 +3727,12 @@ static void test_states(void)
     add_custom_action_entry( hdb, "'ConditionCheck6', 19, '', 'Condition check failed (6)'" );
     add_custom_action_entry( hdb, "'ConditionCheck7', 19, '', 'Condition check failed (7)'" );
     add_custom_action_entry( hdb, "'ConditionCheck8', 19, '', 'Condition check failed (8)'" );
+    add_custom_action_entry( hdb,
+            "'VBFeatureRequest', 38, NULL, 'Session.FeatureRequestState(\"three\") = 3'" );
 
     add_install_execute_sequence_entry( hdb, "'ConditionCheck1', 'REINSTALL', '798'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck2', 'NOT REMOVE AND Preselected', '799'" );
+    add_install_execute_sequence_entry( hdb, "'VBFeatureRequest', 'NOT REMOVE', '1001'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck3', 'REINSTALL', '6598'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck4', 'NOT REMOVE AND Preselected', '6599'" );
     add_install_execute_sequence_entry( hdb, "'ConditionCheck5', 'REINSTALL', '6601'" );
@@ -3768,66 +3799,75 @@ static void test_states(void)
     ok(state == INSTALLSTATE_SOURCE, "state = %d\n", state);
     state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "two");
     ok(state == INSTALLSTATE_ABSENT, "state = %d\n", state);
+    state = MsiQueryFeatureStateA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", "three");
+    ok(state == INSTALLSTATE_LOCAL, "state = %d\n", state);
+
+    /* minor upgrade test with no REINSTALL argument */
+    r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    size = MAX_PATH;
+    r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!strcmp(value, "1.1.1"), "ProductVersion = %s\n", value);
+    MsiCloseHandle(hprod);
+
+    r = MsiOpenDatabaseA(msifile2, (const char*)MSIDBOPEN_DIRECT, &hdb);
+    ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
+    update_ProductVersion_property( hdb, "1.1.2" );
+    set_summary_str(hdb, PID_REVNUMBER, "{A219A62A-D931-4F1B-89DB-FF1C300A8D43}");
+    r = MsiDatabaseCommit(hdb);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseCommit failed: %d\n", r);
+    MsiCloseHandle(hdb);
+
+    r = MsiInstallProductA(msifile2, "");
+    ok(r == ERROR_PRODUCT_VERSION, "Expected ERROR_PRODUCT_VERSION, got %d\n", r);
+
+    r = MsiInstallProductA(msifile2, "REINSTALLMODe=V");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    size = MAX_PATH;
+    r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!strcmp(value, "1.1.2"), "ProductVersion = %s\n", value);
+    MsiCloseHandle(hprod);
+
+    /* major upgrade test */
+    r = MsiOpenDatabaseA(msifile2, (const char*)MSIDBOPEN_DIRECT, &hdb);
+    ok(r == ERROR_SUCCESS, "failed to open database: %d\n", r);
+    add_install_execute_sequence_entry( hdb, "'FindRelatedProducts', '', '100'" );
+    add_install_execute_sequence_entry( hdb, "'RemoveExistingProducts', '', '1401'" );
+    create_upgrade_table( hdb );
+    add_upgrade_entry( hdb, "'{3494EEEA-4221-4A66-802E-DED8916BC5C5}', NULL, '1.1.3', NULL, 0, NULL, 'OLDERVERSIONBEINGUPGRADED'");
+    update_ProductCode_property( hdb, "{333DB27A-C25E-4EBC-9BEC-0F49546C19A6}" );
+    update_ProductVersion_property( hdb, "1.1.3" );
+    set_summary_str(hdb, PID_REVNUMBER, "{5F99011C-02E6-48BD-8B8D-DE7CFABC7A09}");
+    r = MsiDatabaseCommit(hdb);
+    ok(r == ERROR_SUCCESS, "MsiDatabaseCommit failed: %d\n", r);
+    MsiCloseHandle(hdb);
+
+    r = MsiInstallProductA(msifile2, "");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = MsiOpenProductA("{7262AC98-EEBD-4364-8CE3-D654F6A425B9}", &hprod);
+    ok(r == ERROR_UNKNOWN_PRODUCT, "Expected ERROR_UNKNOWN_PRODUCT, got %d\n", r);
+    r = MsiOpenProductA("{333DB27A-C25E-4EBC-9BEC-0F49546C19A6}", &hprod);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    size = MAX_PATH;
+    r = MsiGetProductPropertyA(hprod, "ProductVersion", value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!strcmp(value, "1.1.3"), "ProductVersion = %s\n", value);
+    MsiCloseHandle(hprod);
 
     /* uninstall the product */
-    r = MsiInstallProductA(msifile4, "REMOVE=ALL");
+    r = MsiInstallProductA(msifile2, "REMOVE=ALL");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     DeleteFileA(msifile);
     DeleteFileA(msifile2);
     DeleteFileA(msifile3);
     DeleteFileA(msifile4);
-}
-
-static void test_getproperty(void)
-{
-    MSIHANDLE hPackage = 0;
-    char prop[100];
-    static CHAR empty[] = "";
-    DWORD size;
-    UINT r;
-
-    r = package_from_db(create_package_db(), &hPackage);
-    if (r == ERROR_INSTALL_PACKAGE_REJECTED)
-    {
-        skip("Not enough rights to perform tests\n");
-        DeleteFileA(msifile);
-        return;
-    }
-    ok( r == ERROR_SUCCESS, "Failed to create package %u\n", r );
-
-    /* set the property */
-    r = MsiSetPropertyA(hPackage, "Name", "Value");
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-
-    /* retrieve the size, NULL pointer */
-    size = 0;
-    r = MsiGetPropertyA(hPackage, "Name", NULL, &size);
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok( size == 5, "Expected 5, got %d\n", size);
-
-    /* retrieve the size, empty string */
-    size = 0;
-    r = MsiGetPropertyA(hPackage, "Name", empty, &size);
-    ok( r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
-    ok( size == 5, "Expected 5, got %d\n", size);
-
-    /* don't change size */
-    r = MsiGetPropertyA(hPackage, "Name", prop, &size);
-    ok( r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
-    ok( size == 5, "Expected 5, got %d\n", size);
-    ok( !lstrcmpA(prop, "Valu"), "Expected Valu, got %s\n", prop);
-
-    /* increase the size by 1 */
-    size++;
-    r = MsiGetPropertyA(hPackage, "Name", prop, &size);
-    ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
-    ok( size == 5, "Expected 5, got %d\n", size);
-    ok( !lstrcmpA(prop, "Value"), "Expected Value, got %s\n", prop);
-
-    r = MsiCloseHandle( hPackage);
-    ok( r == ERROR_SUCCESS , "Failed to close package\n" );
-    DeleteFileA(msifile);
 }
 
 static void test_removefiles(void)
@@ -4643,7 +4683,7 @@ static void test_appsearch_reglocator(void)
     ok(!lstrcmpA(prop, "#-42"), "Expected \"#-42\", got \"%s\"\n", prop);
 
     memset(&si, 0, sizeof(si));
-    if (pGetNativeSystemInfo) pGetNativeSystemInfo(&si);
+    GetNativeSystemInfo(&si);
 
     if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
     {
@@ -5504,7 +5544,7 @@ static void test_installprops(void)
     CHAR path[MAX_PATH], buf[MAX_PATH];
     DWORD size, type;
     LANGID langid;
-    HKEY hkey1, hkey2;
+    HKEY hkey1, hkey2, pathkey;
     int res;
     UINT r;
     REGSAM access = KEY_ALL_ACCESS;
@@ -5557,6 +5597,8 @@ static void test_installprops(void)
 
     RegOpenKeyA(HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\MS Setup (ACME)\\User Info", &hkey1);
     RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, access, &hkey2);
+    RegOpenKeyExA(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+        0, KEY_QUERY_VALUE | KEY_WOW64_64KEY, &pathkey);
 
     size = MAX_PATH;
     type = REG_SZ;
@@ -5657,228 +5699,75 @@ static void test_installprops(void)
     r = MsiGetPropertyA(hpkg, "MsiNetAssemblySupport", buf, &size);
     if (r == ERROR_SUCCESS) trace( "MsiNetAssemblySupport \"%s\"\n", buf );
 
-    if (pGetSystemInfo && pSHGetFolderPathA)
+    GetNativeSystemInfo(&si);
+
+    if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
     {
-        pGetSystemInfo(&si);
-        if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64)
-        {
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "Intel", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            ok(buf[0], "property not set\n");
+        sprintf(buf, "%d", si.wProcessorLevel);
+        check_prop(hpkg, "Intel", buf);
+        check_prop(hpkg, "MsiAMD64", buf);
+        check_prop(hpkg, "Msix64", buf);
+        sprintf(buf, "%d", LOBYTE(LOWORD(GetVersion())) * 100 + HIBYTE(LOWORD(GetVersion())));
+        check_prop(hpkg, "VersionNT64", buf);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "MsiAMD64", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            ok(buf[0], "property not set\n");
+        GetSystemDirectoryA(path, MAX_PATH);
+        strcat(path, "\\");
+        check_prop(hpkg, "System64Folder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "Msix64", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            ok(buf[0], "property not set\n");
+        GetSystemWow64DirectoryA(path, MAX_PATH);
+        strcat(path, "\\");
+        check_prop(hpkg, "SystemFolder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "System64Folder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            GetSystemDirectoryA(path, MAX_PATH);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        size = MAX_PATH;
+        r = RegQueryValueExA(pathkey, "ProgramFilesDir (x86)", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "ProgramFilesFolder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "SystemFolder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            pGetSystemWow64DirectoryA(path, MAX_PATH);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        size = MAX_PATH;
+        RegQueryValueExA(pathkey, "ProgramFilesDir", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "ProgramFiles64Folder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "ProgramFiles64Folder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        size = MAX_PATH;
+        RegQueryValueExA(pathkey, "CommonFilesDir (x86)", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "CommonFilesFolder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "ProgramFilesFolder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, path);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        size = MAX_PATH;
+        RegQueryValueExA(pathkey, "CommonFilesDir", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "CommonFiles64Folder", path);
+    }
+    else if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+    {
+        sprintf(buf, "%d", si.wProcessorLevel);
+        check_prop(hpkg, "Intel", buf);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "CommonFiles64Folder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES_COMMON, NULL, 0, path);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        GetSystemDirectoryA(path, MAX_PATH);
+        strcat(path, "\\");
+        check_prop(hpkg, "SystemFolder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "CommonFilesFolder", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES_COMMONX86, NULL, 0, path);
-            if (size) buf[size - 1] = 0;
-            ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
+        size = MAX_PATH;
+        RegQueryValueExA(pathkey, "ProgramFilesDir", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "ProgramFilesFolder", path);
 
-            buf[0] = 0;
-            size = MAX_PATH;
-            r = MsiGetPropertyA(hpkg, "VersionNT64", buf, &size);
-            ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-            ok(buf[0], "property not set\n");
-        }
-        else if (S(U(si)).wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
-        {
-            if (!is_wow64)
-            {
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "Intel", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(buf[0], "property not set\n");
+        size = MAX_PATH;
+        RegQueryValueExA(pathkey, "CommonFilesDir", 0, &type, (BYTE *)path, &size);
+        strcat(path, "\\");
+        check_prop(hpkg, "CommonFilesFolder", path);
 
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "MsiAMD64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "Msix64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "System64Folder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "SystemFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                GetSystemDirectoryA(path, MAX_PATH);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "ProgramFiles64Folder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "ProgramFilesFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES, NULL, 0, path);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "CommonFiles64Folder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "CommonFilesFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES_COMMON, NULL, 0, path);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "VersionNT64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-            }
-            else
-            {
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "Intel", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(buf[0], "property not set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "MsiAMD64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(buf[0], "property not set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "Msix64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(buf[0], "property not set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "System64Folder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                GetSystemDirectoryA(path, MAX_PATH);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "SystemFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                pGetSystemWow64DirectoryA(path, MAX_PATH);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "ProgramFilesFolder64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "ProgramFilesFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILESX86, NULL, 0, path);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "CommonFilesFolder64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(!buf[0], "property set\n");
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "CommonFilesFolder", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                pSHGetFolderPathA(NULL, CSIDL_PROGRAM_FILES_COMMONX86, NULL, 0, path);
-                if (size) buf[size - 1] = 0;
-                ok(!lstrcmpiA(path, buf), "expected \"%s\", got \"%s\"\n", path, buf);
-
-                buf[0] = 0;
-                size = MAX_PATH;
-                r = MsiGetPropertyA(hpkg, "VersionNT64", buf, &size);
-                ok(r == ERROR_SUCCESS, "failed to get property: %d\n", r);
-                ok(buf[0], "property not set\n");
-            }
-        }
+        check_prop(hpkg, "MsiAMD64", "");
+        check_prop(hpkg, "Msix64", "");
+        check_prop(hpkg, "VersionNT64", "");
+        check_prop(hpkg, "System64Folder", "");
+        check_prop(hpkg, "ProgramFiles64Dir", "");
+        check_prop(hpkg, "CommonFiles64Dir", "");
     }
 
     CloseHandle(hkey1);
     CloseHandle(hkey2);
+    RegCloseKey(pathkey);
     MsiCloseHandle(hpkg);
     DeleteFileA(msifile);
     MsiSetInternalUI(uilevel, NULL);
@@ -8520,7 +8409,7 @@ static void test_MsiApplyPatch(void)
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %u\n", r);
 }
 
-static void test_MsiEnumComponentCosts(void)
+static void test_costs(void)
 {
     MSIHANDLE hdb, hpkg;
     char package[12], drive[3];
@@ -8702,6 +8591,20 @@ static void test_MsiEnumComponentCosts(void)
     len = sizeof(drive);
     r = MsiEnumComponentCostsA( hpkg, "", 1, INSTALLSTATE_UNKNOWN, drive, &len, &cost, &temp );
     ok( r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %u\n", r );
+
+    /* test MsiGetFeatureCost */
+    cost = 0xdead;
+    r = MsiGetFeatureCostA( hpkg, NULL, MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
+    ok( r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+    ok( cost == 0xdead, "got %d\n", cost );
+
+    r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, NULL );
+    ok( r == ERROR_INVALID_PARAMETER, "got %u\n", r);
+
+    cost = 0xdead;
+    r = MsiGetFeatureCostA( hpkg, "one", MSICOSTTREE_SELFONLY, INSTALLSTATE_LOCAL, &cost );
+    ok( !r, "got %u\n", r);
+    ok( cost == 8, "got %d\n", cost );
 
     MsiCloseHandle( hpkg );
 error:
@@ -9723,7 +9626,6 @@ START_TEST(package)
     test_formatrecord2();
     test_formatrecord_tables();
     test_states();
-    test_getproperty();
     test_removefiles();
     test_appsearch();
     test_appsearch_complocator();
@@ -9744,7 +9646,7 @@ START_TEST(package)
     test_MsiSetProperty();
     test_MsiApplyMultiplePatches();
     test_MsiApplyPatch();
-    test_MsiEnumComponentCosts();
+    test_costs();
     test_MsiDatabaseCommit();
     test_externalui();
     test_externalui_message();
