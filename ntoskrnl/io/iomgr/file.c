@@ -1902,6 +1902,9 @@ IopQueryNameInternal(IN PVOID ObjectBody,
     BOOLEAN LengthMismatch = FALSE;
     NTSTATUS Status;
     PWCHAR p;
+    PDEVICE_OBJECT DeviceObject;
+    BOOLEAN NoObCall;
+
     IOTRACE(IO_FILE_DEBUG, "ObjectBody: %p\n", ObjectBody);
 
     /* Validate length */
@@ -1912,17 +1915,56 @@ IopQueryNameInternal(IN PVOID ObjectBody,
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    if (QueryDosName) return STATUS_NOT_IMPLEMENTED;
-
     /* Allocate Buffer */
     LocalInfo = ExAllocatePoolWithTag(PagedPool, Length, TAG_IO);
     if (!LocalInfo) return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Query the name */
-    Status = ObQueryNameString(FileObject->DeviceObject,
-                               LocalInfo,
-                               Length,
-                               &LocalReturnLength);
+    /* Query DOS name if the caller asked to */
+    NoObCall = FALSE;
+    if (QueryDosName)
+    {
+        DeviceObject = FileObject->DeviceObject;
+
+        /* In case of a network file system, don't call mountmgr */
+        if (DeviceObject->DeviceType == FILE_DEVICE_NETWORK_FILE_SYSTEM)
+        {
+            /* We'll store separator and terminator */
+            LocalReturnLength = sizeof(OBJECT_NAME_INFORMATION) + 2 * sizeof(WCHAR);
+            if (Length < LocalReturnLength)
+            {
+                Status = STATUS_BUFFER_OVERFLOW;
+            }
+            else
+            {
+                LocalInfo->Name.Length = sizeof(WCHAR);
+                LocalInfo->Name.MaximumLength = sizeof(WCHAR);
+                LocalInfo->Name.Buffer = (PVOID)((ULONG_PTR)LocalInfo + sizeof(OBJECT_NAME_INFORMATION));
+                LocalInfo->Name.Buffer[0] = OBJ_NAME_PATH_SEPARATOR;
+                Status = STATUS_SUCCESS;
+            }
+        }
+        /* Otherwise, call mountmgr to get DOS name */
+        else
+        {
+            Status = IoVolumeDeviceToDosName(DeviceObject, &LocalInfo->Name);
+            LocalReturnLength = LocalInfo->Name.Length + sizeof(OBJECT_NAME_INFORMATION) + sizeof(WCHAR);
+        }
+    }
+
+    /* Fall back if querying DOS name failed or if caller never wanted it ;-) */
+    if (!QueryDosName || !NT_SUCCESS(Status))
+    {
+        /* Query the name */
+        Status = ObQueryNameString(FileObject->DeviceObject,
+                                   LocalInfo,
+                                   Length,
+                                   &LocalReturnLength);
+    }
+    else
+    {
+        NoObCall = TRUE;
+    }
+
     if (!NT_SUCCESS(Status) && (Status != STATUS_INFO_LENGTH_MISMATCH))
     {
         /* Free the buffer and fail */
@@ -1930,14 +1972,36 @@ IopQueryNameInternal(IN PVOID ObjectBody,
         return Status;
     }
 
+    /* Get buffer pointer */
+    p = (PWCHAR)(ObjectNameInfo + 1);
+
     /* Copy the information */
-    RtlCopyMemory(ObjectNameInfo,
-                  LocalInfo,
-                  (LocalReturnLength > Length) ?
-                  Length : LocalReturnLength);
+    if (QueryDosName && NoObCall)
+    {
+        ASSERT(PreviousMode == KernelMode);
+
+        /* Copy structure first */
+        RtlCopyMemory(ObjectNameInfo,
+                      LocalInfo,
+                      (Length >= LocalReturnLength ? sizeof(OBJECT_NAME_INFORMATION) : Length));
+        /* Name then */
+        RtlCopyMemory(p, LocalInfo->Name.Buffer,
+                      (Length >= LocalReturnLength ? LocalInfo->Name.Length : Length - sizeof(OBJECT_NAME_INFORMATION)));
+
+        if (FileObject->DeviceObject->DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM)
+        {
+            ExFreePool(LocalInfo->Name.Buffer);
+        }
+    }
+    else
+    {
+        RtlCopyMemory(ObjectNameInfo,
+                      LocalInfo,
+                      (LocalReturnLength > Length) ?
+                      Length : LocalReturnLength);
+    }
 
     /* Set buffer pointer */
-    p = (PWCHAR)(ObjectNameInfo + 1);
     ObjectNameInfo->Name.Buffer = p;
 
     /* Advance in buffer */
