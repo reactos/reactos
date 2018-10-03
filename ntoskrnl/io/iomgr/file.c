@@ -2004,6 +2004,14 @@ IopQueryNameInternal(IN PVOID ObjectBody,
                                 (ULONG_PTR)ObjectNameInfo +
                                 LocalFileInfo->FileNameLength);
 
+    /* Don't copy the name if it's not valid */
+    if (LocalFileInfo->FileName[0] != OBJ_NAME_PATH_SEPARATOR)
+    {
+        /* Free the allocated buffer and return failure */
+        ExFreePoolWithTag(LocalInfo, TAG_IO);
+        return STATUS_OBJECT_PATH_INVALID;
+    }
+
     /* Write the Name and null-terminate it */
     RtlCopyMemory(p, LocalFileInfo->FileName, FileLength);
     p += (FileLength / sizeof(WCHAR));
