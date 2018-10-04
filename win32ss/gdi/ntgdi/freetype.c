@@ -4346,6 +4346,8 @@ ftGdiGetFontData(
     return Result;
 }
 
+#define GOT_PENALTY(name, value) Penalty += (value)
+
 // NOTE: See Table 1. of https://msdn.microsoft.com/en-us/library/ms969909.aspx
 static UINT
 GetFontPenalty(const LOGFONTW *               LogFont,
@@ -4353,7 +4355,6 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                const char *             style_name)
 {
     ULONG   Penalty = 0;
-#define GOT_PENALTY(name, value) Penalty += (value)
     BYTE    Byte;
     LONG    Long;
     BOOL    fNeedScaling = FALSE;
@@ -4701,10 +4702,10 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             TM->tmCharSet, TM->tmWeight);
     }
 
-#undef GOT_PENALTY
-
     return Penalty;     /* success */
 }
+
+#undef GOT_PENALTY
 
 static __inline VOID
 FindBestFontFromList(FONTOBJ **FontObj, ULONG *MatchPenalty,
