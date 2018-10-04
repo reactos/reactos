@@ -2621,6 +2621,14 @@ NtReadFile(IN HANDLE FileHandle,
                     return STATUS_INVALID_PARAMETER;
                 }
 
+                /* Fail if buffer doesn't match alignment requirements */
+                if (((ULONG_PTR)Buffer & DeviceObject->AlignmentRequirement) != 0)
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
                 if (ByteOffset)
                 {
                     /* Fail if ByteOffset is not sector size aligned */
@@ -3644,6 +3652,14 @@ NtWriteFile(IN HANDLE FileHandle,
                 /* Fail if Length is not sector size aligned */
                 if ((DeviceObject->SectorSize != 0) &&
                     (Length % DeviceObject->SectorSize != 0))
+                {
+                    /* Release the file object and and fail */
+                    ObDereferenceObject(FileObject);
+                    return STATUS_INVALID_PARAMETER;
+                }
+
+                /* Fail if buffer doesn't match alignment requirements */
+                if (((ULONG_PTR)Buffer & DeviceObject->AlignmentRequirement) != 0)
                 {
                     /* Release the file object and and fail */
                     ObDereferenceObject(FileObject);
