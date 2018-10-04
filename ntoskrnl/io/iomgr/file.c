@@ -2443,9 +2443,10 @@ IoGetFileObjectFilterContext(IN PFILE_OBJECT FileObject)
 {
     if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
     {
-        UNIMPLEMENTED;
-        /* FIXME: return NULL for the moment ~ */
-        return NULL;
+        PFILE_OBJECT_EXTENSION FileObjectExtension;
+
+        FileObjectExtension = FileObject->FileObjectExtension;
+        return FileObjectExtension->FilterContext;
     }
 
     return NULL;
