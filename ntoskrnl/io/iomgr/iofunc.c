@@ -2633,7 +2633,7 @@ NtReadFile(IN HANDLE FileHandle,
                 {
                     /* Fail if ByteOffset is not sector size aligned */
                     if ((DeviceObject->SectorSize != 0) &&
-                        (ByteOffset->QuadPart % DeviceObject->SectorSize != 0))
+                        (CapturedByteOffset.QuadPart % DeviceObject->SectorSize != 0))
                     {
                         /* Release the file object and and fail */
                         ObDereferenceObject(FileObject);
@@ -3670,11 +3670,11 @@ NtWriteFile(IN HANDLE FileHandle,
                 {
                     /* Fail if ByteOffset is not sector size aligned */
                     if ((DeviceObject->SectorSize != 0) &&
-                        (ByteOffset->QuadPart % DeviceObject->SectorSize != 0))
+                        (CapturedByteOffset.QuadPart % DeviceObject->SectorSize != 0))
                     {
                         /* Only if that's not specific values for synchronous IO */
-                        if ((ByteOffset->QuadPart != FILE_WRITE_TO_END_OF_FILE) &&
-                            (ByteOffset->QuadPart != FILE_USE_FILE_POINTER_POSITION ||
+                        if ((CapturedByteOffset.QuadPart != FILE_WRITE_TO_END_OF_FILE) &&
+                            (CapturedByteOffset.QuadPart != FILE_USE_FILE_POINTER_POSITION ||
                              !BooleanFlagOn(FileObject->Flags, FO_SYNCHRONOUS_IO)))
                         {
                             /* Release the file object and and fail */
