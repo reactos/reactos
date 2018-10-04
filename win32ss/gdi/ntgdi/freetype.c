@@ -4396,12 +4396,12 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             if (UserCharSet != TM->tmCharSet)
             {
                 /* UNDOCUMENTED: Not user language */
-                GOT_PENALTY("UNDOCUMENTED:NonUserLanguage", 65000);
+                GOT_PENALTY("UNDOCUMENTED:NonUserLanguage", 100);
 
                 if (ANSI_CHARSET != TM->tmCharSet)
                 {
                     /* UNDOCUMENTED: Not ANSI charset */
-                    GOT_PENALTY("UNDOCUMENTED:NotAnsiCharSet", 65000);
+                    GOT_PENALTY("UNDOCUMENTED:NotAnsiCharSet", 100);
                 }
             }
         }
