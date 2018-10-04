@@ -2612,13 +2612,19 @@ NtReadFile(IN HANDLE FileHandle,
             /* Perform additional checks for non-cached file access */
             if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
             {
-                /* Fail if Length is not sector size aligned */
+                /* Fail if Length is not sector size aligned
+                 * Perform a quick check for 2^ sector sizes
+                 * If it fails, try a more standard way
+                 */
                 if ((DeviceObject->SectorSize != 0) &&
-                    (Length % DeviceObject->SectorSize != 0))
+                    ((DeviceObject->SectorSize - 1) & Length) != 0)
                 {
-                    /* Release the file object and and fail */
-                    ObDereferenceObject(FileObject);
-                    return STATUS_INVALID_PARAMETER;
+                    if (Length % DeviceObject->SectorSize != 0)
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
                 }
 
                 /* Fail if buffer doesn't match alignment requirements */
@@ -3649,13 +3655,19 @@ NtWriteFile(IN HANDLE FileHandle,
             /* Perform additional checks for non-cached file access */
             if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING)
             {
-                /* Fail if Length is not sector size aligned */
+                /* Fail if Length is not sector size aligned
+                 * Perform a quick check for 2^ sector sizes
+                 * If it fails, try a more standard way
+                 */
                 if ((DeviceObject->SectorSize != 0) &&
-                    (Length % DeviceObject->SectorSize != 0))
+                    ((DeviceObject->SectorSize - 1) & Length) != 0)
                 {
-                    /* Release the file object and and fail */
-                    ObDereferenceObject(FileObject);
-                    return STATUS_INVALID_PARAMETER;
+                    if (Length % DeviceObject->SectorSize != 0)
+                    {
+                        /* Release the file object and and fail */
+                        ObDereferenceObject(FileObject);
+                        return STATUS_INVALID_PARAMETER;
+                    }
                 }
 
                 /* Fail if buffer doesn't match alignment requirements */
