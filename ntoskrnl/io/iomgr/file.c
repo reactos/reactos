@@ -2441,7 +2441,7 @@ PVOID
 NTAPI
 IoGetFileObjectFilterContext(IN PFILE_OBJECT FileObject)
 {
-    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
+    if (BooleanFlagOn(FileObject->Flags, FO_FILE_OBJECT_HAS_EXTENSION))
     {
         PFILE_OBJECT_EXTENSION FileObjectExtension;
 
@@ -2461,7 +2461,7 @@ IoChangeFileObjectFilterContext(IN PFILE_OBJECT FileObject,
     ULONG_PTR Success;
     PFILE_OBJECT_EXTENSION FileObjectExtension;
 
-    if (!(FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION))
+    if (!BooleanFlagOn(FileObject->Flags, FO_FILE_OBJECT_HAS_EXTENSION))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -2472,7 +2472,7 @@ IoChangeFileObjectFilterContext(IN PFILE_OBJECT FileObject,
         /* If define, just set the new value if not value is set
          * Success will only contain old value. It is valid if it is NULL
          */
-        Success = InterlockedCompareExchange((volatile LONG *)&FileObjectExtension->FilterContext, (ULONG_PTR)FilterContext, 0);
+        Success = (ULONG_PTR)InterlockedCompareExchangePointer(&FileObjectExtension->FilterContext, FilterContext, NULL);
     }
     else
     {
@@ -2483,7 +2483,7 @@ IoChangeFileObjectFilterContext(IN PFILE_OBJECT FileObject,
          * If it matches (and thus, we reset), Success will contain 0
          * Otherwise, it will contain a non-zero value.
          */
-        Success = InterlockedCompareExchange((volatile LONG *)&FileObjectExtension->FilterContext, 0, (ULONG_PTR)FilterContext) - (ULONG_PTR)FilterContext;
+        Success = (ULONG_PTR)InterlockedCompareExchangePointer(&FileObjectExtension->FilterContext, NULL, FilterContext) - (ULONG_PTR)FilterContext;
     }
 
     /* If success isn't 0, it means we failed somewhere (set or unset) */
