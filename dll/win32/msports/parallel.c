@@ -8,16 +8,81 @@
 
 #include "precomp.h"
 
+
 typedef struct _PORT_DATA
 {
     HDEVINFO DeviceInfoSet;
     PSP_DEVINFO_DATA DeviceInfoData;
 
     WCHAR szPortName[16];
+    DWORD dwPortNumber;
     DWORD dwFilterResourceMethod;
     DWORD dwLegacy;
 
 } PORT_DATA, *PPORT_DATA;
+
+
+static
+VOID
+GetUsedPorts(
+    PDWORD pPortMap)
+{
+    WCHAR szDeviceName[64];
+    WCHAR szDosDeviceName[64];
+    DWORD dwIndex, dwType, dwPortNumber;
+    DWORD dwDeviceNameSize, dwDosDeviceNameSize;
+    PWSTR ptr;
+    HKEY hKey;
+    DWORD dwError;
+
+    *pPortMap = 0;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"Hardware\\DeviceMap\\PARALLEL PORTS",
+                            0,
+                            KEY_READ,
+                            &hKey);
+    if (dwError == ERROR_SUCCESS)
+    {
+        for (dwIndex = 0; ; dwIndex++)
+        {
+            dwDeviceNameSize = ARRAYSIZE(szDeviceName);
+            dwDosDeviceNameSize = sizeof(szDosDeviceName);
+            dwError = RegEnumValueW(hKey,
+                                    dwIndex,
+                                    szDeviceName,
+                                    &dwDeviceNameSize,
+                                    NULL,
+                                    &dwType,
+                                    (LPBYTE)szDosDeviceName,
+                                    &dwDosDeviceNameSize);
+            if (dwError != ERROR_SUCCESS)
+                break;
+
+            if (dwType == REG_SZ)
+            {
+                TRACE("%S --> %S\n", szDeviceName, szDosDeviceName);
+                if (_wcsnicmp(szDosDeviceName, L"\\DosDevices\\LPT", wcslen(L"\\DosDevices\\LPT")) == 0)
+                {
+                     ptr = szDosDeviceName + wcslen(L"\\DosDevices\\LPT");
+                     if (wcschr(ptr, L'.') == NULL)
+                     {
+                         TRACE("Device number %S\n", ptr);
+                         dwPortNumber = wcstoul(ptr, NULL, 10);
+                         if (dwPortNumber != 0)
+                         {
+                             *pPortMap |=(1 << dwPortNumber);
+                         }
+                     }
+                }
+            }
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    TRACE("Done\n");
+}
 
 
 static
@@ -33,6 +98,7 @@ ReadPortSettings(
 
     pPortData->dwFilterResourceMethod = 1; /* Never use an interrupt */
     pPortData->dwLegacy = 0;               /* Disabled */
+    pPortData->dwPortNumber = 0;           /* Unknown */
 
     hKey = SetupDiOpenDevRegKey(pPortData->DeviceInfoSet,
                                 pPortData->DeviceInfoData,
@@ -102,6 +168,7 @@ WritePortSettings(
     DWORD dwDisposition;
     DWORD dwFilterResourceMethod;
     DWORD dwLegacy;
+    DWORD dwPortNumber;
     HKEY hKey;
     DWORD dwError;
 
@@ -169,7 +236,22 @@ WritePortSettings(
             if (dwError == ERROR_SUCCESS)
             {
                 FIXME("Notify the driver!\n");
+
+                pPortData->dwLegacy = dwLegacy;
             }
+        }
+    }
+
+    dwPortNumber = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_PARALLEL_NAME));
+    if (dwPortNumber != LB_ERR)
+    {
+        dwPortNumber++;
+        if (dwPortNumber != pPortData->dwPortNumber)
+        {
+            FIXME("Port name changed! LPT%lu --> LPT%lu", pPortData->dwPortNumber, dwPortNumber);
+
+
+//            pPortData->dwPortNumber = dwPortNumber;
         }
     }
 }
@@ -181,9 +263,11 @@ OnInitDialog(HWND hwnd,
              WPARAM wParam,
              LPARAM lParam)
 {
+    WCHAR szBuffer[256];
+    WCHAR szPortInUse[64];
     PPORT_DATA pPortData;
     HWND hwndControl;
-    WCHAR szBuffer[256];
+    DWORD dwPortMap;
     UINT i;
 
     TRACE("OnInitDialog()\n");
@@ -214,18 +298,31 @@ OnInitDialog(HWND hwnd,
                         pPortData->dwLegacy ? BST_CHECKED : BST_UNCHECKED);
     }
 
+    LoadStringW(hInstance, IDS_PORT_IN_USE, szPortInUse, ARRAYSIZE(szPortInUse));
+
     /* Fill the 'LPT Port Number' combobox */
     hwndControl = GetDlgItem(hwnd, IDC_PARALLEL_NAME);
     if (hwndControl)
     {
-        for (i = 0; i < 3; i++)
+        GetUsedPorts(&dwPortMap);
+
+        for (i = 1; i < 4; i++)
         {
-            swprintf(szBuffer, L"LPT%lu", i + 1);
+            swprintf(szBuffer, L"LPT%lu", i);
+
+            if ((dwPortMap & (1 << i)) && (pPortData->dwPortNumber != i))
+                wcscat(szBuffer, szPortInUse);
+
             ComboBox_AddString(hwndControl, szBuffer);
+
+            if (_wcsicmp(pPortData->szPortName, szBuffer) == 0)
+                pPortData->dwPortNumber = i;
         }
 
-        /* Disable it */
-        EnableWindow(hwndControl, FALSE);
+        if (pPortData->dwPortNumber != 0)
+        {
+            ComboBox_SetCurSel(hwndControl, pPortData->dwPortNumber - 1);
+        }
     }
 
     return TRUE;

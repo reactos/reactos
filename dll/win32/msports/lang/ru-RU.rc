@@ -44,4 +44,5 @@ BEGIN
     IDS_PARITY "Чёт,Нечёт,Нет,Маркер,Пробел"
     IDS_STOPBITS "1,1.5,2"
     IDS_FLOWCONTROL "Xon / Xoff,Аппаратное,Нет"
+    IDS_PORT_IN_USE " (in use)"
 END
