@@ -4353,6 +4353,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                const char *             style_name)
 {
     ULONG   Penalty = 0;
+#define GOT_PENALTY(name, value) Penalty += (value)
     BYTE    Byte;
     LONG    Long;
     BOOL    fNeedScaling = FALSE;
@@ -4387,18 +4388,18 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         {
             /* CharSet Penalty 65000 */
             /* Requested charset does not match the candidate's. */
-            Penalty += 65000;
+            GOT_PENALTY("CharSet", 65000);
         }
         else
         {
             if (UserCharSet != TM->tmCharSet)
             {
                 /* UNDOCUMENTED */
-                Penalty += 100;
+                GOT_PENALTY("UNDOCUMENTED", 65000);
                 if (ANSI_CHARSET != TM->tmCharSet)
                 {
                     /* UNDOCUMENTED */
-                    Penalty += 100;
+                    GOT_PENALTY("UNDOCUMENTED", 65000);
                 }
             }
         }
@@ -4416,7 +4417,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                 /* OutputPrecision Penalty 19000 */
                 /* Requested OUT_STROKE_PRECIS, but the device can't do it
                    or the candidate is not a vector font. */
-                Penalty += 19000;
+                GOT_PENALTY("OutputPrecision", 19000);
             }
             break;
         default:
@@ -4425,7 +4426,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                 /* OutputPrecision Penalty 19000 */
                 /* Or OUT_STROKE_PRECIS not requested, and the candidate
                    is a vector font that requires GDI support. */
-                Penalty += 19000;
+                GOT_PENALTY("OutputPrecision", 19000);
             }
             break;
     }
@@ -4440,7 +4441,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* FixedPitch Penalty 15000 */
             /* Requested a fixed pitch font, but the candidate is a
                variable pitch font. */
-            Penalty += 15000;
+            GOT_PENALTY("FixedPitch", 15000);
         }
     }
     if (Byte == VARIABLE_PITCH)
@@ -4450,7 +4451,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* PitchVariable Penalty 350 */
             /* Requested a variable pitch font, but the candidate is not a
                variable pitch font. */
-            Penalty += 350;
+            GOT_PENALTY("PitchVariable", 350);
         }
     }
 
@@ -4461,7 +4462,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         {
             /* DefaultPitchFixed Penalty 1 */
             /* Requested DEFAULT_PITCH, but the candidate is fixed pitch. */
-            Penalty += 1;
+            GOT_PENALTY("DefaultPitchFixed", 1);
         }
     }
 
@@ -4487,7 +4488,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* FaceName Penalty 10000 */
             /* Requested a face name, but the candidate's face name
                does not match. */
-            Penalty += 10000;
+            GOT_PENALTY("FaceName", 10000);
         }
     }
 
@@ -4498,13 +4499,13 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         {
             /* Family Penalty 9000 */
             /* Requested a family, but the candidate's family is different. */
-            Penalty += 9000;
+            GOT_PENALTY("Family", 9000);
         }
         if ((TM->tmPitchAndFamily & 0xF0) == FF_DONTCARE)
         {
             /* FamilyUnknown Penalty 8000 */
             /* Requested a family, but the candidate has no family. */
-            Penalty += 8000;
+            GOT_PENALTY("FamilyUnknown", 8000);
         }
     }
 
@@ -4519,11 +4520,11 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                 /* HeightBigger Penalty 600 */
                 /* The candidate is a nonvector font and is bigger than the
                    requested height. */
-                Penalty += 600;
+                GOT_PENALTY("HeightBigger", 600);
                 /* HeightBiggerDifference Penalty 150 */
                 /* The candidate is a raster font and is larger than the
                    requested height. Penalty * height difference */
-                Penalty += 150 * labs(TM->tmHeight - labs(LogFont->lfHeight));
+                GOT_PENALTY("HeightBiggerDifference", 150 * labs(TM->tmHeight - labs(LogFont->lfHeight)));
 
                 fNeedScaling = TRUE;
             }
@@ -4532,7 +4533,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                 /* HeightSmaller Penalty 150 */
                 /* The candidate is a raster font and is smaller than the
                    requested height. Penalty * height difference */
-                Penalty += 150 * labs(TM->tmHeight - labs(LogFont->lfHeight));
+                GOT_PENALTY("HeightSmaller", 150 * labs(TM->tmHeight - labs(LogFont->lfHeight)));
 
                 fNeedScaling = TRUE;
             }
@@ -4548,7 +4549,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                     /* FamilyUnlikely Penalty 50 */
                     /* Requested a roman/modern/swiss family, but the
                        candidate is decorative/script. */
-                    Penalty += 50;
+                    GOT_PENALTY("FamilyUnlikely", 50);
                     break;
                 default:
                     break;
@@ -4561,7 +4562,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
                     /* FamilyUnlikely Penalty 50 */
                     /* Or requested decorative/script, and the candidate is
                        roman/modern/swiss. */
-                    Penalty += 50;
+                    GOT_PENALTY("FamilyUnlikely", 50);
                     break;
                 default:
                     break;
@@ -4577,7 +4578,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* Width Penalty 50 */
             /* Requested a nonzero width, but the candidate's width
                doesn't match. Penalty * width difference */
-            Penalty += 50 * labs(LogFont->lfWidth - TM->tmAveCharWidth);
+            GOT_PENALTY("Width", 50 * labs(LogFont->lfWidth - TM->tmAveCharWidth));
 
             if (!(TM->tmPitchAndFamily & (TMPF_TRUETYPE | TMPF_VECTOR)))
                 fNeedScaling = TRUE;
@@ -4588,7 +4589,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     {
         /* SizeSynth Penalty 50 */
         /* The candidate is a raster font that needs scaling by GDI. */
-        Penalty += 50;
+        GOT_PENALTY("SizeSynth", 50);
     }
 
     if (!!LogFont->lfItalic != !!TM->tmItalic)
@@ -4599,14 +4600,14 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* Requested font and candidate font do not agree on italic status,
                and the desired result cannot be simulated. */
             /* Adjusted to 40 to satisfy (Oblique Penalty > Book Penalty). */
-            Penalty += 40;
+            GOT_PENALTY("Italic", 40);
         }
         else if (LogFont->lfItalic && !ItalicFromStyle(style_name))
         {
             /* ItalicSim Penalty 1 */
             /* Requested italic font but the candidate is not italic,
                although italics can be simulated. */
-            Penalty += 1;
+            GOT_PENALTY("ItalicSim", 1);
         }
     }
 
@@ -4617,7 +4618,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* NotTrueType Penalty 4 */
             /* Requested OUT_TT_PRECIS, but the candidate is not a
                TrueType font. */
-            Penalty += 4;
+            GOT_PENALTY("NotTrueType", 4);
         }
     }
 
@@ -4629,7 +4630,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         /* Weight Penalty 3 */
         /* The candidate's weight does not match the requested weight. 
            Penalty * (weight difference/10) */
-        Penalty += 3 * (labs(Long - TM->tmWeight) / 10);
+        GOT_PENALTY("Weight", 3 * (labs(Long - TM->tmWeight) / 10));
     }
 
     if (!LogFont->lfUnderline && TM->tmUnderlined)
@@ -4637,7 +4638,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         /* Underline Penalty 3 */
         /* Requested font has no underline, but the candidate is
            underlined. */
-        Penalty += 3;
+        GOT_PENALTY("Underline", 3);
     }
 
     if (!LogFont->lfStrikeOut && TM->tmStruckOut)
@@ -4645,7 +4646,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         /* StrikeOut Penalty 3 */
         /* Requested font has no strike-out, but the candidate is
            struck out. */
-        Penalty += 3;
+        GOT_PENALTY("StrikeOut", 3);
     }
 
     /* Is the candidate a non-vector font? */
@@ -4656,14 +4657,14 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             /* VectorHeightSmaller Penalty 2 */
             /* Candidate is a vector font that is smaller than the
                requested height. Penalty * height difference */
-            Penalty += 2 * labs(TM->tmHeight - LogFont->lfHeight);
+            GOT_PENALTY("VectorHeightSmaller", 2 * labs(TM->tmHeight - LogFont->lfHeight));
         }
         if (LogFont->lfHeight != 0 && TM->tmHeight > LogFont->lfHeight)
         {
             /* VectorHeightBigger Penalty 1 */
             /* Candidate is a vector font that is bigger than the
                requested height. Penalty * height difference */
-            Penalty += 1 * labs(TM->tmHeight - LogFont->lfHeight);
+            GOT_PENALTY("VectorHeightBigger", 1 * labs(TM->tmHeight - LogFont->lfHeight));
         }
     }
 
@@ -4671,7 +4672,7 @@ GetFontPenalty(const LOGFONTW *               LogFont,
     {
         /* DeviceFavor Penalty 2 */
         /* Extra penalty for all nondevice fonts. */
-        Penalty += 2;
+        GOT_PENALTY("DeviceFavor", 2);
     }
 
     if (TM->tmAveCharWidth >= 5 && TM->tmHeight >= 5)
@@ -4680,13 +4681,13 @@ GetFontPenalty(const LOGFONTW *               LogFont,
         {
             /* Aspect Penalty 30 */
             /* The aspect rate is >= 3. It seems like a bad font. */
-            Penalty += ((TM->tmAveCharWidth / TM->tmHeight) - 2) * 30;
+            GOT_PENALTY("Aspect", ((TM->tmAveCharWidth / TM->tmHeight) - 2) * 30);
         }
         else if (TM->tmHeight / TM->tmAveCharWidth >= 3)
         {
             /* Aspect Penalty 30 */
             /* The aspect rate is >= 3. It seems like a bad font. */
-            Penalty += ((TM->tmHeight / TM->tmAveCharWidth) - 2) * 30;
+            GOT_PENALTY("Aspect", ((TM->tmHeight / TM->tmAveCharWidth) - 2) * 30);
         }
     }
 
@@ -4699,6 +4700,8 @@ GetFontPenalty(const LOGFONTW *               LogFont,
             LogFont->lfCharSet, LogFont->lfWeight,
             TM->tmCharSet, TM->tmWeight);
     }
+
+#undef GOT_PENALTY
 
     return Penalty;     /* success */
 }
