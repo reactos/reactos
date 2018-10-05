@@ -267,6 +267,54 @@ IopDoNameTransmogrify(IN PIRP Irp,
 }
 
 NTSTATUS
+IopCheckTopDeviceHint(IN OUT PDEVICE_OBJECT * DeviceObject,
+                      IN POPEN_PACKET OpenPacket,
+                      BOOLEAN DirectOpen)
+{
+    PDEVICE_OBJECT LocalDevice;
+    DEVICE_TYPE DeviceType;
+
+    LocalDevice = *DeviceObject;
+
+    /* Direct open is not allowed */
+    if (DirectOpen)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Validate we have a file system device */
+    DeviceType = LocalDevice->DeviceType;
+    if (DeviceType != FILE_DEVICE_DISK_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_CD_ROM_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_TAPE_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_NETWORK_FILE_SYSTEM &&
+        DeviceType != FILE_DEVICE_DFS_FILE_SYSTEM)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Verify the hint and if it's OK, return it */
+    if (IopVerifyDeviceObjectOnStack(LocalDevice, OpenPacket->TopDeviceObjectHint))
+    {
+        *DeviceObject = OpenPacket->TopDeviceObjectHint;
+        return STATUS_SUCCESS;
+    }
+
+    /* Failure case here */
+    /* If we thought was had come through a mount point,
+     * actually update we didn't and return the error
+     */
+    if (OpenPacket->TraversedMountPoint)
+    {
+        OpenPacket->TraversedMountPoint = FALSE;
+        return STATUS_MOUNT_POINT_NOT_RESOLVED;
+    }
+
+    /* Otherwise, just return the fact the hint is invalid */
+    return STATUS_INVALID_DEVICE_OBJECT_PARAMETER;
+}
+
+NTSTATUS
 NTAPI
 IopParseDevice(IN PVOID ParseObject,
                IN PVOID ObjectType,

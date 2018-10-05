@@ -1299,6 +1299,13 @@ IopGetFileInformation(
     OUT PULONG ReturnedLength
 );
 
+BOOLEAN
+NTAPI
+IopVerifyDeviceObjectOnStack(
+    IN PDEVICE_OBJECT BaseDeviceObject,
+    IN PDEVICE_OBJECT TopDeviceObjectHint
+);
+
 //
 // I/O Timer Routines
 //
