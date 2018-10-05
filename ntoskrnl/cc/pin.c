@@ -35,7 +35,7 @@ static
 BOOLEAN
 NTAPI
 CcpMapData(
-    IN PFILE_OBJECT FileObject,
+    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
     IN PLARGE_INTEGER FileOffset,
     IN ULONG Length,
     IN ULONG Flags,
@@ -44,7 +44,6 @@ CcpMapData(
 {
     LONGLONG ReadOffset;
     BOOLEAN Valid;
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
     PROS_VACB Vacb;
     NTSTATUS Status;
     PINTERNAL_BCB iBcb;
@@ -53,13 +52,6 @@ CcpMapData(
 
     ReadOffset = FileOffset->QuadPart;
 
-    ASSERT(FileObject);
-    ASSERT(FileObject->SectionObjectPointer);
-    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
-
-    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-    ASSERT(SharedCacheMap);
-
     DPRINT("SectionSize %I64x, FileSize %I64x\n",
            SharedCacheMap->SectionSize.QuadPart,
            SharedCacheMap->FileSize.QuadPart);
@@ -67,7 +59,7 @@ CcpMapData(
     if (ReadOffset % VACB_MAPPING_GRANULARITY + Length > VACB_MAPPING_GRANULARITY)
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-            FileObject, FileOffset, Length, Flags);
+            SharedCacheMap->FileObject, FileOffset, Length, Flags);
         return FALSE;
     }
 
@@ -92,7 +84,7 @@ CcpMapData(
     if (!NT_SUCCESS(Status))
     {
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-            FileObject, FileOffset, Length, Flags);
+            SharedCacheMap->FileObject, FileOffset, Length, Flags);
         ExRaiseStatus(Status);
         return FALSE;
     }
@@ -103,7 +95,7 @@ CcpMapData(
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-                FileObject, FileOffset, Length, Flags);
+                SharedCacheMap->FileObject, FileOffset, Length, Flags);
             return FALSE;
         }
 
@@ -112,7 +104,7 @@ CcpMapData(
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-                FileObject, FileOffset, Length, Flags);
+                SharedCacheMap->FileObject, FileOffset, Length, Flags);
             ExRaiseStatus(Status);
             return FALSE;
         }
@@ -124,7 +116,7 @@ CcpMapData(
     {
         CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
         CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
-            FileObject, FileOffset, Length, Flags);
+            SharedCacheMap->FileObject, FileOffset, Length, Flags);
         ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
         return FALSE;
     }
@@ -148,6 +140,40 @@ CcpMapData(
     return TRUE;
 }
 
+static
+PINTERNAL_BCB
+NTAPI
+CcpFindBcb(
+    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Pinned)
+{
+    PINTERNAL_BCB Bcb;
+    BOOLEAN Found = FALSE;
+    PLIST_ENTRY NextEntry;
+
+    for (NextEntry = SharedCacheMap->BcbList.Flink;
+         NextEntry != &SharedCacheMap->BcbList;
+         NextEntry = NextEntry->Flink)
+    {
+        Bcb = CONTAINING_RECORD(NextEntry, INTERNAL_BCB, BcbEntry);
+
+        if (Bcb->PFCB.MappedFileOffset.QuadPart <= FileOffset->QuadPart &&
+            (Bcb->PFCB.MappedFileOffset.QuadPart + Bcb->PFCB.MappedLength) >=
+            (FileOffset->QuadPart + Length))
+        {
+            if ((Pinned && Bcb->PinCount > 0) || (!Pinned && Bcb->PinCount == 0))
+            {
+                Found = TRUE;
+                break;
+            }
+        }
+    }
+
+    return (Found ? Bcb : NULL);
+}
+
 /*
  * @implemented
  */
@@ -162,10 +188,20 @@ CcMapData (
     OUT PVOID *pBuffer)
 {
     BOOLEAN Ret;
+    KIRQL OldIrql;
+    PINTERNAL_BCB iBcb;
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
 
     DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %lu, Flags 0x%lx,"
            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
            Length, Flags, pBcb, pBuffer);
+
+    ASSERT(FileObject);
+    ASSERT(FileObject->SectionObjectPointer);
+    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
 
     if (Flags & MAP_WAIT)
     {
@@ -176,7 +212,21 @@ CcMapData (
         ++CcMapDataNoWait;
     }
 
-    Ret = CcpMapData(FileObject, FileOffset, Length, Flags, pBcb, pBuffer);
+    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+    iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, FALSE);
+    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
+    if (iBcb == NULL)
+    {
+        Ret = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, pBcb, pBuffer);
+    }
+    else
+    {
+        ++iBcb->RefCount;
+        *pBcb = iBcb;
+        *pBuffer = (PUCHAR)iBcb->Vacb->BaseAddress + FileOffset->QuadPart % VACB_MAPPING_GRANULARITY;
+        Ret = TRUE;
+    }
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> %d Bcb=%p\n",
         FileObject, FileOffset, Length, Flags, Ret, *pBcb);
@@ -249,8 +299,17 @@ CcPinRead (
     OUT	PVOID * Bcb,
     OUT	PVOID * Buffer)
 {
+    PROS_SHARED_CACHE_MAP SharedCacheMap;
+
     CCTRACE(CC_API_DEBUG, "FileOffset=%p FileOffset=%p Length=%lu Flags=0x%lx\n",
         FileObject, FileOffset, Length, Flags);
+
+    ASSERT(FileObject);
+    ASSERT(FileObject->SectionObjectPointer);
+    ASSERT(FileObject->SectionObjectPointer->SharedCacheMap);
+
+    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+    ASSERT(SharedCacheMap);
 
     if (Flags & PIN_WAIT)
     {
@@ -262,7 +321,7 @@ CcPinRead (
     }
 
     /* Map first */
-    if (!CcpMapData(FileObject, FileOffset, Length, Flags, Bcb, Buffer))
+    if (!CcpMapData(SharedCacheMap, FileOffset, Length, Flags, Bcb, Buffer))
     {
         return FALSE;
     }
