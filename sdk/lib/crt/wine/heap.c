@@ -849,7 +849,7 @@ int CDECL wmemcpy_s(MSVCRT_wchar_t *dest, MSVCRT_size_t numberOfElements,
         return MSVCRT_ERANGE;
     }
 
-    memcpy(dest, src, sizeof(MSVCRT_wchar_t)*count);
+    memmove(dest, src, sizeof(MSVCRT_wchar_t)*count);
     return 0;
 }
 #endif
