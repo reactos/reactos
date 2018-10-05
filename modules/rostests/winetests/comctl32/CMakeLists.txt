@@ -42,6 +42,11 @@ add_executable(comctl32_winetest
     ${PCH_SKIP_SOURCE}
     rsrc.rc)
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+    target_compile_options(comctl32_winetest PRIVATE /wd4334)
+endif()
+
 target_compile_options(comctl32_winetest PRIVATE $<$<NOT:$<C_COMPILER_ID:MSVC>>:-Wno-format>)
 
 set_module_type(comctl32_winetest win32cui)
