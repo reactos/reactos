@@ -822,7 +822,7 @@ int CDECL MSVCRT_memcpy_s(void *dest, MSVCRT_size_t numberOfElements, const void
         return MSVCRT_ERANGE;
     }
 
-    memcpy(dest, src, count);
+    memmove(dest, src, count);
     return 0;
 }
 
