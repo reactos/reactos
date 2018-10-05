@@ -151,16 +151,23 @@ ScmIsSameServiceAccount(
     _In_ PCWSTR pszAccountName1,
     _In_ PCWSTR pszAccountName2)
 {
-    if (pszAccountName1 == NULL && pszAccountName2 == NULL)
+    if (pszAccountName1 == NULL &&
+        pszAccountName2 == NULL)
         return TRUE;
 
-    if (pszAccountName1 == NULL && pszAccountName2 && wcscmp(pszAccountName2, L"LocalSystem") == 0)
+    if (pszAccountName1 == NULL &&
+        pszAccountName2 != NULL &&
+        _wcsicmp(pszAccountName2, L"LocalSystem") == 0)
         return TRUE;
 
-    if (pszAccountName2 == NULL && pszAccountName1 && wcscmp(pszAccountName1, L"LocalSystem") == 0)
+    if (pszAccountName1 != NULL &&
+        pszAccountName2 == NULL &&
+        _wcsicmp(pszAccountName1, L"LocalSystem") == 0)
         return TRUE;
 
-    if (pszAccountName1 && pszAccountName2 && wcscmp(pszAccountName1, pszAccountName2) == 0)
+    if (pszAccountName1 != NULL &&
+        pszAccountName2 != NULL &&
+        _wcsicmp(pszAccountName1, pszAccountName2) == 0)
         return TRUE;
 
     return FALSE;
@@ -173,7 +180,7 @@ ScmIsLocalSystemAccount(
     _In_ PCWSTR pszAccountName)
 {
     if (pszAccountName == NULL ||
-        wcscmp(pszAccountName, L"LocalSystem") == 0)
+        _wcsicmp(pszAccountName, L"LocalSystem") == 0)
         return TRUE;
 
     return FALSE;
