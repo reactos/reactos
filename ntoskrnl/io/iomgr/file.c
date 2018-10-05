@@ -673,10 +673,16 @@ IopParseDevice(IN PVOID ParseObject,
             }
         }
 
+        /* If we have a top level device hint, verify it */
         if (OpenPacket->InternalFlags & IOP_USE_TOP_LEVEL_DEVICE_HINT)
         {
-            // FIXME: Verify our device object is good to use
-            ASSERT(DirectOpen == FALSE);
+            Status = IopCheckTopDeviceHint(&DeviceObject, OpenPacket, DirectOpen);
+            if (!NT_SUCCESS(Status))
+            {
+                IopDereferenceDeviceObject(OriginalDeviceObject, FALSE);
+                if (Vpb) IopDereferenceVpbAndFree(Vpb);
+                return Status;
+            }
         }
 
         /* If we traversed a mount point, reset the information */
