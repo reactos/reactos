@@ -38,6 +38,11 @@ add_executable(ntdll_winetest
 
 target_link_libraries(ntdll_winetest pseh)
 
+if(MSVC AND ARCH STREQUAL "amd64")
+    # warning C4334: '<<': result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+    target_compile_options(ntdll_winetest PRIVATE /wd4334)
+endif()
+
 if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(ntdll_winetest PRIVATE "-Wno-format")
 endif()
