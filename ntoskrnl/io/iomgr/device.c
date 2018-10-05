@@ -687,6 +687,40 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+IopVerifyDeviceObjectOnStack(IN PDEVICE_OBJECT BaseDeviceObject,
+                             IN PDEVICE_OBJECT TopDeviceObjectHint)
+{
+    KIRQL OldIrql;
+    BOOLEAN Result;
+    PDEVICE_OBJECT LoopObject;
+
+    ASSERT(BaseDeviceObject != NULL);
+
+    Result = FALSE;
+    /* Simply loop on the device stack and try to find our hint */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+    for (LoopObject = BaseDeviceObject; ; LoopObject = LoopObject->AttachedDevice)
+    {
+        /* It was found, it's a success */
+        if (LoopObject == TopDeviceObjectHint)
+        {
+            Result = TRUE;
+            break;
+        }
+
+        /* End of the stack, that's a failure - default */
+        if (LoopObject == NULL)
+        {
+            break;
+        }
+    }
+    KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, OldIrql);
+
+    return Result;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
