@@ -6,6 +6,7 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Filip Navara (navaraf@reactos.org)
  *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES *******************************************************************/
@@ -1387,8 +1388,10 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
                 /* Cast the buffer to something we understand */
                 FileObjectExtension = FileObject->FileObjectExtension;
 
-                /* Check if have a replacement top level device */
-                if (FileObjectExtension->TopDeviceObjectHint)
+                /* Check if have a valid replacement top level device */
+                if (FileObjectExtension->TopDeviceObjectHint &&
+                    IopVerifyDeviceObjectOnStack(DeviceObject,
+                                                 FileObjectExtension->TopDeviceObjectHint))
                 {
                     /* Use this instead of returning the top level device */
                     return FileObjectExtension->TopDeviceObjectHint;
