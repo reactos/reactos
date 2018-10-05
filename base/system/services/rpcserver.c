@@ -1671,6 +1671,43 @@ ScmIsValidServiceState(DWORD dwCurrentState)
 }
 
 
+static
+DWORD
+WINAPI
+ScmStopThread(
+    _In_ PVOID pParam)
+{
+    PSERVICE pService;
+
+    DPRINT("ScmStopThread(%p)\n", pParam);
+
+    pService = (PSERVICE)pParam;
+
+    if (pService->lpImage->dwImageRunCount != 0)
+        return 0;
+
+    Sleep(2000);
+
+    /* Lock the service database exclusively */
+    ScmLockDatabaseExclusive();
+
+    /* Stop the dispatcher thread */
+    ScmControlService(pService->lpImage->hControlPipe,
+                      L"",
+                      (SERVICE_STATUS_HANDLE)pService,
+                      SERVICE_CONTROL_STOP);
+
+    /* Remove the service image */
+    ScmRemoveServiceImage(pService->lpImage);
+
+    /* Unlock the service database */
+    ScmUnlockDatabase();
+
+    DPRINT("ScmStopThread done!\n");
+    return 0;
+}
+
+
 /* Function 7 */
 DWORD
 WINAPI
@@ -1683,6 +1720,8 @@ RSetServiceStatus(
     DWORD dwPreviousType;
     LPCWSTR lpLogStrings[2];
     WCHAR szLogBuffer[80];
+    HANDLE hStopThread = NULL;
+    DWORD dwStopThreadId;
     UINT uID;
 
     DPRINT("RSetServiceStatus() called\n");
@@ -1762,15 +1801,17 @@ RSetServiceStatus(
         /* If we just stopped the last running service... */
         if (lpService->lpImage->dwImageRunCount == 0)
         {
-            /* Stop the dispatcher thread */
-            ScmControlService(lpService->lpImage->hControlPipe,
-                              L"",
-                              (SERVICE_STATUS_HANDLE)lpService,
-                              SERVICE_CONTROL_STOP);
-
-            /* Remove the service image */
-            ScmRemoveServiceImage(lpService->lpImage);
-            lpService->lpImage = NULL;
+           /* Run the stop thread to stop the service dispatcher */
+           hStopThread = CreateThread(NULL,
+                                      0,
+                                      (LPTHREAD_START_ROUTINE)ScmStopThread,
+                                      (LPVOID)lpService,
+                                      0,
+                                      &dwStopThreadId);
+           if (hStopThread != NULL)
+           {
+               CloseHandle(hStopThread);
+           }
         }
     }
 
