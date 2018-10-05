@@ -329,6 +329,12 @@ CcPinRead (
 
     if (iBcb == NULL)
     {
+        /* We failed to find an already existing BCB */
+        if (BooleanFlagOn(Flags, PIN_IF_BCB))
+        {
+            return FALSE;
+        }
+
         /* Map first */
         if (!CcpMapData(SharedCacheMap, FileOffset, Length, Flags, Bcb, Buffer))
         {
