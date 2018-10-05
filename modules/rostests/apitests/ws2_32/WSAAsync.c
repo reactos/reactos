@@ -31,7 +31,7 @@ START_TEST(WSAAsync)
     WSANETWORKEVENTS WsaNetworkEvents;
     ULONG ulValue = 1;
     DWORD dwWait;
-    DWORD dwFlags = 0;
+    DWORD dwFlags;
     struct fd_set select_rfds;
     struct fd_set select_wfds;
     struct fd_set select_efds;
@@ -45,6 +45,8 @@ START_TEST(WSAAsync)
         skip("WSAStartup failed\n");
         return;
     }
+
+    trace("1st part: Events\n");
 
     ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -120,6 +122,7 @@ START_TEST(WSAAsync)
     fEvents[0] = ServerEvent;
     fEvents[1] = ClientEvent;
 
+    dwFlags = 0;
     while (dwFlags != EXIT_FLAGS)
     {
         dwWait = WaitForMultipleObjects(2, fEvents, FALSE, WAIT_TIMEOUT_);
@@ -164,6 +167,8 @@ START_TEST(WSAAsync)
     closesocket(ClientSocket);
 
     /* same test but with waiting select and getsockname to return proper values */
+    trace("2nd part: select()\n");
+
     ServerSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     ClientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -209,8 +214,8 @@ START_TEST(WSAAsync)
 
     memset(&timeval, 0, sizeof(timeval));
     timeval.tv_usec = WAIT_TIMEOUT_;
-    dwFlags = 0;
 
+    dwFlags = 0;
     while (dwFlags != EXIT_FLAGS)
     {
         len = sizeof(addr_con_loc);
@@ -219,6 +224,7 @@ START_TEST(WSAAsync)
         {
             ok(nSockNameRes == SOCKET_ERROR, "ERROR: getsockname function failed, expected %d error %d\n", SOCKET_ERROR, nSockNameRes);
             ok(WSAGetLastError() == WSAEINVAL, "ERROR: getsockname function failed, expected %ld error %d\n", WSAEINVAL, WSAGetLastError());
+
             trace("Starting client to server connection ...\n");
             // connect
             nConRes = connect(ClientSocket, (struct sockaddr*)&server_addr_in, sizeof(server_addr_in));
@@ -227,34 +233,33 @@ START_TEST(WSAAsync)
             ConnectSent = TRUE;
             continue;
         }
-        else
+
+        if (nSockNameRes != 0)
+            ok(FALSE, "ERROR: getsockname function failed, expected 0 error %d\n", nSockNameRes);
+        if (len != sizeof(addr_con_loc))
+            ok(FALSE, "ERROR: getsockname function wrong size, expected %Iu returned %d\n", sizeof(addr_con_loc), len);
+
+        if (addr_con_loc.sin_addr.s_addr == 0ul)
         {
-            if (nSockNameRes != 0)
-                ok(FALSE, "ERROR: getsockname function failed, expected 0 error %d\n", nSockNameRes);
-            if (len != sizeof(addr_con_loc))
-                ok(FALSE, "ERROR: getsockname function wrong size, expected %Iu returned %d\n", sizeof(addr_con_loc), len);
-
-            if (addr_con_loc.sin_addr.s_addr == 0ul)
+            if (++Addr_con_locLoopCount >= MAX_LOOPCOUNT)
             {
-                if (++Addr_con_locLoopCount >= MAX_LOOPCOUNT)
-                {
-                    ok(FALSE, "Giving up, on getsockname() (%u/%u), as addr_con_loc is not set yet\n",
-                       Addr_con_locLoopCount, MAX_LOOPCOUNT);
-                    goto done;
-                }
-
-                trace("Looping, for getsockname() (%u/%u), as addr_con_loc is not set yet\n",
-                      Addr_con_locLoopCount, MAX_LOOPCOUNT);
-                Sleep(1);
-                continue;
+                ok(FALSE, "Giving up, on getsockname() (%u/%u), as addr_con_loc is not set yet\n",
+                   Addr_con_locLoopCount, MAX_LOOPCOUNT);
+                goto done;
             }
 
-            if (addr_con_loc.sin_addr.s_addr != server_addr_in.sin_addr.s_addr)
-                ok(FALSE, "ERROR: getsockname function wrong addr, expected %08lx returned %08lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+            trace("Looping, for getsockname() (%u/%u), as addr_con_loc is not set yet\n",
+                  Addr_con_locLoopCount, MAX_LOOPCOUNT);
+            Sleep(1);
+            continue;
         }
+
+        if (addr_con_loc.sin_addr.s_addr != server_addr_in.sin_addr.s_addr)
+            ok(FALSE, "ERROR: getsockname function wrong addr, expected %08lx returned %08lx\n", server_addr_in.sin_addr.s_addr, addr_con_loc.sin_addr.s_addr);
+
         if ((dwFlags & FD_ACCEPT) != 0)
         {// client connected
-            trace("Select CONNECT...\n");
+            trace("Add FD_CONNECT...\n");
             dwFlags |= FD_CONNECT;
         }
 
@@ -274,26 +279,26 @@ START_TEST(WSAAsync)
             FD_SET(sockaccept, &select_efds);
         }
         if (select(0, &select_rfds, &select_wfds, &select_efds, &timeval) != 0)
-        {// connection accepted
-            if (dwFlags == (FD_ACCEPT | FD_CONNECT))
+        {
+            if ((dwFlags & FD_CONNECT) != 0)
             {
-                trace("Select ACCEPT&CONNECT...\n");
+                trace("Select, already FD_CONNECT...\n");
                 ok(FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is not writable\n");
                 ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
                 ok(!FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is readable\n");
             }
-            if (dwFlags == FD_ACCEPT)
+            else if ((dwFlags & FD_ACCEPT) != 0)
             {
-                trace("Select ACCEPT...\n");
+                trace("Select, already FD_ACCEPT...\n");
                 ok(!FD_ISSET(ClientSocket, &select_wfds), "ClientSocket is writable\n");
                 ok(FD_ISSET(sockaccept, &select_wfds), "sockaccept is not writable\n");
                 ok(FD_ISSET(ServerSocket, &select_rfds), "ServerSocket is not readable\n");
             }
-            if (dwFlags == 0)
+            else // if (dwFlags == 0)
             {
                 if (FD_ISSET(ServerSocket, &select_rfds))
-                {
-                    trace("Select ACCEPT...\n");
+                {// connection accepted
+                    trace("Select, add FD_ACCEPT...\n");
                     addrsize = sizeof(addr_remote);
                     sockaccept = accept(ServerSocket, (struct sockaddr*)&addr_remote, &addrsize);
                     ok(sockaccept != INVALID_SOCKET, "ERROR: Connection accept function failed, error %d\n", WSAGetLastError());
