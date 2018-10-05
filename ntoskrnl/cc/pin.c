@@ -136,7 +136,7 @@ CcpMapData(
     iBcb->PFCB.MappedFileOffset = *FileOffset;
     iBcb->Vacb = Vacb;
     iBcb->Dirty = FALSE;
-    iBcb->Pinned = FALSE;
+    iBcb->PinCount = 0;
     iBcb->RefCount = 1;
     ExInitializeResourceLite(&iBcb->Lock);
     *pBcb = (PVOID)iBcb;
@@ -215,10 +215,9 @@ CcPinMappedData (
     }
 
     iBcb = *Bcb;
-    ASSERT(iBcb->Pinned == FALSE);
+    ASSERT(iBcb->PinCount == 0);
 
-    iBcb->Pinned = TRUE;
-    iBcb->Vacb->PinCount++;
+    iBcb->PinCount++;
 
     if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
     {
@@ -231,8 +230,7 @@ CcPinMappedData (
 
     if (!Result)
     {
-        iBcb->Pinned = FALSE;
-        iBcb->Vacb->PinCount--;
+        iBcb->PinCount--;
     }
 
     return Result;
@@ -353,11 +351,10 @@ CcUnpinDataForThread (
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
 
-    if (iBcb->Pinned)
+    if (iBcb->PinCount != 0)
     {
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
-        iBcb->Pinned = FALSE;
-        iBcb->Vacb->PinCount--;
+        iBcb->PinCount--;
     }
 
     if (--iBcb->RefCount == 0)
@@ -365,6 +362,7 @@ CcUnpinDataForThread (
         KIRQL OldIrql;
         PROS_SHARED_CACHE_MAP SharedCacheMap;
 
+        ASSERT(iBcb->PinCount == 0);
         SharedCacheMap = iBcb->Vacb->SharedCacheMap;
         CcRosReleaseVacb(SharedCacheMap,
                          iBcb->Vacb,
@@ -432,12 +430,11 @@ CcUnpinRepinnedBcb (
             IoStatus->Status = STATUS_SUCCESS;
         }
 
-        if (iBcb->Pinned)
+        if (iBcb->PinCount != 0)
         {
             ExReleaseResourceLite(&iBcb->Lock);
-            iBcb->Pinned = FALSE;
-            iBcb->Vacb->PinCount--;
-            ASSERT(iBcb->Vacb->PinCount == 0);
+            iBcb->PinCount--;
+            ASSERT(iBcb->PinCount == 0);
         }
 
         SharedCacheMap = iBcb->Vacb->SharedCacheMap;

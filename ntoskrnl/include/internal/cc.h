@@ -221,8 +221,6 @@ typedef struct _ROS_VACB
     LARGE_INTEGER FileOffset;
     /* Number of references. */
     volatile ULONG ReferenceCount;
-    /* How many times was it pinned? */
-    LONG PinCount;
     /* Pointer to the shared cache map for the file which this view maps data for. */
     PROS_SHARED_CACHE_MAP SharedCacheMap;
     /* Pointer to the next VACB in a chain. */
@@ -235,7 +233,7 @@ typedef struct _INTERNAL_BCB
     PUBLIC_BCB PFCB;
     PROS_VACB Vacb;
     BOOLEAN Dirty;
-    BOOLEAN Pinned;
+    ULONG PinCount;
     CSHORT RefCount; /* (At offset 0x34 on WinNT4) */
     LIST_ENTRY BcbEntry;
 } INTERNAL_BCB, *PINTERNAL_BCB;
