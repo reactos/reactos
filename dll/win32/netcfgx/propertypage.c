@@ -31,6 +31,7 @@ typedef struct _PARAMETER
     PWSTR pszValue;
     PWSTR pszDefault;
     BOOL bOptional;
+    BOOL bPresent;
     PARAM_TYPE Type;
 
     DWORD dwEnumOptions;
@@ -43,6 +44,7 @@ typedef struct _PARAMETER
 
 typedef struct _PARAMETER_ARRAY
 {
+    PPARAMETER pCurrentParam;
     DWORD dwCount;
     PARAMETER Array[0];
 } PARAMETER_ARRAY, *PPARAMETER_ARRAY;
@@ -501,9 +503,14 @@ BuildParameterArray(
             RegCloseKey(hParamKey);
         }
 
-        GetStringValue(hDriverKey,
-                       ParamArray->Array[dwIndex].pszName,
-                       &ParamArray->Array[dwIndex].pszValue);
+        lError = GetStringValue(hDriverKey,
+                                ParamArray->Array[dwIndex].pszName,
+                                &ParamArray->Array[dwIndex].pszValue);
+        if ((lError == ERROR_SUCCESS) ||
+            (ParamArray->Array[dwIndex].pszDefault != NULL))
+        {
+            ParamArray->Array[dwIndex].bPresent = TRUE;
+        }
     }
 
     *ParameterArray = ParamArray;
@@ -538,8 +545,10 @@ DisplayParameter(
     ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_NOT_PRESENT), (Parameter->bOptional) ? SW_SHOW : SW_HIDE);
     if (Parameter->bOptional)
     {
-        Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_PRESENT), (Parameter->pszValue) ? BST_UNCHECKED : BST_CHECKED);
-        Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_NOT_PRESENT), (Parameter->pszValue) ? BST_CHECKED : BST_UNCHECKED);
+        if (Parameter->bPresent)
+            Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_PRESENT), BST_CHECKED);
+        else
+            Button_SetCheck(GetDlgItem(hwnd, IDC_PROPERTY_NOT_PRESENT), BST_CHECKED);
     }
 
     switch (Parameter->Type)
@@ -548,10 +557,14 @@ DisplayParameter(
         case LONG_TYPE:
         case WORD_TYPE:
         case DWORD_TYPE:
-            ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), SW_SHOW);
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_HIDE);
 
+            hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN);
+            EnableWindow(hwndControl, Parameter->bPresent);
+            ShowWindow(hwndControl, SW_SHOW);
+
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
+            EnableWindow(hwndControl, Parameter->bPresent);
             ShowWindow(hwndControl, SW_SHOW);
 
             Style = GetWindowLongPtr(hwndControl, GWL_STYLE);
@@ -571,6 +584,7 @@ DisplayParameter(
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), SW_HIDE);
 
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
+            EnableWindow(hwndControl, Parameter->bPresent);
             ShowWindow(hwndControl, SW_SHOW);
 
             Style = GetWindowLongPtr(hwndControl, GWL_STYLE);
@@ -594,6 +608,7 @@ DisplayParameter(
             ShowWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), SW_HIDE);
 
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST);
+            EnableWindow(hwndControl, Parameter->bPresent);
             ShowWindow(hwndControl, SW_SHOW);
 
             ComboBox_ResetContent(hwndControl);
@@ -665,7 +680,8 @@ OnInitDialog(
         if (pParamArray->dwCount > 0)
         {
             ListBox_SetCurSel(hwndControl, 0);
-            DisplayParameter(hwnd, &pParamArray->Array[0]);
+            pParamArray->pCurrentParam = &pParamArray->Array[0];
+            DisplayParameter(hwnd, pParamArray->pCurrentParam);
         }
     }
 
@@ -697,8 +713,23 @@ OnCommand(
         iIndex = ListBox_GetCurSel((HWND)lParam);
         if (iIndex != LB_ERR && iIndex < pParamArray->dwCount)
         {
-            DisplayParameter(hwnd, &pParamArray->Array[iIndex]);
+            pParamArray->pCurrentParam = &pParamArray->Array[iIndex];
+            DisplayParameter(hwnd, pParamArray->pCurrentParam);
         }
+    }
+    else if ((LOWORD(wParam) == IDC_PROPERTY_PRESENT) && (HIWORD(wParam) == BN_CLICKED))
+    {
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), TRUE);
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), TRUE);
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), TRUE);
+        pParamArray->pCurrentParam->bPresent = TRUE;
+    }
+    else if ((LOWORD(wParam) == IDC_PROPERTY_NOT_PRESENT) && (HIWORD(wParam) == BN_CLICKED))
+    {
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT), FALSE);
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN), FALSE);
+        EnableWindow(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST), FALSE);
+        pParamArray->pCurrentParam->bPresent = FALSE;
     }
 }
 
