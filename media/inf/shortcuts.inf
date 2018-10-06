@@ -1,4 +1,4 @@
-[Version]
+﻿[Version]
 Signature = $Windows NT$
 ClassGUID = {00000000-0000-0000-0000-000000000000}
 
@@ -1465,7 +1465,7 @@ ENTERTAINMENT=娱乐
 COMMUNICATIONS=通讯
 GAMES=游戏
 
-README_TITLE=请先读我
+README_TITLE=自述文件
 README_DESC=ReactOS 自述文件
 
 CMD_TITLE=命令提示符
@@ -1501,7 +1501,7 @@ KBSWITCH_TITLE=键盘布局切换器
 KBSWITCH_DESC=启动键盘布局切换器
 REGEDIT_TITLE=注册表编辑器
 REGEDIT_DESC=启动注册表编辑器
-DXDIAG_TITLE=ReactX 诊断
+DXDIAG_TITLE=ReactX 诊断程序
 DXDIAG_DESC=启动 ReactX 诊断程序
 MAGNIFY_TITLE=放大镜
 MAGNIFY_DESC=放大镜
