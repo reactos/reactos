@@ -160,6 +160,89 @@ ReadPortSettings(
 
 
 static
+DWORD
+ChangePortNumber(
+    _In_ PPORT_DATA pPortData,
+    _In_ DWORD dwNewPortNumber)
+{
+    WCHAR szDeviceDescription[256];
+    WCHAR szFriendlyName[256];
+    WCHAR szNewPortName[16];
+    HKEY hDeviceKey = INVALID_HANDLE_VALUE;
+    DWORD dwError;
+
+    /* We are done if old and new port number are the same */
+    if (pPortData->dwPortNumber == dwNewPortNumber)
+        return ERROR_SUCCESS;
+
+    /* Build the new port name */
+    swprintf(szNewPortName, L"LPT%lu", dwNewPortNumber);
+
+    /* Open the devices hardware key */
+    hDeviceKey = SetupDiOpenDevRegKey(pPortData->DeviceInfoSet,
+                                      pPortData->DeviceInfoData,
+                                      DICS_FLAG_GLOBAL,
+                                      0,
+                                      DIREG_DEV,
+                                      KEY_READ | KEY_WRITE);
+    if (hDeviceKey == INVALID_HANDLE_VALUE)
+    {
+        return GetLastError();
+    }
+
+    /* Set the new 'PortName' value */
+    dwError = RegSetValueExW(hDeviceKey,
+                             L"PortName",
+                             0,
+                             REG_SZ,
+                             (LPBYTE)szNewPortName,
+                             (wcslen(szNewPortName) + 1) * sizeof(WCHAR));
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Save the new port name and number */
+    wcscpy(pPortData->szPortName, szNewPortName);
+    pPortData->dwPortNumber = dwNewPortNumber;
+
+    /* Get the device description... */
+    if (SetupDiGetDeviceRegistryProperty(pPortData->DeviceInfoSet,
+                                         pPortData->DeviceInfoData,
+                                         SPDRP_DEVICEDESC,
+                                         NULL,
+                                         (PBYTE)szDeviceDescription,
+                                         sizeof(szDeviceDescription),
+                                         NULL))
+    {
+        /* ... and use it to build a new friendly name */
+        swprintf(szFriendlyName,
+                 L"%s (%s)",
+                 szDeviceDescription,
+                 szNewPortName);
+    }
+    else
+    {
+        /* ... or build a generic friendly name */
+        swprintf(szFriendlyName,
+                 L"Parallel Port (%s)",
+                 szNewPortName);
+    }
+
+    /* Set the friendly name for the device */
+    SetupDiSetDeviceRegistryProperty(pPortData->DeviceInfoSet,
+                                     pPortData->DeviceInfoData,
+                                     SPDRP_FRIENDLYNAME,
+                                     (PBYTE)szFriendlyName,
+                                     (wcslen(szFriendlyName) + 1) * sizeof(WCHAR));
+
+done:
+    if (hDeviceKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hDeviceKey);
+
+    return dwError;
+}
+
+
+static
 VOID
 WritePortSettings(
     HWND hwnd,
@@ -169,6 +252,7 @@ WritePortSettings(
     DWORD dwFilterResourceMethod;
     DWORD dwLegacy;
     DWORD dwPortNumber;
+    DWORD dwPortMap;
     HKEY hKey;
     DWORD dwError;
 
@@ -248,10 +332,16 @@ WritePortSettings(
         dwPortNumber++;
         if (dwPortNumber != pPortData->dwPortNumber)
         {
-            FIXME("Port name changed! LPT%lu --> LPT%lu", pPortData->dwPortNumber, dwPortNumber);
+            GetUsedPorts(&dwPortMap);
 
+            if (dwPortMap & 1 << dwPortNumber)
+            {
+                ERR("Port LPT%lu is already in use!\n", dwPortNumber);
+                return;
+            }
 
-//            pPortData->dwPortNumber = dwPortNumber;
+            ChangePortNumber(pPortData,
+                             dwPortNumber);
         }
     }
 }
