@@ -29,6 +29,7 @@ typedef struct _PARAMETER
     PWSTR pszName;
     PWSTR pszDescription;
     PWSTR pszValue;
+    DWORD cchValueLength;
     PWSTR pszDefault;
     BOOL bOptional;
     BOOL bPresent;
@@ -39,11 +40,12 @@ typedef struct _PARAMETER
 
     BOOL bUpperCase;
     INT iTextLimit;
-
 } PARAMETER, *PPARAMETER;
 
 typedef struct _PARAMETER_ARRAY
 {
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
     PPARAMETER pCurrentParam;
     DWORD dwCount;
     PARAMETER Array[0];
@@ -93,9 +95,10 @@ FreeParameterArray(
 
 static DWORD
 GetStringValue(
-    IN HKEY hKey,
-    IN PWSTR pValueName,
-    OUT PWSTR *pString)
+    _In_ HKEY hKey,
+    _In_ PWSTR pValueName,
+    _Out_ PWSTR *pString,
+    _Out_opt_ PDWORD pdwStringLength)
 {
     PWSTR pBuffer;
     DWORD dwLength = 0;
@@ -123,6 +126,8 @@ GetStringValue(
     pBuffer[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
 
     *pString = pBuffer;
+    if (pdwStringLength)
+        *pdwStringLength = dwLength;
 
     return ERROR_SUCCESS;
 }
@@ -385,7 +390,7 @@ BuildParameterArray(
         goto done;
     }
 
-    FIXME("Sub keys: %lu\n", dwSubKeys);
+    TRACE("Sub keys: %lu\n", dwSubKeys);
 
     if (dwSubKeys == 0)
     {
@@ -402,6 +407,8 @@ BuildParameterArray(
         goto done;
     }
 
+    ParamArray->DeviceInfoSet = DeviceInfoSet;
+    ParamArray->DeviceInfoData = DeviceInfoData;
     ParamArray->dwCount = dwSubKeys;
 
     dwMaxSubKeyLen++;
@@ -429,7 +436,7 @@ BuildParameterArray(
         if (lError != ERROR_SUCCESS)
             break;
 
-        FIXME("Sub key '%S'\n", ParamArray->Array[dwIndex].pszName);
+        TRACE("Sub key '%S'\n", ParamArray->Array[dwIndex].pszName);
 
         lError = RegOpenKeyExW(hParamsKey,
                                ParamArray->Array[dwIndex].pszName,
@@ -440,11 +447,13 @@ BuildParameterArray(
         {
             GetStringValue(hParamKey,
                            L"ParamDesc",
-                           &ParamArray->Array[dwIndex].pszDescription);
+                           &ParamArray->Array[dwIndex].pszDescription,
+                           NULL);
 
             GetStringValue(hParamKey,
                            L"Type",
-                           &pszType);
+                           &pszType,
+                           NULL);
             if (pszType != NULL)
             {
                 if (_wcsicmp(pszType, L"int") == 0)
@@ -468,7 +477,8 @@ BuildParameterArray(
 
             GetStringValue(hParamKey,
                            L"Default",
-                           &ParamArray->Array[dwIndex].pszDefault);
+                           &ParamArray->Array[dwIndex].pszDefault,
+                           NULL);
 
             GetBooleanValue(hParamKey,
                             L"Optional",
@@ -505,7 +515,8 @@ BuildParameterArray(
 
         lError = GetStringValue(hDriverKey,
                                 ParamArray->Array[dwIndex].pszName,
-                                &ParamArray->Array[dwIndex].pszValue);
+                                &ParamArray->Array[dwIndex].pszValue,
+                                &ParamArray->Array[dwIndex].cchValueLength);
         if ((lError == ERROR_SUCCESS) ||
             (ParamArray->Array[dwIndex].pszDefault != NULL))
         {
@@ -532,9 +543,117 @@ done:
 
 static
 VOID
+ReadParameterValue(
+     HWND hwnd,
+     PPARAMETER pParam)
+{
+    INT iIndex, iLength;
+
+    if (pParam->Type == ENUM_TYPE)
+    {
+        iIndex = ComboBox_GetCurSel(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_LIST));
+        if (iIndex != CB_ERR && iIndex < pParam->dwEnumOptions)
+        {
+            iLength = wcslen(pParam->pEnumOptions[iIndex].pszValue);
+            if (iLength > pParam->cchValueLength)
+            {
+                if (pParam->pszValue != NULL)
+                    HeapFree(GetProcessHeap(), 0, pParam->pszValue);
+
+                pParam->pszValue = HeapAlloc(GetProcessHeap(), 0, (iLength + 1) * sizeof(WCHAR));
+            }
+
+            if (pParam->pszValue != NULL)
+            {
+                wcscpy(pParam->pszValue,
+                       pParam->pEnumOptions[iIndex].pszValue);
+                pParam->cchValueLength = iLength;
+            }
+        }
+    }
+    else
+    {
+        iLength = Edit_GetTextLength(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT));
+        if (iLength > pParam->cchValueLength)
+        {
+            if (pParam->pszValue != NULL)
+                HeapFree(GetProcessHeap(), 0, pParam->pszValue);
+
+            pParam->pszValue = HeapAlloc(GetProcessHeap(), 0, (iLength + 1) * sizeof(WCHAR));
+        }
+
+        if (pParam->pszValue != NULL)
+        {
+            Edit_GetText(GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT),
+                         pParam->pszValue,
+                         iLength + 1);
+            pParam->cchValueLength = iLength;
+        }
+    }
+}
+
+
+static
+VOID
+WriteParameterArray(
+    _In_ HWND hwnd,
+    _In_ PPARAMETER_ARRAY ParamArray)
+{
+    PPARAMETER Param;
+    HKEY hDriverKey;
+    INT i;
+
+    if (ParamArray == NULL)
+        return;
+
+    hDriverKey = SetupDiOpenDevRegKey(ParamArray->DeviceInfoSet,
+                                      ParamArray->DeviceInfoData,
+                                      DICS_FLAG_GLOBAL,
+                                      0,
+                                      DIREG_DRV,
+                                      KEY_WRITE);
+    if (hDriverKey == INVALID_HANDLE_VALUE)
+    {
+        ERR("SetupDiOpenDevRegKey() failed\n");
+        return;
+    }
+
+    for (i = 0; i < ParamArray->dwCount; i++)
+    {
+        Param = &ParamArray->Array[i];
+
+        if (Param == ParamArray->pCurrentParam)
+        {
+            ReadParameterValue(hwnd, Param);
+        }
+
+        if (Param->bPresent)
+        {
+            TRACE("Set '%S' --> '%S'\n", Param->pszName, Param->pszValue);
+            RegSetValueExW(hDriverKey,
+                           Param->pszName,
+                           0,
+                           REG_SZ,
+                           (LPBYTE)Param->pszValue,
+                           (wcslen(Param->pszValue) + 1) * sizeof(WCHAR));
+        }
+        else
+        {
+            TRACE("Delete '%S'\n", Param->pszName);
+            RegDeleteValueW(hDriverKey,
+                            Param->pszName);
+        }
+    }
+
+    RegCloseKey(hDriverKey);
+}
+
+
+static
+VOID
 DisplayParameter(
-    HWND hwnd,
-    PPARAMETER Parameter)
+    _In_ HWND hwnd,
+    _In_ PPARAMETER Parameter)
 {
     HWND hwndControl;
     LONG_PTR Style;
@@ -653,7 +772,7 @@ OnInitDialog(
     PWSTR pszText;
     DWORD i;
 
-    FIXME("OnInitDialog()\n");
+    TRACE("OnInitDialog()\n");
 
     pParamArray = (PPARAMETER_ARRAY)((LPPROPSHEETPAGEW)lParam)->lParam;
     if (pParamArray == NULL)
@@ -710,6 +829,11 @@ OnCommand(
 
     if ((LOWORD(wParam) == IDC_PROPERTY_NAME) && (HIWORD(wParam) == LBN_SELCHANGE))
     {
+        if (pParamArray->pCurrentParam != NULL)
+        {
+            ReadParameterValue(hwnd, pParamArray->pCurrentParam);
+        }
+
         iIndex = ListBox_GetCurSel((HWND)lParam);
         if (iIndex != LB_ERR && iIndex < pParamArray->dwCount)
         {
@@ -736,12 +860,38 @@ OnCommand(
 
 static
 VOID
+OnNotify(
+    HWND hwnd,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    PPARAMETER_ARRAY pParamArray;
+
+    TRACE("OnNotify()\n");
+
+    pParamArray = (PPARAMETER_ARRAY)GetWindowLongPtr(hwnd, DWLP_USER);
+    if (pParamArray == NULL)
+    {
+        ERR("pParamArray is NULL\n");
+        return;
+    }
+
+    if (((LPNMHDR)lParam)->code == (UINT)PSN_APPLY)
+    {
+        TRACE("PSN_APPLY!\n");
+        WriteParameterArray(hwnd, pParamArray);
+    }
+}
+
+
+static
+VOID
 OnDestroy(
     HWND hwnd)
 {
     PPARAMETER_ARRAY pParamArray;
 
-    FIXME("OnDestroy()\n");
+    TRACE("OnDestroy()\n");
 
     pParamArray = (PPARAMETER_ARRAY)GetWindowLongPtr(hwnd, DWLP_USER);
     if (pParamArray == NULL)
@@ -773,6 +923,10 @@ NetPropertyPageDlgProc(
             OnCommand(hwnd, wParam, lParam);
             break;
 
+        case WM_NOTIFY:
+            OnNotify(hwnd, wParam, lParam);
+            break;
+
         case WM_DESTROY:
             OnDestroy(hwnd);
             break;
@@ -796,7 +950,7 @@ NetPropPageProvider(
     HPROPSHEETPAGE hPropSheetPage;
     PPARAMETER_ARRAY ParameterArray = NULL;
 
-    ERR("NetPropPageProvider(%p %p %lx)\n",
+    TRACE("NetPropPageProvider(%p %p %lx)\n",
           lpPropSheetPageRequest, lpfnAddPropSheetPageProc, lParam);
 
     if (!BuildParameterArray(lpPropSheetPageRequest->DeviceInfoSet,
@@ -806,7 +960,7 @@ NetPropPageProvider(
 
     if (lpPropSheetPageRequest->PageRequested == SPPSR_ENUM_ADV_DEVICE_PROPERTIES)
     {
-        ERR("SPPSR_ENUM_ADV_DEVICE_PROPERTIES\n");
+        TRACE("SPPSR_ENUM_ADV_DEVICE_PROPERTIES\n");
 
         PropSheetPage.dwSize = sizeof(PROPSHEETPAGEW);
         PropSheetPage.dwFlags = 0;
@@ -831,7 +985,7 @@ NetPropPageProvider(
         }
     }
 
-    ERR("Done!\n");
+    TRACE("Done!\n");
 
     return TRUE;
 }
