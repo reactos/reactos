@@ -179,10 +179,10 @@ BEGIN
     LTEXT "Просмотр сведений о файлах драйверов.", -1, 91, 110, 154, 17, SS_NOPREFIX
     PUSHBUTTON "&Обновить...", IDC_UPDATEDRIVER, 7, 134, 75, 15
     LTEXT "Обновление драйверов для устройства.", -1, 91, 138, 154, 17, SS_NOPREFIX
-    PUSHBUTTON "&Roll Back Driver", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
-    LTEXT "If the device fails after updating the driver, roll back to the previously installed driver.", -1, 91, 162, 154, 25, SS_NOPREFIX
-    PUSHBUTTON "&Uninstall", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
-    LTEXT "To uninstall the driver (Advanced).", -1, 91, 194, 154, 17, SS_NOPREFIX
+    PUSHBUTTON "От&катить", IDC_ROLLBACKDRIVER, 7, 162, 75, 15
+    LTEXT "Если устройство не работает после обновления драйвера, выполните откат к ранее установленному драйверу.", -1, 91, 162, 154, 25, SS_NOPREFIX
+    PUSHBUTTON "&Удалить", IDC_UNINSTALLDRIVER, 7, 190, 75, 15
+    LTEXT "Удаление драйвера (для опытных).", -1, 91, 194, 154, 17, SS_NOPREFIX
 END
 
 IDD_DRIVERDETAILS DIALOGEX 0, 0, 224, 230
