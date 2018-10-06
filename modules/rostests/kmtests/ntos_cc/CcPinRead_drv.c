@@ -172,6 +172,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -184,6 +185,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -196,6 +198,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, TestContext->Buffer);
 
@@ -223,6 +226,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -235,6 +239,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -247,6 +252,7 @@ PinInAnotherThread(IN PVOID Context)
 
     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
     {
+        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
         ok_eq_pointer(Bcb, TestContext->Bcb);
         ok_eq_pointer(Buffer, (PVOID)((ULONG_PTR)TestContext->Buffer + 0x500));
 
@@ -387,6 +393,7 @@ PerformTest(
 
                     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                     {
+                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
                         ok_eq_ulong(Buffer[(0x3000 - TestId * 0x1000) / sizeof(ULONG)], 0xDEADBABE);
 
                         CcUnpinData(Bcb);
@@ -420,6 +427,8 @@ PerformTest(
                         {
                             PKTHREAD ThreadHandle;
 
+                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
+
 #ifdef _X86_
                             /* FIXME: Should be fixed, will fail under certains conditions */
                             ok(TestContext->Buffer > (PVOID)0xC1000000 && TestContext->Buffer < (PVOID)0xDCFFFFFF,
@@ -432,7 +441,6 @@ PerformTest(
                             skip(FALSE, "System space mapping not defined\n");
 #endif
 #endif
-
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThread, TestContext);
                             KmtFinishThread(ThreadHandle, NULL);
@@ -451,6 +459,8 @@ PerformTest(
                         if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                         {
                             PKTHREAD ThreadHandle;
+
+                            ok(*(PUSHORT)TestContext->Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)TestContext->Bcb);
 
                             TestContext->Length = FileSizes.FileSize.QuadPart - Offset.QuadPart;
                             ThreadHandle = KmtStartThread(PinInAnotherThreadExclusive, TestContext);
@@ -472,6 +482,7 @@ PerformTest(
 
                     if (!skip(Ret == TRUE, "CcPinRead failed\n"))
                     {
+                        ok(*(PUSHORT)Bcb == 0x2FD, "Not a BCB: %x\n", *(PUSHORT)Bcb);
                         ok_eq_ulong(Buffer[0x2000 / sizeof(ULONG)], 0);
 
                         CcUnpinData(Bcb);
