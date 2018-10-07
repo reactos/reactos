@@ -519,7 +519,7 @@ static LPWSTR Stream_LoadPath(LPCSTR p, DWORD maxlen)
 {
     UINT len = 0;
 
-    while (p[len] && len < maxlen)
+    while (len < maxlen && p[len])
         len++;
 
     UINT wlen = MultiByteToWideChar(CP_ACP, 0, p, len, NULL, 0);
