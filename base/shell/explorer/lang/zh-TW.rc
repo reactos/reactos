@@ -97,11 +97,11 @@ CAPTION "開始功能表"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
 CONTROL "", IDC_TASKBARPROP_STARTMENU_BITMAP, "Static", SS_BITMAP | SS_SUNKEN,7, 7, 183, 108
-    AUTORADIOBUTTON "開始功能表(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
-    LTEXT "這個樣式讓你可以輕鬆存取您的資料夾、最愛的程式和搜尋資料。", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
+    AUTORADIOBUTTON "[開始]功能表(&S)", IDC_TASKBARPROP_STARTMENU, 7, 135, 105, 10, WS_DISABLED
+    LTEXT "選取這個功能表樣式，輕鬆存取網際網路、電子郵件和您最愛的程式。", IDC_STATIC, 20, 145, 150, 24, WS_DISABLED
     PUSHBUTTON "自訂(&C)...", IDC_TASKBARPROP_STARTMENUCUST, 192, 132, 53, 14, WS_DISABLED
-    AUTORADIOBUTTON "傳統開始功能表(&M)", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
-    LTEXT "這個樣式可以為您帶來傳統的外貌及功能。", IDC_STATIC, 20, 185, 150, 24
+    AUTORADIOBUTTON "傳統[開始]功能表(&M)", IDC_TASKBARPROP_STARTMENUCLASSIC, 7, 175, 105, 10
+    LTEXT "選取這個選項，使用較舊版本的傳統功能表樣式。", IDC_STATIC, 20, 185, 150, 24
     PUSHBUTTON "自訂(&C)...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192, 172, 53, 14
 END
 
@@ -133,9 +133,9 @@ BEGIN
     PUSHBUTTON       "高階(&V)", IDC_CLASSICSTART_ADVANCED, 162, 49, 53, 14
     PUSHBUTTON       "排序(&S)", IDC_CLASSICSTART_SORT, 162, 65, 53, 14
     ICON             IDI_RECYCLEBIN, IDC_STATIC, 20, 85, 20, 20
-    LTEXT            "要刪除最近訪問過的檔案、 程式和網站點記錄，單擊清除。", IDC_STATIC, 49, 85, 108, 33
+    LTEXT            "要刪除最近訪問過的檔案、 程式和網站點記錄，點擊清除。", IDC_STATIC, 49, 85, 108, 33
     PUSHBUTTON       "清除(&C)", IDC_CLASSICSTART_CLEAR, 162, 94, 53, 14
-    LTEXT            "開始選單中的高階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
+    LTEXT            "開始選單中的進階的選項:(&T)", IDC_STATIC, 8, 129, 150, 8
     CONTROL          "開始選單設定(&T)", IDC_CLASSICSTART_SETTINGS, "SysTreeView32", WS_BORDER | 0x00000001, 8, 139, 218, 72, WS_EX_CLIENTEDGE
     DEFPUSHBUTTON    "確定", IDOK, 122, 220, 50, 14
     PUSHBUTTON       "取消", IDCANCEL, 176, 220, 50, 14
@@ -143,7 +143,7 @@ END
 
 IDD_FILENAME_WARNING DIALOGEX 0, 0, 272, 81, 0
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_DLGFRAME
-CAPTION "檔名稱警告"
+CAPTION "檔案名稱警告"
 FONT 9, "新細明體"
 BEGIN
     DEFPUSHBUTTON    "忽略(&I)", IDIGNORE, 215, 60, 50, 14
@@ -151,7 +151,7 @@ BEGIN
     LTEXT            "", IDC_STATIC, 7, 51, 258, 1, NOT WS_GROUP
     AUTOCHECKBOX     "不執行此檢查啟動時(&D)", IDC_NOTCHECK, 7, 62, 139, 10
     ICON             32515, IDC_STATIC, 7, 7, 21, 20
-    LTEXT            "有是一個檔案或資料夾在您的計算機被稱為 %s 這可能會導致某些應用程式不能夠正確。重新命名為 %s 將解決這個問題。您想現在重新命名它?", IDC_STATIC, 34, 7, 224, 37
+    LTEXT            "有是一個檔案或資料夾在您的電腦中被稱為 %s 這可能會導致某些應用程式不正確。重新命名為 %s 將解決這個問題。您想重新命名嗎?", IDC_STATIC, 34, 7, 224, 37
 END
 
 IDD_MODERNSTART_ADVANCED DIALOGEX 0, 0, 251, 198, 0
