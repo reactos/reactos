@@ -40,6 +40,9 @@ typedef struct _PARAMETER
 
     BOOL bUpperCase;
     INT iTextLimit;
+
+    INT iBase;
+    INT iStep;
 } PARAMETER, *PPARAMETER;
 
 typedef struct _PARAMETER_ARRAY
@@ -490,7 +493,17 @@ BuildParameterArray(
                 ParamArray->Array[dwIndex].Type == WORD_TYPE ||
                 ParamArray->Array[dwIndex].Type == DWORD_TYPE)
             {
-                /* FIXME: Read Base, Min, Max and Step values */
+                /* FIXME: Read Min and Max values */
+
+                GetIntValue(hParamKey,
+                            L"Base",
+                            10,
+                            &ParamArray->Array[dwIndex].iBase);
+
+                GetIntValue(hParamKey,
+                            L"Step",
+                            1,
+                            &ParamArray->Array[dwIndex].iStep);
             }
             else if (ParamArray->Array[dwIndex].Type == EDIT_TYPE)
             {
@@ -681,6 +694,11 @@ DisplayParameter(
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_UPDN);
             EnableWindow(hwndControl, Parameter->bPresent);
             ShowWindow(hwndControl, SW_SHOW);
+
+            if (Parameter->Type == WORD_TYPE || Parameter->Type == DWORD_TYPE)
+                SendMessage(hwndControl, UDM_SETBASE, Parameter->iBase, 0);
+            else
+                SendMessage(hwndControl, UDM_SETBASE, 10, 0);
 
             hwndControl = GetDlgItem(hwnd, IDC_PROPERTY_VALUE_EDIT);
             EnableWindow(hwndControl, Parameter->bPresent);
@@ -880,6 +898,11 @@ OnNotify(
     {
         TRACE("PSN_APPLY!\n");
         WriteParameterArray(hwnd, pParamArray);
+    }
+    else if (((LPNMHDR)lParam)->code == (UINT)UDN_DELTAPOS)
+    {
+        LPNMUPDOWN pUpDown = (LPNMUPDOWN)lParam;
+        pUpDown->iDelta *= pParamArray->pCurrentParam->iStep;
     }
 }
 
