@@ -214,16 +214,24 @@ VOID TranslateEscapes(IN OUT LPTSTR lpString)
  * Expands the path for the ReactOS Installer "reactos.exe".
  * See also base/system/userinit/userinit.c!StartInstaller()
  */
-VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
+BOOL
+ExpandInstallerPath(
+    IN LPCTSTR lpInstallerName,
+    OUT LPTSTR lpInstallerPath,
+    IN SIZE_T PathSize)
 {
     SYSTEM_INFO SystemInfo;
+    SIZE_T cchInstallerNameLen;
     PTSTR ptr;
     DWORD dwAttribs;
 
-#if 0
-    if (_tcsicmp(lpInstallerPath, TEXT("reactos.exe")) != 0)
-        return;
-#endif
+    cchInstallerNameLen = _tcslen(lpInstallerName);
+    if (PathSize < cchInstallerNameLen)
+    {
+        /* The buffer is not large enough to contain the installer file name */
+        *lpInstallerPath = 0;
+        return FALSE;
+    }
 
     /*
      * First, try to find the installer using the default drive, under
@@ -233,7 +241,7 @@ VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
     GetSystemInfo(&SystemInfo);
 
     *lpInstallerPath = 0;
-    GetModuleFileName(NULL, lpInstallerPath, PathSize);
+    GetModuleFileName(NULL, lpInstallerPath, PathSize - cchInstallerNameLen - 1);
     ptr = _tcschr(lpInstallerPath, _T('\\'));
     if (ptr)
         *++ptr = 0;
@@ -288,14 +296,14 @@ VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
 
     if (SystemInfo.wProcessorArchitecture != PROCESSOR_ARCHITECTURE_UNKNOWN)
         StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
-    StringCchCat(lpInstallerPath, PathSize, TEXT("reactos.exe"));
+    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
 
     dwAttribs = GetFileAttributes(lpInstallerPath);
     if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
         !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
     {
         /* We have found the installer */
-        return;
+        return TRUE;
     }
 
     /*
@@ -303,9 +311,21 @@ VOID ExpandInstallerPath(IN OUT LPTSTR lpInstallerPath, IN SIZE_T PathSize)
      * ReactOS installation directory, or from our current directory.
      */
     *lpInstallerPath = 0;
-    if (GetWindowsDirectory(lpInstallerPath, PathSize - 12))
+    if (GetWindowsDirectory(lpInstallerPath, PathSize - cchInstallerNameLen - 1))
         StringCchCat(lpInstallerPath, PathSize, TEXT("\\"));
-    StringCchCat(lpInstallerPath, PathSize, TEXT("reactos.exe"));
+    StringCchCat(lpInstallerPath, PathSize, lpInstallerName);
+
+    dwAttribs = GetFileAttributes(lpInstallerPath);
+    if ((dwAttribs != INVALID_FILE_ATTRIBUTES) &&
+        !(dwAttribs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* We have found the installer */
+        return TRUE;
+    }
+
+    /* Installer not found */
+    *lpInstallerPath = 0;
+    return FALSE;
 }
 
 VOID InitializeTopicList(VOID)
@@ -337,7 +357,8 @@ PTOPIC AddNewTopic(VOID)
     return pTopic;
 }
 
-PTOPIC AddNewTopicEx(
+PTOPIC
+AddNewTopicEx(
     IN LPTSTR szText  OPTIONAL,
     IN LPTSTR szTitle OPTIONAL,
     IN LPTSTR szDesc  OPTIONAL,
@@ -372,11 +393,21 @@ PTOPIC AddNewTopicEx(
     if (szCommand && *szCommand)
     {
         pTopic->bIsCommand = TRUE;
-        StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
 
         /* Check for special applications: ReactOS Installer */
-        if (_tcsicmp(pTopic->szCommand, TEXT("reactos.exe")) == 0)
-            ExpandInstallerPath(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
+        if (_tcsicmp(szCommand, TEXT("reactos.exe")) == 0)
+        {
+            ExpandInstallerPath(szCommand, pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
+        }
+        else
+        {
+            /* Expand any environment string in the command line */
+            DWORD dwSize = ExpandEnvironmentStringsW(szCommand, NULL, 0);
+            if (dwSize <= ARRAYSIZE(pTopic->szCommand))
+                ExpandEnvironmentStringsW(szCommand, pTopic->szCommand, ARRAYSIZE(pTopic->szCommand));
+            else
+                StringCchCopy(pTopic->szCommand, ARRAYSIZE(pTopic->szCommand), szCommand);
+        }
     }
     else
     {
@@ -759,6 +790,8 @@ _tWinMain(HINSTANCE hInst,
         return 0;
     }
 
+#if 0
+    /* Mirroring is enabled from within the resources */
     switch (GetUserDefaultUILanguage())
     {
         case MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT):
@@ -768,6 +801,7 @@ _tWinMain(HINSTANCE hInst,
         default:
             break;
     }
+#endif
 
     hInstance = hInst;
 
@@ -1086,7 +1120,9 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             pTopics[i]->hWndButton = CreateWindow(TEXT("BUTTON"),
                                                   pTopics[i]->szText,
-                                                  WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_MULTILINE | BS_OWNERDRAW,
+                                                  (*pTopics[i]->szCommand ? 0 : WS_DISABLED) |
+                                                      WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP |
+                                                      BS_MULTILINE | BS_OWNERDRAW,
                                                   rcLeftPanel.left,
                                                   dwTop,
                                                   rcLeftPanel.right - rcLeftPanel.left,
@@ -1120,7 +1156,8 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
             hWndCheckButton = CreateWindow(TEXT("BUTTON"),
                                            szText,
-                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_MULTILINE /**/| BS_FLAT/**/,
+                                           WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP |
+                                               BS_AUTOCHECKBOX | BS_MULTILINE /**/| BS_FLAT/**/,
                                            rcLeftPanel.left + 8,
                                            rcLeftPanel.bottom - 8 - 13,
                                            rcLeftPanel.right - rcLeftPanel.left - 16,
@@ -1419,7 +1456,8 @@ OnDrawItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
     InflateRect(&lpDis->rcItem, -10, -4);
     OffsetRect(&lpDis->rcItem, 0, 1);
     GetWindowText(lpDis->hwndItem, szText, ARRAYSIZE(szText));
-    SetTextColor(lpDis->hDC, GetSysColor(COLOR_WINDOWTEXT));
+    SetTextColor(lpDis->hDC, GetSysColor(IsWindowEnabled(lpDis->hwndItem) ?
+                                         COLOR_WINDOWTEXT : COLOR_GRAYTEXT));
     iBkMode = SetBkMode(lpDis->hDC, TRANSPARENT);
     DrawText(lpDis->hDC, szText, -1, &lpDis->rcItem, DT_TOP | DT_LEFT | DT_WORDBREAK);
     SetBkMode(lpDis->hDC, iBkMode);
