@@ -810,15 +810,15 @@ function(create_registry_hives)
 
     # BootCD setup system hive
     add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv
-        COMMAND native-mkhive -h:SETUPREG -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
         DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
 
     add_custom_target(bootcd_hives
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv)
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
 
     add_cd_file(
-        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
         TARGET bootcd_hives
         DESTINATION reactos
         NO_CAB
@@ -859,7 +859,7 @@ function(create_registry_hives)
     # BCD Hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/BCD
-        COMMAND native-mkhive -h:BCD -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
+        COMMAND native-mkhive -h:BCD -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf
         DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivebcd_utf16.inf)
 
     add_custom_target(bcd_hive

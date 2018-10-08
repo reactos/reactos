@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
 {
     INT ret;
     UINT i;
+    PSTR ptr;
     BOOL UpperCaseFileName = FALSE;
     PCSTR HiveList = NULL;
     CHAR DestPath[PATH_MAX] = "";
@@ -108,13 +109,13 @@ int main(int argc, char *argv[])
     /* Read the options */
     for (i = 1; i < argc && *argv[i] == '-'; i++)
     {
-        if (argv[i][1] == '?' && argv[i][1] == 0)
+        if (argv[i][1] == '?' && argv[i][2] == 0)
         {
             usage();
             return 0;
         }
 
-        if (argv[i][1] == 'u' && argv[i][1] == 0)
+        if (argv[i][1] == 'u' && argv[i][2] == 0)
         {
             UpperCaseFileName = TRUE;
         }
@@ -173,6 +174,9 @@ int main(int argc, char *argv[])
 
         strcpy(FileName, DestPath);
         strcat(FileName, DIR_SEPARATOR_STRING);
+
+        ptr = FileName + strlen(FileName);
+
         strcat(FileName, RegistryHives[i].HiveName);
 
         /* Exception for the special setup registry hive */
@@ -183,15 +187,13 @@ int main(int argc, char *argv[])
         /* Adjust file name case if needed */
         if (UpperCaseFileName)
         {
-            PSTR ptr = FileName;
-            while (*ptr)
-                *ptr++ = toupper(*ptr);
+            for (; *ptr; ++ptr)
+                *ptr = toupper(*ptr);
         }
         else
         {
-            PSTR ptr = FileName;
-            while (*ptr)
-                *ptr++ = tolower(*ptr);
+            for (; *ptr; ++ptr)
+                *ptr = tolower(*ptr);
         }
 
         if (!ExportBinaryHive(FileName, RegistryHives[i].CmHive))
