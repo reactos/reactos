@@ -1125,10 +1125,78 @@ BOOLEAN DosUnlockFile(WORD DosHandle, DWORD Offset, DWORD Size)
     return TRUE;
 }
 
+BOOLEAN DosDeviceIoControlDrive(WORD DriveNumber, BYTE ControlCode, DWORD Buffer, PWORD Result)
+{
+    CHAR RootPath[] = "?:\\";
+
+    if (DriveNumber == 0x00)
+        RootPath[0] = 'A' + Sda->CurrentDrive;
+    else
+        RootPath[0] = 'A' + DriveNumber - 1;
+
+    switch (ControlCode)
+    {
+        case 0x04:
+            DPRINT1("UNIMPLEMENTED INT 21h, 4404h, Read from block device %s\n", RootPath);
+            Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+            break;
+        case 0x05:
+            DPRINT1("UNIMPLEMENTED INT 21h, 4405h, Write block device control string %s\n", RootPath);
+            Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+            break;
+        case 0x08:
+        {
+            DWORD DriveType = GetDriveTypeA(RootPath);
+
+            switch (DriveType)
+            {
+            case DRIVE_UNKNOWN:
+            case DRIVE_NO_ROOT_DIR:
+            default:
+                DPRINT1("INT 21h, 4408h, %s -> DriveType = 0x%x\n", RootPath, DriveType);
+                *Result = 0x000f;
+                return TRUE;
+            case DRIVE_REMOVABLE:
+            case DRIVE_CDROM:
+                *Result = 0x0000;
+                return TRUE;
+            case DRIVE_FIXED:
+                *Result = 0x0001;
+                return TRUE;
+            case DRIVE_REMOTE:
+            case DRIVE_RAMDISK: // ??
+                break;
+            }
+            Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+            return FALSE;
+        }
+        case 0x09:
+            DPRINT1("UNIMPLEMENTED INT 21h, 4409h, Determine if a logical device is local or remote %s\n", RootPath);
+            Sda->LastErrorCode = ERROR_INVALID_FUNCTION;
+            return FALSE;
+        default:
+            assert(0);
+            break;
+    }
+
+    return FALSE;
+}
+
 BOOLEAN DosDeviceIoControl(WORD FileHandle, BYTE ControlCode, DWORD Buffer, PWORD Length)
 {
-    PDOS_FILE_DESCRIPTOR Descriptor = DosGetHandleFileDescriptor(FileHandle);
+    PDOS_FILE_DESCRIPTOR Descriptor;
     PDOS_DEVICE_NODE Node = NULL;
+
+    switch (ControlCode)
+    {
+        case 0x04:
+        case 0x05:
+        case 0x08:
+        case 0x09:
+            return DosDeviceIoControlDrive(FileHandle, ControlCode, Buffer, Length);
+    }
+
+    Descriptor = DosGetHandleFileDescriptor(FileHandle);
 
     if (!Descriptor)
     {
