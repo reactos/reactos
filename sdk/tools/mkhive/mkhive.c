@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     printf("Binary hive maker\n");
 
     /* Read the options */
-    for (i = 1; i < argc && (*argv[i] == '-' || *argv[i] == '/'); i++)
+    for (i = 1; i < argc && *argv[i] == '-'; i++)
     {
         if (argv[i][1] == '?' && argv[i][1] == 0)
         {
