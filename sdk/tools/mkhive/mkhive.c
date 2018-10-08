@@ -51,11 +51,13 @@
 
 void usage(void)
 {
-    printf("Usage: mkhive -h:hive1[,hiveN...] -d:<dstdir> <inffiles>\n\n"
+    printf("Usage: mkhive [-?] -h:hive1[,hiveN...] [-u] -d:<dstdir> <inffiles>\n\n"
            "  -h:hiveN  - Comma-separated list of hives to create. Possible values are:\n"
            "              SETUPREG, SYSTEM, SOFTWARE, DEFAULT, SAM, SECURITY, BCD.\n"
+           "  -u        - Generate file names in uppercase (default: lowercase) (TEMPORARY FLAG!).\n"
            "  -d:dstdir - The binary hive files are created in this directory.\n"
-           "  inffiles  - List of INF files with full path.\n");
+           "  inffiles  - List of INF files with full path.\n"
+           "  -?        - Displays this help screen.\n");
 }
 
 void convert_path(char *dst, char *src)
@@ -90,6 +92,7 @@ int main(int argc, char *argv[])
 {
     INT ret;
     UINT i;
+    BOOL UpperCaseFileName = FALSE;
     PCSTR HiveList = NULL;
     CHAR DestPath[PATH_MAX] = "";
     CHAR FileName[PATH_MAX];
@@ -103,8 +106,19 @@ int main(int argc, char *argv[])
     printf("Binary hive maker\n");
 
     /* Read the options */
-    for (i = 1; i < argc && *argv[i] == '-'; i++)
+    for (i = 1; i < argc && (*argv[i] == '-' || *argv[i] == '/'); i++)
     {
+        if (argv[i][1] == '?' && argv[i][1] == 0)
+        {
+            usage();
+            return 0;
+        }
+
+        if (argv[i][1] == 'u' && argv[i][1] == 0)
+        {
+            UpperCaseFileName = TRUE;
+        }
+        else
         if (argv[i][1] == 'h' && (argv[i][2] == ':' || argv[i][2] == '='))
         {
             HiveList = argv[i] + 3;
@@ -165,6 +179,20 @@ int main(int argc, char *argv[])
         // if (strcmp(RegistryHives[i].HiveName, "SETUPREG") == 0)
         if (i == 0)
             strcat(FileName, ".HIV");
+
+        /* Adjust file name case if needed */
+        if (UpperCaseFileName)
+        {
+            PSTR ptr = FileName;
+            while (*ptr)
+                *ptr++ = toupper(*ptr);
+        }
+        else
+        {
+            PSTR ptr = FileName;
+            while (*ptr)
+                *ptr++ = tolower(*ptr);
+        }
 
         if (!ExportBinaryHive(FileName, RegistryHives[i].CmHive))
             goto Quit;

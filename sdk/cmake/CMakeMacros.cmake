@@ -810,15 +810,15 @@ function(create_registry_hives)
 
     # BootCD setup system hive
     add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
+        OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv
         COMMAND native-mkhive -h:SETUPREG -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf
         DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
 
     add_custom_target(bootcd_hives
-        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
+        DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv)
 
     add_cd_file(
-        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/setupreg.hiv
         TARGET bootcd_hives
         DESTINATION reactos
         NO_CAB
