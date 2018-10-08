@@ -86,6 +86,7 @@ BEGIN
     IDS_INSTALLING "安裝中..."
     IDS_INVALID_SHA "意外的下載了的檔案的校驗和。中止安裝已損壞的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
     IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
     IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END

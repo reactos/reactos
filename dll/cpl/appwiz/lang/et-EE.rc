@@ -86,6 +86,7 @@ BEGIN
     IDS_INSTALLING "Paigaldamine..."
     IDS_INVALID_SHA "Kontrollsumma ei kattu. Paigaldamine katkestatud korrupteerinud faili tõttu."
     IDS_NEW_INTERNET_SHORTCUT "New Internet Shortcut"
+    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
     IDS_CANTMAKEINETSHORTCUT "Failed to create internet shortcut."
     IDS_CANTMAKESHORTCUT "Failed to create shortcut."
 END
