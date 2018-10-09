@@ -88,7 +88,7 @@ BEGIN
     IDS_INSTALLING "Instalowanie..."
     IDS_INVALID_SHA "Nieoczekiwana suma kontrolna ściągniętego pliku. Przerwanie instalacji uszkodzonego pliku."
     IDS_NEW_INTERNET_SHORTCUT "Nowy skrót internetowy"
-    IDS_DWL_FAILED "Failed to download the Gecko package. Make sure you have an internet connection in order to download it. The setup will proceed without installing Gecko."
+    IDS_DWL_FAILED "Nie udało się pobrać pakietu Gecko. Upewnij się, że masz połączenie internetowe, aby je pobrać. Konfiguracja zostanie przeprowadzona bez instalacji Gecko."
     IDS_CANTMAKEINETSHORTCUT "Nie można utworzyć skrótu internetowego."
     IDS_CANTMAKESHORTCUT "Nie można utworzyć skrótu."
 END
