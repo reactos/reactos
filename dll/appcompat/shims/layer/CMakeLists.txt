@@ -14,7 +14,7 @@ add_library(aclayers SHARED
     ${SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/aclayers.def)
 
-set_module_type(aclayers win32dll)
+set_module_type(aclayers win32dll ENTRYPOINT DllMain 12)
 target_link_libraries(aclayers shimlib)
-add_importlibs(aclayers user32 msvcrt kernel32 ntdll)
+add_importlibs(aclayers user32 kernel32 ntdll)
 add_cd_file(TARGET aclayers DESTINATION reactos/AppPatch FOR all)
