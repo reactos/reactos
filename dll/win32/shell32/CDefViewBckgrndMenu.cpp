@@ -199,6 +199,18 @@ CDefViewBckgrndMenu::QueryContextMenu(HMENU hMenu, UINT indexMenu, UINT idCmdFir
             EnableMenuItem(hMenuPart, FCIDM_SHVIEW_INSERTLINK, MF_BYCOMMAND | MF_GRAYED);
         }
 
+        /* Disable Auto Arrange when in details or list view */
+        CComPtr<IFolderView> pfv;
+        UINT viewMode = 0;
+        if (SUCCEEDED(IUnknown_QueryService(m_site, SID_IFolderView, IID_PPV_ARG(IFolderView, &pfv))))
+        {
+            if (SUCCEEDED(pfv->GetCurrentViewMode(&viewMode)))
+            {
+                if (viewMode == FVM_DETAILS || viewMode == FVM_LIST)
+                    EnableMenuItem(hMenuPart, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND | MF_GRAYED);
+            }
+        }
+
         /* merge general background context menu in */
         Shell_MergeMenus(hMenu, GetSubMenu(hMenuPart, 0), indexMenu, 0, idCmdLast, MM_DONTREMOVESEPS | MM_SUBMENUSHAVEIDS | MM_ADDSEPARATOR);
         DestroyMenu(hMenuPart);

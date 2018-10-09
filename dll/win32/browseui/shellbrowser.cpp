@@ -1672,12 +1672,14 @@ void CShellBrowser::UpdateGotoMenu(HMENU theMenu)
 void CShellBrowser::UpdateViewMenu(HMENU theMenu)
 {
     CComPtr<ITravelLog>                     travelLog;
+    CComPtr<IFolderView>                    pfv;
     HMENU                                   gotoMenu;
     OLECMD                                  commandList[5];
     HMENU                                   toolbarMenuBar;
     HMENU                                   toolbarMenu;
     MENUITEMINFO                            menuItemInfo;
     HRESULT                                 hResult;
+    UINT                                    viewMode;
 
     gotoMenu = SHGetMenuFromID(theMenu, FCIDM_MENU_EXPLORE);
     if (gotoMenu != NULL)
@@ -1726,6 +1728,18 @@ void CShellBrowser::UpdateViewMenu(HMENU theMenu)
         SetMenuItemInfo(theMenu, IDM_VIEW_TOOLBARS, FALSE, &menuItemInfo);
     }
     SHCheckMenuItem(theMenu, IDM_VIEW_STATUSBAR, fStatusBarVisible ? TRUE : FALSE);
+
+    /* Disable Auto Arrange when in details or list view */
+    if (SUCCEEDED(fCurrentShellView->QueryInterface(IID_PPV_ARG(IFolderView, &pfv))))
+    {
+        if (SUCCEEDED(pfv->GetCurrentViewMode(&viewMode)))
+        {
+            if (viewMode == FVM_DETAILS || viewMode == FVM_LIST)
+                EnableMenuItem(theMenu, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND | MF_GRAYED);
+            else
+                EnableMenuItem(theMenu, FCIDM_SHVIEW_AUTOARRANGE, MF_BYCOMMAND);
+        }
+    }
 }
 
 HRESULT CShellBrowser::BuildExplorerBandMenu()
