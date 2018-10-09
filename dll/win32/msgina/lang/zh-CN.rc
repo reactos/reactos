@@ -48,7 +48,7 @@ BEGIN
     GROUPBOX "登录信息", IDC_STATIC, 7, 50, 261, 52
     LTEXT "<Message>", IDC_SECURITY_MESSAGE, 15, 62, 245, 18
     LTEXT "<Logon date>", IDC_SECURITY_LOGONDATE, 15, 83, 245, 8
-    CTEXT "你想要做什么?", IDC_STATIC, 10, 108, 255, 8
+    CTEXT "您想要做什么?", IDC_STATIC, 10, 108, 255, 8
     PUSHBUTTON "锁定计算机(&K)", IDC_SECURITY_LOCK, 7, 124, 80, 14
     PUSHBUTTON "注销(&L)...", IDC_SECURITY_LOGOFF, 98, 124, 80, 14
     PUSHBUTTON "关闭(&S)...", IDC_SECURITY_SHUTDOWN, 188, 124, 80, 14
@@ -183,7 +183,7 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "欢迎!"
     IDS_LOCKEDSAS "计算机当前已锁定。"
-    IDS_PRESSCTRLALTDELETE "按 Control+Alt+Delete 登录。"
+    IDS_PRESSCTRLALTDELETE "请按 Control+Alt+Delete 登录。"
     IDS_ASKFORUSER "用户名称: "
     IDS_ASKFORPASSWORD "密码: "
     IDS_FORCELOGOFF "这将注销当前用户，并丢失未保存的所有数据。要继续吗?"
@@ -201,7 +201,7 @@ BEGIN
     IDS_LOGONUSERDISABLED "您的帐户已被禁用。请参阅您的系统管理员。"
     IDS_PASSWORDMUSTCHANGE "您需要更改您在首次登录的密码。"
     IDS_PASSWORDEXPIRED "您的密码已过期，必须更改。"
-    IDS_ACCOUNTEXPIRED "Your account has expired. Please see your system administrator."
+    IDS_ACCOUNTEXPIRED "您的账户已过期。请联系系统管理员。"
 END
 
 /* Shutdown Dialog Strings */
