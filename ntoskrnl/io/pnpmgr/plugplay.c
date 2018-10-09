@@ -1010,7 +1010,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
     /* Check if there's already a driver loaded for this device */
     if (DeviceNode->Flags & DNF_ADDED)
     {
-#if 0
+#if 1
         /* Remove the device node */
         Status = IopRemoveDevice(DeviceNode);
         if (NT_SUCCESS(Status))
