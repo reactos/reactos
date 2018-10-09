@@ -789,6 +789,7 @@ OnInitDialog(
     HWND hwndControl;
     PWSTR pszText;
     DWORD i;
+    INT idx;
 
     TRACE("OnInitDialog()\n");
 
@@ -811,13 +812,15 @@ OnInitDialog(
             else
                 pszText = pParamArray->Array[i].pszName;
 
-            ListBox_AddString(hwndControl, pszText);
+            idx = ListBox_AddString(hwndControl, pszText);
+            if (idx != LB_ERR)
+                ListBox_SetItemData(hwndControl, idx, (LPARAM)&pParamArray->Array[i]);
         }
 
         if (pParamArray->dwCount > 0)
         {
             ListBox_SetCurSel(hwndControl, 0);
-            pParamArray->pCurrentParam = &pParamArray->Array[0];
+            pParamArray->pCurrentParam = (PPARAMETER)ListBox_GetItemData(hwndControl, 0);
             DisplayParameter(hwnd, pParamArray->pCurrentParam);
         }
     }
@@ -855,7 +858,7 @@ OnCommand(
         iIndex = ListBox_GetCurSel((HWND)lParam);
         if (iIndex != LB_ERR && iIndex < pParamArray->dwCount)
         {
-            pParamArray->pCurrentParam = &pParamArray->Array[iIndex];
+            pParamArray->pCurrentParam = (PPARAMETER)ListBox_GetItemData((HWND)lParam, iIndex);
             DisplayParameter(hwnd, pParamArray->pCurrentParam);
         }
     }
