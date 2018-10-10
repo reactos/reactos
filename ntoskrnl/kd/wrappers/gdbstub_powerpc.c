@@ -1525,7 +1525,6 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                 ExReleaseFastMutex(&GspLock);
                 DPRINT("Thread %p leaving stub\n", PsGetCurrentThread());
                 return kdContinue;
-                break;
               }
 
             case 'k':  /* kill the program */
