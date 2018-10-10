@@ -14,11 +14,11 @@
 /*
  * Scrollbar functional modes:
  * 0  view < canvas
- * 1  view < canvas + scroll
- * 2  view >= canvas + scroll
+ * 1  view < canvas + scroll width
+ * 2  view >= canvas + scroll width
  *
  * Matrix of scrollbar presence (VERTICAL,HORIZONTAL) given by
- * vertical x horizontal scrollbar modes (view:whole report):
+ * vertical & horizontal scrollbar modes (view:canvas ratio):
  *
  *           horizontal mode
  *             |      0      |      1      |      2
@@ -43,6 +43,9 @@ CONST ScrollbarPresence sp_mx[3][3] =
     { { FALSE,TRUE  }, { FALSE,FALSE }, { FALSE,FALSE } }
 };
 
+CONST INT HSCROLL_WIDTH = ::GetSystemMetrics(SM_CYHSCROLL);
+CONST INT VSCROLL_WIDTH = ::GetSystemMetrics(SM_CXVSCROLL);
+
 
 /* FUNCTIONS ********************************************************/
 
@@ -65,12 +68,10 @@ UpdateScrollbox()
     sizeImageArea += CSize(EXTRASIZE * 2, EXTRASIZE * 2);
 
     /* show/hide the scrollbars */
-    vmode = (sizeScrollBox.cy < sizeImageArea.cy? 0 :
-                (sizeScrollBox.cy < sizeImageArea.cy +
-                    ::GetSystemMetrics(SM_CYHSCROLL) ? 1 : 2));
+    vmode = (sizeScrollBox.cy < sizeImageArea.cy ? 0 :
+                (sizeScrollBox.cy < sizeImageArea.cy + HSCROLL_WIDTH ? 1 : 2));
     hmode = (sizeScrollBox.cx < sizeImageArea.cx ? 0 :
-                (sizeScrollBox.cx < sizeImageArea.cx +
-                    ::GetSystemMetrics(SM_CXVSCROLL) ? 1 : 2));
+                (sizeScrollBox.cx < sizeImageArea.cx + VSCROLL_WIDTH ? 1 : 2));
     scrollboxWindow.ShowScrollBar(SB_VERT, sp_mx[vmode][hmode].bVert);
     scrollboxWindow.ShowScrollBar(SB_HORZ, sp_mx[vmode][hmode].bHoriz);
 
@@ -79,14 +80,12 @@ UpdateScrollbox()
     si.nMin   = 0;
 
     si.nMax   = sizeImageArea.cx +
-                    (sp_mx[vmode][hmode].bVert == TRUE ?
-                        ::GetSystemMetrics(SM_CYHSCROLL) : 0);
+                    (sp_mx[vmode][hmode].bVert == TRUE ? HSCROLL_WIDTH : 0);
     si.nPage  = sizeScrollBox.cx;
     scrollboxWindow.SetScrollInfo(SB_HORZ, &si);
 
     si.nMax   = sizeImageArea.cy +
-                    (sp_mx[vmode][hmode].bHoriz == TRUE ?
-                        ::GetSystemMetrics(SM_CXHSCROLL) : 0);
+                    (sp_mx[vmode][hmode].bHoriz == TRUE ? VSCROLL_WIDTH : 0);
     si.nPage  = sizeScrollBox.cy;
     scrollboxWindow.SetScrollInfo(SB_VERT, &si);
 
