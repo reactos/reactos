@@ -51,7 +51,7 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                 iMode++;
 
                 SurfaceDesc.dwSize = sizeof (DDSURFACEDESC);
-                SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_REFRESHRATE | DDSD_WIDTH | DDSD_PIXELFORMAT;
+                SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH | DDSD_REFRESHRATE;
                 SurfaceDesc.dwHeight = DevMode.dmPelsHeight;
                 SurfaceDesc.dwWidth = DevMode.dmPelsWidth;
                 SurfaceDesc.lPitch = DevMode.dmPelsWidth * DevMode.dmBitsPerPel / 8;
@@ -149,7 +149,7 @@ Main_DirectDraw_EnumDisplayModes4(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                 iMode++;
 
                 SurfaceDesc.dwSize = sizeof (DDSURFACEDESC2);
-                SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_REFRESHRATE | DDSD_WIDTH | DDSD_PIXELFORMAT;
+                SurfaceDesc.dwFlags = DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH | DDSD_REFRESHRATE;
                 SurfaceDesc.dwHeight = DevMode.dmPelsHeight;
                 SurfaceDesc.dwWidth = DevMode.dmPelsWidth;
                 SurfaceDesc.lPitch = DevMode.dmPelsWidth * DevMode.dmBitsPerPel / 8;
