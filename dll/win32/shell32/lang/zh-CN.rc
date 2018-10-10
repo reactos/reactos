@@ -650,13 +650,13 @@ BEGIN
 END
 
 IDD_NEWEXTENSION DIALOGEX 0, 0, 260, 75
-CAPTION "新建插件"
+CAPTION "新建扩展名"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 9, "宋体"
 BEGIN
     LTEXT "&File Extension:", -1, 10, 10, 85, 14
     EDITTEXT IDC_NEWEXT_EDIT, 105, 8, 60, 14
-    PUSHBUTTON "<< 高级(&v)", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
+    PUSHBUTTON "<< 高级(&V)", IDC_NEWEXT_ADVANCED, 185, 8, 65, 15
     LTEXT "&Associated File Type:", IDC_NEWEXT_ASSOC, 10, 34, 85, 14
     COMBOBOX IDC_NEWEXT_COMBOBOX, 105, 32, 145, 120, CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 125, 55, 60, 14
@@ -678,11 +678,11 @@ BEGIN
     PUSHBUTTON "移除(&R)", IDC_EDITTYPE_REMOVE, 150, 80, 70, 14
     PUSHBUTTON "设为默认(&S)", IDC_EDITTYPE_SET_DEFAULT, 150, 95, 70, 14
     AUTOCHECKBOX "Confirm &open after download", IDC_EDITTYPE_CONFIRM_OPEN, 5, 115, 150, 14
-    AUTOCHECKBOX "总是显示插件(&w)", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 
+    AUTOCHECKBOX "总是显示扩展名(&W)", IDC_EDITTYPE_SHOW_EXT, 5, 130, 150, 
 14
     AUTOCHECKBOX "在相同窗口中浏览(&B)", IDC_EDITTYPE_SAME_WINDOW, 5, 145, 150, 14
     DEFPUSHBUTTON "确定", IDOK, 95, 170, 60, 14
-    PUSHBUTTON "取消, IDCANCEL, 160, 170, 60, 14
+    PUSHBUTTON "取消", IDCANCEL, 160, 170, 60, 14
 END
 
 IDD_ACTION DIALOG 0, 0, 225, 95
@@ -706,11 +706,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 FONT 9, "宋体"
 BEGIN
     GROUPBOX "您想要什么类型的文件夹?", IDC_STATIC, 5, 5, 230, 65, WS_TABSTOP
-    LTEXT "将此文件夹设为模板(&f):", IDC_STATIC, 15, 20, 210, 12
+    LTEXT "将此文件夹设为模板(&F):", IDC_STATIC, 15, 20, 210, 12
     COMBOBOX IDC_FOLDERCUST_COMBOBOX, 15, 35, 210, 300, CBS_HASSTRINGS | CBS_AUTOHSCROLL | CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "将此模板应用到所有子文件夹(&s)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
+    AUTOCHECKBOX "将此模板应用到所有子文件夹(&S)", IDC_FOLDERCUST_CHECKBOX, 15, 50, 210, 15
     GROUPBOX "文件夹图片", IDC_STATIC, 5, 75, 230, 90, WS_TABSTOP
-    LTEXT "对于缩略图视图，您可以在此文件夹上放置能够提醒您的图片。, IDC_STATIC, 15, 87, 115, 33
+    LTEXT "对于缩略图视图，您可以在此文件夹上放置能够提醒您的图片。", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "选择图片(&R)...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "还原为默认(&R)", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
     LTEXT "预览:", IDC_STATIC, 139, 85, 81, 11
@@ -888,7 +888,7 @@ BEGIN
     IDS_DB__FILE "数据库文件"
     IDS_DLL_FILE "应用程序扩展"
     IDS_DRV_FILE "设备驱动程序"
-    IDS_EFI_FILE "Extensible Firmware Interface Executable"
+    IDS_EFI_FILE "可扩展固件接口(EFI)可执行文件"
     IDS_EXE_FILE "应用程序"
     IDS_NLS_FILE "语言支持文件"
     IDS_OCX_FILE "ActiveX Control"
@@ -961,12 +961,12 @@ BEGIN
     IDS_ADVANCED_SHOW_COMP_COLOR "用彩色显示加密或压缩的 NTFS 文件"
     IDS_ADVANCED_SHOW_INFO_TIP "鼠标指向文件夹和桌面项时显示提示信息"
 
-    IDS_NEWEXT_ADVANCED_LEFT "<< 高级(&v)"
-    IDS_NEWEXT_ADVANCED_RIGHT "高级(&v) >>"
+    IDS_NEWEXT_ADVANCED_LEFT "<< 高级(&V)"
+    IDS_NEWEXT_ADVANCED_RIGHT "高级(&V) >>"
     IDS_NEWEXT_NEW "<New>"
-    IDS_NEWEXT_SPECIFY_EXT "您必须指定一个插件。"
+    IDS_NEWEXT_SPECIFY_EXT "您必须指定一个扩展名。"
     IDS_NEWEXT_ALREADY_ASSOC "Extension %s is already associated with File Type %s. Do you want to un-associate %s with %s and create a new File Type for it?"
-    IDS_NEWEXT_EXT_IN_USE "插件正在被使用"
+    IDS_NEWEXT_EXT_IN_USE "扩展名正在被使用"
 
     IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
     IDS_SPECIFY_ACTION "您必须指定一个动作。"
