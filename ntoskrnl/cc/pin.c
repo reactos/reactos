@@ -32,6 +32,40 @@ ULONG CcPinReadNoWait = 0;
 /* FUNCTIONS *****************************************************************/
 
 static
+PINTERNAL_BCB
+NTAPI
+CcpFindBcb(
+    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
+    IN PLARGE_INTEGER FileOffset,
+    IN ULONG Length,
+    IN BOOLEAN Pinned)
+{
+    PINTERNAL_BCB Bcb;
+    BOOLEAN Found = FALSE;
+    PLIST_ENTRY NextEntry;
+
+    for (NextEntry = SharedCacheMap->BcbList.Flink;
+         NextEntry != &SharedCacheMap->BcbList;
+         NextEntry = NextEntry->Flink)
+    {
+        Bcb = CONTAINING_RECORD(NextEntry, INTERNAL_BCB, BcbEntry);
+
+        if (Bcb->PFCB.MappedFileOffset.QuadPart <= FileOffset->QuadPart &&
+            (Bcb->PFCB.MappedFileOffset.QuadPart + Bcb->PFCB.MappedLength) >=
+            (FileOffset->QuadPart + Length))
+        {
+            if ((Pinned && Bcb->PinCount > 0) || (!Pinned && Bcb->PinCount == 0))
+            {
+                Found = TRUE;
+                break;
+            }
+        }
+    }
+
+    return (Found ? Bcb : NULL);
+}
+
+static
 BOOLEAN
 NTAPI
 CcpMapData(
@@ -39,6 +73,7 @@ CcpMapData(
     IN PLARGE_INTEGER FileOffset,
     IN ULONG Length,
     IN ULONG Flags,
+    IN BOOLEAN ToPin,
     OUT PVOID *pBcb,
     OUT PVOID *pBuffer)
 {
@@ -46,7 +81,7 @@ CcpMapData(
     BOOLEAN Valid;
     PROS_VACB Vacb;
     NTSTATUS Status;
-    PINTERNAL_BCB iBcb;
+    PINTERNAL_BCB iBcb, DupBcb;
     LONGLONG ROffset;
     KIRQL OldIrql;
 
@@ -133,45 +168,42 @@ CcpMapData(
     ExInitializeResourceLite(&iBcb->Lock);
     *pBcb = (PVOID)iBcb;
 
-    KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
-    InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
-    KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
-
-    return TRUE;
-}
-
-static
-PINTERNAL_BCB
-NTAPI
-CcpFindBcb(
-    IN PROS_SHARED_CACHE_MAP SharedCacheMap,
-    IN PLARGE_INTEGER FileOffset,
-    IN ULONG Length,
-    IN BOOLEAN Pinned)
-{
-    PINTERNAL_BCB Bcb;
-    BOOLEAN Found = FALSE;
-    PLIST_ENTRY NextEntry;
-
-    for (NextEntry = SharedCacheMap->BcbList.Flink;
-         NextEntry != &SharedCacheMap->BcbList;
-         NextEntry = NextEntry->Flink)
+    /* Only insert if we're not to pin data */
+    if (!ToPin)
     {
-        Bcb = CONTAINING_RECORD(NextEntry, INTERNAL_BCB, BcbEntry);
+        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
 
-        if (Bcb->PFCB.MappedFileOffset.QuadPart <= FileOffset->QuadPart &&
-            (Bcb->PFCB.MappedFileOffset.QuadPart + Bcb->PFCB.MappedLength) >=
-            (FileOffset->QuadPart + Length))
+        /* Check if we raced with another BCB creation */
+        DupBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, FALSE);
+        /* Yes, and we've lost */
+        if (DupBcb != NULL)
         {
-            if ((Pinned && Bcb->PinCount > 0) || (!Pinned && Bcb->PinCount == 0))
-            {
-                Found = TRUE;
-                break;
-            }
+            /* We'll return that BCB */
+            ++DupBcb->RefCount;
+
+            /* Delete the loser */
+            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+            ExDeleteResourceLite(&iBcb->Lock);
+            ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
+
+            /* Return the winner - no need to update buffer address, it's
+             * relative to the VACB, which is unchanged.
+             */
+            *pBcb = DupBcb;
         }
+        /* Nope, insert ourselves */
+        else
+        {
+            InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+        }
+        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+    }
+    else
+    {
+        InitializeListHead(&iBcb->BcbEntry);
     }
 
-    return (Found ? Bcb : NULL);
+    return TRUE;
 }
 
 /*
@@ -218,7 +250,7 @@ CcMapData (
 
     if (iBcb == NULL)
     {
-        Ret = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, pBcb, pBuffer);
+        Ret = CcpMapData(SharedCacheMap, FileOffset, Length, Flags, FALSE, pBcb, pBuffer);
     }
     else
     {
@@ -336,7 +368,7 @@ CcPinRead (
         }
 
         /* Map first */
-        if (!CcpMapData(SharedCacheMap, FileOffset, Length, Flags, Bcb, Buffer))
+        if (!CcpMapData(SharedCacheMap, FileOffset, Length, Flags, TRUE, Bcb, Buffer))
         {
             return FALSE;
         }
@@ -347,6 +379,43 @@ CcPinRead (
             CcUnpinData(*Bcb);
             return FALSE;
         }
+
+        /* Did we race for the BCB creation? */
+        KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
+        iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
+        if (iBcb != NULL)
+        {
+            /* Free our now unused BCB */
+            CcUnpinData(*Bcb);
+
+            /* Lock the found BCB and return it */
+            if (BooleanFlagOn(Flags, PIN_EXCLUSIVE))
+            {
+                Result = ExAcquireResourceExclusiveLite(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
+            }
+            else
+            {
+                Result = ExAcquireSharedStarveExclusive(&iBcb->Lock, BooleanFlagOn(Flags, PIN_WAIT));
+            }
+
+            if (!Result)
+            {
+                return FALSE;
+            }
+
+            ++iBcb->PinCount;
+            ++iBcb->RefCount;
+
+            *Bcb = iBcb;
+        }
+        else
+        {
+            iBcb = *Bcb;
+
+            /* Insert ourselves in the linked list */
+            InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+        }
+        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
     }
     /* We found a BCB, lock it and return it */
     else
@@ -469,7 +538,10 @@ CcUnpinDataForThread (
                          FALSE);
 
         KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
-        RemoveEntryList(&iBcb->BcbEntry);
+        if (!IsListEmpty(&iBcb->BcbEntry))
+        {
+            RemoveEntryList(&iBcb->BcbEntry);
+        }
         KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
         ExDeleteResourceLite(&iBcb->Lock);
@@ -543,7 +615,10 @@ CcUnpinRepinnedBcb (
                          FALSE);
 
         KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
-        RemoveEntryList(&iBcb->BcbEntry);
+        if (!IsListEmpty(&iBcb->BcbEntry))
+        {
+            RemoveEntryList(&iBcb->BcbEntry);
+        }
         KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
 
         ExDeleteResourceLite(&iBcb->Lock);
