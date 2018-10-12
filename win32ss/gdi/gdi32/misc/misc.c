@@ -1021,12 +1021,32 @@ GdiRealizationInfo(HDC hdc,
 
 
 /*
- * @unimplemented
+ * @halfplemented
  */
 VOID WINAPI GdiInitializeLanguagePack(DWORD InitParam)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    /* Lpk function pointers to be passed to user32 */
+    FARPROC hookfuncs[4];
+
+#ifdef LANGPACK
+    if (!LoadLPK(LPK_INIT)) // no lpk found!
+#endif
+        return;
+
+     /* Call InitializeLpkHooks with 4 procedure addresses
+        loaded from lpk.dll but currently only one of them is currently implemented.
+        Then InitializeLpkHooks (in user32) uses these to replace certain internal functions
+        and ORs a DWORD being used also by ClientThreadSetup and calls
+        NtUserOneParam with parameter 54 which is ONEPARAM_ROUTINE_REGISTERLPK
+        which most likely changes the value of dwLpkEntryPoints in the 
+        PROCESSINFO struct */
+    
+#if 0
+        hookfuncs[0] = GetProcAddress(hLpk, "LpkPSMTextOut");
+        InitializeLpkHooks(hookfuncs);
+#endif
+
+    gbLpk = TRUE;
 }
 
 BOOL
