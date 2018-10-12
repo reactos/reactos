@@ -385,6 +385,8 @@ CcPinRead (
         iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
         if (iBcb != NULL)
         {
+            KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
+
             /* Free our now unused BCB */
             CcUnpinData(*Bcb);
 
@@ -414,8 +416,8 @@ CcPinRead (
 
             /* Insert ourselves in the linked list */
             InsertTailList(&SharedCacheMap->BcbList, &iBcb->BcbEntry);
+            KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
         }
-        KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
     }
     /* We found a BCB, lock it and return it */
     else
